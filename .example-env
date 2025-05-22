@@ -1,0 +1,46 @@
+NEXT_PUBLIC_APP_URL=https://starter.vibecode.party
+
+# Clerk Auth
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
+
+# Convex DB
+CONVEX_DEPLOYMENT=
+# NEXT_PUBLIC_CONVEX_URL will be different for production and local dev
+NEXT_PUBLIC_CONVEX_URL=https://<your-project-slug>.convex.cloud
+
+# AI Keys
+OPENAI_API_KEY=
+REPLICATE_API_TOKEN=
+REPLICATE_MODEL=black-forest-labs/flux-schnell
+
+# File Storage
+AWS_KEY=
+AWS_SECRET=
+AWS_REGION=us-east-1
+AWS_BUCKET_PUBLIC=
+AWS_BUCKET_PRIVATE=
+CLOUDFRONT_DOMAIN=
+
+# Recaptcha
+NEXT_PUBLIC_RECAPTCHA_SITE_KEY=
+RECAPTCHA_SECRET_KEY=
+
+# Email
+SENDGRID_API_KEY=
+SENDGRID_SENDER=
+CONTACT_EMAIL=
+UNSUBSCRIBE_SECRET=
+
+# Stripe
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+STRIPE_SECRET_KEY=
+
+# Admin settings
+# Replace with your Clerk user ID after signing in
+ADMIN_USER_IDS=
+
+# Test User Credentials
+TEST_USER_EMAIL=
+TEST_USER_PASSWORD=
+TEST_USER_ID=

@@ -1,0 +1,134 @@
+{
+  "id": "the-midnight-summons",
+  "title": "The Midnight Summons",
+  "author": "D20Adventures",
+  "version": "1716220800",
+  "teaser": "A mysterious summons draws a reclusive ranger into the wilds of the Valkarr forest.",
+  "overview": "Thalbern, a ranger of the Valkarr woods, is called upon by his old friend, the druid Wollandora, to meet him at the Old Standing Stones at midnight. The balance of the forest could depend on it.",
+  "party": [1, 1],
+  "tags": ["fantasy", "solo", "investigation", "forest", "mystery"],
+  "image": "images/settings/realm-of-myr/the-midnight-summons/the-midnight-summons.png",
+  "start": "approach",
+  "sections": [
+    {
+      "title": "Journey to the Standing Stones",
+      "summary": "Thalbern receives an urgent message and ventures to meet the druid Wollandora, facing an unexpected danger along the way.",
+      "scenes": [
+        {
+          "title": "Path Through The Dark Forest",
+          "summary": "Thalbern answers Wollandora's call, navigating the dark forest towards the ancient meeting place.",
+          "encounters": [
+            {
+              "id": "approach",
+              "title": "Broken Silence",
+              "intro": "Thalbern, a solitary ranger of the Valkarr woods, has always trusted the silence of the wilds more than the promises of men. Orphaned by border raiders and raised by the elves of the Valkrarr Forest, he has spent years living on the edge of Kordavos, guiding travelers, hunting for his own survival, and keeping his distance from the tangled politics of the city. But tonight, a message delivered by a red squirrel bearing the unmistakable script of Wollandora, a trusted elven friend and druid, has drawn him from his hidden home. The note was simple and urgent: Meet me at the Old Standing Stones at midnight. The balance of the forest could depend on it.\n\nNow, as midnight approaches, Thalbern moves quietly through the dense undergrowth, guided by memory and instinct. It's dark with almost no moonlight.\n\nSuddenly, the hush of the night is broken by a sharp crack somewhere off in the darkness.",
+              "instructions": "A perception check is appropriate if Thalbernl investigates. If successful, he will determine it is a large creature. If very successful, he will determine it is an Owlbear. If combat ensues and Thalbern is below 25% health, Wollandora will intervene. If Thalbern avoids or defeats the Owlbear, or if Wollandora saves him, he proceeds to the Old Standing Stones.",
+              "image": "images/settings/realm-of-myr/the-midnight-summons/broken-silence-2.png",
+              "transitions": [
+                {
+                  "condition": "Thalbern decides to investigate the sound and moves towards it, or the Owlbear finds him.",
+                  "encounter": "owlbear-confrontation"
+                },
+                {
+                  "condition": "Thalbern successfully uses stealth and proceeds cautiously towards the Standing Stones.",
+                  "encounter": "meeting-at-stones"
+                }
+              ]
+            },
+            {
+              "id": "owlbear-confrontation",
+              "title": "Owlbear in the Dark",
+              "intro": "A hulking Owlbear, its eyes glinting menacingly in the dim light, crashes out from the undergrowth! It lets out a guttural screech, clearly agitated and territorial.",
+              "instructions": "The Owlbear will attack. If Thalbern attempts an animal handling check (high difficulty) and succeeds, he can move past the Owlbear. If Thalbern's health drops to a critical level, Wollandora appears and drives off the Owlbear, transitioning to 'wollandora-intervention'. If Thalbern defeats the Owlbear, describe his victory and transition to 'meeting-at-stones'.",
+              "image": "creatures/owlbear-attack.jpg",
+              "npc": [
+                {
+                  "id": "owlbear",
+                  "behavior": "Aggressively attacks any perceived threat. Will fight until heavily wounded or driven off."
+                }
+              ],
+              "transitions": [
+                {
+                  "condition": "Thalbern defeats the Owlbear or manages to evade it.",
+                  "encounter": "meeting-at-stones"
+                },
+                {
+                  "condition": "Thalbern is reduced to critical health by the Owlbear.",
+                  "encounter": "wollandora-intervention"
+                }
+              ]
+            },
+            {
+              "id": "wollandora-intervention",
+              "title": "Timely Rescue",
+              "intro": "Just as the Owlbear is about to land a seemingly final blow, a shaft of silvery moonlight pierces the canopy. A calm, authoritative voice calls out, 'That's enough, beast of the wood!' Wollandora steps from the shadows, her staff glowing faintly. With a gesture and a word of power, she unleashes a wave of natural energy that stuns and drives the startled Owlbear back into the depths of the forest.",
+              "instructions": "Wollandora quickly checks on Thalbern's condition. She'll offer a brief comment ('You look like you've seen better nights, ranger. Come, the stones are not far, and our business is urgent.'). She then leads him to the Standing Stones.",
+              "image": "scenes/wollandora-intervention.jpg",
+              "npc": [
+                {
+                  "id": "wollandora",
+                  "behavior": "Protective of Thalbern, focused on getting to the meeting."
+                }
+              ],
+              "transitions": [
+                {
+                  "condition": "Thalbern is ready to go to the Standing Stones with Wollandora.",
+                  "encounter": "meeting-at-stones"
+                }
+              ]
+            },
+            {
+              "id": "kordavos-departure-prep",
+              "title": "Preparing for the City",
+              "intro": "The following morning, bathed in the soft light of the forest, Thalbern is back at his secluded home. Wollandora's words from the previous night echo in his mind – the stolen relics, the suspicious shipment, the urgent need to investigate in Kordavos. The city's tangled ways are far from the quiet paths he knows.\n\nThalbern carefully packed a change of simple, unassuming clothes, ensuring his hunting bow and a quiver of arrows were discreetly bundled, alongside a smaller hand axe and knife. As the sun climbed higher, he left the quiet security of his forest home, turning his steps towards the distant, bustling spires of Kordavos, a place where his survival instincts would be tested in a different kind of wilderness.",
+              "instructions": "Prompt Thalbern to consider how he will prepare for his journey to Kordavos. This might involve deciding what gear to pack (emphasizing items useful for a city investigation rather than deep wilderness), considering his appearance to be less conspicuous, or thinking about how he will enter the city. There are no immediate obstacles or checks needed here, it's a narrative transition and planning phase.",
+              "image": "scenes/bernthals_home.jpg",
+              "notes": "This encounter serves as a narrative bridge and allows the player to make small, character-flavoring decisions before the next main section of the adventure."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "npcs": {
+    "wollandora": {
+      "id": "wollandora",
+      "type": "npc",
+      "name": "Wollandora",
+      "archetype": "Druid",
+      "race": "Elf",
+      "gender": "Female",
+      "appearance": "An elder elf with silver hair braided with leaves and twigs. Her eyes are a deep forest green, wise and kind, but currently troubled. She carries a staff of gnarled oak.",
+      "personality": "Wise, patient, deeply connected to nature, fiercely protective of the forest balance.",
+      "background": "An ancient guardian of the Valkarr woods, a friend to Thalbern, and a powerful druid.",
+      "motivation": "Recover the stolen relics and restore balance to the forest. Protect the secrets of her people.",
+      "behavior": "Generally calm and thoughtful. Will provide information and guidance. Can be firm when necessary.",
+      "image": "/images/settings/realm-of-myr/the-midnight-summons/npcs/wollandora.png",
+      "health": 100,
+      "attributes": {
+        "strength": 10,
+        "dexterity": 12,
+        "constitution": 12,
+        "intelligence": 16,
+        "wisdom": 18,
+        "charisma": 14
+      },
+      "status": ""
+    },
+    "owlbear": {
+      "id": "owlbear",
+      "type": "npc",
+      "name": "Owlbear",
+      "archetype": "Monster",
+      "race": "Owlbear",
+      "appearance": "A hulking monstrosity with the body of a bear and the head of an owl. Thick, matted fur, razor-sharp talons, and a powerful beak. Its eyes glow with a feral intensity.",
+      "personality": "Territorial, aggressive, primal.",
+      "motivation": "Defend its territory, hunt for food.",
+      "behavior": "Attacks perceived threats on sight. Fights with ferocity. Can be driven off by overwhelming force or a display of superior power.",
+      "image": "/images/settings/realm-of-myr/the-midnight-summons/npcs/owlbear-2.png",
+      "health": 100,
+      "attributes": {},
+      "status": ""
+    }
+  }
+}
