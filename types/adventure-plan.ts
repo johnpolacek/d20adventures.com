@@ -32,11 +32,12 @@ export interface AdventureEncounter {
   id: string;
   title: string;
   intro: string;
-  instructions: string;
-  image: string;
+  instructions?: string;
+  image?: string;
+  notes?: string;
   transitions?: EncounterTransition[];
   npc?: CharacterRef[];
-  notes?: string;
+  skipInitialNpcTurns?: boolean;
 }
 
 export interface EncounterTransition {

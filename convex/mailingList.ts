@@ -1,13 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { Doc, Id } from "./_generated/dataModel";
-import {
-  ConvexResponse,
-  getCurrentTimestamp,
-  getBaseFields,
-  handleError,
-  handleSuccess,
-} from "./utils";
+import { Doc } from "./_generated/dataModel";
 
 // Types
 export type MailingListSubscription = Doc<"mailing_list_subscriptions">;
@@ -48,10 +41,10 @@ export const subscribe = mutation({
     userId: v.string(),
     email: v.string(),
     name: v.optional(v.string()),
-    preferences: v.object({
+    preferences: v.optional(v.object({
       marketing: v.boolean(),
       updates: v.boolean(),
-    }),
+    })),
   },
   handler: async (ctx, args) => {
     try {
@@ -62,7 +55,22 @@ export const subscribe = mutation({
         .first();
 
       if (existing) {
-        throw new Error("Email already subscribed");
+        // If already subscribed, perhaps update their info or just return existing?
+        // For a waitlist, re-subscribing might just confirm their interest.
+        // Or, if they were unsubscribed, re-subscribe them.
+        // For now, throwing error if active. If unsubscribed, allow re-subscribe.
+        if (!existing.unsubscribedAt) {
+          throw new Error("Email already subscribed");
+        }
+        // If they are re-subscribing after being unsubscribed:
+        const now = Date.now();
+        return await ctx.db.patch(existing._id, {
+            name: args.name,
+            preferences: args.preferences ?? { marketing: false, updates: false },
+            unsubscribedAt: null, // Re-subscribe
+            updatedAt: now,
+            // Note: subscribedAt and createdAt remain from original subscription
+        });
       }
 
       const now = Date.now();
@@ -70,7 +78,7 @@ export const subscribe = mutation({
         userId: args.userId,
         email: args.email,
         name: args.name,
-        preferences: args.preferences,
+        preferences: args.preferences ?? { marketing: false, updates: false }, // Default if not provided
         subscribedAt: now,
         unsubscribedAt: null,
         createdAt: now,
@@ -118,33 +126,5 @@ export const deleteSubscription = mutation({
   args: { id: v.id("mailing_list_subscriptions") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
-  },
-});
-
-export const updatePreferences = mutation({
-  args: {
-    userId: v.string(),
-    preferences: v.object({
-      marketing: v.boolean(),
-      updates: v.boolean(),
-    }),
-  },
-  handler: async (ctx, args) => {
-    // Find the active subscription for this user
-    const subscription = await ctx.db
-      .query("mailing_list_subscriptions")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
-      .first();
-
-    if (!subscription || subscription.unsubscribedAt !== null) {
-      throw new Error("Active subscription not found");
-    }
-
-    await ctx.db.patch(subscription._id, {
-      preferences: args.preferences,
-      updatedAt: Date.now(),
-    });
-
-    return true;
   },
 }); 

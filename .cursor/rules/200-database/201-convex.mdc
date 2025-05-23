@@ -1,25 +1,63 @@
 ---
 description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
-# Convex Implementation Guide
+# Convex Implementation
+
+## 🚨 Convex Function Reference & Usage Rules (MUST FOLLOW)
+
+- **All Convex queries, mutations, and actions must be called from server actions or API routes, never directly from client components.**
+- **Never use `useQuery`, `useMutation`, or `useAction` from `convex/react` in client components for protected or user-specific data.**
+- **Always wrap Convex calls in a server action and call that server action from your client.**
+- **Always import `api` and `internal` from `./_generated/api` for function references in queries and mutations.**
+- **In actions, ALWAYS use string names for `ctx.runMutation` and `ctx.runQuery`.**
+- **NEVER use function references in actions for `ctx.runMutation`/`ctx.runQuery`.**
+- **Violating these rules will cause runtime or linter errors.**
+- **These rules are enforced in this codebase and must be followed for all Convex code.**
+
+### ❌ Incorrect: Client-side Convex Calls
+```tsx
+// BAD: Do not do this in a client component
+import { useQuery, useMutation } from "convex/react"
+import { api } from "@/convex/_generated/api"
+
+const data = useQuery(api.adventure.getCurrentAdventure, { adventureId })
+const submit = useMutation(api.adventure.submitReply)
+```
+
+### ✅ Correct: Use Server Actions
+```ts
+// app/_actions/adventure.ts
+'use server'
+import { api } from "@/convex/_generated/api"
+import { convex } from "@/lib/convex/server"
+import { auth } from "@clerk/nextjs/server"
+import type { Id } from "@/convex/_generated/dataModel"
+
+export async function fetchCurrentTurn(adventureId: Id<"adventures">) {
+  const { userId } = await auth()
+  if (!userId) throw new Error("Unauthorized")
+  return convex.query(api.adventure.getCurrentAdventure, { adventureId })
+}
+```
+
+```tsx
+// In your client component
+import { fetchCurrentTurn } from "@/app/_actions/adventure"
+
+export default function MyComponent() {
+  // Call fetchCurrentTurn via useEffect or event handler
+}
+```
+
+---
+
+## Convex docs
+
+Always refer to the Convex docs at https://docs.convex.dev/llms.txt
 
 ## Setup & Configuration
-
-### Convex Project Initialization
-
-1. **Install Convex CLI**
-   ```bash
-   pnpm add convex
-   pnpm dlx convex dev
-   ```
-2. **Initialize Convex**
-   ```bash
-   pnpm dlx convex init
-   ```
-3. **Configure Convex URL**
-   - Add `NEXT_PUBLIC_CONVEX_URL` to your `.env` file.
 
 ### Directory Structure
 
@@ -33,55 +71,62 @@ alwaysApply: false
 
 Define your schema and backend logic in `/convex/schema.ts` and `/convex/[module].ts`:
 
-```typescript
-// convex/schema.ts
-import { defineSchema, v } from "convex/schema";
+---
 
-export default defineSchema({
-  visits: {
-    path: v.string(),
-    userId: v.optional(v.string()),
-    metadata: v.any(),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-    indexes: [
-      { fields: ["userId", "_creationTime"] },
-      { fields: ["path", "_creationTime"] },
-      { fields: ["createdAt", "_creationTime"] },
-    ],
-  },
-});
-```
+## ⚠️ Important: Use String Names in Actions
 
-```typescript
-// convex/visits.ts
-import { mutation, query } from "convex/server";
-import { v } from "convex/values";
+> **Warning:**
+> In Convex **actions**, you must use string names for `ctx.runMutation` and `ctx.runQuery` calls, not function references. Using a function reference (e.g. an imported mutation or internal function) will cause a runtime error.
+>
+> - **Do this:**
+>   ```ts
+>   await ctx.runMutation("adventure:createTurn", { ... });
+>   await ctx.runQuery("adventure:getTurnById", { ... });
+>   ```
+> - **Not this:**
+>   ```ts
+>   import { createTurn } from "./adventure";
+>   await ctx.runMutation(createTurn, { ... }); // ❌
+>   ```
+>
+> See: [Convex Docs: Action Names](mdc:https:/docs.convex.dev/functions/actions#action-names)
 
-export const recordVisit = mutation({
-  args: {
-    path: v.string(),
-    userId: v.optional(v.string()),
-    metadata: v.any(),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  },
-  handler: async (ctx, args) => {
-    return await ctx.db.insert("visits", args);
-  },
-});
+---
 
-export const getVisitsByUser = query({
-  args: { userId: v.string(), limit: v.optional(v.number()) },
-  handler: async (ctx, args) => {
-    return await ctx.db
-      .query("visits")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
-      .order("desc")
-      .take(args.limit ?? 10);
-  },
-});
-```
+## ⚠️ Convex Argument Validation
+
+> **Warning:**
+> Convex strictly validates arguments to mutations and queries. **You must only pass the fields allowed by the validator.**
+> Passing extra fields (even timestamps like `createdAt` or `updatedAt`) will cause an `ArgumentValidationError`.
+>
+> - **Do this:**
+>   ```ts
+>   // Only pass allowed fields
+>   await ctx.runMutation("adventure:createTurn", {
+>     adventureId,
+>     encounterId,
+>     narrative,
+>     characters,
+>     order,
+>   });
+>   ```
+> - **Not this:**
+>   ```ts
+>   // This will throw ArgumentValidationError if the validator doesn't allow these fields
+>   await ctx.runMutation("adventure:createTurn", {
+>     adventureId,
+>     encounterId,
+>     narrative,
+>     characters,
+>     order,
+>     createdAt, // ❌
+>     updatedAt, // ❌
+>   });
+>   ```
+>
+> See: [Convex Docs: Argument Validators](mdc:https:/docs.convex.dev/functions/validation)
+
+---
 
 ### Service Layer Pattern
 
@@ -120,20 +165,63 @@ export async function createVisit(input) {
 }
 ```
 
-### Client Component Pattern
+## Server-Driven Game Logic Pattern
 
-Import server actions as a module in client components:
+- **All backend logic for turn advancement, dice rolls, and adventure progression is handled in Convex actions.**
+- **Actions that require external data (like an adventure plan from S3, or generated text from an LLM) receive that data as arguments.**
+- **No Convex function (action, mutation, or query) should call another Convex function via `ctx.runAction` or `ctx.runMutation` with a function reference.**
+- **Shared logic should be placed in plain JS/TS helper functions and called directly from actions/mutations.**
 
-```typescript
-// components/some-component.tsx
-"use client"
-import * as actions from "@/app/_actions/visits";
+> **Warning:**
+> Convex does **not** allow calling one Convex function (action, mutation, or query) from another Convex function. If you need to share logic, extract it to a plain helper function and call that helper from each Convex function as needed.
 
-export function SomeComponent() {
-  // ...
-  await actions.createVisit({ path: "/", metadata: {} });
-}
+---
+
+### Example: Turn Advancement
+
+**Before (not allowed):**
+```ts
+export const advanceTurnAction = action({
+  handler: async (ctx, args) => {
+    // ❌ Not allowed: calling another Convex function
+    await ctx.runMutation(api.turns.doAdvanceTurn, args);
+  }
+});
 ```
+
+**After (allowed):**
+```ts
+// Shared helper (not a Convex function)
+async function doAdvanceTurnHelper(ctx, args) {
+  // ...all logic for advancing a turn...
+}
+
+export const advanceTurnAction = action({
+  args: { turnId: v.id("turns"), plan: v.any() },
+  handler: async (ctx, args) => {
+    return await doAdvanceTurnHelper(ctx, args);
+  },
+});
+
+// If you have a mutation, call the helper too:
+// export const doAdvanceTurn = mutation({
+//   handler: async (ctx, args) => doAdvanceTurnHelper(ctx, args)
+// });
+```
+
+---
+
+## Frontend/Server Usage
+
+- **Load any required external data (e.g., adventure plan from S3) in your Next.js server action.**
+- **Call the Convex action with all required arguments.**
+- **Never call Convex actions that require secrets or env vars from the client.**
+
+### Why?
+
+- This pattern avoids Convex's restriction on calling function references.
+- It keeps all business logic in one place, and all external data fetching in your Next.js server.
+- It ensures maximum security and reliability for backend-driven game logic.
 
 ## Best Practices
 
@@ -153,7 +241,38 @@ export function SomeComponent() {
    - Use proper types for documents and collections
    - Type server action parameters and returns
 
-## Migration Notes
+# No Fetch to Internal API in Server Actions
 
-- All Firebase-specific code, config, and patterns have been replaced by Convex equivalents.
+**Never use `fetch` to call your own Next.js API routes (e.g., `/api/ai/generate/text`) from within server actions or backend code.**
+
+### Why?
+
+- Server actions and backend code can directly import and call shared service helpers or libraries (e.g., `lib/ai/generateObject`).
+- Using `fetch` to call your own API is inefficient, error-prone, and can break in serverless or production environments.
+- Always prefer direct function calls or shared helpers for internal logic.
+
+### Correct Pattern
+
+- Import and use shared helpers (e.g., `generateObject`, `generateText`) directly in your server action or backend code.
+
+```ts
+// GOOD: Use shared helper directly
+import { generateObject } from "@/lib/ai";
+const result = await generateObject({ prompt, schema });
+```
+
+### Incorrect Pattern
+
+```ts
+// BAD: Do not do this in a server action or backend code
+await fetch("/api/ai/generate/object", { ... });
+```
+
+### Applies To
+
+- All code in `/app/_actions/`, `/app/actions/`, `/lib/services/`, and backend logic.
+- Does NOT apply to client-side code (where fetch to API routes is expected).
+
+## Docs
+
 - See [Convex Docs](mdc:https:/docs.convex.dev) for more details and advanced usage.

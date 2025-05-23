@@ -12,6 +12,7 @@ interface ImageHeaderProps {
 }
 
 export default function ImageHeader({ imageUrl, title, subtitle, imageAlt }: ImageHeaderProps) {
+  console.log("ImageHeader imageUrl:", imageUrl)
   return (
     <>
       <div className="absolute top-12 sm:top-12 left-0 right-0 w-full aspect-video min-h-[480px]">

@@ -1,5 +1,5 @@
 import { GetObjectCommand,PutObjectCommand } from "@aws-sdk/client-s3"
-import { s3Client, isAwsConfigured, getAssetUrl } from "@/lib/aws"
+import { s3Client, isAwsConfigured, getAssetUrl } from "./aws"
 import { Readable } from "stream"
 
 /**
@@ -81,11 +81,10 @@ export const transferImageToS3 = async (imageUrl: string, key: string): Promise<
 
 // Helper function to convert a Readable stream to a string
 export const streamToString = (stream: Readable): Promise<string> => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const chunks: any[] = []
+  const chunks: unknown[] = []
   return new Promise((resolve, reject) => {
     stream.on("data", (chunk) => chunks.push(chunk))
-    stream.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")))
+    stream.on("end", () => resolve(Buffer.concat(chunks as Buffer[]).toString("utf8")))
     stream.on("error", reject)
   })
 }
@@ -95,8 +94,9 @@ export const streamToString = (stream: Readable): Promise<string> => {
  * @param key The S3 object key (path + filename)
  * @returns The parsed JSON object
  */
-export async function readJsonFromS3(key: string): Promise<any> {
-  const bucket = process.env.AWS_BUCKET_DATA;
+export async function readJsonFromS3(key: string): Promise<unknown> {
+  console.log(`[readJsonFromS3] Attempting to read key: ${key}`);
+  const bucket = process.env.bucketData || process.env.AWS_BUCKET_DATA;
   if (!bucket) {
     throw new Error("AWS_BUCKET_DATA is not set");
   }

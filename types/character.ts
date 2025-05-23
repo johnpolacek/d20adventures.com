@@ -11,7 +11,7 @@ export interface BaseCharacter {
   background?: string;
   motivation?: string;
   behavior?: string;
-  health: number; // 0-100, percentage
+  healthPercent: number; // 0-100, percentage
   equipment?: EquipmentItem[];
   skills?: string[];
   status?: string;

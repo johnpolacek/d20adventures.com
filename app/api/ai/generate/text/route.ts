@@ -1,26 +1,28 @@
-import { generateText } from "ai"
-import { google } from '@ai-sdk/google';
+import { generateText } from "@/lib/ai/"
 import { NextRequest } from "next/server"
 import { requireAuthMiddleware } from "../../_auth"
+
+type Message = { content: string }
 
 export async function POST(request: NextRequest) {
   // Check authentication
   const authError = await requireAuthMiddleware()
   if (authError) return authError
 
-  const { input, messages, system } = await request.json()
+  const body = await request.json()
+
+  const { input, messages, system } = body
 
   let prompt = input
   if (messages) {
     // If you want to support chat-style messages, concatenate them
-    prompt = messages.map((m: any) => m.content).join("\n")
+    prompt = (messages as Message[]).map((m) => m.content).join("\n")
   }
   if (system) {
     prompt = `${system}\n${prompt}`
   }
 
   const result = await generateText({
-    model: google("gemini-2.0-flash-lite"),
     prompt,
   })
 

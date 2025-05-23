@@ -1,10 +1,6 @@
 import { v } from "convex/values"
 import { mutation, query } from "./_generated/server"
 
-// Define allowed table names for type safety
-const ALLOWED_TABLES = ["visits", "mailing_list_subscriptions"] as const
-type TableName = typeof ALLOWED_TABLES[number]
-
 function isTestOrDevEnv() {
   return process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development";
 }
@@ -14,7 +10,12 @@ function isTestOrDevEnv() {
  * This mutation should only be available in test environments
  */
 export const deleteAll = mutation({
-  args: { tableName: v.union(v.literal("visits"), v.literal("mailing_list_subscriptions")) },
+  args: { tableName: v.union(
+    v.literal("visits"),
+    v.literal("mailing_list_subscriptions"),
+    v.literal("adventures"),
+    v.literal("turns")
+  ) },
   handler: async (ctx, args) => {
     if (!isTestOrDevEnv()) {
       throw new Error("This operation is only allowed in test or development environments");

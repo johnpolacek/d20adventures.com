@@ -12,6 +12,7 @@ export default function CharacterDiceRoll({
   className,
   inputKey,
   character,
+  modifier,
 }: {
   rollType: string
   difficulty: number
@@ -20,6 +21,7 @@ export default function CharacterDiceRoll({
   className?: string
   inputKey?: string | number
   character: TurnCharacter
+  modifier?: number
 }) {
   return (
     <div className={cn("relative font-display font-bold border border-primary-700 rounded-xl overflow-hidden", className)}>
@@ -27,10 +29,15 @@ export default function CharacterDiceRoll({
         <Image className="object-cover" src={IMAGE_HOST + character.image} alt={character.name} fill={true} />
         <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-black to-transparent"></div>
       </div>
-      <div className="px-4 py-6 flex flex-col gap-4 items-center justify-start w-1/2 relative left-1/2">
+      <div className="px-4 py-6 flex flex-col gap-4 text-center items-center justify-start w-1/2 relative left-1/2">
         <h4 className="text-sm">Dice Roll {rollResult === null ? "Needed" : ""}</h4>
         <h3 className="text-2xl">{rollType}</h3>
-        <div className="font-mono text-xs text-primary-300 -mt-4 uppercase tracking-wider">(Target {difficulty})</div>
+        <div className="font-mono text-xs text-primary-300 -mt-4 uppercase tracking-wider">
+          Target {difficulty}
+          {typeof modifier === "number" && modifier !== 0 && (
+            <span className={modifier > 0 ? "text-green-400" : "text-red-400"}>{modifier > 0 ? `  +${modifier} bonus` : `  ${modifier} penalty`}</span>
+          )}
+        </div>
         <DiceRoll key={inputKey} className="my-2" iconSize={48} id="d20-roll" {...(rollResult === null ? { onRoll } : {})} />
       </div>
     </div>

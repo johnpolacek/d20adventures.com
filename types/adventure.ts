@@ -2,6 +2,7 @@ import type { PC, NPC } from "./character";
 
 export interface Adventure {
   id: string;
+  title: string;
   adventurePlanId: string;
   settingId: string;
   party: PC[];
@@ -16,9 +17,12 @@ export type TurnCharacter =
   | (NPC & { type: "npc"; initiative: number; hasReplied?: boolean; isComplete?: boolean });
 
 export interface Turn {
+  id: string;
   encounterId: string;
   title?: string;
   subtitle?: string;
   narrative: string;
   characters: TurnCharacter[];
+  adventureId: string;
+  isFinalEncounter?: boolean;
 }

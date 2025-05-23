@@ -1,5 +1,4 @@
-import { google } from "@ai-sdk/google"
-import { streamObject } from "ai"
+import { streamObject } from "@/lib/ai/"
 import { z } from "zod"
 import { requireAuthMiddleware } from "../../_auth"
 
@@ -106,7 +105,6 @@ export async function POST(req: Request) {
     const schema = createZodSchema(schemaShape)
     
     const result = streamObject({
-      model: google("gemini-2.0-flash-lite"),
       schema,
       prompt,
     })
