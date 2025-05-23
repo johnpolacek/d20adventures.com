@@ -13,11 +13,12 @@ export const thalbern: PCTemplate = {
   background: "Orphaned by border raiders, raised by elves in the Valkarr woods. Lives on the edge of Kordavos, guiding travelers and hunting for survival.",
   motivation: "To protect the Valkarr woods and its people from outside threats, and to find a place where he truly belongs.",
   behavior: "Prefers silence and observation, avoids city politics, acts decisively when the wilds are threatened.",
-  health: 92,
+  healthPercent: 100,
   equipment: [
     { name: "Longbow", description: "A finely crafted elven bow, silent and deadly." },
-    { name: "Short Sword", description: "A practical blade for close encounters." },
-    { name: "Cloak of the Wilds", description: "Blends the wearer into the forest." }
+    { name: "Quiver", description: "A quiver filled with arrows." },
+    { name: "Sword", description: "A practical blade for close encounters." },
+    { name: "Dagger", description: "A small blade for quick strikes." }
   ],
   skills: ["Stealth", "Tracking", "Archery", "Survival", "Nature Lore"],
   attributes: {

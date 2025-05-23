@@ -4,10 +4,8 @@ import { Rethink_Sans, Cinzel_Decorative, Syne_Mono } from "next/font/google"
 import { ThemeProvider } from "@/components/layout/theme-provider"
 import { cn } from "@/lib/utils"
 import { Toaster } from "sonner"
-import { auth } from "@clerk/nextjs/server"
 import { headers } from "next/headers"
 import { trackVisit } from "@/app/_actions/track-visit"
-import { RouteTracker } from "@/components/analytics/route-tracker"
 import { siteConfig } from "@/lib/config"
 import "./globals.css"
 import { Providers } from "./providers"
@@ -65,7 +63,7 @@ export default async function RootLayout({
 }>) {
   // Track the visit
   const headersList = await headers()
-  let path = headersList.get("x-pathname") || "/"
+  const path = headersList.get("x-pathname") || "/"
   await trackVisit(path)
 
   const currentYear = new Date().getFullYear()
@@ -75,7 +73,6 @@ export default async function RootLayout({
       <body className={cn("min-h-screen bg-black text-white font-serif antialiased")}>
         <Providers>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-            <RouteTracker />
             <div className="relative flex min-h-screen flex-col">
               <Header path={path} />
               <main className="flex-1">{children}</main>

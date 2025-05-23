@@ -5,20 +5,20 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ConfigCard } from "@/components/admin/config-card"
 
-async function handleUnsubscribe() {
+async function handleLeaveWaitlist() {
   "use server"
   const result = await getSubscription()
   const subscription = result.success ? result.data : null
   if (!subscription?.email) return
-  await unsubscribe(subscription.email)
+  await unsubscribe(subscription.email) // Internally, unsubscribe still correctly removes them
 }
 
-export default async function MailingListPage() {
+export default async function WaitlistPage() {
   // Check if required environment variables are configured
   const missingEnvVars = [
     {
       key: "SENDGRID_API_KEY",
-      description: "Your SendGrid API key",
+      description: "Your SendGrid API key (for waitlist notifications)",
       isMissing: !process.env.SENDGRID_API_KEY,
     },
   ].filter((item) => item.isMissing)
@@ -26,7 +26,7 @@ export default async function MailingListPage() {
   if (missingEnvVars.length > 0) {
     return (
       <div className="container max-w-2xl py-8 md:py-12">
-        <ConfigCard title="Mailing List Setup Required" description="The mailing list feature needs configuration before it can be used." configItems={missingEnvVars} />
+        <ConfigCard title="Waitlist Setup Required" description="The waitlist feature needs configuration before it can be used for notifications." configItems={missingEnvVars} />
       </div>
     )
   }
@@ -42,17 +42,17 @@ export default async function MailingListPage() {
             <>
               {subscription.unsubscribedAt ? (
                 <>
-                  <span className="text-primary">Unsubscribed</span> <span className="text-muted-foreground">from our mailing list.</span>
+                  You&apos;ve left the <span className="text-primary">Waitlist.</span>
                 </>
               ) : (
                 <>
-                  <span className="text-primary">Subscribed</span> <span className="text-muted-foreground">to our mailing list.</span>
+                  You&apos;re on the <span className="text-primary">Waitlist!</span>
                 </>
               )}
             </>
           ) : (
             <>
-              Join the <span className="text-primary">Mailing List</span>
+              Join the <span className="text-primary">Waitlist</span>
             </>
           )}
         </Heading>
@@ -60,20 +60,20 @@ export default async function MailingListPage() {
         {subscription ? (
           <Card className="w-full max-w-[500px] p-4 md:p-8 md:mt-4">
             <CardHeader className="md:pt-4">
-              <CardTitle>Subscription Status</CardTitle>
+              <CardTitle>Waitlist Status</CardTitle>
             </CardHeader>
             <CardContent className="md:pb-4">
               {subscription.unsubscribedAt ? (
                 <div className="space-y-4">
-                  <p>You are currently unsubscribed. Your previous email was {subscription.email}.</p>
+                  <p>You previously joined the waitlist with {subscription.email}, but have since left. You can rejoin below.</p>
                   <MailingListForm initialEmail={subscription.email} />
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <p>You are currently subscribed with {subscription.email}.</p>
-                  <form action={handleUnsubscribe}>
+                  <p>You&apos;re on the waitlist with {subscription.email}. We&apos;ll notify you when access is available!</p>
+                  <form action={handleLeaveWaitlist}>
                     <Button variant="destructive" type="submit">
-                      Unsubscribe
+                      Leave Waitlist
                     </Button>
                   </form>
                 </div>

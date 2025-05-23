@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import Image from "next/image"
 import Parchment from "@/components/graphics/background/Parchment"
 import { textShadow, textShadowSpread } from "../typography/styles"
@@ -12,10 +12,18 @@ interface ImageHeaderProps {
 }
 
 export default function ImageHeader({ imageUrl, title, subtitle, imageAlt }: ImageHeaderProps) {
+  const [imageLoaded, setImageLoaded] = useState(false)
+
   return (
     <>
       <div className="absolute top-12 sm:top-12 left-0 right-0 w-full aspect-video min-h-[480px]">
-        <Image className="object-cover rounded-lg shadow-lg" fill src={imageUrl} alt={imageAlt || title || ""} />
+        <Image
+          className={`object-cover rounded-lg shadow-lg transition-opacity duration-1000 ease-in-out ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+          fill
+          src={imageUrl}
+          alt={imageAlt || title || ""}
+          onLoad={() => setImageLoaded(true)}
+        />
         {title && (
           <h2 className="text-2xl sm:text-4xl md:text-5xl font-display text-center w-full absolute bottom-44 sm:bottom-54 px-4" style={textShadowSpread}>
             {title}
@@ -29,11 +37,11 @@ export default function ImageHeader({ imageUrl, title, subtitle, imageAlt }: Ima
             </h3>
           )}
         </div>
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent h-1/4 rounded-b-lg" />
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent h-1/3 rounded-b-lg" />
         <div className="absolute bottom-6 sm:bottom-12 left-0 right-0 w-full h-32 bg-gradient-to-b from-black/50 to-transparent"></div>
         <div className="absolute bottom-36 sm:bottom-42 left-0 right-0 w-full h-[1px] bg-blend-lighten -mb-px overflow-hidden opacity-50 bg-[url('/images/app/art/texture-line.png')]" />
       </div>
-      <div className="w-full aspect-video -mb-12 min-h-[480px]" />
+      <div className="w-full aspect-video -mb-16 -mb-12 min-h-[480px]" />
     </>
   )
 }

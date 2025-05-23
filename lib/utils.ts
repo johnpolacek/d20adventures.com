@@ -36,3 +36,46 @@ export const getInitials = (name: string) => {
     .toUpperCase()
     .substring(0, 2)
 }
+
+export function hasBooleanProp(obj: unknown, prop: string): obj is { [key: string]: boolean } {
+  return !!obj && typeof obj === "object" && prop in obj && typeof (obj as { [key: string]: unknown })[prop] === "boolean"
+}
+export function hasNumberProp(obj: unknown, prop: string): obj is { [key: string]: number } {
+  return !!obj && typeof obj === "object" && prop in obj && typeof (obj as { [key: string]: unknown })[prop] === "number"
+}
+export function isRollRequired(obj: unknown): obj is { rollType: string; difficulty?: number; modifier?: number } {
+  return !!obj && typeof obj === "object" && "rollType" in obj
+}
+
+/**
+ * Map a Convex turn document to the frontend Turn type
+ * @param raw Convex turn document
+ * @returns Turn or null
+ */
+export function mapConvexTurnToTurn(raw: unknown): import("@/types/adventure").Turn | null {
+  if (!raw || typeof raw !== "object" || !("encounterId" in raw) || !("title" in raw)) return null;
+  const t = raw as { _id: string; encounterId: string; title: string; narrative: string; characters: import("@/types/adventure").TurnCharacter[]; adventureId: string; isFinalEncounter?: boolean };
+  return {
+    id: t._id,
+    encounterId: t.encounterId,
+    title: t.title,
+    narrative: t.narrative,
+    characters: t.characters,
+    adventureId: t.adventureId,
+    isFinalEncounter: t.isFinalEncounter,
+  };
+}
+
+export function rollD20(): number {
+  return Math.floor(Math.random() * 20) + 1;
+}
+
+export function formatNumberToK(num: number): string {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1).replace(/\.0$/, "") + "m";
+  }
+  if (num >= 1000) {
+    return (num / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+  }
+  return num.toString();
+}

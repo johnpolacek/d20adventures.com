@@ -2,11 +2,10 @@
 import React, { useState, useRef } from "react"
 import { Button } from "./button"
 import Image from "next/image"
-import { cn } from "@/lib/utils"
+import { cn, rollD20 } from "@/lib/utils"
 import { textShadow } from "../typography/styles"
 import DiceRollResult from "@/components/adventure/dice-roll-result"
 
-const DICE_SIDES = 20
 const ROLL_ANIMATION_DURATION = 1200 // ms
 const ROLL_ANIMATION_INTERVAL = 60 // ms
 
@@ -28,19 +27,17 @@ export default function DiceRoll({
   const [display, setDisplay] = useState<number | null>(null)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
-  const rollDice = () => Math.floor(Math.random() * DICE_SIDES) + 1
-
   const handleRoll = () => {
     setRolling(true)
     setResult(null)
     let elapsed = 0
     intervalRef.current = setInterval(() => {
-      const animRoll = rollDice()
+      const animRoll = rollD20()
       setDisplay(animRoll)
       elapsed += ROLL_ANIMATION_INTERVAL
       if (elapsed >= ROLL_ANIMATION_DURATION) {
         if (intervalRef.current) clearInterval(intervalRef.current)
-        const final = rollDice()
+        const final = rollD20()
         setDisplay(final)
         setResult(final)
         setRolling(false)

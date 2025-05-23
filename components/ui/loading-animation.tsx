@@ -24,16 +24,16 @@ const LoadingAnimation = ({ className, children, containerClassName }: { classNa
   }, [])
 
   return (
-    <div ref={containerRef} className={cn("flex flex-col items-center justify-center gap-2 py-16", containerClassName)}>
-      <AnimateIn from="opacity-0 scale-0" to="opacity-50 scale-100" duration={1000} className={cn("w-full flex justify-center", className)}>
+    <div ref={containerRef} className={cn("flex flex-col items-center justify-center gap-2", containerClassName)}>
+      <AnimateIn from="opacity-0 scale-0" to="opacity-50 scale-50" duration={1000} className={cn("w-full flex justify-center", className)}>
         <style>{spin}</style>
         <Image
-          className="inline-block p-3 border-2 bg-black/90 border-white/75 rounded-full overflow-hidden transition-all ease-in-out animate-spin"
+          className="inline-block p-4 border-2 bg-black/90 border-indigo-400 rounded-full overflow-hidden transition-all ease-in-out animate-spin"
           src="/images/d20-white.svg"
           width={96}
           height={96}
           alt="Loading"
-          style={{ animation: "spin 2s infinite ease-in-out", boxShadow: "0 0 2px #000, 0 0 4px #000, 0 0 8px #000, 0 0 16px #000" }}
+          style={{ animation: "spin 2s infinite ease-in-out" }}
         />
       </AnimateIn>
       {children && (

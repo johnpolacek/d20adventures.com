@@ -11,8 +11,8 @@ export interface ButtonProps {
   onClick?: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void
   type?: "button" | "submit" | "reset"
   className?: string
-  size?: "default" | "lg" | "sm"
-  variant?: "epic" | "brick" | "emboss" | "outline" | "ghost" | "ai" | "sparkle"
+  size?: "default" | "lg" | "sm" | "icon"
+  variant?: "epic" | "brick" | "emboss" | "outline" | "ghost" | "ai" | "sparkle" | "destructive"
   disabled?: boolean
   ariaLabel?: string
   asChild?: boolean
@@ -76,6 +76,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       sizeClass = "text-3xl py-6"
     } else if (size === "small") {
       sizeClass = "text-lg py-2"
+    } else if (size === "icon") {
+      sizeClass = "h-9 w-9"
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -108,6 +110,10 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     if (variant === "ghost") {
       variantClass = "bg-transparent border-2 border-transparent px-2 py-1"
+    }
+
+    if (variant === "destructive") {
+      variantClass = "bg-red-600 text-white shadow-sm hover:bg-red-700"
     }
 
     if (asChild && React.isValidElement(children)) {

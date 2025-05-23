@@ -1,0 +1,56 @@
+---
+description: When using AI to generate text or stuctured data
+globs: 
+alwaysApply: false
+---
+# Google Gemini API Usage (Backend)
+
+> **Note:** Backend AI-powered features (such as structured data generation, roll requirement detection, and narrative generation) use **Google Gemini** via the `@ai-sdk/google` and `ai` packages. The core AI logic and utilities are consolidated in `lib/ai`. This replaces the previous OpenAI-based pattern for backend logic.
+
+## Recommended Pattern: Google Gemini
+- Use `@ai-sdk/google` and `ai` for backend AI logic.
+- Utilize the helper functions and configurations within `lib/ai`.
+- Use `generateObject` with a Zod schema for structured data in server-side contexts. Use `streamObject` for streaming responses (e.g., in Convex actions or HTTP functions).
+- Refer to the AI SDK documentation at [https://ai-sdk.dev/llms.txt](https://ai-sdk.dev/llms.txt) for more details on the `ai` package.
+
+### Example (Streaming, e.g., Convex Action/HTTP)
+```typescript
+import { google } from "@ai-sdk/google";
+import { streamObject } from "ai";
+import { z } from "zod";
+import { getFlashModel } from "lib/ai"; // Example: Using a helper from lib/ai
+
+const mySchema = z.object({
+  field: z.string(),
+});
+
+const result = await streamObject({
+  model: getFlashModel(), // Using a helper function for the model
+  schema: mySchema,
+  prompt: "Generate a field value as a string.",
+});
+
+// This result object can be streamed back to the client
+// See AI SDK documentation for handling streamed results
+```
+
+### Example (Server-side)
+```typescript
+import { google } from "@ai-sdk/google";
+import { generateObject } from "ai";
+import { z } from "zod";
+import { getFlashModel } from "lib/ai"; // Example: Using a helper from lib/ai
+
+const mySchema = z.object({
+  field: z.string(),
+});
+
+const result = await generateObject({
+  model: getFlashModel(), // Using a helper function for the model
+  schema: mySchema,
+  prompt: "Generate a field value as a string.",
+});
+
+// Access the structured result
+const object = result.object;
+```

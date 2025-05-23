@@ -27,22 +27,6 @@ type TransformKeys<T, Transform extends (str: string) => string> = T extends obj
 
 /**
  * Transforms an object's keys from camelCase to snake_case recursively
- * @deprecated Use toSnakeCase instead
- */
-export function toDatabaseCase<T extends object>(obj: T): TransformKeys<T, typeof snakeCase> {
-  return toSnakeCase(obj)
-}
-
-/**
- * Transforms an object's keys from snake_case to camelCase recursively
- * @deprecated Use toCamelCase instead
- */
-export function toClientCase<T extends object>(obj: T): TransformKeys<T, typeof camelCase> {
-  return toCamelCase(obj)
-}
-
-/**
- * Transforms an object's keys from camelCase to snake_case recursively
  */
 export function toSnakeCase<T extends object>(obj: T): TransformKeys<T, typeof snakeCase> {
   if (Array.isArray(obj)) {

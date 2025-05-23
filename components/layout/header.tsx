@@ -20,14 +20,14 @@ export default async function Header({ path }: { path: string }) {
       <Parchment />
       <Link className="cursor-pointer flex items-center font-display scale-90 sm:scale-100 gap-2 mix-blend-multiply" href="/">
         <Image
-          className={cn("inline -mt-1 scale-90 sm:scale-100 w-12 h-12", isBig ? "sm:w-[72px] sm:h-[72px]" : "sm:w-12 sm:h-12")}
-          width={isBig ? 72 : 48}
-          height={isBig ? 72 : 48}
+          className={cn("inline -mt-1 scale-90 sm:scale-100 w-12 h-12", isBig ? "sm:w-[72px] sm:h-[72px]" : "sm:w-8 sm:h-8")}
+          width={isBig ? 72 : 36}
+          height={isBig ? 72 : 36}
           alt=""
           src="/images/d20.jpg"
         />
         <div className="flex flex-col">
-          <h1 className={cn(!isBig && "scale-90 -ml-2")} aria-label="D20 Adventures">
+          <h1 className={cn(!isBig && "scale-[.6] -ml-12 font-semibold")} aria-label="D20 Adventures">
             <span className="sr-only">D20 Adventures</span>
             <span aria-hidden="true">
               <span className={cn("text-2xl sm:text-4xl text-primary-600 mr-1", !isBig && "text-2xl")}>D20</span>
@@ -37,7 +37,14 @@ export default async function Header({ path }: { path: string }) {
           </h1>
         </div>
       </Link>
-      <div className="flex flex-1 justify-end items-center scale-90 sm:scale-100 -mt-1 sm:-mt-0 gap-2 pl-4">
+      <div className="flex flex-1 justify-end items-center scale-90 sm:scale-100 -mt-1 sm:-mt-0 gap-8 pl-4">
+        <a
+          className="text-lg font-display text-amber-950/60 hover:text-amber-950/80 transition-all ease-in-out duration-500 font-bold"
+          href="https://discord.gg/5kEA9Tk4hG"
+          style={{ textShadow: "0 0 4px #fff" }}
+        >
+          JOin Discord
+        </a>
         <AuthButtons />
       </div>
     </header>

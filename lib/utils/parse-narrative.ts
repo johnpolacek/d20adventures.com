@@ -2,12 +2,15 @@
 
 export type NarrativePart =
   | { type: 'paragraph'; value: string }
-  | { type: 'diceroll'; rollType: string; result: number; difficulty: number; character: string; image?: string; success: boolean };
+  | { type: 'diceroll'; rollType: string; baseRoll?: number; modifier?: number; result: number; difficulty: number; character: string; image?: string; success: boolean };
 
 const diceRollRegex = /^\[DiceRoll:([^\]]+)\]$/i;
 
 export function parseNarrative(narrative: string): NarrativePart[] {
-  return narrative.split(/\n+/).map<NarrativePart>(line => {
+  // Convert escaped newlines to actual newlines
+  const processedNarrative = narrative.replace(/\\n/g, '\n');
+  
+  return processedNarrative.split(/\n/).map<NarrativePart>(line => {
     const trimmed = line.trim();
     const match = trimmed.match(diceRollRegex);
     if (match) {
@@ -21,6 +24,8 @@ export function parseNarrative(narrative: string): NarrativePart[] {
       return {
         type: 'diceroll',
         rollType: fields.rollType || '',
+        baseRoll: fields.baseRoll !== undefined && fields.baseRoll !== '' ? Number(fields.baseRoll) : undefined,
+        modifier: fields.modifier !== undefined && fields.modifier !== '' ? Number(fields.modifier) : undefined,
         result: Number(fields.result),
         difficulty: Number(fields.difficulty),
         character: fields.character || '',
@@ -29,5 +34,5 @@ export function parseNarrative(narrative: string): NarrativePart[] {
       } as const;
     }
     return { type: 'paragraph', value: trimmed } as const;
-  }).filter(part => part.type === 'diceroll' || part.value.length > 0);
+  }).filter(part => part.type === 'diceroll' || (part.type === 'paragraph' && part.value.length > 0));
 } 

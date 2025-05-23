@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { ChevronDown, ChevronUp, ArrowRight } from "lucide-react"
+import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -174,9 +175,9 @@ export function RoadmapView({ features, featureRequests }: RoadmapViewProps) {
               </CardHeader>
               <CardContent>
                 <Button asChild className="w-full">
-                  <a href="/contact">
+                  <Link href="/contact/">
                     Suggest a Feature <ArrowRight className="ml-2 h-4 w-4" />
-                  </a>
+                  </Link>
                 </Button>
               </CardContent>
             </Card>
@@ -188,9 +189,9 @@ export function RoadmapView({ features, featureRequests }: RoadmapViewProps) {
               </CardHeader>
               <CardContent>
                 <Button asChild className="w-full">
-                  <a href="/subscribe">
+                  <Link href="/subscribe/">
                     Subscribe to Updates <ArrowRight className="ml-2 h-4 w-4" />
-                  </a>
+                  </Link>
                 </Button>
               </CardContent>
             </Card>

@@ -27,6 +27,7 @@ const eslintConfig = [
     rules: {
       // Disable noisy rules
       "@typescript-eslint/no-this-alias": "off",
+      "react-hooks/exhaustive-deps": "off",
       
       // Enable max-lines rule
       "max-lines": ["error", {

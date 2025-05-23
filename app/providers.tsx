@@ -4,6 +4,8 @@ import { ClerkProvider } from "@clerk/nextjs"
 import { ConvexProvider, ConvexReactClient } from "convex/react"
 import { PropsWithChildren } from "react"
 import { dark } from "@clerk/themes"
+import { TokenProvider } from "@/lib/context/TokenContext"
+
 const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!)
 
 export function Providers({ children }: PropsWithChildren) {
@@ -18,7 +20,9 @@ export function Providers({ children }: PropsWithChildren) {
       }}
       afterSignOutUrl="/"
     >
-      <ConvexProvider client={convex}>{children}</ConvexProvider>
+      <ConvexProvider client={convex}>
+        <TokenProvider>{children}</TokenProvider>
+      </ConvexProvider>
     </ClerkProvider>
   )
 }

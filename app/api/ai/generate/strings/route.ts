@@ -1,5 +1,4 @@
-import { google } from '@ai-sdk/google';
-import { streamObject } from "ai"
+import { streamObject } from "@/lib/ai/"
 import { z } from "zod"
 import { requireAuthMiddleware } from "../../_auth"
 
@@ -15,8 +14,7 @@ export async function POST(req: Request) {
     const body = await req.json()
     const { prompt, count = 6 } = body
 
-    const result = streamObject({
-      model: google("gemini-2.0-flash-lite"),
+    const result = await streamObject({
       schema: z.object({
         strings: z.array(z.string()).describe("Array of generated strings based on the prompt"),
       }),

@@ -8,7 +8,7 @@ export type MailingListSubscription = Doc<"mailing_list_subscriptions">;
  */
 export async function getMailingListSubscriptions(): Promise<MailingListSubscription[]> {
   try {
-    return await convex.query(api.mailingList.getSubscriptions);
+    return await convex.query(api.mailingList.getSubscriptions, {});
   } catch (error) {
     console.error('Error getting mailing list subscriptions:', error);
     return [];
@@ -22,7 +22,7 @@ export async function addMailingListSubscription(data: {
   userId: string, 
   email: string, 
   name?: string | undefined,
-  preferences: {
+  preferences?: {
     marketing: boolean,
     updates: boolean
   }
@@ -43,18 +43,6 @@ export async function removeMailingListSubscription(email: string): Promise<bool
     return await convex.mutation(api.mailingList.unsubscribe, { email });
   } catch (error) {
     console.error('Error removing mailing list subscription:', error);
-    return false;
-  }
-}
-
-/**
- * Updates preferences for a user's mailing list subscription
- */
-export async function updateMailingListPreferences(userId: string, preferences: { marketing: boolean, updates: boolean }): Promise<boolean> {
-  try {
-    return await convex.mutation(api.mailingList.updatePreferences, { userId, preferences });
-  } catch (error) {
-    console.error('Error updating mailing list preferences:', error);
     return false;
   }
 } 
