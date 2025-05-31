@@ -7,7 +7,7 @@ export default async function HomePage() {
   const isProduction = process.env.NODE_ENV === "production"
 
   return (
-    <div className="flex min-h-[max(100vh,100vw)] flex-col relative">
+    <div className="flex min-h-[max(100vh,100vw)] lg:min-h-screen flex-col relative">
       <h2 className="text-4xl sm:text-6xl font-display text-center w-full mt-20 sm:mt-36 fade-in delay-[2s] relative z-10" style={textShadowSpread}>
         <span className="block sm:inline">EXpeRienCe</span> <span className="inline-block scale-75 sm:scale-90 -mx-2 sm:mx-0">tHe</span> Thrill
       </h2>
