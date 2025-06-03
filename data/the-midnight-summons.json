@@ -27,23 +27,11 @@
               "image": "images/settings/realm-of-myr/the-midnight-summons/broken-silence-2.png",
               "transitions": [
                 {
-                  "condition": "If Thalbern successfully uses stealth to evade and proceeds cautiously towards the Standing Stones, go to meeting-at-stones.",
-                  "encounter": "meeting-at-stones"
+                  "condition": "If Thalbern successfully rolls to hide or evade and can avoid the Owlbear, go to meeting-at-the-stones.",
+                  "encounter": "meeting-at-the-stones"
                 },
                 {
-                  "condition": "If Thalbern fails a perception check, advance to owlbear-confrontation.",
-                  "encounter": "owlbear-confrontation"
-                },
-                {
-                  "condition": "If Thalbern fails any dice roll (including stealth, perception, or any other check), advance to owlbear-confrontation.",
-                  "encounter": "owlbear-confrontation"
-                },
-                {
-                  "condition": "If Thalbern does NOT successfully use stealth to evade, go to owlbear-confrontation.",
-                  "encounter": "owlbear-confrontation"
-                },
-                {
-                  "condition": "If Thalbern does nothing or takes no action, go to owlbear-confrontation.",
+                  "condition": "If Thalbern fails any dice roll (including stealth, perception, or any other check) or does nothing requiring a roll, advance to owlbear-confrontation.",
                   "encounter": "owlbear-confrontation"
                 },
                 {
@@ -56,7 +44,7 @@
               "id": "owlbear-confrontation",
               "title": "Owlbear Confrontation",
               "intro": "From the direction of the sound, a little bit of eye shine glints in the shadows of the tree line. A hulking fifteen foot tall monster with the body of a giant bear and the head of an owl. As it crashes out from the undergrowth, it lets out a guttural squawk, clearly agitated and territorial.",
-              "instructions": "The Owlbear will attack. If Thalbern attempts an animal handling check (high difficulty) and succeeds, he can move past the Owlbear. If Thalbern wins initiative and attempts to hide, he can move past the Owlbear if he passes a medium difficulty stealth check. If Thalbern's health drops to a critical level, Wollandora appears and drives off the Owlbear, transitioning to 'wollandora-intervention'. If Thalbern defeats the Owlbear, describe his victory and transition to 'meeting-at-stones'.",
+              "instructions": "The Owlbear will attack. If Thalbern attempts an animal handling check (high difficulty) and succeeds, he can move past the Owlbear. If Thalbern wins initiative and attempts to hide, he can move past the Owlbear if he passes a medium difficulty stealth check. If Thalbern's health drops to a critical level, Wollandora appears and drives off the Owlbear, transitioning to 'wollandora-intervention'. If Thalbern defeats the Owlbear, describe his victory and transition to 'meeting-at-the-stones'.",
               "image": "images/settings/realm-of-myr/the-midnight-summons/owlbear-confrontation.png",
               "npc": [
                 {
@@ -68,7 +56,7 @@
               "transitions": [
                 {
                   "condition": "Thalbern defeats the Owlbear, manages to evade it, successfully uses Animal Handling to pacify and move past it, or successfully rolls any other way to move past it.",
-                  "encounter": "meeting-at-stones"
+                  "encounter": "meeting-at-the-stones"
                 },
                 {
                   "condition": "Thalbern is reduced to critical health by the Owlbear.",
@@ -91,36 +79,61 @@
               "transitions": [
                 {
                   "condition": "Thalbern is able to go to the Standing Stones with Wollandora.",
-                  "encounter": "meeting-at-stones"
+                  "encounter": "meeting-at-the-stones"
                 }
               ]
             },
             {
-              "id": "meeting-at-stones",
+              "id": "meeting-at-the-stones",
               "title": "Meeting at the Stones",
               "intro": "Thalbern arrives at the ancient Standing Stones. The air is thick with anticipation as the moonlight bathes the clearing in a silvery glow.\n\n\"Thalbern, thank you for coming. The forest is grateful for your swiftness,\" Wollandora intones, her voice echoing softly in the stillness. The wise elf's silver hair glistens in the moonlight, and her eyes are a deep forest green, wise and kind, but currently troubled.",
-              "instructions": "Write dialogue for Wollandora as she explains the situation. She should say: \"Thalbern, we have a problem. Someone has stolen Valkaran relics from the elves' vaults—items that should never leave these woods.\" She nods toward the river, where the current glides past the standing stones. \"I saw a river boat, Valkaran-made, loaded with crates, heading downstream to Kordavos earlier tonight. You must go to the city and investigate - find these relics before they disappear forever.\" Wollandora should NOT offer any transportation, boats, or assistance beyond information. She only provides the mission details and urges Thalbern to act. Thalbern can ask questions about the relics, the boat, or Kordavos. When ready, transition to 'preparing-for-the-city'.",
+              "instructions": "Write dialogue for Wollandora as she explains the situation. She should say: \"Thalbern, we have a problem. I received word from a friend from Faelendar. Some Valkaran relics from the elves' vaults have gone missing. Items that should never leave these woods.\" She nods toward the river, where the current glides past the standing stones. \"I saw a river boat, Valkaran-made, heading downstream to Kordavos. You must go to the city and investigate - find these relics before they disappear forever.\" Wollandora should NOT offer any transportation, boats, or assistance beyond information. She only provides the mission details and urges Thalbern to act. Thalbern can ask questions about the relics, the boat, or Kordavos. When ready, transition to 'preparing-for-the-city'.",
               "image": "images/settings/realm-of-myr/the-midnight-summons/meeting-at-the-stones.png",
               "skipInitialNpcTurns": true,
               "npc": [
                 {
                   "id": "wollandora",
-                  "behavior": "Protective of Thalbern, focused on getting to the meeting.",
+                  "behavior": "Concerned about the missing relics, focused on getting Thalbern to investigate in the city.",
                   "initialInitiative": 1
                 }
               ],
               "transitions": [
                 {
-                  "condition": "If Thalbern accepts the mission.",
+                  "condition": "If Thalbern accepts or the mission",
                   "encounter": "preparing-for-the-city"
                 },
                 {
-                  "condition": "If Thalbern refuses the mission.",
+                  "condition": "If Thalbern refuses the mission",
+                  "encounter": "back-home"
+                },
+                {
+                  "condition": "If Thalbern asks for more information",
+                  "encounter": "the-missing-relics"
+                }
+              ]
+            },
+            {
+              "id": "the-missing-relics",
+              "title": "The Missing Relics",
+              "intro": "",
+              "instructions": "Wollandora can offer the following info:\n\nAs ancient Valkaran artifacts, deeply connected to the history and spirit of the Valkarr Forest, it is possible they could hold forgotten lore or possess secret untapped powers. The elves have kept them safe for centuries, to maintain the balance of the forest. She can allude to hearing about the rise of powerful figures in the human city who have little respect for the old ways or the forest. Somehow the elves have been drawn into the tangled politics and the relics have been stolen. \n\nWollandora remains focused on getting Thalbern to investigate in the city and **will NOT offer any transportation, boats, or assistance beyond this information**",
+              "image": "images/settings/realm-of-myr/the-midnight-summons/meeting-at-the-stones.png",
+              "skipInitialNpcTurns": true,
+              "npc": [
+                {
+                  "id": "wollandora",
+                  "behavior": "Focused on getting Thalbern to agree to investigate in the city. “The hour is late and the trail grows cold. Will you take on this task?”",
+                  "initialInitiative": 1
+                }
+              ],
+              "transitions": [
+                {
+                  "condition": "If Thalbern accepts or the mission",
                   "encounter": "preparing-for-the-city"
                 },
                 {
-                  "condition": "If Thalbern has more questions and has not accepted or refused the mission, stay in the same encounter.",
-                  "encounter": "meeting-at-stones"
+                  "condition": "If Thalbern refuses the mission",
+                  "encounter": "back-home"
                 }
               ]
             },
@@ -128,17 +141,19 @@
               "id": "preparing-for-the-city",
               "title": "Preparing for the City",
               "intro": "The following morning, bathed in the soft light of the forest, Thalbern is back at his secluded home. Wollandora's words from the previous night echo in his mind – the stolen relics, the suspicious shipment, the urgent need to investigate in Kordavos.\n\nThe city's tangled ways are far from the quiet paths he knows. Thalbern carefully packs a change of simple, unassuming clothes, ensuring his hunting bow and a quiver of arrows were discreetly bundled, alongside a smaller hand axe and knife. As the sun climbed higher, he left the quiet security of his forest home, turning his steps towards the distant, bustling spires of Kordavos, a place where his survival instincts would be tested in a different kind of wilderness.",
-              "instructions": "",
+              "instructions": "Thalbern should be fully healed from any wounds or fatigue from the previous night.",
               "image": "images/settings/realm-of-myr/the-midnight-summons/preparing-for-the-city.png",
-              "notes": "This encounter serves as a narrative bridge and allows the player to make small, character-flavoring decisions before the next main section of the adventure."
+              "notes": "This encounter serves as a narrative bridge and allows the player to make small, character-flavoring decisions before the next main section of the adventure.",
+              "resetHealth": true
             },
             {
               "id": "back-home",
               "title": "Back home",
-              "intro": "The following morning, bathed in the soft light of the forest, Thalbern is back at his secluded home. Wollandora's words from the previous night echo in his mind – the stolen relics, the suspicious shipment, the urgent need to investigate in Kordavos.\n\nHe had turned down her request for his help.\n\nHad he made the right choice? He did not enjoy the city, but Wollandora’s claims of stolen relics were intriguing. Perhaps a trip to the city would prove tobe worth it.",
+              "intro": "The following morning, bathed in the soft light of the forest, Thalbern is back at his secluded home. Wollandora's words from the previous night echo in his mind – the stolen relics, the suspicious shipment, the urgent need to investigate in Kordavos.\n\nHe had turned down her request for his help.\n\nHad he made the right choice? He did not enjoy the city, but Wollandora's claims of stolen relics were intriguing. Perhaps a trip to the city would prove tobe worth it.",
               "instructions": "",
-              "image": "images/settings/realm-of-myr/the-midnight-summons/preparing-for-the-city.png",
-              "notes": "This encounter serves as a narrative bridge and allows the player to make small, character-flavoring decisions before the next main section of the adventure."
+              "image": "images/settings/realm-of-myr/the-midnight-summons/back-home.png",
+              "notes": "This encounter serves as a narrative bridge and allows the player to make small, character-flavoring decisions before the next main section of the adventure.",
+              "resetHealth": true
             }
           ]
         }

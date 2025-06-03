@@ -38,6 +38,7 @@ export interface AdventureEncounter {
   transitions?: EncounterTransition[];
   npc?: EncounterCharacterRef[];
   skipInitialNpcTurns?: boolean;
+  resetHealth?: boolean;
 }
 
 export interface EncounterTransition {

@@ -14,7 +14,7 @@ interface DecrementTokensArgs {
 export async function decrementUserTokensAction(args: DecrementTokensArgs) {
   const { userId } = await auth(); 
 
-  const TOKEN_DECREMENT_MULTIPLIER = 0.1; // 10 tokens of gemini usage = 1 token of D20 usage
+  const TOKEN_DECREMENT_MULTIPLIER = 0.01; // 100 tokens of gemini usage = 1 token of D20 usage
   // 10k Gemini tokens costs about $0.00175 (blended input/output)
 
   if (!userId) {

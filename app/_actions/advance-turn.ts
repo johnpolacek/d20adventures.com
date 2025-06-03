@@ -256,12 +256,22 @@ Respond in JSON:
       return { status: "adventure_complete" };
     }
     // PCs: persist from previous turn (remove dead/fled) and re-roll initiative
-    const pcs: TurnCharacter[] = (turn.characters as TurnCharacter[])
+    let pcs: TurnCharacter[] = (turn.characters as TurnCharacter[])
       .filter((c) => c.type === "pc" && c.status !== "dead" && c.status !== "fled")
       .map((pc) => ({
         ...pc,
         initiative: rollD20(), // Re-roll PC initiative
       }));
+
+    // Reset health if the encounter has resetHealth flag
+    if (nextEncounter.resetHealth) {
+      console.log(`[advanceTurn] Resetting health for all characters due to resetHealth flag in encounter: ${nextEncounter.id}`);
+      pcs = pcs.map((pc) => ({
+        ...pc,
+        healthPercent: 100,
+        status: pc.status === "dead" ? "" : pc.status, // Clear dead status if health is being reset
+      }));
+    }
 
     // NPCs: add from next encounter
     const npcs: TurnCharacter[] = (nextEncounter.npc || []).map((npcRef: { id: string; initialInitiative?: number }) => {
@@ -273,6 +283,8 @@ Respond in JSON:
         isComplete: false,
         hasReplied: false,
         initiative: typeof npcRef.initialInitiative === 'number' ? npcRef.initialInitiative : rollD20(),
+        // NPCs always start at full health
+        healthPercent: 100,
       };
     });
     let allCharacters: TurnCharacter[] = [...pcs, ...npcs];

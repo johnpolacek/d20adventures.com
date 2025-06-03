@@ -194,9 +194,11 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
     }
   }
 
+  const showDiceRoll = characterState?.rollRequired && rollResult == null
+
   return (
     <form onSubmit={handleReply} className="flex flex-col gap-4 min-h-[100px]">
-      {!loading && !hasSubmitted && (
+      {!loading && !hasSubmitted && !showDiceRoll && (
         <>
           <Textarea className="text-lg border-white/30" value={input} onChange={handleInputChange} placeholder="Write your character's actions and dialogue here, in the third person..." />
           {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
@@ -216,7 +218,7 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
           </div>
         </>
       )}
-      {characterState?.rollRequired && rollResult == null && (
+      {showDiceRoll && characterState?.rollRequired && (
         <CharacterDiceRoll character={characterState as TurnCharacter} rollRequired={characterState.rollRequired} rollResult={rollResult ?? null} onRoll={handleRollResult} inputKey={input} />
       )}
       {loading && <LoadingAnimation />}

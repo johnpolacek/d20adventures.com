@@ -21,7 +21,8 @@ export default function TokenCount({ tokensRemaining }: TokenCountProps) {
         <div className="space-y-2">
           <h4 className="font-display font-bold">Tokens Remaining</h4>
           <p className="text-sm">
-            You have <span className="font-mono font-semibold">{tokensRemaining.toLocaleString()}</span> tokens for D20 gameplay. Instead of paying a monthly fee, simply buy more tokens as needed.
+            You have <span className="font-mono font-semibold">{Math.round(tokensRemaining).toLocaleString()}</span> tokens for D20 gameplay. Instead of paying a monthly fee, simply buy more tokens as
+            needed.
           </p>
         </div>
       </HoverCardContent>

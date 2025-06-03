@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import type { Metadata } from "next"
 import AdventureHome from "@/components/views/adventure-home"
 import { loadAdventureWithNpc } from "@/app/_actions/load-adventure"
@@ -62,6 +62,14 @@ export default async function AdventurePage(props: { params: Promise<{ settingId
   const currentTurn = mapConvexTurnToTurn(adventureData?.currentTurn)
 
   if (!adventure) return notFound()
+
+  // If there's a current turn, redirect to the turn-specific URL
+  if (currentTurn) {
+    const turnOrder = (adventureData?.currentTurn as { order?: number })?.order
+    if (turnOrder) {
+      redirect(`/${settingId}/${adventurePlanId}/${adventureId}/${turnOrder + 1}`)
+    }
+  }
 
   const encounter = findEncounter(adventurePlan, currentTurn?.encounterId)
 

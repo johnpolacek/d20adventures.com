@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import { useTurn } from "@/lib/context/TurnContext"
+import { useTurnContext } from "@/lib/context/TurnContext"
 import TurnNarrativeReply from "./turn-narrative-reply"
 import { parseNarrative } from "@/lib/utils/parse-narrative"
 import CharacterDiceRollResultDisplay from "@/components/adventure/character-dice-roll-result-display"
@@ -15,10 +15,14 @@ import { useAdventure } from "@/lib/context/AdventureContext"
 import LoadingAnimation from "../ui/loading-animation"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertTriangle } from "lucide-react"
+import { scrollToBottom } from "../ui/utils"
+import { useParams, useRouter } from "next/navigation"
 
 export default function TurnNarrative() {
-  const currentTurn = useTurn()
+  const { currentTurn, disableSSE } = useTurnContext()
   const { settingId, adventurePlanId } = useAdventure()
+  const params = useParams()
+  const router = useRouter()
   const bottomRef = React.useRef<HTMLDivElement>(null)
   const [advancing, setAdvancing] = React.useState(false)
   const [initialNarrative, setInitialNarrative] = React.useState("")
@@ -29,11 +33,11 @@ export default function TurnNarrative() {
     if (currentTurn?.narrative) {
       if (!initialNarrative) {
         setInitialNarrative(currentTurn.narrative)
-      } else if (initialNarrative !== currentTurn.narrative) {
-        // scrollToBottom()
+      } else if (initialNarrative !== currentTurn.narrative && !disableSSE) {
+        scrollToBottom()
       }
     }
-  }, [currentTurn?.narrative])
+  }, [currentTurn?.narrative, disableSSE, initialNarrative])
 
   if (!currentTurn) {
     console.log("[TurnNarrative] currentTurn is null, returning null")
@@ -53,7 +57,52 @@ export default function TurnNarrative() {
 
   const parsed = parseNarrative(currentTurn?.narrative || "")
 
-  const shouldShowReplyCondition = currentTurn && !currentTurn.isFinalEncounter && currentCharacter && currentCharacter.type === "pc" && !isNpcProcessing
+  const shouldShowReplyCondition = currentTurn && !currentTurn.isFinalEncounter && currentCharacter && currentCharacter.type === "pc" && !isNpcProcessing && !disableSSE
+
+  const handleAdvanceOrNavigate = async () => {
+    if (disableSSE) {
+      // Navigation mode: just go to the next turn
+      const currentTurnOrder = params.turnOrder ? parseInt(params.turnOrder as string, 10) : 1
+      const nextTurnOrder = currentTurnOrder + 1
+      const basePath = `/${settingId}/${adventurePlanId}/${params.adventureId}`
+
+      console.log("[TurnNarrative] Navigating to next turn:", `${basePath}/${nextTurnOrder}`)
+      setAdvancing(true)
+      router.push(`${basePath}/${nextTurnOrder}`)
+      // Reset advancing state after a delay since navigation doesn't complete immediately
+      setTimeout(() => setAdvancing(false), 1000)
+    } else {
+      // Advance mode: actually advance the turn
+      console.log("[advanceTurn] currentTurn before:", JSON.stringify(currentTurn, null, 2))
+      console.log("[advanceTurn] turnId:", currentTurn?.id)
+      setAdvancing(true)
+      setTokenError(null) // Clear previous errors
+      try {
+        console.log("[advanceTurn] calling advanceTurn with:", JSON.stringify({ currentTurn }, null, 2))
+        const result = await advanceTurn({ turnId: currentTurn?.id as Id<"turns">, settingId, adventurePlanId })
+        console.log("[advanceTurn] result:", JSON.stringify(result, null, 2))
+
+        // Navigate to the new turn URL after successful advancement
+        if (result.status === "turn_advanced") {
+          const currentTurnOrder = params.turnOrder ? parseInt(params.turnOrder as string, 10) : 1
+          const newTurnOrder = currentTurnOrder + 1
+          const basePath = `/${settingId}/${adventurePlanId}/${params.adventureId}`
+          router.replace(`${basePath}/${newTurnOrder}`, { scroll: false })
+        }
+      } catch (error) {
+        console.error("[TurnNarrative] Error advancing turn:", error)
+        if (error instanceof Error && error.message.includes("Insufficient tokens")) {
+          setTokenError("You do not have enough tokens to perform this action. Please add more tokens to your account.")
+        } else {
+          setTokenError("An unexpected error occurred while advancing the turn. Please try again.")
+        }
+      } finally {
+        setAdvancing(false)
+      }
+    }
+  }
+
+  console.log("[TurnNarrative] disableSSE:", disableSSE)
 
   return (
     <div className="grow max-w-2xl fade-in">
@@ -91,14 +140,14 @@ export default function TurnNarrative() {
       })}
 
       {/* Show loading animation if an NPC is processing their turn */}
-      {isNpcProcessing && !currentTurn?.isFinalEncounter && (
+      {isNpcProcessing && !currentTurn?.isFinalEncounter && !disableSSE && (
         <div className="flex flex-col items-center gap-4 py-8">
           <LoadingAnimation />
           <p className="text-indigo-300 font-display">{currentCharacter.name} is rolling…</p>
         </div>
       )}
 
-      {/* Show reply form only if current character is a PC */}
+      {/* Show reply form only if current character is a PC and not in historical mode */}
       {shouldShowReplyCondition && (
         <TurnNarrativeReply
           character={currentCharacter!}
@@ -145,36 +194,7 @@ export default function TurnNarrative() {
       )}
       {isTurnComplete && !currentTurn?.isFinalEncounter && (
         <div className="flex justify-center mt-8">
-          <TurnAdvanceButton
-            advancing={advancing}
-            onAdvance={async () => {
-              console.log("[advanceTurn] currentTurn before:", JSON.stringify(currentTurn, null, 2))
-              console.log("[advanceTurn] turnId:", currentTurn?.id)
-              setAdvancing(true)
-              setTokenError(null) // Clear previous errors
-              try {
-                console.log("[advanceTurn] calling advanceTurn with:", JSON.stringify({ currentTurn }, null, 2))
-                const result = await advanceTurn({ turnId: currentTurn?.id as Id<"turns">, settingId, adventurePlanId })
-                console.log("[advanceTurn] result:", JSON.stringify(result, null, 2))
-                // If successful, scroll to top
-                if (!tokenError) {
-                  // Check if an error was NOT set from this operation
-                  // scrollToTop(); // Re-enable if desired, or use a more specific scroll target
-                }
-              } catch (error) {
-                console.error("[TurnNarrative] Error advancing turn:", error)
-                if (error instanceof Error && error.message.includes("Insufficient tokens")) {
-                  setTokenError("You do not have enough tokens to perform this action. Please add more tokens to your account.")
-                } else {
-                  // Handle other types of errors or re-throw if necessary
-                  setTokenError("An unexpected error occurred while advancing the turn. Please try again.")
-                }
-              } finally {
-                setAdvancing(false)
-                // scrollToTop() // Removed from here
-              }
-            }}
-          />
+          <TurnAdvanceButton advancing={advancing} navigationMode={disableSSE} navigationLabel={disableSSE ? "Go to Next Turn" : undefined} onAdvance={handleAdvanceOrNavigate} />
         </div>
       )}
       <div ref={bottomRef} />

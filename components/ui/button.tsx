@@ -1,4 +1,4 @@
-import React, { ReactElement, forwardRef } from "react"
+import React, { forwardRef } from "react"
 import { cn } from "@/lib/utils"
 import { emboss } from "../graphics/styles"
 import { textShadow } from "../typography/styles"
@@ -117,15 +117,18 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     }
 
     if (asChild && React.isValidElement(children)) {
-      // Type assertion to HTMLButtonElement
-      return React.cloneElement(children as ReactElement<ButtonProps>, {
-        ariaLabel,
+      // For asChild mode, only pass props that are valid for the child element
+      const childProps: Record<string, unknown> = {
         onClick,
         className: cn(baseButtonClass, sizeClass, variantClass, className),
         style: style || buttonStyle,
-        disabled,
-        type,
-      })
+      }
+
+      if (ariaLabel) {
+        childProps["aria-label"] = ariaLabel
+      }
+
+      return React.cloneElement(children, childProps)
     }
 
     return (

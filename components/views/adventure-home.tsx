@@ -16,6 +16,7 @@ function AdventureHome({
   encounterImage,
   teaser,
   currentTurn,
+  disableSSE = false,
 }: {
   adventurePlanId: string
   settingId: string
@@ -23,15 +24,15 @@ function AdventureHome({
   teaser?: string
   encounterImage: string
   currentTurn: TurnType | null
+  disableSSE?: boolean
 }) {
   useEffect(() => {
-    console.log("[AdventureHome]", JSON.stringify({ currentTurn, encounterImage }, null, 2))
-    console.log("[AdventureHome]", JSON.stringify({ currentTurn, encounterImage }, null, 2))
-  }, [currentTurn?.id])
+    console.log("[AdventureHome]", JSON.stringify({ currentTurn, encounterImage, disableSSE }, null, 2))
+  }, [currentTurn?.id, disableSSE])
 
   return (
     <AdventureProvider settingId={settingId} adventurePlanId={adventurePlanId} adventure={adventure}>
-      <TurnProvider adventureId={adventure?.id ?? ""} initialTurn={currentTurn}>
+      <TurnProvider adventureId={adventure?.id ?? ""} initialTurn={currentTurn} disableSSE={disableSSE}>
         <AdventureHomeContent initialImage={encounterImage} initialSubtitle={currentTurn?.title || ""} adventure={adventure} teaser={teaser} />
       </TurnProvider>
     </AdventureProvider>

@@ -229,6 +229,34 @@ export const getTurnById = query({
   },
 });
 
+// Query: Get a turn by adventure ID and order
+export const getTurnByOrder = query({
+  args: { 
+    adventureId: v.id("adventures"), 
+    order: v.number() 
+  },
+  handler: async (ctx, args) => {
+    const turn = await ctx.db
+      .query("turns")
+      .withIndex("by_adventure", (q) => q.eq("adventureId", args.adventureId))
+      .filter((q) => q.eq(q.field("order"), args.order))
+      .first();
+    return turn;
+  },
+});
+
+// Query: Get all turns for an adventure ordered by turn order
+export const getTurnsByAdventure = query({
+  args: { adventureId: v.id("adventures") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("turns")
+      .withIndex("by_adventure", (q) => q.eq("adventureId", args.adventureId))
+      .order("asc")
+      .collect();
+  },
+});
+
 // Internal mutation: Patch a turn by ID
 export const patchTurn = internalMutation({
   args: {
@@ -258,7 +286,7 @@ export const getEncounterContext = action({
   },
 });
 
-// Public query: Get an adventure by ID
+// Query: Get adventure by ID
 export const getAdventureById = query({
   args: { adventureId: v.id("adventures") },
   handler: async (ctx, args) => {
@@ -280,5 +308,35 @@ export const patchAdventure = internalMutation({
   handler: async (ctx, args) => {
     await ctx.db.patch(args.adventureId, args.patch);
     return true;
+  },
+});
+
+// Query: Get turn navigation info (efficient - minimal data transfer)
+export const getTurnNavigationInfo = query({
+  args: { adventureId: v.id("adventures") },
+  handler: async (ctx, args) => {
+    // Get adventure with current turn info
+    const adventure = await ctx.db.get(args.adventureId);
+    if (!adventure) return null;
+
+    // Count total turns efficiently
+    const turns = await ctx.db
+      .query("turns")
+      .withIndex("by_adventure", (q) => q.eq("adventureId", args.adventureId))
+      .collect();
+    
+    const totalTurns = turns.length;
+
+    // Get current turn order if exists
+    let currentTurnOrder = null;
+    if (adventure.currentTurnId) {
+      const currentTurn = await ctx.db.get(adventure.currentTurnId as Id<"turns">);
+      currentTurnOrder = currentTurn?.order || null;
+    }
+
+    return {
+      totalTurns,
+      currentTurnOrder
+    };
   },
 });

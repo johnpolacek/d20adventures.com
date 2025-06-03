@@ -9,6 +9,8 @@ import { useTurn } from "@/lib/context/TurnContext"
 import { useParams } from "next/navigation"
 import { ensureNpcProcessed } from "@/app/_actions/ensure-npc-processed"
 import type { Id } from "@/convex/_generated/dataModel"
+import wait from "waait"
+import { scrollToTop } from "../ui/utils"
 
 export const dynamic = "force-dynamic"
 
@@ -22,8 +24,13 @@ function AdventureHomeContent({ initialImage, adventure, teaser }: { initialImag
   useEffect(() => {
     console.log("[AdventureHomeContent] turn encounterId", turn?.encounterId)
     if (turn) {
-      if (turn.encounterId) {
-        setImage(`images/settings/${settingId}/${adventurePlanId}/${turn.encounterId}.png`)
+      const newImage = `images/settings/${settingId}/${adventurePlanId}/${turn.encounterId}.png`
+      console.log("[AdventureHomeContent] image check", { newImage, image })
+      if (turn.encounterId && image !== newImage) {
+        setImage(newImage)
+        wait(500).then(() => {
+          scrollToTop()
+        })
       }
     }
   }, [turn?.encounterId, settingId, adventurePlanId])
@@ -48,8 +55,6 @@ function AdventureHomeContent({ initialImage, adventure, teaser }: { initialImag
       }
     }
   }, [turn, initialCheckDone])
-
-  console.log("[AdventureHomeContent] turn title", turn?.title)
 
   return (
     <>

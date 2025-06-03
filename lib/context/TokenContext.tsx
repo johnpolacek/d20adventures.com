@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react"
+import { useUser } from "@clerk/nextjs"
 import { fetchUserTokenBalance } from "@/app/_actions/user-token-actions" // Adjust path as necessary
 
 type TokenContextType = {
@@ -17,12 +18,22 @@ interface TokenProviderProps {
 }
 
 export const TokenProvider: React.FC<TokenProviderProps> = ({ children, pollingInterval = 60000 }) => {
+  const { isSignedIn, isLoaded } = useUser()
   const [tokensRemaining, setTokensRemaining] = useState<number | null>(null)
   const [alltimeTokens, setAlltimeTokens] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
 
   const handleFetchTokens = useCallback(async () => {
+    // Don't fetch if user is not signed in or Clerk hasn't loaded yet
+    if (!isLoaded || !isSignedIn) {
+      setTokensRemaining(null)
+      setAlltimeTokens(null)
+      setIsLoading(false)
+      setError(null)
+      return
+    }
+
     setIsLoading(true)
     try {
       const balance = await fetchUserTokenBalance()
@@ -38,17 +49,20 @@ export const TokenProvider: React.FC<TokenProviderProps> = ({ children, pollingI
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [isLoaded, isSignedIn])
 
   useEffect(() => {
     handleFetchTokens() // Initial fetch
 
-    const intervalId = setInterval(() => {
-      handleFetchTokens()
-    }, pollingInterval)
+    // Only set up polling if user is signed in
+    if (isLoaded && isSignedIn) {
+      const intervalId = setInterval(() => {
+        handleFetchTokens()
+      }, pollingInterval)
 
-    return () => clearInterval(intervalId) // Cleanup interval on unmount
-  }, [handleFetchTokens, pollingInterval])
+      return () => clearInterval(intervalId) // Cleanup interval on unmount
+    }
+  }, [handleFetchTokens, pollingInterval, isLoaded, isSignedIn])
 
   return <TokenContext.Provider value={{ tokensRemaining, alltimeTokens, isLoading, error, refreshTokens: handleFetchTokens }}>{children}</TokenContext.Provider>
 }
