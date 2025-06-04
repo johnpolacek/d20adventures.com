@@ -95,7 +95,6 @@ export const streamToString = (stream: Readable): Promise<string> => {
  * @returns The parsed JSON object
  */
 export async function readJsonFromS3(key: string): Promise<unknown> {
-  console.log(`[readJsonFromS3] Attempting to read key: ${key}`);
   const bucket = process.env.bucketData || process.env.AWS_BUCKET_DATA;
   if (!bucket) {
     throw new Error("AWS_BUCKET_DATA is not set");

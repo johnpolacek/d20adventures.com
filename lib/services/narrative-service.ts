@@ -137,7 +137,7 @@ Output only the narrative paragraph with dialogue.`.trim();
     return result;
   }
 
-  // Original logic for non-dialogue actions
+  // Logic for non-dialogue actions
   const prompt = `
 Context:
 ${narrativeContext}
@@ -146,7 +146,8 @@ Player's original action for ${characterName}: "${playerInput}"
 
 Review the player's original action.
 If the action is already a well-written, third-person, present-tense narrative paragraph describing what ${characterName} said or did, then return the player's original action verbatim.
-Otherwise, expand the player's action into a vivid, engaging, third-person, present-tense narrative paragraph. If the action is minimal (like "attack" or "hide"), enhance it with appropriate descriptive details that fit the context. Describe how ${characterName} performs the action in a way that's immersive and engaging.
+Otherwise, rewrite the player's action into a vivid, engaging, third-person, present-tense narrative paragraph. If the action is minimal (like "attack" or "hide"), enhance it with appropriate descriptive details that fit the context. Describe how ${characterName} performs the action in a way that's immersive and engaging.
+IMPORTANT:Do NOT write anything about the outcome of the action!
 Use the provided context to inform appropriate details (weapons, environment, targets, etc.) but focus on ${characterName}'s specific actions. Write in the style of an adventure novel. Do not use semicolons. Never mention game mechanics, dice, or rules.
 
 Output only the final narrative paragraph.`.trim();
@@ -314,15 +315,57 @@ Respond in JSON: { "rollType": string, "difficulty": number } or null if no roll
 }
 
 export async function getRollModifier(context: { scenario: unknown; rollRequirement: unknown; character: unknown }) {
+  console.log('[getRollModifier] === STARTING MODIFIER CALCULATION ===')
+  console.log('[getRollModifier] Input context:', JSON.stringify(context, null, 2))
+  
+  // First, calculate base attribute modifier
+  const rollType = typeof context.rollRequirement === 'object' && 
+                  context.rollRequirement !== null && 
+                  'rollType' in context.rollRequirement ? 
+                  String(context.rollRequirement.rollType) : ''
+  
+  console.log('[getRollModifier] Extracted roll type:', rollType)
+  console.log('[getRollModifier] Character data being passed to calculateAttributeModifier:', JSON.stringify(context.character, null, 2))
+  
+  const { calculateAttributeModifier } = await import('@/lib/utils/modifier-utils')
+  const baseAttributeModifier = calculateAttributeModifier(context.character, rollType)
+  
+  console.log('[getRollModifier] Base attribute modifier calculated:', baseAttributeModifier)
+  
+  // Then get situational modifier from LLM
   const prompt = `
-Given the following scenario, roll requirement, and character, determine if there should be a bonus or penalty (modifier) to the roll. Respond in JSON: { "modifier": number } (can be negative, zero, or positive).
+Given the following scenario, roll requirement, and character (paying attention to their archetype, skills, and how they might interact with the environment), determine if there should be an additional situational bonus or penalty (modifier) to the roll.
+This modifier should reflect:
+1. Environmental factors (e.g., darkness, weather, noise).
+2. How the character's specific archetype (e.g., a Ranger's attunement to forests, a Rogue's expertise in shadows) or skills (e.g., Survival, Stealth, Perception proficiency in certain conditions) would uniquely affect their performance in THIS specific situation.
+
+Note: The character's raw ability score modifier (e.g., from Wisdom for Perception) has ALREADY been factored in. You are to provide ONLY the *additional* modifier based on the situation and the character's specific fitness for it.
 
 Scenario: ${JSON.stringify(context.scenario, null, 2)}
 Roll Requirement: ${JSON.stringify(context.rollRequirement, null, 2)}
 Character: ${JSON.stringify(context.character, null, 2)}
+
+Respond in JSON: { "modifier": number } (can be negative, zero, or positive).
 `;
+  console.log('[getRollModifier] LLM prompt for situational modifier:', prompt)
+  
   const result = await generateObject({ prompt, schema: rollModifierSchema });
-  return result.object?.modifier ?? 0;
+  const situationalModifier = result.object?.modifier ?? 0;
+  
+  console.log('[getRollModifier] LLM result object:', JSON.stringify(result.object, null, 2))
+  console.log('[getRollModifier] Situational modifier from LLM:', situationalModifier)
+  
+  // Combine base attribute modifier with situational modifier
+  const totalModifier = baseAttributeModifier + situationalModifier;
+  
+  console.log(`[getRollModifier] === FINAL CALCULATION ===`)
+  console.log(`[getRollModifier] Roll Type: "${rollType}"`)
+  console.log(`[getRollModifier] Base Attribute Modifier: ${baseAttributeModifier}`)
+  console.log(`[getRollModifier] Situational Modifier: ${situationalModifier}`)
+  console.log(`[getRollModifier] Total Modifier: ${totalModifier}`)
+  console.log(`[getRollModifier] === END MODIFIER CALCULATION ===`)
+  
+  return totalModifier;
 }
 
 /**

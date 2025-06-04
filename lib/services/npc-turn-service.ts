@@ -320,12 +320,9 @@ export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
       npcId: npc.id,
       encounterContext, // Pass the populated context
     });
-    // Logging for verification
-    console.log("[NPC TURN] Previous narrative:\n", turn.narrative);
-    console.log("[NPC TURN] Shortcode:", result.shortcode);
     // Use appendNarrative utility for consistent narrative updates
     const newNarrative = appendNarrative(turn.narrative || "", result.narrativeToAppend || "");
-    console.log("[NPC TURN] Updated narrative to be saved:\n", newNarrative);
+    
     await convex.mutation(api.turns.updateTurn, {
       turnId: turn._id,
       patch: {

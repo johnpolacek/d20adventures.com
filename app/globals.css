@@ -49,7 +49,7 @@
   --font-sans: ['var(--font-rethink-sans)'];
   --font-display: ['var(--font-display)'];
   --font-mono: ['var(--font-mono)'];
-  --font-serif: ['var(--font-serif)'];
+  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
 
   --text-xxxs: 0.5rem;
   --text-xxs: 0.625rem;

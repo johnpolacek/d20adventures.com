@@ -17,12 +17,16 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertTriangle } from "lucide-react"
 import { scrollToBottom } from "../ui/utils"
 import { useParams, useRouter } from "next/navigation"
+import { useUser } from "@clerk/nextjs"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
 
 export default function TurnNarrative() {
   const { currentTurn, disableSSE } = useTurnContext()
   const { settingId, adventurePlanId } = useAdventure()
   const params = useParams()
   const router = useRouter()
+  const { isSignedIn } = useUser()
   const bottomRef = React.useRef<HTMLDivElement>(null)
   const [advancing, setAdvancing] = React.useState(false)
   const [initialNarrative, setInitialNarrative] = React.useState("")
@@ -39,12 +43,12 @@ export default function TurnNarrative() {
     }
   }, [currentTurn?.narrative, disableSSE, initialNarrative])
 
+  const isTurnComplete = currentTurn?.characters.every((c: TurnCharacter) => c.isComplete)
+
   if (!currentTurn) {
     console.log("[TurnNarrative] currentTurn is null, returning null")
     return null
   }
-
-  const isTurnComplete = currentTurn.characters.every((c: TurnCharacter) => c.isComplete)
 
   // Sort characters by initiative (highest first) and find the current actor
   const charactersByInitiative = (currentTurn?.characters || []).slice().sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
@@ -60,6 +64,7 @@ export default function TurnNarrative() {
   const shouldShowReplyCondition = currentTurn && !currentTurn.isFinalEncounter && currentCharacter && currentCharacter.type === "pc" && !isNpcProcessing && !disableSSE
 
   const handleAdvanceOrNavigate = async () => {
+    console.log("[handleAdvanceOrNavigate] CALLED", { disableSSE, action: disableSSE ? "navigate" : "advance" })
     if (disableSSE) {
       // Navigation mode: just go to the next turn
       const currentTurnOrder = params.turnOrder ? parseInt(params.turnOrder as string, 10) : 1
@@ -102,12 +107,10 @@ export default function TurnNarrative() {
     }
   }
 
-  console.log("[TurnNarrative] disableSSE:", disableSSE)
-
   return (
     <div className="grow max-w-2xl fade-in">
       {tokenError && (
-        <Alert variant="destructive" className="my-4">
+        <Alert variant="destructive" className="mb-8">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Action Failed</AlertTitle>
           <AlertDescription>{tokenError}</AlertDescription>
@@ -185,11 +188,14 @@ export default function TurnNarrative() {
         />
       )}
 
-      {isTurnComplete && currentTurn?.isFinalEncounter && (
-        <div className="flex flex-col items-center justify-center mt-8 text-center p-6 bg-green-100 border border-green-300 rounded-lg shadow-md">
-          <h2 className="text-2xl font-semibold text-green-700 mb-2">Adventure Complete!</h2>
-          <p className="text-green-600">Congratulations on reaching the end of your journey.</p>
-          {/* You could add a button here to navigate away or view a summary */}
+      {currentTurn?.isFinalEncounter && (
+        <div className="flex flex-col items-center justify-center mt-8 md:mt-16 text-center px-4 py-8 md:py-16 border-double border-8 border-primary-800 rounded-lg">
+          <p className="text-primary-300 text-lg font-display font-bold mb-6">You’ve reached the end of the journey for this adventure</p>
+          {isSignedIn && (
+            <Button size="sm" asChild variant="epic">
+              <Link href={`/${settingId}/${adventurePlanId}`}>Play Again</Link>
+            </Button>
+          )}
         </div>
       )}
       {isTurnComplete && !currentTurn?.isFinalEncounter && (

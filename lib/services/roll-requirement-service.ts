@@ -96,7 +96,6 @@ Possible roll types:
 - Brewing Check
 - Gambling Check
 - Barter Check
-- Command Check
 - Leadership Check
 - Strategy Check
 - Tactics Check
@@ -104,11 +103,6 @@ Possible roll types:
 - Psionics Check
 - Telepathy Check
 - Intuition Check
-- Perception (Hearing) Check
-- Perception (Sight) Check
-- Perception (Smell) Check
-- Perception (Taste) Check
-- Perception (Touch) Check
 
 Examples:
 Action: "Try to sneak past the guards."

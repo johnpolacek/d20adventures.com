@@ -16,6 +16,7 @@ export async function decrementUserTokensAction(args: DecrementTokensArgs) {
 
   const TOKEN_DECREMENT_MULTIPLIER = 0.01; // 100 tokens of gemini usage = 1 token of D20 usage
   // 10k Gemini tokens costs about $0.00175 (blended input/output)
+  // 10k D20 tokens costs about $0.0175
 
   if (!userId) {
     console.error("decrementUserTokensAction: User not authenticated. Cannot decrement tokens.");
@@ -37,7 +38,6 @@ export async function decrementUserTokensAction(args: DecrementTokensArgs) {
       transactionType: args.transactionType,
       description: description,
     });
-    console.log("decrementUserTokensAction: Tokens decremented successfully for user:", userId, "Result:", result);
     return { success: true, data: result };
   } catch (error) {
     console.error(

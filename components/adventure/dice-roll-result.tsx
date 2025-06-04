@@ -44,7 +44,7 @@ export default function DiceRollResult({ result, animate }: { result: number; an
   return (
     <div className="relative flex flex-col items-center justify-center">
       <div className={`w-20 h-20 flex items-center justify-center text-4xl bg-black/70 border-2 ring-8 ring-white/5 rounded-full ${diceBorderColor} ${diceGlow}`}>
-        {animatedResult ? <span className={`font-mono ${diceTextColor}`}>{animatedResult}</span> : <span className="font-display">~</span>}
+        {typeof animatedResult === "number" ? <span className={`font-mono ${diceTextColor}`}>{animatedResult}</span> : <span className="font-display">~</span>}
       </div>
       <div className="-mt-2 flex justify-center w-48">
         {result && (

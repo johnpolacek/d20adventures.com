@@ -15,8 +15,6 @@ function sleep(ms: number): Promise<void> {
 export async function generateObject<T extends z.ZodTypeAny>({prompt, schema}: { prompt: string; schema: T; }) {
   let result;
   try {
-    console.log('Entering generateObject...');
-
     const { userId } = await auth()
 
     if (!userId) {
@@ -29,14 +27,13 @@ export async function generateObject<T extends z.ZodTypeAny>({prompt, schema}: {
       model: geminiModel,
     });
 
-    console.log('generateObject raw result:', result);
+    console.log('generateObject:', result.object);
 
     if (result.usage && result.usage.totalTokens > 0) {
       console.log('Token Usage (generateObject):', {
-        promptTokens: result.usage.promptTokens,
-        completionTokens: result.usage.completionTokens,
+        tokensInputOutputRatio: result.usage.promptTokens/result.usage.completionTokens,
         totalTokens: result.usage.totalTokens,
-        model: geminiModel.modelId
+        model: geminiModel.modelId,
       });
       const tokenDecrementResult = await decrementUserTokensAction({
         tokensUsed: result.usage.totalTokens,
@@ -75,8 +72,7 @@ export async function generateObject<T extends z.ZodTypeAny>({prompt, schema}: {
 
       if (result.usage && result.usage.totalTokens > 0) {
         console.log('Token Usage (generateObject retry):', {
-          promptTokens: result.usage.promptTokens,
-          completionTokens: result.usage.completionTokens,
+          tokensInputOutputRatio: result.usage.promptTokens/result.usage.completionTokens,
           totalTokens: result.usage.totalTokens,
           model: geminiModel.modelId
         });
@@ -140,12 +136,11 @@ export async function generateText({prompt}: { prompt: string; }) {
       model: geminiModel,
     });
 
-    console.log('generateText raw result:', result);
+    console.log('generateText result:', result.text);
 
     if (result.usage && result.usage.totalTokens > 0) {
       console.log('Token Usage (generateText):', {
-        promptTokens: result.usage.promptTokens,
-        completionTokens: result.usage.completionTokens,
+        tokensInputOutputRatio: result.usage.promptTokens/result.usage.completionTokens,
         totalTokens: result.usage.totalTokens,
         model: geminiModel.modelId
       });
@@ -185,8 +180,7 @@ export async function generateText({prompt}: { prompt: string; }) {
 
       if (result.usage && result.usage.totalTokens > 0) {
         console.log('Token Usage (generateText retry):', {
-          promptTokens: result.usage.promptTokens,
-          completionTokens: result.usage.completionTokens,
+          tokensInputOutputRatio: result.usage.promptTokens/result.usage.completionTokens,
           totalTokens: result.usage.totalTokens,
           model: geminiModel.modelId
         });

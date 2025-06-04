@@ -88,12 +88,7 @@ export default async function TurnPage({ params }: PageProps) {
   if (!currentTurn) return notFound()
 
   const encounter = findEncounter(adventurePlan, currentTurn?.encounterId)
-
-  // Convert 0-based current turn order from navInfo to 1-based for comparison
-  const currentTurnOrderFromNav = (navInfo?.currentTurnOrder ?? 0) + 1
-  const isLatestTurn = currentTurnOrderFromNav === turnOrderNum
-
-  console.log("[TurnPage] isLatestTurn:", isLatestTurn)
+  const isLatestTurn = turnOrderNum === (navInfo?.totalTurns ?? 0)
 
   return (
     <div className="min-h-screen relative">

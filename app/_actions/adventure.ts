@@ -40,7 +40,6 @@ export async function processTurnReply({ turnId, characterId, narrativeAction }:
     console.error('[processTurnReply] Turn not found for turnId:', turnId);
     throw new Error("Turn not found")
   }
-  console.log('[processTurnReply] Fetched turn:', JSON.stringify(turn, null, 2));
   
   const adventure = await convex.query(api.adventure.getAdventureById, { adventureId: turn.adventureId })
   if (!adventure) {
@@ -49,7 +48,6 @@ export async function processTurnReply({ turnId, characterId, narrativeAction }:
   }
   
   const planPath = `settings/${adventure.settingId}/${adventure.planId}.json`;
-  console.log('[processTurnReply] Attempting to read adventure plan from S3:', planPath);
   const plan = (await readJsonFromS3(planPath)) as AdventurePlan
   if (!plan) {
     console.error('[processTurnReply] Adventure plan not found at path:', planPath);
@@ -77,22 +75,19 @@ export async function processTurnReply({ turnId, characterId, narrativeAction }:
   const actionContext = {
     character: {
       name: characterPerformingAction.name,
-      // You might need to fetch richer character data if it's not already on the turn.characters object.
-      // For example, if character class, stats, or specific abilities are crucial for plausibility:
-      // class: characterPerformingAction.class, 
-      // abilities: characterPerformingAction.abilities,
+      archetype: characterPerformingAction.archetype,
+      race: characterPerformingAction.race,
+      attributes: characterPerformingAction.attributes,
+      skills: characterPerformingAction.skills,
+      equipment: characterPerformingAction.equipment,
     },
     encounter: {
       id: encounter.id,
-      // name: encounter.name || "Unnamed Encounter", // Removed as 'name' might not exist
-      // description: encounter.description || "No description", // Removed as 'description' might not exist
-      instructions: encounter.instructions || "", // Keep instructions if available
+      instructions: encounter.instructions || "",
     },
     plan: {
-      planId: adventure.planId, // Use existing planId
-      settingId: adventure.settingId, // Use existing settingId
-      // name: plan.name || "Unnamed Plan", // Removed as 'name' might not exist
-      // settingDescription: plan.setting?.description || "No setting description", // Removed
+      planId: adventure.planId,
+      settingId: adventure.settingId,
     }
   };
   console.log('[processTurnReply] Action context for getRollRequirementForAction:', JSON.stringify(actionContext, null, 2));
@@ -128,13 +123,34 @@ export async function processTurnReply({ turnId, characterId, narrativeAction }:
   console.log('[processTurnReply] Derived rollRequirementDetails:', JSON.stringify(rollRequirementDetails, null, 2));
 
   if (rollRequirementDetails && rollRequirementDetails.rollType && typeof rollRequirementDetails.difficulty === 'number') {
-    console.log('[processTurnReply] Roll IS required. Submitting reply with rollRequirementDetails.');
+    console.log('[processTurnReply] Roll IS required. Calling getRollModifier...');
+    
+    // Calculate modifier using the enhanced getRollModifier function
+    const modifierContext = {
+      scenario: { 
+        encounterIntro: encounter.instructions || "",
+        encounterInstructions: encounter.instructions || "",
+        narrativeContext: turn.narrative || "",
+      },
+      rollRequirement: rollRequirementDetails,
+      character: characterPerformingAction,
+    };
+    console.log('[processTurnReply] Modifier context being passed to getRollModifier:', JSON.stringify(modifierContext, null, 2));
+    
+    const calculatedModifier = await getRollModifier(modifierContext);
+    console.log('[processTurnReply] Calculated modifier from getRollModifier:', calculatedModifier);
+    
+    // Override the modifier with the calculated one
+    rollRequirementDetails.modifier = calculatedModifier;
+    
+    console.log('[processTurnReply] Final rollRequirementDetails with calculated modifier:', JSON.stringify(rollRequirementDetails, null, 2));
+    
     // Set rollRequirement for the character, do not mark as complete
     const submitReplyArgs = {
       turnId,
       characterId,
       narrativeAction,
-      rollRequirement: rollRequirementDetails, // Pass the extracted details
+      rollRequirement: rollRequirementDetails, // Pass the details with calculated modifier
     };
     console.log('[processTurnReply] Convex mutation api.adventure.submitReply ARGS (roll required):', JSON.stringify(submitReplyArgs, null, 2));
     await convex.mutation(api.adventure.submitReply, submitReplyArgs)

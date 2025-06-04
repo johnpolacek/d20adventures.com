@@ -2,7 +2,56 @@
 
 A new narrative-driven RPG platform that blends play-by-post gameplay and real-time updates facilitated by an AI Game Master.
 
+--
+
+### Work in Progress
+
+Doing test play throughs and tweaking the prompts:
+
+- 1: `/realm-of-myr/the-midnight-summons/jh74yx5mqjw0f9tbfh6q24nr5d7h4npr/1` (gemini-2.0-flash-lite)
+- 2: `/realm-of-myr/the-midnight-summons/jh7da623rz0wd328p8pnkcpgz57h4j6q/1` (gemini-2.0-flash-lite)
+- 3: `/realm-of-myr/the-midnight-summons/jh7b2xsg8w0jcsyvzxqjzpkpf57h5cch/1` (gemini-2.5-flash-preview-05-20)
+
+
+#### Test Responses
+
+Response 1 (test rewrite)
+Try to figure out what it is and draw my bow
+
+Response 2 (better response, should not be overwritten, prompt animal handling roll)
+“Easy there big guy,” says Thalbern, trying to keep his voice steady. “I have no quarrel with you. Why don’t you just move alone”
+
+Using the skills he had learned from the elves as a youth, the ranger used his body and voice to calm the wild beast and direct him to move onward.
+
+Response 3 (if forced to attack)
+
+“Violence it is then!” the ranger exclaims as he draws his sword and attacks the wild beast.
+
+Reponse 4 (unclear action, attack or intimidation)
+
+“Begone wild beast!” the ranger shouted through gritted teeth, hoping to drive the thing away into the woods as he brandished his blade in defense.
+
+Responses (brief should be rewritten)
+
+attack more aggressively now
+
+try a different tactic in attacking
+
+##### Alt Path, avoiding Owlbear
+
+Response 2
+Thalbern bows slightly in deference to the druid, then straightens. "Wollandora. It is great to see you again old friend," he replies. "Now please tell me what urgent matter caused you to summon me out here at this late hour. I had a near miss encounter on the way here with an owlbear, you should know."
+
+Response 3
+Try to hide and let it pass
+
+Response 4
+“This is troubling indeed,” says Thalbern, his brow furrowing as he considers the implications. “Is there anything else you can tell me about who might be behind this?”
+
+
 ---
+
+### Overview
 
 The prototype for D20 Adventures is a proof of concept for a turn based narrative driven RPG platform where players work their way through an adventure module run by an AI game master.
 

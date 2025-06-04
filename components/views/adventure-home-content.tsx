@@ -25,7 +25,6 @@ function AdventureHomeContent({ initialImage, adventure, teaser }: { initialImag
     console.log("[AdventureHomeContent] turn encounterId", turn?.encounterId)
     if (turn) {
       const newImage = `images/settings/${settingId}/${adventurePlanId}/${turn.encounterId}.png`
-      console.log("[AdventureHomeContent] image check", { newImage, image })
       if (turn.encounterId && image !== newImage) {
         setImage(newImage)
         wait(500).then(() => {
