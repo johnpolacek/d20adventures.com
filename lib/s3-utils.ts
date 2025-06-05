@@ -1,4 +1,4 @@
-import { GetObjectCommand,PutObjectCommand } from "@aws-sdk/client-s3"
+import { GetObjectCommand,PutObjectCommand, CopyObjectCommand } from "@aws-sdk/client-s3"
 import { s3Client, isAwsConfigured, getAssetUrl } from "./aws"
 import { Readable } from "stream"
 
@@ -126,5 +126,50 @@ export async function readJsonFromS3(key: string): Promise<unknown> {
     }
   } catch (error) {
     throw new Error(`Error reading JSON from S3: ${error}`);
+  }
+}
+
+export async function updateJsonOnS3(key: string, data: unknown): Promise<void> {
+  const bucket = process.env.bucketData || process.env.AWS_BUCKET_DATA;
+  if (!bucket) {
+    throw new Error("AWS_BUCKET_DATA is not set");
+  }
+  if (!isAwsConfigured() || !s3Client) {
+    throw new Error("AWS S3 is not configured");
+  }
+  try {
+    const command = new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: JSON.stringify(data, null, 2),
+      ContentType: "application/json",
+    });
+    await s3Client.send(command);
+  } catch (error) {
+    console.error("Error updating JSON on S3:", { key, error });
+    throw new Error(`Error updating JSON on S3: ${error}`);
+  }
+}
+
+export async function copyS3Object(sourceKey: string, destinationKey: string): Promise<void> {
+  const bucket = process.env.bucketData || process.env.AWS_BUCKET_DATA;
+  if (!bucket) {
+    throw new Error("AWS_BUCKET_DATA is not set");
+  }
+  if (!isAwsConfigured() || !s3Client) {
+    throw new Error("AWS S3 is not configured");
+  }
+
+  try {
+    const command = new CopyObjectCommand({
+      Bucket: bucket,
+      CopySource: `${bucket}/${sourceKey}`,
+      Key: destinationKey,
+    });
+    await s3Client.send(command);
+    console.log(`Successfully copied ${sourceKey} to ${destinationKey}`);
+  } catch (error) {
+    console.error("Error copying S3 object:", { sourceKey, destinationKey, error });
+    throw new Error(`Error copying S3 object: ${error}`);
   }
 }

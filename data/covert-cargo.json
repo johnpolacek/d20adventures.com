@@ -1,7 +1,7 @@
 {
-  "id": "the-midnight-summons",
+  "id": "covert-cargo",
   "settingId": "realm-of-myr",
-  "title": "The Midnight Summons",
+  "title": "Covert Cargo",
   "author": "D20Adventures",
   "version": "1716220800",
   "teaser": "A mysterious summons from an old druid friend draws a reclusive ranger into the wilds of the Valkarr forest.",
@@ -12,12 +12,10 @@
     {
       "title": "Journey to the Standing Stones",
       "summary": "Thalbern receives an urgent message and ventures to meet the druid Wollandora, facing an unexpected danger along the way.",
-      "image": "",
       "scenes": [
         {
           "title": "Path Through The Dark Forest",
           "summary": "Thalbern answers Wollandora's call, navigating the dark forest towards the ancient meeting place.",
-          "image": "",
           "encounters": [
             {
               "id": "broken-silence",

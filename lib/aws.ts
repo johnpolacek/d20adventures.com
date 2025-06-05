@@ -55,7 +55,7 @@ export function getAssetUrl(key: string, withTimestamp = false): string | null {
     : key
 
   if (awsConfig.cloudfrontDomain) {
-    return `https://${awsConfig.cloudfrontDomain}/${keyWithTimestamp}`
+    return `${awsConfig.cloudfrontDomain}/${keyWithTimestamp}`
   }
 
   // Fallback to direct S3 URL

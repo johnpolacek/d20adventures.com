@@ -19,12 +19,14 @@ export interface AdventurePlan {
 export interface AdventureSection {
   title: string;
   summary: string;
+  image?: string;
   scenes: AdventureScene[];
 }
 
 export interface AdventureScene {
   title: string;
   summary: string;
+  image?: string;
   encounters: AdventureEncounter[];
 }
 
@@ -34,7 +36,6 @@ export interface AdventureEncounter {
   intro: string;
   instructions?: string;
   image?: string;
-  notes?: string;
   transitions?: EncounterTransition[];
   npc?: EncounterCharacterRef[];
   skipInitialNpcTurns?: boolean;
@@ -50,4 +51,4 @@ export interface EncounterCharacterRef {
   id: string;
   behavior: string;
   initialInitiative?: number;
-} 
+}
