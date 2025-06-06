@@ -1,4 +1,4 @@
-import type { Character } from "./character";
+import type { Character, PCTemplate } from "./character";
 
 export interface AdventurePlan {
   id: string;
@@ -13,6 +13,7 @@ export interface AdventurePlan {
   image: string;
   start: string;
   sections: AdventureSection[];
+  premadePlayerCharacters: PCTemplate[];
   npcs: Record<string, Character>;
 }
 

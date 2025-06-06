@@ -43,7 +43,7 @@ export function AdventurePlanEditSidebar({ adventurePlan }: AdventurePlanEditSid
   const defaultOpenScenes = adventurePlan.sections.flatMap((section, sIndex) => section.scenes.map((_, scIndex) => `scene-${sIndex}-${scIndex}`))
 
   return (
-    <div id="adventure-plan-edit-sidebar" className="w-[360px] h-full overflow-y-auto pr-4">
+    <div id="adventure-plan-edit-sidebar" className="w-[360px] h-full overflow-y-auto pr-8">
       <div className="text-xs p-1 opacity-70 text-primary-100 font-mono">Edit Adventure Plan</div>
       <NavLink href="#adventure-plan-main" className="text-2xl text-amber-400 font-display block mb-2 hover:text-amber-300 transition-colors">
         {adventurePlan.title}
@@ -96,8 +96,12 @@ export function AdventurePlanEditSidebar({ adventurePlan }: AdventurePlanEditSid
           </div>
         ))}
         <div className="border-t border-primary-200/30 pt-2 mt-2">
-          <NavLink className="text-sm" href="#npcs-editor">
+          <div className="font-display">Characters</div>
+          <NavLink className="text-xs p-2" href="#npcs-editor">
             NPCs
+          </NavLink>
+          <NavLink className="text-xs p-2" href="#premade-pcs-editor">
+            Premade PCs
           </NavLink>
         </div>
       </nav>

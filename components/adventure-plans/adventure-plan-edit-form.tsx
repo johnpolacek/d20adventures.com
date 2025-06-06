@@ -2,16 +2,18 @@
 
 import * as React from "react"
 import { AdventurePlan, AdventureSection } from "@/types/adventure-plan"
-import type { Character } from "@/types/character"
+import type { Character, PCTemplate } from "@/types/character"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ImageUpload } from "@/components/ui/image-upload"
 import { EncounterEditForm } from "@/components/adventure-plans/encounter-edit-form"
-import { AdventurePlanNpcsEdit } from "@/components/adventure-plans/adventure-plan-npcs-edit"
+import { AdventurePlanCharactersEdit } from "@/components/adventure-plans/adventure-plan-characters-edit"
 import { AdventurePlanEditSidebar } from "@/components/adventure-plans/adventure-plan-edit-sidebar"
 import { updateAdventurePlanAction } from "@/app/_actions/adventure-plan-actions"
 import { toast } from "sonner"
+import { Download } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface AdventurePlanEditFormProps {
   adventurePlan: AdventurePlan
@@ -26,6 +28,7 @@ export function AdventurePlanEditForm({ adventurePlan }: AdventurePlanEditFormPr
   const [image, setImage] = React.useState(adventurePlan.image || "")
   const [sections, setSections] = React.useState<AdventureSection[]>(adventurePlan.sections || [])
   const [npcs, setNpcs] = React.useState<Record<string, Character>>(adventurePlan.npcs || {})
+  const [premadePlayerCharacters, setPremadePlayerCharacters] = React.useState<PCTemplate[]>(adventurePlan.premadePlayerCharacters || [])
   const [isSaving, setIsSaving] = React.useState(false)
 
   const imageUploadFolder = `images/settings/${adventurePlan.settingId}/${adventurePlan.id}`
@@ -73,11 +76,6 @@ export function AdventurePlanEditForm({ adventurePlan }: AdventurePlanEditFormPr
   }
 
   const handleEncounterTitleChange = (sectionIndex: number, sceneIndex: number, encounterIndex: number, newTitle: string) => {
-    console.log("[AdventurePlanEditForm] handleEncounterTitleChange called")
-    console.log("[AdventurePlanEditForm] Indices:", { sectionIndex, sceneIndex, encounterIndex })
-    console.log("[AdventurePlanEditForm] New title:", newTitle)
-    console.log("[AdventurePlanEditForm] Current sections length:", sections.length)
-
     const updatedSections = sections.map((section, sIdx) => {
       if (sIdx === sectionIndex) {
         const updatedScenes = section.scenes.map((scene, scIdx) => {
@@ -99,9 +97,6 @@ export function AdventurePlanEditForm({ adventurePlan }: AdventurePlanEditFormPr
       }
       return section
     })
-
-    console.log("[AdventurePlanEditForm] About to setSections with updated data")
-    console.log("[AdventurePlanEditForm] Updated sections:", updatedSections)
     setSections(updatedSections)
   }
 
@@ -309,9 +304,73 @@ export function AdventurePlanEditForm({ adventurePlan }: AdventurePlanEditFormPr
     )
   }
 
+  const handleEncounterNpcChange = (sectionIndex: number, sceneIndex: number, encounterIndex: number, newNpcs: { id: string; behavior: string; initialInitiative?: number }[]) => {
+    setSections((prevSections) =>
+      prevSections.map((section, sIndex) => {
+        if (sIndex === sectionIndex) {
+          return {
+            ...section,
+            scenes: section.scenes.map((scene, scIndex) => {
+              if (scIndex === sceneIndex) {
+                return {
+                  ...scene,
+                  encounters: scene.encounters.map((encounter, eIndex) => {
+                    if (eIndex === encounterIndex) {
+                      return { ...encounter, npc: newNpcs }
+                    }
+                    return encounter
+                  }),
+                }
+              }
+              return scene
+            }),
+          }
+        }
+        return section
+      })
+    )
+  }
+
   const handleNpcsChange = (newNpcs: Record<string, Character>) => {
     setNpcs(newNpcs)
   }
+
+  const handlePremadePlayerCharactersChange = (newPcs: PCTemplate[]) => {
+    setPremadePlayerCharacters(newPcs)
+  }
+
+  // Wrapper handlers for the generic component
+  const handleNpcsChangeWrapper = (characters: Record<string, Character> | PCTemplate[]) => {
+    if (Array.isArray(characters)) {
+      // This shouldn't happen for NPCs, but handle gracefully
+      console.warn("NPCs handler received array instead of object")
+      return
+    }
+    handleNpcsChange(characters)
+  }
+
+  const handlePremadePlayerCharactersChangeWrapper = (characters: Record<string, Character> | PCTemplate[]) => {
+    if (!Array.isArray(characters)) {
+      // This shouldn't happen for PCs, but handle gracefully
+      console.warn("Premade PCs handler received object instead of array")
+      return
+    }
+    handlePremadePlayerCharactersChange(characters)
+  }
+
+  // Prepare available NPCs for the encounter form
+  const availableNpcs = React.useMemo(() => {
+    const npcOptions: Record<string, { id: string; name: string }> = {}
+
+    Object.entries(npcs).forEach(([npcId, npcData]) => {
+      npcOptions[npcId] = {
+        id: npcId,
+        name: npcData.name || npcId,
+      }
+    })
+
+    return npcOptions
+  }, [npcs])
 
   const handleSave = async () => {
     setIsSaving(true)
@@ -324,6 +383,7 @@ export function AdventurePlanEditForm({ adventurePlan }: AdventurePlanEditFormPr
       image,
       sections,
       npcs,
+      premadePlayerCharacters,
     }
 
     try {
@@ -342,8 +402,52 @@ export function AdventurePlanEditForm({ adventurePlan }: AdventurePlanEditFormPr
     }
   }
 
+  const handleDownload = () => {
+    // Prepare the current adventure plan data (including unsaved changes)
+    const currentAdventurePlan: AdventurePlan = {
+      ...adventurePlan,
+      teaser,
+      overview,
+      party: [Number(minPartySize), Number(maxPartySize)] as [number, number],
+      image,
+      sections,
+      npcs,
+      premadePlayerCharacters,
+    }
+
+    // Convert to JSON with pretty formatting
+    const jsonData = JSON.stringify(currentAdventurePlan, null, 2)
+
+    // Create blob and download
+    const blob = new Blob([jsonData], { type: "application/json" })
+    const url = URL.createObjectURL(blob)
+
+    // Create download link
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `${adventurePlan.title.replace(/[^a-z0-9]/gi, "_").toLowerCase()}_adventure_plan.json`
+
+    // Trigger download
+    document.body.appendChild(link)
+    link.click()
+
+    // Cleanup
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+
+    toast.success("Adventure plan downloaded successfully!")
+  }
+
   return (
-    <div className="py-8 flex gap-8 h-[90vh]">
+    <div className="pb-8 flex flex-wrap h-[90vh]">
+      <div className="flex items-center justify-end gap-4 w-full border-b border-white/10 pb-2">
+        <Button ariaLabel="download json" variant="outline" className="text-sm" size="icon" onClick={handleDownload}>
+          <Download size={20} className="opacity-50 scale-150" />
+        </Button>
+        <Button variant="outline" className="font-display font-extrabold tracking-widest text-sm w-24" size="sm" onClick={handleSave} disabled={isSaving}>
+          {isSaving ? "Saving..." : "Save"}
+        </Button>
+      </div>
       <AdventurePlanEditSidebar adventurePlan={{ ...adventurePlan, sections }} />
       <div id="adventure-plan-main" className="flex-1 pt-2 h-full overflow-y-auto">
         <div className="grid grid-cols-2 gap-8 pb-4" id="adventure-plan-main-top">
@@ -400,64 +504,74 @@ export function AdventurePlanEditForm({ adventurePlan }: AdventurePlanEditFormPr
           <Textarea id="overview" value={overview} onChange={(e) => setOverview(e.target.value)} placeholder="A broader overview of the adventure plan..." rows={6} disabled={isSaving} />
         </div>
 
-        <h4 className="font-mono opacity-70 text-sm pt-12 mb-1 text-indigo-300/80 text-center font-bold tracking-widest uppercase">Adventure Plan Sections</h4>
+        <h4 className="font-mono opacity-70 text-sm pt-12 mb-1 text-indigo-300/80 text-center font-bold tracking-widest uppercase">Adventure Plan</h4>
         {sections.map((section, sIndex) => (
           <div key={sIndex} id={`section-${sIndex}`} className="border-t border-white/20 pt-8 w-full flex flex-col gap-4 scroll-mt-20">
-            <h3 className="text-xl font-bold font-display text-amber-300/80 text-center">{section.title || <span className="italic text-gray-400">Untitled Section</span>}</h3>
+            {sections.length > 1 && (
+              <>
+                <h3 className="text-xl font-bold font-display text-amber-300/80 text-center">{section.title || <span className="italic text-gray-400">Untitled Section</span>}</h3>
+                <div>
+                  <label htmlFor={`section-title-${sIndex}`} className="block text-sm font-medium font-mono text-primary-200/90 mb-1">
+                    Section Title
+                  </label>
+                  <Input
+                    id={`section-title-${sIndex}`}
+                    value={section.title}
+                    onChange={(e) => handleSectionTitleChange(sIndex, e.target.value)}
+                    placeholder="Enter section title"
+                    disabled={isSaving}
+                    className="bg-neutral-800/50 border-neutral-700 placeholder:text-white/50"
+                  />
+                </div>
+                <label htmlFor={`section-summary-${sIndex}`} className="block text-sm font-medium font-mono text-primary-200/90 mb-1">
+                  Section Summary
+                </label>
+                <Textarea
+                  id={`section-summary-${sIndex}`}
+                  value={section.summary}
+                  onChange={(e) => handleSectionSummaryChange(sIndex, e.target.value)}
+                  placeholder="Enter section summary"
+                  rows={3}
+                  disabled={isSaving}
+                  className="bg-neutral-800/50 border-neutral-700 placeholder:text-white/50"
+                />
+              </>
+            )}
+
             <div>
-              <label htmlFor={`section-title-${sIndex}`} className="block text-sm font-medium font-mono text-primary-200/90 mb-1">
-                Section Title
-              </label>
-              <Input
-                id={`section-title-${sIndex}`}
-                value={section.title}
-                onChange={(e) => handleSectionTitleChange(sIndex, e.target.value)}
-                placeholder="Enter section title"
-                disabled={isSaving}
-                className="bg-neutral-800/50 border-neutral-700 placeholder:text-white/50"
-              />
-            </div>
-            <div>
-              <label htmlFor={`section-summary-${sIndex}`} className="block text-sm font-medium font-mono text-primary-200/90 mb-1">
-                Section Summary
-              </label>
-              <Textarea
-                id={`section-summary-${sIndex}`}
-                value={section.summary}
-                onChange={(e) => handleSectionSummaryChange(sIndex, e.target.value)}
-                placeholder="Enter section summary"
-                rows={3}
-                disabled={isSaving}
-                className="bg-neutral-800/50 border-neutral-700 placeholder:text-white/50"
-              />
               <div>
                 {section.scenes.map((scene, scIndex) => (
-                  <div id={`scene-${sIndex}-${scIndex}`} className="border border-white/20 rounded-lg p-4 mt-8 flex flex-col gap-4 scroll-mt-20" key={scIndex}>
-                    <h3 className="text-xl font-bold font-display text-amber-300/80 text-center">{scene.title || <span className="italic text-gray-400">Untitled Scene</span>}</h3>
+                  <div id={`scene-${sIndex}-${scIndex}`} className={cn(section.scenes.length > 1 && "border border-white/20 rounded-lg p-4 mt-8 flex flex-col gap-4 scroll-mt-20")} key={scIndex}>
                     <div>
-                      <label htmlFor={`scene-title-${sIndex}-${scIndex}`} className="block text-sm font-medium font-mono text-primary-200/90 mb-1">
-                        Scene Title
-                      </label>
-                      <Input
-                        id={`scene-title-${sIndex}-${scIndex}`}
-                        value={scene.title}
-                        onChange={(e) => handleSceneTitleChange(sIndex, scIndex, e.target.value)}
-                        placeholder="Enter scene title"
-                        disabled={isSaving}
-                        className="bg-neutral-800/50 border-neutral-700 placeholder:text-white/50"
-                      />
-                      <label htmlFor={`scene-summary-${sIndex}-${scIndex}`} className="block text-sm font-medium font-mono text-primary-200/90 mb-1 mt-4">
-                        Scene Summary
-                      </label>
-                      <Textarea
-                        id={`scene-summary-${sIndex}-${scIndex}`}
-                        value={scene.summary}
-                        onChange={(e) => handleSceneSummaryChange(sIndex, scIndex, e.target.value)}
-                        placeholder="Enter scene summary"
-                        rows={3}
-                        disabled={isSaving}
-                        className="bg-neutral-800/50 border-neutral-700 placeholder:text-white/50"
-                      />
+                      {section.scenes.length > 1 && (
+                        <>
+                          <h3 className="text-xl font-bold font-display text-amber-300/80 text-center pb-2">{scene.title || <span className="italic text-gray-400">Untitled Scene</span>}</h3>
+                          <label htmlFor={`scene-title-${sIndex}-${scIndex}`} className="block text-sm font-medium font-mono text-primary-200/90 mb-1">
+                            Scene Title
+                          </label>
+                          <Input
+                            id={`scene-title-${sIndex}-${scIndex}`}
+                            value={scene.title}
+                            onChange={(e) => handleSceneTitleChange(sIndex, scIndex, e.target.value)}
+                            placeholder="Enter scene title"
+                            disabled={isSaving}
+                            className="bg-neutral-800/50 border-neutral-700 placeholder:text-white/50"
+                          />
+                          <label htmlFor={`scene-summary-${sIndex}-${scIndex}`} className="block text-sm font-medium font-mono text-primary-200/90 mb-1 mt-4">
+                            Scene Summary
+                          </label>
+                          <Textarea
+                            id={`scene-summary-${sIndex}-${scIndex}`}
+                            value={scene.summary}
+                            onChange={(e) => handleSceneSummaryChange(sIndex, scIndex, e.target.value)}
+                            placeholder="Enter scene summary"
+                            rows={3}
+                            disabled={isSaving}
+                            className="bg-neutral-800/50 border-neutral-700 placeholder:text-white/50"
+                          />
+                        </>
+                      )}
+
                       <div>
                         {scene.encounters.map((encounter, eIndex) => (
                           <EncounterEditForm
@@ -470,6 +584,7 @@ export function AdventurePlanEditForm({ adventurePlan }: AdventurePlanEditFormPr
                             sceneIndex={scIndex}
                             encounterIndex={eIndex}
                             allSections={sections}
+                            availableNpcs={availableNpcs}
                             onTitleChange={handleEncounterTitleChange}
                             onIntroChange={handleEncounterIntroChange}
                             onIdChange={handleEncounterIdChange}
@@ -479,6 +594,7 @@ export function AdventurePlanEditForm({ adventurePlan }: AdventurePlanEditFormPr
                             onImageChange={handleEncounterImageChange}
                             onDelete={handleEncounterDelete}
                             onTransitionsChange={handleEncounterTransitionsChange}
+                            onNpcChange={handleEncounterNpcChange}
                             isSaving={isSaving}
                           />
                         ))}
@@ -492,7 +608,25 @@ export function AdventurePlanEditForm({ adventurePlan }: AdventurePlanEditFormPr
         ))}
         {sections.length === 0 && <p className="text-sm text-gray-400 italic">This adventure plan currently has no sections defined.</p>}
 
-        <AdventurePlanNpcsEdit id="npcs-editor" npcs={npcs} onNpcsChange={handleNpcsChange} isSaving={isSaving} adventurePlanId={adventurePlan.id} settingId={adventurePlan.settingId} />
+        <AdventurePlanCharactersEdit
+          id="npcs-editor"
+          type="npcs"
+          characters={npcs}
+          onCharactersChange={handleNpcsChangeWrapper}
+          isSaving={isSaving}
+          adventurePlanId={adventurePlan.id}
+          settingId={adventurePlan.settingId}
+        />
+
+        <AdventurePlanCharactersEdit
+          id="premade-pcs-editor"
+          type="premadePlayerCharacters"
+          characters={premadePlayerCharacters}
+          onCharactersChange={handlePremadePlayerCharactersChangeWrapper}
+          isSaving={isSaving}
+          adventurePlanId={adventurePlan.id}
+          settingId={adventurePlan.settingId}
+        />
 
         <div className="flex flex-col items-end gap-4 mt-8 px-4">
           <Button variant="epic" size="sm" onClick={handleSave} disabled={isSaving}>

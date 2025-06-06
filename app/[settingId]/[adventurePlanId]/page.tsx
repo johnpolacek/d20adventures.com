@@ -1,7 +1,6 @@
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import AdventureHome from "@/components/views/adventure-home"
 import type { AdventurePlan } from "@/types/adventure-plan"
-import { thalbern } from "@/data/demo"
 import { TurnCharacter } from "@/types/adventure"
 
 export default async function AdventureHomePage(props: { params: Promise<{ settingId: string; adventurePlanId: string }> }) {
@@ -34,7 +33,7 @@ export default async function AdventureHomePage(props: { params: Promise<{ setti
     narrative: adventurePlan.sections[0].scenes[0].encounters[0].intro,
     characters: [
       {
-        ...thalbern,
+        ...adventurePlan.premadePlayerCharacters[0],
         initiative: 10,
       } as TurnCharacter,
     ],

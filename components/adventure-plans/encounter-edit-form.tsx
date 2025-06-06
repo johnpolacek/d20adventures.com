@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { AdventureEncounter, EncounterTransition, AdventureSection } from "@/types/adventure-plan"
+import { AdventureEncounter, EncounterTransition, AdventureSection, EncounterCharacterRef } from "@/types/adventure-plan"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label"
 import { ImageUpload } from "@/components/ui/image-upload"
 import { Button } from "@/components/ui/button"
 import { X, Plus } from "lucide-react"
-// import slugify from "slugify" // Temporarily commented out for debugging
 
 interface EncounterEditFormProps {
   id: string
@@ -20,6 +19,7 @@ interface EncounterEditFormProps {
   sceneIndex: number
   encounterIndex: number
   allSections: AdventureSection[] // Properly typed sections array
+  availableNpcs: Record<string, { id: string; name: string }> // Available NPCs from adventure plan
   onTitleChange: (sectionIndex: number, sceneIndex: number, encounterIndex: number, newTitle: string) => void
   onIntroChange: (sectionIndex: number, sceneIndex: number, encounterIndex: number, newIntro: string) => void
   onIdChange: (sectionIndex: number, sceneIndex: number, encounterIndex: number, newId: string) => void // Keep this for now, we'll use it later
@@ -28,6 +28,7 @@ interface EncounterEditFormProps {
   onResetHealthChange: (sectionIndex: number, sceneIndex: number, encounterIndex: number, newValue: boolean) => void
   onImageChange: (sectionIndex: number, sceneIndex: number, encounterIndex: number, newImageUrl: string) => void
   onTransitionsChange: (sectionIndex: number, sceneIndex: number, encounterIndex: number, newTransitions: EncounterTransition[]) => void
+  onNpcChange: (sectionIndex: number, sceneIndex: number, encounterIndex: number, newNpcs: EncounterCharacterRef[]) => void
   onDelete: (sectionIndex: number, sceneIndex: number, encounterIndex: number) => void
   isSaving: boolean
 }
@@ -41,14 +42,15 @@ export function EncounterEditForm({
   sceneIndex,
   encounterIndex,
   allSections,
+  availableNpcs,
   onTitleChange,
   onIntroChange,
-  onIdChange, // eslint-disable-line @typescript-eslint/no-unused-vars
   onInstructionsChange,
   onSkipInitialNpcTurnsChange,
   onResetHealthChange,
   onImageChange,
   onTransitionsChange,
+  onNpcChange,
   onDelete,
   isSaving,
 }: EncounterEditFormProps) {
@@ -65,14 +67,8 @@ export function EncounterEditForm({
     console.log("[EncounterEditForm] Section/Scene/Encounter indices:", sectionIndex, sceneIndex, encounterIndex)
 
     onTitleChange(sectionIndex, sceneIndex, encounterIndex, newTitle)
-
-    // Temporarily disable automatic ID update to test if this is causing the issue
-    // const newId = slugify(newTitle, { lower: true, strict: true })
-    // console.log('[EncounterEditForm] Generated new ID:', newId)
-    // onIdChange(sectionIndex, sceneIndex, encounterIndex, newId)
   }
 
-  // Get all available encounter IDs from all sections
   const getAllEncounterIds = () => {
     const encounters: { id: string; title: string; sectionTitle?: string; sceneTitle?: string }[] = []
     allSections.forEach((section) => {
@@ -113,6 +109,26 @@ export function EncounterEditForm({
   const handleRemoveTransition = (transitionIndex: number) => {
     const newTransitions = transitions.filter((_, idx) => idx !== transitionIndex)
     onTransitionsChange(sectionIndex, sceneIndex, encounterIndex, newTransitions)
+  }
+
+  const handleAddNpc = () => {
+    const newNpcs = [...(encounter.npc || []), { id: "", behavior: "", initialInitiative: 0 }]
+    onNpcChange(sectionIndex, sceneIndex, encounterIndex, newNpcs)
+  }
+
+  const handleNpcChange = (npcIndex: number, field: "id" | "behavior" | "initialInitiative", value: string | number) => {
+    const newNpcs = (encounter.npc || []).map((npc, idx) => {
+      if (idx === npcIndex) {
+        return { ...npc, [field]: value }
+      }
+      return npc
+    })
+    onNpcChange(sectionIndex, sceneIndex, encounterIndex, newNpcs)
+  }
+
+  const handleRemoveNpc = (npcIndex: number) => {
+    const newNpcs = (encounter.npc || []).filter((_, idx) => idx !== npcIndex)
+    onNpcChange(sectionIndex, sceneIndex, encounterIndex, newNpcs)
   }
 
   const baseId = `encounter-${sectionIndex}-${sceneIndex}-${encounterIndex}`
@@ -248,6 +264,69 @@ export function EncounterEditForm({
                       </option>
                     ))}
                   </select>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* NPCs Section */}
+      <div className="border-t border-white/10 pt-4">
+        <div className="flex items-center justify-between mb-3">
+          <Label className="text-sm font-medium font-mono text-primary-200/90">NPCs in Encounter</Label>
+          <Button onClick={handleAddNpc} disabled={isSaving} size="sm" variant="outline" className="h-8 px-2 text-xs">
+            <Plus size={12} className="mr-1" />
+            Add NPC
+          </Button>
+        </div>
+
+        {!encounter.npc || encounter.npc.length === 0 ? (
+          <p className="text-xs text-gray-400 italic mb-2">No NPCs assigned to this encounter.</p>
+        ) : (
+          <div className="space-y-3">
+            {encounter.npc.map((npc, nIndex) => (
+              <div key={nIndex} className="border border-white/10 rounded p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono text-white/60">NPC {nIndex + 1}</span>
+                  <Button onClick={() => handleRemoveNpc(nIndex)} disabled={isSaving} size="icon" variant="ghost" className="h-5 w-5 p-0 text-red-400 hover:text-red-300 hover:bg-red-400/10">
+                    <X size={10} />
+                  </Button>
+                </div>
+
+                <div>
+                  <Label htmlFor={`${baseId}-npc-${nIndex}-id`} className="text-xs font-mono text-primary-200/90 mb-1 block">
+                    NPC Character
+                  </Label>
+                  <select
+                    id={`${baseId}-npc-${nIndex}-id`}
+                    value={npc.id}
+                    onChange={(e) => handleNpcChange(nIndex, "id", e.target.value)}
+                    disabled={isSaving}
+                    className="w-full bg-white/5 border border-white/20 rounded px-2 py-1 text-xs text-white placeholder:text-white/40"
+                  >
+                    <option value="">Select NPC...</option>
+                    {Object.entries(availableNpcs).map(([npcId, npcData]) => (
+                      <option key={npcId} value={npcId} className="bg-gray-800">
+                        {npcData.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <Label htmlFor={`${baseId}-npc-${nIndex}-behavior`} className="text-xs font-mono text-primary-200/90 mb-1 block">
+                    Behavior Instructions
+                  </Label>
+                  <Textarea
+                    id={`${baseId}-npc-${nIndex}-behavior`}
+                    value={npc.behavior}
+                    onChange={(e) => handleNpcChange(nIndex, "behavior", e.target.value)}
+                    placeholder="e.g., 'Aggressive attacker, focuses on spellcasters' or 'Tries to negotiate before fighting'"
+                    rows={2}
+                    disabled={isSaving}
+                    className="bg-white/5 placeholder:text-white/40 text-xs"
+                  />
                 </div>
               </div>
             ))}
