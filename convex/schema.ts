@@ -113,6 +113,7 @@ export default defineSchema({
       v.literal("purchase"),
       v.literal("usage_generate_text"),
       v.literal("usage_generate_object"),
+      v.literal("usage_image_upload"),
       v.literal("adjustment_manual") // For admin corrections or other types
     ),
     amount: v.number(), // Positive for additions (grants, purchases), negative for deductions (usage)

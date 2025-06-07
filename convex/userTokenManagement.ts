@@ -57,6 +57,7 @@ export const decrementTokens = mutation({
     transactionType: v.union(
       v.literal("usage_generate_text"),
       v.literal("usage_generate_object"),
+      v.literal("usage_image_upload"),
       // Add other usage types as needed
     ),
     description: v.optional(v.string()),

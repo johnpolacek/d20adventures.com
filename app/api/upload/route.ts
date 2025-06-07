@@ -3,6 +3,8 @@ import { uploadFileToS3 } from "@/lib/s3-utils"
 import { isAwsConfigured } from "@/lib/aws"
 import { v4 as uuidv4 } from "uuid"
 import { auth } from "@clerk/nextjs/server"
+import { decrementUserTokensAction } from "@/app/_actions/tokens"
+import { fetchUserTokenBalance } from "@/app/_actions/user-token-actions"
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,6 +15,8 @@ export async function POST(request: NextRequest) {
         { status: 503 }
       )
     }
+
+    const IMAGE_UPLOAD_TOKEN_COST = 200;
 
     const { userId } = await auth()
 
@@ -40,12 +44,40 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "File size exceeds 10MB limit" }, { status: 400 })
     }
     
+    // Check if user has enough tokens for upload
+    try {
+      const tokenBalance = await fetchUserTokenBalance()
+      if (tokenBalance.tokensRemaining < IMAGE_UPLOAD_TOKEN_COST) {
+        return NextResponse.json({ 
+          error: `Insufficient tokens for image upload. ${IMAGE_UPLOAD_TOKEN_COST} tokens required.` 
+        }, { status: 402 }) // Payment Required
+      }
+    } catch (tokenError) {
+      console.error("Failed to check token balance:", tokenError)
+      return NextResponse.json({ 
+        error: "Unable to verify token balance" 
+      }, { status: 500 })
+    }
+    
     // Generate a unique filename
     const fileExtension = file.name.split(".").pop()
     const fileName = `${folder}/${uuidv4()}.${fileExtension}`
     
     // Upload to S3
     const fileUrl = await uploadFileToS3(file, fileName)
+    
+    // Deduct tokens for the upload
+    try {
+      await decrementUserTokensAction({
+        tokensUsed: IMAGE_UPLOAD_TOKEN_COST,
+        transactionType: "usage_image_upload",
+        description: `Image upload: ${file.name} (${Math.round(file.size / 1024)}KB)`
+      })
+    } catch (tokenError) {
+      console.error("Failed to deduct tokens for image upload:", tokenError)
+      // Continue with the upload even if token deduction fails - we don't want to break the upload
+      // In a production system, you might want to handle this differently
+    }
     
     return NextResponse.json({ url: fileUrl })
   } catch (error) {
