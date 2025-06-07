@@ -13,6 +13,12 @@ Doing test play throughs and tweaking the prompts:
 - 3: `/realm-of-myr/the-midnight-summons/jh7b2xsg8w0jcsyvzxqjzpkpf57h5cch/1` (gemini-2.5-flash-preview-05-20)
 
 
+### Future Adventure Ideas
+
+Olav’s Outpost - A tavern at the edge of civilization across from a mysterious forest island
+
+
+
 #### Test Responses
 
 Response 1 (test rewrite)

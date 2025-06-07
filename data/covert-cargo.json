@@ -4,154 +4,85 @@
   "title": "Covert Cargo",
   "author": "D20Adventures",
   "version": "1716220800",
-  "teaser": "A mysterious summons from an old druid friend draws a reclusive ranger into the wilds of the Valkarr forest.",
-  "overview": "Thalbern, a ranger of the Valkarr woods, is called upon by his old friend, the druid Wollandora, to meet him at the Old Standing Stones at midnight. The balance of the forest could depend on it.",
-  "party": [1, 1],
-  "image": "images/settings/realm-of-myr/the-midnight-summons/the-midnight-summons.png",
+  "teaser": "Docked on a discrete pier on a quiet fork of the Mordava River, a river boat bearing a shipment bound for Kordavos sets a clandestine plot in motion and draws the attention of an opportunistic group of rogues.",
+  "overview": "Docked on a discrete pier on a quiet fork of the Mordava River, a river boat bearing a shipment bound for Kordavos sets a clandestine plot in motion and draws the attention of an opportunistic group of rogues.",
+  "party": [
+    1,
+    2
+  ],
+  "tags": [
+    "fantasy",
+    "solo",
+    "investigation",
+    "forest",
+    "mystery"
+  ],
+  "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/1baf5c28-98db-41c4-86b1-2e2520f022c5.png?t=1749056586286",
   "sections": [
     {
-      "title": "Journey to the Standing Stones",
-      "summary": "Thalbern receives an urgent message and ventures to meet the druid Wollandora, facing an unexpected danger along the way.",
+      "title": "Section One",
+      "summary": "",
       "scenes": [
         {
-          "title": "Path Through The Dark Forest",
-          "summary": "Thalbern answers Wollandora's call, navigating the dark forest towards the ancient meeting place.",
+          "title": "Quiet Pier at Dawn",
+          "summary": "",
           "encounters": [
             {
-              "id": "broken-silence",
-              "title": "Broken Silence",
-              "intro": "Thalbern, a solitary ranger of the Valkarr woods, has always trusted the silence of the wilds more than the promises of men. Orphaned by border raiders and raised by the elves of the Valkrarr Forest, he has spent years living on the edge of Kordavos, guiding travelers, hunting for his own survival, and keeping his distance from the tangled politics of the city.\n\nYet on this night, a message delivered by a red squirrel bearing the unmistakable script of Wollandora, a trusted elven friend and druid, has drawn him from his hidden home. The note was simple and urgent: Meet me at the Old Standing Stones at midnight. The balance of the forest could depend on it.\n\nNow, as midnight approaches, Thalbern moves quietly through the dense undergrowth, guided by memory and instinct. It is dark with almost no moonlight coming through the forest canopy.\n\nSuddenly, the hush of the night is broken by a sharp crack. Something large has just stepped on a branch somewhere off in the distance.",
-              "instructions": "A perception check is appropriate if Thalbern investigates (low difficulty with a plus 3 modifier). If successful, he will determine it is a large creature that is approaching quickly. With a high roll (18+), he will determine it is an Owlbear. If combat ensues and Thalbern is below 25% health, Wollandora will intervene. If Thalbern avoids or defeats the Owlbear, or if Wollandora saves him, he proceeds to the Old Standing Stones.",
-              "image": "images/settings/realm-of-myr/the-midnight-summons/broken-silence-2.png",
+              "id": "the-shipment",
+              "title": "The Shipment",
+              "intro": "Docked on a discrete pier on a quiet fork of the Mordava River, a river boat bearing a shipment bound for Kordavos rests silently on the dark, placid water.\n\nThe air is cool and damp, thick with the scent of wet earth and the chirping of crickets. The only other sounds are the gentle lapping of water against the pier's aging pylons and the rustle of wind through the skeletal branches of the willow trees.\n\nLyra stands near the middle of the rickety wooden pier. The instructions from her contact, Master Valerius, were explicit. Her sole purpose is to verify the authenticity of a Valkaaran artifact using her arcane talents. She is to confirm its magical properties, give a simple nod, and her part will be done. She will be well compensated for her expertise and, more importantly, her discretion.\n\nFor her part, it was hard to resist getting the chance to interact with reclusive Faelendarian elves and also get a chance to be near a Valkaran relic. She had studied both at length, but there was a big difference between reading old dusty tomes and experiencing the real thing.\n\nShe did not know much of her two escorts. There was Varius Reinhard, a large gruff soldier type who was in charge of security for this little mission. The other was a man who called himself Silas. Where Varius was a stone wall of presence, Silas was a whisper. He was slender, moving with a liquid grace that spoke of a life spent in shadows. \n\nFrom a tangled hideaway of overgrown reeds, Corvus watches the scene unfold. The cool water of the Mordava lapps just inches from his boots, but he remains utterly still. The tip-off mentioned secret trades along seldom used river routes in late evening and predawn hours. He had been staking out this spot for weeks and now his patience is finally paying off it seems.\n\nHe could clearly see the three figures on the pier.  There was a large big soldier, a woman in robes and another who followed behind, scanning the periphery. They are a professional crew, not sloppy thugs. \n\nA soft creak of wood from the ship cuts through the night's quiet hum as the cabin door opened. A figure emerges with a silent, deliberate grace that was distinctly elven. He is tall and lithe, clad in dark, practical leather armor. Two other elves, equally silent and alert, could be seen on the boat's deck, one near the bow and another by the stern, both armed with bows.\n\nThe lead elf steps forward to the edge of his boat, his gaze settling on Lyra's escorts. His voice is low and clear, carrying easily across the water without being loud.\n\n\"You have the arrangement?\" asked the elf.\n\n“I have it here Aelar,” Silas replies, gliding from the shadows at the base of the pier. He removes a heavy scrollcase from its oilskin wrapping.\n\n\"Very well,\" Aelar says, turning to give an order in Elvish to one of his crew. \"The shipment is ready for your specialist's inspection.\"\n\n“Ok, let’s get on with it then,” says Varius, nodding at Lyra, eager to get her to inspect the shipment and have the matter concluded. The crate remained closed. No one was allowed to see what was inside.\n\nLyra had been contracted for one simple task, use her magecraft to determine that the contents of the shipment were indeed arcane in nature.",
+              "instructions": "If Lyra asks questions or stalls in any way, Varius and Silas will be impatient and urge her to do what she was paid for. If Lyra tries to engage Aelar in conversation he will be evasive. If she continues to delay, then Silas will nod at Varius who will draw his sword and threaten her.\n\nIf Lyra successfully casts a spell on the crate to detect magic, she will be detect an ancient potent enchantment on an object within the crate. On a highly successful roll of 18 or higher, she will determine its purpose to be related to concepts of binding promises, loyalty, and solemn vows. On a natural twenty, she will be able to name the item as the Verodynian Oath Stone of the First Clans.",
+              "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/broken-silenc/368fc7c0-2714-40ea-8fc6-f0912c6b2268.png?t=1749097542307",
               "transitions": [
                 {
-                  "condition": "If Thalbern successfully rolls to hide or evade and can avoid the Owlbear, go to meeting-at-the-stones.",
-                  "encounter": "meeting-at-the-stones"
+                  "condition": "If Lyra confirms the magic properties of the shipment",
+                  "encounter": "the-transaction"
                 },
                 {
-                  "condition": "If Thalbern fails any dice roll (including stealth, perception, or any other check) or does nothing requiring a roll, advance to owlbear-confrontation.",
-                  "encounter": "owlbear-confrontation"
-                },
-                {
-                  "condition": "If Thalbern has a healthPercent of less than 50%, go to wollandora-intervention.",
-                  "encounter": "wollandora-intervention"
-                }
-              ]
-            },
-            {
-              "id": "owlbear-confrontation",
-              "title": "Owlbear Confrontation",
-              "intro": "From the direction of the sound, a little bit of eye shine glints in the shadows of the tree line. A hulking fifteen foot tall monster with the body of a giant bear and the head of an owl. As it crashes out from the undergrowth, it lets out a guttural squawk, clearly agitated and territorial.",
-              "instructions": "The Owlbear will attack. If Thalbern attempts an animal handling check (high difficulty) and succeeds, he can move past the Owlbear. If Thalbern wins initiative and attempts to hide, he can move past the Owlbear if he passes a medium difficulty stealth check. If Thalbern's health drops to a critical level, Wollandora appears and drives off the Owlbear, transitioning to 'wollandora-intervention'. If Thalbern defeats the Owlbear, describe his victory and transition to 'meeting-at-the-stones'.",
-              "image": "images/settings/realm-of-myr/the-midnight-summons/owlbear-confrontation.png",
-              "npc": [
-                {
-                  "id": "owlbear",
-                  "behavior": "Aggressively attacks any perceived threat. Will fight until heavily wounded or driven off.",
-                  "initialInitiative": 1
+                  "condition": "If Lyra says the shipment has no magical properties",
+                  "encounter": "the-fake"
                 }
               ],
-              "transitions": [
-                {
-                  "condition": "Thalbern defeats the Owlbear, manages to evade it, successfully uses Animal Handling to pacify and move past it, or successfully rolls any other way to move past it.",
-                  "encounter": "meeting-at-the-stones"
-                },
-                {
-                  "condition": "Thalbern is reduced to critical health by the Owlbear.",
-                  "encounter": "timely-rescue"
-                }
-              ]
-            },
-            {
-              "id": "timely-rescue",
-              "title": "Timely Rescue",
-              "intro": "Just as the Owlbear is about to land a seemingly final blow, a shaft of silvery moonlight pierces the canopy. A calm, authoritative voice calls out, 'That's enough, beast of the wood!' Wollandora steps from the shadows, her staff glowing faintly. With a gesture and a word of power, she unleashes a wave of natural energy that stuns and drives the startled Owlbear back into the depths of the forest.",
-              "instructions": "Wollandora quickly checks on Thalbern's condition. She'll offer a brief comment ('You look like you've seen better nights, ranger. Come, the stones are not far, and our business is urgent.'). She then leads him to the Standing Stones.",
-              "image": "images/settings/realm-of-myr/the-midnight-summons/timely-rescue.png",
-              "npc": [
-                {
-                  "id": "wollandora",
-                  "behavior": "Protective of Thalbern, focused on getting to the meeting."
-                }
-              ],
-              "transitions": [
-                {
-                  "condition": "Thalbern is able to go to the Standing Stones with Wollandora.",
-                  "encounter": "meeting-at-the-stones"
-                }
-              ]
-            },
-            {
-              "id": "meeting-at-the-stones",
-              "title": "Meeting at the Stones",
-              "intro": "Thalbern arrives at the ancient Standing Stones. The air is thick with anticipation as the moonlight bathes the clearing in a silvery glow.\n\n\"Thalbern, thank you for coming. The forest is grateful for your swiftness,\" Wollandora intones, her voice echoing softly in the stillness. The wise elf's silver hair glistens in the moonlight, and her eyes are a deep forest green, wise and kind, but currently troubled.",
-              "instructions": "Write dialogue for Wollandora as she explains the situation. She should say: \"Thalbern, we have a problem. I received word from a friend from Faelendar. Some Valkaran relics from the elves' vaults have gone missing. Items that should never leave these woods.\" She nods toward the river, where the current glides past the standing stones. \"I saw a river boat, Valkaran-made, heading downstream to Kordavos. You must go to the city and investigate - find these relics before they disappear forever.\" Wollandora should NOT offer any transportation, boats, or assistance beyond information. She only provides the mission details and urges Thalbern to act. If Thalbern asks for further information about the relics, the boat, or Kordavos, this will trigger a transition to 'the-missing-relics' for more details. Once he is ready to accept or decline the overall mission, other transitions apply (e.g., to 'preparing-for-the-city' or 'back-home').",
-              "image": "images/settings/realm-of-myr/the-midnight-summons/meeting-at-the-stones.png",
               "skipInitialNpcTurns": true,
               "npc": [
                 {
-                  "id": "wollandora",
-                  "behavior": "Concerned about the missing relics, focused on getting Thalbern to investigate in the city.",
-                  "initialInitiative": 1
-                }
-              ],
-              "transitions": [
-                {
-                  "condition": "If Thalbern accepts or the mission",
-                  "encounter": "preparing-for-the-city"
+                  "id": "npcs-1749163978757",
+                  "behavior": "Determined to complete the mission to secure the artifact.",
+                  "initialInitiative": 0
                 },
                 {
-                  "condition": "If Thalbern refuses the mission",
-                  "encounter": "back-home"
+                  "id": "npcs-1749181492795",
+                  "behavior": "Silas is the brains of the mission and is tasked to make sure everything goes as planned.",
+                  "initialInitiative": 0
                 },
                 {
-                  "condition": "If Thalbern asks for more information",
-                  "encounter": "the-missing-relics"
+                  "id": "npcs-1749184389465",
+                  "behavior": "Eager to have the shipment verified",
+                  "initialInitiative": 0
                 }
               ]
             },
             {
-              "id": "the-missing-relics",
-              "title": "The Missing Relics",
+              "id": "the-transaction",
+              "title": "The Transaction",
               "intro": "",
-              "instructions": "Wollandora can offer the following info:\n\nAs ancient Valkaran artifacts, deeply connected to the history and spirit of the Valkarr Forest, it is possible they could hold forgotten lore or possess secret untapped powers. The elves have kept them safe for centuries, to maintain the balance of the forest. She can allude to hearing about the rise of powerful figures in the human city who have little respect for the old ways or the forest. Somehow the elves have been drawn into the tangled politics and the relics have been stolen. \n\nWollandora remains focused on getting Thalbern to investigate in the city and **will NOT offer any transportation, boats, or assistance beyond this information**",
-              "image": "images/settings/realm-of-myr/the-midnight-summons/meeting-at-the-stones.png",
-              "skipInitialNpcTurns": true,
-              "npc": [
-                {
-                  "id": "wollandora",
-                  "behavior": "Focused on getting Thalbern to agree to investigate in the city. \"The hour is late and the trail grows cold. Will you take on this task?\"",
-                  "initialInitiative": 1
-                }
-              ],
-              "transitions": [
-                {
-                  "condition": "If Thalbern accepts or the mission",
-                  "encounter": "preparing-for-the-city"
-                },
-                {
-                  "condition": "If Thalbern refuses the mission",
-                  "encounter": "back-home"
-                }
-              ]
-            },
-            {
-              "id": "preparing-for-the-city",
-              "title": "Preparing for the City",
-              "intro": "The following morning, bathed in the soft light of the forest, Thalbern is back at his secluded home. Wollandora's words from the previous night echo in his mind – the stolen relics, the suspicious shipment, the urgent need to investigate in Kordavos.\n\nThe city's tangled ways are far from the quiet paths he knows. Thalbern carefully packs a change of simple, unassuming clothes, ensuring his hunting bow and a quiver of arrows were discreetly bundled, alongside a smaller hand axe and knife. As the sun climbed higher, he left the quiet security of his forest home, turning his steps towards the distant, bustling spires of Kordavos, a place where his survival instincts would be tested in a different kind of wilderness.",
-              "instructions": "Thalbern should be fully healed from any wounds or fatigue from the previous night.",
-              "image": "images/settings/realm-of-myr/the-midnight-summons/preparing-for-the-city.png",
-              "notes": "This encounter serves as a narrative bridge and allows the player to make small, character-flavoring decisions before the next main section of the adventure.",
-              "resetHealth": true
-            },
-            {
-              "id": "back-home",
-              "title": "Back home",
-              "intro": "The following morning, bathed in the soft light of the forest, Thalbern is back at his secluded home. Wollandora's words from the previous night echo in his mind – the stolen relics, the suspicious shipment, the urgent need to investigate in Kordavos.\n\nHe had turned down her request for his help.\n\nHad he made the right choice? He did not enjoy the city, but Wollandora's claims of stolen relics were intriguing. Perhaps a trip to the city would prove tobe worth it.",
               "instructions": "",
-              "image": "images/settings/realm-of-myr/the-midnight-summons/back-home.png",
-              "notes": "This encounter serves as a narrative bridge and allows the player to make small, character-flavoring decisions before the next main section of the adventure.",
-              "resetHealth": true
+              "image": "",
+              "transitions": [],
+              "npc": [],
+              "skipInitialNpcTurns": true,
+              "resetHealth": false
+            },
+            {
+              "id": "the-fake",
+              "title": "The Fake",
+              "intro": "",
+              "instructions": "",
+              "image": "",
+              "transitions": [],
+              "npc": [],
+              "skipInitialNpcTurns": false,
+              "resetHealth": false
             }
           ]
         }
@@ -159,44 +90,280 @@
     }
   ],
   "npcs": {
-    "wollandora": {
-      "id": "wollandora",
-      "type": "npc",
-      "name": "Wollandora",
-      "archetype": "Druid",
-      "race": "Elf",
-      "gender": "Female",
-      "appearance": "A wise elf with silver hair braided with leaves and twigs. Her eyes are a deep forest green, wise and kind, but currently troubled. She carries a staff of gnarled oak.",
-      "personality": "Wise, patient, deeply connected to nature, fiercely protective of the forest balance.",
-      "background": "An ancient guardian of the Valkarr woods, a friend to Thalbern, and a powerful druid.",
-      "motivation": "Recover the stolen relics and restore balance to the forest. Protect the secrets of her people.",
-      "behavior": "Generally calm and thoughtful. Will provide information and guidance. Can be firm when necessary.",
-      "image": "/images/settings/realm-of-myr/the-midnight-summons/npcs/wollandora.png",
+    "npcs-1749163978757": {
+      "name": "Varius Reinhard",
+      "archetype": "Enforcer",
+      "race": "Human",
+      "gender": "Male",
+      "appearance": "A burly human with a scarred face, close-cropped dark hair, and cold, calculating eyes. He often wears a heavy, dark leather coat that conceals several hidden weapons. His posture is always rigid, exuding an aura of quiet menace.",
+      "personality": "Stoic, ruthless, and highly pragmatic. Varius values efficiency and loyalty above all else. He rarely shows emotion, preferring to let his actions speak. He is fiercely loyal to the Blackthorn clan and expects the same from his subordinates. He has a dry, sardonic wit that surfaces only in moments of extreme stress or rare amusement.",
+      "background": "Varius grew up on the fringes of society, learning early that power was taken, not given. He joined the Blackthorn clan as a young man, quickly rising through the ranks due to his unwavering loyalty, brutal efficiency, and strategic mind. He's been involved in countless 'fixer' operations, cleaning up messes and ensuring the clan's interests are protected. He sees the clan as his true family and its prosperity as his life's purpose.",
+      "motivation": "To ensure the Blackthorn clan's dominance and security. The current mission to secure the shipment is critical to maintaining their influence and resources, and Kaelen will stop at nothing to see it through successfully.",
+      "behavior": "Direct and to the point, Kaelen prefers action over words. He is highly observant and rarely misses details. When challenged, he responds with calm, calculated aggression.",
       "healthPercent": 100,
+      "equipment": [
+        {
+          "name": "Heavy Leather Coat",
+          "description": "A durable, dark leather coat reinforced with hidden plates, offering protection and concealing multiple weapons."
+        },
+        {
+          "name": "Custom Revolver",
+          "description": "A heavy-caliber revolver, well-maintained and clearly a favored weapon, known for its stopping power."
+        },
+        {
+          "name": "Combat Knife",
+          "description": "A razor-sharp, balanced combat knife, often used for close-quarters engagements or utility."
+        },
+        {
+          "name": "Commlink",
+          "description": "A secure, encrypted commlink for communicating with Blackthorn clan members."
+        },
+        {
+          "name": "Lockpicking Tools",
+          "description": "A small, discreet set of tools for bypassing locks."
+        }
+      ],
+      "skills": [
+        "Intimidation",
+        "Stealth",
+        "Investigation",
+        "Athletics",
+        "Perception",
+        "Streetwise",
+        "Tactics"
+      ],
+      "status": "Active, leading a critical mission for the Blackthorn clan.",
+      "type": "npc",
+      "attributes": {
+        "strength": 16,
+        "dexterity": 14,
+        "constitution": 15,
+        "intelligence": 13,
+        "wisdom": 12,
+        "charisma": 10
+      },
+      "id": "npcs-1749163978757",
+      "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/npcs/236683b0-4745-4a8c-ad9d-48ed3bbaf908.png?t=1749164549983"
+    },
+    "npcs-1749181492795": {
+      "name": "Silas",
+      "archetype": "Rogue",
+      "race": "Human",
+      "gender": "Male",
+      "appearance": "Silas is a lean and wiry, observant grey eyes that constantly scan his surroundings. He moves with a quiet, almost predatory grace, his movements fluid and economical.",
+      "personality": "Sly, cynical, and highly independent. Silas is a pragmatist who trusts few and relies on his own skills. He possesses a dry wit that surfaces occasionally, often in the form of sarcastic remarks.",
+      "background": "Silas grew up in the grimy back alleys of the city, learning to survive by his wits and nimble fingers. He has developed into a ruthless pragrmatist.",
+      "motivation": "",
+      "behavior": "",
+      "healthPercent": 100,
+      "equipment": [
+        {
+          "name": "Two finely balanced daggers",
+          "description": "One tucked into each boot, their blades honed to a razor's edge."
+        },
+        {
+          "name": "Set of masterwork lockpicks",
+          "description": "Kept in a small, leather pouch, these tools are his most prized possessions."
+        },
+        {
+          "name": "Dark leather armor",
+          "description": "Light and flexible, designed for stealth and minimal noise."
+        },
+        {
+          "name": "Coin pouch",
+          "description": "Contains a modest amount of gold and silver, enough for immediate needs."
+        },
+        {
+          "name": "Grappling hook and rope",
+          "description": "Compact and easily concealed, useful for scaling walls."
+        }
+      ],
+      "skills": [
+        "Stealth",
+        "Sleight of Hand",
+        "Acrobatics",
+        "Perception",
+        "Investigation",
+        "Deception"
+      ],
+      "status": "Alive",
+      "type": "npc",
+      "attributes": {
+        "strength": 9,
+        "dexterity": 16,
+        "constitution": 10,
+        "intelligence": 14,
+        "wisdom": 13,
+        "charisma": 12
+      },
+      "id": "npcs-1749181492795",
+      "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/npcs/3959ac3c-b63a-4e88-9cce-6a2d69f2bc52.png?t=1749182638807"
+    },
+    "npcs-1749184389465": {
+      "name": "Aelar Moonglimmer",
+      "archetype": "Operative",
+      "race": "Elf",
+      "gender": "Male",
+      "appearance": "Aelar Moonglimmer is a lean and agile elf with sharp, observant grey eyes that seem to miss nothing. His movements are fluid and silent, often cloaked in practical, dark attire that blends seamlessly into shadows. His silver hair is usually tied back, and his features, while refined, bear the subtle lines of one who has seen much and trusts little.",
+      "personality": "Pragmatic, highly disciplined, and exceptionally discreet. Aelar rarely shows emotion, preferring to analyze situations with cold logic. He is fiercely loyal to his faction and will go to great lengths to achieve his objectives, even if it means making difficult moral choices.",
+      "background": "Hailing from the hidden elven enclaves of Faelendar, Aelar was trained from a young age in the arts of espionage, infiltration, and negotiation. He belongs to a clandestine faction dedicated to preserving elven influence and securing their future in a changing world. His current mission is one of the most critical: to exchange a powerful Valkaaran artifact, whose true nature is known only to a select few, for strategic resources that will bolster Faelendar's position against emerging threats.",
+      "motivation": "To secure the future and prosperity of his people in Faelendar by acquiring vital strategic assets, ensuring their continued influence and survival.",
+      "behavior": "Aelar is always alert, observing his surroundings and the people within them. He speaks concisely and directly, valuing efficiency over pleasantries. During negotiations, he remains calm and composed, rarely revealing his true intentions or emotions. He is wary of strangers and trusts only those who have proven themselves.",
+      "healthPercent": 100,
+      "equipment": [
+        {
+          "name": "Shadowsilk Cloak",
+          "description": "A dark, lightweight cloak woven with shadowsilk, providing excellent camouflage and muffling sound."
+        },
+        {
+          "name": "Moon-Forged Dagger",
+          "description": "A finely crafted dagger with a razor-sharp edge, designed for silent takedowns."
+        },
+        {
+          "name": "Master Lockpicks",
+          "description": "A set of intricate tools capable of bypassing complex locks."
+        },
+        {
+          "name": "Valkaaran Artifact",
+          "description": "A small, intricately carved obsidian orb pulsating with faint, ancient energy. Its true power and purpose are a closely guarded secret."
+        },
+        {
+          "name": "Concealed Communicator",
+          "description": "A small, enchanted device allowing discreet communication with his faction."
+        }
+      ],
+      "skills": [
+        "Stealth",
+        "Acrobatics",
+        "Perception",
+        "Diplomacy",
+        "Investigation",
+        "Negotiation",
+        "Disguise"
+      ],
+      "status": "On active mission, currently in transit/negotiation phase.",
+      "type": "npc",
       "attributes": {
         "strength": 10,
-        "dexterity": 12,
-        "constitution": 12,
+        "dexterity": 18,
+        "constitution": 14,
         "intelligence": 16,
-        "wisdom": 18,
-        "charisma": 14
+        "wisdom": 15,
+        "charisma": 12
       },
-      "status": ""
-    },
-    "owlbear": {
-      "id": "owlbear",
-      "type": "npc",
-      "name": "Owlbear",
-      "archetype": "Monster",
-      "race": "Owlbear",
-      "appearance": "A hulking monstrosity with the body of a bear and the head of an owl. Thick, matted fur, razor-sharp talons, and a powerful beak. Its eyes glow with a feral intensity.",
-      "personality": "Territorial, aggressive, primal.",
-      "motivation": "Defend its territory, hunt for food.",
-      "behavior": "Attacks perceived threats on sight. Fights with ferocity. Can be driven off by overwhelming force or a display of superior power.",
-      "image": "/images/settings/realm-of-myr/the-midnight-summons/npcs/owlbear-portrait.png",
-      "healthPercent": 100,
-      "attributes": {},
-      "status": ""
+      "id": "npcs-1749184389465",
+      "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/npcs/e8e02409-93a9-4936-8b2e-b5a3d083889d.png?t=1749226155922"
     }
-  }
+  },
+  "premadePlayerCharacters": [
+    {
+      "name": "Lyra Silvanus",
+      "archetype": "Arcanist",
+      "race": "Asterian",
+      "gender": "Female",
+      "appearance": "Lyra is a young woman with keen, intelligent eyes often framed by spectacles perched on her nose. She has neat, dark hair, usually tied back to keep it out of the way while she studies. Her posture is typically upright and attentive, reflecting her scholarly nature, and she often carries a slightly worn satchel filled with books and scrolls.",
+      "personality": "Curious, studious, and deeply analytical, Lyra possesses a quiet determination. She is often lost in thought, pondering ancient mysteries, but is also genuinely kind and empathetic. While she can be a bit socially awkward at times, her passion for knowledge makes her an engaging conversationalist on her chosen subjects. She values truth and understanding above all else.",
+      "background": "Lyra grew up within the hallowed halls of the Asterian Grand Library, an institution renowned for its vast collection of ancient texts and magical knowledge. From a young age, she displayed an insatiable curiosity, particularly drawn to the enigmatic Valkaran lore and the intricate beauty of elven culture, subjects often considered niche even among her peers. She spent countless hours poring over dusty tomes, deciphering forgotten languages, and piecing together fragmented histories.",
+      "motivation": "Lyra is driven by a profound desire to uncover the lost secrets of Valkaran civilization and to fully understand the nuances of elven culture. She believes that by bridging the knowledge gap between these ancient peoples and her own Asterian heritage, she can unlock new forms of magic and prevent past mistakes from being repeated. Her ultimate goal is to contribute significantly to the collective knowledge of the world.",
+      "behavior": "Lyra is generally quiet and observant, preferring to listen and absorb information rather than dominate conversations. When a topic of interest arises, especially concerning lore or magic, she becomes animated and eager to share her knowledge or ask probing questions. She is meticulous in her work and values accuracy above all else.",
+      "healthPercent": 100,
+      "equipment": [
+        {
+          "name": "Scholar's Robes",
+          "description": "Comfortable, dark blue robes suitable for study and travel."
+        },
+        {
+          "name": "Enchanted Quill",
+          "description": "A quill that never runs out of ink and subtly glows when near ancient magic."
+        },
+        {
+          "name": "Leather-bound Spellbook",
+          "description": "A personal spellbook filled with Lyra's learned spells and research notes."
+        },
+        {
+          "name": "Satchel of Rare Texts",
+          "description": "Contains a few rare, fragile books on Valkaran history and elven linguistics."
+        },
+        {
+          "name": "Simple Wooden Staff",
+          "description": "A sturdy staff, unadorned but reliable for focus and defense."
+        }
+      ],
+      "skills": [
+        "Arcana",
+        "History",
+        "Investigation",
+        "Linguistics",
+        "Culture (Elven)",
+        "Calligraphy"
+      ],
+      "status": "Healthy",
+      "type": "pc",
+      "attributes": {
+        "strength": 8,
+        "dexterity": 10,
+        "constitution": 10,
+        "intelligence": 16,
+        "wisdom": 14,
+        "charisma": 12
+      },
+      "id": "1749159962941",
+      "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/pcs/dc23c6a6-6247-4384-bccc-2eeed66a7b0c.png?t=1749161969365"
+    },
+    {
+      "name": "Corvus Moldvay",
+      "archetype": "Rogue",
+      "race": "Human",
+      "gender": "Male",
+      "appearance": "Corvus is a lean young man with sharp, intelligent grey eyes that constantly scan his surroundings. His dark, unruly hair often falls across his forehead, and a faint scar traces his left cheekbone, hinting at past scrapes. He moves with a quiet, almost feline grace, his frame suggesting agility over brute strength.",
+      "personality": "Cunning and pragmatic, Corvus possesses a dry wit and a cynical outlook on life. He's slow to trust but fiercely loyal to those who earn his respect. Beneath his guarded exterior, there's a hidden streak of compassion, particularly for the downtrodden, though he rarely shows it openly. He values efficiency and cleverness above all else.",
+      "background": "Corvus grew up in the grimy back alleys of Kordavos, an orphan who learned early that survival meant being quick-witted and even quicker on his feet. He honed his skills picking pockets and navigating the shadows, often working for a small, informal network of street urchins. He joined the Thieves Guild to master advanced techniques and expand his repertoire beyond simple street thievery, aspiring to become a legend in the underworld.",
+      "motivation": "Corvus is driven by a desire for security and self-sufficiency. He seeks enough wealth and influence to never again be at the mercy of others or the harsh streets. His ambition is never again be a powerless, forgotten face in the Kordavos gutters.",
+      "behavior": "Observant and cautious, Corvus tends to hang back and assess situations before acting. He prefers to avoid direct confrontation, opting for stealth and misdirection. When forced into a fight, he relies on his agility and precision.",
+      "healthPercent": 100,
+      "equipment": [
+        {
+          "name": "Two well-balanced daggers",
+          "description": "One tucked into his boot, the other concealed in his sleeve."
+        },
+        {
+          "name": "Dark leather armor",
+          "description": "Lightweight and designed for silent movement."
+        },
+        {
+          "name": "Thieves' tools",
+          "description": "A small, expertly crafted set of lockpicks and other implements."
+        },
+        {
+          "name": "Pouch of assorted coins",
+          "description": "A modest sum, enough for immediate needs."
+        },
+        {
+          "name": "Grappling hook and 50 feet of rope",
+          "description": "Useful for scaling walls and escaping."
+        }
+      ],
+      "skills": [
+        "Acrobatics",
+        "Deception",
+        "Insight",
+        "Investigation",
+        "Perception",
+        "Sleight of Hand",
+        "Stealth"
+      ],
+      "status": "Healthy",
+      "type": "pc",
+      "attributes": {
+        "strength": 10,
+        "dexterity": 18,
+        "constitution": 14,
+        "intelligence": 16,
+        "wisdom": 12,
+        "charisma": 15
+      },
+      "id": "1749161506044",
+      "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/pcs/98b7b3c2-d10b-4cdf-8f18-dafda1e6636e.png?t=1749162137212"
+    }
+  ]
 }

@@ -12,14 +12,11 @@ import { AdventurePlanCharactersEdit } from "@/components/adventure-plans/advent
 import { AdventurePlanEditSidebar } from "@/components/adventure-plans/adventure-plan-edit-sidebar"
 import { updateAdventurePlanAction } from "@/app/_actions/adventure-plan-actions"
 import { toast } from "sonner"
-import { Download } from "lucide-react"
+import { Download, Loader2, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
+import slugify from "slugify"
 
-interface AdventurePlanEditFormProps {
-  adventurePlan: AdventurePlan
-}
-
-export function AdventurePlanEditForm({ adventurePlan }: AdventurePlanEditFormProps) {
+export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: AdventurePlan }) {
   console.log("AdventurePlanEditForm: Initial adventurePlan.image:", adventurePlan.image)
   const [teaser, setTeaser] = React.useState(adventurePlan.teaser)
   const [overview, setOverview] = React.useState(adventurePlan.overview)
@@ -83,7 +80,8 @@ export function AdventurePlanEditForm({ adventurePlan }: AdventurePlanEditFormPr
             const updatedEncounters = scene.encounters.map((encounter, eIdx) => {
               if (eIdx === encounterIndex) {
                 console.log("[AdventurePlanEditForm] Updating encounter:", encounter.id, "from", encounter.title, "to", newTitle)
-                const updatedEncounter = { ...encounter, title: newTitle }
+                const newId = slugify(newTitle, { lower: true, strict: true })
+                const updatedEncounter = { ...encounter, title: newTitle, id: newId }
                 console.log("[AdventurePlanEditForm] Updated encounter object:", updatedEncounter)
                 return updatedEncounter
               }
@@ -331,6 +329,41 @@ export function AdventurePlanEditForm({ adventurePlan }: AdventurePlanEditFormPr
     )
   }
 
+  const handleAddEncounter = (sectionIndex: number, sceneIndex: number) => {
+    const newEncounterId = `encounter-${Date.now()}`
+    const newEncounter = {
+      id: newEncounterId,
+      title: "",
+      intro: "",
+      instructions: "",
+      image: "",
+      transitions: [],
+      npc: [],
+      skipInitialNpcTurns: false,
+      resetHealth: false,
+    }
+
+    setSections((prevSections) =>
+      prevSections.map((section, sIndex) => {
+        if (sIndex === sectionIndex) {
+          return {
+            ...section,
+            scenes: section.scenes.map((scene, scIndex) => {
+              if (scIndex === sceneIndex) {
+                return {
+                  ...scene,
+                  encounters: [...scene.encounters, newEncounter],
+                }
+              }
+              return scene
+            }),
+          }
+        }
+        return section
+      })
+    )
+  }
+
   const handleNpcsChange = (newNpcs: Record<string, Character>) => {
     setNpcs(newNpcs)
   }
@@ -445,11 +478,20 @@ export function AdventurePlanEditForm({ adventurePlan }: AdventurePlanEditFormPr
           <Download size={20} className="opacity-50 scale-150" />
         </Button>
         <Button variant="outline" className="font-display font-extrabold tracking-widest text-sm w-24" size="sm" onClick={handleSave} disabled={isSaving}>
-          {isSaving ? "Saving..." : "Save"}
+          {isSaving ? (
+            <div className="flex items-center gap-2">
+              <Loader2 aria-label="Saving in progress" className="animate-spin" />
+            </div>
+          ) : (
+            "Save"
+          )}
         </Button>
       </div>
       <AdventurePlanEditSidebar adventurePlan={{ ...adventurePlan, sections }} />
-      <div id="adventure-plan-main" className="flex-1 pt-2 h-full overflow-y-auto">
+      <div
+        id="adventure-plan-main"
+        className="flex-1 pt-2 pr-3 -mr-3 h-full overflow-y-auto [scrollbar-width:thin] [scrollbar-color:dimgray_black] [&::-webkit-scrollbar-track]:bg-black [&::-webkit-scrollbar-thumb]:bg-black [&::-webkit-scrollbar]:w-1"
+      >
         <div className="grid grid-cols-2 gap-8 pb-4" id="adventure-plan-main-top">
           <div>
             <label htmlFor="adventureImage" className="block text-sm font-medium font-mono text-primary-200/90 mb-1">
@@ -504,9 +546,9 @@ export function AdventurePlanEditForm({ adventurePlan }: AdventurePlanEditFormPr
           <Textarea id="overview" value={overview} onChange={(e) => setOverview(e.target.value)} placeholder="A broader overview of the adventure plan..." rows={6} disabled={isSaving} />
         </div>
 
-        <h4 className="font-mono opacity-70 text-sm pt-12 mb-1 text-indigo-300/80 text-center font-bold tracking-widest uppercase">Adventure Plan</h4>
+        <h4 className="font-mono pt-12 text-indigo-400 text-center font-bold tracking-widest">Adventure Plan</h4>
         {sections.map((section, sIndex) => (
-          <div key={sIndex} id={`section-${sIndex}`} className="border-t border-white/20 pt-8 w-full flex flex-col gap-4 scroll-mt-20">
+          <div key={sIndex} id={`section-${sIndex}`} className="w-full flex flex-col gap-4 scroll-mt-20">
             {sections.length > 1 && (
               <>
                 <h3 className="text-xl font-bold font-display text-amber-300/80 text-center">{section.title || <span className="italic text-gray-400">Untitled Section</span>}</h3>
@@ -575,7 +617,7 @@ export function AdventurePlanEditForm({ adventurePlan }: AdventurePlanEditFormPr
                       <div>
                         {scene.encounters.map((encounter, eIndex) => (
                           <EncounterEditForm
-                            key={encounter.id || eIndex}
+                            key={eIndex}
                             id={`encounter-${sIndex}-${scIndex}-${eIndex}`}
                             adventurePlanId={adventurePlan.id}
                             settingId={adventurePlan.settingId}
@@ -598,6 +640,13 @@ export function AdventurePlanEditForm({ adventurePlan }: AdventurePlanEditFormPr
                             isSaving={isSaving}
                           />
                         ))}
+
+                        <div className="mt-4 flex justify-center">
+                          <Button onClick={() => handleAddEncounter(sIndex, scIndex)} disabled={isSaving} size="sm" variant="outline" className="flex items-center gap-2 hover:scale-100">
+                            <Plus size={16} />
+                            Add Encounter
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -628,7 +677,7 @@ export function AdventurePlanEditForm({ adventurePlan }: AdventurePlanEditFormPr
           settingId={adventurePlan.settingId}
         />
 
-        <div className="flex flex-col items-end gap-4 mt-8 px-4">
+        <div className="flex flex-col items-end gap-4 mt-8 px-4 pb-8">
           <Button variant="epic" size="sm" onClick={handleSave} disabled={isSaving}>
             {isSaving ? "Saving..." : "Save Changes"}
           </Button>

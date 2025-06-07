@@ -34,10 +34,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "File type not allowed. Please upload an image (JPEG, PNG, WebP, SVG, or GIF)." }, { status: 400 })
     }
     
-    // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024 // 5MB
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024 // 10MB
     if (file.size > maxSize) {
-      return NextResponse.json({ error: "File size exceeds 5MB limit" }, { status: 400 })
+      return NextResponse.json({ error: "File size exceeds 10MB limit" }, { status: 400 })
     }
     
     // Generate a unique filename

@@ -7,11 +7,12 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
 import { ImageUpload } from "@/components/ui/image-upload"
-import { Plus, X, Edit } from "lucide-react"
+import { Plus, X, Edit, ChevronsUp } from "lucide-react"
 import type { Character, NPC, PCTemplate, EquipmentItem } from "@/types/character"
 import { generateCharacterAction } from "@/app/_actions/generate-character-action"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import Image from "next/image"
 
 const IMAGE_HOST = process.env.NEXT_PUBLIC_IMAGE_HOST || ""
 
@@ -175,6 +176,50 @@ export function AdventurePlanCharactersEdit({ id, type, characters, onCharacters
     updateSkills(charId, newSkills)
   }
 
+  const updateSpells = (charId: string, spells: Array<{ name: string; description?: string; isUsed?: boolean }>) => {
+    updateCharacter(charId, { spells })
+  }
+
+  const addSpell = (charId: string) => {
+    const char = isNpcs ? (characters as Record<string, Character>)[charId] : (characters as PCTemplate[])[parseInt(charId)]
+    const newSpells = [...(char.spells || []), { name: "", description: "", isUsed: false }]
+    updateSpells(charId, newSpells)
+  }
+
+  const removeSpell = (charId: string, index: number) => {
+    const char = isNpcs ? (characters as Record<string, Character>)[charId] : (characters as PCTemplate[])[parseInt(charId)]
+    const newSpells = (char.spells || []).filter((_, i) => i !== index)
+    updateSpells(charId, newSpells)
+  }
+
+  const updateSpell = (charId: string, index: number, updates: { name?: string; description?: string; isUsed?: boolean }) => {
+    const char = isNpcs ? (characters as Record<string, Character>)[charId] : (characters as PCTemplate[])[parseInt(charId)]
+    const newSpells = (char.spells || []).map((spell, i) => (i === index ? { ...spell, ...updates } : spell))
+    updateSpells(charId, newSpells)
+  }
+
+  const updateSpecialAbilities = (charId: string, specialAbilities: string[]) => {
+    updateCharacter(charId, { specialAbilities })
+  }
+
+  const addSpecialAbility = (charId: string) => {
+    const char = isNpcs ? (characters as Record<string, Character>)[charId] : (characters as PCTemplate[])[parseInt(charId)]
+    const newSpecialAbilities = [...(char.specialAbilities || []), ""]
+    updateSpecialAbilities(charId, newSpecialAbilities)
+  }
+
+  const removeSpecialAbility = (charId: string, index: number) => {
+    const char = isNpcs ? (characters as Record<string, Character>)[charId] : (characters as PCTemplate[])[parseInt(charId)]
+    const newSpecialAbilities = (char.specialAbilities || []).filter((_, i) => i !== index)
+    updateSpecialAbilities(charId, newSpecialAbilities)
+  }
+
+  const updateSpecialAbility = (charId: string, index: number, ability: string) => {
+    const char = isNpcs ? (characters as Record<string, Character>)[charId] : (characters as PCTemplate[])[parseInt(charId)]
+    const newSpecialAbilities = (char.specialAbilities || []).map((a, i) => (i === index ? ability : a))
+    updateSpecialAbilities(charId, newSpecialAbilities)
+  }
+
   const updateAttributes = (charId: string, attribute: string, value: number) => {
     const char = isNpcs ? (characters as Record<string, Character>)[charId] : (characters as PCTemplate[])[parseInt(charId)]
     const newAttributes = {
@@ -303,14 +348,14 @@ export function AdventurePlanCharactersEdit({ id, type, characters, onCharacters
                 {!editing ? (
                   // Collapsed Mode
                   <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-white/10 flex-shrink-0">
+                    <div onClick={() => toggleEditMode(charId)} className="w-16 h-16 rounded-lg overflow-hidden bg-white/10 flex-shrink-0 cursor-pointer relative">
                       {imageUrl ? (
-                        <img src={imageUrl} alt={char.name || "Character"} className="w-full h-full object-cover" />
+                        <Image fill={true} src={imageUrl} alt={char.name || "Character"} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-white/40 text-xs">No Image</div>
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div onClick={() => toggleEditMode(charId)} className="flex-1 min-w-0 cursor-pointer">
                       <div className="text-lg font-display text-amber-300/90 truncate">{char.name || `Unnamed ${isNpcs ? "NPC" : "Character"}`}</div>
                       <div className="text-sm text-white/70 space-y-1">
                         {char.gender} {char.race} {char.archetype}
@@ -327,6 +372,9 @@ export function AdventurePlanCharactersEdit({ id, type, characters, onCharacters
                   </div>
                 ) : (
                   <>
+                    <button onClick={() => toggleEditMode(charId)} className="text-sm flex gap-1 items-center absolute -top-5 right-3 text-indigo-400 hover:text-indigo-300">
+                      <ChevronsUp size={14} /> close
+                    </button>
                     <div className="flex flex-col">
                       <div className="pb-4">
                         <Label className="font-mono p-1 text-primary-200" htmlFor={`char-image-${charId}`}>
@@ -493,8 +541,8 @@ export function AdventurePlanCharactersEdit({ id, type, characters, onCharacters
                           rows={2}
                         />
                       </div>
-                      <div>
-                        <div className="font-mono p-1 text-primary-200">Skills</div>
+                      <div className="space-y-2">
+                        <div className="font-mono px-1 text-primary-200">Skills</div>
                         {(char.skills || []).map((skill, index) => (
                           <div key={index} className="flex gap-2">
                             <Input value={skill} onChange={(e) => updateSkill(charId, index, e.target.value)} disabled={isSaving} placeholder="Skill name" className="flex-1" />
@@ -508,8 +556,49 @@ export function AdventurePlanCharactersEdit({ id, type, characters, onCharacters
                           Add Skill
                         </Button>
                       </div>
-                      <div>
-                        <div className="font-mono p-1 text-primary-200">Equipment</div>
+                      <div className="space-y-2">
+                        <div className="font-mono px-1 text-primary-200">Spells</div>
+                        {(char.spells || []).map((spell, index) => (
+                          <div key={index} className="space-y-2 p-3 border border-white/10 rounded">
+                            <div className="flex gap-2">
+                              <Input value={spell.name} onChange={(e) => updateSpell(charId, index, { name: e.target.value })} disabled={isSaving} placeholder="Spell name" className="flex-1" />
+                              <div className="flex items-center gap-2">
+                                <Button onClick={() => removeSpell(charId, index)} disabled={isSaving} size="sm" variant="ghost" className="text-red-400 hover:text-red-300">
+                                  <X size={16} />
+                                </Button>
+                              </div>
+                            </div>
+                            <Textarea
+                              value={spell.description || ""}
+                              onChange={(e) => updateSpell(charId, index, { description: e.target.value })}
+                              disabled={isSaving}
+                              placeholder="Spell description (optional)"
+                              rows={2}
+                            />
+                          </div>
+                        ))}
+                        <Button onClick={() => addSpell(charId)} disabled={isSaving} size="sm" variant="outline" className="text-xs">
+                          <Plus size={16} className="mr-2" />
+                          Add Spell
+                        </Button>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="font-mono px-1 text-primary-200">Special Abilities</div>
+                        {(char.specialAbilities || []).map((ability, index) => (
+                          <div key={index} className="flex gap-2">
+                            <Input value={ability} onChange={(e) => updateSpecialAbility(charId, index, e.target.value)} disabled={isSaving} placeholder="Special ability name" className="flex-1" />
+                            <Button onClick={() => removeSpecialAbility(charId, index)} disabled={isSaving} size="sm" variant="ghost" className="text-red-400 hover:text-red-300">
+                              <X size={16} />
+                            </Button>
+                          </div>
+                        ))}
+                        <Button onClick={() => addSpecialAbility(charId)} disabled={isSaving} size="sm" variant="outline" className="text-xs">
+                          <Plus size={16} className="mr-2" />
+                          Add Special Ability
+                        </Button>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="font-mono px-1 text-primary-200">Equipment</div>
                         {(char.equipment || []).map((item, index) => (
                           <div key={index} className="space-y-2 p-3 border border-white/10 rounded">
                             <div className="flex gap-2">

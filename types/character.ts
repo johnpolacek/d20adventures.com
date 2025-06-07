@@ -8,17 +8,20 @@ export const equipmentItemSchema = z.object({
 
 export type EquipmentItem = z.infer<typeof equipmentItemSchema>
 
-// Spell schema and type (simple approach)
 export const spellSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
-  level: z.number().min(0).max(9).optional(), // D&D style spell levels 0-9 (cantrips to 9th level)
-  school: z.string().optional(), // e.g., "Evocation", "Illusion", etc.
+  isUsed: z.boolean().optional(),
+})
+
+export const specialAbilitySchema = z.object({
+  name: z.string(),
+  description: z.string().optional(),
+  isUsed: z.boolean().optional(),
 })
 
 export type Spell = z.infer<typeof spellSchema>
 
-// Standard RPG attributes schema and type (1-20)
 export const attributesSchema = z.object({
   strength: z.number().min(1).max(20),
   dexterity: z.number().min(1).max(20),
@@ -30,7 +33,6 @@ export const attributesSchema = z.object({
 
 export type Attributes = z.infer<typeof attributesSchema>
 
-// Base character schema and type
 export const baseCharacterSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -46,7 +48,8 @@ export const baseCharacterSchema = z.object({
   healthPercent: z.number().min(0).max(100), // 0-100, percentage
   equipment: z.array(equipmentItemSchema).optional(),
   skills: z.array(z.string()).optional(),
-  spells: z.array(spellSchema).optional(), // Simple spell support
+  spells: z.array(spellSchema).optional(),
+  specialAbilities: z.array(z.string()).optional(),
   status: z.string().optional(),
 })
 
@@ -64,7 +67,7 @@ export type PC = z.infer<typeof pcSchema>
 // Non-Player Character (NPC) schema and type
 export const npcSchema = baseCharacterSchema.extend({
   type: z.literal("npc"),
-  attributes: attributesSchema.partial().optional(), // Some NPCs may have attributes
+  attributes: attributesSchema.partial().optional(),
 })
 
 export type NPC = z.infer<typeof npcSchema>

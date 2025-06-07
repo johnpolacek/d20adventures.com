@@ -40,7 +40,10 @@ export async function generateCharacterAction({
     Please include:
     - Physical appearance and personality traits
     - Background story and motivation
-    - Appropriate skills and equipment
+    - Appropriate skills and equipment based on their archetype/class
+    - Race-specific traits and abilities that would be natural for their race
+    - Class/archetype-specific spells (if they are a spellcaster like wizard, cleric, druid, sorcerer, bard, etc.)
+    - Special abilities that align with their race, class, and background (e.g., a ranger's tracking abilities, a rogue's sneak attack, a dwarf's resistance to magic, an elf's keen senses)
     ${characterType === "pc" ? "- Balanced but generous attributes (strength, dexterity, constitution, intelligence, wisdom, charisma) suitable for the character concept" : "- Attributes if relevant to the character's role"}
     `
 
