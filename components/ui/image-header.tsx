@@ -1,33 +1,48 @@
+"use client"
+
 import React, { useState } from "react"
 import Image from "next/image"
 import Parchment from "@/components/graphics/background/Parchment"
 import { textShadow, textShadowSpread } from "../typography/styles"
+import { cn } from "@/lib/utils"
 
 interface ImageHeaderProps {
   imageUrl: string
+  children?: React.ReactNode
   title?: string
   subtitle?: string
   overlayContent?: React.ReactNode
   imageAlt?: string
+  variant?: "default" | "compact"
+  topBorder?: boolean
 }
 
-export default function ImageHeader({ imageUrl, title, subtitle, imageAlt }: ImageHeaderProps) {
+export default function ImageHeader({ imageUrl, children, title, subtitle, imageAlt, variant = "default", topBorder }: ImageHeaderProps) {
   const [imageLoaded, setImageLoaded] = useState(false)
 
   return (
     <>
-      <div className="absolute top-12 sm:top-12 left-0 right-0 w-full aspect-video min-h-[480px]">
+      <div className={cn("absolute left-0 right-0 w-full aspect-video min-h-[480px]", variant === "compact" && "aspect-[2]")}>
+        {topBorder && (
+          <>
+            <div className="absolute top-0 left-0 right-0 h-2 bg-black/30 z-10" />
+            <div id="top-border" className="absolute top-2 left-0 right-0 z-10 w-full h-[1px] bg-blend-lighten -mb-px overflow-hidden opacity-70 bg-[url('/images/app/art/texture-line.png')]" />
+          </>
+        )}
         <Image
-          className={`object-cover rounded-lg shadow-lg transition-opacity duration-1000 ease-in-out ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+          className={cn("object-cover transition-opacity duration-1000 ease-in-out", imageLoaded ? "opacity-100" : "opacity-0")}
           fill
           src={imageUrl}
           alt={imageAlt || title || ""}
           onLoad={() => setImageLoaded(true)}
         />
         {title && (
-          <h2 className="text-2xl sm:text-4xl md:text-5xl font-display text-center w-full absolute bottom-44 sm:bottom-54 px-4" style={textShadowSpread}>
-            {title}
-          </h2>
+          <div className="absolute bottom-44 sm:bottom-54 px-4 w-full flex flex-col items-center">
+            <h2 className="text-2xl sm:text-4xl md:text-5xl font-display text-center" style={textShadowSpread}>
+              {title}
+            </h2>
+            {children}
+          </div>
         )}
         <div className="absolute bottom-32 sm:bottom-36 left-0 right-0 flex justify-center">
           {subtitle && (

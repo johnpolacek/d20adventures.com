@@ -24,11 +24,13 @@ export default async function AdventureHomePage(props: { params: Promise<{ setti
     startedAt: new Date().toISOString(),
   }
 
+  console.log("adventurePlan", JSON.stringify(adventurePlan, null, 2))
+
   const demoTurn = {
     id: "demo-turn",
     adventureId: "demo-adventure",
-    encounterId: "broken-silence",
-    title: adventurePlan.title,
+    encounterId: adventurePlan.sections[0].scenes[0].encounters[0].id,
+    title: adventurePlan.sections[0].scenes[0].encounters[0].title,
     subtitle: adventurePlan.sections[0].scenes[0].encounters[0].title,
     narrative: adventurePlan.sections[0].scenes[0].encounters[0].intro,
     characters: [

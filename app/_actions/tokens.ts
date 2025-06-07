@@ -6,15 +6,13 @@ import { api } from "@/convex/_generated/api";
 
 interface DecrementTokensArgs {
   tokensUsed: number;
-  transactionType: "usage_generate_text" | "usage_generate_object";
+  transactionType: "usage_generate_text" | "usage_generate_object" | "usage_image_upload";
   description?: string;
   modelId?: string;
 }
 
 export async function decrementUserTokensAction(args: DecrementTokensArgs) {
   const { userId } = await auth(); 
-
-  const TOKEN_DECREMENT_MULTIPLIER = 0.01; // 100 tokens of gemini usage = 1 token of D20 usage
 
   if (!userId) {
     console.error("decrementUserTokensAction: User not authenticated. Cannot decrement tokens.");
@@ -29,7 +27,17 @@ export async function decrementUserTokensAction(args: DecrementTokensArgs) {
 
   try {
     const description = args.description || `Token usage for ${args.transactionType}${args.modelId ? ' (' + args.modelId + ')' : ''}`;
-    const tokensUsed = args.tokensUsed * TOKEN_DECREMENT_MULTIPLIER;
+    
+    // Different token calculations for different transaction types
+    let tokensUsed: number;
+    if (args.transactionType === "usage_image_upload") {
+      // Image uploads are a flat rate, no multiplier needed
+      tokensUsed = args.tokensUsed;
+    } else {
+      // AI generation uses a multiplier: 100 tokens of gemini usage = 1 token of D20 usage
+      const TOKEN_DECREMENT_MULTIPLIER = 0.01;
+      tokensUsed = args.tokensUsed * TOKEN_DECREMENT_MULTIPLIER;
+    }
     const result = await convex.mutation(api.userTokenManagement.decrementTokens, {
       userId,
       tokensUsed,

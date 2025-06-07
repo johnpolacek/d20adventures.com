@@ -21,6 +21,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { X, Plus, Edit, ChevronsUp } from "lucide-react"
+import { IMAGE_HOST } from "@/lib/config"
 
 interface EncounterEditFormProps {
   id: string
@@ -151,8 +152,21 @@ export function EncounterEditForm({
 
   const baseId = `encounter-${sectionIndex}-${sceneIndex}-${encounterIndex}`
   const imageUploadFolder = `images/settings/${settingId}/${adventurePlanId}/encounters/${encounter.id || `temp-${baseId}`}`
-  const IMAGE_HOST = process.env.NEXT_PUBLIC_IMAGE_HOST || ""
-  const imageUrl = encounter.image ? IMAGE_HOST + encounter.image : ""
+
+  // Helper function to construct the full URL for display
+  const getDisplayUrl = (value: string): string => {
+    if (!value) return value
+
+    // If it's already a full URL, use it as-is
+    if (value.startsWith("http://") || value.startsWith("https://")) {
+      return value
+    }
+
+    // If it's a relative path, prepend the IMAGE_HOST
+    return `${IMAGE_HOST}/${value.replace(/^\/+/, "")}`
+  }
+
+  const imageUrl = getDisplayUrl(encounter.image || "")
 
   return (
     <div id={id} className={`border border-white/20 rounded-lg mt-8 flex flex-col gap-4 relative ${!isEditing ? "py-0" : "p-4"}`}>
@@ -184,7 +198,7 @@ export function EncounterEditForm({
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete Encounter</AlertDialogTitle>
-                <AlertDialogDescription>Are you sure you want to delete the encounter "{encounter.title || "Untitled Encounter"}"? This action cannot be undone.</AlertDialogDescription>
+                <AlertDialogDescription>Are you sure you want to delete the encounter “{encounter.title || "Untitled Encounter"}”? This action cannot be undone.</AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -430,7 +444,7 @@ export function EncounterEditForm({
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Delete Encounter</AlertDialogTitle>
-                  <AlertDialogDescription>Are you sure you want to delete the encounter "{encounter.title || "Untitled Encounter"}"? This action cannot be undone.</AlertDialogDescription>
+                  <AlertDialogDescription>Are you sure you want to delete the encounter “{encounter.title || "Untitled Encounter"}”? This action cannot be undone.</AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>

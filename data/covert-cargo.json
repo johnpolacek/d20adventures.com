@@ -7,7 +7,7 @@
   "teaser": "Docked on a discrete pier on a quiet fork of the Mordava River, a river boat bearing a shipment bound for Kordavos sets a clandestine plot in motion and draws the attention of an opportunistic group of rogues.",
   "overview": "Docked on a discrete pier on a quiet fork of the Mordava River, a river boat bearing a shipment bound for Kordavos sets a clandestine plot in motion and draws the attention of an opportunistic group of rogues.",
   "party": [
-    1,
+    2,
     2
   ],
   "tags": [
@@ -17,7 +17,7 @@
     "forest",
     "mystery"
   ],
-  "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/1baf5c28-98db-41c4-86b1-2e2520f022c5.png?t=1749056586286",
+  "image": "images/settings/realm-of-myr/covert-cargo/0897705a-12e6-42d8-9d96-d38faa1063ca.png?t=1749244724241",
   "sections": [
     {
       "title": "Section One",
@@ -30,9 +30,9 @@
             {
               "id": "the-shipment",
               "title": "The Shipment",
-              "intro": "Docked on a discrete pier on a quiet fork of the Mordava River, a river boat bearing a shipment bound for Kordavos rests silently on the dark, placid water.\n\nThe air is cool and damp, thick with the scent of wet earth and the chirping of crickets. The only other sounds are the gentle lapping of water against the pier's aging pylons and the rustle of wind through the skeletal branches of the willow trees.\n\nLyra stands near the middle of the rickety wooden pier. The instructions from her contact, Master Valerius, were explicit. Her sole purpose is to verify the authenticity of a Valkaaran artifact using her arcane talents. She is to confirm its magical properties, give a simple nod, and her part will be done. She will be well compensated for her expertise and, more importantly, her discretion.\n\nFor her part, it was hard to resist getting the chance to interact with reclusive Faelendarian elves and also get a chance to be near a Valkaran relic. She had studied both at length, but there was a big difference between reading old dusty tomes and experiencing the real thing.\n\nShe did not know much of her two escorts. There was Varius Reinhard, a large gruff soldier type who was in charge of security for this little mission. The other was a man who called himself Silas. Where Varius was a stone wall of presence, Silas was a whisper. He was slender, moving with a liquid grace that spoke of a life spent in shadows. \n\nFrom a tangled hideaway of overgrown reeds, Corvus watches the scene unfold. The cool water of the Mordava lapps just inches from his boots, but he remains utterly still. The tip-off mentioned secret trades along seldom used river routes in late evening and predawn hours. He had been staking out this spot for weeks and now his patience is finally paying off it seems.\n\nHe could clearly see the three figures on the pier.  There was a large big soldier, a woman in robes and another who followed behind, scanning the periphery. They are a professional crew, not sloppy thugs. \n\nA soft creak of wood from the ship cuts through the night's quiet hum as the cabin door opened. A figure emerges with a silent, deliberate grace that was distinctly elven. He is tall and lithe, clad in dark, practical leather armor. Two other elves, equally silent and alert, could be seen on the boat's deck, one near the bow and another by the stern, both armed with bows.\n\nThe lead elf steps forward to the edge of his boat, his gaze settling on Lyra's escorts. His voice is low and clear, carrying easily across the water without being loud.\n\n\"You have the arrangement?\" asked the elf.\n\n“I have it here Aelar,” Silas replies, gliding from the shadows at the base of the pier. He removes a heavy scrollcase from its oilskin wrapping.\n\n\"Very well,\" Aelar says, turning to give an order in Elvish to one of his crew. \"The shipment is ready for your specialist's inspection.\"\n\n“Ok, let’s get on with it then,” says Varius, nodding at Lyra, eager to get her to inspect the shipment and have the matter concluded. The crate remained closed. No one was allowed to see what was inside.\n\nLyra had been contracted for one simple task, use her magecraft to determine that the contents of the shipment were indeed arcane in nature.",
+              "intro": "Docked on a discrete pier on a quiet fork of the Mordava River, a river boat bearing a shipment bound for Kordavos rests silently on the dark, placid water.\n\nThe air is cool and damp, thick with the scent of wet earth and the chirping of crickets. The only other sounds are the gentle lapping of water against the pier's aging pylons and the rustle of wind through the skeletal branches of the willow trees.\n\nLyra stands inside the boat, the mysterious cargo crate before her. The instructions from her contact, Master Valerius, were explicit. Her sole purpose is to verify the authenticity of a Valkaaran artifact using her arcane talents. She is to confirm its magical properties, give a simple nod, and her part will be done. She will be well compensated for her expertise and, more importantly, her discretion.\n\nFor her part, it was hard to resist getting the chance to interact with reclusive Faelendarian elves and also get a chance to be near a Valkaran relic. She had studied both at length, but there was a big difference between reading old dusty tomes and experiencing the real thing.\n\nShe did not know much of her two escorts. There was Varius Reinhard, a large gruff soldier type who was in charge of security for this little mission. The other was a man who called himself Silas. Where Varius was a stone wall of presence, Silas was a whisper. He was slender, moving with a liquid grace that spoke of a life spent in shadows. \n\nMeanwhile, from his cleverly concealed vantage within a tangle of overgrown reeds, Poppen Quickfoot watched the scene unfold, a small smile playing on his lips. The cool water of the Mordava lapped just inches from his boots, but he remained utterly still, his senses stretched. Weeks of patient stakeouts had led him to this exact predawn hour, this quiet fork of the river, following the threads of rumor about a clandestine trade. His instinct, honed by a lifetime of seeking out hidden value, told him this was it—the score that would truly mark his arrival in Kordavos.\n\nHis keen hazel eyes, accustomed to discerning worth from a glint in the dark, tracked the three figures on the pier. The hulking soldier, the robed woman, and the whispering shadow-man. A professional crew, indeed; no sloppy thugs. This wasn't just any cargo; this was an item of importance, something worth securing. Poppen’s mind raced, not just with the thought of fencing such a treasure, but with the delicious social connections such a coup would bring.\n\nA soft creak of wood from the ship cuts through the night's quiet hum as the cabin door opened. A figure emerges with a silent, deliberate grace that was distinctly elven. He is tall and lithe, clad in dark, practical leather armor. Two other elves, equally silent and alert, could be seen on the boat's deck, one near the bow and another by the stern, both armed with bows.\n\nThe lead elf steps forward to the edge of his boat, his gaze settling on Lyra's escorts. His voice is low and clear, carrying easily across the water without being loud.\n\n\"You have the arrangement?\" asked the elf.\n\n“I have it here Aelar,” Silas replies, gliding from the shadows at the base of the pier. He removes a heavy scrollcase from its oilskin wrapping.\n\n\"Very well,\" Aelar says, turning to give an order in Elvish to one of his crew. \"The shipment is ready for your specialist's inspection.\"\n\n“Ok, let’s get on with it then,” says Varius, nodding at Lyra, eager to get her to inspect the shipment and have the matter concluded. The crate remained closed. No one was allowed to see what was inside.\n\nLyra had been contracted for one simple task, use her magecraft to determine that the contents of the shipment were indeed arcane in nature.",
               "instructions": "If Lyra asks questions or stalls in any way, Varius and Silas will be impatient and urge her to do what she was paid for. If Lyra tries to engage Aelar in conversation he will be evasive. If she continues to delay, then Silas will nod at Varius who will draw his sword and threaten her.\n\nIf Lyra successfully casts a spell on the crate to detect magic, she will be detect an ancient potent enchantment on an object within the crate. On a highly successful roll of 18 or higher, she will determine its purpose to be related to concepts of binding promises, loyalty, and solemn vows. On a natural twenty, she will be able to name the item as the Verodynian Oath Stone of the First Clans.",
-              "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/broken-silenc/368fc7c0-2714-40ea-8fc6-f0912c6b2268.png?t=1749097542307",
+              "image": "images/settings/realm-of-myr/covert-cargo/encounters/the-shipment/dccea2c5-b22d-41e0-9467-95d8ea2301d5.png?t=1749244761507",
               "transitions": [
                 {
                   "condition": "If Lyra confirms the magic properties of the shipment",
@@ -65,10 +65,15 @@
             {
               "id": "the-transaction",
               "title": "The Transaction",
-              "intro": "",
+              "intro": "Silas glided from the shadows, extending the oilskin-wrapped scrollcase to the elf, \"As agreed.\" \n\nAelar Moonglimmer took the offering, his  grey eyes, sharp and observant, held the rogue’s gaze. \"The Circle is appreciative,\" Aelar replied, his own voice just as quiet and controlled. \"They trust this partnership will prove fruitful for all involved.\"\n\nWith the exchange made, Aelar gave a final, sharp nod, then he and his kin made a quick and graceful exit, stepping off the boat and onto the pier. They moved like shadows across the rickety wood, disappearing into the shadows of the treeline without a single backward glance.",
               "instructions": "",
-              "image": "",
-              "transitions": [],
+              "image": "images/settings/realm-of-myr/covert-cargo/encounters/the-transaction/1c232871-8395-4892-bcf9-543a03bede80.png?t=1749243102836",
+              "transitions": [
+                {
+                  "condition": "After this encounter, always transition immediately to the Battle on the Boat encounter.",
+                  "encounter": "battle-on-the-boat"
+                }
+              ],
               "npc": [],
               "skipInitialNpcTurns": true,
               "resetHealth": false
@@ -76,11 +81,49 @@
             {
               "id": "the-fake",
               "title": "The Fake",
-              "intro": "",
-              "instructions": "",
-              "image": "",
+              "intro": "A silence, sharp and cold as a shard of glass, fell over the boat’s cabin in the wake of the arcanist’s pronouncement.\n\nIt was Silas who moved first. In a single, fluid motion, he was no longer lounging by the door but standing before it, blocking the only exit. A dagger appeared in his hand, its point aimed steadily at Aelar. \"There seems to have been a misunderstanding,\" Silas said, his voice dropping to a silken threat. \"My employers do not appreciate being sold worthless trinkets.\"\n\nVarius Reinhard let out a low, guttural growl, his hand dropping to the hilt of the massive blade at his side. \"You have nerve, elf,\" he snarled, his cold, calculating eyes promising violence as he took a heavy step forward.\n\nAelar Moonglimmer recoiled, but it was with the shock of indignation, not fear. His professional calm fractured into unconcealed fury. \"Worthless?\" he spat, his gaze flicking with contempt toward the unseen specialist. \"Your arcanist is either a fool, or you mean to double-cross us!”",
+              "instructions": "If there ",
+              "image": "images/settings/realm-of-myr/covert-cargo/encounters/the-fake/7b96ca3c-db72-4559-8f8d-59dacbba3185.png?t=1749300003015",
               "transitions": [],
-              "npc": [],
+              "npc": [
+                {
+                  "id": "npcs-1749163978757",
+                  "behavior": "Varius will follow Silas’s lead and orders. He is ready to use force if necessary.",
+                  "initialInitiative": 0
+                },
+                {
+                  "id": "npcs-1749181492795",
+                  "behavior": "Silas will want to figure out who is telling lies - Lyra or Aelar. He will not attack the elves under any circumstances.",
+                  "initialInitiative": 0
+                },
+                {
+                  "id": "npcs-1749184389465",
+                  "behavior": "Aelar will vigorously defend his honor. He does not wish for a fight but will defend himself if necessary.",
+                  "initialInitiative": 0
+                }
+              ],
+              "skipInitialNpcTurns": false,
+              "resetHealth": false
+            },
+            {
+              "id": "battle-on-the-boat",
+              "title": "Battle on the Boat",
+              "intro": "Varius Reinhard turned, a semblance of a smile touching his lips but not his cold eyes. \"Good work, mage,\" he said, his voice suddenly relaxed. \"Your service is most appreciated, but we have our orders.\" He took a slow step, his bulk seeming to shrink the confines of the cabin. \n\nThe cabin door clicks shut, the sound unnaturally loud in the sudden stillness. Silas stands before it, blocking the only exit, the faint whisper of steel on leather the only warning as two wicked-looking daggers appear in his hands.\n\n“No loose ends,” he states, flatly.",
+              "instructions": "",
+              "image": "images/settings/realm-of-myr/covert-cargo/encounters/battle-on-the-boat/088f0e14-cd0f-4312-821b-fac650a518f6.png?t=1749324854329",
+              "transitions": [],
+              "npc": [
+                {
+                  "id": "npcs-1749163978757",
+                  "behavior": "Will attack",
+                  "initialInitiative": 0
+                },
+                {
+                  "id": "npcs-1749181492795",
+                  "behavior": "Will watch and only interfere if Varius is killed or gravely wounded.",
+                  "initialInitiative": 0
+                }
+              ],
               "skipInitialNpcTurns": false,
               "resetHealth": false
             }
@@ -143,7 +186,7 @@
         "charisma": 10
       },
       "id": "npcs-1749163978757",
-      "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/npcs/236683b0-4745-4a8c-ad9d-48ed3bbaf908.png?t=1749164549983"
+      "image": "images/settings/realm-of-myr/covert-cargo/npcs/236683b0-4745-4a8c-ad9d-48ed3bbaf908.png?t=1749164549983"
     },
     "npcs-1749181492795": {
       "name": "Silas",
@@ -197,7 +240,7 @@
         "charisma": 12
       },
       "id": "npcs-1749181492795",
-      "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/npcs/3959ac3c-b63a-4e88-9cce-6a2d69f2bc52.png?t=1749182638807"
+      "image": "images/settings/realm-of-myr/covert-cargo/npcs/3959ac3c-b63a-4e88-9cce-6a2d69f2bc52.png?t=1749182638807"
     },
     "npcs-1749184389465": {
       "name": "Aelar Moonglimmer",
@@ -252,7 +295,121 @@
         "charisma": 12
       },
       "id": "npcs-1749184389465",
-      "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/npcs/e8e02409-93a9-4936-8b2e-b5a3d083889d.png?t=1749226155922"
+      "image": "images/settings/realm-of-myr/covert-cargo/npcs/e8e02409-93a9-4936-8b2e-b5a3d083889d.png?t=1749226155922"
+    },
+    "npcs-1749243735467": {
+      "name": "Elven Archer",
+      "archetype": "Archer",
+      "race": "Wood Elf",
+      "gender": "Female",
+      "appearance": "Tall, slender elf with keen, emerald eyes that constantly scan her surroundings. Her long, braided auburn hair is often adorned with forest leaves and small feathers. She moves with a silent grace, her lithe frame suggesting both agility and endurance. Her skin is lightly tanned from years spent under the sun, and a faint scar runs along her left cheekbone, a memento from a close encounter with a monstrous beast.",
+      "personality": "Stoic and disciplined, with a strong sense of responsibility. ",
+      "background": "",
+      "motivation": "",
+      "behavior": "",
+      "healthPercent": 100,
+      "equipment": [
+        {
+          "name": "Whisperwood Longbow",
+          "description": "A finely crafted longbow made from ancient Whisperwood, known for its incredible range and accuracy."
+        },
+        {
+          "name": "Quiver of Swift Arrows",
+          "description": "A quiver containing 20 meticulously fletched arrows, some tipped with special broadheads for hunting, others with enchanted tips for magical threats."
+        },
+        {
+          "name": "Forest-Green Leather Armor",
+          "description": "Lightweight, supple leather armor dyed forest-green, providing protection without hindering movement, and excellent camouflage."
+        },
+        {
+          "name": "Elven Hunting Knife",
+          "description": "A sharp, balanced knife used for skinning, carving, and close-quarters defense."
+        },
+        {
+          "name": "Cloak of the Wilds",
+          "description": "A hooded cloak woven with natural fibers, providing warmth and blending seamlessly with forest environments."
+        }
+      ],
+      "skills": [
+        "Archery (Expert)",
+        "Stealth",
+        "Survival",
+        "Perception",
+        "Tracking",
+        "Nature Lore",
+        "Acrobatics"
+      ],
+      "specialAbilities": [
+        "Fey Ancestry (Advantage on saves vs. charm, cannot be put to sleep by magic)",
+        "Trance (Does not require sleep, meditates for 4 hours)",
+        "Forest Camouflage (Can attempt to hide even when only lightly obscured by natural phenomena)"
+      ],
+      "status": "Vigilant, currently scouting the northern borders of Whisperwood.",
+      "type": "npc",
+      "attributes": {
+        "strength": 10,
+        "dexterity": 18,
+        "constitution": 14,
+        "intelligence": 12,
+        "wisdom": 16,
+        "charisma": 10
+      },
+      "id": "npcs-1749243735467",
+      "image": "images/settings/realm-of-myr/covert-cargo/npcs/66faef7d-7d77-4aac-bdec-83850e136f5f.png?t=1749243814586"
+    },
+    "npcs-1749243869357": {
+      "name": "Elven Fighter",
+      "archetype": "Fighter",
+      "race": "Elf",
+      "gender": "Male",
+      "appearance": "Tall and lean with sharp, angular features and piercing emerald green eyes. He carries himself with a quiet confidence and a warrior's posture.",
+      "personality": "",
+      "background": "",
+      "motivation": "",
+      "behavior": "Reserved and watchful, Faelar rarely speaks unless necessary. He observes situations carefully before acting, preferring decisive, efficient movements.",
+      "healthPercent": 100,
+      "equipment": [
+        {
+          "name": "Elven Longsword",
+          "description": "A finely crafted blade with a leaf-shaped guard, sharp and perfectly balanced."
+        },
+        {
+          "name": "Reinforced Leather Armor",
+          "description": "Light yet durable armor, allowing for swift movement while offering decent protection."
+        },
+        {
+          "name": "Wooden Shield",
+          "description": "A sturdy, round shield adorned with a faded elven symbol."
+        },
+        {
+          "name": "Quiver of Arrows",
+          "description": "Contains 20 standard arrows, though he primarily uses his sword."
+        },
+        {
+          "name": "Healing Potion",
+          "description": "A small vial containing a shimmering red liquid, capable of mending minor wounds."
+        }
+      ],
+      "skills": [
+        "Swordsmanship",
+        "Tactics",
+        "Survival",
+        "Perception",
+        "Stealth",
+        "Archery"
+      ],
+      "status": "Vigilant",
+      "type": "npc",
+      "attributes": {
+        "strength": 16,
+        "dexterity": 14,
+        "constitution": 15,
+        "intelligence": 12,
+        "wisdom": 13,
+        "charisma": 10
+      },
+      "id": "npcs-1749243869357",
+      "image": "images/settings/realm-of-myr/covert-cargo/npcs/ce082298-d090-47b2-a3b9-5af7c851dec7.png?t=1749243962919"
     }
   },
   "premadePlayerCharacters": [
@@ -308,62 +465,114 @@
         "charisma": 12
       },
       "id": "1749159962941",
-      "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/pcs/dc23c6a6-6247-4384-bccc-2eeed66a7b0c.png?t=1749161969365"
+      "image": "images/settings/realm-of-myr/covert-cargo/pcs/dc23c6a6-6247-4384-bccc-2eeed66a7b0c.png?t=1749161969365",
+      "spells": [
+        {
+          "name": "Detect Magic",
+          "description": "Reveals the presence and general nature of magical auras within range",
+          "isUsed": false
+        },
+        {
+          "name": "Mage Hand",
+          "description": "Creates a spectral, floating hand that can manipulate an object from a distance.",
+          "isUsed": false
+        },
+        {
+          "name": "Light",
+          "description": "Causes an object to shed bright light, illuminating the surrounding area.",
+          "isUsed": false
+        },
+        {
+          "name": "Ray of Frost",
+          "description": "Hurls a beam of frigid cold at a creature, dealing damage and reducing its speed.",
+          "isUsed": false
+        },
+        {
+          "name": "Identify",
+          "description": "Determines the specific magical properties of an item.",
+          "isUsed": false
+        },
+        {
+          "name": "Comprehend Languages",
+          "description": "Allows you to understand the literal meaning of any spoken language you hear.",
+          "isUsed": false
+        },
+        {
+          "name": "Fog Cloud",
+          "description": "Creates a dense sphere of fog, heavily obscuring the area and providing cover.",
+          "isUsed": false
+        },
+        {
+          "name": "Charm Person",
+          "description": "Magically charms a humanoid, causing them to regard you as a friendly acquaintance.",
+          "isUsed": false
+        }
+      ]
     },
     {
-      "name": "Corvus Moldvay",
+      "name": "Poppen Quickfoot",
       "archetype": "Rogue",
-      "race": "Human",
+      "race": "Halfling",
       "gender": "Male",
-      "appearance": "Corvus is a lean young man with sharp, intelligent grey eyes that constantly scan his surroundings. His dark, unruly hair often falls across his forehead, and a faint scar traces his left cheekbone, hinting at past scrapes. He moves with a quiet, almost feline grace, his frame suggesting agility over brute strength.",
-      "personality": "Cunning and pragmatic, Corvus possesses a dry wit and a cynical outlook on life. He's slow to trust but fiercely loyal to those who earn his respect. Beneath his guarded exterior, there's a hidden streak of compassion, particularly for the downtrodden, though he rarely shows it openly. He values efficiency and cleverness above all else.",
-      "background": "Corvus grew up in the grimy back alleys of Kordavos, an orphan who learned early that survival meant being quick-witted and even quicker on his feet. He honed his skills picking pockets and navigating the shadows, often working for a small, informal network of street urchins. He joined the Thieves Guild to master advanced techniques and expand his repertoire beyond simple street thievery, aspiring to become a legend in the underworld.",
-      "motivation": "Corvus is driven by a desire for security and self-sufficiency. He seeks enough wealth and influence to never again be at the mercy of others or the harsh streets. His ambition is never again be a powerless, forgotten face in the Kordavos gutters.",
-      "behavior": "Observant and cautious, Corvus tends to hang back and assess situations before acting. He prefers to avoid direct confrontation, opting for stealth and misdirection. When forced into a fight, he relies on his agility and precision.",
+      "appearance": "Standing just over three feet tall, Poppen is a bundle of restless energy. His curly chestnut hair is kept cropped close to avoid snags. He wears a patchwork waistcoat festooned with hidden pockets. His bright hazel eyes dart constantly, and his pale leather boots are scuffed from midnight footwork.",
+      "personality": "Gregarious, ever‐curious, and smooth‐tongued. Poppen lives for gossip almost as much as profit. He’d rather talk his way out of a fight—or better yet, never get into one at all. He is endlessly curious, flitting from docksider to courtier in search of the next tantalizing rumor.",
+      "background": "Originally from Willowdale, the tranquil halfling homeland bordering the March of Davos. Life in the Dell was too idyllic and slow-paced for Poppen’s adventurous spirit so he set out on a journey to seek his fortune elsewhere.",
+      "motivation": "Driven by an insatiable love for objects of great value, not just for their worth, but for the stories and prestige they carry. He aspires to become a prominent purloiner and fence to indulge this fascination while simultaneously using his social skills to mingle with interesting people, and get rich while doing it.",
+      "behavior": "Poppen moves with quick, careful steps and speaks with a disarming grin, always alert for an unguarded glance or dropped word. He prefers to avoid violence by sleight of hand or a well-placed bribe, but his steel nerve means he’ll risk a bold break-in for the right payoff.",
       "healthPercent": 100,
       "equipment": [
         {
-          "name": "Two well-balanced daggers",
-          "description": "One tucked into his boot, the other concealed in his sleeve."
+          "name": "Leather Armor"
         },
         {
-          "name": "Dark leather armor",
-          "description": "Lightweight and designed for silent movement."
+          "name": "Two Daggers"
         },
         {
-          "name": "Thieves' tools",
-          "description": "A small, expertly crafted set of lockpicks and other implements."
+          "name": "Shortbow"
         },
         {
-          "name": "Pouch of assorted coins",
-          "description": "A modest sum, enough for immediate needs."
+          "name": "Quiver with 20 Arrows"
         },
         {
-          "name": "Grappling hook and 50 feet of rope",
-          "description": "Useful for scaling walls and escaping."
+          "name": "Thieves' Tools"
+        },
+        {
+          "name": "Waistcoast with hidden pockets"
+        },
+        {
+          "name": "Belt Pouch"
+        },
+        {
+          "name": "15 Gold Pieces"
         }
       ],
       "skills": [
         "Acrobatics",
         "Deception",
-        "Insight",
-        "Investigation",
         "Perception",
         "Sleight of Hand",
         "Stealth"
+      ],
+      "spells": [],
+      "specialAbilities": [
+        "Halfling Nimbleness: Can move through the space of any creature that is of a size larger than him.",
+        "Lucky: When he rolls a 1 on an attack roll, ability check, or saving throw, he can reroll the die and must use the new roll.",
+        "Brave: Has advantage on saving throws against being frightened.",
+        "Sneak Attack: Deals extra damage when he has advantage on an attack roll or when an enemy is within 5 feet of an ally who isn't incapacitated.",
+        "Cunning Action: Can take a bonus action on each of his turns in combat to take the Dash, Disengage, or Hide action."
       ],
       "status": "Healthy",
       "type": "pc",
       "attributes": {
         "strength": 10,
-        "dexterity": 18,
+        "dexterity": 16,
         "constitution": 14,
-        "intelligence": 16,
-        "wisdom": 12,
-        "charisma": 15
+        "intelligence": 12,
+        "wisdom": 10,
+        "charisma": 14
       },
-      "id": "1749161506044",
-      "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/pcs/98b7b3c2-d10b-4cdf-8f18-dafda1e6636e.png?t=1749162137212"
+      "id": "1749307435667",
+      "image": "images/settings/realm-of-myr/covert-cargo/pcs/b44179ad-0e8e-4d1e-8b17-8c436dbeb15a.png?t=1749311061893"
     }
   ]
 }

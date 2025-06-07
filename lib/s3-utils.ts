@@ -1,4 +1,4 @@
-import { GetObjectCommand,PutObjectCommand, CopyObjectCommand } from "@aws-sdk/client-s3"
+import { GetObjectCommand,PutObjectCommand, CopyObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3"
 import { s3Client, isAwsConfigured, getAssetUrl } from "./aws"
 import { Readable } from "stream"
 
@@ -171,5 +171,75 @@ export async function copyS3Object(sourceKey: string, destinationKey: string): P
   } catch (error) {
     console.error("Error copying S3 object:", { sourceKey, destinationKey, error });
     throw new Error(`Error copying S3 object: ${error}`);
+  }
+}
+
+/**
+ * List and read all .json files within a given directory on S3 (private data bucket)
+ * @param directoryPrefix The directory prefix (e.g., "adventures/" or "templates/")
+ * @param exclude Optional array of filenames to exclude (e.g., ["setting-data.json"])
+ * @returns Array of objects with key and parsed JSON data
+ */
+export async function listAndReadJsonFilesInS3Directory(
+  directoryPrefix: string, 
+  exclude: string[] = []
+): Promise<Array<{ key: string; data: unknown }>> {
+  const bucket = process.env.bucketData || process.env.AWS_BUCKET_DATA;
+  if (!bucket) {
+    throw new Error("AWS_BUCKET_DATA is not set");
+  }
+  if (!isAwsConfigured() || !s3Client) {
+    throw new Error("AWS S3 is not configured");
+  }
+
+  try {
+    const command = new ListObjectsV2Command({
+      Bucket: bucket,
+      Prefix: directoryPrefix,
+    });
+
+    const response = await s3Client.send(command);
+    
+    if (!response.Contents) {
+      return [];
+    }
+
+    // Filter for .json files and exclude specified files
+    const jsonFiles = response.Contents
+      .filter(object => {
+        if (!object.Key || !object.Key.endsWith('.json')) {
+          return false;
+        }
+        
+        // Only include files in the top level of the directory (no subdirectories)
+        const relativePath = object.Key.replace(directoryPrefix, '');
+        if (relativePath.includes('/')) {
+          return false; // Skip files in subdirectories
+        }
+        
+        // Extract filename from the full key
+        const filename = object.Key.split('/').pop() || '';
+        return !exclude.includes(filename);
+      })
+      .map(object => object.Key!)
+      .sort();
+
+    // Read the content of each JSON file
+    const results = await Promise.all(
+      jsonFiles.map(async (key) => {
+        try {
+          const data = await readJsonFromS3(key);
+          return { key, data };
+        } catch (error) {
+          console.error(`Error reading JSON file ${key}:`, error);
+          throw new Error(`Failed to read JSON file ${key}: ${error}`);
+        }
+      })
+    );
+
+    return results;
+  } catch (error) {
+    console.error("Error listing and reading JSON files from S3:", { directoryPrefix, error });
+    throw new Error(`Error listing and reading JSON files from S3: ${error}`);
   }
 }

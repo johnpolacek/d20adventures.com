@@ -8,6 +8,7 @@ import Turn from "@/components/adventure/turn"
 import { useTurn } from "@/lib/context/TurnContext"
 import { useParams } from "next/navigation"
 import { ensureNpcProcessed } from "@/app/_actions/ensure-npc-processed"
+import { getEncounterImage } from "@/app/_actions/get-encounter-image"
 import type { Id } from "@/convex/_generated/dataModel"
 import wait from "waait"
 import { scrollToTop } from "../ui/utils"
@@ -18,21 +19,56 @@ function AdventureHomeContent({ initialImage, adventure, teaser }: { initialImag
   const { adventurePlanId, settingId } = useParams()
   const [image, setImage] = useState(initialImage)
   const [initialCheckDone, setInitialCheckDone] = useState(false)
+  const [lastEncounterId, setLastEncounterId] = useState<string | null>(null)
 
   const turn = useTurn()
 
   useEffect(() => {
     console.log("[AdventureHomeContent] turn encounterId", turn?.encounterId)
-    if (turn) {
-      const newImage = `images/settings/${settingId}/${adventurePlanId}/${turn.encounterId}.png`
-      if (turn.encounterId && image !== newImage) {
-        setImage(newImage)
-        wait(500).then(() => {
-          scrollToTop()
+
+    // Only update image if the encounter actually changed
+    if (turn && turn.encounterId && turn.encounterId !== lastEncounterId) {
+      console.log("[AdventureHomeContent] Encounter changed from", lastEncounterId, "to", turn.encounterId)
+
+      // Get the correct encounter image from the adventure plan
+      getEncounterImage(adventurePlanId as string, turn.encounterId)
+        .then((encounterImage) => {
+          if (encounterImage) {
+            console.log("[AdventureHomeContent] Found encounter image:", encounterImage)
+            setImage(encounterImage)
+          } else {
+            // Fallback to simple path pattern
+            const fallbackImage = `images/settings/${settingId}/${adventurePlanId}/${turn.encounterId}.png`
+            console.log("[AdventureHomeContent] Using fallback image:", fallbackImage)
+            setImage(fallbackImage)
+          }
+          setLastEncounterId(turn.encounterId)
+
+          wait(500).then(() => {
+            scrollToTop()
+          })
         })
-      }
+        .catch((error) => {
+          console.error("[AdventureHomeContent] Error getting encounter image:", error)
+          // Fallback to simple path pattern
+          const fallbackImage = `images/settings/${settingId}/${adventurePlanId}/${turn.encounterId}.png`
+          console.log("[AdventureHomeContent] Using fallback image after error:", fallbackImage)
+          setImage(fallbackImage)
+          setLastEncounterId(turn.encounterId)
+
+          wait(500).then(() => {
+            scrollToTop()
+          })
+        })
     }
-  }, [turn?.encounterId, settingId, adventurePlanId])
+  }, [turn?.encounterId, settingId, adventurePlanId, lastEncounterId])
+
+  // Set initial lastEncounterId when component first loads
+  useEffect(() => {
+    if (turn?.encounterId && !lastEncounterId) {
+      setLastEncounterId(turn.encounterId)
+    }
+  }, [turn?.encounterId, lastEncounterId])
 
   useEffect(() => {
     if (turn && turn.id && !initialCheckDone) {
@@ -54,6 +90,8 @@ function AdventureHomeContent({ initialImage, adventure, teaser }: { initialImag
       }
     }
   }, [turn, initialCheckDone])
+
+  console.log("turn?.title", turn?.title)
 
   return (
     <>

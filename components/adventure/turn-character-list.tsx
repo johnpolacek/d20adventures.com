@@ -40,7 +40,7 @@ export default function TurnCharacterList() {
                 isDead && "opacity-50 scale-90" // Ensure dead characters are visually distinct
               )}
             >
-              {character.image && <CharacterImage src={IMAGE_HOST + character.image} alt={character.name} />}
+              {character.image && <CharacterImage src={`${IMAGE_HOST}/${character.image.startsWith("/") ? character.image.slice(1) : character.image}`} alt={character.name} />}
               <div className="z-10">
                 <div className="text-xxs sm:text-sm font-bold font-display flex items-center gap-2">
                   {character.name}

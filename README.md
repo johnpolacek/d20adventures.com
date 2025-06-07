@@ -16,7 +16,7 @@ Doing test play throughs and tweaking the prompts:
 ### Future Adventure Ideas
 
 Olav’s Outpost - A tavern at the edge of civilization across from a mysterious forest island
-
+Shadow of the Caldera
 
 
 #### Test Responses
