@@ -22,7 +22,7 @@ export default function ImageHeader({ imageUrl, children, title, subtitle, image
 
   return (
     <>
-      <div className={cn("absolute left-0 right-0 w-full aspect-video min-h-[480px]", variant === "compact" && "aspect-[2]")}>
+      <div className={cn("absolute left-0 right-0 w-full aspect-video min-h-[480px]", variant === "compact" && "aspect-[2.25]")}>
         {topBorder && (
           <>
             <div className="absolute top-0 left-0 right-0 h-2 bg-black/30 z-10" />
@@ -38,10 +38,10 @@ export default function ImageHeader({ imageUrl, children, title, subtitle, image
         />
         {title && (
           <div className="absolute bottom-44 sm:bottom-54 px-4 w-full flex flex-col items-center">
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-display text-center" style={textShadowSpread}>
+            {children}
+            <h2 className="text-2xl sm:text-4xl md:text-5xl font-display text-center mt-12" style={textShadowSpread}>
               {title}
             </h2>
-            {children}
           </div>
         )}
         <div className="absolute bottom-32 sm:bottom-36 left-0 right-0 flex justify-center">
@@ -56,7 +56,7 @@ export default function ImageHeader({ imageUrl, children, title, subtitle, image
         <div className="absolute bottom-6 sm:bottom-12 left-0 right-0 w-full h-32 bg-gradient-to-b from-black/50 to-transparent"></div>
         <div className="absolute bottom-36 sm:bottom-42 left-0 right-0 w-full h-[1px] bg-blend-lighten -mb-px overflow-hidden opacity-50 bg-[url('/images/app/art/texture-line.png')]" />
       </div>
-      <div className="w-full aspect-video -mb-16 -mb-12 min-h-[480px]" />
+      <div className={cn("w-full aspect-video -mb-16 -mb-12 min-h-[480px]", variant === "compact" && "aspect-[2.25]")} />
     </>
   )
 }

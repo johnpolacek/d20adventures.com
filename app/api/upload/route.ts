@@ -45,18 +45,26 @@ export async function POST(request: NextRequest) {
     }
     
     // Check if user has enough tokens for upload
-    try {
-      const tokenBalance = await fetchUserTokenBalance()
-      if (tokenBalance.tokensRemaining < IMAGE_UPLOAD_TOKEN_COST) {
-        return NextResponse.json({ 
-          error: `Insufficient tokens for image upload. ${IMAGE_UPLOAD_TOKEN_COST} tokens required.` 
-        }, { status: 402 }) // Payment Required
-      }
-    } catch (tokenError) {
-      console.error("Failed to check token balance:", tokenError)
+    const tokenBalance = await fetchUserTokenBalance()
+    
+    // Handle authentication error
+    if (tokenBalance.error === "USER_NOT_AUTHENTICATED") {
+      return NextResponse.json({ error: "User authentication failed" }, { status: 401 })
+    }
+    
+    // Handle other errors
+    if (tokenBalance.error) {
+      console.error("Failed to check token balance:", tokenBalance.error)
       return NextResponse.json({ 
         error: "Unable to verify token balance" 
       }, { status: 500 })
+    }
+    
+    // Check token sufficiency
+    if ((tokenBalance.tokensRemaining ?? 0) < IMAGE_UPLOAD_TOKEN_COST) {
+      return NextResponse.json({ 
+        error: `Insufficient tokens for image upload. ${IMAGE_UPLOAD_TOKEN_COST} tokens required.` 
+      }, { status: 402 }) // Payment Required
     }
     
     // Generate a unique filename

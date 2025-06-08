@@ -108,7 +108,7 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
   }
 
   return (
-    <div className="pb-8 flex flex-wrap h-[90vh]">
+    <div className="pb-8 flex flex-wrap h-[80vh]">
       <AdventurePlanFormHeader isSaving={isSaving} onDownload={handleDownload} onSave={() => saveAdventurePlan()} />
       <AdventurePlanEditSidebar adventurePlan={{ ...adventurePlan, sections }} />
 

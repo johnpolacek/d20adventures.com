@@ -1,6 +1,6 @@
 import Image from "next/image"
-import { IMAGE_HOST } from "@/lib/config"
 import DiceRollResult from "@/components/adventure/dice-roll-result"
+import { getImageUrl } from "@/lib/utils"
 
 export default function CharacterDiceRollResultDisplay({
   character,
@@ -23,7 +23,7 @@ export default function CharacterDiceRollResultDisplay({
   return (
     <div className="relative aspect-[4/5] sm:aspect-auto font-display font-bold border border-primary-700 rounded-xl overflow-hidden">
       <div className="absolute top-0 left-0 h-2/3 sm:h-full w-full sm:w-2/3 overflow-hidden">
-        <Image className="object-cover" src={IMAGE_HOST + imageUrl} alt={character} fill={true} />
+        <Image className="object-cover" src={getImageUrl(imageUrl)} alt={character} fill={true} />
         <div className="absolute bottom-0 sm:bottom-auto sm:top-0 right-0 w-full sm:w-1/3 h-1/3 sm:h-full bg-gradient-to-t sm:bg-gradient-to-l from-black to-transparent"></div>
       </div>
       <div className="px-4 py-6 flex flex-col gap-2 text-center items-center justify-start w-full sm:w-1/2 absolute bottom-0 sm:relative sm:left-1/2">

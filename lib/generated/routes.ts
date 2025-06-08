@@ -3,7 +3,6 @@
 // To regenerate, run: pnpm generate:routes
 
 export const validRoutes = new Set([
-  '*',
   '/',
   'about',
   'account/*',
@@ -17,6 +16,7 @@ export const validRoutes = new Set([
   'pay',
   'privacy',
   'roadmap',
+  'settings/*',
   'terms',
   'unsubscribe'
 ])

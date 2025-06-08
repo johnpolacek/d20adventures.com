@@ -2,9 +2,12 @@ import { readJsonFromS3 } from "@/lib/s3-utils"
 import AdventureHome from "@/components/views/adventure-home"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import { TurnCharacter } from "@/types/adventure"
+import { redirect } from "next/navigation"
 
-export default async function AdventureHomePage(props: { params: Promise<{ settingId: string; adventurePlanId: string }> }) {
+export default async function AdventureHomePage(props: { params: Promise<{ settingId: string; adventurePlanId: string }>; searchParams?: Promise<{ selectedCharacter?: string }> }) {
   const { settingId, adventurePlanId } = await props.params
+  const searchParams = await props.searchParams
+  const selectedCharacterId = searchParams?.selectedCharacter
   const key = `settings/${settingId}/${adventurePlanId}.json`
   let adventurePlan: AdventurePlan | null = null
   try {
@@ -14,6 +17,15 @@ export default async function AdventureHomePage(props: { params: Promise<{ setti
     return <div>Error loading adventure data.</div>
   }
 
+  // Check if we have multiple premade characters and no selection - redirect to character selection
+  if (adventurePlan.premadePlayerCharacters.length > 1 && !selectedCharacterId) {
+    redirect(`/settings/${settingId}/${adventurePlanId}/character-selection`)
+  }
+
+  // Find the selected character or use the first one
+  const selectedCharacter = selectedCharacterId ? adventurePlan.premadePlayerCharacters.find((char) => char.id === selectedCharacterId) : adventurePlan.premadePlayerCharacters[0]
+
+  // If we only have one character or none, proceed with demo setup
   const demoAdventure = {
     id: "demo-adventure",
     title: adventurePlan.title,
@@ -24,8 +36,6 @@ export default async function AdventureHomePage(props: { params: Promise<{ setti
     startedAt: new Date().toISOString(),
   }
 
-  console.log("adventurePlan", JSON.stringify(adventurePlan, null, 2))
-
   const demoTurn = {
     id: "demo-turn",
     adventureId: "demo-adventure",
@@ -33,12 +43,14 @@ export default async function AdventureHomePage(props: { params: Promise<{ setti
     title: adventurePlan.sections[0].scenes[0].encounters[0].title,
     subtitle: adventurePlan.sections[0].scenes[0].encounters[0].title,
     narrative: adventurePlan.sections[0].scenes[0].encounters[0].intro,
-    characters: [
-      {
-        ...adventurePlan.premadePlayerCharacters[0],
-        initiative: 10,
-      } as TurnCharacter,
-    ],
+    characters: selectedCharacter
+      ? [
+          {
+            ...selectedCharacter,
+            initiative: 10,
+          } as TurnCharacter,
+        ]
+      : [],
   }
 
   return (

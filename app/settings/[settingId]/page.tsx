@@ -1,7 +1,10 @@
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import { Setting } from "@/types/setting"
 import ImageHeader from "@/components/ui/image-header"
-import { IMAGE_HOST } from "@/lib/config"
+import { Button } from "@/components/ui/button"
+import { isDev } from "@/lib/auth-utils"
+import Link from "next/link"
+import { getImageUrl } from "@/lib/utils"
 
 export default async function SettingHome(props: { params: Promise<{ settingId: string }> }) {
   const { settingId } = await props.params
@@ -16,10 +19,19 @@ export default async function SettingHome(props: { params: Promise<{ settingId: 
     return <div>Error loading setting data.</div>
   }
 
+  const canEdit = isDev()
+
+  console.log("[SettingHome] canEdit:", canEdit)
+
   return (
     <div className="flex min-h-screen flex-col relative">
       <div className="fade-in delay-[2s] relative z-10">
-        <ImageHeader variant="compact" imageUrl={`${IMAGE_HOST}/${setting.image}`} title={setting.name} imageAlt={setting.name} />
+        <ImageHeader variant="compact" imageUrl={getImageUrl(setting.image)} title={setting.name} imageAlt={setting.name} />
+        {canEdit && (
+          <Link className="fixed top-[90vh] right-8 z-10" href={`/settings/${settingId}/edit`}>
+            <Button className="text-sm bg-primary-600 hover:bg-primary-700">Edit</Button>
+          </Link>
+        )}
         <div className="max-w-3xl mx-auto -mt-48 relative z-10 whitespace-pre-line">
           <p>{setting.description}</p>
           {setting.technology && (
@@ -41,7 +53,7 @@ export default async function SettingHome(props: { params: Promise<{ settingId: 
               <div className="flex flex-col pt-16">
                 <h4 className="text-xl font-display font-bold text-primary-200">{location.name}</h4>
 
-                <ImageHeader topBorder variant="compact" imageUrl={`${IMAGE_HOST}/${location.image}`} title={location.name} imageAlt={location.name} />
+                <ImageHeader topBorder variant="compact" imageUrl={getImageUrl(location.image)} title={location.name} imageAlt={location.name} />
 
                 <div className="max-w-3xl mx-auto -mt-48 relative z-10 whitespace-pre-line">
                   <div className="whitespace-pre-line">
@@ -69,7 +81,7 @@ export default async function SettingHome(props: { params: Promise<{ settingId: 
 
                 {location.organizations.map((org) => (
                   <div key={org.name} className="relative mt-16">
-                    <ImageHeader topBorder variant="compact" imageUrl={`${IMAGE_HOST}/${org.image}`} title={org.name} imageAlt={org.name} />
+                    <ImageHeader topBorder variant="compact" imageUrl={getImageUrl(org.image)} title={org.name} imageAlt={org.name} />
                     <div className="max-w-3xl mx-auto -mt-48 relative z-10 whitespace-pre-line">
                       <p>{org.description}</p>
                     </div>

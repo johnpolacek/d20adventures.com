@@ -24,22 +24,14 @@ function AdventureHomeContent({ initialImage, adventure, teaser }: { initialImag
   const turn = useTurn()
 
   useEffect(() => {
-    console.log("[AdventureHomeContent] turn encounterId", turn?.encounterId)
-
     // Only update image if the encounter actually changed
     if (turn && turn.encounterId && turn.encounterId !== lastEncounterId) {
-      console.log("[AdventureHomeContent] Encounter changed from", lastEncounterId, "to", turn.encounterId)
-
-      // Get the correct encounter image from the adventure plan
       getEncounterImage(adventurePlanId as string, turn.encounterId)
         .then((encounterImage) => {
           if (encounterImage) {
-            console.log("[AdventureHomeContent] Found encounter image:", encounterImage)
             setImage(encounterImage)
           } else {
-            // Fallback to simple path pattern
             const fallbackImage = `images/settings/${settingId}/${adventurePlanId}/${turn.encounterId}.png`
-            console.log("[AdventureHomeContent] Using fallback image:", fallbackImage)
             setImage(fallbackImage)
           }
           setLastEncounterId(turn.encounterId)
@@ -90,8 +82,6 @@ function AdventureHomeContent({ initialImage, adventure, teaser }: { initialImag
       }
     }
   }, [turn, initialCheckDone])
-
-  console.log("turn?.title", turn?.title)
 
   return (
     <>

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect } from "react"
+import React from "react"
 import { Adventure } from "@/types/adventure"
 import type { Turn as TurnType } from "@/types/adventure"
 import { TurnProvider } from "@/lib/context/TurnContext"
@@ -26,10 +26,6 @@ function AdventureHome({
   currentTurn: TurnType | null
   disableSSE?: boolean
 }) {
-  useEffect(() => {
-    console.log("[AdventureHome]", JSON.stringify({ currentTurn, encounterImage, disableSSE }, null, 2))
-  }, [currentTurn?.id, disableSSE])
-
   return (
     <AdventureProvider settingId={settingId} adventurePlanId={adventurePlanId} adventure={adventure}>
       <TurnProvider adventureId={adventure?.id ?? ""} initialTurn={currentTurn} disableSSE={disableSSE}>

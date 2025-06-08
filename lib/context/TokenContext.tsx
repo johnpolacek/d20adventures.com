@@ -36,16 +36,31 @@ export const TokenProvider: React.FC<TokenProviderProps> = ({ children, pollingI
 
     setIsLoading(true)
     try {
-      const balance = await fetchUserTokenBalance()
-      setTokensRemaining(balance.tokensRemaining)
-      setAlltimeTokens(balance.alltimeTokens)
+      const result = await fetchUserTokenBalance()
+
+      // Handle authentication error gracefully
+      if (result.error === "USER_NOT_AUTHENTICATED") {
+        // User is not authenticated on server side, treat as signed out
+        setTokensRemaining(null)
+        setAlltimeTokens(null)
+        setError(null) // Don't show error for auth issues, just clear tokens
+        return
+      }
+
+      // Handle other errors
+      if (result.error) {
+        setError(result.error)
+        return
+      }
+
+      // Success case
+      setTokensRemaining(result.tokensRemaining)
+      setAlltimeTokens(result.alltimeTokens)
       setError(null)
     } catch (err) {
-      console.error("TokenContext: Failed to fetch token balance", err)
+      // This should rarely happen now since server action returns error objects
+      console.error("TokenContext: Unexpected error fetching token balance", err)
       setError(err instanceof Error ? err.message : "An unknown error occurred while fetching token balance.")
-      // Keep existing token values if fetch fails, or set to null based on preference
-      // setTokensRemaining(null);
-      // setAlltimeTokens(null);
     } finally {
       setIsLoading(false)
     }

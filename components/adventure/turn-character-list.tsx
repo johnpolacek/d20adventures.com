@@ -1,6 +1,5 @@
-import { IMAGE_HOST } from "@/lib/config"
 import { useTurn } from "@/lib/context/TurnContext"
-import { cn } from "@/lib/utils"
+import { cn, getImageUrl } from "@/lib/utils"
 import { CircleCheckBig } from "lucide-react"
 import { useState } from "react"
 import Image from "next/image"
@@ -40,7 +39,7 @@ export default function TurnCharacterList() {
                 isDead && "opacity-50 scale-90" // Ensure dead characters are visually distinct
               )}
             >
-              {character.image && <CharacterImage src={`${IMAGE_HOST}/${character.image.startsWith("/") ? character.image.slice(1) : character.image}`} alt={character.name} />}
+              {character.image && <CharacterImage src={getImageUrl(character.image)} alt={character.name} />}
               <div className="z-10">
                 <div className="text-xxs sm:text-sm font-bold font-display flex items-center gap-2">
                   {character.name}

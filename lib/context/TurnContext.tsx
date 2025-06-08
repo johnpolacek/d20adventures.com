@@ -117,26 +117,11 @@ export const TurnProvider = ({ adventureId, initialTurn, disableSSE = false, chi
   }
 
   useEffect(() => {
-    console.log(
-      "[TurnProvider MainEffect] Running. adventureId:",
-      adventureId,
-      "disableSSE:",
-      disableSSE,
-      "isLoaded:",
-      isLoaded,
-      "isSignedIn:",
-      isSignedIn,
-      "initialTurn ID:",
-      initialTurn?.id,
-      "initialTurn Title:",
-      initialTurn?.title
-    )
     createConnection()
 
     // Handle visibility change to reconnect when tab becomes active
     const handleVisibilityChange = () => {
       if (!document.hidden && isSignedIn && (!eventSourceRef.current || eventSourceRef.current.readyState === EventSource.CLOSED)) {
-        console.log("[TurnProvider VisChange] Tab visible, checking connection. adventureId:", adventureId, "initialTurn ID:", initialTurn?.id, "disableSSE:", disableSSE)
         // Reset attempts when user returns to tab
         reconnectAttempts.current = 0
         createConnection()
