@@ -20,6 +20,7 @@ import { useParams, useRouter } from "next/navigation"
 import { useUser } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { cn } from "@/lib/utils"
 
 export default function TurnNarrative() {
   const params = useParams()
@@ -63,13 +64,17 @@ export default function TurnNarrative() {
   const shouldShowReplyCondition =
     currentTurn && !currentTurn.isFinalEncounter && currentCharacter && currentCharacter.type === "pc" && currentCharacter.userId === user?.id && !isNpcProcessing && !disableSSE
 
+  // Find the player's character and check if their turn is complete
+  const playerCharacter = currentTurn?.characters.find((c: TurnCharacter) => c.type === "pc" && c.userId === user?.id)
+  const isPlayerTurnComplete = playerCharacter?.isComplete
+
   const handleAdvanceOrNavigate = async () => {
     console.log("[handleAdvanceOrNavigate] CALLED", { disableSSE, action: disableSSE ? "navigate" : "advance" })
     if (disableSSE) {
       // Navigation mode: just go to the next turn
       const currentTurnOrder = params.turnOrder ? parseInt(params.turnOrder as string, 10) : 1
       const nextTurnOrder = currentTurnOrder + 1
-      const basePath = `/${settingId}/${adventurePlanId}/${params.adventureId}`
+      const basePath = `/settings/${settingId}/${adventurePlanId}/${params.adventureId}`
 
       console.log("[TurnNarrative] Navigating to next turn:", `${basePath}/${nextTurnOrder}`)
       setAdvancing(true)
@@ -77,13 +82,9 @@ export default function TurnNarrative() {
       // Reset advancing state after a delay since navigation doesn't complete immediately
       setTimeout(() => setAdvancing(false), 1000)
     } else {
-      // Advance mode: actually advance the turn
-      console.log("[advanceTurn] currentTurn before:", JSON.stringify(currentTurn, null, 2))
-      console.log("[advanceTurn] turnId:", currentTurn?.id)
       setAdvancing(true)
       setTokenError(null) // Clear previous errors
       try {
-        console.log("[advanceTurn] calling advanceTurn with:", JSON.stringify({ currentTurn }, null, 2))
         const result = await advanceTurn({ turnId: currentTurn?.id as Id<"turns">, settingId, adventurePlanId })
         console.log("[advanceTurn] result:", JSON.stringify(result, null, 2))
 
@@ -91,7 +92,7 @@ export default function TurnNarrative() {
         if (result.status === "turn_advanced") {
           const currentTurnOrder = params.turnOrder ? parseInt(params.turnOrder as string, 10) : 1
           const newTurnOrder = currentTurnOrder + 1
-          const basePath = `/${settingId}/${adventurePlanId}/${params.adventureId}`
+          const basePath = `/settings/${settingId}/${adventurePlanId}/${params.adventureId}`
           router.replace(`${basePath}/${newTurnOrder}`, { scroll: false })
         }
       } catch (error) {
@@ -195,12 +196,19 @@ export default function TurnNarrative() {
           }}
         />
       ) : (
-        <div id="turn-indicator" className="flex flex-col gap-2 justify-center border mt-4 border-dashed border-white/20 items-center p-8 rounded-lg bg-primary-800/50">
-          <h4 className="text-primary-200 text-xl font-display">Waiting for Your Turn</h4>
+        <div
+          id="turn-indicator"
+          className={cn(
+            "flex flex-col gap-2 justify-center border mt-4 border-white/20 items-center p-8 rounded-lg",
+            isPlayerTurnComplete ? "bg-neutral-900" : "bg-primary-800/70 border-dashed",
+            isTurnComplete && "hidden"
+          )}
+        >
+          <h4 className={cn("text-xl font-display", isPlayerTurnComplete ? "text-green-300/70" : "text-primary-200")}>{isPlayerTurnComplete ? "Your Turn is Complete" : "Waiting for Your Turn"}</h4>
           <div className="flex gap-3 mt-3 mb-4 scale-75">
-            <span className="w-2 h-2 bg-primary-200 rounded-full animate-pulse" style={{ animationDelay: "0ms", animationDuration: "1.4s" }}></span>
-            <span className="w-2 h-2 bg-primary-200 rounded-full animate-pulse" style={{ animationDelay: "200ms", animationDuration: "1.4s" }}></span>
-            <span className="w-2 h-2 bg-primary-200 rounded-full animate-pulse" style={{ animationDelay: "400ms", animationDuration: "1.4s" }}></span>
+            <span className={cn("w-2 h-2 rounded-full animate-pulse", isPlayerTurnComplete ? "bg-neutral-600" : "bg-primary-200")} style={{ animationDelay: "0ms", animationDuration: "2s" }}></span>
+            <span className={cn("w-2 h-2 rounded-full animate-pulse", isPlayerTurnComplete ? "bg-neutral-600" : "bg-primary-200")} style={{ animationDelay: "200ms", animationDuration: "2s" }}></span>
+            <span className={cn("w-2 h-2 rounded-full animate-pulse", isPlayerTurnComplete ? "bg-neutral-600" : "bg-primary-200")} style={{ animationDelay: "400ms", animationDuration: "2s" }}></span>
           </div>
           <p className="italic text-white/70">It is currently {currentCharacter?.name}’s turn</p>
         </div>

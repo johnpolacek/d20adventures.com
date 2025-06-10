@@ -20,7 +20,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { X, Plus, Edit, ChevronsUp } from "lucide-react"
+import { X, Edit, ChevronsUp, ChevronsRight } from "lucide-react"
 import { IMAGE_HOST } from "@/lib/config"
 
 interface EncounterEditFormProps {
@@ -110,30 +110,19 @@ export function EncounterEditForm({
   const availableEncounters = getAllEncounterIds()
   const transitions = encounter.transitions || []
 
-  const handleAddTransition = () => {
-    const newTransitions = [...transitions, { condition: "", encounter: "" }]
-    onTransitionsChange(sectionIndex, sceneIndex, encounterIndex, newTransitions)
-  }
-
-  const handleTransitionChange = (transitionIndex: number, field: "condition" | "encounter", value: string) => {
-    const newTransitions = transitions.map((transition, idx) => {
-      if (idx === transitionIndex) {
-        return { ...transition, [field]: value }
-      }
-      return transition
-    })
-    onTransitionsChange(sectionIndex, sceneIndex, encounterIndex, newTransitions)
-  }
-
-  const handleRemoveTransition = (transitionIndex: number) => {
-    const newTransitions = transitions.filter((_, idx) => idx !== transitionIndex)
-    onTransitionsChange(sectionIndex, sceneIndex, encounterIndex, newTransitions)
-  }
-
-  const handleAddNpc = () => {
-    const newNpcs = [...(encounter.npc || []), { id: "", behavior: "", initialInitiative: 0 }]
+  const handleAddNpc = (npcId: string) => {
+    if (!npcId) return
+    const newNpcs = [...(encounter.npc || []), { id: npcId, behavior: "", initialInitiative: 0 }]
     onNpcChange(sectionIndex, sceneIndex, encounterIndex, newNpcs)
   }
+
+  // Get NPCs that haven't been added to this encounter yet
+  const getAvailableNpcsForAdd = () => {
+    const assignedNpcIds = new Set((encounter.npc || []).map((npc) => npc.id))
+    return Object.entries(availableNpcs).filter(([npcId]) => !assignedNpcIds.has(npcId))
+  }
+
+  const availableNpcsForAdd = getAvailableNpcsForAdd()
 
   const handleNpcChange = (npcIndex: number, field: "id" | "behavior" | "initialInitiative", value: string | number) => {
     const newNpcs = (encounter.npc || []).map((npc, idx) => {
@@ -168,11 +157,35 @@ export function EncounterEditForm({
 
   const imageUrl = getDisplayUrl(encounter.image || "")
 
+  // Helper: Get available encounters for transitions (not already selected)
+  const getAvailableEncountersForTransition = () => {
+    const selectedEncounterIds = new Set(transitions.map((t) => t.encounter))
+    return availableEncounters.filter((enc) => !selectedEncounterIds.has(enc.id))
+  }
+  const availableEncountersForTransition = getAvailableEncountersForTransition()
+  const [addTransitionValue, setAddTransitionValue] = React.useState("")
+
+  // Restore transition handlers (needed for transitions section)
+  const handleTransitionChange = (transitionIndex: number, field: "condition" | "encounter", value: string) => {
+    const newTransitions = transitions.map((transition, idx) => {
+      if (idx === transitionIndex) {
+        return { ...transition, [field]: value }
+      }
+      return transition
+    })
+    onTransitionsChange(sectionIndex, sceneIndex, encounterIndex, newTransitions)
+  }
+
+  const handleRemoveTransition = (transitionIndex: number) => {
+    const newTransitions = transitions.filter((_, idx) => idx !== transitionIndex)
+    onTransitionsChange(sectionIndex, sceneIndex, encounterIndex, newTransitions)
+  }
+
   return (
     <div id={id} className={`border border-white/20 rounded-lg mt-8 flex flex-col gap-4 relative ${!isEditing ? "py-0" : "p-4"}`}>
       {!isEditing ? (
         // Collapsed Mode
-        <div className="p-4 flex items-center gap-4">
+        <div className="p-4 flex items-center gap-4 relative">
           <div onClick={toggleEditMode} className="h-16 aspect-video rounded-lg overflow-hidden bg-white/10 flex-shrink-0 cursor-pointer relative">
             {imageUrl ? (
               <Image fill={true} src={imageUrl} alt={encounter.title || "Encounter"} className="w-full h-full object-cover" />
@@ -181,8 +194,30 @@ export function EncounterEditForm({
             )}
           </div>
           <div onClick={toggleEditMode} className="flex-1 min-w-0 cursor-pointer">
-            <div className="text-lg font-display text-amber-300/90 truncate">{encounter.title || "Untitled Encounter"}</div>
-            <div className="text-sm text-white/70 space-y-1">{encounter.intro && <div className="text-white/60 text-xs truncate">{encounter.intro.substring(0, 100)}...</div>}</div>
+            <div className="text-lg font-display font-bold text-amber-300 truncate">{encounter.title || "Untitled Encounter"}</div>
+            {!encounter.transitions ||
+              (encounter.transitions.length === 0 && (
+                <div className="absolute -bottom-3 left-6 bg-black border border-red-700/80 rounded px-2 py-0.5 text-xxs font-mono text-white/90">Final Encounter</div>
+              ))}
+            <div className="text-sm text-white/90 space-y-1">{encounter.intro && <div className="text-white/60 text-xs truncate">{encounter.intro.substring(0, 100)}...</div>}</div>
+            {/* Transition Badges */}
+            {encounter.transitions && encounter.transitions.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {encounter.transitions.map((transition, idx) => {
+                  const target = availableEncounters.find((enc) => enc.id === transition.encounter)
+                  if (!target) return null
+                  return (
+                    <span
+                      key={transition.encounter + idx}
+                      className="inline-flex items-center gap-1 bg-indigo-800/80 text-indigo-100 text-xxs font-mono rounded-full px-2 py-0.5 max-w-xs truncate"
+                      title={target.title}
+                    >
+                      <ChevronsRight size={10} /> {target.title}
+                    </span>
+                  )
+                })}
+              </div>
+            )}
           </div>
           <Button onClick={toggleEditMode} disabled={isSaving} size="sm" variant="outline" className="flex items-center gap-2 text-sm">
             <Edit size={14} />
@@ -216,9 +251,7 @@ export function EncounterEditForm({
             <ChevronsUp size={14} /> close
           </button>
           <div className="absolute -top-4 left-2 text-xxs font-mono text-white/60 px-1.5 pt-8 pb-2 rounded">{encounter.id || ""}</div>
-          <h4 className="text-lg font-bold font-display text-amber-300/80 text-center pt-4">
-            <span className="relative -top-4">{encounter.title}</span>
-          </h4>
+          <h4 className="text-5xl font-display text-amber-400 text-center pt-4">{encounter.title}</h4>
 
           <div>
             <Label htmlFor={`${baseId}-image-upload`} className="block text-sm font-medium font-mono text-primary-200/90 mb-1">
@@ -278,89 +311,16 @@ export function EncounterEditForm({
             />
           </div>
 
-          {/* Transitions Section */}
-          <div className="border-t border-white/10 pt-4">
-            <div className="flex items-center justify-between mb-3">
-              <Label className="text-sm font-medium font-mono text-primary-200/90">Transitions</Label>
-              <Button onClick={handleAddTransition} disabled={isSaving} size="sm" variant="outline" className="h-8 px-2 text-xs">
-                <Plus size={12} className="mr-1" />
-                Add Transition
-              </Button>
-            </div>
-
-            {transitions.length === 0 ? (
-              <p className="text-xs text-gray-400 italic mb-2">No transitions defined. This encounter will end the adventure.</p>
-            ) : (
-              <div className="space-y-3">
-                {transitions.map((transition, tIndex) => (
-                  <div key={tIndex} className="border border-white/10 rounded p-3 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono text-white/60">Transition {tIndex + 1}</span>
-                      <Button
-                        onClick={() => handleRemoveTransition(tIndex)}
-                        disabled={isSaving}
-                        size="icon"
-                        variant="ghost"
-                        className="h-5 w-5 p-0 text-red-400 hover:text-red-300 hover:bg-red-400/10"
-                      >
-                        <X size={10} />
-                      </Button>
-                    </div>
-
-                    <div>
-                      <Label htmlFor={`${baseId}-transition-${tIndex}-condition`} className="text-xs font-mono text-primary-200/90 mb-1 block">
-                        Condition
-                      </Label>
-                      <Textarea
-                        id={`${baseId}-transition-${tIndex}-condition`}
-                        value={transition.condition}
-                        onChange={(e) => handleTransitionChange(tIndex, "condition", e.target.value)}
-                        placeholder="e.g., 'Player successfully unlocks the door' or 'Combat ends with all enemies defeated'"
-                        rows={2}
-                        disabled={isSaving}
-                        className="bg-white/5 placeholder:text-white/40 text-xs"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor={`${baseId}-transition-${tIndex}-encounter`} className="text-xs font-mono text-primary-200/90 mb-1 block">
-                        Target Encounter
-                      </Label>
-                      <select
-                        id={`${baseId}-transition-${tIndex}-encounter`}
-                        value={transition.encounter}
-                        onChange={(e) => handleTransitionChange(tIndex, "encounter", e.target.value)}
-                        disabled={isSaving}
-                        className="w-full bg-white/5 border border-white/20 rounded px-2 py-1 text-xs text-white placeholder:text-white/40"
-                      >
-                        <option value="">Select target encounter...</option>
-                        {availableEncounters.map((enc) => (
-                          <option key={enc.id} value={enc.id} className="bg-gray-800">
-                            {enc.title}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
           {/* NPCs Section */}
           <div className="border-t border-white/10 pt-4">
-            <div className="flex items-center justify-between mb-3">
-              <Label className="text-sm font-medium font-mono text-primary-200/90">NPCs in Encounter</Label>
-              <Button onClick={handleAddNpc} disabled={isSaving} size="sm" variant="outline" className="h-8 px-2 text-xs">
-                <Plus size={12} className="mr-1" />
-                Add NPC
-              </Button>
+            <div className="mb-3">
+              <Label className="text-lg font-display text-amber-400/90 pl-2">NPCs</Label>
             </div>
 
             {!encounter.npc || encounter.npc.length === 0 ? (
               <p className="text-xs text-gray-400 italic mb-2">No NPCs assigned to this encounter.</p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-3 mb-3">
                 {encounter.npc.map((npc, nIndex) => (
                   <div key={nIndex} className="border border-white/10 rounded p-3 space-y-2">
                     <div className="flex items-center justify-between">
@@ -408,9 +368,126 @@ export function EncounterEditForm({
                 ))}
               </div>
             )}
+
+            {/* Add NPC Dropdown */}
+            {availableNpcsForAdd.length > 0 && (
+              <div className="max-w-[300px]">
+                <select
+                  value=""
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      handleAddNpc(e.target.value)
+                      // Reset the select to show the placeholder again
+                      e.target.value = ""
+                    }
+                  }}
+                  disabled={isSaving}
+                  className="w-full bg-white/5 border border-white/20 rounded p-2 text-xs text-white placeholder:text-white/40"
+                >
+                  <option value="">+ Add NPC</option>
+                  {availableNpcsForAdd.map(([npcId, npcData]) => (
+                    <option key={npcId} value={npcId} className="bg-gray-800">
+                      {npcData.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
-          <div className="flex items-center space-x-2 pt-2">
+          {/* Transitions Section */}
+          <div className="border-t border-white/10 pt-4">
+            <div className="flex items-center justify-between mb-3">
+              <Label className="text-lg font-display text-amber-400/90 pl-2">Transitions</Label>
+            </div>
+
+            {transitions.length === 0 ? (
+              <p className="text-xs text-gray-400 italic mb-2">No transitions defined. This encounter will end the adventure.</p>
+            ) : (
+              <div className="space-y-2">
+                {transitions.map((transition, tIndex) => (
+                  <div key={tIndex} className="border border-white/10 rounded pb-2 space-y-2">
+                    <div className="flex items-center justify-end -mb-4">
+                      <Button
+                        onClick={() => handleRemoveTransition(tIndex)}
+                        disabled={isSaving}
+                        size="icon"
+                        variant="ghost"
+                        className="scale-150 h-5 w-5 p-0 text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                      >
+                        <X size={10} />
+                      </Button>
+                    </div>
+
+                    <div>
+                      <Label htmlFor={`${baseId}-transition-${tIndex}-encounter`} className="text-xs font-mono text-primary-200/90 mb-1 block">
+                        Target Encounter
+                      </Label>
+                      <div className="max-w-[300px]">
+                        <select
+                          id={`${baseId}-transition-${tIndex}-encounter`}
+                          value={transition.encounter}
+                          onChange={(e) => handleTransitionChange(tIndex, "encounter", e.target.value)}
+                          disabled={isSaving}
+                          className="w-full bg-white/5 border border-white/20 rounded p-2 text-base text-white placeholder:text-white/40"
+                        >
+                          {!transition.encounter && <option value="">Select target encounter...</option>}
+                          {availableEncounters.map((enc) => (
+                            <option key={enc.id} value={enc.id} className="bg-gray-800">
+                              {enc.title}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor={`${baseId}-transition-${tIndex}-condition`} className="text-xs font-mono text-primary-200/90 mb-1 block">
+                        Condition
+                      </Label>
+                      <Textarea
+                        id={`${baseId}-transition-${tIndex}-condition`}
+                        value={transition.condition}
+                        onChange={(e) => handleTransitionChange(tIndex, "condition", e.target.value)}
+                        placeholder="e.g., 'Player successfully unlocks the door' or 'Combat ends with all enemies defeated'"
+                        rows={2}
+                        disabled={isSaving}
+                        className="bg-white/5 placeholder:text-white/40 text-xs"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add Transition Dropdown */}
+            {availableEncountersForTransition.length > 0 && (
+              <div className="max-w-[300px] mt-2">
+                <select
+                  value={addTransitionValue}
+                  onChange={(e) => {
+                    const selected = e.target.value
+                    if (selected) {
+                      const newTransitions = [...transitions, { condition: "", encounter: selected }]
+                      onTransitionsChange(sectionIndex, sceneIndex, encounterIndex, newTransitions)
+                      setAddTransitionValue("")
+                    }
+                  }}
+                  disabled={isSaving}
+                  className="w-full bg-white/5 border border-white/20 rounded p-2 text-xs text-white placeholder:text-white/40"
+                >
+                  <option value="">+ Add Transition</option>
+                  {availableEncountersForTransition.map((enc) => (
+                    <option key={enc.id} value={enc.id} className="bg-gray-800">
+                      {enc.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center space-x-2">
             <Checkbox
               id={`${baseId}-skipNpcTurns`}
               checked={encounter.skipInitialNpcTurns || false}
@@ -448,7 +525,7 @@ export function EncounterEditForm({
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => onDelete(sectionIndex, sceneIndex, encounterIndex)} className="bg-red-600 hover:bg-red-700 focus:ring-red-600">
+                  <AlertDialogAction onClick={() => onDelete(sectionIndex, sceneIndex, encounterIndex)} className="bg-red-800 font-display font-bold hover:bg-red-700 focus:ring-red-800">
                     Delete Encounter
                   </AlertDialogAction>
                 </AlertDialogFooter>

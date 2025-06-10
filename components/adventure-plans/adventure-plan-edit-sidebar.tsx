@@ -4,6 +4,8 @@ import * as React from "react"
 import { AdventurePlan } from "@/types/adventure-plan"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { cn } from "@/lib/utils"
+import { reverseSlugify } from "@/lib/utils"
+import Link from "next/link"
 
 interface AdventurePlanEditSidebarProps {
   adventurePlan: AdventurePlan
@@ -41,13 +43,19 @@ const NavLink: React.FC<{ href: string; children: React.ReactNode; className?: s
 export function AdventurePlanEditSidebar({ adventurePlan }: AdventurePlanEditSidebarProps) {
   // Generate default values for all scenes to be open by default
   const defaultOpenScenes = adventurePlan.sections.flatMap((section, sIndex) => section.scenes.map((_, scIndex) => `scene-${sIndex}-${scIndex}`))
+  const settingId = adventurePlan.settingId
+  const settingName = reverseSlugify(settingId)
 
   return (
     <div id="adventure-plan-edit-sidebar" className="w-[360px] h-full overflow-y-auto pr-8">
-      <div className="text-xs p-1 opacity-70 text-primary-100 font-mono">Edit Adventure Plan</div>
-      <NavLink href="#adventure-plan-main" className="text-2xl text-amber-400 font-display block mb-2 hover:text-amber-300 transition-colors">
+      <NavLink href="#adventure-plan-main" className="text-2xl text-amber-400 font-display block hover:text-amber-300 transition-colors">
         {adventurePlan.title}
       </NavLink>
+      <div className="text-xs -mt-1 opacity-70 text-primary-100 font-display mb-4">
+        <Link className="text-blue-300" href={`/settings/${settingId}`}>
+          {settingName}
+        </Link>{" "}
+      </div>
       <nav className="space-y-1">
         {adventurePlan.sections.map((section, sIndex) => (
           <div key={`nav-section-${sIndex}`}>

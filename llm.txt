@@ -1210,6 +1210,75 @@ export async function sendContactEmail(data: ContactFormData) {
 } 
 
 /*
+  File: app/_actions/create-adventure.ts
+  Absolute: /Users/johnpolacek/Projects/d20adventures.com/app/_actions/create-adventure.ts
+  Directory: app/_actions
+*/
+
+--- File: app/_actions/create-adventure.ts ---
+
+'use server'
+
+import { api } from "@/convex/_generated/api"
+import { convex } from "@/lib/convex/server"
+import { auth } from "@clerk/nextjs/server"
+import { redirect } from "next/navigation"
+import type { CharacterChoiceMode } from "@/components/adventure/character-selection"
+import { readJsonFromS3 } from "@/lib/s3-utils"
+import type { AdventurePlan } from "@/types/adventure-plan"
+
+interface CreateAdventureInput {
+  settingId: string
+  adventurePlanId: string
+  characterChoices: CharacterChoiceMode[]
+}
+
+export async function createAdventure(input: CreateAdventureInput) {
+  const { userId } = await auth()
+  if (!userId) {
+    throw new Error("Unauthorized")
+  }
+
+  const { settingId, adventurePlanId } = input
+  // TODO: Use characterChoices in later stages for lobby state
+
+  // Read the adventure plan to get the proper title
+  const planPath = `settings/${settingId}/${adventurePlanId}.json`
+  const plan = (await readJsonFromS3(planPath)) as AdventurePlan
+  if (!plan || !plan.title) {
+    throw new Error("Adventure plan not found or is invalid")
+  }
+
+  // Extract character choices and create the players array
+  const { characterChoices } = input
+  const players = characterChoices
+    .filter(choice => choice.mode === "player") // Only include characters selected as "player"
+    .map(choice => ({
+      userId: userId,
+      characterId: choice.characterId,
+    }))
+
+  // Create adventure in waiting state
+  const now = Date.now()
+  
+  // Create the adventure using the existing Convex mutation
+  const adventureId = await convex.mutation(api.adventure.createAdventure, {
+    planId: adventurePlanId,
+    settingId,
+    ownerId: userId,
+    playerIds: [userId], // Keep for backwards compatibility
+    players,
+    status: "waitingForPlayers", // Start in lobby state
+    title: plan.title, // Use the actual adventure title from the plan
+    startedAt: now,
+  })
+
+  // For MVP, we'll redirect to the adventure page immediately
+  // The adventure page will handle the "no current turn" state
+  redirect(`/settings/${settingId}/${adventurePlanId}/${adventureId}`)
+} 
+
+/*
   File: app/_actions/ensure-npc-processed.ts
   Absolute: /Users/johnpolacek/Projects/d20adventures.com/app/_actions/ensure-npc-processed.ts
   Directory: app/_actions
@@ -1330,9 +1399,15 @@ export async function generateCharacterAction({
       }
     }
 
+    // Override the status to always be empty
+    const character = {
+      ...result.object,
+      status: ""
+    } as (typeof characterType extends "npc" ? NPC : PCTemplate)
+
     return {
       success: true,
-      character: result.object as (typeof characterType extends "npc" ? NPC : PCTemplate)
+      character
     }
 
   } catch (error) {
@@ -1403,6 +1478,55 @@ export async function getRollRequirement(reply: string) {
 } 
 
 /*
+  File: app/_actions/join-adventure.ts
+  Absolute: /Users/johnpolacek/Projects/d20adventures.com/app/_actions/join-adventure.ts
+  Directory: app/_actions
+*/
+
+--- File: app/_actions/join-adventure.ts ---
+
+'use server'
+
+import { auth } from "@clerk/nextjs/server"
+import { redirect } from "next/navigation"
+import { convex } from "@/lib/convex/server"
+import { api } from "@/convex/_generated/api"
+import type { Id } from "@/convex/_generated/dataModel"
+
+interface JoinAdventureArgs {
+  settingId: string
+  adventurePlanId: string
+  adventureId: string
+  characterId: string
+}
+
+export async function joinAdventure({ settingId, adventurePlanId, adventureId, characterId }: JoinAdventureArgs) {
+  console.log("🎲 Server Action: joinAdventure called", { settingId, adventurePlanId, adventureId, characterId })
+
+  const { userId } = await auth()
+  if (!userId) {
+    throw new Error("Unauthorized: User must be signed in")
+  }
+
+  try {
+    // Add the player to the adventure
+    await convex.mutation(api.adventure.joinAdventure, {
+      adventureId: adventureId as Id<"adventures">,
+      userId,
+      characterId,
+    })
+
+    console.log("🎲 Successfully joined adventure, redirecting...")
+
+    // Redirect to the adventure page
+    redirect(`/settings/${settingId}/${adventurePlanId}/${adventureId}`)
+  } catch (error) {
+    console.error("🎲 Failed to join adventure:", error)
+    throw error
+  }
+} 
+
+/*
   File: app/_actions/load-adventure.ts
   Absolute: /Users/johnpolacek/Projects/d20adventures.com/app/_actions/load-adventure.ts
   Directory: app/_actions
@@ -1417,22 +1541,27 @@ import { auth } from "@clerk/nextjs/server";
 import type { Id } from "@/convex/_generated/dataModel";
 
 export async function loadAdventureWithNpc(adventureId: Id<"adventures">) {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Unauthorized");
   return convex.mutation(api.adventure.getCurrentAdventureWithNpcProcessing, { adventureId, refreshKey: Date.now() });
 }
 
 export async function loadAdventureWithTurnByOrder(adventureId: Id<"adventures">, turnOrder: number) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+  
   const adventure = await convex.query(api.adventure.getAdventureById, { adventureId });
   const turn = await convex.query(api.adventure.getTurnByOrder, { adventureId, order: turnOrder });
   return { adventure, currentTurn: turn };
 }
 
 export async function getAdventureTurns(adventureId: Id<"adventures">) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
   return convex.query(api.adventure.getTurnsByAdventure, { adventureId });
 }
 
 export async function getTurnNavigationInfo(adventureId: Id<"adventures">) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
   return convex.query(api.adventure.getTurnNavigationInfo, { adventureId });
 } 
 
@@ -1666,6 +1795,152 @@ export async function updateSettingAction(
     console.error("updateSettingAction: Failed setting object structure:", JSON.stringify(setting, null, 2))
     const errorMessage = error instanceof Error ? error.message : "An unknown error occurred"
     return { success: false, error: `Failed to update setting: ${errorMessage}` }
+  }
+} 
+
+/*
+  File: app/_actions/start-adventure.ts
+  Absolute: /Users/johnpolacek/Projects/d20adventures.com/app/_actions/start-adventure.ts
+  Directory: app/_actions
+*/
+
+--- File: app/_actions/start-adventure.ts ---
+
+'use server'
+
+import { auth } from "@clerk/nextjs/server"
+import { redirect } from "next/navigation"
+import { convex } from "@/lib/convex/server"
+import { api } from "@/convex/_generated/api"
+import type { Id } from "@/convex/_generated/dataModel"
+import { readJsonFromS3 } from "@/lib/s3-utils"
+import type { AdventurePlan } from "@/types/adventure-plan"
+
+interface StartAdventureArgs {
+  settingId: string
+  adventurePlanId: string
+  adventureId: string
+}
+
+export async function startAdventure({ settingId, adventurePlanId, adventureId }: StartAdventureArgs) {
+  console.log("🎲 Server Action: startAdventure called", { settingId, adventurePlanId, adventureId })
+
+  const { userId } = await auth()
+  if (!userId) {
+    throw new Error("Unauthorized: User must be signed in")
+  }
+
+  try {
+    // Load adventure plan
+    const planPath = `settings/${settingId}/${adventurePlanId}.json`
+    const adventurePlan = (await readJsonFromS3(planPath)) as AdventurePlan
+    if (!adventurePlan) {
+      throw new Error("Adventure plan not found")
+    }
+
+    console.log("🎲 Adventure plan loaded:", JSON.stringify({
+      title: adventurePlan.title,
+      party: adventurePlan.party,
+      premadeCharacterCount: adventurePlan.premadePlayerCharacters?.length || 0
+    }, null, 2))
+
+    // Get the current adventure to access player data
+    const adventure = await convex.query(api.adventure.getAdventureById, {
+      adventureId: adventureId as Id<"adventures">
+    })
+
+    if (!adventure) {
+      throw new Error("Adventure not found")
+    }
+
+    console.log("🎲 Current adventure data:", JSON.stringify({
+      id: adventure._id,
+      title: adventure.title,
+      status: adventure.status,
+      players: adventure.players,
+      playerIds: adventure.playerIds
+    }, null, 2))
+
+    // Get the first encounter from the adventure plan
+    const firstSection = adventurePlan.sections[0]
+    const firstScene = firstSection.scenes[0]
+    const firstEncounter = firstScene.encounters[0]
+
+    if (!firstEncounter) {
+      throw new Error("No encounters found in adventure plan")
+    }
+
+    console.log("🎲 First encounter:", JSON.stringify({
+      id: firstEncounter.id,
+      title: firstEncounter.title,
+      skipInitialNpcTurns: firstEncounter.skipInitialNpcTurns
+    }, null, 2))
+
+    // Build the characters array from adventure players + NPCs
+    const characters = []
+
+    // Add player characters
+    if (adventure.players) {
+      for (const player of adventure.players) {
+        const characterTemplate = adventurePlan.premadePlayerCharacters.find(pc => pc.id === player.characterId)
+        if (characterTemplate) {
+          const pcCharacter = {
+            ...characterTemplate,
+            type: "pc" as const,
+            userId: player.userId,
+            initiative: Math.floor(Math.random() * 20) + 1, // Random initiative for now
+            hasReplied: false,
+            isComplete: false
+          }
+          characters.push(pcCharacter)
+        }
+      }
+    }
+
+    // Add NPC characters from the encounter
+    if (firstEncounter.npc) {
+      for (const npcRef of firstEncounter.npc) {
+        const npcTemplate = adventurePlan.npcs[npcRef.id]
+        if (npcTemplate) {
+          const npcCharacter = {
+            ...npcTemplate,
+            type: "npc" as const,
+            initiative: npcRef.initialInitiative || Math.floor(Math.random() * 20) + 1,
+            hasReplied: false,
+            isComplete: false,
+            behavior: npcRef.behavior
+          }
+          characters.push(npcCharacter)
+        }
+      }
+    }
+
+    console.log("🎲 Turn characters being created:", JSON.stringify(characters.map(c => ({
+      id: c.id,
+      name: c.name,
+      type: c.type,
+      initiative: c.initiative,
+      userId: c.type === "pc" ? c.userId : undefined
+    })), null, 2))
+
+    // Create the first turn
+    const turnId = await convex.mutation(api.adventure.createTurn, {
+      adventureId: adventureId as Id<"adventures">,
+      encounterId: firstEncounter.id,
+      title: firstEncounter.title,
+      narrative: firstEncounter.intro,
+      characters: characters,
+      order: 1,
+    })
+
+    console.log("🎲 Successfully started adventure with first turn:", turnId)
+    console.log("🎲 Turn created with", characters.length, "characters")
+
+    // Redirect to the adventure page (which will show the first turn)
+    redirect(`/settings/${settingId}/${adventurePlanId}/${adventureId}`)
+  } catch (error) {
+    console.error("🎲 Failed to start adventure:", error)
+    throw error
   }
 } 
 
@@ -4396,6 +4671,7 @@ import type { Adventure } from "@/types/adventure"
 import { mapConvexTurnToTurn } from "@/lib/utils"
 import { AdventurePlan } from "@/types/adventure-plan"
 import TurnNavigation from "@/components/adventure/turn-navigation"
+import { reverseSlugify } from "@/lib/utils"
 
 export const dynamic = "force-dynamic"
 
@@ -4426,9 +4702,9 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { adventurePlanId, turnOrder } = await params
+  const { adventurePlanId } = await params
   return {
-    title: `Adventure | ${adventurePlanId} | Turn ${turnOrder}`,
+    title: `D20 Adventures | ${reverseSlugify(adventurePlanId)}`,
   }
 }
 
@@ -4464,8 +4740,8 @@ export default async function TurnPage({ params }: PageProps) {
   }
   if (!adventurePlan) return notFound()
 
-  // Convert 1-based URL parameter to 0-based for database query
-  const turnOrderForDb = turnOrderNum - 1
+  // Use 1-based URL parameter directly since database stores 1-based order values
+  const turnOrderForDb = turnOrderNum
 
   // Load adventure and specific turn + navigation info in parallel
   const [adventureData, navInfo] = await Promise.all([loadAdventureWithTurnByOrder(adventureId as Id<"adventures">, turnOrderForDb), getTurnNavigationInfo(adventureId as Id<"adventures">)])
@@ -4511,21 +4787,48 @@ import AdventureHome from "@/components/views/adventure-home"
 import { loadAdventureWithNpc } from "@/app/_actions/load-adventure"
 import type { Id } from "@/convex/_generated/dataModel"
 import type { Adventure } from "@/types/adventure"
-import { mapConvexTurnToTurn } from "@/lib/utils"
+import type { PC } from "@/types/character"
+import { mapConvexTurnToTurn, reverseSlugify } from "@/lib/utils"
 import { AdventurePlan } from "@/types/adventure-plan"
-
-export const dynamic = "force-dynamic"
+import { readJsonFromS3 } from "@/lib/s3-utils"
 
 // Helper to map Convex adventure to frontend Adventure type
-function mapConvexAdventureToAdventure(raw: unknown): Adventure | null {
+function mapConvexAdventureToAdventure(raw: unknown, adventurePlan: AdventurePlan): Adventure | null {
   if (!raw || typeof raw !== "object" || !("_id" in raw)) return null
-  const a = raw as { _id: string; title: string; planId: string; startedAt: number; endedAt?: number; settingId?: string }
+  const a = raw as {
+    _id: string
+    title: string
+    planId: string
+    startedAt: number
+    endedAt?: number
+    settingId?: string
+    status?: "waitingForPlayers" | "active" | "completed"
+    players?: Array<{ userId: string; characterId: string }>
+    playerIds?: string[]
+  }
+
+  // Map players to full PC objects from adventure plan
+  const party: PC[] =
+    a.players
+      ?.map((player) => {
+        const character = adventurePlan.premadePlayerCharacters.find((pc) => pc.id === player.characterId)
+        if (character) {
+          return {
+            ...character,
+            userId: player.userId, // Add userId to the character
+          } as PC
+        }
+        return null
+      })
+      .filter((char): char is PC => char !== null) || []
+
   return {
     id: a._id,
     title: a.title,
     adventurePlanId: a.planId,
     settingId: a.settingId ?? "",
-    party: [],
+    status: a.status || "active", // Default to active for backwards compatibility
+    party,
     turns: [],
     startedAt: a.startedAt ? new Date(a.startedAt).toISOString() : "",
     endedAt: a.endedAt ? new Date(a.endedAt).toISOString() : undefined,
@@ -4536,7 +4839,7 @@ function mapConvexAdventureToAdventure(raw: unknown): Adventure | null {
 export async function generateMetadata({ params }: { params: Promise<{ settingId: string; adventurePlanId: string; adventureId: string }> }): Promise<Metadata> {
   const { adventurePlanId } = await params
   return {
-    title: `Adventure | ${adventurePlanId}`,
+    title: `D20 Adventures | ${reverseSlugify(adventurePlanId)}`,
   }
 }
 
@@ -4556,16 +4859,10 @@ function findEncounter(adventurePlan: AdventurePlan, encounterIdToFind: string |
 
 export default async function AdventurePage(props: { params: Promise<{ settingId: string; adventurePlanId: string; adventureId: string }> }) {
   const { adventurePlanId, adventureId, settingId } = await props.params
-  let adventurePlan = null
-  try {
-    // Dynamically import the adventure plan JSON file
-    adventurePlan = (await import(`@/data/${adventurePlanId}.json`)).default
-  } catch {
-    return notFound()
-  }
+  const adventurePlan = (await readJsonFromS3(`settings/${settingId}/${adventurePlanId}.json`)) as AdventurePlan
   if (!adventurePlan) return notFound()
   const adventureData = await loadAdventureWithNpc(adventureId as Id<"adventures">)
-  const adventure = mapConvexAdventureToAdventure(adventureData?.adventure)
+  const adventure = mapConvexAdventureToAdventure(adventureData?.adventure, adventurePlan)
   const currentTurn = mapConvexTurnToTurn(adventureData?.currentTurn)
 
   if (!adventure) return notFound()
@@ -4574,13 +4871,22 @@ export default async function AdventurePage(props: { params: Promise<{ settingId
   if (currentTurn) {
     const turnOrder = (adventureData?.currentTurn as { order?: number })?.order
     if (turnOrder) {
-      redirect(`/${settingId}/${adventurePlanId}/${adventureId}/${turnOrder + 1}`)
+      redirect(`/settings/${settingId}/${adventurePlanId}/${adventureId}/${turnOrder}`)
     }
   }
 
   const encounter = findEncounter(adventurePlan, currentTurn?.encounterId)
 
-  return <AdventureHome settingId={settingId} adventurePlanId={adventurePlanId} adventure={adventure} encounterImage={encounter?.image || adventurePlan.image} currentTurn={currentTurn} />
+  return (
+    <AdventureHome
+      settingId={settingId}
+      adventurePlanId={adventurePlanId}
+      adventure={adventure}
+      encounterImage={encounter?.image || adventurePlan.image}
+      currentTurn={currentTurn}
+      adventurePlan={adventurePlan}
+    />
+  )
 }
 
 
@@ -4783,7 +5089,7 @@ export default async function AdventureHomePage(props: { params: Promise<{ setti
 
   return (
     <div className="flex min-h-screen flex-col relative">
-      <AdventureHome adventure={demoAdventure} adventurePlanId={adventurePlanId} settingId={settingId} encounterImage={adventurePlan.image} teaser={adventurePlan.teaser} currentTurn={demoTurn} />
+      <AdventureHome adventure={demoAdventure} adventurePlanId={adventurePlanId} settingId={settingId} encounterImage={adventurePlan.image} currentTurn={demoTurn} />
     </div>
   )
 }
@@ -4871,13 +5177,20 @@ export default async function SettingHome(props: { params: Promise<{ settingId: 
   return (
     <div className="flex min-h-screen flex-col relative">
       <div className="fade-in delay-[2s] relative z-10">
-        <ImageHeader variant="compact" imageUrl={getImageUrl(setting.image)} title={setting.name} imageAlt={setting.name} />
+        <ImageHeader variant="semicompact" imageUrl={getImageUrl(setting.image)} title={setting.name} imageAlt={setting.name} />
         {canEdit && (
           <Link className="fixed top-[90vh] right-8 z-10" href={`/settings/${settingId}/edit`}>
             <Button className="text-sm bg-primary-600 hover:bg-primary-700">Edit</Button>
           </Link>
         )}
-        <div className="max-w-3xl mx-auto -mt-48 relative z-10 whitespace-pre-line">
+        <div className="max-w-3xl mx-auto -mt-32 relative z-10 whitespace-pre-line">
+          <div className="flex justify-center mb-8">
+            <Link href={`/settings/${settingId}/play`}>
+              <Button asChild variant="epic">
+                Go to Adventures
+              </Button>
+            </Link>
+          </div>
           <p>{setting.description}</p>
           {setting.technology && (
             <>
@@ -4898,9 +5211,9 @@ export default async function SettingHome(props: { params: Promise<{ settingId: 
               <div className="flex flex-col pt-16">
                 <h4 className="text-xl font-display font-bold text-primary-200">{location.name}</h4>
 
-                <ImageHeader topBorder variant="compact" imageUrl={getImageUrl(location.image)} title={location.name} imageAlt={location.name} />
+                <ImageHeader topBorder variant="semicompact" imageUrl={getImageUrl(location.image)} title={location.name} imageAlt={location.name} />
 
-                <div className="max-w-3xl mx-auto -mt-48 relative z-10 whitespace-pre-line">
+                <div className="max-w-3xl mx-auto -mt-32 relative z-10 whitespace-pre-line">
                   <div className="whitespace-pre-line">
                     <p>{location.description}</p>
                   </div>
@@ -4926,8 +5239,8 @@ export default async function SettingHome(props: { params: Promise<{ settingId: 
 
                 {location.organizations.map((org) => (
                   <div key={org.name} className="relative mt-16">
-                    <ImageHeader topBorder variant="compact" imageUrl={getImageUrl(org.image)} title={org.name} imageAlt={org.name} />
-                    <div className="max-w-3xl mx-auto -mt-48 relative z-10 whitespace-pre-line">
+                    <ImageHeader topBorder variant="semicompact" imageUrl={getImageUrl(org.image)} title={org.name} imageAlt={org.name} />
+                    <div className="max-w-3xl mx-auto -mt-32 relative z-10 whitespace-pre-line">
                       <p>{org.description}</p>
                     </div>
                   </div>
@@ -5822,12 +6135,13 @@ export function AdminUserList({ initialUsers }: AdminUserListProps) {
 
 "use client"
 
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import type { CharacterChoiceMode } from "./character-selection"
-import { useParams, useRouter } from "next/navigation"
+import { useParams } from "next/navigation"
 import { scrollToBottom } from "../ui/utils"
 import { useUser, SignUpButton } from "@clerk/nextjs"
+import { createAdventure } from "@/app/_actions/create-adventure"
 
 interface PartyConfigurationProps {
   characterChoices: CharacterChoiceMode[]
@@ -5836,19 +6150,25 @@ interface PartyConfigurationProps {
 }
 
 const PartyConfiguration: React.FC<PartyConfigurationProps> = ({ characterChoices, characterNames }) => {
-  const router = useRouter()
   const { settingId, adventurePlanId } = useParams()
   const { isSignedIn } = useUser()
+  const [isCreating, setIsCreating] = useState(false)
 
-  const handleStartAdventure = () => {
-    // For now, just proceed to the adventure with the selected character
-    // TODO: In the future, handle party composition and invites
-    const searchParams = new URLSearchParams({
-      selectedCharacters: characterChoices.map((choice) => choice.characterId).join(","),
-      // Add other character choices as needed
-    })
+  const handleStartAdventure = async () => {
+    if (isCreating) return
 
-    router.push(`/settings/${settingId}/${adventurePlanId}?${searchParams.toString()}`)
+    setIsCreating(true)
+    try {
+      await createAdventure({
+        settingId: settingId as string,
+        adventurePlanId: adventurePlanId as string,
+        characterChoices,
+      })
+      // The redirect happens in the server action
+    } catch (error) {
+      console.error("Failed to create adventure:", error)
+      setIsCreating(false)
+    }
   }
 
   useEffect(() => {
@@ -5865,10 +6185,11 @@ const PartyConfiguration: React.FC<PartyConfigurationProps> = ({ characterChoice
           </div>
         </div>
       ))}
+
       <div className="text-center py-4">
         {isSignedIn ? (
-          <Button variant="epic" size="lg" className="text-2xl py-6 px-12" onClick={handleStartAdventure}>
-            Start Adventure
+          <Button variant="epic" size="lg" className="text-2xl py-6 px-12" onClick={handleStartAdventure} disabled={isCreating}>
+            {isCreating ? "Creating Adventure..." : "Start Adventure"}
           </Button>
         ) : (
           <SignUpButton mode="modal">
@@ -5925,6 +6246,489 @@ export default function AdventureComplete() {
         </div>
       </CardContent>
     </Card>
+  )
+}
+
+
+/*
+  File: components/adventure/adventure-lobby.tsx
+  Absolute: /Users/johnpolacek/Projects/d20adventures.com/components/adventure/adventure-lobby.tsx
+  Directory: components/adventure
+*/
+
+--- File: components/adventure/adventure-lobby.tsx ---
+
+"use client"
+
+import React, { useState, useEffect } from "react"
+import { useUser, SignInButton } from "@clerk/nextjs"
+import { useQuery } from "convex/react"
+import { api } from "@/convex/_generated/api"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import type { Adventure, TurnCharacter } from "@/types/adventure"
+import type { AdventurePlan } from "@/types/adventure-plan"
+import type { PCTemplate } from "@/types/character"
+import type { Id } from "@/convex/_generated/dataModel"
+import Image from "next/image"
+import { getImageUrl } from "@/lib/utils"
+import { Copy, Check, Share2, Bot } from "lucide-react"
+import { toast } from "sonner"
+import { useParams } from "next/navigation"
+import { textShadow } from "../typography/styles"
+import { joinAdventure } from "@/app/_actions/join-adventure"
+import { startAdventure } from "@/app/_actions/start-adventure"
+import { CharacterSheetModal } from "./character-sheet-modal"
+import { scrollToTop } from "../ui/utils"
+
+interface AdventureLobbyProps {
+  adventure: Adventure
+  adventurePlan?: AdventurePlan
+}
+
+// Convert PC to TurnCharacter format for the modal
+function convertPCToTurnCharacter(pc: Adventure["party"][0]): TurnCharacter {
+  return {
+    ...pc,
+    type: "pc" as const,
+    initiative: 0, // Default value
+    hasReplied: false,
+    isComplete: false,
+  }
+}
+
+// Convert PCTemplate to TurnCharacter format for the modal
+function convertPCTemplateToTurnCharacter(pcTemplate: PCTemplate): TurnCharacter {
+  return {
+    ...pcTemplate,
+    type: "pc" as const,
+    userId: "", // Empty for template
+    initiative: 0, // Default value
+    hasReplied: false,
+    isComplete: false,
+  }
+}
+
+// Helper to map Convex adventure to frontend Adventure type
+function mapConvexAdventureToAdventure(raw: unknown, adventurePlan: AdventurePlan): Adventure | null {
+  if (!raw || typeof raw !== "object" || !("_id" in raw)) return null
+  const a = raw as {
+    _id: string
+    title: string
+    planId: string
+    startedAt: number
+    endedAt?: number
+    settingId?: string
+    status?: "waitingForPlayers" | "active" | "completed"
+    players?: Array<{ userId: string; characterId: string }>
+    playerIds?: string[]
+  }
+
+  // Map players to full PC objects from adventure plan
+  const party: Adventure["party"] =
+    a.players
+      ?.map((player) => {
+        const character = adventurePlan.premadePlayerCharacters.find((pc) => pc.id === player.characterId)
+        if (character) {
+          return {
+            ...character,
+            userId: player.userId, // Add userId to the character
+          }
+        }
+        return null
+      })
+      .filter((char): char is NonNullable<typeof char> => char !== null) || []
+
+  return {
+    id: a._id,
+    title: a.title,
+    adventurePlanId: a.planId,
+    settingId: a.settingId ?? "",
+    status: a.status || "active", // Default to active for backwards compatibility
+    party,
+    turns: [],
+    startedAt: a.startedAt ? new Date(a.startedAt).toISOString() : "",
+    endedAt: a.endedAt ? new Date(a.endedAt).toISOString() : undefined,
+    pausedAt: undefined,
+  }
+}
+
+export default function AdventureLobby({ adventure: initialAdventure, adventurePlan }: AdventureLobbyProps) {
+  const { user, isSignedIn, isLoaded } = useUser()
+  const params = useParams()
+  const [isCopied, setIsCopied] = useState(false)
+  const [assigningToAI, setAssigningToAI] = useState<string | null>(null)
+  const [isJoining, setIsJoining] = useState(false)
+  const [isStarting, setIsStarting] = useState(false)
+  const [modalCharacter, setModalCharacter] = useState<TurnCharacter | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  // Get live adventure data from Convex
+  const adventureData = useQuery(api.adventure.getCurrentAdventure, {
+    adventureId: initialAdventure.id as Id<"adventures">,
+  })
+
+  // Use live data if available, fallback to initial data
+  const adventure = adventureData?.adventure && adventurePlan ? mapConvexAdventureToAdventure(adventureData.adventure, adventurePlan) || initialAdventure : initialAdventure
+
+  useEffect(() => {
+    if (isLoaded) {
+      scrollToTop()
+    }
+  }, [isLoaded])
+
+  if (!isLoaded) {
+    return null
+  }
+
+  // Generate the invite link
+  const inviteLink = typeof window !== "undefined" ? `${window.location.origin}/settings/${params.settingId}/${params.adventurePlanId}/${adventure.id}` : ""
+
+  // Generate the redirect URL for after sign up/sign in
+  const redirectUrl =
+    typeof window !== "undefined" ? window.location.href : `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/settings/${params.settingId}/${params.adventurePlanId}/${adventure.id}`
+
+  const handleCopyInvite = async () => {
+    try {
+      await navigator.clipboard.writeText(inviteLink)
+      setIsCopied(true)
+      toast.success("Invite link copied to clipboard!")
+      setTimeout(() => setIsCopied(false), 2000)
+    } catch (error) {
+      toast.error("Failed to copy link")
+      console.error("Copy failed:", error)
+    }
+  }
+
+  const handleAssignToAI = async (characterId: string) => {
+    setAssigningToAI(characterId)
+    try {
+      // TODO: Implement assignCharacterToAI server action
+      await new Promise((resolve) => setTimeout(resolve, 1000)) // Placeholder delay
+      toast.success("Character assigned to AI!")
+    } catch {
+      toast.error("Failed to assign character to AI")
+    } finally {
+      setAssigningToAI(null)
+    }
+  }
+
+  const handleJoinAdventure = async (characterId: string) => {
+    if (isJoining) return
+
+    setIsJoining(true)
+    await joinAdventure({
+      settingId: params.settingId as string,
+      adventurePlanId: params.adventurePlanId as string,
+      adventureId: adventure.id,
+      characterId,
+    })
+    // The redirect happens in the server action
+    // Note: redirect() throws NEXT_REDIRECT which is expected behavior, not an error
+  }
+
+  const handleStartAdventure = async () => {
+    if (isStarting) return
+
+    setIsStarting(true)
+    await startAdventure({
+      settingId: params.settingId as string,
+      adventurePlanId: params.adventurePlanId as string,
+      adventureId: adventure.id,
+    })
+    // The redirect happens in the server action
+    // Note: redirect() throws NEXT_REDIRECT which is expected behavior, not an error
+  }
+
+  const handleViewCharacterSheet = (character: Adventure["party"][0]) => {
+    const turnCharacter = convertPCToTurnCharacter(character)
+    setModalCharacter(turnCharacter)
+    setIsModalOpen(true)
+  }
+
+  const handleViewAvailableCharacterSheet = (character: PCTemplate) => {
+    const turnCharacter = convertPCTemplateToTurnCharacter(character)
+    setModalCharacter(turnCharacter)
+    setIsModalOpen(true)
+  }
+
+  // Check if current user has a character in this adventure
+  const userCharacter = adventure.party?.find((pc) => pc.userId === user?.id)
+
+  // Get available characters (not claimed by anyone)
+  const availableCharacters = adventurePlan?.premadePlayerCharacters?.filter((pc) => !adventure.party?.some((partyMember) => partyMember.id === pc.id)) || []
+
+  // Get AI-controlled characters (placeholder - will be implemented with aiCharacters array)
+  const aiCharacters: PCTemplate[] = [] // TODO: Get from adventure.aiCharacters
+
+  // Determine party state based on adventure plan requirements
+  const [minParty, maxParty] = adventurePlan?.party || [1, 4] // Default fallback
+  const currentPartySize = adventure.party?.length || 0
+  const canStartAdventure = currentPartySize >= minParty
+  const partyIsFull = currentPartySize >= maxParty
+  const shouldShowInvite = !partyIsFull && availableCharacters.length > 0
+
+  console.log("[AdventureLobby] party info", {
+    minParty,
+    maxParty,
+    currentPartySize,
+    canStartAdventure,
+    partyIsFull,
+    shouldShowInvite,
+  })
+
+  // Show different UI based on user state
+  if (isSignedIn && userCharacter) {
+    // User is signed in and has a character - show waiting state
+    return (
+      <div className="w-full flex flex-col items-center justify-center max-w-5xl fade-in relative z-10 pb-16 -mt-16">
+        <div className="absolute -top-4 left-0 w-full flex justify-center z-10 text-xl text-center font-display font-bold">
+          <div className="text-sm bg-primary-700 px-4 py-1 ring-[6px] ring-primary-800 rounded border border-white/20 font-display text-amber-300">Your Character</div>
+        </div>
+        <div
+          id="your-character"
+          className="relative bg-black/50 rounded-lg overflow-hidden border border-white/30 ring-8 ring-black/50 w-80 cursor-pointer hover:ring-primary-500 transition-all duration-300 hover:scale-[1.01]"
+          onClick={() => handleViewCharacterSheet(userCharacter)}
+        >
+          <div className="relative w-full h-full aspect-square">
+            <Image className="w-full h-full object-cover" fill src={getImageUrl(userCharacter.image)} alt={userCharacter.name} />
+          </div>
+          <div className="text-white absolute bottom-0 left-0 right-0 w-full z-10 text-center">
+            <div className="font-display font-bold text-2xl mb-1">{userCharacter.name}</div>
+            <div className="text-xs font-medium bg-black/80 px-2 py-1 rounded border border-white/30 inline-block mb-3">View Character Sheet</div>
+          </div>
+          <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black to-transparent h-1/2" />
+        </div>
+
+        <div className="pt-12 mb-4 text-center flex flex-col items-center">
+          {adventurePlan?.teaser && (
+            <div className="pb-16 max-w-2xl mx-auto">
+              <p>{adventurePlan?.teaser}</p>
+            </div>
+          )}
+
+          {/* Show different messages based on party state */}
+          {!canStartAdventure ? (
+            <h3 className="font-display mb-4 text-2xl opacity-70">
+              Waiting for more players... ({currentPartySize}/{minParty} minimum)
+            </h3>
+          ) : partyIsFull ? (
+            <div className="space-y-4">
+              <h3 className="font-display mb-4 text-2xl text-green-400">Party Complete!</h3>
+              <p className="text-lg text-white/80 mb-6">All party slots filled. Ready to begin the adventure?</p>
+              <Button variant="epic" size="lg" className="text-xl py-4 px-8" onClick={handleStartAdventure} disabled={isStarting}>
+                {isStarting ? "Starting Adventure..." : "Start Adventure"}
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <h3 className="font-display mb-4 text-2xl text-green-400">Ready to Start!</h3>
+              <p className="text-lg text-white/80 mb-6">
+                Minimum party size reached ({currentPartySize}/{maxParty}). You can start now or wait for more players.
+              </p>
+              <Button variant="epic" size="lg" className="text-xl py-4 px-8" onClick={handleStartAdventure} disabled={isStarting}>
+                {isStarting ? "Starting Adventure..." : "Start Adventure"}
+              </Button>
+            </div>
+          )}
+
+          {/* Invite Link - only show if party isn't full */}
+          {shouldShowInvite && (
+            <div className="mb-6 border border-white/30 bg-primary-800/70 rounded-lg pt-2 pb-6 px-4">
+              <p className="text-sm text-amber-400 pt-3 pb-2 font-display text-xl">Invite Players</p>
+              <div className="flex items-center gap-2 bg-black rounded-lg p-3 max-w-md mx-auto">
+                <Share2 className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                <code className="flex-1 text-xs text-gray-300 truncate">{inviteLink}</code>
+                <Button size="sm" variant="outline" onClick={handleCopyInvite} className="flex-shrink-0 h-7 px-2">
+                  {isCopied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Available Characters - only show if party isn't full */}
+          {shouldShowInvite && (
+            <div className="space-y-3 w-full max-w-lg mx-auto">
+              <p className="text-sm text-white/70 mt-4 mb-2">Available characters:</p>
+              {availableCharacters.map((char) => (
+                <div key={char.id} className="w-full flex items-center justify-between bg-black/30 rounded-lg p-3 border border-white/20">
+                  <div
+                    className="flex items-center gap-3 cursor-pointer hover:bg-white/10 transition-colors duration-500 ease-in-out rounded p-1 -m-1"
+                    onClick={() => handleViewAvailableCharacterSheet(char)}
+                  >
+                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-700">
+                      <Image src={getImageUrl(char.image)} alt={char.name} width={40} height={40} className="w-full h-full object-cover" />
+                    </div>
+                    <div>
+                      <p className="text-base font-display text-white pr-8">{char.name}</p>
+                    </div>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={() => handleAssignToAI(char.id)} disabled={assigningToAI === char.id} className="flex items-center gap-2 text-sm">
+                    <Bot className="w-4 h-4" />
+                    {assigningToAI === char.id ? "Assigning..." : "Assign to AI"}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* AI-Controlled Characters */}
+          {aiCharacters.length > 0 && (
+            <div className="space-y-3 mt-6">
+              <p className="text-sm text-gray-500 mb-4">AI-controlled characters:</p>
+              {aiCharacters.map((char) => (
+                <div key={char.id} className="flex items-center justify-between bg-blue-900/20 rounded-lg p-3 border border-blue-500/30">
+                  <div className="flex items-center gap-3 cursor-pointer hover:bg-white/5 transition-colors duration-200 rounded p-1 -m-1" onClick={() => handleViewAvailableCharacterSheet(char)}>
+                    <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-700">
+                      <Image src={getImageUrl(char.image)} alt={char.name} width={40} height={40} className="w-full h-full object-cover" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-white">{char.name}</p>
+                      <p className="text-xs text-blue-300 flex items-center gap-1">
+                        <Bot className="w-3 h-3" />
+                        AI-controlled • Click to view details
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Character Sheet Modal */}
+        <CharacterSheetModal character={modalCharacter} open={isModalOpen} onOpenChange={setIsModalOpen} />
+      </div>
+    )
+  }
+
+  if (!isSignedIn && availableCharacters.length > 0) {
+    // User is not signed in and there are available characters
+    const firstAvailable = availableCharacters[0]
+    return (
+      <div id="join-adventure" className="grow max-w-2xl fade-in relative z-10 -mt-16 pb-12">
+        {adventurePlan?.teaser && (
+          <div className="pb-8">
+            <p style={textShadow}>{adventurePlan?.teaser}</p>
+          </div>
+        )}
+        <Card className="bg-black/50 border-amber-300/30 ring-8 ring-black/30 max-w-md mx-auto">
+          <CardContent className="p-6 text-center flex flex-col items-center gap-2">
+            <h2 className="text-3xl text-amber-300 font-display mb-4">Join the Adventure</h2>
+            <p className="mb-2 text-white/90">
+              You can play as <span className="text-white text-xl">{firstAvailable.name}</span>
+            </p>
+
+            <div
+              id="join-adventure-character"
+              className="relative bg-black/50 rounded-lg overflow-hidden border border-white/30 ring-8 ring-black/50 w-80 cursor-pointer hover:ring-primary-500 transition-all duration-300 hover:scale-[1.01]"
+              onClick={() => handleViewAvailableCharacterSheet(firstAvailable)}
+            >
+              <div className="relative w-full h-full aspect-square">
+                <Image className="w-full h-full object-cover" fill src={getImageUrl(firstAvailable.image)} alt={firstAvailable.name} />
+              </div>
+              <div className="text-white absolute bottom-0 left-0 right-0 w-full z-10 text-center">
+                <div className="font-display font-bold text-2xl mb-1">{firstAvailable.name}</div>
+                <div className="text-xs font-medium bg-black/80 px-2 py-1 rounded border border-white/30 inline-block mb-3">View Character Sheet</div>
+              </div>
+              <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black to-transparent h-1/2" />
+            </div>
+
+            <p className="text-gray-300 mb-6 text-sm">Sign up to claim this character and join the adventure.</p>
+
+            <SignInButton mode="modal" fallbackRedirectUrl={redirectUrl}>
+              <Button variant="epic" size="lg" className="text-xl py-4 px-8">
+                Sign Up to Play
+              </Button>
+            </SignInButton>
+
+            {availableCharacters.length > 1 && (
+              <div className="mt-6 bg-gray-900/50 rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-gray-400 mb-2">Other Available Characters:</h3>
+                <div className="space-y-1">
+                  {availableCharacters.slice(1).map((char) => (
+                    <p key={char.id} className="text-sm text-gray-400">
+                      {char.name} - <span className="text-green-300">Open</span>
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Character Sheet Modal */}
+        <CharacterSheetModal character={modalCharacter} open={isModalOpen} onOpenChange={setIsModalOpen} />
+      </div>
+    )
+  }
+
+  if (isSignedIn && !userCharacter && availableCharacters.length > 0) {
+    // User is signed in but doesn't have a character yet - let them join
+    const firstAvailable = availableCharacters[0]
+    return (
+      <div id="join-adventure" className="grow max-w-2xl fade-in relative z-10 -mt-16 pb-12">
+        {adventurePlan?.teaser && (
+          <div className="pb-8">
+            <p style={textShadow}>{adventurePlan?.teaser}</p>
+          </div>
+        )}
+        <Card className="bg-black/50 border-amber-300/30 ring-8 ring-black/30 max-w-md mx-auto">
+          <CardContent className="p-6 text-center flex flex-col items-center gap-2">
+            <h2 className="text-3xl text-amber-300 font-display mb-4">Join the Adventure</h2>
+            <p className="mb-2 text-white/80">
+              You can play as <span className="text-white">{firstAvailable.name}</span>
+            </p>
+
+            <div
+              className="relative bg-black/50 rounded-lg overflow-hidden border border-white/30 ring-8 ring-black/50 w-80 cursor-pointer hover:ring-primary-500 transition-all duration-300 hover:scale-[1.01]"
+              onClick={() => handleViewAvailableCharacterSheet(firstAvailable)}
+            >
+              <div className="relative w-full h-full aspect-square">
+                <Image className="w-full h-full object-cover" fill src={getImageUrl(firstAvailable.image)} alt={firstAvailable.name} />
+              </div>
+              <div className="text-white absolute bottom-0 left-0 right-0 w-full z-10 text-center">
+                <div className="font-display font-bold text-2xl mb-1">{firstAvailable.name}</div>
+                <div className="text-xs font-medium bg-black/80 px-2 py-1 rounded border border-white/30 inline-block mb-3">View Character Sheet</div>
+              </div>
+              <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black to-transparent h-1/2" />
+            </div>
+
+            <Button variant="epic" size="lg" className="text-xl py-4 px-8 mt-4" onClick={() => handleJoinAdventure(firstAvailable.id)} disabled={isJoining}>
+              {isJoining ? "Joining..." : `Join Game`}
+            </Button>
+
+            {availableCharacters.length > 1 && (
+              <div className="mt-6 bg-gray-900/50 rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-gray-400 mb-2">Other Available Characters:</h3>
+                <div className="space-y-1">
+                  {availableCharacters.slice(1).map((char) => (
+                    <p key={char.id} className="text-sm text-gray-400">
+                      {char.name} - <span className="text-green-300">Open</span>
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Character Sheet Modal */}
+        <CharacterSheetModal character={modalCharacter} open={isModalOpen} onOpenChange={setIsModalOpen} />
+      </div>
+    )
+  }
+
+  // Fallback: show basic waiting message
+  return (
+    <div className="grow max-w-2xl fade-in">
+      <Card className="bg-black/50 border-gray-500/50">
+        <CardContent className="p-6 text-center">
+          <h2 className="text-2xl font-bold text-gray-400 mb-4">Adventure Lobby</h2>
+          <p className="text-gray-300 mb-6">{adventure.status === "waitingForPlayers" ? "Waiting for players to join..." : "Adventure is ready to begin!"}</p>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
 
@@ -6010,7 +6814,7 @@ import DiceRoll from "@/components/ui/dice-roll"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
 import { TurnCharacter } from "@/types/adventure"
-import { IMAGE_HOST } from "@/lib/config"
+import { getImageUrl } from "@/lib/utils"
 import type { RollRequirement } from "@/lib/validations/roll-requirement-schema"
 
 export default function CharacterDiceRoll({
@@ -6035,7 +6839,7 @@ export default function CharacterDiceRoll({
   return (
     <div className={cn("relative aspect-[4/5] sm:aspect-auto font-display font-bold border border-primary-700 rounded-xl overflow-hidden", className)}>
       <div className="absolute top-0 left-0 h-2/3 sm:h-full w-full sm:w-2/3 overflow-hidden">
-        <Image className="object-cover" src={IMAGE_HOST + character.image} alt={character.name} fill={true} />
+        <Image className="object-cover" src={getImageUrl(character.image)} alt={character.name} fill={true} />
         <div className="absolute bottom-0 sm:bottom-auto sm:top-0 right-0 w-full sm:w-1/3 h-1/3 sm:h-full bg-gradient-to-t sm:bg-gradient-to-l from-black to-transparent"></div>
       </div>
       <div className="px-4 py-6 flex flex-col gap-4 text-center items-center justify-start w-full sm:w-1/2 absolute bottom-0 sm:relative sm:left-1/2">
@@ -6128,14 +6932,16 @@ export default function CharacterRollDisplay({
 import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-
-import { useRouter } from "next/navigation"
 import type { AdventurePlan } from "@/types/adventure-plan"
+import type { TurnCharacter } from "@/types/adventure"
+import type { PCTemplate } from "@/types/character"
 import Image from "next/image"
-import { textShadow } from "@/components/typography/styles"
+import { textShadow, textShadowSpreadLight } from "@/components/typography/styles"
+import { Eye } from "lucide-react"
 
 import { getImageUrl } from "@/lib/utils"
 import PartyConfiguration from "./PartyConfiguration"
+import { CharacterSheetModal } from "./character-sheet-modal"
 
 interface CharacterSelectionProps {
   adventurePlan: AdventurePlan
@@ -6148,10 +6954,23 @@ export type CharacterChoiceMode = {
   mode: "player" | "invite" | "ai"
 }
 
-export default function CharacterSelection({ adventurePlan, settingId, adventurePlanId }: CharacterSelectionProps) {
-  const router = useRouter()
+// Convert PCTemplate to TurnCharacter format for the modal
+function convertToTurnCharacter(pcTemplate: PCTemplate): TurnCharacter {
+  return {
+    ...pcTemplate,
+    type: "pc" as const,
+    userId: "", // Empty for template
+    initiative: 0, // Default value
+    hasReplied: false,
+    isComplete: false,
+  }
+}
+
+export default function CharacterSelection({ adventurePlan }: CharacterSelectionProps) {
   const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null)
   const [characterChoices, setCharacterChoices] = useState<CharacterChoiceMode[]>([])
+  const [modalCharacter, setModalCharacter] = useState<TurnCharacter | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   const characterNames = Object.fromEntries(adventurePlan.premadePlayerCharacters.map((char) => [char.id, char.name]))
 
@@ -6176,6 +6995,12 @@ export default function CharacterSelection({ adventurePlan, settingId, adventure
     setCharacterChoices(choices)
   }
 
+  const handleViewCharacterSheet = (character: PCTemplate, e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent character selection when clicking view details
+    setModalCharacter(convertToTurnCharacter(character))
+    setIsModalOpen(true)
+  }
+
   return (
     <div
       className="min-h-screen relative"
@@ -6190,11 +7015,16 @@ export default function CharacterSelection({ adventurePlan, settingId, adventure
       <div className="absolute inset-0 bg-black/60" />
 
       <div className="container max-w-5xl mx-auto mt-16 p-8 relative z-10">
-        <div className="text-center mb-16">
-          <h1 style={textShadow} className="text-5xl font-bold font-display mb-2 text-white">
+        <div className="text-center mb-6">
+          <h1 style={textShadowSpreadLight} className="text-5xl font-bold font-display mb-2 text-white">
             {adventurePlan.title}
           </h1>
-          <p className="text-gray-200">Choose your character to begin the adventure</p>
+          <p style={textShadow} className="max-w-2xl mx-auto pb-12 relative z-10">
+            {adventurePlan.teaser}
+          </p>
+          <p className="font-display text-xl text-amber-300 font-bold" style={textShadow}>
+            ChoosE Your characteR to BegiN
+          </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 auto-rows-fr">
@@ -6207,6 +7037,12 @@ export default function CharacterSelection({ adventurePlan, settingId, adventure
               onClick={() => handleCharacterSelect(character.id)}
             >
               <div className="pb-2 relative aspect-[1.25] w-full">
+                {/* View Details Button */}
+                <Button variant="outline" size="sm" className="absolute top-2 right-2 z-20 font-display text-sm" onClick={(e) => handleViewCharacterSheet(character, e)}>
+                  <Eye className="w-4 h-4 mr-1" />
+                  Details
+                </Button>
+
                 <div style={textShadow} className="absolute bottom-2 left-0 right-0 text-white w-full text-center font-display text-2xl z-10">
                   <div className="font-bold text-amber-300 pb-1">{character.name}</div>
                   <div className="text-base">
@@ -6241,7 +7077,192 @@ export default function CharacterSelection({ adventurePlan, settingId, adventure
           />
         )}
       </div>
+
+      <CharacterSheetModal character={modalCharacter} open={isModalOpen} onOpenChange={setIsModalOpen} />
     </div>
+  )
+}
+
+
+/*
+  File: components/adventure/character-sheet-modal.tsx
+  Absolute: /Users/johnpolacek/Projects/d20adventures.com/components/adventure/character-sheet-modal.tsx
+  Directory: components/adventure
+*/
+
+--- File: components/adventure/character-sheet-modal.tsx ---
+
+"use client"
+
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { getImageUrl } from "@/lib/utils"
+import Image from "next/image"
+import { useState } from "react"
+import type { TurnCharacter } from "@/types/adventure"
+
+interface CharacterSheetModalProps {
+  character: TurnCharacter | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+interface ExpandableTextProps {
+  title: string
+  text: string
+}
+
+function ExpandableText({ title, text }: ExpandableTextProps) {
+  const [isExpanded, setIsExpanded] = useState(false)
+
+  // Check if text is long enough to need truncation
+  const needsTruncation = text.length > 150 // Rough estimate for when line-clamp-2 would be needed
+
+  return (
+    <div>
+      <h3 className="text-lg font-display mb-2">{title}</h3>
+      <div className={`text-sm text-white/90 ${!isExpanded && needsTruncation ? "line-clamp-2" : ""}`}>{text}</div>
+      {needsTruncation && (
+        <Button variant="ghost" size="sm" onClick={() => setIsExpanded(!isExpanded)} className="text-sm text-primary-200 hover:text-primary-100 p-0 h-auto mt-1">
+          {isExpanded ? "Read less" : "Read more"}
+        </Button>
+      )}
+    </div>
+  )
+}
+
+export function CharacterSheetModal({ character, open, onOpenChange }: CharacterSheetModalProps) {
+  if (!character) return null
+
+  const getModifier = (score: number) => Math.floor((score - 10) / 2)
+  const formatModifier = (modifier: number) => (modifier >= 0 ? `+${modifier}` : `${modifier}`)
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="fade-inw-full max-w-4xl sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-primary-900/95 via-primary-800/95 to-primary-900/95 border-primary-600">
+        <DialogHeader>
+          <DialogTitle className="sr-only">{character.name}</DialogTitle>
+        </DialogHeader>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column - Basic Info */}
+          <div className="space-y-4">
+            {character.image && (
+              <div className="w-full aspect-[1.33] rounded-xl bg-black border border-white/30 relative overflow-hidden mx-auto lg:mx-0">
+                <Image src={getImageUrl(character.image)} alt={character.name} fill className="absolute inset-0 w-full h-full object-cover rounded-xl" />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <div className="text-2xl lg:text-3xl font-display text-amber-300 font-bold">{character.name}</div>
+              <div className="font-display text-sm">
+                {character.race} {character.gender} {character.archetype}
+              </div>
+
+              <div>
+                <label className="text-xs font-mono text-primary-200 uppercase tracking-wider">Health</label>
+                <div className="flex items-center gap-2">
+                  <div className="">{character.healthPercent}%</div>
+                  <div className="flex-1 bg-gray-700 rounded-full h-2 overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-green-500 to-red-500 transition-all duration-300" style={{ width: `${character.healthPercent}%` }} />
+                  </div>
+                </div>
+              </div>
+
+              {character.status && (
+                <div>
+                  <label className="text-xs font-mono text-primary-200 uppercase tracking-wider">Status</label>
+                  <div className="">{character.status}</div>
+                </div>
+              )}
+            </div>
+
+            {character.attributes && (
+              <div>
+                <h3 className="text-lg font-display  mb-3">Attributes</h3>
+                <div className="grid grid-cols-3 gap-3">
+                  {Object.entries(character.attributes).map(([attr, value]) => {
+                    const modifier = getModifier(value)
+                    return (
+                      <div key={attr} className="text-center p-2 bg-black/30 rounded border border-primary-700">
+                        <div className="text-xs font-mono text-primary-200 uppercase">{attr.slice(0, 3)}</div>
+                        <div className="text-lg font-bold ">{value}</div>
+                        <div className="text-sm text-primary-300">{formatModifier(modifier)}</div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column - Detailed Info */}
+          <div className="space-y-4">
+            {character.background && <ExpandableText title="Background" text={character.background} />}
+            {character.appearance && <ExpandableText title="Appearance" text={character.appearance} />}
+            {character.personality && <ExpandableText title="Personality" text={character.personality} />}
+            {character.motivation && <ExpandableText title="Motivation" text={character.motivation} />}
+            {character.behavior && <ExpandableText title="Behavior" text={character.behavior} />}
+          </div>
+
+          <div className="col-span-2 space-y-4">
+            {character.skills && character.skills.length > 0 && (
+              <div>
+                <h3 className="text-lg font-display  mb-2">Skills</h3>
+                <div className="flex flex-wrap gap-1">
+                  {character.skills.map((skill, index) => (
+                    <span key={index} className="text-xs sm:text-sm text-primary-100 px-3 py-1 bg-primary-700/50 rounded ">
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {character.spells && character.spells.length > 0 && (
+              <div>
+                <h3 className="text-lg font-display  mb-2">Spells</h3>
+                <div className="grid grid-cols-2 gap-2 auto-rows-fr">
+                  {character.spells.map((spell, index) => (
+                    <div key={index} className="h-full flex flex-col p-2 bg-black/30 rounded border border-primary-700">
+                      <div className="font-medium">{spell.name}</div>
+                      {spell.description && <div className="text-sm text-primary-200 mt-1 flex-1">{spell.description}</div>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {character.specialAbilities && character.specialAbilities.length > 0 && (
+              <div>
+                <h3 className="text-lg font-display  mb-2">Special Abilities</h3>
+                <div className="grid grid-cols-2 gap-2 auto-rows-fr">
+                  {character.specialAbilities.map((ability, index) => (
+                    <div key={index} className="h-full flex items-start text-sm text-primary-200 p-2 bg-black/30 rounded border border-primary-700">
+                      {ability}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {character.equipment && character.equipment.length > 0 && (
+              <div>
+                <h3 className="text-lg font-display  mb-2">Equipment</h3>
+                <div className="grid grid-cols-2 gap-2 auto-rows-fr">
+                  {character.equipment.map((item, index) => (
+                    <div key={index} className="h-full flex flex-col p-2 bg-black/30 rounded border border-primary-700">
+                      <div className="font-medium">{item.name}</div>
+                      {item.description && <div className="text-sm text-primary-200 mt-1 flex-1">{item.description}</div>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -6323,6 +7344,171 @@ export default function DiceRollResult({ result, animate }: { result: number; an
 
 
 /*
+  File: components/adventure/npc-character-sheet-modal.tsx
+  Absolute: /Users/johnpolacek/Projects/d20adventures.com/components/adventure/npc-character-sheet-modal.tsx
+  Directory: components/adventure
+*/
+
+--- File: components/adventure/npc-character-sheet-modal.tsx ---
+
+"use client"
+
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { getImageUrl } from "@/lib/utils"
+import Image from "next/image"
+import type { TurnCharacter } from "@/types/adventure"
+
+interface NPCCharacterSheetModalProps {
+  character: TurnCharacter | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+export function NPCCharacterSheetModal({ character, open, onOpenChange }: NPCCharacterSheetModalProps) {
+  if (!character) return null
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-primary-900/95 via-primary-800/95 to-primary-900/95 border-primary-600">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-display text-amber-300">{character.name}</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-6">
+          {/* Character Portrait and Basic Info */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {character.image && (
+              <div className="w-full h-40 rounded-xl bg-black border border-white/30 relative overflow-hidden mx-auto sm:mx-0 flex-shrink-0">
+                <Image src={getImageUrl(character.image)} alt={character.name} fill className="absolute inset-0 w-full h-full object-cover rounded-xl" />
+              </div>
+            )}
+
+            <div className="space-y-3 flex-1">
+              <div className="font-display">
+                {character.race} {character.gender} {character.archetype}
+              </div>
+
+              {/* Health Status - visible condition */}
+              <div>
+                <label className="text-xs font-mono text-white uppercase tracking-wider">Condition</label>
+                <div className="flex items-center gap-2">
+                  {character.healthPercent === 0 ? (
+                    <span className="text-red-400 font-bold">Dead</span>
+                  ) : character.healthPercent <= 25 ? (
+                    <span className="text-red-400">Severely Wounded</span>
+                  ) : character.healthPercent <= 50 ? (
+                    <span className="text-orange-400">Wounded</span>
+                  ) : character.healthPercent <= 75 ? (
+                    <span className="text-yellow-400">Bloodied</span>
+                  ) : (
+                    <span className="text-green-400">Healthy</span>
+                  )}
+                </div>
+              </div>
+
+              {character.status && (
+                <div>
+                  <label className="text-xs font-mono text-white uppercase tracking-wider">Status</label>
+                  <div className="text-white">{character.status}</div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Observable Information */}
+          {character.appearance && (
+            <div>
+              <h3 className="text-lg font-display text-white mb-2">Appearance</h3>
+              <p className="text-sm text-white">{character.appearance}</p>
+            </div>
+          )}
+
+          {/* Visible Equipment Only */}
+          {character.equipment && character.equipment.length > 0 && (
+            <div>
+              <h3 className="text-lg font-display text-white mb-2">Visible Equipment</h3>
+              <div className="space-y-2">
+                {character.equipment
+                  .filter(
+                    (item) =>
+                      // Only show weapons, armor, and obviously visible items
+                      item.name.toLowerCase().includes("sword") ||
+                      item.name.toLowerCase().includes("bow") ||
+                      item.name.toLowerCase().includes("staff") ||
+                      item.name.toLowerCase().includes("armor") ||
+                      item.name.toLowerCase().includes("shield") ||
+                      item.name.toLowerCase().includes("cloak") ||
+                      item.name.toLowerCase().includes("robe") ||
+                      item.name.toLowerCase().includes("weapon") ||
+                      item.name.toLowerCase().includes("axe") ||
+                      item.name.toLowerCase().includes("hammer") ||
+                      item.name.toLowerCase().includes("mace") ||
+                      item.name.toLowerCase().includes("spear")
+                  )
+                  .map((item, index) => (
+                    <div key={index} className="p-2 bg-black/30 rounded border border-primary-700">
+                      <div className="font-semibold text-white">{item.name}</div>
+                      {/* Only show basic descriptions for visible items */}
+                      {item.description && <div className="text-xs text-primary-200 mt-1">{item.description.split(".")[0]}.</div>}
+                    </div>
+                  ))}
+              </div>
+              {character.equipment.filter(
+                (item) =>
+                  item.name.toLowerCase().includes("sword") ||
+                  item.name.toLowerCase().includes("bow") ||
+                  item.name.toLowerCase().includes("staff") ||
+                  item.name.toLowerCase().includes("armor") ||
+                  item.name.toLowerCase().includes("shield") ||
+                  item.name.toLowerCase().includes("cloak") ||
+                  item.name.toLowerCase().includes("robe") ||
+                  item.name.toLowerCase().includes("weapon") ||
+                  item.name.toLowerCase().includes("axe") ||
+                  item.name.toLowerCase().includes("hammer") ||
+                  item.name.toLowerCase().includes("mace") ||
+                  item.name.toLowerCase().includes("spear")
+              ).length === 0 && <p className="text-sm text-primary-200 italic">No obviously visible equipment.</p>}
+            </div>
+          )}
+
+          {/* Observable Skills/Abilities */}
+          {character.skills && character.skills.length > 0 && (
+            <div>
+              <h3 className="text-lg font-display text-white mb-2">Observable Traits</h3>
+              <div className="flex flex-wrap gap-1">
+                {character.skills
+                  .filter(
+                    (skill) =>
+                      // Only show skills that would be obvious from observation
+                      skill.toLowerCase().includes("intimidation") ||
+                      skill.toLowerCase().includes("athletics") ||
+                      skill.toLowerCase().includes("acrobatics") ||
+                      skill.toLowerCase().includes("stealth") ||
+                      skill.toLowerCase().includes("performance") ||
+                      skill.toLowerCase().includes("persuasion") ||
+                      skill.toLowerCase().includes("deception")
+                  )
+                  .map((skill, index) => (
+                    <span key={index} className="text-xs px-2 py-1 bg-primary-700/50 rounded text-white">
+                      {skill}
+                    </span>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {/* Mystery Notice */}
+          <div className="p-3 bg-black/50 rounded border border-primary-600/50">
+            <p className="text-xs text-primary-200 italic">This shows only what your character can observe. Hidden abilities, true motivations, and detailed statistics remain unknown.</p>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+
+/*
   File: components/adventure/turn-advance-button.tsx
   Absolute: /Users/johnpolacek/Projects/d20adventures.com/components/adventure/turn-advance-button.tsx
   Directory: components/adventure
@@ -6378,6 +7564,9 @@ import { cn, getImageUrl } from "@/lib/utils"
 import { CircleCheckBig } from "lucide-react"
 import { useState } from "react"
 import Image from "next/image"
+import type { TurnCharacter } from "@/types/adventure"
+import { CharacterSheetModal } from "./character-sheet-modal"
+import { NPCCharacterSheetModal } from "./npc-character-sheet-modal"
 
 function CharacterImage({ src, alt }: { src: string; alt: string }) {
   const [loaded, setLoaded] = useState(false)
@@ -6397,56 +7586,76 @@ function CharacterImage({ src, alt }: { src: string; alt: string }) {
 export default function TurnCharacterList() {
   const currentTurn = useTurn()
   const characters = (currentTurn?.characters || []).slice().sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
+
+  const [selectedCharacter, setSelectedCharacter] = useState<TurnCharacter | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
+
   // Find the current actor: highest initiative, not complete
   const currentActorId = characters.find((c) => !c.isComplete)?.id
+
+  const handleCharacterClick = (character: TurnCharacter) => {
+    setSelectedCharacter(character)
+    setModalOpen(true)
+  }
+
   return (
-    <div className="lg:w-[320px] rounded-xl p-1">
-      <ul className="flex flex-col gap-4">
-        {characters.map((character) => {
-          const isDead = character.healthPercent === 0
-          return (
-            <li
-              key={character.id}
-              className={cn(
-                "w-full max-w-[300px] sm:w-[320px] flex items-center gap-3 p-1.5 sm:p-2 relative rounded-xl transition-all duration-1000 ease-in-out bg-gradient-to-tl ring ring-primary-700",
-                isDead ? "ring-gray-700 from-gray-800/50 via-gray-800/50 to-gray-700/50 opacity-60" : character.isComplete ? "ring-primary-600" : "from-primary-800 via-primary-800 to-primary-700",
-                character.id === currentActorId && !isDead ? "scale-100 shadow-md ring-primary-600 ring-2 from-primary-900" : "scale-90 from-primary-800/70 via-primary-800/70 opacity-90",
-                isDead && "opacity-50 scale-90" // Ensure dead characters are visually distinct
-              )}
-            >
-              {character.image && <CharacterImage src={getImageUrl(character.image)} alt={character.name} />}
-              <div className="z-10">
-                <div className="text-xxs sm:text-sm font-bold font-display flex items-center gap-2">
-                  {character.name}
-                  {character.isComplete && !isDead && <CircleCheckBig className="absolute bottom-1.5 right-1.5 inline-block text-green-700 w-4 h-4 rounded-full bg-black ring-2 ring-black" />}
+    <>
+      <div className="lg:w-[320px] rounded-xl p-1">
+        <ul className="flex flex-col gap-4">
+          {characters.map((character) => {
+            const isDead = character.healthPercent === 0
+            return (
+              <li
+                key={character.id}
+                className={cn(
+                  "w-full max-w-[300px] sm:w-[320px] flex items-center gap-3 p-1.5 sm:p-2 relative rounded-xl transition-all duration-1000 ease-in-out bg-gradient-to-tl ring ring-primary-700 cursor-pointer hover:ring-primary-500",
+                  isDead ? "ring-gray-700 from-gray-800/50 via-gray-800/50 to-gray-700/50 opacity-60" : character.isComplete ? "ring-primary-600" : "from-primary-800 via-primary-800 to-primary-700",
+                  character.id === currentActorId && !isDead ? "scale-100 shadow-md ring-primary-600 ring-2 from-primary-900" : "scale-90 from-primary-800/70 via-primary-800/70 opacity-90",
+                  isDead && "opacity-50 scale-90" // Ensure dead characters are visually distinct
+                )}
+                onClick={() => handleCharacterClick(character)}
+              >
+                {character.image && <CharacterImage src={getImageUrl(character.image)} alt={character.name} />}
+                <div className="z-10">
+                  <div className="text-xxs sm:text-sm font-bold font-display flex items-center gap-2">
+                    {character.name}
+                    {character.isComplete && !isDead && <CircleCheckBig className="absolute bottom-1.5 right-1.5 inline-block text-green-700 w-4 h-4 rounded-full bg-black ring-2 ring-black" />}
+                  </div>
+                  {character.archetype !== "Monster" && (
+                    <div className="text-xxxs sm:text-xxs font-display">
+                      {character.gender} {character.race} {character.archetype}
+                    </div>
+                  )}
+
+                  {characters.length > 1 && !isDead && (
+                    <div className="text-base flex items-center justify-center rounded-full bg-black ring ring-primary-600 w-8 h-8 font-mono absolute top-4 -left-5">{character.initiative}</div>
+                  )}
                 </div>
-                {character.archetype !== "Monster" && (
-                  <div className="text-xxxs sm:text-xxs font-display">
-                    {character.gender} {character.race} {character.archetype}
+                {character.status && !isDead && (
+                  <div className="text-xxxs sm:text-xxs font-mono px-2 py-0.5 bg-black rounded absolute -bottom-2 ring ring-primary-700 right-8 z-10">{character.status}</div>
+                )}
+                {isDead && <div className="text-xxs sm:text-xs text-red-400 font-bold font-mono px-2 py-0.5 bg-black rounded absolute -bottom-2 ring ring-red-700 right-8 z-10">DEAD</div>}
+                {!isDead && (
+                  <div className="absolute top-0 left-0 w-full h-full rounded-xl overflow-hidden">
+                    <div
+                      className="absolute top-0 left-0 w-full h-full bg-red-800 transition-all duration-1000 ease-in-out"
+                      style={{ width: `${100 - character.healthPercent}%`, opacity: (100 - character.healthPercent) / 100 }}
+                    />
                   </div>
                 )}
+              </li>
+            )
+          })}
+        </ul>
+      </div>
 
-                {characters.length > 1 && !isDead && (
-                  <div className="text-base flex items-center justify-center rounded-full bg-black ring ring-primary-600 w-8 h-8 font-mono absolute top-4 -left-5">{character.initiative}</div>
-                )}
-              </div>
-              {character.status && !isDead && (
-                <div className="text-xxxs sm:text-xxs font-mono px-2 py-0.5 bg-black rounded absolute -bottom-2 ring ring-primary-700 right-8 z-10">{character.status}</div>
-              )}
-              {isDead && <div className="text-xxs sm:text-xs text-red-400 font-bold font-mono px-2 py-0.5 bg-black rounded absolute -bottom-2 ring ring-red-700 right-8 z-10">DEAD</div>}
-              {!isDead && (
-                <div className="absolute top-0 left-0 w-full h-full rounded-xl overflow-hidden">
-                  <div
-                    className="absolute top-0 left-0 w-full h-full bg-red-800 transition-all duration-1000 ease-in-out"
-                    style={{ width: `${100 - character.healthPercent}%`, opacity: (100 - character.healthPercent) / 100 }}
-                  />
-                </div>
-              )}
-            </li>
-          )
-        })}
-      </ul>
-    </div>
+      {/* Show appropriate modal based on character type */}
+      {selectedCharacter?.type === "pc" ? (
+        <CharacterSheetModal character={selectedCharacter} open={modalOpen} onOpenChange={setModalOpen} />
+      ) : (
+        <NPCCharacterSheetModal character={selectedCharacter} open={modalOpen} onOpenChange={setModalOpen} />
+      )}
+    </>
   )
 }
 
@@ -6718,14 +7927,14 @@ import { useParams, useRouter } from "next/navigation"
 import { useUser } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { cn } from "@/lib/utils"
 
 export default function TurnNarrative() {
-  const { currentTurn, disableSSE } = useTurnContext()
-  const { settingId, adventurePlanId } = useAdventure()
   const params = useParams()
   const router = useRouter()
-  const { isSignedIn } = useUser()
-  const bottomRef = React.useRef<HTMLDivElement>(null)
+  const { currentTurn, disableSSE } = useTurnContext()
+  const { settingId, adventurePlanId } = useAdventure()
+  const { isSignedIn, user } = useUser()
   const [advancing, setAdvancing] = React.useState(false)
   const [initialNarrative, setInitialNarrative] = React.useState("")
   const [tokenError, setTokenError] = React.useState<string | null>(null)
@@ -6759,7 +7968,12 @@ export default function TurnNarrative() {
 
   const parsed = parseNarrative(currentTurn?.narrative || "")
 
-  const shouldShowReplyCondition = currentTurn && !currentTurn.isFinalEncounter && currentCharacter && currentCharacter.type === "pc" && !isNpcProcessing && !disableSSE
+  const shouldShowReplyCondition =
+    currentTurn && !currentTurn.isFinalEncounter && currentCharacter && currentCharacter.type === "pc" && currentCharacter.userId === user?.id && !isNpcProcessing && !disableSSE
+
+  // Find the player's character and check if their turn is complete
+  const playerCharacter = currentTurn?.characters.find((c: TurnCharacter) => c.type === "pc" && c.userId === user?.id)
+  const isPlayerTurnComplete = playerCharacter?.isComplete
 
   const handleAdvanceOrNavigate = async () => {
     console.log("[handleAdvanceOrNavigate] CALLED", { disableSSE, action: disableSSE ? "navigate" : "advance" })
@@ -6767,7 +7981,7 @@ export default function TurnNarrative() {
       // Navigation mode: just go to the next turn
       const currentTurnOrder = params.turnOrder ? parseInt(params.turnOrder as string, 10) : 1
       const nextTurnOrder = currentTurnOrder + 1
-      const basePath = `/${settingId}/${adventurePlanId}/${params.adventureId}`
+      const basePath = `/settings/${settingId}/${adventurePlanId}/${params.adventureId}`
 
       console.log("[TurnNarrative] Navigating to next turn:", `${basePath}/${nextTurnOrder}`)
       setAdvancing(true)
@@ -6776,7 +7990,6 @@ export default function TurnNarrative() {
       setTimeout(() => setAdvancing(false), 1000)
     } else {
       // Advance mode: actually advance the turn
-      console.log("[advanceTurn] currentTurn before:", JSON.stringify(currentTurn, null, 2))
       console.log("[advanceTurn] turnId:", currentTurn?.id)
       setAdvancing(true)
       setTokenError(null) // Clear previous errors
@@ -6789,7 +8002,7 @@ export default function TurnNarrative() {
         if (result.status === "turn_advanced") {
           const currentTurnOrder = params.turnOrder ? parseInt(params.turnOrder as string, 10) : 1
           const newTurnOrder = currentTurnOrder + 1
-          const basePath = `/${settingId}/${adventurePlanId}/${params.adventureId}`
+          const basePath = `/settings/${settingId}/${adventurePlanId}/${params.adventureId}`
           router.replace(`${basePath}/${newTurnOrder}`, { scroll: false })
         }
       } catch (error) {
@@ -6813,6 +8026,14 @@ export default function TurnNarrative() {
           <AlertTitle>Action Failed</AlertTitle>
           <AlertDescription>{tokenError}</AlertDescription>
         </Alert>
+      )}
+      {shouldShowReplyCondition && (
+        <div className="fade-in flex justify-between items-center gap-4 px-4 h-14 -mt-18 mb-4 bg-black/70 rounded-lg border border-white/20">
+          <p className="italic text-sm pl-2 font-bold text-amber-300">It is your turn!</p>
+          <Button variant="outline" size="sm" className="text-xs" onClick={() => scrollToBottom()}>
+            Go To Reply
+          </Button>
+        </div>
       )}
       {parsed.map((part, idx) => {
         if (part.type === "paragraph") {
@@ -6849,7 +8070,7 @@ export default function TurnNarrative() {
       )}
 
       {/* Show reply form only if current character is a PC and not in historical mode */}
-      {shouldShowReplyCondition && (
+      {shouldShowReplyCondition ? (
         <TurnNarrativeReply
           character={currentCharacter!}
           submitReply={async ({ turnId, characterId, narrativeAction }) => {
@@ -6884,6 +8105,23 @@ export default function TurnNarrative() {
             }
           }}
         />
+      ) : (
+        <div
+          id="turn-indicator"
+          className={cn(
+            "flex flex-col gap-2 justify-center border mt-4 border-white/20 items-center p-8 rounded-lg",
+            isPlayerTurnComplete ? "bg-neutral-900" : "bg-primary-800/70 border-dashed",
+            isTurnComplete && "hidden"
+          )}
+        >
+          <h4 className={cn("text-xl font-display", isPlayerTurnComplete ? "text-green-300/70" : "text-primary-200")}>{isPlayerTurnComplete ? "Your Turn is Complete" : "Waiting for Your Turn"}</h4>
+          <div className="flex gap-3 mt-3 mb-4 scale-75">
+            <span className={cn("w-2 h-2 rounded-full animate-pulse", isPlayerTurnComplete ? "bg-neutral-600" : "bg-primary-200")} style={{ animationDelay: "0ms", animationDuration: "2s" }}></span>
+            <span className={cn("w-2 h-2 rounded-full animate-pulse", isPlayerTurnComplete ? "bg-neutral-600" : "bg-primary-200")} style={{ animationDelay: "200ms", animationDuration: "2s" }}></span>
+            <span className={cn("w-2 h-2 rounded-full animate-pulse", isPlayerTurnComplete ? "bg-neutral-600" : "bg-primary-200")} style={{ animationDelay: "400ms", animationDuration: "2s" }}></span>
+          </div>
+          <p className="italic text-white/70">It is currently {currentCharacter?.name}’s turn</p>
+        </div>
       )}
 
       {currentTurn?.isFinalEncounter && (
@@ -6901,7 +8139,6 @@ export default function TurnNarrative() {
           <TurnAdvanceButton advancing={advancing} navigationMode={disableSSE} navigationLabel={disableSSE ? "Go to Next Turn" : undefined} onAdvance={handleAdvanceOrNavigate} />
         </div>
       )}
-      <div ref={bottomRef} />
     </div>
   )
 }
@@ -8381,10 +9618,19 @@ export function EncounterEditForm({
     onTransitionsChange(sectionIndex, sceneIndex, encounterIndex, newTransitions)
   }
 
-  const handleAddNpc = () => {
-    const newNpcs = [...(encounter.npc || []), { id: "", behavior: "", initialInitiative: 0 }]
+  const handleAddNpc = (npcId: string) => {
+    if (!npcId) return
+    const newNpcs = [...(encounter.npc || []), { id: npcId, behavior: "", initialInitiative: 0 }]
     onNpcChange(sectionIndex, sceneIndex, encounterIndex, newNpcs)
   }
+
+  // Get NPCs that haven't been added to this encounter yet
+  const getAvailableNpcsForAdd = () => {
+    const assignedNpcIds = new Set((encounter.npc || []).map((npc) => npc.id))
+    return Object.entries(availableNpcs).filter(([npcId]) => !assignedNpcIds.has(npcId))
+  }
+
+  const availableNpcsForAdd = getAvailableNpcsForAdd()
 
   const handleNpcChange = (npcIndex: number, field: "id" | "behavior" | "initialInitiative", value: string | number) => {
     const newNpcs = (encounter.npc || []).map((npc, idx) => {
@@ -8577,20 +9823,22 @@ export function EncounterEditForm({
                       <Label htmlFor={`${baseId}-transition-${tIndex}-encounter`} className="text-xs font-mono text-primary-200/90 mb-1 block">
                         Target Encounter
                       </Label>
-                      <select
-                        id={`${baseId}-transition-${tIndex}-encounter`}
-                        value={transition.encounter}
-                        onChange={(e) => handleTransitionChange(tIndex, "encounter", e.target.value)}
-                        disabled={isSaving}
-                        className="w-full bg-white/5 border border-white/20 rounded px-2 py-1 text-xs text-white placeholder:text-white/40"
-                      >
-                        <option value="">Select target encounter...</option>
-                        {availableEncounters.map((enc) => (
-                          <option key={enc.id} value={enc.id} className="bg-gray-800">
-                            {enc.title}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="max-w-[300px]">
+                        <select
+                          id={`${baseId}-transition-${tIndex}-encounter`}
+                          value={transition.encounter}
+                          onChange={(e) => handleTransitionChange(tIndex, "encounter", e.target.value)}
+                          disabled={isSaving}
+                          className="w-full bg-white/5 border border-white/20 rounded p-2 text-xs text-white placeholder:text-white/40"
+                        >
+                          <option value="">Select target encounter...</option>
+                          {availableEncounters.map((enc) => (
+                            <option key={enc.id} value={enc.id} className="bg-gray-800">
+                              {enc.title}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -8600,18 +9848,14 @@ export function EncounterEditForm({
 
           {/* NPCs Section */}
           <div className="border-t border-white/10 pt-4">
-            <div className="flex items-center justify-between mb-3">
+            <div className="mb-3">
               <Label className="text-sm font-medium font-mono text-primary-200/90">NPCs in Encounter</Label>
-              <Button onClick={handleAddNpc} disabled={isSaving} size="sm" variant="outline" className="h-8 px-2 text-xs">
-                <Plus size={12} className="mr-1" />
-                Add NPC
-              </Button>
             </div>
 
             {!encounter.npc || encounter.npc.length === 0 ? (
               <p className="text-xs text-gray-400 italic mb-2">No NPCs assigned to this encounter.</p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-3 mb-3">
                 {encounter.npc.map((npc, nIndex) => (
                   <div key={nIndex} className="border border-white/10 rounded p-3 space-y-2">
                     <div className="flex items-center justify-between">
@@ -8657,6 +9901,31 @@ export function EncounterEditForm({
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* Add NPC Dropdown */}
+            {availableNpcsForAdd.length > 0 && (
+              <div className="max-w-[300px]">
+                <select
+                  value=""
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      handleAddNpc(e.target.value)
+                      // Reset the select to show the placeholder again
+                      e.target.value = ""
+                    }
+                  }}
+                  disabled={isSaving}
+                  className="w-full bg-white/5 border border-white/20 rounded p-2 text-xs text-white placeholder:text-white/40"
+                >
+                  <option value="">+ Add NPC</option>
+                  {availableNpcsForAdd.map(([npcId, npcData]) => (
+                    <option key={npcId} value={npcId} className="bg-gray-800">
+                      {npcData.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
           </div>
@@ -13531,7 +14800,7 @@ interface ImageHeaderProps {
   subtitle?: string
   overlayContent?: React.ReactNode
   imageAlt?: string
-  variant?: "default" | "compact"
+  variant?: "default" | "semicompact" | "compact"
   topBorder?: boolean
 }
 
@@ -13540,7 +14809,7 @@ export default function ImageHeader({ imageUrl, children, title, subtitle, image
 
   return (
     <>
-      <div className={cn("absolute left-0 right-0 w-full aspect-video min-h-[480px]", variant === "compact" && "aspect-[2.25]")}>
+      <div className={cn("absolute left-0 right-0 w-full aspect-video min-h-[480px]", variant === "semicompact" && "aspect-[2.25]", variant === "compact" && "aspect-[3]")}>
         {topBorder && (
           <>
             <div className="absolute top-0 left-0 right-0 h-2 bg-black/30 z-10" />
@@ -13574,7 +14843,7 @@ export default function ImageHeader({ imageUrl, children, title, subtitle, image
         <div className="absolute bottom-6 sm:bottom-12 left-0 right-0 w-full h-32 bg-gradient-to-b from-black/50 to-transparent"></div>
         <div className="absolute bottom-36 sm:bottom-42 left-0 right-0 w-full h-[1px] bg-blend-lighten -mb-px overflow-hidden opacity-50 bg-[url('/images/app/art/texture-line.png')]" />
       </div>
-      <div className={cn("w-full aspect-video -mb-16 -mb-12 min-h-[480px]", variant === "compact" && "aspect-[2.25]")} />
+      <div className={cn("w-full aspect-video -mb-16 -mb-12 min-h-[480px]", variant === "semicompact" && "aspect-[2.25]", variant === "compact" && "aspect-[3]")} />
     </>
   )
 }
@@ -14874,7 +16143,6 @@ export function scrollToBottom() {
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { IMAGE_HOST } from "@/lib/config"
 import ImageHeader from "@/components/ui/image-header"
 import { Adventure } from "@/types/adventure"
 import Turn from "@/components/adventure/turn"
@@ -14885,14 +16153,19 @@ import { getEncounterImage } from "@/app/_actions/get-encounter-image"
 import type { Id } from "@/convex/_generated/dataModel"
 import wait from "waait"
 import { scrollToTop } from "../ui/utils"
+import AdventureLobby from "@/components/adventure/adventure-lobby"
+import type { AdventurePlan } from "@/types/adventure-plan"
+import { getImageUrl } from "@/lib/utils"
 
 export const dynamic = "force-dynamic"
 
-function AdventureHomeContent({ initialImage, adventure, teaser }: { initialImage: string; initialSubtitle: string; adventure: Adventure; teaser?: string }) {
+function AdventureHomeContent({ initialImage, adventure, adventurePlan }: { initialImage: string; initialSubtitle: string; adventure: Adventure; adventurePlan?: AdventurePlan }) {
   const { adventurePlanId, settingId } = useParams()
   const [image, setImage] = useState(initialImage)
   const [initialCheckDone, setInitialCheckDone] = useState(false)
   const [lastEncounterId, setLastEncounterId] = useState<string | null>(null)
+
+  console.log("[AdventureHomeContent] adventure", JSON.stringify(adventure, null, 2))
 
   const turn = useTurn()
 
@@ -14956,17 +16229,13 @@ function AdventureHomeContent({ initialImage, adventure, teaser }: { initialImag
     }
   }, [turn, initialCheckDone])
 
+  const imageUrl = getImageUrl(image)
+
   return (
     <>
       <div className="flex flex-col items-center min-h-screen relative">
-        <ImageHeader imageUrl={`${IMAGE_HOST}/${image}`} title={adventure.title} subtitle={turn?.title} imageAlt={turn?.title || adventure.title} />
-        {turn ? (
-          <Turn />
-        ) : (
-          <div className="grow max-w-2xl fade-in">
-            <p className="text-sm sm:text-base md:text-lg whitespace-pre-line">{teaser}</p>
-          </div>
-        )}
+        <ImageHeader variant={turn ? "default" : "compact"} imageUrl={imageUrl} title={adventure.title} subtitle={turn?.title} imageAlt={turn?.title || adventure.title} />
+        {turn ? <Turn /> : <AdventureLobby adventure={adventure} adventurePlan={adventurePlan} />}
       </div>
     </>
   )
@@ -14988,33 +16257,32 @@ export default AdventureHomeContent
 import React from "react"
 import { Adventure } from "@/types/adventure"
 import type { Turn as TurnType } from "@/types/adventure"
+import type { AdventurePlan } from "@/types/adventure-plan"
 import { TurnProvider } from "@/lib/context/TurnContext"
 import { AdventureProvider } from "@/lib/context/AdventureContext"
 import AdventureHomeContent from "@/components/views/adventure-home-content"
-
-export const dynamic = "force-dynamic"
 
 function AdventureHome({
   adventurePlanId,
   settingId,
   adventure,
   encounterImage,
-  teaser,
   currentTurn,
+  adventurePlan,
   disableSSE = false,
 }: {
   adventurePlanId: string
   settingId: string
   adventure: Adventure
-  teaser?: string
   encounterImage: string
   currentTurn: TurnType | null
+  adventurePlan?: AdventurePlan
   disableSSE?: boolean
 }) {
   return (
     <AdventureProvider settingId={settingId} adventurePlanId={adventurePlanId} adventure={adventure}>
       <TurnProvider adventureId={adventure?.id ?? ""} initialTurn={currentTurn} disableSSE={disableSSE}>
-        <AdventureHomeContent initialImage={encounterImage} initialSubtitle={currentTurn?.title || ""} adventure={adventure} teaser={teaser} />
+        <AdventureHomeContent initialImage={encounterImage} initialSubtitle={currentTurn?.title || ""} adventure={adventure} adventurePlan={adventurePlan} />
       </TurnProvider>
     </AdventureProvider>
   )
@@ -15172,6 +16440,15 @@ export const createAdventure = mutation({
     settingId: v.string(),
     ownerId: v.string(),
     playerIds: v.array(v.string()),
+    players: v.optional(v.array(v.object({
+      userId: v.string(),
+      characterId: v.string(),
+    }))),
+    status: v.optional(v.union(
+      v.literal("waitingForPlayers"),
+      v.literal("active"),
+      v.literal("completed")
+    )),
     title: v.string(),
     startedAt: v.number(),
   },
@@ -15182,6 +16459,8 @@ export const createAdventure = mutation({
       settingId: args.settingId,
       ownerId: args.ownerId,
       playerIds: args.playerIds,
+      players: args.players,
+      status: args.status,
       startedAt: args.startedAt,
       endedAt: undefined,
       currentTurnId: undefined,
@@ -15190,6 +16469,47 @@ export const createAdventure = mutation({
       updatedAt: now,
     });
     return adventureId;
+  },
+});
+
+// Join an existing adventure
+export const joinAdventure = mutation({
+  args: {
+    adventureId: v.id("adventures"),
+    userId: v.string(),
+    characterId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const adventure = await ctx.db.get(args.adventureId);
+    if (!adventure) throw new Error("Adventure not found");
+    
+    // Check if user is already in the adventure
+    const existingPlayer = adventure.players?.find(p => p.userId === args.userId);
+    if (existingPlayer) {
+      throw new Error("User is already in this adventure");
+    }
+    
+    // Check if character is already taken
+    const characterTaken = adventure.players?.find(p => p.characterId === args.characterId);
+    if (characterTaken) {
+      throw new Error("Character is already taken");
+    }
+    
+    // Add the player to the adventure
+    const updatedPlayers = [...(adventure.players || []), {
+      userId: args.userId,
+      characterId: args.characterId,
+    }];
+    
+    const now = Date.now();
+    
+    await ctx.db.patch(args.adventureId, {
+      players: updatedPlayers,
+      playerIds: [...adventure.playerIds, args.userId],
+      updatedAt: now,
+    });
+    
+    return true;
   },
 });
 
@@ -15688,6 +17008,15 @@ export default defineSchema({
     settingId: v.string(),
     ownerId: v.string(),
     playerIds: v.array(v.string()),
+    players: v.optional(v.array(v.object({
+      userId: v.string(),
+      characterId: v.string(),
+    }))),
+    status: v.optional(v.union(
+      v.literal("waitingForPlayers"),
+      v.literal("active"),
+      v.literal("completed")
+    )),
     startedAt: v.number(),
     endedAt: v.optional(v.number()),
     currentTurnId: v.optional(v.id("turns")),
@@ -15741,6 +17070,12 @@ export default defineSchema({
             charisma: v.optional(v.number()),
           })
         ),
+        spells: v.optional(v.array(v.object({
+          name: v.string(),
+          description: v.string(),
+          isUsed: v.boolean(),
+        }))),
+        specialAbilities: v.optional(v.array(v.string())),
         status: v.optional(v.string()),
       })
     ),
@@ -15998,7 +17333,7 @@ export const patchAdventure = mutation({
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
-const INITIAL_TOKEN_GRANT = 10000; // Example: 10,000 tokens on signup
+const INITIAL_TOKEN_GRANT = 1000;
 
 export const ensureUserTokenRecord = mutation({
   args: { userId: v.string() },
@@ -20210,6 +21545,14 @@ export async function processNpcTurnWithLLM({
   const playerCharactersForPrompt1 = turn.characters.filter(c => c.type === 'pc');
   const playerCharacterNamesForPrompt1 = playerCharactersForPrompt1.map(c => c.name);
   const prompt1 = `You are the DM for a tabletop RPG. Given the following context, decide what action the NPC should take this turn. Be creative and act as a real DM would. Output a short narrative for the action.
+
+IMPORTANT: If the NPC would realistically speak during this action (conversations, negotiations, threats, commands, etc.), include their actual dialogue in quotes. However, if the NPC is a non-speaking creature (like a mindless beast or monster) or the action doesn't involve speaking (pure physical actions, stealth, etc.), use descriptive narrative instead.
+
+Examples:
+- Speaking NPC: 'Silas steps forward, his voice calm but firm. "We need to complete this task quickly and quietly," he says, his eyes scanning the area for threats.'
+- Non-speaking creature: 'The dire wolf snarls, its hackles raised as it prepares to pounce on the nearest target.'
+- Physical action: 'The guard silently draws his sword, positioning himself to block the exit.'
+
 If the NPC's action involves giving items to a player character, include an "effects" array. Each object in "effects" should have a "targetId" (the ID of the character receiving items) and an "equipmentToAdd" array listing the items ({name: string, description?: string}).
 
 Only include the NPC in the short narrative output: ${npc.name}
@@ -20264,7 +21607,25 @@ Respond as JSON:
     // 6. LLM: Given the action, roll result, and context, generate the outcome
     const playerCharacters = turn.characters.filter(c => c.type === 'pc');
     const playerCharacterNames = playerCharacters.map(c => c.name);
-    const prompt2 = `You are the DM for a tabletop RPG. Given the action, the dice roll result, and the context, write a short narrative describing the outcome. Focus the narrative on the interacting characters. **Do not narrate any actions or dialogue for player characters.** Then, output a JSON array of effects for any characters affected (targetId, healthPercentDelta, status). If the NPC\'s action results in any characters receiving items, specify these in an \`equipmentToAdd\` array (each item as \`{name: string, description?: string}\`) within the corresponding effect object for the target character.\n\nNPC: ${npc.name}\nPlayer Characters: ${playerCharacterNames.join(', ')}\nAction: ${actionResult.actionSummary}\nRoll Type: ${rollRequirement.rollType}\nRoll Result: ${result} (difficulty: ${rollRequirement.difficulty}, success: ${success})\n${encounterContext?.intro ? `Encounter Intro: ${encounterContext.intro}\n` : ""}${encounterContext?.instructions ? `Encounter Instructions: ${encounterContext.instructions}\n` : ""}Recent Narrative:\n${updatedNarrative}\n\nRespond as JSON:\n{\n  narrative: string,\n  effects: [ { targetId: string, healthPercentDelta?: number, status?: string, equipmentToAdd?: [{name: string, description?: string}] } ]\n}`;
+    const prompt2 = `You are the DM for a tabletop RPG. Given the action, the dice roll result, and the context, write a short narrative describing the outcome. Focus the narrative on the interacting characters. **Do not narrate any actions or dialogue for player characters.**
+
+IMPORTANT: If the NPC would realistically speak during this outcome (expressing success/failure, reactions, taunts, threats, etc.), include their actual dialogue in quotes. However, if the NPC is a non-speaking creature or the outcome doesn't involve speech, use descriptive narrative instead.
+
+Then, output a JSON array of effects for any characters affected (targetId, healthPercentDelta, status). If the NPC\'s action results in any characters receiving items, specify these in an \`equipmentToAdd\` array (each item as \`{name: string, description?: string}\`) within the corresponding effect object for the target character.
+
+NPC: ${npc.name}
+Player Characters: ${playerCharacterNames.join(', ')}
+Action: ${actionResult.actionSummary}
+Roll Type: ${rollRequirement.rollType}
+Roll Result: ${result} (difficulty: ${rollRequirement.difficulty}, success: ${success})
+${encounterContext?.intro ? `Encounter Intro: ${encounterContext.intro}\n` : ""}${encounterContext?.instructions ? `Encounter Instructions: ${encounterContext.instructions}\n` : ""}Recent Narrative:
+${updatedNarrative}
+
+Respond as JSON:
+{
+  narrative: string,
+  effects: [ { targetId: string, healthPercentDelta?: number, status?: string, equipmentToAdd?: [{name: string, description?: string}] } ]
+}`;
     const outcomeResult = (await generateObject({ prompt: prompt2, schema: npcActionOutcomeSchema })).object;
     
     console.log("[NPC TURN] LLM-generated outcome result:", JSON.stringify(outcomeResult, null, 2));
@@ -21363,6 +22724,18 @@ export function formatNumberToK(num: number): string {
     return (num / 1000).toFixed(1).replace(/\.0$/, "") + "k";
   }
   return Math.round(num).toString();
+}
+
+/**
+ * Converts a slugified string back to a readable title
+ * @param slug - The slugified string (e.g., "dragon-of-icespire-peak")
+ * @returns A readable title with proper capitalization (e.g., "Dragon of Icespire Peak")
+ */
+export function reverseSlugify(slug: string): string {
+  return slug
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ")
 }
 
 
@@ -23233,6 +24606,7 @@ export interface Adventure {
   title: string;
   adventurePlanId: string;
   settingId: string;
+  status?: "waitingForPlayers" | "active" | "completed";
   party: PC[];
   turns: Turn[];
   startedAt: string;

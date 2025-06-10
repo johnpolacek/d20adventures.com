@@ -53,11 +53,19 @@ export function NPCCharacterSheetModal({ character, open, onOpenChange }: NPCCha
                 </div>
               </div>
 
-              {character.status && (
+              {character.effects && character.effects.length > 0 ? (
                 <div>
-                  <label className="text-xs font-mono text-white uppercase tracking-wider">Status</label>
-                  <div className="text-white">{character.status}</div>
+                  <label className="text-xs font-mono text-white uppercase tracking-wider">Effects</label>
+                  <ul>
+                    {character.effects.map((effect, idx) => (
+                      <li key={idx} className="mb-1">
+                        <span className="font-bold">{effect.name}</span>: {effect.description} <span className="text-xs text-gray-400">({effect.duration} turns left)</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
+              ) : (
+                <div className="text-sm text-gray-400">No active effects.</div>
               )}
             </div>
           </div>

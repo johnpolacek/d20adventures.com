@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, use } from "react"
+import React, { useState, useEffect } from "react"
 import { useUser, SignInButton } from "@clerk/nextjs"
 import { useQuery } from "convex/react"
 import { api } from "@/convex/_generated/api"
@@ -355,8 +355,8 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
         <Card className="bg-black/50 border-amber-300/30 ring-8 ring-black/30 max-w-md mx-auto">
           <CardContent className="p-6 text-center flex flex-col items-center gap-2">
             <h2 className="text-3xl text-amber-300 font-display mb-4">Join the Adventure</h2>
-            <p className="text-lg mb-2 text-white/70">
-              You can play as <span className="font-bold text-white text-xl">{firstAvailable.name}</span>
+            <p className="mb-2 text-white/90">
+              You can play as <span className="text-white text-xl">{firstAvailable.name}</span>
             </p>
 
             <div
@@ -416,8 +416,8 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
         <Card className="bg-black/50 border-amber-300/30 ring-8 ring-black/30 max-w-md mx-auto">
           <CardContent className="p-6 text-center flex flex-col items-center gap-2">
             <h2 className="text-3xl text-amber-300 font-display mb-4">Join the Adventure</h2>
-            <p className="text-lg mb-2 text-white/70">
-              You can play as <span className="font-bold text-white text-xl">{firstAvailable.name}</span>
+            <p className="mb-2 text-white/80">
+              You can play as <span className="text-white">{firstAvailable.name}</span>
             </p>
 
             <div

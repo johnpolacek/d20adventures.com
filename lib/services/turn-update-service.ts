@@ -89,7 +89,6 @@ Return an object with the character id, new healthPercent (0-100), and optional 
       ? {
           ...c,
           healthPercent: typeof update.object.healthPercent === "number" ? update.object.healthPercent : c.healthPercent,
-          status: (typeof update.object.healthPercent === "number" && update.object.healthPercent <= 0) ? "Dead" : (update.object.status ?? c.status),
         }
       : c
   );

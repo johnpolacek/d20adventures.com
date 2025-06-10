@@ -15,6 +15,7 @@ import type { AdventurePlan, AdventureEncounter } from "@/types/adventure-plan";
 const npcActionSchema = z.object({
   actionSummary: z.string(), // e.g. "The goblin tries to sneak behind the hero and attack."
   narrative: z.string(), // Narrative update for the action
+  actionType: z.enum(["attack", "skill", "skip", "pass", "other"]).default("other"), // Explicit action type
   effects: z.array(z.object({
     targetId: z.string(),
     equipmentToAdd: z.array(z.object({
@@ -42,10 +43,16 @@ export async function processNpcTurnWithLLM({
   turn,
   npcId,
   encounterContext,
+  sectionContext,
+  sceneContext,
+  adventureOverview,
 }: {
   turn: Turn;
   npcId: string;
   encounterContext?: { intro?: string; instructions?: string };
+  sectionContext?: { title?: string; summary?: string };
+  sceneContext?: { title?: string; summary?: string };
+  adventureOverview?: string;
 }): Promise<{
   updatedNarrative: string;
   updatedCharacters: TurnCharacter[];
@@ -55,15 +62,41 @@ export async function processNpcTurnWithLLM({
   shortcode?: string;
   narrativeToAppend: string;
 }> {
+  // Log new context fields
+  if (adventureOverview) console.log("[NPC TURN] Adventure Overview:", adventureOverview);
+  if (sectionContext) {
+    console.log("[NPC TURN] Section Title:", sectionContext.title);
+    console.log("[NPC TURN] Section Summary:", sectionContext.summary);
+  }
+  if (sceneContext) {
+    console.log("[NPC TURN] Scene Title:", sceneContext.title);
+    console.log("[NPC TURN] Scene Summary:", sceneContext.summary);
+  }
   // 1. LLM decides NPC action
   const npc = turn.characters.find((c) => c.id === npcId);
   if (!npc) throw new Error("NPC not found");
   const narrativeContext = (turn.narrative || "").split(/\n\n+/).slice(-2).join("\n\n");
   const playerCharactersForPrompt1 = turn.characters.filter(c => c.type === 'pc');
   const playerCharacterNamesForPrompt1 = playerCharactersForPrompt1.map(c => c.name);
+  // Build context string for prompt
+  const contextString = [
+    adventureOverview ? `Adventure Overview: ${adventureOverview}` : "",
+    sectionContext && (sectionContext.title || sectionContext.summary) ? `Section Title: ${sectionContext.title || ""}\nSection Summary: ${sectionContext.summary || ""}` : "",
+    sceneContext && (sceneContext.title || sceneContext.summary) ? `Scene Title: ${sceneContext.title || ""}\nScene Summary: ${sceneContext.summary || ""}` : "",
+    encounterContext?.intro ? `Encounter Intro: ${encounterContext.intro}` : "",
+    encounterContext?.instructions ? `Encounter Instructions: ${encounterContext.instructions}` : "",
+    narrativeContext ? `Recent Narrative:\n${narrativeContext}` : "",
+  ].filter(Boolean).join("\n\n");
+
   const prompt1 = `You are the DM for a tabletop RPG. Given the following context, decide what action the NPC should take this turn. Be creative and act as a real DM would. Output a short narrative for the action.
 
+${contextString}
+
 IMPORTANT: If the NPC would realistically speak during this action (conversations, negotiations, threats, commands, etc.), include their actual dialogue in quotes. However, if the NPC is a non-speaking creature (like a mindless beast or monster) or the action doesn't involve speaking (pure physical actions, stealth, etc.), use descriptive narrative instead.
+
+If the NPC would realistically skip or pass their turn (e.g., waiting, observing, preparing, doing nothing), set actionType to "skip" or "pass" and provide appropriate narrative. For example:
+- Skip action: 'The goblin scout remains hidden in the shadows, carefully observing the party's movements before making his next move.'
+- Pass action: 'The wounded orc takes a defensive stance, catching his breath and waiting for an opening.'
 
 Examples:
 - Speaking NPC: 'Silas steps forward, his voice calm but firm. "We need to complete this task quickly and quietly," he says, his eyes scanning the area for threats.'
@@ -74,15 +107,12 @@ If the NPC's action involves giving items to a player character, include an "eff
 
 Only include the NPC in the short narrative output: ${npc.name}
 Targetable Player Characters: ${playerCharacterNamesForPrompt1.join(', ')} (IDs: ${playerCharactersForPrompt1.map(c => c.id).join(', ')})
-${encounterContext?.intro ? `Encounter Intro: ${encounterContext.intro}\n` : ""}
-${encounterContext?.instructions ? `Encounter Instructions: ${encounterContext.instructions}\n` : ""}
-Recent Narrative:
-${narrativeContext}
 
 Respond as JSON:
 {
   actionSummary: string,
   narrative: string,
+  actionType: "attack" | "skill" | "skip" | "pass" | "other",
   effects?: [ { targetId: string, equipmentToAdd?: [{name: string, description?: string}] } ]
 }`;
   const actionResult = (await generateObject({ prompt: prompt1, schema: npcActionSchema })).object;
@@ -95,7 +125,34 @@ Respond as JSON:
   let shortcode = undefined;
 
   // 2. Use roll requirement utility to determine if a roll is needed
-  const rollRequirement = await getRollRequirementForAction(actionResult.actionSummary);
+  const rollRequirement = await getRollRequirementForAction(actionResult.actionSummary, npc);
+
+  // Handle skip/pass actions explicitly
+  if (actionResult.actionType === "skip" || actionResult.actionType === "pass") {
+    narrativeToAppend = actionResult.narrative;
+    updatedCharacters = updatedCharacters.map((c) => {
+      if (c.id === npc.id) {
+        return {
+          ...c,
+          hasReplied: true,
+          isComplete: true,
+          status: actionResult.actionType === "skip" ? "skipping" : "passing",
+        };
+      }
+      return c;
+    });
+    updatedNarrative = appendNarrative(updatedNarrative, narrativeToAppend);
+    return {
+      updatedNarrative,
+      updatedCharacters,
+      actionSummary: actionResult.actionSummary,
+      rollInfo: undefined,
+      effects: undefined,
+      shortcode: undefined,
+      narrativeToAppend,
+    };
+  }
+
   if (rollRequirement && rollRequirement.rollType && rollRequirement.difficulty) {
     // 3. Get modifier
     const modifier = await getRollModifier({
@@ -126,17 +183,17 @@ Respond as JSON:
     const playerCharacterNames = playerCharacters.map(c => c.name);
     const prompt2 = `You are the DM for a tabletop RPG. Given the action, the dice roll result, and the context, write a short narrative describing the outcome. Focus the narrative on the interacting characters. **Do not narrate any actions or dialogue for player characters.**
 
+${contextString}
+
 IMPORTANT: If the NPC would realistically speak during this outcome (expressing success/failure, reactions, taunts, threats, etc.), include their actual dialogue in quotes. However, if the NPC is a non-speaking creature or the outcome doesn't involve speech, use descriptive narrative instead.
 
-Then, output a JSON array of effects for any characters affected (targetId, healthPercentDelta, status). If the NPC\'s action results in any characters receiving items, specify these in an \`equipmentToAdd\` array (each item as \`{name: string, description?: string}\`) within the corresponding effect object for the target character.
+Then, output a JSON array of effects for any characters affected (targetId, healthPercentDelta, status). If the NPC's action results in any characters receiving items, specify these in an \`equipmentToAdd\` array (each item as \`{name: string, description?: string}\`) within the corresponding effect object for the target character.
 
 NPC: ${npc.name}
 Player Characters: ${playerCharacterNames.join(', ')}
 Action: ${actionResult.actionSummary}
 Roll Type: ${rollRequirement.rollType}
 Roll Result: ${result} (difficulty: ${rollRequirement.difficulty}, success: ${success})
-${encounterContext?.intro ? `Encounter Intro: ${encounterContext.intro}\n` : ""}${encounterContext?.instructions ? `Encounter Instructions: ${encounterContext.instructions}\n` : ""}Recent Narrative:
-${updatedNarrative}
 
 Respond as JSON:
 {
@@ -308,6 +365,24 @@ export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
     throw new Error("Adventure plan is missing required fields or could not be loaded");
   }
 
+  // Find current section and scene for context
+  let currentSection = undefined;
+  let currentScene = undefined;
+  for (const section of plan.sections) {
+    for (const scene of section.scenes) {
+      if (scene.encounters.some(enc => enc.id === turn!.encounterId)) {
+        currentSection = section;
+        currentScene = scene;
+        break;
+      }
+    }
+    if (currentSection && currentScene) break;
+  }
+
+  const sectionContext = currentSection ? { title: currentSection.title, summary: currentSection.summary } : undefined;
+  const sceneContext = currentScene ? { title: currentScene.title, summary: currentScene.summary } : undefined;
+  const adventureOverview = plan.overview || undefined;
+
   let characters = turn.characters as TurnCharacter[];
   // Take a snapshot of the current initiative order
   const initiativeOrder = characters
@@ -341,13 +416,17 @@ export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
       console.warn(`[NPC TURN] Could not find details for encounter ${turn.encounterId} in the plan.`);
     }
 
+    // Pass new context fields to processNpcTurnWithLLM
     const result = await processNpcTurnWithLLM({
-      turn: { ...turn, id: turn._id, characters }, // Pass the reloaded turn characters
+      turn: { ...turn, id: turn._id, characters },
       npcId: npc.id,
-      encounterContext, // Pass the populated context
+      encounterContext,
+      sectionContext,
+      sceneContext,
+      adventureOverview,
     });
     // Use appendNarrative utility for consistent narrative updates
-    const newNarrative = appendNarrative(turn.narrative || "", result.narrativeToAppend || "");
+    const newNarrative = appendNarrative(turn!.narrative || "", result.narrativeToAppend || "");
     
     await convex.mutation(api.turns.updateTurn, {
       turnId: turn._id,

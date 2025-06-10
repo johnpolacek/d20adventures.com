@@ -70,9 +70,15 @@ export default function TurnCharacterList() {
                     <div className="text-base flex items-center justify-center rounded-full bg-black ring ring-primary-600 w-8 h-8 font-mono absolute top-4 -left-5">{character.initiative}</div>
                   )}
                 </div>
-                {character.status && !isDead && (
-                  <div className="text-xxxs sm:text-xxs font-mono px-2 py-0.5 bg-black rounded absolute -bottom-2 ring ring-primary-700 right-8 z-10">{character.status}</div>
-                )}
+                {character.effects && character.effects.length > 0 ? (
+                  <div className="absolute top-2 right-8 z-10 bg-primary-100 text-primary-700 px-2 py-1 rounded text-xs">
+                    {character.effects.map((effect, idx) => (
+                      <span key={idx} className="mr-2">
+                        <span className="font-bold">{effect.name}</span> ({effect.duration})
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
                 {isDead && <div className="text-xxs sm:text-xs text-red-400 font-bold font-mono px-2 py-0.5 bg-black rounded absolute -bottom-2 ring ring-red-700 right-8 z-10">DEAD</div>}
                 {!isDead && (
                   <div className="absolute top-0 left-0 w-full h-full rounded-xl overflow-hidden">

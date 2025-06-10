@@ -19,7 +19,7 @@ export default function CharacterRollDisplay({
 }) {
   return (
     <div
-      className={`my-6 flex items-center gap-3 px-4 py-3 rounded-lg font-display text-base shadow-inner border-2 w-fit mx-auto
+      className={`my-6 flex items-center md:min-h-[300px] gap-3 px-4 py-3 rounded-lg font-display text-base shadow-inner border-2 w-fit mx-auto
         ${success ? "bg-green-900/80 text-green-200 border-green-600" : "bg-red-900/80 text-red-200 border-red-600"}
       `}
     >

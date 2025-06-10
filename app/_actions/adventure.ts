@@ -94,8 +94,7 @@ export async function processTurnReply({ turnId, characterId, narrativeAction }:
 
   // Call the (soon to be updated) getRollRequirementForAction
   // This function will now also return plausibility and feedback
-  // @ts-expect-error // Expecting getRollRequirementForAction to be updated to accept 2 arguments
-  const assessment: ActionAssessment = await getRollRequirementForAction(narrativeAction, actionContext)
+  const assessment: ActionAssessment = await getRollRequirementForAction(narrativeAction, characterPerformingAction as import("@/types/character").Character)
   console.log("[processTurnReply] action assessment from getRollRequirementForAction:", JSON.stringify(assessment, null, 2));
 
   if (assessment && assessment.isPlausible === false) {

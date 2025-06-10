@@ -17,7 +17,7 @@ export default async function HomePage() {
           D20
         </h2>
 
-        <Link className="fade-in delay-[2600ms]" href="/settings/realm-of-myr/the-midnight-summons">
+        <Link className="fade-in delay-[2600ms]" href="/settings/realm-of-myr/play">
           <Button asChild variant="epic" size="lg" className="mt-2 relative z-10">
             Quick Start
           </Button>

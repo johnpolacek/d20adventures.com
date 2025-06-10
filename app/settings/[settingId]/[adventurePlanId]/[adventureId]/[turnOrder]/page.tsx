@@ -7,6 +7,10 @@ import type { Adventure } from "@/types/adventure"
 import { mapConvexTurnToTurn } from "@/lib/utils"
 import { AdventurePlan } from "@/types/adventure-plan"
 import TurnNavigation from "@/components/adventure/turn-navigation"
+import { reverseSlugify } from "@/lib/utils"
+import { isDev } from "@/lib/auth-utils"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
 
 export const dynamic = "force-dynamic"
 
@@ -37,9 +41,9 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { adventurePlanId, turnOrder } = await params
+  const { adventurePlanId } = await params
   return {
-    title: `Adventure | ${adventurePlanId} | Turn ${turnOrder}`,
+    title: `D20 Adventures | ${reverseSlugify(adventurePlanId)}`,
   }
 }
 
@@ -90,6 +94,8 @@ export default async function TurnPage({ params }: PageProps) {
   const encounter = findEncounter(adventurePlan, currentTurn?.encounterId)
   const isLatestTurn = turnOrderNum === (navInfo?.totalTurns ?? 0)
 
+  const canEdit = isDev()
+
   return (
     <div className="min-h-screen relative">
       <div className="max-w-6xl mx-auto p-4 absolute top-12 right-0 z-10">
@@ -103,6 +109,11 @@ export default async function TurnPage({ params }: PageProps) {
         currentTurn={currentTurn}
         disableSSE={!isLatestTurn}
       />
+      {canEdit && (
+        <Link className="fixed top-[90vh] right-8 z-10" href={`/settings/${settingId}/${adventurePlanId}/edit`}>
+          <Button className="text-sm bg-primary-600 hover:bg-primary-700">Edit</Button>
+        </Link>
+      )}
     </div>
   )
 }

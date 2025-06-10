@@ -33,6 +33,14 @@ export const attributesSchema = z.object({
 
 export type Attributes = z.infer<typeof attributesSchema>
 
+export const effectSchema = z.object({
+  name: z.string(),        // e.g. "Charmed"
+  description: z.string(), // e.g. "Regards the caster as a friendly acquaintance"
+  duration: z.number(),    // number of turns remaining
+});
+
+export type Effect = z.infer<typeof effectSchema>;
+
 export const baseCharacterSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -50,7 +58,7 @@ export const baseCharacterSchema = z.object({
   skills: z.array(z.string()).optional(),
   spells: z.array(spellSchema).optional(),
   specialAbilities: z.array(z.string()).optional(),
-  status: z.string().optional(),
+  effects: z.array(effectSchema).optional(),
 })
 
 export type BaseCharacter = z.infer<typeof baseCharacterSchema>
@@ -60,6 +68,7 @@ export const pcSchema = baseCharacterSchema.extend({
   type: z.literal("pc"),
   userId: z.string(), // Clerk user id
   attributes: attributesSchema,
+  status: z.string().optional(),
 })
 
 export type PC = z.infer<typeof pcSchema>
@@ -68,6 +77,7 @@ export type PC = z.infer<typeof pcSchema>
 export const npcSchema = baseCharacterSchema.extend({
   type: z.literal("npc"),
   attributes: attributesSchema.partial().optional(),
+  status: z.string().optional(),
 })
 
 export type NPC = z.infer<typeof npcSchema>

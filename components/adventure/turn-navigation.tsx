@@ -14,7 +14,7 @@ export default function TurnNavigation({ currentTurnOrder, totalTurns, isLatestT
   const params = useParams()
   const { settingId, adventurePlanId, adventureId } = params
 
-  const basePath = `/${settingId}/${adventurePlanId}/${adventureId}`
+  const basePath = `/settings/${settingId}/${adventurePlanId}/${adventureId}`
 
   // currentTurnOrder is already the 1-based pagination number from URL
   const currentPaginationNumber = currentTurnOrder

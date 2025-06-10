@@ -13,7 +13,7 @@ interface ImageHeaderProps {
   subtitle?: string
   overlayContent?: React.ReactNode
   imageAlt?: string
-  variant?: "default" | "compact"
+  variant?: "default" | "semicompact" | "compact"
   topBorder?: boolean
 }
 
@@ -22,7 +22,7 @@ export default function ImageHeader({ imageUrl, children, title, subtitle, image
 
   return (
     <>
-      <div className={cn("absolute left-0 right-0 w-full aspect-video min-h-[480px]", variant === "compact" && "aspect-[3]")}>
+      <div className={cn("absolute left-0 right-0 w-full aspect-video min-h-[480px]", variant === "semicompact" && "aspect-[2.25]", variant === "compact" && "aspect-[3]")}>
         {topBorder && (
           <>
             <div className="absolute top-0 left-0 right-0 h-2 bg-black/30 z-10" />
@@ -56,7 +56,7 @@ export default function ImageHeader({ imageUrl, children, title, subtitle, image
         <div className="absolute bottom-6 sm:bottom-12 left-0 right-0 w-full h-32 bg-gradient-to-b from-black/50 to-transparent"></div>
         <div className="absolute bottom-36 sm:bottom-42 left-0 right-0 w-full h-[1px] bg-blend-lighten -mb-px overflow-hidden opacity-50 bg-[url('/images/app/art/texture-line.png')]" />
       </div>
-      <div className={cn("w-full aspect-video -mb-16 -mb-12 min-h-[480px]", variant === "compact" && "aspect-[3]")} />
+      <div className={cn("w-full aspect-video -mb-16 -mb-12 min-h-[480px]", variant === "semicompact" && "aspect-[2.25]", variant === "compact" && "aspect-[3]")} />
     </>
   )
 }

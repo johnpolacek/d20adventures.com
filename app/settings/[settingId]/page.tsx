@@ -26,13 +26,20 @@ export default async function SettingHome(props: { params: Promise<{ settingId: 
   return (
     <div className="flex min-h-screen flex-col relative">
       <div className="fade-in delay-[2s] relative z-10">
-        <ImageHeader variant="compact" imageUrl={getImageUrl(setting.image)} title={setting.name} imageAlt={setting.name} />
+        <ImageHeader variant="semicompact" imageUrl={getImageUrl(setting.image)} title={setting.name} imageAlt={setting.name} />
         {canEdit && (
           <Link className="fixed top-[90vh] right-8 z-10" href={`/settings/${settingId}/edit`}>
             <Button className="text-sm bg-primary-600 hover:bg-primary-700">Edit</Button>
           </Link>
         )}
-        <div className="max-w-3xl mx-auto -mt-48 relative z-10 whitespace-pre-line">
+        <div className="max-w-3xl mx-auto -mt-32 relative z-10 whitespace-pre-line">
+          <div className="flex justify-center mb-8">
+            <Link href={`/settings/${settingId}/play`}>
+              <Button asChild variant="epic">
+                Go to Adventures
+              </Button>
+            </Link>
+          </div>
           <p>{setting.description}</p>
           {setting.technology && (
             <>
@@ -53,9 +60,9 @@ export default async function SettingHome(props: { params: Promise<{ settingId: 
               <div className="flex flex-col pt-16">
                 <h4 className="text-xl font-display font-bold text-primary-200">{location.name}</h4>
 
-                <ImageHeader topBorder variant="compact" imageUrl={getImageUrl(location.image)} title={location.name} imageAlt={location.name} />
+                <ImageHeader topBorder variant="semicompact" imageUrl={getImageUrl(location.image)} title={location.name} imageAlt={location.name} />
 
-                <div className="max-w-3xl mx-auto -mt-48 relative z-10 whitespace-pre-line">
+                <div className="max-w-3xl mx-auto -mt-32 relative z-10 whitespace-pre-line">
                   <div className="whitespace-pre-line">
                     <p>{location.description}</p>
                   </div>
@@ -81,8 +88,8 @@ export default async function SettingHome(props: { params: Promise<{ settingId: 
 
                 {location.organizations.map((org) => (
                   <div key={org.name} className="relative mt-16">
-                    <ImageHeader topBorder variant="compact" imageUrl={getImageUrl(org.image)} title={org.name} imageAlt={org.name} />
-                    <div className="max-w-3xl mx-auto -mt-48 relative z-10 whitespace-pre-line">
+                    <ImageHeader topBorder variant="semicompact" imageUrl={getImageUrl(org.image)} title={org.name} imageAlt={org.name} />
+                    <div className="max-w-3xl mx-auto -mt-32 relative z-10 whitespace-pre-line">
                       <p>{org.description}</p>
                     </div>
                   </div>

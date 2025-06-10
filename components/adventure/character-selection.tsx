@@ -7,7 +7,7 @@ import type { AdventurePlan } from "@/types/adventure-plan"
 import type { TurnCharacter } from "@/types/adventure"
 import type { PCTemplate } from "@/types/character"
 import Image from "next/image"
-import { textShadow } from "@/components/typography/styles"
+import { textShadow, textShadowSpreadLight } from "@/components/typography/styles"
 import { Eye } from "lucide-react"
 
 import { getImageUrl } from "@/lib/utils"
@@ -85,12 +85,17 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
       {/* Background overlay for better readability */}
       <div className="absolute inset-0 bg-black/60" />
 
-      <div className="container max-w-5xl mx-auto mt-16 p-8 relative z-10">
-        <div className="text-center mb-16">
-          <h1 style={textShadow} className="text-5xl font-bold font-display mb-2 text-white">
+      <div className="container max-w-5xl mx-auto mt-24 p-8 relative z-10">
+        <div className="text-center mb-6">
+          <h1 style={textShadowSpreadLight} className="text-5xl font-bold font-display mb-2 text-white">
             {adventurePlan.title}
           </h1>
-          <p className="text-gray-200">Choose your character to begin the adventure</p>
+          <p style={textShadow} className="max-w-2xl mx-auto pb-12 relative z-10">
+            {adventurePlan.teaser}
+          </p>
+          <p className="font-display text-xl text-amber-300 font-bold" style={textShadow}>
+            ChoosE Your characteR to BegiN
+          </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 auto-rows-fr">
@@ -144,7 +149,6 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
         )}
       </div>
 
-      {/* Character Sheet Modal */}
       <CharacterSheetModal character={modalCharacter} open={isModalOpen} onOpenChange={setIsModalOpen} />
     </div>
   )

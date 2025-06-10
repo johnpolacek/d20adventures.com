@@ -138,9 +138,35 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
       ).join("\n")
     : "No explicit transitions defined for this encounter.";
 
+  // Find current section and scene for context
+  let currentSection = undefined;
+  let currentScene = undefined;
+  for (const section of plan.sections) {
+    for (const scene of section.scenes) {
+      if (scene.encounters.some(enc => enc.id === turn.encounterId)) {
+        currentSection = section;
+        currentScene = scene;
+        break;
+      }
+    }
+    if (currentSection && currentScene) break;
+  }
+
+  const sectionContext = currentSection ? `Section Title: ${currentSection.title || ""}\nSection Summary: ${currentSection.summary || ""}` : "";
+  const sceneContext = currentScene ? `Scene Title: ${currentScene.title || ""}\nScene Summary: ${currentScene.summary || ""}` : "";
+  const adventureOverview = plan.overview ? `Adventure Overview: ${plan.overview}` : "";
+
   // --- DETAILED LOGGING FOR LLM PROMPT INPUTS ---
   console.log("\n[advanceTurn] --- LLM PROMPT INPUTS ---");
-  console.log("[advanceTurn] Adventure Plan Overview:", plan.overview);
+  console.log("[advanceTurn] Adventure Overview:", plan.overview);
+  if (currentSection) {
+    console.log("[advanceTurn] Section Title:", currentSection.title);
+    console.log("[advanceTurn] Section Summary:", currentSection.summary);
+  }
+  if (currentScene) {
+    console.log("[advanceTurn] Scene Title:", currentScene.title);
+    console.log("[advanceTurn] Scene Summary:", currentScene.summary);
+  }
   console.log("[advanceTurn] Current Encounter Title:", currentEncounter.title);
   console.log("[advanceTurn] Current Encounter ID:", currentEncounter.id);
   console.log("[advanceTurn] Current Encounter Intro:", encounterIntro);
@@ -154,6 +180,12 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
   // --- END DETAILED LOGGING ---
 
   const prompt = `
+${adventureOverview}
+
+${sectionContext}
+
+${sceneContext}
+
 Current Encounter Title: ${currentEncounter.title}
 Current Encounter ID: ${currentEncounter.id}
 Current Encounter Intro:

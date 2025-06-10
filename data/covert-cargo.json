@@ -4,8 +4,8 @@
   "title": "Covert Cargo",
   "author": "D20Adventures",
   "version": "1716220800",
-  "teaser": "Docked on a discrete pier on a quiet fork of the Mordava River, a river boat bearing a shipment bound for Kordavos sets a clandestine plot in motion and draws the attention of an opportunistic group of rogues.",
-  "overview": "Docked on a discrete pier on a quiet fork of the Mordava River, a river boat bearing a shipment bound for Kordavos sets a clandestine plot in motion and draws the attention of an opportunistic group of rogues.",
+  "teaser": "Docked on a discrete pier on a quiet fork of the Mordava River just before dawn, a river boat bearing a secret shipment bound for Kordavos sets a clandestine plot in motion.",
+  "overview": "Docked on a discrete pier on a quiet fork of the Mordava River, a river boat bearing a secret shipment bound for Kordavos sets a clandestine plot in motion.",
   "party": [
     2,
     2
@@ -17,7 +17,7 @@
     "forest",
     "mystery"
   ],
-  "image": "images/settings/realm-of-myr/covert-cargo/0897705a-12e6-42d8-9d96-d38faa1063ca.png?t=1749244724241",
+  "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/0897705a-12e6-42d8-9d96-d38faa1063ca.png?t=1749244724241",
   "sections": [
     {
       "title": "Section One",
@@ -25,22 +25,30 @@
       "scenes": [
         {
           "title": "Quiet Pier at Dawn",
-          "summary": "",
+          "summary": "Reinhard and Silas are agents of the Blackthorn that have been sent to escort a new agent, Lyra Silvanus (a PC) to verify an exchange with their elven contact from a reclusive settlement in the Valkarr forest. \n\nSilas only knows that it the shipment is a crate containing some sort of enchanted relic of Old Valkara but that is all he knows. He has been instructed by his handler (a half-elf named Eamon Drakovan) to keep the crate sealed. Varius is simply his muscle. \n\nIt is their first such exchange and Silas knows establishing a relationship with the mysterious Aelar Moonglimmer is very important, so he and Reinhard will not ever engage in combat with the elves, even if things go wrong.\n\nTo avoid any possible scandal should this be some sort of trick by their rival clans, they hired an outsider (Lyra) to certify the authenticity of the shipment. After Lyra verbally gives confirmation, they are to take possession of the boat, while the elves return to the Valkarr forest on foot.\n\nAelar has no wish to spend any longer here than he needs to. He wishes for the the humans to accept the relic then he will depart with his companions.\n\nOnce the elves are gone, Silas will have Reinhard eliminate Lyra who knows too much. However, her bookish nature may have caused them to underestimate her skills. There is also the matter of Poppen Quickfoot, a halfling troublemaker who has stumbled onto their little secret interchange and might ruin their plans.",
           "encounters": [
             {
               "id": "the-shipment",
               "title": "The Shipment",
-              "intro": "Docked on a discrete pier on a quiet fork of the Mordava River, a river boat bearing a shipment bound for Kordavos rests silently on the dark, placid water.\n\nThe air is cool and damp, thick with the scent of wet earth and the chirping of crickets. The only other sounds are the gentle lapping of water against the pier's aging pylons and the rustle of wind through the skeletal branches of the willow trees.\n\nLyra stands inside the boat, the mysterious cargo crate before her. The instructions from her contact, Master Valerius, were explicit. Her sole purpose is to verify the authenticity of a Valkaaran artifact using her arcane talents. She is to confirm its magical properties, give a simple nod, and her part will be done. She will be well compensated for her expertise and, more importantly, her discretion.\n\nFor her part, it was hard to resist getting the chance to interact with reclusive Faelendarian elves and also get a chance to be near a Valkaran relic. She had studied both at length, but there was a big difference between reading old dusty tomes and experiencing the real thing.\n\nShe did not know much of her two escorts. There was Varius Reinhard, a large gruff soldier type who was in charge of security for this little mission. The other was a man who called himself Silas. Where Varius was a stone wall of presence, Silas was a whisper. He was slender, moving with a liquid grace that spoke of a life spent in shadows. \n\nMeanwhile, from his cleverly concealed vantage within a tangle of overgrown reeds, Poppen Quickfoot watched the scene unfold, a small smile playing on his lips. The cool water of the Mordava lapped just inches from his boots, but he remained utterly still, his senses stretched. Weeks of patient stakeouts had led him to this exact predawn hour, this quiet fork of the river, following the threads of rumor about a clandestine trade. His instinct, honed by a lifetime of seeking out hidden value, told him this was it—the score that would truly mark his arrival in Kordavos.\n\nHis keen hazel eyes, accustomed to discerning worth from a glint in the dark, tracked the three figures on the pier. The hulking soldier, the robed woman, and the whispering shadow-man. A professional crew, indeed; no sloppy thugs. This wasn't just any cargo; this was an item of importance, something worth securing. Poppen’s mind raced, not just with the thought of fencing such a treasure, but with the delicious social connections such a coup would bring.\n\nA soft creak of wood from the ship cuts through the night's quiet hum as the cabin door opened. A figure emerges with a silent, deliberate grace that was distinctly elven. He is tall and lithe, clad in dark, practical leather armor. Two other elves, equally silent and alert, could be seen on the boat's deck, one near the bow and another by the stern, both armed with bows.\n\nThe lead elf steps forward to the edge of his boat, his gaze settling on Lyra's escorts. His voice is low and clear, carrying easily across the water without being loud.\n\n\"You have the arrangement?\" asked the elf.\n\n“I have it here Aelar,” Silas replies, gliding from the shadows at the base of the pier. He removes a heavy scrollcase from its oilskin wrapping.\n\n\"Very well,\" Aelar says, turning to give an order in Elvish to one of his crew. \"The shipment is ready for your specialist's inspection.\"\n\n“Ok, let’s get on with it then,” says Varius, nodding at Lyra, eager to get her to inspect the shipment and have the matter concluded. The crate remained closed. No one was allowed to see what was inside.\n\nLyra had been contracted for one simple task, use her magecraft to determine that the contents of the shipment were indeed arcane in nature.",
-              "instructions": "If Lyra asks questions or stalls in any way, Varius and Silas will be impatient and urge her to do what she was paid for. If Lyra tries to engage Aelar in conversation he will be evasive. If she continues to delay, then Silas will nod at Varius who will draw his sword and threaten her.\n\nIf Lyra successfully casts a spell on the crate to detect magic, she will be detect an ancient potent enchantment on an object within the crate. On a highly successful roll of 18 or higher, she will determine its purpose to be related to concepts of binding promises, loyalty, and solemn vows. On a natural twenty, she will be able to name the item as the Verodynian Oath Stone of the First Clans.",
-              "image": "images/settings/realm-of-myr/covert-cargo/encounters/the-shipment/dccea2c5-b22d-41e0-9467-95d8ea2301d5.png?t=1749244761507",
+              "intro": "Docked on a discrete pier on a quiet fork of the Mordava River, a river boat bearing a shipment bound for Kordavos rests silently on the dark, placid water.\n\nThe air is cool and damp, thick with the scent of wet earth and the chirping of crickets. The only other sounds are the gentle lapping of water against the pier's aging pylons and the rustle of wind through the skeletal branches of the willow trees.\n\nLyra stands inside the boat, the mysterious cargo crate before her. Silas’s instructions were explicit. Her sole purpose is to verify the authenticity of a Valkaaran artifact using her arcane talents. She is to confirm its magical properties, give a simple nod, and her part will be done. She will be well compensated for her expertise and, more importantly, her discretion.\n\nFor her part, it was hard to resist getting the chance to interact with reclusive Faelendarian elves and also get a chance to be near a Valkaran relic. She had studied both at length, but there was a big difference between reading old dusty tomes and experiencing the real thing.\n\nShe did not know much of her two escorts. There was Reinhard, a large gruff soldier type who was in charge of security for this little mission. Silas had recruited her, noticing her frequent visits to the Old Valkaran Archives section at the Grand Library. Where Varius was a stone wall of presence, Silas was a whisper. He was slender, moving with a liquid grace that spoke of a life spent in shadows. \n\nMeanwhile, from his cleverly concealed vantage within a tangle of overgrown reeds, Poppen Quickfoot watched the scene unfold, a small smile playing on his lips. The cool water of the Mordava lapped just inches from his boots, but he remained utterly still, his senses stretched. Weeks of patient stakeouts had led him to this exact predawn hour, this quiet fork of the river, following the threads of rumor about a clandestine trade. His instinct, honed by a lifetime of seeking out hidden value, told him this was it—the score that would truly mark his arrival in Kordavos.\n\nHis keen hazel eyes, accustomed to discerning worth from a glint in the dark, tracked the three figures on the pier. The hulking soldier, the robed woman, and the whispering shadow-man. A professional crew, indeed; no sloppy thugs. This wasn't just any cargo; this was an item of importance, something worth securing. Poppen’s mind raced, not just with the thought of fencing such a treasure, but with the delicious social connections such a coup would bring.\n\nA soft creak of wood from the ship cuts through the night's quiet hum as the cabin door opened. A figure emerges with a silent, deliberate grace that was distinctly elven. He is tall and lithe, clad in dark, practical leather armor. Two other elves, equally silent and alert, could be seen on the boat's deck, one near the bow and another by the stern, both armed with bows.\n\nThe lead elf steps forward to the edge of his boat, his gaze settling on Lyra's escorts. His voice is low and clear, carrying easily across the water without being loud.\n\n\"You have the arrangement?\" asked the elf.\n\n“I have it here Aelar,” Silas replies, gliding from the shadows at the base of the pier. He removes a heavy scrollcase from its oilskin wrapping.\n\n\"Very well,\" Aelar says, turning to give an order in Elvish to one of his crew. \"The shipment is ready for your specialist's inspection.\"\n\n“Ok, let’s get on with it then,” says Reinhard, nodding at Lyra, eager to get her to inspect the shipment and have the matter concluded. The crate remained closed. No one was allowed to see what was inside.\n\nLyra had been contracted for one simple task, use her magecraft to determine that the contents of the shipment were indeed arcane in nature.",
+              "instructions": "If Lyra asks questions or stalls in any way, Reinhard and Silas will be impatient and urge her to do what she was paid for. If Lyra tries to engage Aelar in conversation he will be evasive. If she continues to delay, then Silas will nod at Varius who will draw his sword and threaten her.\n\nIf Lyra successfully casts a spell on the crate to detect magic, she will be detect an ancient potent enchantment on an object within the crate. On a highly successful roll of 18 or higher, she will determine its purpose to be related to concepts of binding promises, loyalty, and solemn vows. On a 20, she will be able to name the item as the Verodynian Oath Stone of the First Clans.",
+              "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/the-shipment/dccea2c5-b22d-41e0-9467-95d8ea2301d5.png?t=1749244761507",
               "transitions": [
                 {
-                  "condition": "If Lyra confirms the magic properties of the shipment",
+                  "condition": "If Lyra verbally confirms the magic properties of the shipment",
                   "encounter": "the-transaction"
                 },
                 {
                   "condition": "If Lyra says the shipment has no magical properties",
                   "encounter": "the-fake"
+                },
+                {
+                  "condition": "If Poppen causes a distraction or anyone notices his presence",
+                  "encounter": "the-disturbance"
+                },
+                {
+                  "condition": "If ",
+                  "encounter": ""
                 }
               ],
               "skipInitialNpcTurns": true,
@@ -67,33 +75,53 @@
               "title": "The Transaction",
               "intro": "Silas glided from the shadows, extending the oilskin-wrapped scrollcase to the elf, \"As agreed.\" \n\nAelar Moonglimmer took the offering, his  grey eyes, sharp and observant, held the rogue’s gaze. \"The Circle is appreciative,\" Aelar replied, his own voice just as quiet and controlled. \"They trust this partnership will prove fruitful for all involved.\"\n\nWith the exchange made, Aelar gave a final, sharp nod, then he and his kin made a quick and graceful exit, stepping off the boat and onto the pier. They moved like shadows across the rickety wood, disappearing into the shadows of the treeline without a single backward glance.",
               "instructions": "",
-              "image": "images/settings/realm-of-myr/covert-cargo/encounters/the-transaction/1c232871-8395-4892-bcf9-543a03bede80.png?t=1749243102836",
+              "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/the-transaction/1c232871-8395-4892-bcf9-543a03bede80.png?t=1749243102836",
               "transitions": [
                 {
                   "condition": "After this encounter, always transition immediately to the Battle on the Boat encounter.",
                   "encounter": "battle-on-the-boat"
                 }
               ],
-              "npc": [],
+              "npc": [
+                {
+                  "id": "npcs-1749163978757",
+                  "behavior": "Varius silently awaits Silas’s instructions but will not let Lyra leave (if she tries to)",
+                  "initialInitiative": 0
+                },
+                {
+                  "id": "npcs-1749181492795",
+                  "behavior": "Silas is pleased, the mission is almost over.",
+                  "initialInitiative": 0
+                }
+              ],
               "skipInitialNpcTurns": true,
               "resetHealth": false
             },
             {
               "id": "the-fake",
               "title": "The Fake",
-              "intro": "A silence, sharp and cold as a shard of glass, fell over the boat’s cabin in the wake of the arcanist’s pronouncement.\n\nIt was Silas who moved first. In a single, fluid motion, he was no longer lounging by the door but standing before it, blocking the only exit. A dagger appeared in his hand, its point aimed steadily at Aelar. \"There seems to have been a misunderstanding,\" Silas said, his voice dropping to a silken threat. \"My employers do not appreciate being sold worthless trinkets.\"\n\nVarius Reinhard let out a low, guttural growl, his hand dropping to the hilt of the massive blade at his side. \"You have nerve, elf,\" he snarled, his cold, calculating eyes promising violence as he took a heavy step forward.\n\nAelar Moonglimmer recoiled, but it was with the shock of indignation, not fear. His professional calm fractured into unconcealed fury. \"Worthless?\" he spat, his gaze flicking with contempt toward the unseen specialist. \"Your arcanist is either a fool, or you mean to double-cross us!”",
-              "instructions": "If there ",
-              "image": "images/settings/realm-of-myr/covert-cargo/encounters/the-fake/7b96ca3c-db72-4559-8f8d-59dacbba3185.png?t=1749300003015",
-              "transitions": [],
+              "intro": "A silence, sharp and cold as a shard of glass, fell over the boat’s cabin in the wake of the arcanist’s pronouncement.\n\nIt was Silas who moved first. In a single, fluid motion, he was no longer lounging by the door but standing before it, blocking the only exit. A dagger appeared in his hand, its point aimed steadily at Aelar. \"There seems to have been a misunderstanding,\" Silas said, his voice dropping to a silken threat. \"My employers do not appreciate being sold worthless trinkets.\"\n\nReinhard let out a low, guttural growl, his hand dropping to the hilt of the massive blade at his side. \"You have nerve, elf,\" he snarled, his cold, calculating eyes promising violence as he took a heavy step forward.\n\nAelar Moonglimmer recoiled, but it was with the shock of indignation, not fear. His professional calm fractured into unconcealed fury. \"Worthless?\" he spat, his gaze flicking with contempt toward the unseen specialist. \"Your arcanist is either a fool, or you mean to double-cross us!”",
+              "instructions": "Unless charmed, Silas will try to detect if Lyra is lying. Reinhard will do whatever Silas commands.",
+              "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/the-fake/7b96ca3c-db72-4559-8f8d-59dacbba3185.png?t=1749300003015",
+              "transitions": [
+                {
+                  "condition": "If Lyra or Poppen attack",
+                  "encounter": "battle-on-the-boat"
+                },
+                {
+                  "condition": "Ultimately Silas wants to make this deal even if he isn't sure about the relic's authenticity.",
+                  "encounter": "the-transaction"
+                }
+              ],
               "npc": [
                 {
                   "id": "npcs-1749163978757",
-                  "behavior": "Varius will follow Silas’s lead and orders. He is ready to use force if necessary.",
+                  "behavior": "Reinhard will follow Silas’s lead and orders.",
                   "initialInitiative": 0
                 },
                 {
                   "id": "npcs-1749181492795",
-                  "behavior": "Silas will want to figure out who is telling lies - Lyra or Aelar. He will not attack the elves under any circumstances.",
+                  "behavior": "Silas will want to figure out who is telling lies - Lyra or Aelar. He will not attack the elves under any circumstances. If he is out of options, he will simply accept the shipment and complete the Transaction.",
                   "initialInitiative": 0
                 },
                 {
@@ -108,10 +136,23 @@
             {
               "id": "battle-on-the-boat",
               "title": "Battle on the Boat",
-              "intro": "Varius Reinhard turned, a semblance of a smile touching his lips but not his cold eyes. \"Good work, mage,\" he said, his voice suddenly relaxed. \"Your service is most appreciated, but we have our orders.\" He took a slow step, his bulk seeming to shrink the confines of the cabin. \n\nThe cabin door clicks shut, the sound unnaturally loud in the sudden stillness. Silas stands before it, blocking the only exit, the faint whisper of steel on leather the only warning as two wicked-looking daggers appear in his hands.\n\n“No loose ends,” he states, flatly.",
+              "intro": "Reinhard turned, a semblance of a smile touching his lips but not his cold eyes. \"Good work, mage,\" he said, his voice suddenly relaxed. \"Your service is most appreciated, but we have our orders.\" He took a slow step, his bulk seeming to shrink the confines of the cabin. \n\nThe cabin door clicks shut, the sound unnaturally loud in the sudden stillness. Silas stands before it, blocking the only exit, the faint whisper of steel on leather the only warning as two wicked-looking daggers appear in his hands.\n\n“No loose ends,” he states, flatly.",
               "instructions": "",
-              "image": "images/settings/realm-of-myr/covert-cargo/encounters/battle-on-the-boat/088f0e14-cd0f-4312-821b-fac650a518f6.png?t=1749324854329",
-              "transitions": [],
+              "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/battle-on-the-boat/088f0e14-cd0f-4312-821b-fac650a518f6.png?t=1749324854329",
+              "transitions": [
+                {
+                  "condition": "If Poppen tries to cause a distraction outside the boat or gets spotted",
+                  "encounter": "the-fake"
+                },
+                {
+                  "condition": "If Lyra successfully flees and evades capture",
+                  "encounter": "the-escape"
+                },
+                {
+                  "condition": "If Lyra and/or Poppen overcome Silas and Reinhard",
+                  "encounter": "the-crate"
+                }
+              ],
               "npc": [
                 {
                   "id": "npcs-1749163978757",
@@ -126,6 +167,118 @@
               ],
               "skipInitialNpcTurns": false,
               "resetHealth": false
+            },
+            {
+              "id": "the-disturbance",
+              "title": "The Disturbance",
+              "intro": "Suddenly, the clandestine meeting is thrown off course by a sudden disturbance.",
+              "instructions": "Aelar will order his two elves to investigate. Everyone else will stay with the shipment.",
+              "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/the-disturbance/e304a481-79a3-4c8d-a8da-ba9044991495.png?t=1749676178186",
+              "transitions": [
+                {
+                  "condition": "If Poppen successfully hides, then the transaction will proceed as Silas will be eager to have the matter concluded, even if he has to skip Lyra's verification.",
+                  "encounter": "the-transaction"
+                },
+                {
+                  "condition": "If the characters flee",
+                  "encounter": "the-escape"
+                },
+                {
+                  "condition": "If it turns into a battle",
+                  "encounter": "battle-on-the-boat"
+                }
+              ],
+              "npc": [
+                {
+                  "id": "npcs-1749243735467",
+                  "behavior": "Will back up the Fighter, her bow drawn.",
+                  "initialInitiative": 0
+                },
+                {
+                  "id": "npcs-1749243869357",
+                  "behavior": "Will take the lead in investigating the cause of the disturbance. If he sees Poppen, he will aggressively tell him to go away.",
+                  "initialInitiative": 0
+                },
+                {
+                  "id": "npcs-1749163978757",
+                  "behavior": "Varius will keep his eye on the shipment and Lyra.",
+                  "initialInitiative": 0
+                },
+                {
+                  "id": "npcs-1749181492795",
+                  "behavior": "Silas will look outside for any threats but will not engage.",
+                  "initialInitiative": 0
+                },
+                {
+                  "id": "npcs-1749184389465",
+                  "behavior": "",
+                  "initialInitiative": 0
+                }
+              ],
+              "skipInitialNpcTurns": false,
+              "resetHealth": false
+            },
+            {
+              "id": "the-escape",
+              "title": "The Escape",
+              "intro": "",
+              "instructions": "In the beginning of this turn describe the circumstances of the escape, what the PCs and NPCs are doing. This encounter happens if the PCs have successfully fled the scene of the river boat.",
+              "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/the-escape/26311198-03c5-4f40-9a79-e75e9c48c524.png?t=1749675141542",
+              "transitions": [
+                {
+                  "condition": "If the players mention returning, the city or Kordovas",
+                  "encounter": "return-to-the-city"
+                },
+                {
+                  "condition": "If the players want to go into hidin",
+                  "encounter": "the-end"
+                }
+              ],
+              "npc": [],
+              "skipInitialNpcTurns": false,
+              "resetHealth": false
+            },
+            {
+              "id": "the-crate",
+              "title": "The Crate",
+              "intro": "The mysterious crate sits before you.",
+              "instructions": "The crate is sealed tight. They can break it open after concerted effort with equipment lying around the ship. Inside is the large heavy sitting stone. It cannot easily be moved as it weighs about 500 pounds. Though it is a powerful artifact for binding oaths, it is of no immediate use to Lyra or Poppen. Continue with this encounter until they have resolved what they wish to do.\n\nSuggest they return to the city, which is about 3 miles away.",
+              "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/the-crate/a3a863a9-dca9-48da-b3fe-e8c4ad90af3a.png?t=1749674703995",
+              "transitions": [
+                {
+                  "condition": "If they decide to go back, return, city or Kordavos.",
+                  "encounter": "return-to-the-city"
+                },
+                {
+                  "condition": "If they decide to do anything other than go back, return, city or Kordavos.",
+                  "encounter": "the-end"
+                }
+              ],
+              "npc": [],
+              "skipInitialNpcTurns": false,
+              "resetHealth": false
+            },
+            {
+              "id": "return-to-the-city",
+              "title": "Return to the City",
+              "intro": "Kordavos, the capital city of the March of Davos, is a three mile trek back through the forest. It is the middle of the Harvest Festival so there will be many visitors, making it easy to blend in amongst the eclectic travellers from far and wide.",
+              "instructions": "",
+              "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/return-to-the-city/280cc3ba-f72d-4e91-b839-8cec3778791b.png?t=1749677694632",
+              "transitions": [],
+              "npc": [],
+              "skipInitialNpcTurns": false,
+              "resetHealth": false
+            },
+            {
+              "id": "the-end",
+              "title": "The End",
+              "intro": "The path forward remains uncertain, but things cannot be undone. Events have been set in motion and now all that remains is to move forward into the unknown.",
+              "instructions": "",
+              "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/the-end/68166163-ba2c-4387-bfb6-a98343c6c9d7.png?t=1749678027089",
+              "transitions": [],
+              "npc": [],
+              "skipInitialNpcTurns": false,
+              "resetHealth": false
             }
           ]
         }
@@ -134,48 +287,39 @@
   ],
   "npcs": {
     "npcs-1749163978757": {
-      "name": "Varius Reinhard",
+      "name": "Reinhard",
       "archetype": "Enforcer",
       "race": "Human",
       "gender": "Male",
       "appearance": "A burly human with a scarred face, close-cropped dark hair, and cold, calculating eyes. He often wears a heavy, dark leather coat that conceals several hidden weapons. His posture is always rigid, exuding an aura of quiet menace.",
-      "personality": "Stoic, ruthless, and highly pragmatic. Varius values efficiency and loyalty above all else. He rarely shows emotion, preferring to let his actions speak. He is fiercely loyal to the Blackthorn clan and expects the same from his subordinates. He has a dry, sardonic wit that surfaces only in moments of extreme stress or rare amusement.",
-      "background": "Varius grew up on the fringes of society, learning early that power was taken, not given. He joined the Blackthorn clan as a young man, quickly rising through the ranks due to his unwavering loyalty, brutal efficiency, and strategic mind. He's been involved in countless 'fixer' operations, cleaning up messes and ensuring the clan's interests are protected. He sees the clan as his true family and its prosperity as his life's purpose.",
+      "personality": "Stoic, ruthless, and highly pragmatic. Reinhard values efficiency and loyalty above all else. He rarely shows emotion, preferring to let his actions speak. He is fiercely loyal to the Blackthorn clan and expects the same from his subordinates. He has a dry, sardonic wit that surfaces only in moments of extreme stress or rare amusement.",
+      "background": "Reinhard grew up on the fringes of society, learning early that power was taken, not given. He joined the Blackthorn clan as a young man, quickly rising through the ranks due to his unwavering loyalty, brutal efficiency, and strategic mind. He's been involved in countless 'fixer' operations, cleaning up messes and ensuring the clan's interests are protected. He sees the clan as his true family and its prosperity as his life's purpose.",
       "motivation": "To ensure the Blackthorn clan's dominance and security. The current mission to secure the shipment is critical to maintaining their influence and resources, and Kaelen will stop at nothing to see it through successfully.",
-      "behavior": "Direct and to the point, Kaelen prefers action over words. He is highly observant and rarely misses details. When challenged, he responds with calm, calculated aggression.",
+      "behavior": "Direct and to the point, Reinhard prefers action over words. He is highly observant and rarely misses details. When challenged, he responds with calm, calculated aggression.",
       "healthPercent": 100,
       "equipment": [
         {
-          "name": "Heavy Leather Coat",
-          "description": "A durable, dark leather coat reinforced with hidden plates, offering protection and concealing multiple weapons."
+          "name": "Heavy Leather Coat and Armor",
+          "description": "A durable, dark leather coat over studded leather armor, offering protection and concealing multiple weapons."
         },
         {
-          "name": "Custom Revolver",
-          "description": "A heavy-caliber revolver, well-maintained and clearly a favored weapon, known for its stopping power."
+          "name": "Long Sword",
+          "description": ""
         },
         {
-          "name": "Combat Knife",
-          "description": "A razor-sharp, balanced combat knife, often used for close-quarters engagements or utility."
-        },
-        {
-          "name": "Commlink",
-          "description": "A secure, encrypted commlink for communicating with Blackthorn clan members."
-        },
-        {
-          "name": "Lockpicking Tools",
-          "description": "A small, discreet set of tools for bypassing locks."
+          "name": "Throwing knives",
+          "description": "A razor-sharp throwing daggers."
         }
       ],
       "skills": [
         "Intimidation",
         "Stealth",
         "Investigation",
-        "Athletics",
         "Perception",
         "Streetwise",
         "Tactics"
       ],
-      "status": "Active, leading a critical mission for the Blackthorn clan.",
+      "status": "",
       "type": "npc",
       "attributes": {
         "strength": 16,
@@ -229,7 +373,7 @@
         "Investigation",
         "Deception"
       ],
-      "status": "Alive",
+      "status": "",
       "type": "npc",
       "attributes": {
         "strength": 9,
@@ -284,7 +428,7 @@
         "Negotiation",
         "Disguise"
       ],
-      "status": "On active mission, currently in transit/negotiation phase.",
+      "status": "",
       "type": "npc",
       "attributes": {
         "strength": 10,
@@ -344,7 +488,7 @@
         "Trance (Does not require sleep, meditates for 4 hours)",
         "Forest Camouflage (Can attempt to hide even when only lightly obscured by natural phenomena)"
       ],
-      "status": "Vigilant, currently scouting the northern borders of Whisperwood.",
+      "status": "",
       "type": "npc",
       "attributes": {
         "strength": 10,
@@ -398,7 +542,7 @@
         "Stealth",
         "Archery"
       ],
-      "status": "Vigilant",
+      "status": "",
       "type": "npc",
       "attributes": {
         "strength": 16,
@@ -418,9 +562,9 @@
       "archetype": "Arcanist",
       "race": "Asterian",
       "gender": "Female",
-      "appearance": "Lyra is a young woman with keen, intelligent eyes often framed by spectacles perched on her nose. She has neat, dark hair, usually tied back to keep it out of the way while she studies. Her posture is typically upright and attentive, reflecting her scholarly nature, and she often carries a slightly worn satchel filled with books and scrolls.",
+      "appearance": "Lyra has  intelligent eyes framed by spectacles perched on her nose. She has neat, dark hair, tied back to keep it out of the way while she studies. Her posture reflects her scholarly nature, and she often carries a slightly worn satchel filled with books and scrolls.",
       "personality": "Curious, studious, and deeply analytical, Lyra possesses a quiet determination. She is often lost in thought, pondering ancient mysteries, but is also genuinely kind and empathetic. While she can be a bit socially awkward at times, her passion for knowledge makes her an engaging conversationalist on her chosen subjects. She values truth and understanding above all else.",
-      "background": "Lyra grew up within the hallowed halls of the Asterian Grand Library, an institution renowned for its vast collection of ancient texts and magical knowledge. From a young age, she displayed an insatiable curiosity, particularly drawn to the enigmatic Valkaran lore and the intricate beauty of elven culture, subjects often considered niche even among her peers. She spent countless hours poring over dusty tomes, deciphering forgotten languages, and piecing together fragmented histories.",
+      "background": "Lyra has insatiable curiosity, and is especially drawn to enigmatic Valkaran lore and elven culture. Despite her bookish nature, Lyra left behind the safety of Asterian academia to venture to the March of Davos, the wild lands of old Valkara and the elves of the forest.\n\nHer long hours researching drew the attention of an agent of the Blackthorn family who presented her with an opportunity for a clandestine meeting with an elf from the reclusive Faelendar settlement to verify the magical properties of an old Valkaran relic. Her curiousity piqued, she had to say yes!",
       "motivation": "Lyra is driven by a profound desire to uncover the lost secrets of Valkaran civilization and to fully understand the nuances of elven culture. She believes that by bridging the knowledge gap between these ancient peoples and her own Asterian heritage, she can unlock new forms of magic and prevent past mistakes from being repeated. Her ultimate goal is to contribute significantly to the collective knowledge of the world.",
       "behavior": "Lyra is generally quiet and observant, preferring to listen and absorb information rather than dominate conversations. When a topic of interest arises, especially concerning lore or magic, she becomes animated and eager to share her knowledge or ask probing questions. She is meticulous in her work and values accuracy above all else.",
       "healthPercent": 100,
@@ -454,7 +598,7 @@
         "Culture (Elven)",
         "Calligraphy"
       ],
-      "status": "Healthy",
+      "status": "",
       "type": "pc",
       "attributes": {
         "strength": 8,
@@ -516,7 +660,7 @@
       "gender": "Male",
       "appearance": "Standing just over three feet tall, Poppen is a bundle of restless energy. His curly chestnut hair is kept cropped close to avoid snags. He wears a patchwork waistcoat festooned with hidden pockets. His bright hazel eyes dart constantly, and his pale leather boots are scuffed from midnight footwork.",
       "personality": "Gregarious, ever‐curious, and smooth‐tongued. Poppen lives for gossip almost as much as profit. He’d rather talk his way out of a fight—or better yet, never get into one at all. He is endlessly curious, flitting from docksider to courtier in search of the next tantalizing rumor.",
-      "background": "Originally from Willowdale, the tranquil halfling homeland bordering the March of Davos. Life in the Dell was too idyllic and slow-paced for Poppen’s adventurous spirit so he set out on a journey to seek his fortune elsewhere.",
+      "background": "Originally from Willowdale, the tranquil halfling homeland bordering the March of Davos. Life in the Dell was too idyllic and slow-paced for Poppen’s adventurous spirit so he set out on a journey to seek his fortune elsewhere.\n\nPoppen made his way to Kordavos to make a name for himself.  He has just learned of a secret dock not far from the city for smuggling operations, and has been spying on it for several days hoping to find his first big score. ",
       "motivation": "Driven by an insatiable love for objects of great value, not just for their worth, but for the stories and prestige they carry. He aspires to become a prominent purloiner and fence to indulge this fascination while simultaneously using his social skills to mingle with interesting people, and get rich while doing it.",
       "behavior": "Poppen moves with quick, careful steps and speaks with a disarming grin, always alert for an unguarded glance or dropped word. He prefers to avoid violence by sleight of hand or a well-placed bribe, but his steel nerve means he’ll risk a bold break-in for the right payoff.",
       "healthPercent": 100,
@@ -561,7 +705,7 @@
         "Sneak Attack: Deals extra damage when he has advantage on an attack roll or when an enemy is within 5 feet of an ally who isn't incapacitated.",
         "Cunning Action: Can take a bonus action on each of his turns in combat to take the Dash, Disengage, or Hide action."
       ],
-      "status": "Healthy",
+      "status": "",
       "type": "pc",
       "attributes": {
         "strength": 10,

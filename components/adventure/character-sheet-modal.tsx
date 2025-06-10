@@ -45,7 +45,7 @@ export function CharacterSheetModal({ character, open, onOpenChange }: Character
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-4xl sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-primary-900/95 via-primary-800/95 to-primary-900/95 border-primary-600">
+      <DialogContent className="fade-inw-full max-w-4xl sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-primary-900/95 via-primary-800/95 to-primary-900/95 border-primary-600">
         <DialogHeader>
           <DialogTitle className="sr-only">{character.name}</DialogTitle>
         </DialogHeader>
@@ -75,11 +75,19 @@ export function CharacterSheetModal({ character, open, onOpenChange }: Character
                 </div>
               </div>
 
-              {character.status && (
+              {character.effects && character.effects.length > 0 ? (
                 <div>
-                  <label className="text-xs font-mono text-primary-200 uppercase tracking-wider">Status</label>
-                  <div className="">{character.status}</div>
+                  <label className="text-xs font-mono text-primary-200 uppercase tracking-wider">Effects</label>
+                  <ul>
+                    {character.effects.map((effect, idx) => (
+                      <li key={idx} className="mb-1">
+                        <span className="font-bold">{effect.name}</span>: {effect.description} <span className="text-xs text-gray-400">({effect.duration} turns left)</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
+              ) : (
+                <div className="text-sm text-gray-400">No active effects.</div>
               )}
             </div>
 
