@@ -62,6 +62,14 @@ export async function processNpcTurnWithLLM({
   const playerCharactersForPrompt1 = turn.characters.filter(c => c.type === 'pc');
   const playerCharacterNamesForPrompt1 = playerCharactersForPrompt1.map(c => c.name);
   const prompt1 = `You are the DM for a tabletop RPG. Given the following context, decide what action the NPC should take this turn. Be creative and act as a real DM would. Output a short narrative for the action.
+
+IMPORTANT: If the NPC would realistically speak during this action (conversations, negotiations, threats, commands, etc.), include their actual dialogue in quotes. However, if the NPC is a non-speaking creature (like a mindless beast or monster) or the action doesn't involve speaking (pure physical actions, stealth, etc.), use descriptive narrative instead.
+
+Examples:
+- Speaking NPC: 'Silas steps forward, his voice calm but firm. "We need to complete this task quickly and quietly," he says, his eyes scanning the area for threats.'
+- Non-speaking creature: 'The dire wolf snarls, its hackles raised as it prepares to pounce on the nearest target.'
+- Physical action: 'The guard silently draws his sword, positioning himself to block the exit.'
+
 If the NPC's action involves giving items to a player character, include an "effects" array. Each object in "effects" should have a "targetId" (the ID of the character receiving items) and an "equipmentToAdd" array listing the items ({name: string, description?: string}).
 
 Only include the NPC in the short narrative output: ${npc.name}
@@ -116,7 +124,25 @@ Respond as JSON:
     // 6. LLM: Given the action, roll result, and context, generate the outcome
     const playerCharacters = turn.characters.filter(c => c.type === 'pc');
     const playerCharacterNames = playerCharacters.map(c => c.name);
-    const prompt2 = `You are the DM for a tabletop RPG. Given the action, the dice roll result, and the context, write a short narrative describing the outcome. Focus the narrative on the interacting characters. **Do not narrate any actions or dialogue for player characters.** Then, output a JSON array of effects for any characters affected (targetId, healthPercentDelta, status). If the NPC\'s action results in any characters receiving items, specify these in an \`equipmentToAdd\` array (each item as \`{name: string, description?: string}\`) within the corresponding effect object for the target character.\n\nNPC: ${npc.name}\nPlayer Characters: ${playerCharacterNames.join(', ')}\nAction: ${actionResult.actionSummary}\nRoll Type: ${rollRequirement.rollType}\nRoll Result: ${result} (difficulty: ${rollRequirement.difficulty}, success: ${success})\n${encounterContext?.intro ? `Encounter Intro: ${encounterContext.intro}\n` : ""}${encounterContext?.instructions ? `Encounter Instructions: ${encounterContext.instructions}\n` : ""}Recent Narrative:\n${updatedNarrative}\n\nRespond as JSON:\n{\n  narrative: string,\n  effects: [ { targetId: string, healthPercentDelta?: number, status?: string, equipmentToAdd?: [{name: string, description?: string}] } ]\n}`;
+    const prompt2 = `You are the DM for a tabletop RPG. Given the action, the dice roll result, and the context, write a short narrative describing the outcome. Focus the narrative on the interacting characters. **Do not narrate any actions or dialogue for player characters.**
+
+IMPORTANT: If the NPC would realistically speak during this outcome (expressing success/failure, reactions, taunts, threats, etc.), include their actual dialogue in quotes. However, if the NPC is a non-speaking creature or the outcome doesn't involve speech, use descriptive narrative instead.
+
+Then, output a JSON array of effects for any characters affected (targetId, healthPercentDelta, status). If the NPC\'s action results in any characters receiving items, specify these in an \`equipmentToAdd\` array (each item as \`{name: string, description?: string}\`) within the corresponding effect object for the target character.
+
+NPC: ${npc.name}
+Player Characters: ${playerCharacterNames.join(', ')}
+Action: ${actionResult.actionSummary}
+Roll Type: ${rollRequirement.rollType}
+Roll Result: ${result} (difficulty: ${rollRequirement.difficulty}, success: ${success})
+${encounterContext?.intro ? `Encounter Intro: ${encounterContext.intro}\n` : ""}${encounterContext?.instructions ? `Encounter Instructions: ${encounterContext.instructions}\n` : ""}Recent Narrative:
+${updatedNarrative}
+
+Respond as JSON:
+{
+  narrative: string,
+  effects: [ { targetId: string, healthPercentDelta?: number, status?: string, equipmentToAdd?: [{name: string, description?: string}] } ]
+}`;
     const outcomeResult = (await generateObject({ prompt: prompt2, schema: npcActionOutcomeSchema })).object;
     
     console.log("[NPC TURN] LLM-generated outcome result:", JSON.stringify(outcomeResult, null, 2));

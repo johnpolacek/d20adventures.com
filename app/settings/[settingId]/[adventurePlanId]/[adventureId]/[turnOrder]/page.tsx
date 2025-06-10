@@ -75,8 +75,8 @@ export default async function TurnPage({ params }: PageProps) {
   }
   if (!adventurePlan) return notFound()
 
-  // Convert 1-based URL parameter to 0-based for database query
-  const turnOrderForDb = turnOrderNum - 1
+  // Use 1-based URL parameter directly since database stores 1-based order values
+  const turnOrderForDb = turnOrderNum
 
   // Load adventure and specific turn + navigation info in parallel
   const [adventureData, navInfo] = await Promise.all([loadAdventureWithTurnByOrder(adventureId as Id<"adventures">, turnOrderForDb), getTurnNavigationInfo(adventureId as Id<"adventures">)])

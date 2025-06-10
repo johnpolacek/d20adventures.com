@@ -55,7 +55,7 @@ export default async function AdventureHomePage(props: { params: Promise<{ setti
 
   return (
     <div className="flex min-h-screen flex-col relative">
-      <AdventureHome adventure={demoAdventure} adventurePlanId={adventurePlanId} settingId={settingId} encounterImage={adventurePlan.image} teaser={adventurePlan.teaser} currentTurn={demoTurn} />
+      <AdventureHome adventure={demoAdventure} adventurePlanId={adventurePlanId} settingId={settingId} encounterImage={adventurePlan.image} currentTurn={demoTurn} />
     </div>
   )
 }

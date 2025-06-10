@@ -22,12 +22,11 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
 export default function TurnNarrative() {
-  const { currentTurn, disableSSE } = useTurnContext()
-  const { settingId, adventurePlanId } = useAdventure()
   const params = useParams()
   const router = useRouter()
-  const { isSignedIn } = useUser()
-  const bottomRef = React.useRef<HTMLDivElement>(null)
+  const { currentTurn, disableSSE } = useTurnContext()
+  const { settingId, adventurePlanId } = useAdventure()
+  const { isSignedIn, user } = useUser()
   const [advancing, setAdvancing] = React.useState(false)
   const [initialNarrative, setInitialNarrative] = React.useState("")
   const [tokenError, setTokenError] = React.useState<string | null>(null)
@@ -61,7 +60,8 @@ export default function TurnNarrative() {
 
   const parsed = parseNarrative(currentTurn?.narrative || "")
 
-  const shouldShowReplyCondition = currentTurn && !currentTurn.isFinalEncounter && currentCharacter && currentCharacter.type === "pc" && !isNpcProcessing && !disableSSE
+  const shouldShowReplyCondition =
+    currentTurn && !currentTurn.isFinalEncounter && currentCharacter && currentCharacter.type === "pc" && currentCharacter.userId === user?.id && !isNpcProcessing && !disableSSE
 
   const handleAdvanceOrNavigate = async () => {
     console.log("[handleAdvanceOrNavigate] CALLED", { disableSSE, action: disableSSE ? "navigate" : "advance" })
@@ -116,6 +116,14 @@ export default function TurnNarrative() {
           <AlertDescription>{tokenError}</AlertDescription>
         </Alert>
       )}
+      {shouldShowReplyCondition && (
+        <div className="fade-in flex justify-between items-center gap-4 px-4 h-14 -mt-18 mb-4 bg-black/70 rounded-lg border border-white/20">
+          <p className="italic text-sm pl-2 font-bold text-amber-300">It is your turn!</p>
+          <Button variant="outline" size="sm" className="text-xs" onClick={() => scrollToBottom()}>
+            Go To Reply
+          </Button>
+        </div>
+      )}
       {parsed.map((part, idx) => {
         if (part.type === "paragraph") {
           return (
@@ -151,7 +159,7 @@ export default function TurnNarrative() {
       )}
 
       {/* Show reply form only if current character is a PC and not in historical mode */}
-      {shouldShowReplyCondition && (
+      {shouldShowReplyCondition ? (
         <TurnNarrativeReply
           character={currentCharacter!}
           submitReply={async ({ turnId, characterId, narrativeAction }) => {
@@ -186,6 +194,16 @@ export default function TurnNarrative() {
             }
           }}
         />
+      ) : (
+        <div id="turn-indicator" className="flex flex-col gap-2 justify-center border mt-4 border-dashed border-white/20 items-center p-8 rounded-lg bg-primary-800/50">
+          <h4 className="text-primary-200 text-xl font-display">Waiting for Your Turn</h4>
+          <div className="flex gap-3 mt-3 mb-4 scale-75">
+            <span className="w-2 h-2 bg-primary-200 rounded-full animate-pulse" style={{ animationDelay: "0ms", animationDuration: "1.4s" }}></span>
+            <span className="w-2 h-2 bg-primary-200 rounded-full animate-pulse" style={{ animationDelay: "200ms", animationDuration: "1.4s" }}></span>
+            <span className="w-2 h-2 bg-primary-200 rounded-full animate-pulse" style={{ animationDelay: "400ms", animationDuration: "1.4s" }}></span>
+          </div>
+          <p className="italic text-white/70">It is currently {currentCharacter?.name}’s turn</p>
+        </div>
       )}
 
       {currentTurn?.isFinalEncounter && (
@@ -203,7 +221,6 @@ export default function TurnNarrative() {
           <TurnAdvanceButton advancing={advancing} navigationMode={disableSSE} navigationLabel={disableSSE ? "Go to Next Turn" : undefined} onAdvance={handleAdvanceOrNavigate} />
         </div>
       )}
-      <div ref={bottomRef} />
     </div>
   )
 }

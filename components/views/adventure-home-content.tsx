@@ -1,7 +1,6 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { IMAGE_HOST } from "@/lib/config"
 import ImageHeader from "@/components/ui/image-header"
 import { Adventure } from "@/types/adventure"
 import Turn from "@/components/adventure/turn"
@@ -12,14 +11,19 @@ import { getEncounterImage } from "@/app/_actions/get-encounter-image"
 import type { Id } from "@/convex/_generated/dataModel"
 import wait from "waait"
 import { scrollToTop } from "../ui/utils"
+import AdventureLobby from "@/components/adventure/adventure-lobby"
+import type { AdventurePlan } from "@/types/adventure-plan"
+import { getImageUrl } from "@/lib/utils"
 
 export const dynamic = "force-dynamic"
 
-function AdventureHomeContent({ initialImage, adventure, teaser }: { initialImage: string; initialSubtitle: string; adventure: Adventure; teaser?: string }) {
+function AdventureHomeContent({ initialImage, adventure, adventurePlan }: { initialImage: string; initialSubtitle: string; adventure: Adventure; adventurePlan?: AdventurePlan }) {
   const { adventurePlanId, settingId } = useParams()
   const [image, setImage] = useState(initialImage)
   const [initialCheckDone, setInitialCheckDone] = useState(false)
   const [lastEncounterId, setLastEncounterId] = useState<string | null>(null)
+
+  console.log("[AdventureHomeContent] adventure", JSON.stringify(adventure, null, 2))
 
   const turn = useTurn()
 
@@ -83,17 +87,13 @@ function AdventureHomeContent({ initialImage, adventure, teaser }: { initialImag
     }
   }, [turn, initialCheckDone])
 
+  const imageUrl = getImageUrl(image)
+
   return (
     <>
       <div className="flex flex-col items-center min-h-screen relative">
-        <ImageHeader imageUrl={`${IMAGE_HOST}/${image}`} title={adventure.title} subtitle={turn?.title} imageAlt={turn?.title || adventure.title} />
-        {turn ? (
-          <Turn />
-        ) : (
-          <div className="grow max-w-2xl fade-in">
-            <p className="text-sm sm:text-base md:text-lg whitespace-pre-line">{teaser}</p>
-          </div>
-        )}
+        <ImageHeader variant={turn ? "default" : "compact"} imageUrl={imageUrl} title={adventure.title} subtitle={turn?.title} imageAlt={turn?.title || adventure.title} />
+        {turn ? <Turn /> : <AdventureLobby adventure={adventure} adventurePlan={adventurePlan} />}
       </div>
     </>
   )

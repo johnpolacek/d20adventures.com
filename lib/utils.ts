@@ -134,3 +134,15 @@ export function formatNumberToK(num: number): string {
   }
   return Math.round(num).toString();
 }
+
+/**
+ * Converts a slugified string back to a readable title
+ * @param slug - The slugified string (e.g., "dragon-of-icespire-peak")
+ * @returns A readable title with proper capitalization (e.g., "Dragon of Icespire Peak")
+ */
+export function reverseSlugify(slug: string): string {
+  return slug
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ")
+}

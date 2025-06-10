@@ -35,6 +35,15 @@ export default defineSchema({
     settingId: v.string(),
     ownerId: v.string(),
     playerIds: v.array(v.string()),
+    players: v.optional(v.array(v.object({
+      userId: v.string(),
+      characterId: v.string(),
+    }))),
+    status: v.optional(v.union(
+      v.literal("waitingForPlayers"),
+      v.literal("active"),
+      v.literal("completed")
+    )),
     startedAt: v.number(),
     endedAt: v.optional(v.number()),
     currentTurnId: v.optional(v.id("turns")),
@@ -88,6 +97,12 @@ export default defineSchema({
             charisma: v.optional(v.number()),
           })
         ),
+        spells: v.optional(v.array(v.object({
+          name: v.string(),
+          description: v.string(),
+          isUsed: v.boolean(),
+        }))),
+        specialAbilities: v.optional(v.array(v.string())),
         status: v.optional(v.string()),
       })
     ),

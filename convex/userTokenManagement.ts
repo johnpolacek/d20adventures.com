@@ -1,7 +1,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
-const INITIAL_TOKEN_GRANT = 10000; // Example: 10,000 tokens on signup
+const INITIAL_TOKEN_GRANT = 1000;
 
 export const ensureUserTokenRecord = mutation({
   args: { userId: v.string() },

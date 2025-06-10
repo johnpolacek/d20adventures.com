@@ -9,6 +9,15 @@ export const createAdventure = mutation({
     settingId: v.string(),
     ownerId: v.string(),
     playerIds: v.array(v.string()),
+    players: v.optional(v.array(v.object({
+      userId: v.string(),
+      characterId: v.string(),
+    }))),
+    status: v.optional(v.union(
+      v.literal("waitingForPlayers"),
+      v.literal("active"),
+      v.literal("completed")
+    )),
     title: v.string(),
     startedAt: v.number(),
   },
@@ -19,6 +28,8 @@ export const createAdventure = mutation({
       settingId: args.settingId,
       ownerId: args.ownerId,
       playerIds: args.playerIds,
+      players: args.players,
+      status: args.status,
       startedAt: args.startedAt,
       endedAt: undefined,
       currentTurnId: undefined,
@@ -27,6 +38,47 @@ export const createAdventure = mutation({
       updatedAt: now,
     });
     return adventureId;
+  },
+});
+
+// Join an existing adventure
+export const joinAdventure = mutation({
+  args: {
+    adventureId: v.id("adventures"),
+    userId: v.string(),
+    characterId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const adventure = await ctx.db.get(args.adventureId);
+    if (!adventure) throw new Error("Adventure not found");
+    
+    // Check if user is already in the adventure
+    const existingPlayer = adventure.players?.find(p => p.userId === args.userId);
+    if (existingPlayer) {
+      throw new Error("User is already in this adventure");
+    }
+    
+    // Check if character is already taken
+    const characterTaken = adventure.players?.find(p => p.characterId === args.characterId);
+    if (characterTaken) {
+      throw new Error("Character is already taken");
+    }
+    
+    // Add the player to the adventure
+    const updatedPlayers = [...(adventure.players || []), {
+      userId: args.userId,
+      characterId: args.characterId,
+    }];
+    
+    const now = Date.now();
+    
+    await ctx.db.patch(args.adventureId, {
+      players: updatedPlayers,
+      playerIds: [...adventure.playerIds, args.userId],
+      updatedAt: now,
+    });
+    
+    return true;
   },
 });
 

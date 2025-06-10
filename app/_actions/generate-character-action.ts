@@ -59,9 +59,15 @@ export async function generateCharacterAction({
       }
     }
 
+    // Override the status to always be empty
+    const character = {
+      ...result.object,
+      status: ""
+    } as (typeof characterType extends "npc" ? NPC : PCTemplate)
+
     return {
       success: true,
-      character: result.object as (typeof characterType extends "npc" ? NPC : PCTemplate)
+      character
     }
 
   } catch (error) {
