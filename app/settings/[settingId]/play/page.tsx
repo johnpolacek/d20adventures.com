@@ -8,6 +8,8 @@ import { AdventurePlan } from "@/types/adventure-plan"
 import Image from "next/image"
 import { textShadow } from "@/components/typography/styles"
 import { getImageUrl } from "@/lib/utils"
+// @ts-expect-error: no types for number-to-words
+import { toWords } from "number-to-words"
 
 export default async function SettingAdventures(props: { params: Promise<{ settingId: string }> }) {
   const { settingId } = await props.params
@@ -43,7 +45,13 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
                 <Card className="w-full h-full bg-black/80 border-white/20 scale-95 hover:scale-100 hover:bg-black/90 ring-[6px] ring-black hover:ring-8 hover:ring-primary-500 transition-colors cursor-pointer transition-all duration-500 ease-in-out p-0 overflow-hidden flex flex-col">
                   <div className="pb-2 relative aspect-video w-full">
                     <div className="absolute top-1 right-3 z-10">
-                      <span className="bg-black/80 text-white text-xxs font-mono px-2 py-1 rounded">{adventure.party[0] === 1 && adventure.party[1] === 1 ? "Single Player" : "Multiplayer"}</span>
+                      <span className="bg-black/80 text-white text-xxs font-mono px-2 py-1 rounded">
+                        {adventure.party[0] === 1 && adventure.party[1] === 1
+                          ? "Single Player"
+                          : adventure.party[0] === 2 && adventure.party[1] === 2
+                            ? `${toWords(2)[0].toUpperCase() + toWords(2).slice(1)} Players`
+                            : `${adventure.party[0]}-${adventure.party[1]} Players`}
+                      </span>
                     </div>
                     <div style={textShadow} className="absolute bottom-2 left-0 right-0 text-white w-full text-center font-display text-xl z-10">
                       {adventure.title}

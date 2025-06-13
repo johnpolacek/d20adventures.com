@@ -51,7 +51,6 @@ export async function GET(
             controller.enqueue(`data: ${JSON.stringify(turn)}\n\n`);
             lastTurnId = adventure?.currentTurnId ?? null;
             lastTurn = turn;
-            console.log("[SSE API] Updated turn sent:", JSON.stringify(turn));
           }
         } catch (err) {
           console.error("[SSE API] Error fetching adventure/turn in interval:", err);

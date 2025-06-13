@@ -32,6 +32,7 @@ export function Heading({ className, variant, as, ...props }: HeadingProps) {
   return (
     <Tag
       className={cn(
+        "font-display",
         headingVariants({
           variant,
           className,

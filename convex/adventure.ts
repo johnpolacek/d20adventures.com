@@ -392,3 +392,13 @@ export const getTurnNavigationInfo = query({
     };
   },
 });
+
+// Query: Get all adventures (for admin)
+export const getAllAdventures = query({
+  handler: async (ctx) => {
+    return await ctx.db
+      .query("adventures")
+      .order("desc")
+      .collect();
+  },
+});

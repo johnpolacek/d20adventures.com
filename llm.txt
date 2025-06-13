@@ -345,9 +345,35 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
       ).join("\n")
     : "No explicit transitions defined for this encounter.";
 
+  // Find current section and scene for context
+  let currentSection = undefined;
+  let currentScene = undefined;
+  for (const section of plan.sections) {
+    for (const scene of section.scenes) {
+      if (scene.encounters.some(enc => enc.id === turn.encounterId)) {
+        currentSection = section;
+        currentScene = scene;
+        break;
+      }
+    }
+    if (currentSection && currentScene) break;
+  }
+
+  const sectionContext = currentSection ? `Section Title: ${currentSection.title || ""}\nSection Summary: ${currentSection.summary || ""}` : "";
+  const sceneContext = currentScene ? `Scene Title: ${currentScene.title || ""}\nScene Summary: ${currentScene.summary || ""}` : "";
+  const adventureOverview = plan.overview ? `Adventure Overview: ${plan.overview}` : "";
+
   // --- DETAILED LOGGING FOR LLM PROMPT INPUTS ---
   console.log("\n[advanceTurn] --- LLM PROMPT INPUTS ---");
-  console.log("[advanceTurn] Adventure Plan Overview:", plan.overview);
+  console.log("[advanceTurn] Adventure Overview:", plan.overview);
+  if (currentSection) {
+    console.log("[advanceTurn] Section Title:", currentSection.title);
+    console.log("[advanceTurn] Section Summary:", currentSection.summary);
+  }
+  if (currentScene) {
+    console.log("[advanceTurn] Scene Title:", currentScene.title);
+    console.log("[advanceTurn] Scene Summary:", currentScene.summary);
+  }
   console.log("[advanceTurn] Current Encounter Title:", currentEncounter.title);
   console.log("[advanceTurn] Current Encounter ID:", currentEncounter.id);
   console.log("[advanceTurn] Current Encounter Intro:", encounterIntro);
@@ -361,6 +387,12 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
   // --- END DETAILED LOGGING ---
 
   const prompt = `
+${adventureOverview}
+
+${sectionContext}
+
+${sceneContext}
+
 Current Encounter Title: ${currentEncounter.title}
 Current Encounter ID: ${currentEncounter.id}
 Current Encounter Intro:
@@ -720,8 +752,7 @@ export async function processTurnReply({ turnId, characterId, narrativeAction }:
 
   // Call the (soon to be updated) getRollRequirementForAction
   // This function will now also return plausibility and feedback
-  // @ts-expect-error // Expecting getRollRequirementForAction to be updated to accept 2 arguments
-  const assessment: ActionAssessment = await getRollRequirementForAction(narrativeAction, actionContext)
+  const assessment: ActionAssessment = await getRollRequirementForAction(narrativeAction, characterPerformingAction as import("@/types/character").Character)
   console.log("[processTurnReply] action assessment from getRollRequirementForAction:", JSON.stringify(assessment, null, 2));
 
   if (assessment && assessment.isPlausible === false) {
@@ -1472,9 +1503,10 @@ export async function getEncounterImage(adventurePlanId: string, encounterId: st
 --- File: app/_actions/get-roll-requirement.ts ---
 
 import { getRollRequirementForAction } from "@/lib/services/roll-requirement-service";
+import type { Character } from "@/types/character";
 
-export async function getRollRequirement(reply: string) {
-  return getRollRequirementForAction(reply);
+export async function getRollRequirement(reply: string, character: Character) {
+  return getRollRequirementForAction(reply, character);
 } 
 
 /*
@@ -2765,12 +2797,11 @@ import { Heading } from "@/components/typography/heading"
 
 export const metadata: Metadata = {
   title: "Admin Dashboard",
-  description: "Vibecode.party Admin Dashboard",
+  description: "D20 Admin Dashboard",
 }
 
 export default async function AdminPage() {
   const { isAdmin, requiresSetup } = await requireAdmin()
-  const isDev = process.env.NODE_ENV === "development"
 
   if (requiresSetup) {
     return (
@@ -2788,7 +2819,6 @@ export default async function AdminPage() {
             Access Denied
           </Heading>
           <p className="text-muted-foreground text-balance mb-8">You don&apos;t have permission to access this page. Please contact an administrator if you believe this is an error.</p>
-          {isDev && <DevEnvNotice />}
         </div>
       </div>
     )
@@ -2952,7 +2982,6 @@ export async function GET(
             controller.enqueue(`data: ${JSON.stringify(turn)}\n\n`);
             lastTurnId = adventure?.currentTurnId ?? null;
             lastTurn = turn;
-            console.log("[SSE API] Updated turn sent:", JSON.stringify(turn));
           }
         } catch (err) {
           console.error("[SSE API] Error fetching adventure/turn in interval:", err);
@@ -3323,8 +3352,8 @@ import { NextRequest } from "next/server";
 import { getRollRequirement } from "@/app/_actions/get-roll-requirement";
 
 export async function POST(req: NextRequest) {
-  const { reply } = await req.json();
-  const rollRequirement = await getRollRequirement(reply);
+  const { reply, character } = await req.json();
+  const rollRequirement = await getRollRequirement(reply, character);
   return Response.json({ rollRequirement });
 } 
 
@@ -4355,7 +4384,7 @@ export default async function HomePage() {
           D20
         </h2>
 
-        <Link className="fade-in delay-[2600ms]" href="/settings/realm-of-myr/the-midnight-summons">
+        <Link className="fade-in delay-[2600ms]" href="/settings/realm-of-myr/play">
           <Button asChild variant="epic" size="lg" className="mt-2 relative z-10">
             Quick Start
           </Button>
@@ -4672,6 +4701,9 @@ import { mapConvexTurnToTurn } from "@/lib/utils"
 import { AdventurePlan } from "@/types/adventure-plan"
 import TurnNavigation from "@/components/adventure/turn-navigation"
 import { reverseSlugify } from "@/lib/utils"
+import { isDev } from "@/lib/auth-utils"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
 
 export const dynamic = "force-dynamic"
 
@@ -4755,6 +4787,8 @@ export default async function TurnPage({ params }: PageProps) {
   const encounter = findEncounter(adventurePlan, currentTurn?.encounterId)
   const isLatestTurn = turnOrderNum === (navInfo?.totalTurns ?? 0)
 
+  const canEdit = isDev()
+
   return (
     <div className="min-h-screen relative">
       <div className="max-w-6xl mx-auto p-4 absolute top-12 right-0 z-10">
@@ -4768,6 +4802,11 @@ export default async function TurnPage({ params }: PageProps) {
         currentTurn={currentTurn}
         disableSSE={!isLatestTurn}
       />
+      {canEdit && (
+        <Link className="fixed top-[90vh] right-8 z-10" href={`/settings/${settingId}/${adventurePlanId}/edit`}>
+          <Button className="text-sm bg-primary-600 hover:bg-primary-700">Edit</Button>
+        </Link>
+      )}
     </div>
   )
 }
@@ -5273,6 +5312,8 @@ import { AdventurePlan } from "@/types/adventure-plan"
 import Image from "next/image"
 import { textShadow } from "@/components/typography/styles"
 import { getImageUrl } from "@/lib/utils"
+// @ts-expect-error: no types for number-to-words
+import { toWords } from "number-to-words"
 
 export default async function SettingAdventures(props: { params: Promise<{ settingId: string }> }) {
   const { settingId } = await props.params
@@ -5308,7 +5349,13 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
                 <Card className="w-full h-full bg-black/80 border-white/20 scale-95 hover:scale-100 hover:bg-black/90 ring-[6px] ring-black hover:ring-8 hover:ring-primary-500 transition-colors cursor-pointer transition-all duration-500 ease-in-out p-0 overflow-hidden flex flex-col">
                   <div className="pb-2 relative aspect-video w-full">
                     <div className="absolute top-1 right-3 z-10">
-                      <span className="bg-black/80 text-white text-xxs font-mono px-2 py-1 rounded">{adventure.party[0] === 1 && adventure.party[1] === 1 ? "Single Player" : "Multiplayer"}</span>
+                      <span className="bg-black/80 text-white text-xxs font-mono px-2 py-1 rounded">
+                        {adventure.party[0] === 1 && adventure.party[1] === 1
+                          ? "Single Player"
+                          : adventure.party[0] === 2 && adventure.party[1] === 2
+                            ? `${toWords(2)[0].toUpperCase() + toWords(2).slice(1)} Players`
+                            : `${adventure.party[0]}-${adventure.party[1]} Players`}
+                      </span>
                     </div>
                     <div style={textShadow} className="absolute bottom-2 left-0 right-0 text-white w-full text-center font-display text-xl z-10">
                       {adventure.title}
@@ -6262,14 +6309,11 @@ export default function AdventureComplete() {
 
 import React, { useState, useEffect } from "react"
 import { useUser, SignInButton } from "@clerk/nextjs"
-import { useQuery } from "convex/react"
-import { api } from "@/convex/_generated/api"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Adventure, TurnCharacter } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PCTemplate } from "@/types/character"
-import type { Id } from "@/convex/_generated/dataModel"
 import Image from "next/image"
 import { getImageUrl } from "@/lib/utils"
 import { Copy, Check, Share2, Bot } from "lucide-react"
@@ -6309,51 +6353,7 @@ function convertPCTemplateToTurnCharacter(pcTemplate: PCTemplate): TurnCharacter
   }
 }
 
-// Helper to map Convex adventure to frontend Adventure type
-function mapConvexAdventureToAdventure(raw: unknown, adventurePlan: AdventurePlan): Adventure | null {
-  if (!raw || typeof raw !== "object" || !("_id" in raw)) return null
-  const a = raw as {
-    _id: string
-    title: string
-    planId: string
-    startedAt: number
-    endedAt?: number
-    settingId?: string
-    status?: "waitingForPlayers" | "active" | "completed"
-    players?: Array<{ userId: string; characterId: string }>
-    playerIds?: string[]
-  }
-
-  // Map players to full PC objects from adventure plan
-  const party: Adventure["party"] =
-    a.players
-      ?.map((player) => {
-        const character = adventurePlan.premadePlayerCharacters.find((pc) => pc.id === player.characterId)
-        if (character) {
-          return {
-            ...character,
-            userId: player.userId, // Add userId to the character
-          }
-        }
-        return null
-      })
-      .filter((char): char is NonNullable<typeof char> => char !== null) || []
-
-  return {
-    id: a._id,
-    title: a.title,
-    adventurePlanId: a.planId,
-    settingId: a.settingId ?? "",
-    status: a.status || "active", // Default to active for backwards compatibility
-    party,
-    turns: [],
-    startedAt: a.startedAt ? new Date(a.startedAt).toISOString() : "",
-    endedAt: a.endedAt ? new Date(a.endedAt).toISOString() : undefined,
-    pausedAt: undefined,
-  }
-}
-
-export default function AdventureLobby({ adventure: initialAdventure, adventurePlan }: AdventureLobbyProps) {
+export default function AdventureLobby({ adventure, adventurePlan }: AdventureLobbyProps) {
   const { user, isSignedIn, isLoaded } = useUser()
   const params = useParams()
   const [isCopied, setIsCopied] = useState(false)
@@ -6362,14 +6362,6 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
   const [isStarting, setIsStarting] = useState(false)
   const [modalCharacter, setModalCharacter] = useState<TurnCharacter | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-
-  // Get live adventure data from Convex
-  const adventureData = useQuery(api.adventure.getCurrentAdventure, {
-    adventureId: initialAdventure.id as Id<"adventures">,
-  })
-
-  // Use live data if available, fallback to initial data
-  const adventure = adventureData?.adventure && adventurePlan ? mapConvexAdventureToAdventure(adventureData.adventure, adventurePlan) || initialAdventure : initialAdventure
 
   useEffect(() => {
     if (isLoaded) {
@@ -6509,8 +6501,11 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
 
           {/* Show different messages based on party state */}
           {!canStartAdventure ? (
-            <h3 className="font-display mb-4 text-2xl opacity-70">
-              Waiting for more players... ({currentPartySize}/{minParty} minimum)
+            <h3 className="font-display mb-6 text-2xl opacity-70">
+              Waiting for more players...
+              <div className="font-mono text-sm text-primary-200">
+                ({currentPartySize}/{minParty} minimum)
+              </div>
             </h3>
           ) : partyIsFull ? (
             <div className="space-y-4">
@@ -6767,6 +6762,7 @@ export default function CharacterDiceRollResultDisplay({
     <div className="relative aspect-[4/5] sm:aspect-auto font-display font-bold border border-primary-700 rounded-xl overflow-hidden">
       <div className="absolute top-0 left-0 h-2/3 sm:h-full w-full sm:w-2/3 overflow-hidden">
         <Image className="object-cover" src={getImageUrl(imageUrl)} alt={character} fill={true} />
+        <div className="absolute bottom-0 left-0 w-3/4 pl-4 py-2 z-10 text-base text-primary-100 bg-gradient-to-r from-black/90 to-transparent">{character}</div>
         <div className="absolute bottom-0 sm:bottom-auto sm:top-0 right-0 w-full sm:w-1/3 h-1/3 sm:h-full bg-gradient-to-t sm:bg-gradient-to-l from-black to-transparent"></div>
       </div>
       <div className="px-4 py-6 flex flex-col gap-2 text-center items-center justify-start w-full sm:w-1/2 absolute bottom-0 sm:relative sm:left-1/2">
@@ -6837,7 +6833,7 @@ export default function CharacterDiceRoll({
   console.log("[CharacterDiceRoll] rollRequired:", JSON.stringify(rollRequired, null, 2))
 
   return (
-    <div className={cn("relative aspect-[4/5] sm:aspect-auto font-display font-bold border border-primary-700 rounded-xl overflow-hidden", className)}>
+    <div className={cn("relative aspect-[4/5] sm:aspect-auto md:min-h-[300px] font-display font-bold border border-primary-700 rounded-xl overflow-hidden", className)}>
       <div className="absolute top-0 left-0 h-2/3 sm:h-full w-full sm:w-2/3 overflow-hidden">
         <Image className="object-cover" src={getImageUrl(character.image)} alt={character.name} fill={true} />
         <div className="absolute bottom-0 sm:bottom-auto sm:top-0 right-0 w-full sm:w-1/3 h-1/3 sm:h-full bg-gradient-to-t sm:bg-gradient-to-l from-black to-transparent"></div>
@@ -6885,7 +6881,7 @@ export default function CharacterRollDisplay({
 }) {
   return (
     <div
-      className={`my-6 flex items-center gap-3 px-4 py-3 rounded-lg font-display text-base shadow-inner border-2 w-fit mx-auto
+      className={`my-6 flex items-center md:min-h-[300px] gap-3 px-4 py-3 rounded-lg font-display text-base shadow-inner border-2 w-fit mx-auto
         ${success ? "bg-green-900/80 text-green-200 border-green-600" : "bg-red-900/80 text-red-200 border-red-600"}
       `}
     >
@@ -7014,7 +7010,7 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
       {/* Background overlay for better readability */}
       <div className="absolute inset-0 bg-black/60" />
 
-      <div className="container max-w-5xl mx-auto mt-16 p-8 relative z-10">
+      <div className="container max-w-5xl mx-auto mt-24 p-8 relative z-10">
         <div className="text-center mb-6">
           <h1 style={textShadowSpreadLight} className="text-5xl font-bold font-display mb-2 text-white">
             {adventurePlan.title}
@@ -7169,11 +7165,19 @@ export function CharacterSheetModal({ character, open, onOpenChange }: Character
                 </div>
               </div>
 
-              {character.status && (
+              {character.effects && character.effects.length > 0 ? (
                 <div>
-                  <label className="text-xs font-mono text-primary-200 uppercase tracking-wider">Status</label>
-                  <div className="">{character.status}</div>
+                  <label className="text-xs font-mono text-primary-200 uppercase tracking-wider">Effects</label>
+                  <ul>
+                    {character.effects.map((effect, idx) => (
+                      <li key={idx} className="mb-1">
+                        <span className="font-bold">{effect.name}</span>: {effect.description} <span className="text-xs text-gray-400">({effect.duration} turns left)</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
+              ) : (
+                <div className="text-sm text-gray-400">No active effects.</div>
               )}
             </div>
 
@@ -7406,11 +7410,19 @@ export function NPCCharacterSheetModal({ character, open, onOpenChange }: NPCCha
                 </div>
               </div>
 
-              {character.status && (
+              {character.effects && character.effects.length > 0 ? (
                 <div>
-                  <label className="text-xs font-mono text-white uppercase tracking-wider">Status</label>
-                  <div className="text-white">{character.status}</div>
+                  <label className="text-xs font-mono text-white uppercase tracking-wider">Effects</label>
+                  <ul>
+                    {character.effects.map((effect, idx) => (
+                      <li key={idx} className="mb-1">
+                        <span className="font-bold">{effect.name}</span>: {effect.description} <span className="text-xs text-gray-400">({effect.duration} turns left)</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
+              ) : (
+                <div className="text-sm text-gray-400">No active effects.</div>
               )}
             </div>
           </div>
@@ -7631,9 +7643,15 @@ export default function TurnCharacterList() {
                     <div className="text-base flex items-center justify-center rounded-full bg-black ring ring-primary-600 w-8 h-8 font-mono absolute top-4 -left-5">{character.initiative}</div>
                   )}
                 </div>
-                {character.status && !isDead && (
-                  <div className="text-xxxs sm:text-xxs font-mono px-2 py-0.5 bg-black rounded absolute -bottom-2 ring ring-primary-700 right-8 z-10">{character.status}</div>
-                )}
+                {character.effects && character.effects.length > 0 ? (
+                  <div className="absolute top-2 right-8 z-10 bg-primary-100 text-primary-700 px-2 py-1 rounded text-xs">
+                    {character.effects.map((effect, idx) => (
+                      <span key={idx} className="mr-2">
+                        <span className="font-bold">{effect.name}</span> ({effect.duration})
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
                 {isDead && <div className="text-xxs sm:text-xs text-red-400 font-bold font-mono px-2 py-0.5 bg-black rounded absolute -bottom-2 ring ring-red-700 right-8 z-10">DEAD</div>}
                 {!isDead && (
                   <div className="absolute top-0 left-0 w-full h-full rounded-xl overflow-hidden">
@@ -7989,12 +8007,9 @@ export default function TurnNarrative() {
       // Reset advancing state after a delay since navigation doesn't complete immediately
       setTimeout(() => setAdvancing(false), 1000)
     } else {
-      // Advance mode: actually advance the turn
-      console.log("[advanceTurn] turnId:", currentTurn?.id)
       setAdvancing(true)
       setTokenError(null) // Clear previous errors
       try {
-        console.log("[advanceTurn] calling advanceTurn with:", JSON.stringify({ currentTurn }, null, 2))
         const result = await advanceTurn({ turnId: currentTurn?.id as Id<"turns">, settingId, adventurePlanId })
         console.log("[advanceTurn] result:", JSON.stringify(result, null, 2))
 
@@ -8168,7 +8183,7 @@ export default function TurnNavigation({ currentTurnOrder, totalTurns, isLatestT
   const params = useParams()
   const { settingId, adventurePlanId, adventureId } = params
 
-  const basePath = `/${settingId}/${adventurePlanId}/${adventureId}`
+  const basePath = `/settings/${settingId}/${adventurePlanId}/${adventureId}`
 
   // currentTurnOrder is already the 1-based pagination number from URL
   const currentPaginationNumber = currentTurnOrder
@@ -8719,6 +8734,8 @@ import * as React from "react"
 import { AdventurePlan } from "@/types/adventure-plan"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { cn } from "@/lib/utils"
+import { reverseSlugify } from "@/lib/utils"
+import Link from "next/link"
 
 interface AdventurePlanEditSidebarProps {
   adventurePlan: AdventurePlan
@@ -8756,13 +8773,19 @@ const NavLink: React.FC<{ href: string; children: React.ReactNode; className?: s
 export function AdventurePlanEditSidebar({ adventurePlan }: AdventurePlanEditSidebarProps) {
   // Generate default values for all scenes to be open by default
   const defaultOpenScenes = adventurePlan.sections.flatMap((section, sIndex) => section.scenes.map((_, scIndex) => `scene-${sIndex}-${scIndex}`))
+  const settingId = adventurePlan.settingId
+  const settingName = reverseSlugify(settingId)
 
   return (
     <div id="adventure-plan-edit-sidebar" className="w-[360px] h-full overflow-y-auto pr-8">
-      <div className="text-xs p-1 opacity-70 text-primary-100 font-mono">Edit Adventure Plan</div>
-      <NavLink href="#adventure-plan-main" className="text-2xl text-amber-400 font-display block mb-2 hover:text-amber-300 transition-colors">
+      <NavLink href="#adventure-plan-main" className="text-2xl text-amber-400 font-display block hover:text-amber-300 transition-colors">
         {adventurePlan.title}
       </NavLink>
+      <div className="text-xs -mt-1 opacity-70 text-primary-100 font-display mb-4">
+        <Link className="text-blue-300" href={`/settings/${settingId}`}>
+          {settingName}
+        </Link>{" "}
+      </div>
       <nav className="space-y-1">
         {adventurePlan.sections.map((section, sIndex) => (
           <div key={`nav-section-${sIndex}`}>
@@ -8933,12 +8956,12 @@ export function AdventurePlanSections({
 
   return (
     <>
-      <h4 className="font-mono pt-12 text-indigo-400 text-center font-bold tracking-widest">Adventure Plan</h4>
+      <h4 className="font-mono pt-12 pb-1 mb-8 border-b-2 border-primary-700/70 text-primary-300 text-center tracking-widest">Adventure Plan</h4>
       {sections.map((section, sIndex) => (
         <div key={sIndex} id={`section-${sIndex}`} className="w-full flex flex-col gap-4 scroll-mt-20">
           {sections.length > 1 && (
             <>
-              <h3 className="text-xl font-bold font-display text-amber-300/80 text-center">{section.title || <span className="italic text-gray-400">Untitled Section</span>}</h3>
+              <h3 className="text-2xl font-bold font-display text-amber-300/80 text-center">{section.title || <span className="italic text-gray-400">Section {sIndex + 1}</span>}</h3>
               <div>
                 <label htmlFor={`section-title-${sIndex}`} className="block text-sm font-medium font-mono text-primary-200/90 mb-1">
                   Section Title
@@ -8972,34 +8995,33 @@ export function AdventurePlanSections({
               {section.scenes.map((scene, scIndex) => (
                 <div id={`scene-${sIndex}-${scIndex}`} className={cn(section.scenes.length > 1 && "border border-white/20 rounded-lg p-4 mt-8 flex flex-col gap-4 scroll-mt-20")} key={scIndex}>
                   <div>
-                    {section.scenes.length > 1 && (
-                      <>
-                        <h3 className="text-xl font-bold font-display text-amber-300/80 text-center pb-2">{scene.title || <span className="italic text-gray-400">Untitled Scene</span>}</h3>
-                        <label htmlFor={`scene-title-${sIndex}-${scIndex}`} className="block text-sm font-medium font-mono text-primary-200/90 mb-1">
-                          Scene Title
-                        </label>
-                        <Input
-                          id={`scene-title-${sIndex}-${scIndex}`}
-                          value={scene.title}
-                          onChange={(e) => onSceneTitleChange(sIndex, scIndex, e.target.value)}
-                          placeholder="Enter scene title"
-                          disabled={isSaving}
-                          className="bg-neutral-800/50 border-neutral-700 placeholder:text-white/50"
-                        />
-                        <label htmlFor={`scene-summary-${sIndex}-${scIndex}`} className="block text-sm font-medium font-mono text-primary-200/90 mb-1 mt-4">
-                          Scene Summary
-                        </label>
-                        <Textarea
-                          id={`scene-summary-${sIndex}-${scIndex}`}
-                          value={scene.summary}
-                          onChange={(e) => onSceneSummaryChange(sIndex, scIndex, e.target.value)}
-                          placeholder="Enter scene summary"
-                          rows={3}
-                          disabled={isSaving}
-                          className="bg-neutral-800/50 border-neutral-700 placeholder:text-white/50"
-                        />
-                      </>
-                    )}
+                    <h3 className="text-2xl font-bold font-display text-amber-300/80 text-center pb-2">{scene.title || <span className="italic text-gray-400">Scene {scIndex + 1}</span>}</h3>
+                    <label htmlFor={`scene-title-${sIndex}-${scIndex}`} className="block text-sm font-medium font-mono text-primary-200/90 mb-1">
+                      Scene Title
+                    </label>
+                    <Input
+                      id={`scene-title-${sIndex}-${scIndex}`}
+                      value={scene.title}
+                      onChange={(e) => onSceneTitleChange(sIndex, scIndex, e.target.value)}
+                      placeholder="Enter scene title"
+                      disabled={isSaving}
+                      className="bg-neutral-800/50 border-neutral-700 placeholder:text-white/50"
+                    />
+                    <label htmlFor={`scene-summary-${sIndex}-${scIndex}`} className="block text-sm font-medium font-mono text-primary-200/90 mb-1 mt-4">
+                      Scene Summary
+                    </label>
+                    <div className="group">
+                      <Textarea
+                        id={`scene-summary-${sIndex}-${scIndex}`}
+                        value={scene.summary}
+                        onChange={(e) => onSceneSummaryChange(sIndex, scIndex, e.target.value)}
+                        placeholder="Enter scene summary"
+                        rows={3}
+                        disabled={isSaving}
+                        className="bg-neutral-800/50 border-neutral-700 placeholder:text-white/50 max-h-[180px] overflow-y-auto group-focus-within:max-h-none"
+                      />
+                    </div>
+                    <p className="text-sm text-white/70 italic pt-2">The scene summary should describe the overall course of the scene for the GameMaster.</p>
 
                     <div>
                       {scene.encounters.map((encounter, eIndex) => (
@@ -9508,7 +9530,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { X, Plus, Edit, ChevronsUp } from "lucide-react"
+import { X, Edit, ChevronsUp, ChevronsRight } from "lucide-react"
 import { IMAGE_HOST } from "@/lib/config"
 
 interface EncounterEditFormProps {
@@ -9598,26 +9620,6 @@ export function EncounterEditForm({
   const availableEncounters = getAllEncounterIds()
   const transitions = encounter.transitions || []
 
-  const handleAddTransition = () => {
-    const newTransitions = [...transitions, { condition: "", encounter: "" }]
-    onTransitionsChange(sectionIndex, sceneIndex, encounterIndex, newTransitions)
-  }
-
-  const handleTransitionChange = (transitionIndex: number, field: "condition" | "encounter", value: string) => {
-    const newTransitions = transitions.map((transition, idx) => {
-      if (idx === transitionIndex) {
-        return { ...transition, [field]: value }
-      }
-      return transition
-    })
-    onTransitionsChange(sectionIndex, sceneIndex, encounterIndex, newTransitions)
-  }
-
-  const handleRemoveTransition = (transitionIndex: number) => {
-    const newTransitions = transitions.filter((_, idx) => idx !== transitionIndex)
-    onTransitionsChange(sectionIndex, sceneIndex, encounterIndex, newTransitions)
-  }
-
   const handleAddNpc = (npcId: string) => {
     if (!npcId) return
     const newNpcs = [...(encounter.npc || []), { id: npcId, behavior: "", initialInitiative: 0 }]
@@ -9665,11 +9667,35 @@ export function EncounterEditForm({
 
   const imageUrl = getDisplayUrl(encounter.image || "")
 
+  // Helper: Get available encounters for transitions (not already selected)
+  const getAvailableEncountersForTransition = () => {
+    const selectedEncounterIds = new Set(transitions.map((t) => t.encounter))
+    return availableEncounters.filter((enc) => !selectedEncounterIds.has(enc.id))
+  }
+  const availableEncountersForTransition = getAvailableEncountersForTransition()
+  const [addTransitionValue, setAddTransitionValue] = React.useState("")
+
+  // Restore transition handlers (needed for transitions section)
+  const handleTransitionChange = (transitionIndex: number, field: "condition" | "encounter", value: string) => {
+    const newTransitions = transitions.map((transition, idx) => {
+      if (idx === transitionIndex) {
+        return { ...transition, [field]: value }
+      }
+      return transition
+    })
+    onTransitionsChange(sectionIndex, sceneIndex, encounterIndex, newTransitions)
+  }
+
+  const handleRemoveTransition = (transitionIndex: number) => {
+    const newTransitions = transitions.filter((_, idx) => idx !== transitionIndex)
+    onTransitionsChange(sectionIndex, sceneIndex, encounterIndex, newTransitions)
+  }
+
   return (
     <div id={id} className={`border border-white/20 rounded-lg mt-8 flex flex-col gap-4 relative ${!isEditing ? "py-0" : "p-4"}`}>
       {!isEditing ? (
         // Collapsed Mode
-        <div className="p-4 flex items-center gap-4">
+        <div className="p-4 flex items-center gap-4 relative">
           <div onClick={toggleEditMode} className="h-16 aspect-video rounded-lg overflow-hidden bg-white/10 flex-shrink-0 cursor-pointer relative">
             {imageUrl ? (
               <Image fill={true} src={imageUrl} alt={encounter.title || "Encounter"} className="w-full h-full object-cover" />
@@ -9678,8 +9704,30 @@ export function EncounterEditForm({
             )}
           </div>
           <div onClick={toggleEditMode} className="flex-1 min-w-0 cursor-pointer">
-            <div className="text-lg font-display text-amber-300/90 truncate">{encounter.title || "Untitled Encounter"}</div>
-            <div className="text-sm text-white/70 space-y-1">{encounter.intro && <div className="text-white/60 text-xs truncate">{encounter.intro.substring(0, 100)}...</div>}</div>
+            <div className="text-lg font-display font-bold text-amber-300 truncate">{encounter.title || "Untitled Encounter"}</div>
+            {!encounter.transitions ||
+              (encounter.transitions.length === 0 && (
+                <div className="absolute -bottom-3 left-6 bg-black border border-red-700/80 rounded px-2 py-0.5 text-xxs font-mono text-white/90">Final Encounter</div>
+              ))}
+            <div className="text-sm text-white/90 space-y-1">{encounter.intro && <div className="text-white/60 text-xs truncate">{encounter.intro.substring(0, 100)}...</div>}</div>
+            {/* Transition Badges */}
+            {encounter.transitions && encounter.transitions.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {encounter.transitions.map((transition, idx) => {
+                  const target = availableEncounters.find((enc) => enc.id === transition.encounter)
+                  if (!target) return null
+                  return (
+                    <span
+                      key={transition.encounter + idx}
+                      className="inline-flex items-center gap-1 bg-indigo-800/80 text-indigo-100 text-xxs font-mono rounded-full px-2 py-0.5 max-w-xs truncate"
+                      title={target.title}
+                    >
+                      <ChevronsRight size={10} /> {target.title}
+                    </span>
+                  )
+                })}
+              </div>
+            )}
           </div>
           <Button onClick={toggleEditMode} disabled={isSaving} size="sm" variant="outline" className="flex items-center gap-2 text-sm">
             <Edit size={14} />
@@ -9713,9 +9761,7 @@ export function EncounterEditForm({
             <ChevronsUp size={14} /> close
           </button>
           <div className="absolute -top-4 left-2 text-xxs font-mono text-white/60 px-1.5 pt-8 pb-2 rounded">{encounter.id || ""}</div>
-          <h4 className="text-lg font-bold font-display text-amber-300/80 text-center pt-4">
-            <span className="relative -top-4">{encounter.title}</span>
-          </h4>
+          <h4 className="text-5xl font-display text-amber-400 text-center pt-4">{encounter.title}</h4>
 
           <div>
             <Label htmlFor={`${baseId}-image-upload`} className="block text-sm font-medium font-mono text-primary-200/90 mb-1">
@@ -9775,81 +9821,10 @@ export function EncounterEditForm({
             />
           </div>
 
-          {/* Transitions Section */}
-          <div className="border-t border-white/10 pt-4">
-            <div className="flex items-center justify-between mb-3">
-              <Label className="text-sm font-medium font-mono text-primary-200/90">Transitions</Label>
-              <Button onClick={handleAddTransition} disabled={isSaving} size="sm" variant="outline" className="h-8 px-2 text-xs">
-                <Plus size={12} className="mr-1" />
-                Add Transition
-              </Button>
-            </div>
-
-            {transitions.length === 0 ? (
-              <p className="text-xs text-gray-400 italic mb-2">No transitions defined. This encounter will end the adventure.</p>
-            ) : (
-              <div className="space-y-3">
-                {transitions.map((transition, tIndex) => (
-                  <div key={tIndex} className="border border-white/10 rounded p-3 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono text-white/60">Transition {tIndex + 1}</span>
-                      <Button
-                        onClick={() => handleRemoveTransition(tIndex)}
-                        disabled={isSaving}
-                        size="icon"
-                        variant="ghost"
-                        className="h-5 w-5 p-0 text-red-400 hover:text-red-300 hover:bg-red-400/10"
-                      >
-                        <X size={10} />
-                      </Button>
-                    </div>
-
-                    <div>
-                      <Label htmlFor={`${baseId}-transition-${tIndex}-condition`} className="text-xs font-mono text-primary-200/90 mb-1 block">
-                        Condition
-                      </Label>
-                      <Textarea
-                        id={`${baseId}-transition-${tIndex}-condition`}
-                        value={transition.condition}
-                        onChange={(e) => handleTransitionChange(tIndex, "condition", e.target.value)}
-                        placeholder="e.g., 'Player successfully unlocks the door' or 'Combat ends with all enemies defeated'"
-                        rows={2}
-                        disabled={isSaving}
-                        className="bg-white/5 placeholder:text-white/40 text-xs"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor={`${baseId}-transition-${tIndex}-encounter`} className="text-xs font-mono text-primary-200/90 mb-1 block">
-                        Target Encounter
-                      </Label>
-                      <div className="max-w-[300px]">
-                        <select
-                          id={`${baseId}-transition-${tIndex}-encounter`}
-                          value={transition.encounter}
-                          onChange={(e) => handleTransitionChange(tIndex, "encounter", e.target.value)}
-                          disabled={isSaving}
-                          className="w-full bg-white/5 border border-white/20 rounded p-2 text-xs text-white placeholder:text-white/40"
-                        >
-                          <option value="">Select target encounter...</option>
-                          {availableEncounters.map((enc) => (
-                            <option key={enc.id} value={enc.id} className="bg-gray-800">
-                              {enc.title}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
           {/* NPCs Section */}
           <div className="border-t border-white/10 pt-4">
             <div className="mb-3">
-              <Label className="text-sm font-medium font-mono text-primary-200/90">NPCs in Encounter</Label>
+              <Label className="text-lg font-display text-amber-400/90 pl-2">NPCs</Label>
             </div>
 
             {!encounter.npc || encounter.npc.length === 0 ? (
@@ -9930,7 +9905,99 @@ export function EncounterEditForm({
             )}
           </div>
 
-          <div className="flex items-center space-x-2 pt-2">
+          {/* Transitions Section */}
+          <div className="border-t border-white/10 pt-4">
+            <div className="flex items-center justify-between mb-3">
+              <Label className="text-lg font-display text-amber-400/90 pl-2">Transitions</Label>
+            </div>
+
+            {transitions.length === 0 ? (
+              <p className="text-xs text-gray-400 italic mb-2">No transitions defined. This encounter will end the adventure.</p>
+            ) : (
+              <div className="space-y-2">
+                {transitions.map((transition, tIndex) => (
+                  <div key={tIndex} className="border border-white/10 rounded pb-2 space-y-2">
+                    <div className="flex items-center justify-end -mb-4">
+                      <Button
+                        onClick={() => handleRemoveTransition(tIndex)}
+                        disabled={isSaving}
+                        size="icon"
+                        variant="ghost"
+                        className="scale-150 h-5 w-5 p-0 text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                      >
+                        <X size={10} />
+                      </Button>
+                    </div>
+
+                    <div>
+                      <Label htmlFor={`${baseId}-transition-${tIndex}-encounter`} className="text-xs font-mono text-primary-200/90 mb-1 block">
+                        Target Encounter
+                      </Label>
+                      <div className="max-w-[300px]">
+                        <select
+                          id={`${baseId}-transition-${tIndex}-encounter`}
+                          value={transition.encounter}
+                          onChange={(e) => handleTransitionChange(tIndex, "encounter", e.target.value)}
+                          disabled={isSaving}
+                          className="w-full bg-white/5 border border-white/20 rounded p-2 text-base text-white placeholder:text-white/40"
+                        >
+                          {!transition.encounter && <option value="">Select target encounter...</option>}
+                          {availableEncounters.map((enc) => (
+                            <option key={enc.id} value={enc.id} className="bg-gray-800">
+                              {enc.title}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor={`${baseId}-transition-${tIndex}-condition`} className="text-xs font-mono text-primary-200/90 mb-1 block">
+                        Condition
+                      </Label>
+                      <Textarea
+                        id={`${baseId}-transition-${tIndex}-condition`}
+                        value={transition.condition}
+                        onChange={(e) => handleTransitionChange(tIndex, "condition", e.target.value)}
+                        placeholder="e.g., 'Player successfully unlocks the door' or 'Combat ends with all enemies defeated'"
+                        rows={2}
+                        disabled={isSaving}
+                        className="bg-white/5 placeholder:text-white/40 text-xs"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add Transition Dropdown */}
+            {availableEncountersForTransition.length > 0 && (
+              <div className="max-w-[300px] mt-2">
+                <select
+                  value={addTransitionValue}
+                  onChange={(e) => {
+                    const selected = e.target.value
+                    if (selected) {
+                      const newTransitions = [...transitions, { condition: "", encounter: selected }]
+                      onTransitionsChange(sectionIndex, sceneIndex, encounterIndex, newTransitions)
+                      setAddTransitionValue("")
+                    }
+                  }}
+                  disabled={isSaving}
+                  className="w-full bg-white/5 border border-white/20 rounded p-2 text-xs text-white placeholder:text-white/40"
+                >
+                  <option value="">+ Add Transition</option>
+                  {availableEncountersForTransition.map((enc) => (
+                    <option key={enc.id} value={enc.id} className="bg-gray-800">
+                      {enc.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center space-x-2">
             <Checkbox
               id={`${baseId}-skipNpcTurns`}
               checked={encounter.skipInitialNpcTurns || false}
@@ -9968,7 +10035,7 @@ export function EncounterEditForm({
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => onDelete(sectionIndex, sceneIndex, encounterIndex)} className="bg-red-600 hover:bg-red-700 focus:ring-red-600">
+                  <AlertDialogAction onClick={() => onDelete(sectionIndex, sceneIndex, encounterIndex)} className="bg-red-800 font-display font-bold hover:bg-red-700 focus:ring-red-800">
                     Delete Encounter
                   </AlertDialogAction>
                 </AlertDialogFooter>
@@ -13393,7 +13460,7 @@ const AlertDialogContent = React.forwardRef<React.ElementRef<typeof AlertDialogP
       <AlertDialogPrimitive.Content
         ref={ref}
         className={cn(
-          "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
+          "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border border-primary-500 ring-[6px] ring-black/70 bg-black p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
           className
         )}
         {...props}
@@ -13412,12 +13479,12 @@ const AlertDialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDiv
 AlertDialogFooter.displayName = "AlertDialogFooter"
 
 const AlertDialogTitle = React.forwardRef<React.ElementRef<typeof AlertDialogPrimitive.Title>, React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Title>>(({ className, ...props }, ref) => (
-  <AlertDialogPrimitive.Title ref={ref} className={cn("text-lg font-semibold", className)} {...props} />
+  <AlertDialogPrimitive.Title ref={ref} className={cn("text-lg font-display text-white", className)} {...props} />
 ))
 AlertDialogTitle.displayName = AlertDialogPrimitive.Title.displayName
 
 const AlertDialogDescription = React.forwardRef<React.ElementRef<typeof AlertDialogPrimitive.Description>, React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Description>>(
-  ({ className, ...props }, ref) => <AlertDialogPrimitive.Description ref={ref} className={cn("text-sm text-muted-foreground", className)} {...props} />
+  ({ className, ...props }, ref) => <AlertDialogPrimitive.Description ref={ref} className={cn("text-sm text-gray-300", className)} {...props} />
 )
 AlertDialogDescription.displayName = AlertDialogPrimitive.Description.displayName
 
@@ -13427,7 +13494,7 @@ const AlertDialogAction = React.forwardRef<React.ElementRef<typeof AlertDialogPr
 AlertDialogAction.displayName = AlertDialogPrimitive.Action.displayName
 
 const AlertDialogCancel = React.forwardRef<React.ElementRef<typeof AlertDialogPrimitive.Cancel>, React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Cancel>>(({ className, ...props }, ref) => (
-  <AlertDialogPrimitive.Cancel ref={ref} className={cn(buttonVariants({ variant: "outline" }), "mt-2 sm:mt-0", className)} {...props} />
+  <AlertDialogPrimitive.Cancel ref={ref} className={cn(buttonVariants({ variant: "ghost" }), "mt-2 hover:bg-neutral-800/50 hover:text-white sm:mt-0", className)} {...props} />
 ))
 AlertDialogCancel.displayName = AlertDialogPrimitive.Cancel.displayName
 
@@ -17657,8 +17724,8 @@ export const deleteVisit = mutation({
   "title": "Covert Cargo",
   "author": "D20Adventures",
   "version": "1716220800",
-  "teaser": "Docked on a discrete pier on a quiet fork of the Mordava River, a river boat bearing a shipment bound for Kordavos sets a clandestine plot in motion and draws the attention of an opportunistic group of rogues.",
-  "overview": "Docked on a discrete pier on a quiet fork of the Mordava River, a river boat bearing a shipment bound for Kordavos sets a clandestine plot in motion and draws the attention of an opportunistic group of rogues.",
+  "teaser": "Docked on a discrete pier on a quiet fork of the Mordava River just before dawn, a river boat bearing a secret shipment bound for Kordavos sets a clandestine plot in motion.",
+  "overview": "Docked on a discrete pier on a quiet fork of the Mordava River, a river boat bearing a secret shipment bound for Kordavos sets a clandestine plot in motion.",
   "party": [
     2,
     2
@@ -17670,7 +17737,7 @@ export const deleteVisit = mutation({
     "forest",
     "mystery"
   ],
-  "image": "images/settings/realm-of-myr/covert-cargo/0897705a-12e6-42d8-9d96-d38faa1063ca.png?t=1749244724241",
+  "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/0897705a-12e6-42d8-9d96-d38faa1063ca.png?t=1749244724241",
   "sections": [
     {
       "title": "Section One",
@@ -17678,22 +17745,30 @@ export const deleteVisit = mutation({
       "scenes": [
         {
           "title": "Quiet Pier at Dawn",
-          "summary": "",
+          "summary": "Reinhard and Silas are agents of the Blackthorn that have been sent to escort a new agent, Lyra Silvanus (a PC) to verify an exchange with their elven contact from a reclusive settlement in the Valkarr forest. \n\nSilas only knows that it the shipment is a crate containing some sort of enchanted relic of Old Valkara but that is all he knows. He has been instructed by his handler (a half-elf named Eamon Drakovan) to keep the crate sealed. Varius is simply his muscle. \n\nIt is their first such exchange and Silas knows establishing a relationship with the mysterious Aelar Moonglimmer is very important, so he and Reinhard will not ever engage in combat with the elves, even if things go wrong.\n\nTo avoid any possible scandal should this be some sort of trick by their rival clans, they hired an outsider (Lyra) to certify the authenticity of the shipment. After Lyra verbally gives confirmation, they are to take possession of the boat, while the elves return to the Valkarr forest on foot.\n\nAelar has no wish to spend any longer here than he needs to. He wishes for the the humans to accept the relic then he will depart with his companions.\n\nOnce the elves are gone, Silas will have Reinhard eliminate Lyra who knows too much. However, her bookish nature may have caused them to underestimate her skills. There is also the matter of Poppen Quickfoot, a halfling troublemaker who has stumbled onto their little secret interchange and might ruin their plans.",
           "encounters": [
             {
               "id": "the-shipment",
               "title": "The Shipment",
-              "intro": "Docked on a discrete pier on a quiet fork of the Mordava River, a river boat bearing a shipment bound for Kordavos rests silently on the dark, placid water.\n\nThe air is cool and damp, thick with the scent of wet earth and the chirping of crickets. The only other sounds are the gentle lapping of water against the pier's aging pylons and the rustle of wind through the skeletal branches of the willow trees.\n\nLyra stands inside the boat, the mysterious cargo crate before her. The instructions from her contact, Master Valerius, were explicit. Her sole purpose is to verify the authenticity of a Valkaaran artifact using her arcane talents. She is to confirm its magical properties, give a simple nod, and her part will be done. She will be well compensated for her expertise and, more importantly, her discretion.\n\nFor her part, it was hard to resist getting the chance to interact with reclusive Faelendarian elves and also get a chance to be near a Valkaran relic. She had studied both at length, but there was a big difference between reading old dusty tomes and experiencing the real thing.\n\nShe did not know much of her two escorts. There was Varius Reinhard, a large gruff soldier type who was in charge of security for this little mission. The other was a man who called himself Silas. Where Varius was a stone wall of presence, Silas was a whisper. He was slender, moving with a liquid grace that spoke of a life spent in shadows. \n\nMeanwhile, from his cleverly concealed vantage within a tangle of overgrown reeds, Poppen Quickfoot watched the scene unfold, a small smile playing on his lips. The cool water of the Mordava lapped just inches from his boots, but he remained utterly still, his senses stretched. Weeks of patient stakeouts had led him to this exact predawn hour, this quiet fork of the river, following the threads of rumor about a clandestine trade. His instinct, honed by a lifetime of seeking out hidden value, told him this was it—the score that would truly mark his arrival in Kordavos.\n\nHis keen hazel eyes, accustomed to discerning worth from a glint in the dark, tracked the three figures on the pier. The hulking soldier, the robed woman, and the whispering shadow-man. A professional crew, indeed; no sloppy thugs. This wasn't just any cargo; this was an item of importance, something worth securing. Poppen’s mind raced, not just with the thought of fencing such a treasure, but with the delicious social connections such a coup would bring.\n\nA soft creak of wood from the ship cuts through the night's quiet hum as the cabin door opened. A figure emerges with a silent, deliberate grace that was distinctly elven. He is tall and lithe, clad in dark, practical leather armor. Two other elves, equally silent and alert, could be seen on the boat's deck, one near the bow and another by the stern, both armed with bows.\n\nThe lead elf steps forward to the edge of his boat, his gaze settling on Lyra's escorts. His voice is low and clear, carrying easily across the water without being loud.\n\n\"You have the arrangement?\" asked the elf.\n\n“I have it here Aelar,” Silas replies, gliding from the shadows at the base of the pier. He removes a heavy scrollcase from its oilskin wrapping.\n\n\"Very well,\" Aelar says, turning to give an order in Elvish to one of his crew. \"The shipment is ready for your specialist's inspection.\"\n\n“Ok, let’s get on with it then,” says Varius, nodding at Lyra, eager to get her to inspect the shipment and have the matter concluded. The crate remained closed. No one was allowed to see what was inside.\n\nLyra had been contracted for one simple task, use her magecraft to determine that the contents of the shipment were indeed arcane in nature.",
-              "instructions": "If Lyra asks questions or stalls in any way, Varius and Silas will be impatient and urge her to do what she was paid for. If Lyra tries to engage Aelar in conversation he will be evasive. If she continues to delay, then Silas will nod at Varius who will draw his sword and threaten her.\n\nIf Lyra successfully casts a spell on the crate to detect magic, she will be detect an ancient potent enchantment on an object within the crate. On a highly successful roll of 18 or higher, she will determine its purpose to be related to concepts of binding promises, loyalty, and solemn vows. On a natural twenty, she will be able to name the item as the Verodynian Oath Stone of the First Clans.",
-              "image": "images/settings/realm-of-myr/covert-cargo/encounters/the-shipment/dccea2c5-b22d-41e0-9467-95d8ea2301d5.png?t=1749244761507",
+              "intro": "Docked on a discrete pier on a quiet fork of the Mordava River, a river boat bearing a shipment bound for Kordavos rests silently on the dark, placid water.\n\nThe air is cool and damp, thick with the scent of wet earth and the chirping of crickets. The only other sounds are the gentle lapping of water against the pier's aging pylons and the rustle of wind through the skeletal branches of the willow trees.\n\nLyra stands inside the boat, the mysterious cargo crate before her. Silas’s instructions were explicit. Her sole purpose is to verify the authenticity of a Valkaaran artifact using her arcane talents. She is to confirm its magical properties, give a simple nod, and her part will be done. She will be well compensated for her expertise and, more importantly, her discretion.\n\nFor her part, it was hard to resist getting the chance to interact with reclusive Faelendarian elves and also get a chance to be near a Valkaran relic. She had studied both at length, but there was a big difference between reading old dusty tomes and experiencing the real thing.\n\nShe did not know much of her two escorts. There was Reinhard, a large gruff soldier type who was in charge of security for this little mission. Silas had recruited her, noticing her frequent visits to the Old Valkaran Archives section at the Grand Library. Where Varius was a stone wall of presence, Silas was a whisper. He was slender, moving with a liquid grace that spoke of a life spent in shadows. \n\nMeanwhile, from his cleverly concealed vantage within a tangle of overgrown reeds, Poppen Quickfoot watched the scene unfold, a small smile playing on his lips. The cool water of the Mordava lapped just inches from his boots, but he remained utterly still, his senses stretched. Weeks of patient stakeouts had led him to this exact predawn hour, this quiet fork of the river, following the threads of rumor about a clandestine trade. His instinct, honed by a lifetime of seeking out hidden value, told him this was it—the score that would truly mark his arrival in Kordavos.\n\nHis keen hazel eyes, accustomed to discerning worth from a glint in the dark, tracked the three figures on the pier. The hulking soldier, the robed woman, and the whispering shadow-man. A professional crew, indeed; no sloppy thugs. This wasn't just any cargo; this was an item of importance, something worth securing. Poppen’s mind raced, not just with the thought of fencing such a treasure, but with the delicious social connections such a coup would bring.\n\nA soft creak of wood from the ship cuts through the night's quiet hum as the cabin door opened. A figure emerges with a silent, deliberate grace that was distinctly elven. He is tall and lithe, clad in dark, practical leather armor. Two other elves, equally silent and alert, could be seen on the boat's deck, one near the bow and another by the stern, both armed with bows.\n\nThe lead elf steps forward to the edge of his boat, his gaze settling on Lyra's escorts. His voice is low and clear, carrying easily across the water without being loud.\n\n\"You have the arrangement?\" asked the elf.\n\n“I have it here Aelar,” Silas replies, gliding from the shadows at the base of the pier. He removes a heavy scrollcase from its oilskin wrapping.\n\n\"Very well,\" Aelar says, turning to give an order in Elvish to one of his crew. \"The shipment is ready for your specialist's inspection.\"\n\n“Ok, let’s get on with it then,” says Reinhard, nodding at Lyra, eager to get her to inspect the shipment and have the matter concluded. The crate remained closed. No one was allowed to see what was inside.\n\nLyra had been contracted for one simple task, use her magecraft to determine that the contents of the shipment were indeed arcane in nature.",
+              "instructions": "If Lyra asks questions or stalls in any way, Reinhard and Silas will be impatient and urge her to do what she was paid for. If Lyra tries to engage Aelar in conversation he will be evasive. If she continues to delay, then Silas will nod at Varius who will draw his sword and threaten her.\n\nIf Lyra successfully casts a spell on the crate to detect magic, she will be detect an ancient potent enchantment on an object within the crate. On a highly successful roll of 18 or higher, she will determine its purpose to be related to concepts of binding promises, loyalty, and solemn vows. On a 20, she will be able to name the item as the Verodynian Oath Stone of the First Clans.",
+              "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/the-shipment/dccea2c5-b22d-41e0-9467-95d8ea2301d5.png?t=1749244761507",
               "transitions": [
                 {
-                  "condition": "If Lyra confirms the magic properties of the shipment",
+                  "condition": "If Lyra verbally confirms the magic properties of the shipment",
                   "encounter": "the-transaction"
                 },
                 {
                   "condition": "If Lyra says the shipment has no magical properties",
                   "encounter": "the-fake"
+                },
+                {
+                  "condition": "If Poppen causes a distraction or anyone notices his presence",
+                  "encounter": "the-disturbance"
+                },
+                {
+                  "condition": "If ",
+                  "encounter": ""
                 }
               ],
               "skipInitialNpcTurns": true,
@@ -17720,33 +17795,53 @@ export const deleteVisit = mutation({
               "title": "The Transaction",
               "intro": "Silas glided from the shadows, extending the oilskin-wrapped scrollcase to the elf, \"As agreed.\" \n\nAelar Moonglimmer took the offering, his  grey eyes, sharp and observant, held the rogue’s gaze. \"The Circle is appreciative,\" Aelar replied, his own voice just as quiet and controlled. \"They trust this partnership will prove fruitful for all involved.\"\n\nWith the exchange made, Aelar gave a final, sharp nod, then he and his kin made a quick and graceful exit, stepping off the boat and onto the pier. They moved like shadows across the rickety wood, disappearing into the shadows of the treeline without a single backward glance.",
               "instructions": "",
-              "image": "images/settings/realm-of-myr/covert-cargo/encounters/the-transaction/1c232871-8395-4892-bcf9-543a03bede80.png?t=1749243102836",
+              "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/the-transaction/1c232871-8395-4892-bcf9-543a03bede80.png?t=1749243102836",
               "transitions": [
                 {
                   "condition": "After this encounter, always transition immediately to the Battle on the Boat encounter.",
                   "encounter": "battle-on-the-boat"
                 }
               ],
-              "npc": [],
+              "npc": [
+                {
+                  "id": "npcs-1749163978757",
+                  "behavior": "Varius silently awaits Silas’s instructions but will not let Lyra leave (if she tries to)",
+                  "initialInitiative": 0
+                },
+                {
+                  "id": "npcs-1749181492795",
+                  "behavior": "Silas is pleased, the mission is almost over.",
+                  "initialInitiative": 0
+                }
+              ],
               "skipInitialNpcTurns": true,
               "resetHealth": false
             },
             {
               "id": "the-fake",
               "title": "The Fake",
-              "intro": "A silence, sharp and cold as a shard of glass, fell over the boat’s cabin in the wake of the arcanist’s pronouncement.\n\nIt was Silas who moved first. In a single, fluid motion, he was no longer lounging by the door but standing before it, blocking the only exit. A dagger appeared in his hand, its point aimed steadily at Aelar. \"There seems to have been a misunderstanding,\" Silas said, his voice dropping to a silken threat. \"My employers do not appreciate being sold worthless trinkets.\"\n\nVarius Reinhard let out a low, guttural growl, his hand dropping to the hilt of the massive blade at his side. \"You have nerve, elf,\" he snarled, his cold, calculating eyes promising violence as he took a heavy step forward.\n\nAelar Moonglimmer recoiled, but it was with the shock of indignation, not fear. His professional calm fractured into unconcealed fury. \"Worthless?\" he spat, his gaze flicking with contempt toward the unseen specialist. \"Your arcanist is either a fool, or you mean to double-cross us!”",
-              "instructions": "If there ",
-              "image": "images/settings/realm-of-myr/covert-cargo/encounters/the-fake/7b96ca3c-db72-4559-8f8d-59dacbba3185.png?t=1749300003015",
-              "transitions": [],
+              "intro": "A silence, sharp and cold as a shard of glass, fell over the boat’s cabin in the wake of the arcanist’s pronouncement.\n\nIt was Silas who moved first. In a single, fluid motion, he was no longer lounging by the door but standing before it, blocking the only exit. A dagger appeared in his hand, its point aimed steadily at Aelar. \"There seems to have been a misunderstanding,\" Silas said, his voice dropping to a silken threat. \"My employers do not appreciate being sold worthless trinkets.\"\n\nReinhard let out a low, guttural growl, his hand dropping to the hilt of the massive blade at his side. \"You have nerve, elf,\" he snarled, his cold, calculating eyes promising violence as he took a heavy step forward.\n\nAelar Moonglimmer recoiled, but it was with the shock of indignation, not fear. His professional calm fractured into unconcealed fury. \"Worthless?\" he spat, his gaze flicking with contempt toward the unseen specialist. \"Your arcanist is either a fool, or you mean to double-cross us!”",
+              "instructions": "Unless charmed, Silas will try to detect if Lyra is lying. Reinhard will do whatever Silas commands.",
+              "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/the-fake/7b96ca3c-db72-4559-8f8d-59dacbba3185.png?t=1749300003015",
+              "transitions": [
+                {
+                  "condition": "If Lyra or Poppen attack",
+                  "encounter": "battle-on-the-boat"
+                },
+                {
+                  "condition": "Ultimately Silas wants to make this deal even if he isn't sure about the relic's authenticity.",
+                  "encounter": "the-transaction"
+                }
+              ],
               "npc": [
                 {
                   "id": "npcs-1749163978757",
-                  "behavior": "Varius will follow Silas’s lead and orders. He is ready to use force if necessary.",
+                  "behavior": "Reinhard will follow Silas’s lead and orders.",
                   "initialInitiative": 0
                 },
                 {
                   "id": "npcs-1749181492795",
-                  "behavior": "Silas will want to figure out who is telling lies - Lyra or Aelar. He will not attack the elves under any circumstances.",
+                  "behavior": "Silas will want to figure out who is telling lies - Lyra or Aelar. He will not attack the elves under any circumstances. If he is out of options, he will simply accept the shipment and complete the Transaction.",
                   "initialInitiative": 0
                 },
                 {
@@ -17761,10 +17856,23 @@ export const deleteVisit = mutation({
             {
               "id": "battle-on-the-boat",
               "title": "Battle on the Boat",
-              "intro": "Varius Reinhard turned, a semblance of a smile touching his lips but not his cold eyes. \"Good work, mage,\" he said, his voice suddenly relaxed. \"Your service is most appreciated, but we have our orders.\" He took a slow step, his bulk seeming to shrink the confines of the cabin. \n\nThe cabin door clicks shut, the sound unnaturally loud in the sudden stillness. Silas stands before it, blocking the only exit, the faint whisper of steel on leather the only warning as two wicked-looking daggers appear in his hands.\n\n“No loose ends,” he states, flatly.",
+              "intro": "Reinhard turned, a semblance of a smile touching his lips but not his cold eyes. \"Good work, mage,\" he said, his voice suddenly relaxed. \"Your service is most appreciated, but we have our orders.\" He took a slow step, his bulk seeming to shrink the confines of the cabin. \n\nThe cabin door clicks shut, the sound unnaturally loud in the sudden stillness. Silas stands before it, blocking the only exit, the faint whisper of steel on leather the only warning as two wicked-looking daggers appear in his hands.\n\n“No loose ends,” he states, flatly.",
               "instructions": "",
-              "image": "images/settings/realm-of-myr/covert-cargo/encounters/battle-on-the-boat/088f0e14-cd0f-4312-821b-fac650a518f6.png?t=1749324854329",
-              "transitions": [],
+              "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/battle-on-the-boat/088f0e14-cd0f-4312-821b-fac650a518f6.png?t=1749324854329",
+              "transitions": [
+                {
+                  "condition": "If Poppen tries to cause a distraction outside the boat or gets spotted",
+                  "encounter": "the-fake"
+                },
+                {
+                  "condition": "If Lyra successfully flees and evades capture",
+                  "encounter": "the-escape"
+                },
+                {
+                  "condition": "If Lyra and/or Poppen overcome Silas and Reinhard",
+                  "encounter": "the-crate"
+                }
+              ],
               "npc": [
                 {
                   "id": "npcs-1749163978757",
@@ -17779,6 +17887,118 @@ export const deleteVisit = mutation({
               ],
               "skipInitialNpcTurns": false,
               "resetHealth": false
+            },
+            {
+              "id": "the-disturbance",
+              "title": "The Disturbance",
+              "intro": "Suddenly, the clandestine meeting is thrown off course by a sudden disturbance.",
+              "instructions": "Aelar will order his two elves to investigate. Everyone else will stay with the shipment.",
+              "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/the-disturbance/e304a481-79a3-4c8d-a8da-ba9044991495.png?t=1749676178186",
+              "transitions": [
+                {
+                  "condition": "If Poppen successfully hides, then the transaction will proceed as Silas will be eager to have the matter concluded, even if he has to skip Lyra's verification.",
+                  "encounter": "the-transaction"
+                },
+                {
+                  "condition": "If the characters flee",
+                  "encounter": "the-escape"
+                },
+                {
+                  "condition": "If it turns into a battle",
+                  "encounter": "battle-on-the-boat"
+                }
+              ],
+              "npc": [
+                {
+                  "id": "npcs-1749243735467",
+                  "behavior": "Will back up the Fighter, her bow drawn.",
+                  "initialInitiative": 0
+                },
+                {
+                  "id": "npcs-1749243869357",
+                  "behavior": "Will take the lead in investigating the cause of the disturbance. If he sees Poppen, he will aggressively tell him to go away.",
+                  "initialInitiative": 0
+                },
+                {
+                  "id": "npcs-1749163978757",
+                  "behavior": "Varius will keep his eye on the shipment and Lyra.",
+                  "initialInitiative": 0
+                },
+                {
+                  "id": "npcs-1749181492795",
+                  "behavior": "Silas will look outside for any threats but will not engage.",
+                  "initialInitiative": 0
+                },
+                {
+                  "id": "npcs-1749184389465",
+                  "behavior": "",
+                  "initialInitiative": 0
+                }
+              ],
+              "skipInitialNpcTurns": false,
+              "resetHealth": false
+            },
+            {
+              "id": "the-escape",
+              "title": "The Escape",
+              "intro": "",
+              "instructions": "In the beginning of this turn describe the circumstances of the escape, what the PCs and NPCs are doing. This encounter happens if the PCs have successfully fled the scene of the river boat.",
+              "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/the-escape/26311198-03c5-4f40-9a79-e75e9c48c524.png?t=1749675141542",
+              "transitions": [
+                {
+                  "condition": "If the players mention returning, the city or Kordovas",
+                  "encounter": "return-to-the-city"
+                },
+                {
+                  "condition": "If the players want to go into hidin",
+                  "encounter": "the-end"
+                }
+              ],
+              "npc": [],
+              "skipInitialNpcTurns": false,
+              "resetHealth": false
+            },
+            {
+              "id": "the-crate",
+              "title": "The Crate",
+              "intro": "The mysterious crate sits before you.",
+              "instructions": "The crate is sealed tight. They can break it open after concerted effort with equipment lying around the ship. Inside is the large heavy sitting stone. It cannot easily be moved as it weighs about 500 pounds. Though it is a powerful artifact for binding oaths, it is of no immediate use to Lyra or Poppen. Continue with this encounter until they have resolved what they wish to do.\n\nSuggest they return to the city, which is about 3 miles away.",
+              "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/the-crate/a3a863a9-dca9-48da-b3fe-e8c4ad90af3a.png?t=1749674703995",
+              "transitions": [
+                {
+                  "condition": "If they decide to go back, return, city or Kordavos.",
+                  "encounter": "return-to-the-city"
+                },
+                {
+                  "condition": "If they decide to do anything other than go back, return, city or Kordavos.",
+                  "encounter": "the-end"
+                }
+              ],
+              "npc": [],
+              "skipInitialNpcTurns": false,
+              "resetHealth": false
+            },
+            {
+              "id": "return-to-the-city",
+              "title": "Return to the City",
+              "intro": "Kordavos, the capital city of the March of Davos, is a three mile trek back through the forest. It is the middle of the Harvest Festival so there will be many visitors, making it easy to blend in amongst the eclectic travellers from far and wide.",
+              "instructions": "",
+              "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/return-to-the-city/280cc3ba-f72d-4e91-b839-8cec3778791b.png?t=1749677694632",
+              "transitions": [],
+              "npc": [],
+              "skipInitialNpcTurns": false,
+              "resetHealth": false
+            },
+            {
+              "id": "the-end",
+              "title": "The End",
+              "intro": "The path forward remains uncertain, but things cannot be undone. Events have been set in motion and now all that remains is to move forward into the unknown.",
+              "instructions": "",
+              "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/the-end/68166163-ba2c-4387-bfb6-a98343c6c9d7.png?t=1749678027089",
+              "transitions": [],
+              "npc": [],
+              "skipInitialNpcTurns": false,
+              "resetHealth": false
             }
           ]
         }
@@ -17787,48 +18007,39 @@ export const deleteVisit = mutation({
   ],
   "npcs": {
     "npcs-1749163978757": {
-      "name": "Varius Reinhard",
+      "name": "Reinhard",
       "archetype": "Enforcer",
       "race": "Human",
       "gender": "Male",
       "appearance": "A burly human with a scarred face, close-cropped dark hair, and cold, calculating eyes. He often wears a heavy, dark leather coat that conceals several hidden weapons. His posture is always rigid, exuding an aura of quiet menace.",
-      "personality": "Stoic, ruthless, and highly pragmatic. Varius values efficiency and loyalty above all else. He rarely shows emotion, preferring to let his actions speak. He is fiercely loyal to the Blackthorn clan and expects the same from his subordinates. He has a dry, sardonic wit that surfaces only in moments of extreme stress or rare amusement.",
-      "background": "Varius grew up on the fringes of society, learning early that power was taken, not given. He joined the Blackthorn clan as a young man, quickly rising through the ranks due to his unwavering loyalty, brutal efficiency, and strategic mind. He's been involved in countless 'fixer' operations, cleaning up messes and ensuring the clan's interests are protected. He sees the clan as his true family and its prosperity as his life's purpose.",
+      "personality": "Stoic, ruthless, and highly pragmatic. Reinhard values efficiency and loyalty above all else. He rarely shows emotion, preferring to let his actions speak. He is fiercely loyal to the Blackthorn clan and expects the same from his subordinates. He has a dry, sardonic wit that surfaces only in moments of extreme stress or rare amusement.",
+      "background": "Reinhard grew up on the fringes of society, learning early that power was taken, not given. He joined the Blackthorn clan as a young man, quickly rising through the ranks due to his unwavering loyalty, brutal efficiency, and strategic mind. He's been involved in countless 'fixer' operations, cleaning up messes and ensuring the clan's interests are protected. He sees the clan as his true family and its prosperity as his life's purpose.",
       "motivation": "To ensure the Blackthorn clan's dominance and security. The current mission to secure the shipment is critical to maintaining their influence and resources, and Kaelen will stop at nothing to see it through successfully.",
-      "behavior": "Direct and to the point, Kaelen prefers action over words. He is highly observant and rarely misses details. When challenged, he responds with calm, calculated aggression.",
+      "behavior": "Direct and to the point, Reinhard prefers action over words. He is highly observant and rarely misses details. When challenged, he responds with calm, calculated aggression.",
       "healthPercent": 100,
       "equipment": [
         {
-          "name": "Heavy Leather Coat",
-          "description": "A durable, dark leather coat reinforced with hidden plates, offering protection and concealing multiple weapons."
+          "name": "Heavy Leather Coat and Armor",
+          "description": "A durable, dark leather coat over studded leather armor, offering protection and concealing multiple weapons."
         },
         {
-          "name": "Custom Revolver",
-          "description": "A heavy-caliber revolver, well-maintained and clearly a favored weapon, known for its stopping power."
+          "name": "Long Sword",
+          "description": ""
         },
         {
-          "name": "Combat Knife",
-          "description": "A razor-sharp, balanced combat knife, often used for close-quarters engagements or utility."
-        },
-        {
-          "name": "Commlink",
-          "description": "A secure, encrypted commlink for communicating with Blackthorn clan members."
-        },
-        {
-          "name": "Lockpicking Tools",
-          "description": "A small, discreet set of tools for bypassing locks."
+          "name": "Throwing knives",
+          "description": "A razor-sharp throwing daggers."
         }
       ],
       "skills": [
         "Intimidation",
         "Stealth",
         "Investigation",
-        "Athletics",
         "Perception",
         "Streetwise",
         "Tactics"
       ],
-      "status": "Active, leading a critical mission for the Blackthorn clan.",
+      "status": "",
       "type": "npc",
       "attributes": {
         "strength": 16,
@@ -17882,7 +18093,7 @@ export const deleteVisit = mutation({
         "Investigation",
         "Deception"
       ],
-      "status": "Alive",
+      "status": "",
       "type": "npc",
       "attributes": {
         "strength": 9,
@@ -17937,7 +18148,7 @@ export const deleteVisit = mutation({
         "Negotiation",
         "Disguise"
       ],
-      "status": "On active mission, currently in transit/negotiation phase.",
+      "status": "",
       "type": "npc",
       "attributes": {
         "strength": 10,
@@ -17997,7 +18208,7 @@ export const deleteVisit = mutation({
         "Trance (Does not require sleep, meditates for 4 hours)",
         "Forest Camouflage (Can attempt to hide even when only lightly obscured by natural phenomena)"
       ],
-      "status": "Vigilant, currently scouting the northern borders of Whisperwood.",
+      "status": "",
       "type": "npc",
       "attributes": {
         "strength": 10,
@@ -18051,7 +18262,7 @@ export const deleteVisit = mutation({
         "Stealth",
         "Archery"
       ],
-      "status": "Vigilant",
+      "status": "",
       "type": "npc",
       "attributes": {
         "strength": 16,
@@ -18071,9 +18282,9 @@ export const deleteVisit = mutation({
       "archetype": "Arcanist",
       "race": "Asterian",
       "gender": "Female",
-      "appearance": "Lyra is a young woman with keen, intelligent eyes often framed by spectacles perched on her nose. She has neat, dark hair, usually tied back to keep it out of the way while she studies. Her posture is typically upright and attentive, reflecting her scholarly nature, and she often carries a slightly worn satchel filled with books and scrolls.",
+      "appearance": "Lyra has  intelligent eyes framed by spectacles perched on her nose. She has neat, dark hair, tied back to keep it out of the way while she studies. Her posture reflects her scholarly nature, and she often carries a slightly worn satchel filled with books and scrolls.",
       "personality": "Curious, studious, and deeply analytical, Lyra possesses a quiet determination. She is often lost in thought, pondering ancient mysteries, but is also genuinely kind and empathetic. While she can be a bit socially awkward at times, her passion for knowledge makes her an engaging conversationalist on her chosen subjects. She values truth and understanding above all else.",
-      "background": "Lyra grew up within the hallowed halls of the Asterian Grand Library, an institution renowned for its vast collection of ancient texts and magical knowledge. From a young age, she displayed an insatiable curiosity, particularly drawn to the enigmatic Valkaran lore and the intricate beauty of elven culture, subjects often considered niche even among her peers. She spent countless hours poring over dusty tomes, deciphering forgotten languages, and piecing together fragmented histories.",
+      "background": "Lyra has insatiable curiosity, and is especially drawn to enigmatic Valkaran lore and elven culture. Despite her bookish nature, Lyra left behind the safety of Asterian academia to venture to the March of Davos, the wild lands of old Valkara and the elves of the forest.\n\nHer long hours researching drew the attention of an agent of the Blackthorn family who presented her with an opportunity for a clandestine meeting with an elf from the reclusive Faelendar settlement to verify the magical properties of an old Valkaran relic. Her curiousity piqued, she had to say yes!",
       "motivation": "Lyra is driven by a profound desire to uncover the lost secrets of Valkaran civilization and to fully understand the nuances of elven culture. She believes that by bridging the knowledge gap between these ancient peoples and her own Asterian heritage, she can unlock new forms of magic and prevent past mistakes from being repeated. Her ultimate goal is to contribute significantly to the collective knowledge of the world.",
       "behavior": "Lyra is generally quiet and observant, preferring to listen and absorb information rather than dominate conversations. When a topic of interest arises, especially concerning lore or magic, she becomes animated and eager to share her knowledge or ask probing questions. She is meticulous in her work and values accuracy above all else.",
       "healthPercent": 100,
@@ -18107,7 +18318,7 @@ export const deleteVisit = mutation({
         "Culture (Elven)",
         "Calligraphy"
       ],
-      "status": "Healthy",
+      "status": "",
       "type": "pc",
       "attributes": {
         "strength": 8,
@@ -18169,7 +18380,7 @@ export const deleteVisit = mutation({
       "gender": "Male",
       "appearance": "Standing just over three feet tall, Poppen is a bundle of restless energy. His curly chestnut hair is kept cropped close to avoid snags. He wears a patchwork waistcoat festooned with hidden pockets. His bright hazel eyes dart constantly, and his pale leather boots are scuffed from midnight footwork.",
       "personality": "Gregarious, ever‐curious, and smooth‐tongued. Poppen lives for gossip almost as much as profit. He’d rather talk his way out of a fight—or better yet, never get into one at all. He is endlessly curious, flitting from docksider to courtier in search of the next tantalizing rumor.",
-      "background": "Originally from Willowdale, the tranquil halfling homeland bordering the March of Davos. Life in the Dell was too idyllic and slow-paced for Poppen’s adventurous spirit so he set out on a journey to seek his fortune elsewhere.",
+      "background": "Originally from Willowdale, the tranquil halfling homeland bordering the March of Davos. Life in the Dell was too idyllic and slow-paced for Poppen’s adventurous spirit so he set out on a journey to seek his fortune elsewhere.\n\nPoppen made his way to Kordavos to make a name for himself.  He has just learned of a secret dock not far from the city for smuggling operations, and has been spying on it for several days hoping to find his first big score. ",
       "motivation": "Driven by an insatiable love for objects of great value, not just for their worth, but for the stories and prestige they carry. He aspires to become a prominent purloiner and fence to indulge this fascination while simultaneously using his social skills to mingle with interesting people, and get rich while doing it.",
       "behavior": "Poppen moves with quick, careful steps and speaks with a disarming grin, always alert for an unguarded glance or dropped word. He prefers to avoid violence by sleight of hand or a well-placed bribe, but his steel nerve means he’ll risk a bold break-in for the right payoff.",
       "healthPercent": 100,
@@ -18214,7 +18425,7 @@ export const deleteVisit = mutation({
         "Sneak Attack: Deals extra damage when he has advantage on an attack roll or when an enemy is within 5 feet of an ally who isn't incapacitated.",
         "Cunning Action: Can take a bonus action on each of his turns in combat to take the Dash, Disengage, or Hide action."
       ],
-      "status": "Healthy",
+      "status": "",
       "type": "pc",
       "attributes": {
         "strength": 10,
@@ -21498,6 +21709,7 @@ import type { AdventurePlan, AdventureEncounter } from "@/types/adventure-plan";
 const npcActionSchema = z.object({
   actionSummary: z.string(), // e.g. "The goblin tries to sneak behind the hero and attack."
   narrative: z.string(), // Narrative update for the action
+  actionType: z.enum(["attack", "skill", "skip", "pass", "other"]).default("other"), // Explicit action type
   effects: z.array(z.object({
     targetId: z.string(),
     equipmentToAdd: z.array(z.object({
@@ -21525,10 +21737,16 @@ export async function processNpcTurnWithLLM({
   turn,
   npcId,
   encounterContext,
+  sectionContext,
+  sceneContext,
+  adventureOverview,
 }: {
   turn: Turn;
   npcId: string;
   encounterContext?: { intro?: string; instructions?: string };
+  sectionContext?: { title?: string; summary?: string };
+  sceneContext?: { title?: string; summary?: string };
+  adventureOverview?: string;
 }): Promise<{
   updatedNarrative: string;
   updatedCharacters: TurnCharacter[];
@@ -21538,15 +21756,41 @@ export async function processNpcTurnWithLLM({
   shortcode?: string;
   narrativeToAppend: string;
 }> {
+  // Log new context fields
+  if (adventureOverview) console.log("[NPC TURN] Adventure Overview:", adventureOverview);
+  if (sectionContext) {
+    console.log("[NPC TURN] Section Title:", sectionContext.title);
+    console.log("[NPC TURN] Section Summary:", sectionContext.summary);
+  }
+  if (sceneContext) {
+    console.log("[NPC TURN] Scene Title:", sceneContext.title);
+    console.log("[NPC TURN] Scene Summary:", sceneContext.summary);
+  }
   // 1. LLM decides NPC action
   const npc = turn.characters.find((c) => c.id === npcId);
   if (!npc) throw new Error("NPC not found");
   const narrativeContext = (turn.narrative || "").split(/\n\n+/).slice(-2).join("\n\n");
   const playerCharactersForPrompt1 = turn.characters.filter(c => c.type === 'pc');
   const playerCharacterNamesForPrompt1 = playerCharactersForPrompt1.map(c => c.name);
+  // Build context string for prompt
+  const contextString = [
+    adventureOverview ? `Adventure Overview: ${adventureOverview}` : "",
+    sectionContext && (sectionContext.title || sectionContext.summary) ? `Section Title: ${sectionContext.title || ""}\nSection Summary: ${sectionContext.summary || ""}` : "",
+    sceneContext && (sceneContext.title || sceneContext.summary) ? `Scene Title: ${sceneContext.title || ""}\nScene Summary: ${sceneContext.summary || ""}` : "",
+    encounterContext?.intro ? `Encounter Intro: ${encounterContext.intro}` : "",
+    encounterContext?.instructions ? `Encounter Instructions: ${encounterContext.instructions}` : "",
+    narrativeContext ? `Recent Narrative:\n${narrativeContext}` : "",
+  ].filter(Boolean).join("\n\n");
+
   const prompt1 = `You are the DM for a tabletop RPG. Given the following context, decide what action the NPC should take this turn. Be creative and act as a real DM would. Output a short narrative for the action.
 
+${contextString}
+
 IMPORTANT: If the NPC would realistically speak during this action (conversations, negotiations, threats, commands, etc.), include their actual dialogue in quotes. However, if the NPC is a non-speaking creature (like a mindless beast or monster) or the action doesn't involve speaking (pure physical actions, stealth, etc.), use descriptive narrative instead.
+
+If the NPC would realistically skip or pass their turn (e.g., waiting, observing, preparing, doing nothing), set actionType to "skip" or "pass" and provide appropriate narrative. For example:
+- Skip action: 'The goblin scout remains hidden in the shadows, carefully observing the party's movements before making his next move.'
+- Pass action: 'The wounded orc takes a defensive stance, catching his breath and waiting for an opening.'
 
 Examples:
 - Speaking NPC: 'Silas steps forward, his voice calm but firm. "We need to complete this task quickly and quietly," he says, his eyes scanning the area for threats.'
@@ -21557,15 +21801,12 @@ If the NPC's action involves giving items to a player character, include an "eff
 
 Only include the NPC in the short narrative output: ${npc.name}
 Targetable Player Characters: ${playerCharacterNamesForPrompt1.join(', ')} (IDs: ${playerCharactersForPrompt1.map(c => c.id).join(', ')})
-${encounterContext?.intro ? `Encounter Intro: ${encounterContext.intro}\n` : ""}
-${encounterContext?.instructions ? `Encounter Instructions: ${encounterContext.instructions}\n` : ""}
-Recent Narrative:
-${narrativeContext}
 
 Respond as JSON:
 {
   actionSummary: string,
   narrative: string,
+  actionType: "attack" | "skill" | "skip" | "pass" | "other",
   effects?: [ { targetId: string, equipmentToAdd?: [{name: string, description?: string}] } ]
 }`;
   const actionResult = (await generateObject({ prompt: prompt1, schema: npcActionSchema })).object;
@@ -21578,7 +21819,34 @@ Respond as JSON:
   let shortcode = undefined;
 
   // 2. Use roll requirement utility to determine if a roll is needed
-  const rollRequirement = await getRollRequirementForAction(actionResult.actionSummary);
+  const rollRequirement = await getRollRequirementForAction(actionResult.actionSummary, npc);
+
+  // Handle skip/pass actions explicitly
+  if (actionResult.actionType === "skip" || actionResult.actionType === "pass") {
+    narrativeToAppend = actionResult.narrative;
+    updatedCharacters = updatedCharacters.map((c) => {
+      if (c.id === npc.id) {
+        return {
+          ...c,
+          hasReplied: true,
+          isComplete: true,
+          status: actionResult.actionType === "skip" ? "skipping" : "passing",
+        };
+      }
+      return c;
+    });
+    updatedNarrative = appendNarrative(updatedNarrative, narrativeToAppend);
+    return {
+      updatedNarrative,
+      updatedCharacters,
+      actionSummary: actionResult.actionSummary,
+      rollInfo: undefined,
+      effects: undefined,
+      shortcode: undefined,
+      narrativeToAppend,
+    };
+  }
+
   if (rollRequirement && rollRequirement.rollType && rollRequirement.difficulty) {
     // 3. Get modifier
     const modifier = await getRollModifier({
@@ -21609,17 +21877,17 @@ Respond as JSON:
     const playerCharacterNames = playerCharacters.map(c => c.name);
     const prompt2 = `You are the DM for a tabletop RPG. Given the action, the dice roll result, and the context, write a short narrative describing the outcome. Focus the narrative on the interacting characters. **Do not narrate any actions or dialogue for player characters.**
 
+${contextString}
+
 IMPORTANT: If the NPC would realistically speak during this outcome (expressing success/failure, reactions, taunts, threats, etc.), include their actual dialogue in quotes. However, if the NPC is a non-speaking creature or the outcome doesn't involve speech, use descriptive narrative instead.
 
-Then, output a JSON array of effects for any characters affected (targetId, healthPercentDelta, status). If the NPC\'s action results in any characters receiving items, specify these in an \`equipmentToAdd\` array (each item as \`{name: string, description?: string}\`) within the corresponding effect object for the target character.
+Then, output a JSON array of effects for any characters affected (targetId, healthPercentDelta, status). If the NPC's action results in any characters receiving items, specify these in an \`equipmentToAdd\` array (each item as \`{name: string, description?: string}\`) within the corresponding effect object for the target character.
 
 NPC: ${npc.name}
 Player Characters: ${playerCharacterNames.join(', ')}
 Action: ${actionResult.actionSummary}
 Roll Type: ${rollRequirement.rollType}
 Roll Result: ${result} (difficulty: ${rollRequirement.difficulty}, success: ${success})
-${encounterContext?.intro ? `Encounter Intro: ${encounterContext.intro}\n` : ""}${encounterContext?.instructions ? `Encounter Instructions: ${encounterContext.instructions}\n` : ""}Recent Narrative:
-${updatedNarrative}
 
 Respond as JSON:
 {
@@ -21791,6 +22059,24 @@ export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
     throw new Error("Adventure plan is missing required fields or could not be loaded");
   }
 
+  // Find current section and scene for context
+  let currentSection = undefined;
+  let currentScene = undefined;
+  for (const section of plan.sections) {
+    for (const scene of section.scenes) {
+      if (scene.encounters.some(enc => enc.id === turn!.encounterId)) {
+        currentSection = section;
+        currentScene = scene;
+        break;
+      }
+    }
+    if (currentSection && currentScene) break;
+  }
+
+  const sectionContext = currentSection ? { title: currentSection.title, summary: currentSection.summary } : undefined;
+  const sceneContext = currentScene ? { title: currentScene.title, summary: currentScene.summary } : undefined;
+  const adventureOverview = plan.overview || undefined;
+
   let characters = turn.characters as TurnCharacter[];
   // Take a snapshot of the current initiative order
   const initiativeOrder = characters
@@ -21824,13 +22110,17 @@ export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
       console.warn(`[NPC TURN] Could not find details for encounter ${turn.encounterId} in the plan.`);
     }
 
+    // Pass new context fields to processNpcTurnWithLLM
     const result = await processNpcTurnWithLLM({
-      turn: { ...turn, id: turn._id, characters }, // Pass the reloaded turn characters
+      turn: { ...turn, id: turn._id, characters },
       npcId: npc.id,
-      encounterContext, // Pass the populated context
+      encounterContext,
+      sectionContext,
+      sceneContext,
+      adventureOverview,
     });
     // Use appendNarrative utility for consistent narrative updates
-    const newNarrative = appendNarrative(turn.narrative || "", result.narrativeToAppend || "");
+    const newNarrative = appendNarrative(turn!.narrative || "", result.narrativeToAppend || "");
     
     await convex.mutation(api.turns.updateTurn, {
       turnId: turn._id,
@@ -21853,14 +22143,35 @@ export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
 
 import { rollRequirementSchema } from "@/lib/validations/roll-requirement-schema";
 import { generateObject } from "@/lib/ai";
+import type { Character } from "@/types/character";
 
 /**
- * Given an action or reply string, determine if a dice roll is required.
+ * Given an action or reply string and character context, determine if a dice roll is required.
  * Returns { rollType, difficulty } or null if no roll is required.
  */
-export async function getRollRequirementForAction(action: string) {
+export async function getRollRequirementForAction(action: string, character: Character) {
+  // Format character context for the prompt
+  const contextLines = [
+    `Name: ${character.name}`,
+    `Archetype: ${character.archetype}`,
+    `Race: ${character.race}`,
+    character.spells && character.spells.length > 0 ? `Spells: ${character.spells.map(s => s.name).join(", ")}` : undefined,
+    character.skills && character.skills.length > 0 ? `Skills: ${character.skills.join(", ")}` : undefined,
+    character.equipment && character.equipment.length > 0 ? `Equipment: ${character.equipment.map(e => e.name).join(", ")}` : undefined,
+    character.specialAbilities && character.specialAbilities.length > 0 ? `Special Abilities: ${character.specialAbilities.join(", ")}` : undefined,
+  ].filter(Boolean);
+  const characterContext = contextLines.length > 0 ? `Character Context:\n${contextLines.join("\n")}\n` : "";
+
   const prompt = `
+${characterContext}
 Given the following player or NPC action, determine if a dice roll is required for the character to attempt the action. If a roll is required, return a JSON object with "rollType" (choose the most appropriate from the list below) and "difficulty" (a number between 5 and 25). If no roll is required, return the JSON value null (not a string).
+
+Use the character's spells, skills, equipment, special abilities, archetype, and race to determine the most appropriate roll type and difficulty. If the action involves casting a spell (e.g., 'casts charm person', 'casts fireball'), use 'Spellcasting Check' as the rollType, unless the spell is an attack (then use 'Attack Roll').
+
+When assigning difficulty, use the following guidance:
+- The average/typical difficulty should be 10 or 11 for most normal actions.
+- Use 5 for very easy actions, 6-9 for easy, 10-11 for average actions, 15+ for hard actions, and 18-20 for very hard or nearly impossible actions.
+- Most actions should be around 10 or 11 unless the action is clearly much easier or harder than normal.
 
 Possible roll types:
 - Perception Check
@@ -21959,16 +22270,19 @@ Possible roll types:
 
 Examples:
 Action: "Try to sneak past the guards."
-Result: { "rollType": "Stealth Check", "difficulty": 15 }
+Result: { "rollType": "Stealth Check", "difficulty": 12 }
 
 Action: "Attack the goblin."
-Result: { "rollType": "Attack Roll", "difficulty": 12 }
+Result: { "rollType": "Attack Roll", "difficulty": 10 }
 
 Action: "Try to determine what the sound is."
-Result: { "rollType": "Perception Check", "difficulty": 10 }
+Result: { "rollType": "Perception Check", "difficulty": 8 }
 
 Action: "Say hello."
 Result: null
+
+Action: "Lyra casts charm person on Silas."
+Result: { "rollType": "Spellcasting Check", "difficulty": 11 }
 
 Now, given the following action, determine the roll requirement.
 
@@ -22092,7 +22406,6 @@ Return an object with the character id, new healthPercent (0-100), and optional 
       ? {
           ...c,
           healthPercent: typeof update.object.healthPercent === "number" ? update.object.healthPercent : c.healthPercent,
-          status: (typeof update.object.healthPercent === "number" && update.object.healthPercent <= 0) ? "Dead" : (update.object.status ?? c.status),
         }
       : c
   );
@@ -22922,6 +23235,7 @@ export default nextConfig;
     "lucide-react": "^0.511.0",
     "next": "15.3.2",
     "next-themes": "^0.4.6",
+    "number-to-words": "^1.2.4",
     "playwright": "link:@clerk/testing/playwright",
     "prettier": "^3.5.3",
     "react": "^19.1.0",
@@ -24695,6 +25009,14 @@ export const attributesSchema = z.object({
 
 export type Attributes = z.infer<typeof attributesSchema>
 
+export const effectSchema = z.object({
+  name: z.string(),        // e.g. "Charmed"
+  description: z.string(), // e.g. "Regards the caster as a friendly acquaintance"
+  duration: z.number(),    // number of turns remaining
+});
+
+export type Effect = z.infer<typeof effectSchema>;
+
 export const baseCharacterSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -24712,7 +25034,7 @@ export const baseCharacterSchema = z.object({
   skills: z.array(z.string()).optional(),
   spells: z.array(spellSchema).optional(),
   specialAbilities: z.array(z.string()).optional(),
-  status: z.string().optional(),
+  effects: z.array(effectSchema).optional(),
 })
 
 export type BaseCharacter = z.infer<typeof baseCharacterSchema>
@@ -24722,6 +25044,7 @@ export const pcSchema = baseCharacterSchema.extend({
   type: z.literal("pc"),
   userId: z.string(), // Clerk user id
   attributes: attributesSchema,
+  status: z.string().optional(),
 })
 
 export type PC = z.infer<typeof pcSchema>
@@ -24730,6 +25053,7 @@ export type PC = z.infer<typeof pcSchema>
 export const npcSchema = baseCharacterSchema.extend({
   type: z.literal("npc"),
   attributes: attributesSchema.partial().optional(),
+  status: z.string().optional(),
 })
 
 export type NPC = z.infer<typeof npcSchema>

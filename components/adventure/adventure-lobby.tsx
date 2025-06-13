@@ -2,14 +2,11 @@
 
 import React, { useState, useEffect } from "react"
 import { useUser, SignInButton } from "@clerk/nextjs"
-import { useQuery } from "convex/react"
-import { api } from "@/convex/_generated/api"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Adventure, TurnCharacter } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PCTemplate } from "@/types/character"
-import type { Id } from "@/convex/_generated/dataModel"
 import Image from "next/image"
 import { getImageUrl } from "@/lib/utils"
 import { Copy, Check, Share2, Bot } from "lucide-react"
@@ -49,51 +46,7 @@ function convertPCTemplateToTurnCharacter(pcTemplate: PCTemplate): TurnCharacter
   }
 }
 
-// Helper to map Convex adventure to frontend Adventure type
-function mapConvexAdventureToAdventure(raw: unknown, adventurePlan: AdventurePlan): Adventure | null {
-  if (!raw || typeof raw !== "object" || !("_id" in raw)) return null
-  const a = raw as {
-    _id: string
-    title: string
-    planId: string
-    startedAt: number
-    endedAt?: number
-    settingId?: string
-    status?: "waitingForPlayers" | "active" | "completed"
-    players?: Array<{ userId: string; characterId: string }>
-    playerIds?: string[]
-  }
-
-  // Map players to full PC objects from adventure plan
-  const party: Adventure["party"] =
-    a.players
-      ?.map((player) => {
-        const character = adventurePlan.premadePlayerCharacters.find((pc) => pc.id === player.characterId)
-        if (character) {
-          return {
-            ...character,
-            userId: player.userId, // Add userId to the character
-          }
-        }
-        return null
-      })
-      .filter((char): char is NonNullable<typeof char> => char !== null) || []
-
-  return {
-    id: a._id,
-    title: a.title,
-    adventurePlanId: a.planId,
-    settingId: a.settingId ?? "",
-    status: a.status || "active", // Default to active for backwards compatibility
-    party,
-    turns: [],
-    startedAt: a.startedAt ? new Date(a.startedAt).toISOString() : "",
-    endedAt: a.endedAt ? new Date(a.endedAt).toISOString() : undefined,
-    pausedAt: undefined,
-  }
-}
-
-export default function AdventureLobby({ adventure: initialAdventure, adventurePlan }: AdventureLobbyProps) {
+export default function AdventureLobby({ adventure, adventurePlan }: AdventureLobbyProps) {
   const { user, isSignedIn, isLoaded } = useUser()
   const params = useParams()
   const [isCopied, setIsCopied] = useState(false)
@@ -102,14 +55,6 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
   const [isStarting, setIsStarting] = useState(false)
   const [modalCharacter, setModalCharacter] = useState<TurnCharacter | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-
-  // Get live adventure data from Convex
-  const adventureData = useQuery(api.adventure.getCurrentAdventure, {
-    adventureId: initialAdventure.id as Id<"adventures">,
-  })
-
-  // Use live data if available, fallback to initial data
-  const adventure = adventureData?.adventure && adventurePlan ? mapConvexAdventureToAdventure(adventureData.adventure, adventurePlan) || initialAdventure : initialAdventure
 
   useEffect(() => {
     if (isLoaded) {
@@ -249,8 +194,11 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
 
           {/* Show different messages based on party state */}
           {!canStartAdventure ? (
-            <h3 className="font-display mb-4 text-2xl opacity-70">
-              Waiting for more players... ({currentPartySize}/{minParty} minimum)
+            <h3 className="font-display mb-6 text-2xl opacity-70">
+              Waiting for more players...
+              <div className="font-mono text-sm text-primary-200">
+                ({currentPartySize}/{minParty} minimum)
+              </div>
             </h3>
           ) : partyIsFull ? (
             <div className="space-y-4">

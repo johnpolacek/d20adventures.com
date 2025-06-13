@@ -4,17 +4,15 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button"
 import { requireAdmin } from "@/lib/auth-utils"
 import { AdminConfigMessage } from "@/components/admin/admin-config-message"
-import { DevEnvNotice } from "@/components/admin/dev-env-notice"
 import { Heading } from "@/components/typography/heading"
 
 export const metadata: Metadata = {
   title: "Admin Dashboard",
-  description: "Vibecode.party Admin Dashboard",
+  description: "D20 Admin Dashboard",
 }
 
 export default async function AdminPage() {
   const { isAdmin, requiresSetup } = await requireAdmin()
-  const isDev = process.env.NODE_ENV === "development"
 
   if (requiresSetup) {
     return (
@@ -32,16 +30,15 @@ export default async function AdminPage() {
             Access Denied
           </Heading>
           <p className="text-muted-foreground text-balance mb-8">You don&apos;t have permission to access this page. Please contact an administrator if you believe this is an error.</p>
-          {isDev && <DevEnvNotice />}
         </div>
       </div>
     )
   }
 
   return (
-    <div className="container py-8 md:py-12">
+    <div className="container py-8 md:py-24">
       <div className="mx-auto max-w-6xl">
-        <Heading variant="h3" className="mb-8 text-center text-primary">
+        <Heading variant="h3" className="mb-8 text-center text-amber-400">
           Admin Dashboard
         </Heading>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -55,7 +52,7 @@ export default async function AdminPage() {
             </CardContent>
             <CardFooter>
               <Link href="/admin/users" className="w-full">
-                <Button className="w-full">Manage Users</Button>
+                <Button variant="outline">Manage Users</Button>
               </Link>
             </CardFooter>
           </Card>
@@ -69,7 +66,7 @@ export default async function AdminPage() {
             </CardContent>
             <CardFooter>
               <Link href="/admin/mailing-list" className="w-full">
-                <Button className="w-full">Manage Subscribers</Button>
+                <Button variant="outline">Manage Subscribers</Button>
               </Link>
             </CardFooter>
           </Card>
