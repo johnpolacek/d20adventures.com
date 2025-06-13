@@ -39,7 +39,7 @@ export default async function Header({ path }: { path: string }) {
       </Link>
       <div className="flex flex-1 justify-end items-center scale-90 sm:scale-100 -mt-1 sm:-mt-0 gap-8 pl-4">
         <a
-          className="text-lg font-display text-amber-950/60 hover:text-amber-950/80 transition-all ease-in-out duration-500 font-bold"
+          className="text-lg font-display hidden sm:block text-amber-950/60 hover:text-amber-950/80 transition-all ease-in-out duration-500 font-bold"
           href="https://discord.gg/5kEA9Tk4hG"
           style={{ textShadow: "0 0 4px #fff" }}
         >

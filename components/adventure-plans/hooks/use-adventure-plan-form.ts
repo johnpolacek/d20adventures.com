@@ -14,10 +14,12 @@ export function useAdventurePlanForm(adventurePlan: AdventurePlan) {
   const [npcs, setNpcs] = React.useState<Record<string, Character>>(adventurePlan.npcs || {})
   const [premadePlayerCharacters, setPremadePlayerCharacters] = React.useState<PCTemplate[]>(adventurePlan.premadePlayerCharacters || [])
   const [isSaving, setIsSaving] = React.useState(false)
+  const [draft, setDraft] = React.useState(adventurePlan.draft !== undefined ? adventurePlan.draft : true)
 
-  const saveAdventurePlan = async (overrideImage?: string) => {
+  const saveAdventurePlan = async (overrideImage?: string, overrideDraft?: boolean) => {
     setIsSaving(true)
     const imageToSave = overrideImage !== undefined ? overrideImage : image
+    const draftToSave = overrideDraft !== undefined ? overrideDraft : draft
     const updatedAdventurePlan: AdventurePlan = {
       ...adventurePlan,
       teaser,
@@ -27,10 +29,14 @@ export function useAdventurePlanForm(adventurePlan: AdventurePlan) {
       sections,
       npcs,
       premadePlayerCharacters,
+      draft: draftToSave,
     }
+    console.log("[saveAdventurePlan] Saving with draft:", draftToSave)
+    console.log("[saveAdventurePlan] Full updatedAdventurePlan:", updatedAdventurePlan)
 
     try {
       const result = await updateAdventurePlanAction({ adventurePlan: updatedAdventurePlan })
+      console.log("[saveAdventurePlan] Save result:", result)
       if (result.success) {
         toast.success(result.message || "Saved successfully!")
       } else {
@@ -76,6 +82,8 @@ export function useAdventurePlanForm(adventurePlan: AdventurePlan) {
     setPremadePlayerCharacters,
     isSaving,
     availableNpcs,
+    draft,
+    setDraft,
     // Actions
     saveAdventurePlan,
   }

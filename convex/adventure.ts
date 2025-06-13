@@ -93,6 +93,15 @@ export const createTurn = mutation({
     order: v.number(),
   },
   handler: async (ctx, args) => {
+    // Check for duplicate order
+    const existing = await ctx.db
+      .query("turns")
+      .withIndex("by_adventure", (q) => q.eq("adventureId", args.adventureId))
+      .filter((q) => q.eq(q.field("order"), args.order))
+      .first();
+    if (existing) {
+      throw new Error(`A turn with order ${args.order} already exists for this adventure.`);
+    }
     const now = Date.now();
     const turnId = await ctx.db.insert("turns", {
       adventureId: args.adventureId,
@@ -400,5 +409,27 @@ export const getAllAdventures = query({
       .query("adventures")
       .order("desc")
       .collect();
+  },
+});
+
+export const getAdventuresByPlayer = query({
+  args: {
+    playerId: v.string(),
+    status: v.optional(v.union(
+      v.literal("waitingForPlayers"),
+      v.literal("active"),
+      v.literal("completed")
+    ))
+  },
+  handler: async (ctx, args) => {
+    let q = ctx.db
+      .query("adventures")
+      .withIndex("by_started")
+      .order("desc");
+    if (args.status) {
+      q = q.filter((q) => q.eq(q.field("status"), args.status));
+    }
+    const all = await q.collect();
+    return all.filter((a) => Array.isArray(a.playerIds) && a.playerIds.includes(args.playerId));
   },
 });

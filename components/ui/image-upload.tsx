@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useState, useEffect } from "react"
+import { useCallback, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { ImagePlus, X, Loader } from "lucide-react"
 import Image from "next/image"
@@ -60,10 +60,6 @@ function getDisplayUrl(value: string): string {
 
 export function ImageUpload({ id, value, onChange, onRemove, folder = "uploads", className }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false)
-
-  useEffect(() => {
-    console.log("ImageUpload: Received value prop:", value)
-  }, [value])
 
   const { upload } = useFileUpload({
     folder,

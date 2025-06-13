@@ -29,7 +29,7 @@ export default function CharacterDiceRollResultDisplay({
       </div>
       <div className="px-4 py-6 flex flex-col gap-2 text-center items-center justify-start w-full sm:w-1/2 absolute bottom-0 sm:relative sm:left-1/2">
         <h4 className="text-xs opacity-70">Dice Roll Result</h4>
-        <h3 className="text-2xl">{rollType}</h3>
+        <h3 className="text-2xl text-amber-300">{rollType}</h3>
         <div className="font-mono text-xs text-primary-300 -mt-2 uppercase tracking-wider">
           <span className="scale-90">Target {difficulty}</span>
           {typeof baseRoll === "number" && modifier !== 0 && (

@@ -60,4 +60,20 @@ export async function updateAdventurePlanAction(
     const errorMessage = error instanceof Error ? error.message : "An unknown error occurred"
     return { success: false, error: `Failed to update adventure plan: ${errorMessage}` }
   }
+}
+
+export async function createAdventurePlan(adventurePlan: AdventurePlan): Promise<{ success: boolean; message?: string; error?: string }> {
+  const { userId } = await auth()
+  if (!userId) {
+    return { success: false, error: "Unauthorized" }
+  }
+
+  try {
+    const key = `settings/${adventurePlan.settingId}/${adventurePlan.id}.json`
+    await updateJsonOnS3(key, adventurePlan)
+    return { success: true, message: "Adventure plan created successfully" }
+  } catch (error) {
+    console.error("Error creating adventure plan:", error)
+    return { success: false, error: "Failed to create adventure plan" }
+  }
 } 

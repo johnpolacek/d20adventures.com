@@ -35,8 +35,6 @@ export function CharacterCard({ charId, char, isNpcs, isSaving, settingId, adven
   const imageUploadFolder = `images/settings/${settingId}/${adventurePlanId}/${isNpcs ? "npcs" : "pcs"}`
   const imageUrl = char.image ? IMAGE_HOST + "/" + char.image : ""
 
-  console.log("imageUrl", imageUrl)
-
   if (!editing) {
     // Collapsed Mode
     return (

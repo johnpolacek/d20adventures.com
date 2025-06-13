@@ -229,7 +229,13 @@ ${context.narrativeContext || ""}
 
 Player action or narrative: "${playerInput}"
 
-Given the above, decide if a D&D-style roll is required. If so, return the type of roll (choose from: Perception, Investigation, Stealth, Athletics, Acrobatics, Survival, Deception, Persuasion, Intimidation, Insight, Nature, Animal Handling, Medicine, History, Arcana, Sleight of Hand, Performance, Attack, etc.) and a difficulty (DC) between 5 and 20.
+Given the above, decide if a D&D-style roll is required. If so, return the type of roll and a difficulty (DC) between 5 and 20.
+
+For spellcasting actions:
+- If the player is attempting to cast a specific spell (like Charm Person, Fireball, Detect Magic, etc.), use the spell name followed by "Check" (e.g., "Charm Person Check", "Fireball Check") and adjust the difficulty based on the type of spell.
+- If the player is attempting a general magical action without a specific spell, use "Arcana Check".
+
+For non-spellcasting actions, use the appropriate skill check (Perception, Investigation, Stealth, Athletics, Acrobatics, Survival, Deception, Persuasion, Intimidation, Insight, Nature, Animal Handling, Medicine, History, Sleight of Hand, Performance, Attack, etc.)
 
 Respond in JSON: { "rollType": string, "difficulty": number } or null if no roll is needed.
 `;

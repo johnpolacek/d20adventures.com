@@ -13,6 +13,15 @@ export const createTurn = mutation({
     isFinalEncounter: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    // Check for duplicate order
+    const existing = await ctx.db
+      .query("turns")
+      .withIndex("by_adventure", (q) => q.eq("adventureId", args.adventureId))
+      .filter((q) => q.eq(q.field("order"), args.order))
+      .first();
+    if (existing) {
+      throw new Error(`A turn with order ${args.order} already exists for this adventure.`);
+    }
     const now = Date.now();
     return await ctx.db.insert("turns", {
       adventureId: args.adventureId,

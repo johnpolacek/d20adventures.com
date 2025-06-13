@@ -32,7 +32,7 @@ export default function CharacterDiceRoll({
       </div>
       <div className="px-4 py-6 flex flex-col gap-4 text-center items-center justify-start w-full sm:w-1/2 absolute bottom-0 sm:relative sm:left-1/2">
         <h4 className="text-sm">Dice Roll {rollResult === null ? "Needed" : ""}</h4>
-        <h3 className="text-2xl">{rollType}</h3>
+        <h3 className="text-2xl text-amber-300">{rollType}</h3>
         <div className="font-mono text-xs text-primary-300 -mt-4 uppercase tracking-wider">
           Target {difficulty}
           {modifier !== 0 && <span className={modifier > 0 ? "text-green-400" : "text-red-400"}>{modifier > 0 ? `  +${modifier} bonus` : `  ${modifier} penalty`}</span>}

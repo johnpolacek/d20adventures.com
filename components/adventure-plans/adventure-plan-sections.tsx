@@ -29,6 +29,7 @@ interface AdventurePlanSectionsProps {
   onEncounterTransitionsChange: (sectionIndex: number, sceneIndex: number, encounterIndex: number, newTransitions: { condition: string; encounter: string }[]) => void
   onEncounterNpcChange: (sectionIndex: number, sceneIndex: number, encounterIndex: number, newNpcs: { id: string; behavior: string; initialInitiative?: number }[]) => void
   onAddEncounter: (sectionIndex: number, sceneIndex: number) => void
+  onAddSection: () => void
 }
 
 export function AdventurePlanSections({
@@ -52,9 +53,17 @@ export function AdventurePlanSections({
   onEncounterTransitionsChange,
   onEncounterNpcChange,
   onAddEncounter,
+  onAddSection,
 }: AdventurePlanSectionsProps) {
   if (sections.length === 0) {
-    return <p className="text-sm text-gray-400 italic">This adventure plan currently has no sections defined.</p>
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <p className="mb-4 text-muted-foreground">No sections yet. Start by adding your first section!</p>
+        <Button onClick={onAddSection} variant="epic" size="lg">
+          <Plus className="mr-2 h-4 w-4" /> Add Section
+        </Button>
+      </div>
+    )
   }
 
   return (

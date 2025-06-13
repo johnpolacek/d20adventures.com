@@ -15,6 +15,10 @@ export interface AdventurePlan {
   sections: AdventureSection[];
   premadePlayerCharacters: PCTemplate[];
   npcs: Record<string, Character>;
+  /**
+   * If true, this adventure plan is a draft and should not be shown in public lists.
+   */
+  draft?: boolean;
 }
 
 export interface AdventureSection {

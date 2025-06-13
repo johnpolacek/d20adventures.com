@@ -82,11 +82,27 @@ export function useAdventureSections(
     )
   }
 
+  const handleAddSection = () => {
+    const newSection: AdventureSection = {
+      title: "",
+      summary: "",
+      scenes: [
+        {
+          title: "",
+          summary: "",
+          encounters: [],
+        },
+      ],
+    };
+    setSections((prevSections) => [...prevSections, newSection]);
+  };
+
   return {
     handleSectionTitleChange,
     handleSectionSummaryChange,
     handleSceneTitleChange,
     handleSceneSummaryChange,
     handleAddEncounter,
+    handleAddSection,
   }
 } 

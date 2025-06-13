@@ -69,22 +69,11 @@ export function EncounterEditForm({
 }: EncounterEditFormProps) {
   const [isEditing, setIsEditing] = React.useState(false)
 
-  React.useEffect(() => {
-    console.log("[EncounterEditForm] Component rendered/updated")
-    console.log("[EncounterEditForm] Encounter data:", encounter)
-    console.log("[EncounterEditForm] Encounter title:", encounter.title)
-    console.log("[EncounterEditForm] Is saving:", isSaving)
-  }, [encounter, isSaving])
-
   const toggleEditMode = () => {
     setIsEditing(!isEditing)
   }
 
   const handleTitleChange = (newTitle: string) => {
-    console.log("[EncounterEditForm] handleTitleChange called with:", newTitle)
-    console.log("[EncounterEditForm] Current encounter title:", encounter.title)
-    console.log("[EncounterEditForm] Section/Scene/Encounter indices:", sectionIndex, sceneIndex, encounterIndex)
-
     onTitleChange(sectionIndex, sceneIndex, encounterIndex, newTitle)
   }
 
@@ -274,7 +263,6 @@ export function EncounterEditForm({
               id={`${baseId}-title`}
               value={encounter.title}
               onChange={(e) => {
-                console.log("[EncounterEditForm] Input onChange triggered, value:", e.target.value)
                 handleTitleChange(e.target.value)
               }}
               placeholder="Enter encounter title"

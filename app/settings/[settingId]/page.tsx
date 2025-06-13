@@ -26,11 +26,16 @@ export default async function SettingHome(props: { params: Promise<{ settingId: 
   return (
     <div className="flex min-h-screen flex-col relative">
       <div className="fade-in delay-[2s] relative z-10">
-        <ImageHeader variant="semicompact" imageUrl={getImageUrl(setting.image)} title={setting.name} imageAlt={setting.name} />
+        <ImageHeader imageUrl={getImageUrl(setting.image)} title={setting.name} imageAlt={setting.name} />
         {canEdit && (
-          <Link className="fixed top-[90vh] right-8 z-10" href={`/settings/${settingId}/edit`}>
-            <Button className="text-sm bg-primary-600 hover:bg-primary-700">Edit</Button>
-          </Link>
+          <div className="fixed bottom-[4vh] right-[4vh] z-20 space-y-4 flex flex-col items-end">
+            <Link href={`/settings/${settingId}/edit`}>
+              <Button className="text-sm bg-indigo-800 hover:bg-indigo-700">Edit Setting</Button>
+            </Link>
+            <Link href={`/settings/${settingId}/new`}>
+              <Button className="text-sm bg-indigo-800 hover:bg-indigo-700">New Adventure</Button>
+            </Link>
+          </div>
         )}
         <div className="max-w-3xl mx-auto -mt-32 relative z-10 whitespace-pre-line">
           <div className="flex justify-center mb-8">

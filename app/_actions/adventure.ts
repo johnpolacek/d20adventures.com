@@ -12,6 +12,8 @@ import { getRollRequirementForAction } from "@/lib/services/roll-requirement-ser
 import { processNpcTurnsAfterCurrent } from "@/lib/services/npc-turn-service"
 import { analyzeAndApplyDiceRoll } from "@/lib/services/turn-update-service"
 import wait from "waait"
+import type { Adventure } from "@/types/adventure"
+import type { PC } from "@/types/character"
 
 // Placeholder type for ActionAssessment until it's defined in roll-requirement-service.ts
 interface ActionAssessment {
@@ -289,8 +291,8 @@ export async function resolvePlayerRollResult({
   // 2. Fetch the adventure and plan
   const adventure = await convex.query(api.adventure.getAdventureById, { adventureId: turn.adventureId });
   if (!adventure) throw new Error("Adventure not found");
-  const planKey = `settings/${adventure.settingId}/${adventure.planId}.json`;
-  const plan = (await readJsonFromS3(planKey)) as AdventurePlan;
+  const planPath = `settings/${adventure.settingId}/${adventure.planId}.json`;
+  const plan = (await readJsonFromS3(planPath)) as AdventurePlan;
   if (!plan || !Array.isArray(plan.sections)) throw new Error("Adventure plan not found or invalid");
 
   // 3. Extract encounter instructions
@@ -399,4 +401,57 @@ Output only the narrative paragraph.`.trim();
 
   // 7. Return the updated turn
   return await convex.query(api.adventure.getTurnById, { turnId });
+}
+
+export async function getActiveAdventureForUser() {
+  const { userId } = await auth()
+  console.log("[getActiveAdventureForUser] userId:", userId)
+  if (!userId) return null
+
+  // Query for adventures where the user is a player and status is 'active' or 'waitingForPlayers'
+  const activeAdventures = await convex.query(api.adventure.getAdventuresByPlayer, {
+    playerId: userId,
+    status: "active"
+  })
+  console.log("[getActiveAdventureForUser] activeAdventures:", JSON.stringify(activeAdventures, null, 2))
+  const waitingAdventures = await convex.query(api.adventure.getAdventuresByPlayer, {
+    playerId: userId,
+    status: "waitingForPlayers"
+  })
+  console.log("[getActiveAdventureForUser] waitingAdventures:", JSON.stringify(waitingAdventures, null, 2))
+
+  // Prioritize active, then waitingForPlayers
+  const adventure = (activeAdventures && activeAdventures[0]) || (waitingAdventures && waitingAdventures[0])
+  console.log("[getActiveAdventureForUser] selected adventure:", JSON.stringify(adventure, null, 2))
+  if (!adventure) return null
+
+  // Load the adventure plan for party info
+  const planPath = `settings/${adventure.settingId}/${adventure.planId}.json`
+  const adventurePlan = await readJsonFromS3(planPath) as AdventurePlan
+  if (!adventurePlan) return null
+
+  // Map players to full PC objects from adventure plan
+  const party: PC[] = (adventure.players || []).map((player: { userId: string; characterId: string }) => {
+    if (Array.isArray(adventurePlan.premadePlayerCharacters)) {
+      const character = adventurePlan.premadePlayerCharacters.find((pc) => pc.id === player.characterId)
+      if (character) {
+        return { ...character, userId: player.userId }
+      }
+    }
+    return null
+  }).filter((char): char is PC => char !== null)
+
+  // Return a shape compatible with Adventure type
+  return {
+    id: adventure._id,
+    title: adventure.title,
+    adventurePlanId: adventure.planId,
+    settingId: adventure.settingId,
+    status: adventure.status,
+    party,
+    turns: [],
+    startedAt: adventure.startedAt ? new Date(adventure.startedAt).toISOString() : "",
+    endedAt: adventure.endedAt ? new Date(adventure.endedAt).toISOString() : undefined,
+    pausedAt: undefined,
+  } as Adventure
 } 

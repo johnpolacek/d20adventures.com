@@ -36,6 +36,8 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
     isSaving,
     availableNpcs,
     saveAdventurePlan,
+    draft,
+    setDraft,
   } = useAdventurePlanForm(adventurePlan)
 
   const sectionHandlers = useAdventureSections(sections, setSections)
@@ -109,7 +111,13 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
 
   return (
     <div className="pb-8 flex flex-wrap h-[80vh]">
-      <AdventurePlanFormHeader isSaving={isSaving} onDownload={handleDownload} onSave={() => saveAdventurePlan()} />
+      <AdventurePlanFormHeader
+        isSaving={isSaving}
+        onDownload={handleDownload}
+        onSave={(overrideImage, overrideDraft) => saveAdventurePlan(overrideImage, overrideDraft)}
+        draft={draft}
+        setDraft={setDraft}
+      />
       <AdventurePlanEditSidebar adventurePlan={{ ...adventurePlan, sections }} />
 
       <div
@@ -154,6 +162,7 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
           onEncounterTransitionsChange={encounterHandlers.handleEncounterTransitionsChange}
           onEncounterNpcChange={encounterHandlers.handleEncounterNpcChange}
           onAddEncounter={sectionHandlers.handleAddEncounter}
+          onAddSection={sectionHandlers.handleAddSection}
         />
 
         <AdventurePlanCharactersEdit
