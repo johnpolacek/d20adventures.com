@@ -83,7 +83,7 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
       }}
     >
       {/* Background overlay for better readability */}
-      <div className="absolute inset-0 bg-black/60" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/60 to-black/30" />
 
       <div className="container max-w-5xl mx-auto mt-24 p-8 relative z-10">
         <div className="text-center mb-6">

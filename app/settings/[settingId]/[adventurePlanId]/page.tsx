@@ -17,8 +17,8 @@ export default async function AdventureHomePage(props: { params: Promise<{ setti
     return <div>Error loading adventure data.</div>
   }
 
-  // Check if we have multiple premade characters and no selection - redirect to character selection
-  if (adventurePlan.premadePlayerCharacters.length > 1 && !selectedCharacterId) {
+  // Check if we have zero or multiple premade characters and no selection - redirect to character selection
+  if (adventurePlan.premadePlayerCharacters.length !== 1 && !selectedCharacterId) {
     redirect(`/settings/${settingId}/${adventurePlanId}/character-selection`)
   }
 
