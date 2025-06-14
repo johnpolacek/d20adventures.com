@@ -16,10 +16,11 @@ export function useAdventurePlanForm(adventurePlan: AdventurePlan) {
   const [isSaving, setIsSaving] = React.useState(false)
   const [draft, setDraft] = React.useState(adventurePlan.draft !== undefined ? adventurePlan.draft : true)
 
-  const saveAdventurePlan = async (overrideImage?: string, overrideDraft?: boolean) => {
+  const saveAdventurePlan = async (overrideImage?: string, overrideDraft?: boolean, overrideAvailableCharacterOptions?: AdventurePlan["availableCharacterOptions"]) => {
     setIsSaving(true)
     const imageToSave = overrideImage !== undefined ? overrideImage : image
     const draftToSave = overrideDraft !== undefined ? overrideDraft : draft
+    const availableCharacterOptionsToSave = overrideAvailableCharacterOptions !== undefined ? overrideAvailableCharacterOptions : adventurePlan.availableCharacterOptions
     const updatedAdventurePlan: AdventurePlan = {
       ...adventurePlan,
       teaser,
@@ -30,6 +31,7 @@ export function useAdventurePlanForm(adventurePlan: AdventurePlan) {
       npcs,
       premadePlayerCharacters,
       draft: draftToSave,
+      availableCharacterOptions: availableCharacterOptionsToSave,
     }
     console.log("[saveAdventurePlan] Saving with draft:", draftToSave)
     console.log("[saveAdventurePlan] Full updatedAdventurePlan:", updatedAdventurePlan)

@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { AdventurePlan } from "@/types/adventure-plan"
+import { AdventurePlan, RULES_PRESETS } from "@/types/adventure-plan"
 import type { Character, PCTemplate } from "@/types/character"
 import { Button } from "@/components/ui/button"
 import { AdventurePlanCharactersEdit } from "@/components/adventure-plans/adventure-plan-characters-edit"
@@ -13,6 +13,10 @@ import { useAdventurePlanForm } from "@/components/adventure-plans/hooks/use-adv
 import { useAdventureSections } from "@/components/adventure-plans/hooks/use-adventure-sections"
 import { useEncounterHandlers } from "@/components/adventure-plans/hooks/use-encounter-handlers"
 import { toast } from "sonner"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
+import { cn } from "@/lib/utils"
 
 export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: AdventurePlan }) {
   // Use custom hooks for form state management
@@ -42,6 +46,9 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
 
   const sectionHandlers = useAdventureSections(sections, setSections)
   const encounterHandlers = useEncounterHandlers(sections, setSections)
+
+  const [availableCharacterOptions, setAvailableCharacterOptions] = React.useState(adventurePlan.availableCharacterOptions || { races: [], archetypes: [] })
+  const [premadeOnly, setPremadeOnly] = React.useState(adventurePlan.availableCharacterOptions === undefined)
 
   // Character change handlers
   const handleNpcsChange = (newNpcs: Record<string, Character>) => {
@@ -74,13 +81,13 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
   const handleImageChange = async (newUrl: string) => {
     setImage(newUrl)
     if (newUrl) {
-      await saveAdventurePlan(newUrl)
+      await saveAdventurePlan(newUrl, undefined, premadeOnly ? undefined : availableCharacterOptions)
     }
   }
 
   const handleImageRemove = async () => {
     setImage("")
-    await saveAdventurePlan("")
+    await saveAdventurePlan("", undefined, premadeOnly ? undefined : availableCharacterOptions)
   }
 
   // Download handler
@@ -141,6 +148,99 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
           onMaxPartySizeChange={setMaxPartySize}
         />
 
+        {/* New: Available Character Options (Races & Archetypes) */}
+        <div className="my-8 space-y-6">
+          {/* Premade Characters Only Toggle */}
+          <div className="flex items-center gap-4">
+            <Switch
+              id="premade-only-toggle"
+              checked={premadeOnly}
+              onCheckedChange={(checked) => {
+                setPremadeOnly(checked)
+                if (checked) {
+                  setAvailableCharacterOptions({ races: [], archetypes: [] })
+                } else {
+                  setAvailableCharacterOptions(adventurePlan.availableCharacterOptions || { races: [], archetypes: [] })
+                }
+              }}
+              disabled={isSaving}
+            />
+            <Label htmlFor="premade-only-toggle" className="font-mono text-primary-200">
+              Premade Characters Only
+            </Label>
+          </div>
+          {/* Rules System Preset Select (native select) */}
+          <div className={cn("flex items-center gap-4", premadeOnly && "hidden")}>
+            <Label className="font-mono text-primary-200" htmlFor="rules-preset-select">
+              Apply Standard Races & Archetypes:
+            </Label>
+            <select
+              id="rules-preset-select"
+              className="w-56 bg-white/5 border border-white/20 rounded px-2 py-1 text-base text-white placeholder:text-white/40"
+              onChange={(e) => {
+                const val = e.target.value
+                if (!val) return
+                const preset = RULES_PRESETS.find((p) => p.value === val)
+                if (preset) {
+                  setAvailableCharacterOptions({
+                    races: preset.races,
+                    archetypes: preset.archetypes,
+                  })
+                }
+              }}
+              disabled={isSaving}
+              defaultValue=""
+            >
+              <option value="" disabled>
+                Choose a rules system...
+              </option>
+              {RULES_PRESETS.map((preset) => (
+                <option key={preset.value} value={preset.value}>
+                  {preset.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className={cn("flex flex-col md:flex-row gap-8", premadeOnly && "hidden")}>
+            <div className="flex-1">
+              <Label className="font-mono p-1 text-primary-200" htmlFor="available-races">
+                Available Races (comma separated)
+              </Label>
+              <Input
+                id="available-races"
+                value={availableCharacterOptions.races.join(", ")}
+                onChange={(e) => {
+                  const races = e.target.value
+                    .split(",")
+                    .map((r) => r.trim())
+                    .filter(Boolean)
+                  setAvailableCharacterOptions((prev) => ({ ...prev, races }))
+                }}
+                placeholder="e.g., Human, Elf, Dwarf, Halfling"
+                disabled={isSaving}
+              />
+            </div>
+            <div className="flex-1">
+              <Label className="font-mono p-1 text-primary-200" htmlFor="available-archetypes">
+                Available Archetypes (comma separated)
+              </Label>
+              <Input
+                id="available-archetypes"
+                value={availableCharacterOptions.archetypes.join(", ")}
+                onChange={(e) => {
+                  const archetypes = e.target.value
+                    .split(",")
+                    .map((a) => a.trim())
+                    .filter(Boolean)
+                  setAvailableCharacterOptions((prev) => ({ ...prev, archetypes }))
+                }}
+                placeholder="e.g., Fighter, Wizard, Rogue, Bard"
+                disabled={isSaving || premadeOnly}
+              />
+            </div>
+          </div>
+        </div>
+
         <AdventurePlanSections
           adventurePlanId={adventurePlan.id}
           settingId={adventurePlan.settingId}
@@ -186,7 +286,7 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
         />
 
         <div className="flex flex-col items-end gap-4 mt-8 px-4 pb-8">
-          <Button variant="epic" size="sm" onClick={() => saveAdventurePlan()} disabled={isSaving}>
+          <Button variant="epic" size="sm" onClick={() => saveAdventurePlan(undefined, undefined, premadeOnly ? undefined : availableCharacterOptions)} disabled={isSaving}>
             {isSaving ? "Saving..." : "Save Changes"}
           </Button>
         </div>
