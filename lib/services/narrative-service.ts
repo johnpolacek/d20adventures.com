@@ -12,50 +12,6 @@ const rollModifierSchema = z.object({
   modifier: z.number(),
 });
 
-export async function isRedundantOrMinimalAction(action: string, aiNarrative: string, characterName: string): Promise<boolean> {
-  const prompt = `
-Given the following player action and AI-generated narrative for the character ${characterName}, does the action add any meaningful, non-redundant content that avoids mentioning game mechanics to the narrative? If the action is generic, minimal, or already fully captured by the narrative, answer "yes". Otherwise, answer "no".
-
-Player action:
-${action}
-
-AI narrative:
-${aiNarrative}
-
-Answer:`.trim();
-
-  const res = await fetch("/api/ai/generate/text", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ input: prompt }),
-  });
-  if (!res.ok) throw new Error("Failed to judge redundancy");
-  const data = await res.json();
-  const answer = (data.result || data.text || "").trim().toLowerCase();
-  return answer.startsWith("yes");
-}
-
-export async function ensureNarrativeAction(characterName: string, playerInput: string): Promise<string> {
-  const prompt = `
-If the following player action is already a well-written, third-person, present-tense narrative paragraph suitable for a fantasy novel, return it unchanged. Otherwise, rewrite it as such, expanding minimally if needed replacing game mechanics with well-written narrative in the style of a novel..
-
-Character name: ${characterName}
-
-Player input:
-${playerInput}
-
-Final narrative action:`.trim();
-
-  const res = await fetch("/api/ai/generate/text", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ input: prompt }),
-  });
-  if (!res.ok) throw new Error("Failed to process player action");
-  const data = await res.json();
-  return data.result || data.text || "";
-}
-
 export async function generateNarrativeUpdate(previousNarrative: string, playerReply: string): Promise<string> {
   const prompt = `
 Continue the following fantasy adventure story as a single, concise paragraph of immersive third-person narrative prose, as if writing a novel. Write exactly two sentences and do not exceed 60 words. Do not use lists, bullet points, or markdown formatting. Write in present tense. Continue naturally from the previous events and the player's latest action. Do not use semicolons in your response. Never mention game mechanics, dice, or rules in your response.

@@ -8,8 +8,6 @@ import { AdventurePlan } from "@/types/adventure-plan"
 import Image from "next/image"
 import { textShadow } from "@/components/typography/styles"
 import { getImageUrl } from "@/lib/utils"
-// @ts-expect-error: no types for number-to-words
-import { toWords } from "number-to-words"
 
 export default async function SettingAdventures(props: { params: Promise<{ settingId: string }> }) {
   const { settingId } = await props.params
@@ -44,8 +42,8 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
     <div className="flex min-h-screen flex-col relative">
       <div className="fade-in delay-[2s] relative z-10">
         <ImageHeader variant="compact" imageUrl={getImageUrl(setting.image)} title={setting.name} subtitle="Adventures" imageAlt={setting.name} />
-        <div className="max-w-4xl mx-auto -mt-32 relative z-10 whitespace-pre-line">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10 py-8 auto-rows-fr">
+        <div className="max-w-4xl xl:max-w-6xl mx-auto -mt-32 relative z-10 whitespace-pre-line">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 relative z-10 py-8 auto-rows-fr">
             {publishedAdventures.map((adventure) => (
               <div key={adventure.id} className="block h-full">
                 <Card className="w-full h-full bg-black/80 border-white/20 scale-95 hover:scale-100 hover:bg-black/90 ring-[6px] ring-black hover:ring-8 hover:ring-primary-500 transition-colors cursor-pointer transition-all duration-500 ease-in-out p-0 overflow-hidden flex flex-col">
@@ -55,7 +53,7 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
                         {adventure.party[0] === 1 && adventure.party[1] === 1
                           ? "Single Player"
                           : adventure.party[0] === 2 && adventure.party[1] === 2
-                            ? `${toWords(2)[0].toUpperCase() + toWords(2).slice(1)} Players`
+                            ? `${adventure.party[0]} Players`
                             : `${adventure.party[0]}-${adventure.party[1]} Players`}
                       </span>
                     </div>
@@ -82,7 +80,7 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
               </div>
             ))}
           </div>
-          <div className="px-8">
+          <div className="px-8 max-w-4xl mx-auto">
             <p>{setting.description}</p>
           </div>
           <div className="flex justify-center pt-8 pb-24">
@@ -97,7 +95,7 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
           {draftAdventures.length > 0 && (
             <div className="pb-12 mb-12">
               <h3 className="text-lg font-display text-amber-400/80 mb-8 -mt-8 text-center">Draft Adventures</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                 {draftAdventures.map((adventure) => (
                   <div key={adventure.id} className="block h-full">
                     <Card className="w-full h-full bg-black/80 border-yellow-400/60 ring-2 opacity-80 p-0 overflow-hidden flex flex-col">

@@ -4,13 +4,13 @@ import AdventureHome from "@/components/views/adventure-home"
 import { loadAdventureWithNpc } from "@/app/_actions/load-adventure"
 import type { Id } from "@/convex/_generated/dataModel"
 import type { Adventure } from "@/types/adventure"
-import type { PC } from "@/types/character"
+import type { PC, PCTemplate } from "@/types/character"
 import { mapConvexTurnToTurn, reverseSlugify } from "@/lib/utils"
 import { AdventurePlan } from "@/types/adventure-plan"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 
 // Helper to map Convex adventure to frontend Adventure type
-function mapConvexAdventureToAdventure(raw: unknown, adventurePlan: AdventurePlan): Adventure | null {
+function mapConvexAdventureToAdventure(raw: unknown): Adventure | null {
   if (!raw || typeof raw !== "object" || !("_id" in raw)) return null
   const a = raw as {
     _id: string
@@ -24,28 +24,14 @@ function mapConvexAdventureToAdventure(raw: unknown, adventurePlan: AdventurePla
     playerIds?: string[]
   }
 
-  // Map players to full PC objects from adventure plan
-  const party: PC[] =
-    a.players
-      ?.map((player) => {
-        const character = adventurePlan.premadePlayerCharacters.find((pc) => pc.id === player.characterId)
-        if (character) {
-          return {
-            ...character,
-            userId: player.userId, // Add userId to the character
-          } as PC
-        }
-        return null
-      })
-      .filter((char): char is PC => char !== null) || []
-
   return {
     id: a._id,
     title: a.title,
     adventurePlanId: a.planId,
     settingId: a.settingId ?? "",
     status: a.status || "active", // Default to active for backwards compatibility
-    party,
+    party: [],
+    players: a.players ?? [],
     turns: [],
     startedAt: a.startedAt ? new Date(a.startedAt).toISOString() : "",
     endedAt: a.endedAt ? new Date(a.endedAt).toISOString() : undefined,
@@ -79,7 +65,7 @@ export default async function AdventurePage(props: { params: Promise<{ settingId
   const adventurePlan = (await readJsonFromS3(`settings/${settingId}/${adventurePlanId}.json`)) as AdventurePlan
   if (!adventurePlan) return notFound()
   const adventureData = await loadAdventureWithNpc(adventureId as Id<"adventures">)
-  const adventure = mapConvexAdventureToAdventure(adventureData?.adventure, adventurePlan)
+  const adventure = mapConvexAdventureToAdventure(adventureData?.adventure)
   const currentTurn = mapConvexTurnToTurn(adventureData?.currentTurn)
 
   if (!adventure) return notFound()
@@ -92,13 +78,37 @@ export default async function AdventurePage(props: { params: Promise<{ settingId
     }
   }
 
+  // Server-side: resolve party array
+  let party: PC[] = []
+  if (adventure.players && Array.isArray(adventure.players)) {
+    const partyResults = await Promise.all(
+      adventure.players.map(async (player) => {
+        if (typeof player.characterId === "string" && player.characterId.startsWith("characters/")) {
+          try {
+            const pcTemplate = (await readJsonFromS3(player.characterId)) as PCTemplate
+            // Convert PCTemplate to PC by adding userId
+            return { ...pcTemplate, userId: player.userId } as PC
+          } catch (err) {
+            console.error("[AdventurePage] Failed to load custom character from S3:", player.characterId, err)
+            return undefined
+          }
+        } else if (adventurePlan?.premadePlayerCharacters) {
+          const pc = adventurePlan.premadePlayerCharacters.find((c) => c.id === player.characterId)
+          if (pc && typeof pc === "object") return { ...pc, userId: player.userId } as PC
+        }
+        return undefined
+      })
+    )
+    party = partyResults.filter((pc): pc is PC => !!pc)
+  }
+
   const encounter = findEncounter(adventurePlan, currentTurn?.encounterId)
 
   return (
     <AdventureHome
       settingId={settingId}
       adventurePlanId={adventurePlanId}
-      adventure={adventure}
+      adventure={{ ...adventure, party }}
       encounterImage={encounter?.image || adventurePlan.image}
       currentTurn={currentTurn}
       adventurePlan={adventurePlan}

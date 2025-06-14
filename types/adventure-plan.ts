@@ -15,11 +15,55 @@ export interface AdventurePlan {
   sections: AdventureSection[];
   premadePlayerCharacters: PCTemplate[];
   npcs: Record<string, Character>;
-  /**
-   * If true, this adventure plan is a draft and should not be shown in public lists.
-   */
   draft?: boolean;
+  availableCharacterOptions?: {
+    races: string[];
+    archetypes: string[];
+  };
 }
+
+export const RULES_PRESETS = [
+  {
+    label: "Basic Fantasy",
+    value: "basic",
+    races: ["Human", "Elf", "Dwarf", "Half-Elf", "Halfling"],
+    archetypes: ["Fighter", "Wizard", "Rogue", "Cleric"],
+  },
+  {
+    label: "Classic Fantasy",
+    value: "classic",
+    races: ["Human", "Elf", "Dwarf", "Halfling", "Gnome", "Half-Elf", "Half-Orc"],
+    archetypes: ["Fighter", "Barbarian", "Rogue", "Wizard", "Sorcerer", "Cleric", "Paladin", "Bard", "Ranger", "Monk", "Druid", "Warlock"],
+  },
+  {
+    label: "Modern Fantasy",
+    value: "modern",
+    races: [
+      "Human",
+      "Elf",
+      "Dwarf",
+      "Halfling",
+      "Gnome",
+      "Dragonborn",
+      "Tiefling",
+      "Half-Elf",
+      "Half-Orc",
+      "Aasimar",
+      "Genasi",
+      "Gith",
+      "Goliath",
+      "Kenku",
+      "Lizardfolk",
+      "Tabaxi",
+      "Tortle",
+      "Firbolg",
+      "Goblin",
+      "Orc",
+      "Kobold",
+    ],
+    archetypes: ["Barbarian", "Bard", "Cleric", "Druid", "Fighter", "Monk", "Paladin", "Ranger", "Rogue", "Sorcerer", "Warlock", "Wizard", "Artificer"],
+  },
+]
 
 export interface AdventureSection {
   title: string;

@@ -55,16 +55,46 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
   const [isStarting, setIsStarting] = useState(false)
   const [modalCharacter, setModalCharacter] = useState<TurnCharacter | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const party = adventure.party
+  const userCharacter = party?.find((pc) => pc.userId === user?.id)
+  const availableCharacters = adventurePlan?.premadePlayerCharacters?.filter((pc) => !party?.some((partyMember) => partyMember.id === pc.id)) || []
+  const aiCharacters: PCTemplate[] = [] // TODO: Get from adventure.aiCharacters
+  const [minParty, maxParty] = adventurePlan?.party || [1, 4]
+  const currentPartySize = party?.length || 0
+  const canStartAdventure = currentPartySize >= minParty
+  const partyIsFull = currentPartySize >= maxParty
+  const shouldShowInvite = !partyIsFull && availableCharacters.length > 0
+
+  console.log(
+    "[AdventureLobby] party info",
+    JSON.stringify(
+      {
+        minParty,
+        maxParty,
+        currentPartySize,
+        canStartAdventure,
+        partyIsFull,
+        shouldShowInvite,
+      },
+      null,
+      2
+    )
+  )
+
+  // Debug: Log the raw adventure prop
+  console.log("[AdventureLobby] adventure prop:", JSON.stringify(adventure, null, 2))
+  // Debug: Log the players array
+  console.log("[AdventureLobby] adv.players:", JSON.stringify(adventure.players, null, 2))
+  // Debug: Log the computed party array
+  console.log("[AdventureLobby] computed party:", JSON.stringify(party, null, 2))
+  // Debug: Log the userCharacter
+  console.log("[AdventureLobby] userCharacter:", JSON.stringify(userCharacter, null, 2))
 
   useEffect(() => {
     if (isLoaded) {
       scrollToTop()
     }
   }, [isLoaded])
-
-  if (!isLoaded) {
-    return null
-  }
 
   // Generate the invite link
   const inviteLink = typeof window !== "undefined" ? `${window.location.origin}/settings/${params.settingId}/${params.adventurePlanId}/${adventure.id}` : ""
@@ -137,31 +167,6 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
     setIsModalOpen(true)
   }
 
-  // Check if current user has a character in this adventure
-  const userCharacter = adventure.party?.find((pc) => pc.userId === user?.id)
-
-  // Get available characters (not claimed by anyone)
-  const availableCharacters = adventurePlan?.premadePlayerCharacters?.filter((pc) => !adventure.party?.some((partyMember) => partyMember.id === pc.id)) || []
-
-  // Get AI-controlled characters (placeholder - will be implemented with aiCharacters array)
-  const aiCharacters: PCTemplate[] = [] // TODO: Get from adventure.aiCharacters
-
-  // Determine party state based on adventure plan requirements
-  const [minParty, maxParty] = adventurePlan?.party || [1, 4] // Default fallback
-  const currentPartySize = adventure.party?.length || 0
-  const canStartAdventure = currentPartySize >= minParty
-  const partyIsFull = currentPartySize >= maxParty
-  const shouldShowInvite = !partyIsFull && availableCharacters.length > 0
-
-  console.log("[AdventureLobby] party info", {
-    minParty,
-    maxParty,
-    currentPartySize,
-    canStartAdventure,
-    partyIsFull,
-    shouldShowInvite,
-  })
-
   // Show different UI based on user state
   if (isSignedIn && userCharacter) {
     // User is signed in and has a character - show waiting state
@@ -176,7 +181,7 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
           onClick={() => handleViewCharacterSheet(userCharacter)}
         >
           <div className="relative w-full h-full aspect-square">
-            <Image className="w-full h-full object-cover" fill src={getImageUrl(userCharacter.image)} alt={userCharacter.name} />
+            <Image className="w-full h-full object-cover" fill src={userCharacter.image ? getImageUrl(userCharacter.image) : "/images/placeholder.svg"} alt={userCharacter.name} />
           </div>
           <div className="text-white absolute bottom-0 left-0 right-0 w-full z-10 text-center">
             <div className="font-display font-bold text-2xl mb-1">{userCharacter.name}</div>
@@ -209,7 +214,7 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
               </Button>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-4 mb-12">
               <h3 className="font-display mb-4 text-2xl text-green-400">Ready to Start!</h3>
               <p className="text-lg text-white/80 mb-6">
                 Minimum party size reached ({currentPartySize}/{maxParty}). You can start now or wait for more players.
@@ -244,9 +249,6 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
                     className="flex items-center gap-3 cursor-pointer hover:bg-white/10 transition-colors duration-500 ease-in-out rounded p-1 -m-1"
                     onClick={() => handleViewAvailableCharacterSheet(char)}
                   >
-                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-700">
-                      <Image src={getImageUrl(char.image)} alt={char.name} width={40} height={40} className="w-full h-full object-cover" />
-                    </div>
                     <div>
                       <p className="text-base font-display text-white pr-8">{char.name}</p>
                     </div>
@@ -268,7 +270,7 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
                 <div key={char.id} className="flex items-center justify-between bg-blue-900/20 rounded-lg p-3 border border-blue-500/30">
                   <div className="flex items-center gap-3 cursor-pointer hover:bg-white/5 transition-colors duration-200 rounded p-1 -m-1" onClick={() => handleViewAvailableCharacterSheet(char)}>
                     <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-700">
-                      <Image src={getImageUrl(char.image)} alt={char.name} width={40} height={40} className="w-full h-full object-cover" />
+                      <Image className="w-full h-full object-cover" fill src={char.image ? getImageUrl(char.image) : "/images/placeholder.svg"} alt={char.name} width={40} height={40} />
                     </div>
                     <div>
                       <p className="text-sm font-medium text-white">{char.name}</p>
@@ -313,7 +315,7 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
               onClick={() => handleViewAvailableCharacterSheet(firstAvailable)}
             >
               <div className="relative w-full h-full aspect-square">
-                <Image className="w-full h-full object-cover" fill src={getImageUrl(firstAvailable.image)} alt={firstAvailable.name} />
+                <Image className="w-full h-full object-cover" fill src={firstAvailable.image ? getImageUrl(firstAvailable.image) : "/images/placeholder.svg"} alt={firstAvailable.name} />
               </div>
               <div className="text-white absolute bottom-0 left-0 right-0 w-full z-10 text-center">
                 <div className="font-display font-bold text-2xl mb-1">{firstAvailable.name}</div>
@@ -373,7 +375,7 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
               onClick={() => handleViewAvailableCharacterSheet(firstAvailable)}
             >
               <div className="relative w-full h-full aspect-square">
-                <Image className="w-full h-full object-cover" fill src={getImageUrl(firstAvailable.image)} alt={firstAvailable.name} />
+                <Image className="w-full h-full object-cover" fill src={firstAvailable.image ? getImageUrl(firstAvailable.image) : "/images/placeholder.svg"} alt={firstAvailable.name} />
               </div>
               <div className="text-white absolute bottom-0 left-0 right-0 w-full z-10 text-center">
                 <div className="font-display font-bold text-2xl mb-1">{firstAvailable.name}</div>

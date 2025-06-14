@@ -14,6 +14,27 @@ interface StartAdventureArgs {
   adventureId: string
 }
 
+// Helper to safely extract id and name from characterTemplate
+function getCharacterIdAndName(characterTemplate: unknown, player: { characterId: string }) {
+  if (
+    characterTemplate &&
+    typeof characterTemplate === 'object' &&
+    'id' in characterTemplate &&
+    typeof (characterTemplate as { id?: unknown }).id === 'string'
+  ) {
+    return {
+      id: (characterTemplate as { id: string }).id,
+      name: (characterTemplate as { name?: string }).name || 'Unnamed',
+    }
+  }
+  return {
+    id: player.characterId || '',
+    name: (characterTemplate && typeof characterTemplate === 'object' && 'name' in characterTemplate && typeof (characterTemplate as { name?: unknown }).name === 'string')
+      ? (characterTemplate as { name: string }).name
+      : 'Unnamed',
+  }
+}
+
 export async function startAdventure({ settingId, adventurePlanId, adventureId }: StartAdventureArgs) {
   console.log("🎲 Server Action: startAdventure called", { settingId, adventurePlanId, adventureId })
 
@@ -74,17 +95,32 @@ export async function startAdventure({ settingId, adventurePlanId, adventureId }
     // Add player characters
     if (adventure.players) {
       for (const player of adventure.players) {
-        const characterTemplate = adventurePlan.premadePlayerCharacters.find(pc => pc.id === player.characterId)
+        let characterTemplate = null;
+        // If the characterId looks like an S3 path, load from S3
+        if (typeof player.characterId === 'string' && player.characterId.startsWith('characters/')) {
+          try {
+            characterTemplate = await readJsonFromS3(player.characterId);
+          } catch (err) {
+            console.error('Failed to load custom character from S3:', player.characterId, err);
+            throw new Error('Failed to load custom character for player.');
+          }
+        } else {
+          characterTemplate = adventurePlan.premadePlayerCharacters.find(pc => pc.id === player.characterId);
+        }
         if (characterTemplate) {
+          // Use helper to get id and name
+          const { id, name } = getCharacterIdAndName(characterTemplate, player);
           const pcCharacter = {
             ...characterTemplate,
+            id,
+            name,
             type: "pc" as const,
             userId: player.userId,
             initiative: Math.floor(Math.random() * 20) + 1, // Random initiative for now
             hasReplied: false,
             isComplete: false
-          }
-          characters.push(pcCharacter)
+          };
+          characters.push(pcCharacter);
         }
       }
     }

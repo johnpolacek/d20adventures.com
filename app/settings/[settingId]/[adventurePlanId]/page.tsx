@@ -18,7 +18,7 @@ export default async function AdventureHomePage(props: { params: Promise<{ setti
   }
 
   // Check if we have multiple premade characters and no selection - redirect to character selection
-  if (adventurePlan.premadePlayerCharacters.length > 1 && !selectedCharacterId) {
+  if (!selectedCharacterId) {
     redirect(`/settings/${settingId}/${adventurePlanId}/character-selection`)
   }
 

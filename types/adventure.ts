@@ -12,6 +12,7 @@ export interface Adventure {
   startedAt: string;
   endedAt?: string;
   pausedAt?: string;
+  players?: { characterId: string; userId: string }[];
 }
 
 export type TurnCharacter =
