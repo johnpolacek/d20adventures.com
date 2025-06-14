@@ -49,6 +49,7 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
 
   const [availableCharacterOptions, setAvailableCharacterOptions] = React.useState(adventurePlan.availableCharacterOptions || { races: [], archetypes: [] })
   const [premadeOnly, setPremadeOnly] = React.useState(adventurePlan.availableCharacterOptions === undefined)
+  const [reorderFlag, setReorderFlag] = React.useState(false)
 
   // Character change handlers
   const handleNpcsChange = (newNpcs: Record<string, Character>) => {
@@ -116,6 +117,13 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
     toast.success("Adventure plan downloaded successfully!")
   }
 
+  React.useEffect(() => {
+    if (reorderFlag) {
+      saveAdventurePlan(undefined, undefined, premadeOnly ? undefined : availableCharacterOptions)
+      setReorderFlag(false)
+    }
+  }, [reorderFlag])
+
   return (
     <div className="pb-8 flex flex-wrap h-[80vh]">
       <AdventurePlanFormHeader
@@ -125,7 +133,27 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
         draft={draft}
         setDraft={setDraft}
       />
-      <AdventurePlanEditSidebar adventurePlan={{ ...adventurePlan, sections }} />
+      <AdventurePlanEditSidebar
+        adventurePlan={{ ...adventurePlan, sections }}
+        onReorderEncounters={(sectionIndex, sceneIndex, newOrder) => {
+          setSections((prevSections) => {
+            const updatedSections = prevSections.map((section, sIdx) => {
+              if (sIdx !== sectionIndex) return section
+              return {
+                ...section,
+                scenes: section.scenes.map((scene, scIdx) => {
+                  if (scIdx !== sceneIndex) return scene
+                  // Reorder encounters in this scene
+                  const newEncounters = newOrder.map((id) => scene.encounters.find((e) => e.id === id)).filter(Boolean) // filter out any not found
+                  return { ...scene, encounters: newEncounters as typeof scene.encounters }
+                }),
+              }
+            })
+            setReorderFlag(true)
+            return updatedSections
+          })
+        }}
+      />
 
       <div
         id="adventure-plan-main"
