@@ -8,8 +8,6 @@ import { AdventurePlan } from "@/types/adventure-plan"
 import Image from "next/image"
 import { textShadow } from "@/components/typography/styles"
 import { getImageUrl } from "@/lib/utils"
-// @ts-expect-error: no types for number-to-words
-import { toWords } from "number-to-words"
 
 export default async function SettingAdventures(props: { params: Promise<{ settingId: string }> }) {
   const { settingId } = await props.params
