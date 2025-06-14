@@ -157,7 +157,7 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
 
       <div
         id="adventure-plan-main"
-        className="flex-1 pt-2 pr-3 -mr-3 h-full overflow-y-auto [scrollbar-width:thin] [scrollbar-color:dimgray_black] [&::-webkit-scrollbar-track]:bg-black [&::-webkit-scrollbar-thumb]:bg-black [&::-webkit-scrollbar]:w-1"
+        className="flex-1 pt-2 pr-3 -mr-3 h-full overflow-y-auto scroll-smooth [scrollbar-width:thin] [scrollbar-color:dimgray_black] [&::-webkit-scrollbar-track]:bg-black [&::-webkit-scrollbar-thumb]:bg-black [&::-webkit-scrollbar]:w-1"
       >
         <AdventurePlanBasicInfo
           adventurePlanId={adventurePlan.id}

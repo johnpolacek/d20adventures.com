@@ -21,13 +21,15 @@ const scrollToElement = (targetId: string) => {
   const container = document.getElementById("adventure-plan-main")
   const target = document.getElementById(targetId.replace("#", ""))
 
-  if (container && target) {
-    const containerRect = container.getBoundingClientRect()
-    const targetRect = target.getBoundingClientRect()
-    const scrollTop = container.scrollTop + targetRect.top - containerRect.top - 20 // 20px offset for better visibility
-
+  if (target) {
+    target.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" })
+    // Optionally, adjust for fixed headers or offsets if needed
+    // setTimeout(() => window.scrollBy(0, -20), 400)
+  } else if (container) {
+    // fallback: scroll container if target is not found
+    // (should rarely happen, but keep for safety)
     container.scrollTo({
-      top: scrollTop,
+      top: 0,
       behavior: "smooth",
     })
   }
