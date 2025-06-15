@@ -9,7 +9,7 @@ import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PCTemplate } from "@/types/character"
 import Image from "next/image"
 import { getImageUrl } from "@/lib/utils"
-import { Copy, Check, Share2, Bot } from "lucide-react"
+import { Copy, Check, Share2 } from "lucide-react"
 import { toast } from "sonner"
 import { useParams } from "next/navigation"
 import { textShadow } from "../typography/styles"
@@ -50,7 +50,6 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
   const { user, isSignedIn, isLoaded } = useUser()
   const params = useParams()
   const [isCopied, setIsCopied] = useState(false)
-  const [assigningToAI, setAssigningToAI] = useState<string | null>(null)
   const [isJoining, setIsJoining] = useState(false)
   const [isStarting, setIsStarting] = useState(false)
   const [modalCharacter, setModalCharacter] = useState<TurnCharacter | null>(null)
@@ -58,37 +57,11 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
   const party = adventure.party
   const userCharacter = party?.find((pc) => pc.userId === user?.id)
   const availableCharacters = adventurePlan?.premadePlayerCharacters?.filter((pc) => !party?.some((partyMember) => partyMember.id === pc.id)) || []
-  const aiCharacters: PCTemplate[] = [] // TODO: Get from adventure.aiCharacters
   const [minParty, maxParty] = adventurePlan?.party || [1, 4]
   const currentPartySize = party?.length || 0
   const canStartAdventure = currentPartySize >= minParty
   const partyIsFull = currentPartySize >= maxParty
-  const shouldShowInvite = !partyIsFull && availableCharacters.length > 0
-
-  console.log(
-    "[AdventureLobby] party info",
-    JSON.stringify(
-      {
-        minParty,
-        maxParty,
-        currentPartySize,
-        canStartAdventure,
-        partyIsFull,
-        shouldShowInvite,
-      },
-      null,
-      2
-    )
-  )
-
-  // Debug: Log the raw adventure prop
-  console.log("[AdventureLobby] adventure prop:", JSON.stringify(adventure, null, 2))
-  // Debug: Log the players array
-  console.log("[AdventureLobby] adv.players:", JSON.stringify(adventure.players, null, 2))
-  // Debug: Log the computed party array
-  console.log("[AdventureLobby] computed party:", JSON.stringify(party, null, 2))
-  // Debug: Log the userCharacter
-  console.log("[AdventureLobby] userCharacter:", JSON.stringify(userCharacter, null, 2))
+  const shouldShowInvite = currentPartySize < maxParty
 
   useEffect(() => {
     if (isLoaded) {
@@ -112,19 +85,6 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
     } catch (error) {
       toast.error("Failed to copy link")
       console.error("Copy failed:", error)
-    }
-  }
-
-  const handleAssignToAI = async (characterId: string) => {
-    setAssigningToAI(characterId)
-    try {
-      // TODO: Implement assignCharacterToAI server action
-      await new Promise((resolve) => setTimeout(resolve, 1000)) // Placeholder delay
-      toast.success("Character assigned to AI!")
-    } catch {
-      toast.error("Failed to assign character to AI")
-    } finally {
-      setAssigningToAI(null)
     }
   }
 
@@ -166,6 +126,8 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
     setModalCharacter(turnCharacter)
     setIsModalOpen(true)
   }
+
+  console.log("[AdventureLobby] adventurePlan:", JSON.stringify(adventurePlan, null, 2))
 
   // Show different UI based on user state
   if (isSignedIn && userCharacter) {
@@ -216,8 +178,10 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
           ) : (
             <div className="space-y-4 mb-12">
               <h3 className="font-display mb-4 text-2xl text-green-400">Ready to Start!</h3>
-              <p className="text-lg text-white/80 mb-6">
-                Minimum party size reached ({currentPartySize}/{maxParty}). You can start now or wait for more players.
+              <p className="text-white/80 mb-6">
+                Minimum party size reached ({currentPartySize}/{maxParty}).
+                <br />
+                You can start now or wait for more players.
               </p>
               <Button variant="epic" size="lg" className="text-xl py-4 px-8" onClick={handleStartAdventure} disabled={isStarting}>
                 {isStarting ? "Starting Adventure..." : "Start Adventure"}
@@ -240,7 +204,7 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
           )}
 
           {/* Available Characters - only show if party isn't full */}
-          {shouldShowInvite && (
+          {shouldShowInvite && availableCharacters.length > 0 && (
             <div className="space-y-3 w-full max-w-lg mx-auto">
               <p className="text-sm text-white/70 mt-4 mb-2">Available characters:</p>
               {availableCharacters.map((char) => (
@@ -251,33 +215,6 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
                   >
                     <div>
                       <p className="text-base font-display text-white pr-8">{char.name}</p>
-                    </div>
-                  </div>
-                  <Button size="sm" variant="outline" onClick={() => handleAssignToAI(char.id)} disabled={assigningToAI === char.id} className="flex items-center gap-2 text-sm">
-                    <Bot className="w-4 h-4" />
-                    {assigningToAI === char.id ? "Assigning..." : "Assign to AI"}
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* AI-Controlled Characters */}
-          {aiCharacters.length > 0 && (
-            <div className="space-y-3 mt-6">
-              <p className="text-sm text-gray-500 mb-4">AI-controlled characters:</p>
-              {aiCharacters.map((char) => (
-                <div key={char.id} className="flex items-center justify-between bg-blue-900/20 rounded-lg p-3 border border-blue-500/30">
-                  <div className="flex items-center gap-3 cursor-pointer hover:bg-white/5 transition-colors duration-200 rounded p-1 -m-1" onClick={() => handleViewAvailableCharacterSheet(char)}>
-                    <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-700">
-                      <Image className="w-full h-full object-cover" fill src={char.image ? getImageUrl(char.image) : "/images/placeholder.svg"} alt={char.name} width={40} height={40} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-white">{char.name}</p>
-                      <p className="text-xs text-blue-300 flex items-center gap-1">
-                        <Bot className="w-3 h-3" />
-                        AI-controlled • Click to view details
-                      </p>
                     </div>
                   </div>
                 </div>

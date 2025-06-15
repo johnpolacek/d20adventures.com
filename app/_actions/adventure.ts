@@ -454,4 +454,30 @@ export async function getActiveAdventureForUser() {
     endedAt: adventure.endedAt ? new Date(adventure.endedAt).toISOString() : undefined,
     pausedAt: undefined,
   } as Adventure
+}
+
+export async function getAdventuresForUser() {
+  const { userId } = await auth()
+  if (!userId) return []
+
+  // Fetch all adventures for this user (all statuses)
+  const allStatuses: ("active" | "waitingForPlayers" | "completed")[] = ["active", "waitingForPlayers", "completed"]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let adventures: any[] = []
+  for (const status of allStatuses) {
+    const result = await convex.query(api.adventure.getAdventuresByPlayer, {
+      playerId: userId,
+      status,
+    })
+    adventures = adventures.concat(result)
+  }
+  // Remove duplicates by id
+   
+  const unique = Object.values(
+    adventures.reduce((acc, adv) => {
+      acc[adv._id] = adv
+      return acc
+    }, {} as Record<string, (typeof adventures)[number]>)
+  )
+  return unique
 } 

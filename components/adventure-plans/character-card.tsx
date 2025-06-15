@@ -24,13 +24,28 @@ interface CharacterCardProps {
   adventurePlanId: string
   uniqueKey: string
   editing: boolean
-  onToggleEdit: () => void
-  onRemove: () => void
+  onToggleEdit?: () => void
+  onRemove?: () => void
   updateCharacter: (charId: string, updates: Partial<Character | PCTemplate>) => void
   getCharacter: (charId: string) => Character | PCTemplate
+  className?: string
 }
 
-export function CharacterCard({ charId, char, isNpcs, isSaving, settingId, adventurePlanId, uniqueKey, editing, onToggleEdit, onRemove, updateCharacter, getCharacter }: CharacterCardProps) {
+export function CharacterCard({
+  charId,
+  char,
+  isNpcs,
+  isSaving,
+  settingId,
+  adventurePlanId,
+  uniqueKey,
+  editing,
+  onToggleEdit,
+  onRemove,
+  updateCharacter,
+  getCharacter,
+  className,
+}: CharacterCardProps) {
   const characterDetails = useCharacterDetails(charId, getCharacter, updateCharacter)
   const imageUploadFolder = `images/settings/${settingId}/${adventurePlanId}/${isNpcs ? "npcs" : "pcs"}`
   const imageUrl = char.image ? IMAGE_HOST + "/" + char.image : ""
@@ -58,10 +73,12 @@ export function CharacterCard({ charId, char, isNpcs, isSaving, settingId, adven
               <Edit size={14} />
               Edit
             </Button>
-            <Button onClick={onRemove} disabled={isSaving} size="sm" variant="outline" className="flex items-center gap-2 text-sm">
-              <X size={14} />
-              Delete
-            </Button>
+            {onRemove && (
+              <Button onClick={onRemove} disabled={isSaving} size="sm" variant="outline" className="flex items-center gap-2 text-sm">
+                <X size={14} />
+                Delete
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -70,11 +87,13 @@ export function CharacterCard({ charId, char, isNpcs, isSaving, settingId, adven
 
   // Expanded Mode
   return (
-    <Card key={uniqueKey} className={cn("bg-white/5 border-white/20 text-white")}>
+    <Card key={uniqueKey} className={cn("bg-white/5 border-white/20 text-white", className)}>
       <CardContent className="relative grid grid-cols-2 gap-8">
-        <button onClick={onToggleEdit} className="text-sm flex gap-1 items-center absolute -top-5 right-3 text-indigo-400 hover:text-indigo-300">
-          <ChevronsUp size={14} /> close
-        </button>
+        {onToggleEdit && (
+          <button onClick={onToggleEdit} className="text-sm flex gap-1 items-center absolute -top-5 right-3 text-indigo-400 hover:text-indigo-300">
+            <ChevronsUp size={14} /> close
+          </button>
+        )}
 
         {/* Left Column */}
         <div className="flex flex-col">

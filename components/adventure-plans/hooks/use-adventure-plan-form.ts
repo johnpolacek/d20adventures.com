@@ -21,6 +21,15 @@ export function useAdventurePlanForm(adventurePlan: AdventurePlan) {
     const imageToSave = overrideImage !== undefined ? overrideImage : image
     const draftToSave = overrideDraft !== undefined ? overrideDraft : draft
     const availableCharacterOptionsToSave = overrideAvailableCharacterOptions !== undefined ? overrideAvailableCharacterOptions : adventurePlan.availableCharacterOptions
+
+    // Filter out empty premade player characters
+    const filteredPremadePlayerCharacters = premadePlayerCharacters.filter(
+      (pc) =>
+        pc.name.trim() !== "" ||
+        pc.archetype.trim() !== "" ||
+        pc.race.trim() !== ""
+    )
+
     const updatedAdventurePlan: AdventurePlan = {
       ...adventurePlan,
       teaser,
@@ -29,7 +38,7 @@ export function useAdventurePlanForm(adventurePlan: AdventurePlan) {
       image: imageToSave,
       sections,
       npcs,
-      premadePlayerCharacters,
+      premadePlayerCharacters: filteredPremadePlayerCharacters,
       draft: draftToSave,
       availableCharacterOptions: availableCharacterOptionsToSave,
     }
