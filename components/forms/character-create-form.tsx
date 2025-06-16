@@ -18,13 +18,15 @@ import { Button } from "../ui/button"
 import { saveCharacterTemplateAction } from "@/app/_actions/save-character-template"
 import { toast } from "sonner"
 import type { PCTemplate, Character } from "@/types/character"
-import { createAdventure } from "@/app/_actions/create-adventure"
+import { cn } from "@/lib/utils"
+import { useSearchParams } from "next/navigation"
 
 interface CharacterCreateFormProps {
   availableRaces: string[]
   availableArchetypes?: string[]
   settingId: string
   adventurePlanId: string
+  className?: string
 }
 
 const defaultAttributes: Attributes = {
@@ -36,7 +38,7 @@ const defaultAttributes: Attributes = {
   charisma: "",
 }
 
-export default function CharacterCreateForm({ availableRaces, availableArchetypes = [], settingId, adventurePlanId }: CharacterCreateFormProps) {
+export default function CharacterCreateForm({ availableRaces, availableArchetypes = [], settingId, adventurePlanId, className }: CharacterCreateFormProps) {
   const [step, setStep] = useState(1)
   const [selectedRace, setSelectedRace] = useState("")
   const [selectedArchetype, setSelectedArchetype] = useState("")
@@ -56,6 +58,7 @@ export default function CharacterCreateForm({ availableRaces, availableArchetype
   const [specialAbilities, setSpecialAbilities] = useState<string[]>([""])
   const [isSaving, setIsSaving] = useState(false)
   const [image, setImage] = useState("")
+  const searchParams = useSearchParams()
 
   // Placeholder for future steps
   // const [selectedClass, setSelectedClass] = useState("")
@@ -107,19 +110,13 @@ export default function CharacterCreateForm({ availableRaces, availableArchetype
       console.log("[CharacterCreateForm] saveCharacterTemplateAction result:", JSON.stringify(result, null, 2))
       if (result.success && result.characterId) {
         toast.success("Character saved!")
-        // Now create the adventure with this character as the player
-        const adventureResult = await createAdventure({
-          settingId,
-          adventurePlanId,
-          characterChoices: [
-            {
-              characterId: result.characterId, // S3 path
-              mode: "player",
-            },
-          ],
-        })
-        console.log("[CharacterCreateForm] createAdventure result:", JSON.stringify(adventureResult, null, 2))
-        // createAdventure will redirect
+        // Redirect to adventure lobby if redirectToAdventure param is present, else to player profile
+        const redirectTo = searchParams.get("redirectToAdventure")
+        if (redirectTo) {
+          window.location.href = redirectTo
+        } else {
+          window.location.href = "/player"
+        }
       } else {
         toast.error(result.error || "Failed to save character")
       }
@@ -187,7 +184,7 @@ export default function CharacterCreateForm({ availableRaces, availableArchetype
   console.log("RENDER: step", step, { hasSpells, hasSpecialAbilities, spells, specialAbilities })
 
   return (
-    <div className="h-full w-full px-8 pb-8 pt-24 flex flex-col items-center justify-center">
+    <div className={cn("h-full w-full px-8 pb-8 pt-24 flex flex-col items-center justify-center", className)}>
       <h1 style={textShadow} className="text-3xl font-display text-amber-300 mb-6 font-bold">
         Create Your Character
       </h1>

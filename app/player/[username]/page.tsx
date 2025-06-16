@@ -102,6 +102,12 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
                     You don&apos;t have any characters yet. <br />
                     Create one or join an adventure to get started.
                   </p>
+                  {/* Create New Character Button in empty state */}
+                  <Link href={`/player/${user.username}/characters/new`}>
+                    <Button asChild variant="epic" className="text-sm" size="sm">
+                      Create New Character
+                    </Button>
+                  </Link>
                   <Link href="/settings/realm-of-myr/play">
                     <Button asChild variant="epic" className="text-sm" size="sm">
                       Join an Adventure
@@ -110,6 +116,13 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
                 </div>
               </div>
             )}
+            <div className="flex justify-center mt-8">
+              <Link href={`/player/${user.username}/characters/new`}>
+                <Button asChild variant="epic" className="text-sm" size="sm">
+                  Create New Character
+                </Button>
+              </Link>
+            </div>
 
             {/* Adventures Section */}
             <div className="mt-16">

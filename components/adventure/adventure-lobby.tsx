@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { useUser, SignInButton } from "@clerk/nextjs"
+import { useUser, SignInButton, SignUpButton } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Adventure, TurnCharacter } from "@/types/adventure"
@@ -17,6 +17,8 @@ import { joinAdventure } from "@/app/_actions/join-adventure"
 import { startAdventure } from "@/app/_actions/start-adventure"
 import { CharacterSheetModal } from "./character-sheet-modal"
 import { scrollToTop } from "../ui/utils"
+import Link from "next/link"
+import { listAndReadJsonFilesInS3Directory } from "@/lib/s3-utils"
 
 interface AdventureLobbyProps {
   adventure: Adventure
@@ -63,11 +65,27 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
   const partyIsFull = currentPartySize >= maxParty
   const shouldShowInvite = currentPartySize < maxParty
 
+  // Allow joining with own character if no premade characters are available
+  const [userCharacters, setUserCharacters] = useState<PCTemplate[]>([])
+  const [isLoadingUserChars, setIsLoadingUserChars] = useState(true)
+
   useEffect(() => {
     if (isLoaded) {
       scrollToTop()
     }
   }, [isLoaded])
+
+  useEffect(() => {
+    if (isSignedIn && !userCharacter && availableCharacters.length === 0) {
+      setIsLoadingUserChars(true)
+      listAndReadJsonFilesInS3Directory(`characters/${user?.id}/`)
+        .then((results) => {
+          setUserCharacters(results.map((r) => r.data as PCTemplate))
+          setIsLoadingUserChars(false)
+        })
+        .catch(() => setIsLoadingUserChars(false))
+    }
+  }, [isSignedIn, user, userCharacter, availableCharacters.length])
 
   // Generate the invite link
   const inviteLink = typeof window !== "undefined" ? `${window.location.origin}/settings/${params.settingId}/${params.adventurePlanId}/${adventure.id}` : ""
@@ -75,6 +93,9 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
   // Generate the redirect URL for after sign up/sign in
   const redirectUrl =
     typeof window !== "undefined" ? window.location.href : `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/settings/${params.settingId}/${params.adventurePlanId}/${adventure.id}`
+
+  // Get the current adventure lobby URL for redirect
+  const adventureLobbyUrl = typeof window !== "undefined" ? window.location.pathname : `/settings/${params.settingId}/${params.adventurePlanId}/${adventure.id}`
 
   const handleCopyInvite = async () => {
     try {
@@ -130,6 +151,26 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
   console.log("[AdventureLobby] adventurePlan:", JSON.stringify(adventurePlan, null, 2))
 
   // Show different UI based on user state
+  if (!isSignedIn) {
+    return (
+      <div className="w-full flex flex-col items-center justify-center max-w-5xl fade-in relative z-10 pb-16 -mt-16">
+        <Card className="bg-black/50 border-amber-300/30 ring-8 ring-black/30 max-w-md mx-auto">
+          <CardContent className="p-6 text-center flex flex-col items-center gap-2">
+            <h2 className="text-3xl text-amber-300 font-display mb-4 text-balance">Sign Up to Join the Adventure</h2>
+            <p className="mb-4 text-white/80">Create an account or sign in to join this adventure.</p>
+            <div className="flex gap-4">
+              <SignUpButton mode="modal">
+                <Button variant="epic" size="lg" className="text-xl py-4 px-8">
+                  Sign Up
+                </Button>
+              </SignUpButton>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   if (isSignedIn && userCharacter) {
     // User is signed in and has a character - show waiting state
     return (
@@ -342,6 +383,58 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
 
         {/* Character Sheet Modal */}
         <CharacterSheetModal character={modalCharacter} open={isModalOpen} onOpenChange={setIsModalOpen} />
+      </div>
+    )
+  }
+
+  if (isSignedIn && !userCharacter && availableCharacters.length === 0) {
+    if (isLoadingUserChars) {
+      return <div className="text-center text-white/80 py-12">Loading your characters...</div>
+    }
+    if (userCharacters.length === 0) {
+      return (
+        <div className="text-center pb-12 relative z-10">
+          {adventurePlan?.teaser && (
+            <div className="pb-8 max-w-2xl mx-auto -mt-8">
+              <p style={textShadow}>{adventurePlan.teaser}</p>
+            </div>
+          )}
+          <div className="rounded-lg p-8 bg-black/50 border border-white/30 ring-8 ring-black/30 max-w-md mx-auto">
+            <h4 className="text-2xl text-amber-300 font-display mb-4">Create a Character</h4>
+            <p className="text-sm text-white">You don&apos;t have any characters yet.</p>
+            <p className="text-sm text-white mb-6">Create a character to join the adventure.</p>
+            <Link href={`/player/${user?.username}/characters/new?redirectToAdventure=${encodeURIComponent(adventureLobbyUrl)}`}>
+              <Button variant="epic">Create Character</Button>
+            </Link>
+          </div>
+        </div>
+      )
+    }
+    return (
+      <div className="text-center py-12">
+        {adventurePlan?.teaser && (
+          <div className="pb-8 max-w-2xl mx-auto">
+            <p className="text-lg text-white/80">{adventurePlan.teaser}</p>
+          </div>
+        )}
+        <h2 className="text-2xl font-display text-amber-400 mb-6">Join with Your Character</h2>
+        <div className="flex flex-wrap gap-6 justify-center mb-8">
+          {userCharacters.map((char) => (
+            <div key={char.id} className="bg-black/60 rounded-lg p-4 flex flex-col items-center border-2 border-transparent hover:border-amber-400 transition-all">
+              <div className="font-bold text-xl text-amber-300 mb-1">{char.name}</div>
+              <div className="text-white/80 text-base mb-2">
+                {char.race} {char.archetype}
+              </div>
+              {char.image && <img src={char.image} alt={char.name} className="w-24 h-24 object-cover rounded-full mb-2" />}
+              <Button variant="epic" size="sm" onClick={() => handleJoinAdventure(`characters/${user?.id}/${char.id}.json`)} disabled={isJoining}>
+                {isJoining ? "Joining..." : "Join as This Character"}
+              </Button>
+            </div>
+          ))}
+        </div>
+        <Link href={`/player/${user?.username}/characters/new?redirectToAdventure=${encodeURIComponent(adventureLobbyUrl)}`}>
+          <Button variant="outline">Create New Character</Button>
+        </Link>
       </div>
     )
   }

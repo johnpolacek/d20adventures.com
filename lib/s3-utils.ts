@@ -224,6 +224,8 @@ export async function listAndReadJsonFilesInS3Directory(
       .map(object => object.Key!)
       .sort();
 
+    console.log("[listAndReadJsonFilesInS3Directory] jsonFiles", JSON.stringify({ jsonFiles, directoryPrefix, exclude }, null, 2))
+
     // Read the content of each JSON file
     const results = await Promise.all(
       jsonFiles.map(async (key) => {

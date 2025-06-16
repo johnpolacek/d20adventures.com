@@ -67,7 +67,7 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
                     <div className="relative z-10 flex-1 flex flex-col">
                       <div className="text-gray-300 text-base -mt-2 flex-1">{adventure.teaser || adventure.overview}</div>
                       <div className="mt-4 mb-6 w-full flex justify-center">
-                        <Link href={`/settings/${settingId}/${adventure.id}`}>
+                        <Link href={`/settings/${settingId}/${adventure.id}/choose-character`}>
                           <Button variant="epic" size="sm" className="text-sm">
                             Play
                           </Button>
