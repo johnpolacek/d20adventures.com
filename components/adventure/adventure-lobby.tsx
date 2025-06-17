@@ -18,7 +18,7 @@ import { startAdventure } from "@/app/_actions/start-adventure"
 import { CharacterSheetModal } from "./character-sheet-modal"
 import { scrollToTop } from "../ui/utils"
 import Link from "next/link"
-import { listAndReadJsonFilesInS3Directory } from "@/lib/s3-utils"
+import { CharacterSelectCard } from "@/components/ui/character-select-card"
 
 interface AdventureLobbyProps {
   adventure: Adventure
@@ -78,12 +78,10 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
   useEffect(() => {
     if (isSignedIn && !userCharacter && availableCharacters.length === 0) {
       setIsLoadingUserChars(true)
-      listAndReadJsonFilesInS3Directory(`characters/${user?.id}/`)
-        .then((results) => {
-          setUserCharacters(results.map((r) => r.data as PCTemplate))
-          setIsLoadingUserChars(false)
-        })
-        .catch(() => setIsLoadingUserChars(false))
+      fetch(`/api/user-characters?userId=${user?.id}`)
+        .then((res) => res.json())
+        .then(setUserCharacters)
+        .finally(() => setIsLoadingUserChars(false))
     }
   }, [isSignedIn, user, userCharacter, availableCharacters.length])
 
@@ -411,29 +409,29 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
       )
     }
     return (
-      <div className="text-center py-12">
+      <div className="w-full text-center py-12">
         {adventurePlan?.teaser && (
           <div className="pb-8 max-w-2xl mx-auto">
             <p className="text-lg text-white/80">{adventurePlan.teaser}</p>
           </div>
         )}
         <h2 className="text-2xl font-display text-amber-400 mb-6">Join with Your Character</h2>
-        <div className="flex flex-wrap gap-6 justify-center mb-8">
+        <div className="w-full flex flex-wrap gap-6 justify-center mb-8">
           {userCharacters.map((char) => (
-            <div key={char.id} className="bg-black/60 rounded-lg p-4 flex flex-col items-center border-2 border-transparent hover:border-amber-400 transition-all">
-              <div className="font-bold text-xl text-amber-300 mb-1">{char.name}</div>
-              <div className="text-white/80 text-base mb-2">
-                {char.race} {char.archetype}
-              </div>
-              {char.image && <img src={char.image} alt={char.name} className="w-24 h-24 object-cover rounded-full mb-2" />}
-              <Button variant="epic" size="sm" onClick={() => handleJoinAdventure(`characters/${user?.id}/${char.id}.json`)} disabled={isJoining}>
-                {isJoining ? "Joining..." : "Join as This Character"}
-              </Button>
+            <div key={char.id} className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4">
+              <CharacterSelectCard
+                character={char}
+                buttonLabel={isJoining ? "Joining..." : "Join "}
+                disabled={isJoining}
+                onButtonClick={() => handleJoinAdventure(`characters/${user?.id}/${char.id}.json`)}
+              />
             </div>
           ))}
         </div>
         <Link href={`/player/${user?.username}/characters/new?redirectToAdventure=${encodeURIComponent(adventureLobbyUrl)}`}>
-          <Button variant="outline">Create New Character</Button>
+          <Button variant="epic" size="sm" className="text-sm">
+            Create New Character
+          </Button>
         </Link>
       </div>
     )

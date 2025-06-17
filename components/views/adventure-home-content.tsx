@@ -22,8 +22,6 @@ function AdventureHomeContent({ initialImage, adventure, adventurePlan }: { init
   const [initialCheckDone, setInitialCheckDone] = useState(false)
   const [lastEncounterId, setLastEncounterId] = useState<string | null>(null)
 
-  console.log("[AdventureHomeContent] adventure", JSON.stringify(adventure, null, 2))
-
   const turn = useTurn()
 
   useEffect(() => {

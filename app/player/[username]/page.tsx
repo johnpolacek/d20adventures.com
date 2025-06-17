@@ -1,7 +1,7 @@
 import { currentUser } from "@clerk/nextjs/server"
 import Image from "next/image"
 import { redirect } from "next/navigation"
-import { listAndReadJsonFilesInS3Directory, readJsonFromS3 } from "@/lib/s3-utils"
+import { readJsonFromS3 } from "@/lib/s3-utils"
 import type { PCTemplate } from "@/types/character"
 import { getImageUrl } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -9,6 +9,8 @@ import Link from "next/link"
 import FullPageImage from "@/components/layout/fullpage-image"
 import { textShadowSpreadLight } from "@/components/typography/styles"
 import { getAdventuresForUser } from "@/app/_actions/adventure"
+import { getUserCharacters } from "@/app/_actions/character"
+import { CharacterSelectCard } from "@/components/ui/character-select-card"
 
 export default async function PlayerProfilePage(props: { params: Promise<{ username: string }> }) {
   const { username } = await props.params
@@ -28,12 +30,9 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
   let characters: PCTemplate[] = []
   let characterFiles: string[] = []
   try {
-    const results: Array<{ key: string; data: unknown }> = await listAndReadJsonFilesInS3Directory(`characters/${user.id}/`)
-    console.log("[PlayerProfilePage] characters", JSON.stringify({ results }, null, 2))
-    characters = results.map((r) => r.data as PCTemplate)
-    characterFiles = results.map((r) => (r.key.split("/").pop() ?? "").replace(".json", ""))
+    characters = await getUserCharacters(user.id)
+    characterFiles = characters.map((c) => c.id)
   } catch {
-    // If S3 is not configured or there are no characters, just show none
     characters = []
     characterFiles = []
   }
@@ -72,25 +71,7 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
                 <div className="flex flex-wrap gap-6 justify-center">
                   {characters.map((char, i) => (
                     <div key={char.id} className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4">
-                      <div className="bg-black rounded-lg overflow-hidden flex flex-col items-center ring-8 ring-black/30 border border-white/10 pb-6 font-display">
-                        <div className="w-full h-48 relative">
-                          {char.image ? (
-                            <Image src={getImageUrl(char.image)} alt={char.name} fill={true} className="object-cover w-full h-full" />
-                          ) : (
-                            <span className="text-xs text-white/40">No Image</span>
-                          )}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
-                        </div>
-                        <div className="font-bold text-3xl text-amber-400 mb-1 truncate w-full text-center">{char.name}</div>
-                        <div className="text-base mb-4 text-center">
-                          {char.gender} {char.race} {char.archetype}
-                        </div>
-                        <Link href={`/player/${user.username}/characters/${characterFiles[i]}/edit`}>
-                          <Button asChild variant="epic" className="text-sm" size="sm">
-                            Edit
-                          </Button>
-                        </Link>
-                      </div>
+                      <CharacterSelectCard character={char} buttonLabel="Edit" href={`/player/${user.username}/characters/${characterFiles[i]}/edit`} buttonAsChild={true} />
                     </div>
                   ))}
                 </div>

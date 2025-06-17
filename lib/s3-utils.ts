@@ -1,3 +1,5 @@
+"use server"
+
 import { GetObjectCommand,PutObjectCommand, CopyObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3"
 import { s3Client, isAwsConfigured, getAssetUrl } from "./aws"
 import { Readable } from "stream"
@@ -80,7 +82,7 @@ export const transferImageToS3 = async (imageUrl: string, key: string): Promise<
 }
 
 // Helper function to convert a Readable stream to a string
-export const streamToString = (stream: Readable): Promise<string> => {
+export const streamToString = async (stream: Readable): Promise<string> => {
   const chunks: unknown[] = []
   return new Promise((resolve, reject) => {
     stream.on("data", (chunk) => chunks.push(chunk))
