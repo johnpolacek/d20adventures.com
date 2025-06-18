@@ -14,6 +14,7 @@ interface PartyConfigurationProps {
   characterNames: Record<string, string>
 }
 
+// Used for initial setup of a new adventure (before it is created)
 const PartyConfiguration: React.FC<PartyConfigurationProps> = ({ characterChoices, characterNames }) => {
   const { settingId, adventurePlanId } = useParams()
   const { isSignedIn } = useUser()

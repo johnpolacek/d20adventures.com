@@ -99,11 +99,22 @@ export default defineSchema({
         ),
         spells: v.optional(v.array(v.object({
           name: v.string(),
-          description: v.string(),
-          isUsed: v.boolean(),
+          description: v.optional(v.string()),
+          isUsed: v.optional(v.boolean()),
         }))),
         specialAbilities: v.optional(v.array(v.string())),
         status: v.optional(v.string()),
+        effects: v.optional(v.array(v.object({
+          name: v.string(),
+          description: v.optional(v.string()),
+          duration: v.optional(v.number()),
+          status: v.optional(v.string()),
+          healthPercentDelta: v.optional(v.number()),
+          equipmentToAdd: v.optional(v.array(v.object({
+            name: v.string(),
+            description: v.optional(v.string()),
+          }))),
+        }))),
       })
     ),
     order: v.number(),

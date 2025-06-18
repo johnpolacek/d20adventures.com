@@ -11,6 +11,7 @@ import { reverseSlugify } from "@/lib/utils"
 import { isDev } from "@/lib/auth-utils"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { readJsonFromS3 } from "@/lib/s3-utils"
 
 export const dynamic = "force-dynamic"
 
@@ -73,7 +74,7 @@ export default async function TurnPage({ params }: PageProps) {
   // Load adventure plan
   let adventurePlan = null
   try {
-    adventurePlan = (await import(`@/data/${adventurePlanId}.json`)).default
+    adventurePlan = (await readJsonFromS3(`settings/${settingId}/${adventurePlanId}.json`)) as AdventurePlan
   } catch {
     return notFound()
   }
@@ -104,6 +105,7 @@ export default async function TurnPage({ params }: PageProps) {
       <AdventureHome
         settingId={settingId}
         adventurePlanId={adventurePlanId}
+        adventurePlan={adventurePlan}
         adventure={adventure}
         encounterImage={encounter?.image || adventurePlan.image}
         currentTurn={currentTurn}

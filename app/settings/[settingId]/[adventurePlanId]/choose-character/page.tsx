@@ -11,9 +11,20 @@ import { AdventurePlan } from "@/types/adventure-plan"
 import { textShadowSpread } from "@/components/typography/styles"
 import { getImageUrl } from "@/lib/utils"
 
-export default async function ChooseCharacterPage({ params }: { params: { settingId: string; adventurePlanId: string } }) {
+interface PageProps {
+  params: Promise<{
+    settingId: string
+    adventurePlanId: string
+  }>
+}
+
+export default async function ChooseCharacterPage({ params }: PageProps) {
   const user = await currentUser()
   if (!user) redirect("/sign-in")
+
+  if (!user.username) {
+    redirect("/player")
+  }
 
   const { settingId, adventurePlanId } = await params
   const key = `settings/${settingId}/${adventurePlanId}.json`
@@ -53,14 +64,7 @@ export default async function ChooseCharacterPage({ params }: { params: { settin
             </div>
           </div>
         ) : (
-          <ChooseCharacterView
-            username={user.username}
-            characters={characters}
-            characterFiles={characterFiles}
-            userId={user.id}
-            settingId={params.settingId}
-            adventurePlanId={params.adventurePlanId}
-          />
+          <ChooseCharacterView username={user.username} characters={characters} characterFiles={characterFiles} userId={user.id} settingId={settingId} adventurePlanId={adventurePlanId} />
         )}
       </div>
     </FullPageImage>

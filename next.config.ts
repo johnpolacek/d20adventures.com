@@ -6,11 +6,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'vibecodeparty-public.s3.us-east-1.amazonaws.com',
+        hostname: 'd20-public.s3.us-east-1.amazonaws.com',
       },
       {
         protocol: 'https',
-        hostname: 'vibecodeparty-public.s3.amazonaws.com',
+        hostname: 'd20-public.s3.amazonaws.com',
       },
       {
         protocol: 'https',

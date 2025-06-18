@@ -16,10 +16,12 @@ import StepSpecialAbilities from "./step-special-abilities"
 import { CharacterCard } from "@/components/adventure-plans/character-card"
 import { Button } from "../ui/button"
 import { saveCharacterTemplateAction } from "@/app/_actions/save-character-template"
+import { getUserCharacters } from "@/app/_actions/character"
 import { toast } from "sonner"
 import type { PCTemplate, Character } from "@/types/character"
 import { cn } from "@/lib/utils"
 import { useSearchParams } from "next/navigation"
+import slugify from "slugify"
 
 interface CharacterCreateFormProps {
   availableRaces: string[]
@@ -78,34 +80,21 @@ export default function CharacterCreateForm({ availableRaces, availableArchetype
   const handleSaveCharacter = async () => {
     setIsSaving(true)
     try {
-      const characterTemplate: PCTemplate = {
-        id: Date.now().toString(),
-        type: "pc",
-        name,
-        image,
-        archetype: selectedArchetype,
-        race: selectedRace,
-        gender,
-        appearance,
-        personality,
-        background,
-        motivation,
-        behavior: "",
-        healthPercent: 100,
-        equipment: equipment.filter((e) => e.trim() !== "").map((name) => ({ name })),
-        skills: skills.filter((s) => s.trim() !== ""),
-        spells: hasSpells ? spells.filter((s) => s.trim() !== "").map((name) => ({ name })) : [],
-        specialAbilities: hasSpecialAbilities ? specialAbilities.filter((a) => a.trim() !== "") : [],
-        effects: [],
-        attributes: {
-          strength: Number(attributes.strength) || 1,
-          dexterity: Number(attributes.dexterity) || 1,
-          constitution: Number(attributes.constitution) || 1,
-          intelligence: Number(attributes.intelligence) || 1,
-          wisdom: Number(attributes.wisdom) || 1,
-          charisma: Number(attributes.charisma) || 1,
-        },
+      const slug = slugify(name, { lower: true, strict: true })
+      // Unique name validation: fetch user's characters and check for slug collision
+      const user = await fetch("/api/auth/me").then((res) => res.json())
+      if (!user || !user.id) {
+        toast.error("You must be signed in to create a character.")
+        setIsSaving(false)
+        return
       }
+      const existingCharacters = await getUserCharacters(user.id)
+      if (existingCharacters.some((c: PCTemplate) => slugify(c.name, { lower: true, strict: true }) === slug)) {
+        toast.error("You already have a character with that name. Please choose a different name.")
+        setIsSaving(false)
+        return
+      }
+      const characterTemplate: PCTemplate = getReviewCharacter()
       const result = await saveCharacterTemplateAction({ character: characterTemplate })
       console.log("[CharacterCreateForm] saveCharacterTemplateAction result:", JSON.stringify(result, null, 2))
       if (result.success && result.characterId) {
@@ -149,9 +138,10 @@ export default function CharacterCreateForm({ availableRaces, availableArchetype
     if ("specialAbilities" in updates && updates.specialAbilities) setSpecialAbilities(updates.specialAbilities as string[])
   }
 
-  function getReviewCharacter(): Character | PCTemplate {
+  function getReviewCharacter(): PCTemplate {
+    const slug = slugify(name, { lower: true, strict: true })
     return {
-      id: "review",
+      id: slug,
       name,
       image,
       archetype: selectedArchetype,

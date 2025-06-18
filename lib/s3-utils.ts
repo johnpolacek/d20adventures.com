@@ -247,3 +247,12 @@ export async function listAndReadJsonFilesInS3Directory(
     throw new Error(`Error listing and reading JSON files from S3: ${error}`);
   }
 }
+
+export async function deleteS3Object(key: string): Promise<void> {
+  const bucket = process.env.bucketData || process.env.AWS_BUCKET_DATA;
+  if (!bucket) throw new Error("AWS_BUCKET_DATA is not set");
+  if (!isAwsConfigured() || !s3Client) throw new Error("AWS S3 is not configured");
+  const { DeleteObjectCommand } = await import("@aws-sdk/client-s3")
+  const command = new DeleteObjectCommand({ Bucket: bucket, Key: key })
+  await s3Client.send(command)
+}

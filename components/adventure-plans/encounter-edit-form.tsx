@@ -21,7 +21,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { X, Edit, ChevronsUp, ChevronsRight } from "lucide-react"
-import { IMAGE_HOST } from "@/lib/config"
+import { getImageUrl } from "@/lib/utils"
 
 interface EncounterEditFormProps {
   id: string
@@ -131,20 +131,21 @@ export function EncounterEditForm({
   const baseId = `encounter-${sectionIndex}-${sceneIndex}-${encounterIndex}`
   const imageUploadFolder = `images/settings/${settingId}/${adventurePlanId}/encounters/${encounter.id || `temp-${baseId}`}`
 
+  const imageUrl = getImageUrl(encounter.image || "")
+
+  // Log imageUrl on initial render
+  React.useEffect(() => {
+    console.log("[EncounterEditForm] imageUrl on mount", imageUrl)
+  }, [])
+
   // Helper function to construct the full URL for display
-  const getDisplayUrl = (value: string): string => {
-    if (!value) return value
-
-    // If it's already a full URL, use it as-is
-    if (value.startsWith("http://") || value.startsWith("https://")) {
-      return value
-    }
-
-    // If it's a relative path, prepend the IMAGE_HOST
-    return `${IMAGE_HOST}/${value.replace(/^\/+/, "")}`
-  }
-
-  const imageUrl = getDisplayUrl(encounter.image || "")
+  // const getDisplayUrl = (value: string): string => {
+  //   if (!value) return value
+  //   if (value.startsWith("http://") || value.startsWith("https://")) {
+  //     return value
+  //   }
+  //   return `${IMAGE_HOST}/${value.replace(/^\/+/ , "")}`
+  // }
 
   // Helper: Get available encounters for transitions (not already selected)
   const getAvailableEncountersForTransition = () => {
@@ -169,6 +170,8 @@ export function EncounterEditForm({
     const newTransitions = transitions.filter((_, idx) => idx !== transitionIndex)
     onTransitionsChange(sectionIndex, sceneIndex, encounterIndex, newTransitions)
   }
+
+  console.log("[EncounterEditForm] encounter.image", encounter.image)
 
   return (
     <div id={id} className={`border border-white/20 rounded-lg mt-8 flex flex-col gap-4 relative ${!isEditing ? "py-0" : "p-4"}`}>
@@ -249,7 +252,11 @@ export function EncounterEditForm({
             <ImageUpload
               id={`${baseId}-image-upload`}
               value={encounter.image || ""}
-              onChange={(newUrl) => onImageChange(sectionIndex, sceneIndex, encounterIndex, newUrl)}
+              onChange={(newUrl) => {
+                onImageChange(sectionIndex, sceneIndex, encounterIndex, newUrl)
+                const updatedUrl = getImageUrl(newUrl || "")
+                console.log("[EncounterEditForm] imageUrl after upload", updatedUrl)
+              }}
               onRemove={() => onImageChange(sectionIndex, sceneIndex, encounterIndex, "")}
               folder={imageUploadFolder}
             />

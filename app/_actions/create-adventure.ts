@@ -5,8 +5,10 @@ import { convex } from "@/lib/convex/server"
 import { auth } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 import type { CharacterChoiceMode } from "@/components/adventure/character-selection"
-import { readJsonFromS3 } from "@/lib/s3-utils"
+import { readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 import type { AdventurePlan } from "@/types/adventure-plan"
+import type { PCTemplate } from "@/types/character"
+import { toPCTemplate } from "@/lib/utils/character-mapping"
 
 interface CreateAdventureInput {
   settingId: string
@@ -36,8 +38,33 @@ export async function createAdventure(input: CreateAdventureInput) {
     .filter(choice => choice.mode === "player") // Only include characters selected as "player"
     .map(choice => ({
       userId: userId,
-      characterId: choice.characterId,
+      characterId: `characters/${userId}/${choice.characterId}.json`,
     }))
+
+  // Ensure each selected character exists in the user's S3 path
+  for (const choice of characterChoices.filter(c => c.mode === "player")) {
+    const userCharKey = `characters/${userId}/${choice.characterId}.json`
+    let exists = false
+    try {
+      await readJsonFromS3(userCharKey)
+      exists = true
+    } catch {}
+    if (!exists) {
+      // Try to find the character in premade PCs or as a custom character
+      let characterData: PCTemplate | unknown = plan.premadePlayerCharacters?.find(pc => pc.id === choice.characterId)
+      if (!characterData) {
+        // Try to load as a custom character (should not throw if not found)
+        try {
+          const customChar = await readJsonFromS3(choice.characterId)
+          characterData = customChar
+        } catch {}
+      }
+      const pc = toPCTemplate(characterData)
+      if (pc) {
+        await updateJsonOnS3(userCharKey, pc)
+      }
+    }
+  }
 
   // Create adventure in waiting state
   const now = Date.now()

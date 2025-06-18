@@ -20,9 +20,11 @@ export function CharacterSelectCard({ character, buttonLabel, onButtonClick, hre
   return (
     <Card
       className={cn(
-        "bg-black text-white rounded-lg overflow-hidden flex flex-col items-center ring-8 ring-black/30 border border-white/10 p-0 font-display w-full h-full transition-all ease-in-out duration-500 hover:scale-105",
+        "bg-black text-white rounded-lg overflow-hidden flex flex-col items-center ring-8 ring-black/30 border border-white/10 p-0 font-display w-full h-full transition-all ease-in-out duration-500",
+        onButtonClick && "cursor-pointer hover:scale-105 hover:ring-primary-400",
         className
       )}
+      onClick={onButtonClick}
     >
       <div className="w-full aspect-video relative">
         {character.image ? (
@@ -44,7 +46,7 @@ export function CharacterSelectCard({ character, buttonLabel, onButtonClick, hre
             </Button>
           </Link>
         ) : (
-          <Button variant="epic" className="text-sm" size="sm" onClick={onButtonClick} disabled={disabled}>
+          <Button variant="epic" className="text-sm" size="sm" disabled={disabled}>
             {buttonLabel}
           </Button>
         )}

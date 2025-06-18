@@ -19,35 +19,17 @@ import { CharacterSheetModal } from "./character-sheet-modal"
 import { scrollToTop } from "../ui/utils"
 import Link from "next/link"
 import { CharacterSelectCard } from "@/components/ui/character-select-card"
+import AnimateIn from "../ui/animate-in"
+import slugify from "slugify"
+import { convertPCToTurnCharacter, convertPCTemplateToTurnCharacter } from "@/lib/utils/character-mapping"
+import LoadingAnimation from "../ui/loading-animation"
 
 interface AdventureLobbyProps {
   adventure: Adventure
   adventurePlan?: AdventurePlan
 }
 
-// Convert PC to TurnCharacter format for the modal
-function convertPCToTurnCharacter(pc: Adventure["party"][0]): TurnCharacter {
-  return {
-    ...pc,
-    type: "pc" as const,
-    initiative: 0, // Default value
-    hasReplied: false,
-    isComplete: false,
-  }
-}
-
-// Convert PCTemplate to TurnCharacter format for the modal
-function convertPCTemplateToTurnCharacter(pcTemplate: PCTemplate): TurnCharacter {
-  return {
-    ...pcTemplate,
-    type: "pc" as const,
-    userId: "", // Empty for template
-    initiative: 0, // Default value
-    hasReplied: false,
-    isComplete: false,
-  }
-}
-
+// Waiting room of an existing adventure, before it begins
 export default function AdventureLobby({ adventure, adventurePlan }: AdventureLobbyProps) {
   const { user, isSignedIn, isLoaded } = useUser()
   const params = useParams()
@@ -146,7 +128,9 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
     setIsModalOpen(true)
   }
 
-  console.log("[AdventureLobby] adventurePlan:", JSON.stringify(adventurePlan, null, 2))
+  if (!isLoaded) {
+    return null
+  }
 
   // Show different UI based on user state
   if (!isSignedIn) {
@@ -387,11 +371,11 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
 
   if (isSignedIn && !userCharacter && availableCharacters.length === 0) {
     if (isLoadingUserChars) {
-      return <div className="text-center text-white/80 py-12">Loading your characters...</div>
+      return <LoadingAnimation>Loading your characters...</LoadingAnimation>
     }
     if (userCharacters.length === 0) {
       return (
-        <div className="text-center pb-12 relative z-10">
+        <AnimateIn from="opacity-0" to="opacity-100" className="text-center pb-12 relative z-10">
           {adventurePlan?.teaser && (
             <div className="pb-8 max-w-2xl mx-auto -mt-8">
               <p style={textShadow}>{adventurePlan.teaser}</p>
@@ -405,14 +389,16 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
               <Button variant="epic">Create Character</Button>
             </Link>
           </div>
-        </div>
+        </AnimateIn>
       )
     }
     return (
-      <div className="w-full text-center py-12">
+      <AnimateIn from="opacity-0 top-4" to="opacity-100 top-0" className="w-full text-center -mt-16 pb-12 relative z-10">
         {adventurePlan?.teaser && (
           <div className="pb-8 max-w-2xl mx-auto">
-            <p className="text-lg text-white/80">{adventurePlan.teaser}</p>
+            <p style={textShadow} className="text-balance">
+              {adventurePlan.teaser}
+            </p>
           </div>
         )}
         <h2 className="text-2xl font-display text-amber-400 mb-6">Join with Your Character</h2>
@@ -420,10 +406,11 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
           {userCharacters.map((char) => (
             <div key={char.id} className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4">
               <CharacterSelectCard
+                className="ring-white/20"
                 character={char}
                 buttonLabel={isJoining ? "Joining..." : "Join "}
                 disabled={isJoining}
-                onButtonClick={() => handleJoinAdventure(`characters/${user?.id}/${char.id}.json`)}
+                onButtonClick={() => handleJoinAdventure(`characters/${user?.id}/${slugify(char.name, { lower: true, strict: true })}.json`)}
               />
             </div>
           ))}
@@ -433,7 +420,7 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
             Create New Character
           </Button>
         </Link>
-      </div>
+      </AnimateIn>
     )
   }
 
