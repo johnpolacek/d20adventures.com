@@ -1,5 +1,5 @@
 import * as React from "react"
-import { AdventureSection } from "@/types/adventure-plan"
+import { AdventureSection, AdventureEncounter } from "@/types/adventure-plan"
 
 export function useAdventureSections(
   sections: AdventureSection[],
@@ -47,19 +47,20 @@ export function useAdventureSections(
     setSections(updatedSections)
   }
 
-  const handleAddEncounter = (sectionIndex: number, sceneIndex: number) => {
-    const newEncounterId = `encounter-${Date.now()}`
-    const newEncounter = {
-      id: newEncounterId,
-      title: "",
-      intro: "",
-      instructions: "",
-      image: "",
-      transitions: [],
-      npc: [],
-      skipInitialNpcTurns: false,
-      resetHealth: false,
-    }
+  const handleAddEncounter = (sectionIndex: number, sceneIndex: number, newEncounter?: AdventureEncounter) => {
+    const encounterToAdd =
+      newEncounter ||
+      ({
+        id: `encounter-${Date.now()}`,
+        title: "",
+        intro: "",
+        instructions: "",
+        image: "",
+        transitions: [],
+        npc: [],
+        skipInitialNpcTurns: false,
+        resetHealth: false,
+      } as AdventureEncounter)
 
     setSections((prevSections) =>
       prevSections.map((section, sIndex) => {
@@ -70,7 +71,7 @@ export function useAdventureSections(
               if (scIndex === sceneIndex) {
                 return {
                   ...scene,
-                  encounters: [...scene.encounters, newEncounter],
+                  encounters: [...scene.encounters, encounterToAdd],
                 }
               }
               return scene

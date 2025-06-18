@@ -17,6 +17,8 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
+import { getOtherAdventurePlans } from "@/app/_actions/adventure-plan-actions"
+import { useNpcManagement } from "./hooks/use-npc-management"
 
 export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: AdventurePlan }) {
   // Use custom hooks for form state management
@@ -38,14 +40,32 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
     premadePlayerCharacters,
     setPremadePlayerCharacters,
     isSaving,
-    availableNpcs,
     saveAdventurePlan,
     draft,
     setDraft,
   } = useAdventurePlanForm(adventurePlan)
 
+  const npcManagement = useNpcManagement(npcs, setNpcs)
   const sectionHandlers = useAdventureSections(sections, setSections)
   const encounterHandlers = useEncounterHandlers(sections, setSections)
+
+  const [otherAdventurePlans, setOtherAdventurePlans] = React.useState<AdventurePlan[]>([])
+
+  React.useEffect(() => {
+    const fetchOtherPlans = async () => {
+      try {
+        const plans = await getOtherAdventurePlans(adventurePlan.settingId, adventurePlan.id)
+        setOtherAdventurePlans(plans)
+        console.log(
+          "Available next adventures:",
+          plans.map((p) => ({ id: p.id, title: p.title }))
+        )
+      } catch (error) {
+        console.error("Error fetching other adventure plans:", error)
+      }
+    }
+    fetchOtherPlans()
+  }, [adventurePlan.settingId, adventurePlan.id])
 
   const [availableCharacterOptions, setAvailableCharacterOptions] = React.useState(adventurePlan.availableCharacterOptions || { races: [], archetypes: [] })
   const [premadeOnly, setPremadeOnly] = React.useState(adventurePlan.availableCharacterOptions === undefined)
@@ -123,6 +143,8 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
       setReorderFlag(false)
     }
   }, [reorderFlag])
+
+  console.log("[AdventurePlanEditForm] otherAdventurePlans", otherAdventurePlans)
 
   return (
     <div className="pb-8 flex flex-wrap h-[80vh]">
@@ -204,7 +226,7 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
             </Label>
             <select
               id="rules-preset-select"
-              className="w-56 bg-white/5 border border-white/20 rounded px-2 py-1 text-base text-white placeholder:text-white/40"
+              className="w-56 bg-white/5 border border-white/20 rounded px-2 py-1 text-sm text-white placeholder:text-white/40"
               onChange={(e) => {
                 const val = e.target.value
                 if (!val) return
@@ -220,7 +242,7 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
               defaultValue=""
             >
               <option value="" disabled>
-                Choose a rules system...
+                Select a genre...
               </option>
               {RULES_PRESETS.map((preset) => (
                 <option key={preset.value} value={preset.value}>
@@ -267,13 +289,41 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
               />
             </div>
           </div>
+
+          {/* Next Adventure Selection */}
+          <div className="mt-8 space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="font-mono text-primary-200" htmlFor="next-adventure">
+                Next Adventure in Series
+              </Label>
+              <div className="text-sm text-primary-200/60">Optional</div>
+            </div>
+            <select
+              id="next-adventure"
+              className="w-full bg-white/5 border border-white/20 rounded px-2 py-1 text-sm text-white placeholder:text-white/40"
+              onChange={(e) => {
+                const nextAdventureId = e.target.value || undefined
+                saveAdventurePlan(undefined, undefined, premadeOnly ? undefined : availableCharacterOptions, nextAdventureId)
+              }}
+              value={adventurePlan.nextAdventure || ""}
+              disabled={isSaving || otherAdventurePlans.length === 0}
+            >
+              <option value="">None - This is a standalone adventure</option>
+              {otherAdventurePlans.map((plan) => (
+                <option key={plan.id} value={plan.id}>
+                  {plan.title}
+                </option>
+              ))}
+            </select>
+            {otherAdventurePlans.length === 0 && <div className="text-sm text-primary-200/60">No other adventures available in this setting</div>}
+          </div>
         </div>
 
         <AdventurePlanSections
           adventurePlanId={adventurePlan.id}
           settingId={adventurePlan.settingId}
           sections={sections}
-          availableNpcs={availableNpcs}
+          availableNpcs={npcs}
           isSaving={isSaving}
           onSectionTitleChange={sectionHandlers.handleSectionTitleChange}
           onSectionSummaryChange={sectionHandlers.handleSectionSummaryChange}
@@ -291,6 +341,7 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
           onEncounterNpcChange={encounterHandlers.handleEncounterNpcChange}
           onAddEncounter={sectionHandlers.handleAddEncounter}
           onAddSection={sectionHandlers.handleAddSection}
+          onNpcCreate={npcManagement.handleNpcCreate}
         />
 
         <AdventurePlanCharactersEdit

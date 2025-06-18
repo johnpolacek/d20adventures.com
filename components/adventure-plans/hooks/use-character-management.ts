@@ -52,6 +52,7 @@ export function useCharacterManagement(
       const pcArray = characters as PCTemplate[]
       onCharactersChange([...pcArray, newPc])
     }
+    return newId
   }
 
   const updateCharacter = (charId: string, updates: Partial<Character | PCTemplate>) => {

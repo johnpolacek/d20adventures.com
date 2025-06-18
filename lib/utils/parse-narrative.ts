@@ -2,9 +2,11 @@
 
 export type NarrativePart =
   | { type: 'paragraph'; value: string }
-  | { type: 'diceroll'; rollType: string; baseRoll?: number; modifier?: number; result: number; difficulty: number; character: string; image?: string; success: boolean };
+  | { type: 'diceroll'; rollType: string; baseRoll?: number; modifier?: number; result: number; difficulty: number; character: string; image?: string; success: boolean }
+  | { type: 'original-reply'; value: string };
 
 const diceRollRegex = /^\[DiceRoll:([^\]]+)\]$/i;
+const originalReplyRegex = /^\[OriginalReply:(.*)\]$/i;
 
 export function parseNarrative(narrative: string): NarrativePart[] {
   // Convert escaped newlines to actual newlines
@@ -33,6 +35,10 @@ export function parseNarrative(narrative: string): NarrativePart[] {
         success: fields.success === 'true',
       } as const;
     }
+    const originalReplyMatch = trimmed.match(originalReplyRegex);
+    if (originalReplyMatch) {
+      return { type: 'original-reply', value: originalReplyMatch[1].trim() } as const;
+    }
     return { type: 'paragraph', value: trimmed } as const;
-  }).filter(part => part.type === 'diceroll' || (part.type === 'paragraph' && part.value.length > 0));
+  }).filter(part => part.type === 'diceroll' || part.type === 'original-reply' || (part.type === 'paragraph' && part.value.length > 0));
 } 

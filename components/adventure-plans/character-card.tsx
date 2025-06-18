@@ -9,11 +9,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import { ImageUpload } from "@/components/ui/image-upload"
 import { Plus, X, Edit, ChevronsUp } from "lucide-react"
 import type { Character, PCTemplate } from "@/types/character"
-import { cn } from "@/lib/utils"
+import { cn, getImageUrl } from "@/lib/utils"
 import Image from "next/image"
 import { useCharacterDetails } from "@/components/adventure-plans/hooks/use-character-details"
-
-const IMAGE_HOST = process.env.NEXT_PUBLIC_IMAGE_HOST || ""
 
 interface CharacterCardProps {
   charId: string
@@ -48,7 +46,7 @@ export function CharacterCard({
 }: CharacterCardProps) {
   const characterDetails = useCharacterDetails(charId, getCharacter, updateCharacter)
   const imageUploadFolder = `images/settings/${settingId}/${adventurePlanId}/${isNpcs ? "npcs" : "pcs"}`
-  const imageUrl = char.image ? IMAGE_HOST + "/" + char.image : ""
+  const imageUrl = char.image ? getImageUrl(char.image) : ""
 
   if (!editing) {
     // Collapsed Mode

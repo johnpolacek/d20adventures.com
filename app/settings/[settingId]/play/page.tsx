@@ -8,6 +8,8 @@ import { AdventurePlan } from "@/types/adventure-plan"
 import Image from "next/image"
 import { textShadow } from "@/components/typography/styles"
 import { getImageUrl } from "@/lib/utils"
+import { isDev } from "@/lib/auth-utils"
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
 
 export default async function SettingAdventures(props: { params: Promise<{ settingId: string }> }) {
   const { settingId } = await props.params
@@ -92,39 +94,34 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
           </div>
 
           {/* Draft Adventures Section */}
-          {draftAdventures.length > 0 && (
-            <div className="pb-12 mb-12">
-              <h3 className="text-lg font-display text-amber-400/80 mb-8 -mt-8 text-center">Draft Adventures</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-                {draftAdventures.map((adventure) => (
-                  <div key={adventure.id} className="block h-full">
-                    <Card className="w-full h-full bg-black/80 border-yellow-400/60 ring-2 opacity-80 p-0 overflow-hidden flex flex-col">
-                      <div className="pb-2 relative aspect-video w-full">
-                        <div className="absolute top-1 right-3 z-10 flex gap-2">
-                          <span className="bg-yellow-400/80 text-black text-xxs font-mono px-2 py-1 rounded">Draft</span>
-                        </div>
-                        <div style={textShadow} className="absolute bottom-2 left-0 right-0 text-white w-full text-center font-display text-xl z-10">
-                          {adventure.title}
-                        </div>
-                        <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black to-transparent z-[9]" />
-                        <Image src={getImageUrl(adventure.image)} alt={adventure.title} fill className="object-cover" />
-                      </div>
-                      <CardContent className="flex-1 flex flex-col">
-                        <div className="relative z-10 flex-1 flex flex-col">
-                          <div className="text-gray-300 text-base -mt-2 flex-1">{adventure.teaser || adventure.overview}</div>
-                          <div className="mt-4 mb-6 w-full flex justify-center">
-                            <Link href={`/settings/${settingId}/${adventure.id}/edit`}>
-                              <Button variant="outline" size="sm" className="text-sm">
-                                Edit
-                              </Button>
-                            </Link>
-                          </div>
-                        </div>
-                        <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-gradient-to-tl from-black/50 to-transparent" />
-                      </CardContent>
-                    </Card>
-                  </div>
-                ))}
+          {isDev() && draftAdventures.length > 0 && (
+            <div className="pb-12 mb-12 px-4 max-w-4xl mx-auto">
+              <h3 className="text-lg font-display text-amber-400/90 mb-4 -mt-8 text-center">Draft Adventures</h3>
+              <div className="rounded-lg overflow-hidden">
+                <Table>
+                  <TableBody>
+                    {draftAdventures.map((adventure) => (
+                      <Link key={adventure.id} href={`/settings/${settingId}/${adventure.id}/edit`}>
+                        <TableRow className="hover:bg-white/10 transition-all duration-500 ease-in-out cursor-pointer group">
+                          <TableCell className="font-display text-lg text-amber-300 group-hover:text-amber-200">{adventure.title}</TableCell>
+                          <TableCell>
+                            {adventure.party[0] === 1 && adventure.party[1] === 1
+                              ? "Single Player"
+                              : adventure.party[0] === 2 && adventure.party[1] === 2
+                                ? `${adventure.party[0]} Players`
+                                : `${adventure.party[0]}-${adventure.party[1]} Players`}
+                          </TableCell>
+                          <TableCell className="max-w-md truncate">{adventure.teaser || adventure.overview}</TableCell>
+                          <TableCell className="text-right">
+                            <Button variant="outline" size="sm" className="text-sm opacity-90 group-hover:opacity-100 transition-opacity">
+                              Edit
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      </Link>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             </div>
           )}

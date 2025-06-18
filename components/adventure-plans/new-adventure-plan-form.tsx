@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
+import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -61,51 +62,53 @@ export function NewAdventurePlanForm({ settingId }: NewAdventurePlanFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 max-w-4xl">
-      <div>
+    <Card className="px-6 bg-black/50 backdrop-blur-sm border-white/20 mt-8">
+      <form onSubmit={handleSubmit} className="space-y-8 max-w-4xl text-white">
         <div>
-          <div className="text-2xl font-display text-amber-400 py-8">Create New Adventure Plan</div>
+          <div>
+            <div className="text-2xl font-display text-amber-400 pb-8">Create New Adventure Plan</div>
+          </div>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="title">Title</label>
+                <Input id="title" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} required />
+              </div>
+              <div className="space-y-2 hidden">
+                <label htmlFor="author">Author</label>
+                <Input id="author" value="D20Adventures" onChange={(e) => setFormData({ ...formData, author: e.target.value })} required />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="teaser">Teaser</label>
+              <Textarea id="teaser" value={formData.teaser} onChange={(e) => setFormData({ ...formData, teaser: e.target.value })} required />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="overview">Overview</label>
+              <Textarea id="overview" value={formData.overview} onChange={(e) => setFormData({ ...formData, overview: e.target.value })} required />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="minPartySize">Minimum Party Size</label>
+                <Input id="minPartySize" type="number" min="1" value={formData.minPartySize} onChange={(e) => setFormData({ ...formData, minPartySize: parseInt(e.target.value) })} required />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="maxPartySize">Maximum Party Size</label>
+                <Input id="maxPartySize" type="number" min="1" value={formData.maxPartySize} onChange={(e) => setFormData({ ...formData, maxPartySize: parseInt(e.target.value) })} required />
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label htmlFor="title">Title</label>
-              <Input id="title" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} required />
-            </div>
-            <div className="space-y-2 hidden">
-              <label htmlFor="author">Author</label>
-              <Input id="author" value="D20Adventures" onChange={(e) => setFormData({ ...formData, author: e.target.value })} required />
-            </div>
-          </div>
 
-          <div className="space-y-2">
-            <label htmlFor="teaser">Teaser</label>
-            <Textarea id="teaser" value={formData.teaser} onChange={(e) => setFormData({ ...formData, teaser: e.target.value })} required />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="overview">Overview</label>
-            <Textarea id="overview" value={formData.overview} onChange={(e) => setFormData({ ...formData, overview: e.target.value })} required />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label htmlFor="minPartySize">Minimum Party Size</label>
-              <Input id="minPartySize" type="number" min="1" value={formData.minPartySize} onChange={(e) => setFormData({ ...formData, minPartySize: parseInt(e.target.value) })} required />
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="maxPartySize">Maximum Party Size</label>
-              <Input id="maxPartySize" type="number" min="1" value={formData.maxPartySize} onChange={(e) => setFormData({ ...formData, maxPartySize: parseInt(e.target.value) })} required />
-            </div>
-          </div>
+        <div className="flex justify-center">
+          <Button type="submit" variant="epic" disabled={isSaving}>
+            {isSaving ? "Creating..." : "Create"}
+          </Button>
         </div>
-      </div>
-
-      <div className="flex justify-end">
-        <Button type="submit" variant="epic" disabled={isSaving}>
-          {isSaving ? "Creating..." : "Create Adventure Plan"}
-        </Button>
-      </div>
-    </form>
+      </form>
+    </Card>
   )
 }

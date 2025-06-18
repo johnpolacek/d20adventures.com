@@ -1,3 +1,4 @@
+import { z } from "zod"
 import type { Character, PCTemplate } from "./character";
 
 export interface AdventurePlan {
@@ -20,6 +21,7 @@ export interface AdventurePlan {
     races: string[];
     archetypes: string[];
   };
+  nextAdventure?: string;
 }
 
 export const RULES_PRESETS = [
@@ -65,39 +67,44 @@ export const RULES_PRESETS = [
   },
 ]
 
-export interface AdventureSection {
-  title: string;
-  summary: string;
-  image?: string;
-  scenes: AdventureScene[];
-}
+export const encounterCharacterRefSchema = z.object({
+  id: z.string(),
+  behavior: z.string(),
+  initialInitiative: z.number().optional(),
+})
+export type EncounterCharacterRef = z.infer<typeof encounterCharacterRefSchema>
 
-export interface AdventureScene {
-  title: string;
-  summary: string;
-  image?: string;
-  encounters: AdventureEncounter[];
-}
+export const encounterTransitionSchema = z.object({
+  condition: z.string(),
+  encounter: z.string(),
+})
+export type EncounterTransition = z.infer<typeof encounterTransitionSchema>
 
-export interface AdventureEncounter {
-  id: string;
-  title: string;
-  intro: string;
-  instructions?: string;
-  image?: string;
-  transitions?: EncounterTransition[];
-  npc?: EncounterCharacterRef[];
-  skipInitialNpcTurns?: boolean;
-  resetHealth?: boolean;
-}
+export const adventureEncounterSchema = z.object({
+  id: z.string(),
+  title: z.string().min(1, "Title is required for encounters"),
+  intro: z.string(),
+  instructions: z.string().optional(),
+  image: z.string().optional(),
+  transitions: z.array(encounterTransitionSchema).optional(),
+  npc: z.array(encounterCharacterRefSchema).optional(),
+  skipInitialNpcTurns: z.boolean().optional(),
+  resetHealth: z.boolean().optional(),
+})
+export type AdventureEncounter = z.infer<typeof adventureEncounterSchema>
 
-export interface EncounterTransition {
-  condition: string;
-  encounter: string;
-}
+export const adventureSceneSchema = z.object({
+  title: z.string(),
+  summary: z.string(),
+  image: z.string().optional(),
+  encounters: z.array(adventureEncounterSchema),
+})
+export type AdventureScene = z.infer<typeof adventureSceneSchema>
 
-export interface EncounterCharacterRef {
-  id: string;
-  behavior: string;
-  initialInitiative?: number;
-}
+export const adventureSectionSchema = z.object({
+  title: z.string(),
+  summary: z.string(),
+  image: z.string().optional(),
+  scenes: z.array(adventureSceneSchema),
+})
+export type AdventureSection = z.infer<typeof adventureSectionSchema>

@@ -21,6 +21,7 @@ import { useUser } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { Switch } from "@/components/ui/switch"
 
 export default function TurnNarrative() {
   const params = useParams()
@@ -31,6 +32,7 @@ export default function TurnNarrative() {
   const [advancing, setAdvancing] = React.useState(false)
   const [initialNarrative, setInitialNarrative] = React.useState("")
   const [tokenError, setTokenError] = React.useState<string | null>(null)
+  const [showOriginalReplies, setShowOriginalReplies] = React.useState(false)
 
   useEffect(() => {
     // scroll to bottom of page when currentTurn.narrative changes after the first render
@@ -61,8 +63,7 @@ export default function TurnNarrative() {
 
   const parsed = parseNarrative(currentTurn?.narrative || "")
 
-  const shouldShowReplyCondition =
-    currentTurn && !currentTurn.isFinalEncounter && currentCharacter && currentCharacter.type === "pc" && currentCharacter.userId === user?.id && !isNpcProcessing && !disableSSE
+  const shouldShowReplyCondition = currentTurn && currentCharacter && currentCharacter.type === "pc" && currentCharacter.userId === user?.id && !isNpcProcessing && !disableSSE
 
   // Find the player's character and check if their turn is complete
   const playerCharacter = currentTurn?.characters.find((c: TurnCharacter) => c.type === "pc" && c.userId === user?.id)
@@ -110,6 +111,11 @@ export default function TurnNarrative() {
 
   return (
     <div className="grow max-w-2xl fade-in">
+      {/* Toggle for showing original replies - now a Switch in the bottom right */}
+      <div className="fixed bottom-20 left-20 z-50 flex items-center gap-2 bg-black/70 px-4 py-2 rounded-lg border border-white/20 shadow-lg">
+        <span className="text-xs text-muted-foreground">Show Original Replies</span>
+        <Switch checked={showOriginalReplies} onCheckedChange={setShowOriginalReplies} id="show-original-replies-switch" />
+      </div>
       {tokenError && (
         <Alert variant="destructive" className="mb-8">
           <AlertTriangle className="h-4 w-4" />
@@ -126,6 +132,14 @@ export default function TurnNarrative() {
         </div>
       )}
       {parsed.map((part, idx) => {
+        if (part.type === "original-reply") {
+          if (!showOriginalReplies) return null
+          return (
+            <div key={"original-" + idx} className="text-base italic text-primary-300 mb-2">
+              Player Reply: {part.value}
+            </div>
+          )
+        }
         if (part.type === "paragraph") {
           return (
             <p key={idx} className="text-sm sm:text-base md:text-lg whitespace-pre-line mb-4">
@@ -215,12 +229,18 @@ export default function TurnNarrative() {
       )}
 
       {currentTurn?.isFinalEncounter && (
-        <div className="flex flex-col items-center justify-center mt-8 md:mt-16 text-center px-4 py-8 md:py-16 border-double border-8 border-primary-800 rounded-lg">
-          <p className="text-primary-300 text-lg font-display font-bold mb-6">You’ve reached the end of the journey for this adventure</p>
-          {isSignedIn && (
-            <Button size="sm" asChild variant="epic">
-              <Link href={`/${settingId}/${adventurePlanId}`}>Play Again</Link>
-            </Button>
+        <div className="flex flex-col items-center justify-center mt-8 md:mt-16 text-center px-2 py-4 md:py-6 border-double border-8 border-primary-800 rounded-lg">
+          {isPlayerTurnComplete ? (
+            <>
+              <p className="text-primary-300 text-lg xl:text-xl font-display font-bold mb-4 max-w-md mx-auto">Congratulations, you’ve made it to the end of this adventure!</p>
+              {isSignedIn && (
+                <Button size="sm" asChild variant="epic">
+                  <Link href={`/${settingId}/${adventurePlanId}`}>Play Again</Link>
+                </Button>
+              )}
+            </>
+          ) : (
+            <p className="text-primary-300 text-lg xl:text-xl font-display font-bold">Final Encounter — Make Your Last Move</p>
           )}
         </div>
       )}

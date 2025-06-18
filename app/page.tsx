@@ -21,7 +21,7 @@ export default async function HomePage() {
           <div className="text-center my-8">
             <Link href="/settings/realm-of-myr/play">
               <Button asChild variant="epic" size="sm" className="mt-2 text-xs relative z-10">
-                Start New Adventure
+                Find New Adventure
               </Button>
             </Link>
           </div>

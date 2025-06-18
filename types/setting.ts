@@ -14,6 +14,7 @@ export interface Location {
 }
 
 export interface Setting {
+  id?: string;
   name: string;
   description: string;
   genre: string;

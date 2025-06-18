@@ -68,6 +68,7 @@ Answer only "yes" or "no".`.trim();
   
   console.log("[formatNarrativeAction] should generate dialogue:", shouldGenerateDialogue);
 
+  let formattedNarrative = "";
   if (shouldGenerateDialogue) {
     // Generate dialogue
     const dialoguePrompt = `
@@ -88,13 +89,11 @@ Output only the narrative paragraph with dialogue.`.trim();
     });
     if (!dialogueRes.ok) throw new Error("Failed to generate dialogue");
     const dialogueData = await dialogueRes.json();
-    const result = dialogueData.result || dialogueData.text || "";
-    console.log("[formatNarrativeAction] dialogue result:", result);
-    return result;
-  }
-
-  // Logic for non-dialogue actions
-  const prompt = `
+    formattedNarrative = dialogueData.result || dialogueData.text || "";
+    console.log("[formatNarrativeAction] dialogue result:", formattedNarrative);
+  } else {
+    // Logic for non-dialogue actions
+    const prompt = `
 Context:
 ${narrativeContext}
 
@@ -108,17 +107,22 @@ Use the provided context to inform appropriate details (weapons, environment, ta
 
 Output only the final narrative paragraph.`.trim();
 
-  await wait(500)
-  console.log("[formatNarrativeAction] standard formatting prompt:\n", prompt);
-  const res = await fetch("/api/ai/generate/text", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ input: prompt }),
-  });
-  if (!res.ok) throw new Error("Failed to process player action");
-  const data = await res.json();
-  console.log("[formatNarrativeAction] standard result:", data.result || data.text || "");
-  return data.result || data.text || "";
+    await wait(500)
+    console.log("[formatNarrativeAction] standard formatting prompt:\n", prompt);
+    const res = await fetch("/api/ai/generate/text", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ input: prompt }),
+    });
+    if (!res.ok) throw new Error("Failed to process player action");
+    const data = await res.json();
+    formattedNarrative = data.result || data.text || "";
+    console.log("[formatNarrativeAction] standard result:", formattedNarrative);
+  }
+
+  // Always include the original reply as a tag before the formatted narrative
+  const originalReplyTag = `[OriginalReply: ${playerInput}]`;
+  return `${originalReplyTag}\n${formattedNarrative}`;
 }
 
 export async function generateRollOutcomeNarrativeWithContext({

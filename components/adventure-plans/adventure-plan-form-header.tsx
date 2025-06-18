@@ -22,20 +22,22 @@ export function AdventurePlanFormHeader({ isSaving, onDownload, onSave, draft, s
   return (
     <div className="flex items-center justify-between gap-4 w-full border-b border-white/10 pb-2">
       <div className="flex items-center gap-3">
-        <Switch
-          id="draft-toggle"
-          checked={draft}
-          onCheckedChange={async (checked) => {
-            setDraft(checked)
-            await onSave(undefined, checked)
-          }}
-          disabled={isSaving}
-        />
-        <Label htmlFor="draft-toggle" className="text-sm font-medium font-mono text-primary-200/90">
-          Draft Mode
-        </Label>
-
-        {!draft && (
+        {draft ? (
+          <>
+            <Switch
+              id="draft-toggle"
+              checked={draft}
+              onCheckedChange={async (checked) => {
+                setDraft(checked)
+                await onSave(undefined, checked)
+              }}
+              disabled={isSaving}
+            />
+            <Label htmlFor="draft-toggle" className="text-sm font-medium font-mono text-primary-200/90">
+              Draft Mode
+            </Label>
+          </>
+        ) : (
           <>
             <Badge className="font-mono opacity-80 text-xxs font-bold uppercase">Published</Badge>
             <Link

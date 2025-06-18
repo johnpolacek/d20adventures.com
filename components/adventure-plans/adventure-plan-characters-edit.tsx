@@ -22,7 +22,14 @@ export function AdventurePlanCharactersEdit({ id, type, characters, onCharacters
   const [showGenerateForm, setShowGenerateForm] = React.useState(false)
   const [editingCharacters, setEditingCharacters] = React.useState<Set<string>>(new Set())
 
-  const { isNpcs, charactersArray, addNewCharacter, updateCharacter, removeCharacter, getCharacter } = useCharacterManagement(type, characters, onCharactersChange)
+  const { isNpcs, charactersArray, addNewCharacter: _addNewCharacter, updateCharacter, removeCharacter, getCharacter } = useCharacterManagement(type, characters, onCharactersChange)
+
+  const handleAddNewCharacter = () => {
+    const newCharId = _addNewCharacter()
+    if (newCharId) {
+      setEditingCharacters((prev) => new Set(prev).add(newCharId))
+    }
+  }
 
   const toggleEditMode = (charId: string) => {
     setEditingCharacters((prev) => {
@@ -61,7 +68,7 @@ export function AdventurePlanCharactersEdit({ id, type, characters, onCharacters
             <Plus size={16} />
             {generateButtonText}
           </Button>
-          <Button onClick={addNewCharacter} disabled={isSaving} size="sm" variant="outline" className="flex items-center gap-2 hover:scale-100">
+          <Button onClick={handleAddNewCharacter} disabled={isSaving} size="sm" variant="outline" className="flex items-center gap-2 hover:scale-100">
             <Plus size={16} />
             {buttonText}
           </Button>

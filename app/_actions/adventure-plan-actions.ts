@@ -1,7 +1,7 @@
 'use server'
 
 import { auth } from "@clerk/nextjs/server"
-import { updateJsonOnS3, copyS3Object, readJsonFromS3 } from "@/lib/s3-utils"
+import { updateJsonOnS3, copyS3Object, readJsonFromS3, listAndReadJsonFilesInS3Directory } from "@/lib/s3-utils"
 import type { AdventurePlan } from "@/types/adventure-plan"
 
 interface UpdateAdventurePlanParams {
@@ -75,5 +75,25 @@ export async function createAdventurePlan(adventurePlan: AdventurePlan): Promise
   } catch (error) {
     console.error("Error creating adventure plan:", error)
     return { success: false, error: "Failed to create adventure plan" }
+  }
+}
+
+export async function getOtherAdventurePlans(settingId: string, currentPlanId: string): Promise<AdventurePlan[]> {
+  const { userId } = await auth()
+  if (!userId) {
+    throw new Error("Unauthorized")
+  }
+
+  try {
+    // Read all adventure plan JSON files (excluding setting-data.json)
+    const adventureFiles = await listAndReadJsonFilesInS3Directory(`settings/${settingId}/`, ["setting-data.json"])
+    const adventures = adventureFiles
+      .map((file: { key: string; data: unknown }) => file.data as AdventurePlan)
+      .filter((plan: AdventurePlan) => plan.id !== currentPlanId && !plan.draft) // Exclude current plan and drafts
+    
+    return adventures
+  } catch (error) {
+    console.error("Error fetching other adventure plans:", error)
+    return []
   }
 } 
