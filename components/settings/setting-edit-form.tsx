@@ -99,8 +99,6 @@ export function SettingEditForm({ setting, settingId }: { setting: Setting; sett
     toast.success("Setting downloaded successfully!")
   }
 
-  console.log("[SettingEditForm] About to render, checking components...")
-
   // Add a simple fallback UI to ensure we can see something
   if (!setting) {
     console.error("[SettingEditForm] No setting data provided")
@@ -108,8 +106,6 @@ export function SettingEditForm({ setting, settingId }: { setting: Setting; sett
   }
 
   try {
-    console.log("[SettingEditForm] Rendering form components...")
-
     return (
       <div className="pt-12 flex flex-col h-[90vh] text-white">
         <SettingFormHeader settingId={settingId} settingName={setting.name} isSaving={isSaving} onDownload={handleDownload} onSave={() => saveSetting()} />

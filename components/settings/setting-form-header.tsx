@@ -13,8 +13,6 @@ interface SettingFormHeaderProps {
 }
 
 export function SettingFormHeader({ settingId, settingName, isSaving, onDownload, onSave }: SettingFormHeaderProps) {
-  console.log("[SettingFormHeader] Rendering header, isSaving:", isSaving)
-
   return (
     <div className="w-full flex justify-between items-center p-4 border-b border-white/10 bg-black/50 backdrop-blur-sm -mt-4">
       <div className="flex gap-4">

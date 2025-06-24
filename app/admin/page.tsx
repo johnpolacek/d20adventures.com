@@ -84,6 +84,20 @@ export default async function AdminPage() {
               </Link>
             </CardFooter>
           </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Adventure Plans</CardTitle>
+              <CardDescription>Manage adventure plans</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">View and manage all adventure plans across settings.</p>
+            </CardContent>
+            <CardFooter>
+              <Link href="/admin/adventure-plans" className="w-full">
+                <Button variant="outline">Manage Adventure Plans</Button>
+              </Link>
+            </CardFooter>
+          </Card>
         </div>
       </div>
     </div>

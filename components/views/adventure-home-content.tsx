@@ -27,7 +27,6 @@ function AdventureHomeContent({ initialImage, adventure, adventurePlan }: { init
   useEffect(() => {
     // Only update image if the encounter actually changed
     if (turn && turn.encounterId && turn.encounterId !== lastEncounterId) {
-      console.log("[AdventureHomeContent] update image")
       // Try to get the image from the adventurePlan object
       let encounterImage: string | undefined = undefined
       if (adventurePlan) {
@@ -42,13 +41,10 @@ function AdventureHomeContent({ initialImage, adventure, adventurePlan }: { init
           }
         }
       }
-      console.log("[AdventureHomeContent] encounterImage", encounterImage)
       if (encounterImage) {
-        console.log("[AdventureHomeContent] setImage to encounterImage", encounterImage)
         setImage(encounterImage)
       } else {
         const fallbackImage = `images/settings/${settingId}/${adventurePlanId}/${turn.encounterId}.png`
-        console.log("[AdventureHomeContent] setImage to fallbackImage", fallbackImage)
         setImage(fallbackImage)
       }
       setLastEncounterId(turn.encounterId)
@@ -86,14 +82,7 @@ function AdventureHomeContent({ initialImage, adventure, adventurePlan }: { init
     }
   }, [turn, initialCheckDone])
 
-  useEffect(() => {
-    console.log("[AdventureHomeContent] adventurePlan ", JSON.stringify(adventurePlan, null, 2))
-  }, [])
-
   const imageUrl = getImageUrl(image)
-
-  console.log("[AdventureHomeContent] imageUrl", imageUrl)
-  console.log("[AdventureHomeContent] initialImage", initialImage)
 
   return (
     <>

@@ -49,12 +49,8 @@ export function useAdventurePlanForm(adventurePlan: AdventurePlan) {
       availableCharacterOptions: availableCharacterOptionsToSave,
       nextAdventure: nextAdventureToSave,
     }
-    console.log("[saveAdventurePlan] Saving with draft:", draftToSave)
-    console.log("[saveAdventurePlan] Full updatedAdventurePlan:", updatedAdventurePlan)
-
     try {
       const result = await updateAdventurePlanAction({ adventurePlan: updatedAdventurePlan })
-      console.log("[saveAdventurePlan] Save result:", result)
       if (result.success) {
         toast.success(result.message || "Saved successfully!")
       } else {

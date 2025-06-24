@@ -78,8 +78,6 @@ Return an object with the character id, new healthPercent (0-100), and optional 
     schema: characterUpdateSchema,
   });
 
-  console.log("[analyzeAndApplyDiceRoll] update:", JSON.stringify(update.object, null, 2))
-
   // If the AI didn't return a valid update, return the turn unchanged
   if (!update.object || !update.object.id) return turn;
 

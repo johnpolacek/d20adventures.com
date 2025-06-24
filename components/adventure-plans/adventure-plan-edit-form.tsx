@@ -18,7 +18,6 @@ import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import { getOtherAdventurePlans } from "@/app/_actions/adventure-plan-actions"
-import { useNpcManagement } from "./hooks/use-npc-management"
 
 export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: AdventurePlan }) {
   // Use custom hooks for form state management
@@ -45,7 +44,6 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
     setDraft,
   } = useAdventurePlanForm(adventurePlan)
 
-  const npcManagement = useNpcManagement(npcs, setNpcs)
   const sectionHandlers = useAdventureSections(sections, setSections)
   const encounterHandlers = useEncounterHandlers(sections, setSections)
 
@@ -143,8 +141,6 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
       setReorderFlag(false)
     }
   }, [reorderFlag])
-
-  console.log("[AdventurePlanEditForm] otherAdventurePlans", otherAdventurePlans)
 
   return (
     <div className="pb-8 flex flex-wrap h-[80vh]">
@@ -341,7 +337,8 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
           onEncounterNpcChange={encounterHandlers.handleEncounterNpcChange}
           onAddEncounter={sectionHandlers.handleAddEncounter}
           onAddSection={sectionHandlers.handleAddSection}
-          onNpcCreate={npcManagement.handleNpcCreate}
+          onNpcsChange={handleNpcsChange}
+          setNpcs={setNpcs}
         />
 
         <AdventurePlanCharactersEdit

@@ -19,9 +19,9 @@ import { scrollToBottom } from "../ui/utils"
 import { useParams, useRouter } from "next/navigation"
 import { useUser } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
-import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { Switch } from "@/components/ui/switch"
+import FinalEncounterCompleteMessage from "./final-encounter-complete-message"
 
 export default function TurnNarrative() {
   const params = useParams()
@@ -48,7 +48,6 @@ export default function TurnNarrative() {
   const isTurnComplete = currentTurn?.characters.every((c: TurnCharacter) => c.isComplete)
 
   if (!currentTurn) {
-    console.log("[TurnNarrative] currentTurn is null, returning null")
     return null
   }
 
@@ -70,14 +69,12 @@ export default function TurnNarrative() {
   const isPlayerTurnComplete = playerCharacter?.isComplete
 
   const handleAdvanceOrNavigate = async () => {
-    console.log("[handleAdvanceOrNavigate] CALLED", { disableSSE, action: disableSSE ? "navigate" : "advance" })
     if (disableSSE) {
       // Navigation mode: just go to the next turn
       const currentTurnOrder = params.turnOrder ? parseInt(params.turnOrder as string, 10) : 1
       const nextTurnOrder = currentTurnOrder + 1
       const basePath = `/settings/${settingId}/${adventurePlanId}/${params.adventureId}`
 
-      console.log("[TurnNarrative] Navigating to next turn:", `${basePath}/${nextTurnOrder}`)
       setAdvancing(true)
       router.push(`${basePath}/${nextTurnOrder}`)
       // Reset advancing state after a delay since navigation doesn't complete immediately
@@ -87,7 +84,6 @@ export default function TurnNarrative() {
       setTokenError(null) // Clear previous errors
       try {
         const result = await advanceTurn({ turnId: currentTurn?.id as Id<"turns">, settingId, adventurePlanId })
-        console.log("[advanceTurn] result:", JSON.stringify(result, null, 2))
 
         // Navigate to the new turn URL after successful advancement
         if (result.status === "turn_advanced") {
@@ -97,7 +93,6 @@ export default function TurnNarrative() {
           router.replace(`${basePath}/${newTurnOrder}`, { scroll: false })
         }
       } catch (error) {
-        console.error("[TurnNarrative] Error advancing turn:", error)
         if (error instanceof Error && error.message.includes("Insufficient tokens")) {
           setTokenError("You do not have enough tokens to perform this action. Please add more tokens to your account.")
         } else {
@@ -181,9 +176,7 @@ export default function TurnNarrative() {
             setTokenError(null) // Clear previous errors
             try {
               // Cast turnId to Id<'turns'>
-              console.log("[TurnNarrative] processTurnReply called with:", JSON.stringify({ turnId, characterId, narrativeAction }, null, 2))
               const result = await processTurnReply({ turnId: turnId as Id<"turns">, characterId, narrativeAction })
-              console.log("[TurnNarrative] processTurnReply result:", JSON.stringify(result, null, 2))
               // If the action was implausible, set the feedback as a tokenError to display it.
               if (result?.actionImplausible && result.feedback) {
                 setTokenError(result.feedback)
@@ -192,7 +185,6 @@ export default function TurnNarrative() {
               }
               return result
             } catch (error) {
-              console.error("[TurnNarrative] Error processing turn reply:", error)
               if (error instanceof Error && error.message.includes("Insufficient tokens")) {
                 setTokenError("You do not have enough tokens to perform this action. Please add more tokens to your account.")
               } else if (error instanceof Error) {
@@ -228,22 +220,18 @@ export default function TurnNarrative() {
         </div>
       )}
 
-      {currentTurn?.isFinalEncounter && (
-        <div className="flex flex-col items-center justify-center mt-8 md:mt-16 text-center px-2 py-4 md:py-6 border-double border-8 border-primary-800 rounded-lg">
-          {isPlayerTurnComplete ? (
-            <>
-              <p className="text-primary-300 text-lg xl:text-xl font-display font-bold mb-4 max-w-md mx-auto">Congratulations, you’ve made it to the end of this adventure!</p>
-              {isSignedIn && (
-                <Button size="sm" asChild variant="epic">
-                  <Link href={`/${settingId}/${adventurePlanId}`}>Play Again</Link>
-                </Button>
+      {currentTurn?.isFinalEncounter &&
+        (() => {
+          return (
+            <div className="flex flex-col items-center justify-center mt-8 md:mt-16 text-center px-2 py-4 md:py-6 border-double border-8 border-primary-800 rounded-lg">
+              {isTurnComplete ? (
+                <FinalEncounterCompleteMessage isSignedIn={Boolean(isSignedIn)} settingId={settingId} adventurePlanId={adventurePlanId} />
+              ) : (
+                <p className="text-primary-300 text-lg xl:text-xl font-display font-bold">Final Encounter — Make Your Last Move</p>
               )}
-            </>
-          ) : (
-            <p className="text-primary-300 text-lg xl:text-xl font-display font-bold">Final Encounter — Make Your Last Move</p>
-          )}
-        </div>
-      )}
+            </div>
+          )
+        })()}
       {isTurnComplete && !currentTurn?.isFinalEncounter && (
         <div className="flex justify-center mt-8">
           <TurnAdvanceButton advancing={advancing} navigationMode={disableSSE} navigationLabel={disableSSE ? "Go to Next Turn" : undefined} onAdvance={handleAdvanceOrNavigate} />

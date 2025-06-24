@@ -21,8 +21,6 @@ export default async function SettingHome(props: { params: Promise<{ settingId: 
 
   const canEdit = isDev()
 
-  console.log("[SettingHome] canEdit:", canEdit)
-
   return (
     <div className="flex min-h-screen flex-col relative">
       <div className="fade-in delay-[2s] relative z-10">

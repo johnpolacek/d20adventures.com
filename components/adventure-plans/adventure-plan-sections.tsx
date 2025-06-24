@@ -34,7 +34,8 @@ interface AdventurePlanSectionsProps {
   onEncounterNpcChange: (sectionIndex: number, sceneIndex: number, encounterIndex: number, newNpcs: { id: string; behavior: string; initialInitiative?: number }[]) => void
   onAddEncounter: (sectionIndex: number, sceneIndex: number, newEncounter?: AdventureEncounter) => void
   onAddSection: () => void
-  onNpcCreate: (npcName: string) => string | null
+  onNpcsChange: (npcs: Record<string, Character>) => void
+  setNpcs: React.Dispatch<React.SetStateAction<Record<string, Character>>>
 }
 
 export function AdventurePlanSections({
@@ -59,7 +60,8 @@ export function AdventurePlanSections({
   onEncounterNpcChange,
   onAddEncounter,
   onAddSection,
-  onNpcCreate,
+  onNpcsChange,
+  setNpcs,
 }: AdventurePlanSectionsProps) {
   const [generatorOpen, setGeneratorOpen] = React.useState<{ sIndex: number; scIndex: number } | null>(null)
   const [prompt, setPrompt] = React.useState("")
@@ -191,7 +193,8 @@ export function AdventurePlanSections({
                           onDelete={onEncounterDelete}
                           onTransitionsChange={onEncounterTransitionsChange}
                           onNpcChange={onEncounterNpcChange}
-                          onNpcCreate={onNpcCreate}
+                          onNpcsChange={onNpcsChange}
+                          setNpcs={setNpcs}
                           isSaving={isSaving}
                         />
                       ))}

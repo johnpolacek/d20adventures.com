@@ -96,7 +96,7 @@ export default function CharacterCreateForm({ availableRaces, availableArchetype
       }
       const characterTemplate: PCTemplate = getReviewCharacter()
       const result = await saveCharacterTemplateAction({ character: characterTemplate })
-      console.log("[CharacterCreateForm] saveCharacterTemplateAction result:", JSON.stringify(result, null, 2))
+
       if (result.success && result.characterId) {
         toast.success("Character saved!")
         // Redirect to adventure lobby if redirectToAdventure param is present, else to player profile

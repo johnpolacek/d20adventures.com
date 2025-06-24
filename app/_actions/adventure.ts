@@ -97,7 +97,6 @@ export async function processTurnReply({ turnId, characterId, narrativeAction }:
   // Call the (soon to be updated) getRollRequirementForAction
   // This function will now also return plausibility and feedback
   const assessment: ActionAssessment = await getRollRequirementForAction(narrativeAction, characterPerformingAction as import("@/types/character").Character)
-  console.log("[processTurnReply] action assessment from getRollRequirementForAction:", JSON.stringify(assessment, null, 2));
 
   if (assessment && assessment.isPlausible === false) {
     // Action is not plausible, return feedback to the user to try again
@@ -341,10 +340,8 @@ Output only the narrative paragraph.`.trim();
     const { text } = await generateText({ prompt: rollOutcomePrompt });
     rollOutcome = text;
     // LOGGING: Before appending rollOutcome
-    console.log("[appendNarrative] BEFORE rollOutcome", { prev: newNarrative, rollOutcome });
     newNarrative = appendNarrative(newNarrative, rollOutcome);
     // LOGGING: After appending rollOutcome
-    console.log("[appendNarrative] AFTER rollOutcome", { newNarrative });
   } catch (err) {
     console.error("[resolvePlayerRollResult] Error generating roll outcome:", err);
   }
@@ -405,7 +402,6 @@ Output only the narrative paragraph.`.trim();
 
 export async function getActiveAdventureForUser() {
   const { userId } = await auth()
-  console.log("[getActiveAdventureForUser] userId:", userId)
   if (!userId) return null
 
   // Query for adventures where the user is a player and status is 'active' or 'waitingForPlayers'
@@ -413,16 +409,13 @@ export async function getActiveAdventureForUser() {
     playerId: userId,
     status: "active"
   })
-  console.log("[getActiveAdventureForUser] activeAdventures:", JSON.stringify(activeAdventures, null, 2))
   const waitingAdventures = await convex.query(api.adventure.getAdventuresByPlayer, {
     playerId: userId,
     status: "waitingForPlayers"
   })
-  console.log("[getActiveAdventureForUser] waitingAdventures:", JSON.stringify(waitingAdventures, null, 2))
-
   // Prioritize active, then waitingForPlayers
   const adventure = (activeAdventures && activeAdventures[0]) || (waitingAdventures && waitingAdventures[0])
-  console.log("[getActiveAdventureForUser] selected adventure:", JSON.stringify(adventure, null, 2))
+  
   if (!adventure) return null
 
   // Load the adventure plan for party info
@@ -480,4 +473,12 @@ export async function getAdventuresForUser() {
     }, {} as Record<string, (typeof adventures)[number]>)
   )
   return unique
+}
+
+export async function getNextAdventure({ settingId, adventurePlanId }: { settingId: string; adventurePlanId: string }) {
+  // No auth required, this is public data
+  const planPath = `settings/${settingId}/${adventurePlanId}.json`;
+  const plan = (await readJsonFromS3(planPath)) as AdventurePlan | null;
+  if (!plan) return null;
+  return plan.nextAdventure || null;
 } 

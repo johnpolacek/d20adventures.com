@@ -39,7 +39,6 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
   if (!turn) throw new Error("Turn not found");
 
   // 2. Load the plan from S3
-  console.log("[advanceTurn] settingId:", settingId, "adventurePlanId:", adventurePlanId);
   const plan = (await readJsonFromS3(`settings/${settingId}/${adventurePlanId}.json`)) as AdventurePlan;
   if (!plan || !plan.id || !plan.sections || !plan.title) {
     throw new Error("Adventure plan is missing required fields");
@@ -105,24 +104,18 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
 
       if (!isNaN(rollResult) && !isNaN(difficulty)) {
         rollInfo = `Regarding the most recent dice roll: Character '${characterName}' attempted a '${rollType}'. The result was ${rollResult} (difficulty: ${difficulty}${modifierText}). This roll was a ${success ? 'SUCCESS' : 'FAILURE'}.`;
-        console.log("[advanceTurn] Constructed rollInfo from parsed narrative:", rollInfo);
       } else {
-        console.log("[advanceTurn] Failed to parse numeric rollResult/difficulty from DiceRoll tag. Parsed params:", JSON.stringify(params));
       }
     } else {
-      console.log("[advanceTurn] Could not parse all required fields (character, rollType, result, difficulty, success) from DiceRoll tag. Parsed params:", JSON.stringify(params));
     }
   } else {
-    console.log("[advanceTurn] No DiceRoll tag found in narrative. Attempting fallback to character object data for rollInfo.");
     const lastRollingCharacter = (turn.characters as TurnCharacter[]).find(hasRollFields);
     if (lastRollingCharacter) {
       const { name, rollRequired, rollResult: charRollResult } = lastRollingCharacter;
       const { rollType: charRollType, difficulty: charDifficulty, modifier: charModifier = 0 } = rollRequired;
       const charSuccess = charRollResult >= charDifficulty;
       rollInfo = `Regarding the most recent dice roll (from character data): Character '${name}' attempted a '${charRollType}'. The result was ${charRollResult} (difficulty: ${charDifficulty}, modifier: ${charModifier}). This roll was a ${charSuccess ? 'SUCCESS' : 'FAILURE'}.`;
-      console.log("[advanceTurn] Constructed rollInfo from character data (fallback):", rollInfo);
     } else {
-      console.log("[advanceTurn] No specific roll found in character data either (fallback). Using default message for rollInfo.");
     }
   }
 
@@ -158,24 +151,10 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
 
   // --- DETAILED LOGGING FOR LLM PROMPT INPUTS ---
   console.log("\n[advanceTurn] --- LLM PROMPT INPUTS ---");
-  console.log("[advanceTurn] Adventure Overview:", plan.overview);
   if (currentSection) {
-    console.log("[advanceTurn] Section Title:", currentSection.title);
-    console.log("[advanceTurn] Section Summary:", currentSection.summary);
   }
   if (currentScene) {
-    console.log("[advanceTurn] Scene Title:", currentScene.title);
-    console.log("[advanceTurn] Scene Summary:", currentScene.summary);
   }
-  console.log("[advanceTurn] Current Encounter Title:", currentEncounter.title);
-  console.log("[advanceTurn] Current Encounter ID:", currentEncounter.id);
-  console.log("[advanceTurn] Current Encounter Intro:", encounterIntro);
-  console.log("[advanceTurn] Current Encounter Instructions:", encounterInstructions);
-  console.log("[advanceTurn] Recent Narrative (context):\n", narrativeContext);
-  console.log("[advanceTurn] Most Recent Narrative Block (action/event):\n", mostRecentNarrativeBlock);
-  console.log("[advanceTurn] Roll Information For Context:", rollInfo);
-  console.log("[advanceTurn] Available Transitions Text:\n", transitionsText);
-  console.log("[advanceTurn] Player Character Names:", playerCharacterNames);
   console.log("--- END LLM PROMPT INPUTS ---\n");
   // --- END DETAILED LOGGING ---
 
@@ -238,10 +217,8 @@ Respond in JSON:
   const llmResult = (await generateObject({ prompt, schema: encounterProgressionSchema })).object;
 
   // Log the LLM's raw response
-  console.log("[advanceTurn] LLM result:", JSON.stringify(llmResult, null, 2));
 
   // Log what the LLM decided about encounter progression
-  console.log("[advanceTurn] Next encounterId:", llmResult.nextEncounterId);
 
   // 6. Build the new turn object
   let newTurn: Turn | null = null;

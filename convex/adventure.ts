@@ -145,9 +145,6 @@ export const getCurrentAdventure = query({
     let currentTurn = null;
     if (adventure.currentTurnId) {
       currentTurn = await ctx.db.get(adventure.currentTurnId as Id<"turns">);
-      console.log("[getCurrentAdventure] loaded currentTurn:", JSON.stringify(currentTurn, null, 2));
-    } else {
-      console.log("[getCurrentAdventure] No currentTurnId on adventure");
     }
     return { adventure, currentTurn };
   },
@@ -163,7 +160,6 @@ export const getCurrentAdventureWithNpcProcessing = mutation({
     if (adventure.currentTurnId) {
       currentTurn = await ctx.db.get(adventure.currentTurnId as Id<"turns">);
     } else {
-      console.log("[getCurrentAdventureWithNpcProcessing] No currentTurnId on adventure");
     }
     return { adventure, currentTurn };
   },
@@ -188,7 +184,6 @@ export const createAdventureWithFirstTurn = mutation({
     rollRequirement: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
-    console.log("[createAdventureWithFirstTurn] CALLED");
     const now = Date.now();
     const adventureId = await ctx.db.insert("adventures", {
       planId: args.planId,
@@ -218,7 +213,6 @@ export const createAdventureWithFirstTurn = mutation({
       );
     }
     // Log just before insert
-    console.log("[createAdventureWithFirstTurn] INSERT turn:", JSON.stringify(turn, null, 2));
 
     const turnId = await ctx.db.insert("turns", {
       adventureId,

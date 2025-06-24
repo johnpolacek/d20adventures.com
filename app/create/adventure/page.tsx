@@ -58,8 +58,6 @@ export default async function CreateAdventurePage() {
         const settingId = prefix.Prefix.split("/")[1]
         if (!settingId) return null
 
-        console.log("[CreateAdventurePage] settingId", settingId)
-
         try {
           const setting = (await readJsonFromS3(`settings/${settingId}/setting-data.json`)) as Setting
           return { ...setting, id: settingId }

@@ -78,12 +78,9 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
           order: 0,
         },
       }
-      console.log("[handleDemoReply] Calling createAdventureWithFirstTurn with payload:", JSON.stringify(payload, null, 2))
       setHasSubmitted(true)
       const res = await createAdventureWithFirstTurn(payload)
-      console.log("[handleDemoReply] createAdventureWithFirstTurn result:", JSON.stringify(res, null, 2))
       if (res && res.adventureId) {
-        console.log("[handleDemoReply] Navigating to new adventure:", `/${settingId}/${adventurePlanId}/${res.adventureId}`)
         router.push(`/${settingId}/${adventurePlanId}/${res.adventureId}`, { scroll: false })
         return
       }
@@ -105,7 +102,6 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
         playerInput: input,
         narrativeContext,
       })
-      console.log("[handleCharacterReply] aiResult:", JSON.stringify(aiResult, null, 2))
       if (typeof aiResult !== "string") {
         console.error("[handleCharacterReply] aiResult is not a string:", aiResult)
         setError("Failed to format reply. Please try again.")
@@ -132,7 +128,6 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
   }
 
   const handleReply = async (e?: React.FormEvent) => {
-    console.log("[handleReply] FUNCTION CALLED with input:", input)
     if (e) e.preventDefault()
     if (!input.trim()) return
     setLoading(true)
@@ -160,14 +155,11 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
   }
 
   const handleRollResult = async (result: number) => {
-    console.log("[handleRollResult] FUNCTION CALLED with result:", result)
     let turnId: Id<"turns"> | undefined = undefined
     if (currentTurn && typeof currentTurn.id === "string") {
       turnId = currentTurn.id as Id<"turns">
     }
-    console.log("[handleRollResult] Computed turnId:", turnId)
     if (!turnId) {
-      console.log("[handleRollResult] No turnId found, aborting.")
       setError("Cannot process roll: current turn ID is missing.")
       return
     }

@@ -63,15 +63,8 @@ export async function processNpcTurnWithLLM({
   narrativeToAppend: string;
 }> {
   // Log new context fields
-  if (adventureOverview) console.log("[NPC TURN] Adventure Overview:", adventureOverview);
-  if (sectionContext) {
-    console.log("[NPC TURN] Section Title:", sectionContext.title);
-    console.log("[NPC TURN] Section Summary:", sectionContext.summary);
-  }
-  if (sceneContext) {
-    console.log("[NPC TURN] Scene Title:", sceneContext.title);
-    console.log("[NPC TURN] Scene Summary:", sceneContext.summary);
-  }
+
+  
   // 1. LLM decides NPC action
   const npc = turn.characters.find((c) => c.id === npcId);
   if (!npc) throw new Error("NPC not found");
@@ -201,16 +194,10 @@ Respond as JSON:
   effects: [ { targetId: string, healthPercentDelta?: number, status?: string, equipmentToAdd?: [{name: string, description?: string}] } ]
 }`;
     const outcomeResult = (await generateObject({ prompt: prompt2, schema: npcActionOutcomeSchema })).object;
-    
-    console.log("[NPC TURN] LLM-generated outcome result:", JSON.stringify(outcomeResult, null, 2));
-    
     narrativeToAppend = (shortcode ? shortcode : "") + (outcomeResult.narrative || "");
     effects = outcomeResult.effects;
     
-    console.log("[NPC TURN] Effects to apply:", JSON.stringify(effects, null, 2));
-    
     // Log character health BEFORE applying effects
-    console.log("[NPC TURN] Character health BEFORE applying effects:");
     updatedCharacters.forEach(c => {
       console.log(`  ${c.name} (${c.id}): ${c.healthPercent}%`);
     });
@@ -245,13 +232,11 @@ Respond as JSON:
     });
     
     // Log character health AFTER applying effects
-    console.log("[NPC TURN] Character health AFTER applying effects:");
     updatedCharacters.forEach(c => {
       console.log(`  ${c.name} (${c.id}): ${c.healthPercent}%`);
     });
     
     // Logging for verification
-    console.log("[NPC TURN] Roll required. Appending shortcode and outcome narrative...");
 
     // --- AI health update: analyzeAndApplyDiceRoll ---
     const diceRoll = {
@@ -266,8 +251,6 @@ Respond as JSON:
       success,
     };
     
-    console.log("[NPC TURN] Calling analyzeAndApplyDiceRoll with diceRoll:", JSON.stringify(diceRoll, null, 2));
-    console.log("[NPC TURN] Character health BEFORE analyzeAndApplyDiceRoll:");
     updatedCharacters.forEach(c => {
       console.log(`  ${c.name} (${c.id}): ${c.healthPercent}%`);
     });
@@ -277,10 +260,8 @@ Respond as JSON:
       diceRoll,
       narrative: appendNarrative(updatedNarrative, narrativeToAppend),
     });
-    console.log("[NPC TURN] analyzeAndApplyDiceRoll result:", aiTurn.characters);
     
     // Log detailed comparison of AI updates
-    console.log("[NPC TURN] Detailed AI character updates:");
     aiTurn.characters.forEach(aiChar => {
       const origChar = updatedCharacters.find(c => c.id === aiChar.id);
       if (origChar) {
@@ -302,7 +283,6 @@ Respond as JSON:
     );
     
     // Log final character health state
-    console.log("[NPC TURN] FINAL character health after AI merge:");
     updatedCharacters.forEach(c => {
       console.log(`  ${c.name} (${c.id}): ${c.healthPercent}%`);
     });
@@ -327,10 +307,7 @@ Respond as JSON:
       return updated;
     });
     // Logging for verification
-    console.log("[NPC TURN] No roll required. Appending action narrative only:");
-    console.log("[NPC TURN] Action narrative:", actionResult.narrative);
     if (effects && effects.length > 0) {
-      console.log("[NPC TURN] Effects from no-roll action:", JSON.stringify(effects, null, 2));
     }
   }
   updatedNarrative = appendNarrative(updatedNarrative, narrativeToAppend);

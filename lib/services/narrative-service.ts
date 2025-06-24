@@ -53,8 +53,6 @@ Player's action for ${characterName}: "${playerInput}"
 Does this player action suggest that ${characterName} should speak dialogue? Look for actions like "greet", "ask", "say", "tell", "speak", "respond", "answer", "call out", "whisper", "shout", or any action that implies the character is communicating verbally with someone.
 
 Answer only "yes" or "no".`.trim();
-
-  console.log("[formatNarrativeAction] dialogue evaluation prompt:\n", dialogueEvalPrompt);
   
   const dialogueEvalRes = await fetch("/api/ai/generate/text", {
     method: "POST",
@@ -65,8 +63,6 @@ Answer only "yes" or "no".`.trim();
   if (!dialogueEvalRes.ok) throw new Error("Failed to evaluate dialogue need");
   const dialogueEvalData = await dialogueEvalRes.json();
   const shouldGenerateDialogue = (dialogueEvalData.result || dialogueEvalData.text || "").trim().toLowerCase().startsWith("yes");
-  
-  console.log("[formatNarrativeAction] should generate dialogue:", shouldGenerateDialogue);
 
   let formattedNarrative = "";
   if (shouldGenerateDialogue) {
@@ -81,7 +77,6 @@ Write a brief narrative paragraph in third-person present tense that includes ac
 
 Output only the narrative paragraph with dialogue.`.trim();
 
-    console.log("[formatNarrativeAction] dialogue generation prompt:\n", dialoguePrompt);
     const dialogueRes = await fetch("/api/ai/generate/text", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -90,7 +85,6 @@ Output only the narrative paragraph with dialogue.`.trim();
     if (!dialogueRes.ok) throw new Error("Failed to generate dialogue");
     const dialogueData = await dialogueRes.json();
     formattedNarrative = dialogueData.result || dialogueData.text || "";
-    console.log("[formatNarrativeAction] dialogue result:", formattedNarrative);
   } else {
     // Logic for non-dialogue actions
     const prompt = `
@@ -108,7 +102,6 @@ Use the provided context to inform appropriate details (weapons, environment, ta
 Output only the final narrative paragraph.`.trim();
 
     await wait(500)
-    console.log("[formatNarrativeAction] standard formatting prompt:\n", prompt);
     const res = await fetch("/api/ai/generate/text", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -117,7 +110,6 @@ Output only the final narrative paragraph.`.trim();
     if (!res.ok) throw new Error("Failed to process player action");
     const data = await res.json();
     formattedNarrative = data.result || data.text || "";
-    console.log("[formatNarrativeAction] standard result:", formattedNarrative);
   }
 
   // Always include the original reply as a tag before the formatted narrative
@@ -164,7 +156,6 @@ Write a single, concise, immersive third-person narrative paragraph (exactly two
 
 Output only the narrative paragraph.`.trim();
 
-  console.log("[generateRollOutcomeNarrativeWithContext] prompt:\n", prompt);
   const res = await fetch("/api/ai/generate/text", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -172,7 +163,6 @@ Output only the narrative paragraph.`.trim();
   });
   if (!res.ok) throw new Error("Failed to generate roll outcome narrative");
   const data = await res.json();
-  console.log("[generateRollOutcomeNarrativeWithContext] AI result:", data.result || data.text || "");
   return data.result || data.text || "";
 }
 

@@ -24,6 +24,8 @@ import { getImageUrl } from "@/lib/utils"
 import { EncounterEditCollapsed } from "./encounter-edit-collapsed"
 import { CharacterCard } from "./character-card"
 import { Character } from "@/types/character"
+import { CharacterGenerateForm } from "./character-generate-form"
+import { useNpcManagement } from "./hooks/use-npc-management"
 
 interface EncounterEditFormProps {
   id: string
@@ -45,7 +47,8 @@ interface EncounterEditFormProps {
   onTransitionsChange: (sectionIndex: number, sceneIndex: number, encounterIndex: number, newTransitions: EncounterTransition[]) => void
   onNpcChange: (sectionIndex: number, sceneIndex: number, encounterIndex: number, newNpcs: EncounterCharacterRef[]) => void
   onDelete: (sectionIndex: number, sceneIndex: number, encounterIndex: number) => void
-  onNpcCreate: (npcName: string) => string | null
+  onNpcsChange: (npcs: Record<string, Character>) => void
+  setNpcs: React.Dispatch<React.SetStateAction<Record<string, Character>>>
   isSaving: boolean
 }
 
@@ -68,12 +71,15 @@ export function EncounterEditForm({
   onTransitionsChange,
   onNpcChange,
   onDelete,
-  onNpcCreate,
+  onNpcsChange,
+  setNpcs,
   isSaving,
 }: EncounterEditFormProps) {
   const [isEditing, setIsEditing] = React.useState(false)
-  const [isCreatingNpc, setIsCreatingNpc] = React.useState(false)
-  const [newNpcName, setNewNpcName] = React.useState("")
+  const [showGenerateForm, setShowGenerateForm] = React.useState(false)
+  const [prevNpcIds, setPrevNpcIds] = React.useState<string[]>([])
+
+  const npcManagement = useNpcManagement(availableNpcs, setNpcs)
 
   // Auto-expand new encounters
   React.useEffect(() => {
@@ -112,19 +118,6 @@ export function EncounterEditForm({
   const availableEncounters = getAllEncounterIds()
   const transitions = encounter.transitions || []
 
-  const handleAddNpc = (npcId: string) => {
-    if (!npcId) return
-    const newNpcs = [...(encounter.npc || []), { id: npcId, behavior: "", initialInitiative: 0 }]
-    onNpcChange(sectionIndex, sceneIndex, encounterIndex, newNpcs)
-  }
-
-  const getAvailableNpcsForAdd = () => {
-    const assignedNpcIds = new Set((encounter.npc || []).map((npc) => npc.id))
-    return Object.values(availableNpcs).filter((npc) => !assignedNpcIds.has(npc.id))
-  }
-
-  const availableNpcsForAdd = getAvailableNpcsForAdd()
-
   const handleNpcChange = (npcIndex: number, field: "behavior" | "initialInitiative", value: string | number) => {
     const newNpcs = (encounter.npc || []).map((npc, idx) => {
       if (idx === npcIndex) {
@@ -138,22 +131,6 @@ export function EncounterEditForm({
   const handleRemoveNpc = (npcIndex: number) => {
     const newNpcs = (encounter.npc || []).filter((_, idx) => idx !== npcIndex)
     onNpcChange(sectionIndex, sceneIndex, encounterIndex, newNpcs)
-  }
-
-  const handleCreateAndAddNpc = async () => {
-    if (!newNpcName.trim()) return
-
-    const newNpcId = onNpcCreate(newNpcName)
-
-    if (newNpcId) {
-      // Now add this new NPC to the current encounter
-      const newNpcs = [...(encounter.npc || []), { id: newNpcId, behavior: "", initialInitiative: 0 }]
-      onNpcChange(sectionIndex, sceneIndex, encounterIndex, newNpcs)
-
-      // Reset form
-      setNewNpcName("")
-      setIsCreatingNpc(false)
-    }
   }
 
   const baseId = `encounter-${sectionIndex}-${sceneIndex}-${encounterIndex}`
@@ -181,6 +158,32 @@ export function EncounterEditForm({
     const newTransitions = transitions.filter((_, idx) => idx !== transitionIndex)
     onTransitionsChange(sectionIndex, sceneIndex, encounterIndex, newTransitions)
   }
+
+  // Add New NPC logic (manual entry, similar to useNpcManagement)
+  const handleAddNewNpc = () => {
+    const newNpcId = npcManagement.handleNpcCreateDefault()
+    if (newNpcId) {
+      // Add to this encounter
+      const newNpcs = [...(encounter.npc || []), { id: newNpcId, behavior: "", initialInitiative: 0 }]
+      onNpcChange(sectionIndex, sceneIndex, encounterIndex, newNpcs)
+    }
+  }
+
+  // Effect: When generate form closes, check for new NPC and add to encounter
+  React.useEffect(() => {
+    if (!showGenerateForm && prevNpcIds.length > 0) {
+      const currentNpcIds = Object.keys(availableNpcs)
+      const newNpcId = currentNpcIds.find((id) => !prevNpcIds.includes(id))
+      if (newNpcId) {
+        // Only add if not already in encounter
+        if (!encounter.npc?.some((npc) => npc.id === newNpcId)) {
+          const newNpcs = [...(encounter.npc || []), { id: newNpcId, behavior: "", initialInitiative: 0 }]
+          onNpcChange(sectionIndex, sceneIndex, encounterIndex, newNpcs)
+        }
+      }
+      setPrevNpcIds([])
+    }
+  }, [showGenerateForm, availableNpcs])
 
   return (
     <div id={id} className={`border border-white/20 rounded-lg mt-8 flex flex-col gap-4 relative ${!isEditing ? "py-0" : "p-4"}`}>
@@ -214,8 +217,6 @@ export function EncounterEditForm({
               value={encounter.image || ""}
               onChange={(newUrl) => {
                 onImageChange(sectionIndex, sceneIndex, encounterIndex, newUrl)
-                const updatedUrl = getImageUrl(newUrl || "")
-                console.log("[EncounterEditForm] imageUrl after upload", updatedUrl)
               }}
               onRemove={() => onImageChange(sectionIndex, sceneIndex, encounterIndex, "")}
               folder={imageUploadFolder}
@@ -272,6 +273,36 @@ export function EncounterEditForm({
               <Label className="text-lg font-display text-amber-400/90 pl-2">NPCs</Label>
             </div>
 
+            {/* Add/Generate NPC Buttons */}
+            <div className="flex gap-2 mb-4">
+              <Button onClick={handleAddNewNpc} disabled={isSaving} size="sm" variant="outline" className="flex items-center gap-2">
+                <Plus size={16} /> Add New NPC
+              </Button>
+              <Button
+                onClick={() => {
+                  setPrevNpcIds(Object.keys(availableNpcs))
+                  setShowGenerateForm(true)
+                }}
+                disabled={isSaving}
+                size="sm"
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <Plus size={16} /> Generate NPC
+              </Button>
+            </div>
+            {showGenerateForm && (
+              <CharacterGenerateForm
+                type="npcs"
+                characters={availableNpcs}
+                onCharactersChange={(characters) => {
+                  if (Array.isArray(characters)) return
+                  onNpcsChange(characters)
+                }}
+                onClose={() => setShowGenerateForm(false)}
+              />
+            )}
+
             {!encounter.npc || encounter.npc.length === 0 ? (
               <p className="text-xs text-gray-400 italic mb-2">No NPCs assigned to this encounter.</p>
             ) : (
@@ -319,66 +350,6 @@ export function EncounterEditForm({
                     </div>
                   )
                 })}
-              </div>
-            )}
-
-            {/* Add NPC Section */}
-            {!isCreatingNpc && (
-              <div className="mt-4 space-y-4">
-                {availableNpcsForAdd.length > 0 && (
-                  <div>
-                    <Label className="text-sm font-display text-amber-400/80">Add Existing NPCs</Label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mt-2">
-                      {availableNpcsForAdd.map((npc) => (
-                        <div key={npc.id} onClick={() => handleAddNpc(npc.id)} className="cursor-pointer">
-                          <CharacterCard
-                            char={npc}
-                            charId={npc.id}
-                            isNpcs={true}
-                            isSaving={isSaving}
-                            settingId={settingId}
-                            adventurePlanId={adventurePlanId}
-                            uniqueKey={npc.id}
-                            editing={false}
-                            onToggleEdit={() => {}}
-                            updateCharacter={() => {}}
-                            getCharacter={() => npc}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex justify-end">
-                  <Button onClick={() => setIsCreatingNpc(true)} variant="outline" size="sm" className="text-xs">
-                    <Plus size={14} className="mr-1" /> Create New NPC
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {isCreatingNpc && (
-              <div className="p-3 border border-dashed border-white/20 rounded-lg">
-                <Label htmlFor="new-npc-name" className="text-xs font-mono text-primary-200/90 mb-1 block">
-                  New NPC Name
-                </Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="new-npc-name"
-                    value={newNpcName}
-                    onChange={(e) => setNewNpcName(e.target.value)}
-                    placeholder="e.g., Gorok the Orc"
-                    className="bg-white/5 placeholder:text-white/40 text-xs h-8"
-                    disabled={isSaving}
-                  />
-                  <Button onClick={handleCreateAndAddNpc} size="sm" className="text-xs h-8" disabled={isSaving || !newNpcName.trim()}>
-                    Create & Add
-                  </Button>
-                  <Button onClick={() => setIsCreatingNpc(false)} variant="ghost" size="sm" className="text-xs h-8" disabled={isSaving}>
-                    Cancel
-                  </Button>
-                </div>
               </div>
             )}
           </div>

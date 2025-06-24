@@ -80,20 +80,14 @@ export const TurnProvider = ({ adventureId, initialTurn, disableSSE = false, chi
           console.error("[TurnProvider SSE OnMessage] JSON.parse error. Data will be treated as null.", "Error:", e, "Raw event.data:", event.data)
           // rawData remains null if parsing fails
         }
-      } else {
-        // event.data is falsy (null, undefined, empty string, 0, false), so treat rawData as null.
-        console.log("[TurnProvider SSE OnMessage] event.data is falsy. Data treated as null. Raw event.data:", event.data)
       }
 
-      // console.log("[TurnProvider SSE OnMessage] Parsed rawData:", rawData)
       const newTurn = mapConvexTurnToTurn(rawData)
 
       // Only update currentTurn if newTurn is not null.
       // This prevents a null message from SSE from wiping out a valid initialTurn or a previously valid SSE turn.
       if (newTurn !== null) {
         setCurrentTurn(newTurn)
-      } else {
-        console.log("[TurnProvider SSE OnMessage] SSE resulted in a null turn. currentTurn will NOT be updated to null to preserve existing state. Current currentTurn ID:", currentTurn?.id)
       }
     }
 

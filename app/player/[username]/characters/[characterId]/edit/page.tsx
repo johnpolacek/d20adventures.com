@@ -11,13 +11,9 @@ interface EditCharacterPageProps {
 
 export default async function EditCharacterPage(props: EditCharacterPageProps) {
   const { username, characterId } = await props.params
-  console.log("[EditCharacterPage] username:", username)
-  console.log("[EditCharacterPage] characterId:", characterId)
   const user = await currentUser()
-  console.log("[EditCharacterPage] user:", JSON.stringify(user, null, 2))
 
   if (!user) {
-    console.log("[EditCharacterPage] No user, redirecting to /sign-in")
     redirect("/sign-in")
   }
 
@@ -29,11 +25,9 @@ export default async function EditCharacterPage(props: EditCharacterPageProps) {
   // Load character from S3
   let character: PCTemplate | null = null
   const s3Key = `characters/${user.id}/${characterId}.json`
-  console.log("[EditCharacterPage] S3 key:", s3Key)
   try {
     const data = await readJsonFromS3(s3Key)
     character = data as PCTemplate
-    console.log("[EditCharacterPage] Loaded character:", JSON.stringify(character, null, 2))
   } catch (err) {
     console.log(`[EditCharacterPage] Error loading character from S3: ${err}. Redirecting to /player/${username}`)
     redirect(`/player/${username}`)

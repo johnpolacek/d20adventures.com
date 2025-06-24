@@ -34,7 +34,40 @@ export function useNpcManagement(
     return newNpcId
   }
 
+  const handleNpcCreateDefault = () => {
+    // Start with base name
+    const baseName = "New NPC"
+    let idx = 1
+    let newName = baseName
+    // Ensure unique name
+    while (Object.values(npcs).some((npc) => npc.name === newName)) {
+      newName = `${baseName} ${idx++}`
+    }
+    const newNpcId = slugify(newName, { lower: true, strict: true })
+    if (npcs[newNpcId]) {
+      toast.error(`NPC with ID "${newNpcId}" already exists.`)
+      return null
+    }
+    const newNpc: Character = {
+      id: newNpcId,
+      name: newName,
+      type: "npc",
+      archetype: "Unknown",
+      race: "Unknown",
+      appearance: "Not described",
+      healthPercent: 100,
+      image: "",
+    }
+    setNpcs((prevNpcs) => ({
+      ...prevNpcs,
+      [newNpcId]: newNpc,
+    }))
+    toast.success(`NPC "${newName}" created successfully!`)
+    return newNpcId
+  }
+
   return {
     handleNpcCreate,
+    handleNpcCreateDefault,
   }
 } 

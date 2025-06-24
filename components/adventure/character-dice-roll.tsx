@@ -22,8 +22,6 @@ export default function CharacterDiceRoll({
 }) {
   const { rollType, difficulty, modifier = 0 } = rollRequired
 
-  console.log("[CharacterDiceRoll] rollRequired:", JSON.stringify(rollRequired, null, 2))
-
   return (
     <div className={cn("relative aspect-[4/5] sm:aspect-auto md:min-h-[300px] font-display font-bold border border-primary-700 rounded-xl overflow-hidden", className)}>
       <div className="absolute top-0 left-0 h-2/3 sm:h-full w-full sm:w-2/3 overflow-hidden">
