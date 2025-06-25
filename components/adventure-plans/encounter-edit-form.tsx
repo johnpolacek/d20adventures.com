@@ -78,6 +78,7 @@ export function EncounterEditForm({
   const [isEditing, setIsEditing] = React.useState(false)
   const [showGenerateForm, setShowGenerateForm] = React.useState(false)
   const [prevNpcIds, setPrevNpcIds] = React.useState<string[]>([])
+  const [editingNpcId, setEditingNpcId] = React.useState<string | null>(null)
 
   const npcManagement = useNpcManagement(availableNpcs, setNpcs)
 
@@ -184,6 +185,11 @@ export function EncounterEditForm({
       setPrevNpcIds([])
     }
   }, [showGenerateForm, availableNpcs])
+
+  // Toggle edit handler
+  const handleToggleEdit = (npcId: string) => {
+    setEditingNpcId(editingNpcId === npcId ? null : npcId)
+  }
 
   return (
     <div id={id} className={`border border-white/20 rounded-lg mt-8 flex flex-col gap-4 relative ${!isEditing ? "py-0" : "p-4"}`}>
@@ -311,6 +317,43 @@ export function EncounterEditForm({
                   const npc = availableNpcs[npcRef.id]
                   if (!npc) return null
 
+                  // Duplicate handler (move here so npc is in scope)
+                  const handleDuplicateNpc = () => {
+                    const originalName = npc.name || "NPC"
+                    // Regex to match a name ending with a number
+                    const match = originalName.match(/^(.*?)(?: (\d+))?$/)
+                    const baseName = match ? match[1] : originalName
+                    let startIdx = match && match[2] ? parseInt(match[2], 10) + 1 : 2
+                    let copyName = `${baseName} ${startIdx}`
+                    const existingNames = new Set(Object.values(availableNpcs).map((n) => n.name))
+                    while (existingNames.has(copyName)) {
+                      startIdx++
+                      copyName = `${baseName} ${startIdx}`
+                    }
+                    // Generate a new unique id
+                    const slugify = (str: string) =>
+                      str
+                        .toLowerCase()
+                        .replace(/[^a-z0-9]+/g, "-")
+                        .replace(/(^-|-$)/g, "")
+                    let newId = slugify(copyName)
+                    let idIdx = 2
+                    const existingIds = new Set(Object.keys(availableNpcs))
+                    while (existingIds.has(newId)) {
+                      newId = slugify(`${copyName}-${idIdx++}`)
+                    }
+                    // Deep copy the NPC
+                    const newNpc = {
+                      ...npc,
+                      id: newId,
+                      name: copyName,
+                    }
+                    setNpcs((prev) => ({ ...prev, [newId]: newNpc }))
+                    // Add to encounter.npc
+                    const newNpcRefs = [...(encounter.npc || []), { id: newId, behavior: "", initialInitiative: 0 }]
+                    onNpcChange(sectionIndex, sceneIndex, encounterIndex, newNpcRefs)
+                  }
+
                   return (
                     <div key={npc.id} className="border border-white/10 rounded p-3">
                       <CharacterCard
@@ -321,10 +364,11 @@ export function EncounterEditForm({
                         settingId={settingId}
                         adventurePlanId={adventurePlanId}
                         uniqueKey={npc.id}
-                        editing={false}
-                        onToggleEdit={() => {}}
+                        editing={editingNpcId === npc.id}
+                        onToggleEdit={() => handleToggleEdit(npc.id)}
                         updateCharacter={() => {}}
                         getCharacter={() => npc}
+                        onDuplicate={handleDuplicateNpc}
                       />
                       <div className="mt-2 space-y-2">
                         <div>

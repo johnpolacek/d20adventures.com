@@ -9,7 +9,6 @@ import Image from "next/image"
 import { textShadow } from "@/components/typography/styles"
 import { getImageUrl } from "@/lib/utils"
 import { isDev } from "@/lib/auth-utils"
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
 
 export default async function SettingAdventures(props: { params: Promise<{ settingId: string }> }) {
   const { settingId } = await props.params
@@ -33,9 +32,6 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
     adventures = adventureFiles.map((file) => file.data as AdventurePlan)
     publishedAdventures = adventures.filter((a) => !a.draft)
     draftAdventures = adventures.filter((a) => !!a.draft)
-    adventures.forEach((adventure) => {
-      console.log(`[SettingAdventures] id: ${adventure.id}, draft: ${adventure.draft}`)
-    })
   } catch (err) {
     console.error("Error fetching adventure files from S3:", err)
   }
@@ -97,31 +93,27 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
           {isDev() && draftAdventures.length > 0 && (
             <div className="pb-12 mb-12 px-4 max-w-4xl mx-auto">
               <h3 className="text-lg font-display text-amber-400/90 mb-4 -mt-8 text-center">Draft Adventures</h3>
-              <div className="rounded-lg overflow-hidden">
-                <Table>
-                  <TableBody>
-                    {draftAdventures.map((adventure) => (
-                      <Link key={adventure.id} href={`/settings/${settingId}/${adventure.id}/edit`}>
-                        <TableRow className="hover:bg-white/10 transition-all duration-500 ease-in-out cursor-pointer group">
-                          <TableCell className="font-display text-lg text-amber-300 group-hover:text-amber-200">{adventure.title}</TableCell>
-                          <TableCell>
-                            {adventure.party[0] === 1 && adventure.party[1] === 1
-                              ? "Single Player"
-                              : adventure.party[0] === 2 && adventure.party[1] === 2
-                                ? `${adventure.party[0]} Players`
-                                : `${adventure.party[0]}-${adventure.party[1]} Players`}
-                          </TableCell>
-                          <TableCell className="max-w-md truncate">{adventure.teaser || adventure.overview}</TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="outline" size="sm" className="text-sm opacity-90 group-hover:opacity-100 transition-opacity">
-                              Edit
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      </Link>
-                    ))}
-                  </TableBody>
-                </Table>
+              <div className="rounded-lg overflow-hidden flex flex-col divide-y divide-white/10 bg-black/60">
+                {draftAdventures.map((adventure) => (
+                  <Link key={adventure.id} href={`/settings/${settingId}/${adventure.id}/edit`} className="block group">
+                    <div className="flex items-center px-6 py-4 hover:bg-white/10 border-t border-white/20 transition-all duration-500 ease-in-out cursor-pointer">
+                      <div className="flex-1 font-display text-lg text-amber-300 group-hover:text-amber-200">{adventure.title}</div>
+                      <div className="w-40 text-sm">
+                        {adventure.party[0] === 1 && adventure.party[1] === 1
+                          ? "Single Player"
+                          : adventure.party[0] === 2 && adventure.party[1] === 2
+                            ? `${adventure.party[0]} Players`
+                            : `${adventure.party[0]}-${adventure.party[1]} Players`}
+                      </div>
+                      <div className="flex-1 max-w-md truncate text-gray-300 text-xs line-clamp-2 ml-4">{adventure.teaser || adventure.overview}</div>
+                      <div className="text-right ml-4">
+                        <Button variant="outline" size="sm" className="text-sm opacity-90 group-hover:opacity-100 transition-opacity pointer-events-none">
+                          Edit
+                        </Button>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
               </div>
             </div>
           )}

@@ -54,10 +54,6 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
       try {
         const plans = await getOtherAdventurePlans(adventurePlan.settingId, adventurePlan.id)
         setOtherAdventurePlans(plans)
-        console.log(
-          "Available next adventures:",
-          plans.map((p) => ({ id: p.id, title: p.title }))
-        )
       } catch (error) {
         console.error("Error fetching other adventure plans:", error)
       }

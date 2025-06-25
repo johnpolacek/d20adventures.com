@@ -10,6 +10,7 @@ import { siteConfig } from "@/lib/config"
 import "./globals.css"
 import { Providers } from "./providers"
 import Header from "@/components/layout/header"
+import { isDev } from "@/lib/auth-utils"
 
 const rethinkSans = Rethink_Sans({
   subsets: ["latin"],
@@ -61,10 +62,11 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  // Track the visit
   const headersList = await headers()
   const path = headersList.get("x-pathname") || "/"
-  await trackVisit(path)
+  if (!isDev()) {
+    await trackVisit(path)
+  }
 
   const currentYear = new Date().getFullYear()
 

@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
 import { ImageUpload } from "@/components/ui/image-upload"
-import { Plus, X, Edit, ChevronsUp } from "lucide-react"
+import { Plus, X, Edit, ChevronsUp, Copy } from "lucide-react"
 import type { Character, PCTemplate } from "@/types/character"
 import { cn, getImageUrl } from "@/lib/utils"
 import Image from "next/image"
@@ -24,6 +24,7 @@ interface CharacterCardProps {
   editing: boolean
   onToggleEdit?: () => void
   onRemove?: () => void
+  onDuplicate?: () => void
   updateCharacter: (charId: string, updates: Partial<Character | PCTemplate>) => void
   getCharacter: (charId: string) => Character | PCTemplate
   className?: string
@@ -40,6 +41,7 @@ export function CharacterCard({
   editing,
   onToggleEdit,
   onRemove,
+  onDuplicate,
   updateCharacter,
   getCharacter,
   className,
@@ -71,6 +73,12 @@ export function CharacterCard({
               <Edit size={14} />
               Edit
             </Button>
+            {onDuplicate && (
+              <Button onClick={onDuplicate} disabled={isSaving} size="sm" variant="outline" className="flex items-center gap-2 text-sm">
+                <Copy size={14} />
+                Duplicate
+              </Button>
+            )}
             {onRemove && (
               <Button onClick={onRemove} disabled={isSaving} size="sm" variant="outline" className="flex items-center gap-2 text-sm">
                 <X size={14} />
