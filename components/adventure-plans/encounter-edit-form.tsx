@@ -8,24 +8,14 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { ImageUpload } from "@/components/ui/image-upload"
 import { Button } from "@/components/ui/button"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
 import { X, ChevronsUp, Plus } from "lucide-react"
 import { getImageUrl } from "@/lib/utils"
 import { EncounterEditCollapsed } from "./encounter-edit-collapsed"
 import { CharacterCard } from "./character-card"
-import { Character } from "@/types/character"
+import { Character, NPC, PCTemplate } from "@/types/character"
 import { CharacterGenerateForm } from "./character-generate-form"
 import { useNpcManagement } from "./hooks/use-npc-management"
+import { DeleteEncounterAlert } from "./delete-encounter-alert"
 
 interface EncounterEditFormProps {
   id: string
@@ -189,6 +179,21 @@ export function EncounterEditForm({
   // Toggle edit handler
   const handleToggleEdit = (npcId: string) => {
     setEditingNpcId(editingNpcId === npcId ? null : npcId)
+  }
+
+  // Update character handler for NPCs
+  const handleUpdateCharacter = (charId: string, updates: Partial<Character | PCTemplate>) => {
+    const filteredNpcs = Object.fromEntries(
+      Object.entries({
+        ...availableNpcs,
+        [charId]: {
+          ...availableNpcs[charId],
+          ...updates,
+        },
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      }).filter(([_, value]) => value.type === "npc")
+    ) as Record<string, NPC>
+    onNpcsChange(filteredNpcs)
   }
 
   return (
@@ -366,7 +371,7 @@ export function EncounterEditForm({
                         uniqueKey={npc.id}
                         editing={editingNpcId === npc.id}
                         onToggleEdit={() => handleToggleEdit(npc.id)}
-                        updateCharacter={() => {}}
+                        updateCharacter={handleUpdateCharacter}
                         getCharacter={() => npc}
                         onDuplicate={handleDuplicateNpc}
                       />
@@ -514,26 +519,7 @@ export function EncounterEditForm({
           </div>
 
           <div className="w-full flex justify-end items-center">
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button disabled={isSaving} size="sm" variant="ghost" className="flex items-center gap-2 text-red-400 hover:text-red-400 hover:bg-red-400/10 z-10">
-                  <X size={14} />
-                  Delete Encounter
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Encounter</AlertDialogTitle>
-                  <AlertDialogDescription>Are you sure you want to delete the encounter “{encounter.title || "Untitled Encounter"}”? This action cannot be undone.</AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => onDelete(sectionIndex, sceneIndex, encounterIndex)} className="bg-red-800 font-display font-bold hover:bg-red-700 focus:ring-red-800">
-                    Delete Encounter
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <DeleteEncounterAlert disabled={isSaving} onDelete={() => onDelete(sectionIndex, sceneIndex, encounterIndex)} encounterTitle={encounter.title || "Untitled Encounter"} />
           </div>
         </>
       )}
