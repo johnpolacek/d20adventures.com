@@ -12,12 +12,15 @@ import wait from "waait"
 import { scrollToTop } from "../ui/utils"
 import AdventureLobby from "@/components/adventure/adventure-lobby"
 import type { AdventurePlan } from "@/types/adventure-plan"
-import { getImageUrl } from "@/lib/utils"
+import { cn, getImageUrl } from "@/lib/utils"
+import AccountRequired from "@/components/nav/account-required"
+import { useUser } from "@clerk/nextjs"
 
 export const dynamic = "force-dynamic"
 
 function AdventureHomeContent({ initialImage, adventure, adventurePlan }: { initialImage: string; initialSubtitle: string; adventure: Adventure; adventurePlan?: AdventurePlan }) {
   const { adventurePlanId, settingId } = useParams()
+  const { isSignedIn, isLoaded } = useUser()
   const [image, setImage] = useState(initialImage)
   const [initialCheckDone, setInitialCheckDone] = useState(false)
   const [lastEncounterId, setLastEncounterId] = useState<string | null>(null)
@@ -86,9 +89,9 @@ function AdventureHomeContent({ initialImage, adventure, adventurePlan }: { init
 
   return (
     <>
-      <div className="flex flex-col items-center min-h-screen relative">
+      <div className={cn("flex flex-col items-center relative", isSignedIn && "min-h-screen")}>
         <ImageHeader variant={turn ? "default" : "compact"} imageUrl={imageUrl} title={adventure.title} subtitle={turn?.title} imageAlt={turn?.title || adventure.title} />
-        {turn ? <Turn /> : <AdventureLobby adventure={adventure} adventurePlan={adventurePlan} />}
+        {turn ? <Turn /> : !isLoaded ? null : !isSignedIn ? <AccountRequired /> : <AdventureLobby adventure={adventure} adventurePlan={adventurePlan} />}
       </div>
     </>
   )

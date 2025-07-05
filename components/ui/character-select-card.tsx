@@ -34,7 +34,7 @@ export function CharacterSelectCard({ character, buttonLabel, onButtonClick, hre
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
       </div>
-      <div className="pb-6 -mt-10 z-10 relative">
+      <div className="pb-6 -mt-10 z-10 relative flex flex-col justify-center items-center">
         <div className="font-bold text-3xl text-amber-400 mb-1 truncate w-full text-center">{character.name}</div>
         <div className="text-base mb-4 text-center">
           {character.gender} {character.race} {character.archetype}

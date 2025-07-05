@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { useUser, SignInButton, SignUpButton } from "@clerk/nextjs"
+import { useUser, SignInButton } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Adventure, TurnCharacter } from "@/types/adventure"
@@ -134,23 +134,7 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
 
   // Show different UI based on user state
   if (!isSignedIn) {
-    return (
-      <div className="w-full flex flex-col items-center justify-center max-w-5xl fade-in relative z-10 pb-16 -mt-16">
-        <Card className="bg-black/50 border-amber-300/30 ring-8 ring-black/30 max-w-md mx-auto">
-          <CardContent className="p-6 text-center flex flex-col items-center gap-2">
-            <h2 className="text-3xl text-amber-300 font-display mb-4 text-balance">Sign Up to Join the Adventure</h2>
-            <p className="mb-4 text-white/80">Create an account or sign in to join this adventure.</p>
-            <div className="flex gap-4">
-              <SignUpButton mode="modal">
-                <Button variant="epic" size="lg" className="text-xl py-4 px-8">
-                  Sign Up
-                </Button>
-              </SignUpButton>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
+    return null // Let parent handle AccountRequired
   }
 
   if (isSignedIn && userCharacter) {
@@ -416,7 +400,7 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
           ))}
         </div>
         <Link href={`/player/${user?.username}/characters/new?redirectToAdventure=${encodeURIComponent(adventureLobbyUrl)}`}>
-          <Button variant="epic" size="sm" className="text-sm">
+          <Button variant="epic" size="sm" className="text-lg">
             Create New Character
           </Button>
         </Link>

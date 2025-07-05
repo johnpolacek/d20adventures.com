@@ -59,7 +59,7 @@ export default function ChooseCharacterView({
       </div>
       <div className="flex flex-col items-center justify-center">
         <Link href={`/player/${username}/characters/new`}>
-          <Button size="sm" className="text-sm" variant="epic">
+          <Button size="sm" className="text-lg" variant="epic">
             Create New Character
           </Button>
         </Link>

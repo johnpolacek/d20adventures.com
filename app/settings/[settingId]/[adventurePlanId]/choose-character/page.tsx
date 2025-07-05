@@ -10,6 +10,7 @@ import FullPageImage from "@/components/layout/fullpage-image"
 import { AdventurePlan } from "@/types/adventure-plan"
 import { textShadowSpread } from "@/components/typography/styles"
 import { getImageUrl } from "@/lib/utils"
+import AccountRequired from "@/components/nav/account-required"
 
 interface PageProps {
   params: Promise<{
@@ -20,12 +21,6 @@ interface PageProps {
 
 export default async function ChooseCharacterPage({ params }: PageProps) {
   const user = await currentUser()
-  if (!user) redirect("/sign-in")
-
-  if (!user.username) {
-    redirect("/player")
-  }
-
   const { settingId, adventurePlanId } = await params
   const key = `settings/${settingId}/${adventurePlanId}.json`
   let adventurePlan: AdventurePlan | null = null
@@ -34,6 +29,19 @@ export default async function ChooseCharacterPage({ params }: PageProps) {
   } catch (err) {
     console.error("Error fetching JSON from S3:", err)
     return <div>Error loading adventure data.</div>
+  }
+  const adventureImage = getImageUrl(adventurePlan.image)
+
+  if (!user) {
+    return (
+      <FullPageImage overlay={true} image={adventureImage}>
+        <AccountRequired />
+      </FullPageImage>
+    )
+  }
+
+  if (!user.username) {
+    redirect("/player")
   }
 
   // Fetch user's characters
@@ -49,7 +57,7 @@ export default async function ChooseCharacterPage({ params }: PageProps) {
   }
 
   return (
-    <FullPageImage overlay={true} image={getImageUrl(adventurePlan.image)}>
+    <FullPageImage overlay={true} image={adventureImage}>
       <div className="relative z-10">
         <h2 className="text-2xl sm:text-4xl md:text-5xl font-display text-center mt-24" style={textShadowSpread}>
           {adventurePlan.title}

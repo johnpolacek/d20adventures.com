@@ -24,7 +24,7 @@ export default function StepChooseRace({ availableRaces, selectedRace, onSelect,
           {availableRaces.map((race) => (
             <button
               key={race}
-              className={`capitalize px-4 py-2 rounded transition-all ease-in-out duration-500 ${selectedRace === race ? "border border-transparent bg-amber-400 text-black" : "bg-transparent border border-amber-400 hover:bg-amber-700/30 hover:scale-105 text-amber-300"}`}
+              className={`capitalize px-4 py-2 rounded transition-all ease-in-out duration-500 ${selectedRace === race ? "border border-transparent bg-amber-400 text-black" : "bg-transparent border border-amber-400 !bg-black/30 hover:!bg-amber-900/50 hover:scale-105 text-amber-300"}`}
               onClick={() => onSelect(race)}
               type="button"
             >
