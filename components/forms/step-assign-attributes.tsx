@@ -2,6 +2,9 @@ import React from "react"
 import { Input } from "@/components/ui/input"
 import StepperButtons from "./stepper-buttons"
 import { textShadow } from "../typography/styles"
+import { Button } from "@/components/ui/button"
+import { generateAttributesAction } from "@/app/_actions/generate-attributes-action"
+import { useState } from "react"
 
 export interface Attributes {
   strength: number | ""
@@ -17,6 +20,8 @@ interface StepAssignAttributesProps {
   onChange: (attr: Partial<Attributes>) => void
   onNext: () => void
   onBack?: () => void
+  archetype?: string
+  race?: string
 }
 
 const ATTR_LIST = [
@@ -28,7 +33,10 @@ const ATTR_LIST = [
   { key: "charisma", label: "Charisma" },
 ]
 
-export default function StepAssignAttributes({ attributes, onChange, onNext, onBack }: StepAssignAttributesProps) {
+export default function StepAssignAttributes({ attributes, onChange, onNext, onBack, archetype, race }: StepAssignAttributesProps) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
   const isValid = ATTR_LIST.every(({ key }) => {
     const val = attributes[key as keyof Attributes]
     return typeof val === "number" && val >= 1 && val <= 20
@@ -37,6 +45,26 @@ export default function StepAssignAttributes({ attributes, onChange, onNext, onB
   const handleInput = (key: keyof Attributes) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value === "" ? "" : Number(e.target.value)
     onChange({ [key]: value })
+  }
+
+  const handleGenerate = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await generateAttributesAction({
+        archetype,
+        race,
+      })
+      if (result.success && result.attributes) {
+        onChange(result.attributes)
+      } else {
+        setError(result.error || "Failed to generate attributes.")
+      }
+    } catch {
+      setError("An error occurred while generating attributes.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -57,13 +85,17 @@ export default function StepAssignAttributes({ attributes, onChange, onNext, onB
               max={20}
               value={attributes[key as keyof Attributes]}
               onChange={handleInput(key as keyof Attributes)}
-              className="w-32 bg-black/50"
+              className="w-32 bg-black/50 font-mono !text-xl text-center"
               inputMode="numeric"
               pattern="[0-9]*"
             />
           </div>
         ))}
       </div>
+      <Button onClick={handleGenerate} disabled={loading} variant="ai" className="mt-2 !text-lg">
+        {loading ? "Generating..." : "Generate Attributes"}
+      </Button>
+      {error && <div className="text-red-400 text-sm mt-2">{error}</div>}
       <StepperButtons onBack={onBack} onNext={onNext} nextDisabled={!isValid} />
     </div>
   )

@@ -19,7 +19,7 @@ export default function StepAppearanceBackground({ appearance, background, onApp
       </h2>
       <div className="w-full max-w-md flex flex-col items-center gap-4 rounded-lg p-4 bg-black/70 ring-8 ring-black/30">
         <label className="font-display font-bold text-amber-300/80" htmlFor="appearance">
-          Appearance <span className="text-amber-300">*</span>
+          Appearance
         </label>
         <textarea
           id="appearance"

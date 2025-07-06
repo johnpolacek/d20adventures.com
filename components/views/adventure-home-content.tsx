@@ -15,12 +15,14 @@ import type { AdventurePlan } from "@/types/adventure-plan"
 import { cn, getImageUrl } from "@/lib/utils"
 import AccountRequired from "@/components/nav/account-required"
 import { useUser } from "@clerk/nextjs"
+import { usePathname } from "next/navigation"
 
 export const dynamic = "force-dynamic"
 
 function AdventureHomeContent({ initialImage, adventure, adventurePlan }: { initialImage: string; initialSubtitle: string; adventure: Adventure; adventurePlan?: AdventurePlan }) {
   const { adventurePlanId, settingId } = useParams()
   const { isSignedIn, isLoaded } = useUser()
+  const pathname = usePathname()
   const [image, setImage] = useState(initialImage)
   const [initialCheckDone, setInitialCheckDone] = useState(false)
   const [lastEncounterId, setLastEncounterId] = useState<string | null>(null)
@@ -87,11 +89,36 @@ function AdventureHomeContent({ initialImage, adventure, adventurePlan }: { init
 
   const imageUrl = getImageUrl(image)
 
+  console.log(
+    "[AdventureHomeContent] Component state:",
+    JSON.stringify(
+      {
+        isSignedIn,
+        isLoaded,
+        pathname,
+        hasTurn: !!turn,
+      },
+      null,
+      2
+    )
+  )
+
   return (
     <>
       <div className={cn("flex flex-col items-center relative", isSignedIn && "min-h-screen")}>
         <ImageHeader variant={turn ? "default" : "compact"} imageUrl={imageUrl} title={adventure.title} subtitle={turn?.title} imageAlt={turn?.title || adventure.title} />
-        {turn ? <Turn /> : !isLoaded ? null : !isSignedIn ? <AccountRequired /> : <AdventureLobby adventure={adventure} adventurePlan={adventurePlan} />}
+        {turn ? (
+          <Turn />
+        ) : (
+          <>
+            <AdventureLobby adventure={adventure} adventurePlan={adventurePlan} />
+            {!isSignedIn && isLoaded && (
+              <div className="-mt-24 pb-24">
+                <AccountRequired redirectUrl={pathname} />
+              </div>
+            )}
+          </>
+        )}
       </div>
     </>
   )

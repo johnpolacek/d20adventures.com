@@ -200,7 +200,16 @@ export default function CharacterCreateForm({ availableRaces, availableArchetype
           onBack={step > 1 ? handleBack : undefined}
         />
       )}
-      {step === 5 && <StepAssignAttributes attributes={attributes} onChange={handleAttributesChange} onNext={handleNext} onBack={step > 1 ? handleBack : undefined} />}
+      {step === 5 && (
+        <StepAssignAttributes
+          attributes={attributes}
+          onChange={handleAttributesChange}
+          onNext={handleNext}
+          onBack={step > 1 ? handleBack : undefined}
+          archetype={selectedArchetype}
+          race={selectedRace}
+        />
+      )}
       {step === 6 && (
         <StepAppearanceBackground
           appearance={appearance}
