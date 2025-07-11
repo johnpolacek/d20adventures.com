@@ -27,14 +27,7 @@ export async function generateObject<T extends z.ZodTypeAny>({prompt, schema}: {
       model: geminiModel,
     });
 
-    console.log('generateObject:', result.object);
-
     if (result.usage && result.usage.totalTokens > 0) {
-      console.log('Token Usage (generateObject):', {
-        tokensInputOutputRatio: result.usage.promptTokens/result.usage.completionTokens,
-        totalTokens: result.usage.totalTokens,
-        model: geminiModel.modelId,
-      });
       const tokenDecrementResult = await decrementUserTokensAction({
         tokensUsed: result.usage.totalTokens,
         transactionType: "usage_generate_object",

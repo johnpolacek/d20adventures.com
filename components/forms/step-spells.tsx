@@ -1,26 +1,70 @@
-import React from "react"
+import React, { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { textShadow } from "../typography/styles"
 import StepperButtons from "./stepper-buttons"
+import { generateSpellsAction } from "@/app/_actions/generate-spells-action"
+import { Button } from "@/components/ui/button"
+import type { Attributes } from "./step-assign-attributes"
+
+export interface SpellFormValue {
+  name: string
+  description?: string
+}
 
 interface StepSpellsProps {
   hasSpells: boolean | undefined
   onHasSpellsChange: (val: boolean) => void
-  spells: string[]
-  onSpellsChange: (spells: string[]) => void
+  spells: SpellFormValue[]
+  onSpellsChange: (spells: SpellFormValue[]) => void
   onNext: () => void
   onBack?: () => void
+  race?: string
+  archetype?: string
+  attributes?: Attributes
+  appearance?: string
+  background?: string
+  personality?: string
+  motivation?: string
+  backstory?: string
+  skills?: string[]
+  equipment?: string[]
 }
 
-export default function StepSpells({ hasSpells, onHasSpellsChange, spells, onSpellsChange, onNext, onBack }: StepSpellsProps) {
+export default function StepSpells({
+  hasSpells,
+  onHasSpellsChange,
+  spells,
+  onSpellsChange,
+  onNext,
+  onBack,
+  race,
+  archetype,
+  attributes,
+  appearance,
+  background,
+  personality,
+  motivation,
+  backstory,
+  skills,
+  equipment,
+}: StepSpellsProps) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
   const handleSpellChange = (idx: number, value: string) => {
     const updated = [...spells]
-    updated[idx] = value
+    updated[idx].name = value
+    onSpellsChange(updated)
+  }
+
+  const handleSpellDescriptionChange = (idx: number, value: string) => {
+    const updated = [...spells]
+    updated[idx].description = value
     onSpellsChange(updated)
   }
 
   const handleAddSpell = () => {
-    onSpellsChange([...spells, ""])
+    onSpellsChange([...spells, { name: "", description: "" }])
   }
 
   const handleRemoveSpell = (idx: number) => {
@@ -28,7 +72,7 @@ export default function StepSpells({ hasSpells, onHasSpellsChange, spells, onSpe
     onSpellsChange(updated)
   }
 
-  const nonBlankSpells = spells.filter((s) => s.trim() !== "")
+  const nonBlankSpells = spells.filter((s) => s.name.trim() !== "")
   const canProceed = typeof hasSpells === "boolean" && (!hasSpells || nonBlankSpells.length > 0)
 
   const handleNext = () => {
@@ -36,6 +80,34 @@ export default function StepSpells({ hasSpells, onHasSpellsChange, spells, onSpe
       onSpellsChange(nonBlankSpells)
     }
     onNext()
+  }
+
+  const handleGenerate = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await generateSpellsAction({
+        race,
+        archetype,
+        attributes,
+        appearance,
+        background,
+        personality,
+        motivation,
+        backstory,
+        skills,
+        equipment,
+      })
+      if (result.success && result.spells) {
+        onSpellsChange(result.spells.map((s) => ({ name: s.name, description: s.description })))
+      } else {
+        setError(result.error || "Failed to generate spells.")
+      }
+    } catch {
+      setError("An error occurred while generating spells.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -63,7 +135,10 @@ export default function StepSpells({ hasSpells, onHasSpellsChange, spells, onSpe
         <div className="w-full max-w-md flex flex-col items-center gap-4 rounded-lg p-4 bg-black/70 ring-8 ring-black/30">
           {spells.map((spell, idx) => (
             <div key={idx} className="flex w-full gap-2 items-center">
-              <Input className="flex-1 bg-black/50" placeholder={`Spell #${idx + 1}`} value={spell} onChange={(e) => handleSpellChange(idx, e.target.value)} />
+              <div className="flex-1 flex flex-col gap-1">
+                <Input className="bg-black/50" placeholder={`Spell #${idx + 1} Name`} value={spell.name} onChange={(e) => handleSpellChange(idx, e.target.value)} />
+                <Input className="bg-black/40 text-xs" placeholder="Description (optional)" value={spell.description || ""} onChange={(e) => handleSpellDescriptionChange(idx, e.target.value)} />
+              </div>
               <button type="button" className="text-red-400 px-2" onClick={() => handleRemoveSpell(idx)} disabled={spells.length === 1}>
                 Remove
               </button>
@@ -78,6 +153,10 @@ export default function StepSpells({ hasSpells, onHasSpellsChange, spells, onSpe
               Add Spell
             </button>
           </div>
+          <Button onClick={handleGenerate} disabled={loading} variant="ai" className="mt-2 !text-lg">
+            {loading ? "Generating..." : "Generate"}
+          </Button>
+          {error && <div className="text-red-400 text-sm mt-2">{error}</div>}
         </div>
       )}
       <StepperButtons onBack={onBack} onNext={handleNext} nextDisabled={!canProceed} />

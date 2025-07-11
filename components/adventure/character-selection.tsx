@@ -42,6 +42,7 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
   const [characterChoices, setCharacterChoices] = useState<CharacterChoiceMode[]>([])
   const [modalCharacter, setModalCharacter] = useState<TurnCharacter | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isSelecting, setIsSelecting] = useState(false)
 
   const characterNames = Object.fromEntries(adventurePlan.premadePlayerCharacters.map((char) => [char.id, char.name]))
 
@@ -57,6 +58,7 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
   }, [selectedCharacterId, characterChoices.length, adventurePlan.premadePlayerCharacters])
 
   const handleCharacterSelect = (characterId: string) => {
+    setIsSelecting(true)
     setSelectedCharacterId(characterId)
     // Reset choices and set the selected character as player, others as AI
     const choices: CharacterChoiceMode[] = adventurePlan.premadePlayerCharacters.map((char) => ({
@@ -64,6 +66,8 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
       mode: char.id === characterId ? "player" : "ai",
     }))
     setCharacterChoices(choices)
+    // Simulate async feedback, reset after short delay
+    setTimeout(() => setIsSelecting(false), 600)
   }
 
   const handleViewCharacterSheet = (character: PCTemplate, e: React.MouseEvent) => {
@@ -114,21 +118,34 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
             <p className="font-display w-full text-center text-xl text-amber-300 font-bold mb-6" style={textShadow}>
               ChoosE Your characteR
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 auto-rows-fr">
+            <div className="flex flex-wrap justify-center gap-6 mb-8">
               {adventurePlan.premadePlayerCharacters.map((character) => (
                 <Card
                   key={character.id}
-                  className={`w-full h-full bg-black/80 border-white/20 scale-95 hover:scale-100 hover:bg-black/90 ring-4 ring-black transition-all duration-500 ease-in-out p-0 overflow-hidden cursor-pointer flex flex-col ${
-                    selectedCharacterId === character.id ? "ring-8 ring-primary-500 scale-100" : "hover:ring-8 hover:ring-primary-500"
-                  }`}
-                  onClick={() => handleCharacterSelect(character.id)}
+                  className={cn(
+                    "w-full max-w-md h-full bg-black/80 border-white/20 scale-95 hover:scale-100 hover:bg-black/90 ring-4 ring-black transition-all duration-500 ease-in-out p-0 overflow-hidden cursor-pointer flex flex-col",
+                    selectedCharacterId === character.id ? "ring-8 ring-primary-500 scale-100" : "hover:ring-8 hover:ring-primary-500",
+                    isSelecting && "pointer-events-none opacity-60 grayscale"
+                  )}
+                  onClick={() => !isSelecting && handleCharacterSelect(character.id)}
+                  aria-disabled={isSelecting}
                 >
                   <div className="pb-2 relative aspect-[1.25] w-full">
                     {/* View Details Button */}
-                    <Button variant="outline" size="sm" className="absolute top-2 right-2 z-20 font-display text-sm" onClick={(e) => handleViewCharacterSheet(character, e)}>
+                    <Button variant="outline" size="sm" className="absolute top-2 right-2 z-20 font-display text-sm" onClick={(e) => handleViewCharacterSheet(character, e)} disabled={isSelecting}>
                       <Eye className="w-4 h-4 mr-1" />
                       Details
                     </Button>
+                    {/* Overlay spinner/feedback if selecting this card */}
+                    {isSelecting && selectedCharacterId === character.id && (
+                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-30">
+                        <svg className="animate-spin h-8 w-8 text-amber-300 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                        </svg>
+                        <span className="text-amber-300 font-bold text-lg">Selecting...</span>
+                      </div>
+                    )}
 
                     <div style={textShadow} className="absolute bottom-2 left-0 right-0 text-white w-full text-center font-display text-2xl z-10">
                       <div className="font-bold text-amber-300 pb-1">{character.name}</div>
@@ -143,8 +160,8 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
                     <div className="relative z-10 flex-1 flex flex-col">
                       {character.background && <div className="text-gray-300 text-sm -mt-2 mb-3 flex-1 whitespace-pre-line">{character.background}</div>}
                       <div className="w-full flex justify-center pt-2 pb-8">
-                        <Button variant="outline" size="lg" className="text-lg w-36">
-                          {selectedCharacterId === character.id ? "Selected" : "Select"}
+                        <Button variant="outline" size="lg" className="text-lg w-36" disabled={isSelecting}>
+                          {isSelecting && selectedCharacterId === character.id ? <span>Selecting...</span> : selectedCharacterId === character.id ? "Selected" : "Select"}
                         </Button>
                       </div>
                     </div>

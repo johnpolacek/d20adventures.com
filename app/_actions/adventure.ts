@@ -482,3 +482,9 @@ export async function getNextAdventure({ settingId, adventurePlanId }: { setting
   if (!plan) return null;
   return plan.nextAdventure || null;
 } 
+
+export async function getAdventureLobbyData(adventureId: Id<"adventures">) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+  return convex.query(api.adventure.getAdventureLobbyData, { adventureId });
+} 

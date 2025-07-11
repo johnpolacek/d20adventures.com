@@ -5,7 +5,6 @@ import { useUser } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
 import type { Adventure } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
-import type { PCTemplate } from "@/types/character"
 import { useParams } from "next/navigation"
 import { joinAdventure } from "@/app/_actions/join-adventure"
 import { scrollToTop } from "../ui/utils"
@@ -13,6 +12,10 @@ import { PartyLobbyGrid } from "./party-lobby-grid"
 import Link from "next/link"
 import { CharacterSelectCard } from "@/components/ui/character-select-card"
 import slugify from "slugify"
+import { InviteLink } from "./invite-link"
+import { CharacterSheetModal } from "./character-sheet-modal"
+import type { PC, PCTemplate } from "@/types/character"
+import { StartAdventureButton } from "./start-adventure-button"
 
 interface AdventureLobbyProps {
   adventure: Adventure
@@ -24,6 +27,8 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
   const { user, isSignedIn, isLoaded } = useUser()
   const params = useParams()
   const [isJoining, setIsJoining] = useState(false)
+  const [modalCharacter, setModalCharacter] = useState<PC | PCTemplate | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const party = adventure.party
   const userCharacter = party?.find((pc) => pc.userId === user?.id)
   const availableCharacters = adventurePlan?.premadePlayerCharacters?.filter((pc) => !party?.some((partyMember) => partyMember.id === pc.id)) || []
@@ -61,15 +66,10 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
   }
 
   // Add a handler for clicking a character slot to open the modal
-  const handlePartySlotClick = (character: Adventure["party"][0] | PCTemplate) => {
-    // Use a type guard to check for userId (PC vs PCTemplate)
-    if ("userId" in character) {
-      // setModalCharacter(turnCharacter) // Removed
-      // setIsModalOpen(true) // Removed
-    } else {
-      // setModalCharacter(turnCharacter) // Removed
-      // setIsModalOpen(true) // Removed
-    }
+  const handlePartySlotClick = (character: PC | PCTemplate) => {
+    console.log("AdventureLobby: handlePartySlotClick", JSON.stringify(character, null, 2))
+    setModalCharacter(character)
+    setIsModalOpen(true)
   }
 
   if (!isLoaded) {
@@ -78,73 +78,107 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
 
   // Always show the party grid and teaser, even if not signed in
   const showTeaser = adventurePlan?.teaser
+  // Generate the invite link for the lobby
+  const inviteLink = typeof window !== "undefined" ? `${window.location.origin}/settings/${params.settingId}/${params.adventurePlanId}/${adventure.id}` : ""
+  // Calculate min and max party size
+  const minParty = adventurePlan?.party?.[0] || 1
+  const maxParty = adventurePlan?.party?.[1] || 4
+  const currentPartySize = party?.length || 0
+  const canStartAdventure = currentPartySize >= minParty
+  const partyIsFull = currentPartySize >= maxParty
+  const hasEmptySlots = (party?.length || 0) < maxParty
 
   return (
-    <div className="w-full flex flex-col items-center justify-center max-w-5xl fade-in relative z-10 pb-16 -mt-16">
-      {/* Fortnite-style party grid */}
-      <PartyLobbyGrid
-        adventure={adventure}
-        adventurePlan={adventurePlan!}
-        userId={user?.id}
-        onCharacterClick={handlePartySlotClick}
-        availableCharacters={availableCharacters}
-        onJoinClick={isSignedIn ? handleJoinAdventure : undefined}
-        isJoining={isJoining}
+    <>
+      <CharacterSheetModal
+        character={modalCharacter}
+        open={isModalOpen}
+        onOpenChange={(open) => {
+          console.log("AdventureLobby: onOpenChange", JSON.stringify({ open, modalCharacter }, null, 2))
+          setIsModalOpen(open)
+          if (!open) setModalCharacter(null)
+        }}
       />
-      {showTeaser && (
-        <div className="pt-4 text-center flex flex-col items-center">
-          <div className="pb-16 max-w-2xl mx-auto">
-            <p>{adventurePlan?.teaser}</p>
+      <div className="w-full flex flex-col items-center justify-center max-w-5xl fade-in relative z-10 pb-16 -mt-16">
+        {/* Fortnite-style party grid */}
+        <PartyLobbyGrid
+          adventure={adventure}
+          adventurePlan={adventurePlan!}
+          userId={user?.id}
+          onCharacterClick={handlePartySlotClick}
+          availableCharacters={availableCharacters}
+          onJoinClick={isSignedIn ? handleJoinAdventure : undefined}
+          isJoining={isJoining}
+        />
+        {showTeaser && (
+          <div className="pt-4 text-center flex flex-col items-center">
+            <div className="pb-8 max-w-2xl mx-auto">
+              <p>{adventurePlan?.teaser}</p>
+            </div>
           </div>
-        </div>
-      )}
-
-      {/* Only show join/start controls if signed in */}
-      {isSignedIn && !userCharacter && (
-        <div className="w-full flex flex-col items-center justify-center mb-8">
-          {isLoadingUserChars ? (
-            <div className="text-center text-white/80 py-8 opacity-0">Loading your characters...</div>
-          ) : (
-            <>
-              {userCharacters.length > 0 && (
-                <>
-                  <h2 className="text-2xl font-display text-amber-400 mb-6">Join with Your Character</h2>
-                  <div className="w-full flex flex-wrap gap-6 justify-center mb-8">
-                    {userCharacters.map((char) => (
-                      <div key={char.id} className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4">
-                        <CharacterSelectCard
-                          className="ring-white/20"
-                          character={char}
-                          buttonLabel={isJoining ? "Joining..." : "Join"}
-                          disabled={isJoining}
-                          onButtonClick={() => handleJoinAdventure(`characters/${user?.id}/${slugify(char.name, { lower: true, strict: true })}.json`)}
-                        />
-                      </div>
-                    ))}
+        )}
+        {/* Start Adventure Button for signed-in users with a character */}
+        {isSignedIn && userCharacter && (
+          <StartAdventureButton
+            canStartAdventure={canStartAdventure}
+            partyIsFull={partyIsFull}
+            isSignedIn={isSignedIn}
+            adventure={adventure}
+            minParty={minParty}
+            maxParty={maxParty}
+            currentPartySize={currentPartySize}
+            settingId={params.settingId as string}
+            adventurePlanId={params.adventurePlanId as string}
+          />
+        )}
+        {/* Only show join controls if signed in and no user character */}
+        {isSignedIn && !userCharacter && (
+          <div className="w-full flex flex-col items-center justify-center mb-8">
+            {isLoadingUserChars ? (
+              <div className="text-center text-white/80 py-8 opacity-0">Loading your characters...</div>
+            ) : (
+              <>
+                {userCharacters.length > 0 && (
+                  <>
+                    <h2 className="text-2xl font-display text-amber-400 mb-6">Join with Your Character</h2>
+                    <div className="w-full flex flex-wrap gap-6 justify-center mb-8">
+                      {userCharacters.map((char) => (
+                        <div key={char.id} className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4">
+                          <CharacterSelectCard
+                            className="ring-white/20"
+                            character={char}
+                            buttonLabel={isJoining ? "Joining..." : "Join"}
+                            disabled={isJoining}
+                            onButtonClick={() => handleJoinAdventure(`characters/${user?.id}/${slugify(char.name, { lower: true, strict: true })}.json`)}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+                <Link href={`/player/${user?.username}/characters/new?redirectToAdventure=${encodeURIComponent(window.location.pathname)}`}>
+                  <Button variant="epic" size="lg" className="mb-4">
+                    Create New Character
+                  </Button>
+                </Link>
+                {availableCharacters.length > 0 && (
+                  <div className="mt-8 w-full max-w-lg mx-auto">
+                    <h3 className="text-lg font-display text-white/80 mb-2">Or join with a premade character:</h3>
+                    <div className="space-y-2">
+                      {availableCharacters.map((char) => (
+                        <Button key={char.id} variant="outline" className="w-full" onClick={() => handleJoinAdventure(char.id)} disabled={isJoining}>
+                          {isJoining ? "Joining..." : `Join as ${char.name}`}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
-                </>
-              )}
-              <Link href={`/player/${user?.username}/characters/new?redirectToAdventure=${encodeURIComponent(window.location.pathname)}`}>
-                <Button variant="epic" size="lg" className="mb-4">
-                  Create New Character
-                </Button>
-              </Link>
-              {availableCharacters.length > 0 && (
-                <div className="mt-8 w-full max-w-lg mx-auto">
-                  <h3 className="text-lg font-display text-white/80 mb-2">Or join with a premade character:</h3>
-                  <div className="space-y-2">
-                    {availableCharacters.map((char) => (
-                      <Button key={char.id} variant="outline" className="w-full" onClick={() => handleJoinAdventure(char.id)} disabled={isJoining}>
-                        {isJoining ? "Joining..." : `Join as ${char.name}`}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      )}
-    </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+        {isSignedIn && userCharacter && hasEmptySlots && <InviteLink inviteLink={inviteLink} />}
+      </div>
+    </>
   )
 }

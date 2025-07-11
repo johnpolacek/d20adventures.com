@@ -1,6 +1,10 @@
-import React from "react"
+import React, { useState } from "react"
 import { textShadow } from "../typography/styles"
 import StepperButtons from "./stepper-buttons"
+import { generateAppearanceBackgroundAction } from "@/app/_actions/generate-appearance-background-action"
+import { Button } from "@/components/ui/button"
+import type { Attributes } from "./step-assign-attributes"
+import { Textarea } from "../ui/textarea"
 
 interface StepAppearanceBackgroundProps {
   appearance: string
@@ -9,9 +13,37 @@ interface StepAppearanceBackgroundProps {
   onBackgroundChange: (background: string) => void
   onNext: () => void
   onBack?: () => void
+  race?: string
+  archetype?: string
+  attributes?: Attributes
 }
 
-export default function StepAppearanceBackground({ appearance, background, onAppearanceChange, onBackgroundChange, onNext, onBack }: StepAppearanceBackgroundProps) {
+export default function StepAppearanceBackground({ appearance, background, onAppearanceChange, onBackgroundChange, onNext, onBack, race, archetype, attributes }: StepAppearanceBackgroundProps) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleGenerate = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await generateAppearanceBackgroundAction({
+        race,
+        archetype,
+        attributes,
+      })
+      if (result.success && result.appearance) {
+        onAppearanceChange(result.appearance)
+        onBackgroundChange(result.background || "")
+      } else {
+        setError(result.error || "Failed to generate appearance/background.")
+      }
+    } catch {
+      setError("An error occurred while generating appearance/background.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="w-full flex flex-col items-center gap-6">
       <h2 style={textShadow} className="text-lg italic">
@@ -21,9 +53,9 @@ export default function StepAppearanceBackground({ appearance, background, onApp
         <label className="font-display font-bold text-amber-300/80" htmlFor="appearance">
           Appearance
         </label>
-        <textarea
+        <Textarea
           id="appearance"
-          className="w-full min-h-[80px] rounded bg-black/50 p-2 text-base"
+          className="w-full min-h-[80px] rounded bg-black/50 p-2 text-sm"
           placeholder="Describe your character's appearance (required)"
           value={appearance}
           onChange={(e) => onAppearanceChange(e.target.value)}
@@ -32,13 +64,17 @@ export default function StepAppearanceBackground({ appearance, background, onApp
         <label className="font-display font-bold text-amber-300/80" htmlFor="background">
           Background
         </label>
-        <textarea
+        <Textarea
           id="background"
-          className="w-full min-h-[80px] rounded bg-black/50 p-2 text-base"
+          className="w-full min-h-[80px] rounded bg-black/50 p-2 text-sm"
           placeholder="Describe your character's background (optional)"
           value={background}
           onChange={(e) => onBackgroundChange(e.target.value)}
         />
+        <Button onClick={handleGenerate} disabled={loading} variant="ai" className="mt-2 !text-lg">
+          {loading ? "Generating..." : "Generate"}
+        </Button>
+        {error && <div className="text-red-400 text-sm mt-2">{error}</div>}
       </div>
       <StepperButtons onBack={onBack} onNext={onNext} nextDisabled={!appearance.trim()} />
     </div>

@@ -1,16 +1,45 @@
-import React from "react"
+import React, { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { textShadow } from "../typography/styles"
 import StepperButtons from "./stepper-buttons"
+import { generateEquipmentAction } from "@/app/_actions/generate-equipment-action"
+import { Button } from "@/components/ui/button"
+import type { Attributes } from "./step-assign-attributes"
 
 interface StepEquipmentProps {
   equipment: string[]
   onEquipmentChange: (equipment: string[]) => void
   onNext: () => void
   onBack?: () => void
+  race?: string
+  archetype?: string
+  attributes?: Attributes
+  appearance?: string
+  background?: string
+  personality?: string
+  motivation?: string
+  backstory?: string
+  skills?: string[]
 }
 
-export default function StepEquipment({ equipment, onEquipmentChange, onNext, onBack }: StepEquipmentProps) {
+export default function StepEquipment({
+  equipment,
+  onEquipmentChange,
+  onNext,
+  onBack,
+  race,
+  archetype,
+  attributes,
+  appearance,
+  background,
+  personality,
+  motivation,
+  backstory,
+  skills,
+}: StepEquipmentProps) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
   const handleEquipmentChange = (idx: number, value: string) => {
     const updated = [...equipment]
     updated[idx] = value
@@ -36,6 +65,33 @@ export default function StepEquipment({ equipment, onEquipmentChange, onNext, on
     onNext()
   }
 
+  const handleGenerate = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await generateEquipmentAction({
+        race,
+        archetype,
+        attributes,
+        appearance,
+        background,
+        personality,
+        motivation,
+        backstory,
+        skills,
+      })
+      if (result.success && result.equipment) {
+        onEquipmentChange(result.equipment)
+      } else {
+        setError(result.error || "Failed to generate equipment.")
+      }
+    } catch {
+      setError("An error occurred while generating equipment.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="w-full flex flex-col items-center gap-6">
       <h2 style={textShadow} className="text-lg italic">
@@ -59,6 +115,10 @@ export default function StepEquipment({ equipment, onEquipmentChange, onNext, on
             Add Equipment
           </button>
         </div>
+        <Button onClick={handleGenerate} disabled={loading} variant="ai" className="mt-2 !text-lg">
+          {loading ? "Generating..." : "Generate"}
+        </Button>
+        {error && <div className="text-red-400 text-sm mt-2">{error}</div>}
       </div>
       <StepperButtons onBack={onBack} onNext={handleNext} nextDisabled={!canProceed} />
     </div>

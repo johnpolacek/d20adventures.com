@@ -15,6 +15,7 @@ import { hasBooleanProp, hasNumberProp } from "@/lib/utils"
 import { formatNarrativeAction } from "@/lib/services/narrative-service"
 import { resolvePlayerRollResult } from "@/app/_actions/adventure"
 import { createAdventureWithFirstTurn } from "@/app/_actions/adventure"
+import { Loader2 } from "lucide-react"
 
 type TurnNarrativeReplyProps = {
   character: TurnCharacter
@@ -154,6 +155,13 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
     setError(null)
   }
 
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault()
+      handleReply()
+    }
+  }
+
   const handleRollResult = async (result: number) => {
     let turnId: Id<"turns"> | undefined = undefined
     if (currentTurn && typeof currentTurn.id === "string") {
@@ -192,12 +200,25 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
     <form onSubmit={handleReply} className="flex flex-col gap-4 min-h-[100px]">
       {!loading && !hasSubmitted && !showDiceRoll && (
         <>
-          <Textarea className="text-lg border-white/30" value={input} onChange={handleInputChange} placeholder="Write your character's actions and dialogue here, in the third person..." />
+          <Textarea
+            className="text-lg border-white/30"
+            value={input}
+            onChange={handleInputChange}
+            placeholder="Write your character's actions and dialogue here, in the third person..."
+            onKeyDown={handleInputKeyDown}
+          />
           {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
           <div className="flex justify-end mt-2">
             <SignedIn>
-              <Button type="submit" disabled={!input.trim()} variant="epic" size="lg">
-                Send Reply
+              <Button type="submit" disabled={!input.trim() || loading} variant="epic" size="lg">
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="animate-spin w-4 h-4" />
+                    Sending...
+                  </span>
+                ) : (
+                  "Send Reply"
+                )}
               </Button>
             </SignedIn>
             <SignedOut>

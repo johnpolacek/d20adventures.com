@@ -11,7 +11,7 @@ import StepAppearanceBackground from "./step-appearance-background"
 import StepPersonalityMotivationBackstory from "./step-personality-motivation-backstory"
 import StepSkills from "./step-skills"
 import StepEquipment from "./step-equipment"
-import StepSpells from "./step-spells"
+import StepSpells, { SpellFormValue } from "./step-spells"
 import StepSpecialAbilities from "./step-special-abilities"
 import { CharacterCard } from "@/components/adventure-plans/character-card"
 import { Button } from "../ui/button"
@@ -55,7 +55,7 @@ export default function CharacterCreateForm({ availableRaces, availableArchetype
   const [skills, setSkills] = useState<string[]>([""])
   const [equipment, setEquipment] = useState<string[]>([""])
   const [hasSpells, setHasSpells] = useState<boolean | undefined>(undefined)
-  const [spells, setSpells] = useState<string[]>([""])
+  const [spells, setSpells] = useState<SpellFormValue[]>([{ name: "", description: "" }])
   const [hasSpecialAbilities, setHasSpecialAbilities] = useState<boolean | undefined>(undefined)
   const [specialAbilities, setSpecialAbilities] = useState<string[]>([""])
   const [isSaving, setIsSaving] = useState(false)
@@ -134,7 +134,7 @@ export default function CharacterCreateForm({ availableRaces, availableArchetype
       })
     if ("skills" in updates && updates.skills) setSkills(updates.skills as string[])
     if ("equipment" in updates && updates.equipment) setEquipment((updates.equipment as { name: string }[]).map((e) => (typeof e === "string" ? e : e.name)))
-    if ("spells" in updates && updates.spells) setSpells((updates.spells as { name: string }[]).map((e) => (typeof e === "string" ? e : e.name)))
+    if ("spells" in updates && updates.spells) setSpells((updates.spells as SpellFormValue[]).map((s) => ({ name: s.name, description: s.description })))
     if ("specialAbilities" in updates && updates.specialAbilities) setSpecialAbilities(updates.specialAbilities as string[])
   }
 
@@ -155,7 +155,7 @@ export default function CharacterCreateForm({ availableRaces, availableArchetype
       healthPercent: 100,
       equipment: equipment.filter((e) => e.trim() !== "").map((name) => ({ name })),
       skills: skills.filter((s) => s.trim() !== ""),
-      spells: spells.filter((s) => s.trim() !== "").map((name) => ({ name })),
+      spells: spells.filter((s) => s.name.trim() !== "").map((s) => ({ name: s.name, description: s.description })),
       specialAbilities: specialAbilities.filter((a) => a.trim() !== ""),
       effects: [],
       type: "pc",
@@ -218,6 +218,9 @@ export default function CharacterCreateForm({ availableRaces, availableArchetype
           onBackgroundChange={setBackground}
           onNext={handleNext}
           onBack={step > 1 ? handleBack : undefined}
+          race={selectedRace}
+          archetype={selectedArchetype}
+          attributes={attributes}
         />
       )}
       {step === 7 && (
@@ -230,11 +233,66 @@ export default function CharacterCreateForm({ availableRaces, availableArchetype
           onBackstoryChange={setBackstory}
           onNext={handleNext}
           onBack={step > 1 ? handleBack : undefined}
+          race={selectedRace}
+          archetype={selectedArchetype}
+          attributes={attributes}
+          appearance={appearance}
+          background={background}
         />
       )}
-      {step === 8 && <StepSkills skills={skills} onSkillsChange={setSkills} onNext={handleNext} onBack={step > 1 ? handleBack : undefined} />}
-      {step === 9 && <StepEquipment equipment={equipment} onEquipmentChange={setEquipment} onNext={handleNext} onBack={step > 1 ? handleBack : undefined} />}
-      {step === 10 && <StepSpells hasSpells={hasSpells} onHasSpellsChange={setHasSpells} spells={spells} onSpellsChange={setSpells} onNext={handleNext} onBack={step > 1 ? handleBack : undefined} />}
+      {step === 8 && (
+        <StepSkills
+          skills={skills}
+          onSkillsChange={setSkills}
+          onNext={handleNext}
+          onBack={step > 1 ? handleBack : undefined}
+          race={selectedRace}
+          archetype={selectedArchetype}
+          attributes={attributes}
+          appearance={appearance}
+          background={background}
+          personality={personality}
+          motivation={motivation}
+          backstory={backstory}
+        />
+      )}
+      {step === 9 && (
+        <StepEquipment
+          equipment={equipment}
+          onEquipmentChange={setEquipment}
+          onNext={handleNext}
+          onBack={step > 1 ? handleBack : undefined}
+          race={selectedRace}
+          archetype={selectedArchetype}
+          attributes={attributes}
+          appearance={appearance}
+          background={background}
+          personality={personality}
+          motivation={motivation}
+          backstory={backstory}
+          skills={skills}
+        />
+      )}
+      {step === 10 && (
+        <StepSpells
+          hasSpells={hasSpells}
+          onHasSpellsChange={setHasSpells}
+          spells={spells}
+          onSpellsChange={setSpells}
+          onNext={handleNext}
+          onBack={step > 1 ? handleBack : undefined}
+          race={selectedRace}
+          archetype={selectedArchetype}
+          attributes={attributes}
+          appearance={appearance}
+          background={background}
+          personality={personality}
+          motivation={motivation}
+          backstory={backstory}
+          skills={skills}
+          equipment={equipment}
+        />
+      )}
       {step === 11 && (
         <StepSpecialAbilities
           hasSpecialAbilities={hasSpecialAbilities}

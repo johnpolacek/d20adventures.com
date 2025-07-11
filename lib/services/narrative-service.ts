@@ -271,22 +271,14 @@ Respond in JSON: { "rollType": string, "difficulty": number } or null if no roll
 }
 
 export async function getRollModifier(context: { scenario: unknown; rollRequirement: unknown; character: unknown }) {
-  console.log('[getRollModifier] === STARTING MODIFIER CALCULATION ===')
-  console.log('[getRollModifier] Input context:', JSON.stringify(context, null, 2))
-  
   // First, calculate base attribute modifier
   const rollType = typeof context.rollRequirement === 'object' && 
                   context.rollRequirement !== null && 
                   'rollType' in context.rollRequirement ? 
                   String(context.rollRequirement.rollType) : ''
   
-  console.log('[getRollModifier] Extracted roll type:', rollType)
-  console.log('[getRollModifier] Character data being passed to calculateAttributeModifier:', JSON.stringify(context.character, null, 2))
-  
   const { calculateAttributeModifier } = await import('@/lib/utils/modifier-utils')
   const baseAttributeModifier = calculateAttributeModifier(context.character, rollType)
-  
-  console.log('[getRollModifier] Base attribute modifier calculated:', baseAttributeModifier)
   
   // Then get situational modifier from LLM
   const prompt = `
@@ -303,24 +295,11 @@ Character: ${JSON.stringify(context.character, null, 2)}
 
 Respond in JSON: { "modifier": number } (can be negative, zero, or positive).
 `;
-  console.log('[getRollModifier] LLM prompt for situational modifier:', prompt)
-  
   const result = await generateObject({ prompt, schema: rollModifierSchema });
   const situationalModifier = result.object?.modifier ?? 0;
   
-  console.log('[getRollModifier] LLM result object:', JSON.stringify(result.object, null, 2))
-  console.log('[getRollModifier] Situational modifier from LLM:', situationalModifier)
-  
   // Combine base attribute modifier with situational modifier
   const totalModifier = baseAttributeModifier + situationalModifier;
-  
-  console.log(`[getRollModifier] === FINAL CALCULATION ===`)
-  console.log(`[getRollModifier] Roll Type: "${rollType}"`)
-  console.log(`[getRollModifier] Base Attribute Modifier: ${baseAttributeModifier}`)
-  console.log(`[getRollModifier] Situational Modifier: ${situationalModifier}`)
-  console.log(`[getRollModifier] Total Modifier: ${totalModifier}`)
-  console.log(`[getRollModifier] === END MODIFIER CALCULATION ===`)
-  
   return totalModifier;
 }
 

@@ -37,7 +37,7 @@ export default function ChooseCharacterView({
   }
 
   return (
-    <div className="flex flex-col items-center justify-center relative z-10 py-12">
+    <div className="flex flex-col items-center justify-center relative z-10 pt-24 pb-12">
       <div style={textShadow} className="mb-8 text-2xl font-display font-bold text-amber-400">
         Choose Your Character
       </div>

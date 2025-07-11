@@ -34,10 +34,10 @@ export function PartyLobbyGrid({ adventure, adventurePlan, userId, onCharacterCl
   for (let i = 0; i < maxParty; i++) {
     if (i === 1 && userChar) {
       // 2nd slot: user character
-      slots.push(<PartySlot key={userChar.id} character={userChar} isUserCharacter={true} onClick={onCharacterClick ? () => onCharacterClick(userChar!) : undefined} />)
+      slots.push(<PartySlot key={userChar.id} character={userChar} isUserCharacter={true} onClick={() => (onCharacterClick ? onCharacterClick(userChar!) : undefined)} />)
     } else if (charIdx < otherChars.length) {
       const character = otherChars[charIdx]
-      slots.push(<PartySlot key={character.id} character={character} isUserCharacter={false} onClick={onCharacterClick ? () => onCharacterClick(character) : undefined} />)
+      slots.push(<PartySlot key={character.id} character={character} isUserCharacter={false} onClick={() => (onCharacterClick ? onCharacterClick(character) : undefined)} />)
       charIdx++
     } else {
       // If there are available premade characters, allow joining with the first available

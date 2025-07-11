@@ -1,16 +1,30 @@
-import React from "react"
+import React, { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { textShadow } from "../typography/styles"
 import StepperButtons from "./stepper-buttons"
+import { generateSkillsAction } from "@/app/_actions/generate-skills-action"
+import { Button } from "@/components/ui/button"
+import type { Attributes } from "./step-assign-attributes"
 
 interface StepSkillsProps {
   skills: string[]
   onSkillsChange: (skills: string[]) => void
   onNext: () => void
   onBack?: () => void
+  race?: string
+  archetype?: string
+  attributes?: Attributes
+  appearance?: string
+  background?: string
+  personality?: string
+  motivation?: string
+  backstory?: string
 }
 
-export default function StepSkills({ skills, onSkillsChange, onNext, onBack }: StepSkillsProps) {
+export default function StepSkills({ skills, onSkillsChange, onNext, onBack, race, archetype, attributes, appearance, background, personality, motivation, backstory }: StepSkillsProps) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
   const handleSkillChange = (idx: number, value: string) => {
     const updated = [...skills]
     updated[idx] = value
@@ -36,6 +50,32 @@ export default function StepSkills({ skills, onSkillsChange, onNext, onBack }: S
     onNext()
   }
 
+  const handleGenerate = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await generateSkillsAction({
+        race,
+        archetype,
+        attributes,
+        appearance,
+        background,
+        personality,
+        motivation,
+        backstory,
+      })
+      if (result.success && result.skills) {
+        onSkillsChange(result.skills)
+      } else {
+        setError(result.error || "Failed to generate skills.")
+      }
+    } catch {
+      setError("An error occurred while generating skills.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="w-full flex flex-col items-center gap-6">
       <h2 style={textShadow} className="text-lg italic">
@@ -59,6 +99,10 @@ export default function StepSkills({ skills, onSkillsChange, onNext, onBack }: S
             Add Skill
           </button>
         </div>
+        <Button onClick={handleGenerate} disabled={loading} variant="ai" className="mt-2 !text-lg">
+          {loading ? "Generating..." : "Generate"}
+        </Button>
+        {error && <div className="text-red-400 text-sm mt-2">{error}</div>}
       </div>
       <StepperButtons onBack={onBack} onNext={handleNext} nextDisabled={!canProceed} />
     </div>

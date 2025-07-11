@@ -64,6 +64,13 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
   const [availableCharacterOptions, setAvailableCharacterOptions] = React.useState(adventurePlan.availableCharacterOptions || { races: [], archetypes: [] })
   const [premadeOnly, setPremadeOnly] = React.useState(adventurePlan.availableCharacterOptions === undefined)
   const [reorderFlag, setReorderFlag] = React.useState(false)
+  // Add local state for nextAdventure
+  const [nextAdventure, setNextAdventure] = React.useState(adventurePlan.nextAdventure || "")
+
+  // Sync local state with prop when adventurePlan.nextAdventure changes
+  React.useEffect(() => {
+    setNextAdventure(adventurePlan.nextAdventure || "")
+  }, [adventurePlan.nextAdventure])
 
   // Character change handlers
   const handleNpcsChange = (newNpcs: Record<string, Character>) => {
@@ -293,11 +300,12 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
             <select
               id="next-adventure"
               className="w-full bg-white/5 border border-white/20 rounded px-2 py-1 text-sm text-white placeholder:text-white/40"
-              onChange={(e) => {
+              onChange={async (e) => {
                 const nextAdventureId = e.target.value || undefined
-                saveAdventurePlan(undefined, undefined, premadeOnly ? undefined : availableCharacterOptions, nextAdventureId)
+                setNextAdventure(e.target.value) // update local state immediately
+                await saveAdventurePlan(undefined, undefined, premadeOnly ? undefined : availableCharacterOptions, nextAdventureId)
               }}
-              value={adventurePlan.nextAdventure || ""}
+              value={nextAdventure}
               disabled={isSaving || otherAdventurePlans.length === 0}
             >
               <option value="">None - This is a standalone adventure</option>

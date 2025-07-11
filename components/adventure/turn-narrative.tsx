@@ -22,8 +22,9 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Switch } from "@/components/ui/switch"
 import FinalEncounterCompleteMessage from "./final-encounter-complete-message"
+import Link from "next/link"
 
-export default function TurnNarrative() {
+export default function TurnNarrative({ nextAdventure }: { nextAdventure?: string }) {
   const params = useParams()
   const router = useRouter()
   const { currentTurn, disableSSE } = useTurnContext()
@@ -62,11 +63,16 @@ export default function TurnNarrative() {
 
   const parsed = parseNarrative(currentTurn?.narrative || "")
 
-  const shouldShowReplyCondition = currentTurn && currentCharacter && currentCharacter.type === "pc" && currentCharacter.userId === user?.id && !isNpcProcessing && !disableSSE
+  const shouldShowReplyCondition =
+    currentTurn && currentCharacter && currentCharacter.type === "pc" && currentCharacter.userId === user?.id && !isNpcProcessing && !disableSSE && currentCharacter.healthPercent !== 0
 
   // Find the player's character and check if their turn is complete
   const playerCharacter = currentTurn?.characters.find((c: TurnCharacter) => c.type === "pc" && c.userId === user?.id)
   const isPlayerTurnComplete = playerCharacter?.isComplete
+
+  // Check if all PCs are dead
+  const pcs = currentTurn?.characters.filter((c: TurnCharacter) => c.type === "pc") || []
+  const allPCsDead = pcs.length > 0 && pcs.every((c) => c.healthPercent === 0)
 
   const handleAdvanceOrNavigate = async () => {
     if (disableSSE) {
@@ -201,6 +207,16 @@ export default function TurnNarrative() {
             }
           }}
         />
+      ) : allPCsDead ? (
+        <div id="turn-indicator" className="flex flex-col gap-2 justify-center border mt-6 border-red-800/50 items-center p-8 rounded-lg bg-red-900/20">
+          <h4 className="text-xl font-display text-red-400">Game Over</h4>
+          <p className="italic text-red-300">All player characters have fallen</p>
+          <Link href={`/settings/${settingId}/play`} className="mt-4">
+            <Button variant="epic" size="sm" className="text-sm">
+              Return to Setting
+            </Button>
+          </Link>
+        </div>
       ) : (
         <div
           id="turn-indicator"
@@ -216,7 +232,7 @@ export default function TurnNarrative() {
             <span className={cn("w-2 h-2 rounded-full animate-pulse", isPlayerTurnComplete ? "bg-neutral-600" : "bg-primary-200")} style={{ animationDelay: "200ms", animationDuration: "2s" }}></span>
             <span className={cn("w-2 h-2 rounded-full animate-pulse", isPlayerTurnComplete ? "bg-neutral-600" : "bg-primary-200")} style={{ animationDelay: "400ms", animationDuration: "2s" }}></span>
           </div>
-          <p className="italic text-white/70">It is currently {currentCharacter?.name}’s turn</p>
+          <p className="italic text-white/70">It is currently {currentCharacter?.name}&apos;s turn</p>
         </div>
       )}
 
@@ -225,7 +241,7 @@ export default function TurnNarrative() {
           return (
             <div className="flex flex-col items-center justify-center mt-8 md:mt-16 text-center px-2 py-4 md:py-6 border-double border-8 border-primary-800 rounded-lg">
               {isTurnComplete ? (
-                <FinalEncounterCompleteMessage isSignedIn={Boolean(isSignedIn)} settingId={settingId} adventurePlanId={adventurePlanId} />
+                <FinalEncounterCompleteMessage isSignedIn={Boolean(isSignedIn)} settingId={settingId} adventurePlanId={adventurePlanId} nextAdventure={nextAdventure} />
               ) : (
                 <p className="text-primary-300 text-lg xl:text-xl font-display font-bold">Final Encounter — Make Your Last Move</p>
               )}

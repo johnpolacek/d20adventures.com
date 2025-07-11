@@ -427,3 +427,20 @@ export const getAdventuresByPlayer = query({
     return all.filter((a) => Array.isArray(a.playerIds) && a.playerIds.includes(args.playerId));
   },
 });
+
+// Query: Get adventure lobby data with real-time updates
+export const getAdventureLobbyData = query({
+  args: { adventureId: v.id("adventures") },
+  handler: async (ctx, args) => {
+    const adventure = await ctx.db.get(args.adventureId);
+    if (!adventure) return null;
+    return {
+      id: adventure._id,
+      title: adventure.title,
+      status: adventure.status,
+      players: adventure.players || [],
+      playerIds: adventure.playerIds || [],
+      updatedAt: adventure.updatedAt,
+    };
+  },
+});

@@ -9,6 +9,7 @@ import { readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PCTemplate } from "@/types/character"
 import { toPCTemplate } from "@/lib/utils/character-mapping"
+import { startAdventure } from "@/app/_actions/start-adventure"
 
 interface CreateAdventureInput {
   settingId: string
@@ -80,6 +81,13 @@ export async function createAdventure(input: CreateAdventureInput) {
     title: plan.title, // Use the actual adventure title from the plan
     startedAt: now,
   })
+
+  // If only one player character, auto-start the adventure
+  if (players.length === 1) {
+    // Call startAdventure to create the first turn and redirect to it
+    await startAdventure({ settingId, adventurePlanId, adventureId })
+    return // startAdventure will handle the redirect
+  }
 
   // For MVP, we'll redirect to the adventure page immediately
   // The adventure page will handle the "no current turn" state

@@ -18,11 +18,11 @@ const FinalEncounterCompleteMessage = ({ isSignedIn, settingId, adventurePlanId,
       {isSignedIn &&
         (nextAdventure ? (
           <Button size="sm" asChild variant="epic">
-            <Link href={`/${settingId}/${nextAdventure}`}>Play Next Adventure</Link>
+            <Link href={`/settings/${settingId}/${nextAdventure}/character-select`}>Play Next Adventure</Link>
           </Button>
         ) : (
           <Button size="sm" asChild variant="epic">
-            <Link href={`/${settingId}/${adventurePlanId}`}>Play Again</Link>
+            <Link href={`/${settingId}/${adventurePlanId}/character-select`}>Play Again</Link>
           </Button>
         ))}
     </>

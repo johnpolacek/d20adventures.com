@@ -6,11 +6,17 @@ import { getImageUrl } from "@/lib/utils"
 import Image from "next/image"
 import { useState } from "react"
 import type { TurnCharacter } from "@/types/adventure"
+import type { PC, PCTemplate } from "@/types/character"
 
+type CharacterSheetModalCharacter = TurnCharacter | PC | PCTemplate | null
 interface CharacterSheetModalProps {
-  character: TurnCharacter | null
+  character: CharacterSheetModalCharacter
   open: boolean
   onOpenChange: (open: boolean) => void
+}
+// Type guard for TurnCharacter
+function isTurnCharacter(char: CharacterSheetModalCharacter): char is TurnCharacter {
+  return typeof char === "object" && char !== null && "initiative" in char
 }
 
 interface ExpandableTextProps {
@@ -175,6 +181,17 @@ export function CharacterSheetModal({ character, open, onOpenChange }: Character
             )}
           </div>
         </div>
+        {/* Turn-specific info if available */}
+        {isTurnCharacter(character) && (
+          <div className="flex gap-4 items-center mt-2">
+            <div className="text-xs font-mono text-primary-200 uppercase tracking-wider">
+              Initiative: <span className="font-bold text-lg">{character.initiative}</span>
+            </div>
+            {character.isComplete && <div className="text-xs text-green-400 font-bold">Turn Complete</div>}
+            {character.hasReplied && <div className="text-xs text-blue-400 font-bold">Replied</div>}
+            {character.rollRequired && <div className="text-xs text-yellow-400 font-bold">Roll Required</div>}
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   )

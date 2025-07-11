@@ -89,26 +89,12 @@ function AdventureHomeContent({ initialImage, adventure, adventurePlan }: { init
 
   const imageUrl = getImageUrl(image)
 
-  console.log(
-    "[AdventureHomeContent] Component state:",
-    JSON.stringify(
-      {
-        isSignedIn,
-        isLoaded,
-        pathname,
-        hasTurn: !!turn,
-      },
-      null,
-      2
-    )
-  )
-
   return (
     <>
       <div className={cn("flex flex-col items-center relative", isSignedIn && "min-h-screen")}>
         <ImageHeader variant={turn ? "default" : "compact"} imageUrl={imageUrl} title={adventure.title} subtitle={turn?.title} imageAlt={turn?.title || adventure.title} />
         {turn ? (
-          <Turn />
+          <Turn nextAdventure={adventurePlan?.nextAdventure} />
         ) : (
           <>
             <AdventureLobby adventure={adventure} adventurePlan={adventurePlan} />
