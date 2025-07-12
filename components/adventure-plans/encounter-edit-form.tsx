@@ -217,7 +217,7 @@ export function EncounterEditForm({
             <ChevronsUp size={14} /> close
           </button>
           <div className="absolute -top-4 left-2 text-xxs font-mono text-white/60 px-1.5 pt-8 pb-2 rounded">{encounter.id || ""}</div>
-          <h4 className="text-5xl font-display text-amber-400 text-center pt-4">{encounter.title}</h4>
+          <h4 className="text-4xl font-display text-amber-400 text-center pt-6">{encounter.title}</h4>
 
           <div>
             <Label htmlFor={`${baseId}-image-upload`} className="block text-sm font-medium font-mono text-primary-200/90 mb-1">

@@ -97,3 +97,14 @@ export async function getOtherAdventurePlans(settingId: string, currentPlanId: s
     return []
   }
 } 
+
+export async function getAdventurePlan(settingId: string, adventurePlanId: string): Promise<AdventurePlan | null> {
+  try {
+    const planPath = `settings/${settingId}/${adventurePlanId}.json`
+    const adventurePlan = (await readJsonFromS3(planPath)) as AdventurePlan
+    return adventurePlan
+  } catch (error) {
+    console.error("Error fetching adventure plan:", error)
+    return null
+  }
+} 
