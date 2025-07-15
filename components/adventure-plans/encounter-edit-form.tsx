@@ -220,21 +220,6 @@ export function EncounterEditForm({
           <h4 className="text-4xl font-display text-amber-400 text-center pt-6">{encounter.title}</h4>
 
           <div>
-            <Label htmlFor={`${baseId}-image-upload`} className="block text-sm font-medium font-mono text-primary-200/90 mb-1">
-              Encounter Image
-            </Label>
-            <ImageUpload
-              id={`${baseId}-image-upload`}
-              value={encounter.image || ""}
-              onChange={(newUrl) => {
-                onImageChange(sectionIndex, sceneIndex, encounterIndex, newUrl)
-              }}
-              onRemove={() => onImageChange(sectionIndex, sceneIndex, encounterIndex, "")}
-              folder={imageUploadFolder}
-            />
-          </div>
-
-          <div>
             <Label htmlFor={`${baseId}-title`} className="block text-sm font-medium font-mono text-primary-200/90 cursor-pointer mb-1">
               Encounter Title
             </Label>
@@ -249,6 +234,22 @@ export function EncounterEditForm({
               className="bg-white/10 placeholder:text-white/40"
             />
           </div>
+
+          <div>
+            <Label htmlFor={`${baseId}-image-upload`} className="block text-sm font-medium font-mono text-primary-200/90 mb-1">
+              Encounter Image
+            </Label>
+            <ImageUpload
+              id={`${baseId}-image-upload`}
+              value={encounter.image || ""}
+              onChange={(newUrl) => {
+                onImageChange(sectionIndex, sceneIndex, encounterIndex, newUrl)
+              }}
+              onRemove={() => onImageChange(sectionIndex, sceneIndex, encounterIndex, "")}
+              folder={imageUploadFolder}
+            />
+          </div>
+
           <div>
             <Label htmlFor={`${baseId}-intro`} className="block text-sm font-medium font-mono text-primary-200/90 cursor-pointer mb-1">
               Encounter Intro
@@ -286,9 +287,6 @@ export function EncounterEditForm({
 
             {/* Add/Generate NPC Buttons */}
             <div className="flex gap-2 mb-4">
-              <Button onClick={handleAddNewNpc} disabled={isSaving} size="sm" variant="outline" className="flex items-center gap-2">
-                <Plus size={16} /> Add New NPC
-              </Button>
               <Button
                 onClick={() => {
                   setPrevNpcIds(Object.keys(availableNpcs))
@@ -300,6 +298,9 @@ export function EncounterEditForm({
                 className="flex items-center gap-2"
               >
                 <Plus size={16} /> Generate NPC
+              </Button>
+              <Button onClick={handleAddNewNpc} disabled={isSaving} size="sm" variant="outline" className="flex items-center gap-2">
+                <Plus size={16} /> Blank NPC
               </Button>
             </div>
             {showGenerateForm && (

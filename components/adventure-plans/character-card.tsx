@@ -103,19 +103,6 @@ export function CharacterCard({
 
         {/* Left Column */}
         <div className="flex flex-col">
-          <div className="pb-4">
-            <Label className="font-mono p-1 text-primary-200" htmlFor={`char-image-${charId}`}>
-              Image
-            </Label>
-            <ImageUpload
-              id={`char-image-${charId}`}
-              value={imageUrl || ""}
-              onChange={(url) => updateCharacter(charId, { image: url })}
-              onRemove={() => updateCharacter(charId, { image: "" })}
-              folder={imageUploadFolder}
-              className="aspect-square"
-            />
-          </div>
           <div className="grid grid-cols-3 gap-4">
             <div className="col-span-2">
               <Label className="font-mono p-1 text-primary-200" htmlFor={`char-name-${charId}`}>
@@ -130,6 +117,21 @@ export function CharacterCard({
               <Input id={`char-gender-${charId}`} value={char.gender || ""} onChange={(e) => updateCharacter(charId, { gender: e.target.value })} disabled={isSaving} placeholder="Optional" />
             </div>
           </div>
+
+          <div className="pt-4">
+            <Label className="font-mono p-1 text-primary-200" htmlFor={`char-image-${charId}`}>
+              Image
+            </Label>
+            <ImageUpload
+              id={`char-image-${charId}`}
+              value={imageUrl || ""}
+              onChange={(url) => updateCharacter(charId, { image: url })}
+              onRemove={() => updateCharacter(charId, { image: "" })}
+              folder={imageUploadFolder}
+              className="aspect-square"
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-4 pt-4">
             <div>
               <Label className="font-mono p-1 text-primary-200" htmlFor={`char-race-${charId}`}>
@@ -150,6 +152,7 @@ export function CharacterCard({
               />
             </div>
           </div>
+
           <div className="grid grid-cols-3 gap-4 pt-4">
             {["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"].map((attr) => (
               <div key={attr}>

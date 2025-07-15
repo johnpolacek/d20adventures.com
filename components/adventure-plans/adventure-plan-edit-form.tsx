@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { AdventurePlan, RULES_PRESETS } from "@/types/adventure-plan"
+import { AdventurePlan } from "@/types/adventure-plan"
 import type { Character, PCTemplate } from "@/types/character"
 import { Button } from "@/components/ui/button"
 import { AdventurePlanCharactersEdit } from "@/components/adventure-plans/adventure-plan-characters-edit"
@@ -13,10 +13,6 @@ import { useAdventurePlanForm } from "@/components/adventure-plans/hooks/use-adv
 import { useAdventureSections } from "@/components/adventure-plans/hooks/use-adventure-sections"
 import { useEncounterHandlers } from "@/components/adventure-plans/hooks/use-encounter-handlers"
 import { toast } from "sonner"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Switch } from "@/components/ui/switch"
-import { cn } from "@/lib/utils"
 import { getOtherAdventurePlans } from "@/app/_actions/adventure-plan-actions"
 
 export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: AdventurePlan }) {
@@ -195,129 +191,17 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
           onOverviewChange={setOverview}
           onMinPartySizeChange={setMinPartySize}
           onMaxPartySizeChange={setMaxPartySize}
+          premadeOnly={premadeOnly}
+          setPremadeOnly={setPremadeOnly}
+          availableCharacterOptions={availableCharacterOptions}
+          setAvailableCharacterOptions={setAvailableCharacterOptions}
+          nextAdventure={nextAdventure}
+          setNextAdventure={setNextAdventure}
+          otherAdventurePlans={otherAdventurePlans}
+          saveAdventurePlan={saveAdventurePlan}
         />
 
-        {/* New: Available Character Options (Races & Archetypes) */}
-        <div className="my-8 space-y-6">
-          {/* Premade Characters Only Toggle */}
-          <div className="flex items-center gap-4">
-            <Switch
-              id="premade-only-toggle"
-              checked={premadeOnly}
-              onCheckedChange={(checked) => {
-                setPremadeOnly(checked)
-                if (checked) {
-                  setAvailableCharacterOptions({ races: [], archetypes: [] })
-                } else {
-                  setAvailableCharacterOptions(adventurePlan.availableCharacterOptions || { races: [], archetypes: [] })
-                }
-              }}
-              disabled={isSaving}
-            />
-            <Label htmlFor="premade-only-toggle" className="font-mono text-primary-200">
-              Premade Characters Only
-            </Label>
-          </div>
-          {/* Rules System Preset Select (native select) */}
-          <div className={cn("flex items-center gap-4", premadeOnly && "hidden")}>
-            <Label className="font-mono text-primary-200" htmlFor="rules-preset-select">
-              Apply Standard Races & Archetypes:
-            </Label>
-            <select
-              id="rules-preset-select"
-              className="w-56 bg-white/5 border border-white/20 rounded px-2 py-1 text-sm text-white placeholder:text-white/40"
-              onChange={(e) => {
-                const val = e.target.value
-                if (!val) return
-                const preset = RULES_PRESETS.find((p) => p.value === val)
-                if (preset) {
-                  setAvailableCharacterOptions({
-                    races: preset.races,
-                    archetypes: preset.archetypes,
-                  })
-                }
-              }}
-              disabled={isSaving}
-              defaultValue=""
-            >
-              <option value="" disabled>
-                Select a genre...
-              </option>
-              {RULES_PRESETS.map((preset) => (
-                <option key={preset.value} value={preset.value}>
-                  {preset.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className={cn("flex flex-col md:flex-row gap-8", premadeOnly && "hidden")}>
-            <div className="flex-1">
-              <Label className="font-mono p-1 text-primary-200" htmlFor="available-races">
-                Available Races (comma separated)
-              </Label>
-              <Input
-                id="available-races"
-                value={availableCharacterOptions.races.join(", ")}
-                onChange={(e) => {
-                  const races = e.target.value
-                    .split(",")
-                    .map((r) => r.trim())
-                    .filter(Boolean)
-                  setAvailableCharacterOptions((prev) => ({ ...prev, races }))
-                }}
-                placeholder="e.g., Human, Elf, Dwarf, Halfling"
-                disabled={isSaving}
-              />
-            </div>
-            <div className="flex-1">
-              <Label className="font-mono p-1 text-primary-200" htmlFor="available-archetypes">
-                Available Archetypes (comma separated)
-              </Label>
-              <Input
-                id="available-archetypes"
-                value={availableCharacterOptions.archetypes.join(", ")}
-                onChange={(e) => {
-                  const archetypes = e.target.value
-                    .split(",")
-                    .map((a) => a.trim())
-                    .filter(Boolean)
-                  setAvailableCharacterOptions((prev) => ({ ...prev, archetypes }))
-                }}
-                placeholder="e.g., Fighter, Wizard, Rogue, Bard"
-                disabled={isSaving || premadeOnly}
-              />
-            </div>
-          </div>
-
-          {/* Next Adventure Selection */}
-          <div className="mt-8 space-y-2">
-            <div className="flex items-center justify-between">
-              <Label className="font-mono text-primary-200" htmlFor="next-adventure">
-                Next Adventure in Series
-              </Label>
-              <div className="text-sm text-primary-200/60">Optional</div>
-            </div>
-            <select
-              id="next-adventure"
-              className="w-full bg-white/5 border border-white/20 rounded px-2 py-1 text-sm text-white placeholder:text-white/40"
-              onChange={async (e) => {
-                const nextAdventureId = e.target.value || undefined
-                setNextAdventure(e.target.value) // update local state immediately
-                await saveAdventurePlan(undefined, undefined, premadeOnly ? undefined : availableCharacterOptions, nextAdventureId)
-              }}
-              value={nextAdventure}
-              disabled={isSaving || otherAdventurePlans.length === 0}
-            >
-              <option value="">None - This is a standalone adventure</option>
-              {otherAdventurePlans.map((plan) => (
-                <option key={plan.id} value={plan.id}>
-                  {plan.title}
-                </option>
-              ))}
-            </select>
-            {otherAdventurePlans.length === 0 && <div className="text-sm text-primary-200/60">No other adventures available in this setting</div>}
-          </div>
-        </div>
+        {/* Remove the Next Adventure Selection UI here, as it is now in AdventurePlanBasicInfo */}
 
         <AdventurePlanSections
           adventurePlanId={adventurePlan.id}
