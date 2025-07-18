@@ -82,14 +82,16 @@ export async function createAdventure(input: CreateAdventureInput) {
     startedAt: now,
   })
 
-  // If only one player character, auto-start the adventure
-  if (players.length === 1) {
+  // If only one player character AND the adventure plan expects only one player, auto-start the adventure
+  const maxPartySize = plan.party?.[1] || 1
+  const isSoloAdventure = maxPartySize === 1
+  
+  if (players.length === 1 && isSoloAdventure) {
     // Call startAdventure to create the first turn and redirect to it
     await startAdventure({ settingId, adventurePlanId, adventureId })
     return // startAdventure will handle the redirect
   }
 
-  // For MVP, we'll redirect to the adventure page immediately
-  // The adventure page will handle the "no current turn" state
+  // For multi-character adventures or when more players might join, redirect to lobby
   redirect(`/settings/${settingId}/${adventurePlanId}/${adventureId}`)
 } 

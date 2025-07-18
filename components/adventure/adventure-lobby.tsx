@@ -111,8 +111,8 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
           isJoining={isJoining}
         />
         {showTeaser && (
-          <div className="pt-4 text-center flex flex-col items-center">
-            <div className="pb-8 max-w-2xl mx-auto">
+          <div className="italic opacity-90 text-center flex flex-col items-center">
+            <div className="pb-8 max-w-4xl mx-auto text-left text-pretty">
               <p>{adventurePlan?.teaser}</p>
             </div>
           </div>

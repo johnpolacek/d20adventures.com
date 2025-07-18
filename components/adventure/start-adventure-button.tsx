@@ -33,7 +33,7 @@ export function StartAdventureButton({ canStartAdventure, partyIsFull, isSignedI
 
   if (!canStartAdventure) {
     return (
-      <h3 className="font-display mb-6 text-2xl opacity-70">
+      <h3 className="font-display mb-6 text-2xl opacity-70 text-center">
         Waiting for more players...
         <div className="font-mono text-sm text-primary-200">
           ({currentPartySize}/{minParty} minimum)

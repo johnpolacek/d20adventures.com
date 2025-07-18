@@ -52,7 +52,15 @@ export function PartyLobbyGrid({ adventure, adventurePlan, userId, onCharacterCl
   }
 
   // Use 3 columns for up to 6 slots, otherwise fallback to 2 columns
-  const colCount = maxParty >= 3 ? "sm:grid-cols-3" : "sm:grid-cols-2"
+  const colCount = maxParty >= 3 ? "sm:flex-[0_0_calc(33.333%-1rem)]" : "sm:flex-[0_0_calc(50%-1rem)]"
 
-  return <div className={`grid grid-cols-1 ${colCount} gap-6 justify-center items-center w-full max-w-2xl mx-auto mb-8`}>{slots}</div>
+  return (
+    <div className={`flex flex-wrap gap-6 justify-center items-center w-full max-w-2xl mx-auto mb-8`}>
+      {slots.map((slot, index) => (
+        <div key={index} className={`flex-[0_0_100%] ${colCount}`}>
+          {slot}
+        </div>
+      ))}
+    </div>
+  )
 }

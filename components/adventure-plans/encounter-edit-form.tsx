@@ -110,12 +110,7 @@ export function EncounterEditForm({
   const transitions = encounter.transitions || []
 
   const handleNpcChange = (npcIndex: number, field: "behavior" | "initialInitiative", value: string | number) => {
-    const newNpcs = (encounter.npc || []).map((npc, idx) => {
-      if (idx === npcIndex) {
-        return { ...npc, [field]: value }
-      }
-      return npc
-    })
+    const newNpcs = (encounter.npc || []).map((npc, idx) => (idx === npcIndex ? { ...npc, [field]: value } : npc))
     onNpcChange(sectionIndex, sceneIndex, encounterIndex, newNpcs)
   }
 
@@ -136,12 +131,7 @@ export function EncounterEditForm({
   const [addTransitionValue, setAddTransitionValue] = React.useState("")
 
   const handleTransitionChange = (transitionIndex: number, field: "condition" | "encounter", value: string) => {
-    const newTransitions = transitions.map((transition, idx) => {
-      if (idx === transitionIndex) {
-        return { ...transition, [field]: value }
-      }
-      return transition
-    })
+    const newTransitions = transitions.map((transition, idx) => (idx === transitionIndex ? { ...transition, [field]: value } : transition))
     onTransitionsChange(sectionIndex, sceneIndex, encounterIndex, newTransitions)
   }
 
@@ -159,6 +149,19 @@ export function EncounterEditForm({
       onNpcChange(sectionIndex, sceneIndex, encounterIndex, newNpcs)
     }
   }
+
+  // Add existing NPC to encounter
+  const handleAddExistingNpc = (npcId: string) => {
+    if (!npcId) return
+    const newNpcs = [...(encounter.npc || []), { id: npcId, behavior: "", initialInitiative: 0 }]
+    onNpcChange(sectionIndex, sceneIndex, encounterIndex, newNpcs)
+  }
+
+  // Get available NPCs that aren't already assigned to this encounter
+  const availableNpcsForAdd = React.useMemo(() => {
+    const assignedNpcIds = new Set((encounter.npc || []).map((npc) => npc.id))
+    return Object.values(availableNpcs).filter((npc) => !assignedNpcIds.has(npc.id))
+  }, [encounter.npc, availableNpcs])
 
   // Effect: When generate form closes, check for new NPC and add to encounter
   React.useEffect(() => {
@@ -303,6 +306,36 @@ export function EncounterEditForm({
                 <Plus size={16} /> Blank NPC
               </Button>
             </div>
+
+            {/* Add Existing NPCs Dropdown */}
+            {availableNpcsForAdd.length > 0 && (
+              <div className="mb-4">
+                <Label className="text-xs font-mono text-primary-200/90 mb-1 block">Add Existing NPC</Label>
+                <div className="max-w-[300px]">
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      const selected = e.target.value
+                      if (selected) {
+                        handleAddExistingNpc(selected)
+                        // Reset the select
+                        e.target.value = ""
+                      }
+                    }}
+                    disabled={isSaving}
+                    className="w-full bg-white/5 border border-white/20 rounded p-2 text-xs text-white placeholder:text-white/40"
+                  >
+                    <option value="">Select an existing NPC...</option>
+                    {availableNpcsForAdd.map((npc) => (
+                      <option key={npc.id} value={npc.id} className="bg-gray-800">
+                        {npc.name || npc.id}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
             {showGenerateForm && (
               <CharacterGenerateForm
                 type="npcs"

@@ -76,7 +76,7 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
     setIsModalOpen(true)
   }
 
-  console.log({ adventurePlan })
+  console.log(JSON.stringify({ adventurePlan }, null, 2))
 
   return (
     <div
@@ -91,7 +91,7 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
       {/* Background overlay for better readability */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/60 to-black/30" />
 
-      <div className="container max-w-5xl mx-auto mt-24 p-8 relative z-10">
+      <div className="container max-w-5xl mx-auto pt-24 p-8 relative z-10">
         <div className="text-center mb-4">
           <h1 style={textShadowSpreadLight} className="text-5xl font-bold font-display mb-2 text-white">
             {adventurePlan.title}

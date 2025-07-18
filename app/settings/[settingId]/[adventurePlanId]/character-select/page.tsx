@@ -58,7 +58,16 @@ export default async function CharacterSelectPage({ params }: PageProps) {
 
   return (
     <FullPageImage overlay={true} image={adventureImage}>
-      <ChooseCharacterView username={user.username} characters={characters} characterFiles={characterFiles} userId={user.id} settingId={settingId} adventurePlanId={adventurePlanId} />
+      <ChooseCharacterView
+        username={user.username}
+        characters={characters}
+        characterFiles={characterFiles}
+        userId={user.id}
+        settingId={settingId}
+        adventurePlanId={adventurePlanId}
+        adventureTitle={adventurePlan.title}
+        adventureTeaser={adventurePlan.teaser}
+      />
     </FullPageImage>
   )
 }

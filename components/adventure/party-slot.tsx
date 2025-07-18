@@ -18,12 +18,12 @@ export function PartySlot({ character, isUserCharacter = false, isAvailable = fa
   if (character) {
     return (
       <div
-        className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 ${isUserCharacter ? "border-4 border-amber-400/50" : "border-white/20"} bg-black/40 aspect-[3/4] w-full shadow-lg cursor-pointer hover:ring-4 hover:ring-amber-400/50 transition-all`}
+        className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 ${isUserCharacter ? "border-4 border-primary-400/80" : "border-white/20"} bg-black/40 aspect-[3/4] w-full shadow-lg cursor-pointer hover:ring-4 hover:ring-primary-400/80 transition-all`}
         onClick={onClick}
         title={character.name}
       >
         <div className="w-full rounded-full ring-4 ring-white/20 overflow-hidden aspect-square max-w-[120px] mb-2 relative">
-          <Image fill src={getImageUrl(character.image)} alt={character.name} />
+          <Image className="object-cover" fill src={getImageUrl(character.image)} alt={character.name} />
         </div>
         <div className={cn("text-white font-display text-lg text-center truncate w-full", isUserCharacter && "text-amber-400")}>{character.name}</div>
         <div className="text-xs font-display text-white/90 mt-1">

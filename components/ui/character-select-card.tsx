@@ -14,14 +14,15 @@ interface CharacterSelectCardProps {
   buttonAsChild?: boolean
   className?: string
   disabled?: boolean
+  clickable?: boolean
 }
 
-export function CharacterSelectCard({ character, buttonLabel, onButtonClick, href, buttonAsChild = false, className, disabled = false }: CharacterSelectCardProps) {
+export function CharacterSelectCard({ character, buttonLabel, onButtonClick, href, buttonAsChild = false, className, disabled = false, clickable = false }: CharacterSelectCardProps) {
   return (
     <Card
       className={cn(
-        "bg-black text-white rounded-lg overflow-hidden flex flex-col items-center ring-8 ring-black/30 border border-white/10 p-0 font-display w-full h-full transition-all ease-in-out duration-500",
-        onButtonClick && "cursor-pointer hover:scale-105 hover:ring-primary-400",
+        "bg-black text-white rounded-lg overflow-hidden flex flex-col items-center ring-8 ring-black/30 border border-white/10 p-0 font-display w-full h-full hover:scale-[1.01] transition-all ease-in-out duration-500",
+        (onButtonClick || clickable) && "cursor-pointer hover:scale-105 hover hover:ring-primary-400/80",
         className
       )}
       onClick={onButtonClick}
