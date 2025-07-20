@@ -16,11 +16,11 @@ import StepSpecialAbilities from "./step-special-abilities"
 import { CharacterCard } from "@/components/adventure-plans/character-card"
 import { Button } from "../ui/button"
 import { saveCharacterTemplateAction } from "@/app/_actions/save-character-template"
-import { getUserCharacters } from "@/app/_actions/character"
+import { joinAdventure } from "@/app/_actions/join-adventure"
 import { toast } from "sonner"
 import type { PCTemplate, Character } from "@/types/character"
 import { cn } from "@/lib/utils"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useParams } from "next/navigation"
 import slugify from "slugify"
 
 interface CharacterCreateFormProps {
@@ -61,6 +61,7 @@ export default function CharacterCreateForm({ availableRaces, availableArchetype
   const [isSaving, setIsSaving] = useState(false)
   const [image, setImage] = useState("")
   const searchParams = useSearchParams()
+  const params = useParams()
 
   // Placeholder for future steps
   // const [selectedClass, setSelectedClass] = useState("")
@@ -78,39 +79,104 @@ export default function CharacterCreateForm({ availableRaces, availableArchetype
   }
 
   const handleSaveCharacter = async () => {
+    console.log("[CharacterCreateForm] Starting save character process")
     setIsSaving(true)
     try {
       const slug = slugify(name, { lower: true, strict: true })
-      // Unique name validation: fetch user's characters and check for slug collision
-      const user = await fetch("/api/auth/me").then((res) => res.json())
-      if (!user || !user.id) {
-        toast.error("You must be signed in to create a character.")
-        setIsSaving(false)
-        return
-      }
-      const existingCharacters = await getUserCharacters(user.id)
-      if (existingCharacters.some((c: PCTemplate) => slugify(c.name, { lower: true, strict: true }) === slug)) {
-        toast.error("You already have a character with that name. Please choose a different name.")
-        setIsSaving(false)
-        return
-      }
+      console.log("[CharacterCreateForm] Generated slug:", slug)
+
       const characterTemplate: PCTemplate = getReviewCharacter()
+      console.log("[CharacterCreateForm] Character template to save:", JSON.stringify(characterTemplate, null, 2))
+
+      console.log("[CharacterCreateForm] Calling saveCharacterTemplateAction...")
       const result = await saveCharacterTemplateAction({ character: characterTemplate })
+      console.log("[CharacterCreateForm] Save result:", JSON.stringify(result, null, 2))
 
       if (result.success && result.characterId) {
+        console.log("[CharacterCreateForm] Character saved successfully")
         toast.success("Character saved!")
-        // Redirect to adventure lobby if redirectToAdventure param is present, else to player profile
+
+        // Check if we should automatically join an adventure
         const redirectTo = searchParams.get("redirectToAdventure")
+        console.log("[CharacterCreateForm] Redirect target:", redirectTo)
+        console.log("[CharacterCreateForm] All search params:", JSON.stringify(Object.fromEntries(searchParams.entries()), null, 2))
+        console.log("[CharacterCreateForm] All URL params:", JSON.stringify(params, null, 2))
+
         if (redirectTo) {
-          window.location.href = redirectTo
+          console.log("[CharacterCreateForm] Processing redirectToAdventure:", redirectTo)
+
+          // Extract adventure info from the redirect URL
+          const urlParts = redirectTo.split("/")
+          console.log("[CharacterCreateForm] URL parts:", JSON.stringify(urlParts, null, 2))
+
+          const adventureIdIndex = urlParts.findIndex((part) => part === params.adventureId)
+          console.log("[CharacterCreateForm] Adventure ID from params:", params.adventureId)
+          console.log("[CharacterCreateForm] Adventure ID index in URL:", adventureIdIndex)
+
+          // Also try to extract adventure ID from the URL parts directly
+          const adventureIdFromUrl = urlParts[urlParts.length - 1] // Last part should be adventure ID
+          console.log("[CharacterCreateForm] Adventure ID from URL (last part):", adventureIdFromUrl)
+
+          // Extract adventure plan ID from URL (should be the 3rd part: /settings/settingId/adventurePlanId/adventureId)
+          const adventurePlanIdFromUrl = urlParts[3] // 4th part (0-indexed) should be adventure plan ID
+          console.log("[CharacterCreateForm] Adventure Plan ID from URL:", adventurePlanIdFromUrl)
+
+          // Try to get adventure ID from params first, then from URL
+          const adventureId = (params.adventureId as string) || adventureIdFromUrl
+          console.log("[CharacterCreateForm] Final adventure ID to use:", adventureId)
+
+          // Use the adventure plan ID from URL instead of the prop
+          const correctAdventurePlanId = adventurePlanIdFromUrl || adventurePlanId
+          console.log("[CharacterCreateForm] Correct adventure plan ID:", correctAdventurePlanId)
+
+          if (adventureId) {
+            console.log("[CharacterCreateForm] Auto-joining adventure with new character...")
+            console.log(
+              "[CharacterCreateForm] Join adventure parameters:",
+              JSON.stringify(
+                {
+                  settingId,
+                  adventurePlanId: correctAdventurePlanId,
+                  adventureId: adventureId,
+                  characterId: result.characterId,
+                },
+                null,
+                2
+              )
+            )
+
+            try {
+              // Auto-join the adventure with the newly created character
+              await joinAdventure({
+                settingId: settingId,
+                adventurePlanId: correctAdventurePlanId,
+                adventureId: adventureId,
+                characterId: result.characterId,
+              })
+              console.log("[CharacterCreateForm] Auto-join successful, redirecting...")
+              // joinAdventure will handle the redirect
+            } catch (error) {
+              console.error("[CharacterCreateForm] Failed to auto-join adventure:", JSON.stringify(error, null, 2))
+              console.error("[CharacterCreateForm] Error stack:", error instanceof Error ? error.stack : "No stack trace")
+              toast.error("Character saved but failed to join adventure. Please join manually.")
+              window.location.href = redirectTo
+            }
+          } else {
+            console.log("[CharacterCreateForm] Could not parse adventure info, falling back to redirect")
+            console.log("[CharacterCreateForm] Adventure ID not found in URL or params")
+            // Fallback to redirect if we can't parse the adventure info
+            window.location.href = redirectTo
+          }
         } else {
           window.location.href = "/player"
         }
       } else {
+        console.error("[CharacterCreateForm] Save failed:", result.error)
         toast.error(result.error || "Failed to save character")
       }
     } catch (err) {
-      console.error("[CharacterCreateForm] Unexpected error:", err)
+      console.error("[CharacterCreateForm] Unexpected error:", JSON.stringify(err, null, 2))
+      console.error("[CharacterCreateForm] Error stack:", err instanceof Error ? err.stack : "No stack trace")
       toast.error("An unexpected error occurred")
     } finally {
       setIsSaving(false)
@@ -220,6 +286,7 @@ export default function CharacterCreateForm({ availableRaces, availableArchetype
           onBack={step > 1 ? handleBack : undefined}
           race={selectedRace}
           archetype={selectedArchetype}
+          name={name}
           attributes={attributes}
         />
       )}
@@ -301,6 +368,16 @@ export default function CharacterCreateForm({ availableRaces, availableArchetype
           onAbilitiesChange={setSpecialAbilities}
           onNext={handleNext}
           onBack={step > 1 ? handleBack : undefined}
+          race={selectedRace}
+          archetype={selectedArchetype}
+          attributes={attributes}
+          appearance={appearance}
+          background={background}
+          personality={personality}
+          motivation={motivation}
+          backstory={backstory}
+          skills={skills}
+          equipment={equipment}
         />
       )}
       {step === 12 && (

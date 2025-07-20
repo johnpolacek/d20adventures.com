@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import React from "react"
-import { Card, CardContent } from "@/components/ui/card"
 import { getAdventurePlan } from "@/app/_actions/adventure-plan-actions"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import { getImageUrl } from "@/lib/utils"

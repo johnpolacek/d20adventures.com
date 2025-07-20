@@ -6,6 +6,7 @@ import Image from "next/image"
 import type { TurnCharacter } from "@/types/adventure"
 import { CharacterSheetModal } from "./character-sheet-modal"
 import { NPCCharacterSheetModal } from "./npc-character-sheet-modal"
+import { useUser } from "@clerk/nextjs"
 
 function CharacterImage({ src, alt }: { src: string; alt: string }) {
   const [loaded, setLoaded] = useState(false)
@@ -25,12 +26,16 @@ function CharacterImage({ src, alt }: { src: string; alt: string }) {
 export default function TurnCharacterList() {
   const currentTurn = useTurn()
   const characters = (currentTurn?.characters || []).slice().sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
+  const { user } = useUser()
 
   const [selectedCharacter, setSelectedCharacter] = useState<TurnCharacter | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
 
   // Find the current actor: highest initiative, not complete
   const currentActorId = characters.find((c) => !c.isComplete)?.id
+
+  // Find the player's character
+  const playerCharacter = characters.find((c) => c.type === "pc" && c.userId === user?.id)
 
   const handleCharacterClick = (character: TurnCharacter) => {
     setSelectedCharacter(character)
@@ -43,6 +48,7 @@ export default function TurnCharacterList() {
         <ul className="flex flex-col gap-4">
           {characters.map((character) => {
             const isDead = character.healthPercent === 0
+            const isPlayerCharacter = character.id === playerCharacter?.id
             return (
               <li
                 key={character.id}
@@ -80,6 +86,11 @@ export default function TurnCharacterList() {
                   </div>
                 ) : null}
                 {isDead && <div className="text-xxs sm:text-xs text-red-400 font-bold font-mono px-2 py-0.5 bg-black rounded absolute -bottom-2 ring ring-red-700 right-8 z-10">DEAD</div>}
+                {isPlayerCharacter && !isDead && (
+                  <div className="text-xxs sm:text-xs text-amber-300/80 scale-x-110 tracking-wide font-bold font-mono px-1 py-0.5 bg-black rounded absolute -bottom-2.5 ring-2 ring-primary-600 right-8 z-10 scale-90">
+                    YOU
+                  </div>
+                )}
                 {!isDead && (
                   <div className="absolute top-0 left-0 w-full h-full rounded-xl overflow-hidden">
                     <div

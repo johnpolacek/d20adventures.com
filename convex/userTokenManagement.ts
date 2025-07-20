@@ -58,6 +58,7 @@ export const decrementTokens = mutation({
       v.literal("usage_generate_text"),
       v.literal("usage_generate_object"),
       v.literal("usage_image_upload"),
+      v.literal("usage_join_adventure"),
       // Add other usage types as needed
     ),
     description: v.optional(v.string()),

@@ -16,6 +16,8 @@ import { formatNarrativeAction } from "@/lib/services/narrative-service"
 import { resolvePlayerRollResult } from "@/app/_actions/adventure"
 import { createAdventureWithFirstTurn } from "@/app/_actions/adventure"
 import { Loader2 } from "lucide-react"
+import { SparklesIcon } from "@heroicons/react/24/solid"
+import { useGenerateText } from "@/app/_hooks/useGenerateText"
 
 type TurnNarrativeReplyProps = {
   character: TurnCharacter
@@ -27,10 +29,12 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
   const [loading, setLoading] = useState(false)
   const [hasSubmitted, setHasSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [generating, setGenerating] = useState(false)
   const router = useRouter()
   const { user } = useUser()
   const currentTurn = useTurn()
   const { settingId, adventurePlanId, adventure } = useAdventure()
+  const { streamText } = useGenerateText()
 
   if (!currentTurn) {
     return null
@@ -194,6 +198,24 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
     }
   }
 
+  const handleGenerate = async () => {
+    if (!characterState) return
+    setGenerating(true)
+    setError(null)
+    setInput("") // Clear textarea at start
+    try {
+      // Build the LLM prompt
+      const prompt = `You are roleplaying as the player character below in a tabletop RPG. Given the recent narrative and any player input, write a short narrative describing what the character does next. Include a character action and 1-2 sentences of dialogue in the character's voice. Use third person for actions and put dialogue in quotes. Be creative, stay in character, and keep the reply concise (3-5 sentences max).\n\nCharacter:\nName: ${characterState.name}\n${characterState.personality ? `Personality: ${characterState.personality}\n` : ""}${characterState.background ? `Background: ${characterState.background}\n` : ""}${characterState.motivation ? `Motivation: ${characterState.motivation}\n` : ""}${characterState.appearance ? `Appearance: ${characterState.appearance}\n` : ""}${characterState.specialAbilities ? `Special Abilities: ${characterState.specialAbilities}\n` : ""}\nRecent Narrative:\n${currentTurn.narrative}\n${input ? `\nPlayer Input: ${input}` : ""}`
+      await streamText(prompt, (output) => {
+        setInput(output)
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to generate reply. Please try again.")
+    } finally {
+      setGenerating(false)
+    }
+  }
+
   const showDiceRoll = characterState?.rollRequired && rollResult == null
 
   return (
@@ -207,6 +229,18 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
             placeholder="Write your character's actions and dialogue here, in the third person..."
             onKeyDown={handleInputKeyDown}
           />
+          <div className="flex justify-start -mt-1">
+            {generating ? (
+              <div className="flex items-center justify-center w-[80px] h-8">
+                <Loader2 className="animate-spin w-4 h-4 text-primary-400" />
+              </div>
+            ) : (
+              <Button variant="outline" size="sm" className="text-xs" type="button" onClick={handleGenerate} disabled={generating}>
+                <SparklesIcon className="w-4 h-4 text-amber-400 mr-0.5" />
+                Generate
+              </Button>
+            )}
+          </div>
           {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
           <div className="flex justify-end mt-2">
             <SignedIn>

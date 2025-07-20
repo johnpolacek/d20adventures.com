@@ -15,10 +15,11 @@ interface StepAppearanceBackgroundProps {
   onBack?: () => void
   race?: string
   archetype?: string
+  name?: string
   attributes?: Attributes
 }
 
-export default function StepAppearanceBackground({ appearance, background, onAppearanceChange, onBackgroundChange, onNext, onBack, race, archetype, attributes }: StepAppearanceBackgroundProps) {
+export default function StepAppearanceBackground({ appearance, background, onAppearanceChange, onBackgroundChange, onNext, onBack, race, archetype, name, attributes }: StepAppearanceBackgroundProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -29,6 +30,7 @@ export default function StepAppearanceBackground({ appearance, background, onApp
       const result = await generateAppearanceBackgroundAction({
         race,
         archetype,
+        name,
         attributes,
       })
       if (result.success && result.appearance) {

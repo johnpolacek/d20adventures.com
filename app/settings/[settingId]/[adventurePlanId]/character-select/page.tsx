@@ -10,14 +10,14 @@ import AccountRequired from "@/components/nav/account-required"
 import { getImageUrl } from "@/lib/utils"
 
 interface PageProps {
-  params: {
+  params: Promise<{
     settingId: string
     adventurePlanId: string
-  }
+  }>
 }
 
 export default async function CharacterSelectPage({ params }: PageProps) {
-  const { settingId, adventurePlanId } = params
+  const { settingId, adventurePlanId } = await params
   const key = `settings/${settingId}/${adventurePlanId}.json`
   let adventurePlan: AdventurePlan | null = null
   try {
@@ -37,7 +37,7 @@ export default async function CharacterSelectPage({ params }: PageProps) {
   if (!user) {
     return (
       <FullPageImage overlay={true} image={adventureImage}>
-        <AccountRequired />
+        <AccountRequired className="min-h-[80vh]" />
       </FullPageImage>
     )
   }

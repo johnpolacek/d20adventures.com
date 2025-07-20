@@ -15,7 +15,6 @@ import wait from "waait"
 import type { Adventure } from "@/types/adventure"
 import type { PC } from "@/types/character"
 
-// Placeholder type for ActionAssessment until it's defined in roll-requirement-service.ts
 interface ActionAssessment {
   isPlausible?: boolean;
   feedback?: string | null;
@@ -96,7 +95,15 @@ export async function processTurnReply({ turnId, characterId, narrativeAction }:
 
   // Call the (soon to be updated) getRollRequirementForAction
   // This function will now also return plausibility and feedback
-  const assessment: ActionAssessment = await getRollRequirementForAction(narrativeAction, characterPerformingAction as import("@/types/character").Character)
+  const assessment: ActionAssessment = await getRollRequirementForAction(
+    narrativeAction,
+    characterPerformingAction as import("@/types/character").Character,
+    {
+      encounterInstructions: encounter.instructions || "",
+      narrativeContext: turn.narrative || "",
+      encounterIntro: encounter.intro || "",
+    }
+  );
 
   if (assessment && assessment.isPlausible === false) {
     // Action is not plausible, return feedback to the user to try again
@@ -329,9 +336,17 @@ Player action: "${shortcode}"
 
 A dice roll was made for ${character.name}: ${rollType} (Result: ${totalResult}, Difficulty: ${difficulty}, Margin: ${margin}).
 
-The margin indicates how close the roll was to the target number. Use this information to inspire the drama, tension, or impact of the outcome, but write a creative, immersive narrative that fits the context. Do not use game terms like "margin" or "DC" in the narrative.
+CRITICAL: You must ONLY reference elements that are explicitly mentioned in the encounter instructions, encounter intro, or existing narrative context. Do NOT invent new objects, people, events, or details that are not already established in the adventure plan.
 
-Write a single, concise, immersive third-person PRESENT-tense narrative paragraph (exactly two sentences, max 60 words) describing the direct outcome of the roll. Focus on what the character perceives or the immediate result of their action (e.g., a lock clicking open, a rope snapping, information gained). If the roll was for perception, describe what is now sensed or known. **Do not narrate combat actions, damage, or status effects inflicted by other entities as part of this roll\'s outcome; these will be handled by subsequent game mechanics.** Only describe self-inflicted effects if the character\'s own roll was a critical failure of an action they were taking. Only reference things present in the context. Do not invent new objects, people, or events not implied by the context or encounter instructions. Write in third person PRESENT tense. Do not use lists, bullet points, or markdown formatting. Do not use semicolons. Never mention game mechanics, dice, or rules.
+Write a single, concise, immersive third-person PRESENT-tense narrative paragraph (exactly two sentences, max 60 words) describing the direct outcome of the roll. Focus on what the character perceives or the immediate result of their action. If the roll was for perception, describe what is now sensed or known based ONLY on the existing environment and NPCs described in the encounter. **Do not narrate combat actions, damage, or status effects inflicted by other entities as part of this roll\'s outcome; these will be handled by subsequent game mechanics.** Only describe self-inflicted effects if the character\'s own roll was a critical failure of an action they were taking. 
+
+RESTRICTIONS:
+- Only reference NPCs, objects, and locations explicitly mentioned in the encounter instructions or intro
+- Do not create new characters, items, or events
+- Do not add new details to the environment
+- Stick strictly to what is already established in the adventure plan
+
+Write in third person PRESENT tense. Do not use lists, bullet points, or markdown formatting. Do not use semicolons. Never mention game mechanics, dice, or rules.
 
 Output only the narrative paragraph.`.trim();
 

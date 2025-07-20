@@ -9,6 +9,7 @@ import { readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 import type { PCTemplate } from "@/types/character"
 import { toPCTemplate } from "@/lib/utils/character-mapping"
 import type { AdventurePlan } from "@/types/adventure-plan"
+import { decrementUserTokensAction } from "./tokens"
 
 interface JoinAdventureArgs {
   settingId: string
@@ -26,6 +27,20 @@ export async function joinAdventure({ settingId, adventurePlanId, adventureId, c
   }
 
   try {
+    // Deduct tokens for joining adventure lobby
+    const tokenResult = await decrementUserTokensAction({
+      tokensUsed: 1, // 1 token to join lobby
+      transactionType: "usage_join_adventure",
+      description: `Joined adventure lobby: ${adventureId}`,
+    })
+
+    if (!tokenResult.success) {
+      if (tokenResult.error?.includes("Insufficient tokens")) {
+        throw new Error("Insufficient tokens to join adventure. Please purchase more tokens to continue.")
+      }
+      throw new Error(`Failed to deduct tokens: ${tokenResult.error}`)
+    }
+
     // Ensure the character exists in the user's S3 path
     const userCharKey = `characters/${userId}/${characterId.split('/').pop()?.replace('.json', '')}.json`
     let exists = false

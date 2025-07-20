@@ -99,7 +99,7 @@ function AdventureHomeContent({ initialImage, adventure, adventurePlan }: { init
           <>
             <AdventureLobby adventure={adventure} adventurePlan={adventurePlan} />
             {!isSignedIn && isLoaded && (
-              <div className="-mt-24 pb-24">
+              <div className="-mt-12 pb-24">
                 <AccountRequired redirectUrl={pathname} />
               </div>
             )}

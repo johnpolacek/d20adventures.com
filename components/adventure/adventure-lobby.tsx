@@ -23,17 +23,33 @@ interface AdventureLobbyProps {
 }
 
 // Waiting room of an existing adventure, before it begins
-export default function AdventureLobby({ adventure, adventurePlan }: AdventureLobbyProps) {
+export default function AdventureLobby({ adventure: initialAdventure, adventurePlan }: AdventureLobbyProps) {
   const { user, isSignedIn, isLoaded } = useUser()
   const params = useParams()
   const [isJoining, setIsJoining] = useState(false)
   const [modalCharacter, setModalCharacter] = useState<PC | PCTemplate | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const party = adventure.party
-  const userCharacter = party?.find((pc) => pc.userId === user?.id)
-  const availableCharacters = adventurePlan?.premadePlayerCharacters?.filter((pc) => !party?.some((partyMember) => partyMember.id === pc.id)) || []
+  const [adventure, setAdventure] = useState(initialAdventure)
   const [userCharacters, setUserCharacters] = useState<PCTemplate[]>([])
   const [isLoadingUserChars, setIsLoadingUserChars] = useState(false)
+  const [joinError, setJoinError] = useState<string | null>(null)
+
+  // Polling for adventure updates
+  useEffect(() => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await fetch(`/api/adventure/${params.adventureId}`)
+        if (response.ok) {
+          const updatedAdventure = await response.json()
+          setAdventure(updatedAdventure)
+        }
+      } catch (error) {
+        console.error("Failed to poll adventure updates:", error)
+      }
+    }, 3000) // Poll every 3 seconds
+
+    return () => clearInterval(pollInterval)
+  }, [params.adventureId])
 
   useEffect(() => {
     if (isLoaded) {
@@ -42,6 +58,9 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
   }, [isLoaded])
 
   useEffect(() => {
+    const party = adventure.party
+    const userCharacter = party?.find((pc) => pc.userId === user?.id)
+
     if (isSignedIn && !userCharacter) {
       setIsLoadingUserChars(true)
       fetch(`/api/user-characters?userId=${user?.id}`)
@@ -49,20 +68,28 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
         .then(setUserCharacters)
         .finally(() => setIsLoadingUserChars(false))
     }
-  }, [isSignedIn, user, userCharacter])
+  }, [isSignedIn, user, adventure.party])
 
   const handleJoinAdventure = async (characterId: string) => {
     if (isJoining) return
 
     setIsJoining(true)
-    await joinAdventure({
-      settingId: params.settingId as string,
-      adventurePlanId: params.adventurePlanId as string,
-      adventureId: adventure.id,
-      characterId,
-    })
-    // The redirect happens in the server action
-    // Note: redirect() throws NEXT_REDIRECT which is expected behavior, not an error
+    setJoinError(null)
+
+    try {
+      await joinAdventure({
+        settingId: params.settingId as string,
+        adventurePlanId: params.adventurePlanId as string,
+        adventureId: adventure.id,
+        characterId,
+      })
+      // The redirect happens in the server action
+      // Note: redirect() throws NEXT_REDIRECT which is expected behavior, not an error
+    } catch (error) {
+      console.error("Failed to join adventure:", error)
+      setJoinError(error instanceof Error ? error.message : "Failed to join adventure")
+      setIsJoining(false)
+    }
   }
 
   // Add a handler for clicking a character slot to open the modal
@@ -75,6 +102,10 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
   if (!isLoaded) {
     return null
   }
+
+  const party = adventure.party
+  const userCharacter = party?.find((pc) => pc.userId === user?.id)
+  const availableCharacters = adventurePlan?.premadePlayerCharacters?.filter((pc) => !party?.some((partyMember) => partyMember.id === pc.id)) || []
 
   // Always show the party grid and teaser, even if not signed in
   const showTeaser = adventurePlan?.teaser
@@ -99,7 +130,7 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
           if (!open) setModalCharacter(null)
         }}
       />
-      <div className="w-full flex flex-col items-center justify-center max-w-5xl fade-in relative z-10 pb-16 -mt-16">
+      <div className="w-full flex flex-col items-center justify-center max-w-6xl fade-in relative z-10 pb-16 -mt-16">
         {/* Fortnite-style party grid */}
         <PartyLobbyGrid
           adventure={adventure}
@@ -138,6 +169,7 @@ export default function AdventureLobby({ adventure, adventurePlan }: AdventureLo
               <div className="text-center text-white/80 py-8 opacity-0">Loading your characters...</div>
             ) : (
               <>
+                {joinError && <div className="text-center text-red-400 text-sm mb-4 bg-red-900/20 px-4 py-2 rounded">{joinError}</div>}
                 {userCharacters.length > 0 && (
                   <>
                     <h2 className="text-2xl font-display text-amber-400 mb-6">Join with Your Character</h2>

@@ -112,11 +112,6 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
 
   return (
     <div className="grow max-w-2xl fade-in">
-      {/* Toggle for showing original replies - now a Switch in the bottom right */}
-      <div className="fixed bottom-20 left-20 z-50 flex items-center gap-2 bg-black/70 px-4 py-2 rounded-lg border border-white/20 shadow-lg">
-        <span className="text-xs text-muted-foreground">Show Original Replies</span>
-        <Switch checked={showOriginalReplies} onCheckedChange={setShowOriginalReplies} id="show-original-replies-switch" />
-      </div>
       {tokenError && (
         <Alert variant="destructive" className="mb-8">
           <AlertTriangle className="h-4 w-4" />
@@ -253,6 +248,12 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
           <TurnAdvanceButton advancing={advancing} navigationMode={disableSSE} navigationLabel={disableSSE ? "Go to Next Turn" : undefined} onAdvance={handleAdvanceOrNavigate} />
         </div>
       )}
+      <div className="absolute bottom-8 left-8 z-50 flex items-center gap-2 bg-black/70 px-4 py-2 rounded-lg border border-white/20 shadow-lg">
+        <span className="text-xs text-muted-foreground">Show Original Replies</span>
+        <div className="scale-75 pt-0.5">
+          <Switch checked={showOriginalReplies} onCheckedChange={setShowOriginalReplies} id="show-original-replies-switch" />
+        </div>
+      </div>
     </div>
   )
 }

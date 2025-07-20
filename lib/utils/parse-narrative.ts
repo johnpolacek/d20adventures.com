@@ -6,7 +6,6 @@ export type NarrativePart =
   | { type: 'original-reply'; value: string };
 
 const diceRollRegex = /^\[DiceRoll:([^\]]+)\]$/i;
-const originalReplyRegex = /^\[OriginalReply:(.*)\]$/i;
 
 export function parseNarrative(narrative: string): NarrativePart[] {
   // Convert escaped newlines to actual newlines
@@ -35,9 +34,9 @@ export function parseNarrative(narrative: string): NarrativePart[] {
         success: fields.success === 'true',
       } as const;
     }
-    const originalReplyMatch = trimmed.match(originalReplyRegex);
-    if (originalReplyMatch) {
-      return { type: 'original-reply', value: originalReplyMatch[1].trim() } as const;
+    const isOriginalReply = trimmed.includes("[OriginalReply:");
+    if (isOriginalReply) {
+      return { type: 'original-reply', value: trimmed } as const;
     }
     return { type: 'paragraph', value: trimmed } as const;
   }).filter(part => part.type === 'diceroll' || part.type === 'original-reply' || (part.type === 'paragraph' && part.value.length > 0));

@@ -39,9 +39,32 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
   if (!turn) throw new Error("Turn not found");
 
   // 2. Load the plan from S3
+  console.log("[advanceTurn] settingId:", settingId, "adventurePlanId:", adventurePlanId);
   const plan = (await readJsonFromS3(`settings/${settingId}/${adventurePlanId}.json`)) as AdventurePlan;
   if (!plan || !plan.id || !plan.sections || !plan.title) {
     throw new Error("Adventure plan is missing required fields");
+  }
+
+  // 2.5. Fetch recent turn history for better context
+  const allTurns = await convex.query(api.adventure.getTurnsByAdventure, { adventureId: turnData.adventureId });
+  const currentTurnOrder = turnData.order || 1;
+  
+  // Get the last 3 turns (including current) for context, but only if we're not on the first turn
+  const recentTurns = currentTurnOrder > 1 
+    ? allTurns
+        .filter(t => t.order < currentTurnOrder && t.order >= Math.max(1, currentTurnOrder - 3))
+        .sort((a, b) => (a.order || 0) - (b.order || 0))
+        .map(t => ({ 
+          turn: mapConvexTurnToTurn({ ...t, adventureId: turnData.adventureId.toString() }),
+          order: t.order 
+        }))
+        .filter(item => item.turn !== null)
+    : [];
+  
+  console.log("[advanceTurn] Current turn order:", currentTurnOrder);
+  console.log("[advanceTurn] Recent turns for context:", recentTurns.length);
+  if (recentTurns.length > 0) {
+    console.log("[advanceTurn] Recent turn narratives:", recentTurns.map(item => ({ order: item.order, narrative: item.turn?.narrative?.substring(0, 100) + "..." })));
   }
 
   // 3. Find current encounter
@@ -57,6 +80,9 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
   const encounterIntro = currentEncounter.intro ?? "";
   const encounterInstructions = currentEncounter.instructions ?? "";
   const narrativeContext = (turn.narrative ?? "");
+
+  console.log("[advanceTurn] Encounter intro:", JSON.stringify(encounterIntro, null, 2));
+  console.log("[advanceTurn] Encounter instructions:", JSON.stringify(encounterInstructions, null, 2));
 
   // Extract the player's most recent action from the narrative
   const mostRecentNarrativeBlock = (turn.narrative ?? "").split(/\n\n/).filter(Boolean).at(-1) ?? "";
@@ -131,6 +157,11 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
       ).join("\n")
     : "No explicit transitions defined for this encounter.";
 
+  console.log("[advanceTurn] Current encounter transitions:", JSON.stringify(currentEncounter.transitions, null, 2));
+  console.log("[advanceTurn] Transitions text for LLM:", JSON.stringify(transitionsText, null, 2));
+  console.log("[advanceTurn] Most recent narrative block:", JSON.stringify(mostRecentNarrativeBlock, null, 2));
+  console.log("[advanceTurn] Roll info:", JSON.stringify(rollInfo, null, 2));
+
   // Find current section and scene for context
   let currentSection = undefined;
   let currentScene = undefined;
@@ -148,6 +179,12 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
   const sectionContext = currentSection ? `Section Title: ${currentSection.title || ""}\nSection Summary: ${currentSection.summary || ""}` : "";
   const sceneContext = currentScene ? `Scene Title: ${currentScene.title || ""}\nScene Summary: ${currentScene.summary || ""}` : "";
   const adventureOverview = plan.overview ? `Adventure Overview: ${plan.overview}` : "";
+
+  // Build recent turn history context
+  const recentTurnHistory = recentTurns.length > 0 
+    ? `Recent Turn History (previous turns in this encounter):
+${recentTurns.map(item => `Turn ${item.order}: ${item.turn?.narrative || ""}`).join("\n\n")}`
+    : "No previous turns in this encounter.";
 
   // --- DETAILED LOGGING FOR LLM PROMPT INPUTS ---
   console.log("\n[advanceTurn] --- LLM PROMPT INPUTS ---");
@@ -172,6 +209,8 @@ ${encounterIntro}
 Current Encounter Instructions:
 ${encounterInstructions}
 
+${recentTurnHistory}
+
 Recent Narrative Context (last few paragraphs):
 ${narrativeContext}
 
@@ -186,17 +225,23 @@ ${transitionsText}
 
 Your Task:
 1. Carefully review the 'Recent Narrative Context', the 'Most Recent Action/Event', and any 'Key Information Regarding Recent Dice Roll'. These describe events that HAVE ALREADY HAPPENED.
-2. Evaluate 'Most Recent Action/Event' against 'Available Transition Options' (if any):
-    - If a transition condition IS clearly met by PAST actions/rolls: Set 'nextEncounterId' to the 'encounter' ID specified in that transition option. The 'Available Transition Options' list is the definitive guide for all transitions. If the 'Most Recent Action/Event' directly and clearly fulfills a 'condition' in this list, that transition MUST occur. This takes strict precedence over any general interaction possibilities mentioned in the 'Current Encounter Instructions'.
-3. Determine the 'nextEncounterId':
-    - If a transition condition IS MET: Use the 'leads to encounter ID' from that transition.
-    - If MULTIPLE transition conditions appear to be met by PAST actions/rolls: Prioritize conditions related to explicit success or failure of a recent dice roll if applicable. If still ambiguous, use the first one that clearly applies.
-    - If NO transition condition is met the 'nextEncounterId' should remain the Current Encounter ID ('${currentEncounter.id}').
-4. Generate a 'narrative' response:
-    - If transitioning (because a condition was met by PAST actions/rolls): The narrative should briefly describe the events or state that fulfill the transition condition and logically lead into the new encounter. This acts as a bridge.
-    - If NOT transitioning (i.e., 'nextEncounterId' is '${currentEncounter.id}'): The narrative MUST describe what happens next in the current encounter based on the 'Most Recent Action/Event' and 'Key Information Regarding Recent Dice Roll'. It should set the stage for the player's NEXT decision. For example, if a creature was detected, the narrative might describe the creature appearing or its immediate reaction, prompting the player to decide their next move. DO NOT write new actions or decisions for the player character(s).
-    - Do NOT add any questions at the end like 'What does he do next?'
-    - Do NOT mention any game mechanics such as dice rolls.
+2. **CRITICAL: Check if the player has successfully completed the encounter's main objective.** Look for:
+   - If the encounter instructions mention specific requirements (like "pay the 3 marks for entrance"), check if the player's action clearly fulfilled that requirement
+   - If the player's action directly accomplishes what the encounter was designed for, this should trigger a transition
+   - Pay special attention to actions like paying fees, completing tasks, or achieving stated objectives
+   - **IMPORTANT: Check the 'Recent Turn History' to see if any previous players have already completed key objectives (like paying entrance fees). If the objective was completed in a previous turn, this should trigger a transition.**
+3. Evaluate 'Most Recent Action/Event' against 'Available Transition Options' (if any):
+   - If a transition condition IS clearly met by PAST actions/rolls: Set 'nextEncounterId' to the 'encounter' ID specified in that transition option. The 'Available Transition Options' list is the definitive guide for all transitions. If the 'Most Recent Action/Event' directly and clearly fulfills a 'condition' in this list, that transition MUST occur. This takes strict precedence over any general interaction possibilities mentioned in the 'Current Encounter Instructions'.
+   - **IMPORTANT: If the player has successfully completed the encounter's main objective (like paying the entrance fee), but no specific transition condition matches, look for a general "enter" or "proceed" transition.**
+4. Determine the 'nextEncounterId':
+   - If a transition condition IS MET: Use the 'leads to encounter ID' from that transition.
+   - If MULTIPLE transition conditions appear to be met by PAST actions/rolls: Prioritize conditions related to explicit success or failure of a recent dice roll if applicable. If still ambiguous, use the first one that clearly applies.
+   - If NO transition condition is met the 'nextEncounterId' should remain the Current Encounter ID ('${currentEncounter.id}').
+5. Generate a 'narrative' response:
+   - If transitioning (because a condition was met by PAST actions/rolls): The narrative should briefly describe the events or state that fulfill the transition condition and logically lead into the new encounter. This acts as a bridge.
+   - If NOT transitioning (i.e., 'nextEncounterId' is '${currentEncounter.id}'): The narrative MUST describe what happens next in the current encounter based on the 'Most Recent Action/Event' and 'Key Information Regarding Recent Dice Roll'. It should set the stage for the player's NEXT decision. For example, if a creature was detected, the narrative might describe the creature appearing or its immediate reaction, prompting the player to decide their next move. DO NOT write new actions or decisions for the player character(s).
+   - Do NOT add any questions at the end like 'What does he do next?'
+   - Do NOT mention any game mechanics such as dice rolls.
 
 IMPORTANT GUIDELINES:
 - Only use encounter IDs explicitly listed in the 'Available Transition Options' or the 'Current Encounter ID' ('${currentEncounter.id}').
@@ -217,8 +262,12 @@ Respond in JSON:
   const llmResult = (await generateObject({ prompt, schema: encounterProgressionSchema })).object;
 
   // Log the LLM's raw response
+  console.log("[advanceTurn] LLM result:", JSON.stringify(llmResult, null, 2));
 
   // Log what the LLM decided about encounter progression
+  console.log("[advanceTurn] Next encounterId:", llmResult.nextEncounterId);
+  console.log("[advanceTurn] Current encounterId:", turn.encounterId);
+  console.log("[advanceTurn] Will transition?", llmResult.nextEncounterId !== turn.encounterId);
 
   // 6. Build the new turn object
   let newTurn: Turn | null = null;

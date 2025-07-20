@@ -132,23 +132,42 @@ export async function readJsonFromS3(key: string): Promise<unknown> {
 }
 
 export async function updateJsonOnS3(key: string, data: unknown): Promise<void> {
+  console.log("[updateJsonOnS3] Starting with key:", key)
+  console.log("[updateJsonOnS3] Data to save:", JSON.stringify(data, null, 2))
+  
   const bucket = process.env.bucketData || process.env.AWS_BUCKET_DATA;
+  console.log("[updateJsonOnS3] Using bucket:", bucket)
+  
   if (!bucket) {
+    console.error("[updateJsonOnS3] AWS_BUCKET_DATA is not set")
     throw new Error("AWS_BUCKET_DATA is not set");
   }
+  
+  console.log("[updateJsonOnS3] Checking AWS configuration...")
   if (!isAwsConfigured() || !s3Client) {
+    console.error("[updateJsonOnS3] AWS S3 is not configured")
     throw new Error("AWS S3 is not configured");
   }
+  
+  console.log("[updateJsonOnS3] AWS configuration is valid")
+  
   try {
+    const jsonString = JSON.stringify(data, null, 2)
+    console.log("[updateJsonOnS3] JSON string length:", jsonString.length)
+    
     const command = new PutObjectCommand({
       Bucket: bucket,
       Key: key,
-      Body: JSON.stringify(data, null, 2),
+      Body: jsonString,
       ContentType: "application/json",
     });
+    
+    console.log("[updateJsonOnS3] Sending PutObjectCommand to S3...")
     await s3Client.send(command);
+    console.log("[updateJsonOnS3] Successfully uploaded to S3")
   } catch (error) {
-    console.error("Error updating JSON on S3:", { key, error });
+    console.error("[updateJsonOnS3] Error updating JSON on S3:", JSON.stringify(error, null, 2))
+    console.error("[updateJsonOnS3] Error stack:", error instanceof Error ? error.stack : "No stack trace")
     throw new Error(`Error updating JSON on S3: ${error}`);
   }
 }

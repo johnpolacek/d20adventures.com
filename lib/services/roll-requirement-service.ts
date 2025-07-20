@@ -6,7 +6,32 @@ import type { Character } from "@/types/character";
  * Given an action or reply string and character context, determine if a dice roll is required.
  * Returns { rollType, difficulty } or null if no roll is required.
  */
-export async function getRollRequirementForAction(action: string, character: Character) {
+export async function getRollRequirementForAction(
+  action: string,
+  character: Character,
+  options?: {
+    encounterInstructions?: string;
+    encounterIntro?: string;
+    narrativeContext?: string;
+  }
+) {
+  console.log("[LLM DM] Starting roll requirement check", JSON.stringify({
+    action,
+    characterName: character.name,
+    characterArchetype: character.archetype,
+    characterRace: character.race,
+    hasSpells: character.spells && character.spells.length > 0,
+    hasSkills: character.skills && character.skills.length > 0,
+    hasEquipment: character.equipment && character.equipment.length > 0,
+    hasSpecialAbilities: character.specialAbilities && character.specialAbilities.length > 0,
+    options: {
+      hasEncounterInstructions: !!options?.encounterInstructions,
+      hasEncounterIntro: !!options?.encounterIntro,
+      hasNarrativeContext: !!options?.narrativeContext
+    }
+  }, null, 2));
+
+  const { encounterInstructions = "", encounterIntro = "", narrativeContext = "" } = options || {};
   // Format character context for the prompt
   const contextLines = [
     `Name: ${character.name}`,
@@ -19,147 +44,85 @@ export async function getRollRequirementForAction(action: string, character: Cha
   ].filter(Boolean);
   const characterContext = contextLines.length > 0 ? `Character Context:\n${contextLines.join("\n")}\n` : "";
 
+  const encounterContext = `${encounterIntro ? `Encounter Intro:\n${encounterIntro}\n` : ""}` +
+    `${encounterInstructions ? `Encounter Instructions:\n${encounterInstructions}\n` : ""}` +
+    `${narrativeContext ? `Recent Narrative Context:\n${narrativeContext}\n` : ""}`;
+
+  console.log("[LLM DM] Built context for roll requirement", JSON.stringify({
+    characterContextLength: characterContext.length,
+    encounterContextLength: encounterContext.length,
+    contextLinesCount: contextLines.length
+  }, null, 2));
+
   const prompt = `
+${encounterContext}
 ${characterContext}
-Given the following player or NPC action, determine if a dice roll is required for the character to attempt the action. If a roll is required, return a JSON object with "rollType" (choose the most appropriate from the list below) and "difficulty" (a number between 5 and 25). If no roll is required, return the JSON value null (not a string).
 
-Use the character's spells, skills, equipment, special abilities, archetype, and race to determine the most appropriate roll type and difficulty. If the action involves casting a spell (e.g., 'casts charm person', 'casts fireball'), use 'Spellcasting Check' as the rollType, unless the spell is an attack (then use 'Attack Roll').
+You are a Dungeon Master adjudicating whether a dice roll is needed.
 
-When assigning difficulty, use the following guidance:
-- The average/typical difficulty should be 10 or 11 for most normal actions.
-- Use 5 for very easy actions, 6-9 for easy, 10-11 for average actions, 15+ for hard actions, and 18-20 for very hard or nearly impossible actions.
-- Most actions should be around 10 or 11 unless the action is clearly much easier or harder than normal.
+1. **First, respect the encounter instructions.** If they explicitly state that no dice rolls are necessary for a certain action (e.g., paying an entrance fee) and the player's action follows that flow, then *no roll is required*.
 
-Possible roll types:
-- Perception Check
-- Investigation Check
-- Insight Check
-- Stealth Check
-- Athletics Check
-- Acrobatics Check
-- Survival Check
-- Nature Check
-- Arcana Check
-- History Check
-- Medicine Check
-- Animal Handling Check
-- Persuasion Check
-- Deception Check
-- Intimidation Check
-- Performance Check
-- Sleight of Hand Check
-- Strength Check
-- Dexterity Check
-- Constitution Check
-- Intelligence Check
-- Wisdom Check
-- Charisma Check
-- Attack Roll
-- Spellcasting Check
-- Saving Throw
-- Initiative Roll
-- Luck Check
-- Reflex Saving Throw
-- Fortitude Saving Throw
-- Will Saving Throw
-- Concentration Check
-- Endurance Check
-- Religion Check
-- Technology Check
-- Engineering Check
-- Piloting Check
-- Driving Check
-- Climbing Check
-- Swimming Check
-- Jumping Check
-- Disguise Check
-- Bluff Check
-- Sense Motive Check
-- Use Magic Device Check
-- Use Rope Check
-- Escape Artist Check
-- Appraise Check
-- Disable Device Check
-- Knowledge (Any) Check
-- Perform (Any) Check
-- Craft (Any) Check
-- Profession (Any) Check
-- Read Lips Check
-- Tumble Check
-- Balance Check
-- Ride Check
-- Handle Animal Check
-- Gather Information Check
-- Search Check
-- Listen Check
-- Spot Check
-- Open Lock Check
-- Forgery Check
-- Diplomacy Check
-- Intuition Check
-- Morale Check
-- Sanity Check
-- Willpower Check
-- Faith Check
-- Social Check
-- Streetwise Check
-- Investigation Check
-- Technology Use Check
-- Computer Use Check
-- Hacking Check
-- Science Check
-- Alchemy Check
-- Herbalism Check
-- Tracking Check
-- Navigation Check
-- Weather Sense Check
-- Cooking Check
-- Brewing Check
-- Gambling Check
-- Barter Check
-- Leadership Check
-- Strategy Check
-- Tactics Check
-- Animal Empathy Check
-- Psionics Check
-- Telepathy Check
-- Intuition Check
+2. If the player's action attempts something beyond what is automatically allowed (e.g., sneaking past the guards **without** paying), determine the most appropriate skill check.
 
-Examples:
-Action: "Try to sneak past the guards."
-Result: { "rollType": "Stealth Check", "difficulty": 12 }
+3. Return strictly **JSON**: either "null" (when no roll is required) or an object { "rollType": string, "difficulty": number }.
 
-Action: "Attack the goblin."
-Result: { "rollType": "Attack Roll", "difficulty": 10 }
+Difficulty guidelines:
+- 5 very easy, 6-9 easy, 10-11 average, 12-14 moderate, 15-17 hard, 18-20 very hard, 21-25 nearly impossible.
 
-Action: "Try to determine what the sound is."
-Result: { "rollType": "Perception Check", "difficulty": 8 }
-
-Action: "Say hello."
-Result: null
-
-Action: "Lyra casts charm person on Silas."
-Result: { "rollType": "Spellcasting Check", "difficulty": 11 }
-
-Now, given the following action, determine the roll requirement.
+Use the character's abilities, spells, skills, and equipment when selecting the roll type and setting difficulty.
 
 Action: "${action}"
 `;
+
+  console.log("[LLM DM] Sending roll requirement prompt to LLM", JSON.stringify({
+    promptLength: prompt.length,
+    action,
+    characterName: character.name
+  }, null, 2));
+
   try {
     const result = await generateObject({
       schema: rollRequirementSchema,
       prompt,
     });
+
+    console.log("[LLM DM] LLM response for roll requirement", JSON.stringify({
+      rawResult: result.object,
+      hasRollType: result.object && "rollType" in result.object,
+      hasDifficulty: result.object && "difficulty" in result.object,
+      rollType: result.object?.rollType,
+      difficulty: result.object?.difficulty
+    }, null, 2));
+
     if (
       result.object &&
       typeof result.object === "object" &&
       "rollType" in result.object &&
       (result.object.rollType === "null" || result.object.rollType === "none" || result.object.rollType === "")
     ) {
+      console.log("[LLM DM] No roll required based on LLM response", JSON.stringify({
+        action,
+        characterName: character.name,
+        reason: "rollType is null/none/empty"
+      }, null, 2));
       return null;
     }
-    return result.object ?? null;
+
+    const finalResult = result.object ?? null;
+    console.log("[LLM DM] Roll requirement check completed", JSON.stringify({
+      action,
+      characterName: character.name,
+      result: finalResult,
+      requiresRoll: !!finalResult
+    }, null, 2));
+
+    return finalResult;
   } catch (error) {
+    console.error("[LLM DM] Error in roll requirement check", JSON.stringify({
+      action,
+      characterName: character.name,
+      error: error instanceof Error ? error.message : String(error)
+    }, null, 2));
     throw error;
   }
 } 

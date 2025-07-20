@@ -1,7 +1,10 @@
-import React from "react"
+import React, { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { textShadow } from "../typography/styles"
 import StepperButtons from "./stepper-buttons"
+import { generateSpecialAbilitiesAction } from "@/app/_actions/generate-special-abilities-action"
+import { Button } from "@/components/ui/button"
+import type { Attributes } from "./step-assign-attributes"
 
 interface StepSpecialAbilitiesProps {
   hasSpecialAbilities: boolean | undefined
@@ -10,9 +13,39 @@ interface StepSpecialAbilitiesProps {
   onAbilitiesChange: (abilities: string[]) => void
   onNext: () => void
   onBack?: () => void
+  race?: string
+  archetype?: string
+  attributes?: Attributes
+  appearance?: string
+  background?: string
+  personality?: string
+  motivation?: string
+  backstory?: string
+  skills?: string[]
+  equipment?: string[]
 }
 
-export default function StepSpecialAbilities({ hasSpecialAbilities, onHasSpecialAbilitiesChange, abilities, onAbilitiesChange, onNext, onBack }: StepSpecialAbilitiesProps) {
+export default function StepSpecialAbilities({
+  hasSpecialAbilities,
+  onHasSpecialAbilitiesChange,
+  abilities,
+  onAbilitiesChange,
+  onNext,
+  onBack,
+  race,
+  archetype,
+  attributes,
+  appearance,
+  background,
+  personality,
+  motivation,
+  backstory,
+  skills,
+  equipment,
+}: StepSpecialAbilitiesProps) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
   const handleAbilityChange = (idx: number, value: string) => {
     const updated = [...abilities]
     updated[idx] = value
@@ -36,6 +69,34 @@ export default function StepSpecialAbilities({ hasSpecialAbilities, onHasSpecial
       onAbilitiesChange(nonBlankAbilities)
     }
     onNext()
+  }
+
+  const handleGenerate = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await generateSpecialAbilitiesAction({
+        race,
+        archetype,
+        attributes,
+        appearance,
+        background,
+        personality,
+        motivation,
+        backstory,
+        skills,
+        equipment,
+      })
+      if (result.success && result.specialAbilities) {
+        onAbilitiesChange(result.specialAbilities)
+      } else {
+        setError(result.error || "Failed to generate special abilities.")
+      }
+    } catch {
+      setError("An error occurred while generating special abilities.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -78,6 +139,10 @@ export default function StepSpecialAbilities({ hasSpecialAbilities, onHasSpecial
               Add Ability
             </button>
           </div>
+          <Button onClick={handleGenerate} disabled={loading} variant="ai" className="mt-2 !text-lg">
+            {loading ? "Generating..." : "Generate"}
+          </Button>
+          {error && <div className="text-red-400 text-sm mt-2">{error}</div>}
         </div>
       )}
       <StepperButtons onBack={onBack} onNext={handleNext} nextDisabled={!canProceed} />

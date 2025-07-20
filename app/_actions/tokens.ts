@@ -6,7 +6,7 @@ import { api } from "@/convex/_generated/api";
 
 interface DecrementTokensArgs {
   tokensUsed: number;
-  transactionType: "usage_generate_text" | "usage_generate_object" | "usage_image_upload";
+  transactionType: "usage_generate_text" | "usage_generate_object" | "usage_image_upload" | "usage_join_adventure";
   description?: string;
   modelId?: string;
 }
@@ -32,6 +32,9 @@ export async function decrementUserTokensAction(args: DecrementTokensArgs) {
     let tokensUsed: number;
     if (args.transactionType === "usage_image_upload") {
       // Image uploads are a flat rate, no multiplier needed
+      tokensUsed = args.tokensUsed;
+    } else if (args.transactionType === "usage_join_adventure") {
+      // Adventure joins are a flat rate, no multiplier needed
       tokensUsed = args.tokensUsed;
     } else {
       // AI generation uses a multiplier: 100 tokens of gemini usage = 1 token of D20 usage

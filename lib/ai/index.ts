@@ -50,8 +50,17 @@ export async function generateObject<T extends z.ZodTypeAny>({prompt, schema}: {
     return result;
   } catch (error) {
     console.warn('generateObject failed. Error details:', error);
-    console.warn('Retrying generateObject in 2 seconds...');
-    await sleep(2000);
+    
+    // Check if it's a quota/rate limit error
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isQuotaError = errorMessage.includes('quota') || 
+                        errorMessage.includes('rate') || 
+                        errorMessage.includes('exceeded');
+    
+    // Add longer delay for quota errors, shorter for others
+    const retryDelay = isQuotaError ? 10000 : 2000; // 10 seconds for quota errors, 2 seconds for others
+    console.warn(`Retrying generateObject in ${retryDelay/1000} seconds...`);
+    await sleep(retryDelay);
     
     // Retry once
     try {
@@ -159,8 +168,17 @@ export async function generateText({prompt}: { prompt: string; }) {
     return result;
   } catch (error) {
     console.warn('generateText failed. Error details:', error);
-    console.warn('Retrying generateText in 2 seconds...');
-    await sleep(2000);
+    
+    // Check if it's a quota/rate limit error
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isQuotaError = errorMessage.includes('quota') || 
+                        errorMessage.includes('rate') || 
+                        errorMessage.includes('exceeded');
+    
+    // Add longer delay for quota errors, shorter for others
+    const retryDelay = isQuotaError ? 10000 : 2000; // 10 seconds for quota errors, 2 seconds for others
+    console.warn(`Retrying generateText in ${retryDelay/1000} seconds...`);
+    await sleep(retryDelay);
     
     // Retry once
     try {
