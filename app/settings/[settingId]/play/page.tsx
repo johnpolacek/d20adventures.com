@@ -41,7 +41,7 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
       <div className="fade-in delay-[2s] relative z-10">
         <ImageHeader variant="compact" imageUrl={getImageUrl(setting.image)} title={setting.name} subtitle="Adventures" imageAlt={setting.name} />
         <div className="max-w-4xl xl:max-w-6xl mx-auto -mt-32 relative z-10 whitespace-pre-line">
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 relative z-10 py-8 auto-rows-fr">
+          <div className="md:grid md:grid-cols-2 xl:grid-cols-3 gap-8 relative z-10 py-8 auto-rows-fr">
             {publishedAdventures.map((adventure) => (
               <div key={adventure.id} className="block h-full">
                 <Card className="w-full h-full bg-black/80 border-white/20 scale-95 hover:scale-100 hover:bg-black/90 ring-[6px] ring-black hover:ring-8 hover:ring-primary-500 transition-colors cursor-pointer transition-all duration-500 ease-in-out p-0 overflow-hidden flex flex-col">

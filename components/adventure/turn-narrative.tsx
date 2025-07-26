@@ -120,7 +120,7 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
         </Alert>
       )}
       {shouldShowReplyCondition && (
-        <div className="fade-in flex justify-between items-center gap-4 px-4 h-14 -mt-18 mb-4 bg-black/70 rounded-lg border border-white/20">
+        <div className="hidden md:block fade-in flex justify-between items-center gap-4 px-4 h-14 -mt-18 mb-4 bg-black/70 rounded-lg border border-white/20">
           <p className="italic text-sm pl-2 font-bold text-amber-300">It is your turn!</p>
           <Button variant="outline" size="sm" className="text-xs" onClick={() => scrollToBottom()}>
             Go To Reply
@@ -248,10 +248,12 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
           <TurnAdvanceButton advancing={advancing} navigationMode={disableSSE} navigationLabel={disableSSE ? "Go to Next Turn" : undefined} onAdvance={handleAdvanceOrNavigate} />
         </div>
       )}
-      <div className="absolute bottom-8 left-8 z-50 flex items-center gap-2 bg-black/70 px-4 py-2 rounded-lg border border-white/20 shadow-lg">
-        <span className="text-xs text-muted-foreground">Show Original Replies</span>
-        <div className="scale-75 pt-0.5">
-          <Switch checked={showOriginalReplies} onCheckedChange={setShowOriginalReplies} id="show-original-replies-switch" />
+      <div className="absolute bottom-8 left-8 w-full pr-16 z-50">
+        <div className="flex justify-center md:justify-start items-center gap-2 md:bg-black/70 px-4 py-2 rounded-lg md:border border-white/20">
+          <span className="text-xs text-muted-foreground">Show Original Replies</span>
+          <div className="scale-75 pt-0.5">
+            <Switch checked={showOriginalReplies} onCheckedChange={setShowOriginalReplies} id="show-original-replies-switch" />
+          </div>
         </div>
       </div>
     </div>

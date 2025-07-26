@@ -223,7 +223,7 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
       {!loading && !hasSubmitted && !showDiceRoll && (
         <>
           <Textarea
-            className="text-lg border-white/30"
+            className="md:text-lg border-white/30"
             value={input}
             onChange={handleInputChange}
             placeholder="Write your character's actions and dialogue here, in the third person..."
@@ -242,7 +242,7 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
             )}
           </div>
           {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
-          <div className="flex justify-end mt-2">
+          <div className="flex justify-center md:justify-end mt-2">
             <SignedIn>
               <Button type="submit" disabled={!input.trim() || loading} variant="epic" size="lg">
                 {loading ? (

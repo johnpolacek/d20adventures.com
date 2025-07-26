@@ -62,12 +62,12 @@ export default function TurnCharacterList() {
               >
                 {character.image && <CharacterImage src={getImageUrl(character.image)} alt={character.name} />}
                 <div className="z-10">
-                  <div className="text-xxs sm:text-sm font-bold font-display flex items-center gap-2">
+                  <div className="text-xs sm:text-sm font-bold font-display flex items-center gap-2">
                     {character.name}
                     {character.isComplete && !isDead && <CircleCheckBig className="absolute bottom-1.5 right-1.5 inline-block text-green-700 w-4 h-4 rounded-full bg-black ring-2 ring-black" />}
                   </div>
                   {character.archetype !== "Monster" && (
-                    <div className="text-xxxs sm:text-xxs font-display">
+                    <div className="text-xxs sm:text-xs font-display">
                       {character.gender} {character.race} {character.archetype}
                     </div>
                   )}

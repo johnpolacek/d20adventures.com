@@ -37,7 +37,7 @@ export default function ActiveAdventureCard({ adventure, userId }: ActiveAdventu
           )}
         </div>
         <div className="flex gap-3 mt-4">
-          <Button asChild variant="epic" size="lg" className="flex items-center gap-2">
+          <Button asChild variant="epic" size="lg" className="flex items-center text-center gap-2">
             <Link href={`/settings/${adventure.settingId}/${adventure.adventurePlanId}/${adventure.id}`}>Continue Adventure</Link>
           </Button>
         </div>

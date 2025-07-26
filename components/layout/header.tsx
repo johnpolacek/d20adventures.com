@@ -12,7 +12,7 @@ export default async function Header({ path }: { path: string }) {
     <header
       className={cn(
         paper.className,
-        "fixed top-0 select-none z-30 flex sm:gap-1 items-center pr-2 sm:px-8 md:px-12 pt-1 sm:py-4 w-full border-b-8 border-[rgba(0,0,0,.25)]",
+        "fixed top-0 select-none z-30 flex sm:gap-1 items-center pr-2 sm:px-8 md:px-12 pt-1 sm:py-4 w-full max-w-[100vw] border-b-8 border-[rgba(0,0,0,.25)]",
         !isBig && "md:px-8 sm:py-0"
       )}
       style={paper.style}
@@ -27,7 +27,7 @@ export default async function Header({ path }: { path: string }) {
           src="/images/d20.jpg"
         />
         <div className="flex flex-col">
-          <h1 className={cn(!isBig && "scale-[.6] -ml-12 font-semibold")} aria-label="D20 Adventures">
+          <h1 className={cn(!isBig && "scale-[.8] sm:scale-[.6] -ml-5 sm:-ml-12 font-semibold")} aria-label="D20 Adventures">
             <span className="sr-only">D20 Adventures</span>
             <span aria-hidden="true">
               <span className={cn("text-2xl sm:text-4xl text-primary-600 mr-1", !isBig && "text-2xl")}>D20</span>

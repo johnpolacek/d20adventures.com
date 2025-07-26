@@ -23,8 +23,8 @@ export default function CharacterDiceRoll({
   const { rollType, difficulty, modifier = 0 } = rollRequired
 
   return (
-    <div className={cn("relative aspect-[4/5] sm:aspect-auto md:min-h-[300px] font-display font-bold border border-primary-700 rounded-xl overflow-hidden", className)}>
-      <div className="absolute top-0 left-0 h-2/3 sm:h-full w-full sm:w-2/3 overflow-hidden">
+    <div className={cn("relative aspect-[2/3] sm:aspect-auto md:min-h-[300px] font-display font-bold border border-primary-700 rounded-xl overflow-hidden", className)}>
+      <div className="absolute top-0 left-0 h-1/2 sm:h-full w-full sm:w-2/3 overflow-hidden">
         <Image className="object-cover" src={getImageUrl(character.image)} alt={character.name} fill={true} />
         <div className="absolute bottom-0 sm:bottom-auto sm:top-0 right-0 w-full sm:w-1/3 h-1/3 sm:h-full bg-gradient-to-t sm:bg-gradient-to-l from-black to-transparent"></div>
       </div>
