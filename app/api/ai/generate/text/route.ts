@@ -17,8 +17,6 @@ export async function POST(request: NextRequest) {
       model: geminiModel,
       prompt: input,
     });
-    
-    // Return as JSON for backend use
     return Response.json({ result: result.text });
   }
 

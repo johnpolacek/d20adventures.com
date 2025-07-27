@@ -120,7 +120,7 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
         </Alert>
       )}
       {shouldShowReplyCondition && (
-        <div className="hidden md:block fade-in flex justify-between items-center gap-4 px-4 h-14 -mt-18 mb-4 bg-black/70 rounded-lg border border-white/20">
+        <div className="hidden md:flex fade-in justify-between items-center gap-4 px-4 h-14 -mt-18 mb-4 bg-black/70 rounded-lg border border-white/20">
           <p className="italic text-sm pl-2 font-bold text-amber-300">It is your turn!</p>
           <Button variant="outline" size="sm" className="text-xs" onClick={() => scrollToBottom()}>
             Go To Reply
