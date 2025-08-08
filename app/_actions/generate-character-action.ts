@@ -59,11 +59,10 @@ export async function generateCharacterAction({
       }
     }
 
-    // Override the status to always be empty
-    const character = {
-      ...result.object,
-      status: ""
-    } as (typeof characterType extends "npc" ? NPC : PCTemplate)
+    // Ensure status is defined for NPCs, and keep PC template shape intact
+    const character = (characterType === "npc"
+      ? ({ ...(result.object as NPC), status: "" } as NPC)
+      : (result.object as PCTemplate))
 
     return {
       success: true,

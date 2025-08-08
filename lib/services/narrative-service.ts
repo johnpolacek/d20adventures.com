@@ -38,7 +38,7 @@ Narrative continuation:`.trim();
   });
   if (!res.ok) throw new Error("Failed to generate narrative");
   const data = await res.json();
-  return data.result || data.text || "";
+  return data.result || data.text.text.text || "";
 }
 
 export async function formatNarrativeAction({
@@ -159,7 +159,7 @@ Output only the narrative paragraph.`.trim();
     });
     if (!res.ok) throw new Error("Failed to generate narrative action");
     const data = await res.json();
-    formattedNarrative = data.result || data.text || "";
+    formattedNarrative = data.result || data.text.text.text || "";
 
     console.log("[LLM DM] Non-dialogue action generation completed", JSON.stringify({
       formattedNarrative,
@@ -236,7 +236,7 @@ Output only the narrative paragraph.`.trim();
   });
   if (!res.ok) throw new Error("Failed to generate roll outcome narrative");
   const data = await res.json();
-  return data.result || data.text || "";
+  return data.result || data.text.text.text || "";
 }
 
 export async function getRollRequirementHelper(playerInput: string, context: { encounterIntro?: string; encounterInstructions?: string; narrativeContext?: string }) {

@@ -178,12 +178,6 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
             try {
               // Cast turnId to Id<'turns'>
               const result = await processTurnReply({ turnId: turnId as Id<"turns">, characterId, narrativeAction })
-              // If the action was implausible, set the feedback as a tokenError to display it.
-              if (result?.actionImplausible && result.feedback) {
-                setTokenError(result.feedback)
-                // Potentially return a different structure or throw an error to prevent further processing in TurnNarrativeReply
-                return result // Or throw new Error(result.feedback) if TurnNarrativeReply should stop hard.
-              }
               return result
             } catch (error) {
               if (error instanceof Error && error.message.includes("Insufficient tokens")) {

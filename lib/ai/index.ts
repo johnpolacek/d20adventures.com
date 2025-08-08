@@ -1,7 +1,8 @@
 "use server"
 
 import { generateObject as baseGenerateObject, streamObject as baseStreamObject, generateText as baseGenerateText } from "ai";
-import { geminiModel } from "./llm";
+import type { Schema as AISchema } from "ai";
+import { openaiModel } from "./llm";
 import { auth } from "@clerk/nextjs/server"
 import { z } from "zod";
 import { decrementUserTokensAction } from "@/app/_actions/tokens";
@@ -11,9 +12,19 @@ function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// Wrapper: uses geminiModel by default, but allows override
-export async function generateObject<T extends z.ZodTypeAny>({prompt, schema}: { prompt: string; schema: T; }) {
-  let result;
+type GenerateObjectReturn<T extends z.ZodTypeAny> = {
+  object: z.infer<T>;
+  usage?: {
+    inputTokens?: number;
+    outputTokens?: number;
+    totalTokens?: number;
+  };
+  [key: string]: unknown;
+}
+
+// Wrapper: uses openaiModel by default, but allows override
+export async function generateObject<T extends z.ZodTypeAny>({prompt, schema}: { prompt: string; schema: T; }): Promise<GenerateObjectReturn<T>> {
+  let result: GenerateObjectReturn<T>;
   try {
     const { userId } = await auth()
 
@@ -21,17 +32,18 @@ export async function generateObject<T extends z.ZodTypeAny>({prompt, schema}: {
       throw new Error("User not authenticated");
     }
 
-    result = await baseGenerateObject({
+    result = (await baseGenerateObject({
       prompt,
-      schema,
-      model: geminiModel,
-    });
+      schema: schema as unknown as AISchema,
+      model: openaiModel,
+    })) as unknown as GenerateObjectReturn<T>;
 
-    if (result.usage && result.usage.totalTokens > 0) {
+    const totalTokens = result.usage?.totalTokens ?? 0;
+    if (totalTokens > 0) {
       const tokenDecrementResult = await decrementUserTokensAction({
-        tokensUsed: result.usage.totalTokens,
+        tokensUsed: totalTokens,
         transactionType: "usage_generate_object",
-        modelId: geminiModel.modelId,
+        modelId: openaiModel.modelId,
       });
 
       if (!tokenDecrementResult.success) {
@@ -41,7 +53,7 @@ export async function generateObject<T extends z.ZodTypeAny>({prompt, schema}: {
           errorMessage = tokenDecrementResult.details.message;
         }
         if (errorMessage.includes("Insufficient tokens")) {
-          throw new Error(`Insufficient tokens for generateObject operation. Usage: ${result.usage.totalTokens}.`);
+          throw new Error(`Insufficient tokens for generateObject operation. Usage: ${totalTokens}.`);
         }
         throw new Error("Failed to update token balance after generateObject operation.");
       }
@@ -64,24 +76,28 @@ export async function generateObject<T extends z.ZodTypeAny>({prompt, schema}: {
     
     // Retry once
     try {
-      result = await baseGenerateObject({
+      result = (await baseGenerateObject({
         prompt,
-        schema,
-        model: geminiModel,
-      });
+        schema: schema as unknown as AISchema,
+        model: openaiModel,
+      })) as unknown as GenerateObjectReturn<T>;
 
       console.log('generateObject (retry) raw result:', result);
 
-      if (result.usage && result.usage.totalTokens > 0) {
+      const retryTotalTokens = result.usage?.totalTokens ?? 0;
+      if (retryTotalTokens > 0) {
+        const inputTokens = result.usage?.inputTokens ?? 0;
+        const outputTokens = result.usage?.outputTokens ?? 0;
+        const tokensInputOutputRatio = outputTokens > 0 ? inputTokens / outputTokens : 0;
         console.log('Token Usage (generateObject retry):', {
-          tokensInputOutputRatio: result.usage.promptTokens/result.usage.completionTokens,
-          totalTokens: result.usage.totalTokens,
-          model: geminiModel.modelId
+          tokensInputOutputRatio,
+          totalTokens: retryTotalTokens,
+          model: openaiModel.modelId
         });
         const tokenDecrementResultRetry = await decrementUserTokensAction({
-          tokensUsed: result.usage.totalTokens,
+          tokensUsed: retryTotalTokens,
           transactionType: "usage_generate_object",
-          modelId: geminiModel.modelId,
+          modelId: openaiModel.modelId,
         });
 
         if (!tokenDecrementResultRetry.success) {
@@ -91,7 +107,7 @@ export async function generateObject<T extends z.ZodTypeAny>({prompt, schema}: {
             errorMessage = tokenDecrementResultRetry.details.message;
           }
           if (errorMessage.includes("Insufficient tokens")) {
-            throw new Error(`Insufficient tokens for generateObject operation (retry). Usage: ${result.usage.totalTokens}.`);
+            throw new Error(`Insufficient tokens for generateObject operation (retry). Usage: ${retryTotalTokens}.`);
           }
           throw new Error("Failed to update token balance after generateObject operation (retry).");
         }
@@ -105,7 +121,7 @@ export async function generateObject<T extends z.ZodTypeAny>({prompt, schema}: {
   }
 }
 
-// Wrapper for streamObject: uses geminiModel by default, but allows override
+// Wrapper for streamObject: uses openaiModel by default, but allows override
 export async function streamObject<T extends z.ZodTypeAny>({prompt, schema}: { prompt: string; schema: T; }) {
 
   const { userId } = await auth()
@@ -116,12 +132,12 @@ export async function streamObject<T extends z.ZodTypeAny>({prompt, schema}: { p
 
   return baseStreamObject({
     prompt,
-    schema,
-    model: geminiModel,
+    schema: schema as unknown as AISchema,
+    model: openaiModel,
   });
 }
 
-// Wrapper for generateText: uses geminiModel by default, but allows override
+// Wrapper for generateText: uses openaiModel by default, but allows override
 export async function generateText({prompt}: { prompt: string; }) {
   let result;
   try {
@@ -135,21 +151,25 @@ export async function generateText({prompt}: { prompt: string; }) {
 
     result = await baseGenerateText({
       prompt,
-      model: geminiModel,
+      model: openaiModel,
     });
 
     console.log('generateText result:', result.text);
 
-    if (result.usage && result.usage.totalTokens > 0) {
+    const totalTokens = result.usage?.totalTokens ?? 0;
+    if (totalTokens > 0) {
+      const inputTokens = result.usage?.inputTokens ?? 0;
+      const outputTokens = result.usage?.outputTokens ?? 0;
+      const tokensInputOutputRatio = outputTokens > 0 ? inputTokens / outputTokens : 0;
       console.log('Token Usage (generateText):', {
-        tokensInputOutputRatio: result.usage.promptTokens/result.usage.completionTokens,
-        totalTokens: result.usage.totalTokens,
-        model: geminiModel.modelId
+        tokensInputOutputRatio,
+        totalTokens,
+        model: openaiModel.modelId
       });
       const tokenDecrementResult = await decrementUserTokensAction({
-        tokensUsed: result.usage.totalTokens,
+        tokensUsed: totalTokens,
         transactionType: "usage_generate_text",
-        modelId: geminiModel.modelId,
+        modelId: openaiModel.modelId,
       });
 
       if (!tokenDecrementResult.success) {
@@ -159,7 +179,7 @@ export async function generateText({prompt}: { prompt: string; }) {
           errorMessage = tokenDecrementResult.details.message;
         }
         if (errorMessage.includes("Insufficient tokens")) {
-          throw new Error(`Insufficient tokens for generateText operation. Usage: ${result.usage.totalTokens}.`);
+          throw new Error(`Insufficient tokens for generateText operation. Usage: ${totalTokens}.`);
         }
         throw new Error("Failed to update token balance after generateText operation.");
       }
@@ -184,21 +204,25 @@ export async function generateText({prompt}: { prompt: string; }) {
     try {
       result = await baseGenerateText({
         prompt,
-        model: geminiModel,
+        model: openaiModel,
       });
 
       console.log('generateText (retry) raw result:', result);
 
-      if (result.usage && result.usage.totalTokens > 0) {
+      const retryTotalTokens = result.usage?.totalTokens ?? 0;
+      if (retryTotalTokens > 0) {
+        const inputTokens = result.usage?.inputTokens ?? 0;
+        const outputTokens = result.usage?.outputTokens ?? 0;
+        const tokensInputOutputRatio = outputTokens > 0 ? inputTokens / outputTokens : 0;
         console.log('Token Usage (generateText retry):', {
-          tokensInputOutputRatio: result.usage.promptTokens/result.usage.completionTokens,
-          totalTokens: result.usage.totalTokens,
-          model: geminiModel.modelId
+          tokensInputOutputRatio,
+          totalTokens: retryTotalTokens,
+          model: openaiModel.modelId
         });
         const tokenDecrementResultRetry = await decrementUserTokensAction({
-          tokensUsed: result.usage.totalTokens,
+          tokensUsed: retryTotalTokens,
           transactionType: "usage_generate_text",
-          modelId: geminiModel.modelId,
+          modelId: openaiModel.modelId,
         });
 
         if (!tokenDecrementResultRetry.success) {
@@ -208,7 +232,7 @@ export async function generateText({prompt}: { prompt: string; }) {
             errorMessage = tokenDecrementResultRetry.details.message;
           }
           if (errorMessage.includes("Insufficient tokens")) {
-            throw new Error(`Insufficient tokens for generateText operation (retry). Usage: ${result.usage.totalTokens}.`);
+            throw new Error(`Insufficient tokens for generateText operation (retry). Usage: ${retryTotalTokens}.`);
           }
           throw new Error("Failed to update token balance after generateText operation (retry).");
         }

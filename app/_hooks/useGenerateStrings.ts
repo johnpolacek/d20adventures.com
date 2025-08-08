@@ -6,7 +6,7 @@ const responseSchema = z.object({
   strings: z.array(z.string()),
 })
 
-type ResponseType = z.infer<typeof responseSchema>
+// Inferred type kept for reference (not used directly to avoid lint error)
 
 export function useGenerateStrings() {
   const [strings, setStrings] = useState<string[]>([])
@@ -21,7 +21,7 @@ export function useGenerateStrings() {
     isLoading,
     submit,
     error: objectError,
-  } = useObject<ResponseType>({
+  } = useObject<typeof responseSchema>({
     api: "/api/ai/generate/strings",
     schema: responseSchema,
   })
@@ -39,7 +39,7 @@ export function useGenerateStrings() {
 
   useEffect(() => {
     if (response?.strings) {
-      const validStrings = response.strings.filter((s): s is string => typeof s === "string")
+      const validStrings = response.strings.filter((s: unknown): s is string => typeof s === "string")
       setStrings(validStrings)
     }
   }, [response])
@@ -48,7 +48,7 @@ export function useGenerateStrings() {
   useEffect(() => {
     // If we were loading and now we're not, and we have a promise to resolve
     if (!isLoading && promiseRef.current && response?.strings) {
-      const validStrings = response.strings.filter((s): s is string => typeof s === "string")
+      const validStrings = response.strings.filter((s: unknown): s is string => typeof s === "string")
       promiseRef.current.resolve(validStrings);
       promiseRef.current = null;
     }

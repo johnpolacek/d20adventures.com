@@ -1,6 +1,7 @@
 import { rollRequirementSchema } from "@/lib/validations/roll-requirement-schema";
 import { generateObject } from "@/lib/ai";
 import type { Character } from "@/types/character";
+import { z } from "zod";
 
 /**
  * Given an action or reply string and character context, determine if a dice roll is required.
@@ -64,7 +65,8 @@ You are a Dungeon Master adjudicating whether a dice roll is needed.
 
 2. If the player's action attempts something beyond what is automatically allowed (e.g., sneaking past the guards **without** paying), determine the most appropriate skill check.
 
-3. Return strictly **JSON**: either "null" (when no roll is required) or an object { "rollType": string, "difficulty": number }.
+ 3. Return strictly **JSON object** with the shape { "rollType": string, "difficulty": number, "modifier"?: number }.
+    - If NO roll is required, set "rollType" to "none" and "difficulty" to 0.
 
 Difficulty guidelines:
 - 5 very easy, 6-9 easy, 10-11 average, 12-14 moderate, 15-17 hard, 18-20 very hard, 21-25 nearly impossible.
@@ -81,8 +83,15 @@ Action: "${action}"
   }, null, 2));
 
   try {
+    // Use object-only schema for LLM; union with null is not supported by AI SDK response_format
+    const llmRollRequirementObjectSchema = z.object({
+      rollType: z.string(),
+      difficulty: z.number().int(),
+      modifier: z.number().int().optional(),
+    });
+
     const result = await generateObject({
-      schema: rollRequirementSchema,
+      schema: llmRollRequirementObjectSchema,
       prompt,
     });
 
@@ -94,21 +103,9 @@ Action: "${action}"
       difficulty: result.object?.difficulty
     }, null, 2));
 
-    if (
-      result.object &&
-      typeof result.object === "object" &&
-      "rollType" in result.object &&
-      (result.object.rollType === "null" || result.object.rollType === "none" || result.object.rollType === "")
-    ) {
-      console.log("[LLM DM] No roll required based on LLM response", JSON.stringify({
-        action,
-        characterName: character.name,
-        reason: "rollType is null/none/empty"
-      }, null, 2));
-      return null;
-    }
-
-    const finalResult = result.object ?? null;
+    const finalResult = (result.object && result.object.rollType !== "none" && result.object.difficulty > 0)
+      ? result.object
+      : null;
     console.log("[LLM DM] Roll requirement check completed", JSON.stringify({
       action,
       characterName: character.name,

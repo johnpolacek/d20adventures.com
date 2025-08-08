@@ -32,6 +32,7 @@ export function AIDemoClient({ isMissingReplicateToken }: { isMissingReplicateTo
   const { streamText } = useGenerateText()
   const { generate: generateStrings } = useGenerateStrings()
   const { generate: generateObject, object: generatedObject, isLoading: isGeneratingObject } = useGenerateObject(personSchema)
+  type Person = z.infer<typeof personSchema>
   const { generate: generateImage, imageUrl, isLoading: isGeneratingImage, error: imageError } = useGenerateImage()
 
   const handleGenerateText = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -199,34 +200,34 @@ export function AIDemoClient({ isMissingReplicateToken }: { isMissingReplicateTo
               <dl className="space-y-4">
                 <div>
                   <dt className="font-semibold">Name</dt>
-                  <dd>{generatedObject.name}</dd>
+                  <dd>{(generatedObject as Person).name}</dd>
                 </div>
                 <div>
                   <dt className="font-semibold">Age</dt>
-                  <dd>{generatedObject.age}</dd>
+                  <dd>{(generatedObject as Person).age}</dd>
                 </div>
                 <div>
                   <dt className="font-semibold">Occupation</dt>
-                  <dd>{generatedObject.occupation}</dd>
+                  <dd>{(generatedObject as Person).occupation}</dd>
                 </div>
-                {generatedObject.interests && (
+                {(generatedObject as Person).interests && (
                   <div>
                     <dt className="font-semibold">Interests</dt>
                     <dd>
                       <ul className="list-disc pl-6">
-                        {generatedObject.interests.map((interest, index) => (
+                        {(generatedObject as Person).interests.map((interest: string, index: number) => (
                           <li key={index}>{interest}</li>
                         ))}
                       </ul>
                     </dd>
                   </div>
                 )}
-                {generatedObject.contact && (
+                {(generatedObject as Person).contact && (
                   <div>
                     <dt className="font-semibold">Contact</dt>
                     <dd className="space-y-1">
-                      <div>Email: {generatedObject.contact.email}</div>
-                      <div>Phone: {generatedObject.contact.phone}</div>
+                      <div>Email: {(generatedObject as Person).contact.email}</div>
+                      <div>Phone: {(generatedObject as Person).contact.phone}</div>
                     </dd>
                   </div>
                 )}

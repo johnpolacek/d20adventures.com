@@ -1,10 +1,6 @@
 "use client"
-import { useChat } from "@ai-sdk/react"
 
 export function useGenerateText() {
-  const { messages, input, handleInputChange, handleSubmit } = useChat({
-    api: "/api/ai/generate/text",
-  })
 
   const streamText = async (prompt: string, onUpdate: (output: string) => void) => {
     const response = await fetch("/api/ai/generate/text", {
@@ -39,10 +35,6 @@ export function useGenerateText() {
   }
 
   return {
-    messages,
-    input,
-    handleInputChange,
-    handleSubmit,
     streamText,
   }
 }

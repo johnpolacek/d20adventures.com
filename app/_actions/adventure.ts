@@ -14,19 +14,9 @@ import { analyzeAndApplyDiceRoll } from "@/lib/services/turn-update-service"
 import wait from "waait"
 import type { Adventure } from "@/types/adventure"
 import type { PC } from "@/types/character"
+import type { RollRequirement } from "@/lib/validations/roll-requirement-schema"
 
-interface ActionAssessment {
-  isPlausible?: boolean;
-  feedback?: string | null;
-  rollRequirement?: {
-    rollType: string;
-    difficulty: number;
-    modifier?: number;
-  } | null;
-  rollType?: string;
-  difficulty?: number;
-  modifier?: number;
-}
+// Using RollRequirement union (object | null) from validation schema
 
 export async function processTurnReply({ turnId, characterId, narrativeAction }: { turnId: Id<"turns">; characterId: string; narrativeAction: string }) {
   console.log('[processTurnReply] CALLED')
@@ -93,9 +83,8 @@ export async function processTurnReply({ turnId, characterId, narrativeAction }:
   };
   console.log('[processTurnReply] Action context for getRollRequirementForAction:', JSON.stringify(actionContext, null, 2));
 
-  // Call the (soon to be updated) getRollRequirementForAction
-  // This function will now also return plausibility and feedback
-  const assessment: ActionAssessment = await getRollRequirementForAction(
+  // Call roll requirement service (returns RollRequirement | null)
+  const assessment = await getRollRequirementForAction(
     narrativeAction,
     characterPerformingAction as import("@/types/character").Character,
     {
@@ -105,27 +94,10 @@ export async function processTurnReply({ turnId, characterId, narrativeAction }:
     }
   );
 
-  if (assessment && assessment.isPlausible === false) {
-    // Action is not plausible, return feedback to the user to try again
-    console.log('[processTurnReply] Action deemed implausible. Feedback:', assessment.feedback);
-    return {
-      actionImplausible: true,
-      feedback: assessment.feedback || "This action is not possible or doesn't make sense in the current situation. Please try something else.",
-    }
-  }
-  console.log('[processTurnReply] Action deemed plausible or plausibility check not present.');
+  // If assessment is null, no roll required; otherwise we have roll details
 
   // If plausible, proceed with existing logic
-  let rollRequirementDetails = null;
-  if (assessment?.rollRequirement) {
-    rollRequirementDetails = assessment.rollRequirement;
-  } else if (assessment?.rollType && typeof assessment.difficulty === 'number') {
-    rollRequirementDetails = {
-      rollType: assessment.rollType,
-      difficulty: assessment.difficulty,
-      modifier: assessment.modifier,
-    };
-  }
+  const rollRequirementDetails: RollRequirement = assessment;
 
   console.log('[processTurnReply] Derived rollRequirementDetails:', JSON.stringify(rollRequirementDetails, null, 2));
 
