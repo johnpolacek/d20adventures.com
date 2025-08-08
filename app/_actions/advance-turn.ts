@@ -10,7 +10,7 @@ import type { Turn, TurnCharacter } from "@/types/adventure";
 import { processNpcTurnsAfterCurrent } from "@/lib/services/npc-turn-service";
 import { mapConvexTurnToTurn, rollD20 } from "@/lib/utils";
 import wait from "waait"
-import { appendNarrative } from "@/lib/services/narrative-service";
+import { appendNarrative, normalizeNarrative } from "@/lib/services/narrative-service";
 
 const encounterProgressionSchema = z.object({
   nextEncounterId: z.string(),
@@ -250,6 +250,8 @@ IMPORTANT GUIDELINES:
 - If a transition occurs due to a failed dice roll (that already happened), ensure the narrative reflects the consequences of that failure leading to the new situation.
 - If a transition occurs due to a successful dice roll (that already happened), ensure the narrative reflects the consequences of that success.
 - If no transition occurs, the narrative should clearly end in a way that prompts the player for their next action. For instance, describe the scene and end with a question like "What does Thalbern do next?" or simply describe the immediate situation that demands a response.
+ - Write in clean, classic fantasy prose without em dashes (—), en dashes (–), figure dashes (‒), or horizontal bars (―). Prefer commas or periods instead.
+ - Use paragraphs with proper line breaks: separate paragraphs with a single blank line (i.e., two consecutive \n characters). Do not use list formatting or markdown.
 
 Respond in JSON:
 {
@@ -274,7 +276,7 @@ Respond in JSON:
   if (llmResult.nextEncounterId === turn.encounterId) {
     // Continue current encounter
     let newCharacters: TurnCharacter[] = (turn.characters as TurnCharacter[]).filter((c) => c.status !== "dead" && c.status !== "fled");
-    const narrative = llmResult.narrative || ""; // Use LLM narrative
+    const narrative = normalizeNarrative(llmResult.narrative || ""); // Normalize formatting
     // Reset hasReplied, isComplete, and re-roll initiative for all characters
     newCharacters = newCharacters.map((c) => ({
       ...c,
@@ -349,8 +351,8 @@ Respond in JSON:
     // Sort by new initiative
     allCharacters.sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0));
 
-    // Use appendNarrative utility for new encounter intro and new narrative
-    const narrative = appendNarrative(llmResult.narrative || "", nextEncounter.intro || "");
+    // Use appendNarrative utility for new encounter intro and new narrative (normalize both)
+    const narrative = appendNarrative(normalizeNarrative(llmResult.narrative || ""), normalizeNarrative(nextEncounter.intro || ""));
     newTurn = {
       id: "", // placeholder, Convex will generate
       adventureId: turnData.adventureId,
@@ -378,11 +380,19 @@ Respond in JSON:
     isFinalEncounter: isFinalEncounter,
   });
 
-  // 8. Patch adventure with new currentTurnId
-  await convex.mutation(api.turns.patchAdventure, {
-    adventureId: turnData.adventureId,
-    patch: { currentTurnId: newTurnId },
-  });
+  // 8. Patch adventure with new currentTurnId, and if final, end the adventure immediately
+  if (isFinalEncounter) {
+    shouldProcessNpcTurns = false; // do not process any NPC turns on the final encounter
+    await convex.mutation(api.turns.patchAdventure, {
+      adventureId: turnData.adventureId,
+      patch: { currentTurnId: newTurnId, endedAt: Date.now(), updatedAt: Date.now(), status: "completed" },
+    });
+  } else {
+    await convex.mutation(api.turns.patchAdventure, {
+      adventureId: turnData.adventureId,
+      patch: { currentTurnId: newTurnId },
+    });
+  }
 
   // 9. After creating the new turn, process NPC turn if needed
   if (shouldProcessNpcTurns) {

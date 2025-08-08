@@ -1,4 +1,3 @@
-import { rollRequirementSchema } from "@/lib/validations/roll-requirement-schema";
 import { generateObject } from "@/lib/ai";
 import type { Character } from "@/types/character";
 import { z } from "zod";
@@ -61,11 +60,19 @@ ${characterContext}
 
 You are a Dungeon Master adjudicating whether a dice roll is needed.
 
-1. **First, respect the encounter instructions.** If they explicitly state that no dice rolls are necessary for a certain action (e.g., paying an entrance fee) and the player's action follows that flow, then *no roll is required*.
+1) First, respect the encounter instructions. If they explicitly allow an action without checks (e.g., paying a stated fee) and the player follows that procedure plainly, choose no roll.
 
-2. If the player's action attempts something beyond what is automatically allowed (e.g., sneaking past the guards **without** paying), determine the most appropriate skill check.
+2) Otherwise, call for a roll when the outcome is uncertain, opposed, risky, concealed, time‑sensitive, or dependent on skill. Use a general RPG rubric:
+   - Social influence: Persuasion (cooperation/charm), Deception (mislead/falsehoods), Intimidation (threat/pressure), Performance (entertain/present).
+   - Avoiding notice vs. manual finesse: Stealth (avoid being seen/heard), Sleight of Hand (quick, precise, or concealed manipulation of small items).
+   - Observation and reasoning: Perception (notice/sense), Investigation (search/analyze evidence), Insight (read motives/intent).
+   - Physical challenges: Athletics (power/endurance), Acrobatics (agility/balance/precision movement).
+   - Knowledge and expertise: Arcana, History, Nature, Medicine, Religion as appropriate; Survival and Animal Handling for wilderness/creature control.
+   - Combat actions: if the action is an attack or contests defenses directly, treat as an Attack roll.
 
- 3. Return strictly **JSON object** with the shape { "rollType": string, "difficulty": number, "modifier"?: number }.
+3) If the action simply follows established procedure (e.g., pays fee, answers routine question) without concealment, opposition, or special risk, choose no roll.
+
+4) Select the most fitting single check and set a DC using:
     - If NO roll is required, set "rollType" to "none" and "difficulty" to 0.
 
 Difficulty guidelines:

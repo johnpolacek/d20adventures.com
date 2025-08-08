@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { generateObject } from "@/lib/ai";
 import { getRollRequirementForAction } from "@/lib/services/roll-requirement-service";
-import { getRollModifier, appendNarrative } from "@/lib/services/narrative-service";
+import { getRollModifier, appendNarrative, normalizeNarrative } from "@/lib/services/narrative-service";
 import { rollD20 } from "@/lib/utils";
 import type { Turn, TurnCharacter } from "@/types/adventure";
 import { convex } from "@/lib/convex/server";
@@ -138,6 +138,14 @@ Based on all the context provided, determine the most logical action for **${npc
 
 IMPORTANT: If the NPC would realistically speak during this action (conversations, negotiations, threats, commands, etc.), include their actual dialogue in quotes. However, if the NPC is a non-speaking creature (like a mindless beast or monster) or the action doesn't involve speaking (pure physical actions, stealth, etc.), use descriptive narrative instead.
 
+STYLE AND FORMAT RULES:
+- Write in present tense, third person.
+- No markdown, no lists, no bullets.
+- Do not use em dashes (—) or en dashes; use commas or periods instead.
+- Keep sentences short and clear; avoid semicolons.
+- Use novel-like pacing with line breaks: separate distinct beats into separate paragraphs with a blank line between paragraphs.
+- Put each spoken line of dialogue on its own line. Dialogue should use straight quotes ("...") and may include dialogue tags like says/asks/replies.
+
 If the NPC would realistically skip or pass their turn (e.g., waiting, observing, preparing, doing nothing), set actionType to "skip" or "pass" and provide appropriate narrative. For example:
 - Skip action: 'The goblin scout remains hidden in the shadows, carefully observing the party's movements before making his next move.'
 - Pass action: 'The wounded orc takes a defensive stance, catching his breath and waiting for an opening.'
@@ -182,7 +190,7 @@ Respond as JSON. The 'narrative' and 'actionSummary' fields must describe the ac
       narrative: actionResult.narrative
     }, null, 2));
 
-    const narrativeToAppend = actionResult.narrative;
+    const narrativeToAppend = normalizeNarrative(actionResult.narrative);
     const updatedCharacters = turn.characters.map((c) => {
       if (c.id === npc.id) {
         return {
@@ -307,6 +315,14 @@ CRITICAL: You must ONLY reference elements that are explicitly mentioned in the 
 
 IMPORTANT: If the NPC would realistically speak during this outcome (expressing success/failure, reactions, taunts, threats, etc.), include their actual dialogue in quotes. However, if the NPC is a non-speaking creature or the outcome doesn't involve speech, use descriptive narrative instead.
 
+STYLE AND FORMAT RULES:
+- Write in present tense, third person.
+- No markdown, no lists, no bullets.
+- Do not use em dashes (—) or en dashes; use commas or periods instead.
+- Keep sentences short and clear; avoid semicolons.
+- Use novel-like pacing with line breaks: separate distinct beats into separate paragraphs with a blank line between paragraphs.
+- Put each spoken line of dialogue on its own line. Dialogue should use straight quotes ("...") and may include dialogue tags like says/asks/replies.
+
 RESTRICTIONS:
 - Only reference NPCs, objects, and locations explicitly mentioned in the encounter instructions or intro
 - Do not create new characters, items, or events
@@ -344,7 +360,7 @@ Respond as JSON:
       effectCount: outcomeResult.effects.length
     }, null, 2));
 
-    narrativeToAppend = (shortcode ? shortcode : "") + (outcomeResult.narrative || "");
+    narrativeToAppend = (shortcode ? shortcode : "") + normalizeNarrative(outcomeResult.narrative || "");
     effects = outcomeResult.effects;
     
     // Log character health BEFORE applying effects
@@ -468,7 +484,7 @@ Respond as JSON:
       narrative: actionResult.narrative
     }, null, 2));
 
-    narrativeToAppend = actionResult.narrative;
+    narrativeToAppend = normalizeNarrative(actionResult.narrative);
     effects = actionResult.effects;
 
     updatedCharacters = updatedCharacters.map((c) => {

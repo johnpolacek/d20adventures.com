@@ -64,7 +64,14 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
   const parsed = parseNarrative(currentTurn?.narrative || "")
 
   const shouldShowReplyCondition =
-    currentTurn && currentCharacter && currentCharacter.type === "pc" && currentCharacter.userId === user?.id && !isNpcProcessing && !disableSSE && currentCharacter.healthPercent !== 0
+    currentTurn &&
+    !currentTurn.isFinalEncounter &&
+    currentCharacter &&
+    currentCharacter.type === "pc" &&
+    currentCharacter.userId === user?.id &&
+    !isNpcProcessing &&
+    !disableSSE &&
+    currentCharacter.healthPercent !== 0
 
   // Find the player's character and check if their turn is complete
   const playerCharacter = currentTurn?.characters.find((c: TurnCharacter) => c.type === "pc" && c.userId === user?.id)
@@ -206,7 +213,7 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
             </Button>
           </Link>
         </div>
-      ) : (
+      ) : !currentTurn?.isFinalEncounter ? (
         <div
           id="turn-indicator"
           className={cn(
@@ -223,26 +230,19 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
           </div>
           <p className="italic text-white/70">It is currently {currentCharacter?.name}&apos;s turn</p>
         </div>
-      )}
+      ) : null}
 
-      {currentTurn?.isFinalEncounter &&
-        (() => {
-          return (
-            <div className="flex flex-col items-center justify-center mt-8 md:mt-16 text-center px-2 py-4 md:py-6 border-double border-8 border-primary-800 rounded-lg">
-              {isTurnComplete ? (
-                <FinalEncounterCompleteMessage isSignedIn={Boolean(isSignedIn)} settingId={settingId} adventurePlanId={adventurePlanId} nextAdventure={nextAdventure} />
-              ) : (
-                <p className="text-primary-300 text-lg xl:text-xl font-display font-bold">Final Encounter — Make Your Last Move</p>
-              )}
-            </div>
-          )
-        })()}
+      {currentTurn?.isFinalEncounter && (
+        <div className="flex flex-col items-center justify-center mt-8 md:mt-16 text-center px-2 py-4 md:py-6 border-double border-8 border-primary-800 rounded-lg">
+          <FinalEncounterCompleteMessage isSignedIn={Boolean(isSignedIn)} settingId={settingId} adventurePlanId={adventurePlanId} nextAdventure={nextAdventure} />
+        </div>
+      )}
       {isTurnComplete && !currentTurn?.isFinalEncounter && (
         <div className="flex justify-center mt-8">
           <TurnAdvanceButton advancing={advancing} navigationMode={disableSSE} navigationLabel={disableSSE ? "Go to Next Turn" : undefined} onAdvance={handleAdvanceOrNavigate} />
         </div>
       )}
-      <div className="absolute bottom-8 left-8 w-full pr-16 z-50">
+      <div className="absolute bottom-8 left-8 w-auto pr-16 z-50">
         <div className="flex justify-center md:justify-start items-center gap-2 md:bg-black/70 px-4 py-2 rounded-lg md:border border-white/20">
           <span className="text-xs text-muted-foreground">Show Original Replies</span>
           <div className="scale-75 pt-0.5">

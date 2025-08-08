@@ -75,9 +75,14 @@ const FinalEncounterCompleteMessage = ({ isSignedIn, settingId, adventurePlanId,
         </div>
       )}
       {isSignedIn && !nextAdventure && (
-        <Button size="sm" asChild variant="epic">
-          <Link href={`/settings/${settingId}/${adventurePlanId}/character-select`}>Play Again</Link>
-        </Button>
+        <div className="flex flex-col md:flex-row justify-center gap-6">
+          <Button size="sm" asChild variant="epic">
+            <Link href={`/settings/${settingId}/${adventurePlanId}/character-select`}>Play Again</Link>
+          </Button>
+          <Button size="sm" asChild variant="epic" className="bg-amber-800 hover:bg-amber-700 saturate-75">
+            <Link href={`/settings/${settingId}/play`}>Go to Setting</Link>
+          </Button>
+        </div>
       )}
     </>
   )

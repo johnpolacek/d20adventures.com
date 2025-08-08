@@ -16,6 +16,9 @@ export default function TurnNavigation({ currentTurnOrder, totalTurns, isLatestT
 
   const basePath = `/settings/${settingId}/${adventurePlanId}/${adventureId}`
 
+  // Do not render pagination when there is only one turn
+  if (totalTurns <= 1) return null
+
   // currentTurnOrder is already the 1-based pagination number from URL
   const currentPaginationNumber = currentTurnOrder
   const hasPrevious = currentPaginationNumber > 1

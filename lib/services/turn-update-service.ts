@@ -3,11 +3,31 @@ import { z } from "zod";
 import type { Turn, DiceRoll } from "@/types/adventure";
 
 // Zod schema for the AI's expected output
-const characterUpdateSchema = z.object({
-  id: z.string(), // character id
-  healthPercent: z.number().min(0).max(100),
-  status: z.string().optional(),
-});
+// Accept either a full update object or an empty object (no change)
+const characterUpdateSchema = z.union([
+  z.object({
+    id: z.string(), // character id
+    healthPercent: z.number().min(0).max(100),
+    status: z.string().optional(),
+  }),
+  z.object({}).strict(),
+]);
+
+type CharacterUpdate = {
+  id: string;
+  healthPercent: number;
+  status?: string;
+};
+
+function isCharacterUpdate(value: unknown): value is CharacterUpdate {
+  if (!value || typeof value !== "object") return false;
+  const v = value as Record<string, unknown>;
+  return (
+    typeof v.id === "string" &&
+    typeof v.healthPercent === "number" &&
+    (v.status === undefined || typeof v.status === "string")
+  );
+}
 
 /**
  * Extracts the narrative text that follows the last [DiceRoll:...] shortcode.
@@ -69,24 +89,46 @@ ${narrativeGuidance}
 Outcome Narrative: ${relevantNarrative}
 Current Characters: ${JSON.stringify(turn.characters)}
 
-Return an object with the character id, new healthPercent (0-100), and optional status if any changes are warranted.
+If no changes are warranted, return an empty JSON object {}.
+If changes are warranted, return an object with the character id, new healthPercent (0-100), and optional status.
 `;
 
-  // Call the AI
-  const update = await generateObject({
-    prompt,
-    schema: characterUpdateSchema,
-  });
+  // Call the AI (gracefully handle failures by leaving the turn unchanged)
+  let update:
+    | {
+        object: z.infer<typeof characterUpdateSchema>;
+        [key: string]: unknown;
+      }
+    | undefined;
+  try {
+    update = await generateObject({
+      prompt,
+      schema: characterUpdateSchema,
+    });
+  } catch (err) {
+    console.warn("[analyzeAndApplyDiceRoll] generateObject failed, leaving turn unchanged.", err);
+    return turn;
+  }
 
   // If the AI didn't return a valid update, return the turn unchanged
-  if (!update.object || !update.object.id) return turn;
+  if (!update || !update.object) return turn;
+
+  const obj = update.object as unknown;
+  // Allow empty object (no changes)
+  if (obj && typeof obj === "object" && Object.keys(obj as Record<string, unknown>).length === 0) {
+    return turn;
+  }
+
+  if (!isCharacterUpdate(obj)) {
+    return turn;
+  }
 
   // Find and update the character in the turn
   const updatedCharacters = turn.characters.map((c) =>
-    c.id === update.object.id
+    c.id === obj.id
       ? {
           ...c,
-          healthPercent: typeof update.object.healthPercent === "number" ? update.object.healthPercent : c.healthPercent,
+          healthPercent: typeof obj.healthPercent === "number" ? obj.healthPercent : c.healthPercent,
         }
       : c
   );

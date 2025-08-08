@@ -149,4 +149,13 @@ export default defineSchema({
     tokensRemainingAfterTransaction: v.optional(v.number()) // User's token balance after this transaction
   }).index("by_userId", ["userId"])
     .index("by_timestamp", ["timestamp"]),
+
+  // Per-adventure game chat (text only)
+  chat_messages: defineTable({
+    adventureId: v.id("adventures"),
+    username: v.string(),
+    characterName: v.optional(v.string()),
+    content: v.string(),
+    createdAt: v.number(),
+  }).index("by_adventure_created", ["adventureId", "createdAt"]),
 }); 

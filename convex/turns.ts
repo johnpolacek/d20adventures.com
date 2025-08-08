@@ -61,6 +61,11 @@ export const patchAdventure = mutation({
       currentTurnId: v.optional(v.id("turns")),
       updatedAt: v.optional(v.number()),
       endedAt: v.optional(v.number()),
+      status: v.optional(v.union(
+        v.literal("waitingForPlayers"),
+        v.literal("active"),
+        v.literal("completed")
+      )),
     }),
   },
   handler: async (ctx, args) => {

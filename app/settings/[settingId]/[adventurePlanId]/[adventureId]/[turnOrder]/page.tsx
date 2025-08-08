@@ -112,9 +112,11 @@ export default async function TurnPage({ params }: PageProps) {
         disableSSE={!isLatestTurn}
       />
       {canEdit && (
-        <Link className="fixed top-[90vh] right-12 sm:right-8 z-20" href={`/settings/${settingId}/${adventurePlanId}/edit`}>
-          <Button className="text-sm bg-primary-600 hover:bg-primary-700">Edit</Button>
-        </Link>
+        <div className="w-full flex justify-end p-8">
+          <Link className="z-20" href={`/settings/${settingId}/${adventurePlanId}/edit`}>
+            <Button className="text-sm bg-primary-600 hover:bg-primary-700">Edit</Button>
+          </Link>
+        </div>
       )}
     </div>
   )

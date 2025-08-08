@@ -43,30 +43,76 @@ Narrative continuation:`.trim();
 
 export async function formatNarrativeAction({
   characterName,
+  gender,
   playerInput,
   narrativeContext,
+  characterInfo,
 }: {
   characterName: string;
+  gender?: string;
   playerInput: string;
   narrativeContext: string;
+  characterInfo?: {
+    archetype?: string;
+    race?: string;
+    appearance?: string;
+    personality?: string;
+    motivation?: string;
+    specialAbilities?: string[];
+    skills?: string[];
+    equipment?: { name: string }[];
+  };
 }): Promise<string> {
   console.log("[LLM DM] Starting narrative action formatting", JSON.stringify({
     characterName,
+    gender,
     playerInput,
     narrativeContextLength: narrativeContext.length,
     narrativeContextPreview: narrativeContext.substring(0, 200) + (narrativeContext.length > 200 ? "..." : "")
   }, null, 2));
 
+  // Build pronoun guidance based on gender
+  const normalizedGender = (gender || "").trim().toLowerCase();
+  let pronounGuidance: string;
+  if (["female", "woman", "f"].includes(normalizedGender)) {
+    pronounGuidance = `Use she/her pronouns for ${characterName}. Do not use he/him.`;
+  } else if (["male", "man", "m"].includes(normalizedGender)) {
+    pronounGuidance = `Use he/him pronouns for ${characterName}. Do not use she/her.`;
+  } else if (["nonbinary", "non-binary", "nb", "they", "genderqueer", "agender"].includes(normalizedGender)) {
+    pronounGuidance = `Use they/them pronouns for ${characterName}. Avoid gendered titles.`;
+  } else if (normalizedGender) {
+    pronounGuidance = `Respect ${characterName}'s gender: ${gender}. Use appropriate pronouns and titles; do not assume otherwise.`;
+  } else {
+    pronounGuidance = `Avoid gendered pronouns. Prefer ${characterName}'s name or singular they/them.`;
+  }
+
+  // Build compact Character Info block
+  const truncate = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
+  const infoLines: string[] = [];
+  infoLines.push(`Name: ${characterName}`);
+  if (characterInfo?.archetype) infoLines.push(`Archetype: ${characterInfo.archetype}`);
+  if (characterInfo?.race) infoLines.push(`Race: ${characterInfo.race}`);
+  if (characterInfo?.appearance) infoLines.push(`Appearance: ${truncate(characterInfo.appearance, 120)}`);
+  if (characterInfo?.personality) infoLines.push(`Personality: ${truncate(characterInfo.personality, 120)}`);
+  if (characterInfo?.motivation) infoLines.push(`Motivation: ${truncate(characterInfo.motivation, 120)}`);
+  if (characterInfo?.specialAbilities && characterInfo.specialAbilities.length)
+    infoLines.push(`Abilities: ${characterInfo.specialAbilities.slice(0, 3).join(', ')}`);
+  if (characterInfo?.skills && characterInfo.skills.length)
+    infoLines.push(`Skills: ${characterInfo.skills.slice(0, 3).join(', ')}`);
+  if (characterInfo?.equipment && characterInfo.equipment.length)
+    infoLines.push(`Equipment: ${characterInfo.equipment.slice(0, 2).map(e => e.name).join(', ')}`);
+  const characterInfoBlock = infoLines.length ? `Character Info:\n${infoLines.join('\n')}` : '';
+
   // First, check if dialogue should be generated
   const dialogueEvalPrompt = `
-Context:
-${narrativeContext}
-
-Player's action for ${characterName}: "${playerInput}"
-
-Does this player action suggest that ${characterName} should speak dialogue? Look for actions like "greet", "ask", "say", "tell", "speak", "respond", "answer", "call out", "whisper", "shout", or any action that implies the character is communicating verbally with someone.
-
-Answer only "yes" or "no".`.trim();
+  Context:
+  ${narrativeContext}
+  
+  Player's action for ${characterName}: "${playerInput}"
+  
+  Does this player action suggest that ${characterName} should speak dialogue? Consider actions that naturally involve interaction with another person (guards, merchants, NPCs), such as: greet, ask, say, tell, speak, respond, answer, call out, whisper, shout, request, offer, pay, present, show papers, hand over, comply, bargain, negotiate, trade, apologize, thank.
+  
+  Answer only "yes" or "no".`.trim();
   
   console.log("[LLM DM] Evaluating if dialogue should be generated", JSON.stringify({
     dialogueEvalPromptLength: dialogueEvalPrompt.length,
@@ -98,14 +144,14 @@ Answer only "yes" or "no".`.trim();
 
     // Generate dialogue
     const dialoguePrompt = `
-Context:
-${narrativeContext}
-
-Player's action for ${characterName}: "${playerInput}"
-
-Write a brief narrative paragraph in third-person present tense that includes actual dialogue for ${characterName}. Base the dialogue on what the player action suggests the character should say. Keep it concise and natural, with up to 2 sentences of narrative, in the style of a novel, with at least one complete sentence of prose. Include dialogue tags (e.g., "says", "asks", "replies"). Do not use semicolons. Never mention game mechanics, dice, or rules.
-
-Output only the narrative paragraph with dialogue.`.trim();
+    ${characterInfoBlock ? characterInfoBlock + "\n\n" : ""}${pronounGuidance}\n\nContext:
+    ${narrativeContext}
+    
+    Player's action for ${characterName}: "${playerInput}"
+    
+    Write one brief paragraph in third-person present tense that includes actual dialogue for ${characterName}. Base the dialogue on what the player action suggests the character should say. Write only 1 or 2 sentences total. At least one sentence must contain dialogue in double quotes with a natural dialogue tag (e.g., says, asks, replies). Do not use semicolons. Never mention game mechanics, dice, or rules. Ensure all pronouns/titles match the guidance above, correcting any mismatches implied by the player input.
+    
+    Output only the paragraph.`.trim();
 
     console.log("[LLM DM] Sending dialogue generation prompt", JSON.stringify({
       dialoguePromptLength: dialoguePrompt.length,
@@ -120,6 +166,7 @@ Output only the narrative paragraph with dialogue.`.trim();
     if (!dialogueRes.ok) throw new Error("Failed to generate dialogue");
     const dialogueData = await dialogueRes.json();
     formattedNarrative = dialogueData.result || dialogueData.text || "";
+    formattedNarrative = limitToTwoSentences(formattedNarrative);
 
     console.log("[LLM DM] Dialogue generation completed", JSON.stringify({
       formattedNarrative,
@@ -134,16 +181,17 @@ Output only the narrative paragraph with dialogue.`.trim();
 
     // Logic for non-dialogue actions
     const prompt = `
-Context:
+${characterInfoBlock ? characterInfoBlock + "\n\n" : ""}${pronounGuidance}\n\nContext:
 ${narrativeContext}
 
 Player's original action for ${characterName}: "${playerInput}"
 
 Review the player's original action.
-If the action is already a well-written, third-person, present-tense narrative paragraph describing what ${characterName} said or did, then return the player's original action verbatim.
-Otherwise, rewrite the player's action into a vivid, engaging, third-person, present-tense narrative paragraph. If the action is minimal (like "attack" or "hide"), enhance it with appropriate descriptive details that fit the context. Describe how ${characterName} performs the action in a way that's immersive and engaging.
+    If the action is already a well-written, third-person, present-tense narrative paragraph describing what ${characterName} said or did, then return the player's original action verbatim. However, if any pronouns or gendered titles conflict with the following guidance, correct them: ${pronounGuidance}
+    Otherwise, rewrite the player's action into a vivid, engaging, third-person, present-tense narrative paragraph. If the action is minimal (like "attack" or "hide"), enhance it with appropriate descriptive details that fit the context. Describe how ${characterName} performs the action in a way that's immersive and engaging.
 IMPORTANT:Do NOT write anything about the outcome of the action!
-Use the provided context to inform appropriate details (weapons, environment, targets, etc.) but focus on ${characterName}'s specific actions. Write in the style of an adventure novel. Do not use semicolons. Never mention game mechanics, dice, or rules.
+    Use the provided context to inform appropriate details (weapons, environment, targets, etc.) but focus on ${characterName}'s specific actions. Write in the style of an adventure novel. Do not use semicolons. Never mention game mechanics, dice, or rules.
+    Write only 1 or 2 sentences total. Output a single paragraph.
 
 Output only the narrative paragraph.`.trim();
 
@@ -160,6 +208,7 @@ Output only the narrative paragraph.`.trim();
     if (!res.ok) throw new Error("Failed to generate narrative action");
     const data = await res.json();
     formattedNarrative = data.result || data.text.text.text || "";
+    formattedNarrative = limitToTwoSentences(formattedNarrative);
 
     console.log("[LLM DM] Non-dialogue action generation completed", JSON.stringify({
       formattedNarrative,
@@ -279,87 +328,7 @@ Respond in JSON: { "rollType": string, "difficulty": number } or null if no roll
     console.log('getRollRequirementHelper - Returning LLM roll requirement:', JSON.stringify(result.object, null, 2));
     return result.object;
   }
-
-  // --- Fallback: detect roll type keywords if LLM returns null ---
-  // This ensures actions like "sneak away", "hide", "attack", etc. require the appropriate check
-  const lower = playerInput.toLowerCase();
-  console.log('getRollRequirementHelper - Checking keyword fallbacks for:', JSON.stringify(lower, null, 2));
-  
-  // Attack
-  if (/(attack|strike|shoot|stab|slash|hit|swing|fire|punch|kick|smash|lunge|thrust|snipe|ambush|assault|charge|fight|brawl|clash|engage|swing at|fire at|shoot at)/.test(lower)) {
-    console.log('getRollRequirementHelper - Keyword match: Attack Roll');
-    return { rollType: "Attack Roll", difficulty: 13 };
-  }
-  // Stealth
-  if (/(sneak|hide|conceal|slip away|evade|escape|stealth|shadow|blend in|slink|creep|tiptoe|slither|prowl|skulk|lurk|camouflage|mask|cover|avoid|dodge|elude|flee|retreat|withdraw|vanish|disappear)/.test(lower)) {
-    return { rollType: "Stealth Check", difficulty: 15 };
-  }
-  // Athletics
-  if (/(climb|jump|run|swim|lift|push|pull|drag|break|force open|athletic|scale|vault|heave|hoist|tug|haul|sprint|dash|leap|wrestle|grapple|carry|throw|toss|hurl|shove|barge|ram|bust|burst|athletics)/.test(lower)) {
-    return { rollType: "Athletics Check", difficulty: 14 };
-  }
-  // Acrobatics
-  if (/(acrobatics|flip|tumble|roll|cartwheel|somersault|dive|dodge|evade|balance|tightrope|spring|vault|slide|slip|twist|spin|pirouette|leap|agile|agility|nimble|dexterous|somersault|handspring|backflip|frontflip|handstand)/.test(lower)) {
-    return { rollType: "Acrobatics Check", difficulty: 14 };
-  }
-  // Survival
-  if (/(track|forage|hunt|survive|navigate|find food|find water|build shelter|endure|weather|survival|trail|wilderness|outdoors|camp|trap|snare|follow tracks|read tracks|nature lore)/.test(lower)) {
-    return { rollType: "Survival Check", difficulty: 13 };
-  }
-  // Deception
-  if (/(deceiv|lie|bluff|trick|mislead|con|fake|forg|falsif|cheat|hoax|dupe|deception|fib|fabricat|pretend|disguise|mask intent|cover up|conceal intent)/.test(lower)) {
-    return { rollType: "Deception Check", difficulty: 13 };
-  }
-  // Persuasion
-  if (/(persuad|convince|influence|charm|appeal|negotiate|bargain|diplomacy|diplomat|reason with|plead|entreat|coax|sway|talk into|win over|persuasion)/.test(lower)) {
-    return { rollType: "Persuasion Check", difficulty: 13 };
-  }
-  // Intimidation
-  if (/(intimidat|threaten|bully|coerce|frighten|scare|menace|terrorize|daunt|cow|browbeat|overawe|dominate|intimidation)/.test(lower)) {
-    return { rollType: "Intimidation Check", difficulty: 13 };
-  }
-  // Insight
-  if (/(insight|sense motive|discern motive|read emotion|read intent|detect lie|intuition|gut feeling|hunch|perceive motive|perceive intent|understand motive|understand intent)/.test(lower)) {
-    return { rollType: "Insight Check", difficulty: 12 };
-  }
-  // Investigation
-  if (/(investigat|search for clues|examin|inspect|analy[sz]e|scrutinize|probe|study|investigation|look for evidence|find evidence|detect|deduce|uncover|solve|research|inquire|delve|explore|question|interrogate)/.test(lower)) {
-    return { rollType: "Investigation Check", difficulty: 14 };
-  }
-  // Nature
-  if (/(nature|identify plant|identify animal|recognize animal|recognize plant|natural world|wilderness lore|herbalism|animal lore|plant lore|track animal|animal tracks|plant identification|forage|herb|flora|fauna)/.test(lower)) {
-    return { rollType: "Nature Check", difficulty: 13 };
-  }
-  // Animal Handling
-  if (/(animal handling|calm animal|train animal|control animal|soothe animal|befriend animal|command animal|handle animal|ride animal|mount animal|tame|break horse|lead animal|animal empathy|pet|feed animal|groom animal)/.test(lower)) {
-    return { rollType: "Animal Handling Check", difficulty: 12 };
-  }
-  // Medicine
-  if (/(medicine|heal|treat wound|bandage|diagnose|cure|first aid|medical|doctor|nurse|tend wound|set bone|apply poultice|stop bleeding|check pulse|revive|resuscitate|medic|herbal remedy|herbal medicine)/.test(lower)) {
-    return { rollType: "Medicine Check", difficulty: 12 };
-  }
-  // History
-  if (/(history|recall history|remember event|ancient|legend|lore|historical|present event|old story|ancestry|genealogy|chronicle|record|archive|historian|antiquity|antique|artifact|relic|old tale|old legend)/.test(lower)) {
-    return { rollType: "History Check", difficulty: 12 };
-  }
-  // Arcana
-  if (/(arcana|magic|spell|identify spell|recognize spell|magical|arcane|wizardry|sorcery|enchantment|rune|glyph|sigil|ritual|incantation|occult|mystic|eldritch|divination|conjuration|abjuration|evocation|illusion|necromancy|transmutation|spellcraft|magical knowledge)/.test(lower)) {
-    return { rollType: "Arcana Check", difficulty: 14 };
-  }
-  // Sleight of Hand
-  if (/(sleight of hand|pickpocket|palm|conceal object|quick fingers|legerdemain|trickery|filch|swipe|steal|lift|plant|switch|swap|hand trick|card trick|coin trick|nimble fingers|deft fingers|dexterous fingers|slide of hand)/.test(lower)) {
-    return { rollType: "Sleight of Hand Check", difficulty: 14 };
-  }
-  // Performance
-  if (/(perform|performance|sing|dance|play instrument|recite|act|entertain|show|display talent|put on show|storytell|orate|speech|monologue|soliloquy|juggle|acrobatics performance|musical|theater|theatre|comedy|drama|improv|recital|concert|showcase|presentation)/.test(lower)) {
-    return { rollType: "Performance Check", difficulty: 12 };
-  }
-  // Perception (keep last, as it's a common fallback)
-  if (/(perceiv|perception|look|figure out|search|spot|notice|discern|determine|find|sense|scan|study|observe|see|hear|smell|taste|touch|listen|watch|glance|peek|peer|survey|examine|inspect|observe|check|detect|discover|recognize|identify|locate|explore|scout|patrol|monitor|track|survey|scrutinize|investigate)/.test(lower)) {
-    console.log('getRollRequirementHelper - Keyword match: Perception Check');
-    return { rollType: "Perception Check", difficulty: 14 };
-  }
-  console.log('getRollRequirementHelper - No roll required (no keyword matches)');
+  console.log('getRollRequirementHelper - No roll required (LLM returned null/none)');
   return null;
 }
 
@@ -450,6 +419,24 @@ Respond in JSON: { "modifier": number } (can be negative, zero, or positive).
   return totalModifier;
 }
 
+// Ensures output is at most two sentences and a single paragraph
+function limitToTwoSentences(text: string): string {
+  if (!text) return "";
+  // Normalize whitespace and newlines to a single paragraph first
+  const oneParagraph = text.replace(/\s+/g, ' ').trim();
+  // Split on sentence boundaries (. ! ?), keeping delimiters
+  const parts = oneParagraph.split(/([.!?])[\s\"]*/).filter(Boolean);
+  if (parts.length <= 2) return oneParagraph;
+  // Reconstruct sentences: token + delimiter pairs
+  const sentences: string[] = [];
+  for (let i = 0; i < parts.length - 1; i += 2) {
+    const sentence = (parts[i] + (parts[i + 1] || '')).trim();
+    if (sentence) sentences.push(sentence);
+    if (sentences.length === 2) break;
+  }
+  return sentences.join(' ');
+}
+
 /**
  * Appends new narrative content to the previous narrative, ensuring consistent formatting.
  * Does NOT attempt to diff or remove duplication—callers must ensure newContent is truly new.
@@ -464,3 +451,27 @@ export function appendNarrative(previousNarrative: string, newContent: string | 
   // Always separate with two newlines for clarity
   return previousNarrative.trimEnd() + '\n\n' + toAppend.trimStart();
 } 
+
+/**
+ * Normalizes narrative prose formatting for display:
+ * - Converts Windows newlines to Unix
+ * - Removes em/en/figure dashes and replaces with comma + space
+ * - Collapses excessive spaces and newlines
+ * - Trims leading/trailing whitespace
+ */
+export function normalizeNarrative(text: string): string {
+  if (!text) return "";
+  let result = text.replace(/\r\n/g, "\n");
+  // Replace em dash, en dash, figure dash, horizontal bar with comma + space
+  result = result.replace(/[\u2012\u2013\u2014\u2015]/g, ", ");
+  // Normalize comma spacing and collapse duplicates created by replacements
+  result = result
+    .replace(/\s+,/g, ",")
+    .replace(/,\s*/g, ", ")
+    .replace(/,\s*,+/g, ", ");
+  // Collapse multiple spaces
+  result = result.replace(/[ \t]{2,}/g, " ");
+  // Normalize paragraph breaks (max one blank line)
+  result = result.replace(/\n{3,}/g, "\n\n");
+  return result.trim();
+}

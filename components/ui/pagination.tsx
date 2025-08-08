@@ -9,7 +9,7 @@ function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
 }
 
 function PaginationContent({ className, ...props }: React.ComponentProps<"ul">) {
-  return <ul data-slot="pagination-content" className={cn("flex flex-row items-center gap-1 bg-gradient-to-tl from-black/50 to-black/30 rounded-lg px-1", className)} {...props} />
+  return <ul data-slot="pagination-content" className={cn("flex flex-row items-center gap-1 bg-gradient-to-tl from-black/50 to-black/30 rounded-lg p-1.5", className)} {...props} />
 }
 
 function PaginationItem({ ...props }: React.ComponentProps<"li">) {
@@ -32,7 +32,7 @@ function PaginationLink({ className, isActive, size = "icon", ...props }: Pagina
           variant: "ghost",
           size,
         }),
-        "px-2 h-7 w-auto hover:bg-black/70 transition-all duration-700 ease-in-out font-mono font-bold text-white hover:text-white",
+        "px-1.5 h-6 w-auto hover:bg-black/70 transition-all duration-700 ease-in-out font-mono font-bold text-white hover:text-white",
         isActive && "border border-white/30",
         className
       )}

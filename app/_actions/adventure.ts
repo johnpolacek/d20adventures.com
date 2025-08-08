@@ -296,7 +296,12 @@ export async function resolvePlayerRollResult({
 
   let newNarrative = appendNarrative(turn.narrative || "", shortcode);
   
+  // Build stricter prompt context and capture the actual player action text
+  const paragraphs = (turn.narrative || "").split(/\n\n+/).filter(Boolean);
+  const playerActionText = paragraphs[paragraphs.length - 1] || "";
   const narrativeContext = (turn.narrative || "").split(/\n\n+/).slice(-2).join("\n\n");
+  // Note: we let the LLM decide whether to respond, based on clear instructions
+
   const rollOutcomePrompt = `
 Context:
 ${narrativeContext}
@@ -304,31 +309,29 @@ ${narrativeContext}
 Encounter Instructions:
 ${encounterInstructions}
 
-Player action: "${shortcode}"
-
+Player action (verbatim): """${playerActionText}"""
+  
 A dice roll was made for ${character.name}: ${rollType} (Result: ${totalResult}, Difficulty: ${difficulty}, Margin: ${margin}).
 
-CRITICAL: You must ONLY reference elements that are explicitly mentioned in the encounter instructions, encounter intro, or existing narrative context. Do NOT invent new objects, people, events, or details that are not already established in the adventure plan.
+  Guidelines:
+  - Prefer restraint. Only bring an NPC into the outcome if the player action clearly engages them now.
+  - Do not narrate speech or actions for player characters.
+  - If the action is exclusively between player characters or naturally requires no DM narration, output nothing.
+  - Do not invent new objects, people, events, or details. Use only the encounter instructions/intro and established narrative.
 
-Write a single, concise, immersive third-person PRESENT-tense narrative paragraph (exactly two sentences, max 60 words) describing the direct outcome of the roll. Focus on what the character perceives or the immediate result of their action. If the roll was for perception, describe what is now sensed or known based ONLY on the existing environment and NPCs described in the encounter. **Do not narrate combat actions, damage, or status effects inflicted by other entities as part of this roll\'s outcome; these will be handled by subsequent game mechanics.** Only describe self-inflicted effects if the character\'s own roll was a critical failure of an action they were taking. 
-
-RESTRICTIONS:
-- Only reference NPCs, objects, and locations explicitly mentioned in the encounter instructions or intro
-- Do not create new characters, items, or events
-- Do not add new details to the environment
-- Stick strictly to what is already established in the adventure plan
+Write a single, concise, immersive third-person PRESENT-tense narrative paragraph (exactly two sentences, max 60 words) describing only the immediate outcome of the roll as it pertains to the engaged NPC (if any). If no NPC is engaged, output nothing.
 
 Write in third person PRESENT tense. Do not use lists, bullet points, or markdown formatting. Do not use semicolons. Never mention game mechanics, dice, or rules.
 
-Output only the narrative paragraph.`.trim();
+Output only the narrative paragraph, or output nothing if no DM narration applies.`.trim();
 
   let rollOutcome = "";
   try {
     const { text } = await generateText({ prompt: rollOutcomePrompt });
-    rollOutcome = text;
-    // LOGGING: Before appending rollOutcome
-    newNarrative = appendNarrative(newNarrative, rollOutcome);
-    // LOGGING: After appending rollOutcome
+    rollOutcome = (text || "").trim();
+    if (rollOutcome) {
+      newNarrative = appendNarrative(newNarrative, rollOutcome);
+    }
   } catch (err) {
     console.error("[resolvePlayerRollResult] Error generating roll outcome:", err);
   }
@@ -344,18 +347,27 @@ Output only the narrative paragraph.`.trim();
     success,
   };
   await wait(500)
-  const updatedTurn = await analyzeAndApplyDiceRoll({
-    turn: { 
-      ...turn,
-      id: turn._id,
-      characters: turn.characters.map(c => ({
-        ...c,
-        healthPercent: typeof c.healthPercent === "number" ? c.healthPercent : 100,
-      }) as TurnCharacter),
-    },
-    diceRoll,
-    narrative: newNarrative,
-  });
+  const updatedTurn = rollOutcome
+    ? await analyzeAndApplyDiceRoll({
+        turn: { 
+          ...turn,
+          id: turn._id,
+          characters: turn.characters.map(c => ({
+            ...c,
+            healthPercent: typeof c.healthPercent === "number" ? c.healthPercent : 100,
+          }) as TurnCharacter),
+        },
+        diceRoll,
+        narrative: newNarrative,
+      })
+    : {
+        ...turn,
+        id: turn._id,
+        characters: turn.characters.map(c => ({
+          ...c,
+          healthPercent: typeof c.healthPercent === "number" ? c.healthPercent : 100,
+        }) as TurnCharacter),
+      };
 
   // Ensure the rolling character is marked complete and roll fields are set
   const updatedCharacters = updatedTurn.characters.map(c =>

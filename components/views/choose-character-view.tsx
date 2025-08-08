@@ -7,6 +7,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import Image from "next/image"
+import { ChevronDoubleLeftIcon } from "@heroicons/react/24/outline"
 
 export default function ChooseCharacterView({
   username,
@@ -51,6 +52,11 @@ export default function ChooseCharacterView({
         <div style={textShadow} className="max-w-4xl mx-auto text-base text-amber-50 text-left text-pretty">
           {adventureTeaser}
         </div>
+        <Link href={`/settings/${settingId}/play`}>
+          <Button variant="ghost" className="mt-2 text-sm bg-primary-800 px-4 text-primary-300 hover:text-primary-200" size="sm">
+            <ChevronDoubleLeftIcon className="w-3 h-3" /> Back to Setting Adventures
+          </Button>
+        </Link>
       </Card>
       <div style={textShadowSpread} className="mb-8 text-3xl font-display font-bold text-amber-100">
         Choose Your Character
@@ -85,8 +91,7 @@ export default function ChooseCharacterView({
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
               </div>
               <div className="pb-6 -mt-10 z-10 relative flex flex-col justify-center items-center">
-                <div className="font-bold text-3xl text-amber-400 mb-1 truncate w-full text-center">Create New Character</div>
-                <div className="text-base mb-4 text-center">Start a new adventure</div>
+                <div className="font-bold text-3xl text-amber-400 -mt-8 mb-4 truncate w-full text-center">Create New Character</div>
                 <Button variant="epic" className="text-sm" size="sm">
                   Create
                 </Button>

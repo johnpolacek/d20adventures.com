@@ -27,6 +27,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
   const { user, isSignedIn, isLoaded } = useUser()
   const params = useParams()
   const [isJoining, setIsJoining] = useState(false)
+  const [joiningCharacterId, setJoiningCharacterId] = useState<string | null>(null)
   const [modalCharacter, setModalCharacter] = useState<PC | PCTemplate | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [adventure, setAdventure] = useState(initialAdventure)
@@ -73,6 +74,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
   const handleJoinAdventure = async (characterId: string) => {
     if (isJoining) return
 
+    setJoiningCharacterId(characterId)
     setIsJoining(true)
     setJoinError(null)
 
@@ -89,6 +91,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
       console.error("Failed to join adventure:", error)
       setJoinError(error instanceof Error ? error.message : "Failed to join adventure")
       setIsJoining(false)
+      setJoiningCharacterId(null)
     }
   }
 
@@ -169,22 +172,25 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
               <div className="text-center text-white/80 py-8 opacity-0">Loading your characters...</div>
             ) : (
               <>
-                {joinError && <div className="text-center text-red-400 text-sm mb-4 bg-red-900/20 px-4 py-2 rounded">{joinError}</div>}
+                {joinError && !/redirect/i.test(joinError) && <div className="text-center text-red-400 text-sm mb-4 bg-red-900/20 px-4 py-2 rounded">{joinError}</div>}
                 {userCharacters.length > 0 && (
                   <>
                     <h2 className="text-2xl font-display text-amber-400 mb-6">Join with Your Character</h2>
                     <div className="w-full flex flex-wrap gap-6 justify-center mb-8">
-                      {userCharacters.map((char) => (
-                        <div key={char.id} className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4">
-                          <CharacterSelectCard
-                            className="ring-white/20"
-                            character={char}
-                            buttonLabel={isJoining ? "Joining..." : "Join"}
-                            disabled={isJoining}
-                            onButtonClick={() => handleJoinAdventure(`characters/${user?.id}/${slugify(char.name, { lower: true, strict: true })}.json`)}
-                          />
-                        </div>
-                      ))}
+                      {userCharacters.map((char) => {
+                        const charJoinId = `characters/${user?.id}/${slugify(char.name, { lower: true, strict: true })}.json`
+                        return (
+                          <div key={char.id} className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4">
+                            <CharacterSelectCard
+                              className="ring-white/20"
+                              character={char}
+                              buttonLabel={isJoining && joiningCharacterId === charJoinId ? "Joining..." : "Join"}
+                              disabled={isJoining}
+                              onButtonClick={() => handleJoinAdventure(charJoinId)}
+                            />
+                          </div>
+                        )
+                      })}
                     </div>
                   </>
                 )}
@@ -197,11 +203,14 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
                   <div className="mt-8 w-full max-w-lg mx-auto">
                     <h3 className="text-lg font-display text-white/80 mb-2">Or join with a premade character:</h3>
                     <div className="space-y-2">
-                      {availableCharacters.map((char) => (
-                        <Button key={char.id} variant="outline" className="w-full" onClick={() => handleJoinAdventure(char.id)} disabled={isJoining}>
-                          {isJoining ? "Joining..." : `Join as ${char.name}`}
-                        </Button>
-                      ))}
+                      {availableCharacters.map((char) => {
+                        const label = isJoining && joiningCharacterId === char.id ? "Joining..." : `Join as ${char.name}`
+                        return (
+                          <Button key={char.id} variant="outline" className="w-full" onClick={() => handleJoinAdventure(char.id)} disabled={isJoining}>
+                            {label}
+                          </Button>
+                        )
+                      })}
                     </div>
                   </div>
                 )}
