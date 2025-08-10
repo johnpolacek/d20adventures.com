@@ -2,7 +2,7 @@
 
 import { generateObject as baseGenerateObject, streamObject as baseStreamObject, generateText as baseGenerateText } from "ai";
 import type { Schema as AISchema } from "ai";
-import { openaiModel } from "./llm";
+import { currentModel } from "./llm";
 import { auth } from "@clerk/nextjs/server"
 import { z } from "zod";
 import { decrementUserTokensAction } from "@/app/_actions/tokens";
@@ -10,6 +10,16 @@ import { decrementUserTokensAction } from "@/app/_actions/tokens";
 // Helper function to wait for a specified number of milliseconds
 function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Helper function to clean JSON responses that might be wrapped in markdown
+function cleanJsonResponse(text: string): string {
+  // Remove markdown code blocks if present
+  const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (codeBlockMatch) {
+    return codeBlockMatch[1].trim();
+  }
+  return text.trim();
 }
 
 type GenerateObjectReturn<T extends z.ZodTypeAny> = {
@@ -22,7 +32,7 @@ type GenerateObjectReturn<T extends z.ZodTypeAny> = {
   [key: string]: unknown;
 }
 
-// Wrapper: uses openaiModel by default, but allows override
+// Wrapper: uses currentModel by default, but allows override
 export async function generateObject<T extends z.ZodTypeAny>({prompt, schema}: { prompt: string; schema: T; }): Promise<GenerateObjectReturn<T>> {
   let result: GenerateObjectReturn<T>;
   try {
@@ -35,7 +45,7 @@ export async function generateObject<T extends z.ZodTypeAny>({prompt, schema}: {
     result = (await baseGenerateObject({
       prompt,
       schema: schema as unknown as AISchema,
-      model: openaiModel,
+      model: currentModel,
     })) as unknown as GenerateObjectReturn<T>;
 
     const totalTokens = result.usage?.totalTokens ?? 0;
@@ -43,7 +53,7 @@ export async function generateObject<T extends z.ZodTypeAny>({prompt, schema}: {
       const tokenDecrementResult = await decrementUserTokensAction({
         tokensUsed: totalTokens,
         transactionType: "usage_generate_object",
-        modelId: openaiModel.modelId,
+        modelId: currentModel.modelId,
       });
 
       if (!tokenDecrementResult.success) {
@@ -63,8 +73,54 @@ export async function generateObject<T extends z.ZodTypeAny>({prompt, schema}: {
   } catch (error) {
     console.warn('generateObject failed. Error details:', error);
     
-    // Check if it's a quota/rate limit error
+    // Check if it's a JSON parsing error with markdown-wrapped content
     const errorMessage = error instanceof Error ? error.message : String(error);
+    const isJsonParseError = errorMessage.includes('JSON parsing failed') || 
+                            errorMessage.includes('could not parse the response');
+    
+    if (isJsonParseError && error && typeof error === 'object' && 'text' in error) {
+      console.warn('Attempting to clean markdown-wrapped JSON response...');
+      try {
+        const errorWithText = error as { text: string; usage?: { totalTokens?: number; inputTokens?: number; outputTokens?: number } };
+        const rawText = errorWithText.text;
+        const cleanedText = cleanJsonResponse(rawText);
+        console.log('Original text:', rawText);
+        console.log('Cleaned text:', cleanedText);
+        
+        // Try to parse the cleaned JSON manually
+        const parsedObject = JSON.parse(cleanedText);
+        
+        // Return the result in the expected format
+        result = {
+          object: parsedObject,
+          usage: errorWithText.usage || {},
+        } as GenerateObjectReturn<T>;
+        
+        console.log('Successfully parsed cleaned JSON response');
+        
+        // Handle token decrementation for successful parse
+        const totalTokens = result.usage?.totalTokens ?? 0;
+        if (totalTokens > 0) {
+          const tokenDecrementResult = await decrementUserTokensAction({
+            tokensUsed: totalTokens,
+            transactionType: "usage_generate_object",
+            modelId: currentModel.modelId,
+          });
+
+          if (!tokenDecrementResult.success) {
+            console.error("Token decrementation failed for generateObject (cleaned):", tokenDecrementResult.error);
+            // Don't throw here since we successfully parsed the response
+          }
+        }
+        
+        return result;
+      } catch (cleaningError) {
+        console.warn('Failed to clean and parse JSON response:', cleaningError);
+        // Fall through to normal retry logic
+      }
+    }
+    
+    // Check if it's a quota/rate limit error
     const isQuotaError = errorMessage.includes('quota') || 
                         errorMessage.includes('rate') || 
                         errorMessage.includes('exceeded');
@@ -79,7 +135,7 @@ export async function generateObject<T extends z.ZodTypeAny>({prompt, schema}: {
       result = (await baseGenerateObject({
         prompt,
         schema: schema as unknown as AISchema,
-        model: openaiModel,
+        model: currentModel,
       })) as unknown as GenerateObjectReturn<T>;
 
       console.log('generateObject (retry) raw result:', result);
@@ -92,12 +148,12 @@ export async function generateObject<T extends z.ZodTypeAny>({prompt, schema}: {
         console.log('Token Usage (generateObject retry):', {
           tokensInputOutputRatio,
           totalTokens: retryTotalTokens,
-          model: openaiModel.modelId
+          model: currentModel.modelId
         });
         const tokenDecrementResultRetry = await decrementUserTokensAction({
           tokensUsed: retryTotalTokens,
           transactionType: "usage_generate_object",
-          modelId: openaiModel.modelId,
+          modelId: currentModel.modelId,
         });
 
         if (!tokenDecrementResultRetry.success) {
@@ -116,12 +172,60 @@ export async function generateObject<T extends z.ZodTypeAny>({prompt, schema}: {
       return result;
     } catch (retryError) {
       console.error('generateObject retry also failed. Error details:', retryError);
+      
+      // Try the same JSON cleaning logic on retry error
+      const retryErrorMessage = retryError instanceof Error ? retryError.message : String(retryError);
+      const isRetryJsonParseError = retryErrorMessage.includes('JSON parsing failed') || 
+                                   retryErrorMessage.includes('could not parse the response');
+      
+      if (isRetryJsonParseError && retryError && typeof retryError === 'object' && 'text' in retryError) {
+        console.warn('Attempting to clean markdown-wrapped JSON response on retry...');
+        try {
+          const retryErrorWithText = retryError as { text: string; usage?: { totalTokens?: number; inputTokens?: number; outputTokens?: number } };
+          const rawText = retryErrorWithText.text;
+          const cleanedText = cleanJsonResponse(rawText);
+          console.log('Retry - Original text:', rawText);
+          console.log('Retry - Cleaned text:', cleanedText);
+          
+          // Try to parse the cleaned JSON manually
+          const parsedObject = JSON.parse(cleanedText);
+          
+          // Return the result in the expected format
+          result = {
+            object: parsedObject,
+            usage: retryErrorWithText.usage || {},
+          } as GenerateObjectReturn<T>;
+          
+          console.log('Successfully parsed cleaned JSON response on retry');
+          
+          // Handle token decrementation for successful parse
+          const totalTokens = result.usage?.totalTokens ?? 0;
+          if (totalTokens > 0) {
+            const tokenDecrementResult = await decrementUserTokensAction({
+              tokensUsed: totalTokens,
+              transactionType: "usage_generate_object",
+              modelId: currentModel.modelId,
+            });
+
+            if (!tokenDecrementResult.success) {
+              console.error("Token decrementation failed for generateObject (retry cleaned):", tokenDecrementResult.error);
+              // Don't throw here since we successfully parsed the response
+            }
+          }
+          
+          return result;
+        } catch (retryCleaningError) {
+          console.warn('Failed to clean and parse JSON response on retry:', retryCleaningError);
+          // Fall through to throw the original retry error
+        }
+      }
+      
       throw retryError; // Re-throw the error from the retry attempt
     }
   }
 }
 
-// Wrapper for streamObject: uses openaiModel by default, but allows override
+// Wrapper for streamObject: uses currentModel by default, but allows override
 export async function streamObject<T extends z.ZodTypeAny>({prompt, schema}: { prompt: string; schema: T; }) {
 
   const { userId } = await auth()
@@ -133,43 +237,49 @@ export async function streamObject<T extends z.ZodTypeAny>({prompt, schema}: { p
   return baseStreamObject({
     prompt,
     schema: schema as unknown as AISchema,
-    model: openaiModel,
+    model: currentModel,
   });
 }
 
-// Wrapper for generateText: uses openaiModel by default, but allows override
+// Wrapper for generateText: uses currentModel by default, but allows override
 export async function generateText({prompt}: { prompt: string; }) {
   let result;
   try {
-    console.log('Entering generateText...');
-
     const { userId } = await auth()
 
     if (!userId) {
       throw new Error("User not authenticated");
     }
 
-    result = await baseGenerateText({
-      prompt,
-      model: openaiModel,
+    console.log('[LLM] generateText prompt:', {
+      promptLength: prompt.length,
+      model: currentModel.modelId
     });
 
-    console.log('generateText result:', result.text);
+    result = await baseGenerateText({
+      prompt,
+      model: currentModel,
+    });
+
+    console.log('[LLM] generateText response:', {
+      textLength: result.text?.length || 0,
+      quality: result.text && result.text.length > 0 ? 'complete' : 'empty'
+    });
 
     const totalTokens = result.usage?.totalTokens ?? 0;
     if (totalTokens > 0) {
       const inputTokens = result.usage?.inputTokens ?? 0;
       const outputTokens = result.usage?.outputTokens ?? 0;
       const tokensInputOutputRatio = outputTokens > 0 ? inputTokens / outputTokens : 0;
-      console.log('Token Usage (generateText):', {
-        tokensInputOutputRatio,
-        totalTokens,
-        model: openaiModel.modelId
+      console.log('[LLM] Token usage:', {
+        total: totalTokens,
+        efficiency: tokensInputOutputRatio.toFixed(2),
+        model: currentModel.modelId
       });
       const tokenDecrementResult = await decrementUserTokensAction({
         tokensUsed: totalTokens,
         transactionType: "usage_generate_text",
-        modelId: openaiModel.modelId,
+        modelId: currentModel.modelId,
       });
 
       if (!tokenDecrementResult.success) {
@@ -204,7 +314,7 @@ export async function generateText({prompt}: { prompt: string; }) {
     try {
       result = await baseGenerateText({
         prompt,
-        model: openaiModel,
+        model: currentModel,
       });
 
       console.log('generateText (retry) raw result:', result);
@@ -217,12 +327,12 @@ export async function generateText({prompt}: { prompt: string; }) {
         console.log('Token Usage (generateText retry):', {
           tokensInputOutputRatio,
           totalTokens: retryTotalTokens,
-          model: openaiModel.modelId
+          model: currentModel.modelId
         });
         const tokenDecrementResultRetry = await decrementUserTokensAction({
           tokensUsed: retryTotalTokens,
           transactionType: "usage_generate_text",
-          modelId: openaiModel.modelId,
+          modelId: currentModel.modelId,
         });
 
         if (!tokenDecrementResultRetry.success) {

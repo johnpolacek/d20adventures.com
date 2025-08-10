@@ -4,7 +4,8 @@ import { convex } from "@/lib/convex/server"
 import { auth } from "@clerk/nextjs/server"
 import type { Id } from "@/convex/_generated/dataModel"
 import type { TurnCharacter } from "@/types/adventure"
-import { getRollRequirementHelper, getRollModifier, appendNarrative } from "@/lib/services/narrative-service"
+import { getRollRequirementHelper, appendNarrative } from "@/lib/services/narrative-service"
+import { getRollModifier } from "@/lib/services/roll-modifier-service"
 import { generateText } from "@/lib/ai"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import type { AdventurePlan } from "@/types/adventure-plan"
@@ -18,8 +19,7 @@ import type { RollRequirement } from "@/lib/validations/roll-requirement-schema"
 
 // Using RollRequirement union (object | null) from validation schema
 
-export async function processTurnReply({ turnId, characterId, narrativeAction }: { turnId: Id<"turns">; characterId: string; narrativeAction: string }) {
-  console.log('[processTurnReply] CALLED')
+export async function processTurnReply({ turnId, characterId, narrativeAction, originalPlayerInput }: { turnId: Id<"turns">; characterId: string; narrativeAction: string; originalPlayerInput?: string }) {
   const { userId } = await auth()
   if (!userId) {
     console.error('[processTurnReply] Unauthorized access attempt.');
@@ -53,39 +53,27 @@ export async function processTurnReply({ turnId, characterId, narrativeAction }:
     console.error('[processTurnReply] Encounter not found for encounterId:', turn.encounterId);
     throw new Error("Encounter not found")
   }
-  console.log('[processTurnReply] Fetched encounter:', JSON.stringify(encounter, null, 2));
   
   const characterPerformingAction = turn.characters.find(c => c.id === characterId);
   if (!characterPerformingAction) {
     console.error('[processTurnReply] Character performing action not found for characterId:', characterId);
     throw new Error("Character performing action not found in turn data");
   }
-  console.log('[processTurnReply] Character performing action:', JSON.stringify(characterPerformingAction, null, 2));
 
-  // Prepare context for the updated getRollRequirementForAction
-  const actionContext = {
-    character: {
-      name: characterPerformingAction.name,
-      archetype: characterPerformingAction.archetype,
-      race: characterPerformingAction.race,
-      attributes: characterPerformingAction.attributes,
-      skills: characterPerformingAction.skills,
-      equipment: characterPerformingAction.equipment,
-    },
-    encounter: {
-      id: encounter.id,
-      instructions: encounter.instructions || "",
-    },
-    plan: {
-      planId: adventure.planId,
-      settingId: adventure.settingId,
-    }
-  };
-  console.log('[processTurnReply] Action context for getRollRequirementForAction:', JSON.stringify(actionContext, null, 2));
+  // Use originalPlayerInput if available to preserve player intent, fallback to narrativeAction
+  const actionToAnalyze = originalPlayerInput && originalPlayerInput.trim() ? originalPlayerInput : narrativeAction;
+
+  // Log LLM analysis start
+  console.log('[LLM] Analyzing action for roll requirement:', {
+    action: actionToAnalyze,
+    isOriginalInput: !!(originalPlayerInput && originalPlayerInput.trim()),
+    character: characterPerformingAction.name,
+    encounter: encounter.id
+  });
 
   // Call roll requirement service (returns RollRequirement | null)
   const assessment = await getRollRequirementForAction(
-    narrativeAction,
+    actionToAnalyze,
     characterPerformingAction as import("@/types/character").Character,
     {
       encounterInstructions: encounter.instructions || "",
@@ -99,10 +87,14 @@ export async function processTurnReply({ turnId, characterId, narrativeAction }:
   // If plausible, proceed with existing logic
   const rollRequirementDetails: RollRequirement = assessment;
 
-  console.log('[processTurnReply] Derived rollRequirementDetails:', JSON.stringify(rollRequirementDetails, null, 2));
+  console.log('[LLM] Roll requirement analysis result:', {
+    requiresRoll: !!rollRequirementDetails,
+    rollType: rollRequirementDetails?.rollType,
+    difficulty: rollRequirementDetails?.difficulty
+  });
 
   if (rollRequirementDetails && rollRequirementDetails.rollType && typeof rollRequirementDetails.difficulty === 'number') {
-    console.log('[processTurnReply] Roll IS required. Calling getRollModifier...');
+    console.log('[LLM] Calculating roll modifier for:', rollRequirementDetails.rollType);
     
     // Calculate modifier using the enhanced getRollModifier function
     const modifierContext = {
@@ -114,43 +106,33 @@ export async function processTurnReply({ turnId, characterId, narrativeAction }:
       rollRequirement: rollRequirementDetails,
       character: characterPerformingAction,
     };
-    console.log('[processTurnReply] Modifier context being passed to getRollModifier:', JSON.stringify(modifierContext, null, 2));
     
     const calculatedModifier = await getRollModifier(modifierContext);
-    console.log('[processTurnReply] Calculated modifier from getRollModifier:', calculatedModifier);
-    
-    // Override the modifier with the calculated one
     rollRequirementDetails.modifier = calculatedModifier;
     
-    console.log('[processTurnReply] Final rollRequirementDetails with calculated modifier:', JSON.stringify(rollRequirementDetails, null, 2));
+    console.log('[LLM] Roll configuration:', {
+      rollType: rollRequirementDetails.rollType,
+      difficulty: rollRequirementDetails.difficulty,
+      modifier: calculatedModifier
+    });
     
-    // Set rollRequirement for the character, do not mark as complete
-    const submitReplyArgs = {
+    await convex.mutation(api.adventure.submitReply, {
       turnId,
       characterId,
       narrativeAction,
-      rollRequirement: rollRequirementDetails, // Pass the details with calculated modifier
-    };
-    console.log('[processTurnReply] Convex mutation api.adventure.submitReply ARGS (roll required):', JSON.stringify(submitReplyArgs, null, 2));
-    await convex.mutation(api.adventure.submitReply, submitReplyArgs)
-    console.log('[processTurnReply] Convex mutation api.adventure.submitReply successful (roll required).');
+      originalPlayerInput,
+      rollRequirement: rollRequirementDetails,
+    })
     return { rollRequired: rollRequirementDetails }
   } else {
-    console.log('[processTurnReply] Roll IS NOT required or rollRequirementDetails is malformed. Marking character complete.');
-    // Mark character as complete and hasReplied
-    const submitReplyArgs = {
+    await convex.mutation(api.adventure.submitReply, {
       turnId,
       characterId,
       narrativeAction,
+      originalPlayerInput,
       rollRequirement: undefined,
-    };
-    console.log('[processTurnReply] Convex mutation api.adventure.submitReply ARGS (no roll):', JSON.stringify(submitReplyArgs, null, 2));
-    await convex.mutation(api.adventure.submitReply, submitReplyArgs)
-    console.log('[processTurnReply] Convex mutation api.adventure.submitReply successful (no roll).');
-    // After marking player complete, process NPCs
-    console.log('[processTurnReply] Processing NPC turns after player reply.');
+    })
     await processNpcTurnsAfterCurrent(turnId);
-    console.log('[processTurnReply] NPC turn processing complete.');
     return { rollRequired: null }
   }
 }
@@ -347,7 +329,14 @@ Output only the narrative paragraph, or output nothing if no DM narration applie
     success,
   };
   await wait(500)
-  const updatedTurn = rollOutcome
+  
+  // Only analyze for health changes on roll types that could affect health
+  const healthAffectingRolls = ['Attack', 'Constitution', 'Strength', 'Dexterity'];
+  const shouldAnalyzeHealth = rollOutcome && healthAffectingRolls.includes(rollType);
+  
+  console.log(`[resolvePlayerRollResult] Roll analysis: rollType=${rollType}, hasOutcome=${!!rollOutcome}, shouldAnalyzeHealth=${shouldAnalyzeHealth}`);
+  
+  const updatedTurn = shouldAnalyzeHealth
     ? await analyzeAndApplyDiceRoll({
         turn: { 
           ...turn,

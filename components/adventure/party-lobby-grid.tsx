@@ -3,6 +3,7 @@ import type { Adventure } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PC, PCTemplate } from "@/types/character"
 import { PartySlot } from "./party-slot"
+import { useUser } from "@clerk/nextjs"
 
 interface PartyLobbyGridProps {
   adventure: Adventure
@@ -12,16 +13,18 @@ interface PartyLobbyGridProps {
   onJoinClick?: (characterId: string) => void
   isJoining?: boolean
   availableCharacters?: PCTemplate[]
+  playerNames?: Record<string, string>
 }
 
-export function PartyLobbyGrid({ adventure, adventurePlan, userId, onCharacterClick, onJoinClick, isJoining = false, availableCharacters = [] }: PartyLobbyGridProps) {
+export function PartyLobbyGrid({ adventure, adventurePlan, userId, onCharacterClick, onJoinClick, isJoining = false, availableCharacters = [], playerNames = {} }: PartyLobbyGridProps) {
   const maxParty = adventurePlan.party?.[1] || 4
   const party = adventure.party || []
+  const { user } = useUser()
 
   // Find the user's character if present
   let userChar: PC | undefined = undefined
   let otherChars: PC[] = []
-  if (userId) {
+  if (user?.id) {
     userChar = party.find((c) => c.userId === userId)
     otherChars = party.filter((c) => c.userId !== userId)
   } else {
@@ -34,10 +37,13 @@ export function PartyLobbyGrid({ adventure, adventurePlan, userId, onCharacterCl
   for (let i = 0; i < maxParty; i++) {
     if (i === 1 && userChar) {
       // 2nd slot: user character
-      slots.push(<PartySlot key={userChar.id} character={userChar} isUserCharacter={true} onClick={() => (onCharacterClick ? onCharacterClick(userChar!) : undefined)} />)
+      slots.push(
+        <PartySlot key={userChar.id} character={userChar} isUserCharacter={true} playerName={user?.username || "YOU"} onClick={() => (onCharacterClick ? onCharacterClick(userChar!) : undefined)} />
+      )
     } else if (charIdx < otherChars.length) {
       const character = otherChars[charIdx]
-      slots.push(<PartySlot key={character.id} character={character} isUserCharacter={false} onClick={() => (onCharacterClick ? onCharacterClick(character) : undefined)} />)
+      const playerName = character.userId ? playerNames[character.userId] : undefined
+      slots.push(<PartySlot key={character.id} character={character} isUserCharacter={false} playerName={playerName} onClick={() => (onCharacterClick ? onCharacterClick(character) : undefined)} />)
       charIdx++
     } else {
       // If there are available premade characters, allow joining with the first available

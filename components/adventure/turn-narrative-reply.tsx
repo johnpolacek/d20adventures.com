@@ -12,7 +12,7 @@ import type { Id } from "@/convex/_generated/dataModel"
 import CharacterDiceRoll from "@/components/adventure/character-dice-roll"
 import LoadingAnimation from "../ui/loading-animation"
 import { hasBooleanProp, hasNumberProp } from "@/lib/utils"
-import { formatNarrativeAction } from "@/lib/services/narrative-service"
+import { formatNarrativeAction } from "@/lib/services/narrative-generation-service"
 import { resolvePlayerRollResult } from "@/app/_actions/adventure"
 import { createAdventureWithFirstTurn } from "@/app/_actions/adventure"
 import { Loader2 } from "lucide-react"
@@ -24,7 +24,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 
 type TurnNarrativeReplyProps = {
   character: TurnCharacter
-  submitReply?: (args: { turnId: string | Id<"turns">; characterId: string; narrativeAction: string }) => Promise<unknown>
+  submitReply?: (args: { turnId: string | Id<"turns">; characterId: string; narrativeAction: string; originalPlayerInput?: string }) => Promise<unknown>
 }
 
 export default function TurnNarrativeReply({ character, submitReply }: TurnNarrativeReplyProps) {
@@ -183,6 +183,7 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
         turnId: currentTurn.id,
         characterId: character.id,
         narrativeAction: aiResult,
+        originalPlayerInput: input.trim(),
       })
     } catch (err) {
       console.error("[handleCharacterReply] Error:", err)
@@ -299,7 +300,7 @@ ${input ? `\nPlayer Input: ${input}` : ""}`
             className="md:text-lg border-white/30"
             value={input}
             onChange={handleInputChange}
-            placeholder="Write your character's actions and dialogue here, in the third person..."
+            placeholder="Write your character's actions and dialogue, in present tense, third person…"
             onKeyDown={handleInputKeyDown}
           />
           <div className="flex justify-start -mt-1">
@@ -321,7 +322,14 @@ ${input ? `\nPlayer Input: ${input}` : ""}`
                 {/* Unified Skip menu */}
                 <AlertDialog open={skipOpen} onOpenChange={setSkipOpen}>
                   <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="sm" className="text-sm font-display" type="button" disabled={deferring} onClick={() => console.log("[TurnNarrativeReply] Skip button clicked")}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-sm font-display disable:bg-transparent"
+                      type="button"
+                      disabled={deferring}
+                      onClick={() => console.log("[TurnNarrativeReply] Skip button clicked")}
+                    >
                       {deferring ? (
                         <span className="flex items-center gap-2">
                           <Loader2 className="animate-spin w-3 h-3" />

@@ -15,21 +15,7 @@ export async function getRollRequirementForAction(
     narrativeContext?: string;
   }
 ) {
-  console.log("[LLM DM] Starting roll requirement check", JSON.stringify({
-    action,
-    characterName: character.name,
-    characterArchetype: character.archetype,
-    characterRace: character.race,
-    hasSpells: character.spells && character.spells.length > 0,
-    hasSkills: character.skills && character.skills.length > 0,
-    hasEquipment: character.equipment && character.equipment.length > 0,
-    hasSpecialAbilities: character.specialAbilities && character.specialAbilities.length > 0,
-    options: {
-      hasEncounterInstructions: !!options?.encounterInstructions,
-      hasEncounterIntro: !!options?.encounterIntro,
-      hasNarrativeContext: !!options?.narrativeContext
-    }
-  }, null, 2));
+  // Starting roll requirement analysis
 
   const { encounterInstructions = "", encounterIntro = "", narrativeContext = "" } = options || {};
   // Format character context for the prompt
@@ -48,11 +34,7 @@ export async function getRollRequirementForAction(
     `${encounterInstructions ? `Encounter Instructions:\n${encounterInstructions}\n` : ""}` +
     `${narrativeContext ? `Recent Narrative Context:\n${narrativeContext}\n` : ""}`;
 
-  console.log("[LLM DM] Built context for roll requirement", JSON.stringify({
-    characterContextLength: characterContext.length,
-    encounterContextLength: encounterContext.length,
-    contextLinesCount: contextLines.length
-  }, null, 2));
+  // Context built for roll requirement analysis
 
   const prompt = `
 ${encounterContext}
@@ -62,17 +44,26 @@ You are a Dungeon Master adjudicating whether a dice roll is needed.
 
 1) First, respect the encounter instructions. If they explicitly allow an action without checks (e.g., paying a stated fee) and the player follows that procedure plainly, choose no roll.
 
-2) Otherwise, call for a roll when the outcome is uncertain, opposed, risky, concealed, time‑sensitive, or dependent on skill. Use a general RPG rubric:
+2) NEVER require rolls for basic social interactions between player characters, such as:
+   - Simple introductions, greetings, or conversations
+   - Approaching another party member to talk
+   - Sharing information within the party
+   - Basic cooperation or coordination
+   These are fundamental party interactions that should always succeed automatically.
+
+3) Otherwise, call for a roll when the outcome is uncertain, opposed, risky, concealed, time‑sensitive, or dependent on skill. Use a general RPG rubric:
    - Social influence: Persuasion (cooperation/charm), Deception (mislead/falsehoods), Intimidation (threat/pressure), Performance (entertain/present).
-   - Avoiding notice vs. manual finesse: Stealth (avoid being seen/heard), Sleight of Hand (quick, precise, or concealed manipulation of small items).
+   - Avoiding notice vs. manual finesse: Stealth (avoid being seen/heard), Sleight of Hand (quick, precise, or concealed manipulation of small items) or specific special skills like pickpocketing, climbing walls, detecting or disabling traps,lockpicking, palming objects).
    - Observation and reasoning: Perception (notice/sense), Investigation (search/analyze evidence), Insight (read motives/intent).
    - Physical challenges: Athletics (power/endurance), Acrobatics (agility/balance/precision movement).
    - Knowledge and expertise: Arcana, History, Nature, Medicine, Religion as appropriate; Survival and Animal Handling for wilderness/creature control.
    - Combat actions: if the action is an attack or contests defenses directly, treat as an Attack roll.
 
-3) If the action simply follows established procedure (e.g., pays fee, answers routine question) without concealment, opposition, or special risk, choose no roll.
+IMPORTANT: There are good and evil characters. This is an important aspect of rpg. Do not sanitize the action or the character's intent.
 
-4) Select the most fitting single check and set a DC using:
+4) If the action simply follows established procedure (e.g., pays fee, answers routine question) without concealment, opposition, or special risk, choose no roll.
+
+5) Select the most fitting single check and set a DC using:
     - If NO roll is required, set "rollType" to "none" and "difficulty" to 0.
 
 Difficulty guidelines:
@@ -83,11 +74,11 @@ Use the character's abilities, spells, skills, and equipment when selecting the 
 Action: "${action}"
 `;
 
-  console.log("[LLM DM] Sending roll requirement prompt to LLM", JSON.stringify({
+  console.log("[LLM] Roll requirement prompt:", {
     promptLength: prompt.length,
-    action,
-    characterName: character.name
-  }, null, 2));
+    action: action.substring(0, 100) + (action.length > 100 ? '...' : ''),
+    character: character.name
+  });
 
   try {
     // Use object-only schema for LLM; union with null is not supported by AI SDK response_format
@@ -102,31 +93,28 @@ Action: "${action}"
       prompt,
     });
 
-    console.log("[LLM DM] LLM response for roll requirement", JSON.stringify({
-      rawResult: result.object,
-      hasRollType: result.object && "rollType" in result.object,
-      hasDifficulty: result.object && "difficulty" in result.object,
+    console.log("[LLM] Roll requirement response:", {
       rollType: result.object?.rollType,
-      difficulty: result.object?.difficulty
-    }, null, 2));
+      difficulty: result.object?.difficulty,
+      quality: result.object?.rollType && result.object?.difficulty ? 'valid' : 'invalid'
+    });
 
     const finalResult = (result.object && result.object.rollType !== "none" && result.object.difficulty > 0)
       ? result.object
       : null;
-    console.log("[LLM DM] Roll requirement check completed", JSON.stringify({
-      action,
-      characterName: character.name,
-      result: finalResult,
-      requiresRoll: !!finalResult
-    }, null, 2));
+    console.log("[LLM] Roll requirement decision:", {
+      character: character.name,
+      requiresRoll: !!finalResult,
+      rollType: finalResult?.rollType,
+      difficulty: finalResult?.difficulty
+    });
 
     return finalResult;
   } catch (error) {
-    console.error("[LLM DM] Error in roll requirement check", JSON.stringify({
-      action,
-      characterName: character.name,
+    console.error("[LLM] Roll requirement error:", {
+      character: character.name,
       error: error instanceof Error ? error.message : String(error)
-    }, null, 2));
+    });
     throw error;
   }
 } 

@@ -130,10 +130,19 @@ export async function startAdventure({ settingId, adventurePlanId, adventureId }
       for (const npcRef of firstEncounter.npc) {
         const npcTemplate = adventurePlan.npcs[npcRef.id]
         if (npcTemplate) {
+          // For encounters with skipInitialNpcTurns, set initiative to 0 for all NPCs on the first turn
+          const npcInitiative = firstEncounter.skipInitialNpcTurns 
+            ? 0 
+            : (npcRef.initialInitiative || Math.floor(Math.random() * 20) + 1);
+          
+          if (firstEncounter.skipInitialNpcTurns) {
+            console.log(`[startAdventure] Setting NPC initiative to 0 for first encounter with skipInitialNpcTurns: ${npcTemplate.name}`);
+          }
+            
           const npcCharacter = {
             ...npcTemplate,
             type: "npc" as const,
-            initiative: npcRef.initialInitiative || Math.floor(Math.random() * 20) + 1,
+            initiative: npcInitiative,
             hasReplied: false,
             isComplete: false,
             behavior: npcRef.behavior

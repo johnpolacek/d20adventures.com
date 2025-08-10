@@ -26,7 +26,8 @@ export async function POST(req: Request) {
     );
 
     return Response.json({ users: results });
-  } catch (e) {
+  } catch (e: unknown) {
+    console.error("Error looking up users", typeof e === "object" && e !== null && "message" in e ? e.message : "Unknown error");
     return new Response("Server Error", { status: 500 });
   }
 }

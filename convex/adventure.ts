@@ -245,6 +245,7 @@ export const submitReply = mutation({
     turnId: v.id("turns"),
     characterId: v.string(),
     narrativeAction: v.string(),
+    originalPlayerInput: v.optional(v.string()),
     rollRequirement: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
@@ -253,7 +254,14 @@ export const submitReply = mutation({
     const character = turn.characters.find((c) => c.id === args.characterId);
     if (!character) throw new Error("Character not found");
     const prev = turn.narrative || "";
-    const narrative = prev ? `${prev}\n\n${args.narrativeAction}` : args.narrativeAction;
+    
+    // Build narrative with original reply tag if provided
+    let narrativeToAdd = args.narrativeAction;
+    if (args.originalPlayerInput) {
+      narrativeToAdd = `[OriginalReply: ${args.originalPlayerInput}]\n${args.narrativeAction}`;
+    }
+    
+    const narrative = prev ? `${prev}\n\n${narrativeToAdd}` : narrativeToAdd;
 
     // Use rollRequirement from args, do not call AI here!
     const updatedCharacters = turn.characters.map((c) =>

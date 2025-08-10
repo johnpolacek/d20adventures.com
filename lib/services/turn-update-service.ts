@@ -82,16 +82,26 @@ export async function analyzeAndApplyDiceRoll({
 
   // Compose a prompt for the AI
   const prompt = `
-Given the outcome narrative and performance context, decide if any character's healthPercent or status should be updated. Only update if the narrative describes harm, healing, or a condition change.
+You must decide if any character's healthPercent should be updated based ONLY on the outcome narrative.
+
+IMPORTANT RULES:
+- Only update health if the narrative explicitly describes physical damage, injury, healing, or recovery
+- Conversations, social interactions, skill checks, and mental effects do NOT affect health
+- Failed social rolls (like Insight, Persuasion, Deception) should NEVER change health
+- Only combat actions, environmental hazards, or explicit healing should affect health
 
 ${narrativeGuidance}
 
-Outcome Narrative: ${relevantNarrative}
+Outcome Narrative: "${relevantNarrative}"
 Current Characters: ${JSON.stringify(turn.characters)}
 
-If no changes are warranted, return an empty JSON object {}.
-If changes are warranted, return an object with the character id, new healthPercent (0-100), and optional status.
+If NO physical harm, healing, or injury is described in the narrative, return an empty JSON object {}.
+If physical harm or healing IS explicitly described, return an object with the character id and new healthPercent (0-100).
 `;
+
+  console.log("[analyzeAndApplyDiceRoll] Prompt:", prompt);
+  console.log("[analyzeAndApplyDiceRoll] Relevant narrative:", relevantNarrative);
+  console.log("[analyzeAndApplyDiceRoll] DiceRoll:", JSON.stringify(diceRoll, null, 2));
 
   // Call the AI (gracefully handle failures by leaving the turn unchanged)
   let update:
@@ -105,21 +115,59 @@ If changes are warranted, return an object with the character id, new healthPerc
       prompt,
       schema: characterUpdateSchema,
     });
+    console.log("[analyzeAndApplyDiceRoll] AI Response:", JSON.stringify(update, null, 2));
   } catch (err) {
     console.warn("[analyzeAndApplyDiceRoll] generateObject failed, leaving turn unchanged.", err);
     return turn;
   }
 
   // If the AI didn't return a valid update, return the turn unchanged
-  if (!update || !update.object) return turn;
+  if (!update || !update.object) {
+    console.log("[analyzeAndApplyDiceRoll] No update object returned");
+    return turn;
+  }
 
   const obj = update.object as unknown;
+  console.log("[analyzeAndApplyDiceRoll] Update object:", JSON.stringify(obj, null, 2));
+  
   // Allow empty object (no changes)
   if (obj && typeof obj === "object" && Object.keys(obj as Record<string, unknown>).length === 0) {
+    console.log("[analyzeAndApplyDiceRoll] Empty object returned, no changes");
     return turn;
   }
 
   if (!isCharacterUpdate(obj)) {
+    console.log("[analyzeAndApplyDiceRoll] Object is not a valid character update");
+    return turn;
+  }
+
+  console.log("[analyzeAndApplyDiceRoll] Applying character update:", JSON.stringify(obj, null, 2));
+
+  // Additional safety check: ensure the narrative actually contains words indicating physical harm/healing
+  const harmKeywords = ['damage', 'injury', 'wounded', 'hurt', 'bleeding', 'pain', 'struck', 'hit', 'slashed', 'pierced', 'burned', 'poisoned'];
+  const healKeywords = ['heal', 'recover', 'restoration', 'mend', 'cure', 'health restored', 'vitality'];
+  const narrativeLower = relevantNarrative.toLowerCase();
+  
+  const hasPhysicalContent = [...harmKeywords, ...healKeywords].some(keyword => narrativeLower.includes(keyword));
+  
+  if (!hasPhysicalContent) {
+    console.log("[analyzeAndApplyDiceRoll] No physical harm/healing keywords found in narrative, ignoring health update");
+    return turn;
+  }
+
+  // Validate the health change is reasonable
+  const targetCharacter = turn.characters.find(c => c.id === obj.id);
+  if (!targetCharacter) {
+    console.log("[analyzeAndApplyDiceRoll] Target character not found, ignoring update");
+    return turn;
+  }
+
+  const currentHealth = targetCharacter.healthPercent ?? 100;
+  const newHealth = obj.healthPercent;
+  
+  // Prevent unreasonable health changes (more than 50% in one turn from social interactions)
+  if (Math.abs(newHealth - currentHealth) > 50) {
+    console.log(`[analyzeAndApplyDiceRoll] Unreasonable health change detected: ${currentHealth}% -> ${newHealth}%, ignoring update`);
     return turn;
   }
 

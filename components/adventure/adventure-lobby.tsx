@@ -16,6 +16,7 @@ import { InviteLink } from "./invite-link"
 import { CharacterSheetModal } from "./character-sheet-modal"
 import type { PC, PCTemplate } from "@/types/character"
 import { StartAdventureButton } from "./start-adventure-button"
+import GameChat from "./game-chat"
 
 interface AdventureLobbyProps {
   adventure: Adventure
@@ -34,6 +35,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
   const [userCharacters, setUserCharacters] = useState<PCTemplate[]>([])
   const [isLoadingUserChars, setIsLoadingUserChars] = useState(false)
   const [joinError, setJoinError] = useState<string | null>(null)
+  const [playerNames, setPlayerNames] = useState<Record<string, string>>({})
 
   // Polling for adventure updates
   useEffect(() => {
@@ -70,6 +72,23 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
         .finally(() => setIsLoadingUserChars(false))
     }
   }, [isSignedIn, user, adventure.party])
+
+  // Fetch player names for characters in the party
+  useEffect(() => {
+    const party = adventure.party || []
+    const userIds = party.map((pc) => pc.userId).filter(Boolean)
+
+    if (userIds.length > 0) {
+      fetch("/api/users/lookup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: userIds }),
+      })
+        .then((res) => res.json())
+        .then((data) => setPlayerNames(data.users || {}))
+        .catch((err) => console.error("Failed to fetch player names:", err))
+    }
+  }, [adventure.party])
 
   const handleJoinAdventure = async (characterId: string) => {
     if (isJoining) return
@@ -134,7 +153,6 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
         }}
       />
       <div className="w-full flex flex-col items-center justify-center max-w-6xl fade-in relative z-10 pb-16 -mt-16">
-        {/* Fortnite-style party grid */}
         <PartyLobbyGrid
           adventure={adventure}
           adventurePlan={adventurePlan!}
@@ -143,6 +161,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
           availableCharacters={availableCharacters}
           onJoinClick={isSignedIn ? handleJoinAdventure : undefined}
           isJoining={isJoining}
+          playerNames={playerNames}
         />
         {showTeaser && (
           <div className="italic opacity-90 text-center flex flex-col items-center">
@@ -219,6 +238,11 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
           </div>
         )}
         {isSignedIn && userCharacter && hasEmptySlots && <InviteLink inviteLink={inviteLink} />}
+        {isSignedIn && userCharacter && (
+          <div className="fixed top-20 right-8 z-50">
+            <GameChat />
+          </div>
+        )}
       </div>
     </>
   )

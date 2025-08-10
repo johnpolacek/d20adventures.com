@@ -138,7 +138,7 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
         if (part.type === "original-reply") {
           if (!showOriginalReplies) return null
           return (
-            <div key={"original-" + idx} className="text-base italic text-primary-300 mb-2">
+            <div key={"original-" + idx} className="text-base italic text-primary-200 mb-6 whitespace-pre-line">
               Player Reply: {part.value}
             </div>
           )
@@ -180,11 +180,11 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
       {shouldShowReplyCondition ? (
         <TurnNarrativeReply
           character={currentCharacter!}
-          submitReply={async ({ turnId, characterId, narrativeAction }) => {
+          submitReply={async ({ turnId, characterId, narrativeAction, originalPlayerInput }) => {
             setTokenError(null) // Clear previous errors
             try {
               // Cast turnId to Id<'turns'>
-              const result = await processTurnReply({ turnId: turnId as Id<"turns">, characterId, narrativeAction })
+              const result = await processTurnReply({ turnId: turnId as Id<"turns">, characterId, narrativeAction, originalPlayerInput })
               return result
             } catch (error) {
               if (error instanceof Error && error.message.includes("Insufficient tokens")) {

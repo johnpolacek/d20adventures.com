@@ -12,9 +12,10 @@ interface PartySlotProps {
   onClick?: () => void
   onJoinClick?: () => void
   isJoining?: boolean
+  playerName?: string
 }
 
-export function PartySlot({ character, isUserCharacter = false, isAvailable = false, onClick, onJoinClick, isJoining = false }: PartySlotProps) {
+export function PartySlot({ character, isUserCharacter = false, isAvailable = false, onClick, onJoinClick, isJoining = false, playerName }: PartySlotProps) {
   if (character) {
     return (
       <Card
@@ -34,7 +35,11 @@ export function PartySlot({ character, isUserCharacter = false, isAvailable = fa
           <div className="text-base mb-4 text-center text-white/90">
             {character.gender} {character.race} {character.archetype}
           </div>
-          {isUserCharacter && <div className="text-xs bg-amber-800 rounded-sm px-2 py-0.5 text-amber-200 font-mono tracking-wider font-bold">YOU</div>}
+          {isUserCharacter ? (
+            <div className="text-xs bg-amber-800 rounded-sm px-2 py-0.5 text-amber-200 font-mono tracking-wider font-bold">{playerName || "YOU"}</div>
+          ) : (
+            <div className="text-xs bg-primary-700 rounded-sm px-2 py-0.5 text-primary-200 font-mono tracking-wider font-bold">{playerName || "Player"}</div>
+          )}
         </div>
       </Card>
     )

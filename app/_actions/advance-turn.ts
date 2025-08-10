@@ -49,22 +49,41 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
   const allTurns = await convex.query(api.adventure.getTurnsByAdventure, { adventureId: turnData.adventureId });
   const currentTurnOrder = turnData.order || 1;
   
-  // Get the last 3 turns (including current) for context, but only if we're not on the first turn
-  const recentTurns = currentTurnOrder > 1 
-    ? allTurns
-        .filter(t => t.order < currentTurnOrder && t.order >= Math.max(1, currentTurnOrder - 3))
-        .sort((a, b) => (a.order || 0) - (b.order || 0))
-        .map(t => ({ 
-          turn: mapConvexTurnToTurn({ ...t, adventureId: turnData.adventureId.toString() }),
-          order: t.order 
-        }))
-        .filter(item => item.turn !== null)
-    : [];
+  // Compute completed turns within the current encounter (do not include the current, in-progress turn)
+  const completedEncounterTurnCount = allTurns.filter(
+    (t) => t.encounterId === turn.encounterId && (t.order || 0) < currentTurnOrder
+  ).length;
+  const encounterTurnDisplay = completedEncounterTurnCount >= 5 ? "5 or more" : String(completedEncounterTurnCount);
+  const currentEncounterTurnNumber = completedEncounterTurnCount + 1;
+  
+  console.log("[advanceTurn] Providing last 5 turns as context for LLM to analyze:", {
+    encounterId: turn.encounterId,
+    currentTurnOrder,
+    completedEncounterTurnCount,
+    encounterTurnDisplay,
+    currentEncounterTurnNumber,
+  });
+  
+  // Get the last 5 turns from any encounter for broader context
+  const recentTurns = allTurns
+    .filter(t => t.order < currentTurnOrder)
+    .sort((a, b) => (a.order || 0) - (b.order || 0))
+    .slice(-5) // Get last 5 turns
+    .map(t => ({ 
+      turn: mapConvexTurnToTurn({ ...t, adventureId: turnData.adventureId.toString() }),
+      order: t.order,
+      encounterId: t.encounterId
+    }))
+    .filter(item => item.turn !== null);
   
   console.log("[advanceTurn] Current turn order:", currentTurnOrder);
   console.log("[advanceTurn] Recent turns for context:", recentTurns.length);
   if (recentTurns.length > 0) {
-    console.log("[advanceTurn] Recent turn narratives:", recentTurns.map(item => ({ order: item.order, narrative: item.turn?.narrative?.substring(0, 100) + "..." })));
+    console.log("[advanceTurn] Recent turn narratives:", recentTurns.map(item => ({ 
+      order: item.order, 
+      encounterId: item.encounterId,
+      narrative: item.turn?.narrative?.substring(0, 100) + "..." 
+    })));
   }
 
   // 3. Find current encounter
@@ -180,11 +199,11 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
   const sceneContext = currentScene ? `Scene Title: ${currentScene.title || ""}\nScene Summary: ${currentScene.summary || ""}` : "";
   const adventureOverview = plan.overview ? `Adventure Overview: ${plan.overview}` : "";
 
-  // Build recent turn history context
+  // Build recent turn history context with encounter information
   const recentTurnHistory = recentTurns.length > 0 
-    ? `Recent Turn History (previous turns in this encounter):
-${recentTurns.map(item => `Turn ${item.order}: ${item.turn?.narrative || ""}`).join("\n\n")}`
-    : "No previous turns in this encounter.";
+    ? `Recent Adventure History (last ${recentTurns.length} turns across encounters):
+${recentTurns.map(item => `Turn ${item.order} [Encounter: ${item.encounterId}]: ${item.turn?.narrative || ""}`).join("\n\n")}`
+    : "No previous turns available.";
 
   // --- DETAILED LOGGING FOR LLM PROMPT INPUTS ---
   console.log("\n[advanceTurn] --- LLM PROMPT INPUTS ---");
@@ -223,14 +242,17 @@ ${rollInfo}
 Available Transition Options for '${currentEncounter.id}':
 ${transitionsText}
 
+Encounter Turn Status: ${encounterTurnDisplay} turns have been completed in the current encounter '${currentEncounter.id}'. You are now processing what will be turn #${currentEncounterTurnNumber} in this encounter.
+
 Your Task:
-1. Carefully review the 'Recent Narrative Context', the 'Most Recent Action/Event', and any 'Key Information Regarding Recent Dice Roll'. These describe events that HAVE ALREADY HAPPENED.
+1. Carefully review the 'Recent Adventure History' to understand the full context of what has happened across encounters.
 2. **CRITICAL: Check if the player has successfully completed the encounter's main objective.** Look for:
    - If the encounter instructions mention specific requirements (like "pay the 3 marks for entrance"), check if the player's action clearly fulfilled that requirement
    - If the player's action directly accomplishes what the encounter was designed for, this should trigger a transition
    - Pay special attention to actions like paying fees, completing tasks, or achieving stated objectives
-   - **IMPORTANT: Check the 'Recent Turn History' to see if any previous players have already completed key objectives (like paying entrance fees). If the objective was completed in a previous turn, this should trigger a transition.**
-3. Evaluate 'Most Recent Action/Event' against 'Available Transition Options' (if any):
+   - **IMPORTANT: Check the 'Recent Adventure History' to see if any previous players have already completed key objectives (like paying entrance fees). If the objective was completed in a previous turn, this should trigger a transition.**
+3. Evaluate 'Most Recent Action/Event' and the provided encounter turn information against 'Available Transition Options' (if any):
+   - **CRITICAL: For turn-count transitions** (e.g., "After 3 turns"), use the Encounter Turn Status above. If you are processing turn #N and N meets or exceeds the required number, that transition MUST occur immediately.
    - If a transition condition IS clearly met by PAST actions/rolls: Set 'nextEncounterId' to the 'encounter' ID specified in that transition option. The 'Available Transition Options' list is the definitive guide for all transitions. If the 'Most Recent Action/Event' directly and clearly fulfills a 'condition' in this list, that transition MUST occur. This takes strict precedence over any general interaction possibilities mentioned in the 'Current Encounter Instructions'.
    - **IMPORTANT: If the player has successfully completed the encounter's main objective (like paying the entrance fee), but no specific transition condition matches, look for a general "enter" or "proceed" transition.**
 4. Determine the 'nextEncounterId':
@@ -327,18 +349,37 @@ Respond in JSON:
       }));
     }
 
+    // Check if this is the first turn for this encounter by looking at all previous turns
+    const isFirstTurnForEncounter = !allTurns.some(previousTurn => 
+      previousTurn.encounterId === nextEncounter.id
+    );
+
+    if (nextEncounter.skipInitialNpcTurns && isFirstTurnForEncounter) {
+      console.log(`[advanceTurn] Setting NPC initiatives to 0 for first turn of encounter with skipInitialNpcTurns: ${nextEncounter.id}`);
+    }
+
     // NPCs: add from next encounter
-    const npcs: TurnCharacter[] = (nextEncounter.npc || []).map((npcRef: { id: string; initialInitiative?: number }) => {
+    const npcs: TurnCharacter[] = (nextEncounter.npc || []).map((npcRef: { id: string; initialInitiative?: number; behavior?: string }) => {
       const npc = plan.npcs[npcRef.id];
+      
+      // For encounters with skipInitialNpcTurns, set initiative to 0 for all NPCs if this is the first turn for the encounter
+      let npcInitiative: number;
+      if (nextEncounter.skipInitialNpcTurns && isFirstTurnForEncounter) {
+        npcInitiative = 0;
+      } else {
+        npcInitiative = typeof npcRef.initialInitiative === 'number' ? npcRef.initialInitiative : rollD20();
+      }
+      
       return {
         ...npc,
         id: npcRef.id,
         type: "npc",
         isComplete: false,
         hasReplied: false,
-        initiative: typeof npcRef.initialInitiative === 'number' ? npcRef.initialInitiative : rollD20(),
+        initiative: npcInitiative,
         // NPCs always start at full health
         healthPercent: 100,
+        behavior: npcRef.behavior,
       };
     });
     let allCharacters: TurnCharacter[] = [...pcs, ...npcs];

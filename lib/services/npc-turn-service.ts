@@ -3,7 +3,8 @@
 import { z } from "zod";
 import { generateObject } from "@/lib/ai";
 import { getRollRequirementForAction } from "@/lib/services/roll-requirement-service";
-import { getRollModifier, appendNarrative, normalizeNarrative } from "@/lib/services/narrative-service";
+import { appendNarrative, normalizeNarrative } from "@/lib/services/narrative-service";
+import { getRollModifier } from "@/lib/services/roll-modifier-service";
 import { rollD20 } from "@/lib/utils";
 import type { Turn, TurnCharacter } from "@/types/adventure";
 import { convex } from "@/lib/convex/server";
@@ -64,43 +65,22 @@ export async function processNpcTurnWithLLM({
   shortcode?: string;
   narrativeToAppend: string;
 }> {
-  console.log("[LLM DM] Starting NPC turn processing", JSON.stringify({
-    npcId,
-    turnId: turn.id,
-    encounterId: turn.encounterId,
-    currentNarrative: turn.narrative,
-    characterCount: turn.characters.length,
-    context: {
-      adventureOverview: adventureOverview ? "present" : "missing",
-      sectionContext: sectionContext ? "present" : "missing", 
-      sceneContext: sceneContext ? "present" : "missing",
-      encounterContext: encounterContext ? "present" : "missing"
-    }
-  }, null, 2));
+  console.log("[LLM] Starting NPC turn:", {
+    npc: npcId,
+    encounter: turn.encounterId
+  });
 
   // 1. LLM decides NPC action
   const npc = turn.characters.find((c) => c.id === npcId);
   if (!npc) throw new Error("NPC not found");
   
-  console.log("[LLM DM] NPC details", JSON.stringify({
-    npcId: npc.id,
-    npcName: npc.name,
-    npcType: npc.type,
-    npcHealth: npc.healthPercent,
-    npcStatus: npc.status,
-    npcHasReplied: npc.hasReplied,
-    npcIsComplete: npc.isComplete
-  }, null, 2));
+  // NPC turn processing
 
   const narrativeContext = (turn.narrative || "").split(/\n\n+/).slice(-2).join("\n\n");
   const playerCharactersForPrompt1 = turn.characters.filter(c => c.type === 'pc');
   const playerCharacterNamesForPrompt1 = playerCharactersForPrompt1.map(c => c.name);
   
-  console.log("[LLM DM] Player characters available", JSON.stringify({
-    playerCount: playerCharactersForPrompt1.length,
-    playerNames: playerCharacterNamesForPrompt1,
-    playerIds: playerCharactersForPrompt1.map(c => c.id)
-  }, null, 2));
+  // Player characters identified for NPC interaction
 
   // Build context string for prompt
   const contextString = [
@@ -113,15 +93,7 @@ export async function processNpcTurnWithLLM({
     narrativeContext ? `Recent Narrative:\n${narrativeContext}` : "",
   ].filter(Boolean).join("\n\n");
 
-  console.log("[LLM DM] Context for NPC action decision", JSON.stringify({
-    contextStringLength: contextString.length,
-    hasAdventureOverview: !!adventureOverview,
-    hasSectionContext: !!sectionContext,
-    hasSceneContext: !!sceneContext,
-    hasEncounterContext: !!encounterContext,
-    narrativeContextLength: narrativeContext.length,
-    narrativeContextPreview: narrativeContext.substring(0, 200) + (narrativeContext.length > 200 ? "..." : "")
-  }, null, 2));
+  // Context prepared for NPC action decision
 
   const prompt1 = `You are the DM for a tabletop RPG. Given the following context, decide what action the NPC should take this turn. Be creative and act as a real DM would. Output a short narrative for the action.
 
@@ -167,28 +139,25 @@ Respond as JSON. The 'narrative' and 'actionSummary' fields must describe the ac
   effects?: [ { targetId: string, equipmentToAdd?: [{name: string, description?: string}] } ]
 }`;
 
-  console.log("[LLM DM] Sending prompt to LLM for NPC action decision", JSON.stringify({
+  console.log("[LLM] NPC action prompt:", {
     promptLength: prompt1.length,
-    npcName: npc.name,
-    targetPlayerCount: playerCharactersForPrompt1.length
-  }, null, 2));
+    npc: npc.name,
+    targetPlayers: playerCharactersForPrompt1.length
+  });
 
   const actionResult = (await generateObject({ prompt: prompt1, schema: npcActionSchema })).object;
   
-  console.log("[LLM DM] LLM response for NPC action", JSON.stringify({
-    actionSummary: actionResult.actionSummary,
-    narrative: actionResult.narrative,
+  console.log("[LLM] NPC action response:", {
     actionType: actionResult.actionType,
-    effects: actionResult.effects,
-    narrativeLength: actionResult.narrative.length
-  }, null, 2));
+    narrativeLength: actionResult.narrative.length,
+    quality: actionResult.narrative && actionResult.actionSummary ? 'complete' : 'incomplete',
+    hasDialogue: actionResult.narrative.includes('"'),
+    hasEffects: !!(actionResult.effects?.length)
+  });
 
   // HANDLE SKIP/PASS FIRST to avoid unnecessary API calls
   if (actionResult.actionType === "skip" || actionResult.actionType === "pass") {
-    console.log("[LLM DM] Processing skip/pass action immediately", JSON.stringify({
-      actionType: actionResult.actionType,
-      narrative: actionResult.narrative
-    }, null, 2));
+    // Processing skip/pass action
 
     const narrativeToAppend = normalizeNarrative(actionResult.narrative);
     const updatedCharacters = turn.characters.map((c) => {
@@ -204,10 +173,10 @@ Respond as JSON. The 'narrative' and 'actionSummary' fields must describe the ac
     });
     const updatedNarrative = appendNarrative(turn.narrative || "", narrativeToAppend);
     
-    console.log("[LLM DM] Skip/pass action completed", JSON.stringify({
-      finalNarrativeLength: updatedNarrative.length,
-      npcStatus: updatedCharacters.find(c => c.id === npc.id)?.status
-    }, null, 2));
+    console.log("[LLM] NPC turn completed:", {
+      action: actionResult.actionType,
+      npc: npc.name
+    });
 
     return {
       updatedNarrative,
@@ -227,11 +196,7 @@ Respond as JSON. The 'narrative' and 'actionSummary' fields must describe the ac
   let effects: Array<{ targetId: string; healthPercentDelta?: number; status?: string; equipmentToAdd?: Array<{name: string, description?: string}> }> | undefined = undefined;
   let shortcode = undefined;
 
-  // 2. Use roll requirement utility to determine if a roll is needed
-  console.log("[LLM DM] Checking if roll is required for action", JSON.stringify({
-    actionSummary: actionResult.actionSummary,
-    npcName: npc.name
-  }, null, 2));
+  // Check if roll is required for NPC action
 
   const rollRequirement = await getRollRequirementForAction(
     actionResult.actionSummary,
@@ -243,19 +208,14 @@ Respond as JSON. The 'narrative' and 'actionSummary' fields must describe the ac
     }
   );
 
-  console.log("[LLM DM] Roll requirement result", JSON.stringify({
-    hasRollRequirement: !!rollRequirement,
+  console.log("[LLM] NPC roll requirement:", {
+    requiresRoll: !!rollRequirement,
     rollType: rollRequirement?.rollType,
-    difficulty: rollRequirement?.difficulty,
-    rollRequirement: rollRequirement
-  }, null, 2));
+    difficulty: rollRequirement?.difficulty
+  });
 
   if (rollRequirement && rollRequirement.rollType && rollRequirement.difficulty) {
-    console.log("[LLM DM] Roll required - getting modifier", JSON.stringify({
-      rollType: rollRequirement.rollType,
-      difficulty: rollRequirement.difficulty,
-      npcName: npc.name
-    }, null, 2));
+    // Getting modifier for NPC roll
 
     // 3. Get modifier
     const modifier = await getRollModifier({
@@ -268,11 +228,7 @@ Respond as JSON. The 'narrative' and 'actionSummary' fields must describe the ac
       character: npc,
     });
 
-    console.log("[LLM DM] Roll modifier calculated", JSON.stringify({
-      modifier,
-      rollType: rollRequirement.rollType,
-      difficulty: rollRequirement.difficulty
-    }, null, 2));
+    // Roll modifier calculated
 
     // 4. Perform the roll
     const baseRoll = rollD20();
@@ -287,14 +243,12 @@ Respond as JSON. The 'narrative' and 'actionSummary' fields must describe the ac
       success,
     };
 
-    console.log("[LLM DM] Dice roll completed", JSON.stringify({
-      baseRoll,
-      modifier,
+    console.log("[LLM] NPC dice roll:", {
+      rollType: rollRequirement.rollType,
       result,
       difficulty: rollRequirement.difficulty,
-      success,
-      rollType: rollRequirement.rollType
-    }, null, 2));
+      success
+    });
 
     // 5. Build DiceRoll shortcode
     shortcode = `[DiceRoll:rollType=${rollRequirement.rollType};baseRoll=${baseRoll};modifier=${modifier >= 0 ? "+" + modifier : modifier};result=${result};difficulty=${rollRequirement.difficulty};character=${npc.name};image=${npc.image};success=${success}]\n`;
@@ -363,35 +317,27 @@ Respond as JSON:
     narrativeToAppend = (shortcode ? shortcode : "") + normalizeNarrative(outcomeResult.narrative || "");
     effects = outcomeResult.effects;
     
-    // Log character health BEFORE applying effects
-    console.log("[LLM DM] Character health BEFORE applying effects", JSON.stringify({
-      characters: updatedCharacters.map(c => ({
-        id: c.id,
-        name: c.name,
-        healthPercent: c.healthPercent,
-        status: c.status
-      }))
-    }, null, 2));
+    // Applying effects to characters
     
     // Apply effects to characters
     updatedCharacters = updatedCharacters.map((c) => {
       const effect = effects?.find((e) => e.targetId === c.id);
       const updated = { ...c };
       if (effect) {
-        console.log(`[LLM DM] Applying effect to ${c.name} (${c.id}):`, JSON.stringify(effect, null, 2));
+        // Applying effect to character
         
         if (effect.healthPercentDelta !== undefined) {
           const oldHealth = c.healthPercent ?? 100;
           const newHealth = Math.max(0, oldHealth + effect.healthPercentDelta);
           updated.healthPercent = newHealth;
-          console.log(`[LLM DM] Health update for ${c.name}: ${oldHealth}% -> ${newHealth}% (delta: ${effect.healthPercentDelta})`);
+          // Health updated
         }
         
         updated.status = effect.status || c.status;
         if (effect.equipmentToAdd && effect.equipmentToAdd.length > 0) {
           const existingEquipment = Array.isArray(c.equipment) ? c.equipment : [];
           updated.equipment = [...existingEquipment, ...effect.equipmentToAdd];
-          console.log(`[LLM DM] Added equipment to ${c.name}:`, JSON.stringify(effect.equipmentToAdd, null, 2));
+          // Equipment added
         }
       }
       // Mark this NPC as having acted
@@ -402,15 +348,7 @@ Respond as JSON:
       return updated;
     });
     
-    // Log character health AFTER applying effects
-    console.log("[LLM DM] Character health AFTER applying effects", JSON.stringify({
-      characters: updatedCharacters.map(c => ({
-        id: c.id,
-        name: c.name,
-        healthPercent: c.healthPercent,
-        status: c.status
-      }))
-    }, null, 2));
+    // Effects applied
     
     // Logging for verification
 
@@ -469,20 +407,9 @@ Respond as JSON:
         : orig
     );
     
-    // Log final character health state
-    console.log("[LLM DM] Final character health state", JSON.stringify({
-      characters: updatedCharacters.map(c => ({
-        id: c.id,
-        name: c.name,
-        healthPercent: c.healthPercent,
-        status: c.status
-      }))
-    }, null, 2));
+    // Final character state updated
   } else {
-    console.log("[LLM DM] No roll required - applying action directly", JSON.stringify({
-      actionSummary: actionResult.actionSummary,
-      narrative: actionResult.narrative
-    }, null, 2));
+    // Applying action directly (no roll required)
 
     narrativeToAppend = normalizeNarrative(actionResult.narrative);
     effects = actionResult.effects;
@@ -491,12 +418,12 @@ Respond as JSON:
       const effect = effects?.find((e) => e.targetId === c.id);
       const updated = { ...c };
       if (effect) {
-        console.log(`[LLM DM] Applying direct effect to ${c.name} (${c.id}):`, JSON.stringify(effect, null, 2));
+        // Applying direct effect
         
         if (effect.equipmentToAdd && effect.equipmentToAdd.length > 0) {
           const existingEquipment = Array.isArray(c.equipment) ? c.equipment : [];
           updated.equipment = [...existingEquipment, ...effect.equipmentToAdd];
-          console.log(`[LLM DM] Added equipment to ${c.name}:`, JSON.stringify(effect.equipmentToAdd, null, 2));
+          // Equipment added
         }
       }
       // Mark this NPC as having acted
@@ -507,10 +434,7 @@ Respond as JSON:
       return updated;
     });
     
-    console.log("[LLM DM] Direct action completed", JSON.stringify({
-      finalNarrativeLength: (updatedNarrative + narrativeToAppend).length,
-      npcStatus: updatedCharacters.find(c => c.id === npc.id)?.status
-    }, null, 2));
+    // Direct action completed
   }
   updatedNarrative = appendNarrative(updatedNarrative, narrativeToAppend);
 
@@ -542,10 +466,9 @@ const findEncounterInPlan = (plan: AdventurePlan, encounterId: string): Adventur
     .find(encounter => encounter.id === encounterId) ?? null;
 
 export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
-  console.log("[LLM DM] Starting NPC turns processing", JSON.stringify({
-    turnId: turnId.toString(),
-    timestamp: new Date().toISOString()
-  }, null, 2));
+  console.log("[LLM] Starting NPC turns processing:", {
+    turnId: turnId.toString()
+  });
 
   let turn = await convex.query(api.adventure.getTurnById, { turnId });
   if (!turn) throw new Error("Turn not found");
@@ -634,18 +557,11 @@ export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
   let processedNpcCount = 0;
   for (const char of initiativeOrder) {
     if (char.type !== "npc") {
-      console.log("[LLM DM] Reached player character, stopping NPC processing", JSON.stringify({
-        characterName: char.name,
-        characterType: char.type
-      }, null, 2));
+      console.log("[LLM] Stopping at player character:", char.name);
       break; // Process NPCs in order, then stop
     }
 
-    console.log(`[LLM DM] Processing NPC ${processedNpcCount + 1}/${initiativeOrder.filter(c => c.type === 'npc').length}`, JSON.stringify({
-      npcId: char.id,
-      npcName: char.name,
-      npcInitiative: char.initiative
-    }, null, 2));
+    console.log(`[LLM] Processing NPC ${processedNpcCount + 1}:`, char.name);
 
     // Always reload the latest turn state before processing each NPC
     // as previous NPC actions in the same turn might have updated it.
@@ -757,9 +673,8 @@ export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
     }, null, 2));
   }
 
-  console.log("[LLM DM] NPC turns processing completed", JSON.stringify({
-    totalProcessed: processedNpcCount,
-    totalInInitiativeOrder: initiativeOrder.length,
-    timestamp: new Date().toISOString()
-  }, null, 2));
+  console.log("[LLM] NPC turns processing completed:", {
+    processed: processedNpcCount,
+    total: initiativeOrder.length
+  });
 } 

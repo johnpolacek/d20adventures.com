@@ -1,5 +1,5 @@
 import { streamText, generateText } from "ai";
-import { openaiModel } from "@/lib/ai/llm";
+import { currentModel } from "@/lib/ai/llm";
 import { NextRequest } from "next/server";
 import { requireAuthMiddleware } from "../../_auth";
 
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
   // If stream is false, use non-streaming generateText
   if (!stream) {
     const result = await generateText({
-      model: openaiModel,
+      model: currentModel,
       prompt: input,
     });
     return Response.json({ result: result.text });
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
 
   // Stream the text response using the ai SDK
   const result = streamText({
-    model: openaiModel,
+    model: currentModel,
     prompt: input,
   });
 

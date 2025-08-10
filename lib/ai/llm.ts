@@ -1,7 +1,9 @@
 import { google } from "@ai-sdk/google";
 import { openai } from "@ai-sdk/openai";
 
-const geminiModel = google('gemini-2.5-flash-lite'); 
+const geminiModel = google('gemini-2.5-flash'); 
 const openaiModel = openai('gpt-5-mini');
 
-export { geminiModel, openaiModel }
+const currentModel = geminiModel;
+
+export { geminiModel, openaiModel, currentModel }

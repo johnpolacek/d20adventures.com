@@ -8,10 +8,12 @@ import { useEffect, useMemo, useRef } from "react"
 import { useParams } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Badge } from "@/components/ui/badge"
 import { sendChatMessage } from "@/app/_actions/chat"
 import type { Id } from "@/convex/_generated/dataModel"
 import { useUser } from "@clerk/nextjs"
 import { useTurnContext } from "@/lib/context/TurnContext"
+import { getLastSeenTimestamp, setLastSeenTimestamp } from "@/lib/utils/chat-storage"
 
 type GameChatProps = {
   adventureId?: string
@@ -37,7 +39,9 @@ export default function GameChat({ adventureId, characterName }: GameChatProps) 
 
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
+  const [unseenCount, setUnseenCount] = useState(0)
   const ids = useRef<Set<string>>(new Set())
+  const unseenIds = useRef<Set<string>>(new Set())
   const listEndRef = useRef<HTMLDivElement | null>(null)
 
   // Determine default character name for this user from latest messages as fallback
@@ -55,10 +59,12 @@ export default function GameChat({ adventureId, characterName }: GameChatProps) 
     return lastMine?.characterName
   }, [characterName, currentPlayerCharacterName, messages])
 
+  // Main SSE effect for when chat is open
   useEffect(() => {
     if (!open || !effectiveAdventureId) return
     setMessages([])
     ids.current = new Set()
+
     const es = new EventSource(`/api/adventure/chat/${effectiveAdventureId}`)
     es.onmessage = (evt) => {
       try {
@@ -66,13 +72,53 @@ export default function GameChat({ adventureId, characterName }: GameChatProps) 
         if (Array.isArray(batch) && batch.length) {
           setMessages((prev) => {
             const next = [...prev]
+            let hasNewMessages = false
+
             for (const m of batch) {
               if (!ids.current.has(m._id)) {
                 ids.current.add(m._id)
                 next.push(m)
+                hasNewMessages = true
               }
             }
+
+            // If modal is open and we got new messages, mark them as seen immediately
+            if (hasNewMessages && open) {
+              const newestTimestamp = Math.max(...batch.map((m) => m.createdAt))
+              setLastSeenTimestamp(effectiveAdventureId, newestTimestamp)
+            }
+
             return next
+          })
+        }
+      } catch {}
+    }
+    es.onerror = () => {
+      // Keep the stream alive; browser will retry
+    }
+    return () => {
+      es.close()
+    }
+  }, [open, effectiveAdventureId])
+
+  // Separate SSE effect for tracking unseen messages when chat is closed
+  useEffect(() => {
+    if (open || !effectiveAdventureId) return
+
+    const lastSeen = getLastSeenTimestamp(effectiveAdventureId)
+    unseenIds.current = new Set()
+    setUnseenCount(0)
+
+    const es = new EventSource(`/api/adventure/chat/${effectiveAdventureId}`)
+    es.onmessage = (evt) => {
+      try {
+        const batch: ChatMessage[] = JSON.parse(evt.data)
+        if (Array.isArray(batch) && batch.length) {
+          batch.forEach((m) => {
+            if (m.createdAt > lastSeen && !unseenIds.current.has(m._id)) {
+              unseenIds.current.add(m._id)
+              setUnseenCount((prev) => prev + 1)
+            }
           })
         }
       } catch {}
@@ -89,6 +135,17 @@ export default function GameChat({ adventureId, characterName }: GameChatProps) 
     listEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages.length, open])
 
+  // Handle dialog state changes
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen)
+
+    if (newOpen && effectiveAdventureId) {
+      // Mark all messages as seen when opening
+      setUnseenCount(0)
+      setLastSeenTimestamp(effectiveAdventureId, Date.now())
+    }
+  }
+
   async function handleSend() {
     const content = input.trim()
     if (!content || !effectiveAdventureId) return
@@ -98,12 +155,19 @@ export default function GameChat({ adventureId, characterName }: GameChatProps) 
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button size="sm" className="bg-primary-700 ring-4 ring-primary-600 hover:bg-primary-700 hover:scale-105 transition-all duration-300">
-          <MessageSquare className="mr-1 h-4 w-4" />
-          Game Chat
-        </Button>
+        <div className="relative">
+          <Button size="sm" className="bg-primary-700 ring-4 ring-primary-600 hover:bg-primary-700 hover:scale-105 transition-all duration-300">
+            <MessageSquare className="mr-1 h-4 w-4" />
+            Game Chat
+          </Button>
+          {unseenCount > 0 && (
+            <Badge className="bg-purple-600 ring-2 ring-purple-700 absolute -top-2.5 -right-2.5 h-5 w-5 p-0 flex items-center justify-center text-xs font-mono font-bold rounded-full animate-in fade-in duration-200">
+              {unseenCount > 99 ? "99+" : unseenCount}
+            </Badge>
+          )}
+        </div>
       </DialogTrigger>
       <DialogContent className="w-full max-w-4xl bg-primary-800 text-white border-4 border-primary-600">
         <DialogHeader>
