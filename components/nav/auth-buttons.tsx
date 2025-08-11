@@ -1,6 +1,7 @@
 "use client"
 
-import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs"
+import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs"
+import { User as UserIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useTokens } from "@/lib/context/TokenContext"
 import TokenCount from "./token-count"
@@ -8,6 +9,7 @@ import { useState, useEffect } from "react"
 
 export default function AuthButtons() {
   const { tokensRemaining, isLoading: isLoadingTokens } = useTokens()
+  const { user } = useUser()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -52,7 +54,11 @@ export default function AuthButtons() {
           <div className="flex items-center gap-0.5 text-xs sm:text-sm text-muted-foreground">
             {!isLoadingTokens && typeof tokensRemaining === "number" && <TokenCount tokensRemaining={tokensRemaining} />}
           </div>
-          <UserButton userProfileUrl="/account" />
+          <UserButton userProfileUrl="/account">
+            <UserButton.MenuItems>
+              <UserButton.Link label="Player Page" href={user?.username ? `/player/${user.username}` : "/player"} labelIcon={<UserIcon className="size-4" />} />
+            </UserButton.MenuItems>
+          </UserButton>
         </div>
       </SignedIn>
     </div>
