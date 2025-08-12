@@ -5,6 +5,7 @@ import { getImageUrl } from "@/lib/utils"
 import type { PCTemplate } from "@/types/character"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { UserRoundX } from "lucide-react"
 
 interface CharacterSelectCardProps {
   character: PCTemplate
@@ -15,9 +16,10 @@ interface CharacterSelectCardProps {
   className?: string
   disabled?: boolean
   clickable?: boolean
+  onDelete?: () => void
 }
 
-export function CharacterSelectCard({ character, buttonLabel, onButtonClick, href, buttonAsChild = false, className, disabled = false, clickable = false }: CharacterSelectCardProps) {
+export function CharacterSelectCard({ character, buttonLabel, onButtonClick, href, buttonAsChild = false, className, disabled = false, clickable = false, onDelete }: CharacterSelectCardProps) {
   return (
     <Card
       className={cn(
@@ -33,9 +35,9 @@ export function CharacterSelectCard({ character, buttonLabel, onButtonClick, hre
         ) : (
           <span className="text-xs text-white/40">No Image</span>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent pointer-events-none" />
       </div>
-      <div className="pb-6 -mt-10 z-10 relative flex flex-col justify-center items-center">
+      <div className="pb-6 -mt-10 z-10 relative flex flex-col justify-center items-center w-full">
         <div className="font-bold text-3xl text-amber-400 mb-1 truncate w-full text-center">{character.name}</div>
         <div className="text-base mb-4 text-center">
           {character.gender} {character.race} {character.archetype}
@@ -49,6 +51,21 @@ export function CharacterSelectCard({ character, buttonLabel, onButtonClick, hre
         ) : (
           <Button variant="epic" className="text-sm" size="sm" disabled={disabled}>
             {buttonLabel}
+          </Button>
+        )}
+        {onDelete && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute bottom-2 right-2 p-0 h-6 w-6 bg-red-900/30 hover:bg-red-600/70 text-red-500/70 z-20"
+            onClick={(e) => {
+              e.stopPropagation()
+              onDelete()
+            }}
+            aria-label="Delete character"
+          >
+            <UserRoundX className="h-4 w-4" />
           </Button>
         )}
       </div>

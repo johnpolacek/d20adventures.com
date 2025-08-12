@@ -10,7 +10,7 @@ import FullPageImage from "@/components/layout/fullpage-image"
 import { textShadowSpreadLight } from "@/components/typography/styles"
 import { getAdventuresForUser } from "@/app/_actions/adventure"
 import { getUserCharacters } from "@/app/_actions/character"
-import { CharacterSelectCard } from "@/components/ui/character-select-card"
+import { CharacterGrid } from "./components/character-grid"
 
 export default async function PlayerProfilePage(props: { params: Promise<{ username: string }> }) {
   const { username } = await props.params
@@ -68,13 +68,7 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
                 <h2 style={textShadowSpreadLight} className="text-3xl font-bold mb-8 w-full text-amber-400 font-display text-center">
                   Your Characters
                 </h2>
-                <div className="flex flex-wrap gap-6 justify-center">
-                  {characters.map((char, i) => (
-                    <div key={char.id} className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4">
-                      <CharacterSelectCard character={char} buttonLabel="Edit" href={`/player/${user.username}/characters/${characterFiles[i]}/edit`} buttonAsChild={true} />
-                    </div>
-                  ))}
-                </div>
+                <CharacterGrid username={user.username!} characters={characters} characterFiles={characterFiles} />
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center gap-4 pt-12">
