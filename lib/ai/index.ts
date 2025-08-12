@@ -242,7 +242,7 @@ export async function streamObject<T extends z.ZodTypeAny>({prompt, schema}: { p
 }
 
 // Wrapper for generateText: uses currentModel by default, but allows override
-export async function generateText({prompt}: { prompt: string; }) {
+export async function generateText({prompt}: { prompt: string; }): Promise<{ text: string; usage?: { inputTokens?: number; outputTokens?: number; totalTokens?: number } }> {
   let result;
   try {
     const { userId } = await auth()
@@ -295,7 +295,10 @@ export async function generateText({prompt}: { prompt: string; }) {
       }
     }
 
-    return result;
+    return {
+      text: result.text ?? "",
+      usage: result.usage,
+    };
   } catch (error) {
     console.warn('generateText failed. Error details:', error);
     
@@ -348,7 +351,10 @@ export async function generateText({prompt}: { prompt: string; }) {
         }
       }
 
-      return result;
+      return {
+        text: result.text ?? "",
+        usage: result.usage,
+      };
     } catch (retryError) {
       console.error('generateText retry also failed. Error details:', retryError);
       throw retryError; // Re-throw the error from the retry attempt
