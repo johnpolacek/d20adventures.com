@@ -6,34 +6,29 @@ import ActiveAdventureCard from "@/components/views/active-adventure-card"
 import { getActiveAdventureForUser } from "@/app/_actions/adventure"
 import { auth } from "@clerk/nextjs/server"
 import RedirectHandler from "@/components/nav/redirect-handler"
+import { currentUser } from "@clerk/nextjs/server"
 
 export default async function HomePage() {
   const activeAdventure = await getActiveAdventureForUser()
   const { userId } = await auth()
-
-  console.log(
-    "[HomePage] Server component state:",
-    JSON.stringify(
-      {
-        hasActiveAdventure: !!activeAdventure,
-        userId,
-      },
-      null,
-      2
-    )
-  )
+  const user = await currentUser()
 
   return (
     <>
       <RedirectHandler />
       <div className="flex min-h-[max(100vh,100vw)] lg:min-h-screen flex-col relative">
-        {activeAdventure ? (
+        {activeAdventure && user ? (
           <div className="fade-in delay-[2600ms] mt-32 sm:mt-48 w-screen relative z-10">
             <h2 className="text-4xl sm:text-6xl font-display text-center w-full fade-in delay-[2s] mb-8" style={textShadowSpreadLight}>
               Welcome Back
             </h2>
             <ActiveAdventureCard adventure={activeAdventure} userId={userId} />
-            <div className="text-center my-8">
+            <div className="flex justify-center items-center gap-8 py-12">
+              <Link href={`/player/${user.username}`}>
+                <Button asChild variant="epic" size="sm" className="mt-2 text-xs relative z-10 bg-fuchsia-800">
+                  Your Player Page
+                </Button>
+              </Link>
               <Link href="/settings/realm-of-myr/play">
                 <Button asChild variant="epic" size="sm" className="mt-2 text-xs relative z-10">
                   Find New Adventure
