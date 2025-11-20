@@ -1,7 +1,7 @@
 'use server'
 import { listAndReadJsonFilesInS3Directory } from "@/lib/s3-utils";
 import { auth } from "@clerk/nextjs/server";
-import { copyS3Object, deleteS3Object, readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils";
+import { deleteS3Object, readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils";
 import type { PCTemplate } from "@/types/character";
 
 export async function getUserCharacters(userId: string): Promise<PCTemplate[]> {
