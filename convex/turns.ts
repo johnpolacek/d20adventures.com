@@ -1,5 +1,5 @@
-import { mutation } from "./_generated/server";
-import { v } from "convex/values";
+import { v } from "convex/values"
+import { mutation } from "./_generated/server"
 
 // Minimal mutation: create a new turn
 export const createTurn = mutation({
@@ -18,11 +18,11 @@ export const createTurn = mutation({
       .query("turns")
       .withIndex("by_adventure", (q) => q.eq("adventureId", args.adventureId))
       .filter((q) => q.eq(q.field("order"), args.order))
-      .first();
+      .first()
     if (existing) {
-      throw new Error(`A turn with order ${args.order} already exists for this adventure.`);
+      throw new Error(`A turn with order ${args.order} already exists for this adventure.`)
     }
-    const now = Date.now();
+    const now = Date.now()
     return await ctx.db.insert("turns", {
       adventureId: args.adventureId,
       encounterId: args.encounterId,
@@ -33,9 +33,9 @@ export const createTurn = mutation({
       isFinalEncounter: args.isFinalEncounter,
       createdAt: now,
       updatedAt: now,
-    });
+    })
   },
-});
+})
 
 // Minimal mutation: update a turn (patch)
 export const updateTurn = mutation({
@@ -48,10 +48,10 @@ export const updateTurn = mutation({
     }),
   },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.turnId, args.patch);
-    return true;
+    await ctx.db.patch(args.turnId, args.patch)
+    return true
   },
-});
+})
 
 // Minimal mutation: patch adventure
 export const patchAdventure = mutation({
@@ -61,15 +61,11 @@ export const patchAdventure = mutation({
       currentTurnId: v.optional(v.id("turns")),
       updatedAt: v.optional(v.number()),
       endedAt: v.optional(v.number()),
-      status: v.optional(v.union(
-        v.literal("waitingForPlayers"),
-        v.literal("active"),
-        v.literal("completed")
-      )),
+      status: v.optional(v.union(v.literal("waitingForPlayers"), v.literal("active"), v.literal("completed"))),
     }),
   },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.adventureId, args.patch);
-    return true;
+    await ctx.db.patch(args.adventureId, args.patch)
+    return true
   },
-}); 
+})

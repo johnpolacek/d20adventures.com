@@ -1,10 +1,6 @@
-import type { Character, PCTemplate, EquipmentItem } from "@/types/character"
+import type { Character, EquipmentItem, PCTemplate } from "@/types/character"
 
-export function useCharacterDetails(
-  charId: string,
-  getCharacter: (charId: string) => Character | PCTemplate,
-  updateCharacter: (charId: string, updates: Partial<Character | PCTemplate>) => void
-) {
+export function useCharacterDetails(charId: string, getCharacter: (charId: string) => Character | PCTemplate, updateCharacter: (charId: string, updates: Partial<Character | PCTemplate>) => void) {
   const char = getCharacter(charId)
 
   // Equipment management
@@ -117,4 +113,4 @@ export function useCharacterDetails(
     // Attributes
     updateAttributes,
   }
-} 
+}

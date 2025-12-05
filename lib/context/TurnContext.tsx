@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useEffect, useState, useRef } from "react"
-import { useUser } from "@clerk/nextjs"
-import type { Turn } from "@/types/adventure" // Adjust as needed
 import { mapConvexTurnToTurn } from "@/lib/utils"
+import type { Turn } from "@/types/adventure" // Adjust as needed
+import { useUser } from "@clerk/nextjs"
+import type React from "react"
+import { createContext, useContext, useEffect, useRef, useState } from "react"
 
 type TurnContextType = {
   currentTurn: Turn | null
@@ -97,7 +98,7 @@ export const TurnProvider = ({ adventureId, initialTurn, disableSSE = false, chi
 
       // Only attempt reconnection if we haven't exceeded max attempts and user is still authenticated
       if (reconnectAttempts.current < maxReconnectAttempts && isSignedIn) {
-        const backoffDelay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000) // Max 30 seconds
+        const backoffDelay = Math.min(1000 * 2 ** reconnectAttempts.current, 30000) // Max 30 seconds
         console.log(`[TurnProvider] Attempting reconnection in ${backoffDelay}ms (attempt ${reconnectAttempts.current + 1}/${maxReconnectAttempts})`)
 
         reconnectAttempts.current++

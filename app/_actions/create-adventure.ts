@@ -1,15 +1,15 @@
-'use server'
+"use server"
 
+import { startAdventure } from "@/app/_actions/start-adventure"
+import type { CharacterChoiceMode } from "@/components/adventure/character-selection"
 import { api } from "@/convex/_generated/api"
 import { convex } from "@/lib/convex/server"
-import { auth } from "@clerk/nextjs/server"
-import { redirect } from "next/navigation"
-import type { CharacterChoiceMode } from "@/components/adventure/character-selection"
 import { readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
+import { toPCTemplate } from "@/lib/utils/character-mapping"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PCTemplate } from "@/types/character"
-import { toPCTemplate } from "@/lib/utils/character-mapping"
-import { startAdventure } from "@/app/_actions/start-adventure"
+import { auth } from "@clerk/nextjs/server"
+import { redirect } from "next/navigation"
 
 interface CreateAdventureInput {
   settingId: string
@@ -36,14 +36,14 @@ export async function createAdventure(input: CreateAdventureInput) {
   // Extract character choices and create the players array
   const { characterChoices } = input
   const players = characterChoices
-    .filter(choice => choice.mode === "player") // Only include characters selected as "player"
-    .map(choice => ({
+    .filter((choice) => choice.mode === "player") // Only include characters selected as "player"
+    .map((choice) => ({
       userId: userId,
       characterId: `characters/${userId}/${choice.characterId}.json`,
     }))
 
   // Ensure each selected character exists in the user's S3 path
-  for (const choice of characterChoices.filter(c => c.mode === "player")) {
+  for (const choice of characterChoices.filter((c) => c.mode === "player")) {
     const userCharKey = `characters/${userId}/${choice.characterId}.json`
     let exists = false
     try {
@@ -52,7 +52,7 @@ export async function createAdventure(input: CreateAdventureInput) {
     } catch {}
     if (!exists) {
       // Try to find the character in premade PCs or as a custom character
-      let characterData: PCTemplate | unknown = plan.premadePlayerCharacters?.find(pc => pc.id === choice.characterId)
+      let characterData: PCTemplate | unknown = plan.premadePlayerCharacters?.find((pc) => pc.id === choice.characterId)
       if (!characterData) {
         // Try to load as a custom character (should not throw if not found)
         try {
@@ -69,7 +69,7 @@ export async function createAdventure(input: CreateAdventureInput) {
 
   // Create adventure in waiting state
   const now = Date.now()
-  
+
   // Create the adventure using the existing Convex mutation
   const adventureId = await convex.mutation(api.adventure.createAdventure, {
     planId: adventurePlanId,
@@ -85,7 +85,7 @@ export async function createAdventure(input: CreateAdventureInput) {
   // If only one player character AND the adventure plan expects only one player, auto-start the adventure
   const maxPartySize = plan.party?.[1] || 1
   const isSoloAdventure = maxPartySize === 1
-  
+
   if (players.length === 1 && isSoloAdventure) {
     // Call startAdventure to create the first turn and redirect to it
     await startAdventure({ settingId, adventurePlanId, adventureId })
@@ -94,4 +94,4 @@ export async function createAdventure(input: CreateAdventureInput) {
 
   // For multi-character adventures or when more players might join, redirect to lobby
   redirect(`/settings/${settingId}/${adventurePlanId}/${adventureId}`)
-} 
+}

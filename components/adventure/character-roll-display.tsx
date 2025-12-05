@@ -33,8 +33,7 @@ export default function CharacterRollDisplay({
             {typeof modifier === "number" && modifier !== 0 && (
               <>
                 {modifier > 0 ? " + " : " - "}
-                <span className={modifier > 0 ? "text-green-400" : "text-red-400"}>{Math.abs(modifier)}</span>
-                <> = </>
+                <span className={modifier > 0 ? "text-green-400" : "text-red-400"}>{Math.abs(modifier)}</span>=
               </>
             )}
             {typeof modifier === "number" && modifier !== 0 ? result : null}

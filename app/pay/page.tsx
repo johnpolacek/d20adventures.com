@@ -1,12 +1,12 @@
 "use client"
 
-import { useState } from "react"
-import { Card } from "@/components/ui/card"
-import { Heading } from "@/components/typography/heading"
-import { SignInButton, useUser } from "@clerk/nextjs"
-import { Button } from "@/components/ui/button"
-import { LogIn, Coffee } from "lucide-react"
 import { StripePaymentForm } from "@/components/checkout/stripe-payment-form"
+import { Heading } from "@/components/typography/heading"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { SignInButton, useUser } from "@clerk/nextjs"
+import { Coffee, LogIn } from "lucide-react"
+import { useState } from "react"
 
 export default function DonatePage() {
   const { isSignedIn, isLoaded, user } = useUser()

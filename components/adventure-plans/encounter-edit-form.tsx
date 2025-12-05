@@ -2,22 +2,22 @@
 
 "use client"
 
-import * as React from "react"
-import { AdventureEncounter, EncounterTransition, AdventureSection, EncounterCharacterRef } from "@/types/adventure-plan"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
-import { ImageUpload } from "@/components/ui/image-upload"
 import { Button } from "@/components/ui/button"
-import { X, ChevronsUp, Plus } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
+import { ImageUpload } from "@/components/ui/image-upload"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { getImageUrl } from "@/lib/utils"
-import { EncounterEditCollapsed } from "./encounter-edit-collapsed"
+import type { AdventureEncounter, AdventureSection, EncounterCharacterRef, EncounterTransition } from "@/types/adventure-plan"
+import type { Character, NPC, PCTemplate } from "@/types/character"
+import { ChevronsUp, Plus, X } from "lucide-react"
+import * as React from "react"
 import { CharacterCard } from "./character-card"
-import { Character, NPC, PCTemplate } from "@/types/character"
 import { CharacterGenerateForm } from "./character-generate-form"
-import { useNpcManagement } from "./hooks/use-npc-management"
 import { DeleteEncounterAlert } from "./delete-encounter-alert"
+import { EncounterEditCollapsed } from "./encounter-edit-collapsed"
+import { useNpcManagement } from "./hooks/use-npc-management"
 
 interface EncounterEditFormProps {
   id: string
@@ -364,7 +364,7 @@ export function EncounterEditForm({
                     // Regex to match a name ending with a number
                     const match = originalName.match(/^(.*?)(?: (\d+))?$/)
                     const baseName = match ? match[1] : originalName
-                    let startIdx = match && match[2] ? parseInt(match[2], 10) + 1 : 2
+                    let startIdx = match?.[2] ? Number.parseInt(match[2], 10) + 1 : 2
                     let copyName = `${baseName} ${startIdx}`
                     const existingNames = new Set(Object.values(availableNpcs).map((n) => n.name))
                     while (existingNames.has(copyName)) {

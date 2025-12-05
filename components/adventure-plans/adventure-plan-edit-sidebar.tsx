@@ -1,16 +1,16 @@
 "use client"
 
-import * as React from "react"
-import { AdventurePlan } from "@/types/adventure-plan"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { cn } from "@/lib/utils"
 import { reverseSlugify } from "@/lib/utils"
-import Link from "next/link"
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
-import { arrayMove, SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable"
+import type { AdventurePlan } from "@/types/adventure-plan"
+import { DndContext, PointerSensor, closestCenter, useSensor, useSensors } from "@dnd-kit/core"
+import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable"
 // @ts-expect-error dnd-kit/utilities may not have types in some setups
 import { CSS } from "@dnd-kit/utilities"
 import { GripVertical } from "lucide-react"
+import Link from "next/link"
+import * as React from "react"
 
 interface AdventurePlanEditSidebarProps {
   adventurePlan: AdventurePlan

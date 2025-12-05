@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
 import { unsubscribe } from "@/app/_actions/mailing-list"
 import { Button } from "@/components/ui/button"
+import { useState } from "react"
 
 export default function UnsubscribeForm() {
   const [email, setEmail] = useState("")
@@ -37,7 +37,7 @@ export default function UnsubscribeForm() {
             <label htmlFor="email" className="block mb-2 font-medium">
               Email address
             </label>
-            <input id="email" type="email" className="w-full border rounded px-3 py-2" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus />
+            <input id="email" type="email" className="w-full border rounded px-3 py-2" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
           <Button type="submit" className="w-full" size="lg" variant="destructive">
             Unsubscribe

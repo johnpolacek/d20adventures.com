@@ -1,16 +1,16 @@
 "use client"
 
-import { AdventureSection, AdventureEncounter } from "@/types/adventure-plan"
-import { Textarea } from "@/components/ui/textarea"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { generateEncounterAction } from "@/app/_actions/generate-encounter"
 import { EncounterEditForm } from "@/components/adventure-plans/encounter-edit-form"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
+import type { AdventureEncounter, AdventureSection } from "@/types/adventure-plan"
+import type { Character } from "@/types/character"
 import { Plus, Wand2 } from "lucide-react"
 import * as React from "react"
-import { generateEncounterAction } from "@/app/_actions/generate-encounter"
 import { toast } from "sonner"
-import { Character } from "@/types/character"
 
 interface AdventurePlanSectionsProps {
   adventurePlanId: string

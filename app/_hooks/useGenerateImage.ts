@@ -23,7 +23,7 @@ export function useGenerateImage() {
         body: JSON.stringify({
           input: prompt,
           userId: "demo", // Using a demo folder for the AI demo
-          deckId: "ai-demo" // Using a fixed demo deck ID
+          deckId: "ai-demo", // Using a fixed demo deck ID
         }),
       })
 
@@ -48,4 +48,4 @@ export function useGenerateImage() {
     error,
     generate,
   }
-} 
+}

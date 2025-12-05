@@ -1,11 +1,8 @@
-import * as React from "react"
-import { AdventureSection } from "@/types/adventure-plan"
+import type { AdventureSection } from "@/types/adventure-plan"
+import type * as React from "react"
 import slugify from "slugify"
 
-export function useEncounterHandlers(
-  sections: AdventureSection[],
-  setSections: React.Dispatch<React.SetStateAction<AdventureSection[]>>
-) {
+export function useEncounterHandlers(sections: AdventureSection[], setSections: React.Dispatch<React.SetStateAction<AdventureSection[]>>) {
   const handleEncounterTitleChange = (sectionIndex: number, sceneIndex: number, encounterIndex: number, newTitle: string) => {
     const updatedSections = sections.map((section, sIdx) => {
       if (sIdx === sectionIndex) {
@@ -272,4 +269,4 @@ export function useEncounterHandlers(
     handleEncounterTransitionsChange,
     handleEncounterNpcChange,
   }
-} 
+}

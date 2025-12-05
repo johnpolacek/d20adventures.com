@@ -1,10 +1,10 @@
 "use client"
-import React, { useState, useRef } from "react"
-import { Button } from "./button"
-import Image from "next/image"
-import { cn, rollD20 } from "@/lib/utils"
-import { textShadow } from "../typography/styles"
 import DiceRollResult from "@/components/adventure/dice-roll-result"
+import { cn, rollD20 } from "@/lib/utils"
+import Image from "next/image"
+import React, { useState, useRef } from "react"
+import { textShadow } from "../typography/styles"
+import { Button } from "./button"
 
 const ROLL_ANIMATION_DURATION = 1200 // ms
 const ROLL_ANIMATION_INTERVAL = 60 // ms

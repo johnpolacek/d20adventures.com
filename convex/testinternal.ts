@@ -1,9 +1,9 @@
-import { internalAction } from "./_generated/server";
-import { v } from "convex/values";
+import { v } from "convex/values"
+import { internalAction } from "./_generated/server"
 
 export const testInternal = internalAction({
   args: { foo: v.string() },
   handler: async (ctx, args) => {
-    return args.foo;
+    return args.foo
   },
-}); 
+})

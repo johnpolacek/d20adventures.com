@@ -1,9 +1,9 @@
-import Link from "next/link"
-import Image from "next/image"
-import AuthButtons from "../nav/auth-buttons"
 import { cn, reverseSlugify } from "@/lib/utils"
-import { paper } from "../graphics/styles"
+import Image from "next/image"
+import Link from "next/link"
 import Parchment from "../graphics/background/Parchment"
+import { paper } from "../graphics/styles"
+import AuthButtons from "../nav/auth-buttons"
 
 export default async function Header({ path }: { path: string }) {
   const isBig = path === "" || path === "/" || path === "/start" || path === "/join"

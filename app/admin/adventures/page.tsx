@@ -1,10 +1,10 @@
 import { getAllAdventuresAdmin } from "@/app/_actions/admin/get-all-adventures"
 import { AdminBreadcrumb } from "@/components/nav/admin-breadcrumb"
+import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import type { Doc } from "@/convex/_generated/dataModel"
 import { clerkClient } from "@clerk/nextjs/server"
 import type { User } from "@clerk/nextjs/server"
-import { Button } from "@/components/ui/button"
 
 export default async function AdminAdventuresPage() {
   const adventures: Doc<"adventures">[] = await getAllAdventuresAdmin()
@@ -37,7 +37,7 @@ export default async function AdminAdventuresPage() {
             <TableHead>Email</TableHead>
             <TableHead>Players</TableHead>
             <TableHead>Created At</TableHead>
-            <TableHead></TableHead>
+            <TableHead />
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -56,7 +56,7 @@ export default async function AdminAdventuresPage() {
                 <TableCell>{adventure._id}</TableCell>
                 <TableCell>{adventure.title}</TableCell>
                 <TableCell>{adventure.ownerId}</TableCell>
-                <TableCell>{user ? user.firstName + " " + user.lastName : "Unknown"}</TableCell>
+                <TableCell>{user ? `${user.firstName} ${user.lastName}` : "Unknown"}</TableCell>
                 <TableCell>{user ? user.emailAddresses[0]?.emailAddress : "Unknown"}</TableCell>
                 <TableCell>
                   {players.length === 0 ? (

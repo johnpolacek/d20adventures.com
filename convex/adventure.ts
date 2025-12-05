@@ -1,6 +1,6 @@
-import { query, mutation, action, internalMutation } from "./_generated/server";
-import { v } from "convex/values";
-import type { Doc, Id } from "./_generated/dataModel";
+import { v } from "convex/values"
+import type { Doc, Id } from "./_generated/dataModel"
+import { action, internalMutation, mutation, query } from "./_generated/server"
 
 // Create a new adventure
 export const createAdventure = mutation({
@@ -9,20 +9,20 @@ export const createAdventure = mutation({
     settingId: v.string(),
     ownerId: v.string(),
     playerIds: v.array(v.string()),
-    players: v.optional(v.array(v.object({
-      userId: v.string(),
-      characterId: v.string(),
-    }))),
-    status: v.optional(v.union(
-      v.literal("waitingForPlayers"),
-      v.literal("active"),
-      v.literal("completed")
-    )),
+    players: v.optional(
+      v.array(
+        v.object({
+          userId: v.string(),
+          characterId: v.string(),
+        })
+      )
+    ),
+    status: v.optional(v.union(v.literal("waitingForPlayers"), v.literal("active"), v.literal("completed"))),
     title: v.string(),
     startedAt: v.number(),
   },
   handler: async (ctx, args) => {
-    const now = Date.now();
+    const now = Date.now()
     const adventureId = await ctx.db.insert("adventures", {
       planId: args.planId,
       settingId: args.settingId,
@@ -36,10 +36,10 @@ export const createAdventure = mutation({
       title: args.title,
       createdAt: now,
       updatedAt: now,
-    });
-    return adventureId;
+    })
+    return adventureId
   },
-});
+})
 
 // Join an existing adventure
 export const joinAdventure = mutation({
@@ -49,38 +49,41 @@ export const joinAdventure = mutation({
     characterId: v.string(),
   },
   handler: async (ctx, args) => {
-    const adventure = await ctx.db.get(args.adventureId);
-    if (!adventure) throw new Error("Adventure not found");
-    
+    const adventure = await ctx.db.get(args.adventureId)
+    if (!adventure) throw new Error("Adventure not found")
+
     // Check if user is already in the adventure
-    const existingPlayer = adventure.players?.find(p => p.userId === args.userId);
+    const existingPlayer = adventure.players?.find((p) => p.userId === args.userId)
     if (existingPlayer) {
-      throw new Error("User is already in this adventure");
+      throw new Error("User is already in this adventure")
     }
-    
+
     // Check if character is already taken
-    const characterTaken = adventure.players?.find(p => p.characterId === args.characterId);
+    const characterTaken = adventure.players?.find((p) => p.characterId === args.characterId)
     if (characterTaken) {
-      throw new Error("Character is already taken");
+      throw new Error("Character is already taken")
     }
-    
+
     // Add the player to the adventure
-    const updatedPlayers = [...(adventure.players || []), {
-      userId: args.userId,
-      characterId: args.characterId,
-    }];
-    
-    const now = Date.now();
-    
+    const updatedPlayers = [
+      ...(adventure.players || []),
+      {
+        userId: args.userId,
+        characterId: args.characterId,
+      },
+    ]
+
+    const now = Date.now()
+
     await ctx.db.patch(args.adventureId, {
       players: updatedPlayers,
       playerIds: [...adventure.playerIds, args.userId],
       updatedAt: now,
-    });
-    
-    return true;
+    })
+
+    return true
   },
-});
+})
 
 // Create a new turn for an adventure
 export const createTurn = mutation({
@@ -98,11 +101,11 @@ export const createTurn = mutation({
       .query("turns")
       .withIndex("by_adventure", (q) => q.eq("adventureId", args.adventureId))
       .filter((q) => q.eq(q.field("order"), args.order))
-      .first();
+      .first()
     if (existing) {
-      throw new Error(`A turn with order ${args.order} already exists for this adventure.`);
+      throw new Error(`A turn with order ${args.order} already exists for this adventure.`)
     }
-    const now = Date.now();
+    const now = Date.now()
     const turnId = await ctx.db.insert("turns", {
       adventureId: args.adventureId,
       encounterId: args.encounterId,
@@ -112,12 +115,12 @@ export const createTurn = mutation({
       order: args.order,
       createdAt: now,
       updatedAt: now,
-    });
+    })
     // Update adventure's currentTurnId
-    await ctx.db.patch(args.adventureId, { currentTurnId: turnId, updatedAt: now });
-    return turnId;
+    await ctx.db.patch(args.adventureId, { currentTurnId: turnId, updatedAt: now })
+    return turnId
   },
-});
+})
 
 // Update a turn (narrative or characters)
 export const updateTurn = mutation({
@@ -127,43 +130,43 @@ export const updateTurn = mutation({
     characters: v.optional(v.array(v.any())),
   },
   handler: async (ctx, args) => {
-    const now = Date.now();
-    const patch: Partial<Doc<"turns">> = { updatedAt: now };
-    if (args.narrative !== undefined) patch.narrative = args.narrative;
-    if (args.characters !== undefined) patch.characters = args.characters as Doc<"turns">["characters"];
-    await ctx.db.patch(args.turnId, patch);
-    return true;
+    const now = Date.now()
+    const patch: Partial<Doc<"turns">> = { updatedAt: now }
+    if (args.narrative !== undefined) patch.narrative = args.narrative
+    if (args.characters !== undefined) patch.characters = args.characters as Doc<"turns">["characters"]
+    await ctx.db.patch(args.turnId, patch)
+    return true
   },
-});
+})
 
 // Query: Get current adventure and its current turn
 export const getCurrentAdventure = query({
   args: { adventureId: v.id("adventures"), refreshKey: v.optional(v.number()) },
   handler: async (ctx, args) => {
-    const adventure = await ctx.db.get(args.adventureId);
-    if (!adventure) return null;
-    let currentTurn = null;
+    const adventure = await ctx.db.get(args.adventureId)
+    if (!adventure) return null
+    let currentTurn = null
     if (adventure.currentTurnId) {
-      currentTurn = await ctx.db.get(adventure.currentTurnId as Id<"turns">);
+      currentTurn = await ctx.db.get(adventure.currentTurnId as Id<"turns">)
     }
-    return { adventure, currentTurn };
+    return { adventure, currentTurn }
   },
-});
+})
 
 // Mutation: Get current adventure and process NPC turn if needed
 export const getCurrentAdventureWithNpcProcessing = mutation({
   args: { adventureId: v.id("adventures"), refreshKey: v.optional(v.number()) },
   handler: async (ctx, args) => {
-    const adventure = await ctx.db.get(args.adventureId);
-    if (!adventure) return null;
-    let currentTurn = null;
+    const adventure = await ctx.db.get(args.adventureId)
+    if (!adventure) return null
+    let currentTurn = null
     if (adventure.currentTurnId) {
-      currentTurn = await ctx.db.get(adventure.currentTurnId as Id<"turns">);
+      currentTurn = await ctx.db.get(adventure.currentTurnId as Id<"turns">)
     } else {
     }
-    return { adventure, currentTurn };
+    return { adventure, currentTurn }
   },
-});
+})
 
 export const createAdventureWithFirstTurn = mutation({
   args: {
@@ -184,7 +187,7 @@ export const createAdventureWithFirstTurn = mutation({
     rollRequirement: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
-    const now = Date.now();
+    const now = Date.now()
     const adventureId = await ctx.db.insert("adventures", {
       planId: args.planId,
       settingId: args.settingId,
@@ -194,12 +197,12 @@ export const createAdventureWithFirstTurn = mutation({
       title: args.title,
       createdAt: now,
       updatedAt: now,
-    });
+    })
 
     // --- Use rollRequirement from args, no AI calls here ---
-    const turn = { ...args.turn };
+    const turn = { ...args.turn }
     if (args.rollRequirement && turn.characters.length > 0) {
-      const actor = turn.characters[0];
+      const actor = turn.characters[0]
       turn.characters = turn.characters.map((c) =>
         c.id === actor.id
           ? {
@@ -210,7 +213,7 @@ export const createAdventureWithFirstTurn = mutation({
               rollResult: undefined,
             }
           : c
-      );
+      )
     }
     // Log just before insert
 
@@ -219,11 +222,11 @@ export const createAdventureWithFirstTurn = mutation({
       ...turn,
       createdAt: now,
       updatedAt: now,
-    });
-    await ctx.db.patch(adventureId, { currentTurnId: turnId, updatedAt: now });
-    return { adventureId, turnId };
+    })
+    await ctx.db.patch(adventureId, { currentTurnId: turnId, updatedAt: now })
+    return { adventureId, turnId }
   },
-});
+})
 
 // Action: AI rewrite of reply (no DB access)
 export const aiRewriteReply = action({
@@ -235,9 +238,9 @@ export const aiRewriteReply = action({
   handler: async (ctx, args) => {
     // TODO: Call your AI service here (Google Gemini, etc.)
     // For now, just return the playerInput as a placeholder
-    return args.playerInput;
+    return args.playerInput
   },
-});
+})
 
 // Mutation: Submit reply (updates turn with AI result)
 export const submitReply = mutation({
@@ -249,19 +252,19 @@ export const submitReply = mutation({
     rollRequirement: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
-    const turn = await ctx.db.get(args.turnId);
-    if (!turn) throw new Error("Turn not found");
-    const character = turn.characters.find((c) => c.id === args.characterId);
-    if (!character) throw new Error("Character not found");
-    const prev = turn.narrative || "";
-    
+    const turn = await ctx.db.get(args.turnId)
+    if (!turn) throw new Error("Turn not found")
+    const character = turn.characters.find((c) => c.id === args.characterId)
+    if (!character) throw new Error("Character not found")
+    const prev = turn.narrative || ""
+
     // Build narrative with original reply tag if provided
-    let narrativeToAdd = args.narrativeAction;
+    let narrativeToAdd = args.narrativeAction
     if (args.originalPlayerInput) {
-      narrativeToAdd = `[OriginalReply: ${args.originalPlayerInput}]\n${args.narrativeAction}`;
+      narrativeToAdd = `[OriginalReply: ${args.originalPlayerInput}]\n${args.narrativeAction}`
     }
-    
-    const narrative = prev ? `${prev}\n\n${narrativeToAdd}` : narrativeToAdd;
+
+    const narrative = prev ? `${prev}\n\n${narrativeToAdd}` : narrativeToAdd
 
     // Use rollRequirement from args, do not call AI here!
     const updatedCharacters = turn.characters.map((c) =>
@@ -274,39 +277,39 @@ export const submitReply = mutation({
             rollResult: undefined,
           }
         : c
-    );
+    )
 
     await ctx.db.patch(args.turnId, {
       narrative,
       characters: updatedCharacters,
-    });
-    return await ctx.db.get(args.turnId);
+    })
+    return await ctx.db.get(args.turnId)
   },
-});
+})
 
 // Internal query: Get a turn by ID
 export const getTurnById = query({
   args: { turnId: v.id("turns") },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.turnId);
+    return await ctx.db.get(args.turnId)
   },
-});
+})
 
 // Query: Get a turn by adventure ID and order
 export const getTurnByOrder = query({
-  args: { 
-    adventureId: v.id("adventures"), 
-    order: v.number() 
+  args: {
+    adventureId: v.id("adventures"),
+    order: v.number(),
   },
   handler: async (ctx, args) => {
     const turn = await ctx.db
       .query("turns")
       .withIndex("by_adventure", (q) => q.eq("adventureId", args.adventureId))
       .filter((q) => q.eq(q.field("order"), args.order))
-      .first();
-    return turn;
+      .first()
+    return turn
   },
-});
+})
 
 // Query: Get all turns for an adventure ordered by turn order
 export const getTurnsByAdventure = query({
@@ -316,9 +319,9 @@ export const getTurnsByAdventure = query({
       .query("turns")
       .withIndex("by_adventure", (q) => q.eq("adventureId", args.adventureId))
       .order("asc")
-      .collect();
+      .collect()
   },
-});
+})
 
 // Internal mutation: Patch a turn by ID
 export const patchTurn = internalMutation({
@@ -331,10 +334,10 @@ export const patchTurn = internalMutation({
     }),
   },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.turnId, args.patch);
-    return true;
+    await ctx.db.patch(args.turnId, args.patch)
+    return true
   },
-});
+})
 
 // Action: Get encounter context (intro/instructions)
 export const getEncounterContext = action({
@@ -345,17 +348,17 @@ export const getEncounterContext = action({
     return {
       intro: "Encounter intro goes here.",
       instructions: "Encounter instructions go here.",
-    };
+    }
   },
-});
+})
 
 // Query: Get adventure by ID
 export const getAdventureById = query({
   args: { adventureId: v.id("adventures") },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.adventureId);
+    return await ctx.db.get(args.adventureId)
   },
-});
+})
 
 // Internal mutation: Patch an adventure by ID
 export const patchAdventure = internalMutation({
@@ -369,79 +372,69 @@ export const patchAdventure = internalMutation({
     }),
   },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.adventureId, args.patch);
-    return true;
+    await ctx.db.patch(args.adventureId, args.patch)
+    return true
   },
-});
+})
 
 // Query: Get turn navigation info (efficient - minimal data transfer)
 export const getTurnNavigationInfo = query({
   args: { adventureId: v.id("adventures") },
   handler: async (ctx, args) => {
     // Get adventure with current turn info
-    const adventure = await ctx.db.get(args.adventureId);
-    if (!adventure) return null;
+    const adventure = await ctx.db.get(args.adventureId)
+    if (!adventure) return null
 
     // Count total turns efficiently
     const turns = await ctx.db
       .query("turns")
       .withIndex("by_adventure", (q) => q.eq("adventureId", args.adventureId))
-      .collect();
-    
-    const totalTurns = turns.length;
+      .collect()
+
+    const totalTurns = turns.length
 
     // Get current turn order if exists
-    let currentTurnOrder = null;
+    let currentTurnOrder = null
     if (adventure.currentTurnId) {
-      const currentTurn = await ctx.db.get(adventure.currentTurnId as Id<"turns">);
-      currentTurnOrder = currentTurn?.order || null;
+      const currentTurn = await ctx.db.get(adventure.currentTurnId as Id<"turns">)
+      currentTurnOrder = currentTurn?.order || null
     }
 
     return {
       totalTurns,
-      currentTurnOrder
-    };
+      currentTurnOrder,
+    }
   },
-});
+})
 
 // Query: Get all adventures (for admin)
 export const getAllAdventures = query({
   handler: async (ctx) => {
-    return await ctx.db
-      .query("adventures")
-      .order("desc")
-      .collect();
+    return await ctx.db.query("adventures").order("desc").collect()
   },
-});
+})
 
 export const getAdventuresByPlayer = query({
   args: {
     playerId: v.string(),
-    status: v.optional(v.union(
-      v.literal("waitingForPlayers"),
-      v.literal("active"),
-      v.literal("completed")
-    ))
+    status: v.optional(v.union(v.literal("waitingForPlayers"), v.literal("active"), v.literal("completed"))),
   },
   handler: async (ctx, args) => {
-    let q = ctx.db
-      .query("adventures")
-      .withIndex("by_started")
-      .order("desc");
+    let q = ctx.db.query("adventures").withIndex("by_started").order("desc")
     if (args.status) {
-      q = q.filter((q) => q.eq(q.field("status"), args.status));
+      q = q.filter((q) => q.eq(q.field("status"), args.status))
     }
-    const all = await q.collect();
-    return all.filter((a) => Array.isArray(a.playerIds) && a.playerIds.includes(args.playerId));
+    const all = await q.collect()
+    return all.filter((a) => Array.isArray(a.playerIds) && a.playerIds.includes(args.playerId))
   },
-});
+})
 
 // Query: Get adventure lobby data with real-time updates
 export const getAdventureLobbyData = query({
   args: { adventureId: v.id("adventures") },
   handler: async (ctx, args) => {
-    const adventure = await ctx.db.get(args.adventureId);
-    if (!adventure) return null;
+    const adventure = await ctx.db.get(args.adventureId)
+    if (!adventure) return null
     return {
       id: adventure._id,
       title: adventure.title,
@@ -449,6 +442,6 @@ export const getAdventureLobbyData = query({
       players: adventure.players || [],
       playerIds: adventure.playerIds || [],
       updatedAt: adventure.updatedAt,
-    };
+    }
   },
-});
+})

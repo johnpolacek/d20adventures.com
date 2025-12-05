@@ -2,7 +2,7 @@ import { v } from "convex/values"
 import { mutation, query } from "./_generated/server"
 
 function isTestOrDevEnv() {
-  return process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development";
+  return process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development"
 }
 
 /**
@@ -10,15 +10,10 @@ function isTestOrDevEnv() {
  * This mutation should only be available in test environments
  */
 export const deleteAll = mutation({
-  args: { tableName: v.union(
-    v.literal("visits"),
-    v.literal("mailing_list_subscriptions"),
-    v.literal("adventures"),
-    v.literal("turns")
-  ) },
+  args: { tableName: v.union(v.literal("visits"), v.literal("mailing_list_subscriptions"), v.literal("adventures"), v.literal("turns")) },
   handler: async (ctx, args) => {
     if (!isTestOrDevEnv()) {
-      throw new Error("This operation is only allowed in test or development environments");
+      throw new Error("This operation is only allowed in test or development environments")
     }
     const documents = await ctx.db.query(args.tableName).collect()
     for (const doc of documents) {
@@ -36,7 +31,7 @@ export const countDocuments = query({
   args: { tableName: v.union(v.literal("visits"), v.literal("mailing_list_subscriptions")) },
   handler: async (ctx, args) => {
     if (!isTestOrDevEnv()) {
-      throw new Error("This operation is only allowed in test or development environments");
+      throw new Error("This operation is only allowed in test or development environments")
     }
     const documents = await ctx.db.query(args.tableName).collect()
     return documents.length
@@ -51,7 +46,7 @@ export const seedTestData = mutation({
   args: {},
   handler: async (ctx) => {
     if (!isTestOrDevEnv()) {
-      throw new Error("This operation is only allowed in test or development environments");
+      throw new Error("This operation is only allowed in test or development environments")
     }
     // Seed visits
     await ctx.db.insert("visits", {
@@ -60,7 +55,7 @@ export const seedTestData = mutation({
       metadata: { test: true },
       createdAt: Date.now(),
       updatedAt: Date.now(),
-    });
+    })
     // Seed mailing list subscriptions
     await ctx.db.insert("mailing_list_subscriptions", {
       userId: "test-user",
@@ -71,7 +66,7 @@ export const seedTestData = mutation({
       unsubscribedAt: null,
       createdAt: Date.now(),
       updatedAt: Date.now(),
-    });
-    return { success: true };
+    })
+    return { success: true }
   },
-}); 
+})

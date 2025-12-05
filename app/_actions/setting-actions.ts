@@ -1,17 +1,15 @@
-'use server'
+"use server"
 
+import { copyS3Object, readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
+import type { Setting } from "@/types/setting"
 import { auth } from "@clerk/nextjs/server"
-import { updateJsonOnS3, readJsonFromS3, copyS3Object } from "@/lib/s3-utils"
-import { Setting } from "@/types/setting"
 
 interface UpdateSettingParams {
   setting: Setting
   settingId: string
 }
 
-export async function updateSettingAction(
-  params: UpdateSettingParams
-): Promise<{ success: boolean; message?: string; error?: string }> {
+export async function updateSettingAction(params: UpdateSettingParams): Promise<{ success: boolean; message?: string; error?: string }> {
   console.log("updateSettingAction: Received params:", JSON.stringify(params, null, 2))
 
   const { userId } = await auth()
@@ -49,7 +47,7 @@ export async function updateSettingAction(
         console.warn(`updateSettingAction: Could not back up ${originalKey} due to an unexpected error during pre-backup check: ${errorMessage}`, readError)
       }
     }
-    
+
     // Log setting data before calling updateJsonOnS3
     console.log("updateSettingAction: setting.locations before S3 update:", JSON.stringify(setting.locations, null, 2))
     console.log("updateSettingAction: Full setting object before S3 update:", JSON.stringify(setting, null, 2))
@@ -62,4 +60,4 @@ export async function updateSettingAction(
     const errorMessage = error instanceof Error ? error.message : "An unknown error occurred"
     return { success: false, error: `Failed to update setting: ${errorMessage}` }
   }
-} 
+}

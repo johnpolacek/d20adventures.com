@@ -1,6 +1,6 @@
+import CharacterCreateForm from "@/components/forms/character-create-form"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import type { AdventurePlan } from "@/types/adventure-plan"
-import CharacterCreateForm from "@/components/forms/character-create-form"
 import Image from "next/image"
 
 interface PageProps {
@@ -29,7 +29,7 @@ export default async function CharacterCreatePage({ params }: PageProps) {
       <div className="flex flex-1 items-center justify-center z-20">
         <CharacterCreateForm availableRaces={availableRaces} availableArchetypes={availableArchetypes} settingId={settingId} adventurePlanId={adventurePlanId} />
       </div>
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/70 to-black/10 z-10"></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/70 to-black/10 z-10" />
       <Image className="object-cover fade-in" fill={true} src="/images/app/backgrounds/d20-hero.png" alt="D20" />
     </div>
   )

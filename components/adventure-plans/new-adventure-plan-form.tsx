@@ -1,12 +1,12 @@
 "use client"
 
-import * as React from "react"
-import { useRouter } from "next/navigation"
-import { Card } from "@/components/ui/card"
+import { createAdventurePlan } from "@/app/_actions/adventure-plan-actions"
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { createAdventurePlan } from "@/app/_actions/adventure-plan-actions"
+import { useRouter } from "next/navigation"
+import * as React from "react"
 import { toast } from "sonner"
 
 interface NewAdventurePlanFormProps {
@@ -93,11 +93,11 @@ export function NewAdventurePlanForm({ settingId }: NewAdventurePlanFormProps) {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label htmlFor="minPartySize">Minimum Party Size</label>
-                <Input id="minPartySize" type="number" min="1" value={formData.minPartySize} onChange={(e) => setFormData({ ...formData, minPartySize: parseInt(e.target.value) })} required />
+                <Input id="minPartySize" type="number" min="1" value={formData.minPartySize} onChange={(e) => setFormData({ ...formData, minPartySize: Number.parseInt(e.target.value) })} required />
               </div>
               <div className="space-y-2">
                 <label htmlFor="maxPartySize">Maximum Party Size</label>
-                <Input id="maxPartySize" type="number" min="1" value={formData.maxPartySize} onChange={(e) => setFormData({ ...formData, maxPartySize: parseInt(e.target.value) })} required />
+                <Input id="maxPartySize" type="number" min="1" value={formData.maxPartySize} onChange={(e) => setFormData({ ...formData, maxPartySize: Number.parseInt(e.target.value) })} required />
               </div>
             </div>
           </div>

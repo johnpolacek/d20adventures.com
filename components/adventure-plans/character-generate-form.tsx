@@ -1,14 +1,14 @@
 "use client"
 
-import * as React from "react"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
 import { generateCharacterAction } from "@/app/_actions/generate-character-action"
-import { toast } from "sonner"
-import type { Character, PCTemplate } from "@/types/character"
+import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import type { Character, PCTemplate } from "@/types/character"
+import * as React from "react"
+import { toast } from "sonner"
 
 interface CharacterGenerateFormProps {
   type: "npcs" | "premadePlayerCharacters"
@@ -138,7 +138,7 @@ export function CharacterGenerateForm({ type, characters, onCharactersChange, on
                   min="1"
                   max="10"
                   value={batchSize}
-                  onChange={(e) => setBatchSize(Math.min(10, Math.max(1, parseInt(e.target.value) || 1)))}
+                  onChange={(e) => setBatchSize(Math.min(10, Math.max(1, Number.parseInt(e.target.value) || 1)))}
                   disabled={isGenerating}
                   className="w-24"
                 />

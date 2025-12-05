@@ -1,8 +1,8 @@
 "use client"
 
-import { useParams } from "next/navigation"
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
 import { ChevronFirst, ChevronLast } from "lucide-react"
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext, PaginationEllipsis } from "@/components/ui/pagination"
+import { useParams } from "next/navigation"
 
 interface TurnNavigationProps {
   currentTurnOrder: number

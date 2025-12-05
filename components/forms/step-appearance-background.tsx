@@ -1,10 +1,10 @@
-import React, { useState } from "react"
-import { textShadow } from "../typography/styles"
-import StepperButtons from "./stepper-buttons"
 import { generateAppearanceBackgroundAction } from "@/app/_actions/generate-appearance-background-action"
 import { Button } from "@/components/ui/button"
-import type { Attributes } from "./step-assign-attributes"
+import React, { useState } from "react"
+import { textShadow } from "../typography/styles"
 import { Textarea } from "../ui/textarea"
+import type { Attributes } from "./step-assign-attributes"
+import StepperButtons from "./stepper-buttons"
 
 interface StepAppearanceBackgroundProps {
   appearance: string

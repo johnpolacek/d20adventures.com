@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server"
 import sgMail from "@sendgrid/mail"
+import { type NextRequest, NextResponse } from "next/server"
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,9 +32,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Error processing inbound email:", error)
-    return NextResponse.json(
-      { error: "Failed to process inbound email" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Failed to process inbound email" }, { status: 500 })
   }
-} 
+}

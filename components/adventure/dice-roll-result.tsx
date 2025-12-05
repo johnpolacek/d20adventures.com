@@ -1,7 +1,7 @@
 "use client"
-import React, { useState, useEffect } from "react"
-import Image from "next/image"
 import { textShadow } from "@/components/typography/styles"
+import Image from "next/image"
+import React, { useState, useEffect } from "react"
 
 export default function DiceRollResult({ result, animate }: { result: number; animate?: boolean }) {
   const [animatedResult, setAnimatedResult] = useState<number | undefined>(animate ? undefined : result)
@@ -54,7 +54,7 @@ export default function DiceRollResult({ result, animate }: { result: number; an
           >
             <div className="w-32 flex gap-1.5 items-center fade-in">
               <div style={{ boxShadow: "inset 0 2px 2px 0 rgba(0,0,0,.85)" }} className="bg-black/20 border border-white/30 h-10 w-10 rounded-full flex items-center justify-center">
-                <Image src={`/images/app/dice/d20.svg`} width={36} height={36} alt="Dice Roll" />
+                <Image src={"/images/app/dice/d20.svg"} width={36} height={36} alt="Dice Roll" />
               </div>
               <span style={textShadow}>Result</span>
             </div>

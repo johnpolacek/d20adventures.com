@@ -6,4 +6,4 @@ export const personalityMotivationBackstorySchema = z.object({
   backstory: z.string(), // backstory can be empty
 })
 
-export type PersonalityMotivationBackstory = z.infer<typeof personalityMotivationBackstorySchema> 
+export type PersonalityMotivationBackstory = z.infer<typeof personalityMotivationBackstorySchema>

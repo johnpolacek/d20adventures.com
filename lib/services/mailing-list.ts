@@ -1,37 +1,37 @@
-import { convex, api } from "@/lib/convex/server";
-import { Doc } from "@/convex/_generated/dataModel";
+import type { Doc } from "@/convex/_generated/dataModel"
+import { api, convex } from "@/lib/convex/server"
 
-export type MailingListSubscription = Doc<"mailing_list_subscriptions">;
+export type MailingListSubscription = Doc<"mailing_list_subscriptions">
 
 /**
  * Retrieves all mailing list subscriptions from Convex
  */
 export async function getMailingListSubscriptions(): Promise<MailingListSubscription[]> {
   try {
-    return await convex.query(api.mailingList.getSubscriptions, {});
+    return await convex.query(api.mailingList.getSubscriptions, {})
   } catch (error) {
-    console.error('Error getting mailing list subscriptions:', error);
-    return [];
+    console.error("Error getting mailing list subscriptions:", error)
+    return []
   }
 }
 
 /**
  * Adds a new email subscription to the mailing list
  */
-export async function addMailingListSubscription(data: { 
-  userId: string, 
-  email: string, 
-  name?: string | undefined,
+export async function addMailingListSubscription(data: {
+  userId: string
+  email: string
+  name?: string | undefined
   preferences?: {
-    marketing: boolean,
+    marketing: boolean
     updates: boolean
   }
 }): Promise<MailingListSubscription | null> {
   try {
-    return await convex.mutation(api.mailingList.subscribe, data);
+    return await convex.mutation(api.mailingList.subscribe, data)
   } catch (error) {
-    console.error('Error adding mailing list subscription:', error);
-    return null;
+    console.error("Error adding mailing list subscription:", error)
+    return null
   }
 }
 
@@ -40,9 +40,9 @@ export async function addMailingListSubscription(data: {
  */
 export async function removeMailingListSubscription(email: string): Promise<boolean> {
   try {
-    return await convex.mutation(api.mailingList.unsubscribe, { email });
+    return await convex.mutation(api.mailingList.unsubscribe, { email })
   } catch (error) {
-    console.error('Error removing mailing list subscription:', error);
-    return false;
+    console.error("Error removing mailing list subscription:", error)
+    return false
   }
-} 
+}

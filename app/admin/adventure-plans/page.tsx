@@ -1,7 +1,7 @@
-import { listAndReadJsonFilesInS3Directory } from "@/lib/s3-utils"
 import { AdminBreadcrumb } from "@/components/nav/admin-breadcrumb"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { listAndReadJsonFilesInS3Directory } from "@/lib/s3-utils"
 import type { AdventurePlan } from "@/types/adventure-plan"
 
 // Helper to get all plans from all settings
@@ -46,7 +46,7 @@ export default async function AdminAdventurePlansPage() {
             <TableHead>Setting ID</TableHead>
             <TableHead>Version</TableHead>
             <TableHead>Draft?</TableHead>
-            <TableHead></TableHead>
+            <TableHead />
           </TableRow>
         </TableHeader>
         <TableBody>

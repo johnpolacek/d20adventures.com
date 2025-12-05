@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
-import { ChevronDown, ChevronUp, ArrowRight } from "lucide-react"
+import { ArrowRight, ChevronDown, ChevronUp } from "lucide-react"
 import Link from "next/link"
+import { useState } from "react"
 
+import { Heading } from "@/components/typography/heading"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Heading } from "@/components/typography/heading"
 
 export type Feature = {
   id: string

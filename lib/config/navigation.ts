@@ -9,4 +9,4 @@ export const navItems = [
   },
 ] as const
 
-export type NavItem = (typeof navItems)[number] 
+export type NavItem = (typeof navItems)[number]

@@ -1,11 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { cn } from "@/lib/utils"
+import { useUser } from "@clerk/nextjs"
+import { ShieldCheckIcon } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useUser } from "@clerk/nextjs"
-import { cn } from "@/lib/utils"
-import { ShieldCheckIcon } from "lucide-react"
+import { useEffect, useState } from "react"
 
 export function AdminNavItem() {
   const pathname = usePathname()

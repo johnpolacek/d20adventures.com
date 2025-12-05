@@ -1,6 +1,6 @@
-import { requireAdmin } from "@/lib/auth-utils"
-import { AdminBreadcrumb } from "@/components/nav/admin-breadcrumb"
 import { AdminUserList } from "@/components/admin/user-list"
+import { AdminBreadcrumb } from "@/components/nav/admin-breadcrumb"
+import { requireAdmin } from "@/lib/auth-utils"
 import { clerkClient } from "@clerk/nextjs/server"
 import type { User } from "@clerk/nextjs/server"
 

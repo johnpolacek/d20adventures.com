@@ -1,13 +1,13 @@
-import { currentUser } from "@clerk/nextjs/server"
-import { redirect } from "next/navigation"
-import { listAndReadJsonFilesInS3Directory, readJsonFromS3 } from "@/lib/s3-utils"
-import type { AdventurePlan } from "@/types/adventure-plan"
-import type { PCTemplate } from "@/types/character"
-import ChooseCharacterView from "@/components/views/choose-character-view"
 import CharacterSelection from "@/components/adventure/character-selection"
 import FullPageImage from "@/components/layout/fullpage-image"
 import AccountRequired from "@/components/nav/account-required"
+import ChooseCharacterView from "@/components/views/choose-character-view"
+import { listAndReadJsonFilesInS3Directory, readJsonFromS3 } from "@/lib/s3-utils"
 import { getImageUrl } from "@/lib/utils"
+import type { AdventurePlan } from "@/types/adventure-plan"
+import type { PCTemplate } from "@/types/character"
+import { currentUser } from "@clerk/nextjs/server"
+import { redirect } from "next/navigation"
 
 interface PageProps {
   params: Promise<{

@@ -1,21 +1,21 @@
-import { defineConfig, devices } from '@playwright/test';
-import path from 'path';
+import path from "node:path"
+import { defineConfig, devices } from "@playwright/test"
 
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
  */
-import dotenv from 'dotenv';
+import dotenv from "dotenv"
 // Load environment variables in order of precedence (later files take precedence)
-dotenv.config({ path: path.resolve(__dirname, '.env') });
-dotenv.config({ path: path.resolve(__dirname, '.env.test') });
-dotenv.config({ path: path.resolve(__dirname, '.env.local') });
+dotenv.config({ path: path.resolve(__dirname, ".env") })
+dotenv.config({ path: path.resolve(__dirname, ".env.test") })
+dotenv.config({ path: path.resolve(__dirname, ".env.local") })
 
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  testDir: './tests',
+  testDir: "./tests",
   /* Run tests in files in parallel - except in UI mode */
   fullyParallel: false,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -25,21 +25,21 @@ export default defineConfig({
   /* Opt out of parallel tests on CI or in UI mode */
   workers: 1,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
+  reporter: "html",
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: 'http://localhost:3000',
+    baseURL: "http://localhost:3000",
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
+    trace: "on-first-retry",
   },
 
   /* Configure projects for major browsers */
   projects: [
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
     },
 
     // {
@@ -80,7 +80,7 @@ export default defineConfig({
   //   reuseExistingServer: !process.env.CI,
   //   timeout: 120000,
   // },
-  
+
   /* Global setup to run before all tests */
-  globalSetup: process.env.PLAYWRIGHT_UI_MODE ? undefined : './tests/global-setup.ts',
-});
+  globalSetup: process.env.PLAYWRIGHT_UI_MODE ? undefined : "./tests/global-setup.ts",
+})

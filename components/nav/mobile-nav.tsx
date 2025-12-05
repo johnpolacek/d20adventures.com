@@ -1,19 +1,19 @@
 "use client"
 
-import { useState } from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { Menu, ShieldCheck } from "lucide-react"
 import { LogoLockup } from "@/components/graphics/logo-lockup"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { siteConfig } from "@/lib/config"
+import { navItems } from "@/lib/config/navigation"
 import { cn } from "@/lib/utils"
 import { useUser } from "@clerk/nextjs"
-import { useEffect } from "react"
-import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs"
-import { navItems } from "@/lib/config/navigation"
-import { siteConfig } from "@/lib/config"
+import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs"
+import { Menu, ShieldCheck } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { useState } from "react"
+import { useEffect } from "react"
 
 export function MobileNav() {
   const [open, setOpen] = useState(false)
@@ -63,7 +63,7 @@ export function MobileNav() {
               <LogoLockup />
             ) : (
               <div className="flex items-center gap-3">
-                {siteConfig.logo && <Image src={siteConfig.logo} alt={siteConfig.title + " logo"} width={32} height={32} />}
+                {siteConfig.logo && <Image src={siteConfig.logo} alt={`${siteConfig.title} logo`} width={32} height={32} />}
                 <span className="text-xl font-bold bg-clip-text text-transparent bg-linear-to-br dark:bg-linear-to-br from-blue-500 via-purple-700 to-indigo-500 dark:from-blue-300 dark:via-purple-500 dark:to-indigo-500">
                   {siteConfig.title}
                 </span>

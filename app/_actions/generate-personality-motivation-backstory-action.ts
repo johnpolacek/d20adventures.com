@@ -1,4 +1,4 @@
-'use server'
+"use server"
 
 import { generateObject } from "@/lib/ai"
 import { personalityMotivationBackstorySchema } from "@/lib/validations/personality-motivation-backstory-schema"
@@ -31,7 +31,7 @@ export async function generatePersonalityMotivationBackstoryAction({
   race,
   attributes,
   appearance,
-  background
+  background,
 }: GeneratePersonalityMotivationBackstoryInput): Promise<GeneratePersonalityMotivationBackstoryResult> {
   try {
     let attributesText = ""
@@ -42,17 +42,17 @@ export async function generatePersonalityMotivationBackstoryAction({
         .join(", ")
       if (attributesText) attributesText = `Attributes: ${attributesText}\n`
     }
-    const prompt = `Generate a D&D-style single-sentence personality, single-sentence motivation, and a brief backstory for a character with the following details. Do not include any place names. Return only a JSON object with three fields: personality (required), motivation (required), and backstory (optional). Do not include any extra fields or text.\n\n${archetype ? `Archetype: ${archetype}\n` : ''}${race ? `Race: ${race}\n` : ''}${attributesText}${appearance ? `Appearance: ${appearance}\n` : ''}${background ? `Background: ${background}\n` : ''}`
+    const prompt = `Generate a D&D-style single-sentence personality, single-sentence motivation, and a brief backstory for a character with the following details. Do not include any place names. Return only a JSON object with three fields: personality (required), motivation (required), and backstory (optional). Do not include any extra fields or text.\n\n${archetype ? `Archetype: ${archetype}\n` : ""}${race ? `Race: ${race}\n` : ""}${attributesText}${appearance ? `Appearance: ${appearance}\n` : ""}${background ? `Background: ${background}\n` : ""}`
 
     const result = await generateObject({
       prompt,
-      schema: personalityMotivationBackstorySchema
+      schema: personalityMotivationBackstorySchema,
     })
 
     if (!result.object) {
       return {
         success: false,
-        error: "Failed to generate personality/motivation/backstory"
+        error: "Failed to generate personality/motivation/backstory",
       }
     }
 
@@ -60,14 +60,14 @@ export async function generatePersonalityMotivationBackstoryAction({
       success: true,
       personality: result.object.personality,
       motivation: result.object.motivation,
-      backstory: result.object.backstory
+      backstory: result.object.backstory,
     }
   } catch (error) {
     console.error("Error generating personality/motivation/backstory:", error)
     const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred"
     return {
       success: false,
-      error: errorMessage
+      error: errorMessage,
     }
   }
-} 
+}

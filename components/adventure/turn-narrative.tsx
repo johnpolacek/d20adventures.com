@@ -1,28 +1,28 @@
 "use client"
 
-import { useEffect } from "react"
-import { useTurnContext } from "@/lib/context/TurnContext"
-import TurnNarrativeReply from "./turn-narrative-reply"
-import { parseNarrative } from "@/lib/utils/parse-narrative"
-import CharacterDiceRollResultDisplay from "@/components/adventure/character-dice-roll-result-display"
-import type { TurnCharacter } from "@/types/adventure"
-import type { Id } from "@/convex/_generated/dataModel"
 import { advanceTurn } from "@/app/_actions/advance-turn"
-import React from "react"
-import TurnAdvanceButton from "@/components/adventure/turn-advance-button"
 import { processTurnReply } from "@/app/_actions/adventure"
-import { useAdventure } from "@/lib/context/AdventureContext"
-import LoadingAnimation from "../ui/loading-animation"
+import CharacterDiceRollResultDisplay from "@/components/adventure/character-dice-roll-result-display"
+import TurnAdvanceButton from "@/components/adventure/turn-advance-button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertTriangle } from "lucide-react"
-import { scrollToBottom } from "../ui/utils"
-import { useParams, useRouter } from "next/navigation"
-import { useUser } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
 import { Switch } from "@/components/ui/switch"
-import FinalEncounterCompleteMessage from "./final-encounter-complete-message"
+import type { Id } from "@/convex/_generated/dataModel"
+import { useAdventure } from "@/lib/context/AdventureContext"
+import { useTurnContext } from "@/lib/context/TurnContext"
+import { cn } from "@/lib/utils"
+import { parseNarrative } from "@/lib/utils/parse-narrative"
+import type { TurnCharacter } from "@/types/adventure"
+import { useUser } from "@clerk/nextjs"
+import { AlertTriangle } from "lucide-react"
 import Link from "next/link"
+import { useParams, useRouter } from "next/navigation"
+import { useEffect } from "react"
+import React from "react"
+import LoadingAnimation from "../ui/loading-animation"
+import { scrollToBottom } from "../ui/utils"
+import FinalEncounterCompleteMessage from "./final-encounter-complete-message"
+import TurnNarrativeReply from "./turn-narrative-reply"
 
 export default function TurnNarrative({ nextAdventure }: { nextAdventure?: string }) {
   const params = useParams()
@@ -84,7 +84,7 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
   const handleAdvanceOrNavigate = async () => {
     if (disableSSE) {
       // Navigation mode: just go to the next turn
-      const currentTurnOrder = params.turnOrder ? parseInt(params.turnOrder as string, 10) : 1
+      const currentTurnOrder = params.turnOrder ? Number.parseInt(params.turnOrder as string, 10) : 1
       const nextTurnOrder = currentTurnOrder + 1
       const basePath = `/settings/${settingId}/${adventurePlanId}/${params.adventureId}`
 
@@ -100,7 +100,7 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
 
         // Navigate to the new turn URL after successful advancement
         if (result.status === "turn_advanced") {
-          const currentTurnOrder = params.turnOrder ? parseInt(params.turnOrder as string, 10) : 1
+          const currentTurnOrder = params.turnOrder ? Number.parseInt(params.turnOrder as string, 10) : 1
           const newTurnOrder = currentTurnOrder + 1
           const basePath = `/settings/${settingId}/${adventurePlanId}/${params.adventureId}`
           router.replace(`${basePath}/${newTurnOrder}`, { scroll: false })
@@ -138,7 +138,7 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
         if (part.type === "original-reply") {
           if (!showOriginalReplies) return null
           return (
-            <div key={"original-" + idx} className="text-base italic text-primary-200 mb-6 whitespace-pre-line">
+            <div key={`original-${idx}`} className="text-base italic text-primary-200 mb-6 whitespace-pre-line">
               Player Reply: {part.value}
             </div>
           )
@@ -149,23 +149,22 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
               {part.value}
             </p>
           )
-        } else {
-          // Use a more unique key if available, otherwise fallback to idx
-          const key = part.character ? `${part.character}-${part.rollType}-${part.result}-${part.difficulty}` : idx
-          return (
-            <div className="pb-6" key={key}>
-              <CharacterDiceRollResultDisplay
-                character={part.character}
-                rollType={part.rollType}
-                difficulty={part.difficulty}
-                result={part.result}
-                image={part.image}
-                modifier={part.modifier}
-                baseRoll={part.baseRoll}
-              />
-            </div>
-          )
         }
+        // Use a more unique key if available, otherwise fallback to idx
+        const key = part.character ? `${part.character}-${part.rollType}-${part.result}-${part.difficulty}` : idx
+        return (
+          <div className="pb-6" key={key}>
+            <CharacterDiceRollResultDisplay
+              character={part.character}
+              rollType={part.rollType}
+              difficulty={part.difficulty}
+              result={part.result}
+              image={part.image}
+              modifier={part.modifier}
+              baseRoll={part.baseRoll}
+            />
+          </div>
+        )
       })}
 
       {/* Show loading animation if an NPC is processing their turn */}
@@ -224,9 +223,9 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
         >
           <h4 className={cn("text-xl font-display", isPlayerTurnComplete ? "text-green-300/70" : "text-primary-200")}>{isPlayerTurnComplete ? "Your Turn is Complete" : "Waiting for Your Turn"}</h4>
           <div className="flex gap-3 mt-3 mb-4 scale-75">
-            <span className={cn("w-2 h-2 rounded-full animate-pulse", isPlayerTurnComplete ? "bg-neutral-600" : "bg-primary-200")} style={{ animationDelay: "0ms", animationDuration: "2s" }}></span>
-            <span className={cn("w-2 h-2 rounded-full animate-pulse", isPlayerTurnComplete ? "bg-neutral-600" : "bg-primary-200")} style={{ animationDelay: "200ms", animationDuration: "2s" }}></span>
-            <span className={cn("w-2 h-2 rounded-full animate-pulse", isPlayerTurnComplete ? "bg-neutral-600" : "bg-primary-200")} style={{ animationDelay: "400ms", animationDuration: "2s" }}></span>
+            <span className={cn("w-2 h-2 rounded-full animate-pulse", isPlayerTurnComplete ? "bg-neutral-600" : "bg-primary-200")} style={{ animationDelay: "0ms", animationDuration: "2s" }} />
+            <span className={cn("w-2 h-2 rounded-full animate-pulse", isPlayerTurnComplete ? "bg-neutral-600" : "bg-primary-200")} style={{ animationDelay: "200ms", animationDuration: "2s" }} />
+            <span className={cn("w-2 h-2 rounded-full animate-pulse", isPlayerTurnComplete ? "bg-neutral-600" : "bg-primary-200")} style={{ animationDelay: "400ms", animationDuration: "2s" }} />
           </div>
           <p className="italic text-white/70">It is currently {currentCharacter?.name}&apos;s turn</p>
         </div>

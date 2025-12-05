@@ -1,6 +1,6 @@
-import { RoadmapView, type Feature, type FeatureRequest } from "@/components/admin/roadmap-view"
-import initialFeatures from "./data/features.json"
+import { type Feature, type FeatureRequest, RoadmapView } from "@/components/admin/roadmap-view"
 import initialRequests from "./data/featureRequests.json"
+import initialFeatures from "./data/features.json"
 
 export default function RoadmapPage() {
   const features = initialFeatures as Feature[]

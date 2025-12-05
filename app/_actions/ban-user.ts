@@ -1,14 +1,14 @@
-'use server'
+"use server"
 
+import { isAdmin } from "@/lib/auth-utils"
 import { auth, clerkClient } from "@clerk/nextjs/server"
 import { revalidatePath } from "next/cache"
-import { isAdmin } from "@/lib/auth-utils"
 
 export async function banUser(userId: string, reason?: string) {
   try {
     // Get the current user's ID
     const { userId: adminId } = await auth()
-    
+
     if (!adminId) {
       throw new Error("Not authenticated")
     }
@@ -32,14 +32,14 @@ export async function banUser(userId: string, reason?: string) {
     } else {
       // Ban the user and store reason in metadata
       await client.users.banUser(userId)
-      
+
       // Store the ban reason in metadata if provided
       if (reason) {
         await client.users.updateUser(userId, {
           publicMetadata: {
             ...user.publicMetadata,
-            banReason: reason
-          }
+            banReason: reason,
+          },
         })
       }
     }
@@ -52,4 +52,4 @@ export async function banUser(userId: string, reason?: string) {
     console.error("Error managing user ban status:", error)
     return { success: false, error: (error as Error).message }
   }
-} 
+}

@@ -1,12 +1,12 @@
 "use client"
 
-import React from "react"
-import { Adventure } from "@/types/adventure"
+import AdventureHomeContent from "@/components/views/adventure-home-content"
+import { AdventureProvider } from "@/lib/context/AdventureContext"
+import { TurnProvider } from "@/lib/context/TurnContext"
+import type { Adventure } from "@/types/adventure"
 import type { Turn as TurnType } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
-import { TurnProvider } from "@/lib/context/TurnContext"
-import { AdventureProvider } from "@/lib/context/AdventureContext"
-import AdventureHomeContent from "@/components/views/adventure-home-content"
+import React from "react"
 
 function AdventureHome({
   adventurePlanId,

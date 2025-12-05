@@ -1,10 +1,10 @@
-import { auth } from "@clerk/nextjs/server"
+import FullPageImage from "@/components/layout/fullpage-image"
+import { textShadowSpreadLight } from "@/components/typography/styles"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { SignInButton } from "@clerk/nextjs"
+import { auth } from "@clerk/nextjs/server"
 import Link from "next/link"
-import { textShadowSpreadLight } from "@/components/typography/styles"
-import FullPageImage from "@/components/layout/fullpage-image"
 
 export default async function CreatePage() {
   const { userId } = await auth()

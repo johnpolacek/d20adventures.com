@@ -1,7 +1,7 @@
 import { ImageUpload } from "@/components/ui/image-upload"
+import React from "react"
 import { Button } from "../ui/button"
 import { Label } from "../ui/label"
-import React from "react"
 
 interface StepCharacterImageProps {
   image: string

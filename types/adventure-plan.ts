@@ -1,27 +1,27 @@
 import { z } from "zod"
-import type { Character, PCTemplate } from "./character";
+import type { Character, PCTemplate } from "./character"
 
 export interface AdventurePlan {
-  id: string;
-  settingId: string;
-  title: string;
-  author: string;
-  version: string;
-  teaser: string;
-  overview: string;
-  party: [number, number];
-  tags: string[];
-  image: string;
-  start: string;
-  sections: AdventureSection[];
-  premadePlayerCharacters: PCTemplate[];
-  npcs: Record<string, Character>;
-  draft?: boolean;
+  id: string
+  settingId: string
+  title: string
+  author: string
+  version: string
+  teaser: string
+  overview: string
+  party: [number, number]
+  tags: string[]
+  image: string
+  start: string
+  sections: AdventureSection[]
+  premadePlayerCharacters: PCTemplate[]
+  npcs: Record<string, Character>
+  draft?: boolean
   availableCharacterOptions?: {
-    races: string[];
-    archetypes: string[];
-  };
-  nextAdventure?: string;
+    races: string[]
+    archetypes: string[]
+  }
+  nextAdventure?: string
 }
 
 export const RULES_PRESETS = [

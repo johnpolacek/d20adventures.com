@@ -12,24 +12,19 @@ const awsConfig = {
 export const AWS_BUCKET_PUBLIC = process.env.AWS_BUCKET_PUBLIC
 
 // Log missing variables in development only
-if (process.env.NODE_ENV === 'development') {
+if (process.env.NODE_ENV === "development") {
   const missingVars = Object.entries(awsConfig)
     .filter(([, value]) => !value)
     .map(([key]) => key)
 
   if (missingVars.length > 0) {
-    console.warn('Missing AWS configuration variables:', missingVars)
+    console.warn("Missing AWS configuration variables:", missingVars)
   }
 }
 
 // Function to check if AWS is configured
 export function isAwsConfigured(): boolean {
-  return Boolean(
-    awsConfig.region &&
-    awsConfig.accessKeyId &&
-    awsConfig.secretAccessKey &&
-    awsConfig.bucketPublic
-  )
+  return Boolean(awsConfig.region && awsConfig.accessKeyId && awsConfig.secretAccessKey && awsConfig.bucketPublic)
 }
 
 // Create an S3 client if configured
@@ -50,9 +45,7 @@ export function getAssetUrl(key: string, withTimestamp = false): string | null {
   }
 
   const timestamp = withTimestamp ? Date.now() : null
-  const keyWithTimestamp = timestamp 
-    ? (key.includes('?') ? `${key}&t=${timestamp}` : `${key}?t=${timestamp}`)
-    : key
+  const keyWithTimestamp = timestamp ? (key.includes("?") ? `${key}&t=${timestamp}` : `${key}?t=${timestamp}`) : key
 
   if (awsConfig.cloudfrontDomain) {
     return `${awsConfig.cloudfrontDomain}/${keyWithTimestamp}`
@@ -73,27 +66,27 @@ export async function checkAwsConnection(): Promise<{
   if (!isAwsConfigured()) {
     return {
       success: false,
-      message: 'AWS is not configured',
+      message: "AWS is not configured",
       details: {
-        error: 'Missing required environment variables'
-      }
+        error: "Missing required environment variables",
+      },
     }
   }
 
   try {
     // Try to make a simple API call to verify connection
     await s3Client!.config.credentials()
-    
+
     return {
       success: true,
-      message: 'Successfully connected to AWS'
+      message: "Successfully connected to AWS",
     }
   } catch (err) {
-    console.error('Unexpected error checking AWS connection:', err)
+    console.error("Unexpected error checking AWS connection:", err)
     return {
       success: false,
       message: `Unexpected error: ${err instanceof Error ? err.message : String(err)}`,
-      details: { error: err }
+      details: { error: err },
     }
   }
-} 
+}

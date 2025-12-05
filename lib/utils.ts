@@ -1,6 +1,6 @@
+import { IMAGE_HOST } from "@/lib/config"
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { IMAGE_HOST } from "@/lib/config"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -79,7 +79,7 @@ export function formatCurrency(amount: number) {
     style: "currency",
     currency: "USD",
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0
+    maximumFractionDigits: 0,
   }).format(amount)
 }
 
@@ -108,8 +108,8 @@ export function isRollRequired(obj: unknown): obj is { rollType: string; difficu
  * @returns Turn or null
  */
 export function mapConvexTurnToTurn(raw: unknown): import("@/types/adventure").Turn | null {
-  if (!raw || typeof raw !== "object" || !("encounterId" in raw) || !("title" in raw)) return null;
-  const t = raw as { _id: string; encounterId: string; title: string; narrative: string; characters: import("@/types/adventure").TurnCharacter[]; adventureId: string; isFinalEncounter?: boolean };
+  if (!raw || typeof raw !== "object" || !("encounterId" in raw) || !("title" in raw)) return null
+  const t = raw as { _id: string; encounterId: string; title: string; narrative: string; characters: import("@/types/adventure").TurnCharacter[]; adventureId: string; isFinalEncounter?: boolean }
   return {
     id: t._id,
     encounterId: t.encounterId,
@@ -118,21 +118,21 @@ export function mapConvexTurnToTurn(raw: unknown): import("@/types/adventure").T
     characters: t.characters,
     adventureId: t.adventureId,
     isFinalEncounter: t.isFinalEncounter,
-  };
+  }
 }
 
 export function rollD20(): number {
-  return Math.floor(Math.random() * 20) + 1;
+  return Math.floor(Math.random() * 20) + 1
 }
 
 export function formatNumberToK(num: number): string {
   if (num >= 1000000) {
-    return (num / 1000000).toFixed(1).replace(/\.0$/, "") + "m";
+    return `${(num / 1000000).toFixed(1).replace(/\.0$/, "")}m`
   }
   if (num >= 1000) {
-    return (num / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+    return `${(num / 1000).toFixed(1).replace(/\.0$/, "")}k`
   }
-  return Math.round(num).toString();
+  return Math.round(num).toString()
 }
 
 /**

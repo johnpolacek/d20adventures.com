@@ -1,15 +1,15 @@
 "use client"
 
-import * as React from "react"
-import { Location, Organization } from "@/types/setting"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { ImageUpload } from "@/components/ui/image-upload"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Trash2, ChevronDown, ChevronRight } from "lucide-react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { ImageUpload } from "@/components/ui/image-upload"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import type { Location, Organization } from "@/types/setting"
+import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react"
+import * as React from "react"
 
 interface SettingLocationsProps {
   settingId: string

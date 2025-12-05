@@ -15,10 +15,10 @@ export interface MailingListSubscription {
   updated_at: string
 }
 
-export type CreateMailingListSubscription = Pick<MailingListSubscription, 'user_id' | 'email' | 'name'> & {
+export type CreateMailingListSubscription = Pick<MailingListSubscription, "user_id" | "email" | "name"> & {
   preferences?: Partial<MailingListPreferences>
 }
 
-export type UpdateMailingListSubscription = Partial<Pick<MailingListSubscription, 'name' | 'unsubscribed_at'>> & {
+export type UpdateMailingListSubscription = Partial<Pick<MailingListSubscription, "name" | "unsubscribed_at">> & {
   preferences?: Partial<MailingListPreferences>
-} 
+}

@@ -1,4 +1,4 @@
-import { createHash } from "crypto"
+import { createHash } from "node:crypto"
 
 /**
  * Generates a secure token for email unsubscribe links
@@ -30,7 +30,7 @@ export function verifyUnsubscribeToken(email: string, token: string): boolean {
   // Generate a token for the current month and previous month
   // This gives users a grace period when links cross month boundaries
   const currentToken = generateUnsubscribeToken(email)
-  
+
   // Generate token for previous month
   const lastMonth = new Date()
   lastMonth.setUTCMonth(lastMonth.getUTCMonth() - 1)
@@ -58,4 +58,4 @@ export function encodeEmail(email: string): string {
  */
 export function decodeEmail(encoded: string): string {
   return Buffer.from(encoded, "base64url").toString("utf-8")
-} 
+}

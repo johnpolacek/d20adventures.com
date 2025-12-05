@@ -1,8 +1,8 @@
 "use client"
 
-import Image from "next/image"
 import DiceRollResult from "@/components/adventure/dice-roll-result"
 import { getImageUrl } from "@/lib/utils"
+import Image from "next/image"
 
 export default function CharacterDiceRollResultDisplay({
   character,
@@ -29,7 +29,7 @@ export default function CharacterDiceRollResultDisplay({
         <div className="absolute bottom-0 left-0 text-center w-full md:w-3/4 pl-4 py-4 md:py-2 z-10 text-base text-primary-100 bg-gradient-to-t md:bg-gradient-to-r from-black/90 to-transparent">
           {character}
         </div>
-        <div className="absolute bottom-0 sm:bottom-auto sm:top-0 right-0 w-full sm:w-1/3 h-1/3 sm:h-full bg-gradient-to-t sm:bg-gradient-to-l from-black to-transparent"></div>
+        <div className="absolute bottom-0 sm:bottom-auto sm:top-0 right-0 w-full sm:w-1/3 h-1/3 sm:h-full bg-gradient-to-t sm:bg-gradient-to-l from-black to-transparent" />
       </div>
       <div className="px-4 py-6 flex flex-col gap-2 text-center items-center justify-start w-full sm:w-1/2 absolute bottom-0 sm:relative sm:left-1/2 z-10">
         <h4 className="text-xs opacity-70">Dice Roll Result</h4>
@@ -43,13 +43,11 @@ export default function CharacterDiceRollResultDisplay({
                 <span className="text-white/50">|</span> {baseRoll}
               </span>
               {typeof modifier === "number" && modifier !== 0 && (
-                <>
-                  <span className={modifier > 0 ? "text-green-500" : "text-red-500"}>
-                    {" "}
-                    {modifier > 0 ? " + " : " - "}
-                    {Math.abs(modifier)}
-                  </span>
-                </>
+                <span className={modifier > 0 ? "text-green-500" : "text-red-500"}>
+                  {" "}
+                  {modifier > 0 ? " + " : " - "}
+                  {Math.abs(modifier)}
+                </span>
               )}
               {typeof modifier === "number" && modifier !== 0 ? <> </> : null}
             </>

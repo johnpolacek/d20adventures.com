@@ -1,6 +1,6 @@
-import { Heading } from "@/components/typography/heading"
-import { UploadDemoClient } from "@/components/demo/upload-demo-client"
 import { ConfigCard } from "@/components/admin/config-card"
+import { UploadDemoClient } from "@/components/demo/upload-demo-client"
+import { Heading } from "@/components/typography/heading"
 
 const requiredEnvVars = {
   AWS_KEY: "Your AWS access key ID for S3 access",

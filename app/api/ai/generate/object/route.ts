@@ -103,12 +103,12 @@ export async function POST(req: Request) {
 
     // Create a new schema from the shape
     const schema = createZodSchema(schemaShape)
-    
+
     const result = await streamObject({
       schema,
       prompt,
     })
-    
+
     return result.toTextStreamResponse()
   } catch (error) {
     console.error("Error in generate object route:", error)

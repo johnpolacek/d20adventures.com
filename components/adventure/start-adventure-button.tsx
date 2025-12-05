@@ -1,7 +1,7 @@
-import React, { useState } from "react"
-import { Button } from "@/components/ui/button"
 import { startAdventure } from "@/app/_actions/start-adventure"
+import { Button } from "@/components/ui/button"
 import type { Adventure } from "@/types/adventure"
+import React, { useState } from "react"
 
 interface StartAdventureButtonProps {
   canStartAdventure: boolean

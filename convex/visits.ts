@@ -1,15 +1,15 @@
-import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
-import { Doc, Id } from "./_generated/dataModel";
+import { v } from "convex/values"
+import { Doc, Id } from "./_generated/dataModel"
+import { mutation, query } from "./_generated/server"
 
 // Schema is defined in schema.ts
 export type Visit = {
-  path: string;
-  userId: string | null;
-  metadata: Record<string, any>;
-  createdAt: number;
-  updatedAt: number;
-};
+  path: string
+  userId: string | null
+  metadata: Record<string, any>
+  createdAt: number
+  updatedAt: number
+}
 
 export const recordVisit = mutation({
   args: {
@@ -18,16 +18,16 @@ export const recordVisit = mutation({
     metadata: v.any(),
   },
   handler: async (ctx, args) => {
-    const now = Date.now();
+    const now = Date.now()
     return await ctx.db.insert("visits", {
       path: args.path,
       userId: args.userId,
       metadata: args.metadata,
       createdAt: now,
       updatedAt: now,
-    });
+    })
   },
-});
+})
 
 export const getVisits = query({
   args: {
@@ -35,19 +35,17 @@ export const getVisits = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const query = args.userId !== undefined
-      ? await ctx.db
-          .query("visits")
-          .withIndex("by_user", (q) => q.eq("userId", args.userId as string | null))
-          .collect()
-      : await ctx.db
-          .query("visits")
-          .withIndex("by_created")
-          .collect();
+    const query =
+      args.userId !== undefined
+        ? await ctx.db
+            .query("visits")
+            .withIndex("by_user", (q) => q.eq("userId", args.userId as string | null))
+            .collect()
+        : await ctx.db.query("visits").withIndex("by_created").collect()
 
-    return args.limit !== undefined ? query.slice(0, args.limit) : query;
+    return args.limit !== undefined ? query.slice(0, args.limit) : query
   },
-});
+})
 
 export const getVisitsByPath = query({
   args: {
@@ -58,15 +56,15 @@ export const getVisitsByPath = query({
     const results = await ctx.db
       .query("visits")
       .withIndex("by_path", (q) => q.eq("path", args.path))
-      .collect();
+      .collect()
 
-    return args.limit !== undefined ? results.slice(0, args.limit) : results;
+    return args.limit !== undefined ? results.slice(0, args.limit) : results
   },
-});
+})
 
 export const deleteVisit = mutation({
   args: { id: v.id("visits") },
   handler: async (ctx, args) => {
-    await ctx.db.delete(args.id);
+    await ctx.db.delete(args.id)
   },
-}); 
+})

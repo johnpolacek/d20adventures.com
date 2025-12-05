@@ -1,14 +1,14 @@
-'use server'
+"use server"
 
-import { auth } from "@clerk/nextjs/server"
-import { redirect } from "next/navigation"
-import { convex } from "@/lib/convex/server"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
+import { convex } from "@/lib/convex/server"
 import { readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
-import type { PCTemplate } from "@/types/character"
 import { toPCTemplate } from "@/lib/utils/character-mapping"
 import type { AdventurePlan } from "@/types/adventure-plan"
+import type { PCTemplate } from "@/types/character"
+import { auth } from "@clerk/nextjs/server"
+import { redirect } from "next/navigation"
 import { decrementUserTokensAction } from "./tokens"
 
 interface JoinAdventureArgs {
@@ -42,7 +42,7 @@ export async function joinAdventure({ settingId, adventurePlanId, adventureId, c
     }
 
     // Ensure the character exists in the user's S3 path
-    const userCharKey = `characters/${userId}/${characterId.split('/').pop()?.replace('.json', '')}.json`
+    const userCharKey = `characters/${userId}/${characterId.split("/").pop()?.replace(".json", "")}.json`
     let exists = false
     try {
       await readJsonFromS3(userCharKey)
@@ -54,7 +54,7 @@ export async function joinAdventure({ settingId, adventurePlanId, adventureId, c
       let characterData: PCTemplate | unknown = undefined
       try {
         const plan = (await readJsonFromS3(planPath)) as AdventurePlan
-        characterData = plan.premadePlayerCharacters?.find(pc => pc.id === characterId.split('/').pop()?.replace('.json', ''))
+        characterData = plan.premadePlayerCharacters?.find((pc) => pc.id === characterId.split("/").pop()?.replace(".json", ""))
       } catch {}
       if (!characterData) {
         // Try to load as a custom character (should not throw if not found)
@@ -84,4 +84,4 @@ export async function joinAdventure({ settingId, adventurePlanId, adventureId, c
     console.error("🎲 Failed to join adventure:", error)
     throw error
   }
-} 
+}

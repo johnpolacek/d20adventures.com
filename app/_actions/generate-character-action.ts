@@ -1,12 +1,7 @@
-'use server'
+"use server"
 
 import { generateObject } from "@/lib/ai"
-import { 
-  npcGenerationSchema, 
-  pcTemplateGenerationSchema,
-  type NPC, 
-  type PCTemplate 
-} from "@/types/character"
+import { type NPC, type PCTemplate, npcGenerationSchema, pcTemplateGenerationSchema } from "@/types/character"
 
 interface GenerateCharacterInput {
   prompt: string
@@ -19,15 +14,12 @@ interface GenerateCharacterResult {
   error?: string
 }
 
-export async function generateCharacterAction({ 
-  prompt, 
-  characterType 
-}: GenerateCharacterInput): Promise<GenerateCharacterResult> {
+export async function generateCharacterAction({ prompt, characterType }: GenerateCharacterInput): Promise<GenerateCharacterResult> {
   try {
     if (!prompt.trim()) {
       return {
         success: false,
-        error: "Prompt is required"
+        error: "Prompt is required",
       }
     }
 
@@ -49,34 +41,31 @@ export async function generateCharacterAction({
 
     const result = await generateObject({
       prompt: enhancedPrompt,
-      schema
+      schema,
     })
 
     if (!result.object) {
       return {
         success: false,
-        error: "Failed to generate character"
+        error: "Failed to generate character",
       }
     }
 
     // Ensure status is defined for NPCs, and keep PC template shape intact
-    const character = (characterType === "npc"
-      ? ({ ...(result.object as NPC), status: "" } as NPC)
-      : (result.object as PCTemplate))
+    const character = characterType === "npc" ? ({ ...(result.object as NPC), status: "" } as NPC) : (result.object as PCTemplate)
 
     return {
       success: true,
-      character
+      character,
     }
-
   } catch (error) {
     console.error("Error generating character:", error)
-    
+
     const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred"
-    
+
     return {
       success: false,
-      error: errorMessage
+      error: errorMessage,
     }
   }
-} 
+}

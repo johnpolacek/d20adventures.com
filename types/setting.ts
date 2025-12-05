@@ -1,26 +1,26 @@
 export interface Organization {
-  name: string;
-  description: string;
-  image: string;
+  name: string
+  description: string
+  image: string
 }
 
 export interface Location {
-  name: string;
-  description: string;
-  image: string;
-  history: string;
-  inhabitants: string;
-  organizations: Organization[];
+  name: string
+  description: string
+  image: string
+  history: string
+  inhabitants: string
+  organizations: Organization[]
 }
 
 export interface Setting {
-  id?: string;
-  name: string;
-  description: string;
-  genre: string;
-  image: string;
-  technology: string;
-  magic: string;
-  locations: Location[];
-  isPublic: boolean;
+  id?: string
+  name: string
+  description: string
+  genre: string
+  image: string
+  technology: string
+  magic: string
+  locations: Location[]
+  isPublic: boolean
 }

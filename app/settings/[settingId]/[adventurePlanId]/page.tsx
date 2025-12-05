@@ -1,7 +1,7 @@
-import { readJsonFromS3 } from "@/lib/s3-utils"
 import AdventureHome from "@/components/views/adventure-home"
+import { readJsonFromS3 } from "@/lib/s3-utils"
+import type { TurnCharacter } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
-import { TurnCharacter } from "@/types/adventure"
 import { redirect } from "next/navigation"
 
 export default async function AdventureHomePage(props: { params: Promise<{ settingId: string; adventurePlanId: string }>; searchParams?: Promise<{ selectedCharacter?: string }> }) {

@@ -46,11 +46,11 @@ export async function refreshProfile(path: string) {
 
 export async function setUsername(userId: string, username: string) {
   try {
-    const client = await clerkClient();
-    await client.users.updateUser(userId, { username });
-    return { success: true };
+    const client = await clerkClient()
+    await client.users.updateUser(userId, { username })
+    return { success: true }
   } catch (error) {
-    console.error("Error setting username:", error);
-    return { success: false, error: "Failed to set username" };
+    console.error("Error setting username:", error)
+    return { success: false, error: "Failed to set username" }
   }
-} 
+}

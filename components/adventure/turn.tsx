@@ -1,6 +1,6 @@
+import GameChat from "./game-chat"
 import TurnCharacterList from "./turn-character-list"
 import TurnNarrative from "./turn-narrative"
-import GameChat from "./game-chat"
 
 export default function Turn({ nextAdventure }: { nextAdventure?: string }) {
   return (

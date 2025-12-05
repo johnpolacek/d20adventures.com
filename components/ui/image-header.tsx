@@ -1,10 +1,11 @@
 "use client"
 
-import React, { useState } from "react"
-import Image from "next/image"
 import Parchment from "@/components/graphics/background/Parchment"
-import { textShadow, textShadowSpread } from "../typography/styles"
 import { cn } from "@/lib/utils"
+import Image from "next/image"
+import type React from "react"
+import { useState } from "react"
+import { textShadow, textShadowSpread } from "../typography/styles"
 
 interface ImageHeaderProps {
   imageUrl: string
@@ -53,7 +54,7 @@ export default function ImageHeader({ imageUrl, children, title, subtitle, image
           )}
         </div>
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent h-1/3" />
-        <div className="absolute bottom-6 sm:bottom-12 left-0 right-0 w-full h-32 bg-gradient-to-b from-black/50 to-transparent"></div>
+        <div className="absolute bottom-6 sm:bottom-12 left-0 right-0 w-full h-32 bg-gradient-to-b from-black/50 to-transparent" />
         <div className="absolute bottom-36 sm:bottom-42 left-0 right-0 w-full h-[1px] bg-blend-lighten -mb-px overflow-hidden opacity-50 bg-[url('/images/app/art/texture-line.png')]" />
       </div>
       <div className={cn("w-full aspect-video -mb-16 -mb-12 min-h-[480px]", variant === "semicompact" && "aspect-[2.25]", variant === "compact" && "aspect-[3]")} />

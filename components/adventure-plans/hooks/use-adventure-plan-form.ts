@@ -1,7 +1,7 @@
-import * as React from "react"
-import { AdventurePlan, AdventureSection } from "@/types/adventure-plan"
-import type { Character, PCTemplate } from "@/types/character"
 import { updateAdventurePlanAction } from "@/app/_actions/adventure-plan-actions"
+import type { AdventurePlan, AdventureSection } from "@/types/adventure-plan"
+import type { Character, PCTemplate } from "@/types/character"
+import * as React from "react"
 import { toast } from "sonner"
 
 export function useAdventurePlanForm(adventurePlan: AdventurePlan) {
@@ -16,12 +16,7 @@ export function useAdventurePlanForm(adventurePlan: AdventurePlan) {
   const [isSaving, setIsSaving] = React.useState(false)
   const [draft, setDraft] = React.useState(adventurePlan.draft !== undefined ? adventurePlan.draft : true)
 
-  const saveAdventurePlan = async (
-    overrideImage?: string, 
-    overrideDraft?: boolean, 
-    overrideAvailableCharacterOptions?: AdventurePlan["availableCharacterOptions"],
-    overrideNextAdventure?: string
-  ) => {
+  const saveAdventurePlan = async (overrideImage?: string, overrideDraft?: boolean, overrideAvailableCharacterOptions?: AdventurePlan["availableCharacterOptions"], overrideNextAdventure?: string) => {
     setIsSaving(true)
     const imageToSave = overrideImage !== undefined ? overrideImage : image
     const draftToSave = overrideDraft !== undefined ? overrideDraft : draft
@@ -29,12 +24,7 @@ export function useAdventurePlanForm(adventurePlan: AdventurePlan) {
     const nextAdventureToSave = overrideNextAdventure !== undefined ? overrideNextAdventure : adventurePlan.nextAdventure
 
     // Filter out empty premade player characters
-    const filteredPremadePlayerCharacters = premadePlayerCharacters.filter(
-      (pc) =>
-        pc.name.trim() !== "" ||
-        pc.archetype.trim() !== "" ||
-        pc.race.trim() !== ""
-    )
+    const filteredPremadePlayerCharacters = premadePlayerCharacters.filter((pc) => pc.name.trim() !== "" || pc.archetype.trim() !== "" || pc.race.trim() !== "")
 
     const updatedAdventurePlan: AdventurePlan = {
       ...adventurePlan,
@@ -101,4 +91,4 @@ export function useAdventurePlanForm(adventurePlan: AdventurePlan) {
     // Actions
     saveAdventurePlan,
   }
-} 
+}

@@ -71,4 +71,4 @@ export function useFileUpload(options: UploadOptions = {}) {
     upload,
     isUploading,
   }
-} 
+}

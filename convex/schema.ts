@@ -1,5 +1,5 @@
-import { defineSchema, defineTable } from "convex/server";
-import { v } from "convex/values";
+import { defineSchema, defineTable } from "convex/server"
+import { v } from "convex/values"
 
 // Define your schema
 export default defineSchema({
@@ -9,7 +9,8 @@ export default defineSchema({
     metadata: v.any(),
     createdAt: v.number(),
     updatedAt: v.number(),
-  }).index("by_user", ["userId"])
+  })
+    .index("by_user", ["userId"])
     .index("by_path", ["path"])
     .index("by_created", ["createdAt"]),
 
@@ -25,7 +26,8 @@ export default defineSchema({
     unsubscribedAt: v.union(v.number(), v.null()),
     createdAt: v.number(),
     updatedAt: v.number(),
-  }).index("by_email", ["email"])
+  })
+    .index("by_email", ["email"])
     .index("by_user", ["userId"])
     .index("by_subscribed", ["subscribedAt"]),
 
@@ -35,15 +37,15 @@ export default defineSchema({
     settingId: v.string(),
     ownerId: v.string(),
     playerIds: v.array(v.string()),
-    players: v.optional(v.array(v.object({
-      userId: v.string(),
-      characterId: v.string(),
-    }))),
-    status: v.optional(v.union(
-      v.literal("waitingForPlayers"),
-      v.literal("active"),
-      v.literal("completed")
-    )),
+    players: v.optional(
+      v.array(
+        v.object({
+          userId: v.string(),
+          characterId: v.string(),
+        })
+      )
+    ),
+    status: v.optional(v.union(v.literal("waitingForPlayers"), v.literal("active"), v.literal("completed"))),
     startedAt: v.number(),
     endedAt: v.optional(v.number()),
     currentTurnId: v.optional(v.id("turns")),
@@ -83,10 +85,14 @@ export default defineSchema({
         motivation: v.optional(v.string()),
         personality: v.optional(v.string()),
         skills: v.optional(v.array(v.string())),
-        equipment: v.optional(v.array(v.object({
-          name: v.string(),
-          description: v.optional(v.string()),
-        }))),
+        equipment: v.optional(
+          v.array(
+            v.object({
+              name: v.string(),
+              description: v.optional(v.string()),
+            })
+          )
+        ),
         attributes: v.optional(
           v.object({
             strength: v.optional(v.number()),
@@ -97,24 +103,36 @@ export default defineSchema({
             charisma: v.optional(v.number()),
           })
         ),
-        spells: v.optional(v.array(v.object({
-          name: v.string(),
-          description: v.optional(v.string()),
-          isUsed: v.optional(v.boolean()),
-        }))),
+        spells: v.optional(
+          v.array(
+            v.object({
+              name: v.string(),
+              description: v.optional(v.string()),
+              isUsed: v.optional(v.boolean()),
+            })
+          )
+        ),
         specialAbilities: v.optional(v.array(v.string())),
         status: v.optional(v.string()),
-        effects: v.optional(v.array(v.object({
-          name: v.string(),
-          description: v.optional(v.string()),
-          duration: v.optional(v.number()),
-          status: v.optional(v.string()),
-          healthPercentDelta: v.optional(v.number()),
-          equipmentToAdd: v.optional(v.array(v.object({
-            name: v.string(),
-            description: v.optional(v.string()),
-          }))),
-        }))),
+        effects: v.optional(
+          v.array(
+            v.object({
+              name: v.string(),
+              description: v.optional(v.string()),
+              duration: v.optional(v.number()),
+              status: v.optional(v.string()),
+              healthPercentDelta: v.optional(v.number()),
+              equipmentToAdd: v.optional(
+                v.array(
+                  v.object({
+                    name: v.string(),
+                    description: v.optional(v.string()),
+                  })
+                )
+              ),
+            })
+          )
+        ),
       })
     ),
     order: v.number(),
@@ -134,7 +152,8 @@ export default defineSchema({
 
   tokenTransactionHistory: defineTable({
     userId: v.string(), // Clerk User ID, to link to userTokenLedger
-    type: v.union( // Type of transaction
+    type: v.union(
+      // Type of transaction
       v.literal("initial_grant"),
       v.literal("purchase"),
       v.literal("usage_generate_text"),
@@ -146,8 +165,9 @@ export default defineSchema({
     amount: v.number(), // Positive for additions (grants, purchases), negative for deductions (usage)
     timestamp: v.number(), // Timestamp of the transaction
     description: v.optional(v.string()), // Optional details about the transaction
-    tokensRemainingAfterTransaction: v.optional(v.number()) // User's token balance after this transaction
-  }).index("by_userId", ["userId"])
+    tokensRemainingAfterTransaction: v.optional(v.number()), // User's token balance after this transaction
+  })
+    .index("by_userId", ["userId"])
     .index("by_timestamp", ["timestamp"]),
 
   // Per-adventure game chat (text only)
@@ -158,4 +178,4 @@ export default defineSchema({
     content: v.string(),
     createdAt: v.number(),
   }).index("by_adventure_created", ["adventureId", "createdAt"]),
-}); 
+})

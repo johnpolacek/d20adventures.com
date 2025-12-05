@@ -1,5 +1,5 @@
-import FullPageImage from "@/components/layout/fullpage-image"
 import CharacterCreateForm from "@/components/forms/character-create-form"
+import FullPageImage from "@/components/layout/fullpage-image"
 
 export default function NewCharacterPage() {
   // TODO: Replace with real data fetching for these props

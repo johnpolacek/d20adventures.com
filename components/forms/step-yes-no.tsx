@@ -1,6 +1,6 @@
 import React from "react"
-import StepperButtons from "./stepper-buttons"
 import { textShadow } from "../typography/styles"
+import StepperButtons from "./stepper-buttons"
 
 interface StepYesNoProps {
   question: string

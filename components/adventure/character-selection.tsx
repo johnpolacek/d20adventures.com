@@ -1,19 +1,19 @@
 "use client"
 
-import React, { useState } from "react"
+import { textShadow, textShadowSpreadLight } from "@/components/typography/styles"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import type { AdventurePlan } from "@/types/adventure-plan"
-import type { TurnCharacter } from "@/types/adventure"
-import type { PCTemplate } from "@/types/character"
-import Image from "next/image"
-import { textShadow, textShadowSpreadLight } from "@/components/typography/styles"
-import { Eye } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { getImageUrl } from "@/lib/utils"
+import type { TurnCharacter } from "@/types/adventure"
+import type { AdventurePlan } from "@/types/adventure-plan"
+import type { PCTemplate } from "@/types/character"
+import { Eye } from "lucide-react"
+import Image from "next/image"
+import Link from "next/link"
+import React, { useState } from "react"
 import PartyConfiguration from "./PartyConfiguration"
 import { CharacterSheetModal } from "./character-sheet-modal"
-import Link from "next/link"
 
 interface CharacterSelectionProps {
   adventurePlan: AdventurePlan
@@ -108,7 +108,7 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
               </p>
             )}
 
-            <Button asChild variant="epic" size="lg" className={cn(!adventurePlan.premadePlayerCharacters || (adventurePlan.premadePlayerCharacters.length == 0 && "text-xl px-12 py-4"))}>
+            <Button asChild variant="epic" size="lg" className={cn(!adventurePlan.premadePlayerCharacters || (adventurePlan.premadePlayerCharacters.length === 0 && "text-xl px-12 py-4"))}>
               <Link href={`/settings/${adventurePlan.settingId}/${adventurePlan.id}/character-create`}>Create Character</Link>
             </Button>
           </div>
@@ -140,8 +140,8 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
                     {isSelecting && selectedCharacterId === character.id && (
                       <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-30">
                         <svg className="animate-spin h-8 w-8 text-amber-300 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
                         </svg>
                         <span className="text-amber-300 font-bold text-lg">Selecting...</span>
                       </div>

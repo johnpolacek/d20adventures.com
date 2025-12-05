@@ -1,10 +1,7 @@
-import * as React from "react"
-import { AdventureSection, AdventureEncounter } from "@/types/adventure-plan"
+import type { AdventureEncounter, AdventureSection } from "@/types/adventure-plan"
+import type * as React from "react"
 
-export function useAdventureSections(
-  sections: AdventureSection[],
-  setSections: React.Dispatch<React.SetStateAction<AdventureSection[]>>
-) {
+export function useAdventureSections(sections: AdventureSection[], setSections: React.Dispatch<React.SetStateAction<AdventureSection[]>>) {
   const handleSectionTitleChange = (index: number, newTitle: string) => {
     const updatedSections = sections.map((section, i) => (i === index ? { ...section, title: newTitle } : section))
     setSections(updatedSections)
@@ -94,9 +91,9 @@ export function useAdventureSections(
           encounters: [],
         },
       ],
-    };
-    setSections((prevSections) => [...prevSections, newSection]);
-  };
+    }
+    setSections((prevSections) => [...prevSections, newSection])
+  }
 
   return {
     handleSectionTitleChange,
@@ -106,4 +103,4 @@ export function useAdventureSections(
     handleAddEncounter,
     handleAddSection,
   }
-} 
+}

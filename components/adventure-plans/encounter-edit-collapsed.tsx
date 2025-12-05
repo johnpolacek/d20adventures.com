@@ -1,9 +1,5 @@
 "use client"
 
-import * as React from "react"
-import Image from "next/image"
-import { AdventureEncounter } from "@/types/adventure-plan"
-import { Button } from "@/components/ui/button"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,7 +11,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { X, Edit, ChevronsRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import type { AdventureEncounter } from "@/types/adventure-plan"
+import { ChevronsRight, Edit, X } from "lucide-react"
+import Image from "next/image"
+import * as React from "react"
 
 interface EncounterEditCollapsedProps {
   encounter: AdventureEncounter

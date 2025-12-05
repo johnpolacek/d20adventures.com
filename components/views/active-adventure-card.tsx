@@ -1,11 +1,11 @@
-import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import Image from "next/image"
-import type { Adventure } from "@/types/adventure"
+import { Card, CardContent } from "@/components/ui/card"
 import { getImageUrl } from "@/lib/utils"
-import { textShadow, textShadowSpread } from "../typography/styles"
+import type { Adventure } from "@/types/adventure"
 import { ChevronsRight } from "lucide-react"
+import Image from "next/image"
+import Link from "next/link"
+import { textShadow, textShadowSpread } from "../typography/styles"
 
 interface ActiveAdventureCardProps {
   adventure: Adventure

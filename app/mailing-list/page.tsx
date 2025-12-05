@@ -1,9 +1,9 @@
+import { getSubscription, unsubscribe } from "@/app/_actions/mailing-list"
+import { ConfigCard } from "@/components/admin/config-card"
 import { MailingListForm } from "@/components/forms/mailing-list-form"
 import { Heading } from "@/components/typography/heading"
-import { getSubscription, unsubscribe } from "@/app/_actions/mailing-list"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ConfigCard } from "@/components/admin/config-card"
 
 async function handleLeaveWaitlist() {
   "use server"

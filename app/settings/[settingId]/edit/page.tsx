@@ -1,6 +1,6 @@
-import { readJsonFromS3 } from "@/lib/s3-utils"
-import { Setting } from "@/types/setting"
 import { SettingEditForm } from "@/components/settings/setting-edit-form"
+import { readJsonFromS3 } from "@/lib/s3-utils"
+import type { Setting } from "@/types/setting"
 
 export default async function SettingEditPage(props: { params: Promise<{ settingId: string }> }) {
   const { settingId } = await props.params

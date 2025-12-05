@@ -1,12 +1,9 @@
-import * as React from "react"
-import { toast } from "sonner"
-import slugify from "slugify"
 import type { Character } from "@/types/character"
+import type * as React from "react"
+import slugify from "slugify"
+import { toast } from "sonner"
 
-export function useNpcManagement(
-  npcs: Record<string, Character>,
-  setNpcs: React.Dispatch<React.SetStateAction<Record<string, Character>>>
-) {
+export function useNpcManagement(npcs: Record<string, Character>, setNpcs: React.Dispatch<React.SetStateAction<Record<string, Character>>>) {
   const handleNpcCreate = (npcName: string) => {
     const newNpcId = slugify(npcName, { lower: true, strict: true })
     if (npcs[newNpcId]) {
@@ -70,4 +67,4 @@ export function useNpcManagement(
     handleNpcCreate,
     handleNpcCreateDefault,
   }
-} 
+}

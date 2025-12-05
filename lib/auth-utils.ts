@@ -1,16 +1,16 @@
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
+import { auth } from "@clerk/nextjs/server"
+import { redirect } from "next/navigation"
 
 export function isClerkConfigured(): boolean {
-  return Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY);
+  return Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY)
 }
 
 export function isAdminConfigured(): boolean {
-  return Boolean(process.env.ADMIN_USER_IDS);
+  return Boolean(process.env.ADMIN_USER_IDS)
 }
 
 export function isDev(): boolean {
-  return process.env.NODE_ENV === "development";
+  return process.env.NODE_ENV === "development"
 }
 
 /**
@@ -21,26 +21,26 @@ export function isDev(): boolean {
 export async function isAdmin(userId?: string): Promise<boolean> {
   try {
     // If userId is not provided, get the current user's ID
-    let userIdToCheck = userId;
-    
+    let userIdToCheck = userId
+
     if (!userIdToCheck) {
-      const { userId: currentUserId } = await auth();
-      userIdToCheck = currentUserId || undefined;
+      const { userId: currentUserId } = await auth()
+      userIdToCheck = currentUserId || undefined
     }
-    
+
     // If no user is authenticated, they're not an admin
     if (!userIdToCheck) {
-      return false;
+      return false
     }
-    
+
     // Get the list of admin user IDs from environment variables
-    const adminUserIds = process.env.ADMIN_USER_IDS?.split(",") || [];
-    
+    const adminUserIds = process.env.ADMIN_USER_IDS?.split(",") || []
+
     // Check if the user's ID is in the admin list
-    return adminUserIds.includes(userIdToCheck);
+    return adminUserIds.includes(userIdToCheck)
   } catch (error) {
-    console.error("Error checking admin status:", error);
-    return false;
+    console.error("Error checking admin status:", error)
+    return false
   }
 }
 
@@ -51,14 +51,14 @@ export async function isAdmin(userId?: string): Promise<boolean> {
  */
 export function isUserAdmin(userId: string | null): boolean {
   if (!userId) {
-    return false;
+    return false
   }
-  
+
   // Get the list of admin user IDs from environment variables
-  const adminUserIds = process.env.ADMIN_USER_IDS?.split(",") || [];
-  
+  const adminUserIds = process.env.ADMIN_USER_IDS?.split(",") || []
+
   // Check if the provided user ID is in the admin list
-  return adminUserIds.includes(userId);
+  return adminUserIds.includes(userId)
 }
 
 export type AdminCheckResult = {
@@ -80,9 +80,9 @@ export async function checkAuth(): Promise<AuthCheckResult> {
   // Get the user's ID from Clerk
   const { userId } = await auth()
 
-  return { 
-    isAuthenticated: !!userId, 
-    userId 
+  return {
+    isAuthenticated: !!userId,
+    userId,
   }
 }
 
@@ -119,4 +119,4 @@ export async function requireAdmin(): Promise<AdminCheckResult> {
   }
 
   return { isAdmin: true, userId, requiresSetup: false }
-} 
+}

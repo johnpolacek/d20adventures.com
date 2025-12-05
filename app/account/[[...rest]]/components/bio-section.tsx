@@ -1,9 +1,9 @@
 "use client"
 
-import { useUser } from "@clerk/nextjs"
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { useUser } from "@clerk/nextjs"
+import { useState } from "react"
 
 export function BioSection() {
   const { user } = useUser()

@@ -1,15 +1,9 @@
-import { camelCase, snakeCase } from 'lodash-es'
+import { camelCase, snakeCase } from "lodash-es"
 
 // Type transformations for TypeScript type system
-type CamelToSnakeCase<S extends string> = S extends `${infer T}${infer U}`
-  ? T extends Uppercase<T>
-    ? `_${Lowercase<T>}${CamelToSnakeCase<U>}`
-    : `${T}${CamelToSnakeCase<U>}`
-  : S
+type CamelToSnakeCase<S extends string> = S extends `${infer T}${infer U}` ? (T extends Uppercase<T> ? `_${Lowercase<T>}${CamelToSnakeCase<U>}` : `${T}${CamelToSnakeCase<U>}`) : S
 
-type SnakeToCamelCase<S extends string> = S extends `${infer T}_${infer U}`
-  ? `${T}${Capitalize<SnakeToCamelCase<U>>}`
-  : S
+type SnakeToCamelCase<S extends string> = S extends `${infer T}_${infer U}` ? `${T}${Capitalize<SnakeToCamelCase<U>>}` : S
 
 type TransformKeys<T, Transform extends (str: string) => string> = T extends object
   ? {
@@ -19,9 +13,7 @@ type TransformKeys<T, Transform extends (str: string) => string> = T extends obj
           : Transform extends typeof snakeCase
             ? Uncapitalize<CamelToSnakeCase<K>>
             : Uncapitalize<SnakeToCamelCase<K>>
-        : K]: T[K] extends object
-        ? TransformKeys<T[K], Transform>
-        : T[K]
+        : K]: T[K] extends object ? TransformKeys<T[K], Transform> : T[K]
     }
   : T
 
@@ -30,21 +22,14 @@ type TransformKeys<T, Transform extends (str: string) => string> = T extends obj
  */
 export function toSnakeCase<T extends object>(obj: T): TransformKeys<T, typeof snakeCase> {
   if (Array.isArray(obj)) {
-    return obj.map((item) =>
-      typeof item === 'object' ? toSnakeCase(item) : item
-    ) as TransformKeys<T, typeof snakeCase>
+    return obj.map((item) => (typeof item === "object" ? toSnakeCase(item) : item)) as TransformKeys<T, typeof snakeCase>
   }
 
-  if (obj === null || typeof obj !== 'object') {
+  if (obj === null || typeof obj !== "object") {
     return obj as TransformKeys<T, typeof snakeCase>
   }
 
-  return Object.fromEntries(
-    Object.entries(obj).map(([key, value]) => [
-      snakeCase(key),
-      typeof value === 'object' ? toSnakeCase(value) : value,
-    ])
-  ) as TransformKeys<T, typeof snakeCase>
+  return Object.fromEntries(Object.entries(obj).map(([key, value]) => [snakeCase(key), typeof value === "object" ? toSnakeCase(value) : value])) as TransformKeys<T, typeof snakeCase>
 }
 
 /**
@@ -52,21 +37,14 @@ export function toSnakeCase<T extends object>(obj: T): TransformKeys<T, typeof s
  */
 export function toCamelCase<T extends object>(obj: T): TransformKeys<T, typeof camelCase> {
   if (Array.isArray(obj)) {
-    return obj.map((item) =>
-      typeof item === 'object' ? toCamelCase(item) : item
-    ) as TransformKeys<T, typeof camelCase>
+    return obj.map((item) => (typeof item === "object" ? toCamelCase(item) : item)) as TransformKeys<T, typeof camelCase>
   }
 
-  if (obj === null || typeof obj !== 'object') {
+  if (obj === null || typeof obj !== "object") {
     return obj as TransformKeys<T, typeof camelCase>
   }
 
-  return Object.fromEntries(
-    Object.entries(obj).map(([key, value]) => [
-      camelCase(key),
-      typeof value === 'object' ? toCamelCase(value) : value,
-    ])
-  ) as TransformKeys<T, typeof camelCase>
+  return Object.fromEntries(Object.entries(obj).map(([key, value]) => [camelCase(key), typeof value === "object" ? toCamelCase(value) : value])) as TransformKeys<T, typeof camelCase>
 }
 
 /**
@@ -81,7 +59,7 @@ export const deepToCamelCase = toCamelCase
  *   firstName: string
  *   lastName: string
  * }
- * 
+ *
  * type DatabaseUser = ToSnakeCase<UserInput>
  * // Result: { first_name: string, last_name: string }
  */
@@ -94,7 +72,7 @@ export type ToSnakeCase<T> = TransformKeys<T, typeof snakeCase>
  *   first_name: string
  *   last_name: string
  * }
- * 
+ *
  * type ClientUser = ToCamelCase<DatabaseUser>
  * // Result: { firstName: string, lastName: string }
  */
@@ -104,4 +82,4 @@ export type ToCamelCase<T> = TransformKeys<T, typeof camelCase>
 export type Primitive = string | number | boolean | null | undefined
 export type TransformableObject = { [key: string]: Transformable }
 export type TransformableArray = Transformable[]
-export type Transformable = Primitive | TransformableObject | TransformableArray 
+export type Transformable = Primitive | TransformableObject | TransformableArray

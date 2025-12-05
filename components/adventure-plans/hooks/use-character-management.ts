@@ -68,7 +68,7 @@ export function useCharacterManagement(
       onCharactersChange(updatedNpcs)
     } else {
       const pcArray = characters as PCTemplate[]
-      const index = parseInt(charId)
+      const index = Number.parseInt(charId)
       const updatedPcs = pcArray.map((char, i) => (i === index ? ({ ...char, ...updates } as PCTemplate) : char))
       onCharactersChange(updatedPcs)
     }
@@ -82,14 +82,14 @@ export function useCharacterManagement(
       onCharactersChange(updatedNpcs)
     } else {
       const pcArray = characters as PCTemplate[]
-      const index = parseInt(charId)
+      const index = Number.parseInt(charId)
       const updatedPcs = pcArray.filter((_, i) => i !== index)
       onCharactersChange(updatedPcs)
     }
   }
 
   const getCharacter = (charId: string): Character | PCTemplate => {
-    return isNpcs ? (characters as Record<string, Character>)[charId] : (characters as PCTemplate[])[parseInt(charId)]
+    return isNpcs ? (characters as Record<string, Character>)[charId] : (characters as PCTemplate[])[Number.parseInt(charId)]
   }
 
   // Get the characters array for rendering - convert objects to array format for consistency
@@ -105,4 +105,4 @@ export function useCharacterManagement(
     removeCharacter,
     getCharacter,
   }
-} 
+}

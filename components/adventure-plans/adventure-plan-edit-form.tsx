@@ -1,19 +1,19 @@
 "use client"
 
-import * as React from "react"
-import { AdventurePlan } from "@/types/adventure-plan"
-import type { Character, PCTemplate } from "@/types/character"
-import { Button } from "@/components/ui/button"
+import { getOtherAdventurePlans } from "@/app/_actions/adventure-plan-actions"
+import { AdventurePlanBasicInfo } from "@/components/adventure-plans/adventure-plan-basic-info"
 import { AdventurePlanCharactersEdit } from "@/components/adventure-plans/adventure-plan-characters-edit"
 import { AdventurePlanEditSidebar } from "@/components/adventure-plans/adventure-plan-edit-sidebar"
 import { AdventurePlanFormHeader } from "@/components/adventure-plans/adventure-plan-form-header"
-import { AdventurePlanBasicInfo } from "@/components/adventure-plans/adventure-plan-basic-info"
 import { AdventurePlanSections } from "@/components/adventure-plans/adventure-plan-sections"
 import { useAdventurePlanForm } from "@/components/adventure-plans/hooks/use-adventure-plan-form"
 import { useAdventureSections } from "@/components/adventure-plans/hooks/use-adventure-sections"
 import { useEncounterHandlers } from "@/components/adventure-plans/hooks/use-encounter-handlers"
+import { Button } from "@/components/ui/button"
+import type { AdventurePlan } from "@/types/adventure-plan"
+import type { Character, PCTemplate } from "@/types/character"
+import * as React from "react"
 import { toast } from "sonner"
-import { getOtherAdventurePlans } from "@/app/_actions/adventure-plan-actions"
 
 export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: AdventurePlan }) {
   // Use custom hooks for form state management

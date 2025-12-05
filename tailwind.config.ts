@@ -1,16 +1,10 @@
+import typography from "@tailwindcss/typography"
 import type { Config } from "tailwindcss"
 import tailwindcssAnimate from "tailwindcss-animate"
-import typography from '@tailwindcss/typography'
 
 const config = {
   darkMode: "class",
-  content: [
-    "./pages/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-    "./app/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
-    "*.{js,ts,jsx,tsx,mdx}",
-  ],
+  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}", "*.{js,ts,jsx,tsx,mdx}"],
   prefix: "",
   theme: {
     container: {
@@ -90,53 +84,53 @@ const config = {
       typography: {
         DEFAULT: {
           css: {
-            maxWidth: 'none',
-            color: 'hsl(var(--foreground))',
+            maxWidth: "none",
+            color: "hsl(var(--foreground))",
             a: {
-              color: 'hsl(var(--primary))',
-              textDecoration: 'underline',
-              fontWeight: '500',
+              color: "hsl(var(--primary))",
+              textDecoration: "underline",
+              fontWeight: "500",
             },
             h1: {
-              color: 'hsl(var(--foreground))',
+              color: "hsl(var(--foreground))",
             },
             h2: {
-              color: 'hsl(var(--foreground))',
+              color: "hsl(var(--foreground))",
             },
             h3: {
-              color: 'hsl(var(--foreground))',
+              color: "hsl(var(--foreground))",
             },
             h4: {
-              color: 'hsl(var(--foreground))',
+              color: "hsl(var(--foreground))",
             },
             code: {
-              color: 'hsl(var(--foreground))',
-              backgroundColor: 'hsl(var(--muted))',
-              borderRadius: '0.25rem',
-              padding: '0.15rem 0.3rem',
+              color: "hsl(var(--foreground))",
+              backgroundColor: "hsl(var(--muted))",
+              borderRadius: "0.25rem",
+              padding: "0.15rem 0.3rem",
             },
             pre: {
-              backgroundColor: 'hsl(var(--muted))',
-              borderRadius: '0.5rem',
-              padding: '1rem',
+              backgroundColor: "hsl(var(--muted))",
+              borderRadius: "0.5rem",
+              padding: "1rem",
             },
             blockquote: {
-              color: 'hsl(var(--muted-foreground))',
-              borderLeftColor: 'hsl(var(--border))',
+              color: "hsl(var(--muted-foreground))",
+              borderLeftColor: "hsl(var(--border))",
             },
             hr: {
-              borderColor: 'hsl(var(--border))',
+              borderColor: "hsl(var(--border))",
             },
             strong: {
-              color: 'hsl(var(--foreground))',
+              color: "hsl(var(--foreground))",
             },
             thead: {
-              color: 'hsl(var(--foreground))',
-              borderBottomColor: 'hsl(var(--border))',
+              color: "hsl(var(--foreground))",
+              borderBottomColor: "hsl(var(--border))",
             },
             tbody: {
               tr: {
-                borderBottomColor: 'hsl(var(--border))',
+                borderBottomColor: "hsl(var(--border))",
               },
             },
           },
@@ -144,11 +138,7 @@ const config = {
       },
     },
   },
-  plugins: [
-    tailwindcssAnimate,
-    typography,
-  ],
+  plugins: [tailwindcssAnimate, typography],
 } satisfies Config
 
 export default config
-

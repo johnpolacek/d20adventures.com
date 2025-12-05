@@ -1,8 +1,8 @@
 "use client"
-import { useTransition } from "react"
+import { softDeleteUserCharacter } from "@/app/_actions/character"
 import { CharacterSelectCard } from "@/components/ui/character-select-card"
 import type { PCTemplate } from "@/types/character"
-import { softDeleteUserCharacter } from "@/app/_actions/character"
+import { useTransition } from "react"
 
 interface CharacterGridProps {
   username: string

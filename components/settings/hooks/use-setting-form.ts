@@ -1,10 +1,9 @@
-import { useState, useCallback } from "react"
-import { Setting, Location } from "@/types/setting"
 import { updateSettingAction } from "@/app/_actions/setting-actions"
+import type { Location, Setting } from "@/types/setting"
+import { useCallback, useState } from "react"
 import { toast } from "sonner"
 
 export function useSettingForm(initialSetting: Setting, settingId: string) {
-
   const [name, setName] = useState(initialSetting.name)
   const [description, setDescription] = useState(initialSetting.description)
   const [genre, setGenre] = useState(initialSetting.genre)
@@ -15,38 +14,41 @@ export function useSettingForm(initialSetting: Setting, settingId: string) {
   const [isPublic, setIsPublic] = useState(initialSetting.isPublic)
   const [isSaving, setIsSaving] = useState(false)
 
-  const saveSetting = useCallback(async (imageOverride?: string) => {
-    setIsSaving(true)
-    try {
-      const settingData: Setting = {
-        name,
-        description,
-        genre,
-        image: imageOverride !== undefined ? imageOverride : image,
-        technology,
-        magic,
-        locations,
-        isPublic,
-      }
-      
-      const result = await updateSettingAction({
-        setting: settingData,
-        settingId
-      })
+  const saveSetting = useCallback(
+    async (imageOverride?: string) => {
+      setIsSaving(true)
+      try {
+        const settingData: Setting = {
+          name,
+          description,
+          genre,
+          image: imageOverride !== undefined ? imageOverride : image,
+          technology,
+          magic,
+          locations,
+          isPublic,
+        }
 
-      if (result.success) {
-        toast.success(result.message || "Setting saved successfully!")
-      } else {
-        console.error("Server action failed:", result.error)
-        toast.error(result.error || "Failed to save setting. Please try again.")
+        const result = await updateSettingAction({
+          setting: settingData,
+          settingId,
+        })
+
+        if (result.success) {
+          toast.success(result.message || "Setting saved successfully!")
+        } else {
+          console.error("Server action failed:", result.error)
+          toast.error(result.error || "Failed to save setting. Please try again.")
+        }
+      } catch (error) {
+        console.error("Error calling updateSettingAction:", error)
+        toast.error("Failed to save setting. Please try again.")
+      } finally {
+        setIsSaving(false)
       }
-    } catch (error) {
-      console.error("Error calling updateSettingAction:", error)
-      toast.error("Failed to save setting. Please try again.")
-    } finally {
-      setIsSaving(false)
-    }
-  }, [settingId, name, description, genre, image, technology, magic, locations, isPublic])
+    },
+    [settingId, name, description, genre, image, technology, magic, locations, isPublic]
+  )
 
   return {
     name,
@@ -68,4 +70,4 @@ export function useSettingForm(initialSetting: Setting, settingId: string) {
     isSaving,
     saveSetting,
   }
-} 
+}

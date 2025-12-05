@@ -1,9 +1,9 @@
-import { requireAdmin } from "@/lib/auth-utils"
+import { MailingListSubscriberTable } from "@/components/admin/mailing-list/mailing-list-subscriber-table"
 import { AdminBreadcrumb } from "@/components/nav/admin-breadcrumb"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { MailingListSubscriberTable } from "@/components/admin/mailing-list/mailing-list-subscriber-table"
+import type { Doc } from "@/convex/_generated/dataModel"
+import { requireAdmin } from "@/lib/auth-utils"
 import { getMailingListSubscriptions } from "@/lib/services/mailing-list"
-import { Doc } from "@/convex/_generated/dataModel"
 
 type ConvexSubscription = Doc<"mailing_list_subscriptions">
 

@@ -1,16 +1,16 @@
 "use client"
 
-import { useState } from "react"
-import { Textarea } from "@/components/ui/textarea"
-import { Input } from "@/components/ui/input"
-import { ImageUpload } from "@/components/ui/image-upload"
 import { Button } from "@/components/ui/button"
-import Image from "next/image"
-import { Pencil } from "lucide-react"
-import { RULES_PRESETS } from "@/types/adventure-plan"
+import { ImageUpload } from "@/components/ui/image-upload"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
+import { RULES_PRESETS } from "@/types/adventure-plan"
+import { Pencil } from "lucide-react"
+import Image from "next/image"
+import { useState } from "react"
 
 interface AdventurePlanBasicInfoProps {
   adventurePlanId: string
@@ -117,7 +117,7 @@ export function AdventurePlanBasicInfo({
         {displayUrl && (
           <div className="w-full aspect-video relative">
             <Image src={displayUrl} alt="Adventure Cover" fill className="object-cover" />
-            <div className="absolute bottom-0 left-0 w-full h-3/4 bg-gradient-to-t from-black via-black/90 to-transparent"></div>
+            <div className="absolute bottom-0 left-0 w-full h-3/4 bg-gradient-to-t from-black via-black/90 to-transparent" />
           </div>
         )}
         <div className="flex flex-col gap-2 px-8 -mt-40 relative z-10 line-clamp-3">
@@ -169,7 +169,7 @@ export function AdventurePlanBasicInfo({
                 id="minPartySize"
                 type="number"
                 value={editMinPartySize}
-                onChange={(e) => setEditMinPartySize(parseInt(e.target.value, 10) || 0)}
+                onChange={(e) => setEditMinPartySize(Number.parseInt(e.target.value, 10) || 0)}
                 placeholder="Minimum party size"
                 disabled={isSaving}
                 min={1}
@@ -183,7 +183,7 @@ export function AdventurePlanBasicInfo({
                 id="maxPartySize"
                 type="number"
                 value={editMaxPartySize}
-                onChange={(e) => setEditMaxPartySize(parseInt(e.target.value, 10) || 0)}
+                onChange={(e) => setEditMaxPartySize(Number.parseInt(e.target.value, 10) || 0)}
                 placeholder="Maximum party size"
                 disabled={isSaving}
                 min={editMinPartySize || 1}

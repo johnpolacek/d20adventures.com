@@ -5,4 +5,4 @@ export const appearanceBackgroundSchema = z.object({
   background: z.string(), // background can be empty
 })
 
-export type AppearanceBackground = z.infer<typeof appearanceBackgroundSchema> 
+export type AppearanceBackground = z.infer<typeof appearanceBackgroundSchema>

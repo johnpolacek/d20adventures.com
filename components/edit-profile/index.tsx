@@ -1,14 +1,14 @@
 "use client"
 
-import { useState } from "react"
-import { toast } from "sonner"
-import { useUser } from "@clerk/nextjs"
-import { Edit2, Plus, X } from "lucide-react"
+import { updateProfile } from "@/app/_actions/profile"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { updateProfile } from "@/app/_actions/profile"
+import { Textarea } from "@/components/ui/textarea"
+import { useUser } from "@clerk/nextjs"
+import { Edit2, Plus, X } from "lucide-react"
+import { useState } from "react"
+import { toast } from "sonner"
 
 interface UserData {
   id: string

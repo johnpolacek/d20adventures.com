@@ -1,12 +1,12 @@
-import { textShadowSpreadLight } from "@/components/typography/styles"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import ActiveAdventureCard from "@/components/views/active-adventure-card"
 import { getActiveAdventureForUser } from "@/app/_actions/adventure"
-import { auth } from "@clerk/nextjs/server"
 import RedirectHandler from "@/components/nav/redirect-handler"
+import { textShadowSpreadLight } from "@/components/typography/styles"
+import { Button } from "@/components/ui/button"
+import ActiveAdventureCard from "@/components/views/active-adventure-card"
+import { auth } from "@clerk/nextjs/server"
 import { currentUser } from "@clerk/nextjs/server"
+import Image from "next/image"
+import Link from "next/link"
 
 export default async function HomePage() {
   const activeAdventure = await getActiveAdventureForUser()

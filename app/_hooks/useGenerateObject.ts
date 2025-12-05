@@ -1,13 +1,13 @@
 import { experimental_useObject as useObject } from "@ai-sdk/react"
-import { z } from "zod"
 import { useState } from "react"
+import type { z } from "zod"
 import { zodToJsonSchema } from "zod-to-json-schema"
 
 export function useGenerateObject<T extends z.ZodTypeAny>(schema: T) {
   const [error, setError] = useState<string>("")
-  
+
   type InferredType = z.infer<T>
-  
+
   const { object, isLoading, submit } = useObject<InferredType>({
     api: "/api/ai/generate/object",
     schema,
@@ -18,7 +18,7 @@ export function useGenerateObject<T extends z.ZodTypeAny>(schema: T) {
     try {
       // Convert Zod schema to JSON schema
       const jsonSchema = zodToJsonSchema(schema)
-      
+
       await submit({
         schema: jsonSchema,
         prompt,

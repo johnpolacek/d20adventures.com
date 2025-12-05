@@ -1,7 +1,7 @@
 "use client"
 
-import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import { useUser } from "@clerk/nextjs"
 import { Copy, ShieldUser } from "lucide-react"
 import { toast } from "sonner"

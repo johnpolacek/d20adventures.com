@@ -1,10 +1,10 @@
-import { readJsonFromS3 } from "@/lib/s3-utils"
-import { Setting } from "@/types/setting"
-import ImageHeader from "@/components/ui/image-header"
 import { Button } from "@/components/ui/button"
+import ImageHeader from "@/components/ui/image-header"
 import { isDev } from "@/lib/auth-utils"
-import Link from "next/link"
+import { readJsonFromS3 } from "@/lib/s3-utils"
 import { getImageUrl } from "@/lib/utils"
+import type { Setting } from "@/types/setting"
+import Link from "next/link"
 
 export default async function SettingHome(props: { params: Promise<{ settingId: string }> }) {
   const { settingId } = await props.params

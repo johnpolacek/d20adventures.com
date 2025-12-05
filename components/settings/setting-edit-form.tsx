@@ -1,13 +1,13 @@
 "use client"
 
-import * as React from "react"
-import { Setting } from "@/types/setting"
-import { Button } from "@/components/ui/button"
-import { SettingFormHeader } from "./setting-form-header"
-import { SettingBasicInfo } from "./setting-basic-info"
-import { SettingLocations } from "./setting-locations"
 import { useSettingForm } from "@/components/settings/hooks/use-setting-form"
+import { Button } from "@/components/ui/button"
+import type { Setting } from "@/types/setting"
+import * as React from "react"
 import { toast } from "sonner"
+import { SettingBasicInfo } from "./setting-basic-info"
+import { SettingFormHeader } from "./setting-form-header"
+import { SettingLocations } from "./setting-locations"
 
 export function SettingEditForm({ setting, settingId }: { setting: Setting; settingId: string }) {
   console.log(

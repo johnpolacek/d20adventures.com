@@ -1,6 +1,6 @@
-import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CheckCircle, Trophy, BookOpen } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { BookOpen, CheckCircle, Trophy } from "lucide-react"
 import Link from "next/link"
 
 export default function AdventureComplete() {

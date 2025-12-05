@@ -1,12 +1,11 @@
 "use client"
 
 export function useGenerateText() {
-
   const streamText = async (prompt: string, onUpdate: (output: string) => void) => {
     const response = await fetch("/api/ai/generate/text", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ input: prompt + " - Use smart quotes and avoid using backslashes" }),
+      body: JSON.stringify({ input: `${prompt} - Use smart quotes and avoid using backslashes` }),
     })
 
     if (!response.ok) {

@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect } from "react"
 import { useUser } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 
 export default function RedirectHandler() {
   const { isSignedIn, isLoaded } = useUser()

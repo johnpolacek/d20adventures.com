@@ -1,23 +1,20 @@
-import { z } from "zod";
-import { generateObject } from "@/lib/ai";
+import { generateObject } from "@/lib/ai"
+import { z } from "zod"
 
 // Thin compatibility layer: re-export split services and utils
-export { formatNarrativeAction, generateNarrativeUpdate, generateRollOutcomeNarrativeWithContext } from "@/lib/services/narrative-generation-service";
-export { getRollModifier } from "@/lib/services/roll-modifier-service";
-export { appendNarrative, normalizeNarrative, limitToTwoSentences, fixMalformedQuotes } from "@/lib/utils/narrative-utils";
-export { analyzePlayerInput } from "@/lib/utils/narrative-analysis";
+export { formatNarrativeAction, generateNarrativeUpdate, generateRollOutcomeNarrativeWithContext } from "@/lib/services/narrative-generation-service"
+export { getRollModifier } from "@/lib/services/roll-modifier-service"
+export { appendNarrative, normalizeNarrative, limitToTwoSentences, fixMalformedQuotes } from "@/lib/utils/narrative-utils"
+export { analyzePlayerInput } from "@/lib/utils/narrative-analysis"
 
 // Keep helper if current callsites depend on it (new code should use roll-requirement-service)
 const rollRequirementSchema = z.object({
   rollType: z.string(),
   difficulty: z.number().int(),
   modifier: z.number().int().optional(),
-});
+})
 
-export async function getRollRequirementHelper(
-  playerInput: string,
-  context: { encounterIntro?: string; encounterInstructions?: string; narrativeContext?: string }
-) {
+export async function getRollRequirementHelper(playerInput: string, context: { encounterIntro?: string; encounterInstructions?: string; narrativeContext?: string }) {
   const prompt = `
 Encounter Intro:
 ${context.encounterIntro || ""}
@@ -55,9 +52,7 @@ For spellcasting actions:
  - Do NOT require Acrobatics for normal movement like walking, jogging unless the text describes a stunt or the scene explicitly imposes obstacles/time pressure that demand acrobatic precision.
 
 Respond in JSON: { "rollType": string, "difficulty": number } or null if no roll is needed.
-`;
-  const result = await generateObject({ prompt, schema: rollRequirementSchema });
-  return result.object ?? null;
+`
+  const result = await generateObject({ prompt, schema: rollRequirementSchema })
+  return result.object ?? null
 }
-
-

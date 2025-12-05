@@ -1,25 +1,24 @@
-import { generateObject } from "@/lib/ai";
+import { generateObject } from "@/lib/ai"
 
-import { z } from "zod";
+import { z } from "zod"
 
 // External utils
-import { calculateAttributeModifier } from "@/lib/utils/modifier-utils";
+import { calculateAttributeModifier } from "@/lib/utils/modifier-utils"
 
 const rollModifierSchema = z.object({
   modifier: z.number().int(),
-});
+})
 
 export async function getRollModifier(context: { scenario: unknown; rollRequirement: unknown; character: unknown }) {
-  const rollType = typeof context.rollRequirement === 'object' && context.rollRequirement !== null && 'rollType' in context.rollRequirement
-    ? String((context.rollRequirement as Record<string, unknown>).rollType)
-    : '';
-  const characterName = typeof context.character === 'object' && context.character !== null && 'name' in context.character
-    ? String((context.character as Record<string, unknown>).name)
-    : 'unknown';
+  const rollType =
+    typeof context.rollRequirement === "object" && context.rollRequirement !== null && "rollType" in context.rollRequirement
+      ? String((context.rollRequirement as Record<string, unknown>).rollType)
+      : ""
+  const characterName = typeof context.character === "object" && context.character !== null && "name" in context.character ? String((context.character as Record<string, unknown>).name) : "unknown"
 
-  console.log("[LLM] Calculating roll modifier:", { rollType, character: characterName });
+  console.log("[LLM] Calculating roll modifier:", { rollType, character: characterName })
 
-  const baseAttributeModifier = calculateAttributeModifier(context.character, rollType);
+  const baseAttributeModifier = calculateAttributeModifier(context.character, rollType)
 
   const prompt = `
 Given the following scenario, roll requirement, and character (paying attention to their archetype, skills, and how they might interact with the environment), determine if there should be an additional situational bonus or penalty (modifier) to the roll.
@@ -34,20 +33,18 @@ Roll Requirement: ${JSON.stringify(context.rollRequirement, null, 2)}
 Character: ${JSON.stringify(context.character, null, 2)}
 
 Respond in JSON: { "modifier": number } (can be negative, zero, or positive).
-`;
+`
 
-  console.log("[LLM] Situational modifier prompt:", { promptLength: prompt.length, rollType });
+  console.log("[LLM] Situational modifier prompt:", { promptLength: prompt.length, rollType })
 
-  const result = await generateObject({ prompt, schema: rollModifierSchema });
-  const situationalModifier = result.object?.modifier ?? 0;
+  const result = await generateObject({ prompt, schema: rollModifierSchema })
+  const situationalModifier = result.object?.modifier ?? 0
 
-  console.log("[LLM] Situational modifier response:", { modifier: situationalModifier, quality: typeof situationalModifier === 'number' ? 'valid' : 'invalid' });
+  console.log("[LLM] Situational modifier response:", { modifier: situationalModifier, quality: typeof situationalModifier === "number" ? "valid" : "invalid" })
 
-  const totalModifier = Math.round(baseAttributeModifier + situationalModifier);
+  const totalModifier = Math.round(baseAttributeModifier + situationalModifier)
 
-  console.log("[LLM] Roll modifier calculated:", { base: baseAttributeModifier, situational: situationalModifier, total: totalModifier, rollType });
+  console.log("[LLM] Roll modifier calculated:", { base: baseAttributeModifier, situational: situationalModifier, total: totalModifier, rollType })
 
-  return totalModifier;
+  return totalModifier
 }
-
-

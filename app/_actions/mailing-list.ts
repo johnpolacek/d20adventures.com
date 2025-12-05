@@ -1,13 +1,9 @@
 "use server"
 
+import { addMailingListSubscription, getMailingListSubscriptions, removeMailingListSubscription } from "@/lib/services/mailing-list"
 import { auth } from "@clerk/nextjs/server"
 import sgMail from "@sendgrid/mail"
 import { revalidatePath } from "next/cache"
-import {
-  addMailingListSubscription,
-  removeMailingListSubscription,
-  getMailingListSubscriptions
-} from "@/lib/services/mailing-list"
 
 // Configure SendGrid and track availability
 let isEmailServiceConfigured = false
@@ -39,14 +35,14 @@ export async function subscribe(data: {
     revalidatePath("/mailing-list") // Consider if this path is still relevant or needs to be /waitlist
     return {
       success: !!result,
-      emailServiceAvailable: isEmailServiceAvailable()
+      emailServiceAvailable: isEmailServiceAvailable(),
     }
   } catch (error) {
     console.error("Error in subscribe:", error)
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to subscribe",
-      emailServiceAvailable: isEmailServiceAvailable()
+      emailServiceAvailable: isEmailServiceAvailable(),
     }
   }
 }
@@ -57,14 +53,14 @@ export async function unsubscribe(email: string) {
     revalidatePath("/mailing-list") // Consider if this path is still relevant
     return {
       success: result,
-      emailServiceAvailable: isEmailServiceAvailable()
+      emailServiceAvailable: isEmailServiceAvailable(),
     }
   } catch (error) {
     console.error("Error in unsubscribe:", error)
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to unsubscribe",
-      emailServiceAvailable: isEmailServiceAvailable()
+      emailServiceAvailable: isEmailServiceAvailable(),
     }
   }
 }
@@ -81,7 +77,7 @@ export async function getSubscription() {
     const subscriptions = await getMailingListSubscriptions()
     // Assuming the shape of subscription object and how to find the relevant one might need adjustment
     // if `unsubscribedAt` or other fields were tied to preferences.
-    const sub = subscriptions.find(s => s.userId === userId && s.unsubscribedAt === null)
+    const sub = subscriptions.find((s) => s.userId === userId && s.unsubscribedAt === null)
     return {
       success: true as const,
       data: sub || null,
@@ -93,4 +89,4 @@ export async function getSubscription() {
       error: error instanceof Error ? error.message : "Failed to get subscription",
     }
   }
-} 
+}

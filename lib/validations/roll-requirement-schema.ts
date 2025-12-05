@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod"
 
 export const rollRequirementSchema = z.union([
   z.object({
@@ -6,7 +6,7 @@ export const rollRequirementSchema = z.union([
     difficulty: z.number().int().describe("The difficulty class (DC) for the roll"),
     modifier: z.number().int().optional().describe("Bonus or penalty to the roll, e.g. +2 or -1"),
   }),
-  z.null()
-]);
+  z.null(),
+])
 
-export type RollRequirement = z.infer<typeof rollRequirementSchema>; 
+export type RollRequirement = z.infer<typeof rollRequirementSchema>

@@ -1,10 +1,10 @@
-import React, { useState } from "react"
-import { Input } from "@/components/ui/input"
-import { textShadow } from "../typography/styles"
-import StepperButtons from "./stepper-buttons"
 import { generateSpellsAction } from "@/app/_actions/generate-spells-action"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import React, { useState } from "react"
+import { textShadow } from "../typography/styles"
 import type { Attributes } from "./step-assign-attributes"
+import StepperButtons from "./stepper-buttons"
 
 export interface SpellFormValue {
   name: string

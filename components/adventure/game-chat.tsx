@@ -1,19 +1,19 @@
 "use client"
 
-import { useState } from "react"
+import { sendChatMessage } from "@/app/_actions/chat"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { MessageSquare } from "lucide-react"
-import { useEffect, useMemo, useRef } from "react"
-import { useParams } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Badge } from "@/components/ui/badge"
-import { sendChatMessage } from "@/app/_actions/chat"
 import type { Id } from "@/convex/_generated/dataModel"
-import { useUser } from "@clerk/nextjs"
 import { useTurnContext } from "@/lib/context/TurnContext"
 import { getLastSeenTimestamp, setLastSeenTimestamp } from "@/lib/utils/chat-storage"
+import { useUser } from "@clerk/nextjs"
+import { MessageSquare } from "lucide-react"
+import { useParams } from "next/navigation"
+import { useState } from "react"
+import { useEffect, useMemo, useRef } from "react"
 
 type GameChatProps = {
   adventureId?: string

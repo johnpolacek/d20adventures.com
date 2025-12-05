@@ -1,6 +1,6 @@
-import { generateObject } from "@/lib/ai";
-import type { Character } from "@/types/character";
-import { z } from "zod";
+import { generateObject } from "@/lib/ai"
+import type { Character } from "@/types/character"
+import { z } from "zod"
 
 /**
  * Given an action or reply string and character context, determine if a dice roll is required.
@@ -10,29 +10,30 @@ export async function getRollRequirementForAction(
   action: string,
   character: Character,
   options?: {
-    encounterInstructions?: string;
-    encounterIntro?: string;
-    narrativeContext?: string;
+    encounterInstructions?: string
+    encounterIntro?: string
+    narrativeContext?: string
   }
 ) {
   // Starting roll requirement analysis
 
-  const { encounterInstructions = "", encounterIntro = "", narrativeContext = "" } = options || {};
+  const { encounterInstructions = "", encounterIntro = "", narrativeContext = "" } = options || {}
   // Format character context for the prompt
   const contextLines = [
     `Name: ${character.name}`,
     `Archetype: ${character.archetype}`,
     `Race: ${character.race}`,
-    character.spells && character.spells.length > 0 ? `Spells: ${character.spells.map(s => s.name).join(", ")}` : undefined,
+    character.spells && character.spells.length > 0 ? `Spells: ${character.spells.map((s) => s.name).join(", ")}` : undefined,
     character.skills && character.skills.length > 0 ? `Skills: ${character.skills.join(", ")}` : undefined,
-    character.equipment && character.equipment.length > 0 ? `Equipment: ${character.equipment.map(e => e.name).join(", ")}` : undefined,
+    character.equipment && character.equipment.length > 0 ? `Equipment: ${character.equipment.map((e) => e.name).join(", ")}` : undefined,
     character.specialAbilities && character.specialAbilities.length > 0 ? `Special Abilities: ${character.specialAbilities.join(", ")}` : undefined,
-  ].filter(Boolean);
-  const characterContext = contextLines.length > 0 ? `Character Context:\n${contextLines.join("\n")}\n` : "";
+  ].filter(Boolean)
+  const characterContext = contextLines.length > 0 ? `Character Context:\n${contextLines.join("\n")}\n` : ""
 
-  const encounterContext = `${encounterIntro ? `Encounter Intro:\n${encounterIntro}\n` : ""}` +
+  const encounterContext =
+    `${encounterIntro ? `Encounter Intro:\n${encounterIntro}\n` : ""}` +
     `${encounterInstructions ? `Encounter Instructions:\n${encounterInstructions}\n` : ""}` +
-    `${narrativeContext ? `Recent Narrative Context:\n${narrativeContext}\n` : ""}`;
+    `${narrativeContext ? `Recent Narrative Context:\n${narrativeContext}\n` : ""}`
 
   // Context built for roll requirement analysis
 
@@ -78,13 +79,13 @@ Difficulty guidelines:
 Use the character's abilities, spells, skills, and equipment when selecting the roll type and setting difficulty.
 
 Action: "${action}"
-`;
+`
 
   console.log("[LLM] Roll requirement prompt:", {
     promptLength: prompt.length,
-    action: action.substring(0, 100) + (action.length > 100 ? '...' : ''),
-    character: character.name
-  });
+    action: action.substring(0, 100) + (action.length > 100 ? "..." : ""),
+    character: character.name,
+  })
 
   try {
     // Use object-only schema for LLM; union with null is not supported by AI SDK response_format
@@ -92,35 +93,33 @@ Action: "${action}"
       rollType: z.string(),
       difficulty: z.number().int(),
       modifier: z.number().int().optional(),
-    });
+    })
 
     const result = await generateObject({
       schema: llmRollRequirementObjectSchema,
       prompt,
-    });
+    })
 
     console.log("[LLM] Roll requirement response:", {
       rollType: result.object?.rollType,
       difficulty: result.object?.difficulty,
-      quality: result.object?.rollType && result.object?.difficulty ? 'valid' : 'invalid'
-    });
+      quality: result.object?.rollType && result.object?.difficulty ? "valid" : "invalid",
+    })
 
-    const finalResult = (result.object && result.object.rollType !== "none" && result.object.difficulty > 0)
-      ? result.object
-      : null;
+    const finalResult = result.object && result.object.rollType !== "none" && result.object.difficulty > 0 ? result.object : null
     console.log("[LLM] Roll requirement decision:", {
       character: character.name,
       requiresRoll: !!finalResult,
       rollType: finalResult?.rollType,
-      difficulty: finalResult?.difficulty
-    });
+      difficulty: finalResult?.difficulty,
+    })
 
-    return finalResult;
+    return finalResult
   } catch (error) {
     console.error("[LLM] Roll requirement error:", {
       character: character.name,
-      error: error instanceof Error ? error.message : String(error)
-    });
-    throw error;
+      error: error instanceof Error ? error.message : String(error),
+    })
+    throw error
   }
-} 
+}

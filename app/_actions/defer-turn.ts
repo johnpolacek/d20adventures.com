@@ -1,10 +1,10 @@
-'use server'
-import { auth } from "@clerk/nextjs/server"
-import { convex } from "@/lib/convex/server"
+"use server"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
-import type { TurnCharacter } from "@/types/adventure"
+import { convex } from "@/lib/convex/server"
 import { processNpcTurnsAfterCurrent } from "@/lib/services/npc-turn-service"
+import type { TurnCharacter } from "@/types/adventure"
+import { auth } from "@clerk/nextjs/server"
 
 type DeferOrSkipArgs = {
   turnId: Id<"turns">
@@ -13,7 +13,7 @@ type DeferOrSkipArgs = {
   skipEntire?: boolean
 }
 
-export async function deferOrSkipTurn({ turnId, characterId, afterCharacterId, skipEntire }: DeferOrSkipArgs): Promise<{ status: "deferred" | "skipped" }>{
+export async function deferOrSkipTurn({ turnId, characterId, afterCharacterId, skipEntire }: DeferOrSkipArgs): Promise<{ status: "deferred" | "skipped" }> {
   console.log("[deferOrSkipTurn] called", { turnId: String(turnId), characterId, afterCharacterId, skipEntire })
   const { userId } = await auth()
   if (!userId) throw new Error("Unauthorized")
@@ -32,9 +32,12 @@ export async function deferOrSkipTurn({ turnId, characterId, afterCharacterId, s
   // Calculate candidates with lower initiative than the player's current initiative
   const playerInitiative = player.initiative ?? 0
   const lowerCandidates = characters
-    .filter((c) => !c.isComplete && c.id !== player.id && (c.initiative ?? -Infinity) < playerInitiative)
+    .filter((c) => !c.isComplete && c.id !== player.id && (c.initiative ?? Number.NEGATIVE_INFINITY) < playerInitiative)
     .sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
-  console.log("[deferOrSkipTurn] lower candidates", lowerCandidates.map(c => ({ id: c.id, name: c.name, initiative: c.initiative })))
+  console.log(
+    "[deferOrSkipTurn] lower candidates",
+    lowerCandidates.map((c) => ({ id: c.id, name: c.name, initiative: c.initiative }))
+  )
 
   // If explicitly skipping entire turn, mark complete regardless of available candidates
   if (skipEntire) {
@@ -143,7 +146,12 @@ export async function deferOrSkipTurn({ turnId, characterId, afterCharacterId, s
   // Safety: If we reached here without a valid target but candidates exist, place after the lowest-initiative candidate
   const lastCandidate = lowerCandidates[lowerCandidates.length - 1]
   const newInitiative = (lastCandidate.initiative ?? 0) - 1
-  console.log("[deferOrSkipTurn] fallback defer after lowest candidate", { lastCandidateId: lastCandidate.id, lastCandidateName: lastCandidate.name, lastCandidateInitiative: lastCandidate.initiative, newInitiative })
+  console.log("[deferOrSkipTurn] fallback defer after lowest candidate", {
+    lastCandidateId: lastCandidate.id,
+    lastCandidateName: lastCandidate.name,
+    lastCandidateInitiative: lastCandidate.initiative,
+    newInitiative,
+  })
   const updatedCharacters: TurnCharacter[] = characters.map((c) =>
     c.id === player.id
       ? {
@@ -172,5 +180,3 @@ export async function deferOrSkipTurn({ turnId, characterId, afterCharacterId, s
 
   return { status: "deferred" }
 }
-
-

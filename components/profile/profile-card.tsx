@@ -1,18 +1,18 @@
 "use client"
 
-import { useState } from "react"
-import Link from "next/link"
-import { cn } from "@/lib/utils"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import { Calendar, CheckCircle, Globe, Twitter, Github, Link as LinkIcon } from "lucide-react"
-import { EditProfile } from "@/components/edit-profile"
 import { refreshProfile } from "@/app/_actions/profile"
+import { EditProfile } from "@/components/edit-profile"
 import { Heading } from "@/components/typography/heading"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import { cn } from "@/lib/utils"
+import { Calendar, CheckCircle, Github, Globe, Link as LinkIcon, Twitter } from "lucide-react"
+import Link from "next/link"
+import { useState } from "react"
 
-interface Link {
+interface ProfileLink {
   label: string
   url: string
 }
@@ -38,7 +38,7 @@ export function ProfileCard({ user, bio, status, joinedDate, path }: ProfileCard
   const website = user.unsafeMetadata?.website as string
   const twitter = user.unsafeMetadata?.twitter as string
   const github = user.unsafeMetadata?.github as string
-  const customLinks = (user.unsafeMetadata?.customLinks as Link[]) || []
+  const customLinks = (user.unsafeMetadata?.customLinks as ProfileLink[]) || []
 
   const handleUpdate = async () => {
     setIsEditing(false)

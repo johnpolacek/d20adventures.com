@@ -1,7 +1,8 @@
-import React, { useState } from "react"
 import { Input } from "@/components/ui/input"
-import StepperButtons from "./stepper-buttons"
+import type React from "react"
+import { useState } from "react"
 import { textShadow } from "../typography/styles"
+import StepperButtons from "./stepper-buttons"
 
 const GENDER_OPTIONS = ["Male", "Female", "Other"]
 

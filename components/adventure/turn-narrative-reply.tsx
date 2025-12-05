@@ -1,26 +1,26 @@
 "use client"
-import React from "react"
-import { useAdventure } from "@/lib/context/AdventureContext"
-import { SignedIn, SignedOut, SignUpButton, useUser } from "@clerk/nextjs"
-import { useTurn } from "@/lib/context/TurnContext"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
-import type { TurnCharacter } from "@/types/adventure"
-import type { Id } from "@/convex/_generated/dataModel"
-import CharacterDiceRoll from "@/components/adventure/character-dice-roll"
-import LoadingAnimation from "../ui/loading-animation"
-import { hasBooleanProp, hasNumberProp } from "@/lib/utils"
-import { formatNarrativeAction } from "@/lib/services/narrative-generation-service"
 import { resolvePlayerRollResult } from "@/app/_actions/adventure"
 import { createAdventureWithFirstTurn } from "@/app/_actions/adventure"
-import { Loader2 } from "lucide-react"
-import { SparklesIcon } from "@heroicons/react/24/solid"
-import { useGenerateText } from "@/app/_hooks/useGenerateText"
 import { deferOrSkipTurn } from "@/app/_actions/defer-turn"
+import { useGenerateText } from "@/app/_hooks/useGenerateText"
+import CharacterDiceRoll from "@/components/adventure/character-dice-roll"
 // removed dropdown in favor of modal
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import type { Id } from "@/convex/_generated/dataModel"
+import { useAdventure } from "@/lib/context/AdventureContext"
+import { useTurn } from "@/lib/context/TurnContext"
+import { formatNarrativeAction } from "@/lib/services/narrative-generation-service"
+import { hasBooleanProp, hasNumberProp } from "@/lib/utils"
+import type { TurnCharacter } from "@/types/adventure"
+import { SignUpButton, SignedIn, SignedOut, useUser } from "@clerk/nextjs"
+import { SparklesIcon } from "@heroicons/react/24/solid"
+import { Loader2 } from "lucide-react"
+import { useRouter } from "next/navigation"
+import type React from "react"
+import { useState } from "react"
+import LoadingAnimation from "../ui/loading-animation"
 
 type TurnNarrativeReplyProps = {
   character: TurnCharacter
@@ -54,7 +54,7 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
   // Build lower-initiative candidates to defer behind (PCs or NPCs)
   const playerInitiative = characterState?.initiative ?? 0
   const lowerCandidates = (currentTurn.characters as TurnCharacter[])
-    .filter((c) => !c.isComplete && c.id !== character.id && (c.initiative ?? -Infinity) < playerInitiative)
+    .filter((c) => !c.isComplete && c.id !== character.id && (c.initiative ?? Number.NEGATIVE_INFINITY) < playerInitiative)
     .sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
 
   const handleDefer = async (afterId?: string, skipEntire?: boolean) => {
@@ -133,7 +133,7 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
       }
       setHasSubmitted(true)
       const res = await createAdventureWithFirstTurn(payload)
-      if (res && res.adventureId) {
+      if (res?.adventureId) {
         router.push(`/${settingId}/${adventurePlanId}/${res.adventureId}`, { scroll: false })
         return
       }
@@ -197,7 +197,7 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
     if (!input.trim()) return
     setLoading(true)
     setError(null)
-    const isDemoTurn = currentTurn && currentTurn.id.includes("demo")
+    const isDemoTurn = currentTurn?.id.includes("demo")
     try {
       if (isDemoTurn) {
         await handleDemoReply()

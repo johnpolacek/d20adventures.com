@@ -1,15 +1,12 @@
+import { isStripeConfigured, stripe } from "@/lib/stripe"
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
-import { stripe, isStripeConfigured } from "@/lib/stripe"
 
 export async function POST(request: Request) {
   try {
     // Check if Stripe is configured
     if (!isStripeConfigured()) {
-      return NextResponse.json(
-        { error: "Payment system not configured" },
-        { status: 503 }
-      )
+      return NextResponse.json({ error: "Payment system not configured" }, { status: 503 })
     }
 
     // Check authentication
@@ -26,8 +23,8 @@ export async function POST(request: Request) {
       currency: "usd",
       metadata: {
         userId: authResult.userId,
-        type: "donation"
-      }
+        type: "donation",
+      },
     })
 
     return NextResponse.json({
@@ -35,9 +32,6 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     console.error("Error creating payment intent:", error)
-    return NextResponse.json(
-      { error: "Error creating payment intent" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Error creating payment intent" }, { status: 500 })
   }
-} 
+}

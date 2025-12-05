@@ -1,10 +1,10 @@
-import React, { useState } from "react"
-import { textShadow } from "../typography/styles"
-import StepperButtons from "./stepper-buttons"
 import { generatePersonalityMotivationBackstoryAction } from "@/app/_actions/generate-personality-motivation-backstory-action"
 import { Button } from "@/components/ui/button"
+import React, { useState } from "react"
+import { textShadow } from "../typography/styles"
 import { Textarea } from "../ui/textarea"
 import type { Attributes } from "./step-assign-attributes"
+import StepperButtons from "./stepper-buttons"
 
 interface StepPersonalityMotivationBackstoryProps {
   personality: string

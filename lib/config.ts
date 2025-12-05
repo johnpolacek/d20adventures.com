@@ -1,4 +1,4 @@
-export const IMAGE_HOST = "https://d1dkwd3w4hheqw.cloudfront.net";
+export const IMAGE_HOST = "https://d1dkwd3w4hheqw.cloudfront.net"
 
 export const siteConfig = {
   title: "D20 Adventures",
@@ -13,13 +13,13 @@ export const siteConfig = {
 } as const
 
 export type SiteConfig = {
-    title: string
-    description: string
-    shortDescription: string
-    url: string
-    shareImage: string
-    x: string
-    github: string
-    logo: string
-    imageHost: string
+  title: string
+  description: string
+  shortDescription: string
+  url: string
+  shareImage: string
+  x: string
+  github: string
+  logo: string
+  imageHost: string
 }

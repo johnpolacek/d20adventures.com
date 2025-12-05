@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useTransition } from "react"
-import { useParams, useRouter } from "next/navigation"
-import { CharacterCard } from "@/components/adventure-plans/character-card"
-import type { PCTemplate, Character } from "@/types/character"
 import { editCharacterTemplateAction } from "@/app/_actions/edit-character-template"
+import { CharacterCard } from "@/components/adventure-plans/character-card"
+import type { Character, PCTemplate } from "@/types/character"
+import { useParams, useRouter } from "next/navigation"
+import { useState, useTransition } from "react"
 import { toast } from "sonner"
 import { Button } from "../ui/button"
 

@@ -1,8 +1,9 @@
 "use client"
-import React, { useEffect, useRef } from "react"
-import Image from "next/image"
 import AnimateIn from "@/components/ui/animate-in"
 import { cn } from "@/lib/utils"
+import Image from "next/image"
+import type React from "react"
+import { useEffect, useRef } from "react"
 
 const spin = `@keyframes spin {
   0% {

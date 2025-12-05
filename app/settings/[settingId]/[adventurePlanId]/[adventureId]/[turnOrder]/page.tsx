@@ -1,17 +1,17 @@
-import { notFound } from "next/navigation"
-import type { Metadata } from "next"
-import AdventureHome from "@/components/views/adventure-home"
-import { loadAdventureWithTurnByOrder, getTurnNavigationInfo } from "@/app/_actions/load-adventure"
-import type { Id } from "@/convex/_generated/dataModel"
-import type { Adventure } from "@/types/adventure"
-import { mapConvexTurnToTurn } from "@/lib/utils"
-import { AdventurePlan } from "@/types/adventure-plan"
+import { getTurnNavigationInfo, loadAdventureWithTurnByOrder } from "@/app/_actions/load-adventure"
 import TurnNavigation from "@/components/adventure/turn-navigation"
-import { reverseSlugify } from "@/lib/utils"
-import { isDev } from "@/lib/auth-utils"
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import AdventureHome from "@/components/views/adventure-home"
+import type { Id } from "@/convex/_generated/dataModel"
+import { isDev } from "@/lib/auth-utils"
 import { readJsonFromS3 } from "@/lib/s3-utils"
+import { mapConvexTurnToTurn } from "@/lib/utils"
+import { reverseSlugify } from "@/lib/utils"
+import type { Adventure } from "@/types/adventure"
+import type { AdventurePlan } from "@/types/adventure-plan"
+import type { Metadata } from "next"
+import Link from "next/link"
+import { notFound } from "next/navigation"
 
 export const dynamic = "force-dynamic"
 
@@ -66,8 +66,8 @@ export default async function TurnPage({ params }: PageProps) {
   const { adventurePlanId, adventureId, settingId, turnOrder } = await params
 
   // Parse turn order as number
-  const turnOrderNum = parseInt(turnOrder, 10)
-  if (isNaN(turnOrderNum) || turnOrderNum < 1) {
+  const turnOrderNum = Number.parseInt(turnOrder, 10)
+  if (Number.isNaN(turnOrderNum) || turnOrderNum < 1) {
     return notFound()
   }
 

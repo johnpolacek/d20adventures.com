@@ -1,13 +1,13 @@
 "use client"
-import { useState } from "react"
-import { textShadow, textShadowSpread } from "../typography/styles"
-import { CharacterSelectCard } from "@/components/ui/character-select-card"
-import type { PCTemplate } from "@/types/character"
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import Image from "next/image"
+import { CharacterSelectCard } from "@/components/ui/character-select-card"
+import type { PCTemplate } from "@/types/character"
 import { ChevronDoubleLeftIcon } from "@heroicons/react/24/outline"
+import Image from "next/image"
+import Link from "next/link"
+import { useState } from "react"
+import { textShadow, textShadowSpread } from "../typography/styles"
 
 export default function ChooseCharacterView({
   username,
@@ -65,9 +65,7 @@ export default function ChooseCharacterView({
         {characters.map((char, i) => (
           <div
             key={char.id}
-            className={
-              "w-full sm:w-1/2 md:w-1/3 lg:w-1/4 cursor-pointer transition-all ease-in-out duration-500" + (selectedCharacter === characterFiles[i] ? " ring-amber-400 border-amber-400 scale-105" : "")
-            }
+            className={`w-full sm:w-1/2 md:w-1/3 lg:w-1/4 cursor-pointer transition-all ease-in-out duration-500${selectedCharacter === characterFiles[i] ? " ring-amber-400 border-amber-400 scale-105" : ""}`}
             onClick={() => {
               setSelectedCharacter(characterFiles[i])
               handleChoose(characterFiles[i])

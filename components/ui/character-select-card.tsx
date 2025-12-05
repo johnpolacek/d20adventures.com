@@ -1,11 +1,11 @@
-import Image from "next/image"
-import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import { getImageUrl } from "@/lib/utils"
-import type { PCTemplate } from "@/types/character"
-import Link from "next/link"
 import { cn } from "@/lib/utils"
+import type { PCTemplate } from "@/types/character"
 import { UserRoundX } from "lucide-react"
+import Image from "next/image"
+import Link from "next/link"
 
 interface CharacterSelectCardProps {
   character: PCTemplate

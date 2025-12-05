@@ -1,29 +1,27 @@
-'use server'
+"use server"
 
-import { auth } from "@clerk/nextjs/server"
-import { updateJsonOnS3, copyS3Object, readJsonFromS3, listAndReadJsonFilesInS3Directory } from "@/lib/s3-utils"
+import { copyS3Object, listAndReadJsonFilesInS3Directory, readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 import type { AdventurePlan } from "@/types/adventure-plan"
+import { auth } from "@clerk/nextjs/server"
 
 interface UpdateAdventurePlanParams {
   adventurePlan: AdventurePlan
 }
 
-export async function updateAdventurePlanAction(
-  params: UpdateAdventurePlanParams
-): Promise<{ success: boolean; message?: string; error?: string }> {
-  console.log("updateAdventurePlanAction: Received params:", JSON.stringify(params, null, 2)); // Log received params
+export async function updateAdventurePlanAction(params: UpdateAdventurePlanParams): Promise<{ success: boolean; message?: string; error?: string }> {
+  console.log("updateAdventurePlanAction: Received params:", JSON.stringify(params, null, 2)) // Log received params
 
   const { userId } = await auth()
   if (!userId) {
-    console.error("updateAdventurePlanAction: Unauthorized access attempt.");
+    console.error("updateAdventurePlanAction: Unauthorized access attempt.")
     return { success: false, error: "Unauthorized" }
   }
 
   const { adventurePlan } = params
-  console.log("updateAdventurePlanAction: Extracted adventurePlan object:", JSON.stringify(adventurePlan, null, 2)); // Log extracted adventurePlan
+  console.log("updateAdventurePlanAction: Extracted adventurePlan object:", JSON.stringify(adventurePlan, null, 2)) // Log extracted adventurePlan
 
   if (!adventurePlan || !adventurePlan.id || !adventurePlan.settingId) {
-    console.error("updateAdventurePlanAction: Invalid adventure plan data provided:", adventurePlan);
+    console.error("updateAdventurePlanAction: Invalid adventure plan data provided:", adventurePlan)
     return { success: false, error: "Invalid adventure plan data provided." }
   }
 
@@ -39,7 +37,7 @@ export async function updateAdventurePlanAction(
     } catch (readError: unknown) {
       let errorMessage = "An unknown error occurred during pre-backup check."
       if (readError instanceof Error) {
-        errorMessage = readError.message;
+        errorMessage = readError.message
       }
       if (errorMessage.includes("No file body returned from S3") || errorMessage.includes("NoSuchKey")) {
         console.log(`updateAdventurePlanAction: Original file ${originalKey} not found, skipping backup.`)
@@ -47,16 +45,16 @@ export async function updateAdventurePlanAction(
         console.warn(`updateAdventurePlanAction: Could not back up ${originalKey} due to an unexpected error during pre-backup check: ${errorMessage}`, readError)
       }
     }
-    
+
     // Log adventurePlan and its sections before calling updateJsonOnS3
-    console.log("updateAdventurePlanAction: adventurePlan.sections before S3 update:", JSON.stringify(adventurePlan.sections, null, 2));
-    console.log("updateAdventurePlanAction: Full adventurePlan object before S3 update:", JSON.stringify(adventurePlan, null, 2));
+    console.log("updateAdventurePlanAction: adventurePlan.sections before S3 update:", JSON.stringify(adventurePlan.sections, null, 2))
+    console.log("updateAdventurePlanAction: Full adventurePlan object before S3 update:", JSON.stringify(adventurePlan, null, 2))
 
     await updateJsonOnS3(originalKey, adventurePlan)
     return { success: true, message: "Adventure plan updated successfully." }
   } catch (error) {
     console.error(`updateAdventurePlanAction: Error during S3 operations for ${originalKey}:`, error)
-    console.error("updateAdventurePlanAction: Failed adventurePlan object structure:", JSON.stringify(adventurePlan, null, 2)); // Log the object that failed
+    console.error("updateAdventurePlanAction: Failed adventurePlan object structure:", JSON.stringify(adventurePlan, null, 2)) // Log the object that failed
     const errorMessage = error instanceof Error ? error.message : "An unknown error occurred"
     return { success: false, error: `Failed to update adventure plan: ${errorMessage}` }
   }
@@ -87,16 +85,14 @@ export async function getOtherAdventurePlans(settingId: string, currentPlanId: s
   try {
     // Read all adventure plan JSON files (excluding setting-data.json)
     const adventureFiles = await listAndReadJsonFilesInS3Directory(`settings/${settingId}/`, ["setting-data.json"])
-    const adventures = adventureFiles
-      .map((file: { key: string; data: unknown }) => file.data as AdventurePlan)
-      .filter((plan: AdventurePlan) => plan.id !== currentPlanId && !plan.draft) // Exclude current plan and drafts
-    
+    const adventures = adventureFiles.map((file: { key: string; data: unknown }) => file.data as AdventurePlan).filter((plan: AdventurePlan) => plan.id !== currentPlanId && !plan.draft) // Exclude current plan and drafts
+
     return adventures
   } catch (error) {
     console.error("Error fetching other adventure plans:", error)
     return []
   }
-} 
+}
 
 export async function getAdventurePlan(settingId: string, adventurePlanId: string): Promise<AdventurePlan | null> {
   try {
@@ -107,4 +103,4 @@ export async function getAdventurePlan(settingId: string, adventurePlanId: strin
     console.error("Error fetching adventure plan:", error)
     return null
   }
-} 
+}

@@ -1,7 +1,7 @@
-import { mutation, query } from "./_generated/server";
-import { v } from "convex/values";
+import { v } from "convex/values"
+import { mutation, query } from "./_generated/server"
 
-const INITIAL_TOKEN_GRANT = 1000;
+const INITIAL_TOKEN_GRANT = 1000
 
 export const ensureUserTokenRecord = mutation({
   args: { userId: v.string() },
@@ -9,17 +9,17 @@ export const ensureUserTokenRecord = mutation({
     const existingRecord = await ctx.db
       .query("userTokenLedger")
       .withIndex("by_userId", (q) => q.eq("userId", args.userId))
-      .unique();
+      .unique()
 
     if (!existingRecord) {
-      const now = Date.now();
+      const now = Date.now()
       // Create the ledger entry
       const ledgerId = await ctx.db.insert("userTokenLedger", {
         userId: args.userId,
         alltimeTokens: INITIAL_TOKEN_GRANT,
         tokensRemaining: INITIAL_TOKEN_GRANT,
         lastTokenUpdate: now,
-      });
+      })
 
       // Create the initial transaction history entry
       await ctx.db.insert("tokenTransactionHistory", {
@@ -29,26 +29,26 @@ export const ensureUserTokenRecord = mutation({
         timestamp: now,
         description: "Initial token grant upon account creation.",
         tokensRemainingAfterTransaction: INITIAL_TOKEN_GRANT,
-      });
+      })
 
-      return { 
-        status: "created", 
+      return {
+        status: "created",
         userId: args.userId,
-        tokensRemaining: INITIAL_TOKEN_GRANT, 
+        tokensRemaining: INITIAL_TOKEN_GRANT,
         alltimeTokens: INITIAL_TOKEN_GRANT,
-        ledgerId: ledgerId
-      };
+        ledgerId: ledgerId,
+      }
     }
 
-    return { 
-      status: "exists", 
-      userId: args.userId, 
-      tokensRemaining: existingRecord.tokensRemaining, 
+    return {
+      status: "exists",
+      userId: args.userId,
+      tokensRemaining: existingRecord.tokensRemaining,
       alltimeTokens: existingRecord.alltimeTokens ?? 0, // Handle case where it might be undefined due to migration
-      ledgerId: existingRecord._id
-    };
+      ledgerId: existingRecord._id,
+    }
   },
-});
+})
 
 export const decrementTokens = mutation({
   args: {
@@ -58,7 +58,7 @@ export const decrementTokens = mutation({
       v.literal("usage_generate_text"),
       v.literal("usage_generate_object"),
       v.literal("usage_image_upload"),
-      v.literal("usage_join_adventure"),
+      v.literal("usage_join_adventure")
       // Add other usage types as needed
     ),
     description: v.optional(v.string()),
@@ -67,16 +67,16 @@ export const decrementTokens = mutation({
     if (args.tokensUsed <= 0) {
       // No actual cost, or invalid input
       // Optionally log this or return a specific status if needed
-      return { success: true, message: "No tokens to decrement or invalid amount.", tokensRemaining: null };
+      return { success: true, message: "No tokens to decrement or invalid amount.", tokensRemaining: null }
     }
 
     const userLedger = await ctx.db
       .query("userTokenLedger")
       .withIndex("by_userId", (q) => q.eq("userId", args.userId))
-      .unique();
+      .unique()
 
     if (!userLedger) {
-      throw new Error(`User token ledger not found for userId: ${args.userId}. Cannot decrement tokens.`);
+      throw new Error(`User token ledger not found for userId: ${args.userId}. Cannot decrement tokens.`)
     }
 
     if (userLedger.tokensRemaining < args.tokensUsed) {
@@ -84,25 +84,22 @@ export const decrementTokens = mutation({
       // For now, just throw an error. You could also create a transaction history entry for the failed attempt.
       await ctx.db.insert("tokenTransactionHistory", {
         userId: args.userId,
-        type: args.transactionType, 
+        type: args.transactionType,
         amount: -args.tokensUsed, // Record the attempted usage as negative
         timestamp: Date.now(),
         description: args.description ? `${args.description} (Failed - Insufficient tokens)` : `Attempted ${args.transactionType} (Failed - Insufficient tokens)`,
         tokensRemainingAfterTransaction: userLedger.tokensRemaining, // Balance before this failed attempt
-      });
-      throw new Error(
-        `Insufficient tokens for userId: ${args.userId}. ` +
-        `Required: ${args.tokensUsed}, Available: ${userLedger.tokensRemaining}.`
-      );
+      })
+      throw new Error(`Insufficient tokens for userId: ${args.userId}. ` + `Required: ${args.tokensUsed}, Available: ${userLedger.tokensRemaining}.`)
     }
 
-    const now = Date.now();
-    const newTokensRemaining = userLedger.tokensRemaining - args.tokensUsed;
+    const now = Date.now()
+    const newTokensRemaining = userLedger.tokensRemaining - args.tokensUsed
 
     await ctx.db.patch(userLedger._id, {
       tokensRemaining: newTokensRemaining,
       lastTokenUpdate: now,
-    });
+    })
 
     await ctx.db.insert("tokenTransactionHistory", {
       userId: args.userId,
@@ -111,15 +108,15 @@ export const decrementTokens = mutation({
       timestamp: now,
       description: args.description,
       tokensRemainingAfterTransaction: newTokensRemaining,
-    });
+    })
 
-    return { 
-      success: true, 
-      tokensRemaining: newTokensRemaining, 
-      alltimeTokens: userLedger.alltimeTokens ?? 0 
-    };
+    return {
+      success: true,
+      tokensRemaining: newTokensRemaining,
+      alltimeTokens: userLedger.alltimeTokens ?? 0,
+    }
   },
-});
+})
 
 export const getTokenBalance = query({
   args: { userId: v.string() },
@@ -132,19 +129,19 @@ export const getTokenBalance = query({
     const userLedger = await ctx.db
       .query("userTokenLedger")
       .withIndex("by_userId", (q) => q.eq("userId", args.userId))
-      .unique();
+      .unique()
 
     if (!userLedger) {
       // This case should ideally be handled by ensureUserTokenRecord being called first.
       // If not, the user effectively has 0 tokens until their record is created.
-      return { tokensRemaining: 0, alltimeTokens: 0, needsInitialization: true };
+      return { tokensRemaining: 0, alltimeTokens: 0, needsInitialization: true }
     }
 
     return {
       tokensRemaining: userLedger.tokensRemaining,
       // Handle case where alltimeTokens might be undefined due to schema migration
-      alltimeTokens: userLedger.alltimeTokens ?? 0, 
+      alltimeTokens: userLedger.alltimeTokens ?? 0,
       needsInitialization: false,
-    };
+    }
   },
-}); 
+})

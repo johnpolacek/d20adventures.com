@@ -1,21 +1,21 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
-import ImageHeader from "@/components/ui/image-header"
-import { Adventure } from "@/types/adventure"
-import Turn from "@/components/adventure/turn"
-import { useTurn } from "@/lib/context/TurnContext"
-import { useParams } from "next/navigation"
 import { ensureNpcProcessed } from "@/app/_actions/ensure-npc-processed"
+import AdventureLobby from "@/components/adventure/adventure-lobby"
+import Turn from "@/components/adventure/turn"
+import AccountRequired from "@/components/nav/account-required"
+import ImageHeader from "@/components/ui/image-header"
 import type { Id } from "@/convex/_generated/dataModel"
+import { useTurn } from "@/lib/context/TurnContext"
+import { cn, getImageUrl } from "@/lib/utils"
+import type { Adventure } from "@/types/adventure"
+import type { AdventurePlan } from "@/types/adventure-plan"
+import { useUser } from "@clerk/nextjs"
+import { useParams } from "next/navigation"
+import { usePathname } from "next/navigation"
+import React, { useEffect, useState } from "react"
 import wait from "waait"
 import { scrollToTop } from "../ui/utils"
-import AdventureLobby from "@/components/adventure/adventure-lobby"
-import type { AdventurePlan } from "@/types/adventure-plan"
-import { cn, getImageUrl } from "@/lib/utils"
-import AccountRequired from "@/components/nav/account-required"
-import { useUser } from "@clerk/nextjs"
-import { usePathname } from "next/navigation"
 
 export const dynamic = "force-dynamic"
 
@@ -31,7 +31,7 @@ function AdventureHomeContent({ initialImage, adventure, adventurePlan }: { init
 
   useEffect(() => {
     // Only update image if the encounter actually changed
-    if (turn && turn.encounterId && turn.encounterId !== lastEncounterId) {
+    if (turn?.encounterId && turn.encounterId !== lastEncounterId) {
       // Try to get the image from the adventurePlan object
       let encounterImage: string | undefined = undefined
       if (adventurePlan) {
@@ -67,7 +67,7 @@ function AdventureHomeContent({ initialImage, adventure, adventurePlan }: { init
   }, [turn?.encounterId, lastEncounterId])
 
   useEffect(() => {
-    if (turn && turn.id && !initialCheckDone) {
+    if (turn?.id && !initialCheckDone) {
       setInitialCheckDone(true)
 
       const characters = turn.characters || []
@@ -78,10 +78,10 @@ function AdventureHomeContent({ initialImage, adventure, adventurePlan }: { init
         console.log(`[AdventureHomeContent] Initial turn load: NPC (${currentActor.id}) waiting for turn ${turn.id}. Triggering check.`)
         ensureNpcProcessed(turn.id as Id<"turns">)
           .then((result) => {
-            console.log(`[AdventureHomeContent] ensureNpcProcessed result:`, result)
+            console.log("[AdventureHomeContent] ensureNpcProcessed result:", result)
           })
           .catch((error) => {
-            console.error(`[AdventureHomeContent] Error calling ensureNpcProcessed:`, error)
+            console.error("[AdventureHomeContent] Error calling ensureNpcProcessed:", error)
           })
       }
     }

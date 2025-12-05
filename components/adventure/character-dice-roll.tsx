@@ -1,9 +1,9 @@
 import DiceRoll from "@/components/ui/dice-roll"
 import { cn } from "@/lib/utils"
-import Image from "next/image"
-import { TurnCharacter } from "@/types/adventure"
 import { getImageUrl } from "@/lib/utils"
 import type { RollRequirement } from "@/lib/validations/roll-requirement-schema"
+import type { TurnCharacter } from "@/types/adventure"
+import Image from "next/image"
 
 export default function CharacterDiceRoll({
   rollRequired,
@@ -26,7 +26,7 @@ export default function CharacterDiceRoll({
     <div className={cn("relative aspect-[2/3] sm:aspect-auto md:min-h-[300px] font-display font-bold border border-primary-700 rounded-xl overflow-hidden", className)}>
       <div className="absolute top-0 left-0 h-1/2 sm:h-full w-full sm:w-2/3 overflow-hidden">
         <Image className="object-cover" src={getImageUrl(character.image)} alt={character.name} fill={true} />
-        <div className="absolute bottom-0 sm:bottom-auto sm:top-0 right-0 w-full sm:w-1/3 h-1/3 sm:h-full bg-gradient-to-t sm:bg-gradient-to-l from-black to-transparent"></div>
+        <div className="absolute bottom-0 sm:bottom-auto sm:top-0 right-0 w-full sm:w-1/3 h-1/3 sm:h-full bg-gradient-to-t sm:bg-gradient-to-l from-black to-transparent" />
       </div>
       <div className="px-4 py-6 flex flex-col gap-4 text-center items-center justify-start w-full sm:w-1/2 absolute bottom-0 sm:relative sm:left-1/2">
         <h4 className="text-sm">Dice Roll {rollResult === null ? "Needed" : ""}</h4>

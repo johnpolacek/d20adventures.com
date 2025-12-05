@@ -1,8 +1,8 @@
-import { Metadata } from "next"
-import { ContactForm } from "@/components/contact/contact-form"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ConfigCard } from "@/components/admin/config-card"
+import { ContactForm } from "@/components/contact/contact-form"
 import { Heading } from "@/components/typography/heading"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import type { Metadata } from "next"
 
 export const metadata: Metadata = {
   title: "Contact Us",

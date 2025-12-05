@@ -1,9 +1,9 @@
-import React from "react"
 import type { Adventure } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PC, PCTemplate } from "@/types/character"
-import { PartySlot } from "./party-slot"
 import { useUser } from "@clerk/nextjs"
+import type React from "react"
+import { PartySlot } from "./party-slot"
 
 interface PartyLobbyGridProps {
   adventure: Adventure
@@ -61,7 +61,7 @@ export function PartyLobbyGrid({ adventure, adventurePlan, userId, onCharacterCl
   const colCount = maxParty >= 3 ? "sm:flex-[0_0_calc(33.333%-1rem)]" : "sm:flex-[0_0_calc(50%-1rem)]"
 
   return (
-    <div className={`flex flex-wrap gap-6 justify-center items-center w-full max-w-6xl mx-auto mb-8`}>
+    <div className={"flex flex-wrap gap-6 justify-center items-center w-full max-w-6xl mx-auto mb-8"}>
       {slots.map((slot, index) => (
         <div key={index} className={`flex-[0_0_100%] ${colCount}`}>
           {slot}

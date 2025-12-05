@@ -1,7 +1,7 @@
 "use server"
 
-import { z } from "zod"
 import sgMail from "@sendgrid/mail"
+import { z } from "zod"
 import { verifyCaptcha } from "./verifyCaptcha"
 
 const contactFormSchema = z.object({
@@ -64,4 +64,4 @@ export async function sendContactEmail(data: ContactFormData) {
       error: error instanceof Error ? error.message : "Failed to send email",
     }
   }
-} 
+}

@@ -1,12 +1,12 @@
 import { useTurn } from "@/lib/context/TurnContext"
 import { cn, getImageUrl } from "@/lib/utils"
-import { CircleCheckBig } from "lucide-react"
-import { useState } from "react"
-import Image from "next/image"
 import type { TurnCharacter } from "@/types/adventure"
+import { useUser } from "@clerk/nextjs"
+import { CircleCheckBig } from "lucide-react"
+import Image from "next/image"
+import { useState } from "react"
 import { CharacterSheetModal } from "./character-sheet-modal"
 import { NPCCharacterSheetModal } from "./npc-character-sheet-modal"
-import { useUser } from "@clerk/nextjs"
 
 function CharacterImage({ src, alt }: { src: string; alt: string }) {
   const [loaded, setLoaded] = useState(false)
@@ -16,7 +16,7 @@ function CharacterImage({ src, alt }: { src: string; alt: string }) {
         src={src}
         alt={alt}
         fill
-        className={"absolute inset-0 w-full h-full object-cover rounded-xl transition-opacity duration-300" + (loaded ? " opacity-100" : " opacity-0")}
+        className={`absolute inset-0 w-full h-full object-cover rounded-xl transition-opacity duration-300${loaded ? " opacity-100" : " opacity-0"}`}
         onLoad={() => setLoaded(true)}
       />
     </div>

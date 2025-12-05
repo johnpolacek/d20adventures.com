@@ -1,9 +1,9 @@
 "use server"
 
-import { convex } from "@/lib/convex/server"
 import { api } from "@/convex/_generated/api"
-import { readJsonFromS3 } from "@/lib/s3-utils"
 import type { Id } from "@/convex/_generated/dataModel"
+import { convex } from "@/lib/convex/server"
+import { readJsonFromS3 } from "@/lib/s3-utils"
 import type { AdventurePlan } from "@/types/adventure-plan"
 
 export async function checkIsEncounterFinal(turnId: Id<"turns">): Promise<boolean> {
@@ -21,12 +21,12 @@ export async function checkIsEncounterFinal(turnId: Id<"turns">): Promise<boolea
 
   // 4. Find current encounter
   const currentEncounter = plan.sections
-    .flatMap(section => section.scenes)
-    .flatMap(scene => scene.encounters)
-    .find(encounter => encounter.id === turn.encounterId)
+    .flatMap((section) => section.scenes)
+    .flatMap((scene) => scene.encounters)
+    .find((encounter) => encounter.id === turn.encounterId)
 
   if (!currentEncounter) throw new Error("Current encounter not found in plan")
 
   // 5. Check if encounter has no transitions (indicating it's the final encounter)
   return !currentEncounter.transitions || currentEncounter.transitions.length === 0
-} 
+}

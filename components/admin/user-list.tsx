@@ -1,15 +1,15 @@
 "use client"
 
-import * as React from "react"
-import { useState } from "react"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { banUser } from "@/app/_actions/ban-user"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { banUser } from "@/app/_actions/ban-user"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import * as React from "react"
+import { useState } from "react"
 import { toast } from "sonner"
 
 interface User {
@@ -73,7 +73,7 @@ export function AdminUserList({ initialUsers }: AdminUserListProps) {
         setBanReason("")
         setSelectedUser(null)
       } else {
-        toast.error("Failed to manage user ban status: " + result.error)
+        toast.error(`Failed to manage user ban status: ${result.error}`)
       }
     } catch {
       toast.error("An error occurred while managing user ban status")
@@ -93,7 +93,7 @@ export function AdminUserList({ initialUsers }: AdminUserListProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[30px]"></TableHead>
+              <TableHead className="w-[30px]" />
               <TableHead>User</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Username</TableHead>

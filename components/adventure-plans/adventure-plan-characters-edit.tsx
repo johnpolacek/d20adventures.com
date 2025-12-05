@@ -1,12 +1,12 @@
 "use client"
 
-import * as React from "react"
-import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
-import type { Character, PCTemplate } from "@/types/character"
-import { useCharacterManagement } from "@/components/adventure-plans/hooks/use-character-management"
-import { CharacterGenerateForm } from "@/components/adventure-plans/character-generate-form"
 import { CharacterCard } from "@/components/adventure-plans/character-card"
+import { CharacterGenerateForm } from "@/components/adventure-plans/character-generate-form"
+import { useCharacterManagement } from "@/components/adventure-plans/hooks/use-character-management"
+import { Button } from "@/components/ui/button"
+import type { Character, PCTemplate } from "@/types/character"
+import { Plus } from "lucide-react"
+import * as React from "react"
 
 interface AdventurePlanCharactersEditProps {
   id: string
