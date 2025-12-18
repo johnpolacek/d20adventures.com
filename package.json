@@ -3,7 +3,12 @@
   "version": "0.1.0",
   "license": "None",
   "description": "A new narrative-driven RPG platform that blends play-by-post gameplay and real-time updates facilitated by an AI Game Master.",
-  "keywords": ["nextjs", "template", "starter", "vibecoding"],
+  "keywords": [
+    "nextjs",
+    "template",
+    "starter",
+    "vibecoding"
+  ],
   "author": "johnpolacek",
   "scripts": {
     "kill:ports": "kill-port 3000 4000 4400 4500 5001 8080 8085 9000 9099 9199 || true",
@@ -84,7 +89,7 @@
     "ignore": "^7.0.5",
     "lodash-es": "^4.17.21",
     "lucide-react": "^0.511.0",
-    "next": "15.3.2",
+    "next": "15.3.8",
     "next-themes": "^0.4.6",
     "number-to-words": "^1.2.4",
     "playwright": "link:@clerk/testing/playwright",
