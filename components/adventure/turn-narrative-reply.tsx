@@ -342,7 +342,7 @@ export default function TurnNarrativeReply({
       // Build the LLM prompt
       const prompt = `You are the PLAYER (not the GM) roleplaying as the character below. Players describe their character's intent and attempt only. The GM determines all outcomes, results, and perceptions.
 
-Given the recent narrative and any player input, write a short narrative describing what the character does next. Include a character action and 1-2 sentences of dialogue in the character's voice. Use third person for actions and put dialogue in quotes. Be creative, stay in character, and keep the reply concise (3-5 sentences max).
+Given the recent narrative and any player input, write a short narrative describing what the character does next. Include a character action and 1-2 sentences of dialogue in the character's voice. Use third person for actions and put dialogue in quotes. Be creative, stay in character, and keep the reply concise (3-5 sentences max). Use paragraph breaks (blank lines) to separate distinct narrative beats when appropriate.
 
 Constraints:
 - Read the narrative to identify what the character is expected to do, then describe them actively taking that action.
@@ -389,7 +389,7 @@ ${input ? `\nPlayer Input: ${input}` : ""}`;
       {!loading && !hasSubmitted && !showDiceRoll && (
         <>
           <Textarea
-            className="md:text-lg border-white/30"
+            className="md:text-lg border-white/30 whitespace-pre-wrap"
             value={input}
             onChange={handleInputChange}
             placeholder="Write your character's actions and dialogue, in present tense, third person…"
