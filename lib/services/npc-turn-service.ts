@@ -564,7 +564,7 @@ export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
   }
 
   console.log(
-    "[LLM DM] Loaded adventure plan",
+    `[LLM DM] Loaded adventure plan from settings/${adventure.settingId}/${adventure.planId}.json`,
     JSON.stringify(
       {
         planId: plan.id,
@@ -613,24 +613,6 @@ export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
   let characters = turn.characters as TurnCharacter[]
   // Take a snapshot of the current initiative order
   const initiativeOrder = characters.filter((c) => !c.hasReplied && !c.isComplete).sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
-
-  console.log(
-    "[LLM DM] Initiative order for processing",
-    JSON.stringify(
-      {
-        totalCharacters: characters.length,
-        eligibleCharacters: initiativeOrder.length,
-        initiativeOrder: initiativeOrder.map((c) => ({
-          id: c.id,
-          name: c.name,
-          type: c.type,
-          initiative: c.initiative,
-        })),
-      },
-      null,
-      2
-    )
-  )
 
   let processedNpcCount = 0
   for (const char of initiativeOrder) {

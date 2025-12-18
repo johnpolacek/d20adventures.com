@@ -139,10 +139,6 @@ export default function AdventureLobby({
 
   // Add a handler for clicking a character slot to open the modal
   const handlePartySlotClick = (character: PC | PCTemplate) => {
-    console.log(
-      "AdventureLobby: handlePartySlotClick",
-      JSON.stringify(character, null, 2)
-    );
     setModalCharacter(character);
     setIsModalOpen(true);
   };
@@ -179,10 +175,6 @@ export default function AdventureLobby({
         character={modalCharacter}
         open={isModalOpen}
         onOpenChange={(open) => {
-          console.log(
-            "AdventureLobby: onOpenChange",
-            JSON.stringify({ open, modalCharacter }, null, 2)
-          );
           setIsModalOpen(open);
           if (!open) setModalCharacter(null);
         }}
