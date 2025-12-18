@@ -166,12 +166,12 @@ export default function CharacterSelection({
               >
                 ChoosE Your characteR
               </p>
-              <div className="flex flex-wrap justify-center gap-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 max-w-4xl mx-auto">
                 {adventurePlan.premadePlayerCharacters.map((character) => (
                   <Card
                     key={character.id}
                     className={cn(
-                      "w-full max-w-md h-full bg-black/80 border-white/20 scale-95 hover:scale-100 hover:bg-black/90 ring-4 ring-black transition-all duration-500 ease-in-out p-0 overflow-hidden cursor-pointer flex flex-col",
+                      "w-full bg-black/80 border-white/20 scale-95 hover:scale-100 hover:bg-black/90 ring-4 ring-black transition-all duration-500 ease-in-out p-0 overflow-hidden cursor-pointer flex flex-col",
                       selectedCharacterId === character.id
                         ? "ring-8 ring-primary-500 scale-100"
                         : "hover:ring-8 hover:ring-primary-500",
@@ -248,11 +248,11 @@ export default function CharacterSelection({
                     <CardContent className="flex-1 flex flex-col">
                       <div className="relative z-10 flex-1 flex flex-col">
                         {character.background && (
-                          <div className="text-gray-300 text-sm -mt-2 mb-3 flex-1 whitespace-pre-line">
+                          <div className="text-gray-300 text-sm -mt-2 mb-3 whitespace-pre-line">
                             {character.background}
                           </div>
                         )}
-                        <div className="w-full flex justify-center pt-2 pb-8">
+                        <div className="w-full flex justify-center pt-2 pb-8 mt-auto">
                           <Button
                             variant="outline"
                             size="lg"
@@ -277,7 +277,7 @@ export default function CharacterSelection({
               </div>
 
               {!selectedCharacterId && (
-                <p className="text-center text-lg text-indigo-200">
+                <p className="text-center text-lg text-indigo-200 pb-8">
                   This adventure uses premade characters. Please select your
                   character to continue.
                 </p>
