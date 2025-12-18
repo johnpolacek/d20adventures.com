@@ -10,7 +10,7 @@ export async function loadAdventureWithNpc(adventureId: Id<"adventures">) {
 
 export async function loadAdventureWithTurnByOrder(adventureId: Id<"adventures">, turnOrder: number) {
   const { userId } = await auth()
-  if (!userId) throw new Error("Unauthorized")
+  if (!userId) return null
 
   const adventure = await convex.query(api.adventure.getAdventureById, { adventureId })
   const turn = await convex.query(api.adventure.getTurnByOrder, { adventureId, order: turnOrder })
@@ -25,6 +25,7 @@ export async function getAdventureTurns(adventureId: Id<"adventures">) {
 
 export async function getTurnNavigationInfo(adventureId: Id<"adventures">) {
   const { userId } = await auth()
-  if (!userId) throw new Error("Unauthorized")
+  if (!userId) return null
+
   return convex.query(api.adventure.getTurnNavigationInfo, { adventureId })
 }

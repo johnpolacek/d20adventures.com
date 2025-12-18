@@ -37,8 +37,10 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
   const [joinError, setJoinError] = useState<string | null>(null)
   const [playerNames, setPlayerNames] = useState<Record<string, string>>({})
 
-  // Polling for adventure updates
+  // Polling for adventure updates (only when signed in)
   useEffect(() => {
+    if (!isSignedIn) return
+
     const pollInterval = setInterval(async () => {
       try {
         const response = await fetch(`/api/adventure/${params.adventureId}`)
@@ -52,7 +54,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
     }, 3000) // Poll every 3 seconds
 
     return () => clearInterval(pollInterval)
-  }, [params.adventureId])
+  }, [params.adventureId, isSignedIn])
 
   useEffect(() => {
     if (isLoaded) {
@@ -75,6 +77,8 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
 
   // Fetch player names for characters in the party
   useEffect(() => {
+    if (!isSignedIn) return
+
     const party = adventure.party || []
     const userIds = party.map((pc) => pc.userId).filter(Boolean)
 
@@ -88,7 +92,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
         .then((data) => setPlayerNames(data.users || {}))
         .catch((err) => console.error("Failed to fetch player names:", err))
     }
-  }, [adventure.party])
+  }, [adventure.party, isSignedIn])
 
   const handleJoinAdventure = async (characterId: string) => {
     if (isJoining) return
