@@ -106,7 +106,31 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
           router.replace(`${basePath}/${newTurnOrder}`, { scroll: false })
         }
       } catch (error) {
-        if (error instanceof Error && error.message.includes("Insufficient tokens")) {
+        const errorMessage = error instanceof Error ? error.message : ""
+        
+        // Check for race condition: another user already advanced this turn
+        const expectedTurnOrder = params.turnOrder ? Number.parseInt(params.turnOrder as string, 10) : 1
+        const turnAlreadyAdvanced = currentTurn?.order && currentTurn.order > expectedTurnOrder
+        
+        // Known race-condition error messages
+        const isRaceConditionError =
+          errorMessage.includes("Turn not found") ||
+          errorMessage.includes("Turn already") ||
+          errorMessage.includes("order mismatch")
+        
+        if (turnAlreadyAdvanced || isRaceConditionError) {
+          // Another user already advanced - navigate silently to the current turn
+          const basePath = `/settings/${settingId}/${adventurePlanId}/${params.adventureId}`
+          if (turnAlreadyAdvanced && currentTurn?.order) {
+            router.replace(`${basePath}/${currentTurn.order}`, { scroll: false })
+          } else {
+            router.refresh()
+          }
+          return
+        }
+        
+        // Show actual errors
+        if (errorMessage.includes("Insufficient tokens")) {
           setTokenError("You do not have enough tokens to perform this action. Please add more tokens to your account.")
         } else {
           setTokenError("An unexpected error occurred while advancing the turn. Please try again.")
