@@ -122,7 +122,7 @@ export default function CharacterSelection({
           </h1>
           <p
             style={textShadow}
-            className="max-w-2xl mx-auto pt-2 pb-8 relative z-10 text-indigo-100 text-lg !text-balance"
+            className="max-w-2xl mx-auto pt-2 pb-8 relative z-10 text-indigo-200 text-lg !text-balance"
           >
             {adventurePlan.teaser}
           </p>
@@ -275,6 +275,13 @@ export default function CharacterSelection({
                   </Card>
                 ))}
               </div>
+
+              {!selectedCharacterId && (
+                <p className="text-center text-lg text-indigo-200">
+                  This adventure uses premade characters. Please select your
+                  character to continue.
+                </p>
+              )}
 
               {selectedCharacterId && characterChoices.length > 0 && (
                 <PartyConfiguration

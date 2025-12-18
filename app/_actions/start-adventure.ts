@@ -194,11 +194,11 @@ export async function startAdventure({ settingId, adventurePlanId, adventureId }
 
     console.log("🎲 Successfully started adventure with first turn:", turnId)
     console.log("🎲 Turn created with", characters.length, "characters")
-
-    // Redirect to the adventure page (which will show the first turn)
-    redirect(`/settings/${settingId}/${adventurePlanId}/${adventureId}`)
   } catch (error) {
     console.error("🎲 Failed to start adventure:", error)
     throw error
   }
+
+  // Redirect to the adventure page (which will show the first turn)
+  return redirect(`/settings/${settingId}/${adventurePlanId}/${adventureId}`)
 }

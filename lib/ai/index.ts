@@ -102,7 +102,6 @@ export async function generateObject<T extends z.ZodTypeAny>({ prompt, schema }:
           const tokenDecrementResult = await decrementUserTokensAction({
             tokensUsed: totalTokens,
             transactionType: "usage_generate_object",
-            modelId: currentModel.modelId,
           })
 
           if (!tokenDecrementResult.success) {
@@ -198,7 +197,6 @@ export async function generateObject<T extends z.ZodTypeAny>({ prompt, schema }:
             const tokenDecrementResult = await decrementUserTokensAction({
               tokensUsed: totalTokens,
               transactionType: "usage_generate_object",
-              modelId: currentModel.modelId,
             })
 
             if (!tokenDecrementResult.success) {
@@ -244,31 +242,14 @@ export async function generateText({ prompt }: { prompt: string }): Promise<{ te
       throw new Error("User not authenticated")
     }
 
-    console.log("[LLM] generateText prompt:", {
-      promptLength: prompt.length,
-      model: currentModel.modelId,
-    })
-
     result = await baseGenerateText({
       prompt,
       model: currentModel,
     })
 
-    console.log("[LLM] generateText response:", {
-      textLength: result.text?.length || 0,
-      quality: result.text && result.text.length > 0 ? "complete" : "empty",
-    })
 
     const totalTokens = result.usage?.totalTokens ?? 0
     if (totalTokens > 0) {
-      const inputTokens = result.usage?.inputTokens ?? 0
-      const outputTokens = result.usage?.outputTokens ?? 0
-      const tokensInputOutputRatio = outputTokens > 0 ? inputTokens / outputTokens : 0
-      console.log("[LLM] Token usage:", {
-        total: totalTokens,
-        efficiency: tokensInputOutputRatio.toFixed(2),
-        model: currentModel.modelId,
-      })
       const tokenDecrementResult = await decrementUserTokensAction({
         tokensUsed: totalTokens,
         transactionType: "usage_generate_text",
