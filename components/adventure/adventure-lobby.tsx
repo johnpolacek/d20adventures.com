@@ -265,30 +265,31 @@ export default function AdventureLobby({
                   </Button>
                 </Link>
                 {availableCharacters.length > 0 && (
-                  <div className="mt-8 w-full max-w-lg mx-auto">
-                    <h3 className="text-lg font-display text-white/80 mb-2">
+                  <>
+                    <h3 className="text-lg font-display text-amber-400 my-8 w-full text-center">
                       Or join with a premade character:
                     </h3>
-                    <div className="space-y-2">
-                      {availableCharacters.map((char) => {
-                        const label =
-                          isJoining && joiningCharacterId === char.id
-                            ? "Joining..."
-                            : `Join as ${char.name}`;
-                        return (
-                          <Button
-                            key={char.id}
-                            variant="outline"
-                            className="w-full"
-                            onClick={() => handleJoinAdventure(char.id)}
+                    <div className="w-full flex flex-wrap gap-6 justify-center mb-8">
+                      {availableCharacters.map((char) => (
+                        <div
+                          key={char.id}
+                          className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4"
+                        >
+                          <CharacterSelectCard
+                            className="ring-white/20"
+                            character={char}
+                            buttonLabel={
+                              isJoining && joiningCharacterId === char.id
+                                ? "Joining..."
+                                : "Join"
+                            }
                             disabled={isJoining}
-                          >
-                            {label}
-                          </Button>
-                        );
-                      })}
+                            onButtonClick={() => handleJoinAdventure(char.id)}
+                          />
+                        </div>
+                      ))}
                     </div>
-                  </div>
+                  </>
                 )}
               </>
             )}
