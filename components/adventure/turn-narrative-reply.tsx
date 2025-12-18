@@ -457,7 +457,7 @@ ${input ? `\nPlayer Input: ${input}` : ""}`;
                           {lowerCandidates.map((c) => (
                             <AlertDialogAction
                               key={c.id}
-                              className="justify-start"
+                              className="justify-start bg-black border border-primary-700 hover:bg-primary-800 transition-all"
                               onClick={() => {
                                 console.log(
                                   "[TurnNarrativeReply] Skip after selected",
@@ -473,7 +473,7 @@ ${input ? `\nPlayer Input: ${input}` : ""}`;
                         </div>
                       )}
                       <AlertDialogAction
-                        className="justify-start"
+                        className="justify-start bg-black border border-primary-700 hover:bg-primary-800 transition-all"
                         onClick={() => {
                           console.log(
                             "[TurnNarrativeReply] Skip entire turn selected"

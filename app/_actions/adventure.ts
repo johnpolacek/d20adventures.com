@@ -65,6 +65,17 @@ export async function processTurnReply({
     throw new Error("Character performing action not found in turn data")
   }
 
+  // Fetch recent turns for context (same pattern as advanceTurn)
+  const allTurns = await convex.query(api.adventure.getTurnsByAdventure, { adventureId: turn.adventureId })
+  const currentTurnOrder = turn.order || 1
+
+  const recentTurnNarratives = allTurns
+    .filter((t) => t.order <= currentTurnOrder)
+    .sort((a, b) => (a.order || 0) - (b.order || 0))
+    .slice(-3) // Last 3 turns including current
+    .map((t) => t.narrative || "")
+    .join("\n\n---\n\n")
+
   // Use originalPlayerInput if available to preserve player intent, fallback to narrativeAction
   const actionToAnalyze = originalPlayerInput?.trim() ? originalPlayerInput : narrativeAction
 
@@ -74,12 +85,13 @@ export async function processTurnReply({
     isOriginalInput: !!originalPlayerInput?.trim(),
     character: characterPerformingAction.name,
     encounter: encounter.id,
+    recentTurnsCount: allTurns.filter((t) => t.order <= currentTurnOrder).length,
   })
 
   // Call roll requirement service (returns RollRequirement | null)
   const assessment = await getRollRequirementForAction(actionToAnalyze, characterPerformingAction as import("@/types/character").Character, {
     encounterInstructions: encounter.instructions || "",
-    narrativeContext: turn.narrative || "",
+    narrativeContext: recentTurnNarratives || turn.narrative || "",
     encounterIntro: encounter.intro || "",
   })
 

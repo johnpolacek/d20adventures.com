@@ -72,7 +72,9 @@ IMPORTANT: There are good and evil characters. This is an important aspect of rp
 
 7) If the action simply follows established procedure (e.g., pays fee, answers routine question) without concealment, opposition, or special risk, choose no roll. Paying a posted fee or routine handover, even with flair or charm, should not require a check.
 
-8) Select the most fitting single check and set a DC using:
+8) Already obtained knowledge: If the narrative context shows a character already SUCCEEDED at a knowledge check (Arcana, History, Religion, Nature, etc.) and learned specific information, they do NOT need another roll to simply share or recall that information. Check the narrative for previous successful rolls and what information was revealed. Simply communicating already-known facts is automatic.
+
+9) Select the most fitting single check and set a DC using:
     - If NO roll is required, set "rollType" to "none" and "difficulty" to 0.
 
 Difficulty guidelines:
