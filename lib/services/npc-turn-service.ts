@@ -509,7 +509,8 @@ const findEncounterInPlan = (plan: AdventurePlan, encounterId: string): Adventur
     .find((encounter) => encounter.id === encounterId) ?? null
 
 export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
-  console.log("[LLM] Starting NPC turns processing:", {
+  const npcRequestId = Math.random().toString(36).substring(7)
+  console.log(`[NPC:${npcRequestId}] Starting NPC turns processing:`, {
     turnId: turnId.toString(),
   })
 
@@ -517,13 +518,14 @@ export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
   if (!turn) throw new Error("Turn not found")
 
   console.log(
-    "[LLM DM] Loaded turn",
+    `[NPC:${npcRequestId}] Loaded turn`,
     JSON.stringify(
       {
         turnId: turn._id.toString(),
         adventureId: turn.adventureId.toString(),
         encounterId: turn.encounterId,
         narrativeLength: turn.narrative?.length || 0,
+        narrativePreview: `${turn.narrative?.substring(0, 200)}...`,
         characterCount: turn.characters.length,
         characters: turn.characters.map((c) => ({
           id: c.id,
@@ -759,13 +761,15 @@ export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
     const newNarrative = appendNarrative(turn!.narrative || "", result.narrativeToAppend || "")
 
     console.log(
-      "[LLM DM] Updating turn in database",
+      `[NPC:${npcRequestId}] Updating turn in database`,
       JSON.stringify(
         {
           turnId: turn._id.toString(),
           oldNarrativeLength: turn.narrative?.length || 0,
           newNarrativeLength: newNarrative.length,
           narrativeDelta: newNarrative.length - (turn.narrative?.length || 0),
+          oldNarrativePreview: `${turn.narrative?.substring(0, 100)}...`,
+          newNarrativePreview: `${newNarrative.substring(0, 100)}...`,
           updatedCharacterCount: result.updatedCharacters.length,
         },
         null,
@@ -798,7 +802,7 @@ export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
     )
   }
 
-  console.log("[LLM] NPC turns processing completed:", {
+  console.log(`[NPC:${npcRequestId}] NPC turns processing completed:`, {
     processed: processedNpcCount,
     total: initiativeOrder.length,
   })

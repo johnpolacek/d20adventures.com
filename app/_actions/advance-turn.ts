@@ -23,12 +23,36 @@ function hasRollFields(c: TurnCharacter): c is TurnCharacter & { rollRequired: {
 }
 
 export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turnId: Id<"turns">; settingId: string; adventurePlanId: string }) {
+  // Generate unique request ID for debugging
+  const requestId = Math.random().toString(36).substring(7)
+  console.log(`[advanceTurn:${requestId}] Starting advance turn for turnId:`, turnId)
+
   let shouldProcessNpcTurns = true // Initialize to true by default
+
   // 1. Fetch the turn from Convex
+  console.log(`[advanceTurn:${requestId}] Fetching turn data from Convex`)
   const turnData = await convex.query(api.adventure.getTurnById, { turnId })
   if (!turnData) throw new Error("Turn not found")
+
+  // Check if turn already exists to prevent duplicate processing
+  const existingNextTurn = await convex.query(api.adventure.getTurnByOrder, {
+    adventureId: turnData.adventureId,
+    order: (turnData.order || 0) + 1
+  })
+
+  if (existingNextTurn) {
+    console.log(`[advanceTurn:${requestId}] Turn already exists for next order, skipping duplicate processing`)
+    return { status: "already_advanced", turn: existingNextTurn }
+  }
   const turn = mapConvexTurnToTurn({ ...turnData, adventureId: turnData.adventureId.toString() })
   if (!turn) throw new Error("Turn not found")
+
+  console.log(`[advanceTurn:${requestId}] Turn loaded:`, {
+    turnId: turn.id,
+    encounterId: turn.encounterId,
+    order: turnData.order,
+    narrativeLength: turn.narrative?.length || 0
+  })
 
   // 2. Load the plan from S3
   console.log("[advanceTurn] settingId:", settingId, "adventurePlanId:", adventurePlanId)
@@ -282,11 +306,14 @@ Respond in JSON:
 }
 `
 
+  console.log(`[advanceTurn:${requestId}] Making LLM call for encounter progression`)
   await wait(1000)
   const llmResult = (await generateObject({ prompt, schema: encounterProgressionSchema })).object
 
-  // Log the LLM's raw response
-  console.log("[advanceTurn] LLM result:", JSON.stringify(llmResult, null, 2))
+  // Log the LLM's raw response with request ID
+  console.log(`[advanceTurn:${requestId}] LLM result:`, JSON.stringify(llmResult, null, 2))
+  console.log(`[advanceTurn:${requestId}] Narrative length:`, llmResult.narrative?.length || 0)
+    console.log(`[advanceTurn:${requestId}] Narrative preview:`, `${llmResult.narrative?.substring(0, 200)}...`)
 
   // Log what the LLM decided about encounter progression
   console.log("[advanceTurn] Next encounterId:", llmResult.nextEncounterId)
@@ -407,6 +434,16 @@ Respond in JSON:
   const isFinalEncounter = resolvedNextEncounterForFinalCheck ? !resolvedNextEncounterForFinalCheck.transitions || resolvedNextEncounterForFinalCheck.transitions.length === 0 : false
 
   // 7. Create the new turn in Convex
+  console.log(`[advanceTurn:${requestId}] Creating new turn in Convex:`, {
+    adventureId: turnData.adventureId.toString(),
+    encounterId: newTurn.encounterId,
+    title: newTurn.title,
+    narrativeLength: newTurn.narrative.length,
+    characterCount: newTurn.characters.length,
+    order: (turnData.order || 0) + 1,
+    isFinalEncounter
+  })
+
   const newTurnId = await convex.mutation(api.turns.createTurn, {
     adventureId: turnData.adventureId,
     encounterId: newTurn.encounterId,
@@ -416,6 +453,8 @@ Respond in JSON:
     order: (turnData.order || 0) + 1,
     isFinalEncounter: isFinalEncounter,
   })
+
+  console.log(`[advanceTurn:${requestId}] Created new turn with ID:`, newTurnId)
 
   // 8. Patch adventure with new currentTurnId, and if final, end the adventure immediately
   if (isFinalEncounter) {
@@ -433,11 +472,14 @@ Respond in JSON:
 
   // 9. After creating the new turn, process NPC turn if needed
   if (shouldProcessNpcTurns) {
+    console.log(`[advanceTurn:${requestId}] Starting NPC turn processing for turnId:`, newTurnId)
     await processNpcTurnsAfterCurrent(newTurnId)
+    console.log(`[advanceTurn:${requestId}] NPC turn processing completed`)
   } else {
-    console.log(`[advanceTurn] NPC turns processing was skipped for turnId: ${newTurnId}`)
+    console.log(`[advanceTurn:${requestId}] NPC turns processing was skipped for turnId:`, newTurnId)
   }
 
   // 10. Return the new turn/adventure state
+  console.log(`[advanceTurn:${requestId}] Function completed successfully`)
   return { status: "turn_advanced", turn: newTurn }
 }
