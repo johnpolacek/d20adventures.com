@@ -120,6 +120,14 @@ export default function AdventureLobby({
       // The redirect happens in the server action
       // Note: redirect() throws NEXT_REDIRECT which is expected behavior, not an error
     } catch (error) {
+      // Don't reset state for redirect errors - let the redirect complete
+      const isRedirectError =
+        error &&
+        typeof error === "object" &&
+        "digest" in error &&
+        String((error as { digest?: string }).digest).includes("NEXT_REDIRECT");
+      if (isRedirectError) return;
+
       console.error("Failed to join adventure:", error);
       setJoinError(
         error instanceof Error ? error.message : "Failed to join adventure"
