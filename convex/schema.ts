@@ -164,7 +164,6 @@ export default defineSchema({
     ),
     amount: v.number(), // Positive for additions (grants, purchases), negative for deductions (usage)
     timestamp: v.number(), // Timestamp of the transaction
-    description: v.optional(v.string()), // Optional details about the transaction
     tokensRemainingAfterTransaction: v.optional(v.number()), // User's token balance after this transaction
   })
     .index("by_userId", ["userId"])

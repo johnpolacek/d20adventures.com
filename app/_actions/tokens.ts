@@ -7,8 +7,6 @@ import { auth } from "@clerk/nextjs/server"
 interface DecrementTokensArgs {
   tokensUsed: number
   transactionType: "usage_generate_text" | "usage_generate_object" | "usage_image_upload" | "usage_join_adventure"
-  description?: string
-  modelId?: string
 }
 
 export async function decrementUserTokensAction(args: DecrementTokensArgs) {
@@ -26,8 +24,6 @@ export async function decrementUserTokensAction(args: DecrementTokensArgs) {
   }
 
   try {
-    const description = args.description || `Token usage for ${args.transactionType}${args.modelId ? ` (${args.modelId})` : ""}`
-
     // Different token calculations for different transaction types
     let tokensUsed: number
     if (args.transactionType === "usage_image_upload") {
@@ -45,7 +41,6 @@ export async function decrementUserTokensAction(args: DecrementTokensArgs) {
       userId,
       tokensUsed,
       transactionType: args.transactionType,
-      description: description,
     })
     return { success: true, data: result }
   } catch (error) {

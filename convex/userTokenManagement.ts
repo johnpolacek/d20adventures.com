@@ -25,9 +25,8 @@ export const ensureUserTokenRecord = mutation({
       await ctx.db.insert("tokenTransactionHistory", {
         userId: args.userId,
         type: "initial_grant",
-        amount: INITIAL_TOKEN_GRANT, // Positive for a grant
+        amount: INITIAL_TOKEN_GRANT,
         timestamp: now,
-        description: "Initial token grant upon account creation.",
         tokensRemainingAfterTransaction: INITIAL_TOKEN_GRANT,
       })
 
@@ -59,9 +58,7 @@ export const decrementTokens = mutation({
       v.literal("usage_generate_object"),
       v.literal("usage_image_upload"),
       v.literal("usage_join_adventure")
-      // Add other usage types as needed
     ),
-    description: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     if (args.tokensUsed <= 0) {
@@ -85,10 +82,9 @@ export const decrementTokens = mutation({
       await ctx.db.insert("tokenTransactionHistory", {
         userId: args.userId,
         type: args.transactionType,
-        amount: -args.tokensUsed, // Record the attempted usage as negative
+        amount: -args.tokensUsed,
         timestamp: Date.now(),
-        description: args.description ? `${args.description} (Failed - Insufficient tokens)` : `Attempted ${args.transactionType} (Failed - Insufficient tokens)`,
-        tokensRemainingAfterTransaction: userLedger.tokensRemaining, // Balance before this failed attempt
+        tokensRemainingAfterTransaction: userLedger.tokensRemaining,
       })
       throw new Error(`Insufficient tokens for userId: ${args.userId}. ` + `Required: ${args.tokensUsed}, Available: ${userLedger.tokensRemaining}.`)
     }
@@ -104,9 +100,8 @@ export const decrementTokens = mutation({
     await ctx.db.insert("tokenTransactionHistory", {
       userId: args.userId,
       type: args.transactionType,
-      amount: -args.tokensUsed, // Negative for a deduction
+      amount: -args.tokensUsed,
       timestamp: now,
-      description: args.description,
       tokensRemainingAfterTransaction: newTokensRemaining,
     })
 

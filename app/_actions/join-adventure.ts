@@ -31,7 +31,6 @@ export async function joinAdventure({ settingId, adventurePlanId, adventureId, c
     const tokenResult = await decrementUserTokensAction({
       tokensUsed: 1, // 1 token to join lobby
       transactionType: "usage_join_adventure",
-      description: `Joined adventure lobby: ${adventureId}`,
     })
 
     if (!tokenResult.success) {

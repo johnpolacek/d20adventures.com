@@ -82,7 +82,6 @@ export async function POST(request: NextRequest) {
       await decrementUserTokensAction({
         tokensUsed: IMAGE_UPLOAD_TOKEN_COST,
         transactionType: "usage_image_upload",
-        description: `Image upload: ${file.name} (${Math.round(file.size / 1024)}KB)`,
       })
     } catch (tokenError) {
       console.error("Failed to deduct tokens for image upload:", tokenError)

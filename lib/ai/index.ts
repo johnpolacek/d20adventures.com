@@ -53,7 +53,6 @@ export async function generateObject<T extends z.ZodTypeAny>({ prompt, schema }:
       const tokenDecrementResult = await decrementUserTokensAction({
         tokensUsed: totalTokens,
         transactionType: "usage_generate_object",
-        modelId: currentModel.modelId,
       })
 
       if (!tokenDecrementResult.success) {
@@ -148,10 +147,9 @@ export async function generateObject<T extends z.ZodTypeAny>({ prompt, schema }:
           model: currentModel.modelId,
         })
         const tokenDecrementResultRetry = await decrementUserTokensAction({
-          tokensUsed: retryTotalTokens,
-          transactionType: "usage_generate_object",
-          modelId: currentModel.modelId,
-        })
+        tokensUsed: retryTotalTokens,
+        transactionType: "usage_generate_object",
+      })
 
         if (!tokenDecrementResultRetry.success) {
           console.error("Token decrementation failed for generateObject (retry):", tokenDecrementResultRetry.error, tokenDecrementResultRetry.details)
@@ -274,7 +272,6 @@ export async function generateText({ prompt }: { prompt: string }): Promise<{ te
       const tokenDecrementResult = await decrementUserTokensAction({
         tokensUsed: totalTokens,
         transactionType: "usage_generate_text",
-        modelId: currentModel.modelId,
       })
 
       if (!tokenDecrementResult.success) {
@@ -326,10 +323,9 @@ export async function generateText({ prompt }: { prompt: string }): Promise<{ te
           model: currentModel.modelId,
         })
         const tokenDecrementResultRetry = await decrementUserTokensAction({
-          tokensUsed: retryTotalTokens,
-          transactionType: "usage_generate_text",
-          modelId: currentModel.modelId,
-        })
+        tokensUsed: retryTotalTokens,
+        transactionType: "usage_generate_text",
+      })
 
         if (!tokenDecrementResultRetry.success) {
           console.error("Token decrementation failed for generateText (retry):", tokenDecrementResultRetry.error, tokenDecrementResultRetry.details)
