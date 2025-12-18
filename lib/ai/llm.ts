@@ -1,7 +1,7 @@
 import { google } from "@ai-sdk/google"
 import { openai } from "@ai-sdk/openai"
 
-const geminiModel = google("gemini-3-pro-preview")
+const geminiModel = google("gemini-3-flash-preview")
 const openaiModel = openai("gpt-5-mini")
 
 const currentModel = geminiModel
