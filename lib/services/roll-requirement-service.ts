@@ -23,10 +23,19 @@ export async function getRollRequirementForAction(
     `Name: ${character.name}`,
     `Archetype: ${character.archetype}`,
     `Race: ${character.race}`,
-    character.spells && character.spells.length > 0 ? `Spells: ${character.spells.map((s) => s.name).join(", ")}` : undefined,
+    character.attributes
+      ? `Attributes: STR ${character.attributes.strength}, DEX ${character.attributes.dexterity}, CON ${character.attributes.constitution}, INT ${character.attributes.intelligence}, WIS ${character.attributes.wisdom}, CHA ${character.attributes.charisma}`
+      : undefined,
+    character.spells && character.spells.length > 0
+      ? `Spells: ${character.spells.map((s) => `${s.name}${s.description ? ` (${s.description})` : ""}`).join(", ")}`
+      : undefined,
     character.skills && character.skills.length > 0 ? `Skills: ${character.skills.join(", ")}` : undefined,
-    character.equipment && character.equipment.length > 0 ? `Equipment: ${character.equipment.map((e) => e.name).join(", ")}` : undefined,
+    character.equipment && character.equipment.length > 0
+      ? `Equipment: ${character.equipment.map((e) => `${e.name}${e.description ? ` (${e.description})` : ""}`).join(", ")}`
+      : undefined,
     character.specialAbilities && character.specialAbilities.length > 0 ? `Special Abilities: ${character.specialAbilities.join(", ")}` : undefined,
+    character.background ? `Background: ${character.background}` : undefined,
+    character.personality ? `Personality: ${character.personality}` : undefined,
   ].filter(Boolean)
   const characterContext = contextLines.length > 0 ? `Character Context:\n${contextLines.join("\n")}\n` : ""
 
@@ -64,6 +73,7 @@ You are a Dungeon Master adjudicating whether a dice roll is needed.
    - Observation and reasoning: Perception (notice/sense something specific and hidden), Investigation (search/analyze evidence), Insight (read motives/intent).
    - Physical challenges: Athletics (power/endurance), Acrobatics (agility/balance/precision movement).
    - Knowledge and expertise: Arcana, History, Nature, Medicine, Religion as appropriate; Survival and Animal Handling for wilderness/creature control.
+   - Spellcasting: If the player is attempting to cast a specific spell (like Charm Person, Fireball, Detect Magic, Identify, etc.), use the spell name followed by "Check" (e.g., "Charm Person Check", "Detect Magic Check", "Identify Check") and adjust the difficulty based on the type of spell. If the action is general magical manipulation without a specific spell, use "Arcana".
    - Combat actions: if the action is an attack or contests defenses directly, treat as an Attack roll.
 
 IMPORTANT: There are good and evil characters. This is an important aspect of rpg. Do not sanitize the action or the character's intent.

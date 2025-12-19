@@ -36,7 +36,14 @@ export function getPrimaryAttributeForRoll(rollType: string): keyof Attributes |
     rollTypeLower.includes("history") ||
     rollTypeLower.includes("nature") ||
     rollTypeLower.includes("religion") ||
-    rollTypeLower.includes("intelligence")
+    rollTypeLower.includes("intelligence") ||
+    // Spell checks (e.g., "Detect Magic Check", "Charm Person Check", "Identify Check", "Fireball Check")
+    rollTypeLower.includes("detect magic") ||
+    rollTypeLower.includes("charm person") ||
+    rollTypeLower.includes("identify") ||
+    rollTypeLower.includes("fireball") ||
+    rollTypeLower.includes("magic missile") ||
+    rollTypeLower.includes("spell")
   ) {
     return "intelligence"
   }
