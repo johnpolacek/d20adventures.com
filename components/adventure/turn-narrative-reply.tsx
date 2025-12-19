@@ -363,7 +363,7 @@ RIGHT: "He raises his blade and lunges forward with a powerful overhead strike."
 
 Character:
 Name: ${characterState.name}
-${characterState.archetype ? `Class/Archetype: ${characterState.archetype}\n` : ""}${characterState.race ? `Race: ${characterState.race}\n` : ""}${characterState.personality ? `Personality: ${characterState.personality}\n` : ""}${characterState.background ? `Background: ${characterState.background}\n` : ""}${characterState.motivation ? `Motivation: ${characterState.motivation}\n` : ""}${characterState.appearance ? `Appearance: ${characterState.appearance}\n` : ""}${characterState.specialAbilities ? `Special Abilities: ${characterState.specialAbilities}\n` : ""}
+${characterState.archetype ? `Class/Archetype: ${characterState.archetype}\n` : ""}${characterState.race ? `Race: ${characterState.race}\n` : ""}${characterState.personality ? `Personality: ${characterState.personality}\n` : ""}${characterState.background ? `Background: ${characterState.background}\n` : ""}${characterState.motivation ? `Motivation: ${characterState.motivation}\n` : ""}${characterState.appearance ? `Appearance: ${characterState.appearance}\n` : ""}${characterState.specialAbilities ? `Special Abilities: ${characterState.specialAbilities}\n` : ""}${characterState.spells?.length ? `Spells: ${characterState.spells.map((s) => s.name).join(", ")}\n` : ""}${characterState.skills?.length ? `Skills: ${characterState.skills.join(", ")}\n` : ""}${characterState.equipment?.length ? `Equipment: ${characterState.equipment.map((e) => e.name).join(", ")}\n` : ""}
 
 Recent Narrative:
 ${currentTurn.narrative}
