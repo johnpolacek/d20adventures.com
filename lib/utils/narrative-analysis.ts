@@ -42,6 +42,9 @@ export function analyzePlayerInput(input: string, characterName: string) {
   const hasDetailedAction = sentenceCount >= 2 && wordCount >= 20
   const hasGoodStructure = hasDialogue && (hasDialogueTags || hasCharacterThoughts) && isThirdPerson
 
+  // Imperative/instructional text detection (e.g., "continue to shoot", "attack the guard")
+  const isImperative = /^(continue|attack|shoot|run|go|hide|move|cast|use|take|grab|try|attempt|shout|say|tell|ask)\b/i.test(input.trim())
+
   return {
     hasDialogue,
     hasDialogueTags,
@@ -57,10 +60,11 @@ export function analyzePlayerInput(input: string, characterName: string) {
     hasCharacterThoughts,
     hasDetailedAction,
     hasGoodStructure,
-    isWellWritten: (hasGoodStructure || hasDialogue || (isThirdPerson && hasNarrative && !isFirstPerson && hasPresentTense)) && !isMinimal && !hasPastTense,
-    needsEnhancement: (isMinimal || (isFirstPerson && !hasDialogue) || hasPastTense) && !(hasGoodStructure || hasDetailedAction || hasDialogue),
+    isImperative,
+    isWellWritten: (hasGoodStructure || hasDialogue || (isThirdPerson && hasNarrative && !isFirstPerson && hasPresentTense)) && !isMinimal && !hasPastTense && !isImperative,
+    needsEnhancement: (isMinimal || (isFirstPerson && !hasDialogue) || hasPastTense || isImperative) && !(hasGoodStructure || (hasDetailedAction && isThirdPerson) || hasDialogue),
     preserveOriginal:
-      (hasGoodStructure || hasDetailedAction || (hasDialogue && hasDialogueTags && isThirdPerson && !hasPastTense) || (hasDialogue && hasDialogueTags && !isMinimal)) &&
+      (hasGoodStructure || (hasDetailedAction && isThirdPerson && !isImperative) || (hasDialogue && hasDialogueTags && isThirdPerson && !hasPastTense) || (hasDialogue && hasDialogueTags && !isMinimal)) &&
       !(isFirstPerson && !hasDialogue),
     useMinimalCorrections: (hasDialogue && isThirdPerson && !isMinimal && !hasPastTense) || (hasDialogue && hasDialogueTags && !isMinimal && !hasPastTense),
   }
