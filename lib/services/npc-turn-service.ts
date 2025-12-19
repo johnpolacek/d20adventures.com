@@ -112,14 +112,31 @@ export async function processNpcTurnWithLLM({
 
   // Context prepared for NPC action decision
 
+  // Build NPC details including equipment
+  const npcEquipmentList = npc.equipment?.map((e) => e.name).join(", ") || "None"
+  const npcDetails = `
+NPC Details:
+- Name: ${npc.name}
+- Race: ${npc.race || "Unknown"}
+- Archetype: ${npc.archetype || "Unknown"}
+- Equipment: ${npcEquipmentList}
+- Skills: ${npc.skills?.join(", ") || "None"}
+- Health: ${npc.healthPercent ?? 100}%
+- Status: ${npc.status || "Normal"}
+`
+
   const prompt1 = `You are the DM for a tabletop RPG. Given the following context, decide what action the NPC should take this turn. Be creative and act as a real DM would. Output a short narrative for the action.
 
 ${contextString}
+
+${npcDetails}
 
 YOUR TASK:
 You are the DM. Your SOLE responsibility right now is to decide the action for ONE specific NPC.
 
 **THE CURRENT NPC IS: ${npc.name}** (ID: ${npc.id}, Type: ${npc.type})
+
+CRITICAL: When the NPC attacks or uses equipment, you MUST use ONLY the weapons and items listed in their Equipment above. Do NOT invent or reference weapons they don't have.
 
 CRITICAL: Pay close attention to the NPC's behavior and role. The NPC behavior section describes their specific responsibilities, motivations, and how they should act in this encounter. This is the most important context for determining their action.
 
@@ -158,11 +175,12 @@ Respond as JSON. The 'narrative' and 'actionSummary' fields must describe the ac
   effects?: [ { targetId: string, equipmentToAdd?: [{name: string, description?: string}] } ]
 }`
 
-  console.log("[LLM] NPC action prompt:", {
+  console.log("[LLM] NPC action prompt:", JSON.stringify({
     promptLength: prompt1.length,
     npc: npc.name,
+    npcEquipment: npcEquipmentList,
     targetPlayers: playerCharactersForPrompt1.length,
-  })
+  }, null, 2))
 
   const actionResult = (await generateObject({ prompt: prompt1, schema: npcActionSchema })).object
 
@@ -283,9 +301,20 @@ Respond as JSON. The 'narrative' and 'actionSummary' fields must describe the ac
     // 6. LLM: Given the action, roll result, and context, generate the outcome
     const playerCharacters = turn.characters.filter((c) => c.type === "pc")
     const playerCharacterNames = playerCharacters.map((c) => c.name)
+    
+    // Build player character details for context
+    const playerCharacterDetails = playerCharacters.map((pc) => `- ${pc.name}: ${pc.archetype || "Unknown"}, HP ${pc.healthPercent ?? 100}%, Equipment: ${pc.equipment?.map((e) => e.name).join(", ") || "None"}`).join("\n")
+    
     const prompt2 = `You are the DM for a tabletop RPG. Given the action, the dice roll result, and the context, write a short narrative describing the outcome. Focus the narrative on the interacting characters. **Do not narrate any actions or dialogue for player characters.**
 
 ${contextString}
+
+${npcDetails}
+
+Player Character Details:
+${playerCharacterDetails}
+
+CRITICAL: When describing the NPC's attack or action, you MUST reference ONLY the weapons and items listed in their Equipment. Do NOT invent or reference weapons they don't have.
 
 CRITICAL: You must ONLY reference elements that are explicitly mentioned in the encounter instructions, encounter intro, or existing narrative context. Do NOT invent new objects, people, events, or details that are not already established in the adventure plan.
 

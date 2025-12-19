@@ -2,28 +2,22 @@ import { generateObject } from "@/lib/ai"
 import type { DiceRoll, Turn } from "@/types/adventure"
 import { z } from "zod"
 
-// Zod schema for the AI's expected output
-// Accept either a full update object or an empty object (no change)
-const characterUpdateSchema = z.union([
-  z.object({
-    id: z.string(), // character id
-    healthPercent: z.number().min(0).max(100),
-    status: z.string().optional(),
-  }),
-  z.object({}).strict(),
-])
+// Enhanced schema: AI must provide reasoning for health and status changes
+const healthAnalysisSchema = z.object({
+  hasPhysicalEffect: z.boolean().describe("Whether the narrative describes physical damage, injury, healing, or recovery"),
+  reasoning: z.string().describe("Brief explanation of why health/status should or should not change"),
+  update: z
+    .object({
+      characterId: z.string().describe("The id of the character whose health/status changed"),
+      newHealthPercent: z.number().min(0).max(100).optional().describe("The new health percentage after this action (if health changed)"),
+      newStatus: z.string().optional().describe("New status condition (e.g., 'Off-balance', 'Stunned', 'Bleeding') or empty string to clear status"),
+      damageOrHealingDescription: z.string().describe("Brief description of what caused the health/status change"),
+    })
+    .nullable()
+    .describe("Null if no health/status change, otherwise the update details"),
+})
 
-type CharacterUpdate = {
-  id: string
-  healthPercent: number
-  status?: string
-}
-
-function isCharacterUpdate(value: unknown): value is CharacterUpdate {
-  if (!value || typeof value !== "object") return false
-  const v = value as Record<string, unknown>
-  return typeof v.id === "string" && typeof v.healthPercent === "number" && (v.status === undefined || typeof v.status === "string")
-}
+type HealthAnalysis = z.infer<typeof healthAnalysisSchema>
 
 /**
  * Extracts the narrative text that follows the last [DiceRoll:...] shortcode.
@@ -40,8 +34,8 @@ function extractNarrativeAfterLastDiceRoll(narrative: string): string | null {
 }
 
 /**
- * Uses generateObject to analyze the most recent dice roll and outcome narrative,
- * and returns an updated turn object with the character's healthPercent and status updated as needed.
+ * Uses AI to analyze the narrative and determine if any character's health should change.
+ * Returns an updated turn object with the character's healthPercent updated as needed.
  */
 export async function analyzeAndApplyDiceRoll({
   turn,
@@ -52,134 +46,220 @@ export async function analyzeAndApplyDiceRoll({
   diceRoll: DiceRoll
   narrative: string
 }): Promise<Turn> {
+  console.log("[analyzeAndApplyDiceRoll] Input diceRoll:", JSON.stringify(diceRoll, null, 2))
+  console.log("[analyzeAndApplyDiceRoll] Input turn:", JSON.stringify({ characterCount: turn.characters.length, characters: turn.characters.map(c => ({ id: c.id, name: c.name, healthPercent: c.healthPercent, status: c.status })) }, null, 2))
+
   // Extract only the narrative following the last dice roll shortcode
   const relevantNarrative = extractNarrativeAfterLastDiceRoll(narrative)
 
   if (!relevantNarrative) {
-    // If we can't find the relevant narrative, return the turn unchanged
+    console.log("[analyzeAndApplyDiceRoll] No narrative found after dice roll")
+    console.log("[analyzeAndApplyDiceRoll] Full narrative:", narrative)
     return turn
   }
 
-  // Determine if this is a natural 1 or 20, or calculate performance delta
-  let narrativeGuidance = ""
+  console.log("[analyzeAndApplyDiceRoll] Extracted relevant narrative:", relevantNarrative)
 
+  // Build context about the roll outcome
+  let rollContext = ""
   if (diceRoll.baseRoll === 1) {
-    narrativeGuidance = "This was a catastrophic failure. The narrative should reflect dramatic, unexpected negative consequences that go beyond a simple failure."
+    rollContext = "This was a CRITICAL FAILURE (natural 1). The outcome should be dramatically bad."
   } else if (diceRoll.baseRoll === 20) {
-    narrativeGuidance = "This was a spectacular success. The narrative should reflect exceptional, dramatically positive outcomes that exceed normal success."
+    rollContext = "This was a CRITICAL SUCCESS (natural 20). The outcome should be exceptionally good."
   } else {
     const delta = diceRoll.result - diceRoll.difficulty
-    if (delta > 0) {
-      narrativeGuidance = `This was a success that exceeded the target by ${delta} points. The narrative should reflect how well the action was performed.`
-    } else {
-      narrativeGuidance = `This was a failure that missed the target by ${Math.abs(delta)} points. The narrative should reflect the degree of the failure.`
-    }
+    rollContext = diceRoll.success
+      ? `This was a SUCCESS (exceeded target by ${delta} points).`
+      : `This was a FAILURE (missed target by ${Math.abs(delta)} points).`
   }
 
-  // Compose a prompt for the AI
-  const prompt = `
-You must decide if any character's healthPercent should be updated based ONLY on the outcome narrative.
+  // Build character summary for context - include attributes for damage assessment
+  const characterSummary = turn.characters.map((c) => ({
+    id: c.id,
+    name: c.name,
+    type: c.type,
+    archetype: c.archetype ?? "Unknown",
+    currentHealthPercent: c.healthPercent ?? 100,
+    currentStatus: c.status ?? "",
+    // Include key combat stats for accurate damage assessment
+    strength: c.attributes?.strength ?? 10,
+    constitution: c.attributes?.constitution ?? 10,
+    equipment: c.equipment?.map((e) => e.name).slice(0, 5) ?? [], // Include primary equipment
+  }))
 
-IMPORTANT RULES:
-- Only update health if the narrative explicitly describes physical damage, injury, healing, or recovery
-- Conversations, social interactions, skill checks, and mental effects do NOT affect health
-- Failed social rolls (like Insight, Persuasion, Deception) should NEVER change health
-- Only combat actions, environmental hazards, or explicit healing should affect health
+  console.log("[analyzeAndApplyDiceRoll] Character summary:", JSON.stringify(characterSummary, null, 2))
+  console.log("[analyzeAndApplyDiceRoll] Roll context:", rollContext)
 
-${narrativeGuidance}
+  const prompt = `Analyze this combat/action narrative to determine if any character's health or status should change.
 
-Outcome Narrative: "${relevantNarrative}"
-Current Characters: ${JSON.stringify(turn.characters)}
+ROLL CONTEXT:
+- Roll Type: ${diceRoll.rollType}
+- Character Acting: ${diceRoll.character}
+- ${rollContext}
 
-If NO physical harm, healing, or injury is described in the narrative, return an empty JSON object {}.
-If physical harm or healing IS explicitly described, return an object with the character id and new healthPercent (0-100).
-`
+OUTCOME NARRATIVE:
+"${relevantNarrative}"
 
+CURRENT CHARACTERS:
+${JSON.stringify(characterSummary, null, 2)}
+
+RULES FOR HEALTH CHANGES:
+1. Only physical damage, injury, healing, or recovery affects health
+2. Social interactions, skill checks, and mental effects do NOT affect health
+3. Failed social rolls (Insight, Persuasion, Deception) NEVER change health
+4. Stumbling, falling without injury, or near-misses do NOT change health
+
+DAMAGE CALCULATION GUIDELINES:
+- Consider the ATTACKER's strength and weapon: High STR (14+) with heavy weapons = more damage
+- Consider the TARGET's constitution and armor: Low CON (10 or below) = takes more damage
+- A strong warrior (STR 16) hitting a fragile scholar (CON 10) with a sword should deal 20-30% damage
+- A weak character attacking a tough armored foe should deal only 5-10% damage
+- Use the character stats provided to calculate realistic damage:
+
+BASE DAMAGE BY ATTACK SUCCESS:
+- Barely succeeded (1-2 over DC): 10-15% health loss
+- Solid success (3-5 over DC): 15-25% health loss  
+- Exceptional success (6+ over DC): 20-30% health loss
+- Critical hit (nat 20): 25-40% health loss
+
+MODIFIERS:
+- Strong attacker (STR 14+) vs weak target (CON 10-): Add 5-10% more damage
+- Weak attacker (STR 10-) vs tough target (CON 14+): Reduce damage by 5-10%
+- Heavy weapon (sword, mace, axe): Add 5% damage
+- Light weapon (dagger, fists): Reduce damage by 5%
+
+RULES FOR STATUS CHANGES:
+1. Status represents temporary conditions (e.g., "Off-balance", "Stunned", "Bleeding", "Prone", "Grappled")
+2. Only update status if the narrative explicitly describes a condition that affects the character
+3. Use empty string "" to clear status if a condition is resolved
+4. Common status conditions: "Off-balance", "Stunned", "Bleeding", "Prone", "Grappled", "Disadvantaged", "Advantaged"
+5. Status should reflect immediate tactical effects from the action
+
+Analyze the narrative and determine if health or status should change.`
+
+  console.log("[analyzeAndApplyDiceRoll] Sending prompt to AI")
   console.log("[analyzeAndApplyDiceRoll] Prompt:", prompt)
-  console.log("[analyzeAndApplyDiceRoll] Relevant narrative:", relevantNarrative)
-  console.log("[analyzeAndApplyDiceRoll] DiceRoll:", JSON.stringify(diceRoll, null, 2))
 
-  // Call the AI (gracefully handle failures by leaving the turn unchanged)
-  let update:
-    | {
-        object: z.infer<typeof characterUpdateSchema>
-        [key: string]: unknown
-      }
-    | undefined
+  let analysis: HealthAnalysis
   try {
-    update = await generateObject({
+    const result = await generateObject({
       prompt,
-      schema: characterUpdateSchema,
+      schema: healthAnalysisSchema,
     })
-    console.log("[analyzeAndApplyDiceRoll] AI Response:", JSON.stringify(update, null, 2))
+    analysis = result.object as HealthAnalysis
+    console.log("[analyzeAndApplyDiceRoll] AI Response (full):", JSON.stringify(result, null, 2))
+    console.log("[analyzeAndApplyDiceRoll] AI Analysis (parsed):", JSON.stringify(analysis, null, 2))
   } catch (err) {
-    console.warn("[analyzeAndApplyDiceRoll] generateObject failed, leaving turn unchanged.", err)
+    console.error("[analyzeAndApplyDiceRoll] AI analysis failed, leaving turn unchanged")
+    console.error("[analyzeAndApplyDiceRoll] Error:", JSON.stringify(err, null, 2))
     return turn
   }
 
-  // If the AI didn't return a valid update, return the turn unchanged
-  if (!update || !update.object) {
-    console.log("[analyzeAndApplyDiceRoll] No update object returned")
+  // If no physical effect or no update, return unchanged
+  if (!analysis.hasPhysicalEffect || !analysis.update) {
+    console.log("[analyzeAndApplyDiceRoll] No health/status change needed")
+    console.log("[analyzeAndApplyDiceRoll] Reasoning:", analysis.reasoning)
+    console.log("[analyzeAndApplyDiceRoll] hasPhysicalEffect:", analysis.hasPhysicalEffect)
+    console.log("[analyzeAndApplyDiceRoll] update:", JSON.stringify(analysis.update, null, 2))
     return turn
   }
 
-  const obj = update.object as unknown
-  console.log("[analyzeAndApplyDiceRoll] Update object:", JSON.stringify(obj, null, 2))
+  console.log("[analyzeAndApplyDiceRoll] Health/status change detected")
+  console.log("[analyzeAndApplyDiceRoll] Update details:", JSON.stringify(analysis.update, null, 2))
 
-  // Allow empty object (no changes)
-  if (obj && typeof obj === "object" && Object.keys(obj as Record<string, unknown>).length === 0) {
-    console.log("[analyzeAndApplyDiceRoll] Empty object returned, no changes")
-    return turn
-  }
-
-  if (!isCharacterUpdate(obj)) {
-    console.log("[analyzeAndApplyDiceRoll] Object is not a valid character update")
-    return turn
-  }
-
-  console.log("[analyzeAndApplyDiceRoll] Applying character update:", JSON.stringify(obj, null, 2))
-
-  // Additional safety check: ensure the narrative actually contains words indicating physical harm/healing
-  const harmKeywords = ["damage", "injury", "wounded", "hurt", "bleeding", "pain", "struck", "hit", "slashed", "pierced", "burned", "poisoned"]
-  const healKeywords = ["heal", "recover", "restoration", "mend", "cure", "health restored", "vitality"]
-  const narrativeLower = relevantNarrative.toLowerCase()
-
-  const hasPhysicalContent = [...harmKeywords, ...healKeywords].some((keyword) => narrativeLower.includes(keyword))
-
-  if (!hasPhysicalContent) {
-    console.log("[analyzeAndApplyDiceRoll] No physical harm/healing keywords found in narrative, ignoring health update")
-    return turn
-  }
-
-  // Validate the health change is reasonable
-  const targetCharacter = turn.characters.find((c) => c.id === obj.id)
+  // Validate the target character exists
+  const targetCharacter = turn.characters.find((c) => c.id === analysis.update!.characterId)
   if (!targetCharacter) {
-    console.log("[analyzeAndApplyDiceRoll] Target character not found, ignoring update")
+    console.error("[analyzeAndApplyDiceRoll] Target character not found")
+    console.error("[analyzeAndApplyDiceRoll] Requested characterId:", analysis.update.characterId)
+    console.error("[analyzeAndApplyDiceRoll] Available character IDs:", JSON.stringify(turn.characters.map(c => c.id), null, 2))
     return turn
   }
+
+  console.log("[analyzeAndApplyDiceRoll] Target character found:", JSON.stringify({ 
+    id: targetCharacter.id, 
+    name: targetCharacter.name, 
+    currentHealthPercent: targetCharacter.healthPercent,
+    currentStatus: targetCharacter.status ?? ""
+  }, null, 2))
 
   const currentHealth = targetCharacter.healthPercent ?? 100
-  const newHealth = obj.healthPercent
+  const currentStatus = targetCharacter.status ?? ""
+  const newHealth = analysis.update.newHealthPercent
+  const newStatus = analysis.update.newStatus
 
-  // Prevent unreasonable health changes (more than 50% in one turn from social interactions)
-  if (Math.abs(newHealth - currentHealth) > 50) {
-    console.log(`[analyzeAndApplyDiceRoll] Unreasonable health change detected: ${currentHealth}% -> ${newHealth}%, ignoring update`)
-    return turn
+  // Log health assessment
+  if (newHealth !== undefined) {
+    console.log("[analyzeAndApplyDiceRoll] Health assessment:", JSON.stringify({
+      currentHealth,
+      newHealth,
+      delta: newHealth - currentHealth,
+      absoluteDelta: Math.abs(newHealth - currentHealth),
+      willChange: newHealth !== currentHealth
+    }, null, 2))
+
+    // Sanity check: prevent extreme single-turn changes (more than 50%)
+    if (Math.abs(newHealth - currentHealth) > 50) {
+      console.warn("[analyzeAndApplyDiceRoll] Health change too extreme, capping")
+      console.warn("[analyzeAndApplyDiceRoll] Original change:", JSON.stringify({ currentHealth, newHealth, delta: newHealth - currentHealth }, null, 2))
+      const cappedHealth = newHealth < currentHealth ? Math.max(currentHealth - 50, 0) : Math.min(currentHealth + 50, 100)
+      analysis.update.newHealthPercent = cappedHealth
+      console.warn("[analyzeAndApplyDiceRoll] Capped change:", JSON.stringify({ currentHealth, cappedHealth, delta: cappedHealth - currentHealth }, null, 2))
+    }
+  } else {
+    console.log("[analyzeAndApplyDiceRoll] No health change in this update")
   }
 
-  // Find and update the character in the turn
-  const updatedCharacters = turn.characters.map((c) =>
-    c.id === obj.id
-      ? {
-          ...c,
-          healthPercent: typeof obj.healthPercent === "number" ? obj.healthPercent : c.healthPercent,
-        }
-      : c
-  )
+  // Log status assessment
+  if (newStatus !== undefined) {
+    console.log("[analyzeAndApplyDiceRoll] Status assessment:", JSON.stringify({
+      currentStatus: currentStatus || "(none)",
+      newStatus: newStatus || "(clearing)",
+      willChange: newStatus !== currentStatus
+    }, null, 2))
+  } else {
+    console.log("[analyzeAndApplyDiceRoll] No status change in this update")
+  }
 
-  // Return the updated turn
-  return {
+  console.log("[analyzeAndApplyDiceRoll] Damage/healing description:", analysis.update.damageOrHealingDescription)
+
+  // Apply the update (we know analysis.update is not null here due to check above)
+  const update = analysis.update
+  const updatedCharacters = turn.characters.map((c) => {
+    if (c.id !== update.characterId) {
+      return c
+    }
+
+    const updates: { healthPercent?: number; status?: string | undefined } = {}
+    
+    if (update.newHealthPercent !== undefined) {
+      updates.healthPercent = update.newHealthPercent
+      console.log(`[analyzeAndApplyDiceRoll] Applying health change to ${c.name}: ${currentHealth}% -> ${update.newHealthPercent}%`)
+    }
+    
+    if (update.newStatus !== undefined) {
+      updates.status = update.newStatus === "" ? undefined : update.newStatus
+      console.log(`[analyzeAndApplyDiceRoll] Applying status change to ${c.name}: "${currentStatus || "(none)"}" -> "${update.newStatus || "(clearing)"}"`)
+    }
+
+    return {
+      ...c,
+      ...updates,
+    }
+  })
+
+  const updatedTurn = {
     ...turn,
     characters: updatedCharacters,
   }
+
+  console.log("[analyzeAndApplyDiceRoll] Turn updated successfully")
+  console.log("[analyzeAndApplyDiceRoll] Updated characters:", JSON.stringify(updatedCharacters.map(c => ({ 
+    id: c.id, 
+    name: c.name, 
+    healthPercent: c.healthPercent,
+    status: c.status ?? ""
+  })), null, 2))
+
+  return updatedTurn
 }
