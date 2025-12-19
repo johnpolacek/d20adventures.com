@@ -90,7 +90,8 @@ export async function processNpcTurnWithLLM({
 
   // NPC turn processing
 
-  const narrativeContext = (turn.narrative || "").split(/\n\n+/).slice(-2).join("\n\n")
+  // Use more narrative context (last 6 paragraphs) to better understand what has happened
+  const narrativeContext = (turn.narrative || "").split(/\n\n+/).slice(-6).join("\n\n")
   const playerCharactersForPrompt1 = turn.characters.filter((c) => c.type === "pc")
   const playerCharacterNamesForPrompt1 = playerCharactersForPrompt1.map((c) => c.name)
 
@@ -121,6 +122,8 @@ You are the DM. Your SOLE responsibility right now is to decide the action for O
 **THE CURRENT NPC IS: ${npc.name}** (ID: ${npc.id}, Type: ${npc.type})
 
 CRITICAL: Pay close attention to the NPC's behavior and role. The NPC behavior section describes their specific responsibilities, motivations, and how they should act in this encounter. This is the most important context for determining their action.
+
+**IMPORTANT: Before deciding the NPC's action, carefully review the 'Recent Narrative' to understand what has ALREADY happened. If a player character has already completed a task (like casting a spell, detecting magic, or performing an action), the NPC should react to that completed action appropriately. Do NOT ask the player to do something they have already done. Instead, the NPC should respond to what has been completed or ask for the next step in the process.**
 
 Based on all the context provided, determine the most logical action for **${npc.name}** to take. The 'Recent Narrative' describes what other characters have already done. Do NOT repeat or continue actions for other characters. Your response must be exclusively about **${npc.name}**.
 

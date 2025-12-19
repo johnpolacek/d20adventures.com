@@ -87,7 +87,7 @@ Action: "${action}"
 
   console.log("[LLM] Roll requirement prompt:", {
     promptLength: prompt.length,
-    action: action.substring(0, 100) + (action.length > 100 ? "..." : ""),
+    action,
     character: character.name,
   })
 
