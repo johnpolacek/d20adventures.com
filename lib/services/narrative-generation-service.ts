@@ -128,11 +128,18 @@ export async function formatNarrativeAction({
     
     Player's action for ${characterName}: "${playerInput}"
     
-    Write one brief paragraph in third-person present tense that includes actual dialogue for ${characterName}. PRESERVE THE PLAYER'S INTENDED ACTION completely - if they want to deceive, threaten, lie, manipulate, or do something morally questionable, maintain that intent exactly. Base the dialogue on what the player action suggests the character should say to accomplish their goal.
+    Write one brief paragraph in third-person present tense describing ${characterName}'s complete action. If the action includes BOTH speaking AND a physical action (like attacking, shooting, moving, etc.), you MUST include BOTH elements in your response.
     
-    Write only 1 or 2 sentences total. At least one sentence must contain dialogue in PROPERLY FORMATTED double quotes with BOTH opening and closing quotes (e.g., "Hello there," she says). Include a natural dialogue tag (e.g., says, asks, replies). Do not use semicolons. Never mention game mechanics, dice, or rules. Ensure all pronouns/titles match the guidance above, correcting any mismatches implied by the player input.
+    CRITICAL FORMATTING RULES:
+    1. Write in THIRD PERSON (e.g., "${characterName} shouts..." not "I shout...")
+    2. Use STRAIGHT double quotes with BOTH opening AND closing (e.g., "Hello there," she says)
+    3. NEVER use backticks (\`) or smart quotes - only straight double quotes (")
+    4. Include a dialogue tag (says, shouts, calls out, yells, etc.)
+    5. If there's a physical action (attack, shoot, etc.), describe it too
     
-    CRITICAL: Make sure the response is grammatically correct, and in the style of a well written rpg novel.
+    PRESERVE THE PLAYER'S INTENDED ACTION completely - if they want to deceive, threaten, lie, manipulate, or do something morally questionable, maintain that intent exactly.
+    
+    Write exactly 1-2 sentences total. Do not use semicolons. Never mention game mechanics, dice, or rules.
     
     IMPORTANT: Do not sanitize or make the action more "nice" - this is an RPG where characters can be good, evil, or morally ambiguous. Stay true to the player's intent.
     
@@ -151,15 +158,20 @@ ${narrativeContext}
 
 Player's original action for ${characterName}: "${playerInput}"
 
-Review the player's original action.
-    If the action is already a well-written, third-person, present-tense narrative paragraph describing what ${characterName} said or did, then return the player's original action verbatim.
-    Otherwise, rewrite the player's action into a vivid, engaging, third-person, present-tense narrative paragraph. If the action is minimal (like "attack" or "hide"), enhance it with appropriate descriptive details that fit the context. Describe how ${characterName} performs the action in a way that's immersive and engaging.
+CRITICAL FORMATTING RULES:
+1. Write in THIRD PERSON present tense (e.g., "${characterName} moves..." not "I move...")
+2. If the action includes dialogue, use STRAIGHT double quotes with BOTH opening AND closing (e.g., "Hello," he says)
+3. NEVER use backticks (\`) or smart quotes - only straight double quotes (")
 
-CRITICAL: PRESERVE THE PLAYER'S INTENDED ACTION completely - if they want to pickpocket, steal, deceive, threaten, attack, or do something morally questionable, maintain that exact intent. This is an RPG where characters can be good, evil, or morally ambiguous. Do not sanitize or make actions more "nice" or socially acceptable.
+Review the player's original action.
+If the action is already a well-written, third-person, present-tense narrative paragraph, return it verbatim.
+Otherwise, rewrite into a vivid, engaging, third-person, present-tense narrative paragraph. If the action is minimal (like "attack" or "hide"), enhance with appropriate descriptive details. Describe how ${characterName} performs the action in an immersive and engaging way.
+
+CRITICAL: PRESERVE THE PLAYER'S INTENDED ACTION completely - if they want to pickpocket, steal, deceive, threaten, attack, or do something morally questionable, maintain that exact intent.
 
 IMPORTANT: Do NOT write anything about the outcome of the action!
-    Use the provided context to inform appropriate details (weapons, environment, targets, etc.) but focus on ${characterName}'s specific actions. Write in the style of an adventure novel. Do not use semicolons. Never mention game mechanics, dice, or rules.
-    Write only 1 or 2 sentences total. Output a single paragraph.
+Use the provided context to inform appropriate details (weapons, environment, targets, etc.) but focus on ${characterName}'s specific actions. Write in the style of an adventure novel. Do not use semicolons. Never mention game mechanics, dice, or rules.
+Write only 1 or 2 sentences total. Output a single paragraph.
 
 Output only the narrative paragraph.`.trim()
 
