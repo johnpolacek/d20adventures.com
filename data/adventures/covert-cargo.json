@@ -165,7 +165,7 @@
                 },
                 {
                   "id": "npcs-1749181492795",
-                  "behavior": "Will watch and only interfere if Varius is killed or gravely wounded.",
+                  "behavior": "Will watch and only interfere if Reinhard is killed or gravely wounded. If attacked, then he will attack back.",
                   "initialInitiative": 0
                 }
               ],
