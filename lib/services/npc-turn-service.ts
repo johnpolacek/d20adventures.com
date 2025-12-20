@@ -151,7 +151,7 @@ STYLE AND FORMAT RULES:
 - No markdown, no lists, no bullets.
 - Do not use em dashes (—) or en dashes; use commas or periods instead.
 - Keep sentences short and clear; avoid semicolons.
-- Use novel-like pacing with line breaks: separate distinct beats into separate paragraphs with a blank line between paragraphs.
+- **FORMATTING REQUIREMENT**: Break the narrative into 2-3 separate paragraphs. Use \\n\\n (double newlines) between paragraphs. Each paragraph should focus on a different aspect: action, reaction, or atmosphere. Do NOT write everything as a single block of text.
 - Put each spoken line of dialogue on its own line. Dialogue should use straight quotes ("...") and may include dialogue tags like says/asks/replies.
 
 If the NPC would realistically skip or pass their turn (e.g., waiting, observing, preparing, doing nothing), set actionType to "skip" or "pass" and provide appropriate narrative. For example:
@@ -325,7 +325,7 @@ STYLE AND FORMAT RULES:
 - No markdown, no lists, no bullets.
 - Do not use em dashes (—) or en dashes; use commas or periods instead.
 - Keep sentences short and clear; avoid semicolons.
-- Use novel-like pacing with line breaks: separate distinct beats into separate paragraphs with a blank line between paragraphs.
+- **FORMATTING REQUIREMENT**: Break the narrative into 2-3 separate paragraphs. Use \\n\\n (double newlines) between paragraphs. Each paragraph should focus on a different aspect: action, reaction, or atmosphere. Do NOT write everything as a single block of text.
 - Put each spoken line of dialogue on its own line. Dialogue should use straight quotes ("...") and may include dialogue tags like says/asks/replies.
 
 RESTRICTIONS:
