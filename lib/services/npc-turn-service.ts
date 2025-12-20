@@ -662,6 +662,11 @@ export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
 
   let processedNpcCount = 0
   for (const char of initiativeOrder) {
+    // Skip dead PCs and continue processing NPCs
+    if (char.type === "pc" && (char.healthPercent === 0 || char.status === "dead")) {
+      console.log("[LLM] Skipping dead player character:", char.name)
+      continue // Skip dead PCs and continue with NPCs
+    }
     if (char.type !== "npc") {
       console.log("[LLM] Stopping at player character:", char.name)
       break // Process NPCs in order, then stop
@@ -828,6 +833,37 @@ export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
         2
       )
     )
+  }
+
+  // After processing NPCs, mark all dead characters as complete
+  const finalTurnState = await convex.query(api.adventure.getTurnById, { turnId })
+  if (finalTurnState) {
+    const finalCharacters = finalTurnState.characters as TurnCharacter[]
+    const deadCharacters = finalCharacters.filter(
+      (c) => !c.isComplete && (c.healthPercent === 0 || c.status === "dead")
+    )
+
+    if (deadCharacters.length > 0) {
+      console.log(`[NPC:${npcRequestId}] Marking ${deadCharacters.length} dead character(s) as complete:`, deadCharacters.map((c) => c.name))
+      const updatedCharacters = finalCharacters.map((c) => {
+        if (!c.isComplete && (c.healthPercent === 0 || c.status === "dead")) {
+          return {
+            ...c,
+            hasReplied: true,
+            isComplete: true,
+          }
+        }
+        return c
+      })
+
+      await convex.mutation(api.turns.updateTurn, {
+        turnId: finalTurnState._id,
+        patch: {
+          characters: updatedCharacters,
+          updatedAt: Date.now(),
+        },
+      })
+    }
   }
 
   console.log(`[NPC:${npcRequestId}] NPC turns processing completed:`, {

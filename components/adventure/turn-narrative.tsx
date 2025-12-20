@@ -95,9 +95,10 @@ export default function TurnNarrative({
     .slice()
     .sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0));
 
-  // Find the current actor: highest initiative, not complete
+  // Find the current actor: highest initiative, not complete, and not dead
   const currentCharacter = charactersByInitiative.find(
-    (c: TurnCharacter) => !c.isComplete
+    (c: TurnCharacter) =>
+      !c.isComplete && c.healthPercent !== 0 && c.status !== "dead"
   );
 
   // Check if we're waiting for an NPC to process their turn
