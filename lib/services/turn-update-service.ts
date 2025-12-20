@@ -103,6 +103,12 @@ OUTCOME NARRATIVE:
 CURRENT CHARACTERS:
 ${JSON.stringify(characterSummary, null, 2)}
 
+CRITICAL: When matching characters mentioned in the narrative to the character list above:
+- Match characters ONLY by their exact names from the CURRENT CHARACTERS list
+- Do NOT match characters based on descriptions in the narrative (e.g., "elven operative", "the mage", "the warrior") unless those descriptions match the character's actual name
+- If the narrative mentions a character that doesn't exist in CURRENT CHARACTERS, ignore that reference
+- Only apply health/status changes to characters that are actually present in CURRENT CHARACTERS
+
 RULES FOR HEALTH CHANGES:
 1. Only physical damage, injury, healing, or recovery affects health
 2. Social interactions, skill checks, and mental effects do NOT affect health
@@ -138,7 +144,6 @@ RULES FOR STATUS CHANGES:
 Analyze the narrative and determine if health or status should change.`
 
   console.log("[analyzeAndApplyDiceRoll] Sending prompt to AI")
-  console.log("[analyzeAndApplyDiceRoll] Prompt:", prompt)
 
   let analysis: HealthAnalysis
   try {

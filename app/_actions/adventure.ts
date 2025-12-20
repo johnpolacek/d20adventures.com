@@ -8,6 +8,7 @@ import { appendNarrative, getRollRequirementHelper } from "@/lib/services/narrat
 import { processNpcTurnsAfterCurrent } from "@/lib/services/npc-turn-service"
 import { getRollModifier } from "@/lib/services/roll-modifier-service"
 import { getRollRequirementForAction } from "@/lib/services/roll-requirement-service"
+import { detectSpellFromRollType, markSpellAsUsed } from "@/lib/services/spell-tracking-service"
 import { analyzeAndApplyDiceRoll } from "@/lib/services/turn-update-service"
 import type { RollRequirement } from "@/lib/validations/roll-requirement-schema"
 import type { TurnCharacter } from "@/types/adventure"
@@ -296,12 +297,25 @@ export async function resolvePlayerRollResult({
   const narrativeContext = (turn.narrative || "").split(/\n\n+/).slice(-2).join("\n\n")
   // Note: we let the LLM decide whether to respond, based on clear instructions
 
+  // Build list of NPCs actually present in this turn
+  const presentNpcs = turn.characters
+    .filter((c) => c.type === "npc")
+    .map((c) => c.name)
+    .join(", ")
+
   const rollOutcomePrompt = `
 Context:
 ${narrativeContext}
 
 Encounter Instructions:
 ${encounterInstructions}
+
+CRITICAL: The encounter instructions may contain conditional statements (e.g., "If X is present..."). Only reference characters, objects, or events mentioned in conditionals if those conditions are actually met in the current scene. Do NOT assume conditional elements are present unless explicitly confirmed.
+
+NPCs ACTUALLY PRESENT in this encounter:
+${presentNpcs || "None"}
+
+IMPORTANT: Only reference NPCs listed above. Do NOT reference characters mentioned in conditional statements unless they are confirmed to be present.
 
 Player action (verbatim): """${playerActionText}"""
   
@@ -312,6 +326,7 @@ A dice roll was made for ${character.name}: ${rollType} (Result: ${totalResult},
   - Do not narrate speech or actions for player characters.
   - If the action is exclusively between player characters or naturally requires no DM narration, output nothing.
   - Do not invent new objects, people, events, or details. Use only the encounter instructions/intro and established narrative.
+  - Only reference NPCs that are actually present (listed above).
 
 Write a single, concise, immersive third-person PRESENT-tense narrative paragraph (exactly two sentences, max 60 words) describing only the immediate outcome of the roll as it pertains to the engaged NPC (if any). If no NPC is engaged, output nothing.
 
@@ -377,7 +392,7 @@ Output only the narrative paragraph, or output nothing if no DM narration applie
       }
 
   // Ensure the rolling character is marked complete and roll fields are set
-  const updatedCharacters = updatedTurn.characters.map((c) =>
+  let updatedCharacters = updatedTurn.characters.map((c) =>
     c.id === characterId
       ? {
           ...c,
@@ -388,6 +403,13 @@ Output only the narrative paragraph, or output nothing if no DM narration applie
         }
       : c
   )
+
+  // Check if a spell was cast and mark it as used
+  const spellName = detectSpellFromRollType(rollType)
+  if (spellName) {
+    console.log(`[resolvePlayerRollResult] Spell detected: "${spellName}" - marking as used for character ${characterId}`)
+    updatedCharacters = markSpellAsUsed(updatedCharacters, characterId, spellName)
+  }
 
   // 6. Patch the turn with the new narrative and character state
   await convex.mutation(api.turns.updateTurn, {

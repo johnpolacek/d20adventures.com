@@ -6,6 +6,7 @@ import { convex } from "@/lib/convex/server"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import { appendNarrative, normalizeNarrative } from "@/lib/services/narrative-service"
 import { processNpcTurnsAfterCurrent } from "@/lib/services/npc-turn-service"
+import { resetAllSpells } from "@/lib/services/spell-tracking-service"
 import { mapConvexTurnToTurn, rollD20 } from "@/lib/utils"
 import type { Turn, TurnCharacter } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
@@ -365,6 +366,10 @@ Respond in JSON:
         ...pc,
         initiative: rollD20(), // Re-roll PC initiative
       }))
+
+    // Reset all spell usage for PCs on encounter transition
+    console.log(`[advanceTurn] Resetting spell usage for all PCs on encounter transition to: ${nextEncounter.id}`)
+    pcs = resetAllSpells(pcs)
 
     // Reset health if the encounter has resetHealth flag
     if (nextEncounter.resetHealth) {

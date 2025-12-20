@@ -6,6 +6,7 @@ import { generateObject } from "@/lib/ai"
 import { convex } from "@/lib/convex/server"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import { appendNarrative, normalizeNarrative } from "@/lib/services/narrative-service"
+import { detectSpellFromRollType, formatSpellsForPrompt, markSpellAsUsed } from "@/lib/services/spell-tracking-service"
 import { getRollModifier } from "@/lib/services/roll-modifier-service"
 import { getRollRequirementForAction } from "@/lib/services/roll-requirement-service"
 import { analyzeAndApplyDiceRoll } from "@/lib/services/turn-update-service"
@@ -112,8 +113,9 @@ export async function processNpcTurnWithLLM({
 
   // Context prepared for NPC action decision
 
-  // Build NPC details including equipment
+  // Build NPC details including equipment and spells
   const npcEquipmentList = npc.equipment?.map((e) => e.name).join(", ") || "None"
+  const npcSpellsList = npc.spells && npc.spells.length > 0 ? formatSpellsForPrompt(npc) : "None"
   const npcDetails = `
 NPC Details:
 - Name: ${npc.name}
@@ -121,6 +123,7 @@ NPC Details:
 - Archetype: ${npc.archetype || "Unknown"}
 - Equipment: ${npcEquipmentList}
 - Skills: ${npc.skills?.join(", ") || "None"}
+- Spells: ${npcSpellsList}
 - Health: ${npc.healthPercent ?? 100}%
 - Status: ${npc.status || "Normal"}
 `
@@ -137,6 +140,8 @@ You are the DM. Your SOLE responsibility right now is to decide the action for O
 **THE CURRENT NPC IS: ${npc.name}** (ID: ${npc.id}, Type: ${npc.type})
 
 CRITICAL: When the NPC attacks or uses equipment, you MUST use ONLY the weapons and items listed in their Equipment above. Do NOT invent or reference weapons they don't have.
+
+CRITICAL: When the NPC casts spells, they may ONLY use spells marked as "Available" in their Spells list above. Spells marked as "Used (unavailable this encounter)" have already been cast and CANNOT be used again until the next encounter. If the NPC has no available spells, they must use physical actions or equipment instead.
 
 CRITICAL: Pay close attention to the NPC's behavior and role. The NPC behavior section describes their specific responsibilities, motivations, and how they should act in this encounter. This is the most important context for determining their action.
 
@@ -505,6 +510,15 @@ Respond as JSON:
     // Direct action completed
   }
   updatedNarrative = appendNarrative(updatedNarrative, narrativeToAppend)
+
+  // Check if a spell was cast by the NPC and mark it as used
+  if (rollInfo?.rollType) {
+    const spellName = detectSpellFromRollType(rollInfo.rollType)
+    if (spellName) {
+      console.log(`[LLM DM] NPC spell detected: "${spellName}" - marking as used for NPC ${npc.id}`)
+      updatedCharacters = markSpellAsUsed(updatedCharacters, npc.id, spellName)
+    }
+  }
 
   console.log(
     "[LLM DM] NPC turn processing completed",

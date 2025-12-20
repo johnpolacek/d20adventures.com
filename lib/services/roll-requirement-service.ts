@@ -1,5 +1,7 @@
 import { generateObject } from "@/lib/ai"
+import { formatSpellsForPrompt } from "@/lib/services/spell-tracking-service"
 import type { Character } from "@/types/character"
+import type { TurnCharacter } from "@/types/adventure"
 import { z } from "zod"
 
 /**
@@ -27,7 +29,7 @@ export async function getRollRequirementForAction(
       ? `Attributes: STR ${character.attributes.strength}, DEX ${character.attributes.dexterity}, CON ${character.attributes.constitution}, INT ${character.attributes.intelligence}, WIS ${character.attributes.wisdom}, CHA ${character.attributes.charisma}`
       : undefined,
     character.spells && character.spells.length > 0
-      ? `Spells: ${character.spells.map((s) => `${s.name}${s.description ? ` (${s.description})` : ""}`).join(", ")}`
+      ? `Spells: ${formatSpellsForPrompt(character as unknown as TurnCharacter)}`
       : undefined,
     character.skills && character.skills.length > 0 ? `Skills: ${character.skills.join(", ")}` : undefined,
     character.equipment && character.equipment.length > 0
@@ -74,6 +76,7 @@ You are a Dungeon Master adjudicating whether a dice roll is needed.
    - Physical challenges: Athletics (power/endurance), Acrobatics (agility/balance/precision movement).
    - Knowledge and expertise: Arcana, History, Nature, Medicine, Religion as appropriate; Survival and Animal Handling for wilderness/creature control.
    - Spellcasting: If the player is attempting to cast a specific spell (like Charm Person, Fireball, Detect Magic, Identify, etc.), use the spell name followed by "Check" (e.g., "Charm Person Check", "Detect Magic Check", "Identify Check") and adjust the difficulty based on the type of spell. If the action is general magical manipulation without a specific spell, use "Arcana".
+   - SPELL AVAILABILITY: Check the character's spell list. Spells marked as "Used (unavailable this encounter)" CANNOT be cast again until the next encounter. If a player attempts to cast a spell that is marked as used/unavailable, set rollType to "none" and difficulty to 0 - the spell simply fails to activate.
    - Combat actions: if the action is an attack or contests defenses directly, treat as an Attack roll.
 
 IMPORTANT: There are good and evil characters. This is an important aspect of rpg. Do not sanitize the action or the character's intent.
