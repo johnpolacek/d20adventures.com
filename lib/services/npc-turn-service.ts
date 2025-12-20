@@ -660,6 +660,21 @@ export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
   // Take a snapshot of the current initiative order
   const initiativeOrder = characters.filter((c) => !c.hasReplied && !c.isComplete).sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
 
+  console.log(`[NPC:${npcRequestId}] Initiative order analysis:`, {
+    totalCharacters: characters.length,
+    incompleteCharacters: initiativeOrder.length,
+    initiativeOrder: initiativeOrder.map((c) => ({
+      id: c.id,
+      name: c.name,
+      type: c.type,
+      initiative: c.initiative,
+      hasReplied: c.hasReplied,
+      isComplete: c.isComplete,
+      healthPercent: c.healthPercent,
+      status: c.status,
+    })),
+  })
+
   let processedNpcCount = 0
   for (const char of initiativeOrder) {
     // Skip dead PCs and continue processing NPCs

@@ -153,6 +153,10 @@
                   "encounter": "the-escape"
                 },
                 {
+                  "condition": "If Lyra dies and Poppen runs away",
+                  "encounter": "the-escape"
+                },
+                {
                   "condition": "If Lyra and/or Poppen overcome Silas and Reinhard",
                   "encounter": "the-crate"
                 }
@@ -238,7 +242,7 @@
                   "encounter": "return-to-the-city"
                 },
                 {
-                  "condition": "If the players want to go into hidin",
+                  "condition": "If the players want to go into hiding",
                   "encounter": "the-end"
                 }
               ],

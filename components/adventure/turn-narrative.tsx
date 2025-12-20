@@ -1,6 +1,7 @@
 "use client";
 
 import { advanceTurn } from "@/app/_actions/advance-turn";
+import { ensureNpcProcessed } from "@/app/_actions/ensure-npc-processed";
 import { processTurnReply } from "@/app/_actions/adventure";
 import CharacterDiceRollResultDisplay from "@/components/adventure/character-dice-roll-result-display";
 import TurnAdvanceButton from "@/components/adventure/turn-advance-button";
@@ -101,11 +102,75 @@ export default function TurnNarrative({
       !c.isComplete && c.healthPercent !== 0 && c.status !== "dead"
   );
 
+  // Log turn state for debugging
+  React.useEffect(() => {
+    if (currentTurn) {
+      console.log("[TurnNarrative] Turn state:", {
+        turnId: currentTurn.id,
+        turnOrder: (currentTurn as { order?: number }).order,
+        characterCount: currentTurn.characters.length,
+        characters: currentTurn.characters.map((c) => ({
+          id: c.id,
+          name: c.name,
+          type: c.type,
+          initiative: c.initiative,
+          hasReplied: c.hasReplied,
+          isComplete: c.isComplete,
+          healthPercent: c.healthPercent,
+          status: c.status,
+        })),
+        currentCharacter: currentCharacter
+          ? {
+              id: currentCharacter.id,
+              name: currentCharacter.name,
+              type: currentCharacter.type,
+              hasReplied: currentCharacter.hasReplied,
+              isComplete: currentCharacter.isComplete,
+            }
+          : null,
+        isTurnComplete,
+        disableSSE,
+      });
+    }
+  }, [currentTurn, currentCharacter, isTurnComplete, disableSSE]);
+
   // Check if we're waiting for an NPC to process their turn
   const isNpcProcessing =
     currentCharacter &&
     currentCharacter.type === "npc" &&
     !currentCharacter.hasReplied;
+
+  // Trigger NPC processing when an NPC turn is detected
+  React.useEffect(() => {
+    if (
+      !disableSSE &&
+      currentTurn &&
+      isNpcProcessing &&
+      currentCharacter &&
+      !currentTurn.isFinalEncounter
+    ) {
+      console.log(
+        "[TurnNarrative] Detected NPC turn, triggering ensureNpcProcessed:",
+        {
+          turnId: currentTurn.id,
+          npcId: currentCharacter.id,
+          npcName: currentCharacter.name,
+          hasReplied: currentCharacter.hasReplied,
+          isComplete: currentCharacter.isComplete,
+        }
+      );
+      ensureNpcProcessed(currentTurn.id as Id<"turns">)
+        .then((result) => {
+          console.log("[TurnNarrative] ensureNpcProcessed result:", result);
+        })
+        .catch((error) => {
+          console.error(
+            "[TurnNarrative] Error calling ensureNpcProcessed:",
+            error
+          );
+        });
+    }
+  }, [currentTurn, isNpcProcessing, currentCharacter, disableSSE]);
 
   const parsed = parseNarrative(currentTurn?.narrative || "");
 

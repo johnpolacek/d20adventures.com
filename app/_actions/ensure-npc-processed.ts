@@ -23,11 +23,39 @@ export async function ensureNpcProcessed(turnId: Id<"turns">): Promise<{ status:
 
   const characters = turn.characters || []
   // Sort by initiative (highest first) to find the current actor
-  const sortedCharacters = [...characters].sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
+  // Skip dead characters (healthPercent === 0 or status === "dead")
+  const sortedCharacters = [...characters]
+    .sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
+    .filter((c) => c.healthPercent !== 0 && c.status !== "dead")
   const currentActor = sortedCharacters.find((c) => !c.isComplete)
 
+  console.log(`[ensureNpcProcessed] Turn analysis:`, {
+    turnId: turn._id.toString(),
+    totalCharacters: characters.length,
+    aliveCharacters: sortedCharacters.length,
+    characters: characters.map((c) => ({
+      id: c.id,
+      name: c.name,
+      type: c.type,
+      initiative: c.initiative,
+      hasReplied: c.hasReplied,
+      isComplete: c.isComplete,
+      healthPercent: c.healthPercent,
+      status: c.status,
+    })),
+    currentActor: currentActor
+      ? {
+          id: currentActor.id,
+          name: currentActor.name,
+          type: currentActor.type,
+          hasReplied: currentActor.hasReplied,
+          isComplete: currentActor.isComplete,
+        }
+      : null,
+  })
+
   if (currentActor && currentActor.type === "npc" && !currentActor.hasReplied) {
-    console.log(`[ensureNpcProcessed] Pending NPC ${currentActor.id} found in turn ${turnId}. Processing...`)
+    console.log(`[ensureNpcProcessed] Pending NPC ${currentActor.id} (${currentActor.name}) found in turn ${turnId}. Processing...`)
     try {
       await processNpcTurnsAfterCurrent(turnId)
       console.log(`[ensureNpcProcessed] Finished processing NPCs for turn ${turnId}.`)
@@ -37,7 +65,15 @@ export async function ensureNpcProcessed(turnId: Id<"turns">): Promise<{ status:
       return { status: "error_processing_npc" }
     }
   } else {
-    console.log(`[ensureNpcProcessed] No pending NPC actions found for turn ${turnId}, or current actor is not an NPC awaiting reply.`)
+    console.log(`[ensureNpcProcessed] No pending NPC actions found for turn ${turnId}.`, {
+      currentActor: currentActor
+        ? {
+            type: currentActor.type,
+            hasReplied: currentActor.hasReplied,
+            isComplete: currentActor.isComplete,
+          }
+        : "none",
+    })
     return { status: "no_pending_npc" }
   }
 }
