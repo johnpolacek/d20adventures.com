@@ -94,7 +94,9 @@ export async function processNpcTurnWithLLM({
   // Use more narrative context (last 6 paragraphs) to better understand what has happened
   const narrativeContext = (turn.narrative || "").split(/\n\n+/).slice(-6).join("\n\n")
   const playerCharactersForPrompt1 = turn.characters.filter((c) => c.type === "pc")
-  const playerCharacterNamesForPrompt1 = playerCharactersForPrompt1.map((c) => c.name)
+  const alivePlayerCharacters = playerCharactersForPrompt1.filter((c) => c.healthPercent !== 0 && c.status !== "dead")
+  const deadPlayerCharacters = playerCharactersForPrompt1.filter((c) => c.healthPercent === 0 || c.status === "dead")
+  const playerCharacterNamesForPrompt1 = alivePlayerCharacters.map((c) => c.name)
 
   // Player characters identified for NPC interaction
 
@@ -145,6 +147,8 @@ CRITICAL: When the NPC casts spells, they may ONLY use spells marked as "Availab
 
 CRITICAL: Pay close attention to the NPC's behavior and role. The NPC behavior section describes their specific responsibilities, motivations, and how they should act in this encounter. This is the most important context for determining their action.
 
+**CRITICAL: Dead or unconscious player characters (HP 0% or status "Dead"/"Unconscious") cannot act and should be ignored. Do NOT target them with attacks or actions. Focus only on active, conscious player characters. If a character is dead or unconscious, the NPC should acknowledge this in their narrative but not attempt to interact with them.**
+
 **IMPORTANT: Before deciding the NPC's action, carefully review the 'Recent Narrative' to understand what has ALREADY happened. If a player character has already completed a task (like casting a spell, detecting magic, or performing an action), the NPC should react to that completed action appropriately. Do NOT ask the player to do something they have already done. Instead, the NPC should respond to what has been completed or ask for the next step in the process.**
 
 Based on all the context provided, determine the most logical action for **${npc.name}** to take. The 'Recent Narrative' describes what other characters have already done. Do NOT repeat or continue actions for other characters. Your response must be exclusively about **${npc.name}**.
@@ -170,7 +174,8 @@ Examples:
 
 If the NPC's action involves giving items to a player character, include an "effects" array. Each object in "effects" should have a "targetId" (the ID of the character receiving items) and an "equipmentToAdd" array listing the items ({name: string, description?: string}).
 
-Targetable Player Characters: ${playerCharacterNamesForPrompt1.join(", ")} (IDs: ${playerCharactersForPrompt1.map((c) => c.id).join(", ")})
+Targetable Player Characters (alive and conscious): ${playerCharacterNamesForPrompt1.join(", ")} (IDs: ${alivePlayerCharacters.map((c) => c.id).join(", ")})
+${deadPlayerCharacters.length > 0 ? `\n\nIMPORTANT: The following player characters are DEAD or UNCONSCIOUS and should NOT be targeted: ${deadPlayerCharacters.map((c) => `${c.name} (HP ${c.healthPercent}%, Status: ${c.status || "Dead"})`).join(", ")}. The NPC should acknowledge their condition but not attempt to interact with them.` : ""}
 
 Respond as JSON. The 'narrative' and 'actionSummary' fields must describe the action of **${npc.name}** and no one else.
 {
@@ -308,7 +313,13 @@ Respond as JSON. The 'narrative' and 'actionSummary' fields must describe the ac
     const playerCharacterNames = playerCharacters.map((c) => c.name)
     
     // Build player character details for context
-    const playerCharacterDetails = playerCharacters.map((pc) => `- ${pc.name}: ${pc.archetype || "Unknown"}, HP ${pc.healthPercent ?? 100}%, Equipment: ${pc.equipment?.map((e) => e.name).join(", ") || "None"}`).join("\n")
+    const playerCharacterDetails = playerCharacters.map((pc) => {
+      const isDead = pc.healthPercent === 0 || pc.status === "dead"
+      const status = isDead 
+        ? `DEAD/UNCONSCIOUS (HP ${pc.healthPercent}%, Status: ${pc.status || "Dead"})` 
+        : `HP ${pc.healthPercent ?? 100}%${pc.status ? `, Status: ${pc.status}` : ""}`
+      return `- ${pc.name}: ${pc.archetype || "Unknown"}, ${status}, Equipment: ${pc.equipment?.map((e) => e.name).join(", ") || "None"}`
+    }).join("\n")
     
     const prompt2 = `You are the DM for a tabletop RPG. Given the action, the dice roll result, and the context, write a short narrative describing the outcome. Focus the narrative on the interacting characters. **Do not narrate any actions or dialogue for player characters.**
 
@@ -318,6 +329,8 @@ ${npcDetails}
 
 Player Character Details:
 ${playerCharacterDetails}
+
+CRITICAL: Dead or unconscious player characters (marked as "DEAD/UNCONSCIOUS") cannot act and should NOT be targeted. Focus only on active, conscious player characters. If a character is dead or unconscious, acknowledge this in the narrative but do not attempt to interact with them.
 
 CRITICAL: When describing the NPC's attack or action, you MUST reference ONLY the weapons and items listed in their Equipment. Do NOT invent or reference weapons they don't have.
 
