@@ -72,10 +72,20 @@ export default async function SettingAdventures(props: {
                   publishedAdventures[2],
                   publishedAdventures[3],
                 ].map((adventure) => (
-                  <div key={adventure.id} className="block h-full">
+                  <Link
+                    key={adventure.id}
+                    href={`/settings/${settingId}/${adventure.id}/character-select`}
+                    className="block h-full"
+                  >
                     <Card className="w-full h-full bg-black/80 border-white/20 scale-95 hover:scale-100 hover:bg-black/90 ring-[6px] ring-black hover:ring-8 hover:ring-primary-500 transition-colors cursor-pointer transition-all duration-500 ease-in-out p-0 overflow-hidden flex flex-col">
                       <div className="pb-2 relative aspect-video w-full">
-                        <div className="absolute top-1 right-3 z-10 flex gap-2">
+                        <div className="absolute top-1 right-3 z-10 flex gap-2 items-end">
+                          {adventure.premadePlayerCharacters &&
+                            adventure.premadePlayerCharacters.length > 0 && (
+                              <span className="bg-amber-500/90 text-black text-xxs font-mono px-2 py-1 rounded font-semibold">
+                                Premade Characters
+                              </span>
+                            )}
                           <span className="bg-black/80 text-white text-xxs font-mono px-2 py-1 rounded">
                             {adventure.party[0] === 1 &&
                             adventure.party[1] === 1
@@ -106,23 +116,19 @@ export default async function SettingAdventures(props: {
                             {adventure.teaser || adventure.overview}
                           </div>
                           <div className="mt-4 mb-6 w-full flex justify-center">
-                            <Link
-                              href={`/settings/${settingId}/${adventure.id}/character-select`}
+                            <Button
+                              variant="epic"
+                              size="sm"
+                              className="text-sm pointer-events-none"
                             >
-                              <Button
-                                variant="epic"
-                                size="sm"
-                                className="text-sm"
-                              >
-                                Play
-                              </Button>
-                            </Link>
+                              Play
+                            </Button>
                           </div>
                         </div>
                         <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-gradient-to-tl from-black/50 to-transparent" />
                       </CardContent>
                     </Card>
-                  </div>
+                  </Link>
                 ))}
               </div>
               {publishedAdventures[1] && (
@@ -130,13 +136,14 @@ export default async function SettingAdventures(props: {
                   <h4 className="inline-block text-xl font-bold bg-black/50 px-8 py-2 rounded text-sm text-amber-400/90 font-display my-4 text-center tracking-wider">
                     Full Adventure
                   </h4>
-                  <div
+                  <Link
                     key={publishedAdventures[1].id}
+                    href={`/settings/${settingId}/${publishedAdventures[1].id}/character-select`}
                     className="block h-full w-full mx-auto"
                   >
                     <Card className="w-full h-full bg-black/80 border-white/20 hover:scale-[1.01] hover:bg-black/90 ring-[6px] ring-black hover:ring-8 hover:ring-primary-500 transition-colors cursor-pointer transition-all duration-500 ease-in-out p-0 overflow-hidden flex flex-col">
                       <div className="pb-2 relative aspect-video md:aspect-[3/1] w-full">
-                        <div className="absolute top-1 right-3 z-10 flex gap-2">
+                        <div className="absolute top-1 right-3 z-10 flex gap-2 flex-col items-end">
                           <span className="bg-black/80 text-white text-xxs font-mono px-2 py-1 rounded">
                             {publishedAdventures[1].party[0] === 1 &&
                             publishedAdventures[1].party[1] === 1
@@ -146,6 +153,13 @@ export default async function SettingAdventures(props: {
                                 ? `${publishedAdventures[1].party[0]} Players`
                                 : `${publishedAdventures[1].party[0]}-${publishedAdventures[1].party[1]} Players`}
                           </span>
+                          {publishedAdventures[1].premadePlayerCharacters &&
+                            publishedAdventures[1].premadePlayerCharacters
+                              .length > 0 && (
+                              <span className="bg-amber-500/90 text-black text-xxs font-mono px-2 py-1 rounded font-semibold">
+                                Premade Characters
+                              </span>
+                            )}
                         </div>
                         <div
                           style={textShadow}
@@ -168,33 +182,33 @@ export default async function SettingAdventures(props: {
                               publishedAdventures[1].overview}
                           </div>
                           <div className="mt-4 mb-6 w-full flex justify-center">
-                            <Link
-                              href={`/settings/${settingId}/${publishedAdventures[1].id}/character-select`}
+                            <Button
+                              variant="epic"
+                              size="sm"
+                              className="text-sm pointer-events-none"
                             >
-                              <Button
-                                variant="epic"
-                                size="sm"
-                                className="text-sm"
-                              >
-                                Play
-                              </Button>
-                            </Link>
+                              Play
+                            </Button>
                           </div>
                         </div>
                         <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-gradient-to-tl from-black/50 to-transparent" />
                       </CardContent>
                     </Card>
-                  </div>
+                  </Link>
                 </>
               )}
             </div>
           ) : (
             <div className="md:grid md:grid-cols-2 xl:grid-cols-3 gap-8 relative z-10 py-8 auto-rows-fr">
               {publishedAdventures.map((adventure) => (
-                <div key={adventure.id} className="block h-full">
+                <Link
+                  key={adventure.id}
+                  href={`/settings/${settingId}/${adventure.id}/character-select`}
+                  className="block h-full"
+                >
                   <Card className="w-full h-full bg-black/80 border-white/20 scale-95 hover:scale-100 hover:bg-black/90 ring-[6px] ring-black hover:ring-8 hover:ring-primary-500 transition-colors cursor-pointer transition-all duration-500 ease-in-out p-0 overflow-hidden flex flex-col">
                     <div className="pb-2 relative aspect-video w-full">
-                      <div className="absolute top-1 right-3 z-10 flex gap-2">
+                      <div className="absolute top-1 right-3 z-10 flex gap-2 flex-col items-end">
                         <span className="bg-black/80 text-white text-xxs font-mono px-2 py-1 rounded">
                           {adventure.party[0] === 1 && adventure.party[1] === 1
                             ? "Single Player"
@@ -203,6 +217,12 @@ export default async function SettingAdventures(props: {
                               ? `${adventure.party[0]} Players`
                               : `${adventure.party[0]}-${adventure.party[1]} Players`}
                         </span>
+                        {adventure.premadePlayerCharacters &&
+                          adventure.premadePlayerCharacters.length > 0 && (
+                            <span className="bg-amber-500/90 text-black text-xxs font-mono px-2 py-1 rounded font-semibold">
+                              Premade Characters
+                            </span>
+                          )}
                       </div>
                       <div
                         style={textShadow}
@@ -224,23 +244,19 @@ export default async function SettingAdventures(props: {
                           {adventure.teaser || adventure.overview}
                         </div>
                         <div className="mt-4 mb-6 w-full flex justify-center">
-                          <Link
-                            href={`/settings/${settingId}/${adventure.id}/character-select`}
+                          <Button
+                            variant="epic"
+                            size="sm"
+                            className="text-sm pointer-events-none"
                           >
-                            <Button
-                              variant="epic"
-                              size="sm"
-                              className="text-sm"
-                            >
-                              Play
-                            </Button>
-                          </Link>
+                            Play
+                          </Button>
                         </div>
                       </div>
                       <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-gradient-to-tl from-black/50 to-transparent" />
                     </CardContent>
                   </Card>
-                </div>
+                </Link>
               ))}
             </div>
           )}
