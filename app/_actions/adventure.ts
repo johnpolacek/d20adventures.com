@@ -322,22 +322,38 @@ Player action (verbatim): """${playerActionText}"""
 A dice roll was made for ${character.name}: ${rollType} (Result: ${totalResult}, Difficulty: ${difficulty}, Margin: ${margin}).
 
   Guidelines:
-  - Prefer restraint. Only bring an NPC into the outcome if the player action clearly engages them now.
+  - ALWAYS generate narrative if NPCs are present and the action relates to them (attacking, hiding from, avoiding, reacting to, interacting with, etc.). Actions that respond to NPC threats or presence should be narrated.
+  - Generate narrative for successful rolls that affect or respond to NPCs (e.g., successfully hiding from a monster, avoiding an attack, etc.).
   - Do not narrate speech or actions for player characters.
-  - If the action is exclusively between player characters or naturally requires no DM narration, output nothing.
+  - Only output nothing if the action is EXCLUSIVELY between player characters with no NPC involvement AND no environmental consequences.
   - Do not invent new objects, people, events, or details. Use only the encounter instructions/intro and established narrative.
   - Only reference NPCs that are actually present (listed above).
 
-Write a single, concise, immersive third-person PRESENT-tense narrative paragraph (exactly two sentences, max 60 words) describing only the immediate outcome of the roll as it pertains to the engaged NPC (if any). If no NPC is engaged, output nothing.
+Write a single, concise, immersive third-person PRESENT-tense narrative paragraph (exactly two sentences, max 60 words) describing the immediate outcome of the roll. Focus on how the NPC(s) react, perceive, or are affected by the action, or describe the environmental/atmospheric result of the successful roll.
 
 Write in third person PRESENT tense. Do not use lists, bullet points, or markdown formatting. Do not use semicolons. Never mention game mechanics, dice, or rules.
 
-Output only the narrative paragraph, or output nothing if no DM narration applies.`.trim()
+Output only the narrative paragraph.`.trim()
 
   let rollOutcome = ""
   try {
     const { text } = await generateText({ prompt: rollOutcomePrompt })
     rollOutcome = (text || "").trim()
+    
+    // Filter out meta-commentary messages that the LLM sometimes outputs instead of nothing
+    const metaCommentaryPatterns = [
+      /\[No output provided.*?\]/i,
+      /\[No narrative.*?\]/i,
+      /\[Nothing to output.*?\]/i,
+      /No output provided/i,
+      /No narrative applies/i,
+    ]
+    
+    const isMetaCommentary = metaCommentaryPatterns.some(pattern => pattern.test(rollOutcome))
+    if (isMetaCommentary) {
+      rollOutcome = ""
+    }
+    
     if (rollOutcome) {
       newNarrative = appendNarrative(newNarrative, rollOutcome)
     }
