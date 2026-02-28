@@ -8,8 +8,10 @@ import { defineConfig, devices } from "@playwright/test"
 import dotenv from "dotenv"
 // Load environment variables in order of precedence (later files take precedence)
 dotenv.config({ path: path.resolve(__dirname, ".env") })
-dotenv.config({ path: path.resolve(__dirname, ".env.test") })
 dotenv.config({ path: path.resolve(__dirname, ".env.local") })
+dotenv.config({ path: path.resolve(__dirname, ".env.test") })
+
+const isUiMode = Boolean(process.env.PLAYWRIGHT_UI_MODE)
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -25,7 +27,7 @@ export default defineConfig({
   /* Opt out of parallel tests on CI or in UI mode */
   workers: 1,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: "html",
+  reporter: process.env.CI ? "dot" : "list",
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
@@ -73,14 +75,6 @@ export default defineConfig({
     // },
   ],
 
-  /* Since we're running the Next.js server separately, we don't need the webServer config */
-  // webServer: {
-  //   command: 'pnpm dev',
-  //   url: 'http://127.0.0.1:3000',
-  //   reuseExistingServer: !process.env.CI,
-  //   timeout: 120000,
-  // },
-
   /* Global setup to run before all tests */
-  globalSetup: process.env.PLAYWRIGHT_UI_MODE ? undefined : "./tests/global-setup.ts",
+  globalSetup: isUiMode ? undefined : "./tests/global-setup.ts",
 })
