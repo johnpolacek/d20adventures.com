@@ -8,9 +8,9 @@ type MailingListSubscription = Doc<"mailing_list_subscriptions">;
 
 // Initialize Convex client for test verification
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-const convexAdminToken = process.env.CONVEX_DEPLOY_KEY ?? process.env.CONVEX_DEPLOYMENT;
+const convexAdminToken = process.env.CONVEX_DEPLOY_KEY?.trim();
 if (!convexAdminToken) {
-  throw new Error("CONVEX_DEPLOY_KEY or CONVEX_DEPLOYMENT is required for Convex test verification.");
+  throw new Error("CONVEX_DEPLOY_KEY is required for Convex test verification.");
 }
 (convex as unknown as { setAdminAuth: (token: string) => void }).setAdminAuth(convexAdminToken);
 

@@ -7,9 +7,16 @@ if (!convexUrl) {
   throw new Error("Missing CONVEX_URL or NEXT_PUBLIC_CONVEX_URL for server Convex client.")
 }
 
-const convexAdminToken = process.env.CONVEX_DEPLOY_KEY ?? process.env.CONVEX_DEPLOYMENT
+const convexAdminToken = process.env.CONVEX_DEPLOY_KEY?.trim()
 if (!convexAdminToken) {
-  throw new Error("Missing CONVEX_DEPLOY_KEY or CONVEX_DEPLOYMENT for internal Convex calls.")
+  throw new Error(
+    "Missing CONVEX_DEPLOY_KEY for internal Convex calls. CONVEX_DEPLOYMENT is only a deployment identifier (for example, dev:my-project-123), not an admin auth token."
+  )
+}
+
+// Deployment identifiers look like `dev:project-name-123` and are not valid admin tokens.
+if (/^(dev|prod):[a-z0-9-]+$/i.test(convexAdminToken)) {
+  throw new Error("CONVEX_DEPLOY_KEY appears to be a deployment identifier. Use the Convex Deploy Key value from your Convex dashboard.")
 }
 
 const client = new ConvexHttpClient(convexUrl)
