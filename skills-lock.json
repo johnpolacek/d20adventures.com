@@ -1,6 +1,16 @@
 {
   "version": 1,
   "skills": {
+    "clerk": {
+      "source": "clerk/skills",
+      "sourceType": "github",
+      "computedHash": "d013f024ec5d70f0207a5718ab2af641414466eb607a81dd5cb4fdafeef51d48"
+    },
+    "clerk-nextjs-patterns": {
+      "source": "clerk/skills",
+      "sourceType": "github",
+      "computedHash": "f540cdf890ed9eb3267f136bcd6dfb486de2e05dc09d2cdfce4726fb99b5801c"
+    },
     "convex": {
       "source": "waynesutton/convexskills",
       "sourceType": "github",

@@ -90,7 +90,7 @@
     "ignore": "^7.0.5",
     "lodash-es": "^4.17.21",
     "lucide-react": "^0.511.0",
-    "next": "15.3.8",
+    "next": "15.5.12",
     "next-themes": "^0.4.6",
     "number-to-words": "^1.2.4",
     "react": "^19.2.0",
@@ -110,8 +110,8 @@
     "zod-to-json-schema": "^3.25.0"
   },
   "devDependencies": {
-    "@clerk/testing": "^1.13.16",
     "@biomejs/biome": "^1.9.4",
+    "@clerk/testing": "^1.13.16",
     "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "^4.1.17",
     "@tailwindcss/typography": "^0.5.19",
