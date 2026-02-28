@@ -4,6 +4,7 @@ import type { Character, PCTemplate } from "./character"
 export interface AdventurePlan {
   id: string
   settingId: string
+  ownerId?: string
   title: string
   author: string
   version: string

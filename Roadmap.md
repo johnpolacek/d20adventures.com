@@ -27,12 +27,13 @@ Last updated: 2026-02-28
   - `app/api/adventure/[adventureId]/route.ts`
   - `app/api/adventure/chat/[adventureId]/route.ts`
   - `app/api/adventure/stream/[adventureId]/route.ts`
-- `OPEN`: Setting/adventure-plan edit paths are authenticated but not admin/owner gated:
+- `DONE`: Setting/adventure-plan edit actions and pages now enforce admin-or-owner checks:
   - `app/_actions/setting-actions.ts`
   - `app/_actions/adventure-plan-actions.ts`
   - `app/settings/[settingId]/edit/page.tsx`
   - `app/settings/[settingId]/[adventurePlanId]/edit/page.tsx`
   - `app/settings/[settingId]/new/page.tsx`
+  - Note: legacy content without owner metadata is effectively admin-only until ownership metadata is backfilled.
 - `DONE`: `/api/user-characters` now requires auth, defaults to current user, and only allows cross-user reads for admins:
   - `app/api/user-characters/route.ts`
 - `OPEN`: adventure page load path still bypasses shared access guard:
@@ -77,8 +78,7 @@ Last updated: 2026-02-28
 
 ## Current Next Checklist
 
-1. Add admin/owner policy checks to setting and adventure-plan edit actions/pages.
-2. Add access guard for page-based adventure load path (`loadAdventureWithNpc` usage).
-3. Add token integrity rules (fail-closed debit, rollback/compensation strategy).
-4. Add Stripe amount validation and server-side product/price mapping.
-5. Add CI workflow after 1-4 are green locally.
+1. Add access guard for page-based adventure load path (`loadAdventureWithNpc` usage).
+2. Add token integrity rules (fail-closed debit, rollback/compensation strategy).
+3. Add Stripe amount validation and server-side product/price mapping.
+4. Add CI workflow after 1-3 are green locally.

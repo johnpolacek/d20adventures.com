@@ -2,8 +2,10 @@ import { AdventurePlanEditForm } from "@/components/adventure-plans/adventure-pl
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { getAssetUrl } from "@/lib/aws"
+import { canManageResource } from "@/lib/content-permissions"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import type { AdventurePlan } from "@/types/adventure-plan"
+import type { Setting } from "@/types/setting"
 import { SignInButton } from "@clerk/nextjs"
 import { auth } from "@clerk/nextjs/server"
 
@@ -70,6 +72,27 @@ export default async function AdventurePlanEditPage(props: { params: Promise<{ s
       <div className="flex min-h-screen flex-col items-center justify-center p-16">
         <div className="text-2xl font-bold py-8 text-red-500">Error Loading Adventure Data</div>
         <p>Could not load the adventure plan. Please check the console for more details or try again later.</p>
+      </div>
+    )
+  }
+
+  let setting: Setting | null = null
+  try {
+    setting = (await readJsonFromS3(`settings/${settingId}/setting-data.json`)) as Setting
+  } catch (err) {
+    console.warn("AdventurePlanEditPage: failed to load setting data for permission fallback:", err)
+  }
+
+  const canManagePlan = canManageResource(userId, adventurePlan) || (setting !== null && canManageResource(userId, setting))
+  if (!canManagePlan) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center p-8 md:p-16">
+        <Card className="w-full max-w-md bg-primary-800 border-primary-700 border-2 py-8">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-display text-white">Access Denied</CardTitle>
+            <CardDescription className="text-white/70">You do not have permission to edit this adventure plan.</CardDescription>
+          </CardHeader>
+        </Card>
       </div>
     )
   }

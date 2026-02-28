@@ -1,8 +1,15 @@
 import { SettingEditForm } from "@/components/settings/setting-edit-form"
+import { canManageResource } from "@/lib/content-permissions"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import type { Setting } from "@/types/setting"
+import { auth } from "@clerk/nextjs/server"
 
 export default async function SettingEditPage(props: { params: Promise<{ settingId: string }> }) {
+  const { userId } = await auth()
+  if (!userId) {
+    return <div>Unauthorized</div>
+  }
+
   const { settingId } = await props.params
 
   const key = `settings/${settingId}/setting-data.json`
@@ -18,6 +25,10 @@ export default async function SettingEditPage(props: { params: Promise<{ setting
   if (!setting) {
     console.error("[SettingEditPage] Setting is null after loading")
     return <div>Setting data is empty.</div>
+  }
+
+  if (!canManageResource(userId, setting)) {
+    return <div>Access Denied</div>
   }
 
   return (

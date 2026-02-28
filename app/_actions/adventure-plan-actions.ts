@@ -1,11 +1,21 @@
 "use server"
 
+import { canManageResource, getResourceOwnerId } from "@/lib/content-permissions"
 import { copyS3Object, listAndReadJsonFilesInS3Directory, readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 import type { AdventurePlan } from "@/types/adventure-plan"
+import type { Setting } from "@/types/setting"
 import { auth } from "@clerk/nextjs/server"
 
 interface UpdateAdventurePlanParams {
   adventurePlan: AdventurePlan
+}
+
+async function loadSetting(settingId: string): Promise<Setting | null> {
+  try {
+    return (await readJsonFromS3(`settings/${settingId}/setting-data.json`)) as Setting
+  } catch {
+    return null
+  }
 }
 
 export async function updateAdventurePlanAction(params: UpdateAdventurePlanParams): Promise<{ success: boolean; message?: string; error?: string }> {
@@ -28,10 +38,37 @@ export async function updateAdventurePlanAction(params: UpdateAdventurePlanParam
   const originalKey = `settings/${adventurePlan.settingId}/${adventurePlan.id}.json`
   const timestamp = Date.now()
   const backupKey = `settings/${adventurePlan.settingId}/backups/${adventurePlan.id}-${timestamp}.json`
+  let existingAdventurePlan: AdventurePlan | null = null
 
   try {
     try {
-      await readJsonFromS3(originalKey)
+      existingAdventurePlan = (await readJsonFromS3(originalKey)) as AdventurePlan
+    } catch (readError) {
+      console.warn(`updateAdventurePlanAction: Could not read existing adventure plan at ${originalKey}:`, readError)
+    }
+
+    if (!existingAdventurePlan) {
+      return { success: false, error: "Adventure plan not found." }
+    }
+
+    const setting = await loadSetting(adventurePlan.settingId)
+    const canManagePlan = canManageResource(userId, existingAdventurePlan) || (setting !== null && canManageResource(userId, setting))
+    if (!canManagePlan) {
+      console.error("updateAdventurePlanAction: Forbidden access attempt.", {
+        userId,
+        settingId: adventurePlan.settingId,
+        adventurePlanId: adventurePlan.id,
+      })
+      return { success: false, error: "Forbidden" }
+    }
+
+    const ownerId = getResourceOwnerId(existingAdventurePlan) ?? getResourceOwnerId(setting) ?? userId
+    const sanitizedAdventurePlan: AdventurePlan = {
+      ...adventurePlan,
+      ownerId,
+    }
+
+    try {
       await copyS3Object(originalKey, backupKey)
       console.log(`updateAdventurePlanAction: Backup created for ${originalKey} at ${backupKey}`)
     } catch (readError: unknown) {
@@ -47,10 +84,10 @@ export async function updateAdventurePlanAction(params: UpdateAdventurePlanParam
     }
 
     // Log adventurePlan and its sections before calling updateJsonOnS3
-    console.log("updateAdventurePlanAction: adventurePlan.sections before S3 update:", JSON.stringify(adventurePlan.sections, null, 2))
-    console.log("updateAdventurePlanAction: Full adventurePlan object before S3 update:", JSON.stringify(adventurePlan, null, 2))
+    console.log("updateAdventurePlanAction: adventurePlan.sections before S3 update:", JSON.stringify(sanitizedAdventurePlan.sections, null, 2))
+    console.log("updateAdventurePlanAction: Full adventurePlan object before S3 update:", JSON.stringify(sanitizedAdventurePlan, null, 2))
 
-    await updateJsonOnS3(originalKey, adventurePlan)
+    await updateJsonOnS3(originalKey, sanitizedAdventurePlan)
     return { success: true, message: "Adventure plan updated successfully." }
   } catch (error) {
     console.error(`updateAdventurePlanAction: Error during S3 operations for ${originalKey}:`, error)
@@ -67,8 +104,21 @@ export async function createAdventurePlan(adventurePlan: AdventurePlan): Promise
   }
 
   try {
+    const setting = await loadSetting(adventurePlan.settingId)
+    if (!setting) {
+      return { success: false, error: "Setting not found." }
+    }
+    if (!canManageResource(userId, setting)) {
+      return { success: false, error: "Forbidden" }
+    }
+
+    const sanitizedAdventurePlan: AdventurePlan = {
+      ...adventurePlan,
+      ownerId: userId,
+    }
+
     const key = `settings/${adventurePlan.settingId}/${adventurePlan.id}.json`
-    await updateJsonOnS3(key, adventurePlan)
+    await updateJsonOnS3(key, sanitizedAdventurePlan)
     return { success: true, message: "Adventure plan created successfully" }
   } catch (error) {
     console.error("Error creating adventure plan:", error)
@@ -83,6 +133,14 @@ export async function getOtherAdventurePlans(settingId: string, currentPlanId: s
   }
 
   try {
+    const setting = await loadSetting(settingId)
+    const currentPlan = (await readJsonFromS3(`settings/${settingId}/${currentPlanId}.json`)) as AdventurePlan
+    const canManageCurrentPlan = canManageResource(userId, currentPlan)
+    const canManageSetting = setting !== null && canManageResource(userId, setting)
+    if (!canManageCurrentPlan && !canManageSetting) {
+      throw new Error("Forbidden")
+    }
+
     // Read all adventure plan JSON files (excluding setting-data.json)
     const adventureFiles = await listAndReadJsonFilesInS3Directory(`settings/${settingId}/`, ["setting-data.json"])
     const adventures = adventureFiles.map((file: { key: string; data: unknown }) => file.data as AdventurePlan).filter((plan: AdventurePlan) => plan.id !== currentPlanId && !plan.draft) // Exclude current plan and drafts

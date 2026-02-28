@@ -1,6 +1,7 @@
 "use server"
 
 import { copyS3Object, readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
+import { canManageResource, getResourceOwnerId } from "@/lib/content-permissions"
 import type { Setting } from "@/types/setting"
 import { auth } from "@clerk/nextjs/server"
 
@@ -29,11 +30,32 @@ export async function updateSettingAction(params: UpdateSettingParams): Promise<
   const originalKey = `settings/${settingId}/setting-data.json`
   const timestamp = Date.now()
   const backupKey = `settings/${settingId}/backups/setting-data-${timestamp}.json`
+  let existingSetting: Setting | null = null
 
   try {
+    try {
+      existingSetting = (await readJsonFromS3(originalKey)) as Setting
+    } catch (readError) {
+      console.warn(`updateSettingAction: Could not read existing setting at ${originalKey}:`, readError)
+    }
+
+    if (!existingSetting) {
+      return { success: false, error: "Setting not found." }
+    }
+
+    if (!canManageResource(userId, existingSetting)) {
+      console.error("updateSettingAction: Forbidden access attempt.", { userId, settingId })
+      return { success: false, error: "Forbidden" }
+    }
+
+    const ownerId = getResourceOwnerId(existingSetting) ?? userId
+    const sanitizedSetting: Setting = {
+      ...setting,
+      ownerId,
+    }
+
     // Try to create a backup of the existing setting
     try {
-      await readJsonFromS3(originalKey)
       await copyS3Object(originalKey, backupKey)
       console.log(`updateSettingAction: Backup created for ${originalKey} at ${backupKey}`)
     } catch (readError: unknown) {
@@ -49,10 +71,10 @@ export async function updateSettingAction(params: UpdateSettingParams): Promise<
     }
 
     // Log setting data before calling updateJsonOnS3
-    console.log("updateSettingAction: setting.locations before S3 update:", JSON.stringify(setting.locations, null, 2))
-    console.log("updateSettingAction: Full setting object before S3 update:", JSON.stringify(setting, null, 2))
+    console.log("updateSettingAction: setting.locations before S3 update:", JSON.stringify(sanitizedSetting.locations, null, 2))
+    console.log("updateSettingAction: Full setting object before S3 update:", JSON.stringify(sanitizedSetting, null, 2))
 
-    await updateJsonOnS3(originalKey, setting)
+    await updateJsonOnS3(originalKey, sanitizedSetting)
     return { success: true, message: "Setting updated successfully." }
   } catch (error) {
     console.error(`updateSettingAction: Error during S3 operations for ${originalKey}:`, error)

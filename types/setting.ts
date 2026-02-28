@@ -15,6 +15,7 @@ export interface Location {
 
 export interface Setting {
   id?: string
+  ownerId?: string
   name: string
   description: string
   genre: string
