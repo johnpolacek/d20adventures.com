@@ -41,5 +41,34 @@ pnpm exec playwright test
 Run only auth tests:
 
 ```bash
-pnpm exec playwright test tests/auth.spec.ts tests/api-auth.spec.ts
+pnpm test:auth
 ```
+
+## As-Needed Release Checklist
+
+Use this checklist before deploys that touch auth, routing, middleware, or adventure actions.
+
+1. Start local stack:
+
+```bash
+pnpm dev
+```
+
+2. Run auth guardrails:
+
+```bash
+pnpm test:auth
+```
+
+3. Run typecheck:
+
+```bash
+pnpm exec tsc --noEmit
+```
+
+4. Manual smoke in browser:
+
+- Signed-out: `/admin` shows `Access Denied`.
+- Signed-out: `/api/adventure/{id}` returns `401`.
+- Signed-in admin: `/admin` loads dashboard.
+- Signed-in player: active adventure page loads and turn submit still works.
