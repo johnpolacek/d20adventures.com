@@ -1,11 +1,21 @@
 "use server"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
-import { assertAdventureAccess } from "@/lib/adventure-access"
+import { AdventureAccessError, assertAdventureAccess } from "@/lib/adventure-access"
 import { convex } from "@/lib/convex/server"
 import { auth } from "@clerk/nextjs/server"
 
 export async function loadAdventureWithNpc(adventureId: Id<"adventures">) {
+  const { userId } = await auth()
+  if (!userId) return null
+
+  try {
+    await assertAdventureAccess(userId, adventureId)
+  } catch (error) {
+    if (error instanceof AdventureAccessError) return null
+    throw error
+  }
+
   return convex.mutation(api.adventure.getCurrentAdventureWithNpcProcessing, { adventureId, refreshKey: Date.now() })
 }
 

@@ -6,7 +6,7 @@ Last updated: 2026-02-28
 
 | Phase | Status | Notes |
 | --- | --- | --- |
-| Phase 1: Security Hardening | In Progress | Shared adventure access checks were added, but content-edit auth and `/api/user-characters` still need hardening. |
+| Phase 1: Security Hardening | Complete (Planned Items) | Core authz hardening items are implemented; legacy content without owner metadata remains admin-only until backfilled. |
 | Phase 2: Billing/Token Integrity | Not Started | Critical token/Stripe integrity gaps are still open. |
 | Phase 3: Test and CI Guardrails | In Progress | New Playwright auth baseline exists; CI gates are not set up. |
 | Phase 4: Dependency Upgrade Track | Not Started | Deferred until Phases 1-3 are complete. |
@@ -16,14 +16,14 @@ Last updated: 2026-02-28
 
 ### Phase 1: Security Hardening
 
-- `DONE (Partial)`: Shared access helpers and broad adoption in adventure actions/routes:
+- `DONE`: Shared access helpers and broad adoption in adventure actions/routes, including page-load path guard:
   - `lib/adventure-access.ts`
   - `app/_actions/adventure.ts`
   - `app/_actions/advance-turn.ts`
   - `app/_actions/defer-turn.ts`
   - `app/_actions/ensure-npc-processed.ts`
   - `app/_actions/check-encounter-final.ts`
-  - `app/_actions/load-adventure.ts` (partial coverage)
+  - `app/_actions/load-adventure.ts` (including `loadAdventureWithNpc`)
   - `app/api/adventure/[adventureId]/route.ts`
   - `app/api/adventure/chat/[adventureId]/route.ts`
   - `app/api/adventure/stream/[adventureId]/route.ts`
@@ -36,8 +36,9 @@ Last updated: 2026-02-28
   - Note: legacy content without owner metadata is effectively admin-only until ownership metadata is backfilled.
 - `DONE`: `/api/user-characters` now requires auth, defaults to current user, and only allows cross-user reads for admins:
   - `app/api/user-characters/route.ts`
-- `OPEN`: adventure page load path still bypasses shared access guard:
-  - `app/settings/[settingId]/[adventurePlanId]/[adventureId]/page.tsx` calls `loadAdventureWithNpc(...)`
+- `DONE`: adventure page load path now goes through guarded loader:
+  - `app/settings/[settingId]/[adventurePlanId]/[adventureId]/page.tsx`
+  - `app/_actions/load-adventure.ts`
 
 ### Phase 2: Billing/Token Integrity
 
@@ -78,7 +79,6 @@ Last updated: 2026-02-28
 
 ## Current Next Checklist
 
-1. Add access guard for page-based adventure load path (`loadAdventureWithNpc` usage).
-2. Add token integrity rules (fail-closed debit, rollback/compensation strategy).
-3. Add Stripe amount validation and server-side product/price mapping.
-4. Add CI workflow after 1-3 are green locally.
+1. Add token integrity rules (fail-closed debit, rollback/compensation strategy).
+2. Add Stripe amount validation and server-side product/price mapping.
+3. Add CI workflow after 1-2 are green locally.
