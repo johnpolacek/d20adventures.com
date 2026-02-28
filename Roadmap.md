@@ -9,7 +9,7 @@ Last updated: 2026-02-28
 | Phase 1: Security Hardening | Complete (Planned Items) | Core authz hardening items are implemented; legacy content without owner metadata remains admin-only until backfilled. |
 | Phase 2: Billing/Token Integrity | Complete (Planned Items) | Fail-closed charging, Stripe amount validation, and rollback/refund flows are implemented for join/upload and AI non-stream paths. |
 | Phase 3: Test and CI Guardrails | In Progress | New Playwright auth baseline exists; CI gates are not set up. |
-| Phase 4: Dependency Upgrade Track | In Progress | Convex upgraded to `1.32.0` and validated via typecheck/build; `next` and AI SDK upgrades remain. |
+| Phase 4: Dependency Upgrade Track | Complete (Planned Items) | `convex`, `next`, and AI SDK packages were upgraded in isolated steps and validated with typecheck/build/auth + targeted smoke checks. |
 | Phase 5: Architecture Cleanup | Not Started | No structured split/logging cleanup work has started for this plan. |
 
 ## Phase-by-Phase Status
@@ -72,8 +72,23 @@ Last updated: 2026-02-28
 - `DONE (Step 1)`: upgraded `convex` from `^1.29.3` to `^1.32.0` and validated with:
   - `pnpm exec tsc --noEmit`
   - `pnpm -s build`
-- `OPEN`: isolated upgrade pass for `next`.
-- `OPEN`: isolated upgrade pass for AI SDK packages (`ai`, `@ai-sdk/*`).
+- `DONE (Step 2)`: upgraded `next` from `15.3.8` to `15.5.12` and validated with:
+  - `pnpm exec tsc --noEmit`
+  - `pnpm -s build`
+  - `pnpm test:auth`
+  - manual quickstart adventure entry smoke
+  - Note: an attempted jump to `next@16.1.6` was deferred because current Clerk package compatibility requires a separate coordinated upgrade.
+- `DONE (Step 3)`: upgraded AI SDK packages and validated AI/auth/adventure smoke:
+  - `ai`: `^5.0.97` -> `^6.0.105`
+  - `@ai-sdk/google`: `^2.0.39` -> `^3.0.34`
+  - `@ai-sdk/openai`: `^2.0.69` -> `^3.0.37`
+  - `@ai-sdk/react`: `^2.0.97` -> `^3.0.107`
+  - `@ai-sdk/replicate`: `^1.0.18` -> `^2.0.21`
+  - Validation:
+    - `pnpm exec tsc --noEmit`
+    - `pnpm -s build`
+    - `pnpm test:auth`
+    - signed-in smoke for `/api/ai/generate/text`, `/api/ai/generate/object`, AI demo text generation UI, and quickstart adventure entry route.
 
 ### Phase 5: Architecture Cleanup
 
@@ -87,6 +102,6 @@ Last updated: 2026-02-28
 
 ## Current Next Checklist
 
-1. Upgrade `next` in an isolated pass and run local smoke validation (`pnpm exec tsc --noEmit`, `pnpm -s build`, manual auth/adventure flow).
-2. Upgrade AI SDK packages in a separate isolated pass and run targeted AI generation/regression checks.
-3. Keep auth and billing validation as as-needed local smoke runs when touching those paths.
+1. Decide whether to keep dependency track closed at `next@15.5.12` or schedule a separate `next@16` + Clerk compatibility pass.
+2. Keep auth, AI, and billing validation as as-needed local smoke runs when touching those paths.
+3. Start Phase 5 architecture cleanup (split large orchestration files and standardize production logging).

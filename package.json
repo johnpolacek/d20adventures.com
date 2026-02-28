@@ -43,10 +43,10 @@
     "test:full": "pnpm test:setup && pnpm test"
   },
   "dependencies": {
-    "@ai-sdk/google": "^2.0.39",
-    "@ai-sdk/openai": "^2.0.69",
-    "@ai-sdk/react": "^2.0.97",
-    "@ai-sdk/replicate": "^1.0.18",
+    "@ai-sdk/google": "^3.0.34",
+    "@ai-sdk/openai": "^3.0.37",
+    "@ai-sdk/react": "^3.0.107",
+    "@ai-sdk/replicate": "^2.0.21",
     "@atlaskit/pragmatic-drag-and-drop": "^1.7.7",
     "@aws-sdk/client-s3": "^3.935.0",
     "@aws-sdk/s3-request-presigner": "^3.935.0",
@@ -82,7 +82,7 @@
     "@stripe/stripe-js": "^7.9.0",
     "@types/lodash-es": "^4.17.12",
     "@types/react-google-recaptcha": "^2.1.9",
-    "ai": "^5.0.97",
+    "ai": "^6.0.105",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "convex": "^1.32.0",
