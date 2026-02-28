@@ -33,7 +33,7 @@ Last updated: 2026-02-28
   - `app/settings/[settingId]/edit/page.tsx`
   - `app/settings/[settingId]/[adventurePlanId]/edit/page.tsx`
   - `app/settings/[settingId]/new/page.tsx`
-- `OPEN`: `/api/user-characters` trusts `userId` query param and can expose cross-user data:
+- `DONE`: `/api/user-characters` now requires auth, defaults to current user, and only allows cross-user reads for admins:
   - `app/api/user-characters/route.ts`
 - `OPEN`: adventure page load path still bypasses shared access guard:
   - `app/settings/[settingId]/[adventurePlanId]/[adventureId]/page.tsx` calls `loadAdventureWithNpc(...)`
@@ -77,10 +77,8 @@ Last updated: 2026-02-28
 
 ## Current Next Checklist
 
-1. Lock `/api/user-characters` to current authenticated user (or admin).
-2. Add admin/owner policy checks to setting and adventure-plan edit actions/pages.
-3. Add access guard for page-based adventure load path (`loadAdventureWithNpc` usage).
-4. Add token integrity rules (fail-closed debit, rollback/compensation strategy).
-5. Add Stripe amount validation and server-side product/price mapping.
-6. Add CI workflow after 1-5 are green locally.
-
+1. Add admin/owner policy checks to setting and adventure-plan edit actions/pages.
+2. Add access guard for page-based adventure load path (`loadAdventureWithNpc` usage).
+3. Add token integrity rules (fail-closed debit, rollback/compensation strategy).
+4. Add Stripe amount validation and server-side product/price mapping.
+5. Add CI workflow after 1-4 are green locally.

@@ -21,3 +21,13 @@ test("signed-in admin returns isAdmin=true from check-admin API", async ({ page 
   const body = (await response.json()) as { isAdmin?: boolean }
   expect(body.isAdmin).toBe(true)
 })
+
+test("signed-in user can fetch their own character list", async ({ page }) => {
+  await signInAsTestUser(page)
+
+  const response = await page.request.get("/api/user-characters")
+  expect(response.ok()).toBeTruthy()
+
+  const body = (await response.json()) as unknown
+  expect(Array.isArray(body)).toBe(true)
+})
