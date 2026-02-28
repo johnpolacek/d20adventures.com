@@ -65,7 +65,7 @@ Last updated: 2026-02-28
   - `TESTING.md`
   - `package.json` (`test:auth`)
 - `OPEN`: no CI workflow currently enforces checks/build/tests on merge.
-- `OPEN`: no integration tests yet for token failure/rollback edge cases.
+- `DECISION`: token/rollback validation is currently an as-needed manual smoke process documented in `TESTING.md`, not a mandatory integration suite.
 
 ### Phase 4: Dependency Upgrade Track
 
@@ -83,6 +83,6 @@ Last updated: 2026-02-28
 
 ## Current Next Checklist
 
-1. Add integration tests for token/rollback edge cases (join/upload/AI charge failure paths).
-2. Add CI workflow to gate on `pnpm check`, `pnpm -s build`, and critical Playwright flows.
-3. Start dependency upgrade track in isolated PRs after CI guardrails are in place.
+1. Add CI workflow to gate on `pnpm check`, `pnpm -s build`, and critical Playwright flows.
+2. Start dependency upgrade track in isolated PRs after CI guardrails are in place.
+3. Keep billing validation as as-needed manual smoke runs when touching billing/token code.
