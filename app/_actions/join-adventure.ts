@@ -9,7 +9,7 @@ import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PCTemplate } from "@/types/character"
 import { auth } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
-import { decrementUserTokensAction } from "./tokens"
+import { decrementUserTokensAction, incrementUserTokensAction } from "./tokens"
 
 interface JoinAdventureArgs {
   settingId: string
@@ -26,21 +26,21 @@ export async function joinAdventure({ settingId, adventurePlanId, adventureId, c
     throw new Error("Unauthorized: User must be signed in")
   }
 
+  let chargedTokens = 0
   try {
-    // Deduct tokens for joining adventure lobby
     const tokenResult = await decrementUserTokensAction({
-      tokensUsed: 1, // 1 token to join lobby
+      tokensUsed: 1,
       transactionType: "usage_join_adventure",
     })
 
     if (!tokenResult.success) {
-      if (tokenResult.error?.includes("Insufficient tokens")) {
+      if (tokenResult.errorCode === "INSUFFICIENT_TOKENS") {
         throw new Error("Insufficient tokens to join adventure. Please purchase more tokens to continue.")
       }
       throw new Error(`Failed to deduct tokens: ${tokenResult.error}`)
     }
+    chargedTokens = tokenResult.data.chargedTokens
 
-    // Ensure the character exists in the user's S3 path
     const userCharKey = `characters/${userId}/${characterId.split("/").pop()?.replace(".json", "")}.json`
     let exists = false
     try {
@@ -48,7 +48,6 @@ export async function joinAdventure({ settingId, adventurePlanId, adventureId, c
       exists = true
     } catch {}
     if (!exists) {
-      // Load the adventure plan to check for premade PCs
       const planPath = `settings/${settingId}/${adventurePlanId}.json`
       let characterData: PCTemplate | unknown = undefined
       try {
@@ -56,7 +55,6 @@ export async function joinAdventure({ settingId, adventurePlanId, adventureId, c
         characterData = plan.premadePlayerCharacters?.find((pc) => pc.id === characterId.split("/").pop()?.replace(".json", ""))
       } catch {}
       if (!characterData) {
-        // Try to load as a custom character (should not throw if not found)
         try {
           const customChar = await readJsonFromS3(characterId)
           characterData = customChar
@@ -68,19 +66,25 @@ export async function joinAdventure({ settingId, adventurePlanId, adventureId, c
       }
     }
 
-    // Add the player to the adventure
     await convex.mutation(api.adventure.joinAdventure, {
       adventureId: adventureId as Id<"adventures">,
       userId,
       characterId: userCharKey,
     })
-
-    console.log("🎲 Successfully joined adventure, redirecting...")
-
-    // Redirect to the adventure page
-    redirect(`/settings/${settingId}/${adventurePlanId}/${adventureId}`)
   } catch (error) {
+    if (chargedTokens > 0) {
+      const refund = await incrementUserTokensAction({
+        tokensToCredit: chargedTokens,
+        transactionType: "adjustment_refund",
+      })
+      if (!refund.success) {
+        console.error("🎲 Failed to refund tokens after join failure:", refund.error, refund.details)
+      }
+    }
     console.error("🎲 Failed to join adventure:", error)
     throw error
   }
+
+  console.log("🎲 Successfully joined adventure, redirecting...")
+  redirect(`/settings/${settingId}/${adventurePlanId}/${adventureId}`)
 }

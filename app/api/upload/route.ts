@@ -1,4 +1,4 @@
-import { decrementUserTokensAction } from "@/app/_actions/tokens"
+import { decrementUserTokensAction, incrementUserTokensAction } from "@/app/_actions/tokens"
 import { fetchUserTokenBalance } from "@/app/_actions/user-token-actions"
 import { isAwsConfigured } from "@/lib/aws"
 import { uploadFileToS3 } from "@/lib/s3-utils"
@@ -70,26 +70,42 @@ export async function POST(request: NextRequest) {
       ) // Payment Required
     }
 
+    const tokenResult = await decrementUserTokensAction({
+      tokensUsed: IMAGE_UPLOAD_TOKEN_COST,
+      transactionType: "usage_image_upload",
+    })
+
+    if (!tokenResult.success) {
+      if (tokenResult.errorCode === "INSUFFICIENT_TOKENS") {
+        return NextResponse.json(
+          {
+            error: `Insufficient tokens for image upload. ${IMAGE_UPLOAD_TOKEN_COST} tokens required.`,
+          },
+          { status: 402 }
+        )
+      }
+      return NextResponse.json({ error: "Failed to deduct tokens for image upload" }, { status: 500 })
+    }
+
+    const chargedTokens = tokenResult.data.chargedTokens
+
     // Generate a unique filename
     const fileExtension = file.name.split(".").pop()
     const fileName = `${folder}/${uuidv4()}.${fileExtension}`
 
-    // Upload to S3
-    const fileUrl = await uploadFileToS3(file, fileName)
-
-    // Deduct tokens for the upload
     try {
-      await decrementUserTokensAction({
-        tokensUsed: IMAGE_UPLOAD_TOKEN_COST,
-        transactionType: "usage_image_upload",
+      const fileUrl = await uploadFileToS3(file, fileName)
+      return NextResponse.json({ url: fileUrl })
+    } catch (uploadError) {
+      const refundResult = await incrementUserTokensAction({
+        tokensToCredit: chargedTokens,
+        transactionType: "adjustment_refund",
       })
-    } catch (tokenError) {
-      console.error("Failed to deduct tokens for image upload:", tokenError)
-      // Continue with the upload even if token deduction fails - we don't want to break the upload
-      // In a production system, you might want to handle this differently
+      if (!refundResult.success) {
+        console.error("Failed to refund tokens after upload failure:", refundResult.error, refundResult.details)
+      }
+      throw uploadError
     }
-
-    return NextResponse.json({ url: fileUrl })
   } catch (error) {
     console.error("Error uploading file:", error)
     if (error instanceof Error && error.message === "AWS S3 is not configured") {

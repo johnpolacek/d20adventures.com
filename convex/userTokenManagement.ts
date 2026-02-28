@@ -77,15 +77,6 @@ export const decrementTokens = mutation({
     }
 
     if (userLedger.tokensRemaining < args.tokensUsed) {
-      // Not enough tokens. Log this attempt if desired.
-      // For now, just throw an error. You could also create a transaction history entry for the failed attempt.
-      await ctx.db.insert("tokenTransactionHistory", {
-        userId: args.userId,
-        type: args.transactionType,
-        amount: -args.tokensUsed,
-        timestamp: Date.now(),
-        tokensRemainingAfterTransaction: userLedger.tokensRemaining,
-      })
       throw new Error(`Insufficient tokens for userId: ${args.userId}. ` + `Required: ${args.tokensUsed}, Available: ${userLedger.tokensRemaining}.`)
     }
 
@@ -101,6 +92,50 @@ export const decrementTokens = mutation({
       userId: args.userId,
       type: args.transactionType,
       amount: -args.tokensUsed,
+      timestamp: now,
+      tokensRemainingAfterTransaction: newTokensRemaining,
+    })
+
+    return {
+      success: true,
+      tokensRemaining: newTokensRemaining,
+      alltimeTokens: userLedger.alltimeTokens ?? 0,
+    }
+  },
+})
+
+export const incrementTokens = mutation({
+  args: {
+    userId: v.string(),
+    tokensToCredit: v.number(),
+    transactionType: v.union(v.literal("purchase"), v.literal("adjustment_refund"), v.literal("adjustment_manual")),
+  },
+  handler: async (ctx, args) => {
+    if (args.tokensToCredit <= 0) {
+      return { success: true, message: "No tokens to credit or invalid amount.", tokensRemaining: null }
+    }
+
+    const userLedger = await ctx.db
+      .query("userTokenLedger")
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .unique()
+
+    if (!userLedger) {
+      throw new Error(`User token ledger not found for userId: ${args.userId}. Cannot credit tokens.`)
+    }
+
+    const now = Date.now()
+    const newTokensRemaining = userLedger.tokensRemaining + args.tokensToCredit
+
+    await ctx.db.patch(userLedger._id, {
+      tokensRemaining: newTokensRemaining,
+      lastTokenUpdate: now,
+    })
+
+    await ctx.db.insert("tokenTransactionHistory", {
+      userId: args.userId,
+      type: args.transactionType,
+      amount: args.tokensToCredit,
       timestamp: now,
       tokensRemainingAfterTransaction: newTokensRemaining,
     })

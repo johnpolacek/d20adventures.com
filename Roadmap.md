@@ -7,7 +7,7 @@ Last updated: 2026-02-28
 | Phase | Status | Notes |
 | --- | --- | --- |
 | Phase 1: Security Hardening | Complete (Planned Items) | Core authz hardening items are implemented; legacy content without owner metadata remains admin-only until backfilled. |
-| Phase 2: Billing/Token Integrity | Not Started | Critical token/Stripe integrity gaps are still open. |
+| Phase 2: Billing/Token Integrity | Complete (Planned Items) | Fail-closed charging, Stripe amount validation, and rollback/refund flows are implemented for join/upload and AI non-stream paths. |
 | Phase 3: Test and CI Guardrails | In Progress | New Playwright auth baseline exists; CI gates are not set up. |
 | Phase 4: Dependency Upgrade Track | Not Started | Deferred until Phases 1-3 are complete. |
 | Phase 5: Architecture Cleanup | Not Started | No structured split/logging cleanup work has started for this plan. |
@@ -42,14 +42,18 @@ Last updated: 2026-02-28
 
 ### Phase 2: Billing/Token Integrity
 
-- `OPEN`: token debit can fail after successful operation (upload path ignores debit failure):
+- `DONE`: token deductions are fail-closed for core paid flows (no success response on failed debit):
   - `app/api/upload/route.ts`
-- `OPEN`: join flow debits first, but has no rollback if later join work fails:
   - `app/_actions/join-adventure.ts`
-- `OPEN`: AI usage charging is post-operation and not atomic with generation result:
-  - `lib/ai/index.ts`
-- `OPEN`: Stripe intent amount is not validated server-side:
+  - `lib/ai/index.ts` (object/text paths, including cleaned-parse paths)
+- `DONE`: rollback/refund behavior exists for failed paid operations after a successful debit:
+  - `app/api/upload/route.ts` (refund on upload failure)
+  - `app/_actions/join-adventure.ts` (refund on post-debit join failure)
+  - `app/_actions/tokens.ts`
+  - `convex/userTokenManagement.ts`
+- `DONE`: Stripe payment intent amount is validated server-side:
   - `app/api/pay/intent/route.ts`
+- `NOTE`: compensation refunds are best-effort; if refund mutation fails, the operation now fails and logs the incident for manual correction.
 
 ### Phase 3: Test and CI Guardrails
 
@@ -79,6 +83,6 @@ Last updated: 2026-02-28
 
 ## Current Next Checklist
 
-1. Add token integrity rules (fail-closed debit, rollback/compensation strategy).
-2. Add Stripe amount validation and server-side product/price mapping.
-3. Add CI workflow after 1-2 are green locally.
+1. Add integration tests for token/rollback edge cases (join/upload/AI charge failure paths).
+2. Add CI workflow to gate on `pnpm check`, `pnpm -s build`, and critical Playwright flows.
+3. Start dependency upgrade track in isolated PRs after CI guardrails are in place.

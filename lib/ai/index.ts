@@ -32,6 +32,39 @@ type GenerateObjectReturn<T extends z.ZodTypeAny> = {
   [key: string]: unknown
 }
 
+class TokenChargeError extends Error {
+  constructor(
+    message: string,
+    public readonly code: "INSUFFICIENT_TOKENS" | "CHARGE_FAILED"
+  ) {
+    super(message)
+    this.name = "TokenChargeError"
+  }
+}
+
+function isTokenChargeError(error: unknown): error is TokenChargeError {
+  return error instanceof TokenChargeError
+}
+
+async function chargeForUsageOrThrow(totalTokens: number, transactionType: "usage_generate_object" | "usage_generate_text", context: string): Promise<void> {
+  if (totalTokens <= 0) return
+
+  const tokenDecrementResult = await decrementUserTokensAction({
+    tokensUsed: totalTokens,
+    transactionType,
+  })
+
+  if (tokenDecrementResult.success) return
+
+  console.error(`Token decrementation failed for ${context}:`, tokenDecrementResult.error, tokenDecrementResult.details)
+
+  if (tokenDecrementResult.errorCode === "INSUFFICIENT_TOKENS") {
+    throw new TokenChargeError(`Insufficient tokens for ${context}. Usage: ${totalTokens}.`, "INSUFFICIENT_TOKENS")
+  }
+
+  throw new TokenChargeError(`Failed to update token balance after ${context}.`, "CHARGE_FAILED")
+}
+
 // Wrapper: uses currentModel by default, but allows override
 export async function generateObject<T extends z.ZodTypeAny>({ prompt, schema }: { prompt: string; schema: T }): Promise<GenerateObjectReturn<T>> {
   let result: GenerateObjectReturn<T>
@@ -49,28 +82,15 @@ export async function generateObject<T extends z.ZodTypeAny>({ prompt, schema }:
     })) as unknown as GenerateObjectReturn<T>
 
     const totalTokens = result.usage?.totalTokens ?? 0
-    if (totalTokens > 0) {
-      const tokenDecrementResult = await decrementUserTokensAction({
-        tokensUsed: totalTokens,
-        transactionType: "usage_generate_object",
-      })
-
-      if (!tokenDecrementResult.success) {
-        console.error("Token decrementation failed for generateObject:", tokenDecrementResult.error, tokenDecrementResult.details)
-        let errorMessage = ""
-        if (tokenDecrementResult.details instanceof Error) {
-          errorMessage = tokenDecrementResult.details.message
-        }
-        if (errorMessage.includes("Insufficient tokens")) {
-          throw new Error(`Insufficient tokens for generateObject operation. Usage: ${totalTokens}.`)
-        }
-        throw new Error("Failed to update token balance after generateObject operation.")
-      }
-    }
+    await chargeForUsageOrThrow(totalTokens, "usage_generate_object", "generateObject operation")
 
     return result
   } catch (error) {
     console.warn("generateObject failed. Error details:", error)
+
+    if (isTokenChargeError(error)) {
+      throw error
+    }
 
     // Check if it's a JSON parsing error with markdown-wrapped content
     const errorMessage = error instanceof Error ? error.message : String(error)
@@ -98,17 +118,7 @@ export async function generateObject<T extends z.ZodTypeAny>({ prompt, schema }:
 
         // Handle token decrementation for successful parse
         const totalTokens = result.usage?.totalTokens ?? 0
-        if (totalTokens > 0) {
-          const tokenDecrementResult = await decrementUserTokensAction({
-            tokensUsed: totalTokens,
-            transactionType: "usage_generate_object",
-          })
-
-          if (!tokenDecrementResult.success) {
-            console.error("Token decrementation failed for generateObject (cleaned):", tokenDecrementResult.error)
-            // Don't throw here since we successfully parsed the response
-          }
-        }
+        await chargeForUsageOrThrow(totalTokens, "usage_generate_object", "generateObject operation (cleaned parse)")
 
         return result
       } catch (cleaningError) {
@@ -145,23 +155,8 @@ export async function generateObject<T extends z.ZodTypeAny>({ prompt, schema }:
           totalTokens: retryTotalTokens,
           model: currentModel.modelId,
         })
-        const tokenDecrementResultRetry = await decrementUserTokensAction({
-        tokensUsed: retryTotalTokens,
-        transactionType: "usage_generate_object",
-      })
-
-        if (!tokenDecrementResultRetry.success) {
-          console.error("Token decrementation failed for generateObject (retry):", tokenDecrementResultRetry.error, tokenDecrementResultRetry.details)
-          let errorMessage = ""
-          if (tokenDecrementResultRetry.details instanceof Error) {
-            errorMessage = tokenDecrementResultRetry.details.message
-          }
-          if (errorMessage.includes("Insufficient tokens")) {
-            throw new Error(`Insufficient tokens for generateObject operation (retry). Usage: ${retryTotalTokens}.`)
-          }
-          throw new Error("Failed to update token balance after generateObject operation (retry).")
-        }
       }
+      await chargeForUsageOrThrow(retryTotalTokens, "usage_generate_object", "generateObject operation (retry)")
 
       return result
     } catch (retryError) {
@@ -193,17 +188,7 @@ export async function generateObject<T extends z.ZodTypeAny>({ prompt, schema }:
 
           // Handle token decrementation for successful parse
           const totalTokens = result.usage?.totalTokens ?? 0
-          if (totalTokens > 0) {
-            const tokenDecrementResult = await decrementUserTokensAction({
-              tokensUsed: totalTokens,
-              transactionType: "usage_generate_object",
-            })
-
-            if (!tokenDecrementResult.success) {
-              console.error("Token decrementation failed for generateObject (retry cleaned):", tokenDecrementResult.error)
-              // Don't throw here since we successfully parsed the response
-            }
-          }
+          await chargeForUsageOrThrow(totalTokens, "usage_generate_object", "generateObject operation (retry cleaned parse)")
 
           return result
         } catch (retryCleaningError) {
@@ -249,24 +234,7 @@ export async function generateText({ prompt }: { prompt: string }): Promise<{ te
 
 
     const totalTokens = result.usage?.totalTokens ?? 0
-    if (totalTokens > 0) {
-      const tokenDecrementResult = await decrementUserTokensAction({
-        tokensUsed: totalTokens,
-        transactionType: "usage_generate_text",
-      })
-
-      if (!tokenDecrementResult.success) {
-        console.error("Token decrementation failed for generateText:", tokenDecrementResult.error, tokenDecrementResult.details)
-        let errorMessage = ""
-        if (tokenDecrementResult.details instanceof Error) {
-          errorMessage = tokenDecrementResult.details.message
-        }
-        if (errorMessage.includes("Insufficient tokens")) {
-          throw new Error(`Insufficient tokens for generateText operation. Usage: ${totalTokens}.`)
-        }
-        throw new Error("Failed to update token balance after generateText operation.")
-      }
-    }
+    await chargeForUsageOrThrow(totalTokens, "usage_generate_text", "generateText operation")
 
     return {
       text: result.text ?? "",
@@ -274,6 +242,10 @@ export async function generateText({ prompt }: { prompt: string }): Promise<{ te
     }
   } catch (error) {
     console.warn("generateText failed. Error details:", error)
+
+    if (isTokenChargeError(error)) {
+      throw error
+    }
 
     // Check if it's a quota/rate limit error
     const errorMessage = error instanceof Error ? error.message : String(error)
@@ -303,23 +275,8 @@ export async function generateText({ prompt }: { prompt: string }): Promise<{ te
           totalTokens: retryTotalTokens,
           model: currentModel.modelId,
         })
-        const tokenDecrementResultRetry = await decrementUserTokensAction({
-        tokensUsed: retryTotalTokens,
-        transactionType: "usage_generate_text",
-      })
-
-        if (!tokenDecrementResultRetry.success) {
-          console.error("Token decrementation failed for generateText (retry):", tokenDecrementResultRetry.error, tokenDecrementResultRetry.details)
-          let errorMessage = ""
-          if (tokenDecrementResultRetry.details instanceof Error) {
-            errorMessage = tokenDecrementResultRetry.details.message
-          }
-          if (errorMessage.includes("Insufficient tokens")) {
-            throw new Error(`Insufficient tokens for generateText operation (retry). Usage: ${retryTotalTokens}.`)
-          }
-          throw new Error("Failed to update token balance after generateText operation (retry).")
-        }
       }
+      await chargeForUsageOrThrow(retryTotalTokens, "usage_generate_text", "generateText operation (retry)")
 
       return {
         text: result.text ?? "",
