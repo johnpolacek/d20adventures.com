@@ -1,6 +1,6 @@
 "use server"
 
-import { internal as api } from "@/convex/_generated/api"
+import { api } from "@/convex/_generated/api"
 import { convex } from "@/lib/convex/server"
 import { validRoutes } from "@/lib/generated/routes"
 import { auth } from "@clerk/nextjs/server"

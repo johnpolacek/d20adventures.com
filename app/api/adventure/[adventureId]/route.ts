@@ -1,5 +1,5 @@
 import { loadAdventureWithNpc } from "@/app/_actions/load-adventure"
-import { internal as api } from "@/convex/_generated/api"
+import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { convex } from "@/lib/convex/server"
 import { readJsonFromS3 } from "@/lib/s3-utils"

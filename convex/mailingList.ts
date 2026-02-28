@@ -1,12 +1,12 @@
 import { v } from "convex/values"
 import type { Doc } from "./_generated/dataModel"
-import { internalMutation, internalQuery } from "./_generated/server"
+import { mutation, query } from "./_generated/server"
 
 // Types
 export type MailingListSubscription = Doc<"mailing_list_subscriptions">
 
 // Queries
-export const getSubscriptions = internalQuery({
+export const getSubscriptions = query({
   handler: async (ctx) => {
     try {
       return await ctx.db.query("mailing_list_subscriptions").order("desc").collect()
@@ -17,7 +17,7 @@ export const getSubscriptions = internalQuery({
   },
 })
 
-export const getSubscriptionByEmail = internalQuery({
+export const getSubscriptionByEmail = query({
   args: { email: v.string() },
   handler: async (ctx, args) => {
     try {
@@ -33,7 +33,7 @@ export const getSubscriptionByEmail = internalQuery({
 })
 
 // Mutations
-export const subscribe = internalMutation({
+export const subscribe = mutation({
   args: {
     userId: v.string(),
     email: v.string(),
@@ -93,7 +93,7 @@ export const subscribe = internalMutation({
   },
 })
 
-export const unsubscribe = internalMutation({
+export const unsubscribe = mutation({
   args: {
     email: v.string(),
   },
@@ -121,7 +121,7 @@ export const unsubscribe = internalMutation({
   },
 })
 
-export const deleteSubscription = internalMutation({
+export const deleteSubscription = mutation({
   args: { id: v.id("mailing_list_subscriptions") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id)

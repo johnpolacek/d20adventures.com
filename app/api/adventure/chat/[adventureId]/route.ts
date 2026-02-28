@@ -1,4 +1,4 @@
-import { internal as api } from "@/convex/_generated/api"
+import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { convex } from "@/lib/convex/server"
 import { auth } from "@clerk/nextjs/server"

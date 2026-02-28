@@ -1,5 +1,5 @@
 "use server"
-import { internal as api } from "@/convex/_generated/api"
+import { api } from "@/convex/_generated/api"
 import { requireAdmin } from "@/lib/auth-utils"
 import { convex } from "@/lib/convex/server"
 

@@ -1,9 +1,9 @@
 import { v } from "convex/values"
-import { internalMutation, internalQuery } from "./_generated/server"
+import { mutation, query } from "./_generated/server"
 
 const INITIAL_TOKEN_GRANT = 1000
 
-export const ensureUserTokenRecord = internalMutation({
+export const ensureUserTokenRecord = mutation({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     const existingRecord = await ctx.db
@@ -49,7 +49,7 @@ export const ensureUserTokenRecord = internalMutation({
   },
 })
 
-export const decrementTokens = internalMutation({
+export const decrementTokens = mutation({
   args: {
     userId: v.string(),
     tokensUsed: v.number(),
@@ -113,7 +113,7 @@ export const decrementTokens = internalMutation({
   },
 })
 
-export const getTokenBalance = internalQuery({
+export const getTokenBalance = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     // It's generally better for the calling server action to call ensureUserTokenRecord first.

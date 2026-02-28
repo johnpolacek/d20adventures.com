@@ -1,5 +1,5 @@
 "use server"
-import { internal as api } from "@/convex/_generated/api"
+import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { generateObject } from "@/lib/ai"
 import { convex } from "@/lib/convex/server"

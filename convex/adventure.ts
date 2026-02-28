@@ -1,9 +1,9 @@
 import { v } from "convex/values"
 import type { Doc, Id } from "./_generated/dataModel"
-import { action, internalMutation, internalQuery } from "./_generated/server"
+import { action, internalMutation, mutation, query } from "./_generated/server"
 
 // Create a new adventure
-export const createAdventure = internalMutation({
+export const createAdventure = mutation({
   args: {
     planId: v.string(),
     settingId: v.string(),
@@ -42,7 +42,7 @@ export const createAdventure = internalMutation({
 })
 
 // Join an existing adventure
-export const joinAdventure = internalMutation({
+export const joinAdventure = mutation({
   args: {
     adventureId: v.id("adventures"),
     userId: v.string(),
@@ -86,7 +86,7 @@ export const joinAdventure = internalMutation({
 })
 
 // Create a new turn for an adventure
-export const createTurn = internalMutation({
+export const createTurn = mutation({
   args: {
     adventureId: v.id("adventures"),
     encounterId: v.string(),
@@ -123,7 +123,7 @@ export const createTurn = internalMutation({
 })
 
 // Update a turn (narrative or characters)
-export const updateTurn = internalMutation({
+export const updateTurn = mutation({
   args: {
     turnId: v.id("turns"),
     narrative: v.optional(v.string()),
@@ -140,7 +140,7 @@ export const updateTurn = internalMutation({
 })
 
 // Query: Get current adventure and its current turn
-export const getCurrentAdventure = internalQuery({
+export const getCurrentAdventure = query({
   args: { adventureId: v.id("adventures"), refreshKey: v.optional(v.number()) },
   handler: async (ctx, args) => {
     const adventure = await ctx.db.get(args.adventureId)
@@ -154,7 +154,7 @@ export const getCurrentAdventure = internalQuery({
 })
 
 // Mutation: Get current adventure and process NPC turn if needed
-export const getCurrentAdventureWithNpcProcessing = internalMutation({
+export const getCurrentAdventureWithNpcProcessing = mutation({
   args: { adventureId: v.id("adventures"), refreshKey: v.optional(v.number()) },
   handler: async (ctx, args) => {
     const adventure = await ctx.db.get(args.adventureId)
@@ -168,7 +168,7 @@ export const getCurrentAdventureWithNpcProcessing = internalMutation({
   },
 })
 
-export const createAdventureWithFirstTurn = internalMutation({
+export const createAdventureWithFirstTurn = mutation({
   args: {
     planId: v.string(),
     settingId: v.string(),
@@ -243,7 +243,7 @@ export const aiRewriteReply = action({
 })
 
 // Mutation: Submit reply (updates turn with AI result)
-export const submitReply = internalMutation({
+export const submitReply = mutation({
   args: {
     turnId: v.id("turns"),
     characterId: v.string(),
@@ -288,7 +288,7 @@ export const submitReply = internalMutation({
 })
 
 // Internal query: Get a turn by ID
-export const getTurnById = internalQuery({
+export const getTurnById = query({
   args: { turnId: v.id("turns") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.turnId)
@@ -296,7 +296,7 @@ export const getTurnById = internalQuery({
 })
 
 // Query: Get a turn by adventure ID and order
-export const getTurnByOrder = internalQuery({
+export const getTurnByOrder = query({
   args: {
     adventureId: v.id("adventures"),
     order: v.number(),
@@ -312,7 +312,7 @@ export const getTurnByOrder = internalQuery({
 })
 
 // Query: Get all turns for an adventure ordered by turn order
-export const getTurnsByAdventure = internalQuery({
+export const getTurnsByAdventure = query({
   args: { adventureId: v.id("adventures") },
   handler: async (ctx, args) => {
     return await ctx.db
@@ -324,7 +324,7 @@ export const getTurnsByAdventure = internalQuery({
 })
 
 // Internal mutation: Patch a turn by ID
-export const patchTurn = internalMutation({
+export const patchTurn = mutation({
   args: {
     turnId: v.id("turns"),
     patch: v.object({
@@ -353,7 +353,7 @@ export const getEncounterContext = action({
 })
 
 // Query: Get adventure by ID
-export const getAdventureById = internalQuery({
+export const getAdventureById = query({
   args: { adventureId: v.id("adventures") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.adventureId)
@@ -361,7 +361,7 @@ export const getAdventureById = internalQuery({
 })
 
 // Internal mutation: Patch an adventure by ID
-export const patchAdventure = internalMutation({
+export const patchAdventure = mutation({
   args: {
     adventureId: v.id("adventures"),
     patch: v.object({
@@ -378,7 +378,7 @@ export const patchAdventure = internalMutation({
 })
 
 // Query: Get turn navigation info (efficient - minimal data transfer)
-export const getTurnNavigationInfo = internalQuery({
+export const getTurnNavigationInfo = query({
   args: { adventureId: v.id("adventures") },
   handler: async (ctx, args) => {
     // Get adventure with current turn info
@@ -408,13 +408,13 @@ export const getTurnNavigationInfo = internalQuery({
 })
 
 // Query: Get all adventures (for admin)
-export const getAllAdventures = internalQuery({
+export const getAllAdventures = query({
   handler: async (ctx) => {
     return await ctx.db.query("adventures").order("desc").collect()
   },
 })
 
-export const getAdventuresByPlayer = internalQuery({
+export const getAdventuresByPlayer = query({
   args: {
     playerId: v.string(),
     status: v.optional(v.union(v.literal("waitingForPlayers"), v.literal("active"), v.literal("completed"))),
@@ -430,7 +430,7 @@ export const getAdventuresByPlayer = internalQuery({
 })
 
 // Query: Get adventure lobby data with real-time updates
-export const getAdventureLobbyData = internalQuery({
+export const getAdventureLobbyData = query({
   args: { adventureId: v.id("adventures") },
   handler: async (ctx, args) => {
     const adventure = await ctx.db.get(args.adventureId)

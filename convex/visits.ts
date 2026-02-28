@@ -1,5 +1,5 @@
 import { v } from "convex/values"
-import { internalMutation, internalQuery } from "./_generated/server"
+import { mutation, query } from "./_generated/server"
 
 // Schema is defined in schema.ts
 export type Visit = {
@@ -10,7 +10,7 @@ export type Visit = {
   updatedAt: number
 }
 
-export const recordVisit = internalMutation({
+export const recordVisit = mutation({
   args: {
     path: v.string(),
     userId: v.union(v.string(), v.null()),
@@ -28,7 +28,7 @@ export const recordVisit = internalMutation({
   },
 })
 
-export const getVisits = internalQuery({
+export const getVisits = query({
   args: {
     userId: v.optional(v.union(v.string(), v.null())),
     limit: v.optional(v.number()),
@@ -46,7 +46,7 @@ export const getVisits = internalQuery({
   },
 })
 
-export const getVisitsByPath = internalQuery({
+export const getVisitsByPath = query({
   args: {
     path: v.string(),
     limit: v.optional(v.number()),
@@ -61,7 +61,7 @@ export const getVisitsByPath = internalQuery({
   },
 })
 
-export const deleteVisit = internalMutation({
+export const deleteVisit = mutation({
   args: { id: v.id("visits") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id)

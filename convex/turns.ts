@@ -1,8 +1,8 @@
 import { v } from "convex/values"
-import { internalMutation } from "./_generated/server"
+import { mutation } from "./_generated/server"
 
 // Minimal mutation: create a new turn
-export const createTurn = internalMutation({
+export const createTurn = mutation({
   args: {
     adventureId: v.id("adventures"),
     encounterId: v.string(),
@@ -38,7 +38,7 @@ export const createTurn = internalMutation({
 })
 
 // Minimal mutation: update a turn (patch)
-export const updateTurn = internalMutation({
+export const updateTurn = mutation({
   args: {
     turnId: v.id("turns"),
     patch: v.object({
@@ -54,7 +54,7 @@ export const updateTurn = internalMutation({
 })
 
 // Minimal mutation: patch adventure
-export const patchAdventure = internalMutation({
+export const patchAdventure = mutation({
   args: {
     adventureId: v.id("adventures"),
     patch: v.object({

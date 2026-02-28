@@ -1,4 +1,4 @@
-import { internal } from "@/convex/_generated/api"
+import { api, internal } from "@/convex/_generated/api"
 import { ConvexHttpClient } from "convex/browser"
 import type { FunctionReference, FunctionReturnType } from "convex/server"
 
@@ -7,20 +7,7 @@ if (!convexUrl) {
   throw new Error("Missing CONVEX_URL or NEXT_PUBLIC_CONVEX_URL for server Convex client.")
 }
 
-const convexAdminToken = process.env.CONVEX_DEPLOY_KEY?.trim()
-if (!convexAdminToken) {
-  throw new Error(
-    "Missing CONVEX_DEPLOY_KEY for internal Convex calls. CONVEX_DEPLOYMENT is only a deployment identifier (for example, dev:my-project-123), not an admin auth token."
-  )
-}
-
-// Deployment identifiers look like `dev:project-name-123` and are not valid admin tokens.
-if (/^(dev|prod):[a-z0-9-]+$/i.test(convexAdminToken)) {
-  throw new Error("CONVEX_DEPLOY_KEY appears to be a deployment identifier. Use the Convex Deploy Key value from your Convex dashboard.")
-}
-
 const client = new ConvexHttpClient(convexUrl)
-;(client as unknown as { setAdminAuth: (token: string) => void }).setAdminAuth(convexAdminToken)
 
 type AnyQueryRef = FunctionReference<"query", "public" | "internal">
 type AnyMutationRef = FunctionReference<"mutation", "public" | "internal">
@@ -38,6 +25,4 @@ export const convex = {
   },
 }
 
-// Server-side code should call internal Convex functions exclusively.
-export const api = internal
-export { internal }
+export { api, internal }

@@ -1,22 +1,17 @@
 import { test, expect } from '@playwright/test';
 import { setupAuthenticatedUser, setupCleanDatabase } from './utils/test-helpers';
 import { ConvexHttpClient } from "convex/browser";
-import { internal as api } from "@/convex/_generated/api";
+import { api } from "@/convex/_generated/api";
 import { Doc } from "@/convex/_generated/dataModel";
 
 type MailingListSubscription = Doc<"mailing_list_subscriptions">;
 
 // Initialize Convex client for test verification
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-const convexAdminToken = process.env.CONVEX_DEPLOY_KEY?.trim();
-if (!convexAdminToken) {
-  throw new Error("CONVEX_DEPLOY_KEY is required for Convex test verification.");
-}
-(convex as unknown as { setAdminAuth: (token: string) => void }).setAdminAuth(convexAdminToken);
 
 // Helper function to safely cast Convex response
 async function getSubscriptions() {
-  const response = await (convex as { query: (fn: unknown, args: Record<string, never>) => Promise<unknown> }).query(api.mailingList.getSubscriptions, {});
+  const response = await convex.query(api.mailingList.getSubscriptions);
   return response as unknown as MailingListSubscription[];
 }
 
