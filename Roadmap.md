@@ -9,7 +9,7 @@ Last updated: 2026-02-28
 | Phase 1: Security Hardening | Complete (Planned Items) | Core authz hardening items are implemented; legacy content without owner metadata remains admin-only until backfilled. |
 | Phase 2: Billing/Token Integrity | Complete (Planned Items) | Fail-closed charging, Stripe amount validation, and rollback/refund flows are implemented for join/upload and AI non-stream paths. |
 | Phase 3: Test and CI Guardrails | In Progress | New Playwright auth baseline exists; CI gates are not set up. |
-| Phase 4: Dependency Upgrade Track | Not Started | Deferred until Phases 1-3 are complete. |
+| Phase 4: Dependency Upgrade Track | In Progress | Convex upgraded to `1.32.0` and validated via typecheck/build; `next` and AI SDK upgrades remain. |
 | Phase 5: Architecture Cleanup | Not Started | No structured split/logging cleanup work has started for this plan. |
 
 ## Phase-by-Phase Status
@@ -69,7 +69,11 @@ Last updated: 2026-02-28
 
 ### Phase 4: Dependency Upgrade Track
 
-- `OPEN`: no isolated upgrade PRs started for `next`, `ai` SDKs, or `convex` under this phased plan.
+- `DONE (Step 1)`: upgraded `convex` from `^1.29.3` to `^1.32.0` and validated with:
+  - `pnpm exec tsc --noEmit`
+  - `pnpm -s build`
+- `OPEN`: isolated upgrade pass for `next`.
+- `OPEN`: isolated upgrade pass for AI SDK packages (`ai`, `@ai-sdk/*`).
 
 ### Phase 5: Architecture Cleanup
 
@@ -83,6 +87,6 @@ Last updated: 2026-02-28
 
 ## Current Next Checklist
 
-1. Add CI workflow to gate on `pnpm check`, `pnpm -s build`, and critical Playwright flows.
-2. Start dependency upgrade track in isolated PRs after CI guardrails are in place.
-3. Keep billing validation as as-needed manual smoke runs when touching billing/token code.
+1. Upgrade `next` in an isolated pass and run local smoke validation (`pnpm exec tsc --noEmit`, `pnpm -s build`, manual auth/adventure flow).
+2. Upgrade AI SDK packages in a separate isolated pass and run targeted AI generation/regression checks.
+3. Keep auth and billing validation as as-needed local smoke runs when touching those paths.
