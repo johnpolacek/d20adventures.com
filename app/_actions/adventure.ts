@@ -2,6 +2,7 @@
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { generateText } from "@/lib/ai"
+import { assertAdventureAccess, assertAdventureAccessByTurn, assertPlayerCharacterControl } from "@/lib/adventure-access"
 import { convex } from "@/lib/convex/server"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import { appendNarrative, getRollRequirementHelper } from "@/lib/services/narrative-service"
@@ -32,17 +33,7 @@ export async function processTurnReply({
     throw new Error("Unauthorized")
   }
 
-  const turn = await convex.query(api.adventure.getTurnById, { turnId })
-  if (!turn) {
-    console.error("[processTurnReply] Turn not found for turnId:", turnId)
-    throw new Error("Turn not found")
-  }
-
-  const adventure = await convex.query(api.adventure.getAdventureById, { adventureId: turn.adventureId })
-  if (!adventure) {
-    console.error("[processTurnReply] Adventure not found for adventureId:", turn.adventureId)
-    throw new Error("Adventure not found")
-  }
+  const { turn, adventure } = await assertAdventureAccessByTurn(userId, turnId)
 
   const planPath = `settings/${adventure.settingId}/${adventure.planId}.json`
   const plan = (await readJsonFromS3(planPath)) as AdventurePlan
@@ -60,11 +51,7 @@ export async function processTurnReply({
     throw new Error("Encounter not found")
   }
 
-  const characterPerformingAction = turn.characters.find((c) => c.id === characterId)
-  if (!characterPerformingAction) {
-    console.error("[processTurnReply] Character performing action not found for characterId:", characterId)
-    throw new Error("Character performing action not found in turn data")
-  }
+  const characterPerformingAction = assertPlayerCharacterControl(userId, turn, characterId)
 
   // Fetch recent turns for context (same pattern as advanceTurn)
   const allTurns = await convex.query(api.adventure.getTurnsByAdventure, { adventureId: turn.adventureId })
@@ -253,17 +240,13 @@ export async function resolvePlayerRollResult({
   const { userId } = await auth()
   if (!userId) throw new Error("Unauthorized")
 
-  // 1. Fetch the turn
-  const turn = await convex.query(api.adventure.getTurnById, { turnId })
-  if (!turn) throw new Error("Turn not found")
-  const character = turn.characters.find((c) => c.id === characterId)
-  if (!character) throw new Error("Character not found")
+  // 1. Fetch and authorize turn access + character control
+  const { turn, adventure } = await assertAdventureAccessByTurn(userId, turnId)
+  const character = assertPlayerCharacterControl(userId, turn, characterId)
   if (!character.rollRequired) throw new Error("No roll required for this character")
   if (typeof character.rollResult === "number") throw new Error("Roll already completed")
 
-  // 2. Fetch the adventure and plan
-  const adventure = await convex.query(api.adventure.getAdventureById, { adventureId: turn.adventureId })
-  if (!adventure) throw new Error("Adventure not found")
+  // 2. Fetch the adventure plan
   const planPath = `settings/${adventure.settingId}/${adventure.planId}.json`
   const plan = (await readJsonFromS3(planPath)) as AdventurePlan
   if (!plan || !Array.isArray(plan.sections)) throw new Error("Adventure plan not found or invalid")
@@ -535,5 +518,6 @@ export async function getNextAdventure({ settingId, adventurePlanId }: { setting
 export async function getAdventureLobbyData(adventureId: Id<"adventures">) {
   const { userId } = await auth()
   if (!userId) throw new Error("Unauthorized")
+  await assertAdventureAccess(userId, adventureId)
   return convex.query(api.adventure.getAdventureLobbyData, { adventureId })
 }

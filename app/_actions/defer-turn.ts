@@ -1,6 +1,7 @@
 "use server"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
+import { assertAdventureAccessByTurn, assertPlayerCharacterControl } from "@/lib/adventure-access"
 import { convex } from "@/lib/convex/server"
 import { processNpcTurnsAfterCurrent } from "@/lib/services/npc-turn-service"
 import type { TurnCharacter } from "@/types/adventure"
@@ -18,15 +19,11 @@ export async function deferOrSkipTurn({ turnId, characterId, afterCharacterId, s
   const { userId } = await auth()
   if (!userId) throw new Error("Unauthorized")
 
-  const turn = await convex.query(api.adventure.getTurnById, { turnId })
-  if (!turn) throw new Error("Turn not found")
+  const { turn } = await assertAdventureAccessByTurn(userId, turnId)
   console.log("[deferOrSkipTurn] loaded turn", { adventureId: String(turn.adventureId), encounterId: turn.encounterId })
 
   const characters: TurnCharacter[] = (turn.characters || []) as TurnCharacter[]
-  const player = characters.find((c) => c.id === characterId)
-  if (!player) throw new Error("Character not found in turn")
-  if (player.type !== "pc") throw new Error("Only player characters can defer or skip")
-  if (player.userId !== userId) throw new Error("You are not authorized to act for this character")
+  const player = assertPlayerCharacterControl(userId, turn, characterId) as TurnCharacter
   console.log("[deferOrSkipTurn] player found", { playerName: player.name, playerInitiative: player.initiative })
 
   // Calculate candidates with lower initiative than the player's current initiative

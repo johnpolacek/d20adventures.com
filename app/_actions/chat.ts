@@ -1,17 +1,9 @@
 "use server"
 
 import type { Id } from "@/convex/_generated/dataModel"
+import { assertAdventureAccess } from "@/lib/adventure-access"
 import { api, convex } from "@/lib/convex/server"
 import { auth, clerkClient } from "@clerk/nextjs/server"
-
-async function assertCanAccess(adventureId: Id<"adventures">, userId: string) {
-  const adventure = await convex.query(api.adventure.getAdventureById, { adventureId })
-  if (!adventure) throw new Error("Not found")
-  const isOwner = adventure.ownerId === userId
-  const isPlayer = Array.isArray(adventure.playerIds) && adventure.playerIds.includes(userId)
-  if (!isOwner && !isPlayer) throw new Error("Unauthorized")
-  return adventure
-}
 
 export async function sendChatMessage(input: {
   adventureId: Id<"adventures">
@@ -20,7 +12,7 @@ export async function sendChatMessage(input: {
 }) {
   const { userId } = await auth()
   if (!userId) throw new Error("Unauthorized")
-  await assertCanAccess(input.adventureId, userId)
+  await assertAdventureAccess(userId, input.adventureId)
   const client = await clerkClient()
   const user = await client.users.getUser(userId)
   const username = user.username || user.primaryEmailAddress?.emailAddress?.split("@")[0] || "Player"
@@ -30,6 +22,6 @@ export async function sendChatMessage(input: {
 export async function fetchRecentMessages(adventureId: Id<"adventures">, limit = 50) {
   const { userId } = await auth()
   if (!userId) throw new Error("Unauthorized")
-  await assertCanAccess(adventureId, userId)
+  await assertAdventureAccess(userId, adventureId)
   return convex.query(api.chat.getRecent, { adventureId, limit })
 }

@@ -1,25 +1,23 @@
 "use server"
 
-import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
-import { convex } from "@/lib/convex/server"
+import { assertAdventureAccessByTurn } from "@/lib/adventure-access"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import type { AdventurePlan } from "@/types/adventure-plan"
+import { auth } from "@clerk/nextjs/server"
 
 export async function checkIsEncounterFinal(turnId: Id<"turns">): Promise<boolean> {
-  // 1. Fetch the turn from Convex
-  const turn = await convex.query(api.adventure.getTurnById, { turnId })
-  if (!turn) throw new Error("Turn not found")
+  const { userId } = await auth()
+  if (!userId) throw new Error("Unauthorized")
 
-  // 2. Fetch the adventure to get settingId and planId
-  const adventure = await convex.query(api.adventure.getAdventureById, { adventureId: turn.adventureId })
-  if (!adventure) throw new Error("Adventure not found")
+  // 1. Fetch turn + enforce adventure access
+  const { turn, adventure } = await assertAdventureAccessByTurn(userId, turnId)
 
-  // 3. Load the plan from S3
+  // 2. Load the plan from S3
   const plan = (await readJsonFromS3(`settings/${adventure.settingId}/${adventure.planId}.json`)) as AdventurePlan
   if (!plan || !plan.sections) throw new Error("Adventure plan not found")
 
-  // 4. Find current encounter
+  // 3. Find current encounter
   const currentEncounter = plan.sections
     .flatMap((section) => section.scenes)
     .flatMap((scene) => scene.encounters)
@@ -27,6 +25,6 @@ export async function checkIsEncounterFinal(turnId: Id<"turns">): Promise<boolea
 
   if (!currentEncounter) throw new Error("Current encounter not found in plan")
 
-  // 5. Check if encounter has no transitions (indicating it's the final encounter)
+  // 4. Check if encounter has no transitions (indicating it's the final encounter)
   return !currentEncounter.transitions || currentEncounter.transitions.length === 0
 }

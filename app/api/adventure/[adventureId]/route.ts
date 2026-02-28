@@ -1,7 +1,6 @@
 import { loadAdventureWithNpc } from "@/app/_actions/load-adventure"
-import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
-import { convex } from "@/lib/convex/server"
+import { AdventureAccessError, assertAdventureAccess } from "@/lib/adventure-access"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import type { Adventure } from "@/types/adventure"
 import type { PC, PCTemplate } from "@/types/character"
@@ -42,18 +41,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   try {
     const { adventureId } = await params
     const { userId } = await auth()
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const accessAdventure = await convex.query(api.adventure.getAdventureById, { adventureId: adventureId as Id<"adventures"> })
-    if (!accessAdventure) {
-      return NextResponse.json({ error: "Adventure not found" }, { status: 404 })
-    }
-    const canAccess = accessAdventure.ownerId === userId || (Array.isArray(accessAdventure.playerIds) && accessAdventure.playerIds.includes(userId))
-    if (!canAccess) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-    }
+    await assertAdventureAccess(userId, adventureId as Id<"adventures">)
 
     const adventureData = await loadAdventureWithNpc(adventureId as Id<"adventures">)
 
@@ -93,6 +81,9 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
     return NextResponse.json({ ...adventure, party })
   } catch (error) {
+    if (error instanceof AdventureAccessError) {
+      return NextResponse.json({ error: error.message }, { status: error.status })
+    }
     console.error("[AdventureAPI] Error fetching adventure:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }

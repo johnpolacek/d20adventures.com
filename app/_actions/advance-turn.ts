@@ -2,6 +2,7 @@
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { generateObject } from "@/lib/ai"
+import { assertAdventureAccessByTurn } from "@/lib/adventure-access"
 import { convex } from "@/lib/convex/server"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import { appendNarrative, normalizeNarrative } from "@/lib/services/narrative-service"
@@ -10,6 +11,7 @@ import { resetAllSpells } from "@/lib/services/spell-tracking-service"
 import { mapConvexTurnToTurn, rollD20 } from "@/lib/utils"
 import type { Turn, TurnCharacter } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
+import { auth } from "@clerk/nextjs/server"
 import wait from "waait"
 import { z } from "zod"
 
@@ -24,16 +26,20 @@ function hasRollFields(c: TurnCharacter): c is TurnCharacter & { rollRequired: {
 }
 
 export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turnId: Id<"turns">; settingId: string; adventurePlanId: string }) {
+  const { userId } = await auth()
+  if (!userId) {
+    throw new Error("Unauthorized")
+  }
+
   // Generate unique request ID for debugging
   const requestId = Math.random().toString(36).substring(7)
   console.log(`[advanceTurn:${requestId}] Starting advance turn for turnId:`, turnId)
 
   let shouldProcessNpcTurns = true // Initialize to true by default
 
-  // 1. Fetch the turn from Convex
+  // 1. Fetch the turn from Convex and ensure the caller can access the adventure
   console.log(`[advanceTurn:${requestId}] Fetching turn data from Convex`)
-  const turnData = await convex.query(api.adventure.getTurnById, { turnId })
-  if (!turnData) throw new Error("Turn not found")
+  const { turn: turnData } = await assertAdventureAccessByTurn(userId, turnId)
 
   // Check if turn already exists to prevent duplicate processing
   const existingNextTurn = await convex.query(api.adventure.getTurnByOrder, {

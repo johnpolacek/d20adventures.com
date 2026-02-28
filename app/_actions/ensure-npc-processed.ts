@@ -1,8 +1,7 @@
 "use server"
 
-import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
-import { convex } from "@/lib/convex/server"
+import { assertAdventureAccessByTurn } from "@/lib/adventure-access"
 import { processNpcTurnsAfterCurrent } from "@/lib/services/npc-turn-service"
 import { auth } from "@clerk/nextjs/server"
 
@@ -14,12 +13,7 @@ export async function ensureNpcProcessed(turnId: Id<"turns">): Promise<{ status:
   }
 
   console.log(`[ensureNpcProcessed] Checking turn ${turnId} for pending NPC actions.`)
-  const turn = await convex.query(api.adventure.getTurnById, { turnId })
-
-  if (!turn) {
-    console.error(`[ensureNpcProcessed] Turn ${turnId} not found.`)
-    return { status: "error_turn_not_found" }
-  }
+  const { turn } = await assertAdventureAccessByTurn(userId, turnId)
 
   const characters = turn.characters || []
   // Sort by initiative (highest first) to find the current actor
