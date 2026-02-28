@@ -1,6 +1,6 @@
 "use server"
 
-import { api } from "@/convex/_generated/api"
+import { internal as api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { convex } from "@/lib/convex/server"
 import { readJsonFromS3 } from "@/lib/s3-utils"

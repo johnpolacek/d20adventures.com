@@ -1,10 +1,9 @@
-import { api } from "@/convex/_generated/api"
+import { internal as api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
+import { convex } from "@/lib/convex/server"
 import { auth } from "@clerk/nextjs/server"
-import { ConvexClient } from "convex/browser"
 
 export async function GET(_: Request, { params }: { params: Promise<{ adventureId: string }> }) {
-  const convex = new ConvexClient(process.env.CONVEX_URL!)
   const { adventureId } = await params
   const { userId } = await auth()
   if (!userId) {
@@ -15,6 +14,11 @@ export async function GET(_: Request, { params }: { params: Promise<{ adventureI
     return new Response("Invalid adventureId", { status: 400 })
   }
 
+  const adventure = await convex.query(api.adventure.getAdventureById, { adventureId: adventureId as Id<"adventures"> })
+  if (!adventure) return new Response("Not found", { status: 404 })
+  const canAccess = adventure.ownerId === userId || (Array.isArray(adventure.playerIds) && adventure.playerIds.includes(userId))
+  if (!canAccess) return new Response("Forbidden", { status: 403 })
+
   let interval: NodeJS.Timeout
   const stream = new ReadableStream({
     async start(controller) {
@@ -22,7 +26,6 @@ export async function GET(_: Request, { params }: { params: Promise<{ adventureI
       let lastTurn: unknown = null
       // Send initial data immediately
       try {
-        const adventure = await convex.query(api.adventure.getAdventureById, { adventureId: adventureId as Id<"adventures"> })
         let turn = null
         if (adventure?.currentTurnId) {
           turn = await convex.query(api.adventure.getTurnById, { turnId: adventure.currentTurnId })
@@ -35,14 +38,14 @@ export async function GET(_: Request, { params }: { params: Promise<{ adventureI
       }
       interval = setInterval(async () => {
         try {
-          const adventure = await convex.query(api.adventure.getAdventureById, { adventureId: adventureId as Id<"adventures"> })
+          const adventureSnapshot = await convex.query(api.adventure.getAdventureById, { adventureId: adventureId as Id<"adventures"> })
           let turn = null
-          if (adventure?.currentTurnId) {
-            turn = await convex.query(api.adventure.getTurnById, { turnId: adventure.currentTurnId })
+          if (adventureSnapshot?.currentTurnId) {
+            turn = await convex.query(api.adventure.getTurnById, { turnId: adventureSnapshot.currentTurnId })
           }
-          if (adventure?.currentTurnId !== lastTurnId || JSON.stringify(turn) !== JSON.stringify(lastTurn)) {
+          if (adventureSnapshot?.currentTurnId !== lastTurnId || JSON.stringify(turn) !== JSON.stringify(lastTurn)) {
             controller.enqueue(`data: ${JSON.stringify(turn)}\n\n`)
-            lastTurnId = adventure?.currentTurnId ?? null
+            lastTurnId = adventureSnapshot?.currentTurnId ?? null
             lastTurn = turn
           }
         } catch (err) {

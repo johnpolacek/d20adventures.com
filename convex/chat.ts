@@ -1,7 +1,7 @@
 import { v } from "convex/values"
-import { mutation, query } from "./_generated/server"
+import { internalMutation, internalQuery } from "./_generated/server"
 
-export const postMessage = mutation({
+export const postMessage = internalMutation({
   args: {
     adventureId: v.id("adventures"),
     username: v.string(),
@@ -21,7 +21,7 @@ export const postMessage = mutation({
   },
 })
 
-export const getRecent = query({
+export const getRecent = internalQuery({
   args: { adventureId: v.id("adventures"), limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
     const limit = Math.min(args.limit ?? 50, 200)
@@ -34,7 +34,7 @@ export const getRecent = query({
   },
 })
 
-export const getSince = query({
+export const getSince = internalQuery({
   args: { adventureId: v.id("adventures"), since: v.number() },
   handler: async (ctx, args) => {
     return await ctx.db

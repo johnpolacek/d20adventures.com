@@ -1,13 +1,10 @@
 "use server"
 
-import { api } from "@/convex/_generated/api"
+import { internal as api } from "@/convex/_generated/api"
+import { convex } from "@/lib/convex/server"
 import { validRoutes } from "@/lib/generated/routes"
 import { auth } from "@clerk/nextjs/server"
-import { ConvexHttpClient } from "convex/browser"
 import { headers } from "next/headers"
-
-// Initialize Convex HTTP client
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!)
 
 // Check if the user agent is from a common legitimate browser
 function isValidBrowser(userAgent: string | null): boolean {

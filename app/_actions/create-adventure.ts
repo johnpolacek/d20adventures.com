@@ -2,7 +2,7 @@
 
 import { startAdventure } from "@/app/_actions/start-adventure"
 import type { CharacterChoiceMode } from "@/components/adventure/character-selection"
-import { api } from "@/convex/_generated/api"
+import { internal as api } from "@/convex/_generated/api"
 import { convex } from "@/lib/convex/server"
 import { readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 import { toPCTemplate } from "@/lib/utils/character-mapping"

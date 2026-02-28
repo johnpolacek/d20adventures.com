@@ -1,10 +1,9 @@
-import { api } from "@/convex/_generated/api"
+import { internal as api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
+import { convex } from "@/lib/convex/server"
 import { auth } from "@clerk/nextjs/server"
-import { ConvexClient } from "convex/browser"
 
 export async function GET(_: Request, { params }: { params: Promise<{ adventureId: string }> }) {
-  const convex = new ConvexClient(process.env.CONVEX_URL!)
   const { adventureId } = await params
   const { userId } = await auth()
   if (!userId) return new Response("Unauthorized", { status: 401 })
