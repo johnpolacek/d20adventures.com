@@ -6,6 +6,10 @@ import { assertAdventureAccessByTurn } from "@/lib/adventure-access"
 import { convex } from "@/lib/convex/server"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import {
+  buildNextTurnFromProgression,
+  isFinalEncounterById,
+} from "@/lib/services/advance-turn-builder-service"
+import {
   buildEncounterProgressionPrompt,
   buildRecentTurnHistory,
   buildRollInfo,
@@ -15,11 +19,9 @@ import {
   getRecentTurnsForContext,
   getSectionAndSceneContext,
 } from "@/lib/services/advance-turn-prompt-service"
-import { appendNarrative, normalizeNarrative } from "@/lib/services/narrative-service"
 import { processNpcTurnsAfterCurrent } from "@/lib/services/npc-turn-service"
-import { resetAllSpells } from "@/lib/services/spell-tracking-service"
-import { mapConvexTurnToTurn, rollD20 } from "@/lib/utils"
-import type { Turn, TurnCharacter } from "@/types/adventure"
+import { mapConvexTurnToTurn } from "@/lib/utils"
+import type { TurnCharacter } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import { auth } from "@clerk/nextjs/server"
 import wait from "waait"
@@ -175,121 +177,26 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
   console.log("[advanceTurn] Will transition?", llmResult.nextEncounterId !== turn.encounterId)
 
   // 6. Build the new turn object
-  let newTurn: Turn | null = null
-  if (llmResult.nextEncounterId === turn.encounterId) {
-    // Continue current encounter
-    let newCharacters: TurnCharacter[] = (turn.characters as TurnCharacter[]).filter((c) => c.status !== "dead" && c.status !== "fled")
-    const narrative = normalizeNarrative(llmResult.narrative || "") // Normalize formatting
-    // Reset hasReplied, isComplete, and re-roll initiative for all characters
-    newCharacters = newCharacters.map((c) => ({
-      ...c,
-      hasReplied: false,
-      isComplete: false,
-      initiative: rollD20(), // Re-roll initiative
-    }))
+  const buildResult = buildNextTurnFromProgression({
+    turn,
+    plan,
+    allTurns,
+    adventureId: turnData.adventureId.toString(),
+    currentEncounterTitle: currentEncounter.title,
+    llmResult,
+  })
+  shouldProcessNpcTurns = buildResult.shouldProcessNpcTurns
 
-    // Sort by new initiative
-    newCharacters.sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
-
-    newTurn = {
-      id: "", // placeholder, Convex will generate
+  if (buildResult.status === "adventure_complete") {
+    await convex.mutation(api.turns.patchAdventure, {
       adventureId: turnData.adventureId,
-      encounterId: turn.encounterId,
-      title: currentEncounter.title,
-      narrative,
-      characters: newCharacters,
-    }
-  } else {
-    // Transition to new encounter
-    const nextEncounter = findEncounterInPlan(plan, llmResult.nextEncounterId)
-
-    if (nextEncounter?.skipInitialNpcTurns) {
-      console.log(`[advanceTurn] Skipping initial NPC turns for new encounter: ${nextEncounter.id}`)
-      shouldProcessNpcTurns = false
-    }
-
-    if (!nextEncounter) {
-      await convex.mutation(api.turns.patchAdventure, { adventureId: turnData.adventureId, patch: { endedAt: Date.now(), updatedAt: Date.now() } })
-      return { status: "adventure_complete" }
-    }
-    // PCs: persist from previous turn (remove dead/fled) and re-roll initiative
-    let pcs: TurnCharacter[] = (turn.characters as TurnCharacter[])
-      .filter((c) => c.type === "pc" && c.status !== "dead" && c.status !== "fled")
-      .map((pc) => ({
-        ...pc,
-        initiative: rollD20(), // Re-roll PC initiative
-      }))
-
-    // Reset all spell usage for PCs on encounter transition
-    console.log(`[advanceTurn] Resetting spell usage for all PCs on encounter transition to: ${nextEncounter.id}`)
-    pcs = resetAllSpells(pcs)
-
-    // Reset health if the encounter has resetHealth flag
-    if (nextEncounter.resetHealth) {
-      console.log(`[advanceTurn] Resetting health for all characters due to resetHealth flag in encounter: ${nextEncounter.id}`)
-      pcs = pcs.map((pc) => ({
-        ...pc,
-        healthPercent: 100,
-        status: pc.status === "dead" ? "" : pc.status, // Clear dead status if health is being reset
-      }))
-    }
-
-    // Check if this is the first turn for this encounter by looking at all previous turns
-    const isFirstTurnForEncounter = !allTurns.some((previousTurn) => previousTurn.encounterId === nextEncounter.id)
-
-    if (nextEncounter.skipInitialNpcTurns && isFirstTurnForEncounter) {
-      console.log(`[advanceTurn] Setting NPC initiatives to 0 for first turn of encounter with skipInitialNpcTurns: ${nextEncounter.id}`)
-    }
-
-    // NPCs: add from next encounter
-    const npcs: TurnCharacter[] = (nextEncounter.npc || []).map((npcRef: { id: string; initialInitiative?: number; behavior?: string }) => {
-      const npc = plan.npcs[npcRef.id]
-
-      // For encounters with skipInitialNpcTurns, set initiative to 0 for all NPCs if this is the first turn for the encounter
-      let npcInitiative: number
-      if (nextEncounter.skipInitialNpcTurns && isFirstTurnForEncounter) {
-        npcInitiative = 0
-      } else {
-        npcInitiative = typeof npcRef.initialInitiative === "number" ? npcRef.initialInitiative : rollD20()
-      }
-
-      return {
-        ...npc,
-        id: npcRef.id,
-        type: "npc",
-        isComplete: false,
-        hasReplied: false,
-        initiative: npcInitiative,
-        // NPCs always start at full health
-        healthPercent: 100,
-        behavior: npcRef.behavior,
-      }
+      patch: { endedAt: Date.now(), updatedAt: Date.now() },
     })
-    let allCharacters: TurnCharacter[] = [...pcs, ...npcs]
-    // Reset hasReplied and isComplete for all characters
-    allCharacters = allCharacters.map((c) => ({
-      ...c,
-      hasReplied: false,
-      isComplete: false,
-    }))
-    // Sort by new initiative
-    allCharacters.sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
-
-    // Use appendNarrative utility for new encounter intro and new narrative (normalize both)
-    const narrative = appendNarrative(normalizeNarrative(llmResult.narrative || ""), normalizeNarrative(nextEncounter.intro || ""))
-    newTurn = {
-      id: "", // placeholder, Convex will generate
-      adventureId: turnData.adventureId,
-      encounterId: nextEncounter.id,
-      title: nextEncounter.title,
-      narrative,
-      characters: allCharacters, // Use the sorted and updated list
-    }
+    return { status: "adventure_complete" }
   }
 
-  // Determine if this new turn is for the final encounter
-  const resolvedNextEncounterForFinalCheck = findEncounterInPlan(plan, newTurn.encounterId)
-  const isFinalEncounter = resolvedNextEncounterForFinalCheck ? !resolvedNextEncounterForFinalCheck.transitions || resolvedNextEncounterForFinalCheck.transitions.length === 0 : false
+  const newTurn = buildResult.turn
+  const isFinalEncounter = isFinalEncounterById(plan, newTurn.encounterId)
 
   // 7. Create the new turn in Convex
   console.log(`[advanceTurn:${requestId}] Creating new turn in Convex:`, {
