@@ -117,7 +117,11 @@ Last updated: 2026-03-01
   - `lib/services/npc-turn-service.ts`
   - `lib/services/npc-turn-resolution-service.ts`
   - Outcome: character effect mutation and AI reconciliation/merge are isolated from generation and orchestration branches.
-- `OPEN`: continue `npc-turn-service` decomposition by extracting skip/pass branch handling and roll/no-roll branch orchestration wrappers.
+- `DONE (Slice 7)`: extracted skip/pass handling and roll/no-roll branch orchestration wrappers from `processNpcTurnWithLLM`:
+  - `lib/services/npc-turn-service.ts`
+  - `lib/services/npc-turn-branch-service.ts`
+  - Outcome: `processNpcTurnWithLLM` now primarily composes modular branch helpers instead of owning branch internals.
+- `OPEN`: finalize `npc-turn-service` cleanup by extracting spell/post-processing + final response assembly and then removing `max-lines` suppression.
 - `OPEN`: begin similar decomposition for `app/_actions/adventure.ts`.
 - `OPEN`: reduce logging noise and standardize structured production logs across turn orchestration paths.
 
@@ -129,7 +133,7 @@ Last updated: 2026-03-01
 
 ## Current Next Checklist
 
-1. Continue `npc-turn-service` decomposition by extracting skip/pass handling and roll/no-roll branch orchestration wrappers from `processNpcTurnWithLLM`.
+1. Finalize `npc-turn-service` decomposition by extracting spell/post-processing + final response assembly and removing `max-lines` suppression.
 2. Split `app/_actions/adventure.ts` orchestration into focused service layers.
 3. Reduce logging noise and standardize structured production logs on turn/adventure paths.
 4. Keep auth, AI, and billing validation as as-needed local smoke runs when touching those paths.

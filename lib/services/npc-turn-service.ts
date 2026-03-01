@@ -8,17 +8,15 @@ import { buildDeadCharacterCompletion, buildNpcTurnUpdatePatch } from "@/lib/ser
 import {
   buildNpcActionContext,
   buildNpcActionPrompt,
-  buildNpcOutcomePrompt,
   generateNpcAction,
-  generateNpcOutcome,
 } from "@/lib/services/npc-turn-generation-service"
+import {
+  handleSkipPassNpcTurn,
+  resolveNpcTurnRollOrDirectBranch,
+  type NpcTurnBranchResult,
+} from "@/lib/services/npc-turn-branch-service"
 import { buildNpcInitiativeOrder, findEncounterInPlan, resolvePlanContextForEncounter } from "@/lib/services/npc-turn-intent-service"
-import { appendNarrative, normalizeNarrative } from "@/lib/services/narrative-service"
-import { applyNpcEffectsToCharacters, reconcileNpcRollWithAi } from "@/lib/services/npc-turn-resolution-service"
 import { detectSpellFromRollType, markSpellAsUsed } from "@/lib/services/spell-tracking-service"
-import { getRollModifier } from "@/lib/services/roll-modifier-service"
-import { getRollRequirementForAction } from "@/lib/services/roll-requirement-service"
-import { rollD20 } from "@/lib/utils"
 import type { Turn, TurnCharacter } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
 
@@ -91,200 +89,31 @@ export async function processNpcTurnWithLLM({
 
   // HANDLE SKIP/PASS FIRST to avoid unnecessary API calls
   if (actionResult.actionType === "skip" || actionResult.actionType === "pass") {
-    // Processing skip/pass action
-
-    const narrativeToAppend = normalizeNarrative(actionResult.narrative)
-    const updatedCharacters = turn.characters.map((c) => {
-      if (c.id === npc.id) {
-        return {
-          ...c,
-          hasReplied: true,
-          isComplete: true,
-          status: actionResult.actionType === "skip" ? "skipping" : "passing",
-        }
-      }
-      return c
+    return handleSkipPassNpcTurn({
+      turn,
+      npc,
+      actionResult,
     })
-    const updatedNarrative = appendNarrative(turn.narrative || "", narrativeToAppend)
-
-    console.log("[LLM] NPC turn completed:", {
-      action: actionResult.actionType,
-      npc: npc.name,
-    })
-
-    return {
-      updatedNarrative,
-      updatedCharacters,
-      actionSummary: actionResult.actionSummary,
-      rollInfo: undefined,
-      effects: undefined,
-      shortcode: undefined,
-      narrativeToAppend,
-    }
   }
 
-  let updatedNarrative = turn.narrative || ""
-  let narrativeToAppend = ""
-  let updatedCharacters = [...turn.characters]
-  let rollInfo = undefined
-  let effects: Array<{ targetId: string; healthPercentDelta?: number; status?: string; equipmentToAdd?: Array<{ name: string; description?: string }> }> | undefined = undefined
-  let shortcode = undefined
-
-  // Check if roll is required for NPC action
-
-  const rollRequirement = await getRollRequirementForAction(actionResult.actionSummary, npc, {
-    encounterInstructions: encounterContext?.instructions || "",
-    encounterIntro: encounterContext?.intro || "",
-    narrativeContext: turn.narrative || "",
-  })
-
-  console.log("[LLM] NPC roll requirement:", {
-    requiresRoll: !!rollRequirement,
-    rollType: rollRequirement?.rollType,
-    difficulty: rollRequirement?.difficulty,
-  })
-
-  if (rollRequirement?.rollType && rollRequirement.difficulty) {
-    // Getting modifier for NPC roll
-
-    // 3. Get modifier
-    const modifier = await getRollModifier({
-      scenario: {
-        encounterIntro: encounterContext?.intro || "",
-        encounterInstructions: encounterContext?.instructions || "",
-        narrativeContext: turn.narrative || "",
-      },
-      rollRequirement,
-      character: npc,
-    })
-
-    // Roll modifier calculated
-
-    // 4. Perform the roll
-    const baseRoll = rollD20()
-    const result = baseRoll + (modifier || 0)
-    const success = result >= rollRequirement.difficulty
-    rollInfo = {
-      rollType: rollRequirement.rollType,
-      difficulty: rollRequirement.difficulty,
-      baseRoll,
-      modifier,
-      result,
-      success,
-    }
-
-    console.log("[LLM] NPC dice roll:", {
-      rollType: rollRequirement.rollType,
-      result,
-      difficulty: rollRequirement.difficulty,
-      success,
-    })
-
-    // 5. Build DiceRoll shortcode
-    shortcode = `[DiceRoll:rollType=${rollRequirement.rollType};baseRoll=${baseRoll};modifier=${modifier >= 0 ? `+${modifier}` : modifier};result=${result};difficulty=${rollRequirement.difficulty};character=${npc.name};image=${npc.image};success=${success}]\n`
-
-    console.log(
-      "[LLM DM] Generated dice roll shortcode",
-      JSON.stringify(
-        {
-          shortcode,
-          shortcodeLength: shortcode.length,
-        },
-        null,
-        2
-      )
-    )
-
-    const prompt2 = buildNpcOutcomePrompt({
+  const branchResult: Omit<NpcTurnBranchResult, "actionSummary"> = await resolveNpcTurnRollOrDirectBranch({
+    turn,
+    npc,
+    actionResult,
+    encounterContext,
+    npcActionContext: {
       contextString: npcActionContext.contextString,
       npcDetails: npcActionContext.npcDetails,
       playerCharacters: npcActionContext.playerCharacters,
-      npcName: npc.name,
-      actionSummary: actionResult.actionSummary,
-      rollType: rollRequirement.rollType,
-      result,
-      difficulty: rollRequirement.difficulty,
-      success,
-    })
+    },
+  })
 
-    console.log(
-      "[LLM DM] Sending prompt to LLM for outcome generation",
-      JSON.stringify(
-        {
-          promptLength: prompt2.length,
-          actionSummary: actionResult.actionSummary,
-          rollResult: result,
-          success,
-          playerCharacterCount: npcActionContext.playerCharacters.length,
-        },
-        null,
-        2
-      )
-    )
-
-    const outcomeResult = await generateNpcOutcome(prompt2)
-
-    console.log(
-      "[LLM DM] LLM response for outcome",
-      JSON.stringify(
-        {
-          narrative: outcomeResult.narrative,
-          effects: outcomeResult.effects,
-          narrativeLength: outcomeResult.narrative.length,
-          effectCount: outcomeResult.effects.length,
-        },
-        null,
-        2
-      )
-    )
-
-    narrativeToAppend = (shortcode ? shortcode : "") + normalizeNarrative(outcomeResult.narrative || "")
-    effects = outcomeResult.effects
-
-    updatedCharacters = applyNpcEffectsToCharacters({
-      characters: updatedCharacters,
-      npcId: npc.id,
-      effects,
-      applyHealthAndStatus: true,
-    })
-
-    // Effects applied
-
-    const diceRoll = {
-      rollType: rollRequirement.rollType,
-      baseRoll,
-      modifier,
-      result,
-      difficulty: rollRequirement.difficulty,
-      character: npc.name,
-      // Try to infer the target from effects (first effect targetId)
-      target: outcomeResult.effects?.[0] ? outcomeResult.effects[0].targetId : undefined,
-      success,
-    }
-
-    updatedCharacters = await reconcileNpcRollWithAi({
-      turn,
-      updatedCharacters,
-      updatedNarrative,
-      narrativeToAppend,
-      diceRoll,
-    })
-  } else {
-    // Applying action directly (no roll required)
-
-    narrativeToAppend = normalizeNarrative(actionResult.narrative)
-    effects = actionResult.effects
-
-    updatedCharacters = applyNpcEffectsToCharacters({
-      characters: updatedCharacters,
-      npcId: npc.id,
-      effects,
-      applyHealthAndStatus: false,
-    })
-
-    // Direct action completed
-  }
-  updatedNarrative = appendNarrative(updatedNarrative, narrativeToAppend)
+  let updatedNarrative = branchResult.updatedNarrative
+  let updatedCharacters = branchResult.updatedCharacters
+  const rollInfo = branchResult.rollInfo
+  const effects = branchResult.effects
+  const shortcode = branchResult.shortcode
+  const narrativeToAppend = branchResult.narrativeToAppend
 
   // Check if a spell was cast by the NPC and mark it as used
   if (rollInfo?.rollType) {
