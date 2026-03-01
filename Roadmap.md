@@ -126,7 +126,12 @@ Last updated: 2026-03-01
   - `lib/services/npc-turn-postprocess-service.ts`
   - Outcome: post-roll spell updates and final response/log assembly are isolated; `npc-turn-service.ts` no longer suppresses file-length linting.
 - `OPEN`: optional follow-up in `npc-turn-service` to split `processNpcTurnsAfterCurrent` orchestration into smaller phases.
-- `OPEN`: begin similar decomposition for `app/_actions/adventure.ts`.
+- `DONE (Slice 9)`: split `app/_actions/adventure.ts` orchestration into focused service layers:
+  - `app/_actions/adventure.ts`
+  - `lib/services/adventure-turn-reply-service.ts`
+  - `lib/services/adventure-first-turn-service.ts`
+  - `lib/services/adventure-roll-result-service.ts`
+  - Outcome: turn-reply roll assessment, first-turn setup, and player-roll resolution are extracted from action orchestration into dedicated service modules.
 - `OPEN`: reduce logging noise and standardize structured production logs across turn orchestration paths.
 
 ## Completed Milestones (Relevant Commits)
@@ -137,7 +142,6 @@ Last updated: 2026-03-01
 
 ## Current Next Checklist
 
-1. Split `app/_actions/adventure.ts` orchestration into focused service layers.
-2. Optionally split `processNpcTurnsAfterCurrent` orchestration into smaller phases.
-3. Reduce logging noise and standardize structured production logs on turn/adventure paths.
-4. Keep auth, AI, and billing validation as as-needed local smoke runs when touching those paths.
+1. Optionally split `processNpcTurnsAfterCurrent` orchestration into smaller phases.
+2. Reduce logging noise and standardize structured production logs on turn/adventure paths.
+3. Keep auth, AI, and billing validation as as-needed local smoke runs when touching those paths.
