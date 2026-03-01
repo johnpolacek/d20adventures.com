@@ -16,9 +16,13 @@ function mapConvexAdventureToAdventure(raw: unknown): Adventure | null {
     _id: string
     title: string
     planId: string
+    ownerId: string
     startedAt: number
     endedAt?: number
     settingId?: string
+    runType?: "campaign" | "practice"
+    parentAdventureId?: string
+    parentTurnId?: string
     status?: "waitingForPlayers" | "active" | "completed"
     players?: Array<{ userId: string; characterId: string }>
     playerIds?: string[]
@@ -29,6 +33,10 @@ function mapConvexAdventureToAdventure(raw: unknown): Adventure | null {
     title: a.title,
     adventurePlanId: a.planId,
     settingId: a.settingId ?? "",
+    ownerId: a.ownerId,
+    runType: a.runType ?? "campaign",
+    parentAdventureId: a.parentAdventureId,
+    parentTurnId: a.parentTurnId,
     status: a.status || "active", // Default to active for backwards compatibility
     party: [],
     players: a.players ?? [],

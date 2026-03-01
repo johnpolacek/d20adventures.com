@@ -185,8 +185,13 @@ export async function getActiveAdventureForUser() {
     playerId: userId,
     status: "waitingForPlayers",
   })
-  // Prioritize active, then waitingForPlayers
-  const adventure = activeAdventures?.[0] || waitingAdventures?.[0]
+
+  const getRunPriority = (adventure: { runType?: "campaign" | "practice" }) => ((adventure.runType ?? "campaign") === "campaign" ? 0 : 1)
+  const prioritizedActive = [...activeAdventures].sort((a, b) => getRunPriority(a) - getRunPriority(b))
+  const prioritizedWaiting = [...waitingAdventures].sort((a, b) => getRunPriority(a) - getRunPriority(b))
+
+  // Prefer active campaign, then active practice, then waiting campaign, then waiting practice.
+  const adventure = prioritizedActive[0] || prioritizedWaiting[0]
 
   if (!adventure) return null
 
@@ -196,17 +201,28 @@ export async function getActiveAdventureForUser() {
   if (!adventurePlan) return null
 
   // Map players to full PC objects from adventure plan
-  const party: PC[] = (adventure.players || [])
-    .map((player: { userId: string; characterId: string }) => {
+  const partyResults = await Promise.all(
+    (adventure.players || []).map(async (player: { userId: string; characterId: string }) => {
+      if (typeof player.characterId === "string" && player.characterId.startsWith("characters/")) {
+        try {
+          const character = (await readJsonFromS3(player.characterId)) as PC
+          return { ...character, userId: player.userId }
+        } catch {
+          return null
+        }
+      }
+
       if (Array.isArray(adventurePlan.premadePlayerCharacters)) {
         const character = adventurePlan.premadePlayerCharacters.find((pc) => pc.id === player.characterId)
         if (character) {
           return { ...character, userId: player.userId }
         }
       }
+
       return null
     })
-    .filter((char): char is PC => char !== null)
+  )
+  const party = partyResults.filter((char): char is PC => char !== null)
 
   // Return a shape compatible with Adventure type
   return {
@@ -214,6 +230,10 @@ export async function getActiveAdventureForUser() {
     title: adventure.title,
     adventurePlanId: adventure.planId,
     settingId: adventure.settingId,
+    ownerId: adventure.ownerId,
+    runType: adventure.runType ?? "campaign",
+    parentAdventureId: adventure.parentAdventureId,
+    parentTurnId: adventure.parentTurnId,
     status: adventure.status,
     party,
     turns: [],

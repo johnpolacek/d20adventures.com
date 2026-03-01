@@ -1,4 +1,5 @@
 import { getAdventuresForUser } from "@/app/_actions/adventure"
+import { getPracticeReportsForUser } from "@/app/_actions/adventure-reports"
 import { getUserCharacters } from "@/app/_actions/character"
 import FullPageImage from "@/components/layout/fullpage-image"
 import { textShadowSpreadLight } from "@/components/typography/styles"
@@ -39,6 +40,7 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
 
   // Fetch the user's adventures
   const adventures = await getAdventuresForUser()
+  const practiceReports = await getPracticeReportsForUser(20)
 
   // Fetch adventure plan images for each adventure (cache by planId)
   const planImageCache: Record<string, string> = {}
@@ -124,6 +126,12 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
                           )
                         })()}
                         <span className="text-white text-xl text-center px-2 truncate w-full my-2">{adv.title}</span>
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className={`text-xxs px-2 py-1 rounded font-mono ${adv.runType === "practice" ? "bg-amber-700/50 text-amber-100" : "bg-indigo-700/50 text-indigo-100"}`}>
+                            {(adv.runType ?? "campaign") === "practice" ? "Practice" : "Campaign"}
+                          </span>
+                          <span className="text-xxs px-2 py-1 rounded font-mono bg-white/10 text-white/80">{adv.status || "active"}</span>
+                        </div>
                         <Link href={`/settings/${adv.settingId}/${adv.planId || adv.adventurePlanId}/${adv._id || adv.id}`}>
                           <Button asChild variant="epic" className="text-sm" size="sm">
                             {adv.status === "active" ? "Continue" : "View"}
@@ -135,6 +143,37 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
                 </div>
               ) : (
                 <div className="text-center text-white/60 italic">You are not part of any adventures yet.</div>
+              )}
+            </div>
+
+            <div className="mt-16">
+              <h2 style={textShadowSpreadLight} className="text-3xl font-bold mb-8 w-full text-amber-400 font-display text-center">
+                Practice Reports
+              </h2>
+              {practiceReports.length > 0 ? (
+                <div className="max-w-4xl mx-auto space-y-3">
+                  {practiceReports.map((report) => (
+                    <div key={report.id} className="rounded-lg border border-white/20 bg-black/50 p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="font-display text-lg text-amber-200">{report.adventureTitle}</div>
+                        <div className="text-xs font-mono text-white/70">{new Date(report.createdAt).toLocaleString()}</div>
+                      </div>
+                      <div className="text-sm text-white/70 mt-1">
+                        {report.findingsCount} findings • {report.status}
+                      </div>
+                      {report.summary ? <p className="text-sm text-white/85 mt-2 line-clamp-3">{report.summary}</p> : null}
+                      <div className="mt-3">
+                        <Button asChild variant="outline" size="sm">
+                          <Link href={`/settings/${report.settingId}/${report.planId}/${report.adventureId}`}>
+                            Open Run
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-white/60 italic">No practice reports yet.</div>
               )}
             </div>
           </>

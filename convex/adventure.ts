@@ -8,6 +8,9 @@ export const createAdventure = mutation({
     planId: v.string(),
     settingId: v.string(),
     ownerId: v.string(),
+    runType: v.optional(v.union(v.literal("campaign"), v.literal("practice"))),
+    parentAdventureId: v.optional(v.id("adventures")),
+    parentTurnId: v.optional(v.id("turns")),
     playerIds: v.array(v.string()),
     players: v.optional(
       v.array(
@@ -27,6 +30,9 @@ export const createAdventure = mutation({
       planId: args.planId,
       settingId: args.settingId,
       ownerId: args.ownerId,
+      runType: args.runType ?? "campaign",
+      parentAdventureId: args.parentAdventureId,
+      parentTurnId: args.parentTurnId,
       playerIds: args.playerIds,
       players: args.players,
       status: args.status,
@@ -51,6 +57,9 @@ export const joinAdventure = mutation({
   handler: async (ctx, args) => {
     const adventure = await ctx.db.get(args.adventureId)
     if (!adventure) throw new Error("Adventure not found")
+    if ((adventure.runType ?? "campaign") === "practice") {
+      throw new Error("Practice runs are private and do not allow joining")
+    }
 
     // Check if user is already in the adventure
     const existingPlayer = adventure.players?.find((p) => p.userId === args.userId)
@@ -117,7 +126,11 @@ export const createTurn = mutation({
       updatedAt: now,
     })
     // Update adventure's currentTurnId
-    await ctx.db.patch(args.adventureId, { currentTurnId: turnId, updatedAt: now })
+    await ctx.db.patch(args.adventureId, {
+      currentTurnId: turnId,
+      status: "active",
+      updatedAt: now,
+    })
     return turnId
   },
 })
@@ -173,6 +186,9 @@ export const createAdventureWithFirstTurn = mutation({
     planId: v.string(),
     settingId: v.string(),
     ownerId: v.string(),
+    runType: v.optional(v.union(v.literal("campaign"), v.literal("practice"))),
+    parentAdventureId: v.optional(v.id("adventures")),
+    parentTurnId: v.optional(v.id("turns")),
     playerIds: v.array(v.string()),
     title: v.string(),
     startedAt: v.number(),
@@ -192,9 +208,13 @@ export const createAdventureWithFirstTurn = mutation({
       planId: args.planId,
       settingId: args.settingId,
       ownerId: args.ownerId,
+      runType: args.runType ?? "campaign",
+      parentAdventureId: args.parentAdventureId,
+      parentTurnId: args.parentTurnId,
       playerIds: args.playerIds,
       startedAt: args.startedAt,
       title: args.title,
+      status: "active",
       createdAt: now,
       updatedAt: now,
     })
@@ -418,11 +438,15 @@ export const getAdventuresByPlayer = query({
   args: {
     playerId: v.string(),
     status: v.optional(v.union(v.literal("waitingForPlayers"), v.literal("active"), v.literal("completed"))),
+    runType: v.optional(v.union(v.literal("campaign"), v.literal("practice"))),
   },
   handler: async (ctx, args) => {
     let q = ctx.db.query("adventures").withIndex("by_started").order("desc")
     if (args.status) {
       q = q.filter((q) => q.eq(q.field("status"), args.status))
+    }
+    if (args.runType) {
+      q = q.filter((q) => q.eq(q.field("runType"), args.runType))
     }
     const all = await q.collect()
     return all.filter((a) => Array.isArray(a.playerIds) && a.playerIds.includes(args.playerId))

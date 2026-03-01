@@ -36,6 +36,9 @@ export default defineSchema({
     planId: v.string(),
     settingId: v.string(),
     ownerId: v.string(),
+    runType: v.optional(v.union(v.literal("campaign"), v.literal("practice"))),
+    parentAdventureId: v.optional(v.id("adventures")),
+    parentTurnId: v.optional(v.id("turns")),
     playerIds: v.array(v.string()),
     players: v.optional(
       v.array(
@@ -56,6 +59,20 @@ export default defineSchema({
     .index("by_owner", ["ownerId"])
     .index("by_player", ["playerIds"])
     .index("by_started", ["startedAt"]),
+
+  adventure_reports: defineTable({
+    adventureId: v.id("adventures"),
+    ownerId: v.string(),
+    runType: v.union(v.literal("campaign"), v.literal("practice")),
+    trigger: v.literal("on_demand"),
+    status: v.union(v.literal("ready"), v.literal("failed")),
+    report: v.optional(v.any()),
+    error: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_adventure_created", ["adventureId", "createdAt"])
+    .index("by_owner_created", ["ownerId", "createdAt"]),
 
   turns: defineTable({
     adventureId: v.id("adventures"),

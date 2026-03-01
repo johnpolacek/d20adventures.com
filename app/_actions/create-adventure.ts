@@ -2,12 +2,15 @@
 
 import { startAdventure } from "@/app/_actions/start-adventure"
 import type { CharacterChoiceMode } from "@/components/adventure/character-selection"
+import type { Id } from "@/convex/_generated/dataModel"
 import { api } from "@/convex/_generated/api"
 import { convex } from "@/lib/convex/server"
+import { canManageResource } from "@/lib/content-permissions"
 import { readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 import { toPCTemplate } from "@/lib/utils/character-mapping"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PCTemplate } from "@/types/character"
+import type { Setting } from "@/types/setting"
 import { auth } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 
@@ -15,6 +18,9 @@ interface CreateAdventureInput {
   settingId: string
   adventurePlanId: string
   characterChoices: CharacterChoiceMode[]
+  runType?: "campaign" | "practice"
+  parentAdventureId?: Id<"adventures">
+  parentTurnId?: Id<"turns">
 }
 
 export async function createAdventure(input: CreateAdventureInput) {
@@ -75,6 +81,9 @@ export async function createAdventure(input: CreateAdventureInput) {
     planId: adventurePlanId,
     settingId,
     ownerId: userId,
+    runType: input.runType ?? "campaign",
+    parentAdventureId: input.parentAdventureId,
+    parentTurnId: input.parentTurnId,
     playerIds: [userId], // Keep for backwards compatibility
     players,
     status: "waitingForPlayers", // Start in lobby state
@@ -94,4 +103,92 @@ export async function createAdventure(input: CreateAdventureInput) {
 
   // For multi-character adventures or when more players might join, redirect to lobby
   redirect(`/settings/${settingId}/${adventurePlanId}/${adventureId}`)
+}
+
+export interface PracticeLineupSelection {
+  source: "premade" | "saved"
+  characterId: string
+}
+
+interface CreatePracticeAdventureInput {
+  settingId: string
+  adventurePlanId: string
+  lineup: PracticeLineupSelection[]
+  parentAdventureId?: Id<"adventures">
+  parentTurnId?: Id<"turns">
+}
+
+export async function createPracticeAdventure(input: CreatePracticeAdventureInput) {
+  const { userId } = await auth()
+  if (!userId) {
+    throw new Error("Unauthorized")
+  }
+
+  const { settingId, adventurePlanId, lineup } = input
+  const planPath = `settings/${settingId}/${adventurePlanId}.json`
+  const plan = (await readJsonFromS3(planPath)) as AdventurePlan
+  if (!plan || !plan.title) {
+    throw new Error("Adventure plan not found or is invalid")
+  }
+
+  let setting: Setting | null = null
+  try {
+    setting = (await readJsonFromS3(`settings/${settingId}/setting-data.json`)) as Setting
+  } catch {
+    setting = null
+  }
+
+  const canManagePlan = canManageResource(userId, plan) || (setting !== null && canManageResource(userId, setting))
+  if (!canManagePlan) {
+    throw new Error("Forbidden")
+  }
+
+  const minParty = plan.party?.[0] || 1
+  const maxParty = plan.party?.[1] || 4
+  if (lineup.length < minParty || lineup.length > maxParty) {
+    throw new Error(`Practice lineup must include between ${minParty} and ${maxParty} characters`)
+  }
+
+  const selectedCharacterIds = new Set<string>()
+  const players: { userId: string; characterId: string }[] = []
+
+  for (const member of lineup) {
+    if (selectedCharacterIds.has(member.characterId)) {
+      throw new Error("Duplicate characters are not allowed in a practice lineup")
+    }
+    selectedCharacterIds.add(member.characterId)
+
+    if (member.source === "premade") {
+      const isValidPremade = plan.premadePlayerCharacters.some((pc) => pc.id === member.characterId)
+      if (!isValidPremade) {
+        throw new Error(`Unknown premade character: ${member.characterId}`)
+      }
+      players.push({ userId, characterId: member.characterId })
+      continue
+    }
+
+    if (!member.characterId.startsWith(`characters/${userId}/`) || !member.characterId.endsWith(".json")) {
+      throw new Error("Saved characters must belong to the current user")
+    }
+
+    await readJsonFromS3(member.characterId)
+    players.push({ userId, characterId: member.characterId })
+  }
+
+  const now = Date.now()
+  const adventureId = await convex.mutation(api.adventure.createAdventure, {
+    planId: adventurePlanId,
+    settingId,
+    ownerId: userId,
+    runType: "practice",
+    parentAdventureId: input.parentAdventureId,
+    parentTurnId: input.parentTurnId,
+    playerIds: [userId],
+    players,
+    status: "waitingForPlayers",
+    title: `${plan.title} (Practice)`,
+    startedAt: now,
+  })
+
+  await startAdventure({ settingId, adventurePlanId, adventureId })
 }

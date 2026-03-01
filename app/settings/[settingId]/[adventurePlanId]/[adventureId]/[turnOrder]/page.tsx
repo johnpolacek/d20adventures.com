@@ -18,12 +18,27 @@ export const dynamic = "force-dynamic"
 // Helper to map Convex adventure to frontend Adventure type
 function mapConvexAdventureToAdventure(raw: unknown): Adventure | null {
   if (!raw || typeof raw !== "object" || !("_id" in raw)) return null
-  const a = raw as { _id: string; title: string; planId: string; startedAt: number; endedAt?: number; settingId?: string }
+  const a = raw as {
+    _id: string
+    title: string
+    planId: string
+    ownerId: string
+    startedAt: number
+    endedAt?: number
+    settingId?: string
+    runType?: "campaign" | "practice"
+    parentAdventureId?: string
+    parentTurnId?: string
+  }
   return {
     id: a._id,
     title: a.title,
     adventurePlanId: a.planId,
     settingId: a.settingId ?? "",
+    ownerId: a.ownerId,
+    runType: a.runType ?? "campaign",
+    parentAdventureId: a.parentAdventureId,
+    parentTurnId: a.parentTurnId,
     party: [],
     turns: [],
     startedAt: a.startedAt ? new Date(a.startedAt).toISOString() : "",

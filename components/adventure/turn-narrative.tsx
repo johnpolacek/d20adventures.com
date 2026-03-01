@@ -1,6 +1,10 @@
 "use client";
 
 import { advanceTurn } from "@/app/_actions/advance-turn";
+import {
+  generatePracticeReport,
+  getPracticeReportsForAdventure,
+} from "@/app/_actions/adventure-reports";
 import { ensureNpcProcessed } from "@/app/_actions/ensure-npc-processed";
 import { processTurnReply } from "@/app/_actions/adventure";
 import CharacterDiceRollResultDisplay from "@/components/adventure/character-dice-roll-result-display";
@@ -33,12 +37,36 @@ export default function TurnNarrative({
   const params = useParams();
   const router = useRouter();
   const { currentTurn, disableSSE } = useTurnContext();
-  const { settingId, adventurePlanId } = useAdventure();
+  const { settingId, adventurePlanId, adventure } = useAdventure();
   const { isSignedIn, user } = useUser();
   const [advancing, setAdvancing] = React.useState(false);
   const [initialNarrative, setInitialNarrative] = React.useState("");
   const [tokenError, setTokenError] = React.useState<string | null>(null);
   const [showOriginalReplies, setShowOriginalReplies] = React.useState(false);
+  const [isGeneratingPracticeReport, setIsGeneratingPracticeReport] =
+    React.useState(false);
+  const [practiceReportError, setPracticeReportError] = React.useState<
+    string | null
+  >(null);
+  const [practiceReports, setPracticeReports] = React.useState<
+    Array<{
+      id: string;
+      createdAt: number;
+      status: "ready" | "failed";
+      summary?: string;
+      findingsCount: number;
+      findings: Array<{
+        title?: string;
+        type?: string;
+        priority?: string;
+        recommendation?: string;
+        target?: { encounterId?: string; planPath?: string; codeArea?: string };
+      }>;
+      error?: string;
+    }>
+  >([]);
+
+  const isPracticeRun = (adventure.runType ?? "campaign") === "practice";
 
   useEffect(() => {
     // scroll to bottom of page when currentTurn.narrative changes after the first render
@@ -50,6 +78,45 @@ export default function TurnNarrative({
       }
     }
   }, [currentTurn?.narrative, disableSSE, initialNarrative]);
+
+  const loadPracticeReports = React.useCallback(async () => {
+    if (!isPracticeRun || !params.adventureId) return;
+    try {
+      const reports = await getPracticeReportsForAdventure(
+        params.adventureId as Id<"adventures">
+      );
+      setPracticeReports(
+        reports.map((report) => ({
+          id: String(report.id),
+          createdAt: report.createdAt,
+          status: report.status,
+          summary: report.summary,
+          findingsCount: report.findingsCount,
+          findings: Array.isArray(report.findings)
+            ? (report.findings as Array<{
+                title?: string;
+                type?: string;
+                priority?: string;
+                recommendation?: string;
+                target?: {
+                  encounterId?: string;
+                  planPath?: string;
+                  codeArea?: string;
+                };
+              }>)
+            : [],
+          error: report.error,
+        }))
+      );
+    } catch (error) {
+      console.error("Failed to load practice reports:", error);
+    }
+  }, [isPracticeRun, params.adventureId]);
+
+  useEffect(() => {
+    if (!isPracticeRun || !isSignedIn) return;
+    loadPracticeReports();
+  }, [isPracticeRun, isSignedIn, loadPracticeReports]);
 
   // Auto-navigate when turn is advanced by another player (only if on last turn)
   useEffect(() => {
@@ -276,6 +343,25 @@ export default function TurnNarrative({
     }
   };
 
+  const handleGeneratePracticeReport = async () => {
+    if (!params.adventureId || isGeneratingPracticeReport) return;
+
+    setIsGeneratingPracticeReport(true);
+    setPracticeReportError(null);
+    try {
+      await generatePracticeReport(params.adventureId as Id<"adventures">);
+      await loadPracticeReports();
+    } catch (error) {
+      setPracticeReportError(
+        error instanceof Error
+          ? error.message
+          : "Failed to generate practice report."
+      );
+    } finally {
+      setIsGeneratingPracticeReport(false);
+    }
+  };
+
   return (
     <div className="grow max-w-2xl fade-in">
       {tokenError && (
@@ -494,6 +580,115 @@ export default function TurnNarrative({
           </div>
         </div>
       </div>
+      {isPracticeRun && (
+        <div className="mt-8 rounded-lg border border-amber-500/30 bg-amber-950/20 p-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+              <h4 className="text-amber-300 font-display text-lg">
+                Practice Reports
+              </h4>
+              <p className="text-sm text-white/70">
+                Generate a full diagnostic report for plan edits and code
+                investigations.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleGeneratePracticeReport}
+              disabled={isGeneratingPracticeReport}
+            >
+              {isGeneratingPracticeReport
+                ? "Generating Report..."
+                : "Generate Practice Report"}
+            </Button>
+          </div>
+          {practiceReportError ? (
+            <p className="text-red-300 text-sm mt-3">{practiceReportError}</p>
+          ) : null}
+          {practiceReports.length > 0 ? (
+            <div className="mt-4 space-y-3">
+              {practiceReports.slice(0, 5).map((report) => (
+                <div
+                  key={report.id}
+                  className="rounded border border-white/15 bg-black/30 p-3"
+                >
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-white/70">
+                    <span className="font-mono">
+                      {new Date(report.createdAt).toLocaleString()}
+                    </span>
+                    <span
+                      className={`px-2 py-0.5 rounded ${
+                        report.status === "ready"
+                          ? "bg-green-700/50 text-green-200"
+                          : "bg-red-700/50 text-red-200"
+                      }`}
+                    >
+                      {report.status}
+                    </span>
+                    <span>{report.findingsCount} findings</span>
+                  </div>
+                  {report.summary ? (
+                    <p className="text-sm text-white/85 mt-2">
+                      {report.summary}
+                    </p>
+                  ) : null}
+                  {report.error ? (
+                    <p className="text-sm text-red-300 mt-2">{report.error}</p>
+                  ) : null}
+                  {report.findings.length > 0 ? (
+                    <div className="mt-3 space-y-2">
+                      {report.findings.slice(0, 3).map((finding, findingIndex) => (
+                        <div
+                          key={`${report.id}-${findingIndex}`}
+                          className="rounded border border-white/10 bg-black/40 p-2"
+                        >
+                          <div className="flex flex-wrap items-center gap-2 text-xs">
+                            <span className="text-white font-semibold">
+                              {finding.title || "Untitled finding"}
+                            </span>
+                            {finding.type ? (
+                              <span className="px-1.5 py-0.5 rounded bg-indigo-700/50 text-indigo-100 uppercase">
+                                {finding.type}
+                              </span>
+                            ) : null}
+                            {finding.priority ? (
+                              <span className="px-1.5 py-0.5 rounded bg-amber-700/50 text-amber-100 uppercase">
+                                {finding.priority}
+                              </span>
+                            ) : null}
+                          </div>
+                          {finding.recommendation ? (
+                            <p className="text-sm text-white/80 mt-1">
+                              {finding.recommendation}
+                            </p>
+                          ) : null}
+                          {finding.target?.planPath ? (
+                            <div className="mt-2">
+                              <Link
+                                href={`/settings/${settingId}/${adventurePlanId}/edit?focus=${encodeURIComponent(
+                                  finding.target.planPath
+                                )}`}
+                                className="text-xs text-primary-200 hover:text-primary-100 underline"
+                              >
+                                Open plan editor: {finding.target.planPath}
+                              </Link>
+                            </div>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-white/60 mt-3">
+              No reports generated yet.
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

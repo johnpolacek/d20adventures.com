@@ -8,6 +8,7 @@ import type { AdventurePlan } from "@/types/adventure-plan"
 import type { Setting } from "@/types/setting"
 import { SignInButton } from "@clerk/nextjs"
 import { auth } from "@clerk/nextjs/server"
+import Link from "next/link"
 
 export default async function AdventurePlanEditPage(props: { params: Promise<{ settingId: string; adventurePlanId: string }> }) {
   const { userId } = await auth()
@@ -99,6 +100,13 @@ export default async function AdventurePlanEditPage(props: { params: Promise<{ s
 
   return (
     <div className="flex min-h-screen flex-col relative p-8 md:p-16 max-w-7xl mx-auto">
+      <div className="flex justify-end pb-6">
+        <Link href={`/settings/${settingId}/${adventurePlanId}/practice`}>
+          <Button variant="epic" size="sm">
+            Start Practice Run
+          </Button>
+        </Link>
+      </div>
       <AdventurePlanEditForm adventurePlan={adventurePlan} />
     </div>
   )

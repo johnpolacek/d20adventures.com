@@ -24,6 +24,9 @@ function requireUserId(userId: string | null | undefined): string {
 }
 
 function userCanAccessAdventure(userId: string, adventure: AdventureDoc): boolean {
+  if ((adventure.runType ?? "campaign") === "practice") {
+    return adventure.ownerId === userId
+  }
   return adventure.ownerId === userId || (Array.isArray(adventure.playerIds) && adventure.playerIds.includes(userId))
 }
 
@@ -62,4 +65,3 @@ export function assertPlayerCharacterControl(userId: string | null | undefined, 
   }
   return character
 }
-

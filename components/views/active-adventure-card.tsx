@@ -24,7 +24,9 @@ export default function ActiveAdventureCard({ adventure, userId }: ActiveAdventu
       <CardContent className="flex flex-col items-center gap-4 sm:py-4">
         <div className="text-center space-y-2">
           <div className="flex justify-center">
-            <div className="text-xxs text-primary-100 bg-primary-800/80 rounded-lg px-3 py-1 font-display font-bold -mt-2">Current Adventure</div>
+            <div className="text-xxs text-primary-100 bg-primary-800/80 rounded-lg px-3 py-1 font-display font-bold -mt-2">
+              Current {(adventure.runType ?? "campaign") === "practice" ? "Practice Run" : "Campaign"}
+            </div>
           </div>
           <h3 style={textShadowSpread} className="text-2xl sm:text-3xl font-bold text-amber-300 font-display">
             {adventure.title}

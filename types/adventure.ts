@@ -6,6 +6,10 @@ export interface Adventure {
   title: string
   adventurePlanId: string
   settingId: string
+  ownerId?: string
+  runType?: "campaign" | "practice"
+  parentAdventureId?: string
+  parentTurnId?: string
   status?: "waitingForPlayers" | "active" | "completed"
   party: PC[]
   turns: Turn[]
