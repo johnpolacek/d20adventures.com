@@ -100,6 +100,10 @@ Last updated: 2026-03-01
   - `app/_actions/advance-turn.ts`
   - `lib/services/advance-turn-builder-service.ts`
   - Outcome: isolated state mutation/transition assembly from orchestration and persistence steps.
+- `DONE (Slice 3)`: extracted turn persistence/finalization and NPC follow-up orchestration from `advance-turn` into a dedicated service module:
+  - `app/_actions/advance-turn.ts`
+  - `lib/services/advance-turn-finalization-service.ts`
+  - Outcome: removed inline create/patch/finalize/NPC branches from the action and centralized those side effects for safer iteration.
 - `OPEN`: begin similar decomposition for:
   - `app/_actions/adventure.ts`
   - `lib/services/npc-turn-service.ts`
@@ -113,6 +117,7 @@ Last updated: 2026-03-01
 
 ## Current Next Checklist
 
-1. Continue Phase 5 with `advance-turn` slice 3: extract adventure patching/finalization + NPC-follow-up orchestration into focused helpers.
-2. Start decomposition of `lib/services/npc-turn-service.ts` into smaller intent/effect modules.
-3. Keep auth, AI, and billing validation as as-needed local smoke runs when touching those paths.
+1. Start decomposition of `lib/services/npc-turn-service.ts` into smaller intent/effect modules.
+2. Split `app/_actions/adventure.ts` orchestration into focused service layers.
+3. Reduce logging noise and standardize structured production logs on turn/adventure paths.
+4. Keep auth, AI, and billing validation as as-needed local smoke runs when touching those paths.

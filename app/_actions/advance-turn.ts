@@ -10,6 +10,10 @@ import {
   isFinalEncounterById,
 } from "@/lib/services/advance-turn-builder-service"
 import {
+  markAdventureCompleteWithoutNextEncounter,
+  persistTurnAndFinalizeAdventure,
+} from "@/lib/services/advance-turn-finalization-service"
+import {
   buildEncounterProgressionPrompt,
   buildRecentTurnHistory,
   buildRollInfo,
@@ -19,7 +23,6 @@ import {
   getRecentTurnsForContext,
   getSectionAndSceneContext,
 } from "@/lib/services/advance-turn-prompt-service"
-import { processNpcTurnsAfterCurrent } from "@/lib/services/npc-turn-service"
 import { mapConvexTurnToTurn } from "@/lib/utils"
 import type { TurnCharacter } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
@@ -188,63 +191,22 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
   shouldProcessNpcTurns = buildResult.shouldProcessNpcTurns
 
   if (buildResult.status === "adventure_complete") {
-    await convex.mutation(api.turns.patchAdventure, {
-      adventureId: turnData.adventureId,
-      patch: { endedAt: Date.now(), updatedAt: Date.now() },
-    })
+    await markAdventureCompleteWithoutNextEncounter(turnData.adventureId)
     return { status: "adventure_complete" }
   }
 
   const newTurn = buildResult.turn
   const isFinalEncounter = isFinalEncounterById(plan, newTurn.encounterId)
-
-  // 7. Create the new turn in Convex
-  console.log(`[advanceTurn:${requestId}] Creating new turn in Convex:`, {
-    adventureId: turnData.adventureId.toString(),
-    encounterId: newTurn.encounterId,
-    title: newTurn.title,
-    narrativeLength: newTurn.narrative.length,
-    characterCount: newTurn.characters.length,
-    order: (turnData.order || 0) + 1,
-    isFinalEncounter
-  })
-
-  const newTurnId = await convex.mutation(api.turns.createTurn, {
+  await persistTurnAndFinalizeAdventure({
+    requestId,
     adventureId: turnData.adventureId,
-    encounterId: newTurn.encounterId,
-    title: newTurn.title,
-    narrative: newTurn.narrative,
-    characters: newTurn.characters,
-    order: (turnData.order || 0) + 1,
-    isFinalEncounter: isFinalEncounter,
+    currentOrder: turnData.order || 0,
+    newTurn,
+    isFinalEncounter,
+    shouldProcessNpcTurns,
   })
 
-  console.log(`[advanceTurn:${requestId}] Created new turn with ID:`, newTurnId)
-
-  // 8. Patch adventure with new currentTurnId, and if final, end the adventure immediately
-  if (isFinalEncounter) {
-    shouldProcessNpcTurns = false // do not process any NPC turns on the final encounter
-    await convex.mutation(api.turns.patchAdventure, {
-      adventureId: turnData.adventureId,
-      patch: { currentTurnId: newTurnId, endedAt: Date.now(), updatedAt: Date.now(), status: "completed" },
-    })
-  } else {
-    await convex.mutation(api.turns.patchAdventure, {
-      adventureId: turnData.adventureId,
-      patch: { currentTurnId: newTurnId },
-    })
-  }
-
-  // 9. After creating the new turn, process NPC turn if needed
-  if (shouldProcessNpcTurns) {
-    console.log(`[advanceTurn:${requestId}] Starting NPC turn processing for turnId:`, newTurnId)
-    await processNpcTurnsAfterCurrent(newTurnId)
-    console.log(`[advanceTurn:${requestId}] NPC turn processing completed`)
-  } else {
-    console.log(`[advanceTurn:${requestId}] NPC turns processing was skipped for turnId:`, newTurnId)
-  }
-
-  // 10. Return the new turn/adventure state
+  // 8. Return the new turn/adventure state
   console.log(`[advanceTurn:${requestId}] Function completed successfully`)
   return { status: "turn_advanced", turn: newTurn }
 }
