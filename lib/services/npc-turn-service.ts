@@ -14,10 +14,10 @@ import {
 } from "@/lib/services/npc-turn-generation-service"
 import { buildNpcInitiativeOrder, findEncounterInPlan, resolvePlanContextForEncounter } from "@/lib/services/npc-turn-intent-service"
 import { appendNarrative, normalizeNarrative } from "@/lib/services/narrative-service"
+import { applyNpcEffectsToCharacters, reconcileNpcRollWithAi } from "@/lib/services/npc-turn-resolution-service"
 import { detectSpellFromRollType, markSpellAsUsed } from "@/lib/services/spell-tracking-service"
 import { getRollModifier } from "@/lib/services/roll-modifier-service"
 import { getRollRequirementForAction } from "@/lib/services/roll-requirement-service"
-import { analyzeAndApplyDiceRoll } from "@/lib/services/turn-update-service"
 import { rollD20 } from "@/lib/utils"
 import type { Turn, TurnCharacter } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
@@ -241,42 +241,15 @@ export async function processNpcTurnWithLLM({
     narrativeToAppend = (shortcode ? shortcode : "") + normalizeNarrative(outcomeResult.narrative || "")
     effects = outcomeResult.effects
 
-    // Applying effects to characters
-
-    // Apply effects to characters
-    updatedCharacters = updatedCharacters.map((c) => {
-      const effect = effects?.find((e) => e.targetId === c.id)
-      const updated = { ...c }
-      if (effect) {
-        // Applying effect to character
-
-        if (effect.healthPercentDelta !== undefined) {
-          const oldHealth = c.healthPercent ?? 100
-          const newHealth = Math.max(0, oldHealth + effect.healthPercentDelta)
-          updated.healthPercent = newHealth
-          // Health updated
-        }
-
-        updated.status = effect.status || c.status
-        if (effect.equipmentToAdd && effect.equipmentToAdd.length > 0) {
-          const existingEquipment = Array.isArray(c.equipment) ? c.equipment : []
-          updated.equipment = [...existingEquipment, ...effect.equipmentToAdd]
-          // Equipment added
-        }
-      }
-      // Mark this NPC as having acted
-      if (c.id === npc.id) {
-        updated.hasReplied = true
-        updated.isComplete = true
-      }
-      return updated
+    updatedCharacters = applyNpcEffectsToCharacters({
+      characters: updatedCharacters,
+      npcId: npc.id,
+      effects,
+      applyHealthAndStatus: true,
     })
 
     // Effects applied
 
-    // Logging for verification
-
-    // --- AI health update: analyzeAndApplyDiceRoll ---
     const diceRoll = {
       rollType: rollRequirement.rollType,
       baseRoll,
@@ -289,76 +262,24 @@ export async function processNpcTurnWithLLM({
       success,
     }
 
-    console.log("[LLM DM] Calling analyzeAndApplyDiceRoll with dice roll", JSON.stringify(diceRoll, null, 2))
-
-    updatedCharacters.forEach((c) => {
-      console.log(`  ${c.name} (${c.id}): ${c.healthPercent}%`)
-    })
-
-    const aiTurn = await analyzeAndApplyDiceRoll({
-      turn: { ...turn, characters: updatedCharacters },
+    updatedCharacters = await reconcileNpcRollWithAi({
+      turn,
+      updatedCharacters,
+      updatedNarrative,
+      narrativeToAppend,
       diceRoll,
-      narrative: appendNarrative(updatedNarrative, narrativeToAppend),
     })
-
-    console.log(
-      "[LLM DM] analyzeAndApplyDiceRoll result",
-      JSON.stringify(
-        {
-          aiTurnCharacters: aiTurn.characters.map((c) => ({
-            id: c.id,
-            name: c.name,
-            healthPercent: c.healthPercent,
-            status: c.status,
-          })),
-        },
-        null,
-        2
-      )
-    )
-
-    // Log detailed comparison of AI updates
-    aiTurn.characters.forEach((aiChar) => {
-      const origChar = updatedCharacters.find((c) => c.id === aiChar.id)
-      if (origChar) {
-        console.log(`  ${origChar.name} (${aiChar.id}):`)
-        if (origChar.healthPercent !== aiChar.healthPercent) {
-          console.log(`    Health: ${origChar.healthPercent}% -> ${aiChar.healthPercent}%`)
-        }
-        if (origChar.status !== aiChar.status) {
-          console.log(`    Status: "${origChar.status}" -> "${aiChar.status}"`)
-        }
-      }
-    })
-
-    // Merge AI-updated fields into original TurnCharacter objects
-    updatedCharacters = updatedCharacters.map((orig) => (aiTurn.characters.find((ai) => ai.id === orig.id) ? { ...orig, ...aiTurn.characters.find((ai) => ai.id === orig.id) } : orig))
-
-    // Final character state updated
   } else {
     // Applying action directly (no roll required)
 
     narrativeToAppend = normalizeNarrative(actionResult.narrative)
     effects = actionResult.effects
 
-    updatedCharacters = updatedCharacters.map((c) => {
-      const effect = effects?.find((e) => e.targetId === c.id)
-      const updated = { ...c }
-      if (effect) {
-        // Applying direct effect
-
-        if (effect.equipmentToAdd && effect.equipmentToAdd.length > 0) {
-          const existingEquipment = Array.isArray(c.equipment) ? c.equipment : []
-          updated.equipment = [...existingEquipment, ...effect.equipmentToAdd]
-          // Equipment added
-        }
-      }
-      // Mark this NPC as having acted
-      if (c.id === npc.id) {
-        updated.hasReplied = true
-        updated.isComplete = true
-      }
-      return updated
+    updatedCharacters = applyNpcEffectsToCharacters({
+      characters: updatedCharacters,
+      npcId: npc.id,
+      effects,
+      applyHealthAndStatus: false,
     })
 
     // Direct action completed
