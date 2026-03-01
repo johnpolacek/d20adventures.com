@@ -1,5 +1,3 @@
-/* eslint-disable max-lines */
-
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { convex } from "@/lib/convex/server"
@@ -16,7 +14,7 @@ import {
   type NpcTurnBranchResult,
 } from "@/lib/services/npc-turn-branch-service"
 import { buildNpcInitiativeOrder, findEncounterInPlan, resolvePlanContextForEncounter } from "@/lib/services/npc-turn-intent-service"
-import { detectSpellFromRollType, markSpellAsUsed } from "@/lib/services/spell-tracking-service"
+import { applyNpcSpellPostProcessing, finalizeNpcTurnResponse } from "@/lib/services/npc-turn-postprocess-service"
 import type { Turn, TurnCharacter } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
 
@@ -115,40 +113,22 @@ export async function processNpcTurnWithLLM({
   const shortcode = branchResult.shortcode
   const narrativeToAppend = branchResult.narrativeToAppend
 
-  // Check if a spell was cast by the NPC and mark it as used
-  if (rollInfo?.rollType) {
-    const spellName = detectSpellFromRollType(rollInfo.rollType)
-    if (spellName) {
-      console.log(`[LLM DM] NPC spell detected: "${spellName}" - marking as used for NPC ${npc.id}`)
-      updatedCharacters = markSpellAsUsed(updatedCharacters, npc.id, spellName)
-    }
-  }
+  updatedCharacters = applyNpcSpellPostProcessing({
+    updatedCharacters,
+    rollInfo,
+    npcId: npc.id,
+  })
 
-  console.log(
-    "[LLM DM] NPC turn processing completed",
-    JSON.stringify(
-      {
-        finalNarrativeLength: updatedNarrative.length,
-        narrativeToAppendLength: narrativeToAppend.length,
-        characterCount: updatedCharacters.length,
-        npcStatus: updatedCharacters.find((c) => c.id === npc.id)?.status,
-        hasRollInfo: !!rollInfo,
-        effectCount: effects?.length || 0,
-      },
-      null,
-      2
-    )
-  )
-
-  return {
+  return finalizeNpcTurnResponse({
+    actionSummary: actionResult.actionSummary,
     updatedNarrative,
     updatedCharacters,
-    actionSummary: actionResult.actionSummary,
     rollInfo,
     effects,
     shortcode,
     narrativeToAppend,
-  }
+    npcId: npc.id,
+  })
 }
 
 export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
