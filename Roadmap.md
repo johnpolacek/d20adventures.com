@@ -1,6 +1,6 @@
 # D20Adventures Stabilization Roadmap
 
-Last updated: 2026-02-28
+Last updated: 2026-03-01
 
 ## Progress Snapshot
 
@@ -10,7 +10,7 @@ Last updated: 2026-02-28
 | Phase 2: Billing/Token Integrity | Complete (Planned Items) | Fail-closed charging, Stripe amount validation, and rollback/refund flows are implemented for join/upload and AI non-stream paths. |
 | Phase 3: Test and CI Guardrails | In Progress | New Playwright auth baseline exists; CI gates are not set up. |
 | Phase 4: Dependency Upgrade Track | Complete (Planned Items) | `convex`, `next`, and AI SDK packages were upgraded in isolated steps and validated with typecheck/build/auth + targeted smoke checks. |
-| Phase 5: Architecture Cleanup | Not Started | No structured split/logging cleanup work has started for this plan. |
+| Phase 5: Architecture Cleanup | In Progress | Initial `advance-turn` orchestration split is complete; larger file decomposition and log standardization remain. |
 
 ## Phase-by-Phase Status
 
@@ -92,7 +92,15 @@ Last updated: 2026-02-28
 
 ### Phase 5: Architecture Cleanup
 
-- `OPEN`: planned modularization and structured logging standardization not started under this roadmap.
+- `DONE (Slice 1)`: extracted encounter/prompt context construction from `advance-turn` action into a dedicated service module:
+  - `app/_actions/advance-turn.ts`
+  - `lib/services/advance-turn-prompt-service.ts`
+  - Outcome: reduced inline orchestration complexity while preserving behavior.
+- `OPEN`: split additional `advance-turn` responsibilities (turn assembly + transition branching) into focused modules.
+- `OPEN`: begin similar decomposition for:
+  - `app/_actions/adventure.ts`
+  - `lib/services/npc-turn-service.ts`
+- `OPEN`: reduce logging noise and standardize structured production logs across turn orchestration paths.
 
 ## Completed Milestones (Relevant Commits)
 
@@ -102,6 +110,6 @@ Last updated: 2026-02-28
 
 ## Current Next Checklist
 
-1. Decide whether to keep dependency track closed at `next@15.5.12` or schedule a separate `next@16` + Clerk compatibility pass.
-2. Keep auth, AI, and billing validation as as-needed local smoke runs when touching those paths.
-3. Start Phase 5 architecture cleanup (split large orchestration files and standardize production logging).
+1. Continue Phase 5 with `advance-turn` slice 2: extract turn-building/transition branch logic into dedicated services.
+2. Start decomposition of `lib/services/npc-turn-service.ts` into smaller intent/effect modules.
+3. Keep auth, AI, and billing validation as as-needed local smoke runs when touching those paths.
