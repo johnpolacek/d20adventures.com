@@ -5,6 +5,8 @@ import type { Id } from "@/convex/_generated/dataModel"
 import { generateObject } from "@/lib/ai"
 import { convex } from "@/lib/convex/server"
 import { readJsonFromS3 } from "@/lib/s3-utils"
+import { buildDeadCharacterCompletion, buildNpcTurnUpdatePatch } from "@/lib/services/npc-turn-effects-service"
+import { buildNpcInitiativeOrder, findEncounterInPlan, resolvePlanContextForEncounter } from "@/lib/services/npc-turn-intent-service"
 import { appendNarrative, normalizeNarrative } from "@/lib/services/narrative-service"
 import { detectSpellFromRollType, formatSpellsForPrompt, markSpellAsUsed } from "@/lib/services/spell-tracking-service"
 import { getRollModifier } from "@/lib/services/roll-modifier-service"
@@ -12,7 +14,7 @@ import { getRollRequirementForAction } from "@/lib/services/roll-requirement-ser
 import { analyzeAndApplyDiceRoll } from "@/lib/services/turn-update-service"
 import { rollD20 } from "@/lib/utils"
 import type { Turn, TurnCharacter } from "@/types/adventure"
-import type { AdventureEncounter, AdventurePlan } from "@/types/adventure-plan"
+import type { AdventurePlan } from "@/types/adventure-plan"
 import { z } from "zod"
 
 // Step 1: Schema for LLM to decide NPC action
@@ -560,13 +562,6 @@ Respond as JSON:
   }
 }
 
-// Helper function to find encounter in plan
-const findEncounterInPlan = (plan: AdventurePlan, encounterId: string): AdventureEncounter | null =>
-  plan.sections
-    .flatMap((section) => section.scenes)
-    .flatMap((scene) => scene.encounters)
-    .find((encounter) => encounter.id === encounterId) ?? null
-
 export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
   const npcRequestId = Math.random().toString(36).substring(7)
   console.log(`[NPC:${npcRequestId}] Starting NPC turns processing:`, {
@@ -636,28 +631,19 @@ export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
     )
   )
 
-  // Find current section and scene for context
-  let currentSection = undefined
-  let currentScene = undefined
-  for (const section of plan.sections) {
-    for (const scene of section.scenes) {
-      if (scene.encounters.some((enc) => enc.id === turn!.encounterId)) {
-        currentSection = section
-        currentScene = scene
-        break
-      }
-    }
-    if (currentSection && currentScene) break
-  }
+  const { sectionContext, sceneContext, adventureOverview, sectionTitle, sceneTitle } = resolvePlanContextForEncounter(
+    plan,
+    turn.encounterId
+  )
 
   console.log(
     "[LLM DM] Found current context",
     JSON.stringify(
       {
-        hasSection: !!currentSection,
-        hasScene: !!currentScene,
-        sectionTitle: currentSection?.title,
-        sceneTitle: currentScene?.title,
+        hasSection: !!sectionContext,
+        hasScene: !!sceneContext,
+        sectionTitle,
+        sceneTitle,
         encounterId: turn.encounterId,
       },
       null,
@@ -665,13 +651,9 @@ export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
     )
   )
 
-  const sectionContext = currentSection ? { title: currentSection.title, summary: currentSection.summary } : undefined
-  const sceneContext = currentScene ? { title: currentScene.title, summary: currentScene.summary } : undefined
-  const adventureOverview = plan.overview || undefined
-
   let characters = turn.characters as TurnCharacter[]
   // Take a snapshot of the current initiative order
-  const initiativeOrder = characters.filter((c) => !c.hasReplied && !c.isComplete).sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
+  const initiativeOrder = buildNpcInitiativeOrder(characters)
 
   console.log(`[NPC:${npcRequestId}] Initiative order analysis:`, {
     totalCharacters: characters.length,
@@ -818,8 +800,11 @@ export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
       )
     )
 
-    // Use appendNarrative utility for consistent narrative updates
-    const newNarrative = appendNarrative(turn!.narrative || "", result.narrativeToAppend || "")
+    const turnPatch = buildNpcTurnUpdatePatch({
+      currentNarrative: turn.narrative || "",
+      narrativeToAppend: result.narrativeToAppend,
+      updatedCharacters: result.updatedCharacters,
+    })
 
     console.log(
       `[NPC:${npcRequestId}] Updating turn in database`,
@@ -827,10 +812,10 @@ export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
         {
           turnId: turn._id.toString(),
           oldNarrativeLength: turn.narrative?.length || 0,
-          newNarrativeLength: newNarrative.length,
-          narrativeDelta: newNarrative.length - (turn.narrative?.length || 0),
+          newNarrativeLength: turnPatch.narrative.length,
+          narrativeDelta: turnPatch.narrative.length - (turn.narrative?.length || 0),
           oldNarrativePreview: `${turn.narrative?.substring(0, 100)}...`,
-          newNarrativePreview: `${newNarrative.substring(0, 100)}...`,
+          newNarrativePreview: `${turnPatch.narrative.substring(0, 100)}...`,
           updatedCharacterCount: result.updatedCharacters.length,
         },
         null,
@@ -840,11 +825,7 @@ export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
 
     await convex.mutation(api.turns.updateTurn, {
       turnId: turn._id,
-      patch: {
-        characters: result.updatedCharacters,
-        narrative: newNarrative,
-        updatedAt: Date.now(),
-      },
+      patch: turnPatch,
     })
 
     processedNpcCount++
@@ -866,28 +847,20 @@ export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
   // After processing NPCs, mark all dead characters as complete
   const finalTurnState = await convex.query(api.adventure.getTurnById, { turnId })
   if (finalTurnState) {
-    const finalCharacters = finalTurnState.characters as TurnCharacter[]
-    const deadCharacters = finalCharacters.filter(
-      (c) => !c.isComplete && (c.healthPercent === 0 || c.status === "dead")
-    )
+    const deadCharacterCompletion = buildDeadCharacterCompletion({
+      characters: finalTurnState.characters as TurnCharacter[],
+    })
 
-    if (deadCharacters.length > 0) {
-      console.log(`[NPC:${npcRequestId}] Marking ${deadCharacters.length} dead character(s) as complete:`, deadCharacters.map((c) => c.name))
-      const updatedCharacters = finalCharacters.map((c) => {
-        if (!c.isComplete && (c.healthPercent === 0 || c.status === "dead")) {
-          return {
-            ...c,
-            hasReplied: true,
-            isComplete: true,
-          }
-        }
-        return c
-      })
+    if (deadCharacterCompletion.hasChanges) {
+      console.log(
+        `[NPC:${npcRequestId}] Marking ${deadCharacterCompletion.deadCharacters.length} dead character(s) as complete:`,
+        deadCharacterCompletion.deadCharacters.map((character) => character.name)
+      )
 
       await convex.mutation(api.turns.updateTurn, {
         turnId: finalTurnState._id,
         patch: {
-          characters: updatedCharacters,
+          characters: deadCharacterCompletion.updatedCharacters,
           updatedAt: Date.now(),
         },
       })
