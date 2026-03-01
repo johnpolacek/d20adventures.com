@@ -109,7 +109,11 @@ Last updated: 2026-03-01
   - `lib/services/npc-turn-intent-service.ts`
   - `lib/services/npc-turn-effects-service.ts`
   - Outcome: initiative/context derivation and turn/dead-character patch construction are now isolated from orchestration flow.
-- `OPEN`: continue `npc-turn-service` decomposition for prompt/action generation branching in `processNpcTurnWithLLM`.
+- `DONE (Slice 5)`: extracted `processNpcTurnWithLLM` prompt/action generation branching into focused helpers:
+  - `lib/services/npc-turn-service.ts`
+  - `lib/services/npc-turn-generation-service.ts`
+  - Outcome: action context, prompt construction, and model generation are isolated from branch side-effects and persistence orchestration.
+- `OPEN`: continue `npc-turn-service` decomposition for effect-application and AI roll reconciliation branches in `processNpcTurnWithLLM`.
 - `OPEN`: begin similar decomposition for `app/_actions/adventure.ts`.
 - `OPEN`: reduce logging noise and standardize structured production logs across turn orchestration paths.
 
@@ -121,7 +125,7 @@ Last updated: 2026-03-01
 
 ## Current Next Checklist
 
-1. Continue `npc-turn-service` decomposition by extracting prompt/action-generation branching from `processNpcTurnWithLLM`.
+1. Continue `npc-turn-service` decomposition by extracting effect-application and AI roll reconciliation branches from `processNpcTurnWithLLM`.
 2. Split `app/_actions/adventure.ts` orchestration into focused service layers.
 3. Reduce logging noise and standardize structured production logs on turn/adventure paths.
 4. Keep auth, AI, and billing validation as as-needed local smoke runs when touching those paths.
