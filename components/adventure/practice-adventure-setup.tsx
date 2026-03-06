@@ -153,7 +153,13 @@ export function PracticeAdventureSetup({
                   Back to Plan
                 </Button>
               </Link>
-              <Button variant="epic" size="sm" onClick={handleStartPractice} disabled={isStarting || options.length === 0}>
+              <Button
+                variant="epic"
+                size="sm"
+                className="px-4 py-1 text-xs tracking-wide border-2"
+                onClick={handleStartPractice}
+                disabled={isStarting || options.length === 0}
+              >
                 {isStarting ? "Starting Practice..." : "Start Practice Run"}
               </Button>
             </div>

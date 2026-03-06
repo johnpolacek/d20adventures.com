@@ -102,7 +102,7 @@ export default async function AdventurePlanEditPage(props: { params: Promise<{ s
     <div className="flex min-h-screen flex-col relative p-8 md:p-16 max-w-7xl mx-auto">
       <div className="flex justify-end pb-6">
         <Link href={`/settings/${settingId}/${adventurePlanId}/practice`}>
-          <Button variant="epic" size="sm">
+          <Button variant="epic" size="sm" className="px-4 py-1 text-xs tracking-wide border-2">
             Start Practice Run
           </Button>
         </Link>
