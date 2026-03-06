@@ -34,12 +34,14 @@ interface SchemaField {
 }
 
 // Define the schema for field definitions
-const fieldSchema: z.ZodType<SchemaField> = z.object({
-  type: z.enum(["string", "number", "boolean", "array", "object"]),
-  optional: z.boolean().optional(),
-  properties: z.record(z.lazy(() => fieldSchema)).optional(),
-  items: z.lazy(() => fieldSchema).optional(),
-})
+const fieldSchema: z.ZodType<SchemaField> = z.lazy(() =>
+  z.object({
+    type: z.enum(["string", "number", "boolean", "array", "object"]),
+    optional: z.boolean().optional(),
+    properties: z.record(z.string(), fieldSchema).optional(),
+    items: fieldSchema.optional(),
+  })
+)
 
 // Define the schema for the request body
 const requestSchema = z.object({
