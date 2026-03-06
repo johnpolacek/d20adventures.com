@@ -32,10 +32,12 @@ interface AdventurePlanSectionsProps {
   onEncounterDelete: (sectionIndex: number, sceneIndex: number, encounterIndex: number) => void
   onEncounterTransitionsChange: (sectionIndex: number, sceneIndex: number, encounterIndex: number, newTransitions: { condition: string; encounter: string }[]) => void
   onEncounterNpcChange: (sectionIndex: number, sceneIndex: number, encounterIndex: number, newNpcs: { id: string; behavior: string; initialInitiative?: number }[]) => void
+  onEncounterMapChange: (sectionIndex: number, sceneIndex: number, encounterIndex: number, map3d: AdventureEncounter["map3d"]) => void
   onAddEncounter: (sectionIndex: number, sceneIndex: number, newEncounter?: AdventureEncounter) => void
   onAddSection: () => void
   onNpcsChange: (npcs: Record<string, Character>) => void
   setNpcs: React.Dispatch<React.SetStateAction<Record<string, Character>>>
+  maxPartySize: number
 }
 
 export function AdventurePlanSections({
@@ -58,10 +60,12 @@ export function AdventurePlanSections({
   onEncounterDelete,
   onEncounterTransitionsChange,
   onEncounterNpcChange,
+  onEncounterMapChange,
   onAddEncounter,
   onAddSection,
   onNpcsChange,
   setNpcs,
+  maxPartySize,
 }: AdventurePlanSectionsProps) {
   const [generatorOpen, setGeneratorOpen] = React.useState<{ sIndex: number; scIndex: number } | null>(null)
   const [prompt, setPrompt] = React.useState("")
@@ -193,9 +197,11 @@ export function AdventurePlanSections({
                           onDelete={onEncounterDelete}
                           onTransitionsChange={onEncounterTransitionsChange}
                           onNpcChange={onEncounterNpcChange}
+                          onMapChange={onEncounterMapChange}
                           onNpcsChange={onNpcsChange}
                           setNpcs={setNpcs}
                           isSaving={isSaving}
+                          maxPartySize={maxPartySize}
                         />
                       ))}
 

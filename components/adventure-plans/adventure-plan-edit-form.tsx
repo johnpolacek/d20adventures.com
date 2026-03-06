@@ -223,10 +223,12 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
           onEncounterDelete={encounterHandlers.handleEncounterDelete}
           onEncounterTransitionsChange={encounterHandlers.handleEncounterTransitionsChange}
           onEncounterNpcChange={encounterHandlers.handleEncounterNpcChange}
+          onEncounterMapChange={encounterHandlers.handleEncounterMapChange}
           onAddEncounter={sectionHandlers.handleAddEncounter}
           onAddSection={sectionHandlers.handleAddSection}
           onNpcsChange={handleNpcsChange}
           setNpcs={setNpcs}
+          maxPartySize={Number(maxPartySize)}
         />
 
         <AdventurePlanCharactersEdit

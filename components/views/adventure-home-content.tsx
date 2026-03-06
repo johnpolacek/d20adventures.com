@@ -4,6 +4,7 @@ import { ensureNpcProcessed } from "@/app/_actions/ensure-npc-processed"
 import AdventureLobby from "@/components/adventure/adventure-lobby"
 import Turn from "@/components/adventure/turn"
 import AccountRequired from "@/components/nav/account-required"
+import { findEncounterById } from "@/lib/map-utils"
 import ImageHeader from "@/components/ui/image-header"
 import type { Id } from "@/convex/_generated/dataModel"
 import { useTurn } from "@/lib/context/TurnContext"
@@ -88,13 +89,14 @@ function AdventureHomeContent({ initialImage, adventure, adventurePlan }: { init
   }, [turn, initialCheckDone])
 
   const imageUrl = getImageUrl(image)
+  const currentEncounter = React.useMemo(() => findEncounterById(adventurePlan?.sections || [], turn?.encounterId), [adventurePlan?.sections, turn?.encounterId])
 
   return (
     <>
       <div className={cn("flex flex-col items-center relative", isSignedIn && "min-h-screen")}>
         <ImageHeader variant={turn ? "default" : "compact"} imageUrl={imageUrl} title={adventure.title} subtitle={turn?.title} imageAlt={turn?.title || adventure.title} />
         {turn ? (
-          <Turn nextAdventure={adventurePlan?.nextAdventure} />
+          <Turn nextAdventure={adventurePlan?.nextAdventure} encounter={currentEncounter} />
         ) : (
           <>
             <AdventureLobby adventure={adventure} adventurePlan={adventurePlan} />

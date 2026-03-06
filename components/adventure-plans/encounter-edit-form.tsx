@@ -15,6 +15,7 @@ import { ChevronsUp, Plus, X } from "lucide-react"
 import * as React from "react"
 import { CharacterCard } from "./character-card"
 import { CharacterGenerateForm } from "./character-generate-form"
+import { EncounterMapEditor } from "./encounter-map-editor"
 import { DeleteEncounterAlert } from "./delete-encounter-alert"
 import { EncounterEditCollapsed } from "./encounter-edit-collapsed"
 import { useNpcManagement } from "./hooks/use-npc-management"
@@ -38,10 +39,12 @@ interface EncounterEditFormProps {
   onImageChange: (sectionIndex: number, sceneIndex: number, encounterIndex: number, newImageUrl: string) => void
   onTransitionsChange: (sectionIndex: number, sceneIndex: number, encounterIndex: number, newTransitions: EncounterTransition[]) => void
   onNpcChange: (sectionIndex: number, sceneIndex: number, encounterIndex: number, newNpcs: EncounterCharacterRef[]) => void
+  onMapChange: (sectionIndex: number, sceneIndex: number, encounterIndex: number, map3d: AdventureEncounter["map3d"]) => void
   onDelete: (sectionIndex: number, sceneIndex: number, encounterIndex: number) => void
   onNpcsChange: (npcs: Record<string, Character>) => void
   setNpcs: React.Dispatch<React.SetStateAction<Record<string, Character>>>
   isSaving: boolean
+  maxPartySize: number
 }
 
 export function EncounterEditForm({
@@ -62,10 +65,12 @@ export function EncounterEditForm({
   onImageChange,
   onTransitionsChange,
   onNpcChange,
+  onMapChange,
   onDelete,
   onNpcsChange,
   setNpcs,
   isSaving,
+  maxPartySize,
 }: EncounterEditFormProps) {
   const [isEditing, setIsEditing] = React.useState(false)
   const [showGenerateForm, setShowGenerateForm] = React.useState(false)
@@ -283,6 +288,14 @@ export function EncounterEditForm({
               className="bg-white/10 placeholder:text-white/40"
             />
           </div>
+
+          <EncounterMapEditor
+            encounter={encounter}
+            allSections={allSections}
+            maxPartySize={maxPartySize}
+            isSaving={isSaving}
+            onMapChange={(map3d) => onMapChange(sectionIndex, sceneIndex, encounterIndex, map3d)}
+          />
 
           {/* NPCs Section */}
           <div className="border-t border-white/10 pt-4">
