@@ -2,14 +2,14 @@
 
 import { Button } from "@/components/ui/button"
 import { useTokens } from "@/lib/context/TokenContext"
-import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs"
+import { SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs"
 import { User as UserIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 import TokenCount from "./token-count"
 
 export default function AuthButtons() {
   const { tokensRemaining, isLoading: isLoadingTokens } = useTokens()
-  const { user } = useUser()
+  const { user, isSignedIn } = useUser()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -35,7 +35,7 @@ export default function AuthButtons() {
 
   return (
     <div className={"flex items-center overflow-hidden transition-[width] duration-300 ease-in-out"}>
-      <SignedOut>
+      {!isSignedIn && (
         <div className="flex gap-2 sm:gap-4 whitespace-nowrap sm:px-2">
           <SignInButton mode="modal">
             <Button id="signinButton" className="text-[11px] sm:text-sm py-1 px-2 sm:px-4 my-2 tracking-tight sm:tracking-normal font-display normal-case" variant="emboss">
@@ -48,8 +48,8 @@ export default function AuthButtons() {
             </Button>
           </SignUpButton>
         </div>
-      </SignedOut>
-      <SignedIn>
+      )}
+      {isSignedIn && (
         <div className="flex items-center gap-1.5 saturate-50">
           <div className="flex items-center gap-0.5 text-xs sm:text-sm text-muted-foreground">
             {!isLoadingTokens && typeof tokensRemaining === "number" && <TokenCount tokensRemaining={tokensRemaining} />}
@@ -60,7 +60,7 @@ export default function AuthButtons() {
             </UserButton.MenuItems>
           </UserButton>
         </div>
-      </SignedIn>
+      )}
     </div>
   )
 }

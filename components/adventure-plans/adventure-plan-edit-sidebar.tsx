@@ -6,7 +6,6 @@ import { reverseSlugify } from "@/lib/utils"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import { DndContext, PointerSensor, closestCenter, useSensor, useSensors } from "@dnd-kit/core"
 import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable"
-// @ts-expect-error dnd-kit/utilities may not have types in some setups
 import { CSS } from "@dnd-kit/utilities"
 import { GripVertical } from "lucide-react"
 import Link from "next/link"

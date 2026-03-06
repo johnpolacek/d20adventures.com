@@ -22,7 +22,7 @@ import { useTurn } from "@/lib/context/TurnContext";
 import { formatNarrativeAction } from "@/lib/services/narrative-generation-service";
 import { hasBooleanProp, hasNumberProp } from "@/lib/utils";
 import type { TurnCharacter } from "@/types/adventure";
-import { SignUpButton, SignedIn, SignedOut, useUser } from "@clerk/nextjs";
+import { SignUpButton, useUser } from "@clerk/nextjs";
 import { SparklesIcon } from "@heroicons/react/24/solid";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -52,7 +52,7 @@ export default function TurnNarrativeReply({
   const [deferring, setDeferring] = useState(false);
   const [skipOpen, setSkipOpen] = useState(false);
   const router = useRouter();
-  const { user } = useUser();
+  const { user, isSignedIn } = useUser();
   const currentTurn = useTurn();
   const { settingId, adventurePlanId, adventure } = useAdventure();
   const { streamText } = useGenerateText();
@@ -416,7 +416,7 @@ ${input ? `\nPlayer Input: ${input}` : ""}`;
           </div>
           {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
           <div className="flex justify-center md:justify-end mt-2 gap-8">
-            <SignedIn>
+            {isSignedIn ? (
               <>
                 {/* Unified Skip menu */}
                 <AlertDialog open={skipOpen} onOpenChange={setSkipOpen}>
@@ -506,14 +506,13 @@ ${input ? `\nPlayer Input: ${input}` : ""}`;
                   )}
                 </Button>
               </>
-            </SignedIn>
-            <SignedOut>
+            ) : (
               <SignUpButton mode="modal">
                 <Button className="tracking-normal" variant="epic" size="lg">
                   Sign Up to Reply
                 </Button>
               </SignUpButton>
-            </SignedOut>
+            )}
           </div>
         </>
       )}

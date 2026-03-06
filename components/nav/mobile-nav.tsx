@@ -6,8 +6,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 import { siteConfig } from "@/lib/config"
 import { navItems } from "@/lib/config/navigation"
 import { cn } from "@/lib/utils"
-import { useUser } from "@clerk/nextjs"
-import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs"
+import { SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs"
 import { Menu, ShieldCheck } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -96,7 +95,8 @@ export function MobileNav() {
           )}
         </nav>
         <div className="mt-auto flex flex-col gap-4 p-8">
-          <SignedOut>
+          {!isSignedIn && (
+            <>
             <SignUpButton mode="modal">
               <Button className="w-full" onClick={() => setOpen(false)}>
                 Sign Up
@@ -107,12 +107,13 @@ export function MobileNav() {
                 Sign In
               </Button>
             </SignInButton>
-          </SignedOut>
-          <SignedIn>
+            </>
+          )}
+          {isSignedIn && (
             <div className="flex items-center justify-center">
-              <UserButton afterSignOutUrl="/" userProfileUrl="/settings/profile" />
+              <UserButton userProfileUrl="/settings/profile" />
             </div>
-          </SignedIn>
+          )}
         </div>
       </SheetContent>
     </Sheet>
