@@ -4,7 +4,7 @@ import { generateEncounterMapAction, generateEncounterMapPromptAction } from "@/
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { createDefaultEncounterMap, listEncounterOptions } from "@/lib/map-utils"
+import { createDefaultEncounterMap, enhanceEncounterMap, listEncounterOptions } from "@/lib/map-utils"
 import type { AdventureEncounter, AdventureSection, Encounter3DMap } from "@/types/adventure-plan"
 import dynamic from "next/dynamic"
 import * as React from "react"
@@ -51,6 +51,16 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
   const requestKeyRef = React.useRef<string | null>(null)
 
   const map = encounter.map3d
+  const displayMap = React.useMemo(
+    () =>
+      map
+        ? enhanceEncounterMap(map, {
+            maxPartySize,
+            npcIds: (encounter.npc || []).map((entry) => entry.id),
+          })
+        : null,
+    [encounter.npc, map, maxPartySize]
+  )
   const encounterOptions = React.useMemo(() => listEncounterOptions(allSections, encounter.id).filter((option) => option.hasMap), [allSections, encounter.id])
 
   React.useEffect(() => {
@@ -233,21 +243,21 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
           </div>
 
           <div className="space-y-4">
-            <MiniaturesMap map={map} title={encounter.title} className="w-full" />
+            <MiniaturesMap map={displayMap || map} title={encounter.title} className="w-full" />
 
             <div className="w-full space-y-4 rounded-2xl border border-white/10 bg-white/5 p-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                   <div className="mb-2 text-xs font-mono uppercase tracking-[0.25em] text-primary-200/70">Summary</div>
-                  <p className="text-sm text-white/80">{map.summary || "No summary yet."}</p>
+                  <p className="text-sm text-white/80">{displayMap?.summary || map.summary || "No summary yet."}</p>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                   <div className="mb-2 text-xs font-mono uppercase tracking-[0.25em] text-primary-200/70">Board</div>
                   <div className="grid grid-cols-2 gap-2 text-sm text-white/80">
-                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">{map.board.width} width</div>
-                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">{map.board.depth} depth</div>
-                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">{map.board.cellSize} cell size</div>
-                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">{map.board.theme} theme</div>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">{displayMap?.board.width || map.board.width} width</div>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">{displayMap?.board.depth || map.board.depth} depth</div>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">{displayMap?.board.cellSize || map.board.cellSize} cell size</div>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">{displayMap?.board.theme || map.board.theme} theme</div>
                   </div>
                 </div>
               </div>
@@ -256,28 +266,28 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
                 <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                   <div className="mb-2 text-xs font-mono uppercase tracking-[0.25em] text-primary-200/70">Scene Breakdown</div>
                   <div className="grid grid-cols-2 gap-2 text-sm text-white/80">
-                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">Terrain: {map.terrain.length}</div>
-                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">Props: {map.props.length}</div>
-                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">Zones: {map.zones.length}</div>
-                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">Prompts: {map.promptHistory.length}</div>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">Terrain: {displayMap?.terrain.length || map.terrain.length}</div>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">Props: {displayMap?.props.length || map.props.length}</div>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">Zones: {displayMap?.zones.length || map.zones.length}</div>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">Prompts: {displayMap?.promptHistory.length || map.promptHistory.length}</div>
                   </div>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                   <div className="mb-2 text-xs font-mono uppercase tracking-[0.25em] text-primary-200/70">Mini Placement</div>
                   <div className="grid grid-cols-2 gap-2 text-sm text-white/80">
-                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">Party slots: {map.tokenSlots.party.length}</div>
-                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">NPC slots: {map.tokenSlots.npc.length}</div>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">Party slots: {displayMap?.tokenSlots.party.length || map.tokenSlots.party.length}</div>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">NPC slots: {displayMap?.tokenSlots.npc.length || map.tokenSlots.npc.length}</div>
                     <div className="rounded-xl border border-white/10 bg-white/5 p-3">Encounter NPCs: {encounter.npc?.length || 0}</div>
                     <div className="rounded-xl border border-white/10 bg-white/5 p-3">Party cap: {maxPartySize}</div>
                   </div>
                 </div>
               </div>
 
-              {map.promptHistory.length > 0 && (
+              {(displayMap?.promptHistory.length || map.promptHistory.length) > 0 && (
                 <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                   <div className="mb-2 text-xs font-mono uppercase tracking-[0.25em] text-primary-200/70">Recent Prompts</div>
                   <div className="space-y-2 text-sm text-white/75">
-                    {map.promptHistory.slice(-3).reverse().map((entry, index) => (
+                    {(displayMap?.promptHistory || map.promptHistory).slice(-3).reverse().map((entry, index) => (
                       <div key={`${index}-${entry.slice(0, 16)}`} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
                         {entry}
                       </div>

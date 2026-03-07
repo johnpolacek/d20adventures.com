@@ -1,9 +1,9 @@
 "use client"
 
-import { getThemePalette } from "@/lib/map-utils"
+import { enhanceEncounterMap, getThemePalette } from "@/lib/map-utils"
 import { cn, getImageUrl } from "@/lib/utils"
 import type { Encounter3DMap } from "@/types/adventure-plan"
-import { Billboard, Html, OrbitControls } from "@react-three/drei"
+import { Billboard, ContactShadows, Grid, Html, OrbitControls, RoundedBox } from "@react-three/drei"
 import { Canvas } from "@react-three/fiber"
 import type { TurnCharacter } from "@/types/adventure"
 import * as THREE from "three"
@@ -25,7 +25,6 @@ export interface MapMiniToken {
 }
 
 function TerrainMesh({ item }: { item: Encounter3DMap["terrain"][number] }) {
-  const geometry = useMemo(() => new THREE.BoxGeometry(item.width, item.height, item.depth), [item.depth, item.height, item.width])
   const position: [number, number, number] = [item.x, item.y + item.height / 2, item.z]
   const color =
     item.kind === "water"
@@ -34,10 +33,19 @@ function TerrainMesh({ item }: { item: Encounter3DMap["terrain"][number] }) {
         ? item.color || "#2d1e1e"
         : item.color || "#7a746b"
 
+  if (item.kind === "water") {
+    return (
+      <mesh position={[item.x, item.y + item.height / 2, item.z]} rotation={[0, item.rotation, 0]} receiveShadow>
+        <boxGeometry args={[item.width, item.height, item.depth]} />
+        <meshStandardMaterial color={color} roughness={0.2} metalness={0.1} transparent opacity={0.82} />
+      </mesh>
+    )
+  }
+
   return (
-    <mesh geometry={geometry} position={position} rotation={[0, item.rotation, 0]} castShadow receiveShadow>
-      <meshStandardMaterial color={color} roughness={0.85} metalness={0.15} />
-    </mesh>
+    <RoundedBox args={[item.width, item.height, item.depth]} radius={0.08} smoothness={3} position={position} rotation={[0, item.rotation, 0]} castShadow receiveShadow>
+      <meshStandardMaterial color={color} roughness={0.88} metalness={0.08} />
+    </RoundedBox>
   )
 }
 
@@ -53,10 +61,20 @@ function PropMesh({ item }: { item: Encounter3DMap["props"][number] }) {
   switch (item.kind) {
     case "pillar":
       return (
-        <mesh {...sharedProps}>
-          <cylinderGeometry args={[0.35 * item.scale, 0.45 * item.scale, 2.2 * item.scale, 12]} />
-          <meshStandardMaterial color={item.color || "#9b8b7a"} />
-        </mesh>
+        <group position={position} rotation={[0, item.rotation, 0]}>
+          <mesh position={[0, -0.85 * item.scale, 0]} castShadow receiveShadow>
+            <cylinderGeometry args={[0.5 * item.scale, 0.55 * item.scale, 0.18 * item.scale, 16]} />
+            <meshStandardMaterial color="#6c675f" />
+          </mesh>
+          <mesh castShadow receiveShadow>
+            <cylinderGeometry args={[0.28 * item.scale, 0.34 * item.scale, 2 * item.scale, 16]} />
+            <meshStandardMaterial color={item.color || "#b2a391"} />
+          </mesh>
+          <mesh position={[0, 1.02 * item.scale, 0]} castShadow receiveShadow>
+            <cylinderGeometry args={[0.44 * item.scale, 0.44 * item.scale, 0.18 * item.scale, 16]} />
+            <meshStandardMaterial color="#7a746b" />
+          </mesh>
+        </group>
       )
     case "torch":
       return (
@@ -69,6 +87,7 @@ function PropMesh({ item }: { item: Encounter3DMap["props"][number] }) {
             <sphereGeometry args={[0.15 * item.scale, 10, 10]} />
             <meshStandardMaterial emissive="#ff9e00" color="#ffd166" />
           </mesh>
+          <pointLight position={[0, 0.82 * item.scale, 0]} intensity={2.2} distance={5} color="#ffb703" />
         </group>
       )
     case "tree":
@@ -86,7 +105,7 @@ function PropMesh({ item }: { item: Encounter3DMap["props"][number] }) {
       )
     case "rock":
       return (
-        <mesh {...sharedProps}>
+        <mesh {...sharedProps} position={[item.x, item.y + 0.34 * item.scale, item.z]}>
           <dodecahedronGeometry args={[0.5 * item.scale, 0]} />
           <meshStandardMaterial color={item.color || "#7c7f84"} roughness={1} />
         </mesh>
@@ -125,6 +144,10 @@ function PropMesh({ item }: { item: Encounter3DMap["props"][number] }) {
     case "banner":
       return (
         <group position={position} rotation={[0, item.rotation, 0]}>
+          <mesh position={[0, -0.15 * item.scale, 0]} castShadow receiveShadow>
+            <cylinderGeometry args={[0.28 * item.scale, 0.32 * item.scale, 0.16 * item.scale, 12]} />
+            <meshStandardMaterial color="#5b5148" />
+          </mesh>
           <mesh position={[0, 0.55 * item.scale, 0]} castShadow>
             <cylinderGeometry args={[0.04 * item.scale, 0.04 * item.scale, 1.6 * item.scale, 8]} />
             <meshStandardMaterial color="#57483a" />
@@ -137,14 +160,21 @@ function PropMesh({ item }: { item: Encounter3DMap["props"][number] }) {
       )
     case "altar":
       return (
-        <mesh {...sharedProps}>
-          <boxGeometry args={[1.4 * item.scale, 0.9 * item.scale, 0.9 * item.scale]} />
-          <meshStandardMaterial color={item.color || "#b7b7b7"} />
-        </mesh>
+        <group position={position} rotation={[0, item.rotation, 0]}>
+          <RoundedBox args={[1.6 * item.scale, 0.45 * item.scale, 1 * item.scale]} radius={0.05} smoothness={2} castShadow receiveShadow>
+            <meshStandardMaterial color="#8f8b84" />
+          </RoundedBox>
+          <RoundedBox args={[1.1 * item.scale, 0.35 * item.scale, 0.76 * item.scale]} radius={0.05} smoothness={2} position={[0, 0.38 * item.scale, 0]} castShadow receiveShadow>
+            <meshStandardMaterial color={item.color || "#c1beb7"} />
+          </RoundedBox>
+        </group>
       )
     case "statue":
       return (
         <group position={position} rotation={[0, item.rotation, 0]}>
+          <RoundedBox args={[0.7 * item.scale, 0.4 * item.scale, 0.7 * item.scale]} radius={0.04} smoothness={2} position={[0, -0.72 * item.scale, 0]} castShadow receiveShadow>
+            <meshStandardMaterial color="#8d8983" />
+          </RoundedBox>
           <mesh castShadow>
             <cylinderGeometry args={[0.25 * item.scale, 0.32 * item.scale, 1.6 * item.scale, 10]} />
             <meshStandardMaterial color={item.color || "#b3b1aa"} />
@@ -158,10 +188,15 @@ function PropMesh({ item }: { item: Encounter3DMap["props"][number] }) {
     case "crate":
     default:
       return (
-        <mesh {...sharedProps}>
-          <boxGeometry args={[0.8 * item.scale, 0.8 * item.scale, 0.8 * item.scale]} />
-          <meshStandardMaterial color={item.color || "#8b5a2b"} />
-        </mesh>
+        <group position={position} rotation={[0, item.rotation, 0]}>
+          <RoundedBox args={[0.8 * item.scale, 0.8 * item.scale, 0.8 * item.scale]} radius={0.04} smoothness={2} castShadow receiveShadow>
+            <meshStandardMaterial color={item.color || "#8b5a2b"} />
+          </RoundedBox>
+          <mesh position={[0, 0, 0.41 * item.scale]} castShadow>
+            <boxGeometry args={[0.72 * item.scale, 0.08 * item.scale, 0.05 * item.scale]} />
+            <meshStandardMaterial color="#4b2d12" />
+          </mesh>
+        </group>
       )
   }
 }
@@ -215,11 +250,12 @@ export default function MiniaturesMap({
   className?: string
 }) {
   const [selectedToken, setSelectedToken] = useState<MapMiniToken | null>(tokens[0] ?? null)
-  const palette = getThemePalette(map.board.theme)
+  const displayMap = useMemo(() => enhanceEncounterMap(map), [map])
+  const palette = getThemePalette(displayMap.board.theme)
   const cameraPosition: [number, number, number] = [
-    map.camera.focusX + Math.cos(map.camera.yaw) * map.camera.distance,
-    Math.sin(map.camera.pitch) * map.camera.distance,
-    map.camera.focusZ + Math.sin(map.camera.yaw) * map.camera.distance,
+    displayMap.camera.focusX + Math.cos(displayMap.camera.yaw) * displayMap.camera.distance,
+    Math.sin(displayMap.camera.pitch) * displayMap.camera.distance,
+    displayMap.camera.focusZ + Math.sin(displayMap.camera.yaw) * displayMap.camera.distance,
   ]
 
   return (
@@ -227,45 +263,69 @@ export default function MiniaturesMap({
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
         <div>
           <div className="text-xs font-mono uppercase tracking-[0.3em] text-primary-200/70">Miniatures Map</div>
-          <div className="font-display text-lg text-amber-200">{title || map.summary || "Encounter Map"}</div>
+          <div className="font-display text-lg text-amber-200">{title || displayMap.summary || "Encounter Map"}</div>
         </div>
         <div className="text-right text-xs text-white/60">
-          <div>{map.board.width}x{map.board.depth} board</div>
+          <div>{displayMap.board.width}x{displayMap.board.depth} board</div>
           <div>{tokens.length} minis</div>
         </div>
       </div>
 
       <div className="flex flex-col">
-        <div className="h-[480px] w-full bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),_transparent_50%)]">
-          <Canvas camera={{ position: cameraPosition, fov: 42 }} shadows dpr={[1, 1.5]}>
-            <ambientLight intensity={1.15} />
-            <directionalLight position={[8, 14, 6]} intensity={2.1} castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
-            <fog attach="fog" args={["#07080b", 16, 36]} />
+        <div className="h-[520px] w-full bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.1),_transparent_55%)]">
+          <Canvas camera={{ position: cameraPosition, fov: 42 }} shadows dpr={[1, 1.5]} gl={{ antialias: true }}>
+            <color attach="background" args={["#06070a"]} />
+            <hemisphereLight intensity={0.7} groundColor="#0f172a" color="#f8fafc" />
+            <ambientLight intensity={0.65} />
+            <directionalLight position={[8, 16, 6]} intensity={2.5} castShadow shadow-mapSize-width={2048} shadow-mapSize-height={2048} />
+            <spotLight position={[-8, 14, 8]} angle={0.45} penumbra={0.65} intensity={1.2} color="#ffe0b2" castShadow />
+            <fog attach="fog" args={["#06070a", 12, 34]} />
+
+            <mesh position={[0, 6, -displayMap.board.depth * displayMap.board.cellSize * 0.55]} rotation={[0, 0, 0]} receiveShadow>
+              <planeGeometry args={[displayMap.board.width * displayMap.board.cellSize * 1.35, displayMap.board.depth * displayMap.board.cellSize * 0.9]} />
+              <meshStandardMaterial color={palette.edge} roughness={1} />
+            </mesh>
 
             <mesh position={[0, -0.05, 0]} receiveShadow>
-              <boxGeometry args={[map.board.width * map.board.cellSize, 0.2, map.board.depth * map.board.cellSize]} />
+              <boxGeometry args={[displayMap.board.width * displayMap.board.cellSize, 0.2, displayMap.board.depth * displayMap.board.cellSize]} />
               <meshStandardMaterial color={palette.floor} roughness={0.95} />
             </mesh>
 
             <mesh position={[0, -0.18, 0]} receiveShadow>
-              <boxGeometry args={[map.board.width * map.board.cellSize + 1.2, 0.16, map.board.depth * map.board.cellSize + 1.2]} />
+              <boxGeometry args={[displayMap.board.width * displayMap.board.cellSize + 1.2, 0.16, displayMap.board.depth * displayMap.board.cellSize + 1.2]} />
               <meshStandardMaterial color={palette.edge} roughness={1} />
             </mesh>
 
-            {map.zones.map((zone) => (
+            <Grid
+              position={[0, 0.025, 0]}
+              args={[displayMap.board.width * displayMap.board.cellSize, displayMap.board.depth * displayMap.board.cellSize]}
+              cellSize={displayMap.board.cellSize}
+              cellThickness={0.55}
+              cellColor="#f8fafc"
+              sectionSize={displayMap.board.cellSize * 2}
+              sectionThickness={0.9}
+              sectionColor={palette.accent}
+              fadeDistance={40}
+              fadeStrength={1.1}
+              infiniteGrid={false}
+            />
+
+            {displayMap.zones.map((zone) => (
               <mesh key={zone.id} position={[zone.x, 0.015, zone.z]} rotation={[-Math.PI / 2, 0, 0]}>
                 <planeGeometry args={[zone.width, zone.depth]} />
                 <meshBasicMaterial color={zone.color || palette.accent} transparent opacity={0.18} />
               </mesh>
             ))}
 
-            {map.terrain.map((terrain) => (
+            {displayMap.terrain.map((terrain) => (
               <TerrainMesh key={terrain.id} item={terrain} />
             ))}
 
-            {map.props.map((prop) => (
+            {displayMap.props.map((prop) => (
               <PropMesh key={prop.id} item={prop} />
             ))}
+
+            <ContactShadows position={[0, 0.04, 0]} opacity={0.45} scale={Math.max(displayMap.board.width, displayMap.board.depth) * 1.25} blur={2.2} far={8} />
 
             {tokens.map((token) => (
               <TokenMini key={token.id} token={token} onSelect={setSelectedToken} />
@@ -278,20 +338,20 @@ export default function MiniaturesMap({
               minDistance={8}
               minPolarAngle={0.35}
               maxPolarAngle={1.35}
-              target={[map.camera.focusX, 0.5, map.camera.focusZ]}
+              target={[displayMap.camera.focusX, 0.5, displayMap.camera.focusZ]}
             />
           </Canvas>
         </div>
 
         <div className="w-full border-t border-white/10 bg-black/30 p-4">
           <div className="text-xs font-mono uppercase tracking-[0.25em] text-primary-200/60">Scene Summary</div>
-          <p className="mt-2 text-sm text-white/80">{map.summary || "No summary yet."}</p>
+          <p className="mt-2 text-sm text-white/80">{displayMap.summary || "No summary yet."}</p>
 
           <div className="mt-5 grid grid-cols-2 gap-2 text-xs text-white/70">
-            <div className="rounded-xl border border-white/10 bg-white/5 p-2">Terrain: {map.terrain.length}</div>
-            <div className="rounded-xl border border-white/10 bg-white/5 p-2">Props: {map.props.length}</div>
-            <div className="rounded-xl border border-white/10 bg-white/5 p-2">Zones: {map.zones.length}</div>
-            <div className="rounded-xl border border-white/10 bg-white/5 p-2">Party Slots: {map.tokenSlots.party.length}</div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-2">Terrain: {displayMap.terrain.length}</div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-2">Props: {displayMap.props.length}</div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-2">Zones: {displayMap.zones.length}</div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-2">Party Slots: {displayMap.tokenSlots.party.length}</div>
           </div>
 
           <div className="mt-5">
@@ -309,11 +369,11 @@ export default function MiniaturesMap({
             )}
           </div>
 
-          {map.promptHistory.length > 0 && (
+          {displayMap.promptHistory.length > 0 && (
             <div className="mt-5">
               <div className="text-xs font-mono uppercase tracking-[0.25em] text-primary-200/60">Prompt History</div>
               <div className="mt-2 max-h-32 space-y-2 overflow-y-auto pr-1 text-xs text-white/65">
-                {map.promptHistory.slice().reverse().map((prompt, index) => (
+                {displayMap.promptHistory.slice().reverse().map((prompt, index) => (
                   <div key={`${index}-${prompt.slice(0, 12)}`} className="rounded-xl border border-white/10 bg-black/20 px-3 py-2">
                     {prompt}
                   </div>
