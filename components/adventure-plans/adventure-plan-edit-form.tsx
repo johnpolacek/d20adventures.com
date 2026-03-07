@@ -216,6 +216,7 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
           settingId={adventurePlan.settingId}
           sections={sections}
           availableNpcs={npcs}
+          premadePlayerCharacters={premadePlayerCharacters}
           isSaving={isSaving}
           onSectionTitleChange={sectionHandlers.handleSectionTitleChange}
           onSectionSummaryChange={sectionHandlers.handleSectionSummaryChange}

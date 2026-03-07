@@ -2,8 +2,9 @@
 
 import { enhanceEncounterMap, getThemePalette } from "@/lib/map-utils"
 import { cn, getImageUrl } from "@/lib/utils"
-import type { Encounter3DMap } from "@/types/adventure-plan"
-import { Billboard, ContactShadows, Edges, Grid, Html, OrbitControls, RoundedBox } from "@react-three/drei"
+import type { Encounter3DMap, EncounterCharacterRef } from "@/types/adventure-plan"
+import type { Character, PCTemplate } from "@/types/character"
+import { ContactShadows, Edges, Grid, OrbitControls, RoundedBox, Text, useTexture } from "@react-three/drei"
 import { Canvas } from "@react-three/fiber"
 import type { TurnCharacter } from "@/types/adventure"
 import * as THREE from "three"
@@ -13,6 +14,7 @@ export interface MapMiniToken {
   id: string
   label: string
   image?: string
+  shortLabel?: string
   x: number
   y?: number
   z: number
@@ -24,10 +26,43 @@ export interface MapMiniToken {
   subtitle?: string
 }
 
+const MINI_PREVIEW_HEIGHT = 1.7
+
 function shiftColor(color: string, lightness: number) {
   const next = new THREE.Color(color)
   next.offsetHSL(0, 0, lightness)
   return `#${next.getHexString()}`
+}
+
+function getTokenInitials(label: string) {
+  const parts = label
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+
+  if (parts.length === 0) return "?"
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return `${parts[0][0] || ""}${parts[1][0] || ""}`.toUpperCase()
+}
+
+function getMiniPlaqueLabel(label: string) {
+  const firstWord = label.trim().split(/\s+/)[0] || label
+  return firstWord.slice(0, 10)
+}
+
+function getMiniStyle(token: MapMiniToken) {
+  const factionColor = token.kind === "pc" ? "#60a5fa" : "#f87171"
+  const ringColor = token.isDead ? "#7f1d1d" : token.isActive ? "#fbbf24" : factionColor
+
+  return {
+    ringColor,
+    baseColor: token.kind === "pc" ? "#5a4634" : "#4d3b30",
+    topColor: token.isDead ? "#43302d" : token.isComplete ? "#334155" : "#2b2622",
+    accentMetal: token.kind === "pc" ? "#b7c9dc" : "#d8b89f",
+    cardTone: token.kind === "pc" ? "#efe4d6" : "#ead9cf",
+    plaqueTone: token.kind === "pc" ? "#d5b89a" : "#c7aa8b",
+  }
 }
 
 interface SceneTextureSet {
@@ -722,47 +757,110 @@ function PropMesh({
   }
 }
 
+function PortraitBadge({ image, label }: { image: string; label: string }) {
+  const portrait = useTexture(getImageUrl(image))
+  portrait.colorSpace = THREE.SRGBColorSpace
+
+  return (
+    <>
+      <mesh position={[0, 1.02, 0.072]} castShadow>
+        <circleGeometry args={[0.27, 32]} />
+        <meshStandardMaterial color="#f8f2e8" roughness={0.42} metalness={0.02} />
+      </mesh>
+      <mesh position={[0, 1.02, 0.082]} castShadow>
+        <circleGeometry args={[0.225, 32]} />
+        <meshStandardMaterial map={portrait} color="#ffffff" roughness={0.68} metalness={0.02} />
+      </mesh>
+      <mesh position={[0, 0.96, 0.058]} castShadow>
+        <ringGeometry args={[0.245, 0.28, 32]} />
+        <meshStandardMaterial color="#c9ab86" roughness={0.44} metalness={0.16} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh position={[0, 0.73, 0.071]} castShadow receiveShadow>
+        <RoundedBox args={[0.52, 0.14, 0.04]} radius={0.025} smoothness={3}>
+          <meshStandardMaterial color="#f2e4d4" roughness={0.76} metalness={0.02} />
+        </RoundedBox>
+      </mesh>
+      <Text position={[0, 0.73, 0.095]} fontSize={0.065} maxWidth={0.45} color="#2a211b" anchorX="center" anchorY="middle">
+        {getTokenInitials(label)}
+      </Text>
+    </>
+  )
+}
+
+function FallbackBadge({ token }: { token: MapMiniToken }) {
+  return (
+    <>
+      <mesh position={[0, 1.02, 0.072]} castShadow>
+        <circleGeometry args={[0.27, 32]} />
+        <meshStandardMaterial color={token.kind === "pc" ? "#dbeafe" : "#fee2e2"} roughness={0.48} metalness={0.02} />
+      </mesh>
+      <mesh position={[0, 1.02, 0.081]} castShadow>
+        <circleGeometry args={[0.225, 32]} />
+        <meshStandardMaterial color={token.kind === "pc" ? "#1d4ed8" : "#b91c1c"} roughness={0.84} metalness={0.02} />
+      </mesh>
+      <mesh position={[0, 1.06, 0.092]} castShadow>
+        <sphereGeometry args={[0.06, 14, 14]} />
+        <meshStandardMaterial color="#f8f2e8" roughness={0.76} />
+      </mesh>
+      <mesh position={[0, 0.94, 0.092]} castShadow>
+        <capsuleGeometry args={[0.07, 0.14, 4, 10]} />
+        <meshStandardMaterial color="#f8f2e8" roughness={0.76} />
+      </mesh>
+      <Text position={[0, 0.73, 0.095]} fontSize={0.11} color="#f8f5f0" anchorX="center" anchorY="middle">
+        {token.shortLabel || getTokenInitials(token.label)}
+      </Text>
+    </>
+  )
+}
+
 function TokenMini({ token, onSelect }: { token: MapMiniToken; onSelect?: (token: MapMiniToken) => void }) {
-  const ringColor = token.isDead ? "#7f1d1d" : token.isActive ? "#fbbf24" : token.kind === "pc" ? "#60a5fa" : "#f87171"
+  const miniStyle = getMiniStyle(token)
+  const labelText = getMiniPlaqueLabel(token.label)
 
   return (
     <group position={[token.x, (token.y || 0) + 0.01, token.z]} rotation={[0, token.facing || 0, 0]}>
       <mesh castShadow receiveShadow onClick={() => onSelect?.(token)}>
-        <cylinderGeometry args={[0.48, 0.56, 0.16, 28]} />
-        <meshStandardMaterial color="#443324" roughness={0.86} metalness={0.06} />
+        <cylinderGeometry args={[0.54, 0.64, 0.2, 32]} />
+        <meshStandardMaterial color={miniStyle.baseColor} roughness={0.88} metalness={0.08} />
       </mesh>
-      <mesh position={[0, 0.09, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.42, 0.48, 0.05, 28]} />
-        <meshStandardMaterial color={ringColor} roughness={0.62} metalness={0.12} />
+      <mesh position={[0, 0.11, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[0.48, 0.54, 0.06, 32]} />
+        <meshStandardMaterial color={miniStyle.ringColor} roughness={0.52} metalness={0.16} />
       </mesh>
-      <mesh position={[0, 0.145, 0]} castShadow>
-        <cylinderGeometry args={[0.33, 0.36, 0.12, 24]} />
-        <meshStandardMaterial color={token.isComplete ? "#334155" : "#18181b"} roughness={0.84} />
+      <mesh position={[0.18, 0.145, -0.04]} rotation={[0.16, -0.42, 0.08]} castShadow receiveShadow>
+        <boxGeometry args={[0.16, 0.024, 0.22]} />
+        <meshStandardMaterial color="#89715b" roughness={0.92} metalness={0.04} />
       </mesh>
-      <mesh position={[0, 0.46, 0]} castShadow>
-        <cylinderGeometry args={[0.03, 0.03, 0.62, 10]} />
-        <meshStandardMaterial color="#bfa27a" roughness={0.5} metalness={0.35} />
+      <mesh position={[-0.19, 0.145, 0.08]} rotation={[-0.14, 0.28, -0.04]} castShadow receiveShadow>
+        <boxGeometry args={[0.14, 0.024, 0.18]} />
+        <meshStandardMaterial color="#79604d" roughness={0.92} metalness={0.04} />
       </mesh>
-      <Billboard position={[0, 0.88, 0]} follow>
-        <mesh>
-          <planeGeometry args={[0.92, 1.08]} />
-          <meshBasicMaterial color="#f8fafc" transparent opacity={0.96} />
-        </mesh>
-        <Html transform sprite distanceFactor={8} style={{ pointerEvents: "none" }}>
-          <div className="flex w-14 flex-col items-center rounded-xl border border-black/30 bg-black/85 px-1 py-1 text-center shadow-lg">
-            <div className="relative h-10 w-10 overflow-hidden rounded-full border border-white/20 bg-neutral-900">
-              {token.image ? (
-                <img src={getImageUrl(token.image)} alt={token.label} className="h-full w-full object-cover" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-sm font-bold text-white">
-                  {token.label.slice(0, 2).toUpperCase()}
-                </div>
-              )}
-            </div>
-            <div className="mt-1 max-w-full truncate text-[10px] font-bold uppercase tracking-wide text-white">{token.label}</div>
-          </div>
-        </Html>
-      </Billboard>
+
+      <mesh position={[0, 0.42, -0.08]} rotation={[-0.48, 0, 0]} castShadow receiveShadow>
+        <boxGeometry args={[0.18, 0.56, 0.18]} />
+        <meshStandardMaterial color="#3f332b" roughness={0.86} metalness={0.06} />
+      </mesh>
+      <RoundedBox args={[0.7, MINI_PREVIEW_HEIGHT, 0.08]} radius={0.08} smoothness={4} position={[0, 1.02, 0]} castShadow receiveShadow>
+        <meshPhysicalMaterial color={miniStyle.cardTone} roughness={0.72} metalness={0.02} clearcoat={0.24} clearcoatRoughness={0.38} />
+      </RoundedBox>
+      <RoundedBox args={[0.76, MINI_PREVIEW_HEIGHT + 0.08, 0.03]} radius={0.09} smoothness={4} position={[0, 1.02, -0.048]} castShadow receiveShadow>
+        <meshStandardMaterial color={miniStyle.topColor} roughness={0.82} metalness={0.04} />
+      </RoundedBox>
+      <mesh position={[0, 1.76, 0.02]} castShadow>
+        <cylinderGeometry args={[0.13, 0.18, 0.1, 24]} />
+        <meshStandardMaterial color={miniStyle.accentMetal} roughness={0.42} metalness={0.26} />
+      </mesh>
+
+      <mesh position={[0, 0.36, 0.17]} castShadow receiveShadow>
+        <RoundedBox args={[0.58, 0.15, 0.18]} radius={0.03} smoothness={3}>
+          <meshStandardMaterial color={miniStyle.plaqueTone} roughness={0.74} metalness={0.08} />
+        </RoundedBox>
+      </mesh>
+      <Text position={[0, 0.36, 0.27]} fontSize={0.065} maxWidth={0.5} color="#2d241d" anchorX="center" anchorY="middle">
+        {labelText}
+      </Text>
+
+      {token.image ? <PortraitBadge image={token.image} label={token.label} /> : <FallbackBadge token={token} />}
     </group>
   )
 }
@@ -971,6 +1069,93 @@ export default function MiniaturesMap({
   )
 }
 
+export function buildPreviewMapTokens({
+  map,
+  premadePlayerCharacters,
+  availableNpcs,
+  encounterNpcRefs,
+  maxPartySize,
+}: {
+  map: Encounter3DMap
+  premadePlayerCharacters: PCTemplate[]
+  availableNpcs: Record<string, Character>
+  encounterNpcRefs: EncounterCharacterRef[]
+  maxPartySize: number
+}) {
+  const previewParty = premadePlayerCharacters.slice(0, maxPartySize)
+  const npcRefsById = new Map(encounterNpcRefs.map((entry) => [entry.id, entry]))
+
+  const partyTokens = map.tokenSlots.party.map((slot) => {
+    const character = previewParty[slot.slotIndex]
+    if (!character) {
+      return {
+        id: `preview-party-${slot.slotIndex}`,
+        label: `Party ${slot.slotIndex + 1}`,
+        shortLabel: `P${slot.slotIndex + 1}`,
+        x: slot.x,
+        y: slot.y,
+        z: slot.z,
+        facing: slot.facing,
+        kind: "pc" as const,
+        subtitle: "Generic party placeholder",
+      } satisfies MapMiniToken
+    }
+
+    return {
+      id: character.id,
+      label: character.name,
+      shortLabel: getTokenInitials(character.name),
+      image: character.image,
+      x: slot.x,
+      y: slot.y,
+      z: slot.z,
+      facing: slot.facing,
+      kind: "pc" as const,
+      subtitle: `${character.race} ${character.archetype}`.trim() || "Premade PC",
+    } satisfies MapMiniToken
+  })
+
+  const npcTokens = map.tokenSlots.npc.flatMap((slot) => {
+    const character = availableNpcs[slot.npcId]
+    const npcRef = npcRefsById.get(slot.npcId)
+
+    if (character) {
+      return [
+        {
+          id: character.id,
+          label: character.name,
+          shortLabel: getTokenInitials(character.name),
+          image: character.image,
+          x: slot.x,
+          y: slot.y,
+          z: slot.z,
+          facing: slot.facing,
+          kind: "npc" as const,
+          subtitle: npcRef?.behavior || character.behavior || "Encounter NPC",
+        } satisfies MapMiniToken,
+      ]
+    }
+
+    if (!npcRef) return []
+
+    return [
+      {
+        id: `preview-npc-${npcRef.id}`,
+        label: npcRef.id,
+        shortLabel: "NPC",
+        x: slot.x,
+        y: slot.y,
+        z: slot.z,
+        facing: slot.facing,
+        kind: "npc" as const,
+        subtitle: npcRef.behavior || "Encounter NPC",
+      } satisfies MapMiniToken,
+    ]
+  })
+
+  return [...partyTokens, ...npcTokens]
+}
+
 export function buildRuntimeMapTokens({
   map,
   characters,
@@ -995,6 +1180,7 @@ export function buildRuntimeMapTokens({
       {
         id: character.id,
         label: character.name,
+        shortLabel: getTokenInitials(character.name),
         image: character.image,
         x: slot.x,
         y: slot.y,
@@ -1017,6 +1203,7 @@ export function buildRuntimeMapTokens({
       {
         id: character.id,
         label: character.name,
+        shortLabel: getTokenInitials(character.name),
         image: character.image,
         x: slot.x,
         y: slot.y,

@@ -1,11 +1,13 @@
 "use client"
 
 import { generateEncounterMapAction, generateEncounterMapPromptAction } from "@/app/_actions/generate-encounter-map"
+import { buildPreviewMapTokens } from "@/components/adventure/miniatures-map"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { createDefaultEncounterMap, enhanceEncounterMap, formatEncounterSceneKit, inferEncounterSceneKit, listEncounterOptions } from "@/lib/map-utils"
 import type { AdventureEncounter, AdventureSection, Encounter3DMap } from "@/types/adventure-plan"
+import type { Character, PCTemplate } from "@/types/character"
 import dynamic from "next/dynamic"
 import * as React from "react"
 import { Loader2, Plus } from "lucide-react"
@@ -19,6 +21,8 @@ const MiniaturesMap = dynamic(() => import("@/components/adventure/miniatures-ma
 interface EncounterMapEditorProps {
   encounter: AdventureEncounter
   allSections: AdventureSection[]
+  availableNpcs: Record<string, Character>
+  premadePlayerCharacters: PCTemplate[]
   maxPartySize: number
   isSaving: boolean
   onMapChange: (map: Encounter3DMap | undefined) => void
@@ -33,7 +37,16 @@ function buildSuggestedPrompt(encounter: AdventureEncounter) {
   return `Create a tabletop 3D encounter map for ${encounter.title || "this encounter"}.`
 }
 
-export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSaving, onMapChange, onMapPersistRequest }: EncounterMapEditorProps) {
+export function EncounterMapEditor({
+  encounter,
+  allSections,
+  availableNpcs,
+  premadePlayerCharacters,
+  maxPartySize,
+  isSaving,
+  onMapChange,
+  onMapPersistRequest,
+}: EncounterMapEditorProps) {
   const sectionTitle = React.useMemo(() => allSections.find((section) => section.scenes.some((scene) => scene.encounters.some((entry) => entry.id === encounter.id)))?.title, [allSections, encounter.id])
   const sceneTitle = React.useMemo(
     () =>
@@ -75,6 +88,19 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
     [encounter.npc, inferredSceneKit, map, maxPartySize]
   )
   const encounterOptions = React.useMemo(() => listEncounterOptions(allSections, encounter.id).filter((option) => option.hasMap), [allSections, encounter.id])
+  const previewTokens = React.useMemo(
+    () =>
+      displayMap
+        ? buildPreviewMapTokens({
+            map: displayMap,
+            premadePlayerCharacters,
+            availableNpcs,
+            encounterNpcRefs: encounter.npc || [],
+            maxPartySize,
+          })
+        : [],
+    [availableNpcs, displayMap, encounter.npc, maxPartySize, premadePlayerCharacters]
+  )
 
   React.useEffect(() => {
     setPrompt(defaultPrompt)
@@ -270,7 +296,7 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
 
           <div className="space-y-4">
             <div className="relative">
-              <MiniaturesMap map={displayMap || map} title={encounter.title} className="w-full" />
+              <MiniaturesMap map={displayMap || map} tokens={previewTokens} title={encounter.title} className="w-full" />
               {isGenerating && (
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-2xl bg-black/35 backdrop-blur-[2px]">
                   <div className="flex h-16 w-16 items-center justify-center rounded-full border border-white/15 bg-black/70 shadow-2xl">
