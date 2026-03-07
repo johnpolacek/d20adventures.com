@@ -1,6 +1,6 @@
 "use client"
 
-import { generateEncounterMapAction } from "@/app/_actions/generate-encounter-map"
+import { generateEncounterMapAction, generateEncounterMapPromptAction } from "@/app/_actions/generate-encounter-map"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -9,6 +9,7 @@ import { createDefaultEncounterMap, getPropDefaults, getTerrainDefaults, listEnc
 import type { AdventureEncounter, AdventureSection, Encounter3DMap } from "@/types/adventure-plan"
 import dynamic from "next/dynamic"
 import * as React from "react"
+import { Wand2 } from "lucide-react"
 import { toast } from "sonner"
 
 const MiniaturesMap = dynamic(() => import("@/components/adventure/miniatures-map"), {
@@ -28,31 +29,88 @@ interface EncounterMapEditorProps {
 }
 
 function buildSuggestedPrompt(encounter: AdventureEncounter) {
-  const intro = encounter.intro.trim()
-  if (intro.length > 0) {
-    return intro
+  if (encounter.intro.trim().length > 0) {
+    return "Drafting a map prompt from the encounter intro..."
   }
 
   return `Create a tabletop 3D encounter map for ${encounter.title || "this encounter"}.`
 }
 
 export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSaving, onMapChange }: EncounterMapEditorProps) {
+  const sectionTitle = React.useMemo(() => allSections.find((section) => section.scenes.some((scene) => scene.encounters.some((entry) => entry.id === encounter.id)))?.title, [allSections, encounter.id])
+  const sceneTitle = React.useMemo(
+    () =>
+      allSections
+        .flatMap((section) => section.scenes)
+        .find((scene) => scene.encounters.some((entry) => entry.id === encounter.id))
+        ?.title || "",
+    [allSections, encounter.id]
+  )
   const defaultPrompt = React.useMemo(() => buildSuggestedPrompt(encounter), [encounter])
   const [prompt, setPrompt] = React.useState(defaultPrompt)
+  const [suggestedPrompt, setSuggestedPrompt] = React.useState("")
   const [isGenerating, setIsGenerating] = React.useState(false)
+  const [isDraftingPrompt, setIsDraftingPrompt] = React.useState(false)
   const [copySourceId, setCopySourceId] = React.useState("")
+  const requestKeyRef = React.useRef<string | null>(null)
 
   const map = encounter.map3d
   const encounterOptions = React.useMemo(() => listEncounterOptions(allSections, encounter.id).filter((option) => option.hasMap), [allSections, encounter.id])
 
   React.useEffect(() => {
-    setPrompt((currentPrompt) => (currentPrompt.trim().length === 0 ? defaultPrompt : currentPrompt))
+    setPrompt(defaultPrompt)
+    setSuggestedPrompt("")
+    requestKeyRef.current = null
   }, [defaultPrompt])
 
   const updateMap = (updater: (current: Encounter3DMap) => Encounter3DMap) => {
     const next = updater(map || createDefaultEncounterMap(encounter.title))
     onMapChange(next)
   }
+
+  const draftPromptFromEncounter = React.useCallback(
+    async (forceReplace: boolean) => {
+      if (!encounter.intro.trim()) {
+        const fallbackPrompt = buildSuggestedPrompt(encounter)
+        setSuggestedPrompt(fallbackPrompt)
+        setPrompt((currentPrompt) => (forceReplace || currentPrompt.trim().length === 0 ? fallbackPrompt : currentPrompt))
+        return
+      }
+
+      setIsDraftingPrompt(true)
+      try {
+        const nextPrompt = await generateEncounterMapPromptAction({
+          sectionTitle,
+          sceneTitle,
+          encounterTitle: encounter.title,
+          encounterIntro: encounter.intro,
+          encounterInstructions: encounter.instructions,
+          encounterNpcRefs: encounter.npc,
+        })
+        setSuggestedPrompt(nextPrompt)
+        setPrompt((currentPrompt) => (forceReplace || currentPrompt.trim().length === 0 || currentPrompt === defaultPrompt ? nextPrompt : currentPrompt))
+      } catch (error) {
+        console.error("Failed to draft encounter map prompt:", error)
+        const fallbackPrompt = `Create a stylized tabletop 3D environment for ${encounter.title || "this encounter"}, based on this scene: ${encounter.intro.trim()}`
+        setSuggestedPrompt(fallbackPrompt)
+        setPrompt((currentPrompt) => (forceReplace || currentPrompt.trim().length === 0 ? fallbackPrompt : currentPrompt))
+        toast.error("Failed to draft a prompt from the intro. Using a fallback prompt instead.")
+      } finally {
+        setIsDraftingPrompt(false)
+      }
+    },
+    [defaultPrompt, encounter, sceneTitle, sectionTitle]
+  )
+
+  React.useEffect(() => {
+    if (!map) return
+
+    const requestKey = `${encounter.id}:${encounter.intro}:${encounter.instructions}`
+    if (requestKeyRef.current === requestKey) return
+
+    requestKeyRef.current = requestKey
+    void draftPromptFromEncounter(true)
+  }, [draftPromptFromEncounter, encounter.id, encounter.instructions, encounter.intro, map])
 
   const handleGenerate = () => {
     if (!prompt.trim()) {
@@ -63,12 +121,8 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
     setIsGenerating(true)
     generateEncounterMapAction({
       prompt,
-      sectionTitle: allSections.find((section) => section.scenes.some((scene) => scene.encounters.some((entry) => entry.id === encounter.id)))?.title,
-      sceneTitle:
-        allSections
-          .flatMap((section) => section.scenes)
-          .find((scene) => scene.encounters.some((entry) => entry.id === encounter.id))
-          ?.title || "",
+      sectionTitle,
+      sceneTitle,
       encounterTitle: encounter.title,
       encounterIntro: encounter.intro,
       encounterInstructions: encounter.instructions,
@@ -78,7 +132,7 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
     })
       .then((generated) => {
         onMapChange(generated)
-        setPrompt(defaultPrompt)
+        setPrompt(suggestedPrompt || defaultPrompt)
         toast.success(map ? "Map updated from prompt." : "Map generated.")
       })
       .catch((error) => {
@@ -140,10 +194,23 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
                   value={prompt}
                   onChange={(event) => setPrompt(event.target.value)}
                   rows={4}
-                  disabled={isSaving || isGenerating}
-                  placeholder={defaultPrompt}
+                  disabled={isSaving || isGenerating || isDraftingPrompt}
+                  placeholder={suggestedPrompt || defaultPrompt}
                   className="bg-black/30 placeholder:text-white/35"
                 />
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  <p className="text-xs text-white/45">{encounter.intro.trim().length > 0 ? "AI rewrites the encounter intro into a spatial map-design prompt." : "No encounter intro yet, so the prompt falls back to a generic map request."}</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={isSaving || isGenerating || isDraftingPrompt}
+                    onClick={() => void draftPromptFromEncounter(true)}
+                    className="shrink-0"
+                  >
+                    <Wand2 className="mr-2 h-3.5 w-3.5" />
+                    {isDraftingPrompt ? "Drafting..." : "Rewrite from Intro"}
+                  </Button>
+                </div>
               </div>
 
               <div className="space-y-3">
@@ -162,12 +229,12 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
                       </option>
                     ))}
                   </select>
-                  <Button variant="outline" size="sm" disabled={!copySourceId || isSaving || isGenerating} onClick={handleCopyFromEncounter} className="mt-2 w-full">
+                  <Button variant="outline" size="sm" disabled={!copySourceId || isSaving || isGenerating || isDraftingPrompt} onClick={handleCopyFromEncounter} className="mt-2 w-full">
                     Copy Map
                   </Button>
                 </div>
 
-                <Button variant="epic" size="sm" disabled={isSaving || isGenerating} onClick={handleGenerate} className="w-full">
+                <Button variant="epic" size="sm" disabled={isSaving || isGenerating || isDraftingPrompt} onClick={handleGenerate} className="w-full">
                   {isGenerating ? "Generating..." : map.promptHistory.length > 0 ? "Revise Map" : "Generate Map"}
                 </Button>
               </div>

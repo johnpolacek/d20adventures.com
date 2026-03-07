@@ -1,6 +1,6 @@
 "use server"
 
-import { generateObject } from "@/lib/ai"
+import { generateObject, generateText } from "@/lib/ai"
 import { createDefaultEncounterMap } from "@/lib/map-utils"
 import type { EncounterCharacterRef } from "@/types/adventure-plan"
 import { encounter3dMapSchema } from "@/types/adventure-plan"
@@ -44,6 +44,34 @@ Owner request:
 ${args.prompt}`
 }
 
+function buildPromptAuthoringPrompt(args: {
+  sectionTitle?: string
+  sceneTitle?: string
+  encounterTitle?: string
+  encounterIntro?: string
+  encounterInstructions?: string
+  encounterNpcRefs?: EncounterCharacterRef[]
+}) {
+  return `You are helping an adventure designer write a high-quality prompt for generating a tabletop 3D environment.
+
+Write a single concise prompt that tells a map-generation model what environment to build.
+
+Requirements:
+- Focus on physical environment, layout, mood, elevation, hazards, cover, landmarks, entrances, and likely starting positions.
+- Do not summarize the story; convert it into spatial directions.
+- Mention the scene style as a stylized tabletop 3D battlemap.
+- Keep it to 2-4 sentences.
+- Output only the prompt text, with no bullets, labels, or quotation marks.
+
+Encounter context:
+- Section: ${args.sectionTitle || "Unknown"}
+- Scene: ${args.sceneTitle || "Unknown"}
+- Encounter: ${args.encounterTitle || "Unknown"}
+- Intro: ${args.encounterIntro || "None"}
+- Instructions: ${args.encounterInstructions || "None"}
+- NPC refs: ${(args.encounterNpcRefs || []).map((npc) => `${npc.id}: ${npc.behavior}`).join("; ") || "None"}`
+}
+
 export async function generateEncounterMapAction(args: {
   prompt: string
   sectionTitle?: string
@@ -75,4 +103,24 @@ export async function generateEncounterMapAction(args: {
     version: 1 as const,
     promptHistory: [...(args.existingMap && typeof args.existingMap === "object" && args.existingMap && "promptHistory" in args.existingMap ? (((args.existingMap as { promptHistory?: string[] }).promptHistory || [])) : []), args.prompt],
   }
+}
+
+export async function generateEncounterMapPromptAction(args: {
+  sectionTitle?: string
+  sceneTitle?: string
+  encounterTitle?: string
+  encounterIntro?: string
+  encounterInstructions?: string
+  encounterNpcRefs?: EncounterCharacterRef[]
+}) {
+  const { userId } = await auth()
+  if (!userId) {
+    throw new Error("Unauthorized")
+  }
+
+  const { text } = await generateText({
+    prompt: buildPromptAuthoringPrompt(args),
+  })
+
+  return text.trim().replace(/^["']|["']$/g, "")
 }
