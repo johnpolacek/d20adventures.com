@@ -81,6 +81,22 @@ export const encounterTransitionSchema = z.object({
 })
 export type EncounterTransition = z.infer<typeof encounterTransitionSchema>
 
+function normalizeAngleValue(value: unknown) {
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return value
+  }
+
+  // Accept model outputs in degrees and normalize to radians for runtime use.
+  if (Math.abs(value) > Math.PI * 2) {
+    return (value * Math.PI) / 180
+  }
+
+  return value
+}
+
+const rotationAngleSchema = z.preprocess(normalizeAngleValue, z.number().min(-Math.PI).max(Math.PI).default(0))
+const pitchAngleSchema = z.preprocess(normalizeAngleValue, z.number().min(0.2).max(1.4))
+
 export const encounter3dThemeSchema = z.enum(["stone", "dirt", "wood", "cavern", "sand", "snow"])
 export type Encounter3DTheme = z.infer<typeof encounter3dThemeSchema>
 
@@ -95,8 +111,8 @@ export type Encounter3DBoard = z.infer<typeof encounter3dBoardSchema>
 
 export const encounter3dCameraSchema = z.object({
   distance: z.number().min(6).max(60),
-  pitch: z.number().min(0.2).max(1.4),
-  yaw: z.number().min(-3.15).max(3.15),
+  pitch: pitchAngleSchema,
+  yaw: rotationAngleSchema,
   focusX: z.number().min(-48).max(48).default(0),
   focusZ: z.number().min(-48).max(48).default(0),
 })
@@ -114,7 +130,7 @@ export const encounter3dTerrainSchema = z.object({
   width: z.number().min(0.5).max(48),
   depth: z.number().min(0.5).max(48),
   height: z.number().min(0.1).max(24).default(1),
-  rotation: z.number().min(-3.15).max(3.15).default(0),
+  rotation: rotationAngleSchema,
   color: z.string().optional(),
   label: z.string().optional(),
 })
@@ -130,7 +146,7 @@ export const encounter3dPropSchema = z.object({
   z: z.number().min(-48).max(48),
   y: z.number().min(-12).max(24).default(0),
   scale: z.number().min(0.25).max(6).default(1),
-  rotation: z.number().min(-3.15).max(3.15).default(0),
+  rotation: rotationAngleSchema,
   color: z.string().optional(),
   label: z.string().optional(),
 })
@@ -157,7 +173,7 @@ export const encounter3dPartySlotSchema = z.object({
   x: z.number().min(-48).max(48),
   z: z.number().min(-48).max(48),
   y: z.number().min(-12).max(24).default(0),
-  facing: z.number().min(-3.15).max(3.15).default(0),
+  facing: rotationAngleSchema,
 })
 export type Encounter3DPartySlot = z.infer<typeof encounter3dPartySlotSchema>
 
@@ -167,7 +183,7 @@ export const encounter3dNpcSlotSchema = z.object({
   x: z.number().min(-48).max(48),
   z: z.number().min(-48).max(48),
   y: z.number().min(-12).max(24).default(0),
-  facing: z.number().min(-3.15).max(3.15).default(0),
+  facing: rotationAngleSchema,
 })
 export type Encounter3DNpcSlot = z.infer<typeof encounter3dNpcSlotSchema>
 

@@ -26,6 +26,7 @@ Requirements:
 - Keep dimensions compact and playable.
 - Use terrain for large structural shapes and props for dressing.
 - Always include a board, camera, and a short summary.
+- Use radians for all rotation, yaw, pitch, and facing values.
 - Include enough party token slots for up to ${args.maxPartySize} party members when the encounter supports combat or positioning.
 - Include NPC token slots for any explicitly mentioned encounter NPC ids.
 - Keep prompts and map edits grounded in the encounter text.
