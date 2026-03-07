@@ -8,7 +8,7 @@ import { createDefaultEncounterMap, enhanceEncounterMap, listEncounterOptions } 
 import type { AdventureEncounter, AdventureSection, Encounter3DMap } from "@/types/adventure-plan"
 import dynamic from "next/dynamic"
 import * as React from "react"
-import { Plus, Wand2 } from "lucide-react"
+import { Plus } from "lucide-react"
 import { toast } from "sonner"
 
 const MiniaturesMap = dynamic(() => import("@/components/adventure/miniatures-map"), {
@@ -200,19 +200,7 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
                   placeholder={suggestedPrompt || defaultPrompt}
                   className="bg-black/30 placeholder:text-white/35"
                 />
-                <div className="mt-2 flex items-center justify-between gap-2">
-                  <p className="text-xs text-white/45">{encounter.intro.trim().length > 0 ? "Describe changes in plain language and regenerate. The intro is rewritten into a spatial map-design prompt automatically." : "Describe the environment in plain language and generate. Without an intro, this starts from a generic map request."}</p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={isSaving || isGenerating || isDraftingPrompt}
-                    onClick={() => void draftPromptFromEncounter(true)}
-                    className="shrink-0"
-                  >
-                    <Wand2 className="mr-2 h-3.5 w-3.5" />
-                    {isDraftingPrompt ? "Drafting..." : "Rewrite from Intro"}
-                  </Button>
-                </div>
+                <p className="mt-2 text-xs text-white/45">{encounter.intro.trim().length > 0 ? "Describe changes in plain language and regenerate. The intro is rewritten into a spatial map-design prompt automatically." : "Describe the environment in plain language and generate. Without an intro, this starts from a generic map request."}</p>
               </div>
 
               <div className="space-y-3">
