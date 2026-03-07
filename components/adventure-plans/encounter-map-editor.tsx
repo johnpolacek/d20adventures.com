@@ -22,6 +22,7 @@ interface EncounterMapEditorProps {
   maxPartySize: number
   isSaving: boolean
   onMapChange: (map: Encounter3DMap | undefined) => void
+  onMapPersistRequest: () => void
 }
 
 function buildSuggestedPrompt(encounter: AdventureEncounter) {
@@ -32,7 +33,7 @@ function buildSuggestedPrompt(encounter: AdventureEncounter) {
   return `Create a tabletop 3D encounter map for ${encounter.title || "this encounter"}.`
 }
 
-export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSaving, onMapChange }: EncounterMapEditorProps) {
+export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSaving, onMapChange, onMapPersistRequest }: EncounterMapEditorProps) {
   const sectionTitle = React.useMemo(() => allSections.find((section) => section.scenes.some((scene) => scene.encounters.some((entry) => entry.id === encounter.id)))?.title, [allSections, encounter.id])
   const sceneTitle = React.useMemo(
     () =>
@@ -133,6 +134,7 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
     })
       .then((generated) => {
         onMapChange(generated)
+        onMapPersistRequest()
         setPrompt(suggestedPrompt || defaultPrompt)
         toast.success(map ? "Map updated from prompt." : "Map generated.")
       })
@@ -150,11 +152,29 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
       <div className="mb-3 flex items-center justify-between gap-3">
         <Label className="pl-2 text-lg font-display text-amber-400/90">3D Map</Label>
         {map ? (
-          <Button variant="ghost" size="sm" disabled={isSaving || isGenerating} onClick={() => onMapChange(undefined)} className="text-xs text-red-300 hover:text-red-200">
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={isSaving || isGenerating}
+            onClick={() => {
+              onMapChange(undefined)
+              onMapPersistRequest()
+            }}
+            className="text-xs text-red-300 hover:text-red-200"
+          >
             Remove Map
           </Button>
         ) : (
-          <Button variant="outline" size="sm" disabled={isSaving || isGenerating} onClick={() => onMapChange(createDefaultEncounterMap(encounter.title))} className="font-mono">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={isSaving || isGenerating}
+            onClick={() => {
+              onMapChange(createDefaultEncounterMap(encounter.title))
+              onMapPersistRequest()
+            }}
+            className="font-mono"
+          >
             <Plus className="mr-2 h-4 w-4" />
             Add 3D Map
           </Button>
@@ -220,6 +240,7 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
                         ...sourceEncounter.map3d,
                         promptHistory: [...sourceEncounter.map3d.promptHistory, `Copied from ${selectedId}`],
                       })
+                      onMapPersistRequest()
                       setCopySourceId("")
                       toast.success("Map copied from encounter.")
                     }}

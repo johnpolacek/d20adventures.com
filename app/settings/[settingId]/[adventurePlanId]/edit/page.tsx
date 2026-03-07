@@ -1,6 +1,7 @@
 import { AdventurePlanEditForm } from "@/components/adventure-plans/adventure-plan-edit-form"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { loadAdventurePlanFromStorage } from "@/lib/adventure-plan-storage"
 import { getAssetUrl } from "@/lib/aws"
 import { canManageResource } from "@/lib/content-permissions"
 import { readJsonFromS3 } from "@/lib/s3-utils"
@@ -37,7 +38,7 @@ export default async function AdventurePlanEditPage(props: { params: Promise<{ s
   const key = `settings/${settingId}/${adventurePlanId}.json`
   let adventurePlan: AdventurePlan | null = null
   try {
-    adventurePlan = (await readJsonFromS3(key)) as AdventurePlan
+    adventurePlan = await loadAdventurePlanFromStorage(settingId, adventurePlanId, { includeMaps: true })
     if (adventurePlan) {
       // Resolve main adventure plan image
       if (adventurePlan.image && !adventurePlan.image.startsWith("http")) {

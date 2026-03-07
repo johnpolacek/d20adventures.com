@@ -60,6 +60,7 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
   const [availableCharacterOptions, setAvailableCharacterOptions] = React.useState(adventurePlan.availableCharacterOptions || { races: [], archetypes: [] })
   const [premadeOnly, setPremadeOnly] = React.useState(adventurePlan.availableCharacterOptions === undefined)
   const [reorderFlag, setReorderFlag] = React.useState(false)
+  const [mapPersistRequested, setMapPersistRequested] = React.useState(false)
   // Add local state for nextAdventure
   const [nextAdventure, setNextAdventure] = React.useState(adventurePlan.nextAdventure || "")
 
@@ -140,6 +141,13 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
       setReorderFlag(false)
     }
   }, [reorderFlag])
+
+  React.useEffect(() => {
+    if (mapPersistRequested) {
+      saveAdventurePlan(undefined, undefined, premadeOnly ? undefined : availableCharacterOptions)
+      setMapPersistRequested(false)
+    }
+  }, [availableCharacterOptions, mapPersistRequested, premadeOnly, saveAdventurePlan])
 
   return (
     <div className="pb-8 flex flex-wrap h-[80vh]">
@@ -224,6 +232,7 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
           onEncounterTransitionsChange={encounterHandlers.handleEncounterTransitionsChange}
           onEncounterNpcChange={encounterHandlers.handleEncounterNpcChange}
           onEncounterMapChange={encounterHandlers.handleEncounterMapChange}
+          onEncounterMapPersistRequest={() => setMapPersistRequested(true)}
           onAddEncounter={sectionHandlers.handleAddEncounter}
           onAddSection={sectionHandlers.handleAddSection}
           onNpcsChange={handleNpcsChange}

@@ -33,6 +33,7 @@ interface AdventurePlanSectionsProps {
   onEncounterTransitionsChange: (sectionIndex: number, sceneIndex: number, encounterIndex: number, newTransitions: { condition: string; encounter: string }[]) => void
   onEncounterNpcChange: (sectionIndex: number, sceneIndex: number, encounterIndex: number, newNpcs: { id: string; behavior: string; initialInitiative?: number }[]) => void
   onEncounterMapChange: (sectionIndex: number, sceneIndex: number, encounterIndex: number, map3d: AdventureEncounter["map3d"]) => void
+  onEncounterMapPersistRequest: () => void
   onAddEncounter: (sectionIndex: number, sceneIndex: number, newEncounter?: AdventureEncounter) => void
   onAddSection: () => void
   onNpcsChange: (npcs: Record<string, Character>) => void
@@ -61,6 +62,7 @@ export function AdventurePlanSections({
   onEncounterTransitionsChange,
   onEncounterNpcChange,
   onEncounterMapChange,
+  onEncounterMapPersistRequest,
   onAddEncounter,
   onAddSection,
   onNpcsChange,
@@ -198,6 +200,7 @@ export function AdventurePlanSections({
                           onTransitionsChange={onEncounterTransitionsChange}
                           onNpcChange={onEncounterNpcChange}
                           onMapChange={onEncounterMapChange}
+                          onMapPersistRequest={onEncounterMapPersistRequest}
                           onNpcsChange={onNpcsChange}
                           setNpcs={setNpcs}
                           isSaving={isSaving}

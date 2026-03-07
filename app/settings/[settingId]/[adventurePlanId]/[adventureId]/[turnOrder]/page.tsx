@@ -3,8 +3,8 @@ import TurnNavigation from "@/components/adventure/turn-navigation"
 import { Button } from "@/components/ui/button"
 import AdventureHome from "@/components/views/adventure-home"
 import type { Id } from "@/convex/_generated/dataModel"
+import { loadAdventurePlanFromStorage } from "@/lib/adventure-plan-storage"
 import { isDev } from "@/lib/auth-utils"
-import { readJsonFromS3 } from "@/lib/s3-utils"
 import { mapConvexTurnToTurn } from "@/lib/utils"
 import { reverseSlugify } from "@/lib/utils"
 import type { Adventure } from "@/types/adventure"
@@ -89,7 +89,7 @@ export default async function TurnPage({ params }: PageProps) {
   // Load adventure plan
   let adventurePlan = null
   try {
-    adventurePlan = (await readJsonFromS3(`settings/${settingId}/${adventurePlanId}.json`)) as AdventurePlan
+    adventurePlan = await loadAdventurePlanFromStorage(settingId, adventurePlanId, { includeMaps: true })
   } catch {
     return notFound()
   }

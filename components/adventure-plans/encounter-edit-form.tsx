@@ -40,6 +40,7 @@ interface EncounterEditFormProps {
   onTransitionsChange: (sectionIndex: number, sceneIndex: number, encounterIndex: number, newTransitions: EncounterTransition[]) => void
   onNpcChange: (sectionIndex: number, sceneIndex: number, encounterIndex: number, newNpcs: EncounterCharacterRef[]) => void
   onMapChange: (sectionIndex: number, sceneIndex: number, encounterIndex: number, map3d: AdventureEncounter["map3d"]) => void
+  onMapPersistRequest: () => void
   onDelete: (sectionIndex: number, sceneIndex: number, encounterIndex: number) => void
   onNpcsChange: (npcs: Record<string, Character>) => void
   setNpcs: React.Dispatch<React.SetStateAction<Record<string, Character>>>
@@ -66,6 +67,7 @@ export function EncounterEditForm({
   onTransitionsChange,
   onNpcChange,
   onMapChange,
+  onMapPersistRequest,
   onDelete,
   onNpcsChange,
   setNpcs,
@@ -295,6 +297,7 @@ export function EncounterEditForm({
             maxPartySize={maxPartySize}
             isSaving={isSaving}
             onMapChange={(map3d) => onMapChange(sectionIndex, sceneIndex, encounterIndex, map3d)}
+            onMapPersistRequest={onMapPersistRequest}
           />
 
           {/* NPCs Section */}

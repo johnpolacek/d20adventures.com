@@ -214,6 +214,7 @@ export const adventureEncounterSchema = z.object({
   skipInitialNpcTurns: z.boolean().optional(),
   resetHealth: z.boolean().optional(),
   map3d: encounter3dMapSchema.optional(),
+  map3dKey: z.string().optional(),
 })
 export type AdventureEncounter = z.infer<typeof adventureEncounterSchema>
 
