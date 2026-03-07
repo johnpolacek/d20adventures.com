@@ -235,8 +235,8 @@ export default function MiniaturesMap({
         </div>
       </div>
 
-      <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_260px]">
-        <div className="h-[420px] w-full bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),_transparent_50%)]">
+      <div className="flex flex-col">
+        <div className="h-[480px] w-full bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),_transparent_50%)]">
           <Canvas camera={{ position: cameraPosition, fov: 42 }} shadows dpr={[1, 1.5]}>
             <ambientLight intensity={1.15} />
             <directionalLight position={[8, 14, 6]} intensity={2.1} castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
@@ -283,7 +283,7 @@ export default function MiniaturesMap({
           </Canvas>
         </div>
 
-        <div className="border-t border-white/10 bg-black/30 p-4 lg:border-l lg:border-t-0">
+        <div className="w-full border-t border-white/10 bg-black/30 p-4">
           <div className="text-xs font-mono uppercase tracking-[0.25em] text-primary-200/60">Scene Summary</div>
           <p className="mt-2 text-sm text-white/80">{map.summary || "No summary yet."}</p>
 

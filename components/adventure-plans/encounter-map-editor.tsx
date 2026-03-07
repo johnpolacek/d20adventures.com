@@ -241,10 +241,10 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
             </div>
           </div>
 
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
-            <MiniaturesMap map={map} title={encounter.title} />
+          <div className="space-y-4">
+            <MiniaturesMap map={map} title={encounter.title} className="w-full" />
 
-            <div className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div className="w-full space-y-4 rounded-2xl border border-white/10 bg-white/5 p-4">
               <div>
                 <Label className="mb-1 block text-xs font-mono text-primary-200/90">Summary</Label>
                 <Textarea
