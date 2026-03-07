@@ -30,6 +30,23 @@ function buildSceneKitGuidance(sceneKit: Encounter3DSceneKit) {
   }
 }
 
+function buildRedrawIntentGuidance(redrawIntent: string | undefined) {
+  switch (redrawIntent) {
+    case "More Cover":
+      return "Increase playable cover with low walls, cargo, rubble, trees, rocks, or barricades without blocking the whole map."
+    case "Denser Center":
+      return "Add more clustered mid-board structure so the center reads as intentional and playable instead of open."
+    case "Less Symmetry":
+      return "Break mirrored spacing and create a more asymmetrical arrangement of terrain and props."
+    case "Stronger Perimeter":
+      return "Strengthen the scene edges and backdrop with more convincing perimeter treatment and flanking set pieces."
+    case "Bigger Focal Piece":
+      return "Make the main hero terrain piece larger and more visually defining."
+    default:
+      return ""
+  }
+}
+
 function inferSceneKitFromArgs(args: {
   sectionTitle?: string
   sceneTitle?: string
@@ -144,6 +161,7 @@ export async function generateEncounterMapAction(args: {
   encounterNpcRefs?: EncounterCharacterRef[]
   maxPartySize: number
   existingMap?: unknown
+  redrawIntent?: string
 }) {
   const { userId } = await auth()
   if (!userId) {
@@ -154,10 +172,13 @@ export async function generateEncounterMapAction(args: {
     args.existingMap && typeof args.existingMap === "object" && args.existingMap && "sceneKit" in args.existingMap
       ? (((args.existingMap as { sceneKit?: Encounter3DSceneKit }).sceneKit) || inferSceneKitFromArgs(args))
       : inferSceneKitFromArgs(args)
+  const redrawIntentGuidance = buildRedrawIntentGuidance(args.redrawIntent)
+  const effectivePrompt = redrawIntentGuidance ? `${args.prompt}\n\nRevision emphasis: ${redrawIntentGuidance}` : args.prompt
   const existingMapJson = args.existingMap ? JSON.stringify(args.existingMap, null, 2) : undefined
   const result = await generateObject({
     prompt: buildMapPrompt({
       ...args,
+      prompt: effectivePrompt,
       sceneKit,
       existingMapJson,
     }),
@@ -169,7 +190,13 @@ export async function generateEncounterMapAction(args: {
       ...createDefaultEncounterMap("", { sceneKit }),
       ...result.object,
       version: 1 as const,
-      promptHistory: [...(args.existingMap && typeof args.existingMap === "object" && args.existingMap && "promptHistory" in args.existingMap ? (((args.existingMap as { promptHistory?: string[] }).promptHistory || [])) : []), args.prompt],
+      lastRedrawIntent: args.redrawIntent || "",
+      promptHistory: [
+        ...(args.existingMap && typeof args.existingMap === "object" && args.existingMap && "promptHistory" in args.existingMap
+          ? (((args.existingMap as { promptHistory?: string[] }).promptHistory || []))
+          : []),
+        args.redrawIntent ? `${args.prompt} [${args.redrawIntent}]` : args.prompt,
+      ],
     },
     {
       maxPartySize: args.maxPartySize,

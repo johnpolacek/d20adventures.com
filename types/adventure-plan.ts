@@ -195,6 +195,7 @@ export const encounter3dMapSchema = z.object({
   summary: z.string().default(""),
   promptHistory: z.array(z.string()).default([]),
   sceneKit: encounter3dSceneKitSchema.default("generic"),
+  lastRedrawIntent: z.string().default(""),
   board: encounter3dBoardSchema,
   camera: encounter3dCameraSchema,
   terrain: z.array(encounter3dTerrainSchema).default([]),
