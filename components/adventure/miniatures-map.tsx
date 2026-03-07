@@ -918,6 +918,8 @@ export default function MiniaturesMap({
               enableZoom
               maxDistance={38}
               minDistance={8}
+              minAzimuthAngle={displayMap.camera.yaw - 1.05}
+              maxAzimuthAngle={displayMap.camera.yaw + 1.05}
               minPolarAngle={0.35}
               maxPolarAngle={1.35}
               target={[displayMap.camera.focusX, 0.5, displayMap.camera.focusZ]}
