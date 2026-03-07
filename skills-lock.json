@@ -51,6 +51,41 @@
       "sourceType": "github",
       "computedHash": "06adec4dcd4b30ff462a83af6fedd84f168229551637e69d568d54303e29efc6"
     },
+    "threejs-fundamentals": {
+      "source": "cloudai-x/threejs-skills",
+      "sourceType": "github",
+      "computedHash": "e08d49571071f0f54ef2a76fdfcb96c16673e4fda478067727def4659feb80ca"
+    },
+    "threejs-geometry": {
+      "source": "cloudai-x/threejs-skills",
+      "sourceType": "github",
+      "computedHash": "4e5757bf80a329810545c237e557e362fa14fd3a3e6a567ec1d75435be6b2dda"
+    },
+    "threejs-lighting": {
+      "source": "cloudai-x/threejs-skills",
+      "sourceType": "github",
+      "computedHash": "9303d1b8a9704e88415e5a98c98ad7b6e0f654f8029a3606af7947c0efcb86cc"
+    },
+    "threejs-materials": {
+      "source": "cloudai-x/threejs-skills",
+      "sourceType": "github",
+      "computedHash": "201cf0f3720c0ea9e415e6376b8ad389aa86b483875e87ca0e51aa2770c856aa"
+    },
+    "threejs-postprocessing": {
+      "source": "cloudai-x/threejs-skills",
+      "sourceType": "github",
+      "computedHash": "48e04ff507582a18e0d509c2738b9d9466881b00e8ca2600727910a0d52abf75"
+    },
+    "threejs-shaders": {
+      "source": "cloudai-x/threejs-skills",
+      "sourceType": "github",
+      "computedHash": "649ceb058edfb5cfd51e80fb3a6c57aca9bab4a9d3a03f6077aa9502be0c0771"
+    },
+    "threejs-textures": {
+      "source": "cloudai-x/threejs-skills",
+      "sourceType": "github",
+      "computedHash": "772a0bfc1d64cfcbc5347d206584a8fa412983201ad7a2cfb8766097b4936db9"
+    },
     "vercel-react-best-practices": {
       "source": "vercel-labs/agent-skills",
       "sourceType": "github",
