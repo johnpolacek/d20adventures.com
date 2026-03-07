@@ -31,6 +31,9 @@ Requirements:
 - Break up open space with cover, dressing, elevation changes, or pathing features so the scene feels intentionally staged.
 - Include asymmetry and layered depth where the encounter supports it.
 - Avoid sparse or unfinished scenes; corners, edges, and back lines should feel dressed.
+- Make it feel like premium handcrafted tabletop terrain with scenic bases, lane shaping, clustered set dressing, and a few hero pieces that define the location.
+- Prefer terrain and props that read as miniature wargame scenery: stepped risers, ruined walls, flanking cover, shrine pieces, trees, cargo, rock clusters, banners, and gate structures.
+- Compose in foreground, midground, and background so the camera sees a staged diorama rather than isolated objects on a flat board.
 - Include enough party token slots for up to ${args.maxPartySize} party members when the encounter supports combat or positioning.
 - Include NPC token slots for any explicitly mentioned encounter NPC ids.
 - Keep prompts and map edits grounded in the encounter text.
@@ -64,6 +67,7 @@ Write a single concise prompt that tells a map-generation model what environment
 Requirements:
 - Focus on physical environment, layout, mood, elevation, hazards, cover, landmarks, entrances, and likely starting positions.
 - Push for denser, more intentional composition with focal points, perimeter treatment, layered depth, and scenic dressing.
+- Ask for premium tabletop terrain language: handcrafted miniature scenery, flanking set pieces, clustered props, scenic bases, and readable lanes.
 - Do not summarize the story; convert it into spatial directions.
 - Mention the scene style as a stylized tabletop 3D battlemap.
 - Keep it to 2-4 sentences.

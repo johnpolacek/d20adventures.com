@@ -61,18 +61,72 @@ function cloneEncounterMap(map: Encounter3DMap): Encounter3DMap {
 export function getThemePalette(theme: Encounter3DTheme) {
   switch (theme) {
     case "dirt":
-      return { floor: "#6f4e37", edge: "#422d1d", accent: "#a67c52" }
+      return {
+        floor: "#7c5b3e",
+        edge: "#473221",
+        accent: "#b78650",
+        frame: "#2b1e16",
+        rim: "#8c6b4b",
+        backdrop: "#221a15",
+        haze: "#15100d",
+        grid: "#f4e4c6",
+      }
     case "wood":
-      return { floor: "#8b5a2b", edge: "#55341c", accent: "#d6b27d" }
+      return {
+        floor: "#9a6934",
+        edge: "#5c371d",
+        accent: "#d7b27b",
+        frame: "#2f1a10",
+        rim: "#b17a46",
+        backdrop: "#1b100b",
+        haze: "#130b08",
+        grid: "#f2dfbf",
+      }
     case "cavern":
-      return { floor: "#585b66", edge: "#2f3138", accent: "#9da3af" }
+      return {
+        floor: "#626672",
+        edge: "#31343d",
+        accent: "#99a0ae",
+        frame: "#16181d",
+        rim: "#515866",
+        backdrop: "#0c0f14",
+        haze: "#090b0f",
+        grid: "#dbe4f6",
+      }
     case "sand":
-      return { floor: "#c8ad7f", edge: "#8b7355", accent: "#eed9a7" }
+      return {
+        floor: "#ceb487",
+        edge: "#8f7553",
+        accent: "#efd9a1",
+        frame: "#463626",
+        rim: "#bd9c6e",
+        backdrop: "#2d241a",
+        haze: "#1c140d",
+        grid: "#f7e9c4",
+      }
     case "snow":
-      return { floor: "#dbe8f1", edge: "#98a8b3", accent: "#f8fbff" }
+      return {
+        floor: "#dce8f1",
+        edge: "#97aab6",
+        accent: "#f8fbff",
+        frame: "#384956",
+        rim: "#c2d0dc",
+        backdrop: "#19242e",
+        haze: "#111922",
+        grid: "#ffffff",
+      }
     case "stone":
     default:
-      return { floor: "#7a746b", edge: "#4c4741", accent: "#b08968" }
+      return {
+        floor: "#817a72",
+        edge: "#4b443f",
+        accent: "#bb9470",
+        frame: "#241d18",
+        rim: "#6a5d51",
+        backdrop: "#16110d",
+        haze: "#0f0b09",
+        grid: "#f4ead6",
+      }
   }
 }
 
@@ -129,6 +183,8 @@ function createPerimeterTerrain(theme: Encounter3DTheme, width: number, depth: n
       { id: "auto-ridge-back", kind: "platform", x: 0, z: -depth / 2 + 0.8, y: 0.2, width: width - 1.6, depth: 1.6, height: 1.2, rotation: 0, color: "#4b4f58", label: "Rock ridge" },
       { id: "auto-ridge-left", kind: "platform", x: -width / 2 + 0.8, z: 0, y: 0.2, width: 1.6, depth: depth - 1.6, height: 1.2, rotation: 0, color: "#41454f", label: "Rock ridge" },
       { id: "auto-ridge-right", kind: "platform", x: width / 2 - 0.8, z: 0, y: 0.2, width: 1.6, depth: depth - 1.6, height: 1.2, rotation: 0, color: "#41454f", label: "Rock ridge" },
+      { id: "auto-ridge-front-left", kind: "platform", x: -width / 2 + 1.5, z: depth / 2 - 1.2, y: 0.15, width: 2.4, depth: 1.8, height: 0.9, rotation: 0, color: "#3f434b", label: "Rock shelf" },
+      { id: "auto-ridge-front-right", kind: "platform", x: width / 2 - 1.5, z: depth / 2 - 1.2, y: 0.15, width: 2.4, depth: 1.8, height: 0.9, rotation: 0, color: "#3f434b", label: "Rock shelf" },
     ]
   }
 
@@ -136,7 +192,53 @@ function createPerimeterTerrain(theme: Encounter3DTheme, width: number, depth: n
     { id: "auto-wall-back", kind: "wall", x: 0, z: -depth / 2 + 0.35, y: 0, width: width - 0.8, depth: 0.7, height: 2.8, rotation: 0, color: theme === "wood" ? "#7a5230" : "#6c675f", label: "Perimeter wall" },
     { id: "auto-wall-left", kind: "wall", x: -width / 2 + 0.35, z: 0, y: 0, width: 0.7, depth: depth - 1.8, height: 2.6, rotation: 0, color: theme === "wood" ? "#6d4927" : "#686259", label: "Perimeter wall" },
     { id: "auto-wall-right", kind: "wall", x: width / 2 - 0.35, z: 0, y: 0, width: 0.7, depth: depth - 1.8, height: 2.6, rotation: 0, color: theme === "wood" ? "#6d4927" : "#686259", label: "Perimeter wall" },
+    { id: "auto-wall-front-left", kind: "wall", x: -width / 2 + 1.5, z: depth / 2 - 0.4, y: 0, width: 2.2, depth: 0.7, height: 1.3, rotation: 0, color: theme === "wood" ? "#7a5230" : "#736d66", label: "Front barricade" },
+    { id: "auto-wall-front-right", kind: "wall", x: width / 2 - 1.5, z: depth / 2 - 0.4, y: 0, width: 2.2, depth: 0.7, height: 1.3, rotation: 0, color: theme === "wood" ? "#7a5230" : "#736d66", label: "Front barricade" },
   ]
+}
+
+function createFocalTerrain(theme: Encounter3DTheme, width: number, depth: number): Encounter3DTerrain[] {
+  const backline = -depth / 2 + 2.8
+
+  switch (theme) {
+    case "dirt":
+      return [
+        { id: "auto-focal-road", kind: "platform", x: 0, z: 0.6, y: 0, width: 3.4, depth: depth - 3.2, height: 0.14, rotation: 0, color: "#8d6846", label: "Packed road" },
+        { id: "auto-focal-berm-left", kind: "platform", x: -width / 2 + 2.1, z: -0.4, y: 0, width: 2.3, depth: depth - 5, height: 0.42, rotation: 0, color: "#6b4e33", label: "Earth berm" },
+        { id: "auto-focal-berm-right", kind: "platform", x: width / 2 - 2.1, z: 0.7, y: 0, width: 2.3, depth: depth - 5, height: 0.42, rotation: 0, color: "#6b4e33", label: "Earth berm" },
+      ]
+    case "wood":
+      return [
+        { id: "auto-focal-platform", kind: "dais", x: 0, z: backline, y: 0, width: 4.2, depth: 2.4, height: 0.5, rotation: 0, color: "#8d5d33", label: "Raised checkpoint" },
+        { id: "auto-focal-lane-left", kind: "platform", x: -2.7, z: -0.4, y: 0, width: 2, depth: depth - 4.8, height: 0.12, rotation: 0, color: "#7b512f", label: "Boardwalk lane" },
+        { id: "auto-focal-lane-right", kind: "platform", x: 2.7, z: 0.4, y: 0, width: 2, depth: depth - 4.8, height: 0.12, rotation: 0, color: "#7b512f", label: "Boardwalk lane" },
+      ]
+    case "cavern":
+      return [
+        { id: "auto-focal-shelf", kind: "dais", x: 0, z: backline, y: 0, width: 4.8, depth: 2.6, height: 0.7, rotation: 0, color: "#5b606c", label: "Stone shelf" },
+        { id: "auto-focal-ledge-left", kind: "platform", x: -width / 2 + 2.6, z: 0.4, y: 0, width: 2.6, depth: depth - 5.4, height: 0.5, rotation: 0, color: "#4a4f58", label: "Ledge" },
+        { id: "auto-focal-ledge-right", kind: "platform", x: width / 2 - 2.6, z: -0.3, y: 0, width: 2.6, depth: depth - 5.4, height: 0.5, rotation: 0, color: "#4a4f58", label: "Ledge" },
+      ]
+    case "sand":
+      return [
+        { id: "auto-focal-dais", kind: "dais", x: 0, z: backline, y: 0, width: 4.4, depth: 2.5, height: 0.55, rotation: 0, color: "#c9aa78", label: "Ceremonial dais" },
+        { id: "auto-focal-ridge-left", kind: "platform", x: -width / 2 + 2.3, z: -0.2, y: 0, width: 2.2, depth: depth - 4.8, height: 0.3, rotation: 0, color: "#b89363", label: "Dune ridge" },
+        { id: "auto-focal-ridge-right", kind: "platform", x: width / 2 - 2.3, z: 0.5, y: 0, width: 2.2, depth: depth - 4.8, height: 0.3, rotation: 0, color: "#b89363", label: "Dune ridge" },
+      ]
+    case "snow":
+      return [
+        { id: "auto-focal-ice-dais", kind: "dais", x: 0, z: backline, y: 0, width: 4.2, depth: 2.4, height: 0.45, rotation: 0, color: "#d4e4f2", label: "Frozen rise" },
+        { id: "auto-focal-bank-left", kind: "platform", x: -width / 2 + 2.1, z: 0.2, y: 0, width: 2.2, depth: depth - 4.6, height: 0.28, rotation: 0, color: "#cedce7", label: "Snow bank" },
+        { id: "auto-focal-bank-right", kind: "platform", x: width / 2 - 2.1, z: -0.5, y: 0, width: 2.2, depth: depth - 4.6, height: 0.28, rotation: 0, color: "#cedce7", label: "Snow bank" },
+      ]
+    case "stone":
+    default:
+      return [
+        { id: "auto-focal-dais", kind: "dais", x: 0, z: backline, y: 0, width: 4.6, depth: 2.6, height: 0.55, rotation: 0, color: "#8c847a", label: "Command dais" },
+        { id: "auto-focal-plinth-left", kind: "platform", x: -width / 2 + 2.1, z: -0.2, y: 0, width: 2.3, depth: depth - 5, height: 0.2, rotation: 0, color: "#726b62", label: "Stone run" },
+        { id: "auto-focal-plinth-right", kind: "platform", x: width / 2 - 2.1, z: 0.5, y: 0, width: 2.3, depth: depth - 5, height: 0.2, rotation: 0, color: "#726b62", label: "Stone run" },
+      ]
+  }
 }
 
 function createAtmosphereProps(theme: Encounter3DTheme, width: number, depth: number): Encounter3DProp[] {
@@ -149,24 +251,31 @@ function createAtmosphereProps(theme: Encounter3DTheme, width: number, depth: nu
         { id: "auto-tree-left", kind: "tree", x: -width / 2 + 2.2, z: flankZ, y: 0, scale: 1.4, rotation: 0.3, color: "#7ba05b", label: "Evergreen" },
         { id: "auto-tree-right", kind: "tree", x: width / 2 - 2.2, z: flankZ, y: 0, scale: 1.4, rotation: -0.3, color: "#7ba05b", label: "Evergreen" },
         { id: "auto-rock-center", kind: "rock", x: 0, z: edgeZ + 2, y: 0, scale: 1.3, rotation: 0.4, color: "#c9d3de", label: "Snow drift" },
+        { id: "auto-statue-back", kind: "statue", x: 0, z: edgeZ + 0.4, y: 0, scale: 1.05, rotation: 0, color: "#e5edf4", label: "Frozen marker" },
       ]
     case "sand":
       return [
         { id: "auto-obelisk-left", kind: "pillar", x: -width / 2 + 2.4, z: edgeZ, y: 0, scale: 1.2, rotation: 0.2, color: "#d0b484", label: "Weathered obelisk" },
         { id: "auto-obelisk-right", kind: "pillar", x: width / 2 - 2.4, z: edgeZ, y: 0, scale: 1.2, rotation: -0.2, color: "#d0b484", label: "Weathered obelisk" },
         { id: "auto-altar-center", kind: "altar", x: 0, z: 0.8, y: 0, scale: 1, rotation: 0, color: "#bfa477", label: "Stone marker" },
+        { id: "auto-banner-left", kind: "banner", x: -2.4, z: edgeZ + 1.8, y: 0, scale: 0.95, rotation: 0, color: "#9c6644", label: "Tattered standard" },
+        { id: "auto-banner-right", kind: "banner", x: 2.4, z: edgeZ + 1.8, y: 0, scale: 0.95, rotation: 0, color: "#9c6644", label: "Tattered standard" },
       ]
     case "cavern":
       return [
         { id: "auto-rock-left", kind: "rock", x: -width / 2 + 2.2, z: edgeZ + 1, y: 0, scale: 1.3, rotation: 0.2, color: "#727785", label: "Boulder" },
         { id: "auto-rock-right", kind: "rock", x: width / 2 - 2.2, z: edgeZ + 1, y: 0, scale: 1.3, rotation: -0.2, color: "#727785", label: "Boulder" },
         { id: "auto-torch-center", kind: "torch", x: 0, z: edgeZ + 2.6, y: 0, scale: 1, rotation: 0, color: "#ffb703", label: "Brazer" },
+        { id: "auto-pillar-left", kind: "pillar", x: -2.6, z: edgeZ + 1.9, y: 0, scale: 1.1, rotation: 0.2, color: "#8f94a1", label: "Stone column" },
+        { id: "auto-pillar-right", kind: "pillar", x: 2.6, z: edgeZ + 1.9, y: 0, scale: 1.1, rotation: -0.2, color: "#8f94a1", label: "Stone column" },
       ]
     case "wood":
       return [
         { id: "auto-banner-left", kind: "banner", x: -width / 2 + 1.2, z: edgeZ + 0.5, y: 0, scale: 1.1, rotation: 0, color: "#9c6644", label: "Banner" },
         { id: "auto-banner-right", kind: "banner", x: width / 2 - 1.2, z: edgeZ + 0.5, y: 0, scale: 1.1, rotation: 0, color: "#9c6644", label: "Banner" },
         { id: "auto-table-center", kind: "table", x: 0, z: edgeZ + 2.2, y: 0, scale: 1, rotation: 0, color: "#7b4f2c", label: "Checkpoint table" },
+        { id: "auto-crate-left", kind: "crate", x: -2.5, z: 0.8, y: 0, scale: 1, rotation: 0.2, color: "#88512b", label: "Cargo stack" },
+        { id: "auto-crate-right", kind: "crate", x: 2.6, z: -0.4, y: 0, scale: 1.05, rotation: -0.2, color: "#88512b", label: "Cargo stack" },
       ]
     case "dirt":
       return [
@@ -174,6 +283,7 @@ function createAtmosphereProps(theme: Encounter3DTheme, width: number, depth: nu
         { id: "auto-crate-right", kind: "crate", x: 2.6, z: -0.4, y: 0, scale: 1.1, rotation: -0.2, color: "#8d5524", label: "Supply crate" },
         { id: "auto-torch-left", kind: "torch", x: -width / 2 + 1.6, z: edgeZ + 0.8, y: 0, scale: 1, rotation: 0, color: "#ffb703", label: "Torch" },
         { id: "auto-torch-right", kind: "torch", x: width / 2 - 1.6, z: edgeZ + 0.8, y: 0, scale: 1, rotation: 0, color: "#ffb703", label: "Torch" },
+        { id: "auto-banner-center", kind: "banner", x: 0, z: edgeZ + 1.1, y: 0, scale: 0.95, rotation: 0, color: "#9d3a24", label: "Road sign" },
       ]
     case "stone":
     default:
@@ -183,6 +293,8 @@ function createAtmosphereProps(theme: Encounter3DTheme, width: number, depth: nu
         { id: "auto-torch-left", kind: "torch", x: -width / 2 + 1.8, z: flankZ, y: 0, scale: 1, rotation: 0, color: "#ffb703", label: "Torch" },
         { id: "auto-torch-right", kind: "torch", x: width / 2 - 1.8, z: flankZ, y: 0, scale: 1, rotation: 0, color: "#ffb703", label: "Torch" },
         { id: "auto-table-center", kind: "table", x: 0, z: edgeZ + 2.3, y: 0, scale: 1, rotation: 0, color: "#6f4e37", label: "Checkpoint table" },
+        { id: "auto-statue-left", kind: "statue", x: -2.8, z: edgeZ + 1.7, y: 0, scale: 1.05, rotation: 0.1, color: "#bdb7ad", label: "Guardian statue" },
+        { id: "auto-statue-right", kind: "statue", x: 2.8, z: edgeZ + 1.7, y: 0, scale: 1.05, rotation: -0.1, color: "#bdb7ad", label: "Guardian statue" },
       ]
   }
 }
@@ -193,16 +305,22 @@ function createScatterProps(theme: Encounter3DTheme): Encounter3DProp[] {
       return [
         { id: "auto-scatter-rock-1", kind: "rock", x: -2.5, z: 2.3, y: 0, scale: 1, rotation: 0.3, color: "#70757f", label: "Rock cover" },
         { id: "auto-scatter-rock-2", kind: "rock", x: 2.9, z: -1.7, y: 0, scale: 0.9, rotation: -0.4, color: "#70757f", label: "Rock cover" },
+        { id: "auto-scatter-rock-3", kind: "rock", x: 0.8, z: 1.1, y: 0, scale: 0.8, rotation: 0.4, color: "#676c76", label: "Stone outcrop" },
+        { id: "auto-scatter-rock-4", kind: "rock", x: -1.2, z: -2.2, y: 0, scale: 0.85, rotation: -0.2, color: "#676c76", label: "Stone outcrop" },
       ]
     case "snow":
       return [
         { id: "auto-scatter-rock-1", kind: "rock", x: -2.1, z: 1.8, y: 0, scale: 0.9, rotation: 0.2, color: "#cfd7df", label: "Snowy rock" },
         { id: "auto-scatter-rock-2", kind: "rock", x: 2.6, z: -1.8, y: 0, scale: 0.9, rotation: -0.3, color: "#cfd7df", label: "Snowy rock" },
+        { id: "auto-scatter-rock-3", kind: "rock", x: 0.9, z: 1.2, y: 0, scale: 0.8, rotation: 0.1, color: "#d8e1e9", label: "Ice chunk" },
+        { id: "auto-scatter-rock-4", kind: "rock", x: -1.4, z: -1.9, y: 0, scale: 0.8, rotation: -0.2, color: "#d8e1e9", label: "Ice chunk" },
       ]
     default:
       return [
         { id: "auto-scatter-crate-1", kind: "crate", x: -2.4, z: 1.8, y: 0, scale: 0.9, rotation: 0.2, color: "#99602b", label: "Cover crate" },
         { id: "auto-scatter-crate-2", kind: "crate", x: 2.8, z: -1.6, y: 0, scale: 1, rotation: -0.2, color: "#8f5726", label: "Cover crate" },
+        { id: "auto-scatter-crate-3", kind: "crate", x: 1.2, z: 1.3, y: 0, scale: 0.8, rotation: 0.1, color: "#a56b31", label: "Cover crate" },
+        { id: "auto-scatter-crate-4", kind: "crate", x: -0.8, z: -2.1, y: 0, scale: 0.85, rotation: -0.15, color: "#a56b31", label: "Cover crate" },
       ]
   }
 }
@@ -250,13 +368,19 @@ export function enhanceEncounterMap(
     }
   }
 
-  if (next.props.length < 4) {
+  if (next.terrain.length < 4) {
+    for (const terrain of createFocalTerrain(next.board.theme, width, depth)) {
+      addIfMissing(next.terrain, terrain)
+    }
+  }
+
+  if (next.props.length < 6) {
     for (const prop of createAtmosphereProps(next.board.theme, width, depth)) {
       addIfMissing(next.props, prop)
     }
   }
 
-  if (next.props.length < 6) {
+  if (next.props.length < 10) {
     for (const prop of createScatterProps(next.board.theme)) {
       addIfMissing(next.props, prop)
     }
