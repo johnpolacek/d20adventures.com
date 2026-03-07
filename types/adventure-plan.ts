@@ -172,7 +172,7 @@ export const encounter3dNpcSlotSchema = z.object({
 export type Encounter3DNpcSlot = z.infer<typeof encounter3dNpcSlotSchema>
 
 export const encounter3dMapSchema = z.object({
-  version: z.literal(1),
+  version: z.number().int().min(1).max(1).default(1),
   summary: z.string().default(""),
   promptHistory: z.array(z.string()).default([]),
   board: encounter3dBoardSchema,
