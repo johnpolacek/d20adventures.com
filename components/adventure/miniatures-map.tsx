@@ -201,23 +201,23 @@ function DisplayBase({
   return (
     <group>
       <RoundedBox args={[width + 2.5, 0.95, depth + 2.5]} radius={0.22} smoothness={4} position={[0, -0.52, 0]} receiveShadow>
-        <meshStandardMaterial color={palette.frame} roughness={0.88} metalness={0.12} map={textures?.wood} />
+        <meshStandardMaterial color="#ffffff" roughness={0.88} metalness={0.12} map={textures?.wood} />
         <Edges scale={1.005} color={shiftColor(palette.frame, 0.14)} />
       </RoundedBox>
 
       <RoundedBox args={[width + 1.3, 0.34, depth + 1.3]} radius={0.16} smoothness={4} position={[0, -0.08, 0]} receiveShadow>
-        <meshStandardMaterial color={palette.rim} roughness={0.7} metalness={0.18} map={textures?.metal} />
+        <meshStandardMaterial color="#f2ede4" roughness={0.7} metalness={0.18} map={textures?.metal} />
         <Edges scale={1.004} color={shiftColor(palette.rim, 0.12)} />
       </RoundedBox>
 
       <RoundedBox args={[width, 0.16, depth]} radius={0.1} smoothness={4} position={[0, 0.08, 0]} receiveShadow>
-        <meshStandardMaterial color={palette.floor} roughness={0.92} metalness={0.02} map={boardTexture} />
+        <meshStandardMaterial color="#f3eee2" roughness={0.92} metalness={0.02} map={boardTexture} />
         <Edges scale={1.003} color={shiftColor(palette.floor, -0.18)} />
       </RoundedBox>
 
       <mesh position={[0, 0.165, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[width - 0.45, depth - 0.45]} />
-        <meshStandardMaterial color={shiftColor(palette.floor, 0.03)} roughness={0.95} map={boardTexture} />
+        <meshStandardMaterial color="#ffffff" roughness={0.95} map={boardTexture} />
       </mesh>
 
       {[
@@ -253,12 +253,12 @@ function SceneBackdrop({
     <group>
       <mesh position={[0, 7, backZ]} receiveShadow>
         <planeGeometry args={[width * 2.2, depth * 1.6]} />
-        <meshStandardMaterial color={palette.backdrop} roughness={1} side={THREE.DoubleSide} />
+        <meshStandardMaterial color={shiftColor(palette.backdrop, 0.12)} roughness={1} side={THREE.DoubleSide} />
       </mesh>
 
       <mesh position={[0, -0.45, -depth * 0.2]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[width * 2.2, depth * 2]} />
-        <meshStandardMaterial color={shiftColor(palette.backdrop, -0.02)} roughness={1} />
+        <meshStandardMaterial color={shiftColor(palette.backdrop, 0.06)} roughness={1} />
       </mesh>
 
       {map.board.theme === "cavern" ? (
@@ -291,13 +291,13 @@ function SceneBackdrop({
       ) : (
         <>
           <RoundedBox args={[2.5, 5.7, 1.9]} radius={0.12} smoothness={3} position={[-width * 0.34, 2.35, backZ + 1.2]} castShadow receiveShadow>
-            <meshStandardMaterial color={wallColor} roughness={0.92} map={textures?.stone} />
+            <meshStandardMaterial color="#f3eee4" roughness={0.92} map={textures?.stone} />
           </RoundedBox>
           <RoundedBox args={[2.5, 5.7, 1.9]} radius={0.12} smoothness={3} position={[width * 0.34, 2.35, backZ + 1.2]} castShadow receiveShadow>
-            <meshStandardMaterial color={wallColor} roughness={0.92} map={textures?.stone} />
+            <meshStandardMaterial color="#f3eee4" roughness={0.92} map={textures?.stone} />
           </RoundedBox>
           <RoundedBox args={[width * 0.34, 1.2, 1.35]} radius={0.08} smoothness={3} position={[0, 4.02, backZ + 1.05]} castShadow receiveShadow>
-            <meshStandardMaterial color={shiftColor(wallColor, 0.06)} roughness={0.9} map={textures?.stone} />
+            <meshStandardMaterial color="#faf5ec" roughness={0.9} map={textures?.stone} />
           </RoundedBox>
           {[-1.15, -0.45, 0.45, 1.15].map((offset) => (
             <RoundedBox key={offset} args={[0.42, 0.42, 0.55]} radius={0.04} smoothness={2} position={[offset * width * 0.16, 4.82, backZ + 1.06]} castShadow receiveShadow>
@@ -338,7 +338,7 @@ function TerrainMesh({
     return (
       <group position={[item.x, item.y, item.z]} rotation={[0, item.rotation, 0]}>
         <RoundedBox args={[item.width, 0.18, item.depth]} radius={0.08} smoothness={3} position={[0, 0.09, 0]} receiveShadow>
-          <meshStandardMaterial color={shiftColor(color, -0.24)} roughness={0.95} map={stoneTexture} />
+          <meshStandardMaterial color="#f2eee7" roughness={0.95} map={stoneTexture} />
           <Edges scale={1.004} color={outline} />
         </RoundedBox>
         <mesh position={[0, item.height / 2 + 0.09, 0]} receiveShadow>
@@ -353,7 +353,7 @@ function TerrainMesh({
     return (
       <group position={[item.x, item.y, item.z]} rotation={[0, item.rotation, 0]}>
         <RoundedBox args={[item.width, 0.22, item.depth]} radius={0.08} smoothness={3} position={[0, 0.11, 0]} castShadow receiveShadow>
-          <meshStandardMaterial color={shiftColor(color, -0.14)} roughness={0.96} map={stoneTexture} />
+          <meshStandardMaterial color="#ece7df" roughness={0.96} map={stoneTexture} />
           <Edges scale={1.004} color={outline} />
         </RoundedBox>
         <mesh position={[0, -item.height / 2 + 0.04, 0]} receiveShadow>
@@ -368,7 +368,7 @@ function TerrainMesh({
     return (
       <group position={[item.x, item.y, item.z]} rotation={[0, item.rotation, 0]}>
         <RoundedBox args={[item.width, item.height * 0.45, item.depth]} radius={0.08} smoothness={3} position={[0, item.height * 0.225, 0]} castShadow receiveShadow>
-          <meshStandardMaterial color={shiftColor(color, -0.08)} roughness={0.88} map={stoneTexture} />
+          <meshStandardMaterial color="#f0ebe3" roughness={0.88} map={stoneTexture} />
           <Edges scale={1.004} color={outline} />
         </RoundedBox>
         <RoundedBox
@@ -379,7 +379,7 @@ function TerrainMesh({
           castShadow
           receiveShadow
         >
-          <meshStandardMaterial color={color} roughness={0.84} map={surfaceTexture} />
+          <meshStandardMaterial color="#ffffff" roughness={0.84} map={surfaceTexture} />
           <Edges scale={1.004} color={outline} />
         </RoundedBox>
         <RoundedBox
@@ -390,7 +390,7 @@ function TerrainMesh({
           castShadow
           receiveShadow
         >
-          <meshStandardMaterial color={shiftColor(color, 0.06)} roughness={0.8} metalness={0.05} map={surfaceTexture} />
+          <meshStandardMaterial color="#fcf8f0" roughness={0.8} metalness={0.05} map={surfaceTexture} />
           <Edges scale={1.003} color={shiftColor(outline, 0.08)} />
         </RoundedBox>
       </group>
@@ -401,14 +401,14 @@ function TerrainMesh({
     return (
       <group position={[item.x, item.y, item.z]} rotation={[0, item.rotation, 0]}>
         <RoundedBox args={[item.width + 0.12, 0.24, item.depth + 0.12]} radius={0.06} smoothness={3} position={[0, 0.12, 0]} castShadow receiveShadow>
-          <meshStandardMaterial color={shiftColor(color, -0.1)} roughness={0.9} map={stoneTexture} />
+          <meshStandardMaterial color="#eee9e1" roughness={0.9} map={stoneTexture} />
         </RoundedBox>
         <RoundedBox args={[item.width, item.height, item.depth]} radius={0.08} smoothness={3} position={[0, item.height / 2, 0]} castShadow receiveShadow>
-          <meshStandardMaterial color={color} roughness={0.82} map={stoneTexture} />
+          <meshStandardMaterial color="#ffffff" roughness={0.82} map={stoneTexture} />
           <Edges scale={1.004} color={outline} />
         </RoundedBox>
         <RoundedBox args={[item.width + 0.2, 0.14, item.depth + 0.2]} radius={0.05} smoothness={3} position={[0, item.height + 0.07, 0]} castShadow receiveShadow>
-          <meshStandardMaterial color={shiftColor(color, 0.08)} roughness={0.8} metalness={0.04} map={stoneTexture} />
+          <meshStandardMaterial color="#faf5ee" roughness={0.8} metalness={0.04} map={stoneTexture} />
         </RoundedBox>
         {item.height > 1.2 &&
           [-1, 1].map((side) => (
@@ -421,7 +421,7 @@ function TerrainMesh({
               castShadow
               receiveShadow
             >
-              <meshStandardMaterial color={shiftColor(color, -0.05)} roughness={0.88} map={stoneTexture} />
+              <meshStandardMaterial color="#e8e2d9" roughness={0.88} map={stoneTexture} />
             </RoundedBox>
           ))}
       </group>
@@ -442,7 +442,7 @@ function TerrainMesh({
             castShadow
             receiveShadow
           >
-            <meshStandardMaterial color={step % 2 === 0 ? color : shiftColor(color, 0.04)} roughness={0.88} map={surfaceTexture} />
+            <meshStandardMaterial color={step % 2 === 0 ? "#ffffff" : "#f4efe6"} roughness={0.88} map={surfaceTexture} />
             <Edges scale={1.004} color={outline} />
           </RoundedBox>
         ))}
@@ -453,7 +453,7 @@ function TerrainMesh({
   return (
     <group position={[item.x, item.y, item.z]} rotation={[0, item.rotation, 0]}>
       <RoundedBox args={[item.width, item.height, item.depth]} radius={0.08} smoothness={3} position={[0, item.height / 2, 0]} castShadow receiveShadow>
-        <meshStandardMaterial color={color} roughness={0.84} metalness={0.04} map={surfaceTexture} />
+        <meshStandardMaterial color="#ffffff" roughness={0.84} metalness={0.04} map={surfaceTexture} />
         <Edges scale={1.004} color={outline} />
       </RoundedBox>
       <RoundedBox
@@ -464,7 +464,7 @@ function TerrainMesh({
         castShadow
         receiveShadow
       >
-        <meshStandardMaterial color={shiftColor(color, 0.05)} roughness={0.78} metalness={0.04} map={surfaceTexture} />
+        <meshStandardMaterial color="#faf5ee" roughness={0.78} metalness={0.04} map={surfaceTexture} />
       </RoundedBox>
     </group>
   )
@@ -488,11 +488,11 @@ function PropMesh({
         <group position={position} rotation={[0, item.rotation, 0]}>
           <mesh position={[0, -0.88 * item.scale, 0]} castShadow receiveShadow>
             <cylinderGeometry args={[0.56 * item.scale, 0.62 * item.scale, 0.18 * item.scale, 18]} />
-            <meshStandardMaterial color="#5f5953" roughness={0.88} map={textures?.stone} />
+            <meshStandardMaterial color="#efeae1" roughness={0.88} map={textures?.stone} />
           </mesh>
           <mesh position={[0, -0.05 * item.scale, 0]} castShadow receiveShadow>
             <cylinderGeometry args={[0.28 * item.scale, 0.36 * item.scale, 1.9 * item.scale, 18]} />
-            <meshStandardMaterial color={item.color || "#b2a391"} roughness={0.78} map={textures?.stone} />
+            <meshStandardMaterial color="#faf4ea" roughness={0.78} map={textures?.stone} />
           </mesh>
           <mesh position={[0, 0.95 * item.scale, 0]} rotation={[0.14, 0, 0.1]} castShadow receiveShadow>
             <boxGeometry args={[0.5 * item.scale, 0.18 * item.scale, 0.5 * item.scale]} />
@@ -540,7 +540,7 @@ function PropMesh({
           ].map(([x, y, z, size], index) => (
             <mesh key={index} position={[x * item.scale, y * item.scale, z * item.scale]} castShadow>
               <sphereGeometry args={[size * item.scale, 12, 12]} />
-              <meshStandardMaterial color={item.color || "#52734d"} roughness={0.98} map={textures?.dirt} />
+            <meshStandardMaterial color="#e8f0e1" roughness={0.98} map={textures?.dirt} />
             </mesh>
           ))}
           <mesh position={[0.08 * item.scale, 0.5 * item.scale, 0]} rotation={[0.15, 0.1, -0.1]} castShadow>
@@ -559,7 +559,7 @@ function PropMesh({
           ].map(([x, y, z, size], index) => (
             <mesh key={index} position={[x * item.scale, y * item.scale, z * item.scale]} castShadow receiveShadow>
               <dodecahedronGeometry args={[size * item.scale, 0]} />
-              <meshStandardMaterial color={item.color || "#7c7f84"} roughness={0.94} map={textures?.stone} />
+              <meshStandardMaterial color="#edf0f3" roughness={0.94} map={textures?.stone} />
             </mesh>
           ))}
         </group>
@@ -569,11 +569,11 @@ function PropMesh({
         <group position={position} rotation={[0, item.rotation, 0]}>
           <mesh position={[0, 0.55 * item.scale, 0]} castShadow>
             <boxGeometry args={[1.3 * item.scale, 0.12 * item.scale, 0.75 * item.scale]} />
-            <meshStandardMaterial color={item.color || "#6f4e37"} roughness={0.78} map={textures?.wood} />
+            <meshStandardMaterial color="#f7e7d2" roughness={0.78} map={textures?.wood} />
           </mesh>
           <mesh position={[0, 0.63 * item.scale, 0]} castShadow>
             <boxGeometry args={[0.82 * item.scale, 0.02 * item.scale, 0.42 * item.scale]} />
-            <meshStandardMaterial color="#b48b5e" roughness={0.72} map={textures?.cloth} />
+            <meshStandardMaterial color="#f0d39d" roughness={0.72} map={textures?.cloth} />
           </mesh>
           {[
             [-0.5, 0.2, -0.24],
@@ -583,7 +583,7 @@ function PropMesh({
           ].map((leg) => (
             <mesh key={leg.join(":")} position={[leg[0] * item.scale, leg[1] * item.scale, leg[2] * item.scale]} castShadow>
               <boxGeometry args={[0.1 * item.scale, 0.45 * item.scale, 0.1 * item.scale]} />
-              <meshStandardMaterial color={item.color || "#5b3a29"} roughness={0.8} map={textures?.wood} />
+              <meshStandardMaterial color="#ecd0ac" roughness={0.8} map={textures?.wood} />
             </mesh>
           ))}
         </group>
@@ -594,7 +594,7 @@ function PropMesh({
           {[0, 1, 2, 3].map((step) => (
             <mesh key={step} position={[0, step * 0.16 * item.scale, step * 0.18 * item.scale]} castShadow receiveShadow>
               <boxGeometry args={[1.1 * item.scale, 0.16 * item.scale, 0.34 * item.scale]} />
-              <meshStandardMaterial color={step % 2 === 0 ? item.color || "#9b8b7a" : shiftColor(item.color || "#9b8b7a", 0.04)} roughness={0.86} map={groundTexture} />
+              <meshStandardMaterial color={step % 2 === 0 ? "#ffffff" : "#f5f0e8"} roughness={0.86} map={groundTexture} />
             </mesh>
           ))}
         </group>
@@ -616,7 +616,7 @@ function PropMesh({
           </mesh>
           <mesh position={[0.25 * item.scale, 0.8 * item.scale, 0]} castShadow>
             <planeGeometry args={[0.55 * item.scale, 0.8 * item.scale]} />
-            <meshStandardMaterial color={item.color || "#8c2f39"} side={THREE.DoubleSide} roughness={0.88} map={textures?.cloth} />
+            <meshStandardMaterial color="#f7d8de" side={THREE.DoubleSide} roughness={0.88} map={textures?.cloth} />
           </mesh>
         </group>
       )
@@ -624,13 +624,13 @@ function PropMesh({
       return (
         <group position={position} rotation={[0, item.rotation, 0]}>
           <RoundedBox args={[1.7 * item.scale, 0.3 * item.scale, 1.1 * item.scale]} radius={0.05} smoothness={2} position={[0, -0.12 * item.scale, 0]} castShadow receiveShadow>
-            <meshStandardMaterial color="#7e7870" roughness={0.88} map={textures?.stone} />
+            <meshStandardMaterial color="#eee8de" roughness={0.88} map={textures?.stone} />
           </RoundedBox>
           <RoundedBox args={[1.6 * item.scale, 0.45 * item.scale, 1 * item.scale]} radius={0.05} smoothness={2} position={[0, 0.12 * item.scale, 0]} castShadow receiveShadow>
-            <meshStandardMaterial color="#8f8b84" roughness={0.84} map={textures?.stone} />
+            <meshStandardMaterial color="#ffffff" roughness={0.84} map={textures?.stone} />
           </RoundedBox>
           <RoundedBox args={[1.1 * item.scale, 0.35 * item.scale, 0.76 * item.scale]} radius={0.05} smoothness={2} position={[0, 0.48 * item.scale, 0]} castShadow receiveShadow>
-            <meshStandardMaterial color={item.color || "#c1beb7"} roughness={0.82} map={textures?.stone} />
+            <meshStandardMaterial color="#fffaf1" roughness={0.82} map={textures?.stone} />
           </RoundedBox>
           {[-0.28, 0, 0.28].map((x) => (
             <mesh key={x} position={[x * item.scale, 0.78 * item.scale, -0.12 * item.scale]} castShadow>
@@ -644,15 +644,15 @@ function PropMesh({
       return (
         <group position={position} rotation={[0, item.rotation, 0]}>
           <RoundedBox args={[0.7 * item.scale, 0.4 * item.scale, 0.7 * item.scale]} radius={0.04} smoothness={2} position={[0, -0.72 * item.scale, 0]} castShadow receiveShadow>
-            <meshStandardMaterial color="#8d8983" roughness={0.88} map={textures?.stone} />
+            <meshStandardMaterial color="#f3eee6" roughness={0.88} map={textures?.stone} />
           </RoundedBox>
           <mesh position={[0, -0.02 * item.scale, 0]} castShadow>
             <cylinderGeometry args={[0.22 * item.scale, 0.3 * item.scale, 1.5 * item.scale, 10]} />
-            <meshStandardMaterial color={item.color || "#b3b1aa"} roughness={0.82} map={textures?.stone} />
+            <meshStandardMaterial color="#ffffff" roughness={0.82} map={textures?.stone} />
           </mesh>
           <mesh position={[0, 0.42 * item.scale, 0.02 * item.scale]} castShadow>
             <boxGeometry args={[0.42 * item.scale, 0.7 * item.scale, 0.28 * item.scale]} />
-            <meshStandardMaterial color={item.color || "#bdbab2"} roughness={0.82} map={textures?.stone} />
+            <meshStandardMaterial color="#fbf6ee" roughness={0.82} map={textures?.stone} />
           </mesh>
           <mesh position={[0, 1.02 * item.scale, 0]} castShadow>
             <sphereGeometry args={[0.26 * item.scale, 10, 10]} />
@@ -665,7 +665,7 @@ function PropMesh({
       return (
         <group position={position} rotation={[0, item.rotation, 0]}>
           <RoundedBox args={[0.8 * item.scale, 0.8 * item.scale, 0.8 * item.scale]} radius={0.04} smoothness={2} castShadow receiveShadow>
-            <meshStandardMaterial color={item.color || "#8b5a2b"} roughness={0.76} map={textures?.wood} />
+            <meshStandardMaterial color="#f0c993" roughness={0.76} map={textures?.wood} />
           </RoundedBox>
           {[
             [0, 0, 0.41, 0.72, 0.08, 0.05],
@@ -801,14 +801,15 @@ export default function MiniaturesMap({
             onCreated={({ gl }) => {
               gl.shadowMap.enabled = true
               gl.shadowMap.type = THREE.PCFSoftShadowMap
+              gl.toneMappingExposure = 1.25
             }}
           >
-            <color attach="background" args={[palette.haze]} />
-            <hemisphereLight intensity={0.68} groundColor={shiftColor(palette.haze, -0.02)} color="#f7f1e8" />
-            <ambientLight intensity={0.45} color="#fff4df" />
+            <color attach="background" args={[shiftColor(palette.haze, 0.08)]} />
+            <hemisphereLight intensity={0.9} groundColor={shiftColor(palette.floor, -0.18)} color="#f8f3ea" />
+            <ambientLight intensity={0.75} color="#fff6e7" />
             <directionalLight
               position={[10, 16, 7]}
-              intensity={2.85}
+              intensity={3.2}
               color="#fff4de"
               castShadow
               shadow-mapSize-width={2048}
@@ -822,13 +823,13 @@ export default function MiniaturesMap({
               shadow-bias={-0.00012}
               shadow-normalBias={0.02}
             />
-            <directionalLight position={[-8, 10, -7]} intensity={0.8} color="#9bb4d1" />
-            <directionalLight position={[0, 6, -10]} intensity={0.45} color="#fff2d6" />
+            <directionalLight position={[-8, 10, -7]} intensity={1.2} color="#a9c4e2" />
+            <directionalLight position={[0, 6, -10]} intensity={0.8} color="#fff2d6" />
             <spotLight
               position={[-6, 14, 10]}
               angle={0.5}
               penumbra={0.65}
-              intensity={1.7}
+              intensity={2.1}
               color="#ffd7a3"
               castShadow
               shadow-mapSize-width={1024}
@@ -837,7 +838,7 @@ export default function MiniaturesMap({
               shadow-camera-far={30}
               shadow-bias={-0.00014}
             />
-            <fog attach="fog" args={[palette.haze, 14, 38]} />
+            <fog attach="fog" args={[shiftColor(palette.haze, 0.05), 18, 48]} />
 
             <SceneBackdrop map={displayMap} palette={palette} textures={textures} />
             <DisplayBase map={displayMap} palette={palette} textures={textures} />

@@ -67,8 +67,8 @@ export function getThemePalette(theme: Encounter3DTheme) {
         accent: "#b78650",
         frame: "#2b1e16",
         rim: "#8c6b4b",
-        backdrop: "#221a15",
-        haze: "#15100d",
+        backdrop: "#342720",
+        haze: "#261b15",
         grid: "#f4e4c6",
       }
     case "wood":
@@ -78,8 +78,8 @@ export function getThemePalette(theme: Encounter3DTheme) {
         accent: "#d7b27b",
         frame: "#2f1a10",
         rim: "#b17a46",
-        backdrop: "#1b100b",
-        haze: "#130b08",
+        backdrop: "#2c1a11",
+        haze: "#1f130c",
         grid: "#f2dfbf",
       }
     case "cavern":
@@ -89,8 +89,8 @@ export function getThemePalette(theme: Encounter3DTheme) {
         accent: "#99a0ae",
         frame: "#16181d",
         rim: "#515866",
-        backdrop: "#0c0f14",
-        haze: "#090b0f",
+        backdrop: "#1a1f28",
+        haze: "#12161d",
         grid: "#dbe4f6",
       }
     case "sand":
@@ -100,8 +100,8 @@ export function getThemePalette(theme: Encounter3DTheme) {
         accent: "#efd9a1",
         frame: "#463626",
         rim: "#bd9c6e",
-        backdrop: "#2d241a",
-        haze: "#1c140d",
+        backdrop: "#433223",
+        haze: "#2c2015",
         grid: "#f7e9c4",
       }
     case "snow":
@@ -111,8 +111,8 @@ export function getThemePalette(theme: Encounter3DTheme) {
         accent: "#f8fbff",
         frame: "#384956",
         rim: "#c2d0dc",
-        backdrop: "#19242e",
-        haze: "#111922",
+        backdrop: "#273540",
+        haze: "#19222d",
         grid: "#ffffff",
       }
     case "stone":
@@ -123,8 +123,8 @@ export function getThemePalette(theme: Encounter3DTheme) {
         accent: "#bb9470",
         frame: "#241d18",
         rim: "#6a5d51",
-        backdrop: "#16110d",
-        haze: "#0f0b09",
+        backdrop: "#2a221d",
+        haze: "#1a1411",
         grid: "#f4ead6",
       }
   }
