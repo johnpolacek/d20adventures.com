@@ -144,26 +144,6 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
       })
   }
 
-  const handleCopyFromEncounter = () => {
-    if (!copySourceId) return
-    const sourceEncounter =
-      allSections
-        .flatMap((section) => section.scenes)
-        .flatMap((scene) => scene.encounters)
-        .find((entry) => entry.id === copySourceId) || null
-
-    if (!sourceEncounter?.map3d) {
-      toast.error("Selected encounter has no map to copy.")
-      return
-    }
-
-    onMapChange({
-      ...sourceEncounter.map3d,
-      promptHistory: [...sourceEncounter.map3d.promptHistory, `Copied from ${copySourceId}`],
-    })
-    toast.success("Map copied from encounter.")
-  }
-
   return (
     <div className="border-t border-white/10 pt-4">
       <div className="mb-3 flex items-center justify-between gap-3">
@@ -219,7 +199,29 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
                   <Label className="mb-1 block text-xs font-mono text-primary-200/90">Copy Existing Map</Label>
                   <select
                     value={copySourceId}
-                    onChange={(event) => setCopySourceId(event.target.value)}
+                    onChange={(event) => {
+                      const selectedId = event.target.value
+                      setCopySourceId(selectedId)
+                      if (!selectedId) return
+
+                      const sourceEncounter =
+                        allSections
+                          .flatMap((section) => section.scenes)
+                          .flatMap((scene) => scene.encounters)
+                          .find((entry) => entry.id === selectedId) || null
+
+                      if (!sourceEncounter?.map3d) {
+                        toast.error("Selected encounter has no map to copy.")
+                        return
+                      }
+
+                      onMapChange({
+                        ...sourceEncounter.map3d,
+                        promptHistory: [...sourceEncounter.map3d.promptHistory, `Copied from ${selectedId}`],
+                      })
+                      setCopySourceId("")
+                      toast.success("Map copied from encounter.")
+                    }}
                     className="w-full rounded-md border border-white/15 bg-black/30 p-2 text-sm text-white"
                     disabled={isSaving || isGenerating}
                   >
@@ -230,9 +232,6 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
                       </option>
                     ))}
                   </select>
-                  <Button variant="outline" size="sm" disabled={!copySourceId || isSaving || isGenerating || isDraftingPrompt} onClick={handleCopyFromEncounter} className="mt-2 w-full">
-                    Copy Map
-                  </Button>
                 </div>
 
                 <Button variant="epic" size="sm" disabled={isSaving || isGenerating || isDraftingPrompt} onClick={handleGenerate} className="w-full">
