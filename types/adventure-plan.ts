@@ -100,6 +100,9 @@ const pitchAngleSchema = z.preprocess(normalizeAngleValue, z.number().min(0.2).m
 export const encounter3dThemeSchema = z.enum(["stone", "dirt", "wood", "cavern", "sand", "snow"])
 export type Encounter3DTheme = z.infer<typeof encounter3dThemeSchema>
 
+export const encounter3dSceneKitSchema = z.enum(["generic", "checkpoint", "courtyard", "ruins", "shrine", "camp", "road", "crypt", "cavern"])
+export type Encounter3DSceneKit = z.infer<typeof encounter3dSceneKitSchema>
+
 export const encounter3dBoardSchema = z.object({
   width: z.number().min(4).max(48),
   depth: z.number().min(4).max(48),
@@ -191,6 +194,7 @@ export const encounter3dMapSchema = z.object({
   version: z.number().int().min(1).max(1).default(1),
   summary: z.string().default(""),
   promptHistory: z.array(z.string()).default([]),
+  sceneKit: encounter3dSceneKitSchema.default("generic"),
   board: encounter3dBoardSchema,
   camera: encounter3dCameraSchema,
   terrain: z.array(encounter3dTerrainSchema).default([]),

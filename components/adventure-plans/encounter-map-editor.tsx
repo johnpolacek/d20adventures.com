@@ -4,7 +4,7 @@ import { generateEncounterMapAction, generateEncounterMapPromptAction } from "@/
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { createDefaultEncounterMap, enhanceEncounterMap, listEncounterOptions } from "@/lib/map-utils"
+import { createDefaultEncounterMap, enhanceEncounterMap, formatEncounterSceneKit, inferEncounterSceneKit, listEncounterOptions } from "@/lib/map-utils"
 import type { AdventureEncounter, AdventureSection, Encounter3DMap } from "@/types/adventure-plan"
 import dynamic from "next/dynamic"
 import * as React from "react"
@@ -43,6 +43,18 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
         ?.title || "",
     [allSections, encounter.id]
   )
+  const inferredSceneKit = React.useMemo(
+    () =>
+      inferEncounterSceneKit({
+        sectionTitle,
+        sceneTitle,
+        encounterTitle: encounter.title,
+        encounterIntro: encounter.intro,
+        encounterInstructions: encounter.instructions,
+        encounterNpcBehaviors: (encounter.npc || []).map((entry) => entry.behavior),
+      }),
+    [encounter.instructions, encounter.intro, encounter.npc, encounter.title, sceneTitle, sectionTitle]
+  )
   const defaultPrompt = React.useMemo(() => buildSuggestedPrompt(encounter), [encounter])
   const [prompt, setPrompt] = React.useState(defaultPrompt)
   const [suggestedPrompt, setSuggestedPrompt] = React.useState("")
@@ -55,12 +67,12 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
   const displayMap = React.useMemo(
     () =>
       map
-        ? enhanceEncounterMap(map, {
+        ? enhanceEncounterMap({ ...map, sceneKit: map.sceneKit || inferredSceneKit }, {
             maxPartySize,
             npcIds: (encounter.npc || []).map((entry) => entry.id),
           })
         : null,
-    [encounter.npc, map, maxPartySize]
+    [encounter.npc, inferredSceneKit, map, maxPartySize]
   )
   const encounterOptions = React.useMemo(() => listEncounterOptions(allSections, encounter.id).filter((option) => option.hasMap), [allSections, encounter.id])
 
@@ -170,7 +182,7 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
             size="sm"
             disabled={isSaving || isGenerating}
             onClick={() => {
-              onMapChange(createDefaultEncounterMap(encounter.title))
+              onMapChange(createDefaultEncounterMap(encounter.title, { sceneKit: inferredSceneKit }))
               onMapPersistRequest()
             }}
             className="font-mono"
@@ -281,6 +293,7 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
                     <div className="rounded-xl border border-white/10 bg-white/5 p-3">{displayMap?.board.depth || map.board.depth} depth</div>
                     <div className="rounded-xl border border-white/10 bg-white/5 p-3">{displayMap?.board.cellSize || map.board.cellSize} cell size</div>
                     <div className="rounded-xl border border-white/10 bg-white/5 p-3">{displayMap?.board.theme || map.board.theme} theme</div>
+                    <div className="col-span-2 rounded-xl border border-white/10 bg-white/5 p-3">{formatEncounterSceneKit(displayMap?.sceneKit || map.sceneKit || inferredSceneKit)} kit</div>
                   </div>
                 </div>
               </div>

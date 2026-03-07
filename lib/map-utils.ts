@@ -7,23 +7,146 @@ import type {
   Encounter3DPartySlot,
   Encounter3DProp,
   Encounter3DPropKind,
+  Encounter3DSceneKit,
   Encounter3DTerrain,
   Encounter3DTerrainKind,
   Encounter3DTheme,
 } from "@/types/adventure-plan"
 
 const DEFAULT_THEME: Encounter3DTheme = "stone"
+const DEFAULT_SCENE_KIT: Encounter3DSceneKit = "generic"
 
-export function createDefaultEncounterMap(summary = ""): Encounter3DMap {
+function clampScore(score: number) {
+  return Math.max(score, 0)
+}
+
+export function inferEncounterSceneKit(args: {
+  sectionTitle?: string
+  sceneTitle?: string
+  encounterTitle?: string
+  encounterIntro?: string
+  encounterInstructions?: string
+  encounterNpcBehaviors?: string[]
+}): Encounter3DSceneKit {
+  const text = [
+    args.sectionTitle,
+    args.sceneTitle,
+    args.encounterTitle,
+    args.encounterIntro,
+    args.encounterInstructions,
+    ...(args.encounterNpcBehaviors || []),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase()
+
+  const score = (keywords: string[], penalty: string[] = []) =>
+    clampScore(
+      keywords.reduce((total, keyword) => total + (text.includes(keyword) ? 2 : 0), 0) -
+        penalty.reduce((total, keyword) => total + (text.includes(keyword) ? 1 : 0), 0)
+    )
+
+  const rankedKits = [
+    {
+      kit: "checkpoint" as const,
+      score: score(["checkpoint", "gate", "gatehouse", "border", "toll", "customs", "watchtower", "guard post", "barricade"]),
+    },
+    {
+      kit: "crypt" as const,
+      score: score(["crypt", "tomb", "mausoleum", "grave", "catacomb", "sarcophagus", "burial", "sepulcher"]),
+    },
+    {
+      kit: "shrine" as const,
+      score: score(["shrine", "altar", "temple", "sanctum", "idol", "ritual", "chapel", "sacred"]),
+    },
+    {
+      kit: "cavern" as const,
+      score: score(["cavern", "cave", "grotto", "underground", "mine", "tunnel", "chasm"]),
+    },
+    {
+      kit: "camp" as const,
+      score: score(["camp", "encampment", "campfire", "tent", "supply", "wagon", "outpost"]),
+    },
+    {
+      kit: "road" as const,
+      score: score(["road", "path", "trail", "pass", "bridge", "causeway", "roadside", "caravan", "ambush"]),
+    },
+    {
+      kit: "ruins" as const,
+      score: score(["ruins", "ruined", "collapsed", "broken", "shattered", "rubble", "derelict"]),
+    },
+    {
+      kit: "courtyard" as const,
+      score: score(["courtyard", "plaza", "hall", "keep", "castle", "fort", "fortress", "court"], ["ruins", "collapsed", "crypt"]),
+    },
+  ]
+
+  const best = rankedKits.sort((left, right) => right.score - left.score)[0]
+  return best && best.score > 0 ? best.kit : DEFAULT_SCENE_KIT
+}
+
+export function inferThemeForSceneKit(sceneKit: Encounter3DSceneKit): Encounter3DTheme {
+  switch (sceneKit) {
+    case "camp":
+    case "road":
+      return "dirt"
+    case "cavern":
+      return "cavern"
+    case "checkpoint":
+      return "wood"
+    case "shrine":
+    case "crypt":
+    case "courtyard":
+    case "ruins":
+    case "generic":
+    default:
+      return DEFAULT_THEME
+  }
+}
+
+export function formatEncounterSceneKit(sceneKit: Encounter3DSceneKit) {
+  switch (sceneKit) {
+    case "checkpoint":
+      return "Gate checkpoint"
+    case "courtyard":
+      return "Courtyard"
+    case "ruins":
+      return "Ruins"
+    case "shrine":
+      return "Shrine"
+    case "camp":
+      return "Camp"
+    case "road":
+      return "Road / ambush"
+    case "crypt":
+      return "Crypt"
+    case "cavern":
+      return "Cavern"
+    case "generic":
+    default:
+      return "Generic"
+  }
+}
+
+export function createDefaultEncounterMap(
+  summary = "",
+  options?: {
+    theme?: Encounter3DTheme
+    sceneKit?: Encounter3DSceneKit
+  }
+): Encounter3DMap {
+  const sceneKit = options?.sceneKit || DEFAULT_SCENE_KIT
+  const theme = options?.theme || inferThemeForSceneKit(sceneKit)
   return {
     version: 1,
     summary,
     promptHistory: [],
+    sceneKit,
     board: {
       width: 12,
       depth: 12,
       cellSize: 1,
-      theme: DEFAULT_THEME,
+      theme,
       accentColor: "#b08968",
     },
     camera: {
@@ -177,7 +300,140 @@ function addIfMissing<T extends { id: string }>(collection: T[], nextItem: T) {
   }
 }
 
-function createPerimeterTerrain(theme: Encounter3DTheme, width: number, depth: number): Encounter3DTerrain[] {
+function createSceneKitTerrain(sceneKit: Encounter3DSceneKit, theme: Encounter3DTheme, width: number, depth: number): Encounter3DTerrain[] {
+  const palette = getThemePalette(theme)
+  const backline = -depth / 2 + 2.2
+
+  switch (sceneKit) {
+    case "checkpoint":
+      return [
+        { id: "auto-kit-checkpoint-tower-left", kind: "wall", x: -3.4, z: backline + 0.1, y: 0, width: 1.8, depth: 2.6, height: 3.2, rotation: 0, color: palette.edge, label: "Gate tower" },
+        { id: "auto-kit-checkpoint-tower-right", kind: "wall", x: 3.4, z: backline + 0.1, y: 0, width: 1.8, depth: 2.6, height: 3.2, rotation: 0, color: palette.edge, label: "Gate tower" },
+        { id: "auto-kit-checkpoint-bridge", kind: "ramp", x: 0, z: backline - 0.2, y: 0, width: 3.8, depth: 1.5, height: 1.1, rotation: 0, color: palette.floor, label: "Gate bridge" },
+        { id: "auto-kit-checkpoint-platform", kind: "dais", x: 1.7, z: -0.1, y: 0, width: 2.2, depth: 1.5, height: 0.26, rotation: 0.08, color: palette.accent, label: "Inspection platform" },
+      ]
+    case "courtyard":
+      return [
+        { id: "auto-kit-courtyard-dais", kind: "dais", x: 0, z: backline, y: 0, width: 4.8, depth: 2.5, height: 0.48, rotation: 0, color: palette.accent, label: "Rear dais" },
+        { id: "auto-kit-courtyard-arcade-left", kind: "wall", x: -3.2, z: -0.8, y: 0, width: 1, depth: depth - 5.6, height: 1.8, rotation: 0.02, color: palette.floor, label: "Colonnade" },
+        { id: "auto-kit-courtyard-arcade-right", kind: "wall", x: 3.2, z: 0.6, y: 0, width: 1, depth: depth - 5.8, height: 1.8, rotation: -0.02, color: palette.floor, label: "Colonnade" },
+        { id: "auto-kit-courtyard-plinth", kind: "platform", x: 0.4, z: 1.3, y: 0, width: 2, depth: 1.4, height: 0.22, rotation: 0.1, color: palette.rim, label: "Center plinth" },
+      ]
+    case "ruins":
+      return [
+        { id: "auto-kit-ruins-wall-left", kind: "wall", x: -3.1, z: -0.4, y: 0, width: 1, depth: 4.6, height: 1.8, rotation: 0.16, color: palette.edge, label: "Broken wall" },
+        { id: "auto-kit-ruins-wall-right", kind: "wall", x: 2.5, z: 0.9, y: 0, width: 1, depth: 3.8, height: 1.5, rotation: -0.22, color: palette.edge, label: "Broken wall" },
+        { id: "auto-kit-ruins-plinth", kind: "platform", x: -0.4, z: 1.5, y: 0, width: 2.1, depth: 1.2, height: 0.24, rotation: -0.14, color: palette.floor, label: "Collapsed plinth" },
+        { id: "auto-kit-ruins-dais", kind: "dais", x: 2.1, z: -1.9, y: 0, width: 1.9, depth: 1.2, height: 0.22, rotation: 0.2, color: palette.accent, label: "Broken step" },
+      ]
+    case "shrine":
+      return [
+        { id: "auto-kit-shrine-dais", kind: "dais", x: 0, z: backline, y: 0, width: 4.2, depth: 2.2, height: 0.55, rotation: 0, color: palette.accent, label: "Shrine dais" },
+        { id: "auto-kit-shrine-approach", kind: "platform", x: 0, z: -0.2, y: 0, width: 2.2, depth: depth - 5, height: 0.1, rotation: 0, color: palette.floor, label: "Processional path" },
+        { id: "auto-kit-shrine-plinth-left", kind: "platform", x: -2.5, z: 0.8, y: 0, width: 1.6, depth: 1.2, height: 0.24, rotation: 0.12, color: palette.rim, label: "Offering plinth" },
+        { id: "auto-kit-shrine-plinth-right", kind: "platform", x: 2.3, z: -0.6, y: 0, width: 1.6, depth: 1.2, height: 0.24, rotation: -0.14, color: palette.rim, label: "Offering plinth" },
+      ]
+    case "camp":
+      return [
+        { id: "auto-kit-camp-command", kind: "platform", x: -2.2, z: backline + 0.6, y: 0, width: 3, depth: 2.1, height: 0.18, rotation: -0.08, color: palette.accent, label: "Command ground" },
+        { id: "auto-kit-camp-barricade-left", kind: "wall", x: -0.6, z: 1.1, y: 0, width: 2.2, depth: 0.55, height: 0.72, rotation: 0.22, color: palette.edge, label: "Camp barricade" },
+        { id: "auto-kit-camp-barricade-right", kind: "wall", x: 2.6, z: -0.8, y: 0, width: 2.1, depth: 0.55, height: 0.72, rotation: -0.18, color: palette.edge, label: "Camp barricade" },
+        { id: "auto-kit-camp-lane", kind: "platform", x: 1.2, z: 0.2, y: 0, width: 2.5, depth: 1.2, height: 0.12, rotation: -0.08, color: palette.floor, label: "Trampled lane" },
+      ]
+    case "road":
+      return [
+        { id: "auto-kit-road-lane", kind: "platform", x: 0, z: 0, y: 0, width: 3.6, depth: depth - 2.8, height: 0.12, rotation: 0.02, color: palette.accent, label: "Road lane" },
+        { id: "auto-kit-road-bank-left", kind: "platform", x: -3.1, z: 0.5, y: 0, width: 2.1, depth: depth - 4.2, height: 0.3, rotation: 0.08, color: palette.edge, label: "Road bank" },
+        { id: "auto-kit-road-bank-right", kind: "platform", x: 3, z: -0.4, y: 0, width: 2.1, depth: depth - 4.2, height: 0.3, rotation: -0.08, color: palette.edge, label: "Road bank" },
+        { id: "auto-kit-road-choke", kind: "wall", x: 1.5, z: 1.3, y: 0, width: 2.2, depth: 0.55, height: 0.7, rotation: -0.24, color: palette.floor, label: "Ambush barricade" },
+      ]
+    case "crypt":
+      return [
+        { id: "auto-kit-crypt-sarcophagus", kind: "dais", x: 0, z: backline, y: 0, width: 3.2, depth: 1.9, height: 0.52, rotation: 0, color: palette.floor, label: "Stone tomb" },
+        { id: "auto-kit-crypt-aisle-left", kind: "wall", x: -2.8, z: 0.3, y: 0, width: 1, depth: depth - 5.4, height: 1.4, rotation: 0.04, color: palette.edge, label: "Tomb aisle" },
+        { id: "auto-kit-crypt-aisle-right", kind: "wall", x: 2.8, z: -0.2, y: 0, width: 1, depth: depth - 5.4, height: 1.4, rotation: -0.04, color: palette.edge, label: "Tomb aisle" },
+        { id: "auto-kit-crypt-step", kind: "platform", x: 0.5, z: 1.8, y: 0, width: 2, depth: 1.3, height: 0.16, rotation: 0.08, color: palette.rim, label: "Burial step" },
+      ]
+    case "cavern":
+      return [
+        { id: "auto-kit-cavern-arch-left", kind: "platform", x: -3.2, z: backline + 0.4, y: 0.1, width: 2.4, depth: 2.8, height: 1.2, rotation: 0.18, color: palette.edge, label: "Rock arch" },
+        { id: "auto-kit-cavern-arch-right", kind: "platform", x: 3, z: backline, y: 0.1, width: 2.2, depth: 2.8, height: 1.1, rotation: -0.18, color: palette.edge, label: "Rock arch" },
+        { id: "auto-kit-cavern-shelf", kind: "dais", x: 0.4, z: 1.2, y: 0, width: 2.4, depth: 1.5, height: 0.42, rotation: 0.1, color: palette.floor, label: "Rock shelf" },
+        { id: "auto-kit-cavern-spur", kind: "platform", x: -1.8, z: -0.8, y: 0, width: 2, depth: 1.4, height: 0.38, rotation: -0.16, color: palette.rim, label: "Rock spur" },
+      ]
+    case "generic":
+    default:
+      return []
+  }
+}
+
+function createSceneKitProps(sceneKit: Encounter3DSceneKit, theme: Encounter3DTheme, width: number, depth: number): Encounter3DProp[] {
+  const palette = getThemePalette(theme)
+  const backline = -depth / 2 + 2.6
+
+  switch (sceneKit) {
+    case "checkpoint":
+      return [
+        { id: "auto-kit-checkpoint-banner-left", kind: "banner", x: -1.6, z: backline + 0.1, y: 0, scale: 0.92, rotation: 0, color: palette.accent, label: "Checkpoint banner" },
+        { id: "auto-kit-checkpoint-banner-right", kind: "banner", x: 1.6, z: backline + 0.2, y: 0, scale: 0.92, rotation: 0, color: palette.accent, label: "Checkpoint banner" },
+        { id: "auto-kit-checkpoint-table", kind: "table", x: 1.8, z: -0.5, y: 0, scale: 0.92, rotation: 0.1, color: palette.rim, label: "Inspection table" },
+        { id: "auto-kit-checkpoint-crate", kind: "crate", x: -2, z: 0.8, y: 0, scale: 1.02, rotation: -0.12, color: palette.accent, label: "Supply crate" },
+      ]
+    case "courtyard":
+      return [
+        { id: "auto-kit-courtyard-statue-left", kind: "statue", x: -3.1, z: backline + 0.4, y: 0, scale: 0.92, rotation: 0, color: palette.accent, label: "Court marker" },
+        { id: "auto-kit-courtyard-statue-right", kind: "statue", x: 3.1, z: backline + 0.3, y: 0, scale: 0.92, rotation: 0, color: palette.accent, label: "Court marker" },
+        { id: "auto-kit-courtyard-banner-left", kind: "banner", x: -1.6, z: backline, y: 0, scale: 0.86, rotation: 0.04, color: palette.accent, label: "Court banner" },
+        { id: "auto-kit-courtyard-banner-right", kind: "banner", x: 1.6, z: backline + 0.2, y: 0, scale: 0.86, rotation: -0.04, color: palette.accent, label: "Court banner" },
+      ]
+    case "ruins":
+      return [
+        { id: "auto-kit-ruins-pillar-left", kind: "pillar", x: -2.3, z: -1.6, y: 0, scale: 0.92, rotation: 0.14, color: palette.floor, label: "Broken pillar" },
+        { id: "auto-kit-ruins-pillar-right", kind: "pillar", x: 2.4, z: 1.9, y: 0, scale: 0.84, rotation: -0.12, color: palette.floor, label: "Broken pillar" },
+        { id: "auto-kit-ruins-rubble-left", kind: "rock", x: -0.8, z: 2.1, y: 0, scale: 0.95, rotation: 0.2, color: palette.edge, label: "Rubble pile" },
+        { id: "auto-kit-ruins-rubble-right", kind: "rock", x: 2.1, z: -2, y: 0, scale: 1.02, rotation: -0.14, color: palette.edge, label: "Rubble pile" },
+      ]
+    case "shrine":
+      return [
+        { id: "auto-kit-shrine-altar", kind: "altar", x: 0, z: backline + 0.1, y: 0, scale: 0.94, rotation: 0, color: palette.accent, label: "Shrine altar" },
+        { id: "auto-kit-shrine-banner-left", kind: "banner", x: -2.2, z: backline + 0.3, y: 0, scale: 0.88, rotation: 0.08, color: palette.accent, label: "Ritual banner" },
+        { id: "auto-kit-shrine-banner-right", kind: "banner", x: 2.2, z: backline + 0.3, y: 0, scale: 0.88, rotation: -0.08, color: palette.accent, label: "Ritual banner" },
+        { id: "auto-kit-shrine-torch-left", kind: "torch", x: -1.1, z: 0.4, y: 0, scale: 0.96, rotation: 0, color: "#efc65b", label: "Ceremonial torch" },
+      ]
+    case "camp":
+      return [
+        { id: "auto-kit-camp-table", kind: "table", x: -2.1, z: backline + 0.4, y: 0, scale: 1, rotation: -0.08, color: palette.rim, label: "Command table" },
+        { id: "auto-kit-camp-crate-1", kind: "crate", x: -0.6, z: 2.1, y: 0, scale: 1.02, rotation: 0.18, color: palette.accent, label: "Supply stack" },
+        { id: "auto-kit-camp-crate-2", kind: "crate", x: 2.6, z: -1.4, y: 0, scale: 0.94, rotation: -0.16, color: palette.accent, label: "Supply stack" },
+        { id: "auto-kit-camp-banner", kind: "banner", x: 0.5, z: backline + 0.2, y: 0, scale: 0.84, rotation: 0.04, color: palette.accent, label: "Camp standard" },
+      ]
+    case "road":
+      return [
+        { id: "auto-kit-road-tree-left", kind: "tree", x: -4.2, z: 2.1, y: 0, scale: 0.94, rotation: 0.18, color: "#78965e", label: "Roadside tree" },
+        { id: "auto-kit-road-tree-right", kind: "tree", x: 4, z: -1.8, y: 0, scale: 0.9, rotation: -0.16, color: "#78965e", label: "Roadside tree" },
+        { id: "auto-kit-road-rock", kind: "rock", x: 2.6, z: 0.8, y: 0, scale: 0.92, rotation: 0.12, color: palette.edge, label: "Roadside rock" },
+        { id: "auto-kit-road-crate", kind: "crate", x: -1.8, z: -1.4, y: 0, scale: 0.88, rotation: -0.18, color: palette.accent, label: "Abandoned cargo" },
+      ]
+    case "crypt":
+      return [
+        { id: "auto-kit-crypt-statue-left", kind: "statue", x: -2.1, z: backline + 0.3, y: 0, scale: 0.86, rotation: 0.06, color: palette.rim, label: "Funerary statue" },
+        { id: "auto-kit-crypt-statue-right", kind: "statue", x: 2.1, z: backline + 0.2, y: 0, scale: 0.86, rotation: -0.06, color: palette.rim, label: "Funerary statue" },
+        { id: "auto-kit-crypt-torch-left", kind: "torch", x: -1.4, z: 0.7, y: 0, scale: 0.92, rotation: 0, color: "#efc65b", label: "Grave torch" },
+        { id: "auto-kit-crypt-torch-right", kind: "torch", x: 1.5, z: 0.5, y: 0, scale: 0.92, rotation: 0, color: "#efc65b", label: "Grave torch" },
+      ]
+    case "cavern":
+      return [
+        { id: "auto-kit-cavern-rock-left", kind: "rock", x: -2.5, z: 2.1, y: 0, scale: 1.08, rotation: 0.2, color: palette.rim, label: "Boulder cluster" },
+        { id: "auto-kit-cavern-rock-right", kind: "rock", x: 2.8, z: -1.9, y: 0, scale: 1.02, rotation: -0.18, color: palette.rim, label: "Boulder cluster" },
+        { id: "auto-kit-cavern-torch", kind: "torch", x: 0.7, z: backline + 0.3, y: 0, scale: 0.9, rotation: 0, color: "#efc65b", label: "Wall torch" },
+      ]
+    case "generic":
+    default:
+      return []
+  }
+}
+
+function createPerimeterTerrain(sceneKit: Encounter3DSceneKit, theme: Encounter3DTheme, width: number, depth: number): Encounter3DTerrain[] {
   if (theme === "cavern") {
     return [
       { id: "auto-ridge-back", kind: "platform", x: 0, z: -depth / 2 + 0.8, y: 0.2, width: width - 1.6, depth: 1.6, height: 1.2, rotation: 0, color: "#4b4f58", label: "Rock ridge" },
@@ -185,6 +441,26 @@ function createPerimeterTerrain(theme: Encounter3DTheme, width: number, depth: n
       { id: "auto-ridge-right", kind: "platform", x: width / 2 - 0.8, z: 0, y: 0.2, width: 1.6, depth: depth - 1.6, height: 1.2, rotation: 0, color: "#41454f", label: "Rock ridge" },
       { id: "auto-ridge-front-left", kind: "platform", x: -width / 2 + 1.5, z: depth / 2 - 1.2, y: 0.15, width: 2.4, depth: 1.8, height: 0.9, rotation: 0, color: "#3f434b", label: "Rock shelf" },
       { id: "auto-ridge-front-right", kind: "platform", x: width / 2 - 1.5, z: depth / 2 - 1.2, y: 0.15, width: 2.4, depth: 1.8, height: 0.9, rotation: 0, color: "#3f434b", label: "Rock shelf" },
+    ]
+  }
+
+  if (sceneKit === "checkpoint") {
+    return [
+      { id: "auto-wall-back", kind: "wall", x: 0, z: -depth / 2 + 0.35, y: 0, width: width - 1.6, depth: 0.7, height: 2.4, rotation: 0, color: theme === "wood" ? "#7a5230" : "#6c675f", label: "Rear fortification" },
+      { id: "auto-wall-left", kind: "wall", x: -width / 2 + 0.8, z: -depth / 2 + 2.3, y: 0, width: 1.2, depth: 3.1, height: 2.3, rotation: 0, color: theme === "wood" ? "#6d4927" : "#686259", label: "Gate flank" },
+      { id: "auto-wall-right", kind: "wall", x: width / 2 - 0.8, z: -depth / 2 + 2.3, y: 0, width: 1.2, depth: 3.1, height: 2.3, rotation: 0, color: theme === "wood" ? "#6d4927" : "#686259", label: "Gate flank" },
+      { id: "auto-wall-front-left", kind: "wall", x: -width / 2 + 1.6, z: depth / 2 - 0.6, y: 0, width: 2.1, depth: 0.7, height: 0.9, rotation: 0.06, color: theme === "wood" ? "#7a5230" : "#736d66", label: "Approach barricade" },
+      { id: "auto-wall-front-right", kind: "wall", x: width / 2 - 1.6, z: depth / 2 - 0.6, y: 0, width: 2.1, depth: 0.7, height: 0.9, rotation: -0.06, color: theme === "wood" ? "#7a5230" : "#736d66", label: "Approach barricade" },
+    ]
+  }
+
+  if (sceneKit === "camp" || sceneKit === "road" || sceneKit === "ruins") {
+    return [
+      { id: "auto-wall-back", kind: "wall", x: 0, z: -depth / 2 + 0.45, y: 0, width: width - 1.2, depth: 0.7, height: 1.6, rotation: 0, color: theme === "wood" ? "#7a5230" : "#6c675f", label: "Rear boundary" },
+      { id: "auto-wall-left", kind: "wall", x: -width / 2 + 1.2, z: 0.8, y: 0, width: 1.2, depth: 4.8, height: 1.2, rotation: 0.18, color: theme === "wood" ? "#6d4927" : "#686259", label: "Flank cover" },
+      { id: "auto-wall-right", kind: "wall", x: width / 2 - 1.2, z: -0.8, y: 0, width: 1.2, depth: 4.4, height: 1.2, rotation: -0.18, color: theme === "wood" ? "#6d4927" : "#686259", label: "Flank cover" },
+      { id: "auto-wall-front-left", kind: "wall", x: -width / 2 + 1.7, z: depth / 2 - 0.6, y: 0, width: 2, depth: 0.7, height: 0.75, rotation: 0.08, color: theme === "wood" ? "#7a5230" : "#736d66", label: "Front cover" },
+      { id: "auto-wall-front-right", kind: "wall", x: width / 2 - 1.7, z: depth / 2 - 0.6, y: 0, width: 2, depth: 0.7, height: 0.75, rotation: -0.08, color: theme === "wood" ? "#7a5230" : "#736d66", label: "Front cover" },
     ]
   }
 
@@ -449,15 +725,24 @@ export function enhanceEncounterMap(
   }
 ) {
   const next = cloneEncounterMap(map)
+  const sceneKit = next.sceneKit || DEFAULT_SCENE_KIT
   const width = next.board.width * next.board.cellSize
   const depth = next.board.depth * next.board.cellSize
 
+  const hasSceneKitTerrain = next.terrain.some((item) => item.id.startsWith(`auto-kit-${sceneKit}`))
+  const hasSceneKitProps = next.props.some((item) => item.id.startsWith(`auto-kit-${sceneKit}`))
   const hasPerimeterTreatment =
     next.terrain.some((item) => item.id.startsWith("auto-wall") || item.id.startsWith("auto-ridge")) ||
     next.terrain.filter((item) => item.kind === "wall").length >= 2
 
+  if (!hasSceneKitTerrain && sceneKit !== "generic" && next.terrain.length < 9) {
+    for (const terrain of createSceneKitTerrain(sceneKit, next.board.theme, width, depth)) {
+      addIfMissing(next.terrain, terrain)
+    }
+  }
+
   if (!hasPerimeterTreatment) {
-    for (const terrain of createPerimeterTerrain(next.board.theme, width, depth)) {
+    for (const terrain of createPerimeterTerrain(sceneKit, next.board.theme, width, depth)) {
       addIfMissing(next.terrain, terrain)
     }
   }
@@ -488,6 +773,12 @@ export function enhanceEncounterMap(
 
   if (next.props.length < 14) {
     for (const prop of createClusterProps(next.board.theme, width, depth)) {
+      addIfMissing(next.props, prop)
+    }
+  }
+
+  if (!hasSceneKitProps && sceneKit !== "generic" && next.props.length < 18) {
+    for (const prop of createSceneKitProps(sceneKit, next.board.theme, width, depth)) {
       addIfMissing(next.props, prop)
     }
   }

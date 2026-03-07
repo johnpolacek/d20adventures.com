@@ -1,10 +1,52 @@
 "use server"
 
 import { generateObject, generateText } from "@/lib/ai"
-import { createDefaultEncounterMap, enhanceEncounterMap } from "@/lib/map-utils"
-import type { EncounterCharacterRef } from "@/types/adventure-plan"
+import { createDefaultEncounterMap, enhanceEncounterMap, formatEncounterSceneKit, inferEncounterSceneKit } from "@/lib/map-utils"
+import type { Encounter3DSceneKit, EncounterCharacterRef } from "@/types/adventure-plan"
 import { encounter3dMapSchema } from "@/types/adventure-plan"
 import { auth } from "@clerk/nextjs/server"
+
+function buildSceneKitGuidance(sceneKit: Encounter3DSceneKit) {
+  switch (sceneKit) {
+    case "checkpoint":
+      return "Target a fortified checkpoint with flanking gate structures, an inspection platform, cargo or barricade clusters, and readable approach lanes."
+    case "courtyard":
+      return "Target a formal courtyard with a raised rear dais, partial colonnades or flanking structures, and cover clusters that keep the center playable."
+    case "ruins":
+      return "Target broken ruins with collapsed wall fragments, offset plinths, rubble clusters, and asymmetrical cover lines."
+    case "shrine":
+      return "Target a sacred shrine with a ceremonial dais or altar, a processional approach, flanking markers, and dense ritual dressing."
+    case "camp":
+      return "Target an encampment with command space, supply stacks, low barricades, and uneven lanes between clustered camp elements."
+    case "road":
+      return "Target a travel route or ambush lane with a clear road, flanking banks or obstacles, chokepoints, and roadside dressing."
+    case "crypt":
+      return "Target a tomb or crypt with a sarcophagus-like focal piece, funerary markers, oppressive side aisles, and broken burial dressing."
+    case "cavern":
+      return "Target a cave chamber with uneven shelves, rock spurs, choke points, and clustered boulders."
+    case "generic":
+    default:
+      return "Target a compact tabletop encounter space with strong focal terrain, asymmetrical clustered cover, and clear lanes."
+  }
+}
+
+function inferSceneKitFromArgs(args: {
+  sectionTitle?: string
+  sceneTitle?: string
+  encounterTitle?: string
+  encounterIntro?: string
+  encounterInstructions?: string
+  encounterNpcRefs?: EncounterCharacterRef[]
+}) {
+  return inferEncounterSceneKit({
+    sectionTitle: args.sectionTitle,
+    sceneTitle: args.sceneTitle,
+    encounterTitle: args.encounterTitle,
+    encounterIntro: args.encounterIntro,
+    encounterInstructions: args.encounterInstructions,
+    encounterNpcBehaviors: (args.encounterNpcRefs || []).map((npc) => npc.behavior),
+  })
+}
 
 function buildMapPrompt(args: {
   prompt: string
@@ -15,6 +57,7 @@ function buildMapPrompt(args: {
   encounterInstructions?: string
   encounterNpcRefs?: EncounterCharacterRef[]
   maxPartySize: number
+  sceneKit: Encounter3DSceneKit
   existingMapJson?: string
 }) {
   return `You are designing a tabletop 3D battlemap for a fantasy adventure app.
@@ -39,6 +82,9 @@ Requirements:
 - Include enough party token slots for up to ${args.maxPartySize} party members when the encounter supports combat or positioning.
 - Include NPC token slots for any explicitly mentioned encounter NPC ids.
 - Keep prompts and map edits grounded in the encounter text.
+- Set "sceneKit" to the best fit from: generic, checkpoint, courtyard, ruins, shrine, camp, road, crypt, cavern.
+- Current best-fit scene kit: ${args.sceneKit} (${formatEncounterSceneKit(args.sceneKit)}).
+- ${buildSceneKitGuidance(args.sceneKit)}
 
 Adventure context:
 - Section: ${args.sectionTitle || "Unknown"}
@@ -61,6 +107,7 @@ function buildPromptAuthoringPrompt(args: {
   encounterIntro?: string
   encounterInstructions?: string
   encounterNpcRefs?: EncounterCharacterRef[]
+  sceneKit: Encounter3DSceneKit
 }) {
   return `You are helping an adventure designer write a high-quality prompt for generating a tabletop 3D environment.
 
@@ -73,6 +120,8 @@ Requirements:
 - Ask for clustered mid-board cover and asymmetry so the scene avoids a large empty center.
 - Do not summarize the story; convert it into spatial directions.
 - Mention the scene style as a stylized tabletop 3D battlemap.
+- Push the map toward this scene kit unless the encounter text strongly contradicts it: ${args.sceneKit} (${formatEncounterSceneKit(args.sceneKit)}).
+- ${buildSceneKitGuidance(args.sceneKit)}
 - Keep it to 2-4 sentences.
 - Output only the prompt text, with no bullets, labels, or quotation marks.
 
@@ -101,10 +150,15 @@ export async function generateEncounterMapAction(args: {
     throw new Error("Unauthorized")
   }
 
+  const sceneKit =
+    args.existingMap && typeof args.existingMap === "object" && args.existingMap && "sceneKit" in args.existingMap
+      ? (((args.existingMap as { sceneKit?: Encounter3DSceneKit }).sceneKit) || inferSceneKitFromArgs(args))
+      : inferSceneKitFromArgs(args)
   const existingMapJson = args.existingMap ? JSON.stringify(args.existingMap, null, 2) : undefined
   const result = await generateObject({
     prompt: buildMapPrompt({
       ...args,
+      sceneKit,
       existingMapJson,
     }),
     schema: encounter3dMapSchema,
@@ -112,7 +166,7 @@ export async function generateEncounterMapAction(args: {
 
   return enhanceEncounterMap(
     {
-      ...createDefaultEncounterMap(),
+      ...createDefaultEncounterMap("", { sceneKit }),
       ...result.object,
       version: 1 as const,
       promptHistory: [...(args.existingMap && typeof args.existingMap === "object" && args.existingMap && "promptHistory" in args.existingMap ? (((args.existingMap as { promptHistory?: string[] }).promptHistory || [])) : []), args.prompt],
@@ -137,8 +191,12 @@ export async function generateEncounterMapPromptAction(args: {
     throw new Error("Unauthorized")
   }
 
+  const sceneKit = inferSceneKitFromArgs(args)
   const { text } = await generateText({
-    prompt: buildPromptAuthoringPrompt(args),
+    prompt: buildPromptAuthoringPrompt({
+      ...args,
+      sceneKit,
+    }),
   })
 
   return text.trim().replace(/^["']|["']$/g, "")
