@@ -27,13 +27,27 @@ interface EncounterMapEditorProps {
   onMapChange: (map: Encounter3DMap | undefined) => void
 }
 
+function buildSuggestedPrompt(encounter: AdventureEncounter) {
+  const intro = encounter.intro.trim()
+  if (intro.length > 0) {
+    return intro
+  }
+
+  return `Create a tabletop 3D encounter map for ${encounter.title || "this encounter"}.`
+}
+
 export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSaving, onMapChange }: EncounterMapEditorProps) {
-  const [prompt, setPrompt] = React.useState("")
+  const defaultPrompt = React.useMemo(() => buildSuggestedPrompt(encounter), [encounter])
+  const [prompt, setPrompt] = React.useState(defaultPrompt)
   const [isGenerating, setIsGenerating] = React.useState(false)
   const [copySourceId, setCopySourceId] = React.useState("")
 
   const map = encounter.map3d
   const encounterOptions = React.useMemo(() => listEncounterOptions(allSections, encounter.id).filter((option) => option.hasMap), [allSections, encounter.id])
+
+  React.useEffect(() => {
+    setPrompt((currentPrompt) => (currentPrompt.trim().length === 0 ? defaultPrompt : currentPrompt))
+  }, [defaultPrompt])
 
   const updateMap = (updater: (current: Encounter3DMap) => Encounter3DMap) => {
     const next = updater(map || createDefaultEncounterMap(encounter.title))
@@ -64,7 +78,7 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
     })
       .then((generated) => {
         onMapChange(generated)
-        setPrompt("")
+        setPrompt(defaultPrompt)
         toast.success(map ? "Map updated from prompt." : "Map generated.")
       })
       .catch((error) => {
@@ -127,7 +141,7 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
                   onChange={(event) => setPrompt(event.target.value)}
                   rows={4}
                   disabled={isSaving || isGenerating}
-                  placeholder="Describe the environment, sight lines, elevation, hazards, and where party / enemy minis should start."
+                  placeholder={defaultPrompt}
                   className="bg-black/30 placeholder:text-white/35"
                 />
               </div>
