@@ -325,6 +325,100 @@ function createScatterProps(theme: Encounter3DTheme): Encounter3DProp[] {
   }
 }
 
+function createMidfieldTerrain(theme: Encounter3DTheme, width: number, depth: number): Encounter3DTerrain[] {
+  switch (theme) {
+    case "dirt":
+      return [
+        { id: "auto-mid-barricade-left", kind: "wall", x: -2.6, z: 0.9, y: 0, width: 2.4, depth: 0.6, height: 0.75, rotation: 0.22, color: "#8a6443", label: "Barricade" },
+        { id: "auto-mid-barricade-right", kind: "wall", x: 2.3, z: -0.6, y: 0, width: 2, depth: 0.6, height: 0.75, rotation: -0.18, color: "#8a6443", label: "Barricade" },
+        { id: "auto-mid-hillock", kind: "platform", x: 0.7, z: 1.8, y: 0, width: 2.2, depth: 1.4, height: 0.2, rotation: 0.12, color: "#956b46", label: "Earth rise" },
+      ]
+    case "wood":
+      return [
+        { id: "auto-mid-cover-left", kind: "wall", x: -2.8, z: 0.8, y: 0, width: 2.1, depth: 0.55, height: 0.8, rotation: 0.18, color: "#916036", label: "Timber cover" },
+        { id: "auto-mid-cover-right", kind: "wall", x: 2.5, z: -0.5, y: 0, width: 2.1, depth: 0.55, height: 0.8, rotation: -0.16, color: "#916036", label: "Timber cover" },
+        { id: "auto-mid-platform", kind: "platform", x: 0.8, z: 1.6, y: 0, width: 2.3, depth: 1.3, height: 0.16, rotation: 0.08, color: "#986a3e", label: "Cargo deck" },
+      ]
+    case "cavern":
+      return [
+        { id: "auto-mid-spur-left", kind: "platform", x: -2.7, z: 0.7, y: 0, width: 2.4, depth: 1.5, height: 0.55, rotation: 0.22, color: "#525763", label: "Rock spur" },
+        { id: "auto-mid-spur-right", kind: "platform", x: 2.4, z: -0.8, y: 0, width: 2.3, depth: 1.5, height: 0.5, rotation: -0.2, color: "#525763", label: "Rock spur" },
+        { id: "auto-mid-bridge", kind: "platform", x: 0.4, z: 1.8, y: 0, width: 1.8, depth: 1.1, height: 0.25, rotation: 0.12, color: "#646a76", label: "Stone shelf" },
+      ]
+    case "sand":
+      return [
+        { id: "auto-mid-dune-left", kind: "platform", x: -2.7, z: 1.0, y: 0, width: 2.4, depth: 1.6, height: 0.28, rotation: 0.24, color: "#d2b27e", label: "Dune rise" },
+        { id: "auto-mid-dune-right", kind: "platform", x: 2.4, z: -0.7, y: 0, width: 2.2, depth: 1.4, height: 0.24, rotation: -0.18, color: "#d2b27e", label: "Dune rise" },
+        { id: "auto-mid-shrine-step", kind: "dais", x: 0.7, z: 1.7, y: 0, width: 2.1, depth: 1.2, height: 0.32, rotation: 0.1, color: "#d9bf8f", label: "Shrine step" },
+      ]
+    case "snow":
+      return [
+        { id: "auto-mid-bank-left", kind: "platform", x: -2.7, z: 0.9, y: 0, width: 2.4, depth: 1.6, height: 0.24, rotation: 0.22, color: "#dce7f0", label: "Snow bank" },
+        { id: "auto-mid-bank-right", kind: "platform", x: 2.4, z: -0.7, y: 0, width: 2.2, depth: 1.4, height: 0.22, rotation: -0.18, color: "#dce7f0", label: "Snow bank" },
+        { id: "auto-mid-ice-step", kind: "dais", x: 0.8, z: 1.6, y: 0, width: 2, depth: 1.2, height: 0.26, rotation: 0.08, color: "#eef6fc", label: "Ice shelf" },
+      ]
+    case "stone":
+    default:
+      return [
+        { id: "auto-mid-cover-left", kind: "wall", x: -2.8, z: 0.9, y: 0, width: 2.2, depth: 0.6, height: 0.82, rotation: 0.2, color: "#8b8378", label: "Stone cover" },
+        { id: "auto-mid-cover-right", kind: "wall", x: 2.5, z: -0.6, y: 0, width: 2, depth: 0.6, height: 0.82, rotation: -0.18, color: "#8b8378", label: "Stone cover" },
+        { id: "auto-mid-plinth", kind: "platform", x: 0.8, z: 1.7, y: 0, width: 2.1, depth: 1.2, height: 0.18, rotation: 0.1, color: "#979084", label: "Flagstone plinth" },
+      ]
+  }
+}
+
+function createClusterProps(theme: Encounter3DTheme, width: number, depth: number): Encounter3DProp[] {
+  const backline = -depth / 2 + 3
+
+  switch (theme) {
+    case "dirt":
+      return [
+        { id: "auto-cluster-left-1", kind: "crate", x: -3.2, z: 2.4, y: 0, scale: 1.08, rotation: 0.14, color: "#ab6a30", label: "Supply stack" },
+        { id: "auto-cluster-left-2", kind: "crate", x: -2.35, z: 2.05, y: 0, scale: 0.94, rotation: -0.12, color: "#b27339", label: "Supply stack" },
+        { id: "auto-cluster-right-1", kind: "crate", x: 3, z: -2.3, y: 0, scale: 1.06, rotation: -0.14, color: "#ab6a30", label: "Supply stack" },
+        { id: "auto-cluster-right-2", kind: "crate", x: 2.35, z: -1.9, y: 0, scale: 0.92, rotation: 0.18, color: "#b27339", label: "Supply stack" },
+      ]
+    case "wood":
+      return [
+        { id: "auto-cluster-left-1", kind: "crate", x: -3.1, z: 2.3, y: 0, scale: 1.12, rotation: 0.16, color: "#9d6633", label: "Cargo stack" },
+        { id: "auto-cluster-left-2", kind: "crate", x: -2.3, z: 2.0, y: 0, scale: 0.96, rotation: -0.12, color: "#a86f39", label: "Cargo stack" },
+        { id: "auto-cluster-right-1", kind: "crate", x: 2.9, z: -2.1, y: 0, scale: 1.08, rotation: -0.14, color: "#9d6633", label: "Cargo stack" },
+        { id: "auto-cluster-right-2", kind: "crate", x: 2.25, z: -1.72, y: 0, scale: 0.92, rotation: 0.18, color: "#a86f39", label: "Cargo stack" },
+      ]
+    case "cavern":
+      return [
+        { id: "auto-cluster-left-1", kind: "rock", x: -3, z: 2.2, y: 0, scale: 1.18, rotation: 0.2, color: "#767c87", label: "Boulder cluster" },
+        { id: "auto-cluster-left-2", kind: "rock", x: -2.2, z: 1.9, y: 0, scale: 0.92, rotation: -0.16, color: "#808692", label: "Boulder cluster" },
+        { id: "auto-cluster-right-1", kind: "rock", x: 2.9, z: -2.2, y: 0, scale: 1.14, rotation: -0.2, color: "#767c87", label: "Boulder cluster" },
+        { id: "auto-cluster-right-2", kind: "rock", x: 2.2, z: -1.8, y: 0, scale: 0.9, rotation: 0.12, color: "#808692", label: "Boulder cluster" },
+      ]
+    case "sand":
+      return [
+        { id: "auto-cluster-left-1", kind: "pillar", x: -3, z: 2.2, y: 0, scale: 1.02, rotation: 0.18, color: "#dcc08a", label: "Shrine marker" },
+        { id: "auto-cluster-left-2", kind: "banner", x: -2.15, z: 1.85, y: 0, scale: 0.88, rotation: -0.12, color: "#b98756", label: "Shrine banner" },
+        { id: "auto-cluster-right-1", kind: "pillar", x: 2.9, z: -2.2, y: 0, scale: 1, rotation: -0.16, color: "#dcc08a", label: "Shrine marker" },
+        { id: "auto-cluster-right-2", kind: "banner", x: 2.2, z: -1.8, y: 0, scale: 0.86, rotation: 0.14, color: "#b98756", label: "Shrine banner" },
+      ]
+    case "snow":
+      return [
+        { id: "auto-cluster-left-1", kind: "rock", x: -3.1, z: 2.3, y: 0, scale: 1.06, rotation: 0.18, color: "#e2ebf2", label: "Snow drift" },
+        { id: "auto-cluster-left-2", kind: "tree", x: -2.2, z: 1.9, y: 0, scale: 0.9, rotation: -0.14, color: "#7ca46b", label: "Snow pine" },
+        { id: "auto-cluster-right-1", kind: "rock", x: 2.9, z: -2.1, y: 0, scale: 1.04, rotation: -0.18, color: "#e2ebf2", label: "Snow drift" },
+        { id: "auto-cluster-right-2", kind: "tree", x: 2.2, z: -1.75, y: 0, scale: 0.88, rotation: 0.16, color: "#7ca46b", label: "Snow pine" },
+      ]
+    case "stone":
+    default:
+      return [
+        { id: "auto-cluster-left-1", kind: "crate", x: -3.2, z: 2.35, y: 0, scale: 1.06, rotation: 0.16, color: "#b0733f", label: "Supply stack" },
+        { id: "auto-cluster-left-2", kind: "crate", x: -2.35, z: 1.98, y: 0, scale: 0.92, rotation: -0.12, color: "#bc8450", label: "Supply stack" },
+        { id: "auto-cluster-right-1", kind: "crate", x: 3.05, z: -2.2, y: 0, scale: 1.08, rotation: -0.14, color: "#b0733f", label: "Supply stack" },
+        { id: "auto-cluster-right-2", kind: "crate", x: 2.25, z: -1.82, y: 0, scale: 0.92, rotation: 0.18, color: "#bc8450", label: "Supply stack" },
+        { id: "auto-cluster-banner-left", kind: "banner", x: -1.4, z: backline + 0.4, y: 0, scale: 0.9, rotation: 0.02, color: "#b8896d", label: "Court banner" },
+        { id: "auto-cluster-banner-right", kind: "banner", x: 1.45, z: backline + 0.6, y: 0, scale: 0.9, rotation: -0.04, color: "#b8896d", label: "Court banner" },
+      ]
+  }
+}
+
 function createDefaultPartySlots(maxPartySize: number, depth: number): Encounter3DPartySlot[] {
   return Array.from({ length: Math.max(maxPartySize, 0) }, (_, index) => ({
     id: `auto-party-${index + 1}`,
@@ -374,6 +468,12 @@ export function enhanceEncounterMap(
     }
   }
 
+  if (next.terrain.length < 7) {
+    for (const terrain of createMidfieldTerrain(next.board.theme, width, depth)) {
+      addIfMissing(next.terrain, terrain)
+    }
+  }
+
   if (next.props.length < 6) {
     for (const prop of createAtmosphereProps(next.board.theme, width, depth)) {
       addIfMissing(next.props, prop)
@@ -382,6 +482,12 @@ export function enhanceEncounterMap(
 
   if (next.props.length < 10) {
     for (const prop of createScatterProps(next.board.theme)) {
+      addIfMissing(next.props, prop)
+    }
+  }
+
+  if (next.props.length < 14) {
+    for (const prop of createClusterProps(next.board.theme, width, depth)) {
       addIfMissing(next.props, prop)
     }
   }

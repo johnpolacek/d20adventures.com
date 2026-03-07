@@ -398,6 +398,16 @@ function TerrainMesh({
   }
 
   if (item.kind === "wall") {
+    const isWideWall = Math.max(item.width, item.depth) > 2.4
+    const capCount = Math.min(4, Math.max(2, Math.round(Math.max(item.width, item.depth) / 1.6)))
+    const capOffsets = isWideWall
+      ? Array.from({ length: capCount }, (_, index) => {
+          const distance = Math.max(item.width, item.depth) / 2 - 0.35
+          const step = capCount === 1 ? 0 : (index / (capCount - 1)) * 2 - 1
+          return step * distance
+        })
+      : []
+
     return (
       <group position={[item.x, item.y, item.z]} rotation={[0, item.rotation, 0]}>
         <RoundedBox args={[item.width + 0.12, 0.24, item.depth + 0.12]} radius={0.06} smoothness={3} position={[0, 0.12, 0]} castShadow receiveShadow>
@@ -422,6 +432,20 @@ function TerrainMesh({
               receiveShadow
             >
               <meshStandardMaterial color="#e8e2d9" roughness={0.88} map={stoneTexture} />
+            </RoundedBox>
+          ))}
+        {isWideWall &&
+          capOffsets.map((offset, index) => (
+            <RoundedBox
+              key={index}
+              args={item.width >= item.depth ? [0.46, 0.22, item.depth + 0.16] : [item.width + 0.16, 0.22, 0.46]}
+              radius={0.04}
+              smoothness={2}
+              position={item.width >= item.depth ? [offset, item.height + 0.22, 0] : [0, item.height + 0.22, offset]}
+              castShadow
+              receiveShadow
+            >
+              <meshStandardMaterial color="#ddd5ca" roughness={0.84} map={stoneTexture} />
             </RoundedBox>
           ))}
       </group>
@@ -481,6 +505,28 @@ function PropMesh({
 }) {
   const position: [number, number, number] = [item.x, item.y + 0.5 * item.scale, item.z]
   const groundTexture = getSurfaceTexture(textures, theme)
+  const renderCrate = (offset: [number, number, number], scale: number, tone = "#f0c993") => (
+    <group position={offset}>
+      <RoundedBox args={[0.8 * scale, 0.8 * scale, 0.8 * scale]} radius={0.04} smoothness={2} castShadow receiveShadow>
+        <meshStandardMaterial color={tone} roughness={0.76} map={textures?.wood} />
+      </RoundedBox>
+      {[
+        [0, 0, 0.41, 0.72, 0.08, 0.05],
+        [0, 0, -0.41, 0.72, 0.08, 0.05],
+        [0.41, 0, 0, 0.05, 0.08, 0.72],
+        [-0.41, 0, 0, 0.05, 0.08, 0.72],
+      ].map(([x, y, z, sizeX, sizeY, sizeZ], index) => (
+        <mesh key={index} position={[x * scale, y * scale, z * scale]} castShadow>
+          <boxGeometry args={[sizeX * scale, sizeY * scale, sizeZ * scale]} />
+          <meshStandardMaterial color="#4b2d12" roughness={0.84} />
+        </mesh>
+      ))}
+      <mesh position={[0, 0.42 * scale, 0]} castShadow>
+        <boxGeometry args={[0.72 * scale, 0.05 * scale, 0.72 * scale]} />
+        <meshStandardMaterial color="#4b2d12" />
+      </mesh>
+    </group>
+  )
 
   switch (item.kind) {
     case "pillar":
@@ -586,6 +632,10 @@ function PropMesh({
               <meshStandardMaterial color="#ecd0ac" roughness={0.8} map={textures?.wood} />
             </mesh>
           ))}
+          <mesh position={[-0.18 * item.scale, 0.67 * item.scale, 0]} castShadow rotation={[0, 0, -0.2]}>
+            <boxGeometry args={[0.16 * item.scale, 0.02 * item.scale, 0.38 * item.scale]} />
+            <meshStandardMaterial color="#fdf8f0" roughness={0.72} />
+          </mesh>
         </group>
       )
     case "stairs":
@@ -664,24 +714,9 @@ function PropMesh({
     default:
       return (
         <group position={position} rotation={[0, item.rotation, 0]}>
-          <RoundedBox args={[0.8 * item.scale, 0.8 * item.scale, 0.8 * item.scale]} radius={0.04} smoothness={2} castShadow receiveShadow>
-            <meshStandardMaterial color="#f0c993" roughness={0.76} map={textures?.wood} />
-          </RoundedBox>
-          {[
-            [0, 0, 0.41, 0.72, 0.08, 0.05],
-            [0, 0, -0.41, 0.72, 0.08, 0.05],
-            [0.41, 0, 0, 0.05, 0.08, 0.72],
-            [-0.41, 0, 0, 0.05, 0.08, 0.72],
-          ].map(([x, y, z, sizeX, sizeY, sizeZ], index) => (
-            <mesh key={index} position={[x * item.scale, y * item.scale, z * item.scale]} castShadow>
-              <boxGeometry args={[sizeX * item.scale, sizeY * item.scale, sizeZ * item.scale]} />
-              <meshStandardMaterial color="#4b2d12" roughness={0.84} />
-            </mesh>
-          ))}
-          <mesh position={[0, 0.42 * item.scale, 0]} castShadow>
-            <boxGeometry args={[0.72 * item.scale, 0.05 * item.scale, 0.72 * item.scale]} />
-            <meshStandardMaterial color="#4b2d12" />
-          </mesh>
+          {renderCrate([0, 0, 0], item.scale, "#f0c993")}
+          {item.scale >= 1.02 && renderCrate([0.36 * item.scale, -0.06 * item.scale, -0.18 * item.scale], item.scale * 0.86, "#e6bb7e")}
+          {item.scale >= 1.18 && renderCrate([-0.24 * item.scale, 0.32 * item.scale, 0.08 * item.scale], item.scale * 0.74, "#f6d5a8")}
         </group>
       )
   }
