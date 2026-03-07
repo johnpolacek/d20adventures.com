@@ -30,30 +30,194 @@ function shiftColor(color: string, lightness: number) {
   return `#${next.getHexString()}`
 }
 
-function DisplayBase({ map, palette }: { map: Encounter3DMap; palette: ReturnType<typeof getThemePalette> }) {
+interface SceneTextureSet {
+  stone: THREE.CanvasTexture
+  wood: THREE.CanvasTexture
+  cloth: THREE.CanvasTexture
+  dirt: THREE.CanvasTexture
+  metal: THREE.CanvasTexture
+}
+
+function createPatternTexture(args: {
+  width?: number
+  height?: number
+  repeatX: number
+  repeatY: number
+  draw: (context: CanvasRenderingContext2D, width: number, height: number) => void
+}) {
+  const canvas = document.createElement("canvas")
+  canvas.width = args.width ?? 256
+  canvas.height = args.height ?? 256
+  const context = canvas.getContext("2d")
+  if (!context) {
+    throw new Error("Unable to create texture context")
+  }
+
+  args.draw(context, canvas.width, canvas.height)
+
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.wrapS = THREE.RepeatWrapping
+  texture.wrapT = THREE.RepeatWrapping
+  texture.repeat.set(args.repeatX, args.repeatY)
+  texture.colorSpace = THREE.SRGBColorSpace
+  texture.needsUpdate = true
+  return texture
+}
+
+function buildSceneTextures(palette: ReturnType<typeof getThemePalette>) {
+  const stone = createPatternTexture({
+    repeatX: 4,
+    repeatY: 4,
+    draw: (context, width, height) => {
+      context.fillStyle = palette.floor
+      context.fillRect(0, 0, width, height)
+      context.strokeStyle = shiftColor(palette.edge, 0.1)
+      context.lineWidth = 8
+      for (let row = 0; row < 4; row += 1) {
+        const y = row * (height / 4)
+        context.beginPath()
+        context.moveTo(0, y)
+        context.lineTo(width, y)
+        context.stroke()
+      }
+      for (let column = 0; column < 4; column += 1) {
+        const x = column * (width / 4) + (column % 2 === 0 ? 12 : -12)
+        context.beginPath()
+        context.moveTo(x, 0)
+        context.lineTo(x, height)
+        context.stroke()
+      }
+      for (let index = 0; index < 120; index += 1) {
+        context.fillStyle = index % 3 === 0 ? shiftColor(palette.floor, 0.08) : shiftColor(palette.edge, 0.18)
+        context.fillRect(Math.random() * width, Math.random() * height, 4, 4)
+      }
+    },
+  })
+
+  const wood = createPatternTexture({
+    repeatX: 5,
+    repeatY: 2,
+    draw: (context, width, height) => {
+      context.fillStyle = shiftColor(palette.frame, 0.26)
+      context.fillRect(0, 0, width, height)
+      for (let row = 0; row < 6; row += 1) {
+        const y = row * (height / 6)
+        context.fillStyle = row % 2 === 0 ? shiftColor(palette.frame, 0.34) : shiftColor(palette.frame, 0.2)
+        context.fillRect(0, y, width, height / 6 - 2)
+      }
+      context.strokeStyle = shiftColor(palette.frame, 0.42)
+      context.lineWidth = 2
+      for (let index = 0; index < 36; index += 1) {
+        context.beginPath()
+        context.moveTo(0, index * 7)
+        context.bezierCurveTo(width * 0.25, index * 7 + 4, width * 0.75, index * 7 - 3, width, index * 7 + 2)
+        context.stroke()
+      }
+    },
+  })
+
+  const cloth = createPatternTexture({
+    repeatX: 1,
+    repeatY: 1,
+    draw: (context, width, height) => {
+      context.fillStyle = shiftColor(palette.accent, -0.08)
+      context.fillRect(0, 0, width, height)
+      context.strokeStyle = shiftColor(palette.accent, 0.2)
+      context.lineWidth = 3
+      for (let x = 10; x < width; x += 18) {
+        context.beginPath()
+        context.moveTo(x, 0)
+        context.lineTo(x, height)
+        context.stroke()
+      }
+    },
+  })
+
+  const dirt = createPatternTexture({
+    repeatX: 5,
+    repeatY: 5,
+    draw: (context, width, height) => {
+      context.fillStyle = shiftColor(palette.floor, -0.02)
+      context.fillRect(0, 0, width, height)
+      for (let index = 0; index < 260; index += 1) {
+        context.fillStyle = index % 2 === 0 ? shiftColor(palette.floor, 0.06) : shiftColor(palette.edge, 0.18)
+        const size = 2 + (index % 4)
+        context.beginPath()
+        context.arc(Math.random() * width, Math.random() * height, size, 0, Math.PI * 2)
+        context.fill()
+      }
+    },
+  })
+
+  const metal = createPatternTexture({
+    repeatX: 2,
+    repeatY: 2,
+    draw: (context, width, height) => {
+      context.fillStyle = shiftColor(palette.rim, -0.1)
+      context.fillRect(0, 0, width, height)
+      context.strokeStyle = shiftColor(palette.rim, 0.14)
+      context.lineWidth = 2
+      for (let index = 0; index < 80; index += 1) {
+        context.beginPath()
+        context.moveTo(0, index * 4)
+        context.lineTo(width, index * 4 + (index % 2 === 0 ? 5 : -5))
+        context.stroke()
+      }
+    },
+  })
+
+  return { stone, wood, cloth, dirt, metal }
+}
+
+function getSurfaceTexture(textures: SceneTextureSet | null, theme: Encounter3DMap["board"]["theme"]) {
+  if (!textures) return undefined
+  switch (theme) {
+    case "wood":
+      return textures.wood
+    case "dirt":
+    case "sand":
+    case "snow":
+      return textures.dirt
+    case "stone":
+    case "cavern":
+    default:
+      return textures.stone
+  }
+}
+
+function DisplayBase({
+  map,
+  palette,
+  textures,
+}: {
+  map: Encounter3DMap
+  palette: ReturnType<typeof getThemePalette>
+  textures: SceneTextureSet | null
+}) {
   const width = map.board.width * map.board.cellSize
   const depth = map.board.depth * map.board.cellSize
+  const boardTexture = getSurfaceTexture(textures, map.board.theme)
 
   return (
     <group>
       <RoundedBox args={[width + 2.5, 0.95, depth + 2.5]} radius={0.22} smoothness={4} position={[0, -0.52, 0]} receiveShadow>
-        <meshStandardMaterial color={palette.frame} roughness={0.92} metalness={0.08} />
+        <meshStandardMaterial color={palette.frame} roughness={0.88} metalness={0.12} map={textures?.wood} />
         <Edges scale={1.005} color={shiftColor(palette.frame, 0.14)} />
       </RoundedBox>
 
       <RoundedBox args={[width + 1.3, 0.34, depth + 1.3]} radius={0.16} smoothness={4} position={[0, -0.08, 0]} receiveShadow>
-        <meshStandardMaterial color={palette.rim} roughness={0.88} metalness={0.04} />
+        <meshStandardMaterial color={palette.rim} roughness={0.7} metalness={0.18} map={textures?.metal} />
         <Edges scale={1.004} color={shiftColor(palette.rim, 0.12)} />
       </RoundedBox>
 
       <RoundedBox args={[width, 0.16, depth]} radius={0.1} smoothness={4} position={[0, 0.08, 0]} receiveShadow>
-        <meshStandardMaterial color={palette.floor} roughness={0.94} metalness={0.02} />
+        <meshStandardMaterial color={palette.floor} roughness={0.92} metalness={0.02} map={boardTexture} />
         <Edges scale={1.003} color={shiftColor(palette.floor, -0.18)} />
       </RoundedBox>
 
       <mesh position={[0, 0.165, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[width - 0.45, depth - 0.45]} />
-        <meshStandardMaterial color={shiftColor(palette.floor, 0.03)} roughness={0.98} />
+        <meshStandardMaterial color={shiftColor(palette.floor, 0.03)} roughness={0.95} map={boardTexture} />
       </mesh>
 
       {[
@@ -64,14 +228,22 @@ function DisplayBase({ map, palette }: { map: Encounter3DMap; palette: ReturnTyp
       ].map(([x, y, z, sizeX, sizeZ], index) => (
         <mesh key={index} position={[x, y, z]} receiveShadow>
           <boxGeometry args={[sizeX, 0.04, sizeZ]} />
-          <meshStandardMaterial color={palette.accent} roughness={0.7} metalness={0.08} />
+          <meshStandardMaterial color={palette.accent} roughness={0.62} metalness={0.18} />
         </mesh>
       ))}
     </group>
   )
 }
 
-function SceneBackdrop({ map, palette }: { map: Encounter3DMap; palette: ReturnType<typeof getThemePalette> }) {
+function SceneBackdrop({
+  map,
+  palette,
+  textures,
+}: {
+  map: Encounter3DMap
+  palette: ReturnType<typeof getThemePalette>
+  textures: SceneTextureSet | null
+}) {
   const width = map.board.width * map.board.cellSize
   const depth = map.board.depth * map.board.cellSize
   const backZ = -depth * 0.66
@@ -118,22 +290,40 @@ function SceneBackdrop({ map, palette }: { map: Encounter3DMap; palette: ReturnT
         </>
       ) : (
         <>
-          <RoundedBox args={[2.2, 5.4, 1.8]} radius={0.12} smoothness={3} position={[-width * 0.34, 2.2, backZ + 1.2]} castShadow receiveShadow>
-            <meshStandardMaterial color={wallColor} roughness={0.96} />
+          <RoundedBox args={[2.5, 5.7, 1.9]} radius={0.12} smoothness={3} position={[-width * 0.34, 2.35, backZ + 1.2]} castShadow receiveShadow>
+            <meshStandardMaterial color={wallColor} roughness={0.92} map={textures?.stone} />
           </RoundedBox>
-          <RoundedBox args={[2.2, 5.4, 1.8]} radius={0.12} smoothness={3} position={[width * 0.34, 2.2, backZ + 1.2]} castShadow receiveShadow>
-            <meshStandardMaterial color={wallColor} roughness={0.96} />
+          <RoundedBox args={[2.5, 5.7, 1.9]} radius={0.12} smoothness={3} position={[width * 0.34, 2.35, backZ + 1.2]} castShadow receiveShadow>
+            <meshStandardMaterial color={wallColor} roughness={0.92} map={textures?.stone} />
           </RoundedBox>
-          <RoundedBox args={[width * 0.3, 1.1, 1.3]} radius={0.08} smoothness={3} position={[0, 3.8, backZ + 1.05]} castShadow receiveShadow>
-            <meshStandardMaterial color={shiftColor(wallColor, 0.06)} roughness={0.94} />
+          <RoundedBox args={[width * 0.34, 1.2, 1.35]} radius={0.08} smoothness={3} position={[0, 4.02, backZ + 1.05]} castShadow receiveShadow>
+            <meshStandardMaterial color={shiftColor(wallColor, 0.06)} roughness={0.9} map={textures?.stone} />
           </RoundedBox>
+          {[-1.15, -0.45, 0.45, 1.15].map((offset) => (
+            <RoundedBox key={offset} args={[0.42, 0.42, 0.55]} radius={0.04} smoothness={2} position={[offset * width * 0.16, 4.82, backZ + 1.06]} castShadow receiveShadow>
+              <meshStandardMaterial color={shiftColor(wallColor, 0.1)} roughness={0.86} />
+            </RoundedBox>
+          ))}
+          {[-1, 1].map((side) => (
+            <RoundedBox key={side} args={[0.55, 2.2, 0.6]} radius={0.06} smoothness={2} position={[side * width * 0.17, 1.15, backZ + 1.45]} castShadow receiveShadow>
+              <meshStandardMaterial color={shiftColor(wallColor, -0.05)} roughness={0.92} map={textures?.stone} />
+            </RoundedBox>
+          ))}
         </>
       )}
     </group>
   )
 }
 
-function TerrainMesh({ item }: { item: Encounter3DMap["terrain"][number] }) {
+function TerrainMesh({
+  item,
+  theme,
+  textures,
+}: {
+  item: Encounter3DMap["terrain"][number]
+  theme: Encounter3DMap["board"]["theme"]
+  textures: SceneTextureSet | null
+}) {
   const color =
     item.kind === "water"
       ? item.color || "#2a6f97"
@@ -141,17 +331,19 @@ function TerrainMesh({ item }: { item: Encounter3DMap["terrain"][number] }) {
         ? item.color || "#2d1e1e"
         : item.color || "#7a746b"
   const outline = shiftColor(color, -0.18)
+  const surfaceTexture = getSurfaceTexture(textures, theme)
+  const stoneTexture = textures?.stone
 
   if (item.kind === "water") {
     return (
       <group position={[item.x, item.y, item.z]} rotation={[0, item.rotation, 0]}>
         <RoundedBox args={[item.width, 0.18, item.depth]} radius={0.08} smoothness={3} position={[0, 0.09, 0]} receiveShadow>
-          <meshStandardMaterial color={shiftColor(color, -0.24)} roughness={0.95} />
+          <meshStandardMaterial color={shiftColor(color, -0.24)} roughness={0.95} map={stoneTexture} />
           <Edges scale={1.004} color={outline} />
         </RoundedBox>
         <mesh position={[0, item.height / 2 + 0.09, 0]} receiveShadow>
           <boxGeometry args={[Math.max(item.width - 0.2, 0.3), item.height, Math.max(item.depth - 0.2, 0.3)]} />
-          <meshStandardMaterial color={color} roughness={0.18} metalness={0.08} transparent opacity={0.9} />
+          <meshPhysicalMaterial color={color} roughness={0.12} metalness={0} transmission={0.25} thickness={0.4} clearcoat={0.45} transparent opacity={0.9} />
         </mesh>
       </group>
     )
@@ -161,7 +353,7 @@ function TerrainMesh({ item }: { item: Encounter3DMap["terrain"][number] }) {
     return (
       <group position={[item.x, item.y, item.z]} rotation={[0, item.rotation, 0]}>
         <RoundedBox args={[item.width, 0.22, item.depth]} radius={0.08} smoothness={3} position={[0, 0.11, 0]} castShadow receiveShadow>
-          <meshStandardMaterial color={shiftColor(color, -0.14)} roughness={0.96} />
+          <meshStandardMaterial color={shiftColor(color, -0.14)} roughness={0.96} map={stoneTexture} />
           <Edges scale={1.004} color={outline} />
         </RoundedBox>
         <mesh position={[0, -item.height / 2 + 0.04, 0]} receiveShadow>
@@ -176,7 +368,7 @@ function TerrainMesh({ item }: { item: Encounter3DMap["terrain"][number] }) {
     return (
       <group position={[item.x, item.y, item.z]} rotation={[0, item.rotation, 0]}>
         <RoundedBox args={[item.width, item.height * 0.45, item.depth]} radius={0.08} smoothness={3} position={[0, item.height * 0.225, 0]} castShadow receiveShadow>
-          <meshStandardMaterial color={shiftColor(color, -0.08)} roughness={0.92} />
+          <meshStandardMaterial color={shiftColor(color, -0.08)} roughness={0.88} map={stoneTexture} />
           <Edges scale={1.004} color={outline} />
         </RoundedBox>
         <RoundedBox
@@ -187,7 +379,7 @@ function TerrainMesh({ item }: { item: Encounter3DMap["terrain"][number] }) {
           castShadow
           receiveShadow
         >
-          <meshStandardMaterial color={color} roughness={0.9} />
+          <meshStandardMaterial color={color} roughness={0.84} map={surfaceTexture} />
           <Edges scale={1.004} color={outline} />
         </RoundedBox>
         <RoundedBox
@@ -198,7 +390,7 @@ function TerrainMesh({ item }: { item: Encounter3DMap["terrain"][number] }) {
           castShadow
           receiveShadow
         >
-          <meshStandardMaterial color={shiftColor(color, 0.06)} roughness={0.88} />
+          <meshStandardMaterial color={shiftColor(color, 0.06)} roughness={0.8} metalness={0.05} map={surfaceTexture} />
           <Edges scale={1.003} color={shiftColor(outline, 0.08)} />
         </RoundedBox>
       </group>
@@ -209,15 +401,29 @@ function TerrainMesh({ item }: { item: Encounter3DMap["terrain"][number] }) {
     return (
       <group position={[item.x, item.y, item.z]} rotation={[0, item.rotation, 0]}>
         <RoundedBox args={[item.width + 0.12, 0.24, item.depth + 0.12]} radius={0.06} smoothness={3} position={[0, 0.12, 0]} castShadow receiveShadow>
-          <meshStandardMaterial color={shiftColor(color, -0.1)} roughness={0.95} />
+          <meshStandardMaterial color={shiftColor(color, -0.1)} roughness={0.9} map={stoneTexture} />
         </RoundedBox>
         <RoundedBox args={[item.width, item.height, item.depth]} radius={0.08} smoothness={3} position={[0, item.height / 2, 0]} castShadow receiveShadow>
-          <meshStandardMaterial color={color} roughness={0.9} />
+          <meshStandardMaterial color={color} roughness={0.82} map={stoneTexture} />
           <Edges scale={1.004} color={outline} />
         </RoundedBox>
         <RoundedBox args={[item.width + 0.2, 0.14, item.depth + 0.2]} radius={0.05} smoothness={3} position={[0, item.height + 0.07, 0]} castShadow receiveShadow>
-          <meshStandardMaterial color={shiftColor(color, 0.08)} roughness={0.85} />
+          <meshStandardMaterial color={shiftColor(color, 0.08)} roughness={0.8} metalness={0.04} map={stoneTexture} />
         </RoundedBox>
+        {item.height > 1.2 &&
+          [-1, 1].map((side) => (
+            <RoundedBox
+              key={side}
+              args={[Math.min(item.width * 0.12, 0.28), Math.max(item.height * 0.7, 0.4), item.depth + 0.12]}
+              radius={0.04}
+              smoothness={2}
+              position={[side * (item.width / 2 - Math.min(item.width * 0.06, 0.14)), item.height * 0.35, 0]}
+              castShadow
+              receiveShadow
+            >
+              <meshStandardMaterial color={shiftColor(color, -0.05)} roughness={0.88} map={stoneTexture} />
+            </RoundedBox>
+          ))}
       </group>
     )
   }
@@ -236,7 +442,7 @@ function TerrainMesh({ item }: { item: Encounter3DMap["terrain"][number] }) {
             castShadow
             receiveShadow
           >
-            <meshStandardMaterial color={step % 2 === 0 ? color : shiftColor(color, 0.04)} roughness={0.92} />
+            <meshStandardMaterial color={step % 2 === 0 ? color : shiftColor(color, 0.04)} roughness={0.88} map={surfaceTexture} />
             <Edges scale={1.004} color={outline} />
           </RoundedBox>
         ))}
@@ -247,7 +453,7 @@ function TerrainMesh({ item }: { item: Encounter3DMap["terrain"][number] }) {
   return (
     <group position={[item.x, item.y, item.z]} rotation={[0, item.rotation, 0]}>
       <RoundedBox args={[item.width, item.height, item.depth]} radius={0.08} smoothness={3} position={[0, item.height / 2, 0]} castShadow receiveShadow>
-        <meshStandardMaterial color={color} roughness={0.88} metalness={0.04} />
+        <meshStandardMaterial color={color} roughness={0.84} metalness={0.04} map={surfaceTexture} />
         <Edges scale={1.004} color={outline} />
       </RoundedBox>
       <RoundedBox
@@ -258,14 +464,23 @@ function TerrainMesh({ item }: { item: Encounter3DMap["terrain"][number] }) {
         castShadow
         receiveShadow
       >
-        <meshStandardMaterial color={shiftColor(color, 0.05)} roughness={0.86} />
+        <meshStandardMaterial color={shiftColor(color, 0.05)} roughness={0.78} metalness={0.04} map={surfaceTexture} />
       </RoundedBox>
     </group>
   )
 }
 
-function PropMesh({ item }: { item: Encounter3DMap["props"][number] }) {
+function PropMesh({
+  item,
+  theme,
+  textures,
+}: {
+  item: Encounter3DMap["props"][number]
+  theme: Encounter3DMap["board"]["theme"]
+  textures: SceneTextureSet | null
+}) {
   const position: [number, number, number] = [item.x, item.y + 0.5 * item.scale, item.z]
+  const groundTexture = getSurfaceTexture(textures, theme)
 
   switch (item.kind) {
     case "pillar":
@@ -273,11 +488,11 @@ function PropMesh({ item }: { item: Encounter3DMap["props"][number] }) {
         <group position={position} rotation={[0, item.rotation, 0]}>
           <mesh position={[0, -0.88 * item.scale, 0]} castShadow receiveShadow>
             <cylinderGeometry args={[0.56 * item.scale, 0.62 * item.scale, 0.18 * item.scale, 18]} />
-            <meshStandardMaterial color="#5f5953" roughness={0.92} />
+            <meshStandardMaterial color="#5f5953" roughness={0.88} map={textures?.stone} />
           </mesh>
           <mesh position={[0, -0.05 * item.scale, 0]} castShadow receiveShadow>
             <cylinderGeometry args={[0.28 * item.scale, 0.36 * item.scale, 1.9 * item.scale, 18]} />
-            <meshStandardMaterial color={item.color || "#b2a391"} roughness={0.84} />
+            <meshStandardMaterial color={item.color || "#b2a391"} roughness={0.78} map={textures?.stone} />
           </mesh>
           <mesh position={[0, 0.95 * item.scale, 0]} rotation={[0.14, 0, 0.1]} castShadow receiveShadow>
             <boxGeometry args={[0.5 * item.scale, 0.18 * item.scale, 0.5 * item.scale]} />
@@ -294,21 +509,21 @@ function PropMesh({ item }: { item: Encounter3DMap["props"][number] }) {
         <group position={position} rotation={[0, item.rotation, 0]}>
           <mesh position={[0, -0.48 * item.scale, 0]} castShadow receiveShadow>
             <cylinderGeometry args={[0.22 * item.scale, 0.24 * item.scale, 0.14 * item.scale, 14]} />
-            <meshStandardMaterial color="#4f4438" roughness={0.9} />
+            <meshStandardMaterial color="#4f4438" roughness={0.72} metalness={0.18} map={textures?.metal} />
           </mesh>
           <mesh castShadow>
             <cylinderGeometry args={[0.08 * item.scale, 0.08 * item.scale, 1.2 * item.scale, 10]} />
-            <meshStandardMaterial color={item.color || "#5f4330"} roughness={0.82} />
+            <meshStandardMaterial color={item.color || "#5f4330"} roughness={0.62} metalness={0.2} map={textures?.metal} />
           </mesh>
           <mesh position={[0, 0.66 * item.scale, 0]} castShadow>
             <cylinderGeometry args={[0.16 * item.scale, 0.21 * item.scale, 0.18 * item.scale, 12]} />
-            <meshStandardMaterial color="#3a2a1b" roughness={0.88} />
+            <meshStandardMaterial color="#3a2a1b" roughness={0.46} metalness={0.2} />
           </mesh>
           <mesh position={[0, 0.84 * item.scale, 0]} castShadow>
             <sphereGeometry args={[0.17 * item.scale, 10, 10]} />
-            <meshStandardMaterial emissive="#ff9e00" emissiveIntensity={2.2} color="#ffd166" toneMapped={false} />
+            <meshPhysicalMaterial emissive="#ff9e00" emissiveIntensity={2.5} color="#ffd166" toneMapped={false} clearcoat={0.5} roughness={0.18} />
           </mesh>
-          <pointLight position={[0, 0.9 * item.scale, 0]} intensity={2.8} distance={5.5} color="#ffb703" />
+          <pointLight position={[0, 0.9 * item.scale, 0]} intensity={3.5} distance={6.2} decay={2} color="#ffb703" castShadow shadow-mapSize-width={512} shadow-mapSize-height={512} shadow-bias={-0.0002} />
         </group>
       )
     case "tree":
@@ -325,7 +540,7 @@ function PropMesh({ item }: { item: Encounter3DMap["props"][number] }) {
           ].map(([x, y, z, size], index) => (
             <mesh key={index} position={[x * item.scale, y * item.scale, z * item.scale]} castShadow>
               <sphereGeometry args={[size * item.scale, 12, 12]} />
-              <meshStandardMaterial color={item.color || "#52734d"} roughness={0.98} />
+              <meshStandardMaterial color={item.color || "#52734d"} roughness={0.98} map={textures?.dirt} />
             </mesh>
           ))}
           <mesh position={[0.08 * item.scale, 0.5 * item.scale, 0]} rotation={[0.15, 0.1, -0.1]} castShadow>
@@ -344,7 +559,7 @@ function PropMesh({ item }: { item: Encounter3DMap["props"][number] }) {
           ].map(([x, y, z, size], index) => (
             <mesh key={index} position={[x * item.scale, y * item.scale, z * item.scale]} castShadow receiveShadow>
               <dodecahedronGeometry args={[size * item.scale, 0]} />
-              <meshStandardMaterial color={item.color || "#7c7f84"} roughness={1} />
+              <meshStandardMaterial color={item.color || "#7c7f84"} roughness={0.94} map={textures?.stone} />
             </mesh>
           ))}
         </group>
@@ -354,11 +569,11 @@ function PropMesh({ item }: { item: Encounter3DMap["props"][number] }) {
         <group position={position} rotation={[0, item.rotation, 0]}>
           <mesh position={[0, 0.55 * item.scale, 0]} castShadow>
             <boxGeometry args={[1.3 * item.scale, 0.12 * item.scale, 0.75 * item.scale]} />
-            <meshStandardMaterial color={item.color || "#6f4e37"} roughness={0.85} />
+            <meshStandardMaterial color={item.color || "#6f4e37"} roughness={0.78} map={textures?.wood} />
           </mesh>
           <mesh position={[0, 0.63 * item.scale, 0]} castShadow>
             <boxGeometry args={[0.82 * item.scale, 0.02 * item.scale, 0.42 * item.scale]} />
-            <meshStandardMaterial color="#b48b5e" roughness={0.8} />
+            <meshStandardMaterial color="#b48b5e" roughness={0.72} map={textures?.cloth} />
           </mesh>
           {[
             [-0.5, 0.2, -0.24],
@@ -368,7 +583,7 @@ function PropMesh({ item }: { item: Encounter3DMap["props"][number] }) {
           ].map((leg) => (
             <mesh key={leg.join(":")} position={[leg[0] * item.scale, leg[1] * item.scale, leg[2] * item.scale]} castShadow>
               <boxGeometry args={[0.1 * item.scale, 0.45 * item.scale, 0.1 * item.scale]} />
-              <meshStandardMaterial color={item.color || "#5b3a29"} />
+              <meshStandardMaterial color={item.color || "#5b3a29"} roughness={0.8} map={textures?.wood} />
             </mesh>
           ))}
         </group>
@@ -379,7 +594,7 @@ function PropMesh({ item }: { item: Encounter3DMap["props"][number] }) {
           {[0, 1, 2, 3].map((step) => (
             <mesh key={step} position={[0, step * 0.16 * item.scale, step * 0.18 * item.scale]} castShadow receiveShadow>
               <boxGeometry args={[1.1 * item.scale, 0.16 * item.scale, 0.34 * item.scale]} />
-              <meshStandardMaterial color={step % 2 === 0 ? item.color || "#9b8b7a" : shiftColor(item.color || "#9b8b7a", 0.04)} roughness={0.92} />
+              <meshStandardMaterial color={step % 2 === 0 ? item.color || "#9b8b7a" : shiftColor(item.color || "#9b8b7a", 0.04)} roughness={0.86} map={groundTexture} />
             </mesh>
           ))}
         </group>
@@ -401,7 +616,7 @@ function PropMesh({ item }: { item: Encounter3DMap["props"][number] }) {
           </mesh>
           <mesh position={[0.25 * item.scale, 0.8 * item.scale, 0]} castShadow>
             <planeGeometry args={[0.55 * item.scale, 0.8 * item.scale]} />
-            <meshStandardMaterial color={item.color || "#8c2f39"} side={THREE.DoubleSide} roughness={0.92} />
+            <meshStandardMaterial color={item.color || "#8c2f39"} side={THREE.DoubleSide} roughness={0.88} map={textures?.cloth} />
           </mesh>
         </group>
       )
@@ -409,13 +624,13 @@ function PropMesh({ item }: { item: Encounter3DMap["props"][number] }) {
       return (
         <group position={position} rotation={[0, item.rotation, 0]}>
           <RoundedBox args={[1.7 * item.scale, 0.3 * item.scale, 1.1 * item.scale]} radius={0.05} smoothness={2} position={[0, -0.12 * item.scale, 0]} castShadow receiveShadow>
-            <meshStandardMaterial color="#7e7870" roughness={0.92} />
+            <meshStandardMaterial color="#7e7870" roughness={0.88} map={textures?.stone} />
           </RoundedBox>
           <RoundedBox args={[1.6 * item.scale, 0.45 * item.scale, 1 * item.scale]} radius={0.05} smoothness={2} position={[0, 0.12 * item.scale, 0]} castShadow receiveShadow>
-            <meshStandardMaterial color="#8f8b84" roughness={0.9} />
+            <meshStandardMaterial color="#8f8b84" roughness={0.84} map={textures?.stone} />
           </RoundedBox>
           <RoundedBox args={[1.1 * item.scale, 0.35 * item.scale, 0.76 * item.scale]} radius={0.05} smoothness={2} position={[0, 0.48 * item.scale, 0]} castShadow receiveShadow>
-            <meshStandardMaterial color={item.color || "#c1beb7"} roughness={0.86} />
+            <meshStandardMaterial color={item.color || "#c1beb7"} roughness={0.82} map={textures?.stone} />
           </RoundedBox>
           {[-0.28, 0, 0.28].map((x) => (
             <mesh key={x} position={[x * item.scale, 0.78 * item.scale, -0.12 * item.scale]} castShadow>
@@ -429,15 +644,15 @@ function PropMesh({ item }: { item: Encounter3DMap["props"][number] }) {
       return (
         <group position={position} rotation={[0, item.rotation, 0]}>
           <RoundedBox args={[0.7 * item.scale, 0.4 * item.scale, 0.7 * item.scale]} radius={0.04} smoothness={2} position={[0, -0.72 * item.scale, 0]} castShadow receiveShadow>
-            <meshStandardMaterial color="#8d8983" roughness={0.92} />
+            <meshStandardMaterial color="#8d8983" roughness={0.88} map={textures?.stone} />
           </RoundedBox>
           <mesh position={[0, -0.02 * item.scale, 0]} castShadow>
             <cylinderGeometry args={[0.22 * item.scale, 0.3 * item.scale, 1.5 * item.scale, 10]} />
-            <meshStandardMaterial color={item.color || "#b3b1aa"} roughness={0.88} />
+            <meshStandardMaterial color={item.color || "#b3b1aa"} roughness={0.82} map={textures?.stone} />
           </mesh>
           <mesh position={[0, 0.42 * item.scale, 0.02 * item.scale]} castShadow>
             <boxGeometry args={[0.42 * item.scale, 0.7 * item.scale, 0.28 * item.scale]} />
-            <meshStandardMaterial color={item.color || "#bdbab2"} roughness={0.88} />
+            <meshStandardMaterial color={item.color || "#bdbab2"} roughness={0.82} map={textures?.stone} />
           </mesh>
           <mesh position={[0, 1.02 * item.scale, 0]} castShadow>
             <sphereGeometry args={[0.26 * item.scale, 10, 10]} />
@@ -450,7 +665,7 @@ function PropMesh({ item }: { item: Encounter3DMap["props"][number] }) {
       return (
         <group position={position} rotation={[0, item.rotation, 0]}>
           <RoundedBox args={[0.8 * item.scale, 0.8 * item.scale, 0.8 * item.scale]} radius={0.04} smoothness={2} castShadow receiveShadow>
-            <meshStandardMaterial color={item.color || "#8b5a2b"} roughness={0.86} />
+            <meshStandardMaterial color={item.color || "#8b5a2b"} roughness={0.76} map={textures?.wood} />
           </RoundedBox>
           {[
             [0, 0, 0.41, 0.72, 0.08, 0.05],
@@ -460,7 +675,7 @@ function PropMesh({ item }: { item: Encounter3DMap["props"][number] }) {
           ].map(([x, y, z, sizeX, sizeY, sizeZ], index) => (
             <mesh key={index} position={[x * item.scale, y * item.scale, z * item.scale]} castShadow>
               <boxGeometry args={[sizeX * item.scale, sizeY * item.scale, sizeZ * item.scale]} />
-              <meshStandardMaterial color="#4b2d12" roughness={0.9} />
+              <meshStandardMaterial color="#4b2d12" roughness={0.84} />
             </mesh>
           ))}
           <mesh position={[0, 0.42 * item.scale, 0]} castShadow>
@@ -530,7 +745,14 @@ export default function MiniaturesMap({
 }) {
   const [selectedToken, setSelectedToken] = useState<MapMiniToken | null>(tokens[0] ?? null)
   const displayMap = useMemo(() => enhanceEncounterMap(map), [map])
-  const palette = getThemePalette(displayMap.board.theme)
+  const palette = useMemo(() => getThemePalette(displayMap.board.theme), [displayMap.board.theme])
+  const textures = useMemo(() => {
+    if (typeof document === "undefined") {
+      return null
+    }
+
+    return buildSceneTextures(palette)
+  }, [displayMap.board.theme, palette])
   const cameraPosition: [number, number, number] = [
     displayMap.camera.focusX + Math.cos(displayMap.camera.yaw) * displayMap.camera.distance,
     Math.sin(displayMap.camera.pitch) * displayMap.camera.distance,
@@ -549,6 +771,13 @@ export default function MiniaturesMap({
     }
   }, [selectedToken, tokens])
 
+  useEffect(() => {
+    return () => {
+      if (!textures) return
+      Object.values(textures).forEach((texture) => texture.dispose())
+    }
+  }, [textures])
+
   return (
     <div className={cn("overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-2xl", className)}>
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
@@ -564,17 +793,54 @@ export default function MiniaturesMap({
 
       <div className="flex flex-col">
         <div className="h-[560px] w-full bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.12),_transparent_52%)]">
-          <Canvas camera={{ position: cameraPosition, fov: 42 }} shadows dpr={[1, 1.5]} gl={{ antialias: true }}>
+          <Canvas
+            camera={{ position: cameraPosition, fov: 42 }}
+            shadows
+            dpr={[1, 1.5]}
+            gl={{ antialias: true }}
+            onCreated={({ gl }) => {
+              gl.shadowMap.enabled = true
+              gl.shadowMap.type = THREE.PCFSoftShadowMap
+            }}
+          >
             <color attach="background" args={[palette.haze]} />
-            <hemisphereLight intensity={0.8} groundColor={shiftColor(palette.haze, -0.02)} color="#f7f1e8" />
-            <ambientLight intensity={0.7} color="#fff4df" />
-            <directionalLight position={[10, 16, 7]} intensity={2.7} color="#fff4de" castShadow shadow-mapSize-width={2048} shadow-mapSize-height={2048} />
+            <hemisphereLight intensity={0.68} groundColor={shiftColor(palette.haze, -0.02)} color="#f7f1e8" />
+            <ambientLight intensity={0.45} color="#fff4df" />
+            <directionalLight
+              position={[10, 16, 7]}
+              intensity={2.85}
+              color="#fff4de"
+              castShadow
+              shadow-mapSize-width={2048}
+              shadow-mapSize-height={2048}
+              shadow-camera-near={0.5}
+              shadow-camera-far={36}
+              shadow-camera-left={-16}
+              shadow-camera-right={16}
+              shadow-camera-top={16}
+              shadow-camera-bottom={-16}
+              shadow-bias={-0.00012}
+              shadow-normalBias={0.02}
+            />
             <directionalLight position={[-8, 10, -7]} intensity={0.8} color="#9bb4d1" />
-            <spotLight position={[-6, 14, 10]} angle={0.5} penumbra={0.65} intensity={1.5} color="#ffd7a3" castShadow />
+            <directionalLight position={[0, 6, -10]} intensity={0.45} color="#fff2d6" />
+            <spotLight
+              position={[-6, 14, 10]}
+              angle={0.5}
+              penumbra={0.65}
+              intensity={1.7}
+              color="#ffd7a3"
+              castShadow
+              shadow-mapSize-width={1024}
+              shadow-mapSize-height={1024}
+              shadow-camera-near={1}
+              shadow-camera-far={30}
+              shadow-bias={-0.00014}
+            />
             <fog attach="fog" args={[palette.haze, 14, 38]} />
 
-            <SceneBackdrop map={displayMap} palette={palette} />
-            <DisplayBase map={displayMap} palette={palette} />
+            <SceneBackdrop map={displayMap} palette={palette} textures={textures} />
+            <DisplayBase map={displayMap} palette={palette} textures={textures} />
 
             <Grid
               position={[0, 0.185, 0]}
@@ -598,11 +864,11 @@ export default function MiniaturesMap({
             ))}
 
             {displayMap.terrain.map((terrain) => (
-              <TerrainMesh key={terrain.id} item={terrain} />
+              <TerrainMesh key={terrain.id} item={terrain} theme={displayMap.board.theme} textures={textures} />
             ))}
 
             {displayMap.props.map((prop) => (
-              <PropMesh key={prop.id} item={prop} />
+              <PropMesh key={prop.id} item={prop} theme={displayMap.board.theme} textures={textures} />
             ))}
 
             <ContactShadows position={[0, 0.16, 0]} opacity={0.42} scale={Math.max(displayMap.board.width, displayMap.board.depth) * 1.45} blur={2.6} far={10} />
