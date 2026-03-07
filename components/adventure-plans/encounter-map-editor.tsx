@@ -25,8 +25,6 @@ interface EncounterMapEditorProps {
   onMapPersistRequest: () => void
 }
 
-const REDRAW_INTENTS = ["More Cover", "Denser Center", "Less Symmetry", "Stronger Perimeter", "Bigger Focal Piece"] as const
-
 function buildSuggestedPrompt(encounter: AdventureEncounter) {
   if (encounter.intro.trim().length > 0) {
     return "Drafting a map prompt from the encounter intro..."
@@ -128,7 +126,7 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
     void draftPromptFromEncounter(true)
   }, [draftPromptFromEncounter, encounter.id, encounter.instructions, encounter.intro, map])
 
-  const handleGenerate = (redrawIntent?: (typeof REDRAW_INTENTS)[number]) => {
+  const handleGenerate = () => {
     if (!prompt.trim()) {
       toast.error("Add a prompt before generating a map.")
       return
@@ -145,13 +143,12 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
       encounterNpcRefs: encounter.npc,
       maxPartySize,
       existingMap: map,
-      redrawIntent,
     })
       .then((generated) => {
         onMapChange(generated)
         onMapPersistRequest()
         setPrompt(suggestedPrompt || defaultPrompt)
-        toast.success(redrawIntent ? `Map redrawn: ${redrawIntent}.` : map ? "Map updated from prompt." : "Map generated.")
+        toast.success(map ? "Map updated from prompt." : "Map generated.")
       })
       .catch((error) => {
         console.error("Failed to generate encounter map:", error)
@@ -262,7 +259,7 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
                   variant="epic"
                   size="sm"
                   disabled={isSaving || isGenerating || isDraftingPrompt}
-                  onClick={() => handleGenerate()}
+                  onClick={handleGenerate}
                   className={map.promptHistory.length > 0 ? "px-5 py-2 text-sm tracking-[0.18em]" : "w-full"}
                 >
                   {isGenerating ? "Generating..." : map.promptHistory.length > 0 ? "Redraw" : "Generate"}
@@ -270,24 +267,6 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
               </div>
             </div>
           </div>
-
-          {map.promptHistory.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {REDRAW_INTENTS.map((intent) => (
-                <Button
-                  key={intent}
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={isSaving || isGenerating || isDraftingPrompt}
-                  onClick={() => handleGenerate(intent)}
-                  className="h-8 rounded-full border-white/15 bg-black/20 px-3 text-[11px] font-mono tracking-[0.14em] text-white/80 hover:bg-white/10"
-                >
-                  {intent}
-                </Button>
-              ))}
-            </div>
-          )}
 
           <div className="space-y-4">
             <div className="relative">
@@ -315,7 +294,6 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
                     <div className="rounded-xl border border-white/10 bg-white/5 p-3">{displayMap?.board.cellSize || map.board.cellSize} cell size</div>
                     <div className="rounded-xl border border-white/10 bg-white/5 p-3">{displayMap?.board.theme || map.board.theme} theme</div>
                     <div className="col-span-2 rounded-xl border border-white/10 bg-white/5 p-3">{formatEncounterSceneKit(displayMap?.sceneKit || map.sceneKit || inferredSceneKit)} kit</div>
-                    <div className="col-span-2 rounded-xl border border-white/10 bg-white/5 p-3">Last redraw: {displayMap?.lastRedrawIntent || map.lastRedrawIntent || "None"}</div>
                   </div>
                 </div>
               </div>

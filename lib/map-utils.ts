@@ -142,7 +142,6 @@ export function createDefaultEncounterMap(
     summary,
     promptHistory: [],
     sceneKit,
-    lastRedrawIntent: "",
     board: {
       width: 12,
       depth: 12,
