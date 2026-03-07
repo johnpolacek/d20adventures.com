@@ -174,7 +174,7 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
           </Button>
         ) : (
           <Button variant="outline" size="sm" disabled={isSaving || isGenerating} onClick={() => onMapChange(createDefaultEncounterMap(encounter.title))}>
-            Enable Map
+            Add 3D Map
           </Button>
         )}
       </div>
