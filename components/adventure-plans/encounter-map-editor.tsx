@@ -261,7 +261,7 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
                   size="sm"
                   disabled={isSaving || isGenerating || isDraftingPrompt}
                   onClick={handleGenerate}
-                  className={map.promptHistory.length > 0 ? "w-full px-5 py-2 text-sm tracking-[0.18em]" : "w-full"}
+                  className={map.promptHistory.length > 0 ? "px-5 py-2 text-sm tracking-[0.18em]" : "w-full"}
                 >
                   {isGenerating ? "Generating..." : map.promptHistory.length > 0 ? "Redraw" : "Generate"}
                 </Button>
