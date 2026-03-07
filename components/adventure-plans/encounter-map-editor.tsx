@@ -9,7 +9,7 @@ import { createDefaultEncounterMap, getPropDefaults, getTerrainDefaults, listEnc
 import type { AdventureEncounter, AdventureSection, Encounter3DMap } from "@/types/adventure-plan"
 import dynamic from "next/dynamic"
 import * as React from "react"
-import { Wand2 } from "lucide-react"
+import { Plus, Wand2 } from "lucide-react"
 import { toast } from "sonner"
 
 const MiniaturesMap = dynamic(() => import("@/components/adventure/miniatures-map"), {
@@ -174,6 +174,7 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
           </Button>
         ) : (
           <Button variant="outline" size="sm" disabled={isSaving || isGenerating} onClick={() => onMapChange(createDefaultEncounterMap(encounter.title))}>
+            <Plus className="mr-2 h-4 w-4" />
             Add 3D Map
           </Button>
         )}
