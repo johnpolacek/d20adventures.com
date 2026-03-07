@@ -236,7 +236,7 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
                 </div>
 
                 <Button variant="epic" size="sm" disabled={isSaving || isGenerating || isDraftingPrompt} onClick={handleGenerate} className="w-full">
-                  {isGenerating ? "Generating..." : map.promptHistory.length > 0 ? "Revise Map" : "Generate Map"}
+                  {isGenerating ? "Generating..." : map.promptHistory.length > 0 ? "Revise Map" : "Generate"}
                 </Button>
               </div>
             </div>
