@@ -173,7 +173,7 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
             Remove Map
           </Button>
         ) : (
-          <Button variant="outline" size="sm" disabled={isSaving || isGenerating} onClick={() => onMapChange(createDefaultEncounterMap(encounter.title))}>
+          <Button variant="outline" size="sm" disabled={isSaving || isGenerating} onClick={() => onMapChange(createDefaultEncounterMap(encounter.title))} className="font-mono">
             <Plus className="mr-2 h-4 w-4" />
             Add 3D Map
           </Button>
