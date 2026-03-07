@@ -8,7 +8,7 @@ import { createDefaultEncounterMap, enhanceEncounterMap, listEncounterOptions } 
 import type { AdventureEncounter, AdventureSection, Encounter3DMap } from "@/types/adventure-plan"
 import dynamic from "next/dynamic"
 import * as React from "react"
-import { Plus } from "lucide-react"
+import { Loader2, Plus } from "lucide-react"
 import { toast } from "sonner"
 
 const MiniaturesMap = dynamic(() => import("@/components/adventure/miniatures-map"), {
@@ -200,7 +200,6 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
                   placeholder={suggestedPrompt || defaultPrompt}
                   className="bg-black/30 placeholder:text-white/35"
                 />
-                <p className="mt-2 text-xs text-white/45">{encounter.intro.trim().length > 0 ? "Describe changes in plain language and regenerate. The intro is rewritten into a spatial map-design prompt automatically." : "Describe the environment in plain language and generate. Without an intro, this starts from a generic map request."}</p>
               </div>
 
               <div className="space-y-3">
@@ -258,7 +257,16 @@ export function EncounterMapEditor({ encounter, allSections, maxPartySize, isSav
           </div>
 
           <div className="space-y-4">
-            <MiniaturesMap map={displayMap || map} title={encounter.title} className="w-full" />
+            <div className="relative">
+              <MiniaturesMap map={displayMap || map} title={encounter.title} className="w-full" />
+              {isGenerating && (
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-2xl bg-black/35 backdrop-blur-[2px]">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full border border-white/15 bg-black/70 shadow-2xl">
+                    <Loader2 className="h-8 w-8 animate-spin text-amber-200" />
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div className="w-full space-y-4 rounded-2xl border border-white/10 bg-white/5 p-4">
               <div className="grid gap-4 md:grid-cols-2">
