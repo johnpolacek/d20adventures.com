@@ -2,9 +2,8 @@
 
 import { enhanceEncounterMap, getThemePalette } from "@/lib/map-utils"
 import { cn, getImageUrl } from "@/lib/utils"
-import type { Encounter3DMap, EncounterCharacterRef } from "@/types/adventure-plan"
-import type { Character, PCTemplate } from "@/types/character"
-import { ContactShadows, Edges, Grid, OrbitControls, RoundedBox, Text, useTexture } from "@react-three/drei"
+import type { Encounter3DMap } from "@/types/adventure-plan"
+import { ContactShadows, Edges, Grid, OrbitControls, RoundedBox, Text } from "@react-three/drei"
 import { Canvas } from "@react-three/fiber"
 import type { TurnCharacter } from "@/types/adventure"
 import * as THREE from "three"
@@ -63,6 +62,64 @@ function getMiniStyle(token: MapMiniToken) {
     cardTone: token.kind === "pc" ? "#efe4d6" : "#ead9cf",
     plaqueTone: token.kind === "pc" ? "#d5b89a" : "#c7aa8b",
   }
+}
+
+function usePortraitTexture(image?: string) {
+  const imageUrl = image ? getImageUrl(image) : ""
+  const [portraitTexture, setPortraitTexture] = useState<THREE.Texture | null>(null)
+
+  useEffect(() => {
+    if (!imageUrl) {
+      setPortraitTexture((previous) => {
+        previous?.dispose()
+        return null
+      })
+      return
+    }
+
+    let isCancelled = false
+    let nextTexture: THREE.Texture | null = null
+    const loader = new THREE.TextureLoader()
+
+    loader.load(
+      imageUrl,
+      (texture) => {
+        if (isCancelled) {
+          texture.dispose()
+          return
+        }
+
+        texture.colorSpace = THREE.SRGBColorSpace
+        texture.needsUpdate = true
+        nextTexture = texture
+
+        setPortraitTexture((previous) => {
+          if (previous && previous !== texture) {
+            previous.dispose()
+          }
+          return texture
+        })
+      },
+      undefined,
+      (error) => {
+        if (isCancelled) return
+        console.warn(`Could not load ${imageUrl}:`, error)
+        setPortraitTexture((previous) => {
+          previous?.dispose()
+          return null
+        })
+      }
+    )
+
+    return () => {
+      isCancelled = true
+      if (nextTexture) {
+        nextTexture.dispose()
+      }
+    }
+  }, [imageUrl])
+
+  return portraitTexture
 }
 
 interface SceneTextureSet {
@@ -757,9 +814,12 @@ function PropMesh({
   }
 }
 
-function PortraitBadge({ image, label }: { image: string; label: string }) {
-  const portrait = useTexture(getImageUrl(image))
-  portrait.colorSpace = THREE.SRGBColorSpace
+function PortraitBadge({ token }: { token: MapMiniToken }) {
+  const portrait = usePortraitTexture(token.image)
+
+  if (!portrait) {
+    return <FallbackBadge token={token} />
+  }
 
   return (
     <>
@@ -781,7 +841,7 @@ function PortraitBadge({ image, label }: { image: string; label: string }) {
         </RoundedBox>
       </mesh>
       <Text position={[0, 0.73, 0.095]} fontSize={0.065} maxWidth={0.45} color="#2a211b" anchorX="center" anchorY="middle">
-        {getTokenInitials(label)}
+        {getTokenInitials(token.label)}
       </Text>
     </>
   )
@@ -860,7 +920,7 @@ function TokenMini({ token, onSelect }: { token: MapMiniToken; onSelect?: (token
         {labelText}
       </Text>
 
-      {token.image ? <PortraitBadge image={token.image} label={token.label} /> : <FallbackBadge token={token} />}
+      {token.image ? <PortraitBadge token={token} /> : <FallbackBadge token={token} />}
     </group>
   )
 }
@@ -1067,93 +1127,6 @@ export default function MiniaturesMap({
       </div>
     </div>
   )
-}
-
-export function buildPreviewMapTokens({
-  map,
-  premadePlayerCharacters,
-  availableNpcs,
-  encounterNpcRefs,
-  maxPartySize,
-}: {
-  map: Encounter3DMap
-  premadePlayerCharacters: PCTemplate[]
-  availableNpcs: Record<string, Character>
-  encounterNpcRefs: EncounterCharacterRef[]
-  maxPartySize: number
-}) {
-  const previewParty = premadePlayerCharacters.slice(0, maxPartySize)
-  const npcRefsById = new Map(encounterNpcRefs.map((entry) => [entry.id, entry]))
-
-  const partyTokens = map.tokenSlots.party.map((slot) => {
-    const character = previewParty[slot.slotIndex]
-    if (!character) {
-      return {
-        id: `preview-party-${slot.slotIndex}`,
-        label: `Party ${slot.slotIndex + 1}`,
-        shortLabel: `P${slot.slotIndex + 1}`,
-        x: slot.x,
-        y: slot.y,
-        z: slot.z,
-        facing: slot.facing,
-        kind: "pc" as const,
-        subtitle: "Generic party placeholder",
-      } satisfies MapMiniToken
-    }
-
-    return {
-      id: character.id,
-      label: character.name,
-      shortLabel: getTokenInitials(character.name),
-      image: character.image,
-      x: slot.x,
-      y: slot.y,
-      z: slot.z,
-      facing: slot.facing,
-      kind: "pc" as const,
-      subtitle: `${character.race} ${character.archetype}`.trim() || "Premade PC",
-    } satisfies MapMiniToken
-  })
-
-  const npcTokens = map.tokenSlots.npc.flatMap((slot) => {
-    const character = availableNpcs[slot.npcId]
-    const npcRef = npcRefsById.get(slot.npcId)
-
-    if (character) {
-      return [
-        {
-          id: character.id,
-          label: character.name,
-          shortLabel: getTokenInitials(character.name),
-          image: character.image,
-          x: slot.x,
-          y: slot.y,
-          z: slot.z,
-          facing: slot.facing,
-          kind: "npc" as const,
-          subtitle: npcRef?.behavior || character.behavior || "Encounter NPC",
-        } satisfies MapMiniToken,
-      ]
-    }
-
-    if (!npcRef) return []
-
-    return [
-      {
-        id: `preview-npc-${npcRef.id}`,
-        label: npcRef.id,
-        shortLabel: "NPC",
-        x: slot.x,
-        y: slot.y,
-        z: slot.z,
-        facing: slot.facing,
-        kind: "npc" as const,
-        subtitle: npcRef.behavior || "Encounter NPC",
-      } satisfies MapMiniToken,
-    ]
-  })
-
-  return [...partyTokens, ...npcTokens]
 }
 
 export function buildRuntimeMapTokens({

@@ -1,13 +1,13 @@
 "use client"
 
 import { generateEncounterMapAction, generateEncounterMapPromptAction } from "@/app/_actions/generate-encounter-map"
-import { buildPreviewMapTokens } from "@/components/adventure/miniatures-map"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { buildPreviewNpcMapTokens } from "@/lib/map-preview-tokens"
 import { createDefaultEncounterMap, enhanceEncounterMap, formatEncounterSceneKit, inferEncounterSceneKit, listEncounterOptions } from "@/lib/map-utils"
 import type { AdventureEncounter, AdventureSection, Encounter3DMap } from "@/types/adventure-plan"
-import type { Character, PCTemplate } from "@/types/character"
+import type { Character } from "@/types/character"
 import dynamic from "next/dynamic"
 import * as React from "react"
 import { Loader2, Plus } from "lucide-react"
@@ -22,7 +22,6 @@ interface EncounterMapEditorProps {
   encounter: AdventureEncounter
   allSections: AdventureSection[]
   availableNpcs: Record<string, Character>
-  premadePlayerCharacters: PCTemplate[]
   maxPartySize: number
   isSaving: boolean
   onMapChange: (map: Encounter3DMap | undefined) => void
@@ -41,7 +40,6 @@ export function EncounterMapEditor({
   encounter,
   allSections,
   availableNpcs,
-  premadePlayerCharacters,
   maxPartySize,
   isSaving,
   onMapChange,
@@ -91,15 +89,13 @@ export function EncounterMapEditor({
   const previewTokens = React.useMemo(
     () =>
       displayMap
-        ? buildPreviewMapTokens({
+        ? buildPreviewNpcMapTokens({
             map: displayMap,
-            premadePlayerCharacters,
             availableNpcs,
             encounterNpcRefs: encounter.npc || [],
-            maxPartySize,
           })
         : [],
-    [availableNpcs, displayMap, encounter.npc, maxPartySize, premadePlayerCharacters]
+    [availableNpcs, displayMap, encounter.npc]
   )
 
   React.useEffect(() => {

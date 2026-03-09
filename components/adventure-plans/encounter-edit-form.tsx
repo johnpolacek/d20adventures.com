@@ -30,7 +30,6 @@ interface EncounterEditFormProps {
   encounterIndex: number
   allSections: AdventureSection[] // Properly typed sections array
   availableNpcs: Record<string, Character> // Available NPCs from adventure plan
-  premadePlayerCharacters: PCTemplate[]
   onTitleChange: (sectionIndex: number, sceneIndex: number, encounterIndex: number, newTitle: string) => void
   onIntroChange: (sectionIndex: number, sceneIndex: number, encounterIndex: number, newIntro: string) => void
   onIdChange: (sectionIndex: number, sceneIndex: number, encounterIndex: number, newId: string) => void // Keep this for now, we'll use it later
@@ -59,7 +58,6 @@ export function EncounterEditForm({
   encounterIndex,
   allSections,
   availableNpcs,
-  premadePlayerCharacters,
   onTitleChange,
   onIntroChange,
   onInstructionsChange,
@@ -297,7 +295,6 @@ export function EncounterEditForm({
             encounter={encounter}
             allSections={allSections}
             availableNpcs={availableNpcs}
-            premadePlayerCharacters={premadePlayerCharacters}
             maxPartySize={maxPartySize}
             isSaving={isSaving}
             onMapChange={(map3d) => onMapChange(sectionIndex, sceneIndex, encounterIndex, map3d)}

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import type { AdventureEncounter, AdventureSection } from "@/types/adventure-plan"
-import type { Character, PCTemplate } from "@/types/character"
+import type { Character } from "@/types/character"
 import { Plus, Wand2 } from "lucide-react"
 import * as React from "react"
 import { toast } from "sonner"
@@ -17,7 +17,6 @@ interface AdventurePlanSectionsProps {
   settingId: string
   sections: AdventureSection[]
   availableNpcs: Record<string, Character>
-  premadePlayerCharacters: PCTemplate[]
   isSaving: boolean
   onSectionTitleChange: (index: number, newTitle: string) => void
   onSectionSummaryChange: (index: number, newSummary: string) => void
@@ -47,7 +46,6 @@ export function AdventurePlanSections({
   settingId,
   sections,
   availableNpcs,
-  premadePlayerCharacters,
   isSaving,
   onSectionTitleChange,
   onSectionSummaryChange,
@@ -191,7 +189,6 @@ export function AdventurePlanSections({
                           encounterIndex={eIndex}
                           allSections={sections}
                           availableNpcs={availableNpcs}
-                          premadePlayerCharacters={premadePlayerCharacters}
                           onTitleChange={onEncounterTitleChange}
                           onIntroChange={onEncounterIntroChange}
                           onIdChange={onEncounterIdChange}
