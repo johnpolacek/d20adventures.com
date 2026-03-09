@@ -38,7 +38,7 @@ export function getTextureImageUrl(imagePath: string): string {
   const imageUrl = getImageUrl(imagePath)
   if (!imageUrl) return imageUrl
 
-  return `/api/image-proxy?src=${encodeURIComponent(imageUrl)}`
+  return `/_next/image?url=${encodeURIComponent(imageUrl)}&w=256&q=75`
 }
 
 /**

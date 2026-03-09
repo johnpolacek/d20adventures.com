@@ -3,7 +3,7 @@
 import { enhanceEncounterMap, getThemePalette } from "@/lib/map-utils"
 import { cn, getTextureImageUrl } from "@/lib/utils"
 import type { Encounter3DMap } from "@/types/adventure-plan"
-import { ContactShadows, Edges, Grid, OrbitControls, RoundedBox, Text } from "@react-three/drei"
+import { Edges, Grid, OrbitControls, RoundedBox, Text } from "@react-three/drei"
 import { Canvas } from "@react-three/fiber"
 import type { TurnCharacter } from "@/types/adventure"
 import * as THREE from "three"
@@ -660,7 +660,7 @@ function PropMesh({
             <sphereGeometry args={[0.17 * item.scale, 10, 10]} />
             <meshPhysicalMaterial emissive="#ff9e00" emissiveIntensity={2.5} color="#ffd166" toneMapped={false} clearcoat={0.5} roughness={0.18} />
           </mesh>
-          <pointLight position={[0, 0.9 * item.scale, 0]} intensity={3.5} distance={6.2} decay={2} color="#ffb703" castShadow shadow-mapSize-width={512} shadow-mapSize-height={512} shadow-bias={-0.0002} />
+          <pointLight position={[0, 0.9 * item.scale, 0]} intensity={3.1} distance={6.2} decay={2} color="#ffb703" />
         </group>
       )
     case "tree":
@@ -988,12 +988,12 @@ export default function MiniaturesMap({
           <Canvas
             camera={{ position: cameraPosition, fov: 42 }}
             shadows
-            dpr={[1, 1.5]}
-            gl={{ antialias: true }}
+            dpr={[1, 1.25]}
+            gl={{ antialias: true, powerPreference: "default" }}
             onCreated={({ gl }) => {
               gl.shadowMap.enabled = true
               gl.shadowMap.type = THREE.PCFSoftShadowMap
-              gl.toneMappingExposure = 1.25
+              gl.toneMappingExposure = 1.2
             }}
           >
             <color attach="background" args={[shiftColor(palette.haze, 0.08)]} />
@@ -1001,17 +1001,17 @@ export default function MiniaturesMap({
             <ambientLight intensity={0.75} color="#fff6e7" />
             <directionalLight
               position={[10, 16, 7]}
-              intensity={3.2}
+              intensity={3}
               color="#fff4de"
               castShadow
-              shadow-mapSize-width={2048}
-              shadow-mapSize-height={2048}
+              shadow-mapSize-width={1024}
+              shadow-mapSize-height={1024}
               shadow-camera-near={0.5}
-              shadow-camera-far={36}
-              shadow-camera-left={-16}
-              shadow-camera-right={16}
-              shadow-camera-top={16}
-              shadow-camera-bottom={-16}
+              shadow-camera-far={30}
+              shadow-camera-left={-14}
+              shadow-camera-right={14}
+              shadow-camera-top={14}
+              shadow-camera-bottom={-14}
               shadow-bias={-0.00012}
               shadow-normalBias={0.02}
             />
@@ -1021,14 +1021,8 @@ export default function MiniaturesMap({
               position={[-6, 14, 10]}
               angle={0.5}
               penumbra={0.65}
-              intensity={2.1}
+              intensity={1.6}
               color="#ffd7a3"
-              castShadow
-              shadow-mapSize-width={1024}
-              shadow-mapSize-height={1024}
-              shadow-camera-near={1}
-              shadow-camera-far={30}
-              shadow-bias={-0.00014}
             />
             <fog attach="fog" args={[shiftColor(palette.haze, 0.05), 18, 48]} />
 
@@ -1063,8 +1057,6 @@ export default function MiniaturesMap({
             {displayMap.props.map((prop) => (
               <PropMesh key={prop.id} item={prop} theme={displayMap.board.theme} textures={textures} />
             ))}
-
-            <ContactShadows position={[0, 0.16, 0]} opacity={0.42} scale={Math.max(displayMap.board.width, displayMap.board.depth) * 1.45} blur={2.6} far={10} />
 
             {tokens.map((token) => (
               <TokenMini key={token.id} token={token} onSelect={setSelectedToken} />
