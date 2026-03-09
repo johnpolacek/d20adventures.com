@@ -292,7 +292,7 @@ export function EncounterMapEditor({
 
           <div className="space-y-4">
             <div className="relative">
-              <MiniaturesMap map={displayMap || map} tokens={previewTokens} title={encounter.title} className="w-full" />
+              <MiniaturesMap map={displayMap || map} tokens={previewTokens} title={encounter.title} className="w-full" renderMode="safe" />
               {isGenerating && (
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-2xl bg-black/35 backdrop-blur-[2px]">
                   <div className="flex h-16 w-16 items-center justify-center rounded-full border border-white/15 bg-black/70 shadow-2xl">

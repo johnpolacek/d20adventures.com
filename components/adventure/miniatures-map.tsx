@@ -140,18 +140,24 @@ function MiniaturesMapDiagnostics({
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
       console.groupCollapsed(`[MiniaturesMap:${mapId}] renderer ready`)
-      console.table({
-        title: title || "Encounter Map",
-        minis: tokens.length,
-        geometries: gl.info.memory.geometries,
-        textures: gl.info.memory.textures,
-        calls: gl.info.render.calls,
-        triangles: gl.info.render.triangles,
-        maxTextureSize: gl.capabilities.maxTextureSize,
-        maxCubemapSize: gl.capabilities.maxCubemapSize,
-        pixelRatio: window.devicePixelRatio,
-      })
-      console.log("sceneChildren", scene.children.length)
+      console.log(
+        JSON.stringify(
+          {
+            title: title || "Encounter Map",
+            minis: tokens.length,
+            geometries: gl.info.memory.geometries,
+            textures: gl.info.memory.textures,
+            calls: gl.info.render.calls,
+            triangles: gl.info.render.triangles,
+            maxTextureSize: gl.capabilities.maxTextureSize,
+            maxCubemapSize: gl.capabilities.maxCubemapSize,
+            pixelRatio: window.devicePixelRatio,
+            sceneChildren: scene.children.length,
+          },
+          null,
+          2
+        )
+      )
       console.groupEnd()
     })
 
@@ -964,16 +970,132 @@ function TokenMini({ token, onSelect }: { token: MapMiniToken; onSelect?: (token
   )
 }
 
+function SafeDisplayBase({
+  map,
+  palette,
+}: {
+  map: Encounter3DMap
+  palette: ReturnType<typeof getThemePalette>
+}) {
+  const width = map.board.width * map.board.cellSize
+  const depth = map.board.depth * map.board.cellSize
+
+  return (
+    <group>
+      <mesh position={[0, -0.22, 0]} receiveShadow>
+        <boxGeometry args={[width + 1.2, 0.45, depth + 1.2]} />
+        <meshStandardMaterial color={shiftColor(palette.frame, 0.2)} roughness={0.95} />
+      </mesh>
+      <mesh position={[0, 0.04, 0]} receiveShadow>
+        <boxGeometry args={[width, 0.12, depth]} />
+        <meshStandardMaterial color={shiftColor(palette.floor, 0.12)} roughness={1} />
+      </mesh>
+    </group>
+  )
+}
+
+function SafeTerrainMesh({ item }: { item: Encounter3DMap["terrain"][number] }) {
+  const color =
+    item.kind === "water"
+      ? "#5b8db8"
+      : item.kind === "pit"
+        ? "#3b2d2a"
+        : item.kind === "wall"
+          ? "#b9b1a7"
+          : "#cfc7bc"
+
+  return (
+    <mesh position={[item.x, item.y + item.height / 2, item.z]} rotation={[0, item.rotation, 0]}>
+      <boxGeometry args={[item.width, Math.max(item.height, 0.1), item.depth]} />
+      <meshStandardMaterial color={color} roughness={1} />
+    </mesh>
+  )
+}
+
+function SafePropMesh({ item }: { item: Encounter3DMap["props"][number] }) {
+  const position: [number, number, number] = [item.x, item.y + 0.35 * item.scale, item.z]
+
+  switch (item.kind) {
+    case "torch":
+      return (
+        <group position={position} rotation={[0, item.rotation, 0]}>
+          <mesh position={[0, 0.3 * item.scale, 0]}>
+            <cylinderGeometry args={[0.04 * item.scale, 0.04 * item.scale, 0.8 * item.scale, 8]} />
+            <meshStandardMaterial color="#7b5b3b" roughness={1} />
+          </mesh>
+          <mesh position={[0, 0.76 * item.scale, 0]}>
+            <sphereGeometry args={[0.11 * item.scale, 8, 8]} />
+            <meshBasicMaterial color="#ffd166" />
+          </mesh>
+        </group>
+      )
+    case "pillar":
+      return (
+        <mesh position={[item.x, item.y + item.scale * 0.8, item.z]}>
+          <cylinderGeometry args={[0.18 * item.scale, 0.2 * item.scale, 1.6 * item.scale, 10]} />
+          <meshStandardMaterial color="#d5cec4" roughness={1} />
+        </mesh>
+      )
+    case "tree":
+      return (
+        <group position={position}>
+          <mesh position={[0, 0.25 * item.scale, 0]}>
+            <cylinderGeometry args={[0.08 * item.scale, 0.1 * item.scale, 0.8 * item.scale, 8]} />
+            <meshStandardMaterial color="#6a4a34" roughness={1} />
+          </mesh>
+          <mesh position={[0, 0.82 * item.scale, 0]}>
+            <sphereGeometry args={[0.34 * item.scale, 10, 10]} />
+            <meshStandardMaterial color="#8ea67f" roughness={1} />
+          </mesh>
+        </group>
+      )
+    default:
+      return (
+        <mesh position={position} rotation={[0, item.rotation, 0]}>
+          <boxGeometry args={[0.7 * item.scale, 0.7 * item.scale, 0.7 * item.scale]} />
+          <meshStandardMaterial color="#c49b68" roughness={1} />
+        </mesh>
+      )
+  }
+}
+
+function SafeTokenMini({ token, onSelect }: { token: MapMiniToken; onSelect?: (token: MapMiniToken) => void }) {
+  const miniStyle = getMiniStyle(token)
+
+  return (
+    <group position={[token.x, (token.y || 0) + 0.01, token.z]} rotation={[0, token.facing || 0, 0]}>
+      <mesh onClick={() => onSelect?.(token)}>
+        <cylinderGeometry args={[0.42, 0.48, 0.18, 20]} />
+        <meshStandardMaterial color={miniStyle.baseColor} roughness={1} />
+      </mesh>
+      <mesh position={[0, 0.11, 0]}>
+        <cylinderGeometry args={[0.36, 0.42, 0.05, 20]} />
+        <meshStandardMaterial color={miniStyle.ringColor} roughness={0.85} />
+      </mesh>
+      <mesh position={[0, 0.66, 0]}>
+        <boxGeometry args={[0.42, 0.9, 0.14]} />
+        <meshStandardMaterial color={token.kind === "pc" ? "#d9e6f8" : "#f2ddd7"} roughness={1} />
+      </mesh>
+      <mesh position={[0, 1.2, 0.02]}>
+        <sphereGeometry args={[0.16, 10, 10]} />
+        <meshStandardMaterial color="#f6efe6" roughness={1} />
+      </mesh>
+    </group>
+  )
+}
+
 export default function MiniaturesMap({
   map,
   tokens = [],
   title,
   className,
+  renderMode = "full",
 }: {
   map: Encounter3DMap
   tokens?: MapMiniToken[]
   title?: string
   className?: string
+  renderMode?: "full" | "safe"
 }) {
   const mapDebugId = useId()
   const [selectedToken, setSelectedToken] = useState<MapMiniToken | null>(tokens[0] ?? null)
@@ -984,12 +1106,15 @@ export default function MiniaturesMap({
   const displayMap = useMemo(() => enhanceEncounterMap(map), [map])
   const palette = useMemo(() => getThemePalette(displayMap.board.theme), [displayMap.board.theme])
   const textures = useMemo(() => {
+    if (renderMode === "safe") {
+      return null
+    }
     if (typeof document === "undefined") {
       return null
     }
 
     return buildSceneTextures(palette)
-  }, [displayMap.board.theme, palette])
+  }, [displayMap.board.theme, palette, renderMode])
   const cameraPosition = useMemo<[number, number, number]>(
     () => [
       displayMap.camera.focusX + Math.cos(displayMap.camera.yaw) * displayMap.camera.distance,
@@ -1120,8 +1245,8 @@ export default function MiniaturesMap({
             <Canvas
               frameloop="demand"
               camera={canvasCameraProps}
-              shadows
-              dpr={[1, 1.25]}
+              shadows={renderMode === "full"}
+              dpr={renderMode === "full" ? [1, 1.25] : 1}
               gl={canvasGlProps}
               onCreated={({ gl }) => {
                 gl.domElement.dataset.miniaturesCanvasId = mapDebugId
@@ -1138,20 +1263,20 @@ export default function MiniaturesMap({
                     2
                   )}`
                 )
-                gl.shadowMap.enabled = true
+                gl.shadowMap.enabled = renderMode === "full"
                 gl.shadowMap.type = THREE.PCFSoftShadowMap
                 gl.toneMappingExposure = 1.2
               }}
             >
               <MiniaturesMapDiagnostics mapId={mapDebugId} title={title || displayMap.summary} tokens={tokens} />
               <color attach="background" args={[shiftColor(palette.haze, 0.08)]} />
-              <hemisphereLight intensity={0.9} groundColor={shiftColor(palette.floor, -0.18)} color="#f8f3ea" />
-              <ambientLight intensity={0.75} color="#fff6e7" />
+              <hemisphereLight intensity={renderMode === "full" ? 0.9 : 0.7} groundColor={shiftColor(palette.floor, -0.18)} color="#f8f3ea" />
+              <ambientLight intensity={renderMode === "full" ? 0.75 : 1} color="#fff6e7" />
               <directionalLight
                 position={[10, 16, 7]}
-                intensity={3}
+                intensity={renderMode === "full" ? 3 : 1.4}
                 color="#fff4de"
-                castShadow
+                castShadow={renderMode === "full"}
                 shadow-mapSize-width={1024}
                 shadow-mapSize-height={1024}
                 shadow-camera-near={0.5}
@@ -1163,19 +1288,13 @@ export default function MiniaturesMap({
                 shadow-bias={-0.00012}
                 shadow-normalBias={0.02}
               />
-              <directionalLight position={[-8, 10, -7]} intensity={1.2} color="#a9c4e2" />
-              <directionalLight position={[0, 6, -10]} intensity={0.8} color="#fff2d6" />
-              <spotLight
-                position={[-6, 14, 10]}
-                angle={0.5}
-                penumbra={0.65}
-                intensity={1.6}
-                color="#ffd7a3"
-              />
-              <fog attach="fog" args={[shiftColor(palette.haze, 0.05), 18, 48]} />
+              {renderMode === "full" ? <directionalLight position={[-8, 10, -7]} intensity={1.2} color="#a9c4e2" /> : null}
+              {renderMode === "full" ? <directionalLight position={[0, 6, -10]} intensity={0.8} color="#fff2d6" /> : null}
+              {renderMode === "full" ? <spotLight position={[-6, 14, 10]} angle={0.5} penumbra={0.65} intensity={1.6} color="#ffd7a3" /> : null}
+              {renderMode === "full" ? <fog attach="fog" args={[shiftColor(palette.haze, 0.05), 18, 48]} /> : null}
 
-              <SceneBackdrop map={displayMap} palette={palette} textures={textures} />
-              <DisplayBase map={displayMap} palette={palette} textures={textures} />
+              {renderMode === "full" ? <SceneBackdrop map={displayMap} palette={palette} textures={textures} /> : null}
+              {renderMode === "full" ? <DisplayBase map={displayMap} palette={palette} textures={textures} /> : <SafeDisplayBase map={displayMap} palette={palette} />}
 
               <Grid
                 position={[0, 0.185, 0]}
@@ -1199,15 +1318,19 @@ export default function MiniaturesMap({
               ))}
 
               {displayMap.terrain.map((terrain) => (
-                <TerrainMesh key={terrain.id} item={terrain} theme={displayMap.board.theme} textures={textures} />
+                renderMode === "full" ? (
+                  <TerrainMesh key={terrain.id} item={terrain} theme={displayMap.board.theme} textures={textures} />
+                ) : (
+                  <SafeTerrainMesh key={terrain.id} item={terrain} />
+                )
               ))}
 
               {displayMap.props.map((prop) => (
-                <PropMesh key={prop.id} item={prop} theme={displayMap.board.theme} textures={textures} />
+                renderMode === "full" ? <PropMesh key={prop.id} item={prop} theme={displayMap.board.theme} textures={textures} /> : <SafePropMesh key={prop.id} item={prop} />
               ))}
 
               {tokens.map((token) => (
-                <TokenMini key={token.id} token={token} onSelect={setSelectedToken} />
+                renderMode === "full" ? <TokenMini key={token.id} token={token} onSelect={setSelectedToken} /> : <SafeTokenMini key={token.id} token={token} onSelect={setSelectedToken} />
               ))}
 
               <OrbitControls
