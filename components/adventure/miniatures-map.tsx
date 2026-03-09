@@ -26,6 +26,9 @@ export interface MapMiniToken {
 }
 
 const MINI_PREVIEW_HEIGHT = 1.7
+const portraitTextureCache = new Map<string, THREE.Texture | null>()
+const portraitTextureRequestCache = new Map<string, Promise<THREE.Texture | null>>()
+const portraitTextureLoader = new THREE.TextureLoader()
 
 function shiftColor(color: string, lightness: number) {
   const next = new THREE.Color(color)
@@ -66,56 +69,52 @@ function getMiniStyle(token: MapMiniToken) {
 
 function usePortraitTexture(image?: string) {
   const imageUrl = image ? getTextureImageUrl(image) : ""
-  const [portraitTexture, setPortraitTexture] = useState<THREE.Texture | null>(null)
+  const [portraitTexture, setPortraitTexture] = useState<THREE.Texture | null>(() => (imageUrl ? portraitTextureCache.get(imageUrl) ?? null : null))
 
   useEffect(() => {
     if (!imageUrl) {
-      setPortraitTexture((previous) => {
-        previous?.dispose()
-        return null
-      })
+      setPortraitTexture(null)
+      return
+    }
+
+    const cachedTexture = portraitTextureCache.get(imageUrl)
+    if (cachedTexture !== undefined) {
+      setPortraitTexture(cachedTexture)
       return
     }
 
     let isCancelled = false
-    let nextTexture: THREE.Texture | null = null
-    const loader = new THREE.TextureLoader()
-
-    loader.load(
-      imageUrl,
-      (texture) => {
-        if (isCancelled) {
-          texture.dispose()
-          return
-        }
-
-        texture.colorSpace = THREE.SRGBColorSpace
-        texture.needsUpdate = true
-        nextTexture = texture
-
-        setPortraitTexture((previous) => {
-          if (previous && previous !== texture) {
-            previous.dispose()
+    const pendingRequest =
+      portraitTextureRequestCache.get(imageUrl) ||
+      new Promise<THREE.Texture | null>((resolve) => {
+        portraitTextureLoader.load(
+          imageUrl,
+          (texture) => {
+            texture.colorSpace = THREE.SRGBColorSpace
+            texture.needsUpdate = true
+            portraitTextureCache.set(imageUrl, texture)
+            portraitTextureRequestCache.delete(imageUrl)
+            resolve(texture)
+          },
+          undefined,
+          (error) => {
+            console.warn(`Could not load ${imageUrl}:`, error)
+            portraitTextureCache.set(imageUrl, null)
+            portraitTextureRequestCache.delete(imageUrl)
+            resolve(null)
           }
-          return texture
-        })
-      },
-      undefined,
-      (error) => {
-        if (isCancelled) return
-        console.warn(`Could not load ${imageUrl}:`, error)
-        setPortraitTexture((previous) => {
-          previous?.dispose()
-          return null
-        })
-      }
-    )
+        )
+      })
+
+    portraitTextureRequestCache.set(imageUrl, pendingRequest)
+
+    void pendingRequest.then((texture) => {
+      if (isCancelled) return
+      setPortraitTexture(texture)
+    })
 
     return () => {
       isCancelled = true
-      if (nextTexture) {
-        nextTexture.dispose()
-      }
     }
   }, [imageUrl])
 
