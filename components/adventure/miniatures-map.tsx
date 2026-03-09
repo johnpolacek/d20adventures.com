@@ -990,11 +990,17 @@ export default function MiniaturesMap({
 
     return buildSceneTextures(palette)
   }, [displayMap.board.theme, palette])
-  const cameraPosition: [number, number, number] = [
-    displayMap.camera.focusX + Math.cos(displayMap.camera.yaw) * displayMap.camera.distance,
-    Math.sin(displayMap.camera.pitch) * displayMap.camera.distance,
-    displayMap.camera.focusZ + Math.sin(displayMap.camera.yaw) * displayMap.camera.distance,
-  ]
+  const cameraPosition = useMemo<[number, number, number]>(
+    () => [
+      displayMap.camera.focusX + Math.cos(displayMap.camera.yaw) * displayMap.camera.distance,
+      Math.sin(displayMap.camera.pitch) * displayMap.camera.distance,
+      displayMap.camera.focusZ + Math.sin(displayMap.camera.yaw) * displayMap.camera.distance,
+    ],
+    [displayMap.camera.distance, displayMap.camera.focusX, displayMap.camera.focusZ, displayMap.camera.pitch, displayMap.camera.yaw]
+  )
+  const orbitTarget = useMemo<[number, number, number]>(() => [displayMap.camera.focusX, 0.5, displayMap.camera.focusZ], [displayMap.camera.focusX, displayMap.camera.focusZ])
+  const canvasGlProps = useMemo(() => ({ antialias: true, powerPreference: "default" as const }), [])
+  const canvasCameraProps = useMemo(() => ({ position: cameraPosition, fov: 42 }), [cameraPosition])
 
   useEffect(() => {
     const settleTimer = window.setTimeout(() => {
@@ -1039,7 +1045,7 @@ export default function MiniaturesMap({
       setRenderEvents((current) => [...current.slice(-4), nextMessage])
       const payload = details ? JSON.stringify(details, null, 2) : ""
       if (details) {
-        console.error(`[MiniaturesMap:${mapDebugId}] ${message}\n${payload}`)
+          console.error(`[MiniaturesMap:${mapDebugId}] ${message}\n${payload}`)
       } else {
         console.error(`[MiniaturesMap:${mapDebugId}] ${message}`)
       }
@@ -1113,13 +1119,25 @@ export default function MiniaturesMap({
           {shouldRenderCanvas ? (
             <Canvas
               frameloop="demand"
-              camera={{ position: cameraPosition, fov: 42 }}
+              camera={canvasCameraProps}
               shadows
               dpr={[1, 1.25]}
-              gl={{ antialias: true, powerPreference: "default" }}
+              gl={canvasGlProps}
               onCreated={({ gl }) => {
+                gl.domElement.dataset.miniaturesCanvasId = mapDebugId
                 setCanvasElement(gl.domElement)
                 setRenderStatus("ready")
+                console.info(
+                  `[MiniaturesMap:${mapDebugId}] canvas created\n${JSON.stringify(
+                    {
+                      canvasId: mapDebugId,
+                      width: gl.domElement.width,
+                      height: gl.domElement.height,
+                    },
+                    null,
+                    2
+                  )}`
+                )
                 gl.shadowMap.enabled = true
                 gl.shadowMap.type = THREE.PCFSoftShadowMap
                 gl.toneMappingExposure = 1.2
@@ -1201,7 +1219,7 @@ export default function MiniaturesMap({
                 maxAzimuthAngle={displayMap.camera.yaw + 1.7}
                 minPolarAngle={0.35}
                 maxPolarAngle={1.35}
-                target={[displayMap.camera.focusX, 0.5, displayMap.camera.focusZ]}
+                target={orbitTarget}
               />
             </Canvas>
           ) : (
