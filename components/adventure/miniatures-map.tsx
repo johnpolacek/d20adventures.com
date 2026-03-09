@@ -1,7 +1,7 @@
 "use client"
 
 import { enhanceEncounterMap, getThemePalette } from "@/lib/map-utils"
-import { cn, getImageUrl } from "@/lib/utils"
+import { cn, getTextureImageUrl } from "@/lib/utils"
 import type { Encounter3DMap } from "@/types/adventure-plan"
 import { ContactShadows, Edges, Grid, OrbitControls, RoundedBox, Text } from "@react-three/drei"
 import { Canvas } from "@react-three/fiber"
@@ -65,7 +65,7 @@ function getMiniStyle(token: MapMiniToken) {
 }
 
 function usePortraitTexture(image?: string) {
-  const imageUrl = image ? getImageUrl(image) : ""
+  const imageUrl = image ? getTextureImageUrl(image) : ""
   const [portraitTexture, setPortraitTexture] = useState<THREE.Texture | null>(null)
 
   useEffect(() => {
