@@ -4,10 +4,10 @@ import { enhanceEncounterMap, getThemePalette } from "@/lib/map-utils"
 import { cn, getTextureImageUrl } from "@/lib/utils"
 import type { Encounter3DMap } from "@/types/adventure-plan"
 import { Edges, Grid, OrbitControls, RoundedBox, Text } from "@react-three/drei"
-import { Canvas } from "@react-three/fiber"
+import { Canvas, useThree } from "@react-three/fiber"
 import type { TurnCharacter } from "@/types/adventure"
 import * as THREE from "three"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useId, useMemo, useState } from "react"
 
 export interface MapMiniToken {
   id: string
@@ -92,6 +92,11 @@ function usePortraitTexture(image?: string) {
           (texture) => {
             texture.colorSpace = THREE.SRGBColorSpace
             texture.needsUpdate = true
+            console.info("[MiniaturesMap] portrait texture loaded", {
+              imageUrl,
+              width: texture.image?.width ?? null,
+              height: texture.image?.height ?? null,
+            })
             portraitTextureCache.set(imageUrl, texture)
             portraitTextureRequestCache.delete(imageUrl)
             resolve(texture)
@@ -119,6 +124,41 @@ function usePortraitTexture(image?: string) {
   }, [imageUrl])
 
   return portraitTexture
+}
+
+function MiniaturesMapDiagnostics({
+  mapId,
+  title,
+  tokens,
+}: {
+  mapId: string
+  title?: string
+  tokens: MapMiniToken[]
+}) {
+  const { gl, scene } = useThree()
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      console.groupCollapsed(`[MiniaturesMap:${mapId}] renderer ready`)
+      console.table({
+        title: title || "Encounter Map",
+        minis: tokens.length,
+        geometries: gl.info.memory.geometries,
+        textures: gl.info.memory.textures,
+        calls: gl.info.render.calls,
+        triangles: gl.info.render.triangles,
+        maxTextureSize: gl.capabilities.maxTextureSize,
+        maxCubemapSize: gl.capabilities.maxCubemapSize,
+        pixelRatio: window.devicePixelRatio,
+      })
+      console.log("sceneChildren", scene.children.length)
+      console.groupEnd()
+    })
+
+    return () => cancelAnimationFrame(frame)
+  }, [gl, mapId, scene.children.length, title, tokens.length])
+
+  return null
 }
 
 interface SceneTextureSet {
@@ -935,7 +975,11 @@ export default function MiniaturesMap({
   title?: string
   className?: string
 }) {
+  const mapDebugId = useId()
   const [selectedToken, setSelectedToken] = useState<MapMiniToken | null>(tokens[0] ?? null)
+  const [renderStatus, setRenderStatus] = useState<"initializing" | "ready" | "lost">("initializing")
+  const [renderEvents, setRenderEvents] = useState<string[]>([])
+  const [canvasElement, setCanvasElement] = useState<HTMLCanvasElement | null>(null)
   const displayMap = useMemo(() => enhanceEncounterMap(map), [map])
   const palette = useMemo(() => getThemePalette(displayMap.board.theme), [displayMap.board.theme])
   const textures = useMemo(() => {
@@ -970,6 +1014,69 @@ export default function MiniaturesMap({
     }
   }, [textures])
 
+  useEffect(() => {
+    if (!canvasElement) return
+
+    const appendRenderEvent = (message: string, details?: Record<string, unknown>) => {
+      const timestamp = new Date().toLocaleTimeString("en-US", {
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      })
+      const nextMessage = `${timestamp} ${message}`
+      setRenderEvents((current) => [...current.slice(-4), nextMessage])
+      if (details) {
+        console.error(`[MiniaturesMap:${mapDebugId}] ${message}`, details)
+      } else {
+        console.error(`[MiniaturesMap:${mapDebugId}] ${message}`)
+      }
+    }
+
+    const handleContextLost = (event: Event) => {
+      event.preventDefault()
+      setRenderStatus("lost")
+      appendRenderEvent("WebGL context lost", {
+        title: title || displayMap.summary || "Encounter Map",
+        minis: tokens.length,
+        terrain: displayMap.terrain.length,
+        props: displayMap.props.length,
+        zones: displayMap.zones.length,
+      })
+    }
+
+    const handleContextRestored = () => {
+      setRenderStatus("ready")
+      appendRenderEvent("WebGL context restored")
+    }
+
+    canvasElement.addEventListener("webglcontextlost", handleContextLost, { passive: false })
+    canvasElement.addEventListener("webglcontextrestored", handleContextRestored)
+
+    return () => {
+      canvasElement.removeEventListener("webglcontextlost", handleContextLost)
+      canvasElement.removeEventListener("webglcontextrestored", handleContextRestored)
+    }
+  }, [canvasElement, displayMap.props.length, displayMap.summary, displayMap.terrain.length, displayMap.zones.length, mapDebugId, title, tokens.length])
+
+  useEffect(() => {
+    console.groupCollapsed(`[MiniaturesMap:${mapDebugId}] mount`)
+    console.table({
+      title: title || displayMap.summary || "Encounter Map",
+      minis: tokens.length,
+      terrain: displayMap.terrain.length,
+      props: displayMap.props.length,
+      zones: displayMap.zones.length,
+      partySlots: displayMap.tokenSlots.party.length,
+      npcSlots: displayMap.tokenSlots.npc.length,
+    })
+    console.groupEnd()
+
+    return () => {
+      console.info(`[MiniaturesMap:${mapDebugId}] unmount`)
+    }
+  }, [displayMap.props.length, displayMap.summary, displayMap.terrain.length, displayMap.tokenSlots.npc.length, displayMap.tokenSlots.party.length, displayMap.zones.length, mapDebugId, title, tokens.length])
+
   return (
     <div className={cn("overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-2xl", className)}>
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
@@ -986,16 +1093,20 @@ export default function MiniaturesMap({
       <div className="flex flex-col">
         <div className="h-[560px] w-full bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.12),_transparent_52%)]">
           <Canvas
+            frameloop="demand"
             camera={{ position: cameraPosition, fov: 42 }}
             shadows
             dpr={[1, 1.25]}
             gl={{ antialias: true, powerPreference: "default" }}
             onCreated={({ gl }) => {
+              setCanvasElement(gl.domElement)
+              setRenderStatus("ready")
               gl.shadowMap.enabled = true
               gl.shadowMap.type = THREE.PCFSoftShadowMap
               gl.toneMappingExposure = 1.2
             }}
           >
+            <MiniaturesMapDiagnostics mapId={mapDebugId} title={title || displayMap.summary} tokens={tokens} />
             <color attach="background" args={[shiftColor(palette.haze, 0.08)]} />
             <hemisphereLight intensity={0.9} groundColor={shiftColor(palette.floor, -0.18)} color="#f8f3ea" />
             <ambientLight intensity={0.75} color="#fff6e7" />
@@ -1085,7 +1196,20 @@ export default function MiniaturesMap({
             <div className="rounded-xl border border-white/10 bg-white/5 p-2">Props: {displayMap.props.length}</div>
             <div className="rounded-xl border border-white/10 bg-white/5 p-2">Zones: {displayMap.zones.length}</div>
             <div className="rounded-xl border border-white/10 bg-white/5 p-2">Party Slots: {displayMap.tokenSlots.party.length}</div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-2">Renderer: {renderStatus}</div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-2">Minis: {tokens.length}</div>
           </div>
+
+          {renderEvents.length > 0 ? (
+            <div className="mt-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-3">
+              <div className="text-xs font-mono uppercase tracking-[0.25em] text-amber-200/70">Render Events</div>
+              <div className="mt-2 space-y-1 font-mono text-[11px] text-amber-100/80">
+                {renderEvents.map((entry) => (
+                  <div key={entry}>{entry}</div>
+                ))}
+              </div>
+            </div>
+          ) : null}
 
           <div className="mt-5">
             <div className="text-xs font-mono uppercase tracking-[0.25em] text-primary-200/60">Selected Mini</div>
