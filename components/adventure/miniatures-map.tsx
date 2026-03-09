@@ -980,6 +980,7 @@ export default function MiniaturesMap({
   const [renderStatus, setRenderStatus] = useState<"initializing" | "ready" | "lost">("initializing")
   const [renderEvents, setRenderEvents] = useState<string[]>([])
   const [canvasElement, setCanvasElement] = useState<HTMLCanvasElement | null>(null)
+  const [shouldRenderCanvas, setShouldRenderCanvas] = useState(false)
   const displayMap = useMemo(() => enhanceEncounterMap(map), [map])
   const palette = useMemo(() => getThemePalette(displayMap.board.theme), [displayMap.board.theme])
   const textures = useMemo(() => {
@@ -994,6 +995,16 @@ export default function MiniaturesMap({
     Math.sin(displayMap.camera.pitch) * displayMap.camera.distance,
     displayMap.camera.focusZ + Math.sin(displayMap.camera.yaw) * displayMap.camera.distance,
   ]
+
+  useEffect(() => {
+    const settleTimer = window.setTimeout(() => {
+      setShouldRenderCanvas(true)
+    }, 180)
+
+    return () => {
+      window.clearTimeout(settleTimer)
+    }
+  }, [])
 
   useEffect(() => {
     if (!selectedToken) {
@@ -1026,8 +1037,9 @@ export default function MiniaturesMap({
       })
       const nextMessage = `${timestamp} ${message}`
       setRenderEvents((current) => [...current.slice(-4), nextMessage])
+      const payload = details ? JSON.stringify(details, null, 2) : ""
       if (details) {
-        console.error(`[MiniaturesMap:${mapDebugId}] ${message}`, details)
+        console.error(`[MiniaturesMap:${mapDebugId}] ${message}\n${payload}`)
       } else {
         console.error(`[MiniaturesMap:${mapDebugId}] ${message}`)
       }
@@ -1061,15 +1073,21 @@ export default function MiniaturesMap({
 
   useEffect(() => {
     console.groupCollapsed(`[MiniaturesMap:${mapDebugId}] mount`)
-    console.table({
-      title: title || displayMap.summary || "Encounter Map",
-      minis: tokens.length,
-      terrain: displayMap.terrain.length,
-      props: displayMap.props.length,
-      zones: displayMap.zones.length,
-      partySlots: displayMap.tokenSlots.party.length,
-      npcSlots: displayMap.tokenSlots.npc.length,
-    })
+    console.log(
+      JSON.stringify(
+        {
+          title: title || displayMap.summary || "Encounter Map",
+          minis: tokens.length,
+          terrain: displayMap.terrain.length,
+          props: displayMap.props.length,
+          zones: displayMap.zones.length,
+          partySlots: displayMap.tokenSlots.party.length,
+          npcSlots: displayMap.tokenSlots.npc.length,
+        },
+        null,
+        2
+      )
+    )
     console.groupEnd()
 
     return () => {
@@ -1092,99 +1110,103 @@ export default function MiniaturesMap({
 
       <div className="flex flex-col">
         <div className="h-[560px] w-full bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.12),_transparent_52%)]">
-          <Canvas
-            frameloop="demand"
-            camera={{ position: cameraPosition, fov: 42 }}
-            shadows
-            dpr={[1, 1.25]}
-            gl={{ antialias: true, powerPreference: "default" }}
-            onCreated={({ gl }) => {
-              setCanvasElement(gl.domElement)
-              setRenderStatus("ready")
-              gl.shadowMap.enabled = true
-              gl.shadowMap.type = THREE.PCFSoftShadowMap
-              gl.toneMappingExposure = 1.2
-            }}
-          >
-            <MiniaturesMapDiagnostics mapId={mapDebugId} title={title || displayMap.summary} tokens={tokens} />
-            <color attach="background" args={[shiftColor(palette.haze, 0.08)]} />
-            <hemisphereLight intensity={0.9} groundColor={shiftColor(palette.floor, -0.18)} color="#f8f3ea" />
-            <ambientLight intensity={0.75} color="#fff6e7" />
-            <directionalLight
-              position={[10, 16, 7]}
-              intensity={3}
-              color="#fff4de"
-              castShadow
-              shadow-mapSize-width={1024}
-              shadow-mapSize-height={1024}
-              shadow-camera-near={0.5}
-              shadow-camera-far={30}
-              shadow-camera-left={-14}
-              shadow-camera-right={14}
-              shadow-camera-top={14}
-              shadow-camera-bottom={-14}
-              shadow-bias={-0.00012}
-              shadow-normalBias={0.02}
-            />
-            <directionalLight position={[-8, 10, -7]} intensity={1.2} color="#a9c4e2" />
-            <directionalLight position={[0, 6, -10]} intensity={0.8} color="#fff2d6" />
-            <spotLight
-              position={[-6, 14, 10]}
-              angle={0.5}
-              penumbra={0.65}
-              intensity={1.6}
-              color="#ffd7a3"
-            />
-            <fog attach="fog" args={[shiftColor(palette.haze, 0.05), 18, 48]} />
+          {shouldRenderCanvas ? (
+            <Canvas
+              frameloop="demand"
+              camera={{ position: cameraPosition, fov: 42 }}
+              shadows
+              dpr={[1, 1.25]}
+              gl={{ antialias: true, powerPreference: "default" }}
+              onCreated={({ gl }) => {
+                setCanvasElement(gl.domElement)
+                setRenderStatus("ready")
+                gl.shadowMap.enabled = true
+                gl.shadowMap.type = THREE.PCFSoftShadowMap
+                gl.toneMappingExposure = 1.2
+              }}
+            >
+              <MiniaturesMapDiagnostics mapId={mapDebugId} title={title || displayMap.summary} tokens={tokens} />
+              <color attach="background" args={[shiftColor(palette.haze, 0.08)]} />
+              <hemisphereLight intensity={0.9} groundColor={shiftColor(palette.floor, -0.18)} color="#f8f3ea" />
+              <ambientLight intensity={0.75} color="#fff6e7" />
+              <directionalLight
+                position={[10, 16, 7]}
+                intensity={3}
+                color="#fff4de"
+                castShadow
+                shadow-mapSize-width={1024}
+                shadow-mapSize-height={1024}
+                shadow-camera-near={0.5}
+                shadow-camera-far={30}
+                shadow-camera-left={-14}
+                shadow-camera-right={14}
+                shadow-camera-top={14}
+                shadow-camera-bottom={-14}
+                shadow-bias={-0.00012}
+                shadow-normalBias={0.02}
+              />
+              <directionalLight position={[-8, 10, -7]} intensity={1.2} color="#a9c4e2" />
+              <directionalLight position={[0, 6, -10]} intensity={0.8} color="#fff2d6" />
+              <spotLight
+                position={[-6, 14, 10]}
+                angle={0.5}
+                penumbra={0.65}
+                intensity={1.6}
+                color="#ffd7a3"
+              />
+              <fog attach="fog" args={[shiftColor(palette.haze, 0.05), 18, 48]} />
 
-            <SceneBackdrop map={displayMap} palette={palette} textures={textures} />
-            <DisplayBase map={displayMap} palette={palette} textures={textures} />
+              <SceneBackdrop map={displayMap} palette={palette} textures={textures} />
+              <DisplayBase map={displayMap} palette={palette} textures={textures} />
 
-            <Grid
-              position={[0, 0.185, 0]}
-              args={[displayMap.board.width * displayMap.board.cellSize, displayMap.board.depth * displayMap.board.cellSize]}
-              cellSize={displayMap.board.cellSize}
-              cellThickness={0.42}
-              cellColor={palette.grid}
-              sectionSize={displayMap.board.cellSize * 2}
-              sectionThickness={0.7}
-              sectionColor={palette.accent}
-              fadeDistance={40}
-              fadeStrength={1.1}
-              infiniteGrid={false}
-            />
+              <Grid
+                position={[0, 0.185, 0]}
+                args={[displayMap.board.width * displayMap.board.cellSize, displayMap.board.depth * displayMap.board.cellSize]}
+                cellSize={displayMap.board.cellSize}
+                cellThickness={0.42}
+                cellColor={palette.grid}
+                sectionSize={displayMap.board.cellSize * 2}
+                sectionThickness={0.7}
+                sectionColor={palette.accent}
+                fadeDistance={40}
+                fadeStrength={1.1}
+                infiniteGrid={false}
+              />
 
-            {displayMap.zones.map((zone) => (
-              <mesh key={zone.id} position={[zone.x, 0.19, zone.z]} rotation={[-Math.PI / 2, 0, 0]}>
-                <planeGeometry args={[zone.width, zone.depth]} />
-                <meshBasicMaterial color={zone.color || palette.accent} transparent opacity={0.16} />
-              </mesh>
-            ))}
+              {displayMap.zones.map((zone) => (
+                <mesh key={zone.id} position={[zone.x, 0.19, zone.z]} rotation={[-Math.PI / 2, 0, 0]}>
+                  <planeGeometry args={[zone.width, zone.depth]} />
+                  <meshBasicMaterial color={zone.color || palette.accent} transparent opacity={0.16} />
+                </mesh>
+              ))}
 
-            {displayMap.terrain.map((terrain) => (
-              <TerrainMesh key={terrain.id} item={terrain} theme={displayMap.board.theme} textures={textures} />
-            ))}
+              {displayMap.terrain.map((terrain) => (
+                <TerrainMesh key={terrain.id} item={terrain} theme={displayMap.board.theme} textures={textures} />
+              ))}
 
-            {displayMap.props.map((prop) => (
-              <PropMesh key={prop.id} item={prop} theme={displayMap.board.theme} textures={textures} />
-            ))}
+              {displayMap.props.map((prop) => (
+                <PropMesh key={prop.id} item={prop} theme={displayMap.board.theme} textures={textures} />
+              ))}
 
-            {tokens.map((token) => (
-              <TokenMini key={token.id} token={token} onSelect={setSelectedToken} />
-            ))}
+              {tokens.map((token) => (
+                <TokenMini key={token.id} token={token} onSelect={setSelectedToken} />
+              ))}
 
-            <OrbitControls
-              enablePan
-              enableZoom
-              maxDistance={38}
-              minDistance={8}
-              minAzimuthAngle={displayMap.camera.yaw - 1.7}
-              maxAzimuthAngle={displayMap.camera.yaw + 1.7}
-              minPolarAngle={0.35}
-              maxPolarAngle={1.35}
-              target={[displayMap.camera.focusX, 0.5, displayMap.camera.focusZ]}
-            />
-          </Canvas>
+              <OrbitControls
+                enablePan
+                enableZoom
+                maxDistance={38}
+                minDistance={8}
+                minAzimuthAngle={displayMap.camera.yaw - 1.7}
+                maxAzimuthAngle={displayMap.camera.yaw + 1.7}
+                minPolarAngle={0.35}
+                maxPolarAngle={1.35}
+                target={[displayMap.camera.focusX, 0.5, displayMap.camera.focusZ]}
+              />
+            </Canvas>
+          ) : (
+            <div className="flex h-full items-center justify-center text-xs font-mono uppercase tracking-[0.25em] text-white/45">Preparing renderer...</div>
+          )}
         </div>
 
         <div className="w-full border-t border-white/10 bg-black/30 p-4">
