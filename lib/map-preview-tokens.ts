@@ -35,7 +35,6 @@ export function buildPreviewNpcMapTokens({
           id: character.id,
           label: character.name,
           shortLabel: getTokenInitials(character.name),
-          image: character.image,
           x: slot.x,
           y: slot.y,
           z: slot.z,
