@@ -441,22 +441,22 @@ function SceneBackdrop({
 
       {map.sceneKit === "city_gate" ? (
         <>
-          <RoundedBox args={[3.4, 7.4, 3]} radius={0.12} smoothness={3} position={[-width * 0.39, 3.05, backZ + 1.08]} castShadow receiveShadow>
+          <RoundedBox args={[2.9, 7.2, 2.7]} radius={0.12} smoothness={3} position={[-2.95, 2.98, backZ + 1.08]} castShadow receiveShadow>
             <meshStandardMaterial color="#f2ece3" roughness={0.9} map={textures?.stone} />
           </RoundedBox>
-          <RoundedBox args={[3.4, 7.4, 3]} radius={0.12} smoothness={3} position={[width * 0.39, 3.05, backZ + 1.08]} castShadow receiveShadow>
+          <RoundedBox args={[2.9, 7.2, 2.7]} radius={0.12} smoothness={3} position={[2.95, 2.98, backZ + 1.08]} castShadow receiveShadow>
             <meshStandardMaterial color="#f2ece3" roughness={0.9} map={textures?.stone} />
           </RoundedBox>
-          <RoundedBox args={[1.65, 6.2, 2]} radius={0.08} smoothness={3} position={[-width * 0.165, 2.7, backZ + 1.22]} castShadow receiveShadow>
+          <RoundedBox args={[1.3, 5.9, 1.8]} radius={0.08} smoothness={3} position={[-1.45, 2.55, backZ + 1.2]} castShadow receiveShadow>
             <meshStandardMaterial color="#ece3d6" roughness={0.88} map={textures?.stone} />
           </RoundedBox>
-          <RoundedBox args={[1.65, 6.2, 2]} radius={0.08} smoothness={3} position={[width * 0.165, 2.7, backZ + 1.22]} castShadow receiveShadow>
+          <RoundedBox args={[1.3, 5.9, 1.8]} radius={0.08} smoothness={3} position={[1.45, 2.55, backZ + 1.2]} castShadow receiveShadow>
             <meshStandardMaterial color="#ece3d6" roughness={0.88} map={textures?.stone} />
           </RoundedBox>
-          <RoundedBox args={[width * 0.58, 2, 1.5]} radius={0.08} smoothness={3} position={[0, 4.82, backZ + 1.04]} castShadow receiveShadow>
+          <RoundedBox args={[6.8, 2, 1.42]} radius={0.08} smoothness={3} position={[0, 4.72, backZ + 1.04]} castShadow receiveShadow>
             <meshStandardMaterial color="#faf4eb" roughness={0.84} map={textures?.stone} />
           </RoundedBox>
-          <RoundedBox args={[width * 0.24, 1.15, 1.2]} radius={0.07} smoothness={3} position={[0, 6.18, backZ + 1.02]} castShadow receiveShadow>
+          <RoundedBox args={[2.1, 1.12, 1.08]} radius={0.07} smoothness={3} position={[0, 5.98, backZ + 1.02]} castShadow receiveShadow>
             <meshStandardMaterial color="#e4dacc" roughness={0.86} map={textures?.stone} />
           </RoundedBox>
           <mesh position={[0, 2.55, backZ + 1.3]} rotation={[Math.PI / 2, 0, 0]} castShadow receiveShadow>
@@ -473,25 +473,25 @@ function SceneBackdrop({
               <meshStandardMaterial color="#604838" roughness={0.86} map={textures?.wood} />
             </mesh>
           ))}
-          {[-2.1, 0, 2.1].map((offset) => (
+          {[-1.7, 0, 1.7].map((offset) => (
             <mesh key={offset} position={[offset, 2.24, backZ + 1.14]} castShadow receiveShadow>
               <planeGeometry args={[0.78, offset === 0 ? 2.35 : 2]} />
               <meshStandardMaterial color="#b66d63" side={THREE.DoubleSide} roughness={0.86} map={textures?.cloth} />
             </mesh>
           ))}
-          {[-1.72, -0.86, 0, 0.86, 1.72].map((offset) => (
-            <RoundedBox key={offset} args={[0.48, 0.48, 0.62]} radius={0.04} smoothness={2} position={[offset * width * 0.15, 5.22, backZ + 1.04]} castShadow receiveShadow>
+          {[-1.55, -0.78, 0, 0.78, 1.55].map((offset) => (
+            <RoundedBox key={offset} args={[0.46, 0.46, 0.58]} radius={0.04} smoothness={2} position={[offset, 5.08, backZ + 1.04]} castShadow receiveShadow>
               <meshStandardMaterial color={shiftColor(wallColor, 0.08)} roughness={0.84} map={textures?.stone} />
             </RoundedBox>
           ))}
           {[-1, 1].flatMap((side) =>
-            [-1.05, 1.05].map((zOffset) => (
+            [-0.92, 0.92].map((zOffset) => (
               <RoundedBox
                 key={`${side}:${zOffset}`}
-                args={[0.42, 5.3, 0.42]}
+                args={[0.38, 5.05, 0.38]}
                 radius={0.04}
                 smoothness={2}
-                position={[side * (width * 0.39 + 1.28), 2.42, backZ + 1.12 + zOffset]}
+                position={[side * 4.15, 2.36, backZ + 1.1 + zOffset]}
                 castShadow
                 receiveShadow
               >
