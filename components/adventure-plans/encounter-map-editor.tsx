@@ -80,7 +80,7 @@ export function EncounterMapEditor({
   const [isGenerating, setIsGenerating] = React.useState(false)
   const [isDraftingPrompt, setIsDraftingPrompt] = React.useState(false)
   const [copySourceId, setCopySourceId] = React.useState("")
-  const [renderMode, setRenderMode] = React.useState<MiniaturesMapRenderMode>("textured")
+  const [renderMode, setRenderMode] = React.useState<MiniaturesMapRenderMode>("full")
   const requestKeyRef = React.useRef<string | null>(null)
 
   const map = encounter.map3d
