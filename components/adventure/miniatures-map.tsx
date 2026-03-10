@@ -1940,8 +1940,6 @@ export default function MiniaturesMap({
                 enableZoom
                 maxDistance={38}
                 minDistance={12}
-                minAzimuthAngle={displayMap.camera.yaw - 1.7}
-                maxAzimuthAngle={displayMap.camera.yaw + 1.7}
                 minPolarAngle={0.44}
                 maxPolarAngle={1.2}
                 target={orbitTarget}
