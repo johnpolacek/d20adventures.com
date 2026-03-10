@@ -439,7 +439,48 @@ function SceneBackdrop({
         <meshStandardMaterial color={shiftColor(palette.backdrop, 0.06)} roughness={1} />
       </mesh>
 
-      {map.sceneKit === "checkpoint" ? (
+      {map.sceneKit === "city_gate" ? (
+        <>
+          <RoundedBox args={[3.2, 6.8, 2.8]} radius={0.12} smoothness={3} position={[-width * 0.38, 2.85, backZ + 1.05]} castShadow receiveShadow>
+            <meshStandardMaterial color="#f2ece3" roughness={0.9} map={textures?.stone} />
+          </RoundedBox>
+          <RoundedBox args={[3.2, 6.8, 2.8]} radius={0.12} smoothness={3} position={[width * 0.38, 2.85, backZ + 1.05]} castShadow receiveShadow>
+            <meshStandardMaterial color="#f2ece3" roughness={0.9} map={textures?.stone} />
+          </RoundedBox>
+          <RoundedBox args={[2.2, 5.6, 2.2]} radius={0.1} smoothness={3} position={[-width * 0.12, 2.35, backZ + 1.18]} castShadow receiveShadow>
+            <meshStandardMaterial color="#ece3d6" roughness={0.88} map={textures?.stone} />
+          </RoundedBox>
+          <RoundedBox args={[2.2, 5.6, 2.2]} radius={0.1} smoothness={3} position={[width * 0.12, 2.35, backZ + 1.18]} castShadow receiveShadow>
+            <meshStandardMaterial color="#ece3d6" roughness={0.88} map={textures?.stone} />
+          </RoundedBox>
+          <RoundedBox args={[width * 0.5, 1.6, 1.35]} radius={0.08} smoothness={3} position={[0, 4.3, backZ + 1.06]} castShadow receiveShadow>
+            <meshStandardMaterial color="#faf4eb" roughness={0.84} map={textures?.stone} />
+          </RoundedBox>
+          <RoundedBox args={[width * 0.2, 3.5, 0.85]} radius={0.06} smoothness={2} position={[0, 1.75, backZ + 1.54]} castShadow receiveShadow>
+            <meshStandardMaterial color={shiftColor(palette.edge, -0.04)} roughness={0.96} />
+          </RoundedBox>
+          {[-1.45, -0.55, 0.55, 1.45].map((offset) => (
+            <RoundedBox key={offset} args={[0.48, 0.48, 0.62]} radius={0.04} smoothness={2} position={[offset * width * 0.15, 5.22, backZ + 1.04]} castShadow receiveShadow>
+              <meshStandardMaterial color={shiftColor(wallColor, 0.08)} roughness={0.84} map={textures?.stone} />
+            </RoundedBox>
+          ))}
+          {[-1, 1].flatMap((side) =>
+            [-0.9, 0.9].map((zOffset) => (
+              <RoundedBox
+                key={`${side}:${zOffset}`}
+                args={[0.36, 4.8, 0.38]}
+                radius={0.04}
+                smoothness={2}
+                position={[side * (width * 0.38 + 1.18), 2.18, backZ + 1.12 + zOffset]}
+                castShadow
+                receiveShadow
+              >
+                <meshStandardMaterial color="#e6dfd5" roughness={0.9} map={textures?.stone} />
+              </RoundedBox>
+            ))
+          )}
+        </>
+      ) : map.sceneKit === "checkpoint" ? (
         <>
           <RoundedBox args={[2.7, 6.2, 2.2]} radius={0.12} smoothness={3} position={[-width * 0.34, 2.55, backZ + 1.15]} castShadow receiveShadow>
             <meshStandardMaterial color="#f2ece3" roughness={0.9} map={textures?.stone} />
@@ -557,6 +598,10 @@ function TerrainMesh({
   const isCheckpointTower = sceneKit === "checkpoint" && (item.id.includes("checkpoint-tower") || item.label?.toLowerCase().includes("tower"))
   const isCheckpointBridge = sceneKit === "checkpoint" && item.id.includes("checkpoint-bridge")
   const isCheckpointPlatform = sceneKit === "checkpoint" && item.id.includes("checkpoint-platform")
+  const isCityGateTower = sceneKit === "city_gate" && (item.id.includes("city-gate-tower") || item.id.includes("city-gate-arch"))
+  const isCityGateBridge = sceneKit === "city_gate" && item.id.includes("city-gate-bridge")
+  const isCityGatePlatform = sceneKit === "city_gate" && item.id.includes("city-gate-platform")
+  const isCityGateMarketPad = sceneKit === "city_gate" && item.id.includes("city-gate-market")
 
   if (item.kind === "water") {
     return (
@@ -589,6 +634,32 @@ function TerrainMesh({
   }
 
   if (item.kind === "dais") {
+    if (isCityGatePlatform) {
+      return (
+        <group position={[item.x, item.y, item.z]} rotation={[0, item.rotation, 0]}>
+          <RoundedBox args={[item.width, item.height * 0.6, item.depth]} radius={0.08} smoothness={3} position={[0, item.height * 0.3, 0]} castShadow receiveShadow>
+            <meshStandardMaterial color="#efe6d8" roughness={0.9} map={stoneTexture} />
+            <Edges scale={1.004} color={outline} />
+          </RoundedBox>
+          <RoundedBox
+            args={[Math.max(item.width - 0.24, 0.45), item.height * 0.16, Math.max(item.depth - 0.24, 0.45)]}
+            radius={0.05}
+            smoothness={2}
+            position={[0, item.height * 0.72, 0]}
+            castShadow
+            receiveShadow
+          >
+            <meshStandardMaterial color="#faf5ec" roughness={0.82} map={stoneTexture} />
+          </RoundedBox>
+          {[-0.36, 0.36].map((side) => (
+            <RoundedBox key={side} args={[0.22, 0.22, 0.48]} radius={0.03} smoothness={2} position={[side * item.width, item.height * 0.76, 0]} castShadow receiveShadow>
+              <meshStandardMaterial color="#ddd4c8" roughness={0.86} map={stoneTexture} />
+            </RoundedBox>
+          ))}
+        </group>
+      )
+    }
+
     if (isCheckpointPlatform) {
       return (
         <group position={[item.x, item.y, item.z]} rotation={[0, item.rotation, 0]}>
@@ -649,6 +720,46 @@ function TerrainMesh({
   }
 
   if (item.kind === "wall") {
+    if (isCityGateTower) {
+      return (
+        <group position={[item.x, item.y, item.z]} rotation={[0, item.rotation, 0]}>
+          <RoundedBox args={[item.width + 0.2, 0.34, item.depth + 0.2]} radius={0.08} smoothness={3} position={[0, 0.17, 0]} castShadow receiveShadow>
+            <meshStandardMaterial color="#e7e0d6" roughness={0.9} map={stoneTexture} />
+          </RoundedBox>
+          <RoundedBox args={[item.width, item.height, item.depth]} radius={0.08} smoothness={3} position={[0, item.height / 2, 0]} castShadow receiveShadow>
+            <meshStandardMaterial color="#f5efe7" roughness={0.84} map={stoneTexture} />
+            <Edges scale={1.004} color={outline} />
+          </RoundedBox>
+          {[-1, 1].flatMap((side) =>
+            [-1, 1].map((depthSide) => (
+              <RoundedBox
+                key={`${side}:${depthSide}`}
+                args={[0.28, item.height + 0.3, 0.28]}
+                radius={0.04}
+                smoothness={2}
+                position={[side * (item.width / 2 - 0.22), item.height / 2 + 0.05, depthSide * (item.depth / 2 - 0.22)]}
+                castShadow
+                receiveShadow
+              >
+                <meshStandardMaterial color="#ddd4c8" roughness={0.88} map={stoneTexture} />
+              </RoundedBox>
+            ))
+          )}
+          {[-0.55, 0, 0.55].map((offset) => (
+            <RoundedBox key={offset} args={[0.38, 0.26, item.depth + 0.24]} radius={0.04} smoothness={2} position={[offset * item.width, item.height + 0.22, 0]} castShadow receiveShadow>
+              <meshStandardMaterial color="#d2c7b9" roughness={0.84} map={stoneTexture} />
+            </RoundedBox>
+          ))}
+          {item.id.includes("arch") ? (
+            <mesh position={[0, 1.24, item.depth / 2 + 0.02]} castShadow receiveShadow>
+              <boxGeometry args={[item.width * 0.44, 2.2, 0.08]} />
+              <meshStandardMaterial color="#594536" roughness={0.88} map={textures?.wood} />
+            </mesh>
+          ) : null}
+        </group>
+      )
+    }
+
     if (isCheckpointTower) {
       return (
         <group position={[item.x, item.y, item.z]} rotation={[0, item.rotation, 0]}>
@@ -744,6 +855,44 @@ function TerrainMesh({
   if (item.kind === "ramp") {
     const stepDepth = item.depth / 4
 
+    if (isCityGateBridge) {
+      const plankCount = 6
+      return (
+        <group position={[item.x, item.y, item.z]} rotation={[0, item.rotation, 0]}>
+          {[0, 1, 2, 3].map((step) => (
+            <RoundedBox
+              key={step}
+              args={[item.width, Math.max(item.height / 4, 0.1), stepDepth + 0.05]}
+              radius={0.04}
+              smoothness={2}
+              position={[0, (step + 0.5) * (item.height / 4), -item.depth / 2 + stepDepth * (step + 0.5)]}
+              castShadow
+              receiveShadow
+            >
+              <meshStandardMaterial color="#d0c2ad" roughness={0.82} map={stoneTexture} />
+              <Edges scale={1.004} color={shiftColor("#7b746a", -0.12)} />
+            </RoundedBox>
+          ))}
+          {Array.from({ length: plankCount }, (_, index) => {
+            const z = -item.depth / 2 + 0.18 + (index / (plankCount - 1)) * (item.depth - 0.36)
+            const y = 0.16 + (index / (plankCount - 1)) * (item.height - 0.14)
+            return (
+              <mesh key={index} position={[0, y, z]} castShadow receiveShadow>
+                <boxGeometry args={[item.width - 0.2, 0.04, 0.16]} />
+                <meshStandardMaterial color="#efeadf" roughness={0.82} map={stoneTexture} />
+              </mesh>
+            )
+          })}
+          {[-1, 1].map((side) => (
+            <mesh key={side} position={[side * (item.width / 2 - 0.16), item.height * 0.52, 0]} rotation={[0.22, 0, 0]} castShadow receiveShadow>
+              <boxGeometry args={[0.1, item.height + 0.24, 0.1]} />
+              <meshStandardMaterial color="#7a746b" roughness={0.88} />
+            </mesh>
+          ))}
+        </group>
+      )
+    }
+
     if (isCheckpointBridge) {
       const plankCount = 5
       return (
@@ -838,6 +987,9 @@ function PropMesh({
   const groundTexture = getSurfaceTexture(textures, theme)
   const isCheckpointBanner = sceneKit === "checkpoint" && item.id.includes("checkpoint-banner")
   const isCheckpointTable = sceneKit === "checkpoint" && item.id.includes("checkpoint-table")
+  const isCityGateBanner = sceneKit === "city_gate" && item.id.includes("city-gate-banner")
+  const isCityGateTable = sceneKit === "city_gate" && item.id.includes("city-gate-guard-table")
+  const isCityGateTorch = sceneKit === "city_gate" && item.id.includes("city-gate-torch")
   const renderCrate = (offset: [number, number, number], scale: number, tone = "#f0c993") => (
     <group position={offset}>
       <RoundedBox args={[0.8 * scale, 0.8 * scale, 0.8 * scale]} radius={0.04} smoothness={2} castShadow receiveShadow>
@@ -884,6 +1036,30 @@ function PropMesh({
         </group>
       )
     case "torch":
+      if (isCityGateTorch) {
+        return (
+          <group position={position} rotation={[0, item.rotation, 0]}>
+            <mesh position={[0, -0.46 * item.scale, 0]} castShadow receiveShadow>
+              <cylinderGeometry args={[0.24 * item.scale, 0.28 * item.scale, 0.16 * item.scale, 14]} />
+              <meshStandardMaterial color="#585046" roughness={0.7} metalness={0.18} map={textures?.metal} />
+            </mesh>
+            <mesh castShadow>
+              <cylinderGeometry args={[0.08 * item.scale, 0.08 * item.scale, 1.35 * item.scale, 10]} />
+              <meshStandardMaterial color="#5f4330" roughness={0.7} metalness={0.16} map={textures?.metal} />
+            </mesh>
+            <mesh position={[0, 0.72 * item.scale, 0]} castShadow>
+              <cylinderGeometry args={[0.18 * item.scale, 0.24 * item.scale, 0.2 * item.scale, 12]} />
+              <meshStandardMaterial color="#3a2a1b" roughness={0.46} metalness={0.2} />
+            </mesh>
+            <mesh position={[0, 0.95 * item.scale, 0]} castShadow>
+              <sphereGeometry args={[0.19 * item.scale, 10, 10]} />
+              <meshPhysicalMaterial emissive="#ff9e00" emissiveIntensity={2.7} color="#ffd166" toneMapped={false} clearcoat={0.5} roughness={0.18} />
+            </mesh>
+            <pointLight position={[0, 1 * item.scale, 0]} intensity={3.3} distance={6.6} decay={2} color="#ffb703" />
+          </group>
+        )
+      }
+
       return (
         <group position={position} rotation={[0, item.rotation, 0]}>
           <mesh position={[0, -0.48 * item.scale, 0]} castShadow receiveShadow>
@@ -944,6 +1120,40 @@ function PropMesh({
         </group>
       )
     case "table":
+      if (isCityGateTable) {
+        return (
+          <group position={position} rotation={[0, item.rotation, 0]}>
+            <mesh position={[0, 0.56 * item.scale, 0]} castShadow receiveShadow>
+              <boxGeometry args={[1.42 * item.scale, 0.18 * item.scale, 0.84 * item.scale]} />
+              <meshStandardMaterial color="#d8a36f" roughness={0.74} map={textures?.wood} />
+            </mesh>
+            <mesh position={[0, 0.68 * item.scale, 0]} castShadow receiveShadow>
+              <boxGeometry args={[0.92 * item.scale, 0.03 * item.scale, 0.5 * item.scale]} />
+              <meshStandardMaterial color="#ead9b1" roughness={0.76} map={textures?.cloth} />
+            </mesh>
+            {[
+              [-0.54, 0.22, -0.29],
+              [0.54, 0.22, -0.29],
+              [-0.54, 0.22, 0.29],
+              [0.54, 0.22, 0.29],
+            ].map((leg) => (
+              <mesh key={leg.join(":")} position={[leg[0] * item.scale, leg[1] * item.scale, leg[2] * item.scale]} castShadow>
+                <boxGeometry args={[0.12 * item.scale, 0.5 * item.scale, 0.12 * item.scale]} />
+                <meshStandardMaterial color="#c79359" roughness={0.8} map={textures?.wood} />
+              </mesh>
+            ))}
+            <mesh position={[-0.2 * item.scale, 0.76 * item.scale, 0]} rotation={[0, 0.08, -0.08]} castShadow>
+              <boxGeometry args={[0.22 * item.scale, 0.04 * item.scale, 0.44 * item.scale]} />
+              <meshStandardMaterial color="#f8f3ea" roughness={0.72} />
+            </mesh>
+            <mesh position={[0.3 * item.scale, 0.72 * item.scale, -0.06 * item.scale]} castShadow>
+              <boxGeometry args={[0.2 * item.scale, 0.18 * item.scale, 0.2 * item.scale]} />
+              <meshStandardMaterial color="#5e4638" roughness={0.82} />
+            </mesh>
+          </group>
+        )
+      }
+
       if (isCheckpointTable) {
         return (
           <group position={position} rotation={[0, item.rotation, 0]}>
@@ -1017,6 +1227,33 @@ function PropMesh({
         </group>
       )
     case "banner":
+      if (isCityGateBanner) {
+        return (
+          <group position={position} rotation={[0, item.rotation, 0]}>
+            <mesh position={[0, -0.16 * item.scale, 0]} castShadow receiveShadow>
+              <cylinderGeometry args={[0.28 * item.scale, 0.32 * item.scale, 0.16 * item.scale, 12]} />
+              <meshStandardMaterial color="#5b5148" />
+            </mesh>
+            <mesh position={[0, 0.72 * item.scale, 0]} castShadow>
+              <cylinderGeometry args={[0.05 * item.scale, 0.05 * item.scale, 2.1 * item.scale, 8]} />
+              <meshStandardMaterial color="#5a4638" roughness={0.82} map={textures?.wood} />
+            </mesh>
+            <mesh position={[0.26 * item.scale, 1.72 * item.scale, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+              <cylinderGeometry args={[0.03 * item.scale, 0.03 * item.scale, 0.56 * item.scale, 8]} />
+              <meshStandardMaterial color="#5a4638" roughness={0.82} map={textures?.wood} />
+            </mesh>
+            <mesh position={[0.34 * item.scale, 1.08 * item.scale, 0]} castShadow>
+              <planeGeometry args={[0.68 * item.scale, 1.24 * item.scale]} />
+              <meshStandardMaterial color="#b56b62" side={THREE.DoubleSide} roughness={0.84} map={textures?.cloth} />
+            </mesh>
+            <mesh position={[0.34 * item.scale, 1.1 * item.scale, 0.02]} castShadow receiveShadow>
+              <boxGeometry args={[0.16 * item.scale, 0.18 * item.scale, 0.04 * item.scale]} />
+              <meshStandardMaterial color="#784c2c" roughness={0.78} />
+            </mesh>
+          </group>
+        )
+      }
+
       if (isCheckpointBanner) {
         return (
           <group position={position} rotation={[0, item.rotation, 0]}>

@@ -10,6 +10,8 @@ function buildSceneKitGuidance(sceneKit: Encounter3DSceneKit) {
   switch (sceneKit) {
     case "checkpoint":
       return "Target a fortified checkpoint with flanking gate structures, an inspection platform, cargo or barricade clusters, and readable approach lanes."
+    case "city_gate":
+      return "Target a monumental city-gate entrance with a dominant central arch, flanking towers, banners, gate doors, and market or cargo dressing around the approach."
     case "courtyard":
       return "Target a formal courtyard with a raised rear dais, partial colonnades or flanking structures, and cover clusters that keep the center playable."
     case "ruins":
@@ -82,7 +84,7 @@ Requirements:
 - Include enough party token slots for up to ${args.maxPartySize} party members when the encounter supports combat or positioning.
 - Include NPC token slots for any explicitly mentioned encounter NPC ids.
 - Keep prompts and map edits grounded in the encounter text.
-- Set "sceneKit" to the best fit from: generic, checkpoint, courtyard, ruins, shrine, camp, road, crypt, cavern.
+- Set "sceneKit" to the best fit from: generic, checkpoint, city_gate, courtyard, ruins, shrine, camp, road, crypt, cavern.
 - Current best-fit scene kit: ${args.sceneKit} (${formatEncounterSceneKit(args.sceneKit)}).
 - ${buildSceneKitGuidance(args.sceneKit)}
 

@@ -100,7 +100,7 @@ const pitchAngleSchema = z.preprocess(normalizeAngleValue, z.number().min(0.2).m
 export const encounter3dThemeSchema = z.enum(["stone", "dirt", "wood", "cavern", "sand", "snow"])
 export type Encounter3DTheme = z.infer<typeof encounter3dThemeSchema>
 
-export const encounter3dSceneKitSchema = z.enum(["generic", "checkpoint", "courtyard", "ruins", "shrine", "camp", "road", "crypt", "cavern"])
+export const encounter3dSceneKitSchema = z.enum(["generic", "checkpoint", "city_gate", "courtyard", "ruins", "shrine", "camp", "road", "crypt", "cavern"])
 export type Encounter3DSceneKit = z.infer<typeof encounter3dSceneKitSchema>
 
 export const encounter3dBoardSchema = z.object({
