@@ -9,6 +9,8 @@ import type { TurnCharacter } from "@/types/adventure"
 import * as THREE from "three"
 import { useEffect, useId, useMemo, useState } from "react"
 
+export type MiniaturesMapRenderMode = "safe" | "geometry" | "textured" | "full"
+
 export interface MapMiniToken {
   id: string
   label: string
@@ -130,10 +132,12 @@ function MiniaturesMapDiagnostics({
   mapId,
   title,
   tokens,
+  renderMode,
 }: {
   mapId: string
   title?: string
   tokens: MapMiniToken[]
+  renderMode: MiniaturesMapRenderMode
 }) {
   const { gl, scene } = useThree()
 
@@ -153,6 +157,7 @@ function MiniaturesMapDiagnostics({
             maxCubemapSize: gl.capabilities.maxCubemapSize,
             pixelRatio: window.devicePixelRatio,
             sceneChildren: scene.children.length,
+            renderMode,
           },
           null,
           2
@@ -162,7 +167,7 @@ function MiniaturesMapDiagnostics({
     })
 
     return () => cancelAnimationFrame(frame)
-  }, [gl, mapId, scene.children.length, title, tokens.length])
+  }, [gl, mapId, renderMode, scene.children.length, title, tokens.length])
 
   return null
 }
@@ -1095,7 +1100,7 @@ export default function MiniaturesMap({
   tokens?: MapMiniToken[]
   title?: string
   className?: string
-  renderMode?: "full" | "safe"
+  renderMode?: MiniaturesMapRenderMode
 }) {
   const mapDebugId = useId()
   const [selectedToken, setSelectedToken] = useState<MapMiniToken | null>(tokens[0] ?? null)
@@ -1104,9 +1109,12 @@ export default function MiniaturesMap({
   const [canvasElement, setCanvasElement] = useState<HTMLCanvasElement | null>(null)
   const [shouldRenderCanvas, setShouldRenderCanvas] = useState(false)
   const displayMap = useMemo(() => enhanceEncounterMap(map), [map])
+  const usesPremiumGeometry = renderMode !== "safe"
+  const usesTextures = renderMode === "textured" || renderMode === "full"
+  const usesFullLighting = renderMode === "full"
   const palette = useMemo(() => getThemePalette(displayMap.board.theme), [displayMap.board.theme])
   const textures = useMemo(() => {
-    if (renderMode === "safe") {
+    if (!usesTextures) {
       return null
     }
     if (typeof document === "undefined") {
@@ -1114,7 +1122,7 @@ export default function MiniaturesMap({
     }
 
     return buildSceneTextures(palette)
-  }, [displayMap.board.theme, palette, renderMode])
+  }, [displayMap.board.theme, palette, usesTextures])
   const cameraPosition = useMemo<[number, number, number]>(
     () => [
       displayMap.camera.focusX + Math.cos(displayMap.camera.yaw) * displayMap.camera.distance,
@@ -1185,6 +1193,7 @@ export default function MiniaturesMap({
         terrain: displayMap.terrain.length,
         props: displayMap.props.length,
         zones: displayMap.zones.length,
+        renderMode,
       })
     }
 
@@ -1200,7 +1209,7 @@ export default function MiniaturesMap({
       canvasElement.removeEventListener("webglcontextlost", handleContextLost)
       canvasElement.removeEventListener("webglcontextrestored", handleContextRestored)
     }
-  }, [canvasElement, displayMap.props.length, displayMap.summary, displayMap.terrain.length, displayMap.zones.length, mapDebugId, title, tokens.length])
+  }, [canvasElement, displayMap.props.length, displayMap.summary, displayMap.terrain.length, displayMap.zones.length, mapDebugId, renderMode, title, tokens.length])
 
   useEffect(() => {
     console.groupCollapsed(`[MiniaturesMap:${mapDebugId}] mount`)
@@ -1214,6 +1223,7 @@ export default function MiniaturesMap({
           zones: displayMap.zones.length,
           partySlots: displayMap.tokenSlots.party.length,
           npcSlots: displayMap.tokenSlots.npc.length,
+          renderMode,
         },
         null,
         2
@@ -1224,7 +1234,7 @@ export default function MiniaturesMap({
     return () => {
       console.info(`[MiniaturesMap:${mapDebugId}] unmount`)
     }
-  }, [displayMap.props.length, displayMap.summary, displayMap.terrain.length, displayMap.tokenSlots.npc.length, displayMap.tokenSlots.party.length, displayMap.zones.length, mapDebugId, title, tokens.length])
+  }, [displayMap.props.length, displayMap.summary, displayMap.terrain.length, displayMap.tokenSlots.npc.length, displayMap.tokenSlots.party.length, displayMap.zones.length, mapDebugId, renderMode, title, tokens.length])
 
   return (
     <div className={cn("overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-2xl", className)}>
@@ -1245,8 +1255,8 @@ export default function MiniaturesMap({
             <Canvas
               frameloop="demand"
               camera={canvasCameraProps}
-              shadows={renderMode === "full"}
-              dpr={renderMode === "full" ? [1, 1.25] : 1}
+              shadows={usesFullLighting}
+              dpr={usesFullLighting ? [1, 1.25] : 1}
               gl={canvasGlProps}
               onCreated={({ gl }) => {
                 gl.domElement.dataset.miniaturesCanvasId = mapDebugId
@@ -1258,25 +1268,26 @@ export default function MiniaturesMap({
                       canvasId: mapDebugId,
                       width: gl.domElement.width,
                       height: gl.domElement.height,
+                      renderMode,
                     },
                     null,
                     2
                   )}`
                 )
-                gl.shadowMap.enabled = renderMode === "full"
+                gl.shadowMap.enabled = usesFullLighting
                 gl.shadowMap.type = THREE.PCFSoftShadowMap
                 gl.toneMappingExposure = 1.2
               }}
             >
-              <MiniaturesMapDiagnostics mapId={mapDebugId} title={title || displayMap.summary} tokens={tokens} />
+              <MiniaturesMapDiagnostics mapId={mapDebugId} title={title || displayMap.summary} tokens={tokens} renderMode={renderMode} />
               <color attach="background" args={[shiftColor(palette.haze, 0.08)]} />
-              <hemisphereLight intensity={renderMode === "full" ? 0.9 : 0.7} groundColor={shiftColor(palette.floor, -0.18)} color="#f8f3ea" />
-              <ambientLight intensity={renderMode === "full" ? 0.75 : 1} color="#fff6e7" />
+              <hemisphereLight intensity={usesFullLighting ? 0.9 : 0.7} groundColor={shiftColor(palette.floor, -0.18)} color="#f8f3ea" />
+              <ambientLight intensity={usesFullLighting ? 0.75 : 1} color="#fff6e7" />
               <directionalLight
                 position={[10, 16, 7]}
-                intensity={renderMode === "full" ? 3 : 1.4}
+                intensity={usesFullLighting ? 3 : 1.4}
                 color="#fff4de"
-                castShadow={renderMode === "full"}
+                castShadow={usesFullLighting}
                 shadow-mapSize-width={1024}
                 shadow-mapSize-height={1024}
                 shadow-camera-near={0.5}
@@ -1288,13 +1299,13 @@ export default function MiniaturesMap({
                 shadow-bias={-0.00012}
                 shadow-normalBias={0.02}
               />
-              {renderMode === "full" ? <directionalLight position={[-8, 10, -7]} intensity={1.2} color="#a9c4e2" /> : null}
-              {renderMode === "full" ? <directionalLight position={[0, 6, -10]} intensity={0.8} color="#fff2d6" /> : null}
-              {renderMode === "full" ? <spotLight position={[-6, 14, 10]} angle={0.5} penumbra={0.65} intensity={1.6} color="#ffd7a3" /> : null}
-              {renderMode === "full" ? <fog attach="fog" args={[shiftColor(palette.haze, 0.05), 18, 48]} /> : null}
+              {usesPremiumGeometry ? <directionalLight position={[-8, 10, -7]} intensity={usesFullLighting ? 1.2 : 0.7} color="#a9c4e2" /> : null}
+              {usesPremiumGeometry ? <directionalLight position={[0, 6, -10]} intensity={usesFullLighting ? 0.8 : 0.45} color="#fff2d6" /> : null}
+              {usesFullLighting ? <spotLight position={[-6, 14, 10]} angle={0.5} penumbra={0.65} intensity={1.6} color="#ffd7a3" /> : null}
+              {usesFullLighting ? <fog attach="fog" args={[shiftColor(palette.haze, 0.05), 18, 48]} /> : null}
 
-              {renderMode === "full" ? <SceneBackdrop map={displayMap} palette={palette} textures={textures} /> : null}
-              {renderMode === "full" ? <DisplayBase map={displayMap} palette={palette} textures={textures} /> : <SafeDisplayBase map={displayMap} palette={palette} />}
+              {usesPremiumGeometry ? <SceneBackdrop map={displayMap} palette={palette} textures={textures} /> : null}
+              {usesPremiumGeometry ? <DisplayBase map={displayMap} palette={palette} textures={textures} /> : <SafeDisplayBase map={displayMap} palette={palette} />}
 
               <Grid
                 position={[0, 0.185, 0]}
@@ -1318,7 +1329,7 @@ export default function MiniaturesMap({
               ))}
 
               {displayMap.terrain.map((terrain) => (
-                renderMode === "full" ? (
+                usesPremiumGeometry ? (
                   <TerrainMesh key={terrain.id} item={terrain} theme={displayMap.board.theme} textures={textures} />
                 ) : (
                   <SafeTerrainMesh key={terrain.id} item={terrain} />
@@ -1326,11 +1337,11 @@ export default function MiniaturesMap({
               ))}
 
               {displayMap.props.map((prop) => (
-                renderMode === "full" ? <PropMesh key={prop.id} item={prop} theme={displayMap.board.theme} textures={textures} /> : <SafePropMesh key={prop.id} item={prop} />
+                usesPremiumGeometry ? <PropMesh key={prop.id} item={prop} theme={displayMap.board.theme} textures={textures} /> : <SafePropMesh key={prop.id} item={prop} />
               ))}
 
               {tokens.map((token) => (
-                renderMode === "full" ? <TokenMini key={token.id} token={token} onSelect={setSelectedToken} /> : <SafeTokenMini key={token.id} token={token} onSelect={setSelectedToken} />
+                usesPremiumGeometry ? <TokenMini key={token.id} token={token} onSelect={setSelectedToken} /> : <SafeTokenMini key={token.id} token={token} onSelect={setSelectedToken} />
               ))}
 
               <OrbitControls
