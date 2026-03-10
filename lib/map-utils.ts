@@ -333,13 +333,15 @@ function createSceneKitTerrain(sceneKit: Encounter3DSceneKit, theme: Encounter3D
       ]
     case "city_gate":
       return [
-        { id: "auto-kit-city-gate-tower-left", kind: "wall", x: -4.2, z: backline + 0.1, y: 0, width: 2.6, depth: 3.4, height: 4.8, rotation: 0, color: palette.edge, label: "Gate tower" },
-        { id: "auto-kit-city-gate-tower-right", kind: "wall", x: 4.2, z: backline + 0.1, y: 0, width: 2.6, depth: 3.4, height: 4.8, rotation: 0, color: palette.edge, label: "Gate tower" },
-        { id: "auto-kit-city-gate-bridge", kind: "ramp", x: 0, z: backline - 0.35, y: 0, width: 4.6, depth: 1.9, height: 1.2, rotation: 0, color: palette.floor, label: "Gate threshold" },
-        { id: "auto-kit-city-gate-platform-left", kind: "dais", x: -1.8, z: 0.65, y: 0, width: 1.8, depth: 1.1, height: 0.22, rotation: 0.06, color: palette.accent, label: "Guard dais" },
-        { id: "auto-kit-city-gate-platform-right", kind: "dais", x: 2.15, z: -0.12, y: 0, width: 1.9, depth: 1.15, height: 0.22, rotation: -0.04, color: palette.accent, label: "Guard dais" },
-        { id: "auto-kit-city-gate-market-left", kind: "platform", x: -3.2, z: 1.9, y: 0, width: 2.1, depth: 1.4, height: 0.16, rotation: 0.14, color: palette.rim, label: "Market edge" },
-        { id: "auto-kit-city-gate-market-right", kind: "platform", x: 3.1, z: -1.5, y: 0, width: 2.1, depth: 1.4, height: 0.16, rotation: -0.12, color: palette.rim, label: "Market edge" },
+        { id: "auto-kit-city-gate-tower-left", kind: "wall", x: -4.45, z: backline + 0.2, y: 0, width: 2.9, depth: 3.8, height: 5.3, rotation: 0, color: palette.edge, label: "Main gate tower" },
+        { id: "auto-kit-city-gate-tower-right", kind: "wall", x: 4.45, z: backline + 0.2, y: 0, width: 2.9, depth: 3.8, height: 5.3, rotation: 0, color: palette.edge, label: "Main gate tower" },
+        { id: "auto-kit-city-gate-buttress-left", kind: "wall", x: -2.1, z: backline + 0.65, y: 0, width: 1.55, depth: 2.45, height: 3.55, rotation: 0.02, color: palette.floor, label: "Gate buttress" },
+        { id: "auto-kit-city-gate-buttress-right", kind: "wall", x: 2.1, z: backline + 0.65, y: 0, width: 1.55, depth: 2.45, height: 3.55, rotation: -0.02, color: palette.floor, label: "Gate buttress" },
+        { id: "auto-kit-city-gate-bridge", kind: "ramp", x: 0, z: backline - 0.28, y: 0, width: 5.2, depth: 2.1, height: 1.25, rotation: 0, color: palette.floor, label: "Gate threshold" },
+        { id: "auto-kit-city-gate-platform-left", kind: "dais", x: -2.5, z: 0.15, y: 0, width: 1.95, depth: 1.2, height: 0.22, rotation: 0.04, color: palette.accent, label: "Guard dais" },
+        { id: "auto-kit-city-gate-platform-right", kind: "dais", x: 2.55, z: -0.05, y: 0, width: 1.95, depth: 1.2, height: 0.22, rotation: -0.04, color: palette.accent, label: "Guard dais" },
+        { id: "auto-kit-city-gate-market-left", kind: "platform", x: -3.75, z: 1.95, y: 0, width: 2.55, depth: 1.55, height: 0.16, rotation: 0.08, color: palette.rim, label: "Merchant pad" },
+        { id: "auto-kit-city-gate-market-right", kind: "platform", x: 3.65, z: 1.45, y: 0, width: 2.4, depth: 1.48, height: 0.16, rotation: -0.08, color: palette.rim, label: "Merchant pad" },
       ]
     case "courtyard":
       return [
@@ -410,19 +412,19 @@ function createSceneKitProps(sceneKit: Encounter3DSceneKit, theme: Encounter3DTh
       ]
     case "city_gate":
       return [
-        { id: "auto-kit-city-gate-banner-left", kind: "banner", x: -2.2, z: backline + 0.2, y: 0, scale: 1.18, rotation: 0.02, color: palette.accent, label: "Gate banner" },
-        { id: "auto-kit-city-gate-banner-right", kind: "banner", x: 2.2, z: backline + 0.2, y: 0, scale: 1.18, rotation: -0.02, color: palette.accent, label: "Gate banner" },
-        { id: "auto-kit-city-gate-banner-tower-left", kind: "banner", x: -4.2, z: backline + 1.2, y: 0, scale: 0.96, rotation: 0.06, color: palette.accent, label: "Tower standard" },
-        { id: "auto-kit-city-gate-banner-tower-right", kind: "banner", x: 4.2, z: backline + 1.1, y: 0, scale: 0.96, rotation: -0.06, color: palette.accent, label: "Tower standard" },
-        { id: "auto-kit-city-gate-guard-table", kind: "table", x: 2.2, z: 0.6, y: 0, scale: 1.02, rotation: 0.08, color: palette.rim, label: "Guard table" },
-        { id: "auto-kit-city-gate-wagon-left", kind: "wagon", x: -3.05, z: 1.7, y: 0, scale: 1.08, rotation: 0.12, color: palette.accent, label: "Merchant wagon" },
-        { id: "auto-kit-city-gate-stall-right", kind: "stall", x: 3.1, z: -1.35, y: 0, scale: 1.06, rotation: -0.12, color: palette.accent, label: "Market stall" },
-        { id: "auto-kit-city-gate-barrel-left", kind: "barrel", x: -2.2, z: 0.95, y: 0, scale: 0.82, rotation: 0.04, color: palette.rim, label: "Barrel stack" },
-        { id: "auto-kit-city-gate-barrel-right", kind: "barrel", x: 2.75, z: -0.78, y: 0, scale: 0.82, rotation: -0.08, color: palette.rim, label: "Barrel stack" },
-        { id: "auto-kit-city-gate-post-left", kind: "post", x: -1.2, z: 2.2, y: 0, scale: 0.9, rotation: 0, color: palette.rim, label: "Hitching post" },
-        { id: "auto-kit-city-gate-post-right", kind: "post", x: 1.4, z: 1.95, y: 0, scale: 0.9, rotation: 0, color: palette.rim, label: "Hitching post" },
-        { id: "auto-kit-city-gate-torch-left", kind: "torch", x: -1.3, z: 0.5, y: 0, scale: 0.96, rotation: 0, color: "#efc65b", label: "Gate torch" },
-        { id: "auto-kit-city-gate-torch-right", kind: "torch", x: 1.3, z: 0.45, y: 0, scale: 0.96, rotation: 0, color: "#efc65b", label: "Gate torch" },
+        { id: "auto-kit-city-gate-banner-left", kind: "banner", x: -1.95, z: backline + 0.25, y: 0, scale: 1.26, rotation: 0.02, color: palette.accent, label: "Gate banner" },
+        { id: "auto-kit-city-gate-banner-right", kind: "banner", x: 1.95, z: backline + 0.25, y: 0, scale: 1.26, rotation: -0.02, color: palette.accent, label: "Gate banner" },
+        { id: "auto-kit-city-gate-banner-tower-left", kind: "banner", x: -4.45, z: backline + 1.28, y: 0, scale: 1.02, rotation: 0.06, color: palette.accent, label: "Tower standard" },
+        { id: "auto-kit-city-gate-banner-tower-right", kind: "banner", x: 4.45, z: backline + 1.2, y: 0, scale: 1.02, rotation: -0.06, color: palette.accent, label: "Tower standard" },
+        { id: "auto-kit-city-gate-guard-table", kind: "table", x: 2.35, z: 0.3, y: 0, scale: 1.02, rotation: 0.06, color: palette.rim, label: "Customs table" },
+        { id: "auto-kit-city-gate-wagon-left", kind: "wagon", x: -3.65, z: 1.9, y: 0, scale: 1.12, rotation: 0.1, color: palette.accent, label: "Merchant wagon" },
+        { id: "auto-kit-city-gate-stall-right", kind: "stall", x: 3.55, z: 1.4, y: 0, scale: 1.12, rotation: -0.08, color: palette.accent, label: "Market stall" },
+        { id: "auto-kit-city-gate-barrel-left", kind: "barrel", x: -2.75, z: 0.72, y: 0, scale: 0.86, rotation: 0.08, color: palette.rim, label: "Barrel stack" },
+        { id: "auto-kit-city-gate-barrel-right", kind: "barrel", x: 2.95, z: 0.55, y: 0, scale: 0.86, rotation: -0.08, color: palette.rim, label: "Barrel stack" },
+        { id: "auto-kit-city-gate-post-left", kind: "post", x: -2.1, z: 2.45, y: 0, scale: 0.94, rotation: 0, color: palette.rim, label: "Hitching post" },
+        { id: "auto-kit-city-gate-post-right", kind: "post", x: 1.9, z: 2.15, y: 0, scale: 0.94, rotation: 0, color: palette.rim, label: "Hitching post" },
+        { id: "auto-kit-city-gate-torch-left", kind: "torch", x: -1.55, z: 0.34, y: 0, scale: 0.98, rotation: 0, color: "#efc65b", label: "Gate torch" },
+        { id: "auto-kit-city-gate-torch-right", kind: "torch", x: 1.55, z: 0.34, y: 0, scale: 0.98, rotation: 0, color: "#efc65b", label: "Gate torch" },
       ]
     case "courtyard":
       return [
@@ -766,6 +768,50 @@ function createDefaultNpcSlots(npcIds: string[], depth: number): Encounter3DNpcS
   }))
 }
 
+function createCityGateCoreTerrain(theme: Encounter3DTheme, width: number, depth: number): Encounter3DTerrain[] {
+  const palette = getThemePalette(theme)
+  return [
+    ...createSceneKitTerrain("city_gate", theme, width, depth),
+    {
+      id: "auto-city-gate-processional-lane",
+      kind: "platform",
+      x: 0,
+      z: 0.95,
+      y: 0,
+      width: 4.2,
+      depth: depth - 4.3,
+      height: 0.08,
+      rotation: 0,
+      color: theme === "wood" ? "#8c5b34" : palette.floor,
+      label: "Gate approach",
+    },
+  ]
+}
+
+function createCityGateCoreProps(theme: Encounter3DTheme, width: number, depth: number): Encounter3DProp[] {
+  return createSceneKitProps("city_gate", theme, width, depth)
+}
+
+function isCityGateStructuralTerrain(item: Encounter3DTerrain) {
+  if (item.id.startsWith("auto-kit-city-gate") || item.id.startsWith("auto-city-gate")) {
+    return true
+  }
+
+  if (!["wall", "ramp", "dais", "platform"].includes(item.kind)) {
+    return false
+  }
+
+  return item.z <= 2.4
+}
+
+function isCityGateVariableProp(item: Encounter3DProp) {
+  if (item.id.startsWith("auto-kit-city-gate")) {
+    return true
+  }
+
+  return ["crate", "table", "banner", "torch", "wagon", "stall", "barrel", "post", "pillar", "statue"].includes(item.kind)
+}
+
 export function enhanceEncounterMap(
   map: Encounter3DMap,
   options?: {
@@ -777,6 +823,37 @@ export function enhanceEncounterMap(
   const sceneKit = next.sceneKit || DEFAULT_SCENE_KIT
   const width = next.board.width * next.board.cellSize
   const depth = next.board.depth * next.board.cellSize
+
+  if (sceneKit === "city_gate") {
+    next.camera = {
+      ...next.camera,
+      distance: 16.5,
+      pitch: 0.78,
+      yaw: 1.42,
+      focusX: 0,
+      focusZ: -1.15,
+    }
+
+    next.terrain = next.terrain.filter((item) => !isCityGateStructuralTerrain(item))
+    for (const terrain of createCityGateCoreTerrain(next.board.theme, width, depth)) {
+      addIfMissing(next.terrain, terrain)
+    }
+
+    next.props = next.props.filter((item) => !isCityGateVariableProp(item))
+    for (const prop of createCityGateCoreProps(next.board.theme, width, depth)) {
+      addIfMissing(next.props, prop)
+    }
+
+    if (next.tokenSlots.party.length === 0 && options?.maxPartySize) {
+      next.tokenSlots.party = createDefaultPartySlots(options.maxPartySize, depth)
+    }
+
+    if (next.tokenSlots.npc.length === 0 && options?.npcIds?.length) {
+      next.tokenSlots.npc = createDefaultNpcSlots(options.npcIds, depth)
+    }
+
+    return next
+  }
 
   const hasSceneKitTerrain = next.terrain.some((item) => item.id.startsWith(`auto-kit-${sceneKit}`))
   const hasSceneKitProps = next.props.some((item) => item.id.startsWith(`auto-kit-${sceneKit}`))
@@ -802,41 +879,25 @@ export function enhanceEncounterMap(
     }
   }
 
-  if (sceneKit === "city_gate") {
-    addIfMissing(next.terrain, {
-      id: "auto-city-gate-processional-lane",
-      kind: "platform",
-      x: 0,
-      z: 0.9,
-      y: 0,
-      width: 3.6,
-      depth: depth - 4.4,
-      height: 0.08,
-      rotation: 0,
-      color: next.board.theme === "wood" ? "#8c5b34" : "#8d8378",
-      label: "Gate approach",
-    })
-  }
-
-  if (sceneKit !== "city_gate" && next.terrain.length < 7) {
+  if (next.terrain.length < 7) {
     for (const terrain of createMidfieldTerrain(next.board.theme, width, depth)) {
       addIfMissing(next.terrain, terrain)
     }
   }
 
-  if (sceneKit !== "city_gate" && next.props.length < 6) {
+  if (next.props.length < 6) {
     for (const prop of createAtmosphereProps(next.board.theme, width, depth)) {
       addIfMissing(next.props, prop)
     }
   }
 
-  if (sceneKit !== "city_gate" && next.props.length < 10) {
+  if (next.props.length < 10) {
     for (const prop of createScatterProps(next.board.theme)) {
       addIfMissing(next.props, prop)
     }
   }
 
-  if (sceneKit !== "city_gate" && next.props.length < 14) {
+  if (next.props.length < 14) {
     for (const prop of createClusterProps(next.board.theme, width, depth)) {
       addIfMissing(next.props, prop)
     }
