@@ -333,15 +333,12 @@ function createSceneKitTerrain(sceneKit: Encounter3DSceneKit, theme: Encounter3D
       ]
     case "city_gate":
       return [
-        { id: "auto-kit-city-gate-tower-left", kind: "wall", x: -4.45, z: backline + 0.2, y: 0, width: 2.9, depth: 3.8, height: 5.3, rotation: 0, color: palette.edge, label: "Main gate tower" },
-        { id: "auto-kit-city-gate-tower-right", kind: "wall", x: 4.45, z: backline + 0.2, y: 0, width: 2.9, depth: 3.8, height: 5.3, rotation: 0, color: palette.edge, label: "Main gate tower" },
-        { id: "auto-kit-city-gate-buttress-left", kind: "wall", x: -2.1, z: backline + 0.65, y: 0, width: 1.55, depth: 2.45, height: 3.55, rotation: 0.02, color: palette.floor, label: "Gate buttress" },
-        { id: "auto-kit-city-gate-buttress-right", kind: "wall", x: 2.1, z: backline + 0.65, y: 0, width: 1.55, depth: 2.45, height: 3.55, rotation: -0.02, color: palette.floor, label: "Gate buttress" },
-        { id: "auto-kit-city-gate-bridge", kind: "ramp", x: 0, z: backline - 0.28, y: 0, width: 5.2, depth: 2.1, height: 1.25, rotation: 0, color: palette.floor, label: "Gate threshold" },
-        { id: "auto-kit-city-gate-platform-left", kind: "dais", x: -2.5, z: 0.15, y: 0, width: 1.95, depth: 1.2, height: 0.22, rotation: 0.04, color: palette.accent, label: "Guard dais" },
-        { id: "auto-kit-city-gate-platform-right", kind: "dais", x: 2.55, z: -0.05, y: 0, width: 1.95, depth: 1.2, height: 0.22, rotation: -0.04, color: palette.accent, label: "Guard dais" },
-        { id: "auto-kit-city-gate-market-left", kind: "platform", x: -3.75, z: 1.95, y: 0, width: 2.55, depth: 1.55, height: 0.16, rotation: 0.08, color: palette.rim, label: "Merchant pad" },
-        { id: "auto-kit-city-gate-market-right", kind: "platform", x: 3.65, z: 1.45, y: 0, width: 2.4, depth: 1.48, height: 0.16, rotation: -0.08, color: palette.rim, label: "Merchant pad" },
+        { id: "auto-kit-city-gate-bridge", kind: "ramp", x: 0, z: backline - 0.18, y: 0, width: 5.4, depth: 2.3, height: 1.25, rotation: 0, color: palette.floor, label: "Gate threshold" },
+        { id: "auto-kit-city-gate-forecourt", kind: "platform", x: 0, z: 0.55, y: 0, width: 4.8, depth: 1.65, height: 0.08, rotation: 0, color: palette.rim, label: "Forecourt stonework" },
+        { id: "auto-kit-city-gate-platform-left", kind: "dais", x: -2.35, z: 0.25, y: 0, width: 1.7, depth: 1.1, height: 0.2, rotation: 0.04, color: palette.accent, label: "Guard post" },
+        { id: "auto-kit-city-gate-platform-right", kind: "dais", x: 2.35, z: 0.15, y: 0, width: 1.7, depth: 1.1, height: 0.2, rotation: -0.04, color: palette.accent, label: "Guard post" },
+        { id: "auto-kit-city-gate-market-left", kind: "platform", x: -3.65, z: 1.95, y: 0, width: 2.45, depth: 1.5, height: 0.14, rotation: 0.06, color: palette.rim, label: "Merchant pad" },
+        { id: "auto-kit-city-gate-market-right", kind: "platform", x: 3.55, z: 1.6, y: 0, width: 2.35, depth: 1.44, height: 0.14, rotation: -0.06, color: palette.rim, label: "Merchant pad" },
       ]
     case "courtyard":
       return [
