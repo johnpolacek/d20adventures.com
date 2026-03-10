@@ -84,15 +84,20 @@ export function EncounterMapEditor({
   const requestKeyRef = React.useRef<string | null>(null)
 
   const map = encounter.map3d
+  const effectiveSceneKit = React.useMemo(() => {
+    if (!map?.sceneKit) return inferredSceneKit
+    if (map.sceneKit === "checkpoint" && inferredSceneKit === "city_gate") return "city_gate"
+    return map.sceneKit
+  }, [inferredSceneKit, map?.sceneKit])
   const displayMap = React.useMemo(
     () =>
       map
-        ? enhanceEncounterMap({ ...map, sceneKit: map.sceneKit || inferredSceneKit }, {
+        ? enhanceEncounterMap({ ...map, sceneKit: effectiveSceneKit }, {
             maxPartySize,
             npcIds: (encounter.npc || []).map((entry) => entry.id),
           })
         : null,
-    [encounter.npc, inferredSceneKit, map, maxPartySize]
+    [effectiveSceneKit, encounter.npc, map, maxPartySize]
   )
   const encounterOptions = React.useMemo(() => listEncounterOptions(allSections, encounter.id).filter((option) => option.hasMap), [allSections, encounter.id])
   const previewTokens = React.useMemo(
@@ -156,6 +161,18 @@ export function EncounterMapEditor({
     requestKeyRef.current = requestKey
     void draftPromptFromEncounter(true)
   }, [draftPromptFromEncounter, encounter.id, encounter.instructions, encounter.intro, map])
+
+  React.useEffect(() => {
+    if (!map) return
+    if (map.sceneKit !== "checkpoint" || effectiveSceneKit !== "city_gate") return
+
+    onMapChange({
+      ...map,
+      sceneKit: "city_gate",
+    })
+    onMapPersistRequest()
+    toast.success("Updated this encounter map to the city gate kit.")
+  }, [effectiveSceneKit, map, onMapChange, onMapPersistRequest])
 
   const handleGenerate = () => {
     if (!prompt.trim()) {
@@ -266,8 +283,12 @@ export function EncounterMapEditor({
                         return
                       }
 
+                      const copiedSceneKit =
+                        sourceEncounter.map3d.sceneKit === "checkpoint" && inferredSceneKit === "city_gate" ? "city_gate" : sourceEncounter.map3d.sceneKit
+
                       onMapChange({
                         ...sourceEncounter.map3d,
+                        sceneKit: copiedSceneKit,
                         promptHistory: [...sourceEncounter.map3d.promptHistory, `Copied from ${selectedId}`],
                       })
                       onMapPersistRequest()

@@ -152,10 +152,17 @@ export async function generateEncounterMapAction(args: {
     throw new Error("Unauthorized")
   }
 
+  const inferredSceneKit = inferSceneKitFromArgs(args)
   const sceneKit =
     args.existingMap && typeof args.existingMap === "object" && args.existingMap && "sceneKit" in args.existingMap
-      ? (((args.existingMap as { sceneKit?: Encounter3DSceneKit }).sceneKit) || inferSceneKitFromArgs(args))
-      : inferSceneKitFromArgs(args)
+      ? (() => {
+          const existingSceneKit = (args.existingMap as { sceneKit?: Encounter3DSceneKit }).sceneKit
+          if (existingSceneKit === "checkpoint" && inferredSceneKit === "city_gate") {
+            return inferredSceneKit
+          }
+          return existingSceneKit || inferredSceneKit
+        })()
+      : inferredSceneKit
   const existingMapJson = args.existingMap ? JSON.stringify(args.existingMap, null, 2) : undefined
   const result = await generateObject({
     prompt: buildMapPrompt({
