@@ -10,6 +10,7 @@ import * as THREE from "three"
 import { useEffect, useId, useMemo, useState } from "react"
 
 export type MiniaturesMapRenderMode = "safe" | "geometry" | "textured" | "full"
+export type MiniaturesMapTokenRenderMode = "safe" | "premium"
 
 export interface MapMiniToken {
   id: string
@@ -1095,12 +1096,14 @@ export default function MiniaturesMap({
   title,
   className,
   renderMode = "full",
+  tokenRenderMode = "premium",
 }: {
   map: Encounter3DMap
   tokens?: MapMiniToken[]
   title?: string
   className?: string
   renderMode?: MiniaturesMapRenderMode
+  tokenRenderMode?: MiniaturesMapTokenRenderMode
 }) {
   const mapDebugId = useId()
   const [selectedToken, setSelectedToken] = useState<MapMiniToken | null>(tokens[0] ?? null)
@@ -1110,7 +1113,7 @@ export default function MiniaturesMap({
   const [shouldRenderCanvas, setShouldRenderCanvas] = useState(false)
   const displayMap = useMemo(() => enhanceEncounterMap(map), [map])
   const usesPremiumGeometry = renderMode !== "safe"
-  const usesPremiumTokens = renderMode === "textured" || renderMode === "full"
+  const usesPremiumTokens = tokenRenderMode === "premium"
   const usesTextures = renderMode === "textured" || renderMode === "full"
   const usesFullLighting = renderMode === "full"
   const palette = useMemo(() => getThemePalette(displayMap.board.theme), [displayMap.board.theme])

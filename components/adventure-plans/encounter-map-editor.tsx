@@ -20,10 +20,10 @@ const MiniaturesMap = dynamic(() => import("@/components/adventure/miniatures-ma
 })
 
 const renderModes: Array<{ value: MiniaturesMapRenderMode; label: string; description: string }> = [
-  { value: "safe", label: "Safe", description: "Minimal geometry, no textures, no shadows." },
-  { value: "geometry", label: "Geometry", description: "Premium geometry, flat materials, no textures or shadow stack." },
-  { value: "textured", label: "Textured", description: "Premium geometry with textures, but without the full lighting stack." },
-  { value: "full", label: "Full", description: "Full premium renderer with textures, backdrop, and lighting extras." },
+  { value: "safe", label: "Safe", description: "Minimal geometry, safe minis, no textures, no shadows." },
+  { value: "geometry", label: "Geometry", description: "Premium map geometry with safe minis, no textures or shadow stack." },
+  { value: "textured", label: "Textured", description: "Premium map geometry plus textures, still using safe minis." },
+  { value: "full", label: "Full", description: "Premium map with full lighting stack, still using safe minis." },
 ]
 
 interface EncounterMapEditorProps {
@@ -80,7 +80,7 @@ export function EncounterMapEditor({
   const [isGenerating, setIsGenerating] = React.useState(false)
   const [isDraftingPrompt, setIsDraftingPrompt] = React.useState(false)
   const [copySourceId, setCopySourceId] = React.useState("")
-  const [renderMode, setRenderMode] = React.useState<MiniaturesMapRenderMode>("geometry")
+  const [renderMode, setRenderMode] = React.useState<MiniaturesMapRenderMode>("textured")
   const requestKeyRef = React.useRef<string | null>(null)
 
   const map = encounter.map3d
@@ -301,7 +301,7 @@ export function EncounterMapEditor({
 
           <div className="space-y-4">
             <div className="relative">
-              <MiniaturesMap map={displayMap || map} tokens={previewTokens} title={encounter.title} className="w-full" renderMode={renderMode} />
+              <MiniaturesMap map={displayMap || map} tokens={previewTokens} title={encounter.title} className="w-full" renderMode={renderMode} tokenRenderMode="safe" />
               {isGenerating && (
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-2xl bg-black/35 backdrop-blur-[2px]">
                   <div className="flex h-16 w-16 items-center justify-center rounded-full border border-white/15 bg-black/70 shadow-2xl">
