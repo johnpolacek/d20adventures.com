@@ -3,7 +3,7 @@
 import { enhanceEncounterMap, getThemePalette } from "@/lib/map-utils"
 import { cn, getTextureImageUrl } from "@/lib/utils"
 import type { Encounter3DMap } from "@/types/adventure-plan"
-import { Edges, Grid, OrbitControls, RoundedBox, Text } from "@react-three/drei"
+import { Edges, Grid, OrbitControls, RoundedBox } from "@react-three/drei"
 import { Canvas, useThree } from "@react-three/fiber"
 import type { TurnCharacter } from "@/types/adventure"
 import * as THREE from "three"
@@ -49,11 +49,6 @@ function getTokenInitials(label: string) {
   if (parts.length === 0) return "?"
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
   return `${parts[0][0] || ""}${parts[1][0] || ""}`.toUpperCase()
-}
-
-function getMiniPlaqueLabel(label: string) {
-  const firstWord = label.trim().split(/\s+/)[0] || label
-  return firstWord.slice(0, 10)
 }
 
 function getMiniStyle(token: MapMiniToken) {
@@ -875,25 +870,21 @@ function PortraitBadge({ token }: { token: MapMiniToken }) {
   return (
     <>
       <mesh position={[0, 1.02, 0.072]} castShadow>
-        <circleGeometry args={[0.27, 32]} />
+        <circleGeometry args={[0.25, 20]} />
         <meshStandardMaterial color="#f8f2e8" roughness={0.42} metalness={0.02} />
       </mesh>
       <mesh position={[0, 1.02, 0.082]} castShadow>
-        <circleGeometry args={[0.225, 32]} />
+        <circleGeometry args={[0.205, 20]} />
         <meshStandardMaterial map={portrait} color="#ffffff" roughness={0.68} metalness={0.02} />
       </mesh>
       <mesh position={[0, 0.96, 0.058]} castShadow>
-        <ringGeometry args={[0.245, 0.28, 32]} />
+        <ringGeometry args={[0.22, 0.26, 20]} />
         <meshStandardMaterial color="#c9ab86" roughness={0.44} metalness={0.16} side={THREE.DoubleSide} />
       </mesh>
-      <mesh position={[0, 0.73, 0.071]} castShadow receiveShadow>
-        <RoundedBox args={[0.52, 0.14, 0.04]} radius={0.025} smoothness={3}>
-          <meshStandardMaterial color="#f2e4d4" roughness={0.76} metalness={0.02} />
-        </RoundedBox>
+      <mesh position={[0, 0.72, 0.07]} castShadow receiveShadow>
+        <boxGeometry args={[0.38, 0.05, 0.03]} />
+        <meshStandardMaterial color="#e8d5bf" roughness={0.78} metalness={0.04} />
       </mesh>
-      <Text position={[0, 0.73, 0.095]} fontSize={0.065} maxWidth={0.45} color="#2a211b" anchorX="center" anchorY="middle">
-        {getTokenInitials(token.label)}
-      </Text>
     </>
   )
 }
@@ -902,74 +893,61 @@ function FallbackBadge({ token }: { token: MapMiniToken }) {
   return (
     <>
       <mesh position={[0, 1.02, 0.072]} castShadow>
-        <circleGeometry args={[0.27, 32]} />
+        <circleGeometry args={[0.25, 20]} />
         <meshStandardMaterial color={token.kind === "pc" ? "#dbeafe" : "#fee2e2"} roughness={0.48} metalness={0.02} />
       </mesh>
       <mesh position={[0, 1.02, 0.081]} castShadow>
-        <circleGeometry args={[0.225, 32]} />
+        <circleGeometry args={[0.205, 20]} />
         <meshStandardMaterial color={token.kind === "pc" ? "#1d4ed8" : "#b91c1c"} roughness={0.84} metalness={0.02} />
       </mesh>
       <mesh position={[0, 1.06, 0.092]} castShadow>
-        <sphereGeometry args={[0.06, 14, 14]} />
+        <sphereGeometry args={[0.055, 8, 8]} />
         <meshStandardMaterial color="#f8f2e8" roughness={0.76} />
       </mesh>
       <mesh position={[0, 0.94, 0.092]} castShadow>
-        <capsuleGeometry args={[0.07, 0.14, 4, 10]} />
+        <capsuleGeometry args={[0.065, 0.13, 3, 6]} />
         <meshStandardMaterial color="#f8f2e8" roughness={0.76} />
       </mesh>
-      <Text position={[0, 0.73, 0.095]} fontSize={0.11} color="#f8f5f0" anchorX="center" anchorY="middle">
-        {token.shortLabel || getTokenInitials(token.label)}
-      </Text>
+      <mesh position={[0, 0.72, 0.07]} castShadow receiveShadow>
+        <boxGeometry args={[0.3, 0.045, 0.03]} />
+        <meshStandardMaterial color="#f8f2e8" roughness={0.86} metalness={0.02} />
+      </mesh>
     </>
   )
 }
 
 function TokenMini({ token, onSelect }: { token: MapMiniToken; onSelect?: (token: MapMiniToken) => void }) {
   const miniStyle = getMiniStyle(token)
-  const labelText = getMiniPlaqueLabel(token.label)
 
   return (
     <group position={[token.x, (token.y || 0) + 0.01, token.z]} rotation={[0, token.facing || 0, 0]}>
       <mesh castShadow receiveShadow onClick={() => onSelect?.(token)}>
-        <cylinderGeometry args={[0.54, 0.64, 0.2, 32]} />
+        <cylinderGeometry args={[0.5, 0.58, 0.18, 20]} />
         <meshStandardMaterial color={miniStyle.baseColor} roughness={0.88} metalness={0.08} />
       </mesh>
       <mesh position={[0, 0.11, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.48, 0.54, 0.06, 32]} />
+        <cylinderGeometry args={[0.43, 0.49, 0.05, 20]} />
         <meshStandardMaterial color={miniStyle.ringColor} roughness={0.52} metalness={0.16} />
       </mesh>
-      <mesh position={[0.18, 0.145, -0.04]} rotation={[0.16, -0.42, 0.08]} castShadow receiveShadow>
-        <boxGeometry args={[0.16, 0.024, 0.22]} />
-        <meshStandardMaterial color="#89715b" roughness={0.92} metalness={0.04} />
-      </mesh>
-      <mesh position={[-0.19, 0.145, 0.08]} rotation={[-0.14, 0.28, -0.04]} castShadow receiveShadow>
-        <boxGeometry args={[0.14, 0.024, 0.18]} />
-        <meshStandardMaterial color="#79604d" roughness={0.92} metalness={0.04} />
-      </mesh>
-
-      <mesh position={[0, 0.42, -0.08]} rotation={[-0.48, 0, 0]} castShadow receiveShadow>
-        <boxGeometry args={[0.18, 0.56, 0.18]} />
+      <mesh position={[0, 0.42, -0.06]} rotation={[-0.38, 0, 0]} castShadow receiveShadow>
+        <boxGeometry args={[0.15, 0.48, 0.14]} />
         <meshStandardMaterial color="#3f332b" roughness={0.86} metalness={0.06} />
       </mesh>
-      <RoundedBox args={[0.7, MINI_PREVIEW_HEIGHT, 0.08]} radius={0.08} smoothness={4} position={[0, 1.02, 0]} castShadow receiveShadow>
-        <meshPhysicalMaterial color={miniStyle.cardTone} roughness={0.72} metalness={0.02} clearcoat={0.24} clearcoatRoughness={0.38} />
+      <RoundedBox args={[0.62, 1.5, 0.07]} radius={0.06} smoothness={2} position={[0, 1.0, 0]} castShadow receiveShadow>
+        <meshStandardMaterial color={miniStyle.cardTone} roughness={0.76} metalness={0.02} />
       </RoundedBox>
-      <RoundedBox args={[0.76, MINI_PREVIEW_HEIGHT + 0.08, 0.03]} radius={0.09} smoothness={4} position={[0, 1.02, -0.048]} castShadow receiveShadow>
+      <mesh position={[0, 1.0, -0.045]} castShadow receiveShadow>
+        <boxGeometry args={[0.66, 1.56, 0.025]} />
         <meshStandardMaterial color={miniStyle.topColor} roughness={0.82} metalness={0.04} />
-      </RoundedBox>
-      <mesh position={[0, 1.76, 0.02]} castShadow>
-        <cylinderGeometry args={[0.13, 0.18, 0.1, 24]} />
+      </mesh>
+      <mesh position={[0, 1.72, 0.015]} castShadow>
+        <cylinderGeometry args={[0.1, 0.14, 0.08, 16]} />
         <meshStandardMaterial color={miniStyle.accentMetal} roughness={0.42} metalness={0.26} />
       </mesh>
-
-      <mesh position={[0, 0.36, 0.17]} castShadow receiveShadow>
-        <RoundedBox args={[0.58, 0.15, 0.18]} radius={0.03} smoothness={3}>
-          <meshStandardMaterial color={miniStyle.plaqueTone} roughness={0.74} metalness={0.08} />
-        </RoundedBox>
+      <mesh position={[0, 0.34, 0.16]} castShadow receiveShadow>
+        <boxGeometry args={[0.46, 0.08, 0.12]} />
+        <meshStandardMaterial color={miniStyle.plaqueTone} roughness={0.8} metalness={0.06} />
       </mesh>
-      <Text position={[0, 0.36, 0.27]} fontSize={0.065} maxWidth={0.5} color="#2d241d" anchorX="center" anchorY="middle">
-        {labelText}
-      </Text>
 
       {token.image ? <PortraitBadge token={token} /> : <FallbackBadge token={token} />}
     </group>

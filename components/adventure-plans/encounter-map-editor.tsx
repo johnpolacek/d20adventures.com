@@ -23,7 +23,7 @@ const renderModes: Array<{ value: MiniaturesMapRenderMode; label: string; descri
   { value: "safe", label: "Safe", description: "Minimal geometry, safe minis, no textures, no shadows." },
   { value: "geometry", label: "Geometry", description: "Premium map geometry with safe minis, no textures or shadow stack." },
   { value: "textured", label: "Textured", description: "Premium map geometry plus textures, still using safe minis." },
-  { value: "full", label: "Full", description: "Premium map with full lighting stack, still using safe minis." },
+  { value: "full", label: "Full", description: "Full premium map renderer with the simplified premium minis." },
 ]
 
 interface EncounterMapEditorProps {
@@ -301,7 +301,14 @@ export function EncounterMapEditor({
 
           <div className="space-y-4">
             <div className="relative">
-              <MiniaturesMap map={displayMap || map} tokens={previewTokens} title={encounter.title} className="w-full" renderMode={renderMode} tokenRenderMode="safe" />
+              <MiniaturesMap
+                map={displayMap || map}
+                tokens={previewTokens}
+                title={encounter.title}
+                className="w-full"
+                renderMode={renderMode}
+                tokenRenderMode={renderMode === "full" ? "premium" : "safe"}
+              />
               {isGenerating && (
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-2xl bg-black/35 backdrop-blur-[2px]">
                   <div className="flex h-16 w-16 items-center justify-center rounded-full border border-white/15 bg-black/70 shadow-2xl">
