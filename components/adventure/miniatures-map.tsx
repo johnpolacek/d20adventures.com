@@ -198,57 +198,97 @@ function createPatternTexture(args: {
   texture.wrapT = THREE.RepeatWrapping
   texture.repeat.set(args.repeatX, args.repeatY)
   texture.colorSpace = THREE.SRGBColorSpace
+  texture.generateMipmaps = true
   texture.needsUpdate = true
   return texture
 }
 
 function buildSceneTextures(palette: ReturnType<typeof getThemePalette>) {
   const stone = createPatternTexture({
-    repeatX: 4,
-    repeatY: 4,
+    width: 384,
+    height: 384,
+    repeatX: 2.2,
+    repeatY: 2.2,
     draw: (context, width, height) => {
-      context.fillStyle = palette.floor
+      context.fillStyle = shiftColor(palette.floor, 0.08)
       context.fillRect(0, 0, width, height)
-      context.strokeStyle = shiftColor(palette.edge, 0.1)
-      context.lineWidth = 8
-      for (let row = 0; row < 4; row += 1) {
-        const y = row * (height / 4)
+      context.fillStyle = shiftColor(palette.floor, 0.12)
+      context.fillRect(0, 0, width, height)
+
+      let y = 0
+      let row = 0
+      while (y < height) {
+        const rowHeight = 52 + (row % 3) * 18
+        let x = row % 2 === 0 ? -18 : 16
+        while (x < width) {
+          const blockWidth = 74 + ((row + Math.floor(Math.max(x, 0) / 30)) % 3) * 26
+          context.fillStyle = shiftColor(palette.floor, 0.12 - ((row + Math.floor(Math.max(x, 0) / 48)) % 3) * 0.04)
+          context.fillRect(x + 3, y + 3, blockWidth - 6, rowHeight - 6)
+
+          context.strokeStyle = shiftColor(palette.edge, 0.05)
+          context.lineWidth = 2
+          context.strokeRect(x + 3, y + 3, blockWidth - 6, rowHeight - 6)
+
+          context.fillStyle = shiftColor(palette.floor, 0.18)
+          context.fillRect(x + 8, y + 8, blockWidth - 20, 4)
+          context.fillStyle = shiftColor(palette.edge, 0.14)
+          context.fillRect(x + 10, y + rowHeight - 11, blockWidth - 24, 3)
+
+          x += blockWidth - 4
+        }
+        y += rowHeight - 4
+        row += 1
+      }
+
+      context.globalAlpha = 0.24
+      for (let index = 0; index < 180; index += 1) {
+        const px = (index * 37) % width
+        const py = (index * 61) % height
+        const size = 1 + (index % 3)
+        context.fillStyle = index % 2 === 0 ? shiftColor(palette.floor, 0.22) : shiftColor(palette.edge, 0.12)
         context.beginPath()
-        context.moveTo(0, y)
-        context.lineTo(width, y)
-        context.stroke()
+        context.arc(px, py, size, 0, Math.PI * 2)
+        context.fill()
       }
-      for (let column = 0; column < 4; column += 1) {
-        const x = column * (width / 4) + (column % 2 === 0 ? 12 : -12)
-        context.beginPath()
-        context.moveTo(x, 0)
-        context.lineTo(x, height)
-        context.stroke()
-      }
-      for (let index = 0; index < 120; index += 1) {
-        context.fillStyle = index % 3 === 0 ? shiftColor(palette.floor, 0.08) : shiftColor(palette.edge, 0.18)
-        context.fillRect(Math.random() * width, Math.random() * height, 4, 4)
-      }
+      context.globalAlpha = 1
     },
   })
 
   const wood = createPatternTexture({
-    repeatX: 5,
-    repeatY: 2,
+    width: 384,
+    height: 256,
+    repeatX: 3.25,
+    repeatY: 1.5,
     draw: (context, width, height) => {
-      context.fillStyle = shiftColor(palette.frame, 0.26)
+      context.fillStyle = shiftColor(palette.frame, 0.24)
       context.fillRect(0, 0, width, height)
-      for (let row = 0; row < 6; row += 1) {
-        const y = row * (height / 6)
-        context.fillStyle = row % 2 === 0 ? shiftColor(palette.frame, 0.34) : shiftColor(palette.frame, 0.2)
-        context.fillRect(0, y, width, height / 6 - 2)
+      const plankHeight = height / 5
+      for (let row = 0; row < 5; row += 1) {
+        const y = row * plankHeight
+        context.fillStyle = row % 2 === 0 ? shiftColor(palette.frame, 0.34) : shiftColor(palette.frame, 0.16)
+        context.fillRect(0, y, width, plankHeight - 2)
+        context.fillStyle = shiftColor(palette.frame, 0.44)
+        context.fillRect(0, y, width, 2)
+        context.fillStyle = shiftColor(palette.frame, -0.02)
+        context.fillRect(0, y + plankHeight - 3, width, 2)
       }
+
       context.strokeStyle = shiftColor(palette.frame, 0.42)
-      context.lineWidth = 2
-      for (let index = 0; index < 36; index += 1) {
+      context.lineWidth = 1.4
+      for (let index = 0; index < 42; index += 1) {
         context.beginPath()
-        context.moveTo(0, index * 7)
-        context.bezierCurveTo(width * 0.25, index * 7 + 4, width * 0.75, index * 7 - 3, width, index * 7 + 2)
+        context.moveTo(0, index * 6)
+        context.bezierCurveTo(width * 0.2, index * 6 + 5, width * 0.72, index * 6 - 4, width, index * 6 + 1)
+        context.stroke()
+      }
+
+      for (let index = 0; index < 9; index += 1) {
+        const knotX = 28 + index * 38
+        const knotY = 22 + (index % 5) * 38
+        context.strokeStyle = shiftColor(palette.frame, -0.12)
+        context.lineWidth = 1.1
+        context.beginPath()
+        context.ellipse(knotX, knotY, 8, 4, 0, 0, Math.PI * 2)
         context.stroke()
       }
     },
@@ -869,20 +909,20 @@ function PortraitBadge({ token }: { token: MapMiniToken }) {
 
   return (
     <>
-      <mesh position={[0, 1.02, 0.072]} castShadow>
-        <circleGeometry args={[0.25, 20]} />
-        <meshStandardMaterial color="#f8f2e8" roughness={0.42} metalness={0.02} />
+      <mesh position={[0, 1.14, 0.075]} castShadow>
+        <circleGeometry args={[0.23, 20]} />
+        <meshStandardMaterial color="#f8f2e8" roughness={0.38} metalness={0.02} />
       </mesh>
-      <mesh position={[0, 1.02, 0.082]} castShadow>
-        <circleGeometry args={[0.205, 20]} />
+      <mesh position={[0, 1.14, 0.086]} castShadow>
+        <circleGeometry args={[0.19, 20]} />
         <meshStandardMaterial map={portrait} color="#ffffff" roughness={0.68} metalness={0.02} />
       </mesh>
-      <mesh position={[0, 0.96, 0.058]} castShadow>
-        <ringGeometry args={[0.22, 0.26, 20]} />
+      <mesh position={[0, 1.08, 0.058]} castShadow>
+        <ringGeometry args={[0.205, 0.245, 20]} />
         <meshStandardMaterial color="#c9ab86" roughness={0.44} metalness={0.16} side={THREE.DoubleSide} />
       </mesh>
-      <mesh position={[0, 0.72, 0.07]} castShadow receiveShadow>
-        <boxGeometry args={[0.38, 0.05, 0.03]} />
+      <mesh position={[0, 0.72, 0.075]} castShadow receiveShadow>
+        <boxGeometry args={[0.26, 0.045, 0.032]} />
         <meshStandardMaterial color="#e8d5bf" roughness={0.78} metalness={0.04} />
       </mesh>
     </>
@@ -892,24 +932,24 @@ function PortraitBadge({ token }: { token: MapMiniToken }) {
 function FallbackBadge({ token }: { token: MapMiniToken }) {
   return (
     <>
-      <mesh position={[0, 1.02, 0.072]} castShadow>
-        <circleGeometry args={[0.25, 20]} />
+      <mesh position={[0, 1.14, 0.075]} castShadow>
+        <circleGeometry args={[0.23, 20]} />
         <meshStandardMaterial color={token.kind === "pc" ? "#dbeafe" : "#fee2e2"} roughness={0.48} metalness={0.02} />
       </mesh>
-      <mesh position={[0, 1.02, 0.081]} castShadow>
-        <circleGeometry args={[0.205, 20]} />
+      <mesh position={[0, 1.14, 0.084]} castShadow>
+        <circleGeometry args={[0.19, 20]} />
         <meshStandardMaterial color={token.kind === "pc" ? "#1d4ed8" : "#b91c1c"} roughness={0.84} metalness={0.02} />
       </mesh>
-      <mesh position={[0, 1.06, 0.092]} castShadow>
+      <mesh position={[0, 1.17, 0.094]} castShadow>
         <sphereGeometry args={[0.055, 8, 8]} />
         <meshStandardMaterial color="#f8f2e8" roughness={0.76} />
       </mesh>
-      <mesh position={[0, 0.94, 0.092]} castShadow>
+      <mesh position={[0, 1.05, 0.094]} castShadow>
         <capsuleGeometry args={[0.065, 0.13, 3, 6]} />
         <meshStandardMaterial color="#f8f2e8" roughness={0.76} />
       </mesh>
-      <mesh position={[0, 0.72, 0.07]} castShadow receiveShadow>
-        <boxGeometry args={[0.3, 0.045, 0.03]} />
+      <mesh position={[0, 0.72, 0.075]} castShadow receiveShadow>
+        <boxGeometry args={[0.26, 0.045, 0.032]} />
         <meshStandardMaterial color="#f8f2e8" roughness={0.86} metalness={0.02} />
       </mesh>
     </>
@@ -922,32 +962,43 @@ function TokenMini({ token, onSelect }: { token: MapMiniToken; onSelect?: (token
   return (
     <group position={[token.x, (token.y || 0) + 0.01, token.z]} rotation={[0, token.facing || 0, 0]}>
       <mesh castShadow receiveShadow onClick={() => onSelect?.(token)}>
-        <cylinderGeometry args={[0.5, 0.58, 0.18, 20]} />
+        <cylinderGeometry args={[0.54, 0.6, 0.16, 20]} />
         <meshStandardMaterial color={miniStyle.baseColor} roughness={0.88} metalness={0.08} />
       </mesh>
       <mesh position={[0, 0.11, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.43, 0.49, 0.05, 20]} />
+        <cylinderGeometry args={[0.45, 0.5, 0.045, 20]} />
         <meshStandardMaterial color={miniStyle.ringColor} roughness={0.52} metalness={0.16} />
       </mesh>
-      <mesh position={[0, 0.42, -0.06]} rotation={[-0.38, 0, 0]} castShadow receiveShadow>
-        <boxGeometry args={[0.15, 0.48, 0.14]} />
-        <meshStandardMaterial color="#3f332b" roughness={0.86} metalness={0.06} />
+      <mesh position={[0, 0.22, 0.02]} castShadow receiveShadow>
+        <cylinderGeometry args={[0.18, 0.22, 0.06, 16]} />
+        <meshStandardMaterial color={miniStyle.accentMetal} roughness={0.42} metalness={0.24} />
       </mesh>
-      <RoundedBox args={[0.62, 1.5, 0.07]} radius={0.06} smoothness={2} position={[0, 1.0, 0]} castShadow receiveShadow>
-        <meshStandardMaterial color={miniStyle.cardTone} roughness={0.76} metalness={0.02} />
+      <mesh position={[0, 0.46, -0.06]} rotation={[-0.46, 0, 0]} castShadow receiveShadow>
+        <boxGeometry args={[0.12, 0.62, 0.11]} />
+        <meshStandardMaterial color="#46382f" roughness={0.9} metalness={0.04} />
+      </mesh>
+      <mesh position={[0, 1.06, -0.028]} castShadow receiveShadow>
+        <capsuleGeometry args={[0.34, 0.92, 4, 14]} />
+        <meshStandardMaterial color={miniStyle.topColor} roughness={0.84} metalness={0.04} />
+      </mesh>
+      <mesh position={[0, 1.08, 0.014]} castShadow receiveShadow>
+        <capsuleGeometry args={[0.31, 0.86, 4, 14]} />
+        <meshStandardMaterial color={miniStyle.cardTone} roughness={0.74} metalness={0.02} />
+      </mesh>
+      <RoundedBox args={[0.42, 0.12, 0.08]} radius={0.03} smoothness={2} position={[0, 0.52, 0.02]} castShadow receiveShadow>
+        <meshStandardMaterial color={miniStyle.plaqueTone} roughness={0.8} metalness={0.06} />
       </RoundedBox>
-      <mesh position={[0, 1.0, -0.045]} castShadow receiveShadow>
-        <boxGeometry args={[0.66, 1.56, 0.025]} />
-        <meshStandardMaterial color={miniStyle.topColor} roughness={0.82} metalness={0.04} />
-      </mesh>
-      <mesh position={[0, 1.72, 0.015]} castShadow>
-        <cylinderGeometry args={[0.1, 0.14, 0.08, 16]} />
+      <mesh position={[0, 1.8, 0.012]} castShadow>
+        <cylinderGeometry args={[0.08, 0.12, 0.06, 14]} />
         <meshStandardMaterial color={miniStyle.accentMetal} roughness={0.42} metalness={0.26} />
       </mesh>
-      <mesh position={[0, 0.34, 0.16]} castShadow receiveShadow>
-        <boxGeometry args={[0.46, 0.08, 0.12]} />
-        <meshStandardMaterial color={miniStyle.plaqueTone} roughness={0.8} metalness={0.06} />
+      <mesh position={[0, 1.58, 0.034]} castShadow receiveShadow>
+        <capsuleGeometry args={[0.08, 0.14, 3, 10]} />
+        <meshStandardMaterial color={miniStyle.accentMetal} roughness={0.48} metalness={0.24} />
       </mesh>
+      <RoundedBox args={[0.62, 0.1, 0.28]} radius={0.03} smoothness={2} position={[0, 0.12, 0]} castShadow receiveShadow>
+        <meshStandardMaterial color={miniStyle.cardTone} roughness={0.76} metalness={0.02} />
+      </RoundedBox>
 
       {token.image ? <PortraitBadge token={token} /> : <FallbackBadge token={token} />}
     </group>
@@ -1330,11 +1381,11 @@ export default function MiniaturesMap({
                 enablePan
                 enableZoom
                 maxDistance={38}
-                minDistance={8}
+                minDistance={10.5}
                 minAzimuthAngle={displayMap.camera.yaw - 1.7}
                 maxAzimuthAngle={displayMap.camera.yaw + 1.7}
-                minPolarAngle={0.35}
-                maxPolarAngle={1.35}
+                minPolarAngle={0.44}
+                maxPolarAngle={1.2}
                 target={orbitTarget}
               />
             </Canvas>
