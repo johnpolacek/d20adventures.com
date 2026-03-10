@@ -12,19 +12,10 @@ import dynamic from "next/dynamic"
 import * as React from "react"
 import { Loader2, Plus } from "lucide-react"
 import { toast } from "sonner"
-import type { MiniaturesMapRenderMode } from "@/components/adventure/miniatures-map"
-
 const MiniaturesMap = dynamic(() => import("@/components/adventure/miniatures-map"), {
   ssr: false,
   loading: () => <div className="flex h-[420px] items-center justify-center rounded-2xl border border-white/10 bg-black/20 text-sm text-white/60">Loading map preview...</div>,
 })
-
-const renderModes: Array<{ value: MiniaturesMapRenderMode; label: string; description: string }> = [
-  { value: "safe", label: "Safe", description: "Minimal geometry, safe minis, no textures, no shadows." },
-  { value: "geometry", label: "Geometry", description: "Premium map geometry with safe minis, no textures or shadow stack." },
-  { value: "textured", label: "Textured", description: "Premium map geometry plus textures, still using safe minis." },
-  { value: "full", label: "Full", description: "Full premium map renderer with the simplified premium minis." },
-]
 
 interface EncounterMapEditorProps {
   encounter: AdventureEncounter
@@ -92,7 +83,6 @@ export function EncounterMapEditor({
   const [isGenerating, setIsGenerating] = React.useState(false)
   const [isDraftingPrompt, setIsDraftingPrompt] = React.useState(false)
   const [copySourceId, setCopySourceId] = React.useState("")
-  const [renderMode, setRenderMode] = React.useState<MiniaturesMapRenderMode>("full")
   const requestKeyRef = React.useRef<string | null>(null)
 
   const map = encounter.map3d
@@ -340,8 +330,8 @@ export function EncounterMapEditor({
                 tokens={previewTokens}
                 title={encounter.title}
                 className="w-full"
-                renderMode={renderMode}
-                tokenRenderMode={renderMode === "full" ? "premium" : "safe"}
+                renderMode="full"
+                tokenRenderMode="premium"
               />
               {isGenerating && (
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-2xl bg-black/35 backdrop-blur-[2px]">
@@ -353,26 +343,6 @@ export function EncounterMapEditor({
             </div>
 
             <div className="w-full space-y-4 rounded-2xl border border-white/10 bg-white/5 p-4">
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                <div className="mb-2 text-xs font-mono uppercase tracking-[0.25em] text-primary-200/70">Render Debug</div>
-                <div className="flex flex-wrap gap-2">
-                  {renderModes.map((mode) => (
-                    <Button
-                      key={mode.value}
-                      type="button"
-                      variant={renderMode === mode.value ? "ghost" : "outline"}
-                      size="sm"
-                      disabled={isGenerating}
-                      onClick={() => setRenderMode(mode.value)}
-                      className={renderMode === mode.value ? "border border-amber-300/40 bg-amber-300/15 px-3 py-1.5 text-xs font-mono tracking-[0.15em] text-amber-100" : "px-3 py-1.5 text-xs font-mono tracking-[0.15em]"}
-                    >
-                      {mode.label}
-                    </Button>
-                  ))}
-                </div>
-                <p className="mt-3 text-xs text-white/60">{renderModes.find((mode) => mode.value === renderMode)?.description}</p>
-              </div>
-
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                   <div className="mb-2 text-xs font-mono uppercase tracking-[0.25em] text-primary-200/70">Summary</div>
@@ -398,7 +368,7 @@ export function EncounterMapEditor({
                     <div className="rounded-xl border border-white/10 bg-white/5 p-3">Props: {displayMap?.props.length || map.props.length}</div>
                     <div className="rounded-xl border border-white/10 bg-white/5 p-3">Zones: {displayMap?.zones.length || map.zones.length}</div>
                     <div className="rounded-xl border border-white/10 bg-white/5 p-3">Prompts: {displayMap?.promptHistory.length || map.promptHistory.length}</div>
-                    <div className="col-span-2 rounded-xl border border-white/10 bg-white/5 p-3">Render mode: {renderMode}</div>
+                    <div className="col-span-2 rounded-xl border border-white/10 bg-white/5 p-3">Renderer: Premium preview</div>
                   </div>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
