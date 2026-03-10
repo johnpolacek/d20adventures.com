@@ -139,7 +139,7 @@ export const encounter3dTerrainSchema = z.object({
 })
 export type Encounter3DTerrain = z.infer<typeof encounter3dTerrainSchema>
 
-export const encounter3dPropKindSchema = z.enum(["pillar", "crate", "torch", "statue", "tree", "rock", "table", "stairs", "banner", "altar"])
+export const encounter3dPropKindSchema = z.enum(["pillar", "crate", "torch", "statue", "tree", "rock", "table", "stairs", "banner", "altar", "wagon", "stall", "barrel", "post"])
 export type Encounter3DPropKind = z.infer<typeof encounter3dPropKindSchema>
 
 export const encounter3dPropSchema = z.object({

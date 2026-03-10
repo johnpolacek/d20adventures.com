@@ -11,7 +11,7 @@ function buildSceneKitGuidance(sceneKit: Encounter3DSceneKit) {
     case "checkpoint":
       return "Target a fortified checkpoint with flanking gate structures, an inspection platform, cargo or barricade clusters, and readable approach lanes."
     case "city_gate":
-      return "Target a monumental city-gate entrance with a dominant central arch, flanking towers, banners, gate doors, and market or cargo dressing around the approach."
+      return "Target a monumental city-gate entrance with one dominant central arch, flanking towers, banners, gate doors, and market dressing around the approach. Avoid repeated inner wall lines or multiple parallel wall rows behind the main gate facade."
     case "courtyard":
       return "Target a formal courtyard with a raised rear dais, partial colonnades or flanking structures, and cover clusters that keep the center playable."
     case "ruins":
@@ -78,6 +78,7 @@ Requirements:
 - Avoid sparse or unfinished scenes; corners, edges, and back lines should feel dressed.
 - Make it feel like premium handcrafted tabletop terrain with scenic bases, lane shaping, clustered set dressing, and a few hero pieces that define the location.
 - Prefer terrain and props that read as miniature wargame scenery: stepped risers, ruined walls, flanking cover, shrine pieces, trees, cargo, rock clusters, banners, and gate structures.
+- For city gates, prefer one monumental facade and side dressing over repeated wall layers.
 - Compose in foreground, midground, and background so the camera sees a staged diorama rather than isolated objects on a flat board.
 - Avoid leaving the center of the board as a large empty rectangle; add mid-board cover clusters, low walls, plinths, shelves, dunes, banks, or cargo groupings to break it up.
 - Favor asymmetric clusters of 2-4 related pieces over evenly spaced single props.
@@ -124,6 +125,7 @@ Requirements:
 - Mention the scene style as a stylized tabletop 3D battlemap.
 - Push the map toward this scene kit unless the encounter text strongly contradicts it: ${args.sceneKit} (${formatEncounterSceneKit(args.sceneKit)}).
 - ${buildSceneKitGuidance(args.sceneKit)}
+- If this is a city gate, prefer one dominant gate facade with stalls, wagons, banners, barrels, and posts instead of repeated secondary walls.
 - Keep it to 2-4 sentences.
 - Output only the prompt text, with no bullets, labels, or quotation marks.
 

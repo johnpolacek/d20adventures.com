@@ -456,9 +456,26 @@ function SceneBackdrop({
           <RoundedBox args={[width * 0.5, 1.6, 1.35]} radius={0.08} smoothness={3} position={[0, 4.3, backZ + 1.06]} castShadow receiveShadow>
             <meshStandardMaterial color="#faf4eb" roughness={0.84} map={textures?.stone} />
           </RoundedBox>
-          <RoundedBox args={[width * 0.2, 3.5, 0.85]} radius={0.06} smoothness={2} position={[0, 1.75, backZ + 1.54]} castShadow receiveShadow>
-            <meshStandardMaterial color={shiftColor(palette.edge, -0.04)} roughness={0.96} />
-          </RoundedBox>
+          <mesh position={[0, 2.2, backZ + 1.28]} rotation={[Math.PI / 2, 0, 0]} castShadow receiveShadow>
+            <cylinderGeometry args={[2.35, 2.35, 1.2, 28, 1, false, 0, Math.PI]} />
+            <meshStandardMaterial color="#e9dfd0" roughness={0.86} map={textures?.stone} />
+          </mesh>
+          <mesh position={[0, 2.18, backZ + 1.3]} rotation={[Math.PI / 2, 0, 0]} receiveShadow>
+            <cylinderGeometry args={[1.7, 1.7, 1.12, 24, 1, false, 0, Math.PI]} />
+            <meshStandardMaterial color={shiftColor(palette.backdrop, 0.08)} roughness={0.96} side={THREE.BackSide} />
+          </mesh>
+          {[-1, 1].map((side) => (
+            <mesh key={side} position={[side * 0.82, 1.12, backZ + 1.52]} rotation={[0, side * 0.08, 0]} castShadow receiveShadow>
+              <boxGeometry args={[0.16, 2.1, 0.08]} />
+              <meshStandardMaterial color="#5d4638" roughness={0.88} map={textures?.wood} />
+            </mesh>
+          ))}
+          {[-1.2, 1.2].map((side) => (
+            <mesh key={side} position={[side, 1.7, backZ + 1.16]} castShadow receiveShadow>
+              <planeGeometry args={[0.6, 1.7]} />
+              <meshStandardMaterial color="#b66d63" side={THREE.DoubleSide} roughness={0.86} map={textures?.cloth} />
+            </mesh>
+          ))}
           {[-1.45, -0.55, 0.55, 1.45].map((offset) => (
             <RoundedBox key={offset} args={[0.48, 0.48, 0.62]} radius={0.04} smoothness={2} position={[offset * width * 0.15, 5.22, backZ + 1.04]} castShadow receiveShadow>
               <meshStandardMaterial color={shiftColor(wallColor, 0.08)} roughness={0.84} map={textures?.stone} />
@@ -598,7 +615,7 @@ function TerrainMesh({
   const isCheckpointTower = sceneKit === "checkpoint" && (item.id.includes("checkpoint-tower") || item.label?.toLowerCase().includes("tower"))
   const isCheckpointBridge = sceneKit === "checkpoint" && item.id.includes("checkpoint-bridge")
   const isCheckpointPlatform = sceneKit === "checkpoint" && item.id.includes("checkpoint-platform")
-  const isCityGateTower = sceneKit === "city_gate" && (item.id.includes("city-gate-tower") || item.id.includes("city-gate-arch"))
+  const isCityGateTower = sceneKit === "city_gate" && item.id.includes("city-gate-tower")
   const isCityGateBridge = sceneKit === "city_gate" && item.id.includes("city-gate-bridge")
   const isCityGatePlatform = sceneKit === "city_gate" && item.id.includes("city-gate-platform")
   const isCityGateMarketPad = sceneKit === "city_gate" && item.id.includes("city-gate-market")
@@ -958,6 +975,18 @@ function TerrainMesh({
         <meshStandardMaterial color="#ffffff" roughness={0.84} metalness={0.04} map={surfaceTexture} />
         <Edges scale={1.004} color={outline} />
       </RoundedBox>
+      {isCityGateMarketPad ? (
+        <>
+          <mesh position={[0, item.height + 0.07, 0]} castShadow receiveShadow>
+            <boxGeometry args={[Math.max(item.width - 0.18, 0.3), 0.05, Math.max(item.depth - 0.18, 0.3)]} />
+            <meshStandardMaterial color="#ece1cf" roughness={0.8} map={surfaceTexture} />
+          </mesh>
+          <mesh position={[0, item.height + 0.14, 0]} castShadow receiveShadow>
+            <boxGeometry args={[Math.max(item.width - 0.42, 0.2), 0.04, Math.max(item.depth - 0.42, 0.2)]} />
+            <meshStandardMaterial color="#d7b582" roughness={0.76} map={textures?.wood} />
+          </mesh>
+        </>
+      ) : null}
       <RoundedBox
         args={[Math.max(item.width - 0.2, 0.3), Math.max(item.height * 0.18, 0.08), Math.max(item.depth - 0.2, 0.3)]}
         radius={0.05}
@@ -1101,6 +1130,90 @@ function PropMesh({
           <mesh position={[0.08 * item.scale, 0.5 * item.scale, 0]} rotation={[0.15, 0.1, -0.1]} castShadow>
             <cylinderGeometry args={[0.05 * item.scale, 0.08 * item.scale, 0.5 * item.scale, 8]} />
             <meshStandardMaterial color="#69492f" roughness={1} />
+          </mesh>
+        </group>
+      )
+    case "post":
+      return (
+        <group position={position} rotation={[0, item.rotation, 0]}>
+          <mesh position={[0, -0.34 * item.scale, 0]} castShadow receiveShadow>
+            <boxGeometry args={[0.24 * item.scale, 0.08 * item.scale, 0.24 * item.scale]} />
+            <meshStandardMaterial color="#d5c4ac" roughness={0.86} map={textures?.stone} />
+          </mesh>
+          <mesh position={[0, 0.18 * item.scale, 0]} castShadow receiveShadow>
+            <boxGeometry args={[0.08 * item.scale, 0.92 * item.scale, 0.08 * item.scale]} />
+            <meshStandardMaterial color="#74553d" roughness={0.84} map={textures?.wood} />
+          </mesh>
+          <mesh position={[0.14 * item.scale, 0.34 * item.scale, 0]} castShadow receiveShadow>
+            <boxGeometry args={[0.28 * item.scale, 0.06 * item.scale, 0.06 * item.scale]} />
+            <meshStandardMaterial color="#74553d" roughness={0.84} map={textures?.wood} />
+          </mesh>
+        </group>
+      )
+    case "barrel":
+      return (
+        <group position={position} rotation={[0, item.rotation, 0]}>
+          <mesh castShadow receiveShadow>
+            <cylinderGeometry args={[0.24 * item.scale, 0.28 * item.scale, 0.56 * item.scale, 14]} />
+            <meshStandardMaterial color="#b67f4b" roughness={0.78} map={textures?.wood} />
+          </mesh>
+          {[-0.16, 0, 0.16].map((y) => (
+            <mesh key={y} position={[0, y * item.scale, 0]} castShadow>
+              <torusGeometry args={[0.25 * item.scale, 0.018 * item.scale, 8, 16]} />
+              <meshStandardMaterial color="#4f3a2a" roughness={0.7} metalness={0.18} />
+            </mesh>
+          ))}
+        </group>
+      )
+    case "wagon":
+      return (
+        <group position={position} rotation={[0, item.rotation, 0]}>
+          <mesh position={[0, 0.16 * item.scale, 0]} castShadow receiveShadow>
+            <boxGeometry args={[1.5 * item.scale, 0.42 * item.scale, 0.88 * item.scale]} />
+            <meshStandardMaterial color="#bc8450" roughness={0.78} map={textures?.wood} />
+          </mesh>
+          <mesh position={[0, 0.42 * item.scale, 0]} castShadow receiveShadow>
+            <boxGeometry args={[1.28 * item.scale, 0.08 * item.scale, 0.74 * item.scale]} />
+            <meshStandardMaterial color="#d5b385" roughness={0.72} map={textures?.wood} />
+          </mesh>
+          {[
+            [-0.48, -0.1, -0.46],
+            [0.48, -0.1, -0.46],
+            [-0.48, -0.1, 0.46],
+            [0.48, -0.1, 0.46],
+          ].map(([x, y, z], index) => (
+            <mesh key={index} position={[x * item.scale, y * item.scale, z * item.scale]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+              <torusGeometry args={[0.22 * item.scale, 0.04 * item.scale, 8, 16]} />
+              <meshStandardMaterial color="#4f3a2a" roughness={0.72} metalness={0.16} />
+            </mesh>
+          ))}
+          <mesh position={[0.92 * item.scale, -0.02 * item.scale, 0]} rotation={[0, 0, -0.1]} castShadow receiveShadow>
+            <boxGeometry args={[0.74 * item.scale, 0.06 * item.scale, 0.08 * item.scale]} />
+            <meshStandardMaterial color="#7d5b3f" roughness={0.82} map={textures?.wood} />
+          </mesh>
+        </group>
+      )
+    case "stall":
+      return (
+        <group position={position} rotation={[0, item.rotation, 0]}>
+          <mesh position={[0, 0.26 * item.scale, 0]} castShadow receiveShadow>
+            <boxGeometry args={[1.36 * item.scale, 0.08 * item.scale, 0.86 * item.scale]} />
+            <meshStandardMaterial color="#d6a36f" roughness={0.76} map={textures?.wood} />
+          </mesh>
+          {[
+            [-0.56, 0.72, -0.28],
+            [0.56, 0.72, -0.28],
+            [-0.56, 0.72, 0.28],
+            [0.56, 0.72, 0.28],
+          ].map((leg) => (
+            <mesh key={leg.join(":")} position={[leg[0] * item.scale, leg[1] * item.scale, leg[2] * item.scale]} castShadow>
+              <boxGeometry args={[0.08 * item.scale, 1.0 * item.scale, 0.08 * item.scale]} />
+              <meshStandardMaterial color="#815d3f" roughness={0.82} map={textures?.wood} />
+            </mesh>
+          ))}
+          <mesh position={[0, 1.28 * item.scale, 0]} castShadow receiveShadow>
+            <boxGeometry args={[1.46 * item.scale, 0.06 * item.scale, 0.92 * item.scale]} />
+            <meshStandardMaterial color="#b05d58" roughness={0.82} map={textures?.cloth} />
           </mesh>
         </group>
       )
@@ -1345,7 +1458,7 @@ function PropMesh({
     default:
       return (
         <group position={position} rotation={[0, item.rotation, 0]}>
-          {renderCrate([0, 0, 0], item.scale, "#f0c993")}
+          {renderCrate([0, 0, 0], item.scale, item.color || "#f0c993")}
           {item.scale >= 1.02 && renderCrate([0.36 * item.scale, -0.06 * item.scale, -0.18 * item.scale], item.scale * 0.86, "#e6bb7e")}
           {item.scale >= 1.18 && renderCrate([-0.24 * item.scale, 0.32 * item.scale, 0.08 * item.scale], item.scale * 0.74, "#f6d5a8")}
         </group>
