@@ -378,31 +378,31 @@ function DisplayBase({
 
   return (
     <group>
-      <RoundedBox args={[width + 2.5, 0.95, depth + 2.5]} radius={0.22} smoothness={4} position={[0, -0.52, 0]} receiveShadow>
+      <RoundedBox args={[width + 2.1, 0.54, depth + 2.1]} radius={0.18} smoothness={4} position={[0, -0.31, 0]} receiveShadow>
         <meshStandardMaterial color="#ffffff" roughness={0.88} metalness={0.12} map={textures?.wood} />
         <Edges scale={1.005} color={shiftColor(palette.frame, 0.14)} />
       </RoundedBox>
 
-      <RoundedBox args={[width + 1.3, 0.34, depth + 1.3]} radius={0.16} smoothness={4} position={[0, -0.08, 0]} receiveShadow>
+      <RoundedBox args={[width + 1.05, 0.18, depth + 1.05]} radius={0.12} smoothness={4} position={[0, -0.02, 0]} receiveShadow>
         <meshStandardMaterial color="#f2ede4" roughness={0.7} metalness={0.18} map={textures?.metal} />
         <Edges scale={1.004} color={shiftColor(palette.rim, 0.12)} />
       </RoundedBox>
 
-      <RoundedBox args={[width, 0.16, depth]} radius={0.1} smoothness={4} position={[0, 0.08, 0]} receiveShadow>
+      <RoundedBox args={[width, 0.1, depth]} radius={0.08} smoothness={4} position={[0, 0.06, 0]} receiveShadow>
         <meshStandardMaterial color="#f3eee2" roughness={0.92} metalness={0.02} map={boardTexture} />
         <Edges scale={1.003} color={shiftColor(palette.floor, -0.18)} />
       </RoundedBox>
 
-      <mesh position={[0, 0.165, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+      <mesh position={[0, 0.115, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[width - 0.45, depth - 0.45]} />
         <meshStandardMaterial color="#ffffff" roughness={0.95} map={boardTexture} />
       </mesh>
 
       {[
-        [0, 0.17, -depth / 2 + 0.18, width - 0.55, 0.14],
-        [0, 0.17, depth / 2 - 0.18, width - 0.55, 0.14],
-        [-width / 2 + 0.18, 0.17, 0, 0.14, depth - 0.55],
-        [width / 2 - 0.18, 0.17, 0, 0.14, depth - 0.55],
+        [0, 0.12, -depth / 2 + 0.18, width - 0.55, 0.1],
+        [0, 0.12, depth / 2 - 0.18, width - 0.55, 0.1],
+        [-width / 2 + 0.18, 0.12, 0, 0.1, depth - 0.55],
+        [width / 2 - 0.18, 0.12, 0, 0.1, depth - 0.55],
       ].map(([x, y, z, sizeX, sizeZ], index) => (
         <mesh key={index} position={[x, y, z]} receiveShadow>
           <boxGeometry args={[sizeX, 0.04, sizeZ]} />
@@ -1590,12 +1590,12 @@ function SafeDisplayBase({
 
   return (
     <group>
-      <mesh position={[0, -0.22, 0]} receiveShadow>
-        <boxGeometry args={[width + 1.2, 0.45, depth + 1.2]} />
+      <mesh position={[0, -0.12, 0]} receiveShadow>
+        <boxGeometry args={[width + 1, 0.24, depth + 1]} />
         <meshStandardMaterial color={shiftColor(palette.frame, 0.2)} roughness={0.95} />
       </mesh>
-      <mesh position={[0, 0.04, 0]} receiveShadow>
-        <boxGeometry args={[width, 0.12, depth]} />
+      <mesh position={[0, 0.03, 0]} receiveShadow>
+        <boxGeometry args={[width, 0.08, depth]} />
         <meshStandardMaterial color={shiftColor(palette.floor, 0.12)} roughness={1} />
       </mesh>
     </group>
