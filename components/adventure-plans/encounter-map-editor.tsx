@@ -44,6 +44,16 @@ function buildSuggestedPrompt(encounter: AdventureEncounter) {
   return `Create a tabletop 3D encounter map for ${encounter.title || "this encounter"}.`
 }
 
+function getLastSavedPrompt(map: Encounter3DMap | undefined) {
+  if (!map) return ""
+
+  return (
+    [...map.promptHistory]
+      .reverse()
+      .find((entry) => entry.trim().length > 0 && !entry.startsWith("Copied from ")) || ""
+  )
+}
+
 export function EncounterMapEditor({
   encounter,
   allSections,
@@ -75,7 +85,9 @@ export function EncounterMapEditor({
     [encounter.instructions, encounter.intro, encounter.npc, encounter.title, sceneTitle, sectionTitle]
   )
   const defaultPrompt = React.useMemo(() => buildSuggestedPrompt(encounter), [encounter])
-  const [prompt, setPrompt] = React.useState(defaultPrompt)
+  const savedPrompt = React.useMemo(() => getLastSavedPrompt(encounter.map3d), [encounter.map3d])
+  const resolvedPrompt = savedPrompt || defaultPrompt
+  const [prompt, setPrompt] = React.useState(resolvedPrompt)
   const [suggestedPrompt, setSuggestedPrompt] = React.useState("")
   const [isGenerating, setIsGenerating] = React.useState(false)
   const [isDraftingPrompt, setIsDraftingPrompt] = React.useState(false)
@@ -113,10 +125,10 @@ export function EncounterMapEditor({
   )
 
   React.useEffect(() => {
-    setPrompt(defaultPrompt)
+    setPrompt(resolvedPrompt)
     setSuggestedPrompt("")
     requestKeyRef.current = null
-  }, [defaultPrompt])
+  }, [resolvedPrompt])
 
   const draftPromptFromEncounter = React.useCallback(
     async (forceReplace: boolean) => {
@@ -154,13 +166,14 @@ export function EncounterMapEditor({
 
   React.useEffect(() => {
     if (!map) return
+    if (savedPrompt) return
 
     const requestKey = `${encounter.id}:${encounter.intro}:${encounter.instructions}`
     if (requestKeyRef.current === requestKey) return
 
     requestKeyRef.current = requestKey
     void draftPromptFromEncounter(true)
-  }, [draftPromptFromEncounter, encounter.id, encounter.instructions, encounter.intro, map])
+  }, [draftPromptFromEncounter, encounter.id, encounter.instructions, encounter.intro, map, savedPrompt])
 
   React.useEffect(() => {
     if (!map) return
@@ -195,7 +208,7 @@ export function EncounterMapEditor({
       .then((generated) => {
         onMapChange(generated)
         onMapPersistRequest()
-        setPrompt(suggestedPrompt || defaultPrompt)
+        setPrompt(prompt)
         toast.success(map ? "Map updated from prompt." : "Map generated.")
       })
       .catch((error) => {
