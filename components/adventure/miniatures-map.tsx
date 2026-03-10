@@ -1110,6 +1110,7 @@ export default function MiniaturesMap({
   const [shouldRenderCanvas, setShouldRenderCanvas] = useState(false)
   const displayMap = useMemo(() => enhanceEncounterMap(map), [map])
   const usesPremiumGeometry = renderMode !== "safe"
+  const usesPremiumTokens = renderMode === "textured" || renderMode === "full"
   const usesTextures = renderMode === "textured" || renderMode === "full"
   const usesFullLighting = renderMode === "full"
   const palette = useMemo(() => getThemePalette(displayMap.board.theme), [displayMap.board.theme])
@@ -1341,7 +1342,7 @@ export default function MiniaturesMap({
               ))}
 
               {tokens.map((token) => (
-                usesPremiumGeometry ? <TokenMini key={token.id} token={token} onSelect={setSelectedToken} /> : <SafeTokenMini key={token.id} token={token} onSelect={setSelectedToken} />
+                usesPremiumTokens ? <TokenMini key={token.id} token={token} onSelect={setSelectedToken} /> : <SafeTokenMini key={token.id} token={token} onSelect={setSelectedToken} />
               ))}
 
               <OrbitControls
