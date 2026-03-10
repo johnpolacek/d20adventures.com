@@ -412,18 +412,18 @@ function createSceneKitProps(sceneKit: Encounter3DSceneKit, theme: Encounter3DTh
         { id: "auto-kit-city-gate-banner-right", kind: "banner", x: 1.95, z: backline + 0.25, y: 0, scale: 1.26, rotation: -0.02, color: palette.accent, label: "Gate banner" },
         { id: "auto-kit-city-gate-banner-tower-left", kind: "banner", x: -4.45, z: backline + 1.28, y: 0, scale: 1.02, rotation: 0.06, color: palette.accent, label: "Tower standard" },
         { id: "auto-kit-city-gate-banner-tower-right", kind: "banner", x: 4.45, z: backline + 1.2, y: 0, scale: 1.02, rotation: -0.06, color: palette.accent, label: "Tower standard" },
-        { id: "auto-kit-city-gate-guard-table-left", kind: "table", x: -1.95, z: 0.85, y: 0, scale: 0.94, rotation: 0.04, color: palette.rim, label: "Customs table" },
-        { id: "auto-kit-city-gate-guard-table-right", kind: "table", x: 2.35, z: 0.58, y: 0, scale: 1.02, rotation: -0.04, color: palette.rim, label: "Ledger desk" },
-        { id: "auto-kit-city-gate-wagon-left", kind: "wagon", x: -3.4, z: 1.75, y: 0, scale: 1.16, rotation: 0.08, color: palette.accent, label: "Merchant wagon" },
-        { id: "auto-kit-city-gate-wagon-right", kind: "wagon", x: 2.95, z: 1.48, y: 0, scale: 1.06, rotation: -0.1, color: palette.accent, label: "Supply wagon" },
-        { id: "auto-kit-city-gate-stall-left", kind: "stall", x: -2.15, z: 1.55, y: 0, scale: 1.02, rotation: 0.06, color: palette.accent, label: "Market awning" },
-        { id: "auto-kit-city-gate-stall-right", kind: "stall", x: 3.85, z: 1.26, y: 0, scale: 1.06, rotation: -0.08, color: palette.accent, label: "Checkpoint stall" },
-        { id: "auto-kit-city-gate-barrel-left", kind: "barrel", x: -2.8, z: 0.88, y: 0, scale: 0.86, rotation: 0.08, color: palette.rim, label: "Barrel stack" },
-        { id: "auto-kit-city-gate-barrel-right", kind: "barrel", x: 1.6, z: 0.84, y: 0, scale: 0.82, rotation: -0.06, color: palette.rim, label: "Barrel stack" },
-        { id: "auto-kit-city-gate-post-left", kind: "post", x: -3.95, z: 2.28, y: 0, scale: 0.94, rotation: 0, color: palette.rim, label: "Hitching post" },
-        { id: "auto-kit-city-gate-post-right", kind: "post", x: 3.45, z: 2.02, y: 0, scale: 0.94, rotation: 0, color: palette.rim, label: "Hitching post" },
-        { id: "auto-kit-city-gate-torch-left", kind: "torch", x: -1.55, z: 0.34, y: 0, scale: 0.98, rotation: 0, color: "#efc65b", label: "Gate torch" },
-        { id: "auto-kit-city-gate-torch-right", kind: "torch", x: 1.55, z: 0.34, y: 0, scale: 0.98, rotation: 0, color: "#efc65b", label: "Gate torch" },
+        { id: "auto-kit-city-gate-guard-table-left", kind: "table", x: -1.55, z: 0.48, y: 0, scale: 1.02, rotation: 0.04, color: palette.rim, label: "Customs desk" },
+        { id: "auto-kit-city-gate-guard-table-right", kind: "table", x: 1.95, z: 0.28, y: 0, scale: 1.08, rotation: -0.04, color: palette.rim, label: "Ledger station" },
+        { id: "auto-kit-city-gate-wagon-left", kind: "wagon", x: -3.7, z: 1.62, y: 0, scale: 1.18, rotation: 0.1, color: palette.accent, label: "Merchant wagon" },
+        { id: "auto-kit-city-gate-wagon-right", kind: "wagon", x: 3.5, z: 1.42, y: 0, scale: 1.12, rotation: -0.12, color: palette.accent, label: "Supply wagon" },
+        { id: "auto-kit-city-gate-stall-left", kind: "stall", x: -2.45, z: 1.24, y: 0, scale: 1.08, rotation: 0.04, color: palette.accent, label: "Market awning" },
+        { id: "auto-kit-city-gate-stall-right", kind: "stall", x: 2.5, z: 1.08, y: 0, scale: 1.06, rotation: -0.06, color: palette.accent, label: "Cloth stall" },
+        { id: "auto-kit-city-gate-barrel-left", kind: "barrel", x: -2.82, z: 0.62, y: 0, scale: 0.88, rotation: 0.08, color: palette.rim, label: "Barrel stack" },
+        { id: "auto-kit-city-gate-barrel-right", kind: "barrel", x: 2.65, z: 0.52, y: 0, scale: 0.84, rotation: -0.06, color: palette.rim, label: "Barrel stack" },
+        { id: "auto-kit-city-gate-post-left", kind: "post", x: -4.3, z: 2.1, y: 0, scale: 0.96, rotation: 0, color: palette.rim, label: "Hitching post" },
+        { id: "auto-kit-city-gate-post-right", kind: "post", x: 4.05, z: 1.92, y: 0, scale: 0.96, rotation: 0, color: palette.rim, label: "Queue post" },
+        { id: "auto-kit-city-gate-torch-left", kind: "torch", x: -1.3, z: 0.1, y: 0, scale: 1, rotation: 0, color: "#efc65b", label: "Gate torch" },
+        { id: "auto-kit-city-gate-torch-right", kind: "torch", x: 1.3, z: 0.1, y: 0, scale: 1, rotation: 0, color: "#efc65b", label: "Gate torch" },
       ]
     case "courtyard":
       return [
@@ -810,11 +810,11 @@ export function enhanceEncounterMap(
   if (sceneKit === "city_gate") {
     next.camera = {
       ...next.camera,
-      distance: 16.5,
-      pitch: 0.78,
-      yaw: 1.42,
+      distance: 19.2,
+      pitch: 0.58,
+      yaw: Math.PI / 2,
       focusX: 0,
-      focusZ: -1.15,
+      focusZ: -3.15,
     }
 
     next.terrain = next.terrain.filter((item) => !isCityGateStructuralTerrain(item))
