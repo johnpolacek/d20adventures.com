@@ -590,6 +590,35 @@ function CityGateStall({
   )
 }
 
+function CityGateQueueFigure({
+  position,
+  rotation = 0,
+  scale = 1,
+  tone = "#d9c7b4",
+}: {
+  position: [number, number, number]
+  rotation?: number
+  scale?: number
+  tone?: string
+}) {
+  return (
+    <group position={position} rotation={[0, rotation, 0]}>
+      <mesh position={[0, 0.05 * scale, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[0.12 * scale, 0.13 * scale, 0.08 * scale, 12]} />
+        <meshStandardMaterial color="#5b5148" roughness={0.78} />
+      </mesh>
+      <mesh position={[0, 0.48 * scale, 0]} castShadow receiveShadow>
+        <capsuleGeometry args={[0.11 * scale, 0.46 * scale, 3, 10]} />
+        <meshStandardMaterial color={tone} roughness={0.88} />
+      </mesh>
+      <mesh position={[0, 0.92 * scale, 0]} castShadow receiveShadow>
+        <sphereGeometry args={[0.1 * scale, 10, 10]} />
+        <meshStandardMaterial color="#f4decb" roughness={0.82} />
+      </mesh>
+    </group>
+  )
+}
+
 function CityGateAssetSet({
   map,
   palette,
@@ -601,21 +630,21 @@ function CityGateAssetSet({
 }) {
   const width = map.board.width * map.board.cellSize
   const depth = map.board.depth * map.board.cellSize
-  const backZ = -depth * 0.66
+  const backZ = -depth * 0.48
 
   return (
     <group>
-      <RoundedBox args={[13.2, 0.42, 0.28]} radius={0.05} smoothness={3} position={[0, 0.21, backZ + 0.06]} castShadow receiveShadow>
+      <RoundedBox args={[14.6, 0.48, 0.3]} radius={0.05} smoothness={3} position={[0, 0.24, backZ + 0.04]} castShadow receiveShadow>
         <meshStandardMaterial color="#e9dfd1" roughness={0.88} map={textures?.stone} />
       </RoundedBox>
 
       {[
-        [-6.1, 4.3, 2.2, 8.8],
-        [-3.15, 5.2, 2.6, 10.4],
-        [3.15, 5.2, 2.6, 10.4],
-        [6.1, 4.3, 2.2, 8.8],
+        [-6.35, 4.9, 2.32, 10.4],
+        [-3.3, 6.05, 2.88, 12.4],
+        [3.3, 6.05, 2.88, 12.4],
+        [6.35, 4.9, 2.32, 10.4],
       ].map(([x, y, radius, height], index) => (
-        <group key={index} position={[x, y, backZ + 0.12]}>
+        <group key={index} position={[x, y, backZ + 0.1]}>
           <mesh castShadow receiveShadow>
             <cylinderGeometry args={[radius, radius, height, 24, 1, false, -Math.PI / 2, Math.PI]} />
             <meshStandardMaterial color="#efe6d9" roughness={0.88} map={textures?.stone} />
@@ -631,47 +660,71 @@ function CityGateAssetSet({
         </group>
       ))}
 
-      <RoundedBox args={[8.6, 10.6, 0.34]} radius={0.04} smoothness={3} position={[0, 5.3, backZ + 0.02]} castShadow receiveShadow>
+      <RoundedBox args={[9.6, 12.8, 0.36]} radius={0.04} smoothness={3} position={[0, 6.2, backZ]} castShadow receiveShadow>
         <meshStandardMaterial color="#ece2d4" roughness={0.9} map={textures?.stone} />
       </RoundedBox>
-      <RoundedBox args={[9.8, 2.05, 0.32]} radius={0.04} smoothness={3} position={[0, 8.9, backZ + 0.04]} castShadow receiveShadow>
+      <RoundedBox args={[11.1, 2.3, 0.34]} radius={0.04} smoothness={3} position={[0, 10.45, backZ + 0.03]} castShadow receiveShadow>
         <meshStandardMaterial color="#f5ece1" roughness={0.84} map={textures?.stone} />
       </RoundedBox>
-      <RoundedBox args={[3.4, 1.14, 0.28]} radius={0.04} smoothness={3} position={[0, 10.05, backZ + 0.04]} castShadow receiveShadow>
+      <RoundedBox args={[3.9, 1.22, 0.3]} radius={0.04} smoothness={3} position={[0, 11.72, backZ + 0.04]} castShadow receiveShadow>
         <meshStandardMaterial color="#e8ddd0" roughness={0.84} map={textures?.stone} />
       </RoundedBox>
+      <RoundedBox args={[7.2, 0.34, 0.24]} radius={0.04} smoothness={2} position={[0, 7.58, backZ + 0.18]} castShadow receiveShadow>
+        <meshStandardMaterial color="#f7eee4" roughness={0.82} map={textures?.stone} />
+      </RoundedBox>
 
-      <mesh position={[0, 4.8, backZ + 0.2]} rotation={[Math.PI / 2, 0, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[3.44, 3.44, 0.24, 42, 1, false, 0, Math.PI]} />
+      <mesh position={[0, 5.72, backZ + 0.19]} rotation={[Math.PI / 2, 0, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[4.05, 4.05, 0.28, 46, 1, false, 0, Math.PI]} />
         <meshStandardMaterial color="#e2d4c4" roughness={0.84} map={textures?.stone} />
       </mesh>
-      <mesh position={[0, 4.38, backZ + 0.24]} rotation={[Math.PI / 2, 0, 0]} receiveShadow>
-        <cylinderGeometry args={[2.56, 2.56, 0.34, 38, 1, false, 0, Math.PI]} />
+      <mesh position={[0, 5.18, backZ + 0.24]} rotation={[Math.PI / 2, 0, 0]} receiveShadow>
+        <cylinderGeometry args={[3.05, 3.05, 0.38, 40, 1, false, 0, Math.PI]} />
         <meshStandardMaterial color={shiftColor(palette.backdrop, 0.08)} roughness={0.98} side={THREE.BackSide} />
       </mesh>
-      <mesh position={[0, 2.15, backZ + 0.28]} receiveShadow castShadow>
-        <boxGeometry args={[5.1, 4.4, 0.14]} />
+      <mesh position={[0, 2.75, backZ + 0.28]} receiveShadow castShadow>
+        <boxGeometry args={[6.2, 5.6, 0.16]} />
         <meshStandardMaterial color={shiftColor(palette.backdrop, 0.03)} roughness={0.98} />
       </mesh>
+      <mesh position={[0, 1.02, backZ + 0.19]} castShadow receiveShadow>
+        <boxGeometry args={[8.1, 0.26, 0.18]} />
+        <meshStandardMaterial color="#d4c1aa" roughness={0.88} map={textures?.stone} />
+      </mesh>
+      <mesh position={[0, 0.58, backZ + 0.18]} castShadow receiveShadow>
+        <boxGeometry args={[9.5, 0.18, 0.18]} />
+        <meshStandardMaterial color="#c7b39d" roughness={0.9} map={textures?.stone} />
+      </mesh>
 
-      {[-2.16, 2.16].map((side) => (
-        <mesh key={side} position={[side, 2.5, backZ + 0.28]} castShadow receiveShadow>
-          <boxGeometry args={[0.42, 5.02, 0.12]} />
+      {[-2.52, 2.52].map((side) => (
+        <mesh key={side} position={[side, 3.08, backZ + 0.28]} castShadow receiveShadow>
+          <boxGeometry args={[0.48, 6.2, 0.14]} />
           <meshStandardMaterial color="#5d4638" roughness={0.84} map={textures?.wood} />
         </mesh>
       ))}
+      {[-2.8, 2.8].map((side) => (
+        <mesh key={`door-${side}`} position={[side, 2.28, backZ + 0.22]} castShadow receiveShadow>
+          <boxGeometry args={[0.2, 4.3, 0.08]} />
+          <meshStandardMaterial color="#8c694b" roughness={0.82} map={textures?.wood} />
+        </mesh>
+      ))}
 
-      {[-5.95, -3.25, -0.96, 0.96, 3.25, 5.95].map((x) => (
-        <RoundedBox key={x} args={[0.38, 0.38, 0.18]} radius={0.03} smoothness={2} position={[x, 10.05, backZ + 0.12]} castShadow receiveShadow>
+      {[-3.86, -2.94, -2.02, 2.02, 2.94, 3.86].map((x) => (
+        <mesh key={`rail-${x}`} position={[x, 0.86, backZ + 0.26]} castShadow receiveShadow>
+          <boxGeometry args={[0.12, 0.72, 0.08]} />
+          <meshStandardMaterial color="#d8c7b2" roughness={0.86} map={textures?.stone} />
+        </mesh>
+      ))}
+
+      {[-6.1, -3.45, -1.08, 1.08, 3.45, 6.1].map((x) => (
+        <RoundedBox key={x} args={[0.42, 0.42, 0.18]} radius={0.03} smoothness={2} position={[x, 11.72, backZ + 0.12]} castShadow receiveShadow>
           <meshStandardMaterial color={shiftColor(palette.edge, 0.08)} roughness={0.84} map={textures?.stone} />
         </RoundedBox>
       ))}
 
       {[
-        [-5.55, 5.7, 1.0, 4.2],
-        [-3.05, 6.1, 1.16, 4.8],
-        [3.05, 6.1, 1.16, 4.8],
-        [5.55, 5.7, 1.0, 4.2],
+        [-5.85, 6.3, 1.14, 5.4],
+        [-3.18, 6.85, 1.36, 6.2],
+        [3.18, 6.85, 1.36, 6.2],
+        [5.85, 6.3, 1.14, 5.4],
       ].map(([x, y, widthSize, heightSize], index) => (
         <mesh key={index} position={[x, y, backZ + 0.16]} castShadow receiveShadow>
           <planeGeometry args={[widthSize, heightSize]} />
@@ -679,37 +732,46 @@ function CityGateAssetSet({
         </mesh>
       ))}
 
-      {[-1.68, -0.78, 0.78, 1.68].map((x) => (
-        <mesh key={x} position={[x, 6.54, backZ + 0.16]} castShadow receiveShadow>
-          <planeGeometry args={[0.76, 3.4]} />
+      {[-1.92, -0.92, 0.92, 1.92].map((x) => (
+        <mesh key={x} position={[x, 7.38, backZ + 0.16]} castShadow receiveShadow>
+          <planeGeometry args={[0.92, 4.5]} />
           <meshStandardMaterial color="#a9554f" side={THREE.DoubleSide} roughness={0.84} map={textures?.cloth} />
         </mesh>
       ))}
 
-      <RoundedBox args={[5.6, 0.16, 2.4]} radius={0.04} smoothness={2} position={[0, 0.08, -1.2]} castShadow receiveShadow>
+      <RoundedBox args={[6.6, 0.18, 3.0]} radius={0.04} smoothness={2} position={[0.4, 0.09, -0.35]} castShadow receiveShadow>
         <meshStandardMaterial color="#b89162" roughness={0.82} map={textures?.dirt} />
       </RoundedBox>
-      <RoundedBox args={[4.4, 0.12, 1.9]} radius={0.04} smoothness={2} position={[0, 0.18, -1.05]} castShadow receiveShadow>
+      <RoundedBox args={[4.9, 0.14, 2.2]} radius={0.04} smoothness={2} position={[0.36, 0.2, -0.18]} castShadow receiveShadow>
         <meshStandardMaterial color="#dcc4a2" roughness={0.82} map={textures?.dirt} />
       </RoundedBox>
+      <RoundedBox args={[2.1, 0.12, 1.02]} radius={0.04} smoothness={2} position={[-2.65, 0.11, 1.54]} castShadow receiveShadow>
+        <meshStandardMaterial color="#d9c2a2" roughness={0.82} map={textures?.dirt} />
+      </RoundedBox>
+      <RoundedBox args={[2.8, 0.12, 1.18]} radius={0.04} smoothness={2} position={[3.4, 0.11, 1.04]} castShadow receiveShadow>
+        <meshStandardMaterial color="#d9c2a2" roughness={0.82} map={textures?.dirt} />
+      </RoundedBox>
 
-      <RoundedBox args={[2.4, 0.18, 1.34]} radius={0.05} smoothness={2} position={[-2.4, 0.09, 0.86]} castShadow receiveShadow>
+      <RoundedBox args={[2.55, 0.18, 1.42]} radius={0.05} smoothness={2} position={[-2.8, 0.09, 0.96]} castShadow receiveShadow>
         <meshStandardMaterial color="#d1b58e" roughness={0.8} map={textures?.dirt} />
       </RoundedBox>
-      <RoundedBox args={[2.2, 0.18, 1.28]} radius={0.05} smoothness={2} position={[2.85, 0.09, 0.74]} castShadow receiveShadow>
+      <RoundedBox args={[2.7, 0.18, 1.4]} radius={0.05} smoothness={2} position={[3.35, 0.09, 0.54]} castShadow receiveShadow>
         <meshStandardMaterial color="#d1b58e" roughness={0.8} map={textures?.dirt} />
       </RoundedBox>
 
-      <CityGateDesk position={[-1.55, 0, 0.38]} rotation={0.04} scale={0.98} textures={textures} />
-      <CityGateDesk position={[1.95, 0, 0.18]} rotation={-0.05} scale={1.04} textures={textures} ledger />
-      <CityGateWagon position={[-3.7, 0, 1.42]} rotation={0.08} scale={1.02} textures={textures} />
-      <CityGateWagon position={[3.55, 0, 1.22]} rotation={-0.12} scale={0.96} textures={textures} canopy={false} />
-      <CityGateStall position={[-2.35, 0, 1.02]} rotation={0.04} scale={0.98} textures={textures} />
-      <CityGateStall position={[2.4, 0, 0.92]} rotation={-0.06} scale={0.94} textures={textures} />
+      <CityGateDesk position={[-1.15, 0, 0.24]} rotation={0.06} scale={1.02} textures={textures} />
+      <CityGateDesk position={[2.05, 0, -0.16]} rotation={-0.08} scale={1.1} textures={textures} ledger />
+      <CityGateWagon position={[-4.35, 0, 1.46]} rotation={0.1} scale={1.08} textures={textures} />
+      <CityGateWagon position={[-3.1, 0, 0.86]} rotation={0.02} scale={0.9} textures={textures} canopy={false} />
+      <CityGateWagon position={[4.15, 0, 1.18]} rotation={-0.14} scale={0.98} textures={textures} canopy={false} />
+      <CityGateStall position={[-2.35, 0, 1.12]} rotation={0.04} scale={1.06} textures={textures} />
+      <CityGateStall position={[-1.42, 0, 0.58]} rotation={-0.08} scale={0.9} textures={textures} />
+      <CityGateStall position={[2.85, 0, 0.92]} rotation={-0.12} scale={0.96} textures={textures} />
 
       {[
-        [-4.32, 0, 2.02],
-        [4.12, 0, 1.86],
+        [-4.85, 0, 2.22],
+        [4.56, 0, 1.92],
+        [3.28, 0, 1.38],
       ].map(([x, y, z], index) => (
         <group key={index} position={[x, y, z]}>
           <mesh position={[0, -0.32, 0]} castShadow receiveShadow>
@@ -728,9 +790,11 @@ function CityGateAssetSet({
       ))}
 
       {[
-        [-2.82, 0, 0.52],
-        [2.72, 0, 0.44],
-        [3.05, 0, 0.6],
+        [-3.18, 0, 0.64],
+        [-2.86, 0, 0.34],
+        [2.78, 0, 0.32],
+        [3.12, 0, 0.48],
+        [3.46, 0, 0.66],
       ].map(([x, y, z], index) => (
         <group key={index} position={[x, y, z]}>
           <mesh castShadow receiveShadow>
@@ -747,7 +811,7 @@ function CityGateAssetSet({
       ))}
 
       {[-1.3, 1.3].map((x) => (
-        <group key={x} position={[x, 0, -0.08]}>
+        <group key={x} position={[x, 0, -0.34]}>
           <mesh position={[0, -0.48, 0]} castShadow receiveShadow>
             <cylinderGeometry args={[0.22, 0.24, 0.14, 14]} />
             <meshStandardMaterial color="#4f4438" roughness={0.72} metalness={0.18} map={textures?.metal} />
@@ -766,6 +830,17 @@ function CityGateAssetSet({
           </mesh>
           <pointLight position={[0, 0.9, 0]} intensity={3.1} distance={6.2} decay={2} color="#ffb703" />
         </group>
+      ))}
+
+      {[
+        [-1.8, 0, 1.34, 0.06, "#d0c1b1"],
+        [-1.22, 0, 1.1, 0.02, "#c7b6a0"],
+        [-0.62, 0, 0.82, -0.04, "#b8a38e"],
+        [0.12, 0, 0.52, 0.06, "#d7c8b9"],
+        [0.88, 0, 0.28, -0.02, "#c9b8a7"],
+        [1.58, 0, 0.04, 0.04, "#bba998"],
+      ].map(([x, y, z, rotation, tone], index) => (
+        <CityGateQueueFigure key={index} position={[x as number, y as number, z as number]} rotation={rotation as number} scale={0.96} tone={tone as string} />
       ))}
     </group>
   )
