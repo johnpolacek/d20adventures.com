@@ -3,11 +3,12 @@
 import { enhanceEncounterMap, getThemePalette } from "@/lib/map-utils"
 import { cn, getTextureImageUrl } from "@/lib/utils"
 import type { Encounter3DMap } from "@/types/adventure-plan"
-import { Edges, Grid, OrbitControls, RoundedBox } from "@react-three/drei"
+import { Edges, Environment, Grid, OrbitControls, RoundedBox, useGLTF } from "@react-three/drei"
 import { Canvas, useThree } from "@react-three/fiber"
+import { EffectComposer, SSAO, Bloom, Vignette } from "@react-three/postprocessing"
 import type { TurnCharacter } from "@/types/adventure"
 import * as THREE from "three"
-import { useEffect, useId, useMemo, useState } from "react"
+import { Suspense, useEffect, useId, useMemo, useState } from "react"
 
 export type MiniaturesMapRenderMode = "safe" | "geometry" | "textured" | "full"
 export type MiniaturesMapTokenRenderMode = "safe" | "premium"
@@ -410,6 +411,15 @@ function DisplayBase({
         </mesh>
       ))}
     </group>
+  )
+}
+
+function GameTable({ textures }: { textures: SceneTextureSet | null }) {
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.37, 0]} receiveShadow>
+      <planeGeometry args={[80, 80]} />
+      <meshStandardMaterial color="#3d2910" roughness={0.88} metalness={0.04} map={textures?.wood ?? undefined} />
+    </mesh>
   )
 }
 
@@ -865,6 +875,66 @@ function CityGateAssetSet({
           cloak={cloak as string}
         />
       ))}
+    </group>
+  )
+}
+
+// GLB asset paths for the city_gate_v1 premium kit.
+// Place modeled .glb files at these public paths to activate the premium renderer.
+// The component falls back to the procedural CityGateAssetSet when files are unavailable.
+const CITY_GATE_GLB_ASSETS = {
+  gateArchway: "/assets/3d/city_gate/gate_archway.glb",
+  tower: "/assets/3d/city_gate/tower.glb",
+  battlement: "/assets/3d/city_gate/battlement.glb",
+  cobblestone: "/assets/3d/city_gate/cobblestone.glb",
+} as const
+
+function CityGateTowerGLB({ position, mirror = false }: { position: [number, number, number]; mirror?: boolean }) {
+  const { scene } = useGLTF(CITY_GATE_GLB_ASSETS.tower)
+  const clone = useMemo(() => scene.clone(true), [scene])
+  return (
+    <primitive
+      object={clone}
+      position={position}
+      scale={mirror ? [-1, 1, 1] : [1, 1, 1]}
+      castShadow
+      receiveShadow
+    />
+  )
+}
+
+function CityGateArchGLB({ position }: { position: [number, number, number] }) {
+  const { scene } = useGLTF(CITY_GATE_GLB_ASSETS.gateArchway)
+  const clone = useMemo(() => scene.clone(true), [scene])
+  return <primitive object={clone} position={position} castShadow receiveShadow />
+}
+
+// Preload GLB assets so they're ready when the scene mounts
+useGLTF.preload(CITY_GATE_GLB_ASSETS.tower)
+useGLTF.preload(CITY_GATE_GLB_ASSETS.gateArchway)
+useGLTF.preload(CITY_GATE_GLB_ASSETS.battlement)
+useGLTF.preload(CITY_GATE_GLB_ASSETS.cobblestone)
+
+function CityGateAssetSetPremium({
+  map,
+  palette,
+  textures,
+}: {
+  map: Encounter3DMap
+  palette: ReturnType<typeof getThemePalette>
+  textures: SceneTextureSet | null
+}) {
+  const depth = map.board.depth * map.board.cellSize
+  const backZ = -depth * 0.48
+  const towerOffset = 4.8
+
+  return (
+    <group>
+      <Suspense fallback={<CityGateAssetSet map={map} palette={palette} textures={textures} />}>
+        <CityGateArchGLB position={[0, 0, backZ]} />
+        <CityGateTowerGLB position={[-towerOffset, 0, backZ]} />
+        <CityGateTowerGLB position={[towerOffset, 0, backZ]} mirror />
+      </Suspense>
     </group>
   )
 }
@@ -1959,53 +2029,78 @@ function FallbackBadge({ token }: { token: MapMiniToken }) {
 
 function TokenMini({ token, onSelect }: { token: MapMiniToken; onSelect?: (token: MapMiniToken) => void }) {
   const miniStyle = getMiniStyle(token)
+  const portrait = usePortraitTexture(token.image)
+  const bodyColor = token.isDead ? "#5a5a5a" : token.kind === "pc" ? "#c8b89a" : "#b8a090"
+  const armorColor = token.isDead ? "#4a4a4a" : token.isComplete ? "#4a5568" : token.kind === "pc" ? "#7a92b4" : "#b47878"
 
   return (
     <group position={[token.x, (token.y || 0) + 0.01, token.z]} rotation={[0, token.facing || 0, 0]}>
+      {/* Circular base — painted resin look */}
       <mesh castShadow receiveShadow onClick={() => onSelect?.(token)}>
-        <cylinderGeometry args={[0.54, 0.6, 0.16, 20]} />
-        <meshStandardMaterial color={miniStyle.baseColor} roughness={0.88} metalness={0.08} />
+        <cylinderGeometry args={[0.58, 0.62, 0.14, 24]} />
+        <meshPhysicalMaterial color={miniStyle.baseColor} roughness={0.72} metalness={0.06} clearcoat={0.4} clearcoatRoughness={0.28} />
       </mesh>
-      <mesh position={[0, 0.11, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.45, 0.5, 0.045, 20]} />
-        <meshStandardMaterial color={miniStyle.ringColor} roughness={0.52} metalness={0.16} />
-      </mesh>
-      <mesh position={[0, 0.22, 0.02]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.18, 0.22, 0.06, 16]} />
-        <meshStandardMaterial color={miniStyle.accentMetal} roughness={0.42} metalness={0.24} />
-      </mesh>
-      <mesh position={[0, 0.46, -0.06]} rotation={[-0.46, 0, 0]} castShadow receiveShadow>
-        <boxGeometry args={[0.12, 0.62, 0.11]} />
-        <meshStandardMaterial color="#46382f" roughness={0.9} metalness={0.04} />
-      </mesh>
-      <RoundedBox args={[0.54, 1.18, 0.05]} radius={0.08} smoothness={2} position={[0, 1.04, -0.028]} castShadow receiveShadow>
-        <meshStandardMaterial color={miniStyle.topColor} roughness={0.84} metalness={0.04} />
-      </RoundedBox>
-      <RoundedBox args={[0.48, 1.08, 0.04]} radius={0.08} smoothness={2} position={[0, 1.08, 0.014]} castShadow receiveShadow>
-        <meshStandardMaterial color={miniStyle.cardTone} roughness={0.74} metalness={0.02} />
-      </RoundedBox>
-      {[-1, 1].map((side) => (
-        <mesh key={side} position={[side * 0.21, 1.28, 0.005]} rotation={[0, 0, side * -0.5]} castShadow receiveShadow>
-          <boxGeometry args={[0.14, 0.34, 0.04]} />
-          <meshStandardMaterial color={miniStyle.topColor} roughness={0.84} metalness={0.04} />
-        </mesh>
-      ))}
-      <RoundedBox args={[0.42, 0.12, 0.08]} radius={0.03} smoothness={2} position={[0, 0.52, 0.02]} castShadow receiveShadow>
-        <meshStandardMaterial color={miniStyle.plaqueTone} roughness={0.8} metalness={0.06} />
-      </RoundedBox>
-      <mesh position={[0, 1.8, 0.012]} castShadow>
-        <cylinderGeometry args={[0.08, 0.12, 0.06, 14]} />
-        <meshStandardMaterial color={miniStyle.accentMetal} roughness={0.42} metalness={0.26} />
-      </mesh>
-      <mesh position={[0, 1.58, 0.034]} castShadow receiveShadow>
-        <capsuleGeometry args={[0.08, 0.14, 3, 10]} />
-        <meshStandardMaterial color={miniStyle.accentMetal} roughness={0.48} metalness={0.24} />
-      </mesh>
-      <RoundedBox args={[0.62, 0.1, 0.28]} radius={0.03} smoothness={2} position={[0, 0.12, 0]} castShadow receiveShadow>
-        <meshStandardMaterial color={miniStyle.cardTone} roughness={0.76} metalness={0.02} />
-      </RoundedBox>
 
-      {token.image ? <PortraitBadge token={token} /> : <FallbackBadge token={token} />}
+      {/* Faction ring on base edge */}
+      <mesh position={[0, 0.08, 0]}>
+        <torusGeometry args={[0.52, 0.038, 6, 24]} />
+        <meshStandardMaterial color={miniStyle.ringColor} roughness={0.38} metalness={0.26} />
+      </mesh>
+
+      {/* Portrait disc inlaid in base top — visible from overhead camera */}
+      {portrait ? (
+        <mesh position={[0, 0.075, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <circleGeometry args={[0.36, 20]} />
+          <meshStandardMaterial map={portrait} color="#ffffff" roughness={0.6} />
+        </mesh>
+      ) : (
+        <mesh position={[0, 0.075, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <circleGeometry args={[0.36, 20]} />
+          <meshStandardMaterial color={token.kind === "pc" ? "#1d4ed8" : "#b91c1c"} roughness={0.78} />
+        </mesh>
+      )}
+
+      {/* Lower body / legs */}
+      <mesh position={[0, 0.46, 0]} castShadow receiveShadow>
+        <capsuleGeometry args={[0.13, 0.38, 3, 8]} />
+        <meshPhysicalMaterial color={bodyColor} roughness={0.84} metalness={0.04} clearcoat={0.18} clearcoatRoughness={0.45} />
+      </mesh>
+
+      {/* Torso */}
+      <mesh position={[0, 0.84, 0]} castShadow receiveShadow>
+        <capsuleGeometry args={[0.16, 0.28, 3, 10]} />
+        <meshPhysicalMaterial color={armorColor} roughness={0.68} metalness={0.14} clearcoat={0.38} clearcoatRoughness={0.22} />
+      </mesh>
+
+      {/* Left arm */}
+      <mesh position={[-0.22, 0.78, 0]} rotation={[0, 0, 0.48]} castShadow>
+        <capsuleGeometry args={[0.062, 0.26, 2, 6]} />
+        <meshPhysicalMaterial color={armorColor} roughness={0.7} metalness={0.12} clearcoat={0.32} clearcoatRoughness={0.3} />
+      </mesh>
+
+      {/* Right arm */}
+      <mesh position={[0.22, 0.78, 0]} rotation={[0, 0, -0.48]} castShadow>
+        <capsuleGeometry args={[0.062, 0.26, 2, 6]} />
+        <meshPhysicalMaterial color={armorColor} roughness={0.7} metalness={0.12} clearcoat={0.32} clearcoatRoughness={0.3} />
+      </mesh>
+
+      {/* Neck */}
+      <mesh position={[0, 1.07, 0]} castShadow>
+        <cylinderGeometry args={[0.065, 0.075, 0.1, 8]} />
+        <meshPhysicalMaterial color={bodyColor} roughness={0.78} metalness={0.04} clearcoat={0.18} clearcoatRoughness={0.4} />
+      </mesh>
+
+      {/* Head */}
+      <mesh position={[0, 1.26, 0]} castShadow receiveShadow>
+        <sphereGeometry args={[0.19, 14, 12]} />
+        <meshPhysicalMaterial color={bodyColor} roughness={0.7} metalness={0.04} clearcoat={0.42} clearcoatRoughness={0.2} />
+      </mesh>
+
+      {/* Helmet / head cap */}
+      <mesh position={[0, 1.35, 0]} castShadow>
+        <sphereGeometry args={[0.165, 10, 8, 0, Math.PI * 2, 0, Math.PI / 2.1]} />
+        <meshPhysicalMaterial color={armorColor} roughness={0.56} metalness={0.2} clearcoat={0.52} clearcoatRoughness={0.18} />
+      </mesh>
     </group>
   )
 }
@@ -2152,6 +2247,8 @@ export default function MiniaturesMap({
   const usesFullLighting = renderMode === "full"
   const usesCityGateAssetSet = usesPremiumGeometry && displayMap.sceneKit === "city_gate"
   const showsPresentationGrid = renderMode !== "full"
+  const shadowHalfW = (displayMap.board.width * displayMap.board.cellSize) / 2 + 2.5
+  const shadowHalfD = (displayMap.board.depth * displayMap.board.cellSize) / 2 + 2.5
   const palette = useMemo(() => getThemePalette(displayMap.board.theme), [displayMap.board.theme])
   const textures = useMemo(() => {
     if (!usesTextures) {
@@ -2328,25 +2425,36 @@ export default function MiniaturesMap({
                 intensity={usesFullLighting ? 3 : 1.4}
                 color="#fff4de"
                 castShadow={usesFullLighting}
-                shadow-mapSize-width={1024}
-                shadow-mapSize-height={1024}
+                shadow-mapSize-width={usesFullLighting ? 2048 : 1024}
+                shadow-mapSize-height={usesFullLighting ? 2048 : 1024}
                 shadow-camera-near={0.5}
-                shadow-camera-far={30}
-                shadow-camera-left={-14}
-                shadow-camera-right={14}
-                shadow-camera-top={14}
-                shadow-camera-bottom={-14}
-                shadow-bias={-0.00012}
-                shadow-normalBias={0.02}
+                shadow-camera-far={36}
+                shadow-camera-left={-shadowHalfW}
+                shadow-camera-right={shadowHalfW}
+                shadow-camera-top={shadowHalfD}
+                shadow-camera-bottom={-shadowHalfD}
+                shadow-bias={-0.00008}
+                shadow-normalBias={0.018}
               />
               {usesPremiumGeometry ? <directionalLight position={[-8, 10, -7]} intensity={usesFullLighting ? 1.2 : 0.7} color="#a9c4e2" /> : null}
               {usesPremiumGeometry ? <directionalLight position={[0, 6, -10]} intensity={usesFullLighting ? 0.8 : 0.45} color="#fff2d6" /> : null}
               {usesFullLighting ? <spotLight position={[-6, 14, 10]} angle={0.5} penumbra={0.65} intensity={1.6} color="#ffd7a3" /> : null}
               {usesFullLighting ? <fog attach="fog" args={[shiftColor(palette.haze, 0.05), 18, 48]} /> : null}
 
+              {usesPremiumGeometry ? (
+                <Suspense fallback={null}>
+                  <Environment files="/assets/environment/tabletop-warm.hdr" />
+                </Suspense>
+              ) : null}
+
+              {usesPremiumGeometry ? <GameTable textures={textures} /> : null}
               {usesPremiumGeometry ? <SceneBackdrop map={displayMap} palette={palette} textures={textures} /> : null}
               {usesPremiumGeometry ? <DisplayBase map={displayMap} palette={palette} textures={textures} /> : <SafeDisplayBase map={displayMap} palette={palette} />}
-              {usesCityGateAssetSet ? <CityGateAssetSet map={displayMap} palette={palette} textures={textures} /> : null}
+              {usesCityGateAssetSet && displayMap.premiumAssetKit === "city_gate_v1"
+                ? <CityGateAssetSetPremium map={displayMap} palette={palette} textures={textures} />
+                : usesCityGateAssetSet
+                  ? <CityGateAssetSet map={displayMap} palette={palette} textures={textures} />
+                  : null}
 
               {showsPresentationGrid ? (
                 <Grid
@@ -2398,6 +2506,29 @@ export default function MiniaturesMap({
                 maxPolarAngle={1.2}
                 target={orbitTarget}
               />
+
+              {usesFullLighting ? (
+                <EffectComposer multisampling={0}>
+                  <SSAO
+                    samples={30}
+                    radius={0.25}
+                    intensity={18}
+                    bias={0.025}
+                    luminanceInfluence={0.9}
+                    distanceThreshold={1.0}
+                    distanceFalloff={0.0}
+                    rangeThreshold={0.5}
+                    rangeFalloff={0.1}
+                  />
+                  <Bloom
+                    luminanceThreshold={0.85}
+                    luminanceSmoothing={0.025}
+                    intensity={0.18}
+                    radius={0.6}
+                  />
+                  <Vignette darkness={0.32} offset={0.5} />
+                </EffectComposer>
+              ) : null}
             </Canvas>
           ) : (
             <div className="flex h-full items-center justify-center text-xs font-mono uppercase tracking-[0.25em] text-white/45">Preparing renderer...</div>

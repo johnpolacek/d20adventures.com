@@ -860,6 +860,8 @@ export function enhanceEncounterMap(
       next.tokenSlots.npc = createDefaultNpcSlots(options.npcIds, depth)
     }
 
+    next.premiumAssetKit = "city_gate_v1"
+
     return next
   }
 
