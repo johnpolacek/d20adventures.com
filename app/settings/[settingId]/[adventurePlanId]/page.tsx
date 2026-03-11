@@ -1,5 +1,5 @@
 import AdventureHome from "@/components/views/adventure-home"
-import { readJsonFromS3 } from "@/lib/s3-utils"
+import { loadAdventurePlanFromStorage } from "@/lib/adventure-plan-storage"
 import type { TurnCharacter } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import { redirect } from "next/navigation"
@@ -8,10 +8,9 @@ export default async function AdventureHomePage(props: { params: Promise<{ setti
   const { settingId, adventurePlanId } = await props.params
   const searchParams = await props.searchParams
   const selectedCharacterId = searchParams?.selectedCharacter
-  const key = `settings/${settingId}/${adventurePlanId}.json`
   let adventurePlan: AdventurePlan | null = null
   try {
-    adventurePlan = (await readJsonFromS3(key)) as AdventurePlan
+    adventurePlan = await loadAdventurePlanFromStorage(settingId, adventurePlanId, { includeMaps: true })
   } catch (err) {
     console.error("Error fetching JSON from S3:", err)
     return <div>Error loading adventure data.</div>

@@ -1,5 +1,6 @@
 "use server"
 
+import { externalizeAdventurePlanMaps, loadAdventurePlanFromStorage } from "@/lib/adventure-plan-storage"
 import { canManageResource, getResourceOwnerId } from "@/lib/content-permissions"
 import { copyS3Object, listAndReadJsonFilesInS3Directory, readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 import type { AdventurePlan } from "@/types/adventure-plan"
@@ -67,6 +68,7 @@ export async function updateAdventurePlanAction(params: UpdateAdventurePlanParam
       ...adventurePlan,
       ownerId,
     }
+    const persistedAdventurePlan = await externalizeAdventurePlanMaps(sanitizedAdventurePlan, existingAdventurePlan)
 
     try {
       await copyS3Object(originalKey, backupKey)
@@ -84,10 +86,10 @@ export async function updateAdventurePlanAction(params: UpdateAdventurePlanParam
     }
 
     // Log adventurePlan and its sections before calling updateJsonOnS3
-    console.log("updateAdventurePlanAction: adventurePlan.sections before S3 update:", JSON.stringify(sanitizedAdventurePlan.sections, null, 2))
-    console.log("updateAdventurePlanAction: Full adventurePlan object before S3 update:", JSON.stringify(sanitizedAdventurePlan, null, 2))
+    console.log("updateAdventurePlanAction: adventurePlan.sections before S3 update:", JSON.stringify(persistedAdventurePlan.sections, null, 2))
+    console.log("updateAdventurePlanAction: Full adventurePlan object before S3 update:", JSON.stringify(persistedAdventurePlan, null, 2))
 
-    await updateJsonOnS3(originalKey, sanitizedAdventurePlan)
+    await updateJsonOnS3(originalKey, persistedAdventurePlan)
     return { success: true, message: "Adventure plan updated successfully." }
   } catch (error) {
     console.error(`updateAdventurePlanAction: Error during S3 operations for ${originalKey}:`, error)
@@ -116,9 +118,10 @@ export async function createAdventurePlan(adventurePlan: AdventurePlan): Promise
       ...adventurePlan,
       ownerId: userId,
     }
+    const persistedAdventurePlan = await externalizeAdventurePlanMaps(sanitizedAdventurePlan)
 
     const key = `settings/${adventurePlan.settingId}/${adventurePlan.id}.json`
-    await updateJsonOnS3(key, sanitizedAdventurePlan)
+    await updateJsonOnS3(key, persistedAdventurePlan)
     return { success: true, message: "Adventure plan created successfully" }
   } catch (error) {
     console.error("Error creating adventure plan:", error)
@@ -154,8 +157,7 @@ export async function getOtherAdventurePlans(settingId: string, currentPlanId: s
 
 export async function getAdventurePlan(settingId: string, adventurePlanId: string): Promise<AdventurePlan | null> {
   try {
-    const planPath = `settings/${settingId}/${adventurePlanId}.json`
-    const adventurePlan = (await readJsonFromS3(planPath)) as AdventurePlan
+    const adventurePlan = await loadAdventurePlanFromStorage(settingId, adventurePlanId, { includeMaps: true })
     return adventurePlan
   } catch (error) {
     console.error("Error fetching adventure plan:", error)

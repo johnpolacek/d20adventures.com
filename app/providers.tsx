@@ -16,6 +16,19 @@ export function Providers({ children }: PropsWithChildren) {
         variables: {
           fontFamily: "var(--font-rethink-sans)",
           colorBackground: "#1C1934",
+          colorForeground: "#FFFFFF",
+          colorInputForeground: "#FFFFFF",
+          colorNeutral: "#FFFFFF",
+        },
+        elements: {
+          card: "text-white",
+          headerTitle: "text-white",
+          headerSubtitle: "text-white/80",
+          formFieldLabel: "text-white",
+          formFieldInput: "text-white placeholder:text-white/60",
+          footerActionText: "text-white/80",
+          footerActionLink: "text-white hover:text-white/80",
+          socialButtonsBlockButtonText: "text-white",
         },
       }}
       afterSignOutUrl="/"
