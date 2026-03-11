@@ -177,6 +177,30 @@ export function createDefaultEncounterMap(
   }
 }
 
+export function resolveEncounterMapSceneKit(map: Encounter3DMap): Encounter3DSceneKit {
+  if (map.sceneKit === "city_gate") {
+    return "city_gate"
+  }
+
+  const hasCityGateIds =
+    map.terrain.some((item) => item.id.includes("city-gate")) || map.props.some((item) => item.id.includes("city-gate"))
+
+  if (hasCityGateIds) {
+    return "city_gate"
+  }
+
+  const inferredFromText = inferEncounterSceneKit({
+    encounterTitle: map.summary,
+    encounterIntro: map.promptHistory.join(" "),
+  })
+
+  if (inferredFromText === "city_gate" && (map.sceneKit === "generic" || map.sceneKit === "checkpoint")) {
+    return "city_gate"
+  }
+
+  return map.sceneKit || DEFAULT_SCENE_KIT
+}
+
 function cloneEncounterMap(map: Encounter3DMap): Encounter3DMap {
   return {
     ...map,
@@ -803,7 +827,8 @@ export function enhanceEncounterMap(
   }
 ) {
   const next = cloneEncounterMap(map)
-  const sceneKit = next.sceneKit || DEFAULT_SCENE_KIT
+  const sceneKit = resolveEncounterMapSceneKit(next)
+  next.sceneKit = sceneKit
   const width = next.board.width * next.board.cellSize
   const depth = next.board.depth * next.board.cellSize
 

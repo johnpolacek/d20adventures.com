@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { buildPreviewNpcMapTokens } from "@/lib/map-preview-tokens"
-import { createDefaultEncounterMap, enhanceEncounterMap, formatEncounterSceneKit, inferEncounterSceneKit, listEncounterOptions } from "@/lib/map-utils"
+import { createDefaultEncounterMap, enhanceEncounterMap, formatEncounterSceneKit, inferEncounterSceneKit, listEncounterOptions, resolveEncounterMapSceneKit } from "@/lib/map-utils"
 import type { AdventureEncounter, AdventureSection, Encounter3DMap } from "@/types/adventure-plan"
 import type { Character } from "@/types/character"
 import dynamic from "next/dynamic"
@@ -167,14 +167,16 @@ export function EncounterMapEditor({
 
   React.useEffect(() => {
     if (!map) return
-    if (map.sceneKit !== "checkpoint" || effectiveSceneKit !== "city_gate") return
+    const resolvedSceneKit = resolveEncounterMapSceneKit(map)
+    const nextSceneKit = resolvedSceneKit === "generic" ? effectiveSceneKit : resolvedSceneKit
+    if (map.sceneKit === nextSceneKit) return
 
     onMapChange({
       ...map,
-      sceneKit: "city_gate",
+      sceneKit: nextSceneKit,
     })
     onMapPersistRequest()
-    toast.success("Updated this encounter map to the city gate kit.")
+    toast.success("Updated this encounter map to the correct scene kit.")
   }, [effectiveSceneKit, map, onMapChange, onMapPersistRequest])
 
   const handleGenerate = () => {
