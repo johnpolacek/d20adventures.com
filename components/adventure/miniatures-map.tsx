@@ -595,25 +595,35 @@ function CityGateQueueFigure({
   rotation = 0,
   scale = 1,
   tone = "#d9c7b4",
+  cloak = "#8a5a52",
 }: {
   position: [number, number, number]
   rotation?: number
   scale?: number
   tone?: string
+  cloak?: string
 }) {
   return (
     <group position={position} rotation={[0, rotation, 0]}>
-      <mesh position={[0, 0.05 * scale, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.12 * scale, 0.13 * scale, 0.08 * scale, 12]} />
+      <mesh position={[0, 0.04 * scale, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[0.13 * scale, 0.15 * scale, 0.08 * scale, 12]} />
         <meshStandardMaterial color="#5b5148" roughness={0.78} />
       </mesh>
-      <mesh position={[0, 0.48 * scale, 0]} castShadow receiveShadow>
-        <capsuleGeometry args={[0.11 * scale, 0.46 * scale, 3, 10]} />
+      <mesh position={[0, 0.36 * scale, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[0.18 * scale, 0.14 * scale, 0.48 * scale, 12]} />
+        <meshStandardMaterial color={cloak} roughness={0.86} />
+      </mesh>
+      <mesh position={[0, 0.65 * scale, 0.01 * scale]} castShadow receiveShadow>
+        <capsuleGeometry args={[0.1 * scale, 0.22 * scale, 3, 10]} />
         <meshStandardMaterial color={tone} roughness={0.88} />
       </mesh>
-      <mesh position={[0, 0.92 * scale, 0]} castShadow receiveShadow>
-        <sphereGeometry args={[0.1 * scale, 10, 10]} />
+      <mesh position={[0, 0.93 * scale, 0]} castShadow receiveShadow>
+        <sphereGeometry args={[0.11 * scale, 10, 10]} />
         <meshStandardMaterial color="#f4decb" roughness={0.82} />
+      </mesh>
+      <mesh position={[0.1 * scale, 0.63 * scale, 0.02 * scale]} rotation={[0.2, 0.3, -0.3]} castShadow>
+        <boxGeometry args={[0.03 * scale, 0.24 * scale, 0.03 * scale]} />
+        <meshStandardMaterial color="#6a4a36" roughness={0.84} />
       </mesh>
     </group>
   )
@@ -759,14 +769,18 @@ function CityGateAssetSet({
         <meshStandardMaterial color="#d1b58e" roughness={0.8} map={textures?.dirt} />
       </RoundedBox>
 
-      <CityGateDesk position={[-1.15, 0, 0.24]} rotation={0.06} scale={1.02} textures={textures} />
-      <CityGateDesk position={[2.05, 0, -0.16]} rotation={-0.08} scale={1.1} textures={textures} ledger />
-      <CityGateWagon position={[-4.35, 0, 1.46]} rotation={0.1} scale={1.08} textures={textures} />
-      <CityGateWagon position={[-3.1, 0, 0.86]} rotation={0.02} scale={0.9} textures={textures} canopy={false} />
-      <CityGateWagon position={[4.15, 0, 1.18]} rotation={-0.14} scale={0.98} textures={textures} canopy={false} />
-      <CityGateStall position={[-2.35, 0, 1.12]} rotation={0.04} scale={1.06} textures={textures} />
-      <CityGateStall position={[-1.42, 0, 0.58]} rotation={-0.08} scale={0.9} textures={textures} />
-      <CityGateStall position={[2.85, 0, 0.92]} rotation={-0.12} scale={0.96} textures={textures} />
+      <CityGateDesk position={[-1.05, 0, 0.18]} rotation={0.04} scale={1.04} textures={textures} />
+      <CityGateDesk position={[1.95, 0, -0.1]} rotation={-0.1} scale={1.12} textures={textures} ledger />
+
+      <CityGateWagon position={[-4.6, 0, 1.52]} rotation={0.12} scale={1.16} textures={textures} />
+      <CityGateWagon position={[-3.3, 0, 0.88]} rotation={0.04} scale={0.98} textures={textures} canopy={false} />
+      <CityGateWagon position={[4.35, 0, 1.22]} rotation={-0.16} scale={1.06} textures={textures} canopy={false} />
+      <CityGateWagon position={[3.1, 0, 0.64]} rotation={-0.04} scale={0.92} textures={textures} />
+
+      <CityGateStall position={[-2.45, 0, 1.2]} rotation={0.06} scale={1.18} textures={textures} />
+      <CityGateStall position={[-1.35, 0, 0.52]} rotation={-0.08} scale={0.98} textures={textures} />
+      <CityGateStall position={[2.7, 0, 0.96]} rotation={-0.12} scale={1.04} textures={textures} />
+      <CityGateStall position={[4.05, 0, 1.42]} rotation={-0.02} scale={1.08} textures={textures} />
 
       {[
         [-4.85, 0, 2.22],
@@ -833,14 +847,23 @@ function CityGateAssetSet({
       ))}
 
       {[
-        [-1.8, 0, 1.34, 0.06, "#d0c1b1"],
-        [-1.22, 0, 1.1, 0.02, "#c7b6a0"],
-        [-0.62, 0, 0.82, -0.04, "#b8a38e"],
-        [0.12, 0, 0.52, 0.06, "#d7c8b9"],
-        [0.88, 0, 0.28, -0.02, "#c9b8a7"],
-        [1.58, 0, 0.04, 0.04, "#bba998"],
-      ].map(([x, y, z, rotation, tone], index) => (
-        <CityGateQueueFigure key={index} position={[x as number, y as number, z as number]} rotation={rotation as number} scale={0.96} tone={tone as string} />
+        [-2.05, 0, 1.46, 0.06, "#d0c1b1", "#8a5a52"],
+        [-1.45, 0, 1.18, 0.02, "#c7b6a0", "#48617a"],
+        [-0.84, 0, 0.9, -0.05, "#b8a38e", "#6d6f49"],
+        [-0.1, 0, 0.6, 0.08, "#d7c8b9", "#7a4f5f"],
+        [0.72, 0, 0.34, -0.02, "#c9b8a7", "#6b4b35"],
+        [1.5, 0, 0.08, 0.05, "#bba998", "#5b6174"],
+        [2.18, 0, 0.44, -0.16, "#d5c5b3", "#7e6449"],
+        [2.72, 0, 0.96, -0.1, "#ccb7a2", "#87644e"],
+      ].map(([x, y, z, rotation, tone, cloak], index) => (
+        <CityGateQueueFigure
+          key={index}
+          position={[x as number, y as number, z as number]}
+          rotation={rotation as number}
+          scale={1.16}
+          tone={tone as string}
+          cloak={cloak as string}
+        />
       ))}
     </group>
   )
