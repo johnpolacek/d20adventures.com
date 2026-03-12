@@ -1,5 +1,8 @@
 "use server"
 
+// Deprecated: 3D encounter map generation is disabled in product flow.
+// Keep this implementation dormant for possible revival.
+
 import { generateObject, generateText } from "@/lib/ai"
 import { createDefaultEncounterMap, enhanceEncounterMap, formatEncounterSceneKit, inferEncounterSceneKit } from "@/lib/map-utils"
 import type { Encounter3DSceneKit, EncounterCharacterRef } from "@/types/adventure-plan"

@@ -1,5 +1,8 @@
 "use client"
 
+// Deprecated: 3D encounter map rendering is disabled in product flow.
+// Keep this implementation dormant for possible revival.
+
 import { enhanceEncounterMap, getThemePalette } from "@/lib/map-utils"
 import { cn, getTextureImageUrl } from "@/lib/utils"
 import type { Encounter3DMap } from "@/types/adventure-plan"

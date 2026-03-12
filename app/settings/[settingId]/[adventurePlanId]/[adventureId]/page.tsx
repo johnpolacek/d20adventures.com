@@ -71,7 +71,7 @@ function findEncounter(adventurePlan: AdventurePlan, encounterIdToFind: string |
 
 export default async function AdventurePage(props: { params: Promise<{ settingId: string; adventurePlanId: string; adventureId: string }> }) {
   const { adventurePlanId, adventureId, settingId } = await props.params
-  const adventurePlan = await loadAdventurePlanFromStorage(settingId, adventurePlanId, { includeMaps: true })
+  const adventurePlan = await loadAdventurePlanFromStorage(settingId, adventurePlanId)
   if (!adventurePlan) return notFound()
   const adventureData = await loadAdventureWithNpc(adventureId as Id<"adventures">)
   const adventure = mapConvexAdventureToAdventure(adventureData?.adventure)

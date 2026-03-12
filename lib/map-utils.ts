@@ -13,6 +13,9 @@ import type {
   Encounter3DTheme,
 } from "@/types/adventure-plan"
 
+// Deprecated: 3D encounter map assembly is disabled in product flow.
+// Keep this implementation dormant for possible revival.
+
 const DEFAULT_THEME: Encounter3DTheme = "stone"
 const DEFAULT_SCENE_KIT: Encounter3DSceneKit = "generic"
 

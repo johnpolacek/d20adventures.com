@@ -1,5 +1,8 @@
 "use client"
 
+// Deprecated: 3D encounter map authoring is disabled in product flow.
+// Keep this implementation dormant for possible revival.
+
 import { generateEncounterMapAction, generateEncounterMapPromptAction } from "@/app/_actions/generate-encounter-map"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"

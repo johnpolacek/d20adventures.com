@@ -2,6 +2,9 @@ import type { MapMiniToken } from "@/components/adventure/miniatures-map"
 import type { Encounter3DMap, EncounterCharacterRef } from "@/types/adventure-plan"
 import type { Character } from "@/types/character"
 
+// Deprecated: 3D encounter map preview tokens are disabled in product flow.
+// Keep this implementation dormant for possible revival.
+
 function getTokenInitials(label: string) {
   const parts = label
     .trim()

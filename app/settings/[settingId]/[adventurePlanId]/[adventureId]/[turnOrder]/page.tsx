@@ -89,7 +89,7 @@ export default async function TurnPage({ params }: PageProps) {
   // Load adventure plan
   let adventurePlan = null
   try {
-    adventurePlan = await loadAdventurePlanFromStorage(settingId, adventurePlanId, { includeMaps: true })
+    adventurePlan = await loadAdventurePlanFromStorage(settingId, adventurePlanId)
   } catch {
     return notFound()
   }

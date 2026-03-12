@@ -38,7 +38,7 @@ export default async function AdventurePlanEditPage(props: { params: Promise<{ s
   const key = `settings/${settingId}/${adventurePlanId}.json`
   let adventurePlan: AdventurePlan | null = null
   try {
-    adventurePlan = await loadAdventurePlanFromStorage(settingId, adventurePlanId, { includeMaps: true })
+    adventurePlan = await loadAdventurePlanFromStorage(settingId, adventurePlanId)
     if (adventurePlan) {
       // Resolve main adventure plan image
       if (adventurePlan.image && !adventurePlan.image.startsWith("http")) {

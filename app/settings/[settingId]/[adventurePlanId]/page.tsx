@@ -10,7 +10,7 @@ export default async function AdventureHomePage(props: { params: Promise<{ setti
   const selectedCharacterId = searchParams?.selectedCharacter
   let adventurePlan: AdventurePlan | null = null
   try {
-    adventurePlan = await loadAdventurePlanFromStorage(settingId, adventurePlanId, { includeMaps: true })
+    adventurePlan = await loadAdventurePlanFromStorage(settingId, adventurePlanId)
   } catch (err) {
     console.error("Error fetching JSON from S3:", err)
     return <div>Error loading adventure data.</div>

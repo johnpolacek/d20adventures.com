@@ -157,7 +157,7 @@ export async function getOtherAdventurePlans(settingId: string, currentPlanId: s
 
 export async function getAdventurePlan(settingId: string, adventurePlanId: string): Promise<AdventurePlan | null> {
   try {
-    const adventurePlan = await loadAdventurePlanFromStorage(settingId, adventurePlanId, { includeMaps: true })
+    const adventurePlan = await loadAdventurePlanFromStorage(settingId, adventurePlanId)
     return adventurePlan
   } catch (error) {
     console.error("Error fetching adventure plan:", error)
