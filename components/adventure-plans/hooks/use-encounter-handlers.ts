@@ -257,33 +257,6 @@ export function useEncounterHandlers(sections: AdventureSection[], setSections: 
     )
   }
 
-  const handleEncounterMapChange = (sectionIndex: number, sceneIndex: number, encounterIndex: number, map3d: AdventureSection["scenes"][number]["encounters"][number]["map3d"]) => {
-    setSections((prevSections) =>
-      prevSections.map((section, sIndex) => {
-        if (sIndex === sectionIndex) {
-          return {
-            ...section,
-            scenes: section.scenes.map((scene, scIndex) => {
-              if (scIndex === sceneIndex) {
-                return {
-                  ...scene,
-                  encounters: scene.encounters.map((encounter, eIndex) => {
-                    if (eIndex === encounterIndex) {
-                      return { ...encounter, map3d }
-                    }
-                    return encounter
-                  }),
-                }
-              }
-              return scene
-            }),
-          }
-        }
-        return section
-      })
-    )
-  }
-
   return {
     handleEncounterTitleChange,
     handleEncounterIntroChange,
@@ -295,6 +268,5 @@ export function useEncounterHandlers(sections: AdventureSection[], setSections: 
     handleEncounterDelete,
     handleEncounterTransitionsChange,
     handleEncounterNpcChange,
-    handleEncounterMapChange,
   }
 }
