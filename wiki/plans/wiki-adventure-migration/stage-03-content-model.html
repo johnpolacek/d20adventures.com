@@ -1,0 +1,24 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="visual-concept" content="wiki migration control room"><title>Stage 3 - Wiki Content Model</title><style>
+:root{--bg:#10120d;--panel:#181d15;--ink:#f4f1df;--muted:#bbb99d;--line:#3f4b32;--accent:#d9b65f;--blue:#7db7ca;--r:8px}*{box-sizing:border-box}body{margin:0;background:#10120d;color:var(--ink);font-family:Georgia,"Times New Roman",serif;line-height:1.5}main{width:min(1120px,calc(100% - 32px));margin:auto;padding:30px 0 54px}a{color:var(--accent)}code{color:#f6d88d}.hero{display:grid;grid-template-columns:1fr 330px;gap:18px;border-bottom:1px solid var(--line);padding-bottom:20px}.panel{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:16px}.eyebrow{font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.11em;color:var(--blue)}h1{font-size:clamp(2rem,5vw,4rem);line-height:1;margin:0 0 10px}.muted{color:var(--muted)}pre{white-space:pre-wrap;border:1px solid var(--line);border-radius:8px;padding:14px;background:#0d110c;color:#f6d88d;overflow:auto}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-top:20px}@media(max-width:760px){.hero{grid-template-columns:1fr}}</style></head><body><main>
+<header class="hero"><div><p class="eyebrow">Stage 3</p><h1>Wiki Content Model Exploration</h1><p class="muted">Design S3 folder/file patterns, required frontmatter, page conventions, and Myr template migration shape.</p></div><aside class="panel"><p class="eyebrow">Reader Goal</p><p>After 2 minutes, see the content model questions that must be answered before parser/index work.</p><p><a href="index.html">Back to plan</a></p></aside></header>
+<section class="panel" style="margin-top:20px"><h2>Candidate Skeleton To Validate</h2><pre><code>s3://content/settings/myr/adventures/the-old-road/
+  adventure.md
+  pages/
+    gatehouse.md
+    market-square.md
+  npcs/
+    captain-vala.md
+  locations/
+    old-bridge.md
+  characters/
+    premades.md
+  assets/
+    gatehouse-map.json
+</code></pre></section>
+<section class="grid">
+<article class="panel"><h2>Unit 01 - Folder patterns</h2><p class="muted">Compare single-file, folder wiki, and hybrid models. Preferred direction is folder wiki with <code>adventure.md</code> as the root manifest and required frontmatter per publishable page.</p><h3>Verification</h3><p class="muted">Decision table explains why the chosen S3 layout supports authoring, links, validation, and retrieval.</p></article>
+<article class="panel"><h2>Unit 02 - Frontmatter contract</h2><p class="muted">Define required keys such as <code>id</code>, <code>type</code>, <code>title</code>, <code>settingId</code>, <code>adventureId</code>, <code>start</code>, <code>visibility</code>, <code>version</code>, and optional tags.</p><h3>Verification</h3><p class="muted">Every required key has a runtime consumer or validation purpose.</p></article>
+<article class="panel"><h2>Unit 03 - Markdown conventions</h2><p class="muted">Define optional but recommended sections for Intro, GM Notes, Secrets, NPCs, Locations, Transitions, Checks, Rewards, Map Notes, and Author Notes.</p><h3>Verification</h3><p class="muted">Conventions remain human-writable and do not recreate rigid JSON.</p></article>
+<article class="panel"><h2>Unit 04 - Myr template model</h2><p class="muted">Design how current Myr adventure plan templates become wiki folders, including page naming, migrated encounters, NPC refs, maps, and premade characters.</p><h3>Verification</h3><p class="muted">At least one representative Myr template can be sketched end-to-end.</p></article>
+</section>
+</main></body></html>

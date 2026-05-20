@@ -15,4 +15,5 @@
 <tr><td>AI gameplay services</td><td><code>lib/ai/</code>, <code>lib/services/</code></td><td>Roll requirements, NPC turns, narrative generation, turn updates, prompt/finalization services.</td></tr>
 <tr><td>Content storage</td><td><code>lib/s3-utils.ts</code>, content actions</td><td>Settings, adventure plans, and character templates stored as JSON in S3 paths.</td></tr>
 </tbody></table></section>
+<section class="panel" style="margin-top:20px"><h2>Planned Architecture Shift</h2><p class="muted">The active planning direction moves authored adventure source from rigid S3 JSON Adventure Plans to S3 markdown wiki folders with required frontmatter and derived runtime indexes. Convex remains the realtime sync layer for live session state, including current page, turn order, rolls, character state, chat, and generated history. Existing JSON/editor surfaces may be removed during the implementation worktree; Myr templates must be migrated.</p></section>
 </main></body></html>
