@@ -1,24 +1,318 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="visual-concept" content="wiki migration control room"><title>Stage 3 - Wiki Content Model</title><style>
-:root{--bg:#10120d;--panel:#181d15;--ink:#f4f1df;--muted:#bbb99d;--line:#3f4b32;--accent:#d9b65f;--blue:#7db7ca;--r:8px}*{box-sizing:border-box}body{margin:0;background:#10120d;color:var(--ink);font-family:Georgia,"Times New Roman",serif;line-height:1.5}main{width:min(1120px,calc(100% - 32px));margin:auto;padding:30px 0 54px}a{color:var(--accent)}code{color:#f6d88d}.hero{display:grid;grid-template-columns:1fr 330px;gap:18px;border-bottom:1px solid var(--line);padding-bottom:20px}.panel{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:16px}.eyebrow{font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.11em;color:var(--blue)}h1{font-size:clamp(2rem,5vw,4rem);line-height:1;margin:0 0 10px}.muted{color:var(--muted)}pre{white-space:pre-wrap;border:1px solid var(--line);border-radius:8px;padding:14px;background:#0d110c;color:#f6d88d;overflow:auto}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-top:20px}@media(max-width:760px){.hero{grid-template-columns:1fr}}</style></head><body><main>
-<header class="hero"><div><p class="eyebrow">Stage 3</p><h1>Wiki Content Model Exploration</h1><p class="muted">Design S3 folder/file patterns, required frontmatter, page conventions, and Myr template migration shape.</p></div><aside class="panel"><p class="eyebrow">Reader Goal</p><p>After 2 minutes, see the content model questions that must be answered before parser/index work.</p><p><a href="index.html">Back to plan</a></p></aside></header>
-<section class="panel" style="margin-top:20px"><h2>Candidate Skeleton To Validate</h2><pre><code>s3://content/settings/myr/adventures/the-old-road/
-  adventure.md
-  pages/
-    gatehouse.md
-    market-square.md
-  npcs/
-    captain-vala.md
-  locations/
-    old-bridge.md
-  characters/
-    premades.md
-  assets/
-    gatehouse-map.json
-</code></pre></section>
-<section class="grid">
-<article class="panel"><h2>Unit 01 - Folder patterns</h2><p class="muted">Compare single-file, folder wiki, and hybrid models. Preferred direction is folder wiki with <code>adventure.md</code> as the root manifest and required frontmatter per publishable page.</p><h3>Verification</h3><p class="muted">Decision table explains why the chosen S3 layout supports authoring, links, validation, and retrieval.</p></article>
-<article class="panel"><h2>Unit 02 - Frontmatter contract</h2><p class="muted">Define required keys such as <code>id</code>, <code>type</code>, <code>title</code>, <code>settingId</code>, <code>adventureId</code>, <code>start</code>, <code>visibility</code>, <code>version</code>, and optional tags.</p><h3>Verification</h3><p class="muted">Every required key has a runtime consumer or validation purpose.</p></article>
-<article class="panel"><h2>Unit 03 - Markdown conventions</h2><p class="muted">Define optional but recommended sections for Intro, GM Notes, Secrets, NPCs, Locations, Transitions, Checks, Rewards, Map Notes, and Author Notes.</p><h3>Verification</h3><p class="muted">Conventions remain human-writable and do not recreate rigid JSON.</p></article>
-<article class="panel"><h2>Unit 04 - Myr template model</h2><p class="muted">Design how current Myr adventure plan templates become wiki folders, including page naming, migrated encounters, NPC refs, maps, and premade characters.</p><h3>Verification</h3><p class="muted">At least one representative Myr template can be sketched end-to-end.</p></article>
-</section>
-</main></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="visual-concept" content="wiki migration control room">
+  <title>Stage 3 - Wiki Content Model</title>
+  <style>
+    :root{--bg:#10120d;--panel:#181d15;--panel2:#22291b;--ink:#f4f1df;--muted:#bbb99d;--line:#3f4b32;--accent:#d9b65f;--blue:#7db7ca;--green:#93c47d;--warn:#e5a65b;--bad:#d87968;--r:8px;--shadow:0 18px 48px #0008}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 78% 0,#26331b 0 17rem,transparent 34rem),linear-gradient(135deg,#10120d,#151910 58%,#0b100f);color:var(--ink);font-family:Georgia,"Times New Roman",serif;line-height:1.5}main{width:min(1180px,calc(100% - 32px));margin:auto;padding:30px 0 54px}a{color:var(--accent)}code{color:#f6d88d}.hero{display:grid;grid-template-columns:1fr 340px;gap:18px;border-bottom:1px solid var(--line);padding-bottom:20px}.panel,.unit{border:1px solid var(--line);border-radius:var(--r);background:linear-gradient(180deg,var(--panel),#12160f);box-shadow:var(--shadow);padding:16px}.eyebrow,.badge{font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.11em}.eyebrow{color:var(--blue);margin:0 0 8px}.badge{display:inline-block;color:var(--green);border:1px solid var(--line);border-radius:999px;padding:3px 8px;margin-bottom:8px}h1,h2,h3,p{margin-top:0}h1{font-size:clamp(2rem,5vw,4rem);line-height:1;margin-bottom:10px}h2{font-size:1.24rem;color:#fff5cd}.muted{color:var(--muted)}pre{white-space:pre-wrap;border:1px solid var(--line);border-radius:var(--r);padding:14px;background:#0d110c;color:#f6d88d;overflow:auto}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:20px}.decision{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px}.decision article{border:1px solid var(--line);border-radius:var(--r);background:var(--panel2);padding:14px}.decision b{display:block;color:var(--accent);font:700 .74rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.two{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}table{width:100%;border-collapse:collapse;margin-top:16px;background:#151911}th,td{border:1px solid var(--line);padding:10px;text-align:left;vertical-align:top}th{background:#202819;color:#fff5cd}.warn{color:var(--warn)}.bad{color:var(--bad)}@media(max-width:860px){.hero,.two{grid-template-columns:1fr}.decision{grid-template-columns:1fr 1fr}}@media(max-width:560px){.decision{grid-template-columns:1fr}h1{font-size:2.45rem}}
+  .wiki-nav{width:min(1120px,calc(100% - 32px));margin:14px auto 0;display:flex;flex-wrap:wrap;gap:8px;font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.wiki-nav a{border:1px solid var(--line,#3d472f);border-radius:999px;padding:6px 9px;background:rgba(25,29,23,.72);color:var(--accent,#d7b35d);text-decoration:none}.wiki-nav a:focus-visible{outline:2px solid var(--accent,#d7b35d);outline-offset:2px}</style>
+</head>
+<body>
+<nav class="wiki-nav" aria-label="Wiki navigation"><a href="../../index.html">Wiki Home</a><a href="../../Sources.html">Sources</a><a href="../../plans/index.html">Plans</a><a href="../../roadmap.html">Roadmap</a><a href="../../Architecture.html">Architecture</a></nav>
+<main>
+  <header class="hero">
+    <section>
+      <p class="eyebrow">Stage 3</p>
+      <h1>Wiki Content Model Specification</h1>
+      <p class="muted">Locked planning direction for the S3-backed markdown adventure model. The gameplay content unit is <code>encounter</code>, not <code>page</code>, so the relaunch preserves the current turn-loop concept while moving authored source into human-writable wiki files.</p>
+    </section>
+    <aside class="panel">
+      <p class="eyebrow">Reader Goal</p>
+      <p>After 2 minutes, know the canonical folder model, file types, frontmatter contract, link conventions, validation posture, and next planning artifact.</p>
+      <p><a href="stage-03-myr-skeleton.html">Representative Myr Adventure Skeleton</a></p>
+      <p><a href="index.html">Back to plan</a></p>
+    </aside>
+  </header>
+
+  <section class="decision" aria-label="Locked decisions">
+    <article><b>Gameplay Unit</b><p><code>encounter</code> remains the active gameplay content unit and replaces old JSON encounters with markdown-authored encounter files.</p></article>
+    <article><b>Source Of Truth</b><p>S3 wiki markdown files are canonical authored content; runtime reads compiled published indexes.</p></article>
+    <article><b>Entity Reuse</b><p>NPCs, locations, factions, and items are setting-level by default; premade characters and assets are adventure-level by default.</p></article>
+  </section>
+
+  <section class="panel" style="margin-top:20px">
+    <h2>Canonical S3 Layout</h2>
+    <pre><code>content/
+  settings/
+    myr/
+      setting.md
+      npcs/
+        captain-vala.md
+      locations/
+        old-road-gatehouse.md
+      factions/
+        gatewardens.md
+      items/
+        silver-ash.md
+      adventures/
+        the-old-road/
+          adventure.md
+          encounters/
+            gatehouse-entry.md
+            market-square-arrival.md
+            shrine-steps.md
+          characters/
+            vala-apprentice.md
+          assets/
+            gatehouse-map.json
+            cover.jpg</code></pre>
+    <p class="muted">Setting-level files are reusable across adventures. Adventure-level files are specific to one adventure and may reference reusable setting entities through typed wiki links or frontmatter references.</p>
+  </section>
+
+  <section class="grid">
+    <article class="unit">
+      <span class="badge">V1 Types</span>
+      <h2>Authored File Types</h2>
+      <p class="muted">Support <code>setting</code>, <code>adventure</code>, <code>encounter</code>, <code>npc</code>, <code>location</code>, <code>premadeCharacter</code>, <code>faction</code>, and <code>item</code>. Defer <code>quest</code>, <code>lore</code>, <code>rule</code>, and first-class <code>map</code> files unless later stages prove they are needed.</p>
+    </article>
+    <article class="unit">
+      <span class="badge">Runtime</span>
+      <h2>Encounter As Active Unit</h2>
+      <p class="muted">The current adventure instance should pin to <code>currentEncounterId</code> plus a published content version. This preserves existing prompt, turn, NPC, and transition concepts while avoiding old JSON authoring constraints.</p>
+    </article>
+    <article class="unit">
+      <span class="badge">Authoring</span>
+      <h2>Human-Writable Markdown</h2>
+      <p class="muted">Required frontmatter provides stable identity and validation. Markdown sections carry gameplay meaning through conventions instead of rebuilding a rigid form-first JSON editor.</p>
+    </article>
+  </section>
+
+  <section class="two">
+    <article class="panel">
+      <h2>Required Frontmatter</h2>
+      <pre><code>---
+id: gatehouse-entry
+type: encounter
+title: Gatehouse Entry
+settingId: myr
+adventureId: the-old-road
+visibility: published
+version: 1
+location: old-road-gatehouse
+npcs:
+  - captain-vala
+---</code></pre>
+      <p class="muted">All files require <code>id</code>, <code>type</code>, <code>title</code>, <code>settingId</code>, <code>visibility</code>, and <code>version</code>. Adventure-owned files also require <code>adventureId</code>. Optional common keys include <code>summary</code>, <code>tags</code>, <code>image</code>, and <code>updatedAt</code>.</p>
+    </article>
+    <article class="panel">
+      <h2>Typed Wiki Links</h2>
+      <pre><code>[[encounter:market-square-arrival]]
+[[npc:captain-vala]]
+[[location:old-road-gatehouse]]
+[[item:silver-ash]]
+[[asset:gatehouse-map]]
+[[npc:captain-vala|Captain Vala]]</code></pre>
+      <p class="muted">Typed links are the canonical authoring and validation syntax. Markdown links may still appear in prose, but only typed wiki links participate in validation and runtime graph extraction.</p>
+    </article>
+  </section>
+
+  <section class="panel" style="margin-top:20px">
+    <h2>Ruleset Attributes</h2>
+    <p class="muted">Character sheet JSON should use the standard six abilities from the current open D&amp;D SRD 5.2 rules reference: Strength, Dexterity, Constitution, Intelligence, Wisdom, and Charisma. Paired markdown profiles may summarize these scores for readability, but the compiled runtime model should normalize from the JSON sheet's <code>attributes</code> keys.</p>
+    <pre><code>attributes:
+  strength: 10
+  dexterity: 12
+  constitution: 11
+  intelligence: 10
+  wisdom: 13
+  charisma: 12</code></pre>
+    <p class="muted">Additional RPG fields such as hit points, armor class, speed, proficiency bonus, skills, saving throws, senses, languages, actions, and traits may be added where useful, but they should not replace the six canonical abilities.</p>
+  </section>
+
+  <section class="panel" style="margin-top:20px">
+    <h2>Character Field Contract</h2>
+    <p class="muted">Character sheets should remain JSON source-of-truth files for default mechanical state. Markdown character files are wiki profiles that link to a sheet and provide narrative role, cross-links, usage notes, and retrieval context. This preserves the existing character creator, character editor, and character sheet modal behavior while letting the wiki model describe how characters fit into adventures.</p>
+    <pre><code>content/settings/myr/npcs/captain-vala.json
+content/settings/myr/npcs/captain-vala.md
+
+content/settings/myr/adventures/the-old-road/characters/vala-apprentice.json
+content/settings/myr/adventures/the-old-road/characters/vala-apprentice.md</code></pre>
+    <p class="muted"><code>premadeCharacter</code> JSON sheets compile to the existing <code>PCTemplate</code> shape. <code>npc</code> JSON sheets compile to the existing <code>NPC</code> shape. The paired markdown profile uses frontmatter such as <code>sheet: vala-apprentice.json</code> or <code>sheet: captain-vala.json</code> and should not duplicate the full mechanical sheet unless doing so is useful for readable summary.</p>
+    <pre><code>{
+  "id": "vala-apprentice",
+  "type": "pc",
+  "name": "Vala's Former Apprentice",
+  "image": "assets/characters/vala-apprentice.jpg",
+  "archetype": "Rogue",
+  "race": "Human",
+  "appearance": "Former Gatewarden apprentice with quick hands and tired eyes.",
+  "healthPercent": 100,
+  "attributes": {
+    "strength": 8,
+    "dexterity": 15,
+    "constitution": 12,
+    "intelligence": 13,
+    "wisdom": 10,
+    "charisma": 14
+  },
+  "skills": ["Stealth", "Persuasion"],
+  "equipment": [{ "name": "Lockpicks", "description": "Worn but reliable." }],
+  "spells": [],
+  "specialAbilities": ["Gatewarden routines"],
+  "effects": []
+}</code></pre>
+    <p class="muted">Required existing schema fields for PC templates are <code>id</code>, <code>name</code>, <code>image</code>, <code>archetype</code>, <code>race</code>, <code>appearance</code>, <code>healthPercent</code>, <code>type</code>, and complete <code>attributes</code>. Optional existing fields include <code>gender</code>, <code>personality</code>, <code>background</code>, <code>motivation</code>, <code>behavior</code>, <code>equipment</code>, <code>skills</code>, <code>spells</code>, <code>specialAbilities</code>, and <code>effects</code>. NPCs use the same base fields, but their <code>attributes</code> may be partial or omitted to match the current schema.</p>
+  </section>
+
+  <section class="panel" style="margin-top:20px">
+    <h2>Image And Asset References</h2>
+    <p class="muted">NPCs, premade PCs, locations, encounters, settings, adventures, items, factions, and other authored entities should support S3 image references. The canonical field is <code>image</code> in frontmatter for the primary image. Additional images, maps, portraits, and handouts may be represented with <code>assets</code> frontmatter or typed <code>[[asset:id]]</code> links in markdown.</p>
+    <pre><code>image: assets/portraits/captain-vala.jpg
+assets:
+  - gatehouse-map
+  - vala-token</code></pre>
+    <p class="muted">Image values should be S3-relative content keys or asset IDs resolved by the compiler, not arbitrary external URLs. The model should stay format-neutral and allow ordinary web image formats such as <code>.jpg</code> and <code>.png</code>. Publish validation should warn for missing referenced image assets and block only when a required runtime surface depends on that image.</p>
+  </section>
+
+  <section class="panel" style="margin-top:20px">
+    <h2>Cross-Linking Rule</h2>
+    <p class="muted">Markdown files should link to related authored files wherever the relationship matters to readers, editors, validation, or retrieval. Frontmatter references remain the machine-friendly source for core ownership and runtime relationships, while typed wiki links make the wiki navigable and give the compiler additional retrieval signals.</p>
+    <pre><code>adventure.md summary links to [[encounter:gatehouse-entry]], [[npc:captain-vala]], and [[location:old-road-gatehouse]]
+encounters/gatehouse-entry.md links to its NPC, location, transition targets, item clues, and assets
+npcs/captain-vala.md links back to the encounter and location where she appears
+locations/old-road-gatehouse.md links to notable NPCs and encounters
+characters/vala-apprentice.md links to relevant NPCs, locations, and starting encounter context</code></pre>
+    <p class="muted">Cross-links are encouraged and validated when typed. Missing reciprocal links should be warnings or suggestions, not publish blockers, unless later runtime retrieval proves they are required.</p>
+  </section>
+
+  <section class="panel" style="margin-top:20px">
+    <h2>Adventure Manifest</h2>
+    <pre><code>---
+id: the-old-road
+type: adventure
+title: The Old Road
+settingId: myr
+visibility: published
+version: 1
+startEncounter: gatehouse-entry
+recommendedPlayers: 1
+minPlayers: 1
+maxPlayers: 4
+premadeCharacters:
+  - vala-apprentice
+nextAdventure: market-shadows
+image: assets/cover.jpg
+---
+
+## Teaser
+
+A forgotten toll road leads toward the walled city of Myr, where old debts still have teeth.
+
+## Summary
+
+The party reaches the gatehouse, negotiates entry, discovers unrest near the market, and chooses whether to help the Gatewardens or slip into the city unseen.
+
+## Author Notes
+
+This introductory adventure tests social checks, simple transitions, and one optional conflict.</code></pre>
+    <p class="muted"><code>adventure.md</code> owns adventure metadata, start encounter, player count, premade character list, next adventure, cover image, teaser, and summary. It does not own every NPC, transition, or encounter detail.</p>
+  </section>
+
+  <section class="panel" style="margin-top:20px">
+    <h2>Encounter Markdown Convention</h2>
+    <pre><code>## Intro
+
+Player-safe opening situation text.
+
+## GM Notes
+
+Operational context for the AI Game Master.
+
+## Secrets
+
+Hidden facts that may be revealed through play.
+
+## Checks
+
+- DC 12 Insight: Notice Vala is more frightened than hostile.
+- DC 13 Persuasion: Convince Vala to reduce or waive the fee.
+
+## Transitions
+
+- To [[encounter:market-square-arrival]] when the party enters Myr.
+- To [[encounter:outer-road-return]] if the party turns back.
+- To [[encounter:gatehouse-conflict]] if the party attacks or seriously threatens Vala.
+
+## Rewards
+
+Consequences, relationship changes, or useful gains.
+
+## Map Notes
+
+Use [[asset:gatehouse-map]] if tactical positioning is needed.</code></pre>
+    <p class="muted">Required encounter sections are <code>Intro</code>, <code>GM Notes</code>, and <code>Transitions</code>. Recommended sections are <code>Secrets</code>, <code>Checks</code>, <code>Rewards</code>, <code>Map Notes</code>, and <code>Author Notes</code>.</p>
+  </section>
+
+  <section class="two">
+    <article class="panel">
+      <h2>Draft, Publish, And Versioning</h2>
+      <p class="muted">Authored files use <code>visibility</code> for editor status. Runtime reads published compiled snapshots, not raw draft markdown.</p>
+      <pre><code>published/settings/myr/adventures/the-old-road/v1/
+  manifest.json
+  encounters.json
+  entities.json
+  graph.json
+  retrieval-index.json</code></pre>
+      <p class="muted">Live sessions pin to <code>settingId</code>, <code>adventureId</code>, <code>contentVersion</code>, and <code>currentEncounterId</code>. Existing sessions should not silently switch to newer content.</p>
+    </article>
+    <article class="panel">
+      <h2>Derived Runtime Index</h2>
+      <pre><code>type PublishedAdventureIndex = {
+  settingId: string
+  adventureId: string
+  version: number
+  title: string
+  startEncounterId: string
+  encounters: Record&lt;string, RuntimeEncounter&gt;
+  npcs: Record&lt;string, RuntimeNpc&gt;
+  locations: Record&lt;string, RuntimeLocation&gt;
+  premadeCharacters: Record&lt;string, RuntimePremadeCharacter&gt;
+  graph: RuntimeTransition[]
+}</code></pre>
+      <p class="muted">The turn loop should consume compiled structured indexes and selected markdown section text. It should not parse raw markdown on every turn.</p>
+    </article>
+  </section>
+
+  <section class="panel" style="margin-top:20px">
+    <h2>Validation Rules</h2>
+    <table>
+      <thead><tr><th>Severity</th><th>Rules</th></tr></thead>
+      <tbody>
+        <tr><td><span class="bad">Publish-blocking</span></td><td>Missing required frontmatter; invalid type; duplicate IDs in scope; missing <code>adventure.md</code>; missing <code>startEncounter</code>; start encounter missing; broken typed wiki link to a required entity; transition target missing in publish mode; encounter missing <code>Intro</code>, <code>GM Notes</code>, or <code>Transitions</code>; adventure references missing premade character sheet; invalid required character sheet JSON.</td></tr>
+        <tr><td><span class="warn">Warning</span></td><td>Encounter has no NPC refs; missing optional paired profile; check format could not be parsed; asset reference missing; unused or unreachable encounter; unknown section heading; missing summary.</td></tr>
+        <tr><td>Ignored</td><td>Freeform prose style; heading order; extra sections; unparsed stat lines; non-runtime Markdown links in body prose.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="panel" style="margin-top:20px">
+    <h2>Draft Preview Exception</h2>
+    <p class="muted">The editor may allow planning-preview skeletons with unresolved transition targets. Missing target encounters remain publish-blocking, but they should be surfaced as draft validation findings rather than preventing authors or AI editors from sketching incomplete adventure graphs.</p>
+  </section>
+
+  <section class="panel" style="margin-top:20px">
+    <h2>AdventurePlan Migration Mapping</h2>
+    <table>
+      <thead><tr><th>Current JSON</th><th>Wiki Model</th></tr></thead>
+      <tbody>
+        <tr><td><code>AdventurePlan.title</code>, <code>teaser</code>, <code>image</code>, <code>nextAdventure</code></td><td><code>adventure.md</code> frontmatter and body sections.</td></tr>
+        <tr><td><code>sections/scenes</code></td><td>Grouping metadata only unless later stages need first-class files.</td></tr>
+        <tr><td><code>encounters[]</code></td><td><code>encounters/*.md</code> files.</td></tr>
+        <tr><td><code>encounter.intro</code>, <code>instructions</code>, <code>transitions</code></td><td><code>Intro</code>, <code>GM Notes</code>, and <code>Transitions</code> sections.</td></tr>
+        <tr><td><code>AdventurePlan.npcs</code></td><td>Setting-level <code>npcs/*.json</code> sheets plus paired <code>npcs/*.md</code> profiles unless clearly adventure-specific.</td></tr>
+        <tr><td><code>premadePlayerCharacters</code></td><td>Adventure-level <code>characters/*.json</code> sheets plus paired <code>characters/*.md</code> profiles.</td></tr>
+        <tr><td>Maps and media</td><td>Adventure-level <code>assets/*</code> referenced by typed wiki links and optional frontmatter.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="panel" style="margin-top:20px">
+    <h2>Next Stage 3 Artifact</h2>
+    <p class="muted">The <a href="stage-03-myr-skeleton.html">Representative Myr Adventure Skeleton</a> proves the model end to end: <code>adventure.md</code>, one <code>encounters/*.md</code> gameplay unit, one reusable NPC, one reusable location, one premade character, transition examples, and validation notes. This remains a planning/wiki artifact unless explicitly promoted into app implementation.</p>
+  </section>
+</main>
+</body>
+</html>

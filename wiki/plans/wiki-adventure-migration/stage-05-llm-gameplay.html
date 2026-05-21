@@ -1,10 +1,497 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="visual-concept" content="wiki migration control room"><title>Stage 5 - LLM Gameplay</title><style>
-:root{--bg:#10120d;--panel:#181d15;--ink:#f4f1df;--muted:#bbb99d;--line:#3f4b32;--accent:#d9b65f;--blue:#7db7ca;--r:8px}*{box-sizing:border-box}body{margin:0;background:#10120d;color:var(--ink);font-family:Georgia,"Times New Roman",serif;line-height:1.5}main{width:min(1080px,calc(100% - 32px));margin:auto;padding:30px 0 54px}a{color:var(--accent)}code{color:#f6d88d}.hero{display:grid;grid-template-columns:1fr 320px;gap:18px;border-bottom:1px solid var(--line);padding-bottom:20px}.panel{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:16px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-top:20px}.eyebrow{font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.11em;color:var(--blue)}h1{font-size:clamp(2rem,5vw,4rem);line-height:1;margin:0 0 10px}.muted{color:var(--muted)}@media(max-width:760px){.hero{grid-template-columns:1fr}}</style></head><body><main>
+:root{--bg:#10120d;--panel:#181d15;--panel2:#202819;--ink:#f4f1df;--muted:#bbb99d;--line:#3f4b32;--accent:#d9b65f;--blue:#7db7ca;--green:#93c47d;--warn:#e5a65b;--r:8px}*{box-sizing:border-box}body{margin:0;background:#10120d;color:var(--ink);font-family:Georgia,"Times New Roman",serif;line-height:1.5}main{width:min(1120px,calc(100% - 32px));margin:auto;padding:30px 0 54px}a{color:var(--accent)}code{color:#f6d88d}.hero{display:grid;grid-template-columns:1fr 320px;gap:18px;border-bottom:1px solid var(--line);padding-bottom:20px}.panel{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:16px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-top:20px}.eyebrow{font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.11em;color:var(--blue)}h1{font-size:clamp(2rem,5vw,4rem);line-height:1;margin:0 0 10px}h2,h3{color:#fff5cd}.muted{color:var(--muted)}.status{color:var(--green);font:700 .72rem ui-monospace,monospace;text-transform:uppercase}.decision{margin-top:24px}.columns{display:grid;grid-template-columns:1fr 1fr;gap:12px}.packet{display:grid;gap:10px;margin-top:12px}.packet div{border:1px solid var(--line);border-radius:var(--r);background:var(--panel2);padding:12px}.packet b{display:block;color:var(--accent);font:700 .74rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.spec{width:100%;border-collapse:collapse;margin-top:14px}.spec th,.spec td{border:1px solid var(--line);padding:10px;text-align:left;vertical-align:top}.spec th{background:#202819;color:#fff5cd}pre{white-space:pre-wrap;border:1px solid var(--line);border-radius:var(--r);background:#0d100c;padding:14px;overflow:auto}ul{padding-left:20px}@media(max-width:760px){.hero,.columns{grid-template-columns:1fr}}.wiki-nav{width:min(1120px,calc(100% - 32px));margin:14px auto 0;display:flex;flex-wrap:wrap;gap:8px;font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.wiki-nav a{border:1px solid var(--line,#3d472f);border-radius:999px;padding:6px 9px;background:rgba(25,29,23,.72);color:var(--accent,#d7b35d);text-decoration:none}.wiki-nav a:focus-visible{outline:2px solid var(--accent,#d7b35d);outline-offset:2px}</style></head><body><nav class="wiki-nav" aria-label="Wiki navigation"><a href="../../index.html">Wiki Home</a><a href="../../Sources.html">Sources</a><a href="../../plans/index.html">Plans</a><a href="../../roadmap.html">Roadmap</a><a href="../../Architecture.html">Architecture</a></nav><main>
 <header class="hero"><div><p class="eyebrow">Stage 5</p><h1>LLM Context And Gameplay Flow</h1><p class="muted">Redesign the AI Game Master around retrieved wiki context and Convex session state instead of rigid AdventurePlan JSON fields.</p></div><aside class="panel"><p class="eyebrow">Reader Goal</p><p>After 2 minutes, know which prompt and gameplay contracts need to change for wiki-first sessions.</p><p><a href="index.html">Back to plan</a></p></aside></header>
 <section class="grid">
-<article class="panel"><h2>Unit 01 - Context assembly</h2><p class="muted">Specify the prompt packet: current page markdown, page summary, linked pages, relevant NPC/location pages, recent turns, current character state, active rolls, and adventure-wide summary.</p><h3>Verification</h3><p class="muted">Prompt packet has token-budget rules and deterministic source ordering.</p></article>
-<article class="panel"><h2>Unit 02 - Transition model</h2><p class="muted">Define how the LLM proposes page transitions, how the app validates them against the wiki graph, and how Convex records current page and transition history.</p><h3>Verification</h3><p class="muted">Transitions work without JSON encounter arrays.</p></article>
+<article class="panel"><h2>Unit 01 - Context assembly</h2><p class="muted">Specify the prompt packet: current encounter markdown, encounter summary, linked encounters, relevant NPC/location profiles, character sheet snapshots, recent turns, current character state, active rolls, and adventure-wide summary.</p><h3>Verification</h3><p class="muted">Prompt packet has token-budget rules and deterministic source ordering.</p></article>
+<article class="panel"><h2>Unit 02 - Transition model</h2><p class="muted">Define how the LLM proposes encounter transitions, how the app validates them against the encounter graph, and how Convex records current encounter and transition history.</p><h3>Verification</h3><p class="muted">Transitions work without old JSON AdventurePlan encounter arrays.</p></article>
 <article class="panel"><h2>Unit 03 - Dice and narrative compatibility</h2><p class="muted">Preserve simple D20 roll semantics, narrative markers, shortcodes, NPC turns, health/status effects, reports, and readable turn history.</p><h3>Verification</h3><p class="muted">Existing gameplay affordances are either retained, deliberately replaced, or explicitly deferred.</p></article>
-<article class="panel"><h2>Unit 04 - Realtime session model</h2><p class="muted">Define Convex tables/functions for live adventure state in the new model: session, participants, current page, turns, chat, character state, roll state, and generated history.</p><h3>Verification</h3><p class="muted">Convex owns sync, not authored adventure source content.</p></article>
+<article class="panel"><h2>Unit 04 - Realtime session model</h2><p class="muted">Define Convex tables/functions for live adventure state in the new model: session, participants, current encounter, turns, chat, mutable character state, roll state, and generated history.</p><h3>Verification</h3><p class="muted">Convex owns sync, not authored adventure source content.</p></article>
+</section>
+<section class="panel decision" aria-labelledby="unit-01">
+<p class="eyebrow">Unit 01 decision</p>
+<h2 id="unit-01">Context Assembly Contract</h2>
+<p class="muted">The LLM gameplay prompt should be assembled from a typed context packet, not directly from source markdown files and not from the old nested <code>AdventurePlan.sections[].scenes[].encounters[]</code> shape. The packet combines pinned published content artifacts from Stage 4 with mutable Convex session state. Source markdown remains author-facing; runtime prompt assembly uses compiled sections, graph data, entity records, and session snapshots.</p>
+<div class="packet" aria-label="Context packet sources">
+<div><b>Content reference</b><p class="muted">Always include <code>settingId</code>, <code>adventureId</code>, <code>contentVersion</code>, <code>contentHash</code>, and <code>currentEncounterId</code>. This prevents a live session from accidentally mixing content from different published versions.</p></div>
+<div><b>Compiled adventure source</b><p class="muted">Read <code>manifest.json</code> for adventure title, summary, tone, start encounter, and global constraints; <code>encounters.json</code> for the active encounter; <code>entities.json</code> for linked NPC, location, item, faction, and asset profiles; <code>character-sheets.json</code> for relevant baseline sheets; <code>graph.json</code> for legal transition targets; and <code>retrieval-index.json</code> for deterministic linked-context selection.</p></div>
+<div><b>Live session source</b><p class="muted">Read Convex for the current adventure instance, current turn order, current encounter turn count, recent turns, narrative summary, most recent action or narrative block, active roll, participant list, and mutable <code>TurnCharacter</code> records.</p></div>
+<div><b>Output contract</b><p class="muted">The model must return the same core gameplay decision surface as today: <code>nextEncounterId</code> and <code>narrative</code>. Later units can add structured events, but Unit 01 keeps the prompt packet compatible with the current turn loop.</p></div>
+</div>
+</section>
+<section class="columns" aria-label="Context assembly rules">
+<article class="panel">
+<h2>Deterministic Source Order</h2>
+<ol>
+<li>Content/version guard: setting, adventure, content version, hash, and current encounter.</li>
+<li>Adventure summary from <code>manifest.json</code>.</li>
+<li>Current encounter title, summary, intro, GM notes, checks, transition rules, rewards, map notes, and image references from <code>encounters.json</code>.</li>
+<li>Legal transitions from <code>graph.json</code>, ordered exactly as authored.</li>
+<li>Directly linked location, NPC, item, faction, premade profile, and asset records from <code>entities.json</code>.</li>
+<li>Relevant baseline PC/NPC sheets from <code>character-sheets.json</code>, limited to characters present or referenced in the active encounter.</li>
+<li>Live <code>TurnCharacter</code> state, active roll state, current turn order, encounter turn count, recent turns, and narrative summary from Convex.</li>
+<li>Model rules and response schema.</li>
+</ol>
+</article>
+<article class="panel">
+<h2>Token Budget Rules</h2>
+<ul>
+<li>Always include the current encounter intro, instructions or GM notes, checks, transition rules, and legal target IDs.</li>
+<li>Include one-hop linked records first. Avoid broad setting lore unless the active encounter links to it or the retrieval index marks it as required.</li>
+<li>Include recent turn history using the current behavior as the baseline: last five turns, plus a summarized older history when available.</li>
+<li>Include live character state before baseline character sheets. Baselines provide rules and defaults; Convex provides the truth for damage, spell use, effects, inventory changes, and temporary state.</li>
+<li>Include GM-only secrets in the private model packet only. Never expose those sections directly to player-visible UI or generated player-facing context.</li>
+<li>Do not include raw markdown in runtime prompts by default. Use extracted compiled sections so validation, redaction, and token budgeting remain predictable.</li>
+</ul>
+</article>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="packet-shape">
+<h2 id="packet-shape">Packet Shape</h2>
+<pre><code>type LlmGameplayContextPacket = {
+  contentRef: {
+    settingId: string
+    adventureId: string
+    contentVersion: string
+    contentHash: string
+    currentEncounterId: string
+  }
+  adventure: {
+    title: string
+    summary: string
+    tone?: string
+    startEncounterId: string
+  }
+  currentEncounter: {
+    id: string
+    title: string
+    summary?: string
+    intro: string
+    gmNotes?: string
+    secrets?: string
+    checks?: EncounterCheck[]
+    transitions: EncounterTransition[]
+    rewards?: string[]
+    mapNotes?: string
+    locationId?: string
+    npcRefs: string[]
+    imageRefs: string[]
+  }
+  linkedContext: {
+    locations: RuntimeLocation[]
+    npcProfiles: RuntimeNpcProfile[]
+    characterProfiles: RuntimeCharacterProfile[]
+    items: RuntimeItem[]
+    factions: RuntimeFaction[]
+    assets: RuntimeAsset[]
+  }
+  characters: {
+    live: TurnCharacter[]
+    baselines: CharacterSheetBaseline[]
+    activeCharacterId?: string
+  }
+  session: {
+    adventureInstanceId: string
+    currentTurnOrder: number
+    currentEncounterTurnNumber: number
+    recentTurns: RuntimeTurnSummary[]
+    narrativeSummary?: string
+    mostRecentAction?: string
+    activeRoll?: RuntimeRollState
+  }
+  graph: {
+    legalTransitions: EncounterTransition[]
+    currentEncounterLinks: RuntimeLink[]
+  }
+  outputContract: {
+    allowedNextEncounterIds: string[]
+    responseShape: "nextEncounterId+narrative"
+    playerCharacterNames: string[]
+  }
+}</code></pre>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="precedence">
+<h2 id="precedence">State Precedence</h2>
+<table class="spec">
+<thead><tr><th>Question</th><th>Rule</th></tr></thead>
+<tbody>
+<tr><td>Which character state wins?</td><td><code>TurnCharacter</code> in Convex wins over pinned published JSON sheet baselines, and sheet baselines win over markdown profile prose.</td></tr>
+<tr><td>Can source sheets reset live session state?</td><td>No. Published character JSON sheets are copied into session state when a character enters play. During play, damage, spell slots, effects, prepared state, inventory mutations, death saves, and temporary flags mutate only Convex session records.</td></tr>
+<tr><td>Can the LLM invent transition targets?</td><td>No. <code>nextEncounterId</code> must be the current encounter ID or one of the legal transition IDs supplied by <code>graph.json</code>.</td></tr>
+<tr><td>Can the LLM write player choices?</td><td>No. Preserve the current guardrail: generated narrative can describe NPC actions, environment changes, and consequences of past player actions, but not new player decisions, dialogue, or internal thoughts.</td></tr>
+<tr><td>Should chat be included?</td><td>Default no for Unit 01. Include explicit gameplay turns and a curated narrative summary. Raw chat can be considered in Unit 04 if it becomes part of the realtime session model.</td></tr>
+<tr><td>Should embeddings be required?</td><td>Default no for v1. Use deterministic graph and typed-link retrieval first. Embeddings can be added later for authoring help or broad lore recall, but should not be necessary for core turn advancement.</td></tr>
+</tbody>
+</table>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="compatibility">
+<h2 id="compatibility">Current Prompt Compatibility</h2>
+<p class="muted">The existing <code>advance-turn-prompt-service.ts</code> behavior should be preserved while changing its inputs. The current service already establishes several good contracts: last-five-turn context, dice roll extraction, transition options as the definitive guide, encounter turn counts, player-character guardrails, classic fantasy prose constraints, and JSON output containing <code>nextEncounterId</code> and <code>narrative</code>. Stage 5 should replace the old section/scene/encounter lookup with the context packet above, then keep these gameplay constraints unless a later unit deliberately changes them.</p>
+<h3>Verification</h3>
+<p class="muted">Unit 01 is complete when a future implementation can build a packet from pinned Stage 4 artifacts plus Convex session state, feed it to the AI SDK turn advancement call, and verify that the model can only continue the current encounter or choose a legal transition target.</p>
+</section>
+<section class="panel decision" aria-labelledby="unit-02">
+<p class="eyebrow">Unit 02 decision</p>
+<h2 id="unit-02">Transition Validation Contract</h2>
+<p class="muted">The LLM may propose a transition, but it does not directly move the session. Application code validates the proposed <code>nextEncounterId</code> against the pinned <code>graph.json</code>, the current encounter ID stored in Convex, and the session's pinned content reference. Only a valid transition can update the live session's current encounter.</p>
+<div class="packet" aria-label="Transition authority model">
+<div><b>Authoritative graph</b><p class="muted"><code>graph.json</code> is the source of truth for legal encounter-to-encounter movement at runtime. Published gameplay bundles should never contain unresolved transition targets. Draft preview playthroughs may contain unresolved nodes, but preview transition attempts into unresolved targets must be blocked with an editor-facing validation message.</p></div>
+<div><b>Authoritative session</b><p class="muted">Convex stores the current encounter, current turn order, current content version, and transition history. The transition validator must compare the LLM packet's <code>currentEncounterId</code> with the live session before applying a result.</p></div>
+<div><b>Model role</b><p class="muted">The model evaluates whether a transition condition appears satisfied and returns a candidate <code>nextEncounterId</code> plus bridge or continuation narrative. It should also preserve the current encounter ID when no legal transition condition is met.</p></div>
+<div><b>Application role</b><p class="muted">The application parses the model response, rejects malformed JSON, validates the target, decides whether the transition commits, records the decision, and emits the resulting turn state to subscribed clients.</p></div>
+</div>
+</section>
+<section class="columns" aria-label="Transition runtime flow">
+<article class="panel">
+<h2>Runtime Flow</h2>
+<ol>
+<li>Load the live session from Convex and confirm the session is pinned to a content version or preview draft ID.</li>
+<li>Load <code>graph.json</code> from that pinned content reference and derive <code>allowedNextEncounterIds</code> for the live <code>currentEncounterId</code>.</li>
+<li>Assemble the Unit 01 context packet using the live current encounter and legal transition list.</li>
+<li>Call the AI SDK turn advancement flow and request structured JSON containing <code>nextEncounterId</code> and <code>narrative</code>.</li>
+<li>Parse and validate the response. If JSON parsing fails, retry once with a repair prompt or fail the turn with a recoverable error.</li>
+<li>If <code>nextEncounterId</code> equals the current encounter ID, record a non-transition turn and keep the session location unchanged.</li>
+<li>If <code>nextEncounterId</code> is in <code>allowedNextEncounterIds</code>, commit the transition, append a transition event, and set the session's current encounter to the target.</li>
+<li>If <code>nextEncounterId</code> is not allowed, reject the transition target. Default to the current encounter only if the narrative can be safely treated as a continuation; otherwise surface a recoverable GM generation error.</li>
+</ol>
+</article>
+<article class="panel">
+<h2>Validation Rules</h2>
+<table class="spec">
+<thead><tr><th>Case</th><th>Runtime behavior</th></tr></thead>
+<tbody>
+<tr><td>Target is current encounter</td><td>Allowed. Record no transition and continue the encounter.</td></tr>
+<tr><td>Target is a graph edge from current encounter</td><td>Allowed. Commit transition after recording the generated turn.</td></tr>
+<tr><td>Target exists elsewhere but is not an outgoing edge</td><td>Reject. Do not jump across the graph unless an admin/debug override exists outside normal gameplay.</td></tr>
+<tr><td>Target does not exist in published bundle</td><td>Reject. This should be impossible after publish validation, so record telemetry and generation failure context.</td></tr>
+<tr><td>Target is unresolved in preview bundle</td><td>Reject for playthrough movement and show an editor-facing warning that the transition target needs a stub or real encounter.</td></tr>
+<tr><td>Response omits <code>nextEncounterId</code></td><td>Recoverable generation failure. Retry with explicit schema repair, then fail without mutating state if still invalid.</td></tr>
+<tr><td>Session changed while LLM was running</td><td>Reject stale result by comparing current encounter, turn order, and content reference. Rebuild context and retry only if the caller still owns the turn.</td></tr>
+</tbody>
+</table>
+</article>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="transition-shape">
+<h2 id="transition-shape">Compiled Transition Shape</h2>
+<p class="muted">Stage 4 can keep richer authoring metadata in <code>graph.json</code> than the model receives. The prompt should get concise options, while application code gets enough data to validate and record the movement.</p>
+<pre><code>type RuntimeEncounterTransition = {
+  id: string
+  fromEncounterId: string
+  toEncounterId: string
+  label?: string
+  condition: string
+  priority: number
+  kind: "normal" | "success" | "failure" | "timeout" | "fallback"
+  requiresRoll?: {
+    ability?: "strength" | "dexterity" | "constitution" | "intelligence" | "wisdom" | "charisma"
+    skill?: string
+    result?: "success" | "failure"
+  }
+  previewResolved: boolean
+  publishResolved: boolean
+}</code></pre>
+<p class="muted">The LLM should see <code>toEncounterId</code>, <code>label</code>, <code>condition</code>, <code>kind</code>, and any relevant roll outcome. It should not need source paths, validation internals, or unresolved draft metadata during published gameplay.</p>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="transition-state">
+<h2 id="transition-state">Convex Transition Records</h2>
+<p class="muted">Transition history should be a session/runtime concern, separate from authored graph content. A future implementation can store this either as a dedicated table or as structured fields attached to turn records; the important requirement is that movement remains auditable and replayable.</p>
+<pre><code>type RuntimeTransitionEvent = {
+  adventureInstanceId: Id&lt;"adventureInstances"&gt;
+  fromEncounterId: string
+  toEncounterId: string
+  contentVersion: string
+  contentHash: string
+  turnId: Id&lt;"turns"&gt;
+  transitionId?: string
+  condition?: string
+  reason: "llm_selected" | "system_forced" | "admin_override"
+  modelOutput?: {
+    nextEncounterId: string
+    narrative: string
+  }
+  validation: {
+    allowed: boolean
+    rejectedReason?: string
+  }
+  createdAt: number
+}</code></pre>
+<table class="spec">
+<thead><tr><th>State update</th><th>Rule</th></tr></thead>
+<tbody>
+<tr><td>Turn narrative</td><td>Record the accepted narrative on the turn, whether the encounter changes or not.</td></tr>
+<tr><td>Current encounter</td><td>Update only after the transition target passes graph validation and the write confirms the session has not advanced.</td></tr>
+<tr><td>Encounter turn count</td><td>Reset or start a new count for the target encounter after transition. Preserve the old encounter's completed count in turn history.</td></tr>
+<tr><td>Character state</td><td>Do not reset damage or ongoing effects solely because the encounter changes. Per-encounter fields, such as encounter-scoped spell usage if retained, are handled by Unit 03.</td></tr>
+<tr><td>Subscriptions</td><td>Clients observe the committed Convex state. They should not optimistically move to a model-proposed encounter before validation commits.</td></tr>
+</tbody>
+</table>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="transition-edge-cases">
+<h2 id="transition-edge-cases">Defaults And Open Questions</h2>
+<table class="spec">
+<thead><tr><th>Question</th><th>Default for the plan</th></tr></thead>
+<tbody>
+<tr><td>Can multiple transitions fire at once?</td><td>The LLM returns one <code>nextEncounterId</code>. If multiple conditions are satisfied, prefer roll outcome transitions first, then authored <code>priority</code>, then source order.</td></tr>
+<tr><td>Should fallback transitions be allowed?</td><td>Yes, if authored as explicit graph edges. A fallback is still a normal validated transition, not a free-form jump.</td></tr>
+<tr><td>Should authors be able to force a transition without the LLM?</td><td>Yes for system/admin actions such as session repair, debug tools, or scripted future mechanics, but normal gameplay should use the same graph validator and record <code>reason</code>.</td></tr>
+<tr><td>Should the LLM return a transition reason?</td><td>Not required for v1 because the selected transition ID and narrative are enough. A later structured output can add <code>transitionReason</code> if debugging needs it.</td></tr>
+<tr><td>Should transition validation inspect narrative text?</td><td>No for v1. Validate the structured target, not prose. Prose quality and consistency are generation concerns handled by prompt rules and review telemetry.</td></tr>
+</tbody>
+</table>
+<h3>Verification</h3>
+<p class="muted">Unit 02 is complete when a future implementation can prove three paths: continuing the current encounter, committing a legal graph transition, and rejecting an illegal or stale model-proposed target without mutating session state.</p>
+</section>
+<section class="panel decision" aria-labelledby="unit-03">
+<p class="eyebrow">Unit 03 decision</p>
+<h2 id="unit-03">Dice And Narrative Compatibility Contract</h2>
+<p class="muted">The relaunch should preserve the current lightweight D20 gameplay semantics while moving authored encounter content to the wiki runtime projection. Unit 03 is not a full D&amp;D rules engine. It keeps the existing turn loop understandable: players act, the app may request a D20 roll, the roll outcome updates narrative and mutable character state, then the AI Game Master advances or continues the encounter using the Unit 01 and Unit 02 contracts.</p>
+<div class="packet" aria-label="Compatibility surfaces">
+<div><b>Roll state</b><p class="muted">Keep <code>rollRequired</code> and <code>rollResult</code> on live <code>TurnCharacter</code> records. Roll requirements remain runtime/session state, not authored source truth.</p></div>
+<div><b>Narrative markers</b><p class="muted">Keep existing narrative shortcodes for display and history parsing, especially <code>[DiceRoll:...]</code> and <code>[OriginalReply:...]</code>. They are persisted in turn narrative for now because current UI and prompt context already know how to parse them.</p></div>
+<div><b>Character mutation</b><p class="muted">Keep <code>healthPercent</code>, <code>status</code>, <code>effects</code>, <code>spells[].isUsed</code>, <code>hasReplied</code>, <code>isComplete</code>, and <code>initiative</code> as Convex session state copied from character baselines and mutated during play.</p></div>
+<div><b>Reports</b><p class="muted">Practice reports should continue to read turn snapshots, encounter IDs, narrative, and findings. The report source changes from old JSON plan context to pinned wiki runtime artifacts plus Convex turn history.</p></div>
+</div>
+</section>
+<section class="columns" aria-label="Dice and narrative runtime flow">
+<article class="panel">
+<h2>Roll Flow</h2>
+<ol>
+<li>Player submits an action for a live character.</li>
+<li>The app analyzes the action against current encounter context and decides whether a roll is required.</li>
+<li>If no roll is required, the app appends the player action narrative and marks the character complete as today.</li>
+<li>If a roll is required, store <code>rollRequired</code> on that character with <code>rollType</code>, <code>difficulty</code>, and optional <code>modifier</code>.</li>
+<li>When the player rolls, calculate <code>baseRoll + modifier</code>, store <code>rollResult</code>, append a <code>[DiceRoll:...]</code> marker, and generate player-safe outcome prose.</li>
+<li>Apply bounded state changes: clear <code>rollRequired</code>, mark the character complete, mark matching spells as used, and update health/status/effects only through explicit runtime mutation logic.</li>
+<li>After all active characters are complete, the AI Game Master advances the encounter using the Stage 5 Unit 01 context packet and Unit 02 transition validator.</li>
+</ol>
+</article>
+<article class="panel">
+<h2>Roll Data Shape</h2>
+<pre><code>type RuntimeRollState = {
+  characterId: string
+  rollType: string
+  difficulty: number
+  modifier?: number
+  baseRoll?: number
+  result?: number
+  success?: boolean
+  source: "player_action" | "npc_action" | "system"
+  createdAt: number
+  resolvedAt?: number
+}</code></pre>
+<p class="muted">The current <code>RollRequirement</code> shape remains the minimum contract. The richer shape above is the planning target if a future implementation separates active roll state from character records.</p>
+</article>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="shortcodes">
+<h2 id="shortcodes">Narrative Shortcodes</h2>
+<table class="spec">
+<thead><tr><th>Marker</th><th>Status</th><th>Rule</th></tr></thead>
+<tbody>
+<tr><td><code>[DiceRoll:rollType=...;baseRoll=...;modifier=...;result=...;difficulty=...;character=...;image=...;success=...]</code></td><td>Preserve</td><td>Continue using this marker for inline roll display, prompt history, and practice report context. The marker is metadata, not player-facing prose.</td></tr>
+<tr><td><code>[OriginalReply: ...]</code></td><td>Preserve</td><td>Continue storing the original player reply when useful for traceability. UI can render or hide it depending on the current display pattern.</td></tr>
+<tr><td>Future structured events</td><td>Allowed later</td><td>A future implementation may move roll and reply metadata into structured Convex event records, but should keep rendering compatibility for existing turn narratives or migrate them deliberately.</td></tr>
+</tbody>
+</table>
+<p class="muted">Generated prose should remain clean narrative text: no dice mechanics, no raw rules explanation, no markdown lists, and no player-character decisions, dialogue, or internal thoughts written by the model.</p>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="character-mutations">
+<h2 id="character-mutations">Mutable Character State</h2>
+<table class="spec">
+<thead><tr><th>Field</th><th>Compatibility rule</th></tr></thead>
+<tbody>
+<tr><td><code>healthPercent</code></td><td>Keep as the v1 health abstraction. Do not require hit-point-accurate combat in the relaunch baseline. Health changes come from explicit roll-result analysis, NPC turn logic, admin repair, or future structured damage events.</td></tr>
+<tr><td><code>status</code></td><td>Keep as a simple string for current behavior such as <code>dead</code> and <code>fled</code>. Later schema work can constrain values if product behavior needs stricter status rules.</td></tr>
+<tr><td><code>effects</code></td><td>Keep <code>{ name, description, duration }</code> as session state. Decrementing duration and applying effect consequences should be runtime logic, not source markdown mutation.</td></tr>
+<tr><td><code>spells[].isUsed</code></td><td>Keep for lightweight spell availability. The current rule resets spells on encounter transition; preserve this as the v1 default unless Stage 8 explicitly changes rest/resource semantics.</td></tr>
+<tr><td><code>initiative</code></td><td>Keep per-turn initiative. Continuing an encounter rerolls active characters; transitioning creates the next encounter's active PC/NPC list and initiatives.</td></tr>
+<tr><td><code>hasReplied</code> and <code>isComplete</code></td><td>Keep as turn-completion flags. They are realtime session coordination fields, not character-sheet fields.</td></tr>
+<tr><td><code>rollRequired</code> and <code>rollResult</code></td><td>Keep on live turn characters for compatibility. A future event-sourced model may move them into a dedicated roll table, but the visible behavior should remain the same.</td></tr>
+</tbody>
+</table>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="encounter-transition-effects">
+<h2 id="encounter-transition-effects">Transition Effects On Gameplay State</h2>
+<table class="spec">
+<thead><tr><th>Transition effect</th><th>Default for v1</th></tr></thead>
+<tbody>
+<tr><td>Damage</td><td>Carry forward. Do not heal characters solely because the encounter changes.</td></tr>
+<tr><td>Dead or fled characters</td><td>Preserve existing behavior: exclude dead/fled characters from active turn order unless an explicit revive/return action changes state.</td></tr>
+<tr><td>Spells</td><td>Reset <code>spells[].isUsed</code> on encounter transition for v1 compatibility. This is intentionally a simplified encounter-scoped resource model.</td></tr>
+<tr><td>Effects</td><td>Carry forward by default. Duration should decrement through runtime turn/effect handling, not through authored content changes.</td></tr>
+<tr><td>NPC roster</td><td>Build from the target encounter's compiled NPC refs and copied NPC baselines, then mutate only the live session copy.</td></tr>
+<tr><td>Health reset flags</td><td>Do not carry forward old ad hoc <code>resetHealth</code> as a hidden behavior without an authored runtime field. If retained, expose it as an explicit encounter transition effect in the compiled model.</td></tr>
+</tbody>
+</table>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="reports-history">
+<h2 id="reports-history">Readable Turn History And Reports</h2>
+<p class="muted">Turn history remains the durable record players and tools understand. The relaunch should preserve readable narrative while letting structured runtime data grow around it.</p>
+<table class="spec">
+<thead><tr><th>Consumer</th><th>Requirement</th></tr></thead>
+<tbody>
+<tr><td>LLM context assembler</td><td>Use recent turns, parsed roll markers, current encounter ID, and narrative summary. Continue the current last-five-turn baseline from Unit 01.</td></tr>
+<tr><td>Player UI</td><td>Render prose and roll markers cleanly. Mechanics metadata should appear as roll UI, not raw shortcode text.</td></tr>
+<tr><td>Practice reports</td><td>Read pinned content metadata, encounter IDs, turn snapshots, parsed rolls, transition events, and validation findings. Reports should not depend on old AdventurePlan section/scene paths.</td></tr>
+<tr><td>Debug/admin tools</td><td>Show raw model output, parsed shortcodes, character state diffs, and transition validation results when troubleshooting generation or session state.</td></tr>
+</tbody>
+</table>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="compatibility-open-questions">
+<h2 id="compatibility-open-questions">Defaults And Open Questions</h2>
+<table class="spec">
+<thead><tr><th>Question</th><th>Default for the plan</th></tr></thead>
+<tbody>
+<tr><td>Are we implementing full SRD combat math now?</td><td>No. Use standard ability names and existing character fields, but keep v1 gameplay lightweight and narrative-first.</td></tr>
+<tr><td>Should roll types become enum values?</td><td>Not yet. Keep <code>rollType</code> as a string for compatibility with custom checks and spell names. Validation can warn on obvious malformed values later.</td></tr>
+<tr><td>Should spell use reset on encounter transition?</td><td>Yes for v1 compatibility. Revisit only if the final implementation plan chooses rest-based resources.</td></tr>
+<tr><td>Should health be percentage or HP?</td><td>Keep <code>healthPercent</code> for existing UI and schema compatibility. Add true HP only as a future rules upgrade with migration planning.</td></tr>
+<tr><td>Should shortcodes be replaced immediately?</td><td>No. Preserve them for compatibility, then optionally mirror them into structured events during implementation.</td></tr>
+</tbody>
+</table>
+<h3>Verification</h3>
+<p class="muted">Unit 03 is complete when a future implementation can demonstrate: a no-roll player action, a required player roll with a rendered <code>[DiceRoll]</code> marker, spell-use tracking, health/status/effect persistence across an encounter transition, and a practice report that reads wiki runtime context instead of old JSON plan sections.</p>
+</section>
+<section class="panel decision" aria-labelledby="unit-04">
+<p class="eyebrow">Unit 04 decision</p>
+<h2 id="unit-04">Realtime Session Model Contract</h2>
+<p class="muted">Convex should remain the realtime authority for live gameplay state. The relaunch should not move authored adventure truth into Convex; it should store only session references to pinned S3 runtime artifacts plus mutable state created during play. This preserves the current product shape while making the wiki-first boundary explicit.</p>
+<div class="packet" aria-label="Realtime session ownership">
+<div><b>Authored content</b><p class="muted">S3 published artifacts own adventure prose, encounter definitions, graph edges, NPC/location profiles, character-sheet baselines, image references, and validation reports.</p></div>
+<div><b>Live session</b><p class="muted">Convex owns adventure instances, participants, selected characters, current encounter, current turn, mutable character snapshots, roll state, transition history, chat, generated narrative, and practice reports.</p></div>
+<div><b>Realtime UI</b><p class="muted">Clients subscribe to Convex queries for current adventure, current turn, chat, lobby state, and turn navigation. Clients should not subscribe directly to S3; server-side loaders assemble pinned content context as needed.</p></div>
+<div><b>AI boundary</b><p class="muted">AI SDK calls may read Convex state and pinned S3 artifacts through server actions/API routes, then write only validated results back through Convex mutations.</p></div>
+</div>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="session-tables">
+<h2 id="session-tables">Target Convex Tables</h2>
+<p class="muted">Names can stay close to the current schema, but the relaunch should make content pinning and transition/roll auditability first-class. This is a planning target, not an immediate schema migration.</p>
+<table class="spec">
+<thead><tr><th>Table</th><th>Purpose</th><th>Key fields</th></tr></thead>
+<tbody>
+<tr><td><code>adventures</code></td><td>Live adventure session container.</td><td><code>settingId</code>, <code>adventureId</code> or current <code>planId</code> replacement, <code>ownerId</code>, <code>runType</code>, <code>status</code>, <code>playerIds</code>, <code>currentTurnId</code>, <code>currentEncounterId</code>, <code>contentVersion</code>, <code>contentHash</code>, optional <code>previewDraftId</code>.</td></tr>
+<tr><td><code>adventure_participants</code> or embedded <code>players</code></td><td>Player-to-character assignment and lobby state.</td><td><code>adventureId</code>, <code>userId</code>, <code>characterId</code>, <code>characterSource</code>, <code>joinedAt</code>, <code>ready</code>. Embedded players are acceptable for v1 if query patterns stay simple.</td></tr>
+<tr><td><code>turns</code></td><td>Ordered narrative history and live turn snapshots.</td><td><code>adventureId</code>, <code>encounterId</code>, <code>order</code>, <code>title</code>, <code>narrative</code>, <code>characters</code>, <code>isFinalEncounter</code>, <code>createdAt</code>, <code>updatedAt</code>.</td></tr>
+<tr><td><code>transition_events</code></td><td>Auditable encounter movement.</td><td><code>adventureId</code>, <code>turnId</code>, <code>fromEncounterId</code>, <code>toEncounterId</code>, <code>transitionId</code>, <code>contentVersion</code>, <code>validation</code>, <code>reason</code>, <code>createdAt</code>.</td></tr>
+<tr><td><code>roll_events</code></td><td>Optional structured mirror of roll shortcodes and active roll resolution.</td><td><code>adventureId</code>, <code>turnId</code>, <code>characterId</code>, <code>rollType</code>, <code>difficulty</code>, <code>modifier</code>, <code>baseRoll</code>, <code>result</code>, <code>success</code>, <code>createdAt</code>, <code>resolvedAt</code>.</td></tr>
+<tr><td><code>chat_messages</code></td><td>Out-of-band table talk.</td><td><code>adventureId</code>, <code>userId</code> or <code>username</code>, <code>characterName</code>, <code>content</code>, <code>createdAt</code>. Chat does not automatically become game truth.</td></tr>
+<tr><td><code>adventure_reports</code></td><td>Practice/campaign diagnostics.</td><td><code>adventureId</code>, <code>ownerId</code>, <code>runType</code>, <code>status</code>, <code>report</code>, <code>error</code>, <code>createdAt</code>, <code>updatedAt</code>.</td></tr>
+</tbody>
+</table>
+</section>
+<section class="columns" aria-label="Realtime query and mutation model">
+<article class="panel">
+<h2>Realtime Queries</h2>
+<ul>
+<li><code>getAdventureSession(adventureId)</code>: returns session metadata, pinned content reference, status, participants, and current turn ID.</li>
+<li><code>getCurrentTurn(adventureId)</code>: returns the current turn snapshot with characters and narrative.</li>
+<li><code>getTurnsByAdventure(adventureId)</code>: returns ordered turn history for navigation, reports, and context assembly.</li>
+<li><code>getTurnNavigationInfo(adventureId)</code>: returns current order and total turns without transferring all turn payloads.</li>
+<li><code>getChatMessages(adventureId)</code>: returns chat ordered by creation time.</li>
+<li><code>getPracticeReports(adventureId)</code>: returns generated report metadata and findings.</li>
+</ul>
+</article>
+<article class="panel">
+<h2>Mutations And Actions</h2>
+<ul>
+<li><code>createAdventureWithFirstTurn</code>: pins content version/hash, copies selected PC and initial NPC baselines into the first turn, and starts the session.</li>
+<li><code>joinAdventure</code>: validates run type, character ownership/availability, and participant limits before assigning a character.</li>
+<li><code>submitReply</code>: appends player narrative, stores optional roll requirement, and updates only that character's turn state.</li>
+<li><code>resolveRoll</code>: records roll result, appends shortcode-compatible metadata, applies bounded character mutations, and clears active roll state.</li>
+<li><code>advanceTurn</code>: server-side action assembles context, calls the AI SDK, validates transitions, then writes through Convex mutations.</li>
+<li><code>commitTransition</code>: validates stale session guards and graph target, writes transition event, creates next turn, and updates current encounter/turn atomically as much as Convex mutation boundaries allow.</li>
+<li><code>sendChatMessage</code>: writes chat only; does not mutate gameplay state.</li>
+</ul>
+</article>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="session-shape">
+<h2 id="session-shape">Session Shape</h2>
+<pre><code>type WikiAdventureSession = {
+  _id: Id&lt;"adventures"&gt;
+  settingId: string
+  adventureId: string
+  ownerId: string
+  runType: "campaign" | "practice"
+  status: "waitingForPlayers" | "active" | "completed"
+  contentRef: {
+    source: "published" | "preview"
+    contentVersion?: string
+    contentHash?: string
+    previewDraftId?: string
+    schemaVersion: string
+  }
+  currentEncounterId: string
+  currentTurnId?: Id&lt;"turns"&gt;
+  playerIds: string[]
+  players: Array&lt;{
+    userId: string
+    characterId: string
+    characterSource: "user" | "premade"
+  }&gt;
+  startedAt: number
+  endedAt?: number
+  updatedAt: number
+}</code></pre>
+<p class="muted">The current <code>planId</code> field should be replaced or reinterpreted as <code>adventureId</code> once old JSON AdventurePlan IDs are retired. During migration, both may coexist, but Stage 8 should pick the final name.</p>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="turn-shape">
+<h2 id="turn-shape">Turn Snapshot Shape</h2>
+<pre><code>type WikiAdventureTurn = {
+  _id: Id&lt;"turns"&gt;
+  adventureId: Id&lt;"adventures"&gt;
+  encounterId: string
+  title: string
+  order: number
+  narrative: string
+  characters: TurnCharacter[]
+  transitionEventId?: Id&lt;"transition_events"&gt;
+  generatedBy?: {
+    model?: string
+    promptVersion?: string
+    contextHash?: string
+  }
+  createdAt: number
+  updatedAt: number
+}</code></pre>
+<p class="muted">Embedding live <code>TurnCharacter</code> arrays in turns remains acceptable for v1 because it matches the current UI and makes each turn replayable. If sessions later need long-running campaign state independent of turn snapshots, introduce a separate <code>session_characters</code> table rather than mutating published source sheets.</p>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="realtime-boundaries">
+<h2 id="realtime-boundaries">Realtime Boundaries</h2>
+<table class="spec">
+<thead><tr><th>Boundary</th><th>Rule</th></tr></thead>
+<tbody>
+<tr><td>Published content updates</td><td>Existing sessions keep their pinned version. New sessions read <code>latest.json</code> and then pin to a concrete version.</td></tr>
+<tr><td>Preview playthroughs</td><td>Mark as <code>runType: practice</code> or a preview-specific content source. Never mix preview draft IDs with published campaign sessions.</td></tr>
+<tr><td>Chat</td><td>Realtime and visible, but not game truth unless a player submits an explicit action. Unit 01's default of excluding raw chat from LLM context remains correct.</td></tr>
+<tr><td>AI generation</td><td>Actions can call AI and read S3 context; mutations write validated results. Avoid model calls inside Convex mutations.</td></tr>
+<tr><td>Concurrency</td><td>Every mutation that advances turn or commits transition should verify expected <code>currentTurnId</code>, <code>currentEncounterId</code>, and current order before writing.</td></tr>
+<tr><td>Authorization</td><td>Mutations must verify owner/player/admin rights server-side. Client-visible state is realtime, but writes still require control of the relevant adventure or character.</td></tr>
+<tr><td>Generated history</td><td>Store enough model/context metadata to debug and report behavior, but do not store raw private prompt packets unless a later privacy policy allows it.</td></tr>
+</tbody>
+</table>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="state-lifecycle">
+<h2 id="state-lifecycle">Session Lifecycle</h2>
+<ol>
+<li>Start session: load <code>latest.json</code> or preview bundle, pin content ref, copy selected PC sheets and initial encounter NPC sheets into live turn state.</li>
+<li>Lobby/join: update participants and selected character assignments in Convex; do not mutate S3 character sheets.</li>
+<li>Player turn: append reply, optionally require roll, update only that live turn character.</li>
+<li>Roll resolution: append shortcode-compatible roll metadata, apply bounded character mutations, mark the actor complete.</li>
+<li>NPC/system turns: generate and apply NPC actions against live session state, not source NPC baselines.</li>
+<li>Turn advancement: assemble context from pinned S3 artifacts plus Convex state, call AI, validate transition, create the next turn, and update current pointers.</li>
+<li>Completion: mark session completed, retain pinned content ref and turn history for replay/reporting.</li>
+</ol>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="realtime-open-questions">
+<h2 id="realtime-open-questions">Defaults And Open Questions</h2>
+<table class="spec">
+<thead><tr><th>Question</th><th>Default for the plan</th></tr></thead>
+<tbody>
+<tr><td>Should live character state be embedded in turns or normalized?</td><td>Embed for v1 compatibility. Consider <code>session_characters</code> only if campaign-length state becomes hard to manage or query.</td></tr>
+<tr><td>Should transition and roll events be separate tables?</td><td>Yes for the planning target, because they improve debugging and reports. Implementation can mirror events while preserving narrative shortcodes.</td></tr>
+<tr><td>Should chat enter AI context?</td><td>No by default. Chat is table talk unless promoted into an explicit player action or report note.</td></tr>
+<tr><td>Should AI prompts be stored?</td><td>Store model name, prompt version, context hash, and result. Avoid storing full private prompt packets by default.</td></tr>
+<tr><td>Should Convex store compiled encounter records?</td><td>No. Store content references and session state. Read compiled artifacts from S3/server cache when assembling context.</td></tr>
+</tbody>
+</table>
+<h3>Verification</h3>
+<p class="muted">Unit 04 is complete when the final implementation plan can map current <code>adventures</code>, <code>turns</code>, <code>chat_messages</code>, and <code>adventure_reports</code> behavior to a wiki-first schema with pinned content refs, server-side authorization, stale-write guards, realtime subscriptions, and no Convex ownership of authored adventure source content.</p>
 </section>
 </main></body></html>

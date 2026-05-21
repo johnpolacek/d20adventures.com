@@ -8,9 +8,10 @@
   <style>
     :root{color-scheme:dark;--bg:#10120d;--panel:#181d15;--panel2:#22291b;--ink:#f4f1df;--muted:#bbb99d;--line:#3f4b32;--accent:#d9b65f;--blue:#7db7ca;--green:#93c47d;--warn:#e5a65b;--bad:#d87968;--r:8px;--shadow:0 18px 48px #0008;--s1:8px;--s2:14px;--s3:20px;--s4:30px}
     *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 72% 0,#28351c 0 18rem,transparent 34rem),linear-gradient(135deg,#10120d,#151910 60%,#0b100f);color:var(--ink);font-family:Georgia,"Times New Roman",serif;line-height:1.5}main{width:min(1220px,calc(100% - 32px));margin:auto;padding:30px 0 58px}a{color:var(--accent);text-decoration-thickness:.08em}code{color:#f6d88d}.hero{display:grid;grid-template-columns:1fr 360px;gap:18px;align-items:stretch;border-bottom:1px solid var(--line);padding-bottom:22px}.hero>section,.panel{border:1px solid var(--line);border-radius:var(--r);background:linear-gradient(180deg,var(--panel),#12160f);box-shadow:var(--shadow);padding:18px}.eyebrow,.badge{font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.11em}.eyebrow{color:var(--blue);margin:0 0 8px}h1,h2,h3,p{margin-top:0}h1{font-size:clamp(2.2rem,6vw,5.2rem);line-height:.95;margin-bottom:12px}h2{font-size:1.22rem;color:#fff5cd}.muted{color:var(--muted)}.summary dl{display:grid;grid-template-columns:140px 1fr;gap:8px;margin:0}.summary dt{color:var(--blue);font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.summary dd{margin:0;color:var(--muted)}.decision{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:20px 0}.decision article{border:1px solid var(--line);border-radius:var(--r);background:var(--panel2);padding:14px}.decision b{display:block;color:var(--accent);font:700 .74rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.flow{margin-top:20px;border:1px solid var(--line);border-radius:var(--r);background:#14190f;padding:10px}.flow svg{width:100%;height:auto;display:block}.flow rect{fill:#202819;stroke:#6f7d50}.flow path{stroke:var(--accent);stroke-width:2;fill:none}.flow text{fill:var(--ink);font:700 13px ui-monospace,monospace}.stage-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:12px;margin-top:18px}.stage{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:15px;min-height:182px}.stage .badge{display:inline-block;color:var(--blue);border:1px solid var(--line);border-radius:999px;padding:3px 8px;margin-bottom:8px}.stage.current{outline:2px solid var(--accent)}table{width:100%;border-collapse:collapse;margin-top:18px;background:#151911}th,td{border:1px solid var(--line);padding:10px;text-align:left;vertical-align:top}th{background:#202819;color:#fff5cd}.copybar{display:flex;gap:10px;align-items:center;margin-top:16px;flex-wrap:wrap}.copybar button{border:1px solid var(--accent);border-radius:6px;background:#271f10;color:var(--ink);padding:9px 12px;font:700 .8rem ui-monospace,monospace;cursor:pointer}.copybar textarea{position:absolute;left:-9999px}.status-active{color:var(--green)}.status-draft{color:var(--warn)}@media(max-width:820px){.hero{grid-template-columns:1fr}.decision{grid-template-columns:1fr 1fr}.summary dl{grid-template-columns:1fr}table{display:block;overflow-x:auto}}@media(max-width:520px){.decision{grid-template-columns:1fr}h1{font-size:2.55rem}}
-  </style>
+  .wiki-nav{width:min(1120px,calc(100% - 32px));margin:14px auto 0;display:flex;flex-wrap:wrap;gap:8px;font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.wiki-nav a{border:1px solid var(--line,#3d472f);border-radius:999px;padding:6px 9px;background:rgba(25,29,23,.72);color:var(--accent,#d7b35d);text-decoration:none}.wiki-nav a:focus-visible{outline:2px solid var(--accent,#d7b35d);outline-offset:2px}</style>
 </head>
 <body>
+<nav class="wiki-nav" aria-label="Wiki navigation"><a href="../../index.html">Wiki Home</a><a href="../../Sources.html">Sources</a><a href="../../plans/index.html">Plans</a><a href="../../roadmap.html">Roadmap</a><a href="../../Architecture.html">Architecture</a></nav>
 <main>
   <header class="hero">
     <section>
@@ -21,12 +22,12 @@
     <aside class="panel summary" id="summary">
       <p class="eyebrow">Summary</p>
       <dl>
-        <dt>Status</dt><dd><span class="status-active">active planning</span></dd>
+        <dt>Status</dt><dd><span class="status-active">implementation-ready planning complete</span></dd>
         <dt>Shape</dt><dd>multi-stage planning program with stage/unit pages</dd>
-        <dt>Current unit</dt><dd>Stage 1, Unit 01 - current-state dependency inventory</dd>
-        <dt>Next action</dt><dd>Trace every current AdventurePlan dependency before architecture decisions are finalized.</dd>
-        <dt>Blockers</dt><dd>None. User decisions are recorded; implementation details remain open by design.</dd>
-        <dt>Validation</dt><dd>Planning artifacts only; verify through source trace coverage, decision completeness, and user review.</dd>
+        <dt>Current unit</dt><dd>Planning complete - Stage 8 final plan assembled</dd>
+        <dt>Next action</dt><dd>Start implementation in an isolated relaunch worktree only after explicit approval.</dd>
+        <dt>Blockers</dt><dd>None. User decisions are recorded; implementation now needs worktree execution.</dd>
+        <dt>Validation</dt><dd>Stages 1-8 provide implementation milestones, tests, acceptance gates, rollout, and rollback controls.</dd>
       </dl>
     </aside>
   </header>
@@ -54,14 +55,14 @@
   <section aria-labelledby="stages">
     <h2 id="stages" style="margin-top:26px">Stages And Unit Pages</h2>
     <div class="stage-grid">
-      <article class="stage current"><span class="badge">Stage 1</span><h3><a href="stage-01-current-state.html">Discovery And Current-State Map</a></h3><p class="muted">Inventory JSON plan dependencies and classify content, runtime state, and derived metadata.</p></article>
+      <article class="stage"><span class="badge">Stage 1</span><h3><a href="stage-01-current-state.html">Discovery And Current-State Map</a></h3><p class="muted">Inventory JSON plan dependencies and classify content, runtime state, and derived metadata.</p></article>
       <article class="stage"><span class="badge">Stage 2</span><h3><a href="stage-02-product-principles.html">Product Intent And Principles</a></h3><p class="muted">Define the relaunch thesis, non-goals, and what “adventure wiki” means.</p></article>
-      <article class="stage"><span class="badge">Stage 3</span><h3><a href="stage-03-content-model.html">Wiki Content Model</a></h3><p class="muted">Design folder structure, frontmatter, markdown conventions, and Myr template shape.</p></article>
-      <article class="stage"><span class="badge">Stage 4</span><h3><a href="stage-04-runtime-projection.html">Runtime Projection</a></h3><p class="muted">Specify derived index, validation, publish compilation, and S3 layout.</p></article>
+      <article class="stage"><span class="badge">Stage 3</span><h3><a href="stage-03-content-model.html">Wiki Content Model</a></h3><p class="muted">Locked folder structure, frontmatter, markdown conventions, and <code>encounter</code>-first gameplay content unit. See also the <a href="stage-03-myr-skeleton.html">representative Myr skeleton</a>.</p></article>
+      <article class="stage"><span class="badge">Stage 4</span><h3><a href="stage-04-runtime-projection.html">Runtime Projection</a></h3><p class="muted">Specify derived index, validation modes, publish compilation, S3 layout, and session version-pinning.</p></article>
       <article class="stage"><span class="badge">Stage 5</span><h3><a href="stage-05-llm-gameplay.html">LLM And Gameplay Flow</a></h3><p class="muted">Design retrieval, prompt assembly, transitions, turn loop compatibility, and realtime state.</p></article>
       <article class="stage"><span class="badge">Stage 6</span><h3><a href="stage-06-authoring-admin.html">Authoring And Admin</a></h3><p class="muted">Plan the AI-assisted wiki editor, validation preview, draft/publish flow, and editor replacement.</p></article>
       <article class="stage"><span class="badge">Stage 7</span><h3><a href="stage-07-relaunch-migration.html">Relaunch Migration</a></h3><p class="muted">Plan the nuke-and-rebuild worktree strategy and Myr JSON-to-wiki template migration.</p></article>
-      <article class="stage"><span class="badge">Stage 8</span><h3><a href="stage-08-final-plan.html">Final Plan Assembly</a></h3><p class="muted">Assemble the decision-complete implementation plan, tests, acceptance gates, and risk controls.</p></article>
+      <article class="stage current"><span class="badge">Stage 8</span><h3><a href="stage-08-final-plan.html">Final Plan Assembly</a></h3><p class="muted">Decision-complete implementation plan, tests, acceptance gates, and risk controls are assembled.</p></article>
     </div>
   </section>
 
@@ -84,7 +85,7 @@
     <p class="muted">Use this when handing the planning program to another agent.</p>
     <div class="copybar">
       <button type="button" id="copy">Copy Planning Prompt</button><span id="copied" class="muted" aria-live="polite"></span>
-      <textarea id="prompt">Use project-html-wiki. Continue the Wiki Adventure Migration planning program. Read wiki/plans/index.html and wiki/plans/wiki-adventure-migration/index.html first. Current unit: Stage 1, Unit 01 - current-state dependency inventory. Do not edit app code. Update only planning/wiki artifacts unless explicitly redirected.</textarea>
+      <textarea id="prompt">Use project-html-wiki and parallel-dev-worktrees. The Wiki Adventure Migration planning program is complete through Stage 8. Read wiki/plans/index.html, wiki/plans/wiki-adventure-migration/index.html, and wiki/plans/wiki-adventure-migration/stage-08-final-plan.html first. If explicitly asked to implement, create an isolated relaunch worktree/branch and follow the Stage 8 milestone order. Otherwise keep edits to planning/wiki artifacts. Preserve existing user characters, keep S3 wiki source canonical for authored content, keep Convex as live session state, do not add full SRD combat automation, and do not test with production S3 writes.</textarea>
     </div>
   </section>
 </main>

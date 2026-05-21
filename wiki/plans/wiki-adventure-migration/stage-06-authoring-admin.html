@@ -1,10 +1,400 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="visual-concept" content="wiki migration control room"><title>Stage 6 - Authoring Admin</title><style>
-:root{--bg:#10120d;--panel:#181d15;--ink:#f4f1df;--muted:#bbb99d;--line:#3f4b32;--accent:#d9b65f;--blue:#7db7ca;--r:8px}*{box-sizing:border-box}body{margin:0;background:#10120d;color:var(--ink);font-family:Georgia,"Times New Roman",serif;line-height:1.5}main{width:min(1080px,calc(100% - 32px));margin:auto;padding:30px 0 54px}a{color:var(--accent)}code{color:#f6d88d}.hero{display:grid;grid-template-columns:1fr 320px;gap:18px;border-bottom:1px solid var(--line);padding-bottom:20px}.panel{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:16px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-top:20px}.eyebrow{font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.11em;color:var(--blue)}h1{font-size:clamp(2rem,5vw,4rem);line-height:1;margin:0 0 10px}.muted{color:var(--muted)}@media(max-width:760px){.hero{grid-template-columns:1fr}}</style></head><body><main>
+:root{--bg:#10120d;--panel:#181d15;--panel2:#202819;--ink:#f4f1df;--muted:#bbb99d;--line:#3f4b32;--accent:#d9b65f;--blue:#7db7ca;--green:#93c47d;--warn:#e5a65b;--r:8px}*{box-sizing:border-box}body{margin:0;background:#10120d;color:var(--ink);font-family:Georgia,"Times New Roman",serif;line-height:1.5}main{width:min(1120px,calc(100% - 32px));margin:auto;padding:30px 0 54px}a{color:var(--accent)}code{color:#f6d88d}.hero{display:grid;grid-template-columns:1fr 320px;gap:18px;border-bottom:1px solid var(--line);padding-bottom:20px}.panel{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:16px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-top:20px}.columns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.eyebrow{font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.11em;color:var(--blue)}h1{font-size:clamp(2rem,5vw,4rem);line-height:1;margin:0 0 10px}h2,h3{color:#fff5cd}.muted{color:var(--muted)}.decision{margin-top:24px}.packet{display:grid;gap:10px;margin-top:12px}.packet div{border:1px solid var(--line);border-radius:var(--r);background:var(--panel2);padding:12px}.packet b{display:block;color:var(--accent);font:700 .74rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.spec{width:100%;border-collapse:collapse;margin-top:14px}.spec th,.spec td{border:1px solid var(--line);padding:10px;text-align:left;vertical-align:top}.spec th{background:#202819;color:#fff5cd}pre{white-space:pre-wrap;border:1px solid var(--line);border-radius:var(--r);background:#0d100c;padding:14px;overflow:auto}ul{padding-left:20px}@media(max-width:760px){.hero,.columns{grid-template-columns:1fr}}.wiki-nav{width:min(1120px,calc(100% - 32px));margin:14px auto 0;display:flex;flex-wrap:wrap;gap:8px;font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.wiki-nav a{border:1px solid var(--line,#3d472f);border-radius:999px;padding:6px 9px;background:rgba(25,29,23,.72);color:var(--accent,#d7b35d);text-decoration:none}.wiki-nav a:focus-visible{outline:2px solid var(--accent,#d7b35d);outline-offset:2px}</style></head><body><nav class="wiki-nav" aria-label="Wiki navigation"><a href="../../index.html">Wiki Home</a><a href="../../Sources.html">Sources</a><a href="../../plans/index.html">Plans</a><a href="../../roadmap.html">Roadmap</a><a href="../../Architecture.html">Architecture</a></nav><main>
 <header class="hero"><div><p class="eyebrow">Stage 6</p><h1>Authoring And Admin Workflow</h1><p class="muted">Plan the AI-assisted wiki editor that replaces the current Adventure Plan editor and supports validation, preview, draft, and publish workflows.</p></div><aside class="panel"><p class="eyebrow">Reader Goal</p><p>After 2 minutes, know what the authoring product needs before implementation design starts.</p><p><a href="index.html">Back to plan</a></p></aside></header>
 <section class="grid">
-<article class="panel"><h2>Unit 01 - AI-assisted editor model</h2><p class="muted">Define create, expand, rewrite, split page, link NPC, repair validation issue, summarize page, and generate transition tools. Decide human approval gates for AI edits.</p><h3>Verification</h3><p class="muted">Every AI edit has preview, diff, validation, and accept/reject behavior.</p></article>
+<article class="panel"><h2>Unit 01 - AI-assisted editor model</h2><p class="muted">Define create, expand, rewrite, split encounter, link NPC, repair validation issue, summarize encounter, generate transition tools, and maintain paired character sheet/profile files. Decide human approval gates for AI edits.</p><h3>Verification</h3><p class="muted">Every AI edit has preview, diff, validation, and accept/reject behavior.</p></article>
 <article class="panel"><h2>Unit 02 - Admin UX replacement</h2><p class="muted">Inventory current editor features and decide what gets removed, replaced, or folded into a wiki editor and preview surface.</p><h3>Verification</h3><p class="muted">The final implementation plan can safely delete the current editor without losing required launch capability.</p></article>
 <article class="panel"><h2>Unit 03 - Draft/publish lifecycle</h2><p class="muted">Define draft S3 files, validation state, publish compilation, rollback, version history, permissions, and preview playthrough behavior.</p><h3>Verification</h3><p class="muted">Authors cannot accidentally publish invalid adventures or lose draft work.</p></article>
 <article class="panel"><h2>Unit 04 - Design requirements</h2><p class="muted">Define the authoring UI information architecture: file tree, markdown editor, AI command panel, validation drawer, preview, context graph, and publish status.</p><h3>Verification</h3><p class="muted">Design brief is updated if durable UI principles change.</p></article>
+</section>
+<section class="panel decision" aria-labelledby="unit-01">
+<p class="eyebrow">Unit 01 decision</p>
+<h2 id="unit-01">AI-Assisted Editor Model</h2>
+<p class="muted">The new editor should be wiki-first and diff-first. Authors edit S3 source files directly through a controlled UI, while AI tools propose file changes to markdown profiles, encounter files, adventure manifests, character JSON sheets, and asset references. AI does not silently mutate source files. Every AI-assisted edit must produce a previewable change set, run validation, and require explicit human acceptance before writing to the draft source tree.</p>
+<div class="packet" aria-label="Editor model pillars">
+<div><b>Source unit</b><p class="muted">The editor works on files and typed entities, not old nested <code>AdventurePlan</code> forms. The file tree exposes <code>adventure.md</code>, <code>encounters/*.md</code>, setting-level entities, paired character <code>.json</code>/<code>.md</code> files, and assets.</p></div>
+<div><b>AI role</b><p class="muted">AI acts as an authoring assistant that can create, expand, rewrite, split, link, repair, summarize, and scaffold. It must explain proposed changes in terms of affected files and validation impact.</p></div>
+<div><b>Human gate</b><p class="muted">Humans approve writes. The editor shows before/after diffs, affected compiled artifacts, validation findings, and any unresolved targets before accepting changes.</p></div>
+<div><b>Validation loop</b><p class="muted">Every accepted draft change should trigger draft-preview validation. Publish validation remains a separate hard gate from Stage 4.</p></div>
+</div>
+</section>
+<section class="columns" aria-label="Primary authoring surfaces">
+<article class="panel">
+<h2>Primary Surfaces</h2>
+<ul>
+<li>File tree grouped by adventure files, encounters, characters, NPCs, locations, factions, items, and assets.</li>
+<li>Markdown editor for <code>.md</code> files with frontmatter-aware controls for required fields.</li>
+<li>JSON sheet editor for PC/NPC mechanics that validates against <code>types/character.ts</code>-aligned schemas.</li>
+<li>AI command panel scoped to the selected file, selected text, validation finding, or graph node.</li>
+<li>Diff preview showing exact additions, deletions, renames, and paired file updates before save.</li>
+<li>Validation drawer with errors, warnings, suggestions, and AI-fixable actions.</li>
+<li>Compiled preview panel showing encounter summary, linked entities, transition graph, and prompt-context extract.</li>
+</ul>
+</article>
+<article class="panel">
+<h2>Core Workflows</h2>
+<ol>
+<li>Create a new adventure skeleton from setting, premise, player count, and optional Myr template.</li>
+<li>Add or expand an encounter with intro, GM notes, checks, transitions, location/NPC links, and image references.</li>
+<li>Create paired character files: mechanical JSON sheet plus markdown profile.</li>
+<li>Repair validation findings such as missing transition targets, duplicate IDs, missing summaries, broken typed links, or missing profiles.</li>
+<li>Preview a planning skeleton with unresolved targets while keeping publish-blocking findings visible.</li>
+<li>Run a draft preview compile and optionally start a preview playthrough pinned to the preview bundle.</li>
+<li>Promote a valid draft through publish validation into immutable published artifacts.</li>
+</ol>
+</article>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="ai-tools">
+<h2 id="ai-tools">AI Tool Set</h2>
+<table class="spec">
+<thead><tr><th>Tool</th><th>Input scope</th><th>Output</th><th>Approval rule</th></tr></thead>
+<tbody>
+<tr><td>Create adventure skeleton</td><td>Setting, premise, tone, player count, optional template</td><td><code>adventure.md</code>, starter encounter stubs, optional premade character placeholders</td><td>Preview whole file set before writing.</td></tr>
+<tr><td>Create encounter</td><td>Adventure context, selected location/NPCs, author prompt</td><td>New <code>encounters/{id}.md</code> plus typed links and transition candidates</td><td>Require diff approval and validation.</td></tr>
+<tr><td>Expand encounter</td><td>Selected encounter or section</td><td>Updated intro, GM notes, checks, rewards, image suggestions, or transition text</td><td>Require section diff approval.</td></tr>
+<tr><td>Split encounter</td><td>Existing long encounter</td><td>Two or more encounter files plus updated transitions and graph links</td><td>Require multi-file diff and graph preview.</td></tr>
+<tr><td>Link NPC/location</td><td>Selected encounter and target entity</td><td>Typed wiki links, frontmatter refs, and optional reciprocal suggestions</td><td>Require approval; reciprocal links remain suggestions unless selected.</td></tr>
+<tr><td>Repair validation issue</td><td>Single validation finding</td><td>Minimal patch such as stub encounter, fixed link, generated summary, or missing profile</td><td>Allowed only for AI-fixable findings from Stage 4 policy.</td></tr>
+<tr><td>Summarize encounter</td><td>Encounter body</td><td>Frontmatter or compiled summary proposal</td><td>Require approval because summaries affect retrieval and prompts.</td></tr>
+<tr><td>Generate transitions</td><td>Encounter objective and graph context</td><td>Explicit transition bullets with target IDs and conditions</td><td>Require graph preview; unresolved targets allowed only in draft preview.</td></tr>
+<tr><td>Maintain character pair</td><td>Character JSON or markdown profile</td><td>Profile from sheet, sheet-safe profile update, or consistency findings</td><td>AI may not mutate mechanics such as attributes/spells without explicit author intent.</td></tr>
+</tbody>
+</table>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="change-set">
+<h2 id="change-set">AI Change Set Contract</h2>
+<p class="muted">AI authoring actions should return a structured change set. The app applies the change set only after validation and approval. This keeps AI SDK routes/tool calls compatible with S3-backed source files and avoids requiring direct agent filesystem access in production.</p>
+<pre><code>type AuthoringChangeSet = {
+  id: string
+  intent: string
+  source: "ai" | "human"
+  target: {
+    settingId: string
+    adventureId?: string
+    draftId: string
+  }
+  changes: Array&lt;
+    | { op: "create"; path: string; content: string }
+    | { op: "update"; path: string; beforeHash: string; content: string }
+    | { op: "rename"; fromPath: string; toPath: string; beforeHash: string }
+    | { op: "delete"; path: string; beforeHash: string }
+  &gt;
+  affectedEntities: Array&lt;{
+    type: "adventure" | "encounter" | "npc" | "character" | "location" | "item" | "faction" | "asset"
+    id: string
+  }&gt;
+  validationBefore?: ValidationSummary
+  validationAfter?: ValidationSummary
+  risks: string[]
+}</code></pre>
+<p class="muted">Every <code>update</code>, <code>rename</code>, or <code>delete</code> should include the current source hash so the server can reject stale writes if another edit landed while the AI proposal was open.</p>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="approval-gates">
+<h2 id="approval-gates">Approval And Safety Gates</h2>
+<table class="spec">
+<thead><tr><th>Gate</th><th>Rule</th></tr></thead>
+<tbody>
+<tr><td>Preview</td><td>All AI changes render as diffs before write. Multi-file changes show every affected path.</td></tr>
+<tr><td>Validation</td><td>Run draft-preview validation after applying the change set to an in-memory or temporary preview tree. Show before/after findings.</td></tr>
+<tr><td>Human accept</td><td>No AI-generated file write happens without explicit accept. Rejecting a change leaves the draft tree unchanged.</td></tr>
+<tr><td>Stale write check</td><td>Server rejects accepted changes if <code>beforeHash</code> no longer matches the current S3 source object.</td></tr>
+<tr><td>Mechanics protection</td><td>Character attributes, spells, equipment, health defaults, and other mechanical JSON fields require a higher-friction confirmation than prose/profile edits.</td></tr>
+<tr><td>Publish protection</td><td>AI can help fix publish blockers, but only an authorized human/admin can publish immutable artifacts.</td></tr>
+<tr><td>Asset references</td><td>AI can suggest image refs or upload slots, but missing assets remain validation findings until real S3 objects exist or are intentionally stubbed in preview.</td></tr>
+</tbody>
+</table>
+</section>
+<section class="columns" aria-label="Editor state and implementation boundaries">
+<article class="panel">
+<h2>Editor State</h2>
+<ul>
+<li>Open draft source tree and selected file path.</li>
+<li>Unsaved human edits in the current editor buffer.</li>
+<li>Pending AI change sets with status: proposed, validated, accepted, rejected, failed.</li>
+<li>Latest draft-preview validation report.</li>
+<li>Compiled preview bundle pointer when validation has run.</li>
+<li>Graph selection and currently focused validation finding.</li>
+</ul>
+</article>
+<article class="panel">
+<h2>Implementation Boundary</h2>
+<ul>
+<li>Next.js server actions/API routes orchestrate S3 reads/writes, AI SDK calls, and compiler/validator calls.</li>
+<li>Convex is not required for draft source editing unless collaborative live editing is added later.</li>
+<li>S3 remains source storage for draft markdown, JSON sheets, and assets.</li>
+<li>Preview bundles may be written under the Stage 4 <code>preview/</code> prefix.</li>
+<li>Published gameplay sessions read only published or preview-pinned compiled artifacts, not unsaved editor buffers.</li>
+</ul>
+</article>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="unit-01-defaults">
+<h2 id="unit-01-defaults">Defaults And Open Questions</h2>
+<table class="spec">
+<thead><tr><th>Question</th><th>Default for the plan</th></tr></thead>
+<tbody>
+<tr><td>Should AI edits be applied directly?</td><td>No. Use proposed change sets with diff, validation, and human approval.</td></tr>
+<tr><td>Should the editor hide markdown?</td><td>No. Markdown is the source of truth and should remain editable. Structured controls can assist frontmatter and JSON sheets.</td></tr>
+<tr><td>Should unresolved transition targets be allowed?</td><td>Yes in planning preview. Publish still requires resolved target encounters or stubs.</td></tr>
+<tr><td>Should AI write paired character files automatically?</td><td>It may propose both files together, but the author approves the pair. Mechanical JSON changes need explicit confirmation.</td></tr>
+<tr><td>Should production AI tools use local agent skills?</td><td>No. Agent skills can help developer workflow, but production editor tools should be implemented as app-owned AI SDK/server-action capabilities with explicit input/output schemas.</td></tr>
+</tbody>
+</table>
+<h3>Verification</h3>
+<p class="muted">Unit 01 is complete when the final implementation plan can define AI authoring tools as structured change-set producers, show approval-gated diffs, run draft-preview validation before writes, protect mechanical JSON fields, and preserve markdown/S3 as the canonical authoring source.</p>
+</section>
+<section class="panel decision" aria-labelledby="unit-02">
+<p class="eyebrow">Unit 02 decision</p>
+<h2 id="unit-02">Admin UX Replacement Map</h2>
+<p class="muted">The current admin adventure-plan editor can be deleted only after its launch-critical capabilities are represented in the wiki editor. The replacement should preserve adventure metadata, image management, encounter authoring, NPC assignment, premade character handling, transition editing, draft status, and save/download safety, but it should not preserve the old nested <code>sections[].scenes[].encounters[]</code> form model as a product concept.</p>
+<div class="packet" aria-label="Admin replacement principles">
+<div><b>Preserve capability</b><p class="muted">Keep the author jobs that matter: create/edit adventure content, manage playable characters and NPCs, attach images, define transitions, preview playability, save drafts, and publish when valid.</p></div>
+<div><b>Replace structure</b><p class="muted">Replace sections/scenes form nesting with a file tree, encounter graph, typed wiki links, and compiled preview indexes.</p></div>
+<div><b>Remove legacy assumptions</b><p class="muted">Remove JSON download as the primary portability model, hidden health reset behavior, form-only encounter generation, and direct mutation of monolithic <code>AdventurePlan</code> JSON.</p></div>
+<div><b>Fold into validation</b><p class="muted">Many old manual safeguards become validation findings: missing transition targets, missing NPC profiles, invalid images, duplicate IDs, missing summaries, malformed character sheets, and unreachable encounters.</p></div>
+</div>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="current-editor-inventory">
+<h2 id="current-editor-inventory">Current Editor Inventory</h2>
+<table class="spec">
+<thead><tr><th>Current feature</th><th>Current surface</th><th>Replacement decision</th></tr></thead>
+<tbody>
+<tr><td>Adventure title, teaser, overview, party size, cover image</td><td><code>AdventurePlanBasicInfo</code> and root <code>AdventurePlan</code> JSON fields</td><td>Preserve as <code>adventure.md</code> frontmatter/body plus asset reference controls. Party size and cover image remain structured frontmatter.</td></tr>
+<tr><td>Draft toggle</td><td><code>draft</code> boolean on JSON plan</td><td>Replace with source draft state plus Stage 4 <code>draftPreview</code>/<code>publish</code> lifecycle. Draft is a content workflow, not a single boolean.</td></tr>
+<tr><td>Save changes</td><td>Writes monolithic JSON to S3</td><td>Replace with file-level S3 writes using stale-write hashes and validation-aware saves.</td></tr>
+<tr><td>Download adventure JSON</td><td>Client-side blob export of current <code>AdventurePlan</code></td><td>Remove as primary UX. Optional future export should package source files or published artifacts, not legacy JSON.</td></tr>
+<tr><td>Sections and scenes</td><td>Nested form groups with titles/summaries</td><td>Do not preserve as required runtime concepts. If authors want acts/chapters, model them as optional markdown organization, tags, or collection metadata.</td></tr>
+<tr><td>Encounter title, ID, intro, instructions</td><td><code>EncounterEditForm</code></td><td>Preserve as <code>encounters/{encounterId}.md</code> frontmatter plus markdown sections: Intro, GM Notes, Checks, Transitions, Rewards, Map Notes.</td></tr>
+<tr><td>Encounter image upload</td><td><code>ImageUpload</code> writing to S3 image folders</td><td>Preserve as asset picker/uploader that writes S3 objects and updates image refs in frontmatter or asset sections.</td></tr>
+<tr><td>Encounter transitions</td><td>Condition plus target encounter dropdown</td><td>Preserve and improve with graph view, typed transition bullets, unresolved-target preview warnings, and publish-blocking validation.</td></tr>
+<tr><td>Encounter NPC assignment and behavior</td><td>NPC refs embedded in encounter JSON</td><td>Preserve as encounter frontmatter refs plus inline markdown links. Behavior can live in encounter notes or NPC encounter-role metadata.</td></tr>
+<tr><td>Generate encounter</td><td>One-off AI action returns JSON encounter object</td><td>Replace with AI change-set tool that creates or updates encounter markdown and related refs, then validates before write.</td></tr>
+<tr><td>Generate or edit NPCs</td><td>Character form/generation in adventure plan editor</td><td>Replace with setting/adventure character editors that maintain paired JSON sheet and markdown profile files.</td></tr>
+<tr><td>Premade player characters</td><td><code>premadePlayerCharacters</code> array in plan JSON</td><td>Preserve as adventure-local <code>characters/{id}.json</code> and <code>characters/{id}.md</code>, referenced from <code>adventure.md</code>.</td></tr>
+<tr><td>Available character options</td><td>Race/archetype lists or premade-only mode</td><td>Preserve if needed for character creation flow, but move to structured adventure metadata and validate against character creation behavior.</td></tr>
+<tr><td>Next adventure</td><td><code>nextAdventure</code> plan ID selection</td><td>Preserve as <code>nextAdventure</code> metadata in <code>adventure.md</code> or manifest frontmatter, resolved during publish validation.</td></tr>
+<tr><td>Encounter reordering sidebar</td><td>Section/scene encounter ordering</td><td>Replace with graph/navigation ordering: start encounter, recommended order, tags, and visual graph layout. Runtime movement comes from graph edges, not list order.</td></tr>
+<tr><td>Skip initial NPC turns</td><td>Encounter boolean</td><td>Preserve only if still required by gameplay, as explicit encounter runtime metadata with validation and prompt/runtime handling.</td></tr>
+<tr><td>Reset health</td><td>Encounter boolean</td><td>Do not preserve as hidden behavior. If needed, reintroduce as an explicit authored transition/session effect with high-friction validation.</td></tr>
+<tr><td>3D encounter map generation</td><td>Deprecated map actions and optional <code>map3d</code> fields</td><td>Defer. Keep map/image references in content model; do not make 3D map authoring launch-critical unless product scope changes.</td></tr>
+</tbody>
+</table>
+</section>
+<section class="columns" aria-label="Replacement admin surfaces">
+<article class="panel">
+<h2>New Admin Areas</h2>
+<ul>
+<li>Adventure source browser: file tree for markdown, JSON sheets, and assets.</li>
+<li>Entity inspector: selected adventure, encounter, NPC, location, character, item, or asset metadata.</li>
+<li>Encounter graph: start node, transition edges, unresolved targets, unreachable encounters, and selected edge details.</li>
+<li>Validation center: current draft-preview findings with repair actions and publish blockers.</li>
+<li>Preview center: compiled encounter preview, prompt-context preview, and preview playthrough launch.</li>
+<li>Publishing center: publish validation, version summary, latest pointer, rollback status, and immutable artifact links.</li>
+</ul>
+</article>
+<article class="panel">
+<h2>Delete Or Retire</h2>
+<ul>
+<li>Monolithic AdventurePlan JSON edit form as the primary admin UI.</li>
+<li>Section/scene nesting as a required editor structure.</li>
+<li>JSON download as the main export affordance.</li>
+<li>Direct AI generation into app state without diff/validation.</li>
+<li>Form-only transition dropdowns that hide graph consequences.</li>
+<li>Hidden encounter flags whose gameplay effects are not visible in compiled preview.</li>
+</ul>
+</article>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="replacement-routing">
+<h2 id="replacement-routing">Route And Flow Replacement</h2>
+<table class="spec">
+<thead><tr><th>Current route/surface</th><th>Replacement</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><code>/settings/{settingId}/new</code></td><td>New wiki adventure flow</td><td>Creates source folder skeleton under Stage 4 source prefix, not a single JSON file.</td></tr>
+<tr><td><code>/settings/{settingId}/{adventurePlanId}/edit</code></td><td>Wiki adventure editor</td><td>Loads source tree, validation report, preview bundle status, and selected file/entity.</td></tr>
+<tr><td><code>AdventurePlanEditSidebar</code></td><td>File tree plus graph navigation</td><td>Navigation is by source path/entity and encounter graph, not section/scene array indices.</td></tr>
+<tr><td><code>AdventurePlanBasicInfo</code></td><td><code>adventure.md</code> metadata panel</td><td>Structured frontmatter controls can sit beside markdown body editing.</td></tr>
+<tr><td><code>AdventurePlanSections</code></td><td>Encounter file editor and graph view</td><td>Each encounter is an independently addressable file with compiled preview.</td></tr>
+<tr><td><code>AdventurePlanCharactersEdit</code></td><td>Character pair editor</td><td>JSON sheet editor plus markdown profile editor with consistency validation.</td></tr>
+<tr><td>Generate encounter modal</td><td>AI command panel</td><td>Returns an <code>AuthoringChangeSet</code>; never directly inserts into persisted state.</td></tr>
+</tbody>
+</table>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="capability-gates">
+<h2 id="capability-gates">Safe Deletion Gates</h2>
+<p class="muted">The old editor should not be removed until the replacement can perform these jobs end to end.</p>
+<ol>
+<li>Create a new adventure draft with valid <code>adventure.md</code>, start encounter, cover image ref, party settings, and at least one encounter file.</li>
+<li>Edit encounter prose, GM notes, checks, transitions, NPC refs, location refs, and image refs.</li>
+<li>Create and edit reusable NPCs and adventure premade PCs through paired JSON/profile files.</li>
+<li>Upload or select S3 assets and validate missing/broken asset refs.</li>
+<li>Show graph and validation status for missing transition targets, duplicate IDs, unreachable encounters, missing profiles, and malformed character sheets.</li>
+<li>Run draft-preview compile and start a preview playthrough pinned to the preview bundle.</li>
+<li>Publish a valid adventure into immutable Stage 4 artifacts and keep existing sessions pinned to prior versions.</li>
+<li>Migrate at least one Myr template from old JSON to the wiki source layout with equivalent gameplay capability.</li>
+</ol>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="ux-defaults">
+<h2 id="ux-defaults">Defaults And Open Questions</h2>
+<table class="spec">
+<thead><tr><th>Question</th><th>Default for the plan</th></tr></thead>
+<tbody>
+<tr><td>Should section/scene concepts survive?</td><td>Not as required runtime/editor structure. They may survive as optional author-facing organization if a markdown pattern needs them.</td></tr>
+<tr><td>Should old JSON import remain in the editor?</td><td>Yes as a migration/import tool for Stage 7, not as the ongoing authoring surface.</td></tr>
+<tr><td>Should admins edit published artifacts directly?</td><td>No. Edit source drafts, then publish a new immutable version.</td></tr>
+<tr><td>Should map authoring block launch?</td><td>No. Image refs and map notes are launch-critical; 3D map generation is deferred unless explicitly re-scoped.</td></tr>
+<tr><td>Should save be manual or autosave?</td><td>Default to explicit save/apply for source file changes and AI change sets. Lightweight editor-buffer autosave can be added later, but S3 writes should remain intentional.</td></tr>
+</tbody>
+</table>
+<h3>Verification</h3>
+<p class="muted">Unit 02 is complete when Stage 8 can list every current editor capability as preserved, replaced, removed, or deferred, and can set a concrete deletion gate for the old <code>AdventurePlanEditForm</code> path without losing launch-critical authoring workflows.</p>
+</section>
+<section class="panel decision" aria-labelledby="unit-03">
+<p class="eyebrow">Unit 03 decision</p>
+<h2 id="unit-03">Draft And Publish Lifecycle</h2>
+<p class="muted">Authoring should have three explicit artifact states: editable source files, disposable preview bundles, and immutable published versions. Authors can save incomplete draft source, compile preview bundles with draft-preview validation, and start preview playthroughs from those bundles. Publishing is a separate human/admin action that runs publish validation, writes a new immutable version only when the source content hash changes, and updates <code>latest.json</code> only after the version is complete.</p>
+<div class="packet" aria-label="Lifecycle states">
+<div><b>Source draft</b><p class="muted"><code>content/</code> source files are mutable and durable. They can contain incomplete planning work, unresolved transition targets, draft visibility, and validation findings.</p></div>
+<div><b>Preview bundle</b><p class="muted"><code>preview/</code> bundles are generated artifacts scoped to a draft ID or editor session. They support graph view, validation UI, AI repair, and preview playthroughs without claiming publish readiness.</p></div>
+<div><b>Published version</b><p class="muted"><code>published/.../v{version}/</code> bundles are immutable. Live campaign sessions pin to a concrete published version and content hash.</p></div>
+<div><b>Latest pointer</b><p class="muted"><code>latest.json</code> is the mutable public pointer. Rollback moves the pointer; it does not rewrite published version folders.</p></div>
+</div>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="lifecycle-flow">
+<h2 id="lifecycle-flow">Lifecycle Flow</h2>
+<table class="spec">
+<thead><tr><th>Step</th><th>Action</th><th>Output</th><th>Rules</th></tr></thead>
+<tbody>
+<tr><td>Create draft</td><td>Create source folder and starter files.</td><td><code>content/settings/{settingId}/adventures/{adventureId}/...</code></td><td>Can start from blank, AI skeleton, or migrated Myr template. Must create stable IDs immediately.</td></tr>
+<tr><td>Edit source</td><td>Human edit or accepted AI change set.</td><td>Updated source object and source hash.</td><td>Use stale-write checks. Rejected AI changes leave source untouched.</td></tr>
+<tr><td>Validate draft</td><td>Run compiler in <code>draftPreview</code> mode.</td><td><code>validation-report.json</code> and optional preview bundle.</td><td>Warnings allowed for incomplete graph work; publish-blocking issues remain visible.</td></tr>
+<tr><td>Preview playthrough</td><td>Start practice/preview session from preview bundle.</td><td>Convex session pinned to <code>previewDraftId</code>.</td><td>Never promoted to public campaign state. Unresolved target movement is blocked at runtime.</td></tr>
+<tr><td>Publish</td><td>Run compiler in <code>publish</code> mode.</td><td>New immutable <code>v{version}</code> bundle plus validation report.</td><td>Fails if any error exists. If content hash is unchanged, publish should be a no-op.</td></tr>
+<tr><td>Expose latest</td><td>Update <code>latest.json</code>.</td><td>Public adventure points to new version.</td><td>Only after all version artifacts are written and readable.</td></tr>
+<tr><td>Rollback</td><td>Move <code>latest.json</code> back to a prior valid version.</td><td>Public new-session pointer changes.</td><td>Existing sessions remain pinned to their own versions.</td></tr>
+</tbody>
+</table>
+</section>
+<section class="columns" aria-label="Permissions and versioning">
+<article class="panel">
+<h2>Permissions</h2>
+<ul>
+<li>Source read: setting owner, adventure owner, admin, or authorized collaborator.</li>
+<li>Source write: owner/admin/collaborator with edit permission; always server-enforced.</li>
+<li>Preview compile: same as source write, because it reads draft source and writes preview artifacts.</li>
+<li>Preview playthrough: owner/admin/collaborator, or invited tester if explicitly supported later.</li>
+<li>Publish: owner/admin by default; collaborator publish requires explicit role.</li>
+<li>Rollback: admin/owner with high-friction confirmation and audit log.</li>
+</ul>
+</article>
+<article class="panel">
+<h2>Version History</h2>
+<ul>
+<li>Record source content hash for each preview and publish compile.</li>
+<li>Record publish timestamp, publisher user ID, schema version, validation summary, and previous latest pointer.</li>
+<li>List published versions with status: current, previous, unavailable, or superseded.</li>
+<li>Never delete a published version while any Convex session references it.</li>
+<li>Use source object versioning or editor history for draft recovery where possible.</li>
+</ul>
+</article>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="publish-record">
+<h2 id="publish-record">Publish Record Shape</h2>
+<pre><code>type PublishRecord = {
+  settingId: string
+  adventureId: string
+  version: string
+  schemaVersion: string
+  contentHash: string
+  sourceHash: string
+  publishedBy: string
+  publishedAt: string
+  validation: {
+    mode: "publish"
+    errors: 0
+    warnings: number
+    suggestions: number
+  }
+  artifacts: {
+    manifest: string
+    encounters: string
+    entities: string
+    characterSheets: string
+    graph: string
+    retrievalIndex: string
+    validationReport: string
+  }
+  previousLatestVersion?: string
+}</code></pre>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="publish-safety">
+<h2 id="publish-safety">Safety Gates</h2>
+<table class="spec">
+<thead><tr><th>Risk</th><th>Gate</th></tr></thead>
+<tbody>
+<tr><td>Invalid adventure becomes public</td><td>Publish mode fails on errors and does not write or expose a new latest pointer.</td></tr>
+<tr><td>Partial publish</td><td>Write version artifacts first, verify reads/hash, then update <code>latest.json</code>.</td></tr>
+<tr><td>Accidental overwrite</td><td>Published version paths are immutable and content-hash-addressed by behavior, even if not literally hash-named.</td></tr>
+<tr><td>Draft loss</td><td>Use stale-write checks, source versioning/backups, and visible unsaved buffer state.</td></tr>
+<tr><td>Bad latest publish</td><td>Rollback changes <code>latest.json</code> only. Existing sessions remain pinned.</td></tr>
+<tr><td>Unauthorized edits</td><td>All source writes, preview compiles, publishes, and rollbacks enforce Clerk/ownership/admin checks server-side.</td></tr>
+</tbody>
+</table>
+<h3>Verification</h3>
+<p class="muted">Unit 03 is complete when Stage 8 can specify create, edit, validate, preview, publish, rollback, and recovery paths without letting invalid source become public or letting published-session context change underneath active sessions.</p>
+</section>
+<section class="panel decision" aria-labelledby="unit-04">
+<p class="eyebrow">Unit 04 decision</p>
+<h2 id="unit-04">Authoring UI Design Requirements</h2>
+<p class="muted">The authoring UI should feel like a dense workbench for adventure operations, not a marketing page and not a wizard that hides source truth. The first screen of the editor should expose the source tree, selected file/entity, validation state, AI tools, preview, and publish status. The interface should optimize for repeated authoring, scanning, comparison, and repair.</p>
+<div class="packet" aria-label="UI layout requirements">
+<div><b>Left rail</b><p class="muted">Source file tree, entity filters, unsaved indicators, validation badges, and quick create actions.</p></div>
+<div><b>Main editor</b><p class="muted">Markdown editor or JSON sheet editor with frontmatter controls, syntax-aware warnings, and source hash/save state.</p></div>
+<div><b>Right rail</b><p class="muted">AI command panel, validation drawer, selected entity inspector, and change-set diff queue.</p></div>
+<div><b>Preview band</b><p class="muted">Compiled encounter preview, graph preview, prompt-context preview, asset preview, and publish status. This can be a tabbed lower panel on desktop or a separate view on mobile.</p></div>
+</div>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="editor-ia">
+<h2 id="editor-ia">Information Architecture</h2>
+<table class="spec">
+<thead><tr><th>Area</th><th>Required behavior</th></tr></thead>
+<tbody>
+<tr><td>File tree</td><td>Shows adventure files, encounters, characters, NPCs, locations, factions, items, and assets. Badges indicate errors, warnings, unsaved edits, accepted AI changes pending save, and publish-blocking status.</td></tr>
+<tr><td>Markdown editor</td><td>Supports source editing, frontmatter controls, section outline, typed-link insertion, image/asset insertion, and validation annotations.</td></tr>
+<tr><td>JSON sheet editor</td><td>Provides structured controls for character mechanics, validates against the locked character schema, and displays paired markdown profile consistency.</td></tr>
+<tr><td>AI panel</td><td>Commands are scoped to selected file/text/finding/graph node. AI output appears as change sets with diff, risks, validation before/after, accept, and reject.</td></tr>
+<tr><td>Validation drawer</td><td>Groups findings by severity, code, file, entity, and AI-fixable status. Clicking a finding focuses the affected source span or entity.</td></tr>
+<tr><td>Graph view</td><td>Shows start encounter, transitions, unresolved targets, unreachable encounters, selected edge details, and publish blockers.</td></tr>
+<tr><td>Preview panel</td><td>Shows compiled encounter view, linked context, prompt packet excerpt, image/asset preview, and preview playthrough launch status.</td></tr>
+<tr><td>Publish center</td><td>Shows draft hash, preview hash, latest published version, validation summary, publish button, rollback list, and immutable artifact links.</td></tr>
+</tbody>
+</table>
+</section>
+<section class="columns" aria-label="Responsive and accessibility requirements">
+<article class="panel">
+<h2>Interaction Requirements</h2>
+<ul>
+<li>Never hide publish blockers behind collapsed panels without a persistent status badge.</li>
+<li>Keep save, validate, preview, publish, and rollback as distinct commands.</li>
+<li>Use familiar icon buttons with tooltips for create, save, validate, preview, publish, rollback, accept, reject, diff, and upload.</li>
+<li>Show exact S3-relative paths for files and assets when it helps debugging.</li>
+<li>Use stable layout dimensions for file rows, validation rows, graph nodes, and command bars to avoid jitter during validation updates.</li>
+<li>Do not make AI chat the only way to author; direct source editing remains first-class.</li>
+</ul>
+</article>
+<article class="panel">
+<h2>Accessibility And States</h2>
+<ul>
+<li>Keyboard navigation through file tree, editor tabs, validation findings, and diff actions.</li>
+<li>Visible focus states and semantic headings for long-form editor panels.</li>
+<li>Clear loading, success, failure, stale-write, permission-denied, and validation-running states.</li>
+<li>Diffs must be readable without color alone.</li>
+<li>Mobile/tablet layout may switch from multi-pane to task tabs, but must preserve access to validation and publish status.</li>
+</ul>
+</article>
+</section>
+<section class="panel" style="margin-top:12px" aria-labelledby="design-brief-update">
+<h2 id="design-brief-update">Design Brief Update</h2>
+<p class="muted">The design brief should treat the wiki editor as an operational tool: restrained, dense, source-visible, validation-forward, and built for repeated repair/review cycles. It should explicitly avoid a landing-page or wizard-first design for the editor.</p>
+<h3>Verification</h3>
+<p class="muted">Unit 04 is complete when Stage 8 can name the editor panes, commands, states, responsive behavior, validation visibility rules, and accessibility expectations required before implementation.</p>
 </section>
 </main></body></html>

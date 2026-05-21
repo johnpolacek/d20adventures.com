@@ -28,7 +28,7 @@ Prefer to commit and pull whenever confident that the code is good and there are
 - Commit docs-only wiki changes: ask
 - Commit code changes: ask
 - Push changes: ask
-- Install dependencies: ask
+- Install dependencies: allow
 - Run long commands: ask
 - Create plans before code: meaningful-only
 <!-- PROJECT-HTML-WIKI-SKILL:END -->

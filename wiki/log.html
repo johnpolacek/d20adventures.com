@@ -1,8 +1,49 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="visual-concept" content="arcane operations console"><title>D20 Adventures Log</title><style>
 :root{--bg:#11130f;--panel:#191d17;--ink:#f4f1df;--muted:#b7b69d;--line:#3d472f;--accent:#d7b35d;--blue:#74b4c7;--r:8px}*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#15170f,#0f120e);color:var(--ink);font-family:Georgia,"Times New Roman",serif;line-height:1.5}main{width:min(980px,calc(100% - 32px));margin:auto;padding:32px 0 52px}a{color:var(--accent)}header{border-bottom:1px solid var(--line);padding-bottom:18px}.eyebrow{font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.1em;color:var(--blue)}h1{font-size:clamp(2rem,5vw,4rem);line-height:1;margin:0 0 10px}.entry{display:grid;grid-template-columns:150px 1fr;gap:16px;margin-top:20px}.date{font:700 .8rem ui-monospace,monospace;color:var(--accent)}.body{border:1px solid var(--line);background:var(--panel);border-radius:var(--r);padding:16px}.body ul{margin-bottom:0}@media(max-width:680px){.entry{grid-template-columns:1fr}}
-</style></head><body><main>
+.wiki-nav{width:min(1120px,calc(100% - 32px));margin:14px auto 0;display:flex;flex-wrap:wrap;gap:8px;font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.wiki-nav a{border:1px solid var(--line,#3d472f);border-radius:999px;padding:6px 9px;background:rgba(25,29,23,.72);color:var(--accent,#d7b35d);text-decoration:none}.wiki-nav a:focus-visible{outline:2px solid var(--accent,#d7b35d);outline-offset:2px}</style></head><body><nav class="wiki-nav" aria-label="Wiki navigation"><a href="index.html">Wiki Home</a><a href="Sources.html">Sources</a><a href="plans/index.html">Plans</a><a href="roadmap.html">Roadmap</a><a href="Architecture.html">Architecture</a></nav><main>
 <header><p class="eyebrow">Project-context log</p><h1>Decision history</h1><p>Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.</p></header>
+<article class="entry">
+<div class="date">2026-05-21</div>
+<section class="body"><h2>Audited and repaired wiki link navigation</h2><ul>
+<li>Audited all 20 wiki HTML files for broken local references, invalid anchors, reachability from <code>wiki/index.html</code>, and return paths to core wiki pages.</li>
+<li>Added consistent utility navigation to every wiki HTML page with links to the wiki home, source index, plans, roadmap, and architecture pages.</li>
+<li>Added direct source brief links to <code>wiki/Sources.html</code> so the evidence ledger links to the product, technical, design, and marketing briefs.</li>
+<li>Validation after repair found 0 broken local references, 0 invalid anchors, and 0 unreachable HTML pages.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-21</div>
+<section class="body"><h2>Locked Stage 3 wiki content model direction</h2><ul>
+<li>Updated <code>wiki/plans/wiki-adventure-migration/stage-03-content-model.html</code> to lock the content model around markdown-authored <code>encounter</code> files as the active gameplay unit.</li>
+<li>Recorded the canonical S3 folder model: setting-level reusable NPCs, locations, factions, and items; adventure-level manifests, encounters, premade characters, and assets.</li>
+<li>Added <code>wiki/plans/wiki-adventure-migration/stage-03-myr-skeleton.html</code> as a representative Myr skeleton with <code>adventure.md</code>, one encounter, one NPC, one location, premade character handling, transitions, and validation notes.</li>
+<li>Planning nuance: a one-encounter skeleton can demonstrate the model, and the editor should allow planning-preview skeletons with unresolved transition targets. Publish readiness still requires every transition target to resolve or exist as a stub encounter.</li>
+<li>Added image reference guidance: NPCs, premade PCs, setting locations, encounters, adventures, and other authored entities should support S3 image references through frontmatter and compiled asset validation.</li>
+<li>Recorded that NPC and PC-like content should use the standard six ability scores from the current open D&amp;D SRD 5.2 rules reference, stored under the existing schema field name <code>attributes</code>: Strength, Dexterity, Constitution, Intelligence, Wisdom, and Charisma.</li>
+<li>Revised character planning to a hybrid model: JSON character sheets are the source of truth for default mechanical state, while paired markdown profiles provide wiki links, role notes, and retrieval context.</li>
+<li>Locked authored NPC and premade PC JSON sheet field names to match <code>types/character.ts</code>; premade character sheets compile to <code>PCTemplate</code>, NPC sheets compile to <code>NPC</code>, and Convex <code>TurnCharacter</code> records are mutable session snapshots.</li>
+<li>Updated future-stage planning references from stale <code>page</code>-based gameplay terminology to the locked <code>encounter</code>-based model.</li>
+<li>Drafted Stage 4, Unit 01 index shape: published runtime artifacts include <code>manifest.json</code>, <code>encounters.json</code>, <code>entities.json</code>, <code>character-sheets.json</code>, <code>graph.json</code>, <code>retrieval-index.json</code>, and <code>validation-report.json</code>.</li>
+<li>Drafted Stage 4, Unit 02 validation model with separate <code>draftPreview</code> and <code>publish</code> modes, stable validation finding codes, severity rules, and AI-fixable repair policy.</li>
+<li>Drafted Stage 4, Unit 03 publish/index strategy: explicit compile pipeline, disposable preview bundles, immutable published versions, <code>latest.json</code> pointer, content hashes, session version pinning, and rollback rules.</li>
+<li>Drafted Stage 4, Unit 04 S3 contract: source/preview/published prefixes, source layout, preview/published artifact layout, metadata/cache expectations, access policy expectations, and deletion/retention rules.</li>
+<li>Drafted Stage 5, Unit 01 context assembly: the LLM gameplay prompt should be built from a typed context packet combining pinned published artifacts, deterministic linked context, live Convex session state, legal transition IDs, and the current JSON response contract.</li>
+<li>Drafted Stage 5, Unit 02 transition model: the LLM proposes <code>nextEncounterId</code>, application code validates it against pinned <code>graph.json</code> and live Convex session state, then records accepted or rejected transition events without allowing stale or illegal target mutation.</li>
+<li>Drafted Stage 5, Unit 03 dice and narrative compatibility: preserve lightweight D20 roll requirements, <code>[DiceRoll]</code> and <code>[OriginalReply]</code> narrative markers, mutable character session fields, encounter-scoped spell-use defaults, readable turn history, and practice-report compatibility without committing to a full D&amp;D combat engine.</li>
+<li>Drafted Stage 5, Unit 04 realtime session model: Convex remains the realtime authority for adventure sessions, participants, current turns, chat, transition/roll events, mutable character state, and generated history while S3 published artifacts remain the source of authored adventure content.</li>
+<li>Advanced the planning dashboard to Stage 6 authoring and admin.</li>
+<li>Drafted Stage 6, Unit 01 AI-assisted editor model: the new authoring UI should be wiki-first and diff-first, with AI producing structured change sets for markdown/JSON source files, draft-preview validation before writes, stale-write checks, and explicit human approval gates.</li>
+<li>Drafted Stage 6, Unit 02 admin UX replacement: mapped current AdventurePlan editor capabilities to the wiki editor, preserving launch-critical authoring jobs while retiring the monolithic JSON form, section/scene nesting, direct AI mutation, and hidden runtime flags behind explicit source files, graph views, validation, and preview workflows.</li>
+<li>Drafted Stage 6, Unit 03 draft/publish lifecycle: editable source files, disposable preview bundles, immutable published versions, explicit publish validation, version history, rollback through <code>latest.json</code>, permissions, and preview playthrough pinning.</li>
+<li>Drafted Stage 6, Unit 04 design requirements: the wiki editor should be a dense operational workbench with file tree, markdown/JSON editor, AI change-set panel, validation drawer, graph/compiled preview, publish center, visible states, and accessibility requirements.</li>
+<li>Drafted Stage 7 relaunch migration: implementation should happen in an isolated relaunch worktree, migrate Myr JSON templates to wiki source with validation proof, maintain delete/adapt/defer removal gates, and roll out through preview validation with deployment/content-pointer rollback.</li>
+<li>Advanced the planning dashboard to Stage 8 final plan assembly.</li>
+<li>Drafted Stage 8 final implementation assembly: implementation milestones, worktree start guidance, test and acceptance plan, launch gates, risk controls, and handoff prompt for future implementation agents.</li>
+<li>Marked the Wiki Adventure Migration planning program implementation-ready; next work should start only in an isolated relaunch worktree after explicit approval.</li>
+<li>No app code changes were made.</li>
+</ul></section>
+</article>
 <article class="entry">
 <div class="date">2026-05-20</div>
 <section class="body"><h2>Created Wiki Adventure Migration planning program</h2><ul>

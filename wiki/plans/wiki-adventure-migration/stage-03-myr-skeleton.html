@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="visual-concept" content="wiki migration control room">
+  <title>Stage 3 - Representative Myr Skeleton</title>
+  <style>
+    :root{--bg:#10120d;--panel:#181d15;--panel2:#22291b;--ink:#f4f1df;--muted:#bbb99d;--line:#3f4b32;--accent:#d9b65f;--blue:#7db7ca;--green:#93c47d;--warn:#e5a65b;--bad:#d87968;--r:8px;--shadow:0 18px 48px #0008}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 74% 0,#26331b 0 17rem,transparent 34rem),linear-gradient(135deg,#10120d,#151910 58%,#0b100f);color:var(--ink);font-family:Georgia,"Times New Roman",serif;line-height:1.5}main{width:min(1180px,calc(100% - 32px));margin:auto;padding:30px 0 54px}a{color:var(--accent)}code{color:#f6d88d}.hero{display:grid;grid-template-columns:1fr 340px;gap:18px;border-bottom:1px solid var(--line);padding-bottom:20px}.panel{border:1px solid var(--line);border-radius:var(--r);background:linear-gradient(180deg,var(--panel),#12160f);box-shadow:var(--shadow);padding:16px}.eyebrow,.badge{font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.11em}.eyebrow{color:var(--blue);margin:0 0 8px}.badge{display:inline-block;color:var(--green);border:1px solid var(--line);border-radius:999px;padding:3px 8px;margin-bottom:8px}h1,h2,h3,p{margin-top:0}h1{font-size:clamp(2rem,5vw,4rem);line-height:1;margin-bottom:10px}h2{font-size:1.24rem;color:#fff5cd}.muted{color:var(--muted)}pre{white-space:pre-wrap;border:1px solid var(--line);border-radius:var(--r);padding:14px;background:#0d110c;color:#f6d88d;overflow:auto}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin-top:20px}table{width:100%;border-collapse:collapse;margin-top:16px;background:#151911}th,td{border:1px solid var(--line);padding:10px;text-align:left;vertical-align:top}th{background:#202819;color:#fff5cd}.warn{color:var(--warn)}.bad{color:var(--bad)}@media(max-width:820px){.hero{grid-template-columns:1fr}h1{font-size:2.45rem}}
+  .wiki-nav{width:min(1120px,calc(100% - 32px));margin:14px auto 0;display:flex;flex-wrap:wrap;gap:8px;font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.wiki-nav a{border:1px solid var(--line,#3d472f);border-radius:999px;padding:6px 9px;background:rgba(25,29,23,.72);color:var(--accent,#d7b35d);text-decoration:none}.wiki-nav a:focus-visible{outline:2px solid var(--accent,#d7b35d);outline-offset:2px}</style>
+</head>
+<body>
+<nav class="wiki-nav" aria-label="Wiki navigation"><a href="../../index.html">Wiki Home</a><a href="../../Sources.html">Sources</a><a href="../../plans/index.html">Plans</a><a href="../../roadmap.html">Roadmap</a><a href="../../Architecture.html">Architecture</a></nav>
+<main>
+  <header class="hero">
+    <section>
+      <p class="eyebrow">Stage 3 artifact</p>
+      <h1>Representative Myr Adventure Skeleton</h1>
+      <p class="muted">A concrete example of the locked content model using <code>encounter</code> as the gameplay unit. This is planning evidence, not app content to deploy as-is.</p>
+    </section>
+    <aside class="panel">
+      <p class="eyebrow">Reader Goal</p>
+      <p>After 2 minutes, see how one Myr adventure compiles from authored markdown files into stable adventure, encounter, entity, transition, and validation contracts.</p>
+      <p><a href="stage-03-content-model.html">Back to Stage 3 spec</a></p>
+    </aside>
+  </header>
+
+  <section class="panel" style="margin-top:20px">
+    <h2>Skeleton Folder</h2>
+<pre><code>content/settings/myr/
+  npcs/captain-vala.json
+  npcs/captain-vala.md
+  locations/old-road-gatehouse.md
+  assets/portraits/captain-vala.jpg
+  assets/locations/old-road-gatehouse.jpg
+  adventures/the-old-road/
+    adventure.md
+    encounters/gatehouse-entry.md
+    characters/vala-apprentice.json
+    characters/vala-apprentice.md
+    assets/gatehouse-map.json
+    assets/encounters/gatehouse-entry.jpg
+    assets/characters/vala-apprentice.jpg
+    assets/cover.jpg</code></pre>
+  </section>
+
+  <section class="grid">
+    <article class="panel">
+      <span class="badge">Manifest</span>
+      <h2>adventure.md</h2>
+      <pre><code>---
+id: the-old-road
+type: adventure
+title: The Old Road
+settingId: myr
+visibility: published
+version: 1
+startEncounter: gatehouse-entry
+recommendedPlayers: 1
+minPlayers: 1
+maxPlayers: 4
+premadeCharacters:
+  - vala-apprentice
+nextAdventure: market-shadows
+image: assets/cover.jpg
+---
+
+## Teaser
+
+A forgotten toll road leads toward the walled city of Myr, where old debts still have teeth.
+
+## Summary
+
+The party reaches [[location:old-road-gatehouse|the Old Road Gatehouse]] and must negotiate entry with [[npc:captain-vala|Captain Vala]]. The intended path introduces social checks, a clear fee-based transition, and one optional conflict branch from [[encounter:gatehouse-entry]].
+
+## Cast And Places
+
+- Start at [[encounter:gatehouse-entry]].
+- Featured NPC: [[npc:captain-vala]].
+- Featured location: [[location:old-road-gatehouse]].
+- Premade character option: [[premadeCharacter:vala-apprentice]].
+
+## Author Notes
+
+This adventure is designed as a first-session test for markdown-authored encounters, reusable setting entities, premade character selection, and transition extraction.</code></pre>
+    </article>
+
+    <article class="panel">
+      <span class="badge">Encounter</span>
+      <h2>encounters/gatehouse-entry.md</h2>
+      <pre><code>---
+id: gatehouse-entry
+type: encounter
+title: Gatehouse Entry
+settingId: myr
+adventureId: the-old-road
+visibility: published
+version: 1
+location: old-road-gatehouse
+npcs:
+  - captain-vala
+image: assets/encounters/gatehouse-entry.jpg
+assets:
+  - gatehouse-map
+---
+
+## Intro
+
+The old road narrows beneath [[location:old-road-gatehouse|a leaning timber gatehouse]]. [[npc:captain-vala|Captain Vala]] watches from the shade with one hand resting on a cracked spear.
+
+## GM Notes
+
+[[npc:captain-vala|Vala]] is under orders to collect a 3 mark entry fee. She avoids violence, delays suspicious travelers, and becomes more cooperative if the party treats her as a person rather than an obstacle.
+
+## Secrets
+
+Vala has been told to watch for smugglers carrying [[item:silver-ash]]. She will not mention this unless the party earns her trust or directly pressures her about unusual contraband.
+
+## Checks
+
+- DC 12 Insight: Notice Vala is more frightened than hostile.
+- DC 13 Persuasion: Convince Vala to reduce or waive the fee.
+- DC 14 Intimidation: Force Vala to open the gate, but create trouble with the Gatewardens.
+
+## Transitions
+
+- To [[encounter:market-square-arrival]] when the party pays, persuades Vala, or otherwise gains peaceful entry.
+- To [[encounter:outer-road-return]] if the party turns back.
+- To [[encounter:gatehouse-conflict]] if the party attacks or seriously threatens Vala.
+
+## Rewards
+
+Gain Vala's cautious trust if the party enters without humiliating or harming her.
+
+## Map Notes
+
+Use [[asset:gatehouse-map]] if tactical positioning is needed.</code></pre>
+    </article>
+
+    <article class="panel">
+      <span class="badge">NPC Sheet</span>
+      <h2>npcs/captain-vala.json</h2>
+      <pre><code>{
+  "id": "captain-vala",
+  "type": "npc",
+  "name": "Captain Vala",
+  "image": "assets/portraits/captain-vala.jpg",
+  "archetype": "Gatewarden Captain",
+  "race": "Human",
+  "gender": "Female",
+  "appearance": "Weathered gate captain with a cracked spear and a tired, watchful expression.",
+  "personality": "Direct, observant, exhausted, and more compassionate than she first appears.",
+  "background": "Long-serving Gatewarden assigned to the Old Road Gatehouse.",
+  "motivation": "Keep order without turning desperate travelers into enemies.",
+  "behavior": "Avoids violence, tests strangers with pointed questions, and watches for contraband.",
+  "healthPercent": 100,
+  "attributes": {
+    "strength": 10,
+    "dexterity": 12,
+    "constitution": 11,
+    "intelligence": 10,
+    "wisdom": 13,
+    "charisma": 12
+  },
+  "skills": ["Insight", "Persuasion"],
+  "equipment": [{ "name": "Cracked spear" }],
+  "spells": [],
+  "specialAbilities": ["Gatewarden authority"],
+  "effects": []
+}</code></pre>
+    </article>
+
+    <article class="panel">
+      <span class="badge">NPC Profile</span>
+      <h2>npcs/captain-vala.md</h2>
+      <pre><code>---
+id: captain-vala
+type: npcProfile
+title: Captain Vala
+settingId: myr
+visibility: published
+version: 1
+sheet: captain-vala.json
+---
+
+## Description
+
+Captain Vala is a weathered gate captain stationed at [[location:old-road-gatehouse]]. She has a practical sense of mercy and a deep fear of failing her post.
+
+## Personality
+
+Direct, observant, exhausted, and more compassionate than she first appears.
+
+## Baseline Behavior
+
+Vala avoids violence when possible. In [[encounter:gatehouse-entry]], she tries to preserve order, protect civilians, and report suspicious travelers.
+
+## Stat Block
+
+- Armor Class: 11
+- Hit Points: 12
+- Speed: 30 ft.
+- Proficiency Bonus: +2
+
+## Ability Scores
+
+- Strength 10
+- Dexterity 12
+- Constitution 11
+- Intelligence 10
+- Wisdom 13
+- Charisma 12
+
+## Skills
+
+- Insight +3
+- Persuasion +2
+
+## Dialogue Notes
+
+- Calls strangers "roadfolk."
+- Rarely raises her voice.
+- Deflects questions about [[item:silver-ash|silver ash]] unless trust is earned.</code></pre>
+    </article>
+
+    <article class="panel">
+      <span class="badge">Location</span>
+      <h2>locations/old-road-gatehouse.md</h2>
+      <pre><code>---
+id: old-road-gatehouse
+type: location
+title: Old Road Gatehouse
+settingId: myr
+visibility: published
+version: 1
+image: assets/locations/old-road-gatehouse.jpg
+---
+
+## Description
+
+A timber gatehouse leans over the old road, repaired so many times that no beam seems original.
+
+## History
+
+The gatehouse once marked a prosperous trade route. Now it survives as a checkpoint for a poorer, more suspicious city.
+
+## Present State
+
+The road is watched by [[npc:captain-vala]], entry is taxed, and the guards are underpaid. This location is introduced in [[encounter:gatehouse-entry]].</code></pre>
+    </article>
+
+    <article class="panel">
+      <span class="badge">Premade Sheet</span>
+      <h2>characters/vala-apprentice.json</h2>
+      <pre><code>{
+  "id": "vala-apprentice",
+  "type": "pc",
+  "name": "Vala's Former Apprentice",
+  "image": "assets/characters/vala-apprentice.jpg",
+  "archetype": "Rogue",
+  "race": "Human",
+  "gender": "Optional",
+  "appearance": "Former Gatewarden apprentice with quick hands, practical clothes, and a habit of checking exits.",
+  "personality": "Wry, guarded, and loyal once trust is earned.",
+  "background": "You once trained under Captain Vala before leaving the Gatewardens.",
+  "motivation": "You need entry into Myr, but Vala knows why you left.",
+  "behavior": "Watches routines, avoids direct authority, and looks for quiet ways through problems.",
+  "healthPercent": 100,
+  "attributes": {
+    "strength": 8,
+    "dexterity": 15,
+    "constitution": 12,
+    "intelligence": 13,
+    "wisdom": 10,
+    "charisma": 14
+  },
+  "skills": ["Stealth", "Persuasion"],
+  "equipment": [{ "name": "Lockpicks", "description": "Worn but reliable." }],
+  "spells": [],
+  "specialAbilities": ["Gatewarden routines"],
+  "effects": []
+}</code></pre>
+    </article>
+
+    <article class="panel">
+      <span class="badge">Premade Profile</span>
+      <h2>characters/vala-apprentice.md</h2>
+      <pre><code>---
+id: vala-apprentice
+type: premadeCharacterProfile
+title: Vala's Former Apprentice
+settingId: myr
+adventureId: the-old-road
+visibility: published
+version: 1
+sheet: vala-apprentice.json
+---
+
+## Description
+
+You once trained under [[npc:captain-vala|Captain Vala]] before leaving the Gatewardens.
+
+## Starting Motivation
+
+You need entry into Myr through [[location:old-road-gatehouse]], but [[npc:captain-vala|Vala]] knows why you left.
+
+## Traits
+
+- Quick hands
+- Guilty conscience
+- Knows Gatewarden routines
+
+## Ability Scores
+
+- Strength 8
+- Dexterity 15
+- Constitution 12
+- Intelligence 13
+- Wisdom 10
+- Charisma 14
+
+## Skills And Capabilities
+
+- Sneak
+- Persuade
+- Notice danger</code></pre>
+    </article>
+
+    <article class="panel">
+      <span class="badge">Asset</span>
+      <h2>assets/gatehouse-map.json</h2>
+      <pre><code>{
+  "id": "gatehouse-map",
+  "type": "map",
+  "title": "Old Road Gatehouse Map",
+  "summary": "Simple tactical reference for the gatehouse approach.",
+  "zones": [
+    { "id": "road", "label": "Old Road" },
+    { "id": "gate", "label": "Gate" },
+    { "id": "shade", "label": "Guard Shade" }
+  ]
+}</code></pre>
+    </article>
+  </section>
+
+  <section class="panel" style="margin-top:20px">
+    <h2>Expected Extracted Runtime Facts</h2>
+    <table>
+      <thead><tr><th>Fact</th><th>Derived Value</th></tr></thead>
+      <tbody>
+        <tr><td>Adventure key</td><td><code>settingId=myr</code>, <code>adventureId=the-old-road</code>, <code>version=1</code></td></tr>
+        <tr><td>Start encounter</td><td><code>gatehouse-entry</code></td></tr>
+        <tr><td>Encounter entity refs</td><td><code>location=old-road-gatehouse</code>, <code>npcs=[captain-vala]</code>, <code>assets=[gatehouse-map]</code>, <code>items=[silver-ash]</code></td></tr>
+        <tr><td>Image refs</td><td>Adventure cover, encounter image, NPC portrait, location image, and premade character portrait are all represented as S3-relative asset references.</td></tr>
+        <tr><td>Cross-file links</td><td><code>adventure.md</code>, <code>gatehouse-entry.md</code>, <code>captain-vala.md</code>, <code>old-road-gatehouse.md</code>, and <code>vala-apprentice.md</code> all demonstrate typed links to related files.</td></tr>
+        <tr><td>Premade characters</td><td><code>vala-apprentice</code> from adventure manifest and character file.</td></tr>
+        <tr><td>Transition graph</td><td><code>gatehouse-entry -> market-square-arrival</code>, <code>gatehouse-entry -> outer-road-return</code>, <code>gatehouse-entry -> gatehouse-conflict</code></td></tr>
+        <tr><td>LLM sections</td><td><code>Intro</code>, <code>GM Notes</code>, <code>Secrets</code>, <code>Checks</code>, <code>Transitions</code>, <code>Rewards</code>, and linked NPC/location context.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="panel" style="margin-top:20px">
+    <h2>Validation Result For This Skeleton</h2>
+    <table>
+      <thead><tr><th>Severity</th><th>Finding</th><th>Reason</th></tr></thead>
+      <tbody>
+        <tr><td>Blocking</td><td><span class="bad">Missing transition targets</span></td><td><code>market-square-arrival</code>, <code>outer-road-return</code>, and <code>gatehouse-conflict</code> are referenced but not included in this minimal one-encounter skeleton.</td></tr>
+        <tr><td>Warning</td><td><span class="warn">Missing item file</span></td><td><code>[[item:silver-ash]]</code> demonstrates cross-entity validation, but <code>items/silver-ash.md</code> is not included here.</td></tr>
+        <tr><td>Warning</td><td><span class="warn">Image assets not expanded</span></td><td>The skeleton references image keys but does not define image metadata files. The compiler should verify that S3 objects exist or that asset IDs resolve.</td></tr>
+        <tr><td>Warning</td><td><span class="warn">Map schema provisional</span></td><td>The asset file reserves map shape but does not lock final tactical map schema.</td></tr>
+        <tr><td>Pass</td><td>Identity, start encounter, premade character, NPC ref, and location ref are coherent.</td><td>The skeleton proves the core authoring model even with intentionally absent branch targets.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="panel" style="margin-top:20px">
+    <h2>Decision From Skeleton</h2>
+    <p class="muted">The model is coherent, but a publishable adventure cannot contain only one encounter if it references branch targets. The editor should allow this shape in planning-preview mode and report missing targets as draft validation findings. Publish should still require every transition target to resolve to a real or stub encounter.</p>
+  </section>
+</main>
+</body>
+</html>
