@@ -39,6 +39,7 @@
     "pw:headless": "playwright test",
     "db:admin": "open https://dashboard.convex.dev",
     "generate:routes": "tsx scripts/generate-routes.ts",
+    "test:wiki-adventures:batch-a": "tsx scripts/wiki-adventures-batch-a-check.ts",
     "test:setup": "pnpm dev",
     "test:full": "pnpm test:setup && pnpm test"
   },

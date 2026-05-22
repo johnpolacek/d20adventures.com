@@ -5,6 +5,15 @@
 <header><p class="eyebrow">Project-context log</p><h1>Decision history</h1><p>Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.</p></header>
 <article class="entry">
 <div class="date">2026-05-21</div>
+<section class="body"><h2>Started Wiki Adventure implementation Batch A</h2><ul>
+<li>Implemented foundation modules under <code>lib/wiki-adventures/</code> for source models, content hashing, S3 key/version helpers, markdown/frontmatter parsing, typed wiki link extraction, change-set application with stale-hash checks, source services, validation reports, and runtime artifact compilation.</li>
+<li>Added <code>scripts/wiki-adventures-batch-a-check.ts</code> and <code>pnpm test:wiki-adventures:batch-a</code> to verify the representative skeleton compile path, draft-vs-publish transition validation, character sheet validation, and approved change-set behavior.</li>
+<li>Validation evidence: <code>pnpm test:wiki-adventures:batch-a</code> passed and <code>pnpm tsc --noEmit --pretty false</code> passed in the implementation worktree.</li>
+<li>Known repo-level validation caveat: <code>pnpm check</code> is currently blocked by the existing Biome configuration schema mismatch before checking project files.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-21</div>
 <section class="body"><h2>Audited and repaired wiki link navigation</h2><ul>
 <li>Audited all 20 wiki HTML files for broken local references, invalid anchors, reachability from <code>wiki/index.html</code>, and return paths to core wiki pages.</li>
 <li>Added consistent utility navigation to every wiki HTML page with links to the wiki home, source index, plans, roadmap, and architecture pages.</li>
