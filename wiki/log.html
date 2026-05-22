@@ -5,6 +5,64 @@
 <header><p class="eyebrow">Project-context log</p><h1>Decision history</h1><p>Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.</p></header>
 <article class="entry">
 <div class="date">2026-05-21</div>
+<section class="body"><h2>Implemented Wiki Adventure Batch F Convex session pinning</h2><ul>
+<li>Added optional Convex <code>adventures</code> fields for <code>currentEncounterId</code>, pinned <code>contentRef</code>, accumulated <code>adventureSummaryMarkdown</code>, discoveries, entity updates, open threads, and resolved thread IDs.</li>
+<li>Added optional Convex <code>turns</code> fields for embedded <code>adventurePatch</code>, transition decision data, and generated-by metadata.</li>
+<li>Updated adventure creation and first-turn creation mutations to accept pinned content refs and initial current encounter state without breaking existing callers.</li>
+<li>Added <code>commitWikiTurnAdvance</code> to reject stale current-turn, stale current-encounter, and stale content-hash writes before inserting the next turn and applying the adventure wiki patch.</li>
+<li>Updated legacy finalization to maintain <code>currentEncounterId</code> as turns advance, preserving compatibility while Batch G/old-system removal decides when to switch live advancement fully to the wiki runtime path.</li>
+<li>Added <code>lib/wiki-adventures/convex-session.ts</code> and <code>scripts/wiki-adventures-batch-f-check.ts</code> to verify content-pin guard behavior and adventure wiki patch accumulation without requiring production Convex state.</li>
+<li>Validation evidence: <code>pnpm test:wiki-adventures:batch-f</code>, <code>pnpm test:wiki-adventures:batch-e</code>, <code>pnpm test:wiki-adventures:batch-d</code>, <code>pnpm test:wiki-adventures:batch-c</code>, <code>pnpm test:wiki-adventures:batch-b</code>, <code>pnpm test:wiki-adventures:batch-a</code>, <code>pnpm tsc --noEmit --pretty false</code>, and <code>pnpm build</code> passed in the implementation worktree.</li>
+<li>Known repo-level validation caveat remains: <code>pnpm check</code> is blocked by the existing Biome configuration schema mismatch before checking project files.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-21</div>
+<section class="body"><h2>Implemented Wiki Adventure Batch E gameplay runtime projection</h2><ul>
+<li>Added <code>lib/wiki-adventures/artifact-loader.ts</code> with in-memory and S3 loaders for pinned published/preview runtime artifacts and <code>latest.json</code> resolution.</li>
+<li>Added <code>lib/wiki-adventures/runtime-context.ts</code> to assemble the AI GM context packet from compiled artifacts plus live turn/session snapshots, preserving recent-turn and roll-context compatibility without reading legacy <code>AdventurePlan.sections[].scenes[]</code>.</li>
+<li>Added <code>lib/wiki-adventures/transition-validator.ts</code> to validate current-encounter continuation, legal graph transitions, illegal targets, unresolved targets, stale content, and stale encounter results before session movement.</li>
+<li>Added <code>lib/wiki-adventures/adventure-patch.ts</code> to validate the AI GM <code>adventurePatch</code> contract and align patch transition data with the accepted transition validator result.</li>
+<li>Added <code>buildWikiEncounterProgressionPrompt</code> for compiled-artifact gameplay prompts that include content hash/version guards, current encounter sections, legal transition IDs, recent turns, roll context, player-character guardrails, and <code>adventurePatch</code> output requirements.</li>
+<li>Added <code>scripts/wiki-adventures-batch-e-check.ts</code> and <code>pnpm test:wiki-adventures:batch-e</code> to verify publish/load, context packet assembly, prompt shape, legal/illegal/stale transition validation, and adventure patch validation.</li>
+<li>Validation evidence: <code>pnpm test:wiki-adventures:batch-e</code>, <code>pnpm test:wiki-adventures:batch-d</code>, <code>pnpm test:wiki-adventures:batch-c</code>, <code>pnpm test:wiki-adventures:batch-b</code>, <code>pnpm test:wiki-adventures:batch-a</code>, <code>pnpm tsc --noEmit --pretty false</code>, and <code>pnpm build</code> passed in the implementation worktree.</li>
+<li>Known repo-level validation caveat remains: <code>pnpm check</code> is blocked by the existing Biome configuration schema mismatch before checking project files.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-21</div>
+<section class="body"><h2>Implemented Wiki Adventure Batch D AI authoring change-set tools</h2><ul>
+<li>Added <code>lib/wiki-adventures/ai-authoring-tools.ts</code> with deterministic app-owned authoring tools that return <code>AuthoringChangeSet</code> proposals, file diffs, draft-preview validation before/after, risk notes, and mechanical-confirmation flags.</li>
+<li>Covered the Stage 8 Batch D tool categories: create encounter, expand encounter, split encounter, link transition, repair missing transition target, summarize entity, add transition, and create paired character markdown/JSON files.</li>
+<li>Added <code>proposeWikiAdventureAiChangeSet</code> to the wiki adventure server actions so the workbench can request validated change-set proposals without direct client-side source mutation or production S3 writes.</li>
+<li>Updated the workbench AI panel to call the proposal action, display file-level diffs and validation status, and apply accepted proposals only to the local draft buffer for review.</li>
+<li>Added <code>scripts/wiki-adventures-batch-d-check.ts</code> and <code>pnpm test:wiki-adventures:batch-d</code> to verify every tool returns change sets, previews diffs, runs validation, repairs an unresolved transition, and flags character-pair JSON as mechanical.</li>
+<li>Validation evidence: <code>pnpm test:wiki-adventures:batch-d</code>, <code>pnpm test:wiki-adventures:batch-c</code>, <code>pnpm test:wiki-adventures:batch-b</code>, <code>pnpm test:wiki-adventures:batch-a</code>, <code>pnpm tsc --noEmit --pretty false</code>, and <code>pnpm build</code> passed in the implementation worktree.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-21</div>
+<section class="body"><h2>Implemented Wiki Adventure Batch C authoring workbench</h2><ul>
+<li>Added the first admin wiki authoring workbench route at <code>/admin/wiki-adventures</code>, linked from the admin dashboard.</li>
+<li>Added <code>components/wiki-adventures/wiki-adventure-workbench.tsx</code> with source tree, markdown/JSON editor, save/dirty state, validation drawer, AI change-set queue, entity inspector, graph preview, compiled encounter preview, and publish center panels.</li>
+<li>Added <code>app/_actions/wiki-adventures/workbench-actions.ts</code> so the workbench can run draft-preview or publish validation through the server-side compiler instead of client-only heuristics.</li>
+<li>Added <code>lib/wiki-adventures/myr-fixture.ts</code> and <code>lib/wiki-adventures/workbench-demo.ts</code> to feed the workbench from the migrated representative Myr AdventurePlan and compiled runtime artifacts.</li>
+<li>Added <code>scripts/wiki-adventures-batch-c-check.ts</code> and <code>pnpm test:wiki-adventures:batch-c</code> to verify the workbench model includes markdown/JSON source files, graph nodes, publish artifact preview, and draft-vs-publish transition validation behavior.</li>
+<li>Validation evidence: <code>pnpm test:wiki-adventures:batch-c</code>, <code>pnpm test:wiki-adventures:batch-b</code>, <code>pnpm test:wiki-adventures:batch-a</code>, <code>pnpm tsc --noEmit --pretty false</code>, and <code>pnpm build</code> passed in the implementation worktree. A local signed-out HTTP check returned <code>200 OK</code> with the expected admin access-denied state for <code>/admin/wiki-adventures</code>.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-21</div>
+<section class="body"><h2>Implemented Wiki Adventure Batch B preview/publish and Myr migration</h2><ul>
+<li>Added <code>lib/wiki-adventures/published-repository.ts</code> with mutable draft preview artifact writes, immutable timestamp/hash published versions, <code>latest.json</code> pointer writes, unchanged-content publish no-op behavior, rollback pointer movement, and in-memory/S3-backed repository implementations.</li>
+<li>Added <code>lib/wiki-adventures/myr-migration.ts</code> to convert legacy <code>AdventurePlan</code> JSON into wiki source files for <code>adventure.md</code>, encounter markdown, setting NPC markdown/JSON sheets, adventure premade character markdown/JSON sheets, full S3 URL asset fields, and migration reports.</li>
+<li>Added <code>scripts/wiki-adventures-batch-b-check.ts</code> and <code>pnpm test:wiki-adventures:batch-b</code> to verify one representative Myr adventure migrates, compiles in publish mode with zero errors, writes preview artifacts, publishes immutable artifacts, no-ops unchanged publish, and rolls back the latest pointer.</li>
+<li>Validation evidence: <code>pnpm test:wiki-adventures:batch-b</code>, <code>pnpm test:wiki-adventures:batch-a</code>, and <code>pnpm tsc --noEmit --pretty false</code> passed in the implementation worktree.</li>
+<li>Known repo-level validation caveat remains: <code>pnpm check</code> is blocked by the existing Biome configuration schema mismatch before checking project files.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-21</div>
 <section class="body"><h2>Started Wiki Adventure implementation Batch A</h2><ul>
 <li>Implemented foundation modules under <code>lib/wiki-adventures/</code> for source models, content hashing, S3 key/version helpers, markdown/frontmatter parsing, typed wiki link extraction, change-set application with stale-hash checks, source services, validation reports, and runtime artifact compilation.</li>
 <li>Added <code>scripts/wiki-adventures-batch-a-check.ts</code> and <code>pnpm test:wiki-adventures:batch-a</code> to verify the representative skeleton compile path, draft-vs-publish transition validation, character sheet validation, and approved change-set behavior.</li>

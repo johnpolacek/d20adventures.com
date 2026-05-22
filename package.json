@@ -40,6 +40,11 @@
     "db:admin": "open https://dashboard.convex.dev",
     "generate:routes": "tsx scripts/generate-routes.ts",
     "test:wiki-adventures:batch-a": "tsx scripts/wiki-adventures-batch-a-check.ts",
+    "test:wiki-adventures:batch-b": "tsx scripts/wiki-adventures-batch-b-check.ts",
+    "test:wiki-adventures:batch-c": "tsx scripts/wiki-adventures-batch-c-check.ts",
+    "test:wiki-adventures:batch-d": "tsx scripts/wiki-adventures-batch-d-check.ts",
+    "test:wiki-adventures:batch-e": "tsx scripts/wiki-adventures-batch-e-check.ts",
+    "test:wiki-adventures:batch-f": "tsx scripts/wiki-adventures-batch-f-check.ts",
     "test:setup": "pnpm dev",
     "test:full": "pnpm test:setup && pnpm test"
   },

@@ -98,6 +98,20 @@ export default async function AdminPage() {
               </Link>
             </CardFooter>
           </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Wiki Adventures</CardTitle>
+              <CardDescription>Preview the relaunch workbench</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">Inspect wiki source files, validation, graph preview, AI change sets, and publish readiness.</p>
+            </CardContent>
+            <CardFooter>
+              <Link href="/admin/wiki-adventures" className="w-full">
+                <Button variant="outline">Open Workbench</Button>
+              </Link>
+            </CardFooter>
+          </Card>
         </div>
       </div>
     </div>

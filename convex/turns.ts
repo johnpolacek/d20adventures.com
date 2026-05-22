@@ -1,6 +1,23 @@
 import { v } from "convex/values"
 import { mutation } from "./_generated/server"
 
+const contentRefValidator = v.object({
+  source: v.union(v.literal("published"), v.literal("preview")),
+  settingId: v.string(),
+  planId: v.string(),
+  contentVersion: v.optional(v.string()),
+  contentHash: v.optional(v.string()),
+  versionId: v.optional(v.string()),
+  previewDraftId: v.optional(v.string()),
+  schemaVersion: v.string(),
+})
+
+const generatedByValidator = v.object({
+  model: v.optional(v.string()),
+  promptVersion: v.optional(v.string()),
+  contextHash: v.optional(v.string()),
+})
+
 // Minimal mutation: create a new turn
 export const createTurn = mutation({
   args: {
@@ -11,6 +28,9 @@ export const createTurn = mutation({
     characters: v.array(v.any()),
     order: v.number(),
     isFinalEncounter: v.optional(v.boolean()),
+    adventurePatch: v.optional(v.any()),
+    transition: v.optional(v.any()),
+    generatedBy: v.optional(generatedByValidator),
   },
   handler: async (ctx, args) => {
     // Check for duplicate order
@@ -31,6 +51,9 @@ export const createTurn = mutation({
       characters: args.characters,
       order: args.order,
       isFinalEncounter: args.isFinalEncounter,
+      adventurePatch: args.adventurePatch,
+      transition: args.transition,
+      generatedBy: args.generatedBy,
       createdAt: now,
       updatedAt: now,
     })
@@ -59,6 +82,13 @@ export const patchAdventure = mutation({
     adventureId: v.id("adventures"),
     patch: v.object({
       currentTurnId: v.optional(v.id("turns")),
+      currentEncounterId: v.optional(v.string()),
+      contentRef: v.optional(contentRefValidator),
+      adventureSummaryMarkdown: v.optional(v.string()),
+      discoveries: v.optional(v.array(v.any())),
+      entityUpdates: v.optional(v.array(v.any())),
+      openThreads: v.optional(v.array(v.any())),
+      resolvedThreadIds: v.optional(v.array(v.string())),
       updatedAt: v.optional(v.number()),
       endedAt: v.optional(v.number()),
       status: v.optional(v.union(v.literal("waitingForPlayers"), v.literal("active"), v.literal("completed"))),

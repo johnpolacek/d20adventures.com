@@ -48,6 +48,7 @@ export async function persistTurnAndFinalizeAdventure(args: {
       adventureId: args.adventureId,
       patch: {
         currentTurnId: newTurnId,
+        currentEncounterId: args.newTurn.encounterId,
         endedAt: Date.now(),
         updatedAt: Date.now(),
         status: "completed",
@@ -56,7 +57,7 @@ export async function persistTurnAndFinalizeAdventure(args: {
   } else {
     await convex.mutation(api.turns.patchAdventure, {
       adventureId: args.adventureId,
-      patch: { currentTurnId: newTurnId },
+      patch: { currentTurnId: newTurnId, currentEncounterId: args.newTurn.encounterId },
     })
   }
 
