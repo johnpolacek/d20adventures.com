@@ -29,7 +29,7 @@
 <li>Drafted Stage 4, Unit 03 publish/index strategy: explicit compile pipeline, disposable preview bundles, immutable published versions, <code>latest.json</code> pointer, content hashes, session version pinning, and rollback rules.</li>
 <li>Drafted Stage 4, Unit 04 S3 contract: source/preview/published prefixes, source layout, preview/published artifact layout, metadata/cache expectations, access policy expectations, and deletion/retention rules.</li>
 <li>Drafted Stage 5, Unit 01 context assembly: the LLM gameplay prompt should be built from a typed context packet combining pinned published artifacts, deterministic linked context, live Convex session state, legal transition IDs, and the current JSON response contract.</li>
-<li>Drafted Stage 5, Unit 02 transition model: the LLM proposes <code>nextEncounterId</code>, application code validates it against pinned <code>graph.json</code> and live Convex session state, then records accepted or rejected transition events without allowing stale or illegal target mutation.</li>
+<li>Drafted Stage 5, Unit 02 transition model: the LLM proposes <code>nextEncounterId</code>, application code validates it against pinned <code>graph.json</code> and live Convex Adventure state, then records accepted or rejected transition patches without allowing stale or illegal target mutation.</li>
 <li>Drafted Stage 5, Unit 03 dice and narrative compatibility: preserve lightweight D20 roll requirements, <code>[DiceRoll]</code> and <code>[OriginalReply]</code> narrative markers, mutable character session fields, encounter-scoped spell-use defaults, readable turn history, and practice-report compatibility without committing to a full D&amp;D combat engine.</li>
 <li>Drafted Stage 5, Unit 04 realtime session model: Convex remains the realtime authority for adventure sessions, participants, current turns, chat, transition/roll events, mutable character state, and generated history while S3 published artifacts remain the source of authored adventure content.</li>
 <li>Advanced the planning dashboard to Stage 6 authoring and admin.</li>
@@ -41,6 +41,8 @@
 <li>Advanced the planning dashboard to Stage 8 final plan assembly.</li>
 <li>Drafted Stage 8 final implementation assembly: implementation milestones, worktree start guidance, test and acceptance plan, launch gates, risk controls, and handoff prompt for future implementation agents.</li>
 <li>Marked the Wiki Adventure Migration planning program implementation-ready; next work should start only in an isolated relaunch worktree after explicit approval.</li>
+<li>Refined the runtime plan: Adventure Plans are stable authored S3 wiki templates, while live Adventures are AI-GM-controlled playthrough instances that evolve a backend Adventure wiki record in Convex through validated <code>adventurePatch</code> updates.</li>
+<li>Locked implementation-contract addendum decisions: one shared active draft per Adventure Plan, change-set-only source writes, mutable latest preview per draft, timestamp/hash publish versions, full S3 URL asset fields, retained <code>planId</code> semantics, and embedded transition patches instead of a v1 <code>transition_events</code> table.</li>
 <li>No app code changes were made.</li>
 </ul></section>
 </article>

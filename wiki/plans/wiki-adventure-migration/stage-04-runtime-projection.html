@@ -8,7 +8,7 @@
 <article class="panel"><h2>Unit 04 - S3 contract</h2><p class="muted">Define bucket key layout, versioning, draft/published prefixes, generated index paths, image and asset paths, and access policy expectations.</p><h3>Verification</h3><p class="muted">S3 paths support settings, adventures, Myr templates, reusable entity images, encounter art, maps, and future creator-owned content.</p></article>
 </section>
 <section class="panel" style="margin-top:20px"><h2>Unit 01 Decision - Compiled Artifact Set</h2><p class="muted">Publishing an adventure should produce a versioned runtime projection. Runtime code should read these compiled artifacts instead of parsing source markdown or character sheet JSON during every turn.</p>
-<pre><code>published/settings/{settingId}/adventures/{adventureId}/v{version}/
+<pre><code>published/settings/{settingId}/adventures/{adventureId}/{timestamp}-{hash}/
   manifest.json
   encounters.json
   entities.json
@@ -30,7 +30,7 @@
   "schemaVersion": 1,
   "settingId": "myr",
   "adventureId": "the-old-road",
-  "contentVersion": 1,
+  "contentVersion": "2026-05-21T22-30-00Z-ab12cd34",
   "title": "The Old Road",
   "teaser": "A forgotten toll road leads toward the walled city of Myr.",
   "summary": "The party reaches the Old Road Gatehouse and must negotiate entry.",
@@ -59,7 +59,7 @@
     "title": "Gatehouse Entry",
     "settingId": "myr",
     "adventureId": "the-old-road",
-    "contentVersion": 1,
+    "contentVersion": "2026-05-21T22-30-00Z-ab12cd34",
     "sourcePath": "content/settings/myr/adventures/the-old-road/encounters/gatehouse-entry.md",
     "sourceHash": "hash",
     "image": "assets/encounters/gatehouse-entry.jpg",
@@ -230,7 +230,7 @@
 <section class="panel" style="margin-top:20px"><h2>Unit 02 Decision - Validation Modes</h2><p class="muted">Validation should run in two explicit modes. <code>draftPreview</code> supports sketching incomplete adventure graphs and AI-assisted repair. <code>publish</code> is the hard gate for creating immutable published runtime artifacts.</p>
 <table><thead><tr><th>Mode</th><th>Allowed Output</th><th>Blocking Behavior</th></tr></thead><tbody>
 <tr><td><code>draftPreview</code></td><td>Preview indexes, graph view, validation report, AI repair suggestions</td><td>Never creates published artifacts. Missing transition targets, missing optional profiles, and unresolved asset objects can remain as findings.</td></tr>
-<tr><td><code>publish</code></td><td>Versioned artifacts under <code>published/settings/{settingId}/adventures/{adventureId}/v{version}/</code></td><td>Fails if any <code>error</code> finding exists. Warnings and suggestions are allowed but recorded in <code>validation-report.json</code>.</td></tr>
+<tr><td><code>publish</code></td><td>Versioned artifacts under <code>published/settings/{settingId}/adventures/{adventureId}/{timestamp}-{hash}/</code></td><td>Fails if any <code>error</code> finding exists. Warnings and suggestions are allowed but recorded in <code>validation-report.json</code>.</td></tr>
 </tbody></table></section>
 
 <section class="panel" style="margin-top:20px"><h2>Validation Finding Shape</h2><pre><code>{
@@ -303,7 +303,7 @@
 <table><thead><tr><th>Operation</th><th>Input</th><th>Output</th><th>Rule</th></tr></thead><tbody>
 <tr><td>Draft edit</td><td>Source markdown, JSON sheets, assets</td><td>Updated source objects under the draft/source prefix</td><td>May leave validation findings unresolved. Never changes published artifacts.</td></tr>
 <tr><td>Draft preview compile</td><td>Current source tree</td><td>Preview artifact bundle and <code>validation-report.json</code></td><td>Runs <code>draftPreview</code> validation. Allows missing transition targets and other preview exceptions.</td></tr>
-<tr><td>Publish compile</td><td>Current source tree</td><td>New immutable <code>v{version}</code> published artifact bundle</td><td>Runs <code>publish</code> validation. Fails if any error exists.</td></tr>
+<tr><td>Publish compile</td><td>Current source tree</td><td>New immutable <code>{timestamp}-{hash}</code> published artifact bundle</td><td>Runs <code>publish</code> validation. Fails if any error exists.</td></tr>
 <tr><td>Runtime read</td><td>Pinned published version</td><td>Compiled artifacts only</td><td>No raw markdown parsing during normal gameplay turns.</td></tr>
 </tbody></table></section>
 
@@ -337,7 +337,7 @@
 
 5. Write artifacts
    - preview bundle for draft preview, or
-   - immutable published v{version} bundle</code></pre></section>
+   - immutable published {timestamp}-{hash} bundle</code></pre></section>
 
 <section class="panel" style="margin-top:20px"><h2>Preview Artifact Strategy</h2><p class="muted">Preview artifacts should be disposable and scoped to a user/editor session or a draft revision. They support graph view, validation UI, AI repair, and practice playthrough without claiming publish readiness.</p>
 <pre><code>preview/settings/{settingId}/adventures/{adventureId}/drafts/{draftId}/
@@ -350,26 +350,25 @@
   validation-report.json</code></pre>
 <p class="muted">A preview bundle may contain unresolved graph nodes with fields such as <code>publishResolved: false</code>. Preview playthroughs should pin to a preview draft ID, not to a publish version.</p></section>
 
-<section class="panel" style="margin-top:20px"><h2>Publish Versioning</h2><p class="muted">Published versions should be immutable. Each successful publish creates the next version directory and does not overwrite previous version artifacts.</p>
-<pre><code>published/settings/myr/adventures/the-old-road/v1/
-published/settings/myr/adventures/the-old-road/v2/
+<section class="panel" style="margin-top:20px"><h2>Publish Versioning</h2><p class="muted">Published versions should be immutable. Each successful publish creates a timestamp/hash version directory and does not overwrite previous version artifacts.</p>
+<pre><code>published/settings/myr/adventures/the-old-road/2026-05-21T22-30-00Z-ab12cd34/
 published/settings/myr/adventures/the-old-road/latest.json</code></pre>
 <table><thead><tr><th>File/Path</th><th>Behavior</th></tr></thead><tbody>
-<tr><td><code>v{version}/</code></td><td>Immutable artifact bundle used by live sessions that pin to that version.</td></tr>
+<tr><td><code>{timestamp}-{hash}/</code></td><td>Immutable artifact bundle used by live Adventures that pin to that version.</td></tr>
 <tr><td><code>latest.json</code></td><td>Small pointer to the latest published version and manifest metadata. Adventure selection can read this, but sessions should pin to a concrete version at start.</td></tr>
 <tr><td><code>contentHash</code></td><td>Hash of all source inputs that affect runtime artifacts. If unchanged, publish can be a no-op or create no new version.</td></tr>
 <tr><td><code>schemaVersion</code></td><td>Runtime projection schema version. Needed for future migration of published artifact format.</td></tr>
 </tbody></table></section>
 
-<section class="panel" style="margin-top:20px"><h2>Session Pinning And Cache Invalidation</h2><p class="muted">Live sessions should store the exact published content version they started with. Updating an adventure after a session starts should not silently change that session's authored context.</p>
+<section class="panel" style="margin-top:20px"><h2>Adventure Pinning And Cache Invalidation</h2><p class="muted">Live Adventures should store the exact published content version they started with. Updating an Adventure Plan after play starts should not silently change that Adventure's authored context.</p>
 <pre><code>Convex adventure/session fields:
   settingId: "myr"
   adventureId: "the-old-road"
-  contentVersion: 1
+  contentVersion: "2026-05-21T22-30-00Z-ab12cd34"
   contentHash: "published bundle hash"
   currentEncounterId: "gatehouse-entry"</code></pre>
 <table><thead><tr><th>Scenario</th><th>Rule</th></tr></thead><tbody>
-<tr><td>New session starts from public adventure page</td><td>Read <code>latest.json</code>, then pin to that concrete version.</td></tr>
+<tr><td>New Adventure starts from public plan page</td><td>Read <code>latest.json</code>, then pin to that concrete version.</td></tr>
 <tr><td>Existing session continues after v2 is published</td><td>Continue reading v1 artifacts until explicitly migrated or restarted.</td></tr>
 <tr><td>Published v1 artifact is missing/corrupt</td><td>Session should fail closed with a clear content-load error; do not auto-fallback to latest.</td></tr>
 <tr><td>Draft preview playthrough</td><td>Pin to preview <code>draftId</code> and mark run type as preview/practice, never as published campaign state.</td></tr>
@@ -398,7 +397,7 @@ preview/
   settings/{settingId}/adventures/{adventureId}/drafts/{draftId}/...
 
 published/
-  settings/{settingId}/adventures/{adventureId}/v{version}/...
+  settings/{settingId}/adventures/{adventureId}/{timestamp}-{hash}/...
   settings/{settingId}/adventures/{adventureId}/latest.json</code></pre>
 <p class="muted">These prefixes can live in one bucket with key-prefix policy controls, or in separate buckets later. The planning contract is the key layout, mutability, and access semantics.</p></section>
 
@@ -435,7 +434,7 @@ published/
 <tr><td>Setting-level entities</td><td>Reusable across adventures in the same setting unless an adventure-specific override is explicitly modeled later.</td></tr>
 <tr><td>Adventure-level files</td><td>Specific to one adventure. Encounters, premade sheets, premade profiles, cover art, encounter art, handouts, and maps live here.</td></tr>
 <tr><td>User-created saved characters</td><td>Remain outside adventure source at <code>characters/{userId}/{characterId}.json</code> under the existing product path until a later user-content migration is planned.</td></tr>
-<tr><td>Images</td><td>Use S3-relative keys. Supported examples are <code>.jpg</code> and <code>.png</code>; do not assume WebP.</td></tr>
+<tr><td>Images</td><td>Authored fields use full S3 URLs from approved buckets/prefixes. Supported examples are <code>.jpg</code> and <code>.png</code>; do not assume WebP.</td></tr>
 <tr><td>IDs</td><td>Prefer stable slug IDs matching filenames. Compiler should validate mismatches between filename and frontmatter ID as warnings or errors depending on risk.</td></tr>
 </tbody></table></section>
 
@@ -448,7 +447,7 @@ published/
   retrieval-index.json
   validation-report.json
 
-published/settings/{settingId}/adventures/{adventureId}/v{version}/
+published/settings/{settingId}/adventures/{adventureId}/{timestamp}-{hash}/
   manifest.json
   encounters.json
   entities.json
@@ -461,7 +460,7 @@ published/settings/{settingId}/adventures/{adventureId}/latest.json</code></pre>
 <table><thead><tr><th>Prefix</th><th>Mutability</th><th>Expected Lifetime</th><th>Primary Readers</th></tr></thead><tbody>
 <tr><td><code>content/</code></td><td>Mutable</td><td>Durable source of authored content</td><td>Admin editor, compiler, migration tools</td></tr>
 <tr><td><code>preview/</code></td><td>Replaceable/disposable</td><td>Short-lived draft/editor artifacts</td><td>Admin editor, graph UI, preview playthroughs, AI repair tools</td></tr>
-<tr><td><code>published/.../v{version}/</code></td><td>Immutable</td><td>Durable while any session may reference it</td><td>Gameplay runtime, public adventure selection, LLM context assembler</td></tr>
+<tr><td><code>published/.../{timestamp}-{hash}/</code></td><td>Immutable</td><td>Durable while any Adventure may reference it</td><td>Gameplay runtime, public adventure selection, LLM context assembler</td></tr>
 <tr><td><code>published/.../latest.json</code></td><td>Mutable pointer</td><td>Durable pointer to current public version</td><td>Adventure listing and new session start flow</td></tr>
 </tbody></table></section>
 
@@ -486,7 +485,7 @@ published/settings/{settingId}/adventures/{adventureId}/latest.json</code></pre>
 <section class="panel" style="margin-top:20px"><h2>Deletion And Retention Rules</h2><table><thead><tr><th>Path Type</th><th>Deletion Rule</th></tr></thead><tbody>
 <tr><td><code>content/</code> source</td><td>Use soft delete/editor history or S3 versioning where possible. Avoid destructive deletion without admin confirmation.</td></tr>
 <tr><td><code>preview/</code> bundles</td><td>Can be garbage-collected by age, draft closure, or editor session cleanup.</td></tr>
-<tr><td><code>published/.../v{version}/</code></td><td>Do not delete while any session references the version. Prefer marking unavailable for takedown cases.</td></tr>
+<tr><td><code>published/.../{timestamp}-{hash}/</code></td><td>Do not delete while any session references the version. Prefer marking unavailable for takedown cases.</td></tr>
 <tr><td><code>latest.json</code></td><td>May be updated for publish or rollback. Changes should be logged.</td></tr>
 <tr><td>User character JSON</td><td>Use existing soft-delete pattern unless replaced by a later character migration plan.</td></tr>
 </tbody></table></section>

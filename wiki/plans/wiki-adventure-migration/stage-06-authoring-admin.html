@@ -10,7 +10,7 @@
 <section class="panel decision" aria-labelledby="unit-01">
 <p class="eyebrow">Unit 01 decision</p>
 <h2 id="unit-01">AI-Assisted Editor Model</h2>
-<p class="muted">The new editor should be wiki-first and diff-first. Authors edit S3 source files directly through a controlled UI, while AI tools propose file changes to markdown profiles, encounter files, adventure manifests, character JSON sheets, and asset references. AI does not silently mutate source files. Every AI-assisted edit must produce a previewable change set, run validation, and require explicit human acceptance before writing to the draft source tree.</p>
+<p class="muted">The new editor should be wiki-first and diff-first. Authors edit source buffers through a controlled UI, but all persisted source mutations go through <code>AuthoringChangeSet</code>. AI tools also propose change sets for markdown profiles, encounter files, adventure manifests, character JSON sheets, and asset references. Neither human nor AI edits silently mutate source files. Every persisted edit must produce a previewable change set, run validation, and require explicit human acceptance before writing to the active draft source tree.</p>
 <div class="packet" aria-label="Editor model pillars">
 <div><b>Source unit</b><p class="muted">The editor works on files and typed entities, not old nested <code>AdventurePlan</code> forms. The file tree exposes <code>adventure.md</code>, <code>encounters/*.md</code>, setting-level entities, paired character <code>.json</code>/<code>.md</code> files, and assets.</p></div>
 <div><b>AI role</b><p class="muted">AI acts as an authoring assistant that can create, expand, rewrite, split, link, repair, summarize, and scaffold. It must explain proposed changes in terms of affected files and validation impact.</p></div>
@@ -228,7 +228,7 @@
 <li>Upload or select S3 assets and validate missing/broken asset refs.</li>
 <li>Show graph and validation status for missing transition targets, duplicate IDs, unreachable encounters, missing profiles, and malformed character sheets.</li>
 <li>Run draft-preview compile and start a preview playthrough pinned to the preview bundle.</li>
-<li>Publish a valid adventure into immutable Stage 4 artifacts and keep existing sessions pinned to prior versions.</li>
+<li>Publish a valid Adventure Plan into immutable Stage 4 artifacts and keep existing Adventures pinned to prior versions.</li>
 <li>Migrate at least one Myr template from old JSON to the wiki source layout with equivalent gameplay capability.</li>
 </ol>
 </section>
@@ -250,11 +250,11 @@
 <section class="panel decision" aria-labelledby="unit-03">
 <p class="eyebrow">Unit 03 decision</p>
 <h2 id="unit-03">Draft And Publish Lifecycle</h2>
-<p class="muted">Authoring should have three explicit artifact states: editable source files, disposable preview bundles, and immutable published versions. Authors can save incomplete draft source, compile preview bundles with draft-preview validation, and start preview playthroughs from those bundles. Publishing is a separate human/admin action that runs publish validation, writes a new immutable version only when the source content hash changes, and updates <code>latest.json</code> only after the version is complete.</p>
+<p class="muted">Authoring should have three explicit artifact states: one shared active draft per Adventure Plan, one mutable latest preview bundle per active draft, and immutable published versions. Authors can save incomplete draft source through approved change sets, compile the latest preview bundle with draft-preview validation, and start preview playthroughs from that bundle. Publishing is a separate human/admin action that runs publish validation, writes a new immutable timestamp/hash version only when the source content hash changes, updates <code>latest.json</code> only after the version is complete, locks the current draft, and starts a new active draft copied from the locked source.</p>
 <div class="packet" aria-label="Lifecycle states">
-<div><b>Source draft</b><p class="muted"><code>content/</code> source files are mutable and durable. They can contain incomplete planning work, unresolved transition targets, draft visibility, and validation findings.</p></div>
-<div><b>Preview bundle</b><p class="muted"><code>preview/</code> bundles are generated artifacts scoped to a draft ID or editor session. They support graph view, validation UI, AI repair, and preview playthroughs without claiming publish readiness.</p></div>
-<div><b>Published version</b><p class="muted"><code>published/.../v{version}/</code> bundles are immutable. Live campaign sessions pin to a concrete published version and content hash.</p></div>
+<div><b>Source draft</b><p class="muted"><code>content/</code> source files are mutable and durable for the one shared active draft. They can contain incomplete planning work, unresolved transition targets, draft visibility, and validation findings.</p></div>
+<div><b>Preview bundle</b><p class="muted"><code>preview/</code> stores the mutable latest generated bundle for the active draft. It supports graph view, validation UI, AI repair, and preview playthroughs without claiming publish readiness.</p></div>
+<div><b>Published version</b><p class="muted"><code>published/.../{timestamp}-{hash}/</code> bundles are immutable. Live campaign Adventures pin to a concrete published version and content hash.</p></div>
 <div><b>Latest pointer</b><p class="muted"><code>latest.json</code> is the mutable public pointer. Rollback moves the pointer; it does not rewrite published version folders.</p></div>
 </div>
 </section>
@@ -264,10 +264,10 @@
 <thead><tr><th>Step</th><th>Action</th><th>Output</th><th>Rules</th></tr></thead>
 <tbody>
 <tr><td>Create draft</td><td>Create source folder and starter files.</td><td><code>content/settings/{settingId}/adventures/{adventureId}/...</code></td><td>Can start from blank, AI skeleton, or migrated Myr template. Must create stable IDs immediately.</td></tr>
-<tr><td>Edit source</td><td>Human edit or accepted AI change set.</td><td>Updated source object and source hash.</td><td>Use stale-write checks. Rejected AI changes leave source untouched.</td></tr>
+<tr><td>Edit source</td><td>Human edit or accepted AI change set.</td><td>Approved change set, updated source object, and source hash.</td><td>Use stale-write checks. No direct file write path. Rejected changes leave source untouched.</td></tr>
 <tr><td>Validate draft</td><td>Run compiler in <code>draftPreview</code> mode.</td><td><code>validation-report.json</code> and optional preview bundle.</td><td>Warnings allowed for incomplete graph work; publish-blocking issues remain visible.</td></tr>
 <tr><td>Preview playthrough</td><td>Start practice/preview session from preview bundle.</td><td>Convex session pinned to <code>previewDraftId</code>.</td><td>Never promoted to public campaign state. Unresolved target movement is blocked at runtime.</td></tr>
-<tr><td>Publish</td><td>Run compiler in <code>publish</code> mode.</td><td>New immutable <code>v{version}</code> bundle plus validation report.</td><td>Fails if any error exists. If content hash is unchanged, publish should be a no-op.</td></tr>
+<tr><td>Publish</td><td>Run compiler in <code>publish</code> mode.</td><td>New immutable timestamp/hash bundle plus validation report.</td><td>Fails if any error exists. If content hash is unchanged, publish should be a no-op. Successful publish locks the current draft and starts a new active draft from the locked source.</td></tr>
 <tr><td>Expose latest</td><td>Update <code>latest.json</code>.</td><td>Public adventure points to new version.</td><td>Only after all version artifacts are written and readable.</td></tr>
 <tr><td>Rollback</td><td>Move <code>latest.json</code> back to a prior valid version.</td><td>Public new-session pointer changes.</td><td>Existing sessions remain pinned to their own versions.</td></tr>
 </tbody>
@@ -375,7 +375,7 @@
 <li>Never hide publish blockers behind collapsed panels without a persistent status badge.</li>
 <li>Keep save, validate, preview, publish, and rollback as distinct commands.</li>
 <li>Use familiar icon buttons with tooltips for create, save, validate, preview, publish, rollback, accept, reject, diff, and upload.</li>
-<li>Show exact S3-relative paths for files and assets when it helps debugging.</li>
+<li>Show exact S3 keys for source files and full S3 URLs for image/assets when it helps debugging.</li>
 <li>Use stable layout dimensions for file rows, validation rows, graph nodes, and command bars to avoid jitter during validation updates.</li>
 <li>Do not make AI chat the only way to author; direct source editing remains first-class.</li>
 </ul>

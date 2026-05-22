@@ -352,7 +352,7 @@ You need entry into Myr through [[location:old-road-gatehouse]], but [[npc:capta
         <tr><td>Adventure key</td><td><code>settingId=myr</code>, <code>adventureId=the-old-road</code>, <code>version=1</code></td></tr>
         <tr><td>Start encounter</td><td><code>gatehouse-entry</code></td></tr>
         <tr><td>Encounter entity refs</td><td><code>location=old-road-gatehouse</code>, <code>npcs=[captain-vala]</code>, <code>assets=[gatehouse-map]</code>, <code>items=[silver-ash]</code></td></tr>
-        <tr><td>Image refs</td><td>Adventure cover, encounter image, NPC portrait, location image, and premade character portrait are all represented as S3-relative asset references.</td></tr>
+        <tr><td>Image refs</td><td>Adventure cover, encounter image, NPC portrait, location image, and premade character portrait are all represented as full S3 URL asset references from approved buckets/prefixes.</td></tr>
         <tr><td>Cross-file links</td><td><code>adventure.md</code>, <code>gatehouse-entry.md</code>, <code>captain-vala.md</code>, <code>old-road-gatehouse.md</code>, and <code>vala-apprentice.md</code> all demonstrate typed links to related files.</td></tr>
         <tr><td>Premade characters</td><td><code>vala-apprentice</code> from adventure manifest and character file.</td></tr>
         <tr><td>Transition graph</td><td><code>gatehouse-entry -> market-square-arrival</code>, <code>gatehouse-entry -> outer-road-return</code>, <code>gatehouse-entry -> gatehouse-conflict</code></td></tr>

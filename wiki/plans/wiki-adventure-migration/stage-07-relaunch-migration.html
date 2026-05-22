@@ -57,7 +57,7 @@
 <tr><td><code>encounter.transitions[]</code></td><td>Typed transition bullets and <code>graph.json</code> after compile</td><td>Use <code>[[encounter:id]]</code> links; unresolved targets allowed only in preview, not publish.</td></tr>
 <tr><td><code>AdventurePlan.npcs</code></td><td><code>content/settings/myr/npcs/{id}.json</code> and <code>.md</code></td><td>Reusable Myr NPCs become setting-level paired sheet/profile files unless clearly adventure-specific.</td></tr>
 <tr><td><code>premadePlayerCharacters[]</code></td><td><code>adventures/{adventureId}/characters/{id}.json</code> and <code>.md</code></td><td>Keep JSON sheet as mechanical source; generate profile markdown for wiki retrieval and character selection.</td></tr>
-<tr><td>Images/maps</td><td>S3-relative asset refs</td><td>Preserve existing keys where valid. Validate missing refs. Do not assume WebP.</td></tr>
+<tr><td>Images/maps</td><td>Full S3 URL asset refs</td><td>Preserve or convert existing keys to approved full S3 URLs where valid. Validate missing refs. Do not assume WebP.</td></tr>
 <tr><td><code>availableCharacterOptions</code></td><td><code>adventure.md</code> metadata</td><td>Preserve only if the relaunch character creation flow still needs it.</td></tr>
 <tr><td><code>skipInitialNpcTurns</code></td><td>Explicit encounter runtime metadata</td><td>Migrate if still needed by Stage 5 gameplay rules.</td></tr>
 <tr><td><code>resetHealth</code></td><td>Do not migrate by default</td><td>Flag for manual review; reintroduce only as explicit transition/session effect.</td></tr>

@@ -160,11 +160,11 @@ content/settings/myr/adventures/the-old-road/characters/vala-apprentice.md</code
   <section class="panel" style="margin-top:20px">
     <h2>Image And Asset References</h2>
     <p class="muted">NPCs, premade PCs, locations, encounters, settings, adventures, items, factions, and other authored entities should support S3 image references. The canonical field is <code>image</code> in frontmatter for the primary image. Additional images, maps, portraits, and handouts may be represented with <code>assets</code> frontmatter or typed <code>[[asset:id]]</code> links in markdown.</p>
-    <pre><code>image: assets/portraits/captain-vala.jpg
+    <pre><code>image: https://s3.amazonaws.com/d20adventures-content/content/settings/myr/assets/portraits/captain-vala.jpg
 assets:
   - gatehouse-map
   - vala-token</code></pre>
-    <p class="muted">Image values should be S3-relative content keys or asset IDs resolved by the compiler, not arbitrary external URLs. The model should stay format-neutral and allow ordinary web image formats such as <code>.jpg</code> and <code>.png</code>. Publish validation should warn for missing referenced image assets and block only when a required runtime surface depends on that image.</p>
+    <p class="muted">Image values should be full S3 URLs from approved buckets/prefixes. The compiler validates bucket/prefix allowlists, object existence, content type, and accessibility. The model should stay format-neutral and allow ordinary web image formats such as <code>.jpg</code> and <code>.png</code>. Publish validation should warn for missing referenced image assets and block only when a required runtime surface depends on that image.</p>
   </section>
 
   <section class="panel" style="margin-top:20px">
@@ -256,7 +256,7 @@ Use [[asset:gatehouse-map]] if tactical positioning is needed.</code></pre>
   entities.json
   graph.json
   retrieval-index.json</code></pre>
-      <p class="muted">Live sessions pin to <code>settingId</code>, <code>adventureId</code>, <code>contentVersion</code>, and <code>currentEncounterId</code>. Existing sessions should not silently switch to newer content.</p>
+      <p class="muted">Live Adventures pin to <code>settingId</code>, <code>planId</code>, timestamp/hash <code>contentVersion</code>, and <code>currentEncounterId</code>. Existing Adventures should not silently switch to newer Adventure Plan content.</p>
     </article>
     <article class="panel">
       <h2>Derived Runtime Index</h2>
