@@ -4,6 +4,21 @@
 .wiki-nav{width:min(1120px,calc(100% - 32px));margin:14px auto 0;display:flex;flex-wrap:wrap;gap:8px;font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.wiki-nav a{border:1px solid var(--line,#3d472f);border-radius:999px;padding:6px 9px;background:rgba(25,29,23,.72);color:var(--accent,#d7b35d);text-decoration:none}.wiki-nav a:focus-visible{outline:2px solid var(--accent,#d7b35d);outline-offset:2px}</style></head><body><nav class="wiki-nav" aria-label="Wiki navigation"><a href="index.html">Wiki Home</a><a href="Sources.html">Sources</a><a href="plans/index.html">Plans</a><a href="roadmap.html">Roadmap</a><a href="Architecture.html">Architecture</a></nav><main>
 <header><p class="eyebrow">Project-context log</p><h1>Decision history</h1><p>Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.</p></header>
 <article class="entry">
+<div class="date">2026-05-22</div>
+<section class="body"><h2>Allowed confident auto-commits</h2><ul>
+<li>Updated <code>AGENTS.md</code> automation policy so docs-only wiki changes and code changes may be committed without asking when the implementation is clear and validated.</li>
+<li>Kept push, dependency install, and long-command behavior unchanged.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-22</div>
+<section class="body"><h2>Updated default Gemini model</h2><ul>
+<li>Changed the central AI SDK model selector in <code>lib/ai/llm.ts</code> from <code>gemini-3-flash-preview</code> to <code>gemini-3.1-flash-lite</code>.</li>
+<li>Updated <code>TECHNICAL_DOCUMENTATION.md</code> so the documented default model matches runtime behavior.</li>
+<li>Validation note: targeted search found no remaining runtime or technical-documentation references to <code>gemini-3-flash-preview</code> outside this log entry.</li>
+</ul></section>
+</article>
+<article class="entry">
 <div class="date">2026-05-21</div>
 <section class="body"><h2>Audited and repaired wiki link navigation</h2><ul>
 <li>Audited all 20 wiki HTML files for broken local references, invalid anchors, reachability from <code>wiki/index.html</code>, and return paths to core wiki pages.</li>

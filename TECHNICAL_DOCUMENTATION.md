@@ -161,7 +161,7 @@ Parser/helpers live in `lib/utils/parse-narrative.ts` and narrative service util
 ## 8.1 Entry Points
 
 1. `lib/ai/index.ts`: wrappers around `generateText`, `generateObject`, `streamObject`.
-2. `lib/ai/llm.ts`: current model selection (`gemini-3-flash-preview` by default).
+2. `lib/ai/llm.ts`: current model selection (`gemini-3.1-flash-lite` by default).
 
 ## 8.2 Usage and Metering
 

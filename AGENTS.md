@@ -1,6 +1,6 @@
 # AGENTS.md instructions for /Users/johnpolacek/Projects/d20adventures.com
 
-Prefer to commit and pull whenever confident that the code is good and there are no questions about implementation.
+Auto-commit local changes whenever confident that the code is good and there are no questions about implementation. Prefer to pull before work when it is safe and useful.
 
 <!-- PROJECT-HTML-WIKI-SKILL:START v1 -->
 ## D20 Adventures Agent Guide
@@ -25,8 +25,8 @@ Prefer to commit and pull whenever confident that the code is good and there are
 
 ### Automation Policy
 
-- Commit docs-only wiki changes: ask
-- Commit code changes: ask
+- Commit docs-only wiki changes: allow
+- Commit code changes: allow
 - Push changes: ask
 - Install dependencies: allow
 - Run long commands: ask
