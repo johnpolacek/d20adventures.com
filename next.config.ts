@@ -14,6 +14,10 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
+        hostname: "d20adventures-content.s3.us-east-1.amazonaws.com",
+      },
+      {
+        protocol: "https",
         hostname: "img.clerk.com",
       },
       {

@@ -4,6 +4,62 @@
 .wiki-nav{width:min(1120px,calc(100% - 32px));margin:14px auto 0;display:flex;flex-wrap:wrap;gap:8px;font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.wiki-nav a{border:1px solid var(--line,#3d472f);border-radius:999px;padding:6px 9px;background:rgba(25,29,23,.72);color:var(--accent,#d7b35d);text-decoration:none}.wiki-nav a:focus-visible{outline:2px solid var(--accent,#d7b35d);outline-offset:2px}</style></head><body><nav class="wiki-nav" aria-label="Wiki navigation"><a href="index.html">Wiki Home</a><a href="Sources.html">Sources</a><a href="plans/index.html">Plans</a><a href="roadmap.html">Roadmap</a><a href="Architecture.html">Architecture</a></nav><main>
 <header><p class="eyebrow">Project-context log</p><h1>Decision history</h1><p>Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.</p></header>
 <article class="entry">
+<div class="date">2026-05-22</div>
+<section class="body"><h2>Implemented The Midnight Summons playthrough bridge</h2><ul>
+<li>Added <code>lib/wiki-adventures/midnight-summons-runtime.ts</code> to load the migrated wiki source tree, compile publish-valid runtime artifacts, expose a pinned content ref, build first-turn characters from paired wiki sheets, and detect final encounters.</li>
+<li>Updated <code>createAdventure</code> so The Midnight Summons pins wiki content, initializes <code>currentEncounterId</code>, and copies Thalbern from the migrated wiki character sheet.</li>
+<li>Updated <code>startAdventure</code> so The Midnight Summons creates its first turn from compiled wiki artifacts instead of legacy nested AdventurePlan encounters.</li>
+<li>Updated <code>advanceTurn</code> so The Midnight Summons uses the wiki gameplay context packet, wiki prompt, transition validator, adventure patch validator, and guarded <code>commitWikiTurnAdvance</code>.</li>
+<li>Added <code>scripts/wiki-adventures-midnight-bridge-check.ts</code> and <code>pnpm test:wiki-adventures:midnight-bridge</code> to verify the bridge wiring, repaired transition, final encounter detection, and first-turn character assembly.</li>
+<li>Validation evidence: <code>pnpm test:wiki-adventures:midnight-bridge</code>, <code>pnpm migrate:midnight-summons</code>, <code>pnpm tsc --noEmit --pretty false</code>, <code>pnpm build</code>, and <code>git diff --check</code> passed. A signed-out CLI HTTP check for <code>/settings/realm-of-myr/play</code> returned <code>200 OK</code>.</li>
+<li>Authenticated browser smoke reached the first generated turn after selecting Thalbern, proving public selection, solo auto-start, and first-turn creation. The smoke exposed a Next Image/S3 asset issue, fixed by switching migrated URLs to the existing <code>d20-public.s3.us-east-1.amazonaws.com</code> asset host and allowing that host in Next config.</li>
+<li>Remaining manual playthrough: submit player actions, advance branches, and verify completion UI.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-22</div>
+<section class="body"><h2>Migrated The Midnight Summons into wiki source files</h2><ul>
+<li>Added <code>scripts/migrate-midnight-summons.ts</code> and <code>pnpm migrate:midnight-summons</code> to migrate the legacy JSON source into authored wiki files.</li>
+<li>Generated <code>content/settings/realm-of-myr/adventures/the-midnight-summons/adventure.md</code>, 7 encounter markdown files, paired Thalbern premade files, paired Wollandora/Owlbear NPC files, and <code>migration-report.json</code>.</li>
+<li>Repaired the stale transition target <code>broken-silence -&gt; wollandora-intervention</code> to <code>broken-silence -&gt; timely-rescue</code> and recorded it in the migration report.</li>
+<li>Converted legacy local image paths into full S3 URLs under <code>https://d20-public.s3.us-east-1.amazonaws.com/</code>, which matches the existing public S3 asset host.</li>
+<li>Validation evidence: <code>pnpm migrate:midnight-summons</code> generated 14 source files plus the migration report and compiled the result in publish mode with status <code>passed</code>.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-22</div>
+<section class="body"><h2>Expanded The Midnight Summons plan to cover full adventure migration</h2><ul>
+<li>Added a full adventure migration scope section to <code>wiki/plans/midnight-summons-playthrough-test.html</code> covering the adventure root, section/scene wrappers, 7 encounters, 11 transition edges, 2 NPC records, Thalbern, and 11 image references.</li>
+<li>Clarified that section/scene framing should not be lost even if runtime artifacts are encounter-first.</li>
+<li>Added acceptance coverage requiring every legacy adventure object to be represented in wiki source or documented as intentionally transformed.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-22</div>
+<section class="body"><h2>Clarified premade character migration for The Midnight Summons</h2><ul>
+<li>Updated <code>wiki/plans/midnight-summons-playthrough-test.html</code> to state that existing premade characters are still inline legacy <code>AdventurePlan.premadePlayerCharacters[]</code> JSON, not authored wiki source files.</li>
+<li>Added a premade migration section requiring paired <code>characters/thalbern.md</code> and <code>characters/thalbern.json</code> files, with the JSON sheet validating against <code>types/character.ts</code> <code>pcTemplateSchema</code>.</li>
+<li>Called out the required standard attributes, runtime copy behavior, and S3 image URL publish requirement for Thalbern.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-22</div>
+<section class="body"><h2>Audited The Midnight Summons plan for full solo playthrough coverage</h2><ul>
+<li>Expanded <code>wiki/plans/midnight-summons-playthrough-test.html</code> with a full flow audit covering adventure listing, character selection, solo auto-start, first turn render, roll/action loop, branching transitions, terminal encounters, completion UI, post-completion record, and replay/new-run behavior.</li>
+<li>Identified a legacy content issue: <code>broken-silence</code> references <code>wollandora-intervention</code>, but the JSON source contains <code>timely-rescue</code>. Publish validation should block this unless the migration corrects or aliases the transition.</li>
+<li>Added explicit completion acceptance gates for terminal encounters, <code>isFinalEncounter</code>, Adventure <code>completed</code> status, <code>endedAt</code>, final controls, and Play Again isolation.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-22</div>
+<section class="body"><h2>Added The Midnight Summons focused playthrough plan</h2><ul>
+<li>Added <code>wiki/plans/midnight-summons-playthrough-test.html</code> as a focused plan for migrating and testing the single-player Realm of Myr adventure from the current public selection and Thalbern premade selection screens.</li>
+<li>Indexed the new legacy JSON source at <code>wiki/sources/adventure plans/the-midnight-summons.json</code> in <code>wiki/Sources.html</code>.</li>
+<li>Linked the playthrough plan from <code>wiki/plans/index.html</code>.</li>
+<li>Current recommendation: use The Midnight Summons as the first live playthrough cutover candidate, starting with a preview-backed migration and blocking publish until full S3 asset URLs are present.</li>
+</ul></section>
+</article>
+<article class="entry">
 <div class="date">2026-05-21</div>
 <section class="body"><h2>Implemented Wiki Adventure Batch F Convex session pinning</h2><ul>
 <li>Added optional Convex <code>adventures</code> fields for <code>currentEncounterId</code>, pinned <code>contentRef</code>, accumulated <code>adventureSummaryMarkdown</code>, discoveries, entity updates, open threads, and resolved thread IDs.</li>

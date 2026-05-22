@@ -4,6 +4,7 @@ import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { convex } from "@/lib/convex/server"
 import { readJsonFromS3 } from "@/lib/s3-utils"
+import { buildMidnightTurnCharacters, isMidnightSummons, loadMidnightSummonsRuntime } from "@/lib/wiki-adventures/midnight-summons-runtime"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import { auth } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
@@ -67,6 +68,38 @@ export async function startAdventure({ settingId, adventurePlanId, adventureId }
 
     if (!adventure) {
       throw new Error("Adventure not found")
+    }
+
+    if (isMidnightSummons(settingId, adventurePlanId)) {
+      const { artifacts, contentRef } = loadMidnightSummonsRuntime()
+      const firstEncounter = artifacts.encounters[artifacts.manifest.startEncounterId]
+      if (!firstEncounter) throw new Error("The Midnight Summons start encounter is missing from compiled wiki artifacts")
+      const characters = buildMidnightTurnCharacters({
+        artifacts,
+        encounter: firstEncounter,
+        players: adventure.players ?? [],
+      })
+      const turnId = await convex.mutation(api.adventure.createTurn, {
+        adventureId: adventureId as Id<"adventures">,
+        encounterId: firstEncounter.id,
+        title: firstEncounter.title,
+        narrative: firstEncounter.sections.intro ?? firstEncounter.sections.body ?? "",
+        characters,
+        order: 1,
+        generatedBy: { promptVersion: "wiki-midnight-start-v1", contextHash: contentRef.contentHash },
+      })
+      await convex.mutation(api.adventure.patchAdventure, {
+        adventureId: adventureId as Id<"adventures">,
+        patch: {
+          status: "active",
+          currentTurnId: turnId,
+          currentEncounterId: firstEncounter.id,
+          contentRef,
+          adventureSummaryMarkdown: artifacts.manifest.summary,
+          updatedAt: Date.now(),
+        },
+      })
+      return redirect(`/settings/${settingId}/${adventurePlanId}/${adventureId}`)
     }
 
     console.log(

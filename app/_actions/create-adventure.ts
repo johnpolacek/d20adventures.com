@@ -8,6 +8,7 @@ import { convex } from "@/lib/convex/server"
 import { canManageResource } from "@/lib/content-permissions"
 import { readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 import { toPCTemplate } from "@/lib/utils/character-mapping"
+import { isMidnightSummons, loadMidnightSummonsRuntime } from "@/lib/wiki-adventures/midnight-summons-runtime"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PCTemplate } from "@/types/character"
 import type { Setting } from "@/types/setting"
@@ -41,6 +42,7 @@ export async function createAdventure(input: CreateAdventureInput) {
 
   // Extract character choices and create the players array
   const { characterChoices } = input
+  const midnightRuntime = isMidnightSummons(settingId, adventurePlanId) ? loadMidnightSummonsRuntime() : null
   const players = characterChoices
     .filter((choice) => choice.mode === "player") // Only include characters selected as "player"
     .map((choice) => ({
@@ -58,7 +60,7 @@ export async function createAdventure(input: CreateAdventureInput) {
     } catch {}
     if (!exists) {
       // Try to find the character in premade PCs or as a custom character
-      let characterData: PCTemplate | unknown = plan.premadePlayerCharacters?.find((pc) => pc.id === choice.characterId)
+      let characterData: PCTemplate | unknown = midnightRuntime?.artifacts.characterSheets.premadeCharacters[choice.characterId]?.sheet ?? plan.premadePlayerCharacters?.find((pc) => pc.id === choice.characterId)
       if (!characterData) {
         // Try to load as a custom character (should not throw if not found)
         try {
@@ -75,7 +77,6 @@ export async function createAdventure(input: CreateAdventureInput) {
 
   // Create adventure in waiting state
   const now = Date.now()
-
   // Create the adventure using the existing Convex mutation
   const adventureId = await convex.mutation(api.adventure.createAdventure, {
     planId: adventurePlanId,
@@ -89,6 +90,9 @@ export async function createAdventure(input: CreateAdventureInput) {
     status: "waitingForPlayers", // Start in lobby state
     title: plan.title, // Use the actual adventure title from the plan
     startedAt: now,
+    contentRef: midnightRuntime?.contentRef,
+    currentEncounterId: midnightRuntime?.artifacts.manifest.startEncounterId,
+    adventureSummaryMarkdown: midnightRuntime?.artifacts.manifest.summary,
   })
 
   // If only one player character AND the adventure plan expects only one player, auto-start the adventure

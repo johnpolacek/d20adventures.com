@@ -1,0 +1,316 @@
+{
+  "planId": "the-midnight-summons",
+  "settingId": "realm-of-myr",
+  "generatedAt": "2026-05-22T00:00:00.000Z",
+  "generatedFiles": [
+    {
+      "path": "content/settings/realm-of-myr/adventures/the-midnight-summons/adventure.md",
+      "kind": "adventure"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/the-midnight-summons/encounters/broken-silence.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/the-midnight-summons/encounters/owlbear-confrontation.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/the-midnight-summons/encounters/timely-rescue.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/the-midnight-summons/encounters/meeting-at-the-stones.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/the-midnight-summons/encounters/the-missing-relics.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/the-midnight-summons/encounters/preparing-for-the-city.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/the-midnight-summons/encounters/back-home.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/wollandora.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/wollandora.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/owlbear.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/owlbear.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/the-midnight-summons/characters/thalbern.md",
+      "kind": "premadeCharacter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/the-midnight-summons/characters/thalbern.json",
+      "kind": "premadeCharacterSheet"
+    }
+  ],
+  "sourceFieldMappings": [
+    {
+      "source": "AdventurePlan.title",
+      "destination": "adventure.md frontmatter.title"
+    },
+    {
+      "source": "AdventurePlan.teaser",
+      "destination": "adventure.md ## Teaser"
+    },
+    {
+      "source": "AdventurePlan.overview",
+      "destination": "adventure.md ## Summary"
+    },
+    {
+      "source": "AdventurePlan.party",
+      "destination": "adventure.md frontmatter.minPlayers/maxPlayers"
+    },
+    {
+      "source": "AdventurePlan.start",
+      "destination": "adventure.md frontmatter.startEncounter"
+    },
+    {
+      "source": "AdventurePlan.nextAdventure",
+      "destination": "adventure.md frontmatter.nextAdventure"
+    },
+    {
+      "source": "AdventurePlan.premadePlayerCharacters[].id",
+      "destination": "adventure.md frontmatter.premadeCharacters"
+    },
+    {
+      "source": "Encounter.broken-silence.intro",
+      "destination": "encounters/broken-silence.md ## Intro"
+    },
+    {
+      "source": "Encounter.broken-silence.instructions",
+      "destination": "encounters/broken-silence.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.broken-silence.transitions",
+      "destination": "encounters/broken-silence.md ## Transitions"
+    },
+    {
+      "source": "Encounter.broken-silence.npc",
+      "destination": "encounters/broken-silence.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.owlbear-confrontation.intro",
+      "destination": "encounters/owlbear-confrontation.md ## Intro"
+    },
+    {
+      "source": "Encounter.owlbear-confrontation.instructions",
+      "destination": "encounters/owlbear-confrontation.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.owlbear-confrontation.transitions",
+      "destination": "encounters/owlbear-confrontation.md ## Transitions"
+    },
+    {
+      "source": "Encounter.owlbear-confrontation.npc",
+      "destination": "encounters/owlbear-confrontation.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.timely-rescue.intro",
+      "destination": "encounters/timely-rescue.md ## Intro"
+    },
+    {
+      "source": "Encounter.timely-rescue.instructions",
+      "destination": "encounters/timely-rescue.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.timely-rescue.transitions",
+      "destination": "encounters/timely-rescue.md ## Transitions"
+    },
+    {
+      "source": "Encounter.timely-rescue.npc",
+      "destination": "encounters/timely-rescue.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.meeting-at-the-stones.intro",
+      "destination": "encounters/meeting-at-the-stones.md ## Intro"
+    },
+    {
+      "source": "Encounter.meeting-at-the-stones.instructions",
+      "destination": "encounters/meeting-at-the-stones.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.meeting-at-the-stones.transitions",
+      "destination": "encounters/meeting-at-the-stones.md ## Transitions"
+    },
+    {
+      "source": "Encounter.meeting-at-the-stones.npc",
+      "destination": "encounters/meeting-at-the-stones.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-missing-relics.intro",
+      "destination": "encounters/the-missing-relics.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-missing-relics.instructions",
+      "destination": "encounters/the-missing-relics.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-missing-relics.transitions",
+      "destination": "encounters/the-missing-relics.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-missing-relics.npc",
+      "destination": "encounters/the-missing-relics.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.preparing-for-the-city.intro",
+      "destination": "encounters/preparing-for-the-city.md ## Intro"
+    },
+    {
+      "source": "Encounter.preparing-for-the-city.instructions",
+      "destination": "encounters/preparing-for-the-city.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.preparing-for-the-city.transitions",
+      "destination": "encounters/preparing-for-the-city.md ## Transitions"
+    },
+    {
+      "source": "Encounter.preparing-for-the-city.npc",
+      "destination": "encounters/preparing-for-the-city.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.back-home.intro",
+      "destination": "encounters/back-home.md ## Intro"
+    },
+    {
+      "source": "Encounter.back-home.instructions",
+      "destination": "encounters/back-home.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.back-home.transitions",
+      "destination": "encounters/back-home.md ## Transitions"
+    },
+    {
+      "source": "Encounter.back-home.npc",
+      "destination": "encounters/back-home.md frontmatter.npcs"
+    },
+    {
+      "source": "AdventurePlan.npcs.wollandora",
+      "destination": "content/settings/realm-of-myr/npcs/wollandora.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.wollandora",
+      "destination": "content/settings/realm-of-myr/npcs/wollandora.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.owlbear",
+      "destination": "content/settings/realm-of-myr/npcs/owlbear.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.owlbear",
+      "destination": "content/settings/realm-of-myr/npcs/owlbear.md"
+    },
+    {
+      "source": "AdventurePlan.premadePlayerCharacters.thalbern",
+      "destination": "content/settings/realm-of-myr/adventures/the-midnight-summons/characters/thalbern.json"
+    },
+    {
+      "source": "AdventurePlan.premadePlayerCharacters.thalbern",
+      "destination": "content/settings/realm-of-myr/adventures/the-midnight-summons/characters/thalbern.md"
+    },
+    {
+      "source": "Encounter.broken-silence.transitions[wollandora-intervention]",
+      "destination": "encounters/broken-silence.md ## Transitions [[encounter:timely-rescue]]",
+      "note": "Legacy slug did not exist; repaired to the existing Wollandora rescue encounter."
+    }
+  ],
+  "warnings": [
+    {
+      "code": "asset-key-converted",
+      "message": "Converted legacy asset key \"images/settings/realm-of-myr/the-midnight-summons/the-midnight-summons.png\" to full S3 URL.",
+      "source": "AdventurePlan.image"
+    },
+    {
+      "code": "asset-key-converted",
+      "message": "Converted legacy asset key \"images/settings/realm-of-myr/the-midnight-summons/broken-silence-2.png\" to full S3 URL.",
+      "source": "broken-silence.image"
+    },
+    {
+      "code": "asset-key-converted",
+      "message": "Converted legacy asset key \"images/settings/realm-of-myr/the-midnight-summons/owlbear-confrontation.png\" to full S3 URL.",
+      "source": "owlbear-confrontation.image"
+    },
+    {
+      "code": "asset-key-converted",
+      "message": "Converted legacy asset key \"images/settings/realm-of-myr/the-midnight-summons/timely-rescue.png\" to full S3 URL.",
+      "source": "timely-rescue.image"
+    },
+    {
+      "code": "runtime-flag-preserved-as-note",
+      "message": "Encounter \"meeting-at-the-stones\" used skipInitialNpcTurns; migrated as a GM note.",
+      "source": "meeting-at-the-stones.skipInitialNpcTurns"
+    },
+    {
+      "code": "asset-key-converted",
+      "message": "Converted legacy asset key \"images/settings/realm-of-myr/the-midnight-summons/meeting-at-the-stones.png\" to full S3 URL.",
+      "source": "meeting-at-the-stones.image"
+    },
+    {
+      "code": "runtime-flag-preserved-as-note",
+      "message": "Encounter \"the-missing-relics\" used skipInitialNpcTurns; migrated as a GM note.",
+      "source": "the-missing-relics.skipInitialNpcTurns"
+    },
+    {
+      "code": "asset-key-converted",
+      "message": "Converted legacy asset key \"images/settings/realm-of-myr/the-midnight-summons/meeting-at-the-stones.png\" to full S3 URL.",
+      "source": "the-missing-relics.image"
+    },
+    {
+      "code": "runtime-flag-preserved-as-note",
+      "message": "Encounter \"preparing-for-the-city\" used resetHealth; migrated as a GM note.",
+      "source": "preparing-for-the-city.resetHealth"
+    },
+    {
+      "code": "asset-key-converted",
+      "message": "Converted legacy asset key \"images/settings/realm-of-myr/the-midnight-summons/preparing-for-the-city.png\" to full S3 URL.",
+      "source": "preparing-for-the-city.image"
+    },
+    {
+      "code": "runtime-flag-preserved-as-note",
+      "message": "Encounter \"back-home\" used resetHealth; migrated as a GM note.",
+      "source": "back-home.resetHealth"
+    },
+    {
+      "code": "asset-key-converted",
+      "message": "Converted legacy asset key \"images/settings/realm-of-myr/the-midnight-summons/back-home.png\" to full S3 URL.",
+      "source": "back-home.image"
+    },
+    {
+      "code": "asset-key-converted",
+      "message": "Converted legacy asset key \"/images/settings/realm-of-myr/the-midnight-summons/npcs/wollandora.png\" to full S3 URL.",
+      "source": "AdventurePlan.npcs.wollandora.image"
+    },
+    {
+      "code": "asset-key-converted",
+      "message": "Converted legacy asset key \"/images/settings/realm-of-myr/the-midnight-summons/npcs/owlbear-portrait.png\" to full S3 URL.",
+      "source": "AdventurePlan.npcs.owlbear.image"
+    },
+    {
+      "code": "asset-key-converted",
+      "message": "Converted legacy asset key \"/images/characters/demo-ranger.png\" to full S3 URL.",
+      "source": "premadePlayerCharacters.thalbern.image"
+    },
+    {
+      "code": "legacy-transition-repaired",
+      "message": "Repaired transition target \"broken-silence -> wollandora-intervention\" to \"broken-silence -> timely-rescue\"; timely-rescue is the authored Wollandora intervention encounter.",
+      "source": "sections[0].scenes[0].encounters[broken-silence].transitions"
+    }
+  ]
+}

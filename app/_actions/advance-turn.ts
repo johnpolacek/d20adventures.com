@@ -4,6 +4,7 @@ import type { Id } from "@/convex/_generated/dataModel"
 import { generateObject } from "@/lib/ai"
 import { assertAdventureAccessByTurn } from "@/lib/adventure-access"
 import { convex } from "@/lib/convex/server"
+import { appendNarrative, normalizeNarrative } from "@/lib/services/narrative-service"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import {
   buildNextTurnFromProgression,
@@ -24,6 +25,10 @@ import {
   getSectionAndSceneContext,
 } from "@/lib/services/advance-turn-prompt-service"
 import { mapConvexTurnToTurn } from "@/lib/utils"
+import { validateAdventurePatch } from "@/lib/wiki-adventures/adventure-patch"
+import { assembleGameplayContextPacket, buildWikiEncounterProgressionPrompt } from "@/lib/wiki-adventures/runtime-context"
+import { buildMidnightTurnCharacters, isMidnightFinalEncounter, isMidnightSummons, loadMidnightSummonsRuntime } from "@/lib/wiki-adventures/midnight-summons-runtime"
+import { validatePacketTransition } from "@/lib/wiki-adventures/transition-validator"
 import type { TurnCharacter } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import { auth } from "@clerk/nextjs/server"
@@ -33,6 +38,12 @@ import { z } from "zod"
 const encounterProgressionSchema = z.object({
   nextEncounterId: z.string(),
   narrative: z.string(),
+})
+
+const wikiEncounterProgressionSchema = z.object({
+  nextEncounterId: z.string(),
+  narrative: z.string(),
+  adventurePatch: z.unknown().optional(),
 })
 
 export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turnId: Id<"turns">; settingId: string; adventurePlanId: string }) {
@@ -70,6 +81,83 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
     order: turnData.order,
     narrativeLength: turn.narrative?.length || 0
   })
+
+  if (isMidnightSummons(settingId, adventurePlanId)) {
+    const { artifacts, contentRef } = loadMidnightSummonsRuntime()
+    const allTurns = await convex.query(api.adventure.getTurnsByAdventure, { adventureId: turnData.adventureId })
+    const currentTurnOrder = turnData.order || 1
+    const packet = assembleGameplayContextPacket({
+      artifacts,
+      contentRef,
+      session: {
+        adventureInstanceId: turnData.adventureId.toString(),
+        currentTurnOrder,
+        narrativeSummary: undefined,
+        currentTurn: turn,
+        allTurns: allTurns.map((row) => ({
+          encounterId: row.encounterId,
+          narrative: row.narrative,
+          order: row.order,
+          characters: row.characters as TurnCharacter[],
+        })),
+      },
+    })
+    const prompt = buildWikiEncounterProgressionPrompt(packet)
+    await wait(1000)
+    const llmResult = (await generateObject({ prompt, schema: wikiEncounterProgressionSchema })).object
+    const transition = validatePacketTransition(packet, llmResult.nextEncounterId)
+    if (!transition.allowed) {
+      throw new Error(`Wiki transition rejected: ${transition.rejectedReason} (${turn.encounterId} -> ${transition.nextEncounterId})`)
+    }
+    let adventurePatch
+    try {
+      adventurePatch = validateAdventurePatch(llmResult.adventurePatch, transition)
+    } catch (error) {
+      console.warn(`[advanceTurn:${requestId}] Invalid wiki adventurePatch returned by AI; falling back to summary-only patch`, error)
+      adventurePatch = validateAdventurePatch(
+        {
+          summaryDelta: llmResult.narrative,
+        },
+        transition
+      )
+    }
+    const nextEncounter = artifacts.encounters[transition.nextEncounterId]
+    if (!nextEncounter) throw new Error(`Next encounter ${transition.nextEncounterId} missing from wiki artifacts`)
+    const isTransition = transition.nextEncounterId !== turn.encounterId
+    const characters = isTransition
+      ? buildMidnightTurnCharacters({
+          artifacts,
+          encounter: nextEncounter,
+          players: (turn.characters as TurnCharacter[]).filter((character) => character.type === "pc").map((character) => ({ userId: character.userId ?? userId, characterId: character.id })),
+        })
+      : (turn.characters as TurnCharacter[])
+          .filter((character) => character.status !== "dead" && character.status !== "fled")
+          .map((character) => ({
+            ...character,
+            hasReplied: false,
+            isComplete: false,
+            initiative: Math.floor(Math.random() * 20) + 1,
+          }))
+          .sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
+    const narrative = isTransition ? appendNarrative(normalizeNarrative(llmResult.narrative), normalizeNarrative(nextEncounter.sections.intro ?? "")) : normalizeNarrative(llmResult.narrative)
+    const isFinalEncounter = isMidnightFinalEncounter(artifacts, nextEncounter.id)
+    await convex.mutation(api.adventure.commitWikiTurnAdvance, {
+      adventureId: turnData.adventureId,
+      expectedCurrentTurnId: turnId,
+      expectedCurrentEncounterId: turn.encounterId,
+      expectedContentHash: contentRef.contentHash,
+      nextEncounterId: nextEncounter.id,
+      title: nextEncounter.title,
+      narrative,
+      characters,
+      order: currentTurnOrder + 1,
+      adventurePatch,
+      transition: adventurePatch.transition,
+      generatedBy: { promptVersion: "wiki-midnight-advance-v1", contextHash: contentRef.contentHash },
+      isFinalEncounter,
+    })
+    return { status: "turn_advanced", turn: { ...turn, encounterId: nextEncounter.id, title: nextEncounter.title, narrative, characters, isFinalEncounter } }
+  }
 
   // 2. Load the plan from S3
   console.log("[advanceTurn] settingId:", settingId, "adventurePlanId:", adventurePlanId)
