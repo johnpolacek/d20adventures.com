@@ -5,6 +5,14 @@
 <header><p class="eyebrow">Project-context log</p><h1>Decision history</h1><p>Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.</p></header>
 <article class="entry">
 <div class="date">2026-05-23</div>
+<section class="body"><h2>Refined admin wiki editor into a navigable wiki map</h2><ul>
+<li>Replaced the flat source-file list feel with grouped wiki navigation for adventure pages, encounters, NPC profiles, premade characters, and sheets.</li>
+<li>Added parsed typed-link navigation, encounter transition visibility, backlinks, selected-page context, and a more structured editor layout.</li>
+<li>Validation evidence: <code>pnpm test:wiki-adventures:admin-authoring</code>, <code>pnpm tsc --noEmit --pretty false</code>, and <code>pnpm build</code> passed. Local route smoke for <code>/admin/wiki-adventures/realm-of-myr/march-of-davos</code> returned <code>200 OK</code>.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-23</div>
 <section class="body"><h2>Implemented admin wiki authoring rebuild</h2><ul>
 <li>Added a per-adventure admin wiki editor at <code>/admin/wiki-adventures/{settingId}/{planId}</code> with chat-first improvement, key-field editing, validation status, and manual export/restore bundles.</li>
 <li>Changed wiki adventure runtime loading to prefer canonical S3 <code>content/</code> source and fall back to migrated repo-local source when S3 source is not present.</li>
