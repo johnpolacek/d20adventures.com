@@ -61,6 +61,12 @@ function repairLegacyPlan(input: AdventurePlan): AdventurePlan {
             transition.encounter = "timely-rescue"
             transition.condition = transition.condition.replace("wollandora-intervention", "timely-rescue")
           }
+          if (encounter.id === "broken-silence" && transition.encounter === "owlbear-confrontation") {
+            transition.condition = `${transition.condition} Also, if Thalbern detects the approaching creature but does not successfully hide, evade, or withdraw, advance to owlbear-confrontation so the Owlbear enters the encounter.`
+          }
+        }
+        if (encounter.id === "broken-silence") {
+          encounter.instructions = `${encounter.instructions}\n\nMigration clarification: a successful Perception roll reveals the approaching threat, but it does not complete the encounter by itself. If Thalbern investigates, advances, stands his ground, readies a weapon, or otherwise does not successfully hide or evade after detecting the creature, transition to owlbear-confrontation so the Owlbear enters the active encounter as an NPC.`
         }
       }
     }

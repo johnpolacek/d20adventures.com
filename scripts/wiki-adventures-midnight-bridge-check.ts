@@ -13,11 +13,11 @@ function main() {
   const createAction = readFileSync("app/_actions/create-adventure.ts", "utf8")
   const advanceAction = readFileSync("app/_actions/advance-turn.ts", "utf8")
 
-  assert.ok(createAction.includes("contentRef: midnightRuntime?.contentRef"), "createAdventure does not pin Midnight contentRef")
-  assert.ok(createAction.includes("currentEncounterId: midnightRuntime?.artifacts.manifest.startEncounterId"), "createAdventure does not initialize currentEncounterId")
-  assert.ok(createAction.includes("midnightRuntime?.artifacts.characterSheets.premadeCharacters"), "createAdventure does not copy premade from migrated wiki sheet")
-  assert.ok(startAction.includes("loadMidnightSummonsRuntime"), "startAdventure does not load Midnight wiki runtime")
-  assert.ok(startAction.includes("buildMidnightTurnCharacters"), "startAdventure does not build characters from wiki sheets")
+  assert.ok(createAction.includes("contentRef: localWikiRuntime?.contentRef"), "createAdventure does not pin local wiki contentRef")
+  assert.ok(createAction.includes("currentEncounterId: localWikiRuntime?.artifacts.manifest.startEncounterId"), "createAdventure does not initialize currentEncounterId")
+  assert.ok(createAction.includes("localWikiRuntime?.artifacts.characterSheets.premadeCharacters"), "createAdventure does not copy premade from migrated wiki sheet")
+  assert.ok(startAction.includes("loadLocalWikiAdventureRuntime"), "startAdventure does not load local wiki runtime")
+  assert.ok(startAction.includes("buildLocalWikiTurnCharacters"), "startAdventure does not build characters from wiki sheets")
   assert.ok(advanceAction.includes("buildWikiEncounterProgressionPrompt"), "advanceTurn does not use wiki gameplay prompt")
   assert.ok(advanceAction.includes("validatePacketTransition"), "advanceTurn does not validate wiki transitions")
   assert.ok(advanceAction.includes("commitWikiTurnAdvance"), "advanceTurn does not use guarded Convex commit")
@@ -33,6 +33,15 @@ function main() {
   assert.equal(Object.keys(artifacts.characterSheets.npcs).includes("owlbear"), true)
   assert.equal(artifacts.graph.encounterTransitions.some((transition) => transition.toEncounterId === "wollandora-intervention"), false)
   assert.equal(artifacts.graph.encounterTransitions.some((transition) => transition.fromEncounterId === "broken-silence" && transition.toEncounterId === "timely-rescue"), true)
+  assert.equal(
+    artifacts.graph.encounterTransitions.some(
+      (transition) =>
+        transition.fromEncounterId === "broken-silence" &&
+        transition.toEncounterId === "owlbear-confrontation" &&
+        transition.condition.includes("detects the approaching creature")
+    ),
+    true
+  )
   assert.equal(isMidnightFinalEncounter(artifacts, "preparing-for-the-city"), true)
   assert.equal(isMidnightFinalEncounter(artifacts, "back-home"), true)
   assert.equal(isMidnightFinalEncounter(artifacts, "meeting-at-the-stones"), false)

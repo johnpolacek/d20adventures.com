@@ -27,7 +27,7 @@ import {
 import { mapConvexTurnToTurn } from "@/lib/utils"
 import { validateAdventurePatch } from "@/lib/wiki-adventures/adventure-patch"
 import { assembleGameplayContextPacket, buildWikiEncounterProgressionPrompt } from "@/lib/wiki-adventures/runtime-context"
-import { buildMidnightTurnCharacters, isMidnightFinalEncounter, isMidnightSummons, loadMidnightSummonsRuntime } from "@/lib/wiki-adventures/midnight-summons-runtime"
+import { buildLocalWikiTurnCharacters, isLocalWikiAdventure, isLocalWikiFinalEncounter, loadLocalWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
 import { validatePacketTransition } from "@/lib/wiki-adventures/transition-validator"
 import type { TurnCharacter } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
@@ -82,8 +82,8 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
     narrativeLength: turn.narrative?.length || 0
   })
 
-  if (isMidnightSummons(settingId, adventurePlanId)) {
-    const { artifacts, contentRef } = loadMidnightSummonsRuntime()
+  if (isLocalWikiAdventure(settingId, adventurePlanId)) {
+    const { definition, artifacts, contentRef } = loadLocalWikiAdventureRuntime(settingId, adventurePlanId)
     const allTurns = await convex.query(api.adventure.getTurnsByAdventure, { adventureId: turnData.adventureId })
     const currentTurnOrder = turnData.order || 1
     const packet = assembleGameplayContextPacket({
@@ -125,7 +125,7 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
     if (!nextEncounter) throw new Error(`Next encounter ${transition.nextEncounterId} missing from wiki artifacts`)
     const isTransition = transition.nextEncounterId !== turn.encounterId
     const characters = isTransition
-      ? buildMidnightTurnCharacters({
+      ? buildLocalWikiTurnCharacters({
           artifacts,
           encounter: nextEncounter,
           players: (turn.characters as TurnCharacter[]).filter((character) => character.type === "pc").map((character) => ({ userId: character.userId ?? userId, characterId: character.id })),
@@ -140,7 +140,7 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
           }))
           .sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
     const narrative = isTransition ? appendNarrative(normalizeNarrative(llmResult.narrative), normalizeNarrative(nextEncounter.sections.intro ?? "")) : normalizeNarrative(llmResult.narrative)
-    const isFinalEncounter = isMidnightFinalEncounter(artifacts, nextEncounter.id)
+    const isFinalEncounter = isLocalWikiFinalEncounter(artifacts, nextEncounter.id)
     await convex.mutation(api.adventure.commitWikiTurnAdvance, {
       adventureId: turnData.adventureId,
       expectedCurrentTurnId: turnId,
@@ -153,7 +153,7 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
       order: currentTurnOrder + 1,
       adventurePatch,
       transition: adventurePatch.transition,
-      generatedBy: { promptVersion: "wiki-midnight-advance-v1", contextHash: contentRef.contentHash },
+      generatedBy: { promptVersion: `wiki-${definition.promptSlug}-advance-v1`, contextHash: contentRef.contentHash },
       isFinalEncounter,
     })
     return { status: "turn_advanced", turn: { ...turn, encounterId: nextEncounter.id, title: nextEncounter.title, narrative, characters, isFinalEncounter } }

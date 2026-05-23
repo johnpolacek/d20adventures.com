@@ -21,10 +21,12 @@ Suddenly, the hush of the night is broken by a sharp crack. Something large has 
 
 A perception check is appropriate if Thalbern investigates (low difficulty with a plus 3 modifier). If successful, he will determine it is a large creature that is approaching quickly. With a high roll (18+), he will determine it is an Owlbear. If combat ensues and Thalbern is below 25% health, Wollandora will intervene. If Thalbern avoids or defeats the Owlbear, or if Wollandora saves him, he proceeds to the Old Standing Stones.
 
+Migration clarification: a successful Perception roll reveals the approaching threat, but it does not complete the encounter by itself. If Thalbern investigates, advances, stands his ground, readies a weapon, or otherwise does not successfully hide or evade after detecting the creature, transition to owlbear-confrontation so the Owlbear enters the active encounter as an NPC.
+
 ## Transitions
 
 - To [[encounter:meeting-at-the-stones]] when If Thalbern successfully rolls to hide or evade and can avoid the Owlbear, go to meeting-at-the-stones.
-- To [[encounter:owlbear-confrontation]] when If Thalbern fails any dice roll (including stealth, perception, or any other check) or does nothing requiring a roll, advance to owlbear-confrontation.
+- To [[encounter:owlbear-confrontation]] when If Thalbern fails any dice roll (including stealth, perception, or any other check) or does nothing requiring a roll, advance to owlbear-confrontation. Also, if Thalbern detects the approaching creature but does not successfully hide, evade, or withdraw, advance to owlbear-confrontation so the Owlbear enters the encounter.
 - To [[encounter:timely-rescue]] when If Thalbern has a healthPercent of less than 50%, go to timely-rescue.
 
 ## Migration Context

@@ -46,7 +46,9 @@
     "test:wiki-adventures:batch-e": "tsx scripts/wiki-adventures-batch-e-check.ts",
     "test:wiki-adventures:batch-f": "tsx scripts/wiki-adventures-batch-f-check.ts",
     "migrate:midnight-summons": "tsx scripts/migrate-midnight-summons.ts",
+    "migrate:covert-cargo": "tsx scripts/migrate-covert-cargo.ts",
     "test:wiki-adventures:midnight-bridge": "tsx scripts/wiki-adventures-midnight-bridge-check.ts",
+    "test:wiki-adventures:covert-cargo-bridge": "tsx scripts/wiki-adventures-covert-cargo-bridge-check.ts",
     "test:setup": "pnpm dev",
     "test:full": "pnpm test:setup && pnpm test"
   },

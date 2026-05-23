@@ -4,6 +4,17 @@
 .wiki-nav{width:min(1120px,calc(100% - 32px));margin:14px auto 0;display:flex;flex-wrap:wrap;gap:8px;font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.wiki-nav a{border:1px solid var(--line,#3d472f);border-radius:999px;padding:6px 9px;background:rgba(25,29,23,.72);color:var(--accent,#d7b35d);text-decoration:none}.wiki-nav a:focus-visible{outline:2px solid var(--accent,#d7b35d);outline-offset:2px}</style></head><body><nav class="wiki-nav" aria-label="Wiki navigation"><a href="index.html">Wiki Home</a><a href="Sources.html">Sources</a><a href="plans/index.html">Plans</a><a href="roadmap.html">Roadmap</a><a href="Architecture.html">Architecture</a></nav><main>
 <header><p class="eyebrow">Project-context log</p><h1>Decision history</h1><p>Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.</p></header>
 <article class="entry">
+<div class="date">2026-05-23</div>
+<section class="body"><h2>Implemented Covert Cargo wiki trial</h2><ul>
+<li>Added <code>wiki/plans/covert-cargo-wiki-trial.html</code> and indexed <code>wiki/sources/adventure plans/covert-cargo.json</code> as a legacy Realm of Myr source.</li>
+<li>Added <code>scripts/migrate-covert-cargo.ts</code> and <code>pnpm migrate:covert-cargo</code> to generate Covert Cargo wiki source files and a migration report.</li>
+<li>Repaired legacy source issues during migration: missing start encounter set to <code>the-shipment</code>, blank transition target dropped, and numeric premade IDs quoted in frontmatter.</li>
+<li>Generalized the local wiki runtime bridge so Covert Cargo and The Midnight Summons share compiled-artifact create/start/advance behavior.</li>
+<li>Added <code>scripts/wiki-adventures-covert-cargo-bridge-check.ts</code> and <code>pnpm test:wiki-adventures:covert-cargo-bridge</code> for the start-flow bridge proof.</li>
+<li>Validation evidence: <code>pnpm migrate:covert-cargo</code>, <code>pnpm test:wiki-adventures:covert-cargo-bridge</code>, <code>pnpm test:wiki-adventures:midnight-bridge</code>, <code>pnpm tsc --noEmit --pretty false</code>, <code>pnpm build</code>, and <code>git diff --check</code> passed. Signed-out local route checks for <code>/settings/realm-of-myr/play</code>, <code>/settings/realm-of-myr/covert-cargo/practice</code>, and <code>/settings/realm-of-myr/covert-cargo/character-select</code> returned <code>200 OK</code>.</li>
+</ul></section>
+</article>
+<article class="entry">
 <div class="date">2026-05-22</div>
 <section class="body"><h2>Implemented The Midnight Summons playthrough bridge</h2><ul>
 <li>Added <code>lib/wiki-adventures/midnight-summons-runtime.ts</code> to load the migrated wiki source tree, compile publish-valid runtime artifacts, expose a pinned content ref, build first-turn characters from paired wiki sheets, and detect final encounters.</li>

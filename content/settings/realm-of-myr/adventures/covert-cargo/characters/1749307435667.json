@@ -1,0 +1,65 @@
+{
+  "name": "Poppen Quickfoot",
+  "archetype": "Rogue",
+  "race": "Halfling",
+  "gender": "Male",
+  "appearance": "Standing just over three feet tall, Poppen is a bundle of restless energy. His curly chestnut hair is kept cropped close to avoid snags. He wears a patchwork waistcoat festooned with hidden pockets. His bright hazel eyes dart constantly, and his pale leather boots are scuffed from midnight footwork.",
+  "personality": "Gregarious, ever‐curious, and smooth‐tongued. Poppen lives for gossip almost as much as profit. He’d rather talk his way out of a fight—or better yet, never get into one at all. He is endlessly curious, flitting from docksider to courtier in search of the next tantalizing rumor.",
+  "background": "Originally from Willowdale, the tranquil halfling homeland bordering the March of Davos. Life in the Dell was too idyllic and slow-paced for Poppen’s adventurous spirit so he set out on a journey to seek his fortune elsewhere.\n\nPoppen made his way to Kordavos to make a name for himself.  He has just learned of a secret dock not far from the city for smuggling operations, and has been spying on it for several days hoping to find his first big score. ",
+  "motivation": "Driven by an insatiable love for objects of great value, not just for their worth, but for the stories and prestige they carry. He aspires to become a prominent purloiner and fence to indulge this fascination while simultaneously using his social skills to mingle with interesting people, and get rich while doing it.",
+  "behavior": "Poppen moves with quick, careful steps and speaks with a disarming grin, always alert for an unguarded glance or dropped word. He prefers to avoid violence by sleight of hand or a well-placed bribe, but his steel nerve means he’ll risk a bold break-in for the right payoff.",
+  "healthPercent": 100,
+  "equipment": [
+    {
+      "name": "Leather Armor"
+    },
+    {
+      "name": "Two Daggers"
+    },
+    {
+      "name": "Shortbow"
+    },
+    {
+      "name": "Quiver with 20 Arrows"
+    },
+    {
+      "name": "Thieves' Tools"
+    },
+    {
+      "name": "Waistcoast with hidden pockets"
+    },
+    {
+      "name": "Belt Pouch"
+    },
+    {
+      "name": "15 Gold Pieces"
+    }
+  ],
+  "skills": [
+    "Acrobatics",
+    "Deception",
+    "Perception",
+    "Sleight of Hand",
+    "Stealth"
+  ],
+  "spells": [],
+  "specialAbilities": [
+    "Halfling Nimbleness: Can move through the space of any creature that is of a size larger than him.",
+    "Lucky: When he rolls a 1 on an attack roll, ability check, or saving throw, he can reroll the die and must use the new roll.",
+    "Brave: Has advantage on saving throws against being frightened.",
+    "Sneak Attack: Deals extra damage when he has advantage on an attack roll or when an enemy is within 5 feet of an ally who isn't incapacitated.",
+    "Cunning Action: Can take a bonus action on each of his turns in combat to take the Dash, Disengage, or Hide action."
+  ],
+  "status": "",
+  "type": "pc",
+  "attributes": {
+    "strength": 10,
+    "dexterity": 16,
+    "constitution": 14,
+    "intelligence": 12,
+    "wisdom": 10,
+    "charisma": 14
+  },
+  "id": "1749307435667",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/covert-cargo/pcs/b44179ad-0e8e-4d1e-8b17-8c436dbeb15a.png?t=1749311061893"
+}

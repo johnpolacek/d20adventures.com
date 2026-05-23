@@ -1,0 +1,164 @@
+import { readdirSync, readFileSync, statSync } from "node:fs"
+import { join } from "node:path"
+import { createSourceFile } from "./change-sets"
+import { compileAdventureSourceTree } from "./compiler"
+import type { RuntimeArtifacts, RuntimeEncounter } from "./types"
+import type { TurnCharacter } from "@/types/adventure"
+
+export type LocalWikiAdventureDefinition = {
+  settingId: string
+  planId: string
+  contentVersion: string
+  versionId: string
+  assetHosts: string[]
+  sourceRoots: string[]
+  promptSlug: string
+}
+
+export type LocalWikiContentRef = {
+  source: "published"
+  settingId: string
+  planId: string
+  contentVersion: string
+  contentHash: string
+  versionId: string
+  schemaVersion: "1"
+}
+
+export const LOCAL_WIKI_ADVENTURES = [
+  {
+    settingId: "realm-of-myr",
+    planId: "the-midnight-summons",
+    contentVersion: "2026-05-22T00-00-00Z-midnight-migration",
+    versionId: "local-midnight-migration",
+    assetHosts: ["d20-public.s3.us-east-1.amazonaws.com"],
+    sourceRoots: [
+      "content/settings/realm-of-myr/adventures/the-midnight-summons",
+      "content/settings/realm-of-myr/npcs/owlbear.json",
+      "content/settings/realm-of-myr/npcs/owlbear.md",
+      "content/settings/realm-of-myr/npcs/wollandora.json",
+      "content/settings/realm-of-myr/npcs/wollandora.md",
+    ],
+    promptSlug: "midnight",
+  },
+  {
+    settingId: "realm-of-myr",
+    planId: "covert-cargo",
+    contentVersion: "2026-05-23T00-00-00Z-covert-cargo-migration",
+    versionId: "local-covert-cargo-migration",
+    assetHosts: ["d20-public.s3.us-east-1.amazonaws.com", "d1dkwd3w4hheqw.cloudfront.net"],
+    sourceRoots: [
+      "content/settings/realm-of-myr/adventures/covert-cargo",
+      "content/settings/realm-of-myr/npcs/npcs-1749163978757.json",
+      "content/settings/realm-of-myr/npcs/npcs-1749163978757.md",
+      "content/settings/realm-of-myr/npcs/npcs-1749181492795.json",
+      "content/settings/realm-of-myr/npcs/npcs-1749181492795.md",
+      "content/settings/realm-of-myr/npcs/npcs-1749184389465.json",
+      "content/settings/realm-of-myr/npcs/npcs-1749184389465.md",
+      "content/settings/realm-of-myr/npcs/npcs-1749243735467.json",
+      "content/settings/realm-of-myr/npcs/npcs-1749243735467.md",
+      "content/settings/realm-of-myr/npcs/npcs-1749243869357.json",
+      "content/settings/realm-of-myr/npcs/npcs-1749243869357.md",
+    ],
+    promptSlug: "covert-cargo",
+  },
+] as const satisfies LocalWikiAdventureDefinition[]
+
+export function getLocalWikiAdventureDefinition(settingId: string, planId: string): LocalWikiAdventureDefinition | null {
+  return LOCAL_WIKI_ADVENTURES.find((definition) => definition.settingId === settingId && definition.planId === planId) ?? null
+}
+
+export function isLocalWikiAdventure(settingId: string, planId: string) {
+  return getLocalWikiAdventureDefinition(settingId, planId) !== null
+}
+
+export function loadLocalWikiAdventureRuntime(settingId: string, planId: string): { definition: LocalWikiAdventureDefinition; artifacts: RuntimeArtifacts; contentRef: LocalWikiContentRef } {
+  const definition = getLocalWikiAdventureDefinition(settingId, planId)
+  if (!definition) {
+    throw new Error(`No local wiki adventure is registered for ${settingId}/${planId}`)
+  }
+
+  const files = definition.sourceRoots.flatMap(readSourceFiles)
+  const artifacts = compileAdventureSourceTree(files, {
+    mode: "publish",
+    contentVersion: definition.contentVersion,
+    allowedAssetHosts: definition.assetHosts,
+  })
+
+  if (artifacts.validationReport.status === "blocked") {
+    throw new Error(`${definition.planId} wiki source is not publish-valid: ${JSON.stringify(artifacts.validationReport.summary)}`)
+  }
+
+  return {
+    definition,
+    artifacts,
+    contentRef: {
+      source: "published",
+      settingId: definition.settingId,
+      planId: definition.planId,
+      contentVersion: definition.contentVersion,
+      contentHash: artifacts.manifest.contentHash,
+      versionId: definition.versionId,
+      schemaVersion: "1",
+    },
+  }
+}
+
+export function buildLocalWikiTurnCharacters(args: {
+  artifacts: RuntimeArtifacts
+  encounter: RuntimeEncounter
+  players: Array<{ userId: string; characterId: string }>
+}): TurnCharacter[] {
+  const characters: TurnCharacter[] = []
+
+  for (const player of args.players) {
+    const id = player.characterId.split("/").pop()?.replace(/\.json$/, "") ?? player.characterId
+    const sheet = args.artifacts.characterSheets.premadeCharacters[id]?.sheet
+    if (!sheet) throw new Error(`Missing premade character sheet for ${player.characterId}`)
+    characters.push({
+      ...sheet,
+      id: sheet.id,
+      type: "pc",
+      userId: player.userId,
+      initiative: rollD20(),
+      hasReplied: false,
+      isComplete: false,
+    })
+  }
+
+  for (const npcRef of args.encounter.npcRefs) {
+    const sheet = args.artifacts.characterSheets.npcs[npcRef.id]?.sheet
+    if (!sheet) throw new Error(`Missing NPC sheet for ${npcRef.id}`)
+    characters.push({
+      ...sheet,
+      id: sheet.id,
+      type: "npc",
+      initiative: typeof npcRef.initialInitiative === "number" ? npcRef.initialInitiative : rollD20(),
+      hasReplied: false,
+      isComplete: false,
+      behavior: npcRef.behavior ?? sheet.behavior,
+    })
+  }
+
+  return characters.sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
+}
+
+export function isLocalWikiFinalEncounter(artifacts: RuntimeArtifacts, encounterId: string) {
+  return !artifacts.graph.encounterTransitions.some((transition) => transition.fromEncounterId === encounterId)
+}
+
+function readSourceFiles(root: string) {
+  const paths = (statSync(root).isDirectory() ? listFiles(root) : [root]).filter((path) => (path.endsWith(".md") || path.endsWith(".json")) && !path.endsWith("/migration-report.json"))
+  return paths.map((path) => createSourceFile(path, readFileSync(path, "utf8")))
+}
+
+function listFiles(root: string): string[] {
+  return readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(root, entry.name)
+    return entry.isDirectory() ? listFiles(path) : [path]
+  })
+}
+
+function rollD20() {
+  return Math.floor(Math.random() * 20) + 1
+}

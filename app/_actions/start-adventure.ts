@@ -4,7 +4,7 @@ import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { convex } from "@/lib/convex/server"
 import { readJsonFromS3 } from "@/lib/s3-utils"
-import { buildMidnightTurnCharacters, isMidnightSummons, loadMidnightSummonsRuntime } from "@/lib/wiki-adventures/midnight-summons-runtime"
+import { buildLocalWikiTurnCharacters, isLocalWikiAdventure, loadLocalWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import { auth } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
@@ -70,11 +70,11 @@ export async function startAdventure({ settingId, adventurePlanId, adventureId }
       throw new Error("Adventure not found")
     }
 
-    if (isMidnightSummons(settingId, adventurePlanId)) {
-      const { artifacts, contentRef } = loadMidnightSummonsRuntime()
+    if (isLocalWikiAdventure(settingId, adventurePlanId)) {
+      const { definition, artifacts, contentRef } = loadLocalWikiAdventureRuntime(settingId, adventurePlanId)
       const firstEncounter = artifacts.encounters[artifacts.manifest.startEncounterId]
-      if (!firstEncounter) throw new Error("The Midnight Summons start encounter is missing from compiled wiki artifacts")
-      const characters = buildMidnightTurnCharacters({
+      if (!firstEncounter) throw new Error(`${adventurePlanId} start encounter is missing from compiled wiki artifacts`)
+      const characters = buildLocalWikiTurnCharacters({
         artifacts,
         encounter: firstEncounter,
         players: adventure.players ?? [],
@@ -86,7 +86,7 @@ export async function startAdventure({ settingId, adventurePlanId, adventureId }
         narrative: firstEncounter.sections.intro ?? firstEncounter.sections.body ?? "",
         characters,
         order: 1,
-        generatedBy: { promptVersion: "wiki-midnight-start-v1", contextHash: contentRef.contentHash },
+        generatedBy: { promptVersion: `wiki-${definition.promptSlug}-start-v1`, contextHash: contentRef.contentHash },
       })
       await convex.mutation(api.adventure.patchAdventure, {
         adventureId: adventureId as Id<"adventures">,
