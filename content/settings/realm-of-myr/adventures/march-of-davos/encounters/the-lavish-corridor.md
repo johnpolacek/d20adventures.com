@@ -1,5 +1,5 @@
 ---
-moduleOrder: 35
+moduleOrder: 33
 sceneTitle: "Exploring the Mansion"
 sectionTitle: "The Masquerade Ball"
 id: "the-lavish-corridor"

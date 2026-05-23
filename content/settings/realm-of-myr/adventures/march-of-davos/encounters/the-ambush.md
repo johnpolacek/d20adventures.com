@@ -1,5 +1,5 @@
 ---
-moduleOrder: 23
+moduleOrder: 25
 sceneTitle: "Ambush"
 sectionTitle: "The Black Market"
 id: "the-ambush"

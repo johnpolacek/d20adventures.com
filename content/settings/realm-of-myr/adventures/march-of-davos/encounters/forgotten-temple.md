@@ -1,5 +1,5 @@
 ---
-moduleOrder: 14
+moduleOrder: 44
 sceneTitle: "The Inner Sanctum"
 sectionTitle: "The Covenant of The Cowl"
 id: "forgotten-temple"

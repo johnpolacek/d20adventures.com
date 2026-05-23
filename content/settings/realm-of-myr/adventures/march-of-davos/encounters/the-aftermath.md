@@ -1,5 +1,5 @@
 ---
-moduleOrder: 22
+moduleOrder: 12
 sceneTitle: "The Docks"
 sectionTitle: "The Investigation"
 id: "the-aftermath"

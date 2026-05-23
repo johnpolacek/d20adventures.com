@@ -1,5 +1,5 @@
 ---
-moduleOrder: 44
+moduleOrder: 41
 sceneTitle: "Into the Underground"
 sectionTitle: "The Covenant of The Cowl"
 id: "through-the-labyrinth"

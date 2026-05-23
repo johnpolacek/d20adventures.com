@@ -1,5 +1,5 @@
 ---
-moduleOrder: 4
+moduleOrder: 5
 sceneTitle: "Evening Falls"
 sectionTitle: "Arrival At Kordavos"
 id: "an-unsolicited-opportunity"

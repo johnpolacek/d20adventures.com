@@ -1,5 +1,5 @@
 ---
-moduleOrder: 17
+moduleOrder: 18
 sceneTitle: "The Black Market"
 sectionTitle: "The Black Market"
 id: "labyrinthine-stalls"

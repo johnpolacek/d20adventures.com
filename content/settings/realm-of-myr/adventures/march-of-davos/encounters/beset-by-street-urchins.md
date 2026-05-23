@@ -1,5 +1,5 @@
 ---
-moduleOrder: 6
+moduleOrder: 15
 sceneTitle: "The Lower Districts"
 sectionTitle: "The Black Market"
 id: "beset-by-street-urchins"

@@ -1,5 +1,5 @@
 ---
-moduleOrder: 40
+moduleOrder: 36
 sceneTitle: "Murder in the Mansion"
 sectionTitle: "The Masquerade Ball"
 id: "the-speech"

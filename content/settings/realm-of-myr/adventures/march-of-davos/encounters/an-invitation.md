@@ -1,5 +1,5 @@
 ---
-moduleOrder: 3
+moduleOrder: 13
 sceneTitle: "The Docks"
 sectionTitle: "The Investigation"
 id: "an-invitation"

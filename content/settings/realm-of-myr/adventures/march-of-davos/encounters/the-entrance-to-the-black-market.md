@@ -1,5 +1,5 @@
 ---
-moduleOrder: 29
+moduleOrder: 17
 sceneTitle: "The Black Market"
 sectionTitle: "The Black Market"
 id: "the-entrance-to-the-black-market"

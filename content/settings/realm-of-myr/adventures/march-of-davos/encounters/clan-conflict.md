@@ -1,5 +1,5 @@
 ---
-moduleOrder: 8
+moduleOrder: 3
 sceneTitle: "Arrival at Kordavos"
 sectionTitle: "Arrival At Kordavos"
 id: "clan-conflict"

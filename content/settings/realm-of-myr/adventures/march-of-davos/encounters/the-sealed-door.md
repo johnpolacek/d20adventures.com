@@ -1,5 +1,5 @@
 ---
-moduleOrder: 38
+moduleOrder: 42
 sceneTitle: "Into the Underground"
 sectionTitle: "The Covenant of The Cowl"
 id: "the-sealed-door"

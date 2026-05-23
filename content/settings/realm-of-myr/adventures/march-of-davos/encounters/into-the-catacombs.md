@@ -1,5 +1,5 @@
 ---
-moduleOrder: 16
+moduleOrder: 40
 sceneTitle: "Into the Underground"
 sectionTitle: "The Covenant of The Cowl"
 id: "into-the-catacombs"

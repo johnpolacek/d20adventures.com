@@ -1,5 +1,5 @@
 ---
-moduleOrder: 11
+moduleOrder: 24
 sceneTitle: "Silverhand"
 sectionTitle: "The Black Market"
 id: "face-to-face-with-silverhand"

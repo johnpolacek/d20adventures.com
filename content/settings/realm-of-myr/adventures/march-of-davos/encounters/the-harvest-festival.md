@@ -1,5 +1,5 @@
 ---
-moduleOrder: 31
+moduleOrder: 2
 sceneTitle: "Arrival at Kordavos"
 sectionTitle: "Arrival At Kordavos"
 id: "the-harvest-festival"

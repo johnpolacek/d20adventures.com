@@ -1,5 +1,5 @@
 ---
-moduleOrder: 43
+moduleOrder: 31
 sceneTitle: "Exploring the Mansion"
 sectionTitle: "The Masquerade Ball"
 id: "through-the-halls"

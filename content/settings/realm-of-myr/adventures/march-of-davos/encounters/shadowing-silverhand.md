@@ -1,5 +1,5 @@
 ---
-moduleOrder: 20
+moduleOrder: 22
 sceneTitle: "Silverhand"
 sectionTitle: "The Black Market"
 id: "shadowing-silverhand"

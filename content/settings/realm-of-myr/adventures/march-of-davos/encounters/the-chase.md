@@ -1,5 +1,5 @@
 ---
-moduleOrder: 27
+moduleOrder: 38
 sceneTitle: "Murder in the Mansion"
 sectionTitle: "The Masquerade Ball"
 id: "the-chase"

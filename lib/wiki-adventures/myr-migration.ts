@@ -52,7 +52,7 @@ export function migrateAdventurePlanToWikiSource(plan: AdventurePlan, options: M
   }
 
   addAdventureManifest(ctx)
-  for (const { section, scene, encounter } of encounters) addEncounter(ctx, section.title, scene.title, encounter)
+  for (const [index, { section, scene, encounter }] of encounters.entries()) addEncounter(ctx, section.title, scene.title, index + 1, encounter)
   for (const [id, npc] of Object.entries(plan.npcs)) addNpc(ctx, id, npc)
   for (const pc of plan.premadePlayerCharacters) addPremadeCharacter(ctx, pc)
 
@@ -78,6 +78,7 @@ function addAdventureManifest(ctx: MigrationContext) {
       ["Teaser", plan.teaser],
       ["Summary", plan.overview],
       ["Authoring Notes", `Migrated from legacy AdventurePlan ${plan.id} by ${plan.author} at version ${plan.version}.`],
+      ["Encounter Order", plan.sections.flatMap((section) => section.scenes.flatMap((scene) => scene.encounters.map((encounter) => `- ${encounter.id}`))).join("\n")],
     ]
   )
   addFile(ctx, `${adventureSourcePrefix(plan.settingId, plan.id)}/adventure.md`, content, "adventure")
@@ -90,7 +91,7 @@ function addAdventureManifest(ctx: MigrationContext) {
   map(ctx, "AdventurePlan.premadePlayerCharacters[].id", "adventure.md frontmatter.premadeCharacters")
 }
 
-function addEncounter(ctx: MigrationContext, sectionTitle: string, sceneTitle: string, encounter: AdventureEncounter) {
+function addEncounter(ctx: MigrationContext, sectionTitle: string, sceneTitle: string, moduleOrder: number, encounter: AdventureEncounter) {
   for (const transition of encounter.transitions ?? []) {
     if (!ctx.encounterIds.has(transition.encounter)) {
       ctx.report.warnings.push({
@@ -116,6 +117,9 @@ function addEncounter(ctx: MigrationContext, sectionTitle: string, sceneTitle: s
   const transitions = (encounter.transitions ?? []).map((transition) => `- To [[encounter:${transition.encounter}]] when ${transition.condition}`).join("\n")
   const content = markdownWithFrontmatter(
     {
+      moduleOrder,
+      sceneTitle,
+      sectionTitle,
       id: encounter.id,
       type: "encounter",
       title: encounter.title,

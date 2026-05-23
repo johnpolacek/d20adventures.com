@@ -1,5 +1,5 @@
 ---
-moduleOrder: 21
+moduleOrder: 34
 sceneTitle: "Exploring the Mansion"
 sectionTitle: "The Masquerade Ball"
 id: "thaddeus-blackthorns-private-chambers"

@@ -1,5 +1,5 @@
 ---
-moduleOrder: 37
+moduleOrder: 32
 sceneTitle: "Exploring the Mansion"
 sectionTitle: "The Masquerade Ball"
 id: "the-rangers-quarters"

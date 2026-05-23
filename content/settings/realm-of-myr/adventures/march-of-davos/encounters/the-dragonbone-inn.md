@@ -1,5 +1,5 @@
 ---
-moduleOrder: 28
+moduleOrder: 4
 sceneTitle: "Evening Falls"
 sectionTitle: "Arrival At Kordavos"
 id: "the-dragonbone-inn"

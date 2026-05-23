@@ -1,5 +1,5 @@
 ---
-moduleOrder: 32
+moduleOrder: 23
 sceneTitle: "Silverhand"
 sectionTitle: "The Black Market"
 id: "the-hideout"
