@@ -5,6 +5,15 @@
 <header><p class="eyebrow">Project-context log</p><h1>Decision history</h1><p>Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.</p></header>
 <article class="entry">
 <div class="date">2026-05-23</div>
+<section class="body"><h2>Unified admin wiki character navigation</h2><ul>
+<li>Changed the admin wiki editor navigation to show one <code>Characters</code> group instead of separate NPC profile, premade character, and sheet groups.</li>
+<li>Paired character profile markdown and JSON sheets by id, preferring profile paths while preserving JSON-only orphan sheets.</li>
+<li>Kept compiler, runtime artifacts, migrations, S3 source layout, and validation behavior unchanged.</li>
+<li>Validation evidence: <code>pnpm exec biome check components/wiki-adventures/admin-wiki-adventure-editor.tsx</code> and <code>pnpm test:wiki-adventures:admin-authoring</code> passed.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-23</div>
 <section class="body"><h2>Improved admin wiki chat sidebar design</h2><ul>
 <li>Reworked the right sidebar in <code>components/wiki-adventures/admin-wiki-adventure-editor.tsx</code> into a full-height chat rail with a stronger header, source status chip, labeled prompt dock, custom apply button, and structured change log.</li>
 <li>Preserved existing chat behavior and source-write flow while improving visual hierarchy, spacing, message contrast, and scroll containment.</li>

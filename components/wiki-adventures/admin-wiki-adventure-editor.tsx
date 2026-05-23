@@ -566,7 +566,7 @@ function WikiPageHeader({ page }: { page?: WikiPage }) {
       <div>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded border border-[#3a3630] bg-[#24211d] px-2 py-1 font-mono text-[10px] uppercase text-stone-300">{page.kind}</span>
+            <span className="rounded border border-[#3a3630] bg-[#24211d] px-2 py-1 font-mono text-[10px] uppercase text-stone-300">{pageKindLabel(page)}</span>
             <span className="font-mono text-[11px] text-stone-500">{page.id}</span>
           </div>
           <h2 className="mt-2 text-2xl font-semibold leading-tight text-[#e6d6b8]">{page.title}</h2>
@@ -581,8 +581,10 @@ function buildWikiModel(files: SourceFile[], encounters: Record<string, RuntimeE
   const pagesWithoutResolvedLinks = files.map((file) => pageFromSource(file, encounters))
   const pathById = new Map<string, string>()
   for (const page of pagesWithoutResolvedLinks) {
-    pathById.set(page.id, page.path)
+    const existingPath = pathById.get(page.id)
+    if (!existingPath || page.kind !== "sheet") pathById.set(page.id, page.path)
     pathById.set(`${page.kind}:${page.id}`, page.path)
+    if (page.kind === "npc" || page.kind === "character") pathById.set(`character:${page.id}`, page.path)
   }
   for (const encounter of Object.values(encounters)) {
     pathById.set(`encounter:${encounter.id}`, encounter.sourcePath)
@@ -595,12 +597,11 @@ function buildWikiModel(files: SourceFile[], encounters: Record<string, RuntimeE
     })),
   }))
   const byKind = (kind: WikiPage["kind"]) => pages.filter((page) => page.kind === kind).sort(pageSort)
+  const characterPages = buildCharacterPages(pages)
   const groups = [
     { key: "adventure", title: "Adventure", pages: byKind("adventure") },
     { key: "encounter", title: "Encounters", pages: byKind("encounter") },
-    { key: "npc", title: "NPC Profiles", pages: byKind("npc") },
-    { key: "character", title: "Premade Characters", pages: byKind("character") },
-    { key: "sheet", title: "Sheets", pages: byKind("sheet") },
+    { key: "characters", title: "Characters", pages: characterPages },
     { key: "other", title: "Other Pages", pages: byKind("other") },
   ].filter((group) => group.pages.length > 0)
   const moduleSections = buildModuleSections(pages)
@@ -627,7 +628,7 @@ function pageFromSource(file: SourceFile, encounters: Record<string, RuntimeEnco
       id: String(parsed.id ?? id),
       title: String(parsed.name ?? parsed.id ?? id),
       kind: "sheet",
-      summary: [parsed.race, parsed.archetype].filter(Boolean).join(" ") || "Character sheet",
+      summary: [parsed.race, parsed.archetype].filter(Boolean).join(" ") || "Character",
       moduleOrder: Number.MAX_SAFE_INTEGER,
       links: [],
       outgoingEncounterIds: [],
@@ -680,6 +681,26 @@ function markdownKind(file: SourceFile): WikiPage["kind"] {
   if (file.path.includes("/npcs/")) return "npc"
   if (file.path.includes("/characters/")) return "character"
   return "other"
+}
+
+function buildCharacterPages(pages: WikiPage[]): WikiPage[] {
+  const byId = new Map<string, { profile?: WikiPage; sheet?: WikiPage }>()
+  for (const page of pages) {
+    if (page.kind !== "npc" && page.kind !== "character" && page.kind !== "sheet") continue
+    const entry = byId.get(page.id) ?? {}
+    if (page.kind === "sheet") entry.sheet = page
+    else entry.profile = page
+    byId.set(page.id, entry)
+  }
+  return Array.from(byId.values())
+    .map((entry) => entry.profile ?? entry.sheet)
+    .filter((page): page is WikiPage => Boolean(page))
+    .sort(pageSort)
+}
+
+function pageKindLabel(page: WikiPage): string {
+  if (page.kind === "npc" || page.kind === "character" || page.kind === "sheet") return "character"
+  return page.kind
 }
 
 function extractWikiLinks(content: string): WikiLink[] {
