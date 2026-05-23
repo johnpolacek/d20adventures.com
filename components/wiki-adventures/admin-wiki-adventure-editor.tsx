@@ -270,6 +270,25 @@ function ModulePageEditor({
   if (!file) return null
   if (file.path.endsWith(".json")) return <JsonKeyFieldEditor file={file} disabled={disabled} onSave={onSave} />
 
+  const isCharacter = markdownKind(file) === "npc" || markdownKind(file) === "character"
+  if (isCharacter) {
+    return (
+      <CharacterProfileEditor
+        file={file}
+        files={files}
+        manifest={manifest}
+        title={title}
+        summary={summary}
+        image={image}
+        disabled={disabled}
+        onTitleChange={setTitle}
+        onSummaryChange={setSummary}
+        onImageChange={setImage}
+        onSave={onSave}
+      />
+    )
+  }
+
   const nextContent = updateMarkdownFields(file.content, { title, summary, intro, gmNotes, transitions, npcRefs, image, sectionTitle, sceneTitle })
   const isEncounter = file.path.includes("/encounters/")
   const encounter = Object.values(encounters).find((item) => item.sourcePath === file.path)
@@ -326,6 +345,91 @@ function ModulePageEditor({
           <Button variant="outline" size="sm" onClick={() => onSave(file.path, nextContent)} disabled={disabled} className="gap-2 border-[#51473a] bg-[#25211d] text-stone-100 hover:bg-[#34302a]">
             <Save className="size-4" /> Save Module Page
           </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function CharacterProfileEditor({
+  file,
+  files,
+  manifest,
+  title,
+  summary,
+  image,
+  disabled,
+  onTitleChange,
+  onSummaryChange,
+  onImageChange,
+  onSave,
+}: {
+  file: SourceFile
+  files: SourceFile[]
+  manifest: RuntimeManifest
+  title: string
+  summary: string
+  image: string
+  disabled: boolean
+  onTitleChange: (value: string) => void
+  onSummaryChange: (value: string) => void
+  onImageChange: (value: string) => void
+  onSave: (path: string, content: string) => void
+}) {
+  const sheet = React.useMemo(() => characterSheetForProfile(file, files), [file, files])
+  const details = [sheet.gender, sheet.race, sheet.archetype].filter(Boolean)
+  const abilities = [sheet.attributes ? "attributes" : "", sheet.skills?.length ? `${sheet.skills.length} skills` : "", sheet.spells?.length ? `${sheet.spells.length} spells` : ""].filter(Boolean)
+  const nextContent = updateCharacterMarkdownFields(file.content, { title, image, summary })
+  return (
+    <div className="mx-auto max-w-6xl">
+      <div className="overflow-hidden rounded-md border border-[#b9a77f] bg-[#d9caab] text-[#22180e] shadow-[0_24px_80px_rgba(0,0,0,.22)]">
+        <div className="grid gap-0 lg:grid-cols-[360px_minmax(0,1fr)]">
+          <div className="border-b border-[#b9a77f] bg-[#201b15] p-5 lg:border-r lg:border-b-0">
+            <div className="overflow-hidden rounded-md border border-[#b9a77f] bg-[#14110e] shadow-[0_16px_48px_rgba(0,0,0,.28)]">
+              <ImageUpload
+                id={`wiki-character-image-${file.path}`}
+                value={image}
+                onChange={(url) => onImageChange(normalizeUploadedImageUrl(url))}
+                onRemove={() => onImageChange("")}
+                folder={`images/settings/${manifest.settingId}/${manifest.planId}/characters`}
+                className="aspect-square rounded-none border-0"
+              />
+            </div>
+            <div className="mt-4 rounded-md border border-[#4d4235] bg-[#15120f] p-3">
+              <div className="font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#d8bd81]">Character Source</div>
+              <p className="mt-2 break-all font-mono text-[11px] leading-5 text-stone-400">{file.path}</p>
+              {sheet.path && <p className="mt-1 break-all font-mono text-[11px] leading-5 text-stone-500">{sheet.path}</p>}
+            </div>
+          </div>
+
+          <div className="p-6 lg:p-7">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded border border-[#9f8c64] bg-[#efe2bd] px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-[.14em] text-[#5b4631]">Character</span>
+              <span className="font-mono text-[11px] text-[#7b6948]">{frontmatterValue(file.content, "id") || sheet.id || titleFromId(file.path)}</span>
+            </div>
+
+            <Input value={title} onChange={(event) => onTitleChange(event.target.value)} disabled={disabled} className="mt-3 border-[#b9a77f] bg-[#f1e4bf] text-3xl font-bold text-[#22180e]" />
+
+            {(details.length > 0 || abilities.length > 0) && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {[...details, ...abilities].map((detail) => (
+                  <span key={detail} className="rounded border border-[#b9a77f] bg-[#eee2c6] px-2.5 py-1 font-mono text-[11px] uppercase tracking-[.12em] text-[#5b4631]">
+                    {detail}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <div className="mt-6">
+              <Block label="Summary" value={summary} onChange={onSummaryChange} disabled={disabled} rows={8} tone="paper" />
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <Button variant="outline" size="sm" onClick={() => onSave(file.path, nextContent)} disabled={disabled} className="gap-2 border-[#51473a] bg-[#25211d] text-stone-100 hover:bg-[#34302a]">
+                <Save className="size-4" /> Save Character
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -764,6 +868,31 @@ function compactText(values: unknown[]) {
     .join(" ")
 }
 
+function characterSheetForProfile(profile: SourceFile, files: SourceFile[]) {
+  const id = frontmatterValue(profile.content, "id") || profile.path.split("/").at(-1)?.replace(/\.md$/, "") || ""
+  const sheetName = frontmatterValue(profile.content, "sheet")
+  const siblingPath = sheetName ? `${profile.path.split("/").slice(0, -1).join("/")}/${sheetName}` : ""
+  const sheetFile =
+    files.find((file) => file.path === siblingPath) ??
+    files.find((file) => {
+      if (!file.path.endsWith(".json")) return false
+      const parsed = safeJson(file.content)
+      return String(parsed.id ?? "") === id
+    })
+  const parsed = sheetFile ? safeJson(sheetFile.content) : {}
+  return {
+    ...parsed,
+    id: String(parsed.id ?? id),
+    path: sheetFile?.path ?? "",
+    gender: typeof parsed.gender === "string" ? parsed.gender : "",
+    race: typeof parsed.race === "string" ? parsed.race : "",
+    archetype: typeof parsed.archetype === "string" ? parsed.archetype : "",
+    skills: Array.isArray(parsed.skills) ? parsed.skills : [],
+    spells: Array.isArray(parsed.spells) ? parsed.spells : [],
+    attributes: typeof parsed.attributes === "object" && parsed.attributes ? parsed.attributes : undefined,
+  }
+}
+
 function npcImageUrl(url: string) {
   if (!url) return ""
   if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/")) return url
@@ -865,6 +994,13 @@ function updateMarkdownFields(
   next = updateSection(next, "Intro", fields.intro)
   next = updateSection(next, "GM Notes", fields.gmNotes)
   next = updateSection(next, "Transitions", fields.transitions)
+  return next.endsWith("\n") ? next : `${next}\n`
+}
+
+function updateCharacterMarkdownFields(content: string, fields: { title: string; image: string; summary: string }) {
+  let next = updateFrontmatterValue(content, "title", fields.title)
+  next = updateFrontmatterValue(next, "image", fields.image)
+  next = updateSection(next, "Summary", fields.summary)
   return next.endsWith("\n") ? next : `${next}\n`
 }
 
