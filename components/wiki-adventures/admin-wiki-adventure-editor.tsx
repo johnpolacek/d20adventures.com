@@ -378,7 +378,19 @@ function CharacterProfileEditor({
 }) {
   const sheet = React.useMemo(() => characterSheetForProfile(file, files), [file, files])
   const details = [sheet.gender, sheet.race, sheet.archetype].filter(Boolean)
-  const abilities = [sheet.attributes ? "attributes" : "", sheet.skills?.length ? `${sheet.skills.length} skills` : "", sheet.spells?.length ? `${sheet.spells.length} spells` : ""].filter(Boolean)
+  const abilities = [
+    sheet.attributes ? "attributes" : "",
+    sheet.skills.length ? `${sheet.skills.length} skills` : "",
+    sheet.spells.length ? `${sheet.spells.length} spells` : "",
+    sheet.specialAbilities.length ? `${sheet.specialAbilities.length} abilities` : "",
+  ].filter(Boolean)
+  const characterDetails = [
+    { title: "Appearance", value: sheet.appearance },
+    { title: "Personality", value: sheet.personality },
+    { title: "Background", value: sheet.background },
+    { title: "Motivation", value: sheet.motivation },
+    { title: "Behavior", value: sheet.behavior },
+  ].filter((detail) => detail.value)
   const nextContent = updateCharacterMarkdownFields(file.content, { title, image, summary })
   return (
     <div className="mx-auto max-w-6xl">
@@ -395,11 +407,7 @@ function CharacterProfileEditor({
                 className="aspect-square rounded-none border-0"
               />
             </div>
-            <div className="mt-4 rounded-md border border-[#4d4235] bg-[#15120f] p-3">
-              <div className="font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#d8bd81]">Character Source</div>
-              <p className="mt-2 break-all font-mono text-[11px] leading-5 text-stone-400">{file.path}</p>
-              {sheet.path && <p className="mt-1 break-all font-mono text-[11px] leading-5 text-stone-500">{sheet.path}</p>}
-            </div>
+            {sheet.attributes && <AttributeGrid attributes={sheet.attributes} />}
           </div>
 
           <div className="p-6 lg:p-7">
@@ -424,6 +432,19 @@ function CharacterProfileEditor({
               <Block label="Summary" value={summary} onChange={onSummaryChange} disabled={disabled} rows={8} tone="paper" />
             </div>
 
+            <div className="mt-6 grid gap-4 xl:grid-cols-2">
+              {characterDetails.map((detail) => (
+                <CharacterDetail key={detail.title} title={detail.title} value={detail.value} />
+              ))}
+            </div>
+
+            <div className="mt-6 grid gap-4 xl:grid-cols-2">
+              <CharacterList title="Skills" values={sheet.skills} />
+              <CharacterObjectList title="Equipment" values={sheet.equipment} />
+              <CharacterObjectList title="Spells" values={sheet.spells} />
+              <CharacterMixedList title="Special Abilities" values={sheet.specialAbilities} />
+            </div>
+
             <div className="mt-6 flex justify-end">
               <Button variant="outline" size="sm" onClick={() => onSave(file.path, nextContent)} disabled={disabled} className="gap-2 border-[#51473a] bg-[#25211d] text-stone-100 hover:bg-[#34302a]">
                 <Save className="size-4" /> Save Character
@@ -433,6 +454,79 @@ function CharacterProfileEditor({
         </div>
       </div>
     </div>
+  )
+}
+
+function AttributeGrid({ attributes }: { attributes: Record<string, unknown> }) {
+  const entries = Object.entries(attributes).filter(([, value]) => typeof value === "number" || typeof value === "string")
+  if (entries.length === 0) return null
+  return (
+    <div className="mt-4 rounded-md border border-[#4d4235] bg-[#15120f] p-3">
+      <div className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#d8bd81]">Attributes</div>
+      <div className="grid grid-cols-3 gap-2">
+        {entries.map(([key, value]) => (
+          <div key={key} className="rounded border border-[#3b332a] bg-[#211c17] px-2 py-2 text-center">
+            <div className="font-serif text-2xl font-bold leading-none text-[#f1e4bf]">{String(value)}</div>
+            <div className="mt-1 truncate font-mono text-[9px] uppercase tracking-[.12em] text-stone-500">{key.slice(0, 3)}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function CharacterDetail({ title, value }: { title: string; value: unknown }) {
+  if (typeof value !== "string" || !value.trim()) return null
+  return (
+    <section className="rounded border border-[#b9a77f] bg-[#eee2c6] p-4">
+      <h3 className="mb-2 font-mono text-[11px] font-bold uppercase tracking-[.18em] text-[#5b4631]">{title}</h3>
+      <p className="text-base leading-7 text-[#3d2c1a]">{value}</p>
+    </section>
+  )
+}
+
+function CharacterList({ title, values }: { title: string; values: string[] }) {
+  if (values.length === 0) return null
+  return (
+    <section className="rounded border border-[#b9a77f] bg-[#eee2c6] p-4">
+      <h3 className="mb-3 font-mono text-[11px] font-bold uppercase tracking-[.18em] text-[#5b4631]">{title}</h3>
+      <div className="flex flex-wrap gap-2">
+        {values.map((value) => (
+          <span key={value} className="rounded border border-[#b9a77f] bg-[#f6eac9] px-2.5 py-1 text-sm text-[#3d2c1a]">
+            {value}
+          </span>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function CharacterObjectList({ title, values }: { title: string; values: Array<{ name?: unknown; description?: unknown }> }) {
+  if (values.length === 0) return null
+  return (
+    <section className="rounded border border-[#b9a77f] bg-[#eee2c6] p-4">
+      <h3 className="mb-3 font-mono text-[11px] font-bold uppercase tracking-[.18em] text-[#5b4631]">{title}</h3>
+      <div className="space-y-3">
+        {values.map((value, index) => (
+          <div key={`${String(value.name ?? title)}-${index}`} className="border-b border-[#c9b891] pb-2 last:border-b-0 last:pb-0">
+            <div className="font-serif text-lg font-bold leading-tight text-[#24180d]">{String(value.name ?? "Untitled")}</div>
+            {typeof value.description === "string" && value.description.trim() && <p className="mt-1 text-sm leading-6 text-[#4a3822]">{value.description}</p>}
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function CharacterMixedList({ title, values }: { title: string; values: Array<string | { name?: unknown; description?: unknown }> }) {
+  if (values.length === 0) return null
+  const stringValues = values.filter((value): value is string => typeof value === "string")
+  const objectValues = values.filter((value): value is { name?: unknown; description?: unknown } => typeof value === "object" && value !== null)
+  return (
+    <>
+      {stringValues.length > 0 && <CharacterList title={title} values={stringValues} />}
+      {objectValues.length > 0 && <CharacterObjectList title={stringValues.length > 0 ? `${title} Details` : title} values={objectValues} />}
+    </>
   )
 }
 
@@ -880,6 +974,7 @@ function characterSheetForProfile(profile: SourceFile, files: SourceFile[]) {
       return String(parsed.id ?? "") === id
     })
   const parsed = sheetFile ? safeJson(sheetFile.content) : {}
+  const attributes = typeof parsed.attributes === "object" && parsed.attributes ? (parsed.attributes as Record<string, unknown>) : undefined
   return {
     ...parsed,
     id: String(parsed.id ?? id),
@@ -887,9 +982,16 @@ function characterSheetForProfile(profile: SourceFile, files: SourceFile[]) {
     gender: typeof parsed.gender === "string" ? parsed.gender : "",
     race: typeof parsed.race === "string" ? parsed.race : "",
     archetype: typeof parsed.archetype === "string" ? parsed.archetype : "",
+    appearance: typeof parsed.appearance === "string" ? parsed.appearance : "",
+    personality: typeof parsed.personality === "string" ? parsed.personality : "",
+    background: typeof parsed.background === "string" ? parsed.background : "",
+    motivation: typeof parsed.motivation === "string" ? parsed.motivation : "",
+    behavior: typeof parsed.behavior === "string" ? parsed.behavior : "",
     skills: Array.isArray(parsed.skills) ? parsed.skills : [],
     spells: Array.isArray(parsed.spells) ? parsed.spells : [],
-    attributes: typeof parsed.attributes === "object" && parsed.attributes ? parsed.attributes : undefined,
+    equipment: Array.isArray(parsed.equipment) ? parsed.equipment : [],
+    specialAbilities: Array.isArray(parsed.specialAbilities) ? parsed.specialAbilities : [],
+    attributes,
   }
 }
 

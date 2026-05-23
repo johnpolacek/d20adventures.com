@@ -5,6 +5,14 @@
 <header><p class="eyebrow">Project-context log</p><h1>Decision history</h1><p>Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.</p></header>
 <article class="entry">
 <div class="date">2026-05-23</div>
+<section class="body"><h2>Expanded admin character detail display</h2><ul>
+<li>Removed the character source file-path box from the admin character editor.</li>
+<li>Added read-only sheet detail sections for appearance, personality, background, motivation, behavior, attributes, skills, equipment, spells, and special abilities when present.</li>
+<li>Validation evidence: <code>pnpm exec biome check components/wiki-adventures/admin-wiki-adventure-editor.tsx</code>, <code>pnpm test:wiki-adventures:admin-authoring</code>, and <code>pnpm exec tsc --noEmit --pretty false</code> passed.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-23</div>
 <section class="body"><h2>Redesigned admin wiki character editor layout</h2><ul>
 <li>Added a dedicated character profile editor layout instead of reusing the module page editor for NPC and premade character markdown.</li>
 <li>Changed character art to a square portrait treatment, removed repeated header/summary content, and kept one editable summary field with paired sheet metadata badges.</li>
