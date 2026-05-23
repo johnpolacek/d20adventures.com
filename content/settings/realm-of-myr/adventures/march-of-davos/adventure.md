@@ -24,3 +24,51 @@ The narrative escalates during a lavish Blackthorn Masquerade Ball, where politi
 ## Authoring Notes
 
 Migrated from legacy AdventurePlan march-of-davos by D20Adventures at version 1750347829690.
+
+## Encounter Order
+
+- the-gates-of-kordavos
+- the-harvest-festival
+- clan-conflict
+- the-dragonbone-inn
+- an-unsolicited-opportunity
+- morning-at-the-dragonbone
+- the-old-grand-library
+- the-silver-serpent-tavern
+- arrival-at-the-docks
+- mystery-cargo
+- the-beast-escapes
+- the-aftermath
+- an-invitation
+- welcome-to-the-lower-districts
+- beset-by-street-urchins
+- finding-the-black-market
+- the-entrance-to-the-black-market
+- labyrinthine-stalls
+- the-auction-begins
+- a-relic-of-old-valkara
+- the-winning-bid
+- shadowing-silverhand
+- the-hideout
+- face-to-face-with-silverhand
+- the-ambush
+- entry-to-the-ball
+- inside-the-ball
+- the-blackthorns
+- the-lady-and-the-bishop
+- a-distraction
+- through-the-halls
+- the-rangers-quarters
+- the-lavish-corridor
+- thaddeus-blackthorns-private-chambers
+- the-wine-cellar
+- the-speech
+- death-to-the-murderer
+- the-chase
+- the-hunt-for-the-assassin
+- into-the-catacombs
+- through-the-labyrinth
+- the-sealed-door
+- big-empty
+- forgotten-temple
+- final-confrontation
