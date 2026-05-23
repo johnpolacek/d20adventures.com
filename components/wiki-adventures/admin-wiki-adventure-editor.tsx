@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { IMAGE_HOST } from "@/lib/config"
 import type { RuntimeEncounter, RuntimeManifest, SourceFile, ValidationReport } from "@/lib/wiki-adventures"
-import { BookOpen, Check, Download, FileJson, FileText, GitBranch, ImageIcon, MessageSquare, RefreshCcw, Save, Search, Upload, Wand2 } from "lucide-react"
+import { Check, Download, FileJson, FileText, GitBranch, ImageIcon, MessageSquare, RefreshCcw, Save, Search, Upload, Wand2 } from "lucide-react"
 import * as React from "react"
 import { toast } from "sonner"
 
@@ -137,10 +137,12 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
             <Button variant="outline" size="sm" onClick={downloadBundle} disabled={busy} className="gap-2">
               <Download className="size-4" /> Export
             </Button>
-            <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-3 text-sm hover:bg-accent hover:text-accent-foreground">
-              <Upload className="size-4" /> Restore
-              <input type="file" accept="application/json" className="hidden" onChange={restoreBundle} disabled={busy} />
-            </label>
+            <Button variant="outline" size="sm" asChild disabled={busy} className={`gap-2 ${busy ? "pointer-events-none opacity-50" : "cursor-pointer"}`}>
+              <label>
+                <Upload className="size-4" /> Restore
+                <input type="file" accept="application/json" className="hidden" onChange={restoreBundle} disabled={busy} />
+              </label>
+            </Button>
           </div>
         </div>
       </header>
@@ -355,12 +357,8 @@ function WikiNavigator({ wiki, selectedPath, onSelect }: { wiki: WikiModel; sele
   const normalizedQuery = query.trim().toLowerCase()
   return (
     <div className="grid h-full grid-rows-[auto_1fr]">
-      <div className="border-b border-[#31401d] p-4">
-        <div className="flex items-center gap-2 text-[#d8c9ad]">
-          <BookOpen className="size-4" />
-          <h2 className="font-mono text-xs font-bold uppercase">Wiki Map</h2>
-        </div>
-        <label className="mt-3 grid grid-cols-[18px_1fr] items-center gap-2 rounded-md border border-[#3a3630] bg-[#11100f] px-3 py-2">
+      <div className="border-b border-[#3a3630] p-4">
+        <label className="grid grid-cols-[18px_1fr] items-center gap-2 rounded-md border border-[#3a3630] bg-[#11100f] px-3 py-2">
           <Search className="size-4 text-stone-500" />
           <input
             value={query}
