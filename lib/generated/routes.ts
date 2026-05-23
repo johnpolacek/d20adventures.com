@@ -12,6 +12,7 @@ export const validRoutes = new Set([
   'admin/mailing-list',
   'admin/users',
   'admin/wiki-adventures',
+  'admin/wiki-adventures/*',
   'contact',
   'create',
   'create/adventure',

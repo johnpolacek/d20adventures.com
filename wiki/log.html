@@ -5,6 +5,16 @@
 <header><p class="eyebrow">Project-context log</p><h1>Decision history</h1><p>Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.</p></header>
 <article class="entry">
 <div class="date">2026-05-23</div>
+<section class="body"><h2>Implemented admin wiki authoring rebuild</h2><ul>
+<li>Added a per-adventure admin wiki editor at <code>/admin/wiki-adventures/{settingId}/{planId}</code> with chat-first improvement, key-field editing, validation status, and manual export/restore bundles.</li>
+<li>Changed wiki adventure runtime loading to prefer canonical S3 <code>content/</code> source and fall back to migrated repo-local source when S3 source is not present.</li>
+<li>Added admin source actions for listing migrated wiki adventures, loading source trees, applying AI chat writes, saving key fields, and exporting/importing source bundles.</li>
+<li>Hid the visible legacy Adventure Plans admin entry in favor of Wiki Adventures.</li>
+<li>Validation evidence: <code>pnpm test:wiki-adventures:admin-authoring</code>, all migrated adventure bridge checks, <code>pnpm test:wiki-adventures:batch-a</code>, <code>pnpm test:wiki-adventures:batch-b</code>, <code>pnpm tsc --noEmit --pretty false</code>, <code>pnpm build</code>, and <code>git diff --check</code> passed. Local route smoke checks for <code>/admin/wiki-adventures</code> and <code>/admin/wiki-adventures/realm-of-myr/covert-cargo</code> returned <code>200 OK</code>.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-23</div>
 <section class="body"><h2>Implemented March of Davos wiki migration</h2><ul>
 <li>Added <code>wiki/plans/march-of-davos-wiki-migration.html</code> and indexed <code>wiki/sources/adventure plans/the-march-of-davos-plan.json</code>.</li>
 <li>Added <code>scripts/migrate-march-of-davos.ts</code> and <code>pnpm migrate:march-of-davos</code> to normalize the older nested source into wiki source files.</li>

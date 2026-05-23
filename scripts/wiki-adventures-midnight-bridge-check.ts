@@ -16,7 +16,7 @@ function main() {
   assert.ok(createAction.includes("contentRef: localWikiRuntime?.contentRef"), "createAdventure does not pin local wiki contentRef")
   assert.ok(createAction.includes("currentEncounterId: localWikiRuntime?.artifacts.manifest.startEncounterId"), "createAdventure does not initialize currentEncounterId")
   assert.ok(createAction.includes("localWikiRuntime?.artifacts.characterSheets.premadeCharacters"), "createAdventure does not copy premade from migrated wiki sheet")
-  assert.ok(startAction.includes("loadLocalWikiAdventureRuntime"), "startAdventure does not load local wiki runtime")
+  assert.ok(startAction.includes("loadWikiAdventureRuntime"), "startAdventure does not load wiki runtime")
   assert.ok(startAction.includes("buildLocalWikiTurnCharacters"), "startAdventure does not build characters from wiki sheets")
   assert.ok(advanceAction.includes("buildWikiEncounterProgressionPrompt"), "advanceTurn does not use wiki gameplay prompt")
   assert.ok(advanceAction.includes("validatePacketTransition"), "advanceTurn does not validate wiki transitions")

@@ -1,5 +1,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs"
 import { join } from "node:path"
+import { s3Client } from "@/lib/aws"
+import { S3WikiAdventureSourceService } from "./source-service"
 import { createSourceFile } from "./change-sets"
 import { compileAdventureSourceTree } from "./compiler"
 import type { RuntimeArtifacts, RuntimeEncounter } from "./types"
@@ -108,8 +110,29 @@ export function loadLocalWikiAdventureRuntime(settingId: string, planId: string)
     throw new Error(`No local wiki adventure is registered for ${settingId}/${planId}`)
   }
 
+  const files = readLocalWikiAdventureSourceFiles(definition)
+  return compileLocalWikiAdventureRuntime(definition, files)
+}
+
+export async function loadWikiAdventureRuntime(settingId: string, planId: string): Promise<{ definition: LocalWikiAdventureDefinition; artifacts: RuntimeArtifacts; contentRef: LocalWikiContentRef }> {
+  const definition = getLocalWikiAdventureDefinition(settingId, planId)
+  if (!definition) {
+    throw new Error(`No wiki adventure is registered for ${settingId}/${planId}`)
+  }
+  return compileLocalWikiAdventureRuntime(definition, await readWikiAdventureSourceFiles(definition))
+}
+
+export async function readWikiAdventureSourceFiles(definition: LocalWikiAdventureDefinition) {
+  const remoteFiles = await readS3WikiAdventureSourceFiles(definition)
+  return remoteFiles.length > 0 ? remoteFiles : readLocalWikiAdventureSourceFiles(definition)
+}
+
+export function readLocalWikiAdventureSourceFiles(definition: LocalWikiAdventureDefinition) {
   const sourceRoots = [...definition.sourceRoots, ...readMigrationNpcSourcePaths(definition.migrationReportPath)]
-  const files = unique(sourceRoots).flatMap(readSourceFiles)
+  return unique(sourceRoots).flatMap(readSourceFiles)
+}
+
+function compileLocalWikiAdventureRuntime(definition: LocalWikiAdventureDefinition, files: ReturnType<typeof readLocalWikiAdventureSourceFiles>): { definition: LocalWikiAdventureDefinition; artifacts: RuntimeArtifacts; contentRef: LocalWikiContentRef } {
   const artifacts = compileAdventureSourceTree(files, {
     mode: "publish",
     contentVersion: definition.contentVersion,
@@ -133,6 +156,24 @@ export function loadLocalWikiAdventureRuntime(settingId: string, planId: string)
       schemaVersion: "1",
     },
   }
+}
+
+async function readS3WikiAdventureSourceFiles(definition: LocalWikiAdventureDefinition) {
+  const bucket = process.env.bucketData || process.env.AWS_BUCKET_DATA
+  if (!bucket || !s3Client) return []
+
+  const service = new S3WikiAdventureSourceService(s3Client, bucket)
+  const paths = unique([...definition.sourceRoots, ...readMigrationNpcSourcePaths(definition.migrationReportPath)])
+  const files = await Promise.all(
+    paths.map(async (path) => {
+      if (path.endsWith(".md") || path.endsWith(".json")) {
+        const file = await service.readFile(path)
+        return file ? [file] : []
+      }
+      return service.listFiles(path)
+    })
+  )
+  return files.flat()
 }
 
 export function buildLocalWikiTurnCharacters(args: {

@@ -4,7 +4,7 @@ import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { convex } from "@/lib/convex/server"
 import { readJsonFromS3 } from "@/lib/s3-utils"
-import { buildLocalWikiTurnCharacters, isLocalWikiAdventure, loadLocalWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
+import { buildLocalWikiTurnCharacters, isLocalWikiAdventure, loadWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PCTemplate } from "@/types/character"
 import { auth } from "@clerk/nextjs/server"
@@ -72,7 +72,7 @@ export async function startAdventure({ settingId, adventurePlanId, adventureId }
     }
 
     if (isLocalWikiAdventure(settingId, adventurePlanId)) {
-      const { definition, artifacts, contentRef } = loadLocalWikiAdventureRuntime(settingId, adventurePlanId)
+      const { definition, artifacts, contentRef } = await loadWikiAdventureRuntime(settingId, adventurePlanId)
       const firstEncounter = artifacts.encounters[artifacts.manifest.startEncounterId]
       if (!firstEncounter) throw new Error(`${adventurePlanId} start encounter is missing from compiled wiki artifacts`)
       const existingPlayerCharacters = await loadExistingPlayerCharacters(adventure.players ?? [])

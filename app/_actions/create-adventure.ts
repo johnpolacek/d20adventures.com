@@ -8,7 +8,7 @@ import { convex } from "@/lib/convex/server"
 import { canManageResource } from "@/lib/content-permissions"
 import { readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 import { toPCTemplate } from "@/lib/utils/character-mapping"
-import { isLocalWikiAdventure, loadLocalWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
+import { isLocalWikiAdventure, loadWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PCTemplate } from "@/types/character"
 import type { Setting } from "@/types/setting"
@@ -42,7 +42,7 @@ export async function createAdventure(input: CreateAdventureInput) {
 
   // Extract character choices and create the players array
   const { characterChoices } = input
-  const localWikiRuntime = isLocalWikiAdventure(settingId, adventurePlanId) ? loadLocalWikiAdventureRuntime(settingId, adventurePlanId) : null
+  const localWikiRuntime = isLocalWikiAdventure(settingId, adventurePlanId) ? await loadWikiAdventureRuntime(settingId, adventurePlanId) : null
   const players = characterChoices
     .filter((choice) => choice.mode === "player") // Only include characters selected as "player"
     .map((choice) => ({
@@ -180,7 +180,7 @@ export async function createPracticeAdventure(input: CreatePracticeAdventureInpu
   }
 
   const now = Date.now()
-  const localWikiRuntime = isLocalWikiAdventure(settingId, adventurePlanId) ? loadLocalWikiAdventureRuntime(settingId, adventurePlanId) : null
+  const localWikiRuntime = isLocalWikiAdventure(settingId, adventurePlanId) ? await loadWikiAdventureRuntime(settingId, adventurePlanId) : null
   const adventureId = await convex.mutation(api.adventure.createAdventure, {
     planId: adventurePlanId,
     settingId,

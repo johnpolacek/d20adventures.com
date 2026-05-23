@@ -1,4 +1,4 @@
-import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3"
+import { DeleteObjectCommand, GetObjectCommand, ListObjectsV2Command, PutObjectCommand } from "@aws-sdk/client-s3"
 import type { S3Client } from "@aws-sdk/client-s3"
 import { streamToString } from "@/lib/s3-utils"
 import { ChangeSetError, applyAuthoringChangeSet, createSourceFile, createSourceTree, type SourceTree } from "./change-sets"
@@ -6,6 +6,7 @@ import type { AuthoringChangeSet, SourceFile } from "./types"
 
 export interface WikiAdventureSourceService {
   readFile(path: string): Promise<SourceFile | null>
+  listFiles(prefix: string): Promise<SourceFile[]>
   writeApprovedChangeSet(changeSet: AuthoringChangeSet): Promise<SourceFile[]>
 }
 
@@ -20,12 +21,16 @@ export class InMemoryWikiAdventureSourceService implements WikiAdventureSourceSe
     return this.tree.get(path) ?? null
   }
 
+  async listFiles(prefix: string): Promise<SourceFile[]> {
+    return [...this.tree.values()].filter((file) => file.path.startsWith(prefix) && isSourceContentPath(file.path)).sort((a, b) => a.path.localeCompare(b.path))
+  }
+
   async writeApprovedChangeSet(changeSet: AuthoringChangeSet): Promise<SourceFile[]> {
     this.tree = applyAuthoringChangeSet(this.tree, changeSet)
     return [...this.tree.values()].sort((a, b) => a.path.localeCompare(b.path))
   }
 
-  listFiles(): SourceFile[] {
+  allFiles(): SourceFile[] {
     return [...this.tree.values()].sort((a, b) => a.path.localeCompare(b.path))
   }
 }
@@ -47,6 +52,23 @@ export class S3WikiAdventureSourceService implements WikiAdventureSourceService 
       if (name === "NoSuchKey" || name === "NotFound") return null
       throw error
     }
+  }
+
+  async listFiles(prefix: string): Promise<SourceFile[]> {
+    const files: SourceFile[] = []
+    let ContinuationToken: string | undefined
+
+    do {
+      const response = await this.client.send(new ListObjectsV2Command({ Bucket: this.bucket, Prefix: prefix, ContinuationToken }))
+      for (const object of response.Contents ?? []) {
+        if (!object.Key || !isSourceContentPath(object.Key)) continue
+        const file = await this.readFile(object.Key)
+        if (file) files.push(file)
+      }
+      ContinuationToken = response.NextContinuationToken
+    } while (ContinuationToken)
+
+    return files.sort((a, b) => a.path.localeCompare(b.path))
   }
 
   async writeApprovedChangeSet(changeSet: AuthoringChangeSet): Promise<SourceFile[]> {
@@ -111,4 +133,8 @@ function assertRemoteHash(file: SourceFile, expected: string) {
   if (file.hash !== expected) {
     throw new ChangeSetError(`Stale write for ${file.path}: expected ${expected}, found ${file.hash}`)
   }
+}
+
+function isSourceContentPath(path: string) {
+  return (path.endsWith(".md") || path.endsWith(".json")) && !path.endsWith("/migration-report.json")
 }

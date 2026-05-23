@@ -27,7 +27,7 @@ import {
 import { mapConvexTurnToTurn } from "@/lib/utils"
 import { validateAdventurePatch } from "@/lib/wiki-adventures/adventure-patch"
 import { assembleGameplayContextPacket, buildWikiEncounterProgressionPrompt } from "@/lib/wiki-adventures/runtime-context"
-import { buildLocalWikiTurnCharacters, isLocalWikiAdventure, isLocalWikiFinalEncounter, loadLocalWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
+import { buildLocalWikiTurnCharacters, isLocalWikiAdventure, isLocalWikiFinalEncounter, loadWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
 import { validatePacketTransition } from "@/lib/wiki-adventures/transition-validator"
 import type { TurnCharacter } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
@@ -83,7 +83,7 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
   })
 
   if (isLocalWikiAdventure(settingId, adventurePlanId)) {
-    const { definition, artifacts, contentRef } = loadLocalWikiAdventureRuntime(settingId, adventurePlanId)
+    const { definition, artifacts, contentRef } = await loadWikiAdventureRuntime(settingId, adventurePlanId)
     const allTurns = await convex.query(api.adventure.getTurnsByAdventure, { adventureId: turnData.adventureId })
     const currentTurnOrder = turnData.order || 1
     const packet = assembleGameplayContextPacket({
