@@ -170,27 +170,68 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
           </div>
         </section>
 
-        <aside className="min-h-0 overflow-y-auto bg-[#181713] p-5">
-          <div className="flex items-center gap-2 text-[#d8c9ad]">
-            <MessageSquare className="size-4" />
-            <h2 className="font-mono text-xs font-bold uppercase">Chat With Wiki</h2>
-          </div>
-          <div className="mt-3 space-y-2">
-            <Textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="Improve the current adventure..." rows={5} disabled={busy} className="min-h-32" />
-            <div className="flex justify-center">
-              <Button variant="epic" size="sm" onClick={sendMessage} disabled={busy || !prompt.trim()} className="gap-2">
-                <Wand2 className="size-4" /> Apply Change
-              </Button>
-            </div>
-          </div>
-          <div className="mt-4 min-h-[280px] space-y-3 overflow-auto rounded-md border border-[#3a3630] bg-[#11100f] p-3 xl:max-h-[calc(100vh-400px)]">
-            {messages.map((message, index) => (
-              <div key={index} className={message.role === "admin" ? "text-right" : "text-left"}>
-                <div className={`inline-block max-w-[92%] whitespace-pre-wrap rounded-md px-3 py-2 text-sm ${message.role === "admin" ? "bg-slate-800 text-slate-50" : "bg-stone-800 text-stone-100"}`}>
-                  {message.content}
+        <aside className="min-h-0 overflow-hidden bg-[radial-gradient(circle_at_25%_0%,rgba(132,91,44,.18),transparent_34%),linear-gradient(180deg,#1d1914_0%,#12110f_58%,#0d0c0b_100%)]">
+          <div className="flex h-full min-h-0 flex-col p-5">
+            <div className="shrink-0 border-b border-[#4a3e31] pb-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="grid size-9 shrink-0 place-items-center rounded-md border border-[#d8bd81]/45 bg-[#2a241d] shadow-[0_0_28px_rgba(216,189,129,.12)]">
+                    <MessageSquare className="size-4 text-[#f0d79c]" />
+                  </div>
+                  <div className="min-w-0">
+                    <h2 className="font-mono text-[11px] font-bold uppercase tracking-[.18em] text-[#f0d79c]">Chat With Wiki</h2>
+                    <p className="mt-1 truncate text-xs text-stone-500">{state.manifest.title}</p>
+                  </div>
                 </div>
+                <span className="rounded border border-emerald-700/50 bg-emerald-950/35 px-2 py-1 font-mono text-[10px] uppercase tracking-[.12em] text-emerald-200">Source</span>
               </div>
-            ))}
+            </div>
+
+            <div className="shrink-0 pt-4">
+              <div className="rounded-md border border-[#5a4d3f] bg-[#0f0e0c]/80 p-3 shadow-[0_18px_50px_rgba(0,0,0,.28)]">
+                <label htmlFor="wiki-chat-prompt" className="mb-2 block font-mono text-[10px] font-bold uppercase tracking-[.16em] text-stone-500">
+                  Proposed edit
+                </label>
+                <Textarea
+                  id="wiki-chat-prompt"
+                  value={prompt}
+                  onChange={(event) => setPrompt(event.target.value)}
+                  placeholder="Tighten the opening scene, add a stronger clue, and flag any transition risks..."
+                  rows={6}
+                  disabled={busy}
+                  className="min-h-36 resize-none rounded-md border-[#6c604f] bg-[#171512] px-4 py-3 font-serif text-base leading-6 text-[#f4ead7] shadow-[inset_0_1px_0_rgba(255,255,255,.04)] placeholder:text-stone-500 focus-visible:border-[#d8bd81] focus-visible:ring-[#d8bd81]/35"
+                />
+                <Button
+                  size="sm"
+                  onClick={sendMessage}
+                  disabled={busy || !prompt.trim()}
+                  className="mt-3 h-11 w-full gap-2 rounded-md border border-[#d8bd81]/50 bg-[#2d4051] px-4 py-0 font-mono text-[11px] font-bold uppercase tracking-[.16em] text-[#fff8e7] shadow-[inset_0_1px_0_rgba(255,255,255,.18),0_12px_30px_rgba(0,0,0,.28)] hover:scale-[1.01] hover:bg-[#365166]"
+                  style={{ textShadow: "0 2px 2px rgba(0,0,0,.75)" }}
+                >
+                  <Wand2 className="size-4" /> {busy ? "Applying..." : "Apply Change"}
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-4 flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-[#3f372e] bg-[#0b0a09] shadow-[inset_0_1px_0_rgba(255,255,255,.03)]">
+              <div className="flex shrink-0 items-center justify-between border-b border-[#2d2923] px-3 py-2">
+                <span className="font-mono text-[10px] font-bold uppercase tracking-[.16em] text-stone-500">Change Log</span>
+                <span className="font-mono text-[10px] text-stone-600">{messages.length} entries</span>
+              </div>
+              <div className="min-h-0 flex-1 space-y-3 overflow-auto p-3">
+                {messages.map((message, index) => (
+                  <div key={index} className={message.role === "admin" ? "flex justify-end" : "flex justify-start"}>
+                    <div
+                      className={`max-w-[94%] whitespace-pre-wrap rounded-md px-3 py-2 text-sm leading-6 shadow-[0_10px_28px_rgba(0,0,0,.2)] ${
+                        message.role === "admin" ? "border border-[#6f89a0]/45 bg-[#172433] text-sky-50" : "border border-[#4c4035] bg-[#2a2521] text-[#f4ead7]"
+                      }`}
+                    >
+                      {message.content}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </aside>
       </main>

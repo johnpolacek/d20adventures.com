@@ -5,6 +5,14 @@
 <header><p class="eyebrow">Project-context log</p><h1>Decision history</h1><p>Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.</p></header>
 <article class="entry">
 <div class="date">2026-05-23</div>
+<section class="body"><h2>Improved admin wiki chat sidebar design</h2><ul>
+<li>Reworked the right sidebar in <code>components/wiki-adventures/admin-wiki-adventure-editor.tsx</code> into a full-height chat rail with a stronger header, source status chip, labeled prompt dock, custom apply button, and structured change log.</li>
+<li>Preserved existing chat behavior and source-write flow while improving visual hierarchy, spacing, message contrast, and scroll containment.</li>
+<li>Validation evidence: <code>pnpm exec biome check components/wiki-adventures/admin-wiki-adventure-editor.tsx</code> passed. Full <code>pnpm check</code> remains blocked by pre-existing repository-wide Biome diagnostics outside this change.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-23</div>
 <section class="body"><h2>Reworked admin wiki editor toward classic module reading</h2><ul>
 <li>Promoted March of Davos encounter hierarchy into durable <code>sectionTitle</code>, <code>sceneTitle</code>, and <code>moduleOrder</code> frontmatter.</li>
 <li>Changed the admin wiki outline to use nested adventure section and scene groups instead of a flat encounter list.</li>
