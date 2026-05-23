@@ -1,0 +1,88 @@
+{
+  "name": "Sister Mira",
+  "archetype": "Cleric",
+  "race": "Human",
+  "gender": "Female",
+  "appearance": "A woman in her late twenties, with a sturdy build and sun-kissed skin. Her brown hair is often tied back in a practical braid, and her kind, observant eyes show a hint of weariness from long journeys. She wears practical, well-maintained leather armor over simple robes, adorned with the silver holy symbol of Valkara.",
+  "personality": "Devout, compassionate, resilient, and practical. She possesses a quiet strength and a deep well of empathy. While she can be weary from her travels, her faith remains unwavering, and she approaches challenges with determination and a calm demeanor.",
+  "background": "Sister Elara grew up in a small village near the capital, joining the Church of Valkara at a young age. She felt a strong calling to serve those in need, especially in places where the church's presence was sparse. For the past few years, she has been ministering to the scattered settlements along the rugged frontier, providing healing, spiritual guidance, and a beacon of hope against the wilderness's harsh realities. She is now returning to the main temple to report on the conditions and resupply.",
+  "motivation": "Her primary motivation is to serve Valkara by bringing healing and hope to those in need, especially in the harsh frontier lands. She feels a deep responsibility to her flock and to the church, and is driven by a desire to alleviate suffering and spread the light of her deity.",
+  "behavior": "Calm and compassionate, but with a practical, no-nonsense approach born from her time on the frontier. She is quick to offer aid and comfort, but also firm when necessary. She speaks with a gentle, reassuring tone, often interjecting with words of faith or encouragement.",
+  "healthPercent": 95,
+  "equipment": [
+    {
+      "name": "Mace",
+      "description": "A sturdy, well-balanced mace, often used for self-defense against wild beasts or bandits."
+    },
+    {
+      "name": "Shield",
+      "description": "A simple wooden shield emblazoned with the symbol of Valkara."
+    },
+    {
+      "name": "Leather Armor",
+      "description": "Practical, well-worn leather armor suitable for travel."
+    },
+    {
+      "name": "Holy Symbol of Valkara",
+      "description": "A silver pendant depicting a stylized sun, the symbol of Valkara."
+    },
+    {
+      "name": "Healer's Kit",
+      "description": "Contains bandages, salves, and other medical supplies."
+    },
+    {
+      "name": "Traveler's Pack",
+      "description": "Includes rations, a waterskin, bedroll, and other essentials for a long journey."
+    }
+  ],
+  "skills": [
+    "Medicine",
+    "Religion",
+    "Persuasion",
+    "Survival"
+  ],
+  "spells": [
+    {
+      "name": "Cure Wounds",
+      "description": "A touch heals a creature of its wounds.",
+      "isUsed": false
+    },
+    {
+      "name": "Healing Word",
+      "description": "A creature you choose within range regains hit points.",
+      "isUsed": false
+    },
+    {
+      "name": "Bless",
+      "description": "Up to three creatures gain a bonus to attack rolls and saving throws.",
+      "isUsed": false
+    },
+    {
+      "name": "Guiding Bolt",
+      "description": "A flash of light strikes a creature, dealing radiant damage and granting advantage on the next attack roll against it.",
+      "isUsed": false
+    },
+    {
+      "name": "Shield of Faith",
+      "description": "A shimmering field of force appears and surrounds a creature, granting it a bonus to AC.",
+      "isUsed": false
+    }
+  ],
+  "specialAbilities": [
+    "Divine Health: Immune to disease.",
+    "Turn Undead: As an action, she can present her holy symbol and speak a prayer, causing undead within 30 feet to flee.",
+    "Human Versatility: Adaptable and resourceful, able to quickly learn and apply new skills in diverse situations."
+  ],
+  "type": "npc",
+  "attributes": {
+    "strength": 12,
+    "dexterity": 10,
+    "constitution": 14,
+    "intelligence": 13,
+    "wisdom": 16,
+    "charisma": 12
+  },
+  "status": "",
+  "id": "npcs-1749870721240",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-road-to-kordavos/npcs/24fbafb0-8cc1-4e2e-97d4-8fb67b9d60a7.png?t=1749872192595"
+}

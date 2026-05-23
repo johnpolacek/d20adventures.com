@@ -6,6 +6,7 @@ import { convex } from "@/lib/convex/server"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import { buildLocalWikiTurnCharacters, isLocalWikiAdventure, loadLocalWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
 import type { AdventurePlan } from "@/types/adventure-plan"
+import type { PCTemplate } from "@/types/character"
 import { auth } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 
@@ -74,10 +75,12 @@ export async function startAdventure({ settingId, adventurePlanId, adventureId }
       const { definition, artifacts, contentRef } = loadLocalWikiAdventureRuntime(settingId, adventurePlanId)
       const firstEncounter = artifacts.encounters[artifacts.manifest.startEncounterId]
       if (!firstEncounter) throw new Error(`${adventurePlanId} start encounter is missing from compiled wiki artifacts`)
+      const existingPlayerCharacters = await loadExistingPlayerCharacters(adventure.players ?? [])
       const characters = buildLocalWikiTurnCharacters({
         artifacts,
         encounter: firstEncounter,
         players: adventure.players ?? [],
+        existingPlayerCharacters,
       })
       const turnId = await convex.mutation(api.adventure.createTurn, {
         adventureId: adventureId as Id<"adventures">,
@@ -234,4 +237,24 @@ export async function startAdventure({ settingId, adventurePlanId, adventureId }
 
   // Redirect to the adventure page (which will show the first turn)
   return redirect(`/settings/${settingId}/${adventurePlanId}/${adventureId}`)
+}
+
+async function loadExistingPlayerCharacters(players: Array<{ userId: string; characterId: string }>) {
+  const characters = []
+
+  for (const player of players) {
+    if (!player.characterId.startsWith("characters/")) continue
+    const sheet = (await readJsonFromS3(player.characterId)) as PCTemplate
+    characters.push({
+      ...sheet,
+      id: sheet.id,
+      type: "pc" as const,
+      userId: player.userId,
+      initiative: 0,
+      hasReplied: false,
+      isComplete: false,
+    })
+  }
+
+  return characters
 }

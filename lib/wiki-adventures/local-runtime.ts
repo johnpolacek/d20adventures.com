@@ -62,6 +62,25 @@ export const LOCAL_WIKI_ADVENTURES = [
     ],
     promptSlug: "covert-cargo",
   },
+  {
+    settingId: "realm-of-myr",
+    planId: "the-road-to-kordavos",
+    contentVersion: "2026-05-23T00-00-00Z-road-to-kordavos-migration",
+    versionId: "local-road-to-kordavos-migration",
+    assetHosts: ["d20-public.s3.us-east-1.amazonaws.com", "d1dkwd3w4hheqw.cloudfront.net"],
+    sourceRoots: [
+      "content/settings/realm-of-myr/adventures/the-road-to-kordavos",
+      "content/settings/realm-of-myr/npcs/npcs-1749870310278.json",
+      "content/settings/realm-of-myr/npcs/npcs-1749870310278.md",
+      "content/settings/realm-of-myr/npcs/npcs-1749870598631.json",
+      "content/settings/realm-of-myr/npcs/npcs-1749870598631.md",
+      "content/settings/realm-of-myr/npcs/npcs-1749870658664.json",
+      "content/settings/realm-of-myr/npcs/npcs-1749870658664.md",
+      "content/settings/realm-of-myr/npcs/npcs-1749870721240.json",
+      "content/settings/realm-of-myr/npcs/npcs-1749870721240.md",
+    ],
+    promptSlug: "road-to-kordavos",
+  },
 ] as const satisfies LocalWikiAdventureDefinition[]
 
 export function getLocalWikiAdventureDefinition(settingId: string, planId: string): LocalWikiAdventureDefinition | null {
@@ -108,13 +127,14 @@ export function buildLocalWikiTurnCharacters(args: {
   artifacts: RuntimeArtifacts
   encounter: RuntimeEncounter
   players: Array<{ userId: string; characterId: string }>
+  existingPlayerCharacters?: TurnCharacter[]
 }): TurnCharacter[] {
   const characters: TurnCharacter[] = []
 
   for (const player of args.players) {
     const id = player.characterId.split("/").pop()?.replace(/\.json$/, "") ?? player.characterId
-    const sheet = args.artifacts.characterSheets.premadeCharacters[id]?.sheet
-    if (!sheet) throw new Error(`Missing premade character sheet for ${player.characterId}`)
+    const sheet = args.artifacts.characterSheets.premadeCharacters[id]?.sheet ?? args.existingPlayerCharacters?.find((character) => character.id === id || character.id === player.characterId)
+    if (!sheet) throw new Error(`Missing player character sheet for ${player.characterId}`)
     characters.push({
       ...sheet,
       id: sheet.id,

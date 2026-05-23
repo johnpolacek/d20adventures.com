@@ -129,6 +129,7 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
           artifacts,
           encounter: nextEncounter,
           players: (turn.characters as TurnCharacter[]).filter((character) => character.type === "pc").map((character) => ({ userId: character.userId ?? userId, characterId: character.id })),
+          existingPlayerCharacters: (turn.characters as TurnCharacter[]).filter((character) => character.type === "pc"),
         })
       : (turn.characters as TurnCharacter[])
           .filter((character) => character.status !== "dead" && character.status !== "fled")

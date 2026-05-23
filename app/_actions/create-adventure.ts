@@ -47,12 +47,12 @@ export async function createAdventure(input: CreateAdventureInput) {
     .filter((choice) => choice.mode === "player") // Only include characters selected as "player"
     .map((choice) => ({
       userId: userId,
-      characterId: `characters/${userId}/${choice.characterId}.json`,
+      characterId: normalizePlayerCharacterKey(userId, choice.characterId),
     }))
 
   // Ensure each selected character exists in the user's S3 path
   for (const choice of characterChoices.filter((c) => c.mode === "player")) {
-    const userCharKey = `characters/${userId}/${choice.characterId}.json`
+    const userCharKey = normalizePlayerCharacterKey(userId, choice.characterId)
     let exists = false
     try {
       await readJsonFromS3(userCharKey)
@@ -199,4 +199,10 @@ export async function createPracticeAdventure(input: CreatePracticeAdventureInpu
   })
 
   await startAdventure({ settingId, adventurePlanId, adventureId })
+}
+
+function normalizePlayerCharacterKey(userId: string, characterId: string) {
+  if (characterId.startsWith("characters/")) return characterId
+  if (characterId.endsWith(".json")) return `characters/${userId}/${characterId}`
+  return `characters/${userId}/${characterId}.json`
 }

@@ -1,0 +1,85 @@
+{
+  "name": "Borina Runetongue",
+  "archetype": "Fortune Teller",
+  "race": "Dwarf",
+  "gender": "Female",
+  "appearance": "Borina is a stout dwarf with a weathered face, framed by long, dark hair braided with silver beads and small, polished stones. Her eyes, a piercing blue, seem to hold ancient secrets. She often wears layers of dark, embroidered robes that rustle with hidden trinkets and pouches.",
+  "personality": "Wise, eccentric, and deeply insightful, Borina possesses a quiet dignity. She can be cryptic but is fundamentally kind, offering guidance with a gentle, knowing smile. There's a hint of melancholy about her, a lingering sadness from her past, but it's tempered by a profound sense of purpose.",
+  "background": "Borina hails from Hammerdeep, a formidable dwarven kingdom renowned for its craftsmanship and rigid traditions. Her innate fascination with divination and the 'strange ways' of foresight were met with disapproval by her kin, who valued tangible craft over ethereal visions. Unable to reconcile her calling with their strict culture, Borina chose exile, leaving her ancestral home to wander the lands, seeking understanding and a place where her unique gifts would be accepted.",
+  "motivation": "Borina is driven by a deep desire to understand the threads of fate and to use her visions to guide others, hoping to prevent misfortune or reveal hidden truths. She also secretly yearns for a place where her unique gifts are not just tolerated, but valued.",
+  "behavior": "Borina is generally calm and observant, often speaking in riddles or metaphors. She has a habit of studying people intently, as if reading their past and future in their expressions. When performing a reading, she becomes deeply focused, sometimes muttering to herself or entering a trance-like state.",
+  "healthPercent": 100,
+  "equipment": [
+    {
+      "name": "Deck of Ornate Tarot Cards",
+      "description": "A well-worn deck, each card intricately illustrated with dwarven runes and symbols."
+    },
+    {
+      "name": "Polished Crystal Ball",
+      "description": "A small, clear orb that seems to shimmer with inner light."
+    },
+    {
+      "name": "Set of Runestones",
+      "description": "Smooth, carved stones used for casting fortunes."
+    },
+    {
+      "name": "Sturdy Gnarled Staff",
+      "description": "A walking stick adorned with carved dwarven faces and wrapped with leather straps."
+    },
+    {
+      "name": "Leather Pouch of Trinkets",
+      "description": "Contains various small charms, dried herbs, and lucky coins."
+    }
+  ],
+  "skills": [
+    "Arcana",
+    "Insight",
+    "Perception",
+    "History",
+    "Investigation"
+  ],
+  "spells": [
+    {
+      "name": "Detect Magic",
+      "description": "Borina can sense the presence of magic within 30 feet.",
+      "isUsed": false
+    },
+    {
+      "name": "Augury",
+      "description": "Borina can cast a spell to receive an omen from an otherworldly entity regarding the outcome of a specific course of action that she plans to take within the next 30 minutes.",
+      "isUsed": false
+    },
+    {
+      "name": "Clairvoyance",
+      "description": "Borina can create an invisible sensor at a chosen location within range, allowing her to see or hear through it.",
+      "isUsed": false
+    },
+    {
+      "name": "Scrying",
+      "description": "Borina can use a crystal ball to magically spy on a creature or location.",
+      "isUsed": false
+    },
+    {
+      "name": "Guidance",
+      "description": "Borina can touch one willing creature to grant them a d4 bonus to one ability check of their choice.",
+      "isUsed": false
+    }
+  ],
+  "specialAbilities": [
+    "Dwarven Resilience: Advantage on saving throws against poison, and resistance against poison damage.",
+    "Stonecunning: When making an Intelligence (History) check related to the origin of stonework, Borina is considered proficient in the History skill and adds double her proficiency bonus to the check.",
+    "Foresight Glimpse: Once per day, Borina can gain a brief, fleeting vision of the immediate future, granting her advantage on one attack roll, ability check, or saving throw of her choice."
+  ],
+  "type": "npc",
+  "attributes": {
+    "strength": 10,
+    "dexterity": 10,
+    "constitution": 14,
+    "intelligence": 16,
+    "wisdom": 18,
+    "charisma": 12
+  },
+  "status": "",
+  "id": "npcs-1749870598631",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-road-to-kordavos/npcs/7a98e364-48a3-4d85-8155-5505fe6c29ca.png?t=1749872201860"
+}

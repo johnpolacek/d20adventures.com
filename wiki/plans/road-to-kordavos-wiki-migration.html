@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="visual-concept" content="arcane operations console"><title>Road to Kordavos Wiki Migration</title><style>
+:root{--bg:#11130f;--panel:#191d17;--ink:#f4f1df;--muted:#b7b69d;--line:#3d472f;--accent:#d7b35d;--blue:#74b4c7;--green:#93c47d;--r:8px}*{box-sizing:border-box}body{margin:0;background:#11130f;color:var(--ink);font-family:Georgia,"Times New Roman",serif;line-height:1.5}main{width:min(980px,calc(100% - 32px));margin:auto;padding:32px 0 52px}.wiki-nav{width:min(1120px,calc(100% - 32px));margin:14px auto 0;display:flex;flex-wrap:wrap;gap:8px;font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.wiki-nav a{border:1px solid var(--line);border-radius:999px;padding:6px 9px;background:rgba(25,29,23,.72);color:var(--accent);text-decoration:none}a{color:var(--accent)}h1{font-size:clamp(2rem,5vw,4rem);line-height:1;margin:0 0 10px}.eyebrow,.status{font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.1em}.eyebrow{color:var(--blue)}.status{color:var(--green)}.panel{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:16px;margin-top:14px}.muted{color:var(--muted)}code{color:#f6d88d}ul{padding-left:20px}</style></head><body><nav class="wiki-nav" aria-label="Wiki navigation"><a href="../index.html">Wiki Home</a><a href="../Sources.html">Sources</a><a href="index.html">Plans</a><a href="../roadmap.html">Roadmap</a><a href="../Architecture.html">Architecture</a></nav><main>
+<header><p class="eyebrow">Focused implementation plan</p><h1>Road to Kordavos Wiki Migration</h1><p class="muted">Migrate the custom-character legacy adventure <code>the_road_to_kordavos_adventure_plan.json</code> into authored wiki source and wire it into the local wiki runtime bridge.</p></header>
+<section class="panel"><span class="status">Implemented</span><h2>Scope</h2><ul>
+<li>Generate source under <code>content/settings/realm-of-myr/adventures/the-road-to-kordavos/</code> plus 4 shared Realm of Myr NPC sheet/profile pairs.</li>
+<li>Repair the blank legacy start field to <code>well-met</code>.</li>
+<li>Preserve custom-character start and transition behavior by loading saved player sheets into the local wiki runtime.</li>
+</ul></section>
+<section class="panel"><h2>Acceptance</h2><ul>
+<li><code>pnpm migrate:road-to-kordavos</code> generates 12 source files plus <code>migration-report.json</code> and publish validation passes.</li>
+<li><code>pnpm test:wiki-adventures:road-to-kordavos-bridge</code> verifies runtime registration, 3 encounters, 4 NPCs, custom character assembly, and transition graph shape.</li>
+<li>Typecheck, build, and route smoke pass before handoff.</li>
+</ul></section>
+</main></body></html>
