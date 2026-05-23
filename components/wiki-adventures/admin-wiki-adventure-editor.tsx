@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { IMAGE_HOST } from "@/lib/config"
 import type { RuntimeEncounter, RuntimeManifest, SourceFile, ValidationReport } from "@/lib/wiki-adventures"
-import { BookOpen, Check, ChevronRight, Download, FileJson, FileText, GitBranch, ImageIcon, LinkIcon, MessageSquare, RefreshCcw, Save, Search, Upload, Wand2 } from "lucide-react"
+import { BookOpen, Check, Download, FileJson, FileText, GitBranch, ImageIcon, MessageSquare, RefreshCcw, Save, Search, Upload, Wand2 } from "lucide-react"
 import * as React from "react"
 import { toast } from "sonner"
 
@@ -39,7 +39,6 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
   const selectedFile = state.files.find((file) => file.path === selectedPath) ?? state.files[0]
   const wiki = React.useMemo(() => buildWikiModel(state.files, state.encounters), [state.files, state.encounters])
   const selectedPage = wiki.pagesByPath.get(selectedFile?.path ?? "")
-  const backlinks = selectedPage ? wiki.pages.filter((page) => page.links.some((link) => link.path === selectedPage.path)) : []
 
   async function refresh() {
     const next = await loadAdminWikiAdventureStateAction(state.definition.settingId, state.definition.planId)
@@ -114,20 +113,20 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
   }
 
   return (
-    <div className="min-h-[calc(100vh-72px)] bg-[#0d0f0b] text-stone-100">
-      <header className="border-b border-[#31401d] bg-[linear-gradient(135deg,#171b11,#0f130d_55%,#17140c)] px-5 py-4 shadow-[0_18px_60px_rgba(0,0,0,.28)]">
+    <div className="min-h-[calc(100vh-72px)] bg-[#141312] pt-10 text-stone-100">
+      <header className="border-b border-[#3a3630] bg-[#1b1a18] px-6 py-6 shadow-[0_18px_60px_rgba(0,0,0,.22)]">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
             <div className="flex flex-wrap gap-2">
-              <Badge variant="outline" className="border-lime-700 bg-lime-950/70 text-lime-200">
+              <Badge variant="outline" className="border-slate-600 bg-slate-900/70 text-slate-200">
                 {state.source === "s3" ? "S3 source" : "local fallback"}
               </Badge>
-              <Badge variant="outline" className="border-amber-700 bg-amber-950/70 text-amber-200">
+              <Badge variant="outline" className="border-stone-600 bg-stone-900/70 text-stone-200">
                 {state.validation.status}
               </Badge>
             </div>
-            <h1 className="mt-2 text-3xl font-bold tracking-normal text-amber-300">{state.manifest.title}</h1>
-            <p className="text-sm text-stone-400">
+            <h1 className="mt-3 text-3xl font-bold tracking-normal text-[#e6d6b8]">{state.manifest.title}</h1>
+            <p className="text-sm text-stone-500">
               {wiki.pages.length} wiki pages · {Object.keys(state.encounters).length} encounters · {wiki.linkCount} page links · changes apply to canonical wiki source
             </p>
           </div>
@@ -146,32 +145,31 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
         </div>
       </header>
 
-      <main className="grid min-h-[calc(100vh-172px)] grid-cols-1 xl:grid-cols-[420px_minmax(0,1fr)_400px]">
-        <aside className="border-b border-[#31401d] bg-[#10150d] xl:border-r xl:border-b-0">
+      <main className="grid min-h-[calc(100vh-196px)] grid-cols-1 xl:grid-cols-[420px_minmax(0,1fr)_400px]">
+        <aside className="border-b border-[#3a3630] bg-[#181713] xl:border-r xl:border-b-0">
           <WikiNavigator wiki={wiki} selectedPath={selectedPath} onSelect={setSelectedPath} />
         </aside>
 
-        <section className="min-w-0 border-b border-[#31401d] bg-[#0b0f0a] xl:border-r xl:border-b-0">
+        <section className="min-w-0 border-b border-[#3a3630] bg-[#201d18] xl:border-r xl:border-b-0">
           <div className="grid min-h-full grid-rows-[auto_1fr]">
-            <WikiPageHeader page={selectedPage} backlinks={backlinks} onSelect={setSelectedPath} />
-            <div className="grid gap-0 2xl:grid-cols-[minmax(0,1fr)_320px]">
-              <div className="p-5">
+            <WikiPageHeader page={selectedPage} />
+            <div>
+              <div className="p-6">
                 <ModulePageEditor file={selectedFile} manifest={state.manifest} encounters={state.encounters} page={selectedPage} disabled={busy} onSave={saveFile} />
               </div>
-              <WikiLinkPanel page={selectedPage} backlinks={backlinks} onSelect={setSelectedPath} />
             </div>
           </div>
         </section>
 
-        <aside className="bg-[#11150f] p-4">
-          <div className="flex items-center gap-2 text-amber-200">
+        <aside className="bg-[#181713] p-5">
+          <div className="flex items-center gap-2 text-[#d8c9ad]">
             <MessageSquare className="size-4" />
             <h2 className="font-mono text-xs font-bold uppercase">Chat With Wiki</h2>
           </div>
-          <div className="mt-3 h-[calc(100vh-320px)] min-h-[340px] space-y-3 overflow-auto rounded-md border border-[#31401d] bg-[#080b07] p-3">
+          <div className="mt-3 h-[calc(100vh-340px)] min-h-[340px] space-y-3 overflow-auto rounded-md border border-[#3a3630] bg-[#11100f] p-3">
             {messages.map((message, index) => (
               <div key={index} className={message.role === "admin" ? "text-right" : "text-left"}>
-                <div className={`inline-block max-w-[92%] whitespace-pre-wrap rounded-md px-3 py-2 text-sm ${message.role === "admin" ? "bg-amber-900/60 text-amber-50" : "bg-lime-950/50 text-stone-100"}`}>
+                <div className={`inline-block max-w-[92%] whitespace-pre-wrap rounded-md px-3 py-2 text-sm ${message.role === "admin" ? "bg-slate-800 text-slate-50" : "bg-stone-800 text-stone-100"}`}>
                   {message.content}
                 </div>
               </div>
@@ -234,40 +232,36 @@ function ModulePageEditor({
   const encounter = Object.values(encounters).find((item) => item.sourcePath === file.path)
 
   return (
-    <div className="mx-auto max-w-5xl space-y-5">
-      <div className="overflow-hidden rounded-md border border-[#6f5b2d] bg-[#d8c493] text-[#22180e] shadow-[0_24px_80px_rgba(0,0,0,.34)]">
-        <div className="grid gap-0 xl:grid-cols-[360px_minmax(0,1fr)]">
-          <div className="border-b border-[#9a8045] bg-[#23190f] xl:border-r xl:border-b-0">
-            <div className="relative">
-              <ImageUpload
-                id={`wiki-image-${file.path}`}
-                value={image}
-                onChange={(url) => setImage(normalizeUploadedImageUrl(url))}
-                onRemove={() => setImage("")}
-                folder={`images/settings/${manifest.settingId}/${manifest.planId}`}
-                className="aspect-[4/3] rounded-none border-0"
-              />
-              <div className="absolute left-3 top-3 rounded bg-black/65 px-2 py-1 font-mono text-[10px] uppercase tracking-[.16em] text-amber-100">
-                <ImageIcon className="mr-1 inline size-3" />
-                Module Art
-              </div>
+    <div className="mx-auto max-w-6xl space-y-6">
+      <div className="overflow-hidden rounded-md border border-[#b9a77f] bg-[#d9caab] text-[#22180e] shadow-[0_24px_80px_rgba(0,0,0,.24)]">
+        <div className="relative border-b border-[#b9a77f] bg-[#231f1a]">
+          <ImageUpload
+            id={`wiki-image-${file.path}`}
+            value={image}
+            onChange={(url) => setImage(normalizeUploadedImageUrl(url))}
+            onRemove={() => setImage("")}
+            folder={`images/settings/${manifest.settingId}/${manifest.planId}`}
+            className="aspect-[21/9] rounded-none border-0"
+          />
+          <div className="absolute left-4 top-4 rounded bg-black/65 px-2 py-1 font-mono text-[10px] uppercase tracking-[.16em] text-stone-100">
+            <ImageIcon className="mr-1 inline size-3" />
+            Module Art
+          </div>
+        </div>
+        <div className="p-6">
+          <div className="font-mono text-[11px] font-bold uppercase tracking-[.16em] text-[#5b4631]">{isEncounter ? `Encounter ${encounter?.id ?? ""}` : `Adventure ${manifest.planId}`}</div>
+          <Input value={title} onChange={(event) => setTitle(event.target.value)} disabled={disabled} className="mt-2 border-[#b9a77f] bg-[#eee2c6] text-3xl font-bold text-[#22180e]" />
+          {isEncounter && (
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              <Field label="Section" value={sectionTitle} onChange={setSectionTitle} disabled={disabled} tone="paper" />
+              <Field label="Scene" value={sceneTitle} onChange={setSceneTitle} disabled={disabled} tone="paper" />
             </div>
-          </div>
-          <div className="p-5">
-            <div className="font-mono text-[11px] font-bold uppercase tracking-[.16em] text-[#6f3417]">{isEncounter ? `Encounter ${encounter?.id ?? ""}` : `Adventure ${manifest.planId}`}</div>
-            <Input value={title} onChange={(event) => setTitle(event.target.value)} disabled={disabled} className="mt-2 border-[#9a8045] bg-[#eadbb2] text-3xl font-bold text-[#22180e]" />
-            {isEncounter && (
-              <div className="mt-4 grid gap-3 md:grid-cols-2">
-                <Field label="Section" value={sectionTitle} onChange={setSectionTitle} disabled={disabled} tone="paper" />
-                <Field label="Scene" value={sceneTitle} onChange={setSceneTitle} disabled={disabled} tone="paper" />
-              </div>
-            )}
-            <p className="mt-4 text-sm leading-6 text-[#4a3822]">{page?.summary || file.path}</p>
-          </div>
+          )}
+          <p className="mt-4 text-sm leading-6 text-[#4a3822]">{page?.summary || file.path}</p>
         </div>
       </div>
 
-      <div className="rounded-md border border-[#6f5b2d] bg-[#d8c493] p-5 text-[#22180e] shadow-[0_18px_60px_rgba(0,0,0,.22)]">
+      <div className="rounded-md border border-[#b9a77f] bg-[#d9caab] p-6 text-[#22180e] shadow-[0_18px_60px_rgba(0,0,0,.18)]">
         <Block label="Summary" value={summary} onChange={setSummary} disabled={disabled} rows={5} tone="paper" />
         {isEncounter && (
           <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_320px]">
@@ -287,7 +281,7 @@ function ModulePageEditor({
           </div>
         )}
         <div className="mt-5 flex justify-end">
-          <Button variant="outline" size="sm" onClick={() => onSave(file.path, nextContent)} disabled={disabled} className="gap-2 border-[#6f3417] bg-[#25170d] text-amber-100 hover:bg-[#3b2412]">
+          <Button variant="outline" size="sm" onClick={() => onSave(file.path, nextContent)} disabled={disabled} className="gap-2 border-[#51473a] bg-[#25211d] text-stone-100 hover:bg-[#34302a]">
             <Save className="size-4" /> Save Module Page
           </Button>
         </div>
@@ -362,11 +356,11 @@ function WikiNavigator({ wiki, selectedPath, onSelect }: { wiki: WikiModel; sele
   return (
     <div className="grid h-full grid-rows-[auto_1fr]">
       <div className="border-b border-[#31401d] p-4">
-        <div className="flex items-center gap-2 text-lime-300">
+        <div className="flex items-center gap-2 text-[#d8c9ad]">
           <BookOpen className="size-4" />
           <h2 className="font-mono text-xs font-bold uppercase">Wiki Map</h2>
         </div>
-        <label className="mt-3 grid grid-cols-[18px_1fr] items-center gap-2 rounded-md border border-[#31401d] bg-[#090d08] px-3 py-2">
+        <label className="mt-3 grid grid-cols-[18px_1fr] items-center gap-2 rounded-md border border-[#3a3630] bg-[#11100f] px-3 py-2">
           <Search className="size-4 text-stone-500" />
           <input
             value={query}
@@ -388,11 +382,11 @@ function WikiNavigator({ wiki, selectedPath, onSelect }: { wiki: WikiModel; sele
             {wiki.groups.find((group) => group.key === "adventure") && <PageGroup title="Adventure" pages={wiki.groups.find((group) => group.key === "adventure")!.pages} selectedPath={selectedPath} onSelect={onSelect} />}
             {wiki.moduleSections.map((section) => (
               <section key={section.title} className="mb-5">
-                <h3 className="mb-2 border-b border-[#31401d] px-2 pb-1 font-serif text-base font-bold text-amber-200">{section.title}</h3>
+                <h3 className="mb-2 border-b border-[#3a3630] px-2 pb-1 font-serif text-base font-bold text-[#e0d1b3]">{section.title}</h3>
                 {section.scenes.map((scene) => (
                   <div key={`${section.title}-${scene.title}`} className="mb-3 pl-2">
-                    <h4 className="mb-1 font-mono text-[10px] font-bold uppercase tracking-[.14em] text-lime-300">{scene.title}</h4>
-                    <div className="space-y-1 border-l border-[#31401d] pl-2">
+                    <h4 className="mb-1 font-mono text-[10px] font-bold uppercase tracking-[.14em] text-stone-400">{scene.title}</h4>
+                    <div className="space-y-1 border-l border-[#3a3630] pl-2">
                       {scene.pages.map((page) => (
                         <PageButton key={page.path} page={page} selectedPath={selectedPath} onSelect={onSelect} />
                       ))}
@@ -429,103 +423,46 @@ function PageButton({ page, selectedPath, onSelect }: { page: WikiPage; selected
     <button
       type="button"
       onClick={() => onSelect(page.path)}
-      className={`grid w-full grid-cols-[18px_minmax(0,1fr)_auto] items-start gap-2 rounded-md border px-2 py-2 text-left transition-colors ${page.path === selectedPath ? "border-amber-500/70 bg-[#2a220d]" : "border-transparent hover:border-[#31401d] hover:bg-[#172011]"}`}
+      className={`grid w-full grid-cols-[18px_minmax(0,1fr)_auto] items-start gap-2 rounded-md border px-2 py-2 text-left transition-colors ${page.path === selectedPath ? "border-[#b9a77f] bg-[#2a2722]" : "border-transparent hover:border-[#3a3630] hover:bg-[#211f1b]"}`}
     >
-      {page.path.endsWith(".json") ? <FileJson className="mt-0.5 size-4 text-sky-300" /> : <FileText className="mt-0.5 size-4 text-lime-300" />}
+      {page.path.endsWith(".json") ? <FileJson className="mt-0.5 size-4 text-slate-300" /> : <FileText className="mt-0.5 size-4 text-stone-300" />}
       <span className="min-w-0">
         <span className="block truncate text-sm text-stone-100">{page.title}</span>
         <span className="block truncate font-mono text-[10px] text-stone-500">{page.id}</span>
         {page.outgoingEncounterIds.length > 0 && (
-          <span className="mt-1 flex items-center gap-1 truncate text-[11px] text-amber-200/75">
+          <span className="mt-1 flex items-center gap-1 truncate text-[11px] text-stone-400">
             <GitBranch className="size-3 shrink-0" />
             {page.outgoingEncounterIds.join(", ")}
           </span>
         )}
       </span>
-      {page.links.length > 0 && <span className="rounded bg-lime-950/70 px-1.5 py-0.5 font-mono text-[10px] text-lime-200">{page.links.length}</span>}
+      {page.links.length > 0 && <span className="rounded bg-stone-800 px-1.5 py-0.5 font-mono text-[10px] text-stone-300">{page.links.length}</span>}
     </button>
   )
 }
 
-function WikiPageHeader({ page, backlinks, onSelect }: { page?: WikiPage; backlinks: WikiPage[]; onSelect: (path: string) => void }) {
+function WikiPageHeader({ page }: { page?: WikiPage }) {
   if (!page) return null
   return (
-    <header className="border-b border-[#31401d] bg-[#10140d] px-5 py-4">
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+    <header className="border-b border-[#3a3630] bg-[#181713] px-6 py-5">
+      <div>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded border border-[#31401d] bg-[#182111] px-2 py-1 font-mono text-[10px] uppercase text-lime-200">{page.kind}</span>
+            <span className="rounded border border-[#3a3630] bg-[#24211d] px-2 py-1 font-mono text-[10px] uppercase text-stone-300">{page.kind}</span>
             <span className="font-mono text-[11px] text-stone-500">{page.id}</span>
           </div>
-          <h2 className="mt-2 text-2xl font-semibold leading-tight text-stone-100">{page.title}</h2>
+          <h2 className="mt-2 text-2xl font-semibold leading-tight text-[#e6d6b8]">{page.title}</h2>
           <p className="mt-1 line-clamp-2 max-w-4xl text-sm text-stone-400">{page.summary || page.path}</p>
         </div>
-        {backlinks.length > 0 && (
-          <div className="min-w-[220px] rounded-md border border-[#31401d] bg-[#080b07] p-3">
-            <div className="mb-2 font-mono text-[10px] font-bold uppercase text-amber-200">Referenced By</div>
-            <div className="flex flex-wrap gap-1.5">
-              {backlinks.slice(0, 5).map((linkingPage) => (
-                <button key={linkingPage.path} type="button" onClick={() => onSelect(linkingPage.path)} className="rounded border border-amber-900/60 bg-amber-950/25 px-2 py-1 text-xs text-amber-100 hover:bg-amber-900/35">
-                  {linkingPage.title}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </header>
   )
 }
 
-function WikiLinkPanel({ page, backlinks, onSelect }: { page?: WikiPage; backlinks: WikiPage[]; onSelect: (path: string) => void }) {
-  if (!page) return null
-  return (
-    <aside className="border-t border-[#31401d] bg-[#0f130d] p-4 2xl:border-t-0 2xl:border-l">
-      <div className="flex items-center gap-2 text-lime-300">
-        <LinkIcon className="size-4" />
-        <h3 className="font-mono text-xs font-bold uppercase">Page Links</h3>
-      </div>
-      <div className="mt-3 space-y-2">
-        {page.links.length === 0 && <p className="text-sm text-stone-500">No typed wiki links on this page.</p>}
-        {page.links.map((link, index) => (
-          <button
-            key={`${link.type}-${link.id}-${index}`}
-            type="button"
-            disabled={!link.path}
-            onClick={() => link.path && onSelect(link.path)}
-            className="grid w-full grid-cols-[18px_minmax(0,1fr)] gap-2 rounded-md border border-[#31401d] bg-[#080b07] p-2 text-left disabled:opacity-45 enabled:hover:border-amber-700/70 enabled:hover:bg-[#17140c]"
-          >
-            <ChevronRight className="mt-0.5 size-4 text-amber-300" />
-            <span className="min-w-0">
-              <span className="block truncate text-sm text-stone-100">{link.label}</span>
-              <span className="block truncate font-mono text-[10px] text-stone-500">
-                {link.type}:{link.id}
-              </span>
-            </span>
-          </button>
-        ))}
-      </div>
-      <div className="mt-5 flex items-center gap-2 text-amber-200">
-        <GitBranch className="size-4" />
-        <h3 className="font-mono text-xs font-bold uppercase">Backlinks</h3>
-      </div>
-      <div className="mt-3 space-y-2">
-        {backlinks.length === 0 && <p className="text-sm text-stone-500">No pages currently link here.</p>}
-        {backlinks.map((linkingPage) => (
-          <button key={linkingPage.path} type="button" onClick={() => onSelect(linkingPage.path)} className="w-full rounded-md border border-[#31401d] bg-[#080b07] p-2 text-left hover:border-amber-700/70 hover:bg-[#17140c]">
-            <span className="block truncate text-sm text-stone-100">{linkingPage.title}</span>
-            <span className="block truncate font-mono text-[10px] text-stone-500">{linkingPage.id}</span>
-          </button>
-        ))}
-      </div>
-    </aside>
-  )
-}
-
 function ValidationSummary({ validation }: { validation: ValidationReport }) {
   return (
-    <div className="mt-4 rounded-md border border-lime-900/60 bg-black/20 p-3">
-      <div className="flex items-center gap-2 text-lime-200">
+    <div className="mt-4 rounded-md border border-[#3a3630] bg-[#11100f] p-3">
+      <div className="flex items-center gap-2 text-stone-300">
         <Check className="size-4" />
         <h2 className="font-mono text-xs font-bold uppercase">Validation</h2>
       </div>
@@ -535,7 +472,7 @@ function ValidationSummary({ validation }: { validation: ValidationReport }) {
       <div className="mt-3 max-h-48 space-y-2 overflow-auto">
         {validation.findings.map((finding, index) => (
           <p key={`${finding.sourcePath}-${index}`} className="text-xs text-stone-400">
-            <span className="text-amber-300">{finding.severity}</span> {finding.message}
+            <span className="text-stone-200">{finding.severity}</span> {finding.message}
           </p>
         ))}
       </div>
@@ -665,8 +602,8 @@ function titleFromId(id: string) {
 
 function ModuleBlock({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded border border-[#8f7338] bg-[#eadbb2] p-4">
-      <h3 className="mb-3 border-b border-[#b29554] pb-1 font-mono text-[11px] font-bold uppercase tracking-[.18em] text-[#6f3417]">{title}</h3>
+    <section className="rounded border border-[#b9a77f] bg-[#eee2c6] p-4">
+      <h3 className="mb-3 border-b border-[#c9b891] pb-1 font-mono text-[11px] font-bold uppercase tracking-[.18em] text-[#5b4631]">{title}</h3>
       {children}
     </section>
   )
@@ -676,8 +613,8 @@ function Field({ label, value, onChange, disabled, tone = "dark" }: { label: str
   const paper = tone === "paper"
   return (
     <label className="block space-y-1">
-      <span className={`font-mono text-xs uppercase ${paper ? "text-[#6f3417]" : "text-lime-300"}`}>{label}</span>
-      <Input value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} className={paper ? "border-[#9a8045] bg-[#eadbb2] text-[#22180e]" : undefined} />
+      <span className={`font-mono text-xs uppercase ${paper ? "text-[#5b4631]" : "text-stone-300"}`}>{label}</span>
+      <Input value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} className={paper ? "border-[#b9a77f] bg-[#eee2c6] text-[#22180e]" : undefined} />
     </label>
   )
 }
@@ -702,8 +639,8 @@ function Block({
   const paper = tone === "paper"
   return (
     <label className="block space-y-1">
-      {!hideLabel && <span className={`font-mono text-xs uppercase ${paper ? "text-[#6f3417]" : "text-lime-300"}`}>{label}</span>}
-      <Textarea value={value} onChange={(event) => onChange(event.target.value)} rows={rows} disabled={disabled} className={paper ? "border-[#9a8045] bg-[#f1e4bf] font-serif text-base leading-7 text-[#22180e]" : undefined} />
+      {!hideLabel && <span className={`font-mono text-xs uppercase ${paper ? "text-[#5b4631]" : "text-stone-300"}`}>{label}</span>}
+      <Textarea value={value} onChange={(event) => onChange(event.target.value)} rows={rows} disabled={disabled} className={paper ? "border-[#b9a77f] bg-[#f1e4bf] font-serif text-base leading-7 text-[#22180e]" : undefined} />
     </label>
   )
 }
