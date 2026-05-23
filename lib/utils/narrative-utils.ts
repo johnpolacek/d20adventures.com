@@ -1,4 +1,30 @@
 // Narrative utility functions extracted from narrative-service
+const diceRollShortcodePattern = /\[DiceRoll:[^\]]*\]/g
+
+export function sanitizeUserVisibleProse(text: string): string {
+  if (!text) return ""
+
+  const protectedShortcodes: string[] = []
+  let result = text.replace(diceRollShortcodePattern, (match) => {
+    const token = `__D20_DICE_ROLL_${protectedShortcodes.length}__`
+    protectedShortcodes.push(match)
+    return token
+  })
+
+  result = result.replace(/[\u2012\u2013\u2014\u2015]/g, ", ")
+  result = result.replace(/;/g, ",")
+  result = result
+    .replace(/\s+,/g, ",")
+    .replace(/,\s*/g, ", ")
+    .replace(/,\s*,+/g, ", ")
+    .replace(/[ \t]{2,}/g, " ")
+
+  protectedShortcodes.forEach((shortcode, index) => {
+    result = result.replace(`__D20_DICE_ROLL_${index}__`, shortcode)
+  })
+
+  return result
+}
 
 // Ensures output is at most two sentences and a single paragraph
 export function limitToTwoSentences(text: string): string {
@@ -31,13 +57,7 @@ export function appendNarrative(previousNarrative: string, newContent: string | 
  */
 export function normalizeNarrative(text: string): string {
   if (!text) return ""
-  let result = text.replace(/\r\n/g, "\n")
-  result = result.replace(/[\u2012\u2013\u2014\u2015]/g, ", ")
-  result = result
-    .replace(/\s+,/g, ",")
-    .replace(/,\s*/g, ", ")
-    .replace(/,\s*,+/g, ", ")
-  result = result.replace(/[ \t]{2,}/g, " ")
+  let result = sanitizeUserVisibleProse(text.replace(/\r\n/g, "\n"))
   result = result.replace(/\n{3,}/g, "\n\n")
   return result.trim()
 }

@@ -1,4 +1,6 @@
 import { currentModel } from "@/lib/ai/llm"
+import { composeSystemPrompt } from "@/lib/ai/style"
+import { sanitizeUserVisibleProse } from "@/lib/utils/narrative-utils"
 import { generateText, streamText } from "ai"
 import type { NextRequest } from "next/server"
 import { requireAuthMiddleware } from "../../_auth"
@@ -15,14 +17,16 @@ export async function POST(request: NextRequest) {
   if (!stream) {
     const result = await generateText({
       model: currentModel,
+      system: composeSystemPrompt(),
       prompt: input,
     })
-    return Response.json({ result: result.text })
+    return Response.json({ result: sanitizeUserVisibleProse(result.text) })
   }
 
   // Stream the text response using the ai SDK
   const result = streamText({
     model: currentModel,
+    system: composeSystemPrompt(),
     prompt: input,
   })
 

@@ -1,5 +1,7 @@
 "use client"
 
+import { sanitizeUserVisibleProse } from "@/lib/utils/narrative-utils"
+
 export function useGenerateText() {
   const streamText = async (prompt: string, onUpdate: (output: string) => void) => {
     const response = await fetch("/api/ai/generate/text", {
@@ -27,7 +29,7 @@ export function useGenerateText() {
       done = doneReading
       const chunkValue = decoder.decode(value)
       accumulatedResponse += chunkValue
-      onUpdate(accumulatedResponse)
+      onUpdate(sanitizeUserVisibleProse(accumulatedResponse))
     }
 
     return accumulatedResponse

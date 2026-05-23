@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LLM Style Policy Plan</title><style>
+:root{--bg:#11130f;--panel:#191d17;--ink:#f4f1df;--muted:#b7b69d;--line:#3d472f;--accent:#d7b35d;--blue:#74b4c7;--r:8px}*{box-sizing:border-box}body{margin:0;background:#11130f;color:var(--ink);font-family:Georgia,"Times New Roman",serif;line-height:1.5}main{width:min(980px,calc(100% - 32px));margin:auto;padding:32px 0 52px}.panel{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:16px;margin-top:14px}.eyebrow{font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.1em;color:var(--blue)}h1{font-size:clamp(2rem,5vw,4rem);line-height:1;margin:0 0 10px}a{color:var(--accent)}.muted{color:var(--muted)}code{color:#f6d88d}.wiki-nav{width:min(1120px,calc(100% - 32px));margin:14px auto 0;display:flex;flex-wrap:wrap;gap:8px;font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.wiki-nav a{border:1px solid var(--line);border-radius:999px;padding:6px 9px;background:rgba(25,29,23,.72);color:var(--accent);text-decoration:none}</style></head><body><nav class="wiki-nav" aria-label="Wiki navigation"><a href="../index.html">Wiki Home</a><a href="../Sources.html">Sources</a><a href="index.html">Plans</a><a href="../roadmap.html">Roadmap</a><a href="../Architecture.html">Architecture</a></nav><main>
+<header><p class="eyebrow">Behavior plan</p><h1>LLM Style Policy</h1><p class="muted">Decision record for universal user-visible LLM prose style: no em dashes, no semicolons, simple grammar, and concise responses.</p></header>
+<section class="panel"><h2>Implementation Shape</h2><ul>
+<li>Add a shared AI SDK system prompt that instructs all language calls to use short, clear sentences and avoid em dashes, dash variants, and semicolons in prose.</li>
+<li>Sanitize generated user-visible prose after generation while preserving machine syntax such as JSON keys, IDs, paths, URLs, and <code>[DiceRoll:...]</code> shortcodes.</li>
+<li>Tighten gameplay prompts for turn advancement, NPC turns, and player reply generation from multi-paragraph verbose prose to compact one- or two-paragraph output.</li>
+</ul></section>
+<section class="panel"><h2>Validation</h2><ul>
+<li>Verify shortcode preservation and punctuation cleanup with a lightweight TSX validation script.</li>
+<li>Run TypeScript, whitespace diff checks, and targeted prompt searches.</li>
+<li>Record any existing toolchain blockers separately from implementation failures.</li>
+</ul></section>
+</main></body></html>

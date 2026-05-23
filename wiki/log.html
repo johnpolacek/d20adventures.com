@@ -5,6 +5,14 @@
 <header><p class="eyebrow">Project-context log</p><h1>Decision history</h1><p>Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.</p></header>
 <article class="entry">
 <div class="date">2026-05-22</div>
+<section class="body"><h2>Implemented LLM prose style policy</h2><ul>
+<li>Added a shared AI SDK style policy for concise user-visible text without em dashes, dash variants, or semicolons in prose.</li>
+<li>Added shortcode-safe prose cleanup so <code>[DiceRoll:...]</code> semicolon syntax remains parseable.</li>
+<li>Recorded the implementation plan at <code>wiki/plans/llm-style-policy.html</code>.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-22</div>
 <section class="body"><h2>Allowed confident auto-commits</h2><ul>
 <li>Updated <code>AGENTS.md</code> automation policy so docs-only wiki changes and code changes may be committed without asking when the implementation is clear and validated.</li>
 <li>Kept push, dependency install, and long-command behavior unchanged.</li>

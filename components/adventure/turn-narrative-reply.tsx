@@ -342,7 +342,7 @@ export default function TurnNarrativeReply({
       // Build the LLM prompt
       const prompt = `You are the PLAYER (not the GM) roleplaying as the character below. Players describe their character's intent and attempt only. The GM determines all outcomes, results, and perceptions.
 
-Given the recent narrative and any player input, write a short narrative describing what the character does next. Include a character action and 1-2 sentences of dialogue in the character's voice. Use third person for actions and put dialogue in quotes. Be creative, stay in character, and keep the reply concise (3-5 sentences max). Use paragraph breaks (blank lines) to separate distinct narrative beats when appropriate.
+Given the recent narrative and any player input, write a short narrative describing what the character does next. Include a character action and, only when natural, one brief line of dialogue in the character's voice. Use third person for actions and put dialogue in quotes. Be creative, stay in character, and keep the reply concise, 1-2 short sentences total.
 
 Constraints:
 - Read the narrative to identify what the character is expected to do, then describe them actively taking that action.
@@ -350,6 +350,7 @@ Constraints:
 - Show concrete actions that others in the scene could observe.
 - Do not restate character traits, equipment, or special abilities unless they are directly relevant in this moment.
 - Focus on what is happening now; avoid listing capabilities or background info.
+- Do not use em dashes, en dashes, or semicolons. Use commas or periods instead.
 - CRITICAL: Stop the narrative BEFORE any result, outcome, or feedback from the action.
 - Do NOT describe what the character perceives, senses, learns, or discovers.
 - Do NOT describe effects, reactions, or consequences of the action.

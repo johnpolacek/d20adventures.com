@@ -278,13 +278,13 @@ IMPORTANT GUIDELINES:
 - If a transition occurs due to a failed dice roll (that already happened), ensure the narrative reflects the consequences of that failure leading to the new situation.
 - If a transition occurs due to a successful dice roll (that already happened), ensure the narrative reflects the consequences of that success.
 - If no transition occurs, the narrative should clearly end in a way that prompts the player for their next action. For instance, describe the scene and end with a question like "What does Thalbern do next?" or simply describe the immediate situation that demands a response.
-- Write in clean, classic fantasy prose without em dashes (—), en dashes (–), figure dashes (‒), or horizontal bars (―). Prefer commas or periods instead.
-- **FORMATTING REQUIREMENT**: Break the narrative into 2-4 separate paragraphs. Use \\n\\n (double newlines) between paragraphs. Each paragraph should focus on a different aspect: action/consequence, environment/atmosphere, character reactions, or tension. Do NOT write everything as a single block of text.
+- Write in clean, classic fantasy prose without em dashes (—), en dashes (–), figure dashes (‒), horizontal bars (―), or semicolons. Prefer commas or periods instead.
+- **FORMATTING REQUIREMENT**: Write 1-2 compact paragraphs. Use \\n\\n (double newlines) between paragraphs. Each paragraph should use 1-2 short sentences. Do NOT write a long block of text.
 
 Respond in JSON:
 {
   "nextEncounterId": string, // ID of the next/current encounter based on your evaluation
-  "narrative": string      // Narrative prose for the transition OR for continuing the current encounter. IMPORTANT: Do NOT include any questions at the end such as 'What does [character name] do next?' and do NOT mention any game mechanics such as dice rolls. CRITICAL: The narrative MUST be broken into 2-4 paragraphs separated by \\n\\n (double newlines). Each paragraph should be 2-4 sentences. Never return a single block of text.
+  "narrative": string      // Narrative prose for the transition OR for continuing the current encounter. IMPORTANT: Do NOT include any questions at the end such as 'What does [character name] do next?' and do NOT mention any game mechanics such as dice rolls. CRITICAL: The narrative MUST be 1-2 compact paragraphs separated by \\n\\n (double newlines). Each paragraph should be 1-2 short sentences.
 }
 `
 }

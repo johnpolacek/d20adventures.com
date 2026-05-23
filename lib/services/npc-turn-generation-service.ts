@@ -151,9 +151,9 @@ IMPORTANT: If the NPC would realistically speak during this action (conversation
 STYLE AND FORMAT RULES:
 - Write in present tense, third person.
 - No markdown, no lists, no bullets.
-- Do not use em dashes (—) or en dashes; use commas or periods instead.
-- Keep sentences short and clear; avoid semicolons.
-- **FORMATTING REQUIREMENT**: Break the narrative into 2-3 separate paragraphs. Use \\n\\n (double newlines) between paragraphs. Each paragraph should focus on a different aspect: action, reaction, or atmosphere. Do NOT write everything as a single block of text.
+- Do not use em dashes (—), en dashes, or semicolons. Use commas or periods instead.
+- Keep sentences short and clear.
+- **FORMATTING REQUIREMENT**: Write 1-2 compact paragraphs. Use \\n\\n (double newlines) between paragraphs. Each paragraph should use 1-2 short sentences.
 - Put each spoken line of dialogue on its own line. Dialogue should use straight quotes ("...") and may include dialogue tags like says/asks/replies.
 
 If the NPC would realistically skip or pass their turn (e.g., waiting, observing, preparing, doing nothing), set actionType to "skip" or "pass" and provide appropriate narrative. For example:
@@ -221,9 +221,9 @@ IMPORTANT: If the NPC would realistically speak during this outcome (expressing 
 STYLE AND FORMAT RULES:
 - Write in present tense, third person.
 - No markdown, no lists, no bullets.
-- Do not use em dashes (—) or en dashes; use commas or periods instead.
-- Keep sentences short and clear; avoid semicolons.
-- **FORMATTING REQUIREMENT**: Break the narrative into 2-3 separate paragraphs. Use \\n\\n (double newlines) between paragraphs. Each paragraph should focus on a different aspect: action, reaction, or atmosphere. Do NOT write everything as a single block of text.
+- Do not use em dashes (—), en dashes, or semicolons. Use commas or periods instead.
+- Keep sentences short and clear.
+- **FORMATTING REQUIREMENT**: Write 1-2 compact paragraphs. Use \\n\\n (double newlines) between paragraphs. Each paragraph should use 1-2 short sentences.
 - Put each spoken line of dialogue on its own line. Dialogue should use straight quotes ("...") and may include dialogue tags like says/asks/replies.
 
 RESTRICTIONS:
@@ -254,4 +254,3 @@ export async function generateNpcAction(prompt: string) {
 export async function generateNpcOutcome(prompt: string) {
   return (await generateObject({ prompt, schema: npcActionOutcomeSchema })).object
 }
-

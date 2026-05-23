@@ -1,6 +1,6 @@
 import { generateText } from "@/lib/ai"
 import { analyzePlayerInput } from "@/lib/utils/narrative-analysis"
-import { fixMalformedQuotes, limitToTwoSentences } from "@/lib/utils/narrative-utils"
+import { fixMalformedQuotes, limitToTwoSentences, sanitizeUserVisibleProse } from "@/lib/utils/narrative-utils"
 
 async function applyMinimalCorrections(input: string): Promise<string> {
   const prompt = `Fix ONLY formatting and punctuation errors in this text. Do NOT change the content, words, or narrative style. Only fix:
@@ -23,7 +23,7 @@ Corrected text:`.trim()
     const correctedWords = corrected.split(/\s+/).length
     const wordCountDiff = Math.abs(originalWords - correctedWords)
     if (wordCountDiff > Math.max(2, originalWords * 0.1)) return input
-    return corrected.trim()
+    return sanitizeUserVisibleProse(corrected.trim())
   } catch {
     return input
   }
@@ -50,7 +50,7 @@ ${playerReply}
 Narrative continuation:`.trim()
 
   const { text } = await generateText({ prompt })
-  return text || ""
+  return sanitizeUserVisibleProse(text || "")
 }
 
 export async function formatNarrativeAction({
@@ -147,7 +147,7 @@ export async function formatNarrativeAction({
 
     const { text } = await generateText({ prompt: dialoguePrompt })
     let formattedNarrative = text || ""
-    formattedNarrative = limitToTwoSentences(formattedNarrative)
+    formattedNarrative = sanitizeUserVisibleProse(limitToTwoSentences(formattedNarrative))
     formattedNarrative = fixMalformedQuotes(formattedNarrative)
     return formattedNarrative
   }
@@ -176,7 +176,7 @@ Write only 1 or 2 sentences total. Output a single paragraph.
 Output only the narrative paragraph.`.trim()
 
   const { text } = await generateText({ prompt })
-  const formattedNarrative = limitToTwoSentences(text || "")
+  const formattedNarrative = sanitizeUserVisibleProse(limitToTwoSentences(text || ""))
   return formattedNarrative
 }
 
@@ -230,5 +230,5 @@ Write in present tense. Do not use lists, bullet points, or markdown formatting.
 Output only the narrative paragraph.`.trim()
 
   const { text } = await generateText({ prompt })
-  return text || ""
+  return sanitizeUserVisibleProse(text || "")
 }

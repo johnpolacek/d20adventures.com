@@ -5,7 +5,9 @@ import { auth } from "@clerk/nextjs/server"
 import { generateObject as baseGenerateObject, generateText as baseGenerateText, streamObject as baseStreamObject } from "ai"
 import type { Schema as AISchema } from "ai"
 import type { z } from "zod"
+import { sanitizeUserVisibleProse } from "@/lib/utils/narrative-utils"
 import { currentModel } from "./llm"
+import { composeSystemPrompt } from "./style"
 
 // Helper function to wait for a specified number of milliseconds
 function sleep(ms: number): Promise<void> {
@@ -30,6 +32,27 @@ type GenerateObjectReturn<T extends z.ZodTypeAny> = {
     totalTokens?: number
   }
   [key: string]: unknown
+}
+
+function shouldPreserveGeneratedString(key: string): boolean {
+  return /(^|_)?id$|Id$|path|Path|key|Key|url|Url|URL/.test(key)
+}
+
+function sanitizeGeneratedStrings<T>(value: T, key = ""): T {
+  if (typeof value === "string") {
+    return (shouldPreserveGeneratedString(key) ? value : sanitizeUserVisibleProse(value)) as T
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => sanitizeGeneratedStrings(item, key)) as T
+  }
+
+  if (value && typeof value === "object") {
+    const entries = Object.entries(value).map(([entryKey, entryValue]) => [entryKey, sanitizeGeneratedStrings(entryValue, entryKey)])
+    return Object.fromEntries(entries) as T
+  }
+
+  return value
 }
 
 class TokenChargeError extends Error {
@@ -65,8 +88,13 @@ async function chargeForUsageOrThrow(totalTokens: number, transactionType: "usag
   throw new TokenChargeError(`Failed to update token balance after ${context}.`, "CHARGE_FAILED")
 }
 
+type StyledPromptOptions = {
+  prompt: string
+  system?: string
+}
+
 // Wrapper: uses currentModel by default, but allows override
-export async function generateObject<T extends z.ZodTypeAny>({ prompt, schema }: { prompt: string; schema: T }): Promise<GenerateObjectReturn<T>> {
+export async function generateObject<T extends z.ZodTypeAny>({ prompt, schema, system }: StyledPromptOptions & { schema: T }): Promise<GenerateObjectReturn<T>> {
   let result: GenerateObjectReturn<T>
   try {
     const { userId } = await auth()
@@ -77,6 +105,7 @@ export async function generateObject<T extends z.ZodTypeAny>({ prompt, schema }:
 
     result = (await baseGenerateObject({
       prompt,
+      system: composeSystemPrompt(system),
       schema: schema as unknown as AISchema,
       model: currentModel,
     })) as unknown as GenerateObjectReturn<T>
@@ -84,6 +113,7 @@ export async function generateObject<T extends z.ZodTypeAny>({ prompt, schema }:
     const totalTokens = result.usage?.totalTokens ?? 0
     await chargeForUsageOrThrow(totalTokens, "usage_generate_object", "generateObject operation")
 
+    result.object = sanitizeGeneratedStrings(result.object)
     return result
   } catch (error) {
     console.warn("generateObject failed. Error details:", error)
@@ -120,6 +150,7 @@ export async function generateObject<T extends z.ZodTypeAny>({ prompt, schema }:
         const totalTokens = result.usage?.totalTokens ?? 0
         await chargeForUsageOrThrow(totalTokens, "usage_generate_object", "generateObject operation (cleaned parse)")
 
+        result.object = sanitizeGeneratedStrings(result.object)
         return result
       } catch (cleaningError) {
         console.warn("Failed to clean and parse JSON response:", cleaningError)
@@ -139,6 +170,7 @@ export async function generateObject<T extends z.ZodTypeAny>({ prompt, schema }:
     try {
       result = (await baseGenerateObject({
         prompt,
+        system: composeSystemPrompt(system),
         schema: schema as unknown as AISchema,
         model: currentModel,
       })) as unknown as GenerateObjectReturn<T>
@@ -158,6 +190,7 @@ export async function generateObject<T extends z.ZodTypeAny>({ prompt, schema }:
       }
       await chargeForUsageOrThrow(retryTotalTokens, "usage_generate_object", "generateObject operation (retry)")
 
+      result.object = sanitizeGeneratedStrings(result.object)
       return result
     } catch (retryError) {
       console.error("generateObject retry also failed. Error details:", retryError)
@@ -190,6 +223,7 @@ export async function generateObject<T extends z.ZodTypeAny>({ prompt, schema }:
           const totalTokens = result.usage?.totalTokens ?? 0
           await chargeForUsageOrThrow(totalTokens, "usage_generate_object", "generateObject operation (retry cleaned parse)")
 
+          result.object = sanitizeGeneratedStrings(result.object)
           return result
         } catch (retryCleaningError) {
           console.warn("Failed to clean and parse JSON response on retry:", retryCleaningError)
@@ -203,7 +237,7 @@ export async function generateObject<T extends z.ZodTypeAny>({ prompt, schema }:
 }
 
 // Wrapper for streamObject: uses currentModel by default, but allows override
-export async function streamObject<T extends z.ZodTypeAny>({ prompt, schema }: { prompt: string; schema: T }) {
+export async function streamObject<T extends z.ZodTypeAny>({ prompt, schema, system }: StyledPromptOptions & { schema: T }) {
   const { userId } = await auth()
 
   if (!userId) {
@@ -212,13 +246,14 @@ export async function streamObject<T extends z.ZodTypeAny>({ prompt, schema }: {
 
   return baseStreamObject({
     prompt,
+    system: composeSystemPrompt(system),
     schema: schema as unknown as AISchema,
     model: currentModel,
   })
 }
 
 // Wrapper for generateText: uses currentModel by default, but allows override
-export async function generateText({ prompt }: { prompt: string }): Promise<{ text: string; usage?: { inputTokens?: number; outputTokens?: number; totalTokens?: number } }> {
+export async function generateText({ prompt, system }: StyledPromptOptions): Promise<{ text: string; usage?: { inputTokens?: number; outputTokens?: number; totalTokens?: number } }> {
   let result
   try {
     const { userId } = await auth()
@@ -229,6 +264,7 @@ export async function generateText({ prompt }: { prompt: string }): Promise<{ te
 
     result = await baseGenerateText({
       prompt,
+      system: composeSystemPrompt(system),
       model: currentModel,
     })
 
@@ -237,7 +273,7 @@ export async function generateText({ prompt }: { prompt: string }): Promise<{ te
     await chargeForUsageOrThrow(totalTokens, "usage_generate_text", "generateText operation")
 
     return {
-      text: result.text ?? "",
+      text: sanitizeUserVisibleProse(result.text ?? ""),
       usage: result.usage,
     }
   } catch (error) {
@@ -260,6 +296,7 @@ export async function generateText({ prompt }: { prompt: string }): Promise<{ te
     try {
       result = await baseGenerateText({
         prompt,
+        system: composeSystemPrompt(system),
         model: currentModel,
       })
 
@@ -279,7 +316,7 @@ export async function generateText({ prompt }: { prompt: string }): Promise<{ te
       await chargeForUsageOrThrow(retryTotalTokens, "usage_generate_text", "generateText operation (retry)")
 
       return {
-        text: result.text ?? "",
+        text: sanitizeUserVisibleProse(result.text ?? ""),
         usage: result.usage,
       }
     } catch (retryError) {
