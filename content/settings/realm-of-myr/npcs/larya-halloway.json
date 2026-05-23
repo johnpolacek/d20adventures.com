@@ -1,0 +1,13 @@
+{
+  "id": "larya-halloway",
+  "name": "Larya Halloway",
+  "type": "npc",
+  "image": "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725127643282",
+  "archetype": "Rogue",
+  "race": "Human",
+  "gender": "Female",
+  "appearance": "A tall woman with a scar across her cheek, dressed in finely tailored clothes with hints of intricate jewelry.",
+  "personality": "Sharp-tongued and cunning, with a deep-seated need for respect and order.",
+  "behavior": "Stealth, diplomacy, dagger fighting",
+  "healthPercent": 100
+}

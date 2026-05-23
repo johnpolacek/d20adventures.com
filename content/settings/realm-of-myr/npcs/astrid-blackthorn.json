@@ -1,0 +1,11 @@
+{
+  "id": "astrid-blackthorn",
+  "name": "Astrid Blackthorn",
+  "type": "npc",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/app/avatar/npc.png?v=1",
+  "archetype": "Ranger",
+  "race": "Human",
+  "gender": "Female",
+  "appearance": "Tall, clad in rugged leather armor, sharp features, wild windblown black hair. Intense eyes.",
+  "healthPercent": 100
+}

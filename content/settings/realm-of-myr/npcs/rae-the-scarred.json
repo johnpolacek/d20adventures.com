@@ -1,0 +1,13 @@
+{
+  "id": "rae-the-scarred",
+  "name": "Rae the Scarred",
+  "type": "npc",
+  "image": "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726439232056",
+  "archetype": "Fighter",
+  "race": "Human",
+  "gender": "Female",
+  "appearance": "A young woman with a distinct scar across her chin. She has short, messy hair and wears rugged adventurer's gear.",
+  "personality": "Confident, bold, and slightly taunting.",
+  "behavior": "",
+  "healthPercent": 100
+}

@@ -1,0 +1,13 @@
+{
+  "id": "aldith",
+  "name": "Varchk",
+  "type": "npc",
+  "image": "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726459305887",
+  "archetype": "Fighter",
+  "race": "Half-Orc",
+  "gender": "Male",
+  "appearance": "Muscular build with greenish skin, a prominent tusk jutting out from his lower jaw, and a scar that runs from his forehead to his cheek.",
+  "personality": "Loyal, stoic, and unwavering. Aldith is fiercely protective of Silverhand and follows orders without question.",
+  "behavior": "",
+  "healthPercent": 100
+}

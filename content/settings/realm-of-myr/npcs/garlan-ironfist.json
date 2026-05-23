@@ -1,0 +1,13 @@
+{
+  "id": "garlan-ironfist",
+  "name": "Garlan Ironfist",
+  "type": "npc",
+  "image": "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725143818361",
+  "archetype": "Fighter",
+  "race": "Human",
+  "gender": "Male",
+  "appearance": "A burly man with a stern face, kind eyes, and a well-groomed beard. He wears the polished armor of the Kordavos city guard, with a blue-and-gold tabard showcasing the city's crest.",
+  "personality": "Diligent and fair, Garlan takes his duty seriously but can show kindness to those who need it.",
+  "behavior": "",
+  "healthPercent": 100
+}

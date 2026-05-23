@@ -1,0 +1,13 @@
+{
+  "id": "madam-zephyra",
+  "name": "Madam Zephyra",
+  "type": "npc",
+  "image": "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725142158675",
+  "archetype": "Fortune Teller",
+  "race": "Elf",
+  "gender": "Female",
+  "appearance": "Tall and slender, with piercing green eyes that seem to see through one's soul, dressed in flowing, colorful robes with mystical symbols.",
+  "personality": "Mysterious, wise, speaks in riddles.",
+  "behavior": "Divination",
+  "healthPercent": 100
+}

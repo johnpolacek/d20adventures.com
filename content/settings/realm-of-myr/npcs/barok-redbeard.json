@@ -1,0 +1,13 @@
+{
+  "id": "barok-redbeard",
+  "name": "Barok Redbeard",
+  "type": "npc",
+  "image": "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725127621254",
+  "archetype": "Warrior",
+  "race": "Human",
+  "gender": "Male",
+  "appearance": "A burly man with a red-dyed beard, wearing mismatched armor that has seen many battles.",
+  "personality": "Hot-headed and prideful, with a strong sense of loyalty to his people.",
+  "behavior": "Sword fighting, intimidation, leadership",
+  "healthPercent": 100
+}

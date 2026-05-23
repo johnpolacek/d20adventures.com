@@ -1,0 +1,13 @@
+{
+  "id": "garrick",
+  "name": "Garrick",
+  "type": "npc",
+  "image": "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726436888924",
+  "archetype": "Fighter",
+  "race": "Half-Orc",
+  "gender": "Male",
+  "appearance": "Burly figure dressed in a tattered cloak, face mostly hidden beneath a hood. Long dagger tucked into his belt.",
+  "personality": "Suspicious and intimidating, but loyal to those he deems worthy.",
+  "behavior": "Expert in hand-to-hand combat, intimidation, and dagger usage.",
+  "healthPercent": 100
+}

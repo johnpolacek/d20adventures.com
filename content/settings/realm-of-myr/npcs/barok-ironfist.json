@@ -1,0 +1,13 @@
+{
+  "id": "barok-ironfist",
+  "name": "Barok Redbeard",
+  "type": "npc",
+  "image": "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726597353909",
+  "archetype": "Fighter",
+  "race": "Human",
+  "gender": "Male",
+  "appearance": "Burly frame with a neatly trimmed red beard, wearing polished black armor adorned with the Blackthorn family crest.",
+  "personality": "Gruff but dignified, vigilant, holds grudges from past encounters.",
+  "behavior": "Proficient in hand-to-hand combat and swordsmanship, keen observational skills.",
+  "healthPercent": 100
+}

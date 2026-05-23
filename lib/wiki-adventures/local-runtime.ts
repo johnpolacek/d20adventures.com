@@ -12,6 +12,7 @@ export type LocalWikiAdventureDefinition = {
   versionId: string
   assetHosts: string[]
   sourceRoots: string[]
+  migrationReportPath?: string
   promptSlug: string
 }
 
@@ -81,6 +82,16 @@ export const LOCAL_WIKI_ADVENTURES = [
     ],
     promptSlug: "road-to-kordavos",
   },
+  {
+    settingId: "realm-of-myr",
+    planId: "march-of-davos",
+    contentVersion: "2026-05-23T00-00-00Z-march-of-davos-migration",
+    versionId: "local-march-of-davos-migration",
+    assetHosts: ["d20-public.s3.us-east-1.amazonaws.com", "d1dkwd3w4hheqw.cloudfront.net", "s3.us-east-1.amazonaws.com"],
+    sourceRoots: ["content/settings/realm-of-myr/adventures/march-of-davos"],
+    migrationReportPath: "content/settings/realm-of-myr/adventures/march-of-davos/migration-report.json",
+    promptSlug: "march-of-davos",
+  },
 ] as const satisfies LocalWikiAdventureDefinition[]
 
 export function getLocalWikiAdventureDefinition(settingId: string, planId: string): LocalWikiAdventureDefinition | null {
@@ -97,7 +108,8 @@ export function loadLocalWikiAdventureRuntime(settingId: string, planId: string)
     throw new Error(`No local wiki adventure is registered for ${settingId}/${planId}`)
   }
 
-  const files = definition.sourceRoots.flatMap(readSourceFiles)
+  const sourceRoots = [...definition.sourceRoots, ...readMigrationNpcSourcePaths(definition.migrationReportPath)]
+  const files = unique(sourceRoots).flatMap(readSourceFiles)
   const artifacts = compileAdventureSourceTree(files, {
     mode: "publish",
     contentVersion: definition.contentVersion,
@@ -170,6 +182,16 @@ export function isLocalWikiFinalEncounter(artifacts: RuntimeArtifacts, encounter
 function readSourceFiles(root: string) {
   const paths = (statSync(root).isDirectory() ? listFiles(root) : [root]).filter((path) => (path.endsWith(".md") || path.endsWith(".json")) && !path.endsWith("/migration-report.json"))
   return paths.map((path) => createSourceFile(path, readFileSync(path, "utf8")))
+}
+
+function readMigrationNpcSourcePaths(reportPath: string | undefined) {
+  if (!reportPath) return []
+  const report = JSON.parse(readFileSync(reportPath, "utf8")) as { generatedFiles?: Array<{ path: string }> }
+  return (report.generatedFiles ?? []).map((file) => file.path).filter((path) => path.includes("/npcs/") && (path.endsWith(".md") || path.endsWith(".json")))
+}
+
+function unique(values: string[]) {
+  return Array.from(new Set(values))
 }
 
 function listFiles(root: string): string[] {

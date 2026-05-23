@@ -5,6 +5,17 @@
 <header><p class="eyebrow">Project-context log</p><h1>Decision history</h1><p>Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.</p></header>
 <article class="entry">
 <div class="date">2026-05-23</div>
+<section class="body"><h2>Implemented March of Davos wiki migration</h2><ul>
+<li>Added <code>wiki/plans/march-of-davos-wiki-migration.html</code> and indexed <code>wiki/sources/adventure plans/the-march-of-davos-plan.json</code>.</li>
+<li>Added <code>scripts/migrate-march-of-davos.ts</code> and <code>pnpm migrate:march-of-davos</code> to normalize the older nested source into wiki source files.</li>
+<li>Generated 45 encounter files, 35 promoted NPC sheet/profile pairs, and a migration report; folded legacy stage text into GM notes.</li>
+<li>Set the blank start field to <code>the-gates-of-kordavos</code> and inferred linear transitions across the legacy encounter order.</li>
+<li>Added <code>scripts/wiki-adventures-march-of-davos-bridge-check.ts</code> and <code>pnpm test:wiki-adventures:march-of-davos-bridge</code>.</li>
+<li>Validation evidence: <code>pnpm migrate:march-of-davos</code>, <code>pnpm test:wiki-adventures:march-of-davos-bridge</code>, <code>pnpm test:wiki-adventures:road-to-kordavos-bridge</code>, <code>pnpm test:wiki-adventures:covert-cargo-bridge</code>, <code>pnpm test:wiki-adventures:midnight-bridge</code>, <code>pnpm tsc --noEmit --pretty false</code>, <code>pnpm build</code>, and <code>git diff --check</code> passed. Signed-out local route checks for <code>/settings/realm-of-myr/play</code>, <code>/settings/realm-of-myr/march-of-davos/practice</code>, and <code>/settings/realm-of-myr/march-of-davos/character-select</code> returned <code>200 OK</code>.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-23</div>
 <section class="body"><h2>Implemented Road to Kordavos wiki migration</h2><ul>
 <li>Added <code>wiki/plans/road-to-kordavos-wiki-migration.html</code> and indexed <code>wiki/sources/adventure plans/the_road_to_kordavos_adventure_plan.json</code>.</li>
 <li>Added <code>scripts/migrate-road-to-kordavos.ts</code> and <code>pnpm migrate:road-to-kordavos</code> to generate wiki source files and migration report.</li>

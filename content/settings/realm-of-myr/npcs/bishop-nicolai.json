@@ -1,0 +1,11 @@
+{
+  "id": "bishop-nicolai",
+  "name": "Bishop Nicolai",
+  "type": "npc",
+  "image": "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726609448307",
+  "archetype": "Priest",
+  "race": "Human",
+  "gender": "Male",
+  "appearance": "",
+  "healthPercent": 100
+}

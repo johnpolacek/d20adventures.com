@@ -48,9 +48,11 @@
     "migrate:midnight-summons": "tsx scripts/migrate-midnight-summons.ts",
     "migrate:covert-cargo": "tsx scripts/migrate-covert-cargo.ts",
     "migrate:road-to-kordavos": "tsx scripts/migrate-road-to-kordavos.ts",
+    "migrate:march-of-davos": "tsx scripts/migrate-march-of-davos.ts",
     "test:wiki-adventures:midnight-bridge": "tsx scripts/wiki-adventures-midnight-bridge-check.ts",
     "test:wiki-adventures:covert-cargo-bridge": "tsx scripts/wiki-adventures-covert-cargo-bridge-check.ts",
     "test:wiki-adventures:road-to-kordavos-bridge": "tsx scripts/wiki-adventures-road-to-kordavos-bridge-check.ts",
+    "test:wiki-adventures:march-of-davos-bridge": "tsx scripts/wiki-adventures-march-of-davos-bridge-check.ts",
     "test:setup": "pnpm dev",
     "test:full": "pnpm test:setup && pnpm test"
   },

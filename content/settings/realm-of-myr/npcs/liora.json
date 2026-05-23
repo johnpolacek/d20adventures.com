@@ -1,0 +1,13 @@
+{
+  "id": "liora",
+  "name": "Cowled Assassin",
+  "type": "npc",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/app/avatar/npc.png?v=1",
+  "archetype": "Assassin",
+  "race": "Half-Elf",
+  "gender": "Female",
+  "appearance": "Slender and graceful, her narrow eyes gleam with a dangerous light beneath her deep hood.",
+  "personality": "Stoic, deadly, and fiercely loyal to The Cowl.",
+  "behavior": "Master of poisons and silent kills, exceptionally quick and agile.",
+  "healthPercent": 100
+}
