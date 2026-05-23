@@ -1,11 +1,15 @@
 ---
+moduleOrder: 3
+sceneTitle: "Path Through The Dark Forest"
+sectionTitle: "Journey to the Standing Stones"
 id: "timely-rescue"
 type: "encounter"
 title: "Timely Rescue"
 settingId: "realm-of-myr"
 adventureId: "the-midnight-summons"
 npcs:
-  - wollandora
+  - id: "wollandora"
+    behavior: "Protective of Thalbern, focused on getting to the meeting."
 image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-midnight-summons/timely-rescue.png"
 ---
 

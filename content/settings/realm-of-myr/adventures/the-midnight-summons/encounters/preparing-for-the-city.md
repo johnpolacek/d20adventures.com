@@ -1,4 +1,7 @@
 ---
+moduleOrder: 6
+sceneTitle: "Path Through The Dark Forest"
+sectionTitle: "Journey to the Standing Stones"
 id: "preparing-for-the-city"
 type: "encounter"
 title: "Preparing for the City"

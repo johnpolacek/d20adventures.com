@@ -1,4 +1,7 @@
 ---
+moduleOrder: 7
+sceneTitle: "Quiet Pier at Dawn"
+sectionTitle: "Section One"
 id: "the-crate"
 type: "encounter"
 title: "The Crate"

@@ -78,17 +78,33 @@ function parseSimpleYaml(input: string): Record<string, unknown> {
   const lines = input.split(/\r?\n/)
   let currentArrayKey: string | null = null
   let currentObjectKey: string | null = null
+  let currentArrayObject: Record<string, unknown> | null = null
 
   for (const rawLine of lines) {
     if (!rawLine.trim() || rawLine.trim().startsWith("#")) continue
+    const arrayObjectStart = rawLine.match(/^\s*-\s+([a-zA-Z0-9_-]+):\s*(.*)$/)
+    if (arrayObjectStart && currentArrayKey) {
+      const existing = root[currentArrayKey]
+      if (Array.isArray(existing)) {
+        currentArrayObject = { [arrayObjectStart[1]]: parseScalar(arrayObjectStart[2]) }
+        existing.push(currentArrayObject)
+      }
+      continue
+    }
+
     const arrayItem = rawLine.match(/^\s*-\s+(.+)$/)
     if (arrayItem && currentArrayKey) {
       const existing = root[currentArrayKey]
       if (Array.isArray(existing)) existing.push(parseScalar(arrayItem[1]))
+      currentArrayObject = null
       continue
     }
 
     const nested = rawLine.match(/^\s{2,}([a-zA-Z0-9_-]+):\s*(.*)$/)
+    if (nested && currentArrayObject) {
+      currentArrayObject[nested[1]] = parseScalar(nested[2])
+      continue
+    }
     if (nested && currentObjectKey) {
       const objectValue = root[currentObjectKey]
       if (objectValue && typeof objectValue === "object" && !Array.isArray(objectValue)) {
@@ -102,6 +118,7 @@ function parseSimpleYaml(input: string): Record<string, unknown> {
     const [, key, value] = keyValue
     currentArrayKey = null
     currentObjectKey = null
+    currentArrayObject = null
     if (value === "") {
       const nextNonEmpty = lines.slice(lines.indexOf(rawLine) + 1).find((line) => line.trim())
       if (nextNonEmpty?.trim().startsWith("- ")) {
@@ -131,4 +148,3 @@ function parseScalar(raw: string): unknown {
   }
   return value.replace(/^["']|["']$/g, "")
 }
-

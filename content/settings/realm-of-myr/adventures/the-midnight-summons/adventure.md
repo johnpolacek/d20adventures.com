@@ -7,7 +7,7 @@ startEncounter: "broken-silence"
 minPlayers: 1
 maxPlayers: 1
 premadeCharacters:
-  - thalbern
+  - "thalbern"
 image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-midnight-summons/the-midnight-summons.png"
 ---
 

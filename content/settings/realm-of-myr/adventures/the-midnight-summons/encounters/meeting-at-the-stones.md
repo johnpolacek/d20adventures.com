@@ -1,11 +1,16 @@
 ---
+moduleOrder: 4
+sceneTitle: "Path Through The Dark Forest"
+sectionTitle: "Journey to the Standing Stones"
 id: "meeting-at-the-stones"
 type: "encounter"
 title: "Meeting at the Stones"
 settingId: "realm-of-myr"
 adventureId: "the-midnight-summons"
 npcs:
-  - wollandora
+  - id: "wollandora"
+    behavior: "Concerned about the missing relics, focused on getting Thalbern to investigate in the city."
+    initialInitiative: 1
 image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-midnight-summons/meeting-at-the-stones.png"
 ---
 

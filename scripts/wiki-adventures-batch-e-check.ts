@@ -75,6 +75,7 @@ async function main() {
   assert.equal(packet.characters.live[0]?.healthPercent, 100)
   assert.equal(packet.characters.baselines.some((entry) => entry.id === "vala-apprentice" && entry.type === "pc"), true)
   assert.equal(packet.linkedContext.npcProfiles.some((entry) => entry.id === "captain-vala"), true)
+  assert.deepEqual(loaded.artifacts.encounters["gatehouse-entry"].npcRefs, [{ id: "captain-vala", behavior: "Question the party before opening the gate.", initialInitiative: 12 }])
 
   const prompt = buildWikiEncounterProgressionPrompt(packet)
   assert.match(prompt, /Content Hash:/)

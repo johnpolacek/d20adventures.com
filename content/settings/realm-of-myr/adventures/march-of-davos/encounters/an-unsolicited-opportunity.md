@@ -8,8 +8,10 @@ title: "An Unsolicited Opportunity"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
 npcs:
-  - beric
-  - eamon
+  - id: "beric"
+    behavior: "Gruff but respectful, with a no-nonsense attitude. Loyal to his town and friends."
+  - id: "eamon"
+    behavior: "Intelligent and curious, with a calm demeanor. Often lost in thought or poring over ancient texts."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726093207477"
 ---
 

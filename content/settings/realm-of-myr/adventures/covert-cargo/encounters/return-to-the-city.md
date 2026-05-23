@@ -1,4 +1,7 @@
 ---
+moduleOrder: 8
+sceneTitle: "Quiet Pier at Dawn"
+sectionTitle: "Section One"
 id: "return-to-the-city"
 type: "encounter"
 title: "Return to the City"

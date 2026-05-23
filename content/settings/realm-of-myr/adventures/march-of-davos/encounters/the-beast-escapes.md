@@ -8,7 +8,7 @@ title: "The Beast Escapes"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
 npcs:
-  - astrid-blackthorn
+  - id: "astrid-blackthorn"
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726354341751"
 ---
 

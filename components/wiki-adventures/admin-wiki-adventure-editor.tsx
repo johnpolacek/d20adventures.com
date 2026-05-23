@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { IMAGE_HOST } from "@/lib/config"
 import type { RuntimeEncounter, RuntimeManifest, SourceFile, ValidationReport } from "@/lib/wiki-adventures"
-import { Check, Download, FileJson, FileText, GitBranch, ImageIcon, MessageSquare, Save, Search, Upload, Wand2 } from "lucide-react"
+import { Check, Download, FileJson, FileText, GitBranch, ImageIcon, MessageSquare, Plus, Save, Search, Trash2, Upload, Wand2 } from "lucide-react"
 import * as React from "react"
 import { toast } from "sonner"
 
@@ -22,6 +22,12 @@ type EditorState = Awaited<ReturnType<typeof loadAdminWikiAdventureStateAction>>
 type ChatMessage = {
   role: "admin" | "wiki"
   content: string
+}
+
+type EditableNpcRef = {
+  id: string
+  behavior: string
+  initialInitiative: string
 }
 
 export function AdminWikiAdventureEditor({ initialState }: { initialState: EditorState }) {
@@ -201,6 +207,7 @@ function ModulePageEditor({
   const [intro, setIntro] = React.useState(fields.intro)
   const [gmNotes, setGmNotes] = React.useState(fields.gmNotes)
   const [transitions, setTransitions] = React.useState(fields.transitions)
+  const [npcRefs, setNpcRefs] = React.useState(fields.npcRefs)
   const [image, setImage] = React.useState(fields.image)
   const [sectionTitle, setSectionTitle] = React.useState(fields.sectionTitle)
   const [sceneTitle, setSceneTitle] = React.useState(fields.sceneTitle)
@@ -211,6 +218,7 @@ function ModulePageEditor({
     setIntro(fields.intro)
     setGmNotes(fields.gmNotes)
     setTransitions(fields.transitions)
+    setNpcRefs(fields.npcRefs)
     setImage(fields.image)
     setSectionTitle(fields.sectionTitle)
     setSceneTitle(fields.sceneTitle)
@@ -219,7 +227,7 @@ function ModulePageEditor({
   if (!file) return null
   if (file.path.endsWith(".json")) return <JsonKeyFieldEditor file={file} disabled={disabled} onSave={onSave} />
 
-  const nextContent = updateMarkdownFields(file.content, { title, summary, intro, gmNotes, transitions, image, sectionTitle, sceneTitle })
+  const nextContent = updateMarkdownFields(file.content, { title, summary, intro, gmNotes, transitions, npcRefs, image, sectionTitle, sceneTitle })
   const isEncounter = file.path.includes("/encounters/")
   const encounter = Object.values(encounters).find((item) => item.sourcePath === file.path)
 
@@ -266,6 +274,9 @@ function ModulePageEditor({
               </ModuleBlock>
             </div>
             <div className="space-y-5">
+              <ModuleBlock title="Encounter NPCs">
+                <EncounterNpcEditor refs={npcRefs} onChange={setNpcRefs} disabled={disabled} />
+              </ModuleBlock>
               <ModuleBlock title="Exits">
                 <Block label="Transitions" value={transitions} onChange={setTransitions} disabled={disabled} rows={7} tone="paper" hideLabel />
               </ModuleBlock>
@@ -278,6 +289,32 @@ function ModulePageEditor({
           </Button>
         </div>
       </div>
+    </div>
+  )
+}
+
+function EncounterNpcEditor({ refs, onChange, disabled }: { refs: EditableNpcRef[]; onChange: (refs: EditableNpcRef[]) => void; disabled: boolean }) {
+  const updateRef = (index: number, patch: Partial<EditableNpcRef>) => onChange(refs.map((ref, refIndex) => (refIndex === index ? { ...ref, ...patch } : ref)))
+  return (
+    <div className="space-y-3">
+      {refs.length === 0 && <p className="text-sm text-[#5b4631]">No NPCs assigned to this encounter.</p>}
+      {refs.map((ref, index) => (
+        <div key={index} className="rounded border border-[#b9a77f] bg-[#f1e4bf] p-3">
+          <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_92px_auto]">
+            <Field label="NPC ID" value={ref.id} onChange={(value) => updateRef(index, { id: value })} disabled={disabled} tone="paper" />
+            <Field label="Initiative" value={ref.initialInitiative} onChange={(value) => updateRef(index, { initialInitiative: value })} disabled={disabled} tone="paper" />
+            <Button variant="outline" size="sm" onClick={() => onChange(refs.filter((_, refIndex) => refIndex !== index))} disabled={disabled} className="self-end gap-1 border-[#51473a] bg-[#25211d] text-stone-100 hover:bg-[#34302a]">
+              <Trash2 className="size-3.5" /> remove
+            </Button>
+          </div>
+          <div className="mt-2">
+            <Block label="Behavior" value={ref.behavior} onChange={(value) => updateRef(index, { behavior: value })} disabled={disabled} rows={3} tone="paper" />
+          </div>
+        </div>
+      ))}
+      <Button variant="outline" size="sm" onClick={() => onChange([...refs, { id: "", behavior: "", initialInitiative: "" }])} disabled={disabled} className="gap-1 border-[#51473a] bg-[#25211d] text-stone-100 hover:bg-[#34302a]">
+        <Plus className="size-3.5" /> add npc
+      </Button>
     </div>
   )
 }
@@ -644,14 +681,16 @@ function parseEditableFields(file?: SourceFile) {
     intro: sectionValue(content, "Intro"),
     gmNotes: sectionValue(content, "GM Notes"),
     transitions: sectionValue(content, "Transitions"),
+    npcRefs: parseNpcRefs(content),
   }
 }
 
-function updateMarkdownFields(content: string, fields: { title: string; image: string; summary: string; intro: string; gmNotes: string; transitions: string; sectionTitle: string; sceneTitle: string }) {
+function updateMarkdownFields(content: string, fields: { title: string; image: string; summary: string; intro: string; gmNotes: string; transitions: string; npcRefs: EditableNpcRef[]; sectionTitle: string; sceneTitle: string }) {
   let next = updateFrontmatterValue(content, "title", fields.title)
   next = updateFrontmatterValue(next, "image", fields.image)
   next = updateFrontmatterValue(next, "sectionTitle", fields.sectionTitle)
   next = updateFrontmatterValue(next, "sceneTitle", fields.sceneTitle)
+  next = updateNpcRefs(next, fields.npcRefs)
   next = updateSection(next, "Summary", fields.summary)
   next = updateSection(next, "Intro", fields.intro)
   next = updateSection(next, "GM Notes", fields.gmNotes)
@@ -675,6 +714,61 @@ function updateFrontmatterValue(content: string, key: string, value: string) {
   if (new RegExp(`^${key}:`, "m").test(content)) return content.replace(new RegExp(`^${key}:.*$`, "m"), line)
   if (!value.trim()) return content
   return content.replace(/^---\n/, `---\n${line}\n`)
+}
+
+function parseNpcRefs(content: string): EditableNpcRef[] {
+  const block = frontmatterBlock(content)
+  const match = block.match(/^npcs:\n([\s\S]*?)(?=^[a-zA-Z0-9_-]+:|\n---|\s*$)/m)
+  if (!match) return []
+  const refs: EditableNpcRef[] = []
+  let current: EditableNpcRef | null = null
+  for (const line of match[1].split(/\r?\n/)) {
+    const objectStart = line.match(/^\s*-\s+id:\s*(.*)$/)
+    if (objectStart) {
+      current = { id: unquoteYamlValue(objectStart[1]), behavior: "", initialInitiative: "" }
+      refs.push(current)
+      continue
+    }
+    const stringItem = line.match(/^\s*-\s+(.+)$/)
+    if (stringItem) {
+      current = { id: unquoteYamlValue(stringItem[1]), behavior: "", initialInitiative: "" }
+      refs.push(current)
+      continue
+    }
+    const nested = line.match(/^\s{4}([a-zA-Z0-9_-]+):\s*(.*)$/)
+    if (nested && current) {
+      if (nested[1] === "behavior") current.behavior = unquoteYamlValue(nested[2])
+      if (nested[1] === "initialInitiative") current.initialInitiative = unquoteYamlValue(nested[2])
+    }
+  }
+  return refs
+}
+
+function updateNpcRefs(content: string, refs: EditableNpcRef[]) {
+  const cleanedRefs = refs.map((ref) => ({ ...ref, id: ref.id.trim(), behavior: ref.behavior.trim(), initialInitiative: ref.initialInitiative.trim() })).filter((ref) => ref.id)
+  const nextBlock = cleanedRefs.length ? `npcs:\n${cleanedRefs.map(serializeNpcRef).join("\n")}` : ""
+  const pattern = /^npcs:\n(?:\s+-.*(?:\n\s{4}[a-zA-Z0-9_-]+:.*)*\n?)*/m
+  if (pattern.test(content)) {
+    return nextBlock ? content.replace(pattern, `${nextBlock}\n`) : content.replace(pattern, "")
+  }
+  if (!nextBlock) return content
+  return content.replace(/^---\n/, `---\n${nextBlock}\n`)
+}
+
+function serializeNpcRef(ref: EditableNpcRef) {
+  const lines = [`  - id: ${JSON.stringify(ref.id)}`]
+  if (ref.behavior) lines.push(`    behavior: ${JSON.stringify(ref.behavior)}`)
+  const initiative = Number(ref.initialInitiative)
+  if (ref.initialInitiative && Number.isFinite(initiative)) lines.push(`    initialInitiative: ${initiative}`)
+  return lines.join("\n")
+}
+
+function frontmatterBlock(content: string) {
+  return content.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? ""
+}
+
+function unquoteYamlValue(value: string) {
+  return value.trim().replace(/^["']|["']$/g, "")
 }
 
 function sectionValue(content: string, heading: string) {

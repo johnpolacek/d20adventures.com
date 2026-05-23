@@ -8,7 +8,8 @@ title: "The Dragonbone Inn"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
 npcs:
-  - bram
+  - id: "bram"
+    behavior: "Hearty and welcoming, with a knack for making everyone feel at home."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725037898828"
 ---
 

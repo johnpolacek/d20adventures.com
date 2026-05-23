@@ -1,11 +1,16 @@
 ---
+moduleOrder: 2
+sceneTitle: "Path Through The Dark Forest"
+sectionTitle: "Journey to the Standing Stones"
 id: "owlbear-confrontation"
 type: "encounter"
 title: "Owlbear Confrontation"
 settingId: "realm-of-myr"
 adventureId: "the-midnight-summons"
 npcs:
-  - owlbear
+  - id: "owlbear"
+    behavior: "Aggressively attacks any perceived threat. Will fight until heavily wounded or driven off."
+    initialInitiative: 1
 image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-midnight-summons/owlbear-confrontation.png"
 ---
 

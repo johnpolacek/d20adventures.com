@@ -8,8 +8,10 @@ title: "The Ambush"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
 npcs:
-  - silas
-  - liora
+  - id: "silas"
+    behavior: "Cold, calculating, and merciless."
+  - id: "liora"
+    behavior: "Stoic, deadly, and fiercely loyal to The Cowl."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726580775048"
 ---
 

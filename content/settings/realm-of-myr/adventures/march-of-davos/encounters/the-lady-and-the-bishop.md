@@ -8,8 +8,8 @@ title: "The Lady and The Bishop"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
 npcs:
-  - seraphina-valtor
-  - bishop-nicolai
+  - id: "seraphina-valtor"
+  - id: "bishop-nicolai"
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726609502768"
 ---
 

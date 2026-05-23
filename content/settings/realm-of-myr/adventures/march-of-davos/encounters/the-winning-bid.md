@@ -8,7 +8,7 @@ title: "The Winning Bid"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
 npcs:
-  - silverhand-representative
+  - id: "silverhand-representative"
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726458036467"
 ---
 

@@ -8,7 +8,7 @@ title: "Face-to-Face with Silverhand"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
 npcs:
-  - silverhand
+  - id: "silverhand"
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726464286132"
 ---
 

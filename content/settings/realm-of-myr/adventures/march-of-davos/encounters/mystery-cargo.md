@@ -8,7 +8,8 @@ title: "Mystery Cargo"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
 npcs:
-  - scarface-alaric
+  - id: "scarface-alaric"
+    behavior: "Cautious and untrusting, fiercely protective of his crew and territory, has a sharp tongue and quick wit."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726351294262"
 ---
 

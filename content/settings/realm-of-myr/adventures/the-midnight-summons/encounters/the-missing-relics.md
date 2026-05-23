@@ -1,11 +1,16 @@
 ---
+moduleOrder: 5
+sceneTitle: "Path Through The Dark Forest"
+sectionTitle: "Journey to the Standing Stones"
 id: "the-missing-relics"
 type: "encounter"
 title: "The Missing Relics"
 settingId: "realm-of-myr"
 adventureId: "the-midnight-summons"
 npcs:
-  - wollandora
+  - id: "wollandora"
+    behavior: "Focused on getting Thalbern to agree to investigate in the city. \"The hour is late and the trail grows cold. Will you take on this task?\""
+    initialInitiative: 1
 image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-midnight-summons/meeting-at-the-stones.png"
 ---
 

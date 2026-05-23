@@ -8,8 +8,10 @@ title: "Beset by Street Urchins"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
 npcs:
-  - finn-swiftfoot
-  - mara-redleaf
+  - id: "finn-swiftfoot"
+    behavior: "Cheerful and cunning, always looking for a quick escape or opportunity"
+  - id: "mara-redleaf"
+    behavior: "Playful and charismatic, known for her infectious laughter and musical talent"
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726439333709"
 ---
 

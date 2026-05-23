@@ -1,4 +1,7 @@
 ---
+moduleOrder: 3
+sceneTitle: "The Marquis Road"
+sectionTitle: ""
 id: "the-gates-ahead"
 type: "encounter"
 title: "The Gates Ahead"

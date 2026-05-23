@@ -30,7 +30,18 @@ const commonFrontmatterSchema = z.object({
   summary: z.string().optional(),
   sheet: z.string().optional(),
   location: z.string().optional(),
-  npcs: z.array(z.string()).optional(),
+  npcs: z
+    .array(
+      z.union([
+        z.string(),
+        z.object({
+          id: z.string().min(1),
+          behavior: z.string().optional(),
+          initialInitiative: z.number().optional(),
+        }),
+      ])
+    )
+    .optional(),
   assets: z.array(z.string()).optional(),
 })
 
@@ -123,7 +134,7 @@ export function compileAdventureSourceTree(files: SourceFile[], options: Compile
       image: frontmatter.image,
       assetIds: frontmatter.assets ?? [],
       locationId: frontmatter.location,
-      npcRefs: (frontmatter.npcs ?? []).map((id) => ({ id })),
+      npcRefs: (frontmatter.npcs ?? []).map((npc) => (typeof npc === "string" ? { id: npc } : npc)),
       sections: file.sections,
       summary: frontmatter.summary ?? file.sections.summary,
       typedLinks: file.typedLinks,

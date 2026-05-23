@@ -1,11 +1,15 @@
 ---
+moduleOrder: 2
+sceneTitle: "The Marquis Road"
+sectionTitle: ""
 id: "the-fortune-teller"
 type: "encounter"
 title: "The Fortune Teller"
 settingId: "realm-of-myr"
 adventureId: "the-road-to-kordavos"
 npcs:
-  - npcs-1749870598631
+  - id: "npcs-1749870598631"
+    initialInitiative: 0
 image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/the-road-to-kordavos/encounters/the-fortune-teller/49675791-4402-4dff-a8d1-bc260a638c03.png?t=1749923016928"
 ---
 

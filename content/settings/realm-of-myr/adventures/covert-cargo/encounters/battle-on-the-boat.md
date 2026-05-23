@@ -1,12 +1,19 @@
 ---
+moduleOrder: 4
+sceneTitle: "Quiet Pier at Dawn"
+sectionTitle: "Section One"
 id: "battle-on-the-boat"
 type: "encounter"
 title: "Battle on the Boat"
 settingId: "realm-of-myr"
 adventureId: "covert-cargo"
 npcs:
-  - npcs-1749163978757
-  - npcs-1749181492795
+  - id: "npcs-1749163978757"
+    behavior: "Will attack"
+    initialInitiative: 0
+  - id: "npcs-1749181492795"
+    behavior: "Will watch and only interfere if Varius is killed or gravely wounded."
+    initialInitiative: 0
 image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/battle-on-the-boat/088f0e14-cd0f-4312-821b-fac650a518f6.png?t=1749324854329"
 ---
 

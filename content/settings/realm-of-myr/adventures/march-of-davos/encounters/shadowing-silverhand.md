@@ -8,9 +8,12 @@ title: "Shadowing Silverhand"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
 npcs:
-  - silverhand
-  - aldith
-  - kaelen
+  - id: "silverhand"
+    behavior: "Cunning, enigmatic, and stealthy. Silverhand is always two steps ahead, calculating his movements precisely to avoid detection."
+  - id: "aldith"
+    behavior: "Loyal, stoic, and unwavering. Aldith is fiercely protective of Silverhand and follows orders without question."
+  - id: "kaelen"
+    behavior: "Calm, observant, and sharp-witted. Kaelen’s keen senses and agility make her an excellent scout."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726462025424"
 ---
 

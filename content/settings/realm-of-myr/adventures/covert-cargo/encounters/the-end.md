@@ -1,4 +1,7 @@
 ---
+moduleOrder: 9
+sceneTitle: "Quiet Pier at Dawn"
+sectionTitle: "Section One"
 id: "the-end"
 type: "encounter"
 title: "The End"

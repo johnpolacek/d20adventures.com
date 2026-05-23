@@ -1,4 +1,7 @@
 ---
+moduleOrder: 6
+sceneTitle: "Quiet Pier at Dawn"
+sectionTitle: "Section One"
 id: "the-escape"
 type: "encounter"
 title: "The Escape"

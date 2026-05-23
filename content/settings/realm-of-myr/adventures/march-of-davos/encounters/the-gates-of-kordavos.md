@@ -8,7 +8,8 @@ title: "The Gates of Kordavos"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
 npcs:
-  - garlan-ironfist
+  - id: "garlan-ironfist"
+    behavior: "Diligent and fair, Garlan takes his duty seriously but can show kindness to those who need it."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725044729016"
 ---
 

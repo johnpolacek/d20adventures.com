@@ -8,11 +8,16 @@ title: "The Harvest Festival"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
 npcs:
-  - karim-the-jewel-merchant
-  - madam-zephyra
-  - finnian-the-fire-eater
-  - liora-the-spice-merchant
-  - merrick-the-musician
+  - id: "karim-the-jewel-merchant"
+    behavior: "Charismatic, shrewd, always looking for the next big deal."
+  - id: "madam-zephyra"
+    behavior: "Mysterious, wise, speaks in riddles."
+  - id: "finnian-the-fire-eater"
+    behavior: "Energetic, daring, loves to entertain and show off his skills."
+  - id: "liora-the-spice-merchant"
+    behavior: "Warm, knowledgeable, always ready to share a story or a cooking tip."
+  - id: "merrick-the-musician"
+    behavior: "Charming, soulful, enjoys bringing joy to others through music."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725044853455"
 ---
 

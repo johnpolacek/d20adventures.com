@@ -124,7 +124,11 @@ function addEncounter(ctx: MigrationContext, sectionTitle: string, sceneTitle: s
       title: encounter.title,
       settingId: ctx.plan.settingId,
       adventureId: ctx.plan.id,
-      npcs: encounter.npc?.map((npc) => npc.id) ?? [],
+      npcs: (encounter.npc ?? []).map((npc) => ({
+        id: npc.id,
+        behavior: npc.behavior,
+        initialInitiative: npc.initialInitiative,
+      })),
       image: normalizeAssetUrl(ctx, encounter.image, `${encounter.id}.image`),
     },
     [
@@ -226,7 +230,25 @@ function markdownWithFrontmatter(frontmatter: Record<string, unknown>, sections:
 }
 
 function yamlLines(key: string, value: unknown): string[] {
-  if (Array.isArray(value)) return [key + ":", ...value.map((entry) => `  - ${String(entry)}`)]
+  if (Array.isArray(value)) {
+    return [
+      key + ":",
+      ...value.flatMap((entry) => {
+        if (entry && typeof entry === "object") {
+          const entries = Object.entries(entry).filter(([, entryValue]) => entryValue !== undefined && entryValue !== "")
+          if (entries.length === 0) return []
+          const [[firstKey, firstValue], ...rest] = entries
+          return [`  - ${firstKey}: ${yamlScalar(firstValue)}`, ...rest.map(([entryKey, entryValue]) => `    ${entryKey}: ${yamlScalar(entryValue)}`)]
+        }
+        return `  - ${yamlScalar(entry)}`
+      }),
+    ]
+  }
   if (typeof value === "number" || typeof value === "boolean") return [`${key}: ${value}`]
-  return [`${key}: ${JSON.stringify(String(value))}`]
+  return [`${key}: ${yamlScalar(value)}`]
+}
+
+function yamlScalar(value: unknown): string {
+  if (typeof value === "number" || typeof value === "boolean") return String(value)
+  return JSON.stringify(String(value))
 }

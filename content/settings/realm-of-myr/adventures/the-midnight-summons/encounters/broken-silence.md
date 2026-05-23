@@ -1,4 +1,7 @@
 ---
+moduleOrder: 1
+sceneTitle: "Path Through The Dark Forest"
+sectionTitle: "Journey to the Standing Stones"
 id: "broken-silence"
 type: "encounter"
 title: "Broken Silence"

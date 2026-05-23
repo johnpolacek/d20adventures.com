@@ -8,7 +8,8 @@ title: "Morning at the Dragonbone"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
 npcs:
-  - elara
+  - id: "elara"
+    behavior: "Distraught, determined, and responsible. Has a deep sense of duty to her community and the people she cares about."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726111833875"
 ---
 

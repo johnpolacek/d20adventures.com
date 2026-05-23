@@ -1,13 +1,22 @@
 ---
+moduleOrder: 1
+sceneTitle: "Quiet Pier at Dawn"
+sectionTitle: "Section One"
 id: "the-shipment"
 type: "encounter"
 title: "The Shipment"
 settingId: "realm-of-myr"
 adventureId: "covert-cargo"
 npcs:
-  - npcs-1749163978757
-  - npcs-1749181492795
-  - npcs-1749184389465
+  - id: "npcs-1749163978757"
+    behavior: "Determined to complete the mission to secure the artifact."
+    initialInitiative: 0
+  - id: "npcs-1749181492795"
+    behavior: "Silas is the brains of the mission and is tasked to make sure everything goes as planned."
+    initialInitiative: 0
+  - id: "npcs-1749184389465"
+    behavior: "Eager to have the shipment verified"
+    initialInitiative: 0
 image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/the-shipment/dccea2c5-b22d-41e0-9467-95d8ea2301d5.png?t=1749244761507"
 ---
 

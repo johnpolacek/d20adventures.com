@@ -8,9 +8,11 @@ title: "Arrival at the Docks"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
 npcs:
-  - loric-windrider
-  - tor-marros
-  - petra-velan
+  - id: "loric-windrider"
+    behavior: "Gruff but fair. He’s a hard worker and expects the same from others. Deeply loyal to his friends."
+  - id: "tor-marros"
+    behavior: "Very strong"
+  - id: "petra-velan"
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726345480155"
 ---
 

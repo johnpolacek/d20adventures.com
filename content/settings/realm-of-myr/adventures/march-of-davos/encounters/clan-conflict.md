@@ -8,8 +8,10 @@ title: "Clan Conflict"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
 npcs:
-  - barok-redbeard
-  - larya-halloway
+  - id: "barok-redbeard"
+    behavior: "Hot-headed and prideful, with a strong sense of loyalty to his people."
+  - id: "larya-halloway"
+    behavior: "Sharp-tongued and cunning, with a deep-seated need for respect and order."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725127001688"
 ---
 
