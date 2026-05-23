@@ -201,7 +201,6 @@ function ModulePageEditor({
   const [intro, setIntro] = React.useState(fields.intro)
   const [gmNotes, setGmNotes] = React.useState(fields.gmNotes)
   const [transitions, setTransitions] = React.useState(fields.transitions)
-  const [encounterOrder, setEncounterOrder] = React.useState(fields.encounterOrder)
   const [image, setImage] = React.useState(fields.image)
   const [sectionTitle, setSectionTitle] = React.useState(fields.sectionTitle)
   const [sceneTitle, setSceneTitle] = React.useState(fields.sceneTitle)
@@ -212,7 +211,6 @@ function ModulePageEditor({
     setIntro(fields.intro)
     setGmNotes(fields.gmNotes)
     setTransitions(fields.transitions)
-    setEncounterOrder(fields.encounterOrder)
     setImage(fields.image)
     setSectionTitle(fields.sectionTitle)
     setSceneTitle(fields.sceneTitle)
@@ -221,9 +219,8 @@ function ModulePageEditor({
   if (!file) return null
   if (file.path.endsWith(".json")) return <JsonKeyFieldEditor file={file} disabled={disabled} onSave={onSave} />
 
-  const nextContent = updateMarkdownFields(file.content, { title, summary, intro, gmNotes, transitions, encounterOrder, image, sectionTitle, sceneTitle })
+  const nextContent = updateMarkdownFields(file.content, { title, summary, intro, gmNotes, transitions, image, sectionTitle, sceneTitle })
   const isEncounter = file.path.includes("/encounters/")
-  const isAdventure = !isEncounter && file.path.endsWith("/adventure.md")
   const encounter = Object.values(encounters).find((item) => item.sourcePath === file.path)
 
   return (
@@ -258,13 +255,6 @@ function ModulePageEditor({
 
       <div className="rounded-md border border-[#b9a77f] bg-[#d9caab] p-6 text-[#22180e] shadow-[0_18px_60px_rgba(0,0,0,.18)]">
         <Block label="Summary" value={summary} onChange={setSummary} disabled={disabled} rows={5} tone="paper" />
-        {isAdventure && (
-          <div className="mt-5">
-            <ModuleBlock title="Encounter Order">
-              <Block label="Encounter Order" value={encounterOrder} onChange={setEncounterOrder} disabled={disabled} rows={14} tone="paper" hideLabel />
-            </ModuleBlock>
-          </div>
-        )}
         {isEncounter && (
           <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_320px]">
             <div className="space-y-5">
@@ -479,8 +469,7 @@ function ValidationSummary({ validation }: { validation: ValidationReport }) {
 }
 
 function buildWikiModel(files: SourceFile[], encounters: Record<string, RuntimeEncounter>): WikiModel {
-  const orderMap = encounterOrderMap(files)
-  const pagesWithoutResolvedLinks = files.map((file) => pageFromSource(file, encounters, orderMap))
+  const pagesWithoutResolvedLinks = files.map((file) => pageFromSource(file, encounters))
   const pathById = new Map<string, string>()
   for (const page of pagesWithoutResolvedLinks) {
     pathById.set(page.id, page.path)
@@ -516,7 +505,7 @@ function buildWikiModel(files: SourceFile[], encounters: Record<string, RuntimeE
   }
 }
 
-function pageFromSource(file: SourceFile, encounters: Record<string, RuntimeEncounter>, orderMap: Map<string, number>): WikiPage {
+function pageFromSource(file: SourceFile, encounters: Record<string, RuntimeEncounter>): WikiPage {
   const id = file.path.split("/").at(-1)?.replace(/\.(md|json)$/, "") ?? file.path
   if (file.path.endsWith(".json")) {
     const parsed = safeJson(file.content)
@@ -542,7 +531,7 @@ function pageFromSource(file: SourceFile, encounters: Record<string, RuntimeEnco
     summary: frontmatterValue(file.content, "summary") || sectionValue(file.content, "Summary") || sectionValue(file.content, "Intro").slice(0, 220),
     sectionTitle: frontmatterValue(file.content, "sectionTitle") || migrationContextValue(file.content, "Legacy section"),
     sceneTitle: frontmatterValue(file.content, "sceneTitle") || migrationContextValue(file.content, "Legacy scene"),
-    moduleOrder: orderMap.get(pageId) ?? (Number(frontmatterValue(file.content, "moduleOrder")) || encounterOrder(file.path, encounters)),
+    moduleOrder: Number(frontmatterValue(file.content, "moduleOrder")) || encounterOrder(file.path, encounters),
     links: extractWikiLinks(file.content),
     outgoingEncounterIds: encounter?.transitions.map((transition) => transition.toEncounterId) ?? [],
   }
@@ -569,20 +558,6 @@ function encounterOrder(path: string, encounters: Record<string, RuntimeEncounte
     .sort((a, b) => a.sourcePath.localeCompare(b.sourcePath))
     .findIndex((encounter) => encounter.sourcePath === path)
   return ordered === -1 ? Number.MAX_SAFE_INTEGER : ordered + 1
-}
-
-function encounterOrderMap(files: SourceFile[]) {
-  const adventure = files.find((file) => file.path.endsWith("/adventure.md"))
-  const order = sectionValue(adventure?.content ?? "", "Encounter Order")
-  const map = new Map<string, number>()
-  for (const [index, line] of order.split("\n").entries()) {
-    const id = line
-      .replace(/^\s*(?:[-*]|\d+\.)\s*/, "")
-      .replace(/\s+#.*$/, "")
-      .trim()
-    if (id) map.set(id, index + 1)
-  }
-  return map
 }
 
 function markdownKind(file: SourceFile): WikiPage["kind"] {
@@ -669,11 +644,10 @@ function parseEditableFields(file?: SourceFile) {
     intro: sectionValue(content, "Intro"),
     gmNotes: sectionValue(content, "GM Notes"),
     transitions: sectionValue(content, "Transitions"),
-    encounterOrder: sectionValue(content, "Encounter Order"),
   }
 }
 
-function updateMarkdownFields(content: string, fields: { title: string; image: string; summary: string; intro: string; gmNotes: string; transitions: string; encounterOrder: string; sectionTitle: string; sceneTitle: string }) {
+function updateMarkdownFields(content: string, fields: { title: string; image: string; summary: string; intro: string; gmNotes: string; transitions: string; sectionTitle: string; sceneTitle: string }) {
   let next = updateFrontmatterValue(content, "title", fields.title)
   next = updateFrontmatterValue(next, "image", fields.image)
   next = updateFrontmatterValue(next, "sectionTitle", fields.sectionTitle)
@@ -682,7 +656,6 @@ function updateMarkdownFields(content: string, fields: { title: string; image: s
   next = updateSection(next, "Intro", fields.intro)
   next = updateSection(next, "GM Notes", fields.gmNotes)
   next = updateSection(next, "Transitions", fields.transitions)
-  next = updateSection(next, "Encounter Order", fields.encounterOrder)
   return next.endsWith("\n") ? next : `${next}\n`
 }
 

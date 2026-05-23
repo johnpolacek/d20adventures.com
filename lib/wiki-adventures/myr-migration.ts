@@ -78,7 +78,6 @@ function addAdventureManifest(ctx: MigrationContext) {
       ["Teaser", plan.teaser],
       ["Summary", plan.overview],
       ["Authoring Notes", `Migrated from legacy AdventurePlan ${plan.id} by ${plan.author} at version ${plan.version}.`],
-      ["Encounter Order", plan.sections.flatMap((section) => section.scenes.flatMap((scene) => scene.encounters.map((encounter) => `- ${encounter.id}`))).join("\n")],
     ]
   )
   addFile(ctx, `${adventureSourcePrefix(plan.settingId, plan.id)}/adventure.md`, content, "adventure")
