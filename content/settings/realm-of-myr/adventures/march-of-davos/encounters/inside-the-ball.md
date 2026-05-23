@@ -1,4 +1,7 @@
 ---
+moduleOrder: 15
+sceneTitle: "The Blackthorn Mansion"
+sectionTitle: "The Masquerade Ball"
 id: "inside-the-ball"
 type: "encounter"
 title: "Inside the Ball"

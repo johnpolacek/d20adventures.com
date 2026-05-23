@@ -1,4 +1,7 @@
 ---
+moduleOrder: 30
+sceneTitle: "Arrival at Kordavos"
+sectionTitle: "Arrival At Kordavos"
 id: "the-gates-of-kordavos"
 type: "encounter"
 title: "The Gates of Kordavos"

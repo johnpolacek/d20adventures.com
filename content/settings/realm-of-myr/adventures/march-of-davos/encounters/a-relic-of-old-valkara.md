@@ -1,4 +1,7 @@
 ---
+moduleOrder: 2
+sceneTitle: "The Auction"
+sectionTitle: "The Black Market"
 id: "a-relic-of-old-valkara"
 type: "encounter"
 title: "A Relic of Old Valkara"

@@ -1,4 +1,7 @@
 ---
+moduleOrder: 5
+sceneTitle: "The Docks"
+sectionTitle: "The Investigation"
 id: "arrival-at-the-docks"
 type: "encounter"
 title: "Arrival at the Docks"

@@ -1,4 +1,7 @@
 ---
+moduleOrder: 28
+sceneTitle: "Evening Falls"
+sectionTitle: "Arrival At Kordavos"
 id: "the-dragonbone-inn"
 type: "encounter"
 title: "The Dragonbone Inn"

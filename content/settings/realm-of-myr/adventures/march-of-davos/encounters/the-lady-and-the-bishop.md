@@ -1,4 +1,7 @@
 ---
+moduleOrder: 34
+sceneTitle: "The Blackthorn Mansion"
+sectionTitle: "The Masquerade Ball"
 id: "the-lady-and-the-bishop"
 type: "encounter"
 title: "The Lady and The Bishop"

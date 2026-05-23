@@ -1,4 +1,7 @@
 ---
+moduleOrder: 32
+sceneTitle: "Silverhand"
+sectionTitle: "The Black Market"
 id: "the-hideout"
 type: "encounter"
 title: "The Hideout"

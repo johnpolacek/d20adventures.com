@@ -1,4 +1,7 @@
 ---
+moduleOrder: 21
+sceneTitle: "Exploring the Mansion"
+sectionTitle: "The Masquerade Ball"
 id: "thaddeus-blackthorns-private-chambers"
 type: "encounter"
 title: "Thaddeus Blackthorn’s Private Chambers"

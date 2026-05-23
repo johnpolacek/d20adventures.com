@@ -1,4 +1,7 @@
 ---
+moduleOrder: 40
+sceneTitle: "Murder in the Mansion"
+sectionTitle: "The Masquerade Ball"
 id: "the-speech"
 type: "encounter"
 title: "The Speech"

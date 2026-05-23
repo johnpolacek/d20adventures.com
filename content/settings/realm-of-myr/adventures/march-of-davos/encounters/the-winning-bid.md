@@ -1,4 +1,7 @@
 ---
+moduleOrder: 42
+sceneTitle: "The Auction"
+sectionTitle: "The Black Market"
 id: "the-winning-bid"
 type: "encounter"
 title: "The Winning Bid"

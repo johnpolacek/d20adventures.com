@@ -9,10 +9,12 @@ import {
 } from "@/app/_actions/wiki-adventures/admin-authoring-actions"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { ImageUpload } from "@/components/ui/image-upload"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { IMAGE_HOST } from "@/lib/config"
 import type { RuntimeEncounter, RuntimeManifest, SourceFile, ValidationReport } from "@/lib/wiki-adventures"
-import { BookOpen, Check, ChevronRight, Download, FileJson, FileText, GitBranch, LinkIcon, MessageSquare, RefreshCcw, Save, Search, Upload, Wand2 } from "lucide-react"
+import { BookOpen, Check, ChevronRight, Download, FileJson, FileText, GitBranch, ImageIcon, LinkIcon, MessageSquare, RefreshCcw, Save, Search, Upload, Wand2 } from "lucide-react"
 import * as React from "react"
 import { toast } from "sonner"
 
@@ -144,7 +146,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
         </div>
       </header>
 
-      <main className="grid min-h-[calc(100vh-172px)] grid-cols-1 xl:grid-cols-[380px_minmax(0,1fr)_420px]">
+      <main className="grid min-h-[calc(100vh-172px)] grid-cols-1 xl:grid-cols-[420px_minmax(0,1fr)_400px]">
         <aside className="border-b border-[#31401d] bg-[#10150d] xl:border-r xl:border-b-0">
           <WikiNavigator wiki={wiki} selectedPath={selectedPath} onSelect={setSelectedPath} />
         </aside>
@@ -154,7 +156,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
             <WikiPageHeader page={selectedPage} backlinks={backlinks} onSelect={setSelectedPath} />
             <div className="grid gap-0 2xl:grid-cols-[minmax(0,1fr)_320px]">
               <div className="p-5">
-                <KeyFieldEditor file={selectedFile} manifest={state.manifest} encounters={state.encounters} disabled={busy} onSave={saveFile} />
+                <ModulePageEditor file={selectedFile} manifest={state.manifest} encounters={state.encounters} page={selectedPage} disabled={busy} onSave={saveFile} />
               </div>
               <WikiLinkPanel page={selectedPage} backlinks={backlinks} onSelect={setSelectedPath} />
             </div>
@@ -188,16 +190,18 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
   )
 }
 
-function KeyFieldEditor({
+function ModulePageEditor({
   file,
   manifest,
   encounters,
+  page,
   disabled,
   onSave,
 }: {
   file?: SourceFile
   manifest: RuntimeManifest
   encounters: Record<string, RuntimeEncounter>
+  page?: WikiPage
   disabled: boolean
   onSave: (path: string, content: string) => void
 }) {
@@ -205,38 +209,89 @@ function KeyFieldEditor({
   const [title, setTitle] = React.useState(fields.title)
   const [summary, setSummary] = React.useState(fields.summary)
   const [intro, setIntro] = React.useState(fields.intro)
+  const [gmNotes, setGmNotes] = React.useState(fields.gmNotes)
   const [transitions, setTransitions] = React.useState(fields.transitions)
   const [image, setImage] = React.useState(fields.image)
+  const [sectionTitle, setSectionTitle] = React.useState(fields.sectionTitle)
+  const [sceneTitle, setSceneTitle] = React.useState(fields.sceneTitle)
 
   React.useEffect(() => {
     setTitle(fields.title)
     setSummary(fields.summary)
     setIntro(fields.intro)
+    setGmNotes(fields.gmNotes)
     setTransitions(fields.transitions)
     setImage(fields.image)
+    setSectionTitle(fields.sectionTitle)
+    setSceneTitle(fields.sceneTitle)
   }, [fields])
 
   if (!file) return null
   if (file.path.endsWith(".json")) return <JsonKeyFieldEditor file={file} disabled={disabled} onSave={onSave} />
 
-  const nextContent = updateMarkdownFields(file.content, { title, summary, intro, transitions, image })
+  const nextContent = updateMarkdownFields(file.content, { title, summary, intro, gmNotes, transitions, image, sectionTitle, sceneTitle })
   const isEncounter = file.path.includes("/encounters/")
   const encounter = Object.values(encounters).find((item) => item.sourcePath === file.path)
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="break-all font-mono text-sm font-bold text-stone-100">{file.path}</h2>
-        <p className="mt-1 text-xs text-stone-500">{isEncounter ? `Encounter ${encounter?.id ?? ""}` : `Adventure ${manifest.planId}`}</p>
+    <div className="mx-auto max-w-5xl space-y-5">
+      <div className="overflow-hidden rounded-md border border-[#6f5b2d] bg-[#d8c493] text-[#22180e] shadow-[0_24px_80px_rgba(0,0,0,.34)]">
+        <div className="grid gap-0 xl:grid-cols-[360px_minmax(0,1fr)]">
+          <div className="border-b border-[#9a8045] bg-[#23190f] xl:border-r xl:border-b-0">
+            <div className="relative">
+              <ImageUpload
+                id={`wiki-image-${file.path}`}
+                value={image}
+                onChange={(url) => setImage(normalizeUploadedImageUrl(url))}
+                onRemove={() => setImage("")}
+                folder={`images/settings/${manifest.settingId}/${manifest.planId}`}
+                className="aspect-[4/3] rounded-none border-0"
+              />
+              <div className="absolute left-3 top-3 rounded bg-black/65 px-2 py-1 font-mono text-[10px] uppercase tracking-[.16em] text-amber-100">
+                <ImageIcon className="mr-1 inline size-3" />
+                Module Art
+              </div>
+            </div>
+          </div>
+          <div className="p-5">
+            <div className="font-mono text-[11px] font-bold uppercase tracking-[.16em] text-[#6f3417]">{isEncounter ? `Encounter ${encounter?.id ?? ""}` : `Adventure ${manifest.planId}`}</div>
+            <Input value={title} onChange={(event) => setTitle(event.target.value)} disabled={disabled} className="mt-2 border-[#9a8045] bg-[#eadbb2] text-3xl font-bold text-[#22180e]" />
+            {isEncounter && (
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
+                <Field label="Section" value={sectionTitle} onChange={setSectionTitle} disabled={disabled} tone="paper" />
+                <Field label="Scene" value={sceneTitle} onChange={setSceneTitle} disabled={disabled} tone="paper" />
+              </div>
+            )}
+            <p className="mt-4 text-sm leading-6 text-[#4a3822]">{page?.summary || file.path}</p>
+          </div>
+        </div>
       </div>
-      <Field label="Title" value={title} onChange={setTitle} disabled={disabled} />
-      <Field label="Image URL" value={image} onChange={setImage} disabled={disabled} />
-      <Block label="Summary" value={summary} onChange={setSummary} disabled={disabled} rows={5} />
-      {isEncounter && <Block label="Intro" value={intro} onChange={setIntro} disabled={disabled} rows={8} />}
-      {isEncounter && <Block label="Transitions" value={transitions} onChange={setTransitions} disabled={disabled} rows={6} />}
-      <Button variant="outline" size="sm" onClick={() => onSave(file.path, nextContent)} disabled={disabled} className="gap-2">
-        <Save className="size-4" /> Save Fields
-      </Button>
+
+      <div className="rounded-md border border-[#6f5b2d] bg-[#d8c493] p-5 text-[#22180e] shadow-[0_18px_60px_rgba(0,0,0,.22)]">
+        <Block label="Summary" value={summary} onChange={setSummary} disabled={disabled} rows={5} tone="paper" />
+        {isEncounter && (
+          <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_320px]">
+            <div className="space-y-5">
+              <ModuleBlock title="Read Aloud">
+                <Block label="Intro" value={intro} onChange={setIntro} disabled={disabled} rows={9} tone="paper" hideLabel />
+              </ModuleBlock>
+              <ModuleBlock title="GM Notes">
+                <Block label="GM Notes" value={gmNotes} onChange={setGmNotes} disabled={disabled} rows={6} tone="paper" hideLabel />
+              </ModuleBlock>
+            </div>
+            <div className="space-y-5">
+              <ModuleBlock title="Exits">
+                <Block label="Transitions" value={transitions} onChange={setTransitions} disabled={disabled} rows={7} tone="paper" hideLabel />
+              </ModuleBlock>
+            </div>
+          </div>
+        )}
+        <div className="mt-5 flex justify-end">
+          <Button variant="outline" size="sm" onClick={() => onSave(file.path, nextContent)} disabled={disabled} className="gap-2 border-[#6f3417] bg-[#25170d] text-amber-100 hover:bg-[#3b2412]">
+            <Save className="size-4" /> Save Module Page
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }
@@ -280,6 +335,9 @@ type WikiPage = {
   title: string
   kind: "adventure" | "encounter" | "npc" | "character" | "other" | "sheet"
   summary: string
+  sectionTitle?: string
+  sceneTitle?: string
+  moduleOrder: number
   links: WikiLink[]
   outgoingEncounterIds: string[]
 }
@@ -289,7 +347,13 @@ type WikiModel = {
   pagesByPath: Map<string, WikiPage>
   pathById: Map<string, string>
   groups: Array<{ key: string; title: string; pages: WikiPage[] }>
+  moduleSections: ModuleSection[]
   linkCount: number
+}
+
+type ModuleSection = {
+  title: string
+  scenes: Array<{ title: string; pages: WikiPage[] }>
 }
 
 function WikiNavigator({ wiki, selectedPath, onSelect }: { wiki: WikiModel; selectedPath: string; onSelect: (path: string) => void }) {
@@ -313,40 +377,73 @@ function WikiNavigator({ wiki, selectedPath, onSelect }: { wiki: WikiModel; sele
         </label>
       </div>
       <div className="overflow-auto p-3 xl:max-h-[calc(100vh-236px)]">
-        {wiki.groups.map((group) => {
-          const pages = normalizedQuery ? group.pages.filter((page) => `${page.title} ${page.id} ${page.summary}`.toLowerCase().includes(normalizedQuery)) : group.pages
-          if (pages.length === 0) return null
-          return (
-            <section key={group.key} className="mb-4">
-              <h3 className="mb-2 px-2 font-mono text-[10px] font-bold uppercase tracking-[.18em] text-stone-500">{group.title}</h3>
-              <div className="space-y-1">
-                {pages.map((page) => (
-                  <button
-                    key={page.path}
-                    type="button"
-                    onClick={() => onSelect(page.path)}
-                    className={`grid w-full grid-cols-[18px_minmax(0,1fr)_auto] items-start gap-2 rounded-md border px-2 py-2 text-left transition-colors ${page.path === selectedPath ? "border-amber-500/70 bg-[#2a220d]" : "border-transparent hover:border-[#31401d] hover:bg-[#172011]"}`}
-                  >
-                    {page.path.endsWith(".json") ? <FileJson className="mt-0.5 size-4 text-sky-300" /> : <FileText className="mt-0.5 size-4 text-lime-300" />}
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm text-stone-100">{page.title}</span>
-                      <span className="block truncate font-mono text-[10px] text-stone-500">{page.id}</span>
-                      {page.outgoingEncounterIds.length > 0 && (
-                        <span className="mt-1 flex items-center gap-1 truncate text-[11px] text-amber-200/75">
-                          <GitBranch className="size-3 shrink-0" />
-                          {page.outgoingEncounterIds.join(", ")}
-                        </span>
-                      )}
-                    </span>
-                    {page.links.length > 0 && <span className="rounded bg-lime-950/70 px-1.5 py-0.5 font-mono text-[10px] text-lime-200">{page.links.length}</span>}
-                  </button>
+        {normalizedQuery ? (
+          wiki.groups.map((group) => {
+            const pages = group.pages.filter((page) => `${page.title} ${page.id} ${page.summary}`.toLowerCase().includes(normalizedQuery))
+            if (pages.length === 0) return null
+            return <PageGroup key={group.key} title={group.title} pages={pages} selectedPath={selectedPath} onSelect={onSelect} />
+          })
+        ) : (
+          <>
+            {wiki.groups.find((group) => group.key === "adventure") && <PageGroup title="Adventure" pages={wiki.groups.find((group) => group.key === "adventure")!.pages} selectedPath={selectedPath} onSelect={onSelect} />}
+            {wiki.moduleSections.map((section) => (
+              <section key={section.title} className="mb-5">
+                <h3 className="mb-2 border-b border-[#31401d] px-2 pb-1 font-serif text-base font-bold text-amber-200">{section.title}</h3>
+                {section.scenes.map((scene) => (
+                  <div key={`${section.title}-${scene.title}`} className="mb-3 pl-2">
+                    <h4 className="mb-1 font-mono text-[10px] font-bold uppercase tracking-[.14em] text-lime-300">{scene.title}</h4>
+                    <div className="space-y-1 border-l border-[#31401d] pl-2">
+                      {scene.pages.map((page) => (
+                        <PageButton key={page.path} page={page} selectedPath={selectedPath} onSelect={onSelect} />
+                      ))}
+                    </div>
+                  </div>
                 ))}
-              </div>
-            </section>
-          )
-        })}
+              </section>
+            ))}
+            {wiki.groups.filter((group) => !["adventure", "encounter"].includes(group.key)).map((group) => (
+              <PageGroup key={group.key} title={group.title} pages={group.pages} selectedPath={selectedPath} onSelect={onSelect} />
+            ))}
+          </>
+        )}
       </div>
     </div>
+  )
+}
+
+function PageGroup({ title, pages, selectedPath, onSelect }: { title: string; pages: WikiPage[]; selectedPath: string; onSelect: (path: string) => void }) {
+  return (
+    <section className="mb-4">
+      <h3 className="mb-2 px-2 font-mono text-[10px] font-bold uppercase tracking-[.18em] text-stone-500">{title}</h3>
+      <div className="space-y-1">
+        {pages.map((page) => (
+          <PageButton key={page.path} page={page} selectedPath={selectedPath} onSelect={onSelect} />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function PageButton({ page, selectedPath, onSelect }: { page: WikiPage; selectedPath: string; onSelect: (path: string) => void }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(page.path)}
+      className={`grid w-full grid-cols-[18px_minmax(0,1fr)_auto] items-start gap-2 rounded-md border px-2 py-2 text-left transition-colors ${page.path === selectedPath ? "border-amber-500/70 bg-[#2a220d]" : "border-transparent hover:border-[#31401d] hover:bg-[#172011]"}`}
+    >
+      {page.path.endsWith(".json") ? <FileJson className="mt-0.5 size-4 text-sky-300" /> : <FileText className="mt-0.5 size-4 text-lime-300" />}
+      <span className="min-w-0">
+        <span className="block truncate text-sm text-stone-100">{page.title}</span>
+        <span className="block truncate font-mono text-[10px] text-stone-500">{page.id}</span>
+        {page.outgoingEncounterIds.length > 0 && (
+          <span className="mt-1 flex items-center gap-1 truncate text-[11px] text-amber-200/75">
+            <GitBranch className="size-3 shrink-0" />
+            {page.outgoingEncounterIds.join(", ")}
+          </span>
+        )}
+      </span>
+      {page.links.length > 0 && <span className="rounded bg-lime-950/70 px-1.5 py-0.5 font-mono text-[10px] text-lime-200">{page.links.length}</span>}
+    </button>
   )
 }
 
@@ -472,11 +569,13 @@ function buildWikiModel(files: SourceFile[], encounters: Record<string, RuntimeE
     { key: "sheet", title: "Sheets", pages: byKind("sheet") },
     { key: "other", title: "Other Pages", pages: byKind("other") },
   ].filter((group) => group.pages.length > 0)
+  const moduleSections = buildModuleSections(pages)
   return {
     pages,
     pagesByPath: new Map(pages.map((page) => [page.path, page])),
     pathById,
     groups,
+    moduleSections,
     linkCount: pages.reduce((sum, page) => sum + page.links.length, 0),
   }
 }
@@ -491,6 +590,7 @@ function pageFromSource(file: SourceFile, encounters: Record<string, RuntimeEnco
       title: String(parsed.name ?? parsed.id ?? id),
       kind: "sheet",
       summary: [parsed.race, parsed.archetype].filter(Boolean).join(" ") || "Character sheet",
+      moduleOrder: Number.MAX_SAFE_INTEGER,
       links: [],
       outgoingEncounterIds: [],
     }
@@ -504,9 +604,35 @@ function pageFromSource(file: SourceFile, encounters: Record<string, RuntimeEnco
     title: frontmatterValue(file.content, "title") || titleFromId(pageId),
     kind,
     summary: frontmatterValue(file.content, "summary") || sectionValue(file.content, "Summary") || sectionValue(file.content, "Intro").slice(0, 220),
+    sectionTitle: frontmatterValue(file.content, "sectionTitle") || migrationContextValue(file.content, "Legacy section"),
+    sceneTitle: frontmatterValue(file.content, "sceneTitle") || migrationContextValue(file.content, "Legacy scene"),
+    moduleOrder: Number(frontmatterValue(file.content, "moduleOrder")) || encounterOrder(file.path, encounters),
     links: extractWikiLinks(file.content),
     outgoingEncounterIds: encounter?.transitions.map((transition) => transition.toEncounterId) ?? [],
   }
+}
+
+function buildModuleSections(pages: WikiPage[]): ModuleSection[] {
+  const sectionMap = new Map<string, Map<string, WikiPage[]>>()
+  for (const page of pages.filter((item) => item.kind === "encounter").sort((a, b) => a.moduleOrder - b.moduleOrder || pageSort(a, b))) {
+    const section = page.sectionTitle || "Unsectioned Encounters"
+    const scene = page.sceneTitle || "Scene"
+    if (!sectionMap.has(section)) sectionMap.set(section, new Map())
+    const sceneMap = sectionMap.get(section)!
+    if (!sceneMap.has(scene)) sceneMap.set(scene, [])
+    sceneMap.get(scene)!.push(page)
+  }
+  return Array.from(sectionMap.entries()).map(([title, sceneMap]) => ({
+    title,
+    scenes: Array.from(sceneMap.entries()).map(([title, pages]) => ({ title, pages })),
+  }))
+}
+
+function encounterOrder(path: string, encounters: Record<string, RuntimeEncounter>) {
+  const ordered = Object.values(encounters)
+    .sort((a, b) => a.sourcePath.localeCompare(b.sourcePath))
+    .findIndex((encounter) => encounter.sourcePath === path)
+  return ordered === -1 ? Number.MAX_SAFE_INTEGER : ordered + 1
 }
 
 function markdownKind(file: SourceFile): WikiPage["kind"] {
@@ -537,20 +663,47 @@ function titleFromId(id: string) {
     .join(" ")
 }
 
-function Field({ label, value, onChange, disabled }: { label: string; value: string; onChange: (value: string) => void; disabled: boolean }) {
+function ModuleBlock({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded border border-[#8f7338] bg-[#eadbb2] p-4">
+      <h3 className="mb-3 border-b border-[#b29554] pb-1 font-mono text-[11px] font-bold uppercase tracking-[.18em] text-[#6f3417]">{title}</h3>
+      {children}
+    </section>
+  )
+}
+
+function Field({ label, value, onChange, disabled, tone = "dark" }: { label: string; value: string; onChange: (value: string) => void; disabled: boolean; tone?: "dark" | "paper" }) {
+  const paper = tone === "paper"
   return (
     <label className="block space-y-1">
-      <span className="font-mono text-xs uppercase text-lime-300">{label}</span>
-      <Input value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} />
+      <span className={`font-mono text-xs uppercase ${paper ? "text-[#6f3417]" : "text-lime-300"}`}>{label}</span>
+      <Input value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} className={paper ? "border-[#9a8045] bg-[#eadbb2] text-[#22180e]" : undefined} />
     </label>
   )
 }
 
-function Block({ label, value, onChange, disabled, rows }: { label: string; value: string; onChange: (value: string) => void; disabled: boolean; rows: number }) {
+function Block({
+  label,
+  value,
+  onChange,
+  disabled,
+  rows,
+  tone = "dark",
+  hideLabel = false,
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  disabled: boolean
+  rows: number
+  tone?: "dark" | "paper"
+  hideLabel?: boolean
+}) {
+  const paper = tone === "paper"
   return (
     <label className="block space-y-1">
-      <span className="font-mono text-xs uppercase text-lime-300">{label}</span>
-      <Textarea value={value} onChange={(event) => onChange(event.target.value)} rows={rows} disabled={disabled} />
+      {!hideLabel && <span className={`font-mono text-xs uppercase ${paper ? "text-[#6f3417]" : "text-lime-300"}`}>{label}</span>}
+      <Textarea value={value} onChange={(event) => onChange(event.target.value)} rows={rows} disabled={disabled} className={paper ? "border-[#9a8045] bg-[#f1e4bf] font-serif text-base leading-7 text-[#22180e]" : undefined} />
     </label>
   )
 }
@@ -560,19 +713,31 @@ function parseEditableFields(file?: SourceFile) {
   return {
     title: frontmatterValue(content, "title"),
     image: frontmatterValue(content, "image"),
+    sectionTitle: frontmatterValue(content, "sectionTitle") || migrationContextValue(content, "Legacy section"),
+    sceneTitle: frontmatterValue(content, "sceneTitle") || migrationContextValue(content, "Legacy scene"),
     summary: sectionValue(content, "Summary"),
     intro: sectionValue(content, "Intro"),
+    gmNotes: sectionValue(content, "GM Notes"),
     transitions: sectionValue(content, "Transitions"),
   }
 }
 
-function updateMarkdownFields(content: string, fields: { title: string; image: string; summary: string; intro: string; transitions: string }) {
+function updateMarkdownFields(content: string, fields: { title: string; image: string; summary: string; intro: string; gmNotes: string; transitions: string; sectionTitle: string; sceneTitle: string }) {
   let next = updateFrontmatterValue(content, "title", fields.title)
   next = updateFrontmatterValue(next, "image", fields.image)
+  next = updateFrontmatterValue(next, "sectionTitle", fields.sectionTitle)
+  next = updateFrontmatterValue(next, "sceneTitle", fields.sceneTitle)
   next = updateSection(next, "Summary", fields.summary)
   next = updateSection(next, "Intro", fields.intro)
+  next = updateSection(next, "GM Notes", fields.gmNotes)
   next = updateSection(next, "Transitions", fields.transitions)
   return next.endsWith("\n") ? next : `${next}\n`
+}
+
+function normalizeUploadedImageUrl(url: string) {
+  if (!url) return ""
+  if (url.startsWith("http://") || url.startsWith("https://")) return url
+  return `${IMAGE_HOST}/${url.replace(/^\/+/, "")}`
 }
 
 function frontmatterValue(content: string, key: string) {
@@ -591,6 +756,11 @@ function sectionValue(content: string, heading: string) {
   return match?.[1]?.trim() ?? ""
 }
 
+function migrationContextValue(content: string, label: string) {
+  const match = content.match(new RegExp(`^${escapeRegExp(label)}:\\s*(.+)$`, "m"))
+  return match?.[1]?.trim() ?? ""
+}
+
 function updateSection(content: string, heading: string, value: string) {
   if (!value.trim()) return content
   const replacement = `## ${heading}\n\n${value.trim()}\n`
@@ -606,4 +776,8 @@ function safeJson(content: string): Record<string, unknown> {
   } catch {
     return {}
   }
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 }

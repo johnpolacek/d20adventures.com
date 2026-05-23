@@ -1,4 +1,7 @@
 ---
+moduleOrder: 17
+sceneTitle: "The Black Market"
+sectionTitle: "The Black Market"
 id: "labyrinthine-stalls"
 type: "encounter"
 title: "Labyrinthine Stalls"

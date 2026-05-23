@@ -1,4 +1,7 @@
 ---
+moduleOrder: 23
+sceneTitle: "Ambush"
+sectionTitle: "The Black Market"
 id: "the-ambush"
 type: "encounter"
 title: "The Ambush"

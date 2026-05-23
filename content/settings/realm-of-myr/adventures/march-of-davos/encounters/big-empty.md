@@ -1,4 +1,7 @@
 ---
+moduleOrder: 7
+sceneTitle: "Into the Underground"
+sectionTitle: "The Covenant of The Cowl"
 id: "big-empty"
 type: "encounter"
 title: "Big Empty"

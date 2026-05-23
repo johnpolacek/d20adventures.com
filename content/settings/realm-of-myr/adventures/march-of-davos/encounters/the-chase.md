@@ -1,4 +1,7 @@
 ---
+moduleOrder: 27
+sceneTitle: "Murder in the Mansion"
+sectionTitle: "The Masquerade Ball"
 id: "the-chase"
 type: "encounter"
 title: "The Chase"

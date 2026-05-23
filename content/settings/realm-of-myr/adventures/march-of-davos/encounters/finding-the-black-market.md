@@ -1,4 +1,7 @@
 ---
+moduleOrder: 13
+sceneTitle: "The Lower Districts"
+sectionTitle: "The Black Market"
 id: "finding-the-black-market"
 type: "encounter"
 title: "Finding the Black Market"

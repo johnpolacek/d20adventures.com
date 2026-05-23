@@ -1,4 +1,7 @@
 ---
+moduleOrder: 26
+sceneTitle: "The Blackthorn Mansion"
+sectionTitle: "The Masquerade Ball"
 id: "the-blackthorns"
 type: "encounter"
 title: "The Blackthorns"

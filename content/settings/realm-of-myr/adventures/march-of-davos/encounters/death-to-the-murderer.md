@@ -1,4 +1,7 @@
 ---
+moduleOrder: 9
+sceneTitle: "Murder in the Mansion"
+sectionTitle: "The Masquerade Ball"
 id: "death-to-the-murderer"
 type: "encounter"
 title: "Death to the Murderer!"

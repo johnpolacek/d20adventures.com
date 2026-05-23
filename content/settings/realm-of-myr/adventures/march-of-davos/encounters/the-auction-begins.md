@@ -1,4 +1,7 @@
 ---
+moduleOrder: 24
+sceneTitle: "The Auction"
+sectionTitle: "The Black Market"
 id: "the-auction-begins"
 type: "encounter"
 title: "The Auction Begins"

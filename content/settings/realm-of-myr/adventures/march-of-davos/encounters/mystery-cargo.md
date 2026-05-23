@@ -1,4 +1,7 @@
 ---
+moduleOrder: 19
+sceneTitle: "The Docks"
+sectionTitle: "The Investigation"
 id: "mystery-cargo"
 type: "encounter"
 title: "Mystery Cargo"

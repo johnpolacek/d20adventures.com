@@ -5,6 +5,15 @@
 <header><p class="eyebrow">Project-context log</p><h1>Decision history</h1><p>Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.</p></header>
 <article class="entry">
 <div class="date">2026-05-23</div>
+<section class="body"><h2>Reworked admin wiki editor toward classic module reading</h2><ul>
+<li>Promoted March of Davos encounter hierarchy into durable <code>sectionTitle</code>, <code>sceneTitle</code>, and <code>moduleOrder</code> frontmatter.</li>
+<li>Changed the admin wiki outline to use nested adventure section and scene groups instead of a flat encounter list.</li>
+<li>Added module-style page editing with prominent art preview, replace/remove image controls, read-aloud intro, GM notes, and exits.</li>
+<li>Validation evidence: <code>pnpm test:wiki-adventures:admin-authoring</code>, <code>pnpm test:wiki-adventures:march-of-davos-bridge</code>, <code>pnpm tsc --noEmit --pretty false</code>, <code>pnpm build</code>, and <code>git diff --check</code> passed.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-23</div>
 <section class="body"><h2>Refined admin wiki editor into a navigable wiki map</h2><ul>
 <li>Replaced the flat source-file list feel with grouped wiki navigation for adventure pages, encounters, NPC profiles, premade characters, and sheets.</li>
 <li>Added parsed typed-link navigation, encounter transition visibility, backlinks, selected-page context, and a more structured editor layout.</li>

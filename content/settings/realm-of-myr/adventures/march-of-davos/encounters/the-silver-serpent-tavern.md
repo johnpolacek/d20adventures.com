@@ -1,4 +1,7 @@
 ---
+moduleOrder: 39
+sceneTitle: "The Silver Serpent Tavern"
+sectionTitle: "The Investigation"
 id: "the-silver-serpent-tavern"
 type: "encounter"
 title: "The Silver Serpent Tavern"

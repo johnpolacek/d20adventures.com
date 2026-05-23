@@ -1,4 +1,7 @@
 ---
+moduleOrder: 6
+sceneTitle: "The Lower Districts"
+sectionTitle: "The Black Market"
 id: "beset-by-street-urchins"
 type: "encounter"
 title: "Beset by Street Urchins"

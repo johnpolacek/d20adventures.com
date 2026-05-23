@@ -1,4 +1,7 @@
 ---
+moduleOrder: 25
+sceneTitle: "The Docks"
+sectionTitle: "The Investigation"
 id: "the-beast-escapes"
 type: "encounter"
 title: "The Beast Escapes"

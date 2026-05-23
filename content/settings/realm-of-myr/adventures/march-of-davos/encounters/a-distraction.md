@@ -1,4 +1,7 @@
 ---
+moduleOrder: 1
+sceneTitle: "Exploring the Mansion"
+sectionTitle: "The Masquerade Ball"
 id: "a-distraction"
 type: "encounter"
 title: "A Distraction"

@@ -1,4 +1,7 @@
 ---
+moduleOrder: 11
+sceneTitle: "Silverhand"
+sectionTitle: "The Black Market"
 id: "face-to-face-with-silverhand"
 type: "encounter"
 title: "Face-to-Face with Silverhand"

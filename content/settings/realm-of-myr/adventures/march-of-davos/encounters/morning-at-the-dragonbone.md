@@ -1,4 +1,7 @@
 ---
+moduleOrder: 18
+sceneTitle: "Plea for Help"
+sectionTitle: "Arrival At Kordavos"
 id: "morning-at-the-dragonbone"
 type: "encounter"
 title: "Morning at the Dragonbone"

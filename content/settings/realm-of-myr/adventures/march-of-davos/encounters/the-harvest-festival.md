@@ -1,4 +1,7 @@
 ---
+moduleOrder: 31
+sceneTitle: "Arrival at Kordavos"
+sectionTitle: "Arrival At Kordavos"
 id: "the-harvest-festival"
 type: "encounter"
 title: "The Harvest Festival"

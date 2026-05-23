@@ -1,4 +1,7 @@
 ---
+moduleOrder: 33
+sceneTitle: "Into the Underground"
+sectionTitle: "The Covenant of The Cowl"
 id: "the-hunt-for-the-assassin"
 type: "encounter"
 title: "The Hunt for the Assassin"

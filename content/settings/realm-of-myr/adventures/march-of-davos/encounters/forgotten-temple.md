@@ -1,4 +1,7 @@
 ---
+moduleOrder: 14
+sceneTitle: "The Inner Sanctum"
+sectionTitle: "The Covenant of The Cowl"
 id: "forgotten-temple"
 type: "encounter"
 title: "Forgotten Temple"

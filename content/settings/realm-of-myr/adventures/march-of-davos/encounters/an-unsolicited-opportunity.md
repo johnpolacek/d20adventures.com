@@ -1,4 +1,7 @@
 ---
+moduleOrder: 4
+sceneTitle: "Evening Falls"
+sectionTitle: "Arrival At Kordavos"
 id: "an-unsolicited-opportunity"
 type: "encounter"
 title: "An Unsolicited Opportunity"

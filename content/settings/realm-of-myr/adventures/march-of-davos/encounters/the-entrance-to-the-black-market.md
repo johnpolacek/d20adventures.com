@@ -1,4 +1,7 @@
 ---
+moduleOrder: 29
+sceneTitle: "The Black Market"
+sectionTitle: "The Black Market"
 id: "the-entrance-to-the-black-market"
 type: "encounter"
 title: "The Entrance to the Black Market"

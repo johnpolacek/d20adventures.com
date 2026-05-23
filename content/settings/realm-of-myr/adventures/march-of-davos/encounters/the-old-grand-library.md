@@ -1,4 +1,7 @@
 ---
+moduleOrder: 36
+sceneTitle: "The Library"
+sectionTitle: "The Investigation"
 id: "the-old-grand-library"
 type: "encounter"
 title: "The Old Grand Library"

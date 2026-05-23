@@ -19,6 +19,10 @@ async function main() {
   assert.ok(definition)
   const marchFiles = readLocalWikiAdventureSourceFiles(definition)
   assert.ok(marchFiles.some((file) => file.path.endsWith("/npcs/garlan-ironfist.md")), "March NPC source paths should be included from migration report")
+  const firstMarchEncounter = marchFiles.find((file) => file.path.endsWith("/encounters/the-gates-of-kordavos.md"))
+  assert.ok(firstMarchEncounter?.content.includes('sectionTitle: "Arrival At Kordavos"'))
+  assert.ok(firstMarchEncounter?.content.includes('sceneTitle: "Arrival at Kordavos"'))
+  assert.ok(firstMarchEncounter?.content.includes("moduleOrder:"))
 
   const adminPage = readFileSync("app/admin/page.tsx", "utf8")
   assert.equal(adminPage.includes("/admin/adventure-plans"), false)
@@ -27,6 +31,10 @@ async function main() {
   const editorPage = readFileSync("app/admin/wiki-adventures/[settingId]/[planId]/page.tsx", "utf8")
   assert.ok(editorPage.includes("AdminWikiAdventureEditor"))
   assert.ok(editorPage.includes("loadAdminWikiAdventureState"))
+  const editorComponent = readFileSync("components/wiki-adventures/admin-wiki-adventure-editor.tsx", "utf8")
+  assert.ok(editorComponent.includes("Module Art"))
+  assert.ok(editorComponent.includes("Read Aloud"))
+  assert.ok(editorComponent.includes("moduleSections"))
 }
 
 main()

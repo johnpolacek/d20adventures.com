@@ -1,4 +1,7 @@
 ---
+moduleOrder: 8
+sceneTitle: "Arrival at Kordavos"
+sectionTitle: "Arrival At Kordavos"
 id: "clan-conflict"
 type: "encounter"
 title: "Clan Conflict"

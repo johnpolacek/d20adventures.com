@@ -1,4 +1,7 @@
 ---
+moduleOrder: 43
+sceneTitle: "Exploring the Mansion"
+sectionTitle: "The Masquerade Ball"
 id: "through-the-halls"
 type: "encounter"
 title: "Through the Halls"

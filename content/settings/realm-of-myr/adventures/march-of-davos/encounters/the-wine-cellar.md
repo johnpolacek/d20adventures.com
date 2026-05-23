@@ -1,4 +1,7 @@
 ---
+moduleOrder: 41
+sceneTitle: "Exploring the Mansion"
+sectionTitle: "The Masquerade Ball"
 id: "the-wine-cellar"
 type: "encounter"
 title: "The Wine Cellar"

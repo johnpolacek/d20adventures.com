@@ -1,4 +1,7 @@
 ---
+moduleOrder: 44
+sceneTitle: "Into the Underground"
+sectionTitle: "The Covenant of The Cowl"
 id: "through-the-labyrinth"
 type: "encounter"
 title: "Through the Labyrinth"

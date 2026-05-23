@@ -1,4 +1,7 @@
 ---
+moduleOrder: 20
+sceneTitle: "Silverhand"
+sectionTitle: "The Black Market"
 id: "shadowing-silverhand"
 type: "encounter"
 title: "Shadowing Silverhand"

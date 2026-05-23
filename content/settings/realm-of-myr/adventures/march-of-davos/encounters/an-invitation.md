@@ -1,4 +1,7 @@
 ---
+moduleOrder: 3
+sceneTitle: "The Docks"
+sectionTitle: "The Investigation"
 id: "an-invitation"
 type: "encounter"
 title: "An Invitation"

@@ -1,4 +1,7 @@
 ---
+moduleOrder: 38
+sceneTitle: "Into the Underground"
+sectionTitle: "The Covenant of The Cowl"
 id: "the-sealed-door"
 type: "encounter"
 title: "The Sealed Door"

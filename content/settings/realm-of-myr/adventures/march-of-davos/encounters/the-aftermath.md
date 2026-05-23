@@ -1,4 +1,7 @@
 ---
+moduleOrder: 22
+sceneTitle: "The Docks"
+sectionTitle: "The Investigation"
 id: "the-aftermath"
 type: "encounter"
 title: "The Aftermath"

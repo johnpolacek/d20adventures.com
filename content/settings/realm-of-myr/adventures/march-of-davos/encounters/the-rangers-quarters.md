@@ -1,4 +1,7 @@
 ---
+moduleOrder: 37
+sceneTitle: "Exploring the Mansion"
+sectionTitle: "The Masquerade Ball"
 id: "the-rangers-quarters"
 type: "encounter"
 title: "The Ranger’s Quarters"

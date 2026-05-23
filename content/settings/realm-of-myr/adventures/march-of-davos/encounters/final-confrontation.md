@@ -1,4 +1,7 @@
 ---
+moduleOrder: 12
+sceneTitle: "The Inner Sanctum"
+sectionTitle: "The Covenant of The Cowl"
 id: "final-confrontation"
 type: "encounter"
 title: "Final Confrontation"
