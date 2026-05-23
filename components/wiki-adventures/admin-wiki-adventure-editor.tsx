@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, Download, FileJson, FileText, GitBranch, ImageIcon, MessageSquare, Plus, Save, Search, Trash2, Upload, Wand2 } from "lucide-react"
+import { Download, FileJson, FileText, GitBranch, ImageIcon, MessageSquare, Plus, Save, Search, Trash2, Upload, Wand2 } from "lucide-react"
 import * as React from "react"
 import { toast } from "sonner"
 import {
@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input"
 import Image from "@/components/ui/native-image"
 import { Textarea } from "@/components/ui/textarea"
 import { IMAGE_HOST } from "@/lib/config"
-import type { RuntimeEncounter, RuntimeManifest, SourceFile, ValidationReport } from "@/lib/wiki-adventures"
+import type { RuntimeEncounter, RuntimeManifest, SourceFile } from "@/lib/wiki-adventures"
 
 type EditorState = Awaited<ReturnType<typeof loadAdminWikiAdventureStateAction>>
 
@@ -131,8 +131,8 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
   }
 
   return (
-    <div className="min-h-[calc(100vh-72px)] bg-[#141312] pt-10 text-stone-100">
-      <header className="border-b border-[#3a3630] bg-[#1b1a18] px-6 py-6 shadow-[0_18px_60px_rgba(0,0,0,.22)]">
+    <div className="flex h-[calc(100vh-72px)] flex-col overflow-hidden bg-[#141312] pt-10 text-stone-100">
+      <header className="shrink-0 border-b border-[#3a3630] bg-[#1b1a18] px-6 py-6 shadow-[0_18px_60px_rgba(0,0,0,.22)]">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-normal text-[#e6d6b8]">{state.manifest.title}</h1>
@@ -154,15 +154,15 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
         </div>
       </header>
 
-      <main className="grid min-h-[calc(100vh-196px)] grid-cols-1 xl:grid-cols-[420px_minmax(0,1fr)_400px]">
-        <aside className="border-b border-[#3a3630] bg-[#181713] xl:border-r xl:border-b-0">
+      <main className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden xl:grid-cols-[420px_minmax(0,1fr)_400px]">
+        <aside className="min-h-0 overflow-hidden border-b border-[#3a3630] bg-[#181713] xl:border-r xl:border-b-0">
           <WikiNavigator wiki={wiki} selectedPath={selectedPath} onSelect={setSelectedPath} />
         </aside>
 
-        <section className="min-w-0 border-b border-[#3a3630] bg-[#201d18] xl:border-r xl:border-b-0">
-          <div className="grid min-h-full grid-rows-[auto_1fr]">
+        <section className="min-h-0 min-w-0 overflow-hidden border-b border-[#3a3630] bg-[#201d18] xl:border-r xl:border-b-0">
+          <div className="grid h-full min-h-0 grid-rows-[auto_1fr]">
             <WikiPageHeader page={selectedPage} />
-            <div>
+            <div className="min-h-0 overflow-y-auto">
               <div className="p-6">
                 <ModulePageEditor file={selectedFile} files={state.files} manifest={state.manifest} encounters={state.encounters} page={selectedPage} disabled={busy} onSave={saveFile} />
               </div>
@@ -170,7 +170,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
           </div>
         </section>
 
-        <aside className="bg-[#181713] p-5">
+        <aside className="min-h-0 overflow-y-auto bg-[#181713] p-5">
           <div className="flex items-center gap-2 text-[#d8c9ad]">
             <MessageSquare className="size-4" />
             <h2 className="font-mono text-xs font-bold uppercase">Chat With Wiki</h2>
@@ -183,7 +183,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
               </Button>
             </div>
           </div>
-          <div className="mt-4 h-[calc(100vh-400px)] min-h-[280px] space-y-3 overflow-auto rounded-md border border-[#3a3630] bg-[#11100f] p-3">
+          <div className="mt-4 min-h-[280px] space-y-3 overflow-auto rounded-md border border-[#3a3630] bg-[#11100f] p-3 xl:max-h-[calc(100vh-400px)]">
             {messages.map((message, index) => (
               <div key={index} className={message.role === "admin" ? "text-right" : "text-left"}>
                 <div className={`inline-block max-w-[92%] whitespace-pre-wrap rounded-md px-3 py-2 text-sm ${message.role === "admin" ? "bg-slate-800 text-slate-50" : "bg-stone-800 text-stone-100"}`}>
@@ -192,7 +192,6 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
               </div>
             ))}
           </div>
-          <ValidationSummary validation={state.validation} />
         </aside>
       </main>
     </div>
@@ -445,7 +444,7 @@ function WikiNavigator({ wiki, selectedPath, onSelect }: { wiki: WikiModel; sele
   const [query, setQuery] = React.useState("")
   const normalizedQuery = query.trim().toLowerCase()
   return (
-    <div className="grid h-full grid-rows-[auto_1fr]">
+    <div className="grid h-full min-h-0 grid-rows-[auto_1fr]">
       <div className="border-b border-[#3a3630] p-4">
         <label className="grid grid-cols-[18px_1fr] items-center gap-2 rounded-md border border-[#3a3630] bg-[#11100f] px-3 py-2">
           <Search className="size-4 text-stone-500" />
@@ -457,7 +456,7 @@ function WikiNavigator({ wiki, selectedPath, onSelect }: { wiki: WikiModel; sele
           />
         </label>
       </div>
-      <div className="overflow-auto p-3 xl:max-h-[calc(100vh-236px)]">
+      <div className="min-h-0 overflow-y-auto p-3">
         {normalizedQuery ? (
           wiki.groups.map((group) => {
             const pages = group.pages.filter((page) => `${page.title} ${page.id} ${page.summary}`.toLowerCase().includes(normalizedQuery))
@@ -547,27 +546,6 @@ function WikiPageHeader({ page }: { page?: WikiPage }) {
         </div>
       </div>
     </header>
-  )
-}
-
-function ValidationSummary({ validation }: { validation: ValidationReport }) {
-  return (
-    <div className="mt-4 rounded-md border border-[#3a3630] bg-[#11100f] p-3">
-      <div className="flex items-center gap-2 text-stone-300">
-        <Check className="size-4" />
-        <h2 className="font-mono text-xs font-bold uppercase">Validation</h2>
-      </div>
-      <p className="mt-2 text-sm text-stone-300">
-        {validation.summary.errorCount} errors · {validation.summary.warningCount} warnings · {validation.summary.suggestionCount} suggestions
-      </p>
-      <div className="mt-3 max-h-48 space-y-2 overflow-auto">
-        {validation.findings.map((finding, index) => (
-          <p key={`${finding.sourcePath}-${index}`} className="text-xs text-stone-400">
-            <span className="text-stone-200">{finding.severity}</span> {finding.message}
-          </p>
-        ))}
-      </div>
-    </div>
   )
 }
 
