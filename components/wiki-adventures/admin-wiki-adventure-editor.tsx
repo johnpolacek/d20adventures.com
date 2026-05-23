@@ -171,23 +171,13 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
         </section>
 
         <aside className="min-h-0 overflow-hidden bg-[radial-gradient(circle_at_25%_0%,rgba(132,91,44,.18),transparent_34%),linear-gradient(180deg,#1d1914_0%,#12110f_58%,#0d0c0b_100%)]">
-          <div className="flex h-full min-h-0 flex-col p-5">
-            <div className="shrink-0 border-b border-[#4a3e31] pb-4">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="grid size-9 shrink-0 place-items-center rounded-md border border-[#d8bd81]/45 bg-[#2a241d] shadow-[0_0_28px_rgba(216,189,129,.12)]">
-                    <MessageSquare className="size-4 text-[#f0d79c]" />
-                  </div>
-                  <div className="min-w-0">
-                    <h2 className="font-mono text-[11px] font-bold uppercase tracking-[.18em] text-[#f0d79c]">Chat With Wiki</h2>
-                    <p className="mt-1 truncate text-xs text-stone-500">{state.manifest.title}</p>
-                  </div>
-                </div>
-                <span className="rounded border border-emerald-700/50 bg-emerald-950/35 px-2 py-1 font-mono text-[10px] uppercase tracking-[.12em] text-emerald-200">Source</span>
-              </div>
+          <div className="flex h-full min-h-0 flex-col">
+            <div className="flex h-10 shrink-0 items-center gap-2 border-b border-[#4a3e31] bg-[#15120f]/80 px-5">
+              <MessageSquare className="size-3.5 text-[#f0d79c]" />
+              <h2 className="font-mono text-[11px] font-bold uppercase tracking-[.16em] text-[#f0d79c]">Chat</h2>
             </div>
 
-            <div className="shrink-0 pt-4">
+            <div className="shrink-0 px-5 pt-4">
               <div className="rounded-md border border-[#5a4d3f] bg-[#0f0e0c]/80 p-3 shadow-[0_18px_50px_rgba(0,0,0,.28)]">
                 <label htmlFor="wiki-chat-prompt" className="mb-2 block font-mono text-[10px] font-bold uppercase tracking-[.16em] text-stone-500">
                   Proposed edit
@@ -213,7 +203,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
               </div>
             </div>
 
-            <div className="mt-4 flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-[#3f372e] bg-[#0b0a09] shadow-[inset_0_1px_0_rgba(255,255,255,.03)]">
+            <div className="mx-5 mt-4 mb-5 flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-[#3f372e] bg-[#0b0a09] shadow-[inset_0_1px_0_rgba(255,255,255,.03)]">
               <div className="flex shrink-0 items-center justify-between border-b border-[#2d2923] px-3 py-2">
                 <span className="font-mono text-[10px] font-bold uppercase tracking-[.16em] text-stone-500">Change Log</span>
                 <span className="font-mono text-[10px] text-stone-600">{messages.length} entries</span>
