@@ -1,5 +1,8 @@
 "use client"
 
+import { Check, Download, FileJson, FileText, GitBranch, ImageIcon, MessageSquare, Plus, Save, Search, Trash2, Upload, Wand2 } from "lucide-react"
+import * as React from "react"
+import { toast } from "sonner"
 import {
   exportAdminWikiAdventureBundleAction,
   importAdminWikiAdventureBundleAction,
@@ -10,12 +13,10 @@ import {
 import { Button } from "@/components/ui/button"
 import { ImageUpload } from "@/components/ui/image-upload"
 import { Input } from "@/components/ui/input"
+import Image from "@/components/ui/native-image"
 import { Textarea } from "@/components/ui/textarea"
 import { IMAGE_HOST } from "@/lib/config"
 import type { RuntimeEncounter, RuntimeManifest, SourceFile, ValidationReport } from "@/lib/wiki-adventures"
-import { Check, Download, FileJson, FileText, GitBranch, ImageIcon, MessageSquare, Plus, Save, Search, Trash2, Upload, Wand2 } from "lucide-react"
-import * as React from "react"
-import { toast } from "sonner"
 
 type EditorState = Awaited<ReturnType<typeof loadAdminWikiAdventureStateAction>>
 
@@ -28,6 +29,18 @@ type EditableNpcRef = {
   id: string
   behavior: string
   initialInitiative: string
+}
+
+type NpcLookupRecord = {
+  id: string
+  name: string
+  image: string
+  race: string
+  archetype: string
+  gender: string
+  summary: string
+  sheetPath?: string
+  profilePath?: string
 }
 
 export function AdminWikiAdventureEditor({ initialState }: { initialState: EditorState }) {
@@ -151,7 +164,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
             <WikiPageHeader page={selectedPage} />
             <div>
               <div className="p-6">
-                <ModulePageEditor file={selectedFile} manifest={state.manifest} encounters={state.encounters} page={selectedPage} disabled={busy} onSave={saveFile} />
+                <ModulePageEditor file={selectedFile} files={state.files} manifest={state.manifest} encounters={state.encounters} page={selectedPage} disabled={busy} onSave={saveFile} />
               </div>
             </div>
           </div>
@@ -188,6 +201,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
 
 function ModulePageEditor({
   file,
+  files,
   manifest,
   encounters,
   page,
@@ -195,6 +209,7 @@ function ModulePageEditor({
   onSave,
 }: {
   file?: SourceFile
+  files: SourceFile[]
   manifest: RuntimeManifest
   encounters: Record<string, RuntimeEncounter>
   page?: WikiPage
@@ -202,6 +217,7 @@ function ModulePageEditor({
   onSave: (path: string, content: string) => void
 }) {
   const fields = React.useMemo(() => parseEditableFields(file), [file])
+  const npcLookup = React.useMemo(() => buildNpcLookup(files), [files])
   const [title, setTitle] = React.useState(fields.title)
   const [summary, setSummary] = React.useState(fields.summary)
   const [intro, setIntro] = React.useState(fields.intro)
@@ -272,7 +288,7 @@ function ModulePageEditor({
               <Block label="GM Notes" value={gmNotes} onChange={setGmNotes} disabled={disabled} rows={6} tone="paper" hideLabel />
             </ModuleBlock>
             <ModuleBlock title="Encounter NPCs">
-              <EncounterNpcEditor refs={npcRefs} onChange={setNpcRefs} disabled={disabled} />
+              <EncounterNpcEditor refs={npcRefs} npcLookup={npcLookup} onChange={setNpcRefs} disabled={disabled} />
             </ModuleBlock>
             <ModuleBlock title="Exits">
               <Block label="Transitions" value={transitions} onChange={setTransitions} disabled={disabled} rows={7} tone="paper" hideLabel />
@@ -289,26 +305,76 @@ function ModulePageEditor({
   )
 }
 
-function EncounterNpcEditor({ refs, onChange, disabled }: { refs: EditableNpcRef[]; onChange: (refs: EditableNpcRef[]) => void; disabled: boolean }) {
+function EncounterNpcEditor({
+  refs,
+  npcLookup,
+  onChange,
+  disabled,
+}: {
+  refs: EditableNpcRef[]
+  npcLookup: Map<string, NpcLookupRecord>
+  onChange: (refs: EditableNpcRef[]) => void
+  disabled: boolean
+}) {
   const updateRef = (index: number, patch: Partial<EditableNpcRef>) => onChange(refs.map((ref, refIndex) => (refIndex === index ? { ...ref, ...patch } : ref)))
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {refs.length === 0 && <p className="text-sm text-[#5b4631]">No NPCs assigned to this encounter.</p>}
-      {refs.map((ref, index) => (
-        <div key={index} className="rounded border border-[#b9a77f] bg-[#f1e4bf] p-3">
-          <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_160px_auto]">
-            <Field label="NPC ID" value={ref.id} onChange={(value) => updateRef(index, { id: value })} disabled={disabled} tone="paper" />
-            <Field label="Initiative" value={ref.initialInitiative} onChange={(value) => updateRef(index, { initialInitiative: value })} disabled={disabled} tone="paper" />
-            <Button variant="outline" size="sm" onClick={() => onChange(refs.filter((_, refIndex) => refIndex !== index))} disabled={disabled} className="self-end gap-1 border-[#51473a] bg-[#25211d] text-stone-100 hover:bg-[#34302a]">
-              <Trash2 className="size-3.5" /> remove
-            </Button>
+      {refs.map((ref, index) => {
+        const npc = npcLookup.get(ref.id)
+        const image = npcImageUrl(npc?.image ?? "")
+        const details = [npc?.gender, npc?.race, npc?.archetype].filter(Boolean).join(" ")
+        return (
+          <div key={index} className="rounded-md border border-[#b29d70] bg-[#f1e4bf] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.42)]">
+            <div className="grid gap-4 sm:grid-cols-[88px_minmax(0,1fr)]">
+              <div className="size-[88px] overflow-hidden rounded border border-[#9d8759] bg-[#d9caab] shadow-sm">
+                {image ? (
+                  <Image src={image} alt={npc?.name ?? ref.id} width={88} height={88} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-[#d3c19b] font-mono text-lg font-bold uppercase text-[#6a5635]">{initials(npc?.name ?? ref.id)}</div>
+                )}
+              </div>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h4 className="truncate font-serif text-2xl font-bold leading-tight text-[#24180d]">{npc?.name ?? titleFromId(ref.id || "Unknown NPC")}</h4>
+                    <p className="mt-1 font-mono text-[11px] uppercase tracking-[.14em] text-[#6c5738]">{details || "NPC reference"}</p>
+                    <p className="mt-1 truncate font-mono text-[11px] text-[#7b6948]">{ref.id || "missing npc id"}</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onChange(refs.filter((_, refIndex) => refIndex !== index))}
+                    disabled={disabled}
+                    className="gap-1 border-[#51473a] bg-[#25211d] text-stone-100 hover:bg-[#34302a]"
+                  >
+                    <Trash2 className="size-3.5" /> remove
+                  </Button>
+                </div>
+                {npc?.summary ? (
+                  <p className="mt-3 line-clamp-3 text-sm leading-6 text-[#4a3822]">{npc.summary}</p>
+                ) : (
+                  <p className="mt-3 text-sm italic text-[#6f5b3c]">No NPC sheet details found for this reference.</p>
+                )}
+              </div>
+            </div>
+            <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_180px]">
+              <Field label="NPC ID" value={ref.id} onChange={(value) => updateRef(index, { id: value })} disabled={disabled} tone="paper" />
+              <Field label="Initiative" value={ref.initialInitiative} onChange={(value) => updateRef(index, { initialInitiative: value })} disabled={disabled} tone="paper" />
+            </div>
+            <div className="mt-3">
+              <Block label="Behavior" value={ref.behavior} onChange={(value) => updateRef(index, { behavior: value })} disabled={disabled} rows={3} tone="paper" />
+            </div>
           </div>
-          <div className="mt-2">
-            <Block label="Behavior" value={ref.behavior} onChange={(value) => updateRef(index, { behavior: value })} disabled={disabled} rows={3} tone="paper" />
-          </div>
-        </div>
-      ))}
-      <Button variant="outline" size="sm" onClick={() => onChange([...refs, { id: "", behavior: "", initialInitiative: "" }])} disabled={disabled} className="gap-1 border-[#51473a] bg-[#25211d] text-stone-100 hover:bg-[#34302a]">
+        )
+      })}
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => onChange([...refs, { id: "", behavior: "", initialInitiative: "" }])}
+        disabled={disabled}
+        className="gap-1 border-[#51473a] bg-[#25211d] text-stone-100 hover:bg-[#34302a]"
+      >
         <Plus className="size-3.5" /> add npc
       </Button>
     </div>
@@ -400,7 +466,9 @@ function WikiNavigator({ wiki, selectedPath, onSelect }: { wiki: WikiModel; sele
           })
         ) : (
           <>
-            {wiki.groups.find((group) => group.key === "adventure") && <PageGroup title="Adventure" pages={wiki.groups.find((group) => group.key === "adventure")!.pages} selectedPath={selectedPath} onSelect={onSelect} />}
+            {wiki.groups.find((group) => group.key === "adventure") && (
+              <PageGroup title="Adventure" pages={wiki.groups.find((group) => group.key === "adventure")!.pages} selectedPath={selectedPath} onSelect={onSelect} />
+            )}
             {wiki.moduleSections.map((section) => (
               <section key={section.title} className="mb-5">
                 <h3 className="mb-2 border-b border-[#3a3630] px-2 pb-1 font-serif text-base font-bold text-[#e0d1b3]">{section.title}</h3>
@@ -416,9 +484,11 @@ function WikiNavigator({ wiki, selectedPath, onSelect }: { wiki: WikiModel; sele
                 ))}
               </section>
             ))}
-            {wiki.groups.filter((group) => !["adventure", "encounter"].includes(group.key)).map((group) => (
-              <PageGroup key={group.key} title={group.title} pages={group.pages} selectedPath={selectedPath} onSelect={onSelect} />
-            ))}
+            {wiki.groups
+              .filter((group) => !["adventure", "encounter"].includes(group.key))
+              .map((group) => (
+                <PageGroup key={group.key} title={group.title} pages={group.pages} selectedPath={selectedPath} onSelect={onSelect} />
+              ))}
           </>
         )}
       </div>
@@ -539,7 +609,11 @@ function buildWikiModel(files: SourceFile[], encounters: Record<string, RuntimeE
 }
 
 function pageFromSource(file: SourceFile, encounters: Record<string, RuntimeEncounter>): WikiPage {
-  const id = file.path.split("/").at(-1)?.replace(/\.(md|json)$/, "") ?? file.path
+  const id =
+    file.path
+      .split("/")
+      .at(-1)
+      ?.replace(/\.(md|json)$/, "") ?? file.path
   if (file.path.endsWith(".json")) {
     const parsed = safeJson(file.content)
     return {
@@ -614,6 +688,70 @@ function pageSort(a: WikiPage, b: WikiPage) {
   return a.title.localeCompare(b.title)
 }
 
+function buildNpcLookup(files: SourceFile[]): Map<string, NpcLookupRecord> {
+  const lookup = new Map<string, NpcLookupRecord>()
+  for (const file of files) {
+    if (!file.path.endsWith(".json") || !file.path.includes("/npcs/")) continue
+    const parsed = safeJson(file.content)
+    const fallbackId =
+      file.path
+        .split("/")
+        .at(-1)
+        ?.replace(/\.json$/, "") ?? file.path
+    const id = String(parsed.id ?? fallbackId)
+    lookup.set(id, {
+      id,
+      name: String(parsed.name ?? titleFromId(id)),
+      image: String(parsed.image ?? ""),
+      race: String(parsed.race ?? ""),
+      archetype: String(parsed.archetype ?? ""),
+      gender: String(parsed.gender ?? ""),
+      summary: compactText([parsed.appearance, parsed.personality, parsed.behavior]),
+      sheetPath: file.path,
+    })
+  }
+  for (const file of files) {
+    if (!file.path.endsWith(".md") || markdownKind(file) !== "npc") continue
+    const fallbackId = file.path.split("/").at(-1)?.replace(/\.md$/, "") ?? file.path
+    const id = frontmatterValue(file.content, "id") || fallbackId
+    const existing = lookup.get(id)
+    lookup.set(id, {
+      id,
+      name: existing?.name || frontmatterValue(file.content, "title") || titleFromId(id),
+      image: existing?.image || frontmatterValue(file.content, "image"),
+      race: existing?.race ?? "",
+      archetype: existing?.archetype ?? "",
+      gender: existing?.gender ?? "",
+      summary: existing?.summary || sectionValue(file.content, "Summary"),
+      sheetPath: existing?.sheetPath,
+      profilePath: file.path,
+    })
+  }
+  return lookup
+}
+
+function compactText(values: unknown[]) {
+  return values
+    .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+    .map((value) => value.trim())
+    .join(" ")
+}
+
+function npcImageUrl(url: string) {
+  if (!url) return ""
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/")) return url
+  return `${IMAGE_HOST}/${url.replace(/^\/+/, "")}`
+}
+
+function initials(value: string) {
+  return value
+    .split(/[\s-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.slice(0, 1))
+    .join("")
+}
+
 function titleFromId(id: string) {
   return id
     .split("-")
@@ -661,7 +799,13 @@ function Block({
   return (
     <label className="block space-y-1">
       {!hideLabel && <span className={`font-mono text-xs uppercase ${paper ? "text-[#5b4631]" : "text-stone-300"}`}>{label}</span>}
-      <Textarea value={value} onChange={(event) => onChange(event.target.value)} rows={rows} disabled={disabled} className={paper ? "border-[#b9a77f] bg-[#f1e4bf] font-serif text-base leading-7 text-[#22180e]" : undefined} />
+      <Textarea
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        rows={rows}
+        disabled={disabled}
+        className={paper ? "border-[#b9a77f] bg-[#f1e4bf] font-serif text-base leading-7 text-[#22180e]" : undefined}
+      />
     </label>
   )
 }
@@ -681,7 +825,10 @@ function parseEditableFields(file?: SourceFile) {
   }
 }
 
-function updateMarkdownFields(content: string, fields: { title: string; image: string; summary: string; intro: string; gmNotes: string; transitions: string; npcRefs: EditableNpcRef[]; sectionTitle: string; sceneTitle: string }) {
+function updateMarkdownFields(
+  content: string,
+  fields: { title: string; image: string; summary: string; intro: string; gmNotes: string; transitions: string; npcRefs: EditableNpcRef[]; sectionTitle: string; sceneTitle: string }
+) {
   let next = updateFrontmatterValue(content, "title", fields.title)
   next = updateFrontmatterValue(next, "image", fields.image)
   next = updateFrontmatterValue(next, "sectionTitle", fields.sectionTitle)
