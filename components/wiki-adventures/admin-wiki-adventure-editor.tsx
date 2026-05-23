@@ -7,14 +7,13 @@ import {
   saveAdminWikiAdventureFileAction,
   sendAdminWikiAdventureChatAction,
 } from "@/app/_actions/wiki-adventures/admin-authoring-actions"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ImageUpload } from "@/components/ui/image-upload"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { IMAGE_HOST } from "@/lib/config"
 import type { RuntimeEncounter, RuntimeManifest, SourceFile, ValidationReport } from "@/lib/wiki-adventures"
-import { Check, Download, FileJson, FileText, GitBranch, ImageIcon, MessageSquare, RefreshCcw, Save, Search, Upload, Wand2 } from "lucide-react"
+import { Check, Download, FileJson, FileText, GitBranch, ImageIcon, MessageSquare, Save, Search, Upload, Wand2 } from "lucide-react"
 import * as React from "react"
 import { toast } from "sonner"
 
@@ -117,23 +116,12 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
       <header className="border-b border-[#3a3630] bg-[#1b1a18] px-6 py-6 shadow-[0_18px_60px_rgba(0,0,0,.22)]">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="outline" className="border-slate-600 bg-slate-900/70 text-slate-200">
-                {state.source === "s3" ? "S3 source" : "local fallback"}
-              </Badge>
-              <Badge variant="outline" className="border-stone-600 bg-stone-900/70 text-stone-200">
-                {state.validation.status}
-              </Badge>
-            </div>
-            <h1 className="mt-3 text-3xl font-bold tracking-normal text-[#e6d6b8]">{state.manifest.title}</h1>
+            <h1 className="text-3xl font-bold tracking-normal text-[#e6d6b8]">{state.manifest.title}</h1>
             <p className="text-sm text-stone-500">
-              {wiki.pages.length} wiki pages · {Object.keys(state.encounters).length} encounters · {wiki.linkCount} page links · changes apply to canonical wiki source
+              {wiki.pages.length} wiki pages · {Object.keys(state.encounters).length} encounters
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={refresh} disabled={busy} className="gap-2">
-              <RefreshCcw className="size-4" /> Refresh
-            </Button>
             <Button variant="outline" size="sm" onClick={downloadBundle} disabled={busy} className="gap-2">
               <Download className="size-4" /> Export
             </Button>
@@ -168,7 +156,13 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
             <MessageSquare className="size-4" />
             <h2 className="font-mono text-xs font-bold uppercase">Chat With Wiki</h2>
           </div>
-          <div className="mt-3 h-[calc(100vh-340px)] min-h-[340px] space-y-3 overflow-auto rounded-md border border-[#3a3630] bg-[#11100f] p-3">
+          <div className="mt-3 space-y-2">
+            <Textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="Improve the current adventure..." rows={5} disabled={busy} className="min-h-32" />
+            <Button variant="epic" size="sm" onClick={sendMessage} disabled={busy || !prompt.trim()} className="w-full gap-2">
+              <Wand2 className="size-4" /> Apply Change
+            </Button>
+          </div>
+          <div className="mt-4 h-[calc(100vh-400px)] min-h-[280px] space-y-3 overflow-auto rounded-md border border-[#3a3630] bg-[#11100f] p-3">
             {messages.map((message, index) => (
               <div key={index} className={message.role === "admin" ? "text-right" : "text-left"}>
                 <div className={`inline-block max-w-[92%] whitespace-pre-wrap rounded-md px-3 py-2 text-sm ${message.role === "admin" ? "bg-slate-800 text-slate-50" : "bg-stone-800 text-stone-100"}`}>
@@ -176,12 +170,6 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
                 </div>
               </div>
             ))}
-          </div>
-          <div className="mt-3 space-y-2">
-            <Textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="Improve the current adventure..." rows={4} disabled={busy} />
-            <Button variant="epic" size="sm" onClick={sendMessage} disabled={busy || !prompt.trim()} className="w-full gap-2">
-              <Wand2 className="size-4" /> Apply Change
-            </Button>
           </div>
           <ValidationSummary validation={state.validation} />
         </aside>
@@ -363,7 +351,7 @@ function WikiNavigator({ wiki, selectedPath, onSelect }: { wiki: WikiModel; sele
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Find a page"
+            placeholder="Find an encounter"
             className="min-w-0 bg-transparent text-sm text-stone-200 outline-none placeholder:text-stone-600"
           />
         </label>
