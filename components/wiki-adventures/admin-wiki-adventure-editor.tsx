@@ -131,7 +131,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
   }
 
   return (
-    <div className="flex h-[calc(100vh-72px)] flex-col overflow-hidden bg-[#141312] pt-10 text-stone-100">
+    <div className="flex h-screen flex-col overflow-hidden bg-[#141312] pt-10 text-stone-100">
       <header className="shrink-0 border-b border-[#3a3630] bg-[#1b1a18] px-6 py-6 shadow-[0_18px_60px_rgba(0,0,0,.22)]">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
