@@ -122,12 +122,12 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={downloadBundle} disabled={busy} className="gap-2">
-              <Download className="size-4" /> Export
+            <Button variant="outline" size="sm" onClick={downloadBundle} disabled={busy} className="h-7 gap-1.5 px-2 font-mono text-[11px] lowercase">
+              <Download className="size-3.5" /> export
             </Button>
-            <Button variant="outline" size="sm" asChild disabled={busy} className={`gap-2 ${busy ? "pointer-events-none opacity-50" : "cursor-pointer"}`}>
+            <Button variant="outline" size="sm" asChild disabled={busy} className={`h-7 gap-1.5 px-2 font-mono text-[11px] lowercase ${busy ? "pointer-events-none opacity-50" : "cursor-pointer"}`}>
               <label>
-                <Upload className="size-4" /> Restore
+                <Upload className="size-3.5" /> restore
                 <input type="file" accept="application/json" className="hidden" onChange={restoreBundle} disabled={busy} />
               </label>
             </Button>
@@ -158,9 +158,11 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
           </div>
           <div className="mt-3 space-y-2">
             <Textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="Improve the current adventure..." rows={5} disabled={busy} className="min-h-32" />
-            <Button variant="epic" size="sm" onClick={sendMessage} disabled={busy || !prompt.trim()} className="w-full gap-2">
-              <Wand2 className="size-4" /> Apply Change
-            </Button>
+            <div className="flex justify-center">
+              <Button variant="epic" size="sm" onClick={sendMessage} disabled={busy || !prompt.trim()} className="gap-2">
+                <Wand2 className="size-4" /> Apply Change
+              </Button>
+            </div>
           </div>
           <div className="mt-4 h-[calc(100vh-400px)] min-h-[280px] space-y-3 overflow-auto rounded-md border border-[#3a3630] bg-[#11100f] p-3">
             {messages.map((message, index) => (
@@ -351,7 +353,7 @@ function WikiNavigator({ wiki, selectedPath, onSelect }: { wiki: WikiModel; sele
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Find an encounter"
+            placeholder="Find Encounter"
             className="min-w-0 bg-transparent text-sm text-stone-200 outline-none placeholder:text-stone-600"
           />
         </label>
