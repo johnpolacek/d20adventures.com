@@ -179,9 +179,6 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
 
             <div className="shrink-0 px-5 pt-4">
               <div className="rounded-md border border-[#5a4d3f] bg-[#0f0e0c]/80 p-3 shadow-[0_18px_50px_rgba(0,0,0,.28)]">
-                <label htmlFor="wiki-chat-prompt" className="mb-2 block font-mono text-[10px] font-bold uppercase tracking-[.16em] text-stone-500">
-                  Proposed edit
-                </label>
                 <Textarea
                   id="wiki-chat-prompt"
                   value={prompt}
