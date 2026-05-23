@@ -1,6 +1,6 @@
 "use client"
 import { cn } from "@/lib/utils"
-import Image from "next/image"
+import Image from "@/components/ui/native-image"
 import React, { useState } from "react"
 import { Button } from "./button"
 

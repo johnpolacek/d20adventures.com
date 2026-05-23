@@ -1,7 +1,7 @@
 import CharacterCreateForm from "@/components/forms/character-create-form"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import type { AdventurePlan } from "@/types/adventure-plan"
-import Image from "next/image"
+import Image from "@/components/ui/native-image"
 
 interface PageProps {
   params: Promise<{

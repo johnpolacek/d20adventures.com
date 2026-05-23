@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button"
 import type { AdventureEncounter } from "@/types/adventure-plan"
 import { ChevronsRight, Edit, X } from "lucide-react"
-import Image from "next/image"
+import Image from "@/components/ui/native-image"
 import * as React from "react"
 
 interface EncounterEditCollapsedProps {

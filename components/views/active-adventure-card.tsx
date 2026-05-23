@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { getImageUrl } from "@/lib/utils"
 import type { Adventure } from "@/types/adventure"
 import { ChevronsRight } from "lucide-react"
-import Image from "next/image"
+import Image from "@/components/ui/native-image"
 import Link from "next/link"
 import { textShadow, textShadowSpread } from "../typography/styles"
 

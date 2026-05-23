@@ -10,7 +10,7 @@ import { ListObjectsV2Command } from "@aws-sdk/client-s3"
 import { SignInButton } from "@clerk/nextjs"
 import { auth } from "@clerk/nextjs/server"
 import { ChevronsLeft } from "lucide-react"
-import Image from "next/image"
+import Image from "@/components/ui/native-image"
 import Link from "next/link"
 
 export default async function CreateAdventurePage() {

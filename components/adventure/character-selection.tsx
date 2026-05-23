@@ -12,7 +12,7 @@ import type { TurnCharacter } from "@/types/adventure";
 import type { AdventurePlan } from "@/types/adventure-plan";
 import type { PCTemplate } from "@/types/character";
 import { Eye } from "lucide-react";
-import Image from "next/image";
+import Image from "@/components/ui/native-image";
 import Link from "next/link";
 import React, { useState } from "react";
 import PartyConfiguration from "./PartyConfiguration";

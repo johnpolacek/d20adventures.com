@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { cn, getImageUrl } from "@/lib/utils"
 import type { Character, PCTemplate } from "@/types/character"
 import { ChevronsUp, Copy, Edit, Plus, X } from "lucide-react"
-import Image from "next/image"
+import Image from "@/components/ui/native-image"
 import * as React from "react"
 
 interface CharacterCardProps {
