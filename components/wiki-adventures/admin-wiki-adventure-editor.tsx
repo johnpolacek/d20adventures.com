@@ -264,23 +264,19 @@ function ModulePageEditor({
       <div className="rounded-md border border-[#b9a77f] bg-[#d9caab] p-6 text-[#22180e] shadow-[0_18px_60px_rgba(0,0,0,.18)]">
         <Block label="Summary" value={summary} onChange={setSummary} disabled={disabled} rows={5} tone="paper" />
         {isEncounter && (
-          <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_320px]">
-            <div className="space-y-5">
-              <ModuleBlock title="Read Aloud">
-                <Block label="Intro" value={intro} onChange={setIntro} disabled={disabled} rows={9} tone="paper" hideLabel />
-              </ModuleBlock>
-              <ModuleBlock title="GM Notes">
-                <Block label="GM Notes" value={gmNotes} onChange={setGmNotes} disabled={disabled} rows={6} tone="paper" hideLabel />
-              </ModuleBlock>
-            </div>
-            <div className="space-y-5">
-              <ModuleBlock title="Encounter NPCs">
-                <EncounterNpcEditor refs={npcRefs} onChange={setNpcRefs} disabled={disabled} />
-              </ModuleBlock>
-              <ModuleBlock title="Exits">
-                <Block label="Transitions" value={transitions} onChange={setTransitions} disabled={disabled} rows={7} tone="paper" hideLabel />
-              </ModuleBlock>
-            </div>
+          <div className="mt-5 space-y-5">
+            <ModuleBlock title="Read Aloud">
+              <Block label="Intro" value={intro} onChange={setIntro} disabled={disabled} rows={9} tone="paper" hideLabel />
+            </ModuleBlock>
+            <ModuleBlock title="GM Notes">
+              <Block label="GM Notes" value={gmNotes} onChange={setGmNotes} disabled={disabled} rows={6} tone="paper" hideLabel />
+            </ModuleBlock>
+            <ModuleBlock title="Encounter NPCs">
+              <EncounterNpcEditor refs={npcRefs} onChange={setNpcRefs} disabled={disabled} />
+            </ModuleBlock>
+            <ModuleBlock title="Exits">
+              <Block label="Transitions" value={transitions} onChange={setTransitions} disabled={disabled} rows={7} tone="paper" hideLabel />
+            </ModuleBlock>
           </div>
         )}
         <div className="mt-5 flex justify-end">
@@ -300,7 +296,7 @@ function EncounterNpcEditor({ refs, onChange, disabled }: { refs: EditableNpcRef
       {refs.length === 0 && <p className="text-sm text-[#5b4631]">No NPCs assigned to this encounter.</p>}
       {refs.map((ref, index) => (
         <div key={index} className="rounded border border-[#b9a77f] bg-[#f1e4bf] p-3">
-          <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_92px_auto]">
+          <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_160px_auto]">
             <Field label="NPC ID" value={ref.id} onChange={(value) => updateRef(index, { id: value })} disabled={disabled} tone="paper" />
             <Field label="Initiative" value={ref.initialInitiative} onChange={(value) => updateRef(index, { initialInitiative: value })} disabled={disabled} tone="paper" />
             <Button variant="outline" size="sm" onClick={() => onChange(refs.filter((_, refIndex) => refIndex !== index))} disabled={disabled} className="self-end gap-1 border-[#51473a] bg-[#25211d] text-stone-100 hover:bg-[#34302a]">
@@ -718,14 +714,22 @@ function updateFrontmatterValue(content: string, key: string, value: string) {
 
 function parseNpcRefs(content: string): EditableNpcRef[] {
   const block = frontmatterBlock(content)
-  const match = block.match(/^npcs:\n([\s\S]*?)(?=^[a-zA-Z0-9_-]+:|\n---|\s*$)/m)
-  if (!match) return []
+  const lines = block.split(/\r?\n/)
+  const startIndex = lines.findIndex((line) => line.trim() === "npcs:")
+  if (startIndex === -1) return []
   const refs: EditableNpcRef[] = []
   let current: EditableNpcRef | null = null
-  for (const line of match[1].split(/\r?\n/)) {
+  for (const line of lines.slice(startIndex + 1)) {
+    if (line && !line.startsWith(" ") && /^[a-zA-Z0-9_-]+:/.test(line)) break
     const objectStart = line.match(/^\s*-\s+id:\s*(.*)$/)
     if (objectStart) {
       current = { id: unquoteYamlValue(objectStart[1]), behavior: "", initialInitiative: "" }
+      refs.push(current)
+      continue
+    }
+    const inlineObject = line.match(/^\s*-\s+(\{.*\})\s*$/)
+    if (inlineObject) {
+      current = parseInlineNpcRef(inlineObject[1])
       refs.push(current)
       continue
     }
@@ -741,7 +745,7 @@ function parseNpcRefs(content: string): EditableNpcRef[] {
       if (nested[1] === "initialInitiative") current.initialInitiative = unquoteYamlValue(nested[2])
     }
   }
-  return refs
+  return refs.filter((ref) => ref.id && ref.id !== "{" && ref.id !== "[object Object]")
 }
 
 function updateNpcRefs(content: string, refs: EditableNpcRef[]) {
@@ -769,6 +773,20 @@ function frontmatterBlock(content: string) {
 
 function unquoteYamlValue(value: string) {
   return value.trim().replace(/^["']|["']$/g, "")
+}
+
+function parseInlineNpcRef(value: string): EditableNpcRef {
+  try {
+    const json = value.replace(/([{,]\s*)([a-zA-Z0-9_-]+)\s*:/g, '$1"$2":')
+    const parsed = JSON.parse(json) as { id?: unknown; behavior?: unknown; initialInitiative?: unknown }
+    return {
+      id: String(parsed.id ?? ""),
+      behavior: typeof parsed.behavior === "string" ? parsed.behavior : "",
+      initialInitiative: typeof parsed.initialInitiative === "number" || typeof parsed.initialInitiative === "string" ? String(parsed.initialInitiative) : "",
+    }
+  } catch {
+    return { id: "", behavior: "", initialInitiative: "" }
+  }
 }
 
 function sectionValue(content: string, heading: string) {
