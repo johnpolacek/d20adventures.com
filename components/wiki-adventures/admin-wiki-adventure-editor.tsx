@@ -781,7 +781,7 @@ function WikiPageHeader({ page, sectionsSidebarOpen, onRestoreSectionsSidebar }:
               <button
                 type="button"
                 onClick={onRestoreSectionsSidebar}
-                className="hidden size-8 place-items-center rounded-md border border-[#4a4237] bg-[#11100f] p-1 text-[#d8bd81] shadow-[0_8px_20px_rgba(0,0,0,.2)] transition-colors hover:border-[#b9a77f] hover:bg-[#211f1b] xl:grid"
+                className="hidden size-8 place-items-center rounded-md border border-[#4a4237] bg-[#11100f] p-0.5 text-[#d8bd81] shadow-[0_8px_20px_rgba(0,0,0,.2)] transition-colors hover:border-[#b9a77f] hover:bg-[#211f1b] xl:grid"
                 aria-label="Show adventure sections sidebar"
                 title="Show sections"
               >
