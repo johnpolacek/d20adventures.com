@@ -191,7 +191,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
                   size="sm"
                   onClick={sendMessage}
                   disabled={busy || !prompt.trim()}
-                  className="mt-3 h-11 w-full gap-2 rounded-md border border-[#d8bd81]/50 bg-[#2d4051] px-4 py-0 font-mono text-[11px] font-bold uppercase tracking-[.16em] text-[#fff8e7] shadow-[inset_0_1px_0_rgba(255,255,255,.18),0_12px_30px_rgba(0,0,0,.24)] transition-[background-color,scale] hover:scale-[1.01] hover:bg-[#365166] active:scale-[0.96]"
+                  className="mt-3 h-11 w-full gap-2 rounded-md border border-indigo-300/35 bg-indigo-900/80 px-4 py-0 font-mono text-[11px] font-bold uppercase tracking-[.16em] text-indigo-50 shadow-[inset_0_1px_0_rgba(255,255,255,.18),0_12px_30px_rgba(0,0,0,.24)] transition-[background-color,scale] hover:scale-[1.01] hover:bg-indigo-800 active:scale-[0.96]"
                   style={{ textShadow: "0 2px 2px rgba(0,0,0,.75)" }}
                 >
                   <Wand2 className="size-4" /> {busy ? "Applying..." : "Apply Change"}
