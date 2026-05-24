@@ -673,11 +673,11 @@ function WikiNavigator({ wiki, selectedPath, onSelect, onCollapse }: { wiki: Wik
   const [query, setQuery] = React.useState("")
   const normalizedQuery = query.trim().toLowerCase()
   return (
-    <div className="grid h-full min-h-0 grid-rows-[auto_1fr]">
-      <div className="border-b border-[#3a3630] p-4">
-        <div className="grid grid-cols-[minmax(0,1fr)_48px] gap-3">
-          <label className="grid grid-cols-[18px_1fr] items-center gap-2 rounded-md border border-[#3a3630] bg-[#11100f] px-3 py-2">
-            <Search className="size-4 text-stone-500" />
+    <div className="grid h-full min-h-0 grid-rows-[auto_1fr] bg-[radial-gradient(circle_at_0_0,rgba(216,189,129,.08),transparent_28%),#151410]">
+      <div className="border-b border-[#322d26] p-4">
+        <div className="grid grid-cols-[minmax(0,1fr)_40px] items-center gap-2">
+          <label className="grid h-11 grid-cols-[18px_1fr] items-center gap-2 rounded-md border border-[#4a4237] bg-[#0e0d0b]/90 px-3 shadow-[inset_0_1px_0_rgba(255,255,255,.03)] transition-colors focus-within:border-[#b9a77f]">
+            <Search className="size-4 text-[#8f877b]" />
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
@@ -688,15 +688,15 @@ function WikiNavigator({ wiki, selectedPath, onSelect, onCollapse }: { wiki: Wik
           <button
             type="button"
             onClick={onCollapse}
-            className="hidden h-full min-h-12 place-items-center rounded-md border border-[#4a4237] bg-[#11100f] text-[#d8bd81] transition-colors hover:border-[#b9a77f] hover:bg-[#211f1b] xl:grid"
+            className="hidden size-10 place-items-center rounded-md border border-[#5b4c35] bg-[#14110d] text-[#d8bd81] shadow-[inset_0_1px_0_rgba(255,255,255,.06),0_8px_24px_rgba(0,0,0,.2)] transition-colors hover:border-[#d8bd81] hover:bg-[#211b13] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd81]/45 xl:grid"
             aria-label="Hide adventure sections sidebar"
             title="Hide sections"
           >
-            <PanelLeftClose className="size-4" />
+            <PanelLeftClose className="size-3.5" />
           </button>
         </div>
       </div>
-      <div className="min-h-0 overflow-y-auto p-3">
+      <div className="min-h-0 overflow-y-auto px-4 py-5">
         {normalizedQuery ? (
           wiki.groups.map((group) => {
             const pages = group.pages.filter((page) => `${page.title} ${page.id} ${page.summary}`.toLowerCase().includes(normalizedQuery))
@@ -737,8 +737,8 @@ function WikiNavigator({ wiki, selectedPath, onSelect, onCollapse }: { wiki: Wik
 
 function PageGroup({ title, pages, selectedPath, onSelect }: { title: string; pages: WikiPage[]; selectedPath: string; onSelect: (path: string) => void }) {
   return (
-    <section className="mb-4">
-      <h3 className="mb-2 px-2 font-mono text-[10px] font-bold uppercase tracking-[.18em] text-stone-500">{title}</h3>
+    <section className="mb-5">
+      <h3 className="mb-2 px-1 font-mono text-[10px] font-bold uppercase tracking-[.18em] text-[#bfa46f]">{title}</h3>
       <div className="space-y-1">
         {pages.map((page) => (
           <PageButton key={page.path} page={page} selectedPath={selectedPath} onSelect={onSelect} />
@@ -753,9 +753,9 @@ function PageButton({ page, selectedPath, onSelect }: { page: WikiPage; selected
     <button
       type="button"
       onClick={() => onSelect(page.path)}
-      className={`grid w-full grid-cols-[18px_minmax(0,1fr)_auto] items-start gap-2 rounded-md border px-2 py-2 text-left transition-colors ${page.path === selectedPath ? "border-[#b9a77f] bg-[#2a2722]" : "border-transparent hover:border-[#3a3630] hover:bg-[#211f1b]"}`}
+      className={`grid w-full grid-cols-[22px_minmax(0,1fr)_auto] items-start gap-3 rounded-md border px-3 py-3 text-left transition-colors ${page.path === selectedPath ? "border-[#b9a77f] bg-[#2a2722] shadow-[0_10px_28px_rgba(0,0,0,.18)]" : "border-transparent hover:border-[#4a4237] hover:bg-[#211f1b]"}`}
     >
-      {page.path.endsWith(".json") ? <FileJson className="mt-0.5 size-4 text-slate-300" /> : <FileText className="mt-0.5 size-4 text-stone-300" />}
+      {page.path.endsWith(".json") ? <FileJson className="mt-0.5 size-4 text-[#bdb6aa]" /> : <FileText className="mt-0.5 size-4 text-[#d7c8ab]" />}
       <span className="min-w-0">
         <span className="block truncate text-sm text-stone-100">{page.title}</span>
         <span className="block truncate font-mono text-[10px] text-stone-500">{page.id}</span>
