@@ -674,7 +674,7 @@ function WikiNavigator({ wiki, selectedPath, onSelect, onCollapse }: { wiki: Wik
   const normalizedQuery = query.trim().toLowerCase()
   return (
     <div className="grid h-full min-h-0 grid-rows-[auto_1fr] bg-[radial-gradient(circle_at_0_0,rgba(216,189,129,.08),transparent_28%),#151410]">
-      <div className="grid h-12 grid-cols-[48px_minmax(0,1fr)_40px] border-b border-[#322d26] bg-[#0e0d0b]/85">
+      <div className="grid h-12 grid-cols-[48px_minmax(0,1fr)_56px] border-b border-[#322d26] bg-[#0e0d0b]/85">
         <div className="grid place-items-center text-[#8f877b]">
           <Search className="size-4" />
         </div>
@@ -687,7 +687,7 @@ function WikiNavigator({ wiki, selectedPath, onSelect, onCollapse }: { wiki: Wik
         <button
           type="button"
           onClick={onCollapse}
-          className="hidden place-items-center bg-transparent p-0.5 text-[#d8bd81] transition-colors hover:bg-[#211b13] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#d8bd81]/45 xl:grid"
+          className="hidden place-items-center bg-transparent px-2 py-0.5 text-[#d8bd81] transition-colors hover:bg-[#211b13] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#d8bd81]/45 xl:grid"
           aria-label="Hide adventure sections sidebar"
           title="Hide sections"
         >
@@ -779,11 +779,11 @@ function WikiPageHeader({ page, sectionsSidebarOpen, onRestoreSectionsSidebar }:
               <button
                 type="button"
                 onClick={onRestoreSectionsSidebar}
-                className="hidden size-8 place-items-center rounded-md border border-[#4a4237] bg-[#11100f] p-0.5 text-[#d8bd81] shadow-[0_8px_20px_rgba(0,0,0,.2)] transition-colors hover:border-[#b9a77f] hover:bg-[#211f1b] xl:grid"
+                className="hidden size-7 place-items-center rounded-md border border-[#4a4237] bg-[#11100f] p-px text-[#d8bd81] shadow-[0_8px_20px_rgba(0,0,0,.2)] transition-colors hover:border-[#b9a77f] hover:bg-[#211f1b] xl:grid"
                 aria-label="Show adventure sections sidebar"
                 title="Show sections"
               >
-                <Menu className="size-4" strokeWidth={1.5} />
+                <Menu className="size-4" strokeWidth={1.35} />
               </button>
             )}
             <span className="rounded border border-[#3a3630] bg-[#24211d] px-2 py-1 font-mono text-[10px] uppercase text-stone-300">{pageKindLabel(page)}</span>
