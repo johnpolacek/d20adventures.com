@@ -16,44 +16,60 @@ export function useAdventurePlanForm(adventurePlan: AdventurePlan) {
   const [isSaving, setIsSaving] = React.useState(false)
   const [draft, setDraft] = React.useState(adventurePlan.draft !== undefined ? adventurePlan.draft : true)
 
-  const saveAdventurePlan = async (overrideImage?: string, overrideDraft?: boolean, overrideAvailableCharacterOptions?: AdventurePlan["availableCharacterOptions"], overrideNextAdventure?: string) => {
-    setIsSaving(true)
-    const imageToSave = overrideImage !== undefined ? overrideImage : image
-    const draftToSave = overrideDraft !== undefined ? overrideDraft : draft
-    const availableCharacterOptionsToSave = overrideAvailableCharacterOptions !== undefined ? overrideAvailableCharacterOptions : adventurePlan.availableCharacterOptions
-    const nextAdventureToSave = overrideNextAdventure !== undefined ? overrideNextAdventure : adventurePlan.nextAdventure
-
-    // Filter out empty premade player characters
-    const filteredPremadePlayerCharacters = premadePlayerCharacters.filter((pc) => pc.name.trim() !== "" || pc.archetype.trim() !== "" || pc.race.trim() !== "")
-
-    const updatedAdventurePlan: AdventurePlan = {
-      ...adventurePlan,
-      teaser,
-      overview,
-      party: [Number(minPartySize), Number(maxPartySize)] as [number, number],
-      image: imageToSave,
-      sections,
-      npcs,
-      premadePlayerCharacters: filteredPremadePlayerCharacters,
-      draft: draftToSave,
-      availableCharacterOptions: availableCharacterOptionsToSave,
-      nextAdventure: nextAdventureToSave,
-    }
-    try {
-      const result = await updateAdventurePlanAction({ adventurePlan: updatedAdventurePlan })
-      if (result.success) {
-        toast.success(result.message || "Saved successfully!")
-      } else {
-        toast.error(result.error || "Failed to save.")
+  const saveAdventurePlan = React.useCallback(
+    async (
+      overrideImage?: string,
+      overrideDraft?: boolean,
+      overrideAvailableCharacterOptions?: AdventurePlan["availableCharacterOptions"],
+      overrideNextAdventure?: string,
+      options?: { silent?: boolean; sections?: AdventureSection[] }
+    ) => {
+      if (!options?.silent) {
+        setIsSaving(true)
       }
-    } catch (error) {
-      console.error("Error during save operation:", error)
-      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred."
-      toast.error(`Error: ${errorMessage}`)
-    } finally {
-      setIsSaving(false)
-    }
-  }
+      const imageToSave = overrideImage !== undefined ? overrideImage : image
+      const draftToSave = overrideDraft !== undefined ? overrideDraft : draft
+      const availableCharacterOptionsToSave = overrideAvailableCharacterOptions !== undefined ? overrideAvailableCharacterOptions : adventurePlan.availableCharacterOptions
+      const nextAdventureToSave = overrideNextAdventure !== undefined ? overrideNextAdventure : adventurePlan.nextAdventure
+      const sectionsToSave = options?.sections ?? sections
+
+      // Filter out empty premade player characters
+      const filteredPremadePlayerCharacters = premadePlayerCharacters.filter((pc) => pc.name.trim() !== "" || pc.archetype.trim() !== "" || pc.race.trim() !== "")
+
+      const updatedAdventurePlan: AdventurePlan = {
+        ...adventurePlan,
+        teaser,
+        overview,
+        party: [Number(minPartySize), Number(maxPartySize)] as [number, number],
+        image: imageToSave,
+        sections: sectionsToSave,
+        npcs,
+        premadePlayerCharacters: filteredPremadePlayerCharacters,
+        draft: draftToSave,
+        availableCharacterOptions: availableCharacterOptionsToSave,
+        nextAdventure: nextAdventureToSave,
+      }
+      try {
+        const result = await updateAdventurePlanAction({ adventurePlan: updatedAdventurePlan })
+        if (result.success) {
+          if (!options?.silent) {
+            toast.success(result.message || "Saved successfully!")
+          }
+        } else {
+          toast.error(result.error || "Failed to save.")
+        }
+      } catch (error) {
+        console.error("Error during save operation:", error)
+        const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred."
+        toast.error(`Error: ${errorMessage}`)
+      } finally {
+        if (!options?.silent) {
+          setIsSaving(false)
+        }
+      }
+    },
+    [adventurePlan, draft, image, maxPartySize, minPartySize, npcs, overview, premadePlayerCharacters, sections, teaser]
+  )
 
   const availableNpcs = React.useMemo(() => {
     const npcOptions: Record<string, { id: string; name: string }> = {}

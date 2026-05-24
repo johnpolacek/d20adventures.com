@@ -4,6 +4,23 @@
 .wiki-nav{width:min(1120px,calc(100% - 32px));margin:14px auto 0;display:flex;flex-wrap:wrap;gap:8px;font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.wiki-nav a{border:1px solid var(--line,#3d472f);border-radius:999px;padding:6px 9px;background:rgba(25,29,23,.72);color:var(--accent,#d7b35d);text-decoration:none}.wiki-nav a:focus-visible{outline:2px solid var(--accent,#d7b35d);outline-offset:2px}</style></head><body><nav class="wiki-nav" aria-label="Wiki navigation"><a href="index.html">Wiki Home</a><a href="Sources.html">Sources</a><a href="plans/index.html">Plans</a><a href="roadmap.html">Roadmap</a><a href="Architecture.html">Architecture</a></nav><main>
 <header><p class="eyebrow">Project-context log</p><h1>Decision history</h1><p>Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.</p></header>
 <article class="entry">
+<div class="date">2026-05-24</div>
+<section class="body"><h2>Implemented sidebar section and scene navigation refactor</h2><ul>
+<li>Changed the Adventure Plan editor to default to the first section and first scene, with sidebar selection for utilities, sections, scenes, and selected-scene encounters.</li>
+<li>Replaced the long structural encounter editor flow with a prose-focused editor for section title/summary, scene title/summary, and expanded encounter title/intro/instructions.</li>
+<li>Added silent debounced prose auto-save, encounter smooth-scroll links, and scroll-spy active encounter state.</li>
+<li>Validation: <code>pnpm exec tsc --noEmit</code> and <code>pnpm build</code> passed. <code>pnpm check</code> remains blocked by the existing Biome config/schema mismatch.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-24</div>
+<section class="body"><h2>Planned sidebar section and scene navigation refactor</h2><ul>
+<li>Added <code>wiki/plans/sidebar-section-scene-navigation.html</code> for the Adventure Plan editor refactor.</li>
+<li>Locked the prose-focused navigation model: select section, select scene, show encounters in order, and use chat or a later admin surface for structural edits.</li>
+<li>Planned silent prose auto-save with error-only feedback and encounter scroll-spy in the focused scene editor.</li>
+</ul></section>
+</article>
+<article class="entry">
 <div class="date">2026-05-22</div>
 <section class="body"><h2>Implemented LLM prose style policy</h2><ul>
 <li>Added a shared AI SDK style policy for concise user-visible text without em dashes, dash variants, or semicolons in prose.</li>

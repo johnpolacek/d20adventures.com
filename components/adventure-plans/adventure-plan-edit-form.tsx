@@ -3,7 +3,7 @@
 import { getOtherAdventurePlans } from "@/app/_actions/adventure-plan-actions"
 import { AdventurePlanBasicInfo } from "@/components/adventure-plans/adventure-plan-basic-info"
 import { AdventurePlanCharactersEdit } from "@/components/adventure-plans/adventure-plan-characters-edit"
-import { AdventurePlanEditSidebar } from "@/components/adventure-plans/adventure-plan-edit-sidebar"
+import { AdventurePlanEditSidebar, type AdventurePlanEditorView } from "@/components/adventure-plans/adventure-plan-edit-sidebar"
 import { AdventurePlanFormHeader } from "@/components/adventure-plans/adventure-plan-form-header"
 import { AdventurePlanSections } from "@/components/adventure-plans/adventure-plan-sections"
 import { useAdventurePlanForm } from "@/components/adventure-plans/hooks/use-adventure-plan-form"
@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { Character, PCTemplate } from "@/types/character"
 import * as React from "react"
+import slugify from "slugify"
 import { toast } from "sonner"
 
 export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: AdventurePlan }) {
@@ -59,9 +60,13 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
 
   const [availableCharacterOptions, setAvailableCharacterOptions] = React.useState(adventurePlan.availableCharacterOptions || { races: [], archetypes: [] })
   const [premadeOnly, setPremadeOnly] = React.useState(adventurePlan.availableCharacterOptions === undefined)
-  const [reorderFlag, setReorderFlag] = React.useState(false)
   // Add local state for nextAdventure
   const [nextAdventure, setNextAdventure] = React.useState(adventurePlan.nextAdventure || "")
+  const [activeView, setActiveView] = React.useState<AdventurePlanEditorView>("prose")
+  const [activeSectionIndex, setActiveSectionIndex] = React.useState(0)
+  const [activeSceneIndex, setActiveSceneIndex] = React.useState(0)
+  const [activeEncounterId, setActiveEncounterId] = React.useState<string | null>(sections[0]?.scenes[0]?.encounters[0]?.id ?? null)
+  const didInitializeAutosave = React.useRef(false)
 
   // Sync local state with prop when adventurePlan.nextAdventure changes
   React.useEffect(() => {
@@ -135,11 +140,83 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
   }
 
   React.useEffect(() => {
-    if (reorderFlag) {
-      saveAdventurePlan(undefined, undefined, premadeOnly ? undefined : availableCharacterOptions)
-      setReorderFlag(false)
+    if (sections.length === 0) {
+      setActiveSectionIndex(0)
+      setActiveSceneIndex(0)
+      setActiveEncounterId(null)
+      return
     }
-  }, [reorderFlag])
+
+    if (!sections[activeSectionIndex]) {
+      setActiveSectionIndex(0)
+      setActiveSceneIndex(0)
+      setActiveEncounterId(sections[0]?.scenes[0]?.encounters[0]?.id ?? null)
+      return
+    }
+
+    const activeSection = sections[activeSectionIndex]
+    if (!activeSection.scenes[activeSceneIndex]) {
+      setActiveSceneIndex(0)
+      setActiveEncounterId(activeSection.scenes[0]?.encounters[0]?.id ?? null)
+      return
+    }
+
+    const activeScene = activeSection.scenes[activeSceneIndex]
+    if (activeEncounterId && activeScene.encounters.some((encounter) => encounter.id === activeEncounterId)) return
+    setActiveEncounterId(activeScene.encounters[0]?.id ?? null)
+  }, [sections, activeSectionIndex, activeSceneIndex, activeEncounterId])
+
+  React.useEffect(() => {
+    if (!didInitializeAutosave.current) {
+      didInitializeAutosave.current = true
+      return
+    }
+
+    const timeout = window.setTimeout(() => {
+      saveAdventurePlan(undefined, undefined, premadeOnly ? undefined : availableCharacterOptions, undefined, { silent: true, sections })
+    }, 1200)
+
+    return () => window.clearTimeout(timeout)
+  }, [sections, premadeOnly, availableCharacterOptions, saveAdventurePlan])
+
+  const handleUtilitySelect = (view: Exclude<AdventurePlanEditorView, "prose">) => {
+    setActiveView(view)
+    const container = document.getElementById("adventure-plan-main")
+    container?.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
+  const handleSectionSelect = (sectionIndex: number) => {
+    const firstEncounterId = sections[sectionIndex]?.scenes[0]?.encounters[0]?.id ?? null
+    setActiveView("prose")
+    setActiveSectionIndex(sectionIndex)
+    setActiveSceneIndex(0)
+    setActiveEncounterId(firstEncounterId)
+    const container = document.getElementById("adventure-plan-main")
+    container?.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
+  const handleSceneSelect = (sceneIndex: number) => {
+    const firstEncounterId = sections[activeSectionIndex]?.scenes[sceneIndex]?.encounters[0]?.id ?? null
+    setActiveView("prose")
+    setActiveSceneIndex(sceneIndex)
+    setActiveEncounterId(firstEncounterId)
+    const container = document.getElementById("adventure-plan-main")
+    container?.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
+  const handleEncounterSelect = (encounterId: string) => {
+    setActiveEncounterId(encounterId)
+    const encounterIndex = sections[activeSectionIndex]?.scenes[activeSceneIndex]?.encounters.findIndex((encounter) => encounter.id === encounterId) ?? -1
+    const target = document.getElementById(`encounter-${activeSectionIndex}-${activeSceneIndex}-${encounterIndex}`)
+    target?.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" })
+  }
+
+  const handleEncounterTitleChange = (sectionIndex: number, sceneIndex: number, encounterIndex: number, newTitle: string) => {
+    encounterHandlers.handleEncounterTitleChange(sectionIndex, sceneIndex, encounterIndex, newTitle)
+    if (sectionIndex === activeSectionIndex && sceneIndex === activeSceneIndex) {
+      setActiveEncounterId(slugify(newTitle, { lower: true, strict: true }))
+    }
+  }
 
   return (
     <div className="pb-8 flex flex-wrap h-[80vh]">
@@ -152,103 +229,88 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
       />
       <AdventurePlanEditSidebar
         adventurePlan={{ ...adventurePlan, sections }}
-        onReorderEncounters={(sectionIndex, sceneIndex, newOrder) => {
-          setSections((prevSections) => {
-            const updatedSections = prevSections.map((section, sIdx) => {
-              if (sIdx !== sectionIndex) return section
-              return {
-                ...section,
-                scenes: section.scenes.map((scene, scIdx) => {
-                  if (scIdx !== sceneIndex) return scene
-                  // Reorder encounters in this scene
-                  const newEncounters = newOrder.map((id) => scene.encounters.find((e) => e.id === id)).filter(Boolean) // filter out any not found
-                  return { ...scene, encounters: newEncounters as typeof scene.encounters }
-                }),
-              }
-            })
-            setReorderFlag(true)
-            return updatedSections
-          })
-        }}
+        activeView={activeView}
+        activeSectionIndex={activeSectionIndex}
+        activeSceneIndex={activeSceneIndex}
+        activeEncounterId={activeEncounterId}
+        onUtilitySelect={handleUtilitySelect}
+        onSectionSelect={handleSectionSelect}
+        onSceneSelect={handleSceneSelect}
+        onEncounterSelect={handleEncounterSelect}
       />
 
       <div
         id="adventure-plan-main"
         className="flex-1 pt-2 pr-3 -mr-3 h-full overflow-y-auto scroll-smooth [scrollbar-width:thin] [scrollbar-color:dimgray_black] [&::-webkit-scrollbar-track]:bg-black [&::-webkit-scrollbar-thumb]:bg-black [&::-webkit-scrollbar]:w-1"
       >
-        <AdventurePlanBasicInfo
-          adventurePlanId={adventurePlan.id}
-          settingId={adventurePlan.settingId}
-          image={image}
-          teaser={teaser}
-          overview={overview}
-          minPartySize={minPartySize}
-          maxPartySize={maxPartySize}
-          isSaving={isSaving}
-          onImageChange={handleImageChange}
-          onImageRemove={handleImageRemove}
-          onTeaserChange={setTeaser}
-          onOverviewChange={setOverview}
-          onMinPartySizeChange={setMinPartySize}
-          onMaxPartySizeChange={setMaxPartySize}
-          premadeOnly={premadeOnly}
-          setPremadeOnly={setPremadeOnly}
-          availableCharacterOptions={availableCharacterOptions}
-          setAvailableCharacterOptions={setAvailableCharacterOptions}
-          nextAdventure={nextAdventure}
-          setNextAdventure={setNextAdventure}
-          otherAdventurePlans={otherAdventurePlans}
-          saveAdventurePlan={saveAdventurePlan}
-        />
+        {activeView === "basic" && (
+          <AdventurePlanBasicInfo
+            adventurePlanId={adventurePlan.id}
+            settingId={adventurePlan.settingId}
+            image={image}
+            teaser={teaser}
+            overview={overview}
+            minPartySize={minPartySize}
+            maxPartySize={maxPartySize}
+            isSaving={isSaving}
+            onImageChange={handleImageChange}
+            onImageRemove={handleImageRemove}
+            onTeaserChange={setTeaser}
+            onOverviewChange={setOverview}
+            onMinPartySizeChange={setMinPartySize}
+            onMaxPartySizeChange={setMaxPartySize}
+            premadeOnly={premadeOnly}
+            setPremadeOnly={setPremadeOnly}
+            availableCharacterOptions={availableCharacterOptions}
+            setAvailableCharacterOptions={setAvailableCharacterOptions}
+            nextAdventure={nextAdventure}
+            setNextAdventure={setNextAdventure}
+            otherAdventurePlans={otherAdventurePlans}
+            saveAdventurePlan={saveAdventurePlan}
+          />
+        )}
 
-        {/* Remove the Next Adventure Selection UI here, as it is now in AdventurePlanBasicInfo */}
+        {activeView === "prose" && (
+          <AdventurePlanSections
+            sections={sections}
+            isSaving={isSaving}
+            sectionIndex={activeSectionIndex}
+            sceneIndex={activeSceneIndex}
+            activeEncounterId={activeEncounterId}
+            onSectionTitleChange={sectionHandlers.handleSectionTitleChange}
+            onSectionSummaryChange={sectionHandlers.handleSectionSummaryChange}
+            onSceneTitleChange={sectionHandlers.handleSceneTitleChange}
+            onSceneSummaryChange={sectionHandlers.handleSceneSummaryChange}
+            onEncounterTitleChange={handleEncounterTitleChange}
+            onEncounterIntroChange={encounterHandlers.handleEncounterIntroChange}
+            onEncounterInstructionsChange={encounterHandlers.handleEncounterInstructionsChange}
+            onActiveEncounterChange={setActiveEncounterId}
+          />
+        )}
 
-        <AdventurePlanSections
-          adventurePlanId={adventurePlan.id}
-          settingId={adventurePlan.settingId}
-          sections={sections}
-          availableNpcs={npcs}
-          isSaving={isSaving}
-          onSectionTitleChange={sectionHandlers.handleSectionTitleChange}
-          onSectionSummaryChange={sectionHandlers.handleSectionSummaryChange}
-          onSceneTitleChange={sectionHandlers.handleSceneTitleChange}
-          onSceneSummaryChange={sectionHandlers.handleSceneSummaryChange}
-          onEncounterTitleChange={encounterHandlers.handleEncounterTitleChange}
-          onEncounterIntroChange={encounterHandlers.handleEncounterIntroChange}
-          onEncounterIdChange={encounterHandlers.handleEncounterIdChange}
-          onEncounterInstructionsChange={encounterHandlers.handleEncounterInstructionsChange}
-          onEncounterSkipInitialNpcTurnsChange={encounterHandlers.handleEncounterSkipInitialNpcTurnsChange}
-          onEncounterResetHealthChange={encounterHandlers.handleEncounterResetHealthChange}
-          onEncounterImageChange={encounterHandlers.handleEncounterImageChange}
-          onEncounterDelete={encounterHandlers.handleEncounterDelete}
-          onEncounterTransitionsChange={encounterHandlers.handleEncounterTransitionsChange}
-          onEncounterNpcChange={encounterHandlers.handleEncounterNpcChange}
-          onAddEncounter={sectionHandlers.handleAddEncounter}
-          onAddSection={sectionHandlers.handleAddSection}
-          onNpcsChange={handleNpcsChange}
-          setNpcs={setNpcs}
-          maxPartySize={Number(maxPartySize)}
-        />
+        {activeView === "npcs" && (
+          <AdventurePlanCharactersEdit
+            id="npcs-editor"
+            type="npcs"
+            characters={npcs}
+            onCharactersChange={handleNpcsChangeWrapper}
+            isSaving={isSaving}
+            adventurePlanId={adventurePlan.id}
+            settingId={adventurePlan.settingId}
+          />
+        )}
 
-        <AdventurePlanCharactersEdit
-          id="npcs-editor"
-          type="npcs"
-          characters={npcs}
-          onCharactersChange={handleNpcsChangeWrapper}
-          isSaving={isSaving}
-          adventurePlanId={adventurePlan.id}
-          settingId={adventurePlan.settingId}
-        />
-
-        <AdventurePlanCharactersEdit
-          id="premade-pcs-editor"
-          type="premadePlayerCharacters"
-          characters={premadePlayerCharacters}
-          onCharactersChange={handlePremadePlayerCharactersChangeWrapper}
-          isSaving={isSaving}
-          adventurePlanId={adventurePlan.id}
-          settingId={adventurePlan.settingId}
-        />
+        {activeView === "premadePlayerCharacters" && (
+          <AdventurePlanCharactersEdit
+            id="premade-pcs-editor"
+            type="premadePlayerCharacters"
+            characters={premadePlayerCharacters}
+            onCharactersChange={handlePremadePlayerCharactersChangeWrapper}
+            isSaving={isSaving}
+            adventurePlanId={adventurePlan.id}
+            settingId={adventurePlan.settingId}
+          />
+        )}
 
         <div className="flex flex-col items-end gap-4 mt-8 px-4 pb-8">
           <Button variant="epic" size="sm" onClick={() => saveAdventurePlan(undefined, undefined, premadeOnly ? undefined : availableCharacterOptions)} disabled={isSaving}>
