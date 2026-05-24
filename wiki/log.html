@@ -5,6 +5,14 @@
 <header><p class="eyebrow">Project-context log</p><h1>Decision history</h1><p>Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.</p></header>
 <article class="entry">
 <div class="date">2026-05-24</div>
+<section class="body"><h2>Aligned collapsed sections restore control</h2><ul>
+<li>Moved the collapsed-state restore menu button inline with the page eyebrow row so titles align with the editor content.</li>
+<li>Reduced the expanded sidebar collapse icon stroke to <code>0.75</code>.</li>
+<li>Validation evidence: <code>pnpm exec biome check components/wiki-adventures/admin-wiki-adventure-editor.tsx</code>, <code>pnpm test:wiki-adventures:admin-authoring</code>, and <code>pnpm exec tsc --noEmit --pretty false</code> passed.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-24</div>
 <section class="body"><h2>Cleaned up admin sections navigator controls</h2><ul>
 <li>Enlarged the sidebar collapse icon within its button and removed repeated link-count badges from encounter rows.</li>
 <li>Validation evidence: <code>pnpm exec biome check components/wiki-adventures/admin-wiki-adventure-editor.tsx</code>, <code>pnpm test:wiki-adventures:admin-authoring</code>, and <code>pnpm exec tsc --noEmit --pretty false</code> passed.</li>

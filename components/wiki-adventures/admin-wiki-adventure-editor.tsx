@@ -692,7 +692,7 @@ function WikiNavigator({ wiki, selectedPath, onSelect, onCollapse }: { wiki: Wik
             aria-label="Hide adventure sections sidebar"
             title="Hide sections"
           >
-            <PanelLeftClose className="size-full" strokeWidth={1.25} />
+            <PanelLeftClose className="size-full" strokeWidth={0.75} />
           </button>
         </div>
       </div>
@@ -773,21 +773,21 @@ function PageButton({ page, selectedPath, onSelect }: { page: WikiPage; selected
 function WikiPageHeader({ page, sectionsSidebarOpen, onRestoreSectionsSidebar }: { page?: WikiPage; sectionsSidebarOpen: boolean; onRestoreSectionsSidebar: () => void }) {
   if (!page) return null
   return (
-    <header className="relative border-b border-[#3a3630] bg-[#181713] px-6 py-5">
-      {!sectionsSidebarOpen && (
-        <button
-          type="button"
-          onClick={onRestoreSectionsSidebar}
-          className="absolute left-5 top-5 hidden size-12 place-items-center rounded-md border border-[#4a4237] bg-[#11100f] text-[#d8bd81] shadow-[0_14px_36px_rgba(0,0,0,.28)] transition-colors hover:border-[#b9a77f] hover:bg-[#211f1b] xl:grid"
-          aria-label="Show adventure sections sidebar"
-          title="Show sections"
-        >
-          <Menu className="size-5" />
-        </button>
-      )}
+    <header className="border-b border-[#3a3630] bg-[#181713] px-6 py-5">
       <div className="flex items-start gap-4">
-        <div className={`min-w-0 flex-1 ${sectionsSidebarOpen ? "" : "xl:pl-16"}`}>
+        <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
+            {!sectionsSidebarOpen && (
+              <button
+                type="button"
+                onClick={onRestoreSectionsSidebar}
+                className="hidden size-10 place-items-center rounded-md border border-[#4a4237] bg-[#11100f] text-[#d8bd81] shadow-[0_10px_26px_rgba(0,0,0,.22)] transition-colors hover:border-[#b9a77f] hover:bg-[#211f1b] xl:grid"
+                aria-label="Show adventure sections sidebar"
+                title="Show sections"
+              >
+                <Menu className="size-5" strokeWidth={1.5} />
+              </button>
+            )}
             <span className="rounded border border-[#3a3630] bg-[#24211d] px-2 py-1 font-mono text-[10px] uppercase text-stone-300">{pageKindLabel(page)}</span>
             <span className="font-mono text-[11px] text-stone-500">{page.id}</span>
           </div>
