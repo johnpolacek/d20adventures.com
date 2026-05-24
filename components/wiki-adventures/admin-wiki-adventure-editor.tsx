@@ -674,27 +674,25 @@ function WikiNavigator({ wiki, selectedPath, onSelect, onCollapse }: { wiki: Wik
   const normalizedQuery = query.trim().toLowerCase()
   return (
     <div className="grid h-full min-h-0 grid-rows-[auto_1fr] bg-[radial-gradient(circle_at_0_0,rgba(216,189,129,.08),transparent_28%),#151410]">
-      <div className="border-b border-[#322d26] p-4">
-        <div className="grid grid-cols-[minmax(0,1fr)_40px] items-center gap-2">
-          <label className="grid h-11 grid-cols-[18px_1fr] items-center gap-2 rounded-md border border-[#4a4237] bg-[#0e0d0b]/90 px-3 shadow-[inset_0_1px_0_rgba(255,255,255,.03)] transition-colors focus-within:border-[#b9a77f]">
-            <Search className="size-4 text-[#8f877b]" />
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Find Encounter"
-              className="min-w-0 bg-transparent text-sm text-stone-200 outline-none placeholder:text-stone-600"
-            />
-          </label>
-          <button
-            type="button"
-            onClick={onCollapse}
-            className="hidden size-10 place-items-center rounded-md border border-[#5b4c35] bg-[#14110d] p-0.5 text-[#d8bd81] shadow-[inset_0_1px_0_rgba(255,255,255,.06),0_8px_24px_rgba(0,0,0,.2)] transition-colors hover:border-[#d8bd81] hover:bg-[#211b13] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd81]/45 xl:grid"
-            aria-label="Hide adventure sections sidebar"
-            title="Hide sections"
-          >
-            <PanelLeftClose className="size-full" strokeWidth={0.75} />
-          </button>
+      <div className="grid h-12 grid-cols-[48px_minmax(0,1fr)_40px] border-b border-[#322d26] bg-[#0e0d0b]/85">
+        <div className="grid place-items-center text-[#8f877b]">
+          <Search className="size-4" />
         </div>
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Find Encounter"
+          className="min-w-0 border-x border-[#322d26] bg-transparent px-4 text-sm text-stone-200 outline-none placeholder:text-stone-600 focus:bg-[#15120f]"
+        />
+        <button
+          type="button"
+          onClick={onCollapse}
+          className="hidden place-items-center bg-transparent p-0.5 text-[#d8bd81] transition-colors hover:bg-[#211b13] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#d8bd81]/45 xl:grid"
+          aria-label="Hide adventure sections sidebar"
+          title="Hide sections"
+        >
+          <PanelLeftClose className="size-full" strokeWidth={0.75} />
+        </button>
       </div>
       <div className="min-h-0 overflow-y-auto px-4 py-5">
         {normalizedQuery ? (
