@@ -688,11 +688,11 @@ function WikiNavigator({ wiki, selectedPath, onSelect, onCollapse }: { wiki: Wik
           <button
             type="button"
             onClick={onCollapse}
-            className="hidden size-10 place-items-center rounded-md border border-[#5b4c35] bg-[#14110d] text-[#d8bd81] shadow-[inset_0_1px_0_rgba(255,255,255,.06),0_8px_24px_rgba(0,0,0,.2)] transition-colors hover:border-[#d8bd81] hover:bg-[#211b13] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd81]/45 xl:grid"
+            className="hidden size-10 place-items-center rounded-md border border-[#5b4c35] bg-[#14110d] p-0.5 text-[#d8bd81] shadow-[inset_0_1px_0_rgba(255,255,255,.06),0_8px_24px_rgba(0,0,0,.2)] transition-colors hover:border-[#d8bd81] hover:bg-[#211b13] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd81]/45 xl:grid"
             aria-label="Hide adventure sections sidebar"
             title="Hide sections"
           >
-            <PanelLeftClose className="size-3.5" />
+            <PanelLeftClose className="size-full" strokeWidth={1.75} />
           </button>
         </div>
       </div>
@@ -766,7 +766,6 @@ function PageButton({ page, selectedPath, onSelect }: { page: WikiPage; selected
           </span>
         )}
       </span>
-      {page.links.length > 0 && <span className="rounded bg-stone-800 px-1.5 py-0.5 font-mono text-[10px] text-stone-300">{page.links.length}</span>}
     </button>
   )
 }
