@@ -781,11 +781,11 @@ function WikiPageHeader({ page, sectionsSidebarOpen, onRestoreSectionsSidebar }:
               <button
                 type="button"
                 onClick={onRestoreSectionsSidebar}
-                className="hidden size-10 place-items-center rounded-md border border-[#4a4237] bg-[#11100f] text-[#d8bd81] shadow-[0_10px_26px_rgba(0,0,0,.22)] transition-colors hover:border-[#b9a77f] hover:bg-[#211f1b] xl:grid"
+                className="hidden size-8 place-items-center rounded-md border border-[#4a4237] bg-[#11100f] p-1 text-[#d8bd81] shadow-[0_8px_20px_rgba(0,0,0,.2)] transition-colors hover:border-[#b9a77f] hover:bg-[#211f1b] xl:grid"
                 aria-label="Show adventure sections sidebar"
                 title="Show sections"
               >
-                <Menu className="size-5" strokeWidth={1.5} />
+                <Menu className="size-4" strokeWidth={1.5} />
               </button>
             )}
             <span className="rounded border border-[#3a3630] bg-[#24211d] px-2 py-1 font-mono text-[10px] uppercase text-stone-300">{pageKindLabel(page)}</span>
