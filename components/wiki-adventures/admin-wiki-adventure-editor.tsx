@@ -134,7 +134,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
         </div>
       </header>
 
-      <main className={`grid min-h-0 flex-1 grid-cols-1 overflow-hidden ${sectionsSidebarOpen ? "xl:grid-cols-[420px_minmax(0,1fr)_400px]" : "xl:grid-cols-[minmax(0,1fr)_400px]"}`}>
+      <main className={`grid min-h-0 flex-1 grid-cols-1 overflow-hidden ${sectionsSidebarOpen ? "xl:grid-cols-[320px_minmax(0,1fr)_400px]" : "xl:grid-cols-[minmax(0,1fr)_400px]"}`}>
         {sectionsSidebarOpen && (
           <aside className="min-h-0 overflow-hidden border-b border-[#3a3630] bg-[#181713] xl:border-r xl:border-b-0">
             <WikiNavigator wiki={wiki} selectedPath={selectedPath} onSelect={setSelectedPath} onCollapse={() => setSectionsSidebarOpen(false)} />
@@ -745,7 +745,7 @@ function WikiNavigator({ wiki, selectedPath, onSelect, onCollapse }: { wiki: Wik
   const normalizedQuery = query.trim().toLowerCase()
   return (
     <div className="grid h-full min-h-0 grid-rows-[auto_1fr] bg-[linear-gradient(180deg,#171612_0%,#11100d_100%)]">
-      <div className="grid h-11 grid-cols-[42px_minmax(0,1fr)_48px] bg-[#0f0e0c]/92 shadow-[0_10px_24px_rgba(0,0,0,.2)]">
+      <div className="grid h-11 grid-cols-[38px_minmax(0,1fr)_42px] bg-[#0f0e0c]/92 shadow-[0_10px_24px_rgba(0,0,0,.2)]">
         <div className="grid place-items-center text-[#8f877b]">
           <Search className="size-4" />
         </div>
