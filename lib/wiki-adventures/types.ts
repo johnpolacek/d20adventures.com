@@ -1,17 +1,7 @@
-import { z } from "zod"
-import { npcSchema, pcTemplateSchema } from "@/types/character"
+import type { z } from "zod"
+import type { npcSchema, pcTemplateSchema } from "@/types/character"
 
-export const wikiContentTypes = [
-  "setting",
-  "adventure",
-  "encounter",
-  "npc",
-  "location",
-  "premadeCharacter",
-  "faction",
-  "item",
-  "asset",
-] as const
+export const wikiContentTypes = ["setting", "adventure", "encounter", "npc", "location", "premadeCharacter", "faction", "item", "asset"] as const
 
 export type WikiContentType = (typeof wikiContentTypes)[number]
 
@@ -182,7 +172,7 @@ export type RuntimeArtifacts = {
 export type AuthoringChangeSet = {
   id: string
   intent: string
-  source: "ai" | "human"
+  source: "ai" | "human" | "restore"
   target: {
     settingId: string
     planId?: string
@@ -201,3 +191,18 @@ export type AuthoringChangeSet = {
   risks: string[]
 }
 
+export type AuthoringRevision = {
+  schemaVersion: 1
+  id: string
+  settingId: string
+  planId: string
+  parentRevisionId?: string
+  source: "ai" | "human" | "restore"
+  summary: string
+  createdAt: string
+  changedPaths: string[]
+  beforeHashes: Record<string, string | null>
+  afterHashes: Record<string, string | null>
+  validation: Pick<ValidationReport, "mode" | "status" | "summary">
+  files: Array<Pick<SourceFile, "path" | "content" | "hash">>
+}

@@ -1,20 +1,20 @@
 "use client"
 
+import { Bot, Check, CircleAlert, FileJson, FileText, GitBranch, Play, RotateCcw, UploadCloud } from "lucide-react"
+import * as React from "react"
 import { proposeWikiAdventureAiChangeSet, validateWikiAdventureWorkbenchFiles } from "@/app/_actions/wiki-adventures/workbench-actions"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
-import type { WorkbenchFile, WorkbenchInitialState, WorkbenchSummary } from "@/lib/wiki-adventures/workbench-demo"
 import type { AiAuthoringProposal, AiAuthoringToolInput } from "@/lib/wiki-adventures/ai-authoring-tools"
-import { Bot, Check, CircleAlert, CircleDot, FileJson, FileText, GitBranch, Play, RotateCcw, Save, UploadCloud, X } from "lucide-react"
-import * as React from "react"
+import type { WorkbenchFile, WorkbenchInitialState, WorkbenchSummary } from "@/lib/wiki-adventures/workbench-demo"
 
 type ChangeSetPreview = {
   id: string
   title: string
-  status: "proposed" | "accepted" | "rejected"
+  status: "applied"
   path: string
   risk: string
   proposal?: AiAuthoringProposal
@@ -24,7 +24,6 @@ export function WikiAdventureWorkbench({ initialState }: { initialState: Workben
   const [files, setFiles] = React.useState(initialState.files)
   const [selectedPath, setSelectedPath] = React.useState(initialState.selectedPath)
   const [editorValue, setEditorValue] = React.useState(initialState.files.find((file) => file.path === initialState.selectedPath)?.content ?? "")
-  const [dirtyPaths, setDirtyPaths] = React.useState<string[]>([])
   const [summary, setSummary] = React.useState<WorkbenchSummary>(initialState.summary)
   const [isValidating, setIsValidating] = React.useState(false)
   const [isProposingAiChange, setIsProposingAiChange] = React.useState(false)
@@ -32,14 +31,14 @@ export function WikiAdventureWorkbench({ initialState }: { initialState: Workben
     {
       id: "cs-expand-vala",
       title: "Expand Captain Vala motivation",
-      status: "proposed",
+      status: "applied",
       path: "content/settings/myr/npcs/captain-vala.md",
       risk: "Profile prose only; no mechanical sheet change.",
     },
     {
       id: "cs-transition-note",
       title: "Clarify gatehouse transition condition",
-      status: "proposed",
+      status: "applied",
       path: "content/settings/myr/adventures/the-old-road/encounters/gatehouse-entry.md",
       risk: "Touches transition wording; graph target remains unchanged.",
     },
@@ -47,18 +46,11 @@ export function WikiAdventureWorkbench({ initialState }: { initialState: Workben
 
   const selectedFile = files.find((file) => file.path === selectedPath) ?? files[0]
   const selectedFindings = summary.validationReport.findings.filter((finding) => finding.sourcePath === selectedPath)
-  const hasDirtyBuffer = dirtyPaths.includes(selectedPath)
-
   function selectFile(path: string) {
     const file = files.find((entry) => entry.path === path)
     if (!file) return
     setSelectedPath(path)
     setEditorValue(file.content)
-  }
-
-  function saveBuffer() {
-    setFiles((current) => current.map((file) => (file.path === selectedPath ? { ...file, content: editorValue } : file)))
-    setDirtyPaths((current) => current.filter((path) => path !== selectedPath))
   }
 
   async function validate(mode: "draftPreview" | "publish") {
@@ -67,18 +59,19 @@ export function WikiAdventureWorkbench({ initialState }: { initialState: Workben
     const nextSummary = await validateWikiAdventureWorkbenchFiles(nextFiles, mode)
     setSummary(nextSummary)
     setFiles(nextFiles)
-    setDirtyPaths((current) => current.filter((path) => path !== selectedPath))
     setIsValidating(false)
   }
 
   async function proposeAiChange(input: AiAuthoringToolInput) {
     setIsProposingAiChange(true)
     const proposal = await proposeWikiAdventureAiChangeSet(files, input)
+    const nextFiles = applyProposalToFiles(files, proposal)
+    setFiles(nextFiles)
     setChangeSets((current) => [
       {
         id: proposal.changeSet.id,
         title: proposal.changeSet.intent,
-        status: "proposed",
+        status: "applied",
         path: proposal.diff[0]?.path ?? selectedPath,
         risk: proposal.changeSet.risks[0] ?? "Preview validation ran before write.",
         proposal,
@@ -87,16 +80,6 @@ export function WikiAdventureWorkbench({ initialState }: { initialState: Workben
     ])
     setSummary((current) => ({ ...current, validationReport: proposal.validationAfter }))
     setIsProposingAiChange(false)
-  }
-
-  function updateChangeSet(id: string, status: "accepted" | "rejected") {
-    const changeSet = changeSets.find((entry) => entry.id === id)
-    const proposal = changeSet?.proposal
-    if (status === "accepted" && proposal) {
-      setFiles((current) => applyProposalToFiles(current, proposal))
-      setDirtyPaths((current) => Array.from(new Set([...current, ...proposal.diff.map((entry) => entry.path)])))
-    }
-    setChangeSets((current) => current.map((entry) => (entry.id === id ? { ...entry, status } : entry)))
   }
 
   return (
@@ -111,11 +94,6 @@ export function WikiAdventureWorkbench({ initialState }: { initialState: Workben
               <Badge className="border-amber-700 bg-amber-950/60 font-mono text-[10px] uppercase text-amber-200" variant="outline">
                 {summary.validationReport.status}
               </Badge>
-              {dirtyPaths.length > 0 && (
-                <Badge className="border-sky-700 bg-sky-950/60 font-mono text-[10px] uppercase text-sky-200" variant="outline">
-                  {dirtyPaths.length} unsaved
-                </Badge>
-              )}
             </div>
             <h1 className="mt-2 text-3xl font-bold tracking-normal text-amber-300">Wiki Adventure Workbench</h1>
             <p className="mt-1 max-w-3xl text-sm text-stone-400">
@@ -123,9 +101,6 @@ export function WikiAdventureWorkbench({ initialState }: { initialState: Workben
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button ariaLabel="save selected source file" variant="outline" size="sm" disabled={!hasDirtyBuffer} onClick={saveBuffer} className="gap-2">
-              <Save className="size-4" /> Save
-            </Button>
             <Button ariaLabel="validate draft preview" variant="outline" size="sm" disabled={isValidating} onClick={() => validate("draftPreview")} className="gap-2">
               <Play className="size-4" /> Preview
             </Button>
@@ -146,7 +121,6 @@ export function WikiAdventureWorkbench({ initialState }: { initialState: Workben
             {files.map((file) => {
               const isSelected = file.path === selectedPath
               const findingCount = summary.fileFindings[file.path] ?? 0
-              const dirty = dirtyPaths.includes(file.path)
               return (
                 <button
                   key={file.path}
@@ -162,10 +136,7 @@ export function WikiAdventureWorkbench({ initialState }: { initialState: Workben
                     <span className="block truncate text-sm text-stone-100">{file.title}</span>
                     <span className="block truncate font-mono text-[10px] text-stone-500">{file.path}</span>
                   </span>
-                  <span className="flex gap-1">
-                    {dirty && <CircleDot className="size-3 text-sky-300" />}
-                    {findingCount > 0 && <CircleAlert className="size-3 text-amber-300" />}
-                  </span>
+                  <span className="flex gap-1">{findingCount > 0 && <CircleAlert className="size-3 text-amber-300" />}</span>
                 </button>
               )
             })}
@@ -184,19 +155,15 @@ export function WikiAdventureWorkbench({ initialState }: { initialState: Workben
                   {selectedFindings.length} finding
                 </Badge>
               )}
-              {hasDirtyBuffer && (
-                <Badge className="border-sky-700 bg-sky-950/60 text-sky-200" variant="outline">
-                  Unsaved
-                </Badge>
-              )}
             </div>
           </div>
           <div className="grid gap-0 lg:grid-rows-[minmax(420px,1fr)_260px]">
             <Textarea
               value={editorValue}
               onChange={(event) => {
-                setEditorValue(event.target.value)
-                setDirtyPaths((current) => (current.includes(selectedPath) ? current : [...current, selectedPath]))
+                const nextValue = event.target.value
+                setEditorValue(nextValue)
+                setFiles((current) => current.map((file) => (file.path === selectedPath ? { ...file, content: nextValue } : file)))
               }}
               spellCheck={false}
               className="min-h-[420px] resize-none rounded-none border-0 bg-[#0d100c] p-4 font-mono text-xs leading-5 text-stone-200 outline-none focus-visible:ring-0"
@@ -224,20 +191,14 @@ export function WikiAdventureWorkbench({ initialState }: { initialState: Workben
           <Tabs defaultValue="validation" className="h-full">
             <TabsList className="m-3 mb-1 grid w-[calc(100%-24px)] grid-cols-3 bg-lime-950/40">
               <TabsTrigger value="validation">Validation</TabsTrigger>
-              <TabsTrigger value="ai">AI Diff</TabsTrigger>
+              <TabsTrigger value="ai">Revisions</TabsTrigger>
               <TabsTrigger value="entity">Entity</TabsTrigger>
             </TabsList>
             <TabsContent value="validation" className="px-3 pb-4">
               <ValidationDrawer summary={summary} />
             </TabsContent>
             <TabsContent value="ai" className="px-3 pb-4">
-              <AiChangeSetPanel
-                changeSets={changeSets}
-                selectedFile={selectedFile}
-                disabled={isProposingAiChange}
-                onPropose={proposeAiChange}
-                onUpdate={updateChangeSet}
-              />
+              <AiChangeSetPanel changeSets={changeSets} selectedFile={selectedFile} disabled={isProposingAiChange} onPropose={proposeAiChange} />
             </TabsContent>
             <TabsContent value="entity" className="px-3 pb-4">
               <EntityInspector file={selectedFile} warnings={initialState.migrationWarnings} />
@@ -363,19 +324,17 @@ function AiChangeSetPanel({
   selectedFile,
   disabled,
   onPropose,
-  onUpdate,
 }: {
   changeSets: ChangeSetPreview[]
   selectedFile?: WorkbenchFile
   disabled: boolean
   onPropose: (input: AiAuthoringToolInput) => void
-  onUpdate: (id: string, status: "accepted" | "rejected") => void
 }) {
   const selectedPath = selectedFile?.path ?? ""
   return (
     <div className="space-y-3">
       <div className="rounded-md border border-sky-900/70 bg-black/20 p-3">
-        <h2 className="font-mono text-xs font-bold uppercase text-sky-200">AI Tools</h2>
+        <h2 className="font-mono text-xs font-bold uppercase text-sky-200">AI Revisions</h2>
         <div className="mt-3 grid grid-cols-2 gap-2">
           <Button
             ariaLabel="propose encounter expansion"
@@ -457,14 +416,6 @@ function AiChangeSetPanel({
               </ul>
             </div>
           )}
-          <div className="mt-3 flex gap-2">
-            <Button ariaLabel="accept change set" variant="outline" size="sm" disabled={changeSet.status !== "proposed"} onClick={() => onUpdate(changeSet.id, "accepted")}>
-              <Check className="size-4" />
-            </Button>
-            <Button ariaLabel="reject change set" variant="outline" size="sm" disabled={changeSet.status !== "proposed"} onClick={() => onUpdate(changeSet.id, "rejected")}>
-              <X className="size-4" />
-            </Button>
-          </div>
         </div>
       ))}
     </div>

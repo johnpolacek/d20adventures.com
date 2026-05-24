@@ -7,10 +7,10 @@
 <li>Admin chat applies changes directly to canonical wiki source instead of creating draft review queues.</li>
 <li>S3 <code>content/settings/{settingId}/...</code> is the canonical admin source; repo-local content is a bootstrap/dev fallback.</li>
 <li>Direct editing is limited to key fields for markdown and character JSON, not raw source editing.</li>
-<li>Manual export/import source bundles provide v1 recovery; automatic history is deferred.</li>
+<li>Every chat, key-field, or restore write creates an S3-backed authoring revision that can restore the full draft or selected file.</li>
 </ul></section>
 <section class="panel"><h2>Implementation Shape</h2><ul>
-<li>Add complete source-tree loading, export, restore, and change-set writes for wiki adventures.</li>
+<li>Add complete source-tree loading, revision restore, and change-set writes for wiki adventures.</li>
 <li>Compile gameplay runtime from S3 source when available, falling back to migrated repo-local content.</li>
 <li>Replace the admin dashboard entry with <code>/admin/wiki-adventures</code> and per-adventure editor routes.</li>
 <li>Keep validation visible after each chat or key-field save.</li>

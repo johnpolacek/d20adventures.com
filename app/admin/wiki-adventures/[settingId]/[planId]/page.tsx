@@ -1,9 +1,9 @@
+import type { Metadata } from "next"
 import { AdminConfigMessage } from "@/components/admin/admin-config-message"
 import { Heading } from "@/components/typography/heading"
 import { AdminWikiAdventureEditor } from "@/components/wiki-adventures/admin-wiki-adventure-editor"
 import { requireAdmin } from "@/lib/auth-utils"
 import { loadAdminWikiAdventureState } from "@/lib/wiki-adventures/admin-authoring"
-import type { Metadata } from "next"
 
 export const metadata: Metadata = {
   title: "Wiki Adventure Editor",
@@ -42,6 +42,14 @@ export default async function AdminWikiAdventureDetailPage(props: { params: Prom
         graph: state.artifacts.graph,
         encounters: state.artifacts.encounters,
         characterSheets: state.artifacts.characterSheets,
+        revisions: state.revisions.map((revision) => ({
+          id: revision.id,
+          source: revision.source,
+          summary: revision.summary,
+          createdAt: revision.createdAt,
+          changedPaths: revision.changedPaths,
+          validation: revision.validation,
+        })),
       }}
     />
   )

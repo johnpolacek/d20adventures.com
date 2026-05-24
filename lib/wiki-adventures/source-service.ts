@@ -1,7 +1,7 @@
-import { DeleteObjectCommand, GetObjectCommand, ListObjectsV2Command, PutObjectCommand } from "@aws-sdk/client-s3"
 import type { S3Client } from "@aws-sdk/client-s3"
+import { DeleteObjectCommand, GetObjectCommand, ListObjectsV2Command, PutObjectCommand } from "@aws-sdk/client-s3"
 import { streamToString } from "@/lib/s3-utils"
-import { ChangeSetError, applyAuthoringChangeSet, createSourceFile, createSourceTree, type SourceTree } from "./change-sets"
+import { applyAuthoringChangeSet, ChangeSetError, createSourceFile, createSourceTree, type SourceTree } from "./change-sets"
 import type { AuthoringChangeSet, SourceFile } from "./types"
 
 export interface WikiAdventureSourceService {
@@ -136,5 +136,5 @@ function assertRemoteHash(file: SourceFile, expected: string) {
 }
 
 function isSourceContentPath(path: string) {
-  return (path.endsWith(".md") || path.endsWith(".json")) && !path.endsWith("/migration-report.json")
+  return (path.endsWith(".md") || path.endsWith(".json")) && !path.includes("/_revisions/") && !path.endsWith("/migration-report.json")
 }

@@ -2,7 +2,7 @@
 :root{--bg:#10120d;--panel:#181d15;--panel2:#202819;--ink:#f4f1df;--muted:#bbb99d;--line:#3f4b32;--accent:#d9b65f;--blue:#7db7ca;--green:#93c47d;--warn:#e5a65b;--r:8px}*{box-sizing:border-box}body{margin:0;background:#10120d;color:var(--ink);font-family:Georgia,"Times New Roman",serif;line-height:1.5}main{width:min(1120px,calc(100% - 32px));margin:auto;padding:30px 0 54px}a{color:var(--accent)}code{color:#f6d88d}.hero{display:grid;grid-template-columns:1fr 320px;gap:18px;border-bottom:1px solid var(--line);padding-bottom:20px}.panel{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:16px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-top:20px}.columns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.eyebrow{font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.11em;color:var(--blue)}h1{font-size:clamp(2rem,5vw,4rem);line-height:1;margin:0 0 10px}h2,h3{color:#fff5cd}.muted{color:var(--muted)}.decision{margin-top:24px}.packet{display:grid;gap:10px;margin-top:12px}.packet div{border:1px solid var(--line);border-radius:var(--r);background:var(--panel2);padding:12px}.packet b{display:block;color:var(--accent);font:700 .74rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.spec{width:100%;border-collapse:collapse;margin-top:14px}.spec th,.spec td{border:1px solid var(--line);padding:10px;text-align:left;vertical-align:top}.spec th{background:#202819;color:#fff5cd}pre{white-space:pre-wrap;border:1px solid var(--line);border-radius:var(--r);background:#0d100c;padding:14px;overflow:auto}ul{padding-left:20px}@media(max-width:760px){.hero,.columns{grid-template-columns:1fr}}.wiki-nav{width:min(1120px,calc(100% - 32px));margin:14px auto 0;display:flex;flex-wrap:wrap;gap:8px;font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.wiki-nav a{border:1px solid var(--line,#3d472f);border-radius:999px;padding:6px 9px;background:rgba(25,29,23,.72);color:var(--accent,#d7b35d);text-decoration:none}.wiki-nav a:focus-visible{outline:2px solid var(--accent,#d7b35d);outline-offset:2px}</style></head><body><nav class="wiki-nav" aria-label="Wiki navigation"><a href="../../index.html">Wiki Home</a><a href="../../Sources.html">Sources</a><a href="../../plans/index.html">Plans</a><a href="../../roadmap.html">Roadmap</a><a href="../../Architecture.html">Architecture</a></nav><main>
 <header class="hero"><div><p class="eyebrow">Stage 6</p><h1>Authoring And Admin Workflow</h1><p class="muted">Plan the AI-assisted wiki editor that replaces the current Adventure Plan editor and supports validation, preview, draft, and publish workflows.</p></div><aside class="panel"><p class="eyebrow">Reader Goal</p><p>After 2 minutes, know what the authoring product needs before implementation design starts.</p><p><a href="index.html">Back to plan</a></p></aside></header>
 <section class="grid">
-<article class="panel"><h2>Unit 01 - AI-assisted editor model</h2><p class="muted">Define create, expand, rewrite, split encounter, link NPC, repair validation issue, summarize encounter, generate transition tools, and maintain paired character sheet/profile files. Decide human approval gates for AI edits.</p><h3>Verification</h3><p class="muted">Every AI edit has preview, diff, validation, and accept/reject behavior.</p></article>
+<article class="panel"><h2>Unit 01 - AI-assisted editor model</h2><p class="muted">Define create, expand, rewrite, split encounter, link NPC, repair validation issue, summarize encounter, generate transition tools, and maintain paired character sheet/profile files. Prefer chat-primary edits that auto-apply to canonical source and create restorable revisions.</p><h3>Verification</h3><p class="muted">Every AI edit writes a revision, reports affected files and validation, and can be restored from history.</p></article>
 <article class="panel"><h2>Unit 02 - Admin UX replacement</h2><p class="muted">Inventory current editor features and decide what gets removed, replaced, or folded into a wiki editor and preview surface.</p><h3>Verification</h3><p class="muted">The final implementation plan can safely delete the current editor without losing required launch capability.</p></article>
 <article class="panel"><h2>Unit 03 - Draft/publish lifecycle</h2><p class="muted">Define draft S3 files, validation state, publish compilation, rollback, version history, permissions, and preview playthrough behavior.</p><h3>Verification</h3><p class="muted">Authors cannot accidentally publish invalid adventures or lose draft work.</p></article>
 <article class="panel"><h2>Unit 04 - Design requirements</h2><p class="muted">Define the authoring UI information architecture: file tree, markdown editor, AI command panel, validation drawer, preview, context graph, and publish status.</p><h3>Verification</h3><p class="muted">Design brief is updated if durable UI principles change.</p></article>
@@ -10,12 +10,12 @@
 <section class="panel decision" aria-labelledby="unit-01">
 <p class="eyebrow">Unit 01 decision</p>
 <h2 id="unit-01">AI-Assisted Editor Model</h2>
-<p class="muted">The new editor should be wiki-first and diff-first. Authors edit source buffers through a controlled UI, but all persisted source mutations go through <code>AuthoringChangeSet</code>. AI tools also propose change sets for markdown profiles, encounter files, adventure manifests, character JSON sheets, and asset references. Neither human nor AI edits silently mutate source files. Every persisted edit must produce a previewable change set, run validation, and require explicit human acceptance before writing to the active draft source tree.</p>
+<p class="muted">The new editor should be wiki-first and revision-first. Authors mainly change the adventure plan through chat with the LLM, with direct controls limited to key prose and asset fields. All persisted source mutations go through <code>AuthoringChangeSet</code>, write canonical S3 source, run draft-preview validation, and create an <code>AuthoringRevision</code> that can restore the full draft or selected file.</p>
 <div class="packet" aria-label="Editor model pillars">
 <div><b>Source unit</b><p class="muted">The editor works on files and typed entities, not old nested <code>AdventurePlan</code> forms. The file tree exposes <code>adventure.md</code>, <code>encounters/*.md</code>, setting-level entities, paired character <code>.json</code>/<code>.md</code> files, and assets.</p></div>
-<div><b>AI role</b><p class="muted">AI acts as an authoring assistant that can create, expand, rewrite, split, link, repair, summarize, and scaffold. It must explain proposed changes in terms of affected files and validation impact.</p></div>
-<div><b>Human gate</b><p class="muted">Humans approve writes. The editor shows before/after diffs, affected compiled artifacts, validation findings, and any unresolved targets before accepting changes.</p></div>
-<div><b>Validation loop</b><p class="muted">Every accepted draft change should trigger draft-preview validation. Publish validation remains a separate hard gate from Stage 4.</p></div>
+<div><b>AI role</b><p class="muted">AI acts as the primary authoring assistant that can create, expand, rewrite, split, link, repair, summarize, and scaffold. It explains applied changes in terms of affected files and validation impact.</p></div>
+<div><b>Human control</b><p class="muted">Humans steer changes through chat and small key-field edits, then recover from mistakes through visible revision history instead of accept/reject queues.</p></div>
+<div><b>Validation loop</b><p class="muted">Every applied draft change should trigger draft-preview validation. Publish validation remains a separate hard gate from Stage 4.</p></div>
 </div>
 </section>
 <section class="columns" aria-label="Primary authoring surfaces">
@@ -26,7 +26,7 @@
 <li>Markdown editor for <code>.md</code> files with frontmatter-aware controls for required fields.</li>
 <li>JSON sheet editor for PC/NPC mechanics that validates against <code>types/character.ts</code>-aligned schemas.</li>
 <li>AI command panel scoped to the selected file, selected text, validation finding, or graph node.</li>
-<li>Diff preview showing exact additions, deletions, renames, and paired file updates before save.</li>
+<li>Revision history showing affected files, validation result, and restore controls after chat or key-field saves.</li>
 <li>Validation drawer with errors, warnings, suggestions, and AI-fixable actions.</li>
 <li>Compiled preview panel showing encounter summary, linked entities, transition graph, and prompt-context extract.</li>
 </ul>
@@ -50,12 +50,12 @@
 <thead><tr><th>Tool</th><th>Input scope</th><th>Output</th><th>Approval rule</th></tr></thead>
 <tbody>
 <tr><td>Create adventure skeleton</td><td>Setting, premise, tone, player count, optional template</td><td><code>adventure.md</code>, starter encounter stubs, optional premade character placeholders</td><td>Preview whole file set before writing.</td></tr>
-<tr><td>Create encounter</td><td>Adventure context, selected location/NPCs, author prompt</td><td>New <code>encounters/{id}.md</code> plus typed links and transition candidates</td><td>Require diff approval and validation.</td></tr>
-<tr><td>Expand encounter</td><td>Selected encounter or section</td><td>Updated intro, GM notes, checks, rewards, image suggestions, or transition text</td><td>Require section diff approval.</td></tr>
-<tr><td>Split encounter</td><td>Existing long encounter</td><td>Two or more encounter files plus updated transitions and graph links</td><td>Require multi-file diff and graph preview.</td></tr>
-<tr><td>Link NPC/location</td><td>Selected encounter and target entity</td><td>Typed wiki links, frontmatter refs, and optional reciprocal suggestions</td><td>Require approval; reciprocal links remain suggestions unless selected.</td></tr>
+<tr><td>Create encounter</td><td>Adventure context, selected location/NPCs, author prompt</td><td>New <code>encounters/{id}.md</code> plus typed links and transition candidates</td><td>Apply directly, validate, and record a revision.</td></tr>
+<tr><td>Expand encounter</td><td>Selected encounter or section</td><td>Updated intro, GM notes, checks, rewards, image suggestions, or transition text</td><td>Apply directly and create a restorable revision.</td></tr>
+<tr><td>Split encounter</td><td>Existing long encounter</td><td>Two or more encounter files plus updated transitions and graph links</td><td>Apply directly with graph validation and revision restore.</td></tr>
+<tr><td>Link NPC/location</td><td>Selected encounter and target entity</td><td>Typed wiki links, frontmatter refs, and optional reciprocal suggestions</td><td>Apply directly when requested; reciprocal links remain suggestions unless selected.</td></tr>
 <tr><td>Repair validation issue</td><td>Single validation finding</td><td>Minimal patch such as stub encounter, fixed link, generated summary, or missing profile</td><td>Allowed only for AI-fixable findings from Stage 4 policy.</td></tr>
-<tr><td>Summarize encounter</td><td>Encounter body</td><td>Frontmatter or compiled summary proposal</td><td>Require approval because summaries affect retrieval and prompts.</td></tr>
+<tr><td>Summarize encounter</td><td>Encounter body</td><td>Frontmatter or compiled summary update</td><td>Apply directly and validate because summaries affect retrieval and prompts.</td></tr>
 <tr><td>Generate transitions</td><td>Encounter objective and graph context</td><td>Explicit transition bullets with target IDs and conditions</td><td>Require graph preview; unresolved targets allowed only in draft preview.</td></tr>
 <tr><td>Maintain character pair</td><td>Character JSON or markdown profile</td><td>Profile from sheet, sheet-safe profile update, or consistency findings</td><td>AI may not mutate mechanics such as attributes/spells without explicit author intent.</td></tr>
 </tbody>
@@ -63,11 +63,11 @@
 </section>
 <section class="panel" style="margin-top:12px" aria-labelledby="change-set">
 <h2 id="change-set">AI Change Set Contract</h2>
-<p class="muted">AI authoring actions should return a structured change set. The app applies the change set only after validation and approval. This keeps AI SDK routes/tool calls compatible with S3-backed source files and avoids requiring direct agent filesystem access in production.</p>
+<p class="muted">AI authoring actions should return a structured change set. The app applies the change set to canonical S3 source, validates the resulting draft, and records a restorable revision. This keeps AI SDK routes/tool calls compatible with S3-backed source files and avoids requiring direct agent filesystem access in production.</p>
 <pre><code>type AuthoringChangeSet = {
   id: string
   intent: string
-  source: "ai" | "human"
+  source: "ai" | "human" | "restore"
   target: {
     settingId: string
     adventureId?: string
@@ -87,17 +87,17 @@
   validationAfter?: ValidationSummary
   risks: string[]
 }</code></pre>
-<p class="muted">Every <code>update</code>, <code>rename</code>, or <code>delete</code> should include the current source hash so the server can reject stale writes if another edit landed while the AI proposal was open.</p>
+<p class="muted">Every <code>update</code>, <code>rename</code>, or <code>delete</code> should include the current source hash so the server can reject stale writes if another edit landed while the request was running.</p>
 </section>
 <section class="panel" style="margin-top:12px" aria-labelledby="approval-gates">
-<h2 id="approval-gates">Approval And Safety Gates</h2>
+<h2 id="approval-gates">Revision And Safety Gates</h2>
 <table class="spec">
 <thead><tr><th>Gate</th><th>Rule</th></tr></thead>
 <tbody>
-<tr><td>Preview</td><td>All AI changes render as diffs before write. Multi-file changes show every affected path.</td></tr>
-<tr><td>Validation</td><td>Run draft-preview validation after applying the change set to an in-memory or temporary preview tree. Show before/after findings.</td></tr>
-<tr><td>Human accept</td><td>No AI-generated file write happens without explicit accept. Rejecting a change leaves the draft tree unchanged.</td></tr>
-<tr><td>Stale write check</td><td>Server rejects accepted changes if <code>beforeHash</code> no longer matches the current S3 source object.</td></tr>
+<tr><td>Revision</td><td>All AI and human writes create a durable authoring revision with affected paths, validation summary, source hashes, and a full source snapshot.</td></tr>
+<tr><td>Validation</td><td>Run draft-preview validation after applying the change set. Show current findings and keep publish validation explicit.</td></tr>
+<tr><td>Restore</td><td>Authors can restore the full draft or selected file from revision history when an auto-applied change misses the mark.</td></tr>
+<tr><td>Stale write check</td><td>Server rejects changes if <code>beforeHash</code> no longer matches the current S3 source object.</td></tr>
 <tr><td>Mechanics protection</td><td>Character attributes, spells, equipment, health defaults, and other mechanical JSON fields require a higher-friction confirmation than prose/profile edits.</td></tr>
 <tr><td>Publish protection</td><td>AI can help fix publish blockers, but only an authorized human/admin can publish immutable artifacts.</td></tr>
 <tr><td>Asset references</td><td>AI can suggest image refs or upload slots, but missing assets remain validation findings until real S3 objects exist or are intentionally stubbed in preview.</td></tr>
@@ -109,8 +109,8 @@
 <h2>Editor State</h2>
 <ul>
 <li>Open draft source tree and selected file path.</li>
-<li>Unsaved human edits in the current editor buffer.</li>
-<li>Pending AI change sets with status: proposed, validated, accepted, rejected, failed.</li>
+<li>Auto-saved human key-field edits in the selected editor surface.</li>
+<li>Applied authoring revisions with source, changed paths, validation summary, and restore controls.</li>
 <li>Latest draft-preview validation report.</li>
 <li>Compiled preview bundle pointer when validation has run.</li>
 <li>Graph selection and currently focused validation finding.</li>
@@ -132,15 +132,15 @@
 <table class="spec">
 <thead><tr><th>Question</th><th>Default for the plan</th></tr></thead>
 <tbody>
-<tr><td>Should AI edits be applied directly?</td><td>No. Use proposed change sets with diff, validation, and human approval.</td></tr>
-<tr><td>Should the editor hide markdown?</td><td>No. Markdown is the source of truth and should remain editable. Structured controls can assist frontmatter and JSON sheets.</td></tr>
+<tr><td>Should AI edits be applied directly?</td><td>Yes. Chat is the primary authoring mode; applied edits must create revisions and run validation.</td></tr>
+<tr><td>Should the editor hide markdown?</td><td>Mostly. Markdown is the source of truth, but the admin surface should expose key fields and previews while deeper restructuring happens through chat.</td></tr>
 <tr><td>Should unresolved transition targets be allowed?</td><td>Yes in planning preview. Publish still requires resolved target encounters or stubs.</td></tr>
-<tr><td>Should AI write paired character files automatically?</td><td>It may propose both files together, but the author approves the pair. Mechanical JSON changes need explicit confirmation.</td></tr>
+<tr><td>Should AI write paired character files automatically?</td><td>It may update both files together when requested. Mechanical JSON changes need explicit confirmation.</td></tr>
 <tr><td>Should production AI tools use local agent skills?</td><td>No. Agent skills can help developer workflow, but production editor tools should be implemented as app-owned AI SDK/server-action capabilities with explicit input/output schemas.</td></tr>
 </tbody>
 </table>
 <h3>Verification</h3>
-<p class="muted">Unit 01 is complete when the final implementation plan can define AI authoring tools as structured change-set producers, show approval-gated diffs, run draft-preview validation before writes, protect mechanical JSON fields, and preserve markdown/S3 as the canonical authoring source.</p>
+<p class="muted">Unit 01 is complete when the final implementation plan can define AI authoring tools as structured change-set producers, auto-apply chat edits to S3 source, create restorable revisions, run draft-preview validation after writes, protect mechanical JSON fields, and preserve markdown/S3 as the canonical authoring source.</p>
 </section>
 <section class="panel decision" aria-labelledby="unit-02">
 <p class="eyebrow">Unit 02 decision</p>
@@ -197,7 +197,7 @@
 <li>Monolithic AdventurePlan JSON edit form as the primary admin UI.</li>
 <li>Section/scene nesting as a required editor structure.</li>
 <li>JSON download as the main export affordance.</li>
-<li>Direct AI generation into app state without diff/validation.</li>
+<li>Direct AI generation into app state without validation or revision history.</li>
 <li>Form-only transition dropdowns that hide graph consequences.</li>
 <li>Hidden encounter flags whose gameplay effects are not visible in compiled preview.</li>
 </ul>
@@ -250,7 +250,7 @@
 <section class="panel decision" aria-labelledby="unit-03">
 <p class="eyebrow">Unit 03 decision</p>
 <h2 id="unit-03">Draft And Publish Lifecycle</h2>
-<p class="muted">Authoring should have three explicit artifact states: one shared active draft per Adventure Plan, one mutable latest preview bundle per active draft, and immutable published versions. Authors can save incomplete draft source through approved change sets, compile the latest preview bundle with draft-preview validation, and start preview playthroughs from that bundle. Publishing is a separate human/admin action that runs publish validation, writes a new immutable timestamp/hash version only when the source content hash changes, updates <code>latest.json</code> only after the version is complete, locks the current draft, and starts a new active draft copied from the locked source.</p>
+<p class="muted">Authoring should have three explicit artifact states: one shared active draft per Adventure Plan, one mutable latest preview bundle per active draft, and immutable published versions. Authors can save incomplete draft source through applied change sets and authoring revisions, compile the latest preview bundle with draft-preview validation, and start preview playthroughs from that bundle. Publishing is a separate human/admin action that runs publish validation, writes a new immutable timestamp/hash version only when the source content hash changes, updates <code>latest.json</code> only after the version is complete, locks the current draft, and starts a new active draft copied from the locked source.</p>
 <div class="packet" aria-label="Lifecycle states">
 <div><b>Source draft</b><p class="muted"><code>content/</code> source files are mutable and durable for the one shared active draft. They can contain incomplete planning work, unresolved transition targets, draft visibility, and validation findings.</p></div>
 <div><b>Preview bundle</b><p class="muted"><code>preview/</code> stores the mutable latest generated bundle for the active draft. It supports graph view, validation UI, AI repair, and preview playthroughs without claiming publish readiness.</p></div>
@@ -264,7 +264,7 @@
 <thead><tr><th>Step</th><th>Action</th><th>Output</th><th>Rules</th></tr></thead>
 <tbody>
 <tr><td>Create draft</td><td>Create source folder and starter files.</td><td><code>content/settings/{settingId}/adventures/{adventureId}/...</code></td><td>Can start from blank, AI skeleton, or migrated Myr template. Must create stable IDs immediately.</td></tr>
-<tr><td>Edit source</td><td>Human edit or accepted AI change set.</td><td>Approved change set, updated source object, and source hash.</td><td>Use stale-write checks. No direct file write path. Rejected changes leave source untouched.</td></tr>
+<tr><td>Edit source</td><td>Human key-field edit or AI chat change set.</td><td>Applied change set, updated source object, source hash, validation result, and authoring revision.</td><td>Use stale-write checks and revision restore instead of approval-gated queues.</td></tr>
 <tr><td>Validate draft</td><td>Run compiler in <code>draftPreview</code> mode.</td><td><code>validation-report.json</code> and optional preview bundle.</td><td>Warnings allowed for incomplete graph work; publish-blocking issues remain visible.</td></tr>
 <tr><td>Preview playthrough</td><td>Start practice/preview session from preview bundle.</td><td>Convex session pinned to <code>previewDraftId</code>.</td><td>Never promoted to public campaign state. Unresolved target movement is blocked at runtime.</td></tr>
 <tr><td>Publish</td><td>Run compiler in <code>publish</code> mode.</td><td>New immutable timestamp/hash bundle plus validation report.</td><td>Fails if any error exists. If content hash is unchanged, publish should be a no-op. Successful publish locks the current draft and starts a new active draft from the locked source.</td></tr>
@@ -348,7 +348,7 @@
 <div class="packet" aria-label="UI layout requirements">
 <div><b>Left rail</b><p class="muted">Source file tree, entity filters, unsaved indicators, validation badges, and quick create actions.</p></div>
 <div><b>Main editor</b><p class="muted">Markdown editor or JSON sheet editor with frontmatter controls, syntax-aware warnings, and source hash/save state.</p></div>
-<div><b>Right rail</b><p class="muted">AI command panel, validation drawer, selected entity inspector, and change-set diff queue.</p></div>
+<div><b>Right rail</b><p class="muted">AI chat panel, revision history, validation drawer, and selected entity inspector.</p></div>
 <div><b>Preview band</b><p class="muted">Compiled encounter preview, graph preview, prompt-context preview, asset preview, and publish status. This can be a tabbed lower panel on desktop or a separate view on mobile.</p></div>
 </div>
 </section>
@@ -357,10 +357,10 @@
 <table class="spec">
 <thead><tr><th>Area</th><th>Required behavior</th></tr></thead>
 <tbody>
-<tr><td>File tree</td><td>Shows adventure files, encounters, characters, NPCs, locations, factions, items, and assets. Badges indicate errors, warnings, unsaved edits, accepted AI changes pending save, and publish-blocking status.</td></tr>
+<tr><td>File tree</td><td>Shows adventure files, encounters, characters, NPCs, locations, factions, items, and assets. Badges indicate errors, warnings, active validation findings, and publish-blocking status.</td></tr>
 <tr><td>Markdown editor</td><td>Supports source editing, frontmatter controls, section outline, typed-link insertion, image/asset insertion, and validation annotations.</td></tr>
 <tr><td>JSON sheet editor</td><td>Provides structured controls for character mechanics, validates against the locked character schema, and displays paired markdown profile consistency.</td></tr>
-<tr><td>AI panel</td><td>Commands are scoped to selected file/text/finding/graph node. AI output appears as change sets with diff, risks, validation before/after, accept, and reject.</td></tr>
+<tr><td>AI panel</td><td>Chat is scoped to the selected file, validation finding, or graph context. AI output appears as applied revisions with affected paths, risks, validation status, and restore affordances.</td></tr>
 <tr><td>Validation drawer</td><td>Groups findings by severity, code, file, entity, and AI-fixable status. Clicking a finding focuses the affected source span or entity.</td></tr>
 <tr><td>Graph view</td><td>Shows start encounter, transitions, unresolved targets, unreachable encounters, selected edge details, and publish blockers.</td></tr>
 <tr><td>Preview panel</td><td>Shows compiled encounter view, linked context, prompt packet excerpt, image/asset preview, and preview playthrough launch status.</td></tr>
@@ -374,7 +374,7 @@
 <ul>
 <li>Never hide publish blockers behind collapsed panels without a persistent status badge.</li>
 <li>Keep save, validate, preview, publish, and rollback as distinct commands.</li>
-<li>Use familiar icon buttons with tooltips for create, save, validate, preview, publish, rollback, accept, reject, diff, and upload.</li>
+<li>Use familiar icon buttons with tooltips for create, validate, preview, publish, rollback, restore, and upload.</li>
 <li>Show exact S3 keys for source files and full S3 URLs for image/assets when it helps debugging.</li>
 <li>Use stable layout dimensions for file rows, validation rows, graph nodes, and command bars to avoid jitter during validation updates.</li>
 <li>Do not make AI chat the only way to author; direct source editing remains first-class.</li>
@@ -383,7 +383,7 @@
 <article class="panel">
 <h2>Accessibility And States</h2>
 <ul>
-<li>Keyboard navigation through file tree, editor tabs, validation findings, and diff actions.</li>
+<li>Keyboard navigation through file tree, editor tabs, validation findings, and revision restore actions.</li>
 <li>Visible focus states and semantic headings for long-form editor panels.</li>
 <li>Clear loading, success, failure, stale-write, permission-denied, and validation-running states.</li>
 <li>Diffs must be readable without color alone.</li>

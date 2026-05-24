@@ -1,12 +1,11 @@
 "use client"
 
-import { Download, FileJson, FileText, GitBranch, ImageIcon, Menu, MessageSquare, PanelLeftClose, Plus, Save, Search, Trash2, Upload, Wand2 } from "lucide-react"
+import { Clock3, FileJson, FileText, GitBranch, ImageIcon, Menu, MessageSquare, PanelLeftClose, RotateCcw, Search, Wand2 } from "lucide-react"
 import * as React from "react"
 import { toast } from "sonner"
 import {
-  exportAdminWikiAdventureBundleAction,
-  importAdminWikiAdventureBundleAction,
   loadAdminWikiAdventureStateAction,
+  restoreAdminWikiAdventureRevisionAction,
   saveAdminWikiAdventureFileAction,
   sendAdminWikiAdventureChatAction,
 } from "@/app/_actions/wiki-adventures/admin-authoring-actions"
@@ -24,6 +23,8 @@ type ChatMessage = {
   role: "admin" | "wiki"
   content: string
 }
+
+type RevisionSummary = EditorState["revisions"][number]
 
 type EditableNpcRef = {
   id: string
@@ -103,30 +104,15 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
     }
   }
 
-  async function downloadBundle() {
-    const bundle = await exportAdminWikiAdventureBundleAction(state.definition.settingId, state.definition.planId)
-    const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.href = url
-    link.download = `${state.definition.planId}-wiki-source.json`
-    link.click()
-    URL.revokeObjectURL(url)
-  }
-
-  async function restoreBundle(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0]
-    if (!file) return
+  async function restoreRevision(revisionId: string, path?: string) {
     setBusy(true)
     try {
-      const bundle = JSON.parse(await file.text()) as { files: Array<{ path: string; content: string }> }
-      await importAdminWikiAdventureBundleAction({ settingId: state.definition.settingId, planId: state.definition.planId, files: bundle.files })
+      const result = await restoreAdminWikiAdventureRevisionAction({ settingId: state.definition.settingId, planId: state.definition.planId, revisionId, path })
       await refresh()
-      toast.success("Source bundle restored")
+      toast.success(result.reply)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Restore failed")
     } finally {
-      event.target.value = ""
       setBusy(false)
     }
   }
@@ -141,17 +127,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
               {wiki.pages.length} wiki pages · {Object.keys(state.encounters).length} encounters
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={downloadBundle} disabled={busy} className="h-7 gap-1.5 px-2 font-mono text-[11px] lowercase">
-              <Download className="size-3.5" /> export
-            </Button>
-            <Button variant="outline" size="sm" asChild disabled={busy} className={`h-7 gap-1.5 px-2 font-mono text-[11px] lowercase ${busy ? "pointer-events-none opacity-50" : "cursor-pointer"}`}>
-              <label>
-                <Upload className="size-3.5" /> restore
-                <input type="file" accept="application/json" className="hidden" onChange={restoreBundle} disabled={busy} />
-              </label>
-            </Button>
-          </div>
+          <RevisionPill revisions={state.revisions} />
         </div>
       </header>
 
@@ -205,10 +181,11 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
 
             <div className="mx-5 mt-4 mb-5 flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-[#3f372e] bg-[#0b0a09] shadow-[inset_0_1px_0_rgba(255,255,255,.03)]">
               <div className="flex shrink-0 items-center justify-between border-b border-[#2d2923] px-3 py-2">
-                <span className="font-mono text-[10px] font-bold uppercase tracking-[.16em] text-stone-500">Change Log</span>
-                <span className="font-mono text-[10px] text-stone-600">{messages.length} entries</span>
+                <span className="font-mono text-[10px] font-bold uppercase tracking-[.16em] text-stone-500">Revision Log</span>
+                <span className="font-mono text-[10px] text-stone-600">{state.revisions.length} revisions</span>
               </div>
               <div className="min-h-0 flex-1 space-y-3 overflow-auto p-3">
+                <RevisionHistory revisions={state.revisions} selectedPath={selectedPath} disabled={busy} onRestore={restoreRevision} />
                 {messages.map((message, index) => (
                   <div key={index} className={message.role === "admin" ? "flex justify-end" : "flex justify-start"}>
                     <div
@@ -225,6 +202,70 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
           </div>
         </aside>
       </main>
+    </div>
+  )
+}
+
+function RevisionPill({ revisions }: { revisions: RevisionSummary[] }) {
+  const latest = revisions[0]
+  return (
+    <div className="flex items-center gap-2 rounded-md border border-[#4a3e31] bg-[#12100e] px-3 py-2">
+      <Clock3 className="size-4 text-[#d8bd81]" />
+      <div>
+        <div className="font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#d8bd81]">{revisions.length} revisions</div>
+        <div className="max-w-[340px] truncate text-xs text-stone-500">{latest ? latest.summary : "No saved revisions yet"}</div>
+      </div>
+    </div>
+  )
+}
+
+function RevisionHistory({
+  revisions,
+  selectedPath,
+  disabled,
+  onRestore,
+}: {
+  revisions: RevisionSummary[]
+  selectedPath: string
+  disabled: boolean
+  onRestore: (revisionId: string, path?: string) => void
+}) {
+  if (revisions.length === 0) {
+    return <div className="rounded-md border border-[#3f372e] bg-[#15120f] p-3 text-xs leading-5 text-stone-500">Revision history will appear here after chat or prose edits auto-save.</div>
+  }
+  return (
+    <div className="space-y-2 border-b border-[#2d2923] pb-3">
+      {revisions.slice(0, 8).map((revision) => {
+        const includesSelectedPath = revision.changedPaths.includes(selectedPath)
+        return (
+          <div key={revision.id} className="rounded-md border border-[#3f372e] bg-[#15120f] p-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="truncate text-sm font-semibold text-[#f4ead7]">{revision.summary}</div>
+                <div className="mt-1 font-mono text-[10px] uppercase tracking-[.14em] text-stone-600">
+                  {revision.source} · {new Date(revision.createdAt).toLocaleString()}
+                </div>
+              </div>
+              <div className="rounded border border-[#4a3e31] px-1.5 py-0.5 font-mono text-[10px] uppercase text-stone-500">{revision.validation.status}</div>
+            </div>
+            <div className="mt-2 line-clamp-2 break-all font-mono text-[10px] text-stone-600">{revision.changedPaths.join(", ")}</div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={() => onRestore(revision.id)} disabled={disabled} className="h-7 gap-1 px-2 font-mono text-[10px] lowercase">
+                <RotateCcw className="size-3" /> restore draft
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onRestore(revision.id, selectedPath)}
+                disabled={disabled || !includesSelectedPath}
+                className="h-7 gap-1 px-2 font-mono text-[10px] lowercase"
+              >
+                <RotateCcw className="size-3" /> restore file
+              </Button>
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -253,10 +294,11 @@ function ModulePageEditor({
   const [intro, setIntro] = React.useState(fields.intro)
   const [gmNotes, setGmNotes] = React.useState(fields.gmNotes)
   const [transitions, setTransitions] = React.useState(fields.transitions)
-  const [npcRefs, setNpcRefs] = React.useState(fields.npcRefs)
   const [image, setImage] = React.useState(fields.image)
-  const [sectionTitle, setSectionTitle] = React.useState(fields.sectionTitle)
-  const [sceneTitle, setSceneTitle] = React.useState(fields.sceneTitle)
+  const isJson = Boolean(file?.path.endsWith(".json"))
+  const isCharacter = Boolean(file && (markdownKind(file) === "npc" || markdownKind(file) === "character"))
+  const nextContent = file && !isJson && !isCharacter ? updateMarkdownFields(file.content, { title, summary, intro, gmNotes, transitions, image }) : (file?.content ?? "")
+  useDebouncedAutoSave(file?.path ?? "", nextContent, file?.content ?? "", disabled || !file || isJson || isCharacter, onSave)
 
   React.useEffect(() => {
     setTitle(fields.title)
@@ -264,16 +306,12 @@ function ModulePageEditor({
     setIntro(fields.intro)
     setGmNotes(fields.gmNotes)
     setTransitions(fields.transitions)
-    setNpcRefs(fields.npcRefs)
     setImage(fields.image)
-    setSectionTitle(fields.sectionTitle)
-    setSceneTitle(fields.sceneTitle)
   }, [fields])
 
   if (!file) return null
-  if (file.path.endsWith(".json")) return <JsonKeyFieldEditor file={file} disabled={disabled} onSave={onSave} />
+  if (isJson) return <JsonKeyFieldEditor file={file} disabled={disabled} onSave={onSave} />
 
-  const isCharacter = markdownKind(file) === "npc" || markdownKind(file) === "character"
   if (isCharacter) {
     return (
       <CharacterProfileEditor
@@ -292,7 +330,6 @@ function ModulePageEditor({
     )
   }
 
-  const nextContent = updateMarkdownFields(file.content, { title, summary, intro, gmNotes, transitions, npcRefs, image, sectionTitle, sceneTitle })
   const isEncounter = file.path.includes("/encounters/")
   const encounter = Object.values(encounters).find((item) => item.sourcePath === file.path)
 
@@ -318,8 +355,8 @@ function ModulePageEditor({
           <Input value={title} onChange={(event) => setTitle(event.target.value)} disabled={disabled} className="mt-2 border-[#b9a77f] bg-[#eee2c6] text-3xl font-bold text-[#22180e]" />
           {isEncounter && (
             <div className="mt-4 grid gap-3 md:grid-cols-2">
-              <Field label="Section" value={sectionTitle} onChange={setSectionTitle} disabled={disabled} tone="paper" />
-              <Field label="Scene" value={sceneTitle} onChange={setSceneTitle} disabled={disabled} tone="paper" />
+              <ReadonlyField label="Section" value={fields.sectionTitle || "Encounter graph"} />
+              <ReadonlyField label="Scene" value={fields.sceneTitle || "Encounter file"} />
             </div>
           )}
           <p className="mt-4 text-sm leading-6 text-[#4a3822]">{page?.summary || file.path}</p>
@@ -337,18 +374,14 @@ function ModulePageEditor({
               <Block label="GM Notes" value={gmNotes} onChange={setGmNotes} disabled={disabled} rows={6} tone="paper" hideLabel />
             </ModuleBlock>
             <ModuleBlock title="Encounter NPCs">
-              <EncounterNpcEditor refs={npcRefs} npcLookup={npcLookup} onChange={setNpcRefs} disabled={disabled} />
+              <EncounterNpcEditor refs={fields.npcRefs} npcLookup={npcLookup} />
             </ModuleBlock>
             <ModuleBlock title="Exits">
               <Block label="Transitions" value={transitions} onChange={setTransitions} disabled={disabled} rows={7} tone="paper" hideLabel />
             </ModuleBlock>
           </div>
         )}
-        <div className="mt-5 flex justify-end">
-          <Button variant="outline" size="sm" onClick={() => onSave(file.path, nextContent)} disabled={disabled} className="gap-2 border-[#51473a] bg-[#25211d] text-stone-100 hover:bg-[#34302a]">
-            <Save className="size-4" /> Save Module Page
-          </Button>
-        </div>
+        <AutoSaveNote disabled={disabled} />
       </div>
     </div>
   )
@@ -395,6 +428,7 @@ function CharacterProfileEditor({
     { title: "Behavior", value: sheet.behavior },
   ].filter((detail) => detail.value)
   const nextContent = updateCharacterMarkdownFields(file.content, { title, image, summary })
+  useDebouncedAutoSave(file.path, nextContent, file.content, disabled, onSave)
   return (
     <div className="mx-auto max-w-6xl">
       <div className="overflow-hidden rounded-md border border-[#b9a77f] bg-[#d9caab] text-[#22180e] shadow-[0_24px_80px_rgba(0,0,0,.22)]">
@@ -416,7 +450,6 @@ function CharacterProfileEditor({
           <div className="p-6 lg:p-7">
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded border border-[#9f8c64] bg-[#efe2bd] px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-[.14em] text-[#5b4631]">Character</span>
-              <span className="font-mono text-[11px] text-[#7b6948]">{frontmatterValue(file.content, "id") || sheet.id || titleFromId(file.path)}</span>
             </div>
 
             <Input value={title} onChange={(event) => onTitleChange(event.target.value)} disabled={disabled} className="mt-3 border-[#b9a77f] bg-[#f1e4bf] text-3xl font-bold text-[#22180e]" />
@@ -448,11 +481,7 @@ function CharacterProfileEditor({
               <CharacterMixedList title="Special Abilities" values={sheet.specialAbilities} />
             </div>
 
-            <div className="mt-6 flex justify-end">
-              <Button variant="outline" size="sm" onClick={() => onSave(file.path, nextContent)} disabled={disabled} className="gap-2 border-[#51473a] bg-[#25211d] text-stone-100 hover:bg-[#34302a]">
-                <Save className="size-4" /> Save Character
-              </Button>
-            </div>
+            <AutoSaveNote disabled={disabled} />
           </div>
         </div>
       </div>
@@ -533,33 +562,22 @@ function CharacterMixedList({ title, values }: { title: string; values: Array<st
   )
 }
 
-function EncounterNpcEditor({
-  refs,
-  npcLookup,
-  onChange,
-  disabled,
-}: {
-  refs: EditableNpcRef[]
-  npcLookup: Map<string, NpcLookupRecord>
-  onChange: (refs: EditableNpcRef[]) => void
-  disabled: boolean
-}) {
-  const updateRef = (index: number, patch: Partial<EditableNpcRef>) => onChange(refs.map((ref, refIndex) => (refIndex === index ? { ...ref, ...patch } : ref)))
+function EncounterNpcEditor({ refs, npcLookup }: { refs: EditableNpcRef[]; npcLookup: Map<string, NpcLookupRecord> }) {
   return (
     <div className="space-y-4">
-      {refs.length === 0 && <p className="text-sm text-[#5b4631]">No NPCs assigned to this encounter.</p>}
+      {refs.length === 0 && <p className="text-sm text-[#5b4631]">No NPCs assigned to this encounter. Ask the authoring chat to add or connect an NPC.</p>}
       {refs.map((ref, index) => {
         const npc = npcLookup.get(ref.id)
         const image = npcImageUrl(npc?.image ?? "")
         const details = [npc?.gender, npc?.race, npc?.archetype].filter(Boolean).join(" ")
         return (
           <div key={index} className="rounded-md border border-[#b29d70] bg-[#f1e4bf] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.42)]">
-            <div className="grid gap-4 sm:grid-cols-[88px_minmax(0,1fr)]">
-              <div className="size-[88px] overflow-hidden rounded border border-[#9d8759] bg-[#d9caab] shadow-sm">
+            <div className="grid gap-5 sm:grid-cols-[176px_minmax(0,1fr)]">
+              <div className="size-[176px] overflow-hidden rounded border border-[#9d8759] bg-[#d9caab] shadow-sm">
                 {image ? (
-                  <Image src={image} alt={npc?.name ?? ref.id} width={88} height={88} className="h-full w-full object-cover" />
+                  <Image src={image} alt={npc?.name ?? "NPC"} width={176} height={176} className="h-full w-full object-cover" />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-[#d3c19b] font-mono text-lg font-bold uppercase text-[#6a5635]">{initials(npc?.name ?? ref.id)}</div>
+                  <div className="flex h-full w-full items-center justify-center bg-[#d3c19b] font-mono text-3xl font-bold uppercase text-[#6a5635]">{initials(npc?.name ?? "NPC")}</div>
                 )}
               </div>
               <div className="min-w-0">
@@ -567,17 +585,7 @@ function EncounterNpcEditor({
                   <div className="min-w-0">
                     <h4 className="truncate font-serif text-2xl font-bold leading-tight text-[#24180d]">{npc?.name ?? titleFromId(ref.id || "Unknown NPC")}</h4>
                     <p className="mt-1 font-mono text-[11px] uppercase tracking-[.14em] text-[#6c5738]">{details || "NPC reference"}</p>
-                    <p className="mt-1 truncate font-mono text-[11px] text-[#7b6948]">{ref.id || "missing npc id"}</p>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onChange(refs.filter((_, refIndex) => refIndex !== index))}
-                    disabled={disabled}
-                    className="gap-1 border-[#51473a] bg-[#25211d] text-stone-100 hover:bg-[#34302a]"
-                  >
-                    <Trash2 className="size-3.5" /> remove
-                  </Button>
                 </div>
                 {npc?.summary ? (
                   <p className="mt-3 line-clamp-3 text-sm leading-6 text-[#4a3822]">{npc.summary}</p>
@@ -586,25 +594,14 @@ function EncounterNpcEditor({
                 )}
               </div>
             </div>
-            <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_180px]">
-              <Field label="NPC ID" value={ref.id} onChange={(value) => updateRef(index, { id: value })} disabled={disabled} tone="paper" />
-              <Field label="Initiative" value={ref.initialInitiative} onChange={(value) => updateRef(index, { initialInitiative: value })} disabled={disabled} tone="paper" />
-            </div>
-            <div className="mt-3">
-              <Block label="Behavior" value={ref.behavior} onChange={(value) => updateRef(index, { behavior: value })} disabled={disabled} rows={3} tone="paper" />
+            <div className="mt-4 rounded border border-[#c9b891] bg-[#eadbb9] p-3">
+              <div className="font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#6c5738]">Encounter Role</div>
+              <p className="mt-2 text-sm leading-6 text-[#4a3822]">{ref.behavior || "No behavior note yet. Ask the authoring chat to revise this NPC's role in the encounter."}</p>
+              {ref.initialInitiative && <p className="mt-2 font-mono text-[10px] uppercase tracking-[.14em] text-[#7b6948]">Initial initiative: {ref.initialInitiative}</p>}
             </div>
           </div>
         )
       })}
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => onChange([...refs, { id: "", behavior: "", initialInitiative: "" }])}
-        disabled={disabled}
-        className="gap-1 border-[#51473a] bg-[#25211d] text-stone-100 hover:bg-[#34302a]"
-      >
-        <Plus className="size-3.5" /> add npc
-      </Button>
     </div>
   )
 }
@@ -621,6 +618,8 @@ function JsonKeyFieldEditor({ file, disabled, onSave }: { file: SourceFile; disa
     setArchetype(String(parsed.archetype ?? ""))
     setAppearance(String(parsed.appearance ?? ""))
   }, [parsed])
+  const nextContent = `${JSON.stringify({ ...parsed, name, race, archetype, appearance }, null, 2)}\n`
+  useDebouncedAutoSave(file.path, nextContent, file.content, disabled, onSave)
   return (
     <div className="space-y-4">
       <h2 className="break-all font-mono text-sm font-bold text-stone-100">{file.path}</h2>
@@ -628,9 +627,7 @@ function JsonKeyFieldEditor({ file, disabled, onSave }: { file: SourceFile; disa
       <Field label="Race" value={race} onChange={setRace} disabled={disabled} />
       <Field label="Archetype" value={archetype} onChange={setArchetype} disabled={disabled} />
       <Block label="Appearance" value={appearance} onChange={setAppearance} disabled={disabled} rows={6} />
-      <Button variant="outline" size="sm" onClick={() => onSave(file.path, `${JSON.stringify({ ...parsed, name, race, archetype, appearance }, null, 2)}\n`)} disabled={disabled} className="gap-2">
-        <Save className="size-4" /> Save Fields
-      </Button>
+      <AutoSaveNote disabled={disabled} />
     </div>
   )
 }
@@ -756,7 +753,7 @@ function PageButton({ page, selectedPath, onSelect }: { page: WikiPage; selected
       {page.path.endsWith(".json") ? <FileJson className="mt-0.5 size-4 text-[#bdb6aa]" /> : <FileText className="mt-0.5 size-4 text-[#d7c8ab]" />}
       <span className="min-w-0">
         <span className="block truncate text-sm text-stone-100">{page.title}</span>
-        <span className="block truncate font-mono text-[10px] text-stone-500">{page.id}</span>
+        <span className="block truncate font-mono text-[10px] text-stone-500">{page.kind === "npc" || page.kind === "character" || page.kind === "sheet" ? "character" : page.id}</span>
         {page.outgoingEncounterIds.length > 0 && (
           <span className="mt-1 flex items-center gap-1 truncate text-[11px] text-stone-400">
             <GitBranch className="size-3 shrink-0" />
@@ -787,7 +784,7 @@ function WikiPageHeader({ page, sectionsSidebarOpen, onRestoreSectionsSidebar }:
               </button>
             )}
             <span className="rounded border border-[#3a3630] bg-[#24211d] px-2 py-1 font-mono text-[10px] uppercase text-stone-300">{pageKindLabel(page)}</span>
-            <span className="font-mono text-[11px] text-stone-500">{page.id}</span>
+            {page.kind !== "npc" && page.kind !== "character" && page.kind !== "sheet" && <span className="font-mono text-[11px] text-stone-500">{page.id}</span>}
           </div>
           <h2 className="mt-2 text-2xl font-semibold leading-tight text-[#e6d6b8]">{page.title}</h2>
           <p className="mt-1 line-clamp-2 max-w-4xl text-sm text-stone-400">{page.summary || page.path}</p>
@@ -1048,6 +1045,40 @@ function ModuleBlock({ title, children }: { title: string; children: React.React
   )
 }
 
+function useDebouncedAutoSave(path: string, content: string, persistedContent: string, disabled: boolean, onSave: (path: string, content: string) => void) {
+  const lastSavedRef = React.useRef(persistedContent)
+  React.useEffect(() => {
+    lastSavedRef.current = persistedContent
+  }, [path, persistedContent])
+  React.useEffect(() => {
+    if (disabled || !path || content === lastSavedRef.current) return
+    const timeout = window.setTimeout(() => {
+      lastSavedRef.current = content
+      onSave(path, content)
+    }, 1600)
+    return () => window.clearTimeout(timeout)
+  }, [content, disabled, onSave, path])
+}
+
+function AutoSaveNote({ disabled }: { disabled: boolean }) {
+  return (
+    <div className="mt-5 flex justify-end">
+      <span className="rounded border border-[#b9a77f] bg-[#efe2bd] px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#6c5738]">
+        {disabled ? "Saving revision..." : "Auto-saves as a revision"}
+      </span>
+    </div>
+  )
+}
+
+function ReadonlyField({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded border border-[#b9a77f] bg-[#eadbb9] px-3 py-2">
+      <div className="font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#6c5738]">{label}</div>
+      <div className="mt-1 truncate font-serif text-base font-bold text-[#24180d]">{value}</div>
+    </div>
+  )
+}
+
 function Field({ label, value, onChange, disabled, tone = "dark" }: { label: string; value: string; onChange: (value: string) => void; disabled: boolean; tone?: "dark" | "paper" }) {
   const paper = tone === "paper"
   return (
@@ -1105,15 +1136,9 @@ function parseEditableFields(file?: SourceFile) {
   }
 }
 
-function updateMarkdownFields(
-  content: string,
-  fields: { title: string; image: string; summary: string; intro: string; gmNotes: string; transitions: string; npcRefs: EditableNpcRef[]; sectionTitle: string; sceneTitle: string }
-) {
+function updateMarkdownFields(content: string, fields: { title: string; image: string; summary: string; intro: string; gmNotes: string; transitions: string }) {
   let next = updateFrontmatterValue(content, "title", fields.title)
   next = updateFrontmatterValue(next, "image", fields.image)
-  next = updateFrontmatterValue(next, "sectionTitle", fields.sectionTitle)
-  next = updateFrontmatterValue(next, "sceneTitle", fields.sceneTitle)
-  next = updateNpcRefs(next, fields.npcRefs)
   next = updateSection(next, "Summary", fields.summary)
   next = updateSection(next, "Intro", fields.intro)
   next = updateSection(next, "GM Notes", fields.gmNotes)
@@ -1180,25 +1205,6 @@ function parseNpcRefs(content: string): EditableNpcRef[] {
     }
   }
   return refs.filter((ref) => ref.id && ref.id !== "{" && ref.id !== "[object Object]")
-}
-
-function updateNpcRefs(content: string, refs: EditableNpcRef[]) {
-  const cleanedRefs = refs.map((ref) => ({ ...ref, id: ref.id.trim(), behavior: ref.behavior.trim(), initialInitiative: ref.initialInitiative.trim() })).filter((ref) => ref.id)
-  const nextBlock = cleanedRefs.length ? `npcs:\n${cleanedRefs.map(serializeNpcRef).join("\n")}` : ""
-  const pattern = /^npcs:\n(?:\s+-.*(?:\n\s{4}[a-zA-Z0-9_-]+:.*)*\n?)*/m
-  if (pattern.test(content)) {
-    return nextBlock ? content.replace(pattern, `${nextBlock}\n`) : content.replace(pattern, "")
-  }
-  if (!nextBlock) return content
-  return content.replace(/^---\n/, `---\n${nextBlock}\n`)
-}
-
-function serializeNpcRef(ref: EditableNpcRef) {
-  const lines = [`  - id: ${JSON.stringify(ref.id)}`]
-  if (ref.behavior) lines.push(`    behavior: ${JSON.stringify(ref.behavior)}`)
-  const initiative = Number(ref.initialInitiative)
-  if (ref.initialInitiative && Number.isFinite(initiative)) lines.push(`    initialInitiative: ${initiative}`)
-  return lines.join("\n")
 }
 
 function frontmatterBlock(content: string) {

@@ -1,5 +1,6 @@
 "use server"
 
+import { requireAdmin } from "@/lib/auth-utils"
 import {
   applyAdminChatRequest,
   applyAdminKeyFieldUpdate,
@@ -7,8 +8,8 @@ import {
   importAdminWikiAdventureBundle,
   listAdminWikiAdventures,
   loadAdminWikiAdventureState,
+  restoreAdminWikiAdventureRevision,
 } from "@/lib/wiki-adventures/admin-authoring"
-import { requireAdmin } from "@/lib/auth-utils"
 
 async function assertAdmin() {
   const result = await requireAdmin()
@@ -32,6 +33,14 @@ export async function loadAdminWikiAdventureStateAction(settingId: string, planI
     graph: state.artifacts.graph,
     encounters: state.artifacts.encounters,
     characterSheets: state.artifacts.characterSheets,
+    revisions: state.revisions.map((revision) => ({
+      id: revision.id,
+      source: revision.source,
+      summary: revision.summary,
+      createdAt: revision.createdAt,
+      changedPaths: revision.changedPaths,
+      validation: revision.validation,
+    })),
   }
 }
 
@@ -53,4 +62,9 @@ export async function exportAdminWikiAdventureBundleAction(settingId: string, pl
 export async function importAdminWikiAdventureBundleAction(input: { settingId: string; planId: string; files: Array<{ path: string; content: string }> }) {
   await assertAdmin()
   return importAdminWikiAdventureBundle(input)
+}
+
+export async function restoreAdminWikiAdventureRevisionAction(input: { settingId: string; planId: string; revisionId: string; path?: string }) {
+  await assertAdmin()
+  return restoreAdminWikiAdventureRevision(input)
 }

@@ -1,10 +1,12 @@
+import { GetObjectCommand, ListObjectsV2Command, PutObjectCommand } from "@aws-sdk/client-s3"
 import { z } from "zod"
 import { s3Client } from "@/lib/aws"
-import { S3WikiAdventureSourceService } from "./source-service"
+import { streamToString } from "@/lib/s3-utils"
 import { applyAuthoringChangeSet, createSourceFile } from "./change-sets"
 import { compileAdventureSourceTree } from "./compiler"
-import { getLocalWikiAdventureDefinition, readLocalWikiAdventureSourceFiles, readWikiAdventureSourceFiles, type LocalWikiAdventureDefinition } from "./local-runtime"
-import type { AuthoringChangeSet, RuntimeArtifacts, SourceFile, ValidationMode } from "./types"
+import { getLocalWikiAdventureDefinition, type LocalWikiAdventureDefinition, readLocalWikiAdventureSourceFiles, readWikiAdventureSourceFiles } from "./local-runtime"
+import { S3WikiAdventureSourceService } from "./source-service"
+import type { AuthoringChangeSet, AuthoringRevision, RuntimeArtifacts, SourceFile, ValidationMode } from "./types"
 
 export type AdminWikiAdventureSummary = {
   settingId: string
@@ -23,6 +25,7 @@ export type AdminWikiAdventureState = {
   source: "s3" | "local"
   files: SourceFile[]
   artifacts: RuntimeArtifacts
+  revisions: AuthoringRevision[]
 }
 
 export type AdminAuthoringResult = {
@@ -31,6 +34,7 @@ export type AdminAuthoringResult = {
   source: "s3" | "local"
   validation: RuntimeArtifacts["validationReport"]
   manifest: RuntimeArtifacts["manifest"]
+  revision?: AuthoringRevision
 }
 
 const aiChangeSchema = z.object({
@@ -46,9 +50,7 @@ const aiChangeSchema = z.object({
 })
 
 export async function listAdminWikiAdventures(): Promise<AdminWikiAdventureSummary[]> {
-  const states = await Promise.all(
-    ["the-midnight-summons", "covert-cargo", "the-road-to-kordavos", "march-of-davos"].map((planId) => loadAdminWikiAdventureState("realm-of-myr", planId))
-  )
+  const states = await Promise.all(["the-midnight-summons", "covert-cargo", "the-road-to-kordavos", "march-of-davos"].map((planId) => loadAdminWikiAdventureState("realm-of-myr", planId)))
   return states.map((state) => ({
     settingId: state.definition.settingId,
     planId: state.definition.planId,
@@ -72,7 +74,8 @@ export async function loadAdminWikiAdventureState(settingId: string, planId: str
     contentVersion: "admin-current-source",
     allowedAssetHosts: definition.assetHosts,
   })
-  return { definition, source, files, artifacts }
+  const revisions = await listAuthoringRevisions(settingId, planId)
+  return { definition, source, files, artifacts, revisions }
 }
 
 export async function applyAdminChatRequest(input: { settingId: string; planId: string; message: string }): Promise<AdminAuthoringResult> {
@@ -81,8 +84,8 @@ export async function applyAdminChatRequest(input: { settingId: string; planId: 
   const prompt = buildAuthoringPrompt(state, input.message)
   const proposal = (await generateObject({ prompt, schema: aiChangeSchema })).object
   const changeSet = buildUpdateChangeSet(state, proposal.changes, `Admin chat: ${input.message}`)
-  const files = await writeCanonicalChangeSet(state, changeSet)
-  const artifacts = compileAdventureSourceTree(files, {
+  const writeResult = await writeCanonicalChangeSet(state, changeSet, "ai")
+  const artifacts = compileAdventureSourceTree(writeResult.files, {
     mode: "draftPreview",
     contentVersion: "admin-current-source",
     allowedAssetHosts: state.definition.assetHosts,
@@ -93,14 +96,15 @@ export async function applyAdminChatRequest(input: { settingId: string; planId: 
     source: "s3",
     validation: artifacts.validationReport,
     manifest: artifacts.manifest,
+    revision: writeResult.revision,
   }
 }
 
 export async function applyAdminKeyFieldUpdate(input: { settingId: string; planId: string; path: string; content: string; intent: string }): Promise<AdminAuthoringResult> {
   const state = await loadAdminWikiAdventureState(input.settingId, input.planId)
-  const changeSet = buildUpdateChangeSet(state, [{ path: input.path, content: input.content }], input.intent)
-  const files = await writeCanonicalChangeSet(state, changeSet)
-  const artifacts = compileAdventureSourceTree(files, {
+  const changeSet = buildUpdateChangeSet(state, [{ path: input.path, content: input.content }], input.intent, "human")
+  const writeResult = await writeCanonicalChangeSet(state, changeSet, "human")
+  const artifacts = compileAdventureSourceTree(writeResult.files, {
     mode: "draftPreview",
     contentVersion: "admin-current-source",
     allowedAssetHosts: state.definition.assetHosts,
@@ -111,6 +115,7 @@ export async function applyAdminKeyFieldUpdate(input: { settingId: string; planI
     source: "s3",
     validation: artifacts.validationReport,
     manifest: artifacts.manifest,
+    revision: writeResult.revision,
   }
 }
 
@@ -129,9 +134,9 @@ export async function importAdminWikiAdventureBundle(input: { settingId: string;
   const state = await loadAdminWikiAdventureState(input.settingId, input.planId)
   const allowed = allowedPathSet(state)
   const changes = input.files.filter((file) => allowed.has(file.path)).map((file) => ({ path: file.path, content: file.content }))
-  const changeSet = buildUpdateChangeSet(state, changes, "Manual source bundle restore")
-  const files = await writeCanonicalChangeSet(state, changeSet)
-  const artifacts = compileAdventureSourceTree(files, {
+  const changeSet = buildUpdateChangeSet(state, changes, "Manual source bundle restore", "restore")
+  const writeResult = await writeCanonicalChangeSet(state, changeSet, "restore")
+  const artifacts = compileAdventureSourceTree(writeResult.files, {
     mode: "draftPreview",
     contentVersion: "admin-current-source",
     allowedAssetHosts: state.definition.assetHosts,
@@ -142,6 +147,37 @@ export async function importAdminWikiAdventureBundle(input: { settingId: string;
     source: "s3",
     validation: artifacts.validationReport,
     manifest: artifacts.manifest,
+    revision: writeResult.revision,
+  }
+}
+
+export async function restoreAdminWikiAdventureRevision(input: { settingId: string; planId: string; revisionId: string; path?: string }): Promise<AdminAuthoringResult> {
+  const state = await loadAdminWikiAdventureState(input.settingId, input.planId)
+  const revision = await readAuthoringRevision(input.settingId, input.planId, input.revisionId)
+  if (!revision) throw new Error(`Revision not found: ${input.revisionId}`)
+  const snapshot = new Map(revision.files.map((file) => [file.path, file.content]))
+  const paths = input.path ? [input.path] : state.files.map((file) => file.path)
+  const changes = paths
+    .filter((path) => snapshot.has(path))
+    .map((path) => ({
+      path,
+      content: snapshot.get(path)!,
+    }))
+  if (changes.length === 0) throw new Error("No matching files found in revision.")
+  const changeSet = buildUpdateChangeSet(state, changes, input.path ? `Restore ${input.path} from revision ${input.revisionId}` : `Restore draft from revision ${input.revisionId}`, "restore")
+  const writeResult = await writeCanonicalChangeSet(state, changeSet, "restore")
+  const artifacts = compileAdventureSourceTree(writeResult.files, {
+    mode: "draftPreview",
+    contentVersion: "admin-current-source",
+    allowedAssetHosts: state.definition.assetHosts,
+  })
+  return {
+    reply: input.path ? `Restored ${input.path} from revision ${input.revisionId}.` : `Restored draft from revision ${input.revisionId}.`,
+    changedPaths: changeSet.changes.map((change) => ("path" in change ? change.path : change.toPath)),
+    source: "s3",
+    validation: artifacts.validationReport,
+    manifest: artifacts.manifest,
+    revision: writeResult.revision,
   }
 }
 
@@ -151,12 +187,17 @@ function requiredDefinition(settingId: string, planId: string) {
   return definition
 }
 
-function buildUpdateChangeSet(state: AdminWikiAdventureState, updates: Array<{ path: string; content: string }>, intent: string): AuthoringChangeSet {
-  const source = new Map(state.files.map((file) => [file.path, file]))
+function buildUpdateChangeSet(
+  state: AdminWikiAdventureState,
+  updates: Array<{ path: string; content: string }>,
+  intent: string,
+  changeSource: AuthoringChangeSet["source"] = "ai"
+): AuthoringChangeSet {
+  const sourceFiles = new Map(state.files.map((file) => [file.path, file]))
   const allowed = allowedPathSet(state)
   const changes = updates.map((update) => {
     if (!allowed.has(update.path)) throw new Error(`Refusing to edit source outside this adventure: ${update.path}`)
-    const existing = source.get(update.path)
+    const existing = sourceFiles.get(update.path)
     if (update.path.endsWith(".json")) JSON.parse(update.content)
     if (!existing || state.source === "local") return { op: "create" as const, path: update.path, content: update.content }
     return { op: "update" as const, path: update.path, beforeHash: existing.hash, content: update.content }
@@ -164,7 +205,7 @@ function buildUpdateChangeSet(state: AdminWikiAdventureState, updates: Array<{ p
   return {
     id: `admin-${Date.now()}`,
     intent,
-    source: "ai",
+    source: changeSource,
     target: { settingId: state.definition.settingId, planId: state.definition.planId, draftId: "canonical" },
     changes,
     affectedEntities: [],
@@ -172,7 +213,7 @@ function buildUpdateChangeSet(state: AdminWikiAdventureState, updates: Array<{ p
   }
 }
 
-async function writeCanonicalChangeSet(state: AdminWikiAdventureState, changeSet: AuthoringChangeSet) {
+async function writeCanonicalChangeSet(state: AdminWikiAdventureState, changeSet: AuthoringChangeSet, revisionSource: AuthoringRevision["source"]) {
   const bucket = process.env.bucketData || process.env.AWS_BUCKET_DATA
   if (!bucket || !s3Client) throw new Error("AWS S3 data bucket is required for admin wiki authoring.")
   const effectiveChangeSet = state.source === "local" ? seedLocalFilesChangeSet(state, changeSet) : changeSet
@@ -188,7 +229,14 @@ async function writeCanonicalChangeSet(state: AdminWikiAdventureState, changeSet
   for (const change of effectiveChangeSet.changes) {
     if (change.op === "create") nextFiles.push(createSourceFile(change.path, change.content))
   }
-  return uniqueFiles(nextFiles)
+  const files = uniqueFiles(nextFiles)
+  const artifacts = compileAdventureSourceTree(files, {
+    mode: "draftPreview",
+    contentVersion: "admin-current-source",
+    allowedAssetHosts: state.definition.assetHosts,
+  })
+  const revision = await writeAuthoringRevision(bucket, state, effectiveChangeSet, revisionSource, files, artifacts)
+  return { files, revision }
 }
 
 function seedLocalFilesChangeSet(state: AdminWikiAdventureState, changeSet: AuthoringChangeSet): AuthoringChangeSet {
@@ -215,6 +263,93 @@ function sameFileSet(a: SourceFile[], b: SourceFile[]) {
   if (a.length !== b.length) return false
   const local = new Set(b.map((file) => `${file.path}:${file.hash}`))
   return a.every((file) => local.has(`${file.path}:${file.hash}`))
+}
+
+function revisionPrefix(settingId: string, planId: string) {
+  return `content/settings/${settingId}/adventures/${planId}/_revisions`
+}
+
+function revisionKey(settingId: string, planId: string, revisionId: string) {
+  return `${revisionPrefix(settingId, planId)}/${revisionId}.json`
+}
+
+async function listAuthoringRevisions(settingId: string, planId: string): Promise<AuthoringRevision[]> {
+  const bucket = process.env.bucketData || process.env.AWS_BUCKET_DATA
+  if (!bucket || !s3Client) return []
+  const revisions: AuthoringRevision[] = []
+  let ContinuationToken: string | undefined
+  do {
+    const response = await s3Client.send(new ListObjectsV2Command({ Bucket: bucket, Prefix: revisionPrefix(settingId, planId), ContinuationToken }))
+    for (const object of response.Contents ?? []) {
+      if (!object.Key?.endsWith(".json")) continue
+      const revision = await readRevisionByKey(bucket, object.Key)
+      if (revision) revisions.push(revision)
+    }
+    ContinuationToken = response.NextContinuationToken
+  } while (ContinuationToken)
+  return revisions.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+}
+
+async function readAuthoringRevision(settingId: string, planId: string, revisionId: string): Promise<AuthoringRevision | null> {
+  const bucket = process.env.bucketData || process.env.AWS_BUCKET_DATA
+  if (!bucket || !s3Client) return null
+  return readRevisionByKey(bucket, revisionKey(settingId, planId, revisionId))
+}
+
+async function readRevisionByKey(bucket: string, key: string): Promise<AuthoringRevision | null> {
+  if (!s3Client) return null
+  try {
+    const response = await s3Client.send(new GetObjectCommand({ Bucket: bucket, Key: key }))
+    if (!response.Body) return null
+    const parsed = JSON.parse(await streamToString(response.Body as Parameters<typeof streamToString>[0])) as AuthoringRevision
+    return parsed.schemaVersion === 1 ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+async function writeAuthoringRevision(
+  bucket: string,
+  state: AdminWikiAdventureState,
+  changeSet: AuthoringChangeSet,
+  source: AuthoringRevision["source"],
+  files: SourceFile[],
+  artifacts: RuntimeArtifacts
+): Promise<AuthoringRevision> {
+  if (!s3Client) throw new Error("AWS S3 is not configured")
+  const previous = state.revisions[0]
+  const before = new Map(state.files.map((file) => [file.path, file]))
+  const after = new Map(files.map((file) => [file.path, file]))
+  const changedPaths = Array.from(new Set(changeSet.changes.map((change) => ("path" in change ? change.path : change.toPath)))).sort()
+  const createdAt = new Date().toISOString()
+  const revision: AuthoringRevision = {
+    schemaVersion: 1,
+    id: `${createdAt.replace(/[:.]/g, "-")}-${changeSet.id}`,
+    settingId: state.definition.settingId,
+    planId: state.definition.planId,
+    parentRevisionId: previous?.id,
+    source,
+    summary: changeSet.intent,
+    createdAt,
+    changedPaths,
+    beforeHashes: Object.fromEntries(changedPaths.map((path) => [path, before.get(path)?.hash ?? null])),
+    afterHashes: Object.fromEntries(changedPaths.map((path) => [path, after.get(path)?.hash ?? null])),
+    validation: {
+      mode: artifacts.validationReport.mode,
+      status: artifacts.validationReport.status,
+      summary: artifacts.validationReport.summary,
+    },
+    files: files.map((file) => ({ path: file.path, content: file.content, hash: file.hash })),
+  }
+  await s3Client.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: revisionKey(state.definition.settingId, state.definition.planId, revision.id),
+      Body: JSON.stringify(revision, null, 2),
+      ContentType: "application/json",
+    })
+  )
+  return revision
 }
 
 function buildAuthoringPrompt(state: AdminWikiAdventureState, request: string) {
