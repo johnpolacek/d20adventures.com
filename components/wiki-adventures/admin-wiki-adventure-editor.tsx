@@ -803,8 +803,8 @@ function PageButton({ page, selectedPath, onSelect }: { page: WikiPage; selected
     <button
       type="button"
       onClick={() => onSelect(page.path)}
-      className={`group relative flex min-h-9 w-full items-center rounded px-2.5 text-left transition-[background-color,box-shadow,scale] duration-150 active:scale-[0.96] ${
-        isSelected ? "bg-[#2a251e] text-[#fff5dd] shadow-[inset_3px_0_0_#d8bd81,0_8px_18px_rgba(0,0,0,.16)]" : "text-stone-300 hover:bg-[#211d17] hover:text-[#f2e5c9]"
+      className={`group relative flex min-h-9 w-full items-center rounded-r rounded-l-none px-2.5 text-left transition-[background-color,box-shadow,scale] duration-150 active:scale-[0.96] ${
+        isSelected ? "bg-[#2a251e] text-[#fff5dd] shadow-[inset_1px_0_0_rgba(216,189,129,.72),0_8px_18px_rgba(0,0,0,.12)]" : "text-stone-300 hover:bg-[#211d17] hover:text-[#f2e5c9]"
       }`}
     >
       <span className="min-w-0">
