@@ -692,7 +692,7 @@ function WikiNavigator({ wiki, selectedPath, onSelect, onCollapse }: { wiki: Wik
             aria-label="Hide adventure sections sidebar"
             title="Hide sections"
           >
-            <PanelLeftClose className="size-full" strokeWidth={1.75} />
+            <PanelLeftClose className="size-full" strokeWidth={1.25} />
           </button>
         </div>
       </div>
