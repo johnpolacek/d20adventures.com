@@ -6,7 +6,8 @@
 <article class="entry">
 <div class="date">2026-05-24</div>
 <section class="body"><h2>Added admin wiki sections sidebar toggle</h2><ul>
-<li>Added an editor header toggle to hide or restore the left adventure sections navigator on desktop admin wiki editor layouts.</li>
+<li>Added a sidebar search-row toggle to hide the left adventure sections navigator on desktop admin wiki editor layouts.</li>
+<li>When collapsed, the restore menu button appears as a square control at the upper-left of the selected page header.</li>
 <li>Collapsed state gives the selected page more working width while preserving the chat rail and current selection.</li>
 <li>Validation evidence: <code>pnpm exec biome check components/wiki-adventures/admin-wiki-adventure-editor.tsx</code>, <code>pnpm test:wiki-adventures:admin-authoring</code>, and <code>pnpm exec tsc --noEmit --pretty false</code> passed.</li>
 </ul></section>

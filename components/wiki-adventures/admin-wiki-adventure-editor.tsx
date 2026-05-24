@@ -158,13 +158,13 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
       <main className={`grid min-h-0 flex-1 grid-cols-1 overflow-hidden ${sectionsSidebarOpen ? "xl:grid-cols-[420px_minmax(0,1fr)_400px]" : "xl:grid-cols-[minmax(0,1fr)_400px]"}`}>
         {sectionsSidebarOpen && (
           <aside className="min-h-0 overflow-hidden border-b border-[#3a3630] bg-[#181713] xl:border-r xl:border-b-0">
-            <WikiNavigator wiki={wiki} selectedPath={selectedPath} onSelect={setSelectedPath} />
+            <WikiNavigator wiki={wiki} selectedPath={selectedPath} onSelect={setSelectedPath} onCollapse={() => setSectionsSidebarOpen(false)} />
           </aside>
         )}
 
         <section className="min-h-0 min-w-0 overflow-hidden border-b border-[#3a3630] bg-[#201d18] xl:border-r xl:border-b-0">
           <div className="grid h-full min-h-0 grid-rows-[auto_1fr]">
-            <WikiPageHeader page={selectedPage} sectionsSidebarOpen={sectionsSidebarOpen} onToggleSectionsSidebar={() => setSectionsSidebarOpen((current) => !current)} />
+            <WikiPageHeader page={selectedPage} sectionsSidebarOpen={sectionsSidebarOpen} onRestoreSectionsSidebar={() => setSectionsSidebarOpen(true)} />
             <div className="min-h-0 overflow-y-auto">
               <div className="p-6">
                 <ModulePageEditor file={selectedFile} files={state.files} manifest={state.manifest} encounters={state.encounters} page={selectedPage} disabled={busy} onSave={saveFile} />
@@ -669,21 +669,32 @@ type ModuleSection = {
   scenes: Array<{ title: string; pages: WikiPage[] }>
 }
 
-function WikiNavigator({ wiki, selectedPath, onSelect }: { wiki: WikiModel; selectedPath: string; onSelect: (path: string) => void }) {
+function WikiNavigator({ wiki, selectedPath, onSelect, onCollapse }: { wiki: WikiModel; selectedPath: string; onSelect: (path: string) => void; onCollapse: () => void }) {
   const [query, setQuery] = React.useState("")
   const normalizedQuery = query.trim().toLowerCase()
   return (
     <div className="grid h-full min-h-0 grid-rows-[auto_1fr]">
       <div className="border-b border-[#3a3630] p-4">
-        <label className="grid grid-cols-[18px_1fr] items-center gap-2 rounded-md border border-[#3a3630] bg-[#11100f] px-3 py-2">
-          <Search className="size-4 text-stone-500" />
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Find Encounter"
-            className="min-w-0 bg-transparent text-sm text-stone-200 outline-none placeholder:text-stone-600"
-          />
-        </label>
+        <div className="grid grid-cols-[minmax(0,1fr)_48px] gap-3">
+          <label className="grid grid-cols-[18px_1fr] items-center gap-2 rounded-md border border-[#3a3630] bg-[#11100f] px-3 py-2">
+            <Search className="size-4 text-stone-500" />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Find Encounter"
+              className="min-w-0 bg-transparent text-sm text-stone-200 outline-none placeholder:text-stone-600"
+            />
+          </label>
+          <button
+            type="button"
+            onClick={onCollapse}
+            className="hidden h-full min-h-12 place-items-center rounded-md border border-[#4a4237] bg-[#11100f] text-[#d8bd81] transition-colors hover:border-[#b9a77f] hover:bg-[#211f1b] xl:grid"
+            aria-label="Hide adventure sections sidebar"
+            title="Hide sections"
+          >
+            <PanelLeftClose className="size-4" />
+          </button>
+        </div>
       </div>
       <div className="min-h-0 overflow-y-auto p-3">
         {normalizedQuery ? (
@@ -760,21 +771,23 @@ function PageButton({ page, selectedPath, onSelect }: { page: WikiPage; selected
   )
 }
 
-function WikiPageHeader({ page, sectionsSidebarOpen, onToggleSectionsSidebar }: { page?: WikiPage; sectionsSidebarOpen: boolean; onToggleSectionsSidebar: () => void }) {
+function WikiPageHeader({ page, sectionsSidebarOpen, onRestoreSectionsSidebar }: { page?: WikiPage; sectionsSidebarOpen: boolean; onRestoreSectionsSidebar: () => void }) {
   if (!page) return null
   return (
-    <header className="border-b border-[#3a3630] bg-[#181713] px-6 py-5">
-      <div className="flex items-start gap-4">
+    <header className="relative border-b border-[#3a3630] bg-[#181713] px-6 py-5">
+      {!sectionsSidebarOpen && (
         <button
           type="button"
-          onClick={onToggleSectionsSidebar}
-          className="mt-0.5 hidden size-9 shrink-0 place-items-center rounded-md border border-[#4a4237] bg-[#11100f] text-[#d8bd81] transition-colors hover:border-[#b9a77f] hover:bg-[#211f1b] xl:grid"
-          aria-label={sectionsSidebarOpen ? "Hide adventure sections sidebar" : "Show adventure sections sidebar"}
-          title={sectionsSidebarOpen ? "Hide sections" : "Show sections"}
+          onClick={onRestoreSectionsSidebar}
+          className="absolute left-5 top-5 hidden size-12 place-items-center rounded-md border border-[#4a4237] bg-[#11100f] text-[#d8bd81] shadow-[0_14px_36px_rgba(0,0,0,.28)] transition-colors hover:border-[#b9a77f] hover:bg-[#211f1b] xl:grid"
+          aria-label="Show adventure sections sidebar"
+          title="Show sections"
         >
-          {sectionsSidebarOpen ? <PanelLeftClose className="size-4" /> : <Menu className="size-4" />}
+          <Menu className="size-5" />
         </button>
-        <div className="min-w-0 flex-1">
+      )}
+      <div className="flex items-start gap-4">
+        <div className={`min-w-0 flex-1 ${sectionsSidebarOpen ? "" : "xl:pl-16"}`}>
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded border border-[#3a3630] bg-[#24211d] px-2 py-1 font-mono text-[10px] uppercase text-stone-300">{pageKindLabel(page)}</span>
             <span className="font-mono text-[11px] text-stone-500">{page.id}</span>
