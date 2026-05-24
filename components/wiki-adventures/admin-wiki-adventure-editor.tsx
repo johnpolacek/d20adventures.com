@@ -47,12 +47,7 @@ type NpcLookupRecord = {
 export function AdminWikiAdventureEditor({ initialState }: { initialState: EditorState }) {
   const [state, setState] = React.useState(initialState)
   const [selectedPath, setSelectedPath] = React.useState(initialState.files.find((file) => file.path.endsWith("/adventure.md"))?.path ?? initialState.files[0]?.path ?? "")
-  const [messages, setMessages] = React.useState<ChatMessage[]>([
-    {
-      role: "wiki",
-      content: `Loaded ${initialState.manifest.title}. Ask for improvements and I will apply them to the wiki source.`,
-    },
-  ])
+  const [messages, setMessages] = React.useState<ChatMessage[]>([])
   const [prompt, setPrompt] = React.useState("")
   const [busy, setBusy] = React.useState(false)
   const [sectionsSidebarOpen, setSectionsSidebarOpen] = React.useState(true)
@@ -63,6 +58,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
   const sectionCount = wiki.moduleSections.length
   const encounterCount = Object.keys(state.encounters).length
   const npcCount = Object.keys(state.characterSheets.npcs).length
+  const hasChatStarted = messages.length > 0
 
   async function refresh() {
     const next = await loadAdminWikiAdventureStateAction(state.definition.settingId, state.definition.planId)
@@ -163,39 +159,44 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
               <h2 className="font-mono text-[11px] font-bold uppercase tracking-[.16em] text-[#f0d79c]">Chat</h2>
             </div>
 
-            <div className="min-h-0 flex-1 space-y-4 overflow-auto px-5 py-5">
-              {messages.map((message, index) => (
-                <div key={index} className={message.role === "admin" ? "flex justify-end" : "flex justify-start"}>
-                  <div
-                    className={`max-w-[94%] whitespace-pre-wrap text-pretty text-base leading-7 ${
-                      message.role === "admin" ? "rounded-r-md rounded-l-none bg-[#172433] px-3 py-2 text-sky-50 shadow-[0_10px_28px_rgba(0,0,0,.16)]" : "font-serif text-[#f4ead7]"
-                    }`}
-                  >
-                    {message.content}
+            {hasChatStarted && (
+              <div className="min-h-0 flex-1 space-y-4 overflow-auto px-5 py-5">
+                {messages.map((message, index) => (
+                  <div key={index} className={message.role === "admin" ? "flex justify-end" : "flex justify-start"}>
+                    <div
+                      className={`max-w-[94%] whitespace-pre-wrap text-pretty text-base leading-7 ${
+                        message.role === "admin" ? "rounded-r-md rounded-l-none bg-[#172433] px-3 py-2 text-sky-50 shadow-[0_10px_28px_rgba(0,0,0,.16)]" : "font-serif text-[#f4ead7]"
+                      }`}
+                    >
+                      {message.content}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
-            <div className="shrink-0 px-5 pb-4">
-              <Textarea
-                id="wiki-chat-prompt"
-                value={prompt}
-                onChange={(event) => setPrompt(event.target.value)}
-                placeholder="Tighten the opening scene, add a stronger clue, and flag any transition risks..."
-                rows={5}
-                disabled={busy}
-                className="min-h-32 resize-none rounded-md border-[#6c604f] bg-[#171512] px-4 py-3 font-serif text-base leading-6 text-[#f4ead7] shadow-[inset_0_1px_0_rgba(255,255,255,.04)] placeholder:text-stone-500 focus-visible:border-[#d8bd81] focus-visible:ring-[#d8bd81]/35"
-              />
-              <Button
-                size="sm"
-                onClick={sendMessage}
-                disabled={busy || !prompt.trim()}
-                className="mt-3 h-11 w-full gap-2 rounded-md border border-[#d8bd81]/50 bg-[#2d4051] px-4 py-0 font-mono text-[11px] font-bold uppercase tracking-[.16em] text-[#fff8e7] shadow-[inset_0_1px_0_rgba(255,255,255,.18),0_12px_30px_rgba(0,0,0,.24)] transition-[background-color,scale] hover:scale-[1.01] hover:bg-[#365166] active:scale-[0.96]"
-                style={{ textShadow: "0 2px 2px rgba(0,0,0,.75)" }}
-              >
-                <Wand2 className="size-4" /> {busy ? "Applying..." : "Apply Change"}
-              </Button>
+            <div className={hasChatStarted ? "shrink-0 px-5 pb-4" : "flex min-h-0 flex-1 items-center px-5 py-8"}>
+              <div className="w-full">
+                {!hasChatStarted && <p className="mb-4 text-center font-serif text-xl leading-7 text-[#f4ead7] text-balance">Begin a chat session to update this adventure plan</p>}
+                <Textarea
+                  id="wiki-chat-prompt"
+                  value={prompt}
+                  onChange={(event) => setPrompt(event.target.value)}
+                  placeholder="Tighten the opening scene, add a stronger clue, and flag any transition risks..."
+                  rows={5}
+                  disabled={busy}
+                  className="min-h-32 resize-none rounded-md border-[#6c604f] bg-[#171512] px-4 py-3 font-serif text-base leading-6 text-[#f4ead7] shadow-[inset_0_1px_0_rgba(255,255,255,.04)] placeholder:text-stone-500 focus-visible:border-[#d8bd81] focus-visible:ring-[#d8bd81]/35"
+                />
+                <Button
+                  size="sm"
+                  onClick={sendMessage}
+                  disabled={busy || !prompt.trim()}
+                  className="mt-3 h-11 w-full gap-2 rounded-md border border-[#d8bd81]/50 bg-[#2d4051] px-4 py-0 font-mono text-[11px] font-bold uppercase tracking-[.16em] text-[#fff8e7] shadow-[inset_0_1px_0_rgba(255,255,255,.18),0_12px_30px_rgba(0,0,0,.24)] transition-[background-color,scale] hover:scale-[1.01] hover:bg-[#365166] active:scale-[0.96]"
+                  style={{ textShadow: "0 2px 2px rgba(0,0,0,.75)" }}
+                >
+                  <Wand2 className="size-4" /> {busy ? "Applying..." : "Apply Change"}
+                </Button>
+              </div>
             </div>
 
             <button
