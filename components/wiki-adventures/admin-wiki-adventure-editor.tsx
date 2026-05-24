@@ -56,6 +56,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
   const [prompt, setPrompt] = React.useState("")
   const [busy, setBusy] = React.useState(false)
   const [sectionsSidebarOpen, setSectionsSidebarOpen] = React.useState(true)
+  const [revisionDrawerOpen, setRevisionDrawerOpen] = React.useState(false)
   const selectedFile = state.files.find((file) => file.path === selectedPath) ?? state.files[0]
   const wiki = React.useMemo(() => buildWikiModel(state.files, state.encounters), [state.files, state.encounters])
   const selectedPage = wiki.pagesByPath.get(selectedFile?.path ?? "")
@@ -155,56 +156,81 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
           </div>
         </section>
 
-        <aside className="min-h-0 overflow-hidden bg-[radial-gradient(circle_at_25%_0%,rgba(132,91,44,.18),transparent_34%),linear-gradient(180deg,#1d1914_0%,#12110f_58%,#0d0c0b_100%)]">
+        <aside className="relative min-h-0 overflow-hidden bg-[radial-gradient(circle_at_25%_0%,rgba(132,91,44,.18),transparent_34%),linear-gradient(180deg,#1d1914_0%,#12110f_58%,#0d0c0b_100%)]">
           <div className="flex h-full min-h-0 flex-col">
             <div className="flex h-10 shrink-0 items-center gap-2 bg-[#15120f]/80 px-5">
               <MessageSquare className="size-3.5 text-[#f0d79c]" />
               <h2 className="font-mono text-[11px] font-bold uppercase tracking-[.16em] text-[#f0d79c]">Chat</h2>
             </div>
 
-            <div className="shrink-0 px-5 pt-4">
-              <div className="rounded-md border border-[#5a4d3f] bg-[#0f0e0c]/80 p-3 shadow-[0_18px_50px_rgba(0,0,0,.28)]">
-                <Textarea
-                  id="wiki-chat-prompt"
-                  value={prompt}
-                  onChange={(event) => setPrompt(event.target.value)}
-                  placeholder="Tighten the opening scene, add a stronger clue, and flag any transition risks..."
-                  rows={6}
-                  disabled={busy}
-                  className="min-h-36 resize-none rounded-md border-[#6c604f] bg-[#171512] px-4 py-3 font-serif text-base leading-6 text-[#f4ead7] shadow-[inset_0_1px_0_rgba(255,255,255,.04)] placeholder:text-stone-500 focus-visible:border-[#d8bd81] focus-visible:ring-[#d8bd81]/35"
-                />
-                <Button
-                  size="sm"
-                  onClick={sendMessage}
-                  disabled={busy || !prompt.trim()}
-                  className="mt-3 h-11 w-full gap-2 rounded-md border border-[#d8bd81]/50 bg-[#2d4051] px-4 py-0 font-mono text-[11px] font-bold uppercase tracking-[.16em] text-[#fff8e7] shadow-[inset_0_1px_0_rgba(255,255,255,.18),0_12px_30px_rgba(0,0,0,.28)] hover:scale-[1.01] hover:bg-[#365166]"
-                  style={{ textShadow: "0 2px 2px rgba(0,0,0,.75)" }}
-                >
-                  <Wand2 className="size-4" /> {busy ? "Applying..." : "Apply Change"}
-                </Button>
-              </div>
+            <div className="min-h-0 flex-1 space-y-4 overflow-auto px-5 py-5">
+              {messages.map((message, index) => (
+                <div key={index} className={message.role === "admin" ? "flex justify-end" : "flex justify-start"}>
+                  <div
+                    className={`max-w-[94%] whitespace-pre-wrap text-pretty text-base leading-7 ${
+                      message.role === "admin" ? "rounded-r-md rounded-l-none bg-[#172433] px-3 py-2 text-sky-50 shadow-[0_10px_28px_rgba(0,0,0,.16)]" : "font-serif text-[#f4ead7]"
+                    }`}
+                  >
+                    {message.content}
+                  </div>
+                </div>
+              ))}
             </div>
 
-            <div className="mx-5 mt-4 mb-5 flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-[#3f372e] bg-[#0b0a09] shadow-[inset_0_1px_0_rgba(255,255,255,.03)]">
-              <div className="flex shrink-0 items-center justify-between px-3 py-2">
-                <span className="font-mono text-[10px] font-bold uppercase tracking-[.16em] text-stone-500">Revision Log</span>
-                <span className="font-mono text-[10px] text-stone-600">{state.revisions.length} revisions</span>
-              </div>
-              <div className="min-h-0 flex-1 space-y-3 overflow-auto p-3">
-                <RevisionHistory revisions={state.revisions} selectedPath={selectedPath} disabled={busy} onRestore={restoreRevision} />
-                {messages.map((message, index) => (
-                  <div key={index} className={message.role === "admin" ? "flex justify-end" : "flex justify-start"}>
-                    <div
-                      className={`max-w-[94%] whitespace-pre-wrap rounded-md px-3 py-2 text-sm leading-6 shadow-[0_10px_28px_rgba(0,0,0,.2)] ${
-                        message.role === "admin" ? "border border-[#6f89a0]/45 bg-[#172433] text-sky-50" : "border border-[#4c4035] bg-[#2a2521] text-[#f4ead7]"
-                      }`}
-                    >
-                      {message.content}
-                    </div>
-                  </div>
-                ))}
-              </div>
+            <div className="shrink-0 px-5 pb-4">
+              <Textarea
+                id="wiki-chat-prompt"
+                value={prompt}
+                onChange={(event) => setPrompt(event.target.value)}
+                placeholder="Tighten the opening scene, add a stronger clue, and flag any transition risks..."
+                rows={5}
+                disabled={busy}
+                className="min-h-32 resize-none rounded-md border-[#6c604f] bg-[#171512] px-4 py-3 font-serif text-base leading-6 text-[#f4ead7] shadow-[inset_0_1px_0_rgba(255,255,255,.04)] placeholder:text-stone-500 focus-visible:border-[#d8bd81] focus-visible:ring-[#d8bd81]/35"
+              />
+              <Button
+                size="sm"
+                onClick={sendMessage}
+                disabled={busy || !prompt.trim()}
+                className="mt-3 h-11 w-full gap-2 rounded-md border border-[#d8bd81]/50 bg-[#2d4051] px-4 py-0 font-mono text-[11px] font-bold uppercase tracking-[.16em] text-[#fff8e7] shadow-[inset_0_1px_0_rgba(255,255,255,.18),0_12px_30px_rgba(0,0,0,.24)] transition-[background-color,scale] hover:scale-[1.01] hover:bg-[#365166] active:scale-[0.96]"
+                style={{ textShadow: "0 2px 2px rgba(0,0,0,.75)" }}
+              >
+                <Wand2 className="size-4" /> {busy ? "Applying..." : "Apply Change"}
+              </Button>
             </div>
+
+            <button
+              type="button"
+              onClick={() => setRevisionDrawerOpen((current) => !current)}
+              className="flex h-12 shrink-0 items-center justify-between bg-[#0d0c0b]/95 px-5 text-left shadow-[0_-14px_34px_rgba(0,0,0,.24),inset_0_1px_0_rgba(255,255,255,.06)] transition-[background-color] hover:bg-[#14110e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#d8bd81]/45"
+              aria-expanded={revisionDrawerOpen}
+            >
+              <span className="flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#d8bd81]">
+                <Clock3 className="size-3.5" />
+                Revision Log
+              </span>
+              <span className="font-mono text-[10px] uppercase tracking-[.14em] text-stone-500">{state.revisions.length} revisions</span>
+            </button>
+
+            {revisionDrawerOpen && (
+              <div className="absolute inset-x-0 bottom-12 z-10 max-h-[62%] overflow-hidden bg-[#0b0a09]/98 shadow-[0_-24px_60px_rgba(0,0,0,.42),inset_0_1px_0_rgba(255,255,255,.08)]">
+                <div className="flex h-12 items-center justify-between px-5">
+                  <div>
+                    <div className="font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#d8bd81]">Revision Log</div>
+                    <div className="font-mono text-[10px] uppercase tracking-[.12em] text-stone-600">{state.revisions.length} saved revisions</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setRevisionDrawerOpen(false)}
+                    className="h-10 px-3 font-mono text-[10px] font-bold uppercase tracking-[.14em] text-stone-500 transition-[color,scale] hover:text-[#f4ead7] active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd81]/45"
+                  >
+                    close
+                  </button>
+                </div>
+                <div className="max-h-[calc(62vh-96px)] overflow-auto px-5 pb-5">
+                  <RevisionHistory revisions={state.revisions} selectedPath={selectedPath} disabled={busy} onRestore={restoreRevision} />
+                </div>
+              </div>
+            )}
           </div>
         </aside>
       </main>
@@ -246,26 +272,26 @@ function RevisionHistory({
   onRestore: (revisionId: string, path?: string) => void
 }) {
   if (revisions.length === 0) {
-    return <div className="rounded-md border border-[#3f372e] bg-[#15120f] p-3 text-xs leading-5 text-stone-500">Revision history will appear here after chat or prose edits auto-save.</div>
+    return <div className="py-4 text-xs leading-5 text-stone-500">Revision history will appear here after chat or prose edits auto-save.</div>
   }
   return (
-    <div className="space-y-2 pb-3">
+    <div className="space-y-5 pb-3">
       {revisions.slice(0, 8).map((revision) => {
         const includesSelectedPath = revision.changedPaths.includes(selectedPath)
         return (
-          <div key={revision.id} className="rounded-md border border-[#3f372e] bg-[#15120f] p-3">
+          <div key={revision.id}>
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <div className="truncate text-sm font-semibold text-[#f4ead7]">{revision.summary}</div>
-                <div className="mt-1 font-mono text-[10px] uppercase tracking-[.14em] text-stone-600">
+                <div className="truncate font-serif text-xl font-semibold leading-tight text-[#f4ead7] text-balance">{revision.summary}</div>
+                <div className="mt-2 font-mono text-[10px] uppercase tracking-[.14em] text-stone-600">
                   {revision.source} · {new Date(revision.createdAt).toLocaleString()}
                 </div>
               </div>
-              <div className="rounded border border-[#4a3e31] px-1.5 py-0.5 font-mono text-[10px] uppercase text-stone-500">{revision.validation.status}</div>
+              <div className="rounded bg-[#1a1713] px-1.5 py-0.5 font-mono text-[10px] uppercase text-stone-500 shadow-[inset_0_0_0_1px_rgba(216,189,129,.18)]">{revision.validation.status}</div>
             </div>
             <div className="mt-2 line-clamp-2 break-all font-mono text-[10px] text-stone-600">{revision.changedPaths.join(", ")}</div>
             <div className="mt-3 flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={() => onRestore(revision.id)} disabled={disabled} className="h-7 gap-1 px-2 font-mono text-[10px] lowercase">
+              <Button variant="outline" size="sm" onClick={() => onRestore(revision.id)} disabled={disabled} className="h-10 gap-1 px-3 font-mono text-[10px] lowercase active:scale-[0.96]">
                 <RotateCcw className="size-3" /> restore draft
               </Button>
               <Button
@@ -273,7 +299,7 @@ function RevisionHistory({
                 size="sm"
                 onClick={() => onRestore(revision.id, selectedPath)}
                 disabled={disabled || !includesSelectedPath}
-                className="h-7 gap-1 px-2 font-mono text-[10px] lowercase"
+                className="h-10 gap-1 px-3 font-mono text-[10px] lowercase active:scale-[0.96]"
               >
                 <RotateCcw className="size-3" /> restore file
               </Button>
