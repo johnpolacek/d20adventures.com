@@ -157,7 +157,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
 
         <aside className="min-h-0 overflow-hidden bg-[radial-gradient(circle_at_25%_0%,rgba(132,91,44,.18),transparent_34%),linear-gradient(180deg,#1d1914_0%,#12110f_58%,#0d0c0b_100%)]">
           <div className="flex h-full min-h-0 flex-col">
-            <div className="flex h-10 shrink-0 items-center gap-2 border-b border-[#4a3e31] bg-[#15120f]/80 px-5">
+            <div className="flex h-10 shrink-0 items-center gap-2 bg-[#15120f]/80 px-5">
               <MessageSquare className="size-3.5 text-[#f0d79c]" />
               <h2 className="font-mono text-[11px] font-bold uppercase tracking-[.16em] text-[#f0d79c]">Chat</h2>
             </div>
@@ -186,7 +186,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
             </div>
 
             <div className="mx-5 mt-4 mb-5 flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-[#3f372e] bg-[#0b0a09] shadow-[inset_0_1px_0_rgba(255,255,255,.03)]">
-              <div className="flex shrink-0 items-center justify-between border-b border-[#2d2923] px-3 py-2">
+              <div className="flex shrink-0 items-center justify-between px-3 py-2">
                 <span className="font-mono text-[10px] font-bold uppercase tracking-[.16em] text-stone-500">Revision Log</span>
                 <span className="font-mono text-[10px] text-stone-600">{state.revisions.length} revisions</span>
               </div>
@@ -249,7 +249,7 @@ function RevisionHistory({
     return <div className="rounded-md border border-[#3f372e] bg-[#15120f] p-3 text-xs leading-5 text-stone-500">Revision history will appear here after chat or prose edits auto-save.</div>
   }
   return (
-    <div className="space-y-2 border-b border-[#2d2923] pb-3">
+    <div className="space-y-2 pb-3">
       {revisions.slice(0, 8).map((revision) => {
         const includesSelectedPath = revision.changedPaths.includes(selectedPath)
         return (
@@ -352,7 +352,7 @@ function ModulePageEditor({
     return (
       <div className="mx-auto max-w-6xl">
         <article className="overflow-hidden rounded-md bg-[#d9caab] text-[#22180e] shadow-[0_24px_80px_rgba(0,0,0,.24),inset_0_0_0_1px_#b9a77f]">
-          <div className="relative bg-[#231f1a] shadow-[inset_0_-1px_0_#b9a77f]">
+          <div className="relative bg-[#231f1a]">
             <ImageUpload
               id={`wiki-image-${file.path}`}
               value={image}
@@ -376,7 +376,7 @@ function ModulePageEditor({
               className="mt-3 border-[#b9a77f] bg-[#efe2bd] text-3xl font-bold text-[#22180e] shadow-[0_3px_10px_rgba(58,43,20,.08)]"
             />
 
-            <div className="mt-5 grid gap-x-10 gap-y-3 border-y border-[#b9a77f]/70 py-4 md:grid-cols-2">
+            <div className="mt-5 grid gap-x-10 gap-y-3 md:grid-cols-2">
               <ReadonlyField label="Section" value={fields.sectionTitle || "Encounter graph"} />
               <ReadonlyField label="Scene" value={fields.sceneTitle || "Encounter file"} />
             </div>
@@ -410,8 +410,8 @@ function ModulePageEditor({
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <div className="overflow-hidden rounded-md border border-[#b9a77f] bg-[#d9caab] text-[#22180e] shadow-[0_24px_80px_rgba(0,0,0,.24)]">
-        <div className="relative border-b border-[#b9a77f] bg-[#231f1a]">
+      <div className="overflow-hidden rounded-md bg-[#d9caab] text-[#22180e] shadow-[0_24px_80px_rgba(0,0,0,.24),inset_0_0_0_1px_#b9a77f]">
+        <div className="relative bg-[#231f1a]">
           <ImageUpload
             id={`wiki-image-${file.path}`}
             value={image}
@@ -432,7 +432,7 @@ function ModulePageEditor({
         </div>
       </div>
 
-      <div className="rounded-md border border-[#b9a77f] bg-[#d9caab] p-6 text-[#22180e] shadow-[0_18px_60px_rgba(0,0,0,.18)]">
+      <div className="rounded-md bg-[#d9caab] p-6 text-[#22180e] shadow-[0_18px_60px_rgba(0,0,0,.18),inset_0_0_0_1px_#b9a77f]">
         <Block label="Summary" value={summary} onChange={setSummary} disabled={disabled} rows={5} tone="paper" />
         <AutoSaveNote disabled={disabled} />
       </div>
@@ -486,7 +486,7 @@ function CharacterProfileEditor({
     <div className="mx-auto max-w-6xl">
       <div className="overflow-hidden rounded-md border border-[#b9a77f] bg-[#d9caab] text-[#22180e] shadow-[0_24px_80px_rgba(0,0,0,.22)]">
         <div className="grid gap-0 lg:grid-cols-[360px_minmax(0,1fr)]">
-          <div className="border-b border-[#b9a77f] bg-[#201b15] p-5 lg:border-r lg:border-b-0">
+          <div className="bg-[#201b15] p-5 lg:border-r lg:border-[#b9a77f]">
             <div className="overflow-hidden rounded-md border border-[#b9a77f] bg-[#14110e] shadow-[0_16px_48px_rgba(0,0,0,.28)]">
               <ImageUpload
                 id={`wiki-character-image-${file.path}`}
@@ -593,7 +593,7 @@ function CharacterObjectList({ title, values }: { title: string; values: Array<{
       <h3 className="mb-3 font-mono text-[11px] font-bold uppercase tracking-[.18em] text-[#5b4631]">{title}</h3>
       <div className="space-y-3">
         {values.map((value, index) => (
-          <div key={`${String(value.name ?? title)}-${index}`} className="border-b border-[#c9b891] pb-2 last:border-b-0 last:pb-0">
+          <div key={`${String(value.name ?? title)}-${index}`} className="pb-2 last:pb-0">
             <div className="font-serif text-lg font-bold leading-tight text-[#24180d]">{String(value.name ?? "Untitled")}</div>
             {typeof value.description === "string" && value.description.trim() && <p className="mt-1 text-sm leading-6 text-[#4a3822]">{value.description}</p>}
           </div>
@@ -724,7 +724,7 @@ function WikiNavigator({ wiki, selectedPath, onSelect, onCollapse }: { wiki: Wik
   const normalizedQuery = query.trim().toLowerCase()
   return (
     <div className="grid h-full min-h-0 grid-rows-[auto_1fr] bg-[linear-gradient(180deg,#171612_0%,#11100d_100%)]">
-      <div className="grid h-11 grid-cols-[42px_minmax(0,1fr)_48px] border-b border-[#302a22] bg-[#0f0e0c]/92 shadow-[0_10px_24px_rgba(0,0,0,.2)]">
+      <div className="grid h-11 grid-cols-[42px_minmax(0,1fr)_48px] bg-[#0f0e0c]/92 shadow-[0_10px_24px_rgba(0,0,0,.2)]">
         <div className="grid place-items-center text-[#8f877b]">
           <Search className="size-4" />
         </div>
@@ -758,7 +758,7 @@ function WikiNavigator({ wiki, selectedPath, onSelect, onCollapse }: { wiki: Wik
             )}
             {wiki.moduleSections.map((section) => (
               <section key={section.title} className="mb-4">
-                <h3 className="mb-1.5 border-b border-[#322c24] px-2 pb-1 font-serif text-sm font-bold leading-5 text-[#d8c8aa]">{section.title}</h3>
+                <h3 className="mb-1.5 px-2 font-serif text-sm font-bold leading-5 text-[#d8c8aa]">{section.title}</h3>
                 {section.scenes.map((scene) => (
                   <div key={`${section.title}-${scene.title}`} className="mb-2.5">
                     <h4 className="mb-1 px-2 font-mono text-[9px] font-bold uppercase tracking-[.14em] text-stone-500">{scene.title}</h4>
@@ -820,7 +820,7 @@ function PageButton({ page, selectedPath, onSelect }: { page: WikiPage; selected
 function WikiPageHeader({ page, sectionsSidebarOpen, onRestoreSectionsSidebar }: { page?: WikiPage; sectionsSidebarOpen: boolean; onRestoreSectionsSidebar: () => void }) {
   if (!page) return null
   return (
-    <header className="border-b border-[#3a3630] bg-[#181713] px-6 py-5">
+    <header className="bg-[#181713] px-6 py-5">
       <div className="flex items-start gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -1090,7 +1090,7 @@ function titleFromId(id: string) {
 
 function ModuleBlock({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="border-t border-[#b9a77f]/75 pt-5">
+    <section>
       <h3 className="mb-3 font-mono text-[11px] font-bold uppercase tracking-[.18em] text-[#5b4631]">{title}</h3>
       {children}
     </section>
