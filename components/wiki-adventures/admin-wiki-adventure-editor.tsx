@@ -1,6 +1,6 @@
 "use client"
 
-import { Clock3, FileJson, FileText, GitBranch, ImageIcon, Menu, MessageSquare, PanelLeftClose, RotateCcw, Search, Wand2 } from "lucide-react"
+import { Clock3, ImageIcon, Menu, MessageSquare, PanelLeftClose, RotateCcw, Search, Wand2 } from "lucide-react"
 import * as React from "react"
 import { toast } from "sonner"
 import {
@@ -683,8 +683,8 @@ function WikiNavigator({ wiki, selectedPath, onSelect, onCollapse }: { wiki: Wik
   const [query, setQuery] = React.useState("")
   const normalizedQuery = query.trim().toLowerCase()
   return (
-    <div className="grid h-full min-h-0 grid-rows-[auto_1fr] bg-[radial-gradient(circle_at_0_0,rgba(216,189,129,.08),transparent_28%),#151410]">
-      <div className="grid h-12 grid-cols-[48px_minmax(0,1fr)_56px] border-b border-[#322d26] bg-[#0e0d0b]/85">
+    <div className="grid h-full min-h-0 grid-rows-[auto_1fr] bg-[linear-gradient(180deg,#171612_0%,#11100d_100%)]">
+      <div className="grid h-11 grid-cols-[42px_minmax(0,1fr)_48px] border-b border-[#302a22] bg-[#0f0e0c]/92 shadow-[0_10px_24px_rgba(0,0,0,.2)]">
         <div className="grid place-items-center text-[#8f877b]">
           <Search className="size-4" />
         </div>
@@ -692,19 +692,19 @@ function WikiNavigator({ wiki, selectedPath, onSelect, onCollapse }: { wiki: Wik
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Find Encounter"
-          className="min-w-0 border-x border-[#322d26] bg-transparent px-4 text-sm text-stone-200 outline-none placeholder:text-stone-600 focus:bg-[#15120f]"
+          className="min-w-0 border-x border-[#302a22] bg-transparent px-3 text-sm text-stone-200 outline-none placeholder:text-stone-600 focus:bg-[#17130f]"
         />
         <button
           type="button"
           onClick={onCollapse}
-          className="hidden place-items-center bg-transparent px-2 py-0.5 text-[#d8bd81] transition-colors hover:bg-[#211b13] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#d8bd81]/45 xl:grid"
+          className="hidden place-items-center bg-transparent px-2 py-0.5 text-[#d8bd81] transition-[background-color,color,scale] duration-150 hover:bg-[#211b13] active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#d8bd81]/45 xl:grid"
           aria-label="Hide adventure sections sidebar"
           title="Hide sections"
         >
           <PanelLeftClose className="size-full" strokeWidth={0.75} />
         </button>
       </div>
-      <div className="min-h-0 overflow-y-auto px-4 py-5">
+      <div className="min-h-0 overflow-y-auto px-3 py-3">
         {normalizedQuery ? (
           wiki.groups.map((group) => {
             const pages = group.pages.filter((page) => `${page.title} ${page.id} ${page.summary}`.toLowerCase().includes(normalizedQuery))
@@ -717,12 +717,12 @@ function WikiNavigator({ wiki, selectedPath, onSelect, onCollapse }: { wiki: Wik
               <PageGroup title="Adventure" pages={wiki.groups.find((group) => group.key === "adventure")!.pages} selectedPath={selectedPath} onSelect={onSelect} />
             )}
             {wiki.moduleSections.map((section) => (
-              <section key={section.title} className="mb-5">
-                <h3 className="mb-2 border-b border-[#3a3630] px-2 pb-1 font-serif text-base font-bold text-[#e0d1b3]">{section.title}</h3>
+              <section key={section.title} className="mb-4">
+                <h3 className="mb-1.5 border-b border-[#322c24] px-2 pb-1 font-serif text-sm font-bold leading-5 text-[#d8c8aa]">{section.title}</h3>
                 {section.scenes.map((scene) => (
-                  <div key={`${section.title}-${scene.title}`} className="mb-3 pl-2">
-                    <h4 className="mb-1 font-mono text-[10px] font-bold uppercase tracking-[.14em] text-stone-400">{scene.title}</h4>
-                    <div className="space-y-1 border-l border-[#3a3630] pl-2">
+                  <div key={`${section.title}-${scene.title}`} className="mb-2.5">
+                    <h4 className="mb-1 px-2 font-mono text-[9px] font-bold uppercase tracking-[.14em] text-stone-500">{scene.title}</h4>
+                    <div className="space-y-0.5">
                       {scene.pages.map((page) => (
                         <PageButton key={page.path} page={page} selectedPath={selectedPath} onSelect={onSelect} />
                       ))}
@@ -745,9 +745,9 @@ function WikiNavigator({ wiki, selectedPath, onSelect, onCollapse }: { wiki: Wik
 
 function PageGroup({ title, pages, selectedPath, onSelect }: { title: string; pages: WikiPage[]; selectedPath: string; onSelect: (path: string) => void }) {
   return (
-    <section className="mb-5">
-      <h3 className="mb-2 px-1 font-mono text-[10px] font-bold uppercase tracking-[.18em] text-[#bfa46f]">{title}</h3>
-      <div className="space-y-1">
+    <section className="mb-4">
+      <h3 className="mb-1.5 px-2 font-mono text-[9px] font-bold uppercase tracking-[.18em] text-[#bfa46f]">{title}</h3>
+      <div className="space-y-0.5">
         {pages.map((page) => (
           <PageButton key={page.path} page={page} selectedPath={selectedPath} onSelect={onSelect} />
         ))}
@@ -757,21 +757,20 @@ function PageGroup({ title, pages, selectedPath, onSelect }: { title: string; pa
 }
 
 function PageButton({ page, selectedPath, onSelect }: { page: WikiPage; selectedPath: string; onSelect: (path: string) => void }) {
+  const isSelected = page.path === selectedPath
+  const isEncounter = page.kind === "encounter"
   return (
     <button
       type="button"
       onClick={() => onSelect(page.path)}
-      className={`grid w-full grid-cols-[22px_minmax(0,1fr)_auto] items-start gap-3 rounded-md border px-3 py-3 text-left transition-colors ${page.path === selectedPath ? "border-[#b9a77f] bg-[#2a2722] shadow-[0_10px_28px_rgba(0,0,0,.18)]" : "border-transparent hover:border-[#4a4237] hover:bg-[#211f1b]"}`}
+      className={`group relative flex min-h-9 w-full items-center rounded px-2.5 text-left transition-[background-color,box-shadow,scale] duration-150 active:scale-[0.96] ${
+        isSelected ? "bg-[#2a251e] text-[#fff5dd] shadow-[inset_3px_0_0_#d8bd81,0_8px_18px_rgba(0,0,0,.16)]" : "text-stone-300 hover:bg-[#211d17] hover:text-[#f2e5c9]"
+      }`}
     >
-      {page.path.endsWith(".json") ? <FileJson className="mt-0.5 size-4 text-[#bdb6aa]" /> : <FileText className="mt-0.5 size-4 text-[#d7c8ab]" />}
       <span className="min-w-0">
-        <span className="block truncate text-sm text-stone-100">{page.title}</span>
-        <span className="block truncate font-mono text-[10px] text-stone-500">{page.kind === "npc" || page.kind === "character" || page.kind === "sheet" ? "character" : page.id}</span>
-        {page.outgoingEncounterIds.length > 0 && (
-          <span className="mt-1 flex items-center gap-1 truncate text-[11px] text-stone-400">
-            <GitBranch className="size-3 shrink-0" />
-            {page.outgoingEncounterIds.join(", ")}
-          </span>
+        <span className={`block truncate ${isEncounter ? "text-[13px] leading-5" : "text-sm leading-5"}`}>{page.title}</span>
+        {!isEncounter && (
+          <span className="block truncate font-mono text-[10px] leading-4 text-stone-600">{page.kind === "npc" || page.kind === "character" || page.kind === "sheet" ? "character" : page.id}</span>
         )}
       </span>
     </button>
