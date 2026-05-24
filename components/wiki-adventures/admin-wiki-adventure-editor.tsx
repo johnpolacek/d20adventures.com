@@ -59,6 +59,9 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
   const selectedFile = state.files.find((file) => file.path === selectedPath) ?? state.files[0]
   const wiki = React.useMemo(() => buildWikiModel(state.files, state.encounters), [state.files, state.encounters])
   const selectedPage = wiki.pagesByPath.get(selectedFile?.path ?? "")
+  const sectionCount = wiki.moduleSections.length
+  const encounterCount = Object.keys(state.encounters).length
+  const npcCount = Object.keys(state.characterSheets.npcs).length
 
   async function refresh() {
     const next = await loadAdminWikiAdventureStateAction(state.definition.settingId, state.definition.planId)
@@ -119,14 +122,15 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-[#141312] pt-10 text-stone-100">
-      <header className="shrink-0 border-b border-[#3a3630] bg-[#1b1a18] px-6 py-6 shadow-[0_18px_60px_rgba(0,0,0,.22)]">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-normal text-[#e6d6b8]">{state.manifest.title}</h1>
-            <p className="text-sm text-stone-500">
-              {wiki.pages.length} wiki pages · {Object.keys(state.encounters).length} encounters
-            </p>
+      <header className="shrink-0 border-b border-[#3a3630] bg-[#1b1a18] px-6 py-2.5 shadow-[0_18px_60px_rgba(0,0,0,.22)]">
+        <div className="flex min-h-10 flex-wrap items-center gap-x-3 gap-y-2">
+          <h1 className="min-w-0 max-w-full truncate font-display text-2xl font-bold leading-none tracking-normal text-[#e6d6b8] md:text-3xl">{state.manifest.title}</h1>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <HeaderCountBadge value={sectionCount} label="sections" />
+            <HeaderCountBadge value={encounterCount} label="encounters" />
+            <HeaderCountBadge value={npcCount} label="NPCs" />
           </div>
+          <div className="hidden h-6 w-px shrink-0 bg-[#4a4237] sm:block" aria-hidden="true" />
           <RevisionPill revisions={state.revisions} />
         </div>
       </header>
@@ -206,14 +210,23 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
   )
 }
 
+function HeaderCountBadge({ value, label }: { value: number; label: string }) {
+  return (
+    <span className="inline-flex h-7 shrink-0 items-center gap-1 rounded border border-[#4a4237] bg-[#24211d] px-2 font-mono text-[10px] font-bold uppercase tracking-[.12em] text-stone-300">
+      <span className="text-xs text-[#d8bd81]">{value}</span>
+      {label}
+    </span>
+  )
+}
+
 function RevisionPill({ revisions }: { revisions: RevisionSummary[] }) {
   const latest = revisions[0]
   return (
-    <div className="flex items-center gap-2 rounded-md border border-[#4a3e31] bg-[#12100e] px-3 py-2">
-      <Clock3 className="size-4 text-[#d8bd81]" />
-      <div>
-        <div className="font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#d8bd81]">{revisions.length} revisions</div>
-        <div className="max-w-[340px] truncate text-xs text-stone-500">{latest ? latest.summary : "No saved revisions yet"}</div>
+    <div className="flex min-w-0 flex-1 items-center gap-2 text-stone-500 sm:flex-none">
+      <Clock3 className="size-4 shrink-0 text-[#d8bd81]" />
+      <div className="flex min-w-0 items-baseline gap-2">
+        <div className="shrink-0 font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#d8bd81]">{revisions.length} revisions</div>
+        <div className="min-w-0 max-w-[340px] truncate text-xs">{latest ? latest.summary : "No saved revisions yet"}</div>
       </div>
     </div>
   )
