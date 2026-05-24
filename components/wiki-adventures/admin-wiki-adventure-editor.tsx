@@ -400,8 +400,6 @@ function ModulePageEditor({
                 <Block label="Transitions" value={transitions} onChange={setTransitions} disabled={disabled} rows={6} tone="paper" hideLabel />
               </ModuleBlock>
             </div>
-
-            <AutoSaveNote disabled={disabled} />
           </div>
         </article>
       </div>
@@ -434,7 +432,6 @@ function ModulePageEditor({
 
       <div className="rounded-md bg-[#d9caab] p-6 text-[#22180e] shadow-[0_18px_60px_rgba(0,0,0,.18),inset_0_0_0_1px_#b9a77f]">
         <Block label="Summary" value={summary} onChange={setSummary} disabled={disabled} rows={5} tone="paper" />
-        <AutoSaveNote disabled={disabled} />
       </div>
     </div>
   )
@@ -533,8 +530,6 @@ function CharacterProfileEditor({
               <CharacterObjectList title="Spells" values={sheet.spells} />
               <CharacterMixedList title="Special Abilities" values={sheet.specialAbilities} />
             </div>
-
-            <AutoSaveNote disabled={disabled} />
           </div>
         </div>
       </div>
@@ -680,7 +675,6 @@ function JsonKeyFieldEditor({ file, disabled, onSave }: { file: SourceFile; disa
       <Field label="Race" value={race} onChange={setRace} disabled={disabled} />
       <Field label="Archetype" value={archetype} onChange={setArchetype} disabled={disabled} />
       <Block label="Appearance" value={appearance} onChange={setAppearance} disabled={disabled} rows={6} />
-      <AutoSaveNote disabled={disabled} />
     </div>
   )
 }
@@ -1110,16 +1104,6 @@ function useDebouncedAutoSave(path: string, content: string, persistedContent: s
     }, 1600)
     return () => window.clearTimeout(timeout)
   }, [content, disabled, onSave, path])
-}
-
-function AutoSaveNote({ disabled }: { disabled: boolean }) {
-  return (
-    <div className="mt-5 flex justify-end">
-      <span className="rounded border border-[#b9a77f] bg-[#efe2bd] px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#6c5738]">
-        {disabled ? "Saving revision..." : "Auto-saves as a revision"}
-      </span>
-    </div>
-  )
 }
 
 function ReadonlyField({ label, value }: { label: string; value: string }) {
