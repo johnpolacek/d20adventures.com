@@ -348,6 +348,66 @@ function ModulePageEditor({
   const isEncounter = file.path.includes("/encounters/")
   const encounter = Object.values(encounters).find((item) => item.sourcePath === file.path)
 
+  if (isEncounter) {
+    return (
+      <div className="mx-auto max-w-6xl">
+        <article className="overflow-hidden rounded-md bg-[#d9caab] text-[#22180e] shadow-[0_24px_80px_rgba(0,0,0,.24),inset_0_0_0_1px_#b9a77f]">
+          <div className="relative bg-[#231f1a] shadow-[inset_0_-1px_0_#b9a77f]">
+            <ImageUpload
+              id={`wiki-image-${file.path}`}
+              value={image}
+              onChange={(url) => setImage(normalizeUploadedImageUrl(url))}
+              onRemove={() => setImage("")}
+              folder={`images/settings/${manifest.settingId}/${manifest.planId}`}
+              className="aspect-[21/9] rounded-none border-0"
+            />
+            <div className="absolute left-4 top-4 rounded bg-black/65 px-2 py-1 font-mono text-[10px] uppercase tracking-[.16em] text-stone-100">
+              <ImageIcon className="mr-1 inline size-3" />
+              Module Art
+            </div>
+          </div>
+
+          <div className="px-7 py-7 lg:px-10 lg:py-9">
+            <div className="font-mono text-[11px] font-bold uppercase tracking-[.16em] text-[#5b4631]">Encounter {encounter?.id ?? ""}</div>
+            <Input
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              disabled={disabled}
+              className="mt-3 border-[#b9a77f] bg-[#efe2bd] text-3xl font-bold text-[#22180e] shadow-[0_3px_10px_rgba(58,43,20,.08)]"
+            />
+
+            <div className="mt-5 grid gap-x-10 gap-y-3 border-y border-[#b9a77f]/70 py-4 md:grid-cols-2">
+              <ReadonlyField label="Section" value={fields.sectionTitle || "Encounter graph"} />
+              <ReadonlyField label="Scene" value={fields.sceneTitle || "Encounter file"} />
+            </div>
+
+            {page?.summary && <p className="mt-5 text-pretty text-lg leading-8 text-[#4a3822]">{page.summary}</p>}
+
+            <div className="mt-8 space-y-8">
+              <ModuleBlock title="Summary">
+                <Block label="Summary" value={summary} onChange={setSummary} disabled={disabled} rows={4} tone="paper" hideLabel />
+              </ModuleBlock>
+              <ModuleBlock title="Read Aloud">
+                <Block label="Intro" value={intro} onChange={setIntro} disabled={disabled} rows={7} tone="paper" hideLabel />
+              </ModuleBlock>
+              <ModuleBlock title="GM Notes">
+                <Block label="GM Notes" value={gmNotes} onChange={setGmNotes} disabled={disabled} rows={5} tone="paper" hideLabel />
+              </ModuleBlock>
+              <ModuleBlock title="Encounter NPCs">
+                <EncounterNpcEditor refs={fields.npcRefs} npcLookup={npcLookup} />
+              </ModuleBlock>
+              <ModuleBlock title="Exits">
+                <Block label="Transitions" value={transitions} onChange={setTransitions} disabled={disabled} rows={6} tone="paper" hideLabel />
+              </ModuleBlock>
+            </div>
+
+            <AutoSaveNote disabled={disabled} />
+          </div>
+        </article>
+      </div>
+    )
+  }
+
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div className="overflow-hidden rounded-md border border-[#b9a77f] bg-[#d9caab] text-[#22180e] shadow-[0_24px_80px_rgba(0,0,0,.24)]">
@@ -366,36 +426,14 @@ function ModulePageEditor({
           </div>
         </div>
         <div className="p-6">
-          <div className="font-mono text-[11px] font-bold uppercase tracking-[.16em] text-[#5b4631]">{isEncounter ? `Encounter ${encounter?.id ?? ""}` : `Adventure ${manifest.planId}`}</div>
+          <div className="font-mono text-[11px] font-bold uppercase tracking-[.16em] text-[#5b4631]">Adventure {manifest.planId}</div>
           <Input value={title} onChange={(event) => setTitle(event.target.value)} disabled={disabled} className="mt-2 border-[#b9a77f] bg-[#eee2c6] text-3xl font-bold text-[#22180e]" />
-          {isEncounter && (
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
-              <ReadonlyField label="Section" value={fields.sectionTitle || "Encounter graph"} />
-              <ReadonlyField label="Scene" value={fields.sceneTitle || "Encounter file"} />
-            </div>
-          )}
           <p className="mt-4 text-sm leading-6 text-[#4a3822]">{page?.summary || file.path}</p>
         </div>
       </div>
 
       <div className="rounded-md border border-[#b9a77f] bg-[#d9caab] p-6 text-[#22180e] shadow-[0_18px_60px_rgba(0,0,0,.18)]">
         <Block label="Summary" value={summary} onChange={setSummary} disabled={disabled} rows={5} tone="paper" />
-        {isEncounter && (
-          <div className="mt-5 space-y-5">
-            <ModuleBlock title="Read Aloud">
-              <Block label="Intro" value={intro} onChange={setIntro} disabled={disabled} rows={9} tone="paper" hideLabel />
-            </ModuleBlock>
-            <ModuleBlock title="GM Notes">
-              <Block label="GM Notes" value={gmNotes} onChange={setGmNotes} disabled={disabled} rows={6} tone="paper" hideLabel />
-            </ModuleBlock>
-            <ModuleBlock title="Encounter NPCs">
-              <EncounterNpcEditor refs={fields.npcRefs} npcLookup={npcLookup} />
-            </ModuleBlock>
-            <ModuleBlock title="Exits">
-              <Block label="Transitions" value={transitions} onChange={setTransitions} disabled={disabled} rows={7} tone="paper" hideLabel />
-            </ModuleBlock>
-          </div>
-        )}
         <AutoSaveNote disabled={disabled} />
       </div>
     </div>
@@ -1052,8 +1090,8 @@ function titleFromId(id: string) {
 
 function ModuleBlock({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded border border-[#b9a77f] bg-[#eee2c6] p-4">
-      <h3 className="mb-3 border-b border-[#c9b891] pb-1 font-mono text-[11px] font-bold uppercase tracking-[.18em] text-[#5b4631]">{title}</h3>
+    <section className="border-t border-[#b9a77f]/75 pt-5">
+      <h3 className="mb-3 font-mono text-[11px] font-bold uppercase tracking-[.18em] text-[#5b4631]">{title}</h3>
       {children}
     </section>
   )
@@ -1086,9 +1124,9 @@ function AutoSaveNote({ disabled }: { disabled: boolean }) {
 
 function ReadonlyField({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded border border-[#b9a77f] bg-[#eadbb9] px-3 py-2">
+    <div className="min-w-0">
       <div className="font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#6c5738]">{label}</div>
-      <div className="mt-1 truncate font-serif text-base font-bold text-[#24180d]">{value}</div>
+      <div className="mt-1 truncate font-serif text-2xl font-bold leading-tight text-[#24180d]">{value}</div>
     </div>
   )
 }
@@ -1129,7 +1167,7 @@ function Block({
         onChange={(event) => onChange(event.target.value)}
         rows={rows}
         disabled={disabled}
-        className={paper ? "border-[#b9a77f] bg-[#f1e4bf] font-serif text-base leading-7 text-[#22180e]" : undefined}
+        className={paper ? "border-[#b9a77f] bg-[#efe2bd] font-serif text-base leading-7 text-[#22180e] shadow-[inset_0_1px_0_rgba(255,255,255,.25),0_2px_8px_rgba(58,43,20,.08)]" : undefined}
       />
     </label>
   )
