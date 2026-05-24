@@ -1,6 +1,6 @@
 "use client"
 
-import { Download, FileJson, FileText, GitBranch, ImageIcon, MessageSquare, Plus, Save, Search, Trash2, Upload, Wand2 } from "lucide-react"
+import { Download, FileJson, FileText, GitBranch, ImageIcon, Menu, MessageSquare, PanelLeftClose, Plus, Save, Search, Trash2, Upload, Wand2 } from "lucide-react"
 import * as React from "react"
 import { toast } from "sonner"
 import {
@@ -54,6 +54,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
   ])
   const [prompt, setPrompt] = React.useState("")
   const [busy, setBusy] = React.useState(false)
+  const [sectionsSidebarOpen, setSectionsSidebarOpen] = React.useState(true)
   const selectedFile = state.files.find((file) => file.path === selectedPath) ?? state.files[0]
   const wiki = React.useMemo(() => buildWikiModel(state.files, state.encounters), [state.files, state.encounters])
   const selectedPage = wiki.pagesByPath.get(selectedFile?.path ?? "")
@@ -154,14 +155,16 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
         </div>
       </header>
 
-      <main className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden xl:grid-cols-[420px_minmax(0,1fr)_400px]">
-        <aside className="min-h-0 overflow-hidden border-b border-[#3a3630] bg-[#181713] xl:border-r xl:border-b-0">
-          <WikiNavigator wiki={wiki} selectedPath={selectedPath} onSelect={setSelectedPath} />
-        </aside>
+      <main className={`grid min-h-0 flex-1 grid-cols-1 overflow-hidden ${sectionsSidebarOpen ? "xl:grid-cols-[420px_minmax(0,1fr)_400px]" : "xl:grid-cols-[minmax(0,1fr)_400px]"}`}>
+        {sectionsSidebarOpen && (
+          <aside className="min-h-0 overflow-hidden border-b border-[#3a3630] bg-[#181713] xl:border-r xl:border-b-0">
+            <WikiNavigator wiki={wiki} selectedPath={selectedPath} onSelect={setSelectedPath} />
+          </aside>
+        )}
 
         <section className="min-h-0 min-w-0 overflow-hidden border-b border-[#3a3630] bg-[#201d18] xl:border-r xl:border-b-0">
           <div className="grid h-full min-h-0 grid-rows-[auto_1fr]">
-            <WikiPageHeader page={selectedPage} />
+            <WikiPageHeader page={selectedPage} sectionsSidebarOpen={sectionsSidebarOpen} onToggleSectionsSidebar={() => setSectionsSidebarOpen((current) => !current)} />
             <div className="min-h-0 overflow-y-auto">
               <div className="p-6">
                 <ModulePageEditor file={selectedFile} files={state.files} manifest={state.manifest} encounters={state.encounters} page={selectedPage} disabled={busy} onSave={saveFile} />
@@ -757,12 +760,21 @@ function PageButton({ page, selectedPath, onSelect }: { page: WikiPage; selected
   )
 }
 
-function WikiPageHeader({ page }: { page?: WikiPage }) {
+function WikiPageHeader({ page, sectionsSidebarOpen, onToggleSectionsSidebar }: { page?: WikiPage; sectionsSidebarOpen: boolean; onToggleSectionsSidebar: () => void }) {
   if (!page) return null
   return (
     <header className="border-b border-[#3a3630] bg-[#181713] px-6 py-5">
-      <div>
-        <div className="min-w-0">
+      <div className="flex items-start gap-4">
+        <button
+          type="button"
+          onClick={onToggleSectionsSidebar}
+          className="mt-0.5 hidden size-9 shrink-0 place-items-center rounded-md border border-[#4a4237] bg-[#11100f] text-[#d8bd81] transition-colors hover:border-[#b9a77f] hover:bg-[#211f1b] xl:grid"
+          aria-label={sectionsSidebarOpen ? "Hide adventure sections sidebar" : "Show adventure sections sidebar"}
+          title={sectionsSidebarOpen ? "Hide sections" : "Show sections"}
+        >
+          {sectionsSidebarOpen ? <PanelLeftClose className="size-4" /> : <Menu className="size-4" />}
+        </button>
+        <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded border border-[#3a3630] bg-[#24211d] px-2 py-1 font-mono text-[10px] uppercase text-stone-300">{pageKindLabel(page)}</span>
             <span className="font-mono text-[11px] text-stone-500">{page.id}</span>

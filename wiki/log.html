@@ -4,6 +4,14 @@
 .wiki-nav{width:min(1120px,calc(100% - 32px));margin:14px auto 0;display:flex;flex-wrap:wrap;gap:8px;font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.wiki-nav a{border:1px solid var(--line,#3d472f);border-radius:999px;padding:6px 9px;background:rgba(25,29,23,.72);color:var(--accent,#d7b35d);text-decoration:none}.wiki-nav a:focus-visible{outline:2px solid var(--accent,#d7b35d);outline-offset:2px}</style></head><body><nav class="wiki-nav" aria-label="Wiki navigation"><a href="index.html">Wiki Home</a><a href="Sources.html">Sources</a><a href="plans/index.html">Plans</a><a href="roadmap.html">Roadmap</a><a href="Architecture.html">Architecture</a></nav><main>
 <header><p class="eyebrow">Project-context log</p><h1>Decision history</h1><p>Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.</p></header>
 <article class="entry">
+<div class="date">2026-05-24</div>
+<section class="body"><h2>Added admin wiki sections sidebar toggle</h2><ul>
+<li>Added an editor header toggle to hide or restore the left adventure sections navigator on desktop admin wiki editor layouts.</li>
+<li>Collapsed state gives the selected page more working width while preserving the chat rail and current selection.</li>
+<li>Validation evidence: <code>pnpm exec biome check components/wiki-adventures/admin-wiki-adventure-editor.tsx</code>, <code>pnpm test:wiki-adventures:admin-authoring</code>, and <code>pnpm exec tsc --noEmit --pretty false</code> passed.</li>
+</ul></section>
+</article>
+<article class="entry">
 <div class="date">2026-05-23</div>
 <section class="body"><h2>Expanded admin character detail display</h2><ul>
 <li>Removed the character source file-path box from the admin character editor.</li>
