@@ -240,7 +240,11 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
 
             <div className={hasChatStarted ? "shrink-0 px-5 pb-4" : "flex min-h-0 flex-1 items-center px-5 py-8"}>
               <div className="w-full">
-                {!hasChatStarted && <p className="mb-4 text-center font-serif text-xl leading-7 text-[#f4ead7] [text-wrap:balance]">Begin a chat session to update this adventure plan</p>}
+                {!hasChatStarted && (
+                  <p className="mb-4 text-center font-serif text-xl leading-7 text-[#f4ead7]" style={{ textWrap: "balance" }}>
+                    Begin a chat session to update this adventure plan
+                  </p>
+                )}
                 <Textarea
                   id="wiki-chat-prompt"
                   value={prompt}
