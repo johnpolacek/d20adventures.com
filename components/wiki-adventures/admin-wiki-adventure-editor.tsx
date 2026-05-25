@@ -185,7 +185,11 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
 
         <section className="min-h-0 min-w-0 overflow-hidden border-b border-[#3a3630] bg-[#201d18] xl:border-r xl:border-b-0">
           <div className="grid h-full min-h-0 grid-rows-[auto_1fr]">
-            <WikiPageHeader page={selectedPage} sectionsSidebarOpen={sectionsSidebarOpen} onRestoreSectionsSidebar={() => setSectionsSidebarOpen(true)} />
+            {selectedPage?.kind === "encounter" && selectedScene ? (
+              <ScenePageHeader scene={selectedScene} sectionsSidebarOpen={sectionsSidebarOpen} onRestoreSectionsSidebar={() => setSectionsSidebarOpen(true)} />
+            ) : (
+              <WikiPageHeader page={selectedPage} sectionsSidebarOpen={sectionsSidebarOpen} onRestoreSectionsSidebar={() => setSectionsSidebarOpen(true)} />
+            )}
             <div className="min-h-0 overflow-y-auto">
               <div className="p-6">
                 {selectedScene && selectedPage?.kind === "encounter" ? (
@@ -334,20 +338,48 @@ function SceneEncounterEditor({
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
-      <div className="rounded-md border border-[#4a4237] bg-[#171512] px-4 py-3">
-        <div className="font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#d8bd81]">Scene</div>
-        <h2 className="mt-1 font-serif text-2xl font-bold leading-tight text-[#f4ead7]">{scene.title}</h2>
-        <p className="mt-1 text-sm text-stone-500">{scene.pages.length} encounters loaded in order</p>
-      </div>
       {scene.pages.map((page) => {
         const file = files.find((item) => item.path === page.path)
         return (
           <div key={page.path} id={encounterDomId(page.path)} className={selectedPath === page.path ? "scroll-mt-6 ring-2 ring-[#d8bd81]/45 ring-offset-4 ring-offset-[#201d18]" : "scroll-mt-6"}>
-            <ModulePageEditor file={file} files={files} manifest={manifest} encounters={encounters} page={page} disabled={disabled} onSave={onSave} />
+            <ModulePageEditor file={file} files={files} manifest={manifest} encounters={encounters} page={page} disabled={disabled} hideEncounterContext onSave={onSave} />
           </div>
         )
       })}
     </div>
+  )
+}
+
+function ScenePageHeader({
+  scene,
+  sectionsSidebarOpen,
+  onRestoreSectionsSidebar,
+}: {
+  scene: ModuleSection["scenes"][number]
+  sectionsSidebarOpen: boolean
+  onRestoreSectionsSidebar: () => void
+}) {
+  return (
+    <header className="bg-[#181713] px-6 py-5">
+      <div className="flex items-start gap-4">
+        {!sectionsSidebarOpen && (
+          <button
+            type="button"
+            onClick={onRestoreSectionsSidebar}
+            className="hidden size-7 shrink-0 place-items-center rounded-md border border-[#4a4237] bg-[#11100f] p-px text-[#d8bd81] shadow-[0_8px_20px_rgba(0,0,0,.2)] transition-colors hover:border-[#b9a77f] hover:bg-[#211f1b] xl:grid"
+            aria-label="Show adventure sections sidebar"
+            title="Show sections"
+          >
+            <Menu className="size-4" strokeWidth={1.35} />
+          </button>
+        )}
+        <div className="min-w-0 flex-1">
+          <span className="rounded border border-[#3a3630] bg-[#24211d] px-2 py-1 font-mono text-[10px] uppercase text-stone-300">Scene</span>
+          <h2 className="mt-2 text-2xl font-semibold leading-tight text-[#e6d6b8]">{scene.title}</h2>
+          <p className="mt-1 text-sm text-stone-400">{scene.pages.length} encounters loaded in order</p>
+        </div>
+      </div>
+    </header>
   )
 }
 
@@ -432,6 +464,7 @@ function ModulePageEditor({
   page,
   disabled,
   onSave,
+  hideEncounterContext = false,
 }: {
   file?: SourceFile
   files: SourceFile[]
@@ -440,6 +473,7 @@ function ModulePageEditor({
   page?: WikiPage
   disabled: boolean
   onSave: (path: string, content: string) => void
+  hideEncounterContext?: boolean
 }) {
   const fields = React.useMemo(() => parseEditableFields(file), [file])
   const npcLookup = React.useMemo(() => buildNpcLookup(files), [files])
@@ -515,10 +549,12 @@ function ModulePageEditor({
               className="mt-3 border-[#b9a77f] bg-[#efe2bd] text-3xl font-bold text-[#22180e] shadow-[0_3px_10px_rgba(58,43,20,.08)]"
             />
 
-            <div className="mt-5 grid gap-x-10 gap-y-3 md:grid-cols-2">
-              <ReadonlyField label="Section" value={fields.sectionTitle || "Encounter graph"} />
-              <ReadonlyField label="Scene" value={fields.sceneTitle || "Encounter file"} />
-            </div>
+            {!hideEncounterContext && (
+              <div className="mt-5 grid gap-x-10 gap-y-3 md:grid-cols-2">
+                <ReadonlyField label="Section" value={fields.sectionTitle || "Encounter graph"} />
+                <ReadonlyField label="Scene" value={fields.sceneTitle || "Encounter file"} />
+              </div>
+            )}
 
             {page?.summary && <p className="mt-5 text-pretty text-lg leading-8 text-[#4a3822]">{page.summary}</p>}
 
