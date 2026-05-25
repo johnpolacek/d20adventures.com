@@ -376,7 +376,6 @@ function ScenePageHeader({
         <div className="min-w-0 flex-1">
           <span className="rounded border border-[#3a3630] bg-[#24211d] px-2 py-1 font-mono text-[10px] uppercase text-stone-300">Scene</span>
           <h2 className="mt-2 text-2xl font-semibold leading-tight text-[#e6d6b8]">{scene.title}</h2>
-          <p className="mt-1 text-sm text-stone-400">{scene.pages.length} encounters loaded in order</p>
         </div>
       </div>
     </header>
