@@ -4,6 +4,15 @@
 .wiki-nav{width:min(1120px,calc(100% - 32px));margin:14px auto 0;display:flex;flex-wrap:wrap;gap:8px;font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.wiki-nav a{border:1px solid var(--line,#3d472f);border-radius:999px;padding:6px 9px;background:rgba(25,29,23,.72);color:var(--accent,#d7b35d);text-decoration:none}.wiki-nav a:focus-visible{outline:2px solid var(--accent,#d7b35d);outline-offset:2px}</style></head><body><nav class="wiki-nav" aria-label="Wiki navigation"><a href="index.html">Wiki Home</a><a href="Sources.html">Sources</a><a href="plans/index.html">Plans</a><a href="roadmap.html">Roadmap</a><a href="Architecture.html">Architecture</a></nav><main>
 <header><p class="eyebrow">Project-context log</p><h1>Decision history</h1><p>Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.</p></header>
 <article class="entry">
+<div class="date">2026-05-25</div>
+<section class="body"><h2>Planned retained chat history</h2><ul>
+<li>Added <code>wiki/plans/features/retain-chat-history.html</code> as the active compact feature plan for durable, reloadable per-adventure game chat.</li>
+<li>Recorded the current evidence: chat messages already persist in Convex, the SSE route returns only a recent initial batch, and the UI clears local state when the chat opens.</li>
+<li>Set Unit 01 as the next action: establish authenticated paginated history loading before changing the chat modal UI.</li>
+<li>No app code changes were made.</li>
+</ul></section>
+</article>
+<article class="entry">
 <div class="date">2026-05-24</div>
 <section class="body"><h2>Implemented sidebar section and scene navigation refactor</h2><ul>
 <li>Changed the Adventure Plan editor to default to the first section and first scene, with sidebar selection for utilities, sections, scenes, and selected-scene encounters.</li>
