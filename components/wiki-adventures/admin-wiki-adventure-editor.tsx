@@ -332,7 +332,9 @@ function SceneEncounterEditor({
       },
       { root: scrollContainer, threshold: [0.25, 0.55] }
     )
-    targets.forEach((target) => observer.observe(target))
+    targets.forEach((target) => {
+      observer.observe(target)
+    })
     return () => observer.disconnect()
   }, [scene.pages, onActivePathChange])
 
@@ -350,15 +352,7 @@ function SceneEncounterEditor({
   )
 }
 
-function ScenePageHeader({
-  scene,
-  sectionsSidebarOpen,
-  onRestoreSectionsSidebar,
-}: {
-  scene: ModuleSection["scenes"][number]
-  sectionsSidebarOpen: boolean
-  onRestoreSectionsSidebar: () => void
-}) {
+function ScenePageHeader({ scene, sectionsSidebarOpen, onRestoreSectionsSidebar }: { scene: ModuleSection["scenes"][number]; sectionsSidebarOpen: boolean; onRestoreSectionsSidebar: () => void }) {
   return (
     <header className="bg-[#181713] px-6 py-5">
       <div className="flex items-start gap-4">
@@ -398,7 +392,7 @@ function RevisionPill({ revisions }: { revisions: RevisionSummary[] }) {
       <Clock3 className="size-4 shrink-0 text-[#d8bd81]" />
       <div className="flex min-w-0 items-baseline gap-2">
         <div className="shrink-0 font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#d8bd81]">{revisions.length} revisions</div>
-        <div className="min-w-0 max-w-[340px] truncate text-xs">{latest ? latest.summary : "No saved revisions yet"}</div>
+        <div className="line-clamp-1 min-w-0 max-w-[340px] text-xs">{latest ? latest.summary : "No saved revisions yet"}</div>
       </div>
     </div>
   )
@@ -523,7 +517,9 @@ function ModulePageEditor({
   if (isEncounter) {
     return (
       <div className="mx-auto max-w-6xl">
-        <article className={hideEncounterContext ? "overflow-hidden text-[#22180e]" : "overflow-hidden rounded-md bg-[#d9caab] text-[#22180e] shadow-[0_24px_80px_rgba(0,0,0,.24),inset_0_0_0_1px_#b9a77f]"}>
+        <article
+          className={hideEncounterContext ? "overflow-hidden text-[#22180e]" : "overflow-hidden rounded-md bg-[#d9caab] text-[#22180e] shadow-[0_24px_80px_rgba(0,0,0,.24),inset_0_0_0_1px_#b9a77f]"}
+        >
           <div className="relative bg-[#231f1a]">
             <ImageUpload
               id={`wiki-image-${file.path}`}
@@ -947,7 +943,13 @@ function WikiNavigator({
               <div className="space-y-3">
                 {wiki.moduleSections.map((section, sectionIndex) => (
                   <div key={section.title}>
-                    <OutlineButton active={sectionIndex === activeSectionIndex} label={section.title} meta={`${section.scenes.length} scenes`} level="section" onClick={() => onSectionSelect(sectionIndex)} />
+                    <OutlineButton
+                      active={sectionIndex === activeSectionIndex}
+                      label={section.title}
+                      meta={`${section.scenes.length} scenes`}
+                      level="section"
+                      onClick={() => onSectionSelect(sectionIndex)}
+                    />
                     <div className="mt-1 space-y-2 pl-3">
                       {section.scenes.map((scene, sceneIndex) => (
                         <div key={`${section.title}-${scene.title}`}>
