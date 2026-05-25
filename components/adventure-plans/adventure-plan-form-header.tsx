@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { Download, ExternalLink, Loader2 } from "lucide-react"
+import { Download, ExternalLink } from "lucide-react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { Badge } from "../ui/badge"
@@ -53,15 +53,6 @@ export function AdventurePlanFormHeader({ isSaving, onDownload, onSave, draft, s
       <div className="flex items-center gap-4">
         <Button ariaLabel="download json" variant="outline" className="text-sm" size="icon" onClick={onDownload}>
           <Download size={20} className="opacity-50 scale-150" />
-        </Button>
-        <Button variant="outline" className="font-display font-extrabold tracking-widest text-sm w-24" size="sm" onClick={() => onSave()} disabled={isSaving}>
-          {isSaving ? (
-            <div className="flex items-center gap-2">
-              <Loader2 aria-label="Saving in progress" className="animate-spin" />
-            </div>
-          ) : (
-            "Save"
-          )}
         </Button>
       </div>
     </div>
