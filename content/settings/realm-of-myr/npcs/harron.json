@@ -1,0 +1,12 @@
+{
+  "id": "harron",
+  "name": "Harron",
+  "type": "npc",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/app/avatar/npc.png?v=1",
+  "archetype": "Bartender",
+  "race": "Human",
+  "gender": "Male",
+  "appearance": "A grizzled bartender with deep-set eyes, a scar down his cheek, and the wary stillness of someone used to dangerous patrons.",
+  "behavior": "Guarded and reluctant to talk, but can be persuaded to reveal that Joran met Silverhand.",
+  "healthPercent": 100
+}

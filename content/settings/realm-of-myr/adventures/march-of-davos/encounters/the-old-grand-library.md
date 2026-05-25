@@ -10,6 +10,7 @@ adventureId: "march-of-davos"
 npcs:
   - id: "sister-danica"
     behavior: "Calm, serene, commanding, understanding."
+  - id: "eldrin-varokich"
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726275316858"
 ---
 

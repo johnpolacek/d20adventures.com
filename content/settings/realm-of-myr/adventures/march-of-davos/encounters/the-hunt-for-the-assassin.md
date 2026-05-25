@@ -7,6 +7,10 @@ type: "encounter"
 title: "The Hunt for the Assassin"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+npcs:
+  - id: "astrid-blackthorn"
+  - id: "eamon"
+  - id: "liora"
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726868134486"
 ---
 

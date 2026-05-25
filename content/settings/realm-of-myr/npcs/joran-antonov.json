@@ -1,0 +1,12 @@
+{
+  "id": "joran-antonov",
+  "name": "Joran Antonov",
+  "type": "npc",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/app/avatar/npc.png?v=1",
+  "archetype": "Covenant Champion",
+  "race": "Human",
+  "gender": "Male",
+  "appearance": "A determined Valkaran scholar turned revolutionary, usually seen in dark Covenant robes when revealed in the inner sanctum.",
+  "behavior": "Driven by vengeance for Milos Antonov and by a radical commitment to restoring Valkaran power.",
+  "healthPercent": 100
+}

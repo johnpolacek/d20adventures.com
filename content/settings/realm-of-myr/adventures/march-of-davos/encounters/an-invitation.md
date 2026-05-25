@@ -7,6 +7,9 @@ type: "encounter"
 title: "An Invitation"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+npcs:
+  - id: "astrid-blackthorn"
+  - id: "forest-drake"
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726361535587"
 ---
 

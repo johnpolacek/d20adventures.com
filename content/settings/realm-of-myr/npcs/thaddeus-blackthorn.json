@@ -1,0 +1,12 @@
+{
+  "id": "thaddeus-blackthorn",
+  "name": "Thaddeus Blackthorn",
+  "type": "npc",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/app/avatar/npc.png?v=1",
+  "archetype": "Noble",
+  "race": "Human",
+  "gender": "Male",
+  "appearance": "A tall, broad-shouldered noble with slicked-back dark hair, sharp angular features, piercing blue eyes, and immaculate formal attire.",
+  "behavior": "Measured, ambitious, and calculating; treats every conversation as an opportunity to assess usefulness and leverage.",
+  "healthPercent": 100
+}

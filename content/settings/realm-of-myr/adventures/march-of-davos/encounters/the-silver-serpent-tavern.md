@@ -7,6 +7,8 @@ type: "encounter"
 title: "The Silver Serpent Tavern"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+npcs:
+  - id: "harron"
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726289298448"
 ---
 

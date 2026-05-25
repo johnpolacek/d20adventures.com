@@ -7,6 +7,9 @@ type: "encounter"
 title: "Through the Labyrinth"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+npcs:
+  - id: "astrid-blackthorn"
+  - id: "eamon"
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726950403113"
 ---
 
