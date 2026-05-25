@@ -581,8 +581,8 @@ function ModulePageEditor({
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      <div className="overflow-hidden rounded-md bg-[#d9caab] text-[#22180e] shadow-[0_24px_80px_rgba(0,0,0,.24),inset_0_0_0_1px_#b9a77f]">
+    <div className="mx-auto max-w-6xl">
+      <div className="overflow-hidden bg-[#d9caab] text-[#22180e] shadow-[0_24px_80px_rgba(0,0,0,.24),inset_0_0_0_1px_#b9a77f]">
         <div className="relative bg-[#231f1a]">
           <ImageUpload
             id={`wiki-image-${file.path}`}
