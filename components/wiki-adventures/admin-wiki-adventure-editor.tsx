@@ -50,6 +50,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
   const [messages, setMessages] = React.useState<ChatMessage[]>([])
   const [prompt, setPrompt] = React.useState("")
   const [busy, setBusy] = React.useState(false)
+  const [chatPending, setChatPending] = React.useState(false)
   const [sectionsSidebarOpen, setSectionsSidebarOpen] = React.useState(true)
   const [revisionDrawerOpen, setRevisionDrawerOpen] = React.useState(false)
   const pendingScrollPathRef = React.useRef<string | null>(null)
@@ -83,6 +84,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
     setPrompt("")
     setMessages((current) => [...current, { role: "admin", content: message }])
     setBusy(true)
+    setChatPending(true)
     try {
       const result = await sendAdminWikiAdventureChatAction({ settingId: state.definition.settingId, planId: state.definition.planId, message })
       setMessages((current) => [
@@ -99,6 +101,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
       setMessages((current) => [...current, { role: "wiki", content: message }])
       toast.error(message)
     } finally {
+      setChatPending(false)
       setBusy(false)
     }
   }
@@ -224,13 +227,14 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
                   <div key={index} className={message.role === "admin" ? "flex justify-end" : "flex justify-start"}>
                     <div
                       className={`max-w-[94%] whitespace-pre-wrap text-pretty text-base leading-7 ${
-                        message.role === "admin" ? "rounded-r-md rounded-l-none bg-[#172433] px-3 py-2 text-sky-50 shadow-[0_10px_28px_rgba(0,0,0,.16)]" : "font-serif text-[#f4ead7]"
+                        message.role === "admin" ? "rounded-[1.35rem] rounded-br-none bg-indigo-950/90 px-5 py-4 text-sky-50 shadow-[0_10px_28px_rgba(0,0,0,.16)]" : "font-serif text-[#f4ead7]"
                       }`}
                     >
                       {message.content}
                     </div>
                   </div>
                 ))}
+                {chatPending && <TypingIndicator />}
               </div>
             )}
 
@@ -295,6 +299,25 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
         </aside>
       </main>
     </div>
+  )
+}
+
+function TypingIndicator() {
+  return (
+    <output className="flex justify-start" aria-label="Response is being processed">
+      <div className="inline-flex items-center gap-1.5 rounded-[1.35rem] rounded-bl-none bg-[#1a1713] px-4 py-3 shadow-[0_10px_28px_rgba(0,0,0,.16)]">
+        {[0, 1, 2].map((index) => (
+          <span
+            key={index}
+            className="size-2 rounded-full bg-[#d8bd81] motion-safe:animate-bounce"
+            style={{
+              animationDelay: `${index * 140}ms`,
+              animationDuration: "820ms",
+            }}
+          />
+        ))}
+      </div>
+    </output>
   )
 }
 
