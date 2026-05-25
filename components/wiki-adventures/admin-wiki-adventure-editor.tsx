@@ -163,10 +163,6 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
             <HeaderCountBadge value={encounterCount} label="encounters" />
             <HeaderCountBadge value={npcCount} label="NPCs" />
           </div>
-          <div className="ml-auto flex min-w-0 items-center gap-3">
-            <div className="hidden h-6 w-px shrink-0 bg-[#4a4237] sm:block" aria-hidden="true" />
-            <RevisionPill revisions={state.revisions} />
-          </div>
         </div>
       </header>
 
@@ -409,19 +405,6 @@ function HeaderCountBadge({ value, label }: { value: number; label: string }) {
       <span className="text-xs text-[#d8bd81]">{value}</span>
       {label}
     </span>
-  )
-}
-
-function RevisionPill({ revisions }: { revisions: RevisionSummary[] }) {
-  const latest = revisions[0]
-  return (
-    <div className="flex min-w-0 flex-1 items-center gap-2 text-stone-500 sm:flex-none">
-      <Clock3 className="size-4 shrink-0 text-[#d8bd81]" />
-      <div className="flex min-w-0 items-baseline gap-2">
-        <div className="shrink-0 font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#d8bd81]">{revisions.length} revisions</div>
-        <div className="line-clamp-1 min-w-0 max-w-[340px] text-xs">{latest ? latest.summary : "No saved revisions yet"}</div>
-      </div>
-    </div>
   )
 }
 
