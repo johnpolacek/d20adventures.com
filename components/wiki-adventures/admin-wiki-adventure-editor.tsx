@@ -191,7 +191,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
               <WikiPageHeader page={selectedPage} sectionsSidebarOpen={sectionsSidebarOpen} onRestoreSectionsSidebar={() => setSectionsSidebarOpen(true)} />
             )}
             <div className="min-h-0 overflow-y-auto">
-              <div className="p-6">
+              <div>
                 {selectedScene && selectedPage?.kind === "encounter" ? (
                   <SceneEncounterEditor
                     scene={selectedScene}
@@ -539,7 +539,7 @@ function ModulePageEditor({
             </div>
           </div>
 
-          <div className={hideEncounterContext ? "bg-[#d9caab] px-7 py-7 lg:px-10 lg:py-9" : "px-7 py-7 lg:px-10 lg:py-9"}>
+          <div className={hideEncounterContext ? "bg-[#d9caab] px-7 py-7" : "px-7 py-7 lg:px-10 lg:py-9"}>
             <div className="font-mono text-[11px] font-bold uppercase tracking-[.16em] text-[#5b4631]">Encounter {encounter?.id ?? ""}</div>
             <Input
               value={title}
