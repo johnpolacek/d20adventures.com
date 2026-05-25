@@ -8,7 +8,7 @@
 <section class="body"><h2>Fixed admin chat review context</h2><ul>
 <li>Updated Admin Chat to distinguish advisory review prompts from rewrite prompts so evaluation requests do not produce source-edit refusals or suggestion blocks.</li>
 <li>Expanded Admin Chat context with a compact plan outline and full active-section scene and encounter details from the current editor state.</li>
-<li>Added a section-review target for section-level analysis and gated server console diagnostics behind <code>ADMIN_CHAT_DEBUG=true</code>.</li>
+<li>Added a section-review target for section-level analysis and used temporary gated server diagnostics during verification.</li>
 <li>Validation: <code>pnpm exec tsc --noEmit</code> passed and <code>pnpm build</code> passed. <code>pnpm lint</code> remains blocked by the known Biome config/schema mismatch.</li>
 </ul></section>
 </article>

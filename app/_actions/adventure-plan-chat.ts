@@ -95,15 +95,6 @@ function wantsReplacement(content: string) {
   return /\b(rewrite|replace|revise|update|draft|write|polish|improve|expand)\b/i.test(content)
 }
 
-function preview(value: string, max = 2500) {
-  return value.length > max ? `${value.slice(0, max)}...` : value
-}
-
-function debugAdminChat(requestId: string, label: string, data: Record<string, unknown>) {
-  if (process.env.ADMIN_CHAT_DEBUG !== "true") return
-  console.log(`[admin-chat:${requestId}] ${label}`, JSON.stringify(data, null, 2))
-}
-
 function buildAssistantPrompt(input: SendMessageInput, adventurePlan: AdventurePlan, mode: "review" | "rewrite" | "general") {
   return `You are an admin authoring assistant for D20 Adventures.
 
@@ -179,7 +170,6 @@ export async function sendAdventurePlanChatMessage(input: SendMessageInput) {
   const content = input.content.trim()
   if (!content) throw new Error("Message is required")
 
-  const requestId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
   const mode = wantsReplacement(content) ? "rewrite" : isReviewRequest(content) ? "review" : "general"
   const { userId, adventurePlan } = await assertCanManageAdventurePlan(input.settingId, input.adventurePlanId)
   const displayName = await getDisplayName(userId)
@@ -195,18 +185,7 @@ export async function sendAdventurePlanChatMessage(input: SendMessageInput) {
   })
 
   const prompt = buildAssistantPrompt(input, adventurePlan, mode)
-  debugAdminChat(requestId, "request", {
-    settingId: input.settingId,
-    adventurePlanId: input.adventurePlanId,
-    scope: input.scope,
-    mode,
-    promptPreview: preview(prompt),
-  })
-
   const { text } = await generateText({ prompt })
-  debugAdminChat(requestId, "response", {
-    responsePreview: preview(text),
-  })
   const parsed = extractSuggestion(text)
 
   const assistantMessageId = await convex.mutation(api.adventurePlanChat.appendMessage, {
