@@ -337,7 +337,7 @@ function SceneEncounterEditor({
   }, [scene.pages, onActivePathChange])
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
+    <div className="mx-auto max-w-6xl">
       {scene.pages.map((page) => {
         const file = files.find((item) => item.path === page.path)
         return (
@@ -523,7 +523,7 @@ function ModulePageEditor({
   if (isEncounter) {
     return (
       <div className="mx-auto max-w-6xl">
-        <article className="overflow-hidden rounded-md bg-[#d9caab] text-[#22180e] shadow-[0_24px_80px_rgba(0,0,0,.24),inset_0_0_0_1px_#b9a77f]">
+        <article className={hideEncounterContext ? "overflow-hidden text-[#22180e]" : "overflow-hidden rounded-md bg-[#d9caab] text-[#22180e] shadow-[0_24px_80px_rgba(0,0,0,.24),inset_0_0_0_1px_#b9a77f]"}>
           <div className="relative bg-[#231f1a]">
             <ImageUpload
               id={`wiki-image-${file.path}`}
@@ -539,7 +539,7 @@ function ModulePageEditor({
             </div>
           </div>
 
-          <div className="px-7 py-7 lg:px-10 lg:py-9">
+          <div className={hideEncounterContext ? "bg-[#d9caab] px-7 py-7 lg:px-10 lg:py-9" : "px-7 py-7 lg:px-10 lg:py-9"}>
             <div className="font-mono text-[11px] font-bold uppercase tracking-[.16em] text-[#5b4631]">Encounter {encounter?.id ?? ""}</div>
             <Input
               value={title}
