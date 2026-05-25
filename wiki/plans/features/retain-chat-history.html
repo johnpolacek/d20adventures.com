@@ -22,12 +22,12 @@
       <section class="summary" aria-labelledby="summary">
         <h2 id="summary">Summary</h2>
         <dl>
-          <dt>Status</dt><dd>active</dd>
+          <dt>Status</dt><dd>complete</dd>
           <dt>Shape</dt><dd>compact feature plan with three execution units</dd>
-          <dt>Current unit</dt><dd>Unit 01 - access and pagination contract</dd>
-          <dt>Next action</dt><dd>Audit chat reads/writes and implement authenticated paginated history loading.</dd>
+          <dt>Current unit</dt><dd>None - implementation completed 2026-05-25</dd>
+          <dt>Next action</dt><dd>Manual authenticated two-session chat regression when convenient with seeded or real adventure data.</dd>
           <dt>Blockers</dt><dd>None; retention duration is assumed indefinite until a policy decision says otherwise.</dd>
-          <dt>Validation</dt><dd>Convex query coverage, route/action auth checks, UI reload test, and regression check for live chat updates.</dd>
+          <dt>Validation</dt><dd><code>pnpm exec tsc --noEmit</code> passed; <code>pnpm build</code> passed; <code>pnpm check</code> remains blocked by the known Biome config/schema mismatch.</dd>
         </dl>
       </section>
     </header>
@@ -89,25 +89,25 @@
         <article class="unit">
           <div>
             <h3>Unit 01 - Access and Pagination Contract</h3>
-            <p class="muted">Define and implement a server-authenticated history read path that returns messages before a cursor or timestamp. Cap page size, keep ordering stable, and document whether the UI uses Convex query, server action, or route handler for pagination.</p>
+            <p class="muted">Completed. Added a bounded <code>getBefore</code> Convex query and an authenticated <code>fetchMessagesBefore</code> server action. The UI continues to use server-side <code>assertAdventureAccess</code> before reading or writing chat data.</p>
             <h3>Verification</h3>
-            <p class="muted">Add or update tests around unauthorized adventure access, participant access, page-size limits, and chronological ordering. If automated Convex tests are impractical, record a manual verification script with seeded messages.</p>
+            <p class="muted"><code>pnpm exec tsc --noEmit</code> and <code>pnpm build</code> passed. Existing signed-out API auth coverage still covers the SSE route; manual authorized pagination remains the useful follow-up.</p>
           </div>
         </article>
         <article class="unit">
           <div>
             <h3>Unit 02 - Reloadable Chat UI</h3>
-            <p class="muted">Update <code>GameChat</code> so opening chat loads the latest messages, exposes a load-older affordance when more history exists, preserves scroll position when prepending older rows, and keeps new live messages appended without duplication.</p>
+            <p class="muted">Completed. <code>GameChat</code> loads latest history on open, exposes a load-older control, preserves scroll position when older rows are prepended, dedupes live SSE rows, and retains localStorage only for per-device unread state.</p>
             <h3>Verification</h3>
-            <p class="muted">Manually verify modal open, page refresh, reopen after close, load older, unread badge reset, and live delivery from a second session or browser context.</p>
+            <p class="muted"><code>pnpm build</code> passed. Manual modal open, refresh, load older, unread badge, and two-session live delivery should be checked against a real authenticated adventure before release.</p>
           </div>
         </article>
         <article class="unit">
           <div>
             <h3>Unit 03 - Migration Alignment and Cleanup</h3>
-            <p class="muted">Align the retained-chat implementation with the wiki-adventure migration's live Adventure model. Keep chat as Convex live session state, not S3 authored content. Remove any redundant fetch path introduced during implementation and update source briefs only if the runtime contract changes.</p>
+            <p class="muted">Completed. Chat remains Convex live session state and no S3 authored content contract changed. The implementation extends the existing action/query path instead of introducing a separate storage surface.</p>
             <h3>Verification</h3>
-            <p class="muted">Run <code>pnpm exec tsc --noEmit</code> and a focused manual chat-history regression. Run <code>pnpm check</code> only if the known Biome config issue is resolved or record that blocker.</p>
+            <p class="muted"><code>pnpm exec tsc --noEmit</code> passed. <code>pnpm check</code> was run and remains blocked by <code>biome.json</code> using the older 1.9 schema keys with Biome 2.4.6.</p>
           </div>
         </article>
       </div>

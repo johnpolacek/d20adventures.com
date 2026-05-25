@@ -1,24 +1,33 @@
 "use client"
 
-import { sendChatMessage } from "@/app/_actions/chat"
+import { fetchMessagesBefore, fetchRecentMessages, sendChatMessage } from "@/app/_actions/chat"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import type { Id } from "@/convex/_generated/dataModel"
 import { useTurnContext } from "@/lib/context/TurnContext"
 import { getLastSeenTimestamp, setLastSeenTimestamp } from "@/lib/utils/chat-storage"
 import { useUser } from "@clerk/nextjs"
 import { MessageSquare } from "lucide-react"
 import { useParams } from "next/navigation"
-import { useState } from "react"
-import { useEffect, useMemo, useRef } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 type GameChatProps = {
   adventureId?: string
   characterName?: string
 }
+
+type ChatMessage = {
+  _id: string
+  adventureId: string
+  username: string
+  characterName?: string
+  content: string
+  createdAt: number
+}
+
+const CHAT_PAGE_SIZE = 50
 
 export default function GameChat({ adventureId, characterName }: GameChatProps) {
   const [open, setOpen] = useState(false)
@@ -28,21 +37,18 @@ export default function GameChat({ adventureId, characterName }: GameChatProps) 
   const { user } = useUser()
   const { currentTurn } = useTurnContext()
 
-  type ChatMessage = {
-    _id: string
-    adventureId: string
-    username: string
-    characterName?: string
-    content: string
-    createdAt: number
-  }
-
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false)
+  const [isLoadingOlder, setIsLoadingOlder] = useState(false)
+  const [hasOlderMessages, setHasOlderMessages] = useState(false)
+  const [historyError, setHistoryError] = useState<string | null>(null)
   const [unseenCount, setUnseenCount] = useState(0)
   const ids = useRef<Set<string>>(new Set())
   const unseenIds = useRef<Set<string>>(new Set())
   const listEndRef = useRef<HTMLDivElement | null>(null)
+  const scrollViewportRef = useRef<HTMLDivElement | null>(null)
+  const skipNextAutoScroll = useRef(false)
 
   // Determine default character name for this user from latest messages as fallback
   type Character = { type?: string; userId?: string; name?: string }
@@ -59,37 +65,103 @@ export default function GameChat({ adventureId, characterName }: GameChatProps) 
     return lastMine?.characterName
   }, [characterName, currentPlayerCharacterName, messages])
 
+  const mergeMessages = useCallback((incoming: ChatMessage[], mode: "append" | "prepend" | "replace") => {
+    if (mode === "replace") {
+      let added = 0
+      setMessages((prev) => {
+        const byId = new Map(prev.map((message) => [message._id, message]))
+        for (const message of incoming) {
+          if (!byId.has(message._id)) added += 1
+          byId.set(message._id, message)
+        }
+        const next = Array.from(byId.values()).sort((a, b) => a.createdAt - b.createdAt || a._id.localeCompare(b._id))
+        ids.current = new Set(next.map((message) => message._id))
+        return next
+      })
+      return added
+    }
+
+    const newMessages = incoming.filter((message) => !ids.current.has(message._id))
+    if (newMessages.length === 0) return 0
+
+    for (const message of newMessages) {
+      ids.current.add(message._id)
+    }
+    setMessages((prev) => {
+      return mode === "prepend" ? [...newMessages, ...prev] : [...prev, ...newMessages]
+    })
+    return newMessages.length
+  }, [])
+
+  const loadLatestHistory = useCallback(async () => {
+    if (!effectiveAdventureId) return
+    setIsLoadingHistory(true)
+    setHistoryError(null)
+
+    try {
+      const latest = await fetchRecentMessages(effectiveAdventureId as Id<"adventures">, CHAT_PAGE_SIZE)
+      mergeMessages(latest as ChatMessage[], "replace")
+      setHasOlderMessages(latest.length === CHAT_PAGE_SIZE)
+
+      if (latest.length > 0) {
+        setLastSeenTimestamp(effectiveAdventureId, latest[latest.length - 1].createdAt)
+      }
+    } catch (error) {
+      setHistoryError(error instanceof Error ? error.message : "Unable to load chat history")
+    } finally {
+      setIsLoadingHistory(false)
+    }
+  }, [effectiveAdventureId, mergeMessages])
+
+  const loadOlderMessages = useCallback(async () => {
+    if (!effectiveAdventureId || messages.length === 0 || isLoadingOlder) return
+
+    const oldestMessage = messages[0]
+    const viewport = scrollViewportRef.current
+    const previousScrollHeight = viewport?.scrollHeight ?? 0
+    const previousScrollTop = viewport?.scrollTop ?? 0
+
+    setIsLoadingOlder(true)
+    setHistoryError(null)
+
+    try {
+      const older = await fetchMessagesBefore(effectiveAdventureId as Id<"adventures">, oldestMessage.createdAt, CHAT_PAGE_SIZE)
+      skipNextAutoScroll.current = true
+      const addedCount = mergeMessages(older as ChatMessage[], "prepend")
+      setHasOlderMessages(older.length === CHAT_PAGE_SIZE)
+
+      if (addedCount > 0 && viewport) {
+        requestAnimationFrame(() => {
+          viewport.scrollTop = viewport.scrollHeight - previousScrollHeight + previousScrollTop
+        })
+      }
+    } catch (error) {
+      setHistoryError(error instanceof Error ? error.message : "Unable to load older chat messages")
+    } finally {
+      setIsLoadingOlder(false)
+    }
+  }, [effectiveAdventureId, isLoadingOlder, mergeMessages, messages])
+
+  useEffect(() => {
+    if (!open) return
+    void loadLatestHistory()
+  }, [loadLatestHistory, open])
+
   // Main SSE effect for when chat is open
   useEffect(() => {
     if (!open || !effectiveAdventureId) return
-    setMessages([])
-    ids.current = new Set()
 
     const es = new EventSource(`/api/adventure/chat/${effectiveAdventureId}`)
     es.onmessage = (evt) => {
       try {
         const batch: ChatMessage[] = JSON.parse(evt.data)
         if (Array.isArray(batch) && batch.length) {
-          setMessages((prev) => {
-            const next = [...prev]
-            let hasNewMessages = false
+          const addedCount = mergeMessages(batch, "append")
 
-            for (const m of batch) {
-              if (!ids.current.has(m._id)) {
-                ids.current.add(m._id)
-                next.push(m)
-                hasNewMessages = true
-              }
-            }
-
-            // If modal is open and we got new messages, mark them as seen immediately
-            if (hasNewMessages && open) {
-              const newestTimestamp = Math.max(...batch.map((m) => m.createdAt))
-              setLastSeenTimestamp(effectiveAdventureId, newestTimestamp)
-            }
-
-            return next
-          })
+          if (addedCount > 0) {
+            const newestTimestamp = Math.max(...batch.map((m) => m.createdAt))
+            setLastSeenTimestamp(effectiveAdventureId, newestTimestamp)
+          }
         }
       } catch {}
     }
@@ -99,7 +171,7 @@ export default function GameChat({ adventureId, characterName }: GameChatProps) 
     return () => {
       es.close()
     }
-  }, [open, effectiveAdventureId])
+  }, [effectiveAdventureId, mergeMessages, open])
 
   // Separate SSE effect for tracking unseen messages when chat is closed
   useEffect(() => {
@@ -132,6 +204,10 @@ export default function GameChat({ adventureId, characterName }: GameChatProps) 
   }, [open, effectiveAdventureId])
 
   useEffect(() => {
+    if (skipNextAutoScroll.current) {
+      skipNextAutoScroll.current = false
+      return
+    }
     listEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages.length, open])
 
@@ -174,8 +250,16 @@ export default function GameChat({ adventureId, characterName }: GameChatProps) 
           <DialogTitle className="font-display text-amber-300">Game Chat</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-3">
-          <ScrollArea className="h-80 rounded-md p-3 bg-black/30">
+          <div ref={scrollViewportRef} className="h-80 overflow-y-auto rounded-md p-3 bg-black/30">
             <div className="space-y-3">
+              <div className="flex justify-center">
+                <Button variant="outline" size="sm" onClick={loadOlderMessages} disabled={!hasOlderMessages || isLoadingOlder || isLoadingHistory}>
+                  {isLoadingOlder ? "Loading..." : hasOlderMessages ? "Load older" : "No older messages"}
+                </Button>
+              </div>
+              {historyError && <div className="text-sm text-red-300 bg-red-950/50 border border-red-900 rounded-md px-3 py-2">{historyError}</div>}
+              {isLoadingHistory && messages.length === 0 && <div className="text-sm text-muted-foreground text-center py-8">Loading chat history...</div>}
+              {!isLoadingHistory && messages.length === 0 && <div className="text-sm text-muted-foreground text-center py-8">No messages yet.</div>}
               {messages.map((m) => {
                 const currentUsername = user?.username || user?.primaryEmailAddress?.emailAddress?.split("@")[0]
                 const isMine = currentUsername && m.username === currentUsername
@@ -194,7 +278,7 @@ export default function GameChat({ adventureId, characterName }: GameChatProps) 
               })}
               <div ref={listEndRef} />
             </div>
-          </ScrollArea>
+          </div>
           <div className="flex gap-2 items-center">
             <Input
               value={input}

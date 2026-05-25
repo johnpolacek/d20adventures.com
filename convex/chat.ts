@@ -34,6 +34,19 @@ export const getRecent = query({
   },
 })
 
+export const getBefore = query({
+  args: { adventureId: v.id("adventures"), before: v.number(), limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const limit = Math.min(args.limit ?? 50, 200)
+    const rows = await ctx.db
+      .query("chat_messages")
+      .withIndex("by_adventure_created", (q) => q.eq("adventureId", args.adventureId).lt("createdAt", args.before))
+      .order("desc")
+      .take(limit)
+    return rows.reverse()
+  },
+})
+
 export const getSince = query({
   args: { adventureId: v.id("adventures"), since: v.number() },
   handler: async (ctx, args) => {

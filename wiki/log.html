@@ -5,6 +5,15 @@
 <header><p class="eyebrow">Project-context log</p><h1>Decision history</h1><p>Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.</p></header>
 <article class="entry">
 <div class="date">2026-05-25</div>
+<section class="body"><h2>Implemented retained chat history</h2><ul>
+<li>Added authenticated paginated chat history loading for per-adventure game chat using the existing Convex <code>chat_messages</code> table and server-side <code>assertAdventureAccess</code> checks.</li>
+<li>Updated <code>GameChat</code> to load recent history on open, load older messages, preserve scroll position when prepending history, dedupe SSE-delivered rows, and keep unread tracking in localStorage.</li>
+<li>Kept chat as Convex live session state; no S3 authored content or wiki-adventure migration storage contract changed.</li>
+<li>Validation: <code>pnpm exec tsc --noEmit</code> passed and <code>pnpm build</code> passed. <code>pnpm check</code> remains blocked by the known Biome config/schema mismatch.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-25</div>
 <section class="body"><h2>Planned retained chat history</h2><ul>
 <li>Added <code>wiki/plans/features/retain-chat-history.html</code> as the active compact feature plan for durable, reloadable per-adventure game chat.</li>
 <li>Recorded the current evidence: chat messages already persist in Convex, the SSE route returns only a recent initial batch, and the UI clears local state when the chat opens.</li>

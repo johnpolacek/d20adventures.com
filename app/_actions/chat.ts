@@ -25,3 +25,10 @@ export async function fetchRecentMessages(adventureId: Id<"adventures">, limit =
   await assertAdventureAccess(userId, adventureId)
   return convex.query(api.chat.getRecent, { adventureId, limit })
 }
+
+export async function fetchMessagesBefore(adventureId: Id<"adventures">, before: number, limit = 50) {
+  const { userId } = await auth()
+  if (!userId) throw new Error("Unauthorized")
+  await assertAdventureAccess(userId, adventureId)
+  return convex.query(api.chat.getBefore, { adventureId, before, limit })
+}
