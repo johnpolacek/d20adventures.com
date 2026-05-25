@@ -195,4 +195,32 @@ export default defineSchema({
     content: v.string(),
     createdAt: v.number(),
   }).index("by_adventure_created", ["adventureId", "createdAt"]),
+
+  // Shared authoring chat for the S3-backed Adventure Plan editor.
+  adventure_plan_chat_messages: defineTable({
+    settingId: v.string(),
+    adventurePlanId: v.string(),
+    role: v.union(v.literal("user"), v.literal("assistant"), v.literal("event")),
+    userId: v.string(),
+    displayName: v.string(),
+    content: v.string(),
+    scope: v.optional(
+      v.object({
+        label: v.string(),
+        target: v.string(),
+        sectionIndex: v.optional(v.number()),
+        sceneIndex: v.optional(v.number()),
+        encounterId: v.optional(v.string()),
+      })
+    ),
+    proposal: v.optional(
+      v.object({
+        status: v.union(v.literal("proposed"), v.literal("used"), v.literal("dismissed")),
+        target: v.string(),
+        suggestedText: v.string(),
+        sourceMessageId: v.optional(v.id("adventure_plan_chat_messages")),
+      })
+    ),
+    createdAt: v.number(),
+  }).index("by_plan_created", ["settingId", "adventurePlanId", "createdAt"]),
 })

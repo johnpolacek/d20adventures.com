@@ -5,6 +5,16 @@
 <header><p class="eyebrow">Project-context log</p><h1>Decision history</h1><p>Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.</p></header>
 <article class="entry">
 <div class="date">2026-05-25</div>
+<section class="body"><h2>Implemented admin adventure plan chat history</h2><ul>
+<li>Added <code>wiki/plans/features/admin-adventure-plan-chat-history.html</code> and updated the planning dashboard for the focused admin authoring chat feature.</li>
+<li>Added a separate Convex transcript table for shared per-plan admin chat history, distinct from per-adventure game chat.</li>
+<li>Added server-side plan-management checks before reading or writing admin chat history, using the existing S3 Adventure Plan and Setting permission model.</li>
+<li>Added an Admin Chat drawer to the Adventure Plan editor with scoped prompt targets, history loading, older-message pagination, assistant replies, and local application of supported text suggestions through existing editor state.</li>
+<li>Validation: <code>pnpm exec tsc --noEmit</code> passed and <code>pnpm build</code> passed. <code>pnpm lint</code> remains blocked by the known Biome config/schema mismatch.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-25</div>
 <section class="body"><h2>Implemented retained chat history</h2><ul>
 <li>Added authenticated paginated chat history loading for per-adventure game chat using the existing Convex <code>chat_messages</code> table and server-side <code>assertAdventureAccess</code> checks.</li>
 <li>Updated <code>GameChat</code> to load recent history on open, load older messages, preserve scroll position when prepending history, dedupe SSE-delivered rows, and keep unread tracking in localStorage.</li>

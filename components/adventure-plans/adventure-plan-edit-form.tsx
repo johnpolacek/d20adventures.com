@@ -1,6 +1,7 @@
 "use client"
 
 import { getOtherAdventurePlans } from "@/app/_actions/adventure-plan-actions"
+import { AdventurePlanAdminChat, type ChatTarget } from "@/components/adventure-plans/adventure-plan-admin-chat"
 import { AdventurePlanBasicInfo } from "@/components/adventure-plans/adventure-plan-basic-info"
 import { AdventurePlanCharactersEdit } from "@/components/adventure-plans/adventure-plan-characters-edit"
 import { AdventurePlanEditSidebar, type AdventurePlanEditorView } from "@/components/adventure-plans/adventure-plan-edit-sidebar"
@@ -218,6 +219,43 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
     }
   }
 
+  const handleAdminChatSuggestion = React.useCallback(
+    (target: ChatTarget, suggestedText: string) => {
+      const activeSection = sections[activeSectionIndex]
+      const activeScene = activeSection?.scenes[activeSceneIndex]
+      const encounterIndex = activeScene?.encounters.findIndex((encounter) => encounter.id === activeEncounterId) ?? -1
+      const effectiveEncounterIndex = encounterIndex >= 0 ? encounterIndex : activeScene?.encounters[0] ? 0 : -1
+
+      if (target === "teaser") {
+        setTeaser(suggestedText)
+        return true
+      }
+      if (target === "overview") {
+        setOverview(suggestedText)
+        return true
+      }
+      if (target === "section.summary" && activeSection) {
+        sectionHandlers.handleSectionSummaryChange(activeSectionIndex, suggestedText)
+        return true
+      }
+      if (target === "scene.summary" && activeScene) {
+        sectionHandlers.handleSceneSummaryChange(activeSectionIndex, activeSceneIndex, suggestedText)
+        return true
+      }
+      if (target === "encounter.intro" && effectiveEncounterIndex >= 0) {
+        encounterHandlers.handleEncounterIntroChange(activeSectionIndex, activeSceneIndex, effectiveEncounterIndex, suggestedText)
+        return true
+      }
+      if (target === "encounter.instructions" && effectiveEncounterIndex >= 0) {
+        encounterHandlers.handleEncounterInstructionsChange(activeSectionIndex, activeSceneIndex, effectiveEncounterIndex, suggestedText)
+        return true
+      }
+
+      return false
+    },
+    [activeEncounterId, activeSceneIndex, activeSectionIndex, encounterHandlers, sectionHandlers, sections, setOverview, setTeaser]
+  )
+
   return (
     <div className="pb-8 flex flex-wrap h-[80vh]">
       <AdventurePlanFormHeader
@@ -318,6 +356,16 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
           </Button>
         </div>
       </div>
+      <AdventurePlanAdminChat
+        adventurePlan={adventurePlan}
+        teaser={teaser}
+        overview={overview}
+        sections={sections}
+        sectionIndex={activeSectionIndex}
+        sceneIndex={activeSceneIndex}
+        activeEncounterId={activeEncounterId}
+        onApplySuggestion={handleAdminChatSuggestion}
+      />
     </div>
   )
 }
