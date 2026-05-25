@@ -873,8 +873,6 @@ function WikiNavigator({
 }) {
   const [query, setQuery] = React.useState("")
   const normalizedQuery = query.trim().toLowerCase()
-  const activeSection = wiki.moduleSections[activeSectionIndex]
-  const activeScene = activeSection?.scenes[activeSceneIndex]
   return (
     <div className="grid h-full min-h-0 grid-rows-[auto_1fr] bg-[linear-gradient(180deg,#171612_0%,#11100d_100%)]">
       <div className="grid h-11 grid-cols-[38px_minmax(0,1fr)_42px] bg-[#0f0e0c]/92 shadow-[0_10px_24px_rgba(0,0,0,.2)]">
@@ -910,39 +908,33 @@ function WikiNavigator({
               <PageGroup title="Adventure" pages={wiki.groups.find((group) => group.key === "adventure")!.pages} selectedPath={selectedPath} onSelect={onSelect} />
             )}
             <section className="mb-4">
-              <h3 className="mb-1.5 px-2 font-mono text-[9px] font-bold uppercase tracking-[.18em] text-[#bfa46f]">Sections</h3>
-              <div className="space-y-0.5">
+              <h3 className="mb-1.5 px-2 font-mono text-[9px] font-bold uppercase tracking-[.18em] text-[#bfa46f]">Module Outline</h3>
+              <div className="space-y-3">
                 {wiki.moduleSections.map((section, sectionIndex) => (
-                  <OutlineButton key={section.title} active={sectionIndex === activeSectionIndex} label={section.title} meta={`${section.scenes.length} scenes`} onClick={() => onSectionSelect(sectionIndex)} />
+                  <div key={section.title}>
+                    <OutlineButton active={sectionIndex === activeSectionIndex} label={section.title} meta={`${section.scenes.length} scenes`} level="section" onClick={() => onSectionSelect(sectionIndex)} />
+                    <div className="mt-1 space-y-2 pl-3">
+                      {section.scenes.map((scene, sceneIndex) => (
+                        <div key={`${section.title}-${scene.title}`}>
+                          <OutlineButton
+                            active={sectionIndex === activeSectionIndex && sceneIndex === activeSceneIndex}
+                            label={scene.title}
+                            meta={`${scene.pages.length} encounters`}
+                            level="scene"
+                            onClick={() => onSceneSelect(sectionIndex, sceneIndex)}
+                          />
+                          <div className="mt-0.5 space-y-0.5 pl-4">
+                            {scene.pages.map((page) => (
+                              <PageButton key={page.path} page={page} selectedPath={selectedPath} onSelect={onSelect} level="encounter" />
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             </section>
-            {activeSection && (
-              <section className="mb-4">
-                <h3 className="mb-1.5 px-2 font-mono text-[9px] font-bold uppercase tracking-[.18em] text-[#bfa46f]">Scenes</h3>
-                <div className="space-y-0.5">
-                  {activeSection.scenes.map((scene, sceneIndex) => (
-                    <OutlineButton
-                      key={`${activeSection.title}-${scene.title}`}
-                      active={sceneIndex === activeSceneIndex}
-                      label={scene.title}
-                      meta={`${scene.pages.length} encounters`}
-                      onClick={() => onSceneSelect(activeSectionIndex, sceneIndex)}
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
-            {activeScene && (
-              <section className="mb-4">
-                <h3 className="mb-1.5 px-2 font-mono text-[9px] font-bold uppercase tracking-[.18em] text-[#bfa46f]">Encounters</h3>
-                <div className="space-y-0.5">
-                  {activeScene.pages.map((page) => (
-                    <PageButton key={page.path} page={page} selectedPath={selectedPath} onSelect={onSelect} />
-                  ))}
-                </div>
-              </section>
-            )}
             {wiki.groups
               .filter((group) => !["adventure", "encounter"].includes(group.key))
               .map((group) => (
@@ -955,16 +947,16 @@ function WikiNavigator({
   )
 }
 
-function OutlineButton({ active, label, meta, onClick }: { active: boolean; label: string; meta: string; onClick: () => void }) {
+function OutlineButton({ active, label, meta, level, onClick }: { active: boolean; label: string; meta: string; level: "section" | "scene"; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`group relative flex min-h-10 w-full items-center justify-between gap-3 rounded-r rounded-l-none px-2.5 text-left transition-[background-color,box-shadow,scale] duration-150 active:scale-[0.96] ${
+      className={`group relative flex w-full items-center justify-between gap-3 rounded-r rounded-l-none px-2.5 text-left transition-[background-color,box-shadow,scale] duration-150 active:scale-[0.96] ${
         active ? "bg-[#2a251e] text-[#fff5dd] shadow-[inset_1px_0_0_rgba(216,189,129,.72),0_8px_18px_rgba(0,0,0,.12)]" : "text-stone-300 hover:bg-[#211d17] hover:text-[#f2e5c9]"
-      }`}
+      } ${level === "section" ? "min-h-10" : "min-h-8"}`}
     >
-      <span className="min-w-0 truncate font-serif text-sm font-bold leading-5">{label}</span>
+      <span className={`min-w-0 truncate leading-5 ${level === "section" ? "font-serif text-sm font-bold" : "font-mono text-[10px] font-bold uppercase tracking-[.14em]"}`}>{label}</span>
       <span className="shrink-0 font-mono text-[9px] uppercase tracking-[.12em] text-stone-600">{meta}</span>
     </button>
   )
@@ -983,16 +975,16 @@ function PageGroup({ title, pages, selectedPath, onSelect }: { title: string; pa
   )
 }
 
-function PageButton({ page, selectedPath, onSelect }: { page: WikiPage; selectedPath: string; onSelect: (path: string) => void }) {
+function PageButton({ page, selectedPath, onSelect, level = "root" }: { page: WikiPage; selectedPath: string; onSelect: (path: string) => void; level?: "root" | "encounter" }) {
   const isSelected = page.path === selectedPath
   const isEncounter = page.kind === "encounter"
   return (
     <button
       type="button"
       onClick={() => onSelect(page.path)}
-      className={`group relative flex min-h-9 w-full items-center rounded-r rounded-l-none px-2.5 text-left transition-[background-color,box-shadow,scale] duration-150 active:scale-[0.96] ${
+      className={`group relative flex w-full items-center rounded-r rounded-l-none px-2.5 text-left transition-[background-color,box-shadow,scale] duration-150 active:scale-[0.96] ${
         isSelected ? "bg-[#2a251e] text-[#fff5dd] shadow-[inset_1px_0_0_rgba(216,189,129,.72),0_8px_18px_rgba(0,0,0,.12)]" : "text-stone-300 hover:bg-[#211d17] hover:text-[#f2e5c9]"
-      }`}
+      } ${level === "encounter" ? "min-h-8" : "min-h-9"}`}
     >
       <span className="min-w-0">
         <span className={`block truncate ${isEncounter ? "text-[13px] leading-5" : "text-sm leading-5"}`}>{page.title}</span>
