@@ -5,6 +5,15 @@
 <header><p class="eyebrow">Project-context log</p><h1>Decision history</h1><p>Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.</p></header>
 <article class="entry">
 <div class="date">2026-05-25</div>
+<section class="body"><h2>Fixed admin chat review context</h2><ul>
+<li>Updated Admin Chat to distinguish advisory review prompts from rewrite prompts so evaluation requests do not produce source-edit refusals or suggestion blocks.</li>
+<li>Expanded Admin Chat context with a compact plan outline and full active-section scene and encounter details from the current editor state.</li>
+<li>Added a section-review target for section-level analysis and gated server console diagnostics behind <code>ADMIN_CHAT_DEBUG=true</code>.</li>
+<li>Validation: <code>pnpm exec tsc --noEmit</code> passed and <code>pnpm build</code> passed. <code>pnpm lint</code> remains blocked by the known Biome config/schema mismatch.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-25</div>
 <section class="body"><h2>Implemented admin adventure plan chat history</h2><ul>
 <li>Added <code>wiki/plans/features/admin-adventure-plan-chat-history.html</code> and updated the planning dashboard for the focused admin authoring chat feature.</li>
 <li>Added a separate Convex transcript table for shared per-plan admin chat history, distinct from per-adventure game chat.</li>

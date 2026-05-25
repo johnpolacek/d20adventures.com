@@ -52,6 +52,8 @@ type SendMessageInput = {
     encounterIntro?: string
     encounterInstructions?: string
   }
+  planOutline?: string
+  sectionContext?: string
 }
 
 async function assertCanManageAdventurePlan(settingId: string, adventurePlanId: string) {
@@ -85,17 +87,39 @@ function compact(value: string | undefined, max = 1800) {
   return value.length > max ? `${value.slice(0, max)}...` : value
 }
 
-function buildAssistantPrompt(input: SendMessageInput, adventurePlan: AdventurePlan) {
+function isReviewRequest(content: string) {
+  return /\b(evaluate|review|audit|analy[sz]e|assess|check|detailed enough|ready|sufficient|transition)\b/i.test(content)
+}
+
+function wantsReplacement(content: string) {
+  return /\b(rewrite|replace|revise|update|draft|write|polish|improve|expand)\b/i.test(content)
+}
+
+function preview(value: string, max = 2500) {
+  return value.length > max ? `${value.slice(0, max)}...` : value
+}
+
+function debugAdminChat(requestId: string, label: string, data: Record<string, unknown>) {
+  if (process.env.ADMIN_CHAT_DEBUG !== "true") return
+  console.log(`[admin-chat:${requestId}] ${label}`, JSON.stringify(data, null, 2))
+}
+
+function buildAssistantPrompt(input: SendMessageInput, adventurePlan: AdventurePlan, mode: "review" | "rewrite" | "general") {
   return `You are an admin authoring assistant for D20 Adventures.
 
 Help an adventure designer revise a JSON-backed Adventure Plan. Be concise and practical.
 
 Rules:
+- This editor is backed by JSON Adventure Plan data, not markdown source files.
+- You cannot edit files or write source objects directly.
+- Never invent source paths, markdown filenames, filesystem refusals, or messages like "refusing to edit source outside this adventure."
+- If the admin asks to evaluate, review, audit, analyze, assess, or check readiness, answer as an advisor using the provided JSON context.
 - Do not claim that you changed the adventure plan directly.
-- If you propose replacement text for the selected target, include it in one fenced code block labeled suggestion.
+- Only include a fenced code block labeled suggestion when the admin explicitly asks you to rewrite, replace, revise, update, draft, polish, improve, or expand the selected target.
 - Keep any suggested replacement text ready to paste into the selected field.
 - If the request is not about replacing the selected field, answer normally and do not include a suggestion block.
 - Avoid semicolons and em dashes in user-visible prose.
+- Current request mode: ${mode}
 
 Selected target:
 - Label: ${input.scope.label}
@@ -118,6 +142,12 @@ Adventure context:
 - Encounter title: ${input.planContext.encounterTitle || "None"}
 - Encounter intro: ${compact(input.planContext.encounterIntro)}
 - Encounter instructions: ${compact(input.planContext.encounterInstructions)}
+
+Plan outline from current editor state:
+${compact(input.planOutline, 6000)}
+
+Active section context from current editor state:
+${compact(input.sectionContext, 9000)}
 
 Admin request:
 ${input.content}`
@@ -149,6 +179,8 @@ export async function sendAdventurePlanChatMessage(input: SendMessageInput) {
   const content = input.content.trim()
   if (!content) throw new Error("Message is required")
 
+  const requestId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
+  const mode = wantsReplacement(content) ? "rewrite" : isReviewRequest(content) ? "review" : "general"
   const { userId, adventurePlan } = await assertCanManageAdventurePlan(input.settingId, input.adventurePlanId)
   const displayName = await getDisplayName(userId)
 
@@ -162,8 +194,18 @@ export async function sendAdventurePlanChatMessage(input: SendMessageInput) {
     scope: input.scope,
   })
 
-  const { text } = await generateText({
-    prompt: buildAssistantPrompt(input, adventurePlan),
+  const prompt = buildAssistantPrompt(input, adventurePlan, mode)
+  debugAdminChat(requestId, "request", {
+    settingId: input.settingId,
+    adventurePlanId: input.adventurePlanId,
+    scope: input.scope,
+    mode,
+    promptPreview: preview(prompt),
+  })
+
+  const { text } = await generateText({ prompt })
+  debugAdminChat(requestId, "response", {
+    responsePreview: preview(text),
   })
   const parsed = extractSuggestion(text)
 

@@ -234,6 +234,9 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
         setOverview(suggestedText)
         return true
       }
+      if (target === "section.review") {
+        return false
+      }
       if (target === "section.summary" && activeSection) {
         sectionHandlers.handleSectionSummaryChange(activeSectionIndex, suggestedText)
         return true

@@ -23,6 +23,7 @@ const CHAT_PAGE_SIZE = 50
 export type ChatTarget =
   | "teaser"
   | "overview"
+  | "section.review"
   | "section.summary"
   | "scene.summary"
   | "encounter.intro"
@@ -61,6 +62,66 @@ function mergeMessages(current: AdventurePlanChatMessage[], incoming: AdventureP
   return mode === "prepend" ? [...uniqueIncoming, ...current] : [...current, ...uniqueIncoming]
 }
 
+function compactText(value: string | undefined, max = 900) {
+  if (!value) return "None"
+  return value.length > max ? `${value.slice(0, max)}...` : value
+}
+
+function buildPlanOutline(sections: AdventureSection[]) {
+  return sections
+    .map((section, sectionIndex) => {
+      const scenes = section.scenes
+        .map((scene, sceneIndex) => {
+          const encounters = scene.encounters
+            .map((encounter) => {
+              const transitions = encounter.transitions?.map((transition) => `${transition.condition} -> ${transition.encounter}`).join(" | ") || "No transitions"
+              return `      Encounter: ${encounter.title || encounter.id} (${encounter.id})\n        Intro: ${compactText(encounter.intro, 260)}\n        GM instructions: ${compactText(encounter.instructions, 260)}\n        Transitions: ${transitions}`
+            })
+            .join("\n")
+          return `  Scene ${sceneIndex + 1}: ${scene.title || "Untitled scene"}\n    Summary: ${compactText(scene.summary, 360)}\n${encounters || "    No encounters"}`
+        })
+        .join("\n")
+      return `Section ${sectionIndex + 1}: ${section.title || "Untitled section"}\nSummary: ${compactText(section.summary, 500)}\n${scenes || "  No scenes"}`
+    })
+    .join("\n\n")
+}
+
+function buildSectionContext(section: AdventureSection | undefined, sectionIndex: number) {
+  if (!section) return "No active section."
+  const scenes = section.scenes
+    .map((scene, sceneIndex) => {
+      const encounters = scene.encounters
+        .map((encounter) => {
+          const transitions = encounter.transitions?.map((transition) => `- ${transition.condition} -> ${transition.encounter}`).join("\n") || "- No transitions"
+          const npcs = encounter.npc?.map((npc) => `- ${npc.id}: ${npc.behavior}`).join("\n") || "- No NPC refs"
+          return `Encounter: ${encounter.title || encounter.id}
+ID: ${encounter.id}
+Intro:
+${compactText(encounter.intro, 1200)}
+GM instructions:
+${compactText(encounter.instructions, 1200)}
+Transitions:
+${transitions}
+NPC refs:
+${npcs}`
+        })
+        .join("\n\n")
+      return `Scene ${sceneIndex + 1}: ${scene.title || "Untitled scene"}
+Summary:
+${compactText(scene.summary, 900)}
+
+${encounters || "No encounters"}`
+    })
+    .join("\n\n")
+
+  return `Section ${sectionIndex + 1}: ${section.title || "Untitled section"}
+Summary:
+${compactText(section.summary, 1200)}
+
+Scenes:
+${scenes || "No scenes"}`
+}
+
 export function AdventurePlanAdminChat({
   adventurePlan,
   teaser,
@@ -94,6 +155,7 @@ export function AdventurePlanAdminChat({
     ]
 
     if (section) {
+      options.push({ target: "section.review", label: `Section Review: ${section.title || `Section ${sectionIndex + 1}`}` })
       options.push({ target: "section.summary", label: `Section Summary: ${section.title || `Section ${sectionIndex + 1}`}` })
     }
 
@@ -142,6 +204,9 @@ export function AdventurePlanAdminChat({
     }),
     [adventurePlan.title, encounter, overview, scene, section, teaser]
   )
+
+  const planOutline = React.useMemo(() => buildPlanOutline(sections), [sections])
+  const sectionContext = React.useMemo(() => buildSectionContext(section, sectionIndex), [section, sectionIndex])
 
   const loadLatest = React.useCallback(async () => {
     setIsLoading(true)
@@ -205,6 +270,8 @@ export function AdventurePlanAdminChat({
         content,
         scope,
         planContext,
+        planOutline,
+        sectionContext,
       })
       setMessages((current) => mergeMessages(current, result.messages, "append"))
     } catch (err) {
