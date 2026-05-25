@@ -338,7 +338,13 @@ export function AdventurePlanAdminChat({
             </div>
           </div>
 
-          <div className="space-y-2">
+          <form
+            className="space-y-2"
+            onSubmit={(event) => {
+              event.preventDefault()
+              void sendMessage()
+            }}
+          >
             <Textarea
               value={input}
               onChange={(event) => setInput(event.target.value)}
@@ -349,18 +355,18 @@ export function AdventurePlanAdminChat({
               onKeyDown={(event) => {
                 if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
                   event.preventDefault()
-                  void sendMessage()
+                  event.currentTarget.form?.requestSubmit()
                 }
               }}
             />
             <div className="flex items-center justify-between gap-3">
               <div className="text-xs text-white/45">Press Cmd Enter to send.</div>
-              <Button variant="epic" size="sm" disabled={!input.trim() || isSending} onClick={() => void sendMessage()} className="px-4 py-2 text-xs">
+              <Button type="submit" variant="epic" size="sm" disabled={!input.trim() || isSending} className="px-4 py-2 text-xs">
                 <Send className="mr-2 h-4 w-4" />
                 {isSending ? "Sending..." : "Send"}
               </Button>
             </div>
-          </div>
+          </form>
         </div>
       </SheetContent>
     </Sheet>
