@@ -52,13 +52,25 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
   const [busy, setBusy] = React.useState(false)
   const [sectionsSidebarOpen, setSectionsSidebarOpen] = React.useState(true)
   const [revisionDrawerOpen, setRevisionDrawerOpen] = React.useState(false)
+  const pendingScrollPathRef = React.useRef<string | null>(null)
   const selectedFile = state.files.find((file) => file.path === selectedPath) ?? state.files[0]
   const wiki = React.useMemo(() => buildWikiModel(state.files, state.encounters), [state.files, state.encounters])
   const selectedPage = wiki.pagesByPath.get(selectedFile?.path ?? "")
+  const selectedSceneLocation = React.useMemo(() => sceneLocationForPath(wiki, selectedPath), [wiki, selectedPath])
+  const selectedScene = selectedSceneLocation ? wiki.moduleSections[selectedSceneLocation.sectionIndex]?.scenes[selectedSceneLocation.sceneIndex] : undefined
   const sectionCount = wiki.moduleSections.length
   const encounterCount = Object.keys(state.encounters).length
   const npcCount = Object.keys(state.characterSheets.npcs).length
   const hasChatStarted = messages.length > 0
+
+  React.useEffect(() => {
+    const pendingPath = pendingScrollPathRef.current
+    if (!pendingPath) return
+    pendingScrollPathRef.current = null
+    window.requestAnimationFrame(() => {
+      document.getElementById(encounterDomId(pendingPath))?.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" })
+    })
+  }, [selectedPath])
 
   async function refresh() {
     const next = await loadAdminWikiAdventureStateAction(state.definition.settingId, state.definition.planId)
@@ -117,6 +129,27 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
     }
   }
 
+  function selectPath(path: string, options?: { scroll?: boolean }) {
+    if (options?.scroll) {
+      pendingScrollPathRef.current = path
+    }
+    setSelectedPath(path)
+  }
+
+  function selectSection(sectionIndex: number) {
+    const firstPage = wiki.moduleSections[sectionIndex]?.scenes[0]?.pages[0]
+    if (firstPage) {
+      selectPath(firstPage.path, { scroll: true })
+    }
+  }
+
+  function selectScene(sectionIndex: number, sceneIndex: number) {
+    const firstPage = wiki.moduleSections[sectionIndex]?.scenes[sceneIndex]?.pages[0]
+    if (firstPage) {
+      selectPath(firstPage.path, { scroll: true })
+    }
+  }
+
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-[#141312] pt-10 text-stone-100">
       <header className="shrink-0 border-b border-[#3a3630] bg-[#1b1a18] px-6 pt-4 pb-3 shadow-[0_18px_60px_rgba(0,0,0,.22)]">
@@ -137,7 +170,16 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
       <main className={`grid min-h-0 flex-1 grid-cols-1 overflow-hidden ${sectionsSidebarOpen ? "xl:grid-cols-[320px_minmax(0,1fr)_400px]" : "xl:grid-cols-[minmax(0,1fr)_400px]"}`}>
         {sectionsSidebarOpen && (
           <aside className="min-h-0 overflow-hidden border-b border-[#3a3630] bg-[#181713] xl:border-r xl:border-b-0">
-            <WikiNavigator wiki={wiki} selectedPath={selectedPath} onSelect={setSelectedPath} onCollapse={() => setSectionsSidebarOpen(false)} />
+            <WikiNavigator
+              wiki={wiki}
+              selectedPath={selectedPath}
+              activeSectionIndex={selectedSceneLocation?.sectionIndex ?? 0}
+              activeSceneIndex={selectedSceneLocation?.sceneIndex ?? 0}
+              onSelect={(path) => selectPath(path, { scroll: true })}
+              onSectionSelect={selectSection}
+              onSceneSelect={selectScene}
+              onCollapse={() => setSectionsSidebarOpen(false)}
+            />
           </aside>
         )}
 
@@ -146,7 +188,20 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
             <WikiPageHeader page={selectedPage} sectionsSidebarOpen={sectionsSidebarOpen} onRestoreSectionsSidebar={() => setSectionsSidebarOpen(true)} />
             <div className="min-h-0 overflow-y-auto">
               <div className="p-6">
-                <ModulePageEditor file={selectedFile} files={state.files} manifest={state.manifest} encounters={state.encounters} page={selectedPage} disabled={busy} onSave={saveFile} />
+                {selectedScene && selectedPage?.kind === "encounter" ? (
+                  <SceneEncounterEditor
+                    scene={selectedScene}
+                    selectedPath={selectedPath}
+                    files={state.files}
+                    manifest={state.manifest}
+                    encounters={state.encounters}
+                    disabled={busy}
+                    onActivePathChange={setSelectedPath}
+                    onSave={saveFile}
+                  />
+                ) : (
+                  <ModulePageEditor file={selectedFile} files={state.files} manifest={state.manifest} encounters={state.encounters} page={selectedPage} disabled={busy} onSave={saveFile} />
+                )}
               </div>
             </div>
           </div>
@@ -235,6 +290,63 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
           </div>
         </aside>
       </main>
+    </div>
+  )
+}
+
+function SceneEncounterEditor({
+  scene,
+  selectedPath,
+  files,
+  manifest,
+  encounters,
+  disabled,
+  onActivePathChange,
+  onSave,
+}: {
+  scene: ModuleSection["scenes"][number]
+  selectedPath: string
+  files: SourceFile[]
+  manifest: RuntimeManifest
+  encounters: Record<string, RuntimeEncounter>
+  disabled: boolean
+  onActivePathChange: (path: string) => void
+  onSave: (path: string, content: string) => void
+}) {
+  React.useEffect(() => {
+    const scrollContainer = document.querySelector("main section .overflow-y-auto")
+    if (!scrollContainer) return
+    const targets = scene.pages.map((page) => document.getElementById(encounterDomId(page.path))).filter((element): element is HTMLElement => Boolean(element))
+    if (targets.length === 0) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => Math.abs(a.boundingClientRect.top - scrollContainer.getBoundingClientRect().top) - Math.abs(b.boundingClientRect.top - scrollContainer.getBoundingClientRect().top))[0]
+        const path = scene.pages.find((page) => encounterDomId(page.path) === (visible?.target as HTMLElement | undefined)?.id)?.path
+        if (path) onActivePathChange(path)
+      },
+      { root: scrollContainer, threshold: [0.25, 0.55] }
+    )
+    targets.forEach((target) => observer.observe(target))
+    return () => observer.disconnect()
+  }, [scene.pages, onActivePathChange])
+
+  return (
+    <div className="mx-auto max-w-6xl space-y-8">
+      <div className="rounded-md border border-[#4a4237] bg-[#171512] px-4 py-3">
+        <div className="font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#d8bd81]">Scene</div>
+        <h2 className="mt-1 font-serif text-2xl font-bold leading-tight text-[#f4ead7]">{scene.title}</h2>
+        <p className="mt-1 text-sm text-stone-500">{scene.pages.length} encounters loaded in order</p>
+      </div>
+      {scene.pages.map((page) => {
+        const file = files.find((item) => item.path === page.path)
+        return (
+          <div key={page.path} id={encounterDomId(page.path)} className={selectedPath === page.path ? "scroll-mt-6 ring-2 ring-[#d8bd81]/45 ring-offset-4 ring-offset-[#201d18]" : "scroll-mt-6"}>
+            <ModulePageEditor file={file} files={files} manifest={manifest} encounters={encounters} page={page} disabled={disabled} onSave={onSave} />
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -740,9 +852,29 @@ type ModuleSection = {
   scenes: Array<{ title: string; pages: WikiPage[] }>
 }
 
-function WikiNavigator({ wiki, selectedPath, onSelect, onCollapse }: { wiki: WikiModel; selectedPath: string; onSelect: (path: string) => void; onCollapse: () => void }) {
+function WikiNavigator({
+  wiki,
+  selectedPath,
+  activeSectionIndex,
+  activeSceneIndex,
+  onSelect,
+  onSectionSelect,
+  onSceneSelect,
+  onCollapse,
+}: {
+  wiki: WikiModel
+  selectedPath: string
+  activeSectionIndex: number
+  activeSceneIndex: number
+  onSelect: (path: string) => void
+  onSectionSelect: (sectionIndex: number) => void
+  onSceneSelect: (sectionIndex: number, sceneIndex: number) => void
+  onCollapse: () => void
+}) {
   const [query, setQuery] = React.useState("")
   const normalizedQuery = query.trim().toLowerCase()
+  const activeSection = wiki.moduleSections[activeSectionIndex]
+  const activeScene = activeSection?.scenes[activeSceneIndex]
   return (
     <div className="grid h-full min-h-0 grid-rows-[auto_1fr] bg-[linear-gradient(180deg,#171612_0%,#11100d_100%)]">
       <div className="grid h-11 grid-cols-[38px_minmax(0,1fr)_42px] bg-[#0f0e0c]/92 shadow-[0_10px_24px_rgba(0,0,0,.2)]">
@@ -777,21 +909,40 @@ function WikiNavigator({ wiki, selectedPath, onSelect, onCollapse }: { wiki: Wik
             {wiki.groups.find((group) => group.key === "adventure") && (
               <PageGroup title="Adventure" pages={wiki.groups.find((group) => group.key === "adventure")!.pages} selectedPath={selectedPath} onSelect={onSelect} />
             )}
-            {wiki.moduleSections.map((section) => (
-              <section key={section.title} className="mb-4">
-                <h3 className="mb-1.5 px-2 font-serif text-sm font-bold leading-5 text-[#d8c8aa]">{section.title}</h3>
-                {section.scenes.map((scene) => (
-                  <div key={`${section.title}-${scene.title}`} className="mb-2.5">
-                    <h4 className="mb-1 px-2 font-mono text-[9px] font-bold uppercase tracking-[.14em] text-stone-500">{scene.title}</h4>
-                    <div className="space-y-0.5">
-                      {scene.pages.map((page) => (
-                        <PageButton key={page.path} page={page} selectedPath={selectedPath} onSelect={onSelect} />
-                      ))}
-                    </div>
-                  </div>
+            <section className="mb-4">
+              <h3 className="mb-1.5 px-2 font-mono text-[9px] font-bold uppercase tracking-[.18em] text-[#bfa46f]">Sections</h3>
+              <div className="space-y-0.5">
+                {wiki.moduleSections.map((section, sectionIndex) => (
+                  <OutlineButton key={section.title} active={sectionIndex === activeSectionIndex} label={section.title} meta={`${section.scenes.length} scenes`} onClick={() => onSectionSelect(sectionIndex)} />
                 ))}
+              </div>
+            </section>
+            {activeSection && (
+              <section className="mb-4">
+                <h3 className="mb-1.5 px-2 font-mono text-[9px] font-bold uppercase tracking-[.18em] text-[#bfa46f]">Scenes</h3>
+                <div className="space-y-0.5">
+                  {activeSection.scenes.map((scene, sceneIndex) => (
+                    <OutlineButton
+                      key={`${activeSection.title}-${scene.title}`}
+                      active={sceneIndex === activeSceneIndex}
+                      label={scene.title}
+                      meta={`${scene.pages.length} encounters`}
+                      onClick={() => onSceneSelect(activeSectionIndex, sceneIndex)}
+                    />
+                  ))}
+                </div>
               </section>
-            ))}
+            )}
+            {activeScene && (
+              <section className="mb-4">
+                <h3 className="mb-1.5 px-2 font-mono text-[9px] font-bold uppercase tracking-[.18em] text-[#bfa46f]">Encounters</h3>
+                <div className="space-y-0.5">
+                  {activeScene.pages.map((page) => (
+                    <PageButton key={page.path} page={page} selectedPath={selectedPath} onSelect={onSelect} />
+                  ))}
+                </div>
+              </section>
+            )}
             {wiki.groups
               .filter((group) => !["adventure", "encounter"].includes(group.key))
               .map((group) => (
@@ -801,6 +952,21 @@ function WikiNavigator({ wiki, selectedPath, onSelect, onCollapse }: { wiki: Wik
         )}
       </div>
     </div>
+  )
+}
+
+function OutlineButton({ active, label, meta, onClick }: { active: boolean; label: string; meta: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`group relative flex min-h-10 w-full items-center justify-between gap-3 rounded-r rounded-l-none px-2.5 text-left transition-[background-color,box-shadow,scale] duration-150 active:scale-[0.96] ${
+        active ? "bg-[#2a251e] text-[#fff5dd] shadow-[inset_1px_0_0_rgba(216,189,129,.72),0_8px_18px_rgba(0,0,0,.12)]" : "text-stone-300 hover:bg-[#211d17] hover:text-[#f2e5c9]"
+      }`}
+    >
+      <span className="min-w-0 truncate font-serif text-sm font-bold leading-5">{label}</span>
+      <span className="shrink-0 font-mono text-[9px] uppercase tracking-[.12em] text-stone-600">{meta}</span>
+    </button>
   )
 }
 
@@ -955,6 +1121,21 @@ function buildModuleSections(pages: WikiPage[]): ModuleSection[] {
     title,
     scenes: Array.from(sceneMap.entries()).map(([title, pages]) => ({ title, pages })),
   }))
+}
+
+function sceneLocationForPath(wiki: WikiModel, path: string) {
+  for (const [sectionIndex, section] of wiki.moduleSections.entries()) {
+    for (const [sceneIndex, scene] of section.scenes.entries()) {
+      if (scene.pages.some((page) => page.path === path)) {
+        return { sectionIndex, sceneIndex }
+      }
+    }
+  }
+  return null
+}
+
+function encounterDomId(path: string) {
+  return `wiki-encounter-${path.replace(/[^a-zA-Z0-9_-]/g, "-")}`
 }
 
 function encounterOrder(path: string, encounters: Record<string, RuntimeEncounter>) {
