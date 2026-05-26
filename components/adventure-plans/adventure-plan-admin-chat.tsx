@@ -11,7 +11,6 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { Textarea } from "@/components/ui/textarea"
 import { parseStructureProposal, summarizeStructureProposal, type StructureProposal } from "@/lib/adventure-plan-structure"
 import type { AdventurePlan, AdventureSection } from "@/types/adventure-plan"
 import type { Id } from "@/convex/_generated/dataModel"
@@ -345,6 +344,19 @@ export function AdventurePlanAdminChat({
     }
   }
 
+  React.useEffect(() => {
+    if (!open) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Enter" || (!event.metaKey && !event.ctrlKey)) return
+      event.preventDefault()
+      void sendMessage()
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [open, sendMessage])
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
@@ -362,7 +374,7 @@ export function AdventurePlanAdminChat({
           <div className="text-xs text-primary-200/75">Shared authoring history for this adventure plan.</div>
         </SheetHeader>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden px-4 pb-4">
+        <div className="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)_auto] gap-3 overflow-hidden px-4 pb-4">
           <div className="shrink-0 rounded-md border border-white/10 bg-black/25 p-3">
             <label htmlFor="admin-chat-target" className="mb-1 block text-xs font-mono uppercase tracking-widest text-primary-200/80">
               Edit Target
@@ -381,7 +393,7 @@ export function AdventurePlanAdminChat({
             </select>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto rounded-md border border-white/10 bg-black/30 p-3 [scrollbar-width:thin]">
+          <div className="min-h-0 overflow-y-auto rounded-md border border-white/10 bg-black/30 p-3 [scrollbar-width:thin]">
             <div className="mb-3 flex justify-center">
               <Button variant="outline" size="sm" onClick={loadOlder} disabled={!hasOlderMessages || isLoadingOlder || isLoading}>
                 <History className="mr-2 h-4 w-4" />
@@ -455,13 +467,14 @@ export function AdventurePlanAdminChat({
               void sendMessage()
             }}
           >
-            <Textarea
+            <textarea
               value={input}
               onChange={(event) => setInput(event.target.value)}
               disabled={isSending}
               rows={4}
               placeholder="Ask for a rewrite, expansion, continuity check, or GM-facing polish..."
-              className="h-28 max-h-28 resize-none overflow-y-auto border-white/15 bg-black/40 text-white [field-sizing:fixed] placeholder:text-white/35"
+              style={{ fieldSizing: "fixed" } as React.CSSProperties}
+              className="block h-28 min-h-0 max-h-28 w-full resize-none overflow-y-auto rounded-md border border-white/15 bg-black/40 px-3 py-2 text-sm leading-5 text-white outline-none placeholder:text-white/35 focus-visible:border-amber-300/60 focus-visible:ring-2 focus-visible:ring-amber-300/25 disabled:cursor-not-allowed disabled:opacity-50"
               onKeyDown={(event) => {
                 if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
                   event.preventDefault()
