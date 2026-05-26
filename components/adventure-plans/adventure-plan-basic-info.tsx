@@ -34,7 +34,7 @@ interface AdventurePlanBasicInfoProps {
   nextAdventure: string
   setNextAdventure: (val: string) => void
   otherAdventurePlans: { id: string; title: string }[]
-  saveAdventurePlan: (overrideImage?: string, overrideDraft?: boolean, characterOptions?: { races: string[]; archetypes: string[] }, nextAdventureId?: string) => Promise<void>
+  saveAdventurePlan: (overrideImage?: string, overrideDraft?: boolean, characterOptions?: { races: string[]; archetypes: string[] }, nextAdventureId?: string) => Promise<boolean>
 }
 
 export function AdventurePlanBasicInfo({

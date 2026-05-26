@@ -11,7 +11,7 @@ import { Badge } from "../ui/badge"
 interface AdventurePlanFormHeaderProps {
   isSaving: boolean
   onDownload: () => void
-  onSave: (overrideImage?: string, overrideDraft?: boolean) => void
+  onSave: (overrideImage?: string, overrideDraft?: boolean) => Promise<boolean>
   draft: boolean
   setDraft: (draft: boolean) => void
 }

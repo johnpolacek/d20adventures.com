@@ -4,6 +4,7 @@ import { generateText } from "@/lib/ai"
 import { currentModel } from "@/lib/ai/llm"
 import { api, convex } from "@/lib/convex/server"
 import { canManageResource } from "@/lib/content-permissions"
+import { parseStructureProposal } from "@/lib/adventure-plan-structure"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { Setting } from "@/types/setting"
@@ -30,7 +31,9 @@ export type AdventurePlanChatMessage = {
   proposal?: {
     status: "proposed" | "used" | "dismissed"
     target: string
+    kind?: "text" | "structure"
     suggestedText: string
+    operationsJson?: string
     sourceMessageId?: Id<"adventure_plan_chat_messages">
   }
   contextReport?: AdventurePlanChatContextReport
@@ -120,10 +123,14 @@ function wantsReplacement(content: string) {
   return /\b(rewrite|replace|revise|update|draft|write|polish|improve|expand)\b/i.test(content)
 }
 
+function wantsStructureChange(content: string) {
+  return /\b(add|append|create|insert|new|draft)\b[\s\S]{0,80}\b(section|scene|encounter|aftermath)\b/i.test(content) || /\b(section|scene|encounter|aftermath)\b[\s\S]{0,80}\b(add|append|create|insert|new|draft)\b/i.test(content)
+}
+
 function formatChatMessageForPrompt(message: AdventurePlanChatMessage) {
   const scope = message.scope?.label ? ` | scope: ${message.scope.label}` : ""
   const proposal = message.proposal?.suggestedText
-    ? `\nProposal status: ${message.proposal.status}\nProposal target: ${message.proposal.target}\nSuggested text:\n${message.proposal.suggestedText}`
+    ? `\nProposal status: ${message.proposal.status}\nProposal target: ${message.proposal.target}\nProposal kind: ${message.proposal.kind || "text"}\nSuggested text:\n${message.proposal.suggestedText}${message.proposal.operationsJson ? `\nStructural operations JSON:\n${message.proposal.operationsJson}` : ""}`
     : ""
 
   return `[${message.role.toUpperCase()} | ${message.displayName} | ${new Date(message.createdAt).toISOString()}${scope}]
@@ -144,7 +151,7 @@ function getContextStatus(percentUsed: number, omittedMessages: number): Adventu
 function buildAssistantPrompt(
   input: SendMessageInput,
   adventurePlan: AdventurePlan,
-  mode: "review" | "rewrite" | "general",
+  mode: "review" | "rewrite" | "structure" | "general",
   threadContext: string,
   omittedMessages: number
 ) {
@@ -159,10 +166,43 @@ Rules:
 - If the admin asks to evaluate, review, audit, analyze, assess, or check readiness, answer as an advisor using the provided JSON context.
 - Do not claim that you changed the adventure plan directly.
 - Only include a fenced code block labeled suggestion when the admin explicitly asks you to rewrite, replace, revise, update, draft, polish, improve, or expand the selected target.
+- If the admin asks to add, append, create, insert, or draft a new section, scene, or encounter, produce one fenced code block labeled suggestion-json containing a structural proposal JSON object.
+- For structural proposals, include complete section titles and summaries, complete scene titles and summaries, and complete encounter titles, intros, and GM instructions. The JSON must be ready to apply.
+- For structural proposals, never use markdown inside the JSON string values unless it is part of player-facing prose.
 - Keep any suggested replacement text ready to paste into the selected field.
 - If the request is not about replacing the selected field, answer normally and do not include a suggestion block.
 - Avoid semicolons and em dashes in user-visible prose.
 - Current request mode: ${mode}
+
+Structural proposal JSON shape:
+{
+  "operations": [
+    {
+      "type": "insertSection",
+      "position": "end",
+      "section": {
+        "title": "Section title",
+        "summary": "Required section summary",
+        "scenes": [
+          {
+            "title": "Scene title",
+            "summary": "Required scene summary",
+            "encounters": [
+              {
+                "id": "optional-slug-id",
+                "title": "Encounter title",
+                "intro": "Player-facing opening narration.",
+                "instructions": "Required GM-facing instructions for running the encounter.",
+                "transitions": [],
+                "npc": []
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
 
 Selected target:
 - Label: ${input.scope.label}
@@ -202,7 +242,7 @@ Admin request:
 ${input.content}`
 }
 
-function buildPromptWithThreadContext(input: SendMessageInput, adventurePlan: AdventurePlan, mode: "review" | "rewrite" | "general", threadMessages: AdventurePlanChatMessage[]) {
+function buildPromptWithThreadContext(input: SendMessageInput, adventurePlan: AdventurePlan, mode: "review" | "rewrite" | "structure" | "general", threadMessages: AdventurePlanChatMessage[]) {
   const promptBudget = ADMIN_CHAT_CONTEXT_WINDOW_TOKENS - ADMIN_CHAT_RESERVED_OUTPUT_TOKENS - ADMIN_CHAT_CONTEXT_SAFETY_TOKENS
   const includedMessages = [...threadMessages]
   let omittedMessages = 0
@@ -227,7 +267,27 @@ function buildPromptWithThreadContext(input: SendMessageInput, adventurePlan: Ad
   }
 }
 
-function extractSuggestion(text: string): { cleaned: string; suggestedText?: string } {
+function extractSuggestion(text: string): { cleaned: string; suggestedText?: string; operationsJson?: string } {
+  const jsonMatch = text.match(/```suggestion-json\s*([\s\S]*?)```/i)
+  if (jsonMatch) {
+    const operationsJson = jsonMatch[1].trim()
+    try {
+      parseStructureProposal(operationsJson)
+    } catch (error) {
+      const cleaned = text.replace(jsonMatch[0], "").trim()
+      const validationMessage = error instanceof Error ? error.message : "The structural proposal JSON was invalid."
+      return {
+        cleaned: `${cleaned ? `${cleaned}\n\n` : ""}I drafted a structural change, but it did not pass validation: ${validationMessage}`,
+      }
+    }
+    const cleaned = text.replace(jsonMatch[0], "").trim()
+    return {
+      cleaned: cleaned || "I drafted a structural change for the adventure plan.",
+      suggestedText: "Structural adventure plan change",
+      operationsJson,
+    }
+  }
+
   const match = text.match(/```suggestion\s*([\s\S]*?)```/i)
   if (!match) return { cleaned: text.trim() }
 
@@ -253,7 +313,7 @@ export async function sendAdventurePlanChatMessage(input: SendMessageInput) {
   const content = input.content.trim()
   if (!content) throw new Error("Message is required")
 
-  const mode = wantsReplacement(content) ? "rewrite" : isReviewRequest(content) ? "review" : "general"
+  const mode = wantsStructureChange(content) ? "structure" : wantsReplacement(content) ? "rewrite" : isReviewRequest(content) ? "review" : "general"
   const { userId, adventurePlan } = await assertCanManageAdventurePlan(input.settingId, input.adventurePlanId)
   const displayName = await getDisplayName(userId)
 
@@ -304,7 +364,9 @@ export async function sendAdventurePlanChatMessage(input: SendMessageInput) {
       ? {
           status: "proposed" as const,
           target: input.scope.target,
+          kind: parsed.operationsJson ? ("structure" as const) : ("text" as const),
           suggestedText: parsed.suggestedText,
+          operationsJson: parsed.operationsJson,
           sourceMessageId: userMessageId,
         }
       : undefined,

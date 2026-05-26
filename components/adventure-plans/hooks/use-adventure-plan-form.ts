@@ -55,13 +55,16 @@ export function useAdventurePlanForm(adventurePlan: AdventurePlan) {
           if (!options?.silent) {
             toast.success(result.message || "Saved successfully!")
           }
+          return true
         } else {
           toast.error(result.error || "Failed to save.")
+          return false
         }
       } catch (error) {
         console.error("Error during save operation:", error)
         const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred."
         toast.error(`Error: ${errorMessage}`)
+        return false
       } finally {
         if (!options?.silent) {
           setIsSaving(false)

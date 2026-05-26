@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="visual-concept" content="arcane operations console"><title>Admin Chat Structural Proposals</title><style>
+:root{--bg:#11130f;--panel:#191d17;--ink:#f4f1df;--muted:#b7b69d;--line:#3d472f;--accent:#d7b35d;--blue:#74b4c7;--green:#93c47d;--r:8px}*{box-sizing:border-box}body{margin:0;background:#11130f;color:var(--ink);font-family:Georgia,"Times New Roman",serif;line-height:1.5}main{width:min(980px,calc(100% - 32px));margin:auto;padding:32px 0 52px}.panel{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:16px;margin-top:14px}.eyebrow{font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.1em;color:var(--blue)}h1{font-size:clamp(2rem,5vw,4rem);line-height:1;margin:0 0 10px}a{color:var(--accent)}.muted{color:var(--muted)}code{color:#f6d88d}.wiki-nav{width:min(1120px,calc(100% - 32px));margin:14px auto 0;display:flex;flex-wrap:wrap;gap:8px;font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.wiki-nav a{border:1px solid var(--line);border-radius:999px;padding:6px 9px;background:rgba(25,29,23,.72);color:var(--accent);text-decoration:none}</style></head><body><nav class="wiki-nav" aria-label="Wiki navigation"><a href="../../index.html">Wiki Home</a><a href="../../Sources.html">Sources</a><a href="../index.html">Plans</a><a href="../../roadmap.html">Roadmap</a><a href="../../Architecture.html">Architecture</a></nav><main>
+<header><p class="eyebrow">Implementation plan</p><h1>Admin chat structural proposals</h1><p class="muted">Extend the Adventure Plan Admin Chat from text-field suggestions to approved structural section, scene, and encounter inserts.</p></header>
+<section class="panel"><h2>Planned Behavior</h2><ul>
+<li>Add a Plan Structure target that lets assistant replies propose typed JSON operations.</li>
+<li>Support section, scene, and encounter inserts with complete titles, summaries, encounter intros, and GM instructions.</li>
+<li>Validate and preview structural proposals before enabling Use.</li>
+<li>Apply structural proposals to editor state, select the first inserted node, and persist through the existing save action.</li>
+<li>Prevent the assistant from claiming changes were made before the proposal is applied.</li>
+</ul></section>
+<section class="panel"><h2>Validation</h2><ul>
+<li>Run TypeScript after implementation.</li>
+<li>Manually verify a March of Davos Aftermath request produces and applies one section with three scenes and three encounters.</li>
+</ul></section>
+</main></body></html>

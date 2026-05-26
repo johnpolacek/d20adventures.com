@@ -5,6 +5,15 @@
 <header><p class="eyebrow">Project-context log</p><h1>Decision history</h1><p>Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.</p></header>
 <article class="entry">
 <div class="date">2026-05-26</div>
+<section class="body"><h2>Implemented admin chat structural proposals</h2><ul>
+<li>Extended Adventure Plan Admin Chat with a Plan Structure target and typed structural proposals for adding sections, scenes, and encounters.</li>
+<li>Added shared validation and application logic for structural proposal JSON, including required summaries, encounter intros, GM instructions, and de-duplicated encounter IDs.</li>
+<li>Updated the chat drawer to preview structural proposals and apply them through the existing editor state and save action only after the admin clicks Use.</li>
+<li>Validation: <code>npx convex codegen</code> passed; <code>pnpm exec tsc --noEmit</code> passed; <code>pnpm build</code> passed with the existing missing <code>SENDGRID_API_KEY</code> warning.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-26</div>
 <section class="body"><h2>Implemented admin chat thread context</h2><ul>
 <li>Extended Admin Chat so each assistant request includes the stored per-plan thread discussion, with oldest-message trimming only when the prompt approaches the model context budget.</li>
 <li>Added compact context-pressure metadata to assistant chat messages, including model id, estimated and reported token usage, included and omitted message counts, and warning status.</li>

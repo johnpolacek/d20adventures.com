@@ -11,6 +11,7 @@ import { useAdventurePlanForm } from "@/components/adventure-plans/hooks/use-adv
 import { useAdventureSections } from "@/components/adventure-plans/hooks/use-adventure-sections"
 import { useEncounterHandlers } from "@/components/adventure-plans/hooks/use-encounter-handlers"
 import { Button } from "@/components/ui/button"
+import { applyStructureProposal, type StructureProposal } from "@/lib/adventure-plan-structure"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { Character, PCTemplate } from "@/types/character"
 import * as React from "react"
@@ -259,6 +260,24 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
     [activeEncounterId, activeSceneIndex, activeSectionIndex, encounterHandlers, sectionHandlers, sections, setOverview, setTeaser]
   )
 
+  const handleAdminChatStructureProposal = React.useCallback(
+    async (proposal: StructureProposal) => {
+      try {
+        const result = applyStructureProposal(sections, proposal)
+        setSections(result.sections)
+        setActiveView("prose")
+        setActiveSectionIndex(result.selection.sectionIndex)
+        setActiveSceneIndex(result.selection.sceneIndex)
+        setActiveEncounterId(result.selection.encounterId)
+        return await saveAdventurePlan(undefined, undefined, premadeOnly ? undefined : availableCharacterOptions, undefined, { sections: result.sections })
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Unable to apply structural proposal.")
+        return false
+      }
+    },
+    [availableCharacterOptions, premadeOnly, saveAdventurePlan, sections, setSections]
+  )
+
   return (
     <div className="pb-8 flex flex-wrap h-[80vh]">
       <AdventurePlanFormHeader
@@ -368,6 +387,7 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
         sceneIndex={activeSceneIndex}
         activeEncounterId={activeEncounterId}
         onApplySuggestion={handleAdminChatSuggestion}
+        onApplyStructureProposal={handleAdminChatStructureProposal}
       />
     </div>
   )

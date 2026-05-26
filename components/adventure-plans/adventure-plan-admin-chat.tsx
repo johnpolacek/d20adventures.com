@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Textarea } from "@/components/ui/textarea"
+import { parseStructureProposal, summarizeStructureProposal, type StructureProposal } from "@/lib/adventure-plan-structure"
 import type { AdventurePlan, AdventureSection } from "@/types/adventure-plan"
 import type { Id } from "@/convex/_generated/dataModel"
 import { Bot, Check, History, MessageSquareText, Send, X } from "lucide-react"
@@ -28,6 +29,7 @@ export type ChatTarget =
   | "scene.summary"
   | "encounter.intro"
   | "encounter.instructions"
+  | "plan.structure"
 
 type AdminChatTargetOption = {
   target: ChatTarget
@@ -43,6 +45,7 @@ type AdventurePlanAdminChatProps = {
   sceneIndex: number
   activeEncounterId: string | null
   onApplySuggestion: (target: ChatTarget, suggestedText: string) => boolean
+  onApplyStructureProposal: (proposal: StructureProposal) => Promise<boolean>
 }
 
 function formatTimestamp(timestamp: number) {
@@ -140,6 +143,7 @@ export function AdventurePlanAdminChat({
   sceneIndex,
   activeEncounterId,
   onApplySuggestion,
+  onApplyStructureProposal,
 }: AdventurePlanAdminChatProps) {
   const [open, setOpen] = React.useState(false)
   const [messages, setMessages] = React.useState<AdventurePlanChatMessage[]>([])
@@ -161,6 +165,7 @@ export function AdventurePlanAdminChat({
     const options: AdminChatTargetOption[] = [
       { target: "teaser", label: "Adventure Teaser" },
       { target: "overview", label: "Adventure Overview" },
+      { target: "plan.structure", label: "Plan Structure" },
     ]
 
     if (section) {
@@ -296,7 +301,10 @@ export function AdventurePlanAdminChat({
     if (!message.proposal) return
 
     if (eventType === "used") {
-      const applied = onApplySuggestion(message.proposal.target as ChatTarget, message.proposal.suggestedText)
+      const applied =
+        message.proposal.kind === "structure" && message.proposal.operationsJson
+          ? await onApplyStructureProposal(parseStructureProposal(message.proposal.operationsJson))
+          : onApplySuggestion(message.proposal.target as ChatTarget, message.proposal.suggestedText)
       if (!applied) {
         toast.error("This suggestion cannot be applied to the current selection.")
         return
@@ -383,6 +391,16 @@ export function AdventurePlanAdminChat({
                 const isAssistant = message.role === "assistant"
                 const isEvent = message.role === "event"
                 const contextReportText = isAssistant ? formatContextReport(message) : null
+                const structurePreview =
+                  message.proposal?.kind === "structure" && message.proposal.operationsJson
+                    ? (() => {
+                        try {
+                          return summarizeStructureProposal(parseStructureProposal(message.proposal.operationsJson || ""))
+                        } catch {
+                          return null
+                        }
+                      })()
+                    : null
                 return (
                   <article key={message._id} className={`rounded-lg border p-3 ${isEvent ? "border-amber-300/15 bg-amber-900/10" : isAssistant ? "border-blue-300/20 bg-blue-950/20" : "border-white/10 bg-white/5"}`}>
                     <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-white/55">
@@ -394,10 +412,22 @@ export function AdventurePlanAdminChat({
                     {contextReportText && <div className="mt-2 text-xs text-amber-200/80">{contextReportText}</div>}
                     {message.proposal?.suggestedText && (
                       <div className="mt-3 rounded-md border border-amber-300/20 bg-black/30 p-3">
-                        <div className="mb-2 text-xs font-mono uppercase tracking-widest text-amber-200">Suggestion</div>
-                        <div className="max-h-48 overflow-y-auto whitespace-pre-wrap text-sm text-white/80">{message.proposal.suggestedText}</div>
+                        <div className="mb-2 text-xs font-mono uppercase tracking-widest text-amber-200">{message.proposal.kind === "structure" ? "Structural Proposal" : "Suggestion"}</div>
+                        {structurePreview ? (
+                          <div className="space-y-2 text-sm text-white/80">
+                            <div>
+                              Adds {structurePreview.sectionCount} section{structurePreview.sectionCount === 1 ? "" : "s"}, {structurePreview.sceneCount} scene
+                              {structurePreview.sceneCount === 1 ? "" : "s"}, and {structurePreview.encounterCount} encounter{structurePreview.encounterCount === 1 ? "" : "s"}.
+                            </div>
+                            <div className="max-h-48 overflow-y-auto whitespace-pre-wrap rounded border border-white/10 bg-black/25 p-2 text-xs">
+                              {structurePreview.lines.join("\n")}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="max-h-48 overflow-y-auto whitespace-pre-wrap text-sm text-white/80">{message.proposal.suggestedText}</div>
+                        )}
                         <div className="mt-3 flex gap-2">
-                          <Button variant="outline" size="sm" disabled={message.proposal.status !== "proposed"} onClick={() => handleProposal(message, "used")}>
+                          <Button variant="outline" size="sm" disabled={message.proposal.status !== "proposed" || (message.proposal.kind === "structure" && !structurePreview)} onClick={() => handleProposal(message, "used")}>
                             <Check className="mr-1 h-4 w-4" />
                             Use
                           </Button>

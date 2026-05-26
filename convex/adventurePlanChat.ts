@@ -15,7 +15,9 @@ const proposalValidator = v.optional(
   v.object({
     status: v.union(v.literal("proposed"), v.literal("used"), v.literal("dismissed")),
     target: v.string(),
+    kind: v.optional(v.union(v.literal("text"), v.literal("structure"))),
     suggestedText: v.string(),
+    operationsJson: v.optional(v.string()),
     sourceMessageId: v.optional(v.id("adventure_plan_chat_messages")),
   })
 )
@@ -55,6 +57,7 @@ export const appendMessage = mutation({
         ? {
             ...args.proposal,
             suggestedText: args.proposal.suggestedText.slice(0, 12000),
+            operationsJson: args.proposal.operationsJson?.slice(0, 60000),
           }
         : undefined,
       createdAt: Date.now(),
