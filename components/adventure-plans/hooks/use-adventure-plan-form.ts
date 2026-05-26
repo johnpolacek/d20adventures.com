@@ -22,7 +22,7 @@ export function useAdventurePlanForm(adventurePlan: AdventurePlan) {
       overrideDraft?: boolean,
       overrideAvailableCharacterOptions?: AdventurePlan["availableCharacterOptions"],
       overrideNextAdventure?: string,
-      options?: { silent?: boolean; sections?: AdventureSection[] }
+      options?: { silent?: boolean; sections?: AdventureSection[]; teaser?: string; overview?: string }
     ) => {
       if (!options?.silent) {
         setIsSaving(true)
@@ -32,14 +32,16 @@ export function useAdventurePlanForm(adventurePlan: AdventurePlan) {
       const availableCharacterOptionsToSave = overrideAvailableCharacterOptions !== undefined ? overrideAvailableCharacterOptions : adventurePlan.availableCharacterOptions
       const nextAdventureToSave = overrideNextAdventure !== undefined ? overrideNextAdventure : adventurePlan.nextAdventure
       const sectionsToSave = options?.sections ?? sections
+      const teaserToSave = options?.teaser ?? teaser
+      const overviewToSave = options?.overview ?? overview
 
       // Filter out empty premade player characters
       const filteredPremadePlayerCharacters = premadePlayerCharacters.filter((pc) => pc.name.trim() !== "" || pc.archetype.trim() !== "" || pc.race.trim() !== "")
 
       const updatedAdventurePlan: AdventurePlan = {
         ...adventurePlan,
-        teaser,
-        overview,
+        teaser: teaserToSave,
+        overview: overviewToSave,
         party: [Number(minPartySize), Number(maxPartySize)] as [number, number],
         image: imageToSave,
         sections: sectionsToSave,

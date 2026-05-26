@@ -221,7 +221,7 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
   }
 
   const handleAdminChatSuggestion = React.useCallback(
-    (target: ChatTarget, suggestedText: string) => {
+    async (target: ChatTarget, suggestedText: string) => {
       const activeSection = sections[activeSectionIndex]
       const activeScene = activeSection?.scenes[activeSceneIndex]
       const encounterIndex = activeScene?.encounters.findIndex((encounter) => encounter.id === activeEncounterId) ?? -1
@@ -229,35 +229,74 @@ export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: Advent
 
       if (target === "teaser") {
         setTeaser(suggestedText)
-        return true
+        return await saveAdventurePlan(undefined, undefined, premadeOnly ? undefined : availableCharacterOptions, undefined, { teaser: suggestedText })
       }
       if (target === "overview") {
         setOverview(suggestedText)
-        return true
+        return await saveAdventurePlan(undefined, undefined, premadeOnly ? undefined : availableCharacterOptions, undefined, { overview: suggestedText })
       }
       if (target === "section.review") {
         return false
       }
       if (target === "section.summary" && activeSection) {
-        sectionHandlers.handleSectionSummaryChange(activeSectionIndex, suggestedText)
-        return true
+        const updatedSections = sections.map((section, index) => (index === activeSectionIndex ? { ...section, summary: suggestedText } : section))
+        setSections(updatedSections)
+        return await saveAdventurePlan(undefined, undefined, premadeOnly ? undefined : availableCharacterOptions, undefined, { sections: updatedSections })
       }
       if (target === "scene.summary" && activeScene) {
-        sectionHandlers.handleSceneSummaryChange(activeSectionIndex, activeSceneIndex, suggestedText)
-        return true
+        const updatedSections = sections.map((section, sectionIndex) =>
+          sectionIndex === activeSectionIndex
+            ? {
+                ...section,
+                scenes: section.scenes.map((scene, sceneIndex) => (sceneIndex === activeSceneIndex ? { ...scene, summary: suggestedText } : scene)),
+              }
+            : section
+        )
+        setSections(updatedSections)
+        return await saveAdventurePlan(undefined, undefined, premadeOnly ? undefined : availableCharacterOptions, undefined, { sections: updatedSections })
       }
       if (target === "encounter.intro" && effectiveEncounterIndex >= 0) {
-        encounterHandlers.handleEncounterIntroChange(activeSectionIndex, activeSceneIndex, effectiveEncounterIndex, suggestedText)
-        return true
+        const updatedSections = sections.map((section, sectionIndex) =>
+          sectionIndex === activeSectionIndex
+            ? {
+                ...section,
+                scenes: section.scenes.map((scene, sceneIndex) =>
+                  sceneIndex === activeSceneIndex
+                    ? {
+                        ...scene,
+                        encounters: scene.encounters.map((encounter, index) => (index === effectiveEncounterIndex ? { ...encounter, intro: suggestedText } : encounter)),
+                      }
+                    : scene
+                ),
+              }
+            : section
+        )
+        setSections(updatedSections)
+        return await saveAdventurePlan(undefined, undefined, premadeOnly ? undefined : availableCharacterOptions, undefined, { sections: updatedSections })
       }
       if (target === "encounter.instructions" && effectiveEncounterIndex >= 0) {
-        encounterHandlers.handleEncounterInstructionsChange(activeSectionIndex, activeSceneIndex, effectiveEncounterIndex, suggestedText)
-        return true
+        const updatedSections = sections.map((section, sectionIndex) =>
+          sectionIndex === activeSectionIndex
+            ? {
+                ...section,
+                scenes: section.scenes.map((scene, sceneIndex) =>
+                  sceneIndex === activeSceneIndex
+                    ? {
+                        ...scene,
+                        encounters: scene.encounters.map((encounter, index) => (index === effectiveEncounterIndex ? { ...encounter, instructions: suggestedText } : encounter)),
+                      }
+                    : scene
+                ),
+              }
+            : section
+        )
+        setSections(updatedSections)
+        return await saveAdventurePlan(undefined, undefined, premadeOnly ? undefined : availableCharacterOptions, undefined, { sections: updatedSections })
       }
 
       return false
     },
-    [activeEncounterId, activeSceneIndex, activeSectionIndex, encounterHandlers, sectionHandlers, sections, setOverview, setTeaser]
+    [activeEncounterId, activeSceneIndex, activeSectionIndex, availableCharacterOptions, premadeOnly, saveAdventurePlan, sections, setOverview, setSections, setTeaser]
   )
 
   const handleAdminChatStructureProposal = React.useCallback(

@@ -169,6 +169,7 @@ Rules:
 - If the admin asks to add, append, create, insert, or draft a new section, scene, or encounter, produce one fenced code block labeled suggestion-json containing a structural proposal JSON object.
 - For structural proposals, include complete section titles and summaries, complete scene titles and summaries, and complete encounter titles, intros, and GM instructions. The JSON must be ready to apply.
 - For structural proposals, never use markdown inside the JSON string values unless it is part of player-facing prose.
+- Valid text and structural proposals are automatically applied and saved by the editor after your response. Do not ask the admin to click a Use or Apply button.
 - Keep any suggested replacement text ready to paste into the selected field.
 - If the request is not about replacing the selected field, answer normally and do not include a suggestion block.
 - Avoid semicolons and em dashes in user-visible prose.
@@ -282,7 +283,7 @@ function extractSuggestion(text: string): { cleaned: string; suggestedText?: str
     }
     const cleaned = text.replace(jsonMatch[0], "").trim()
     return {
-      cleaned: cleaned || "I drafted a structural change for the adventure plan.",
+      cleaned: cleaned || "I prepared a structural change for the adventure plan.",
       suggestedText: "Structural adventure plan change",
       operationsJson,
     }

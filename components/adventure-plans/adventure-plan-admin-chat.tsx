@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { parseStructureProposal, summarizeStructureProposal, type StructureProposal } from "@/lib/adventure-plan-structure"
 import type { AdventurePlan, AdventureSection } from "@/types/adventure-plan"
 import type { Id } from "@/convex/_generated/dataModel"
-import { Bot, Check, History, MessageSquareText, Send, X } from "lucide-react"
+import { Bot, History, MessageSquareText, Send, X } from "lucide-react"
 import * as React from "react"
 import { toast } from "sonner"
 
@@ -44,7 +44,7 @@ type AdventurePlanAdminChatProps = {
   sectionIndex: number
   sceneIndex: number
   activeEncounterId: string | null
-  onApplySuggestion: (target: ChatTarget, suggestedText: string) => boolean
+  onApplySuggestion: (target: ChatTarget, suggestedText: string) => Promise<boolean>
   onApplyStructureProposal: (proposal: StructureProposal) => Promise<boolean>
 }
 
@@ -270,33 +270,6 @@ export function AdventurePlanAdminChat({
     }
   }
 
-  const sendMessage = async () => {
-    const content = input.trim()
-    if (!content || isSending || !selectedTarget) return
-
-    setInput("")
-    setIsSending(true)
-    setError(null)
-    try {
-      const result = await sendAdventurePlanChatMessage({
-        settingId: adventurePlan.settingId,
-        adventurePlanId: adventurePlan.id,
-        content,
-        scope,
-        planContext,
-        planOutline,
-        sectionContext,
-      })
-      setMessages((current) => mergeMessages(current, result.messages, "append"))
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Admin chat failed"
-      setError(message)
-      toast.error(message)
-    } finally {
-      setIsSending(false)
-    }
-  }
-
   const handleProposal = async (message: AdventurePlanChatMessage, eventType: "used" | "dismissed") => {
     if (!message.proposal) return
 
@@ -309,7 +282,7 @@ export function AdventurePlanAdminChat({
         toast.error("This suggestion cannot be applied to the current selection.")
         return
       }
-      toast.success("Suggestion applied to the editor.")
+      toast.success(message.proposal.kind === "structure" ? "Structural change auto-applied." : "Suggestion auto-applied.")
     }
 
     try {
@@ -336,6 +309,39 @@ export function AdventurePlanAdminChat({
       void loadLatest()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to record chat event")
+    }
+  }
+
+  const sendMessage = async () => {
+    const content = input.trim()
+    if (!content || isSending || !selectedTarget) return
+
+    setInput("")
+    setIsSending(true)
+    setError(null)
+    try {
+      const result = await sendAdventurePlanChatMessage({
+        settingId: adventurePlan.settingId,
+        adventurePlanId: adventurePlan.id,
+        content,
+        scope,
+        planContext,
+        planOutline,
+        sectionContext,
+      })
+      setMessages((current) => mergeMessages(current, result.messages, "append"))
+
+      for (const message of result.messages) {
+        if (message.role === "assistant" && message.proposal?.status === "proposed") {
+          await handleProposal(message, "used")
+        }
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Admin chat failed"
+      setError(message)
+      toast.error(message)
+    } finally {
+      setIsSending(false)
     }
   }
 
@@ -427,10 +433,6 @@ export function AdventurePlanAdminChat({
                           <div className="max-h-48 overflow-y-auto whitespace-pre-wrap text-sm text-white/80">{message.proposal.suggestedText}</div>
                         )}
                         <div className="mt-3 flex gap-2">
-                          <Button variant="outline" size="sm" disabled={message.proposal.status !== "proposed" || (message.proposal.kind === "structure" && !structurePreview)} onClick={() => handleProposal(message, "used")}>
-                            <Check className="mr-1 h-4 w-4" />
-                            Use
-                          </Button>
                           <Button variant="ghost" size="sm" disabled={message.proposal.status !== "proposed"} onClick={() => handleProposal(message, "dismissed")}>
                             <X className="mr-1 h-4 w-4" />
                             Dismiss

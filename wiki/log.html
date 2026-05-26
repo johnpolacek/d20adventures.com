@@ -5,6 +5,14 @@
 <header><p class="eyebrow">Project-context log</p><h1>Decision history</h1><p>Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.</p></header>
 <article class="entry">
 <div class="date">2026-05-26</div>
+<section class="body"><h2>Converted admin chat proposals to auto-apply</h2><ul>
+<li>Changed Adventure Plan Admin Chat so valid assistant text and structural proposals apply immediately after the assistant response and save through the existing plan update action.</li>
+<li>Kept validation before mutation, preserved chat event auditing, and removed the extra Use-button step from newly generated proposals.</li>
+<li>Validation: <code>pnpm exec tsc --noEmit</code> passed; <code>pnpm build</code> passed with the existing missing <code>SENDGRID_API_KEY</code> warning.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-26</div>
 <section class="body"><h2>Implemented admin chat structural proposals</h2><ul>
 <li>Extended Adventure Plan Admin Chat with a Plan Structure target and typed structural proposals for adding sections, scenes, and encounters.</li>
 <li>Added shared validation and application logic for structural proposal JSON, including required summaries, encounter intros, GM instructions, and de-duplicated encounter IDs.</li>
