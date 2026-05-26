@@ -365,7 +365,7 @@ export function AdventurePlanAdminChat({
           Admin Chat
         </Button>
       </SheetTrigger>
-      <SheetContent className="h-dvh w-[min(92vw,540px)] max-w-none gap-0 overflow-hidden border-l border-amber-300/20 bg-[#10130f] text-white sm:max-w-none">
+      <SheetContent className="relative h-dvh w-[min(92vw,540px)] max-w-none gap-0 overflow-hidden border-l border-amber-300/20 bg-[#10130f] pb-[190px] text-white sm:max-w-none">
         <SheetHeader className="border-b border-white/10 bg-black/20">
           <SheetTitle className="flex items-center gap-2 font-display text-xl text-amber-300">
             <Bot className="h-5 w-5" />
@@ -374,7 +374,7 @@ export function AdventurePlanAdminChat({
           <div className="text-xs text-primary-200/75">Shared authoring history for this adventure plan.</div>
         </SheetHeader>
 
-        <div className="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)_auto] gap-3 overflow-hidden px-4 pb-4">
+        <div className="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] gap-3 overflow-hidden px-4 pb-4">
           <div className="shrink-0 rounded-md border border-white/10 bg-black/25 p-3">
             <label htmlFor="admin-chat-target" className="mb-1 block text-xs font-mono uppercase tracking-widest text-primary-200/80">
               Edit Target
@@ -461,7 +461,7 @@ export function AdventurePlanAdminChat({
           </div>
 
           <form
-            className="shrink-0 space-y-2 border-t border-white/10 bg-[#10130f] pt-3"
+            className="absolute inset-x-0 bottom-0 z-20 space-y-2 border-t border-white/10 bg-[#10130f] px-4 pb-4 pt-3 shadow-[0_-16px_30px_rgba(0,0,0,0.45)]"
             onSubmit={(event) => {
               event.preventDefault()
               void sendMessage()
@@ -473,8 +473,8 @@ export function AdventurePlanAdminChat({
               disabled={isSending}
               rows={4}
               placeholder="Ask for a rewrite, expansion, continuity check, or GM-facing polish..."
-              style={{ fieldSizing: "fixed" } as React.CSSProperties}
-              className="block h-28 min-h-0 max-h-28 w-full resize-none overflow-y-auto rounded-md border border-white/15 bg-black/40 px-3 py-2 text-sm leading-5 text-white outline-none placeholder:text-white/35 focus-visible:border-amber-300/60 focus-visible:ring-2 focus-visible:ring-amber-300/25 disabled:cursor-not-allowed disabled:opacity-50"
+              style={{ fieldSizing: "fixed", height: 104, minHeight: 104, maxHeight: 104 } as React.CSSProperties}
+              className="block !h-[104px] !min-h-[104px] !max-h-[104px] w-full resize-none overflow-y-auto rounded-md border border-white/15 bg-black/40 px-3 py-2 text-sm leading-5 text-white outline-none placeholder:text-white/35 focus-visible:border-amber-300/60 focus-visible:ring-2 focus-visible:ring-amber-300/25 disabled:cursor-not-allowed disabled:opacity-50"
               onKeyDown={(event) => {
                 if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
                   event.preventDefault()
