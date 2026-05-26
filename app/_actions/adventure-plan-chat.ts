@@ -1,6 +1,7 @@
 "use server"
 
 import { generateText } from "@/lib/ai"
+import { currentModel } from "@/lib/ai/llm"
 import { api, convex } from "@/lib/convex/server"
 import { canManageResource } from "@/lib/content-permissions"
 import { readJsonFromS3 } from "@/lib/s3-utils"
@@ -32,7 +33,21 @@ export type AdventurePlanChatMessage = {
     suggestedText: string
     sourceMessageId?: Id<"adventure_plan_chat_messages">
   }
+  contextReport?: AdventurePlanChatContextReport
   createdAt: number
+}
+
+export type AdventurePlanChatContextReport = {
+  modelId: string
+  contextWindowTokens: number
+  estimatedPromptTokens: number
+  inputTokens?: number
+  outputTokens?: number
+  totalTokens?: number
+  percentUsed: number
+  includedMessages: number
+  omittedMessages: number
+  status: "ok" | "warning" | "critical" | "unknown"
 }
 
 type SendMessageInput = {
@@ -55,6 +70,12 @@ type SendMessageInput = {
   planOutline?: string
   sectionContext?: string
 }
+
+const ADMIN_CHAT_CONTEXT_WINDOW_TOKENS = 1_000_000
+const ADMIN_CHAT_RESERVED_OUTPUT_TOKENS = 16_000
+const ADMIN_CHAT_CONTEXT_SAFETY_TOKENS = 8_000
+const ADMIN_CHAT_WARNING_PERCENT = 75
+const ADMIN_CHAT_CRITICAL_PERCENT = 90
 
 async function assertCanManageAdventurePlan(settingId: string, adventurePlanId: string) {
   const { userId } = await auth()
@@ -87,6 +108,10 @@ function compact(value: string | undefined, max = 1800) {
   return value.length > max ? `${value.slice(0, max)}...` : value
 }
 
+function estimateTokens(text: string) {
+  return Math.ceil(text.length / 4)
+}
+
 function isReviewRequest(content: string) {
   return /\b(evaluate|review|audit|analy[sz]e|assess|check|detailed enough|ready|sufficient|transition)\b/i.test(content)
 }
@@ -95,7 +120,34 @@ function wantsReplacement(content: string) {
   return /\b(rewrite|replace|revise|update|draft|write|polish|improve|expand)\b/i.test(content)
 }
 
-function buildAssistantPrompt(input: SendMessageInput, adventurePlan: AdventurePlan, mode: "review" | "rewrite" | "general") {
+function formatChatMessageForPrompt(message: AdventurePlanChatMessage) {
+  const scope = message.scope?.label ? ` | scope: ${message.scope.label}` : ""
+  const proposal = message.proposal?.suggestedText
+    ? `\nProposal status: ${message.proposal.status}\nProposal target: ${message.proposal.target}\nSuggested text:\n${message.proposal.suggestedText}`
+    : ""
+
+  return `[${message.role.toUpperCase()} | ${message.displayName} | ${new Date(message.createdAt).toISOString()}${scope}]
+${message.content}${proposal}`
+}
+
+function buildThreadContext(messages: AdventurePlanChatMessage[]) {
+  if (messages.length === 0) return "No previous thread messages."
+  return messages.map(formatChatMessageForPrompt).join("\n\n---\n\n")
+}
+
+function getContextStatus(percentUsed: number, omittedMessages: number): AdventurePlanChatContextReport["status"] {
+  if (percentUsed >= ADMIN_CHAT_CRITICAL_PERCENT) return "critical"
+  if (percentUsed >= ADMIN_CHAT_WARNING_PERCENT || omittedMessages > 0) return "warning"
+  return "ok"
+}
+
+function buildAssistantPrompt(
+  input: SendMessageInput,
+  adventurePlan: AdventurePlan,
+  mode: "review" | "rewrite" | "general",
+  threadContext: string,
+  omittedMessages: number
+) {
   return `You are an admin authoring assistant for D20 Adventures.
 
 Help an adventure designer revise a JSON-backed Adventure Plan. Be concise and practical.
@@ -140,8 +192,39 @@ ${compact(input.planOutline, 6000)}
 Active section context from current editor state:
 ${compact(input.sectionContext, 9000)}
 
+Thread discussion so far:
+${threadContext}
+
+Thread context note:
+${omittedMessages > 0 ? `${omittedMessages} oldest thread message(s) were omitted because the prompt was approaching the model context limit.` : "All stored thread messages are included."}
+
 Admin request:
 ${input.content}`
+}
+
+function buildPromptWithThreadContext(input: SendMessageInput, adventurePlan: AdventurePlan, mode: "review" | "rewrite" | "general", threadMessages: AdventurePlanChatMessage[]) {
+  const promptBudget = ADMIN_CHAT_CONTEXT_WINDOW_TOKENS - ADMIN_CHAT_RESERVED_OUTPUT_TOKENS - ADMIN_CHAT_CONTEXT_SAFETY_TOKENS
+  const includedMessages = [...threadMessages]
+  let omittedMessages = 0
+  let prompt = buildAssistantPrompt(input, adventurePlan, mode, buildThreadContext(includedMessages), omittedMessages)
+  let estimatedPromptTokens = estimateTokens(prompt)
+
+  while (estimatedPromptTokens > promptBudget && includedMessages.length > 0) {
+    includedMessages.shift()
+    omittedMessages += 1
+    prompt = buildAssistantPrompt(input, adventurePlan, mode, buildThreadContext(includedMessages), omittedMessages)
+    estimatedPromptTokens = estimateTokens(prompt)
+  }
+
+  const percentUsed = Math.min(100, Math.round((estimatedPromptTokens / ADMIN_CHAT_CONTEXT_WINDOW_TOKENS) * 100))
+
+  return {
+    prompt,
+    includedMessages: includedMessages.length,
+    omittedMessages,
+    estimatedPromptTokens,
+    percentUsed,
+  }
 }
 
 function extractSuggestion(text: string): { cleaned: string; suggestedText?: string } {
@@ -184,9 +267,30 @@ export async function sendAdventurePlanChatMessage(input: SendMessageInput) {
     scope: input.scope,
   })
 
-  const prompt = buildAssistantPrompt(input, adventurePlan, mode)
-  const { text } = await generateText({ prompt })
+  const threadMessages = (await convex.query(api.adventurePlanChat.getAllForPlan, {
+    settingId: input.settingId,
+    adventurePlanId: input.adventurePlanId,
+  })) as AdventurePlanChatMessage[]
+  const promptContext = buildPromptWithThreadContext(input, adventurePlan, mode, threadMessages)
+  const { text, usage } = await generateText({ prompt: promptContext.prompt })
   const parsed = extractSuggestion(text)
+  const inputTokens = usage?.inputTokens
+  const outputTokens = usage?.outputTokens
+  const totalTokens = usage?.totalTokens
+  const tokensForPercent = inputTokens ?? promptContext.estimatedPromptTokens
+  const percentUsed = Math.min(100, Math.round((tokensForPercent / ADMIN_CHAT_CONTEXT_WINDOW_TOKENS) * 100))
+  const contextReport: AdventurePlanChatContextReport = {
+    modelId: currentModel.modelId,
+    contextWindowTokens: ADMIN_CHAT_CONTEXT_WINDOW_TOKENS,
+    estimatedPromptTokens: promptContext.estimatedPromptTokens,
+    percentUsed,
+    includedMessages: promptContext.includedMessages,
+    omittedMessages: promptContext.omittedMessages,
+    status: getContextStatus(percentUsed, promptContext.omittedMessages),
+  }
+  if (inputTokens !== undefined) contextReport.inputTokens = inputTokens
+  if (outputTokens !== undefined) contextReport.outputTokens = outputTokens
+  if (totalTokens !== undefined) contextReport.totalTokens = totalTokens
 
   const assistantMessageId = await convex.mutation(api.adventurePlanChat.appendMessage, {
     settingId: input.settingId,
@@ -204,6 +308,7 @@ export async function sendAdventurePlanChatMessage(input: SendMessageInput) {
           sourceMessageId: userMessageId,
         }
       : undefined,
+    contextReport,
   })
 
   const messages = await convex.query(api.adventurePlanChat.getRecent, {

@@ -67,6 +67,15 @@ function compactText(value: string | undefined, max = 900) {
   return value.length > max ? `${value.slice(0, max)}...` : value
 }
 
+function formatContextReport(message: AdventurePlanChatMessage) {
+  const report = message.contextReport
+  if (!report || report.status === "ok") return null
+
+  const usage = report.inputTokens ? `${report.percentUsed}% context used` : `${report.percentUsed}% estimated context used`
+  const omitted = report.omittedMessages > 0 ? `, ${report.omittedMessages} older message${report.omittedMessages === 1 ? "" : "s"} omitted` : ""
+  return `${usage}${omitted}`
+}
+
 function buildPlanOutline(sections: AdventureSection[]) {
   return sections
     .map((section, sectionIndex) => {
@@ -373,6 +382,7 @@ export function AdventurePlanAdminChat({
               {messages.map((message) => {
                 const isAssistant = message.role === "assistant"
                 const isEvent = message.role === "event"
+                const contextReportText = isAssistant ? formatContextReport(message) : null
                 return (
                   <article key={message._id} className={`rounded-lg border p-3 ${isEvent ? "border-amber-300/15 bg-amber-900/10" : isAssistant ? "border-blue-300/20 bg-blue-950/20" : "border-white/10 bg-white/5"}`}>
                     <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-white/55">
@@ -381,6 +391,7 @@ export function AdventurePlanAdminChat({
                       {message.scope?.label && <Badge className="border border-amber-300/20 bg-amber-400/10 text-[10px] text-amber-100">{message.scope.label}</Badge>}
                     </div>
                     <div className="whitespace-pre-wrap text-sm leading-relaxed text-white/85">{message.content}</div>
+                    {contextReportText && <div className="mt-2 text-xs text-amber-200/80">{contextReportText}</div>}
                     {message.proposal?.suggestedText && (
                       <div className="mt-3 rounded-md border border-amber-300/20 bg-black/30 p-3">
                         <div className="mb-2 text-xs font-mono uppercase tracking-widest text-amber-200">Suggestion</div>

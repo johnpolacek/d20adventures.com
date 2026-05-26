@@ -20,6 +20,21 @@ const proposalValidator = v.optional(
   })
 )
 
+const contextReportValidator = v.optional(
+  v.object({
+    modelId: v.string(),
+    contextWindowTokens: v.number(),
+    estimatedPromptTokens: v.number(),
+    inputTokens: v.optional(v.number()),
+    outputTokens: v.optional(v.number()),
+    totalTokens: v.optional(v.number()),
+    percentUsed: v.number(),
+    includedMessages: v.number(),
+    omittedMessages: v.number(),
+    status: v.union(v.literal("ok"), v.literal("warning"), v.literal("critical"), v.literal("unknown")),
+  })
+)
+
 export const appendMessage = mutation({
   args: {
     settingId: v.string(),
@@ -30,6 +45,7 @@ export const appendMessage = mutation({
     content: v.string(),
     scope: scopeValidator,
     proposal: proposalValidator,
+    contextReport: contextReportValidator,
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("adventure_plan_chat_messages", {
@@ -81,6 +97,20 @@ export const getRecent = query({
       .take(limit)
 
     return rows.reverse()
+  },
+})
+
+export const getAllForPlan = query({
+  args: {
+    settingId: v.string(),
+    adventurePlanId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("adventure_plan_chat_messages")
+      .withIndex("by_plan_created", (q) => q.eq("settingId", args.settingId).eq("adventurePlanId", args.adventurePlanId))
+      .order("asc")
+      .collect()
   },
 })
 

@@ -17,12 +17,12 @@
       <div>
         <p class="eyebrow">Feature plan</p>
         <h1>Admin adventure plan chat history</h1>
-        <p class="muted">Add a shared authoring chat transcript to the existing S3 JSON Adventure Plan editor so plan managers can revisit prompts, assistant replies, and compact edit-decision events.</p>
+        <p class="muted">Add a shared authoring chat transcript to the existing S3 JSON Adventure Plan editor so plan managers can revisit prompts, assistant replies, compact edit-decision events, and thread-aware assistant context.</p>
       </div>
       <aside class="panel summary">
         <p class="eyebrow">Status</p>
         <dl>
-          <dt>State</dt><dd>Implemented</dd>
+          <dt>State</dt><dd>Extended with thread context</dd>
           <dt>Storage</dt><dd>Convex transcript table</dd>
           <dt>Visibility</dt><dd>Shared by editable Adventure Plan</dd>
           <dt>Boundary</dt><dd>Separate from per-adventure game chat</dd>
@@ -34,12 +34,15 @@
       <article class="panel"><span class="status">Unit 01</span><h2>Persistence and access</h2><p class="muted">Create a Convex table for admin plan chat messages indexed by setting, plan, and creation time. Reads and writes must go through server actions that load the S3 plan/setting and reuse plan-management permission checks.</p></article>
       <article class="panel"><span class="status">Unit 02</span><h2>Assistant workflow</h2><p class="muted">Add server actions that append a user prompt, generate an assistant response using the existing AI SDK wrapper, store optional compact proposal metadata, and record accepted or dismissed suggestion events.</p></article>
       <article class="panel"><span class="status">Unit 03</span><h2>Editor UI</h2><p class="muted">Add an Admin Chat drawer to the Adventure Plan editor with recent history, older-message loading, selected edit scope, prompt submission, and local application of supported text suggestions through the existing save/autosave flow.</p></article>
+      <article class="panel"><span class="status">Unit 04</span><h2>Thread context and pressure</h2><p class="muted">Send the stored per-plan transcript with each assistant request, trim oldest messages only if needed to fit the model context budget, and store compact context-pressure metadata on assistant replies.</p></article>
     </section>
 
     <section class="panel" style="margin-top:20px">
       <h2>Acceptance</h2>
       <ul class="muted">
         <li>Authorized plan managers can send an Admin Chat prompt, refresh, and see the prior transcript.</li>
+        <li>Follow-up prompts include the stored thread discussion so the assistant can reference prior decisions and requests.</li>
+        <li>If the thread grows too large, oldest messages are omitted before the LLM call and the assistant message shows compact context-pressure status.</li>
         <li>Unauthorized users cannot read or write admin chat history.</li>
         <li>Assistant suggestions can update supported local editor fields without directly writing S3 outside the existing save/autosave path.</li>
         <li>Game chat remains unchanged and uses its existing <code>chat_messages</code> table.</li>

@@ -221,6 +221,20 @@ export default defineSchema({
         sourceMessageId: v.optional(v.id("adventure_plan_chat_messages")),
       })
     ),
+    contextReport: v.optional(
+      v.object({
+        modelId: v.string(),
+        contextWindowTokens: v.number(),
+        estimatedPromptTokens: v.number(),
+        inputTokens: v.optional(v.number()),
+        outputTokens: v.optional(v.number()),
+        totalTokens: v.optional(v.number()),
+        percentUsed: v.number(),
+        includedMessages: v.number(),
+        omittedMessages: v.number(),
+        status: v.union(v.literal("ok"), v.literal("warning"), v.literal("critical"), v.literal("unknown")),
+      })
+    ),
     createdAt: v.number(),
   }).index("by_plan_created", ["settingId", "adventurePlanId", "createdAt"]),
 })

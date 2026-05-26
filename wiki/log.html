@@ -4,6 +4,16 @@
 .wiki-nav{width:min(1120px,calc(100% - 32px));margin:14px auto 0;display:flex;flex-wrap:wrap;gap:8px;font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.wiki-nav a{border:1px solid var(--line,#3d472f);border-radius:999px;padding:6px 9px;background:rgba(25,29,23,.72);color:var(--accent,#d7b35d);text-decoration:none}.wiki-nav a:focus-visible{outline:2px solid var(--accent,#d7b35d);outline-offset:2px}</style></head><body><nav class="wiki-nav" aria-label="Wiki navigation"><a href="index.html">Wiki Home</a><a href="Sources.html">Sources</a><a href="plans/index.html">Plans</a><a href="roadmap.html">Roadmap</a><a href="Architecture.html">Architecture</a></nav><main>
 <header><p class="eyebrow">Project-context log</p><h1>Decision history</h1><p>Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.</p></header>
 <article class="entry">
+<div class="date">2026-05-26</div>
+<section class="body"><h2>Implemented admin chat thread context</h2><ul>
+<li>Extended Admin Chat so each assistant request includes the stored per-plan thread discussion, with oldest-message trimming only when the prompt approaches the model context budget.</li>
+<li>Added compact context-pressure metadata to assistant chat messages, including model id, estimated and reported token usage, included and omitted message counts, and warning status.</li>
+<li>Updated the Admin Chat drawer to show context pressure only when usage is notable or prior thread messages were omitted.</li>
+<li>Updated the admin chat feature plan and planning dashboard to record Unit 04, thread context and pressure reporting.</li>
+<li>Validation: <code>npx convex codegen</code> completed; <code>pnpm exec tsc --noEmit</code> passed; <code>pnpm build</code> passed. <code>pnpm check</code> remains blocked by the known Biome config/schema mismatch.</li>
+</ul></section>
+</article>
+<article class="entry">
 <div class="date">2026-05-25</div>
 <section class="body"><h2>Fixed admin chat review context</h2><ul>
 <li>Updated Admin Chat to distinguish advisory review prompts from rewrite prompts so evaluation requests do not produce source-edit refusals or suggestion blocks.</li>
