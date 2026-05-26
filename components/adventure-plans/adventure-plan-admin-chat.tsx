@@ -353,7 +353,7 @@ export function AdventurePlanAdminChat({
           Admin Chat
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-[min(92vw,540px)] max-w-none border-l border-amber-300/20 bg-[#10130f] text-white sm:max-w-none">
+      <SheetContent className="h-dvh w-[min(92vw,540px)] max-w-none gap-0 overflow-hidden border-l border-amber-300/20 bg-[#10130f] text-white sm:max-w-none">
         <SheetHeader className="border-b border-white/10 bg-black/20">
           <SheetTitle className="flex items-center gap-2 font-display text-xl text-amber-300">
             <Bot className="h-5 w-5" />
@@ -362,8 +362,8 @@ export function AdventurePlanAdminChat({
           <div className="text-xs text-primary-200/75">Shared authoring history for this adventure plan.</div>
         </SheetHeader>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-3 px-4 pb-4">
-          <div className="rounded-md border border-white/10 bg-black/25 p-3">
+        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden px-4 pb-4">
+          <div className="shrink-0 rounded-md border border-white/10 bg-black/25 p-3">
             <label htmlFor="admin-chat-target" className="mb-1 block text-xs font-mono uppercase tracking-widest text-primary-200/80">
               Edit Target
             </label>
@@ -449,7 +449,7 @@ export function AdventurePlanAdminChat({
           </div>
 
           <form
-            className="space-y-2"
+            className="shrink-0 space-y-2 border-t border-white/10 bg-[#10130f] pt-3"
             onSubmit={(event) => {
               event.preventDefault()
               void sendMessage()
@@ -461,7 +461,7 @@ export function AdventurePlanAdminChat({
               disabled={isSending}
               rows={4}
               placeholder="Ask for a rewrite, expansion, continuity check, or GM-facing polish..."
-              className="resize-none border-white/15 bg-black/40 text-white placeholder:text-white/35"
+              className="h-28 max-h-28 resize-none overflow-y-auto border-white/15 bg-black/40 text-white [field-sizing:fixed] placeholder:text-white/35"
               onKeyDown={(event) => {
                 if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
                   event.preventDefault()
