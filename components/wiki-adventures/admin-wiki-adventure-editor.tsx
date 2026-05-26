@@ -1035,7 +1035,7 @@ function PageButton({ page, selectedPath, onSelect, level = "root" }: { page: Wi
     >
       <span className="min-w-0">
         <span className={`block truncate ${isEncounter ? "text-[13px] leading-5" : "text-sm leading-5"}`}>{page.title}</span>
-        {!isEncounter && (
+        {!isEncounter && page.kind !== "adventure" && (
           <span className="block truncate font-mono text-[10px] leading-4 text-stone-600">{page.kind === "npc" || page.kind === "character" || page.kind === "sheet" ? "character" : page.id}</span>
         )}
       </span>
