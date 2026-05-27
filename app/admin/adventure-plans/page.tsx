@@ -1,74 +1,68 @@
-import { AdminBreadcrumb } from "@/components/nav/admin-breadcrumb"
+import { AdminConfigMessage } from "@/components/admin/admin-config-message"
+import { Heading } from "@/components/typography/heading"
 import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { listAndReadJsonFilesInS3Directory } from "@/lib/s3-utils"
-import type { AdventurePlan } from "@/types/adventure-plan"
+import { requireAdmin } from "@/lib/auth-utils"
+import { listAdminWikiAdventures } from "@/lib/wiki-adventures/admin-authoring"
+import type { Metadata } from "next"
+import Link from "next/link"
 
-// Helper to get all plans from all settings
-async function getAllAdventurePlans(): Promise<Array<{ key: string; plan: AdventurePlan }>> {
-  // List all settings directories (hardcoded or via S3 if available)
-  // For now, we can hardcode or scan known settings if needed
-  // Example: ["realm-of-myr", "the_road_to_kordavos_adventure_plan", ...]
-  // But ideally, we scan all directories under "settings/"
-  // For simplicity, let's try a few known ones (expand as needed)
-  const settingIds = ["realm-of-myr", "the_road_to_kordavos_adventure_plan", "covert-cargo", "the-march-of-davos-plan", "the-midnight-summons"]
-  const allPlans: Array<{ key: string; plan: AdventurePlan }> = []
-  for (const settingId of settingIds) {
-    try {
-      const files = await listAndReadJsonFilesInS3Directory(`settings/${settingId}/`, ["setting-data.json"])
-      for (const file of files) {
-        allPlans.push({ key: file.key, plan: file.data as AdventurePlan })
-      }
-    } catch (err) {
-      console.error("Error listing and reading JSON files in S3 directory:", err)
-      // Ignore missing settings
-    }
-  }
-  return allPlans
+export const metadata: Metadata = {
+  title: "Adventure Plans Workbench",
+  description: "Admin workbench for wiki-authored adventure plans.",
 }
 
 export default async function AdminAdventurePlansPage() {
-  const plans = await getAllAdventurePlans()
+  const { isAdmin, requiresSetup } = await requireAdmin()
 
-  return (
-    <div className="container py-8">
-      <AdminBreadcrumb items={[{ label: "Adventure Plans" }]} />
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold font-display text-amber-400">Adventure Plans</h1>
-        <p className="font-mono text-primary-300">Manage and view all adventure plans</p>
+  if (requiresSetup) {
+    return (
+      <div className="container max-w-2xl py-8 md:py-12">
+        <AdminConfigMessage />
       </div>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Plan ID</TableHead>
-            <TableHead>Title</TableHead>
-            <TableHead>Author</TableHead>
-            <TableHead>Setting ID</TableHead>
-            <TableHead>Version</TableHead>
-            <TableHead>Draft?</TableHead>
-            <TableHead />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {plans.map(({ key, plan }) => (
-            <TableRow key={key}>
-              <TableCell>{plan.id}</TableCell>
-              <TableCell>{plan.title}</TableCell>
-              <TableCell>{plan.author}</TableCell>
-              <TableCell>{plan.settingId}</TableCell>
-              <TableCell>{plan.version}</TableCell>
-              <TableCell>{plan.draft ? "Yes" : "No"}</TableCell>
-              <TableCell>
-                <a href={`/settings/${plan.settingId}/${plan.id}/edit`} target="_blank" rel="noopener noreferrer">
-                  <Button className="text-xs" variant="outline" size="sm">
-                    Edit
-                  </Button>
-                </a>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+    )
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="container py-8 md:py-12">
+        <div className="mx-auto max-w-2xl text-center">
+          <Heading variant="h1" className="mb-4">
+            Access Denied
+          </Heading>
+          <p className="text-muted-foreground text-balance mb-8">You don&apos;t have permission to access this page. Please contact an administrator if you believe this is an error.</p>
+        </div>
+      </div>
+    )
+  }
+
+  const adventures = await listAdminWikiAdventures()
+  return (
+    <div className="container py-8 md:py-12">
+      <Heading variant="h1" className="mb-2 text-amber-400">
+        Adventure Plans
+      </Heading>
+      <p className="mb-8 text-muted-foreground">Chat with migrated wiki adventures and apply improvements directly to S3 source.</p>
+      <div className="grid gap-4 md:grid-cols-2">
+        {adventures.map((adventure) => (
+          <article key={`${adventure.settingId}/${adventure.planId}`} className="rounded-md border border-lime-900/50 bg-[#151912] p-5 text-stone-100">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-semibold text-amber-300">{adventure.title}</h2>
+                <p className="mt-1 font-mono text-xs text-stone-500">{adventure.settingId}/{adventure.planId}</p>
+              </div>
+              <span className="rounded border border-amber-700 bg-amber-950/60 px-2 py-1 font-mono text-[10px] uppercase text-amber-200">{adventure.status}</span>
+            </div>
+            <p className="mt-4 text-sm text-stone-400">
+              {adventure.fileCount} files · {adventure.encounterCount} encounters · {adventure.source === "s3" ? "S3 source" : "local fallback"}
+            </p>
+            <Link href={`/admin/adventure-plans/${adventure.settingId}/${adventure.planId}`} className="mt-4 block">
+              <Button variant="outline" size="sm">
+                Open Chat Editor
+              </Button>
+            </Link>
+          </article>
+        ))}
+      </div>
     </div>
   )
 }

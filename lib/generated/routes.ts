@@ -8,6 +8,7 @@ export const validRoutes = new Set([
   'account/*',
   'admin',
   'admin/adventure-plans',
+  'admin/adventure-plans/*',
   'admin/adventures',
   'admin/mailing-list',
   'admin/users',
