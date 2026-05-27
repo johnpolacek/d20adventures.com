@@ -153,6 +153,7 @@ export function AdventurePlanAdminChat({
   const [isSending, setIsSending] = React.useState(false)
   const [hasOlderMessages, setHasOlderMessages] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const inputRef = React.useRef<HTMLTextAreaElement | null>(null)
   const endRef = React.useRef<HTMLDivElement | null>(null)
 
   const section = sections[sectionIndex]
@@ -312,10 +313,13 @@ export function AdventurePlanAdminChat({
   }
 
   const sendMessage = async () => {
-    const content = input.trim()
+    const content = (inputRef.current?.value ?? input).trim()
     if (!content || isSending || !selectedTarget) return
 
     setInput("")
+    if (inputRef.current) {
+      inputRef.current.value = ""
+    }
     setIsSending(true)
     setError(null)
     try {
@@ -365,7 +369,7 @@ export function AdventurePlanAdminChat({
           Admin Chat
         </Button>
       </SheetTrigger>
-      <SheetContent className="relative h-dvh w-[min(92vw,540px)] max-w-none gap-0 overflow-hidden border-l border-amber-300/20 bg-[#10130f] pb-[190px] text-white sm:max-w-none">
+      <SheetContent className="relative h-dvh max-h-dvh w-[min(92vw,540px)] max-w-none gap-0 overflow-hidden border-l border-amber-300/20 bg-[#10130f] pb-[190px] text-white sm:max-w-none">
         <SheetHeader className="border-b border-white/10 bg-black/20">
           <SheetTitle className="flex items-center gap-2 font-display text-xl text-amber-300">
             <Bot className="h-5 w-5" />
@@ -461,6 +465,7 @@ export function AdventurePlanAdminChat({
           </div>
 
           <form
+            data-admin-chat-form
             className="absolute inset-x-0 bottom-0 z-20 space-y-2 border-t border-white/10 bg-[#10130f] px-4 pb-4 pt-3 shadow-[0_-16px_30px_rgba(0,0,0,0.45)]"
             onSubmit={(event) => {
               event.preventDefault()
@@ -468,6 +473,8 @@ export function AdventurePlanAdminChat({
             }}
           >
             <textarea
+              ref={inputRef}
+              data-admin-chat-input
               value={input}
               onChange={(event) => setInput(event.target.value)}
               disabled={isSending}

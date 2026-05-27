@@ -203,6 +203,22 @@ textarea {
   text-wrap: pretty;
 }
 
+[data-admin-chat-form] {
+  max-height: 190px !important;
+  overflow: hidden !important;
+}
+
+[data-admin-chat-input] {
+  display: block !important;
+  field-sizing: fixed !important;
+  flex: 0 0 auto !important;
+  height: 104px !important;
+  max-height: 104px !important;
+  min-height: 104px !important;
+  overflow-y: auto !important;
+  resize: none !important;
+}
+
 button {
   cursor: pointer;
 }
