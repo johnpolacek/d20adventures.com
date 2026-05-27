@@ -1,6 +1,7 @@
 "use client"
 
-import { Clock3, ImageIcon, Menu, MessageSquare, PanelLeftClose, RotateCcw, Search, Wand2 } from "lucide-react"
+import { ClipboardList, Clock3, ImageIcon, Menu, MessageSquare, PanelLeftClose, RotateCcw, Search, ShieldCheck, Wand2 } from "lucide-react"
+import Link from "next/link"
 import * as React from "react"
 import { toast } from "sonner"
 import {
@@ -156,12 +157,30 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-[#141312] pt-10 text-stone-100">
       <header className="shrink-0 border-b border-[#3a3630] bg-[#1b1a18] px-6 pt-4 pb-3 shadow-[0_18px_60px_rgba(0,0,0,.22)]">
-        <div className="flex min-h-10 flex-wrap items-center gap-x-3 gap-y-2">
-          <h1 className="min-w-0 max-w-full truncate font-display text-2xl font-bold leading-none tracking-normal text-[#e6d6b8] md:text-3xl">{state.manifest.title}</h1>
-          <div className="flex shrink-0 items-center gap-1.5">
-            <HeaderCountBadge value={sectionCount} label="sections" />
-            <HeaderCountBadge value={encounterCount} label="encounters" />
-            <HeaderCountBadge value={npcCount} label="NPCs" />
+        <div className="flex min-h-10 flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
+            <h1 className="min-w-0 max-w-full truncate font-display text-2xl font-bold leading-none tracking-normal text-[#e6d6b8] md:text-3xl">{state.manifest.title}</h1>
+            <div className="flex shrink-0 items-center gap-1.5">
+              <HeaderCountBadge value={sectionCount} label="sections" />
+              <HeaderCountBadge value={encounterCount} label="encounters" />
+              <HeaderCountBadge value={npcCount} label="NPCs" />
+            </div>
+          </div>
+          <div className="ml-auto flex shrink-0 items-center gap-2">
+            <Link
+              href="/admin"
+              className="inline-flex h-8 items-center gap-1.5 rounded border border-[#5b5145] bg-[#24211d] px-3 font-mono text-[11px] font-bold uppercase tracking-[.12em] text-[#d9c292] transition-colors hover:border-[#d8bd81] hover:text-[#f0d79c]"
+            >
+              <ShieldCheck className="size-3.5" />
+              Admin
+            </Link>
+            <Link
+              href="/admin/adventure-plans"
+              className="inline-flex h-8 items-center gap-1.5 rounded border border-[#5b5145] bg-[#24211d] px-3 font-mono text-[11px] font-bold uppercase tracking-[.12em] text-[#d9c292] transition-colors hover:border-[#d8bd81] hover:text-[#f0d79c]"
+            >
+              <ClipboardList className="size-3.5" />
+              Plans
+            </Link>
           </div>
         </div>
       </header>

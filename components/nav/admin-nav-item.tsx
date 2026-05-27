@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils"
 import { useUser } from "@clerk/nextjs"
-import { ClipboardListIcon, ShieldCheckIcon } from "lucide-react"
+import { ShieldCheckIcon } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -43,27 +43,10 @@ export function AdminNavItem() {
     return null
   }
 
-  const links = [
-    { href: "/admin", label: "Admin", icon: ShieldCheckIcon, isActive: pathname === "/admin" },
-    { href: "/admin/adventure-plans", label: "Plans", icon: ClipboardListIcon, isActive: pathname.startsWith("/admin/adventure-plans") },
-  ]
-
   return (
-    <nav className="flex items-center gap-2 sm:gap-3" aria-label="Admin navigation">
-      {links.map((item) => {
-        const Icon = item.icon
-
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn("text-xs sm:text-sm font-bold font-display transition-colors hover:text-yellow-950 flex items-center gap-1", item.isActive ? "text-yellow-950" : "text-yellow-950/70")}
-          >
-            <Icon className="h-4 w-4" />
-            {item.label}
-          </Link>
-        )
-      })}
-    </nav>
+    <Link href="/admin" className={cn("text-sm font-medium transition-colors hover:text-primary flex items-center gap-1", pathname.startsWith("/admin") ? "text-primary" : "text-muted-foreground")}>
+      <ShieldCheckIcon className="h-4 w-4" />
+      Admin
+    </Link>
   )
 }
