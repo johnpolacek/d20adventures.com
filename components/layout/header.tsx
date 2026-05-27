@@ -3,6 +3,7 @@ import Image from "next/image"
 import Link from "next/link"
 import Parchment from "../graphics/background/Parchment"
 import { paper } from "../graphics/styles"
+import { AdminNavItem } from "../nav/admin-nav-item"
 import AuthButtons from "../nav/auth-buttons"
 
 export default async function Header({ path }: { path: string }) {
@@ -51,7 +52,8 @@ export default async function Header({ path }: { path: string }) {
           </Link>
         )}
       </div>
-      <div className="flex flex-1 justify-end items-center scale-90 sm:scale-100 -mt-1 sm:-mt-0 gap-8 pl-4">
+      <div className="flex flex-1 justify-end items-center scale-90 sm:scale-100 -mt-1 sm:-mt-0 gap-4 sm:gap-8 pl-4">
+        <AdminNavItem />
         <AuthButtons />
       </div>
     </header>

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin Adventure Plans Navigation</title>
+  <style>
+    :root{--bg:#11130f;--panel:#191d17;--ink:#f4f1df;--muted:#b7b69d;--line:#3d472f;--accent:#d7b35d;--blue:#74b4c7;--green:#93c47d;--r:8px}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Georgia,"Times New Roman",serif;line-height:1.5}
+    main{width:min(920px,calc(100% - 32px));margin:auto;padding:32px 0 52px}a{color:var(--accent)}
+    h1{font-size:clamp(2rem,5vw,3.5rem);line-height:1;margin:0 0 10px}.eyebrow{font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.1em;color:var(--blue)}
+    .panel{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:16px;margin-top:14px}.muted{color:var(--muted)}
+    ul{padding-left:1.25rem}.status{color:var(--green);font:700 .78rem ui-monospace,monospace;text-transform:uppercase}
+    .wiki-nav{width:min(920px,calc(100% - 32px));margin:14px auto 0;display:flex;flex-wrap:wrap;gap:8px;font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.wiki-nav a{border:1px solid var(--line);border-radius:999px;padding:6px 9px;background:rgba(25,29,23,.72);text-decoration:none}
+  </style>
+</head>
+<body>
+  <nav class="wiki-nav" aria-label="Wiki navigation"><a href="../index.html">Wiki Home</a><a href="index.html">Plans</a></nav>
+  <main>
+    <p class="eyebrow">Focused implementation plan</p>
+    <h1>Admin Adventure Plans Navigation</h1>
+    <p class="muted">Add top-bar admin navigation for the dashboard and Adventure Plans area, using the existing admin-only visibility check.</p>
+    <section class="panel">
+      <span class="status">Implemented</span>
+      <h2>Scope</h2>
+      <ul class="muted">
+        <li>Expose <code>/admin</code> as Admin in the fixed header.</li>
+        <li>Expose <code>/admin/adventure-plans</code> as Plans in the fixed header.</li>
+        <li>Keep both links hidden from non-admin users through the existing <code>/api/check-admin</code> check.</li>
+        <li>Confirm no active <code>/admin/wiki-adventures</code> app route remains to migrate.</li>
+      </ul>
+    </section>
+    <section class="panel">
+      <h2>Validation</h2>
+      <p class="muted"><code>pnpm generate:routes</code> passed and <code>pnpm exec tsc --noEmit</code> passed on 2026-05-27. Do not push without explicit approval.</p>
+    </section>
+  </main>
+</body>
+</html>
