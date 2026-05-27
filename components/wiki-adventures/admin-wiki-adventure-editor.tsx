@@ -175,7 +175,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
               Admin
             </Link>
             <Link
-              href="/admin/adventure-plans"
+              href="/admin/adventures-plans"
               className="inline-flex h-8 items-center gap-1.5 rounded border border-[#5b5145] bg-[#24211d] px-3 font-mono text-[11px] font-bold uppercase tracking-[.12em] text-[#d9c292] transition-colors hover:border-[#d8bd81] hover:text-[#f0d79c]"
             >
               <ClipboardList className="size-3.5" />

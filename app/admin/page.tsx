@@ -93,7 +93,7 @@ export default async function AdminPage() {
               <p className="text-sm text-muted-foreground">Chat with migrated adventures, edit key fields, validate source, and export restore bundles.</p>
             </CardContent>
             <CardFooter>
-              <Link href="/admin/adventure-plans" className="w-full">
+              <Link href="/admin/adventures-plans" className="w-full">
                 <Button variant="outline">Open Workbench</Button>
               </Link>
             </CardFooter>
