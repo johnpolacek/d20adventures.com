@@ -6,6 +6,15 @@ Git owns routine implementation history. This log records durable wiki, planning
 
 ## 2026-06-11
 
+### Found and fixed two runtime bugs via live authenticated playthroughs
+
+Ran authenticated browser playthroughs (agent-browser + a Clerk dev test user) to exercise the real public play flow, which surfaced two bugs that bridge tests could not:
+
+- **Solo auto-start never navigated.** Selecting the premade in a solo adventure created the adventure server-side but stranded the user on character-select: `PartyConfiguration` caught the server action's `NEXT_REDIRECT` and returned instead of re-throwing. Fixed by re-throwing the redirect (`components/adventure/PartyConfiguration.tsx`).
+- **adventurePatch dropped GM world-state on malformed AI output.** The model intermittently returns the structured patch fields (`openThreads`, `entityUpdates`, etc.) as arrays of strings; a single malformed field failed Zod for the whole patch, so the turn fell back to a summary-only patch and silently dropped that turn's discoveries, entity/character updates, and threads. Made each field independently resilient (`lib/wiki-adventures/adventure-patch.ts`). Encounter transitions are computed separately and were never affected.
+
+Verified encounter transitions work end-to-end: The Midnight Summons played to full completion (3 transitions, terminal encounter, completion UI), and Covert Cargo transitioned live (`the-shipment` → `the-disturbance`). Covert Cargo is a 2-player adventure, so solo verification used practice mode; driving it to its own completion screen was impractical here (heavy multi-PC + multi-NPC combat turns, compounded by intermittent LLM API connect-timeouts in the local environment) — not a product bug.
+
 ### Closed the post-merge hardening track
 
 - Fixed `pnpm check` (Biome) to a green, build-stable state; generated files and wiki source excluded from Biome.
