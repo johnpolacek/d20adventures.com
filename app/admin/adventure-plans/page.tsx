@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
 
 export default function AdminAdventurePlansRedirectPage() {
-  redirect("/admin/adventures-plans")
+  redirect("/admin/wiki-adventures")
 }

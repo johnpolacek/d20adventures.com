@@ -45,7 +45,7 @@ export function AdminNavItem() {
 
   const links = [
     { href: "/admin", label: "Admin", icon: ShieldCheckIcon, isActive: pathname === "/admin" },
-    { href: "/admin/adventure-plans", label: "Plans", icon: ClipboardListIcon, isActive: pathname.startsWith("/admin/adventure-plans") },
+    { href: "/admin/wiki-adventures", label: "Plans", icon: ClipboardListIcon, isActive: pathname.startsWith("/admin/wiki-adventures") },
   ]
 
   return (
