@@ -231,7 +231,9 @@ export async function startAdventure({ settingId, adventurePlanId, adventureId }
     console.log("🎲 Successfully started adventure with first turn:", turnId)
     console.log("🎲 Turn created with", characters.length, "characters")
   } catch (error) {
-    console.error("🎲 Failed to start adventure:", error)
+    // redirect() throws NEXT_REDIRECT as its success signal; don't log it as a failure.
+    const isRedirect = error && typeof error === "object" && "digest" in error && String((error as { digest?: string }).digest).startsWith("NEXT_REDIRECT")
+    if (!isRedirect) console.error("🎲 Failed to start adventure:", error)
     throw error
   }
 

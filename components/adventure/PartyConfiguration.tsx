@@ -51,7 +51,8 @@ const PartyConfiguration: React.FC<PartyConfigurationProps> = ({ characterChoice
     } catch (error) {
       const isRedirectError = error && typeof error === "object" && "digest" in error && String((error as { digest?: string }).digest).includes("NEXT_REDIRECT")
 
-      if (isRedirectError) return
+      // A redirect is the success path: re-throw so Next performs the navigation.
+      if (isRedirectError) throw error
 
       console.error("Failed to create adventure:", error)
       setStartError(error instanceof Error ? error.message : "Failed to start adventure.")
