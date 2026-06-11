@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="visual-concept" content="arcane operations console"><title>D20 Adventures Log</title><style>
 :root{--bg:#11130f;--panel:#191d17;--ink:#f4f1df;--muted:#b7b69d;--line:#3d472f;--accent:#d7b35d;--blue:#74b4c7;--r:8px}*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#15170f,#0f120e);color:var(--ink);font-family:Georgia,"Times New Roman",serif;line-height:1.5}main{width:min(980px,calc(100% - 32px));margin:auto;padding:32px 0 52px}a{color:var(--accent)}header{border-bottom:1px solid var(--line);padding-bottom:18px}.eyebrow{font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.1em;color:var(--blue)}h1{font-size:clamp(2rem,5vw,4rem);line-height:1;margin:0 0 10px}.entry{display:grid;grid-template-columns:150px 1fr;gap:16px;margin-top:20px}.date{font:700 .8rem ui-monospace,monospace;color:var(--accent)}.body{border:1px solid var(--line);background:var(--panel);border-radius:var(--r);padding:16px}.body ul{margin-bottom:0}@media(max-width:680px){.entry{grid-template-columns:1fr}}
-.wiki-nav{width:min(1120px,calc(100% - 32px));margin:14px auto 0;display:flex;flex-wrap:wrap;gap:8px;font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.wiki-nav a{border:1px solid var(--line,#3d472f);border-radius:999px;padding:6px 9px;background:rgba(25,29,23,.72);color:var(--accent,#d7b35d);text-decoration:none}.wiki-nav a:focus-visible{outline:2px solid var(--accent,#d7b35d);outline-offset:2px}</style></head><body><nav class="wiki-nav" aria-label="Wiki navigation"><a href="index.html">Wiki Home</a><a href="Sources.html">Sources</a><a href="plans/index.html">Plans</a><a href="roadmap.html">Roadmap</a><a href="Architecture.html">Architecture</a></nav><main>
+.wiki-nav{width:min(1120px,calc(100% - 32px));margin:14px auto 0;display:flex;flex-wrap:wrap;gap:8px;font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.wiki-nav a{border:1px solid var(--line,#3d472f);border-radius:999px;padding:6px 9px;background:rgba(25,29,23,.72);color:var(--accent,#d7b35d);text-decoration:none}.wiki-nav a:focus-visible{outline:2px solid var(--accent,#d7b35d);outline-offset:2px}</style></head><body><nav class="wiki-nav" aria-label="Wiki navigation"><a href="index.html">Wiki Home</a><a href="Sources.html">Sources</a><a href="plans/index.md">Plans</a><a href="roadmap.html">Roadmap</a><a href="Architecture.html">Architecture</a></nav><main>
 <header><p class="eyebrow">Project-context log</p><h1>Decision history</h1><p>Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.</p></header>
 <article class="entry">
 <div class="date">2026-06-11</div>
@@ -10,7 +10,7 @@
 <li>Confirmed the merged architecture adds registered local wiki adventure runtime support, Realm of Myr migrated source, admin wiki authoring, Convex content refs, guarded wiki turn advancement, and compatibility admin routes.</li>
 <li>Validation evidence: focused wiki-adventure batch tests, admin-authoring test, all four bridge checks, <code>pnpm exec tsc --noEmit --pretty false</code>, and <code>pnpm build</code> passed. Build retains the existing missing <code>SENDGRID_API_KEY</code> warning.</li>
 <li><code>pnpm check</code> now runs far enough to report current Biome diagnostics and fails with 305 errors, 52 warnings, and 44 infos before truncation. This supersedes older log notes that described a Biome config/schema mismatch as the blocker.</li>
-<li>Added <code>wiki/plans/wiki-adventure-implementation-review.html</code> and refreshed the roadmap, plan dashboard, source ledger, technical brief, architecture map, and migration plan status.</li>
+<li>Added <code>wiki/plans/wiki-adventure-implementation-review.md</code> and refreshed the roadmap, plan dashboard, source ledger, technical brief, architecture map, and migration plan status.</li>
 <li>Residual risks to harden before production cutover: admin canonical S3 source writes before validation, partial S3 source overriding local fallback, mixed admin route names, repository-wide Biome cleanup, and authenticated manual playthrough coverage.</li>
 </ul></section>
 </article>
@@ -263,7 +263,7 @@
 <section class="body"><h2>Added The Midnight Summons focused playthrough plan</h2><ul>
 <li>Added <code>wiki/plans/midnight-summons-playthrough-test.html</code> as a focused plan for migrating and testing the single-player Realm of Myr adventure from the current public selection and Thalbern premade selection screens.</li>
 <li>Indexed the new legacy JSON source at <code>wiki/sources/adventure plans/the-midnight-summons.json</code> in <code>wiki/Sources.html</code>.</li>
-<li>Linked the playthrough plan from <code>wiki/plans/index.html</code>.</li>
+<li>Linked the playthrough plan from <code>wiki/plans/index.md</code>.</li>
 <li>Current recommendation: use The Midnight Summons as the first live playthrough cutover candidate, starting with a preview-backed migration and blocking publish until full S3 asset URLs are present.</li>
 </ul></section>
 </article>

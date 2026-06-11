@@ -8,7 +8,7 @@ This `wiki/` directory is the maintained knowledge and planning layer for `D20 A
 - `index.html` is the wiki front door.
 - `log.html` is the project-context changelog. Git owns routine implementation history.
 - `Sources.html` catalogs source material, repository evidence, and unknowns.
-- `plans/index.html` defines the planning contract.
+- `plans/index.md` defines the planning contract.
 - `roadmap.html` tracks the next useful project direction.
 - `Architecture.html` captures cross-cutting architecture boundaries and risks.
 
