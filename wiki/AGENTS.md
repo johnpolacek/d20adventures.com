@@ -5,21 +5,21 @@ This `wiki/` directory is the maintained knowledge and planning layer for `D20 A
 
 ## Source Of Truth
 
-- `index.html` is the wiki front door.
-- `log.html` is the project-context changelog. Git owns routine implementation history.
-- `Sources.html` catalogs source material, repository evidence, and unknowns.
+- `index.md` is the wiki front door.
+- `log.md` is the project-context changelog. Git owns routine implementation history.
+- `Sources.md` catalogs source material, repository evidence, and unknowns.
 - `plans/index.md` defines the planning contract.
-- `roadmap.html` tracks the next useful project direction.
-- `Architecture.html` captures cross-cutting architecture boundaries and risks.
+- `roadmap.md` tracks the next useful project direction.
+- `Architecture.md` captures cross-cutting architecture boundaries and risks.
 
 ## Rules
 
-- Read `index.html` before structural wiki changes.
+- Read `index.md` before structural wiki changes.
 - Keep durable project knowledge, planning, decisions, and validation notes under `wiki/`.
 - Preserve exact source material under `wiki/sources/` only when provenance matters.
-- Update `index.html` when adding or materially changing durable pages.
-- Update `log.html` after bootstrapping, planning, validation, or material project changes that affect durable project context.
-- Use standalone HTML pages with embedded CSS, relative links, semantic structure, and accessible tables, diagrams, or controls when they improve readability.
+- Update `index.md` when adding or materially changing durable pages.
+- Update `log.md` after bootstrapping, planning, validation, or material project changes that affect durable project context.
+- Write pages as GitHub-flavored Markdown with a short breadcrumb nav line, relative `.md` links, and tables instead of decorative HTML. Keep pages concise and scannable.
 
 ## Boundaries
 
