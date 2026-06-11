@@ -6,7 +6,9 @@ Git owns routine implementation history. This log records durable wiki, planning
 
 ## 2026-06-11
 
-### Found and fixed two runtime bugs via live authenticated playthroughs
+### Found and fixed three runtime bugs via live authenticated playthroughs
+
+A multi-character roleplay test of Road to Kordavos surfaced a third bug: the player-reply roll path (`buildTurnReplyRollRequirement`) always read the legacy S3 `AdventurePlan` and looked up the encounter under `sections>scenes>encounters`. For wiki-migrated adventures whose legacy S3 plan is a stub (no encounters) — as Road to Kordavos's was — every player action 500'd with "Encounter not found", making the adventure unplayable. Fixed by routing registered wiki adventures through the compiled wiki runtime artifacts (`lib/services/adventure-turn-reply-service.ts`), proven live with the S3 plan re-stubbed. The Midnight Summons and Covert Cargo bridge cases pass because their legacy plans happened to contain the encounters. (A secondary, non-blocking legacy-plan dependency remains in the NPC-turn DM context — it warns and degrades gracefully.) The multi-character roleplay itself (3 PCs: Arcanist, Ranger, Dwarf Cleric) read as good quality: distinct NPC voices, autonomous NPC cross-talk, tracked continuity, and dice-integrated social actions.
 
 Ran authenticated browser playthroughs (agent-browser + a Clerk dev test user) to exercise the real public play flow, which surfaced two bugs that bridge tests could not:
 
