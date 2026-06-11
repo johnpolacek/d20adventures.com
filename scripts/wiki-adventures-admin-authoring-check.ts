@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
-import { listAdminWikiAdventures, loadAdminWikiAdventureState } from "@/lib/wiki-adventures/admin-authoring"
+import { AdminAuthoringValidationError, assertAdminSourcePublishable, listAdminWikiAdventures, loadAdminWikiAdventureState } from "@/lib/wiki-adventures/admin-authoring"
+import { createSourceFile } from "@/lib/wiki-adventures/change-sets"
 import { getLocalWikiAdventureDefinition, readLocalWikiAdventureSourceFiles } from "@/lib/wiki-adventures/local-runtime"
 
 async function main() {
@@ -41,6 +42,29 @@ async function main() {
   assert.ok(editorComponent.includes("Encounter NPCs"))
   assert.ok(editorComponent.includes("Read Aloud"))
   assert.ok(editorComponent.includes("moduleSections"))
+
+  // Pre-write validation gate: valid source compiles and passes the gate.
+  const covertDefinition = getLocalWikiAdventureDefinition("realm-of-myr", "covert-cargo")
+  assert.ok(covertDefinition)
+  const covertFiles = readLocalWikiAdventureSourceFiles(covertDefinition)
+  const gated = assertAdminSourcePublishable(covertFiles, covertDefinition, [])
+  assert.equal(gated.validationReport.status !== "blocked", true, "Clean covert-cargo source must pass the pre-write gate")
+
+  // Corrupt an encounter so the proposed set has blocking errors, and confirm the gate refuses it.
+  const encounterFile = covertFiles.find((file) => file.path.includes("/encounters/") && file.path.endsWith(".md"))
+  assert.ok(encounterFile, "Expected a covert-cargo encounter source file")
+  const brokenFiles = covertFiles.map((file) => (file.path === encounterFile.path ? createSourceFile(file.path, "no frontmatter here, just prose") : file))
+  assert.throws(
+    () => assertAdminSourcePublishable(brokenFiles, covertDefinition, [encounterFile.path]),
+    (error: unknown) => {
+      assert.ok(error instanceof AdminAuthoringValidationError, "Gate must throw AdminAuthoringValidationError")
+      assert.equal(error.validation.status, "blocked")
+      assert.ok(error.validation.summary.errorCount > 0)
+      assert.deepEqual(error.changedPaths, [encounterFile.path])
+      return true
+    },
+    "Broken source must be blocked before any canonical write"
+  )
 }
 
 main()

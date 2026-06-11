@@ -6,7 +6,7 @@ import { applyAuthoringChangeSet, createSourceFile } from "./change-sets"
 import { compileAdventureSourceTree } from "./compiler"
 import { getLocalWikiAdventureDefinition, type LocalWikiAdventureDefinition, readLocalWikiAdventureSourceFiles, readWikiAdventureSourceFiles } from "./local-runtime"
 import { S3WikiAdventureSourceService } from "./source-service"
-import type { AuthoringChangeSet, AuthoringRevision, RuntimeArtifacts, SourceFile, ValidationMode } from "./types"
+import type { AuthoringChangeSet, AuthoringRevision, RuntimeArtifacts, SourceFile, ValidationMode, ValidationReport } from "./types"
 
 export type AdminWikiAdventureSummary = {
   settingId: string
@@ -49,6 +49,50 @@ const aiChangeSchema = z.object({
     .max(8),
 })
 
+/**
+ * Thrown when a proposed admin change set compiles with blocking validation
+ * errors. It is raised before any canonical S3 write, so the invalid source
+ * never becomes the runtime candidate. Carries the report so the action layer
+ * can surface the blocked findings to the editor.
+ */
+export class AdminAuthoringValidationError extends Error {
+  readonly validation: ValidationReport
+  readonly changedPaths: string[]
+  constructor(validation: ValidationReport, changedPaths: string[]) {
+    const errorCount = validation.summary.errorCount
+    const detail = validation.findings
+      .filter((finding) => finding.severity === "error")
+      .slice(0, 3)
+      .map((finding) => `${finding.sourcePath}: ${finding.message}`)
+      .join("; ")
+    super(`Validation blocked the canonical source write (${errorCount} error${errorCount === 1 ? "" : "s"})${detail ? `: ${detail}` : "."}`)
+    this.name = "AdminAuthoringValidationError"
+    this.validation = validation
+    this.changedPaths = changedPaths
+  }
+}
+
+/** Compile a proposed admin source set in draft-preview mode without writing anything. */
+export function compileProposedAdminSource(files: SourceFile[], definition: LocalWikiAdventureDefinition): RuntimeArtifacts {
+  return compileAdventureSourceTree(files, {
+    mode: "draftPreview",
+    contentVersion: "admin-current-source",
+    allowedAssetHosts: definition.assetHosts,
+  })
+}
+
+/**
+ * Compile the proposed source set and refuse it when validation is blocked.
+ * Returns the compiled artifacts when the source is safe to write canonically.
+ */
+export function assertAdminSourcePublishable(files: SourceFile[], definition: LocalWikiAdventureDefinition, changedPaths: string[] = []): RuntimeArtifacts {
+  const artifacts = compileProposedAdminSource(files, definition)
+  if (artifacts.validationReport.status === "blocked") {
+    throw new AdminAuthoringValidationError(artifacts.validationReport, changedPaths)
+  }
+  return artifacts
+}
+
 export async function listAdminWikiAdventures(): Promise<AdminWikiAdventureSummary[]> {
   const states = await Promise.all(["the-midnight-summons", "covert-cargo", "the-road-to-kordavos", "march-of-davos"].map((planId) => loadAdminWikiAdventureState("realm-of-myr", planId)))
   return states.map((state) => ({
@@ -85,11 +129,7 @@ export async function applyAdminChatRequest(input: { settingId: string; planId: 
   const proposal = (await generateObject({ prompt, schema: aiChangeSchema })).object
   const changeSet = buildUpdateChangeSet(state, proposal.changes, `Admin chat: ${input.message}`)
   const writeResult = await writeCanonicalChangeSet(state, changeSet, "ai")
-  const artifacts = compileAdventureSourceTree(writeResult.files, {
-    mode: "draftPreview",
-    contentVersion: "admin-current-source",
-    allowedAssetHosts: state.definition.assetHosts,
-  })
+  const artifacts = writeResult.artifacts
   return {
     reply: proposal.reply,
     changedPaths: changeSet.changes.map((change) => ("path" in change ? change.path : change.toPath)),
@@ -104,11 +144,7 @@ export async function applyAdminKeyFieldUpdate(input: { settingId: string; planI
   const state = await loadAdminWikiAdventureState(input.settingId, input.planId)
   const changeSet = buildUpdateChangeSet(state, [{ path: input.path, content: input.content }], input.intent, "human")
   const writeResult = await writeCanonicalChangeSet(state, changeSet, "human")
-  const artifacts = compileAdventureSourceTree(writeResult.files, {
-    mode: "draftPreview",
-    contentVersion: "admin-current-source",
-    allowedAssetHosts: state.definition.assetHosts,
-  })
+  const artifacts = writeResult.artifacts
   return {
     reply: "Saved source change.",
     changedPaths: changeSet.changes.map((change) => ("path" in change ? change.path : change.toPath)),
@@ -136,11 +172,7 @@ export async function importAdminWikiAdventureBundle(input: { settingId: string;
   const changes = input.files.filter((file) => allowed.has(file.path)).map((file) => ({ path: file.path, content: file.content }))
   const changeSet = buildUpdateChangeSet(state, changes, "Manual source bundle restore", "restore")
   const writeResult = await writeCanonicalChangeSet(state, changeSet, "restore")
-  const artifacts = compileAdventureSourceTree(writeResult.files, {
-    mode: "draftPreview",
-    contentVersion: "admin-current-source",
-    allowedAssetHosts: state.definition.assetHosts,
-  })
+  const artifacts = writeResult.artifacts
   return {
     reply: "Restored source bundle.",
     changedPaths: changeSet.changes.map((change) => ("path" in change ? change.path : change.toPath)),
@@ -166,11 +198,7 @@ export async function restoreAdminWikiAdventureRevision(input: { settingId: stri
   if (changes.length === 0) throw new Error("No matching files found in revision.")
   const changeSet = buildUpdateChangeSet(state, changes, input.path ? `Restore ${input.path} from revision ${input.revisionId}` : `Restore draft from revision ${input.revisionId}`, "restore")
   const writeResult = await writeCanonicalChangeSet(state, changeSet, "restore")
-  const artifacts = compileAdventureSourceTree(writeResult.files, {
-    mode: "draftPreview",
-    contentVersion: "admin-current-source",
-    allowedAssetHosts: state.definition.assetHosts,
-  })
+  const artifacts = writeResult.artifacts
   return {
     reply: input.path ? `Restored ${input.path} from revision ${input.revisionId}.` : `Restored draft from revision ${input.revisionId}.`,
     changedPaths: changeSet.changes.map((change) => ("path" in change ? change.path : change.toPath)),
@@ -220,8 +248,6 @@ async function writeCanonicalChangeSet(state: AdminWikiAdventureState, changeSet
   if (state.source === "s3") {
     applyAuthoringChangeSet(new Map(state.files.map((file) => [file.path, file])), effectiveChangeSet)
   }
-  const service = new S3WikiAdventureSourceService(s3Client, bucket)
-  await service.writeApprovedChangeSet(effectiveChangeSet)
   const nextFiles = state.files.map((file) => {
     const update = effectiveChangeSet.changes.find((change) => "path" in change && change.path === file.path)
     return update && "content" in update ? createSourceFile(file.path, update.content) : file
@@ -230,13 +256,14 @@ async function writeCanonicalChangeSet(state: AdminWikiAdventureState, changeSet
     if (change.op === "create") nextFiles.push(createSourceFile(change.path, change.content))
   }
   const files = uniqueFiles(nextFiles)
-  const artifacts = compileAdventureSourceTree(files, {
-    mode: "draftPreview",
-    contentVersion: "admin-current-source",
-    allowedAssetHosts: state.definition.assetHosts,
-  })
+  const changedPaths = Array.from(new Set(effectiveChangeSet.changes.map((change) => ("path" in change ? change.path : change.toPath)))).sort()
+  // Gate: compile the proposed source set and block the canonical write if validation fails.
+  // This runs before writeApprovedChangeSet so invalid source never becomes the runtime candidate.
+  const artifacts = assertAdminSourcePublishable(files, state.definition, changedPaths)
+  const service = new S3WikiAdventureSourceService(s3Client, bucket)
+  await service.writeApprovedChangeSet(effectiveChangeSet)
   const revision = await writeAuthoringRevision(bucket, state, effectiveChangeSet, revisionSource, files, artifacts)
-  return { files, revision }
+  return { files, revision, artifacts }
 }
 
 function seedLocalFilesChangeSet(state: AdminWikiAdventureState, changeSet: AuthoringChangeSet): AuthoringChangeSet {
