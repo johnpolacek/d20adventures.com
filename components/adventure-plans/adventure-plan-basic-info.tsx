@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { RULES_PRESETS } from "@/types/adventure-plan"
 import { Pencil } from "lucide-react"
-import Image from "next/image"
+import Image from "@/components/ui/native-image"
 import { useState } from "react"
 
 interface AdventurePlanBasicInfoProps {

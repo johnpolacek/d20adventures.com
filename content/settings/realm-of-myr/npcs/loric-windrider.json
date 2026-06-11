@@ -1,0 +1,13 @@
+{
+  "id": "loric-windrider",
+  "name": "Finn Radonik",
+  "type": "npc",
+  "image": "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726344098147",
+  "archetype": "Fighter",
+  "race": "Human",
+  "gender": "Male",
+  "appearance": "Old and weathered dockhand",
+  "personality": "Gruff but fair. He’s a hard worker and expects the same from others. Deeply loyal to his friends.",
+  "behavior": "",
+  "healthPercent": 100
+}

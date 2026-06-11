@@ -2,7 +2,7 @@
 
 import DiceRollResult from "@/components/adventure/dice-roll-result"
 import { getImageUrl } from "@/lib/utils"
-import Image from "next/image"
+import Image from "@/components/ui/native-image"
 
 export default function CharacterDiceRollResultDisplay({
   character,

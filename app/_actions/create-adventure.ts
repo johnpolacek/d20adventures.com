@@ -8,6 +8,7 @@ import { convex } from "@/lib/convex/server"
 import { canManageResource } from "@/lib/content-permissions"
 import { readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 import { toPCTemplate } from "@/lib/utils/character-mapping"
+import { isLocalWikiAdventure, loadWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PCTemplate } from "@/types/character"
 import type { Setting } from "@/types/setting"
@@ -41,16 +42,17 @@ export async function createAdventure(input: CreateAdventureInput) {
 
   // Extract character choices and create the players array
   const { characterChoices } = input
+  const localWikiRuntime = isLocalWikiAdventure(settingId, adventurePlanId) ? await loadWikiAdventureRuntime(settingId, adventurePlanId) : null
   const players = characterChoices
     .filter((choice) => choice.mode === "player") // Only include characters selected as "player"
     .map((choice) => ({
       userId: userId,
-      characterId: `characters/${userId}/${choice.characterId}.json`,
+      characterId: normalizePlayerCharacterKey(userId, choice.characterId),
     }))
 
   // Ensure each selected character exists in the user's S3 path
   for (const choice of characterChoices.filter((c) => c.mode === "player")) {
-    const userCharKey = `characters/${userId}/${choice.characterId}.json`
+    const userCharKey = normalizePlayerCharacterKey(userId, choice.characterId)
     let exists = false
     try {
       await readJsonFromS3(userCharKey)
@@ -58,7 +60,7 @@ export async function createAdventure(input: CreateAdventureInput) {
     } catch {}
     if (!exists) {
       // Try to find the character in premade PCs or as a custom character
-      let characterData: PCTemplate | unknown = plan.premadePlayerCharacters?.find((pc) => pc.id === choice.characterId)
+      let characterData: PCTemplate | unknown = localWikiRuntime?.artifacts.characterSheets.premadeCharacters[choice.characterId]?.sheet ?? plan.premadePlayerCharacters?.find((pc) => pc.id === choice.characterId)
       if (!characterData) {
         // Try to load as a custom character (should not throw if not found)
         try {
@@ -75,7 +77,6 @@ export async function createAdventure(input: CreateAdventureInput) {
 
   // Create adventure in waiting state
   const now = Date.now()
-
   // Create the adventure using the existing Convex mutation
   const adventureId = await convex.mutation(api.adventure.createAdventure, {
     planId: adventurePlanId,
@@ -89,6 +90,9 @@ export async function createAdventure(input: CreateAdventureInput) {
     status: "waitingForPlayers", // Start in lobby state
     title: plan.title, // Use the actual adventure title from the plan
     startedAt: now,
+    contentRef: localWikiRuntime?.contentRef,
+    currentEncounterId: localWikiRuntime?.artifacts.manifest.startEncounterId,
+    adventureSummaryMarkdown: localWikiRuntime?.artifacts.manifest.summary,
   })
 
   // If only one player character AND the adventure plan expects only one player, auto-start the adventure
@@ -176,6 +180,7 @@ export async function createPracticeAdventure(input: CreatePracticeAdventureInpu
   }
 
   const now = Date.now()
+  const localWikiRuntime = isLocalWikiAdventure(settingId, adventurePlanId) ? await loadWikiAdventureRuntime(settingId, adventurePlanId) : null
   const adventureId = await convex.mutation(api.adventure.createAdventure, {
     planId: adventurePlanId,
     settingId,
@@ -188,7 +193,16 @@ export async function createPracticeAdventure(input: CreatePracticeAdventureInpu
     status: "waitingForPlayers",
     title: `${plan.title} (Practice)`,
     startedAt: now,
+    contentRef: localWikiRuntime?.contentRef,
+    currentEncounterId: localWikiRuntime?.artifacts.manifest.startEncounterId,
+    adventureSummaryMarkdown: localWikiRuntime?.artifacts.manifest.summary,
   })
 
   await startAdventure({ settingId, adventurePlanId, adventureId })
+}
+
+function normalizePlayerCharacterKey(userId: string, characterId: string) {
+  if (characterId.startsWith("characters/")) return characterId
+  if (characterId.endsWith(".json")) return `characters/${userId}/${characterId}`
+  return `characters/${userId}/${characterId}.json`
 }

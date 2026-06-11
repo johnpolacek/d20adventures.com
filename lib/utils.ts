@@ -35,10 +35,7 @@ export function getImageUrl(imagePath: string): string {
  * send texture-friendly CORS headers.
  */
 export function getTextureImageUrl(imagePath: string): string {
-  const imageUrl = getImageUrl(imagePath)
-  if (!imageUrl) return imageUrl
-
-  return `/_next/image?url=${encodeURIComponent(imageUrl)}&w=256&q=75`
+  return getImageUrl(imagePath)
 }
 
 /**

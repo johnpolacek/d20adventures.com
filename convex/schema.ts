@@ -52,6 +52,24 @@ export default defineSchema({
     startedAt: v.number(),
     endedAt: v.optional(v.number()),
     currentTurnId: v.optional(v.id("turns")),
+    currentEncounterId: v.optional(v.string()),
+    contentRef: v.optional(
+      v.object({
+        source: v.union(v.literal("published"), v.literal("preview")),
+        settingId: v.string(),
+        planId: v.string(),
+        contentVersion: v.optional(v.string()),
+        contentHash: v.optional(v.string()),
+        versionId: v.optional(v.string()),
+        previewDraftId: v.optional(v.string()),
+        schemaVersion: v.string(),
+      })
+    ),
+    adventureSummaryMarkdown: v.optional(v.string()),
+    discoveries: v.optional(v.array(v.any())),
+    entityUpdates: v.optional(v.array(v.any())),
+    openThreads: v.optional(v.array(v.any())),
+    resolvedThreadIds: v.optional(v.array(v.string())),
     title: v.string(),
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -154,6 +172,15 @@ export default defineSchema({
     ),
     order: v.number(),
     isFinalEncounter: v.optional(v.boolean()),
+    adventurePatch: v.optional(v.any()),
+    transition: v.optional(v.any()),
+    generatedBy: v.optional(
+      v.object({
+        model: v.optional(v.string()),
+        promptVersion: v.optional(v.string()),
+        contextHash: v.optional(v.string()),
+      })
+    ),
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   })

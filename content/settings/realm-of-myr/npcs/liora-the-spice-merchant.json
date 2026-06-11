@@ -1,0 +1,13 @@
+{
+  "id": "liora-the-spice-merchant",
+  "name": "Liora the Spice Merchant",
+  "type": "npc",
+  "image": "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725142385947",
+  "archetype": "Trader",
+  "race": "Human",
+  "gender": "Female",
+  "appearance": "Short and stout with a braided beard and hair, dressed in earthy tones with a belt full of small, exotic spice jars.",
+  "personality": "Warm, knowledgeable, always ready to share a story or a cooking tip.",
+  "behavior": "Expertise in rare spices and herbs, skilled storyteller.",
+  "healthPercent": 100
+}

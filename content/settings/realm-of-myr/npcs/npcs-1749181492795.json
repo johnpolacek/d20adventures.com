@@ -1,0 +1,54 @@
+{
+  "name": "Silas",
+  "archetype": "Rogue",
+  "race": "Human",
+  "gender": "Male",
+  "appearance": "Silas is a lean and wiry, observant grey eyes that constantly scan his surroundings. He moves with a quiet, almost predatory grace, his movements fluid and economical.",
+  "personality": "Sly, cynical, and highly independent. Silas is a pragmatist who trusts few and relies on his own skills. He possesses a dry wit that surfaces occasionally, often in the form of sarcastic remarks.",
+  "background": "Silas grew up in the grimy back alleys of the city, learning to survive by his wits and nimble fingers. He has developed into a ruthless pragrmatist.",
+  "motivation": "",
+  "behavior": "",
+  "healthPercent": 100,
+  "equipment": [
+    {
+      "name": "Two finely balanced daggers",
+      "description": "One tucked into each boot, their blades honed to a razor's edge."
+    },
+    {
+      "name": "Set of masterwork lockpicks",
+      "description": "Kept in a small, leather pouch, these tools are his most prized possessions."
+    },
+    {
+      "name": "Dark leather armor",
+      "description": "Light and flexible, designed for stealth and minimal noise."
+    },
+    {
+      "name": "Coin pouch",
+      "description": "Contains a modest amount of gold and silver, enough for immediate needs."
+    },
+    {
+      "name": "Grappling hook and rope",
+      "description": "Compact and easily concealed, useful for scaling walls."
+    }
+  ],
+  "skills": [
+    "Stealth",
+    "Sleight of Hand",
+    "Acrobatics",
+    "Perception",
+    "Investigation",
+    "Deception"
+  ],
+  "status": "",
+  "type": "npc",
+  "attributes": {
+    "strength": 9,
+    "dexterity": 16,
+    "constitution": 10,
+    "intelligence": 14,
+    "wisdom": 13,
+    "charisma": 12
+  },
+  "id": "npcs-1749181492795",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/covert-cargo/npcs/3959ac3c-b63a-4e88-9cce-6a2d69f2bc52.png?t=1749182638807"
+}

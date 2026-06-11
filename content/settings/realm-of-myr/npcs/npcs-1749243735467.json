@@ -1,0 +1,60 @@
+{
+  "name": "Elven Archer",
+  "archetype": "Archer",
+  "race": "Wood Elf",
+  "gender": "Female",
+  "appearance": "Tall, slender elf with keen, emerald eyes that constantly scan her surroundings. Her long, braided auburn hair is often adorned with forest leaves and small feathers. She moves with a silent grace, her lithe frame suggesting both agility and endurance. Her skin is lightly tanned from years spent under the sun, and a faint scar runs along her left cheekbone, a memento from a close encounter with a monstrous beast.",
+  "personality": "Stoic and disciplined, with a strong sense of responsibility. ",
+  "background": "",
+  "motivation": "",
+  "behavior": "",
+  "healthPercent": 100,
+  "equipment": [
+    {
+      "name": "Whisperwood Longbow",
+      "description": "A finely crafted longbow made from ancient Whisperwood, known for its incredible range and accuracy."
+    },
+    {
+      "name": "Quiver of Swift Arrows",
+      "description": "A quiver containing 20 meticulously fletched arrows, some tipped with special broadheads for hunting, others with enchanted tips for magical threats."
+    },
+    {
+      "name": "Forest-Green Leather Armor",
+      "description": "Lightweight, supple leather armor dyed forest-green, providing protection without hindering movement, and excellent camouflage."
+    },
+    {
+      "name": "Elven Hunting Knife",
+      "description": "A sharp, balanced knife used for skinning, carving, and close-quarters defense."
+    },
+    {
+      "name": "Cloak of the Wilds",
+      "description": "A hooded cloak woven with natural fibers, providing warmth and blending seamlessly with forest environments."
+    }
+  ],
+  "skills": [
+    "Archery (Expert)",
+    "Stealth",
+    "Survival",
+    "Perception",
+    "Tracking",
+    "Nature Lore",
+    "Acrobatics"
+  ],
+  "specialAbilities": [
+    "Fey Ancestry (Advantage on saves vs. charm, cannot be put to sleep by magic)",
+    "Trance (Does not require sleep, meditates for 4 hours)",
+    "Forest Camouflage (Can attempt to hide even when only lightly obscured by natural phenomena)"
+  ],
+  "status": "",
+  "type": "npc",
+  "attributes": {
+    "strength": 10,
+    "dexterity": 18,
+    "constitution": 14,
+    "intelligence": 12,
+    "wisdom": 16,
+    "charisma": 10
+  },
+  "id": "npcs-1749243735467",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/covert-cargo/npcs/66faef7d-7d77-4aac-bdec-83850e136f5f.png?t=1749243814586"
+}

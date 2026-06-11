@@ -1,4 +1,4 @@
-import Image from "next/image"
+import Image from "@/components/ui/native-image"
 
 export default function CharacterRollDisplay({
   rollType,

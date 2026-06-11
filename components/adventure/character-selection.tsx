@@ -12,7 +12,7 @@ import type { TurnCharacter } from "@/types/adventure";
 import type { AdventurePlan } from "@/types/adventure-plan";
 import type { PCTemplate } from "@/types/character";
 import { Eye } from "lucide-react";
-import Image from "next/image";
+import Image from "@/components/ui/native-image";
 import Link from "next/link";
 import React, { useState } from "react";
 import PartyConfiguration from "./PartyConfiguration";
@@ -112,17 +112,17 @@ export default function CharacterSelection({
       {/* Background overlay for better readability */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/60 to-black/30" />
 
-      <div className="container max-w-5xl mx-auto pt-24 p-8 relative z-10">
-        <div className="text-center mb-4">
+      <div className="container max-w-5xl mx-auto px-6 sm:px-8 pt-6 pb-8 relative z-10">
+        <div className="text-center mb-3 rounded border border-white/15 bg-black/35 px-4 py-3 shadow-2xl shadow-black/30 backdrop-blur-sm">
           <h1
             style={textShadowSpreadLight}
-            className="text-5xl font-bold font-display mb-2 text-white"
+            className="text-3xl md:text-4xl font-bold font-display mb-1 text-white leading-tight"
           >
             {adventurePlan.title}
           </h1>
           <p
             style={textShadow}
-            className="max-w-2xl mx-auto pt-2 pb-8 relative z-10 text-indigo-200 text-lg !text-balance"
+            className="max-w-3xl mx-auto relative z-10 text-indigo-100 text-sm md:text-base !text-balance"
           >
             {adventurePlan.teaser}
           </p>

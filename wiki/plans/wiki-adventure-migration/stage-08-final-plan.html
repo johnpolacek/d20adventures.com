@@ -10,12 +10,12 @@
 <section class="panel decision" aria-labelledby="final-decision">
 <p class="eyebrow">Final decision</p>
 <h2 id="final-decision">Implementation Plan Is Ready To Start In A Worktree</h2>
-<p class="muted">The relaunch should proceed as a complete wiki-first implementation in an isolated worktree. S3 markdown/JSON source files become canonical authored adventure content; compiled S3 artifacts become runtime context; Convex remains live realtime session state; AI authoring produces approval-gated change sets; and old JSON AdventurePlan editor/runtime paths can be removed after replacement gates pass.</p>
+<p class="muted">The relaunch should proceed as a complete wiki-first implementation in an isolated worktree. S3 markdown/JSON source files become canonical authored adventure content; compiled S3 artifacts become runtime context; Convex remains live realtime session state; AI authoring applies structured change sets and records restorable revisions; and old JSON AdventurePlan editor/runtime paths can be removed after replacement gates pass.</p>
 <div class="packet" aria-label="Final architecture pillars">
 <div><b>Content source</b><p class="muted"><code>content/</code> S3 source tree with <code>adventure.md</code>, <code>encounters/*.md</code>, setting entities, paired character JSON/profile files, assets, and typed wiki links.</p></div>
 <div><b>Runtime projection</b><p class="muted">Compiler writes <code>manifest.json</code>, <code>encounters.json</code>, <code>entities.json</code>, <code>character-sheets.json</code>, <code>graph.json</code>, <code>retrieval-index.json</code>, and <code>validation-report.json</code>.</p></div>
 <div><b>Gameplay</b><p class="muted">LLM context packets combine pinned published artifacts with Convex session state. Transitions validate against <code>graph.json</code>. Lightweight D20/narrative compatibility is preserved.</p></div>
-<div><b>Authoring</b><p class="muted">A dense wiki-editor workbench replaces the form-first AdventurePlan editor. AI proposes structured diffs; humans approve S3 writes.</p></div>
+<div><b>Authoring</b><p class="muted">A dense wiki-editor workbench replaces the form-first AdventurePlan editor. AI chat applies structured changes to S3 source; humans steer and restore through revision history.</p></div>
 </div>
 </section>
 <section class="panel" style="margin-top:12px" aria-labelledby="milestones">
@@ -24,12 +24,12 @@
 <thead><tr><th>#</th><th>Milestone</th><th>Primary output</th><th>Acceptance</th></tr></thead>
 <tbody>
 <tr><td>0</td><td>Relaunch worktree setup</td><td><code>feature/wiki-adventure-relaunch</code> worktree, isolated env/state notes, implementation plan copy</td><td>Work happens outside dirty main checkout; preview URL/state isolation documented.</td></tr>
-<tr><td>1</td><td>Content schemas and source service</td><td>Typed source models, S3 file service, frontmatter/parser helpers, character-sheet validators</td><td>Can read source markdown/JSON sheets and apply approved change sets with stale-write hashes and schema validation.</td></tr>
+<tr><td>1</td><td>Content schemas and source service</td><td>Typed source models, S3 file service, frontmatter/parser helpers, character-sheet validators</td><td>Can read source markdown/JSON sheets and apply change sets with stale-write hashes, schema validation, and revision records.</td></tr>
 <tr><td>2</td><td>Compiler and validation</td><td>Stage 4 artifact compiler, <code>draftPreview</code>/<code>publish</code> validation, finding codes</td><td>Representative skeleton compiles; publish mode blocks unresolved targets and invalid sheets.</td></tr>
 <tr><td>3</td><td>Preview/publish storage</td><td><code>content/</code>, <code>preview/</code>, <code>published/</code>, <code>latest.json</code>, publish records</td><td>Preview bundle writes, published version immutability, no-op unchanged publish, rollback pointer movement.</td></tr>
 <tr><td>4</td><td>Myr migration tool</td><td>Old JSON-to-wiki converter and migration report</td><td>At least one Myr adventure migrates and publishes with zero errors.</td></tr>
-<tr><td>5</td><td>Wiki authoring workbench</td><td>File tree, markdown/JSON editor, AI change-set panel, validation drawer, graph/preview/publish center</td><td>Stage 6 safe deletion gates for core editor jobs are satisfied.</td></tr>
-<tr><td>6</td><td>AI authoring tools</td><td>Server-action/API capabilities returning <code>AuthoringChangeSet</code></td><td>Create/expand/split/link/repair/summarize/transition/character-pair tools all preview diffs and validation before writes.</td></tr>
+<tr><td>5</td><td>Wiki authoring workbench</td><td>File tree, key-field editors, chat-primary AI panel, revision history, validation drawer, graph/preview/publish center</td><td>Stage 6 safe deletion gates for core editor jobs are satisfied.</td></tr>
+<tr><td>6</td><td>AI authoring tools</td><td>Server-action/API capabilities returning <code>AuthoringChangeSet</code> and writing <code>AuthoringRevision</code> records</td><td>Create/expand/split/link/repair/summarize/transition/character-pair tools auto-apply to canonical source, validate after writes, and support revision restore.</td></tr>
 <tr><td>7</td><td>Gameplay runtime projection</td><td>Context packet assembler, transition validator, published artifact loader, prompt update</td><td>Turn advancement no longer reads old nested AdventurePlan sections/scenes.</td></tr>
 <tr><td>8</td><td>Convex Adventure updates</td><td>Content pinning fields, Adventure wiki state fields, embedded turn patches, guarded mutations</td><td>Adventures pin content version/hash or preview draft ID; stale turn/transition writes are rejected and validated patches evolve the playthrough record.</td></tr>
 <tr><td>9</td><td>Old system removal</td><td>Deleted/replaced old editor/runtime surfaces and obsolete tests</td><td>Removal list is satisfied or explicitly deferred; no launch path depends on old JSON AdventurePlan runtime.</td></tr>
@@ -70,7 +70,7 @@ sed -n '1,260p' wiki/plans/wiki-adventure-migration/stage-08-final-plan.html</co
 <tr><td>Validation</td><td>Severity tests for <code>draftPreview</code> vs <code>publish</code>; stable finding shape snapshots.</td><td>Editor shows findings grouped by severity and focuses affected file/entity.</td></tr>
 <tr><td>S3 lifecycle</td><td>Unit tests for key builders, stale-write hash rejection, preview write, immutable publish, unchanged content no-op, latest pointer rollback.</td><td>Publish a test adventure, roll latest back, verify previous version remains intact.</td></tr>
 <tr><td>Myr migration</td><td>Migration fixture from old JSON to source tree; migration report coverage; publish validation zero-error proof.</td><td>Review migrated Myr story/encounters/NPCs/premades for intent preservation.</td></tr>
-<tr><td>Authoring UI</td><td>Component/integration tests for file tree, editor save, AI change-set diff, validation drawer, graph view, publish center.</td><td>Create/edit encounter, repair validation issue, accept/reject AI diff, publish valid draft.</td></tr>
+<tr><td>Authoring UI</td><td>Component/integration tests for file tree, auto-save revisions, AI chat edits, validation drawer, graph view, publish center.</td><td>Create/edit encounter, repair validation issue through chat, restore a revision, publish valid draft.</td></tr>
 <tr><td>Gameplay context</td><td>Context packet unit tests, token-budget ordering, live Convex state precedence, legal transition enforcement.</td><td>Play no-roll turn, roll turn, legal transition, invalid transition rejection.</td></tr>
 <tr><td>Convex/session</td><td>Mutation tests for content pinning, current turn guards, player control, embedded transition patch, optional roll mirror, chat separation, and Adventure wiki patch application.</td><td>Two clients observe realtime turn/chat updates without stale writes moving encounter, and reports/admin views see the evolved playthrough record.</td></tr>
 <tr><td>Reports</td><td>Practice report reads pinned artifacts, turn snapshots, parsed rolls, transitions, adventure patches, changed entities, and validation findings.</td><td>Generate practice report from migrated Myr preview run that reflects what happened in that playthrough.</td></tr>
@@ -84,7 +84,7 @@ sed -n '1,260p' wiki/plans/wiki-adventure-migration/stage-08-final-plan.html</co
 <ol>
 <li>At least one migrated Myr adventure compiles and publishes with zero validation errors.</li>
 <li>Preview playthrough can start from the migrated published bundle, select premades, submit a no-roll action, resolve a required roll, advance a turn, and validate a graph transition.</li>
-<li>Wiki editor can create/edit/save source files, show validation, accept/reject an AI change set, repair a missing transition target, and publish.</li>
+<li>Wiki editor can create/edit/save source files, show validation, apply an AI chat change, restore a revision, repair a missing transition target, and publish.</li>
 <li>Published gameplay no longer reads old JSON AdventurePlan section/scene/encounter arrays.</li>
 <li>Convex Adventures pin content refs and do not change authored context when a new version is published.</li>
 <li>Rollback can move <code>latest.json</code> or deployment pointer without rewriting immutable published artifacts.</li>
@@ -116,7 +116,7 @@ sed -n '1,260p' wiki/plans/wiki-adventure-migration/stage-08-final-plan.html</co
 <tbody>
 <tr><td>Naming</td><td><code>planId</code> identifies the authored Adventure Plan. Convex <code>adventures._id</code> identifies the live Adventure playthrough.</td><td>Do not rename <code>planId</code> away just because old JSON plans are removed. Reinterpret it as the wiki Adventure Plan ID.</td></tr>
 <tr><td>Drafts</td><td>One shared active draft exists per Adventure Plan. Publishing or explicitly locking a version freezes that draft and starts a new active draft copied from the locked source.</td><td>Editor and AI tools target the active draft for a plan. The product does not need multiple named draft workspaces in v1.</td></tr>
-<tr><td>Writes</td><td>All source mutations go through <code>AuthoringChangeSet</code>. Human text edits create human-authored change sets; AI edits create AI-authored change sets.</td><td>No direct human file-write path. The same diff, validation, stale-hash, and approval flow applies to both human and AI edits.</td></tr>
+<tr><td>Writes</td><td>All source mutations go through <code>AuthoringChangeSet</code>. Human text edits create human-authored change sets; AI edits create AI-authored change sets; restores create restore-authored change sets.</td><td>No direct human file-write path. The same validation, stale-hash, and revision history flow applies to human, AI, and restore edits.</td></tr>
 <tr><td>Preview</td><td>Each active draft has one mutable latest preview bundle, with optional preview history deferred.</td><td>Validation/playtest uses the latest preview pointer for that draft. Old preview bundles can be overwritten or garbage-collected unless later history is added.</td></tr>
 <tr><td>Publish versions</td><td>Published version IDs use timestamps plus content hash, not simple numeric versions.</td><td>Use paths such as <code>published/settings/myr/adventures/the-old-road/2026-05-21T22-30-00Z-ab12cd34/</code>. <code>latest.json</code> points to a concrete timestamp/hash version.</td></tr>
 <tr><td>Assets</td><td>Authored image/asset fields store full S3 URLs.</td><td>The compiler validates allowed bucket/prefix, existence, content type, and accessibility. Runtime can render URLs directly while still rejecting unsafe external URLs.</td></tr>
@@ -133,8 +133,8 @@ sed -n '1,260p' wiki/plans/wiki-adventure-migration/stage-08-final-plan.html</co
 <table class="spec">
 <thead><tr><th>Module area</th><th>Likely files</th><th>Responsibility</th></tr></thead>
 <tbody>
-<tr><td>Source service</td><td><code>lib/wiki-adventures/source-service.ts</code>, <code>lib/wiki-adventures/s3-keys.ts</code></td><td>Read active draft files, apply approved change sets, enforce stale hashes, build S3 keys, validate full S3 asset URLs.</td></tr>
-<tr><td>Change sets</td><td><code>lib/wiki-adventures/change-sets.ts</code></td><td>Define <code>AuthoringChangeSet</code>, diff validation, path safety, approval state, and apply rules.</td></tr>
+<tr><td>Source service</td><td><code>lib/wiki-adventures/source-service.ts</code>, <code>lib/wiki-adventures/s3-keys.ts</code></td><td>Read active draft files, apply change sets, enforce stale hashes, build S3 keys, validate full S3 asset URLs, and exclude revision snapshots from source reads.</td></tr>
+<tr><td>Change sets</td><td><code>lib/wiki-adventures/change-sets.ts</code></td><td>Define <code>AuthoringChangeSet</code>, path safety, stale-hash checks, and apply rules.</td></tr>
 <tr><td>Compiler</td><td><code>lib/wiki-adventures/compiler.ts</code>, <code>lib/wiki-adventures/validation.ts</code></td><td>Parse source markdown/JSON, produce runtime artifacts, generate validation reports, and enforce publish blockers.</td></tr>
 <tr><td>Publish repository</td><td><code>lib/wiki-adventures/published-repository.ts</code></td><td>Write mutable preview bundle, immutable timestamp/hash publish bundle, <code>latest.json</code>, and rollback pointer updates.</td></tr>
 <tr><td>Gameplay runtime</td><td><code>lib/wiki-adventures/runtime-context.ts</code>, <code>lib/wiki-adventures/transition-validator.ts</code>, <code>lib/wiki-adventures/adventure-patch.ts</code></td><td>Load pinned artifacts, assemble AI GM context, validate legal transitions, validate/apply <code>adventurePatch</code>.</td></tr>

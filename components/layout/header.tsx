@@ -1,5 +1,5 @@
 import { cn, reverseSlugify } from "@/lib/utils"
-import Image from "next/image"
+import Image from "@/components/ui/native-image"
 import Link from "next/link"
 import Parchment from "../graphics/background/Parchment"
 import { paper } from "../graphics/styles"

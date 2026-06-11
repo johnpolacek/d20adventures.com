@@ -20,6 +20,7 @@ Auto-commit local changes whenever confident that the code is good and there are
 
 - Inspect existing files and Git state before writing.
 - Preserve user-authored files and existing Git history.
+- For admin/editor UI, keep surfaces dense and operational: do not add explanatory helper text, status phrases, or "what this does" copy unless the user asks for it or it is required for accessibility, validation, or error handling.
 - Do not create root-level `docs/` or `tasks/` for durable planning.
 - Name unknowns and contradictions instead of inventing certainty.
 

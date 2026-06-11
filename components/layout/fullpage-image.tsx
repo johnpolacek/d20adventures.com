@@ -1,4 +1,4 @@
-import Image from "next/image"
+import Image from "@/components/ui/native-image"
 
 export default async function FullPageImage({ children, image, overlay }: { children: React.ReactNode; image?: string; overlay?: boolean }) {
   return (

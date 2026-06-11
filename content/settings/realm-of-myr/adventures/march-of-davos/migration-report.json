@@ -1,0 +1,1538 @@
+{
+  "planId": "march-of-davos",
+  "settingId": "realm-of-myr",
+  "generatedAt": "2026-05-23T00:00:00.000Z",
+  "generatedFiles": [
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/adventure.md",
+      "kind": "adventure"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/the-gates-of-kordavos.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/the-harvest-festival.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/clan-conflict.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/the-dragonbone-inn.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/an-unsolicited-opportunity.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/morning-at-the-dragonbone.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/the-old-grand-library.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/the-silver-serpent-tavern.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/arrival-at-the-docks.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/mystery-cargo.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/the-beast-escapes.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/the-aftermath.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/an-invitation.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/welcome-to-the-lower-districts.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/beset-by-street-urchins.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/finding-the-black-market.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/the-entrance-to-the-black-market.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/labyrinthine-stalls.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/the-auction-begins.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/a-relic-of-old-valkara.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/the-winning-bid.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/shadowing-silverhand.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/the-hideout.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/face-to-face-with-silverhand.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/the-ambush.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/entry-to-the-ball.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/inside-the-ball.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/the-blackthorns.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/the-lady-and-the-bishop.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/a-distraction.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/through-the-halls.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/the-rangers-quarters.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/the-lavish-corridor.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/thaddeus-blackthorns-private-chambers.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/the-wine-cellar.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/the-speech.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/death-to-the-murderer.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/the-chase.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/the-hunt-for-the-assassin.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/into-the-catacombs.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/through-the-labyrinth.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/the-sealed-door.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/big-empty.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/forgotten-temple.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/final-confrontation.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/garlan-ironfist.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/garlan-ironfist.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/karim-the-jewel-merchant.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/karim-the-jewel-merchant.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/madam-zephyra.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/madam-zephyra.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/finnian-the-fire-eater.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/finnian-the-fire-eater.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/liora-the-spice-merchant.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/liora-the-spice-merchant.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/merrick-the-musician.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/merrick-the-musician.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/barok-redbeard.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/barok-redbeard.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/larya-halloway.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/larya-halloway.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/bram.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/bram.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/beric.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/beric.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/eamon.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/eamon.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/elara.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/elara.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/sister-danica.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/sister-danica.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/loric-windrider.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/loric-windrider.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/tor-marros.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/tor-marros.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/petra-velan.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/petra-velan.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/scarface-alaric.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/scarface-alaric.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/astrid-blackthorn.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/astrid-blackthorn.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/finn-swiftfoot.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/finn-swiftfoot.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/mara-redleaf.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/mara-redleaf.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/garrick.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/garrick.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/grendel-one-eye.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/grendel-one-eye.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/rae-the-scarred.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/rae-the-scarred.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/mizrith-the-cackler.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/mizrith-the-cackler.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/vera-azimov.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/vera-azimov.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/silverhand-representative.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/silverhand-representative.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/silverhand.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/silverhand.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/aldith.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/aldith.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/kaelen.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/kaelen.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/silas.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/silas.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/liora.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/liora.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/barok-ironfist.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/barok-ironfist.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/door-guard.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/door-guard.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/seraphina-valtor.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/seraphina-valtor.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/bishop-nicolai.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/bishop-nicolai.json",
+      "kind": "npcSheet"
+    }
+  ],
+  "sourceFieldMappings": [
+    {
+      "source": "AdventurePlan.title",
+      "destination": "adventure.md frontmatter.title"
+    },
+    {
+      "source": "AdventurePlan.teaser",
+      "destination": "adventure.md ## Teaser"
+    },
+    {
+      "source": "AdventurePlan.overview",
+      "destination": "adventure.md ## Summary"
+    },
+    {
+      "source": "AdventurePlan.party",
+      "destination": "adventure.md frontmatter.minPlayers/maxPlayers"
+    },
+    {
+      "source": "AdventurePlan.start",
+      "destination": "adventure.md frontmatter.startEncounter"
+    },
+    {
+      "source": "AdventurePlan.nextAdventure",
+      "destination": "adventure.md frontmatter.nextAdventure"
+    },
+    {
+      "source": "AdventurePlan.premadePlayerCharacters[].id",
+      "destination": "adventure.md frontmatter.premadeCharacters"
+    },
+    {
+      "source": "Encounter.the-gates-of-kordavos.intro",
+      "destination": "encounters/the-gates-of-kordavos.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-gates-of-kordavos.instructions",
+      "destination": "encounters/the-gates-of-kordavos.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-gates-of-kordavos.transitions",
+      "destination": "encounters/the-gates-of-kordavos.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-gates-of-kordavos.npc",
+      "destination": "encounters/the-gates-of-kordavos.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-harvest-festival.intro",
+      "destination": "encounters/the-harvest-festival.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-harvest-festival.instructions",
+      "destination": "encounters/the-harvest-festival.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-harvest-festival.transitions",
+      "destination": "encounters/the-harvest-festival.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-harvest-festival.npc",
+      "destination": "encounters/the-harvest-festival.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.clan-conflict.intro",
+      "destination": "encounters/clan-conflict.md ## Intro"
+    },
+    {
+      "source": "Encounter.clan-conflict.instructions",
+      "destination": "encounters/clan-conflict.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.clan-conflict.transitions",
+      "destination": "encounters/clan-conflict.md ## Transitions"
+    },
+    {
+      "source": "Encounter.clan-conflict.npc",
+      "destination": "encounters/clan-conflict.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-dragonbone-inn.intro",
+      "destination": "encounters/the-dragonbone-inn.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-dragonbone-inn.instructions",
+      "destination": "encounters/the-dragonbone-inn.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-dragonbone-inn.transitions",
+      "destination": "encounters/the-dragonbone-inn.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-dragonbone-inn.npc",
+      "destination": "encounters/the-dragonbone-inn.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.an-unsolicited-opportunity.intro",
+      "destination": "encounters/an-unsolicited-opportunity.md ## Intro"
+    },
+    {
+      "source": "Encounter.an-unsolicited-opportunity.instructions",
+      "destination": "encounters/an-unsolicited-opportunity.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.an-unsolicited-opportunity.transitions",
+      "destination": "encounters/an-unsolicited-opportunity.md ## Transitions"
+    },
+    {
+      "source": "Encounter.an-unsolicited-opportunity.npc",
+      "destination": "encounters/an-unsolicited-opportunity.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.morning-at-the-dragonbone.intro",
+      "destination": "encounters/morning-at-the-dragonbone.md ## Intro"
+    },
+    {
+      "source": "Encounter.morning-at-the-dragonbone.instructions",
+      "destination": "encounters/morning-at-the-dragonbone.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.morning-at-the-dragonbone.transitions",
+      "destination": "encounters/morning-at-the-dragonbone.md ## Transitions"
+    },
+    {
+      "source": "Encounter.morning-at-the-dragonbone.npc",
+      "destination": "encounters/morning-at-the-dragonbone.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-old-grand-library.intro",
+      "destination": "encounters/the-old-grand-library.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-old-grand-library.instructions",
+      "destination": "encounters/the-old-grand-library.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-old-grand-library.transitions",
+      "destination": "encounters/the-old-grand-library.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-old-grand-library.npc",
+      "destination": "encounters/the-old-grand-library.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-silver-serpent-tavern.intro",
+      "destination": "encounters/the-silver-serpent-tavern.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-silver-serpent-tavern.instructions",
+      "destination": "encounters/the-silver-serpent-tavern.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-silver-serpent-tavern.transitions",
+      "destination": "encounters/the-silver-serpent-tavern.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-silver-serpent-tavern.npc",
+      "destination": "encounters/the-silver-serpent-tavern.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.arrival-at-the-docks.intro",
+      "destination": "encounters/arrival-at-the-docks.md ## Intro"
+    },
+    {
+      "source": "Encounter.arrival-at-the-docks.instructions",
+      "destination": "encounters/arrival-at-the-docks.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.arrival-at-the-docks.transitions",
+      "destination": "encounters/arrival-at-the-docks.md ## Transitions"
+    },
+    {
+      "source": "Encounter.arrival-at-the-docks.npc",
+      "destination": "encounters/arrival-at-the-docks.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.mystery-cargo.intro",
+      "destination": "encounters/mystery-cargo.md ## Intro"
+    },
+    {
+      "source": "Encounter.mystery-cargo.instructions",
+      "destination": "encounters/mystery-cargo.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.mystery-cargo.transitions",
+      "destination": "encounters/mystery-cargo.md ## Transitions"
+    },
+    {
+      "source": "Encounter.mystery-cargo.npc",
+      "destination": "encounters/mystery-cargo.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-beast-escapes.intro",
+      "destination": "encounters/the-beast-escapes.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-beast-escapes.instructions",
+      "destination": "encounters/the-beast-escapes.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-beast-escapes.transitions",
+      "destination": "encounters/the-beast-escapes.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-beast-escapes.npc",
+      "destination": "encounters/the-beast-escapes.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-aftermath.intro",
+      "destination": "encounters/the-aftermath.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-aftermath.instructions",
+      "destination": "encounters/the-aftermath.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-aftermath.transitions",
+      "destination": "encounters/the-aftermath.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-aftermath.npc",
+      "destination": "encounters/the-aftermath.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.an-invitation.intro",
+      "destination": "encounters/an-invitation.md ## Intro"
+    },
+    {
+      "source": "Encounter.an-invitation.instructions",
+      "destination": "encounters/an-invitation.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.an-invitation.transitions",
+      "destination": "encounters/an-invitation.md ## Transitions"
+    },
+    {
+      "source": "Encounter.an-invitation.npc",
+      "destination": "encounters/an-invitation.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.welcome-to-the-lower-districts.intro",
+      "destination": "encounters/welcome-to-the-lower-districts.md ## Intro"
+    },
+    {
+      "source": "Encounter.welcome-to-the-lower-districts.instructions",
+      "destination": "encounters/welcome-to-the-lower-districts.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.welcome-to-the-lower-districts.transitions",
+      "destination": "encounters/welcome-to-the-lower-districts.md ## Transitions"
+    },
+    {
+      "source": "Encounter.welcome-to-the-lower-districts.npc",
+      "destination": "encounters/welcome-to-the-lower-districts.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.beset-by-street-urchins.intro",
+      "destination": "encounters/beset-by-street-urchins.md ## Intro"
+    },
+    {
+      "source": "Encounter.beset-by-street-urchins.instructions",
+      "destination": "encounters/beset-by-street-urchins.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.beset-by-street-urchins.transitions",
+      "destination": "encounters/beset-by-street-urchins.md ## Transitions"
+    },
+    {
+      "source": "Encounter.beset-by-street-urchins.npc",
+      "destination": "encounters/beset-by-street-urchins.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.finding-the-black-market.intro",
+      "destination": "encounters/finding-the-black-market.md ## Intro"
+    },
+    {
+      "source": "Encounter.finding-the-black-market.instructions",
+      "destination": "encounters/finding-the-black-market.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.finding-the-black-market.transitions",
+      "destination": "encounters/finding-the-black-market.md ## Transitions"
+    },
+    {
+      "source": "Encounter.finding-the-black-market.npc",
+      "destination": "encounters/finding-the-black-market.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-entrance-to-the-black-market.intro",
+      "destination": "encounters/the-entrance-to-the-black-market.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-entrance-to-the-black-market.instructions",
+      "destination": "encounters/the-entrance-to-the-black-market.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-entrance-to-the-black-market.transitions",
+      "destination": "encounters/the-entrance-to-the-black-market.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-entrance-to-the-black-market.npc",
+      "destination": "encounters/the-entrance-to-the-black-market.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.labyrinthine-stalls.intro",
+      "destination": "encounters/labyrinthine-stalls.md ## Intro"
+    },
+    {
+      "source": "Encounter.labyrinthine-stalls.instructions",
+      "destination": "encounters/labyrinthine-stalls.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.labyrinthine-stalls.transitions",
+      "destination": "encounters/labyrinthine-stalls.md ## Transitions"
+    },
+    {
+      "source": "Encounter.labyrinthine-stalls.npc",
+      "destination": "encounters/labyrinthine-stalls.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-auction-begins.intro",
+      "destination": "encounters/the-auction-begins.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-auction-begins.instructions",
+      "destination": "encounters/the-auction-begins.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-auction-begins.transitions",
+      "destination": "encounters/the-auction-begins.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-auction-begins.npc",
+      "destination": "encounters/the-auction-begins.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.a-relic-of-old-valkara.intro",
+      "destination": "encounters/a-relic-of-old-valkara.md ## Intro"
+    },
+    {
+      "source": "Encounter.a-relic-of-old-valkara.instructions",
+      "destination": "encounters/a-relic-of-old-valkara.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.a-relic-of-old-valkara.transitions",
+      "destination": "encounters/a-relic-of-old-valkara.md ## Transitions"
+    },
+    {
+      "source": "Encounter.a-relic-of-old-valkara.npc",
+      "destination": "encounters/a-relic-of-old-valkara.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-winning-bid.intro",
+      "destination": "encounters/the-winning-bid.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-winning-bid.instructions",
+      "destination": "encounters/the-winning-bid.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-winning-bid.transitions",
+      "destination": "encounters/the-winning-bid.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-winning-bid.npc",
+      "destination": "encounters/the-winning-bid.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.shadowing-silverhand.intro",
+      "destination": "encounters/shadowing-silverhand.md ## Intro"
+    },
+    {
+      "source": "Encounter.shadowing-silverhand.instructions",
+      "destination": "encounters/shadowing-silverhand.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.shadowing-silverhand.transitions",
+      "destination": "encounters/shadowing-silverhand.md ## Transitions"
+    },
+    {
+      "source": "Encounter.shadowing-silverhand.npc",
+      "destination": "encounters/shadowing-silverhand.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-hideout.intro",
+      "destination": "encounters/the-hideout.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-hideout.instructions",
+      "destination": "encounters/the-hideout.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-hideout.transitions",
+      "destination": "encounters/the-hideout.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-hideout.npc",
+      "destination": "encounters/the-hideout.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.face-to-face-with-silverhand.intro",
+      "destination": "encounters/face-to-face-with-silverhand.md ## Intro"
+    },
+    {
+      "source": "Encounter.face-to-face-with-silverhand.instructions",
+      "destination": "encounters/face-to-face-with-silverhand.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.face-to-face-with-silverhand.transitions",
+      "destination": "encounters/face-to-face-with-silverhand.md ## Transitions"
+    },
+    {
+      "source": "Encounter.face-to-face-with-silverhand.npc",
+      "destination": "encounters/face-to-face-with-silverhand.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-ambush.intro",
+      "destination": "encounters/the-ambush.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-ambush.instructions",
+      "destination": "encounters/the-ambush.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-ambush.transitions",
+      "destination": "encounters/the-ambush.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-ambush.npc",
+      "destination": "encounters/the-ambush.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.entry-to-the-ball.intro",
+      "destination": "encounters/entry-to-the-ball.md ## Intro"
+    },
+    {
+      "source": "Encounter.entry-to-the-ball.instructions",
+      "destination": "encounters/entry-to-the-ball.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.entry-to-the-ball.transitions",
+      "destination": "encounters/entry-to-the-ball.md ## Transitions"
+    },
+    {
+      "source": "Encounter.entry-to-the-ball.npc",
+      "destination": "encounters/entry-to-the-ball.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.inside-the-ball.intro",
+      "destination": "encounters/inside-the-ball.md ## Intro"
+    },
+    {
+      "source": "Encounter.inside-the-ball.instructions",
+      "destination": "encounters/inside-the-ball.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.inside-the-ball.transitions",
+      "destination": "encounters/inside-the-ball.md ## Transitions"
+    },
+    {
+      "source": "Encounter.inside-the-ball.npc",
+      "destination": "encounters/inside-the-ball.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-blackthorns.intro",
+      "destination": "encounters/the-blackthorns.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-blackthorns.instructions",
+      "destination": "encounters/the-blackthorns.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-blackthorns.transitions",
+      "destination": "encounters/the-blackthorns.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-blackthorns.npc",
+      "destination": "encounters/the-blackthorns.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-lady-and-the-bishop.intro",
+      "destination": "encounters/the-lady-and-the-bishop.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-lady-and-the-bishop.instructions",
+      "destination": "encounters/the-lady-and-the-bishop.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-lady-and-the-bishop.transitions",
+      "destination": "encounters/the-lady-and-the-bishop.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-lady-and-the-bishop.npc",
+      "destination": "encounters/the-lady-and-the-bishop.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.a-distraction.intro",
+      "destination": "encounters/a-distraction.md ## Intro"
+    },
+    {
+      "source": "Encounter.a-distraction.instructions",
+      "destination": "encounters/a-distraction.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.a-distraction.transitions",
+      "destination": "encounters/a-distraction.md ## Transitions"
+    },
+    {
+      "source": "Encounter.a-distraction.npc",
+      "destination": "encounters/a-distraction.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.through-the-halls.intro",
+      "destination": "encounters/through-the-halls.md ## Intro"
+    },
+    {
+      "source": "Encounter.through-the-halls.instructions",
+      "destination": "encounters/through-the-halls.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.through-the-halls.transitions",
+      "destination": "encounters/through-the-halls.md ## Transitions"
+    },
+    {
+      "source": "Encounter.through-the-halls.npc",
+      "destination": "encounters/through-the-halls.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-rangers-quarters.intro",
+      "destination": "encounters/the-rangers-quarters.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-rangers-quarters.instructions",
+      "destination": "encounters/the-rangers-quarters.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-rangers-quarters.transitions",
+      "destination": "encounters/the-rangers-quarters.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-rangers-quarters.npc",
+      "destination": "encounters/the-rangers-quarters.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-lavish-corridor.intro",
+      "destination": "encounters/the-lavish-corridor.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-lavish-corridor.instructions",
+      "destination": "encounters/the-lavish-corridor.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-lavish-corridor.transitions",
+      "destination": "encounters/the-lavish-corridor.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-lavish-corridor.npc",
+      "destination": "encounters/the-lavish-corridor.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.thaddeus-blackthorns-private-chambers.intro",
+      "destination": "encounters/thaddeus-blackthorns-private-chambers.md ## Intro"
+    },
+    {
+      "source": "Encounter.thaddeus-blackthorns-private-chambers.instructions",
+      "destination": "encounters/thaddeus-blackthorns-private-chambers.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.thaddeus-blackthorns-private-chambers.transitions",
+      "destination": "encounters/thaddeus-blackthorns-private-chambers.md ## Transitions"
+    },
+    {
+      "source": "Encounter.thaddeus-blackthorns-private-chambers.npc",
+      "destination": "encounters/thaddeus-blackthorns-private-chambers.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-wine-cellar.intro",
+      "destination": "encounters/the-wine-cellar.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-wine-cellar.instructions",
+      "destination": "encounters/the-wine-cellar.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-wine-cellar.transitions",
+      "destination": "encounters/the-wine-cellar.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-wine-cellar.npc",
+      "destination": "encounters/the-wine-cellar.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-speech.intro",
+      "destination": "encounters/the-speech.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-speech.instructions",
+      "destination": "encounters/the-speech.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-speech.transitions",
+      "destination": "encounters/the-speech.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-speech.npc",
+      "destination": "encounters/the-speech.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.death-to-the-murderer.intro",
+      "destination": "encounters/death-to-the-murderer.md ## Intro"
+    },
+    {
+      "source": "Encounter.death-to-the-murderer.instructions",
+      "destination": "encounters/death-to-the-murderer.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.death-to-the-murderer.transitions",
+      "destination": "encounters/death-to-the-murderer.md ## Transitions"
+    },
+    {
+      "source": "Encounter.death-to-the-murderer.npc",
+      "destination": "encounters/death-to-the-murderer.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-chase.intro",
+      "destination": "encounters/the-chase.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-chase.instructions",
+      "destination": "encounters/the-chase.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-chase.transitions",
+      "destination": "encounters/the-chase.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-chase.npc",
+      "destination": "encounters/the-chase.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-hunt-for-the-assassin.intro",
+      "destination": "encounters/the-hunt-for-the-assassin.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-hunt-for-the-assassin.instructions",
+      "destination": "encounters/the-hunt-for-the-assassin.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-hunt-for-the-assassin.transitions",
+      "destination": "encounters/the-hunt-for-the-assassin.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-hunt-for-the-assassin.npc",
+      "destination": "encounters/the-hunt-for-the-assassin.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.into-the-catacombs.intro",
+      "destination": "encounters/into-the-catacombs.md ## Intro"
+    },
+    {
+      "source": "Encounter.into-the-catacombs.instructions",
+      "destination": "encounters/into-the-catacombs.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.into-the-catacombs.transitions",
+      "destination": "encounters/into-the-catacombs.md ## Transitions"
+    },
+    {
+      "source": "Encounter.into-the-catacombs.npc",
+      "destination": "encounters/into-the-catacombs.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.through-the-labyrinth.intro",
+      "destination": "encounters/through-the-labyrinth.md ## Intro"
+    },
+    {
+      "source": "Encounter.through-the-labyrinth.instructions",
+      "destination": "encounters/through-the-labyrinth.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.through-the-labyrinth.transitions",
+      "destination": "encounters/through-the-labyrinth.md ## Transitions"
+    },
+    {
+      "source": "Encounter.through-the-labyrinth.npc",
+      "destination": "encounters/through-the-labyrinth.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-sealed-door.intro",
+      "destination": "encounters/the-sealed-door.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-sealed-door.instructions",
+      "destination": "encounters/the-sealed-door.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-sealed-door.transitions",
+      "destination": "encounters/the-sealed-door.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-sealed-door.npc",
+      "destination": "encounters/the-sealed-door.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.big-empty.intro",
+      "destination": "encounters/big-empty.md ## Intro"
+    },
+    {
+      "source": "Encounter.big-empty.instructions",
+      "destination": "encounters/big-empty.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.big-empty.transitions",
+      "destination": "encounters/big-empty.md ## Transitions"
+    },
+    {
+      "source": "Encounter.big-empty.npc",
+      "destination": "encounters/big-empty.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.forgotten-temple.intro",
+      "destination": "encounters/forgotten-temple.md ## Intro"
+    },
+    {
+      "source": "Encounter.forgotten-temple.instructions",
+      "destination": "encounters/forgotten-temple.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.forgotten-temple.transitions",
+      "destination": "encounters/forgotten-temple.md ## Transitions"
+    },
+    {
+      "source": "Encounter.forgotten-temple.npc",
+      "destination": "encounters/forgotten-temple.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.final-confrontation.intro",
+      "destination": "encounters/final-confrontation.md ## Intro"
+    },
+    {
+      "source": "Encounter.final-confrontation.instructions",
+      "destination": "encounters/final-confrontation.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.final-confrontation.transitions",
+      "destination": "encounters/final-confrontation.md ## Transitions"
+    },
+    {
+      "source": "Encounter.final-confrontation.npc",
+      "destination": "encounters/final-confrontation.md frontmatter.npcs"
+    },
+    {
+      "source": "AdventurePlan.npcs.garlan-ironfist",
+      "destination": "content/settings/realm-of-myr/npcs/garlan-ironfist.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.garlan-ironfist",
+      "destination": "content/settings/realm-of-myr/npcs/garlan-ironfist.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.karim-the-jewel-merchant",
+      "destination": "content/settings/realm-of-myr/npcs/karim-the-jewel-merchant.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.karim-the-jewel-merchant",
+      "destination": "content/settings/realm-of-myr/npcs/karim-the-jewel-merchant.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.madam-zephyra",
+      "destination": "content/settings/realm-of-myr/npcs/madam-zephyra.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.madam-zephyra",
+      "destination": "content/settings/realm-of-myr/npcs/madam-zephyra.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.finnian-the-fire-eater",
+      "destination": "content/settings/realm-of-myr/npcs/finnian-the-fire-eater.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.finnian-the-fire-eater",
+      "destination": "content/settings/realm-of-myr/npcs/finnian-the-fire-eater.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.liora-the-spice-merchant",
+      "destination": "content/settings/realm-of-myr/npcs/liora-the-spice-merchant.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.liora-the-spice-merchant",
+      "destination": "content/settings/realm-of-myr/npcs/liora-the-spice-merchant.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.merrick-the-musician",
+      "destination": "content/settings/realm-of-myr/npcs/merrick-the-musician.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.merrick-the-musician",
+      "destination": "content/settings/realm-of-myr/npcs/merrick-the-musician.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.barok-redbeard",
+      "destination": "content/settings/realm-of-myr/npcs/barok-redbeard.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.barok-redbeard",
+      "destination": "content/settings/realm-of-myr/npcs/barok-redbeard.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.larya-halloway",
+      "destination": "content/settings/realm-of-myr/npcs/larya-halloway.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.larya-halloway",
+      "destination": "content/settings/realm-of-myr/npcs/larya-halloway.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.bram",
+      "destination": "content/settings/realm-of-myr/npcs/bram.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.bram",
+      "destination": "content/settings/realm-of-myr/npcs/bram.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.beric",
+      "destination": "content/settings/realm-of-myr/npcs/beric.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.beric",
+      "destination": "content/settings/realm-of-myr/npcs/beric.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.eamon",
+      "destination": "content/settings/realm-of-myr/npcs/eamon.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.eamon",
+      "destination": "content/settings/realm-of-myr/npcs/eamon.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.elara",
+      "destination": "content/settings/realm-of-myr/npcs/elara.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.elara",
+      "destination": "content/settings/realm-of-myr/npcs/elara.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.sister-danica",
+      "destination": "content/settings/realm-of-myr/npcs/sister-danica.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.sister-danica",
+      "destination": "content/settings/realm-of-myr/npcs/sister-danica.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.loric-windrider",
+      "destination": "content/settings/realm-of-myr/npcs/loric-windrider.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.loric-windrider",
+      "destination": "content/settings/realm-of-myr/npcs/loric-windrider.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.tor-marros",
+      "destination": "content/settings/realm-of-myr/npcs/tor-marros.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.tor-marros",
+      "destination": "content/settings/realm-of-myr/npcs/tor-marros.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.petra-velan",
+      "destination": "content/settings/realm-of-myr/npcs/petra-velan.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.petra-velan",
+      "destination": "content/settings/realm-of-myr/npcs/petra-velan.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.scarface-alaric",
+      "destination": "content/settings/realm-of-myr/npcs/scarface-alaric.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.scarface-alaric",
+      "destination": "content/settings/realm-of-myr/npcs/scarface-alaric.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.astrid-blackthorn",
+      "destination": "content/settings/realm-of-myr/npcs/astrid-blackthorn.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.astrid-blackthorn",
+      "destination": "content/settings/realm-of-myr/npcs/astrid-blackthorn.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.finn-swiftfoot",
+      "destination": "content/settings/realm-of-myr/npcs/finn-swiftfoot.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.finn-swiftfoot",
+      "destination": "content/settings/realm-of-myr/npcs/finn-swiftfoot.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.mara-redleaf",
+      "destination": "content/settings/realm-of-myr/npcs/mara-redleaf.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.mara-redleaf",
+      "destination": "content/settings/realm-of-myr/npcs/mara-redleaf.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.garrick",
+      "destination": "content/settings/realm-of-myr/npcs/garrick.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.garrick",
+      "destination": "content/settings/realm-of-myr/npcs/garrick.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.grendel-one-eye",
+      "destination": "content/settings/realm-of-myr/npcs/grendel-one-eye.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.grendel-one-eye",
+      "destination": "content/settings/realm-of-myr/npcs/grendel-one-eye.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.rae-the-scarred",
+      "destination": "content/settings/realm-of-myr/npcs/rae-the-scarred.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.rae-the-scarred",
+      "destination": "content/settings/realm-of-myr/npcs/rae-the-scarred.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.mizrith-the-cackler",
+      "destination": "content/settings/realm-of-myr/npcs/mizrith-the-cackler.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.mizrith-the-cackler",
+      "destination": "content/settings/realm-of-myr/npcs/mizrith-the-cackler.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.vera-azimov",
+      "destination": "content/settings/realm-of-myr/npcs/vera-azimov.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.vera-azimov",
+      "destination": "content/settings/realm-of-myr/npcs/vera-azimov.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.silverhand-representative",
+      "destination": "content/settings/realm-of-myr/npcs/silverhand-representative.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.silverhand-representative",
+      "destination": "content/settings/realm-of-myr/npcs/silverhand-representative.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.silverhand",
+      "destination": "content/settings/realm-of-myr/npcs/silverhand.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.silverhand",
+      "destination": "content/settings/realm-of-myr/npcs/silverhand.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.aldith",
+      "destination": "content/settings/realm-of-myr/npcs/aldith.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.aldith",
+      "destination": "content/settings/realm-of-myr/npcs/aldith.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.kaelen",
+      "destination": "content/settings/realm-of-myr/npcs/kaelen.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.kaelen",
+      "destination": "content/settings/realm-of-myr/npcs/kaelen.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.silas",
+      "destination": "content/settings/realm-of-myr/npcs/silas.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.silas",
+      "destination": "content/settings/realm-of-myr/npcs/silas.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.liora",
+      "destination": "content/settings/realm-of-myr/npcs/liora.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.liora",
+      "destination": "content/settings/realm-of-myr/npcs/liora.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.barok-ironfist",
+      "destination": "content/settings/realm-of-myr/npcs/barok-ironfist.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.barok-ironfist",
+      "destination": "content/settings/realm-of-myr/npcs/barok-ironfist.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.door-guard",
+      "destination": "content/settings/realm-of-myr/npcs/door-guard.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.door-guard",
+      "destination": "content/settings/realm-of-myr/npcs/door-guard.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.seraphina-valtor",
+      "destination": "content/settings/realm-of-myr/npcs/seraphina-valtor.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.seraphina-valtor",
+      "destination": "content/settings/realm-of-myr/npcs/seraphina-valtor.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.bishop-nicolai",
+      "destination": "content/settings/realm-of-myr/npcs/bishop-nicolai.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.bishop-nicolai",
+      "destination": "content/settings/realm-of-myr/npcs/bishop-nicolai.md"
+    }
+  ],
+  "warnings": [
+    {
+      "code": "asset-key-converted",
+      "message": "Converted legacy asset key \"/images/app/avatar/npc.png?v=1\" to full S3 URL.",
+      "source": "AdventurePlan.npcs.astrid-blackthorn.image"
+    },
+    {
+      "code": "asset-key-converted",
+      "message": "Converted legacy asset key \"/images/app/avatar/npc.png?v=1\" to full S3 URL.",
+      "source": "AdventurePlan.npcs.silverhand.image"
+    },
+    {
+      "code": "asset-key-converted",
+      "message": "Converted legacy asset key \"/images/app/avatar/npc.png?v=1\" to full S3 URL.",
+      "source": "AdventurePlan.npcs.silas.image"
+    },
+    {
+      "code": "asset-key-converted",
+      "message": "Converted legacy asset key \"/images/app/avatar/npc.png?v=1\" to full S3 URL.",
+      "source": "AdventurePlan.npcs.liora.image"
+    },
+    {
+      "code": "legacy-format-normalized",
+      "message": "Normalized older March of Davos encounter shape into 45 AdventurePlan encounters and 35 reusable NPC sheets.",
+      "source": "sections[].scenes[].encounters[]"
+    },
+    {
+      "code": "legacy-start-repaired",
+      "message": "Set blank AdventurePlan.start to \"the-gates-of-kordavos\", the first authored encounter in March of Davos.",
+      "source": "AdventurePlan.start"
+    },
+    {
+      "code": "linear-transitions-inferred",
+      "message": "Inferred linear transitions between legacy encounters because the source did not include explicit transition targets.",
+      "source": "sections[].scenes[].encounters[]"
+    }
+  ]
+}

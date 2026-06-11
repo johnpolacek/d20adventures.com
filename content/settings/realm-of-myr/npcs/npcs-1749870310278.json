@@ -1,0 +1,59 @@
+{
+  "name": "Dmitri Volkov",
+  "archetype": "Merchant",
+  "race": "Human",
+  "gender": "Male",
+  "appearance": "Dmitri Volkov is a man of average height with a sturdy build. His white hair and beard is neatly combed, framing a confident, often smiling, face. He dresses in fine, practical clothes, always clean and well-maintained.",
+  "personality": "Confident, shrewd, affable, and meticulous. He possesses a dry wit and a keen eye for detail. While generally honest in his dealings, he is fiercely protective of his business and can be ruthless when necessary.",
+  "background": "Dmitri started his career from humble beginnings, working as a clerk in a trading house. Through shrewd deals, keen observation, and an innate understanding of market trends, he slowly built his own network and capital. He now owns a successful import-export business, specializing in rare spices and exotic textiles, with connections across several major cities.",
+  "motivation": "Dmitri's primary motivation is to expand his mercantile empire and secure his family's legacy. He seeks out new trade routes, rare goods, and influential contacts to further his business. He also harbors a secret desire to be recognized as the most influential merchant in the region, not just for wealth, but for the power and respect it commands.",
+  "behavior": "Dmitri is generally affable and polite, always ready with a charming smile and a firm handshake. However, beneath the pleasant demeanor lies a sharp mind and a shrewd negotiator. He values punctuality and honesty in business, but is not above a bit of calculated manipulation to secure a favorable deal. He can be surprisingly stubborn when his interests are at stake.",
+  "healthPercent": 100,
+  "equipment": [
+    {
+      "name": "Fine Merchant's Robes",
+      "description": "Well-tailored clothes made from quality fabrics, suitable for formal meetings and travel."
+    },
+    {
+      "name": "Leather-bound Ledger",
+      "description": "A meticulously kept book detailing his transactions, contacts, and inventory."
+    },
+    {
+      "name": "Heavy Coin Pouch",
+      "description": "Filled with a substantial amount of various currencies."
+    },
+    {
+      "name": "Small Dagger",
+      "description": "A simple, well-maintained dagger kept concealed for personal defense."
+    },
+    {
+      "name": "Signet Ring",
+      "description": "A silver ring bearing the crest of his trading house."
+    }
+  ],
+  "skills": [
+    "Persuasion",
+    "Insight",
+    "Investigation",
+    "Appraisal",
+    "Negotiation",
+    "History (Trade Routes)"
+  ],
+  "specialAbilities": [
+    "Keen Negotiator: Dmitri gains advantage on Charisma (Persuasion) checks when negotiating prices or contracts.",
+    "Resourceful: Once per long rest, Dmitri can recall a piece of information about a specific trade good, market trend, or influential contact that might be relevant to the current situation.",
+    "Well-Connected: Dmitri can always find a contact in any major settlement who can provide information or goods, though it may come at a cost."
+  ],
+  "type": "npc",
+  "attributes": {
+    "strength": 9,
+    "dexterity": 10,
+    "constitution": 12,
+    "intelligence": 14,
+    "wisdom": 13,
+    "charisma": 16
+  },
+  "status": "",
+  "id": "npcs-1749870310278",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-road-to-kordavos/npcs/225e726d-4795-4d1c-8d8d-0f7b8f42e094.png?t=1749871388935"
+}

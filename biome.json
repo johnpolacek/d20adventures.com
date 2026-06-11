@@ -1,8 +1,6 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
-  "organizeImports": {
-    "enabled": true
-  },
+  "$schema": "https://biomejs.dev/schemas/2.4.6/schema.json",
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
     "enabled": true,
     "rules": {
@@ -46,7 +44,21 @@
     }
   },
   "files": {
-    "ignore": [".next", "test-results", "tests-examples", "tests", "coverage", "dist", "build", "node_modules", "*.min.js", "*.bundle.js", "convex/_generated", "playwright-report"]
+    "includes": [
+      "**",
+      "!**/.next",
+      "!**/test-results",
+      "!**/tests-examples",
+      "!**/tests",
+      "!**/coverage",
+      "!**/dist",
+      "!**/build",
+      "!**/node_modules",
+      "!**/*.min.js",
+      "!**/*.bundle.js",
+      "!**/convex/_generated",
+      "!**/playwright-report"
+    ]
   },
   "css": {
     "linter": { "enabled": false },

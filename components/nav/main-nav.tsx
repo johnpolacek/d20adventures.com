@@ -5,7 +5,7 @@ import { siteConfig } from "@/lib/config"
 import { navItems } from "@/lib/config/navigation"
 import { cn } from "@/lib/utils"
 import { Icon } from "@radix-ui/react-select"
-import Image from "next/image"
+import Image from "@/components/ui/native-image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 interface MainNavProps {

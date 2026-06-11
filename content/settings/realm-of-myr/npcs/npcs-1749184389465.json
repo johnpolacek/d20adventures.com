@@ -1,0 +1,55 @@
+{
+  "name": "Aelar Moonglimmer",
+  "archetype": "Operative",
+  "race": "Elf",
+  "gender": "Male",
+  "appearance": "Aelar Moonglimmer is a lean and agile elf with sharp, observant grey eyes that seem to miss nothing. His movements are fluid and silent, often cloaked in practical, dark attire that blends seamlessly into shadows. His silver hair is usually tied back, and his features, while refined, bear the subtle lines of one who has seen much and trusts little.",
+  "personality": "Pragmatic, highly disciplined, and exceptionally discreet. Aelar rarely shows emotion, preferring to analyze situations with cold logic. He is fiercely loyal to his faction and will go to great lengths to achieve his objectives, even if it means making difficult moral choices.",
+  "background": "Hailing from the hidden elven enclaves of Faelendar, Aelar was trained from a young age in the arts of espionage, infiltration, and negotiation. He belongs to a clandestine faction dedicated to preserving elven influence and securing their future in a changing world. His current mission is one of the most critical: to exchange a powerful Valkaaran artifact, whose true nature is known only to a select few, for strategic resources that will bolster Faelendar's position against emerging threats.",
+  "motivation": "To secure the future and prosperity of his people in Faelendar by acquiring vital strategic assets, ensuring their continued influence and survival.",
+  "behavior": "Aelar is always alert, observing his surroundings and the people within them. He speaks concisely and directly, valuing efficiency over pleasantries. During negotiations, he remains calm and composed, rarely revealing his true intentions or emotions. He is wary of strangers and trusts only those who have proven themselves.",
+  "healthPercent": 100,
+  "equipment": [
+    {
+      "name": "Shadowsilk Cloak",
+      "description": "A dark, lightweight cloak woven with shadowsilk, providing excellent camouflage and muffling sound."
+    },
+    {
+      "name": "Moon-Forged Dagger",
+      "description": "A finely crafted dagger with a razor-sharp edge, designed for silent takedowns."
+    },
+    {
+      "name": "Master Lockpicks",
+      "description": "A set of intricate tools capable of bypassing complex locks."
+    },
+    {
+      "name": "Valkaaran Artifact",
+      "description": "A small, intricately carved obsidian orb pulsating with faint, ancient energy. Its true power and purpose are a closely guarded secret."
+    },
+    {
+      "name": "Concealed Communicator",
+      "description": "A small, enchanted device allowing discreet communication with his faction."
+    }
+  ],
+  "skills": [
+    "Stealth",
+    "Acrobatics",
+    "Perception",
+    "Diplomacy",
+    "Investigation",
+    "Negotiation",
+    "Disguise"
+  ],
+  "status": "",
+  "type": "npc",
+  "attributes": {
+    "strength": 10,
+    "dexterity": 18,
+    "constitution": 14,
+    "intelligence": 16,
+    "wisdom": 15,
+    "charisma": 12
+  },
+  "id": "npcs-1749184389465",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/covert-cargo/npcs/e8e02409-93a9-4936-8b2e-b5a3d083889d.png?t=1749226155922"
+}

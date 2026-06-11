@@ -1,6 +1,6 @@
 "use client"
 import { cn } from "@/lib/utils"
-import Image from "next/image"
+import Image from "@/components/ui/native-image"
 import type React from "react"
 import { useEffect, useRef } from "react"
 import AnimateIn from "./animate-in"

@@ -5,7 +5,7 @@ import { IMAGE_HOST } from "@/lib/config"
 import { useFileUpload } from "@/lib/upload-utils"
 import { cn } from "@/lib/utils"
 import { ImagePlus, Loader, X } from "lucide-react"
-import Image from "next/image"
+import Image from "@/components/ui/native-image"
 import { useCallback, useState } from "react"
 import { toast } from "sonner"
 

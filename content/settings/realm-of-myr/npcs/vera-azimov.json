@@ -1,0 +1,11 @@
+{
+  "id": "vera-azimov",
+  "name": "Vera Azimov",
+  "type": "npc",
+  "image": "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726438484598",
+  "archetype": "Weapon Dealer",
+  "race": "Dwarf",
+  "gender": "Female",
+  "appearance": "Wears a tattered cloak",
+  "healthPercent": 100
+}

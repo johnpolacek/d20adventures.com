@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils"
-import Image from "next/image"
+import Image from "@/components/ui/native-image"
 
 export default function Parchment({ containerClass, imageClass }: { containerClass?: string; imageClass?: string }) {
   return (

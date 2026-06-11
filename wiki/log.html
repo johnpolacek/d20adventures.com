@@ -49,71 +49,278 @@
 </ul></section>
 </article>
 <article class="entry">
-<div class="date">2026-05-25</div>
-<section class="body"><h2>Implemented admin adventure plan chat history</h2><ul>
-<li>Added <code>wiki/plans/features/admin-adventure-plan-chat-history.html</code> and updated the planning dashboard for the focused admin authoring chat feature.</li>
-<li>Added a separate Convex transcript table for shared per-plan admin chat history, distinct from per-adventure game chat.</li>
-<li>Added server-side plan-management checks before reading or writing admin chat history, using the existing S3 Adventure Plan and Setting permission model.</li>
-<li>Added an Admin Chat drawer to the Adventure Plan editor with scoped prompt targets, history loading, older-message pagination, assistant replies, and local application of supported text suggestions through existing editor state.</li>
-<li>Validation: <code>pnpm exec tsc --noEmit</code> passed and <code>pnpm build</code> passed. <code>pnpm lint</code> remains blocked by the known Biome config/schema mismatch.</li>
-</ul></section>
-</article>
-<article class="entry">
-<div class="date">2026-05-25</div>
-<section class="body"><h2>Implemented retained chat history</h2><ul>
-<li>Added authenticated paginated chat history loading for per-adventure game chat using the existing Convex <code>chat_messages</code> table and server-side <code>assertAdventureAccess</code> checks.</li>
-<li>Updated <code>GameChat</code> to load recent history on open, load older messages, preserve scroll position when prepending history, dedupe SSE-delivered rows, and keep unread tracking in localStorage.</li>
-<li>Kept chat as Convex live session state; no S3 authored content or wiki-adventure migration storage contract changed.</li>
-<li>Validation: <code>pnpm exec tsc --noEmit</code> passed and <code>pnpm build</code> passed. <code>pnpm check</code> remains blocked by the known Biome config/schema mismatch.</li>
-</ul></section>
-</article>
-<article class="entry">
-<div class="date">2026-05-25</div>
-<section class="body"><h2>Planned retained chat history</h2><ul>
-<li>Added <code>wiki/plans/features/retain-chat-history.html</code> as the active compact feature plan for durable, reloadable per-adventure game chat.</li>
-<li>Recorded the current evidence: chat messages already persist in Convex, the SSE route returns only a recent initial batch, and the UI clears local state when the chat opens.</li>
-<li>Set Unit 01 as the next action: establish authenticated paginated history loading before changing the chat modal UI.</li>
-<li>No app code changes were made.</li>
+<div class="date">2026-05-24</div>
+<section class="body"><h2>Restored March of Davos NPC and monster references</h2><ul>
+<li>Audited March of Davos encounter prose against NPC frontmatter references and NPC sheets.</li>
+<li>Added missing NPC/monster source records for the Forest Drake, Ancient Undead, Thaddeus Blackthorn, Joran Antonov, Eldrin Varokich, Clive Stonebrook, Mira Hearthstone, and Harron.</li>
+<li>Attached missing encounter references across the Docks, Library, Wine Cellar, Masquerade Ball, and Covenant finale sequences.</li>
+<li>Validation evidence: March of Davos bridge check, <code>pnpm exec tsc --noEmit</code>, and <code>pnpm build</code> passed.</li>
 </ul></section>
 </article>
 <article class="entry">
 <div class="date">2026-05-24</div>
-<section class="body"><h2>Implemented sidebar section and scene navigation refactor</h2><ul>
-<li>Changed the Adventure Plan editor to default to the first section and first scene, with sidebar selection for utilities, sections, scenes, and selected-scene encounters.</li>
-<li>Replaced the long structural encounter editor flow with a prose-focused editor for section title/summary, scene title/summary, and expanded encounter title/intro/instructions.</li>
-<li>Added silent debounced prose auto-save, encounter smooth-scroll links, and scroll-spy active encounter state.</li>
-<li>Validation: <code>pnpm exec tsc --noEmit</code> and <code>pnpm build</code> passed. <code>pnpm check</code> remains blocked by the existing Biome config/schema mismatch.</li>
+<section class="body"><h2>Shifted admin authoring to chat-primary revisions</h2><ul>
+<li>Changed the admin wiki authoring direction from approval-gated AI change-set queues to auto-applied chat and key-field edits backed by restorable S3 revisions.</li>
+<li>Removed section/scene text editing, manual NPC add/remove editing, visible NPC IDs, and manual save/export/import as primary authoring controls.</li>
+<li>Updated Stage 6 and final migration plan language so chat, validation, and revision restore are the primary adventure-plan editing model.</li>
 </ul></section>
 </article>
 <article class="entry">
 <div class="date">2026-05-24</div>
-<section class="body"><h2>Planned sidebar section and scene navigation refactor</h2><ul>
-<li>Added <code>wiki/plans/sidebar-section-scene-navigation.html</code> for the Adventure Plan editor refactor.</li>
-<li>Locked the prose-focused navigation model: select section, select scene, show encounters in order, and use chat or a later admin surface for structural edits.</li>
-<li>Planned silent prose auto-save with error-only feedback and encounter scroll-spy in the focused scene editor.</li>
+<section class="body"><h2>Simplified admin sections sidebar top bar</h2><ul>
+<li>Removed outer padding, borders, and button chrome from the sidebar search/collapse row.</li>
+<li>Changed the row to a flush segmented bar with search icon, full-height input, and borderless collapse icon separated only by vertical dividers.</li>
+<li>Validation evidence: <code>pnpm exec biome check components/wiki-adventures/admin-wiki-adventure-editor.tsx</code>, <code>pnpm test:wiki-adventures:admin-authoring</code>, and <code>pnpm exec tsc --noEmit --pretty false</code> passed.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-24</div>
+<section class="body"><h2>Aligned collapsed sections restore control</h2><ul>
+<li>Moved the collapsed-state restore menu button inline with the page eyebrow row so titles align with the editor content.</li>
+<li>Reduced the expanded sidebar collapse icon stroke to <code>0.75</code>.</li>
+<li>Validation evidence: <code>pnpm exec biome check components/wiki-adventures/admin-wiki-adventure-editor.tsx</code>, <code>pnpm test:wiki-adventures:admin-authoring</code>, and <code>pnpm exec tsc --noEmit --pretty false</code> passed.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-24</div>
+<section class="body"><h2>Cleaned up admin sections navigator controls</h2><ul>
+<li>Enlarged the sidebar collapse icon within its button and removed repeated link-count badges from encounter rows.</li>
+<li>Validation evidence: <code>pnpm exec biome check components/wiki-adventures/admin-wiki-adventure-editor.tsx</code>, <code>pnpm test:wiki-adventures:admin-authoring</code>, and <code>pnpm exec tsc --noEmit --pretty false</code> passed.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-24</div>
+<section class="body"><h2>Refined admin wiki sections sidebar design</h2><ul>
+<li>Improved the left adventure sections navigator surface, search row, selected page treatment, and collapse button styling.</li>
+<li>Made the collapse control a compact integrated button beside search instead of a visually heavy standalone block.</li>
+<li>Validation evidence: <code>pnpm exec biome check components/wiki-adventures/admin-wiki-adventure-editor.tsx</code>, <code>pnpm test:wiki-adventures:admin-authoring</code>, and <code>pnpm exec tsc --noEmit --pretty false</code> passed.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-24</div>
+<section class="body"><h2>Added admin wiki sections sidebar toggle</h2><ul>
+<li>Added a sidebar search-row toggle to hide the left adventure sections navigator on desktop admin wiki editor layouts.</li>
+<li>When collapsed, the restore menu button appears as a square control at the upper-left of the selected page header.</li>
+<li>Collapsed state gives the selected page more working width while preserving the chat rail and current selection.</li>
+<li>Validation evidence: <code>pnpm exec biome check components/wiki-adventures/admin-wiki-adventure-editor.tsx</code>, <code>pnpm test:wiki-adventures:admin-authoring</code>, and <code>pnpm exec tsc --noEmit --pretty false</code> passed.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-23</div>
+<section class="body"><h2>Expanded admin character detail display</h2><ul>
+<li>Removed the character source file-path box from the admin character editor.</li>
+<li>Added read-only sheet detail sections for appearance, personality, background, motivation, behavior, attributes, skills, equipment, spells, and special abilities when present.</li>
+<li>Validation evidence: <code>pnpm exec biome check components/wiki-adventures/admin-wiki-adventure-editor.tsx</code>, <code>pnpm test:wiki-adventures:admin-authoring</code>, and <code>pnpm exec tsc --noEmit --pretty false</code> passed.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-23</div>
+<section class="body"><h2>Redesigned admin wiki character editor layout</h2><ul>
+<li>Added a dedicated character profile editor layout instead of reusing the module page editor for NPC and premade character markdown.</li>
+<li>Changed character art to a square portrait treatment, removed repeated header/summary content, and kept one editable summary field with paired sheet metadata badges.</li>
+<li>Kept character source writes scoped to markdown profile title, image, and summary fields; JSON sheet handling remains unchanged.</li>
+<li>Validation evidence: <code>pnpm exec biome check components/wiki-adventures/admin-wiki-adventure-editor.tsx</code>, <code>pnpm test:wiki-adventures:admin-authoring</code>, and <code>pnpm exec tsc --noEmit --pretty false</code> passed.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-23</div>
+<section class="body"><h2>Unified admin wiki character navigation</h2><ul>
+<li>Changed the admin wiki editor navigation to show one <code>Characters</code> group instead of separate NPC profile, premade character, and sheet groups.</li>
+<li>Paired character profile markdown and JSON sheets by id, preferring profile paths while preserving JSON-only orphan sheets.</li>
+<li>Kept compiler, runtime artifacts, migrations, S3 source layout, and validation behavior unchanged.</li>
+<li>Validation evidence: <code>pnpm exec biome check components/wiki-adventures/admin-wiki-adventure-editor.tsx</code> and <code>pnpm test:wiki-adventures:admin-authoring</code> passed.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-23</div>
+<section class="body"><h2>Improved admin wiki chat sidebar design</h2><ul>
+<li>Reworked the right sidebar in <code>components/wiki-adventures/admin-wiki-adventure-editor.tsx</code> into a full-height chat rail with a stronger header, source status chip, labeled prompt dock, custom apply button, and structured change log.</li>
+<li>Preserved existing chat behavior and source-write flow while improving visual hierarchy, spacing, message contrast, and scroll containment.</li>
+<li>Validation evidence: <code>pnpm exec biome check components/wiki-adventures/admin-wiki-adventure-editor.tsx</code> passed. Full <code>pnpm check</code> remains blocked by pre-existing repository-wide Biome diagnostics outside this change.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-23</div>
+<section class="body"><h2>Reworked admin wiki editor toward classic module reading</h2><ul>
+<li>Promoted March of Davos encounter hierarchy into durable <code>sectionTitle</code>, <code>sceneTitle</code>, and <code>moduleOrder</code> frontmatter.</li>
+<li>Changed the admin wiki outline to use nested adventure section and scene groups instead of a flat encounter list.</li>
+<li>Added module-style page editing with prominent art preview, replace/remove image controls, read-aloud intro, GM notes, and exits.</li>
+<li>Expanded encounter NPC editing into a compact source-backed NPC panel with portraits, identity details, and sheet/profile summaries while preserving editable reference fields.</li>
+<li>Validation evidence: <code>pnpm test:wiki-adventures:admin-authoring</code>, <code>pnpm test:wiki-adventures:march-of-davos-bridge</code>, <code>pnpm tsc --noEmit --pretty false</code>, <code>pnpm build</code>, and <code>git diff --check</code> passed.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-23</div>
+<section class="body"><h2>Refined admin wiki editor into a navigable wiki map</h2><ul>
+<li>Replaced the flat source-file list feel with grouped wiki navigation for adventure pages, encounters, NPC profiles, premade characters, and sheets.</li>
+<li>Added parsed typed-link navigation, encounter transition visibility, backlinks, selected-page context, and a more structured editor layout.</li>
+<li>Validation evidence: <code>pnpm test:wiki-adventures:admin-authoring</code>, <code>pnpm tsc --noEmit --pretty false</code>, and <code>pnpm build</code> passed. Local route smoke for <code>/admin/wiki-adventures/realm-of-myr/march-of-davos</code> returned <code>200 OK</code>.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-23</div>
+<section class="body"><h2>Implemented admin wiki authoring rebuild</h2><ul>
+<li>Added a per-adventure admin wiki editor at <code>/admin/wiki-adventures/{settingId}/{planId}</code> with chat-first improvement, key-field editing, validation status, and manual export/restore bundles.</li>
+<li>Changed wiki adventure runtime loading to prefer canonical S3 <code>content/</code> source and fall back to migrated repo-local source when S3 source is not present.</li>
+<li>Added admin source actions for listing migrated wiki adventures, loading source trees, applying AI chat writes, saving key fields, and exporting/importing source bundles.</li>
+<li>Hid the visible legacy Adventure Plans admin entry in favor of Wiki Adventures.</li>
+<li>Validation evidence: <code>pnpm test:wiki-adventures:admin-authoring</code>, all migrated adventure bridge checks, <code>pnpm test:wiki-adventures:batch-a</code>, <code>pnpm test:wiki-adventures:batch-b</code>, <code>pnpm tsc --noEmit --pretty false</code>, <code>pnpm build</code>, and <code>git diff --check</code> passed. Local route smoke checks for <code>/admin/wiki-adventures</code> and <code>/admin/wiki-adventures/realm-of-myr/covert-cargo</code> returned <code>200 OK</code>.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-23</div>
+<section class="body"><h2>Implemented March of Davos wiki migration</h2><ul>
+<li>Added <code>wiki/plans/march-of-davos-wiki-migration.html</code> and indexed <code>wiki/sources/adventure plans/the-march-of-davos-plan.json</code>.</li>
+<li>Added <code>scripts/migrate-march-of-davos.ts</code> and <code>pnpm migrate:march-of-davos</code> to normalize the older nested source into wiki source files.</li>
+<li>Generated 45 encounter files, 35 promoted NPC sheet/profile pairs, and a migration report; folded legacy stage text into GM notes.</li>
+<li>Set the blank start field to <code>the-gates-of-kordavos</code> and inferred linear transitions across the legacy encounter order.</li>
+<li>Added <code>scripts/wiki-adventures-march-of-davos-bridge-check.ts</code> and <code>pnpm test:wiki-adventures:march-of-davos-bridge</code>.</li>
+<li>Validation evidence: <code>pnpm migrate:march-of-davos</code>, <code>pnpm test:wiki-adventures:march-of-davos-bridge</code>, <code>pnpm test:wiki-adventures:road-to-kordavos-bridge</code>, <code>pnpm test:wiki-adventures:covert-cargo-bridge</code>, <code>pnpm test:wiki-adventures:midnight-bridge</code>, <code>pnpm tsc --noEmit --pretty false</code>, <code>pnpm build</code>, and <code>git diff --check</code> passed. Signed-out local route checks for <code>/settings/realm-of-myr/play</code>, <code>/settings/realm-of-myr/march-of-davos/practice</code>, and <code>/settings/realm-of-myr/march-of-davos/character-select</code> returned <code>200 OK</code>.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-23</div>
+<section class="body"><h2>Implemented Road to Kordavos wiki migration</h2><ul>
+<li>Added <code>wiki/plans/road-to-kordavos-wiki-migration.html</code> and indexed <code>wiki/sources/adventure plans/the_road_to_kordavos_adventure_plan.json</code>.</li>
+<li>Added <code>scripts/migrate-road-to-kordavos.ts</code> and <code>pnpm migrate:road-to-kordavos</code> to generate wiki source files and migration report.</li>
+<li>Repaired the blank legacy start field to <code>well-met</code> and recorded the repair in the migration report.</li>
+<li>Extended local wiki runtime support for saved player characters so custom-character adventures can start and transition without premade sheets.</li>
+<li>Added <code>scripts/wiki-adventures-road-to-kordavos-bridge-check.ts</code> and <code>pnpm test:wiki-adventures:road-to-kordavos-bridge</code>.</li>
+<li>Validation evidence: <code>pnpm migrate:road-to-kordavos</code>, <code>pnpm test:wiki-adventures:road-to-kordavos-bridge</code>, <code>pnpm test:wiki-adventures:covert-cargo-bridge</code>, <code>pnpm test:wiki-adventures:midnight-bridge</code>, <code>pnpm tsc --noEmit --pretty false</code>, <code>pnpm build</code>, and <code>git diff --check</code> passed. Signed-out local route checks for <code>/settings/realm-of-myr/play</code>, <code>/settings/realm-of-myr/the-road-to-kordavos/practice</code>, and <code>/settings/realm-of-myr/the-road-to-kordavos/character-select</code> returned <code>200 OK</code>.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-23</div>
+<section class="body"><h2>Implemented Covert Cargo wiki trial</h2><ul>
+<li>Added <code>wiki/plans/covert-cargo-wiki-trial.html</code> and indexed <code>wiki/sources/adventure plans/covert-cargo.json</code> as a legacy Realm of Myr source.</li>
+<li>Added <code>scripts/migrate-covert-cargo.ts</code> and <code>pnpm migrate:covert-cargo</code> to generate Covert Cargo wiki source files and a migration report.</li>
+<li>Repaired legacy source issues during migration: missing start encounter set to <code>the-shipment</code>, blank transition target dropped, and numeric premade IDs quoted in frontmatter.</li>
+<li>Generalized the local wiki runtime bridge so Covert Cargo and The Midnight Summons share compiled-artifact create/start/advance behavior.</li>
+<li>Added <code>scripts/wiki-adventures-covert-cargo-bridge-check.ts</code> and <code>pnpm test:wiki-adventures:covert-cargo-bridge</code> for the start-flow bridge proof.</li>
+<li>Validation evidence: <code>pnpm migrate:covert-cargo</code>, <code>pnpm test:wiki-adventures:covert-cargo-bridge</code>, <code>pnpm test:wiki-adventures:midnight-bridge</code>, <code>pnpm tsc --noEmit --pretty false</code>, <code>pnpm build</code>, and <code>git diff --check</code> passed. Signed-out local route checks for <code>/settings/realm-of-myr/play</code>, <code>/settings/realm-of-myr/covert-cargo/practice</code>, and <code>/settings/realm-of-myr/covert-cargo/character-select</code> returned <code>200 OK</code>.</li>
 </ul></section>
 </article>
 <article class="entry">
 <div class="date">2026-05-22</div>
-<section class="body"><h2>Implemented LLM prose style policy</h2><ul>
-<li>Added a shared AI SDK style policy for concise user-visible text without em dashes, dash variants, or semicolons in prose.</li>
-<li>Added shortcode-safe prose cleanup so <code>[DiceRoll:...]</code> semicolon syntax remains parseable.</li>
-<li>Recorded the implementation plan at <code>wiki/plans/llm-style-policy.html</code>.</li>
+<section class="body"><h2>Implemented The Midnight Summons playthrough bridge</h2><ul>
+<li>Added <code>lib/wiki-adventures/midnight-summons-runtime.ts</code> to load the migrated wiki source tree, compile publish-valid runtime artifacts, expose a pinned content ref, build first-turn characters from paired wiki sheets, and detect final encounters.</li>
+<li>Updated <code>createAdventure</code> so The Midnight Summons pins wiki content, initializes <code>currentEncounterId</code>, and copies Thalbern from the migrated wiki character sheet.</li>
+<li>Updated <code>startAdventure</code> so The Midnight Summons creates its first turn from compiled wiki artifacts instead of legacy nested AdventurePlan encounters.</li>
+<li>Updated <code>advanceTurn</code> so The Midnight Summons uses the wiki gameplay context packet, wiki prompt, transition validator, adventure patch validator, and guarded <code>commitWikiTurnAdvance</code>.</li>
+<li>Added <code>scripts/wiki-adventures-midnight-bridge-check.ts</code> and <code>pnpm test:wiki-adventures:midnight-bridge</code> to verify the bridge wiring, repaired transition, final encounter detection, and first-turn character assembly.</li>
+<li>Validation evidence: <code>pnpm test:wiki-adventures:midnight-bridge</code>, <code>pnpm migrate:midnight-summons</code>, <code>pnpm tsc --noEmit --pretty false</code>, <code>pnpm build</code>, and <code>git diff --check</code> passed. A signed-out CLI HTTP check for <code>/settings/realm-of-myr/play</code> returned <code>200 OK</code>.</li>
+<li>Authenticated browser smoke reached the first generated turn after selecting Thalbern, proving public selection, solo auto-start, and first-turn creation. The smoke exposed a Next Image/S3 asset issue, fixed by switching migrated URLs to the existing <code>d20-public.s3.us-east-1.amazonaws.com</code> asset host and allowing that host in Next config.</li>
+<li>Remaining manual playthrough: submit player actions, advance branches, and verify completion UI.</li>
 </ul></section>
 </article>
 <article class="entry">
 <div class="date">2026-05-22</div>
-<section class="body"><h2>Allowed confident auto-commits</h2><ul>
-<li>Updated <code>AGENTS.md</code> automation policy so docs-only wiki changes and code changes may be committed without asking when the implementation is clear and validated.</li>
-<li>Kept push, dependency install, and long-command behavior unchanged.</li>
+<section class="body"><h2>Migrated The Midnight Summons into wiki source files</h2><ul>
+<li>Added <code>scripts/migrate-midnight-summons.ts</code> and <code>pnpm migrate:midnight-summons</code> to migrate the legacy JSON source into authored wiki files.</li>
+<li>Generated <code>content/settings/realm-of-myr/adventures/the-midnight-summons/adventure.md</code>, 7 encounter markdown files, paired Thalbern premade files, paired Wollandora/Owlbear NPC files, and <code>migration-report.json</code>.</li>
+<li>Repaired the stale transition target <code>broken-silence -&gt; wollandora-intervention</code> to <code>broken-silence -&gt; timely-rescue</code> and recorded it in the migration report.</li>
+<li>Converted legacy local image paths into full S3 URLs under <code>https://d20-public.s3.us-east-1.amazonaws.com/</code>, which matches the existing public S3 asset host.</li>
+<li>Validation evidence: <code>pnpm migrate:midnight-summons</code> generated 14 source files plus the migration report and compiled the result in publish mode with status <code>passed</code>.</li>
 </ul></section>
 </article>
 <article class="entry">
 <div class="date">2026-05-22</div>
-<section class="body"><h2>Updated default Gemini model</h2><ul>
-<li>Changed the central AI SDK model selector in <code>lib/ai/llm.ts</code> from <code>gemini-3-flash-preview</code> to <code>gemini-3.1-flash-lite</code>.</li>
-<li>Updated <code>TECHNICAL_DOCUMENTATION.md</code> so the documented default model matches runtime behavior.</li>
-<li>Validation note: targeted search found no remaining runtime or technical-documentation references to <code>gemini-3-flash-preview</code> outside this log entry.</li>
+<section class="body"><h2>Expanded The Midnight Summons plan to cover full adventure migration</h2><ul>
+<li>Added a full adventure migration scope section to <code>wiki/plans/midnight-summons-playthrough-test.html</code> covering the adventure root, section/scene wrappers, 7 encounters, 11 transition edges, 2 NPC records, Thalbern, and 11 image references.</li>
+<li>Clarified that section/scene framing should not be lost even if runtime artifacts are encounter-first.</li>
+<li>Added acceptance coverage requiring every legacy adventure object to be represented in wiki source or documented as intentionally transformed.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-22</div>
+<section class="body"><h2>Clarified premade character migration for The Midnight Summons</h2><ul>
+<li>Updated <code>wiki/plans/midnight-summons-playthrough-test.html</code> to state that existing premade characters are still inline legacy <code>AdventurePlan.premadePlayerCharacters[]</code> JSON, not authored wiki source files.</li>
+<li>Added a premade migration section requiring paired <code>characters/thalbern.md</code> and <code>characters/thalbern.json</code> files, with the JSON sheet validating against <code>types/character.ts</code> <code>pcTemplateSchema</code>.</li>
+<li>Called out the required standard attributes, runtime copy behavior, and S3 image URL publish requirement for Thalbern.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-22</div>
+<section class="body"><h2>Audited The Midnight Summons plan for full solo playthrough coverage</h2><ul>
+<li>Expanded <code>wiki/plans/midnight-summons-playthrough-test.html</code> with a full flow audit covering adventure listing, character selection, solo auto-start, first turn render, roll/action loop, branching transitions, terminal encounters, completion UI, post-completion record, and replay/new-run behavior.</li>
+<li>Identified a legacy content issue: <code>broken-silence</code> references <code>wollandora-intervention</code>, but the JSON source contains <code>timely-rescue</code>. Publish validation should block this unless the migration corrects or aliases the transition.</li>
+<li>Added explicit completion acceptance gates for terminal encounters, <code>isFinalEncounter</code>, Adventure <code>completed</code> status, <code>endedAt</code>, final controls, and Play Again isolation.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-22</div>
+<section class="body"><h2>Added The Midnight Summons focused playthrough plan</h2><ul>
+<li>Added <code>wiki/plans/midnight-summons-playthrough-test.html</code> as a focused plan for migrating and testing the single-player Realm of Myr adventure from the current public selection and Thalbern premade selection screens.</li>
+<li>Indexed the new legacy JSON source at <code>wiki/sources/adventure plans/the-midnight-summons.json</code> in <code>wiki/Sources.html</code>.</li>
+<li>Linked the playthrough plan from <code>wiki/plans/index.html</code>.</li>
+<li>Current recommendation: use The Midnight Summons as the first live playthrough cutover candidate, starting with a preview-backed migration and blocking publish until full S3 asset URLs are present.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-21</div>
+<section class="body"><h2>Implemented Wiki Adventure Batch F Convex session pinning</h2><ul>
+<li>Added optional Convex <code>adventures</code> fields for <code>currentEncounterId</code>, pinned <code>contentRef</code>, accumulated <code>adventureSummaryMarkdown</code>, discoveries, entity updates, open threads, and resolved thread IDs.</li>
+<li>Added optional Convex <code>turns</code> fields for embedded <code>adventurePatch</code>, transition decision data, and generated-by metadata.</li>
+<li>Updated adventure creation and first-turn creation mutations to accept pinned content refs and initial current encounter state without breaking existing callers.</li>
+<li>Added <code>commitWikiTurnAdvance</code> to reject stale current-turn, stale current-encounter, and stale content-hash writes before inserting the next turn and applying the adventure wiki patch.</li>
+<li>Updated legacy finalization to maintain <code>currentEncounterId</code> as turns advance, preserving compatibility while Batch G/old-system removal decides when to switch live advancement fully to the wiki runtime path.</li>
+<li>Added <code>lib/wiki-adventures/convex-session.ts</code> and <code>scripts/wiki-adventures-batch-f-check.ts</code> to verify content-pin guard behavior and adventure wiki patch accumulation without requiring production Convex state.</li>
+<li>Validation evidence: <code>pnpm test:wiki-adventures:batch-f</code>, <code>pnpm test:wiki-adventures:batch-e</code>, <code>pnpm test:wiki-adventures:batch-d</code>, <code>pnpm test:wiki-adventures:batch-c</code>, <code>pnpm test:wiki-adventures:batch-b</code>, <code>pnpm test:wiki-adventures:batch-a</code>, <code>pnpm tsc --noEmit --pretty false</code>, and <code>pnpm build</code> passed in the implementation worktree.</li>
+<li>Known repo-level validation caveat remains: <code>pnpm check</code> is blocked by the existing Biome configuration schema mismatch before checking project files.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-21</div>
+<section class="body"><h2>Implemented Wiki Adventure Batch E gameplay runtime projection</h2><ul>
+<li>Added <code>lib/wiki-adventures/artifact-loader.ts</code> with in-memory and S3 loaders for pinned published/preview runtime artifacts and <code>latest.json</code> resolution.</li>
+<li>Added <code>lib/wiki-adventures/runtime-context.ts</code> to assemble the AI GM context packet from compiled artifacts plus live turn/session snapshots, preserving recent-turn and roll-context compatibility without reading legacy <code>AdventurePlan.sections[].scenes[]</code>.</li>
+<li>Added <code>lib/wiki-adventures/transition-validator.ts</code> to validate current-encounter continuation, legal graph transitions, illegal targets, unresolved targets, stale content, and stale encounter results before session movement.</li>
+<li>Added <code>lib/wiki-adventures/adventure-patch.ts</code> to validate the AI GM <code>adventurePatch</code> contract and align patch transition data with the accepted transition validator result.</li>
+<li>Added <code>buildWikiEncounterProgressionPrompt</code> for compiled-artifact gameplay prompts that include content hash/version guards, current encounter sections, legal transition IDs, recent turns, roll context, player-character guardrails, and <code>adventurePatch</code> output requirements.</li>
+<li>Added <code>scripts/wiki-adventures-batch-e-check.ts</code> and <code>pnpm test:wiki-adventures:batch-e</code> to verify publish/load, context packet assembly, prompt shape, legal/illegal/stale transition validation, and adventure patch validation.</li>
+<li>Validation evidence: <code>pnpm test:wiki-adventures:batch-e</code>, <code>pnpm test:wiki-adventures:batch-d</code>, <code>pnpm test:wiki-adventures:batch-c</code>, <code>pnpm test:wiki-adventures:batch-b</code>, <code>pnpm test:wiki-adventures:batch-a</code>, <code>pnpm tsc --noEmit --pretty false</code>, and <code>pnpm build</code> passed in the implementation worktree.</li>
+<li>Known repo-level validation caveat remains: <code>pnpm check</code> is blocked by the existing Biome configuration schema mismatch before checking project files.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-21</div>
+<section class="body"><h2>Implemented Wiki Adventure Batch D AI authoring change-set tools</h2><ul>
+<li>Added <code>lib/wiki-adventures/ai-authoring-tools.ts</code> with deterministic app-owned authoring tools that return <code>AuthoringChangeSet</code> proposals, file diffs, draft-preview validation before/after, risk notes, and mechanical-confirmation flags.</li>
+<li>Covered the Stage 8 Batch D tool categories: create encounter, expand encounter, split encounter, link transition, repair missing transition target, summarize entity, add transition, and create paired character markdown/JSON files.</li>
+<li>Added <code>proposeWikiAdventureAiChangeSet</code> to the wiki adventure server actions so the workbench can request validated change-set proposals without direct client-side source mutation or production S3 writes.</li>
+<li>Updated the workbench AI panel to call the proposal action, display file-level diffs and validation status, and apply accepted proposals only to the local draft buffer for review.</li>
+<li>Added <code>scripts/wiki-adventures-batch-d-check.ts</code> and <code>pnpm test:wiki-adventures:batch-d</code> to verify every tool returns change sets, previews diffs, runs validation, repairs an unresolved transition, and flags character-pair JSON as mechanical.</li>
+<li>Validation evidence: <code>pnpm test:wiki-adventures:batch-d</code>, <code>pnpm test:wiki-adventures:batch-c</code>, <code>pnpm test:wiki-adventures:batch-b</code>, <code>pnpm test:wiki-adventures:batch-a</code>, <code>pnpm tsc --noEmit --pretty false</code>, and <code>pnpm build</code> passed in the implementation worktree.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-21</div>
+<section class="body"><h2>Implemented Wiki Adventure Batch C authoring workbench</h2><ul>
+<li>Added the first admin wiki authoring workbench route at <code>/admin/wiki-adventures</code>, linked from the admin dashboard.</li>
+<li>Added <code>components/wiki-adventures/wiki-adventure-workbench.tsx</code> with source tree, markdown/JSON editor, save/dirty state, validation drawer, AI change-set queue, entity inspector, graph preview, compiled encounter preview, and publish center panels.</li>
+<li>Added <code>app/_actions/wiki-adventures/workbench-actions.ts</code> so the workbench can run draft-preview or publish validation through the server-side compiler instead of client-only heuristics.</li>
+<li>Added <code>lib/wiki-adventures/myr-fixture.ts</code> and <code>lib/wiki-adventures/workbench-demo.ts</code> to feed the workbench from the migrated representative Myr AdventurePlan and compiled runtime artifacts.</li>
+<li>Added <code>scripts/wiki-adventures-batch-c-check.ts</code> and <code>pnpm test:wiki-adventures:batch-c</code> to verify the workbench model includes markdown/JSON source files, graph nodes, publish artifact preview, and draft-vs-publish transition validation behavior.</li>
+<li>Validation evidence: <code>pnpm test:wiki-adventures:batch-c</code>, <code>pnpm test:wiki-adventures:batch-b</code>, <code>pnpm test:wiki-adventures:batch-a</code>, <code>pnpm tsc --noEmit --pretty false</code>, and <code>pnpm build</code> passed in the implementation worktree. A local signed-out HTTP check returned <code>200 OK</code> with the expected admin access-denied state for <code>/admin/wiki-adventures</code>.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-21</div>
+<section class="body"><h2>Implemented Wiki Adventure Batch B preview/publish and Myr migration</h2><ul>
+<li>Added <code>lib/wiki-adventures/published-repository.ts</code> with mutable draft preview artifact writes, immutable timestamp/hash published versions, <code>latest.json</code> pointer writes, unchanged-content publish no-op behavior, rollback pointer movement, and in-memory/S3-backed repository implementations.</li>
+<li>Added <code>lib/wiki-adventures/myr-migration.ts</code> to convert legacy <code>AdventurePlan</code> JSON into wiki source files for <code>adventure.md</code>, encounter markdown, setting NPC markdown/JSON sheets, adventure premade character markdown/JSON sheets, full S3 URL asset fields, and migration reports.</li>
+<li>Added <code>scripts/wiki-adventures-batch-b-check.ts</code> and <code>pnpm test:wiki-adventures:batch-b</code> to verify one representative Myr adventure migrates, compiles in publish mode with zero errors, writes preview artifacts, publishes immutable artifacts, no-ops unchanged publish, and rolls back the latest pointer.</li>
+<li>Validation evidence: <code>pnpm test:wiki-adventures:batch-b</code>, <code>pnpm test:wiki-adventures:batch-a</code>, and <code>pnpm tsc --noEmit --pretty false</code> passed in the implementation worktree.</li>
+<li>Known repo-level validation caveat remains: <code>pnpm check</code> is blocked by the existing Biome configuration schema mismatch before checking project files.</li>
+</ul></section>
+</article>
+<article class="entry">
+<div class="date">2026-05-21</div>
+<section class="body"><h2>Started Wiki Adventure implementation Batch A</h2><ul>
+<li>Implemented foundation modules under <code>lib/wiki-adventures/</code> for source models, content hashing, S3 key/version helpers, markdown/frontmatter parsing, typed wiki link extraction, change-set application with stale-hash checks, source services, validation reports, and runtime artifact compilation.</li>
+<li>Added <code>scripts/wiki-adventures-batch-a-check.ts</code> and <code>pnpm test:wiki-adventures:batch-a</code> to verify the representative skeleton compile path, draft-vs-publish transition validation, character sheet validation, and approved change-set behavior.</li>
+<li>Validation evidence: <code>pnpm test:wiki-adventures:batch-a</code> passed and <code>pnpm tsc --noEmit --pretty false</code> passed in the implementation worktree.</li>
+<li>Known repo-level validation caveat: <code>pnpm check</code> is currently blocked by the existing Biome configuration schema mismatch before checking project files.</li>
 </ul></section>
 </article>
 <article class="entry">

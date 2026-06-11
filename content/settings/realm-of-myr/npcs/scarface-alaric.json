@@ -1,0 +1,13 @@
+{
+  "id": "scarface-alaric",
+  "name": "Alaric Fleyven",
+  "type": "npc",
+  "image": "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726346336662",
+  "archetype": "Rogue",
+  "race": "Human",
+  "gender": "Male",
+  "appearance": "Tall and lean with a deeply scarred face, jet-black hair tied back in a ponytail, and piercing blue eyes.",
+  "personality": "Cautious and untrusting, fiercely protective of his crew and territory, has a sharp tongue and quick wit.",
+  "behavior": "Expert in stealth, pickpocketing, and knife fighting.",
+  "healthPercent": 100
+}

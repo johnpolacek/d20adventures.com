@@ -10,7 +10,7 @@ import {
 import { getImageUrl } from "@/lib/utils";
 import type { AdventurePlan } from "@/types/adventure-plan";
 import type { Setting } from "@/types/setting";
-import Image from "next/image";
+import Image from "@/components/ui/native-image";
 import Link from "next/link";
 
 export default async function SettingAdventures(props: {

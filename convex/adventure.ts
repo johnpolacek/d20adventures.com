@@ -2,6 +2,23 @@ import { v } from "convex/values"
 import type { Doc, Id } from "./_generated/dataModel"
 import { action, internalMutation, mutation, query } from "./_generated/server"
 
+const contentRefValidator = v.object({
+  source: v.union(v.literal("published"), v.literal("preview")),
+  settingId: v.string(),
+  planId: v.string(),
+  contentVersion: v.optional(v.string()),
+  contentHash: v.optional(v.string()),
+  versionId: v.optional(v.string()),
+  previewDraftId: v.optional(v.string()),
+  schemaVersion: v.string(),
+})
+
+const generatedByValidator = v.object({
+  model: v.optional(v.string()),
+  promptVersion: v.optional(v.string()),
+  contextHash: v.optional(v.string()),
+})
+
 // Create a new adventure
 export const createAdventure = mutation({
   args: {
@@ -21,6 +38,9 @@ export const createAdventure = mutation({
       )
     ),
     status: v.optional(v.union(v.literal("waitingForPlayers"), v.literal("active"), v.literal("completed"))),
+    contentRef: v.optional(contentRefValidator),
+    currentEncounterId: v.optional(v.string()),
+    adventureSummaryMarkdown: v.optional(v.string()),
     title: v.string(),
     startedAt: v.number(),
   },
@@ -39,6 +59,13 @@ export const createAdventure = mutation({
       startedAt: args.startedAt,
       endedAt: undefined,
       currentTurnId: undefined,
+      currentEncounterId: args.currentEncounterId,
+      contentRef: args.contentRef,
+      adventureSummaryMarkdown: args.adventureSummaryMarkdown,
+      discoveries: [],
+      entityUpdates: [],
+      openThreads: [],
+      resolvedThreadIds: [],
       title: args.title,
       createdAt: now,
       updatedAt: now,
@@ -103,6 +130,9 @@ export const createTurn = mutation({
     narrative: v.string(),
     characters: v.array(v.any()), // Should match character object
     order: v.number(),
+    adventurePatch: v.optional(v.any()),
+    transition: v.optional(v.any()),
+    generatedBy: v.optional(generatedByValidator),
   },
   handler: async (ctx, args) => {
     // Check for duplicate order
@@ -122,12 +152,16 @@ export const createTurn = mutation({
       narrative: args.narrative,
       characters: args.characters,
       order: args.order,
+      adventurePatch: args.adventurePatch,
+      transition: args.transition,
+      generatedBy: args.generatedBy,
       createdAt: now,
       updatedAt: now,
     })
     // Update adventure's currentTurnId
     await ctx.db.patch(args.adventureId, {
       currentTurnId: turnId,
+      currentEncounterId: args.encounterId,
       status: "active",
       updatedAt: now,
     })
@@ -199,8 +233,14 @@ export const createAdventureWithFirstTurn = mutation({
       narrative: v.string(),
       characters: v.array(v.any()),
       order: v.number(),
+      adventurePatch: v.optional(v.any()),
+      transition: v.optional(v.any()),
+      generatedBy: v.optional(generatedByValidator),
     }),
     rollRequirement: v.optional(v.any()),
+    contentRef: v.optional(contentRefValidator),
+    currentEncounterId: v.optional(v.string()),
+    adventureSummaryMarkdown: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const now = Date.now()
@@ -215,6 +255,13 @@ export const createAdventureWithFirstTurn = mutation({
       startedAt: args.startedAt,
       title: args.title,
       status: "active",
+      currentEncounterId: args.currentEncounterId ?? args.turn.encounterId,
+      contentRef: args.contentRef,
+      adventureSummaryMarkdown: args.adventureSummaryMarkdown,
+      discoveries: [],
+      entityUpdates: [],
+      openThreads: [],
+      resolvedThreadIds: [],
       createdAt: now,
       updatedAt: now,
     })
@@ -386,8 +433,16 @@ export const patchAdventure = mutation({
     adventureId: v.id("adventures"),
     patch: v.object({
       currentTurnId: v.optional(v.id("turns")),
+      currentEncounterId: v.optional(v.string()),
+      contentRef: v.optional(contentRefValidator),
+      adventureSummaryMarkdown: v.optional(v.string()),
+      discoveries: v.optional(v.array(v.any())),
+      entityUpdates: v.optional(v.array(v.any())),
+      openThreads: v.optional(v.array(v.any())),
+      resolvedThreadIds: v.optional(v.array(v.string())),
       updatedAt: v.optional(v.number()),
       endedAt: v.optional(v.number()),
+      status: v.optional(v.union(v.literal("waitingForPlayers"), v.literal("active"), v.literal("completed"))),
       // Add other fields as needed
     }),
   },
@@ -396,6 +451,95 @@ export const patchAdventure = mutation({
     return true
   },
 })
+
+export const commitWikiTurnAdvance = mutation({
+  args: {
+    adventureId: v.id("adventures"),
+    expectedCurrentTurnId: v.id("turns"),
+    expectedCurrentEncounterId: v.string(),
+    expectedContentHash: v.optional(v.string()),
+    nextEncounterId: v.string(),
+    title: v.string(),
+    narrative: v.string(),
+    characters: v.array(v.any()),
+    order: v.number(),
+    adventurePatch: v.optional(v.any()),
+    transition: v.optional(v.any()),
+    generatedBy: v.optional(generatedByValidator),
+    isFinalEncounter: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const adventure = await ctx.db.get(args.adventureId)
+    if (!adventure) throw new Error("Adventure not found")
+    if (adventure.currentTurnId !== args.expectedCurrentTurnId) {
+      throw new Error("Stale turn advance: current turn changed")
+    }
+    if ((adventure.currentEncounterId ?? args.expectedCurrentEncounterId) !== args.expectedCurrentEncounterId) {
+      throw new Error("Stale turn advance: current encounter changed")
+    }
+    if (args.expectedContentHash && adventure.contentRef?.contentHash !== args.expectedContentHash) {
+      throw new Error("Stale turn advance: content hash changed")
+    }
+
+    const existing = await ctx.db
+      .query("turns")
+      .withIndex("by_adventure", (q) => q.eq("adventureId", args.adventureId))
+      .filter((q) => q.eq(q.field("order"), args.order))
+      .first()
+    if (existing) throw new Error(`A turn with order ${args.order} already exists for this adventure.`)
+
+    const now = Date.now()
+    const turnId = await ctx.db.insert("turns", {
+      adventureId: args.adventureId,
+      encounterId: args.nextEncounterId,
+      title: args.title,
+      narrative: args.narrative,
+      characters: args.characters,
+      order: args.order,
+      isFinalEncounter: args.isFinalEncounter,
+      adventurePatch: args.adventurePatch,
+      transition: args.transition,
+      generatedBy: args.generatedBy,
+      createdAt: now,
+      updatedAt: now,
+    })
+
+    const discoveries = [...(adventure.discoveries ?? []), ...((args.adventurePatch?.discoveries as unknown[]) ?? [])]
+    const entityUpdates = [...(adventure.entityUpdates ?? []), ...((args.adventurePatch?.entityUpdates as unknown[]) ?? [])]
+    const openThreads = mergeThreads(adventure.openThreads ?? [], (args.adventurePatch?.openThreads as Array<{ id?: string }> | undefined) ?? [], (args.adventurePatch?.resolvedThreadIds as string[] | undefined) ?? [])
+    const resolvedThreadIds = Array.from(new Set([...(adventure.resolvedThreadIds ?? []), ...((args.adventurePatch?.resolvedThreadIds as string[] | undefined) ?? [])]))
+    const summaryDelta = typeof args.adventurePatch?.summaryDelta === "string" ? args.adventurePatch.summaryDelta : ""
+    const adventureSummaryMarkdown = summaryDelta ? [adventure.adventureSummaryMarkdown, summaryDelta].filter(Boolean).join("\n\n") : adventure.adventureSummaryMarkdown
+
+    await ctx.db.patch(args.adventureId, {
+      currentTurnId: turnId,
+      currentEncounterId: args.nextEncounterId,
+      adventureSummaryMarkdown,
+      discoveries,
+      entityUpdates,
+      openThreads,
+      resolvedThreadIds,
+      status: args.isFinalEncounter ? "completed" : "active",
+      endedAt: args.isFinalEncounter ? now : adventure.endedAt,
+      updatedAt: now,
+    })
+
+    return { turnId, adventureId: args.adventureId }
+  },
+})
+
+function mergeThreads(existing: unknown[], added: Array<{ id?: string }>, resolvedIds: string[]): unknown[] {
+  const resolved = new Set(resolvedIds)
+  const byId = new Map<string, unknown>()
+  for (const thread of existing) {
+    const id = thread && typeof thread === "object" && "id" in thread ? String((thread as { id: unknown }).id) : ""
+    if (id && !resolved.has(id)) byId.set(id, thread)
+  }
+  for (const thread of added) {
+    if (thread.id && !resolved.has(thread.id)) byId.set(thread.id, thread)
+  }
+  return [...byId.values()]
+}
 
 // Query: Get turn navigation info (efficient - minimal data transfer)
 export const getTurnNavigationInfo = query({

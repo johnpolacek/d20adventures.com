@@ -1,0 +1,96 @@
+{
+  "name": "Lyra Silvanus",
+  "archetype": "Arcanist",
+  "race": "Asterian",
+  "gender": "Female",
+  "appearance": "Lyra has  intelligent eyes framed by spectacles perched on her nose. She has neat, dark hair, tied back to keep it out of the way while she studies. Her posture reflects her scholarly nature, and she often carries a slightly worn satchel filled with books and scrolls.",
+  "personality": "Curious, studious, and deeply analytical, Lyra possesses a quiet determination. She is often lost in thought, pondering ancient mysteries, but is also genuinely kind and empathetic. While she can be a bit socially awkward at times, her passion for knowledge makes her an engaging conversationalist on her chosen subjects. She values truth and understanding above all else.",
+  "background": "Lyra has insatiable curiosity, and is especially drawn to enigmatic Valkaran lore and elven culture. Despite her bookish nature, Lyra left behind the safety of Asterian academia to venture to the March of Davos, the wild lands of old Valkara and the elves of the forest.\n\nHer long hours researching drew the attention of an agent of the Blackthorn family who presented her with an opportunity for a clandestine meeting with an elf from the reclusive Faelendar settlement to verify the magical properties of an old Valkaran relic. Her curiousity piqued, she had to say yes!",
+  "motivation": "Lyra is driven by a profound desire to uncover the lost secrets of Valkaran civilization and to fully understand the nuances of elven culture. She believes that by bridging the knowledge gap between these ancient peoples and her own Asterian heritage, she can unlock new forms of magic and prevent past mistakes from being repeated. Her ultimate goal is to contribute significantly to the collective knowledge of the world.",
+  "behavior": "Lyra is generally quiet and observant, preferring to listen and absorb information rather than dominate conversations. When a topic of interest arises, especially concerning lore or magic, she becomes animated and eager to share her knowledge or ask probing questions. She is meticulous in her work and values accuracy above all else.",
+  "healthPercent": 100,
+  "equipment": [
+    {
+      "name": "Scholar's Robes",
+      "description": "Comfortable, dark blue robes suitable for study and travel."
+    },
+    {
+      "name": "Enchanted Quill",
+      "description": "A quill that never runs out of ink and subtly glows when near ancient magic."
+    },
+    {
+      "name": "Leather-bound Spellbook",
+      "description": "A personal spellbook filled with Lyra's learned spells and research notes."
+    },
+    {
+      "name": "Satchel of Rare Texts",
+      "description": "Contains a few rare, fragile books on Valkaran history and elven linguistics."
+    },
+    {
+      "name": "Simple Wooden Staff",
+      "description": "A sturdy staff, unadorned but reliable for focus and defense."
+    }
+  ],
+  "skills": [
+    "Arcana",
+    "History",
+    "Investigation",
+    "Linguistics",
+    "Culture (Elven)",
+    "Calligraphy"
+  ],
+  "status": "",
+  "type": "pc",
+  "attributes": {
+    "strength": 8,
+    "dexterity": 10,
+    "constitution": 10,
+    "intelligence": 16,
+    "wisdom": 14,
+    "charisma": 12
+  },
+  "id": "1749159962941",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/covert-cargo/pcs/dc23c6a6-6247-4384-bccc-2eeed66a7b0c.png?t=1749161969365",
+  "spells": [
+    {
+      "name": "Detect Magic",
+      "description": "Reveals the presence and general nature of magical auras within range",
+      "isUsed": false
+    },
+    {
+      "name": "Mage Hand",
+      "description": "Creates a spectral, floating hand that can manipulate an object from a distance.",
+      "isUsed": false
+    },
+    {
+      "name": "Light",
+      "description": "Causes an object to shed bright light, illuminating the surrounding area.",
+      "isUsed": false
+    },
+    {
+      "name": "Ray of Frost",
+      "description": "Hurls a beam of frigid cold at a creature, dealing damage and reducing its speed.",
+      "isUsed": false
+    },
+    {
+      "name": "Identify",
+      "description": "Determines the specific magical properties of an item.",
+      "isUsed": false
+    },
+    {
+      "name": "Comprehend Languages",
+      "description": "Allows you to understand the literal meaning of any spoken language you hear.",
+      "isUsed": false
+    },
+    {
+      "name": "Fog Cloud",
+      "description": "Creates a dense sphere of fog, heavily obscuring the area and providing cover.",
+      "isUsed": false
+    },
+    {
+      "name": "Charm Person",
+      "description": "Magically charms a humanoid, causing them to regard you as a friendly acquaintance.",
+      "isUsed": false
+    }
+  ]
+}

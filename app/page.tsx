@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import ActiveAdventureCard from "@/components/views/active-adventure-card"
 import { auth } from "@clerk/nextjs/server"
 import { currentUser } from "@clerk/nextjs/server"
-import Image from "next/image"
+import Image from "@/components/ui/native-image"
 import Link from "next/link"
 
 export default async function HomePage() {

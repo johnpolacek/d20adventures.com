@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { getImageUrl } from "@/lib/utils"
 import type { TurnCharacter } from "@/types/adventure"
 import type { PC, PCTemplate } from "@/types/character"
-import Image from "next/image"
+import Image from "@/components/ui/native-image"
 import { useState } from "react"
 
 type CharacterSheetModalCharacter = TurnCharacter | PC | PCTemplate | null

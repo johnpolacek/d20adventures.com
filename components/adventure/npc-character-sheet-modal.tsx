@@ -3,7 +3,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { getImageUrl } from "@/lib/utils"
 import type { TurnCharacter } from "@/types/adventure"
-import Image from "next/image"
+import Image from "@/components/ui/native-image"
 
 interface NPCCharacterSheetModalProps {
   character: TurnCharacter | null

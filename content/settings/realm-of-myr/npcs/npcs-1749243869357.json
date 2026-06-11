@@ -1,0 +1,54 @@
+{
+  "name": "Elven Fighter",
+  "archetype": "Fighter",
+  "race": "Elf",
+  "gender": "Male",
+  "appearance": "Tall and lean with sharp, angular features and piercing emerald green eyes. He carries himself with a quiet confidence and a warrior's posture.",
+  "personality": "",
+  "background": "",
+  "motivation": "",
+  "behavior": "Reserved and watchful, Faelar rarely speaks unless necessary. He observes situations carefully before acting, preferring decisive, efficient movements.",
+  "healthPercent": 100,
+  "equipment": [
+    {
+      "name": "Elven Longsword",
+      "description": "A finely crafted blade with a leaf-shaped guard, sharp and perfectly balanced."
+    },
+    {
+      "name": "Reinforced Leather Armor",
+      "description": "Light yet durable armor, allowing for swift movement while offering decent protection."
+    },
+    {
+      "name": "Wooden Shield",
+      "description": "A sturdy, round shield adorned with a faded elven symbol."
+    },
+    {
+      "name": "Quiver of Arrows",
+      "description": "Contains 20 standard arrows, though he primarily uses his sword."
+    },
+    {
+      "name": "Healing Potion",
+      "description": "A small vial containing a shimmering red liquid, capable of mending minor wounds."
+    }
+  ],
+  "skills": [
+    "Swordsmanship",
+    "Tactics",
+    "Survival",
+    "Perception",
+    "Stealth",
+    "Archery"
+  ],
+  "status": "",
+  "type": "npc",
+  "attributes": {
+    "strength": 16,
+    "dexterity": 14,
+    "constitution": 15,
+    "intelligence": 12,
+    "wisdom": 13,
+    "charisma": 10
+  },
+  "id": "npcs-1749243869357",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/covert-cargo/npcs/ce082298-d090-47b2-a3b9-5af7c851dec7.png?t=1749243962919"
+}

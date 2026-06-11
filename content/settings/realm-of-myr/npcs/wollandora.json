@@ -1,0 +1,24 @@
+{
+  "id": "wollandora",
+  "type": "npc",
+  "name": "Wollandora",
+  "archetype": "Druid",
+  "race": "Elf",
+  "gender": "Female",
+  "appearance": "A wise elf with silver hair braided with leaves and twigs. Her eyes are a deep forest green, wise and kind, but currently troubled. She carries a staff of gnarled oak.",
+  "personality": "Wise, patient, deeply connected to nature, fiercely protective of the forest balance.",
+  "background": "An ancient guardian of the Valkarr woods, a friend to Thalbern, and a powerful druid.",
+  "motivation": "Recover the stolen relics and restore balance to the forest. Protect the secrets of her people.",
+  "behavior": "Generally calm and thoughtful. Will provide information and guidance. Can be firm when necessary.",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-midnight-summons/npcs/wollandora.png",
+  "healthPercent": 100,
+  "attributes": {
+    "strength": 10,
+    "dexterity": 12,
+    "constitution": 12,
+    "intelligence": 16,
+    "wisdom": 18,
+    "charisma": 14
+  },
+  "status": ""
+}
