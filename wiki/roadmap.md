@@ -16,9 +16,9 @@ Blocking work to make the merged runtime trustworthy. Source: the implementation
 |---|---|---|---|
 | 1 | Fix `pnpm check` (Biome diagnostics) | ✅ Done | One green, build-stable validation command (generated files excluded). |
 | 2 | Pre-write validation for admin canonical S3 source writes | ✅ Done | Edits are compiled and gated before any S3 write, so invalid source never becomes the runtime candidate. |
-| 3 | Complete-manifest-aware S3 source fallback | ⬜ Next | Prevent a partial S3 seed from overriding known-good repo-local source. |
-| 4 | Normalize admin route naming and nav state | ⬜ | One canonical admin URL; the rest redirect. Reduce authoring confusion. |
-| 5 | Authenticated end-to-end playthrough of one migrated adventure | ⬜ | Bridge tests cover data flow; a human path must reach completion in the browser. |
+| 3 | Complete-manifest-aware S3 source fallback | ✅ Done | S3 is preferred only when it covers every expected local path; a partial seed falls back to repo-local source. |
+| 4 | Normalize admin route naming and nav state | ⬜ Next | One canonical admin URL; the rest redirect. Reduce authoring confusion. |
+| 5 | Authenticated end-to-end playthrough of one migrated adventure | ⬜ | Bridge tests cover data flow; a human path must reach completion in the browser. Needs a real authenticated browser session. |
 
 ## Next — production cutover
 
