@@ -7,8 +7,48 @@ import { buildDeadCharacterCompletion, buildNpcTurnUpdatePatch } from "@/lib/ser
 import { buildNpcActionContext, buildNpcActionPrompt, generateNpcAction } from "@/lib/services/npc-turn-generation-service"
 import { buildNpcInitiativeOrder, findEncounterInPlan, resolvePlanContextForEncounter } from "@/lib/services/npc-turn-intent-service"
 import { applyNpcSpellPostProcessing, finalizeNpcTurnResponse } from "@/lib/services/npc-turn-postprocess-service"
+import { isLocalWikiAdventure, loadWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
 import type { Turn, TurnCharacter } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
+
+type DmEncounterContext = {
+  encounterContext: { intro?: string; instructions?: string }
+  sectionContext?: { title?: string; summary?: string }
+  sceneContext?: { title?: string; summary?: string }
+  adventureOverview?: string
+  sectionTitle?: string
+  sceneTitle?: string
+}
+
+/**
+ * Resolve the DM context (encounter intro/instructions, adventure overview, and any section/scene
+ * framing) for an NPC turn. Registered wiki adventures read from the compiled wiki runtime
+ * artifacts (the same source advance-turn and the player-reply path use); legacy adventures read
+ * the S3 AdventurePlan. Previously this always read the legacy plan, which silently lost the
+ * encounter details for wiki adventures whose legacy plan is a stub. The wiki runtime is
+ * encounter-first, so section/scene framing is omitted there.
+ */
+async function resolveDmContext(settingId: string, planId: string, encounterId: string): Promise<DmEncounterContext> {
+  if (isLocalWikiAdventure(settingId, planId)) {
+    const { artifacts } = await loadWikiAdventureRuntime(settingId, planId)
+    const encounter = artifacts.encounters[encounterId]
+    return {
+      encounterContext: encounter ? { intro: encounter.sections.intro ?? encounter.sections.body, instructions: encounter.sections.gmNotes } : {},
+      adventureOverview: artifacts.manifest.summary || undefined,
+    }
+  }
+
+  const plan = (await readJsonFromS3(`settings/${settingId}/${planId}.json`)) as AdventurePlan
+  if (!plan || !plan.id || !plan.sections || !plan.title) {
+    throw new Error("Adventure plan is missing required fields or could not be loaded")
+  }
+  const planContext = resolvePlanContextForEncounter(plan, encounterId)
+  const encounter = findEncounterInPlan(plan, encounterId)
+  return {
+    ...planContext,
+    encounterContext: encounter ? { intro: encounter.intro, instructions: encounter.instructions } : {},
+  }
+}
 
 export async function processNpcTurnWithLLM({
   turn,
@@ -180,36 +220,20 @@ export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
     )
   )
 
-  const plan = (await readJsonFromS3(`settings/${adventure.settingId}/${adventure.planId}.json`)) as AdventurePlan
-  if (!plan || !plan.id || !plan.sections || !plan.title) {
-    throw new Error("Adventure plan is missing required fields or could not be loaded")
-  }
+  const { encounterContext, sectionContext, sceneContext, adventureOverview, sectionTitle, sceneTitle } = await resolveDmContext(adventure.settingId, adventure.planId, turn.encounterId)
 
   console.log(
-    `[LLM DM] Loaded adventure plan from settings/${adventure.settingId}/${adventure.planId}.json`,
+    "[LLM DM] Resolved encounter context",
     JSON.stringify(
       {
-        planId: plan.id,
-        planTitle: plan.title,
-        sectionCount: plan.sections.length,
-        hasOverview: !!plan.overview,
-      },
-      null,
-      2
-    )
-  )
-
-  const { sectionContext, sceneContext, adventureOverview, sectionTitle, sceneTitle } = resolvePlanContextForEncounter(plan, turn.encounterId)
-
-  console.log(
-    "[LLM DM] Found current context",
-    JSON.stringify(
-      {
+        encounterId: turn.encounterId,
+        hasEncounterIntro: !!encounterContext.intro,
+        hasEncounterInstructions: !!encounterContext.instructions,
         hasSection: !!sectionContext,
         hasScene: !!sceneContext,
         sectionTitle,
         sceneTitle,
-        encounterId: turn.encounterId,
+        hasAdventureOverview: !!adventureOverview,
       },
       null,
       2
@@ -296,31 +320,6 @@ export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
         )
       )
       continue // NPC already processed or no longer eligible
-    }
-
-    const currentEncounterDetails = findEncounterInPlan(plan, turn.encounterId)
-    let encounterContext: { intro?: string; instructions?: string } = {}
-    if (currentEncounterDetails) {
-      encounterContext = {
-        intro: currentEncounterDetails.intro,
-        instructions: currentEncounterDetails.instructions,
-      }
-      console.log(
-        "[LLM DM] Found encounter details",
-        JSON.stringify(
-          {
-            encounterId: turn.encounterId,
-            hasIntro: !!currentEncounterDetails.intro,
-            hasInstructions: !!currentEncounterDetails.instructions,
-            introLength: currentEncounterDetails.intro?.length || 0,
-            instructionsLength: currentEncounterDetails.instructions?.length || 0,
-          },
-          null,
-          2
-        )
-      )
-    } else {
-      console.warn(`[LLM DM] Could not find details for encounter ${turn.encounterId} in the plan.`)
     }
 
     console.log(
