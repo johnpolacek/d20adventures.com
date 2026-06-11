@@ -27,12 +27,12 @@ Do not create root-level `docs/` or `tasks/` for maintained project knowledge.
 
 ## Automation Policy
 
-Default to asking before committing, pushing, installing dependencies, or running long commands unless the user chooses a more automated repo policy.
+Follow the root repo policy when it is more current. Default to committing local wiki or code changes when confident the work is correct and implementation questions are resolved. Ask before pushing or running long commands.
 
-- Commit docs-only wiki changes: ask
-- Commit code changes: ask
+- Commit docs-only wiki changes: allow
+- Commit code changes: allow
 - Push changes: ask
-- Install dependencies: ask
+- Install dependencies: allow
 - Run long commands: ask
 - Create plans before code: meaningful-only
 <!-- PROJECT-HTML-WIKI-SKILL:END -->

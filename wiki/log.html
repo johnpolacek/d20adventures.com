@@ -4,6 +4,17 @@
 .wiki-nav{width:min(1120px,calc(100% - 32px));margin:14px auto 0;display:flex;flex-wrap:wrap;gap:8px;font:700 .72rem ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.wiki-nav a{border:1px solid var(--line,#3d472f);border-radius:999px;padding:6px 9px;background:rgba(25,29,23,.72);color:var(--accent,#d7b35d);text-decoration:none}.wiki-nav a:focus-visible{outline:2px solid var(--accent,#d7b35d);outline-offset:2px}</style></head><body><nav class="wiki-nav" aria-label="Wiki navigation"><a href="index.html">Wiki Home</a><a href="Sources.html">Sources</a><a href="plans/index.html">Plans</a><a href="roadmap.html">Roadmap</a><a href="Architecture.html">Architecture</a></nav><main>
 <header><p class="eyebrow">Project-context log</p><h1>Decision history</h1><p>Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.</p></header>
 <article class="entry">
+<div class="date">2026-06-11</div>
+<section class="body"><h2>Audited merged wiki adventure implementation</h2><ul>
+<li>Reviewed merge commit <code>fbd3e97</code>, which brought <code>feature/wiki-adventure-implementation</code> into <code>main</code> on 2026-06-10.</li>
+<li>Confirmed the merged architecture adds registered local wiki adventure runtime support, Realm of Myr migrated source, admin wiki authoring, Convex content refs, guarded wiki turn advancement, and compatibility admin routes.</li>
+<li>Validation evidence: focused wiki-adventure batch tests, admin-authoring test, all four bridge checks, <code>pnpm exec tsc --noEmit --pretty false</code>, and <code>pnpm build</code> passed. Build retains the existing missing <code>SENDGRID_API_KEY</code> warning.</li>
+<li><code>pnpm check</code> now runs far enough to report current Biome diagnostics and fails with 305 errors, 52 warnings, and 44 infos before truncation. This supersedes older log notes that described a Biome config/schema mismatch as the blocker.</li>
+<li>Added <code>wiki/plans/wiki-adventure-implementation-review.html</code> and refreshed the roadmap, plan dashboard, source ledger, technical brief, architecture map, and migration plan status.</li>
+<li>Residual risks to harden before production cutover: admin canonical S3 source writes before validation, partial S3 source overriding local fallback, mixed admin route names, repository-wide Biome cleanup, and authenticated manual playthrough coverage.</li>
+</ul></section>
+</article>
+<article class="entry">
 <div class="date">2026-05-27</div>
 <section class="body"><h2>Added admin Adventure Plans top navigation</h2><ul>
 <li>Added a focused plan at <code>wiki/plans/admin-adventure-plans-nav.html</code> and linked it from the planning dashboard.</li>
