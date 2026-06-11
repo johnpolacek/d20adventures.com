@@ -6,17 +6,15 @@ Active and completed planning work for D20 Adventures. The wiki-adventure runtim
 
 ## Current focus
 
-**[Wiki Adventure Implementation Review](wiki-adventure-implementation-review.md)** — *merged, hardening pending*
+**[Wiki Adventure Implementation Review](wiki-adventure-implementation-review.md)** — *hardening mostly done*
 
-Post-merge code review, validation evidence, and hardening recommendations for the merged feature worktree. Fix the validation and source-write findings before treating the wiki runtime as production-ready.
+Four of the five release-readiness findings are closed (Biome check, admin pre-write validation, complete-manifest S3 fallback, admin route naming). The remaining item is an authenticated end-to-end playthrough. See the [roadmap](../roadmap.md) for the full Now/Next/Later view.
 
 | | |
 |---|---|
-| **Active** | Implementation Review |
-| **State** | Merged, hardening pending |
-| **Next** | Fix validation and S3 source-write hardening findings |
-| **Blockers** | `pnpm check` Biome diagnostics; production S3 source needs controlled verification |
-| **Validation** | Wiki tests, TypeScript, and build pass; repo-wide Biome check fails |
+| **Done** | Biome check, admin pre-write gate, S3 fallback, admin route naming |
+| **Remaining** | [Authenticated playthrough checklist](midnight-summons-playthrough-checklist.md) (human-run) |
+| **Validation** | `pnpm check`, TypeScript, all 11 wiki suites, and build pass |
 
 ## Implemented
 
