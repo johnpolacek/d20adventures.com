@@ -6,6 +6,15 @@ Git owns routine implementation history. This log records durable wiki, planning
 
 ## 2026-06-11
 
+### Closed the post-merge hardening track
+
+- Fixed `pnpm check` (Biome) to a green, build-stable state; generated files and wiki source excluded from Biome.
+- Gated admin canonical S3 source writes behind pre-write validation (compile-and-block before write).
+- Made S3 source preference complete-manifest-aware so a partial remote seed falls back to repo-local source.
+- Normalized the admin route family to a single canonical `/admin/wiki-adventures`, others redirect.
+- Ran the first authenticated end-to-end browser playthrough of The Midnight Summons to completion (selection, solo auto-start, first turn at `broken-silence`, Perception and Stealth rolls, branching through `owlbear-confrontation` and `meeting-at-the-stones`, terminal `back-home`, completion UI). Used a dedicated Clerk dev test user driven via agent-browser.
+- Found and fixed a real bug surfaced only by the live flow: solo auto-start created the adventure but never navigated to it, because the client caught the server action's `NEXT_REDIRECT` and returned instead of re-throwing (`components/adventure/PartyConfiguration.tsx`). Also stopped `start-adventure` from logging every redirect as a failure.
+
 ### Converted the wiki to Markdown and re-assessed the roadmap
 
 - Migrated every wiki page from standalone HTML to GitHub-flavored Markdown: front door, log, sources ledger, architecture, the four source briefs, the plan dashboard and plans, and the archived eight-stage migration plan set. Dropped the inline "arcane console" CSS in favor of breadcrumb nav lines and Markdown tables.

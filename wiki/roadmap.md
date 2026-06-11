@@ -4,7 +4,7 @@
 
 Re-assessed 2026-06-11, after the wiki-adventure implementation merged to `main` (`fbd3e97`, 2026-06-10).
 
-**Where we are:** the wiki-authored adventure runtime is merged and four Realm of Myr adventures are migrated with passing bridge tests, TypeScript, and build. `pnpm check` is now green and build-stable, and admin canonical writes are gated behind validation. It is still **not** a production cutover — legacy S3 JSON still drives the public listing and selection path, and no authenticated end-to-end playthrough has been run. Current focus is hardening, not new features.
+**Where we are:** the wiki-authored adventure runtime is merged and four Realm of Myr adventures are migrated with passing bridge tests, TypeScript, and build. `pnpm check` is green and build-stable, admin canonical writes are gated behind validation, S3 fallback is complete-manifest-aware, the admin routes are normalized, and **The Midnight Summons has been played end-to-end in the browser to completion**. The whole "Now" release-readiness track is closed. Remaining gap before a production cutover: the public listing/selection path still reads legacy S3 JSON (see Next).
 
 **Current focus:** [Wiki Adventure Implementation Review](plans/wiki-adventure-implementation-review.md) — close its findings before anything ships.
 
@@ -18,7 +18,7 @@ Blocking work to make the merged runtime trustworthy. Source: the implementation
 | 2 | Pre-write validation for admin canonical S3 source writes | ✅ Done | Edits are compiled and gated before any S3 write, so invalid source never becomes the runtime candidate. |
 | 3 | Complete-manifest-aware S3 source fallback | ✅ Done | S3 is preferred only when it covers every expected local path; a partial seed falls back to repo-local source. |
 | 4 | Normalize admin route naming and nav state | ✅ Done | `/admin/wiki-adventures` is the single canonical family; the rest redirect into it. |
-| 5 | Authenticated end-to-end playthrough of one migrated adventure | ⬜ Owner: you | Bridge tests cover data flow; a human path must reach completion in the browser. See the [playthrough checklist](plans/midnight-summons-playthrough-checklist.md). |
+| 5 | Authenticated end-to-end playthrough of one migrated adventure | ✅ Done | The Midnight Summons played start→completion in-browser (selection, auto-start, perception/stealth rolls, branching, terminal encounter, completion UI). Found and fixed a solo auto-start navigation bug. See the [playthrough checklist](plans/midnight-summons-playthrough-checklist.md). |
 
 ## Next — production cutover
 
