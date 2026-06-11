@@ -97,6 +97,24 @@ function main() {
   )
   assert.deepEqual(nextState.resolvedThreadIds, ["road-trouble"])
 
+  // Regression: the model intermittently malforms structured world-state fields (e.g. returns
+  // arrays of strings). A single malformed field must NOT reject the whole patch and discard the
+  // other world-state updates. openThreads coerce strings to objects; entityUpdates (and the other
+  // rich object arrays) drop the malformed value via `.catch` while the rest of the patch survives.
+  const resilientPatch = validateAdventurePatch(
+    {
+      summaryDelta: "Lyra confirms the relic is magical.",
+      openThreads: ["The elves grow impatient", "Poppen stays hidden"],
+      entityUpdates: ["Silas is now wary"],
+      transition: { fromEncounterId: "gatehouse-entry", toEncounterId: "market-square-arrival", reason: "Lyra confirmed the magic." },
+    },
+    { allowed: true, kind: "transition", transition: { fromEncounterId: "gatehouse-entry", toEncounterId: "market-square-arrival" } } as Parameters<typeof validateAdventurePatch>[1]
+  )
+  assert.match(resilientPatch.summaryDelta ?? "", /Lyra confirms/, "valid fields must survive a malformed sibling field")
+  assert.equal(resilientPatch.transition?.toEncounterId, "market-square-arrival", "transition must survive malformed patch fields")
+  assert.equal(resilientPatch.openThreads?.[0]?.id, "The elves grow impatient", "string openThreads must coerce to {id,title,text}")
+  assert.equal(resilientPatch.entityUpdates, undefined, "malformed entityUpdates must be dropped, not throw")
+
   console.log("Batch F Convex adventure session checks passed")
 }
 
