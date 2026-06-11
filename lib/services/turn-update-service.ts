@@ -1,6 +1,6 @@
+import { z } from "zod"
 import { generateObject } from "@/lib/ai"
 import type { DiceRoll, Turn } from "@/types/adventure"
-import { z } from "zod"
 
 // Enhanced schema: AI must provide reasoning for health and status changes
 const healthAnalysisSchema = z.object({
@@ -37,17 +37,12 @@ function extractNarrativeAfterLastDiceRoll(narrative: string): string | null {
  * Uses AI to analyze the narrative and determine if any character's health should change.
  * Returns an updated turn object with the character's healthPercent updated as needed.
  */
-export async function analyzeAndApplyDiceRoll({
-  turn,
-  diceRoll,
-  narrative,
-}: {
-  turn: Turn
-  diceRoll: DiceRoll
-  narrative: string
-}): Promise<Turn> {
+export async function analyzeAndApplyDiceRoll({ turn, diceRoll, narrative }: { turn: Turn; diceRoll: DiceRoll; narrative: string }): Promise<Turn> {
   console.log("[analyzeAndApplyDiceRoll] Input diceRoll:", JSON.stringify(diceRoll, null, 2))
-  console.log("[analyzeAndApplyDiceRoll] Input turn:", JSON.stringify({ characterCount: turn.characters.length, characters: turn.characters.map(c => ({ id: c.id, name: c.name, healthPercent: c.healthPercent, status: c.status })) }, null, 2))
+  console.log(
+    "[analyzeAndApplyDiceRoll] Input turn:",
+    JSON.stringify({ characterCount: turn.characters.length, characters: turn.characters.map((c) => ({ id: c.id, name: c.name, healthPercent: c.healthPercent, status: c.status })) }, null, 2)
+  )
 
   // Extract only the narrative following the last dice roll shortcode
   const relevantNarrative = extractNarrativeAfterLastDiceRoll(narrative)
@@ -68,9 +63,7 @@ export async function analyzeAndApplyDiceRoll({
     rollContext = "This was a CRITICAL SUCCESS (natural 20). The outcome should be exceptionally good."
   } else {
     const delta = diceRoll.result - diceRoll.difficulty
-    rollContext = diceRoll.success
-      ? `This was a SUCCESS (exceeded target by ${delta} points).`
-      : `This was a FAILURE (missed target by ${Math.abs(delta)} points).`
+    rollContext = diceRoll.success ? `This was a SUCCESS (exceeded target by ${delta} points).` : `This was a FAILURE (missed target by ${Math.abs(delta)} points).`
   }
 
   // Build character summary for context - include attributes for damage assessment
@@ -177,16 +170,30 @@ Analyze the narrative and determine if health or status should change.`
   if (!targetCharacter) {
     console.error("[analyzeAndApplyDiceRoll] Target character not found")
     console.error("[analyzeAndApplyDiceRoll] Requested characterId:", analysis.update.characterId)
-    console.error("[analyzeAndApplyDiceRoll] Available character IDs:", JSON.stringify(turn.characters.map(c => c.id), null, 2))
+    console.error(
+      "[analyzeAndApplyDiceRoll] Available character IDs:",
+      JSON.stringify(
+        turn.characters.map((c) => c.id),
+        null,
+        2
+      )
+    )
     return turn
   }
 
-  console.log("[analyzeAndApplyDiceRoll] Target character found:", JSON.stringify({ 
-    id: targetCharacter.id, 
-    name: targetCharacter.name, 
-    currentHealthPercent: targetCharacter.healthPercent,
-    currentStatus: targetCharacter.status ?? ""
-  }, null, 2))
+  console.log(
+    "[analyzeAndApplyDiceRoll] Target character found:",
+    JSON.stringify(
+      {
+        id: targetCharacter.id,
+        name: targetCharacter.name,
+        currentHealthPercent: targetCharacter.healthPercent,
+        currentStatus: targetCharacter.status ?? "",
+      },
+      null,
+      2
+    )
+  )
 
   const currentHealth = targetCharacter.healthPercent ?? 100
   const currentStatus = targetCharacter.status ?? ""
@@ -195,13 +202,20 @@ Analyze the narrative and determine if health or status should change.`
 
   // Log health assessment
   if (newHealth !== undefined) {
-    console.log("[analyzeAndApplyDiceRoll] Health assessment:", JSON.stringify({
-      currentHealth,
-      newHealth,
-      delta: newHealth - currentHealth,
-      absoluteDelta: Math.abs(newHealth - currentHealth),
-      willChange: newHealth !== currentHealth
-    }, null, 2))
+    console.log(
+      "[analyzeAndApplyDiceRoll] Health assessment:",
+      JSON.stringify(
+        {
+          currentHealth,
+          newHealth,
+          delta: newHealth - currentHealth,
+          absoluteDelta: Math.abs(newHealth - currentHealth),
+          willChange: newHealth !== currentHealth,
+        },
+        null,
+        2
+      )
+    )
 
     // Sanity check: prevent extreme single-turn changes (more than 50%)
     if (Math.abs(newHealth - currentHealth) > 50) {
@@ -217,11 +231,18 @@ Analyze the narrative and determine if health or status should change.`
 
   // Log status assessment
   if (newStatus !== undefined) {
-    console.log("[analyzeAndApplyDiceRoll] Status assessment:", JSON.stringify({
-      currentStatus: currentStatus || "(none)",
-      newStatus: newStatus || "(clearing)",
-      willChange: newStatus !== currentStatus
-    }, null, 2))
+    console.log(
+      "[analyzeAndApplyDiceRoll] Status assessment:",
+      JSON.stringify(
+        {
+          currentStatus: currentStatus || "(none)",
+          newStatus: newStatus || "(clearing)",
+          willChange: newStatus !== currentStatus,
+        },
+        null,
+        2
+      )
+    )
   } else {
     console.log("[analyzeAndApplyDiceRoll] No status change in this update")
   }
@@ -236,12 +257,12 @@ Analyze the narrative and determine if health or status should change.`
     }
 
     const updates: { healthPercent?: number; status?: string | undefined } = {}
-    
+
     if (update.newHealthPercent !== undefined) {
       updates.healthPercent = update.newHealthPercent
       console.log(`[analyzeAndApplyDiceRoll] Applying health change to ${c.name}: ${currentHealth}% -> ${update.newHealthPercent}%`)
     }
-    
+
     if (update.newStatus !== undefined) {
       updates.status = update.newStatus === "" ? undefined : update.newStatus
       console.log(`[analyzeAndApplyDiceRoll] Applying status change to ${c.name}: "${currentStatus || "(none)"}" -> "${update.newStatus || "(clearing)"}"`)
@@ -259,12 +280,19 @@ Analyze the narrative and determine if health or status should change.`
   }
 
   console.log("[analyzeAndApplyDiceRoll] Turn updated successfully")
-  console.log("[analyzeAndApplyDiceRoll] Updated characters:", JSON.stringify(updatedCharacters.map(c => ({ 
-    id: c.id, 
-    name: c.name, 
-    healthPercent: c.healthPercent,
-    status: c.status ?? ""
-  })), null, 2))
+  console.log(
+    "[analyzeAndApplyDiceRoll] Updated characters:",
+    JSON.stringify(
+      updatedCharacters.map((c) => ({
+        id: c.id,
+        name: c.name,
+        healthPercent: c.healthPercent,
+        status: c.status ?? "",
+      })),
+      null,
+      2
+    )
+  )
 
   return updatedTurn
 }

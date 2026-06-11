@@ -87,8 +87,14 @@ function main() {
   assert.match(nextState.adventureSummaryMarkdown ?? "", /Captain Vala grants passage/)
   assert.equal(nextState.discoveries?.length, 1)
   assert.equal(nextState.entityUpdates?.length, 1)
-  assert.equal(nextState.openThreads?.some((thread) => thread.id === "road-trouble"), false)
-  assert.equal(nextState.openThreads?.some((thread) => thread.id === "market-rumors"), true)
+  assert.equal(
+    nextState.openThreads?.some((thread) => thread.id === "road-trouble"),
+    false
+  )
+  assert.equal(
+    nextState.openThreads?.some((thread) => thread.id === "market-rumors"),
+    true
+  )
   assert.deepEqual(nextState.resolvedThreadIds, ["road-trouble"])
 
   console.log("Batch F Convex adventure session checks passed")

@@ -1,9 +1,8 @@
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import Image from "@/components/ui/native-image"
 import { cn, getImageUrl } from "@/lib/utils"
 import type { PC, PCTemplate } from "@/types/character"
-import Image from "@/components/ui/native-image"
-import React from "react"
 
 interface PartySlotProps {
   character?: PC | PCTemplate

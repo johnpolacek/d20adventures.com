@@ -1,8 +1,8 @@
+import { redirect } from "next/navigation"
 import AdventureHome from "@/components/views/adventure-home"
 import { loadAdventurePlanFromStorage } from "@/lib/adventure-plan-storage"
 import type { TurnCharacter } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
-import { redirect } from "next/navigation"
 
 export default async function AdventureHomePage(props: { params: Promise<{ settingId: string; adventurePlanId: string }>; searchParams?: Promise<{ selectedCharacter?: string }> }) {
   const { settingId, adventurePlanId } = await props.params

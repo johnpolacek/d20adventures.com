@@ -1,12 +1,12 @@
 "use client"
+import { ChevronDoubleLeftIcon } from "@heroicons/react/24/outline"
+import Link from "next/link"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { CharacterSelectCard } from "@/components/ui/character-select-card"
-import type { PCTemplate } from "@/types/character"
-import { ChevronDoubleLeftIcon } from "@heroicons/react/24/outline"
 import Image from "@/components/ui/native-image"
-import Link from "next/link"
-import { useState } from "react"
+import type { PCTemplate } from "@/types/character"
 import { textShadow, textShadowSpread } from "../typography/styles"
 
 export default function ChooseCharacterView({

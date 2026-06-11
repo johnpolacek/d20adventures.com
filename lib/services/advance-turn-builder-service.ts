@@ -26,15 +26,8 @@ export type BuildNextTurnResult =
       shouldProcessNpcTurns: boolean
     }
 
-function buildContinuingEncounterTurn(args: {
-  turn: Turn
-  adventureId: string
-  currentEncounterTitle: string
-  narrative: string
-}): Turn {
-  let newCharacters: TurnCharacter[] = (args.turn.characters as TurnCharacter[]).filter(
-    (c) => c.status !== "dead" && c.status !== "fled"
-  )
+function buildContinuingEncounterTurn(args: { turn: Turn; adventureId: string; currentEncounterTitle: string; narrative: string }): Turn {
+  let newCharacters: TurnCharacter[] = (args.turn.characters as TurnCharacter[]).filter((c) => c.status !== "dead" && c.status !== "fled")
   const normalizedNarrative = normalizeNarrative(args.narrative || "")
 
   newCharacters = newCharacters.map((c) => ({
@@ -56,13 +49,7 @@ function buildContinuingEncounterTurn(args: {
   }
 }
 
-function buildTransitionEncounterTurn(args: {
-  turn: Turn
-  plan: AdventurePlan
-  allTurns: TurnHistoryRow[]
-  adventureId: string
-  llmResult: EncounterProgressionResult
-}): BuildNextTurnResult {
+function buildTransitionEncounterTurn(args: { turn: Turn; plan: AdventurePlan; allTurns: TurnHistoryRow[]; adventureId: string; llmResult: EncounterProgressionResult }): BuildNextTurnResult {
   const nextEncounter = findEncounterInPlan(args.plan, args.llmResult.nextEncounterId)
   let shouldProcessNpcTurns = true
 
@@ -82,15 +69,11 @@ function buildTransitionEncounterTurn(args: {
       initiative: rollD20(),
     }))
 
-  console.log(
-    `[advanceTurn] Resetting spell usage for all PCs on encounter transition to: ${nextEncounter.id}`
-  )
+  console.log(`[advanceTurn] Resetting spell usage for all PCs on encounter transition to: ${nextEncounter.id}`)
   pcs = resetAllSpells(pcs)
 
   if (nextEncounter.resetHealth) {
-    console.log(
-      `[advanceTurn] Resetting health for all characters due to resetHealth flag in encounter: ${nextEncounter.id}`
-    )
+    console.log(`[advanceTurn] Resetting health for all characters due to resetHealth flag in encounter: ${nextEncounter.id}`)
     pcs = pcs.map((pc) => ({
       ...pc,
       healthPercent: 100,
@@ -98,40 +81,33 @@ function buildTransitionEncounterTurn(args: {
     }))
   }
 
-  const isFirstTurnForEncounter = !args.allTurns.some(
-    (previousTurn) => previousTurn.encounterId === nextEncounter.id
-  )
+  const isFirstTurnForEncounter = !args.allTurns.some((previousTurn) => previousTurn.encounterId === nextEncounter.id)
 
   if (nextEncounter.skipInitialNpcTurns && isFirstTurnForEncounter) {
-    console.log(
-      `[advanceTurn] Setting NPC initiatives to 0 for first turn of encounter with skipInitialNpcTurns: ${nextEncounter.id}`
-    )
+    console.log(`[advanceTurn] Setting NPC initiatives to 0 for first turn of encounter with skipInitialNpcTurns: ${nextEncounter.id}`)
   }
 
-  const npcs: TurnCharacter[] = (nextEncounter.npc || []).map(
-    (npcRef: { id: string; initialInitiative?: number; behavior?: string }) => {
-      const npc = args.plan.npcs[npcRef.id]
+  const npcs: TurnCharacter[] = (nextEncounter.npc || []).map((npcRef: { id: string; initialInitiative?: number; behavior?: string }) => {
+    const npc = args.plan.npcs[npcRef.id]
 
-      let npcInitiative: number
-      if (nextEncounter.skipInitialNpcTurns && isFirstTurnForEncounter) {
-        npcInitiative = 0
-      } else {
-        npcInitiative =
-          typeof npcRef.initialInitiative === "number" ? npcRef.initialInitiative : rollD20()
-      }
-
-      return {
-        ...npc,
-        id: npcRef.id,
-        type: "npc",
-        isComplete: false,
-        hasReplied: false,
-        initiative: npcInitiative,
-        healthPercent: 100,
-        behavior: npcRef.behavior,
-      }
+    let npcInitiative: number
+    if (nextEncounter.skipInitialNpcTurns && isFirstTurnForEncounter) {
+      npcInitiative = 0
+    } else {
+      npcInitiative = typeof npcRef.initialInitiative === "number" ? npcRef.initialInitiative : rollD20()
     }
-  )
+
+    return {
+      ...npc,
+      id: npcRef.id,
+      type: "npc",
+      isComplete: false,
+      hasReplied: false,
+      initiative: npcInitiative,
+      healthPercent: 100,
+      behavior: npcRef.behavior,
+    }
+  })
 
   let allCharacters: TurnCharacter[] = [...pcs, ...npcs]
   allCharacters = allCharacters.map((c) => ({
@@ -141,10 +117,7 @@ function buildTransitionEncounterTurn(args: {
   }))
   allCharacters.sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
 
-  const narrative = appendNarrative(
-    normalizeNarrative(args.llmResult.narrative || ""),
-    normalizeNarrative(nextEncounter.intro || "")
-  )
+  const narrative = appendNarrative(normalizeNarrative(args.llmResult.narrative || ""), normalizeNarrative(nextEncounter.intro || ""))
 
   const turn: Turn = {
     id: "",

@@ -1,10 +1,10 @@
 "use client"
 
-import Parchment from "@/components/graphics/background/Parchment"
-import { cn } from "@/lib/utils"
-import Image from "@/components/ui/native-image"
 import type React from "react"
 import { useState } from "react"
+import Parchment from "@/components/graphics/background/Parchment"
+import Image from "@/components/ui/native-image"
+import { cn } from "@/lib/utils"
 import { textShadow, textShadowSpread } from "../typography/styles"
 
 interface ImageHeaderProps {

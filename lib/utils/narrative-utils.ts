@@ -30,7 +30,7 @@ export function sanitizeUserVisibleProse(text: string): string {
 export function limitToTwoSentences(text: string): string {
   if (!text) return ""
   const oneParagraph = text.replace(/\s+/g, " ").trim()
-  const parts = oneParagraph.split(/([.!?])[\s\"][^\S\r\n]*/).filter(Boolean)
+  const parts = oneParagraph.split(/([.!?])[\s"][^\S\r\n]*/).filter(Boolean)
   if (parts.length <= 2) return oneParagraph
   const sentences: string[] = []
   for (let i = 0; i < parts.length - 1; i += 2) {
@@ -67,17 +67,17 @@ export function normalizeNarrative(text: string): string {
  */
 export function fixMalformedQuotes(text: string): string {
   if (!text) return text
-  
+
   // Replace backticks with proper quotes
   text = text.replace(/`/g, '"')
-  
+
   // Replace curly/smart quotes with straight quotes
   text = text.replace(/[\u201C\u201D\u201E\u201F\u2033\u2036]/g, '"')
   text = text.replace(/[\u2018\u2019\u201A\u201B\u2032\u2035]/g, "'")
-  
+
   // Count quotes - if odd number, we have a missing quote
   const quoteCount = (text.match(/"/g) || []).length
-  
+
   if (quoteCount % 2 === 1) {
     // Odd number of quotes - find the unclosed one
     // Check if there's an opening quote without closing
@@ -88,15 +88,15 @@ export function fixMalformedQuotes(text: string): string {
       if (lastPuncMatch) {
         text = text.replace(/([.!?])([^.!?"]*?)$/, '"$1$2')
       } else {
-        text = text + '"'
+        text = `${text}"`
       }
     }
   }
-  
+
   // Add missing opening quote before a dialogue segment following sentence end
   text = text.replace(/([.!?]\s+)([A-Z][^"]*,"\s*\w+\s+(?:says|asks|replies|shouts|whispers|calls|thinks|states|chirps))/g, '$1"$2')
   // Add missing closing quote for dialogue ending with a question without closing quote
   text = text.replace(/"([^"]+[a-z]\?)$/g, '"$1"')
-  
+
   return text
 }

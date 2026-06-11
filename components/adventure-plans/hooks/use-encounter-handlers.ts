@@ -1,6 +1,6 @@
-import type { AdventureSection } from "@/types/adventure-plan"
 import type * as React from "react"
 import slugify from "slugify"
+import type { AdventureSection } from "@/types/adventure-plan"
 
 export function useEncounterHandlers(sections: AdventureSection[], setSections: React.Dispatch<React.SetStateAction<AdventureSection[]>>) {
   const handleEncounterTitleChange = (sectionIndex: number, sceneIndex: number, encounterIndex: number, newTitle: string) => {

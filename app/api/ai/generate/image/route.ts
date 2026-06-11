@@ -1,8 +1,8 @@
-import { AWS_BUCKET_PUBLIC, s3Client } from "@/lib/aws"
 import { replicate } from "@ai-sdk/replicate"
 import { PutObjectCommand } from "@aws-sdk/client-s3"
 import { experimental_generateImage as generateImage } from "ai"
 import type { NextRequest } from "next/server"
+import { AWS_BUCKET_PUBLIC, s3Client } from "@/lib/aws"
 import { requireAuthMiddleware } from "../../_auth"
 
 export async function POST(request: NextRequest) {

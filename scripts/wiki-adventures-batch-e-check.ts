@@ -73,8 +73,14 @@ async function main() {
   assert.equal(packet.currentEncounter.id, "gatehouse-entry")
   assert.deepEqual(packet.outputContract.allowedNextEncounterIds, ["gatehouse-entry", "market-square-arrival"])
   assert.equal(packet.characters.live[0]?.healthPercent, 100)
-  assert.equal(packet.characters.baselines.some((entry) => entry.id === "vala-apprentice" && entry.type === "pc"), true)
-  assert.equal(packet.linkedContext.npcProfiles.some((entry) => entry.id === "captain-vala"), true)
+  assert.equal(
+    packet.characters.baselines.some((entry) => entry.id === "vala-apprentice" && entry.type === "pc"),
+    true
+  )
+  assert.equal(
+    packet.linkedContext.npcProfiles.some((entry) => entry.id === "captain-vala"),
+    true
+  )
   assert.deepEqual(loaded.artifacts.encounters["gatehouse-entry"].npcRefs, [{ id: "captain-vala", behavior: "Question the party before opening the gate.", initialInitiative: 12 }])
 
   const prompt = buildWikiEncounterProgressionPrompt(packet)

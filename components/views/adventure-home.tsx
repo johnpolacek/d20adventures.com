@@ -3,10 +3,8 @@
 import AdventureHomeContent from "@/components/views/adventure-home-content"
 import { AdventureProvider } from "@/lib/context/AdventureContext"
 import { TurnProvider } from "@/lib/context/TurnContext"
-import type { Adventure } from "@/types/adventure"
-import type { Turn as TurnType } from "@/types/adventure"
+import type { Adventure, Turn as TurnType } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
-import React from "react"
 
 function AdventureHome({
   adventurePlanId,

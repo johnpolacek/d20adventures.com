@@ -1,9 +1,9 @@
+import { currentUser } from "@clerk/nextjs/server"
+import { redirect } from "next/navigation"
 import FullPageImage from "@/components/layout/fullpage-image"
 import { EditCharacterView } from "@/components/views/edit-character-view"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import type { PCTemplate } from "@/types/character"
-import { currentUser } from "@clerk/nextjs/server"
-import { redirect } from "next/navigation"
 
 interface EditCharacterPageProps {
   params: Promise<{ username: string; characterId: string }>

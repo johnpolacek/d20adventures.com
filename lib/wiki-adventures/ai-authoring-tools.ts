@@ -1,4 +1,4 @@
-import { applyAuthoringChangeSet, createSourceFile, createSourceTree } from "./change-sets"
+import { applyAuthoringChangeSet, createSourceTree } from "./change-sets"
 import { compileAdventureSourceTree } from "./compiler"
 import { hashContent } from "./hash"
 import { adventureSourcePrefix } from "./s3-keys"
@@ -162,7 +162,14 @@ function buildChangeSet(files: SourceFile[], input: AiAuthoringToolInput): Autho
     const file = requiredFile(source, input.sourcePath)
     return {
       ...base,
-      changes: [{ op: "update", path: file.path, beforeHash: file.hash, content: appendTransition(file.content, input.targetEncounterId, input.condition, input.tool === "linkTransition" ? input.label : undefined) }],
+      changes: [
+        {
+          op: "update",
+          path: file.path,
+          beforeHash: file.hash,
+          content: appendTransition(file.content, input.targetEncounterId, input.condition, input.tool === "linkTransition" ? input.label : undefined),
+        },
+      ],
       affectedEntities: [entityFromPath(file.path, "encounter"), { type: "encounter", id: input.targetEncounterId }],
     }
   }
@@ -171,7 +178,20 @@ function buildChangeSet(files: SourceFile[], input: AiAuthoringToolInput): Autho
     const path = `${adventureSourcePrefix(input.settingId, input.planId)}/encounters/${input.targetEncounterId}.md`
     return {
       ...base,
-      changes: [{ op: "create", path, content: encounterMarkdown(input.settingId, input.planId, input.targetEncounterId, input.title ?? titleFromId(input.targetEncounterId), "Planning stub for an unresolved transition target.", "Replace this stub before publish if the encounter needs full authored content.") }],
+      changes: [
+        {
+          op: "create",
+          path,
+          content: encounterMarkdown(
+            input.settingId,
+            input.planId,
+            input.targetEncounterId,
+            input.title ?? titleFromId(input.targetEncounterId),
+            "Planning stub for an unresolved transition target.",
+            "Replace this stub before publish if the encounter needs full authored content."
+          ),
+        },
+      ],
       affectedEntities: [{ type: "encounter", id: input.targetEncounterId }],
     }
   }
@@ -287,10 +307,7 @@ function characterSheet(input: Extract<AiAuthoringToolInput, { tool: "createChar
     race: input.race,
     appearance: input.appearance,
     healthPercent: 100,
-    attributes:
-      input.characterType === "npc"
-        ? { strength: 10, dexterity: 10, constitution: 10 }
-        : { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
+    attributes: input.characterType === "npc" ? { strength: 10, dexterity: 10, constitution: 10 } : { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
     equipment: [],
     skills: [],
     spells: [],
@@ -300,7 +317,10 @@ function characterSheet(input: Extract<AiAuthoringToolInput, { tool: "createChar
 }
 
 function entityFromPath(path: string, fallback: WikiContentType): { type: WikiContentType | "character"; id: string } {
-  const filename = path.split("/").at(-1)?.replace(/\.(md|json)$/, "")
+  const filename = path
+    .split("/")
+    .at(-1)
+    ?.replace(/\.(md|json)$/, "")
   if (path.includes("/encounters/")) return { type: "encounter", id: filename ?? "unknown" }
   if (path.includes("/npcs/")) return { type: "npc", id: filename ?? "unknown" }
   if (path.includes("/characters/")) return { type: "character", id: filename ?? "unknown" }

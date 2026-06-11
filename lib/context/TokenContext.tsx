@@ -1,7 +1,7 @@
-import { fetchUserTokenBalance } from "@/app/_actions/user-token-actions"
 import { useUser } from "@clerk/nextjs"
 import type React from "react"
-import { type ReactNode, createContext, useCallback, useContext, useEffect, useState } from "react"
+import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from "react"
+import { fetchUserTokenBalance } from "@/app/_actions/user-token-actions"
 
 type TokenContextType = {
   tokensRemaining: number | null

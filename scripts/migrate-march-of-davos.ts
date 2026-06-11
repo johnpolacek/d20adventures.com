@@ -1,10 +1,10 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname } from "node:path"
+import slugify from "slugify"
 import { compileAdventureSourceTree } from "@/lib/wiki-adventures/compiler"
 import { migrateAdventurePlanToWikiSource } from "@/lib/wiki-adventures/myr-migration"
 import type { AdventureEncounter, AdventurePlan, AdventureScene, AdventureSection } from "@/types/adventure-plan"
 import type { Character } from "@/types/character"
-import slugify from "slugify"
 
 type MarchLegacyNpc = {
   name: string
@@ -199,8 +199,6 @@ function formatStages(stages: MarchLegacyEncounter[] | undefined): string {
   if (!stages?.length) return ""
   return [
     "Legacy stages:",
-    ...stages.map((stage) =>
-      [`### ${stage.name}`, stage.narrative, stage.notes, stage.npcs?.length ? `NPCs: ${stage.npcs.map((npc) => npc.name).join(", ")}` : ""].filter(Boolean).join("\n\n")
-    ),
+    ...stages.map((stage) => [`### ${stage.name}`, stage.narrative, stage.notes, stage.npcs?.length ? `NPCs: ${stage.npcs.map((npc) => npc.name).join(", ")}` : ""].filter(Boolean).join("\n\n")),
   ].join("\n\n")
 }

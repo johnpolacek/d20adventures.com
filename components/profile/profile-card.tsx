@@ -1,5 +1,8 @@
 "use client"
 
+import { Calendar, CheckCircle, Github, Globe, Link as LinkIcon, Twitter } from "lucide-react"
+import Link from "next/link"
+import { useState } from "react"
 import { refreshProfile } from "@/app/_actions/profile"
 import { EditProfile } from "@/components/edit-profile"
 import { Heading } from "@/components/typography/heading"
@@ -8,9 +11,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
-import { Calendar, CheckCircle, Github, Globe, Link as LinkIcon, Twitter } from "lucide-react"
-import Link from "next/link"
-import { useState } from "react"
 
 interface ProfileLink {
   label: string

@@ -1,5 +1,7 @@
 "use server"
 
+import { auth } from "@clerk/nextjs/server"
+import { redirect } from "next/navigation"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { convex } from "@/lib/convex/server"
@@ -7,8 +9,6 @@ import { readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 import { toPCTemplate } from "@/lib/utils/character-mapping"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PCTemplate } from "@/types/character"
-import { auth } from "@clerk/nextjs/server"
-import { redirect } from "next/navigation"
 import { decrementUserTokensAction, incrementUserTokensAction } from "./tokens"
 
 interface JoinAdventureArgs {
@@ -49,7 +49,7 @@ export async function joinAdventure({ settingId, adventurePlanId, adventureId, c
     } catch {}
     if (!exists) {
       const planPath = `settings/${settingId}/${adventurePlanId}.json`
-      let characterData: PCTemplate | unknown = undefined
+      let characterData: PCTemplate | unknown
       try {
         const plan = (await readJsonFromS3(planPath)) as AdventurePlan
         characterData = plan.premadePlayerCharacters?.find((pc) => pc.id === characterId.split("/").pop()?.replace(".json", ""))

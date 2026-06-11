@@ -39,17 +39,15 @@ export default async function WaitlistPage() {
       <div className="mx-auto flex max-w-[980px] flex-col items-center gap-8 py-8 md:py-12">
         <Heading variant="h2" className="text-center leading-tight">
           {subscription ? (
-            <>
-              {subscription.unsubscribedAt ? (
-                <>
-                  You&apos;ve left the <span className="text-primary">Waitlist.</span>
-                </>
-              ) : (
-                <>
-                  You&apos;re on the <span className="text-primary">Waitlist!</span>
-                </>
-              )}
-            </>
+            subscription.unsubscribedAt ? (
+              <>
+                You&apos;ve left the <span className="text-primary">Waitlist.</span>
+              </>
+            ) : (
+              <>
+                You&apos;re on the <span className="text-primary">Waitlist!</span>
+              </>
+            )
           ) : (
             <>
               Join the <span className="text-primary">Waitlist</span>

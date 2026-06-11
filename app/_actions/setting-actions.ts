@@ -1,9 +1,9 @@
 "use server"
 
-import { copyS3Object, readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
-import { canManageResource, getResourceOwnerId } from "@/lib/content-permissions"
-import type { Setting } from "@/types/setting"
 import { auth } from "@clerk/nextjs/server"
+import { canManageResource, getResourceOwnerId } from "@/lib/content-permissions"
+import { copyS3Object, readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
+import type { Setting } from "@/types/setting"
 
 interface UpdateSettingParams {
   setting: Setting

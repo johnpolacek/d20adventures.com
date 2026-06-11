@@ -1,5 +1,4 @@
-import type { Adventure } from "@/types/adventure"
-import type { TurnCharacter } from "@/types/adventure"
+import type { Adventure, TurnCharacter } from "@/types/adventure"
 import type { PCTemplate } from "@/types/character"
 
 export function toPCTemplate(obj: unknown): PCTemplate | null {

@@ -1,10 +1,10 @@
 "use server"
 
-import { decrementUserTokensAction } from "@/app/_actions/tokens"
 import { auth } from "@clerk/nextjs/server"
-import { generateObject as baseGenerateObject, generateText as baseGenerateText, streamObject as baseStreamObject } from "ai"
 import type { Schema as AISchema } from "ai"
+import { generateObject as baseGenerateObject, generateText as baseGenerateText, streamObject as baseStreamObject } from "ai"
 import type { z } from "zod"
+import { decrementUserTokensAction } from "@/app/_actions/tokens"
 import { sanitizeUserVisibleProse } from "@/lib/utils/narrative-utils"
 import { currentModel } from "./llm"
 import { composeSystemPrompt } from "./style"
@@ -267,7 +267,6 @@ export async function generateText({ prompt, system }: StyledPromptOptions): Pro
       system: composeSystemPrompt(system),
       model: currentModel,
     })
-
 
     const totalTokens = result.usage?.totalTokens ?? 0
     await chargeForUsageOrThrow(totalTokens, "usage_generate_text", "generateText operation")

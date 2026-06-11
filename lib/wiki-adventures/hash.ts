@@ -7,4 +7,3 @@ export function hashContent(content: string): string {
 export function hashJson(value: unknown): string {
   return hashContent(JSON.stringify(value))
 }
-

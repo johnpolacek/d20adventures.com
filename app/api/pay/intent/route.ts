@@ -1,6 +1,6 @@
-import { isStripeConfigured, stripe } from "@/lib/stripe"
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
+import { isStripeConfigured, stripe } from "@/lib/stripe"
 
 const ALLOWED_DONATION_AMOUNTS = new Set([500]) // cents
 

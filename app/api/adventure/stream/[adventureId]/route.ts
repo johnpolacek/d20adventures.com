@@ -1,8 +1,8 @@
+import { auth } from "@clerk/nextjs/server"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { AdventureAccessError, assertAdventureAccess } from "@/lib/adventure-access"
 import { convex } from "@/lib/convex/server"
-import { auth } from "@clerk/nextjs/server"
 
 export async function GET(_: Request, { params }: { params: Promise<{ adventureId: string }> }) {
   try {
@@ -29,7 +29,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ adventureI
           controller.enqueue(`data: ${JSON.stringify(turn)}\n\n`)
           lastTurnId = adventure?.currentTurnId ?? null
           lastTurn = turn
-        } catch (err) {
+        } catch (_err) {
           controller.enqueue(`event: error\ndata: ${JSON.stringify({ error: "Failed to fetch adventure/turn" })}\n\n`)
         }
         interval = setInterval(async () => {
@@ -44,7 +44,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ adventureI
               lastTurnId = adventureSnapshot?.currentTurnId ?? null
               lastTurn = turn
             }
-          } catch (err) {
+          } catch (_err) {
             controller.enqueue(`event: error\ndata: ${JSON.stringify({ error: "Failed to fetch adventure/turn" })}\n\n`)
           }
         }, 2000)

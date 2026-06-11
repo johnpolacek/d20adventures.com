@@ -35,13 +35,7 @@
       "description": "Contains enough coin for immediate needs."
     }
   ],
-  "skills": [
-    "Performance",
-    "Persuasion",
-    "Deception",
-    "Insight",
-    "Acrobatics"
-  ],
+  "skills": ["Performance", "Persuasion", "Deception", "Insight", "Acrobatics"],
   "spells": [
     {
       "name": "Vicious Mockery",

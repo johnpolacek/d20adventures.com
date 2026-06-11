@@ -19,4 +19,3 @@ export function createValidationReport(mode: ValidationMode, findings: Validatio
 export function modeSeverity(mode: ValidationMode, publishSeverity: ValidationSeverity, draftSeverity: ValidationSeverity = "warning"): ValidationSeverity {
   return mode === "publish" ? publishSeverity : draftSeverity
 }
-

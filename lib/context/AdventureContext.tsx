@@ -1,6 +1,6 @@
-import type { Adventure } from "@/types/adventure"
 import type React from "react"
 import { createContext, useContext } from "react"
+import type { Adventure } from "@/types/adventure"
 
 type AdventureContextType = {
   adventurePlanId: string

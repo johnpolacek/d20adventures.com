@@ -15,25 +15,14 @@ type RecentTurnContext = {
 }
 
 // Type guard for characters with rollRequired and rollResult
-function hasRollFields(
-  c: TurnCharacter
-): c is TurnCharacter & {
+function hasRollFields(c: TurnCharacter): c is TurnCharacter & {
   rollRequired: { rollType: string; difficulty: number; modifier?: number }
   rollResult: number
 } {
-  return (
-    "rollResult" in c &&
-    typeof c.rollResult === "number" &&
-    "rollRequired" in c &&
-    typeof c.rollRequired === "object" &&
-    c.rollRequired !== null
-  )
+  return "rollResult" in c && typeof c.rollResult === "number" && "rollRequired" in c && typeof c.rollRequired === "object" && c.rollRequired !== null
 }
 
-export function findEncounterInPlan(
-  plan: AdventurePlan,
-  encounterId: string
-): AdventurePlan["sections"][number]["scenes"][number]["encounters"][number] | null {
+export function findEncounterInPlan(plan: AdventurePlan, encounterId: string): AdventurePlan["sections"][number]["scenes"][number]["encounters"][number] | null {
   return (
     plan.sections
       .flatMap((section) => section.scenes)
@@ -42,16 +31,9 @@ export function findEncounterInPlan(
   )
 }
 
-export function getEncounterTurnStatus(
-  allTurns: TurnHistoryRow[],
-  encounterId: string,
-  currentTurnOrder: number
-) {
-  const completedEncounterTurnCount = allTurns.filter(
-    (t) => t.encounterId === encounterId && (t.order || 0) < currentTurnOrder
-  ).length
-  const encounterTurnDisplay =
-    completedEncounterTurnCount >= 5 ? "5 or more" : String(completedEncounterTurnCount)
+export function getEncounterTurnStatus(allTurns: TurnHistoryRow[], encounterId: string, currentTurnOrder: number) {
+  const completedEncounterTurnCount = allTurns.filter((t) => t.encounterId === encounterId && (t.order || 0) < currentTurnOrder).length
+  const encounterTurnDisplay = completedEncounterTurnCount >= 5 ? "5 or more" : String(completedEncounterTurnCount)
   const currentEncounterTurnNumber = completedEncounterTurnCount + 1
 
   return {
@@ -61,11 +43,7 @@ export function getEncounterTurnStatus(
   }
 }
 
-export function getRecentTurnsForContext(
-  allTurns: (TurnHistoryRow & Record<string, unknown>)[],
-  currentTurnOrder: number,
-  adventureId: string
-): RecentTurnContext[] {
+export function getRecentTurnsForContext(allTurns: (TurnHistoryRow & Record<string, unknown>)[], currentTurnOrder: number, adventureId: string): RecentTurnContext[] {
   return allTurns
     .filter((t) => typeof t.order === "number" && t.order < currentTurnOrder)
     .sort((a, b) => (a.order || 0) - (b.order || 0))
@@ -90,8 +68,7 @@ export function buildRollInfo(turn: Turn): string {
     lastDiceRollParamsStr = matches[1]
   }
 
-  let rollInfo =
-    "No character-specific dice roll was identified as the immediate precursor to this state."
+  let rollInfo = "No character-specific dice roll was identified as the immediate precursor to this state."
 
   if (lastDiceRollParamsStr) {
     const params = lastDiceRollParamsStr.split(";").reduce(
@@ -134,11 +111,7 @@ export function buildRollInfo(turn: Turn): string {
     const lastRollingCharacter = (turn.characters as TurnCharacter[]).find(hasRollFields)
     if (lastRollingCharacter) {
       const { name, rollRequired, rollResult: charRollResult } = lastRollingCharacter
-      const {
-        rollType: charRollType,
-        difficulty: charDifficulty,
-        modifier: charModifier = 0,
-      } = rollRequired
+      const { rollType: charRollType, difficulty: charDifficulty, modifier: charModifier = 0 } = rollRequired
       const charSuccess = charRollResult >= charDifficulty
       rollInfo = `Regarding the most recent dice roll (from character data): Character '${name}' attempted a '${charRollType}'. The result was ${charRollResult} (difficulty: ${charDifficulty}, modifier: ${charModifier}). This roll was a ${charSuccess ? "SUCCESS" : "FAILURE"}.`
     }
@@ -154,9 +127,7 @@ ${recentTurns.map((item) => `Turn ${item.order} [Encounter: ${item.encounterId}]
     : "No previous turns available."
 }
 
-export function buildTransitionsText(
-  currentEncounter: AdventurePlan["sections"][number]["scenes"][number]["encounters"][number]
-): string {
+export function buildTransitionsText(currentEncounter: AdventurePlan["sections"][number]["scenes"][number]["encounters"][number]): string {
   return currentEncounter.transitions
     ? (
         currentEncounter.transitions as {
@@ -164,20 +135,14 @@ export function buildTransitionsText(
           encounter: string
         }[]
       )
-        .map(
-          (t, i) =>
-            `Transition Option ${i + 1} (leads to encounter ID: '${t.encounter}'):\n  Condition to check: ${t.condition}`
-        )
+        .map((t, i) => `Transition Option ${i + 1} (leads to encounter ID: '${t.encounter}'):\n  Condition to check: ${t.condition}`)
         .join("\n")
     : "No explicit transitions defined for this encounter."
 }
 
-export function getSectionAndSceneContext(
-  plan: AdventurePlan,
-  encounterId: string
-): { sectionContext: string; sceneContext: string } {
-  let currentSection = undefined
-  let currentScene = undefined
+export function getSectionAndSceneContext(plan: AdventurePlan, encounterId: string): { sectionContext: string; sceneContext: string } {
+  let currentSection
+  let currentScene
   for (const section of plan.sections) {
     for (const scene of section.scenes) {
       if (scene.encounters.some((enc) => enc.id === encounterId)) {
@@ -189,12 +154,8 @@ export function getSectionAndSceneContext(
     if (currentSection && currentScene) break
   }
 
-  const sectionContext = currentSection
-    ? `Section Title: ${currentSection.title || ""}\nSection Summary: ${currentSection.summary || ""}`
-    : ""
-  const sceneContext = currentScene
-    ? `Scene Title: ${currentScene.title || ""}\nScene Summary: ${currentScene.summary || ""}`
-    : ""
+  const sectionContext = currentSection ? `Section Title: ${currentSection.title || ""}\nSection Summary: ${currentSection.summary || ""}` : ""
+  const sceneContext = currentScene ? `Scene Title: ${currentScene.title || ""}\nScene Summary: ${currentScene.summary || ""}` : ""
 
   return { sectionContext, sceneContext }
 }

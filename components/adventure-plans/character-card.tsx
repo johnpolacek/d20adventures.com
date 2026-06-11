@@ -1,17 +1,16 @@
 "use client"
 
+import { ChevronsUp, Copy, Edit, Plus, X } from "lucide-react"
 import { useCharacterDetails } from "@/components/adventure-plans/hooks/use-character-details"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ImageUpload } from "@/components/ui/image-upload"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import Image from "@/components/ui/native-image"
 import { Textarea } from "@/components/ui/textarea"
 import { cn, getImageUrl } from "@/lib/utils"
 import type { Character, PCTemplate } from "@/types/character"
-import { ChevronsUp, Copy, Edit, Plus, X } from "lucide-react"
-import Image from "@/components/ui/native-image"
-import * as React from "react"
 
 interface CharacterCardProps {
   charId: string
@@ -165,7 +164,7 @@ export function CharacterCard({
                   min="1"
                   max="20"
                   value={char.attributes?.[attr as keyof typeof char.attributes] || ""}
-                  onChange={(e) => characterDetails.updateAttributes(attr, Number.parseInt(e.target.value) || 0)}
+                  onChange={(e) => characterDetails.updateAttributes(attr, Number.parseInt(e.target.value, 10) || 0)}
                   disabled={isSaving}
                   placeholder="1-20"
                 />

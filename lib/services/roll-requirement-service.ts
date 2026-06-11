@@ -1,8 +1,8 @@
+import { z } from "zod"
 import { generateObject } from "@/lib/ai"
 import { formatSpellsForPrompt } from "@/lib/services/spell-tracking-service"
-import type { Character } from "@/types/character"
 import type { TurnCharacter } from "@/types/adventure"
-import { z } from "zod"
+import type { Character } from "@/types/character"
 
 /**
  * Given an action or reply string and character context, determine if a dice roll is required.
@@ -28,13 +28,9 @@ export async function getRollRequirementForAction(
     character.attributes
       ? `Attributes: STR ${character.attributes.strength}, DEX ${character.attributes.dexterity}, CON ${character.attributes.constitution}, INT ${character.attributes.intelligence}, WIS ${character.attributes.wisdom}, CHA ${character.attributes.charisma}`
       : undefined,
-    character.spells && character.spells.length > 0
-      ? `Spells: ${formatSpellsForPrompt(character as unknown as TurnCharacter)}`
-      : undefined,
+    character.spells && character.spells.length > 0 ? `Spells: ${formatSpellsForPrompt(character as unknown as TurnCharacter)}` : undefined,
     character.skills && character.skills.length > 0 ? `Skills: ${character.skills.join(", ")}` : undefined,
-    character.equipment && character.equipment.length > 0
-      ? `Equipment: ${character.equipment.map((e) => `${e.name}${e.description ? ` (${e.description})` : ""}`).join(", ")}`
-      : undefined,
+    character.equipment && character.equipment.length > 0 ? `Equipment: ${character.equipment.map((e) => `${e.name}${e.description ? ` (${e.description})` : ""}`).join(", ")}` : undefined,
     character.specialAbilities && character.specialAbilities.length > 0 ? `Special Abilities: ${character.specialAbilities.join(", ")}` : undefined,
     character.background ? `Background: ${character.background}` : undefined,
     character.personality ? `Personality: ${character.personality}` : undefined,

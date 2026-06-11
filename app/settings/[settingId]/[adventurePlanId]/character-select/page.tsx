@@ -1,3 +1,5 @@
+import { currentUser } from "@clerk/nextjs/server"
+import { redirect } from "next/navigation"
 import CharacterSelection from "@/components/adventure/character-selection"
 import FullPageImage from "@/components/layout/fullpage-image"
 import AccountRequired from "@/components/nav/account-required"
@@ -6,8 +8,6 @@ import { listAndReadJsonFilesInS3Directory, readJsonFromS3 } from "@/lib/s3-util
 import { getImageUrl } from "@/lib/utils"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PCTemplate } from "@/types/character"
-import { currentUser } from "@clerk/nextjs/server"
-import { redirect } from "next/navigation"
 
 interface PageProps {
   params: Promise<{

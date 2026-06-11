@@ -1,13 +1,13 @@
 "use client"
 
-import { subscribe } from "@/app/_actions/mailing-list"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useUser } from "@clerk/nextjs"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
+import { subscribe } from "@/app/_actions/mailing-list"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 export function MailingListForm({ initialEmail }: { initialEmail?: string }) {
   const router = useRouter()

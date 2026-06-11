@@ -1,9 +1,9 @@
-import { GetObjectCommand } from "@aws-sdk/client-s3"
 import type { S3Client } from "@aws-sdk/client-s3"
+import { GetObjectCommand } from "@aws-sdk/client-s3"
 import { streamToString } from "@/lib/s3-utils"
-import { latestPointerKey, publishedVersionPrefix } from "./s3-keys"
 import type { LatestPointer, RuntimeArtifactName } from "./published-repository"
 import { runtimeArtifactNames } from "./published-repository"
+import { latestPointerKey, publishedVersionPrefix } from "./s3-keys"
 import type { RuntimeArtifacts } from "./types"
 
 export type ContentRef =

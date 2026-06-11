@@ -6,6 +6,7 @@ import { defineConfig, devices } from "@playwright/test"
  * https://github.com/motdotla/dotenv
  */
 import dotenv from "dotenv"
+
 // Load environment variables in order of precedence (later files take precedence)
 dotenv.config({ path: path.resolve(__dirname, ".env") })
 dotenv.config({ path: path.resolve(__dirname, ".env.local") })

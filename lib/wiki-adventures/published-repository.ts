@@ -1,19 +1,11 @@
-import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3"
 import type { S3Client } from "@aws-sdk/client-s3"
+import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3"
 import { streamToString } from "@/lib/s3-utils"
 import { hashJson } from "./hash"
 import { latestPointerKey, previewPrefix, publishedVersionPrefix } from "./s3-keys"
 import type { RuntimeArtifacts } from "./types"
 
-export const runtimeArtifactNames = [
-  "manifest.json",
-  "encounters.json",
-  "entities.json",
-  "character-sheets.json",
-  "graph.json",
-  "retrieval-index.json",
-  "validation-report.json",
-] as const
+export const runtimeArtifactNames = ["manifest.json", "encounters.json", "entities.json", "character-sheets.json", "graph.json", "retrieval-index.json", "validation-report.json"] as const
 
 export type RuntimeArtifactName = (typeof runtimeArtifactNames)[number]
 
@@ -81,7 +73,10 @@ export function runtimeArtifactEntries(artifacts: RuntimeArtifacts): Array<[Runt
 }
 
 export function makePublishedVersionId(publishedAt: Date, contentHash: string): string {
-  const timestamp = publishedAt.toISOString().replace(/\.\d{3}Z$/, "Z").replaceAll(":", "-")
+  const timestamp = publishedAt
+    .toISOString()
+    .replace(/\.\d{3}Z$/, "Z")
+    .replaceAll(":", "-")
   return `${timestamp}-${contentHash.slice(0, 8)}`
 }
 
@@ -159,17 +154,7 @@ export class InMemoryWikiAdventurePublishedRepository implements WikiAdventurePu
     const updatedAt = input.updatedAt ?? new Date()
     this.objects.set(
       latestPointerKey(input.settingId, input.planId),
-      JSON.stringify(
-        latestPointer(
-          { settingId: input.settingId, planId: input.planId, artifacts: { manifest } as RuntimeArtifacts },
-          input.versionId,
-          versionPrefix,
-          updatedAt,
-          "rollback"
-        ),
-        null,
-        2
-      )
+      JSON.stringify(latestPointer({ settingId: input.settingId, planId: input.planId, artifacts: { manifest } as RuntimeArtifacts }, input.versionId, versionPrefix, updatedAt, "rollback"), null, 2)
     )
     return {
       settingId: input.settingId,

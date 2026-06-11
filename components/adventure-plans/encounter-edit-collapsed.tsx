@@ -1,5 +1,6 @@
 "use client"
 
+import { ChevronsRight, Edit, X } from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,10 +13,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
-import type { AdventureEncounter } from "@/types/adventure-plan"
-import { ChevronsRight, Edit, X } from "lucide-react"
 import Image from "@/components/ui/native-image"
-import * as React from "react"
+import type { AdventureEncounter } from "@/types/adventure-plan"
 
 interface EncounterEditCollapsedProps {
   encounter: AdventureEncounter

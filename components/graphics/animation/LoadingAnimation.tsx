@@ -1,9 +1,9 @@
 "use client"
-import AnimateIn from "@/components/ui/animate-in"
-import { cn } from "@/lib/utils"
-import Image from "@/components/ui/native-image"
 import type React from "react"
 import { useEffect, useRef } from "react"
+import AnimateIn from "@/components/ui/animate-in"
+import Image from "@/components/ui/native-image"
+import { cn } from "@/lib/utils"
 
 const spin = `@keyframes spin {
   0% {

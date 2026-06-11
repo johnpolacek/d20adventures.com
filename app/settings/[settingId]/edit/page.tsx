@@ -1,8 +1,8 @@
+import { auth } from "@clerk/nextjs/server"
 import { SettingEditForm } from "@/components/settings/setting-edit-form"
 import { canManageResource } from "@/lib/content-permissions"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import type { Setting } from "@/types/setting"
-import { auth } from "@clerk/nextjs/server"
 
 export default async function SettingEditPage(props: { params: Promise<{ settingId: string }> }) {
   const { userId } = await auth()

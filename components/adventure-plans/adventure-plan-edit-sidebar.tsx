@@ -1,9 +1,9 @@
 "use client"
 
+import Link from "next/link"
+import type * as React from "react"
 import { cn, reverseSlugify } from "@/lib/utils"
 import type { AdventurePlan } from "@/types/adventure-plan"
-import Link from "next/link"
-import * as React from "react"
 
 export type AdventurePlanEditorView = "basic" | "prose" | "npcs" | "premadePlayerCharacters"
 
@@ -19,17 +19,7 @@ interface AdventurePlanEditSidebarProps {
   onEncounterSelect: (encounterId: string) => void
 }
 
-function SidebarButton({
-  active,
-  children,
-  className,
-  onClick,
-}: {
-  active?: boolean
-  children: React.ReactNode
-  className?: string
-  onClick: () => void
-}) {
+function SidebarButton({ active, children, className, onClick }: { active?: boolean; children: React.ReactNode; className?: string; onClick: () => void }) {
   return (
     <button
       type="button"
@@ -63,11 +53,7 @@ export function AdventurePlanEditSidebar({
 
   return (
     <aside id="adventure-plan-edit-sidebar" className="w-[360px] h-full overflow-y-auto pr-8">
-      <button
-        type="button"
-        className="block w-full text-left text-2xl text-amber-400 font-display hover:text-amber-300 transition-colors"
-        onClick={() => onSectionSelect(0)}
-      >
+      <button type="button" className="block w-full text-left text-2xl text-amber-400 font-display hover:text-amber-300 transition-colors" onClick={() => onSectionSelect(0)}>
         {adventurePlan.title}
       </button>
       <div className="text-xs -mt-1 opacity-70 text-primary-100 font-display mb-4">
@@ -114,12 +100,7 @@ export function AdventurePlanEditSidebar({
           <div className="space-y-1 border-t border-primary-200/30 pt-3">
             <div className="font-mono text-[0.65rem] uppercase tracking-widest text-primary-200/70">Encounters</div>
             {activeScene.encounters.map((encounter, encounterIndex) => (
-              <SidebarButton
-                key={encounter.id || `encounter-${encounterIndex}`}
-                active={activeEncounterId === encounter.id}
-                onClick={() => onEncounterSelect(encounter.id)}
-                className="pl-4 text-xs"
-              >
+              <SidebarButton key={encounter.id || `encounter-${encounterIndex}`} active={activeEncounterId === encounter.id} onClick={() => onEncounterSelect(encounter.id)} className="pl-4 text-xs">
                 {encounter.title || `Encounter ${encounterIndex + 1}`}
               </SidebarButton>
             ))}

@@ -1,10 +1,10 @@
+import type { User } from "@clerk/nextjs/server"
+import { clerkClient } from "@clerk/nextjs/server"
 import { getAllAdventuresAdmin } from "@/app/_actions/admin/get-all-adventures"
 import { AdminBreadcrumb } from "@/components/nav/admin-breadcrumb"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import type { Doc } from "@/convex/_generated/dataModel"
-import { clerkClient } from "@clerk/nextjs/server"
-import type { User } from "@clerk/nextjs/server"
 
 export default async function AdminAdventuresPage() {
   const adventures: Doc<"adventures">[] = await getAllAdventuresAdmin()

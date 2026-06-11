@@ -5,14 +5,7 @@ import type { RollRequirement } from "@/lib/validations/roll-requirement-schema"
 import type { TurnCharacter } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
 
-export async function buildFirstTurnSetup(args: {
-  settingId: string
-  planId: string
-  encounterId: string
-  narrative: string
-  playerInput: string
-  characters: TurnCharacter[]
-}): Promise<{
+export async function buildFirstTurnSetup(args: { settingId: string; planId: string; encounterId: string; narrative: string; playerInput: string; characters: TurnCharacter[] }): Promise<{
   turnTitle: string
   rollRequirement: RollRequirement
 }> {
@@ -70,4 +63,3 @@ export async function buildFirstTurnSetup(args: {
     rollRequirement,
   }
 }
-

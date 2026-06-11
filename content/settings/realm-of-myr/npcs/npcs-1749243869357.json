@@ -31,14 +31,7 @@
       "description": "A small vial containing a shimmering red liquid, capable of mending minor wounds."
     }
   ],
-  "skills": [
-    "Swordsmanship",
-    "Tactics",
-    "Survival",
-    "Perception",
-    "Stealth",
-    "Archery"
-  ],
+  "skills": ["Swordsmanship", "Tactics", "Survival", "Perception", "Stealth", "Archery"],
   "status": "",
   "type": "npc",
   "attributes": {

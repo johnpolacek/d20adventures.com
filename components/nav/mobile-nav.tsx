@@ -1,18 +1,17 @@
 "use client"
 
+import { SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs"
+import { Menu, ShieldCheck } from "lucide-react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { useEffect, useState } from "react"
 import { LogoLockup } from "@/components/graphics/logo-lockup"
 import { Button } from "@/components/ui/button"
+import Image from "@/components/ui/native-image"
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { siteConfig } from "@/lib/config"
 import { navItems } from "@/lib/config/navigation"
 import { cn } from "@/lib/utils"
-import { SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs"
-import { Menu, ShieldCheck } from "lucide-react"
-import Image from "@/components/ui/native-image"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { useState } from "react"
-import { useEffect } from "react"
 
 export function MobileNav() {
   const [open, setOpen] = useState(false)
@@ -97,16 +96,16 @@ export function MobileNav() {
         <div className="mt-auto flex flex-col gap-4 p-8">
           {!isSignedIn && (
             <>
-            <SignUpButton mode="modal">
-              <Button className="w-full" onClick={() => setOpen(false)}>
-                Sign Up
-              </Button>
-            </SignUpButton>
-            <SignInButton mode="modal">
-              <Button variant="outline" className="w-full" onClick={() => setOpen(false)}>
-                Sign In
-              </Button>
-            </SignInButton>
+              <SignUpButton mode="modal">
+                <Button className="w-full" onClick={() => setOpen(false)}>
+                  Sign Up
+                </Button>
+              </SignUpButton>
+              <SignInButton mode="modal">
+                <Button variant="outline" className="w-full" onClick={() => setOpen(false)}>
+                  Sign In
+                </Button>
+              </SignInButton>
             </>
           )}
           {isSignedIn && (

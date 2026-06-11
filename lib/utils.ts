@@ -1,6 +1,6 @@
-import { IMAGE_HOST } from "@/lib/config"
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { IMAGE_HOST } from "@/lib/config"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))

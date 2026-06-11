@@ -1,6 +1,6 @@
 import { v } from "convex/values"
 import type { Doc, Id } from "./_generated/dataModel"
-import { action, internalMutation, mutation, query } from "./_generated/server"
+import { action, mutation, query } from "./_generated/server"
 
 const contentRefValidator = v.object({
   source: v.union(v.literal("published"), v.literal("preview")),
@@ -302,7 +302,7 @@ export const aiRewriteReply = action({
     playerInput: v.string(),
     narrativeContext: v.optional(v.string()),
   },
-  handler: async (ctx, args) => {
+  handler: async (_ctx, args) => {
     // TODO: Call your AI service here (Google Gemini, etc.)
     // For now, just return the playerInput as a placeholder
     return args.playerInput
@@ -506,7 +506,11 @@ export const commitWikiTurnAdvance = mutation({
 
     const discoveries = [...(adventure.discoveries ?? []), ...((args.adventurePatch?.discoveries as unknown[]) ?? [])]
     const entityUpdates = [...(adventure.entityUpdates ?? []), ...((args.adventurePatch?.entityUpdates as unknown[]) ?? [])]
-    const openThreads = mergeThreads(adventure.openThreads ?? [], (args.adventurePatch?.openThreads as Array<{ id?: string }> | undefined) ?? [], (args.adventurePatch?.resolvedThreadIds as string[] | undefined) ?? [])
+    const openThreads = mergeThreads(
+      adventure.openThreads ?? [],
+      (args.adventurePatch?.openThreads as Array<{ id?: string }> | undefined) ?? [],
+      (args.adventurePatch?.resolvedThreadIds as string[] | undefined) ?? []
+    )
     const resolvedThreadIds = Array.from(new Set([...(adventure.resolvedThreadIds ?? []), ...((args.adventurePatch?.resolvedThreadIds as string[] | undefined) ?? [])]))
     const summaryDelta = typeof args.adventurePatch?.summaryDelta === "string" ? args.adventurePatch.summaryDelta : ""
     const adventureSummaryMarkdown = summaryDelta ? [adventure.adventureSummaryMarkdown, summaryDelta].filter(Boolean).join("\n\n") : adventure.adventureSummaryMarkdown

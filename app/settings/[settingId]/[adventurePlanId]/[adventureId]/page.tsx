@@ -1,3 +1,5 @@
+import type { Metadata } from "next"
+import { notFound, redirect } from "next/navigation"
 import { loadAdventureWithNpc } from "@/app/_actions/load-adventure"
 import AdventureHome from "@/components/views/adventure-home"
 import type { Id } from "@/convex/_generated/dataModel"
@@ -7,8 +9,6 @@ import { mapConvexTurnToTurn, reverseSlugify } from "@/lib/utils"
 import type { Adventure } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PC, PCTemplate } from "@/types/character"
-import type { Metadata } from "next"
-import { notFound, redirect } from "next/navigation"
 
 // Helper to map Convex adventure to frontend Adventure type
 function mapConvexAdventureToAdventure(raw: unknown): Adventure | null {

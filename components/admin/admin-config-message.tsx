@@ -1,10 +1,10 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
 import { useUser } from "@clerk/nextjs"
 import { Copy, ShieldUser } from "lucide-react"
 import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 
 export function AdminConfigMessage() {
   const { user } = useUser()

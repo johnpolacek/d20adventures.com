@@ -1,5 +1,5 @@
-import { clerkClient } from "@/lib/clerk"
 import { auth } from "@clerk/nextjs/server"
+import { clerkClient } from "@/lib/clerk"
 
 export async function POST(req: Request) {
   const { userId } = await auth()

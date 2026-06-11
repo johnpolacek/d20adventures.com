@@ -3,14 +3,14 @@
 // Deprecated: 3D encounter map rendering is disabled in product flow.
 // Keep this implementation dormant for possible revival.
 
-import { enhanceEncounterMap, getThemePalette } from "@/lib/map-utils"
-import { cn, getTextureImageUrl } from "@/lib/utils"
-import type { Encounter3DMap } from "@/types/adventure-plan"
 import { Edges, Grid, OrbitControls, RoundedBox } from "@react-three/drei"
 import { Canvas, useThree } from "@react-three/fiber"
-import type { TurnCharacter } from "@/types/adventure"
-import * as THREE from "three"
 import { useEffect, useId, useMemo, useState } from "react"
+import * as THREE from "three"
+import { enhanceEncounterMap, getThemePalette } from "@/lib/map-utils"
+import { cn, getTextureImageUrl } from "@/lib/utils"
+import type { TurnCharacter } from "@/types/adventure"
+import type { Encounter3DMap } from "@/types/adventure-plan"
 
 export type MiniaturesMapRenderMode = "safe" | "geometry" | "textured" | "full"
 export type MiniaturesMapTokenRenderMode = "safe" | "premium"
@@ -31,7 +31,7 @@ export interface MapMiniToken {
   subtitle?: string
 }
 
-const MINI_PREVIEW_HEIGHT = 1.7
+const _MINI_PREVIEW_HEIGHT = 1.7
 const portraitTextureCache = new Map<string, THREE.Texture | null>()
 const portraitTextureRequestCache = new Map<string, Promise<THREE.Texture | null>>()
 const portraitTextureLoader = new THREE.TextureLoader()
@@ -43,11 +43,7 @@ function shiftColor(color: string, lightness: number) {
 }
 
 function getTokenInitials(label: string) {
-  const parts = label
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
+  const parts = label.trim().split(/\s+/).filter(Boolean).slice(0, 2)
 
   if (parts.length === 0) return "?"
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
@@ -70,7 +66,7 @@ function getMiniStyle(token: MapMiniToken) {
 
 function usePortraitTexture(image?: string) {
   const imageUrl = image ? getTextureImageUrl(image) : ""
-  const [portraitTexture, setPortraitTexture] = useState<THREE.Texture | null>(() => (imageUrl ? portraitTextureCache.get(imageUrl) ?? null : null))
+  const [portraitTexture, setPortraitTexture] = useState<THREE.Texture | null>(() => (imageUrl ? (portraitTextureCache.get(imageUrl) ?? null) : null))
 
   useEffect(() => {
     if (!imageUrl) {
@@ -127,17 +123,7 @@ function usePortraitTexture(image?: string) {
   return portraitTexture
 }
 
-function MiniaturesMapDiagnostics({
-  mapId,
-  title,
-  tokens,
-  renderMode,
-}: {
-  mapId: string
-  title?: string
-  tokens: MapMiniToken[]
-  renderMode: MiniaturesMapRenderMode
-}) {
+function MiniaturesMapDiagnostics({ mapId, title, tokens, renderMode }: { mapId: string; title?: string; tokens: MapMiniToken[]; renderMode: MiniaturesMapRenderMode }) {
   const { gl, scene } = useThree()
 
   useEffect(() => {
@@ -179,13 +165,7 @@ interface SceneTextureSet {
   metal: THREE.CanvasTexture
 }
 
-function createPatternTexture(args: {
-  width?: number
-  height?: number
-  repeatX: number
-  repeatY: number
-  draw: (context: CanvasRenderingContext2D, width: number, height: number) => void
-}) {
+function createPatternTexture(args: { width?: number; height?: number; repeatX: number; repeatY: number; draw: (context: CanvasRenderingContext2D, width: number, height: number) => void }) {
   const canvas = document.createElement("canvas")
   canvas.width = args.width ?? 256
   canvas.height = args.height ?? 256
@@ -359,22 +339,12 @@ function getSurfaceTexture(textures: SceneTextureSet | null, theme: Encounter3DM
     case "sand":
     case "snow":
       return textures.dirt
-    case "stone":
-    case "cavern":
     default:
       return textures.stone
   }
 }
 
-function DisplayBase({
-  map,
-  palette,
-  textures,
-}: {
-  map: Encounter3DMap
-  palette: ReturnType<typeof getThemePalette>
-  textures: SceneTextureSet | null
-}) {
+function DisplayBase({ map, palette, textures }: { map: Encounter3DMap; palette: ReturnType<typeof getThemePalette>; textures: SceneTextureSet | null }) {
   const width = map.board.width * map.board.cellSize
   const depth = map.board.depth * map.board.cellSize
   const boardTexture = getSurfaceTexture(textures, map.board.theme)
@@ -543,17 +513,7 @@ function CityGateWagon({
   )
 }
 
-function CityGateStall({
-  position,
-  rotation = 0,
-  scale = 1,
-  textures,
-}: {
-  position: [number, number, number]
-  rotation?: number
-  scale?: number
-  textures: SceneTextureSet | null
-}) {
+function CityGateStall({ position, rotation = 0, scale = 1, textures }: { position: [number, number, number]; rotation?: number; scale?: number; textures: SceneTextureSet | null }) {
   return (
     <group position={position} rotation={[0, rotation, 0]}>
       <mesh position={[0, 0.22 * scale, 0]} castShadow receiveShadow>
@@ -632,16 +592,8 @@ function CityGateQueueFigure({
   )
 }
 
-function CityGateAssetSet({
-  map,
-  palette,
-  textures,
-}: {
-  map: Encounter3DMap
-  palette: ReturnType<typeof getThemePalette>
-  textures: SceneTextureSet | null
-}) {
-  const width = map.board.width * map.board.cellSize
+function CityGateAssetSet({ map, palette, textures }: { map: Encounter3DMap; palette: ReturnType<typeof getThemePalette>; textures: SceneTextureSet | null }) {
+  const _width = map.board.width * map.board.cellSize
   const depth = map.board.depth * map.board.cellSize
   const backZ = -depth * 0.48
 
@@ -859,28 +811,13 @@ function CityGateAssetSet({
         [2.18, 0, 0.44, -0.16, "#d5c5b3", "#7e6449"],
         [2.72, 0, 0.96, -0.1, "#ccb7a2", "#87644e"],
       ].map(([x, y, z, rotation, tone, cloak], index) => (
-        <CityGateQueueFigure
-          key={index}
-          position={[x as number, y as number, z as number]}
-          rotation={rotation as number}
-          scale={1.16}
-          tone={tone as string}
-          cloak={cloak as string}
-        />
+        <CityGateQueueFigure key={index} position={[x as number, y as number, z as number]} rotation={rotation as number} scale={1.16} tone={tone as string} cloak={cloak as string} />
       ))}
     </group>
   )
 }
 
-function SceneBackdrop({
-  map,
-  palette,
-  textures,
-}: {
-  map: Encounter3DMap
-  palette: ReturnType<typeof getThemePalette>
-  textures: SceneTextureSet | null
-}) {
+function SceneBackdrop({ map, palette, textures }: { map: Encounter3DMap; palette: ReturnType<typeof getThemePalette>; textures: SceneTextureSet | null }) {
   const width = map.board.width * map.board.cellSize
   const depth = map.board.depth * map.board.cellSize
   const backZ = -depth * 0.66
@@ -898,9 +835,7 @@ function SceneBackdrop({
         <meshStandardMaterial color={shiftColor(palette.backdrop, 0.06)} roughness={1} />
       </mesh>
 
-      {map.sceneKit === "city_gate" ? (
-        null
-      ) : map.sceneKit === "checkpoint" ? (
+      {map.sceneKit === "city_gate" ? null : map.sceneKit === "checkpoint" ? (
         <>
           <RoundedBox args={[2.7, 6.2, 2.2]} radius={0.12} smoothness={3} position={[-width * 0.34, 2.55, backZ + 1.15]} castShadow receiveShadow>
             <meshStandardMaterial color="#f2ece3" roughness={0.9} map={textures?.stone} />
@@ -942,32 +877,28 @@ function SceneBackdrop({
           )}
         </>
       ) : map.board.theme === "cavern" ? (
-        <>
-          {[
-            [-width * 0.36, 1.6, backZ + 1.6, 2.2, 5.8, 1.8],
-            [width * 0.34, 1.8, backZ + 1.8, 2.4, 6.2, 1.9],
-            [0, 1.1, backZ + 0.9, 4.2, 4.2, 1.8],
-          ].map(([x, y, z, sizeX, sizeY, sizeZ], index) => (
-            <RoundedBox key={index} args={[sizeX, sizeY, sizeZ]} radius={0.24} smoothness={3} position={[x, y, z]} castShadow receiveShadow>
-              <meshStandardMaterial color={wallColor} roughness={0.98} />
-            </RoundedBox>
-          ))}
-        </>
+        [
+          [-width * 0.36, 1.6, backZ + 1.6, 2.2, 5.8, 1.8],
+          [width * 0.34, 1.8, backZ + 1.8, 2.4, 6.2, 1.9],
+          [0, 1.1, backZ + 0.9, 4.2, 4.2, 1.8],
+        ].map(([x, y, z, sizeX, sizeY, sizeZ], index) => (
+          <RoundedBox key={index} args={[sizeX, sizeY, sizeZ]} radius={0.24} smoothness={3} position={[x, y, z]} castShadow receiveShadow>
+            <meshStandardMaterial color={wallColor} roughness={0.98} />
+          </RoundedBox>
+        ))
       ) : map.board.theme === "snow" || map.board.theme === "dirt" ? (
-        <>
-          {[-width * 0.38, -width * 0.2, width * 0.2, width * 0.38].map((x, index) => (
-            <group key={index} position={[x, 0, backZ + 1.2 + (index % 2 === 0 ? 0.4 : 0)]}>
-              <mesh position={[0, 1.3, 0]} castShadow receiveShadow>
-                <cylinderGeometry args={[0.16, 0.22, 2.5, 8]} />
-                <meshStandardMaterial color={map.board.theme === "snow" ? "#74583e" : "#5a3f2a"} roughness={1} />
-              </mesh>
-              <mesh position={[0, 2.7, 0]} castShadow receiveShadow>
-                <sphereGeometry args={[1.1, 12, 12]} />
-                <meshStandardMaterial color={map.board.theme === "snow" ? "#6d8d67" : "#4e6b3f"} roughness={0.96} />
-              </mesh>
-            </group>
-          ))}
-        </>
+        [-width * 0.38, -width * 0.2, width * 0.2, width * 0.38].map((x, index) => (
+          <group key={index} position={[x, 0, backZ + 1.2 + (index % 2 === 0 ? 0.4 : 0)]}>
+            <mesh position={[0, 1.3, 0]} castShadow receiveShadow>
+              <cylinderGeometry args={[0.16, 0.22, 2.5, 8]} />
+              <meshStandardMaterial color={map.board.theme === "snow" ? "#74583e" : "#5a3f2a"} roughness={1} />
+            </mesh>
+            <mesh position={[0, 2.7, 0]} castShadow receiveShadow>
+              <sphereGeometry args={[1.1, 12, 12]} />
+              <meshStandardMaterial color={map.board.theme === "snow" ? "#6d8d67" : "#4e6b3f"} roughness={0.96} />
+            </mesh>
+          </group>
+        ))
       ) : (
         <>
           <RoundedBox args={[2.5, 5.7, 1.9]} radius={0.12} smoothness={3} position={[-width * 0.34, 2.35, backZ + 1.2]} castShadow receiveShadow>
@@ -1006,12 +937,7 @@ function TerrainMesh({
   sceneKit: Encounter3DMap["sceneKit"]
   textures: SceneTextureSet | null
 }) {
-  const color =
-    item.kind === "water"
-      ? item.color || "#2a6f97"
-      : item.kind === "pit"
-        ? item.color || "#2d1e1e"
-        : item.color || "#7a746b"
+  const color = item.kind === "water" ? item.color || "#2a6f97" : item.kind === "pit" ? item.color || "#2d1e1e" : item.color || "#7a746b"
   const outline = shiftColor(color, -0.18)
   const surfaceTexture = getSurfaceTexture(textures, theme)
   const stoneTexture = textures?.stone
@@ -1357,7 +1283,7 @@ function TerrainMesh({
         {[0, 1, 2, 3].map((step) => (
           <RoundedBox
             key={step}
-            args={[item.width, Math.max(item.height / 4, 0.1), stepDepth + 0.04,]}
+            args={[item.width, Math.max(item.height / 4, 0.1), stepDepth + 0.04]}
             radius={0.04}
             smoothness={3}
             position={[0, (step + 0.5) * (item.height / 4), -item.depth / 2 + stepDepth * (step + 0.5)]}
@@ -1527,7 +1453,7 @@ function PropMesh({
           ].map(([x, y, z, size], index) => (
             <mesh key={index} position={[x * item.scale, y * item.scale, z * item.scale]} castShadow>
               <sphereGeometry args={[size * item.scale, 12, 12]} />
-            <meshStandardMaterial color="#e8f0e1" roughness={0.98} map={textures?.dirt} />
+              <meshStandardMaterial color="#e8f0e1" roughness={0.98} map={textures?.dirt} />
             </mesh>
           ))}
           <mesh position={[0.08 * item.scale, 0.5 * item.scale, 0]} rotation={[0.15, 0.1, -0.1]} castShadow>
@@ -1892,7 +1818,6 @@ function PropMesh({
           </mesh>
         </group>
       )
-    case "crate":
     default:
       return (
         <group position={position} rotation={[0, item.rotation, 0]}>
@@ -2013,13 +1938,7 @@ function TokenMini({ token, onSelect }: { token: MapMiniToken; onSelect?: (token
   )
 }
 
-function SafeDisplayBase({
-  map,
-  palette,
-}: {
-  map: Encounter3DMap
-  palette: ReturnType<typeof getThemePalette>
-}) {
+function SafeDisplayBase({ map, palette }: { map: Encounter3DMap; palette: ReturnType<typeof getThemePalette> }) {
   const width = map.board.width * map.board.cellSize
   const depth = map.board.depth * map.board.cellSize
 
@@ -2038,14 +1957,7 @@ function SafeDisplayBase({
 }
 
 function SafeTerrainMesh({ item }: { item: Encounter3DMap["terrain"][number] }) {
-  const color =
-    item.kind === "water"
-      ? "#5b8db8"
-      : item.kind === "pit"
-        ? "#3b2d2a"
-        : item.kind === "wall"
-          ? "#b9b1a7"
-          : "#cfc7bc"
+  const color = item.kind === "water" ? "#5b8db8" : item.kind === "pit" ? "#3b2d2a" : item.kind === "wall" ? "#b9b1a7" : "#cfc7bc"
 
   return (
     <mesh position={[item.x, item.y + item.height / 2, item.z]} rotation={[0, item.rotation, 0]}>
@@ -2203,7 +2115,9 @@ export default function MiniaturesMap({
   useEffect(() => {
     return () => {
       if (!textures) return
-      Object.values(textures).forEach((texture) => texture.dispose())
+      Object.values(textures).forEach((texture) => {
+        texture.dispose()
+      })
     }
   }, [textures])
 
@@ -2221,7 +2135,7 @@ export default function MiniaturesMap({
       setRenderEvents((current) => [...current.slice(-4), nextMessage])
       const payload = details ? JSON.stringify(details, null, 2) : ""
       if (details) {
-          console.error(`[MiniaturesMap:${mapDebugId}] ${message}\n${payload}`)
+        console.error(`[MiniaturesMap:${mapDebugId}] ${message}\n${payload}`)
       } else {
         console.error(`[MiniaturesMap:${mapDebugId}] ${message}`)
       }
@@ -2277,7 +2191,18 @@ export default function MiniaturesMap({
     return () => {
       console.info(`[MiniaturesMap:${mapDebugId}] unmount`)
     }
-  }, [displayMap.props.length, displayMap.summary, displayMap.terrain.length, displayMap.tokenSlots.npc.length, displayMap.tokenSlots.party.length, displayMap.zones.length, mapDebugId, renderMode, title, tokens.length])
+  }, [
+    displayMap.props.length,
+    displayMap.summary,
+    displayMap.terrain.length,
+    displayMap.tokenSlots.npc.length,
+    displayMap.tokenSlots.party.length,
+    displayMap.zones.length,
+    mapDebugId,
+    renderMode,
+    title,
+    tokens.length,
+  ])
 
   return (
     <div className={cn("overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-2xl", className)}>
@@ -2287,7 +2212,9 @@ export default function MiniaturesMap({
           <div className="font-display text-lg text-amber-200">{title || displayMap.summary || "Encounter Map"}</div>
         </div>
         <div className="text-right text-xs text-white/60">
-          <div>{displayMap.board.width}x{displayMap.board.depth} board</div>
+          <div>
+            {displayMap.board.width}x{displayMap.board.depth} board
+          </div>
           <div>{tokens.length} minis</div>
         </div>
       </div>
@@ -2384,23 +2311,19 @@ export default function MiniaturesMap({
                 )
               )}
 
-              {(usesCityGateAssetSet ? [] : displayMap.props).map((prop) => (
-                usesPremiumGeometry ? <PropMesh key={prop.id} item={prop} theme={displayMap.board.theme} sceneKit={displayMap.sceneKit} textures={textures} /> : <SafePropMesh key={prop.id} item={prop} />
-              ))}
+              {(usesCityGateAssetSet ? [] : displayMap.props).map((prop) =>
+                usesPremiumGeometry ? (
+                  <PropMesh key={prop.id} item={prop} theme={displayMap.board.theme} sceneKit={displayMap.sceneKit} textures={textures} />
+                ) : (
+                  <SafePropMesh key={prop.id} item={prop} />
+                )
+              )}
 
-              {tokens.map((token) => (
+              {tokens.map((token) =>
                 usesPremiumTokens ? <TokenMini key={token.id} token={token} onSelect={setSelectedToken} /> : <SafeTokenMini key={token.id} token={token} onSelect={setSelectedToken} />
-              ))}
+              )}
 
-              <OrbitControls
-                enablePan
-                enableZoom
-                maxDistance={38}
-                minDistance={12}
-                minPolarAngle={0.44}
-                maxPolarAngle={1.2}
-                target={orbitTarget}
-              />
+              <OrbitControls enablePan enableZoom maxDistance={38} minDistance={12} minPolarAngle={0.44} maxPolarAngle={1.2} target={orbitTarget} />
             </Canvas>
           ) : (
             <div className="flex h-full items-center justify-center text-xs font-mono uppercase tracking-[0.25em] text-white/45">Preparing renderer...</div>
@@ -2450,11 +2373,14 @@ export default function MiniaturesMap({
             <div className="mt-5">
               <div className="text-xs font-mono uppercase tracking-[0.25em] text-primary-200/60">Prompt History</div>
               <div className="mt-2 max-h-32 space-y-2 overflow-y-auto pr-1 text-xs text-white/65">
-                {displayMap.promptHistory.slice().reverse().map((prompt, index) => (
-                  <div key={`${index}-${prompt.slice(0, 12)}`} className="rounded-xl border border-white/10 bg-black/20 px-3 py-2">
-                    {prompt}
-                  </div>
-                ))}
+                {displayMap.promptHistory
+                  .slice()
+                  .reverse()
+                  .map((prompt, index) => (
+                    <div key={`${index}-${prompt.slice(0, 12)}`} className="rounded-xl border border-white/10 bg-black/20 px-3 py-2">
+                      {prompt}
+                    </div>
+                  ))}
               </div>
             </div>
           )}
@@ -2464,15 +2390,7 @@ export default function MiniaturesMap({
   )
 }
 
-export function buildRuntimeMapTokens({
-  map,
-  characters,
-  partySlotOrder,
-}: {
-  map: Encounter3DMap
-  characters: TurnCharacter[]
-  partySlotOrder: string[]
-}) {
+export function buildRuntimeMapTokens({ map, characters, partySlotOrder }: { map: Encounter3DMap; characters: TurnCharacter[]; partySlotOrder: string[] }) {
   const currentActorId =
     characters
       .slice()

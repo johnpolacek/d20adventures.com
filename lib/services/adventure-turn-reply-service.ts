@@ -5,8 +5,8 @@ import { readJsonFromS3 } from "@/lib/s3-utils"
 import { getRollModifier } from "@/lib/services/roll-modifier-service"
 import { getRollRequirementForAction } from "@/lib/services/roll-requirement-service"
 import type { RollRequirement } from "@/lib/validations/roll-requirement-schema"
-import type { Character } from "@/types/character"
 import type { AdventurePlan } from "@/types/adventure-plan"
+import type { Character } from "@/types/character"
 
 export async function buildTurnReplyRollRequirement(args: {
   turn: {

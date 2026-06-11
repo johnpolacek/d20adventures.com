@@ -1,10 +1,10 @@
 "use client"
 
-import { TokenProvider } from "@/lib/context/TokenContext"
 import { ClerkProvider } from "@clerk/nextjs"
 import { dark } from "@clerk/themes"
 import { ConvexProvider, ConvexReactClient } from "convex/react"
 import type { PropsWithChildren } from "react"
+import { TokenProvider } from "@/lib/context/TokenContext"
 
 const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!)
 

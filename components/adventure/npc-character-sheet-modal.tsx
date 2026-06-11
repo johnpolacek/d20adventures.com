@@ -1,9 +1,9 @@
 "use client"
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import Image from "@/components/ui/native-image"
 import { getImageUrl } from "@/lib/utils"
 import type { TurnCharacter } from "@/types/adventure"
-import Image from "@/components/ui/native-image"
 
 interface NPCCharacterSheetModalProps {
   character: TurnCharacter | null

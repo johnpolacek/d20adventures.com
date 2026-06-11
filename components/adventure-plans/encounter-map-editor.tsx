@@ -3,6 +3,10 @@
 // Deprecated: 3D encounter map authoring is disabled in product flow.
 // Keep this implementation dormant for possible revival.
 
+import { Loader2, Plus } from "lucide-react"
+import dynamic from "next/dynamic"
+import * as React from "react"
+import { toast } from "sonner"
 import { generateEncounterMapAction, generateEncounterMapPromptAction } from "@/app/_actions/generate-encounter-map"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -11,10 +15,7 @@ import { buildPreviewNpcMapTokens } from "@/lib/map-preview-tokens"
 import { createDefaultEncounterMap, enhanceEncounterMap, formatEncounterSceneKit, inferEncounterSceneKit, listEncounterOptions, resolveEncounterMapSceneKit } from "@/lib/map-utils"
 import type { AdventureEncounter, AdventureSection, Encounter3DMap } from "@/types/adventure-plan"
 import type { Character } from "@/types/character"
-import dynamic from "next/dynamic"
-import * as React from "react"
-import { Loader2, Plus } from "lucide-react"
-import { toast } from "sonner"
+
 const MiniaturesMap = dynamic(() => import("@/components/adventure/miniatures-map"), {
   ssr: false,
   loading: () => <div className="flex h-[420px] items-center justify-center rounded-2xl border border-white/10 bg-black/20 text-sm text-white/60">Loading map preview...</div>,
@@ -41,29 +42,16 @@ function buildSuggestedPrompt(encounter: AdventureEncounter) {
 function getLastSavedPrompt(map: Encounter3DMap | undefined) {
   if (!map) return ""
 
-  return (
-    [...map.promptHistory]
-      .reverse()
-      .find((entry) => entry.trim().length > 0 && !entry.startsWith("Copied from ")) || ""
-  )
+  return [...map.promptHistory].reverse().find((entry) => entry.trim().length > 0 && !entry.startsWith("Copied from ")) || ""
 }
 
-export function EncounterMapEditor({
-  encounter,
-  allSections,
-  availableNpcs,
-  maxPartySize,
-  isSaving,
-  onMapChange,
-  onMapPersistRequest,
-}: EncounterMapEditorProps) {
-  const sectionTitle = React.useMemo(() => allSections.find((section) => section.scenes.some((scene) => scene.encounters.some((entry) => entry.id === encounter.id)))?.title, [allSections, encounter.id])
+export function EncounterMapEditor({ encounter, allSections, availableNpcs, maxPartySize, isSaving, onMapChange, onMapPersistRequest }: EncounterMapEditorProps) {
+  const sectionTitle = React.useMemo(
+    () => allSections.find((section) => section.scenes.some((scene) => scene.encounters.some((entry) => entry.id === encounter.id)))?.title,
+    [allSections, encounter.id]
+  )
   const sceneTitle = React.useMemo(
-    () =>
-      allSections
-        .flatMap((section) => section.scenes)
-        .find((scene) => scene.encounters.some((entry) => entry.id === encounter.id))
-        ?.title || "",
+    () => allSections.flatMap((section) => section.scenes).find((scene) => scene.encounters.some((entry) => entry.id === encounter.id))?.title || "",
     [allSections, encounter.id]
   )
   const inferredSceneKit = React.useMemo(
@@ -97,10 +85,13 @@ export function EncounterMapEditor({
   const displayMap = React.useMemo(
     () =>
       map
-        ? enhanceEncounterMap({ ...map, sceneKit: effectiveSceneKit }, {
-            maxPartySize,
-            npcIds: (encounter.npc || []).map((entry) => entry.id),
-          })
+        ? enhanceEncounterMap(
+            { ...map, sceneKit: effectiveSceneKit },
+            {
+              maxPartySize,
+              npcIds: (encounter.npc || []).map((entry) => entry.id),
+            }
+          )
         : null,
     [effectiveSceneKit, encounter.npc, map, maxPartySize]
   )
@@ -291,8 +282,7 @@ export function EncounterMapEditor({
                         return
                       }
 
-                      const copiedSceneKit =
-                        sourceEncounter.map3d.sceneKit === "checkpoint" && inferredSceneKit === "city_gate" ? "city_gate" : sourceEncounter.map3d.sceneKit
+                      const copiedSceneKit = sourceEncounter.map3d.sceneKit === "checkpoint" && inferredSceneKit === "city_gate" ? "city_gate" : sourceEncounter.map3d.sceneKit
 
                       onMapChange({
                         ...sourceEncounter.map3d,
@@ -330,14 +320,7 @@ export function EncounterMapEditor({
 
           <div className="space-y-4">
             <div className="relative">
-              <MiniaturesMap
-                map={displayMap || map}
-                tokens={previewTokens}
-                title={encounter.title}
-                className="w-full"
-                renderMode="full"
-                tokenRenderMode="premium"
-              />
+              <MiniaturesMap map={displayMap || map} tokens={previewTokens} title={encounter.title} className="w-full" renderMode="full" tokenRenderMode="premium" />
               {isGenerating && (
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-2xl bg-black/35 backdrop-blur-[2px]">
                   <div className="flex h-16 w-16 items-center justify-center rounded-full border border-white/15 bg-black/70 shadow-2xl">
@@ -391,11 +374,14 @@ export function EncounterMapEditor({
                 <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                   <div className="mb-2 text-xs font-mono uppercase tracking-[0.25em] text-primary-200/70">Recent Prompts</div>
                   <div className="space-y-2 text-sm text-white/75">
-                    {(displayMap?.promptHistory || map.promptHistory).slice(-3).reverse().map((entry, index) => (
-                      <div key={`${index}-${entry.slice(0, 16)}`} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-                        {entry}
-                      </div>
-                    ))}
+                    {(displayMap?.promptHistory || map.promptHistory)
+                      .slice(-3)
+                      .reverse()
+                      .map((entry, index) => (
+                        <div key={`${index}-${entry.slice(0, 16)}`} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+                          {entry}
+                        </div>
+                      ))}
                   </div>
                 </div>
               )}

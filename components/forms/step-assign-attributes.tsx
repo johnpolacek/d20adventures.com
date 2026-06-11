@@ -1,8 +1,8 @@
+import type React from "react"
+import { useState } from "react"
 import { generateAttributesAction } from "@/app/_actions/generate-attributes-action"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import type React from "react"
-import { useState } from "react"
 import { textShadow } from "../typography/styles"
 import StepperButtons from "./stepper-buttons"
 

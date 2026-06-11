@@ -31,13 +31,7 @@
       "description": "Contains various small charms, dried herbs, and lucky coins."
     }
   ],
-  "skills": [
-    "Arcana",
-    "Insight",
-    "Perception",
-    "History",
-    "Investigation"
-  ],
+  "skills": ["Arcana", "Insight", "Perception", "History", "Investigation"],
   "spells": [
     {
       "name": "Detect Magic",

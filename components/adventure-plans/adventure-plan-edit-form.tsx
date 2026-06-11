@@ -1,10 +1,13 @@
 "use client"
 
+import * as React from "react"
+import slugify from "slugify"
+import { toast } from "sonner"
 import { getOtherAdventurePlans } from "@/app/_actions/adventure-plan-actions"
 import { AdventurePlanAdminChat, type ChatTarget } from "@/components/adventure-plans/adventure-plan-admin-chat"
 import { AdventurePlanBasicInfo } from "@/components/adventure-plans/adventure-plan-basic-info"
 import { AdventurePlanCharactersEdit } from "@/components/adventure-plans/adventure-plan-characters-edit"
-import { AdventurePlanEditSidebar, type AdventurePlanEditorView } from "@/components/adventure-plans/adventure-plan-edit-sidebar"
+import { type AdventurePlanEditorView, AdventurePlanEditSidebar } from "@/components/adventure-plans/adventure-plan-edit-sidebar"
 import { AdventurePlanFormHeader } from "@/components/adventure-plans/adventure-plan-form-header"
 import { AdventurePlanSections } from "@/components/adventure-plans/adventure-plan-sections"
 import { useAdventurePlanForm } from "@/components/adventure-plans/hooks/use-adventure-plan-form"
@@ -14,9 +17,6 @@ import { Button } from "@/components/ui/button"
 import { applyStructureProposal, type StructureProposal } from "@/lib/adventure-plan-structure"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { Character, PCTemplate } from "@/types/character"
-import * as React from "react"
-import slugify from "slugify"
-import { toast } from "sonner"
 
 export function AdventurePlanEditForm({ adventurePlan }: { adventurePlan: AdventurePlan }) {
   // Use custom hooks for form state management

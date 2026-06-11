@@ -1,6 +1,5 @@
-import { generateObject } from "@/lib/ai"
-
 import { z } from "zod"
+import { generateObject } from "@/lib/ai"
 
 // External utils
 import { calculateAttributeModifier } from "@/lib/utils/modifier-utils"

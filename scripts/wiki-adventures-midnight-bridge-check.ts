@@ -31,14 +31,17 @@ function main() {
   assert.equal(Object.keys(artifacts.characterSheets.premadeCharacters).includes("thalbern"), true)
   assert.equal(Object.keys(artifacts.characterSheets.npcs).includes("wollandora"), true)
   assert.equal(Object.keys(artifacts.characterSheets.npcs).includes("owlbear"), true)
-  assert.equal(artifacts.graph.encounterTransitions.some((transition) => transition.toEncounterId === "wollandora-intervention"), false)
-  assert.equal(artifacts.graph.encounterTransitions.some((transition) => transition.fromEncounterId === "broken-silence" && transition.toEncounterId === "timely-rescue"), true)
+  assert.equal(
+    artifacts.graph.encounterTransitions.some((transition) => transition.toEncounterId === "wollandora-intervention"),
+    false
+  )
+  assert.equal(
+    artifacts.graph.encounterTransitions.some((transition) => transition.fromEncounterId === "broken-silence" && transition.toEncounterId === "timely-rescue"),
+    true
+  )
   assert.equal(
     artifacts.graph.encounterTransitions.some(
-      (transition) =>
-        transition.fromEncounterId === "broken-silence" &&
-        transition.toEncounterId === "owlbear-confrontation" &&
-        transition.condition.includes("detects the approaching creature")
+      (transition) => transition.fromEncounterId === "broken-silence" && transition.toEncounterId === "owlbear-confrontation" && transition.condition.includes("detects the approaching creature")
     ),
     true
   )
@@ -62,7 +65,10 @@ function main() {
     encounter: artifacts.encounters["owlbear-confrontation"],
     players: [{ userId: "user_test", characterId: "thalbern" }],
   })
-  assert.equal(owlbearCharacters.some((character) => character.id === "owlbear" && character.type === "npc"), true)
+  assert.equal(
+    owlbearCharacters.some((character) => character.id === "owlbear" && character.type === "npc"),
+    true
+  )
 
   console.log("The Midnight Summons playthrough bridge checks passed")
 }

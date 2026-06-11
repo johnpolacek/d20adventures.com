@@ -1,9 +1,9 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
 import { Check, Copy, Share2 } from "lucide-react"
-import React, { useState } from "react"
+import { useState } from "react"
 import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
 
 interface InviteLinkProps {
   inviteLink: string

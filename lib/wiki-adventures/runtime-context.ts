@@ -75,11 +75,7 @@ export type LlmGameplayContextPacket = {
   }
 }
 
-export function assembleGameplayContextPacket(args: {
-  artifacts: RuntimeArtifacts
-  contentRef: Exclude<ContentRef, { source: "latest" }>
-  session: RuntimeSessionSnapshot
-}): LlmGameplayContextPacket {
+export function assembleGameplayContextPacket(args: { artifacts: RuntimeArtifacts; contentRef: Exclude<ContentRef, { source: "latest" }>; session: RuntimeSessionSnapshot }): LlmGameplayContextPacket {
   const currentEncounter = args.artifacts.encounters[args.session.currentTurn.encounterId]
   if (!currentEncounter) throw new Error(`Current encounter ${args.session.currentTurn.encounterId} missing from runtime artifacts`)
 
@@ -168,7 +164,9 @@ function linkedRecords(records: Record<string, RuntimeEntityRecord>, encounter: 
 
 export function buildWikiEncounterProgressionPrompt(packet: LlmGameplayContextPacket): string {
   const transitionText = packet.graph.legalTransitions.length
-    ? packet.graph.legalTransitions.map((transition, index) => `Transition Option ${index + 1} (leads to encounter ID: '${transition.toEncounterId}'):\n  Condition to check: ${transition.condition}`).join("\n")
+    ? packet.graph.legalTransitions
+        .map((transition, index) => `Transition Option ${index + 1} (leads to encounter ID: '${transition.toEncounterId}'):\n  Condition to check: ${transition.condition}`)
+        .join("\n")
     : "No explicit transitions defined for this encounter."
 
   return `Adventure: ${packet.adventure.title}

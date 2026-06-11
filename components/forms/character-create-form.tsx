@@ -1,14 +1,14 @@
 "use client"
 
+import { useParams, useSearchParams } from "next/navigation"
+import { useState } from "react"
+import slugify from "slugify"
+import { toast } from "sonner"
 import { joinAdventure } from "@/app/_actions/join-adventure"
 import { saveCharacterTemplateAction } from "@/app/_actions/save-character-template"
 import { CharacterCard } from "@/components/adventure-plans/character-card"
 import { cn } from "@/lib/utils"
 import type { Character, PCTemplate } from "@/types/character"
-import { useParams, useSearchParams } from "next/navigation"
-import React, { useState } from "react"
-import slugify from "slugify"
-import { toast } from "sonner"
 import { textShadow } from "../typography/styles"
 import { Button } from "../ui/button"
 import StepAppearanceBackground from "./step-appearance-background"
@@ -109,6 +109,7 @@ export default function CharacterCreateForm({ availableRaces, availableArchetype
           const urlParts = redirectTo.split("/")
           console.log("[CharacterCreateForm] URL parts:", JSON.stringify(urlParts, null, 2))
 
+          // biome-ignore lint/complexity/useIndexOf: params.adventureId is ParamValue (string | string[] | undefined); indexOf requires a string argument
           const adventureIdIndex = urlParts.findIndex((part) => part === params.adventureId)
           console.log("[CharacterCreateForm] Adventure ID from params:", params.adventureId)
           console.log("[CharacterCreateForm] Adventure ID index in URL:", adventureIdIndex)

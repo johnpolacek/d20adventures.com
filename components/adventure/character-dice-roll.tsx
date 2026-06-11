@@ -1,9 +1,8 @@
 import DiceRoll from "@/components/ui/dice-roll"
-import { cn } from "@/lib/utils"
-import { getImageUrl } from "@/lib/utils"
+import Image from "@/components/ui/native-image"
+import { cn, getImageUrl } from "@/lib/utils"
 import type { RollRequirement } from "@/lib/validations/roll-requirement-schema"
 import type { TurnCharacter } from "@/types/adventure"
-import Image from "@/components/ui/native-image"
 
 export default function CharacterDiceRoll({
   rollRequired,

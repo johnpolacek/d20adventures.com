@@ -27,8 +27,14 @@ async function main() {
   assert.ok(adventureManifest.includes('  - "1749159962941"'), "Lyra premade ID is not quoted as a string")
   assert.ok(adventureManifest.includes('  - "1749307435667"'), "Poppen premade ID is not quoted as a string")
   assert.equal(shipmentEncounter.includes("[[encounter:]]"), false, "Blank transition target was migrated into the-shipment")
-  assert.equal(migrationReport.warnings.some((warning) => warning.code === "legacy-start-repaired"), true)
-  assert.equal(migrationReport.warnings.some((warning) => warning.code === "legacy-transition-dropped"), true)
+  assert.equal(
+    migrationReport.warnings.some((warning) => warning.code === "legacy-start-repaired"),
+    true
+  )
+  assert.equal(
+    migrationReport.warnings.some((warning) => warning.code === "legacy-transition-dropped"),
+    true
+  )
 
   const { artifacts, contentRef } = await loadWikiAdventureRuntime(SETTING_ID, PLAN_ID)
   assert.equal(contentRef.settingId, SETTING_ID)
@@ -39,7 +45,10 @@ async function main() {
   assert.equal(Object.keys(artifacts.encounters).length, 9)
   assert.equal(Object.keys(artifacts.characterSheets.npcs).length, 5)
   assert.equal(Object.keys(artifacts.characterSheets.premadeCharacters).length, 2)
-  assert.equal(artifacts.graph.encounterTransitions.some((transition) => transition.toEncounterId === ""), false)
+  assert.equal(
+    artifacts.graph.encounterTransitions.some((transition) => transition.toEncounterId === ""),
+    false
+  )
   assert.equal(isLocalWikiFinalEncounter(artifacts, "return-to-the-city"), true)
   assert.equal(isLocalWikiFinalEncounter(artifacts, "the-end"), true)
   assert.equal(isLocalWikiFinalEncounter(artifacts, "the-shipment"), false)
@@ -54,8 +63,14 @@ async function main() {
     ],
   })
 
-  assert.equal(characters.some((character) => character.id === "1749159962941" && character.name === "Lyra Silvanus" && character.type === "pc"), true)
-  assert.equal(characters.some((character) => character.id === "1749307435667" && character.name === "Poppen Quickfoot" && character.type === "pc"), true)
+  assert.equal(
+    characters.some((character) => character.id === "1749159962941" && character.name === "Lyra Silvanus" && character.type === "pc"),
+    true
+  )
+  assert.equal(
+    characters.some((character) => character.id === "1749307435667" && character.name === "Poppen Quickfoot" && character.type === "pc"),
+    true
+  )
 
   console.log("Covert Cargo playthrough bridge checks passed")
 }

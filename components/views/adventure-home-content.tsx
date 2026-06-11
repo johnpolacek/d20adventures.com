@@ -1,21 +1,20 @@
 "use client"
 
+import { useUser } from "@clerk/nextjs"
+import { useParams, usePathname } from "next/navigation"
+import React, { useEffect, useState } from "react"
+import wait from "waait"
 import { ensureNpcProcessed } from "@/app/_actions/ensure-npc-processed"
 import AdventureLobby from "@/components/adventure/adventure-lobby"
 import Turn from "@/components/adventure/turn"
 import AccountRequired from "@/components/nav/account-required"
-import { findEncounterById } from "@/lib/map-utils"
 import ImageHeader from "@/components/ui/image-header"
 import type { Id } from "@/convex/_generated/dataModel"
 import { useTurn } from "@/lib/context/TurnContext"
+import { findEncounterById } from "@/lib/map-utils"
 import { cn, getImageUrl } from "@/lib/utils"
 import type { Adventure } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
-import { useUser } from "@clerk/nextjs"
-import { useParams } from "next/navigation"
-import { usePathname } from "next/navigation"
-import React, { useEffect, useState } from "react"
-import wait from "waait"
 import { scrollToTop } from "../ui/utils"
 
 export const dynamic = "force-dynamic"
@@ -34,7 +33,7 @@ function AdventureHomeContent({ initialImage, adventure, adventurePlan }: { init
     // Only update image if the encounter actually changed
     if (turn?.encounterId && turn.encounterId !== lastEncounterId) {
       // Try to get the image from the adventurePlan object
-      let encounterImage: string | undefined = undefined
+      let encounterImage: string | undefined
       if (adventurePlan) {
         for (const section of adventurePlan.sections) {
           for (const scene of section.scenes) {
@@ -92,23 +91,21 @@ function AdventureHomeContent({ initialImage, adventure, adventurePlan }: { init
   const currentEncounter = React.useMemo(() => findEncounterById(adventurePlan?.sections || [], turn?.encounterId), [adventurePlan?.sections, turn?.encounterId])
 
   return (
-    <>
-      <div className={cn("flex flex-col items-center relative", isSignedIn && "min-h-screen")}>
-        <ImageHeader variant={turn ? "default" : "compact"} imageUrl={imageUrl} title={adventure.title} subtitle={turn?.title} imageAlt={turn?.title || adventure.title} />
-        {turn ? (
-          <Turn nextAdventure={adventurePlan?.nextAdventure} encounter={currentEncounter} />
-        ) : (
-          <>
-            <AdventureLobby adventure={adventure} adventurePlan={adventurePlan} />
-            {!isSignedIn && isLoaded && (
-              <div className="-mt-12 pb-24">
-                <AccountRequired redirectUrl={pathname} />
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </>
+    <div className={cn("flex flex-col items-center relative", isSignedIn && "min-h-screen")}>
+      <ImageHeader variant={turn ? "default" : "compact"} imageUrl={imageUrl} title={adventure.title} subtitle={turn?.title} imageAlt={turn?.title || adventure.title} />
+      {turn ? (
+        <Turn nextAdventure={adventurePlan?.nextAdventure} encounter={currentEncounter} />
+      ) : (
+        <>
+          <AdventureLobby adventure={adventure} adventurePlan={adventurePlan} />
+          {!isSignedIn && isLoaded && (
+            <div className="-mt-12 pb-24">
+              <AccountRequired redirectUrl={pathname} />
+            </div>
+          )}
+        </>
+      )}
+    </div>
   )
 }
 

@@ -1,15 +1,15 @@
 "use server"
 
+import { auth, clerkClient } from "@clerk/nextjs/server"
+import type { Id } from "@/convex/_generated/dataModel"
+import { parseStructureProposal } from "@/lib/adventure-plan-structure"
 import { generateText } from "@/lib/ai"
 import { currentModel } from "@/lib/ai/llm"
-import { api, convex } from "@/lib/convex/server"
 import { canManageResource } from "@/lib/content-permissions"
-import { parseStructureProposal } from "@/lib/adventure-plan-structure"
+import { api, convex } from "@/lib/convex/server"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { Setting } from "@/types/setting"
-import { auth, clerkClient } from "@clerk/nextjs/server"
-import type { Id } from "@/convex/_generated/dataModel"
 
 export type AdventurePlanChatScope = {
   label: string
@@ -124,7 +124,10 @@ function wantsReplacement(content: string) {
 }
 
 function wantsStructureChange(content: string) {
-  return /\b(add|append|create|insert|new|draft)\b[\s\S]{0,80}\b(section|scene|encounter|aftermath)\b/i.test(content) || /\b(section|scene|encounter|aftermath)\b[\s\S]{0,80}\b(add|append|create|insert|new|draft)\b/i.test(content)
+  return (
+    /\b(add|append|create|insert|new|draft)\b[\s\S]{0,80}\b(section|scene|encounter|aftermath)\b/i.test(content) ||
+    /\b(section|scene|encounter|aftermath)\b[\s\S]{0,80}\b(add|append|create|insert|new|draft)\b/i.test(content)
+  )
 }
 
 function formatChatMessageForPrompt(message: AdventurePlanChatMessage) {
@@ -148,13 +151,7 @@ function getContextStatus(percentUsed: number, omittedMessages: number): Adventu
   return "ok"
 }
 
-function buildAssistantPrompt(
-  input: SendMessageInput,
-  adventurePlan: AdventurePlan,
-  mode: "review" | "rewrite" | "structure" | "general",
-  threadContext: string,
-  omittedMessages: number
-) {
+function buildAssistantPrompt(input: SendMessageInput, adventurePlan: AdventurePlan, mode: "review" | "rewrite" | "structure" | "general", threadContext: string, omittedMessages: number) {
   return `You are an admin authoring assistant for D20 Adventures.
 
 Help an adventure designer revise a JSON-backed Adventure Plan. Be concise and practical.

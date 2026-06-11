@@ -9,12 +9,7 @@ export type NpcTurnEffect = {
   equipmentToAdd?: Array<{ name: string; description?: string }>
 }
 
-export function applyNpcEffectsToCharacters(args: {
-  characters: TurnCharacter[]
-  npcId: string
-  effects?: NpcTurnEffect[]
-  applyHealthAndStatus: boolean
-}): TurnCharacter[] {
+export function applyNpcEffectsToCharacters(args: { characters: TurnCharacter[]; npcId: string; effects?: NpcTurnEffect[]; applyHealthAndStatus: boolean }): TurnCharacter[] {
   return args.characters.map((character) => {
     const effect = args.effects?.find((entry) => entry.targetId === character.id)
     const updated = { ...character }
@@ -106,4 +101,3 @@ export async function reconcileNpcRollWithAi(args: {
     return aiCharacter ? { ...originalCharacter, ...aiCharacter } : originalCharacter
   })
 }
-

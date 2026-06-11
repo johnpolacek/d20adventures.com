@@ -35,12 +35,7 @@
       "description": "Includes rations, a waterskin, bedroll, and other essentials for a long journey."
     }
   ],
-  "skills": [
-    "Medicine",
-    "Religion",
-    "Persuasion",
-    "Survival"
-  ],
+  "skills": ["Medicine", "Religion", "Persuasion", "Survival"],
   "spells": [
     {
       "name": "Cure Wounds",

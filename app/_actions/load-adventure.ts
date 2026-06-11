@@ -1,9 +1,9 @@
 "use server"
+import { auth } from "@clerk/nextjs/server"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { AdventureAccessError, assertAdventureAccess } from "@/lib/adventure-access"
 import { convex } from "@/lib/convex/server"
-import { auth } from "@clerk/nextjs/server"
 
 export async function loadAdventureWithNpc(adventureId: Id<"adventures">) {
   const { userId } = await auth()

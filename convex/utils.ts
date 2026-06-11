@@ -1,6 +1,5 @@
-import { v } from "convex/values"
-import { Doc, type Id } from "./_generated/dataModel"
-import { MutationCtx, type QueryCtx } from "./_generated/server"
+import type { Id } from "./_generated/dataModel"
+import type { QueryCtx } from "./_generated/server"
 
 // Type for successful responses
 type SuccessResponse<T> = {
@@ -58,7 +57,7 @@ export type PaginationOptions = {
 }
 
 // Helper for handling pagination in queries
-export const handlePagination = (ctx: QueryCtx, query: any, options?: PaginationOptions) => {
+export const handlePagination = (_ctx: QueryCtx, query: any, options?: PaginationOptions) => {
   if (options?.limit) {
     query = query.take(options.limit)
   }

@@ -1,10 +1,10 @@
+import type { Metadata } from "next"
+import Link from "next/link"
 import { AdminConfigMessage } from "@/components/admin/admin-config-message"
 import { Heading } from "@/components/typography/heading"
 import { Button } from "@/components/ui/button"
 import { requireAdmin } from "@/lib/auth-utils"
 import { listAdminWikiAdventures } from "@/lib/wiki-adventures/admin-authoring"
-import type { Metadata } from "next"
-import Link from "next/link"
 
 export const metadata: Metadata = {
   title: "Adventure Plans Workbench",
@@ -48,7 +48,9 @@ export default async function AdminAdventurePlansPage() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="text-xl font-semibold text-amber-300">{adventure.title}</h2>
-                <p className="mt-1 font-mono text-xs text-stone-500">{adventure.settingId}/{adventure.planId}</p>
+                <p className="mt-1 font-mono text-xs text-stone-500">
+                  {adventure.settingId}/{adventure.planId}
+                </p>
               </div>
               <span className="rounded border border-amber-700 bg-amber-950/60 px-2 py-1 font-mono text-[10px] uppercase text-amber-200">{adventure.status}</span>
             </div>

@@ -1,9 +1,9 @@
 "use client"
 
+import * as React from "react"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import type { AdventureSection } from "@/types/adventure-plan"
-import * as React from "react"
 
 interface AdventurePlanSectionsProps {
   sections: AdventureSection[]
@@ -75,7 +75,9 @@ export function AdventurePlanSections({
       }
     )
 
-    targets.forEach((target) => observer.observe(target.element))
+    targets.forEach((target) => {
+      observer.observe(target.element)
+    })
     return () => observer.disconnect()
   }, [scene, sectionIndex, sceneIndex, onActiveEncounterChange])
 

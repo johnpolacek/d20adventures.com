@@ -1,8 +1,8 @@
 "use server"
 
+import { auth } from "@clerk/nextjs/server"
 import { api } from "@/convex/_generated/api"
 import { convex } from "@/lib/convex/server" // Assuming you have a server client setup
-import { auth } from "@clerk/nextjs/server"
 
 type UsageTransactionType = "usage_generate_text" | "usage_generate_object" | "usage_image_upload" | "usage_join_adventure"
 

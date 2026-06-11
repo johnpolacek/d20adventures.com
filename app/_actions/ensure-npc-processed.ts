@@ -1,9 +1,9 @@
 "use server"
 
+import { auth } from "@clerk/nextjs/server"
 import type { Id } from "@/convex/_generated/dataModel"
 import { assertAdventureAccessByTurn } from "@/lib/adventure-access"
 import { processNpcTurnsAfterCurrent } from "@/lib/services/npc-turn-service"
-import { auth } from "@clerk/nextjs/server"
 
 export async function ensureNpcProcessed(turnId: Id<"turns">): Promise<{ status: string }> {
   const { userId } = await auth()
@@ -18,9 +18,7 @@ export async function ensureNpcProcessed(turnId: Id<"turns">): Promise<{ status:
   const characters = turn.characters || []
   // Sort by initiative (highest first) to find the current actor
   // Skip dead characters (healthPercent === 0 or status === "dead")
-  const sortedCharacters = [...characters]
-    .sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
-    .filter((c) => c.healthPercent !== 0 && c.status !== "dead")
+  const sortedCharacters = [...characters].sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0)).filter((c) => c.healthPercent !== 0 && c.status !== "dead")
   const currentActor = sortedCharacters.find((c) => !c.isComplete)
 
   console.log(`[ensureNpcProcessed] Turn analysis:`, {

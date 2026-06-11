@@ -1,7 +1,7 @@
-import { getUserCharacters } from "@/app/_actions/character"
-import { isUserAdmin } from "@/lib/auth-utils"
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
+import { getUserCharacters } from "@/app/_actions/character"
+import { isUserAdmin } from "@/lib/auth-utils"
 
 export async function GET(req: Request) {
   const { userId: authenticatedUserId } = await auth()

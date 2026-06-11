@@ -100,10 +100,16 @@ function addEncounter(ctx: MigrationContext, sectionTitle: string, sceneTitle: s
       })
     }
   }
-  if (encounter.resetHealth) ctx.report.warnings.push({ code: "runtime-flag-preserved-as-note", message: `Encounter "${encounter.id}" used resetHealth; migrated as a GM note.`, source: `${encounter.id}.resetHealth` })
+  if (encounter.resetHealth)
+    ctx.report.warnings.push({ code: "runtime-flag-preserved-as-note", message: `Encounter "${encounter.id}" used resetHealth; migrated as a GM note.`, source: `${encounter.id}.resetHealth` })
   if (encounter.skipInitialNpcTurns)
-    ctx.report.warnings.push({ code: "runtime-flag-preserved-as-note", message: `Encounter "${encounter.id}" used skipInitialNpcTurns; migrated as a GM note.`, source: `${encounter.id}.skipInitialNpcTurns` })
-  if (encounter.map3d || encounter.map3dKey) ctx.report.warnings.push({ code: "map3d-deferred", message: `Encounter "${encounter.id}" has 3D map data; map asset migration is deferred.`, source: `${encounter.id}.map3d` })
+    ctx.report.warnings.push({
+      code: "runtime-flag-preserved-as-note",
+      message: `Encounter "${encounter.id}" used skipInitialNpcTurns; migrated as a GM note.`,
+      source: `${encounter.id}.skipInitialNpcTurns`,
+    })
+  if (encounter.map3d || encounter.map3dKey)
+    ctx.report.warnings.push({ code: "map3d-deferred", message: `Encounter "${encounter.id}" has 3D map data; map asset migration is deferred.`, source: `${encounter.id}.map3d` })
 
   const notes = [
     encounter.instructions,
@@ -232,7 +238,7 @@ function markdownWithFrontmatter(frontmatter: Record<string, unknown>, sections:
 function yamlLines(key: string, value: unknown): string[] {
   if (Array.isArray(value)) {
     return [
-      key + ":",
+      `${key}:`,
       ...value.flatMap((entry) => {
         if (entry && typeof entry === "object") {
           const entries = Object.entries(entry).filter(([, entryValue]) => entryValue !== undefined && entryValue !== "")

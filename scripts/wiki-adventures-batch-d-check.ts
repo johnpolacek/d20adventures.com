@@ -1,5 +1,5 @@
 import assert from "node:assert/strict"
-import { createSourceFile, migrateAdventurePlanToWikiSource, proposeAiAuthoringChangeSet, type AiAuthoringToolInput } from "@/lib/wiki-adventures"
+import { type AiAuthoringToolInput, createSourceFile, migrateAdventurePlanToWikiSource, proposeAiAuthoringChangeSet } from "@/lib/wiki-adventures"
 import { representativeMyrAdventurePlan } from "@/lib/wiki-adventures/myr-fixture"
 
 const assetHost = "d20adventures-content.s3.us-east-1.amazonaws.com"
@@ -84,12 +84,18 @@ function main() {
     assert.ok(proposal.changeSet.changes.length > 0)
     assert.equal(proposal.diff.length, proposal.changeSet.changes.length)
     assert.ok(["passed", "passedWithWarnings"].includes(proposal.validationAfter.status))
-    assert.equal(proposal.changeSet.risks.every((risk) => risk.length > 0), true)
+    assert.equal(
+      proposal.changeSet.risks.every((risk) => risk.length > 0),
+      true
+    )
   }
 
   const characterPair = propose(cases.at(-1)!, base)
   assert.equal(characterPair.requiresMechanicalConfirmation, true)
-  assert.equal(characterPair.diff.some((diff) => diff.path.endsWith("road-warden.json")), true)
+  assert.equal(
+    characterPair.diff.some((diff) => diff.path.endsWith("road-warden.json")),
+    true
+  )
 
   const brokenFiles = base.map((file) =>
     file.path === gatehousePath ? createSourceFile(file.path, file.content.replace("[[encounter:market-square-arrival]]", "[[encounter:missing-market]]")) : file

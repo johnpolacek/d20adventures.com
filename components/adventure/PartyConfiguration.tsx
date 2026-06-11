@@ -1,97 +1,86 @@
-"use client";
+"use client"
 
-import { SignInButton, SignUpButton, useUser } from "@clerk/nextjs";
-import { useParams } from "next/navigation";
-import type React from "react";
-import { useEffect, useRef, useState } from "react";
-import { createAdventure } from "@/app/_actions/create-adventure";
-import { Button } from "@/components/ui/button";
-import { scrollToBottom } from "../ui/utils";
-import type { CharacterChoiceMode } from "./character-selection";
+import { SignInButton, SignUpButton, useUser } from "@clerk/nextjs"
+import { useParams } from "next/navigation"
+import type React from "react"
+import { useEffect, useRef, useState } from "react"
+import { createAdventure } from "@/app/_actions/create-adventure"
+import { Button } from "@/components/ui/button"
+import { scrollToBottom } from "../ui/utils"
+import type { CharacterChoiceMode } from "./character-selection"
 
 interface PartyConfigurationProps {
-  characterChoices: CharacterChoiceMode[];
-  onModeChange: (characterId: string, mode: "player" | "invite" | "ai") => void;
-  characterNames: Record<string, string>;
+  characterChoices: CharacterChoiceMode[]
+  onModeChange: (characterId: string, mode: "player" | "invite" | "ai") => void
+  characterNames: Record<string, string>
 }
 
 // Helper to check if this is a solo adventure (only one character total)
 function isSoloAdventure(characterChoices: CharacterChoiceMode[]) {
-  return characterChoices.length === 1;
+  return characterChoices.length === 1
 }
 
-const PartyConfiguration: React.FC<PartyConfigurationProps> = ({
-  characterChoices,
-  characterNames,
-}) => {
-  const { settingId, adventurePlanId } = useParams();
-  const { isLoaded, isSignedIn } = useUser();
-  const [isCreating, setIsCreating] = useState(false);
-  const [startError, setStartError] = useState<string | null>(null);
-  const hasAutoStartedRef = useRef(false);
+const PartyConfiguration: React.FC<PartyConfigurationProps> = ({ characterChoices, characterNames }) => {
+  const { settingId, adventurePlanId } = useParams()
+  const { isLoaded, isSignedIn } = useUser()
+  const [isCreating, setIsCreating] = useState(false)
+  const [startError, setStartError] = useState<string | null>(null)
+  const hasAutoStartedRef = useRef(false)
 
   // If only one character, auto-create and start adventure
   useEffect(() => {
-    if (!isLoaded || !isSignedIn || !isSoloAdventure(characterChoices)) return;
-    if (hasAutoStartedRef.current || isCreating) return;
+    if (!isLoaded || !isSignedIn || !isSoloAdventure(characterChoices)) return
+    if (hasAutoStartedRef.current || isCreating) return
 
-    hasAutoStartedRef.current = true;
-    void startSelectedAdventure();
-  }, [isLoaded, isSignedIn, characterChoices, isCreating]);
+    hasAutoStartedRef.current = true
+    void startSelectedAdventure()
+  }, [isLoaded, isSignedIn, characterChoices, isCreating])
 
   async function startSelectedAdventure() {
-    if (isCreating) return;
-    setIsCreating(true);
-    setStartError(null);
+    if (isCreating) return
+    setIsCreating(true)
+    setStartError(null)
 
     try {
       await createAdventure({
         settingId: settingId as string,
         adventurePlanId: adventurePlanId as string,
         characterChoices,
-      });
+      })
       // The redirect happens in the server action.
     } catch (error) {
-      const isRedirectError =
-        error &&
-        typeof error === "object" &&
-        "digest" in error &&
-        String((error as { digest?: string }).digest).includes("NEXT_REDIRECT");
+      const isRedirectError = error && typeof error === "object" && "digest" in error && String((error as { digest?: string }).digest).includes("NEXT_REDIRECT")
 
-      if (isRedirectError) return;
+      if (isRedirectError) return
 
-      console.error("Failed to create adventure:", error);
-      setStartError(error instanceof Error ? error.message : "Failed to start adventure.");
-      setIsCreating(false);
+      console.error("Failed to create adventure:", error)
+      setStartError(error instanceof Error ? error.message : "Failed to start adventure.")
+      setIsCreating(false)
     }
   }
 
   const handleStartAdventure = async () => {
-    await startSelectedAdventure();
-  };
+    await startSelectedAdventure()
+  }
 
   useEffect(() => {
-    scrollToBottom();
-  }, []);
+    scrollToBottom()
+  }, [])
 
   // If only one character, show a loading state
   if (isSoloAdventure(characterChoices)) {
     if (!isLoaded) {
       return (
         <div className="p-8 text-center">
-          <div className="text-2xl font-display mb-4">
-            Preparing your adventure...
-          </div>
+          <div className="text-2xl font-display mb-4">Preparing your adventure...</div>
         </div>
-      );
+      )
     }
 
     if (!isSignedIn) {
       return (
         <div className="p-8 text-center">
-          <div className="text-2xl font-display mb-4">
-            Sign in to start your adventure
-          </div>
+          <div className="text-2xl font-display mb-4">Sign in to start your adventure</div>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <SignInButton mode="modal">
               <Button variant="outline" size="lg" className="text-lg w-36">
@@ -105,73 +94,44 @@ const PartyConfiguration: React.FC<PartyConfigurationProps> = ({
             </SignUpButton>
           </div>
         </div>
-      );
+      )
     }
 
     if (startError) {
       return (
         <div className="p-8 text-center">
-          <div className="text-2xl font-display mb-4">
-            Could not start your adventure
-          </div>
+          <div className="text-2xl font-display mb-4">Could not start your adventure</div>
           <div className="text-red-200 mb-6">{startError}</div>
-          <Button
-            variant="outline"
-            size="lg"
-            className="text-lg w-36"
-            onClick={handleStartAdventure}
-            disabled={isCreating}
-          >
+          <Button variant="outline" size="lg" className="text-lg w-36" onClick={handleStartAdventure} disabled={isCreating}>
             Try Again
           </Button>
         </div>
-      );
+      )
     }
 
     return (
       <div className="p-8 text-center">
-        <div className="text-2xl font-display mb-4">
-          Starting your adventure...
-        </div>
-        <div className="text-white/80">
-          Setting up your solo adventure. Please wait.
-        </div>
+        <div className="text-2xl font-display mb-4">Starting your adventure...</div>
+        <div className="text-white/80">Setting up your solo adventure. Please wait.</div>
       </div>
-    );
+    )
   }
 
   return (
     <div className="p-4 sm:p-8 space-y-4 divide-y divide-white/20">
       {characterChoices.length > 1 &&
         characterChoices.map((choice) => (
-          <div
-            key={choice.characterId}
-            className="character-choice flex justify-between items-center w-full pb-4"
-          >
-            <span className="font-display text-xl font-semibold relative top-1">
-              {characterNames[choice.characterId]}
-            </span>
+          <div key={choice.characterId} className="character-choice flex justify-between items-center w-full pb-4">
+            <span className="font-display text-xl font-semibold relative top-1">{characterNames[choice.characterId]}</span>
             <div className="mode-buttons flex items-center space-x-8">
-              {choice.mode === "player" ? (
-                <Button variant="epic">Player</Button>
-              ) : (
-                <div className="text-green-300 bg-green-200/10 px-12 mr-2 py-1 border border-green-300 rounded font-mono">
-                  Open
-                </div>
-              )}
+              {choice.mode === "player" ? <Button variant="epic">Player</Button> : <div className="text-green-300 bg-green-200/10 px-12 mr-2 py-1 border border-green-300 rounded font-mono">Open</div>}
             </div>
           </div>
         ))}
 
       <div className="text-center py-4">
         {isSignedIn ? (
-          <Button
-            variant="epic"
-            size="lg"
-            className="text-2xl py-6 px-12"
-            onClick={handleStartAdventure}
-            disabled={isCreating}
-          >
+          <Button variant="epic" size="lg" className="text-2xl py-6 px-12" onClick={handleStartAdventure} disabled={isCreating}>
             {isCreating ? "Creating Adventure..." : "Start Adventure"}
           </Button>
         ) : (
@@ -183,7 +143,7 @@ const PartyConfiguration: React.FC<PartyConfigurationProps> = ({
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default PartyConfiguration;
+export default PartyConfiguration

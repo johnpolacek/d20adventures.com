@@ -1,8 +1,8 @@
+import type { User } from "@clerk/nextjs/server"
+import { clerkClient } from "@clerk/nextjs/server"
 import { AdminUserList } from "@/components/admin/user-list"
 import { AdminBreadcrumb } from "@/components/nav/admin-breadcrumb"
 import { requireAdmin } from "@/lib/auth-utils"
-import { clerkClient } from "@clerk/nextjs/server"
-import type { User } from "@clerk/nextjs/server"
 
 async function getInitialUsers() {
   const client = await clerkClient()

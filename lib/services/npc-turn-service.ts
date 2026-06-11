@@ -2,17 +2,9 @@ import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { convex } from "@/lib/convex/server"
 import { readJsonFromS3 } from "@/lib/s3-utils"
+import { handleSkipPassNpcTurn, type NpcTurnBranchResult, resolveNpcTurnRollOrDirectBranch } from "@/lib/services/npc-turn-branch-service"
 import { buildDeadCharacterCompletion, buildNpcTurnUpdatePatch } from "@/lib/services/npc-turn-effects-service"
-import {
-  buildNpcActionContext,
-  buildNpcActionPrompt,
-  generateNpcAction,
-} from "@/lib/services/npc-turn-generation-service"
-import {
-  handleSkipPassNpcTurn,
-  resolveNpcTurnRollOrDirectBranch,
-  type NpcTurnBranchResult,
-} from "@/lib/services/npc-turn-branch-service"
+import { buildNpcActionContext, buildNpcActionPrompt, generateNpcAction } from "@/lib/services/npc-turn-generation-service"
 import { buildNpcInitiativeOrder, findEncounterInPlan, resolvePlanContextForEncounter } from "@/lib/services/npc-turn-intent-service"
 import { applyNpcSpellPostProcessing, finalizeNpcTurnResponse } from "@/lib/services/npc-turn-postprocess-service"
 import type { Turn, TurnCharacter } from "@/types/adventure"
@@ -68,12 +60,19 @@ export async function processNpcTurnWithLLM({
     deadPlayerCharacters: npcActionContext.deadPlayerCharacters,
   })
 
-  console.log("[LLM] NPC action prompt:", JSON.stringify({
-    promptLength: prompt1.length,
-    npc: npc.name,
-    npcEquipment: npcActionContext.npcEquipmentList,
-    targetPlayers: npcActionContext.playerCharacters.length,
-  }, null, 2))
+  console.log(
+    "[LLM] NPC action prompt:",
+    JSON.stringify(
+      {
+        promptLength: prompt1.length,
+        npc: npc.name,
+        npcEquipment: npcActionContext.npcEquipmentList,
+        targetPlayers: npcActionContext.playerCharacters.length,
+      },
+      null,
+      2
+    )
+  )
 
   const actionResult = await generateNpcAction(prompt1)
 
@@ -106,7 +105,7 @@ export async function processNpcTurnWithLLM({
     },
   })
 
-  let updatedNarrative = branchResult.updatedNarrative
+  const updatedNarrative = branchResult.updatedNarrative
   let updatedCharacters = branchResult.updatedCharacters
   const rollInfo = branchResult.rollInfo
   const effects = branchResult.effects
@@ -200,10 +199,7 @@ export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
     )
   )
 
-  const { sectionContext, sceneContext, adventureOverview, sectionTitle, sceneTitle } = resolvePlanContextForEncounter(
-    plan,
-    turn.encounterId
-  )
+  const { sectionContext, sceneContext, adventureOverview, sectionTitle, sceneTitle } = resolvePlanContextForEncounter(plan, turn.encounterId)
 
   console.log(
     "[LLM DM] Found current context",

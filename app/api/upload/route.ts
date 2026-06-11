@@ -1,10 +1,10 @@
+import { auth } from "@clerk/nextjs/server"
+import { type NextRequest, NextResponse } from "next/server"
+import { v4 as uuidv4 } from "uuid"
 import { decrementUserTokensAction, incrementUserTokensAction } from "@/app/_actions/tokens"
 import { fetchUserTokenBalance } from "@/app/_actions/user-token-actions"
 import { isAwsConfigured } from "@/lib/aws"
 import { uploadFileToS3 } from "@/lib/s3-utils"
-import { auth } from "@clerk/nextjs/server"
-import { type NextRequest, NextResponse } from "next/server"
-import { v4 as uuidv4 } from "uuid"
 
 export async function POST(request: NextRequest) {
   try {

@@ -1,8 +1,8 @@
 "use client"
 
+import { Sparkle } from "lucide-react"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { formatNumberToK } from "@/lib/utils"
-import { Sparkle } from "lucide-react"
 
 interface TokenCountProps {
   tokensRemaining: number

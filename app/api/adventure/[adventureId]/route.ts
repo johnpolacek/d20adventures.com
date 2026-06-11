@@ -1,11 +1,11 @@
+import { auth } from "@clerk/nextjs/server"
+import { type NextRequest, NextResponse } from "next/server"
 import { loadAdventureWithNpc } from "@/app/_actions/load-adventure"
 import type { Id } from "@/convex/_generated/dataModel"
 import { AdventureAccessError, assertAdventureAccess } from "@/lib/adventure-access"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import type { Adventure } from "@/types/adventure"
 import type { PC, PCTemplate } from "@/types/character"
-import { auth } from "@clerk/nextjs/server"
-import { type NextRequest, NextResponse } from "next/server"
 
 // Helper to map Convex adventure to frontend Adventure type
 function mapConvexAdventureToAdventure(raw: unknown): Adventure | null {

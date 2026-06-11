@@ -1,6 +1,6 @@
-import type { AdventureEncounter, AdventureScene, AdventureSection } from "@/types/adventure-plan"
 import slugify from "slugify"
 import { z } from "zod"
+import type { AdventureEncounter, AdventureScene, AdventureSection } from "@/types/adventure-plan"
 
 const encounterProposalSchema = z.object({
   id: z.string().optional(),
@@ -89,7 +89,13 @@ function cloneSections(sections: AdventureSection[]) {
 }
 
 function collectEncounterIds(sections: AdventureSection[]) {
-  return new Set(sections.flatMap((section) => section.scenes).flatMap((scene) => scene.encounters).map((encounter) => encounter.id).filter(Boolean))
+  return new Set(
+    sections
+      .flatMap((section) => section.scenes)
+      .flatMap((scene) => scene.encounters)
+      .map((encounter) => encounter.id)
+      .filter(Boolean)
+  )
 }
 
 function createUniqueEncounterId(title: string, existingIds: Set<string>, preferredId?: string) {

@@ -1,8 +1,8 @@
 "use client"
 
+import { useState } from "react"
 import { unsubscribe } from "@/app/_actions/mailing-list"
 import { Button } from "@/components/ui/button"
-import { useState } from "react"
 
 export default function UnsubscribeForm() {
   const [email, setEmail] = useState("")

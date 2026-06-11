@@ -1,10 +1,10 @@
 "use server"
 
+import { auth } from "@clerk/nextjs/server"
 import type { Id } from "@/convex/_generated/dataModel"
 import { assertAdventureAccessByTurn } from "@/lib/adventure-access"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import type { AdventurePlan } from "@/types/adventure-plan"
-import { auth } from "@clerk/nextjs/server"
 
 export async function checkIsEncounterFinal(turnId: Id<"turns">): Promise<boolean> {
   const { userId } = await auth()

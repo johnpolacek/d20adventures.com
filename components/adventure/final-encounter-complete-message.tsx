@@ -1,12 +1,12 @@
 "use client"
 
-import { getAdventurePlan } from "@/app/_actions/adventure-plan-actions"
-import { Button } from "@/components/ui/button"
-import { getImageUrl } from "@/lib/utils"
-import type { AdventurePlan } from "@/types/adventure-plan"
-import Image from "@/components/ui/native-image"
 import Link from "next/link"
 import React from "react"
+import { getAdventurePlan } from "@/app/_actions/adventure-plan-actions"
+import { Button } from "@/components/ui/button"
+import Image from "@/components/ui/native-image"
+import { getImageUrl } from "@/lib/utils"
+import type { AdventurePlan } from "@/types/adventure-plan"
 
 interface FinalEncounterCompleteMessageProps {
   isSignedIn: boolean

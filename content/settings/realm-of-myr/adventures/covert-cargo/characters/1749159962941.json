@@ -31,14 +31,7 @@
       "description": "A sturdy staff, unadorned but reliable for focus and defense."
     }
   ],
-  "skills": [
-    "Arcana",
-    "History",
-    "Investigation",
-    "Linguistics",
-    "Culture (Elven)",
-    "Calligraphy"
-  ],
+  "skills": ["Arcana", "History", "Investigation", "Linguistics", "Culture (Elven)", "Calligraphy"],
   "status": "",
   "type": "pc",
   "attributes": {

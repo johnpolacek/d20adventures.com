@@ -1,12 +1,12 @@
 "use client"
 
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import Image from "@/components/ui/native-image"
 import { getImageUrl } from "@/lib/utils"
 import type { TurnCharacter } from "@/types/adventure"
 import type { PC, PCTemplate } from "@/types/character"
-import Image from "@/components/ui/native-image"
-import { useState } from "react"
 
 type CharacterSheetModalCharacter = TurnCharacter | PC | PCTemplate | null
 interface CharacterSheetModalProps {

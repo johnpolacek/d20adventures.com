@@ -1,11 +1,11 @@
-import { generateObject } from "@/lib/ai"
 import { z } from "zod"
+import { generateObject } from "@/lib/ai"
 
 // Thin compatibility layer: re-export split services and utils
 export { formatNarrativeAction, generateNarrativeUpdate, generateRollOutcomeNarrativeWithContext } from "@/lib/services/narrative-generation-service"
 export { getRollModifier } from "@/lib/services/roll-modifier-service"
-export { appendNarrative, normalizeNarrative, limitToTwoSentences, fixMalformedQuotes } from "@/lib/utils/narrative-utils"
 export { analyzePlayerInput } from "@/lib/utils/narrative-analysis"
+export { appendNarrative, fixMalformedQuotes, limitToTwoSentences, normalizeNarrative } from "@/lib/utils/narrative-utils"
 
 // Keep helper if current callsites depend on it (new code should use roll-requirement-service)
 const rollRequirementSchema = z.object({

@@ -1,5 +1,8 @@
 "use client"
 
+import * as React from "react"
+import { useState } from "react"
+import { toast } from "sonner"
 import { banUser } from "@/app/_actions/ban-user"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -8,9 +11,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import * as React from "react"
-import { useState } from "react"
-import { toast } from "sonner"
 
 interface User {
   id: string

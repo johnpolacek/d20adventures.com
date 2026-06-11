@@ -1,16 +1,16 @@
+import { currentUser } from "@clerk/nextjs/server"
+import Link from "next/link"
+import { redirect } from "next/navigation"
 import { getAdventuresForUser } from "@/app/_actions/adventure"
 import { getPracticeReportsForUser } from "@/app/_actions/adventure-reports"
 import { getUserCharacters } from "@/app/_actions/character"
 import FullPageImage from "@/components/layout/fullpage-image"
 import { textShadowSpreadLight } from "@/components/typography/styles"
 import { Button } from "@/components/ui/button"
+import Image from "@/components/ui/native-image"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import { getImageUrl } from "@/lib/utils"
 import type { PCTemplate } from "@/types/character"
-import { currentUser } from "@clerk/nextjs/server"
-import Image from "@/components/ui/native-image"
-import Link from "next/link"
-import { redirect } from "next/navigation"
 import { CharacterGrid } from "./components/character-grid"
 
 export default async function PlayerProfilePage(props: { params: Promise<{ username: string }> }) {
@@ -164,9 +164,7 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
                       {report.summary ? <p className="text-sm text-white/85 mt-2 line-clamp-3">{report.summary}</p> : null}
                       <div className="mt-3">
                         <Button asChild variant="outline" size="sm">
-                          <Link href={`/settings/${report.settingId}/${report.planId}/${report.adventureId}`}>
-                            Open Run
-                          </Link>
+                          <Link href={`/settings/${report.settingId}/${report.planId}/${report.adventureId}`}>Open Run</Link>
                         </Button>
                       </div>
                     </div>

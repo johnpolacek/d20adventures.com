@@ -1,4 +1,6 @@
 "use client"
+import { useState } from "react"
+import { z } from "zod"
 import { useGenerateImage } from "@/app/_hooks/useGenerateImage"
 import { useGenerateObject } from "@/app/_hooks/useGenerateObject"
 import { useGenerateStrings } from "@/app/_hooks/useGenerateStrings"
@@ -6,11 +8,9 @@ import { useGenerateText } from "@/app/_hooks/useGenerateText"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import Image from "@/components/ui/native-image"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
-import Image from "@/components/ui/native-image"
-import { useState } from "react"
-import { z } from "zod"
 
 const personSchema = z.object({
   name: z.string().describe("The person's full name"),

@@ -1,8 +1,8 @@
+import { generateText, streamText } from "ai"
+import type { NextRequest } from "next/server"
 import { currentModel } from "@/lib/ai/llm"
 import { composeSystemPrompt } from "@/lib/ai/style"
 import { sanitizeUserVisibleProse } from "@/lib/utils/narrative-utils"
-import { generateText, streamText } from "ai"
-import type { NextRequest } from "next/server"
 import { requireAuthMiddleware } from "../../_auth"
 
 export async function POST(request: NextRequest) {

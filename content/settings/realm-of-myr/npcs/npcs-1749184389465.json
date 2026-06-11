@@ -31,15 +31,7 @@
       "description": "A small, enchanted device allowing discreet communication with his faction."
     }
   ],
-  "skills": [
-    "Stealth",
-    "Acrobatics",
-    "Perception",
-    "Diplomacy",
-    "Investigation",
-    "Negotiation",
-    "Disguise"
-  ],
+  "skills": ["Stealth", "Acrobatics", "Perception", "Diplomacy", "Investigation", "Negotiation", "Disguise"],
   "status": "",
   "type": "npc",
   "attributes": {

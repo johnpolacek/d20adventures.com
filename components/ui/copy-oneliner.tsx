@@ -1,8 +1,7 @@
 "use client"
-import { cn } from "@/lib/utils"
-import { Copy, Terminal } from "lucide-react"
-import { Check } from "lucide-react"
+import { Check, Copy, Terminal } from "lucide-react"
 import { useState } from "react"
+import { cn } from "@/lib/utils"
 
 interface CopyOnelinerProps {
   children: string

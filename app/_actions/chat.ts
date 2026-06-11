@@ -1,15 +1,11 @@
 "use server"
 
+import { auth, clerkClient } from "@clerk/nextjs/server"
 import type { Id } from "@/convex/_generated/dataModel"
 import { assertAdventureAccess } from "@/lib/adventure-access"
 import { api, convex } from "@/lib/convex/server"
-import { auth, clerkClient } from "@clerk/nextjs/server"
 
-export async function sendChatMessage(input: {
-  adventureId: Id<"adventures">
-  content: string
-  characterName?: string
-}) {
+export async function sendChatMessage(input: { adventureId: Id<"adventures">; content: string; characterName?: string }) {
   const { userId } = await auth()
   if (!userId) throw new Error("Unauthorized")
   await assertAdventureAccess(userId, input.adventureId)

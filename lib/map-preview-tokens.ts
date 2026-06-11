@@ -6,26 +6,14 @@ import type { Character } from "@/types/character"
 // Keep this implementation dormant for possible revival.
 
 function getTokenInitials(label: string) {
-  const parts = label
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
+  const parts = label.trim().split(/\s+/).filter(Boolean).slice(0, 2)
 
   if (parts.length === 0) return "?"
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
   return `${parts[0][0] || ""}${parts[1][0] || ""}`.toUpperCase()
 }
 
-export function buildPreviewNpcMapTokens({
-  map,
-  availableNpcs,
-  encounterNpcRefs,
-}: {
-  map: Encounter3DMap
-  availableNpcs: Record<string, Character>
-  encounterNpcRefs: EncounterCharacterRef[]
-}) {
+export function buildPreviewNpcMapTokens({ map, availableNpcs, encounterNpcRefs }: { map: Encounter3DMap; availableNpcs: Record<string, Character>; encounterNpcRefs: EncounterCharacterRef[] }) {
   const npcRefsById = new Map(encounterNpcRefs.map((entry) => [entry.id, entry]))
 
   return map.tokenSlots.npc.flatMap((slot) => {

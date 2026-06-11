@@ -1,10 +1,10 @@
 "use server"
 
+import { auth } from "@clerk/nextjs/server"
+import slugify from "slugify"
 import { generateObject } from "@/lib/ai"
 import type { AdventureEncounter, AdventureSection } from "@/types/adventure-plan"
 import { adventureEncounterSchema } from "@/types/adventure-plan"
-import { auth } from "@clerk/nextjs/server"
-import slugify from "slugify"
 
 const encounterGenerationSchema = adventureEncounterSchema.omit({ id: true, image: true })
 

@@ -3,11 +3,7 @@ import { api, convex } from "@/lib/convex/server"
 /**
  * Records a new visit to a page
  */
-export async function recordVisit(data: {
-  path: string
-  userId: string | null
-  metadata: Record<string, unknown>
-}) {
+export async function recordVisit(data: { path: string; userId: string | null; metadata: Record<string, unknown> }) {
   return await convex.mutation(api.visits.recordVisit, data)
 }
 

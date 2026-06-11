@@ -1,8 +1,8 @@
-import { mapConvexTurnToTurn } from "@/lib/utils"
-import type { Turn } from "@/types/adventure" // Adjust as needed
 import { useUser } from "@clerk/nextjs"
 import type React from "react"
 import { createContext, useContext, useEffect, useRef, useState } from "react"
+import { mapConvexTurnToTurn } from "@/lib/utils"
+import type { Turn } from "@/types/adventure" // Adjust as needed
 
 type TurnContextType = {
   currentTurn: Turn | null

@@ -1,5 +1,5 @@
-import type { AdventureEncounter, AdventureSection } from "@/types/adventure-plan"
 import type * as React from "react"
+import type { AdventureEncounter, AdventureSection } from "@/types/adventure-plan"
 
 export function useAdventureSections(sections: AdventureSection[], setSections: React.Dispatch<React.SetStateAction<AdventureSection[]>>) {
   const handleSectionTitleChange = (index: number, newTitle: string) => {

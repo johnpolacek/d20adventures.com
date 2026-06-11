@@ -1,8 +1,8 @@
 "use server"
 
-import { isAdmin } from "@/lib/auth-utils"
 import { auth, clerkClient } from "@clerk/nextjs/server"
 import { revalidatePath } from "next/cache"
+import { isAdmin } from "@/lib/auth-utils"
 
 export async function banUser(userId: string, reason?: string) {
   try {

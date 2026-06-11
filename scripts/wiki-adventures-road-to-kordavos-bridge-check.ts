@@ -21,7 +21,10 @@ function main() {
   assert.ok(advanceAction.includes("existingPlayerCharacters"), "advanceTurn does not preserve saved player characters across wiki transitions")
 
   assert.ok(adventureManifest.includes('startEncounter: "well-met"'), "Road to Kordavos manifest does not start at well-met")
-  assert.equal(migrationReport.warnings.some((warning) => warning.code === "legacy-start-repaired"), true)
+  assert.equal(
+    migrationReport.warnings.some((warning) => warning.code === "legacy-start-repaired"),
+    true
+  )
 
   const { artifacts, contentRef } = loadLocalWikiAdventureRuntime(SETTING_ID, PLAN_ID)
   assert.equal(contentRef.settingId, SETTING_ID)
@@ -32,8 +35,14 @@ function main() {
   assert.equal(Object.keys(artifacts.encounters).length, 3)
   assert.equal(Object.keys(artifacts.characterSheets.npcs).length, 4)
   assert.equal(Object.keys(artifacts.characterSheets.premadeCharacters).length, 0)
-  assert.equal(artifacts.graph.encounterTransitions.some((transition) => transition.fromEncounterId === "well-met" && transition.toEncounterId === "the-gates-ahead"), true)
-  assert.equal(artifacts.graph.encounterTransitions.some((transition) => transition.fromEncounterId === "the-fortune-teller" && transition.toEncounterId === "the-gates-ahead"), true)
+  assert.equal(
+    artifacts.graph.encounterTransitions.some((transition) => transition.fromEncounterId === "well-met" && transition.toEncounterId === "the-gates-ahead"),
+    true
+  )
+  assert.equal(
+    artifacts.graph.encounterTransitions.some((transition) => transition.fromEncounterId === "the-fortune-teller" && transition.toEncounterId === "the-gates-ahead"),
+    true
+  )
   assert.equal(isLocalWikiFinalEncounter(artifacts, "the-gates-ahead"), true)
   assert.equal(isLocalWikiFinalEncounter(artifacts, "well-met"), false)
 
@@ -65,7 +74,10 @@ function main() {
     players: [{ userId: "user_test", characterId: "saved-ranger" }],
     existingPlayerCharacters: [savedCharacter],
   })
-  assert.equal(characters.some((character) => character.id === "saved-ranger" && character.name === "Saved Ranger" && character.type === "pc"), true)
+  assert.equal(
+    characters.some((character) => character.id === "saved-ranger" && character.name === "Saved Ranger" && character.type === "pc"),
+    true
+  )
 
   console.log("The Road to Kordavos playthrough bridge checks passed")
 }

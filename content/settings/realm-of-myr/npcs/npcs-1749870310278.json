@@ -31,14 +31,7 @@
       "description": "A silver ring bearing the crest of his trading house."
     }
   ],
-  "skills": [
-    "Persuasion",
-    "Insight",
-    "Investigation",
-    "Appraisal",
-    "Negotiation",
-    "History (Trade Routes)"
-  ],
+  "skills": ["Persuasion", "Insight", "Investigation", "Appraisal", "Negotiation", "History (Trade Routes)"],
   "specialAbilities": [
     "Keen Negotiator: Dmitri gains advantage on Charisma (Persuasion) checks when negotiating prices or contracts.",
     "Resourceful: Once per long rest, Dmitri can recall a piece of information about a specific trade good, market trend, or influential contact that might be relevant to the current situation.",

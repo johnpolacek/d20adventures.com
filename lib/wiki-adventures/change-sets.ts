@@ -67,4 +67,3 @@ function assertSafePath(path: string) {
     throw new ChangeSetError(`Unsafe source path: ${path}`)
   }
 }
-

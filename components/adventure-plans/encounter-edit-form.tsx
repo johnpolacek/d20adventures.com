@@ -2,6 +2,8 @@
 
 "use client"
 
+import { ChevronsUp, Plus, X } from "lucide-react"
+import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ImageUpload } from "@/components/ui/image-upload"
@@ -11,8 +13,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { getImageUrl } from "@/lib/utils"
 import type { AdventureEncounter, AdventureSection, EncounterCharacterRef, EncounterTransition } from "@/types/adventure-plan"
 import type { Character, NPC, PCTemplate } from "@/types/character"
-import { ChevronsUp, Plus, X } from "lucide-react"
-import * as React from "react"
 import { CharacterCard } from "./character-card"
 import { CharacterGenerateForm } from "./character-generate-form"
 import { DeleteEncounterAlert } from "./delete-encounter-alert"
@@ -67,7 +67,6 @@ export function EncounterEditForm({
   onNpcsChange,
   setNpcs,
   isSaving,
-  maxPartySize,
 }: EncounterEditFormProps) {
   const [isEditing, setIsEditing] = React.useState(false)
   const [showGenerateForm, setShowGenerateForm] = React.useState(false)

@@ -1,7 +1,7 @@
+import { z } from "zod"
 import { generateObject } from "@/lib/ai"
 import { formatSpellsForPrompt } from "@/lib/services/spell-tracking-service"
 import type { Turn, TurnCharacter } from "@/types/adventure"
-import { z } from "zod"
 
 const npcActionSchema = z.object({
   actionSummary: z.string(),
@@ -52,14 +52,7 @@ type NpcActionContext = {
   adventureOverview?: string
 }
 
-export function buildNpcActionContext({
-  turn,
-  npc,
-  encounterContext,
-  sectionContext,
-  sceneContext,
-  adventureOverview,
-}: NpcActionContext): {
+export function buildNpcActionContext({ turn, npc, encounterContext, sectionContext, sceneContext, adventureOverview }: NpcActionContext): {
   contextString: string
   npcDetails: string
   npcEquipmentList: string
@@ -69,21 +62,13 @@ export function buildNpcActionContext({
 } {
   const narrativeContext = (turn.narrative || "").split(/\n\n+/).slice(-6).join("\n\n")
   const playerCharacters = turn.characters.filter((character) => character.type === "pc")
-  const alivePlayerCharacters = playerCharacters.filter(
-    (character) => character.healthPercent !== 0 && character.status !== "dead"
-  )
-  const deadPlayerCharacters = playerCharacters.filter(
-    (character) => character.healthPercent === 0 || character.status === "dead"
-  )
+  const alivePlayerCharacters = playerCharacters.filter((character) => character.healthPercent !== 0 && character.status !== "dead")
+  const deadPlayerCharacters = playerCharacters.filter((character) => character.healthPercent === 0 || character.status === "dead")
 
   const contextString = [
     adventureOverview ? `Adventure Overview: ${adventureOverview}` : "",
-    sectionContext && (sectionContext.title || sectionContext.summary)
-      ? `Section Title: ${sectionContext.title || ""}\nSection Summary: ${sectionContext.summary || ""}`
-      : "",
-    sceneContext && (sceneContext.title || sceneContext.summary)
-      ? `Scene Title: ${sceneContext.title || ""}\nScene Summary: ${sceneContext.summary || ""}`
-      : "",
+    sectionContext && (sectionContext.title || sectionContext.summary) ? `Section Title: ${sectionContext.title || ""}\nSection Summary: ${sectionContext.summary || ""}` : "",
+    sceneContext && (sceneContext.title || sceneContext.summary) ? `Scene Title: ${sceneContext.title || ""}\nScene Summary: ${sceneContext.summary || ""}` : "",
     encounterContext?.intro ? `Encounter Intro: ${encounterContext.intro}` : "",
     encounterContext?.instructions ? `Encounter Instructions: ${encounterContext.instructions}` : "",
     npc.behavior ? `NPC Behavior: ${npc.behavior}` : "",
@@ -116,13 +101,7 @@ NPC Details:
   }
 }
 
-export function buildNpcActionPrompt(args: {
-  contextString: string
-  npcDetails: string
-  npc: TurnCharacter
-  alivePlayerCharacters: TurnCharacter[]
-  deadPlayerCharacters: TurnCharacter[]
-}): string {
+export function buildNpcActionPrompt(args: { contextString: string; npcDetails: string; npc: TurnCharacter; alivePlayerCharacters: TurnCharacter[]; deadPlayerCharacters: TurnCharacter[] }): string {
   return `You are the DM for a tabletop RPG. Given the following context, decide what action the NPC should take this turn. Be creative and act as a real DM would. Output a short narrative for the action.
 
 ${args.contextString}

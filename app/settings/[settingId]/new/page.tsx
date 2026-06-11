@@ -1,3 +1,5 @@
+import { SignInButton } from "@clerk/nextjs"
+import { auth } from "@clerk/nextjs/server"
 import { NewAdventurePlanForm } from "@/components/adventure-plans/new-adventure-plan-form"
 import FullPageImage from "@/components/layout/fullpage-image"
 import { Button } from "@/components/ui/button"
@@ -5,8 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { canManageResource } from "@/lib/content-permissions"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import type { Setting } from "@/types/setting"
-import { SignInButton } from "@clerk/nextjs"
-import { auth } from "@clerk/nextjs/server"
 
 export default async function NewAdventurePlanPage(props: { params: Promise<{ settingId: string }> }) {
   const { userId } = await auth()

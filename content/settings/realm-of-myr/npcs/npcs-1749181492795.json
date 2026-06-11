@@ -31,14 +31,7 @@
       "description": "Compact and easily concealed, useful for scaling walls."
     }
   ],
-  "skills": [
-    "Stealth",
-    "Sleight of Hand",
-    "Acrobatics",
-    "Perception",
-    "Investigation",
-    "Deception"
-  ],
+  "skills": ["Stealth", "Sleight of Hand", "Acrobatics", "Perception", "Investigation", "Deception"],
   "status": "",
   "type": "npc",
   "attributes": {

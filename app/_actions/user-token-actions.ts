@@ -1,8 +1,8 @@
 "use server"
 
+import { auth } from "@clerk/nextjs/server"
 import { api } from "@/convex/_generated/api"
 import { convex } from "@/lib/convex/server"
-import { auth } from "@clerk/nextjs/server"
 
 export type TokenBalanceResponse = {
   tokensRemaining: number | null

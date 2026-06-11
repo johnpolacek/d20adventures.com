@@ -1,10 +1,9 @@
 "use client"
 
+import { toast } from "sonner"
 import { useSettingForm } from "@/components/settings/hooks/use-setting-form"
 import { Button } from "@/components/ui/button"
 import type { Setting } from "@/types/setting"
-import * as React from "react"
-import { toast } from "sonner"
 import { SettingBasicInfo } from "./setting-basic-info"
 import { SettingFormHeader } from "./setting-form-header"
 import { SettingLocations } from "./setting-locations"

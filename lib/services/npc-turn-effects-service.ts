@@ -1,11 +1,7 @@
 import { appendNarrative } from "@/lib/services/narrative-service"
 import type { TurnCharacter } from "@/types/adventure"
 
-export function buildNpcTurnUpdatePatch(args: {
-  currentNarrative?: string
-  narrativeToAppend?: string
-  updatedCharacters: TurnCharacter[]
-}): {
+export function buildNpcTurnUpdatePatch(args: { currentNarrative?: string; narrativeToAppend?: string; updatedCharacters: TurnCharacter[] }): {
   narrative: string
   characters: TurnCharacter[]
   updatedAt: number
@@ -17,16 +13,12 @@ export function buildNpcTurnUpdatePatch(args: {
   }
 }
 
-export function buildDeadCharacterCompletion(args: {
-  characters: TurnCharacter[]
-}): {
+export function buildDeadCharacterCompletion(args: { characters: TurnCharacter[] }): {
   deadCharacters: TurnCharacter[]
   updatedCharacters: TurnCharacter[]
   hasChanges: boolean
 } {
-  const deadCharacters = args.characters.filter(
-    (character) => !character.isComplete && (character.healthPercent === 0 || character.status === "dead")
-  )
+  const deadCharacters = args.characters.filter((character) => !character.isComplete && (character.healthPercent === 0 || character.status === "dead"))
   if (deadCharacters.length === 0) {
     return {
       deadCharacters,
@@ -50,4 +42,3 @@ export function buildDeadCharacterCompletion(args: {
     hasChanges: true,
   }
 }
-

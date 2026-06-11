@@ -64,7 +64,10 @@ export function analyzePlayerInput(input: string, characterName: string) {
     isWellWritten: (hasGoodStructure || hasDialogue || (isThirdPerson && hasNarrative && !isFirstPerson && hasPresentTense)) && !isMinimal && !hasPastTense && !isImperative,
     needsEnhancement: (isMinimal || (isFirstPerson && !hasDialogue) || hasPastTense || isImperative) && !(hasGoodStructure || (hasDetailedAction && isThirdPerson) || hasDialogue),
     preserveOriginal:
-      (hasGoodStructure || (hasDetailedAction && isThirdPerson && !isImperative) || (hasDialogue && hasDialogueTags && isThirdPerson && !hasPastTense) || (hasDialogue && hasDialogueTags && !isMinimal)) &&
+      (hasGoodStructure ||
+        (hasDetailedAction && isThirdPerson && !isImperative) ||
+        (hasDialogue && hasDialogueTags && isThirdPerson && !hasPastTense) ||
+        (hasDialogue && hasDialogueTags && !isMinimal)) &&
       !(isFirstPerson && !hasDialogue),
     useMinimalCorrections: (hasDialogue && isThirdPerson && !isMinimal && !hasPastTense) || (hasDialogue && hasDialogueTags && !isMinimal && !hasPastTense),
   }

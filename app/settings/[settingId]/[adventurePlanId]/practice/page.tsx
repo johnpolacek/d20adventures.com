@@ -1,3 +1,5 @@
+import { SignInButton } from "@clerk/nextjs"
+import { auth } from "@clerk/nextjs/server"
 import { PracticeAdventureSetup } from "@/components/adventure/practice-adventure-setup"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -6,8 +8,6 @@ import { listAndReadJsonFilesInS3Directory, readJsonFromS3 } from "@/lib/s3-util
 import { toPCTemplate } from "@/lib/utils/character-mapping"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { Setting } from "@/types/setting"
-import { SignInButton } from "@clerk/nextjs"
-import { auth } from "@clerk/nextjs/server"
 
 export default async function PracticeAdventurePage(props: {
   params: Promise<{

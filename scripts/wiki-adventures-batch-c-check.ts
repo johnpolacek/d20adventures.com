@@ -3,8 +3,14 @@ import { compileWorkbenchFiles, createRepresentativeWorkbenchState, summarizeWor
 
 async function main() {
   const state = await createRepresentativeWorkbenchState()
-  assert.equal(state.files.some((file) => file.path.endsWith("/adventure.md") && file.kind === "markdown"), true)
-  assert.equal(state.files.some((file) => file.path.endsWith("/characters/vala-apprentice.json") && file.kind === "json"), true)
+  assert.equal(
+    state.files.some((file) => file.path.endsWith("/adventure.md") && file.kind === "markdown"),
+    true
+  )
+  assert.equal(
+    state.files.some((file) => file.path.endsWith("/characters/vala-apprentice.json") && file.kind === "json"),
+    true
+  )
   assert.equal(state.summary.manifest.adventureId, "the-old-road")
   assert.equal(state.summary.graphNodes.length, 2)
   assert.equal(state.summary.validationReport.status, "passed")

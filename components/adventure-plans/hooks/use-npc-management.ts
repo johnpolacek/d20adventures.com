@@ -1,7 +1,7 @@
-import type { Character } from "@/types/character"
 import type * as React from "react"
 import slugify from "slugify"
 import { toast } from "sonner"
+import type { Character } from "@/types/character"
 
 export function useNpcManagement(npcs: Record<string, Character>, setNpcs: React.Dispatch<React.SetStateAction<Record<string, Character>>>) {
   const handleNpcCreate = (npcName: string) => {

@@ -73,5 +73,5 @@ function repairLegacyPlan(input: AdventurePlan): AdventurePlan {
 }
 
 function quoteNumericPremadeFrontmatterIds(content: string) {
-  return content.replace(/^  - (\d+)$/gm, '  - "$1"')
+  return content.replace(/^ {2}- (\d+)$/gm, '  - "$1"')
 }

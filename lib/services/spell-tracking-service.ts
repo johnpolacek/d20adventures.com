@@ -12,25 +12,40 @@ interface Spell {
  */
 export function detectSpellFromRollType(rollType: string): string | null {
   if (!rollType) return null
-  
+
   // Spell rolls are formatted as "SpellName Check" (e.g., "Fireball Check", "Detect Magic Check")
   const checkMatch = rollType.match(/^(.+?)\s+Check$/i)
   if (!checkMatch) return null
-  
+
   const potentialSpellName = checkMatch[1].trim()
-  
+
   // Exclude common non-spell checks
   const nonSpellChecks = [
-    "Attack", "Perception", "Investigation", "Insight", "Stealth",
-    "Sleight of Hand", "Athletics", "Acrobatics", "Persuasion",
-    "Deception", "Intimidation", "Performance", "Survival",
-    "Animal Handling", "Medicine", "History", "Arcana", "Nature", "Religion"
+    "Attack",
+    "Perception",
+    "Investigation",
+    "Insight",
+    "Stealth",
+    "Sleight of Hand",
+    "Athletics",
+    "Acrobatics",
+    "Persuasion",
+    "Deception",
+    "Intimidation",
+    "Performance",
+    "Survival",
+    "Animal Handling",
+    "Medicine",
+    "History",
+    "Arcana",
+    "Nature",
+    "Religion",
   ]
-  
-  if (nonSpellChecks.some(check => check.toLowerCase() === potentialSpellName.toLowerCase())) {
+
+  if (nonSpellChecks.some((check) => check.toLowerCase() === potentialSpellName.toLowerCase())) {
     return null
   }
-  
+
   return potentialSpellName
 }
 
@@ -38,15 +53,11 @@ export function detectSpellFromRollType(rollType: string): string | null {
  * Marks a spell as used for a specific character
  * Returns updated characters array
  */
-export function markSpellAsUsed(
-  characters: TurnCharacter[],
-  characterId: string,
-  spellName: string
-): TurnCharacter[] {
-  return characters.map(char => {
+export function markSpellAsUsed(characters: TurnCharacter[], characterId: string, spellName: string): TurnCharacter[] {
+  return characters.map((char) => {
     if (char.id !== characterId) return char
     if (!char.spells || char.spells.length === 0) return char
-    
+
     const updatedSpells = char.spells.map((spell: Spell) => {
       // Case-insensitive spell name matching
       if (spell.name.toLowerCase() === spellName.toLowerCase()) {
@@ -55,7 +66,7 @@ export function markSpellAsUsed(
       }
       return spell
     })
-    
+
     return { ...char, spells: updatedSpells }
   })
 }
@@ -65,14 +76,14 @@ export function markSpellAsUsed(
  * Returns updated characters array
  */
 export function resetAllSpells(characters: TurnCharacter[]): TurnCharacter[] {
-  return characters.map(char => {
+  return characters.map((char) => {
     if (!char.spells || char.spells.length === 0) return char
-    
+
     const resetSpells = char.spells.map((spell: Spell) => ({
       ...spell,
-      isUsed: false
+      isUsed: false,
     }))
-    
+
     console.log(`[SpellTracking] Reset ${resetSpells.length} spells for character "${char.name}"`)
     return { ...char, spells: resetSpells }
   })
@@ -99,20 +110,19 @@ export function getUsedSpells(character: TurnCharacter): Spell[] {
  */
 export function formatSpellsForPrompt(character: TurnCharacter): string {
   if (!character.spells || character.spells.length === 0) return "None"
-  
+
   const available = getAvailableSpells(character)
   const used = getUsedSpells(character)
-  
+
   const parts: string[] = []
-  
+
   if (available.length > 0) {
-    parts.push(`Available: ${available.map(s => s.name).join(", ")}`)
+    parts.push(`Available: ${available.map((s) => s.name).join(", ")}`)
   }
-  
+
   if (used.length > 0) {
-    parts.push(`Used (unavailable this encounter): ${used.map(s => s.name).join(", ")}`)
+    parts.push(`Used (unavailable this encounter): ${used.map((s) => s.name).join(", ")}`)
   }
-  
+
   return parts.length > 0 ? parts.join(" | ") : "None"
 }
-

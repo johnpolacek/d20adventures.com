@@ -1,11 +1,11 @@
 import { readdirSync, readFileSync, statSync } from "node:fs"
 import { join } from "node:path"
 import { s3Client } from "@/lib/aws"
-import { S3WikiAdventureSourceService } from "./source-service"
+import type { TurnCharacter } from "@/types/adventure"
 import { createSourceFile } from "./change-sets"
 import { compileAdventureSourceTree } from "./compiler"
+import { S3WikiAdventureSourceService } from "./source-service"
 import type { RuntimeArtifacts, RuntimeEncounter } from "./types"
-import type { TurnCharacter } from "@/types/adventure"
 
 export type LocalWikiAdventureDefinition = {
   settingId: string
@@ -132,7 +132,10 @@ export function readLocalWikiAdventureSourceFiles(definition: LocalWikiAdventure
   return unique(sourceRoots).flatMap(readSourceFiles)
 }
 
-function compileLocalWikiAdventureRuntime(definition: LocalWikiAdventureDefinition, files: ReturnType<typeof readLocalWikiAdventureSourceFiles>): { definition: LocalWikiAdventureDefinition; artifacts: RuntimeArtifacts; contentRef: LocalWikiContentRef } {
+function compileLocalWikiAdventureRuntime(
+  definition: LocalWikiAdventureDefinition,
+  files: ReturnType<typeof readLocalWikiAdventureSourceFiles>
+): { definition: LocalWikiAdventureDefinition; artifacts: RuntimeArtifacts; contentRef: LocalWikiContentRef } {
   const artifacts = compileAdventureSourceTree(files, {
     mode: "publish",
     contentVersion: definition.contentVersion,
@@ -185,7 +188,11 @@ export function buildLocalWikiTurnCharacters(args: {
   const characters: TurnCharacter[] = []
 
   for (const player of args.players) {
-    const id = player.characterId.split("/").pop()?.replace(/\.json$/, "") ?? player.characterId
+    const id =
+      player.characterId
+        .split("/")
+        .pop()
+        ?.replace(/\.json$/, "") ?? player.characterId
     const sheet = args.artifacts.characterSheets.premadeCharacters[id]?.sheet ?? args.existingPlayerCharacters?.find((character) => character.id === id || character.id === player.characterId)
     if (!sheet) throw new Error(`Missing player character sheet for ${player.characterId}`)
     characters.push({

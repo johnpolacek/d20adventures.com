@@ -1,9 +1,9 @@
 "use server"
 
-import { addMailingListSubscription, getMailingListSubscriptions, removeMailingListSubscription } from "@/lib/services/mailing-list"
 import { auth } from "@clerk/nextjs/server"
 import sgMail from "@sendgrid/mail"
 import { revalidatePath } from "next/cache"
+import { addMailingListSubscription, getMailingListSubscriptions, removeMailingListSubscription } from "@/lib/services/mailing-list"
 
 // Configure SendGrid and track availability
 let isEmailServiceConfigured = false
@@ -20,11 +20,7 @@ function isEmailServiceAvailable() {
   return isEmailServiceConfigured
 }
 
-export async function subscribe(data: {
-  userId: string
-  email: string
-  name: string | null
-}) {
+export async function subscribe(data: { userId: string; email: string; name: string | null }) {
   try {
     const result = await addMailingListSubscription({
       userId: data.userId,

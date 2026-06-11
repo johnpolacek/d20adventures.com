@@ -21,6 +21,7 @@
       "a11y": {
         "noLabelWithoutControl": "off",
         "useKeyWithClickEvents": "off",
+        "noStaticElementInteractions": "off",
         "useButtonType": "off",
         "noSvgWithoutTitle": "off"
       },
@@ -57,7 +58,9 @@
       "!**/*.min.js",
       "!**/*.bundle.js",
       "!**/convex/_generated",
-      "!**/playwright-report"
+      "!**/playwright-report",
+      "!**/*.css",
+      "!wiki"
     ]
   },
   "css": {

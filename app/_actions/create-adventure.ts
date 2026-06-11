@@ -1,19 +1,19 @@
 "use server"
 
+import { auth } from "@clerk/nextjs/server"
+import { redirect } from "next/navigation"
 import { startAdventure } from "@/app/_actions/start-adventure"
 import type { CharacterChoiceMode } from "@/components/adventure/character-selection"
-import type { Id } from "@/convex/_generated/dataModel"
 import { api } from "@/convex/_generated/api"
-import { convex } from "@/lib/convex/server"
+import type { Id } from "@/convex/_generated/dataModel"
 import { canManageResource } from "@/lib/content-permissions"
+import { convex } from "@/lib/convex/server"
 import { readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 import { toPCTemplate } from "@/lib/utils/character-mapping"
 import { isLocalWikiAdventure, loadWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PCTemplate } from "@/types/character"
 import type { Setting } from "@/types/setting"
-import { auth } from "@clerk/nextjs/server"
-import { redirect } from "next/navigation"
 
 interface CreateAdventureInput {
   settingId: string
@@ -60,7 +60,8 @@ export async function createAdventure(input: CreateAdventureInput) {
     } catch {}
     if (!exists) {
       // Try to find the character in premade PCs or as a custom character
-      let characterData: PCTemplate | unknown = localWikiRuntime?.artifacts.characterSheets.premadeCharacters[choice.characterId]?.sheet ?? plan.premadePlayerCharacters?.find((pc) => pc.id === choice.characterId)
+      let characterData: PCTemplate | unknown =
+        localWikiRuntime?.artifacts.characterSheets.premadeCharacters[choice.characterId]?.sheet ?? plan.premadePlayerCharacters?.find((pc) => pc.id === choice.characterId)
       if (!characterData) {
         // Try to load as a custom character (should not throw if not found)
         try {

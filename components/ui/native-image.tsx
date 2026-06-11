@@ -1,5 +1,5 @@
-import { cn } from "@/lib/utils"
 import type * as React from "react"
+import { cn } from "@/lib/utils"
 
 type NativeImageProps = Omit<React.ImgHTMLAttributes<HTMLImageElement>, "src" | "loading"> & {
   src: string
@@ -12,6 +12,7 @@ type NativeImageProps = Omit<React.ImgHTMLAttributes<HTMLImageElement>, "src" | 
 
 export default function NativeImage({ src, alt, fill, priority, className, width, height, loading, sizes: _sizes, ...props }: NativeImageProps) {
   return (
+    // biome-ignore lint/performance/noImgElement: intentional raw <img> to render S3/CloudFront images without Next remote-host config (see wiki implementation review)
     <img
       {...props}
       src={src}

@@ -1,7 +1,7 @@
-import { updateSettingAction } from "@/app/_actions/setting-actions"
-import type { Location, Setting } from "@/types/setting"
 import { useCallback, useState } from "react"
 import { toast } from "sonner"
+import { updateSettingAction } from "@/app/_actions/setting-actions"
+import type { Location, Setting } from "@/types/setting"
 
 export function useSettingForm(initialSetting: Setting, settingId: string) {
   const [name, setName] = useState(initialSetting.name)

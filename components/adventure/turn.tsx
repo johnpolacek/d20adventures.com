@@ -5,7 +5,7 @@ import GameChat from "./game-chat"
 import TurnCharacterList from "./turn-character-list"
 import TurnNarrative from "./turn-narrative"
 
-export default function Turn({ nextAdventure, encounter }: { nextAdventure?: string; encounter?: AdventureEncounter | null }) {
+export default function Turn({ nextAdventure }: { nextAdventure?: string; encounter?: AdventureEncounter | null }) {
   return (
     <div className="relative flex flex-col gap-4 px-8 pb-24 lg:flex-row lg:gap-8">
       <TurnCharacterList />

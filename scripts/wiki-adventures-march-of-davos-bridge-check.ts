@@ -16,9 +16,18 @@ function main() {
   assert.equal(isLocalWikiAdventure(SETTING_ID, PLAN_ID), true)
   assert.ok(adventureManifest.includes('startEncounter: "the-gates-of-kordavos"'), "March of Davos manifest does not start at the-gates-of-kordavos")
   assert.equal(firstEncounter.includes("[[encounter:the-harvest-festival]]"), true, "First encounter does not infer a linear transition")
-  assert.equal(migrationReport.warnings.some((warning) => warning.code === "legacy-format-normalized"), true)
-  assert.equal(migrationReport.warnings.some((warning) => warning.code === "linear-transitions-inferred"), true)
-  assert.equal(migrationReport.warnings.some((warning) => warning.code === "legacy-start-repaired"), true)
+  assert.equal(
+    migrationReport.warnings.some((warning) => warning.code === "legacy-format-normalized"),
+    true
+  )
+  assert.equal(
+    migrationReport.warnings.some((warning) => warning.code === "linear-transitions-inferred"),
+    true
+  )
+  assert.equal(
+    migrationReport.warnings.some((warning) => warning.code === "legacy-start-repaired"),
+    true
+  )
 
   const { artifacts, contentRef } = loadLocalWikiAdventureRuntime(SETTING_ID, PLAN_ID)
   assert.equal(contentRef.settingId, SETTING_ID)
@@ -30,7 +39,10 @@ function main() {
   assert.equal(Object.keys(artifacts.characterSheets.npcs).length, 35)
   assert.equal(Object.keys(artifacts.characterSheets.premadeCharacters).length, 0)
   assert.equal(artifacts.graph.encounterTransitions.length, 44)
-  assert.equal(artifacts.graph.encounterTransitions.some((transition) => transition.fromEncounterId === "the-gates-of-kordavos" && transition.toEncounterId === "the-harvest-festival"), true)
+  assert.equal(
+    artifacts.graph.encounterTransitions.some((transition) => transition.fromEncounterId === "the-gates-of-kordavos" && transition.toEncounterId === "the-harvest-festival"),
+    true
+  )
   assert.equal(isLocalWikiFinalEncounter(artifacts, "final-confrontation"), true)
   assert.equal(isLocalWikiFinalEncounter(artifacts, "the-gates-of-kordavos"), false)
 
@@ -62,8 +74,14 @@ function main() {
     players: [{ userId: "user_test", characterId: "saved-fighter" }],
     existingPlayerCharacters: [savedCharacter],
   })
-  assert.equal(characters.some((character) => character.id === "saved-fighter" && character.name === "Saved Fighter" && character.type === "pc"), true)
-  assert.equal(characters.some((character) => character.id === "garlan-ironfist" && character.type === "npc"), true)
+  assert.equal(
+    characters.some((character) => character.id === "saved-fighter" && character.name === "Saved Fighter" && character.type === "pc"),
+    true
+  )
+  assert.equal(
+    characters.some((character) => character.id === "garlan-ironfist" && character.type === "npc"),
+    true
+  )
 
   console.log("March of Davos playthrough bridge checks passed")
 }

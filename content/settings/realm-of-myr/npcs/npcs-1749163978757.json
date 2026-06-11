@@ -23,14 +23,7 @@
       "description": "A razor-sharp throwing daggers."
     }
   ],
-  "skills": [
-    "Intimidation",
-    "Stealth",
-    "Investigation",
-    "Perception",
-    "Streetwise",
-    "Tactics"
-  ],
+  "skills": ["Intimidation", "Stealth", "Investigation", "Perception", "Streetwise", "Tactics"],
   "status": "",
   "type": "npc",
   "attributes": {

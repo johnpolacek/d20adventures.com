@@ -1,10 +1,10 @@
 "use server"
 
+import { auth } from "@clerk/nextjs/server"
+import slugify from "slugify"
 import { getUserCharacters } from "@/app/_actions/character"
 import { updateJsonOnS3 } from "@/lib/s3-utils"
 import type { PCTemplate } from "@/types/character"
-import { auth } from "@clerk/nextjs/server"
-import slugify from "slugify"
 
 interface SaveCharacterTemplateParams {
   character: PCTemplate

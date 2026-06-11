@@ -1,10 +1,10 @@
+import { ChevronsRight } from "lucide-react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import Image from "@/components/ui/native-image"
 import { getImageUrl } from "@/lib/utils"
 import type { Adventure } from "@/types/adventure"
-import { ChevronsRight } from "lucide-react"
-import Image from "@/components/ui/native-image"
-import Link from "next/link"
 import { textShadow, textShadowSpread } from "../typography/styles"
 
 interface ActiveAdventureCardProps {

@@ -1,7 +1,7 @@
 "use server"
 
 import { generateObject } from "@/lib/ai"
-import { type NPC, type PCTemplate, npcGenerationSchema, pcTemplateGenerationSchema } from "@/types/character"
+import { type NPC, npcGenerationSchema, type PCTemplate, pcTemplateGenerationSchema } from "@/types/character"
 
 interface GenerateCharacterInput {
   prompt: string

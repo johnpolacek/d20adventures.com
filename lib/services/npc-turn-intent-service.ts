@@ -10,7 +10,10 @@ export function findEncounterInPlan(plan: AdventurePlan, encounterId: string): A
   )
 }
 
-export function resolvePlanContextForEncounter(plan: AdventurePlan, encounterId: string): {
+export function resolvePlanContextForEncounter(
+  plan: AdventurePlan,
+  encounterId: string
+): {
   sectionContext?: { title?: string; summary?: string }
   sceneContext?: { title?: string; summary?: string }
   adventureOverview?: string
@@ -41,8 +44,5 @@ export function resolvePlanContextForEncounter(plan: AdventurePlan, encounterId:
 }
 
 export function buildNpcInitiativeOrder(characters: TurnCharacter[]): TurnCharacter[] {
-  return characters
-    .filter((character) => !character.hasReplied && !character.isComplete)
-    .sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
+  return characters.filter((character) => !character.hasReplied && !character.isComplete).sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
 }
-

@@ -1,5 +1,7 @@
 "use server"
 
+import { auth } from "@clerk/nextjs/server"
+import { z } from "zod"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { assertAdventureAccess } from "@/lib/adventure-access"
@@ -7,8 +9,6 @@ import { generateObject } from "@/lib/ai"
 import { convex } from "@/lib/convex/server"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import type { AdventurePlan } from "@/types/adventure-plan"
-import { auth } from "@clerk/nextjs/server"
-import { z } from "zod"
 
 const reportSchema = z.object({
   summary: z.string(),
@@ -36,10 +36,7 @@ const reportSchema = z.object({
 
 type PracticeReport = z.infer<typeof reportSchema>
 
-function buildPracticeReportPrompt(args: {
-  plan: AdventurePlan
-  turnSnapshots: Array<{ order: number; encounterId: string; title: string; narrative: string }>
-}): string {
+function buildPracticeReportPrompt(args: { plan: AdventurePlan; turnSnapshots: Array<{ order: number; encounterId: string; title: string; narrative: string }> }): string {
   const encounterCatalog = args.plan.sections
     .flatMap((section) => section.scenes)
     .flatMap((scene) => scene.encounters)
@@ -59,9 +56,9 @@ function buildPracticeReportPrompt(args: {
     '- "summary" should be 3-6 sentences.',
     '- "findings" should include 8-20 items where possible.',
     '- Tag each finding as type "plan_edit" or "code_investigation".',
-    '- Include specific evidence from turns in each finding.',
-    '- For plan edits, include target.encounterId and target.planPath when possible.',
-    '- For code investigations, include target.codeArea when possible.',
+    "- Include specific evidence from turns in each finding.",
+    "- For plan edits, include target.encounterId and target.planPath when possible.",
+    "- For code investigations, include target.codeArea when possible.",
     "",
     "Adventure plan metadata:",
     JSON.stringify(
@@ -154,17 +151,11 @@ export async function getPracticeReportsForAdventure(adventureId: Id<"adventures
     trigger: report.trigger,
     summary: typeof report.report === "object" && report.report && "summary" in report.report ? (report.report as { summary?: string }).summary : undefined,
     findingsCount:
-      typeof report.report === "object" &&
-      report.report &&
-      "findings" in report.report &&
-      Array.isArray((report.report as { findings?: unknown[] }).findings)
+      typeof report.report === "object" && report.report && "findings" in report.report && Array.isArray((report.report as { findings?: unknown[] }).findings)
         ? (report.report as { findings: unknown[] }).findings.length
         : 0,
     findings:
-      typeof report.report === "object" &&
-      report.report &&
-      "findings" in report.report &&
-      Array.isArray((report.report as { findings?: unknown[] }).findings)
+      typeof report.report === "object" && report.report && "findings" in report.report && Array.isArray((report.report as { findings?: unknown[] }).findings)
         ? (report.report as { findings: unknown[] }).findings
         : [],
     report: report.report,
@@ -205,10 +196,7 @@ export async function getPracticeReportsForUser(limit = 30) {
       status: report.status,
       summary: typeof report.report === "object" && report.report && "summary" in report.report ? (report.report as { summary?: string }).summary : undefined,
       findingsCount:
-        typeof report.report === "object" &&
-        report.report &&
-        "findings" in report.report &&
-        Array.isArray((report.report as { findings?: unknown[] }).findings)
+        typeof report.report === "object" && report.report && "findings" in report.report && Array.isArray((report.report as { findings?: unknown[] }).findings)
           ? (report.report as { findings: unknown[] }).findings.length
           : 0,
       adventureId: adventureKey,

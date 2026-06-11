@@ -35,13 +35,7 @@
       "name": "15 Gold Pieces"
     }
   ],
-  "skills": [
-    "Acrobatics",
-    "Deception",
-    "Perception",
-    "Sleight of Hand",
-    "Stealth"
-  ],
+  "skills": ["Acrobatics", "Deception", "Perception", "Sleight of Hand", "Stealth"],
   "spells": [],
   "specialAbilities": [
     "Halfling Nimbleness: Can move through the space of any creature that is of a size larger than him.",

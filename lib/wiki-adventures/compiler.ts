@@ -3,8 +3,8 @@ import { npcSchema, pcTemplateSchema } from "@/types/character"
 import { hashJson } from "./hash"
 import { parseMarkdownFile } from "./markdown"
 import { isAllowedS3Url } from "./s3-keys"
-import { createValidationReport, modeSeverity } from "./validation"
 import type { ParsedMarkdownFile, RuntimeArtifacts, RuntimeEncounter, RuntimeEntityRecord, RuntimeTransition, SourceFile, ValidationFinding, ValidationMode } from "./types"
+import { createValidationReport, modeSeverity } from "./validation"
 
 const adventureFrontmatterSchema = z.object({
   id: z.string().min(1),

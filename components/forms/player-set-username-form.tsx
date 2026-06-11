@@ -1,8 +1,8 @@
 "use client"
+import { useState, useTransition } from "react"
 import { setUsername } from "@/app/_actions/profile"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useState, useTransition } from "react"
 
 export default function PlayerSetUsernameForm({ userId }: { userId: string }) {
   const [username, setUsernameState] = useState("")

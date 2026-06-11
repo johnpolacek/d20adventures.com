@@ -1,6 +1,6 @@
-import { buildNpcOutcomePrompt, generateNpcOutcome } from "@/lib/services/npc-turn-generation-service"
 import { appendNarrative, normalizeNarrative } from "@/lib/services/narrative-service"
-import { applyNpcEffectsToCharacters, reconcileNpcRollWithAi, type NpcTurnEffect } from "@/lib/services/npc-turn-resolution-service"
+import { buildNpcOutcomePrompt, generateNpcOutcome } from "@/lib/services/npc-turn-generation-service"
+import { applyNpcEffectsToCharacters, type NpcTurnEffect, reconcileNpcRollWithAi } from "@/lib/services/npc-turn-resolution-service"
 import { getRollModifier } from "@/lib/services/roll-modifier-service"
 import { getRollRequirementForAction } from "@/lib/services/roll-requirement-service"
 import { rollD20 } from "@/lib/utils"
@@ -32,11 +32,7 @@ type NpcActionResult = {
   effects?: NpcTurnEffect[]
 }
 
-export function handleSkipPassNpcTurn(args: {
-  turn: Turn
-  npc: TurnCharacter
-  actionResult: NpcActionResult
-}): NpcTurnBranchResult {
+export function handleSkipPassNpcTurn(args: { turn: Turn; npc: TurnCharacter; actionResult: NpcActionResult }): NpcTurnBranchResult {
   const narrativeToAppend = normalizeNarrative(args.actionResult.narrative)
   const updatedCharacters = args.turn.characters.map((character) => {
     if (character.id === args.npc.id) {
@@ -81,9 +77,9 @@ export async function resolveNpcTurnRollOrDirectBranch(args: {
   let updatedNarrative = args.turn.narrative || ""
   let narrativeToAppend = ""
   let updatedCharacters = [...args.turn.characters]
-  let rollInfo: NpcRollInfo | undefined = undefined
-  let effects: NpcTurnEffect[] | undefined = undefined
-  let shortcode: string | undefined = undefined
+  let rollInfo: NpcRollInfo | undefined
+  let effects: NpcTurnEffect[] | undefined
+  let shortcode: string | undefined
 
   const rollRequirement = await getRollRequirementForAction(args.actionResult.actionSummary, args.npc, {
     encounterInstructions: args.encounterContext?.instructions || "",
@@ -235,4 +231,3 @@ export async function resolveNpcTurnRollOrDirectBranch(args: {
     narrativeToAppend,
   }
 }
-

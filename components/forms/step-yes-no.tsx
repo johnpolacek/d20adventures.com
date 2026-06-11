@@ -1,4 +1,3 @@
-import React from "react"
 import { textShadow } from "../typography/styles"
 import StepperButtons from "./stepper-buttons"
 

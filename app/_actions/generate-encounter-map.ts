@@ -3,11 +3,11 @@
 // Deprecated: 3D encounter map generation is disabled in product flow.
 // Keep this implementation dormant for possible revival.
 
+import { auth } from "@clerk/nextjs/server"
 import { generateObject, generateText } from "@/lib/ai"
 import { createDefaultEncounterMap, enhanceEncounterMap, formatEncounterSceneKit, inferEncounterSceneKit } from "@/lib/map-utils"
 import type { Encounter3DSceneKit, EncounterCharacterRef } from "@/types/adventure-plan"
 import { encounter3dMapSchema } from "@/types/adventure-plan"
-import { auth } from "@clerk/nextjs/server"
 
 function buildSceneKitGuidance(sceneKit: Encounter3DSceneKit) {
   switch (sceneKit) {
@@ -29,7 +29,6 @@ function buildSceneKitGuidance(sceneKit: Encounter3DSceneKit) {
       return "Target a tomb or crypt with a sarcophagus-like focal piece, funerary markers, oppressive side aisles, and broken burial dressing."
     case "cavern":
       return "Target a cave chamber with uneven shelves, rock spurs, choke points, and clustered boulders."
-    case "generic":
     default:
       return "Target a compact tabletop encounter space with strong focal terrain, asymmetrical clustered cover, and clear lanes."
   }
@@ -185,7 +184,7 @@ export async function generateEncounterMapAction(args: {
       version: 1 as const,
       promptHistory: [
         ...(args.existingMap && typeof args.existingMap === "object" && args.existingMap && "promptHistory" in args.existingMap
-          ? (((args.existingMap as { promptHistory?: string[] }).promptHistory || []))
+          ? (args.existingMap as { promptHistory?: string[] }).promptHistory || []
           : []),
         args.prompt,
       ],

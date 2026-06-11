@@ -1,5 +1,7 @@
 "use server"
 
+import { auth } from "@clerk/nextjs/server"
+import { redirect } from "next/navigation"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { convex } from "@/lib/convex/server"
@@ -7,8 +9,6 @@ import { readJsonFromS3 } from "@/lib/s3-utils"
 import { buildLocalWikiTurnCharacters, isLocalWikiAdventure, loadWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PCTemplate } from "@/types/character"
-import { auth } from "@clerk/nextjs/server"
-import { redirect } from "next/navigation"
 
 interface StartAdventureArgs {
   settingId: string

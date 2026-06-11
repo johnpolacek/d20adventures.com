@@ -1,11 +1,11 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { ImageUpload } from "@/components/ui/image-upload"
 import { SignInButton, useUser } from "@clerk/nextjs"
 import { LogIn } from "lucide-react"
 import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { ImageUpload } from "@/components/ui/image-upload"
 
 export function UploadDemoClient() {
   const [imageUrl, setImageUrl] = useState("")

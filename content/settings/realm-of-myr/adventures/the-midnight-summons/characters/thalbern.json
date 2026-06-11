@@ -30,13 +30,7 @@
       "description": "A small blade for quick strikes."
     }
   ],
-  "skills": [
-    "Stealth",
-    "Tracking",
-    "Archery",
-    "Survival",
-    "Nature Lore"
-  ],
+  "skills": ["Stealth", "Tracking", "Archery", "Survival", "Nature Lore"],
   "attributes": {
     "strength": 13,
     "dexterity": 17,

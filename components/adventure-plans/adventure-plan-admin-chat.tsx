@@ -1,34 +1,26 @@
 "use client"
 
+import { Bot, History, MessageSquareText, Send, X } from "lucide-react"
+import * as React from "react"
+import { toast } from "sonner"
 import {
+  type AdventurePlanChatMessage,
+  type AdventurePlanChatScope,
   fetchAdventurePlanChatBefore,
   fetchRecentAdventurePlanChat,
   recordAdventurePlanChatEvent,
   sendAdventurePlanChatMessage,
-  type AdventurePlanChatMessage,
-  type AdventurePlanChatScope,
 } from "@/app/_actions/adventure-plan-chat"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { parseStructureProposal, summarizeStructureProposal, type StructureProposal } from "@/lib/adventure-plan-structure"
-import type { AdventurePlan, AdventureSection } from "@/types/adventure-plan"
 import type { Id } from "@/convex/_generated/dataModel"
-import { Bot, History, MessageSquareText, Send, X } from "lucide-react"
-import * as React from "react"
-import { toast } from "sonner"
+import { parseStructureProposal, type StructureProposal, summarizeStructureProposal } from "@/lib/adventure-plan-structure"
+import type { AdventurePlan, AdventureSection } from "@/types/adventure-plan"
 
 const CHAT_PAGE_SIZE = 50
 
-export type ChatTarget =
-  | "teaser"
-  | "overview"
-  | "section.review"
-  | "section.summary"
-  | "scene.summary"
-  | "encounter.intro"
-  | "encounter.instructions"
-  | "plan.structure"
+export type ChatTarget = "teaser" | "overview" | "section.review" | "section.summary" | "scene.summary" | "encounter.intro" | "encounter.instructions" | "plan.structure"
 
 type AdminChatTargetOption = {
   target: ChatTarget
@@ -424,7 +416,10 @@ export function AdventurePlanAdminChat({
                       })()
                     : null
                 return (
-                  <article key={message._id} className={`rounded-lg border p-3 ${isEvent ? "border-amber-300/15 bg-amber-900/10" : isAssistant ? "border-blue-300/20 bg-blue-950/20" : "border-white/10 bg-white/5"}`}>
+                  <article
+                    key={message._id}
+                    className={`rounded-lg border p-3 ${isEvent ? "border-amber-300/15 bg-amber-900/10" : isAssistant ? "border-blue-300/20 bg-blue-950/20" : "border-white/10 bg-white/5"}`}
+                  >
                     <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-white/55">
                       <span className="font-mono uppercase tracking-widest text-primary-200/80">{message.displayName}</span>
                       <span>{formatTimestamp(message.createdAt)}</span>
@@ -441,9 +436,7 @@ export function AdventurePlanAdminChat({
                               Adds {structurePreview.sectionCount} section{structurePreview.sectionCount === 1 ? "" : "s"}, {structurePreview.sceneCount} scene
                               {structurePreview.sceneCount === 1 ? "" : "s"}, and {structurePreview.encounterCount} encounter{structurePreview.encounterCount === 1 ? "" : "s"}.
                             </div>
-                            <div className="max-h-48 overflow-y-auto whitespace-pre-wrap rounded border border-white/10 bg-black/25 p-2 text-xs">
-                              {structurePreview.lines.join("\n")}
-                            </div>
+                            <div className="max-h-48 overflow-y-auto whitespace-pre-wrap rounded border border-white/10 bg-black/25 p-2 text-xs">{structurePreview.lines.join("\n")}</div>
                           </div>
                         ) : (
                           <div className="max-h-48 overflow-y-auto whitespace-pre-wrap text-sm text-white/80">{message.proposal.suggestedText}</div>

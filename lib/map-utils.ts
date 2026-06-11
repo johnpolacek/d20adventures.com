@@ -31,23 +31,10 @@ export function inferEncounterSceneKit(args: {
   encounterInstructions?: string
   encounterNpcBehaviors?: string[]
 }): Encounter3DSceneKit {
-  const text = [
-    args.sectionTitle,
-    args.sceneTitle,
-    args.encounterTitle,
-    args.encounterIntro,
-    args.encounterInstructions,
-    ...(args.encounterNpcBehaviors || []),
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase()
+  const text = [args.sectionTitle, args.sceneTitle, args.encounterTitle, args.encounterIntro, args.encounterInstructions, ...(args.encounterNpcBehaviors || [])].filter(Boolean).join(" ").toLowerCase()
 
   const score = (keywords: string[], penalty: string[] = []) =>
-    clampScore(
-      keywords.reduce((total, keyword) => total + (text.includes(keyword) ? 2 : 0), 0) -
-        penalty.reduce((total, keyword) => total + (text.includes(keyword) ? 1 : 0), 0)
-    )
+    clampScore(keywords.reduce((total, keyword) => total + (text.includes(keyword) ? 2 : 0), 0) - penalty.reduce((total, keyword) => total + (text.includes(keyword) ? 1 : 0), 0))
 
   const rankedKits = [
     {
@@ -106,11 +93,6 @@ export function inferThemeForSceneKit(sceneKit: Encounter3DSceneKit): Encounter3
       return "wood"
     case "city_gate":
       return "stone"
-    case "shrine":
-    case "crypt":
-    case "courtyard":
-    case "ruins":
-    case "generic":
     default:
       return DEFAULT_THEME
   }
@@ -136,7 +118,6 @@ export function formatEncounterSceneKit(sceneKit: Encounter3DSceneKit) {
       return "Crypt"
     case "cavern":
       return "Cavern"
-    case "generic":
     default:
       return "Generic"
   }
@@ -185,8 +166,7 @@ export function resolveEncounterMapSceneKit(map: Encounter3DMap): Encounter3DSce
     return "city_gate"
   }
 
-  const hasCityGateIds =
-    map.terrain.some((item) => item.id.includes("city-gate")) || map.props.some((item) => item.id.includes("city-gate"))
+  const hasCityGateIds = map.terrain.some((item) => item.id.includes("city-gate")) || map.props.some((item) => item.id.includes("city-gate"))
 
   if (hasCityGateIds) {
     return "city_gate"
@@ -276,7 +256,6 @@ export function getThemePalette(theme: Encounter3DTheme) {
         haze: "#19222d",
         grid: "#ffffff",
       }
-    case "stone":
     default:
       return {
         floor: "#817a72",
@@ -303,7 +282,6 @@ export function getTerrainDefaults(kind: Encounter3DTerrainKind) {
       return { width: 3, depth: 1.5, height: 0.8 }
     case "pit":
       return { width: 3, depth: 3, height: 1.2 }
-    case "platform":
     default:
       return { width: 3, depth: 3, height: 0.5 }
   }
@@ -346,7 +324,7 @@ function addIfMissing<T extends { id: string }>(collection: T[], nextItem: T) {
   }
 }
 
-function createSceneKitTerrain(sceneKit: Encounter3DSceneKit, theme: Encounter3DTheme, width: number, depth: number): Encounter3DTerrain[] {
+function createSceneKitTerrain(sceneKit: Encounter3DSceneKit, theme: Encounter3DTheme, _width: number, depth: number): Encounter3DTerrain[] {
   const palette = getThemePalette(theme)
   const backline = -depth / 2 + 2.2
 
@@ -415,13 +393,12 @@ function createSceneKitTerrain(sceneKit: Encounter3DSceneKit, theme: Encounter3D
         { id: "auto-kit-cavern-shelf", kind: "dais", x: 0.4, z: 1.2, y: 0, width: 2.4, depth: 1.5, height: 0.42, rotation: 0.1, color: palette.floor, label: "Rock shelf" },
         { id: "auto-kit-cavern-spur", kind: "platform", x: -1.8, z: -0.8, y: 0, width: 2, depth: 1.4, height: 0.38, rotation: -0.16, color: palette.rim, label: "Rock spur" },
       ]
-    case "generic":
     default:
       return []
   }
 }
 
-function createSceneKitProps(sceneKit: Encounter3DSceneKit, theme: Encounter3DTheme, width: number, depth: number): Encounter3DProp[] {
+function createSceneKitProps(sceneKit: Encounter3DSceneKit, theme: Encounter3DTheme, _width: number, depth: number): Encounter3DProp[] {
   const palette = getThemePalette(theme)
   const backline = -depth / 2 + 2.6
 
@@ -500,7 +477,6 @@ function createSceneKitProps(sceneKit: Encounter3DSceneKit, theme: Encounter3DTh
         { id: "auto-kit-cavern-rock-right", kind: "rock", x: 2.8, z: -1.9, y: 0, scale: 1.02, rotation: -0.18, color: palette.rim, label: "Boulder cluster" },
         { id: "auto-kit-cavern-torch", kind: "torch", x: 0.7, z: backline + 0.3, y: 0, scale: 0.9, rotation: 0, color: "#efc65b", label: "Wall torch" },
       ]
-    case "generic":
     default:
       return []
   }
@@ -519,11 +495,71 @@ function createPerimeterTerrain(sceneKit: Encounter3DSceneKit, theme: Encounter3
 
   if (sceneKit === "checkpoint") {
     return [
-      { id: "auto-wall-back", kind: "wall", x: 0, z: -depth / 2 + 0.35, y: 0, width: width - 1.6, depth: 0.7, height: 2.4, rotation: 0, color: theme === "wood" ? "#7a5230" : "#6c675f", label: "Rear fortification" },
-      { id: "auto-wall-left", kind: "wall", x: -width / 2 + 0.8, z: -depth / 2 + 2.3, y: 0, width: 1.2, depth: 3.1, height: 2.3, rotation: 0, color: theme === "wood" ? "#6d4927" : "#686259", label: "Gate flank" },
-      { id: "auto-wall-right", kind: "wall", x: width / 2 - 0.8, z: -depth / 2 + 2.3, y: 0, width: 1.2, depth: 3.1, height: 2.3, rotation: 0, color: theme === "wood" ? "#6d4927" : "#686259", label: "Gate flank" },
-      { id: "auto-wall-front-left", kind: "wall", x: -width / 2 + 1.6, z: depth / 2 - 0.6, y: 0, width: 2.1, depth: 0.7, height: 0.9, rotation: 0.06, color: theme === "wood" ? "#7a5230" : "#736d66", label: "Approach barricade" },
-      { id: "auto-wall-front-right", kind: "wall", x: width / 2 - 1.6, z: depth / 2 - 0.6, y: 0, width: 2.1, depth: 0.7, height: 0.9, rotation: -0.06, color: theme === "wood" ? "#7a5230" : "#736d66", label: "Approach barricade" },
+      {
+        id: "auto-wall-back",
+        kind: "wall",
+        x: 0,
+        z: -depth / 2 + 0.35,
+        y: 0,
+        width: width - 1.6,
+        depth: 0.7,
+        height: 2.4,
+        rotation: 0,
+        color: theme === "wood" ? "#7a5230" : "#6c675f",
+        label: "Rear fortification",
+      },
+      {
+        id: "auto-wall-left",
+        kind: "wall",
+        x: -width / 2 + 0.8,
+        z: -depth / 2 + 2.3,
+        y: 0,
+        width: 1.2,
+        depth: 3.1,
+        height: 2.3,
+        rotation: 0,
+        color: theme === "wood" ? "#6d4927" : "#686259",
+        label: "Gate flank",
+      },
+      {
+        id: "auto-wall-right",
+        kind: "wall",
+        x: width / 2 - 0.8,
+        z: -depth / 2 + 2.3,
+        y: 0,
+        width: 1.2,
+        depth: 3.1,
+        height: 2.3,
+        rotation: 0,
+        color: theme === "wood" ? "#6d4927" : "#686259",
+        label: "Gate flank",
+      },
+      {
+        id: "auto-wall-front-left",
+        kind: "wall",
+        x: -width / 2 + 1.6,
+        z: depth / 2 - 0.6,
+        y: 0,
+        width: 2.1,
+        depth: 0.7,
+        height: 0.9,
+        rotation: 0.06,
+        color: theme === "wood" ? "#7a5230" : "#736d66",
+        label: "Approach barricade",
+      },
+      {
+        id: "auto-wall-front-right",
+        kind: "wall",
+        x: width / 2 - 1.6,
+        z: depth / 2 - 0.6,
+        y: 0,
+        width: 2.1,
+        depth: 0.7,
+        height: 0.9,
+        rotation: -0.06,
+        color: theme === "wood" ? "#7a5230" : "#736d66",
+        label: "Approach barricade",
+      },
     ]
   }
 
@@ -533,20 +569,140 @@ function createPerimeterTerrain(sceneKit: Encounter3DSceneKit, theme: Encounter3
 
   if (sceneKit === "camp" || sceneKit === "road" || sceneKit === "ruins") {
     return [
-      { id: "auto-wall-back", kind: "wall", x: 0, z: -depth / 2 + 0.45, y: 0, width: width - 1.2, depth: 0.7, height: 1.6, rotation: 0, color: theme === "wood" ? "#7a5230" : "#6c675f", label: "Rear boundary" },
-      { id: "auto-wall-left", kind: "wall", x: -width / 2 + 1.2, z: 0.8, y: 0, width: 1.2, depth: 4.8, height: 1.2, rotation: 0.18, color: theme === "wood" ? "#6d4927" : "#686259", label: "Flank cover" },
-      { id: "auto-wall-right", kind: "wall", x: width / 2 - 1.2, z: -0.8, y: 0, width: 1.2, depth: 4.4, height: 1.2, rotation: -0.18, color: theme === "wood" ? "#6d4927" : "#686259", label: "Flank cover" },
-      { id: "auto-wall-front-left", kind: "wall", x: -width / 2 + 1.7, z: depth / 2 - 0.6, y: 0, width: 2, depth: 0.7, height: 0.75, rotation: 0.08, color: theme === "wood" ? "#7a5230" : "#736d66", label: "Front cover" },
-      { id: "auto-wall-front-right", kind: "wall", x: width / 2 - 1.7, z: depth / 2 - 0.6, y: 0, width: 2, depth: 0.7, height: 0.75, rotation: -0.08, color: theme === "wood" ? "#7a5230" : "#736d66", label: "Front cover" },
+      {
+        id: "auto-wall-back",
+        kind: "wall",
+        x: 0,
+        z: -depth / 2 + 0.45,
+        y: 0,
+        width: width - 1.2,
+        depth: 0.7,
+        height: 1.6,
+        rotation: 0,
+        color: theme === "wood" ? "#7a5230" : "#6c675f",
+        label: "Rear boundary",
+      },
+      {
+        id: "auto-wall-left",
+        kind: "wall",
+        x: -width / 2 + 1.2,
+        z: 0.8,
+        y: 0,
+        width: 1.2,
+        depth: 4.8,
+        height: 1.2,
+        rotation: 0.18,
+        color: theme === "wood" ? "#6d4927" : "#686259",
+        label: "Flank cover",
+      },
+      {
+        id: "auto-wall-right",
+        kind: "wall",
+        x: width / 2 - 1.2,
+        z: -0.8,
+        y: 0,
+        width: 1.2,
+        depth: 4.4,
+        height: 1.2,
+        rotation: -0.18,
+        color: theme === "wood" ? "#6d4927" : "#686259",
+        label: "Flank cover",
+      },
+      {
+        id: "auto-wall-front-left",
+        kind: "wall",
+        x: -width / 2 + 1.7,
+        z: depth / 2 - 0.6,
+        y: 0,
+        width: 2,
+        depth: 0.7,
+        height: 0.75,
+        rotation: 0.08,
+        color: theme === "wood" ? "#7a5230" : "#736d66",
+        label: "Front cover",
+      },
+      {
+        id: "auto-wall-front-right",
+        kind: "wall",
+        x: width / 2 - 1.7,
+        z: depth / 2 - 0.6,
+        y: 0,
+        width: 2,
+        depth: 0.7,
+        height: 0.75,
+        rotation: -0.08,
+        color: theme === "wood" ? "#7a5230" : "#736d66",
+        label: "Front cover",
+      },
     ]
   }
 
   return [
-    { id: "auto-wall-back", kind: "wall", x: 0, z: -depth / 2 + 0.35, y: 0, width: width - 0.8, depth: 0.7, height: 2.8, rotation: 0, color: theme === "wood" ? "#7a5230" : "#6c675f", label: "Perimeter wall" },
-    { id: "auto-wall-left", kind: "wall", x: -width / 2 + 0.35, z: 0, y: 0, width: 0.7, depth: depth - 1.8, height: 2.6, rotation: 0, color: theme === "wood" ? "#6d4927" : "#686259", label: "Perimeter wall" },
-    { id: "auto-wall-right", kind: "wall", x: width / 2 - 0.35, z: 0, y: 0, width: 0.7, depth: depth - 1.8, height: 2.6, rotation: 0, color: theme === "wood" ? "#6d4927" : "#686259", label: "Perimeter wall" },
-    { id: "auto-wall-front-left", kind: "wall", x: -width / 2 + 1.5, z: depth / 2 - 0.4, y: 0, width: 2.2, depth: 0.7, height: 1.3, rotation: 0, color: theme === "wood" ? "#7a5230" : "#736d66", label: "Front barricade" },
-    { id: "auto-wall-front-right", kind: "wall", x: width / 2 - 1.5, z: depth / 2 - 0.4, y: 0, width: 2.2, depth: 0.7, height: 1.3, rotation: 0, color: theme === "wood" ? "#7a5230" : "#736d66", label: "Front barricade" },
+    {
+      id: "auto-wall-back",
+      kind: "wall",
+      x: 0,
+      z: -depth / 2 + 0.35,
+      y: 0,
+      width: width - 0.8,
+      depth: 0.7,
+      height: 2.8,
+      rotation: 0,
+      color: theme === "wood" ? "#7a5230" : "#6c675f",
+      label: "Perimeter wall",
+    },
+    {
+      id: "auto-wall-left",
+      kind: "wall",
+      x: -width / 2 + 0.35,
+      z: 0,
+      y: 0,
+      width: 0.7,
+      depth: depth - 1.8,
+      height: 2.6,
+      rotation: 0,
+      color: theme === "wood" ? "#6d4927" : "#686259",
+      label: "Perimeter wall",
+    },
+    {
+      id: "auto-wall-right",
+      kind: "wall",
+      x: width / 2 - 0.35,
+      z: 0,
+      y: 0,
+      width: 0.7,
+      depth: depth - 1.8,
+      height: 2.6,
+      rotation: 0,
+      color: theme === "wood" ? "#6d4927" : "#686259",
+      label: "Perimeter wall",
+    },
+    {
+      id: "auto-wall-front-left",
+      kind: "wall",
+      x: -width / 2 + 1.5,
+      z: depth / 2 - 0.4,
+      y: 0,
+      width: 2.2,
+      depth: 0.7,
+      height: 1.3,
+      rotation: 0,
+      color: theme === "wood" ? "#7a5230" : "#736d66",
+      label: "Front barricade",
+    },
+    {
+      id: "auto-wall-front-right",
+      kind: "wall",
+      x: width / 2 - 1.5,
+      z: depth / 2 - 0.4,
+      y: 0,
+      width: 2.2,
+      depth: 0.7,
+      height: 1.3,
+      rotation: 0,
+      color: theme === "wood" ? "#7a5230" : "#736d66",
+      label: "Front barricade",
+    },
   ]
 }
 
@@ -584,7 +740,6 @@ function createFocalTerrain(theme: Encounter3DTheme, width: number, depth: numbe
         { id: "auto-focal-bank-left", kind: "platform", x: -width / 2 + 2.1, z: 0.2, y: 0, width: 2.2, depth: depth - 4.6, height: 0.28, rotation: 0, color: "#cedce7", label: "Snow bank" },
         { id: "auto-focal-bank-right", kind: "platform", x: width / 2 - 2.1, z: -0.5, y: 0, width: 2.2, depth: depth - 4.6, height: 0.28, rotation: 0, color: "#cedce7", label: "Snow bank" },
       ]
-    case "stone":
     default:
       return [
         { id: "auto-focal-dais", kind: "dais", x: 0, z: backline, y: 0, width: 4.6, depth: 2.6, height: 0.55, rotation: 0, color: "#8c847a", label: "Command dais" },
@@ -638,7 +793,6 @@ function createAtmosphereProps(theme: Encounter3DTheme, width: number, depth: nu
         { id: "auto-torch-right", kind: "torch", x: width / 2 - 1.6, z: edgeZ + 0.8, y: 0, scale: 1, rotation: 0, color: "#ffb703", label: "Torch" },
         { id: "auto-banner-center", kind: "banner", x: 0, z: edgeZ + 1.1, y: 0, scale: 0.95, rotation: 0, color: "#9d3a24", label: "Road sign" },
       ]
-    case "stone":
     default:
       return [
         { id: "auto-banner-left", kind: "banner", x: -width / 2 + 1.1, z: edgeZ + 0.5, y: 0, scale: 1.1, rotation: 0, color: "#8c2f39", label: "House banner" },
@@ -678,7 +832,7 @@ function createScatterProps(theme: Encounter3DTheme): Encounter3DProp[] {
   }
 }
 
-function createMidfieldTerrain(theme: Encounter3DTheme, width: number, depth: number): Encounter3DTerrain[] {
+function createMidfieldTerrain(theme: Encounter3DTheme, _width: number, _depth: number): Encounter3DTerrain[] {
   switch (theme) {
     case "dirt":
       return [
@@ -710,7 +864,6 @@ function createMidfieldTerrain(theme: Encounter3DTheme, width: number, depth: nu
         { id: "auto-mid-bank-right", kind: "platform", x: 2.4, z: -0.7, y: 0, width: 2.2, depth: 1.4, height: 0.22, rotation: -0.18, color: "#dce7f0", label: "Snow bank" },
         { id: "auto-mid-ice-step", kind: "dais", x: 0.8, z: 1.6, y: 0, width: 2, depth: 1.2, height: 0.26, rotation: 0.08, color: "#eef6fc", label: "Ice shelf" },
       ]
-    case "stone":
     default:
       return [
         { id: "auto-mid-cover-left", kind: "wall", x: -2.8, z: 0.9, y: 0, width: 2.2, depth: 0.6, height: 0.82, rotation: 0.2, color: "#8b8378", label: "Stone cover" },
@@ -720,7 +873,7 @@ function createMidfieldTerrain(theme: Encounter3DTheme, width: number, depth: nu
   }
 }
 
-function createClusterProps(theme: Encounter3DTheme, width: number, depth: number): Encounter3DProp[] {
+function createClusterProps(theme: Encounter3DTheme, _width: number, depth: number): Encounter3DProp[] {
   const backline = -depth / 2 + 3
 
   switch (theme) {
@@ -759,7 +912,6 @@ function createClusterProps(theme: Encounter3DTheme, width: number, depth: numbe
         { id: "auto-cluster-right-1", kind: "rock", x: 2.9, z: -2.1, y: 0, scale: 1.04, rotation: -0.18, color: "#e2ebf2", label: "Snow drift" },
         { id: "auto-cluster-right-2", kind: "tree", x: 2.2, z: -1.75, y: 0, scale: 0.88, rotation: 0.16, color: "#7ca46b", label: "Snow pine" },
       ]
-    case "stone":
     default:
       return [
         { id: "auto-cluster-left-1", kind: "crate", x: -3.2, z: 2.35, y: 0, scale: 1.06, rotation: 0.16, color: "#b0733f", label: "Supply stack" },
@@ -868,9 +1020,7 @@ export function enhanceEncounterMap(
 
   const hasSceneKitTerrain = next.terrain.some((item) => item.id.startsWith(`auto-kit-${sceneKit}`))
   const hasSceneKitProps = next.props.some((item) => item.id.startsWith(`auto-kit-${sceneKit}`))
-  const hasPerimeterTreatment =
-    next.terrain.some((item) => item.id.startsWith("auto-wall") || item.id.startsWith("auto-ridge")) ||
-    next.terrain.filter((item) => item.kind === "wall").length >= 2
+  const hasPerimeterTreatment = next.terrain.some((item) => item.id.startsWith("auto-wall") || item.id.startsWith("auto-ridge")) || next.terrain.filter((item) => item.kind === "wall").length >= 2
 
   if (!hasSceneKitTerrain && sceneKit !== "generic" && next.terrain.length < 9) {
     for (const terrain of createSceneKitTerrain(sceneKit, next.board.theme, width, depth)) {

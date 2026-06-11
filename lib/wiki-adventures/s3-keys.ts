@@ -42,4 +42,3 @@ export function isAllowedS3Url(url: string, allowedHosts: string[]): boolean {
     return false
   }
 }
-

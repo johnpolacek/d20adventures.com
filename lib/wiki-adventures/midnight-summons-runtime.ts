@@ -1,6 +1,6 @@
-import { buildLocalWikiTurnCharacters, isLocalWikiFinalEncounter, loadLocalWikiAdventureRuntime, type LocalWikiContentRef } from "./local-runtime"
-import type { RuntimeArtifacts, RuntimeEncounter } from "./types"
 import type { TurnCharacter } from "@/types/adventure"
+import { buildLocalWikiTurnCharacters, isLocalWikiFinalEncounter, type LocalWikiContentRef, loadLocalWikiAdventureRuntime } from "./local-runtime"
+import type { RuntimeArtifacts, RuntimeEncounter } from "./types"
 
 export const MIDNIGHT_SUMMONS_SETTING_ID = "realm-of-myr"
 export const MIDNIGHT_SUMMONS_PLAN_ID = "the-midnight-summons"
@@ -24,11 +24,7 @@ export function loadMidnightSummonsRuntime(): { artifacts: RuntimeArtifacts; con
   return { artifacts, contentRef: contentRef as MidnightContentRef }
 }
 
-export function buildMidnightTurnCharacters(args: {
-  artifacts: RuntimeArtifacts
-  encounter: RuntimeEncounter
-  players: Array<{ userId: string; characterId: string }>
-}): TurnCharacter[] {
+export function buildMidnightTurnCharacters(args: { artifacts: RuntimeArtifacts; encounter: RuntimeEncounter; players: Array<{ userId: string; characterId: string }> }): TurnCharacter[] {
   return buildLocalWikiTurnCharacters(args)
 }
 

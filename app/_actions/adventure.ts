@@ -1,22 +1,18 @@
 "use server"
+import { auth } from "@clerk/nextjs/server"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { assertAdventureAccess, assertAdventureAccessByTurn, assertPlayerCharacterControl } from "@/lib/adventure-access"
 import { convex } from "@/lib/convex/server"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import { buildFirstTurnSetup } from "@/lib/services/adventure-first-turn-service"
-import {
-  getEncounterInstructionsFromPlan,
-  resolvePlayerRollNarrativeAndCharacters,
-} from "@/lib/services/adventure-roll-result-service"
+import { getEncounterInstructionsFromPlan, resolvePlayerRollNarrativeAndCharacters } from "@/lib/services/adventure-roll-result-service"
 import { buildTurnReplyRollRequirement } from "@/lib/services/adventure-turn-reply-service"
 import { processNpcTurnsAfterCurrent } from "@/lib/services/npc-turn-service"
 import type { RollRequirement } from "@/lib/validations/roll-requirement-schema"
-import type { TurnCharacter } from "@/types/adventure"
-import type { Adventure } from "@/types/adventure"
+import type { Adventure, TurnCharacter } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PC } from "@/types/character"
-import { auth } from "@clerk/nextjs/server"
 
 // Using RollRequirement union (object | null) from validation schema
 
@@ -25,7 +21,12 @@ export async function processTurnReply({
   characterId,
   narrativeAction,
   originalPlayerInput,
-}: { turnId: Id<"turns">; characterId: string; narrativeAction: string; originalPlayerInput?: string }) {
+}: {
+  turnId: Id<"turns">
+  characterId: string
+  narrativeAction: string
+  originalPlayerInput?: string
+}) {
   const { userId } = await auth()
   if (!userId) {
     console.error("[processTurnReply] Unauthorized access attempt.")
@@ -106,15 +107,7 @@ export async function createAdventureWithFirstTurn(payload: {
   })
 }
 
-export async function resolvePlayerRollResult({
-  turnId,
-  characterId,
-  result,
-}: {
-  turnId: Id<"turns">
-  characterId: string
-  result: number
-}) {
+export async function resolvePlayerRollResult({ turnId, characterId, result }: { turnId: Id<"turns">; characterId: string; result: number }) {
   const { userId } = await auth()
   if (!userId) throw new Error("Unauthorized")
 

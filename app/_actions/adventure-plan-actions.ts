@@ -1,11 +1,11 @@
 "use server"
 
+import { auth } from "@clerk/nextjs/server"
 import { externalizeAdventurePlanMaps, loadAdventurePlanFromStorage } from "@/lib/adventure-plan-storage"
 import { canManageResource, getResourceOwnerId } from "@/lib/content-permissions"
 import { copyS3Object, listAndReadJsonFilesInS3Directory, readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { Setting } from "@/types/setting"
-import { auth } from "@clerk/nextjs/server"
 
 interface UpdateAdventurePlanParams {
   adventurePlan: AdventurePlan

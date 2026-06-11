@@ -1,8 +1,8 @@
 "use client"
 
+import { SignInButton } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { SignInButton } from "@clerk/nextjs"
 
 interface AccountRequiredProps {
   redirectUrl?: string

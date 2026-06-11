@@ -31,15 +31,7 @@
       "description": "A hooded cloak woven with natural fibers, providing warmth and blending seamlessly with forest environments."
     }
   ],
-  "skills": [
-    "Archery (Expert)",
-    "Stealth",
-    "Survival",
-    "Perception",
-    "Tracking",
-    "Nature Lore",
-    "Acrobatics"
-  ],
+  "skills": ["Archery (Expert)", "Stealth", "Survival", "Perception", "Tracking", "Nature Lore", "Acrobatics"],
   "specialAbilities": [
     "Fey Ancestry (Advantage on saves vs. charm, cannot be put to sleep by magic)",
     "Trance (Does not require sleep, meditates for 4 hours)",

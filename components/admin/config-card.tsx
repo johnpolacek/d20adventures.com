@@ -1,6 +1,6 @@
+import { AlertCircle, CheckCircle, XCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { AlertCircle, CheckCircle, XCircle } from "lucide-react"
 
 interface ConfigItem {
   key: string

@@ -1,5 +1,7 @@
 "use client"
 
+import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react"
+import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -8,8 +10,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import type { Location, Organization } from "@/types/setting"
-import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react"
-import * as React from "react"
 
 interface SettingLocationsProps {
   settingId: string

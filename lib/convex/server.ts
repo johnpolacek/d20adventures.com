@@ -1,6 +1,6 @@
-import { api, internal } from "@/convex/_generated/api"
 import { ConvexHttpClient } from "convex/browser"
 import type { FunctionReference, FunctionReturnType } from "convex/server"
+import { api, internal } from "@/convex/_generated/api"
 
 const convexUrl = process.env.CONVEX_URL ?? process.env.NEXT_PUBLIC_CONVEX_URL
 if (!convexUrl) {

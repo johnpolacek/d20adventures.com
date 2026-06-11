@@ -1,8 +1,8 @@
+import * as React from "react"
+import { toast } from "sonner"
 import { updateAdventurePlanAction } from "@/app/_actions/adventure-plan-actions"
 import type { AdventurePlan, AdventureSection } from "@/types/adventure-plan"
 import type { Character, PCTemplate } from "@/types/character"
-import * as React from "react"
-import { toast } from "sonner"
 
 export function useAdventurePlanForm(adventurePlan: AdventurePlan) {
   const [teaser, setTeaser] = React.useState(adventurePlan.teaser)

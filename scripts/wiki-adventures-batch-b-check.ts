@@ -11,11 +11,26 @@ async function main() {
   })
 
   assert.equal(migrated.report.planId, "the-old-road")
-  assert.equal(migrated.report.generatedFiles.some((file) => file.path.endsWith("/adventure.md")), true)
-  assert.equal(migrated.report.generatedFiles.some((file) => file.path.endsWith("/encounters/gatehouse-entry.md")), true)
-  assert.equal(migrated.report.generatedFiles.some((file) => file.path.endsWith("/npcs/captain-vala.json")), true)
-  assert.equal(migrated.report.sourceFieldMappings.some((entry) => entry.source === "AdventurePlan.start"), true)
-  assert.equal(migrated.report.warnings.every((warning) => warning.code === "asset-key-converted"), true)
+  assert.equal(
+    migrated.report.generatedFiles.some((file) => file.path.endsWith("/adventure.md")),
+    true
+  )
+  assert.equal(
+    migrated.report.generatedFiles.some((file) => file.path.endsWith("/encounters/gatehouse-entry.md")),
+    true
+  )
+  assert.equal(
+    migrated.report.generatedFiles.some((file) => file.path.endsWith("/npcs/captain-vala.json")),
+    true
+  )
+  assert.equal(
+    migrated.report.sourceFieldMappings.some((entry) => entry.source === "AdventurePlan.start"),
+    true
+  )
+  assert.equal(
+    migrated.report.warnings.every((warning) => warning.code === "asset-key-converted"),
+    true
+  )
 
   const compiled = compileAdventureSourceTree(migrated.files, {
     mode: "publish",
@@ -48,7 +63,7 @@ async function main() {
     publishedAt: new Date("2026-05-21T22:32:00Z"),
   })
   assert.equal(firstPublish.noop, false)
-  assert.equal(firstPublish.versionId, "2026-05-21T22-32-00Z-" + compiled.manifest.contentHash.slice(0, 8))
+  assert.equal(firstPublish.versionId, `2026-05-21T22-32-00Z-${compiled.manifest.contentHash.slice(0, 8)}`)
   assert.equal(repository.listKeys(firstPublish.versionPrefix).length, 7)
   assert.equal((await repository.readLatestPointer("myr", "the-old-road"))?.versionId, firstPublish.versionId)
 

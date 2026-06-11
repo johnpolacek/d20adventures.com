@@ -1,19 +1,15 @@
 "use server"
+import { auth } from "@clerk/nextjs/server"
+import wait from "waait"
+import { z } from "zod"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
-import { generateObject } from "@/lib/ai"
 import { assertAdventureAccessByTurn } from "@/lib/adventure-access"
+import { generateObject } from "@/lib/ai"
 import { convex } from "@/lib/convex/server"
-import { appendNarrative, normalizeNarrative } from "@/lib/services/narrative-service"
 import { readJsonFromS3 } from "@/lib/s3-utils"
-import {
-  buildNextTurnFromProgression,
-  isFinalEncounterById,
-} from "@/lib/services/advance-turn-builder-service"
-import {
-  markAdventureCompleteWithoutNextEncounter,
-  persistTurnAndFinalizeAdventure,
-} from "@/lib/services/advance-turn-finalization-service"
+import { buildNextTurnFromProgression, isFinalEncounterById } from "@/lib/services/advance-turn-builder-service"
+import { markAdventureCompleteWithoutNextEncounter, persistTurnAndFinalizeAdventure } from "@/lib/services/advance-turn-finalization-service"
 import {
   buildEncounterProgressionPrompt,
   buildRecentTurnHistory,
@@ -24,16 +20,14 @@ import {
   getRecentTurnsForContext,
   getSectionAndSceneContext,
 } from "@/lib/services/advance-turn-prompt-service"
+import { appendNarrative, normalizeNarrative } from "@/lib/services/narrative-service"
 import { mapConvexTurnToTurn } from "@/lib/utils"
 import { validateAdventurePatch } from "@/lib/wiki-adventures/adventure-patch"
-import { assembleGameplayContextPacket, buildWikiEncounterProgressionPrompt } from "@/lib/wiki-adventures/runtime-context"
 import { buildLocalWikiTurnCharacters, isLocalWikiAdventure, isLocalWikiFinalEncounter, loadWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
+import { assembleGameplayContextPacket, buildWikiEncounterProgressionPrompt } from "@/lib/wiki-adventures/runtime-context"
 import { validatePacketTransition } from "@/lib/wiki-adventures/transition-validator"
 import type { TurnCharacter } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
-import { auth } from "@clerk/nextjs/server"
-import wait from "waait"
-import { z } from "zod"
 
 const encounterProgressionSchema = z.object({
   nextEncounterId: z.string(),
@@ -65,7 +59,7 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
   // Check if turn already exists to prevent duplicate processing
   const existingNextTurn = await convex.query(api.adventure.getTurnByOrder, {
     adventureId: turnData.adventureId,
-    order: (turnData.order || 0) + 1
+    order: (turnData.order || 0) + 1,
   })
 
   if (existingNextTurn) {
@@ -79,7 +73,7 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
     turnId: turn.id,
     encounterId: turn.encounterId,
     order: turnData.order,
-    narrativeLength: turn.narrative?.length || 0
+    narrativeLength: turn.narrative?.length || 0,
   })
 
   if (isLocalWikiAdventure(settingId, adventurePlanId)) {
@@ -261,7 +255,7 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
   // Log the LLM's raw response with request ID
   console.log(`[advanceTurn:${requestId}] LLM result:`, JSON.stringify(llmResult, null, 2))
   console.log(`[advanceTurn:${requestId}] Narrative length:`, llmResult.narrative?.length || 0)
-    console.log(`[advanceTurn:${requestId}] Narrative preview:`, `${llmResult.narrative?.substring(0, 200)}...`)
+  console.log(`[advanceTurn:${requestId}] Narrative preview:`, `${llmResult.narrative?.substring(0, 200)}...`)
 
   // Log what the LLM decided about encounter progression
   console.log("[advanceTurn] Next encounterId:", llmResult.nextEncounterId)

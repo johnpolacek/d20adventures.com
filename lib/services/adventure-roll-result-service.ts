@@ -1,3 +1,4 @@
+import wait from "waait"
 import type { Id } from "@/convex/_generated/dataModel"
 import { generateText } from "@/lib/ai"
 import { appendNarrative } from "@/lib/services/narrative-service"
@@ -5,7 +6,6 @@ import { detectSpellFromRollType, markSpellAsUsed } from "@/lib/services/spell-t
 import { analyzeAndApplyDiceRoll } from "@/lib/services/turn-update-service"
 import type { Turn, TurnCharacter } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
-import wait from "waait"
 
 export function getEncounterInstructionsFromPlan(plan: AdventurePlan, encounterId: string): string {
   for (const section of plan.sections) {
@@ -65,13 +65,7 @@ Output only the narrative paragraph.`.trim()
 
 function sanitizeRollOutcome(text: string): string {
   const rollOutcome = (text || "").trim()
-  const metaCommentaryPatterns = [
-    /\[No output provided.*?\]/i,
-    /\[No narrative.*?\]/i,
-    /\[Nothing to output.*?\]/i,
-    /No output provided/i,
-    /No narrative applies/i,
-  ]
+  const metaCommentaryPatterns = [/\[No output provided.*?\]/i, /\[No narrative.*?\]/i, /\[Nothing to output.*?\]/i, /No output provided/i, /No narrative applies/i]
   const isMetaCommentary = metaCommentaryPatterns.some((pattern) => pattern.test(rollOutcome))
   return isMetaCommentary ? "" : rollOutcome
 }
@@ -162,9 +156,7 @@ export async function resolvePlayerRollNarrativeAndCharacters(args: {
 
   const healthAffectingRolls = ["Attack", "Constitution", "Strength", "Dexterity"]
   const shouldAnalyzeHealth = !!rollOutcome && healthAffectingRolls.includes(rollType)
-  console.log(
-    `[resolvePlayerRollResult] Roll analysis: rollType=${rollType}, hasOutcome=${!!rollOutcome}, shouldAnalyzeHealth=${shouldAnalyzeHealth}`
-  )
+  console.log(`[resolvePlayerRollResult] Roll analysis: rollType=${rollType}, hasOutcome=${!!rollOutcome}, shouldAnalyzeHealth=${shouldAnalyzeHealth}`)
 
   const normalizedCharacters = normalizeCharactersForHealthAnalysis(args.turn.characters)
   const turnForAnalysis: Turn = {
@@ -199,9 +191,7 @@ export async function resolvePlayerRollNarrativeAndCharacters(args: {
 
   const spellName = detectSpellFromRollType(rollType)
   if (spellName) {
-    console.log(
-      `[resolvePlayerRollResult] Spell detected: "${spellName}" - marking as used for character ${args.characterId}`
-    )
+    console.log(`[resolvePlayerRollResult] Spell detected: "${spellName}" - marking as used for character ${args.characterId}`)
     updatedCharacters = markSpellAsUsed(updatedCharacters, args.characterId, spellName)
   }
 
@@ -210,4 +200,3 @@ export async function resolvePlayerRollNarrativeAndCharacters(args: {
     characters: updatedCharacters,
   }
 }
-

@@ -18,7 +18,10 @@ async function main() {
   const definition = getLocalWikiAdventureDefinition("realm-of-myr", "march-of-davos")
   assert.ok(definition)
   const marchFiles = readLocalWikiAdventureSourceFiles(definition)
-  assert.ok(marchFiles.some((file) => file.path.endsWith("/npcs/garlan-ironfist.md")), "March NPC source paths should be included from migration report")
+  assert.ok(
+    marchFiles.some((file) => file.path.endsWith("/npcs/garlan-ironfist.md")),
+    "March NPC source paths should be included from migration report"
+  )
   const firstMarchEncounter = marchFiles.find((file) => file.path.endsWith("/encounters/the-gates-of-kordavos.md"))
   assert.ok(firstMarchEncounter?.content.includes('sectionTitle: "Arrival At Kordavos"'))
   assert.ok(firstMarchEncounter?.content.includes('sceneTitle: "Arrival at Kordavos"'))

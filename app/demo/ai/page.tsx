@@ -1,10 +1,10 @@
+import { SignInButton } from "@clerk/nextjs"
 import { ConfigCard } from "@/components/admin/config-card"
 import { AIDemoClient } from "@/components/demo/ai-demo-client"
 import { Heading } from "@/components/typography/heading"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { checkAuth } from "@/lib/auth-utils"
-import { SignInButton } from "@clerk/nextjs"
 
 export default async function AIDemo() {
   // Check authentication

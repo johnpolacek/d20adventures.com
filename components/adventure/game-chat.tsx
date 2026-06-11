@@ -1,5 +1,9 @@
 "use client"
 
+import { useUser } from "@clerk/nextjs"
+import { MessageSquare } from "lucide-react"
+import { useParams } from "next/navigation"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { fetchMessagesBefore, fetchRecentMessages, sendChatMessage } from "@/app/_actions/chat"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -8,10 +12,6 @@ import { Input } from "@/components/ui/input"
 import type { Id } from "@/convex/_generated/dataModel"
 import { useTurnContext } from "@/lib/context/TurnContext"
 import { getLastSeenTimestamp, setLastSeenTimestamp } from "@/lib/utils/chat-storage"
-import { useUser } from "@clerk/nextjs"
-import { MessageSquare } from "lucide-react"
-import { useParams } from "next/navigation"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 type GameChatProps = {
   adventureId?: string

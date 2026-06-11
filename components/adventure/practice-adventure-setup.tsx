@@ -1,11 +1,11 @@
 "use client"
 
+import Link from "next/link"
+import { useState } from "react"
 import { createPracticeAdventure } from "@/app/_actions/create-adventure"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import type { PCTemplate } from "@/types/character"
-import Link from "next/link"
-import { useState } from "react"
 
 interface PracticeAdventureSetupProps {
   settingId: string
@@ -26,15 +26,7 @@ type SelectableCharacter = {
   race: string
 }
 
-export function PracticeAdventureSetup({
-  settingId,
-  adventurePlanId,
-  adventureTitle,
-  minParty,
-  maxParty,
-  premadeCharacters,
-  savedCharacters,
-}: PracticeAdventureSetupProps) {
+export function PracticeAdventureSetup({ settingId, adventurePlanId, adventureTitle, minParty, maxParty, premadeCharacters, savedCharacters }: PracticeAdventureSetupProps) {
   const [selected, setSelected] = useState<SelectableCharacter[]>([])
   const [isStarting, setIsStarting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -90,11 +82,7 @@ export function PracticeAdventureSetup({
         })),
       })
     } catch (err) {
-      const isRedirectError =
-        err &&
-        typeof err === "object" &&
-        "digest" in err &&
-        String((err as { digest?: string }).digest).includes("NEXT_REDIRECT")
+      const isRedirectError = err && typeof err === "object" && "digest" in err && String((err as { digest?: string }).digest).includes("NEXT_REDIRECT")
 
       if (isRedirectError) return
 
@@ -125,9 +113,7 @@ export function PracticeAdventureSetup({
                   key={option.id}
                   type="button"
                   onClick={() => toggleCharacter(option)}
-                  className={`text-left rounded-lg border p-3 transition-colors ${
-                    isSelected ? "border-amber-400 bg-amber-500/10" : "border-white/20 bg-black/40 hover:border-white/40"
-                  }`}
+                  className={`text-left rounded-lg border p-3 transition-colors ${isSelected ? "border-amber-400 bg-amber-500/10" : "border-white/20 bg-black/40 hover:border-white/40"}`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="font-display text-lg text-white">{option.name}</div>
@@ -153,13 +139,7 @@ export function PracticeAdventureSetup({
                   Back to Plan
                 </Button>
               </Link>
-              <Button
-                variant="epic"
-                size="sm"
-                className="px-4 py-1 text-xs tracking-wide border-2"
-                onClick={handleStartPractice}
-                disabled={isStarting || options.length === 0}
-              >
+              <Button variant="epic" size="sm" className="px-4 py-1 text-xs tracking-wide border-2" onClick={handleStartPractice} disabled={isStarting || options.length === 0}>
                 {isStarting ? "Starting Practice..." : "Start Practice Run"}
               </Button>
             </div>

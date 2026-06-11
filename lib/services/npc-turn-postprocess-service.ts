@@ -3,11 +3,7 @@ import type { NpcTurnEffect } from "@/lib/services/npc-turn-resolution-service"
 import { detectSpellFromRollType, markSpellAsUsed } from "@/lib/services/spell-tracking-service"
 import type { TurnCharacter } from "@/types/adventure"
 
-export function applyNpcSpellPostProcessing(args: {
-  updatedCharacters: TurnCharacter[]
-  rollInfo?: NpcRollInfo
-  npcId: string
-}): TurnCharacter[] {
+export function applyNpcSpellPostProcessing(args: { updatedCharacters: TurnCharacter[]; rollInfo?: NpcRollInfo; npcId: string }): TurnCharacter[] {
   if (!args.rollInfo?.rollType) {
     return args.updatedCharacters
   }
@@ -57,4 +53,3 @@ export function finalizeNpcTurnResponse(args: {
     narrativeToAppend: args.narrativeToAppend,
   }
 }
-

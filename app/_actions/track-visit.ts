@@ -1,10 +1,10 @@
 "use server"
 
+import { auth } from "@clerk/nextjs/server"
+import { headers } from "next/headers"
 import { api } from "@/convex/_generated/api"
 import { convex } from "@/lib/convex/server"
 import { validRoutes } from "@/lib/generated/routes"
-import { auth } from "@clerk/nextjs/server"
-import { headers } from "next/headers"
 
 // Check if the user agent is from a common legitimate browser
 function isValidBrowser(userAgent: string | null): boolean {

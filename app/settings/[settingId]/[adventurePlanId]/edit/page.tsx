@@ -1,3 +1,6 @@
+import { SignInButton } from "@clerk/nextjs"
+import { auth } from "@clerk/nextjs/server"
+import Link from "next/link"
 import { AdventurePlanEditForm } from "@/components/adventure-plans/adventure-plan-edit-form"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -7,9 +10,6 @@ import { canManageResource } from "@/lib/content-permissions"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { Setting } from "@/types/setting"
-import { SignInButton } from "@clerk/nextjs"
-import { auth } from "@clerk/nextjs/server"
-import Link from "next/link"
 
 export default async function AdventurePlanEditPage(props: { params: Promise<{ settingId: string; adventurePlanId: string }> }) {
   const { userId } = await auth()
@@ -35,7 +35,7 @@ export default async function AdventurePlanEditPage(props: { params: Promise<{ s
   }
 
   const { settingId, adventurePlanId } = await props.params
-  const key = `settings/${settingId}/${adventurePlanId}.json`
+  const _key = `settings/${settingId}/${adventurePlanId}.json`
   let adventurePlan: AdventurePlan | null = null
   try {
     adventurePlan = await loadAdventurePlanFromStorage(settingId, adventurePlanId)
