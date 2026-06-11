@@ -58,6 +58,8 @@
       "!**/*.min.js",
       "!**/*.bundle.js",
       "!**/convex/_generated",
+      "!lib/generated",
+      "!next-env.d.ts",
       "!**/playwright-report",
       "!**/*.css",
       "!wiki"
