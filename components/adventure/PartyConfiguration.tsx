@@ -1,11 +1,11 @@
 "use client";
 
-import { createAdventure } from "@/app/_actions/create-adventure";
-import { Button } from "@/components/ui/button";
-import { SignUpButton, useUser } from "@clerk/nextjs";
+import { SignInButton, SignUpButton, useUser } from "@clerk/nextjs";
 import { useParams } from "next/navigation";
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createAdventure } from "@/app/_actions/create-adventure";
+import { Button } from "@/components/ui/button";
 import { scrollToBottom } from "../ui/utils";
 import type { CharacterChoiceMode } from "./character-selection";
 
@@ -25,45 +25,49 @@ const PartyConfiguration: React.FC<PartyConfigurationProps> = ({
   characterNames,
 }) => {
   const { settingId, adventurePlanId } = useParams();
-  const { isSignedIn } = useUser();
+  const { isLoaded, isSignedIn } = useUser();
   const [isCreating, setIsCreating] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
+  const hasAutoStartedRef = useRef(false);
 
   // If only one character, auto-create and start adventure
   useEffect(() => {
-    if (isSignedIn && isSoloAdventure(characterChoices)) {
-      (async () => {
-        if (isCreating) return;
-        setIsCreating(true);
-        try {
-          await createAdventure({
-            settingId: settingId as string,
-            adventurePlanId: adventurePlanId as string,
-            characterChoices,
-            // Optionally, pass a flag to auto-start if needed
-          });
-          // The redirect happens in the server action
-        } catch (error) {
-          console.error("Failed to create adventure:", error);
-          setIsCreating(false);
-        }
-      })();
-    }
-  }, [isSignedIn, characterChoices]);
+    if (!isLoaded || !isSignedIn || !isSoloAdventure(characterChoices)) return;
+    if (hasAutoStartedRef.current || isCreating) return;
 
-  const handleStartAdventure = async () => {
+    hasAutoStartedRef.current = true;
+    void startSelectedAdventure();
+  }, [isLoaded, isSignedIn, characterChoices, isCreating]);
+
+  async function startSelectedAdventure() {
     if (isCreating) return;
     setIsCreating(true);
+    setStartError(null);
+
     try {
       await createAdventure({
         settingId: settingId as string,
         adventurePlanId: adventurePlanId as string,
         characterChoices,
       });
-      // The redirect happens in the server action
+      // The redirect happens in the server action.
     } catch (error) {
+      const isRedirectError =
+        error &&
+        typeof error === "object" &&
+        "digest" in error &&
+        String((error as { digest?: string }).digest).includes("NEXT_REDIRECT");
+
+      if (isRedirectError) return;
+
       console.error("Failed to create adventure:", error);
+      setStartError(error instanceof Error ? error.message : "Failed to start adventure.");
       setIsCreating(false);
     }
+  }
+
+  const handleStartAdventure = async () => {
+    await startSelectedAdventure();
   };
 
   useEffect(() => {
@@ -72,6 +76,58 @@ const PartyConfiguration: React.FC<PartyConfigurationProps> = ({
 
   // If only one character, show a loading state
   if (isSoloAdventure(characterChoices)) {
+    if (!isLoaded) {
+      return (
+        <div className="p-8 text-center">
+          <div className="text-2xl font-display mb-4">
+            Preparing your adventure...
+          </div>
+        </div>
+      );
+    }
+
+    if (!isSignedIn) {
+      return (
+        <div className="p-8 text-center">
+          <div className="text-2xl font-display mb-4">
+            Sign in to start your adventure
+          </div>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <SignInButton mode="modal">
+              <Button variant="outline" size="lg" className="text-lg w-36">
+                Sign In
+              </Button>
+            </SignInButton>
+            <SignUpButton mode="modal">
+              <Button variant="epic" size="lg" className="text-lg w-36">
+                Sign Up
+              </Button>
+            </SignUpButton>
+          </div>
+        </div>
+      );
+    }
+
+    if (startError) {
+      return (
+        <div className="p-8 text-center">
+          <div className="text-2xl font-display mb-4">
+            Could not start your adventure
+          </div>
+          <div className="text-red-200 mb-6">{startError}</div>
+          <Button
+            variant="outline"
+            size="lg"
+            className="text-lg w-36"
+            onClick={handleStartAdventure}
+            disabled={isCreating}
+          >
+            Try Again
+          </Button>
+        </div>
+      );
+    }
+
     return (
       <div className="p-8 text-center">
         <div className="text-2xl font-display mb-4">

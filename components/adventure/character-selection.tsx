@@ -112,7 +112,7 @@ export default function CharacterSelection({
       {/* Background overlay for better readability */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/60 to-black/30" />
 
-      <div className="container max-w-5xl mx-auto px-6 sm:px-8 pt-6 pb-8 relative z-10">
+      <div className="container max-w-5xl mx-auto px-6 sm:px-8 pt-24 sm:pt-20 pb-8 relative z-10">
         <div className="text-center mb-3 rounded border border-white/15 bg-black/35 px-4 py-3 shadow-2xl shadow-black/30 backdrop-blur-sm">
           <h1
             style={textShadowSpreadLight}
