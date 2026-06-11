@@ -5,8 +5,47 @@ import { readJsonFromS3 } from "@/lib/s3-utils"
 import { getRollModifier } from "@/lib/services/roll-modifier-service"
 import { getRollRequirementForAction } from "@/lib/services/roll-requirement-service"
 import type { RollRequirement } from "@/lib/validations/roll-requirement-schema"
+import { isLocalWikiAdventure, loadWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { Character } from "@/types/character"
+
+/**
+ * Resolve the intro and GM instructions for the current encounter so the player-reply
+ * roll path can analyze the action. Registered wiki adventures load from the compiled
+ * wiki runtime artifacts (the same source advance-turn uses); legacy adventures fall back
+ * to the S3 AdventurePlan. Previously this always read the legacy plan, which 500s for wiki
+ * adventures whose legacy plan is a stub or whose encounter ids differ.
+ */
+async function resolveEncounterContent(settingId: string, planId: string, encounterId: string): Promise<{ encounterIntro: string; encounterInstructions: string }> {
+  if (isLocalWikiAdventure(settingId, planId)) {
+    const { artifacts } = await loadWikiAdventureRuntime(settingId, planId)
+    const encounter = artifacts.encounters[encounterId]
+    if (!encounter) {
+      console.error("[processTurnReply] Wiki encounter not found for encounterId:", encounterId)
+      throw new Error("Encounter not found")
+    }
+    return {
+      encounterIntro: encounter.sections.intro ?? encounter.sections.body ?? "",
+      encounterInstructions: encounter.sections.gmNotes ?? "",
+    }
+  }
+
+  const planPath = `settings/${settingId}/${planId}.json`
+  const plan = (await readJsonFromS3(planPath)) as AdventurePlan
+  if (!plan) {
+    console.error("[processTurnReply] Adventure plan not found at path:", planPath)
+    throw new Error("Adventure plan not found")
+  }
+  const encounter = plan.sections
+    .flatMap((section) => section.scenes)
+    .flatMap((scene) => scene.encounters)
+    .find((entry) => entry.id === encounterId)
+  if (!encounter) {
+    console.error("[processTurnReply] Encounter not found for encounterId:", encounterId)
+    throw new Error("Encounter not found")
+  }
+  return { encounterIntro: encounter.intro || "", encounterInstructions: encounter.instructions || "" }
+}
 
 export async function buildTurnReplyRollRequirement(args: {
   turn: {
@@ -26,21 +65,7 @@ export async function buildTurnReplyRollRequirement(args: {
   narrativeAction: string
   originalPlayerInput?: string
 }): Promise<RollRequirement> {
-  const planPath = `settings/${args.adventure.settingId}/${args.adventure.planId}.json`
-  const plan = (await readJsonFromS3(planPath)) as AdventurePlan
-  if (!plan) {
-    console.error("[processTurnReply] Adventure plan not found at path:", planPath)
-    throw new Error("Adventure plan not found")
-  }
-
-  const encounter = plan.sections
-    .flatMap((section) => section.scenes)
-    .flatMap((scene) => scene.encounters)
-    .find((entry) => entry.id === args.turn.encounterId)
-  if (!encounter) {
-    console.error("[processTurnReply] Encounter not found for encounterId:", args.turn.encounterId)
-    throw new Error("Encounter not found")
-  }
+  const { encounterIntro, encounterInstructions } = await resolveEncounterContent(args.adventure.settingId, args.adventure.planId, args.turn.encounterId)
 
   const allTurns = await convex.query(api.adventure.getTurnsByAdventure, { adventureId: args.turn.adventureId })
   const currentTurnOrder = args.turn.order || 1
@@ -58,14 +83,14 @@ export async function buildTurnReplyRollRequirement(args: {
     action: actionToAnalyze,
     isOriginalInput: !!args.originalPlayerInput?.trim(),
     character: args.characterPerformingAction.name,
-    encounter: encounter.id,
+    encounter: args.turn.encounterId,
     recentTurnsCount: allTurns.filter((entry) => entry.order <= currentTurnOrder).length,
   })
 
   const assessment = await getRollRequirementForAction(actionToAnalyze, args.characterPerformingAction as Character, {
-    encounterInstructions: encounter.instructions || "",
+    encounterInstructions,
     narrativeContext: recentTurnNarratives || args.turn.narrative || "",
-    encounterIntro: encounter.intro || "",
+    encounterIntro,
   })
 
   const rollRequirement: RollRequirement = assessment
@@ -79,8 +104,8 @@ export async function buildTurnReplyRollRequirement(args: {
     console.log("[LLM] Calculating roll modifier for:", rollRequirement.rollType)
     const calculatedModifier = await getRollModifier({
       scenario: {
-        encounterIntro: encounter.instructions || "",
-        encounterInstructions: encounter.instructions || "",
+        encounterIntro: encounterInstructions,
+        encounterInstructions,
         narrativeContext: args.turn.narrative || "",
       },
       rollRequirement,

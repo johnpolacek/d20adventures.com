@@ -33,6 +33,11 @@ function main() {
   assert.equal(artifacts.manifest.startEncounterId, "well-met")
   assert.deepEqual(artifacts.manifest.premadeCharacterIds, [])
   assert.equal(Object.keys(artifacts.encounters).length, 3)
+  // The player-reply roll path (resolveEncounterContent) reads encounter intro/instructions from
+  // the wiki runtime for wiki adventures, so the start encounter must expose intro content here.
+  const wellMet = artifacts.encounters["well-met"]
+  assert.ok(wellMet, "well-met encounter missing from wiki runtime artifacts")
+  assert.ok((wellMet.sections.intro ?? wellMet.sections.body ?? "").length > 0, "well-met must expose intro/body content for the reply roll path")
   assert.equal(Object.keys(artifacts.characterSheets.npcs).length, 4)
   assert.equal(Object.keys(artifacts.characterSheets.premadeCharacters).length, 0)
   assert.equal(
