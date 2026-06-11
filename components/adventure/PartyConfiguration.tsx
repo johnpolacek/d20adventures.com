@@ -99,7 +99,7 @@ const PartyConfiguration: React.FC<PartyConfigurationProps> = ({
               </Button>
             </SignInButton>
             <SignUpButton mode="modal">
-              <Button variant="epic" size="lg" className="text-lg w-36">
+              <Button variant="outline" size="lg" className="text-lg w-36">
                 Sign Up
               </Button>
             </SignUpButton>
