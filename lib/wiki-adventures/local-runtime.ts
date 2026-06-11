@@ -5,7 +5,7 @@ import type { TurnCharacter } from "@/types/adventure"
 import { createSourceFile } from "./change-sets"
 import { compileAdventureSourceTree } from "./compiler"
 import { S3WikiAdventureSourceService } from "./source-service"
-import type { RuntimeArtifacts, RuntimeEncounter } from "./types"
+import type { RuntimeArtifacts, RuntimeEncounter, SourceFile } from "./types"
 
 export type LocalWikiAdventureDefinition = {
   settingId: string
@@ -122,9 +122,36 @@ export async function loadWikiAdventureRuntime(settingId: string, planId: string
   return compileLocalWikiAdventureRuntime(definition, await readWikiAdventureSourceFiles(definition))
 }
 
+export type WikiSourceSelection = {
+  files: SourceFile[]
+  source: "s3" | "local"
+  missingPaths: string[]
+}
+
+/**
+ * Choose between remote S3 source and repo-local source. Repo-local is the
+ * known-good baseline, so S3 is only preferred when it covers every expected
+ * local path. A partial S3 seed (missing any local path) is rejected in favor
+ * of local source, instead of letting incomplete remote source override it.
+ */
+export function selectWikiAdventureSourceFiles(localFiles: SourceFile[], remoteFiles: SourceFile[]): WikiSourceSelection {
+  if (remoteFiles.length === 0) return { files: localFiles, source: "local", missingPaths: [] }
+  const remotePaths = new Set(remoteFiles.map((file) => file.path))
+  const missingPaths = localFiles.filter((file) => !remotePaths.has(file.path)).map((file) => file.path)
+  if (missingPaths.length > 0) return { files: localFiles, source: "local", missingPaths }
+  return { files: remoteFiles, source: "s3", missingPaths: [] }
+}
+
 export async function readWikiAdventureSourceFiles(definition: LocalWikiAdventureDefinition) {
+  const localFiles = readLocalWikiAdventureSourceFiles(definition)
   const remoteFiles = await readS3WikiAdventureSourceFiles(definition)
-  return remoteFiles.length > 0 ? remoteFiles : readLocalWikiAdventureSourceFiles(definition)
+  const selection = selectWikiAdventureSourceFiles(localFiles, remoteFiles)
+  if (selection.source === "local" && remoteFiles.length > 0) {
+    console.warn(
+      `[wiki-adventures] Ignoring incomplete S3 source for ${definition.settingId}/${definition.planId}: ${remoteFiles.length} remote file(s) missing ${selection.missingPaths.length} expected path(s) (e.g. ${selection.missingPaths[0]}). Using repo-local source.`
+    )
+  }
+  return selection.files
 }
 
 export function readLocalWikiAdventureSourceFiles(definition: LocalWikiAdventureDefinition) {

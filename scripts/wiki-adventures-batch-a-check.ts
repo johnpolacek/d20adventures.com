@@ -9,6 +9,7 @@ import {
   createSourceTree,
   InMemoryWikiAdventureSourceService,
   S3WikiAdventureSourceService,
+  selectWikiAdventureSourceFiles,
 } from "@/lib/wiki-adventures"
 
 async function main() {
@@ -297,6 +298,29 @@ A premade character tied to Captain Vala.`,
   })
   assert.equal(fakeObjects.has(s3File.path), false)
   assert.equal(fakeObjects.get("content/settings/myr/adventures/the-old-road/adventure-renamed.md"), "new-from-s3-service")
+
+  // Source selection: prefer S3 only when it covers every expected local path.
+  const localSet = [createSourceFile("a/adventure.md", "A"), createSourceFile("a/encounters/start.md", "S"), createSourceFile("a/characters/hero.json", "{}")]
+  const completeRemote = [
+    createSourceFile("a/adventure.md", "A2"),
+    createSourceFile("a/encounters/start.md", "S2"),
+    createSourceFile("a/characters/hero.json", "{ }"),
+    createSourceFile("a/encounters/extra.md", "E"),
+  ]
+  const partialRemote = [createSourceFile("a/adventure.md", "A2")]
+
+  const emptyPick = selectWikiAdventureSourceFiles(localSet, [])
+  assert.equal(emptyPick.source, "local")
+
+  const completePick = selectWikiAdventureSourceFiles(localSet, completeRemote)
+  assert.equal(completePick.source, "s3")
+  assert.equal(completePick.missingPaths.length, 0)
+  assert.equal(completePick.files, completeRemote)
+
+  const partialPick = selectWikiAdventureSourceFiles(localSet, partialRemote)
+  assert.equal(partialPick.source, "local", "A partial S3 seed must fall back to repo-local source")
+  assert.deepEqual(partialPick.missingPaths.sort(), ["a/characters/hero.json", "a/encounters/start.md"])
+  assert.equal(partialPick.files, localSet)
 
   console.log("Batch A foundation checks passed")
 }
