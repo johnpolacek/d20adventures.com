@@ -4,7 +4,7 @@
 
 Re-assessed 2026-06-11, after the wiki-adventure implementation merged to `main` (`fbd3e97`, 2026-06-10).
 
-**Where we are:** the wiki-authored adventure runtime is merged and four Realm of Myr adventures are migrated with passing bridge tests, TypeScript, and build. It is **not** a production cutover — legacy S3 JSON still drives the public listing and selection path, `pnpm check` fails repo-wide, and no authenticated end-to-end playthrough has been run. Current focus is hardening, not new features.
+**Where we are:** the wiki-authored adventure runtime is merged and four Realm of Myr adventures are migrated with passing bridge tests, TypeScript, and build. `pnpm check` is now green and build-stable, and admin canonical writes are gated behind validation. It is still **not** a production cutover — legacy S3 JSON still drives the public listing and selection path, and no authenticated end-to-end playthrough has been run. Current focus is hardening, not new features.
 
 **Current focus:** [Wiki Adventure Implementation Review](plans/wiki-adventure-implementation-review.md) — close its findings before anything ships.
 
@@ -12,13 +12,13 @@ Re-assessed 2026-06-11, after the wiki-adventure implementation merged to `main`
 
 Blocking work to make the merged runtime trustworthy. Source: the implementation review findings.
 
-| # | Item | Why |
-|---|---|---|
-| 1 | Fix `pnpm check` (Biome import-sort/format diagnostics) | Restore one green, standard validation command before release work. |
-| 2 | Pre-write validation for admin canonical S3 source writes | Stop invalid LLM or key-field edits from becoming the runtime source of truth. |
-| 3 | Complete-manifest-aware S3 source fallback | Prevent a partial S3 seed from overriding known-good repo-local source. |
-| 4 | Normalize admin route naming and nav state | One canonical admin URL; the rest redirect. Reduce authoring confusion. |
-| 5 | Authenticated end-to-end playthrough of one migrated adventure | Bridge tests cover data flow; a human path must reach completion in the browser. |
+| # | Item | Status | Why |
+|---|---|---|---|
+| 1 | Fix `pnpm check` (Biome diagnostics) | ✅ Done | One green, build-stable validation command (generated files excluded). |
+| 2 | Pre-write validation for admin canonical S3 source writes | ✅ Done | Edits are compiled and gated before any S3 write, so invalid source never becomes the runtime candidate. |
+| 3 | Complete-manifest-aware S3 source fallback | ⬜ Next | Prevent a partial S3 seed from overriding known-good repo-local source. |
+| 4 | Normalize admin route naming and nav state | ⬜ | One canonical admin URL; the rest redirect. Reduce authoring confusion. |
+| 5 | Authenticated end-to-end playthrough of one migrated adventure | ⬜ | Bridge tests cover data flow; a human path must reach completion in the browser. |
 
 ## Next — production cutover
 
