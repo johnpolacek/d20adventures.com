@@ -62,3 +62,6 @@ convex/_generated/
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+# agent-browser local auth/session (do not commit)
+.agent-browser/

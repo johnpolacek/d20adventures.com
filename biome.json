@@ -62,7 +62,8 @@
       "!next-env.d.ts",
       "!**/playwright-report",
       "!**/*.css",
-      "!wiki"
+      "!wiki",
+      "!.agent-browser"
     ]
   },
   "css": {
