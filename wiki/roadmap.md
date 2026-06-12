@@ -6,7 +6,7 @@ Re-assessed 2026-06-11, after the wiki-adventure implementation merged to `main`
 
 **Where we are:** the wiki-authored adventure runtime is merged and four Realm of Myr adventures are migrated with passing bridge tests, TypeScript, and build. `pnpm check` is green and build-stable, admin canonical writes are gated behind validation, S3 fallback is complete-manifest-aware, the admin routes are normalized, and **The Midnight Summons has been played end-to-end in the browser to completion**. The whole "Now" release-readiness track is closed. Remaining gap before a production cutover: the public listing/selection path still reads legacy S3 JSON (see Next).
 
-**Current focus:** [Production Cutover](plans/production-cutover.md) — move the public play flow off legacy `AdventurePlan` JSON onto the wiki runtime, then make it production-safe. The implementation-review hardening track is closed.
+**Current focus:** [Production Cutover](plans/production-cutover.md) — **code cutover complete and browser-verified** (2026-06-12). The entire discovery + gameplay path reads the wiki runtime; the legacy adventure-plan editor is removed; the legacy S3 JSON is retained as a harmless never-reached fallback. Remaining: two pre-prod-push assurance checks (prod S3 completeness audit, rollback verification).
 
 ## Now — release readiness
 
@@ -22,14 +22,15 @@ Blocking work to make the merged runtime trustworthy. Source: the implementation
 
 ## Next — production cutover
 
-Now the committed track. Detailed in [Production Cutover](plans/production-cutover.md). The runtime is trustworthy; move the public flow onto wiki source. Three public pages (listing, character-select, character-create) still read legacy JSON, and `availableCharacterOptions` is not yet compiled into the wiki manifest.
+The committed track, detailed in [Production Cutover](plans/production-cutover.md). The code cutover is **done and browser-verified**; only pre-prod-push assurance remains.
 
-- Carry `availableCharacterOptions` through the wiki runtime (unblocks the custom-character path).
-- Cut the listing, character-select, and character-create screens over from legacy JSON to wiki-backed data.
-- Audit production S3 wiki-source completeness before seeding (complete-manifest fallback already exists locally).
-- Remove, gate, or mark dev-only the prototype/unauthenticated workbench server actions.
-- Verify rollback: revision restore and content-ref pinning behave under a bad publish.
-- Then retire or stub the legacy dual-read once the new paths are proven in the browser.
+- ✅ Carry `availableCharacterOptions` (and `teaser`/`summary`) through the wiki runtime.
+- ✅ Cut listing, character-select, character-create, and the `/play` grid onto wiki-backed data.
+- ✅ Route the whole gameplay/runtime path through the wiki runtime (a stub legacy plan can no longer 500 any play surface).
+- ✅ Gate the prototype workbench server actions behind `requireAdmin`.
+- ✅ Remove the legacy adventure-plan editor; keep the legacy S3 JSON as a harmless never-reached fallback.
+- 🔲 Audit production S3 wiki-source completeness (read-only) before the prod push.
+- 🔲 Verify rollback: revision restore + content-ref pinning behave under a bad publish.
 
 ## Later — platform hardening
 

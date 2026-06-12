@@ -16,8 +16,30 @@ Turn execution is fully wiki-backed. **Three public pages still read the legacy 
 - ✅ **Unit 6** — workbench actions gated behind `requireAdmin`.
 - ✅ **Browser-verified** — authenticated agent-browser pass confirmed grid, premade select, custom character-create races, solo auto-start, turn-1 wiki content, and a full reply → Perception roll → resolution loop, with no server errors.
 - ✅ **Legacy editor removed** — the `/edit` + `/new` routes, plan-actions, plan-chat, `adventure-plan-structure`, and editor-only `components/adventure-plans/*` are deleted; the one gameplay tie (`getAdventurePlan`) moved to a wiki-backed action; dev/admin edit links repointed to `/admin/wiki-adventures`.
-- 🔲 **Unit 4 remainder** — delete the legacy S3 `AdventurePlan` JSON for the four migrated adventures. Now a never-reached fallback; safe to delete, held pending an explicit go + the prod S3 audit.
-- 🔲 **Units 5, 7** — prod S3 completeness audit and rollback verification (need prod access / a manual run).
+- ✅ **Unit 4 resolved (keep the JSON)** — decision 2026-06-12: do **not** delete the legacy S3 `AdventurePlan` JSON. It is now a never-reached fallback, so it is harmless, and keeping it is a free safety net (rollback, and any old in-DB adventures that reference a `planId`). The cutover removes the *dependency*, not the data.
+- 🔲 **Unit 5** — prod S3 wiki-source completeness audit (read-only; needs prod access).
+- 🔲 **Unit 7** — rollback verification under a bad publish (needs a deliberate run).
+
+**The code cutover is complete and verified.** What remains (Units 5 & 7) is pre-prod-push operational assurance, detailed below.
+
+## Remaining work — pre-prod-push assurance
+
+Neither item changes app code; both are operational checks before the wiki runtime drives production traffic.
+
+### Unit 5 — Production S3 wiki-source completeness audit
+The runtime prefers published S3 wiki source and falls back to repo-local source **only when S3 is a complete manifest** ([local-runtime.ts](../../lib/wiki-adventures/local-runtime.ts) `selectWikiAdventureSourceFiles`). Before the prod push, confirm one of two safe states per migrated adventure:
+1. Prod S3 carries a *complete* published source/artifact set (every expected path), so the runtime uses it; **or**
+2. Prod S3 is empty/partial for that adventure, so the complete-manifest check falls back to the repo-local source bundled in the deploy.
+
+The unsafe state is a *partial* prod S3 seed that nonetheless looks preferable. The audit: enumerate the prod S3 wiki prefixes for each of the four adventures, diff against the expected manifest, and assert each adventure resolves to state 1 or 2 (never partial-preferred). Read-only; no writes.
+
+### Unit 7 — Rollback verification under a bad publish
+Player adventures pin `contentRef` (versionId + contentHash) at create time ([create-adventure.ts](../../app/_actions/create-adventure.ts), [start-adventure.ts](../../app/_actions/start-adventure.ts)), so a bad publish should only affect **new** starts that resolve `latest.json`. Prove the chain in a non-prod/preview target:
+1. Publish a deliberately-broken version of an adventure; confirm in-flight pinned adventures are unaffected (still resolve their pinned version).
+2. Run `restoreAdminWikiAdventureRevisionAction` / `rollback` and confirm `latest.json` re-points to the prior good version ([published-repository.ts](../../lib/wiki-adventures/published-repository.ts) `rollback`).
+3. Confirm a fresh start after rollback picks up the restored version.
+
+A `pnpm test:wiki-adventures:*`-style scripted check could cover steps 1–3 against the in-memory/preview repository to make this repeatable without prod writes.
 
 ## Current state
 
