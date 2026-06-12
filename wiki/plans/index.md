@@ -2,19 +2,23 @@
 
 [Wiki Home](../index.md) · [Sources](../Sources.md) · [Roadmap](../roadmap.md) · [Architecture](../Architecture.md)
 
-Active and completed planning work for D20 Adventures. The wiki-adventure runtime has merged to `main`; current focus is post-merge hardening before production cutover.
+Active and completed planning work for D20 Adventures. The wiki-adventure runtime has merged to `main` and the post-merge hardening track is closed; current focus is the production cutover of the public play flow.
 
 ## Current focus
 
-**[Wiki Adventure Implementation Review](wiki-adventure-implementation-review.md)** — *hardening mostly done*
+**[Production Cutover](production-cutover.md)** — *planned, not started*
 
-Four of the five release-readiness findings are closed (Biome check, admin pre-write validation, complete-manifest S3 fallback, admin route naming). The remaining item is an authenticated end-to-end playthrough. See the [roadmap](../roadmap.md) for the full Now/Next/Later view.
+Move the three public pages that still read legacy `AdventurePlan` JSON (listing, character-select, character-create) onto the wiki runtime, carry `availableCharacterOptions` through compilation, audit prod S3 completeness, gate the prototype workbench actions, and verify rollback. See the [roadmap](../roadmap.md) for the full Next/Later/Deferred view.
 
 | | |
 |---|---|
-| **Done** | Biome check, admin pre-write gate, S3 fallback, admin route naming |
-| **Remaining** | [Authenticated playthrough checklist](midnight-summons-playthrough-checklist.md) (human-run) |
-| **Validation** | `pnpm check`, TypeScript, all 11 wiki suites, and build pass |
+| **Cutover surface** | listing, character-select, character-create still read legacy JSON |
+| **Key gap** | `availableCharacterOptions` not yet compiled into the wiki manifest |
+| **Sequencing** | Unit 3 (manifest field) → Units 1–2 (front-door cutover) → Units 5–7 (prod gates) |
+
+## Completed
+
+- **[Wiki Adventure Implementation Review](wiki-adventure-implementation-review.md)** — *hardening done*. All five release-readiness findings closed: Biome check, admin pre-write validation, complete-manifest S3 fallback, admin route naming, and an authenticated end-to-end playthrough (The Midnight Summons to completion). Three further runtime bugs found and fixed via live playthroughs.
 
 ## Implemented
 

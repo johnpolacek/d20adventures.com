@@ -6,7 +6,7 @@ Re-assessed 2026-06-11, after the wiki-adventure implementation merged to `main`
 
 **Where we are:** the wiki-authored adventure runtime is merged and four Realm of Myr adventures are migrated with passing bridge tests, TypeScript, and build. `pnpm check` is green and build-stable, admin canonical writes are gated behind validation, S3 fallback is complete-manifest-aware, the admin routes are normalized, and **The Midnight Summons has been played end-to-end in the browser to completion**. The whole "Now" release-readiness track is closed. Remaining gap before a production cutover: the public listing/selection path still reads legacy S3 JSON (see Next).
 
-**Current focus:** [Wiki Adventure Implementation Review](plans/wiki-adventure-implementation-review.md) — close its findings before anything ships.
+**Current focus:** [Production Cutover](plans/production-cutover.md) — move the public play flow off legacy `AdventurePlan` JSON onto the wiki runtime, then make it production-safe. The implementation-review hardening track is closed.
 
 ## Now — release readiness
 
@@ -22,12 +22,14 @@ Blocking work to make the merged runtime trustworthy. Source: the implementation
 
 ## Next — production cutover
 
-Once the runtime is trustworthy, move the public flow onto wiki source.
+Now the committed track. Detailed in [Production Cutover](plans/production-cutover.md). The runtime is trustworthy; move the public flow onto wiki source. Three public pages (listing, character-select, character-create) still read legacy JSON, and `availableCharacterOptions` is not yet compiled into the wiki manifest.
 
-- Audit production S3 wiki-source completeness, or add complete-manifest detection, before seeding.
-- Cut the public listing and character-selection screens over from legacy JSON to wiki-backed data (or retire the dual-read bridge).
+- Carry `availableCharacterOptions` through the wiki runtime (unblocks the custom-character path).
+- Cut the listing, character-select, and character-create screens over from legacy JSON to wiki-backed data.
+- Audit production S3 wiki-source completeness before seeding (complete-manifest fallback already exists locally).
 - Remove, gate, or mark dev-only the prototype/unauthenticated workbench server actions.
 - Verify rollback: revision restore and content-ref pinning behave under a bad publish.
+- Then retire or stub the legacy dual-read once the new paths are proven in the browser.
 
 ## Later — platform hardening
 

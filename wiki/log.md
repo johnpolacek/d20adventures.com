@@ -6,6 +6,14 @@ Git owns routine implementation history. This log records durable wiki, planning
 
 ## 2026-06-11
 
+### Planned the production cutover track
+
+- Assessed current state: the wiki-adventure runtime is merged and the post-merge hardening track is fully closed (all five release-readiness findings done, plus three further live-playthrough bugs fixed). Turn execution — create, start, advance, player-reply, NPC context — all branch on `isLocalWikiAdventure` and read compiled wiki artifacts.
+- Confirmed by code inspection that the remaining gap is the public front door: three pages still read the legacy `AdventurePlan` JSON unconditionally — listing (`app/settings/[settingId]/[adventurePlanId]/page.tsx`, which even reads legacy nested `sections[0].scenes[0].encounters[0]`), character-select, and character-create. The listing read is the same stub-legacy-plan failure mode that caused three runtime 500s this cycle.
+- Identified one runtime data gap: `availableCharacterOptions` (races/archetypes for the custom-character path, e.g. Road to Kordavos) is not compiled into `RuntimeManifest`, so it must be added before character-select/character-create can leave legacy JSON.
+- Added `wiki/plans/production-cutover.md` with seven work units (carry `availableCharacterOptions`; cut listing, character-select; retire/stub legacy dual-read; prod S3 completeness audit; gate prototype workbench actions; verify rollback under a bad publish), sequencing, acceptance gates, and risks — each anchored to file:line evidence.
+- Set the plan as current focus in `plans/index.md` and `roadmap.md`; moved the implementation review to Completed. No app code changed.
+
 ### Found and fixed three runtime bugs via live authenticated playthroughs
 
 A multi-character roleplay test of Road to Kordavos surfaced a third bug: the player-reply roll path (`buildTurnReplyRollRequirement`) always read the legacy S3 `AdventurePlan` and looked up the encounter under `sections>scenes>encounters`. For wiki-migrated adventures whose legacy S3 plan is a stub (no encounters) — as Road to Kordavos's was — every player action 500'd with "Encounter not found", making the adventure unplayable. Fixed by routing registered wiki adventures through the compiled wiki runtime artifacts (`lib/services/adventure-turn-reply-service.ts`), proven live with the S3 plan re-stubbed. The Midnight Summons and Covert Cargo bridge cases pass because their legacy plans happened to contain the encounters. The NPC-turn DM context had the same legacy-plan dependency and was migrated the same way (`lib/services/npc-turn-service.ts`), also verified live with a re-stubbed plan; section/scene framing is omitted for wiki adventures (encounter-first design). The multi-character roleplay itself (3 PCs: Arcanist, Ranger, Dwarf Cleric) read as good quality: distinct NPC voices, autonomous NPC cross-talk, tracked continuity, and dice-integrated social actions.
