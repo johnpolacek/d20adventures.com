@@ -14,8 +14,9 @@ Turn execution is fully wiki-backed. **Three public pages still read the legacy 
 - ✅ **Units 1–2 + grid** — listing/lobby, character-select, character-create, **and** the `/settings/[settingId]/play` card grid now read the wiki runtime via `lib/wiki-adventures/plan-view.ts`. The registry-vs-S3 sourcing fork resolved itself: the admin side and runtime both already treat the adventure set as a hardcoded list of four, and authoring new adventures is Deferred — so a registry-driven grid is behavior-identical, not a product regression.
 - ✅ **Full runtime path** — `loadAdventurePlanForRuntime` now backs every gameplay/runtime legacy-plan reader (in-progress page, per-turn page, practice, join, check-final, first-turn, roll-result, active-adventure party, reports, profile image). A stubbed/absent legacy plan can no longer 500 any play surface.
 - ✅ **Unit 6** — workbench actions gated behind `requireAdmin`.
-- ⏳ **Browser re-verify** — the front-door and runtime page reads changed; needs one authenticated pass per shape (gameplay turn logic itself is unchanged).
-- 🔲 **Unit 4 (legacy retirement)** — two decisions: (a) the now-superseded **legacy editor** (`edit/page.tsx`, `adventure-plan-actions.ts`, `adventure-plan-chat.ts`) writes legacy JSON the runtime no longer reads — remove it or redirect to `/admin/wiki-adventures`; (b) delete the legacy S3 `AdventurePlan` JSON for the four migrated adventures (destructive — after browser re-verify).
+- ✅ **Browser-verified** — authenticated agent-browser pass confirmed grid, premade select, custom character-create races, solo auto-start, turn-1 wiki content, and a full reply → Perception roll → resolution loop, with no server errors.
+- ✅ **Legacy editor removed** — the `/edit` + `/new` routes, plan-actions, plan-chat, `adventure-plan-structure`, and editor-only `components/adventure-plans/*` are deleted; the one gameplay tie (`getAdventurePlan`) moved to a wiki-backed action; dev/admin edit links repointed to `/admin/wiki-adventures`.
+- 🔲 **Unit 4 remainder** — delete the legacy S3 `AdventurePlan` JSON for the four migrated adventures. Now a never-reached fallback; safe to delete, held pending an explicit go + the prod S3 audit.
 - 🔲 **Units 5, 7** — prod S3 completeness audit and rollback verification (need prod access / a manual run).
 
 ## Current state
