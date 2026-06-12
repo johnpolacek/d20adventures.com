@@ -210,6 +210,7 @@ export default defineSchema({
     amount: v.number(), // Positive for additions (grants, purchases), negative for deductions (usage)
     timestamp: v.number(), // Timestamp of the transaction
     tokensRemainingAfterTransaction: v.optional(v.number()), // User's token balance after this transaction
+    description: v.optional(v.string()),
   })
     .index("by_userId", ["userId"])
     .index("by_timestamp", ["timestamp"]),
