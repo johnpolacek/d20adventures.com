@@ -13,6 +13,7 @@ Git owns routine implementation history. This log records durable wiki, planning
 - URLs via Portless (already installed): `https://d20adventures.localhost` (main), `https://<slug>.d20adventures.localhost` (worktrees); `next dev` honors Portless's `PORT`.
 - Behavior change: `pnpm dev` no longer runs `kill:ports` (it killed sibling worktree servers); `pnpm dev:fresh` preserves the old behavior and `pnpm test` uses it so test runs still get clean ports.
 - Finish policy: merge (no-ff); completed plans archive to `plans/zzz-completed/`. Convex project deletion after finish is manual (dashboard; no CLI).
+- **Live-verified end-to-end** with a `feature/wt-smoke` worktree: main and the worktree ran dev servers simultaneously (Portless auto-assigned ports 4384/4103; both URLs returned 200); `wt:seed` cloned 976 documents; a row written via `visits:recordVisit` in the worktree's deployment (`cautious-panda-676`) was invisible from main's (`courteous-axolotl-753`); `wt:finish` archived the plan, merged no-ff, and removed the worktree. Three bugs found and fixed during verification: postinstall `convex codegen` fails pre-provisioning (install now uses `--ignore-scripts`), `convex --configure new` rewrites `convex/README.md`/`tsconfig.json` (now reverted automatically), and the plan-archive "Finished:" line wasn't staged before commit (now `git add`ed), which had blocked worktree removal. All smoke-test artifacts removed; the throwaway Convex project `d20adventures-feature-wt-smoke` must be deleted manually in the dashboard.
 
 ## 2026-06-11
 

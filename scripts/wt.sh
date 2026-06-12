@@ -116,6 +116,8 @@ cmd_create() {
     echo "WARNING: Convex provisioning failed. Run manually inside $path:" >&2
     echo "  npx convex dev --once --configure new --project $PROJECT_NAME-$slug --dev-deployment cloud" >&2
   }
+  # `--configure new` rewrites convex scaffolding files; revert that noise
+  git -C "$path" checkout -- convex/README.md convex/tsconfig.json 2>/dev/null || true
 
   if [ ! -f "$path/wiki/plans/$slug.md" ]; then
     cat > "$path/wiki/plans/$slug.md" <<EOF
@@ -256,6 +258,7 @@ cmd_finish() {
       && printf '\nFinished: %s (merged to main, policy: merge)\n' "$(date +%Y-%m-%d)" >> "wiki/plans/$slug.md" \
       && mkdir -p wiki/plans/zzz-completed \
       && git mv "wiki/plans/$slug.md" "wiki/plans/zzz-completed/$slug.md" \
+      && git add "wiki/plans/zzz-completed/$slug.md" \
       && git commit -m "Archive plan for $branch")
   fi
 
