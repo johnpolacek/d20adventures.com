@@ -54,6 +54,7 @@
     "test:wiki-adventures:road-to-kordavos-bridge": "tsx scripts/wiki-adventures-road-to-kordavos-bridge-check.ts",
     "test:wiki-adventures:march-of-davos-bridge": "tsx scripts/wiki-adventures-march-of-davos-bridge-check.ts",
     "test:wiki-adventures:admin-authoring": "tsx scripts/wiki-adventures-admin-authoring-check.ts",
+    "test:wiki-adventures:public-flow": "tsx scripts/wiki-adventures-public-flow-check.ts",
     "test:setup": "pnpm dev",
     "test:full": "pnpm test:setup && pnpm test"
   },

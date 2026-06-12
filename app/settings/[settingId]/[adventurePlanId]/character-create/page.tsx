@@ -1,6 +1,8 @@
 import CharacterCreateForm from "@/components/forms/character-create-form"
 import Image from "@/components/ui/native-image"
 import { readJsonFromS3 } from "@/lib/s3-utils"
+import { isLocalWikiAdventure } from "@/lib/wiki-adventures/local-runtime"
+import { loadWikiAdventurePlanView } from "@/lib/wiki-adventures/plan-view"
 import type { AdventurePlan } from "@/types/adventure-plan"
 
 interface PageProps {
@@ -12,10 +14,11 @@ interface PageProps {
 
 export default async function CharacterCreatePage({ params }: PageProps) {
   const { settingId, adventurePlanId } = await params
-  const key = `settings/${settingId}/${adventurePlanId}.json`
   let adventurePlan: AdventurePlan | null = null
   try {
-    adventurePlan = (await readJsonFromS3(key)) as AdventurePlan
+    adventurePlan = isLocalWikiAdventure(settingId, adventurePlanId)
+      ? await loadWikiAdventurePlanView(settingId, adventurePlanId)
+      : ((await readJsonFromS3(`settings/${settingId}/${adventurePlanId}.json`)) as AdventurePlan)
   } catch (err) {
     console.error("Error fetching JSON from S3:", err)
     return <div>Error loading adventure data.</div>

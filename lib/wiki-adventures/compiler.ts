@@ -17,6 +17,12 @@ const adventureFrontmatterSchema = z.object({
   minPlayers: z.number().optional(),
   maxPlayers: z.number().optional(),
   premadeCharacters: z.array(z.string()).optional(),
+  availableCharacterOptions: z
+    .object({
+      races: z.array(z.string()),
+      archetypes: z.array(z.string()),
+    })
+    .optional(),
   nextAdventure: z.string().optional(),
 })
 
@@ -153,12 +159,15 @@ export function compileAdventureSourceTree(files: SourceFile[], options: Compile
     planId: adventure?.id ?? "",
     contentVersion: options.contentVersion,
     title: adventure?.title ?? "Invalid Adventure",
+    teaser: adventureFile?.sections.teaser,
+    summary: adventureFile?.sections.summary,
     image: adventure?.image,
     startEncounterId: adventure?.startEncounter ?? "",
     recommendedPlayers: adventure?.recommendedPlayers,
     minPlayers: adventure?.minPlayers,
     maxPlayers: adventure?.maxPlayers,
     premadeCharacterIds: adventure?.premadeCharacters ?? [],
+    availableCharacterOptions: adventure?.availableCharacterOptions,
     nextAdventureId: adventure?.nextAdventure,
     sourcePath: adventureFile?.path ?? "",
     contentHash: hashJson(files.map((file) => ({ path: file.path, hash: file.hash }))),

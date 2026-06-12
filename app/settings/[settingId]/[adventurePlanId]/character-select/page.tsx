@@ -6,6 +6,8 @@ import AccountRequired from "@/components/nav/account-required"
 import ChooseCharacterView from "@/components/views/choose-character-view"
 import { listAndReadJsonFilesInS3Directory, readJsonFromS3 } from "@/lib/s3-utils"
 import { getImageUrl } from "@/lib/utils"
+import { isLocalWikiAdventure } from "@/lib/wiki-adventures/local-runtime"
+import { loadWikiAdventurePlanView } from "@/lib/wiki-adventures/plan-view"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PCTemplate } from "@/types/character"
 
@@ -18,10 +20,11 @@ interface PageProps {
 
 export default async function CharacterSelectPage({ params }: PageProps) {
   const { settingId, adventurePlanId } = await params
-  const key = `settings/${settingId}/${adventurePlanId}.json`
   let adventurePlan: AdventurePlan | null = null
   try {
-    adventurePlan = (await readJsonFromS3(key)) as AdventurePlan
+    adventurePlan = isLocalWikiAdventure(settingId, adventurePlanId)
+      ? await loadWikiAdventurePlanView(settingId, adventurePlanId)
+      : ((await readJsonFromS3(`settings/${settingId}/${adventurePlanId}.json`)) as AdventurePlan)
   } catch {
     return <div>Error loading adventure data.</div>
   }

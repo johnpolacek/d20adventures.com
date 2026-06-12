@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation"
 import AdventureHome from "@/components/views/adventure-home"
 import { loadAdventurePlanFromStorage } from "@/lib/adventure-plan-storage"
+import { isLocalWikiAdventure } from "@/lib/wiki-adventures/local-runtime"
+import { loadWikiAdventurePlanView } from "@/lib/wiki-adventures/plan-view"
 import type { TurnCharacter } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
 
@@ -10,7 +12,7 @@ export default async function AdventureHomePage(props: { params: Promise<{ setti
   const selectedCharacterId = searchParams?.selectedCharacter
   let adventurePlan: AdventurePlan | null = null
   try {
-    adventurePlan = await loadAdventurePlanFromStorage(settingId, adventurePlanId)
+    adventurePlan = isLocalWikiAdventure(settingId, adventurePlanId) ? await loadWikiAdventurePlanView(settingId, adventurePlanId) : await loadAdventurePlanFromStorage(settingId, adventurePlanId)
   } catch (err) {
     console.error("Error fetching JSON from S3:", err)
     return <div>Error loading adventure data.</div>

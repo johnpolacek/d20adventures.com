@@ -6,6 +6,9 @@ settingId: "realm-of-myr"
 startEncounter: "the-gates-of-kordavos"
 minPlayers: 3
 maxPlayers: 5
+availableCharacterOptions:
+  races: ["Human", "Elf", "Dwarf", "Half-Elf", "Halfling", "Gnome", "Half-Orc"]
+  archetypes: ["Fighter", "Barbarian", "Rogue", "Wizard", "Sorcerer", "Cleric", "Paladin", "Bard", "Ranger", "Monk", "Druid", "Warlock"]
 image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/march-of-davos/80383e3f-940a-41a7-89d5-90b605b6c646.png?t=1750364631668"
 ---
 

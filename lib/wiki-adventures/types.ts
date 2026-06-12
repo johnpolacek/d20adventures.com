@@ -94,6 +94,7 @@ export type RuntimeManifest = {
   minPlayers?: number
   maxPlayers?: number
   premadeCharacterIds: string[]
+  availableCharacterOptions?: { races: string[]; archetypes: string[] }
   nextAdventureId?: string
   sourcePath: string
   contentHash: string
