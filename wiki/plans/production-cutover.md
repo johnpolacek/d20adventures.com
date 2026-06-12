@@ -11,11 +11,12 @@ Turn execution is fully wiki-backed. **Three public pages still read the legacy 
 ## Progress (2026-06-11, branch `feature/production-cutover`)
 
 - ✅ **Unit 3** — `availableCharacterOptions` (and previously-unset `teaser`/`summary`) now compile into `RuntimeManifest`.
-- ✅ **Units 1–2 (gameplay-critical pages)** — listing/lobby, character-select, and character-create branch on the wiki runtime via the new `lib/wiki-adventures/plan-view.ts` adapter. Verified by `pnpm test:wiki-adventures:public-flow` + tsc/build/check.
+- ✅ **Units 1–2 + grid** — listing/lobby, character-select, character-create, **and** the `/settings/[settingId]/play` card grid now read the wiki runtime via `lib/wiki-adventures/plan-view.ts`. The registry-vs-S3 sourcing fork resolved itself: the admin side and runtime both already treat the adventure set as a hardcoded list of four, and authoring new adventures is Deferred — so a registry-driven grid is behavior-identical, not a product regression.
+- ✅ **Full runtime path** — `loadAdventurePlanForRuntime` now backs every gameplay/runtime legacy-plan reader (in-progress page, per-turn page, practice, join, check-final, first-turn, roll-result, active-adventure party, reports, profile image). A stubbed/absent legacy plan can no longer 500 any play surface.
 - ✅ **Unit 6** — workbench actions gated behind `requireAdmin`.
-- ⏳ **Browser re-verify** — the three pages changed; the new front-door paths need a quick authenticated visual check (gameplay turns already proven).
-- 🔲 **Grid cutover + Unit 4** — `/settings/[settingId]/play` still enumerates legacy S3 JSON. Blocked on a sourcing decision (see Unit 1 note).
-- 🔲 **Units 5, 7** — prod S3 audit and rollback verification (need prod access / manual run).
+- ⏳ **Browser re-verify** — the front-door and runtime page reads changed; needs one authenticated pass per shape (gameplay turn logic itself is unchanged).
+- 🔲 **Unit 4 (legacy retirement)** — two decisions: (a) the now-superseded **legacy editor** (`edit/page.tsx`, `adventure-plan-actions.ts`, `adventure-plan-chat.ts`) writes legacy JSON the runtime no longer reads — remove it or redirect to `/admin/wiki-adventures`; (b) delete the legacy S3 `AdventurePlan` JSON for the four migrated adventures (destructive — after browser re-verify).
+- 🔲 **Units 5, 7** — prod S3 completeness audit and rollback verification (need prod access / a manual run).
 
 ## Current state
 
