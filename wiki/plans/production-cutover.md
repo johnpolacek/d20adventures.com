@@ -8,6 +8,15 @@ Move the **public** adventure play flow off legacy S3 `AdventurePlan` JSON and o
 
 Turn execution is fully wiki-backed. **Three public pages still read the legacy plan unconditionally**, and one wiki-runtime data gap (`availableCharacterOptions`) blocks the custom-character path. Close those, audit production S3 completeness, gate the prototype workbench actions, and prove rollback — then the legacy dual-read can be retired.
 
+## Progress (2026-06-11, branch `feature/production-cutover`)
+
+- ✅ **Unit 3** — `availableCharacterOptions` (and previously-unset `teaser`/`summary`) now compile into `RuntimeManifest`.
+- ✅ **Units 1–2 (gameplay-critical pages)** — listing/lobby, character-select, and character-create branch on the wiki runtime via the new `lib/wiki-adventures/plan-view.ts` adapter. Verified by `pnpm test:wiki-adventures:public-flow` + tsc/build/check.
+- ✅ **Unit 6** — workbench actions gated behind `requireAdmin`.
+- ⏳ **Browser re-verify** — the three pages changed; the new front-door paths need a quick authenticated visual check (gameplay turns already proven).
+- 🔲 **Grid cutover + Unit 4** — `/settings/[settingId]/play` still enumerates legacy S3 JSON. Blocked on a sourcing decision (see Unit 1 note).
+- 🔲 **Units 5, 7** — prod S3 audit and rollback verification (need prod access / manual run).
+
 ## Current state
 
 What already branches on `isLocalWikiAdventure(settingId, planId)` ([lib/wiki-adventures/local-runtime.ts:103](../../lib/wiki-adventures/local-runtime.ts)) and needs no cutover work:

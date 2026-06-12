@@ -6,6 +6,15 @@ Git owns routine implementation history. This log records durable wiki, planning
 
 ## 2026-06-11
 
+### Cut the gameplay-critical public pages onto the wiki runtime (cutover Units 1–3, 6)
+
+- Added `lib/wiki-adventures/plan-view.ts`, an adapter that builds the legacy `AdventurePlan` shape from compiled wiki `RuntimeArtifacts`, so the public listing/lobby, character-select, and character-create pages cut off the legacy S3 `AdventurePlan` JSON without any downstream UI rewrite. The start encounter is ordered first; premade sheets, party size, teaser/summary, and `availableCharacterOptions` all map through.
+- Compiler change (Unit 3): `manifest.teaser`/`manifest.summary` now populate from the `adventure.md` body sections — they were previously always `undefined` despite four readers (start/create/npc/runtime-context) — and a new optional `availableCharacterOptions { races, archetypes }` flows from frontmatter into `RuntimeManifest`. Added that frontmatter to the two custom-character adventures (Road to Kordavos, March of Davos), sourced from their legacy plans.
+- Branched the three pages on `isLocalWikiAdventure`; gated the prototype workbench server actions behind `requireAdmin` (Unit 6).
+- Added `scripts/wiki-adventures-public-flow-check.ts` / `pnpm test:wiki-adventures:public-flow`.
+- Validation: `tsc`, `pnpm build`, `pnpm check` (453 files), all four bridge checks, and the new public-flow check pass. Branch `feature/production-cutover`.
+- **Open decision before the grid + legacy retirement (Units 1-grid, 4, 5):** the registry `LOCAL_WIKI_ADVENTURES` is hardcoded to four adventures, while the legacy `/settings/[settingId]/play` grid enumerates every published JSON in S3. A registry-driven grid would not surface future admin-authored adventures, so a true grid cutover needs S3 enumeration of published wiki adventures (tied to the prod publish pipeline). Not yet started.
+
 ### Planned the production cutover track
 
 - Assessed current state: the wiki-adventure runtime is merged and the post-merge hardening track is fully closed (all five release-readiness findings done, plus three further live-playthrough bugs fixed). Turn execution — create, start, advance, player-reply, NPC context — all branch on `isLocalWikiAdventure` and read compiled wiki artifacts.
