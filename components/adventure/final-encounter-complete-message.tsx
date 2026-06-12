@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import React from "react"
-import { getAdventurePlan } from "@/app/_actions/adventure-plan-actions"
+import { getAdventurePlan } from "@/app/_actions/get-adventure-plan"
 import { Button } from "@/components/ui/button"
 import Image from "@/components/ui/native-image"
 import { getImageUrl } from "@/lib/utils"

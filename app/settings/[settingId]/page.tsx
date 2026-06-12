@@ -30,9 +30,6 @@ export default async function SettingHome(props: { params: Promise<{ settingId: 
             <Link href={`/settings/${settingId}/edit`}>
               <Button className="text-sm bg-indigo-800 hover:bg-indigo-700">Edit Setting</Button>
             </Link>
-            <Link href={`/settings/${settingId}/new`}>
-              <Button className="text-sm bg-indigo-800 hover:bg-indigo-700">New Adventure</Button>
-            </Link>
           </div>
         )}
         <div className="max-w-3xl mx-auto -mt-32 relative z-10 whitespace-pre-line">
