@@ -81,7 +81,9 @@ export function makePublishedVersionId(publishedAt: Date, contentHash: string): 
 }
 
 export class InMemoryWikiAdventurePublishedRepository implements WikiAdventurePublishedRepository {
-  private readonly objects = new Map<string, string>()
+  // Accepts an external object store so a test can share it with an
+  // InMemoryWikiAdventureArtifactLoader and read back published/pinned versions.
+  constructor(private readonly objects = new Map<string, string>()) {}
 
   async writePreview(input: { settingId: string; planId: string; draftId: string; artifacts: RuntimeArtifacts; writtenAt?: Date }): Promise<PreviewRecord> {
     const prefix = previewPrefix(input.settingId, input.planId, input.draftId)

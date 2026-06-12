@@ -55,6 +55,8 @@
     "test:wiki-adventures:march-of-davos-bridge": "tsx scripts/wiki-adventures-march-of-davos-bridge-check.ts",
     "test:wiki-adventures:admin-authoring": "tsx scripts/wiki-adventures-admin-authoring-check.ts",
     "test:wiki-adventures:public-flow": "tsx scripts/wiki-adventures-public-flow-check.ts",
+    "test:wiki-adventures:rollback": "tsx scripts/wiki-adventures-rollback-check.ts",
+    "audit:wiki-adventures:prod-s3": "node --env-file=.env --env-file=.env.local --import tsx scripts/wiki-adventures-prod-s3-audit.ts",
     "test:setup": "pnpm dev",
     "test:full": "pnpm test:setup && pnpm test"
   },
