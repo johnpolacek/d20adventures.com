@@ -127,7 +127,7 @@ export default async function TurnPage({ params }: PageProps) {
       />
       {canEdit && (
         <div className="w-full flex justify-end p-8">
-          <Link className="z-20" href={`/settings/${settingId}/${adventurePlanId}/edit`}>
+          <Link className="z-20" href={`/admin/wiki-adventures/${settingId}/${adventurePlanId}`}>
             <Button className="text-sm bg-primary-600 hover:bg-primary-700">Edit</Button>
           </Link>
         </div>

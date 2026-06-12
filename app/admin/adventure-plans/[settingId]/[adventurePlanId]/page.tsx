@@ -10,5 +10,5 @@ type AdminAdventurePlanRedirectPageProps = {
 export default async function AdminAdventurePlanRedirectPage({ params }: AdminAdventurePlanRedirectPageProps) {
   const { settingId, adventurePlanId } = await params
 
-  redirect(`/settings/${settingId}/${adventurePlanId}/edit`)
+  redirect(`/admin/wiki-adventures/${settingId}/${adventurePlanId}`)
 }

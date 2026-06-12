@@ -465,10 +465,7 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
                           {finding.recommendation ? <p className="text-sm text-white/80 mt-1">{finding.recommendation}</p> : null}
                           {finding.target?.planPath ? (
                             <div className="mt-2">
-                              <Link
-                                href={`/settings/${settingId}/${adventurePlanId}/edit?focus=${encodeURIComponent(finding.target.planPath)}`}
-                                className="text-xs text-primary-200 hover:text-primary-100 underline"
-                              >
+                              <Link href={`/admin/wiki-adventures/${settingId}/${adventurePlanId}`} className="text-xs text-primary-200 hover:text-primary-100 underline">
                                 Open plan editor: {finding.target.planPath}
                               </Link>
                             </div>

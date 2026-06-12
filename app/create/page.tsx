@@ -36,7 +36,7 @@ export default async function CreatePage() {
           Create Your World
         </h1>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="max-w-md mx-auto">
           <Card className="p-6 bg-black/50 backdrop-blur-sm border-white/20">
             <CardContent className="space-y-4 flex flex-col items-center">
               <h2 className="text-2xl font-semibold text-amber-300 font-display">Create a Setting</h2>
@@ -45,20 +45,6 @@ export default async function CreatePage() {
                 <Link href="/settings/new">
                   <Button variant="epic" size="sm" className="text-sm">
                     Create Setting
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="p-6 bg-black/50 backdrop-blur-sm border-white/20">
-            <CardContent className="space-y-4 flex flex-col items-center">
-              <h2 className="text-2xl font-semibold text-amber-300 font-display">Create an Adventure</h2>
-              <p className="text-white/80 text-center">Design an epic adventure with encounters, NPCs, and a compelling narrative. Choose an existing setting or create a new one.</p>
-              <div className="pt-4">
-                <Link href="/create/adventure">
-                  <Button variant="epic" size="sm" className="text-sm">
-                    Create Adventure
                   </Button>
                 </Link>
               </div>
