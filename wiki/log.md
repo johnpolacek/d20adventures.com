@@ -4,6 +4,16 @@
 
 Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.
 
+## 2026-06-12
+
+### Bootstrapped the parallel dev worktree workflow
+
+- Added `scripts/wt.sh` and `pnpm wt:*` scripts (`doctor`, `create`, `seed`, `list`, `resume`, `dev`, `open`, `finish`, `clean`) for parallel feature development with git worktrees. Plan: [plans/parallel-dev-worktrees.md](plans/parallel-dev-worktrees.md); agent rules in `AGENTS.md`.
+- Key facts established: Convex dev deployments are one-per-user-per-project, so database isolation requires a **per-worktree Convex project** (`d20adventures-<slug>`, provisioned by `wt:create`, seedable from main via `wt:seed` using `convex export`/`import --replace-all`). Convex functions read no deployment env vars, so fresh projects need no env copying. S3 and Clerk remain shared (worktrees default to placeholder images).
+- URLs via Portless (already installed): `https://d20adventures.localhost` (main), `https://<slug>.d20adventures.localhost` (worktrees); `next dev` honors Portless's `PORT`.
+- Behavior change: `pnpm dev` no longer runs `kill:ports` (it killed sibling worktree servers); `pnpm dev:fresh` preserves the old behavior and `pnpm test` uses it so test runs still get clean ports.
+- Finish policy: merge (no-ff); completed plans archive to `plans/zzz-completed/`. Convex project deletion after finish is manual (dashboard; no CLI).
+
 ## 2026-06-11
 
 ### Ran the pre-prod assurance checks (cutover Units 5 & 7) — found prod S3 march-of-davos drift
