@@ -105,7 +105,9 @@ cmd_create() {
   } >> "$path/.env.local"
 
   echo "== pnpm install =="
-  (cd "$path" && pnpm install)
+  # --ignore-scripts: postinstall runs `convex codegen`, which fails before the
+  # worktree's Convex project exists; `convex dev --once` below does codegen anyway.
+  (cd "$path" && pnpm install --ignore-scripts)
 
   echo "== provisioning isolated Convex project: $PROJECT_NAME-$slug =="
   # Writes CONVEX_DEPLOYMENT / NEXT_PUBLIC_CONVEX_URL into the worktree's .env.local.
