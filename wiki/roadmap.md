@@ -6,7 +6,7 @@ Re-assessed 2026-06-11, after the wiki-adventure implementation merged to `main`
 
 **Where we are:** the wiki-authored adventure runtime is merged and four Realm of Myr adventures are migrated with passing bridge tests, TypeScript, and build. `pnpm check` is green and build-stable, admin canonical writes are gated behind validation, S3 fallback is complete-manifest-aware, the admin routes are normalized, and **The Midnight Summons has been played end-to-end in the browser to completion**. The whole "Now" release-readiness track is closed. Remaining gap before a production cutover: the public listing/selection path still reads legacy S3 JSON (see Next).
 
-**Current focus:** [Production Cutover](plans/production-cutover.md) — **code cutover complete and browser-verified** (2026-06-12). The entire discovery + gameplay path reads the wiki runtime; the legacy adventure-plan editor is removed; the legacy S3 JSON is retained as a harmless never-reached fallback. Remaining: two pre-prod-push assurance checks (prod S3 completeness audit, rollback verification).
+**Current focus:** [Production Cutover](plans/production-cutover.md) — **complete and verified** (2026-06-12). The entire discovery + gameplay path reads the wiki runtime; the legacy editor is removed; the legacy AdventurePlan JSON is kept as a harmless never-reached fallback; the prod S3 audit and rollback verification are done; March of Davos was reconciled (prod S3 → repo) so all four adventures resolve to repo-bundled source. All four are deploy-ready — only the prod deploy itself (`convex:deploy` + frontend) remains, at the owner's discretion.
 
 ## Now — release readiness
 

@@ -17,10 +17,10 @@ Turn execution is fully wiki-backed. **Three public pages still read the legacy 
 - ✅ **Browser-verified** — authenticated agent-browser pass confirmed grid, premade select, custom character-create races, solo auto-start, turn-1 wiki content, and a full reply → Perception roll → resolution loop, with no server errors.
 - ✅ **Legacy editor removed** — the `/edit` + `/new` routes, plan-actions, plan-chat, `adventure-plan-structure`, and editor-only `components/adventure-plans/*` are deleted; the one gameplay tie (`getAdventurePlan`) moved to a wiki-backed action; dev/admin edit links repointed to `/admin/wiki-adventures`.
 - ✅ **Unit 4 resolved (keep the JSON)** — decision 2026-06-12: do **not** delete the legacy S3 `AdventurePlan` JSON. It is now a never-reached fallback, so it is harmless, and keeping it is a free safety net (rollback, and any old in-DB adventures that reference a `planId`). The cutover removes the *dependency*, not the data.
-- ✅ **Unit 5** — prod S3 completeness audit run (`pnpm audit:wiki-adventures:prod-s3`). Three adventures fall back to repo-local (safe); **March of Davos has complete prod S3 source that drifts from the repo in 40/116 files and lacks the new `availableCharacterOptions`** — a pre-deploy blocker for that adventure. See the decision below.
+- ✅ **Unit 5** — prod S3 completeness audit (`pnpm audit:wiki-adventures:prod-s3`). Found and **resolved** the March of Davos drift (reconciled to repo, prod S3 cleared — see below). All four adventures now resolve to the repo-bundled source.
 - ✅ **Unit 7** — rollback / content-ref pinning verified (`pnpm test:wiki-adventures:rollback`): a pinned adventure is unaffected by a bad publish, rollback re-points `latest`, and fresh starts resolve the restored version.
 
-**The code cutover is complete and verified.** The remaining item is a **content decision for March of Davos** (below), plus the actual prod deploy.
+**The cutover is complete and verified, and all four adventures are deploy-ready.** The only thing left is the actual prod deploy (`convex:deploy` + frontend), at your discretion.
 
 ## Decision needed — March of Davos prod S3 source
 
@@ -30,6 +30,10 @@ The Unit 5 audit found the March of Davos wiki source already exists *complete* 
 2. **Prod S3 is canonical** — pull the 40 drifted prod files back into the repo, reconcile, then add `availableCharacterOptions` and re-publish. Preserves any live-authored prod changes; more work and needs a diff review to know what the prod-only edits are.
 
 Until this is resolved, do not `convex:deploy`/deploy the cutover for March of Davos. The other three are deploy-ready.
+
+### Resolved (2026-06-12) — reconciled to repo, prod S3 cleared
+
+Decision taken: **repo-canonical, uniform**. Reconciled the finished prod S3 March of Davos source into the repo (40 files updated; richer `adventure.md`, plot-coherent climax, fuller NPC sheets, 57 transitions vs 44), re-added `availableCharacterOptions`, then deleted the prod S3 `content/.../march-of-davos/` prefix (64 keys incl. `_revisions/`). The audit now reports March of Davos as `local (S3 partial, rejected)` → the runtime serves the repo-bundled source for all four adventures. Git holds the canonical content, so the clear is reversible. (70 setting-level `npcs/` keys remain in prod S3, orphaned and ignored — the runtime uses 100% repo source for March of Davos.) **All four adventures are now deploy-ready.**
 
 ### Drift investigation (2026-06-12) — prod S3 is the canonical, more-finished version
 
