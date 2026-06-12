@@ -31,6 +31,18 @@ The Unit 5 audit found the March of Davos wiki source already exists *complete* 
 
 Until this is resolved, do not `convex:deploy`/deploy the cutover for March of Davos. The other three are deploy-ready.
 
+### Drift investigation (2026-06-12) — prod S3 is the canonical, more-finished version
+
+A content comparison of the 40 drifted files settled the question: **March of Davos was only rawly/partially migrated into the repo; the finished content lives in prod S3** (refined via the wiki authoring tools after the initial migration). So the runtime *correctly* prefers prod S3 — the real problem is that the repo copy is stale.
+
+Evidence:
+- `adventure.md` — prod has `## Aftermath: Potential Outcomes`, `## Conclusion`, and `## Sequel Hooks` sections the repo lacks (the repo has only Teaser/Summary/Authoring Notes). The encounters reference these prod-only sections.
+- `final-confrontation` (climax) — prod names the antagonist (Joran Antonov), the McGuffin (Key of Ilmarin), and a three-way branching resolution tied to the Aftermath; the repo is a generic "cloaked Covenant figure" draft.
+- NPC sheets (`silverhand*`) — prod is ~2× fuller.
+- Not a clean superset: ~17 files are longer in the repo (e.g. `morning-at-the-dragonbone`, `an-unsolicited-opportunity`) — likely verbose raw-migration prose later tightened in prod; spot-check before discarding.
+
+**Recommendation:** reconcile **prod S3 → repo** (pull the finished prod source into git so repo and prod match), spot-check the handful of repo-longer files to confirm nothing unique is lost, then add `availableCharacterOptions` to the reconciled `adventure.md` and it deploys consistently. Tooling: `pnpm audit:wiki-adventures:prod-s3` flags the drift; a small pull script can mirror `content/.../march-of-davos/**` + the drifted `npcs/silverhand*` from S3 into the repo.
+
 ## Remaining work — pre-prod-push assurance
 
 Neither item changes app code; both are operational checks before the wiki runtime drives production traffic.
