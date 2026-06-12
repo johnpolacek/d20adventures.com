@@ -104,6 +104,15 @@ export function isLocalWikiAdventure(settingId: string, planId: string) {
   return getLocalWikiAdventureDefinition(settingId, planId) !== null
 }
 
+/** Registered wiki adventures for a setting, ordered by planId to match legacy S3 key ordering. */
+export function getLocalWikiAdventuresForSetting(settingId: string): LocalWikiAdventureDefinition[] {
+  return LOCAL_WIKI_ADVENTURES.filter((definition) => definition.settingId === settingId).sort((a, b) => a.planId.localeCompare(b.planId))
+}
+
+export function settingHasLocalWikiAdventures(settingId: string): boolean {
+  return LOCAL_WIKI_ADVENTURES.some((definition) => definition.settingId === settingId)
+}
+
 export function loadLocalWikiAdventureRuntime(settingId: string, planId: string): { definition: LocalWikiAdventureDefinition; artifacts: RuntimeArtifacts; contentRef: LocalWikiContentRef } {
   const definition = getLocalWikiAdventureDefinition(settingId, planId)
   if (!definition) {

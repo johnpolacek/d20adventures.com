@@ -7,6 +7,8 @@ import Image from "@/components/ui/native-image"
 import { isDev } from "@/lib/auth-utils"
 import { listAndReadJsonFilesInS3Directory, readJsonFromS3 } from "@/lib/s3-utils"
 import { getImageUrl } from "@/lib/utils"
+import { settingHasLocalWikiAdventures } from "@/lib/wiki-adventures/local-runtime"
+import { loadWikiAdventurePlanViewsForSetting } from "@/lib/wiki-adventures/plan-view"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { Setting } from "@/types/setting"
 
@@ -25,13 +27,18 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
     return <div>Error loading setting data.</div>
   }
 
-  // Read all adventure plan JSON files (excluding setting-data.json)
+  // Resolve the adventure list from the wiki runtime for settings whose adventures are
+  // wiki-backed; otherwise fall back to enumerating the legacy S3 AdventurePlan JSON.
   let adventures: AdventurePlan[] = []
   let publishedAdventures: AdventurePlan[] = []
   let draftAdventures: AdventurePlan[] = []
   try {
-    const adventureFiles = await listAndReadJsonFilesInS3Directory(`settings/${settingId}/`, ["setting-data.json"])
-    adventures = adventureFiles.map((file) => file.data as AdventurePlan)
+    if (settingHasLocalWikiAdventures(settingId)) {
+      adventures = await loadWikiAdventurePlanViewsForSetting(settingId)
+    } else {
+      const adventureFiles = await listAndReadJsonFilesInS3Directory(`settings/${settingId}/`, ["setting-data.json"])
+      adventures = adventureFiles.map((file) => file.data as AdventurePlan)
+    }
     publishedAdventures = adventures.filter((a) => !a.draft)
     draftAdventures = adventures.filter((a) => !!a.draft)
   } catch (err) {

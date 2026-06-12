@@ -1,6 +1,6 @@
 import type { AdventureEncounter, AdventurePlan, AdventureSection } from "@/types/adventure-plan"
 import type { Character, PCTemplate } from "@/types/character"
-import { loadLocalWikiAdventureRuntime, loadWikiAdventureRuntime } from "./local-runtime"
+import { getLocalWikiAdventuresForSetting, loadLocalWikiAdventureRuntime, loadWikiAdventureRuntime } from "./local-runtime"
 import type { RuntimeArtifacts, RuntimeEncounter } from "./types"
 
 /**
@@ -91,4 +91,13 @@ export function loadLocalWikiAdventurePlanView(settingId: string, planId: string
 export async function loadWikiAdventurePlanView(settingId: string, planId: string): Promise<AdventurePlan> {
   const { artifacts } = await loadWikiAdventureRuntime(settingId, planId)
   return buildAdventurePlanViewFromArtifacts(artifacts)
+}
+
+/**
+ * Plan views for every registered wiki adventure in a setting, ordered by planId so the
+ * adventure-listing grid keeps the same ordering it had when it enumerated S3 JSON keys.
+ */
+export async function loadWikiAdventurePlanViewsForSetting(settingId: string): Promise<AdventurePlan[]> {
+  const definitions = getLocalWikiAdventuresForSetting(settingId)
+  return Promise.all(definitions.map((definition) => loadWikiAdventurePlanView(settingId, definition.planId)))
 }

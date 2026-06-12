@@ -1,5 +1,6 @@
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
+import { getLocalWikiAdventuresForSetting } from "@/lib/wiki-adventures/local-runtime"
 import { loadLocalWikiAdventurePlanView } from "@/lib/wiki-adventures/plan-view"
 
 const SETTING_ID = "realm-of-myr"
@@ -71,10 +72,22 @@ function assertPlanViewShape() {
   }
 }
 
+// The adventure-listing grid (`/settings/[settingId]/play`) must source registered settings
+// from the wiki runtime, ordered by planId so its positional intro/full curation is preserved.
+function assertGridSourceAndOrder() {
+  const playPage = readFileSync("app/settings/[settingId]/play/page.tsx", "utf8")
+  assert.ok(playPage.includes("settingHasLocalWikiAdventures"), "play grid does not branch on settingHasLocalWikiAdventures")
+  assert.ok(playPage.includes("loadWikiAdventurePlanViewsForSetting"), "play grid does not load wiki plan views")
+
+  const order = getLocalWikiAdventuresForSetting(SETTING_ID).map((definition) => definition.planId)
+  assert.deepEqual(order, ["covert-cargo", "march-of-davos", "the-midnight-summons", "the-road-to-kordavos"], "grid order changed — positional intro/full curation in the play page would break")
+}
+
 function main() {
   assertPagesBranchOnWiki()
   assertWorkbenchActionsGated()
   assertPlanViewShape()
+  assertGridSourceAndOrder()
   console.log("Public play-flow wiki cutover checks passed")
 }
 
