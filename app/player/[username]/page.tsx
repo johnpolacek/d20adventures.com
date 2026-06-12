@@ -8,8 +8,8 @@ import FullPageImage from "@/components/layout/fullpage-image"
 import { textShadowSpreadLight } from "@/components/typography/styles"
 import { Button } from "@/components/ui/button"
 import Image from "@/components/ui/native-image"
-import { readJsonFromS3 } from "@/lib/s3-utils"
 import { getImageUrl } from "@/lib/utils"
+import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
 import type { PCTemplate } from "@/types/character"
 import { CharacterGrid } from "./components/character-grid"
 
@@ -51,7 +51,7 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
     const settingId = (adv as any).settingId
     if (planId && settingId && !planImageCache[planId]) {
       try {
-        const plan = await readJsonFromS3(`settings/${settingId}/${planId}.json`)
+        const plan = await loadAdventurePlanForRuntime(settingId, planId)
         if (plan && typeof plan === "object" && "image" in plan && typeof plan.image === "string" && plan.image) {
           planImageCache[planId] = getImageUrl(plan.image)
         }

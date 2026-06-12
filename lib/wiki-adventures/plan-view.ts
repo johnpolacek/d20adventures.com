@@ -1,6 +1,7 @@
+import { loadAdventurePlanFromStorage } from "@/lib/adventure-plan-storage"
 import type { AdventureEncounter, AdventurePlan, AdventureSection } from "@/types/adventure-plan"
 import type { Character, PCTemplate } from "@/types/character"
-import { getLocalWikiAdventuresForSetting, loadLocalWikiAdventureRuntime, loadWikiAdventureRuntime } from "./local-runtime"
+import { getLocalWikiAdventuresForSetting, isLocalWikiAdventure, loadLocalWikiAdventureRuntime, loadWikiAdventureRuntime } from "./local-runtime"
 import type { RuntimeArtifacts, RuntimeEncounter } from "./types"
 
 /**
@@ -100,4 +101,17 @@ export async function loadWikiAdventurePlanView(settingId: string, planId: strin
 export async function loadWikiAdventurePlanViewsForSetting(settingId: string): Promise<AdventurePlan[]> {
   const definitions = getLocalWikiAdventuresForSetting(settingId)
   return Promise.all(definitions.map((definition) => loadWikiAdventurePlanView(settingId, definition.planId)))
+}
+
+/**
+ * The single entry point gameplay/runtime readers should use to load an adventure plan:
+ * the wiki plan view for registered wiki adventures, the legacy S3 `AdventurePlan` JSON
+ * otherwise. Keeps every runtime reader off the legacy plan for migrated adventures so a
+ * stubbed or absent legacy plan can never 500 the play flow.
+ */
+export async function loadAdventurePlanForRuntime(settingId: string, planId: string): Promise<AdventurePlan> {
+  if (isLocalWikiAdventure(settingId, planId)) {
+    return loadWikiAdventurePlanView(settingId, planId)
+  }
+  return loadAdventurePlanFromStorage(settingId, planId)
 }

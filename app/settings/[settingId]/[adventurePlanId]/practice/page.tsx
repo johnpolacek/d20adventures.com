@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { canManageResource } from "@/lib/content-permissions"
 import { listAndReadJsonFilesInS3Directory, readJsonFromS3 } from "@/lib/s3-utils"
 import { toPCTemplate } from "@/lib/utils/character-mapping"
-import type { AdventurePlan } from "@/types/adventure-plan"
+import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
 import type { Setting } from "@/types/setting"
 
 export default async function PracticeAdventurePage(props: {
@@ -37,7 +37,7 @@ export default async function PracticeAdventurePage(props: {
   }
 
   const { settingId, adventurePlanId } = await props.params
-  const plan = (await readJsonFromS3(`settings/${settingId}/${adventurePlanId}.json`)) as AdventurePlan
+  const plan = await loadAdventurePlanForRuntime(settingId, adventurePlanId)
   if (!plan) {
     return <div className="p-8 text-red-400">Adventure plan not found.</div>
   }

@@ -10,8 +10,8 @@ import { getEncounterInstructionsFromPlan, resolvePlayerRollNarrativeAndCharacte
 import { buildTurnReplyRollRequirement } from "@/lib/services/adventure-turn-reply-service"
 import { processNpcTurnsAfterCurrent } from "@/lib/services/npc-turn-service"
 import type { RollRequirement } from "@/lib/validations/roll-requirement-schema"
+import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
 import type { Adventure, TurnCharacter } from "@/types/adventure"
-import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PC } from "@/types/character"
 
 // Using RollRequirement union (object | null) from validation schema
@@ -117,9 +117,8 @@ export async function resolvePlayerRollResult({ turnId, characterId, result }: {
   if (!character.rollRequired) throw new Error("No roll required for this character")
   if (typeof character.rollResult === "number") throw new Error("Roll already completed")
 
-  // 2. Fetch the adventure plan
-  const planPath = `settings/${adventure.settingId}/${adventure.planId}.json`
-  const plan = (await readJsonFromS3(planPath)) as AdventurePlan
+  // 2. Fetch the adventure plan (wiki runtime for migrated adventures, legacy S3 JSON otherwise)
+  const plan = await loadAdventurePlanForRuntime(adventure.settingId, adventure.planId)
   if (!plan || !Array.isArray(plan.sections)) throw new Error("Adventure plan not found or invalid")
 
   // 3. Extract encounter instructions
@@ -189,8 +188,7 @@ export async function getActiveAdventureForUser() {
   if (!adventure) return null
 
   // Load the adventure plan for party info
-  const planPath = `settings/${adventure.settingId}/${adventure.planId}.json`
-  const adventurePlan = (await readJsonFromS3(planPath)) as AdventurePlan
+  const adventurePlan = await loadAdventurePlanForRuntime(adventure.settingId, adventure.planId)
   if (!adventurePlan) return null
 
   // Map players to full PC objects from adventure plan
@@ -267,8 +265,7 @@ export async function getAdventuresForUser() {
 
 export async function getNextAdventure({ settingId, adventurePlanId }: { settingId: string; adventurePlanId: string }) {
   // No auth required, this is public data
-  const planPath = `settings/${settingId}/${adventurePlanId}.json`
-  const plan = (await readJsonFromS3(planPath)) as AdventurePlan | null
+  const plan = await loadAdventurePlanForRuntime(settingId, adventurePlanId)
   if (!plan) return null
   return plan.nextAdventure || null
 }

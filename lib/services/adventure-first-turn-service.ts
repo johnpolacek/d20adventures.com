@@ -1,15 +1,14 @@
-import { readJsonFromS3 } from "@/lib/s3-utils"
 import { getRollRequirementHelper } from "@/lib/services/narrative-service"
 import { getRollModifier } from "@/lib/services/roll-modifier-service"
 import type { RollRequirement } from "@/lib/validations/roll-requirement-schema"
+import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
 import type { TurnCharacter } from "@/types/adventure"
-import type { AdventurePlan } from "@/types/adventure-plan"
 
 export async function buildFirstTurnSetup(args: { settingId: string; planId: string; encounterId: string; narrative: string; playerInput: string; characters: TurnCharacter[] }): Promise<{
   turnTitle: string
   rollRequirement: RollRequirement
 }> {
-  const plan = (await readJsonFromS3(`settings/${args.settingId}/${args.planId}.json`)) as AdventurePlan
+  const plan = await loadAdventurePlanForRuntime(args.settingId, args.planId)
   if (!plan || !plan.sections) {
     throw new Error("Adventure plan not found or is invalid")
   }

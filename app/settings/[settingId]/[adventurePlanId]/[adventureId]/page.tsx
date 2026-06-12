@@ -3,9 +3,9 @@ import { notFound, redirect } from "next/navigation"
 import { loadAdventureWithNpc } from "@/app/_actions/load-adventure"
 import AdventureHome from "@/components/views/adventure-home"
 import type { Id } from "@/convex/_generated/dataModel"
-import { loadAdventurePlanFromStorage } from "@/lib/adventure-plan-storage"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import { mapConvexTurnToTurn, reverseSlugify } from "@/lib/utils"
+import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
 import type { Adventure } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PC, PCTemplate } from "@/types/character"
@@ -71,7 +71,7 @@ function findEncounter(adventurePlan: AdventurePlan, encounterIdToFind: string |
 
 export default async function AdventurePage(props: { params: Promise<{ settingId: string; adventurePlanId: string; adventureId: string }> }) {
   const { adventurePlanId, adventureId, settingId } = await props.params
-  const adventurePlan = await loadAdventurePlanFromStorage(settingId, adventurePlanId)
+  const adventurePlan = await loadAdventurePlanForRuntime(settingId, adventurePlanId)
   if (!adventurePlan) return notFound()
   const adventureData = await loadAdventureWithNpc(adventureId as Id<"adventures">)
   const adventure = mapConvexAdventureToAdventure(adventureData?.adventure)

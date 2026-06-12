@@ -7,7 +7,7 @@ import type { Id } from "@/convex/_generated/dataModel"
 import { assertAdventureAccess } from "@/lib/adventure-access"
 import { generateObject } from "@/lib/ai"
 import { convex } from "@/lib/convex/server"
-import { readJsonFromS3 } from "@/lib/s3-utils"
+import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
 import type { AdventurePlan } from "@/types/adventure-plan"
 
 const reportSchema = z.object({
@@ -88,8 +88,7 @@ export async function generatePracticeReport(adventureId: Id<"adventures">) {
   if ((adventure.runType ?? "campaign") !== "practice") throw new Error("Practice reports are only available for practice runs")
 
   const turns = await convex.query(api.adventure.getTurnsByAdventure, { adventureId })
-  const planPath = `settings/${adventure.settingId}/${adventure.planId}.json`
-  const plan = (await readJsonFromS3(planPath)) as AdventurePlan
+  const plan = await loadAdventurePlanForRuntime(adventure.settingId, adventure.planId)
   if (!plan) throw new Error("Adventure plan not found")
 
   const turnSnapshots = turns.map((turn) => ({
