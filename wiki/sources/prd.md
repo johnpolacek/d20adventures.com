@@ -26,6 +26,16 @@ README explicitly favors simple D20 checks over complex mechanics while AI gamep
 
 As of 2026-05-20, the active planning direction is a complete wiki-first relaunch: adventures become S3-backed markdown wikis, AI-assisted authoring/editing replaces the current Adventure Plan editor, and current Myr adventure plan templates will be migrated into the new wiki model.
 
+## Experience Modes
+
+Adventures can be experienced in three distinct modes. All modes share the same underlying game state and adventure content — players can switch between them freely at any point during play.
+
+**Gameview** is the current default: text-driven, turn-by-turn play with the AI Game Master. Players read encounter narrative, make choices, and roll dice.
+
+**Storyview** is a cinematic, immersive mode. Encounter narrative is presented one paragraph at a time, read aloud via AI-generated text-to-speech. Decision points and dice rolls still occur and are narrated. The player taps to advance. Feels like an interactive audiobook.
+
+**Mapview** adds a tabletop-inspired visual layer: a realistic 3D tile map — detailed terrain and character models evoking painted miniatures on a physical table — serves as a backdrop to the adventure. The narrative and choices remain the primary interface; the map shows where you are in the world.
+
 ## Product Unknowns
 
 Current public launch state and active-user volume are unknown. The wiki-first relaunch is active planning direction, but implementation details remain unsettled until the planning program completes.
