@@ -7,9 +7,6 @@ type: "encounter"
 title: "The Wine Cellar"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
-npcs:
-  - id: "clive-stonebrook"
-  - id: "mira-hearthstone"
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726777134645"
 ---
 
@@ -73,7 +70,8 @@ These documents would be enough to bring down the entire clan faction should the
 
 ## Transitions
 
-- To [[encounter:the-speech]] when After resolving The Wine Cellar, continue to The Speech.
+- To [[encounter:the-speech]] when the players head back to the grand ballroom to see the climax of the festival.
+- To [[encounter:through-the-halls]] when the players return to the main hallway hub at the base of the stairs.
 
 ## Migration Context
 

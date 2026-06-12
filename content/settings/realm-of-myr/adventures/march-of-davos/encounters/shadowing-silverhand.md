@@ -19,9 +19,9 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726462025424"
 
 ## Intro
 
-Late evening falls over Kordavos. The city’s streets are bathed in a dim, silvery glow from the moon hanging low in the sky. Silverhand strides purposefully away from the auction house, his cloak rippling in the faint breeze. The distant hum of the city’s nightlife fades as he and his two silent guards move through the winding alleys, the flickering street lanterns barely illuminating their cautious steps. 
+Late evening falls over Kordavos as you emerge from the underground chamber. The city’s streets are bathed in a dim, silvery glow from the moon hanging low in the sky. Ahead, Silverhand’s representative clutches the auction prize tightly, lead by Silverhand himself who strides purposefully through the gloom. His cloak ripples in the faint breeze like a shadow come to life.
 
-The air is thick with tension as they navigate the darkened streets, the threat of being spotted ever-present. Silverhand’s movements are deliberate, and the path he takes seems to lead deeper into the city’s forgotten corners, far from the watchful eyes of law and order.
+The distant hum of the city’s nightlife fades as the group moves through the winding alleys, the flickering street lanterns barely illuminating their cautious steps. Silverhand’s movements are deliberate, and the path he takes seems to lead deeper into the city’s forgotten corners, far from the watchful eyes of law and order. Every few intersections, one of the guards pauses to glance back, checking for tails.
 
 ## GM Notes
 
@@ -31,7 +31,7 @@ If they just attack, other Silverhand bodyguards will appear quickly to defend h
 
 ## Transitions
 
-- To [[encounter:the-hideout]] when After resolving Shadowing Silverhand, continue to The Hideout.
+- To [[encounter:the-hideout]] when the players successfully track the group to their destination or are confronted near it.
 
 ## Migration Context
 

@@ -7,8 +7,6 @@ type: "encounter"
 title: "The Silver Serpent Tavern"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
-npcs:
-  - id: "harron"
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726289298448"
 ---
 
@@ -47,7 +45,9 @@ If the adventurers press further, either by offering coin or leveraging intimida
 
 ## Transitions
 
-- To [[encounter:arrival-at-the-docks]] when After resolving The Silver Serpent Tavern, continue to Arrival at the Docks.
+- To [[encounter:arrival-at-the-docks]] when After gathering information about Silverhand and the shipment, continue to Arrival at the Docks.
+- To [[encounter:the-old-grand-library]] when The players decide to follow up on Joran's scholarly background at the library before proceeding to the docks.
+- To [[encounter:welcome-to-the-lower-districts]] when the players decide to head straight to the Lower Districts to follow the lead on Silverhand or Joran.
 
 ## Migration Context
 

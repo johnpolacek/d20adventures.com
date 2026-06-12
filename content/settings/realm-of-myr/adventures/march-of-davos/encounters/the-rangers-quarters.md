@@ -45,6 +45,7 @@ This journal represents both the culmination of Milos’s life’s work and the 
 ## Transitions
 
 - To [[encounter:the-lavish-corridor]] when After resolving The Ranger’s Quarters, continue to The Lavish Corridor.
+- To [[encounter:through-the-halls]] when the players exit the quarters and return to the main hallway hub.
 
 ## Migration Context
 

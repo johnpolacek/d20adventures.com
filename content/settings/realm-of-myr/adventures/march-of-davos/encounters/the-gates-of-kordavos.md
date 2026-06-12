@@ -15,7 +15,7 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725044729016"
 
 ## Intro
 
-As the adventurers approach the grand gates of Kordavos, they are greeted by the sight of towering stone archways adorned with vibrant Asterian and Valkaran banners fluttering in the breeze. The sound of laughter, music, and lively chatter fills the air, signaling the ongoing festivities of the Harvest Festival just beyond the gates. 
+As the adventurers approach the grand gates of Kordavos, they are greeted by the sight of towering stone archways adorned with vibrant Asterian and Valkaran banners fluttering in the breeze. The sound of laughter, music, and lively chatter fills the air, signaling the ongoing festivities of the Harvest Festival just beyond the gates.
 
 However, before they can join the revelry, they find themselves in a long line of travelers, merchants, and villagers all waiting to be inspected by the city guard. A few guards move among the crowd, occasionally pulling aside individuals for further questioning.
 

@@ -18,7 +18,9 @@ The hall ends with a staircase rising on the left, spiraling upwards to the high
 
 ## Transitions
 
-- To [[encounter:the-rangers-quarters]] when After resolving Through the Halls, continue to The Ranger’s Quarters.
+- To [[encounter:the-rangers-quarters]] when the players choose to head up the grand staircase toward the family living quarters.
+- To [[encounter:the-wine-cellar]] when the players descend the narrow steps into the basement.
+- To [[encounter:inside-the-ball]] when the players decide to head back to the safety and noise of the party.
 
 ## Migration Context
 

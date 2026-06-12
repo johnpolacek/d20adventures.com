@@ -7,30 +7,23 @@ type: "encounter"
 title: "Forgotten Temple"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
-npcs:
-  - id: "astrid-blackthorn"
-  - id: "ancient-undead"
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726955916736"
 ---
 
 ## Intro
 
-Astrid wipes the grime from her blade, her eyes narrowing with determination. "We’re close. The ancient undead were protecting something important."
+Astrid wipes the black ichor of the undead from her blade, her breathing heavy. She looks toward the far archway with a mix of awe and dread. "The catacombs were a decoy. This is the heart of Old Valkara."
 
-The narrow, rough-hewn stone passage begins to widen, its texture and shape gradually changing. The crumbling walls give way to smooth, intricately carved stonework, and the air becomes thick with the musty scent of forgotten history. Faded runes and symbols, barely discernible under centuries of grime, begin to appear, etched into the stonework.
+As you step through the final archway, the rough stone gives way to impossible architecture. The walls are made of translucent white marble that seems to glow with a faint, inner starlight. Towering pillars, carved to look like ancient oaks, support a vaulted ceiling painted with the constellations of a sky that Kordavos hasn't seen in a thousand years.
 
-Astrid’s voice breaks the heavy silence. She exhales slowly, her eyes wide with both awe and disbelief. "A lost temple of old Valkara," she murmurs, her voice barely above a whisper, "underneath the city all this time, just waiting to be discovered."
+In the center of this hidden cathedral, a grand altar stands empty, but the air around it ripples with heat. Faded runes, etched in silver filigree, tell the story of the "Key of Ilmarin"—a gift from the stars to the first High King of Valkara. 
 
-Towering pillars frame an arched doorway, their surfaces etched with intricate runes and faded depictions of Valkaran heroes long forgotten. The massive stone door stands partially ajar, revealing only darkness beyond. The carvings on its surface, once vibrant and telling stories of Valkara’s golden age, are now worn down by centuries of erosion. 
+The silence here is profound, heavy with the weight of centuries. But then, from the shadows behind the altar, a soft, familiar chuckle breaks the stillness.
 
-The air here is thick with the weight of forgotten history, and a palpable tension fills the musty underground air.
+## GM Notes
+
+This room serves as the threshold to the final encounter. The ripples of heat and the silver runes indicate the powerful artifacts that were once kept here. The laughter belongs to Joran, who has already reached the sanctum.
 
 ## Transitions
 
-- To [[encounter:final-confrontation]] when After resolving Forgotten Temple, continue to Final Confrontation.
-
-## Migration Context
-
-Legacy section: The Covenant of The Cowl
-
-Legacy scene: The Inner Sanctum
+- To [[encounter:final-confrontation]] when the players approach the altar to investigate the source of the laughter.

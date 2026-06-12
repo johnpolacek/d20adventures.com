@@ -7,43 +7,32 @@ type: "encounter"
 title: "The Hunt for the Assassin"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
-npcs:
-  - id: "astrid-blackthorn"
-  - id: "eamon"
-  - id: "liora"
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726868134486"
 ---
 
 ## Intro
 
-Lady Astrid, now clad in her ranger gear, steps through the courtyard with renewed purpose, her dark leathers and cloak a stark contrast to the opulence of the Blackthorn mansion. The fury in her eyes remains undimmed, but her attire reflects the shift from a grieving noble to a hardened hunter. The night is cold, and the moonlight casts long shadows as she leads the adventurers along the assassin's escape route.
+Lady Astrid, now clad in her rugged ranger gear, steps through the moonlit courtyard with a predatory focus. Her dark leathers and heavy cloak are a stark contrast to the opulence of the ballroom she just fled. The smell of wet earth and crushed ivy hangs heavy in the air. The night is cold, and the wind whistles through the stone balustrades as she leads you along the assassin's escape route, her eyes fixed on the churned-up soil and the faint, green glow of lingering poison on a discarded glove.
 
-Near the edge of the estate, where the assassin had vanished, a familiar figure stands by the hidden entrance to the underground tunnels. No longer the well-mannered half-elf scholar they met at the Dragonbone Inn—his robes now carry the weight of a man deeply entrenched in the mystery of Kordavos.
+Near the ivy-choked wall of the estate, a familiar figure waits by a heavy drainage grate. It is Eamon, but he is no longer the mild-mannered scholar from the Dragonbone Inn. He stands tall, his hands glowing with a soft, arcane light as he inspects a series of runes etched into the metal of the grate.
 
-Astrid strides forward, her movements silent and deadly, her eyes never leaving the warded door. "Eamon," she snaps, addressing the half-elf, her voice low but intense. "The ward. Break it." Eamon nods, his hands already moving in intricate gestures, his voice a steady murmur as he begins to unravel the magical seal.
+Astrid strides forward, her boots crunching on gravel. "Eamon," she snaps, her voice low but intense. "The ward. Break it." Eamon nods, his voice a steady, rhythmic murmur as he begins to unravel the magical seal. 
 
-Turning to the adventurers, Astrid's gaze hardens. "We’ve wasted enough time. This assassin and the Covenant think they can hide behind magic and shadows. But we will find them. We will deliver justice upon them." She pauses, her voice dropping to a growl. "Help me hunt them down. Thaddeus will not die without vengeance."
+Turning to you, Astrid's gaze is hard as flint. "This assassin and the Covenant think they can hide behind magic and shadows. But they have murdered my brother, and they have underestimated me. Thaddeus will not die without vengeance." She gestures to the grate as it begins to grind open. "We hunt together."
 
 ## GM Notes
 
-Astrid is willing to pay a large sum if asked. She will be desperate to find and end this threat to her family.
+Astrid is driven by cold fury. If the players negotiate for a higher reward, she will offer 500 gold per person immediately, plus a favor from the Blackthorn family in the future.
 
-Legacy stages:
+**The Grate:**
+The entrance is a hidden egress point. The mechanism is disguised as a water drain but reveals a well-maintained stone staircase once the magic is dispelled.
 
 ### Unsealing the Entrance
 
-Eamon steps forward, his fingers weaving through the air as he mutters an arcane incantation. The sound of his voice echoes faintly off the stone walls as a shimmer of magical energy ripples across the sealed door. A moment later, a sharp, metallic click reverberates through the air, signaling the release of the lock. Behind him, Astrid’s soldiers stand at attention, their hands gripping the hilts of swords and axes, their faces a mixture of resolve and wariness.
+Eamon steps forward, his fingers weaving through the air. The sound of his voice echoes faintly off the stone walls as a shimmer of blue energy ripples across the sealed door. A moment later, a sharp, metallic click reverberates through the air. Behind him, Astrid’s remaining loyal soldiers stand at attention, their faces etched with grief and resolve.
 
-The warded seal, once glowing with an ethereal light, fades, leaving the door unprotected. Eamon glances at Astrid and the adventurers, his expression tense. "It’s done," he says quietly. "But whatever’s down there, they won’t be expecting us. Let’s use that to our advantage." He steps back as Astrid’s men shift in place, readying themselves for what lies ahead.
-
-Astrid wastes no time. With a nod, she pushes open the door, revealing the dark mouth of the tunnel beyond. The air inside is cool and damp, carrying the musty scent of earth and stone. "Stay alert," she warns, her voice a low whisper as she draws her blade. "We’ve got the numbers, but they’ve got the advantage. They could be lying in wait. We’re in their territory now." She motions to her soldiers to follow her in.
+The warded seal fades, leaving the door unprotected. Eamon glances at the party, his expression tense. "It’s done. But be warned: the Cowl likely felt the seal break. They know we're coming."
 
 ## Transitions
 
-- To [[encounter:into-the-catacombs]] when After resolving The Hunt for the Assassin, continue to Into the Catacombs.
-
-## Migration Context
-
-Legacy section: The Covenant of The Cowl
-
-Legacy scene: Into the Underground
+- To [[encounter:into-the-catacombs]] when the party descends the stairs into the darkness.

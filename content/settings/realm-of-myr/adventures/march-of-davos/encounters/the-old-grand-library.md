@@ -10,7 +10,6 @@ adventureId: "march-of-davos"
 npcs:
   - id: "sister-danica"
     behavior: "Calm, serene, commanding, understanding."
-  - id: "eldrin-varokich"
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726275316858"
 ---
 
@@ -70,7 +69,8 @@ NPCs: Eldrin Varokich
 
 ## Transitions
 
-- To [[encounter:the-silver-serpent-tavern]] when After resolving The Old Grand Library, continue to The Silver Serpent Tavern.
+- To [[encounter:the-silver-serpent-tavern]] when After researching the historical records and Joran's connection, continue to the Silver Serpent Tavern.
+- To [[encounter:arrival-at-the-docks]] when The players decide to skip the tavern and head directly to the shipping berths based on the new information.
 
 ## Migration Context
 

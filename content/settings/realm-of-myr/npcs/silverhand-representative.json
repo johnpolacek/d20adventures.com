@@ -3,8 +3,11 @@
   "name": "Silverhand Representative",
   "type": "npc",
   "image": "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726458565684",
-  "archetype": "",
-  "race": "",
-  "appearance": "",
+  "archetype": "Merchant",
+  "race": "Human",
+  "gender": "Male",
+  "appearance": "A tall man dressed in a sharp black coat and fine boots. He wears dark gloves and has a composed, almost stone-like expression.",
+  "personality": "Stoic and professional. He does not engage in small talk and executes his master's orders with absolute precision.",
+  "behavior": "Highly vigilant and disciplined. He carries himself with the quiet confidence of a man who knows he is backed by a powerful organization.",
   "healthPercent": 100
 }

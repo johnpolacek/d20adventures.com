@@ -31,16 +31,17 @@ In the center of the square, a stage has been erected where musicians play livel
 
 ## GM Notes
 
-- This is an opportunity for the characters to potentially take notice of one another.
-- The adventurers can interact with various NPCs such as vendors, performers, and townsfolk, each offering unique opportunities or challenges.
-- Karim the Jewel Merchant is a well-to-do merchant who has fallen into favor with the wealthy Blackthorn family.
-- Madam Zephyra can provide cryptic hints or prophecies that may pertain to future events in the adventure.
-- Llora is a proud Valkaran. She will complain about the festival’s traditions being lost since the Asterians have come to power.
-- Merrick is related the son of Eamon, and is estranged from him, seeking to pursue artistic pursuits rather than power.
+- This is an opportunity for the characters to notice one another and decide to travel together if they have not yet formed a party.
+- Characters can interact with vendors and performers. Use these interactions to establish the cultural tension between the Valkaran natives and the Asterian Empire.
+- **Karim (Jewel Merchant)**: Openly favors the Blackthorns for their 'modern' sensibilities.
+- **Liora (Spice Merchant)**: A traditionalist who grumbles about how Asterians are diluting Valkaran culture.
+- **Madam Zephyra**: Can provide cryptic hints about "keys to forgotten rooms" or "shadows beneath the mansion" to foreshadow future plot points.
+
+**Trigger:** Once the players have engaged with a few stalls or characters, transition to [[encounter:clan-conflict]] as a heated argument erupts on the edge of the square, drawing the attention of the crowd.
 
 ## Transitions
 
-- To [[encounter:clan-conflict]] when After resolving The Harvest Festival, continue to Clan Conflict.
+- To [[encounter:clan-conflict]] when After exploring the festival or when the GM triggers the event, continue to Clan Conflict.
 
 ## Migration Context
 

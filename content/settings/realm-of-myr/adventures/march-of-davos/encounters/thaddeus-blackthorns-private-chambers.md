@@ -24,7 +24,7 @@ This is clearly a place where business is done—deals struck, secrets kept, and
 
 ## GM Notes
 
-The ornate long sword is lightly enchanted to slightly increase accuracy and damage. 
+The ornate long sword is lightly enchanted to slightly increase accuracy and damage.
 
 Legacy stages:
 
@@ -49,6 +49,7 @@ Among the listed items, one particular entry stands out: "The Key of Ilmarin, ac
 ## Transitions
 
 - To [[encounter:the-wine-cellar]] when After resolving Thaddeus Blackthorn’s Private Chambers, continue to The Wine Cellar.
+- To [[encounter:the-lavish-corridor]] when the players leave the office and head back into the hall.
 
 ## Migration Context
 

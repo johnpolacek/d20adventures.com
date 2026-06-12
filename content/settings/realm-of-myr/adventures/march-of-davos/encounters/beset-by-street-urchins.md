@@ -17,7 +17,7 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726439333709"
 
 ## Intro
 
-The winding streets of the Lower District are teeming with life, a chaotic mix of hurried vendors, wandering townsfolk, and shady figures lurking in the shadows. The air is thick with the scent of smoke from nearby chimneys, and the distant clatter of market stalls blends with the constant hum of conversation. 
+The winding streets of the Lower District are teeming with life, a chaotic mix of hurried vendors, wandering townsfolk, and shady figures lurking in the shadows. The air is thick with the scent of smoke from nearby chimneys, and the distant clatter of market stalls blends with the constant hum of conversation.
 
 People jostle past one another, their faces hidden beneath hoods or wide-brimmed hats, their steps quick as they navigate the crowded, narrow alleys. Children dart between adults, chasing each other or carrying small parcels, while street performers play haunting melodies on worn instruments.
 
@@ -25,7 +25,7 @@ In the midst of it all, a group of halfling urchins moves unnoticed, weaving thr
 
 ## GM Notes
 
-If the characters pass a perception test, they can discern that the halflings are up to something. 
+If the characters pass a perception test, they can discern that the halflings are up to something.
 
 Roll for success for the red-headed halfling to pickpocket the scroll case from whoever is carrying it. If they don't have the scroll case with them, then they will target a different valuable item or whoever appears the most wealthy in the group.
 

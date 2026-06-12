@@ -23,19 +23,13 @@ The innkeeper, a burly man named Bram, greets the adventurers with a hearty welc
 
 ## GM Notes
 
-The players can secure lodging for the night and take this opportunity to discuss the aftermath of what happened at the festival. Encourage them to gather at the tavern. (see the next encounter)
+The players can secure lodging for the night here. This is a primary gathering point where they can discuss the aftermath of the festival brawls and bond as a group. 
 
-Legacy stages:
-
-### New Companions
-
-The flickering light of the fireplace dances across the new companions sip their drinks. From various corners of the room, curious eyes glance their way—some merely passing, others lingering a little too long. There is a sense that, in a place like this, secrets and opportunities walk hand in hand, waiting for those bold enough to reach out and grasp them. 
-
-The adventurers can interact with other patrons, picking up rumors and potentially learning more about the three family clans of Kordavos. Or they can just continue their conversation until the next set of encounters at the inn.
+Allow for some roleplay between the characters. When they seem ready or settle into their drinks, transition to [[encounter:an-unsolicited-opportunity]] as Beric and Eamon approach them to offer a job.
 
 ## Transitions
 
-- To [[encounter:an-unsolicited-opportunity]] when After resolving The Dragonbone Inn, continue to An Unsolicited Opportunity.
+- To [[encounter:an-unsolicited-opportunity]] when After the players have settled in at the inn, continue to An Unsolicited Opportunity.
 
 ## Migration Context
 

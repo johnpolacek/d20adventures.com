@@ -12,18 +12,22 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726951147257"
 
 ## Intro
 
-After what feels like hours of navigating the endless maze of tunnels, the path narrows and ends abruptly at a large, ancient door. Marked with glowing sigils that pulse with arcane power, the door radiates an oppressive, magical force. The air grows colder as they approach, the sigils casting eerie reflections on the stone walls.
+The seamless wall shimmers as Eamon casts a flare of light, revealing a massive, ancient door of black iron. It is marked with glowing sigils that pulse with a rhythmic, heartbeat-like cadence. The air here is freezing, and every breath you take comes out as a white puff of frost. The oppressive weight of the magic makes it hard to speak.
 
-“This is it,” Astrid says, her voice steady but grim. “Whatever the Covenant’s been hiding, it’s through that door.”
+“This is the inner sanctum,” Astrid says, her hand tightening on the hilt of her sword. “Whatever they’ve been hiding—and whoever killed my brother—is through that door.”
 
-Eamon steps forward, examining the intricate runes etched into the door’s surface. “A powerful seal, just like the last. There is a pattern at work here. I should be able to bypass it like the last, but breaking this will not go unnoticed,” he warns the group.
+Eamon steps forward, sweating despite the cold. “This seal is different. It’s tied to the ley lines of the city itself. If I break this, I’m effectively ringing a bell for everyone inside. Are you ready?”
+
+## GM Notes
+
+**Breaking the Seal (Skill Challenge):**
+Instead of Eamon doing it alone, have the party assist him. 
+- **Arcana**: To stabilize the feedback.
+- **Athletics**: To physically brace the shifting stone frame.
+- **Persuasion/Intimidation**: To keep Eamon focused as the psychic weight of the door pushes back.
+
+Requires 3 successes before 2 failures. On a failure, the door opens but the party is *Surprised* in the next room by the first wave of undead.
 
 ## Transitions
 
-- To [[encounter:big-empty]] when After resolving The Sealed Door, continue to Big Empty.
-
-## Migration Context
-
-Legacy section: The Covenant of The Cowl
-
-Legacy scene: Into the Underground
+- To [[encounter:big-empty]] once the seal is broken.

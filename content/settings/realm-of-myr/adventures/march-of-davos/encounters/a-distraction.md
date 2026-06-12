@@ -26,7 +26,8 @@ It also could serve as the perfect distraction should someone in the crowd of at
 
 ## Transitions
 
-- To [[encounter:through-the-halls]] when After resolving A Distraction, continue to Through the Halls.
+- To [[encounter:through-the-halls]] when the players use the elven bard's performance to slip away from the party to explore the private areas of the mansion.
+- To [[encounter:the-speech]] when the players choose to remain in the ballroom for the rest of the performances and Thaddeus's grand announcement.
 
 ## Migration Context
 

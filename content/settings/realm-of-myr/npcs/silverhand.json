@@ -1,13 +1,13 @@
 {
   "id": "silverhand",
-  "name": "Silverhand",
+  "name": "Silverhand (Kazimir Raskov)",
   "type": "npc",
   "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/app/avatar/npc.png?v=1",
-  "archetype": "",
-  "race": "",
-  "gender": "",
-  "appearance": "",
-  "personality": "Cunning, enigmatic, and stealthy. Silverhand is always two steps ahead, calculating his movements precisely to avoid detection.",
-  "behavior": "",
+  "archetype": "Rogue",
+  "race": "Human",
+  "gender": "Male",
+  "appearance": "Tall, slender frame cloaked in a dark, richly embroidered coat. He wears an intricate gauntlet of polished silver on his left hand. His face is often shadowed by a deep hood, revealing only a thin-lipped, calculating smirk.",
+  "personality": "Cunning, enigmatic, and stealthy. He speaks with cold authority and values information above gold. He is a survivor who knows when to fight and when to retreat.",
+  "behavior": "He remains still and observant, often tapping his silver gauntlet rhythmically when thinking. He avoids direct combat if possible, preferring to let his reputation and guards do the work.",
   "healthPercent": 100
 }

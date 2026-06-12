@@ -43,6 +43,7 @@ The door is locked of course.
 ## Transitions
 
 - To [[encounter:thaddeus-blackthorns-private-chambers]] when After resolving The Lavish Corridor, continue to Thaddeus Blackthorn’s Private Chambers.
+- To [[encounter:the-rangers-quarters]] when the players head back toward the previous wing of the mansion.
 
 ## Migration Context
 

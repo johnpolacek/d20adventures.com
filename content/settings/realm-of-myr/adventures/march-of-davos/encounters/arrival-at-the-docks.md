@@ -18,22 +18,28 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726345480155"
 
 ## Intro
 
-The sun casts a golden hue over the bustling docks of Kordavos as the adventurers arrive. The air is filled with the tang of saltwater, mingled with the earthy scent of freshly unloaded cargo. Towering ships bob gently in their berths, and from every corner, dockworkers laden with crates and barrels shout directions to one another, their voices lost in the cacophony of seagulls and the crashing of waves against the piers.
+The sun casts a golden hue over the bustling docks of Kordavos as you arrive. The air is thick with the tang of saltwater, mingled with the earthy scent of freshly unloaded cargo. Towering ships bob gently in their berths, and from every corner, dockworkers laden with crates and barrels shout directions to one another, their voices lost in the cacophony of seagulls and the crashing of waves against the piers.
 
-Ahead, a group of dockworkers pause their work, their sweat-streaked faces turning toward the adventurers with curiosity. One man, a grizzled veteran of the docks with a sun-worn face, sets down a crate and wipes his brow, eyeing the newcomers cautiously.
+Ahead, a group of dockworkers pause their work, their sweat-streaked faces turning toward you with curiosity. One man, a grizzled veteran of the docks with a sun-worn face and a heavy leather apron, sets down a crate and wipes his brow, eyeing you cautiously.
 
 ## GM Notes
 
-Dockworkers, wary of outsiders, are reluctant to talk. An old dockhand named Finn might eventually share that the shipment in question was being closely watched by figures linked to the Blackthorn Clan.
+The goal here is to find information about the missing shipment or Joran. The dockworkers are wary of the city guard and noble families, so characters should use **Persuasion**, **Intimidation**, or perhaps a bribe to get them talking.
 
-They can discover that the origin of the shipment was Lindrathil, the main elven settlement nestled deep within the Valkarr forest. It was a highly unusual origin point for a shipment, but surprisingly there have been a number of shipments from there recently, all to be received by the Blackthorn family. In fact, there is quite a large shipment that just arrived today.
+### Finding Finn
+
+The grizzled veteran is **Finn Radonik** (Loric Windrider). He is the foreman of this section of the docks. If approached respectfully, or if the players mention Elara, he may open up. 
+
+**Checks:**
+- **DC 12 Insight:** Players notice Finn is glancing nervously toward a smaller, guarded warehouse down the pier.
+- **DC 15 Persuasion:** Finn admits he saw a strange shipment from Lindrathil (the elven settlement) being diverted to a private shed rather than the main Blackthorn warehouse.
+
+### Finn's Tale
+
+Finn lowers his voice, leaning in. "That shipment you're asking about? It didn't go where it was supposed to. A few of the Blackthorn's 'specialists'—rough types, not regular dockhands—moved it to Warehouse 14. They seemed... anxious. Like they were hiding something more than just elven silk."
+
+He points a calloused finger toward an inconspicuous storage shed tucked away behind larger buildings. "They're still there. Watching. Best be careful."
 
 ## Transitions
 
-- To [[encounter:mystery-cargo]] when After resolving Arrival at the Docks, continue to Mystery Cargo.
-
-## Migration Context
-
-Legacy section: The Investigation
-
-Legacy scene: The Docks
+- To [[encounter:mystery-cargo]] when the players decide to investigate Warehouse 14 or follow Finn's lead.

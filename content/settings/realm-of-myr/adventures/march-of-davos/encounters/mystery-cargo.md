@@ -15,22 +15,33 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726351294262"
 
 ## Intro
 
-Following Finn’s revelations, the adventurers decide to investigate the area where the shipment was last seen. The docks are a labyrinth of warehouses, narrow alleyways, and hidden corners. As they make their way to an inconspicuous storage shed tucked away behind larger warehouses, they notice furtive movements in the shadows.
+Following Finn’s directions, you navigate a labyrinth of warehouses and narrow alleyways. You find the inconspicuous storage shed, Warehouse 14, tucked away in a shadowed corner. The air here is stagnant, away from the sea breeze.
 
-A group of suspicious figures lurks near the entrance, attempting to blend in with the workers but clearly out of place. One of them, a tall figure with a scarred face, spots the adventurers and signals to his companions. Realizing they’ve been made, the adventurers prepare for a confrontation.
+A group of suspicious figures lurks near the entrance, attempting to blend in with the workers but clearly on high alert. One of them, a tall figure with a jagged scar running down his cheek, spots you. He signals his companions, and they draw short swords from beneath their tunics.
 
-"Who’re you lot?" the scarred figure demands, stepping forward, hand resting on the hilt of a knife. "Ain’t nothing here for the likes of you. Best be on your way."
+"Who’re you lot?" the scarred figure, Alaric, demands. "Ain’t nothing here for the likes of you. Best be on your way before you find trouble you can't walk away from."
 
 ## GM Notes
 
-The scarred figure is a minion of the Blackthorn Clan and sent to oversee the shipment, unaware of the adventurer's involvement until now. The map is crucial for directing the next steps in the investigation. DMs should use the warehouse skirmish to emphasize the immediate physical danger while the map revelation steers the plot toward uncovering the Blackthorns’ operations.
+This encounter is a combat-focused scene that transitions into a discovery phase. Alaric and his 3 thugs will fight if the players don't leave immediately.
+
+### The Warehouse Skirmish
+
+- **Alaric** is a capable rogue. He uses the crates for cover and attempts to flank players.
+- **The Thugs** are simple mercenaries hired by the Blackthorn Clan to guard this specific shipment.
+- **The Environment:** The warehouse is filled with crates. These can be used as difficult terrain or cover. 
+
+If Alaric is reduced to 5 HP or less, he may try to flee or surrender in exchange for his life. He reveals he was told to hold the cargo until "The Lady" (Astrid) came for it, but some other 'cowl-wearing freaks' have been sniffing around.
+
+### The Discovery
+
+Once the thugs are dealt with, the players can search the warehouse. Among crates of elven wine and silk, they find a small, reinforced lockbox. Inside is a **Manifest and Map**.
+
+- **The Manifest:** Lists several artifacts from Old Valkara, including the "Key of Ilmarin." However, the Key is missing from the crate.
+- **The Map:** Shows a route through the Valkarr Forest with a mark on a ship currently docked at the far end of the harbor: *The Star of lindrathil*.
+
+**The Trigger:** As the players finish their search, a massive, bone-shaking crash echoes from the docks outside, followed by a scream that pierces the air.
 
 ## Transitions
 
-- To [[encounter:the-beast-escapes]] when After resolving Mystery Cargo, continue to The Beast Escapes.
-
-## Migration Context
-
-Legacy section: The Investigation
-
-Legacy scene: The Docks
+- To [[encounter:the-beast-escapes]] when the players head outside to investigate the crash.

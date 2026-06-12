@@ -38,7 +38,7 @@ function main() {
   assert.equal(Object.keys(artifacts.encounters).length, 45)
   assert.equal(Object.keys(artifacts.characterSheets.npcs).length, 35)
   assert.equal(Object.keys(artifacts.characterSheets.premadeCharacters).length, 0)
-  assert.equal(artifacts.graph.encounterTransitions.length, 44)
+  assert.equal(artifacts.graph.encounterTransitions.length, 57)
   assert.equal(
     artifacts.graph.encounterTransitions.some((transition) => transition.fromEncounterId === "the-gates-of-kordavos" && transition.toEncounterId === "the-harvest-festival"),
     true
