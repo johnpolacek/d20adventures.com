@@ -1,6 +1,6 @@
 # Production Cutover — public flow onto wiki source
 
-[← All plans](index.md) · [Roadmap](../roadmap.md) · **Status:** planned, not started · Drafted 2026-06-11
+[← All plans](index.md) · [Roadmap](../roadmap.md) · **Status:** complete · Drafted 2026-06-11 · Deployed 2026-06-12
 
 Move the **public** adventure play flow off legacy S3 `AdventurePlan` JSON and onto the wiki-adventure runtime, then make the runtime safe to push to production. This is the roadmap's committed **Next** track. The merged runtime already drives create, start, advance, NPC, and player-reply turns through compiled wiki artifacts; the gap is the front door (listing and character entry) plus the operational safety work around it.
 
@@ -20,7 +20,7 @@ Turn execution is fully wiki-backed. **Three public pages still read the legacy 
 - ✅ **Unit 5** — prod S3 completeness audit (`pnpm audit:wiki-adventures:prod-s3`). Found and **resolved** the March of Davos drift (reconciled to repo, prod S3 cleared — see below). All four adventures now resolve to the repo-bundled source.
 - ✅ **Unit 7** — rollback / content-ref pinning verified (`pnpm test:wiki-adventures:rollback`): a pinned adventure is unaffected by a bad publish, rollback re-points `latest`, and fresh starts resolve the restored version.
 
-**The cutover is complete and verified, and all four adventures are deploy-ready.** The only thing left is the actual prod deploy (`convex:deploy` + frontend), at your discretion.
+**The cutover is complete, verified, and deployed.** Convex functions pushed to `marvelous-mink-850` (2026-06-12); a schema fix for `tokenTransactionHistory.description` was included. Vercel frontend build triggered from `main` (`3857148`).
 
 ## Decision needed — March of Davos prod S3 source
 
