@@ -1,0 +1,197 @@
+// Mapview generation helpers — pure functions shared by the server action.
+// Pipeline per wiki/plans/mapview.md: scene-kit inference → generateObject against
+// encounter2dGenerationSchema → normalize/clamp → deterministic token placement.
+
+import type { Encounter2DGeneration, Encounter2DMap, Encounter2DNpcStart, Encounter2DPartySlot, Encounter2DZone, MapSceneKit } from "@/types/encounter-map-2d"
+import { encounter2dMapSchema } from "@/types/encounter-map-2d"
+import { formatPieceCatalogForPrompt, getPieceDefinition } from "./piece-catalog"
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value))
+}
+
+function snap(value: number) {
+  return Math.round(value)
+}
+
+const SCENE_KIT_GUIDANCE: Record<MapSceneKit, string> = {
+  generic: "A compact encounter space with one focal landmark, asymmetric cover clusters, and clear movement lanes.",
+  checkpoint: "A fortified checkpoint: a stone-wall or fence line across a lane, a gate or gap as the choke point, crates and barrels as inspection dressing.",
+  city_gate: "One dominant gate piece as the focal point, stone-wall runs flanking it, market stalls, wagons, and barrels dressing the approach. Avoid parallel repeated wall rows.",
+  courtyard: "A formal courtyard: statue or well at the center, pillars in rows for colonnades, low fences or ruined walls framing the space.",
+  ruins: "Broken ruins: ruined-wall fragments at odd angles, rubble patches, a pillar or statue as a surviving landmark, asymmetric cover lines.",
+  shrine: "A sacred site: altar as the focal piece on one end, a processional lane toward it, statues or pillars flanking, campfire or rubble as dressing.",
+  camp: "An encampment: tents clustered around a central campfire, crate stacks and barrels as supply dressing, a fence or wagon marking the perimeter.",
+  road: "A travel route: a clear lane down the map, trees or boulders banking the sides, a wagon as the traveler focal point, ambush cover near the lane.",
+  crypt: "A tomb: altar as the sarcophagus focal piece, pillars in aisles, rubble and pit hazards, oppressive stone-wall boundaries.",
+  cavern: "A cave chamber: boulder and rock-cluster spurs, a pond or pit as the environmental hook, choke points between rock groups.",
+}
+
+export function buildMap2DPrompt(args: {
+  sectionTitle?: string
+  sceneTitle?: string
+  encounterTitle?: string
+  encounterIntro?: string
+  encounterInstructions?: string
+  npcIds: string[]
+  sceneKit: MapSceneKit
+  ownerPrompt?: string
+  existingMapJson?: string
+}) {
+  return `You are designing a top-down 2D battle map for a fantasy tabletop adventure app, in the style of a standard D&D encounter map.
+
+Return a single JSON object matching the requested schema. The map is a static scene backdrop — it shows where the encounter takes place, not tactical state.
+
+The board is a square grid (gridType "square"). Compose with pieces from this standard catalog ONLY (pieceId must be one of these ids). Footprints are width x height in grid cells; resizable pieces may set width/height, others should omit them:
+
+${formatPieceCatalogForPrompt()}
+
+Requirements:
+- Board: pick columns (12-24) and rows (10-16) that fit the location; set cellSize to 48; pick the ground that matches the location.
+- Strong composition: one clear focal area, a dressed perimeter, and 2-3 thematic landmarks. Avoid a large empty center — break it up with cover clusters.
+- Cluster 2-4 related pieces (crates with barrels, trees in groves, rubble near ruined walls) instead of even spacing.
+- Pieces must not overlap each other except intentional layering (rubble under ruined walls is fine). Keep placements inside the board.
+- Use walls (line segments, in cell coordinates) only for long structural runs; use stone-wall/ruined-wall pieces for short fragments.
+- Zones: 1 spawn zone where the party enters, 1 objective or interest zone at the focal area. Zones are rectangles in cell coordinates and may overlap pieces.
+- 1-2 short labels naming major features (in cell coordinates, placed in open space).
+- Scene kit: ${args.sceneKit}. ${SCENE_KIT_GUIDANCE[args.sceneKit]}
+- Keep the summary to one sentence describing the scene.
+- Ground the layout in the encounter text below; convert story into spatial staging.
+
+Encounter context:
+- Section: ${args.sectionTitle || "Unknown"}
+- Scene: ${args.sceneTitle || "Unknown"}
+- Encounter: ${args.encounterTitle || "Unknown"}
+- Intro: ${args.encounterIntro || "None"}
+- Instructions: ${args.encounterInstructions || "None"}
+- NPC ids present: ${args.npcIds.join(", ") || "None"}
+
+${args.existingMapJson ? `Existing map JSON to revise (keep what works, change what the request asks):\n${args.existingMapJson}\n` : ""}${args.ownerPrompt ? `Designer request:\n${args.ownerPrompt}` : ""}`
+}
+
+/** Clamp and snap a generated map onto the board; drop pieces that cannot fit. */
+export function normalizeGeneration(generation: Encounter2DGeneration): Encounter2DGeneration {
+  const columns = clamp(snap(generation.board.columns), 8, 32)
+  const rows = clamp(snap(generation.board.rows), 8, 24)
+
+  const pieces = generation.pieces
+    .map((piece, index) => {
+      const def = getPieceDefinition(piece.pieceId)
+      if (!def) return null
+      const width = clamp(snap(piece.width ?? def.footprint.width), 1, columns)
+      const height = clamp(snap(piece.height ?? def.footprint.height), 1, rows)
+      return {
+        ...piece,
+        id: piece.id || `piece-${index}`,
+        x: clamp(snap(piece.x), 0, columns - width),
+        y: clamp(snap(piece.y), 0, rows - height),
+        width: def.resizable ? width : def.footprint.width,
+        height: def.resizable ? height : def.footprint.height,
+        rotation: (((Math.round((piece.rotation ?? 0) / 90) * 90) % 360) + 360) % 360,
+      }
+    })
+    .filter((piece): piece is NonNullable<typeof piece> => piece !== null)
+
+  return {
+    ...generation,
+    board: { ...generation.board, columns, rows, gridType: "square" },
+    pieces,
+    walls: generation.walls.map((wall, index) => ({
+      ...wall,
+      id: wall.id || `wall-${index}`,
+      x1: clamp(snap(wall.x1), 0, columns),
+      y1: clamp(snap(wall.y1), 0, rows),
+      x2: clamp(snap(wall.x2), 0, columns),
+      y2: clamp(snap(wall.y2), 0, rows),
+    })),
+    zones: generation.zones.map((zone, index) => {
+      const width = clamp(snap(zone.width), 1, columns)
+      const height = clamp(snap(zone.height), 1, rows)
+      return {
+        ...zone,
+        id: zone.id || `zone-${index}`,
+        x: clamp(snap(zone.x), 0, columns - width),
+        y: clamp(snap(zone.y), 0, rows - height),
+        width,
+        height,
+      }
+    }),
+    labels: generation.labels.map((label, index) => ({
+      ...label,
+      id: label.id || `label-${index}`,
+      x: clamp(label.x, 0, columns),
+      y: clamp(label.y, 0.6, rows),
+    })),
+  }
+}
+
+function cellIsOccupied(generation: Encounter2DGeneration, x: number, y: number) {
+  return generation.pieces.some((piece) => {
+    const def = getPieceDefinition(piece.pieceId)
+    const w = piece.width ?? def?.footprint.width ?? 1
+    const h = piece.height ?? def?.footprint.height ?? 1
+    const kind = piece.kind ?? def?.defaultKind ?? "blocking"
+    if (kind === "open") return false
+    return x >= piece.x && x < piece.x + w && y >= piece.y && y < piece.y + h
+  })
+}
+
+function findOpenCells(generation: Encounter2DGeneration, zone: Encounter2DZone | undefined, count: number, fallbackRow: number): Array<{ x: number; y: number }> {
+  const { columns, rows } = generation.board
+  const cells: Array<{ x: number; y: number }> = []
+  const tryCell = (x: number, y: number) => {
+    if (cells.length >= count) return
+    if (x < 0 || y < 0 || x >= columns || y >= rows) return
+    if (cellIsOccupied(generation, x, y)) return
+    if (cells.some((cell) => cell.x === x && cell.y === y)) return
+    cells.push({ x, y })
+  }
+
+  if (zone) {
+    for (let y = zone.y; y < zone.y + zone.height && cells.length < count; y++) {
+      for (let x = zone.x; x < zone.x + zone.width && cells.length < count; x++) {
+        tryCell(x, y)
+      }
+    }
+  }
+  // fallback sweep along the given row, then adjacent rows
+  for (let offset = 0; offset < rows && cells.length < count; offset++) {
+    const y = clamp(fallbackRow + (offset % 2 === 0 ? offset / 2 : -(offset + 1) / 2), 0, rows - 1)
+    for (let x = 1; x < columns - 1 && cells.length < count; x++) {
+      tryCell(x, snap(y))
+    }
+  }
+  return cells
+}
+
+/** Place party slots in/near the spawn zone and NPC starts near the objective, deterministically. */
+export function placeTokens(generation: Encounter2DGeneration, maxPartySize: number, npcIds: string[]): { partySlots: Encounter2DPartySlot[]; npcStarts: Encounter2DNpcStart[] } {
+  const { rows } = generation.board
+  const spawnZone = generation.zones.find((zone) => zone.kind === "spawn")
+  const focusZone = generation.zones.find((zone) => zone.kind === "objective") || generation.zones.find((zone) => zone.kind === "interest")
+
+  const partyCells = findOpenCells(generation, spawnZone, clamp(maxPartySize, 1, 8), rows - 2)
+  const partySlots = partyCells.map((cell, index) => ({ id: `party-${index}`, slotIndex: index, x: cell.x, y: cell.y }))
+
+  const npcCells = findOpenCells(generation, focusZone, Math.min(npcIds.length, 8), 2)
+  const npcStarts = npcIds.slice(0, npcCells.length).map((npcId, index) => ({ id: `npc-${index}`, npcId, x: npcCells[index].x, y: npcCells[index].y }))
+
+  return { partySlots, npcStarts }
+}
+
+export function assembleEncounter2DMap(generation: Encounter2DGeneration, args: { maxPartySize: number; npcIds: string[]; prompt?: string; previousPromptHistory?: string[] }): Encounter2DMap {
+  const normalized = normalizeGeneration(generation)
+  const { partySlots, npcStarts } = placeTokens(normalized, args.maxPartySize, args.npcIds)
+  return encounter2dMapSchema.parse({
+    ...normalized,
+    version: 2,
+    partySlots,
+    npcStarts,
+    notes: [],
+    promptHistory: [...(args.previousPromptHistory || []), ...(args.prompt ? [args.prompt] : [])],
+  })
+}
+
+export function getEncounterMap2DStorageKey(settingId: string, adventurePlanId: string, encounterId: string) {
+  return `settings/${settingId}/maps2d/${adventurePlanId}/${encounterId}.json`
+}

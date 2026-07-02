@@ -10,10 +10,10 @@ Implement Mapview v1 — 2D D&D-style battle maps, AI-generated at authoring tim
 
 ## Progress
 
-- [ ] Schema v2: `gridType`, piece refs against a piece-library registry, gameplay semantics preserved (salvage `types/encounter-map-2d.ts` from `2d-maps` branch, `ed402aa`)
-- [ ] Piece taxonomy defined; piece set v1 designed in OpenPencil → SVG committed
-- [ ] Read-only SVG renderer (square grid)
-- [ ] Generation pipeline: scene-kit inference → `generateObject` → validate/clamp → S3 store (transplant from `app/_actions/generate-encounter-map.ts`)
-- [ ] Authoring hook: generate/review/regenerate from the wiki admin encounter surface
-- [ ] Standalone Mapview page rendering real encounters
-- [ ] Evaluate against 2–3 real encounters (e.g. Midnight Summons); iterate on piece set + prompts
+- [x] Schema v2: `gridType`, piece refs against a piece-library registry, gameplay semantics preserved — `types/encounter-map-2d.ts` (rotation is a plain number snapped to quarter turns; Gemini structured output rejects numeric-literal unions)
+- [x] Piece taxonomy defined (27 pieces: natural/structure/dressing/hazard) — `lib/mapview/piece-catalog.ts`. Piece art is **code-drawn SVG** (`components/mapview/pieces.tsx`, deterministic seeded variation); the OpenPencil art pass is deferred as a pure per-piece visual upgrade (same registry keys/footprints)
+- [x] Read-only SVG renderer (square grid) — `components/mapview/encounter-map-2d.tsx`: textured ground, grid, zones, walls, pieces, party/NPC tokens, labels
+- [x] Generation pipeline: scene-kit inference → `generateObject` → normalize/clamp → deterministic token placement → S3 store (`lib/mapview/generate.ts`, `app/_actions/mapview.ts`; retry on flaky `NoObjectGeneratedError`)
+- [x] Lab authoring surface: generate/review/regenerate at `/admin/mapview` (admin-gated). Integration into the wiki-adventures editor page proper still open
+- [x] Standalone Mapview page rendering real encounters (`/admin/mapview/[settingId]/[planId]`)
+- [ ] Evaluate against 2–3 real encounters; iterate on piece set + prompts — 2/3 done via `scripts/mapview-smoke.ts` (broken-silence/checkpoint, owlbear-confrontation/road; both stored to S3 and visually verified). Remaining: in-browser lab pass + a third encounter, then piece/prompt iteration
