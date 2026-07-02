@@ -13,7 +13,10 @@ The default experience. Text-driven, turn-by-turn play with the AI Game Master. 
 A cinematic, immersive mode. Encounter narrative is presented one paragraph at a time, with each paragraph read aloud via AI-generated text-to-speech. The player taps to advance between paragraphs. Decision points and dice rolls still occur — they are narrated just like the story text. Feels like an interactive audiobook.
 
 ### Mapview
-A tabletop-inspired visual layer. A realistic 3D tile map — detailed terrain and character models evoking painted miniatures on a physical table — serves as a visual backdrop to the adventure. The narrative and choices remain the primary interface; the map shows where you are in the world.
+A tabletop-inspired visual layer: 2D standard D&D-style battle maps, AI-generated at authoring time from encounter text using a standard SVG piece set (designed in OpenPencil). Square grid first (hex-ready schema). A static scene backdrop per encounter — the narrative and choices remain the primary interface; the map shows where you are in the world. Plan: [Mapview](plans/mapview.md).
+
+### Miniview (future)
+A 3D miniatures view — realistic terrain and character models evoking painted miniatures on a physical table. A first implementation (react-three-fiber, AI scene generation) was shelved on 2026-03-12 because visual quality fell short of the painted-miniatures bar; the renderer is kept dormant for revival (`components/adventure/miniatures-map.tsx`, `lib/map-utils.ts`, and the `minimap-claude` branch with post-processing and archetype-token upgrades).
 
 ## Adventure Creation
 

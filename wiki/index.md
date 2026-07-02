@@ -2,7 +2,7 @@
 
 **Home** · [Sources](Sources.md) · [Plans](plans/index.md) · [Roadmap](roadmap.md) · [Architecture](Architecture.md)
 
-A narrative RPG platform blending play-by-post adventure turns, realtime updates, authored adventure plans, and an AI Game Master. Adventures can be experienced as text-driven play (Gameview), a narrated paragraph-by-paragraph audiobook mode (Storyview), or with a 3D tabletop-miniature visual backdrop (Mapview) — all sharing the same game state and switchable mid-adventure. This wiki was initialized from the existing Next.js, Convex, Clerk, S3, Stripe, SendGrid, and AI SDK codebase.
+A narrative RPG platform blending play-by-post adventure turns, realtime updates, authored adventure plans, and an AI Game Master. Adventures can be experienced as text-driven play (Gameview), a narrated paragraph-by-paragraph audiobook mode (Storyview), or with a 2D battle-map backdrop (Mapview; a 3D miniatures Miniview may follow) — all sharing the same game state and switchable mid-adventure. This wiki was initialized from the existing Next.js, Convex, Clerk, S3, Stripe, SendGrid, and AI SDK codebase.
 
 | | |
 |---|---|

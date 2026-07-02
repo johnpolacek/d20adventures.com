@@ -4,6 +4,15 @@
 
 Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.
 
+## 2026-07-02
+
+### Scoped Mapview (2D), split off Miniview (3D), cleaned stale branches
+
+- **Mapview redefined as 2D** standard D&D-style battle maps — AI-generated at authoring time from encounter text using a standard SVG piece set designed in OpenPencil; square grid first with a hex-ready schema; static scene backdrop (no positional game state); developed on a standalone page before mode-switcher integration. Plan: [plans/mapview.md](plans/mapview.md); implementation on the `feature/mapview` worktree.
+- **Miniview split off** as a separate future roadmap item for the 3D miniatures vision. Established why the 3D feature was shelved (2026-03-12, `126200c`): visual quality fell short. The dormant renderer (`miniatures-map.tsx`, `map-utils.ts`, `generate-encounter-map.ts`) and the `minimap-claude` branch (SSAO/HDR/archetype tokens) are preserved for it.
+- **Salvage established**: the `2d-maps` branch (`ed402aa`) schema is the Mapview foundation (needs `gridType`, piece refs); the 3D pipeline's scene-kit inference + `generateObject` pattern transplants to 2D; the wiki migration deferred map data (`map3d-deferred` warnings), so wiki content-model attachment is a gap to solve.
+- **Branch cleanup**: deleted merged `feature/production-cutover`, `prewiki-refactor`, `update-deps`; deleted superseded `feature/wiki-adventure-migration` (planning docs; conclusions already implemented) and abandoned `token-usage` (13 months stale, 327 behind). Deleted `claude/stoic-gates` (strict subset of `minimap-claude`). Kept: `minimap-claude` (Miniview), `2d-maps` (Mapview salvage). `origin/claude/stoic-gates` still exists on the remote.
+
 ## 2026-06-12
 
 ### Bootstrapped the parallel dev worktree workflow

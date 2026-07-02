@@ -6,6 +6,7 @@ Active planning work for D20 Adventures. The wiki-adventure runtime is merged an
 
 ## Active
 
+- **[Mapview](mapview.md)** — 2D D&D-style battle maps: AI-generated at authoring time from a standard SVG piece set, square grid first, static encounter backdrop. Branch: `feature/mapview`.
 - **[Testing Runbook](testing-runbook.md)** — canonical testing runbook for adventure plans and runtime play behavior.
 - **[Parallel Dev Worktrees](parallel-dev-worktrees.md)** — git worktree workflow with Portless URLs and per-worktree Convex projects (`pnpm wt:*` scripts).
 
