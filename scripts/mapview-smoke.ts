@@ -10,16 +10,15 @@ import { join } from "node:path"
 // The lib/ai wrapper is Clerk/token-coupled (server-action context only); use the
 // same underlying model directly so the script runs headless.
 import { google } from "@ai-sdk/google"
-import { generateObject } from "ai"
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { EncounterMap2D } from "@/components/mapview/encounter-map-2d"
 import { currentModel, openaiModel } from "@/lib/ai/llm"
 import { inferEncounterSceneKit } from "@/lib/map-utils"
 import { assembleEncounter2DMap, buildMap2DPrompt, getEncounterMap2DStorageKey } from "@/lib/mapview/generate"
+import { generateEncounter2DGeneration } from "@/lib/mapview/model"
 import { updateJsonOnS3 } from "@/lib/s3-utils"
 import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
-import { encounter2dGenerationSchema } from "@/types/encounter-map-2d"
 
 const SETTING_ID = "realm-of-myr"
 const PLAN_ID = "the-midnight-summons"
@@ -59,32 +58,13 @@ async function main() {
     ownerPrompt,
   })
 
+  // MV_MODEL overrides the shared default (gemini-3.5-flash) for experiments only.
+  const modelOverride = process.env.MV_MODEL === "openai" ? openaiModel : process.env.MV_MODEL === "lite" ? currentModel : process.env.MV_MODEL ? google(process.env.MV_MODEL) : undefined
   const started = Date.now()
-  let result: Awaited<ReturnType<typeof generateObject<typeof encounter2dGenerationSchema>>> | null = null
-  for (let attempt = 1; attempt <= 3 && !result; attempt++) {
-    try {
-      const model = process.env.MV_MODEL === "openai" ? openaiModel : process.env.MV_MODEL === "lite" ? currentModel : google("gemini-3-flash-preview")
-      // temperature > 0 + output cap: Gemini constrained decoding can digit-loop at temp 0;
-      // the cap makes a loop fail fast so the retry gets a fresh sample.
-      result = await generateObject({
-        model,
-        prompt,
-        schema: encounter2dGenerationSchema,
-        temperature: 0.8,
-        maxOutputTokens: 8000,
-        // Native constrained decoding digit-loops on this schema; prompt-mode JSON +
-        // the tolerant generation schema + normalize repair is reliable.
-        providerOptions: { google: { structuredOutputs: false } },
-      })
-    } catch (error) {
-      console.warn(`Attempt ${attempt} failed: ${error instanceof Error ? error.message : error}`)
-      if (attempt === 3) throw error
-    }
-  }
-  if (!result) throw new Error("unreachable")
+  const generation = await generateEncounter2DGeneration(prompt, { model: modelOverride })
   console.log(`Generated in ${((Date.now() - started) / 1000).toFixed(1)}s`)
 
-  const map = assembleEncounter2DMap(result.object, { maxPartySize: plan.party?.[1] ?? 4, npcIds, prompt: ownerPrompt })
+  const map = assembleEncounter2DMap(generation, { maxPartySize: plan.party?.[1] ?? 4, npcIds, prompt: ownerPrompt })
   console.log(
     `Board ${map.board.columns}x${map.board.rows} (${map.board.ground}) · ${map.pieces.length} pieces · ${map.walls.length} walls · ${map.zones.length} zones · ${map.partySlots.length} party slots · ${map.npcStarts.length} NPC starts`
   )

@@ -20,7 +20,7 @@ async function main() {
   })
   try {
     const r = await generateObject({
-      model: google("gemini-3-flash-preview"),
+      model: google("gemini-3.5-flash"),
       prompt,
       schema: encounter2dGenerationSchema,
       temperature: 0.8,

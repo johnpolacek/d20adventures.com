@@ -5,16 +5,15 @@
 // in S3, keyed independently of the plan so the wiki compile pipeline is untouched.
 
 import { auth } from "@clerk/nextjs/server"
-import { generateObject } from "@/lib/ai"
 import { isAdmin } from "@/lib/auth-utils"
 import { inferEncounterSceneKit } from "@/lib/map-utils"
 import { assembleEncounter2DMap, buildMap2DPrompt, getEncounterMap2DStorageKey } from "@/lib/mapview/generate"
 import { loadEncounterMap2D } from "@/lib/mapview/load"
+import { generateEncounter2DGeneration } from "@/lib/mapview/model"
 import { updateJsonOnS3 } from "@/lib/s3-utils"
 import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
 import type { AdventureEncounter } from "@/types/adventure-plan"
 import type { Encounter2DMap } from "@/types/encounter-map-2d"
-import { encounter2dGenerationSchema } from "@/types/encounter-map-2d"
 
 async function requireAdminUser(): Promise<string> {
   const { userId } = await auth()
@@ -75,16 +74,9 @@ export async function generateEncounterMap2D(args: { settingId: string; adventur
     existingMapJson: existingMap ? JSON.stringify(existingMap, null, 2) : undefined,
   })
 
-  // Structured generation is occasionally flaky (NoObjectGeneratedError); retry once.
-  let result: Awaited<ReturnType<typeof generateObject<typeof encounter2dGenerationSchema>>>
-  try {
-    result = await generateObject({ prompt, schema: encounter2dGenerationSchema })
-  } catch (firstError) {
-    console.warn("Map generation failed once, retrying:", firstError)
-    result = await generateObject({ prompt, schema: encounter2dGenerationSchema })
-  }
+  const generation = await generateEncounter2DGeneration(prompt)
 
-  const map = assembleEncounter2DMap(result.object, {
+  const map = assembleEncounter2DMap(generation, {
     maxPartySize: plan.party?.[1] ?? 4,
     npcIds,
     prompt: args.prompt,
