@@ -44,7 +44,7 @@ export default function Turn({
   }, [encounterMap])
 
   return (
-    <div className="relative mx-auto w-full max-w-[1536px] flex flex-col gap-4 px-6 sm:px-8 pb-24 lg:grid lg:grid-cols-[336px_minmax(0,1fr)] lg:items-start lg:gap-6 xl:grid-cols-[336px_minmax(0,1fr)_360px] 2xl:grid-cols-[336px_minmax(0,1fr)_400px] 2xl:gap-8">
+    <div className="relative mx-auto w-full max-w-[1536px] 2xl:max-w-[1700px] flex flex-col gap-4 px-6 sm:px-8 pb-24 lg:grid lg:grid-cols-[336px_minmax(0,1fr)] lg:items-start lg:gap-6 xl:grid-cols-[336px_minmax(0,1fr)_360px] 2xl:grid-cols-[380px_minmax(0,1fr)_440px] 2xl:gap-12">
       {/* Left rail: character list. The negative margin + padding keeps the initiative
           badges (which hang outside the cards) from being clipped by the scroll area. */}
       <div className="lg:sticky lg:top-20 lg:-ml-6 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pb-4 lg:pl-6 lg:pr-1">
