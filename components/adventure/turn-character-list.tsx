@@ -44,7 +44,7 @@ export default function TurnCharacterList() {
 
   return (
     <>
-      <div className="lg:w-[320px] rounded-xl p-1">
+      <div className="rounded-xl p-1">
         <ul className="flex flex-col gap-4">
           {characters.map((character) => {
             const isDead = character.healthPercent === 0
@@ -53,7 +53,7 @@ export default function TurnCharacterList() {
               <li
                 key={character.id}
                 className={cn(
-                  "w-full max-w-[300px] sm:w-[320px] flex items-center gap-3 p-1.5 sm:p-2 relative rounded-xl transition-all duration-1000 ease-in-out bg-gradient-to-tl ring ring-primary-700 cursor-pointer hover:ring-primary-500",
+                  "w-full max-w-[320px] flex items-center gap-3 p-1.5 sm:p-2 relative rounded-xl transition-all duration-1000 ease-in-out bg-gradient-to-tl ring ring-primary-700 cursor-pointer hover:ring-primary-500",
                   isDead ? "ring-gray-700 from-gray-800/50 via-gray-800/50 to-gray-700/50 opacity-60" : character.isComplete ? "ring-primary-600" : "from-primary-800 via-primary-800 to-primary-700",
                   character.id === currentActorId && !isDead ? "scale-100 shadow-md ring-primary-600 ring-2 from-primary-900" : "scale-90 from-primary-800/70 via-primary-800/70 opacity-90",
                   isDead && "opacity-50 scale-90" // Ensure dead characters are visually distinct

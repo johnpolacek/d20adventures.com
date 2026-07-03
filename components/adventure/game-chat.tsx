@@ -1,7 +1,7 @@
 "use client"
 
 import { useUser } from "@clerk/nextjs"
-import { MessageSquare } from "lucide-react"
+import { Maximize2, MessageSquare } from "lucide-react"
 import { useParams } from "next/navigation"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { fetchMessagesBefore, fetchRecentMessages, sendChatMessage } from "@/app/_actions/chat"
@@ -11,11 +11,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input"
 import type { Id } from "@/convex/_generated/dataModel"
 import { useTurnContext } from "@/lib/context/TurnContext"
+import { cn } from "@/lib/utils"
 import { getLastSeenTimestamp, setLastSeenTimestamp } from "@/lib/utils/chat-storage"
 
 type GameChatProps = {
   adventureId?: string
   characterName?: string
+  // "floating" is the dialog-behind-a-button used on mobile and in the lobby;
+  // "rail" docks the chat inline (turn page right rail) with an expand affordance.
+  variant?: "floating" | "rail"
+  className?: string
 }
 
 type ChatMessage = {
@@ -29,13 +34,98 @@ type ChatMessage = {
 
 const CHAT_PAGE_SIZE = 50
 
-export default function GameChat({ adventureId, characterName }: GameChatProps) {
+function ChatMessageList({
+  messages,
+  currentUsername,
+  hasOlderMessages,
+  isLoadingOlder,
+  isLoadingHistory,
+  historyError,
+  onLoadOlder,
+  compact = false,
+  className,
+}: {
+  messages: ChatMessage[]
+  currentUsername?: string
+  hasOlderMessages: boolean
+  isLoadingOlder: boolean
+  isLoadingHistory: boolean
+  historyError: string | null
+  onLoadOlder: () => Promise<number>
+  compact?: boolean
+  className?: string
+}) {
+  const viewportRef = useRef<HTMLDivElement | null>(null)
+  const listEndRef = useRef<HTMLDivElement | null>(null)
+  const skipNextAutoScroll = useRef(false)
+
+  useEffect(() => {
+    if (skipNextAutoScroll.current) {
+      skipNextAutoScroll.current = false
+      return
+    }
+    listEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [messages.length])
+
+  const handleLoadOlder = async () => {
+    const viewport = viewportRef.current
+    const previousScrollHeight = viewport?.scrollHeight ?? 0
+    const previousScrollTop = viewport?.scrollTop ?? 0
+    skipNextAutoScroll.current = true
+    const addedCount = await onLoadOlder()
+    if (addedCount > 0 && viewport) {
+      requestAnimationFrame(() => {
+        viewport.scrollTop = viewport.scrollHeight - previousScrollHeight + previousScrollTop
+      })
+    }
+  }
+
+  return (
+    <div ref={viewportRef} className={cn("overflow-y-auto rounded-md p-3 bg-black/30", className)}>
+      <div className="space-y-3">
+        {hasOlderMessages && (
+          <div className="flex justify-center">
+            <Button variant="outline" size="sm" onClick={handleLoadOlder} disabled={isLoadingOlder || isLoadingHistory}>
+              {isLoadingOlder ? "Loading..." : "Load older"}
+            </Button>
+          </div>
+        )}
+        {historyError && <div className="text-sm text-red-300 bg-red-950/50 border border-red-900 rounded-md px-3 py-2">{historyError}</div>}
+        {isLoadingHistory && messages.length === 0 && <div className="text-sm text-muted-foreground text-center py-8">Loading chat history...</div>}
+        {!isLoadingHistory && messages.length === 0 && <div className="text-sm text-muted-foreground text-center py-8">No messages yet.</div>}
+        {messages.map((m) => {
+          const isMine = currentUsername && m.username === currentUsername
+          return (
+            <div key={m._id} className={`text-sm flex ${isMine ? "justify-end" : "justify-start"}`}>
+              <div className="w-[90%]">
+                <div className={cn("whitespace-pre-wrap text-white px-3 py-2 rounded-lg", compact ? "text-sm" : "text-sm md:text-lg", isMine ? "bg-primary-700" : "bg-black/70")}>{m.content}</div>
+                <div className={`mt-1 text-xs text-muted-foreground ${isMine ? "text-right" : "text-left"}`}>
+                  <span className="text-primary-300">{m.username}</span>
+                  {m.characterName && <span className="ml-2 italic opacity-80">{m.characterName}</span>}
+                  <span className="ml-2 opacity-80 text-xs font-mono tracking-tightest">{new Date(m.createdAt).toLocaleTimeString()}</span>
+                </div>
+              </div>
+            </div>
+          )
+        })}
+        <div ref={listEndRef} />
+      </div>
+    </div>
+  )
+}
+
+export default function GameChat({ adventureId, characterName, variant = "floating", className }: GameChatProps) {
   const [open, setOpen] = useState(false)
   const params = useParams<{ adventureId?: string }>()
   const routeAdventureId = params?.adventureId
   const effectiveAdventureId = adventureId ?? routeAdventureId
   const { user } = useUser()
   const { currentTurn } = useTurnContext()
+
+  const isRail = variant === "rail"
+  // The rail chat is always visible, so it loads history and streams continuously;
+  // the floating chat only does so while its dialog is open.
+  const isActive = isRail || open
 
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
@@ -46,9 +136,6 @@ export default function GameChat({ adventureId, characterName }: GameChatProps) 
   const [unseenCount, setUnseenCount] = useState(0)
   const ids = useRef<Set<string>>(new Set())
   const unseenIds = useRef<Set<string>>(new Set())
-  const listEndRef = useRef<HTMLDivElement | null>(null)
-  const scrollViewportRef = useRef<HTMLDivElement | null>(null)
-  const skipNextAutoScroll = useRef(false)
 
   // Determine default character name for this user from latest messages as fallback
   type Character = { type?: string; userId?: string; name?: string }
@@ -113,43 +200,34 @@ export default function GameChat({ adventureId, characterName }: GameChatProps) 
     }
   }, [effectiveAdventureId, mergeMessages])
 
-  const loadOlderMessages = useCallback(async () => {
-    if (!effectiveAdventureId || messages.length === 0 || isLoadingOlder) return
+  const loadOlderMessages = useCallback(async (): Promise<number> => {
+    if (!effectiveAdventureId || messages.length === 0 || isLoadingOlder) return 0
 
     const oldestMessage = messages[0]
-    const viewport = scrollViewportRef.current
-    const previousScrollHeight = viewport?.scrollHeight ?? 0
-    const previousScrollTop = viewport?.scrollTop ?? 0
-
     setIsLoadingOlder(true)
     setHistoryError(null)
 
     try {
       const older = await fetchMessagesBefore(effectiveAdventureId as Id<"adventures">, oldestMessage.createdAt, CHAT_PAGE_SIZE)
-      skipNextAutoScroll.current = true
       const addedCount = mergeMessages(older as ChatMessage[], "prepend")
       setHasOlderMessages(older.length === CHAT_PAGE_SIZE)
-
-      if (addedCount > 0 && viewport) {
-        requestAnimationFrame(() => {
-          viewport.scrollTop = viewport.scrollHeight - previousScrollHeight + previousScrollTop
-        })
-      }
+      return addedCount
     } catch (error) {
       setHistoryError(error instanceof Error ? error.message : "Unable to load older chat messages")
+      return 0
     } finally {
       setIsLoadingOlder(false)
     }
   }, [effectiveAdventureId, isLoadingOlder, mergeMessages, messages])
 
   useEffect(() => {
-    if (!open) return
+    if (!isActive) return
     void loadLatestHistory()
-  }, [loadLatestHistory, open])
+  }, [loadLatestHistory, isActive])
 
-  // Main SSE effect for when chat is open
+  // Main SSE effect while the chat is visible (rail always, floating while open)
   useEffect(() => {
-    if (!open || !effectiveAdventureId) return
+    if (!isActive || !effectiveAdventureId) return
 
     const es = new EventSource(`/api/adventure/chat/${effectiveAdventureId}`)
     es.onmessage = (evt) => {
@@ -171,11 +249,11 @@ export default function GameChat({ adventureId, characterName }: GameChatProps) 
     return () => {
       es.close()
     }
-  }, [effectiveAdventureId, mergeMessages, open])
+  }, [effectiveAdventureId, mergeMessages, isActive])
 
-  // Separate SSE effect for tracking unseen messages when chat is closed
+  // Separate SSE effect for tracking unseen messages when the floating chat is closed
   useEffect(() => {
-    if (open || !effectiveAdventureId) return
+    if (isActive || !effectiveAdventureId) return
 
     const lastSeen = getLastSeenTimestamp(effectiveAdventureId)
     unseenIds.current = new Set()
@@ -201,15 +279,7 @@ export default function GameChat({ adventureId, characterName }: GameChatProps) 
     return () => {
       es.close()
     }
-  }, [open, effectiveAdventureId])
-
-  useEffect(() => {
-    if (skipNextAutoScroll.current) {
-      skipNextAutoScroll.current = false
-      return
-    }
-    listEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages.length, open])
+  }, [isActive, effectiveAdventureId])
 
   // Handle dialog state changes
   const handleOpenChange = (newOpen: boolean) => {
@@ -230,6 +300,78 @@ export default function GameChat({ adventureId, characterName }: GameChatProps) 
     // SSE will deliver the message back; no optimistic append needed
   }
 
+  const currentUsername = user?.username || user?.primaryEmailAddress?.emailAddress?.split("@")[0] || undefined
+
+  const chatInput = (compact: boolean) => (
+    <div className={cn("flex gap-2 items-center", compact && "p-2")}>
+      <Input
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="Send a message…"
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault()
+            handleSend()
+          }
+        }}
+      />
+      <Button variant="outline" size={compact ? "sm" : "default"} onClick={handleSend} disabled={!input.trim() || !effectiveAdventureId}>
+        Send
+      </Button>
+    </div>
+  )
+
+  const expandedDialogContent = (
+    <DialogContent className="w-full max-w-4xl bg-primary-800 text-white border-4 border-primary-600">
+      <DialogHeader>
+        <DialogTitle className="font-display text-amber-300">Game Chat</DialogTitle>
+      </DialogHeader>
+      <div className="flex flex-col gap-3">
+        <ChatMessageList
+          messages={messages}
+          currentUsername={currentUsername}
+          hasOlderMessages={hasOlderMessages}
+          isLoadingOlder={isLoadingOlder}
+          isLoadingHistory={isLoadingHistory}
+          historyError={historyError}
+          onLoadOlder={loadOlderMessages}
+          className="h-80"
+        />
+        {chatInput(false)}
+      </div>
+    </DialogContent>
+  )
+
+  if (isRail) {
+    return (
+      <>
+        <div className={cn("flex flex-col overflow-hidden rounded-xl bg-primary-800/60 ring ring-primary-700", className)}>
+          <div className="flex flex-none items-center justify-between gap-2 px-3 py-2">
+            <h3 className="font-display text-sm font-bold text-amber-300">Game Chat</h3>
+            <button type="button" onClick={() => handleOpenChange(true)} className="rounded p-1 text-stone-300 transition-colors hover:bg-white/10 hover:text-amber-200" aria-label="Expand chat">
+              <Maximize2 className="h-4 w-4" />
+            </button>
+          </div>
+          <ChatMessageList
+            messages={messages}
+            currentUsername={currentUsername}
+            hasOlderMessages={hasOlderMessages}
+            isLoadingOlder={isLoadingOlder}
+            isLoadingHistory={isLoadingHistory}
+            historyError={historyError}
+            onLoadOlder={loadOlderMessages}
+            compact
+            className="mx-2 min-h-0 flex-1"
+          />
+          {chatInput(true)}
+        </div>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
+          {expandedDialogContent}
+        </Dialog>
+      </>
+    )
+  }
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
@@ -245,58 +387,7 @@ export default function GameChat({ adventureId, characterName }: GameChatProps) 
           )}
         </div>
       </DialogTrigger>
-      <DialogContent className="w-full max-w-4xl bg-primary-800 text-white border-4 border-primary-600">
-        <DialogHeader>
-          <DialogTitle className="font-display text-amber-300">Game Chat</DialogTitle>
-        </DialogHeader>
-        <div className="flex flex-col gap-3">
-          <div ref={scrollViewportRef} className="h-80 overflow-y-auto rounded-md p-3 bg-black/30">
-            <div className="space-y-3">
-              <div className="flex justify-center">
-                <Button variant="outline" size="sm" onClick={loadOlderMessages} disabled={!hasOlderMessages || isLoadingOlder || isLoadingHistory}>
-                  {isLoadingOlder ? "Loading..." : hasOlderMessages ? "Load older" : "No older messages"}
-                </Button>
-              </div>
-              {historyError && <div className="text-sm text-red-300 bg-red-950/50 border border-red-900 rounded-md px-3 py-2">{historyError}</div>}
-              {isLoadingHistory && messages.length === 0 && <div className="text-sm text-muted-foreground text-center py-8">Loading chat history...</div>}
-              {!isLoadingHistory && messages.length === 0 && <div className="text-sm text-muted-foreground text-center py-8">No messages yet.</div>}
-              {messages.map((m) => {
-                const currentUsername = user?.username || user?.primaryEmailAddress?.emailAddress?.split("@")[0]
-                const isMine = currentUsername && m.username === currentUsername
-                return (
-                  <div key={m._id} className={`text-sm flex ${isMine ? "justify-end" : "justify-start"}`}>
-                    <div className="w-[90%]">
-                      <div className={`whitespace-pre-wrap text-sm md:text-lg text-white px-3 py-2 rounded-lg w-[] ${isMine ? "bg-primary-700" : "bg-black/70"}`}>{m.content}</div>
-                      <div className={`mt-1 text-xs text-muted-foreground ${isMine ? "text-right" : "text-left"}`}>
-                        <span className="text-primary-300">{m.username}</span>
-                        {m.characterName && <span className="ml-2 italic opacity-80">{m.characterName}</span>}
-                        <span className="ml-2 opacity-80 text-xs font-mono tracking-tightest">{new Date(m.createdAt).toLocaleTimeString()}</span>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-              <div ref={listEndRef} />
-            </div>
-          </div>
-          <div className="flex gap-2 items-center">
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Send a message…"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault()
-                  handleSend()
-                }
-              }}
-            />
-            <Button variant="outline" onClick={handleSend} disabled={!input.trim() || !effectiveAdventureId}>
-              Send
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
+      {expandedDialogContent}
     </Dialog>
   )
 }
