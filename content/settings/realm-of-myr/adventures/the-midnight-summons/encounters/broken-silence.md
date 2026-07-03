@@ -6,6 +6,7 @@ id: "broken-silence"
 type: "encounter"
 title: "Broken Silence"
 settingId: "realm-of-myr"
+location: "valkarr-forest"
 adventureId: "the-midnight-summons"
 image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-midnight-summons/broken-silence-2.png"
 ---

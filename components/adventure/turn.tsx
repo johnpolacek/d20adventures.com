@@ -19,6 +19,9 @@ export default function Turn({
   encounterMap?: Encounter2DMap | null
   mapTokens?: MapTokens
 }) {
+  // The map is titled by the place it depicts; fall back to the encounter title
+  // for plans that don't declare locations.
+  const mapTitle = encounter?.location || encounter?.title
   return (
     <div className="relative mx-auto w-full max-w-[1536px] flex flex-col gap-4 px-6 sm:px-8 pb-24 lg:grid lg:grid-cols-[336px_minmax(0,1fr)] lg:items-start lg:gap-6 xl:grid-cols-[336px_minmax(0,1fr)_360px] 2xl:grid-cols-[336px_minmax(0,1fr)_400px] 2xl:gap-8">
       {/* Left rail: character list. The negative margin + padding keeps the initiative
@@ -34,13 +37,13 @@ export default function Turn({
 
       {/* Right rail (wide desktop): mini map on top, docked chat filling the rest */}
       <aside className="hidden xl:sticky xl:top-20 xl:flex xl:h-[calc(100vh-7rem)] xl:flex-col xl:gap-4">
-        {encounterMap && <MapRailPanel map={encounterMap} encounterTitle={encounter?.title} tokens={mapTokens} className="flex-none" />}
+        {encounterMap && <MapRailPanel map={encounterMap} title={mapTitle} tokens={mapTokens} className="flex-none" />}
         <GameChat variant="rail" className="min-h-0 flex-1" />
       </aside>
 
       {/* Below xl: floating map + chat buttons (the rail is hidden) */}
       <div className="fixed right-4 top-20 z-50 flex items-center gap-3 xl:hidden">
-        {encounterMap && <MapPanel map={encounterMap} encounterTitle={encounter?.title} tokens={mapTokens} />}
+        {encounterMap && <MapPanel map={encounterMap} title={mapTitle} tokens={mapTokens} />}
         <GameChat />
       </div>
     </div>

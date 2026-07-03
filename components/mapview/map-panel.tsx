@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import type { Encounter2DMap } from "@/types/encounter-map-2d"
 
-function MapOverlay({ map, encounterTitle, tokens, onClose }: { map: Encounter2DMap; encounterTitle?: string; tokens?: MapTokens; onClose: () => void }) {
+function MapOverlay({ map, title, tokens, onClose }: { map: Encounter2DMap; title?: string; tokens?: MapTokens; onClose: () => void }) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose()
@@ -34,7 +34,7 @@ function MapOverlay({ map, encounterTitle, tokens, onClose }: { map: Encounter2D
         {/* title plaque — matches the in-game encounter banner */}
         <h2 className="relative z-[11] rounded-sm border border-white/20 bg-gradient-to-t from-amber-950 via-amber-950 to-amber-800 px-6 py-1.5 text-center font-display text-lg font-bold contrast-[1.2] saturate-[.4] ring-4 ring-black sm:px-8 sm:py-2 sm:text-xl sm:ring-8">
           <Parchment />
-          <span style={textShadow}>{encounterTitle || "Encounter Map"}</span>
+          <span style={textShadow}>{title || "Encounter Map"}</span>
         </h2>
         <button
           type="button"
@@ -55,7 +55,7 @@ function MapOverlay({ map, encounterTitle, tokens, onClose }: { map: Encounter2D
   )
 }
 
-export function MapPanel({ map, encounterTitle, tokens }: { map: Encounter2DMap; encounterTitle?: string; tokens?: MapTokens }) {
+export function MapPanel({ map, title, tokens }: { map: Encounter2DMap; title?: string; tokens?: MapTokens }) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -70,19 +70,19 @@ export function MapPanel({ map, encounterTitle, tokens }: { map: Encounter2DMap;
         Map
       </Button>
 
-      {open && <MapOverlay map={map} encounterTitle={encounterTitle} tokens={tokens} onClose={() => setOpen(false)} />}
+      {open && <MapOverlay map={map} title={title} tokens={tokens} onClose={() => setOpen(false)} />}
     </>
   )
 }
 
-export function MapRailPanel({ map, encounterTitle, tokens, className }: { map: Encounter2DMap; encounterTitle?: string; tokens?: MapTokens; className?: string }) {
+export function MapRailPanel({ map, title, tokens, className }: { map: Encounter2DMap; title?: string; tokens?: MapTokens; className?: string }) {
   const [open, setOpen] = useState(false)
 
   return (
     <>
       <div className={cn("overflow-hidden rounded-xl bg-black/40 ring ring-primary-700", className)}>
         <div className="flex items-center justify-between gap-2 px-3 py-2">
-          <h3 className="truncate font-display text-sm font-bold text-amber-300">{encounterTitle || "Encounter Map"}</h3>
+          <h3 className="truncate font-display text-sm font-bold text-amber-300">{title || "Encounter Map"}</h3>
           <button type="button" onClick={() => setOpen(true)} className="rounded p-1 text-stone-300 transition-colors hover:bg-white/10 hover:text-amber-200" aria-label="Expand map">
             <Maximize2 className="h-4 w-4" />
           </button>
@@ -92,7 +92,7 @@ export function MapRailPanel({ map, encounterTitle, tokens, className }: { map: 
         </button>
       </div>
 
-      {open && <MapOverlay map={map} encounterTitle={encounterTitle} tokens={tokens} onClose={() => setOpen(false)} />}
+      {open && <MapOverlay map={map} title={title} tokens={tokens} onClose={() => setOpen(false)} />}
     </>
   )
 }

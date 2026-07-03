@@ -6,6 +6,7 @@ id: "preparing-for-the-city"
 type: "encounter"
 title: "Preparing for the City"
 settingId: "realm-of-myr"
+location: "thalberns-forest-home"
 adventureId: "the-midnight-summons"
 image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-midnight-summons/preparing-for-the-city.png"
 ---

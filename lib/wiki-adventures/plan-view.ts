@@ -17,10 +17,11 @@ function encounterIntro(encounter: RuntimeEncounter): string {
   return encounter.sections.intro ?? encounter.sections.body ?? encounter.summary ?? ""
 }
 
-function toAdventureEncounter(encounter: RuntimeEncounter): AdventureEncounter {
+function toAdventureEncounter(encounter: RuntimeEncounter, locations: RuntimeArtifacts["entities"]["locations"]): AdventureEncounter {
   return {
     id: encounter.id,
     title: encounter.title,
+    location: encounter.locationId ? locations[encounter.locationId]?.title : undefined,
     intro: encounterIntro(encounter),
     instructions: encounter.sections.gmNotes ?? "",
     image: encounter.image,
@@ -44,7 +45,7 @@ export function buildAdventurePlanViewFromArtifacts(artifacts: RuntimeArtifacts)
   const startId = manifest.startEncounterId
   const encounterRecords = Object.values(artifacts.encounters)
   const ordered = [...encounterRecords.filter((entry) => entry.id === startId), ...encounterRecords.filter((entry) => entry.id !== startId)]
-  const encounters = ordered.map(toAdventureEncounter)
+  const encounters = ordered.map((entry) => toAdventureEncounter(entry, artifacts.entities.locations))
 
   const section: AdventureSection = {
     title: manifest.title,

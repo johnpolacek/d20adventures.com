@@ -210,6 +210,8 @@ export type Encounter3DMap = z.infer<typeof encounter3dMapSchema>
 export const adventureEncounterSchema = z.object({
   id: z.string(),
   title: z.string().min(1, "Title is required for encounters"),
+  /** Display name of the place where the encounter happens (resolved from the wiki location entity). */
+  location: z.string().optional(),
   intro: z.string(),
   instructions: z.string().optional(),
   image: z.string().optional(),

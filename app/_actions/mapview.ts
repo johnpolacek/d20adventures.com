@@ -66,6 +66,7 @@ export async function generateEncounterMap2D(args: { settingId: string; adventur
     sectionTitle,
     sceneTitle,
     encounterTitle: encounter.title,
+    locationTitle: encounter.location,
     encounterIntro: encounter.intro,
     encounterInstructions: encounter.instructions,
     npcIds,

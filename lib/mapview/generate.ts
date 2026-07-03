@@ -33,6 +33,7 @@ export function buildMap2DPrompt(args: {
   sectionTitle?: string
   sceneTitle?: string
   encounterTitle?: string
+  locationTitle?: string
   encounterIntro?: string
   encounterInstructions?: string
   npcIds: string[]
@@ -73,6 +74,7 @@ Encounter context:
 - Section: ${args.sectionTitle || "Unknown"}
 - Scene: ${args.sceneTitle || "Unknown"}
 - Encounter: ${args.encounterTitle || "Unknown"}
+- Location: ${args.locationTitle || "Unknown"}
 - Intro: ${args.encounterIntro || "None"}
 - Instructions: ${args.encounterInstructions || "None"}
 - NPC ids present: ${args.npcIds.join(", ") || "None"}

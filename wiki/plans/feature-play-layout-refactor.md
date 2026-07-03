@@ -24,6 +24,18 @@ Today the character list and narrative sit in a flex row constrained by page pad
 - [x] Responsive: three columns at xl+, two columns (list + narrative) with floating map/chat buttons at lg, stacked with floating buttons below lg
 - [x] Verified in browser at 375 / 1120 / 1280 / 1600 widths; map expand, chat expand, and SSE chat send all exercised
 
+## Map titles are locations
+
+The map panel is titled by the place it depicts (e.g. "Valkarr Forest"), not the encounter title. The wiki model already supported this end-to-end — it was just unauthored and dropped at the plan-view seam:
+
+- Encounter frontmatter `location: "<id>"` → `RuntimeEncounter.locationId` (compiler already parsed it)
+- Location entity pages (`type: "location"`, in `locations/` of the adventure source) → `artifacts.entities.locations` (already indexed; they also feed GM retrieval records)
+- New: `AdventureEncounter.location` (optional display name) resolved in `plan-view.ts`; `turn.tsx` titles the map `encounter.location || encounter.title`
+- New: map generation prompt gets a `- Location:` context line
+- Authored for The Midnight Summons: `valkarr-forest`, `old-standing-stones`, `thalberns-forest-home` across all 7 encounters
+
+Follow-ups: author locations for covert-cargo and the-road-to-kordavos (no stored maps yet, so no UI impact); consider a Location field in the admin module editor (raw-file saves already round-trip the key); legacy S3 plans simply fall back to the encounter title.
+
 Notes:
 - `GameChat` default ("floating") variant is unchanged for the lobby and mobile; unseen-count badge logic only runs for it.
 - Character cards are now `w-full max-w-[320px]` (was fixed `sm:w-[320px]`) so rail columns control their width.

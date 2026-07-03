@@ -6,6 +6,7 @@ id: "the-missing-relics"
 type: "encounter"
 title: "The Missing Relics"
 settingId: "realm-of-myr"
+location: "old-standing-stones"
 adventureId: "the-midnight-summons"
 npcs:
   - id: "wollandora"

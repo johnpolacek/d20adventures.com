@@ -6,6 +6,7 @@ id: "owlbear-confrontation"
 type: "encounter"
 title: "Owlbear Confrontation"
 settingId: "realm-of-myr"
+location: "valkarr-forest"
 adventureId: "the-midnight-summons"
 npcs:
   - id: "owlbear"
