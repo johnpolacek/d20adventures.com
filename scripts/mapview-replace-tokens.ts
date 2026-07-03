@@ -10,7 +10,7 @@ import { join } from "node:path"
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { EncounterMap2D } from "@/components/mapview/encounter-map-2d"
-import { getEncounterMap2DStorageKey, placeTokens } from "@/lib/mapview/generate"
+import { densifyForest, getEncounterMap2DStorageKey, placeTokens } from "@/lib/mapview/generate"
 import { loadEncounterMap2D } from "@/lib/mapview/load"
 import { updateJsonOnS3 } from "@/lib/s3-utils"
 import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
@@ -29,8 +29,9 @@ async function main() {
         const map = await loadEncounterMap2D(SETTING_ID, PLAN_ID, encounter.id)
         if (!map) continue
         const npcIds = (encounter.npc || []).map((npc) => npc.id)
-        const { partySlots, npcStarts } = placeTokens(map, maxPartySize, npcIds)
-        const updated = { ...map, partySlots, npcStarts }
+        const densified = { ...map, ...densifyForest(map) }
+        const { partySlots, npcStarts } = placeTokens(densified, maxPartySize, npcIds)
+        const updated = { ...densified, partySlots, npcStarts }
         await updateJsonOnS3(getEncounterMap2DStorageKey(SETTING_ID, PLAN_ID, encounter.id), updated)
         console.log(`${encounter.id}: party ${partySlots.map((slot) => `(${slot.x},${slot.y})`).join("")} · npc ${npcStarts.map((npc) => `${npc.npcId}(${npc.x},${npc.y})`).join(" ") || "none"}`)
         if (outDir) {

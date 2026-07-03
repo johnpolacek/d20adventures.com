@@ -283,23 +283,33 @@ function TrailNetwork({ map, inner }: { map: Encounter2DMap; inner: InnerArea })
   const chains = buildTrailChains(map)
   if (chains.length === 0) return null
 
-  // A chain end near a board edge is an entrance/exit — run it all the way out to
-  // the inner (frame) edge so the path doesn't stop short of the map border.
-  const edgeTol = cellSize * 1.5
-  const width = columns * cellSize
-  const height = rows * cellSize
+  // Every open trail end is an entrance/exit: run it out to the nearest frame edge
+  // so the path never stops mid-map. The only exception is a trail that ends AT a
+  // landmark (hut, gate, altar, ...) — that end stays put.
+  const LANDMARKS = new Set(["building-hut", "gate", "altar", "tent", "well", "market-stall", "campfire", "bridge", "statue", "monolith"])
+  const landmarkCenters = map.pieces
+    .filter((piece) => LANDMARKS.has(piece.pieceId))
+    .map((piece) => ({
+      x: (piece.x + (piece.width ?? 1) / 2) * cellSize,
+      y: (piece.y + (piece.height ?? 1) / 2) * cellSize,
+    }))
+  const nearLandmark = (p: TrailPoint) => landmarkCenters.some((c) => Math.hypot(c.x - p.x, c.y - p.y) < cellSize * 2.5)
+  void columns
+  void rows
   for (const chain of chains) {
     for (const at of [0, chain.length - 1] as const) {
       const p = chain[at]
-      let ext: TrailPoint | null = null
-      if (p.x - 0 < edgeTol && inner.x < 0) ext = { x: inner.x, y: p.y }
-      else if (width - p.x < edgeTol && inner.x + inner.w > width) ext = { x: inner.x + inner.w, y: p.y }
-      else if (p.y - 0 < edgeTol && inner.y < 0) ext = { x: p.x, y: inner.y }
-      else if (height - p.y < edgeTol && inner.y + inner.h > height) ext = { x: p.x, y: inner.y + inner.h }
-      if (ext) {
-        if (at === 0) chain.unshift(ext)
-        else chain.push(ext)
-      }
+      if (nearLandmark(p)) continue
+      const candidates: Array<{ dist: number; pt: TrailPoint }> = [
+        { dist: p.x - inner.x, pt: { x: inner.x, y: p.y } },
+        { dist: inner.x + inner.w - p.x, pt: { x: inner.x + inner.w, y: p.y } },
+        { dist: p.y - inner.y, pt: { x: p.x, y: inner.y } },
+        { dist: inner.y + inner.h - p.y, pt: { x: p.x, y: inner.y + inner.h } },
+      ]
+      const nearest = candidates.sort((a, b) => a.dist - b.dist)[0]
+      if (nearest.dist < 1) continue
+      if (at === 0) chain.unshift(nearest.pt)
+      else chain.push(nearest.pt)
     }
   }
 
@@ -504,6 +514,37 @@ export function EncounterMap2D({ map, className, tokens, fit = false }: { map: E
           const halfW = Math.min(width / 2 - cellSize * 0.4, (label.text.length * fontSize * 0.62) / 2)
           const cx = Math.min(Math.max(label.x * cellSize, halfW + cellSize * 0.4), width - halfW - cellSize * 0.4)
           const cy = Math.min(Math.max(label.y * cellSize, fontSize), height - fontSize * 0.5)
+          // Direction labels ("To the ...") get an arrow pointing toward the nearest
+          // map edge — where the route leaves the map.
+          const isDirection = /^(to|toward|towards)\s/i.test(label.text)
+          let arrow: { x1: number; y1: number; x2: number; y2: number } | null = null
+          if (isDirection) {
+            const dir = [
+              { dist: cx - inner.x, dx: -1, dy: 0 },
+              { dist: inner.x + inner.w - cx, dx: 1, dy: 0 },
+              { dist: cy - inner.y, dx: 0, dy: -1 },
+              { dist: inner.y + inner.h - cy, dx: 0, dy: 1 },
+            ].sort((a, b) => a.dist - b.dist)[0]
+            const len = cellSize * 1.5
+            if (dir.dy === 0) {
+              const ay = cy + fontSize * 0.9
+              arrow = { x1: cx - (dir.dx * len) / 2, y1: ay, x2: cx + (dir.dx * len) / 2, y2: ay }
+            } else if (dir.dy < 0) {
+              // pointing up: place the arrow above the label so it doesn't cross the text
+              const ay = cy - fontSize * 1.2
+              arrow = { x1: cx, y1: ay, x2: cx, y2: ay - len * 0.7 }
+            } else {
+              const ay = cy + fontSize * 0.6
+              arrow = { x1: cx, y1: ay, x2: cx, y2: ay + len * 0.7 }
+            }
+          }
+          const head = arrow
+            ? (() => {
+                const angle = Math.atan2(arrow.y2 - arrow.y1, arrow.x2 - arrow.x1)
+                const size = cellSize * 0.28
+                return `M ${arrow.x2 - size * Math.cos(angle - 0.5)} ${arrow.y2 - size * Math.sin(angle - 0.5)} L ${arrow.x2} ${arrow.y2} L ${arrow.x2 - size * Math.cos(angle + 0.5)} ${arrow.y2 - size * Math.sin(angle + 0.5)}`
+              })()
+            : null
           return (
             <g key={label.id}>
               <text
@@ -523,6 +564,14 @@ export function EncounterMap2D({ map, className, tokens, fit = false }: { map: E
               <text x={cx} y={cy} textAnchor="middle" fill="#f2e8ce" fontSize={fontSize} fontFamily="var(--font-display), ui-serif, Georgia, serif">
                 {label.text}
               </text>
+              {arrow && head && (
+                <>
+                  <line x1={arrow.x1} y1={arrow.y1} x2={arrow.x2} y2={arrow.y2} stroke="#141009" strokeWidth={cellSize * 0.16} strokeLinecap="round" opacity={0.75} />
+                  <path d={head} fill="none" stroke="#141009" strokeWidth={cellSize * 0.16} strokeLinecap="round" strokeLinejoin="round" opacity={0.75} />
+                  <line x1={arrow.x1} y1={arrow.y1} x2={arrow.x2} y2={arrow.y2} stroke="#f2e8ce" strokeWidth={cellSize * 0.07} strokeLinecap="round" />
+                  <path d={head} fill="none" stroke="#f2e8ce" strokeWidth={cellSize * 0.07} strokeLinecap="round" strokeLinejoin="round" />
+                </>
+              )}
             </g>
           )
         })}

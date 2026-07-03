@@ -63,7 +63,7 @@ Requirements:
 - Tell the story spatially: use trail pieces to show the route the characters travel (add a label where it leads, even offscreen).
 - Do NOT draw destination landmarks that are offscreen or not yet reached in the narrative — if the characters are traveling TOWARD a place (a stone circle, a city, a camp), the trail exiting the map plus a label like "To the Old Stones" is enough. Only draw landmarks the characters are AT in this encounter.
 - Trails must form ONE continuous route: chain trail segments so each starts exactly where the previous ends. A trail runs along the centerline of its LONG axis — use a wide box (e.g. 5x1) for a horizontal run and a tall box (e.g. 1x5) for a vertical run; never rotate trails. Example route from bottom-left to top-right: {"pieceId":"trail","x":1,"y":11,"width":1,"height":3} then {"pieceId":"trail","x":1,"y":8,"width":6,"height":1} then {"pieceId":"trail","x":7,"y":2,"width":1,"height":6}. Never scatter isolated trail pieces.
-- Forests and wilderness must feel DENSELY wooded: use MANY tree pieces (aim for 12+ tree pieces in a forest), a mix of tree-oak and tree-pine. Each tree piece renders as a small grove of several trees, so a 3x3 tree = a dense thicket. Ring the entire perimeter with overlapping tree clusters and scatter more trees through the interior, leaving only the trail and small clearings open.
+- Forests and wilderness must feel DENSELY wooded: use MANY tree pieces (aim for 16-20 tree pieces in a forest), a mix of tree-oak and tree-pine. Each tree piece renders as a small grove of several trees, so a 3x3 tree = a dense thicket. Ring the entire perimeter with overlapping tree clusters and scatter more trees through the interior, leaving only the trail and small clearings open.
 - Keep the summary to one sentence describing the scene.
 - Ground the layout in the encounter text below; convert story into spatial staging.
 
@@ -225,8 +225,70 @@ export function placeTokens(generation: Encounter2DGeneration, maxPartySize: num
   return { partySlots, npcStarts }
 }
 
+/** Deterministic density floor for wilderness scenes: if the model returned a sparse
+ *  forest/grove, add tree clusters in free perimeter/interior spots until the map has
+ *  at least MIN_FOREST_TREES tree pieces. Seeded LCG keeps output reproducible. */
+const MIN_FOREST_TREES = 16
+export function densifyForest(generation: Encounter2DGeneration): Encounter2DGeneration {
+  if (generation.sceneKit !== "forest" && generation.sceneKit !== "grove") return generation
+  const { columns, rows } = generation.board
+  const pieces = [...generation.pieces]
+  let treeCount = pieces.filter((piece) => piece.pieceId.startsWith("tree-")).length
+  if (treeCount >= MIN_FOREST_TREES) return generation
+
+  // occupancy grid over every piece footprint (incl. trail so trees stay off the path)
+  const occupied = new Set<string>()
+  const mark = (x: number, y: number, w: number, h: number, pad: number) => {
+    for (let dy = -pad; dy < h + pad; dy++) {
+      for (let dx = -pad; dx < w + pad; dx++) {
+        occupied.add(`${x + dx},${y + dy}`)
+      }
+    }
+  }
+  for (const piece of pieces) {
+    mark(Math.round(piece.x), Math.round(piece.y), Math.round(piece.width ?? 1), Math.round(piece.height ?? 1), piece.pieceId === "trail" ? 1 : 0)
+  }
+
+  let seed = columns * 31 + rows * 7 + pieces.length * 13 + 1
+  const rng = () => {
+    seed = (seed * 1103515245 + 12345) % 2147483648
+    return seed / 2147483648
+  }
+
+  let added = 0
+  for (let attempt = 0; attempt < 300 && treeCount < MIN_FOREST_TREES; attempt++) {
+    const size = rng() < 0.5 ? 3 : 2
+    // bias toward the perimeter band, sprinkle some interior
+    const band = rng() < 0.7
+    let x: number
+    let y: number
+    if (band) {
+      const side = Math.floor(rng() * 4)
+      x = side === 0 ? Math.floor(rng() * 3) : side === 1 ? columns - size - Math.floor(rng() * 3) : Math.floor(rng() * (columns - size))
+      y = side === 2 ? Math.floor(rng() * 3) : side === 3 ? rows - size - Math.floor(rng() * 3) : Math.floor(rng() * (rows - size))
+    } else {
+      x = Math.floor(rng() * (columns - size))
+      y = Math.floor(rng() * (rows - size))
+    }
+    x = clamp(x, 0, columns - size)
+    y = clamp(y, 0, rows - size)
+    let free = true
+    for (let dy = 0; dy < size && free; dy++) {
+      for (let dx = 0; dx < size && free; dx++) {
+        if (occupied.has(`${x + dx},${y + dy}`)) free = false
+      }
+    }
+    if (!free) continue
+    pieces.push({ id: `densify-tree-${added}`, pieceId: rng() < 0.6 ? "tree-oak" : "tree-pine", x, y, width: size, height: size, rotation: 0 })
+    mark(x, y, size, size, 0)
+    treeCount++
+    added++
+  }
+  return { ...generation, pieces }
+}
+
 export function assembleEncounter2DMap(generation: Encounter2DGeneration, args: { maxPartySize: number; npcIds: string[]; prompt?: string; previousPromptHistory?: string[] }): Encounter2DMap {
-  const normalized = normalizeGeneration(generation)
+  const normalized = densifyForest(normalizeGeneration(generation))
   const { partySlots, npcStarts } = placeTokens(normalized, args.maxPartySize, args.npcIds)
   return encounter2dMapSchema.parse({
     ...normalized,
