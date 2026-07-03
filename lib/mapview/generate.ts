@@ -171,16 +171,29 @@ function findOpenCells(generation: Encounter2DGeneration, zone: Encounter2DZone 
   return cells
 }
 
-/** Place party slots in/near the spawn zone and NPC starts near the objective, deterministically. */
+const SPAWN_LABEL = /\b(spawn|entrance|entry|start|arrival|party|approach)\b/i
+
+/** Place party slots in/near the spawn zone and NPC starts away from it, deterministically.
+ *  The model doesn't reliably use the `spawn` zone kind (often labels the entry "interest"),
+ *  so infer the spawn zone by kind → label → bottom-most, and keep NPCs in a different zone. */
 export function placeTokens(generation: Encounter2DGeneration, maxPartySize: number, npcIds: string[]): { partySlots: Encounter2DPartySlot[]; npcStarts: Encounter2DNpcStart[] } {
   const { rows } = generation.board
-  const spawnZone = generation.zones.find((zone) => zone.kind === "spawn")
-  const focusZone = generation.zones.find((zone) => zone.kind === "objective") || generation.zones.find((zone) => zone.kind === "interest")
+  const zones = generation.zones
+
+  const spawnZone = zones.find((zone) => zone.kind === "spawn") || zones.find((zone) => SPAWN_LABEL.test(zone.label || "")) || [...zones].sort((a, b) => b.y + b.height - (a.y + a.height))[0]
+
+  // NPCs go to the objective, else an interest zone that ISN'T the spawn, else the
+  // zone farthest from spawn — never on top of the party.
+  const focusZone =
+    zones.find((zone) => zone.kind === "objective") ||
+    zones.find((zone) => zone.kind === "interest" && zone !== spawnZone) ||
+    (spawnZone ? [...zones].filter((zone) => zone !== spawnZone).sort((a, b) => Math.abs(b.y - spawnZone.y) - Math.abs(a.y - spawnZone.y))[0] : undefined)
 
   const partyCells = findOpenCells(generation, spawnZone, clamp(maxPartySize, 1, 8), rows - 2)
   const partySlots = partyCells.map((cell, index) => ({ id: `party-${index}`, slotIndex: index, x: cell.x, y: cell.y }))
+  const partyTaken = new Set(partyCells.map((cell) => `${cell.x},${cell.y}`))
 
-  const npcCells = findOpenCells(generation, focusZone, Math.min(npcIds.length, 8), 2)
+  const npcCells = findOpenCells(generation, focusZone, Math.min(npcIds.length, 8), 2).filter((cell) => !partyTaken.has(`${cell.x},${cell.y}`))
   const npcStarts = npcIds.slice(0, npcCells.length).map((npcId, index) => ({ id: `npc-${index}`, npcId, x: npcCells[index].x, y: npcCells[index].y }))
 
   return { partySlots, npcStarts }
