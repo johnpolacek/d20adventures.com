@@ -49,7 +49,7 @@ The board is a square grid (gridType "square"). Compose with pieces from this st
 ${formatPieceCatalogForPrompt()}
 
 Requirements:
-- Board: pick columns (12-24) and rows (10-16) that fit the location; set cellSize to 48; pick the ground that matches the location.
+- Board: pick columns (16-28) sized to the location; the board is widescreen 16:9, rows are derived automatically (columns * 9/16) — any rows value you set is ignored. Set cellSize to 48; pick the ground that matches the location.
 - Strong composition: one clear focal area, a dressed perimeter, and 2-3 thematic landmarks. Avoid a large empty center — break it up with cover clusters.
 - Cluster 2-4 related pieces (crates with barrels, trees in groves, rubble near ruined walls) instead of even spacing.
 - Pieces must not overlap each other except intentional layering (rubble under ruined walls is fine). Keep placements inside the board.
@@ -80,7 +80,9 @@ ${args.existingMapJson ? `Existing map JSON to revise (keep what works, change w
 /** Clamp and snap a generated map onto the board; drop pieces that cannot fit. */
 export function normalizeGeneration(generation: Encounter2DGeneration): Encounter2DGeneration {
   const columns = clamp(snap(generation.board.columns), 8, 32)
-  const rows = clamp(snap(generation.board.rows), 8, 24)
+  // Widescreen boards: rows follow columns at ~16:9 (the renderer pads the frame to
+  // exactly 16:9); the model's rows value is ignored.
+  const rows = clamp(Math.round((columns * 9) / 16), 8, 24)
 
   const pieces = generation.pieces
     .filter((piece): piece is NonNullable<typeof piece> => Boolean(piece))

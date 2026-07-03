@@ -245,10 +245,21 @@ export function EncounterMap2D({ map, className, tokens, fit = false }: { map: E
   const height = rows * cellSize
   const frame = cellSize * 0.35
 
+  // Pad the frame so the rendered map is exactly 16:9 regardless of board dims
+  // (normalization keeps boards near 16:9, so this padding stays small).
+  const totalW = width + frame * 2
+  const totalH = height + frame * 2
+  const padX = totalW / totalH < 16 / 9 ? ((totalH * 16) / 9 - totalW) / 2 : 0
+  const padY = totalW / totalH > 16 / 9 ? ((totalW * 9) / 16 - totalH) / 2 : 0
+  const viewX = -frame - padX
+  const viewY = -frame - padY
+  const viewW = totalW + padX * 2
+  const viewH = totalH + padY * 2
+
   return (
     <div className={cn(fit ? "flex h-full w-full items-center justify-center" : "overflow-hidden rounded-lg border-2 border-[#3a3128] bg-[#241f18] shadow-xl", className)}>
       <svg
-        viewBox={`${-frame} ${-frame} ${width + frame * 2} ${height + frame * 2}`}
+        viewBox={`${viewX} ${viewY} ${viewW} ${viewH}`}
         preserveAspectRatio="xMidYMid meet"
         className={cn("block", fit ? "h-full w-full" : "h-auto w-full")}
         role="img"
@@ -256,8 +267,8 @@ export function EncounterMap2D({ map, className, tokens, fit = false }: { map: E
       >
         <style>{`.mv-token .mv-token-name{opacity:0;transition:opacity .15s}.mv-token:hover .mv-token-name{opacity:1}`}</style>
         {/* parchment frame */}
-        <rect x={-frame} y={-frame} width={width + frame * 2} height={height + frame * 2} fill="#241f18" />
-        <rect x={-frame * 0.5} y={-frame * 0.5} width={width + frame} height={height + frame} fill="none" stroke="#4a3f30" strokeWidth={2} />
+        <rect x={viewX} y={viewY} width={viewW} height={viewH} fill="#241f18" />
+        <rect x={viewX + frame * 0.5} y={viewY + frame * 0.5} width={viewW - frame} height={viewH - frame} fill="none" stroke="#4a3f30" strokeWidth={2} />
 
         {/* Clip the board content to its bounds so oversized art (tree canopies at the
             edges, etc.) never spills past the frame. */}
