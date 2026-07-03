@@ -34,6 +34,12 @@ The map panel is titled by the place it depicts (e.g. "Valkarr Forest"), not the
 - New: map generation prompt gets a `- Location:` context line
 - Authored for The Midnight Summons: `valkarr-forest`, `old-standing-stones`, `thalberns-forest-home` across all 7 encounters
 
+## Narration ↔ battle map consistency
+
+Narration prompts (wiki + legacy) now receive a battle-map staging summary — token starting positions, nearest labels, party↔NPC distances in cells/feet (`lib/mapview/spatial-summary.ts`) — with an instruction to keep described distances/movement consistent. Encounter NPC refs accept `startNear` (`"party"` | `"distant"` | zone/label name), honored by `placeTokens`; the owlbear in the-midnight-summons now starts ~10 ft from the party (stored maps re-placed via `scripts/mapview-replace-tokens.ts`; S3 maps are shared, pre-change copies in session scratchpad `maps-backup/`). Authoring rule added to AGENTS.md.
+
+Note: editing owlbear-confrontation.md changed the plan's content hash again — adventures started before commit a5f6cc5 will fail turn advance with "Stale turn advance"; start fresh ones.
+
 Follow-ups: author locations for covert-cargo and the-road-to-kordavos (no stored maps yet, so no UI impact); consider a Location field in the admin module editor (raw-file saves already round-trip the key); legacy S3 plans simply fall back to the encounter title.
 
 Notes:
