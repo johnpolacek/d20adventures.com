@@ -6,6 +6,7 @@
 
 import { useEffect, useState } from "react"
 import { EncounterMap2D, type MapTokens } from "@/components/mapview/encounter-map-2d"
+import { Button } from "@/components/ui/button"
 import type { Encounter2DMap } from "@/types/encounter-map-2d"
 
 export function MapPanel({ map, encounterTitle, tokens }: { map: Encounter2DMap; encounterTitle?: string; tokens?: MapTokens }) {
@@ -22,18 +23,15 @@ export function MapPanel({ map, encounterTitle, tokens }: { map: Encounter2DMap;
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="flex items-center gap-2 rounded-md border border-amber-800/60 bg-[#241f18]/90 px-3 py-1.5 text-sm font-semibold text-amber-200 shadow-lg backdrop-blur transition-colors hover:border-amber-500 hover:text-amber-100"
-        aria-label="Open encounter map"
-      >
-        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      {/* Muted amber at the same value/saturation as Game Chat's primary-700/600 indigo,
+          so the two buttons read as equal priority. */}
+      <Button size="sm" onClick={() => setOpen(true)} className="bg-[#5a4a26] ring-4 ring-[#7d6635] hover:bg-[#5a4a26] hover:scale-105 transition-all duration-300" aria-label="Open encounter map">
+        <svg viewBox="0 0 24 24" className="mr-1 h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
           <path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z" />
           <path d="M9 4v14M15 6v14" />
         </svg>
         Map
-      </button>
+      </Button>
 
       {open && (
         <div className="fixed inset-0 z-40 flex flex-col bg-black/95">

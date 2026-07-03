@@ -25,7 +25,7 @@ export default function Turn({
       <div className="flex min-w-0 flex-1 flex-col gap-6">
         <TurnNarrative nextAdventure={nextAdventure} />
       </div>
-      <div className="fixed right-8 top-20 z-50 flex items-center gap-2">
+      <div className="fixed right-8 top-20 z-50 flex items-center gap-4">
         {encounterMap && <MapPanel map={encounterMap} encounterTitle={encounter?.title} tokens={mapTokens} />}
         <GameChat />
       </div>
