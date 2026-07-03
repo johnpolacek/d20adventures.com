@@ -5,7 +5,7 @@
 import { getPieceDefinition } from "@/lib/mapview/piece-catalog"
 import { cn } from "@/lib/utils"
 import type { Encounter2DMap, GroundType } from "@/types/encounter-map-2d"
-import { PIECE_RENDERERS } from "./pieces"
+import { getPieceRenderer } from "./pieces"
 
 const GROUND_STYLES: Record<GroundType, { base: string; speckleA: string; speckleB: string; grid: string }> = {
   grass: { base: "#5c7042", speckleA: "#52633a", speckleB: "#6a7f4c", grid: "#3d4a2c" },
@@ -185,7 +185,7 @@ export function EncounterMap2D({ map, className, showZones = true }: { map: Enco
         {/* pieces */}
         {map.pieces.map((piece) => {
           const def = getPieceDefinition(piece.pieceId)
-          const Renderer = PIECE_RENDERERS[piece.pieceId]
+          const Renderer = getPieceRenderer(piece.pieceId)
           if (!def || !Renderer) return null
           const wCells = piece.width ?? def.footprint.width
           const hCells = piece.height ?? def.footprint.height

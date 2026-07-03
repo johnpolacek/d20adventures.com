@@ -7,6 +7,7 @@
 // piece id, never Math.random, so server and client render identically.
 
 import type { ReactNode } from "react"
+import { PIECE_ART, type PieceArt } from "./pieces-art"
 
 export interface PieceRenderProps {
   /** Stable placed-piece id; used as the variation seed. */
@@ -605,6 +606,15 @@ function Spikes({ seed, w, h }: PieceRenderProps) {
 
 // --- registry ---------------------------------------------------------------------
 
+// OpenPencil-designed art (design/mapview-pieces.op → scripts/mapview-pieces-compile.ts)
+// takes precedence; code-drawn renderers below are the fallback for pieces without art.
+function ArtPieceRenderer(art: PieceArt) {
+  return function ArtPiece({ w, h }: PieceRenderProps) {
+    // biome-ignore lint/security/noDangerouslySetInnerHtml: markup is build-time compiled from the committed design/mapview-pieces.op, never user input
+    return <g transform={`scale(${w / art.width} ${h / art.height})`} dangerouslySetInnerHTML={{ __html: art.markup }} />
+  }
+}
+
 export const PIECE_RENDERERS: Record<string, (props: PieceRenderProps) => ReactNode> = {
   "tree-oak": TreeOak,
   "tree-pine": TreePine,
@@ -633,4 +643,10 @@ export const PIECE_RENDERERS: Record<string, (props: PieceRenderProps) => ReactN
   "market-stall": MarketStall,
   pit: Pit,
   spikes: Spikes,
+}
+
+export function getPieceRenderer(pieceId: string): ((props: PieceRenderProps) => ReactNode) | undefined {
+  const art = PIECE_ART[pieceId]
+  if (art) return ArtPieceRenderer(art)
+  return PIECE_RENDERERS[pieceId]
 }
