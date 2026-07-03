@@ -27,7 +27,7 @@ export function MapPanel({ map, encounterTitle, tokens }: { map: Encounter2DMap;
     <>
       {/* Muted amber at the same value/saturation as Game Chat's primary-700/600 indigo,
           so the two buttons read as equal priority. */}
-      <Button size="sm" onClick={() => setOpen(true)} className="bg-[#5a4a26] ring-4 ring-[#7d6635] hover:bg-[#5a4a26] hover:scale-105 transition-all duration-300" aria-label="Open encounter map">
+      <Button size="sm" onClick={() => setOpen(true)} className="bg-[#3d3115] ring-4 ring-[#5f4e24] hover:bg-[#3d3115] hover:scale-105 transition-all duration-300" aria-label="Open encounter map">
         <svg viewBox="0 0 24 24" className="mr-1 h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
           <path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z" />
           <path d="M9 4v14M15 6v14" />

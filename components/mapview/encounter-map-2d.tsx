@@ -278,10 +278,30 @@ function buildTrailChains(map: Encounter2DMap): TrailPoint[][] {
   return chains
 }
 
-function TrailNetwork({ map }: { map: Encounter2DMap }) {
-  const { cellSize } = map.board
+function TrailNetwork({ map, inner }: { map: Encounter2DMap; inner: InnerArea }) {
+  const { cellSize, columns, rows } = map.board
   const chains = buildTrailChains(map)
   if (chains.length === 0) return null
+
+  // A chain end near a board edge is an entrance/exit — run it all the way out to
+  // the inner (frame) edge so the path doesn't stop short of the map border.
+  const edgeTol = cellSize * 1.5
+  const width = columns * cellSize
+  const height = rows * cellSize
+  for (const chain of chains) {
+    for (const at of [0, chain.length - 1] as const) {
+      const p = chain[at]
+      let ext: TrailPoint | null = null
+      if (p.x - 0 < edgeTol && inner.x < 0) ext = { x: inner.x, y: p.y }
+      else if (width - p.x < edgeTol && inner.x + inner.w > width) ext = { x: inner.x + inner.w, y: p.y }
+      else if (p.y - 0 < edgeTol && inner.y < 0) ext = { x: p.x, y: inner.y }
+      else if (height - p.y < edgeTol && inner.y + inner.h > height) ext = { x: p.x, y: inner.y + inner.h }
+      if (ext) {
+        if (at === 0) chain.unshift(ext)
+        else chain.push(ext)
+      }
+    }
+  }
 
   const rng = makeRng(`trail-${chains.length}-${Math.round(chains[0][0].x)}-${Math.round(chains[0][0].y)}`)
 
@@ -432,7 +452,7 @@ export function EncounterMap2D({ map, className, tokens, fit = false }: { map: E
           })}
 
           {/* trails first (under other pieces), joined into one continuous network */}
-          <TrailNetwork map={map} />
+          <TrailNetwork map={map} inner={inner} />
 
           {/* pieces */}
           {map.pieces.map((piece) => {
