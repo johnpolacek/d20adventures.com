@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Roadmap](../roadmap.md)
 
-Status: Active (2026-07-02) · Worktree branch: `feature/mapview` (progress tracker: [feature-mapview.md](feature-mapview.md))
+Status: v1 merged to main (2026-07-03) · progress tracker archived at [zzz-completed/feature-mapview.md](zzz-completed/feature-mapview.md)
 
 ## Goal
 
@@ -36,15 +36,17 @@ Status: Active (2026-07-02) · Worktree branch: `feature/mapview` (progress trac
 3. **Hex-ready coordinates.** The one hard-to-migrate decision. Design coordinates so square v1 data survives a hex-capable v2 (e.g. `gridType` + per-grid coordinate interpretation, pieces sized in cells).
 4. **Generation quality loop.** Validate + clamp generated JSON against the schema; regenerate control in authoring; template few-shots per scene kit.
 
-## Milestones
+## Milestones (v1 — merged 2026-07-03)
 
-- [ ] Schema v2: `gridType`, piece refs against a piece-library registry, gameplay semantics preserved
-- [ ] Piece taxonomy defined; piece set v1 designed in OpenPencil → SVG committed
-- [ ] Read-only SVG renderer (square grid)
-- [ ] Generation pipeline: scene-kit inference → `generateObject` → validate/clamp → S3 store
-- [ ] Authoring hook: generate/review/regenerate from the wiki admin encounter surface
-- [ ] Standalone Mapview page rendering real encounters
-- [ ] Evaluate against 2–3 real encounters (e.g. Midnight Summons) and iterate on piece set + prompts
+- [x] Schema v2: `gridType`, piece refs against a piece-library registry, gameplay semantics preserved
+- [x] Piece taxonomy defined; piece set v1 designed in OpenPencil → SVG committed (30 pieces incl. river/monolith/trail)
+- [x] Read-only SVG renderer (square grid, 16:9 framed)
+- [x] Generation pipeline: scene-kit inference → `generateObject` (gemini-3.5-flash) → validate/clamp → S3 store
+- [x] Authoring hook: generate/review/regenerate at `/admin/mapview`
+- [x] Standalone Mapview page rendering real encounters
+- [x] Evaluated against all 7 Midnight Summons encounters via a full fresh-player playthrough; iterated on piece set + prompts + renderer through many feedback rounds (trail/river network rendering, tree density, lighting, portrait tokens, labels, fullscreen panel)
+
+See [Catalog Growth](#catalog-growth) below for what's next.
 
 ## Catalog Growth
 

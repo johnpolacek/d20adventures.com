@@ -4,6 +4,12 @@
 
 Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.
 
+## 2026-07-03
+
+### Mapview v1 merged to main
+
+Built end-to-end on `feature/mapview` (worktree) and merged no-ff (`d8f077f`): schema, 30-piece SVG catalog (OpenPencil-designed hero pieces + code-drawn procedural pieces), `gemini-3.5-flash` generation pipeline, `/admin/mapview` authoring lab, and a player-facing fullscreen Map panel wired into the turn page next to Game Chat. Validated with a full fresh-player playthrough of all 7 Midnight Summons encounters, iterating through many rounds of feedback (trail/river network rendering with edge-to-edge winding paths, tree density, day/dusk/night lighting, character-portrait tokens, 16:9 framing, direction-arrow labels). Established a durable pattern along the way: player-visible qualities (tree density, connected trails, no offscreen landmarks) must be guaranteed in code (`densifyForest`, `extendChainsToEdges`), not left to prompt wording — prompt-only rules are stochastic and can silently regress on the next regeneration. Worktree and branch removed; the throwaway Convex project `d20adventures-feature-mapview` still needs manual deletion in the dashboard. Next: catalog growth is demand-driven per adventure (river was the first addition beyond the v1 set; Covert Cargo will need docks/boat/water expanse next).
+
 ## 2026-07-02
 
 ### Scoped Mapview (2D), split off Miniview (3D), cleaned stale branches
