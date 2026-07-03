@@ -110,6 +110,11 @@ export default async function TurnPage({ params }: PageProps) {
 
   const encounter = findEncounter(adventurePlan, currentTurn?.encounterId)
   const encounterMap = await loadEncounterMap2D(settingId, adventurePlanId, currentTurn?.encounterId)
+  const turnCharacters = currentTurn?.characters ?? []
+  const mapTokens = {
+    party: turnCharacters.filter((character) => character.type === "pc").map((character) => ({ name: character.name, image: character.image })),
+    npcs: Object.fromEntries(turnCharacters.filter((character) => character.type === "npc").map((character) => [character.id, { name: character.name, image: character.image }])),
+  }
   const isLatestTurn = turnOrderNum === (navInfo?.totalTurns ?? 0)
 
   const canEdit = isDev()
@@ -128,7 +133,7 @@ export default async function TurnPage({ params }: PageProps) {
         currentTurn={currentTurn}
         disableSSE={!isLatestTurn}
       />
-      {encounterMap && <MapPanel map={encounterMap} encounterTitle={encounter?.title} />}
+      {encounterMap && <MapPanel map={encounterMap} encounterTitle={encounter?.title} tokens={mapTokens} />}
       {canEdit && (
         <div className="w-full flex justify-end p-8">
           <Link className="z-20" href={`/admin/wiki-adventures/${settingId}/${adventurePlanId}`}>

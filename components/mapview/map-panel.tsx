@@ -5,10 +5,10 @@
 // encounter has a stored map; read-only, no game state.
 
 import { useEffect, useState } from "react"
-import { EncounterMap2D } from "@/components/mapview/encounter-map-2d"
+import { EncounterMap2D, type MapTokens } from "@/components/mapview/encounter-map-2d"
 import type { Encounter2DMap } from "@/types/encounter-map-2d"
 
-export function MapPanel({ map, encounterTitle }: { map: Encounter2DMap; encounterTitle?: string }) {
+export function MapPanel({ map, encounterTitle, tokens }: { map: Encounter2DMap; encounterTitle?: string; tokens?: MapTokens }) {
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
@@ -44,7 +44,7 @@ export function MapPanel({ map, encounterTitle }: { map: Encounter2DMap; encount
                 ✕ close
               </button>
             </div>
-            <EncounterMap2D map={map} />
+            <EncounterMap2D map={map} tokens={tokens} />
             {map.summary && <p className="mt-2 text-center text-sm italic text-stone-400">{map.summary}</p>}
           </div>
         </div>

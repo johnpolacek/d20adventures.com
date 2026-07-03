@@ -3,17 +3,18 @@
  * (plan load → scene-kit inference → generateObject → assemble/clamp → S3 store) and
  * writes an SSR-rendered HTML preview for visual review. See wiki/plans/mapview.md.
  *
- * Usage: pnpm exec dotenv -e .env.local -e .env -- tsx scripts/mapview-smoke.ts [encounterId] [outDir]
+ * Usage: pnpm exec dotenv -e .env.local -e .env -- tsx scripts/mapview-smoke.ts [encounterId] [outDir] [designer prompt]
  */
 import { mkdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
+// The lib/ai wrapper is Clerk/token-coupled (server-action context only); use the
+// same underlying model directly so the script runs headless.
+import { google } from "@ai-sdk/google"
 import { generateObject } from "ai"
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { EncounterMap2D } from "@/components/mapview/encounter-map-2d"
-// The lib/ai wrapper is Clerk/token-coupled (server-action context only); use the
-// same underlying model directly so the script runs headless.
-import { currentModel } from "@/lib/ai/llm"
+import { currentModel, openaiModel } from "@/lib/ai/llm"
 import { inferEncounterSceneKit } from "@/lib/map-utils"
 import { assembleEncounter2DMap, buildMap2DPrompt, getEncounterMap2DStorageKey } from "@/lib/mapview/generate"
 import { updateJsonOnS3 } from "@/lib/s3-utils"
@@ -26,6 +27,7 @@ const PLAN_ID = "the-midnight-summons"
 async function main() {
   const requestedEncounterId = process.argv[2]
   const outDir = process.argv[3] || "."
+  const ownerPrompt = process.argv[4] || undefined
 
   const plan = await loadAdventurePlanForRuntime(SETTING_ID, PLAN_ID)
   const flat = plan.sections.flatMap((section) => section.scenes.flatMap((scene) => scene.encounters.map((encounter) => ({ section, scene, encounter }))))
@@ -54,13 +56,26 @@ async function main() {
     encounterInstructions: encounter.instructions,
     npcIds,
     sceneKit,
+    ownerPrompt,
   })
 
   const started = Date.now()
   let result: Awaited<ReturnType<typeof generateObject<typeof encounter2dGenerationSchema>>> | null = null
   for (let attempt = 1; attempt <= 3 && !result; attempt++) {
     try {
-      result = await generateObject({ model: currentModel, prompt, schema: encounter2dGenerationSchema })
+      const model = process.env.MV_MODEL === "openai" ? openaiModel : process.env.MV_MODEL === "lite" ? currentModel : google("gemini-3-flash-preview")
+      // temperature > 0 + output cap: Gemini constrained decoding can digit-loop at temp 0;
+      // the cap makes a loop fail fast so the retry gets a fresh sample.
+      result = await generateObject({
+        model,
+        prompt,
+        schema: encounter2dGenerationSchema,
+        temperature: 0.8,
+        maxOutputTokens: 8000,
+        // Native constrained decoding digit-loops on this schema; prompt-mode JSON +
+        // the tolerant generation schema + normalize repair is reliable.
+        providerOptions: { google: { structuredOutputs: false } },
+      })
     } catch (error) {
       console.warn(`Attempt ${attempt} failed: ${error instanceof Error ? error.message : error}`)
       if (attempt === 3) throw error
@@ -69,7 +84,7 @@ async function main() {
   if (!result) throw new Error("unreachable")
   console.log(`Generated in ${((Date.now() - started) / 1000).toFixed(1)}s`)
 
-  const map = assembleEncounter2DMap(result.object, { maxPartySize: plan.party?.[1] ?? 4, npcIds })
+  const map = assembleEncounter2DMap(result.object, { maxPartySize: plan.party?.[1] ?? 4, npcIds, prompt: ownerPrompt })
   console.log(
     `Board ${map.board.columns}x${map.board.rows} (${map.board.ground}) · ${map.pieces.length} pieces · ${map.walls.length} walls · ${map.zones.length} zones · ${map.partySlots.length} party slots · ${map.npcStarts.length} NPC starts`
   )

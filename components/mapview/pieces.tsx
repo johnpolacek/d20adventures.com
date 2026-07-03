@@ -604,6 +604,65 @@ function Spikes({ seed, w, h }: PieceRenderProps) {
   )
 }
 
+function Trail({ seed, w, h }: PieceRenderProps) {
+  const rng = makeRng(seed)
+  // Draw along the long axis so tall boxes read as vertical runs without rotation.
+  const vertical = h > w
+  const length = vertical ? h : w
+  const breadth = vertical ? w : h
+  const mid = breadth / 2
+  const amp = breadth * 0.12
+  const points = Array.from({ length: 7 }, (_, i) => ({ a: (length / 6) * i, b: i === 0 || i === 6 ? mid : mid + jitter(rng, amp) }))
+  const coord = (p: { a: number; b: number }) => (vertical ? `${p.b} ${p.a}` : `${p.a} ${p.b}`)
+  const mids = points.slice(1).map((p, i) => ({ a: (points[i].a + p.a) / 2 + jitter(rng, length * 0.015), b: (points[i].b + p.b) / 2 + jitter(rng, amp * 0.5) }))
+  const d = `M ${coord(points[0])} ${points
+    .slice(1)
+    .map((p, i) => `Q ${coord(mids[i])} ${coord(p)}`)
+    .join(" ")}`
+  return (
+    <g>
+      <path d={d} fill="none" stroke="#4a3d2c" strokeWidth={breadth * 0.4} strokeLinecap="butt" opacity={0.75} />
+      <path d={d} fill="none" stroke="#71603f" strokeWidth={breadth * 0.28} strokeLinecap="butt" opacity={0.9} />
+      <path d={d} fill="none" stroke="#8a7a52" strokeWidth={breadth * 0.1} strokeLinecap="butt" strokeDasharray={`${length * 0.05} ${length * 0.04}`} opacity={0.55} />
+    </g>
+  )
+}
+
+function Monolith({ seed, w, h }: PieceRenderProps) {
+  const rng = makeRng(seed)
+  const cx = w / 2
+  const cy = h / 2
+  const rw = w * 0.42
+  const rh = h * 0.56
+  const angle = jitter(rng, 12)
+  const pts = [
+    [cx - rw / 2 + jitter(rng, 2), cy - rh / 2 + jitter(rng, 2)],
+    [cx + rw / 2 + jitter(rng, 2), cy - rh / 2 + jitter(rng, 3)],
+    [cx + rw / 2 + jitter(rng, 3), cy + rh / 2 + jitter(rng, 2)],
+    [cx - rw / 2 + jitter(rng, 2), cy + rh / 2 + jitter(rng, 2)],
+  ]
+    .map((p) => p.join(","))
+    .join(" ")
+  return (
+    <g transform={`rotate(${angle} ${cx} ${cy})`}>
+      {shadow(cx + rw * 0.25, cy + rh * 0.25, rw * 0.9, rh * 0.6)}
+      <ellipse cx={cx} cy={cy + rh * 0.32} rx={rw * 0.75} ry={rh * 0.3} fill="#57534a" opacity={0.7} />
+      <polygon points={pts} fill="#7d7871" stroke="#3f3b33" strokeWidth={1.8} />
+      <polygon
+        points={pts}
+        fill="none"
+        stroke="#9a948a"
+        strokeWidth={1}
+        opacity={0.55}
+        transform={`translate(${-rw * 0.06} ${-rh * 0.06}) scale(0.85)`}
+        style={{ transformOrigin: `${cx}px ${cy}px` }}
+      />
+      <line x1={cx - rw * 0.2} y1={cy - rh * 0.25} x2={cx + rw * 0.1} y2={cy + rh * 0.15} stroke="#4a463e" strokeWidth={1} opacity={0.7} />
+      <ellipse cx={cx - rw * 0.28} cy={cy + rh * 0.2} rx={rw * 0.18} ry={rh * 0.1} fill="#55703c" opacity={0.6} />
+    </g>
+  )
+}
+
 // --- registry ---------------------------------------------------------------------
 
 // OpenPencil-designed art (design/mapview-pieces.op → scripts/mapview-pieces-compile.ts)
@@ -643,6 +702,8 @@ export const PIECE_RENDERERS: Record<string, (props: PieceRenderProps) => ReactN
   "market-stall": MarketStall,
   pit: Pit,
   spikes: Spikes,
+  trail: Trail,
+  monolith: Monolith,
 }
 
 export function getPieceRenderer(pieceId: string): ((props: PieceRenderProps) => ReactNode) | undefined {

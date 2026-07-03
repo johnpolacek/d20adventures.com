@@ -25,6 +25,8 @@ const SCENE_KIT_GUIDANCE: Record<MapSceneKit, string> = {
   road: "A travel route: a clear lane down the map, trees or boulders banking the sides, a wagon as the traveler focal point, ambush cover near the lane.",
   crypt: "A tomb: altar as the sarcophagus focal piece, pillars in aisles, rubble and pit hazards, oppressive stone-wall boundaries.",
   cavern: "A cave chamber: boulder and rock-cluster spurs, a pond or pit as the environmental hook, choke points between rock groups.",
+  forest: "Deep woods: dense tree clusters (oak/pine) framing the space, bushes and boulders as undergrowth, a trail winding through toward the destination, small clearings as playable space.",
+  grove: "A sacred clearing: monoliths arranged in a circle or arc as the focal point, trees ringing the perimeter, a trail entering the clearing.",
 }
 
 export function buildMap2DPrompt(args: {
@@ -54,7 +56,11 @@ Requirements:
 - Use walls (line segments, in cell coordinates) only for long structural runs; use stone-wall/ruined-wall pieces for short fragments.
 - Zones: 1 spawn zone where the party enters, 1 objective or interest zone at the focal area. Zones are rectangles in cell coordinates and may overlap pieces.
 - 1-2 short labels naming major features (in cell coordinates, placed in open space).
-- Scene kit: ${args.sceneKit}. ${SCENE_KIT_GUIDANCE[args.sceneKit]}
+- Choose "sceneKit" to match the NARRATIVE, not just keywords — a keyword heuristic suggests "${args.sceneKit}" (${SCENE_KIT_GUIDANCE[args.sceneKit]}), but override it freely if the story reads differently (e.g. moving through dark woods = forest, an ancient stone circle = grove).
+- Set board.lighting from the narrative's time of day and mood: "night" for darkness/moonlight scenes, "dusk" for twilight, "day" otherwise.
+- Tell the story spatially: use trail pieces to show the route the characters travel (label where it leads, even offscreen); use an "interest" zone with a short label to mark narrative cues like where a sound came from, a watcher's position, or a hidden threat.
+- Trails must form ONE continuous route: chain trail segments so each starts exactly where the previous ends. A trail runs along the centerline of its LONG axis — use a wide box (e.g. 5x1) for a horizontal run and a tall box (e.g. 1x5) for a vertical run; never rotate trails. Example route from bottom-left to top-right: {"pieceId":"trail","x":1,"y":11,"width":1,"height":3} then {"pieceId":"trail","x":1,"y":8,"width":6,"height":1} then {"pieceId":"trail","x":7,"y":2,"width":1,"height":6}. Never scatter isolated trail pieces.
+- Dense woodland/interior scenes need 12-20 pieces: resize trees into 2x2 or 3x3 canopy clusters and ring the perimeter tightly, leaving deliberate clearings and the trail as the open space.
 - Keep the summary to one sentence describing the scene.
 - Ground the layout in the encounter text below; convert story into spatial staging.
 
@@ -75,6 +81,7 @@ export function normalizeGeneration(generation: Encounter2DGeneration): Encounte
   const rows = clamp(snap(generation.board.rows), 8, 24)
 
   const pieces = generation.pieces
+    .filter((piece): piece is NonNullable<typeof piece> => Boolean(piece))
     .map((piece, index) => {
       const def = getPieceDefinition(piece.pieceId)
       if (!def) return null
@@ -96,7 +103,7 @@ export function normalizeGeneration(generation: Encounter2DGeneration): Encounte
     ...generation,
     board: { ...generation.board, columns, rows, gridType: "square" },
     pieces,
-    walls: generation.walls.map((wall, index) => ({
+    walls: generation.walls.filter(Boolean).map((wall, index) => ({
       ...wall,
       id: wall.id || `wall-${index}`,
       x1: clamp(snap(wall.x1), 0, columns),
@@ -104,7 +111,7 @@ export function normalizeGeneration(generation: Encounter2DGeneration): Encounte
       x2: clamp(snap(wall.x2), 0, columns),
       y2: clamp(snap(wall.y2), 0, rows),
     })),
-    zones: generation.zones.map((zone, index) => {
+    zones: generation.zones.filter(Boolean).map((zone, index) => {
       const width = clamp(snap(zone.width), 1, columns)
       const height = clamp(snap(zone.height), 1, rows)
       return {
@@ -116,7 +123,7 @@ export function normalizeGeneration(generation: Encounter2DGeneration): Encounte
         height,
       }
     }),
-    labels: generation.labels.map((label, index) => ({
+    labels: generation.labels.filter(Boolean).map((label, index) => ({
       ...label,
       id: label.id || `label-${index}`,
       x: clamp(label.x, 0, columns),

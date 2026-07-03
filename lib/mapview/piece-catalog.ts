@@ -30,6 +30,15 @@ export const PIECE_CATALOG: PieceDefinition[] = [
   { id: "bush", label: "Bush", category: "natural", defaultKind: "difficult", footprint: { width: 1, height: 1 }, resizable: true, hint: "Scrub or hedge; slows movement" },
   { id: "pond", label: "Pond", category: "natural", defaultKind: "difficult", footprint: { width: 3, height: 2 }, resizable: true, hint: "Still water; resize to fit the scene" },
   { id: "marsh", label: "Marsh Patch", category: "natural", defaultKind: "difficult", footprint: { width: 2, height: 2 }, resizable: true, hint: "Boggy ground; difficult terrain" },
+  {
+    id: "trail",
+    label: "Trail",
+    category: "natural",
+    defaultKind: "open",
+    footprint: { width: 3, height: 1 },
+    resizable: true,
+    hint: "Worn dirt path; resize/rotate to show a route, chain segments toward a destination",
+  },
 
   // --- structures ----------------------------------------------------------
   { id: "stone-wall", label: "Stone Wall", category: "structure", defaultKind: "blocking", footprint: { width: 3, height: 1 }, resizable: true, hint: "Solid masonry run; orient with rotation" },
@@ -42,6 +51,15 @@ export const PIECE_CATALOG: PieceDefinition[] = [
   { id: "statue", label: "Statue", category: "structure", defaultKind: "blocking", footprint: { width: 1, height: 1 }, resizable: false, hint: "Stone figure on a plinth; landmark" },
   { id: "altar", label: "Altar", category: "structure", defaultKind: "blocking", footprint: { width: 2, height: 1 }, resizable: false, hint: "Ceremonial altar; shrine focal point" },
   { id: "pillar", label: "Pillar", category: "structure", defaultKind: "blocking", footprint: { width: 1, height: 1 }, resizable: false, hint: "Column; place in rows for colonnades" },
+  {
+    id: "monolith",
+    label: "Standing Stone",
+    category: "structure",
+    defaultKind: "blocking",
+    footprint: { width: 1, height: 1 },
+    resizable: false,
+    hint: "Ancient monolith; arrange in circles or rows for sacred sites",
+  },
   { id: "fence", label: "Fence", category: "structure", defaultKind: "cover", footprint: { width: 3, height: 1 }, resizable: true, hint: "Wooden fence run; low cover" },
 
   // --- dressing ------------------------------------------------------------
