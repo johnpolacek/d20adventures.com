@@ -43,6 +43,7 @@ function ChatMessageList({
   historyError,
   onLoadOlder,
   compact = false,
+  hideLoadOlder = false,
   className,
 }: {
   messages: ChatMessage[]
@@ -53,6 +54,7 @@ function ChatMessageList({
   historyError: string | null
   onLoadOlder: () => Promise<number>
   compact?: boolean
+  hideLoadOlder?: boolean
   className?: string
 }) {
   const viewportRef = useRef<HTMLDivElement | null>(null)
@@ -83,7 +85,7 @@ function ChatMessageList({
   return (
     <div ref={viewportRef} className={cn("overflow-y-auto rounded-md p-3 bg-black/30", className)}>
       <div className="space-y-3">
-        {hasOlderMessages && (
+        {hasOlderMessages && !hideLoadOlder && (
           <div className="flex justify-center">
             <Button variant="outline" size="sm" onClick={handleLoadOlder} disabled={isLoadingOlder || isLoadingHistory}>
               {isLoadingOlder ? "Loading..." : "Load older"}
@@ -346,23 +348,27 @@ export default function GameChat({ adventureId, characterName, variant = "floati
     return (
       <>
         <div className={cn("flex flex-col overflow-hidden rounded-xl bg-primary-800/60 ring ring-primary-700", className)}>
-          <div className="flex flex-none items-center justify-between gap-2 px-3 py-2">
-            <h3 className="font-display text-sm font-bold text-amber-300">Game Chat</h3>
-            <button type="button" onClick={() => handleOpenChange(true)} className="rounded p-1 text-stone-300 transition-colors hover:bg-white/10 hover:text-amber-200" aria-label="Expand chat">
-              <Maximize2 className="h-4 w-4" />
-            </button>
-          </div>
-          <ChatMessageList
-            messages={messages}
-            currentUsername={currentUsername}
-            hasOlderMessages={hasOlderMessages}
-            isLoadingOlder={isLoadingOlder}
-            isLoadingHistory={isLoadingHistory}
-            historyError={historyError}
-            onLoadOlder={loadOlderMessages}
-            compact
-            className="mx-2 min-h-0 flex-1"
-          />
+          {/* The whole preview (header + messages) opens the large view; the input row
+              below stays interactive. Load-older is hidden here so this region has no
+              nested controls — expand to page through history. */}
+          <button type="button" onClick={() => handleOpenChange(true)} className="group flex min-h-0 flex-1 cursor-pointer flex-col text-left" aria-label="Expand chat">
+            <div className="flex flex-none items-center justify-between gap-2 px-3 py-2">
+              <h3 className="font-display text-sm font-bold text-amber-300">Game Chat</h3>
+              <Maximize2 className="h-4 w-4 text-stone-300 transition-colors group-hover:text-amber-200" aria-hidden />
+            </div>
+            <ChatMessageList
+              messages={messages}
+              currentUsername={currentUsername}
+              hasOlderMessages={hasOlderMessages}
+              isLoadingOlder={isLoadingOlder}
+              isLoadingHistory={isLoadingHistory}
+              historyError={historyError}
+              onLoadOlder={loadOlderMessages}
+              compact
+              hideLoadOlder
+              className="mx-2 min-h-0 flex-1"
+            />
+          </button>
           {chatInput(true)}
         </div>
         <Dialog open={open} onOpenChange={handleOpenChange}>
