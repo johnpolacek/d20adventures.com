@@ -1,7 +1,9 @@
 "use client"
 
+import { useEffect, useRef, useState } from "react"
 import type { MapTokens } from "@/components/mapview/encounter-map-2d"
 import { MapPanel, MapRailPanel } from "@/components/mapview/map-panel"
+import { cn } from "@/lib/utils"
 import type { AdventureEncounter } from "@/types/adventure-plan"
 import type { Encounter2DMap } from "@/types/encounter-map-2d"
 import GameChat from "./game-chat"
@@ -22,6 +24,25 @@ export default function Turn({
   // The map is titled by the place it depicts; fall back to the encounter title
   // for plans that don't declare locations.
   const mapTitle = encounter?.location || encounter?.title
+
+  // Match the chat card to the map card's height. The map is 16:9, so its height
+  // tracks the rail width — measure it and mirror it onto the chat rather than
+  // letting the chat stretch to the viewport bottom.
+  const mapCardRef = useRef<HTMLDivElement>(null)
+  const [chatHeight, setChatHeight] = useState<number | undefined>(undefined)
+  useEffect(() => {
+    const el = mapCardRef.current
+    if (!el) {
+      setChatHeight(undefined)
+      return
+    }
+    const update = () => setChatHeight(el.offsetHeight)
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [encounterMap])
+
   return (
     <div className="relative mx-auto w-full max-w-[1536px] flex flex-col gap-4 px-6 sm:px-8 pb-24 lg:grid lg:grid-cols-[336px_minmax(0,1fr)] lg:items-start lg:gap-6 xl:grid-cols-[336px_minmax(0,1fr)_360px] 2xl:grid-cols-[336px_minmax(0,1fr)_400px] 2xl:gap-8">
       {/* Left rail: character list. The negative margin + padding keeps the initiative
@@ -35,10 +56,17 @@ export default function Turn({
         <TurnNarrative nextAdventure={nextAdventure} />
       </div>
 
-      {/* Right rail (wide desktop): mini map on top, docked chat filling the rest */}
-      <aside className="hidden xl:sticky xl:top-20 xl:flex xl:h-[calc(100vh-7rem)] xl:flex-col xl:gap-4">
-        {encounterMap && <MapRailPanel map={encounterMap} title={mapTitle} tokens={mapTokens} className="flex-none" />}
-        <GameChat variant="rail" className="min-h-0 flex-1" />
+      {/* Right rail (wide desktop): mini map on top, chat below matching its height.
+          Without a map the chat falls back to filling the rail. */}
+      <aside className={cn("hidden xl:sticky xl:top-20 xl:flex xl:flex-col xl:gap-4", !encounterMap && "xl:h-[calc(100vh-7rem)]")}>
+        {encounterMap && (
+          <div ref={mapCardRef} className="flex-none">
+            <MapRailPanel map={encounterMap} title={mapTitle} tokens={mapTokens} />
+          </div>
+        )}
+        <div className={cn("min-h-0", encounterMap ? "flex-none" : "flex-1")} style={encounterMap ? { height: chatHeight } : undefined}>
+          <GameChat variant="rail" className="h-full" />
+        </div>
       </aside>
 
       {/* Below xl: floating map + chat buttons (the rail is hidden) */}
