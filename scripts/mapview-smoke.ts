@@ -64,7 +64,7 @@ async function main() {
   const generation = await generateEncounter2DGeneration(prompt, { model: modelOverride })
   console.log(`Generated in ${((Date.now() - started) / 1000).toFixed(1)}s`)
 
-  const map = assembleEncounter2DMap(generation, { maxPartySize: plan.party?.[1] ?? 4, npcIds, prompt: ownerPrompt })
+  const map = assembleEncounter2DMap(generation, { maxPartySize: plan.party?.[1] ?? 4, npcs: (encounter.npc || []).map((npc) => ({ id: npc.id, startNear: npc.startNear })), prompt: ownerPrompt })
   console.log(
     `Board ${map.board.columns}x${map.board.rows} (${map.board.ground}) · ${map.pieces.length} pieces · ${map.walls.length} walls · ${map.zones.length} zones · ${map.partySlots.length} party slots · ${map.npcStarts.length} NPC starts`
   )

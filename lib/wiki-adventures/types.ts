@@ -113,7 +113,7 @@ export type RuntimeEncounter = {
   image?: string
   assetIds: string[]
   locationId?: string
-  npcRefs: Array<{ id: string; behavior?: string; initialInitiative?: number }>
+  npcRefs: Array<{ id: string; behavior?: string; initialInitiative?: number; startNear?: string }>
   sections: Record<string, string>
   summary?: string
   typedLinks: RuntimeLink[]

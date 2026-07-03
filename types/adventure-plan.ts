@@ -72,6 +72,8 @@ export const encounterCharacterRefSchema = z.object({
   id: z.string(),
   behavior: z.string(),
   initialInitiative: z.number().optional(),
+  /** Map staging hint: "party" (ambush range of the party spawn), "distant" (default far placement), or a zone/label name. */
+  startNear: z.string().optional(),
 })
 export type EncounterCharacterRef = z.infer<typeof encounterCharacterRefSchema>
 

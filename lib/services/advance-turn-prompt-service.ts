@@ -176,6 +176,8 @@ export function buildEncounterProgressionPrompt(args: {
   encounterTurnDisplay: string
   currentEncounterTurnNumber: number
   playerCharacterNames: string
+  /** Battle-map staging summary (lib/mapview/spatial-summary.ts); omitted when the encounter has no stored map. */
+  spatialContext?: string
 }): string {
   return `
 ${args.adventureOverview}
@@ -191,7 +193,15 @@ ${args.encounterIntro}
 Current Encounter Instructions:
 ${args.encounterInstructions}
 
-${args.recentTurnHistory}
+${
+  args.spatialContext
+    ? `Battle Map Staging:
+${args.spatialContext}
+Keep described distances, positioning, and movement consistent with this staging. A creature that starts far from the party must plausibly cross that distance (over one or more turns) before it can be in melee; a creature that starts adjacent should be described as immediately close. Use the map's place names when referring to locations.
+
+`
+    : ""
+}${args.recentTurnHistory}
 
 Recent Narrative Context (last few paragraphs):
 ${args.narrativeContext}
