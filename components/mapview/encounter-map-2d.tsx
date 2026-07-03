@@ -129,6 +129,103 @@ function npcInitials(npcId: string) {
   return `${parts[0][0] || ""}${parts[1][0] || ""}`.toUpperCase()
 }
 
+// Trails render as one connected network rather than per-piece art: each trail piece
+// contributes an axis-aligned centerline, and endpoints within reach of another
+// segment get a connector stroke bridging the gap. This guarantees a continuous
+// path even when the generation model places segments that almost-but-don't touch.
+interface TrailSegment {
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+}
+
+function nearestPointOnSegment(px: number, py: number, seg: TrailSegment): { x: number; y: number; dist: number } {
+  const dx = seg.x2 - seg.x1
+  const dy = seg.y2 - seg.y1
+  const lengthSq = dx * dx + dy * dy
+  const t = lengthSq === 0 ? 0 : Math.max(0, Math.min(1, ((px - seg.x1) * dx + (py - seg.y1) * dy) / lengthSq))
+  const x = seg.x1 + t * dx
+  const y = seg.y1 + t * dy
+  return { x, y, dist: Math.hypot(px - x, py - y) }
+}
+
+function wobblyPath(seg: TrailSegment, rng: () => number, amp: number): string {
+  const midX = (seg.x1 + seg.x2) / 2 + (rng() - 0.5) * 2 * amp
+  const midY = (seg.y1 + seg.y2) / 2 + (rng() - 0.5) * 2 * amp
+  return `M ${seg.x1} ${seg.y1} Q ${midX} ${midY} ${seg.x2} ${seg.y2}`
+}
+
+function TrailNetwork({ map }: { map: Encounter2DMap }) {
+  const { cellSize } = map.board
+  const trails = map.pieces.filter((piece) => piece.pieceId === "trail")
+  if (trails.length === 0) return null
+
+  const segments: TrailSegment[] = trails.map((piece) => {
+    const w = (piece.width ?? 3) * cellSize
+    const h = (piece.height ?? 1) * cellSize
+    const x = piece.x * cellSize
+    const y = piece.y * cellSize
+    // centerline along the long axis
+    return w >= h ? { x1: x, y1: y + h / 2, x2: x + w, y2: y + h / 2 } : { x1: x + w / 2, y1: y, x2: x + w / 2, y2: y + h }
+  })
+
+  // Bridge each endpoint to the nearest point on another segment when the gap is
+  // small enough to read as "the same path".
+  const maxGap = cellSize * 3
+  const connectors: TrailSegment[] = []
+  const seen = new Set<string>()
+  segments.forEach((seg, i) => {
+    for (const [px, py] of [
+      [seg.x1, seg.y1],
+      [seg.x2, seg.y2],
+    ] as const) {
+      let best: { x: number; y: number; dist: number } | null = null
+      segments.forEach((other, j) => {
+        if (i === j) return
+        const candidate = nearestPointOnSegment(px, py, other)
+        if (!best || candidate.dist < best.dist) best = candidate
+      })
+      const hit = best as { x: number; y: number; dist: number } | null
+      if (hit && hit.dist > 1 && hit.dist <= maxGap) {
+        const key = [Math.round(px), Math.round(py), Math.round(hit.x), Math.round(hit.y)].sort((a, b) => a - b).join(",")
+        if (!seen.has(key)) {
+          seen.add(key)
+          connectors.push({ x1: px, y1: py, x2: hit.x, y2: hit.y })
+        }
+      }
+    }
+  })
+
+  const rng = makeRng(`trail-network-${trails.length}-${Math.round(segments[0].x1)}`)
+  const d = [...segments, ...connectors].map((seg) => wobblyPath(seg, rng, cellSize * 0.12)).join(" ")
+  const dirt: Array<{ cx: number; cy: number; rx: number; ry: number }> = []
+  for (const seg of segments) {
+    const length = Math.hypot(seg.x2 - seg.x1, seg.y2 - seg.y1)
+    const count = Math.max(2, Math.round(length / (cellSize * 1.5)))
+    for (let i = 0; i < count; i++) {
+      const t = rng()
+      dirt.push({
+        cx: seg.x1 + (seg.x2 - seg.x1) * t + (rng() - 0.5) * cellSize * 0.2,
+        cy: seg.y1 + (seg.y2 - seg.y1) * t + (rng() - 0.5) * cellSize * 0.2,
+        rx: cellSize * (0.03 + rng() * 0.02),
+        ry: cellSize * 0.05,
+      })
+    }
+  }
+
+  return (
+    <g>
+      <path d={d} fill="none" stroke="#4f3f2c" strokeWidth={cellSize * 0.52} strokeLinecap="round" opacity={0.9} />
+      <path d={d} fill="none" stroke="#8a7355" strokeWidth={cellSize * 0.4} strokeLinecap="round" />
+      <path d={d} fill="none" stroke="#a08a66" strokeWidth={cellSize * 0.16} strokeLinecap="round" strokeDasharray={`${cellSize * 0.18} ${cellSize * 0.15}`} opacity={0.6} />
+      {dirt.map((spot, i) => (
+        <ellipse key={i} cx={spot.cx} cy={spot.cy} rx={spot.rx} ry={spot.ry} fill="#3f3226" opacity={0.7} />
+      ))}
+    </g>
+  )
+}
+
 export interface MapTokens {
   /** PC identities in party-slot order (slotIndex i -> party[i]). */
   party?: MapTokenIdentity[]
@@ -201,8 +298,12 @@ export function EncounterMap2D({ map, className, tokens, fit = false }: { map: E
             )
           })}
 
+          {/* trails first (under other pieces), joined into one continuous network */}
+          <TrailNetwork map={map} />
+
           {/* pieces */}
           {map.pieces.map((piece) => {
+            if (piece.pieceId === "trail") return null
             const def = getPieceDefinition(piece.pieceId)
             const Renderer = getPieceRenderer(piece.pieceId)
             if (!def || !Renderer) return null
