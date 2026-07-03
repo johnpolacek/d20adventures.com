@@ -25,7 +25,7 @@ export function MapPanel({ map, encounterTitle, tokens }: { map: Encounter2DMap;
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-30 flex items-center gap-2 rounded-full border border-amber-800/60 bg-[#241f18]/90 px-4 py-2 text-sm font-semibold text-amber-200 shadow-lg backdrop-blur transition-colors hover:border-amber-500 hover:text-amber-100"
+        className="flex items-center gap-2 rounded-md border border-amber-800/60 bg-[#241f18]/90 px-3 py-1.5 text-sm font-semibold text-amber-200 shadow-lg backdrop-blur transition-colors hover:border-amber-500 hover:text-amber-100"
         aria-label="Open encounter map"
       >
         <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>

@@ -3,7 +3,6 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getTurnNavigationInfo, loadAdventureWithTurnByOrder } from "@/app/_actions/load-adventure"
 import TurnNavigation from "@/components/adventure/turn-navigation"
-import { MapPanel } from "@/components/mapview/map-panel"
 import { Button } from "@/components/ui/button"
 import AdventureHome from "@/components/views/adventure-home"
 import type { Id } from "@/convex/_generated/dataModel"
@@ -132,8 +131,9 @@ export default async function TurnPage({ params }: PageProps) {
         encounterImage={encounter?.image || adventurePlan.image}
         currentTurn={currentTurn}
         disableSSE={!isLatestTurn}
+        encounterMap={encounterMap}
+        mapTokens={mapTokens}
       />
-      {encounterMap && <MapPanel map={encounterMap} encounterTitle={encounter?.title} tokens={mapTokens} />}
       {canEdit && (
         <div className="w-full flex justify-end p-8">
           <Link className="z-20" href={`/admin/wiki-adventures/${settingId}/${adventurePlanId}`}>
