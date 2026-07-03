@@ -18,4 +18,8 @@ Implement Mapview v1 — 2D D&D-style battle maps, AI-generated at authoring tim
 - [x] Standalone Mapview page rendering real encounters (`/admin/mapview/[settingId]/[planId]`)
 - [x] Evaluate against real encounters — **all 7 Midnight Summons encounters** generated and stored to S3 via `scripts/mapview-smoke.ts`, visually verified (checkpoint, road, camp, grove kits all compose sensibly; the model repurposes statues as standing stones)
 - [x] Player-facing map in play: floating Map panel on the turn page (`components/mapview/map-panel.tsx`), shown only when the encounter has a stored map
-- [ ] Fresh-player playthrough of The Midnight Summons on the worktree (empty Convex = clean history) with the map panel in play — in progress 2026-07-02; then piece/prompt iteration from findings
+- [x] Fresh-player playthrough of The Midnight Summons on the worktree (empty Convex = clean history) with the map panel in play — underway 2026-07-02/03
+- [x] Model: **gemini-3.5-flash** (verified live), centralized in `lib/mapview/model.ts` shared by the action + script; structured outputs OFF with a tolerant/repairing generation schema (bounded numbers digit-loop Gemini's constrained decoder)
+- [x] Feedback round 1 (2026-07-03): narrative-driven scene kit (forest/grove added) over the keyword heuristic; night/dusk lighting overlay; character-portrait tokens with hover names; trail + monolith pieces; NPC placement no longer stacks on the party (infer spawn zone; keep NPCs in a separate zone)
+- [x] Feedback round 2 (2026-07-03): fullscreen map panel (fit mode); trees rewritten to render a grove of individual crowns per footprint + prompt pushes denser forests; removed dashed zone boxes (zones are placement-only; narrative cues are on-map labels now); labels use the display font (Cinzel, `var(--font-display)`)
+- [ ] Next: fold remaining playthrough findings into the piece set/prompt; wire generation into the wiki-adventures editor; broaden beyond Midnight Summons
