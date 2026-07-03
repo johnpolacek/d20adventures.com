@@ -78,6 +78,12 @@ export function MapPanel({ map, title, tokens }: { map: Encounter2DMap; title?: 
 export function MapRailPanel({ map, title, tokens, className }: { map: Encounter2DMap; title?: string; tokens?: MapTokens; className?: string }) {
   const [open, setOpen] = useState(false)
 
+  // Render the map only after mount. Its procedural foliage advances a shared PRNG
+  // during child render, which isn't hydration-stable, so we skip SSR entirely and
+  // hold the 16:9 footprint with a placeholder to avoid layout shift.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
   return (
     <>
       <div className={cn("overflow-hidden rounded-xl bg-black/40 ring ring-primary-700", className)}>
@@ -88,7 +94,11 @@ export function MapRailPanel({ map, title, tokens, className }: { map: Encounter
           </button>
         </div>
         <button type="button" onClick={() => setOpen(true)} className="group block w-full cursor-zoom-in" aria-label="Expand encounter map">
-          <EncounterMap2D map={map} tokens={tokens} className="rounded-none border-0 shadow-none transition-[filter] duration-300 group-hover:brightness-110" />
+          {mounted ? (
+            <EncounterMap2D map={map} tokens={tokens} className="rounded-none border-0 shadow-none transition-[filter] duration-300 group-hover:brightness-110" />
+          ) : (
+            <div className="aspect-[16/9] w-full bg-[#241f18]" />
+          )}
         </button>
       </div>
 
