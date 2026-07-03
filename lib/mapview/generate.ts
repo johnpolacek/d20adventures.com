@@ -193,7 +193,28 @@ export function placeTokens(generation: Encounter2DGeneration, maxPartySize: num
     zones.find((zone) => zone.kind === "interest" && zone !== spawnZone) ||
     (spawnZone ? [...zones].filter((zone) => zone !== spawnZone).sort((a, b) => Math.abs(b.y - spawnZone.y) - Math.abs(a.y - spawnZone.y))[0] : undefined)
 
-  const partyCells = findOpenCells(generation, spawnZone, clamp(maxPartySize, 1, 8), rows - 2)
+  // The party enters along the trail when one exists: place slots on the trail
+  // cells nearest the spawn zone (falling back to open cells otherwise).
+  const trailCells: Array<{ x: number; y: number }> = []
+  for (const piece of generation.pieces) {
+    if (piece.pieceId !== "trail") continue
+    const w = Math.round(piece.width ?? 3)
+    const h = Math.round(piece.height ?? 1)
+    for (let dy = 0; dy < h; dy++) {
+      for (let dx = 0; dx < w; dx++) {
+        trailCells.push({ x: Math.round(piece.x) + dx, y: Math.round(piece.y) + dy })
+      }
+    }
+  }
+  const partyCount = clamp(maxPartySize, 1, 8)
+  let partyCells: Array<{ x: number; y: number }>
+  if (trailCells.length > 0) {
+    const target = spawnZone ? { x: spawnZone.x + spawnZone.width / 2, y: spawnZone.y + spawnZone.height / 2 } : { x: 1, y: rows - 2 }
+    const anchor = [...trailCells].sort((a, b) => Math.hypot(a.x - target.x, a.y - target.y) - Math.hypot(b.x - target.x, b.y - target.y))[0]
+    partyCells = [...trailCells].sort((a, b) => Math.hypot(a.x - anchor.x, a.y - anchor.y) - Math.hypot(b.x - anchor.x, b.y - anchor.y)).slice(0, partyCount)
+  } else {
+    partyCells = findOpenCells(generation, spawnZone, partyCount, rows - 2)
+  }
   const partySlots = partyCells.map((cell, index) => ({ id: `party-${index}`, slotIndex: index, x: cell.x, y: cell.y }))
   const partyTaken = new Set(partyCells.map((cell) => `${cell.x},${cell.y}`))
 

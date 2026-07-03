@@ -142,85 +142,192 @@ function npcInitials(npcId: string) {
   return `${parts[0][0] || ""}${parts[1][0] || ""}`.toUpperCase()
 }
 
-// Trails render as one connected network rather than per-piece art: each trail piece
-// contributes an axis-aligned centerline, and endpoints within reach of another
-// segment get a connector stroke bridging the gap. This guarantees a continuous
-// path even when the generation model places segments that almost-but-don't touch.
-interface TrailSegment {
-  x1: number
-  y1: number
-  x2: number
-  y2: number
+// Trails render as one connected, winding path network. Trail pieces contribute
+// axis-aligned centerlines; endpoints are merged into a graph (nearby endpoints
+// join, hanging ends bridge to the nearest segment), chains are extracted and
+// subdivided with gentle seeded wander, and drawn with midpoint smoothing so
+// corners round naturally — no nubs, no circuit-board right angles.
+interface TrailPoint {
+  x: number
+  y: number
 }
 
-function nearestPointOnSegment(px: number, py: number, seg: TrailSegment): { x: number; y: number; dist: number } {
-  const dx = seg.x2 - seg.x1
-  const dy = seg.y2 - seg.y1
+function nearestPointOnSegment(px: number, py: number, a: TrailPoint, b: TrailPoint): { x: number; y: number; t: number; dist: number } {
+  const dx = b.x - a.x
+  const dy = b.y - a.y
   const lengthSq = dx * dx + dy * dy
-  const t = lengthSq === 0 ? 0 : Math.max(0, Math.min(1, ((px - seg.x1) * dx + (py - seg.y1) * dy) / lengthSq))
-  const x = seg.x1 + t * dx
-  const y = seg.y1 + t * dy
-  return { x, y, dist: Math.hypot(px - x, py - y) }
+  const t = lengthSq === 0 ? 0 : Math.max(0, Math.min(1, ((px - a.x) * dx + (py - a.y) * dy) / lengthSq))
+  const x = a.x + t * dx
+  const y = a.y + t * dy
+  return { x, y, t, dist: Math.hypot(px - x, py - y) }
 }
 
-function wobblyPath(seg: TrailSegment, rng: () => number, amp: number): string {
-  const midX = (seg.x1 + seg.x2) / 2 + (rng() - 0.5) * 2 * amp
-  const midY = (seg.y1 + seg.y2) / 2 + (rng() - 0.5) * 2 * amp
-  return `M ${seg.x1} ${seg.y1} Q ${midX} ${midY} ${seg.x2} ${seg.y2}`
-}
-
-function TrailNetwork({ map }: { map: Encounter2DMap }) {
+function buildTrailChains(map: Encounter2DMap): TrailPoint[][] {
   const { cellSize } = map.board
   const trails = map.pieces.filter((piece) => piece.pieceId === "trail")
-  if (trails.length === 0) return null
+  if (trails.length === 0) return []
 
-  const segments: TrailSegment[] = trails.map((piece) => {
+  // Graph: nodes merged within tolerance, one edge per trail centerline.
+  const nodes: TrailPoint[] = []
+  const edges: Array<[number, number]> = []
+  const mergeTol = cellSize * 1.6
+
+  const addNode = (p: TrailPoint) => {
+    for (let i = 0; i < nodes.length; i++) {
+      if (Math.hypot(nodes[i].x - p.x, nodes[i].y - p.y) <= mergeTol) {
+        nodes[i] = { x: (nodes[i].x + p.x) / 2, y: (nodes[i].y + p.y) / 2 }
+        return i
+      }
+    }
+    nodes.push({ ...p })
+    return nodes.length - 1
+  }
+
+  for (const piece of trails) {
     const w = (piece.width ?? 3) * cellSize
     const h = (piece.height ?? 1) * cellSize
     const x = piece.x * cellSize
     const y = piece.y * cellSize
-    // centerline along the long axis
-    return w >= h ? { x1: x, y1: y + h / 2, x2: x + w, y2: y + h / 2 } : { x1: x + w / 2, y1: y, x2: x + w / 2, y2: y + h }
-  })
+    const [p1, p2] =
+      w >= h
+        ? [
+            { x, y: y + h / 2 },
+            { x: x + w, y: y + h / 2 },
+          ]
+        : [
+            { x: x + w / 2, y },
+            { x: x + w / 2, y: y + h },
+          ]
+    const a = addNode(p1)
+    const b = addNode(p2)
+    if (a !== b) edges.push([a, b])
+  }
 
-  // Bridge each endpoint to the nearest point on another segment when the gap is
-  // small enough to read as "the same path".
-  const maxGap = cellSize * 3
-  const connectors: TrailSegment[] = []
-  const seen = new Set<string>()
-  segments.forEach((seg, i) => {
-    for (const [px, py] of [
-      [seg.x1, seg.y1],
-      [seg.x2, seg.y2],
-    ] as const) {
-      let best: { x: number; y: number; dist: number } | null = null
-      segments.forEach((other, j) => {
-        if (i === j) return
-        const candidate = nearestPointOnSegment(px, py, other)
-        if (!best || candidate.dist < best.dist) best = candidate
-      })
-      const hit = best as { x: number; y: number; dist: number } | null
-      if (hit && hit.dist > 1 && hit.dist <= maxGap) {
-        const key = [Math.round(px), Math.round(py), Math.round(hit.x), Math.round(hit.y)].sort((a, b) => a - b).join(",")
-        if (!seen.has(key)) {
-          seen.add(key)
-          connectors.push({ x1: px, y1: py, x2: hit.x, y2: hit.y })
-        }
-      }
+  const degree = () => {
+    const d = new Map<number, number>()
+    for (const [a, b] of edges) {
+      d.set(a, (d.get(a) ?? 0) + 1)
+      d.set(b, (d.get(b) ?? 0) + 1)
     }
+    return d
+  }
+
+  // Bridge hanging endpoints (degree 1) to the nearest other segment: split that
+  // edge at the projection and connect — handles T-junctions and near-miss gaps.
+  const maxGap = cellSize * 3
+  let deg = degree()
+  for (let n = 0; n < nodes.length; n++) {
+    if ((deg.get(n) ?? 0) !== 1) continue
+    let best: { edge: number; x: number; y: number; t: number; dist: number } | null = null
+    edges.forEach(([a, b], ei) => {
+      if (a === n || b === n) return
+      const hit = nearestPointOnSegment(nodes[n].x, nodes[n].y, nodes[a], nodes[b])
+      if (!best || hit.dist < best.dist) best = { edge: ei, ...hit }
+    })
+    const hit = best as { edge: number; x: number; y: number; t: number; dist: number } | null
+    if (!hit || hit.dist > maxGap || hit.dist < 1) continue
+    const [a, b] = edges[hit.edge]
+    if (hit.t < 0.1) {
+      edges.push([n, a])
+    } else if (hit.t > 0.9) {
+      edges.push([n, b])
+    } else {
+      nodes.push({ x: hit.x, y: hit.y })
+      const m = nodes.length - 1
+      edges[hit.edge] = [a, m]
+      edges.push([m, b], [n, m])
+    }
+    deg = degree()
+  }
+
+  // Extract chains: walk from junction/end nodes through degree-2 nodes.
+  const adjacency = new Map<number, Array<{ to: number; edge: number }>>()
+  edges.forEach(([a, b], ei) => {
+    adjacency.set(a, [...(adjacency.get(a) ?? []), { to: b, edge: ei }])
+    adjacency.set(b, [...(adjacency.get(b) ?? []), { to: a, edge: ei }])
+  })
+  const visited = new Set<number>()
+  const chains: TrailPoint[][] = []
+  const walk = (start: number, first: { to: number; edge: number }) => {
+    const chain = [nodes[start]]
+    visited.add(first.edge)
+    let prev = start
+    let current = first.to
+    chain.push(nodes[current])
+    while ((adjacency.get(current)?.length ?? 0) === 2) {
+      const next = (adjacency.get(current) ?? []).find((step) => !visited.has(step.edge))
+      if (!next) break
+      visited.add(next.edge)
+      prev = current
+      current = next.to
+      chain.push(nodes[current])
+    }
+    void prev
+    return chain
+  }
+  for (const [n, steps] of adjacency) {
+    if (steps.length === 2) continue
+    for (const step of steps) {
+      if (!visited.has(step.edge)) chains.push(walk(n, step))
+    }
+  }
+  // Pure loops (all degree 2) — start anywhere.
+  edges.forEach((edge, ei) => {
+    if (!visited.has(ei)) chains.push(walk(edge[0], { to: edge[1], edge: ei }))
+  })
+  return chains
+}
+
+function TrailNetwork({ map }: { map: Encounter2DMap }) {
+  const { cellSize } = map.board
+  const chains = buildTrailChains(map)
+  if (chains.length === 0) return null
+
+  const rng = makeRng(`trail-${chains.length}-${Math.round(chains[0][0].x)}-${Math.round(chains[0][0].y)}`)
+
+  // Subdivide straight runs and add gentle perpendicular wander; junction nodes stay
+  // fixed so branches keep meeting exactly.
+  const wobbled = chains.map((chain) => {
+    const points: TrailPoint[] = [chain[0]]
+    for (let i = 1; i < chain.length; i++) {
+      const a = chain[i - 1]
+      const b = chain[i]
+      const length = Math.hypot(b.x - a.x, b.y - a.y)
+      const steps = Math.max(1, Math.round(length / (cellSize * 1.4)))
+      const nx = -(b.y - a.y) / (length || 1)
+      const ny = (b.x - a.x) / (length || 1)
+      for (let s = 1; s < steps; s++) {
+        const t = s / steps
+        const amp = (rng() - 0.5) * 2 * cellSize * 0.22
+        points.push({ x: a.x + (b.x - a.x) * t + nx * amp, y: a.y + (b.y - a.y) * t + ny * amp })
+      }
+      points.push(b)
+    }
+    return points
   })
 
-  const rng = makeRng(`trail-network-${trails.length}-${Math.round(segments[0].x1)}`)
-  const d = [...segments, ...connectors].map((seg) => wobblyPath(seg, rng, cellSize * 0.12)).join(" ")
+  // Midpoint smoothing: quadratic curves through midpoints round every corner.
+  const d = wobbled
+    .map((points) => {
+      if (points.length < 2) return ""
+      let path = `M ${points[0].x} ${points[0].y}`
+      for (let i = 1; i < points.length - 1; i++) {
+        const midX = (points[i].x + points[i + 1].x) / 2
+        const midY = (points[i].y + points[i + 1].y) / 2
+        path += ` Q ${points[i].x} ${points[i].y} ${midX} ${midY}`
+      }
+      const last = points[points.length - 1]
+      path += ` L ${last.x} ${last.y}`
+      return path
+    })
+    .join(" ")
+
   const dirt: Array<{ cx: number; cy: number; rx: number; ry: number }> = []
-  for (const seg of segments) {
-    const length = Math.hypot(seg.x2 - seg.x1, seg.y2 - seg.y1)
-    const count = Math.max(2, Math.round(length / (cellSize * 1.5)))
-    for (let i = 0; i < count; i++) {
-      const t = rng()
+  for (const points of wobbled) {
+    for (let i = 0; i < points.length; i += 2) {
       dirt.push({
-        cx: seg.x1 + (seg.x2 - seg.x1) * t + (rng() - 0.5) * cellSize * 0.2,
-        cy: seg.y1 + (seg.y2 - seg.y1) * t + (rng() - 0.5) * cellSize * 0.2,
+        cx: points[i].x + (rng() - 0.5) * cellSize * 0.2,
+        cy: points[i].y + (rng() - 0.5) * cellSize * 0.2,
         rx: cellSize * (0.03 + rng() * 0.02),
         ry: cellSize * 0.05,
       })
@@ -229,9 +336,9 @@ function TrailNetwork({ map }: { map: Encounter2DMap }) {
 
   return (
     <g>
-      <path d={d} fill="none" stroke="#4f3f2c" strokeWidth={cellSize * 0.52} strokeLinecap="round" opacity={0.9} />
-      <path d={d} fill="none" stroke="#8a7355" strokeWidth={cellSize * 0.4} strokeLinecap="round" />
-      <path d={d} fill="none" stroke="#a08a66" strokeWidth={cellSize * 0.16} strokeLinecap="round" strokeDasharray={`${cellSize * 0.18} ${cellSize * 0.15}`} opacity={0.6} />
+      <path d={d} fill="none" stroke="#4f3f2c" strokeWidth={cellSize * 0.52} strokeLinecap="round" strokeLinejoin="round" opacity={0.9} />
+      <path d={d} fill="none" stroke="#8a7355" strokeWidth={cellSize * 0.4} strokeLinecap="round" strokeLinejoin="round" />
+      <path d={d} fill="none" stroke="#a08a66" strokeWidth={cellSize * 0.16} strokeLinecap="round" strokeLinejoin="round" strokeDasharray={`${cellSize * 0.18} ${cellSize * 0.15}`} opacity={0.6} />
       {dirt.map((spot, i) => (
         <ellipse key={i} cx={spot.cx} cy={spot.cy} rx={spot.rx} ry={spot.ry} fill="#3f3226" opacity={0.7} />
       ))}
