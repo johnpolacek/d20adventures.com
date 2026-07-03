@@ -23,3 +23,5 @@ Implement Mapview v1 — 2D D&D-style battle maps, AI-generated at authoring tim
 - [x] Feedback round 1 (2026-07-03): narrative-driven scene kit (forest/grove added) over the keyword heuristic; night/dusk lighting overlay; character-portrait tokens with hover names; trail + monolith pieces; NPC placement no longer stacks on the party (infer spawn zone; keep NPCs in a separate zone)
 - [x] Feedback round 2 (2026-07-03): fullscreen map panel (fit mode); trees rewritten to render a grove of individual crowns per footprint + prompt pushes denser forests; removed dashed zone boxes (zones are placement-only; narrative cues are on-map labels now); labels use the display font (Cinzel, `var(--font-display)`)
 - [ ] Next: fold remaining playthrough findings into the piece set/prompt; wire generation into the wiki-adventures editor; broaden beyond Midnight Summons
+
+Finished: 2026-07-03 (merged to main, policy: merge)
