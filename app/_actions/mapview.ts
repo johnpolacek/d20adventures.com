@@ -9,11 +9,12 @@ import { generateObject } from "@/lib/ai"
 import { isAdmin } from "@/lib/auth-utils"
 import { inferEncounterSceneKit } from "@/lib/map-utils"
 import { assembleEncounter2DMap, buildMap2DPrompt, getEncounterMap2DStorageKey } from "@/lib/mapview/generate"
-import { readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
+import { loadEncounterMap2D } from "@/lib/mapview/load"
+import { updateJsonOnS3 } from "@/lib/s3-utils"
 import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
 import type { AdventureEncounter } from "@/types/adventure-plan"
 import type { Encounter2DMap } from "@/types/encounter-map-2d"
-import { encounter2dGenerationSchema, encounter2dMapSchema } from "@/types/encounter-map-2d"
+import { encounter2dGenerationSchema } from "@/types/encounter-map-2d"
 
 async function requireAdminUser(): Promise<string> {
   const { userId } = await auth()
@@ -37,12 +38,7 @@ function findEncounterContext(sections: { title: string; scenes: { title: string
 
 export async function getEncounterMap2D(settingId: string, adventurePlanId: string, encounterId: string): Promise<Encounter2DMap | null> {
   await requireAdminUser()
-  try {
-    const raw = await readJsonFromS3(getEncounterMap2DStorageKey(settingId, adventurePlanId, encounterId))
-    return encounter2dMapSchema.parse(raw)
-  } catch {
-    return null
-  }
+  return loadEncounterMap2D(settingId, adventurePlanId, encounterId)
 }
 
 export async function generateEncounterMap2D(args: { settingId: string; adventurePlanId: string; encounterId: string; prompt?: string; revise?: boolean }): Promise<Encounter2DMap> {

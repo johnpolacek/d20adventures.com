@@ -3,10 +3,12 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getTurnNavigationInfo, loadAdventureWithTurnByOrder } from "@/app/_actions/load-adventure"
 import TurnNavigation from "@/components/adventure/turn-navigation"
+import { MapPanel } from "@/components/mapview/map-panel"
 import { Button } from "@/components/ui/button"
 import AdventureHome from "@/components/views/adventure-home"
 import type { Id } from "@/convex/_generated/dataModel"
 import { isDev } from "@/lib/auth-utils"
+import { loadEncounterMap2D } from "@/lib/mapview/load"
 import { mapConvexTurnToTurn, reverseSlugify } from "@/lib/utils"
 import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
 import type { Adventure } from "@/types/adventure"
@@ -107,6 +109,7 @@ export default async function TurnPage({ params }: PageProps) {
   if (!currentTurn) return notFound()
 
   const encounter = findEncounter(adventurePlan, currentTurn?.encounterId)
+  const encounterMap = await loadEncounterMap2D(settingId, adventurePlanId, currentTurn?.encounterId)
   const isLatestTurn = turnOrderNum === (navInfo?.totalTurns ?? 0)
 
   const canEdit = isDev()
@@ -125,6 +128,7 @@ export default async function TurnPage({ params }: PageProps) {
         currentTurn={currentTurn}
         disableSSE={!isLatestTurn}
       />
+      {encounterMap && <MapPanel map={encounterMap} encounterTitle={encounter?.title} />}
       {canEdit && (
         <div className="w-full flex justify-end p-8">
           <Link className="z-20" href={`/admin/wiki-adventures/${settingId}/${adventurePlanId}`}>
