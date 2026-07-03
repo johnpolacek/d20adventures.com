@@ -242,27 +242,36 @@ export function EncounterMap2D({ map, className, tokens, fit = false }: { map: E
             surface through labels instead of dashed boxes. */}
 
         {/* labels — display font (Cinzel) with a dark outline for legibility over art */}
-        {map.labels.map((label) => (
-          <g key={label.id}>
-            <text
-              x={label.x * cellSize}
-              y={label.y * cellSize}
-              textAnchor="middle"
-              fill="#141009"
-              fontSize={cellSize * 0.4}
-              fontFamily="var(--font-display), ui-serif, Georgia, serif"
-              opacity={0.75}
-              stroke="#141009"
-              strokeWidth={cellSize * 0.07}
-              strokeLinejoin="round"
-            >
-              {label.text}
-            </text>
-            <text x={label.x * cellSize} y={label.y * cellSize} textAnchor="middle" fill="#f2e8ce" fontSize={cellSize * 0.4} fontFamily="var(--font-display), ui-serif, Georgia, serif">
-              {label.text}
-            </text>
-          </g>
-        ))}
+        {map.labels.map((label) => {
+          const fontSize = cellSize * 0.4
+          // Labels are center-anchored, so clamp the center x/y by the estimated text
+          // half-width/height plus a margin — a center near an edge would otherwise
+          // spill the label off the board (e.g. "Deep Woods" hanging off the left).
+          const halfW = Math.min(width / 2 - cellSize * 0.4, (label.text.length * fontSize * 0.62) / 2)
+          const cx = Math.min(Math.max(label.x * cellSize, halfW + cellSize * 0.4), width - halfW - cellSize * 0.4)
+          const cy = Math.min(Math.max(label.y * cellSize, fontSize), height - fontSize * 0.5)
+          return (
+            <g key={label.id}>
+              <text
+                x={cx}
+                y={cy}
+                textAnchor="middle"
+                fill="#141009"
+                fontSize={fontSize}
+                fontFamily="var(--font-display), ui-serif, Georgia, serif"
+                opacity={0.75}
+                stroke="#141009"
+                strokeWidth={cellSize * 0.07}
+                strokeLinejoin="round"
+              >
+                {label.text}
+              </text>
+              <text x={cx} y={cy} textAnchor="middle" fill="#f2e8ce" fontSize={fontSize} fontFamily="var(--font-display), ui-serif, Georgia, serif">
+                {label.text}
+              </text>
+            </g>
+          )
+        })}
 
         {/* party + NPC tokens */}
         {map.partySlots.map((slot) => (
