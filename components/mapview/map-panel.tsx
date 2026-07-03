@@ -37,15 +37,15 @@ export function MapPanel({ map, encounterTitle, tokens }: { map: Encounter2DMap;
 
       {open && (
         <div className="fixed inset-0 z-40 flex flex-col bg-black/95">
-          <header className="flex flex-none items-center justify-between px-5 py-3">
-            <p className="font-display text-xl text-amber-200">{encounterTitle || "Encounter Map"}</p>
+          <header className="relative flex flex-none items-center justify-center px-5 py-3">
+            <p className="font-display text-2xl text-amber-200 text-center">{encounterTitle || "Encounter Map"}</p>
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="rounded-full border border-stone-700 px-4 py-1.5 text-sm text-stone-300 hover:border-amber-500 hover:text-amber-200"
+              className="absolute right-5 top-1/2 -translate-y-1/2 rounded-full border border-stone-600 px-5 py-2 font-display text-lg text-stone-200 hover:border-amber-500 hover:text-amber-200"
               aria-label="Close map"
             >
-              ✕ Close
+              ✕ Close Map
             </button>
           </header>
           <div className="flex min-h-0 flex-1 items-center justify-center px-4 pb-4">

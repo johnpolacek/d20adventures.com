@@ -79,19 +79,19 @@ export interface MapTokenIdentity {
 function Token({ id, x, y, cellSize, fill, ring, text, identity }: { id: string; x: number; y: number; cellSize: number; fill: string; ring: string; text: string; identity?: MapTokenIdentity }) {
   const cx = (x + 0.5) * cellSize
   const cy = (y + 0.5) * cellSize
-  const r = cellSize * 0.38
+  const r = cellSize * 0.46
   const name = identity?.name
   const imageUrl = identity?.image ? getTextureImageUrl(identity.image) : null
   const clipId = `mv-clip-${id.replace(/[^a-zA-Z0-9_-]/g, "")}`
   return (
     <g className="mv-token" style={{ cursor: name ? "pointer" : undefined }}>
       {name ? <title>{name}</title> : null}
-      <ellipse cx={cx + r * 0.12} cy={cy + r * 0.18} rx={r * 1.05} ry={r * 0.9} fill="#1a140c" opacity={0.35} />
-      <circle cx={cx} cy={cy} r={r} fill={fill} stroke={ring} strokeWidth={Math.max(2, cellSize * 0.05)} />
+      <ellipse cx={cx + r * 0.12} cy={cy + r * 0.18} rx={r * 1.05} ry={r * 0.9} fill="#1a140c" opacity={0.4} />
+      <circle cx={cx} cy={cy} r={r} fill={fill} />
       {imageUrl ? (
         <>
           <clipPath id={clipId}>
-            <circle cx={cx} cy={cy} r={r - Math.max(1.5, cellSize * 0.04)} />
+            <circle cx={cx} cy={cy} r={r} />
           </clipPath>
           <image href={imageUrl} x={cx - r} y={cy - r} width={r * 2} height={r * 2} preserveAspectRatio="xMidYMid slice" clipPath={`url(#${clipId})`} />
         </>
@@ -100,7 +100,8 @@ function Token({ id, x, y, cellSize, fill, ring, text, identity }: { id: string;
           {text}
         </text>
       )}
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke={ring} strokeWidth={Math.max(2, cellSize * 0.05)} />
+      {/* 1px border (device pixels, constant regardless of map scale) */}
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke={ring} strokeWidth={1} vectorEffect="non-scaling-stroke" />
       {name && (
         <g className="mv-token-name" style={{ pointerEvents: "none" }}>
           <rect
@@ -161,74 +162,81 @@ export function EncounterMap2D({ map, className, tokens, fit = false }: { map: E
         <rect x={-frame} y={-frame} width={width + frame * 2} height={height + frame * 2} fill="#241f18" />
         <rect x={-frame * 0.5} y={-frame * 0.5} width={width + frame} height={height + frame} fill="none" stroke="#4a3f30" strokeWidth={2} />
 
-        <GroundTexture map={map} />
-        <GridLines map={map} />
+        {/* Clip the board content to its bounds so oversized art (tree canopies at the
+            edges, etc.) never spills past the frame. */}
+        <clipPath id="mv-board-clip">
+          <rect x={0} y={0} width={width} height={height} />
+        </clipPath>
+        <g clipPath="url(#mv-board-clip)">
+          <GroundTexture map={map} />
+          <GridLines map={map} />
 
-        {/* walls */}
-        {map.walls.map((wall) => {
-          const stroke = wall.material === "wood" ? "#7d5531" : wall.material === "cliff" ? "#4a463e" : "#6e6a60"
-          return (
-            <g key={wall.id}>
-              <line
-                x1={wall.x1 * cellSize}
-                y1={wall.y1 * cellSize + 2}
-                x2={wall.x2 * cellSize}
-                y2={wall.y2 * cellSize + 2}
-                stroke="#1a140c"
-                strokeWidth={cellSize * 0.28}
-                strokeLinecap="round"
-                opacity={0.3}
-              />
-              <line x1={wall.x1 * cellSize} y1={wall.y1 * cellSize} x2={wall.x2 * cellSize} y2={wall.y2 * cellSize} stroke={stroke} strokeWidth={cellSize * 0.26} strokeLinecap="round" />
-              <line
-                x1={wall.x1 * cellSize}
-                y1={wall.y1 * cellSize}
-                x2={wall.x2 * cellSize}
-                y2={wall.y2 * cellSize}
-                stroke="#ffffff"
-                strokeWidth={cellSize * 0.08}
-                strokeLinecap="round"
-                opacity={0.15}
-              />
-            </g>
-          )
-        })}
+          {/* walls */}
+          {map.walls.map((wall) => {
+            const stroke = wall.material === "wood" ? "#7d5531" : wall.material === "cliff" ? "#4a463e" : "#6e6a60"
+            return (
+              <g key={wall.id}>
+                <line
+                  x1={wall.x1 * cellSize}
+                  y1={wall.y1 * cellSize + 2}
+                  x2={wall.x2 * cellSize}
+                  y2={wall.y2 * cellSize + 2}
+                  stroke="#1a140c"
+                  strokeWidth={cellSize * 0.28}
+                  strokeLinecap="round"
+                  opacity={0.3}
+                />
+                <line x1={wall.x1 * cellSize} y1={wall.y1 * cellSize} x2={wall.x2 * cellSize} y2={wall.y2 * cellSize} stroke={stroke} strokeWidth={cellSize * 0.26} strokeLinecap="round" />
+                <line
+                  x1={wall.x1 * cellSize}
+                  y1={wall.y1 * cellSize}
+                  x2={wall.x2 * cellSize}
+                  y2={wall.y2 * cellSize}
+                  stroke="#ffffff"
+                  strokeWidth={cellSize * 0.08}
+                  strokeLinecap="round"
+                  opacity={0.15}
+                />
+              </g>
+            )
+          })}
 
-        {/* pieces */}
-        {map.pieces.map((piece) => {
-          const def = getPieceDefinition(piece.pieceId)
-          const Renderer = getPieceRenderer(piece.pieceId)
-          if (!def || !Renderer) return null
-          const wCells = piece.width ?? def.footprint.width
-          const hCells = piece.height ?? def.footprint.height
-          const w = wCells * cellSize
-          const h = hCells * cellSize
-          // Rotation preserves the placed w×h grid footprint: quarter turns draw the
-          // art for the swapped box and rotate it into place.
-          const quarter = ((piece.rotation % 360) + 360) % 360
-          const swapped = quarter === 90 || quarter === 270
-          const artW = swapped ? h : w
-          const artH = swapped ? w : h
-          const rotate = quarter === 90 ? `translate(${w} 0) rotate(90)` : quarter === 180 ? `rotate(180 ${w / 2} ${h / 2})` : quarter === 270 ? `translate(0 ${h}) rotate(-90)` : ""
-          return (
-            <g key={piece.id} transform={`translate(${piece.x * cellSize} ${piece.y * cellSize}) ${rotate}`.trim()}>
-              {piece.label ? <title>{piece.label}</title> : null}
-              <Renderer seed={piece.id} w={artW} h={artH} />
-            </g>
-          )
-        })}
+          {/* pieces */}
+          {map.pieces.map((piece) => {
+            const def = getPieceDefinition(piece.pieceId)
+            const Renderer = getPieceRenderer(piece.pieceId)
+            if (!def || !Renderer) return null
+            const wCells = piece.width ?? def.footprint.width
+            const hCells = piece.height ?? def.footprint.height
+            const w = wCells * cellSize
+            const h = hCells * cellSize
+            // Rotation preserves the placed w×h grid footprint: quarter turns draw the
+            // art for the swapped box and rotate it into place.
+            const quarter = ((piece.rotation % 360) + 360) % 360
+            const swapped = quarter === 90 || quarter === 270
+            const artW = swapped ? h : w
+            const artH = swapped ? w : h
+            const rotate = quarter === 90 ? `translate(${w} 0) rotate(90)` : quarter === 180 ? `rotate(180 ${w / 2} ${h / 2})` : quarter === 270 ? `translate(0 ${h}) rotate(-90)` : ""
+            return (
+              <g key={piece.id} transform={`translate(${piece.x * cellSize} ${piece.y * cellSize}) ${rotate}`.trim()}>
+                {piece.label ? <title>{piece.label}</title> : null}
+                <Renderer seed={piece.id} w={artW} h={artH} />
+              </g>
+            )
+          })}
 
-        {/* lighting overlay: darkens the scene, sits under labels/tokens so they stay readable */}
-        {LIGHTING_OVERLAYS[map.board.lighting] && (
-          <>
-            <rect x={0} y={0} width={width} height={height} fill={LIGHTING_OVERLAYS[map.board.lighting]?.color} opacity={LIGHTING_OVERLAYS[map.board.lighting]?.opacity} />
-            <rect x={0} y={0} width={width} height={height} fill="url(#mv-vignette)" />
-            <radialGradient id="mv-vignette" cx="0.5" cy="0.45" r="0.75">
-              <stop offset="0.55" stopColor="#000000" stopOpacity="0" />
-              <stop offset="1" stopColor="#000008" stopOpacity={map.board.lighting === "night" ? 0.55 : 0.3} />
-            </radialGradient>
-          </>
-        )}
+          {/* lighting overlay: darkens the scene, sits under labels/tokens so they stay readable */}
+          {LIGHTING_OVERLAYS[map.board.lighting] && (
+            <>
+              <rect x={0} y={0} width={width} height={height} fill={LIGHTING_OVERLAYS[map.board.lighting]?.color} opacity={LIGHTING_OVERLAYS[map.board.lighting]?.opacity} />
+              <rect x={0} y={0} width={width} height={height} fill="url(#mv-vignette)" />
+              <radialGradient id="mv-vignette" cx="0.5" cy="0.45" r="0.75">
+                <stop offset="0.55" stopColor="#000000" stopOpacity="0" />
+                <stop offset="1" stopColor="#000008" stopOpacity={map.board.lighting === "night" ? 0.55 : 0.3} />
+              </radialGradient>
+            </>
+          )}
+        </g>
 
         {/* Zones are placement hints only (spawn/focus) — not drawn. Narrative cues
             surface through labels instead of dashed boxes. */}
@@ -241,16 +249,16 @@ export function EncounterMap2D({ map, className, tokens, fit = false }: { map: E
               y={label.y * cellSize}
               textAnchor="middle"
               fill="#141009"
-              fontSize={cellSize * 0.5}
+              fontSize={cellSize * 0.4}
               fontFamily="var(--font-display), ui-serif, Georgia, serif"
               opacity={0.75}
               stroke="#141009"
-              strokeWidth={cellSize * 0.09}
+              strokeWidth={cellSize * 0.07}
               strokeLinejoin="round"
             >
               {label.text}
             </text>
-            <text x={label.x * cellSize} y={label.y * cellSize} textAnchor="middle" fill="#f2e8ce" fontSize={cellSize * 0.5} fontFamily="var(--font-display), ui-serif, Georgia, serif">
+            <text x={label.x * cellSize} y={label.y * cellSize} textAnchor="middle" fill="#f2e8ce" fontSize={cellSize * 0.4} fontFamily="var(--font-display), ui-serif, Georgia, serif">
               {label.text}
             </text>
           </g>

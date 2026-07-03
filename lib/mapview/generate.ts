@@ -56,6 +56,7 @@ Requirements:
 - Use walls (line segments, in cell coordinates) only for long structural runs; use stone-wall/ruined-wall pieces for short fragments.
 - Zones are INVISIBLE placement hints (not drawn): include 1 spawn zone where the party enters and 1 objective/interest zone at the focal area, as rectangles in cell coordinates.
 - Labels ARE drawn as large text on the map — this is how the player reads the scene. Add 2-4 short labels: name the location/landmarks AND mark key narrative cues in place (e.g. "The Noise", "Watching Eyes", "To the Old Stones"). Put each label in open space near what it describes.
+- NEVER put a character's name in a label — labels name PLACES and features, not people. Use generic, evocative place names: "Forest Path" not "Thalbern's Path"; "The Clearing" not "Wollandora's Grove"; "Ambush Point" not "Owlbear's Den".
 - Choose "sceneKit" to match the NARRATIVE, not just keywords — a keyword heuristic suggests "${args.sceneKit}" (${SCENE_KIT_GUIDANCE[args.sceneKit]}), but override it freely if the story reads differently (e.g. moving through dark woods = forest, an ancient stone circle = grove).
 - Set board.lighting from the narrative's time of day and mood: "night" for darkness/moonlight scenes, "dusk" for twilight, "day" otherwise.
 - Tell the story spatially: use trail pieces to show the route the characters travel (add a label where it leads, even offscreen).
