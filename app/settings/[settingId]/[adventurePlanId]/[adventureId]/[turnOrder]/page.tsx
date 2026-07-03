@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import AdventureHome from "@/components/views/adventure-home"
 import type { Id } from "@/convex/_generated/dataModel"
 import { isDev } from "@/lib/auth-utils"
+import { loadEncounterMap2D } from "@/lib/mapview/load"
 import { mapConvexTurnToTurn, reverseSlugify } from "@/lib/utils"
 import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
 import type { Adventure } from "@/types/adventure"
@@ -107,6 +108,12 @@ export default async function TurnPage({ params }: PageProps) {
   if (!currentTurn) return notFound()
 
   const encounter = findEncounter(adventurePlan, currentTurn?.encounterId)
+  const encounterMap = await loadEncounterMap2D(settingId, adventurePlanId, currentTurn?.encounterId)
+  const turnCharacters = currentTurn?.characters ?? []
+  const mapTokens = {
+    party: turnCharacters.filter((character) => character.type === "pc").map((character) => ({ name: character.name, image: character.image })),
+    npcs: Object.fromEntries(turnCharacters.filter((character) => character.type === "npc").map((character) => [character.id, { name: character.name, image: character.image }])),
+  }
   const isLatestTurn = turnOrderNum === (navInfo?.totalTurns ?? 0)
 
   const canEdit = isDev()
@@ -124,6 +131,8 @@ export default async function TurnPage({ params }: PageProps) {
         encounterImage={encounter?.image || adventurePlan.image}
         currentTurn={currentTurn}
         disableSSE={!isLatestTurn}
+        encounterMap={encounterMap}
+        mapTokens={mapTokens}
       />
       {canEdit && (
         <div className="w-full flex justify-end p-8">

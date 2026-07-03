@@ -7,6 +7,7 @@ import wait from "waait"
 import { ensureNpcProcessed } from "@/app/_actions/ensure-npc-processed"
 import AdventureLobby from "@/components/adventure/adventure-lobby"
 import Turn from "@/components/adventure/turn"
+import type { MapTokens } from "@/components/mapview/encounter-map-2d"
 import AccountRequired from "@/components/nav/account-required"
 import ImageHeader from "@/components/ui/image-header"
 import type { Id } from "@/convex/_generated/dataModel"
@@ -15,11 +16,25 @@ import { findEncounterById } from "@/lib/map-utils"
 import { cn, getImageUrl } from "@/lib/utils"
 import type { Adventure } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
+import type { Encounter2DMap } from "@/types/encounter-map-2d"
 import { scrollToTop } from "../ui/utils"
 
 export const dynamic = "force-dynamic"
 
-function AdventureHomeContent({ initialImage, adventure, adventurePlan }: { initialImage: string; initialSubtitle: string; adventure: Adventure; adventurePlan?: AdventurePlan }) {
+function AdventureHomeContent({
+  initialImage,
+  adventure,
+  adventurePlan,
+  encounterMap,
+  mapTokens,
+}: {
+  initialImage: string
+  initialSubtitle: string
+  adventure: Adventure
+  adventurePlan?: AdventurePlan
+  encounterMap?: Encounter2DMap | null
+  mapTokens?: MapTokens
+}) {
   const { adventurePlanId, settingId } = useParams()
   const { isSignedIn, isLoaded } = useUser()
   const pathname = usePathname()
@@ -94,7 +109,7 @@ function AdventureHomeContent({ initialImage, adventure, adventurePlan }: { init
     <div className={cn("flex flex-col items-center relative", isSignedIn && "min-h-screen")}>
       <ImageHeader variant={turn ? "default" : "compact"} imageUrl={imageUrl} title={adventure.title} subtitle={turn?.title} imageAlt={turn?.title || adventure.title} />
       {turn ? (
-        <Turn nextAdventure={adventurePlan?.nextAdventure} encounter={currentEncounter} />
+        <Turn nextAdventure={adventurePlan?.nextAdventure} encounter={currentEncounter} encounterMap={encounterMap} mapTokens={mapTokens} />
       ) : (
         <>
           <AdventureLobby adventure={adventure} adventurePlan={adventurePlan} />

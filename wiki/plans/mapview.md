@@ -13,7 +13,7 @@ Status: Active (2026-07-02) · Worktree branch: `feature/mapview` (progress trac
 - **Mapview is 2D.** The roadmap's original "realistic 3D tile map" vision is split off as a separate future **Miniview**. The 3D implementation was shelved on 2026-03-12 (`126200c`) because visual quality fell short; the renderer stays dormant (`components/adventure/miniatures-map.tsx`, `lib/map-utils.ts`, `app/_actions/generate-encounter-map.ts`, plus the `minimap-claude` branch with SSAO/HDR/archetype-token improvements).
 - **AI-generated at authoring time, stored.** An author triggers generation per encounter; the result is reviewable before publish and deterministic for players. No play-time generation cost or latency.
 - **Storage reuses the existing externalization.** Per-encounter map JSON in S3 at `settings/{settingId}/maps/{adventurePlanId}/{encounterId}.json` with lazy hydration (`loadAdventurePlanFromStorage(..., { includeMaps: true })`) — already built in `lib/adventure-plan-storage.ts`.
-- **Standard piece set as SVG, designed in OpenPencil.** [OpenPencil](https://github.com/ZSeven-W/openpencil) (MIT, open-source AI-native vector design tool) is the design surface for the piece library; pieces are exported as SVG and committed to the repo. Crisp at any zoom, themeable, no runtime asset pipeline.
+- **Standard piece set as SVG, designed in OpenPencil.** [OpenPencil](https://github.com/ZSeven-W/openpencil) (MIT, open-source AI-native vector design tool) is the design surface for the piece library. Workflow (verified 2026-07-02): pieces live as PenNode frames in the committed OpenPencil document `design/mapview-pieces.op` (one top-level frame per catalog pieceId, 96 units/cell, authored headlessly via `op insert --file` or interactively in the app); `scripts/mapview-pieces-compile.ts` compiles PenNode → SVG into the generated `components/mapview/pieces-art.ts`; the renderer prefers compiled art and falls back to code-drawn procedural SVG (kept for high-count natural clutter where per-instance seeded variation reads better). Note: OpenPencil has no native SVG export — the compiler covers the rect/ellipse/line/path/gradient/shadow subset we use. Crisp at any zoom, no runtime asset pipeline, zero runtime dependency on OpenPencil.
 - **Static scene backdrop.** Fixed party-slot and NPC-start placements per encounter. No positional game state, no token movement, no new turn-state fields.
 - **Square grid v1, hex-ready schema.** The schema carries a `gridType` field and hex-compatible coordinates from day one; only square rendering/generation ships in v1.
 - **Standalone page for development.** Mapview lives on its own route until the design is proven in isolation. Mode-switcher integration (Gameview/Storyview/Mapview) is deferred — Storyview will force that architecture anyway.
@@ -45,6 +45,15 @@ Status: Active (2026-07-02) · Worktree branch: `feature/mapview` (progress trac
 - [ ] Authoring hook: generate/review/regenerate from the wiki admin encounter surface
 - [ ] Standalone Mapview page rendering real encounters
 - [ ] Evaluate against 2–3 real encounters (e.g. Midnight Summons) and iterate on piece set + prompts
+
+## Catalog Growth
+
+The piece catalog grows demand-driven, per adventure — not speculatively. Rules:
+
+- **Append-only**: never rename or remove a piece id (stored maps reference ids; unknown ids degrade gracefully by not rendering). Adding = one entry in `lib/mapview/piece-catalog.ts` + one renderer (code-drawn in `pieces.tsx` or an OpenPencil frame in `design/mapview-pieces.op`); prompt + schema pick it up automatically.
+- **Linear features** (trail, river — and future roads, streams, walls-as-runs) share the network renderer: chained segments → merged graph → smoothed winding path, ends extended to map edges. New linear pieces should reuse `buildPathChains`/`chainsToWobbledPath`.
+- **Prompt bloat threshold**: past ~60–80 pieces, tag pieces by scene kit/biome and filter the catalog per generation instead of sending all of it.
+- **Demand signal**: candidate — a `wishlist` field in the generation schema ("pieces you wanted but the catalog lacked"), logged per generation and surfaced in the lab, so growth follows actual adventure content. Known upcoming needs: Covert Cargo (docks, boat, water expanse, warehouse interior), city encounters (streets, enterable buildings, furniture), crypts (graves, webs, bones).
 
 ## Out of Scope
 
