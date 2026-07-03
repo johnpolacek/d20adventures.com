@@ -58,6 +58,7 @@ Requirements:
 - Labels ARE drawn as large text on the map — this is how the player reads the scene. Add 2-4 short labels: name the location/landmarks AND mark key narrative cues in place (e.g. "The Noise", "Watching Eyes", "To the Old Stones"). Put each label in open space near what it describes.
 - NEVER put a character's name in a label — labels name PLACES and features, not people. Use generic, evocative place names: "Forest Path" not "Thalbern's Path"; "The Clearing" not "Wollandora's Grove"; "Ambush Point" not "Owlbear's Den".
 - Labels are drawn centered on their x — keep label x well inside the board (roughly between one-quarter and three-quarters of the width) so the text doesn't run off the left or right edge. Never place a label at x near 0 or near the last column.
+- Labels for sounds or sensed threats (a snapping branch, rustling, watching eyes) mark what the party HEARS or SENSES — place them within ~5 cells of the spawn zone, close enough to feel immediate, not across the map.
 - Choose "sceneKit" to match the NARRATIVE, not just keywords — a keyword heuristic suggests "${args.sceneKit}" (${SCENE_KIT_GUIDANCE[args.sceneKit]}), but override it freely if the story reads differently (e.g. moving through dark woods = forest, an ancient stone circle = grove).
 - Set board.lighting from the narrative's time of day and mood: "night" for darkness/moonlight scenes, "dusk" for twilight, "day" otherwise.
 - Tell the story spatially: use trail pieces to show the route the characters travel (add a label where it leads, even offscreen).
