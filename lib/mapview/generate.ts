@@ -54,13 +54,13 @@ Requirements:
 - Cluster 2-4 related pieces (crates with barrels, trees in groves, rubble near ruined walls) instead of even spacing.
 - Pieces must not overlap each other except intentional layering (rubble under ruined walls is fine). Keep placements inside the board.
 - Use walls (line segments, in cell coordinates) only for long structural runs; use stone-wall/ruined-wall pieces for short fragments.
-- Zones: 1 spawn zone where the party enters, 1 objective or interest zone at the focal area. Zones are rectangles in cell coordinates and may overlap pieces.
-- 1-2 short labels naming major features (in cell coordinates, placed in open space).
+- Zones are INVISIBLE placement hints (not drawn): include 1 spawn zone where the party enters and 1 objective/interest zone at the focal area, as rectangles in cell coordinates.
+- Labels ARE drawn as large text on the map — this is how the player reads the scene. Add 2-4 short labels: name the location/landmarks AND mark key narrative cues in place (e.g. "The Noise", "Watching Eyes", "To the Old Stones"). Put each label in open space near what it describes.
 - Choose "sceneKit" to match the NARRATIVE, not just keywords — a keyword heuristic suggests "${args.sceneKit}" (${SCENE_KIT_GUIDANCE[args.sceneKit]}), but override it freely if the story reads differently (e.g. moving through dark woods = forest, an ancient stone circle = grove).
 - Set board.lighting from the narrative's time of day and mood: "night" for darkness/moonlight scenes, "dusk" for twilight, "day" otherwise.
-- Tell the story spatially: use trail pieces to show the route the characters travel (label where it leads, even offscreen); use an "interest" zone with a short label to mark narrative cues like where a sound came from, a watcher's position, or a hidden threat.
+- Tell the story spatially: use trail pieces to show the route the characters travel (add a label where it leads, even offscreen).
 - Trails must form ONE continuous route: chain trail segments so each starts exactly where the previous ends. A trail runs along the centerline of its LONG axis — use a wide box (e.g. 5x1) for a horizontal run and a tall box (e.g. 1x5) for a vertical run; never rotate trails. Example route from bottom-left to top-right: {"pieceId":"trail","x":1,"y":11,"width":1,"height":3} then {"pieceId":"trail","x":1,"y":8,"width":6,"height":1} then {"pieceId":"trail","x":7,"y":2,"width":1,"height":6}. Never scatter isolated trail pieces.
-- Dense woodland/interior scenes need 12-20 pieces: resize trees into 2x2 or 3x3 canopy clusters and ring the perimeter tightly, leaving deliberate clearings and the trail as the open space.
+- Forests and wilderness must feel DENSELY wooded: use MANY tree pieces (aim for 12+ tree pieces in a forest), a mix of tree-oak and tree-pine. Each tree piece renders as a small grove of several trees, so a 3x3 tree = a dense thicket. Ring the entire perimeter with overlapping tree clusters and scatter more trees through the interior, leaving only the trail and small clearings open.
 - Keep the summary to one sentence describing the scene.
 - Ground the layout in the encounter text below; convert story into spatial staging.
 

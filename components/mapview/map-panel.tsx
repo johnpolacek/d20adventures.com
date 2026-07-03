@@ -36,17 +36,22 @@ export function MapPanel({ map, encounterTitle, tokens }: { map: Encounter2DMap;
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4 md:p-10" onClick={() => setOpen(false)} onKeyDown={undefined} role="presentation">
-          <div className="w-full max-w-4xl" onClick={(event) => event.stopPropagation()} role="presentation">
-            <div className="mb-2 flex items-center justify-between">
-              <p className="font-serif text-lg text-amber-200">{encounterTitle || "Encounter Map"}</p>
-              <button type="button" onClick={() => setOpen(false)} className="rounded px-3 py-1 text-sm text-stone-400 hover:text-amber-200" aria-label="Close map">
-                ✕ close
-              </button>
-            </div>
-            <EncounterMap2D map={map} tokens={tokens} />
-            {map.summary && <p className="mt-2 text-center text-sm italic text-stone-400">{map.summary}</p>}
+        <div className="fixed inset-0 z-40 flex flex-col bg-black/95">
+          <header className="flex flex-none items-center justify-between px-5 py-3">
+            <p className="font-display text-xl text-amber-200">{encounterTitle || "Encounter Map"}</p>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="rounded-full border border-stone-700 px-4 py-1.5 text-sm text-stone-300 hover:border-amber-500 hover:text-amber-200"
+              aria-label="Close map"
+            >
+              ✕ Close
+            </button>
+          </header>
+          <div className="flex min-h-0 flex-1 items-center justify-center px-4 pb-4">
+            <EncounterMap2D map={map} tokens={tokens} fit className="max-h-full" />
           </div>
+          {map.summary && <p className="flex-none px-5 pb-4 text-center text-sm italic text-stone-400">{map.summary}</p>}
         </div>
       )}
     </>

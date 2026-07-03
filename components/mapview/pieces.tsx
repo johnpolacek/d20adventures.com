@@ -45,50 +45,104 @@ const shadow = (cx: number, cy: number, rx: number, ry: number) => <ellipse cx={
 
 // --- natural -------------------------------------------------------------------
 
-function TreeOak({ seed, w, h }: PieceRenderProps) {
+// A tree piece renders as a small grove: one crown per ~cell of footprint, so a 2x2
+// or 3x3 tree reads as several individual trees rather than one scaled blob.
+interface Crown {
+  cx: number
+  cy: number
+  cr: number
+  t: number
+}
+
+function treeCrowns(seed: string, w: number, h: number): { rng: () => number; crowns: Crown[] } {
   const rng = makeRng(seed)
-  const cx = w / 2
-  const cy = h / 2
-  const r = Math.min(w, h) * 0.42
-  const lobes = Array.from({ length: 6 }, (_, i) => {
-    const angle = (i / 6) * Math.PI * 2 + jitter(rng, 0.4)
-    const dist = r * (0.55 + rng() * 0.2)
-    return { x: cx + Math.cos(angle) * dist, y: cy + Math.sin(angle) * dist, r: r * (0.42 + rng() * 0.18) }
-  })
+  const cols = Math.max(1, Math.round(w / 46))
+  const rows = Math.max(1, Math.round(h / 46))
+  const cw = w / cols
+  const ch = h / rows
+  const crowns: Crown[] = []
+  const multi = cols * rows > 1
+  for (let gy = 0; gy < rows; gy++) {
+    for (let gx = 0; gx < cols; gx++) {
+      if (multi && rng() < 0.15) continue // organic gaps in a cluster
+      crowns.push({
+        cx: (gx + 0.5) * cw + jitter(rng, cw * 0.16),
+        cy: (gy + 0.5) * ch + jitter(rng, ch * 0.16),
+        cr: Math.min(cw, ch) * (0.52 + rng() * 0.12),
+        t: rng(),
+      })
+    }
+  }
+  if (crowns.length === 0) crowns.push({ cx: w / 2, cy: h / 2, cr: Math.min(w, h) * 0.5, t: rng() })
+  crowns.sort((a, b) => a.cy - b.cy) // paint back-to-front
+  return { rng, crowns }
+}
+
+function OakCrown({ cx, cy, cr, t, rng }: Crown & { rng: () => number }) {
+  const lobes = 5 + Math.floor(t * 3)
+  const dark = t > 0.5 ? "#2c471f" : "#314e23"
+  const mid = t > 0.5 ? "#3d5c2b" : "#436230"
   return (
     <g>
-      {shadow(cx + r * 0.15, cy + r * 0.2, r * 1.05, r * 0.85)}
-      {lobes.map((l, i) => (
-        <circle key={i} cx={l.x} cy={l.y} r={l.r} fill="#3d5a2e" />
+      {shadow(cx + cr * 0.16, cy + cr * 0.22, cr * 1.02, cr * 0.82)}
+      {/* bumpy canopy edge */}
+      {Array.from({ length: lobes }, (_, i) => {
+        const a = (i / lobes) * Math.PI * 2 + jitter(rng, 0.3)
+        const d = cr * (0.62 + rng() * 0.14)
+        return <circle key={i} cx={cx + Math.cos(a) * d} cy={cy + Math.sin(a) * d} r={cr * (0.38 + rng() * 0.12)} fill={dark} />
+      })}
+      <circle cx={cx} cy={cy} r={cr * 0.86} fill={mid} />
+      <circle cx={cx - cr * 0.22} cy={cy - cr * 0.24} r={cr * 0.5} fill="#547a3a" opacity={0.9} />
+      <circle cx={cx - cr * 0.34} cy={cy - cr * 0.36} r={cr * 0.24} fill="#6b9a4c" opacity={0.85} />
+      <circle cx={cx + cr * 0.05} cy={cy + cr * 0.05} r={Math.max(1, cr * 0.1)} fill="#241a10" opacity={0.55} />
+    </g>
+  )
+}
+
+function PineCrown({ cx, cy, cr, t, rng }: Crown & { rng: () => number }) {
+  const spikes = 9
+  const inner = 0.66 + t * 0.06
+  const star = (radius: number, twist: number, ratio: number) =>
+    Array.from({ length: spikes * 2 }, (_, i) => {
+      const a = (i / (spikes * 2)) * Math.PI * 2 + twist
+      const d = i % 2 === 0 ? radius : radius * ratio
+      return `${cx + Math.cos(a) * d},${cy + Math.sin(a) * d}`
+    }).join(" ")
+  const dark = t > 0.5 ? "#24401d" : "#284621"
+  return (
+    <g>
+      {shadow(cx + cr * 0.14, cy + cr * 0.2, cr * 0.94, cr * 0.78)}
+      <polygon points={star(cr, jitter(rng, 0.2), inner)} fill={dark} />
+      <polygon points={star(cr * 0.74, 0.34, inner + 0.04)} fill="#335530" />
+      {/* radial branches */}
+      {Array.from({ length: spikes }, (_, i) => {
+        const a = (i / spikes) * Math.PI * 2 + jitter(rng, 0.1)
+        return <line key={i} x1={cx} y1={cy} x2={cx + Math.cos(a) * cr * 0.88} y2={cy + Math.sin(a) * cr * 0.88} stroke="#1d3417" strokeWidth={Math.max(0.6, cr * 0.05)} opacity={0.6} />
+      })}
+      <circle cx={cx - cr * 0.14} cy={cy - cr * 0.14} r={cr * 0.34} fill="#43663a" opacity={0.75} />
+      <circle cx={cx} cy={cy} r={Math.max(1, cr * 0.12)} fill="#1a2f14" />
+    </g>
+  )
+}
+
+function TreeOak({ seed, w, h }: PieceRenderProps) {
+  const { rng, crowns } = treeCrowns(seed, w, h)
+  return (
+    <g>
+      {crowns.map((crown, i) => (
+        <OakCrown key={i} {...crown} rng={rng} />
       ))}
-      <circle cx={cx} cy={cy} r={r * 0.75} fill="#4a6b38" />
-      <circle cx={cx - r * 0.25} cy={cy - r * 0.28} r={r * 0.4} fill="#5a7f45" opacity={0.85} />
-      <circle cx={cx} cy={cy} r={Math.max(1.5, r * 0.09)} fill="#2c2118" />
     </g>
   )
 }
 
 function TreePine({ seed, w, h }: PieceRenderProps) {
-  const rng = makeRng(seed)
-  const cx = w / 2
-  const cy = h / 2
-  const r = Math.min(w, h) * 0.44
-  const points = Array.from({ length: 12 }, (_, i) => {
-    const angle = (i / 12) * Math.PI * 2
-    const dist = i % 2 === 0 ? r : r * (0.45 + rng() * 0.12)
-    return `${cx + Math.cos(angle) * dist},${cy + Math.sin(angle) * dist}`
-  }).join(" ")
-  const inner = Array.from({ length: 12 }, (_, i) => {
-    const angle = (i / 12) * Math.PI * 2 + 0.26
-    const dist = i % 2 === 0 ? r * 0.6 : r * 0.3
-    return `${cx + Math.cos(angle) * dist},${cy + Math.sin(angle) * dist}`
-  }).join(" ")
+  const { rng, crowns } = treeCrowns(seed, w, h)
   return (
     <g>
-      {shadow(cx + r * 0.15, cy + r * 0.18, r * 0.95, r * 0.8)}
-      <polygon points={points} fill="#2e4a28" />
-      <polygon points={inner} fill="#3c5e33" />
-      <circle cx={cx} cy={cy} r={Math.max(1.5, r * 0.08)} fill="#241b12" />
+      {crowns.map((crown, i) => (
+        <PineCrown key={i} {...crown} rng={rng} />
+      ))}
     </g>
   )
 }

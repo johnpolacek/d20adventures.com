@@ -17,12 +17,6 @@ const GROUND_STYLES: Record<GroundType, { base: string; speckleA: string; speckl
   snow: { base: "#d8dde2", speckleA: "#c8cfd6", speckleB: "#e8ecf0", grid: "#9aa4ae" },
 }
 
-const ZONE_STYLES = {
-  spawn: { fill: "#5b8fc9", label: "Spawn" },
-  objective: { fill: "#c9a84c", label: "Objective" },
-  interest: { fill: "#8a68b8", label: "Interest" },
-} as const
-
 function hashSeed(seed: string): number {
   let h = 2166136261
   for (let i = 0; i < seed.length; i++) {
@@ -147,15 +141,21 @@ const LIGHTING_OVERLAYS = {
   night: { color: "#0a1224", opacity: 0.48 },
 } as const
 
-export function EncounterMap2D({ map, className, showZones = true, tokens }: { map: Encounter2DMap; className?: string; showZones?: boolean; tokens?: MapTokens }) {
+export function EncounterMap2D({ map, className, tokens, fit = false }: { map: Encounter2DMap; className?: string; tokens?: MapTokens; fit?: boolean }) {
   const { columns, rows, cellSize } = map.board
   const width = columns * cellSize
   const height = rows * cellSize
   const frame = cellSize * 0.35
 
   return (
-    <div className={cn("overflow-hidden rounded-lg border-2 border-[#3a3128] bg-[#241f18] shadow-xl", className)}>
-      <svg viewBox={`${-frame} ${-frame} ${width + frame * 2} ${height + frame * 2}`} className="block h-auto w-full" role="img" aria-label={map.summary || "Encounter battle map"}>
+    <div className={cn(fit ? "flex h-full w-full items-center justify-center" : "overflow-hidden rounded-lg border-2 border-[#3a3128] bg-[#241f18] shadow-xl", className)}>
+      <svg
+        viewBox={`${-frame} ${-frame} ${width + frame * 2} ${height + frame * 2}`}
+        preserveAspectRatio="xMidYMid meet"
+        className={cn("block", fit ? "h-full w-full" : "h-auto w-full")}
+        role="img"
+        aria-label={map.summary || "Encounter battle map"}
+      >
         <style>{`.mv-token .mv-token-name{opacity:0;transition:opacity .15s}.mv-token:hover .mv-token-name{opacity:1}`}</style>
         {/* parchment frame */}
         <rect x={-frame} y={-frame} width={width + frame * 2} height={height + frame * 2} fill="#241f18" />
@@ -230,60 +230,27 @@ export function EncounterMap2D({ map, className, showZones = true, tokens }: { m
           </>
         )}
 
-        {/* zones above the lighting overlay so markers stay readable at night */}
-        {showZones &&
-          map.zones.map((zone) => {
-            const style = ZONE_STYLES[zone.kind]
-            return (
-              <g key={zone.id}>
-                <rect x={zone.x * cellSize} y={zone.y * cellSize} width={zone.width * cellSize} height={zone.height * cellSize} fill={style.fill} opacity={0.12} rx={cellSize * 0.15} />
-                <rect
-                  x={zone.x * cellSize}
-                  y={zone.y * cellSize}
-                  width={zone.width * cellSize}
-                  height={zone.height * cellSize}
-                  fill="none"
-                  stroke={style.fill}
-                  strokeWidth={1.5}
-                  strokeDasharray={`${cellSize * 0.18} ${cellSize * 0.12}`}
-                  opacity={0.55}
-                  rx={cellSize * 0.15}
-                />
-                <text
-                  x={(zone.x + zone.width / 2) * cellSize}
-                  y={zone.y > 0 ? zone.y * cellSize - cellSize * 0.15 : (zone.y + zone.height) * cellSize + cellSize * 0.4}
-                  textAnchor="middle"
-                  fill={style.fill}
-                  fontSize={cellSize * 0.32}
-                  fontWeight={600}
-                  fontFamily="ui-sans-serif, system-ui"
-                  opacity={0.85}
-                >
-                  {zone.label || style.label}
-                </text>
-              </g>
-            )
-          })}
+        {/* Zones are placement hints only (spawn/focus) — not drawn. Narrative cues
+            surface through labels instead of dashed boxes. */}
 
-        {/* labels */}
+        {/* labels — display font (Cinzel) with a dark outline for legibility over art */}
         {map.labels.map((label) => (
           <g key={label.id}>
             <text
               x={label.x * cellSize}
               y={label.y * cellSize}
               textAnchor="middle"
-              fill="#241f18"
-              fontSize={cellSize * 0.42}
-              fontWeight={700}
-              fontFamily="ui-serif, Georgia, serif"
-              opacity={0.5}
-              stroke="#241f18"
-              strokeWidth={3}
+              fill="#141009"
+              fontSize={cellSize * 0.5}
+              fontFamily="var(--font-display), ui-serif, Georgia, serif"
+              opacity={0.75}
+              stroke="#141009"
+              strokeWidth={cellSize * 0.09}
               strokeLinejoin="round"
             >
               {label.text}
             </text>
-            <text x={label.x * cellSize} y={label.y * cellSize} textAnchor="middle" fill="#f0e6cf" fontSize={cellSize * 0.42} fontWeight={700} fontFamily="ui-serif, Georgia, serif">
+            <text x={label.x * cellSize} y={label.y * cellSize} textAnchor="middle" fill="#f2e8ce" fontSize={cellSize * 0.5} fontFamily="var(--font-display), ui-serif, Georgia, serif">
               {label.text}
             </text>
           </g>
