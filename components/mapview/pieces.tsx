@@ -717,6 +717,31 @@ function Monolith({ seed, w, h }: PieceRenderProps) {
   )
 }
 
+function River({ seed, w, h }: PieceRenderProps) {
+  const rng = makeRng(seed)
+  const horizontal = w >= h
+  const mid = horizontal ? h / 2 : w / 2
+  const amp = (horizontal ? h : w) * 0.1
+  const points = Array.from({ length: 7 }, (_, i) => {
+    const t = (i / 6) * (horizontal ? w : h)
+    const off = mid + (i === 0 || i === 6 ? 0 : jitter(rng, amp))
+    return horizontal ? { x: t, y: off } : { x: off, y: t }
+  })
+  const d = `M ${points[0].x} ${points[0].y} ${points
+    .slice(1)
+    .map((p, i) => `Q ${(points[i].x + p.x) / 2} ${(points[i].y + p.y) / 2} ${p.x} ${p.y}`)
+    .join(" ")}`
+  const bw = horizontal ? h : w
+  return (
+    <g>
+      <path d={d} fill="none" stroke="#57503f" strokeWidth={bw * 0.95} strokeLinecap="round" opacity={0.8} />
+      <path d={d} fill="none" stroke="#2e4a58" strokeWidth={bw * 0.8} strokeLinecap="round" />
+      <path d={d} fill="none" stroke="#3e6478" strokeWidth={bw * 0.5} strokeLinecap="round" />
+      <path d={d} fill="none" stroke="#8fb3c2" strokeWidth={bw * 0.06} strokeLinecap="round" strokeDasharray={`${w * 0.1} ${w * 0.12}`} opacity={0.55} />
+    </g>
+  )
+}
+
 // --- registry ---------------------------------------------------------------------
 
 // OpenPencil-designed art (design/mapview-pieces.op → scripts/mapview-pieces-compile.ts)
@@ -758,6 +783,7 @@ export const PIECE_RENDERERS: Record<string, (props: PieceRenderProps) => ReactN
   spikes: Spikes,
   trail: Trail,
   monolith: Monolith,
+  river: River,
 }
 
 export function getPieceRenderer(pieceId: string): ((props: PieceRenderProps) => ReactNode) | undefined {

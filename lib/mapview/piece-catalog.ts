@@ -31,6 +31,15 @@ export const PIECE_CATALOG: PieceDefinition[] = [
   { id: "pond", label: "Pond", category: "natural", defaultKind: "difficult", footprint: { width: 3, height: 2 }, resizable: true, hint: "Still water; resize to fit the scene" },
   { id: "marsh", label: "Marsh Patch", category: "natural", defaultKind: "difficult", footprint: { width: 2, height: 2 }, resizable: true, hint: "Boggy ground; difficult terrain" },
   {
+    id: "river",
+    label: "River",
+    category: "natural",
+    defaultKind: "difficult",
+    footprint: { width: 4, height: 2 },
+    resizable: true,
+    hint: "Flowing water; chain wide segments (e.g. 8x2 across, 2x6 down) exactly like trails — a river must enter AND exit at map edges. Cross with a bridge piece",
+  },
+  {
     id: "trail",
     label: "Trail",
     category: "natural",

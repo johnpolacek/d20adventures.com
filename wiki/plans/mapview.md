@@ -46,6 +46,15 @@ Status: Active (2026-07-02) · Worktree branch: `feature/mapview` (progress trac
 - [ ] Standalone Mapview page rendering real encounters
 - [ ] Evaluate against 2–3 real encounters (e.g. Midnight Summons) and iterate on piece set + prompts
 
+## Catalog Growth
+
+The piece catalog grows demand-driven, per adventure — not speculatively. Rules:
+
+- **Append-only**: never rename or remove a piece id (stored maps reference ids; unknown ids degrade gracefully by not rendering). Adding = one entry in `lib/mapview/piece-catalog.ts` + one renderer (code-drawn in `pieces.tsx` or an OpenPencil frame in `design/mapview-pieces.op`); prompt + schema pick it up automatically.
+- **Linear features** (trail, river — and future roads, streams, walls-as-runs) share the network renderer: chained segments → merged graph → smoothed winding path, ends extended to map edges. New linear pieces should reuse `buildPathChains`/`chainsToWobbledPath`.
+- **Prompt bloat threshold**: past ~60–80 pieces, tag pieces by scene kit/biome and filter the catalog per generation instead of sending all of it.
+- **Demand signal**: candidate — a `wishlist` field in the generation schema ("pieces you wanted but the catalog lacked"), logged per generation and surfaced in the lab, so growth follows actual adventure content. Known upcoming needs: Covert Cargo (docks, boat, water expanse, warehouse interior), city encounters (streets, enterable buildings, furniture), crypts (graves, webs, bones).
+
 ## Out of Scope
 
 - Hex rendering/generation (schema-ready only)

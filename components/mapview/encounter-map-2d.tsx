@@ -162,12 +162,12 @@ function nearestPointOnSegment(px: number, py: number, a: TrailPoint, b: TrailPo
   return { x, y, t, dist: Math.hypot(px - x, py - y) }
 }
 
-function buildTrailChains(map: Encounter2DMap): TrailPoint[][] {
+function buildPathChains(map: Encounter2DMap, pieceId: string): TrailPoint[][] {
   const { cellSize } = map.board
-  const trails = map.pieces.filter((piece) => piece.pieceId === "trail")
-  if (trails.length === 0) return []
+  const parts = map.pieces.filter((piece) => piece.pieceId === pieceId)
+  if (parts.length === 0) return []
 
-  // Graph: nodes merged within tolerance, one edge per trail centerline.
+  // Graph: nodes merged within tolerance, one edge per centerline.
   const nodes: TrailPoint[] = []
   const edges: Array<[number, number]> = []
   const mergeTol = cellSize * 1.6
@@ -183,7 +183,7 @@ function buildTrailChains(map: Encounter2DMap): TrailPoint[][] {
     return nodes.length - 1
   }
 
-  for (const piece of trails) {
+  for (const piece of parts) {
     const w = (piece.width ?? 3) * cellSize
     const h = (piece.height ?? 1) * cellSize
     const x = piece.x * cellSize
@@ -251,18 +251,15 @@ function buildTrailChains(map: Encounter2DMap): TrailPoint[][] {
   const walk = (start: number, first: { to: number; edge: number }) => {
     const chain = [nodes[start]]
     visited.add(first.edge)
-    let prev = start
     let current = first.to
     chain.push(nodes[current])
     while ((adjacency.get(current)?.length ?? 0) === 2) {
       const next = (adjacency.get(current) ?? []).find((step) => !visited.has(step.edge))
       if (!next) break
       visited.add(next.edge)
-      prev = current
       current = next.to
       chain.push(nodes[current])
     }
-    void prev
     return chain
   }
   for (const [n, steps] of adjacency) {
@@ -278,28 +275,21 @@ function buildTrailChains(map: Encounter2DMap): TrailPoint[][] {
   return chains
 }
 
-function TrailNetwork({ map, inner }: { map: Encounter2DMap; inner: InnerArea }) {
-  const { cellSize, columns, rows } = map.board
-  const chains = buildTrailChains(map)
-  if (chains.length === 0) return null
-
-  // Every open trail end is an entrance/exit: run it out to the nearest frame edge
-  // so the path never stops mid-map. The only exception is a trail that ends AT a
-  // landmark (hut, gate, altar, ...) — that end stays put.
-  const LANDMARKS = new Set(["building-hut", "gate", "altar", "tent", "well", "market-stall", "campfire", "bridge", "statue", "monolith"])
-  const landmarkCenters = map.pieces
-    .filter((piece) => LANDMARKS.has(piece.pieceId))
+/** Extend every open chain end to the nearest frame edge; ends near a piece in
+ *  `stopAt` (a destination landmark, a pond a river feeds) stay put. */
+function extendChainsToEdges(chains: TrailPoint[][], map: Encounter2DMap, inner: InnerArea, stopAt: Set<string>) {
+  const { cellSize } = map.board
+  const stopCenters = map.pieces
+    .filter((piece) => stopAt.has(piece.pieceId))
     .map((piece) => ({
       x: (piece.x + (piece.width ?? 1) / 2) * cellSize,
       y: (piece.y + (piece.height ?? 1) / 2) * cellSize,
     }))
-  const nearLandmark = (p: TrailPoint) => landmarkCenters.some((c) => Math.hypot(c.x - p.x, c.y - p.y) < cellSize * 2.5)
-  void columns
-  void rows
+  const nearStop = (p: TrailPoint) => stopCenters.some((c) => Math.hypot(c.x - p.x, c.y - p.y) < cellSize * 2.5)
   for (const chain of chains) {
     for (const at of [0, chain.length - 1] as const) {
       const p = chain[at]
-      if (nearLandmark(p)) continue
+      if (nearStop(p)) continue
       const candidates: Array<{ dist: number; pt: TrailPoint }> = [
         { dist: p.x - inner.x, pt: { x: inner.x, y: p.y } },
         { dist: inner.x + inner.w - p.x, pt: { x: inner.x + inner.w, y: p.y } },
@@ -312,11 +302,10 @@ function TrailNetwork({ map, inner }: { map: Encounter2DMap; inner: InnerArea })
       else chain.push(nearest.pt)
     }
   }
+}
 
-  const rng = makeRng(`trail-${chains.length}-${Math.round(chains[0][0].x)}-${Math.round(chains[0][0].y)}`)
-
-  // Subdivide straight runs and add gentle perpendicular wander; junction nodes stay
-  // fixed so branches keep meeting exactly.
+/** Subdivide chains with gentle seeded wander and build a midpoint-smoothed path. */
+function chainsToWobbledPath(chains: TrailPoint[][], cellSize: number, rng: () => number, amp: number): { d: string; points: TrailPoint[][] } {
   const wobbled = chains.map((chain) => {
     const points: TrailPoint[] = [chain[0]]
     for (let i = 1; i < chain.length; i++) {
@@ -328,15 +317,13 @@ function TrailNetwork({ map, inner }: { map: Encounter2DMap; inner: InnerArea })
       const ny = (b.x - a.x) / (length || 1)
       for (let s = 1; s < steps; s++) {
         const t = s / steps
-        const amp = (rng() - 0.5) * 2 * cellSize * 0.22
-        points.push({ x: a.x + (b.x - a.x) * t + nx * amp, y: a.y + (b.y - a.y) * t + ny * amp })
+        const wobble = (rng() - 0.5) * 2 * amp
+        points.push({ x: a.x + (b.x - a.x) * t + nx * wobble, y: a.y + (b.y - a.y) * t + ny * wobble })
       }
       points.push(b)
     }
     return points
   })
-
-  // Midpoint smoothing: quadratic curves through midpoints round every corner.
   const d = wobbled
     .map((points) => {
       if (points.length < 2) return ""
@@ -351,13 +338,26 @@ function TrailNetwork({ map, inner }: { map: Encounter2DMap; inner: InnerArea })
       return path
     })
     .join(" ")
+  return { d, points: wobbled }
+}
+
+const TRAIL_STOPS = new Set(["building-hut", "gate", "altar", "tent", "well", "market-stall", "campfire", "bridge", "statue", "monolith"])
+
+function TrailNetwork({ map, inner }: { map: Encounter2DMap; inner: InnerArea }) {
+  const { cellSize } = map.board
+  const chains = buildPathChains(map, "trail")
+  if (chains.length === 0) return null
+  extendChainsToEdges(chains, map, inner, TRAIL_STOPS)
+
+  const rng = makeRng(`trail-${chains.length}-${Math.round(chains[0][0].x)}-${Math.round(chains[0][0].y)}`)
+  const { d, points } = chainsToWobbledPath(chains, cellSize, rng, cellSize * 0.22)
 
   const dirt: Array<{ cx: number; cy: number; rx: number; ry: number }> = []
-  for (const points of wobbled) {
-    for (let i = 0; i < points.length; i += 2) {
+  for (const chain of points) {
+    for (let i = 0; i < chain.length; i += 2) {
       dirt.push({
-        cx: points[i].x + (rng() - 0.5) * cellSize * 0.2,
-        cy: points[i].y + (rng() - 0.5) * cellSize * 0.2,
+        cx: chain[i].x + (rng() - 0.5) * cellSize * 0.2,
+        cy: chain[i].y + (rng() - 0.5) * cellSize * 0.2,
         rx: cellSize * (0.03 + rng() * 0.02),
         ry: cellSize * 0.05,
       })
@@ -372,6 +372,33 @@ function TrailNetwork({ map, inner }: { map: Encounter2DMap; inner: InnerArea })
       {dirt.map((spot, i) => (
         <ellipse key={i} cx={spot.cx} cy={spot.cy} rx={spot.rx} ry={spot.ry} fill="#3f3226" opacity={0.7} />
       ))}
+    </g>
+  )
+}
+
+function RiverNetwork({ map, inner }: { map: Encounter2DMap; inner: InnerArea }) {
+  const { cellSize } = map.board
+  const chains = buildPathChains(map, "river")
+  if (chains.length === 0) return null
+  // Rivers flow through the scene: both ends always reach the frame edge, unless
+  // the river feeds a pond.
+  extendChainsToEdges(chains, map, inner, new Set(["pond"]))
+
+  const riverPieces = map.pieces.filter((piece) => piece.pieceId === "river")
+  const widthCells = Math.max(1.5, ...riverPieces.map((piece) => Math.min(piece.width ?? 2, piece.height ?? 2)))
+  const w = widthCells * cellSize
+
+  const rng = makeRng(`river-${chains.length}-${Math.round(chains[0][0].x)}-${Math.round(chains[0][0].y)}`)
+  const { d } = chainsToWobbledPath(chains, cellSize, rng, cellSize * 0.3)
+
+  return (
+    <g>
+      {/* muddy banks, deep water, mid water, ripple lines */}
+      <path d={d} fill="none" stroke="#57503f" strokeWidth={w * 1.18} strokeLinecap="round" strokeLinejoin="round" opacity={0.8} />
+      <path d={d} fill="none" stroke="#2e4a58" strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" />
+      <path d={d} fill="none" stroke="#3e6478" strokeWidth={w * 0.66} strokeLinecap="round" strokeLinejoin="round" />
+      <path d={d} fill="none" stroke="#5d8f9e" strokeWidth={w * 0.3} strokeLinecap="round" strokeLinejoin="round" opacity={0.5} />
+      <path d={d} fill="none" stroke="#8fb3c2" strokeWidth={w * 0.08} strokeLinecap="round" strokeLinejoin="round" strokeDasharray={`${cellSize * 0.5} ${cellSize * 0.7}`} opacity={0.55} />
     </g>
   )
 }
@@ -461,12 +488,13 @@ export function EncounterMap2D({ map, className, tokens, fit = false }: { map: E
             )
           })}
 
-          {/* trails first (under other pieces), joined into one continuous network */}
+          {/* water first, then trails over it (a crossing reads as a ford/bridge) */}
+          <RiverNetwork map={map} inner={inner} />
           <TrailNetwork map={map} inner={inner} />
 
           {/* pieces */}
           {map.pieces.map((piece) => {
-            if (piece.pieceId === "trail") return null
+            if (piece.pieceId === "trail" || piece.pieceId === "river") return null
             const def = getPieceDefinition(piece.pieceId)
             const Renderer = getPieceRenderer(piece.pieceId)
             if (!def || !Renderer) return null
