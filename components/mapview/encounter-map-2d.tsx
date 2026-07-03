@@ -35,20 +35,31 @@ function makeRng(seed: string) {
   }
 }
 
-function GroundTexture({ map }: { map: Encounter2DMap }) {
+// Ground, grid, clip, and lighting all cover the padded inner area (the 16:9 region
+// inside the frame), not just the board — so the terrain runs edge-to-edge even when
+// the board's cell ratio isn't exactly 16:9.
+interface InnerArea {
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
+function GroundTexture({ map, inner }: { map: Encounter2DMap; inner: InnerArea }) {
   const { columns, rows, cellSize, ground } = map.board
   const style = GROUND_STYLES[ground]
   const rng = makeRng(`ground-${ground}-${columns}x${rows}`)
-  const speckles = Array.from({ length: columns * rows }, (_, i) => ({
-    x: rng() * columns * cellSize,
-    y: rng() * rows * cellSize,
+  const count = Math.ceil((inner.w * inner.h) / (cellSize * cellSize))
+  const speckles = Array.from({ length: count }, (_, i) => ({
+    x: inner.x + rng() * inner.w,
+    y: inner.y + rng() * inner.h,
     r: cellSize * (0.04 + rng() * 0.12),
     tone: i % 2 === 0 ? style.speckleA : style.speckleB,
     opacity: 0.3 + rng() * 0.4,
   }))
   return (
     <g>
-      <rect x={0} y={0} width={columns * cellSize} height={rows * cellSize} fill={style.base} />
+      <rect x={inner.x} y={inner.y} width={inner.w} height={inner.h} fill={style.base} />
       {speckles.map((s, i) => (
         <ellipse key={i} cx={s.x} cy={s.y} rx={s.r * 1.6} ry={s.r} fill={s.tone} opacity={s.opacity} />
       ))}
@@ -56,16 +67,18 @@ function GroundTexture({ map }: { map: Encounter2DMap }) {
   )
 }
 
-function GridLines({ map }: { map: Encounter2DMap }) {
+function GridLines({ map, inner }: { map: Encounter2DMap; inner: InnerArea }) {
   const { columns, rows, cellSize, gridOpacity, ground } = map.board
   const stroke = GROUND_STYLES[ground].grid
+  const extraX = Math.ceil(-inner.x / cellSize)
+  const extraY = Math.ceil(-inner.y / cellSize)
   return (
     <g opacity={gridOpacity} stroke={stroke} strokeWidth={1}>
-      {Array.from({ length: columns + 1 }, (_, i) => (
-        <line key={`v${i}`} x1={i * cellSize} y1={0} x2={i * cellSize} y2={rows * cellSize} />
+      {Array.from({ length: columns + 1 + extraX * 2 }, (_, i) => (
+        <line key={`v${i}`} x1={(i - extraX) * cellSize} y1={inner.y} x2={(i - extraX) * cellSize} y2={inner.y + inner.h} />
       ))}
-      {Array.from({ length: rows + 1 }, (_, i) => (
-        <line key={`h${i}`} x1={0} y1={i * cellSize} x2={columns * cellSize} y2={i * cellSize} />
+      {Array.from({ length: rows + 1 + extraY * 2 }, (_, i) => (
+        <line key={`h${i}`} x1={inner.x} y1={(i - extraY) * cellSize} x2={inner.x + inner.w} y2={(i - extraY) * cellSize} />
       ))}
     </g>
   )
@@ -245,8 +258,9 @@ export function EncounterMap2D({ map, className, tokens, fit = false }: { map: E
   const height = rows * cellSize
   const frame = cellSize * 0.35
 
-  // Pad the frame so the rendered map is exactly 16:9 regardless of board dims
-  // (normalization keeps boards near 16:9, so this padding stays small).
+  // Pad so the rendered map is exactly 16:9 regardless of board dims. The padding
+  // is filled with ground (not parchment) so the terrain runs edge-to-edge; only the
+  // thin frame border surrounds it.
   const totalW = width + frame * 2
   const totalH = height + frame * 2
   const padX = totalW / totalH < 16 / 9 ? ((totalH * 16) / 9 - totalW) / 2 : 0
@@ -255,6 +269,7 @@ export function EncounterMap2D({ map, className, tokens, fit = false }: { map: E
   const viewY = -frame - padY
   const viewW = totalW + padX * 2
   const viewH = totalH + padY * 2
+  const inner = { x: -padX, y: -padY, w: width + padX * 2, h: height + padY * 2 }
 
   return (
     <div className={cn(fit ? "flex h-full w-full items-center justify-center" : "overflow-hidden rounded-lg border-2 border-[#3a3128] bg-[#241f18] shadow-xl", className)}>
@@ -273,11 +288,11 @@ export function EncounterMap2D({ map, className, tokens, fit = false }: { map: E
         {/* Clip the board content to its bounds so oversized art (tree canopies at the
             edges, etc.) never spills past the frame. */}
         <clipPath id="mv-board-clip">
-          <rect x={0} y={0} width={width} height={height} />
+          <rect x={inner.x} y={inner.y} width={inner.w} height={inner.h} />
         </clipPath>
         <g clipPath="url(#mv-board-clip)">
-          <GroundTexture map={map} />
-          <GridLines map={map} />
+          <GroundTexture map={map} inner={inner} />
+          <GridLines map={map} inner={inner} />
 
           {/* walls */}
           {map.walls.map((wall) => {
@@ -340,8 +355,8 @@ export function EncounterMap2D({ map, className, tokens, fit = false }: { map: E
           {/* lighting overlay: darkens the scene, sits under labels/tokens so they stay readable */}
           {LIGHTING_OVERLAYS[map.board.lighting] && (
             <>
-              <rect x={0} y={0} width={width} height={height} fill={LIGHTING_OVERLAYS[map.board.lighting]?.color} opacity={LIGHTING_OVERLAYS[map.board.lighting]?.opacity} />
-              <rect x={0} y={0} width={width} height={height} fill="url(#mv-vignette)" />
+              <rect x={inner.x} y={inner.y} width={inner.w} height={inner.h} fill={LIGHTING_OVERLAYS[map.board.lighting]?.color} opacity={LIGHTING_OVERLAYS[map.board.lighting]?.opacity} />
+              <rect x={inner.x} y={inner.y} width={inner.w} height={inner.h} fill="url(#mv-vignette)" />
               <radialGradient id="mv-vignette" cx="0.5" cy="0.45" r="0.75">
                 <stop offset="0.55" stopColor="#000000" stopOpacity="0" />
                 <stop offset="1" stopColor="#000008" stopOpacity={map.board.lighting === "night" ? 0.55 : 0.3} />
