@@ -13,7 +13,6 @@ import { ALL_EXTENSIONS } from "@gltf-transform/extensions"
 import { prune, dedup, resample, weld, quantize } from "@gltf-transform/functions"
 import { mkdirSync, statSync } from "node:fs"
 import { execSync } from "node:child_process"
-import path from "node:path"
 
 const S = "/private/tmp/claude-501/-Users-johnpolacek-Projects-d20adventures-com/e0f88758-a35c-4956-ac65-375b4aa7b6c4/scratchpad"
 const OUT = "/Users/johnpolacek/Projects/d20adventures.com/public/models/encounter"

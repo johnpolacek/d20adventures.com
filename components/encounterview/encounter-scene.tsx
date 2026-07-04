@@ -1,13 +1,20 @@
 "use client"
 
-// The 3D tabletop: a wooden table rim, tinted ground board, GLB props, and one
-// miniature per turn character. Default export so encounter-panel can next/dynamic
-// this module and keep three.js out of the turn-page bundle until first open.
-// No drei <Environment> presets — they fetch HDRIs from a CDN; plain lights only.
+// The 3D tabletop: a wooden table, textured ground board, GLB props, ambient
+// ground scatter, and one miniature per turn character. Default export so
+// encounter-panel can next/dynamic this module and keep three.js out of the
+// turn-page bundle until first open.
+//
+// Look: "painted miniatures under room light". timeOfDay shifts the key light's
+// tint and angle more than overall visibility — even night scenes stay readable,
+// the way a real minis table does. No drei <Environment> presets (they fetch
+// HDRIs from a CDN); all lights and textures are generated locally.
 
 import { OrbitControls } from "@react-three/drei"
 import { Canvas } from "@react-three/fiber"
+import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing"
 import { Suspense, useMemo } from "react"
+import * as THREE from "three"
 import { ENVIRONMENT_KITS, GROUND_COLORS } from "@/lib/encounterview/asset-catalog"
 import { SCENE_BOARD_SIZE } from "@/lib/encounterview/generate"
 import type { TurnCharacter } from "@/types/adventure"
@@ -16,12 +23,175 @@ import { CharacterMini } from "./character-mini"
 import { SceneProp } from "./scene-prop"
 
 const LIGHTING = {
-  // Even night scenes stay readable — a real miniatures table has room light;
-  // timeOfDay shifts the tint and shadows more than overall visibility.
-  day: { sky: "#bcd3e8", groundBounce: "#5a5243", hemi: 0.9, key: "#fff3dd", keyIntensity: 2.6, keyPosition: [14, 20, 8] as const, background: "#191512" },
-  dusk: { sky: "#c78a5a", groundBounce: "#3c3040", hemi: 0.75, key: "#ff9d5c", keyIntensity: 2.2, keyPosition: [-18, 10, 6] as const, background: "#171210" },
-  night: { sky: "#54698a", groundBounce: "#282834", hemi: 0.8, key: "#a5bce0", keyIntensity: 1.9, keyPosition: [10, 18, -6] as const, background: "#0d0c0f" },
+  day: {
+    hemiSky: "#cfe0f2",
+    hemiGround: "#6a614c",
+    hemi: 1.0,
+    key: "#fff3dd",
+    keyIntensity: 3.0,
+    keyPosition: [14, 22, 10] as const,
+    fill: "#ffe9c4",
+    fillIntensity: 0.5,
+    background: "radial-gradient(ellipse at 50% 35%, #2b2016 0%, #14100b 55%, #060504 100%)",
+  },
+  dusk: {
+    hemiSky: "#d99a6a",
+    hemiGround: "#463a4e",
+    hemi: 0.9,
+    key: "#ff9d5c",
+    keyIntensity: 2.6,
+    keyPosition: [-20, 10, 8] as const,
+    fill: "#ffd9a0",
+    fillIntensity: 0.55,
+    background: "radial-gradient(ellipse at 50% 35%, #2a1c14 0%, #140e0a 55%, #060404 100%)",
+  },
+  night: {
+    hemiSky: "#6d82a8",
+    hemiGround: "#2e2e3c",
+    hemi: 1.0,
+    key: "#aebfe4",
+    keyIntensity: 2.4,
+    keyPosition: [10, 20, -8] as const,
+    fill: "#ffce8f",
+    fillIntensity: 0.45,
+    background: "radial-gradient(ellipse at 50% 35%, #181a26 0%, #0d0e15 55%, #050506 100%)",
+  },
 } as const
+
+/** Deterministic PRNG so scatter and textures are stable per scene. */
+function mulberry32(seed: number) {
+  let a = seed
+  return () => {
+    a |= 0
+    a = (a + 0x6d2b79f5) | 0
+    let t = Math.imul(a ^ (a >>> 15), 1 | a)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+function hashString(input: string): number {
+  let hash = 2166136261
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i)
+    hash = Math.imul(hash, 16777619)
+  }
+  return hash >>> 0
+}
+
+/** Blotchy noise texture so the ground reads as terrain, not a flat mat. */
+function makeGroundTexture(baseColor: string, seed: number): THREE.CanvasTexture {
+  const size = 512
+  const canvas = document.createElement("canvas")
+  canvas.width = size
+  canvas.height = size
+  const ctx = canvas.getContext("2d")!
+  const random = mulberry32(seed)
+  const base = new THREE.Color(baseColor)
+
+  ctx.fillStyle = `#${base.getHexString()}`
+  ctx.fillRect(0, 0, size, size)
+
+  // large soft blotches darker/lighter than base
+  for (let i = 0; i < 140; i++) {
+    const shade = base.clone().offsetHSL(random() * 0.03 - 0.015, random() * 0.08 - 0.04, random() * 0.1 - 0.05)
+    const radius = 20 + random() * 70
+    const x = random() * size
+    const y = random() * size
+    const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius)
+    gradient.addColorStop(0, `rgba(${shade.r * 255}, ${shade.g * 255}, ${shade.b * 255}, 0.35)`)
+    gradient.addColorStop(1, "rgba(0,0,0,0)")
+    ctx.fillStyle = gradient
+    ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2)
+  }
+  // fine speckle
+  for (let i = 0; i < 4200; i++) {
+    const shade = base.clone().offsetHSL(0, random() * 0.1 - 0.05, random() * 0.22 - 0.11)
+    ctx.fillStyle = `rgba(${shade.r * 255}, ${shade.g * 255}, ${shade.b * 255}, ${0.25 + random() * 0.3})`
+    const s = 1 + random() * 2.2
+    ctx.fillRect(random() * size, random() * size, s, s)
+  }
+
+  // Single tile across the board — the blotches aren't seamless, so repeating
+  // would draw visible seam lines at tile borders.
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.colorSpace = THREE.SRGBColorSpace
+  texture.anisotropy = 4
+  return texture
+}
+
+/** Plank-and-grain texture for the table the board sits on. */
+function makeWoodTexture(seed: number): THREE.CanvasTexture {
+  const size = 512
+  const canvas = document.createElement("canvas")
+  canvas.width = size
+  canvas.height = size
+  const ctx = canvas.getContext("2d")!
+  const random = mulberry32(seed)
+
+  ctx.fillStyle = "#5a3d24"
+  ctx.fillRect(0, 0, size, size)
+  const plank = size / 6
+  for (let p = 0; p < 6; p++) {
+    const tone = 0.85 + random() * 0.3
+    ctx.fillStyle = `rgb(${Math.round(90 * tone)}, ${Math.round(61 * tone)}, ${Math.round(36 * tone)})`
+    ctx.fillRect(p * plank, 0, plank - 2, size)
+    for (let i = 0; i < 26; i++) {
+      const shade = 0.7 + random() * 0.5
+      ctx.strokeStyle = `rgba(${Math.round(70 * shade)}, ${Math.round(46 * shade)}, ${Math.round(26 * shade)}, 0.35)`
+      ctx.lineWidth = 0.8 + random() * 1.4
+      const x = p * plank + random() * plank
+      ctx.beginPath()
+      ctx.moveTo(x, 0)
+      ctx.bezierCurveTo(x + random() * 14 - 7, size * 0.33, x + random() * 14 - 7, size * 0.66, x + random() * 10 - 5, size)
+      ctx.stroke()
+    }
+  }
+
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.wrapS = THREE.RepeatWrapping
+  texture.wrapT = THREE.RepeatWrapping
+  texture.repeat.set(2, 2)
+  texture.colorSpace = THREE.SRGBColorSpace
+  return texture
+}
+
+/** Instanced tufts/pebbles so the board isn't an empty plane between props. */
+function GroundScatter({ ground, seed }: { ground: string; seed: number }) {
+  const { matrices, color } = useMemo(() => {
+    const random = mulberry32(seed)
+    const half = SCENE_BOARD_SIZE / 2 - 0.8
+    const dummy = new THREE.Object3D()
+    const list: THREE.Matrix4[] = []
+    for (let i = 0; i < 110; i++) {
+      dummy.position.set((random() * 2 - 1) * half, 0, (random() * 2 - 1) * half)
+      const s = 0.05 + random() * 0.09
+      dummy.scale.set(s, s * (1.1 + random()), s)
+      dummy.rotation.y = random() * Math.PI * 2
+      dummy.updateMatrix()
+      list.push(dummy.matrix.clone())
+    }
+    const colors: Record<string, string> = { grass: "#3e5c33", dirt: "#5c4832", stone: "#5c5952", sand: "#8a7a55", snow: "#cdd6dd", cave: "#403c3a" }
+    return { matrices: list, color: colors[ground] ?? "#3e5c33" }
+  }, [ground, seed])
+
+  return (
+    <instancedMesh
+      args={[undefined, undefined, matrices.length]}
+      ref={(mesh) => {
+        if (!mesh) return
+        matrices.forEach((matrix, i) => {
+          mesh.setMatrixAt(i, matrix)
+        })
+        mesh.instanceMatrix.needsUpdate = true
+      }}
+      castShadow
+    >
+      <coneGeometry args={[1, 2.2, 5]} />
+      <meshStandardMaterial color={color} roughness={0.95} />
+    </instancedMesh>
+  )
+}
 
 export default function EncounterScene({ scene, characters }: { scene: EncounterScene3D; characters: TurnCharacter[] }) {
   const { environment } = scene
@@ -30,14 +200,30 @@ export default function EncounterScene({ scene, characters }: { scene: Encounter
   const groundColor = GROUND_COLORS[environment.ground] ?? kit.groundColor
   const foggy = environment.mood === "eerie" || environment.mood === "tense" || environment.timeOfDay === "night"
 
+  const seed = useMemo(() => hashString(scene.turnId || "scene"), [scene.turnId])
+  const groundTexture = useMemo(() => makeGroundTexture(groundColor, seed), [groundColor, seed])
+  const woodTexture = useMemo(() => makeWoodTexture(1337), [])
   const charactersById = useMemo(() => new Map(characters.map((c) => [c.id, c])), [characters])
   const half = SCENE_BOARD_SIZE / 2
 
   return (
-    <Canvas shadows dpr={[1, 2]} camera={{ fov: 40, position: [0, 14, 18], near: 0.5, far: 120 }} gl={{ antialias: true }} style={{ background: light.background }}>
-      {foggy && <fog attach="fog" args={[kit.fogColor, 22, 55]} />}
+    <Canvas
+      shadows
+      dpr={[1, 2]}
+      camera={{ fov: 40, position: [0, 14, 18], near: 0.5, far: 120 }}
+      gl={{ antialias: true }}
+      onCreated={({ gl }) => {
+        gl.toneMappingExposure = 1.2
+        // Soft shadows via VSM — drei's <SoftShadows> PCSS injection is broken
+        // against three 0.183 (uses the removed unpackRGBAToDepth chunk).
+        gl.shadowMap.type = THREE.VSMShadowMap
+      }}
+      style={{ background: light.background }}
+    >
+      {foggy && <fog attach="fog" args={[kit.fogColor, 26, 60]} />}
 
-      <hemisphereLight args={[light.sky, light.groundBounce, light.hemi]} />
+      <hemisphereLight args={[light.hemiSky, light.hemiGround, light.hemi]} />
+      {/* key light — sun/moon */}
       <directionalLight
         position={[...light.keyPosition]}
         intensity={light.keyIntensity}
@@ -49,21 +235,27 @@ export default function EncounterScene({ scene, characters }: { scene: Encounter
         shadow-camera-right={14}
         shadow-camera-top={14}
         shadow-camera-bottom={-14}
-        shadow-bias={-0.0004}
+        shadow-bias={-0.0002}
+        shadow-radius={5}
+        shadow-blurSamples={12}
       />
+      {/* warm counter-fill from the viewer's side — the "room light over the table" */}
+      <directionalLight position={[-8, 12, 16]} intensity={light.fillIntensity} color={light.fill} />
 
-      {/* wooden table under the board — sells "miniatures on a table" */}
-      <mesh position={[0, -0.35, 0]} receiveShadow>
-        <boxGeometry args={[SCENE_BOARD_SIZE + 3.5, 0.7, SCENE_BOARD_SIZE + 3.5]} />
-        <meshStandardMaterial color="#3e2c1c" roughness={0.65} metalness={0.05} />
+      {/* wooden table under the board */}
+      <mesh position={[0, -0.4, 0]} receiveShadow>
+        <boxGeometry args={[SCENE_BOARD_SIZE + 5, 0.8, SCENE_BOARD_SIZE + 5]} />
+        <meshStandardMaterial map={woodTexture} color="#8a6a48" roughness={0.6} metalness={0.05} />
       </mesh>
       {/* ground board */}
       <mesh position={[0, 0.005, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[SCENE_BOARD_SIZE, SCENE_BOARD_SIZE]} />
-        <meshStandardMaterial color={groundColor} roughness={0.95} />
+        <meshStandardMaterial map={groundTexture} roughness={0.95} />
       </mesh>
       {/* faint grid so it reads as a battle board */}
-      <gridHelper args={[SCENE_BOARD_SIZE, SCENE_BOARD_SIZE, "#000000", "#000000"]} position={[0, 0.02, 0]} material-transparent material-opacity={0.12} />
+      <gridHelper args={[SCENE_BOARD_SIZE, SCENE_BOARD_SIZE, "#000000", "#000000"]} position={[0, 0.02, 0]} material-transparent material-opacity={0.16} />
+
+      <GroundScatter ground={environment.ground} seed={seed} />
 
       <Suspense fallback={null}>
         {scene.props.map((prop) => (
@@ -75,6 +267,11 @@ export default function EncounterScene({ scene, characters }: { scene: Encounter
           return <CharacterMini key={placement.characterId} placement={placement} character={character} />
         })}
       </Suspense>
+
+      <EffectComposer multisampling={4}>
+        <Bloom mipmapBlur intensity={0.75} luminanceThreshold={0.85} luminanceSmoothing={0.2} />
+        <Vignette offset={0.28} darkness={0.72} />
+      </EffectComposer>
 
       <OrbitControls
         target={[0, 0.5, 0]}
