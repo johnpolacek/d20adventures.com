@@ -109,7 +109,7 @@ function AdventureHomeContent({
     <div className={cn("flex flex-col items-center relative", isSignedIn && "min-h-screen")}>
       <ImageHeader variant={turn ? "default" : "compact"} imageUrl={imageUrl} title={adventure.title} subtitle={turn?.title} imageAlt={turn?.title || adventure.title} />
       {turn ? (
-        <Turn nextAdventure={adventurePlan?.nextAdventure} encounter={currentEncounter} encounterMap={encounterMap} mapTokens={mapTokens} />
+        <Turn nextAdventure={adventurePlan?.nextAdventure} encounter={currentEncounter} encounterMap={encounterMap} mapTokens={mapTokens} isSolo={(adventurePlan?.party?.[1] ?? 1) === 1} />
       ) : (
         <>
           <AdventureLobby adventure={adventure} adventurePlan={adventurePlan} />

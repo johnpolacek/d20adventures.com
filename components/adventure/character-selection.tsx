@@ -1,11 +1,13 @@
 "use client"
 
+import { SignInButton, SignUpButton, useUser } from "@clerk/nextjs"
 import { Eye } from "lucide-react"
 import Link from "next/link"
 import React, { useState } from "react"
 import { textShadow, textShadowSpreadLight } from "@/components/typography/styles"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import Image from "@/components/ui/native-image"
 import { cn, getImageUrl } from "@/lib/utils"
 import type { TurnCharacter } from "@/types/adventure"
@@ -37,11 +39,13 @@ function convertToTurnCharacter(pcTemplate: PCTemplate): TurnCharacter {
 }
 
 export default function CharacterSelection({ adventurePlan }: CharacterSelectionProps) {
+  const { isLoaded, isSignedIn } = useUser()
   const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null)
   const [characterChoices, setCharacterChoices] = useState<CharacterChoiceMode[]>([])
   const [modalCharacter, setModalCharacter] = useState<TurnCharacter | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSelecting, setIsSelecting] = useState(false)
+  const [showSignInPrompt, setShowSignInPrompt] = useState(false)
 
   const characterNames = Object.fromEntries(adventurePlan.premadePlayerCharacters.map((char) => [char.id, char.name]))
 
@@ -66,7 +70,12 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
     }))
     setCharacterChoices(choices)
     // Simulate async feedback, reset after short delay
-    setTimeout(() => setIsSelecting(false), 600)
+    setTimeout(() => {
+      setIsSelecting(false)
+      if (isLoaded && !isSignedIn) {
+        setShowSignInPrompt(true)
+      }
+    }, 600)
   }
 
   const handleViewCharacterSheet = (character: PCTemplate, e: React.MouseEvent) => {
@@ -190,6 +199,33 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
         )}
 
         <CharacterSheetModal character={modalCharacter} open={isModalOpen} onOpenChange={setIsModalOpen} />
+
+        <Dialog open={showSignInPrompt && !isSignedIn} onOpenChange={setShowSignInPrompt}>
+          <DialogContent className="bg-gradient-to-br from-primary-900/95 via-primary-800/95 to-primary-900/95 border-primary-600 text-white">
+            <DialogHeader className="sm:text-center">
+              <DialogTitle style={textShadow} className="font-display text-2xl text-amber-300">
+                Sign in to start your adventure
+              </DialogTitle>
+              <DialogDescription className="text-indigo-100 text-base">
+                {selectedCharacterId && characterNames[selectedCharacterId]
+                  ? `Create a free account or sign in to play as ${characterNames[selectedCharacterId]}.`
+                  : "Create a free account or sign in to play this adventure."}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2 pb-2">
+              <SignUpButton mode="modal">
+                <Button variant="epic" size="lg" className="text-lg whitespace-nowrap" onClick={() => setShowSignInPrompt(false)}>
+                  Sign Up
+                </Button>
+              </SignUpButton>
+              <SignInButton mode="modal">
+                <Button variant="outline" size="lg" className="text-lg w-36" onClick={() => setShowSignInPrompt(false)}>
+                  Sign In
+                </Button>
+              </SignInButton>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )

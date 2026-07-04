@@ -1,6 +1,6 @@
 "use client"
 
-import { SignInButton, SignUpButton, useUser } from "@clerk/nextjs"
+import { SignUpButton, useUser } from "@clerk/nextjs"
 import { useParams } from "next/navigation"
 import type React from "react"
 import { useEffect, useRef, useState } from "react"
@@ -18,6 +18,27 @@ interface PartyConfigurationProps {
 // Helper to check if this is a solo adventure (only one character total)
 function isSoloAdventure(characterChoices: CharacterChoiceMode[]) {
   return characterChoices.length === 1
+}
+
+// Fixed, centered overlay so solo-adventure status is impossible to miss
+// (the previous inline message sat at the bottom of the page and was easy to scroll past)
+function StatusOverlay({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+      <div className="w-full max-w-md rounded-lg border border-primary-600 bg-gradient-to-br from-primary-900/95 via-primary-800/95 to-primary-900/95 p-8 text-center text-white shadow-2xl shadow-black/50 ring-4 ring-black/40">
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function Spinner() {
+  return (
+    <svg className="mx-auto mb-4 h-10 w-10 animate-spin text-amber-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+    </svg>
+  )
 }
 
 const PartyConfiguration: React.FC<PartyConfigurationProps> = ({ characterChoices, characterNames }) => {
@@ -64,57 +85,50 @@ const PartyConfiguration: React.FC<PartyConfigurationProps> = ({ characterChoice
     await startSelectedAdventure()
   }
 
+  // Scroll to reveal the start controls for the multi-character button, but not
+  // for solo adventures (status shows in a centered overlay) and not when signed
+  // out (the sign-in prompt is a dialog) — scrolling would tuck the title under the fixed header
   useEffect(() => {
-    scrollToBottom()
-  }, [])
+    if (isSignedIn && !isSoloAdventure(characterChoices)) {
+      scrollToBottom()
+    }
+  }, [isSignedIn, characterChoices])
 
-  // If only one character, show a loading state
+  // If only one character, show status in a centered overlay
   if (isSoloAdventure(characterChoices)) {
     if (!isLoaded) {
       return (
-        <div className="p-8 text-center">
-          <div className="text-2xl font-display mb-4">Preparing your adventure...</div>
-        </div>
+        <StatusOverlay>
+          <Spinner />
+          <div className="text-2xl font-display">Preparing your adventure...</div>
+        </StatusOverlay>
       )
     }
 
+    // Signed-out is handled by the sign-in dialog in character-selection.tsx;
+    // rendering here too would stack a second overlay behind it.
     if (!isSignedIn) {
-      return (
-        <div className="p-8 text-center">
-          <div className="text-2xl font-display mb-4">Sign in to start your adventure</div>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <SignInButton mode="modal">
-              <Button variant="outline" size="lg" className="text-lg w-36">
-                Sign In
-              </Button>
-            </SignInButton>
-            <SignUpButton mode="modal">
-              <Button variant="outline" size="lg" className="text-lg w-36">
-                Sign Up
-              </Button>
-            </SignUpButton>
-          </div>
-        </div>
-      )
+      return null
     }
 
     if (startError) {
       return (
-        <div className="p-8 text-center">
-          <div className="text-2xl font-display mb-4">Could not start your adventure</div>
+        <StatusOverlay>
+          <div className="text-2xl font-display mb-4 text-amber-300">Could not start your adventure</div>
           <div className="text-red-200 mb-6">{startError}</div>
-          <Button variant="outline" size="lg" className="text-lg w-36" onClick={handleStartAdventure} disabled={isCreating}>
+          <Button variant="epic" size="lg" className="text-lg w-36" onClick={handleStartAdventure} disabled={isCreating}>
             Try Again
           </Button>
-        </div>
+        </StatusOverlay>
       )
     }
 
     return (
-      <div className="p-8 text-center">
-        <div className="text-2xl font-display mb-4">Starting your adventure...</div>
+      <StatusOverlay>
+        <Spinner />
+        <div className="text-2xl font-display mb-2">Starting your adventure...</div>
         <div className="text-white/80">Setting up your solo adventure. Please wait.</div>
-      </div>
+      </StatusOverlay>
     )
   }
 

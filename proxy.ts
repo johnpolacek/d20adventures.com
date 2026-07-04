@@ -3,11 +3,10 @@ import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
 
 export default clerkMiddleware((_auth, req: NextRequest) => {
-  // Get the default response from Clerk
-  const res = NextResponse.next()
-  // Set the pathname as a custom header
-  res.headers.set("x-pathname", req.nextUrl.pathname)
-  return res
+  // Forward the pathname as a request header so server components can read it via headers()
+  const requestHeaders = new Headers(req.headers)
+  requestHeaders.set("x-pathname", req.nextUrl.pathname)
+  return NextResponse.next({ request: { headers: requestHeaders } })
 })
 
 export const config = {

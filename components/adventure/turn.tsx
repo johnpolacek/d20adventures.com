@@ -1,5 +1,6 @@
 "use client"
 
+import { EncounterPanel } from "@/components/encounterview/encounter-panel"
 import type { MapTokens } from "@/components/mapview/encounter-map-2d"
 import { MapPanel } from "@/components/mapview/map-panel"
 import type { AdventureEncounter } from "@/types/adventure-plan"
@@ -13,11 +14,13 @@ export default function Turn({
   encounter,
   encounterMap,
   mapTokens,
+  isSolo,
 }: {
   nextAdventure?: string
   encounter?: AdventureEncounter | null
   encounterMap?: Encounter2DMap | null
   mapTokens?: MapTokens
+  isSolo?: boolean
 }) {
   return (
     <div className="relative flex flex-col gap-4 px-8 pb-24 lg:flex-row lg:gap-8">
@@ -26,8 +29,9 @@ export default function Turn({
         <TurnNarrative nextAdventure={nextAdventure} />
       </div>
       <div className="fixed right-8 top-20 z-50 flex items-center gap-4">
+        <EncounterPanel encounterTitle={encounter?.title} />
         {encounterMap && <MapPanel map={encounterMap} encounterTitle={encounter?.title} tokens={mapTokens} />}
-        <GameChat />
+        {!isSolo && <GameChat />}
       </div>
     </div>
   )
