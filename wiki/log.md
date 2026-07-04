@@ -4,6 +4,12 @@
 
 Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.
 
+## 2026-07-04
+
+### Encounter view prototype (3D miniatures, narrative-driven)
+
+First working prototype of a 3D tabletop view: an "Encounter" button on the turn page (beside Map/Game Chat) opens a fullscreen react-three-fiber diorama of the current turn — CC0 KayKit miniatures and props on a wooden table. Direction set by owner decisions that supersede the old Miniview salvage plan: **completely new implementation** (ignores the dormant `miniatures-map.tsx`, `map3d`, and the 2D `map2d` data), **staged from the narrative** (current + previous turn narratives → `gemini-3.5-flash` scene spec, per-turn on first open, cached in S3 at `settings/{settingId}/scenes3d/{adventureId}/{turnId}.json`). Pipeline mirrors mapview's proven pattern (tolerant zod generation schema + normalize/clamp, `structuredOutputs` off). Assets: 9 rigged characters (Adventurers + Skeletons, animation-stripped to `Idle`/`Death_A_Pose`, ~250KB each) + 27 props from Dungeon Remastered/Medieval Hexagon/Halloween Bits, ~3MB total, rebuilt via `scripts/encounterview-assets-build.mjs`; unmatched creatures render as portrait pawns (cone + billboard portrait via the new same-origin `/api/image-proxy`, since the image hosts lack CORS headers for WebGL textures). Learned: Gemini drifts field names between samples (`position` nesting, `rotation` vs `facing`) — fixed with an inline JSON template in the prompt plus coercing/hoisting preprocess steps in the schema, same guarantee-in-code lesson as mapview. Verified in-browser on the completed Midnight Summons run: the "Meeting at the Stones" turn staged a pillar circle with Wollandora beside it and Thalbern retreating — matching the narrative. Punted: stance poses beyond "down", animations, regenerate control, non-humanoid model packs, mode-switcher integration.
+
 ## 2026-07-03
 
 ### Mapview v1 merged to main
