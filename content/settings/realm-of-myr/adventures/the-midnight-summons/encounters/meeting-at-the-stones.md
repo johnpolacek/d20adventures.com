@@ -6,6 +6,7 @@ id: "meeting-at-the-stones"
 type: "encounter"
 title: "Meeting at the Stones"
 settingId: "realm-of-myr"
+location: "old-standing-stones"
 adventureId: "the-midnight-summons"
 npcs:
   - id: "wollandora"

@@ -24,6 +24,10 @@ Auto-commit local changes whenever confident that the code is good and there are
 - Do not create root-level `docs/` or `tasks/` for durable planning.
 - Name unknowns and contradictions instead of inventing certainty.
 
+### Encounter Authoring
+
+- Initial NPC map placement must match the intro's implied distance: an NPC whose intro reads as a close ambush should set `startNear: "party"` on its ref in the encounter frontmatter ("distant"/absent keeps the default far placement; a zone/label name targets that spot). After changing staging hints, re-place tokens on stored maps with `scripts/mapview-replace-tokens.ts`.
+
 ### Automation Policy
 
 - Commit docs-only wiki changes: allow

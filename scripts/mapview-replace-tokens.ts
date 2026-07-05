@@ -28,9 +28,9 @@ async function main() {
       for (const encounter of scene.encounters) {
         const map = await loadEncounterMap2D(SETTING_ID, PLAN_ID, encounter.id)
         if (!map) continue
-        const npcIds = (encounter.npc || []).map((npc) => npc.id)
+        const npcs = (encounter.npc || []).map((npc) => ({ id: npc.id, startNear: npc.startNear }))
         const densified = { ...map, ...densifyForest(map) }
-        const { partySlots, npcStarts } = placeTokens(densified, maxPartySize, npcIds)
+        const { partySlots, npcStarts } = placeTokens(densified, maxPartySize, npcs)
         const updated = { ...densified, partySlots, npcStarts }
         await updateJsonOnS3(getEncounterMap2DStorageKey(SETTING_ID, PLAN_ID, encounter.id), updated)
         console.log(`${encounter.id}: party ${partySlots.map((slot) => `(${slot.x},${slot.y})`).join("")} · npc ${npcStarts.map((npc) => `${npc.npcId}(${npc.x},${npc.y})`).join(" ") || "none"}`)

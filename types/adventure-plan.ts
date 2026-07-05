@@ -72,6 +72,8 @@ export const encounterCharacterRefSchema = z.object({
   id: z.string(),
   behavior: z.string(),
   initialInitiative: z.number().optional(),
+  /** Map staging hint: "party" (ambush range of the party spawn), "distant" (default far placement), or a zone/label name. */
+  startNear: z.string().optional(),
 })
 export type EncounterCharacterRef = z.infer<typeof encounterCharacterRefSchema>
 
@@ -210,6 +212,8 @@ export type Encounter3DMap = z.infer<typeof encounter3dMapSchema>
 export const adventureEncounterSchema = z.object({
   id: z.string(),
   title: z.string().min(1, "Title is required for encounters"),
+  /** Display name of the place where the encounter happens (resolved from the wiki location entity). */
+  location: z.string().optional(),
   intro: z.string(),
   instructions: z.string().optional(),
   image: z.string().optional(),

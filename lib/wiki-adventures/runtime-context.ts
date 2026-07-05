@@ -73,9 +73,16 @@ export type LlmGameplayContextPacket = {
     responseShape: "nextEncounterId+narrative+adventurePatch"
     playerCharacterNames: string[]
   }
+  /** Battle-map staging summary (lib/mapview/spatial-summary.ts); absent when the encounter has no stored map. */
+  spatialContext?: string
 }
 
-export function assembleGameplayContextPacket(args: { artifacts: RuntimeArtifacts; contentRef: Exclude<ContentRef, { source: "latest" }>; session: RuntimeSessionSnapshot }): LlmGameplayContextPacket {
+export function assembleGameplayContextPacket(args: {
+  artifacts: RuntimeArtifacts
+  contentRef: Exclude<ContentRef, { source: "latest" }>
+  session: RuntimeSessionSnapshot
+  spatialContext?: string
+}): LlmGameplayContextPacket {
   const currentEncounter = args.artifacts.encounters[args.session.currentTurn.encounterId]
   if (!currentEncounter) throw new Error(`Current encounter ${args.session.currentTurn.encounterId} missing from runtime artifacts`)
 
@@ -154,6 +161,7 @@ export function assembleGameplayContextPacket(args: { artifacts: RuntimeArtifact
       responseShape: "nextEncounterId+narrative+adventurePatch",
       playerCharacterNames: liveCharacters.filter((character) => character.type === "pc").map((character) => character.name),
     },
+    spatialContext: args.spatialContext,
   }
 }
 
@@ -183,7 +191,15 @@ ${packet.currentEncounter.intro}
 Current Encounter GM Notes:
 ${packet.currentEncounter.gmNotes ?? ""}
 
-${packet.session.recentTurnHistory}
+${
+  packet.spatialContext
+    ? `Battle Map Staging:
+${packet.spatialContext}
+Keep described distances, positioning, and movement consistent with this staging. A creature that starts far from the party must plausibly cross that distance (over one or more turns) before it can be in melee; a creature that starts adjacent should be described as immediately close. Use the map's place names when referring to locations.
+
+`
+    : ""
+}${packet.session.recentTurnHistory}
 
 Most Recent Action/Event:
 ${packet.session.mostRecentAction ?? ""}

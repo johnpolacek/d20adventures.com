@@ -6,6 +6,7 @@ id: "timely-rescue"
 type: "encounter"
 title: "Timely Rescue"
 settingId: "realm-of-myr"
+location: "valkarr-forest"
 adventureId: "the-midnight-summons"
 npcs:
   - id: "wollandora"

@@ -33,6 +33,7 @@ export function buildMap2DPrompt(args: {
   sectionTitle?: string
   sceneTitle?: string
   encounterTitle?: string
+  locationTitle?: string
   encounterIntro?: string
   encounterInstructions?: string
   npcIds: string[]
@@ -73,6 +74,7 @@ Encounter context:
 - Section: ${args.sectionTitle || "Unknown"}
 - Scene: ${args.sceneTitle || "Unknown"}
 - Encounter: ${args.encounterTitle || "Unknown"}
+- Location: ${args.locationTitle || "Unknown"}
 - Intro: ${args.encounterIntro || "None"}
 - Instructions: ${args.encounterInstructions || "None"}
 - NPC ids present: ${args.npcIds.join(", ") || "None"}
@@ -180,10 +182,37 @@ function findOpenCells(generation: Encounter2DGeneration, zone: Encounter2DZone 
 
 const SPAWN_LABEL = /\b(spawn|entrance|entry|start|arrival|party|approach)\b/i
 
+/** Staging hint for an NPC's starting placement, from the encounter's npc ref
+ *  (`startNear` frontmatter): "party" starts the NPC within ambush range of the
+ *  party spawn, "distant" (or absent) keeps the default far objective-zone
+ *  placement, any other string targets the zone/label with that name. */
+export type NpcPlacementRef = { id: string; startNear?: string }
+
+/** Open cells sorted by grid distance to the nearest target point, within [minDist, maxDist]. */
+function findCellsNearTargets(
+  generation: Encounter2DGeneration,
+  targets: Array<{ x: number; y: number }>,
+  count: number,
+  opts: { minDist: number; maxDist: number },
+  taken: Set<string>
+): Array<{ x: number; y: number }> {
+  const { columns, rows } = generation.board
+  const candidates: Array<{ x: number; y: number; d: number }> = []
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < columns; x++) {
+      if (taken.has(`${x},${y}`) || cellIsOccupied(generation, x, y)) continue
+      const d = Math.min(...targets.map((target) => Math.max(Math.abs(x - target.x), Math.abs(y - target.y))))
+      if (d >= opts.minDist && d <= opts.maxDist) candidates.push({ x, y, d })
+    }
+  }
+  return candidates.sort((a, b) => a.d - b.d || a.y - b.y || a.x - b.x).slice(0, count)
+}
+
 /** Place party slots in/near the spawn zone and NPC starts away from it, deterministically.
  *  The model doesn't reliably use the `spawn` zone kind (often labels the entry "interest"),
- *  so infer the spawn zone by kind → label → bottom-most, and keep NPCs in a different zone. */
-export function placeTokens(generation: Encounter2DGeneration, maxPartySize: number, npcIds: string[]): { partySlots: Encounter2DPartySlot[]; npcStarts: Encounter2DNpcStart[] } {
+ *  so infer the spawn zone by kind → label → bottom-most, and keep NPCs in a different zone.
+ *  NPCs with a `startNear` staging hint override the default distant placement. */
+export function placeTokens(generation: Encounter2DGeneration, maxPartySize: number, npcs: NpcPlacementRef[]): { partySlots: Encounter2DPartySlot[]; npcStarts: Encounter2DNpcStart[] } {
   const { rows } = generation.board
   const zones = generation.zones
 
@@ -219,10 +248,27 @@ export function placeTokens(generation: Encounter2DGeneration, maxPartySize: num
     partyCells = findOpenCells(generation, spawnZone, partyCount, rows - 2)
   }
   const partySlots = partyCells.map((cell, index) => ({ id: `party-${index}`, slotIndex: index, x: cell.x, y: cell.y }))
-  const partyTaken = new Set(partyCells.map((cell) => `${cell.x},${cell.y}`))
+  const taken = new Set(partyCells.map((cell) => `${cell.x},${cell.y}`))
 
-  const npcCells = findOpenCells(generation, focusZone, Math.min(npcIds.length, 8), 2).filter((cell) => !partyTaken.has(`${cell.x},${cell.y}`))
-  const npcStarts = npcIds.slice(0, npcCells.length).map((npcId, index) => ({ id: `npc-${index}`, npcId, x: npcCells[index].x, y: npcCells[index].y }))
+  const defaultCells = findOpenCells(generation, focusZone, Math.min(npcs.length, 8), 2).filter((cell) => !taken.has(`${cell.x},${cell.y}`))
+  const npcStarts: Encounter2DNpcStart[] = []
+  for (const npc of npcs.slice(0, 8)) {
+    let cell: { x: number; y: number } | undefined
+    if (npc.startNear === "party") {
+      // Ambush staging: within a couple of cells of the party, never on top of it.
+      cell = findCellsNearTargets(generation, partyCells, 1, { minDist: 2, maxDist: 8 }, taken)[0]
+    } else if (npc.startNear && npc.startNear !== "distant") {
+      const wanted = npc.startNear.toLowerCase()
+      const zone = zones.find((candidate) => candidate.label?.toLowerCase().includes(wanted))
+      const label = generation.labels.find((candidate) => candidate.text.toLowerCase().includes(wanted))
+      if (zone) cell = findOpenCells(generation, zone, 8, 2).find((candidate) => !taken.has(`${candidate.x},${candidate.y}`))
+      else if (label) cell = findCellsNearTargets(generation, [label], 1, { minDist: 1, maxDist: 4 }, taken)[0]
+    }
+    if (!cell) cell = defaultCells.find((candidate) => !taken.has(`${candidate.x},${candidate.y}`))
+    if (!cell) continue
+    taken.add(`${cell.x},${cell.y}`)
+    npcStarts.push({ id: `npc-${npcStarts.length}`, npcId: npc.id, x: cell.x, y: cell.y })
+  }
 
   return { partySlots, npcStarts }
 }
@@ -289,9 +335,9 @@ export function densifyForest(generation: Encounter2DGeneration): Encounter2DGen
   return { ...generation, pieces }
 }
 
-export function assembleEncounter2DMap(generation: Encounter2DGeneration, args: { maxPartySize: number; npcIds: string[]; prompt?: string; previousPromptHistory?: string[] }): Encounter2DMap {
+export function assembleEncounter2DMap(generation: Encounter2DGeneration, args: { maxPartySize: number; npcs: NpcPlacementRef[]; prompt?: string; previousPromptHistory?: string[] }): Encounter2DMap {
   const normalized = densifyForest(normalizeGeneration(generation))
-  const { partySlots, npcStarts } = placeTokens(normalized, args.maxPartySize, args.npcIds)
+  const { partySlots, npcStarts } = placeTokens(normalized, args.maxPartySize, args.npcs)
   return encounter2dMapSchema.parse({
     ...normalized,
     version: 2,

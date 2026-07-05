@@ -294,7 +294,7 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
   }
 
   return (
-    <div className="grow max-w-2xl fade-in">
+    <div className="w-full grow max-w-3xl mx-auto fade-in">
       {tokenError && (
         <Alert variant="destructive" className="mb-8">
           <AlertTriangle className="h-4 w-4" />

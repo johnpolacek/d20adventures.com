@@ -6,11 +6,13 @@ id: "owlbear-confrontation"
 type: "encounter"
 title: "Owlbear Confrontation"
 settingId: "realm-of-myr"
+location: "valkarr-forest"
 adventureId: "the-midnight-summons"
 npcs:
   - id: "owlbear"
     behavior: "Aggressively attacks any perceived threat. Will fight until heavily wounded or driven off."
     initialInitiative: 1
+    startNear: "party"
 image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-midnight-summons/owlbear-confrontation.png"
 ---
 

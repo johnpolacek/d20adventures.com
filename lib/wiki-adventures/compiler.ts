@@ -44,6 +44,7 @@ const commonFrontmatterSchema = z.object({
           id: z.string().min(1),
           behavior: z.string().optional(),
           initialInitiative: z.number().optional(),
+          startNear: z.string().optional(),
         }),
       ])
     )

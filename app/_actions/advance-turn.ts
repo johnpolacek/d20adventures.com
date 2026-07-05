@@ -7,6 +7,8 @@ import type { Id } from "@/convex/_generated/dataModel"
 import { assertAdventureAccessByTurn } from "@/lib/adventure-access"
 import { generateObject } from "@/lib/ai"
 import { convex } from "@/lib/convex/server"
+import { loadEncounterMap2D } from "@/lib/mapview/load"
+import { buildMapSpatialContext } from "@/lib/mapview/spatial-summary"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import { buildNextTurnFromProgression, isFinalEncounterById } from "@/lib/services/advance-turn-builder-service"
 import { markAdventureCompleteWithoutNextEncounter, persistTurnAndFinalizeAdventure } from "@/lib/services/advance-turn-finalization-service"
@@ -76,6 +78,21 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
     narrativeLength: turn.narrative?.length || 0,
   })
 
+  // Battle-map staging for the narration prompt: token starting positions and
+  // party↔NPC distances so described movement matches the map players see.
+  // Gracefully absent when the encounter has no stored map.
+  const turnCharactersForMap = turn.characters as TurnCharacter[]
+  const encounterMap = await loadEncounterMap2D(settingId, adventurePlanId, turn.encounterId)
+  const spatialContext = encounterMap
+    ? (buildMapSpatialContext(encounterMap, {
+        party: turnCharactersForMap.filter((character) => character.type === "pc").map((character) => ({ name: character.name })),
+        npcs: Object.fromEntries(turnCharactersForMap.filter((character) => character.type === "npc").map((character) => [character.id, { name: character.name }])),
+      }) ?? undefined)
+    : undefined
+  if (spatialContext) {
+    console.log(`[advanceTurn:${requestId}] Battle map staging for narration prompt:\n${spatialContext}`)
+  }
+
   if (isLocalWikiAdventure(settingId, adventurePlanId)) {
     const { definition, artifacts, contentRef } = await loadWikiAdventureRuntime(settingId, adventurePlanId)
     const allTurns = await convex.query(api.adventure.getTurnsByAdventure, { adventureId: turnData.adventureId })
@@ -83,6 +100,7 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
     const packet = assembleGameplayContextPacket({
       artifacts,
       contentRef,
+      spatialContext,
       session: {
         adventureInstanceId: turnData.adventureId.toString(),
         currentTurnOrder,
@@ -246,6 +264,7 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
     encounterTurnDisplay,
     currentEncounterTurnNumber,
     playerCharacterNames,
+    spatialContext,
   })
 
   console.log(`[advanceTurn:${requestId}] Making LLM call for encounter progression`)

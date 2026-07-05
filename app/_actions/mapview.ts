@@ -66,6 +66,7 @@ export async function generateEncounterMap2D(args: { settingId: string; adventur
     sectionTitle,
     sceneTitle,
     encounterTitle: encounter.title,
+    locationTitle: encounter.location,
     encounterIntro: encounter.intro,
     encounterInstructions: encounter.instructions,
     npcIds,
@@ -78,7 +79,7 @@ export async function generateEncounterMap2D(args: { settingId: string; adventur
 
   const map = assembleEncounter2DMap(generation, {
     maxPartySize: plan.party?.[1] ?? 4,
-    npcIds,
+    npcs: (encounter.npc || []).map((npc) => ({ id: npc.id, startNear: npc.startNear })),
     prompt: args.prompt,
     previousPromptHistory: existingMap?.promptHistory,
   })
