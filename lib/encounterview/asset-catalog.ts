@@ -31,12 +31,12 @@ export interface PropDefinition {
 // the model's -minY in authored units; the renderer multiplies by the total scale.
 export const PROP_CATALOG: PropDefinition[] = [
   // --- natural -------------------------------------------------------------
-  { id: "tree-oak", label: "Oak Tree", category: "natural", file: "tree-oak.glb", footprintRadius: 0.9, defaultScale: 2.9, yOffset: 0.1, hint: "Broadleaf tree; cluster 2-4 along edges for forest" },
-  { id: "tree-pine", label: "Pine Tree", category: "natural", file: "tree-pine.glb", footprintRadius: 1.0, defaultScale: 2.9, yOffset: 0.1, hint: "Conifer; wilderness perimeters and cold scenes" },
-  { id: "tree-dead", label: "Dead Tree", category: "natural", file: "tree-dead.glb", footprintRadius: 0.9, defaultScale: 0.8, yOffset: 0.27, hint: "Bare twisted tree; eerie, blighted, or night scenes" },
-  { id: "thicket", label: "Thicket", category: "natural", file: "thicket.glb", footprintRadius: 1.1, defaultScale: 1.5, yOffset: 0.02, hint: "Cluster of small trees and brush; soft cover" },
-  { id: "stump", label: "Tree Stump", category: "natural", file: "stump.glb", footprintRadius: 0.3, defaultScale: 1.6, yOffset: 0.1, hint: "Cut stump; logging sites, campsites" },
-  { id: "boulder", label: "Boulder", category: "natural", file: "boulder.glb", footprintRadius: 0.8, defaultScale: 4.0, yOffset: 0, hint: "Large low rock; blocks movement and sight" },
+  { id: "tree-oak", label: "Oak Tree", category: "natural", file: "tree-oak.glb", footprintRadius: 1.3, defaultScale: 4.5, yOffset: 0.1, hint: "Broadleaf tree; cluster 2-4 along edges for forest" },
+  { id: "tree-pine", label: "Pine Tree", category: "natural", file: "tree-pine.glb", footprintRadius: 1.6, defaultScale: 5.0, yOffset: 0.1, hint: "Conifer; wilderness perimeters and cold scenes" },
+  { id: "tree-dead", label: "Dead Tree", category: "natural", file: "tree-dead.glb", footprintRadius: 1.1, defaultScale: 1.1, yOffset: 0.27, hint: "Bare twisted tree; eerie, blighted, or night scenes" },
+  { id: "thicket", label: "Thicket", category: "natural", file: "thicket.glb", footprintRadius: 1.8, defaultScale: 2.4, yOffset: 0.02, hint: "Cluster of small trees and brush; soft cover" },
+  { id: "stump", label: "Tree Stump", category: "natural", file: "stump.glb", footprintRadius: 0.4, defaultScale: 2.0, yOffset: 0.1, hint: "Cut stump; logging sites, campsites" },
+  { id: "boulder", label: "Boulder", category: "natural", file: "boulder.glb", footprintRadius: 1.0, defaultScale: 5.0, yOffset: 0, hint: "Large low rock; blocks movement and sight" },
   { id: "rocks", label: "Rocks", category: "natural", file: "rocks.glb", footprintRadius: 0.5, defaultScale: 3.0, yOffset: 0, hint: "Small rock scatter; ground texture, cavern floors" },
   // --- structure -----------------------------------------------------------
   { id: "wall-stone", label: "Stone Wall", category: "structure", file: "wall-stone.glb", footprintRadius: 1.1, defaultScale: 0.5, yOffset: 0, hint: "Solid masonry run; orient with rotation" },
@@ -150,4 +150,43 @@ export const GROUND_COLORS: Record<string, string> = {
   sand: "#9a8a62",
   snow: "#b9c2c9",
   cave: "#4a4644",
+}
+
+// --- procedural forest (renderer-only, not in the LLM vocabulary) ------------
+// A dense tree band is guaranteed in code for wooded kits — the mapview lesson:
+// player-visible qualities like forest density can't be left to prompt wording.
+
+export interface ForestAsset {
+  file: string
+  scale: number
+  /** Selection weight in the mix. */
+  weight: number
+  /** Keep-clear radius in board units at scale 1 placement. */
+  footprintRadius: number
+}
+
+export const FOREST_ASSETS: ForestAsset[] = [
+  { file: "tree-oak.glb", scale: 4.5, weight: 3, footprintRadius: 1.3 },
+  { file: "tree-pine.glb", scale: 5.0, weight: 3, footprintRadius: 1.6 },
+  { file: "trees-clump-a-medium.glb", scale: 3.4, weight: 2, footprintRadius: 3.0 },
+  { file: "trees-clump-a-large.glb", scale: 3.6, weight: 1, footprintRadius: 3.4 },
+  { file: "trees-clump-b-medium.glb", scale: 3.4, weight: 2, footprintRadius: 3.0 },
+  { file: "trees-clump-b-large.glb", scale: 3.6, weight: 1, footprintRadius: 3.4 },
+]
+
+export const DEAD_FOREST_ASSETS: ForestAsset[] = [{ file: "tree-dead.glb", scale: 1.1, weight: 1, footprintRadius: 1.1 }]
+
+/** How much automatic tree perimeter each kit gets (0 = none, 1 = dense forest). */
+export const KIT_FOREST_DENSITY: Record<EnvironmentKit, number> = {
+  forest: 1,
+  grove: 0.8,
+  road: 0.4,
+  camp: 0.4,
+  ruins: 0.3,
+  crypt: 0.35,
+  cavern: 0,
+  shrine: 0.35,
+  courtyard: 0,
+  checkpoint: 0.3,
+  generic: 0.25,
 }

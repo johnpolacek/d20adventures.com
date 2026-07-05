@@ -47,7 +47,9 @@ export const encounterScene3DSchema = z.object({
   environment: sceneEnvironmentSchema,
   props: z.array(scenePropSchema),
   characters: z.array(sceneCharacterSchema),
-  version: z.literal(1).default(1),
+  // v2: forest-density/scale/landmark-rules pass — bumping the literal invalidates
+  // all v1 cached scenes (strict parse fails -> silent regeneration).
+  version: z.literal(2).default(2),
   turnId: z.string(),
   generatedAt: z.string(),
 })

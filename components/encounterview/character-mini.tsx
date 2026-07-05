@@ -120,6 +120,9 @@ export function CharacterMini({ placement, character }: { placement: SceneCharac
       }}
       onPointerOut={() => setHovered(false)}
     >
+      {/* soft personal key light so minis stay readable even in dark scenes —
+          on a real table every mini catches the room light */}
+      <pointLight position={[0.6, 2.4, 0.9]} intensity={2.4} distance={5} decay={2} color="#ffe3b8" />
       {/* miniature base: amber for PCs, stone for NPCs, red ring when badly hurt */}
       <mesh position={[0, BASE_HEIGHT / 2, 0]} receiveShadow>
         <cylinderGeometry args={[BASE_RADIUS, BASE_RADIUS * 1.12, BASE_HEIGHT, 28]} />

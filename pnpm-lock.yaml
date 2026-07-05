@@ -161,6 +161,9 @@ importers:
       lucide-react:
         specifier: ^0.577.0
         version: 0.577.0(react@19.2.4)
+      n8ao:
+        specifier: ^1.10.2
+        version: 1.10.2(postprocessing@6.39.2(three@0.183.2))(three@0.183.2)
       next:
         specifier: 16.1.6
         version: 16.1.6(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)

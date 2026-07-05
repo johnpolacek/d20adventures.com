@@ -54,7 +54,9 @@ Props — place ONLY these propId values, nothing else:
 ${formatPropCatalogForPrompt()}
 
 Rules:
-- 8-${MAX_PROPS} props. Cluster them naturally (a camp has its tents together), keep the center third of the board mostly open for the characters.
+- Stage ONLY the place the characters are AT during this turn. NEVER place landmarks they are merely traveling toward, remember, or hear about. Worked example: a note says "meet me at the Old Standing Stones at midnight" and the CURRENT TURN has the character still moving through dark woods — then the board is woods only: NO stones, NO pillars, NO shrine. The stones first appear on the turn the narrative says the party ARRIVES at them. Before you output, re-read the CURRENT TURN text and delete any prop that represents a place it does not put the party at right now.
+- For wooded kits (forest, grove) a dense tree perimeter is added around the board automatically — do NOT build your own treeline along the edges. Place feature props only: a notable tree or two, boulders, stumps, and whatever the clearing itself contains.
+- 6-${MAX_PROPS} props. Cluster them naturally (a camp has its tents together), keep the center third of the board mostly open for the characters. Use each prop's scale (0.5-2) for variety.
 - Place EVERY character listed below exactly once, keyed by its characterId string. Stage the CURRENT narrative moment: who faces whom, who is confronting, sneaking, fleeing, or fallen. Allies group loosely; opponents face each other with a few units of tension between them. Keep characters at least 1.5 units apart.
 - Keep continuity with earlier turns: terrain and structures that appeared earlier are still there; a campfire lit two turns ago still burns.
 - stance per character: "down" if fallen or at 0% health, "hurt" if badly wounded, "attack" or "ready" if fighting or braced, else "idle".
@@ -176,7 +178,7 @@ export function normalizeSceneGeneration(generation: EncounterScene3DGeneration,
 export function assembleEncounterScene3D(normalized: ReturnType<typeof normalizeSceneGeneration>, args: { turnId: string }): EncounterScene3D {
   return encounterScene3DSchema.parse({
     ...normalized,
-    version: 1,
+    version: 2,
     turnId: args.turnId,
     generatedAt: new Date().toISOString(),
   })

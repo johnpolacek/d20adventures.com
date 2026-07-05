@@ -11,15 +11,16 @@
 // HDRIs from a CDN); all lights and textures are generated locally.
 
 import { OrbitControls } from "@react-three/drei"
-import { Canvas } from "@react-three/fiber"
-import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing"
-import { Suspense, useMemo } from "react"
+import { Canvas, useFrame } from "@react-three/fiber"
+import { Bloom, EffectComposer, N8AO, Vignette } from "@react-three/postprocessing"
+import { Suspense, useMemo, useRef } from "react"
 import * as THREE from "three"
-import { ENVIRONMENT_KITS, GROUND_COLORS } from "@/lib/encounterview/asset-catalog"
+import { ENVIRONMENT_KITS, GROUND_COLORS, KIT_FOREST_DENSITY, getPropDefinition } from "@/lib/encounterview/asset-catalog"
 import { SCENE_BOARD_SIZE } from "@/lib/encounterview/generate"
 import type { TurnCharacter } from "@/types/adventure"
 import type { EncounterScene3D } from "@/types/encounter-scene-3d"
 import { CharacterMini } from "./character-mini"
+import { ForestRing, type ForestAvoidZone } from "./forest-ring"
 import { SceneProp } from "./scene-prop"
 
 const LIGHTING = {
@@ -193,6 +194,51 @@ function GroundScatter({ ground, seed }: { ground: string; seed: number }) {
   )
 }
 
+/** Slow-drifting light motes — fireflies at night, dust in eerie scenes. */
+function FloatingMotes({ color, seed }: { color: string; seed: number }) {
+  const pointsRef = useRef<THREE.Points>(null)
+  const { positions, phases } = useMemo(() => {
+    const random = mulberry32(seed ^ 0x9e37)
+    const count = 42
+    const pos = new Float32Array(count * 3)
+    const phase = new Float32Array(count * 2)
+    for (let i = 0; i < count; i++) {
+      pos[i * 3] = (random() * 2 - 1) * (SCENE_BOARD_SIZE / 2 - 1)
+      pos[i * 3 + 1] = 0.4 + random() * 2.6
+      pos[i * 3 + 2] = (random() * 2 - 1) * (SCENE_BOARD_SIZE / 2 - 1)
+      phase[i * 2] = random() * Math.PI * 2
+      phase[i * 2 + 1] = 0.3 + random() * 0.7
+    }
+    return { positions: pos, phases: phase }
+  }, [seed])
+
+  useFrame(({ clock }) => {
+    const points = pointsRef.current
+    if (!points) return
+    const attribute = points.geometry.getAttribute("position") as THREE.BufferAttribute
+    const t = clock.elapsedTime
+    for (let i = 0; i < attribute.count; i++) {
+      const p0 = phases[i * 2]
+      const speed = phases[i * 2 + 1]
+      attribute.setX(i, positions[i * 3] + Math.sin(t * 0.22 * speed + p0) * 0.9)
+      attribute.setY(i, positions[i * 3 + 1] + Math.sin(t * 0.4 * speed + p0 * 2) * 0.35)
+      attribute.setZ(i, positions[i * 3 + 2] + Math.cos(t * 0.18 * speed + p0) * 0.9)
+    }
+    attribute.needsUpdate = true
+    const material = points.material as THREE.PointsMaterial
+    material.opacity = 0.55 + Math.sin(t * 0.8) * 0.15
+  })
+
+  return (
+    <points ref={pointsRef}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[positions.slice(), 3]} />
+      </bufferGeometry>
+      <pointsMaterial color={color} size={0.09} transparent opacity={0.6} blending={THREE.AdditiveBlending} depthWrite={false} sizeAttenuation />
+    </points>
+  )
+}
+
 export default function EncounterScene({ scene, characters }: { scene: EncounterScene3D; characters: TurnCharacter[] }) {
   const { environment } = scene
   const light = LIGHTING[environment.timeOfDay]
@@ -206,11 +252,23 @@ export default function EncounterScene({ scene, characters }: { scene: Encounter
   const charactersById = useMemo(() => new Map(characters.map((c) => [c.id, c])), [characters])
   const half = SCENE_BOARD_SIZE / 2
 
+  const forestDensity = KIT_FOREST_DENSITY[environment.kit] ?? 0
+  const forestAvoid = useMemo<ForestAvoidZone[]>(
+    () => [
+      ...scene.characters.map((c) => ({ x: c.x, z: c.z, radius: 1.6 })),
+      ...scene.props.map((p) => {
+        const def = getPropDefinition(p.propId)
+        return { x: p.x, z: p.z, radius: (def?.footprintRadius ?? 0.6) * p.scale + 0.5 }
+      }),
+    ],
+    [scene.characters, scene.props]
+  )
+
   return (
     <Canvas
       shadows
       dpr={[1, 2]}
-      camera={{ fov: 40, position: [0, 14, 18], near: 0.5, far: 120 }}
+      camera={{ fov: 40, position: [0, 16, 15], near: 0.5, far: 120 }}
       gl={{ antialias: true }}
       onCreated={({ gl }) => {
         gl.toneMappingExposure = 1.2
@@ -256,8 +314,10 @@ export default function EncounterScene({ scene, characters }: { scene: Encounter
       <gridHelper args={[SCENE_BOARD_SIZE, SCENE_BOARD_SIZE, "#000000", "#000000"]} position={[0, 0.02, 0]} material-transparent material-opacity={0.16} />
 
       <GroundScatter ground={environment.ground} seed={seed} />
+      {(environment.timeOfDay === "night" || environment.mood === "eerie") && <FloatingMotes color={environment.mood === "eerie" ? "#9db4c9" : "#ffd98a"} seed={seed} />}
 
       <Suspense fallback={null}>
+        <ForestRing density={forestDensity} seed={seed} avoid={forestAvoid} dead={environment.kit === "crypt"} />
         {scene.props.map((prop) => (
           <SceneProp key={prop.id} prop={prop} timeOfDay={environment.timeOfDay} />
         ))}
@@ -269,6 +329,7 @@ export default function EncounterScene({ scene, characters }: { scene: Encounter
       </Suspense>
 
       <EffectComposer multisampling={4}>
+        <N8AO aoRadius={1.6} intensity={3.5} distanceFalloff={1} halfRes />
         <Bloom mipmapBlur intensity={0.75} luminanceThreshold={0.85} luminanceSmoothing={0.2} />
         <Vignette offset={0.28} darkness={0.72} />
       </EffectComposer>
