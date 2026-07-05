@@ -15,7 +15,7 @@ import { decrementUserTokensAction, incrementUserTokensAction } from "@/app/_act
 import type { Id } from "@/convex/_generated/dataModel"
 import { assertAdventureAccessByTurn } from "@/lib/adventure-access"
 import { MINI3D_TOKEN_COST, STANDEE_TOKEN_COST } from "@/lib/encounterview/costs"
-import { getMini3DUrl, isMini3DEnabled, mini3DExists, pollMini3DJob, readMini3DJob, submitMini3DJob } from "@/lib/encounterview/mini3d"
+import { claimMini3DSubmission, getMini3DUrl, isClaimMarker, isClaimStale, isMini3DEnabled, mini3DExists, pollMini3DJob, readMini3DJob, releaseMini3DClaim, submitMini3DJob } from "@/lib/encounterview/mini3d"
 import { getOrCreateStandee, getStandeeHash, getStandeeKey, standeeExists } from "@/lib/encounterview/standee"
 import { getAssetUrl } from "@/lib/aws"
 import { getImageUrl } from "@/lib/utils"
@@ -78,7 +78,14 @@ export async function getOrGenerateCharacterMinis(args: { turnId: string }): Pro
       return
     }
     const job = await readMini3DJob(hash)
-    if (job) {
+    if (job && isClaimMarker(job)) {
+      // Someone else is mid-submission; treat as pending unless their claim
+      // went stale (crashed before submitting).
+      if (!isClaimStale(job)) {
+        pending = true
+        return
+      }
+    } else if (job) {
       const poll = await pollMini3DJob(hash, job)
       if (poll.status === "ready") {
         minis3d[c.id] = poll.url
@@ -90,18 +97,26 @@ export async function getOrGenerateCharacterMinis(args: { turnId: string }): Pro
       return
     }
     if (insufficientTokens || !userId) return
-    const charge = await chargeFlat(MINI3D_TOKEN_COST)
-    if (charge === "insufficient") {
-      insufficientTokens = true
+
+    // Claim BEFORE charging: concurrent callers race to the same marker key
+    // and only the claim winner spends tokens and submits.
+    if (!(await claimMini3DSubmission(hash, userId))) {
+      pending = true
       return
     }
-    if (charge !== "charged") return
+    const charge = await chargeFlat(MINI3D_TOKEN_COST)
+    if (charge !== "charged") {
+      await releaseMini3DClaim(hash)
+      if (charge === "insufficient") insufficientTokens = true
+      return
+    }
     try {
       await submitMini3DJob(hash, standeeUrl, userId)
       pending = true
     } catch (error) {
       console.warn(`[encounterview] mini3d submit failed for ${c.name}: ${error instanceof Error ? error.message : error}`)
       await incrementUserTokensAction({ tokensToCredit: MINI3D_TOKEN_COST, transactionType: "adjustment_refund" })
+      await releaseMini3DClaim(hash)
     }
   }
 

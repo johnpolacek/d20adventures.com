@@ -37,6 +37,41 @@ interface Mini3DJobMarker {
   startedAt: string
 }
 
+interface Mini3DClaim {
+  claim: string
+  claimedBy: string
+  claimedAt: number
+}
+
+/**
+ * Best-effort submission lock. Concurrent callers (React strict-mode double
+ * effects, two players opening the same turn) both pass the "no marker yet"
+ * check, so before charging anyone we write a claim nonce and read it back —
+ * S3 is read-after-write consistent, so the last writer wins and everyone
+ * else backs off. Not a true mutex, but it shrinks the double-charge window
+ * from the full fal round-trip to a single S3 write.
+ */
+export async function claimMini3DSubmission(hash: string, userId: string): Promise<boolean> {
+  const key = getJobMarkerKey(hash)
+  const nonce = `${userId}:${Date.now()}:${Math.random().toString(36).slice(2)}`
+  await updateJsonOnS3(key, { claim: nonce, claimedBy: userId, claimedAt: Date.now() } satisfies Mini3DClaim)
+  const readBack = (await readJsonFromS3(key).catch(() => null)) as Mini3DClaim | null
+  return readBack?.claim === nonce
+}
+
+export function isClaimMarker(marker: unknown): marker is Mini3DClaim {
+  return Boolean(marker && typeof marker === "object" && "claim" in (marker as Record<string, unknown>))
+}
+
+/** A claim whose owner never completed the submit (crashed) unblocks after 2 minutes. */
+export function isClaimStale(claim: Mini3DClaim): boolean {
+  return Date.now() - claim.claimedAt > 2 * 60 * 1000
+}
+
+export async function releaseMini3DClaim(hash: string): Promise<void> {
+  await deleteS3Object(getJobMarkerKey(hash)).catch(() => {})
+}
+
 export async function mini3DExists(hash: string): Promise<boolean> {
   if (!s3Client) return false
   try {
@@ -78,9 +113,9 @@ export async function submitMini3DJob(hash: string, standeeUrl: string, chargedU
   await updateJsonOnS3(getJobMarkerKey(hash), marker)
 }
 
-export async function readMini3DJob(hash: string): Promise<Mini3DJobMarker | null> {
+export async function readMini3DJob(hash: string): Promise<Mini3DJobMarker | Mini3DClaim | null> {
   try {
-    return (await readJsonFromS3(getJobMarkerKey(hash))) as Mini3DJobMarker
+    return (await readJsonFromS3(getJobMarkerKey(hash))) as Mini3DJobMarker | Mini3DClaim
   } catch {
     return null
   }
@@ -105,10 +140,20 @@ export type Mini3DPollResult = { status: "ready"; url: string } | { status: "pen
  * Advance a pending job: check fal status; when complete, download, optimize,
  * upload to the public bucket, and clear the marker.
  */
+const JOB_ABANDON_MS = 30 * 60 * 1000
+
 export async function pollMini3DJob(hash: string, marker: Mini3DJobMarker): Promise<Mini3DPollResult> {
+  const jobAge = Date.now() - new Date(marker.startedAt).getTime()
   const statusResponse = await fetch(marker.statusUrl, { headers: falHeaders() })
   if (!statusResponse.ok) {
-    // Expired/unknown request — treat as failed so the charge can be refunded.
+    // A non-ok status check is usually TRANSIENT (rate limit, account lock,
+    // network) — the job may still complete and fal may still bill us for it.
+    // Keep the marker and stay pending; only give up (and refund) once the
+    // job is old enough that no fal generation could still be running.
+    if (jobAge < JOB_ABANDON_MS) {
+      console.warn(`[encounterview] mini3d status check ${statusResponse.status} for ${marker.requestId}; keeping job pending`)
+      return { status: "pending" }
+    }
     await deleteS3Object(getJobMarkerKey(hash)).catch(() => {})
     return { status: "failed" }
   }

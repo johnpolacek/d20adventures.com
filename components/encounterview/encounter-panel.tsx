@@ -9,7 +9,7 @@
 import { Maximize2 } from "lucide-react"
 import dynamic from "next/dynamic"
 import { useParams } from "next/navigation"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { getOrGenerateCharacterMinis } from "@/app/_actions/generate-character-mini"
 import { getOrGenerateEncounterScene } from "@/app/_actions/generate-encounter-scene"
@@ -77,9 +77,13 @@ function EncounterOverlay({ encounterTitle, onClose }: { encounterTitle?: string
   const adventureId = params?.adventureId
 
   // Avatar-derived minis load in parallel with the scene spec; re-called on an
-  // interval while 3D generation jobs are still running server-side.
+  // interval while 3D generation jobs are still running server-side. The
+  // in-flight guard stops strict-mode double effects (and overlapping polls)
+  // from firing concurrent charge-and-submit calls.
+  const minisInFlight = useRef(false)
   const loadMinis = useCallback(async () => {
-    if (!turnId) return
+    if (!turnId || minisInFlight.current) return
+    minisInFlight.current = true
     try {
       const result = await getOrGenerateCharacterMinis({ turnId })
       setStandees(result.minis)
@@ -89,6 +93,8 @@ function EncounterOverlay({ encounterTitle, onClose }: { encounterTitle?: string
     } catch (error) {
       console.warn("[encounterview] minis fetch failed", error)
       setMinisPending(false)
+    } finally {
+      minisInFlight.current = false
     }
   }, [turnId])
 
