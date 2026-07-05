@@ -10,6 +10,7 @@ import { processTurnReply } from "@/app/_actions/adventure"
 import { generatePracticeReport, getPracticeReportsForAdventure } from "@/app/_actions/adventure-reports"
 import { ensureNpcProcessed } from "@/app/_actions/ensure-npc-processed"
 import CharacterDiceRollResultDisplay from "@/components/adventure/character-dice-roll-result-display"
+import StoryviewButton from "@/components/adventure/storyview/storyview-button"
 import TurnAdvanceButton from "@/components/adventure/turn-advance-button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -423,7 +424,8 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
         </div>
       )}
       <div className="absolute bottom-8 left-8 w-auto pr-16 z-50">
-        <div className="flex justify-center md:justify-start items-center gap-2 md:bg-black/70 px-4 py-2 rounded-lg md:border border-white/20">
+        <div className="flex justify-center md:justify-start items-center gap-3 md:bg-black/70 px-4 py-2 rounded-lg md:border border-white/20">
+          <StoryviewButton />
           <span className="text-xs text-muted-foreground">Show Original Replies</span>
           <div className="scale-75 pt-0.5">
             <Switch checked={showOriginalReplies} onCheckedChange={setShowOriginalReplies} id="show-original-replies-switch" />

@@ -4,6 +4,15 @@
 
 Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.
 
+## 2026-07-05
+
+### Storyview v1 built on feature/storyview (worktree)
+
+- Token-funded TTS narration of turns with a cinematic paragraph-at-a-time overlay. Plan and decisions: [plans/feature-storyview.md](plans/feature-storyview.md). Branched off `feature/play-layout-refactor` (its layout changes are the substrate for the turn-page UI).
+- Durable facts established: `@ai-sdk/google` (v3.0.43) has **no speech support** — Gemini TTS requires a direct REST `generateContent` call with `responseModalities: ["AUDIO"]`; it returns raw 24kHz/16-bit/mono PCM (wrap in a 44-byte WAV header, no transcode deps needed); Gemini multi-speaker caps at 2 voices, so per-segment single-voice synthesis is the scalable shape; measured cost ≈ 25 audio tokens/sec → ~31 D20 tokens for an ~80s turn (attribution LLM + TTS, at the standard 0.01 multiplier).
+- New Convex surface: `turnAudio` table (manifest keyed by narrative sha1, atomic generation claim), `usage_tts_audio` transaction type, `adventures.voiceAssignments` (stable per-adventure character voices).
+- Schema note: `usage_encounter_asset` was admitted into the `tokenTransactionHistory` union so Convex seeds from main import cleanly (main has in-flight encounterview work writing that type from its own uncommitted schema).
+
 ## 2026-07-03
 
 ### Mapview v1 merged to main
