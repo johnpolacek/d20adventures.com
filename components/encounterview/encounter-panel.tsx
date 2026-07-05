@@ -1,23 +1,32 @@
 "use client"
 
-// Player-facing Encounter panel: a floating "Encounter" toggle on the turn page that
-// opens a fullscreen 3D miniatures view of the current turn, staged from the
-// narrative by the server action (per-turn, cached in S3). Mirrors the Mapview
-// panel (components/mapview/map-panel.tsx) so the two buttons read as siblings.
+// Player-facing Encounter view entry points, mirroring the Mapview pair:
+// EncounterPanel is the floating "Encounter" button (below xl), EncounterRailPanel
+// is the card docked in the turn page's right rail (desktop). Both open the same
+// fullscreen 3D miniatures overlay, staged per turn from the narrative by the
+// server action and cached in S3.
 
+import { Maximize2 } from "lucide-react"
 import dynamic from "next/dynamic"
 import { useParams } from "next/navigation"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 import { getOrGenerateCharacterMinis } from "@/app/_actions/generate-character-mini"
 import { getOrGenerateEncounterScene } from "@/app/_actions/generate-encounter-scene"
 import Parchment from "@/components/graphics/background/Parchment"
 import { textShadow } from "@/components/typography/styles"
 import { Button } from "@/components/ui/button"
 import { useTurn } from "@/lib/context/TurnContext"
+import { cn } from "@/lib/utils"
 import type { EncounterScene3D } from "@/types/encounter-scene-3d"
 
-// Keep three.js out of the turn-page bundle until the panel first opens.
+// Keep three.js out of the turn-page bundle until the overlay first opens.
 const EncounterScene = dynamic(() => import("./encounter-scene"), { ssr: false })
+
+const MINIS_POLL_INTERVAL_MS = 10000
+
+// Session-level caches shared by both entry points and across open/close cycles.
+const sceneCache = new Map<string, EncounterScene3D>()
 
 const LOADING_LINES = [
   "The Game Master arranges the miniatures…",
@@ -35,28 +44,30 @@ function LoadingCard() {
   }, [])
   return (
     <div className="flex flex-col items-center gap-4 text-center">
-      <svg viewBox="0 0 24 24" className="h-12 w-12 animate-pulse text-amber-400" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinejoin="round" aria-hidden>
-        <path d="M12 2 3 7.5v9L12 22l9-5.5v-9L12 2Z" />
-        <path d="M12 2v7.5m0 0L3 7.5m9 2 9-2m-9 2V22" />
-      </svg>
+      <D20Icon className="h-12 w-12 animate-pulse text-amber-400" />
       <p className="font-display text-lg text-stone-300">{LOADING_LINES[lineIndex]}</p>
       <p className="text-xs text-stone-500">Staging this turn&apos;s tabletop for the first time can take a moment</p>
     </div>
   )
 }
 
-type PanelState = { status: "idle" } | { status: "loading" } | { status: "ready"; scene: EncounterScene3D } | { status: "error"; message: string }
+function D20Icon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinejoin="round" aria-hidden>
+      <path d="M12 2 3 7.5v9L12 22l9-5.5v-9L12 2Z" />
+      <path d="M12 2v7.5m0 0L3 7.5m9 2 9-2m-9 2V22" />
+    </svg>
+  )
+}
 
-const MINIS_POLL_INTERVAL_MS = 10000
+type PanelState = { status: "loading" } | { status: "ready"; scene: EncounterScene3D } | { status: "error"; message: string }
 
-export function EncounterPanel({ encounterTitle }: { encounterTitle?: string }) {
-  const [open, setOpen] = useState(false)
-  const [state, setState] = useState<PanelState>({ status: "idle" })
+function EncounterOverlay({ encounterTitle, onClose }: { encounterTitle?: string; onClose: () => void }) {
+  const [state, setState] = useState<PanelState>({ status: "loading" })
   const [standees, setStandees] = useState<Record<string, string>>({})
   const [minis3d, setMinis3d] = useState<Record<string, string>>({})
   const [minisPending, setMinisPending] = useState(false)
   const [insufficientTokens, setInsufficientTokens] = useState(false)
-  const sceneCache = useRef(new Map<string, EncounterScene3D>())
   const turn = useTurn()
   const params = useParams<{ settingId?: string; adventurePlanId?: string; adventureId?: string }>()
 
@@ -65,9 +76,8 @@ export function EncounterPanel({ encounterTitle }: { encounterTitle?: string }) 
   const adventurePlanId = params?.adventurePlanId
   const adventureId = params?.adventureId
 
-  // Avatar-derived minis load in parallel with the scene spec; the scene
-  // renders with fallback figures until they arrive. Re-called on an interval
-  // while 3D generation jobs are still running server-side.
+  // Avatar-derived minis load in parallel with the scene spec; re-called on an
+  // interval while 3D generation jobs are still running server-side.
   const loadMinis = useCallback(async () => {
     if (!turnId) return
     try {
@@ -85,11 +95,9 @@ export function EncounterPanel({ encounterTitle }: { encounterTitle?: string }) 
   const loadScene = useCallback(async () => {
     if (!turnId || !settingId || !adventurePlanId || !adventureId) return
 
-    setStandees({})
-    setMinis3d({})
     void loadMinis()
 
-    const cached = sceneCache.current.get(turnId)
+    const cached = sceneCache.get(turnId)
     if (cached) {
       setState({ status: "ready", scene: cached })
       return
@@ -97,7 +105,7 @@ export function EncounterPanel({ encounterTitle }: { encounterTitle?: string }) 
     setState({ status: "loading" })
     try {
       const { scene } = await getOrGenerateEncounterScene({ settingId, adventurePlanId, adventureId, turnId })
-      sceneCache.current.set(turnId, scene)
+      sceneCache.set(turnId, scene)
       setState({ status: "ready", scene })
     } catch (error) {
       console.error("[encounterview] scene generation failed", error)
@@ -106,87 +114,129 @@ export function EncounterPanel({ encounterTitle }: { encounterTitle?: string }) 
     }
   }, [turnId, settingId, adventurePlanId, adventureId, loadMinis])
 
-  // Poll while 3D mini jobs are pending and the panel is open.
   useEffect(() => {
-    if (!open || !minisPending) return
-    const interval = setInterval(() => void loadMinis(), MINIS_POLL_INTERVAL_MS)
-    return () => clearInterval(interval)
-  }, [open, minisPending, loadMinis])
+    void loadScene()
+  }, [loadScene])
 
   useEffect(() => {
-    if (!open) return
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false)
+      if (event.key === "Escape") onClose()
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [open])
+  }, [onClose])
 
+  // Poll while 3D mini jobs are pending.
   useEffect(() => {
-    if (open) void loadScene()
-  }, [open, loadScene])
+    if (!minisPending) return
+    const interval = setInterval(() => void loadMinis(), MINIS_POLL_INTERVAL_MS)
+    return () => clearInterval(interval)
+  }, [minisPending, loadMinis])
 
-  if (!turn || !settingId || !adventurePlanId || !adventureId) return null
+  if (!turn) return null
+
+  // Portal to <body> so the fullscreen overlay escapes any ancestor stacking
+  // context (the right rail is position:sticky).
+  return createPortal(
+    <div className="fixed inset-0 z-40 flex flex-col bg-black/95">
+      <header className="relative flex flex-none items-center justify-center px-5 py-5">
+        <div className="pointer-events-none absolute left-0 right-0 top-1/2 h-[1px] -translate-y-1/2 bg-[url('/images/app/art/texture-line.png')] bg-blend-lighten opacity-50" />
+        <h2 className="relative z-[11] rounded-sm border border-white/20 bg-gradient-to-t from-amber-950 via-amber-950 to-amber-800 px-6 py-1.5 text-center font-display text-lg font-bold contrast-[1.2] saturate-[.4] ring-4 ring-black sm:px-8 sm:py-2 sm:text-xl sm:ring-8">
+          <Parchment />
+          <span style={textShadow}>{encounterTitle || "Encounter"}</span>
+        </h2>
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-10 top-1/2 inline-flex -translate-y-1/2 items-center gap-3 rounded-full border border-stone-600 bg-black px-5 py-2 font-display text-lg text-stone-200 hover:border-amber-500 hover:text-amber-200"
+          aria-label="Close encounter view"
+        >
+          Close
+          <span aria-hidden>✕</span>
+        </button>
+      </header>
+
+      <div className="relative min-h-0 flex-1">
+        {state.status === "ready" ? (
+          <EncounterScene scene={state.scene} characters={turn.characters} standees={standees} minis3d={minis3d} />
+        ) : (
+          <div className="flex h-full items-center justify-center px-6">
+            {state.status === "error" ? (
+              <div className="flex flex-col items-center gap-4 text-center">
+                <p className="font-display text-lg text-stone-300">{state.message}</p>
+                <Button onClick={() => void loadScene()} className="bg-[#15353d] ring-4 ring-[#24565f] hover:bg-[#15353d]">
+                  Retry
+                </Button>
+              </div>
+            ) : (
+              <LoadingCard />
+            )}
+          </div>
+        )}
+      </div>
+
+      {state.status === "ready" && (state.scene.summary || minisPending || insufficientTokens) && (
+        <div className="flex-none px-5 py-3 text-center">
+          {state.scene.summary && <p className="text-sm italic text-stone-400">{state.scene.summary}</p>}
+          {minisPending && <p className="mt-1 text-xs text-teal-400/80">Sculpting 3D miniatures… they&apos;ll appear here when painted.</p>}
+          {insufficientTokens && <p className="mt-1 text-xs text-amber-500/90">Not enough tokens to generate some miniatures.</p>}
+        </div>
+      )}
+    </div>,
+    document.body
+  )
+}
+
+/** Floating "Encounter" button — the below-xl entry point. */
+export function EncounterPanel({ encounterTitle }: { encounterTitle?: string }) {
+  const [open, setOpen] = useState(false)
+  const turn = useTurn()
+  if (!turn) return null
 
   return (
     <>
       {/* Muted teal at the same value/saturation as the Map amber and Game Chat
           indigo, so the three buttons read as equal priority. */}
       <Button size="sm" onClick={() => setOpen(true)} className="bg-[#15353d] ring-4 ring-[#24565f] hover:bg-[#15353d] hover:scale-105 transition-all duration-300" aria-label="Open 3D encounter view">
-        <svg viewBox="0 0 24 24" className="mr-1 h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinejoin="round" aria-hidden>
-          <path d="M12 2 3 7.5v9L12 22l9-5.5v-9L12 2Z" />
-          <path d="M12 2v7.5m0 0L3 7.5m9 2 9-2m-9 2V22" />
-        </svg>
+        <D20Icon className="mr-1 h-4 w-4" />
         Encounter
       </Button>
+      {open && <EncounterOverlay encounterTitle={encounterTitle} onClose={() => setOpen(false)} />}
+    </>
+  )
+}
 
-      {open && (
-        <div className="fixed inset-0 z-40 flex flex-col bg-black/95">
-          <header className="relative flex flex-none items-center justify-center px-5 py-5">
-            <div className="pointer-events-none absolute left-0 right-0 top-1/2 h-[1px] -translate-y-1/2 bg-[url('/images/app/art/texture-line.png')] bg-blend-lighten opacity-50" />
-            <h2 className="relative z-[11] rounded-sm border border-white/20 bg-gradient-to-t from-amber-950 via-amber-950 to-amber-800 px-6 py-1.5 text-center font-display text-lg font-bold contrast-[1.2] saturate-[.4] ring-4 ring-black sm:px-8 sm:py-2 sm:text-xl sm:ring-8">
-              <Parchment />
-              <span style={textShadow}>{encounterTitle || "Encounter"}</span>
-            </h2>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="absolute right-10 top-1/2 inline-flex -translate-y-1/2 items-center gap-3 rounded-full border border-stone-600 bg-black px-5 py-2 font-display text-lg text-stone-200 hover:border-amber-500 hover:text-amber-200"
-              aria-label="Close encounter view"
-            >
-              Close
-              <span aria-hidden>✕</span>
-            </button>
-          </header>
+/** Right-rail card — the desktop entry point, docked with the mini map and chat. */
+export function EncounterRailPanel({ encounterTitle, className }: { encounterTitle?: string; className?: string }) {
+  const [open, setOpen] = useState(false)
+  const turn = useTurn()
+  if (!turn) return null
 
-          <div className="relative min-h-0 flex-1">
-            {state.status === "ready" ? (
-              <EncounterScene scene={state.scene} characters={turn.characters} standees={standees} minis3d={minis3d} />
-            ) : (
-              <div className="flex h-full items-center justify-center px-6">
-                {state.status === "error" ? (
-                  <div className="flex flex-col items-center gap-4 text-center">
-                    <p className="font-display text-lg text-stone-300">{state.message}</p>
-                    <Button onClick={() => void loadScene()} className="bg-[#15353d] ring-4 ring-[#24565f] hover:bg-[#15353d]">
-                      Retry
-                    </Button>
-                  </div>
-                ) : (
-                  <LoadingCard />
-                )}
-              </div>
-            )}
-          </div>
-
-          {state.status === "ready" && (state.scene.summary || minisPending || insufficientTokens) && (
-            <div className="flex-none px-5 py-3 text-center">
-              {state.scene.summary && <p className="text-sm italic text-stone-400">{state.scene.summary}</p>}
-              {minisPending && <p className="mt-1 text-xs text-teal-400/80">Sculpting 3D miniatures… they'll appear here when painted.</p>}
-              {insufficientTokens && <p className="mt-1 text-xs text-amber-500/90">Not enough tokens to generate some miniatures.</p>}
-            </div>
-          )}
+  return (
+    <>
+      <div className={cn("overflow-hidden rounded-xl bg-black/40 ring ring-primary-700", className)}>
+        <div className="flex items-center justify-between gap-2 px-3 py-2">
+          <h3 className="truncate font-display text-sm font-bold text-teal-300">Encounter</h3>
+          <button type="button" onClick={() => setOpen(true)} className="rounded p-1 text-stone-300 transition-colors hover:bg-white/10 hover:text-teal-200" aria-label="Open 3D encounter view">
+            <Maximize2 className="h-4 w-4" />
+          </button>
         </div>
-      )}
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="group relative block w-full cursor-pointer bg-gradient-to-b from-[#101c20] via-[#0c1417] to-[#080c0e] px-3 py-4 text-left"
+          aria-label="Open 3D encounter view"
+        >
+          <div className="flex items-center gap-3">
+            <D20Icon className="h-9 w-9 flex-none text-teal-400/80 transition-colors group-hover:text-teal-300" />
+            <div className="min-w-0">
+              <p className="truncate font-display text-sm font-bold text-stone-200 transition-colors group-hover:text-teal-100">{encounterTitle || "This turn's tabletop"}</p>
+              <p className="text-xs text-stone-400">View the scene in 3D miniatures</p>
+            </div>
+          </div>
+        </button>
+      </div>
+      {open && <EncounterOverlay encounterTitle={encounterTitle} onClose={() => setOpen(false)} />}
     </>
   )
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { EncounterPanel } from "@/components/encounterview/encounter-panel"
+import { EncounterPanel, EncounterRailPanel } from "@/components/encounterview/encounter-panel"
 import type { MapTokens } from "@/components/mapview/encounter-map-2d"
 import { MapPanel, MapRailPanel } from "@/components/mapview/map-panel"
 import { cn } from "@/lib/utils"
@@ -67,6 +67,7 @@ export default function Turn({
             <MapRailPanel map={encounterMap} title={mapTitle} tokens={mapTokens} />
           </div>
         )}
+        <EncounterRailPanel encounterTitle={encounter?.title} className="flex-none" />
         {!isSolo && (
           <div className={cn("min-h-0", encounterMap ? "flex-none" : "flex-1")} style={encounterMap ? { height: chatHeight } : undefined}>
             <GameChat variant="rail" className="h-full" />

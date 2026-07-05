@@ -16,6 +16,10 @@ Scene spec v2 (same day, owner feedback "trees are tiny / expected a forest / st
 
 ## 2026-07-05
 
+### Play layout refactor merged; Encounter joins the right rail
+
+`feature/play-layout-refactor` finished into main via `wt:finish` (merge policy, plan archived to zzz-completed; one conflict in `turn.tsx` resolved by combining the branch's 3-column rail layout with main's `isSolo` gating and Encounter entry). The encounter view now follows the rail pattern: `EncounterPanel`/`EncounterRailPanel` share one portaled fullscreen overlay (mirroring `MapPanel`/`MapRailPanel`) — desktop gets an Encounter card docked under the mini map, below-xl keeps the floating button row. Solo runs hide chat in both rail and floating forms. The `feature-storyview` worktree remains active and untouched. Reminder outstanding: delete the `d20adventures-feature-play-layout-refactor` Convex project in the dashboard.
+
 ### Encounter view: true 3D minis (fal Hunyuan3D) + token charging for all paid generations
 
 - **Token economy now covers the encounter view.** New `usage_encounter_asset` transaction type (convex schema + mutation + tokens action). Scene staging charges metered LLM usage via `usage_generate_object` (provider tokens × 0.01, charged before the scene is cached — unaffordable = not stored); standees charge a flat 100 tokens and 3D minis a flat 400 (`lib/encounterview/costs.ts`), charged before generation with `adjustment_refund` on failure. Cache hits are free; the triggering player pays. Verified against the live ledger. Mapview generation stays uncharged (admin authoring, not player-triggered).
