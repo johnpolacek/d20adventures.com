@@ -65,3 +65,6 @@ convex/_generated/
 
 # agent-browser local auth/session (do not commit)
 .agent-browser/
+
+# Claude Code local config (launch.json is machine-local; settings.local.json is personal permissions)
+.claude/
