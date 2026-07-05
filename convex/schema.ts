@@ -65,6 +65,14 @@ export default defineSchema({
         schemaVersion: v.string(),
       })
     ),
+    voiceAssignments: v.optional(
+      v.array(
+        v.object({
+          characterId: v.string(),
+          voice: v.string(),
+        })
+      )
+    ),
     adventureSummaryMarkdown: v.optional(v.string()),
     discoveries: v.optional(v.array(v.any())),
     entityUpdates: v.optional(v.array(v.any())),
@@ -204,6 +212,7 @@ export default defineSchema({
       v.literal("usage_generate_object"),
       v.literal("usage_image_upload"),
       v.literal("usage_join_adventure"),
+      v.literal("usage_tts_audio"),
       v.literal("usage_encounter_asset"),
       v.literal("adjustment_refund"),
       v.literal("adjustment_manual") // For admin corrections or other types
@@ -215,6 +224,38 @@ export default defineSchema({
   })
     .index("by_userId", ["userId"])
     .index("by_timestamp", ["timestamp"]),
+
+  // Storyview narration audio manifests, one per turn, keyed by narrative hash
+  turnAudio: defineTable({
+    turnId: v.id("turns"),
+    adventureId: v.id("adventures"),
+    status: v.union(v.literal("generating"), v.literal("ready"), v.literal("error")),
+    narrativeHash: v.string(),
+    requestedBy: v.string(), // Clerk User ID of the player who triggered generation
+    segments: v.optional(
+      v.array(
+        v.object({
+          partIndex: v.number(),
+          speaker: v.string(), // "narrator" | characterId
+          characterName: v.optional(v.string()),
+          text: v.string(),
+          voice: v.string(),
+          audioKey: v.string(),
+          durationSec: v.number(),
+        })
+      )
+    ),
+    usage: v.optional(
+      v.object({
+        ttsInputTokens: v.number(),
+        ttsOutputTokens: v.number(),
+        chargedTokens: v.number(),
+      })
+    ),
+    error: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_turn", ["turnId"]),
 
   // Per-adventure game chat (text only)
   chat_messages: defineTable({

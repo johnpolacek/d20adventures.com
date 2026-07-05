@@ -13,6 +13,8 @@ export const validRoutes = new Set([
   'admin/adventures-plans',
   'admin/adventures-plans/*',
   'admin/mailing-list',
+  'admin/mapview',
+  'admin/mapview/*',
   'admin/users',
   'admin/wiki-adventures',
   'admin/wiki-adventures/*',

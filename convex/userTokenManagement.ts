@@ -53,7 +53,14 @@ export const decrementTokens = mutation({
   args: {
     userId: v.string(),
     tokensUsed: v.number(),
-    transactionType: v.union(v.literal("usage_generate_text"), v.literal("usage_generate_object"), v.literal("usage_image_upload"), v.literal("usage_join_adventure"), v.literal("usage_encounter_asset")),
+    transactionType: v.union(
+      v.literal("usage_generate_text"),
+      v.literal("usage_generate_object"),
+      v.literal("usage_image_upload"),
+      v.literal("usage_join_adventure"),
+      v.literal("usage_encounter_asset"),
+      v.literal("usage_tts_audio")
+    ),
   },
   handler: async (ctx, args) => {
     if (args.tokensUsed <= 0) {

@@ -25,6 +25,13 @@ Scene spec v2 (same day, owner feedback "trees are tiny / expected a forest / st
 - **Token economy now covers the encounter view.** New `usage_encounter_asset` transaction type (convex schema + mutation + tokens action). Scene staging charges metered LLM usage via `usage_generate_object` (provider tokens × 0.01, charged before the scene is cached — unaffordable = not stored); standees charge a flat 100 tokens and 3D minis a flat 400 (`lib/encounterview/costs.ts`), charged before generation with `adjustment_refund` on failure. Cache hits are free; the triggering player pays. Verified against the live ledger. Mapview generation stays uncharged (admin authoring, not player-triggered).
 - **3D mini pipeline** (`lib/encounterview/mini3d.ts`): standee render → fal.ai `hunyuan3d-v3/image-to-3d` queue → GLB optimized server-side with gltf-transform (weld/quantize/prune + webp textures) → public bucket keyed by the standee's portrait hash. Jobs are async (1-2 min): a pending marker lives in the data bucket and the panel polls every 10s while open ("Sculpting 3D miniatures…"). Render order: 3D mini > standee > KayKit model > portrait pawn. **Gated on `FAL_KEY`** — without it the view stays on standees; the key still needs to be added to `.env`.
 
+### Storyview v1 built on feature/storyview (worktree), merged to main
+
+- Token-funded TTS narration of turns with a cinematic paragraph-at-a-time overlay. Plan and decisions: [plans/feature-storyview.md](plans/feature-storyview.md). Branched off `feature/play-layout-refactor` (its layout changes are the substrate for the turn-page UI).
+- Durable facts established: `@ai-sdk/google` (v3.0.43) has **no speech support** — Gemini TTS requires a direct REST `generateContent` call with `responseModalities: ["AUDIO"]`; it returns raw 24kHz/16-bit/mono PCM (wrap in a 44-byte WAV header, no transcode deps needed); Gemini multi-speaker caps at 2 voices, so per-segment single-voice synthesis is the scalable shape; measured cost ≈ 25 audio tokens/sec → ~31 D20 tokens for an ~80s turn (attribution LLM + TTS, at the standard 0.01 multiplier).
+- New Convex surface: `turnAudio` table (manifest keyed by narrative sha1, atomic generation claim), `usage_tts_audio` transaction type, `adventures.voiceAssignments` (stable per-adventure character voices).
+- Schema note: `usage_encounter_asset` was admitted into the branch's `tokenTransactionHistory` union so Convex seeds from main imported cleanly while the encounterview work was still uncommitted on main; the merge unions both new transaction types.
+
 ## 2026-07-03
 
 ### Mapview v1 merged to main

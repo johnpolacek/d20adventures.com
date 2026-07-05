@@ -435,6 +435,7 @@ export const patchAdventure = mutation({
       currentTurnId: v.optional(v.id("turns")),
       currentEncounterId: v.optional(v.string()),
       contentRef: v.optional(contentRefValidator),
+      voiceAssignments: v.optional(v.array(v.object({ characterId: v.string(), voice: v.string() }))),
       adventureSummaryMarkdown: v.optional(v.string()),
       discoveries: v.optional(v.array(v.any())),
       entityUpdates: v.optional(v.array(v.any())),
