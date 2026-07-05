@@ -46,3 +46,5 @@ Notes:
 - `GameChat` default ("floating") variant is unchanged for the lobby and mobile; unseen-count badge logic only runs for it.
 - Character cards are now `w-full max-w-[320px]` (was fixed `sm:w-[320px]`) so rail columns control their width.
 - One test chat message ("Testing the new rail chat layout") remains in the worktree's isolated Convex DB (adventure jh77x05rkff2qjp8napzppn8r188hep9) — DB is disposable at finish.
+
+Finished: 2026-07-05 (merged to main, policy: merge)
