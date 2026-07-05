@@ -269,7 +269,7 @@ export default function EncounterScene({ scene, characters, standees, minis3d }:
       shadows
       dpr={[1, 2]}
       camera={{ fov: 40, position: [0, 16, 15], near: 0.5, far: 120 }}
-      gl={{ antialias: true }}
+      gl={{ antialias: true, preserveDrawingBuffer: true }}
       onCreated={({ gl }) => {
         gl.toneMappingExposure = 1.2
         // Soft shadows via VSM — drei's <SoftShadows> PCSS injection is broken

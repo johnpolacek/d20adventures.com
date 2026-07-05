@@ -67,7 +67,7 @@ export default function Turn({
             <MapRailPanel map={encounterMap} title={mapTitle} tokens={mapTokens} />
           </div>
         )}
-        <EncounterRailPanel encounterTitle={encounter?.title} className="flex-none" />
+        <EncounterRailPanel encounterTitle={encounter?.title} encounterImage={encounter?.image} className="flex-none" />
         {!isSolo && (
           <div className={cn("min-h-0", encounterMap ? "flex-none" : "flex-1")} style={encounterMap ? { height: chatHeight } : undefined}>
             <GameChat variant="rail" className="h-full" />
