@@ -6,6 +6,15 @@ import type { TurnAudioManifestResponse, TurnAudioSegmentWithUrl } from "@/types
 
 const GENERATION_POLL_MS = 2000
 const DICE_SLIDE_DWELL_MS = 4000
+const SPEED_STEPS = [1, 1.25, 1.5, 2]
+const DEFAULT_SPEED = 1.25
+const SPEED_STORAGE_KEY = "storyview-speed"
+
+function loadStoredSpeed(): number {
+  if (typeof window === "undefined") return DEFAULT_SPEED
+  const stored = Number(window.localStorage.getItem(SPEED_STORAGE_KEY))
+  return SPEED_STEPS.includes(stored) ? stored : DEFAULT_SPEED
+}
 
 export type StoryviewSlide =
   | { type: "paragraph"; partIndex: number; segments: TurnAudioSegmentWithUrl[] }
@@ -28,6 +37,7 @@ export function useStoryviewPlayer({ turnId, narrative, open, onGenerated }: Use
   const [segmentIndex, setSegmentIndex] = useState(0)
   const [playing, setPlaying] = useState(false)
   const [finished, setFinished] = useState(false)
+  const [speed, setSpeed] = useState(loadStoredSpeed)
 
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const diceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -196,7 +206,7 @@ export function useStoryviewPlayer({ turnId, narrative, open, onGenerated }: Use
 
     if (currentSlide.type === "diceroll") {
       stopAudio()
-      diceTimerRef.current = setTimeout(advance, DICE_SLIDE_DWELL_MS)
+      diceTimerRef.current = setTimeout(advance, DICE_SLIDE_DWELL_MS / speed)
       return
     }
 
@@ -211,6 +221,7 @@ export function useStoryviewPlayer({ turnId, narrative, open, onGenerated }: Use
     }
     const audio = audioRef.current
     audio.src = segment.audioUrl
+    audio.playbackRate = speed
     audio.onended = advance
     audio.onerror = advance
     audio.play().catch(() => {
@@ -233,6 +244,16 @@ export function useStoryviewPlayer({ turnId, narrative, open, onGenerated }: Use
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playing, currentSlide, segmentIndex, advance])
+
+  const cycleSpeed = useCallback(() => {
+    setSpeed((current) => {
+      const next = SPEED_STEPS[(SPEED_STEPS.indexOf(current) + 1) % SPEED_STEPS.length]
+      window.localStorage.setItem(SPEED_STORAGE_KEY, String(next))
+      // Apply to the live element so the change is audible mid-segment.
+      if (audioRef.current) audioRef.current.playbackRate = next
+      return next
+    })
+  }, [])
 
   const play = useCallback(() => {
     if (finished) {
@@ -268,6 +289,8 @@ export function useStoryviewPlayer({ turnId, narrative, open, onGenerated }: Use
     currentSlide,
     playing,
     finished,
+    speed,
+    cycleSpeed,
     play,
     pause,
     next: () => goToSlide(slideIndex + 1),

@@ -23,7 +23,7 @@ const ESTIMATED_PROVIDER_TOKENS_PER_CHAR = 2
 const TOKEN_MULTIPLIER = 0.01
 const SYNTHESIS_CONCURRENCY = 4
 
-const NARRATOR_STYLE = "Narrate in a measured, immersive storyteller voice:"
+const NARRATOR_STYLE = "Narrate in an engaging storyteller voice at a brisk, energetic pace:"
 
 function sha1(text: string): string {
   return createHash("sha1").update(text).digest("hex")

@@ -99,7 +99,7 @@ export default function StoryviewOverlay({ snapshot, onClose }: { snapshot: Stor
 
       {player.status === "ready" && (
         <div className="px-6 pb-8">
-          <StoryviewControls playing={player.playing} finished={player.finished} slideCount={player.slides.length} slideIndex={player.slideIndex} onPlay={player.play} onPause={player.pause} onPrev={player.prev} onNext={player.next} />
+          <StoryviewControls playing={player.playing} finished={player.finished} slideCount={player.slides.length} slideIndex={player.slideIndex} speed={player.speed} onPlay={player.play} onPause={player.pause} onPrev={player.prev} onNext={player.next} onCycleSpeed={player.cycleSpeed} />
         </div>
       )}
     </div>,
