@@ -13,9 +13,12 @@ import { getAssetUrl, s3Client } from "@/lib/aws"
 
 export const STANDEE_MODEL_ID = "gemini-3.1-flash-image"
 
+export function getStandeeHash(sourceImageUrl: string): string {
+  return createHash("sha1").update(sourceImageUrl).digest("hex")
+}
+
 export function getStandeeKey(sourceImageUrl: string): string {
-  const hash = createHash("sha1").update(sourceImageUrl).digest("hex")
-  return `images/minis/${hash}.png`
+  return `images/minis/${getStandeeHash(sourceImageUrl)}.png`
 }
 
 export async function standeeExists(key: string): Promise<boolean> {

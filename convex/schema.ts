@@ -204,6 +204,7 @@ export default defineSchema({
       v.literal("usage_generate_object"),
       v.literal("usage_image_upload"),
       v.literal("usage_join_adventure"),
+      v.literal("usage_encounter_asset"),
       v.literal("adjustment_refund"),
       v.literal("adjustment_manual") // For admin corrections or other types
     ),

@@ -11,10 +11,14 @@ import { encounterScene3DGenerationSchema } from "@/types/encounter-scene-3d"
 
 export const ENCOUNTERVIEW_MODEL_ID = "gemini-3.5-flash"
 
-export async function generateEncounterScene3DGeneration(prompt: string, opts?: { model?: LanguageModel; attempts?: number }): Promise<EncounterScene3DGeneration> {
+export async function generateEncounterScene3DGeneration(
+  prompt: string,
+  opts?: { model?: LanguageModel; attempts?: number }
+): Promise<{ generation: EncounterScene3DGeneration; providerTokens: number }> {
   const model = opts?.model ?? google(ENCOUNTERVIEW_MODEL_ID)
   const attempts = opts?.attempts ?? 3
   let lastError: unknown
+  let providerTokens = 0
   for (let attempt = 1; attempt <= attempts; attempt++) {
     try {
       const result = await generateObject({
@@ -25,9 +29,13 @@ export async function generateEncounterScene3DGeneration(prompt: string, opts?: 
         maxOutputTokens: 5000,
         providerOptions: { google: { structuredOutputs: false } },
       })
-      return result.object
+      providerTokens += result.usage?.totalTokens ?? 0
+      return { generation: result.object, providerTokens }
     } catch (error) {
       lastError = error
+      // Failed attempts still consumed provider tokens when usage is reported.
+      const usage = (error as { usage?: { totalTokens?: number } })?.usage
+      providerTokens += usage?.totalTokens ?? 0
       console.warn(`[encounterview] generation attempt ${attempt}/${attempts} failed: ${error instanceof Error ? error.message : error}`)
     }
   }

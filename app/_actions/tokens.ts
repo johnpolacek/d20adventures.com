@@ -4,7 +4,7 @@ import { auth } from "@clerk/nextjs/server"
 import { api } from "@/convex/_generated/api"
 import { convex } from "@/lib/convex/server" // Assuming you have a server client setup
 
-type UsageTransactionType = "usage_generate_text" | "usage_generate_object" | "usage_image_upload" | "usage_join_adventure"
+type UsageTransactionType = "usage_generate_text" | "usage_generate_object" | "usage_image_upload" | "usage_join_adventure" | "usage_encounter_asset"
 
 interface DecrementTokensArgs {
   tokensUsed: number
@@ -29,7 +29,7 @@ type DecrementTokensResult = TokenActionSuccess<{ chargedTokens: number }> | Tok
 type IncrementTokensResult = TokenActionSuccess<{ creditedTokens: number }> | TokenActionFailure
 
 function computeChargedTokens(args: DecrementTokensArgs): number {
-  if (args.transactionType === "usage_image_upload" || args.transactionType === "usage_join_adventure") {
+  if (args.transactionType === "usage_image_upload" || args.transactionType === "usage_join_adventure" || args.transactionType === "usage_encounter_asset") {
     return args.tokensUsed
   }
 

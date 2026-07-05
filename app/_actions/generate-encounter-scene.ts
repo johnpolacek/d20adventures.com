@@ -5,6 +5,7 @@
 // generation: scenes are staged from play-time narratives, so players trigger them.
 
 import { auth } from "@clerk/nextjs/server"
+import { decrementUserTokensAction } from "@/app/_actions/tokens"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { assertAdventureAccessByTurn } from "@/lib/adventure-access"
@@ -73,7 +74,18 @@ export async function getOrGenerateEncounterScene(args: { settingId: string; adv
     roster,
   })
 
-  const generation = await generateEncounterScene3DGeneration(prompt)
+  const { generation, providerTokens } = await generateEncounterScene3DGeneration(prompt)
+
+  // Charge metered LLM usage before caching — if the user can't pay, the
+  // scene is not stored (same policy as the lib/ai wrappers).
+  const charge = await decrementUserTokensAction({ tokensUsed: providerTokens, transactionType: "usage_generate_object" })
+  if (!charge.success) {
+    if (charge.errorCode === "INSUFFICIENT_TOKENS") {
+      throw new Error("Insufficient tokens to stage this encounter scene.")
+    }
+    throw new Error("Failed to charge tokens for scene staging.")
+  }
+
   const scene = assembleEncounterScene3D(normalizeSceneGeneration(generation, roster), { turnId: args.turnId })
 
   await updateJsonOnS3(getEncounterScene3DStorageKey(args.settingId, args.adventureId, args.turnId), scene)

@@ -14,6 +14,13 @@ Avatar-derived standee minis (same day, owner feedback "chibi looks like a kid s
 
 Scene spec v2 (same day, owner feedback "trees are tiny / expected a forest / stones shouldn't be here yet"): forest density is now guaranteed in code — a seeded instanced tree perimeter per kit (`components/encounterview/forest-ring.tsx`, `KIT_FOREST_DENSITY`), with the viewer-side treeline shortened/thinned so it never walls off the stage; single trees scaled to tower over minis; N8AO + firefly motes + per-mini key light added. The mapview no-unearned-landmarks rule carried over the hard way: the model kept staging the destination standing stones during travel turns until the prompt got a worked example of that exact case. `version: 2` literal bump silently invalidates all v1 cached scenes.
 
+## 2026-07-05
+
+### Encounter view: true 3D minis (fal Hunyuan3D) + token charging for all paid generations
+
+- **Token economy now covers the encounter view.** New `usage_encounter_asset` transaction type (convex schema + mutation + tokens action). Scene staging charges metered LLM usage via `usage_generate_object` (provider tokens × 0.01, charged before the scene is cached — unaffordable = not stored); standees charge a flat 100 tokens and 3D minis a flat 400 (`lib/encounterview/costs.ts`), charged before generation with `adjustment_refund` on failure. Cache hits are free; the triggering player pays. Verified against the live ledger. Mapview generation stays uncharged (admin authoring, not player-triggered).
+- **3D mini pipeline** (`lib/encounterview/mini3d.ts`): standee render → fal.ai `hunyuan3d-v3/image-to-3d` queue → GLB optimized server-side with gltf-transform (weld/quantize/prune + webp textures) → public bucket keyed by the standee's portrait hash. Jobs are async (1-2 min): a pending marker lives in the data bucket and the panel polls every 10s while open ("Sculpting 3D miniatures…"). Render order: 3D mini > standee > KayKit model > portrait pawn. **Gated on `FAL_KEY`** — without it the view stays on standees; the key still needs to be added to `.env`.
+
 ## 2026-07-03
 
 ### Mapview v1 merged to main

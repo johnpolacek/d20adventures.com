@@ -47,12 +47,16 @@ function LoadingCard() {
 
 type PanelState = { status: "idle" } | { status: "loading" } | { status: "ready"; scene: EncounterScene3D } | { status: "error"; message: string }
 
+const MINIS_POLL_INTERVAL_MS = 10000
+
 export function EncounterPanel({ encounterTitle }: { encounterTitle?: string }) {
   const [open, setOpen] = useState(false)
   const [state, setState] = useState<PanelState>({ status: "idle" })
   const [standees, setStandees] = useState<Record<string, string>>({})
+  const [minis3d, setMinis3d] = useState<Record<string, string>>({})
+  const [minisPending, setMinisPending] = useState(false)
+  const [insufficientTokens, setInsufficientTokens] = useState(false)
   const sceneCache = useRef(new Map<string, EncounterScene3D>())
-  const standeeCache = useRef(new Map<string, Record<string, string>>())
   const turn = useTurn()
   const params = useParams<{ settingId?: string; adventurePlanId?: string; adventureId?: string }>()
 
@@ -61,23 +65,29 @@ export function EncounterPanel({ encounterTitle }: { encounterTitle?: string }) 
   const adventurePlanId = params?.adventurePlanId
   const adventureId = params?.adventureId
 
+  // Avatar-derived minis load in parallel with the scene spec; the scene
+  // renders with fallback figures until they arrive. Re-called on an interval
+  // while 3D generation jobs are still running server-side.
+  const loadMinis = useCallback(async () => {
+    if (!turnId) return
+    try {
+      const result = await getOrGenerateCharacterMinis({ turnId })
+      setStandees(result.minis)
+      setMinis3d(result.minis3d)
+      setMinisPending(result.pending)
+      setInsufficientTokens(result.insufficientTokens)
+    } catch (error) {
+      console.warn("[encounterview] minis fetch failed", error)
+      setMinisPending(false)
+    }
+  }, [turnId])
+
   const loadScene = useCallback(async () => {
     if (!turnId || !settingId || !adventurePlanId || !adventureId) return
 
-    // Avatar-derived standee minis load in parallel with the scene spec; the
-    // scene renders with fallback minis until they arrive.
-    const cachedStandees = standeeCache.current.get(turnId)
-    if (cachedStandees) {
-      setStandees(cachedStandees)
-    } else {
-      setStandees({})
-      void getOrGenerateCharacterMinis({ turnId })
-        .then(({ minis }) => {
-          standeeCache.current.set(turnId, minis)
-          setStandees(minis)
-        })
-        .catch((error) => console.warn("[encounterview] standee fetch failed", error))
-    }
+    setStandees({})
+    setMinis3d({})
+    void loadMinis()
 
     const cached = sceneCache.current.get(turnId)
     if (cached) {
@@ -91,9 +101,17 @@ export function EncounterPanel({ encounterTitle }: { encounterTitle?: string }) 
       setState({ status: "ready", scene })
     } catch (error) {
       console.error("[encounterview] scene generation failed", error)
-      setState({ status: "error", message: "The Game Master knocked over the miniatures. Try again?" })
+      const message = error instanceof Error && error.message.includes("Insufficient tokens") ? "Not enough tokens to stage this scene." : "The Game Master knocked over the miniatures. Try again?"
+      setState({ status: "error", message })
     }
-  }, [turnId, settingId, adventurePlanId, adventureId])
+  }, [turnId, settingId, adventurePlanId, adventureId, loadMinis])
+
+  // Poll while 3D mini jobs are pending and the panel is open.
+  useEffect(() => {
+    if (!open || !minisPending) return
+    const interval = setInterval(() => void loadMinis(), MINIS_POLL_INTERVAL_MS)
+    return () => clearInterval(interval)
+  }, [open, minisPending, loadMinis])
 
   useEffect(() => {
     if (!open) return
@@ -143,7 +161,7 @@ export function EncounterPanel({ encounterTitle }: { encounterTitle?: string }) 
 
           <div className="relative min-h-0 flex-1">
             {state.status === "ready" ? (
-              <EncounterScene scene={state.scene} characters={turn.characters} standees={standees} />
+              <EncounterScene scene={state.scene} characters={turn.characters} standees={standees} minis3d={minis3d} />
             ) : (
               <div className="flex h-full items-center justify-center px-6">
                 {state.status === "error" ? (
@@ -160,7 +178,13 @@ export function EncounterPanel({ encounterTitle }: { encounterTitle?: string }) 
             )}
           </div>
 
-          {state.status === "ready" && state.scene.summary && <p className="flex-none px-5 py-3 text-center text-sm italic text-stone-400">{state.scene.summary}</p>}
+          {state.status === "ready" && (state.scene.summary || minisPending || insufficientTokens) && (
+            <div className="flex-none px-5 py-3 text-center">
+              {state.scene.summary && <p className="text-sm italic text-stone-400">{state.scene.summary}</p>}
+              {minisPending && <p className="mt-1 text-xs text-teal-400/80">Sculpting 3D miniatures… they'll appear here when painted.</p>}
+              {insufficientTokens && <p className="mt-1 text-xs text-amber-500/90">Not enough tokens to generate some miniatures.</p>}
+            </div>
+          )}
         </div>
       )}
     </>

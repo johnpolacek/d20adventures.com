@@ -127,6 +127,36 @@ function useProxiedTexture(url?: string | null) {
 const isLargeCreature = (race: string, archetype: string) => /monster|beast|owlbear|dragon|giant|troll|ogre|demon|elemental|golem/i.test(`${race} ${archetype}`)
 
 /**
+ * Generated 3D miniature (fal Hunyuan3D GLB). Normalized at load: scaled to the
+ * mini height, centered on the base, feet on the ground — generated models have
+ * arbitrary units and origins.
+ */
+function Mini3DFigure({ url, race, archetype, stance }: { url: string; race: string; archetype: string; stance: SceneStance }) {
+  const gltf = useGLTF(`/api/image-proxy?url=${encodeURIComponent(url)}`)
+  const normalized = useMemo(() => {
+    const clone = gltf.scene.clone(true)
+    markSceneShadows(clone)
+    const bounds = new THREE.Box3().setFromObject(clone)
+    const size = bounds.getSize(new THREE.Vector3())
+    const center = bounds.getCenter(new THREE.Vector3())
+    const targetHeight = isLargeCreature(race, archetype) ? 2.6 : 1.9
+    const scale = size.y > 0 ? targetHeight / size.y : 1
+    const wrapper = new THREE.Group()
+    wrapper.add(clone)
+    clone.position.set(-center.x, -bounds.min.y, -center.z)
+    wrapper.scale.setScalar(scale)
+    return wrapper
+  }, [gltf.scene, race, archetype])
+
+  const down = stance === "down"
+  return (
+    <group position={[0, BASE_HEIGHT, 0]} rotation={down ? [-Math.PI / 2.1, 0, 0] : [0, 0, 0]}>
+      <primitive object={normalized} />
+    </group>
+  )
+}
+
+/**
  * Die-cut "paper mini" standee: the avatar-derived full-body cutout mounted as
  * a card. alphaTest keeps the silhouette crisp and makes cast shadows follow
  * the cutout, not the card rectangle.
@@ -184,7 +214,7 @@ function YawBillboard({ height, children }: { height: number; children: ReactNod
 
 const healthColor = (percent: number) => (percent > 60 ? "#4ade80" : percent > 30 ? "#facc15" : "#ef4444")
 
-export function CharacterMini({ placement, character, standeeUrl }: { placement: SceneCharacter; character: TurnCharacter; standeeUrl?: string }) {
+export function CharacterMini({ placement, character, standeeUrl, mini3dUrl }: { placement: SceneCharacter; character: TurnCharacter; standeeUrl?: string; mini3dUrl?: string }) {
   const [hovered, setHovered] = useState(false)
   const groupRef = useRef<THREE.Group>(null)
 
@@ -218,7 +248,11 @@ export function CharacterMini({ placement, character, standeeUrl }: { placement:
         </mesh>
       )}
 
-      {standeeUrl ? (
+      {mini3dUrl ? (
+        <group rotation={[0, -toRadians(placement.facing) + Math.PI, 0]}>
+          <Mini3DFigure url={mini3dUrl} race={character.race ?? ""} archetype={character.archetype ?? ""} stance={placement.stance} />
+        </group>
+      ) : standeeUrl ? (
         // Standee billboards itself — keep it outside the facing rotation.
         <StandeeFigure url={standeeUrl} race={character.race ?? ""} archetype={character.archetype ?? ""} stance={placement.stance} />
       ) : (
