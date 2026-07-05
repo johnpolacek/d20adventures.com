@@ -8,6 +8,7 @@
 import dynamic from "next/dynamic"
 import { useParams } from "next/navigation"
 import { useCallback, useEffect, useRef, useState } from "react"
+import { getOrGenerateCharacterMinis } from "@/app/_actions/generate-character-mini"
 import { getOrGenerateEncounterScene } from "@/app/_actions/generate-encounter-scene"
 import Parchment from "@/components/graphics/background/Parchment"
 import { textShadow } from "@/components/typography/styles"
@@ -49,7 +50,9 @@ type PanelState = { status: "idle" } | { status: "loading" } | { status: "ready"
 export function EncounterPanel({ encounterTitle }: { encounterTitle?: string }) {
   const [open, setOpen] = useState(false)
   const [state, setState] = useState<PanelState>({ status: "idle" })
+  const [standees, setStandees] = useState<Record<string, string>>({})
   const sceneCache = useRef(new Map<string, EncounterScene3D>())
+  const standeeCache = useRef(new Map<string, Record<string, string>>())
   const turn = useTurn()
   const params = useParams<{ settingId?: string; adventurePlanId?: string; adventureId?: string }>()
 
@@ -60,6 +63,22 @@ export function EncounterPanel({ encounterTitle }: { encounterTitle?: string }) 
 
   const loadScene = useCallback(async () => {
     if (!turnId || !settingId || !adventurePlanId || !adventureId) return
+
+    // Avatar-derived standee minis load in parallel with the scene spec; the
+    // scene renders with fallback minis until they arrive.
+    const cachedStandees = standeeCache.current.get(turnId)
+    if (cachedStandees) {
+      setStandees(cachedStandees)
+    } else {
+      setStandees({})
+      void getOrGenerateCharacterMinis({ turnId })
+        .then(({ minis }) => {
+          standeeCache.current.set(turnId, minis)
+          setStandees(minis)
+        })
+        .catch((error) => console.warn("[encounterview] standee fetch failed", error))
+    }
+
     const cached = sceneCache.current.get(turnId)
     if (cached) {
       setState({ status: "ready", scene: cached })
@@ -124,7 +143,7 @@ export function EncounterPanel({ encounterTitle }: { encounterTitle?: string }) 
 
           <div className="relative min-h-0 flex-1">
             {state.status === "ready" ? (
-              <EncounterScene scene={state.scene} characters={turn.characters} />
+              <EncounterScene scene={state.scene} characters={turn.characters} standees={standees} />
             ) : (
               <div className="flex h-full items-center justify-center px-6">
                 {state.status === "error" ? (
