@@ -38,3 +38,5 @@ Storyview: an optional, token-funded audio narration mode for adventure turns. A
 ## Test data note
 
 E2E testing wrote 5 WAV files to the **shared** S3 bucket under `adventures/jh7bftjhdjgrjwqakfc4ccdb6x89tzxa/turns/jn77se1k9cx3pfbwe03gtsxjfn89vjj6/audio/` (~4MB, hash-keyed, harmless; same-id regeneration on main would reuse identical keys). Delete that prefix at `wt:finish` if tidiness matters. The `turnAudio` row lives only in the worktree's Convex project.
+
+Finished: 2026-07-05 (merged to main, policy: merge)
