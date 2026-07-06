@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import StoryviewRailPanel from "@/components/adventure/storyview/storyview-rail-panel"
 import { EncounterPanel, EncounterRailPanel } from "@/components/encounterview/encounter-panel"
 import type { MapTokens } from "@/components/mapview/encounter-map-2d"
 import { MapPanel, MapRailPanel } from "@/components/mapview/map-panel"
@@ -49,8 +50,9 @@ export default function Turn({
   return (
     <div className="relative mx-auto w-full max-w-[1536px] 2xl:max-w-[1700px] flex flex-col gap-4 px-6 sm:px-8 pb-24 lg:grid lg:grid-cols-[336px_minmax(0,1fr)] lg:items-start lg:gap-6 xl:grid-cols-[336px_minmax(0,1fr)_360px] 2xl:grid-cols-[380px_minmax(0,1fr)_440px] 2xl:gap-12">
       {/* Left rail: character list. The negative margin + padding keeps the initiative
-          badges (which hang outside the cards) from being clipped by the scroll area. */}
-      <div className="lg:sticky lg:top-20 lg:-ml-6 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pb-4 lg:pl-6 lg:pr-1">
+          badges (which hang outside the cards) from being clipped by the scroll area.
+          -mt-18 lifts the rail to align with the narrative's "It is your turn!" bar. */}
+      <div className="lg:sticky lg:top-20 lg:-ml-6 lg:-mt-18 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pb-4 lg:pl-6 lg:pr-1">
         <TurnCharacterList />
       </div>
 
@@ -60,14 +62,16 @@ export default function Turn({
       </div>
 
       {/* Right rail (wide desktop): mini map on top, chat below matching its height.
-          Without a map the chat falls back to filling the rail. Solo runs have no chat. */}
-      <aside className={cn("hidden xl:sticky xl:top-20 xl:flex xl:flex-col xl:gap-4", !encounterMap && !isSolo && "xl:h-[calc(100vh-7rem)]")}>
+          Without a map the chat falls back to filling the rail. Solo runs have no chat.
+          -mt-18 aligns the rail top with the narrative's "It is your turn!" bar. */}
+      <aside className={cn("hidden xl:sticky xl:top-20 xl:-mt-18 xl:flex xl:flex-col xl:gap-4", !encounterMap && !isSolo && "xl:h-[calc(100vh-7rem)]")}>
         {encounterMap && (
           <div ref={mapCardRef} className="flex-none">
             <MapRailPanel map={encounterMap} title={mapTitle} tokens={mapTokens} />
           </div>
         )}
         <EncounterRailPanel encounterTitle={encounter?.title} encounterImage={encounter?.image} className="flex-none" />
+        <StoryviewRailPanel className="flex-none" />
         {!isSolo && (
           <div className={cn("min-h-0", encounterMap ? "flex-none" : "flex-1")} style={encounterMap ? { height: chatHeight } : undefined}>
             <GameChat variant="rail" className="h-full" />
