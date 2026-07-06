@@ -274,7 +274,7 @@ export function EncounterRailPanel({ encounterTitle, encounterImage, className }
     <>
       <div className={cn("overflow-hidden rounded-xl bg-black/40 ring ring-primary-700", className)}>
         <div className="flex items-center justify-between gap-2 px-3 py-2">
-          <h3 className="truncate font-display text-sm font-bold text-teal-300">Encounter</h3>
+          <h3 className="truncate font-display text-sm font-bold text-teal-300">Encounter Map</h3>
           <button type="button" onClick={() => setOpen(true)} className="rounded p-1 text-stone-300 transition-colors hover:bg-white/10 hover:text-teal-200" aria-label="Open 3D encounter view">
             <Maximize2 className="h-4 w-4" />
           </button>

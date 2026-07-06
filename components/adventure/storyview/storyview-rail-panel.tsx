@@ -45,7 +45,7 @@ export default function StoryviewRailPanel({ className }: { className?: string }
         </div>
         <button type="button" onClick={open} className="group relative block w-full cursor-pointer bg-gradient-to-b from-[#14101f] via-[#0e0b16] to-[#08060d] text-left" aria-label="Play this turn in Storyview">
           <div className="relative max-h-28 overflow-hidden px-4 pt-3">
-            <p className="font-display text-lg leading-snug text-stone-200 transition-colors group-hover:text-violet-100">{previewText(currentTurn.narrative)}</p>
+            <p className="font-display text-lg leading-snug text-stone-200/30 transition-colors group-hover:text-violet-100/30">{previewText(currentTurn.narrative)}</p>
             {/* crop fade into the caption row */}
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-[#0a0810] to-transparent" />
           </div>
