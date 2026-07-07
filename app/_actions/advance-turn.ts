@@ -159,6 +159,8 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
       expectedCurrentTurnId: turnId,
       expectedCurrentEncounterId: turn.encounterId,
       expectedContentHash: contentRef.contentHash,
+      currentContentVersion: contentRef.contentVersion,
+      currentVersionId: contentRef.versionId,
       nextEncounterId: nextEncounter.id,
       title: nextEncounter.title,
       narrative,

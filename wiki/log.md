@@ -4,6 +4,12 @@
 
 Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.
 
+## 2026-07-06
+
+### Content-hash drift no longer bricks live playthroughs (auto-re-pin)
+
+The play-layout-refactor merge edited the Midnight Summons encounter/location markdown, which changed the compiled content hash — and `commitWikiTurnAdvance`'s strict hash guard then dead-ended every in-progress adventure ("Stale turn advance: content hash changed") with no recovery path. Decision: since the runtime always compiles latest content, the pinned `contentRef` is provenance, not a load selector — on drift the mutation now logs and **re-pins the adventure to the content that generated the turn** (hash + contentVersion/versionId passed from the advance action) and continues. The turn/encounter guards remain the real concurrency protection. Old stuck adventures were wiped (owner call — all test data; `testing:deleteAll` needed a temporary guard bypass because Convex cloud isolates force `NODE_ENV=production` even on dev deployments). Verified end-to-end with a fresh playthrough: whitespace-edit to an encounter file mid-game, turn advance succeeded and the pin moved to the new hash.
+
 ## 2026-07-04
 
 ### Encounter view prototype (3D miniatures, narrative-driven)

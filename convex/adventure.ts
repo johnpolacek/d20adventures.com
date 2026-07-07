@@ -459,6 +459,9 @@ export const commitWikiTurnAdvance = mutation({
     expectedCurrentTurnId: v.id("turns"),
     expectedCurrentEncounterId: v.string(),
     expectedContentHash: v.optional(v.string()),
+    /** Version metadata of the freshly compiled content, used to re-pin on drift. */
+    currentContentVersion: v.optional(v.string()),
+    currentVersionId: v.optional(v.string()),
     nextEncounterId: v.string(),
     title: v.string(),
     narrative: v.string(),
@@ -478,8 +481,23 @@ export const commitWikiTurnAdvance = mutation({
     if ((adventure.currentEncounterId ?? args.expectedCurrentEncounterId) !== args.expectedCurrentEncounterId) {
       throw new Error("Stale turn advance: current encounter changed")
     }
-    if (args.expectedContentHash && adventure.contentRef?.contentHash !== args.expectedContentHash) {
-      throw new Error("Stale turn advance: content hash changed")
+    // Content-hash drift is NOT a dead-end: the runtime always compiles the
+    // latest content, so the pinned contentRef is provenance, not a load
+    // selector. When the plan's content was edited mid-playthrough, re-pin the
+    // adventure to the content that actually generated this turn and continue.
+    // The turn/encounter guards above remain the real concurrency protection.
+    let contentRefRepin: typeof adventure.contentRef
+    if (args.expectedContentHash && adventure.contentRef && adventure.contentRef.contentHash !== args.expectedContentHash) {
+      console.log(
+        `[commitWikiTurnAdvance] Content hash drift for adventure ${args.adventureId}: ` +
+          `${adventure.contentRef.contentHash} -> ${args.expectedContentHash}. Re-pinning to current content.`
+      )
+      contentRefRepin = {
+        ...adventure.contentRef,
+        contentHash: args.expectedContentHash,
+        ...(args.currentContentVersion ? { contentVersion: args.currentContentVersion } : {}),
+        ...(args.currentVersionId ? { versionId: args.currentVersionId } : {}),
+      }
     }
 
     const existing = await ctx.db
@@ -524,6 +542,7 @@ export const commitWikiTurnAdvance = mutation({
       entityUpdates,
       openThreads,
       resolvedThreadIds,
+      ...(contentRefRepin ? { contentRef: contentRefRepin } : {}),
       status: args.isFinalEncounter ? "completed" : "active",
       endedAt: args.isFinalEncounter ? now : adventure.endedAt,
       updatedAt: now,
