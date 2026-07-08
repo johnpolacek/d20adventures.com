@@ -203,16 +203,24 @@ async function readS3WikiAdventureSourceFiles(definition: LocalWikiAdventureDefi
 
   const service = new S3WikiAdventureSourceService(s3Client, bucket)
   const paths = unique([...definition.sourceRoots, ...readMigrationNpcSourcePaths(definition.migrationReportPath)])
-  const files = await Promise.all(
-    paths.map(async (path) => {
-      if (path.endsWith(".md") || path.endsWith(".json")) {
-        const file = await service.readFile(path)
-        return file ? [file] : []
-      }
-      return service.listFiles(path)
-    })
-  )
-  return files.flat()
+  try {
+    const files = await Promise.all(
+      paths.map(async (path) => {
+        if (path.endsWith(".md") || path.endsWith(".json")) {
+          const file = await service.readFile(path)
+          return file ? [file] : []
+        }
+        return service.listFiles(path)
+      })
+    )
+    return files.flat()
+  } catch (error) {
+    // A transient S3 failure (timeout, ECONNRESET) must not crash the runtime.
+    // selectWikiAdventureSourceFiles treats repo-local as the known-good baseline,
+    // so degrade to local by returning no remote files instead of throwing.
+    console.warn(`[wiki-adventures] S3 source read failed for ${definition.settingId}/${definition.planId}; falling back to repo-local source: ${error instanceof Error ? error.message : error}`)
+    return []
+  }
 }
 
 export function buildLocalWikiTurnCharacters(args: {

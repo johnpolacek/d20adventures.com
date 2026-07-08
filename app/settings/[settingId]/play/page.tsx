@@ -52,7 +52,7 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
               <p className="text-center pt-4">Choose from short introductory adventures or dive right in with the full adventure.</p>
               <h4 className="inline-block font-bold bg-black/50 px-8 py-2 rounded text-lg text-amber-400/90 font-display mt-8 mb-4 text-center tracking-wider font-bold">Intro Adventures</h4>
               <div className="md:grid md:grid-cols-2 xl:grid-cols-3 gap-8 relative z-10 pb-8 auto-rows-fr">
-                {[publishedAdventures[0], publishedAdventures[2], publishedAdventures[3]].map((adventure) => (
+                {[publishedAdventures[0], publishedAdventures[2], publishedAdventures[3]].filter(Boolean).map((adventure) => (
                   <Link key={adventure.id} href={`/settings/${settingId}/${adventure.id}/character-select`} className="block h-full">
                     <Card className="w-full h-full bg-black/80 border-white/20 scale-95 hover:scale-100 hover:bg-black/90 ring-[6px] ring-black hover:ring-8 hover:ring-primary-500 transition-colors cursor-pointer transition-all duration-500 ease-in-out p-0 overflow-hidden flex flex-col">
                       <div className="pb-2 relative aspect-video w-full">
