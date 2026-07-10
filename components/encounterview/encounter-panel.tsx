@@ -219,10 +219,11 @@ function EncounterOverlay({ encounterTitle, onClose }: { encounterTitle?: string
         )}
       </div>
 
-      {state.status === "ready" && (state.scene.summary || minisPending || insufficientTokens) && (
+      {/* 3D miniatures upgrade in silently while minisPending drives the poll loop
+          above — no status line; the standee already reads as a finished mini. */}
+      {state.status === "ready" && (state.scene.summary || insufficientTokens) && (
         <div className="flex-none px-5 py-3 text-center">
           {state.scene.summary && <p className="text-sm italic text-stone-400">{state.scene.summary}</p>}
-          {minisPending && <p className="mt-1 text-xs text-teal-400/80">Sculpting 3D miniatures… they&apos;ll appear here when painted.</p>}
           {insufficientTokens && <p className="mt-1 text-xs text-amber-500/90">Not enough tokens to generate some miniatures.</p>}
         </div>
       )}
