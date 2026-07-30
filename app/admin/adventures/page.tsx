@@ -1,6 +1,7 @@
 import type { User } from "@clerk/nextjs/server"
 import { clerkClient } from "@clerk/nextjs/server"
 import { getAllAdventuresAdmin } from "@/app/_actions/admin/get-all-adventures"
+import { DeleteAdventureButton } from "@/components/admin/delete-adventure-button"
 import { AdminBreadcrumb } from "@/components/nav/admin-breadcrumb"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -32,6 +33,7 @@ export default async function AdminAdventuresPage() {
           <TableRow>
             <TableHead>Adventure ID</TableHead>
             <TableHead>Title</TableHead>
+            <TableHead>Status</TableHead>
             <TableHead>Owner ID</TableHead>
             <TableHead>Owner Name</TableHead>
             <TableHead>Email</TableHead>
@@ -47,6 +49,7 @@ export default async function AdminAdventuresPage() {
               const playerUser = userMap.get(p.userId)
               return {
                 userId: p.userId,
+                aiControlled: p.controlledBy === "ai",
                 name: playerUser ? `${playerUser.firstName} ${playerUser.lastName}` : "Unknown",
                 email: playerUser ? playerUser.emailAddresses[0]?.emailAddress : "Unknown",
               }
@@ -55,6 +58,13 @@ export default async function AdminAdventuresPage() {
               <TableRow key={adventure._id}>
                 <TableCell>{adventure._id}</TableCell>
                 <TableCell>{adventure.title}</TableCell>
+                <TableCell>
+                  <div className="flex flex-col gap-1 text-xs">
+                    <span>{adventure.status ?? "active"}</span>
+                    {(adventure.runType ?? "campaign") === "practice" && <span className="text-purple-300">practice</span>}
+                    {players.some((p) => p.aiControlled) && <span className="text-sky-300">{players.filter((p) => p.aiControlled).length} AI</span>}
+                  </div>
+                </TableCell>
                 <TableCell>{adventure.ownerId}</TableCell>
                 <TableCell>{user ? `${user.firstName} ${user.lastName}` : "Unknown"}</TableCell>
                 <TableCell>{user ? user.emailAddresses[0]?.emailAddress : "Unknown"}</TableCell>
@@ -63,13 +73,19 @@ export default async function AdminAdventuresPage() {
                     <span className="text-muted-foreground">No players</span>
                   ) : (
                     <ul className="space-y-1">
-                      {players.map((p) => (
-                        <li key={p.userId} className="text-xs">
-                          <span className="font-mono">{p.userId}</span>
-                          <br />
-                          <span>{p.name}</span>
-                          <br />
-                          <span className="text-muted-foreground">{p.email}</span>
+                      {players.map((p, index) => (
+                        <li key={`${p.userId}-${index}`} className="text-xs">
+                          {p.aiControlled ? (
+                            <span className="text-sky-300 font-mono">AI companion</span>
+                          ) : (
+                            <>
+                              <span className="font-mono">{p.userId}</span>
+                              <br />
+                              <span>{p.name}</span>
+                              <br />
+                              <span className="text-muted-foreground">{p.email}</span>
+                            </>
+                          )}
                         </li>
                       ))}
                     </ul>
@@ -77,11 +93,14 @@ export default async function AdminAdventuresPage() {
                 </TableCell>
                 <TableCell>{new Date(adventure.createdAt).toLocaleDateString()}</TableCell>
                 <TableCell>
-                  <a href={`/settings/${adventure.settingId}/${adventure.planId}/${adventure._id}`} target="_blank" rel="noopener noreferrer">
-                    <Button className="text-xs" variant="outline" size="sm">
-                      View
-                    </Button>
-                  </a>
+                  <div className="flex items-center gap-2">
+                    <a href={`/settings/${adventure.settingId}/${adventure.planId}/${adventure._id}`} target="_blank" rel="noopener noreferrer">
+                      <Button className="text-xs" variant="outline" size="sm">
+                        View
+                      </Button>
+                    </a>
+                    <DeleteAdventureButton adventureId={adventure._id} title={adventure.title} />
+                  </div>
                 </TableCell>
               </TableRow>
             )
