@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react"
 import slugify from "slugify"
 import { joinAdventure } from "@/app/_actions/join-adventure"
 import { Button } from "@/components/ui/button"
+import type { Id } from "@/convex/_generated/dataModel"
 import { CharacterSelectCard } from "@/components/ui/character-select-card"
 import type { Adventure } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
@@ -65,7 +66,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
 
   useEffect(() => {
     const party = adventure.party
-    const userCharacter = party?.find((pc) => pc.userId === user?.id)
+    const userCharacter = party?.find((pc) => pc.userId === user?.id && pc.controlledBy !== "ai")
 
     if (isSignedIn && !userCharacter && !hasFetchedUserChars.current) {
       hasFetchedUserChars.current = true
@@ -130,13 +131,51 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
     setIsModalOpen(true)
   }
 
+  const [companionBusyId, setCompanionBusyId] = useState<string | null>(null)
+  const [showAiCompanions, setShowAiCompanions] = useState(false)
+
+  const handleAddAiCompanion = async (characterId: string) => {
+    if (companionBusyId) return
+    setCompanionBusyId(characterId)
+    setJoinError(null)
+    try {
+      const { addAiCompanionAction } = await import("@/app/_actions/manage-ai-companions")
+      await addAiCompanionAction({ adventureId: adventure.id as Id<"adventures">, characterId })
+      const response = await fetch(`/api/adventure/${params.adventureId}`)
+      if (response.ok) setAdventure(await response.json())
+    } catch (error) {
+      console.error("Failed to add AI companion:", error)
+      setJoinError(error instanceof Error ? error.message : "Failed to add AI companion")
+    } finally {
+      setCompanionBusyId(null)
+    }
+  }
+
+  const handleRemoveAiCompanion = async (characterId: string) => {
+    if (companionBusyId) return
+    setCompanionBusyId(characterId)
+    setJoinError(null)
+    try {
+      const { removeAiCompanionAction } = await import("@/app/_actions/manage-ai-companions")
+      await removeAiCompanionAction({ adventureId: adventure.id as Id<"adventures">, characterId })
+      const response = await fetch(`/api/adventure/${params.adventureId}`)
+      if (response.ok) setAdventure(await response.json())
+    } catch (error) {
+      console.error("Failed to remove AI companion:", error)
+      setJoinError(error instanceof Error ? error.message : "Failed to remove AI companion")
+    } finally {
+      setCompanionBusyId(null)
+    }
+  }
+
   if (!isLoaded) {
     return null
   }
 
   const party = adventure.party
-  const userCharacter = party?.find((pc) => pc.userId === user?.id)
+  const userCharacter = party?.find((pc) => pc.userId === user?.id && pc.controlledBy !== "ai")
   const availableCharacters = adventurePlan?.premadePlayerCharacters?.filter((pc) => !party?.some((partyMember) => partyMember.id === pc.id)) || []
+  const isOwner = user?.id === adventure.ownerId
 
   // Always show the party grid and teaser, even if not signed in
   const showTeaser = adventurePlan?.teaser
@@ -168,6 +207,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
           onCharacterClick={handlePartySlotClick}
           availableCharacters={availableCharacters}
           onJoinClick={isSignedIn ? handleJoinAdventure : undefined}
+          onRemoveAiCompanion={isOwner ? handleRemoveAiCompanion : undefined}
           isJoining={isJoining}
           playerNames={playerNames}
         />
@@ -244,6 +284,40 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
                     </div>
                   </>
                 )}
+              </>
+            )}
+          </div>
+        )}
+        {/* Owner can fill open slots with AI companions from the remaining premades.
+            Secondary to inviting humans, so the roster stays collapsed until asked for. */}
+        {isSignedIn && isOwner && userCharacter && hasEmptySlots && availableCharacters.length > 0 && (
+          <div className="w-full flex flex-col items-center justify-center mb-8">
+            {joinError && <div className="text-center text-red-400 text-sm mb-4 bg-red-900/20 px-4 py-2 rounded">{joinError}</div>}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-sm text-sky-300 border border-sky-400/40 bg-sky-950/40 px-4 hover:text-sky-200 hover:bg-sky-900/50"
+              onClick={() => setShowAiCompanions((open) => !open)}
+              disabled={companionBusyId !== null}
+            >
+              {showAiCompanions ? "Hide AI Companions" : "Add AI Companions"}
+            </Button>
+            {showAiCompanions && (
+              <>
+                <p className="mt-4 mb-6 text-sm text-white/70 text-center max-w-2xl">AI companions fill open slots and take their own turns in character, so you can start without waiting for more players.</p>
+                <div className="w-full flex flex-wrap gap-6 justify-center mb-4">
+                  {availableCharacters.map((char) => (
+                    <div key={char.id} className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4">
+                      <CharacterSelectCard
+                        className="ring-white/20"
+                        character={char}
+                        buttonLabel={companionBusyId === char.id ? "Adding..." : "Add as AI"}
+                        disabled={companionBusyId !== null}
+                        onButtonClick={() => handleAddAiCompanion(char.id)}
+                      />
+                    </div>
+                  ))}
+                </div>
               </>
             )}
           </div>

@@ -140,10 +140,11 @@ export default function GameChat({ adventureId, characterName, variant = "floati
   const unseenIds = useRef<Set<string>>(new Set())
 
   // Determine default character name for this user from latest messages as fallback
-  type Character = { type?: string; userId?: string; name?: string }
+  type Character = { type?: string; userId?: string; name?: string; controlledBy?: string }
   const currentPlayerCharacterName = useMemo(() => {
     const list: Character[] = (currentTurn?.characters as Character[]) || []
-    const mine = list.find((c) => c?.type === "pc" && c?.userId === user?.id)
+    // AI companions carry the owner's userId; they are not "mine" for chat.
+    const mine = list.find((c) => c?.type === "pc" && c?.userId === user?.id && c?.controlledBy !== "ai")
     return mine?.name
   }, [currentTurn?.characters, user?.id])
 

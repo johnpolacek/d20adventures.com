@@ -45,6 +45,8 @@ export default defineSchema({
         v.object({
           userId: v.string(),
           characterId: v.string(),
+          // "ai" marks an AI-controlled companion; userId is the adventure owner's.
+          controlledBy: v.optional(v.literal("ai")),
         })
       )
     ),
@@ -72,6 +74,23 @@ export default defineSchema({
           voice: v.string(),
         })
       )
+    ),
+    // Storyview auto-narration mode: audio generates on narrative settle and the
+    // cost splits evenly across all members (owner + players).
+    storyview: v.optional(
+      v.object({
+        autoEnabled: v.boolean(),
+        updatedBy: v.string(), // Clerk ID of the owner who toggled
+        updatedAt: v.number(),
+        paused: v.optional(
+          v.object({
+            reason: v.literal("insufficient_tokens"),
+            shortUserIds: v.array(v.string()),
+            estimatedShare: v.number(), // D20 tokens each member needed
+            at: v.number(),
+          })
+        ),
+      })
     ),
     adventureSummaryMarkdown: v.optional(v.string()),
     discoveries: v.optional(v.array(v.any())),
@@ -111,6 +130,8 @@ export default defineSchema({
         name: v.string(),
         type: v.string(), // "pc" | "npc"
         userId: v.optional(v.string()),
+        // "ai" on a PC means an AI-controlled companion (userId is the owner's).
+        controlledBy: v.optional(v.literal("ai")),
         initiative: v.number(),
         isComplete: v.boolean(),
         hasReplied: v.boolean(),
@@ -242,6 +263,9 @@ export default defineSchema({
           voice: v.string(),
           audioKey: v.string(),
           durationSec: v.number(),
+          // sha1 of the source paragraph text; lets regeneration reuse audio for
+          // unchanged paragraphs. Absent on rows created before incremental mode.
+          paragraphHash: v.optional(v.string()),
         })
       )
     ),

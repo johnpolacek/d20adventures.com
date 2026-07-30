@@ -14,6 +14,7 @@ import type { Id } from "@/convex/_generated/dataModel"
 import { useTurn } from "@/lib/context/TurnContext"
 import { findEncounterById } from "@/lib/map-utils"
 import { cn, getImageUrl } from "@/lib/utils"
+import { findCurrentActor, hasPendingAutonomousAction } from "@/lib/utils/turn-actors"
 import type { Adventure } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { Encounter2DMap } from "@/types/encounter-map-2d"
@@ -85,12 +86,10 @@ function AdventureHomeContent({
     if (turn?.id && !initialCheckDone) {
       setInitialCheckDone(true)
 
-      const characters = turn.characters || []
-      const sortedCharacters = [...characters].sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
-      const currentActor = sortedCharacters.find((c) => !c.isComplete)
+      const currentActor = findCurrentActor(turn.characters || [])
 
-      if (currentActor && currentActor.type === "npc" && !currentActor.hasReplied) {
-        console.log(`[AdventureHomeContent] Initial turn load: NPC (${currentActor.id}) waiting for turn ${turn.id}. Triggering check.`)
+      if (currentActor && hasPendingAutonomousAction(currentActor) && !turn.isFinalEncounter) {
+        console.log(`[AdventureHomeContent] Initial turn load: autonomous actor (${currentActor.id}) waiting for turn ${turn.id}. Triggering check.`)
         ensureNpcProcessed(turn.id as Id<"turns">)
           .then((result) => {
             console.log("[AdventureHomeContent] ensureNpcProcessed result:", result)

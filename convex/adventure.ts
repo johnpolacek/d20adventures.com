@@ -34,6 +34,7 @@ export const createAdventure = mutation({
         v.object({
           userId: v.string(),
           characterId: v.string(),
+          controlledBy: v.optional(v.literal("ai")),
         })
       )
     ),
@@ -115,6 +116,62 @@ export const joinAdventure = mutation({
       players: updatedPlayers,
       playerIds: [...adventure.playerIds, args.userId],
       updatedAt: now,
+    })
+
+    return true
+  },
+})
+
+// Add an AI-controlled companion to a lobby. Owner-only; the entry carries the
+// owner's userId plus the "ai" marker, and is NOT added to playerIds (that
+// stays human clerk ids for access control and cost splitting).
+export const addAiCompanion = mutation({
+  args: {
+    adventureId: v.id("adventures"),
+    requesterId: v.string(),
+    characterId: v.string(),
+    maxParty: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const adventure = await ctx.db.get(args.adventureId)
+    if (!adventure) throw new Error("Adventure not found")
+    if (adventure.ownerId !== args.requesterId) throw new Error("Only the adventure owner can manage AI companions")
+    if (adventure.status !== "waitingForPlayers") throw new Error("AI companions can only be changed before the adventure starts")
+
+    const characterTaken = adventure.players?.find((p) => p.characterId === args.characterId)
+    if (characterTaken) throw new Error("Character is already taken")
+    if (typeof args.maxParty === "number" && (adventure.players?.length ?? 0) >= args.maxParty) {
+      throw new Error("The party is already full")
+    }
+
+    await ctx.db.patch(args.adventureId, {
+      players: [...(adventure.players || []), { userId: adventure.ownerId, characterId: args.characterId, controlledBy: "ai" as const }],
+      updatedAt: Date.now(),
+    })
+
+    return true
+  },
+})
+
+export const removeAiCompanion = mutation({
+  args: {
+    adventureId: v.id("adventures"),
+    requesterId: v.string(),
+    characterId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const adventure = await ctx.db.get(args.adventureId)
+    if (!adventure) throw new Error("Adventure not found")
+    if (adventure.ownerId !== args.requesterId) throw new Error("Only the adventure owner can manage AI companions")
+    if (adventure.status !== "waitingForPlayers") throw new Error("AI companions can only be changed before the adventure starts")
+
+    const entry = adventure.players?.find((p) => p.characterId === args.characterId)
+    if (!entry) throw new Error("Companion not found")
+    if (entry.controlledBy !== "ai") throw new Error("That character is not an AI companion")
+
+    await ctx.db.patch(args.adventureId, {
+      players: (adventure.players || []).filter((p) => p.characterId !== args.characterId),
+      updatedAt: Date.now(),
     })
 
     return true
@@ -453,6 +510,31 @@ export const patchAdventure = mutation({
   },
 })
 
+// Mutation: Set Storyview auto-narration settings (toggle and pause state).
+// Authorization happens in the calling Next server action/route.
+export const setStoryviewSettings = mutation({
+  args: {
+    adventureId: v.id("adventures"),
+    storyview: v.object({
+      autoEnabled: v.boolean(),
+      updatedBy: v.string(),
+      updatedAt: v.number(),
+      paused: v.optional(
+        v.object({
+          reason: v.literal("insufficient_tokens"),
+          shortUserIds: v.array(v.string()),
+          estimatedShare: v.number(),
+          at: v.number(),
+        })
+      ),
+    }),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.adventureId, { storyview: args.storyview, updatedAt: Date.now() })
+    return true
+  },
+})
+
 export const commitWikiTurnAdvance = mutation({
   args: {
     adventureId: v.id("adventures"),
@@ -599,6 +681,61 @@ export const getTurnNavigationInfo = query({
 export const getAllAdventures = query({
   handler: async (ctx) => {
     return await ctx.db.query("adventures").order("desc").collect()
+  },
+})
+
+// Admin cleanup: delete an adventure and every dependent row (turns, turn
+// audio manifests, chat, reports). Authorization happens in the calling
+// server action (requireAdmin) — keep this mutation out of client reach.
+export const deleteAdventureCascade = mutation({
+  args: {
+    adventureId: v.id("adventures"),
+  },
+  handler: async (ctx, args) => {
+    const adventure = await ctx.db.get(args.adventureId)
+    if (!adventure) throw new Error("Adventure not found")
+
+    const turns = await ctx.db
+      .query("turns")
+      .withIndex("by_adventure", (q) => q.eq("adventureId", args.adventureId))
+      .collect()
+    let audioCount = 0
+    for (const turn of turns) {
+      const audioRows = await ctx.db
+        .query("turnAudio")
+        .withIndex("by_turn", (q) => q.eq("turnId", turn._id))
+        .collect()
+      for (const row of audioRows) {
+        await ctx.db.delete(row._id)
+        audioCount++
+      }
+      await ctx.db.delete(turn._id)
+    }
+
+    const chatMessages = await ctx.db
+      .query("chat_messages")
+      .withIndex("by_adventure_created", (q) => q.eq("adventureId", args.adventureId))
+      .collect()
+    for (const message of chatMessages) {
+      await ctx.db.delete(message._id)
+    }
+
+    const reports = await ctx.db
+      .query("adventure_reports")
+      .withIndex("by_adventure_created", (q) => q.eq("adventureId", args.adventureId))
+      .collect()
+    for (const report of reports) {
+      await ctx.db.delete(report._id)
+    }
+
+    await ctx.db.delete(args.adventureId)
+
+    return {
+      deletedTurns: turns.length,
+      deletedAudioManifests: audioCount,
+      deletedChatMessages: chatMessages.length,
+      deletedReports: reports.length,
+    }
   },
 })
 

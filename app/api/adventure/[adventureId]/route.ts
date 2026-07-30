@@ -22,7 +22,7 @@ function mapConvexAdventureToAdventure(raw: unknown): Adventure | null {
     parentAdventureId?: string
     parentTurnId?: string
     status?: "waitingForPlayers" | "active" | "completed"
-    players?: Array<{ userId: string; characterId: string }>
+    players?: Array<{ userId: string; characterId: string; controlledBy?: "ai" }>
     playerIds?: string[]
   }
 
@@ -67,12 +67,12 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     let party: PC[] = []
     if (adventure.players && Array.isArray(adventure.players)) {
       const partyResults = await Promise.all(
-        adventure.players.map(async (player: { userId: string; characterId: string }) => {
+        adventure.players.map(async (player: { userId: string; characterId: string; controlledBy?: "ai" }) => {
           if (typeof player.characterId === "string" && player.characterId.startsWith("characters/")) {
             try {
               const pcTemplate = (await readJsonFromS3(player.characterId)) as PCTemplate
-              // Convert PCTemplate to PC by adding userId
-              return { ...pcTemplate, userId: player.userId } as PC
+              // Convert PCTemplate to PC by adding userId + AI marker
+              return { ...pcTemplate, userId: player.userId, controlledBy: player.controlledBy } as PC
             } catch (err) {
               console.error("[AdventureAPI] Failed to load custom character from S3:", player.characterId, err)
               return undefined

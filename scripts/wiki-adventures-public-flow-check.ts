@@ -39,7 +39,14 @@ const EXPECTATIONS: Expectation[] = [
   { planId: "the-midnight-summons", party: [1, 1], start: "broken-silence", premadeIds: ["thalbern"], hasOptions: false },
   { planId: "covert-cargo", party: [2, 2], start: "the-shipment", premadeIds: ["1749159962941", "1749307435667"], hasOptions: false },
   { planId: "the-road-to-kordavos", party: [1, 3], start: "well-met", premadeIds: [], hasOptions: true },
-  { planId: "march-of-davos", party: [3, 5], start: "the-gates-of-kordavos", premadeIds: [], hasOptions: true },
+  {
+    planId: "march-of-davos",
+    party: [3, 5],
+    start: "the-gates-of-kordavos",
+    // Both premades AND custom-character options: premades serve as AI companions.
+    premadeIds: ["branka-stoneveil", "milos-radan", "yeva-softstep", "cassia-verane", "wrenna-faelendar", "ilya-veles"],
+    hasOptions: true,
+  },
 ]
 
 function assertPlanViewShape() {

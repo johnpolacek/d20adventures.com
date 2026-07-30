@@ -4,6 +4,7 @@ import { useState } from "react"
 import Image from "@/components/ui/native-image"
 import { useTurn } from "@/lib/context/TurnContext"
 import { cn, getImageUrl } from "@/lib/utils"
+import { isAiControlledPc } from "@/lib/utils/turn-actors"
 import type { TurnCharacter } from "@/types/adventure"
 import { CharacterSheetModal } from "./character-sheet-modal"
 import { NPCCharacterSheetModal } from "./npc-character-sheet-modal"
@@ -34,8 +35,8 @@ export default function TurnCharacterList() {
   // Find the current actor: highest initiative, not complete
   const currentActorId = characters.find((c) => !c.isComplete)?.id
 
-  // Find the player's character
-  const playerCharacter = characters.find((c) => c.type === "pc" && c.userId === user?.id)
+  // Find the player's character (AI companions carry the owner's userId)
+  const playerCharacter = characters.find((c) => c.type === "pc" && c.userId === user?.id && !isAiControlledPc(c))
 
   const handleCharacterClick = (character: TurnCharacter) => {
     setSelectedCharacter(character)

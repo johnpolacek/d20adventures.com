@@ -34,10 +34,10 @@ function main() {
   assert.equal(contentRef.planId, PLAN_ID)
   assert.equal(artifacts.validationReport.status, "passed")
   assert.equal(artifacts.manifest.startEncounterId, "the-gates-of-kordavos")
-  assert.deepEqual(artifacts.manifest.premadeCharacterIds, [])
+  assert.deepEqual(artifacts.manifest.premadeCharacterIds, ["branka-stoneveil", "milos-radan", "yeva-softstep", "cassia-verane", "wrenna-faelendar", "ilya-veles"])
   assert.equal(Object.keys(artifacts.encounters).length, 45)
   assert.equal(Object.keys(artifacts.characterSheets.npcs).length, 35)
-  assert.equal(Object.keys(artifacts.characterSheets.premadeCharacters).length, 0)
+  assert.equal(Object.keys(artifacts.characterSheets.premadeCharacters).length, 6)
   assert.equal(artifacts.graph.encounterTransitions.length, 57)
   assert.equal(
     artifacts.graph.encounterTransitions.some((transition) => transition.fromEncounterId === "the-gates-of-kordavos" && transition.toEncounterId === "the-harvest-festival"),
@@ -71,13 +71,23 @@ function main() {
   const characters = buildLocalWikiTurnCharacters({
     artifacts,
     encounter: artifacts.encounters[artifacts.manifest.startEncounterId],
-    players: [{ userId: "user_test", characterId: "saved-fighter" }],
+    players: [
+      { userId: "user_test", characterId: "saved-fighter" },
+      // AI companion resolved from the compiled premade sheets by key tail,
+      // carrying the owner's userId plus the controlledBy marker.
+      { userId: "user_test", characterId: "characters/user_test/branka-stoneveil.json", controlledBy: "ai" },
+    ],
     existingPlayerCharacters: [savedCharacter],
   })
   assert.equal(
     characters.some((character) => character.id === "saved-fighter" && character.name === "Saved Fighter" && character.type === "pc"),
     true
   )
+  const companion = characters.find((character) => character.id === "branka-stoneveil")
+  assert.ok(companion, "AI companion premade sheet did not resolve")
+  assert.equal(companion.type, "pc")
+  assert.equal(companion.type === "pc" && companion.userId, "user_test")
+  assert.equal(companion.type === "pc" && companion.controlledBy, "ai")
   assert.equal(
     characters.some((character) => character.id === "garlan-ironfist" && character.type === "npc"),
     true

@@ -1,3 +1,4 @@
+import { isAiControlledPc } from "@/lib/utils/turn-actors"
 import type { TurnCharacter } from "@/types/adventure"
 import type { AdventureEncounter, AdventurePlan } from "@/types/adventure-plan"
 
@@ -44,5 +45,7 @@ export function resolvePlanContextForEncounter(
 }
 
 export function buildNpcInitiativeOrder(characters: TurnCharacter[]): TurnCharacter[] {
-  return characters.filter((character) => !character.hasReplied && !character.isComplete).sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
+  // AI companions stay eligible after hasReplied so a turn that crashed between
+  // submitReply and roll resolution can resume; mid-roll humans stay excluded.
+  return characters.filter((character) => !character.isComplete && (!character.hasReplied || isAiControlledPc(character))).sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
 }

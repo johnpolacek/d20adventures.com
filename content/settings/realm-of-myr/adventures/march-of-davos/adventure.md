@@ -6,6 +6,13 @@ settingId: "realm-of-myr"
 startEncounter: "the-gates-of-kordavos"
 minPlayers: 3
 maxPlayers: 5
+premadeCharacters:
+  - "branka-stoneveil"
+  - "milos-radan"
+  - "yeva-softstep"
+  - "cassia-verane"
+  - "wrenna-faelendar"
+  - "ilya-veles"
 availableCharacterOptions:
   races: ["Human", "Elf", "Dwarf", "Half-Elf", "Halfling", "Gnome", "Half-Orc"]
   archetypes: ["Fighter", "Barbarian", "Rogue", "Wizard", "Sorcerer", "Cleric", "Paladin", "Bard", "Ranger", "Monk", "Druid", "Warlock"]

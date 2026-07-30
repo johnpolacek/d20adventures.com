@@ -6,6 +6,7 @@ import { startAdventure } from "@/app/_actions/start-adventure"
 import type { CharacterChoiceMode } from "@/components/adventure/character-selection"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
+import { markAiControlled } from "@/lib/ai-companions"
 import { canManageResource } from "@/lib/content-permissions"
 import { convex } from "@/lib/convex/server"
 import { readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
@@ -22,6 +23,9 @@ interface CreateAdventureInput {
   runType?: "campaign" | "practice"
   parentAdventureId?: Id<"adventures">
   parentTurnId?: Id<"turns">
+  // Start right away (human + AI companions must satisfy the plan's min party)
+  // instead of landing in the lobby to invite humans.
+  startImmediately?: boolean
 }
 
 export async function createAdventure(input: CreateAdventureInput) {
@@ -31,7 +35,6 @@ export async function createAdventure(input: CreateAdventureInput) {
   }
 
   const { settingId, adventurePlanId } = input
-  // TODO: Use characterChoices in later stages for lobby state
 
   // Read the adventure plan to get the proper title
   const planPath = `settings/${settingId}/${adventurePlanId}.json`
@@ -43,15 +46,50 @@ export async function createAdventure(input: CreateAdventureInput) {
   // Extract character choices and create the players array
   const { characterChoices } = input
   const localWikiRuntime = isLocalWikiAdventure(settingId, adventurePlanId) ? await loadWikiAdventureRuntime(settingId, adventurePlanId) : null
-  const players = characterChoices
-    .filter((choice) => choice.mode === "player") // Only include characters selected as "player"
-    .map((choice) => ({
+
+  // Party limits: registered wiki adventures carry them on the compiled
+  // manifest (the legacy S3 plan can be a stub); legacy plans use plan.party.
+  const manifest = localWikiRuntime?.artifacts.manifest
+  const minParty = manifest ? (manifest.minPlayers ?? manifest.recommendedPlayers ?? 1) : plan.party?.[0] || 1
+  const maxParty = manifest ? (manifest.maxPlayers ?? manifest.recommendedPlayers ?? minParty) : plan.party?.[1] || 1
+
+  const playerChoices = characterChoices.filter((choice) => choice.mode === "player")
+  const aiChoices = characterChoices.filter((choice) => choice.mode === "ai")
+
+  if (playerChoices.length !== 1) {
+    throw new Error("Exactly one character must be selected as your player character")
+  }
+  const findPremadeSheet = (id: string) => localWikiRuntime?.artifacts.characterSheets.premadeCharacters[id]?.sheet ?? plan.premadePlayerCharacters?.find((pc) => pc.id === id)
+  const chosenIds = new Set<string>(playerChoices.map((choice) => choice.characterId))
+  for (const choice of aiChoices) {
+    if (!findPremadeSheet(choice.characterId)) {
+      throw new Error(`AI companions must be premade characters from this adventure (unknown: ${choice.characterId})`)
+    }
+    if (chosenIds.has(choice.characterId)) {
+      throw new Error("Duplicate characters are not allowed in the party")
+    }
+    chosenIds.add(choice.characterId)
+  }
+  if (1 + aiChoices.length > maxParty) {
+    throw new Error(`The party cannot exceed ${maxParty} characters`)
+  }
+
+  const players = [
+    ...playerChoices.map((choice) => ({
       userId: userId,
       characterId: normalizePlayerCharacterKey(userId, choice.characterId),
-    }))
+    })),
+    ...aiChoices.map((choice) =>
+      markAiControlled({
+        userId: userId,
+        characterId: normalizePlayerCharacterKey(userId, choice.characterId),
+      })
+    ),
+  ]
 
-  // Ensure each selected character exists in the user's S3 path
-  for (const choice of characterChoices.filter((c) => c.mode === "player")) {
+  // Ensure each selected character (the player's pick and AI companions)
+  // exists in the user's S3 path
+  for (const choice of [...playerChoices, ...aiChoices]) {
     const userCharKey = normalizePlayerCharacterKey(userId, choice.characterId)
     let exists = false
     try {
@@ -60,8 +98,7 @@ export async function createAdventure(input: CreateAdventureInput) {
     } catch {}
     if (!exists) {
       // Try to find the character in premade PCs or as a custom character
-      let characterData: PCTemplate | unknown =
-        localWikiRuntime?.artifacts.characterSheets.premadeCharacters[choice.characterId]?.sheet ?? plan.premadePlayerCharacters?.find((pc) => pc.id === choice.characterId)
+      let characterData: PCTemplate | unknown = findPremadeSheet(choice.characterId)
       if (!characterData) {
         // Try to load as a custom character (should not throw if not found)
         try {
@@ -97,11 +134,20 @@ export async function createAdventure(input: CreateAdventureInput) {
   })
 
   // If only one player character AND the adventure plan expects only one player, auto-start the adventure
-  const maxPartySize = plan.party?.[1] || 1
-  const isSoloAdventure = maxPartySize === 1
+  const isSoloAdventure = maxParty === 1
 
   if (players.length === 1 && isSoloAdventure) {
     // Call startAdventure to create the first turn and redirect to it
+    await startAdventure({ settingId, adventurePlanId, adventureId })
+    return // startAdventure will handle the redirect
+  }
+
+  // Explicit immediate start: the human plus AI companions satisfy the minimum
+  // party, no lobby needed.
+  if (input.startImmediately) {
+    if (players.length < minParty) {
+      throw new Error(`This adventure needs at least ${minParty} party members to start`)
+    }
     await startAdventure({ settingId, adventurePlanId, adventureId })
     return // startAdventure will handle the redirect
   }

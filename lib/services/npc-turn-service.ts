@@ -2,11 +2,13 @@ import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { convex } from "@/lib/convex/server"
 import { readJsonFromS3 } from "@/lib/s3-utils"
+import { processAiPcTurn } from "@/lib/services/ai-pc-turn-service"
 import { handleSkipPassNpcTurn, type NpcTurnBranchResult, resolveNpcTurnRollOrDirectBranch } from "@/lib/services/npc-turn-branch-service"
 import { buildDeadCharacterCompletion, buildNpcTurnUpdatePatch } from "@/lib/services/npc-turn-effects-service"
 import { buildNpcActionContext, buildNpcActionPrompt, generateNpcAction } from "@/lib/services/npc-turn-generation-service"
 import { buildNpcInitiativeOrder, findEncounterInPlan, resolvePlanContextForEncounter } from "@/lib/services/npc-turn-intent-service"
 import { applyNpcSpellPostProcessing, finalizeNpcTurnResponse } from "@/lib/services/npc-turn-postprocess-service"
+import { isAiControlledPc } from "@/lib/utils/turn-actors"
 import { isLocalWikiAdventure, loadWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
 import type { Turn, TurnCharacter } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
@@ -170,6 +172,12 @@ export async function processNpcTurnWithLLM({
   })
 }
 
+/**
+ * Walk the initiative order and play every autonomous actor whose turn is up:
+ * NPCs and AI-controlled companion PCs. Stops at the first human-controlled PC
+ * (their turn is resolved by the player) and on the first failure (the pending
+ * actor is left un-replied so the client-side safety net can retry).
+ */
 export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
   const npcRequestId = Math.random().toString(36).substring(7)
   console.log(`[NPC:${npcRequestId}] Starting NPC turns processing:`, {
@@ -266,6 +274,23 @@ export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
       console.log("[LLM] Skipping dead player character:", char.name)
       continue // Skip dead PCs and continue with NPCs
     }
+    if (isAiControlledPc(char)) {
+      // AI companion: play their turn automatically, then keep walking the
+      // initiative order. On failure leave them pending so the client-side
+      // ensureNpcProcessed safety net can retry instead of wedging the turn.
+      console.log("[LLM] Processing AI companion turn:", char.name)
+      try {
+        await processAiPcTurn({
+          turnId,
+          characterId: char.id,
+          adventure: { _id: adventure._id, settingId: adventure.settingId, planId: adventure.planId },
+        })
+      } catch (error) {
+        console.error("[LLM] AI companion turn failed, stopping loop for retry:", char.name, error)
+        break
+      }
+      continue
+    }
     if (char.type !== "npc") {
       console.log("[LLM] Stopping at player character:", char.name)
       break // Process NPCs in order, then stop
@@ -338,15 +363,22 @@ export async function processNpcTurnsAfterCurrent(turnId: Id<"turns">) {
       )
     )
 
-    // Pass new context fields to processNpcTurnWithLLM
-    const result = await processNpcTurnWithLLM({
-      turn: { ...turn, id: turn._id, characters },
-      npcId: npc.id,
-      encounterContext,
-      sectionContext,
-      sceneContext,
-      adventureOverview,
-    })
+    // Pass new context fields to processNpcTurnWithLLM. On failure leave the
+    // NPC pending and stop; the client-side safety net retries.
+    let result: Awaited<ReturnType<typeof processNpcTurnWithLLM>>
+    try {
+      result = await processNpcTurnWithLLM({
+        turn: { ...turn, id: turn._id, characters },
+        npcId: npc.id,
+        encounterContext,
+        sectionContext,
+        sceneContext,
+        adventureOverview,
+      })
+    } catch (error) {
+      console.error("[LLM] NPC turn failed, stopping loop for retry:", npc.name, error)
+      break
+    }
 
     console.log(
       "[LLM DM] processNpcTurnWithLLM completed",

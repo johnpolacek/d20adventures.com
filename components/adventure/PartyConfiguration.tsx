@@ -13,6 +13,7 @@ interface PartyConfigurationProps {
   characterChoices: CharacterChoiceMode[]
   onModeChange: (characterId: string, mode: "player" | "invite" | "ai") => void
   characterNames: Record<string, string>
+  party?: [number, number]
 }
 
 // Helper to check if this is a solo adventure (only one character total)
@@ -41,12 +42,17 @@ function Spinner() {
   )
 }
 
-const PartyConfiguration: React.FC<PartyConfigurationProps> = ({ characterChoices, characterNames }) => {
+const PartyConfiguration: React.FC<PartyConfigurationProps> = ({ characterChoices, onModeChange, characterNames, party }) => {
   const { settingId, adventurePlanId } = useParams()
   const { isLoaded, isSignedIn } = useUser()
   const [isCreating, setIsCreating] = useState(false)
   const [startError, setStartError] = useState<string | null>(null)
   const hasAutoStartedRef = useRef(false)
+
+  const minParty = party?.[0] ?? 1
+  const aiCount = characterChoices.filter((choice) => choice.mode === "ai").length
+  const partySize = 1 + aiCount // the player plus AI companions
+  const canStartNow = partySize >= minParty
 
   // If only one character, auto-create and start adventure
   useEffect(() => {
@@ -54,10 +60,10 @@ const PartyConfiguration: React.FC<PartyConfigurationProps> = ({ characterChoice
     if (hasAutoStartedRef.current || isCreating) return
 
     hasAutoStartedRef.current = true
-    void startSelectedAdventure()
+    void startSelectedAdventure(false)
   }, [isLoaded, isSignedIn, characterChoices, isCreating])
 
-  async function startSelectedAdventure() {
+  async function startSelectedAdventure(startImmediately: boolean) {
     if (isCreating) return
     setIsCreating(true)
     setStartError(null)
@@ -67,6 +73,7 @@ const PartyConfiguration: React.FC<PartyConfigurationProps> = ({ characterChoice
         settingId: settingId as string,
         adventurePlanId: adventurePlanId as string,
         characterChoices,
+        startImmediately,
       })
       // The redirect happens in the server action.
     } catch (error) {
@@ -82,7 +89,7 @@ const PartyConfiguration: React.FC<PartyConfigurationProps> = ({ characterChoice
   }
 
   const handleStartAdventure = async () => {
-    await startSelectedAdventure()
+    await startSelectedAdventure(false)
   }
 
   // Scroll to reveal the start controls for the multi-character button, but not
@@ -138,17 +145,57 @@ const PartyConfiguration: React.FC<PartyConfigurationProps> = ({ characterChoice
         characterChoices.map((choice) => (
           <div key={choice.characterId} className="character-choice flex justify-between items-center w-full pb-4">
             <span className="font-display text-xl font-semibold relative top-1">{characterNames[choice.characterId]}</span>
-            <div className="mode-buttons flex items-center space-x-8">
-              {choice.mode === "player" ? <Button variant="epic">Player</Button> : <div className="text-green-300 bg-green-200/10 px-12 mr-2 py-1 border border-green-300 rounded font-mono">Open</div>}
+            <div className="mode-buttons flex items-center space-x-2">
+              {choice.mode === "player" ? (
+                <Button variant="epic">Player</Button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => onModeChange(choice.characterId, "invite")}
+                    className={
+                      choice.mode === "invite"
+                        ? "text-green-300 bg-green-200/10 px-6 py-1 border border-green-300 rounded font-mono"
+                        : "text-white/50 px-6 py-1 border border-white/20 rounded font-mono hover:border-green-300/60 hover:text-green-200"
+                    }
+                  >
+                    Open
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onModeChange(choice.characterId, "ai")}
+                    className={
+                      choice.mode === "ai"
+                        ? "text-sky-300 bg-sky-200/10 px-6 py-1 border border-sky-300 rounded font-mono"
+                        : "text-white/50 px-6 py-1 border border-white/20 rounded font-mono hover:border-sky-300/60 hover:text-sky-200"
+                    }
+                  >
+                    AI Companion
+                  </button>
+                </>
+              )}
             </div>
           </div>
         ))}
 
-      <div className="text-center py-4">
+      <div className="text-center py-4 space-y-4">
         {isSignedIn ? (
-          <Button variant="epic" size="lg" className="text-2xl py-6 px-12" onClick={handleStartAdventure} disabled={isCreating}>
-            {isCreating ? "Creating Adventure..." : "Start Adventure"}
-          </Button>
+          <>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Button variant="epic" size="lg" className="text-xl py-6 px-10" onClick={() => startSelectedAdventure(true)} disabled={isCreating || !canStartNow}>
+                {isCreating ? "Creating Adventure..." : "Start Adventure"}
+              </Button>
+              <Button variant="outline" size="lg" className="text-xl py-6 px-10" onClick={() => startSelectedAdventure(false)} disabled={isCreating}>
+                Create Lobby &amp; Invite Friends
+              </Button>
+            </div>
+            <p className="text-sm text-white/70">
+              {canStartNow
+                ? `Party of ${partySize}: you${aiCount > 0 ? ` and ${aiCount} AI companion${aiCount === 1 ? "" : "s"}` : ""}. Open slots stay available for friends in the lobby.`
+                : `This adventure needs at least ${minParty} party members. Add ${minParty - partySize} more AI companion${minParty - partySize === 1 ? "" : "s"} to start now, or create a lobby and invite friends.`}
+            </p>
+            {startError && <p className="text-red-300">{startError}</p>}
+          </>
         ) : (
           <SignUpButton mode="modal">
             <Button variant="epic" size="lg" className="text-2xl py-6 px-12">

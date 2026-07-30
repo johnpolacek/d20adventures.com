@@ -70,6 +70,8 @@ export default async function CharacterSelectPage({ params }: PageProps) {
         adventurePlanId={adventurePlanId}
         adventureTitle={adventurePlan.title}
         adventureTeaser={adventurePlan.teaser}
+        premadeCompanions={adventurePlan.premadePlayerCharacters ?? []}
+        party={adventurePlan.party ?? [1, 1]}
       />
     </FullPageImage>
   )

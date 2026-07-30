@@ -60,6 +60,11 @@ export function assertPlayerCharacterControl(userId: string | null | undefined, 
   if (character.type !== "pc") {
     throw new AdventureAccessError(403, "Only player characters can perform this action")
   }
+  // AI companions carry the owner's userId, so this must come before the
+  // userId check or the owner could manually act for them.
+  if (character.controlledBy === "ai") {
+    throw new AdventureAccessError(403, "This character is controlled by an AI companion")
+  }
   if (character.userId !== resolvedUserId) {
     throw new AdventureAccessError(403, "You are not authorized to act for this character")
   }

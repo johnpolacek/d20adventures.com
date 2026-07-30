@@ -11,22 +11,24 @@ interface PartyLobbyGridProps {
   userId?: string
   onCharacterClick?: (character: PC | PCTemplate) => void
   onJoinClick?: (characterId: string) => void
+  onRemoveAiCompanion?: (characterId: string) => void
   isJoining?: boolean
   availableCharacters?: PCTemplate[]
   playerNames?: Record<string, string>
 }
 
-export function PartyLobbyGrid({ adventure, adventurePlan, userId, onCharacterClick, onJoinClick, isJoining = false, availableCharacters = [], playerNames = {} }: PartyLobbyGridProps) {
+export function PartyLobbyGrid({ adventure, adventurePlan, userId, onCharacterClick, onJoinClick, onRemoveAiCompanion, isJoining = false, availableCharacters = [], playerNames = {} }: PartyLobbyGridProps) {
   const maxParty = adventurePlan.party?.[1] || 4
   const party = adventure.party || []
   const { user } = useUser()
 
-  // Find the user's character if present
+  // Find the user's character if present. AI companions carry the owner's
+  // userId, so they must not match as the user's own slot.
   let userChar: PC | undefined
   let otherChars: PC[] = []
   if (user?.id) {
-    userChar = party.find((c) => c.userId === userId)
-    otherChars = party.filter((c) => c.userId !== userId)
+    userChar = party.find((c) => c.userId === userId && c.controlledBy !== "ai")
+    otherChars = party.filter((c) => c !== userChar)
   } else {
     otherChars = party
   }
@@ -42,8 +44,19 @@ export function PartyLobbyGrid({ adventure, adventurePlan, userId, onCharacterCl
       )
     } else if (charIdx < otherChars.length) {
       const character = otherChars[charIdx]
-      const playerName = character.userId ? playerNames[character.userId] : undefined
-      slots.push(<PartySlot key={character.id} character={character} isUserCharacter={false} playerName={playerName} onClick={() => (onCharacterClick ? onCharacterClick(character) : undefined)} />)
+      const aiControlled = character.controlledBy === "ai"
+      const playerName = !aiControlled && character.userId ? playerNames[character.userId] : undefined
+      slots.push(
+        <PartySlot
+          key={character.id}
+          character={character}
+          isUserCharacter={false}
+          aiControlled={aiControlled}
+          playerName={playerName}
+          onClick={() => (onCharacterClick ? onCharacterClick(character) : undefined)}
+          onRemoveClick={aiControlled && onRemoveAiCompanion ? () => onRemoveAiCompanion(character.id) : undefined}
+        />
+      )
       charIdx++
     } else {
       // If there are available premade characters, allow joining with the first available

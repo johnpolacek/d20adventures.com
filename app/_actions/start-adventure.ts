@@ -2,10 +2,12 @@
 
 import { auth } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
+import { after } from "next/server"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { convex } from "@/lib/convex/server"
 import { readJsonFromS3 } from "@/lib/s3-utils"
+import { maybeTriggerStoryviewAutoGeneration } from "@/lib/services/turn-audio-service"
 import { buildLocalWikiTurnCharacters, isLocalWikiAdventure, loadWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PCTemplate } from "@/types/character"
@@ -102,6 +104,7 @@ export async function startAdventure({ settingId, adventurePlanId, adventureId }
           updatedAt: Date.now(),
         },
       })
+      after(() => maybeTriggerStoryviewAutoGeneration(turnId))
       return redirect(`/settings/${settingId}/${adventurePlanId}/${adventureId}`)
     }
 
@@ -169,6 +172,7 @@ export async function startAdventure({ settingId, adventurePlanId, adventureId }
             name,
             type: "pc" as const,
             userId: player.userId,
+            controlledBy: player.controlledBy,
             initiative: Math.floor(Math.random() * 20) + 1, // Random initiative for now
             hasReplied: false,
             isComplete: false,
@@ -230,6 +234,7 @@ export async function startAdventure({ settingId, adventurePlanId, adventureId }
 
     console.log("🎲 Successfully started adventure with first turn:", turnId)
     console.log("🎲 Turn created with", characters.length, "characters")
+    after(() => maybeTriggerStoryviewAutoGeneration(turnId))
   } catch (error) {
     // redirect() throws NEXT_REDIRECT as its success signal; don't log it as a failure.
     const isRedirect = error && typeof error === "object" && "digest" in error && String((error as { digest?: string }).digest).startsWith("NEXT_REDIRECT")

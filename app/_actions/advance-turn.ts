@@ -1,5 +1,6 @@
 "use server"
 import { auth } from "@clerk/nextjs/server"
+import { after } from "next/server"
 import wait from "waait"
 import { z } from "zod"
 import { api } from "@/convex/_generated/api"
@@ -23,6 +24,7 @@ import {
   getSectionAndSceneContext,
 } from "@/lib/services/advance-turn-prompt-service"
 import { appendNarrative, normalizeNarrative } from "@/lib/services/narrative-service"
+import { maybeTriggerStoryviewAutoGeneration } from "@/lib/services/turn-audio-service"
 import { mapConvexTurnToTurn } from "@/lib/utils"
 import { validateAdventurePatch } from "@/lib/wiki-adventures/adventure-patch"
 import { buildLocalWikiTurnCharacters, isLocalWikiAdventure, isLocalWikiFinalEncounter, loadWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
@@ -56,7 +58,7 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
 
   // 1. Fetch the turn from Convex and ensure the caller can access the adventure
   console.log(`[advanceTurn:${requestId}] Fetching turn data from Convex`)
-  const { turn: turnData } = await assertAdventureAccessByTurn(userId, turnId)
+  const { turn: turnData, adventure } = await assertAdventureAccessByTurn(userId, turnId)
 
   // Check if turn already exists to prevent duplicate processing
   const existingNextTurn = await convex.query(api.adventure.getTurnByOrder, {
@@ -140,7 +142,11 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
       ? buildLocalWikiTurnCharacters({
           artifacts,
           encounter: nextEncounter,
-          players: (turn.characters as TurnCharacter[]).filter((character) => character.type === "pc").map((character) => ({ userId: character.userId ?? userId, characterId: character.id })),
+          // Fall back to the adventure owner (not whoever clicked advance) for a
+          // userId-less PC, and carry the AI-companion marker across encounters.
+          players: (turn.characters as TurnCharacter[])
+            .filter((character): character is Extract<TurnCharacter, { type: "pc" }> => character.type === "pc")
+            .map((character) => ({ userId: character.userId ?? adventure.ownerId, characterId: character.id, controlledBy: character.controlledBy })),
           existingPlayerCharacters: (turn.characters as TurnCharacter[]).filter((character) => character.type === "pc"),
         })
       : (turn.characters as TurnCharacter[])
@@ -154,7 +160,7 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
           .sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
     const narrative = isTransition ? appendNarrative(normalizeNarrative(llmResult.narrative), normalizeNarrative(nextEncounter.sections.intro ?? "")) : normalizeNarrative(llmResult.narrative)
     const isFinalEncounter = isLocalWikiFinalEncounter(artifacts, nextEncounter.id)
-    await convex.mutation(api.adventure.commitWikiTurnAdvance, {
+    const commitResult = await convex.mutation(api.adventure.commitWikiTurnAdvance, {
       adventureId: turnData.adventureId,
       expectedCurrentTurnId: turnId,
       expectedCurrentEncounterId: turn.encounterId,
@@ -171,6 +177,7 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
       generatedBy: { promptVersion: `wiki-${definition.promptSlug}-advance-v1`, contextHash: contentRef.contentHash },
       isFinalEncounter,
     })
+    after(() => maybeTriggerStoryviewAutoGeneration(commitResult.turnId))
     return { status: "turn_advanced", turn: { ...turn, encounterId: nextEncounter.id, title: nextEncounter.title, narrative, characters, isFinalEncounter } }
   }
 
@@ -301,7 +308,7 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
 
   const newTurn = buildResult.turn
   const isFinalEncounter = isFinalEncounterById(plan, newTurn.encounterId)
-  await persistTurnAndFinalizeAdventure({
+  const newTurnId = await persistTurnAndFinalizeAdventure({
     requestId,
     adventureId: turnData.adventureId,
     currentOrder: turnData.order || 0,
@@ -309,6 +316,7 @@ export async function advanceTurn({ turnId, settingId, adventurePlanId }: { turn
     isFinalEncounter,
     shouldProcessNpcTurns,
   })
+  after(() => maybeTriggerStoryviewAutoGeneration(newTurnId))
 
   // 8. Return the new turn/adventure state
   console.log(`[advanceTurn:${requestId}] Function completed successfully`)

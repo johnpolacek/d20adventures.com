@@ -87,8 +87,8 @@ export const LOCAL_WIKI_ADVENTURES = [
   {
     settingId: "realm-of-myr",
     planId: "march-of-davos",
-    contentVersion: "2026-05-23T00-00-00Z-march-of-davos-migration",
-    versionId: "local-march-of-davos-migration",
+    contentVersion: "2026-07-29T00-00-00Z-march-of-davos-companions",
+    versionId: "local-march-of-davos-companions",
     assetHosts: ["d20-public.s3.us-east-1.amazonaws.com", "d1dkwd3w4hheqw.cloudfront.net", "s3.us-east-1.amazonaws.com"],
     sourceRoots: ["content/settings/realm-of-myr/adventures/march-of-davos"],
     migrationReportPath: "content/settings/realm-of-myr/adventures/march-of-davos/migration-report.json",
@@ -226,7 +226,7 @@ async function readS3WikiAdventureSourceFiles(definition: LocalWikiAdventureDefi
 export function buildLocalWikiTurnCharacters(args: {
   artifacts: RuntimeArtifacts
   encounter: RuntimeEncounter
-  players: Array<{ userId: string; characterId: string }>
+  players: Array<{ userId: string; characterId: string; controlledBy?: "ai" }>
   existingPlayerCharacters?: TurnCharacter[]
 }): TurnCharacter[] {
   const characters: TurnCharacter[] = []
@@ -244,6 +244,7 @@ export function buildLocalWikiTurnCharacters(args: {
       id: sheet.id,
       type: "pc",
       userId: player.userId,
+      controlledBy: player.controlledBy,
       initiative: rollD20(),
       hasReplied: false,
       isComplete: false,

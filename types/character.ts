@@ -67,6 +67,8 @@ export type BaseCharacter = z.infer<typeof baseCharacterSchema>
 export const pcSchema = baseCharacterSchema.extend({
   type: z.literal("pc"),
   userId: z.string(), // Clerk user id
+  // "ai" marks an AI-controlled companion; userId is the adventure owner's.
+  controlledBy: z.literal("ai").optional(),
   attributes: attributesSchema,
   status: z.string().optional(),
 })
@@ -85,6 +87,7 @@ export type NPC = z.infer<typeof npcSchema>
 // Pre-rolled Player Character template schema and type (no userId)
 export const pcTemplateSchema = baseCharacterSchema.extend({
   type: z.literal("pc"),
+  controlledBy: z.literal("ai").optional(),
   attributes: attributesSchema,
 })
 

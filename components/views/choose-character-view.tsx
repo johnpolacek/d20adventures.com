@@ -1,13 +1,15 @@
 "use client"
 import { ChevronDoubleLeftIcon } from "@heroicons/react/24/outline"
 import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import PartySetup from "@/components/adventure/party-setup"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { CharacterSelectCard } from "@/components/ui/character-select-card"
 import Image from "@/components/ui/native-image"
 import type { PCTemplate } from "@/types/character"
 import { textShadow, textShadowSpread } from "../typography/styles"
+import { scrollToTop } from "../ui/utils"
 
 export default function ChooseCharacterView({
   username,
@@ -18,6 +20,8 @@ export default function ChooseCharacterView({
   adventurePlanId,
   adventureTitle,
   adventureTeaser,
+  premadeCompanions = [],
+  party = [1, 1],
 }: {
   username: string
   characters: PCTemplate[]
@@ -27,11 +31,28 @@ export default function ChooseCharacterView({
   adventurePlanId: string
   adventureTitle: string
   adventureTeaser: string
+  premadeCompanions?: PCTemplate[]
+  party?: [number, number]
 }) {
   const [selectedCharacter, setSelectedCharacter] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  // When the adventure has premade companions, picking a character advances to
+  // a party-setup step instead of creating the adventure immediately.
+  const hasPartyStep = premadeCompanions.length > 0
+  const [partyStep, setPartyStep] = useState(false)
+
+  // The party step is much shorter than the character grid, so an inherited
+  // scroll position would leave its heading tucked under the fixed header.
+  useEffect(() => {
+    scrollToTop()
+  }, [partyStep])
 
   async function handleChoose(characterFile: string) {
+    if (hasPartyStep) {
+      setSelectedCharacter(characterFile)
+      setPartyStep(true)
+      return
+    }
     setSubmitting(true)
     const { createAdventure } = await import("@/app/_actions/create-adventure")
     await createAdventure({
@@ -41,6 +62,29 @@ export default function ChooseCharacterView({
     })
     // The redirect happens in the server action
     setSubmitting(false)
+  }
+
+  const selectedIndex = selectedCharacter ? characterFiles.indexOf(selectedCharacter) : -1
+  const selectedCharacterSheet = selectedIndex >= 0 ? characters[selectedIndex] : null
+
+  if (partyStep && selectedCharacter && selectedCharacterSheet) {
+    return (
+      <div className="flex flex-col items-center justify-center relative z-10 pt-24 pb-12">
+        <PartySetup
+          settingId={settingId}
+          adventurePlanId={adventurePlanId}
+          selectedCharacterId={`characters/${userId}/${selectedCharacter}.json`}
+          selectedCharacterName={selectedCharacterSheet.name}
+          selectedCharacterImage={selectedCharacterSheet.image}
+          companions={premadeCompanions}
+          party={party}
+          onBack={() => {
+            setPartyStep(false)
+            setSelectedCharacter(null)
+          }}
+        />
+      </div>
+    )
   }
 
   return (

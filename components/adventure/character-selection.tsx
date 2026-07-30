@@ -54,7 +54,7 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
     if (selectedCharacterId && characterChoices.length === 0) {
       const choices: CharacterChoiceMode[] = adventurePlan.premadePlayerCharacters.map((char, index) => ({
         characterId: char.id,
-        mode: index === 0 && char.id === selectedCharacterId ? "player" : "ai",
+        mode: index === 0 && char.id === selectedCharacterId ? "player" : "invite",
       }))
       setCharacterChoices(choices)
     }
@@ -63,10 +63,11 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
   const handleCharacterSelect = (characterId: string) => {
     setIsSelecting(true)
     setSelectedCharacterId(characterId)
-    // Reset choices and set the selected character as player, others as AI
+    // Reset choices: the selected character is the player, others start as
+    // open (invite) slots — AI companions are opt-in per slot.
     const choices: CharacterChoiceMode[] = adventurePlan.premadePlayerCharacters.map((char) => ({
       characterId: char.id,
-      mode: char.id === characterId ? "player" : "ai",
+      mode: char.id === characterId ? "player" : "invite",
     }))
     setCharacterChoices(choices)
     // Simulate async feedback, reset after short delay
@@ -97,7 +98,7 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
       {/* Background overlay for better readability */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/60 to-black/30" />
 
-      <div className="container max-w-5xl mx-auto px-6 sm:px-8 pt-24 sm:pt-20 pb-8 relative z-10">
+      <div className="container max-w-5xl mx-auto px-6 sm:px-8 pt-24 sm:pt-28 pb-8 relative z-10">
         <div className="text-center mb-3 rounded border border-white/15 bg-black/35 px-4 py-3 shadow-2xl shadow-black/30 backdrop-blur-sm">
           <h1 style={textShadowSpreadLight} className="text-3xl md:text-4xl font-bold font-display mb-1 text-white leading-tight">
             {adventurePlan.title}
@@ -193,6 +194,7 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
                   setCharacterChoices((prev) => prev.map((choice) => (choice.characterId === characterId ? { ...choice, mode } : choice)))
                 }}
                 characterNames={characterNames}
+                party={adventurePlan.party}
               />
             )}
           </div>

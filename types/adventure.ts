@@ -16,7 +16,10 @@ export interface Adventure {
   startedAt: string
   endedAt?: string
   pausedAt?: string
-  players?: { characterId: string; userId: string }[]
+  players?: { characterId: string; userId: string; controlledBy?: "ai" }[]
+  // Auto-narration toggle for initial render; live pause detail arrives via
+  // the turn-audio manifest (the adventure doc is not a live subscription).
+  storyview?: { autoEnabled: boolean }
 }
 
 export type TurnCharacter =

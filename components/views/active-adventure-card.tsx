@@ -13,8 +13,8 @@ interface ActiveAdventureCardProps {
 }
 
 export default function ActiveAdventureCard({ adventure, userId }: ActiveAdventureCardProps) {
-  // Find the current user's character in the adventure
-  const userCharacter = adventure.party.find((pc) => pc.userId === userId)
+  // Find the current user's character in the adventure (AI companions carry the owner's userId)
+  const userCharacter = adventure.party.find((pc) => pc.userId === userId && pc.controlledBy !== "ai")
 
   return (
     <Card

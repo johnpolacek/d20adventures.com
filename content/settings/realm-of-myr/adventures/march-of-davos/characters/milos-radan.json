@@ -1,0 +1,76 @@
+{
+  "name": "Milos Radan",
+  "archetype": "Cleric",
+  "race": "Human",
+  "gender": "Male",
+  "appearance": "Milos is a lean Valkaran man in his forties with a close-cropped grey beard, road-worn boots, and the undyed travelling robes of a Wayfinder priest. A bronze compass-star of the Church of Valkara hangs at his chest, and his walking staff is notched with the miles of a hundred pilgrimages.",
+  "personality": "Calm, warm, and quietly observant, Milos is the sort of man strangers confide in without meaning to. He carries his faith lightly but seriously, offering comfort more often than sermons. Injustice makes him stubborn, and secrets within his own church trouble him deeply.",
+  "background": "Milos has walked the pilgrim roads of the March of Davos for twenty years as a Wayfinder, a wandering priest of the Church of Valkara who tends shrines and travellers alike. Of late he has heard troubling whispers in the villages: shrines stripped of old relics, and a name spoken only in doubt, the Covenant of the Cowl. He has come to Kordavos for the Harvest Festival to seek answers from the Church, and he fears what he may find.",
+  "motivation": "Milos wants to protect the soul of Valkaran tradition without letting it curdle into fanaticism. He seeks the truth behind the whispers of the Covenant, and he believes an honest accounting, however painful, is the only way to keep faith and city from tearing each other apart.",
+  "behavior": "Milos watches and listens before he acts, tends the wounded without being asked, and steps forward when someone needs defending, whether from blades or from lies. In a fight he shields his companions with prayers of warding and mends their wounds, striking with his staff only when there is no gentler path.",
+  "healthPercent": 100,
+  "equipment": [
+    {
+      "name": "Wayfinder's Staff",
+      "description": "A tall walking staff notched with the miles of many pilgrimages, sturdy enough to serve as a weapon."
+    },
+    {
+      "name": "Bronze Compass-Star",
+      "description": "The holy symbol of the Church of Valkara, worn smooth by twenty years of travel."
+    },
+    {
+      "name": "Healer's Satchel",
+      "description": "Bandages, salves, and dried herbs gathered along the pilgrim roads."
+    },
+    {
+      "name": "Travelling Robes",
+      "description": "Undyed Wayfinder robes, patched and rain-faded, that mark him as a friend to travellers."
+    }
+  ],
+  "skills": ["Medicine", "Insight", "Religion", "Persuasion", "History (Valkaran)"],
+  "spells": [
+    {
+      "name": "Healing Word",
+      "description": "A prayer that knits wounds and restores vigor to an injured ally.",
+      "isUsed": false
+    },
+    {
+      "name": "Bless",
+      "description": "Invokes Valkara's favor, steadying the hands and hearts of nearby allies.",
+      "isUsed": false
+    },
+    {
+      "name": "Shield of Faith",
+      "description": "A shimmering ward of divine light that protects a chosen ally from harm.",
+      "isUsed": false
+    },
+    {
+      "name": "Guiding Bolt",
+      "description": "A lance of radiant light that sears a foe and marks them for allies to strike.",
+      "isUsed": false
+    },
+    {
+      "name": "Detect Evil and Good",
+      "description": "Reveals the presence of unholy or celestial influence nearby.",
+      "isUsed": false
+    },
+    {
+      "name": "Sanctuary",
+      "description": "Wards a creature so that attackers must resist the urge to do it harm.",
+      "isUsed": false
+    }
+  ],
+  "specialAbilities": ["Wayfinder's Welcome: common folk of the March trust a Wayfinder's robes and speak freely to Milos", "Steady Hands: Milos can stabilize the dying and ease pain even without magic"],
+  "status": "",
+  "type": "pc",
+  "attributes": {
+    "strength": 10,
+    "dexterity": 8,
+    "constitution": 12,
+    "intelligence": 12,
+    "wisdom": 16,
+    "charisma": 14
+  },
+  "id": "milos-radan",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/march-of-davos/pcs/milos-radan.png"
+}

@@ -7,14 +7,16 @@ import type { PC, PCTemplate } from "@/types/character"
 interface PartySlotProps {
   character?: PC | PCTemplate
   isUserCharacter?: boolean
+  aiControlled?: boolean
   isAvailable?: boolean
   onClick?: () => void
   onJoinClick?: () => void
+  onRemoveClick?: () => void
   isJoining?: boolean
   playerName?: string
 }
 
-export function PartySlot({ character, isUserCharacter = false, isAvailable = false, onClick, onJoinClick, isJoining = false, playerName }: PartySlotProps) {
+export function PartySlot({ character, isUserCharacter = false, aiControlled = false, isAvailable = false, onClick, onJoinClick, onRemoveClick, isJoining = false, playerName }: PartySlotProps) {
   if (character) {
     return (
       <Card
@@ -36,6 +38,23 @@ export function PartySlot({ character, isUserCharacter = false, isAvailable = fa
           </div>
           {isUserCharacter ? (
             <div className="text-xs bg-amber-800 rounded-sm px-2 py-0.5 text-amber-200 font-mono tracking-wider font-bold">{playerName || "YOU"}</div>
+          ) : aiControlled ? (
+            <div className="flex items-center gap-2">
+              <div className="text-xs bg-sky-900 rounded-sm px-2 py-0.5 text-sky-200 font-mono tracking-wider font-bold">AI COMPANION</div>
+              {onRemoveClick && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-xs h-6 px-2 text-red-300/80 hover:text-red-200 hover:bg-red-900/40"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onRemoveClick()
+                  }}
+                >
+                  Remove
+                </Button>
+              )}
+            </div>
           ) : (
             <div className="text-xs bg-primary-700 rounded-sm px-2 py-0.5 text-primary-200 font-mono tracking-wider font-bold">{playerName || "Player"}</div>
           )}

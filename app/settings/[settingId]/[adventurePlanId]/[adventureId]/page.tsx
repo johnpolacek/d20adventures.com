@@ -25,8 +25,9 @@ function mapConvexAdventureToAdventure(raw: unknown): Adventure | null {
     parentAdventureId?: string
     parentTurnId?: string
     status?: "waitingForPlayers" | "active" | "completed"
-    players?: Array<{ userId: string; characterId: string }>
+    players?: Array<{ userId: string; characterId: string; controlledBy?: "ai" }>
     playerIds?: string[]
+    storyview?: { autoEnabled: boolean }
   }
 
   return {
@@ -45,6 +46,7 @@ function mapConvexAdventureToAdventure(raw: unknown): Adventure | null {
     startedAt: a.startedAt ? new Date(a.startedAt).toISOString() : "",
     endedAt: a.endedAt ? new Date(a.endedAt).toISOString() : undefined,
     pausedAt: undefined,
+    storyview: a.storyview ? { autoEnabled: a.storyview.autoEnabled } : undefined,
   }
 }
 
@@ -95,15 +97,15 @@ export default async function AdventurePage(props: { params: Promise<{ settingId
         if (typeof player.characterId === "string" && player.characterId.startsWith("characters/")) {
           try {
             const pcTemplate = (await readJsonFromS3(player.characterId)) as PCTemplate
-            // Convert PCTemplate to PC by adding userId
-            return { ...pcTemplate, userId: player.userId } as PC
+            // Convert PCTemplate to PC by adding userId + AI marker
+            return { ...pcTemplate, userId: player.userId, controlledBy: player.controlledBy } as PC
           } catch (err) {
             console.error("[AdventurePage] Failed to load custom character from S3:", player.characterId, err)
             return undefined
           }
         } else if (adventurePlan?.premadePlayerCharacters) {
           const pc = adventurePlan.premadePlayerCharacters.find((c) => c.id === player.characterId)
-          if (pc && typeof pc === "object") return { ...pc, userId: player.userId } as PC
+          if (pc && typeof pc === "object") return { ...pc, userId: player.userId, controlledBy: player.controlledBy } as PC
         }
         return undefined
       })
