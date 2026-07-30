@@ -239,7 +239,7 @@ function FloatingMotes({ color, seed }: { color: string; seed: number }) {
   )
 }
 
-export default function EncounterScene({ scene, characters, standees, minis3d }: { scene: EncounterScene3D; characters: TurnCharacter[]; standees?: Record<string, string>; minis3d?: Record<string, string> }) {
+export default function EncounterScene({ scene, characters, standees, standeesBack, minis3d }: { scene: EncounterScene3D; characters: TurnCharacter[]; standees?: Record<string, string>; standeesBack?: Record<string, string>; minis3d?: Record<string, string> }) {
   const { environment } = scene
   const light = LIGHTING[environment.timeOfDay]
   const kit = ENVIRONMENT_KITS[environment.kit]
@@ -324,7 +324,7 @@ export default function EncounterScene({ scene, characters, standees, minis3d }:
         {scene.characters.map((placement) => {
           const character = charactersById.get(placement.characterId)
           if (!character) return null
-          return <CharacterMini key={placement.characterId} placement={placement} character={character} standeeUrl={standees?.[placement.characterId]} mini3dUrl={minis3d?.[placement.characterId]} />
+          return <CharacterMini key={placement.characterId} placement={placement} character={character} standeeUrl={standees?.[placement.characterId]} standeeBackUrl={standeesBack?.[placement.characterId]} mini3dUrl={minis3d?.[placement.characterId]} />
         })}
       </Suspense>
 

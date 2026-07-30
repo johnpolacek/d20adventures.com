@@ -4,6 +4,10 @@
 // and cache the cutout PNG in the public bucket, keyed by a hash of the source
 // image URL (stable per character art, shared across adventures).
 //
+// Each character gets two views: the front cutout ({hash}.png) and a rear view
+// ({hash}-back.png) generated from the portrait plus the finished front cutout
+// as references, so the renderer can swap art when the camera orbits behind.
+//
 // Server-only (sharp + S3). Model verified live 2026-07-04: gemini-3.1-flash-image.
 
 import { createHash } from "node:crypto"
@@ -17,8 +21,11 @@ export function getStandeeHash(sourceImageUrl: string): string {
   return createHash("sha1").update(sourceImageUrl).digest("hex")
 }
 
-export function getStandeeKey(sourceImageUrl: string): string {
-  return `images/minis/${getStandeeHash(sourceImageUrl)}.png`
+export type StandeeView = "front" | "back"
+
+export function getStandeeKey(sourceImageUrl: string, view: StandeeView = "front"): string {
+  const hash = getStandeeHash(sourceImageUrl)
+  return view === "back" ? `images/minis/${hash}-back.png` : `images/minis/${hash}.png`
 }
 
 export async function standeeExists(key: string): Promise<boolean> {
@@ -45,7 +52,32 @@ Requirements:
 - Background: SOLID UNIFORM PURE GREEN (#00FF00) everywhere. No scenery, no shadows on the background, no text, no border, no logo. One character only.`
 }
 
-async function generateStandeeRender(sourceImage: Buffer, sourceMimeType: string, prompt: string): Promise<Buffer> {
+function buildStandeeBackPrompt(args: { name: string; race?: string; archetype?: string; appearance?: string }): string {
+  const identity = [args.race, args.archetype].filter(Boolean).join(" ")
+  return `Two reference images are provided: (1) the character's face portrait, (2) the finished FRONT view of the character's tabletop miniature standee. Render the SAME character seen directly FROM BEHIND — a full-body rear view of the exact figure in image 2, as if the camera walked 180 degrees around the same frozen figure.
+
+Character: ${args.name}${identity ? ` — ${identity}` : ""}${args.appearance ? `\nAppearance notes: ${args.appearance.slice(0, 400)}` : ""}
+
+Requirements:
+- Entire body visible head to toe, nothing cropped; comfortable margin on all four sides.
+- Match image 2 exactly in silhouette, height, build, stance, and footprint; held items stay in the same hands.
+- Back of the head/hair, costume, cloak, pack, or scabbard continued plausibly from the front design. Do NOT show the face.
+- Same painted cinematic dark-fantasy style and lighting direction as image 2 — NOT cartoon, NOT chibi, NOT cute.
+- Background: SOLID UNIFORM PURE GREEN (#00FF00) everywhere. No scenery, no shadows on the background, no text, no border, no logo. One character only.`
+}
+
+interface ReferenceImage {
+  data: Buffer
+  mimeType: string
+}
+
+async function fetchReferenceImage(url: string, label: string): Promise<ReferenceImage> {
+  const response = await fetch(url)
+  if (!response.ok) throw new Error(`${label} fetch failed: ${response.status}`)
+  return { data: Buffer.from(await response.arrayBuffer()), mimeType: response.headers.get("content-type") ?? "image/png" }
+}
+
+async function generateStandeeRender(images: ReferenceImage[], prompt: string): Promise<Buffer> {
   const key = process.env.GOOGLE_GENERATIVE_AI_API_KEY
   if (!key) throw new Error("GOOGLE_GENERATIVE_AI_API_KEY is not set")
   const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${STANDEE_MODEL_ID}:generateContent?key=${key}`, {
@@ -54,7 +86,7 @@ async function generateStandeeRender(sourceImage: Buffer, sourceMimeType: string
     body: JSON.stringify({
       contents: [
         {
-          parts: [{ text: prompt }, { inline_data: { mime_type: sourceMimeType, data: sourceImage.toString("base64") } }],
+          parts: [{ text: prompt }, ...images.map((image) => ({ inline_data: { mime_type: image.mimeType, data: image.data.toString("base64") } }))],
         },
       ],
       generationConfig: { responseModalities: ["IMAGE"] },
@@ -125,6 +157,20 @@ export interface StandeeSource {
   appearance?: string
 }
 
+async function uploadCutout(key: string, cutout: Buffer): Promise<string | null> {
+  if (!s3Client) throw new Error("S3 not configured")
+  await s3Client.send(
+    new PutObjectCommand({
+      Bucket: process.env.AWS_BUCKET_PUBLIC,
+      Key: key,
+      Body: cutout,
+      ContentType: "image/png",
+      CacheControl: "public, max-age=31536000",
+    })
+  )
+  return getAssetUrl(key)
+}
+
 /** Generate (or fetch cached) standee cutout; returns the public URL, or null on failure. */
 export async function getOrCreateStandee(source: StandeeSource): Promise<string | null> {
   try {
@@ -133,27 +179,34 @@ export async function getOrCreateStandee(source: StandeeSource): Promise<string 
       return getAssetUrl(key)
     }
 
-    const portraitResponse = await fetch(source.imageUrl)
-    if (!portraitResponse.ok) throw new Error(`portrait fetch failed: ${portraitResponse.status}`)
-    const portrait = Buffer.from(await portraitResponse.arrayBuffer())
-    const mimeType = portraitResponse.headers.get("content-type") ?? "image/png"
-
-    const rendered = await generateStandeeRender(portrait, mimeType, buildStandeePrompt(source))
+    const portrait = await fetchReferenceImage(source.imageUrl, "portrait")
+    const rendered = await generateStandeeRender([portrait], buildStandeePrompt(source))
     const cutout = await chromaKeyCutout(rendered)
-
-    if (!s3Client) throw new Error("S3 not configured")
-    await s3Client.send(
-      new PutObjectCommand({
-        Bucket: process.env.AWS_BUCKET_PUBLIC,
-        Key: key,
-        Body: cutout,
-        ContentType: "image/png",
-        CacheControl: "public, max-age=31536000",
-      })
-    )
-    return getAssetUrl(key)
+    return await uploadCutout(key, cutout)
   } catch (error) {
     console.warn(`[encounterview] standee generation failed for ${source.name}: ${error instanceof Error ? error.message : error}`)
+    return null
+  }
+}
+
+/**
+ * Generate (or fetch cached) the rear-view cutout. Needs the finished front
+ * cutout as a style/silhouette reference alongside the portrait; returns the
+ * public URL, or null on failure (renderer falls back to front-only).
+ */
+export async function getOrCreateStandeeBack(source: StandeeSource & { frontStandeeUrl: string }): Promise<string | null> {
+  try {
+    const key = getStandeeKey(source.imageUrl, "back")
+    if (await standeeExists(key)) {
+      return getAssetUrl(key)
+    }
+
+    const [portrait, front] = await Promise.all([fetchReferenceImage(source.imageUrl, "portrait"), fetchReferenceImage(source.frontStandeeUrl, "front standee")])
+    const rendered = await generateStandeeRender([portrait, front], buildStandeeBackPrompt(source))
+    const cutout = await chromaKeyCutout(rendered)
+    return await uploadCutout(key, cutout)
+  } catch (error) {
+    console.warn(`[encounterview] back standee generation failed for ${source.name}: ${error instanceof Error ? error.message : error}`)
     return null
   }
 }

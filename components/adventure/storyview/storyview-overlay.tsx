@@ -9,6 +9,7 @@ import { useTokens } from "@/lib/context/TokenContext"
 import { useTurnContext } from "@/lib/context/TurnContext"
 import type { TurnCharacter } from "@/types/adventure"
 import StoryviewControls from "./storyview-controls"
+import StoryviewPausedNotice from "./storyview-paused-notice"
 import StoryviewSlideView from "./storyview-slide"
 import { useStoryviewPlayer } from "./use-storyview-player"
 
@@ -97,6 +98,11 @@ export default function StoryviewOverlay({ snapshot, onClose }: { snapshot: Stor
         {player.status === "ready" && player.currentSlide && <StoryviewSlideView slide={player.currentSlide} segmentIndex={player.segmentIndex} getSpeaker={getSpeaker} />}
       </div>
 
+      {player.storyviewAuto?.enabled && player.storyviewAuto.paused && (
+        <div className="flex justify-center px-6 pb-2">
+          <StoryviewPausedNotice paused={player.storyviewAuto.paused} />
+        </div>
+      )}
       {player.status === "ready" && (
         <div className="px-6 pb-8">
           <StoryviewControls playing={player.playing} finished={player.finished} slideCount={player.slides.length} slideIndex={player.slideIndex} speed={player.speed} onPlay={player.play} onPause={player.pause} onPrev={player.prev} onNext={player.next} onCycleSpeed={player.cycleSpeed} />

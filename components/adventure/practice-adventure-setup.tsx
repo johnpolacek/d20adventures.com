@@ -134,7 +134,7 @@ export function PracticeAdventureSetup({ settingId, adventurePlanId, adventureTi
               Selected: {selected.length} / {maxParty}
             </div>
             <div className="flex items-center gap-3">
-              <Link href={`/admin/wiki-adventures/${settingId}/${adventurePlanId}`}>
+              <Link href={`/admin/adventure-plans/${settingId}/${adventurePlanId}`}>
                 <Button variant="outline" size="sm">
                   Back to Plan
                 </Button>

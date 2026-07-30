@@ -1,10 +1,12 @@
 "use server"
 import { auth } from "@clerk/nextjs/server"
+import { after } from "next/server"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { assertAdventureAccessByTurn, assertPlayerCharacterControl } from "@/lib/adventure-access"
 import { convex } from "@/lib/convex/server"
 import { processNpcTurnsAfterCurrent } from "@/lib/services/npc-turn-service"
+import { maybeTriggerStoryviewAutoGeneration } from "@/lib/services/turn-audio-service"
 import type { TurnCharacter } from "@/types/adventure"
 
 type DeferOrSkipArgs = {
@@ -64,6 +66,7 @@ export async function deferOrSkipTurn({ turnId, characterId, afterCharacterId, s
       console.error("[deferOrSkipTurn] NPC processing error after explicit skip:", err)
     }
 
+    after(() => maybeTriggerStoryviewAutoGeneration(turnId))
     return { status: "skipped" }
   }
 
@@ -105,6 +108,7 @@ export async function deferOrSkipTurn({ turnId, characterId, afterCharacterId, s
       console.error("[deferOrSkipTurn] NPC processing error:", err)
     }
 
+    after(() => maybeTriggerStoryviewAutoGeneration(turnId))
     return { status: "deferred" }
   }
 
@@ -137,6 +141,7 @@ export async function deferOrSkipTurn({ turnId, characterId, afterCharacterId, s
       console.error("[deferOrSkipTurn] NPC processing error after skip:", err)
     }
 
+    after(() => maybeTriggerStoryviewAutoGeneration(turnId))
     return { status: "skipped" }
   }
 
@@ -175,5 +180,6 @@ export async function deferOrSkipTurn({ turnId, characterId, afterCharacterId, s
     console.error("[deferOrSkipTurn] NPC processing error (fallback):", err)
   }
 
+  after(() => maybeTriggerStoryviewAutoGeneration(turnId))
   return { status: "deferred" }
 }

@@ -13,6 +13,7 @@ const segmentValidator = v.object({
   voice: v.string(),
   audioKey: v.string(),
   durationSec: v.number(),
+  paragraphHash: v.optional(v.string()),
 })
 
 export const getTurnAudio = query({

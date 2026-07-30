@@ -31,19 +31,23 @@ async function main() {
   assert.ok(firstMarchEncounter?.content.includes('behavior: "Diligent and fair'))
 
   const adminPage = readFileSync("app/admin/page.tsx", "utf8")
-  assert.equal(adminPage.includes("/admin/adventure-plans"), false)
-  assert.ok(adminPage.includes("/admin/wiki-adventures"))
+  assert.equal(adminPage.includes("/admin/wiki-adventures"), false)
+  assert.ok(adminPage.includes("/admin/adventure-plans"))
 
-  const editorPage = readFileSync("app/admin/wiki-adventures/[settingId]/[planId]/page.tsx", "utf8")
+  const editorPage = readFileSync("app/admin/adventure-plans/[settingId]/[planId]/page.tsx", "utf8")
   assert.ok(editorPage.includes("AdminWikiAdventureEditor"))
   assert.ok(editorPage.includes("loadAdminWikiAdventureState"))
 
-  // Canonical admin route family is /admin/wiki-adventures; the others redirect into it.
-  const listPage = readFileSync("app/admin/wiki-adventures/page.tsx", "utf8")
-  assert.ok(listPage.includes("listAdminWikiAdventures"), "/admin/wiki-adventures must be the canonical list page")
-  for (const redirectRoute of ["app/admin/adventures-plans/page.tsx", "app/admin/adventure-plans/page.tsx"]) {
+  // Canonical admin route family is /admin/adventure-plans; the others redirect into it.
+  const listPage = readFileSync("app/admin/adventure-plans/page.tsx", "utf8")
+  assert.ok(listPage.includes("listAdminWikiAdventures"), "/admin/adventure-plans must be the canonical list page")
+  for (const redirectRoute of ["app/admin/adventures-plans/page.tsx", "app/admin/wiki-adventures/page.tsx"]) {
     const source = readFileSync(redirectRoute, "utf8")
-    assert.ok(source.includes('redirect("/admin/wiki-adventures")'), `${redirectRoute} must redirect to the canonical /admin/wiki-adventures`)
+    assert.ok(source.includes('redirect("/admin/adventure-plans")'), `${redirectRoute} must redirect to the canonical /admin/adventure-plans`)
+  }
+  for (const redirectRoute of ["app/admin/adventures-plans/[settingId]/[planId]/page.tsx", "app/admin/wiki-adventures/[settingId]/[planId]/page.tsx"]) {
+    const source = readFileSync(redirectRoute, "utf8")
+    assert.ok(source.includes("redirect(") && source.includes("/admin/adventure-plans/"), `${redirectRoute} must redirect to the canonical editor route`)
   }
   const editorComponent = readFileSync("components/wiki-adventures/admin-wiki-adventure-editor.tsx", "utf8")
   assert.ok(editorComponent.includes("Module Art"))

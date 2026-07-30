@@ -7,14 +7,14 @@
 // retries, failed chroma keys, and vendor price drift stay inside margin.
 //
 // Vendor cost basis (verified 2026-07-05):
-//   standee  gemini-3.1-flash-image, 1K output  ~$0.067/image
+//   standee  gemini-3.1-flash-image, 1K output  ~$0.067/image x 2 views (front + back)
 //   3D mini  fal hunyuan3d-v3 "Normal" $0.375 + $0.15 custom face_count = $0.525
 //   scene    gemini-3.5-flash ~$0.004/run -> metered charge ~$0.04 (~10x) already
 //
 // If a vendor price changes, update the table AND the constant together.
 
-/** Full-body standee render, once per character portrait. ~$0.07 cost -> $0.30 retail. */
-export const STANDEE_TOKEN_COST = 300
+/** Full-body standee render (front + back views), once per character portrait. ~$0.13 cost -> $0.50 retail. */
+export const STANDEE_TOKEN_COST = 500
 
 /** 3D miniature generation, once per character portrait. ~$0.53 cost -> $2.00 retail. */
 export const MINI3D_TOKEN_COST = 2000

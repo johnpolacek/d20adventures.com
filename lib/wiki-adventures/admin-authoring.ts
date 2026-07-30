@@ -12,6 +12,8 @@ export type AdminWikiAdventureSummary = {
   settingId: string
   planId: string
   title: string
+  image?: string
+  teaser?: string
   status: RuntimeArtifacts["validationReport"]["status"]
   source: "s3" | "local"
   fileCount: number
@@ -99,6 +101,8 @@ export async function listAdminWikiAdventures(): Promise<AdminWikiAdventureSumma
     settingId: state.definition.settingId,
     planId: state.definition.planId,
     title: state.artifacts.manifest.title,
+    image: state.artifacts.manifest.image,
+    teaser: state.artifacts.manifest.teaser,
     status: state.artifacts.validationReport.status,
     source: state.source,
     fileCount: state.files.length,

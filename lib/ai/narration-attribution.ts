@@ -1,16 +1,26 @@
+import { generateObject as baseGenerateObject, type Schema as AISchema } from "ai"
 import { z } from "zod"
-import { generateObject } from "@/lib/ai"
-import type { NarrativePart } from "@/lib/utils/parse-narrative"
+import { currentModel } from "./llm"
+import { composeSystemPrompt } from "./style"
 
 // Splits narrative paragraphs into ordered narration segments: narrator prose
 // and per-character quoted dialogue. Dialogue has no structured attribution in
 // the data model, so an LLM pass infers the speaker from context.
+//
+// Calls the model directly (no auth/charging wrapper): attribution runs in
+// background auto-narration where there is no authenticated caller, and its
+// provider tokens are folded into the caller's usage_tts_audio charge.
 
 export interface AttributionCharacter {
   id: string
   name: string
   gender?: string
   personality?: string
+}
+
+export interface ParagraphInput {
+  partIndex: number // index into parseNarrative() parts
+  text: string
 }
 
 export interface AttributedSegment {
@@ -40,7 +50,7 @@ function normalizeForComparison(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]/g, "")
 }
 
-function buildPrompt(paragraphs: Array<{ partIndex: number; text: string }>, characters: AttributionCharacter[]): string {
+function buildPrompt(paragraphs: ParagraphInput[], characters: AttributionCharacter[]): string {
   const roster = characters.map((c) => `- id: ${c.id} | name: ${c.name}${c.gender ? ` | gender: ${c.gender}` : ""}${c.personality ? ` | personality: ${c.personality}` : ""}`).join("\n")
   const paragraphList = paragraphs.map((p) => `[partIndex ${p.partIndex}]\n${p.text}`).join("\n\n")
 
@@ -62,37 +72,51 @@ Paragraphs:
 ${paragraphList}`
 }
 
+async function runAttributionModel(paragraphs: ParagraphInput[], characters: AttributionCharacter[]) {
+  return await baseGenerateObject({
+    prompt: buildPrompt(paragraphs, characters),
+    system: composeSystemPrompt("You are a precise text segmentation engine for audio narration. You never rewrite source text."),
+    schema: attributionSchema as unknown as AISchema,
+    model: currentModel,
+  })
+}
+
 // Falls back to a single narrator segment for any paragraph the LLM mangles;
-// only throws if the underlying generateObject call itself fails.
-export async function attributeNarrative(parts: NarrativePart[], characters: AttributionCharacter[]): Promise<AttributedSegment[]> {
-  const paragraphs = parts.map((part, index) => ({ part, index })).filter((entry): entry is { part: Extract<NarrativePart, { type: "paragraph" }>; index: number } => entry.part.type === "paragraph")
+// only throws if the underlying model call itself fails (after one retry).
+// Accepts an explicit paragraph subset so incremental regeneration can
+// attribute only new/changed paragraphs.
+export async function attributeNarrative(paragraphs: ParagraphInput[], characters: AttributionCharacter[]): Promise<{ segments: AttributedSegment[]; usage: { totalTokens: number } }> {
+  if (paragraphs.length === 0) return { segments: [], usage: { totalTokens: 0 } }
 
-  if (paragraphs.length === 0) return []
-
-  const paragraphInputs = paragraphs.map((p) => ({ partIndex: p.index, text: p.part.value }))
   const validIds = new Set(characters.map((c) => c.id))
   const idByName = new Map(characters.map((c) => [c.name.toLowerCase(), c.id]))
   const nameById = new Map(characters.map((c) => [c.id, c.name]))
 
-  const { object } = await generateObject({
-    prompt: buildPrompt(paragraphInputs, characters),
-    schema: attributionSchema,
-    system: "You are a precise text segmentation engine for audio narration. You never rewrite source text.",
-  })
+  let response
+  try {
+    response = await runAttributionModel(paragraphs, characters)
+  } catch (error) {
+    console.warn("attributeNarrative: model call failed, retrying once:", error)
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+    response = await runAttributionModel(paragraphs, characters)
+  }
+
+  const object = response.object as z.infer<typeof attributionSchema>
+  const totalTokens = response.usage?.totalTokens ?? 0
 
   const byPartIndex = new Map(object.paragraphs.map((p) => [p.partIndex, p.segments]))
-  const result: AttributedSegment[] = []
+  const segments: AttributedSegment[] = []
 
-  for (const { partIndex, text } of paragraphInputs) {
-    const segments = byPartIndex.get(partIndex)
+  for (const { partIndex, text } of paragraphs) {
+    const paragraphSegments = byPartIndex.get(partIndex)
     const narratorFallback: AttributedSegment = { partIndex, speaker: "narrator", text }
 
-    if (!segments || segments.length === 0) {
-      result.push(narratorFallback)
+    if (!paragraphSegments || paragraphSegments.length === 0) {
+      segments.push(narratorFallback)
       continue
     }
 
-    const resolved = segments.map((segment) => {
+    const resolved = paragraphSegments.map((segment) => {
       let speaker = segment.speaker
       if (speaker !== "narrator" && !validIds.has(speaker)) {
         speaker = idByName.get(speaker.toLowerCase()) ?? "narrator"
@@ -109,12 +133,12 @@ export async function attributeNarrative(parts: NarrativePart[], characters: Att
     const reconstructed = normalizeForComparison(resolved.map((s) => s.text).join(""))
     if (reconstructed !== normalizeForComparison(text)) {
       console.warn(`attributeNarrative: segments for partIndex ${partIndex} do not reconstruct the paragraph; using narrator fallback`)
-      result.push(narratorFallback)
+      segments.push(narratorFallback)
       continue
     }
 
-    result.push(...resolved)
+    segments.push(...resolved)
   }
 
-  return result
+  return { segments, usage: { totalTokens } }
 }

@@ -158,55 +158,96 @@ function Mini3DFigure({ url, race, archetype, stance }: { url: string; race: str
 
 /**
  * Die-cut "paper mini" standee: the avatar-derived full-body cutout mounted as
- * a card. alphaTest keeps the silhouette crisp and makes cast shadows follow
- * the cutout, not the card rectangle.
+ * a card planted at the character's facing (via the parent rotation) like a
+ * real tabletop paper mini — front art printed on one face, the rear-view
+ * cutout (when generated) on the other, so opposed characters genuinely face
+ * each other. A lazy billboard lets the card lean toward the camera so it
+ * never sits unreadably edge-on (see LeanBillboard). alphaTest keeps the
+ * silhouette crisp and makes cast shadows follow the cutout, not the card
+ * rectangle.
  */
-function StandeeFigure({ url, race, archetype, stance }: { url: string; race: string; archetype: string; stance: SceneStance }) {
-  const texture = useProxiedTexture(url)
-  if (!texture) return null
+function StandeeFigure({ url, backUrl, facing, race, archetype, stance }: { url: string; backUrl?: string; facing: number; race: string; archetype: string; stance: SceneStance }) {
+  const frontTexture = useProxiedTexture(url)
+  const backTexture = useProxiedTexture(backUrl)
+  if (!frontTexture) return null
 
-  const image = texture.image as { width: number; height: number }
-  const aspect = image.width / image.height
   const height = isLargeCreature(race, archetype) ? 2.7 : 2.0
-  const width = height * aspect
+  const frontImage = frontTexture.image as { width: number; height: number }
+  const frontWidth = height * (frontImage.width / frontImage.height)
+  const backImage = backTexture?.image as { width: number; height: number } | undefined
+  const backWidth = backImage ? height * (backImage.width / backImage.height) : frontWidth
   const down = stance === "down"
 
   const card = (
     <>
-      {/* dark die-cut card edge behind the art */}
-      <mesh position={[0, height / 2, -0.012]} scale={[1.045, 1.03, 1]}>
-        <planeGeometry args={[width, height]} />
-        <meshStandardMaterial map={texture} color="#141210" alphaTest={0.4} side={THREE.DoubleSide} roughness={0.8} />
+      {/* dark die-cut card edge sandwiched between the two faces */}
+      <mesh position={[0, height / 2, 0]} scale={[1.045, 1.03, 1]}>
+        <planeGeometry args={[frontWidth, height]} />
+        <meshStandardMaterial map={frontTexture} color="#141210" alphaTest={0.4} side={THREE.DoubleSide} roughness={0.8} />
       </mesh>
-      {/* slight emissive keeps the painted art readable in any scene lighting */}
-      <mesh position={[0, height / 2, 0]} castShadow>
-        <planeGeometry args={[width, height]} />
-        <meshStandardMaterial map={texture} emissiveMap={texture} emissive="#ffffff" emissiveIntensity={0.35} alphaTest={0.5} side={THREE.DoubleSide} roughness={0.55} />
+      {/* front face; slight emissive keeps the painted art readable in any scene
+          lighting. Without back art it goes DoubleSide so the character stays
+          readable from behind (mirrored, like a single-sided print). */}
+      <mesh position={[0, height / 2, 0.008]} castShadow>
+        <planeGeometry args={[frontWidth, height]} />
+        <meshStandardMaterial map={frontTexture} emissiveMap={frontTexture} emissive="#ffffff" emissiveIntensity={0.35} alphaTest={0.5} side={backTexture ? THREE.FrontSide : THREE.DoubleSide} roughness={0.55} />
       </mesh>
+      {/* rear face, flipped to point away — reads unmirrored from behind */}
+      {backTexture && (
+        <mesh position={[0, height / 2, -0.008]} rotation={[0, Math.PI, 0]} castShadow>
+          <planeGeometry args={[backWidth, height]} />
+          <meshStandardMaterial map={backTexture} emissiveMap={backTexture} emissive="#ffffff" emissiveIntensity={0.35} alphaTest={0.5} side={THREE.FrontSide} roughness={0.55} />
+        </mesh>
+      )}
     </>
   )
 
   if (down) {
+    // Lies flat, face up.
     return <group position={[0, BASE_HEIGHT, 0]} rotation={[-Math.PI / 2.2, 0, 0]}>{card}</group>
   }
-  // Yaw-only billboard: the card always turns its art to the camera (classic
-  // 2.5D standee behavior) instead of showing its edge or unlit back. Manual
-  // atan2 yaw — drei's <Billboard lockX lockZ> degenerates when the camera is
-  // nearly overhead. Assumes the parent chain carries no Y rotation.
-  return <YawBillboard height={BASE_HEIGHT}>{card}</YawBillboard>
+  return <LeanBillboard facing={facing}>{card}</LeanBillboard>
 }
 
-function YawBillboard({ height, children }: { height: number; children: ReactNode }) {
+// Lazy-billboard tuning: the card may lean up to ±60° from its true facing to
+// meet the camera, and past ~side-on it swings over to present its other face
+// (with hysteresis so hovering at the boundary doesn't flicker).
+const MAX_LEAN = toRadians(60)
+const FLIP_TO_BACK = toRadians(100)
+const FLIP_TO_FRONT = toRadians(80)
+const wrapAngle = (a: number) => Math.atan2(Math.sin(a), Math.cos(a))
+
+/**
+ * Lazy yaw billboard for the standee card. The card is planted at the
+ * character's facing but leans toward the camera up to MAX_LEAN, so it stays
+ * readable from any orbit angle without spinning to fully face the viewer —
+ * the character still visibly faces where they're facing. When the camera
+ * crosses into the rear hemisphere the card swings around (damped, so it reads
+ * as the card flipping over) to lean its rear face toward the camera instead.
+ * Manual atan2 yaw — drei's <Billboard> can't express a clamped lean. Rotation
+ * is local, relative to the parent facing group.
+ */
+function LeanBillboard({ facing, children }: { facing: number; children: ReactNode }) {
   const groupRef = useRef<THREE.Group>(null)
   const worldPosition = useRef(new THREE.Vector3())
-  useFrame(({ camera }) => {
+  const behind = useRef(false)
+  useFrame(({ camera }, delta) => {
     const group = groupRef.current
     if (!group) return
     group.getWorldPosition(worldPosition.current)
-    group.rotation.y = Math.atan2(camera.position.x - worldPosition.current.x, camera.position.z - worldPosition.current.z)
+    const camYaw = Math.atan2(camera.position.x - worldPosition.current.x, camera.position.z - worldPosition.current.z)
+    // facing 0 = looking down -z; character's forward-as-yaw is π - toRadians(facing),
+    // the same convention as the parent group's rotation.y = -toRadians(facing) + π.
+    const off = wrapAngle(camYaw - (Math.PI - toRadians(facing)))
+    if (behind.current ? Math.abs(off) < FLIP_TO_FRONT : Math.abs(off) > FLIP_TO_BACK) {
+      behind.current = !behind.current
+    }
+    // Lean the near face toward the camera, capped at MAX_LEAN off true facing.
+    const target = behind.current ? THREE.MathUtils.clamp(wrapAngle(off - Math.PI), -MAX_LEAN, MAX_LEAN) : THREE.MathUtils.clamp(off, -MAX_LEAN, MAX_LEAN)
+    group.rotation.y += wrapAngle(target - group.rotation.y) * Math.min(1, 1 - Math.exp(-10 * delta))
   })
   return (
-    <group ref={groupRef} position={[0, height, 0]}>
+    <group ref={groupRef} position={[0, BASE_HEIGHT, 0]}>
       {children}
     </group>
   )
@@ -214,7 +255,7 @@ function YawBillboard({ height, children }: { height: number; children: ReactNod
 
 const healthColor = (percent: number) => (percent > 60 ? "#4ade80" : percent > 30 ? "#facc15" : "#ef4444")
 
-export function CharacterMini({ placement, character, standeeUrl, mini3dUrl }: { placement: SceneCharacter; character: TurnCharacter; standeeUrl?: string; mini3dUrl?: string }) {
+export function CharacterMini({ placement, character, standeeUrl, standeeBackUrl, mini3dUrl }: { placement: SceneCharacter; character: TurnCharacter; standeeUrl?: string; standeeBackUrl?: string; mini3dUrl?: string }) {
   const [hovered, setHovered] = useState(false)
   const groupRef = useRef<THREE.Group>(null)
 
@@ -248,18 +289,19 @@ export function CharacterMini({ placement, character, standeeUrl, mini3dUrl }: {
         </mesh>
       )}
 
-      {mini3dUrl ? (
-        <group rotation={[0, -toRadians(placement.facing) + Math.PI, 0]}>
+      {/* every representation turns to the character's facing — standees are
+          fixed cards now, so opposed characters genuinely face each other */}
+      <group rotation={[0, -toRadians(placement.facing) + Math.PI, 0]}>
+        {mini3dUrl ? (
           <Mini3DFigure url={mini3dUrl} race={character.race ?? ""} archetype={character.archetype ?? ""} stance={placement.stance} />
-        </group>
-      ) : standeeUrl ? (
-        // Standee billboards itself — keep it outside the facing rotation.
-        <StandeeFigure url={standeeUrl} race={character.race ?? ""} archetype={character.archetype ?? ""} stance={placement.stance} />
-      ) : (
-        <group rotation={[0, -toRadians(placement.facing) + Math.PI, 0]}>
-          {model ? <FigureMini file={model.file} scale={model.scale} stance={placement.stance} /> : <PortraitPawn image={character.image} name={character.name} />}
-        </group>
-      )}
+        ) : standeeUrl ? (
+          <StandeeFigure url={standeeUrl} backUrl={standeeBackUrl} facing={placement.facing} race={character.race ?? ""} archetype={character.archetype ?? ""} stance={placement.stance} />
+        ) : model ? (
+          <FigureMini file={model.file} scale={model.scale} stance={placement.stance} />
+        ) : (
+          <PortraitPawn image={character.image} name={character.name} />
+        )}
+      </group>
 
       {hovered && (
         <Html position={[0, 2.4, 0]} center distanceFactor={11} style={{ pointerEvents: "none" }}>

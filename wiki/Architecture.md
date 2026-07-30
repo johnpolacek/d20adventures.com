@@ -28,5 +28,4 @@ The application combines Next.js UI and server actions, Convex persistence and r
 | Query/schema design | Prior docs flagged collect/filter hotspots and loose validators. | Plan index and validator hardening after authorization scope is clear. |
 | Admin source writes | Chat and key-field edits write canonical S3 wiki source before blocking validation gates. | Add pre-write validation or draft-only staging before canonical mutation. |
 | Remote source fallback | Any S3 wiki source presence overrides local fallback for a registered adventure. | Require complete manifest coverage before preferring S3 source. |
-| Admin route naming | Canonical list URL, redirect URLs, and editor URL mix `adventure-plans`, `adventures-plans`, and `wiki-adventures` names. | Pick one canonical admin route family and align nav state with it. |
 | Repository validation | `pnpm check` fails with current Biome import-sorting and formatting diagnostics. | Run a Biome cleanup pass before release cutover. |

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { parseNarrative, type NarrativePart } from "@/lib/utils/parse-narrative"
-import type { TurnAudioManifestResponse, TurnAudioSegmentWithUrl } from "@/types/turn-audio"
+import type { StoryviewAutoStatus, TurnAudioManifestResponse, TurnAudioSegmentWithUrl } from "@/types/turn-audio"
 
 const GENERATION_POLL_MS = 2000
 const DICE_SLIDE_DWELL_MS = 4000
@@ -32,6 +32,7 @@ interface UseStoryviewPlayerArgs {
 export function useStoryviewPlayer({ turnId, narrative, open, onGenerated }: UseStoryviewPlayerArgs) {
   const [status, setStatus] = useState<StoryviewStatus>("loading")
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [storyviewAuto, setStoryviewAuto] = useState<StoryviewAutoStatus | undefined>(undefined)
   const [segments, setSegments] = useState<TurnAudioSegmentWithUrl[]>([])
   const [slideIndex, setSlideIndex] = useState(0)
   const [segmentIndex, setSegmentIndex] = useState(0)
@@ -87,6 +88,7 @@ export function useStoryviewPlayer({ turnId, narrative, open, onGenerated }: Use
   }, [])
 
   const applyManifest = useCallback((manifest: TurnAudioManifestResponse) => {
+    if (manifest.storyviewAuto) setStoryviewAuto(manifest.storyviewAuto)
     if (manifest.status === "ready" && manifest.segments && manifest.segments.length > 0) {
       setSegments(manifest.segments)
       setStatus("ready")
@@ -283,6 +285,7 @@ export function useStoryviewPlayer({ turnId, narrative, open, onGenerated }: Use
   return {
     status,
     errorMessage,
+    storyviewAuto,
     slides,
     slideIndex,
     segmentIndex,

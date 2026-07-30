@@ -86,14 +86,14 @@ export default async function AdminPage() {
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>Wiki Adventures</CardTitle>
-              <CardDescription>Author and improve wiki adventures</CardDescription>
+              <CardTitle>Adventure Plans</CardTitle>
+              <CardDescription>Author and improve adventure plans</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">Chat with migrated adventures, edit key fields, validate source, and export restore bundles.</p>
             </CardContent>
             <CardFooter>
-              <Link href="/admin/wiki-adventures" className="w-full">
+              <Link href="/admin/adventure-plans" className="w-full">
                 <Button variant="outline">Open Workbench</Button>
               </Link>
             </CardFooter>

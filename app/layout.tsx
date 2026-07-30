@@ -69,7 +69,7 @@ export default async function RootLayout({
   }
 
   const currentYear = new Date().getFullYear()
-  const hideFooter = path.startsWith("/admin/adventures-plans/") || path.startsWith("/admin/adventure-plans/") || path.startsWith("/admin/wiki-adventures/")
+  const hideFooter = path.startsWith("/admin/adventure-plans/") || path.startsWith("/admin/adventures-plans/") || path.startsWith("/admin/wiki-adventures/")
 
   return (
     <html lang="en" suppressHydrationWarning className={`${rethinkSans.variable} ${cinzel.variable} ${syne.variable}`}>

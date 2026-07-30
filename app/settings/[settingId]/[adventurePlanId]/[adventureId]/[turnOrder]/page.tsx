@@ -29,6 +29,7 @@ function mapConvexAdventureToAdventure(raw: unknown): Adventure | null {
     runType?: "campaign" | "practice"
     parentAdventureId?: string
     parentTurnId?: string
+    storyview?: { autoEnabled: boolean }
   }
   return {
     id: a._id,
@@ -44,6 +45,7 @@ function mapConvexAdventureToAdventure(raw: unknown): Adventure | null {
     startedAt: a.startedAt ? new Date(a.startedAt).toISOString() : "",
     endedAt: a.endedAt ? new Date(a.endedAt).toISOString() : undefined,
     pausedAt: undefined,
+    storyview: a.storyview ? { autoEnabled: a.storyview.autoEnabled } : undefined,
   }
 }
 
@@ -90,7 +92,8 @@ export default async function TurnPage({ params }: PageProps) {
   let adventurePlan = null
   try {
     adventurePlan = await loadAdventurePlanForRuntime(settingId, adventurePlanId)
-  } catch {
+  } catch (error) {
+    console.error("[turn-page] adventure plan load failed", error)
     return notFound()
   }
   if (!adventurePlan) return notFound()
@@ -136,7 +139,7 @@ export default async function TurnPage({ params }: PageProps) {
       />
       {canEdit && (
         <div className="w-full flex justify-end p-8">
-          <Link className="z-20" href={`/admin/wiki-adventures/${settingId}/${adventurePlanId}`}>
+          <Link className="z-20" href={`/admin/adventure-plans/${settingId}/${adventurePlanId}`}>
             <Button className="text-sm bg-primary-600 hover:bg-primary-700">Edit</Button>
           </Link>
         </div>

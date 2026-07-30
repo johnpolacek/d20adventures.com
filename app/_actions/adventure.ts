@@ -1,5 +1,6 @@
 "use server"
 import { auth } from "@clerk/nextjs/server"
+import { after } from "next/server"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { assertAdventureAccess, assertAdventureAccessByTurn, assertPlayerCharacterControl } from "@/lib/adventure-access"
@@ -9,6 +10,7 @@ import { buildFirstTurnSetup } from "@/lib/services/adventure-first-turn-service
 import { getEncounterInstructionsFromPlan, resolvePlayerRollNarrativeAndCharacters } from "@/lib/services/adventure-roll-result-service"
 import { buildTurnReplyRollRequirement } from "@/lib/services/adventure-turn-reply-service"
 import { processNpcTurnsAfterCurrent } from "@/lib/services/npc-turn-service"
+import { maybeTriggerStoryviewAutoGeneration } from "@/lib/services/turn-audio-service"
 import type { RollRequirement } from "@/lib/validations/roll-requirement-schema"
 import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
 import type { Adventure, TurnCharacter } from "@/types/adventure"
@@ -52,6 +54,7 @@ export async function processTurnReply({
       originalPlayerInput,
       rollRequirement: rollRequirementDetails,
     })
+    after(() => maybeTriggerStoryviewAutoGeneration(turnId))
     return { rollRequired: rollRequirementDetails }
   }
   await convex.mutation(api.adventure.submitReply, {
@@ -62,6 +65,7 @@ export async function processTurnReply({
     rollRequirement: undefined,
   })
   await processNpcTurnsAfterCurrent(turnId)
+  after(() => maybeTriggerStoryviewAutoGeneration(turnId))
   return { rollRequired: null }
 }
 
@@ -98,13 +102,15 @@ export async function createAdventureWithFirstTurn(payload: {
   }
 
   // Overwrite ownerId with the authenticated user
-  return convex.mutation(api.adventure.createAdventureWithFirstTurn, {
+  const result = await convex.mutation(api.adventure.createAdventureWithFirstTurn, {
     ...payload,
     settingId: payload.settingId,
     ownerId: userId,
     turn: turnWithTitle, // Pass the turn object with the title
     rollRequirement: firstTurnSetup.rollRequirement,
   })
+  after(() => maybeTriggerStoryviewAutoGeneration(result.turnId))
+  return result
 }
 
 export async function resolvePlayerRollResult({ turnId, characterId, result }: { turnId: Id<"turns">; characterId: string; result: number }) {
@@ -159,6 +165,8 @@ export async function resolvePlayerRollResult({ turnId, characterId, result }: {
 
   // After marking player complete, process NPCs
   await processNpcTurnsAfterCurrent(turnId)
+
+  after(() => maybeTriggerStoryviewAutoGeneration(turnId))
 
   // 6. Return the updated turn
   return await convex.query(api.adventure.getTurnById, { turnId })

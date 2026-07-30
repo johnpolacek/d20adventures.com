@@ -2,7 +2,9 @@
 
 // Get-or-generate character miniature assets for a turn, charging D20 tokens
 // for every generation that costs real money (cache hits are free):
-//   - standee render (gemini image): flat STANDEE_TOKEN_COST, refunded on failure
+//   - standee render (gemini image): flat STANDEE_TOKEN_COST covering BOTH the
+//     front and rear-view cutouts, refunded only if the front fails; a failed
+//     back view retries free on the next call and the renderer shows front-only
 //   - 3D mini (fal Hunyuan3D): flat MINI3D_TOKEN_COST charged at job submit,
 //     refunded if the job fails; jobs are async, the client polls via this action
 //
@@ -16,15 +18,17 @@ import type { Id } from "@/convex/_generated/dataModel"
 import { assertAdventureAccessByTurn } from "@/lib/adventure-access"
 import { MINI3D_TOKEN_COST, STANDEE_TOKEN_COST } from "@/lib/encounterview/costs"
 import { claimMini3DSubmission, getMini3DUrl, isClaimMarker, isClaimStale, isMini3DEnabled, mini3DExists, pollMini3DJob, readMini3DJob, releaseMini3DClaim, submitMini3DJob } from "@/lib/encounterview/mini3d"
-import { getOrCreateStandee, getStandeeHash, getStandeeKey, standeeExists } from "@/lib/encounterview/standee"
+import { getOrCreateStandee, getOrCreateStandeeBack, getStandeeHash, getStandeeKey, standeeExists } from "@/lib/encounterview/standee"
 import { getAssetUrl } from "@/lib/aws"
 import { getImageUrl } from "@/lib/utils"
 
 const CONCURRENCY = 3
 
 export interface CharacterMinisResult {
-  /** characterId -> standee cutout PNG URL */
+  /** characterId -> standee cutout PNG URL (front view) */
   minis: Record<string, string>
+  /** characterId -> rear-view standee cutout PNG URL */
+  minisBack: Record<string, string>
   /** characterId -> generated 3D mini GLB URL */
   minis3d: Record<string, string>
   /** true while any 3D generation job is still running — poll again */
@@ -45,6 +49,7 @@ export async function getOrGenerateCharacterMinis(args: { turnId: string }): Pro
 
   const candidates = turn.characters.filter((c) => typeof c.image === "string" && c.image.length > 0)
   const minis: Record<string, string> = {}
+  const minisBack: Record<string, string> = {}
   const minis3d: Record<string, string> = {}
   let pending = false
   let insufficientTokens = false
@@ -69,6 +74,18 @@ export async function getOrGenerateCharacterMinis(args: { turnId: string }): Pro
       }
     }
     if (standeeUrl) minis[c.id] = standeeUrl
+
+    // --- rear-view standee, bundled with the front charge --------------------
+    // Legacy characters with an already-paid front get their back backfilled
+    // free (bounded one-time vendor cost); failures return null and retry free
+    // on the next call while the renderer shows the front from all angles.
+    let backUrl: string | null = null
+    if (await standeeExists(getStandeeKey(imageUrl, "back"))) {
+      backUrl = getAssetUrl(getStandeeKey(imageUrl, "back"))
+    } else if (standeeUrl) {
+      backUrl = await getOrCreateStandeeBack({ imageUrl, name: c.name, race: c.race, archetype: c.archetype, appearance: c.appearance, frontStandeeUrl: standeeUrl })
+    }
+    if (backUrl) minisBack[c.id] = backUrl
 
     // --- 3D mini (fal Hunyuan3D), input is the standee render ---------------
     if (!isMini3DEnabled() || !standeeUrl) return
@@ -124,5 +141,5 @@ export async function getOrGenerateCharacterMinis(args: { turnId: string }): Pro
     await Promise.all(candidates.slice(i, i + CONCURRENCY).map(processCharacter))
   }
 
-  return { minis, minis3d, pending, insufficientTokens }
+  return { minis, minisBack, minis3d, pending, insufficientTokens }
 }
