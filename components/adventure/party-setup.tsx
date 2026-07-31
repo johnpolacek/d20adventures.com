@@ -104,24 +104,29 @@ export default function PartySetup({ settingId, adventurePlanId, selectedCharact
 
   return (
     <div className="flex flex-col items-center w-full max-w-6xl px-4">
-      <Card className="w-full max-w-2xl text-center p-8 sm:p-10 bg-gradient-to-tl from-black/80 to-black/60 border-none ring-8 ring-black/20 rounded-2xl">
+      {/* gap-0: the card's default flex gap fights the per-element spacing below */}
+      <Card className="w-full max-w-2xl text-center gap-0 p-8 sm:p-10 bg-gradient-to-tl from-black/80 to-black/60 border-none ring-8 ring-black/20 rounded-2xl">
         <h2 style={textShadow} className="text-3xl sm:text-4xl font-display font-bold text-amber-300 text-balance mb-2">
           Choose Your Party
         </h2>
-        <p className="text-indigo-100 text-pretty mb-1">
-          Playing as <span className="text-amber-300 font-bold">{selectedCharacterName}</span>
-          {onBack && (
-            <>
-              {" · "}
-              <button type="button" onClick={onBack} disabled={isCreating} className="underline underline-offset-4 decoration-indigo-300/50 text-indigo-200 hover:text-white transition-colors">
-                change
-              </button>
-            </>
-          )}
-        </p>
-        <p className="text-sm text-white/60 tabular-nums mb-6">
+        <p className="text-sm text-white/60 tabular-nums mb-3">
           {partySize} of {minParty}–{maxParty} party members
         </p>
+        <div className="flex flex-col items-center mb-6">
+          <p className="text-indigo-100 text-pretty">
+            Playing as <span className="text-amber-300 font-bold">{selectedCharacterName}</span>
+          </p>
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              disabled={isCreating}
+              className="mt-1 text-sm underline underline-offset-4 decoration-indigo-300/50 text-indigo-200 hover:text-white transition-colors"
+            >
+              change
+            </button>
+          )}
+        </div>
 
         {/* Party at a glance: you, any AI companions, and open slots for friends */}
         <div className="flex items-start justify-center gap-4 sm:gap-6 mb-6">
@@ -155,7 +160,7 @@ export default function PartySetup({ settingId, adventurePlanId, selectedCharact
           ))}
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-5 sm:gap-8 mb-6">
           <Button
             variant="epic"
             size="lg"
@@ -166,29 +171,29 @@ export default function PartySetup({ settingId, adventurePlanId, selectedCharact
             {isCreating ? "Creating Adventure..." : "Start Adventure"}
           </Button>
           <Button
-            variant="outline"
+            variant="epic"
             size="lg"
-            className="text-lg py-6 px-8 w-full sm:w-auto whitespace-nowrap bg-black/30 transition-transform active:scale-[0.96]"
+            className="text-lg py-6 px-8 w-full sm:w-auto whitespace-nowrap bg-purple-600 transition-transform active:scale-[0.96]"
             onClick={() => submit(false)}
             disabled={isCreating}
           >
-            Create Lobby &amp; Invite Friends
+            Go To Lobby
           </Button>
         </div>
 
         <p className="text-sm text-white/60 text-pretty max-w-md mx-auto">
           {canStartNow
             ? addedCompanions.length > 0
-              ? "Start now with your AI companions, or open a lobby so friends can take the open slots."
-              : "Start now, or open a lobby so friends can join you."
-            : `This adventure needs at least ${minParty} party members. Create a lobby to invite friends, or add ${minParty - partySize} AI companion${minParty - partySize === 1 ? "" : "s"} to start right away.`}
+              ? "Start now with your AI companions, or go to the lobby so friends can take the open slots."
+              : "Start now, or go to the lobby so friends can join you."
+            : `This adventure needs at least ${minParty} party members. Go to the lobby to invite friends, or add ${minParty - partySize} AI companion${minParty - partySize === 1 ? "" : "s"} to start right away.`}
         </p>
 
         {!showCompanions && (
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
-            className="mt-5 text-sm text-sky-300 border border-sky-400/40 bg-sky-950/40 px-4 hover:text-sky-200 hover:bg-sky-900/50 transition-colors"
+            className="self-center mt-5 text-sm text-sky-200 border-sky-400/30 hover:text-white transition-colors"
             onClick={() => setShowCompanions(true)}
             disabled={isCreating}
           >

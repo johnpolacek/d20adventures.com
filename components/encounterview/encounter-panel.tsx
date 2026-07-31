@@ -446,16 +446,16 @@ export function EncounterRailPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [turnId])
 
-  // The 2D map half renders only after mount: its procedural foliage advances a
-  // shared PRNG during render, which isn't hydration-stable, so we skip SSR and
-  // hold its half with a placeholder background instead.
+  // The 2D map renders only after mount: its procedural foliage advances a shared
+  // PRNG during render, which isn't hydration-stable, so we skip SSR and hold the
+  // footprint with a placeholder background instead.
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
 
   if (!turn) return null
 
-  // The 3D half of the split preview (or the full-width preview when there's no
-  // 2D map): snapshot/art image, else the icon block.
+  // Fallback preview when the encounter has no 2D map: scene snapshot/art image,
+  // else the icon block.
   const scenePreview = previewSrc ? (
     <NativeImage
       src={previewSrc}
@@ -479,26 +479,22 @@ export function EncounterRailPanel({
           </button>
         </div>
         <button type="button" onClick={() => setOpen(true)} className="group relative block w-full cursor-pointer text-left" aria-label="Open encounter map">
-          <div className="relative aspect-video w-full overflow-hidden bg-[#0c1417]">
+          <div className={cn("relative w-full overflow-hidden bg-[#0c1417]", !map && "aspect-video")}>
             {map ? (
-              // Split preview: 2D map on the left, 3D scene on the right. Purely
-              // visual — the whole card is one click target into the 3D view.
-              <div className="flex h-full w-full">
-                <div className="relative h-full w-1/2 overflow-hidden bg-[#241f18]">
-                  {mounted && (
-                    // Center-crop: render the 16:9 map at the half's full height
-                    // and crop horizontally, keeping tokens/terrain legible.
-                    <div className="absolute inset-y-0 left-1/2 aspect-video h-full -translate-x-1/2">
-                      <EncounterMap2D map={map} tokens={mapTokens} fit className="transition-[filter] duration-300 group-hover:brightness-110" />
-                    </div>
-                  )}
-                </div>
-                <div className="h-full w-1/2 overflow-hidden border-l border-black/60">{scenePreview}</div>
-              </div>
+              // The 2D map is the preview — it reads at rail width where a cropped
+              // half or a dark 3D snapshot doesn't. The card still opens the 3D view;
+              // the toggle inside the overlay switches between them.
+              mounted ? (
+                <EncounterMap2D map={map} tokens={mapTokens} className="rounded-none border-0 shadow-none transition-[filter] duration-300 group-hover:brightness-110" />
+              ) : (
+                <div className="aspect-video w-full bg-[#241f18]" />
+              )
             ) : (
               scenePreview
             )}
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
+            {/* Caption scrim. Over a map it hugs the bottom so terrain stays
+                readable; over photographic art the broader vignette looks better. */}
+            <div className={cn("pointer-events-none absolute inset-0 bg-gradient-to-t", map ? "from-black/90 via-transparent via-30%" : "from-black/85 via-black/10 to-transparent")} />
             <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center gap-2 px-3 py-2">
               <D20Icon className="h-5 w-5 flex-none text-teal-300/90" />
               <div className="min-w-0">

@@ -68,8 +68,9 @@ export default function ChooseCharacterView({
   const selectedCharacterSheet = selectedIndex >= 0 ? characters[selectedIndex] : null
 
   if (partyStep && selectedCharacter && selectedCharacterSheet) {
+    // The fixed header is ~110px tall at desktop widths, so pt-24 (96px) clipped the card.
     return (
-      <div className="flex flex-col items-center justify-center relative z-10 pt-24 pb-12">
+      <div className="flex flex-col items-center justify-center relative z-10 pt-28 sm:pt-36 pb-12">
         <PartySetup
           settingId={settingId}
           adventurePlanId={adventurePlanId}

@@ -77,12 +77,13 @@ export async function startAdventure({ settingId, adventurePlanId, adventureId }
       const { definition, artifacts, contentRef } = await loadWikiAdventureRuntime(settingId, adventurePlanId)
       const firstEncounter = artifacts.encounters[artifacts.manifest.startEncounterId]
       if (!firstEncounter) throw new Error(`${adventurePlanId} start encounter is missing from compiled wiki artifacts`)
-      const existingPlayerCharacters = await loadExistingPlayerCharacters(adventure.players ?? [])
+      const { characters: existingPlayerCharacters, sheetsByCharacterId } = await loadExistingPlayerCharacters(adventure.players ?? [])
       const characters = buildLocalWikiTurnCharacters({
         artifacts,
         encounter: firstEncounter,
         players: adventure.players ?? [],
         existingPlayerCharacters,
+        sheetsByCharacterId,
       })
       const turnId = await convex.mutation(api.adventure.createTurn, {
         adventureId: adventureId as Id<"adventures">,
@@ -248,10 +249,14 @@ export async function startAdventure({ settingId, adventurePlanId, adventureId }
 
 async function loadExistingPlayerCharacters(players: Array<{ userId: string; characterId: string }>) {
   const characters = []
+  // Keyed by the storage key so lookups don't depend on a saved character's
+  // file name matching the id inside its sheet.
+  const sheetsByCharacterId: Record<string, PCTemplate> = {}
 
   for (const player of players) {
     if (!player.characterId.startsWith("characters/")) continue
     const sheet = (await readJsonFromS3(player.characterId)) as PCTemplate
+    sheetsByCharacterId[player.characterId] = sheet
     characters.push({
       ...sheet,
       id: sheet.id,
@@ -263,5 +268,5 @@ async function loadExistingPlayerCharacters(players: Array<{ userId: string; cha
     })
   }
 
-  return characters
+  return { characters, sheetsByCharacterId }
 }

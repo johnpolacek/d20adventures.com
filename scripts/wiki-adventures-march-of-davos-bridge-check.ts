@@ -93,6 +93,27 @@ function main() {
     true
   )
 
+  // A character saved from the creator is filed under a slug of its name while
+  // its sheet keeps an unrelated generated id, so it only resolves when the
+  // caller supplies the loaded sheet keyed by storage key.
+  const savedWithGeneratedId = {
+    ...savedCharacter,
+    id: "1749965201054",
+    name: "Bok",
+  }
+  const savedKey = "characters/user_test/bok.json"
+  const withSavedCharacter = buildLocalWikiTurnCharacters({
+    artifacts,
+    encounter: artifacts.encounters[artifacts.manifest.startEncounterId],
+    players: [{ userId: "user_test", characterId: savedKey }],
+    existingPlayerCharacters: [savedWithGeneratedId],
+    sheetsByCharacterId: { [savedKey]: savedWithGeneratedId },
+  })
+  assert.ok(
+    withSavedCharacter.some((character) => character.id === "1749965201054" && character.name === "Bok"),
+    "saved character whose file name differs from its sheet id did not resolve"
+  )
+
   console.log("March of Davos playthrough bridge checks passed")
 }
 
