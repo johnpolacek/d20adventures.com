@@ -96,13 +96,17 @@ export async function loadWikiAdventurePlanView(settingId: string, planId: strin
   return buildAdventurePlanViewFromArtifacts(artifacts)
 }
 
-/**
- * Plan views for every registered wiki adventure in a setting, ordered by planId so the
- * adventure-listing grid keeps the same ordering it had when it enumerated S3 JSON keys.
- */
+/** Plan views for every playable registered wiki adventure in a setting, ordered by planId. */
 export async function loadWikiAdventurePlanViewsForSetting(settingId: string): Promise<AdventurePlan[]> {
   const definitions = getLocalWikiAdventuresForSetting(settingId)
-  return Promise.all(definitions.map((definition) => loadWikiAdventurePlanView(settingId, definition.planId)))
+  const results = await Promise.allSettled(definitions.map((definition) => loadWikiAdventurePlanView(settingId, definition.planId)))
+
+  return results.flatMap((result, index) => {
+    if (result.status === "fulfilled") return [result.value]
+
+    console.error(`[wiki-adventures] Unable to load ${settingId}/${definitions[index].planId} for the adventure listing:`, result.reason)
+    return []
+  })
 }
 
 /**

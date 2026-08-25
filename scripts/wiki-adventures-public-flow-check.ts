@@ -80,14 +80,26 @@ function assertPlanViewShape() {
 }
 
 // The adventure-listing grid (`/settings/[settingId]/play`) must source registered settings
-// from the wiki runtime, ordered by planId so its positional intro/full curation is preserved.
+// from the wiki runtime without relying on positional intro/full curation.
 function assertGridSourceAndOrder() {
   const playPage = readFileSync("app/settings/[settingId]/play/page.tsx", "utf8")
   assert.ok(playPage.includes("settingHasLocalWikiAdventures"), "play grid does not branch on settingHasLocalWikiAdventures")
   assert.ok(playPage.includes("loadWikiAdventurePlanViewsForSetting"), "play grid does not load wiki plan views")
+  assert.ok(playPage.includes("publishedAdventures.map"), "play grid does not render every published adventure")
+  assert.ok(!playPage.includes("publishedAdventures["), "play grid still curates adventures by array position")
+  assert.ok(!playPage.includes("Intro Adventures"), "play grid still labels adventures as introductory")
+  assert.ok(!playPage.includes("Full Adventure"), "play grid still splits out a full adventure")
+  assert.ok(!playPage.includes("isQuickStart"), "play grid still special-cases Realm of Myr presentation")
+
+  const planView = readFileSync("lib/wiki-adventures/plan-view.ts", "utf8")
+  assert.ok(planView.includes("Promise.allSettled"), "one failed wiki plan can still reject the full adventure listing")
+
+  const nextConfig = readFileSync("next.config.ts", "utf8")
+  assert.ok(nextConfig.includes("outputFileTracingIncludes"), "Next.js does not explicitly trace dynamically-read wiki content")
+  assert.ok(nextConfig.includes("./content/settings/realm-of-myr/**/*"), "Realm of Myr wiki source is missing from the server trace configuration")
 
   const order = getLocalWikiAdventuresForSetting(SETTING_ID).map((definition) => definition.planId)
-  assert.deepEqual(order, ["covert-cargo", "march-of-davos", "the-midnight-summons", "the-road-to-kordavos"], "grid order changed — positional intro/full curation in the play page would break")
+  assert.deepEqual(order, ["covert-cargo", "march-of-davos", "the-midnight-summons", "the-road-to-kordavos"], "grid order changed")
 }
 
 function main() {

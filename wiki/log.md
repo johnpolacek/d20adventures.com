@@ -4,6 +4,16 @@
 
 Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.
 
+## 2026-08-25
+
+### Restored the setting adventure listing in production
+
+- Diagnosed the blank Realm of Myr listing on the deployed `/settings/realm-of-myr/play` page: dynamic filesystem reads prevented Next.js output tracing from discovering the repo-local wiki source, while the production S3 audit showed that all four registered adventures still depend on that fallback.
+- Added an explicit server-trace include for `content/settings/realm-of-myr/`; a focused production build confirmed that the play-route trace now contains all 201 source files.
+- Replaced the Realm of Myr-only positional intro/full layout with one data-driven **Adventures** grid. One failed wiki source now leaves other fulfilled adventures available, and an all-failed load has a visible unavailable state instead of a blank section.
+- Browser verification against the production build rendered Covert Cargo, March of Davos, The Midnight Summons, and The Road to Kordavos with their play links and no console errors.
+- Validation: production S3 audit, public-flow check, touched-file Biome check, TypeScript, and focused Next.js production build passed.
+
 ## 2026-07-06
 
 ### Content-hash drift no longer bricks live playthroughs (auto-re-pin)

@@ -13,4 +13,6 @@ Active planning work for D20 Adventures. The wiki-adventure runtime is merged an
 
 ## Completed
 
+- **[Setting adventure listing hardening](zzz-completed/setting-adventure-listing.md)** — restored repo-local wiki content in production traces and replaced Realm of Myr's positional intro/full curation with one playable-adventure grid (2026-08-25).
+
 All completed plans are archived in [zzz-completed/](zzz-completed/).

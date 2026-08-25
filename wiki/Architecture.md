@@ -27,5 +27,5 @@ The application combines Next.js UI and server actions, Convex persistence and r
 | Convex functions | Prior docs flagged lack of in-function auth checks. | Evaluate the Convex auth model and migration path. |
 | Query/schema design | Prior docs flagged collect/filter hotspots and loose validators. | Plan index and validator hardening after authorization scope is clear. |
 | Admin source writes | Chat and key-field edits write canonical S3 wiki source before blocking validation gates. | Add pre-write validation or draft-only staging before canonical mutation. |
-| Remote source fallback | Any S3 wiki source presence overrides local fallback for a registered adventure. | Require complete manifest coverage before preferring S3 source. |
+| Wiki source fallback | Registered adventures fall back to dynamically-read repo-local source when S3 coverage is empty or incomplete. | Keep the runtime content tree in Next.js output-file traces until every registered adventure has a complete canonical S3 source. |
 | Repository validation | `pnpm check` fails with current Biome import-sorting and formatting diagnostics. | Run a Biome cleanup pass before release cutover. |

@@ -10,7 +10,7 @@ This page catalogs the source material used to initialize and maintain the wiki.
 
 - **Application shape** *(confirmed from repo)* — Next.js App Router app with Convex backend, Clerk auth, S3 content storage, AI SDK integrations, Stripe, SendGrid, Playwright, Biome, and custom local skills.
 - **Product intent** *(confirmed from source doc)* — narrative turn-based RPG platform with an AI Game Master, authored adventure plans, character turns, rolls, NPC turns, and eventual multiplayer/community-creation ambitions.
-- **Fresh priorities** *(needs hardening)* — the wiki-adventure implementation is merged. Current priorities are post-merge validation cleanup, canonical S3 source-write safety, partial remote-source fallback, admin route naming, and manual playthrough coverage.
+- **Fresh priorities** *(needs hardening)* — the wiki-adventure implementation is merged. Current priorities are post-merge validation cleanup, canonical S3 source-write safety, deployable repo-local fallback integrity, admin route naming, and manual playthrough coverage.
 
 ## Source briefs
 
@@ -28,6 +28,7 @@ This page catalogs the source material used to initialize and maintain the wiki.
 | Merge commit `fbd3e97` | Brought `feature/wiki-adventure-implementation` into `main`: migrated wiki source, runtime bridge, Convex content refs, admin authoring, and route conflict resolution. | High | Current source of truth for the post-merge review baseline. |
 | `lib/wiki-adventures/` | Compiler, validation, source service, S3 key handling, local runtime, Convex session helpers, transition validation, admin authoring, and migration helpers. | High | Primary implementation surface for wiki-authored adventures. |
 | `content/settings/realm-of-myr/` | Migrated source for The Midnight Summons, Covert Cargo, The Road to Kordavos, March of Davos, NPC profiles, character sheets, and migration reports. | High | Repo-local fallback source for registered local wiki adventures. |
+| Production S3 audit, focused production build, and browser verification (2026-08-25) | S3 source coverage, output-file trace contents, and deployed/local listing behavior. | High | Three adventures have no canonical S3 source and March of Davos is incomplete, so all four currently require the explicitly traced repo-local fallback. |
 | Validation commands | Focused wiki-adventure batch tests, admin authoring, four bridge checks, TypeScript, and build pass after merge. `pnpm check` fails with current Biome diagnostics. | High | See the [implementation review](plans/wiki-adventure-implementation-review.md) for command-level detail. |
 | `TECHNICAL_DOCUMENTATION.md` | Architecture, runtime roles, data model, flows, LLM context guide, next milestones. | Medium | Strong structure, but dependency versions are older than `package.json`. |
 | `CODEBASE_ASSESSMENT.md` | Security findings, build/check status as of 2026-02-28, remediation phases. | Medium | Some status may be superseded by later code changes; use as risk context. |
@@ -44,6 +45,5 @@ This page catalogs the source material used to initialize and maintain the wiki.
 
 | Unknown | Why it matters | Safest next action |
 |---|---|---|
-| Current production S3 wiki source completeness. | Runtime prefers S3 source when any remote files are present, so partial remote seeding can override complete local fallback. | Audit bucket state or add complete-manifest detection before production cutover. |
 | Authenticated end-to-end playthrough coverage after the merge. | Bridge tests validate runtime wiring, but user-facing creation, turns, completion, and admin edits need browser coverage. | Run at least one migrated adventure from character selection through completion with an authenticated account. |
 | Whether February 2026 security findings are already fully fixed. | Planning should not repeat completed work or miss remaining vulnerabilities. | Run a focused audit before creating an authorization plan. |
