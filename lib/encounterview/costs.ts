@@ -9,7 +9,7 @@
 // Vendor cost basis (verified 2026-07-05):
 //   standee  gemini-3.1-flash-image, 1K output  ~$0.067/image x 2 views (front + back)
 //   3D mini  fal hunyuan3d-v3 "Normal" $0.375 + $0.15 custom face_count = $0.525
-//   scene    gemini-3.5-flash ~$0.004/run -> metered charge ~$0.04 (~10x) already
+//   scene    gemini-3.6-flash ~$0.004/run -> metered charge ~$0.04 (~10x) already
 //
 // If a vendor price changes, update the table AND the constant together.
 

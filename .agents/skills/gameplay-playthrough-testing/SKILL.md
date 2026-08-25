@@ -17,7 +17,7 @@ A stray `wikibop-2` dev server may also be running on the machine — verify the
 ## 2. Test env flags (local only; revert when done)
 
 Add to `.env.local` (gitignored), then **restart `pnpm dev`** (env is read at startup):
-- `NEXT_PUBLIC_USE_PLACEHOLDER_IMAGES=true` — disables Replicate image generation (returns placeholders). Replicate (`104.18.x`) is often unreachable from dev machines and its connect-timeouts bog down heavy multi-NPC turns; **it is never on the gameplay/LLM path**, so disabling it is safe and recommended. The text model (`gemini-3.1-flash-lite`) is fast and is the real engine.
+- `NEXT_PUBLIC_USE_PLACEHOLDER_IMAGES=true` — disables Replicate image generation (returns placeholders). Replicate (`104.18.x`) is often unreachable from dev machines and its connect-timeouts bog down heavy multi-NPC turns; **it is never on the gameplay/LLM path**, so disabling it is safe and recommended. The text model (`gemini-3.5-flash-lite`) is fast and is the real engine.
 
 In `.env`, add the test user's Clerk id to `ADMIN_USER_IDS` (comma-separated) for **admin + practice-mode** access, then restart.
 

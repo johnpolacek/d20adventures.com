@@ -9,7 +9,7 @@ import { generateObject } from "ai"
 import type { EncounterScene3DGeneration } from "@/types/encounter-scene-3d"
 import { encounterScene3DGenerationSchema } from "@/types/encounter-scene-3d"
 
-export const ENCOUNTERVIEW_MODEL_ID = "gemini-3.5-flash"
+export const ENCOUNTERVIEW_MODEL_ID = "gemini-3.6-flash"
 
 export async function generateEncounterScene3DGeneration(
   prompt: string,

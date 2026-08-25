@@ -58,7 +58,7 @@ async function main() {
     ownerPrompt,
   })
 
-  // MV_MODEL overrides the shared default (gemini-3.5-flash) for experiments only.
+  // MV_MODEL overrides the shared default (MAPVIEW_MODEL_ID) for experiments only.
   const modelOverride = process.env.MV_MODEL === "openai" ? openaiModel : process.env.MV_MODEL === "lite" ? currentModel : process.env.MV_MODEL ? google(process.env.MV_MODEL) : undefined
   const started = Date.now()
   const generation = await generateEncounter2DGeneration(prompt, { model: modelOverride })

@@ -27,7 +27,10 @@ export async function POST(request: NextRequest) {
     }
 
     const { image } = await generateImage({
-      model: replicate.image(process.env.REPLICATE_MODEL || "black-forest-labs/flux-schnell"),
+      // klein-4b is the low-latency tier (the flux-2 successor to flux-schnell) — this
+      // route is synchronous and the user waits on it. Set REPLICATE_MODEL to
+      // black-forest-labs/flux-2-pro when quality matters more than speed.
+      model: replicate.image(process.env.REPLICATE_MODEL || "black-forest-labs/flux-2-klein-4b"),
       prompt: input,
       aspectRatio: aspectRatio || "1:1",
     })

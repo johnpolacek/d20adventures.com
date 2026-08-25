@@ -2,7 +2,7 @@
 // generated, shared by the admin action and the headless smoke script so they can't
 // drift (wiki/plans/mapview.md).
 //
-// gemini-3.5-flash with native structured outputs OFF: numeric min/max bounds in the
+// Gemini flash with native structured outputs OFF: numeric min/max bounds in the
 // schema drive Gemini's constrained decoder into digit-loops ("rows": 14000000…
 // forever, observed 2026-07-03), so we generate prompt-mode JSON against the tolerant
 // generation schema and repair in normalizeGeneration. Retries absorb the occasional
@@ -14,7 +14,7 @@ import { generateObject } from "ai"
 import type { Encounter2DGeneration } from "@/types/encounter-map-2d"
 import { encounter2dGenerationSchema } from "@/types/encounter-map-2d"
 
-export const MAPVIEW_MODEL_ID = "gemini-3.5-flash"
+export const MAPVIEW_MODEL_ID = "gemini-3.6-flash"
 
 export async function generateEncounter2DGeneration(prompt: string, opts?: { model?: LanguageModel; attempts?: number }): Promise<Encounter2DGeneration> {
   const model = opts?.model ?? google(MAPVIEW_MODEL_ID)

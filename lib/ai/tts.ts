@@ -2,7 +2,7 @@ import { pcmDurationSec, silencePcm } from "@/lib/audio/wav"
 
 // @ai-sdk/google has no speech support, so we call the Gemini API directly.
 // Response audio is raw PCM: 24kHz, 16-bit, mono (see lib/audio/wav.ts).
-const DEFAULT_TTS_MODEL = "gemini-2.5-flash-preview-tts"
+const DEFAULT_TTS_MODEL = "gemini-3.1-flash-tts-preview"
 
 export interface TtsUsage {
   inputTokens: number

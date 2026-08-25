@@ -253,7 +253,7 @@ export function AIDemoClient({ isMissingReplicateToken }: { isMissingReplicateTo
               </div>
             ) : (
               <>
-                <div className="font-mono text-xs -mt-4 mb-1 w-full text-right text-muted-foreground">black-forest-labs/flux-schnell</div>
+                <div className="font-mono text-xs -mt-4 mb-1 w-full text-right text-muted-foreground">black-forest-labs/flux-2-klein-4b</div>
                 <form onSubmit={handleGenerateImage} className="space-y-4">
                   <Textarea name="prompt" placeholder="Describe the image you want to generate..." className="min-h-[100px]" />
                   <Button type="submit" className="w-full" disabled={isGeneratingImage}>

@@ -2,6 +2,7 @@
 import { google } from "@ai-sdk/google"
 import { generateObject } from "ai"
 import { buildMap2DPrompt } from "@/lib/mapview/generate"
+import { MAPVIEW_MODEL_ID } from "@/lib/mapview/model"
 import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
 import { encounter2dGenerationSchema } from "@/types/encounter-map-2d"
 
@@ -20,7 +21,7 @@ async function main() {
   })
   try {
     const r = await generateObject({
-      model: google("gemini-3.5-flash"),
+      model: google(MAPVIEW_MODEL_ID),
       prompt,
       schema: encounter2dGenerationSchema,
       temperature: 0.8,
