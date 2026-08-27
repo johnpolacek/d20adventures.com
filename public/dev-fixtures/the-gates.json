@@ -1,35 +1,230 @@
 {
-  "label": "The Gates — checkpoint (exterior, day / tense)",
+  "label": "The Gates \u2014 checkpoint (exterior, day / tense)",
   "note": "Verbatim capture of a live encounter-1 generation (asset-pipeline a6caca8): gate-arch landmark at the far edge, UrbanRing facades behind it, a queue of crowd figures down the west side.",
   "scene": {
     "summary": "Travelers queue outside the soaring stone archway of Kordavos, where guards inspect every arrival amidst the distant sounds of festival merriment.",
-    "environment": { "kit": "checkpoint", "ground": "stone", "timeOfDay": "day", "mood": "tense" },
+    "environment": {
+      "kit": "checkpoint",
+      "ground": "stone",
+      "timeOfDay": "day",
+      "mood": "tense"
+    },
     "props": [
-      { "id": "gate-arch-1", "propId": "gate-arch", "x": 10.05, "z": 2.17, "rotation": 0, "scale": 1.2 },
-      { "id": "banner-1", "propId": "banner", "x": 7.13, "z": 3.78, "rotation": 0, "scale": 1 },
-      { "id": "banner-2", "propId": "banner", "x": 12.98, "z": 3.86, "rotation": 0, "scale": 1 },
-      { "id": "guard-1", "propId": "town-guard", "x": 7.39, "z": 4.6, "rotation": 160, "scale": 1 },
-      { "id": "guard-2", "propId": "town-guard", "x": 12.45, "z": 4.59, "rotation": 200, "scale": 1 },
-      { "id": "torch-1", "propId": "torch", "x": 7, "z": 6, "rotation": 0, "scale": 1 },
-      { "id": "torch-2", "propId": "torch", "x": 13.04, "z": 5.65, "rotation": 0, "scale": 1 },
-      { "id": "table-1", "propId": "table", "x": 10.85, "z": 6.86, "rotation": 90, "scale": 1 },
-      { "id": "crate-1", "propId": "crate", "x": 12.94, "z": 6.77, "rotation": 15, "scale": 1 },
-      { "id": "crate-2", "propId": "crate", "x": 12.96, "z": 8.39, "rotation": 40, "scale": 0.9 },
-      { "id": "barrel-1", "propId": "barrel", "x": 12.01, "z": 9.22, "rotation": 0, "scale": 1 },
-      { "id": "fence-1", "propId": "fence-wood", "x": 6.5, "z": 8, "rotation": 0, "scale": 1 },
-      { "id": "fence-2", "propId": "fence-wood", "x": 6.5, "z": 11, "rotation": 0, "scale": 1 },
-      { "id": "traveler-1", "propId": "traveler", "x": 8, "z": 12.5, "rotation": 10, "scale": 1 },
-      { "id": "merchant-1", "propId": "merchant", "x": 8.5, "z": 15, "rotation": 0, "scale": 1 },
-      { "id": "wanderer-1", "propId": "hooded-wanderer", "x": 8, "z": 17.5, "rotation": 355, "scale": 1 },
-      { "id": "cart-1", "propId": "cart", "x": 15, "z": 13, "rotation": 45, "scale": 1 },
-      { "id": "barrel-2", "propId": "barrel", "x": 16, "z": 14, "rotation": 0, "scale": 1 },
-      { "id": "stall-1", "propId": "market-stall", "x": 16.4, "z": 9.5, "rotation": 270, "scale": 1 },
-      { "id": "stall-2", "propId": "market-stall", "x": 16.4, "z": 17, "rotation": 270, "scale": 1 }
+      {
+        "id": "gate-arch-1",
+        "propId": "gate-arch",
+        "x": 10.05,
+        "z": 2.17,
+        "rotation": 0,
+        "scale": 1.2
+      },
+      {
+        "id": "banner-1",
+        "propId": "banner",
+        "x": 7.13,
+        "z": 3.78,
+        "rotation": 0,
+        "scale": 1
+      },
+      {
+        "id": "banner-2",
+        "propId": "banner",
+        "x": 12.98,
+        "z": 3.86,
+        "rotation": 0,
+        "scale": 1
+      },
+      {
+        "id": "guard-1",
+        "propId": "town-guard",
+        "x": 7.39,
+        "z": 4.6,
+        "rotation": 160,
+        "scale": 1
+      },
+      {
+        "id": "guard-2",
+        "propId": "town-guard",
+        "x": 12.45,
+        "z": 4.59,
+        "rotation": 200,
+        "scale": 1
+      },
+      {
+        "id": "torch-1",
+        "propId": "torch",
+        "x": 7,
+        "z": 6,
+        "rotation": 0,
+        "scale": 1
+      },
+      {
+        "id": "torch-2",
+        "propId": "torch",
+        "x": 13.04,
+        "z": 5.65,
+        "rotation": 0,
+        "scale": 1
+      },
+      {
+        "id": "table-1",
+        "propId": "table",
+        "x": 10.85,
+        "z": 6.86,
+        "rotation": 90,
+        "scale": 1
+      },
+      {
+        "id": "crate-1",
+        "propId": "crate",
+        "x": 12.94,
+        "z": 6.77,
+        "rotation": 15,
+        "scale": 1
+      },
+      {
+        "id": "crate-2",
+        "propId": "crate",
+        "x": 12.96,
+        "z": 8.39,
+        "rotation": 40,
+        "scale": 0.9
+      },
+      {
+        "id": "barrel-1",
+        "propId": "barrel",
+        "x": 12.01,
+        "z": 9.22,
+        "rotation": 0,
+        "scale": 1
+      },
+      {
+        "id": "fence-1",
+        "propId": "fence-wood",
+        "x": 6.5,
+        "z": 8,
+        "rotation": 0,
+        "scale": 1
+      },
+      {
+        "id": "fence-2",
+        "propId": "fence-wood",
+        "x": 6.5,
+        "z": 11,
+        "rotation": 0,
+        "scale": 1
+      },
+      {
+        "id": "traveler-1",
+        "propId": "traveler",
+        "x": 8,
+        "z": 12.5,
+        "rotation": 10,
+        "scale": 1
+      },
+      {
+        "id": "merchant-1",
+        "propId": "merchant",
+        "x": 8.5,
+        "z": 15,
+        "rotation": 0,
+        "scale": 1
+      },
+      {
+        "id": "wanderer-1",
+        "propId": "hooded-wanderer",
+        "x": 8,
+        "z": 17.5,
+        "rotation": 355,
+        "scale": 1
+      },
+      {
+        "id": "cart-1",
+        "propId": "cart",
+        "x": 15,
+        "z": 13,
+        "rotation": 45,
+        "scale": 1
+      },
+      {
+        "id": "barrel-2",
+        "propId": "barrel",
+        "x": 16,
+        "z": 14,
+        "rotation": 0,
+        "scale": 1
+      },
+      {
+        "id": "stall-1",
+        "propId": "market-stall",
+        "x": 16.4,
+        "z": 9.5,
+        "rotation": 270,
+        "scale": 1
+      },
+      {
+        "id": "stall-2",
+        "propId": "market-stall",
+        "x": 16.4,
+        "z": 17,
+        "rotation": 270,
+        "scale": 1
+      },
+      {
+        "id": "wagon-1",
+        "propId": "wagon",
+        "x": 6.2,
+        "z": 12.6,
+        "rotation": 0,
+        "scale": 1
+      },
+      {
+        "id": "horse-1",
+        "propId": "horse",
+        "x": 6.2,
+        "z": 10.2,
+        "rotation": 0,
+        "scale": 1
+      },
+      {
+        "id": "cart-2",
+        "propId": "cart",
+        "x": 8.3,
+        "z": 15.3,
+        "rotation": 350,
+        "scale": 1
+      },
+      {
+        "id": "merchant-2",
+        "propId": "merchant",
+        "x": 7.3,
+        "z": 14.2,
+        "rotation": 5,
+        "scale": 1
+      }
     ],
     "characters": [
-      { "characterId": "npc-garlan", "x": 9.19, "z": 7.62, "facing": 180, "stance": "idle" },
-      { "characterId": "pc-1", "x": 9.5, "z": 9.5, "facing": 0, "stance": "ready" },
-      { "characterId": "pc-2", "x": 10.5, "z": 11, "facing": 350, "stance": "idle" }
+      {
+        "characterId": "npc-garlan",
+        "x": 9.19,
+        "z": 7.62,
+        "facing": 180,
+        "stance": "idle"
+      },
+      {
+        "characterId": "pc-1",
+        "x": 9.5,
+        "z": 9.5,
+        "facing": 0,
+        "stance": "ready"
+      },
+      {
+        "characterId": "pc-2",
+        "x": 10.5,
+        "z": 11,
+        "facing": 350,
+        "stance": "idle"
+      }
     ],
     "version": 2,
     "turnId": "dev-the-gates",
@@ -58,7 +253,14 @@
       "appearance": "Travel-stained cloak, hood down, papers she would rather not have inspected.",
       "healthPercent": 100,
       "initiative": 18,
-      "attributes": { "strength": 10, "dexterity": 16, "constitution": 12, "intelligence": 13, "wisdom": 11, "charisma": 14 }
+      "attributes": {
+        "strength": 10,
+        "dexterity": 16,
+        "constitution": 12,
+        "intelligence": 13,
+        "wisdom": 11,
+        "charisma": 14
+      }
     },
     {
       "id": "pc-2",
@@ -71,7 +273,14 @@
       "appearance": "Broad-shouldered, plate scuffed from the road, shield slung across his back.",
       "healthPercent": 74,
       "initiative": 9,
-      "attributes": { "strength": 16, "dexterity": 10, "constitution": 15, "intelligence": 10, "wisdom": 12, "charisma": 11 }
+      "attributes": {
+        "strength": 16,
+        "dexterity": 10,
+        "constitution": 15,
+        "intelligence": 10,
+        "wisdom": 12,
+        "charisma": 11
+      }
     }
   ]
 }

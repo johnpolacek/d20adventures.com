@@ -112,6 +112,9 @@ export const PROP_CATALOG: PropDefinition[] = [
   { id: "merchant", label: "Merchant", category: "dressing", file: "merchant.glb", footprintRadius: 0.4, defaultScale: 1.96, height: 1.8, yOffset: 0, hint: "Crowd dressing: an aproned trader with a laden basket; cluster around market stalls, never blocking the action" },
   { id: "hooded-wanderer", label: "Hooded Wanderer", category: "dressing", file: "hooded-wanderer.glb", footprintRadius: 0.3, defaultScale: 1.96, height: 1.8, yOffset: 0, hint: "Crowd dressing: a cloaked figure with hands clasped; stand one or two at the edge of a market or queue, never blocking the action" },
   { id: "town-guard", label: "Town Guard", category: "dressing", file: "town-guard.glb", footprintRadius: 0.4, defaultScale: 2.07, height: 1.9, yOffset: 0, hint: "Crowd dressing: a spear-armed guard in a red-and-cream tabard; post in pairs at gates and doors, never blocking the action" },
+  // Caravan set (asset-pipeline 4626ea4)
+  { id: "horse", label: "Draft Horse", category: "dressing", file: "horse.glb", footprintRadius: 0.9, defaultScale: 1.85, height: 1.7, yOffset: 0, hint: "Crowd dressing: a standing draft horse; hitch before a wagon or tie near gates and stables" },
+  { id: "wagon", label: "Trader's Wagon", category: "dressing", file: "wagon.glb", footprintRadius: 1.5, defaultScale: 2.72, height: 2.5, yOffset: 0, hint: "A covered trader's wagon; pair with a horse in caravans, markets and gate queues" },
   // --- end generated props (asset-pipeline d8f3b13) ---
 ]
 
