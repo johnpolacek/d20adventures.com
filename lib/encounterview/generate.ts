@@ -9,7 +9,13 @@ import { encounterScene3DSchema, environmentKitSchema } from "@/types/encounter-
 export const SCENE_BOARD_SIZE = 20
 const BOARD_MIN = 0.75
 const BOARD_MAX = SCENE_BOARD_SIZE - 0.75
-const MAX_PROPS = 18
+// Hard cap on placed props. Raised 18 -> 24 for the density pass: each prop is one
+// drei <Clone> in components/encounterview/scene-prop.tsx, and the procedural
+// ForestRing already instances ~150 trees in the same frame, so a handful more
+// clones is not what bounds the scene. Nothing outside this module reads it.
+const MAX_PROPS = 24
+const TARGET_PROPS_MIN = 14
+const TARGET_PROPS_MAX = 18
 const CHARACTER_RADIUS = 0.6
 
 export function getEncounterScene3DStorageKey(settingId: string, adventureId: string, turnId: string): string {
@@ -56,7 +62,13 @@ ${formatPropCatalogForPrompt()}
 Rules:
 - Stage ONLY the place the characters are AT during this turn. NEVER place landmarks they are merely traveling toward, remember, or hear about. Worked example: a note says "meet me at the Old Standing Stones at midnight" and the CURRENT TURN has the character still moving through dark woods — then the board is woods only: NO stones, NO pillars, NO shrine. The stones first appear on the turn the narrative says the party ARRIVES at them. Before you output, re-read the CURRENT TURN text and delete any prop that represents a place it does not put the party at right now.
 - For wooded kits (forest, grove) a dense tree perimeter is added around the board automatically — do NOT build your own treeline along the edges. Place feature props only: a notable tree or two, boulders, stumps, and whatever the clearing itself contains.
-- 6-${MAX_PROPS} props. Cluster them naturally (a camp has its tents together), keep the center third of the board mostly open for the characters. Use each prop's scale (0.5-2) for variety.
+- For built-up kits (courtyard, checkpoint, ruins, crypt) a backdrop of building fronts and wall runs is added along the far and side edges automatically — do NOT spend your prop budget re-building that outer shell. Place what stands INSIDE the enclosure.
+- Place ${TARGET_PROPS_MIN}-${TARGET_PROPS_MAX} props (hard cap ${MAX_PROPS}). A sparse board looks unfinished — a half-empty tabletop is a failure, so keep going until the setting reads as a real place.
+- FILL THE BOARD. Dress all four quadrants, not just the middle: props belong in the corners and along the edges too. Empty ground between the characters is fine; empty ground everywhere else is not.
+- ENCLOSE THE EDGES on any kit that does NOT get one of the two automatic perimeters above, using whatever the setting implies — building-facade or wall-stone for streets and forts, fence-wood for farms and camps, hedge for gardens, pillar rows for halls. Repeat the same propId 3-5 times in a line to make a run, stepping ~2-3 units along it and giving every piece in the run the same rotation.
+- REPEAT PROPS IN CLUSTERS, never as singletons — this applies on every kit. Crates, barrels, banners, market stalls, tents, gravestones and torches read as scenery only in twos and threes: stack 3 crates in a corner, line 3 market-stalls down a street, flank a gate with a pair of banners. One lone barrel on an empty board looks like a mistake.
+- LARGE LANDMARKS GO AT THE BOARD EDGE, not the middle: gate-arch, building-facade, crypt, boat and pier belong near z=1-4 (the far edge) or hard against a side, with the characters and the action staged in front of them toward the viewer. Never drop a landmark in the center third.
+- Keep the center third of the board mostly open for the characters, and use each prop's scale (0.5-2) for variety.
 - Place EVERY character listed below exactly once, keyed by its characterId string. Stage the CURRENT narrative moment: who faces whom, who is confronting, sneaking, fleeing, or fallen. Allies group loosely; opponents face each other with a few units of tension between them. Keep characters at least 1.5 units apart.
 - Keep continuity with earlier turns: terrain and structures that appeared earlier are still there; a campfire lit two turns ago still burns.
 - stance per character: "down" if fallen or at 0% health, "hurt" if badly wounded, "attack" or "ready" if fighting or braced, else "idle".

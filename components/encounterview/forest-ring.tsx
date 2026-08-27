@@ -21,7 +21,7 @@ export interface ForestAvoidZone {
   radius: number
 }
 
-interface TreePlacement {
+export interface ScatterPlacement {
   assetIndex: number
   x: number
   z: number
@@ -30,7 +30,7 @@ interface TreePlacement {
   tint: THREE.Color
 }
 
-function mulberry32(seed: number) {
+export function mulberry32(seed: number) {
   let a = seed
   return () => {
     a |= 0
@@ -51,9 +51,9 @@ function pickWeighted(assets: ForestAsset[], random: () => number): number {
   return assets.length - 1
 }
 
-function planForest(assets: ForestAsset[], density: number, seed: number, avoid: ForestAvoidZone[]): TreePlacement[] {
+function planForest(assets: ForestAsset[], density: number, seed: number, avoid: ForestAvoidZone[]): ScatterPlacement[] {
   const random = mulberry32(seed ^ 0x51ab)
-  const placements: TreePlacement[] = []
+  const placements: ScatterPlacement[] = []
   const placed: { x: number; z: number; radius: number }[] = []
 
   const blocked = (x: number, z: number, radius: number) => {
@@ -134,7 +134,7 @@ function collectSubmeshes(root: THREE.Object3D): { geometry: THREE.BufferGeometr
   return result
 }
 
-function InstancedModel({ file, baseScale, placements }: { file: string; baseScale: number; placements: TreePlacement[] }) {
+export function InstancedModel({ file, baseScale, placements }: { file: string; baseScale: number; placements: ScatterPlacement[] }) {
   const gltf = useGLTF(`/models/encounter/props/${file}`)
   const submeshes = useMemo(() => collectSubmeshes(gltf.scene), [gltf.scene])
   const instanceData = useMemo(() => {

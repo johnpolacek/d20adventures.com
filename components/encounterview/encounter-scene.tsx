@@ -15,13 +15,14 @@ import { Canvas, useFrame } from "@react-three/fiber"
 import { Bloom, EffectComposer, N8AO, Vignette } from "@react-three/postprocessing"
 import { Suspense, useMemo, useRef } from "react"
 import * as THREE from "three"
-import { ENVIRONMENT_KITS, GROUND_COLORS, KIT_FOREST_DENSITY, getPropDefinition } from "@/lib/encounterview/asset-catalog"
+import { ENVIRONMENT_KITS, GROUND_COLORS, KIT_FOREST_DENSITY, KIT_URBAN_DRESSING, getPropDefinition } from "@/lib/encounterview/asset-catalog"
 import { SCENE_BOARD_SIZE } from "@/lib/encounterview/generate"
 import type { TurnCharacter } from "@/types/adventure"
 import type { EncounterScene3D } from "@/types/encounter-scene-3d"
 import { CharacterMini } from "./character-mini"
 import { ForestRing, type ForestAvoidZone } from "./forest-ring"
 import { SceneProp } from "./scene-prop"
+import { UrbanRing, planUrbanRing, urbanAvoidZones } from "./urban-ring"
 
 const LIGHTING = {
   day: {
@@ -58,6 +59,57 @@ const LIGHTING = {
     background: "radial-gradient(ellipse at 50% 35%, #181a26 0%, #0d0e15 55%, #050506 100%)",
   },
 } as const
+
+// Sky dome gradient per time of day: zenith -> horizon. Cheap on purpose — a single
+// back-faced sphere with a two-stop vertex gradient, no HDRI fetch, no drei <Sky>
+// (its Rayleigh model can't be tinted toward "eerie" or "battle" the way mood needs).
+const SKY = {
+  day: { top: "#3f6ba3", horizon: "#c6d4e2" },
+  dusk: { top: "#2a2145", horizon: "#e3915a" },
+  night: { top: "#080b16", horizon: "#2b3550" },
+} as const
+
+/** Mood pushes the horizon band; the zenith stays put so the dome keeps its depth. */
+const MOOD_SKY_SHIFT: Record<string, { hue: number; sat: number; light: number }> = {
+  calm: { hue: 0, sat: 0, light: 0.02 },
+  tense: { hue: -0.02, sat: -0.06, light: -0.05 },
+  battle: { hue: -0.05, sat: 0.1, light: -0.03 },
+  eerie: { hue: 0.16, sat: -0.1, light: -0.08 },
+  aftermath: { hue: 0.02, sat: -0.14, light: -0.06 },
+}
+
+/** Back-faced gradient dome. fog is off on it so distance fog can't flatten the sky. */
+function SkyDome({ top, horizon }: { top: string; horizon: string }) {
+  const uniforms = useMemo(() => ({ topColor: { value: new THREE.Color(top) }, horizonColor: { value: new THREE.Color(horizon) } }), [top, horizon])
+  return (
+    <mesh scale={[1, 0.6, 1]}>
+      <sphereGeometry args={[58, 24, 16]} />
+      <shaderMaterial
+        side={THREE.BackSide}
+        depthWrite={false}
+        fog={false}
+        uniforms={uniforms}
+        vertexShader={`
+          varying float vH;
+          void main() {
+            vec4 world = modelMatrix * vec4(position, 1.0);
+            vH = clamp(world.y / 34.0, -1.0, 1.0);
+            gl_Position = projectionMatrix * viewMatrix * world;
+          }
+        `}
+        fragmentShader={`
+          uniform vec3 topColor;
+          uniform vec3 horizonColor;
+          varying float vH;
+          void main() {
+            float t = smoothstep(0.0, 0.75, vH);
+            gl_FragColor = vec4(mix(horizonColor, topColor, t), 1.0);
+          }
+        `}
+      />
+    </mesh>
+  )
+}
 
 /** Deterministic PRNG so scatter and textures are stable per scene. */
 function mulberry32(seed: number) {
@@ -243,8 +295,16 @@ export default function EncounterScene({ scene, characters, standees, standeesBa
   const { environment } = scene
   const light = LIGHTING[environment.timeOfDay]
   const kit = ENVIRONMENT_KITS[environment.kit]
-  const groundColor = GROUND_COLORS[environment.ground] ?? kit.groundColor
+  // ground enum picks the material, the kit tints it — so stone in a crypt reads
+  // colder than the same stone in a courtyard instead of both being one flat swatch.
+  const groundColor = useMemo(() => `#${new THREE.Color(GROUND_COLORS[environment.ground] ?? kit.groundColor).lerp(new THREE.Color(kit.groundColor), 0.3).getHexString()}`, [environment.ground, kit.groundColor])
   const foggy = environment.mood === "eerie" || environment.mood === "tense" || environment.timeOfDay === "night"
+
+  const sky = useMemo(() => {
+    const shift = MOOD_SKY_SHIFT[environment.mood] ?? MOOD_SKY_SHIFT.calm
+    const base = SKY[environment.timeOfDay]
+    return { top: base.top, horizon: `#${new THREE.Color(base.horizon).offsetHSL(shift.hue, shift.sat, shift.light).getHexString()}` }
+  }, [environment.timeOfDay, environment.mood])
 
   const seed = useMemo(() => hashString(scene.turnId || "scene"), [scene.turnId])
   const groundTexture = useMemo(() => makeGroundTexture(groundColor, seed), [groundColor, seed])
@@ -253,7 +313,7 @@ export default function EncounterScene({ scene, characters, standees, standeesBa
   const half = SCENE_BOARD_SIZE / 2
 
   const forestDensity = KIT_FOREST_DENSITY[environment.kit] ?? 0
-  const forestAvoid = useMemo<ForestAvoidZone[]>(
+  const sceneAvoid = useMemo<ForestAvoidZone[]>(
     () => [
       ...scene.characters.map((c) => ({ x: c.x, z: c.z, radius: 1.6 })),
       ...scene.props.map((p) => {
@@ -263,6 +323,10 @@ export default function EncounterScene({ scene, characters, standees, standeesBa
     ],
     [scene.characters, scene.props]
   )
+  // Buildings are planned first and then handed to the treeline as keep-clear zones,
+  // so a checkpoint gets both a street front and a thin treeline without them clipping.
+  const urbanPlan = useMemo(() => planUrbanRing(KIT_URBAN_DRESSING[environment.kit] ?? { walls: 0, facades: 0 }, seed, sceneAvoid), [environment.kit, seed, sceneAvoid])
+  const forestAvoid = useMemo(() => [...sceneAvoid, ...urbanAvoidZones(urbanPlan)], [sceneAvoid, urbanPlan])
 
   return (
     <Canvas
@@ -278,7 +342,10 @@ export default function EncounterScene({ scene, characters, standees, standeesBa
       }}
       style={{ background: light.background }}
     >
-      {foggy && <fog attach="fog" args={[kit.fogColor, 26, 60]} />}
+      {/* Always fogged now, just at different strengths: the far fog pins the props to
+          the sky's horizon band instead of leaving them floating on a hard cut. */}
+      <fog attach="fog" args={foggy ? [kit.fogColor, 26, 60] : [sky.horizon, 42, 96]} />
+      <SkyDome top={sky.top} horizon={sky.horizon} />
 
       <hemisphereLight args={[light.hemiSky, light.hemiGround, light.hemi]} />
       {/* key light — sun/moon */}
@@ -317,6 +384,7 @@ export default function EncounterScene({ scene, characters, standees, standeesBa
       {(environment.timeOfDay === "night" || environment.mood === "eerie") && <FloatingMotes color={environment.mood === "eerie" ? "#9db4c9" : "#ffd98a"} seed={seed} />}
 
       <Suspense fallback={null}>
+        <UrbanRing plan={urbanPlan} />
         <ForestRing density={forestDensity} seed={seed} avoid={forestAvoid} dead={environment.kit === "crypt"} />
         {scene.props.map((prop) => (
           <SceneProp key={prop.id} prop={prop} timeOfDay={environment.timeOfDay} />

@@ -76,7 +76,10 @@ export const PROP_CATALOG: PropDefinition[] = [
   // structure -------------------------------------------------------------
   { id: "building-facade", label: "Building Facade", category: "structure", file: "building-facade.glb", footprintRadius: 3.5, defaultScale: 7.61, yOffset: 0, hint: "Two-storey timber-framed housefront; line the board edge to wall in a street scene" },
   { id: "staircase", label: "Staircase", category: "structure", file: "staircase.glb", footprintRadius: 1.7, defaultScale: 2.17, yOffset: 0, hint: "Stone stair flight; put it against a wall or dais edge to imply a second level" },
-  { id: "gate-arch", label: "Gate Arch", category: "structure", file: "gate-arch.glb", footprintRadius: 2.4, defaultScale: 3.91, yOffset: 0, hint: "Free-standing stone arch; one per scene as a city gate or courtyard threshold" },
+  // defaultScale overridden off the 0.92 m authoring rule: a city gate has to read
+  // as something a mounted rider passes under, so it is scaled to ~6 m tall.
+  // footprintRadius stays 2.4 — the piers are what you actually collide with.
+  { id: "gate-arch", label: "Gate Arch", category: "structure", file: "gate-arch.glb", footprintRadius: 2.4, defaultScale: 6.5, yOffset: 0, hint: "Free-standing stone arch, 6 m tall; one per scene as a city gate or courtyard threshold — put it at the board edge with the action in front of it" },
   { id: "door-heavy", label: "Heavy Door", category: "structure", file: "door-heavy.glb", footprintRadius: 0.8, defaultScale: 2.5, yOffset: 0, hint: "Iron-banded timber door; set flat against a wall as an entrance or a barred way out" },
   { id: "door-arcane", label: "Arcane Door", category: "structure", file: "door-arcane.glb", footprintRadius: 1.5, defaultScale: 2.83, yOffset: 0, hint: "Rune-sealed door in its own frame; vaults, sanctums and puzzle thresholds, one per scene" },
   { id: "boat", label: "Boat", category: "structure", file: "boat.glb", footprintRadius: 2.3, defaultScale: 3.26, yOffset: 0, hint: "Small open boat with a swept stern post; beach it at a shoreline or moor it beside a pier" },
@@ -223,4 +226,45 @@ export const KIT_FOREST_DENSITY: Record<EnvironmentKit, number> = {
   courtyard: 0,
   checkpoint: 0.3,
   generic: 0.25,
+}
+
+// --- procedural urban dressing (renderer-only, not in the LLM vocabulary) -----
+// The forest lesson applied to built-up kits: a checkpoint or a courtyard has to
+// read as enclosed even when the model returns a thin prop list, so the backdrop
+// is guaranteed in code the same way the treeline is. Facades line the north (far)
+// edge as a street front; wall runs close the east/west edges. The south edge is
+// left open — that is the camera's side of the diorama.
+
+export const URBAN_FACADE_ASSETS: ForestAsset[] = [{ file: "building-facade.glb", scale: 7.61, weight: 1, footprintRadius: 3.5 }]
+
+export const URBAN_WALL_ASSETS: ForestAsset[] = [
+  { file: "wall-stone.glb", scale: 0.5, weight: 4, footprintRadius: 1.1 },
+  { file: "wall-broken.glb", scale: 0.5, weight: 1, footprintRadius: 1.1 },
+]
+
+/** Ruined kits get the same runs built from collapsed masonry. */
+export const RUINED_WALL_ASSETS: ForestAsset[] = [{ file: "wall-broken.glb", scale: 0.5, weight: 1, footprintRadius: 1.1 }]
+
+export interface UrbanDressing {
+  /** Wall run along the east/west edges (0 = none, 1 = continuous). */
+  walls: number
+  /** Building facades along the north edge (0 = none, 1 = a solid street front). */
+  facades: number
+  /** Build the wall runs from broken masonry instead of intact stone. */
+  ruined?: boolean
+}
+
+/** How much automatic building/wall enclosure each kit gets. */
+export const KIT_URBAN_DRESSING: Record<EnvironmentKit, UrbanDressing> = {
+  forest: { walls: 0, facades: 0 },
+  grove: { walls: 0, facades: 0 },
+  road: { walls: 0.25, facades: 0 },
+  camp: { walls: 0, facades: 0 },
+  ruins: { walls: 0.55, facades: 0, ruined: true },
+  crypt: { walls: 0.3, facades: 0, ruined: true },
+  cavern: { walls: 0, facades: 0 },
+  shrine: { walls: 0.25, facades: 0 },
+  courtyard: { walls: 0.9, facades: 0.5 },
+  checkpoint: { walls: 0.8, facades: 0.7 },
+  generic: { walls: 0, facades: 0 },
 }
