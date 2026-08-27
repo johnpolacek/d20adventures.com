@@ -12,7 +12,7 @@ import * as THREE from "three"
 import { DEAD_FOREST_ASSETS, FOREST_ASSETS, type ForestAsset } from "@/lib/encounterview/asset-catalog"
 import { SCENE_BOARD_SIZE } from "@/lib/encounterview/generate"
 
-const BOARD_OFFSET = SCENE_BOARD_SIZE / 2
+export const BOARD_OFFSET = SCENE_BOARD_SIZE / 2
 
 export interface ForestAvoidZone {
   /** Board coordinates (0..20). */

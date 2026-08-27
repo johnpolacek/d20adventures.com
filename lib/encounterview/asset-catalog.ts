@@ -317,7 +317,9 @@ export const KIT_URBAN_DRESSING: Record<EnvironmentKit, UrbanDressing> = {
   cavern: { walls: 0, facades: 0 },
   shrine: { walls: 0.25, facades: 0 },
   courtyard: { walls: 0.9, facades: 0.5, cityWall: true },
-  checkpoint: { walls: 0.8, facades: 0.7, cityWall: true },
+  // No facades: the board side of a checkpoint's wall is OUTSIDE the city —
+  // that is where the queue waits — and houses do not stand outside the gates.
+  checkpoint: { walls: 0.8, facades: 0, cityWall: true },
   // Interiors get their shell from RoomShell instead — an outdoor street front
   // standing behind an interior wall would be visible over the top of it.
   "interior-common": { walls: 0, facades: 0 },

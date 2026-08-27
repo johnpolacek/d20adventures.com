@@ -21,7 +21,7 @@ import * as THREE from "three"
 import { CITY_WALL_ASSET, type ForestAsset, RUINED_WALL_ASSETS, URBAN_FACADE_ASSETS, URBAN_WALL_ASSETS, type UrbanDressing } from "@/lib/encounterview/asset-catalog"
 import { SCENE_BOARD_SIZE } from "@/lib/encounterview/generate"
 import type { SceneProp } from "@/types/encounter-scene-3d"
-import { type ForestAvoidZone, InstancedModel, mulberry32, type ScatterPlacement } from "./forest-ring"
+import { BOARD_OFFSET, type ForestAvoidZone, InstancedModel, mulberry32, type ScatterPlacement } from "./forest-ring"
 
 const FACE_SOUTH = 0
 const FACE_EAST = Math.PI / 2
@@ -40,6 +40,8 @@ const NORTH_WALL_SCALE = NORTH_WALL_HEIGHT / 6.0
 const NORTH_WALL_LENGTH = (CITY_WALL_ASSET.length ?? 14.04) * NORTH_WALL_SCALE
 /** Shaved off the step so float error can never open a hairline gap between segments. */
 const NORTH_WALL_SEAM = 0.06
+/** World depth of a segment (authored 1.15 m x catalog scale x run scale). */
+const NORTH_WALL_DEPTH = 1.15 * 6.52 * NORTH_WALL_SCALE
 /** How far the run tucks BEHIND the gate's outermost stone, so the two interlock. */
 const GATE_OVERLAP = 0.5
 /** Fallback z for the run when the scene placed no gate to align with. */
@@ -251,6 +253,17 @@ export function UrbanRing({ plan }: { plan: UrbanPlan }) {
   return (
     <>
       <InstancedModel file={CITY_WALL_ASSET.file} baseScale={CITY_WALL_ASSET.scale} placements={plan.northWall} />
+      {/* Opaque backing inset inside each wall segment. The generated wall mesh is
+          carved block-by-block (a Hunyuan quirk the pipeline documents), so at the
+          shipped triangle budget the block gaps are real holes — with sky behind
+          them the wall reads see-through and mortarless. A mortar-dark box fills
+          the gaps from inside: no more sky, and the slits now read as mortar. */}
+      {plan.northWall.map((p, i) => (
+        <mesh key={`mortar-${i}`} position={[p.x - BOARD_OFFSET, NORTH_WALL_HEIGHT * 0.44, p.z - BOARD_OFFSET]} rotation={[0, p.rotation, 0]}>
+          <boxGeometry args={[NORTH_WALL_LENGTH * 0.98, NORTH_WALL_HEIGHT * 0.88, NORTH_WALL_DEPTH * 0.55]} />
+          <meshStandardMaterial color="#4a4139" roughness={1} />
+        </mesh>
+      ))}
       {URBAN_FACADE_ASSETS.map((asset, index) => (
         <InstancedModel key={`facade-${asset.file}`} file={asset.file} baseScale={asset.scale} placements={facadesByAsset[index]} />
       ))}
