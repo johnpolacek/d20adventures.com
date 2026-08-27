@@ -1,39 +1,229 @@
 {
-  "label": "The Drowned Lantern — tavern common room (interior-common, night / calm)",
+  "label": "The Drowned Lantern \u2014 tavern common room (interior-common, night / calm)",
   "note": "Hand-authored to exercise the interior-common RoomShell: no structure props at all, so the camera planner falls back to framing the far wall, and every light in the room comes from lightSource props.",
   "scene": {
     "summary": "Low beams, a banked hearth and the smell of spilled ale; the common room hushes a little as the party takes the corner table.",
-    "environment": { "kit": "interior-common", "ground": "dirt", "timeOfDay": "night", "mood": "calm" },
+    "environment": {
+      "kit": "interior-common",
+      "ground": "dirt",
+      "timeOfDay": "night",
+      "mood": "calm"
+    },
     "props": [
-      { "id": "bar-1", "propId": "bar-counter", "x": 5.6, "z": 2.4, "rotation": 0, "scale": 1 },
-      { "id": "bar-2", "propId": "bar-counter", "x": 8.3, "z": 2.4, "rotation": 0, "scale": 1 },
-      { "id": "hearth-1", "propId": "brazier", "x": 17.2, "z": 3.2, "rotation": 0, "scale": 1.4 },
-      { "id": "table-1", "propId": "table", "x": 6, "z": 9, "rotation": 0, "scale": 1 },
-      { "id": "chair-1", "propId": "chair", "x": 4.8, "z": 8.4, "rotation": 90, "scale": 1 },
-      { "id": "chair-2", "propId": "chair", "x": 7.2, "z": 8.4, "rotation": 270, "scale": 1 },
-      { "id": "chair-3", "propId": "chair", "x": 4.8, "z": 9.7, "rotation": 90, "scale": 1 },
-      { "id": "table-2", "propId": "table", "x": 14, "z": 11, "rotation": 90, "scale": 1 },
-      { "id": "chair-4", "propId": "chair", "x": 13, "z": 10.1, "rotation": 180, "scale": 1 },
-      { "id": "chair-5", "propId": "chair", "x": 15, "z": 10.1, "rotation": 180, "scale": 1 },
-      { "id": "chair-6", "propId": "chair", "x": 13, "z": 12, "rotation": 0, "scale": 1 },
-      { "id": "table-3", "propId": "table", "x": 7, "z": 15.4, "rotation": 0, "scale": 1 },
-      { "id": "chair-7", "propId": "chair", "x": 5.8, "z": 15.4, "rotation": 90, "scale": 1 },
-      { "id": "chair-8", "propId": "chair", "x": 8.2, "z": 15.4, "rotation": 270, "scale": 1 },
-      { "id": "chandelier-1", "propId": "chandelier", "x": 10.2, "z": 6.8, "rotation": 0, "scale": 1 },
-      { "id": "chandelier-2", "propId": "chandelier", "x": 10.2, "z": 13.4, "rotation": 0, "scale": 1 },
-      { "id": "candelabra-1", "propId": "candelabra", "x": 2.3, "z": 6.2, "rotation": 0, "scale": 1 },
-      { "id": "candelabra-2", "propId": "candelabra", "x": 17.7, "z": 7.4, "rotation": 0, "scale": 1 },
-      { "id": "barrel-1", "propId": "barrel", "x": 2.6, "z": 2.6, "rotation": 0, "scale": 1 },
-      { "id": "barrel-2", "propId": "barrel", "x": 3.6, "z": 2.7, "rotation": 30, "scale": 0.9 },
-      { "id": "barrel-3", "propId": "barrel", "x": 2.7, "z": 3.7, "rotation": 200, "scale": 1 },
-      { "id": "crate-1", "propId": "crate", "x": 17.6, "z": 17.2, "rotation": 20, "scale": 1 },
-      { "id": "crate-2", "propId": "crate", "x": 18.1, "z": 15.7, "rotation": 55, "scale": 0.85 }
+      {
+        "id": "bar-1",
+        "propId": "bar-counter",
+        "x": 5.6,
+        "z": 2.4,
+        "rotation": 180,
+        "scale": 1
+      },
+      {
+        "id": "bar-2",
+        "propId": "bar-counter",
+        "x": 8.3,
+        "z": 2.4,
+        "rotation": 180,
+        "scale": 1
+      },
+      {
+        "id": "hearth-1",
+        "propId": "brazier",
+        "x": 17.2,
+        "z": 3.2,
+        "rotation": 0,
+        "scale": 1.4
+      },
+      {
+        "id": "table-1",
+        "propId": "table",
+        "x": 6,
+        "z": 9,
+        "rotation": 0,
+        "scale": 1
+      },
+      {
+        "id": "chair-1",
+        "propId": "chair",
+        "x": 4.8,
+        "z": 8.4,
+        "rotation": 90,
+        "scale": 1
+      },
+      {
+        "id": "chair-2",
+        "propId": "chair",
+        "x": 7.2,
+        "z": 8.4,
+        "rotation": 270,
+        "scale": 1
+      },
+      {
+        "id": "chair-3",
+        "propId": "chair",
+        "x": 4.8,
+        "z": 9.7,
+        "rotation": 90,
+        "scale": 1
+      },
+      {
+        "id": "table-2",
+        "propId": "table",
+        "x": 14,
+        "z": 11,
+        "rotation": 90,
+        "scale": 1
+      },
+      {
+        "id": "chair-4",
+        "propId": "chair",
+        "x": 13,
+        "z": 10.1,
+        "rotation": 180,
+        "scale": 1
+      },
+      {
+        "id": "chair-5",
+        "propId": "chair",
+        "x": 15,
+        "z": 10.1,
+        "rotation": 180,
+        "scale": 1
+      },
+      {
+        "id": "chair-6",
+        "propId": "chair",
+        "x": 13,
+        "z": 12,
+        "rotation": 0,
+        "scale": 1
+      },
+      {
+        "id": "table-3",
+        "propId": "table",
+        "x": 7,
+        "z": 15.4,
+        "rotation": 0,
+        "scale": 1
+      },
+      {
+        "id": "chair-7",
+        "propId": "chair",
+        "x": 5.8,
+        "z": 15.4,
+        "rotation": 90,
+        "scale": 1
+      },
+      {
+        "id": "chair-8",
+        "propId": "chair",
+        "x": 8.2,
+        "z": 15.4,
+        "rotation": 270,
+        "scale": 1
+      },
+      {
+        "id": "chandelier-1",
+        "propId": "chandelier",
+        "x": 10.2,
+        "z": 6.8,
+        "rotation": 0,
+        "scale": 1
+      },
+      {
+        "id": "chandelier-2",
+        "propId": "chandelier",
+        "x": 10.2,
+        "z": 13.4,
+        "rotation": 0,
+        "scale": 1
+      },
+      {
+        "id": "candelabra-1",
+        "propId": "candelabra",
+        "x": 2.3,
+        "z": 6.2,
+        "rotation": 0,
+        "scale": 1
+      },
+      {
+        "id": "candelabra-2",
+        "propId": "candelabra",
+        "x": 17.7,
+        "z": 7.4,
+        "rotation": 0,
+        "scale": 1
+      },
+      {
+        "id": "barrel-1",
+        "propId": "barrel",
+        "x": 2.6,
+        "z": 2.6,
+        "rotation": 0,
+        "scale": 1
+      },
+      {
+        "id": "barrel-2",
+        "propId": "barrel",
+        "x": 3.6,
+        "z": 2.7,
+        "rotation": 30,
+        "scale": 0.9
+      },
+      {
+        "id": "barrel-3",
+        "propId": "barrel",
+        "x": 2.7,
+        "z": 3.7,
+        "rotation": 200,
+        "scale": 1
+      },
+      {
+        "id": "crate-1",
+        "propId": "crate",
+        "x": 17.6,
+        "z": 17.2,
+        "rotation": 20,
+        "scale": 1
+      },
+      {
+        "id": "crate-2",
+        "propId": "crate",
+        "x": 18.1,
+        "z": 15.7,
+        "rotation": 55,
+        "scale": 0.85
+      }
     ],
     "characters": [
-      { "characterId": "pc-1", "x": 9.4, "z": 11.6, "facing": 0, "stance": "idle" },
-      { "characterId": "pc-2", "x": 11.1, "z": 12.4, "facing": 15, "stance": "idle" },
-      { "characterId": "npc-innkeep", "x": 7.4, "z": 4.2, "facing": 180, "stance": "idle" },
-      { "characterId": "npc-cutpurse", "x": 13.2, "z": 8.4, "facing": 200, "stance": "ready" }
+      {
+        "characterId": "pc-1",
+        "x": 9.4,
+        "z": 11.6,
+        "facing": 0,
+        "stance": "idle"
+      },
+      {
+        "characterId": "pc-2",
+        "x": 11.1,
+        "z": 12.4,
+        "facing": 15,
+        "stance": "idle"
+      },
+      {
+        "characterId": "npc-innkeep",
+        "x": 7.4,
+        "z": 4.2,
+        "facing": 180,
+        "stance": "idle"
+      },
+      {
+        "characterId": "npc-cutpurse",
+        "x": 13.2,
+        "z": 8.4,
+        "facing": 200,
+        "stance": "ready"
+      }
     ],
     "version": 2,
     "turnId": "dev-tavern-common-room",
@@ -51,7 +241,14 @@
       "appearance": "Travel-stained cloak, hood down, eyes on the door.",
       "healthPercent": 100,
       "initiative": 18,
-      "attributes": { "strength": 10, "dexterity": 16, "constitution": 12, "intelligence": 13, "wisdom": 11, "charisma": 14 }
+      "attributes": {
+        "strength": 10,
+        "dexterity": 16,
+        "constitution": 12,
+        "intelligence": 13,
+        "wisdom": 11,
+        "charisma": 14
+      }
     },
     {
       "id": "pc-2",
@@ -64,7 +261,14 @@
       "appearance": "Broad-shouldered, plate scuffed from the road.",
       "healthPercent": 74,
       "initiative": 9,
-      "attributes": { "strength": 16, "dexterity": 10, "constitution": 15, "intelligence": 10, "wisdom": 12, "charisma": 11 }
+      "attributes": {
+        "strength": 16,
+        "dexterity": 10,
+        "constitution": 15,
+        "intelligence": 10,
+        "wisdom": 12,
+        "charisma": 11
+      }
     },
     {
       "id": "npc-innkeep",

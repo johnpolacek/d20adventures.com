@@ -425,7 +425,10 @@ export default function EncounterScene({
   )
   // Buildings are planned first and then handed to the treeline as keep-clear zones,
   // so a checkpoint gets both a street front and a thin treeline without them clipping.
-  const urbanPlan = useMemo(() => planUrbanRing(KIT_URBAN_DRESSING[environment.kit] ?? { walls: 0, facades: 0 }, seed, sceneAvoid), [environment.kit, seed, sceneAvoid])
+  const urbanPlan = useMemo(
+    () => planUrbanRing(KIT_URBAN_DRESSING[environment.kit] ?? { walls: 0, facades: 0 }, seed, sceneAvoid, scene.props),
+    [environment.kit, seed, sceneAvoid, scene.props]
+  )
   const roomPlan = useMemo(() => planRoomShell(shell, seed), [shell, seed])
   const forestAvoid = useMemo(() => [...sceneAvoid, ...urbanAvoidZones(urbanPlan), ...roomAvoidZones(roomPlan)], [sceneAvoid, urbanPlan, roomPlan])
 

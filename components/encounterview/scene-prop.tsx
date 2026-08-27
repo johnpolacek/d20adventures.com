@@ -15,6 +15,27 @@ const BOARD_OFFSET = 10
 const toWorld = (x: number, z: number): [number, number, number] => [x - BOARD_OFFSET, 0, z - BOARD_OFFSET]
 const toRadians = (degrees: number) => (degrees * Math.PI) / 180
 
+/**
+ * Half a turn, because every prop GLB in the catalog is authored facing +Z and the
+ * board's +Z is SOUTH — toward the viewer — while the generation prompt promises
+ * the opposite ("rotation 0 = facing north/away from viewer"). Without this a
+ * gate guard told to face the queue at 180 turned its back on it.
+ *
+ * Both asset families are +Z-authored:
+ *  - generated props (asset-pipeline blender/to_prop.py) yaw the mesh so the front
+ *    lands on Blender -Y, which the glTF exporter's Y-up conversion maps to +Z.
+ *  - KayKit packs: room-shell.tsx stands wall-stone on the WEST edge at +90deg to
+ *    turn its face into the room, which only works if the face starts on +Z; and
+ *    character-mini.tsx already carries this exact same +PI on the KayKit character
+ *    minis, whose facing is known-correct on the board today.
+ *
+ * The procedural paths (UrbanRing, RoomShell, ForestRing) do NOT go through here:
+ * they write world radians straight into InstancedModel, which applies them with
+ * the OPPOSITE sign and no offset, so their FACE_SOUTH/FACE_EAST constants are
+ * unaffected by this.
+ */
+const AUTHORED_FRONT_YAW = Math.PI
+
 function Campfire({ scale }: { scale: number }) {
   const stones = useMemo(
     () =>
@@ -75,7 +96,7 @@ export function SceneProp({ prop, timeOfDay, interior = false }: { prop: ScenePr
   // Indoors it is always "night" as far as the lamps are concerned.
   const glow = def.lightSource && (interior || timeOfDay !== "day")
   return (
-    <group position={toWorld(prop.x, prop.z)} rotation={[0, -toRadians(prop.rotation), 0]}>
+    <group position={toWorld(prop.x, prop.z)} rotation={[0, AUTHORED_FRONT_YAW - toRadians(prop.rotation), 0]}>
       {def.file ? <GlbProp file={def.file} scale={scale} yOffset={def.yOffset} /> : <Campfire scale={prop.scale} />}
       {/* Sit the pool near the top of the prop that emits it, using the measured
           catalog height — a chandelier's flames hang 3 m up, a brazier's sit at

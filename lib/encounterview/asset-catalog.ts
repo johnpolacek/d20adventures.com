@@ -217,6 +217,14 @@ export interface ForestAsset {
   weight: number
   /** Keep-clear radius in board units at scale 1 placement. */
   footprintRadius: number
+  /**
+   * Measured world length along the model's own +X at `scale`, in board units.
+   * Only set on the pieces that get CHAINED into a continuous run (walls, facades),
+   * where the spacing has to be the asset's real span or the run gaps. Measured
+   * from the GLB's POSITION bounds; the generated props cross-check against
+   * asset-pipeline dist/emission.json meshAABB_m.
+   */
+  length?: number
 }
 
 export const FOREST_ASSETS: ForestAsset[] = [
@@ -254,27 +262,48 @@ export const KIT_FOREST_DENSITY: Record<EnvironmentKit, number> = {
 // --- procedural urban dressing (renderer-only, not in the LLM vocabulary) -----
 // The forest lesson applied to built-up kits: a checkpoint or a courtyard has to
 // read as enclosed even when the model returns a thin prop list, so the backdrop
-// is guaranteed in code the same way the treeline is. Facades line the north (far)
-// edge as a street front; wall runs close the east/west edges. The south edge is
+// is guaranteed in code the same way the treeline is. Wall runs close the
+// east/west edges; on city-entrance kits (cityWall) the north edge gets one
+// unbroken run of the tall city wall and the facades move to the side returns,
+// otherwise the facades themselves are the north street front. The south edge is
 // left open — that is the camera's side of the diorama.
 
-export const URBAN_FACADE_ASSETS: ForestAsset[] = [{ file: "building-facade.glb", scale: 7.61, weight: 1, footprintRadius: 3.5 }]
+// building-facade.glb measures 0.899 x 0.920 x 0.922 m as authored, so 6.84 wide
+// at the 7.61 scale below.
+export const URBAN_FACADE_ASSETS: ForestAsset[] = [{ file: "building-facade.glb", scale: 7.61, weight: 1, footprintRadius: 3.5, length: 6.84 }]
 
+// Both KayKit panels are authored 4 x 4 x 1 units, so 2.0 x 2.0 x 0.5 m at scale 0.5.
 export const URBAN_WALL_ASSETS: ForestAsset[] = [
-  { file: "wall-stone.glb", scale: 0.5, weight: 4, footprintRadius: 1.1 },
-  { file: "wall-broken.glb", scale: 0.5, weight: 1, footprintRadius: 1.1 },
+  { file: "wall-stone.glb", scale: 0.5, weight: 4, footprintRadius: 1.1, length: 2.0 },
+  { file: "wall-broken.glb", scale: 0.5, weight: 1, footprintRadius: 1.1, length: 2.0 },
 ]
 
 /** Ruined kits get the same runs built from collapsed masonry. */
-export const RUINED_WALL_ASSETS: ForestAsset[] = [{ file: "wall-broken.glb", scale: 0.5, weight: 1, footprintRadius: 1.1 }]
+export const RUINED_WALL_ASSETS: ForestAsset[] = [{ file: "wall-broken.glb", scale: 0.5, weight: 1, footprintRadius: 1.1, length: 2.0 }]
+
+/**
+ * The tall generated wall used for the north-edge city run — the one piece that
+ * has to read as a CITY wall meeting a 6 m gate arch, not as knee-high masonry.
+ * city-wall.glb is authored 2.154 x 0.920 x 1.150 m (asset-pipeline
+ * dist/emission.json meshAABB_m), i.e. 14.04 long x 6.00 tall at this 6.52 scale.
+ * The ring scales each segment down from there — see NORTH_WALL_HEIGHT.
+ */
+export const CITY_WALL_ASSET: ForestAsset = { file: "city-wall.glb", scale: 6.52, weight: 1, footprintRadius: 7, length: 14.04 }
 
 export interface UrbanDressing {
   /** Wall run along the east/west edges (0 = none, 1 = continuous). */
   walls: number
-  /** Building facades along the north edge (0 = none, 1 = a solid street front). */
+  /** Building facades (0 = none, 1 = a solid street front). */
   facades: number
   /** Build the wall runs from broken masonry instead of intact stone. */
   ruined?: boolean
+  /**
+   * Close the north edge with an unbroken, edge-to-edge run of the tall city
+   * wall, parting only where the scene's gate landmark stands. Kits that get it
+   * are city entrances; their facades move to the east/west returns so they do
+   * not fight the wall.
+   */
+  cityWall?: boolean
 }
 
 /** How much automatic building/wall enclosure each kit gets. */
@@ -287,8 +316,8 @@ export const KIT_URBAN_DRESSING: Record<EnvironmentKit, UrbanDressing> = {
   crypt: { walls: 0.3, facades: 0, ruined: true },
   cavern: { walls: 0, facades: 0 },
   shrine: { walls: 0.25, facades: 0 },
-  courtyard: { walls: 0.9, facades: 0.5 },
-  checkpoint: { walls: 0.8, facades: 0.7 },
+  courtyard: { walls: 0.9, facades: 0.5, cityWall: true },
+  checkpoint: { walls: 0.8, facades: 0.7, cityWall: true },
   // Interiors get their shell from RoomShell instead — an outdoor street front
   // standing behind an interior wall would be visible over the top of it.
   "interior-common": { walls: 0, facades: 0 },
