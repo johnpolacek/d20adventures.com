@@ -2,7 +2,7 @@
 // Pure functions; the server action in app/_actions/generate-encounter-scene.ts wires
 // them to auth, Convex, and S3.
 
-import { formatPropCatalogForPrompt, getPropDefinition, ENVIRONMENT_KITS } from "@/lib/encounterview/asset-catalog"
+import { ENVIRONMENT_KITS, formatPropCatalogForPrompt, getPropDefinition } from "@/lib/encounterview/asset-catalog"
 import type { EncounterScene3D, EncounterScene3DGeneration, SceneCharacter, SceneProp, SceneStance } from "@/types/encounter-scene-3d"
 import { encounterScene3DSchema, environmentKitSchema } from "@/types/encounter-scene-3d"
 
@@ -31,18 +31,10 @@ export interface SceneRosterCharacter {
   healthPercent?: number
 }
 
-export function buildScenePrompt(args: {
-  encounterTitle?: string
-  encounterIntro?: string
-  previousNarratives: string[]
-  currentNarrative: string
-  roster: SceneRosterCharacter[]
-}): string {
+export function buildScenePrompt(args: { encounterTitle?: string; encounterIntro?: string; previousNarratives: string[]; currentNarrative: string; roster: SceneRosterCharacter[] }): string {
   const kitGuidance = (Object.keys(ENVIRONMENT_KITS) as (keyof typeof ENVIRONMENT_KITS)[]).map((kit) => `  - ${kit}: ${ENVIRONMENT_KITS[kit].guidance}`).join("\n")
   const truncate = (text: string, max = 1200) => (text.length > max ? `${text.slice(0, max)}…` : text)
-  const previous = args.previousNarratives.length
-    ? args.previousNarratives.map((narrative, i) => `Turn ${i + 1}:\n${truncate(narrative)}`).join("\n\n")
-    : "(none — this is the first turn)"
+  const previous = args.previousNarratives.length ? args.previousNarratives.map((narrative, i) => `Turn ${i + 1}:\n${truncate(narrative)}`).join("\n\n") : "(none — this is the first turn)"
   const roster = args.roster
     .map((c) => `  - characterId "${c.id}" | ${c.name} | ${c.type.toUpperCase()} | ${c.race ?? "unknown race"} ${c.archetype ?? ""} | health ${c.healthPercent ?? 100}%`)
     .join("\n")
@@ -56,6 +48,8 @@ The board is ${SCENE_BOARD_SIZE}x${SCENE_BOARD_SIZE} units, coordinates x (west�
 Environment kits (pick the one the narrative implies):
 ${kitGuidance}
 
+INDOORS OR OUTDOORS — decide this FIRST. If the current turn happens inside a building or underground — a tavern or inn common room, a shop, a guardroom, a library, a ballroom, an auction hall, a throne room, a temple interior, a wine cellar, a vault, a tunnel, a dungeon corridor or cell — you MUST pick one of the three interior-* kits. "generic" is an OUTDOOR kit and is never the right answer for a scene with a roof over it. Only pick a non-interior kit when the characters are genuinely under open sky (or in a natural cave, which is "cavern").
+
 Props — place ONLY these propId values, nothing else:
 ${formatPropCatalogForPrompt()}
 
@@ -63,11 +57,13 @@ Rules:
 - Stage ONLY the place the characters are AT during this turn. NEVER place landmarks they are merely traveling toward, remember, or hear about. Worked example: a note says "meet me at the Old Standing Stones at midnight" and the CURRENT TURN has the character still moving through dark woods — then the board is woods only: NO stones, NO pillars, NO shrine. The stones first appear on the turn the narrative says the party ARRIVES at them. Before you output, re-read the CURRENT TURN text and delete any prop that represents a place it does not put the party at right now.
 - For wooded kits (forest, grove) a dense tree perimeter is added around the board automatically — do NOT build your own treeline along the edges. Place feature props only: a notable tree or two, boulders, stumps, and whatever the clearing itself contains.
 - For built-up kits (courtyard, checkpoint, ruins, crypt) a backdrop of building fronts and wall runs is added along the far and side edges automatically — do NOT spend your prop budget re-building that outer shell. Place what stands INSIDE the enclosure.
+- For interior kits the ROOM ITSELF is built automatically: walls close the north, east and west edges, a ceiling closes the top, and interior-grand also gets two rows of pillars down the hall. Do NOT place wall-stone, wall-broken, pillar or building-facade to make a room — you would only be building a second wall inside the first. Spend the whole budget on FURNITURE and clutter: tables and chairs in groups, a bar-counter or desk against a wall, bookshelves in a row, barrels and crates in the corners, a dais, an altar, banners on the walls, rubble and bones underfoot.
+- INTERIORS HAVE NO SUN. An interior scene that places no light sources renders almost black. Every interior needs 3-5 of: torch, brazier, candelabra, chandelier, lantern, campfire (a hearth). Chandeliers hang in the air over open floor; candelabra flank doors and aisles in pairs; torches and braziers go against the walls and down corridors.
 - Place ${TARGET_PROPS_MIN}-${TARGET_PROPS_MAX} props (hard cap ${MAX_PROPS}). A sparse board looks unfinished — a half-empty tabletop is a failure, so keep going until the setting reads as a real place.
 - FILL THE BOARD. Dress all four quadrants, not just the middle: props belong in the corners and along the edges too. Empty ground between the characters is fine; empty ground everywhere else is not.
-- ENCLOSE THE EDGES on any kit that does NOT get one of the two automatic perimeters above, using whatever the setting implies — building-facade or wall-stone for streets and forts, fence-wood for farms and camps, hedge for gardens, pillar rows for halls. Repeat the same propId 3-5 times in a line to make a run, stepping ~2-3 units along it and giving every piece in the run the same rotation.
+- ENCLOSE THE EDGES on any kit that does NOT get one of the three automatic perimeters above, using whatever the setting implies — building-facade or wall-stone for streets and forts, fence-wood for farms and camps, hedge for gardens, pillar rows for halls. Repeat the same propId 3-5 times in a line to make a run, stepping ~2-3 units along it and giving every piece in the run the same rotation.
 - REPEAT PROPS IN CLUSTERS, never as singletons — this applies on every kit. Crates, barrels, banners, market stalls, tents, gravestones and torches read as scenery only in twos and threes: stack 3 crates in a corner, line 3 market-stalls down a street, flank a gate with a pair of banners. One lone barrel on an empty board looks like a mistake.
-- LARGE LANDMARKS GO AT THE BOARD EDGE, not the middle: gate-arch, building-facade, crypt, boat and pier belong near z=1-4 (the far edge) or hard against a side, with the characters and the action staged in front of them toward the viewer. Never drop a landmark in the center third.
+- LARGE LANDMARKS GO AT THE BOARD EDGE, not the middle: gate-arch, building-facade, crypt, boat and pier belong near z=1-4 (the far edge) or hard against a side, with the characters and the action staged in front of them toward the viewer. Never drop a landmark in the center third. The establishing camera frames the biggest structure you place against the characters, so one deliberate landmark at the far edge is worth more than three scattered ones.
 - Keep the center third of the board mostly open for the characters, and use each prop's scale (0.5-2) for variety.
 - Place EVERY character listed below exactly once, keyed by its characterId string. Stage the CURRENT narrative moment: who faces whom, who is confronting, sneaking, fleeing, or fallen. Allies group loosely; opponents face each other with a few units of tension between them. Keep characters at least 1.5 units apart.
 - Keep continuity with earlier turns: terrain and structures that appeared earlier are still there; a campfire lit two turns ago still burns.
@@ -118,7 +114,10 @@ function nudgeApart(items: { x: number; z: number; radius: number }[]) {
   }
 }
 
-export function normalizeSceneGeneration(generation: EncounterScene3DGeneration, roster: SceneRosterCharacter[]): { environment: EncounterScene3D["environment"]; props: SceneProp[]; characters: SceneCharacter[]; summary: string } {
+export function normalizeSceneGeneration(
+  generation: EncounterScene3DGeneration,
+  roster: SceneRosterCharacter[]
+): { environment: EncounterScene3D["environment"]; props: SceneProp[]; characters: SceneCharacter[]; summary: string } {
   const kit = environmentKitSchema.catch("generic").parse(generation.environment.kit)
 
   const props: SceneProp[] = []

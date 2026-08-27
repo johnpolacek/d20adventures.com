@@ -11,18 +11,22 @@
 // HDRIs from a CDN); all lights and textures are generated locally.
 
 import { OrbitControls } from "@react-three/drei"
-import { Canvas, useFrame } from "@react-three/fiber"
+import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { Bloom, EffectComposer, N8AO, Vignette } from "@react-three/postprocessing"
-import { Suspense, useMemo, useRef } from "react"
+import { Suspense, useEffect, useMemo, useRef } from "react"
 import * as THREE from "three"
-import { ENVIRONMENT_KITS, GROUND_COLORS, KIT_FOREST_DENSITY, KIT_URBAN_DRESSING, getPropDefinition } from "@/lib/encounterview/asset-catalog"
+import { ENVIRONMENT_KITS, GROUND_COLORS, getInteriorShell, getPropDefinition, KIT_FOREST_DENSITY, KIT_URBAN_DRESSING } from "@/lib/encounterview/asset-catalog"
+import { planEstablishingShot } from "@/lib/encounterview/camera"
 import { SCENE_BOARD_SIZE } from "@/lib/encounterview/generate"
 import type { TurnCharacter } from "@/types/adventure"
 import type { EncounterScene3D } from "@/types/encounter-scene-3d"
 import { CharacterMini } from "./character-mini"
-import { ForestRing, type ForestAvoidZone } from "./forest-ring"
+import { type ForestAvoidZone, ForestRing } from "./forest-ring"
+import { planRoomShell, RoomShell, roomAvoidZones } from "./room-shell"
 import { SceneProp } from "./scene-prop"
-import { UrbanRing, planUrbanRing, urbanAvoidZones } from "./urban-ring"
+import { planUrbanRing, UrbanRing, urbanAvoidZones } from "./urban-ring"
+
+const CAMERA_FOV = 40
 
 const LIGHTING = {
   day: {
@@ -36,29 +40,55 @@ const LIGHTING = {
     fillIntensity: 0.5,
     background: "radial-gradient(ellipse at 50% 35%, #2b2016 0%, #14100b 55%, #060504 100%)",
   },
+  // Dusk sits the sun ON the horizon rather than a third of the way up it: a long
+  // raking key throws the prop shadows right across the board, which is most of
+  // what makes a low-sun scene read as low-sun.
   dusk: {
     hemiSky: "#d99a6a",
     hemiGround: "#463a4e",
-    hemi: 0.9,
-    key: "#ff9d5c",
-    keyIntensity: 2.6,
-    keyPosition: [-20, 10, 8] as const,
+    hemi: 0.85,
+    key: "#ff8440",
+    keyIntensity: 2.5,
+    keyPosition: [-24, 5.5, 9] as const,
     fill: "#ffd9a0",
     fillIntensity: 0.55,
     background: "radial-gradient(ellipse at 50% 35%, #2a1c14 0%, #140e0a 55%, #060404 100%)",
   },
+  // Night drops the key hard and goes properly cold, so the warm pools thrown by
+  // the lightSource props (torch, brazier, candelabra, campfire) are what actually
+  // lights the tableau. scene-prop.tsx scales those pools up to match.
   night: {
-    hemiSky: "#6d82a8",
-    hemiGround: "#2e2e3c",
-    hemi: 1.0,
-    key: "#aebfe4",
-    keyIntensity: 2.4,
+    hemiSky: "#5a6f96",
+    hemiGround: "#26262f",
+    hemi: 0.78,
+    key: "#8ea3cc",
+    keyIntensity: 1.35,
     keyPosition: [10, 20, -8] as const,
     fill: "#ffce8f",
-    fillIntensity: 0.45,
+    fillIntensity: 0.4,
     background: "radial-gradient(ellipse at 50% 35%, #181a26 0%, #0d0e15 55%, #050506 100%)",
   },
 } as const
+
+/**
+ * Mood on top of time of day. Offsets are HSL deltas applied to the base lights;
+ * multipliers scale intensity. Deliberately restrained — this is a colour grade,
+ * not a relight, and the board has to stay readable in every combination.
+ */
+const MOOD_LIGHT: Record<
+  string,
+  { keyMultiplier: number; keyShift: readonly [number, number, number]; ambientMultiplier: number; ambientShift: readonly [number, number, number]; fillMultiplier: number }
+> = {
+  calm: { keyMultiplier: 1, keyShift: [0, 0, 0], ambientMultiplier: 1, ambientShift: [0, 0, 0], fillMultiplier: 1 },
+  tense: { keyMultiplier: 0.92, keyShift: [-0.01, -0.04, -0.03], ambientMultiplier: 0.9, ambientShift: [-0.01, -0.05, -0.03], fillMultiplier: 0.95 },
+  // Harsher and warmer: a hot key with the ambient pulled down under it.
+  battle: { keyMultiplier: 1.15, keyShift: [-0.03, 0.1, -0.02], ambientMultiplier: 0.82, ambientShift: [-0.02, 0.05, -0.05], fillMultiplier: 1.12 },
+  // Green-shifted ambient, key nearly gone — the classic wrong-coloured-daylight look.
+  eerie: { keyMultiplier: 0.68, keyShift: [0.1, -0.06, -0.06], ambientMultiplier: 0.8, ambientShift: [0.2, 0.06, -0.06], fillMultiplier: 0.7 },
+  aftermath: { keyMultiplier: 0.8, keyShift: [0.02, -0.2, -0.05], ambientMultiplier: 0.9, ambientShift: [0.01, -0.2, -0.04], fillMultiplier: 0.8 },
+}
+
+const shiftColor = (hex: string, shift: readonly [number, number, number]) => `#${new THREE.Color(hex).offsetHSL(shift[0], shift[1], shift[2]).getHexString()}`
 
 // Sky dome gradient per time of day: zenith -> horizon. Cheap on purpose — a single
 // back-faced sphere with a two-stop vertex gradient, no HDRI fetch, no drei <Sky>
@@ -109,6 +139,45 @@ function SkyDome({ top, horizon }: { top: string; horizon: string }) {
       />
     </mesh>
   )
+}
+
+/**
+ * Applies the computed establishing shot once per scene, then gets out of the way.
+ *
+ * Runs inside the Canvas because it needs the live viewport aspect (the shot pulls
+ * back further on a narrow panel) and drei's <OrbitControls makeDefault>, which is
+ * only reachable from the R3F store. After the effect fires the camera belongs to
+ * OrbitControls again — orbit, zoom and pan behave exactly as before.
+ */
+function EstablishingCamera({ scene }: { scene: EncounterScene3D }) {
+  const camera = useThree((state) => state.camera)
+  const controls = useThree((state) => state.controls) as (THREE.EventDispatcher & { target: THREE.Vector3; maxPolarAngle: number; maxDistance: number; update: () => void }) | null
+  const { width, height } = useThree((state) => state.size)
+  const shot = useMemo(() => planEstablishingShot(scene, { fov: CAMERA_FOV, aspect: height > 0 ? width / height : 16 / 9 }), [scene, width, height])
+  // Applied once per turn. The shot is recomputed on resize (a narrow panel needs
+  // a wider shot) but is NOT re-applied — yanking the camera back to the
+  // establishing angle every time the window changes size would be maddening.
+  const appliedFor = useRef<string | null>(null)
+
+  useEffect(() => {
+    const key = scene.turnId || "scene"
+    if (appliedFor.current === key) return
+    camera.position.set(...shot.position)
+    if (!controls) {
+      // Controls mount a frame later; leave the marker unset so we run again then.
+      camera.lookAt(shot.target[0], shot.target[1], shot.target[2])
+      return
+    }
+    appliedFor.current = key
+    // Raise the ceilings before update(), or OrbitControls clamps the low shot
+    // straight back up into the old map view on its first frame.
+    controls.maxPolarAngle = Math.max(controls.maxPolarAngle, shot.maxPolarAngle)
+    controls.maxDistance = Math.max(controls.maxDistance, shot.maxDistance)
+    controls.target.set(shot.target[0], shot.target[1], shot.target[2])
+    controls.update()
+  }, [camera, controls, shot, scene.turnId])
+
+  return null
 }
 
 /** Deterministic PRNG so scatter and textures are stable per scene. */
@@ -291,13 +360,44 @@ function FloatingMotes({ color, seed }: { color: string; seed: number }) {
   )
 }
 
-export default function EncounterScene({ scene, characters, standees, standeesBack, minis3d }: { scene: EncounterScene3D; characters: TurnCharacter[]; standees?: Record<string, string>; standeesBack?: Record<string, string>; minis3d?: Record<string, string> }) {
+export default function EncounterScene({
+  scene,
+  characters,
+  standees,
+  standeesBack,
+  minis3d,
+}: {
+  scene: EncounterScene3D
+  characters: TurnCharacter[]
+  standees?: Record<string, string>
+  standeesBack?: Record<string, string>
+  minis3d?: Record<string, string>
+}) {
   const { environment } = scene
   const light = LIGHTING[environment.timeOfDay]
   const kit = ENVIRONMENT_KITS[environment.kit]
+  // Interior kits swap the sky for a ceiling: no dome, near fog, and the sun's
+  // key light cut to a trickle so the room is lit by its own lamps.
+  const shell = getInteriorShell(environment.kit)
+  const mood = MOOD_LIGHT[environment.mood] ?? MOOD_LIGHT.calm
+  const graded = useMemo(
+    () => ({
+      key: shiftColor(light.key, mood.keyShift),
+      keyIntensity: light.keyIntensity * mood.keyMultiplier * (shell?.keyMultiplier ?? 1),
+      hemiSky: shiftColor(light.hemiSky, mood.ambientShift),
+      hemiGround: shiftColor(light.hemiGround, mood.ambientShift),
+      hemi: light.hemi * mood.ambientMultiplier * (shell?.ambientMultiplier ?? 1),
+      fill: shiftColor(light.fill, mood.keyShift),
+      fillIntensity: light.fillIntensity * mood.fillMultiplier * (shell?.ambientMultiplier ?? 1),
+    }),
+    [light, mood, shell]
+  )
   // ground enum picks the material, the kit tints it — so stone in a crypt reads
   // colder than the same stone in a courtyard instead of both being one flat swatch.
-  const groundColor = useMemo(() => `#${new THREE.Color(GROUND_COLORS[environment.ground] ?? kit.groundColor).lerp(new THREE.Color(kit.groundColor), 0.3).getHexString()}`, [environment.ground, kit.groundColor])
+  const groundColor = useMemo(
+    () => `#${new THREE.Color(GROUND_COLORS[environment.ground] ?? kit.groundColor).lerp(new THREE.Color(kit.groundColor), 0.3).getHexString()}`,
+    [environment.ground, kit.groundColor]
+  )
   const foggy = environment.mood === "eerie" || environment.mood === "tense" || environment.timeOfDay === "night"
 
   const sky = useMemo(() => {
@@ -326,13 +426,25 @@ export default function EncounterScene({ scene, characters, standees, standeesBa
   // Buildings are planned first and then handed to the treeline as keep-clear zones,
   // so a checkpoint gets both a street front and a thin treeline without them clipping.
   const urbanPlan = useMemo(() => planUrbanRing(KIT_URBAN_DRESSING[environment.kit] ?? { walls: 0, facades: 0 }, seed, sceneAvoid), [environment.kit, seed, sceneAvoid])
-  const forestAvoid = useMemo(() => [...sceneAvoid, ...urbanAvoidZones(urbanPlan)], [sceneAvoid, urbanPlan])
+  const roomPlan = useMemo(() => planRoomShell(shell, seed), [shell, seed])
+  const forestAvoid = useMemo(() => [...sceneAvoid, ...urbanAvoidZones(urbanPlan), ...roomAvoidZones(roomPlan)], [sceneAvoid, urbanPlan, roomPlan])
+
+  // Fog is tied to the establishing shot's depth so the landmark it frames never
+  // arrives already washed out — the old fixed 26/60 band ate a gate-arch staged
+  // at the far edge. Computed here at a nominal aspect; EstablishingCamera
+  // re-derives the same shot at the real one for the camera itself.
+  const shot = useMemo(() => planEstablishingShot(scene, { fov: CAMERA_FOV }), [scene])
+  const fog = useMemo<[string, number, number]>(() => {
+    if (shell) return [kit.fogColor, shell.fog[0], shell.fog[1]]
+    if (foggy) return [kit.fogColor, shot.depth * 1.25, shot.depth * 2.9]
+    return [sky.horizon, shot.depth * 1.9, shot.depth * 4.4]
+  }, [shell, foggy, kit.fogColor, sky.horizon, shot.depth])
 
   return (
     <Canvas
       shadows
       dpr={[1, 2]}
-      camera={{ fov: 40, position: [0, 16, 15], near: 0.5, far: 120 }}
+      camera={{ fov: CAMERA_FOV, position: shot.position, near: 0.5, far: 140 }}
       gl={{ antialias: true, preserveDrawingBuffer: true }}
       onCreated={({ gl }) => {
         gl.toneMappingExposure = 1.2
@@ -340,19 +452,22 @@ export default function EncounterScene({ scene, characters, standees, standeesBa
         // against three 0.183 (uses the removed unpackRGBAToDepth chunk).
         gl.shadowMap.type = THREE.VSMShadowMap
       }}
-      style={{ background: light.background }}
+      style={{ background: shell ? shell.backdrop : light.background }}
     >
+      <EstablishingCamera scene={scene} />
       {/* Always fogged now, just at different strengths: the far fog pins the props to
-          the sky's horizon band instead of leaving them floating on a hard cut. */}
-      <fog attach="fog" args={foggy ? [kit.fogColor, 26, 60] : [sky.horizon, 42, 96]} />
-      <SkyDome top={sky.top} horizon={sky.horizon} />
+          the sky's horizon band instead of leaving them floating on a hard cut.
+          Interiors use their own much nearer band so the walls fall away into dark. */}
+      <fog attach="fog" args={fog} />
+      {/* No sky indoors — RoomShell's ceiling and the flat backdrop take its place. */}
+      {!shell && <SkyDome top={sky.top} horizon={sky.horizon} />}
 
-      <hemisphereLight args={[light.hemiSky, light.hemiGround, light.hemi]} />
-      {/* key light — sun/moon */}
+      <hemisphereLight args={[graded.hemiSky, graded.hemiGround, graded.hemi]} />
+      {/* key light — sun/moon; indoors this is only a hint of spill through a window */}
       <directionalLight
         position={[...light.keyPosition]}
-        intensity={light.keyIntensity}
-        color={light.key}
+        intensity={graded.keyIntensity}
+        color={graded.key}
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
@@ -365,7 +480,7 @@ export default function EncounterScene({ scene, characters, standees, standeesBa
         shadow-blurSamples={12}
       />
       {/* warm counter-fill from the viewer's side — the "room light over the table" */}
-      <directionalLight position={[-8, 12, 16]} intensity={light.fillIntensity} color={light.fill} />
+      <directionalLight position={[-8, 12, 16]} intensity={graded.fillIntensity} color={graded.fill} />
 
       {/* wooden table under the board */}
       <mesh position={[0, -0.4, 0]} receiveShadow>
@@ -380,19 +495,30 @@ export default function EncounterScene({ scene, characters, standees, standeesBa
       {/* faint grid so it reads as a battle board */}
       <gridHelper args={[SCENE_BOARD_SIZE, SCENE_BOARD_SIZE, "#000000", "#000000"]} position={[0, 0.02, 0]} material-transparent material-opacity={0.16} />
 
-      <GroundScatter ground={environment.ground} seed={seed} />
+      {/* Tufts and pebbles are outdoor ground cover — a swept tavern floor has none. */}
+      {!shell && <GroundScatter ground={environment.ground} seed={seed} />}
       {(environment.timeOfDay === "night" || environment.mood === "eerie") && <FloatingMotes color={environment.mood === "eerie" ? "#9db4c9" : "#ffd98a"} seed={seed} />}
 
       <Suspense fallback={null}>
+        <RoomShell plan={roomPlan} />
         <UrbanRing plan={urbanPlan} />
         <ForestRing density={forestDensity} seed={seed} avoid={forestAvoid} dead={environment.kit === "crypt"} />
         {scene.props.map((prop) => (
-          <SceneProp key={prop.id} prop={prop} timeOfDay={environment.timeOfDay} />
+          <SceneProp key={prop.id} prop={prop} timeOfDay={environment.timeOfDay} interior={!!shell} />
         ))}
         {scene.characters.map((placement) => {
           const character = charactersById.get(placement.characterId)
           if (!character) return null
-          return <CharacterMini key={placement.characterId} placement={placement} character={character} standeeUrl={standees?.[placement.characterId]} standeeBackUrl={standeesBack?.[placement.characterId]} mini3dUrl={minis3d?.[placement.characterId]} />
+          return (
+            <CharacterMini
+              key={placement.characterId}
+              placement={placement}
+              character={character}
+              standeeUrl={standees?.[placement.characterId]}
+              standeeBackUrl={standeesBack?.[placement.characterId]}
+              mini3dUrl={minis3d?.[placement.characterId]}
+            />
+          )
         })}
       </Suspense>
 
@@ -402,15 +528,9 @@ export default function EncounterScene({ scene, characters, standees, standeesBa
         <Vignette offset={0.28} darkness={0.72} />
       </EffectComposer>
 
-      <OrbitControls
-        target={[0, 0.5, 0]}
-        minPolarAngle={0.4}
-        maxPolarAngle={1.35}
-        minDistance={6}
-        maxDistance={Math.max(30, half * 3)}
-        enablePan
-        makeDefault
-      />
+      {/* Limits are widened to admit the low establishing shot; everything else
+          about orbit/zoom/pan is unchanged. EstablishingCamera owns the target. */}
+      <OrbitControls target={shot.target} minPolarAngle={0.4} maxPolarAngle={shot.maxPolarAngle} minDistance={6} maxDistance={Math.max(30, half * 3, shot.maxDistance)} enablePan makeDefault />
     </Canvas>
   )
 }

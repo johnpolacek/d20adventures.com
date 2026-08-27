@@ -57,15 +57,39 @@ function GlbProp({ file, scale, yOffset }: { file: string; scale: number; yOffse
   return <Clone object={gltf.scene} scale={scale} position={[0, yOffset * scale, 0]} castShadow receiveShadow />
 }
 
-export function SceneProp({ prop, timeOfDay }: { prop: ScenePropSpec; timeOfDay: "day" | "dusk" | "night" }) {
+/**
+ * Warm pool thrown by a lightSource prop. Indoors these ARE the lighting — the
+ * scene's sun key is cut to a trickle for interior kits — so they burn brighter
+ * and reach further; outdoors at night they carry the scene alongside a dimmed
+ * moon key; by day outdoors a lit torch is just a prop.
+ */
+function poolIntensity(timeOfDay: "day" | "dusk" | "night", interior: boolean): number {
+  if (interior) return timeOfDay === "night" ? 11 : 9
+  return timeOfDay === "night" ? 8 : 5
+}
+
+export function SceneProp({ prop, timeOfDay, interior = false }: { prop: ScenePropSpec; timeOfDay: "day" | "dusk" | "night"; interior?: boolean }) {
   const def = getPropDefinition(prop.propId)
   if (!def) return null
   const scale = def.defaultScale * prop.scale
-  const glow = def.lightSource && timeOfDay !== "day"
+  // Indoors it is always "night" as far as the lamps are concerned.
+  const glow = def.lightSource && (interior || timeOfDay !== "day")
   return (
     <group position={toWorld(prop.x, prop.z)} rotation={[0, -toRadians(prop.rotation), 0]}>
       {def.file ? <GlbProp file={def.file} scale={scale} yOffset={def.yOffset} /> : <Campfire scale={prop.scale} />}
-      {glow && <pointLight position={[0, 1.1 * scale, 0]} color="#ffb45e" intensity={5} distance={7} decay={2} castShadow={false} />}
+      {/* Sit the pool near the top of the prop that emits it, using the measured
+          catalog height — a chandelier's flames hang 3 m up, a brazier's sit at
+          waist height, and the old flat 1.1 x scale put both in the wrong place. */}
+      {glow && (
+        <pointLight
+          position={[0, def.yOffset * scale + def.height * prop.scale * 0.75, 0]}
+          color="#ffb45e"
+          intensity={poolIntensity(timeOfDay, interior)}
+          distance={interior ? 10 : 7}
+          decay={2}
+          castShadow={false}
+        />
+      )}
     </group>
   )
 }

@@ -1,0 +1,93 @@
+{
+  "label": "Auction Hall of the Sable Ring — grand hall (interior-grand, dusk / tense)",
+  "note": "Hand-authored to exercise interior-grand: RoomShell supplies the three-course walls and both pillar rows, so the fixture places no wall or pillar props at all — only the furniture of the hall.",
+  "scene": {
+    "summary": "Chandeliers burn low over the auction floor, and every bidder is watching the dais rather than each other.",
+    "environment": { "kit": "interior-grand", "ground": "stone", "timeOfDay": "dusk", "mood": "tense" },
+    "props": [
+      { "id": "dais-1", "propId": "dais", "x": 10, "z": 3.4, "rotation": 0, "scale": 1.3 },
+      { "id": "stair-1", "propId": "staircase", "x": 10, "z": 5.6, "rotation": 0, "scale": 1 },
+      { "id": "altar-1", "propId": "altar", "x": 10, "z": 2.6, "rotation": 0, "scale": 1 },
+      { "id": "balustrade-1", "propId": "balustrade", "x": 7.2, "z": 3.6, "rotation": 0, "scale": 1 },
+      { "id": "balustrade-2", "propId": "balustrade", "x": 12.8, "z": 3.6, "rotation": 0, "scale": 1 },
+      { "id": "banquet-1", "propId": "table", "x": 7.6, "z": 10.5, "rotation": 90, "scale": 1.3 },
+      { "id": "banquet-2", "propId": "table", "x": 12.4, "z": 10.5, "rotation": 90, "scale": 1.3 },
+      { "id": "banquet-3", "propId": "table", "x": 7.6, "z": 15, "rotation": 90, "scale": 1.3 },
+      { "id": "banquet-4", "propId": "table", "x": 12.4, "z": 15, "rotation": 90, "scale": 1.3 },
+      { "id": "chair-1", "propId": "chair", "x": 7.6, "z": 9.2, "rotation": 180, "scale": 1 },
+      { "id": "chair-2", "propId": "chair", "x": 12.4, "z": 9.2, "rotation": 180, "scale": 1 },
+      { "id": "chair-3", "propId": "chair", "x": 7.6, "z": 16.4, "rotation": 0, "scale": 1 },
+      { "id": "chair-4", "propId": "chair", "x": 12.4, "z": 16.4, "rotation": 0, "scale": 1 },
+      { "id": "bookshelf-1", "propId": "bookshelf", "x": 2.2, "z": 8.5, "rotation": 90, "scale": 1 },
+      { "id": "bookshelf-2", "propId": "bookshelf", "x": 2.2, "z": 11, "rotation": 90, "scale": 1 },
+      { "id": "bookshelf-3", "propId": "bookshelf", "x": 17.8, "z": 8.5, "rotation": 270, "scale": 1 },
+      { "id": "bookshelf-4", "propId": "bookshelf", "x": 17.8, "z": 11, "rotation": 270, "scale": 1 },
+      { "id": "chandelier-1", "propId": "chandelier", "x": 10, "z": 8, "rotation": 0, "scale": 1.4 },
+      { "id": "chandelier-2", "propId": "chandelier", "x": 10, "z": 13, "rotation": 0, "scale": 1.4 },
+      { "id": "chandelier-3", "propId": "chandelier", "x": 10, "z": 17.5, "rotation": 0, "scale": 1.2 },
+      { "id": "candelabra-1", "propId": "candelabra", "x": 7.9, "z": 6.4, "rotation": 0, "scale": 1.2 },
+      { "id": "candelabra-2", "propId": "candelabra", "x": 12.1, "z": 6.4, "rotation": 0, "scale": 1.2 },
+      { "id": "cage-1", "propId": "beast-cage", "x": 15.8, "z": 5.4, "rotation": 250, "scale": 1 },
+      { "id": "coins-1", "propId": "coins", "x": 12.4, "z": 11.4, "rotation": 0, "scale": 1 }
+    ],
+    "characters": [
+      { "characterId": "pc-1", "x": 9.2, "z": 12.4, "facing": 0, "stance": "idle" },
+      { "characterId": "pc-2", "x": 10.9, "z": 13, "facing": 350, "stance": "ready" },
+      { "characterId": "npc-auctioneer", "x": 10, "z": 5.9, "facing": 180, "stance": "idle" },
+      { "characterId": "npc-rival", "x": 13.6, "z": 9.4, "facing": 210, "stance": "idle" }
+    ],
+    "version": 2,
+    "turnId": "dev-grand-hall",
+    "generatedAt": "2026-08-27T00:00:00.000Z"
+  },
+  "characters": [
+    {
+      "id": "pc-1",
+      "type": "pc",
+      "userId": "dev-user",
+      "name": "Ilya Fenn",
+      "image": "",
+      "archetype": "Rogue",
+      "race": "Half-elf",
+      "appearance": "Borrowed finery, and a route to the door already picked out.",
+      "healthPercent": 100,
+      "initiative": 18,
+      "attributes": { "strength": 10, "dexterity": 16, "constitution": 12, "intelligence": 13, "wisdom": 11, "charisma": 14 }
+    },
+    {
+      "id": "pc-2",
+      "type": "pc",
+      "userId": "dev-user",
+      "name": "Bram Holt",
+      "image": "",
+      "archetype": "Knight",
+      "race": "Human",
+      "appearance": "Uncomfortable out of plate, hand resting where a sword should be.",
+      "healthPercent": 88,
+      "initiative": 9,
+      "attributes": { "strength": 16, "dexterity": 10, "constitution": 15, "intelligence": 10, "wisdom": 12, "charisma": 11 }
+    },
+    {
+      "id": "npc-auctioneer",
+      "type": "npc",
+      "name": "Vessel Cael",
+      "image": "",
+      "archetype": "Mage",
+      "race": "Elf",
+      "appearance": "Gilt-masked, speaking softly enough that the room has to lean in.",
+      "healthPercent": 100,
+      "initiative": 11
+    },
+    {
+      "id": "npc-rival",
+      "type": "npc",
+      "name": "Doraq Vell",
+      "image": "",
+      "archetype": "Mercenary",
+      "race": "Half-orc",
+      "appearance": "Bidding on everything, wanting none of it.",
+      "healthPercent": 100,
+      "initiative": 13
+    }
+  ]
+}

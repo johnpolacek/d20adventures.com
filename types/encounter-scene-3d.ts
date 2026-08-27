@@ -6,7 +6,25 @@ import { PROP_IDS } from "@/lib/encounterview/asset-catalog"
 // 20x20-unit tabletop: x/z in [0, 20], rendered centered (world = board - 10).
 // facing/rotation in degrees, 0 = facing -z (away from the default camera).
 
-export const environmentKitSchema = z.enum(["forest", "grove", "road", "camp", "ruins", "crypt", "cavern", "shrine", "courtyard", "checkpoint", "generic"])
+// Kit ids are ADDITIVE only. The interior-* trio was appended for the Tier C pass;
+// appending enum members leaves every cached v2 scene parsing exactly as before,
+// which is why the version literal below stays at 2.
+export const environmentKitSchema = z.enum([
+  "forest",
+  "grove",
+  "road",
+  "camp",
+  "ruins",
+  "crypt",
+  "cavern",
+  "shrine",
+  "courtyard",
+  "checkpoint",
+  "interior-common",
+  "interior-grand",
+  "interior-underground",
+  "generic",
+])
 export type SceneEnvironmentKit = z.infer<typeof environmentKitSchema>
 
 export const sceneGroundSchema = z.enum(["grass", "dirt", "stone", "sand", "snow", "cave"])
@@ -114,11 +132,16 @@ const generationCharacterSchema = z.preprocess(
 
 /** Map free-text enum-ish values ("tense and moonlit") onto the closest enum member. */
 const fuzzyEnum = <T extends string>(options: readonly T[], fallback: T) =>
-  z.preprocess((value) => {
-    if (typeof value !== "string") return value
-    const lower = value.toLowerCase()
-    return options.find((option) => lower.includes(option)) ?? value
-  }, z.enum(options as [T, ...T[]]).catch(fallback))
+  z.preprocess(
+    (value) => {
+      if (typeof value !== "string") return value
+      // Separator drift too: the hyphenated interior-* kits come back as
+      // "interior_common" / "interior common" often enough to be worth folding.
+      const lower = value.toLowerCase().replace(/[\s_]+/g, "-")
+      return options.find((option) => lower.includes(option)) ?? value
+    },
+    z.enum(options as [T, ...T[]]).catch(fallback)
+  )
 
 export const encounterScene3DGenerationSchema = z.preprocess(
   (value) => {

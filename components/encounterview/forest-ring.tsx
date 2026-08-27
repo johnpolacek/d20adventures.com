@@ -25,6 +25,8 @@ export interface ScatterPlacement {
   assetIndex: number
   x: number
   z: number
+  /** World-space lift off the board, in board units. Used to stack RoomShell wall courses; defaults to 0. */
+  y?: number
   rotation: number
   scale: number
   tint: THREE.Color
@@ -148,7 +150,7 @@ export function InstancedModel({ file, baseScale, placements }: { file: string; 
       for (const p of placements) {
         quaternion.setFromAxisAngle(up, p.rotation)
         const s = baseScale * p.scale
-        placement.compose(new THREE.Vector3(p.x - BOARD_OFFSET, 0, p.z - BOARD_OFFSET), quaternion, new THREE.Vector3(s, s, s))
+        placement.compose(new THREE.Vector3(p.x - BOARD_OFFSET, p.y ?? 0, p.z - BOARD_OFFSET), quaternion, new THREE.Vector3(s, s, s))
         composed.multiplyMatrices(placement, submesh.matrix)
         matrices.push(composed.clone())
         colors.push(p.tint)
