@@ -58,12 +58,25 @@ const GATE_WIDTH: Record<string, number> = {
   gatehouse: 14.69,
 }
 
+/**
+ * Full dims of the gate landmarks in board units at defaultScale, for the mortar
+ * backing that fills their carved-block gaps: overall height/depth from the GLB
+ * bounds, archway opening estimated off the preview renders (the backing only has
+ * to stay clear of the passage, so an estimate with margin is fine).
+ */
+const GATE_DIMS: Record<string, { height: number; depth: number; openWidth: number; openHeight: number }> = {
+  "gate-arch": { height: 5.97, depth: 2.47, openWidth: 3.8, openHeight: 4.5 },
+  gatehouse: { height: 9.97, depth: 4.79, openWidth: 5.0, openHeight: 5.8 },
+}
+
 export interface UrbanPlan {
   facades: ScatterPlacement[]
   walls: ScatterPlacement[]
   wallAssets: ForestAsset[]
   /** North-edge city wall run; empty unless the kit asks for one. */
   northWall: ScatterPlacement[]
+  /** The gate landmark's resolved dims, for its mortar backing (board units). */
+  gate?: { x: number; z: number; width: number; height: number; depth: number; openWidth: number; openHeight: number }
 }
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
@@ -83,14 +96,14 @@ function pickWeighted(assets: ForestAsset[], random: () => number): number {
  * the board. The north wall run is built around it — same z, parting for its span —
  * so the gate reads as set INTO the city wall instead of standing beside it.
  */
-function findGate(props: SceneProp[]): { x: number; z: number; halfWidth: number } | null {
-  let best: { x: number; z: number; halfWidth: number } | null = null
+function findGate(props: SceneProp[]): { x: number; z: number; halfWidth: number; propId: string; scale: number } | null {
+  let best: { x: number; z: number; halfWidth: number; propId: string; scale: number } | null = null
   for (const prop of props) {
     const width = GATE_WIDTH[prop.propId]
     if (!width) continue
     const halfWidth = (width * prop.scale) / 2
     if (best && halfWidth <= best.halfWidth) continue
-    best = { x: prop.x, z: prop.z, halfWidth }
+    best = { x: prop.x, z: prop.z, halfWidth, propId: prop.propId, scale: prop.scale }
   }
   return best
 }
@@ -121,6 +134,7 @@ export function planUrbanRing(dressing: UrbanDressing, seed: number, avoid: Fore
   const facades: ScatterPlacement[] = []
   const walls: ScatterPlacement[] = []
   const northWall: ScatterPlacement[] = []
+  let gateBacking: UrbanPlan["gate"]
   if (dressing.walls <= 0 && dressing.facades <= 0 && !dressing.cityWall) return { facades, walls, wallAssets, northWall }
 
   const random = mulberry32(seed ^ 0x7ab1)
@@ -180,6 +194,18 @@ export function planUrbanRing(dressing: UrbanDressing, seed: number, avoid: Fore
       // that is already standing there (the corners are inside its span).
       placed.push({ x, z, radius: NORTH_WALL_LENGTH / 2 })
     }
+    if (gate) {
+      const dims = GATE_DIMS[gate.propId]
+      gateBacking = {
+        x: gate.x,
+        z,
+        width: gate.halfWidth * 2,
+        height: dims.height * gate.scale,
+        depth: dims.depth * gate.scale,
+        openWidth: dims.openWidth * gate.scale,
+        openHeight: dims.openHeight * gate.scale,
+      }
+    }
   }
 
   // Facades: a street front across the north (far) edge, plus a short return down
@@ -233,7 +259,7 @@ export function planUrbanRing(dressing: UrbanDressing, seed: number, avoid: Fore
     }
   }
 
-  return { facades, walls, wallAssets, northWall }
+  return { facades, walls, wallAssets, northWall, gate: gateBacking }
 }
 
 /** Keep-clear zones for everything the enclosure occupies, so trees don't grow through it. */
@@ -246,6 +272,7 @@ export function urbanAvoidZones(plan: UrbanPlan): ForestAvoidZone[] {
 }
 
 export function UrbanRing({ plan }: { plan: UrbanPlan }) {
+  const gate = plan.gate
   const facadesByAsset = useMemo(() => URBAN_FACADE_ASSETS.map((_, index) => plan.facades.filter((p) => p.assetIndex === index)), [plan.facades])
   const wallsByAsset = useMemo(() => plan.wallAssets.map((_, index) => plan.walls.filter((p) => p.assetIndex === index)), [plan.wallAssets, plan.walls])
 
@@ -264,6 +291,27 @@ export function UrbanRing({ plan }: { plan: UrbanPlan }) {
           <meshStandardMaterial color="#4a4139" roughness={1} />
         </mesh>
       ))}
+      {/* The gate landmark is carved block-by-block too. Its backing has to leave
+          the archway open: a pier box either side of the opening and a lintel box
+          above it, all inset to the same depth fraction as the wall backing so the
+          gate and the wall read as one continuous mortared construction. */}
+      {gate && (
+        <group position={[gate.x - BOARD_OFFSET, 0, gate.z - BOARD_OFFSET]}>
+          {[-1, 1].map((side) => (
+            <mesh
+              key={`gate-pier-${side}`}
+              position={[side * ((gate.width * 0.84 + gate.openWidth) / 4), gate.height * 0.41, 0]}
+            >
+              <boxGeometry args={[(gate.width * 0.84 - gate.openWidth) / 2, gate.height * 0.82, gate.depth * 0.16]} />
+              <meshStandardMaterial color="#4a4139" roughness={1} />
+            </mesh>
+          ))}
+          <mesh position={[0, (gate.openHeight + gate.height * 0.84) / 2, 0]}>
+            <boxGeometry args={[gate.openWidth + 0.2, Math.max(gate.height * 0.84 - gate.openHeight, 0.3), gate.depth * 0.16]} />
+            <meshStandardMaterial color="#4a4139" roughness={1} />
+          </mesh>
+        </group>
+      )}
       {URBAN_FACADE_ASSETS.map((asset, index) => (
         <InstancedModel key={`facade-${asset.file}`} file={asset.file} baseScale={asset.scale} placements={facadesByAsset[index]} />
       ))}
