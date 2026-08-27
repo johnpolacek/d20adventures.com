@@ -9,11 +9,11 @@ All models in this directory are **CC0 1.0 Universal** (public domain — no att
 | `props/barrel,crate,chest,table,torch,pillar,wall-stone,wall-broken,banner,coins,rubble` | KayKit Dungeon Remastered 1.0 | Kay Lousberg | https://github.com/KayKit-Game-Assets/KayKit-Dungeon-Remastered-1.0 |
 | `props/tree-oak,tree-pine,thicket,stump,boulder,rocks,tent,cart,fence-wood` | KayKit Medieval Hexagon Pack 1.0 | Kay Lousberg | https://github.com/KayKit-Game-Assets/KayKit-Medieval-Hexagon-Pack-1.0 |
 | `props/tree-dead,gravestone,crypt,bones,coffin,shrine,lantern` | KayKit Halloween Bits 1.0 | Kay Lousberg | https://github.com/KayKit-Game-Assets/KayKit-Halloween-Bits-1.0 |
-| `props/market-stall,building-facade,chair,beast-cage,staircase,bookshelf,gate-arch,door-heavy,door-arcane,boat,pier,bar-counter,desk,candelabra,chandelier,dais,altar,brazier,iron-gate,hedge,balustrade` | asset-pipeline generated set (`d8f3b13`) | machine-generated — see below | `~/Projects/asset-pipeline` (local repo, no remote) @ `d8f3b13` |
+| `props/market-stall,building-facade,chair,beast-cage,staircase,bookshelf,gate-arch,door-heavy,door-arcane,boat,pier,bar-counter,desk,candelabra,chandelier,dais,altar,brazier,iron-gate,hedge,balustrade,gatehouse,city-wall,traveler,merchant,hooded-wanderer,town-guard` | asset-pipeline generated set (`d8f3b13`) | machine-generated — see below | `~/Projects/asset-pipeline` (local repo, no remote) @ `d8f3b13` |
 
 ## Generated props — not CC0
 
-The 21 props in the row above are **not CC0** and are not from a KayKit pack. They were
+The 27 props in the row above are **not CC0** and are not from a KayKit pack. They were
 machine-generated: a concept plate per prop from `fal-ai/flux/schnell`, then image-to-3D
 through `fal-ai/hunyuan3d-v3 on fal.ai (image-to-3D)`, then post-processed in the `asset-pipeline` repo
 (`blender/to_prop.py` for decimation, flat shading, 0.92 m normalisation and matte material

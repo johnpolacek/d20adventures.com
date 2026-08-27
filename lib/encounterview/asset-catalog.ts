@@ -98,6 +98,13 @@ export const PROP_CATALOG: PropDefinition[] = [
   { id: "dais", label: "Dais", category: "dressing", file: "dais.glb", footprintRadius: 1.7, defaultScale: 1.96, yOffset: 0, hint: "Raised timber platform with corner posts; thrones, auctions and speeches - the focal point of a hall" },
   { id: "altar", label: "Altar", category: "dressing", file: "altar.glb", footprintRadius: 0.7, defaultScale: 1.3, yOffset: 0, hint: "Warm-grey stone altar with a gilt rune band; temple and ritual centrepiece, leave it clear" },
   { id: "brazier", label: "Brazier", category: "dressing", file: "brazier.glb", footprintRadius: 0.5, defaultScale: 1.2, yOffset: 0, lightSource: true, hint: "Standing coal brazier; warms and lights tunnels, guard posts and night camps" },
+  // Tier B set-pieces and crowd dressing (asset-pipeline 876f130)
+  { id: "gatehouse", label: "Stone Gatehouse", category: "structure", file: "gatehouse.glb", footprintRadius: 7.3, defaultScale: 10.87, yOffset: 0, hint: "Monumental city gate; place at the board’s north edge, one per scene" },
+  { id: "city-wall", label: "City Wall Section", category: "structure", file: "city-wall.glb", footprintRadius: 7, defaultScale: 6.52, yOffset: 0, hint: "Tall wall run; chain along board edges to enclose a city scene" },
+  { id: "traveler", label: "Traveler", category: "dressing", file: "traveler.glb", footprintRadius: 0.4, defaultScale: 1.96, yOffset: 0, hint: "Crowd dressing: a standing traveler with pack and staff; cluster in queues at gates and roads, never blocking the action" },
+  { id: "merchant", label: "Merchant", category: "dressing", file: "merchant.glb", footprintRadius: 0.4, defaultScale: 1.96, yOffset: 0, hint: "Crowd dressing: an aproned trader with a laden basket; cluster around market stalls, never blocking the action" },
+  { id: "hooded-wanderer", label: "Hooded Wanderer", category: "dressing", file: "hooded-wanderer.glb", footprintRadius: 0.3, defaultScale: 1.96, yOffset: 0, hint: "Crowd dressing: a cloaked figure with hands clasped; stand one or two at the edge of a market or queue, never blocking the action" },
+  { id: "town-guard", label: "Town Guard", category: "dressing", file: "town-guard.glb", footprintRadius: 0.4, defaultScale: 2.07, yOffset: 0, hint: "Crowd dressing: a spear-armed guard in a red-and-cream tabard; post in pairs at gates and doors, never blocking the action" },
   // --- end generated props (asset-pipeline d8f3b13) ---
 ]
 
