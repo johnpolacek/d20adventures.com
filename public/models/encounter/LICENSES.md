@@ -23,7 +23,13 @@ derivations, gate verdicts and scale overrides are in `dist/emission.json`.
 
 They are used here under fal.ai's terms for commercial use of model outputs.
 
-> **Flagged for the owner:** the per-vendor terms (fal.ai's output-ownership and commercial-use
-> clauses for `flux/schnell` and `hunyuan3d-v3`, and the upstream model licences those wrap)
-> were **not re-verified** at emission time. Confirm them before this ships publicly, and
-> replace this paragraph with the specific licence names and dates once you have.
+**License verification (2026-08-27):** fal.ai lists `fal-ai/hunyuan3d-v3/image-to-3d`
+with a **Commercial use** badge, and fal's FAQ states most models are commercially usable
+with each model carrying its own license. The concept plates came from `fal-ai/flux/schnell`
+(FLUX.1 [schnell]), which is **Apache 2.0** — outputs unrestricted. One residual note:
+Tencent's *open-weights* Hunyuan community licenses carry territory exclusions (EU/UK/
+South Korea) and a 100M-MAU clause, but those govern deploying the model weights, not the
+assets a hosted API produces; we access v3 only through fal's hosted, commercially-badged
+endpoint and redistribute no model. Assessed low risk for shipping these GLBs as game
+content. If distribution to EU users ever becomes a legal review topic, this is the
+paragraph to hand the reviewer.
