@@ -36,12 +36,12 @@ const FACE_WEST = -Math.PI / 2
  */
 const NORTH_WALL_HEIGHT = 4.3
 const NORTH_WALL_SCALE = NORTH_WALL_HEIGHT / 6.0
-/** Segment span at that scale — the spacing the run has to step by to stay solid. */
-const NORTH_WALL_LENGTH = (CITY_WALL_ASSET.length ?? 14.04) * NORTH_WALL_SCALE
+/** Authored-at-catalog-scale dims of one segment; multiply by placement scale. */
+const SEGMENT_LENGTH = CITY_WALL_ASSET.length ?? 14.04
+const SEGMENT_HEIGHT = 6.0
+const SEGMENT_DEPTH = 1.15 * 6.52
 /** Shaved off the step so float error can never open a hairline gap between segments. */
 const NORTH_WALL_SEAM = 0.06
-/** World depth of a segment (authored 1.15 m x catalog scale x run scale). */
-const NORTH_WALL_DEPTH = 1.15 * 6.52 * NORTH_WALL_SCALE
 /** How far the run tucks BEHIND the gate's outermost stone, so the two interlock. */
 const GATE_OVERLAP = 0.5
 /** Fallback z for the run when the scene placed no gate to align with. */
@@ -54,7 +54,7 @@ const NORTH_WALL_Z = 1.6
  * (it is the piers you collide with, not the span), so it is the wrong number here.
  */
 const GATE_WIDTH: Record<string, number> = {
-  "gate-arch": 8.0,
+  "gate-arch": 9.86,
   gatehouse: 14.69,
 }
 
@@ -65,7 +65,7 @@ const GATE_WIDTH: Record<string, number> = {
  * to stay clear of the passage, so an estimate with margin is fine).
  */
 const GATE_DIMS: Record<string, { height: number; depth: number; openWidth: number; openHeight: number }> = {
-  "gate-arch": { height: 5.97, depth: 2.47, openWidth: 3.8, openHeight: 4.5 },
+  "gate-arch": { height: 7.35, depth: 3.04, openWidth: 4.68, openHeight: 5.54 },
   gatehouse: { height: 9.97, depth: 4.79, openWidth: 5.0, openHeight: 5.8 },
 }
 
@@ -115,12 +115,12 @@ function findGate(props: SceneProp[]): { x: number; z: number; halfWidth: number
  * is allowed to overhang the board, which is exactly what "edge to edge" needs —
  * a run that stopped at x=0 would leave a visible stub of open ground.
  */
-function northRunCentres(anchor: number, toward: -1 | 1): number[] {
+function northRunCentres(anchor: number, toward: -1 | 1, segLength: number): number[] {
   const distance = toward > 0 ? SCENE_BOARD_SIZE - anchor : anchor
   if (distance <= 0.2) return []
-  const step = NORTH_WALL_LENGTH - NORTH_WALL_SEAM
+  const step = segLength - NORTH_WALL_SEAM
   const count = Math.max(1, Math.ceil(distance / step))
-  return Array.from({ length: count }, (_, i) => anchor + toward * (NORTH_WALL_LENGTH / 2 + i * step))
+  return Array.from({ length: count }, (_, i) => anchor + toward * (segLength / 2 + i * step))
 }
 
 /**
@@ -185,14 +185,19 @@ export function planUrbanRing(dressing: UrbanDressing, seed: number, avoid: Fore
   if (dressing.cityWall) {
     const gate = findGate(props)
     const z = gate ? clamp(gate.z, 0.8, 4.0) : NORTH_WALL_Z
+    // The run matches the gate's own height (owner call: wall and gate are ONE
+    // fortification, same crown line), falling back to the standalone height
+    // when the scene placed no gate.
+    const wallScale = gate ? (GATE_DIMS[gate.propId].height * gate.scale) / SEGMENT_HEIGHT : NORTH_WALL_SCALE
+    const segLength = SEGMENT_LENGTH * wallScale
     const centres = gate
-      ? [...northRunCentres(gate.x - gate.halfWidth + GATE_OVERLAP, -1), ...northRunCentres(gate.x + gate.halfWidth - GATE_OVERLAP, 1)]
-      : northRunCentres(0, 1)
+      ? [...northRunCentres(gate.x - gate.halfWidth + GATE_OVERLAP, -1, segLength), ...northRunCentres(gate.x + gate.halfWidth - GATE_OVERLAP, 1, segLength)]
+      : northRunCentres(0, 1, segLength)
     for (const x of centres) {
-      northWall.push({ assetIndex: 0, x, z, rotation: FACE_SOUTH, scale: NORTH_WALL_SCALE, tint: greyTint() })
+      northWall.push({ assetIndex: 0, x, z, rotation: FACE_SOUTH, scale: wallScale, tint: greyTint() })
       // Claim the footprint so the side runs and facades don't stack into a wall
       // that is already standing there (the corners are inside its span).
-      placed.push({ x, z, radius: NORTH_WALL_LENGTH / 2 })
+      placed.push({ x, z, radius: segLength / 2 })
     }
     if (gate) {
       const dims = GATE_DIMS[gate.propId]
@@ -267,7 +272,7 @@ export function urbanAvoidZones(plan: UrbanPlan): ForestAvoidZone[] {
   return [
     ...plan.facades.map((p) => ({ x: p.x, z: p.z, radius: URBAN_FACADE_ASSETS[p.assetIndex].footprintRadius * p.scale + 0.5 })),
     ...plan.walls.map((p) => ({ x: p.x, z: p.z, radius: plan.wallAssets[p.assetIndex].footprintRadius * p.scale + 0.3 })),
-    ...plan.northWall.map((p) => ({ x: p.x, z: p.z, radius: NORTH_WALL_LENGTH / 2 })),
+    ...plan.northWall.map((p) => ({ x: p.x, z: p.z, radius: (SEGMENT_LENGTH * p.scale) / 2 })),
   ]
 }
 
@@ -286,8 +291,8 @@ export function UrbanRing({ plan }: { plan: UrbanPlan }) {
           them the wall reads see-through and mortarless. A mortar-dark box fills
           the gaps from inside: no more sky, and the slits now read as mortar. */}
       {plan.northWall.map((p, i) => (
-        <mesh key={`mortar-${i}`} position={[p.x - BOARD_OFFSET, NORTH_WALL_HEIGHT * 0.44, p.z - BOARD_OFFSET]} rotation={[0, p.rotation, 0]}>
-          <boxGeometry args={[NORTH_WALL_LENGTH * 0.98, NORTH_WALL_HEIGHT * 0.88, NORTH_WALL_DEPTH * 0.55]} />
+        <mesh key={`mortar-${i}`} position={[p.x - BOARD_OFFSET, SEGMENT_HEIGHT * p.scale * 0.44, p.z - BOARD_OFFSET]} rotation={[0, p.rotation, 0]}>
+          <boxGeometry args={[SEGMENT_LENGTH * p.scale * 0.98, SEGMENT_HEIGHT * p.scale * 0.88, SEGMENT_DEPTH * p.scale * 0.55]} />
           <meshStandardMaterial color="#4a4139" roughness={1} />
         </mesh>
       ))}
@@ -300,14 +305,14 @@ export function UrbanRing({ plan }: { plan: UrbanPlan }) {
           {[-1, 1].map((side) => (
             <mesh
               key={`gate-pier-${side}`}
-              position={[side * ((gate.width * 0.84 + gate.openWidth) / 4), gate.height * 0.41, 0]}
+              position={[side * ((gate.width * 0.94 + gate.openWidth) / 4), gate.height * 0.45, 0]}
             >
-              <boxGeometry args={[(gate.width * 0.84 - gate.openWidth) / 2, gate.height * 0.82, gate.depth * 0.16]} />
+              <boxGeometry args={[(gate.width * 0.94 - gate.openWidth) / 2, gate.height * 0.9, gate.depth * 0.16]} />
               <meshStandardMaterial color="#4a4139" roughness={1} />
             </mesh>
           ))}
-          <mesh position={[0, (gate.openHeight + gate.height * 0.84) / 2, 0]}>
-            <boxGeometry args={[gate.openWidth + 0.2, Math.max(gate.height * 0.84 - gate.openHeight, 0.3), gate.depth * 0.16]} />
+          <mesh position={[0, (gate.openHeight + gate.height * 0.92) / 2, 0]}>
+            <boxGeometry args={[gate.openWidth + 0.2, Math.max(gate.height * 0.92 - gate.openHeight, 0.3), gate.depth * 0.16]} />
             <meshStandardMaterial color="#4a4139" roughness={1} />
           </mesh>
         </group>

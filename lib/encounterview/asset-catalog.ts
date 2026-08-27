@@ -86,7 +86,7 @@ export const PROP_CATALOG: PropDefinition[] = [
   // defaultScale overridden off the 0.92 m authoring rule: a city gate has to read
   // as something a mounted rider passes under, so it is scaled to ~6 m tall.
   // footprintRadius stays 2.4 — the piers are what you actually collide with.
-  { id: "gate-arch", label: "Gate Arch", category: "structure", file: "gate-arch.glb", footprintRadius: 2.4, defaultScale: 6.5, height: 5.97, yOffset: 0, hint: "Free-standing stone arch, 6 m tall; one per scene as a city gate or courtyard threshold — put it at the board edge with the action in front of it" },
+  { id: "gate-arch", label: "Gate Arch", category: "structure", file: "gate-arch.glb", footprintRadius: 3.0, defaultScale: 8.0, height: 7.35, yOffset: 0, hint: "Monumental stone gate arch, ~7 m, wide enough for wagons and riders; one per scene at the board edge with the action in front of it" },
   { id: "door-heavy", label: "Heavy Door", category: "structure", file: "door-heavy.glb", footprintRadius: 0.8, defaultScale: 2.5, height: 2.3, yOffset: 0, hint: "Iron-banded timber door; set flat against a wall as an entrance or a barred way out" },
   { id: "door-arcane", label: "Arcane Door", category: "structure", file: "door-arcane.glb", footprintRadius: 1.5, defaultScale: 2.83, height: 2.6, yOffset: 0, hint: "Rune-sealed door in its own frame; vaults, sanctums and puzzle thresholds, one per scene" },
   { id: "boat", label: "Boat", category: "structure", file: "boat.glb", footprintRadius: 2.3, defaultScale: 3.26, height: 3, yOffset: 0, hint: "Small open boat with a swept stern post; beach it at a shoreline or moor it beside a pier" },
