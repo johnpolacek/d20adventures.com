@@ -13,6 +13,7 @@ Active planning work for D20 Adventures. The wiki-adventure runtime is merged an
 
 ## Completed
 
+- **[Reduce Vercel Fluid Active CPU](zzz-completed/vercel-fluid-cpu.md)** — removed request-wide visit tracking and pathname headers, restored static public routes, narrowed Clerk middleware, and audited remaining dynamic rendering (2026-08-31).
 - **[Setting adventure listing hardening](zzz-completed/setting-adventure-listing.md)** — restored repo-local wiki content in production traces and replaced Realm of Myr's positional intro/full curation with one playable-adventure grid (2026-08-25).
 
 All completed plans are archived in [zzz-completed/](zzz-completed/).

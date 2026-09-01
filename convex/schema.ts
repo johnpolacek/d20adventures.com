@@ -3,17 +3,6 @@ import { v } from "convex/values"
 
 // Define your schema
 export default defineSchema({
-  visits: defineTable({
-    path: v.string(),
-    userId: v.union(v.string(), v.null()),
-    metadata: v.any(),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  })
-    .index("by_user", ["userId"])
-    .index("by_path", ["path"])
-    .index("by_created", ["createdAt"]),
-
   mailing_list_subscriptions: defineTable({
     userId: v.string(),
     email: v.string(),

@@ -20,8 +20,6 @@ import type { AdventurePlan } from "@/types/adventure-plan"
 import type { Encounter2DMap } from "@/types/encounter-map-2d"
 import { scrollToTop } from "../ui/utils"
 
-export const dynamic = "force-dynamic"
-
 function AdventureHomeContent({
   initialImage,
   adventure,

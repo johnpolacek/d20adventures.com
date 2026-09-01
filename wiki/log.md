@@ -4,6 +4,17 @@
 
 Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.
 
+## 2026-08-31
+
+### Restored static public rendering and removed request-wide visit tracking
+
+- Removed custom visit tracking end to end, including the root-layout mutation, pathname header plumbing, route generator, Convex functions/table, and visit-only testing support.
+- Moved header/footer pathname behavior to isolated client components so the root server layout has no request API. `/privacy`, `/terms`, `/_not-found`, `/about`, `/contact`, `/roadmap`, `/pay`, and `/unsubscribe` now build as static content.
+- Narrowed Clerk proxy matching to routes that need server auth. Unknown bot probes and static content no longer invoke Clerk middleware; `/` remains dynamic for the authenticated active-adventure experience.
+- Deduplicated homepage auth and skipped the Clerk user lookup when no active adventure will render. Kept `/mailing-list` explicitly dynamic for signed-in subscription state and the turn-order route dynamic for mutable gameplay.
+- Confirmed production ClerkJS targets `clerk.d20adventures.com`, not `/__clerk`; the observed same-origin proxy-path 404s are not initiated by current app configuration, so Clerk config remains unchanged.
+- Validation: production build, standalone TypeScript, lint, 8/8 Playwright tests, and production-mode cache/header smoke checks passed. The existing `pnpm test` wrapper still stalls on its unused TCP port 4000 prerequisite; direct `pnpm test:run` passes.
+
 ## 2026-08-25
 
 ### Restored the setting adventure listing in production

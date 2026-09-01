@@ -174,7 +174,7 @@ export async function resolvePlayerRollResult({ turnId, characterId, result }: {
 
 export async function getActiveAdventureForUser() {
   const { userId } = await auth()
-  if (!userId) return null
+  if (!userId) return { activeAdventure: null, userId: null }
 
   // Query for adventures where the user is a player and status is 'active' or 'waitingForPlayers'
   const activeAdventures = await convex.query(api.adventure.getAdventuresByPlayer, {
@@ -193,11 +193,11 @@ export async function getActiveAdventureForUser() {
   // Prefer active campaign, then active practice, then waiting campaign, then waiting practice.
   const adventure = prioritizedActive[0] || prioritizedWaiting[0]
 
-  if (!adventure) return null
+  if (!adventure) return { activeAdventure: null, userId }
 
   // Load the adventure plan for party info
   const adventurePlan = await loadAdventurePlanForRuntime(adventure.settingId, adventure.planId)
-  if (!adventurePlan) return null
+  if (!adventurePlan) return { activeAdventure: null, userId }
 
   // Map players to full PC objects from adventure plan
   const partyResults = await Promise.all(
@@ -225,21 +225,24 @@ export async function getActiveAdventureForUser() {
 
   // Return a shape compatible with Adventure type
   return {
-    id: adventure._id,
-    title: adventure.title,
-    adventurePlanId: adventure.planId,
-    settingId: adventure.settingId,
-    ownerId: adventure.ownerId,
-    runType: adventure.runType ?? "campaign",
-    parentAdventureId: adventure.parentAdventureId,
-    parentTurnId: adventure.parentTurnId,
-    status: adventure.status,
-    party,
-    turns: [],
-    startedAt: adventure.startedAt ? new Date(adventure.startedAt).toISOString() : "",
-    endedAt: adventure.endedAt ? new Date(adventure.endedAt).toISOString() : undefined,
-    pausedAt: undefined,
-  } as Adventure
+    activeAdventure: {
+      id: adventure._id,
+      title: adventure.title,
+      adventurePlanId: adventure.planId,
+      settingId: adventure.settingId,
+      ownerId: adventure.ownerId,
+      runType: adventure.runType ?? "campaign",
+      parentAdventureId: adventure.parentAdventureId,
+      parentTurnId: adventure.parentTurnId,
+      status: adventure.status,
+      party,
+      turns: [],
+      startedAt: adventure.startedAt ? new Date(adventure.startedAt).toISOString() : "",
+      endedAt: adventure.endedAt ? new Date(adventure.endedAt).toISOString() : undefined,
+      pausedAt: undefined,
+    } as Adventure,
+    userId,
+  }
 }
 
 export async function getAdventuresForUser() {

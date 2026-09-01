@@ -8,7 +8,7 @@ A narrative RPG platform blending play-by-post adventure turns, realtime updates
 |---|---|
 | **Lifecycle** | Existing product prototype, post-MVP import |
 | **Current priority** | Post-merge wiki-adventure hardening |
-| **Latest validation** | Realm of Myr's production adventure listing now traces its repo-local fallback and renders all four playable adventures (2026-08-25). |
+| **Latest validation** | Public content routes now build static and bypass request-wide Clerk middleware; build, TypeScript, lint, and 8/8 Playwright tests pass (2026-08-31). |
 | **Planning shape** | Review findings and hardening plans under [plans/](plans/index.md) |
 | **Automation** | Commit when confident; ask before pushes and long-running operations |
 

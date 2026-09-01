@@ -1,4 +1,7 @@
+"use client"
+
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import Image from "@/components/ui/native-image"
 import { cn, reverseSlugify } from "@/lib/utils"
 import Parchment from "../graphics/background/Parchment"
@@ -6,7 +9,8 @@ import { paper } from "../graphics/styles"
 import { AdminNavItem } from "../nav/admin-nav-item"
 import AuthButtons from "../nav/auth-buttons"
 
-export default async function Header({ path }: { path: string }) {
+export default function Header() {
+  const path = usePathname()
   const isBig = path === "" || path === "/" || path === "/start" || path === "/join"
   let settingSlug = null
   if (path.includes("/settings/")) {

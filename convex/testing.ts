@@ -10,7 +10,7 @@ function isTestOrDevEnv() {
  * This mutation should only be available in test environments
  */
 export const deleteAll = mutation({
-  args: { tableName: v.union(v.literal("visits"), v.literal("mailing_list_subscriptions"), v.literal("adventures"), v.literal("turns")) },
+  args: { tableName: v.union(v.literal("mailing_list_subscriptions"), v.literal("adventures"), v.literal("turns")) },
   handler: async (ctx, args) => {
     if (!isTestOrDevEnv()) {
       throw new Error("This operation is only allowed in test or development environments")
@@ -28,7 +28,7 @@ export const deleteAll = mutation({
  * This query should only be available in test environments
  */
 export const countDocuments = query({
-  args: { tableName: v.union(v.literal("visits"), v.literal("mailing_list_subscriptions")) },
+  args: { tableName: v.literal("mailing_list_subscriptions") },
   handler: async (ctx, args) => {
     if (!isTestOrDevEnv()) {
       throw new Error("This operation is only allowed in test or development environments")
@@ -39,7 +39,7 @@ export const countDocuments = query({
 })
 
 /**
- * Seed test data for visits and mailing_list_subscriptions
+ * Seed test data for mailing_list_subscriptions
  * This mutation should only be available in test environments
  */
 export const seedTestData = mutation({
@@ -48,14 +48,6 @@ export const seedTestData = mutation({
     if (!isTestOrDevEnv()) {
       throw new Error("This operation is only allowed in test or development environments")
     }
-    // Seed visits
-    await ctx.db.insert("visits", {
-      path: "/test-path",
-      userId: "test-user",
-      metadata: { test: true },
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    })
     // Seed mailing list subscriptions
     await ctx.db.insert("mailing_list_subscriptions", {
       userId: "test-user",

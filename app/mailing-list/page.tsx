@@ -5,6 +5,8 @@ import { Heading } from "@/components/typography/heading"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
+export const dynamic = "force-dynamic"
+
 async function handleLeaveWaitlist() {
   "use server"
   const result = await getSubscription()

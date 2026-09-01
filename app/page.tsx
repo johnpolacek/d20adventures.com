@@ -1,4 +1,4 @@
-import { auth, currentUser } from "@clerk/nextjs/server"
+import { clerkClient } from "@clerk/nextjs/server"
 import Link from "next/link"
 import { getActiveAdventureForUser } from "@/app/_actions/adventure"
 import RedirectHandler from "@/components/nav/redirect-handler"
@@ -8,9 +8,8 @@ import Image from "@/components/ui/native-image"
 import ActiveAdventureCard from "@/components/views/active-adventure-card"
 
 export default async function HomePage() {
-  const activeAdventure = await getActiveAdventureForUser()
-  const { userId } = await auth()
-  const user = await currentUser()
+  const { activeAdventure, userId } = await getActiveAdventureForUser()
+  const user = activeAdventure && userId ? await (await clerkClient()).users.getUser(userId) : null
 
   return (
     <>
