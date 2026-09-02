@@ -51,6 +51,8 @@ export interface SceneBriefInput {
   referenceImageUrl?: string
   /** Sets already authored for this setting, so the brief can propose reuse. */
   existingSets?: SceneBriefSetCandidate[]
+  /** Human steering for this run ("larger, connected rooms, crowded"). Overrides everything except art direction. */
+  directorNotes?: string
 }
 
 /**
@@ -66,7 +68,10 @@ marks: <named stage positions this encounter needs, e.g. queue, checkpoint, door
 
 == SCENE BRIEF ==
 <One paragraph: where this is, what it is made of, the cultural and material signature of the
-place, and the exact moment being staged. The detail budget goes where the characters stand;
+place, and the exact moment being staged. Time of day comes from the encounter text, never assumed.
+Scale for play, not for realism: an interior is a hall with connected spaces, not a room — a tavern
+common room runs 20-30 m with a bar end, a hearth end, a gallery or stair, and openings into back
+rooms and a yard, all visible from where the action is. The detail budget goes where the characters stand;
 anything beyond a threshold, gate or doorway is backdrop only — light, haze, silhouettes — and
 places they are traveling toward, remembering, or hearing about are not built at all.
 End with a one-line mood.>
@@ -74,7 +79,8 @@ End with a one-line mood.>
 == KEY ASSETS (priority order) ==
 <Numbered list, most important first. Each item: what it is, materials, wear, approximate
 dimensions in meters, and how it should read. Architecture first, then set dressing, then
-background population (crowds, animals, vehicles) with counts. 5-8 items.>
+background population with generous counts: a crowded tavern is 40-60 patrons in groups, a
+market street is a hundred, a queue is dozens. 5-8 items.>
 
 == HERO CHARACTERS ==
 <One entry per named NPC in this encounter: build, face, hair, armour or clothing with colours
@@ -144,7 +150,7 @@ ${npcs}
 Sets already authored in this setting:
 ${sets}
 
-Reuse rule: if this encounter takes place in a location that already has a set, say so in the SET section and list only the marks and cameras the existing set is missing. A set is a location, not a story beat — a tavern at night and the same tavern the next morning are one set with a time-of-day toggle. Only propose "new" when the location is physically different.
+${input.directorNotes ? `Director's notes for this brief (follow these over the encounter text and your own judgement; only the art direction outranks them):\n${input.directorNotes.trim()}\n\n` : ""}Reuse rule: if this encounter takes place in a location that already has a set, say so in the SET section and list only the marks and cameras the existing set is missing. A set is a location, not a story beat — a tavern at night and the same tavern the next morning are one set with a time-of-day toggle. Only propose "new" when the location is physically different.
 
 Output the brief in EXACTLY this format, filling every section. No preamble, no commentary after it.
 

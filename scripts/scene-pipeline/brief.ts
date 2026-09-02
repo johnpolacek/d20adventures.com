@@ -14,8 +14,11 @@
  * Options:
  *   --setting <id>   setting id (default: realm-of-myr)
  *   --generate       call the model to write the brief, then emit scene-prompt.md
- *   --sets <file>    JSON array of {id, summary} for sets already authored (reuse decisions)
+ *   --sets <file>    JSON array of {id, summary} of authored sets (default: the setting's entries in lib/scene-sets/manifest.ts)
  *   --art-direction <file>  setting art-direction markdown (default: content/settings/<setting>/art-direction.md)
+ *   --image <file|url>  reference image to use instead of the encounter's own
+ *   --no-image       ignore the encounter's image (e.g. an exterior shot for an interior scene)
+ *   --notes <text>   director's notes: steering that overrides the encounter text ("larger, connected rooms, crowded")
  *   --out <dir>      output root (default: out/scene-pipeline)
  *
  * Without --generate it only writes brief-request.md, for pasting into a stronger
@@ -28,6 +31,7 @@ import { google } from "@ai-sdk/google"
 import { generateText, type UserModelMessage } from "ai"
 import { buildBriefRequestPrompt, buildStandaloneScenePrompt, type SceneBriefSetCandidate } from "@/lib/scene-pipeline/brief"
 import { sceneBriefInputFromPlan } from "@/lib/scene-pipeline/from-plan"
+import { SET_MANIFEST } from "@/lib/scene-sets/manifest"
 import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
 
 const BRIEF_MODEL_ID = "gemini-3.6-flash"
@@ -38,6 +42,9 @@ function parseArgs(argv: string[]) {
   let generate = false
   let setsFile: string | undefined
   let artDirectionFile: string | undefined
+  let image: string | undefined
+  let noImage = false
+  let notes: string | undefined
   let outRoot = path.join("out", "scene-pipeline")
 
   for (let i = 0; i < argv.length; i++) {
@@ -46,13 +53,16 @@ function parseArgs(argv: string[]) {
     else if (arg === "--generate") generate = true
     else if (arg === "--sets") setsFile = argv[++i]
     else if (arg === "--art-direction") artDirectionFile = argv[++i]
+    else if (arg === "--image") image = argv[++i]
+    else if (arg === "--no-image") noImage = true
+    else if (arg === "--notes") notes = argv[++i]
     else if (arg === "--out") outRoot = argv[++i]
     else positional.push(arg)
   }
 
   const [planId, encounterId] = positional
   if (!planId || !encounterId) throw new Error("Usage: tsx scripts/scene-pipeline/brief.ts <planId> <encounterId> [--setting id] [--generate] [--sets file.json] [--out dir]")
-  return { planId, encounterId, settingId, generate, setsFile, artDirectionFile: artDirectionFile ?? path.join("content", "settings", settingId, "art-direction.md"), outRoot }
+  return { planId, encounterId, settingId, generate, setsFile, artDirectionFile: artDirectionFile ?? path.join("content", "settings", settingId, "art-direction.md"), image, noImage, notes, outRoot }
 }
 
 /** The art-direction entry minus its frontmatter, or undefined when the setting has none. */
@@ -65,15 +75,25 @@ async function readArtDirection(file: string): Promise<string | undefined> {
   return raw.replace(/^---[\s\S]*?---\s*/, "").trim()
 }
 
-async function fetchReferenceImage(url: string, dir: string): Promise<{ file: string; data: Uint8Array; mediaType: string } | null> {
-  const response = await fetch(url)
-  if (!response.ok) {
-    console.warn(`[scene-pipeline] reference image fetch failed (${response.status}): ${url}`)
-    return null
+const MEDIA_TYPES: Record<string, string> = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp" }
+
+/** Copy a local file or download a URL into the output dir as reference.<ext>. */
+async function fetchReferenceImage(source: string, dir: string): Promise<{ file: string; data: Uint8Array; mediaType: string } | null> {
+  let data: Uint8Array
+  let mediaType: string
+  if (/^https?:\/\//.test(source)) {
+    const response = await fetch(source)
+    if (!response.ok) {
+      console.warn(`[scene-pipeline] reference image fetch failed (${response.status}): ${source}`)
+      return null
+    }
+    mediaType = response.headers.get("content-type")?.split(";")[0] || "image/png"
+    data = new Uint8Array(await response.arrayBuffer())
+  } else {
+    data = new Uint8Array(await fs.readFile(source))
+    mediaType = MEDIA_TYPES[path.extname(source).slice(1).toLowerCase()] ?? "image/png"
   }
-  const mediaType = response.headers.get("content-type")?.split(";")[0] || "image/png"
   const ext = mediaType === "image/jpeg" ? "jpg" : mediaType === "image/webp" ? "webp" : "png"
-  const data = new Uint8Array(await response.arrayBuffer())
   const file = path.join(dir, `reference.${ext}`)
   await fs.writeFile(file, data)
   return { file, data, mediaType }
@@ -82,9 +102,14 @@ async function fetchReferenceImage(url: string, dir: string): Promise<{ file: st
 async function main() {
   const args = parseArgs(process.argv.slice(2))
   const plan = await loadAdventurePlanForRuntime(args.settingId, args.planId)
-  const existingSets: SceneBriefSetCandidate[] | undefined = args.setsFile ? JSON.parse(await fs.readFile(args.setsFile, "utf8")) : undefined
+  const existingSets: SceneBriefSetCandidate[] = args.setsFile
+    ? JSON.parse(await fs.readFile(args.setsFile, "utf8"))
+    : SET_MANIFEST.filter((entry) => entry.settingId === args.settingId).map((entry) => ({ id: entry.id, summary: entry.summary }))
   const artDirection = await readArtDirection(args.artDirectionFile)
   const input = sceneBriefInputFromPlan(plan, args.encounterId, { existingSets, artDirection })
+  input.directorNotes = args.notes
+  if (args.noImage) input.referenceImageUrl = undefined
+  else if (args.image) input.referenceImageUrl = args.image
 
   const dir = path.join(args.outRoot, args.encounterId)
   await fs.mkdir(dir, { recursive: true })
@@ -93,7 +118,7 @@ async function main() {
   await fs.writeFile(path.join(dir, "brief-request.md"), request)
   console.log(`wrote ${path.join(dir, "brief-request.md")}`)
   if (input.referenceImageUrl) console.log(`reference image: ${input.referenceImageUrl}`)
-  else console.warn("[scene-pipeline] encounter has no reference image; the brief will be text-only")
+  else console.warn(`[scene-pipeline] ${args.noImage ? "reference image ignored (--no-image)" : "encounter has no reference image"}; the brief is text-only`)
 
   if (!args.generate) return
 
@@ -102,8 +127,9 @@ async function main() {
   if (reference) content.push({ type: "image", image: reference.data, mediaType: reference.mediaType })
   const message: UserModelMessage = { role: "user", content }
 
-  const result = await generateText({ model: google(BRIEF_MODEL_ID), messages: [message], temperature: 0.7, maxOutputTokens: 4000 })
+  const result = await generateText({ model: google(BRIEF_MODEL_ID), messages: [message], temperature: 0.7, maxOutputTokens: 8000 })
   const brief = result.text.trim()
+  if (result.finishReason !== "stop") console.warn(`[scene-pipeline] generation finished with reason "${result.finishReason}"; the brief may be incomplete`)
   await fs.writeFile(path.join(dir, "brief.md"), brief)
   console.log(`wrote ${path.join(dir, "brief.md")} (${result.usage?.totalTokens ?? "?"} tokens)`)
 
