@@ -126,6 +126,79 @@
     "aspect": 0.5537
   },
   {
+    "id": "traveler-pilgrim-staff",
+    "pose": "standing",
+    "height": 1.8,
+    "aspect": 1.7982
+  },
+  {
+    "id": "traveler-woman-bundle",
+    "pose": "standing",
+    "height": 1.7,
+    "aspect": 0.5372
+  },
+  {
+    "id": "traveler-man-sack",
+    "pose": "standing",
+    "height": 1.8,
+    "aspect": 0.5392
+  },
+  {
+    "id": "traveler-mother-child",
+    "pose": "standing",
+    "height": 1.7,
+    "aspect": 0.5796
+  },
+  {
+    "id": "traveler-elder-cane",
+    "pose": "standing",
+    "height": 1.6,
+    "aspect": 0.5921
+  },
+  {
+    "id": "traveler-cloaked-merchant",
+    "pose": "standing",
+    "height": 1.8,
+    "aspect": 0.581
+  },
+  {
+    "id": "traveler-young-pack",
+    "pose": "standing",
+    "height": 1.78,
+    "aspect": 1.3708
+  },
+  {
+    "id": "guard-spear",
+    "pose": "standing",
+    "height": 1.9,
+    "aspect": 0.5236
+  },
+  {
+    "id": "guard-sword",
+    "pose": "standing",
+    "height": 1.9,
+    "aspect": 0.5107
+  },
+  {
+    "id": "seated-driver",
+    "pose": "seated",
+    "height": 1.4,
+    "aspect": 0.7886
+  },
+  {
+    "id": "vendor-apron",
+    "pose": "standing",
+    "height": 1.75,
+    "aspect": 0.5979
+  },
+  {
+    "id": "npc-garlan-ironfist",
+    "pose": "standing",
+    "height": 2,
+    "aspect": 0.4879,
+    "back": true
+  },
+  {
     "id": "npc-bram",
     "pose": "standing",
     "height": 1.9,

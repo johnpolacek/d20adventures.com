@@ -81,6 +81,39 @@ const REALM_OF_MYR: CrowdType[] = [
   },
   { id: "server-man", description: "a tavern potboy in an apron carrying two stoneware jugs, sleeves rolled", pose: "standing", height: 1.75 },
   { id: "bard-lute", description: "a bard in a plum doublet and a feathered hat, standing and playing a lute, mouth open in song", pose: "standing", height: 1.8 },
+  // the road and the gate
+  { id: "traveler-pilgrim-staff", description: `a hooded pilgrim leaning on a tall walking staff, ${VALKARAN}, dusty from the road`, pose: "standing", height: 1.8 },
+  { id: "traveler-woman-bundle", description: `a woman carrying a cloth-wrapped bundle on her back and a basket on one arm, ${VALKARAN}`, pose: "standing", height: 1.7 },
+  { id: "traveler-man-sack", description: `a labourer with a grain sack over one shoulder, ${VALKARAN}, sleeves rolled`, pose: "standing", height: 1.8 },
+  { id: "traveler-mother-child", description: `a mother holding a small child by the hand, both in ${VALKARAN}, the child clutching a wooden toy`, pose: "standing", height: 1.7 },
+  { id: "traveler-elder-cane", description: `a stooped old man with a cane and a wide straw hat, ${VALKARAN}`, pose: "standing", height: 1.6 },
+  { id: "traveler-cloaked-merchant", description: `a well-fed merchant in a travelling cloak over ${ASTERIAN}, holding a ledger, impatient`, pose: "standing", height: 1.8 },
+  { id: "traveler-young-pack", description: `a young man with a heavy pack, bedroll and a coil of rope, ${VALKARAN}, looking up in wonder`, pose: "standing", height: 1.78 },
+  {
+    id: "guard-spear",
+    description:
+      "a Kordavos city guard: polished half-plate with gold-trimmed edges over a navy tabard bearing a gold tower crest, steel kettle helm, a tall spear held upright in one hand, a round navy shield slung on the other arm",
+    pose: "standing",
+    height: 1.9,
+    back: true,
+  },
+  {
+    id: "guard-sword",
+    description: "a Kordavos city guard: polished half-plate with gold-trimmed edges over a navy tabard bearing a gold tower crest, open helm, one hand resting on a sheathed sword, alert",
+    pose: "standing",
+    height: 1.9,
+  },
+  { id: "seated-driver", description: `a wagon driver seated with the reins in both hands, a wide-brimmed hat and a heavy coat, ${VALKARAN}`, pose: "seated", height: 1.4 },
+  { id: "vendor-apron", description: `a harvest vendor in an apron holding up a gourd, ${VALKARAN}, calling to passers-by`, pose: "standing", height: 1.75 },
+  {
+    id: "npc-garlan-ironfist",
+    description:
+      "Garlan Ironfist, captain of the gate: burly, stern face with kind green eyes, well-groomed beard, polished half-plate with gold trim, navy tabard bearing the gold tower crest of Kordavos, one hand raised beckoning the next traveler forward",
+    pose: "standing",
+    height: 2.0,
+    portrait: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725143818361",
+    back: true,
+  },
   // named NPCs from portraits
   {
     id: "npc-bram",
@@ -108,7 +141,8 @@ ${STYLE}
 
 Requirements:
 - Entire body visible head to toe, nothing cropped; comfortable margin on all four sides.
-- One character only, no props on the ground, no scenery.
+- ONE character, ONE view of it — never a front and back side by side, never a lineup.
+- No props on the ground, no scenery.
 - No text, no border, no logo, no lettering anywhere.
 - Background: SOLID UNIFORM PURE GREEN (#00FF00) everywhere. No shadows on the background.`
 }

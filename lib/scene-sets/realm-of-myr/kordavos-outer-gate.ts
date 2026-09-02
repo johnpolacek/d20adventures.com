@@ -6,7 +6,6 @@
 
 import * as THREE from "three"
 import {
-  armoredCaptain,
   type BuilderContext,
   barrel,
   birchTree,
@@ -28,7 +27,6 @@ import {
   ENVIRONMENT_PRESETS,
   gateBlock,
   gateDoors,
-  guard,
   handcart,
   hangBanner,
   hayBale,
@@ -46,6 +44,8 @@ import {
   type SceneSet,
   type SetContext,
   type SetDefinition,
+  StandeeLibrary,
+  StandeeSystem,
   sack,
   stagTotem,
   torchPole,
@@ -79,6 +79,13 @@ async function build(ctx: SetContext): Promise<SceneSet> {
 
   const preset = toggles.timeOfDay === "night" ? ENVIRONMENT_PRESETS.night : toggles.timeOfDay === "dusk" ? ENVIRONMENT_PRESETS.goldenHour : ENVIRONMENT_PRESETS.autumnMorning
   const environment = createEnvironment(scene, renderer, time, preset)
+  await progress("Painting the crowd…")
+  const standees = await StandeeLibrary.load("/standees/realm-of-myr")
+  const people = new StandeeSystem()
+  animated.push(people)
+  /** A standee with its feet on the ground at (x, z), planted at `facing` (yaw radians, 0 = +Z). */
+  const person = (id: string, x: number, z: number, facing: number) => place(people.add(standees.get(id), { facing }), x, z, 0)
+  const someone = (x: number, z: number, facing: number) => place(people.add(standees.pick(rng, "standing"), { facing }), x, z, 0)
 
   // ---- terrain -------------------------------------------------------------
   await progress("Laying the road…")
@@ -186,7 +193,7 @@ async function build(ctx: SetContext): Promise<SceneSet> {
     ["hay", 0, -8.0, 14.5, Math.PI + 0.9, false],
     ["barrels", 0, 8.6, 24, Math.PI - 1.1, false],
   ] as const)
-    place(wagon(b, { type, horses, driver }), x, z, ry)
+    place(wagon(b, { type, horses, driver: driver ? people.add(standees.get("seated-driver"), { facing: 0 }) : false }), x, z, ry)
   const looseHorse = (x: number, z: number, ry: number, opts: Parameters<typeof horse>[1]) => place(horse(b, opts), x, z, ry)
   looseHorse(-9.2, 18.5, 2.3, { grazing: true, harness: false })
   looseHorse(-10.5, 17, 2.8, { grazing: true, harness: false, color: 0x8c8880 })
@@ -203,7 +210,7 @@ async function build(ctx: SetContext): Promise<SceneSet> {
     rider.position.set(0, 0.84, -0.05)
     mount.add(rider)
   }
-  place(randomTraveler(b, { noProps: true }), 6.1, 8.4, Math.PI - 0.7)
+  someone(6.1, 8.4, Math.PI - 0.7)
 
   // ---- the queue -----------------------------------------------------------
   for (let i = 0; i < 58; i++) {
@@ -213,7 +220,7 @@ async function build(ctx: SetContext): Promise<SceneSet> {
     if (rng.chance(0.45)) spots.push([x + rng.range(0.65, 1.05) * rng.sign(), z + rng.range(-0.3, 0.3)])
     for (const [sx, sz] of spots) {
       if (blockedByWagon(sx, sz)) continue
-      place(randomTraveler(b), sx, sz, Math.PI + rng.range(-0.7, 0.7))
+      someone(sx, sz, Math.PI + rng.range(-0.7, 0.7))
     }
   }
   for (const [cx, cz, n] of [
@@ -226,14 +233,14 @@ async function build(ctx: SetContext): Promise<SceneSet> {
     [-4.9, 47, 3],
     [-4.5, 41, 3],
   ])
-    for (let i = 0; i < n; i++) place(randomTraveler(b), cx + rng.range(-1.1, 1.1), cz + rng.range(-1.1, 1.1), rng.value() * 6.28)
+    for (let i = 0; i < n; i++) someone(cx + rng.range(-1.1, 1.1), cz + rng.range(-1.1, 1.1), rng.value() * 6.28)
   for (let i = 0; i < 16; i++) {
     const z = rng.range(4.2, 12.5)
     const x = rng.sign() * rng.range(1.4, 2.0)
     if (blockedByWagon(x, z)) continue
-    place(randomTraveler(b), x, z, Math.PI + rng.range(-1.2, 1.2))
+    someone(x, z, Math.PI + rng.range(-1.2, 1.2))
   }
-  for (let i = 0; i < 3; i++) place(randomTraveler(b, { h: rng.range(0.5, 0.62) }), -6.5 + rng.range(-1, 1), 7.5 + rng.range(-0.8, 0.8), rng.value() * 6.28)
+  for (let i = 0; i < 2; i++) person("standing-child", -6.5 + rng.range(-1, 1), 7.5 + rng.range(-0.8, 0.8), rng.value() * 6.28)
 
   // roadside cargo
   const drop = (object: THREE.Object3D, x: number, y: number, z: number, ry = 0) => {
@@ -259,9 +266,7 @@ async function build(ctx: SetContext): Promise<SceneSet> {
   place(inspectionTable(b), 2.75, 3.7, -0.35)
   for (let i = 0; i < 2; i++) place(leaningSpear(b), 4.3 + i * 0.35, 3.2 - i * 0.2)
   place(brazier(b), 3.7, 5.3)
-  const captain = armoredCaptain(b)
-  place(captain.group, 1.5, 3.3, 0.35)
-  animated.push(captain)
+  person("npc-garlan-ironfist", 1.5, 3.3, 0.35)
   for (const [x, z, ry, spear] of [
     [-2.9, 3.7, -0.3, 1],
     [3.9, 5.0, -2.4, 0],
@@ -271,14 +276,13 @@ async function build(ctx: SetContext): Promise<SceneSet> {
     [4.9, 29, -2.9, 1],
     [-4.6, 36, 0.5, 1],
   ])
-    place(guard(b, { spear: !!spear }), x, z, ry)
+    person(spear ? "guard-spear" : "guard-sword", x, z, ry)
   for (const [x, z, ry] of [
     [-2.0, 1.8, 0.3],
     [2.4, 1.8, -0.2],
   ]) {
-    const sentry = guard(b)
+    const sentry = people.add(standees.get("guard-spear"), { facing: ry })
     sentry.position.set(x, 13.2, z)
-    sentry.rotation.y = ry
     root.add(sentry)
   }
   for (const s of [-1, 1]) {
@@ -326,7 +330,7 @@ async function build(ctx: SetContext): Promise<SceneSet> {
   const camp = new THREE.Group()
   place(camp, -7.2, 10)
   camp.add(campfire(b))
-  camp.add(restingTravelers(b))
+  camp.add(restingTravelers(b, { makeFigure: (facing) => people.add(standees.pick(rng, "seated"), { facing }) }))
   camp.add(cyl(0.16, 0.12, 0.22, M.ironDark, -0.6, 0.42, 0.7, 10))
   const campSack = sack(b, 0.8)
   campSack.position.set(1.6, 0, 1.2)
@@ -337,7 +341,7 @@ async function build(ctx: SetContext): Promise<SceneSet> {
   camp.add(campCrate)
 
   place(handcart(b), 5.6, 12, -0.6)
-  place(randomTraveler(b, { noProps: true, hat: true }), 6.4, 13.4, -2.2)
+  person("vendor-apron", 6.4, 13.4, -2.2)
   for (const [x, z, ry] of [
     [-6.6, 13.5, 0.3],
     [-7.4, 13.2, 0.4],
@@ -382,6 +386,7 @@ async function build(ctx: SetContext): Promise<SceneSet> {
     animated,
     dispose() {
       environment.dispose()
+      standees.dispose()
       root.removeFromParent()
     },
   }

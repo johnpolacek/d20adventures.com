@@ -407,7 +407,7 @@ export function marketStall(ctx: BuilderContext, canopy: TextureSet): THREE.Grou
 }
 
 /** Three seated travelers on logs around a point, facing it. */
-export function restingTravelers(ctx: BuilderContext): THREE.Group {
+export function restingTravelers(ctx: BuilderContext, { makeFigure }: { makeFigure?: (facing: number) => THREE.Object3D } = {}): THREE.Group {
   const { materials: M } = ctx
   const g = new THREE.Group()
   const lm = M.wood(2, 1, M.woodDarkTex)
@@ -419,10 +419,17 @@ export function restingTravelers(ctx: BuilderContext): THREE.Group {
     const log = cyl(0.2, 0.22, 1.8, lm, x, 0.2, z, 10)
     log.rotation.set(0, ry, Math.PI / 2)
     g.add(log)
-    const t = randomTraveler(ctx, { seated: true })
-    t.position.set(x, 0.05, z)
-    t.rotation.y = Math.atan2(-x, -z)
-    g.add(t)
+    const facing = Math.atan2(-x, -z)
+    if (makeFigure) {
+      const f = makeFigure(facing)
+      f.position.set(x, 0.05, z)
+      g.add(f)
+    } else {
+      const t = randomTraveler(ctx, { seated: true })
+      t.position.set(x, 0.05, z)
+      t.rotation.y = facing
+      g.add(t)
+    }
   }
   return g
 }

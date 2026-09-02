@@ -15,7 +15,8 @@ export type WagonType = "covered" | "hay" | "barrels"
 export interface WagonOptions {
   type?: WagonType
   horses?: number
-  driver?: boolean
+  /** true for a procedural driver, an Object3D (e.g. a seated standee) to seat that instead, false for none. */
+  driver?: boolean | THREE.Object3D
 }
 
 export function wagon(ctx: BuilderContext, { type = "covered", horses = 1, driver = true }: WagonOptions = {}): THREE.Group {
@@ -96,8 +97,8 @@ export function wagon(ctx: BuilderContext, { type = "covered", horses = 1, drive
   for (const s of [-1, 1]) cart.add(box(0.08, 0.55, 0.08, dm, s * (W / 2 - 0.25), 1.28, L / 2 + 0.05))
   cart.add(box(W - 0.2, 0.55, 0.08, wm, 0, 1.2, L / 2 + 0.42))
   if (driver) {
-    const d = randomTraveler(ctx, { seated: true, noProps: true })
-    d.position.set(0.25, 0.66, L / 2 + 0.02)
+    const d = driver === true ? randomTraveler(ctx, { seated: true, noProps: true }) : driver
+    d.position.set(0.25, driver === true ? 0.66 : 1.0, L / 2 + 0.02)
     cart.add(d)
   }
   const shaftLength = 2.6
