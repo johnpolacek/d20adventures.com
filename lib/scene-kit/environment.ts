@@ -5,6 +5,7 @@
 // Interiors pass `sky: false` and light themselves.
 
 import * as THREE from "three"
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js"
 import type { TimeUniform } from "./shaders"
 
 export interface SkyColors {
@@ -26,6 +27,8 @@ export interface EnvironmentOptions {
   shadowTarget?: [number, number, number]
   hemisphere?: { sky: THREE.ColorRepresentation; ground: THREE.ColorRepresentation; intensity: number }
   sky?: SkyColors | false
+  /** With sky off, use a neutral room environment map so metals still reflect something. */
+  interior?: boolean
   environmentIntensity?: number
   fog?: { color: THREE.ColorRepresentation; density: number } | false
   exposure?: number
@@ -56,6 +59,34 @@ export const ENVIRONMENT_PRESETS = {
     sky: { zenith: 0x3a4a86, horizon: 0xe8a060, ground: 0x6a5040, cloudCover: 0.55 },
     environmentIntensity: 0.3,
     fog: { color: 0xd8b090, density: 0.006 },
+    exposure: 0.95,
+  },
+  /** A lamp-lit interior at dusk: faint blue directional from the windows, everything else from practicals. */
+  interiorDusk: {
+    sun: [0.2, 0.5, 0.85],
+    sunColor: 0x6f8fd6,
+    sunIntensity: 0.25,
+    shadowExtent: 20,
+    shadowMapSize: 2048,
+    hemisphere: { sky: 0x3a3a48, ground: 0x2a1c12, intensity: 0.25 },
+    sky: false,
+    interior: true,
+    environmentIntensity: 0.12,
+    fog: { color: 0x1a1410, density: 0.02 },
+    exposure: 0.95,
+  },
+  /** A lamp-lit interior at night: no directional light at all. */
+  interiorNight: {
+    sun: [0.2, 0.5, 0.85],
+    sunColor: 0x2a3550,
+    sunIntensity: 0.05,
+    shadowExtent: 20,
+    shadowMapSize: 1024,
+    hemisphere: { sky: 0x22222c, ground: 0x1a1410, intensity: 0.22 },
+    sky: false,
+    interior: true,
+    environmentIntensity: 0.1,
+    fog: { color: 0x14100c, density: 0.022 },
     exposure: 0.95,
   },
   /** Moonlit blue with room for warm practicals. */
@@ -137,6 +168,11 @@ export function createEnvironment(scene: THREE.Scene, renderer: THREE.WebGLRende
     envScene.add(new THREE.Mesh(new THREE.SphereGeometry(50, 32, 16), material.clone()))
     scene.environment = pmrem.fromScene(envScene, 0.04).texture
     scene.environmentIntensity = options.environmentIntensity ?? 0.3
+    pmrem.dispose()
+  } else if (options.interior) {
+    const pmrem = new THREE.PMREMGenerator(renderer)
+    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
+    scene.environmentIntensity = options.environmentIntensity ?? 0.12
     pmrem.dispose()
   }
 

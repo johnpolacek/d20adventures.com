@@ -15,6 +15,7 @@ import {
   grassTexture,
   knotTexture,
   medallionTexture,
+  plasterTexture,
   radialSprite,
   stoneTexture,
   type TextureSet,
@@ -44,8 +45,12 @@ export class MaterialLibrary {
   get stoneLightTex() {
     return this.bake("stone-light", () => stoneTexture({ rows: 7, base: [0.76, 0.64, 0.54], grey: [0.7, 0.66, 0.6], seed: 9, chipAmt: 0.4 }))
   }
+  /** Fine-coursed pale stone (rendered rubble); the old "plaster" look. */
+  get rubbleTex() {
+    return this.bake("rubble", () => stoneTexture({ rows: 14, base: [0.74, 0.66, 0.55], grey: [0.7, 0.64, 0.58], mortar: [0.5, 0.44, 0.38], seed: 17, chipAmt: 0 }))
+  }
   get plasterTex() {
-    return this.bake("plaster", () => stoneTexture({ rows: 14, base: [0.74, 0.66, 0.55], grey: [0.7, 0.64, 0.58], mortar: [0.5, 0.44, 0.38], seed: 17, chipAmt: 0 }))
+    return this.bake("plaster", () => plasterTexture())
   }
   get woodTex() {
     return this.bake("wood", () => woodTexture({}))

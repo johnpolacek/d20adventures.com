@@ -185,7 +185,7 @@ export async function createRuntime({
     renderer.info.reset()
     if (flyControls) fly(dt)
     controls.update()
-    for (const a of set.animated) a.update(t, dt)
+    for (const a of set.animated) a.update(t, dt, camera)
     composer.render()
     frames++
     if (t - fpsAt >= 1) {

@@ -617,6 +617,50 @@ export function cobbleTexture(S = 512, n = 7): TextureSet {
   return { map: canvasTex(canvas), normalMap: normalFromHeight(H, S, S, 6), roughnessMap: grayTex(Rg, S, S) }
 }
 
+/** Lime plaster: off-white with mottling, hairline cracks and a soft trowelled normal. */
+export function plasterTexture(S = 512, base: RGB = [0.86, 0.8, 0.68]): TextureSet {
+  const r = mulberry32(41)
+  const canvas = makeCanvas(S, S)
+  const ctx = canvas.getContext("2d")!
+  const img = ctx.createImageData(S, S)
+  const px = img.data
+  const H = new Float32Array(S * S)
+  const Rg = new Float32Array(S * S)
+  for (let y = 0; y < S; y++) {
+    for (let x = 0; x < S; x++) {
+      const u = x / S
+      const v = y / S
+      const m = NZ.fbm(u, v, 4, 4)
+      const f = NZ.v(x * 0.9, y * 0.9)
+      const stain = smoothstep(0.62, 0.8, NZ.fbm(u + 0.3, v + 0.7, 2, 3))
+      const k = (0.82 + m * 0.3) * (0.93 + f * 0.14) * (1 - stain * 0.18)
+      const i = y * S + x
+      px[i * 4] = clamp(base[0] * k, 0, 1) * 255
+      px[i * 4 + 1] = clamp(base[1] * k, 0, 1) * 255
+      px[i * 4 + 2] = clamp(base[2] * k * (1 - stain * 0.08), 0, 1) * 255
+      px[i * 4 + 3] = 255
+      H[i] = 0.5 + m * 0.08 + f * 0.03
+      Rg[i] = 0.85 + f * 0.1
+    }
+  }
+  ctx.putImageData(img, 0, 0)
+  ctx.strokeStyle = "rgba(60,50,40,0.35)"
+  ctx.lineWidth = 1
+  for (let i = 0; i < 6; i++) {
+    let x = r() * S
+    let y = r() * S
+    ctx.beginPath()
+    ctx.moveTo(x, y)
+    for (let k = 0; k < 8; k++) {
+      x += (r() - 0.5) * 40
+      y += r() * 30
+      ctx.lineTo(x, y)
+    }
+    ctx.stroke()
+  }
+  return { map: canvasTex(canvas), normalMap: normalFromHeight(H, S, S, 2), roughnessMap: grayTex(Rg, S, S) }
+}
+
 /** Birch bark: pale with dark lenticels. Colour only, 1:2 aspect for trunks. */
 export function birchTexture(): TextureSet {
   const S = 256

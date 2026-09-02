@@ -53,7 +53,7 @@ export interface SceneSet {
   title: string
   root: THREE.Group
   marks: Record<string, SetMark>
-  /** The first camera is the establishing shot. */
+  /** The first camera is the opening shot shown on load; one should be named "establishing". */
   cameras: Record<string, SetCamera>
   groundHeight: HeightFn
   environment: EnvironmentHandle

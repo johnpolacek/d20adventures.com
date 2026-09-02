@@ -66,7 +66,7 @@ Requirements:
 - Background: SOLID UNIFORM PURE GREEN (#00FF00) everywhere. No scenery, no shadows on the background, no text, no border, no logo. One character only.`
 }
 
-interface ReferenceImage {
+export interface ReferenceImage {
   data: Buffer
   mimeType: string
 }
@@ -77,7 +77,7 @@ async function fetchReferenceImage(url: string, label: string): Promise<Referenc
   return { data: Buffer.from(await response.arrayBuffer()), mimeType: response.headers.get("content-type") ?? "image/png" }
 }
 
-async function generateStandeeRender(images: ReferenceImage[], prompt: string): Promise<Buffer> {
+export async function generateStandeeRender(images: ReferenceImage[], prompt: string): Promise<Buffer> {
   const key = process.env.GOOGLE_GENERATIVE_AI_API_KEY
   if (!key) throw new Error("GOOGLE_GENERATIVE_AI_API_KEY is not set")
   const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${STANDEE_MODEL_ID}:generateContent?key=${key}`, {
@@ -104,7 +104,7 @@ async function generateStandeeRender(images: ReferenceImage[], prompt: string): 
 }
 
 /** Green-screen removal + despill + trim to the figure's bounding box. */
-async function chromaKeyCutout(rendered: Buffer): Promise<Buffer> {
+export async function chromaKeyCutout(rendered: Buffer): Promise<Buffer> {
   const { data, info } = await sharp(rendered).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
   const { width, height, channels } = info
 

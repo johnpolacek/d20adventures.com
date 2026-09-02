@@ -7,7 +7,8 @@ import type { MaterialLibrary } from "./materials"
 import type { TimeUniform } from "./shaders"
 
 export interface Animated {
-  update(t: number, dt: number): void
+  /** Called once per frame; `camera` is provided by hosts that have one (billboards need it). */
+  update(t: number, dt: number, camera?: THREE.Camera): void
 }
 
 export interface GodRayOptions {

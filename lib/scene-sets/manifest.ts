@@ -21,11 +21,21 @@ export const SET_MANIFEST: SetManifestEntry[] = [
       "Outside the city gatehouse: road, traveler queue with wagons, guard checkpoint with Garlan. Marks: checkpoint, queue, roadside, portal, captain. Cameras: queue, establishing, checkpoint, wagons. Toggle: timeOfDay.",
     load: () => import("./realm-of-myr/kordavos-outer-gate").then((m) => m.kordavosOuterGate),
   },
+  {
+    id: "kordavos-dragonbone-inn",
+    title: "The Dragonbone Inn",
+    settingId: "realm-of-myr",
+    summary:
+      "Common room of the Dragonbone Inn: double-height timber hall with hearth and bard's dais, bar and kitchen pass, gallery with the party's snug beneath. Marks: corner-table, bram, bar, hearthside, bard-stage, main-entrance. Cameras: entrance (opening), establishing, snug, hearth, bar. Toggle: timeOfDay (dusk default, night).",
+    load: () => import("./realm-of-myr/kordavos-dragonbone-inn").then((m) => m.kordavosDragonboneInn),
+  },
 ]
 
 /** Which set an encounter plays on. Populated by the pipeline's resolve stage. */
 export const ENCOUNTER_SETS: Record<string, { setId: string; camera: string; toggles?: Record<string, string | boolean> }> = {
   "the-gates-of-kordavos": { setId: "kordavos-outer-gate", camera: "queue" },
+  "the-dragonbone-inn": { setId: "kordavos-dragonbone-inn", camera: "entrance", toggles: { timeOfDay: "dusk" } },
+  "morning-at-the-dragonbone": { setId: "kordavos-dragonbone-inn", camera: "establishing", toggles: { timeOfDay: "day" } },
 }
 
 export function getSetEntry(setId: string): SetManifestEntry | undefined {
