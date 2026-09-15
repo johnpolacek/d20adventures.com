@@ -8,7 +8,7 @@ A narrative RPG platform blending play-by-post adventure turns, realtime updates
 |---|---|
 | **Lifecycle** | Existing product prototype, post-MVP import |
 | **Current priority** | Post-merge wiki-adventure hardening |
-| **Latest validation** | Public content routes now build static and bypass request-wide Clerk middleware; build, TypeScript, lint, and 8/8 Playwright tests pass (2026-08-31). |
+| **Latest validation** | Homepage now builds static and bypasses Clerk middleware; private APIs load the signed-in welcome and token balance. Production build, TypeScript, lint, 15 production-mode Playwright cases, and live isolated-adventure browser checks pass (2026-09-15). |
 | **Planning shape** | Review findings and hardening plans under [plans/](plans/index.md) |
 | **Automation** | Commit when confident; ask before pushes and long-running operations |
 
@@ -20,6 +20,7 @@ Player UI → Next.js server actions → Convex (state) and wiki source (S3 or r
 
 ## Core pages
 
+- **[Static homepage](plans/zzz-completed/feature-static-homepage.md)** — rendering boundary, Clerk cache-action behavior, authenticated API migration, and validation evidence.
 - **[Wiki Agent Guide](AGENTS.md)** — maintenance contract for this wiki directory.
 - **[Project Log](log.md)** — durable context changes and validation notes.
 - **[Sources](Sources.md)** — source evidence, confidence, and unknowns.

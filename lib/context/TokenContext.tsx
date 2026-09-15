@@ -1,7 +1,7 @@
 import { useUser } from "@clerk/nextjs"
 import type React from "react"
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from "react"
-import { fetchUserTokenBalance } from "@/app/_actions/user-token-actions"
+import type { TokenBalanceResponse } from "@/app/_actions/user-token-actions"
 
 type TokenContextType = {
   tokensRemaining: number | null
@@ -37,7 +37,10 @@ export const TokenProvider: React.FC<TokenProviderProps> = ({ children, pollingI
 
     setIsLoading(true)
     try {
-      const result = await fetchUserTokenBalance()
+      // Static pages bypass Clerk middleware; route authenticated work through /api.
+      const response = await fetch("/api/user/tokens", { method: "POST", cache: "no-store" })
+      const result: TokenBalanceResponse = await response.json()
+      if (!response.ok && !result.error) throw new Error("Failed to fetch token balance")
 
       // Handle authentication error gracefully
       if (result.error === "USER_NOT_AUTHENTICATED") {

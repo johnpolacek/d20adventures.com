@@ -4,6 +4,18 @@
 
 Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.
 
+## 2026-09-15
+
+### Prerendered the homepage and moved personalized reads behind APIs
+
+- `/` now serves the public hero as static content and bypasses Clerk middleware. After sign-in, `HomeAdventure` fetches `/api/user/active-adventure`, preserves the existing adventure selection, and uses Clerk's client username for the player link. It cancels stale requests and keeps the public hero on empty/error/mismatched-user responses.
+- Moved the globally mounted token provider from a homepage-hosted Server Action to POST `/api/user/tokens`, preserving first-use grants and balance refresh. Both API responses use `private, no-store`, derive identity on the server, and reject anonymous callers.
+- Discovered Clerk 7's own sign-in/sign-out POST: `invalidateCacheAction` only deletes a cache-marker cookie. It works without middleware; the browser test distinguishes it from application data requests rather than forbidding all homepage POSTs.
+- Production build reports `○ /`; the prerender manifest includes `/` with no timed revalidation. Local production responses for `/` and `/privacy` return `x-nextjs-cache: HIT`, `s-maxage=31536000`, and no Clerk auth headers. Signed-in document HTML also stays public.
+- Validation: build and TypeScript passed; touched-file Biome passed; full lint passed with 7 pre-existing warnings and 3 informational diagnostics in scene/map scripts. All 15 production-compatible Playwright cases passed. A separate browser check created and removed one adventure in the isolated Convex project, verifying real welcome data, token display, navigation, sign-out, and zero page errors. Desktop/mobile public and welcome states were visually inspected.
+- Existing test limitation: the signed-out admin test expects development's `Access Denied` page. Production instead redirects to the pre-existing missing `/sign-in` route. That unrelated behavior is unchanged; the case passed separately against the isolated development server, bringing coverage to all 16 cases.
+- Added `PLAYWRIGHT_BASE_URL` support to target the worktree server without disturbing another checkout's port 3000. Plan: [Static homepage](plans/zzz-completed/feature-static-homepage.md).
+
 ## 2026-08-31
 
 ### Restored static public rendering and removed request-wide visit tracking
