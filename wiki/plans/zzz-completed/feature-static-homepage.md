@@ -44,3 +44,5 @@ Serve `/` from Next.js prerendered output without Clerk middleware. Fetch the si
 - Real Clerk sign-in and a temporary adventure in isolated Convex verified the welcome card, current-user API identity, token display, adventure-list navigation, and sign-out. The temporary adventure was deleted afterward; no shared gameplay data was mutated.
 - Desktop and mobile browser screenshots checked for both public hero and real welcome card. No browser page errors in the live check.
 - No production deploy occurred. Vercel CPU savings require a subsequent deployment and comparable traffic measurements.
+
+Finished: 2026-09-15 (merged to main, policy: merge)
