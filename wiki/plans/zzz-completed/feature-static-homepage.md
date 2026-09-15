@@ -46,3 +46,7 @@ Serve `/` from Next.js prerendered output without Clerk middleware. Fetch the si
 - No production deploy occurred. Vercel CPU savings require a subsequent deployment and comparable traffic measurements.
 
 Finished: 2026-09-15 (merged to main, policy: merge)
+
+## Remaining environment cleanup
+
+The feature worktree and branch were removed after merging. Delete the isolated [d20adventures-feature-static-homepage Convex project](https://dashboard.convex.dev/t/john-polacek/d20adventures-feature-static-homepage) once dashboard sign-in is available. The dashboard currently redirects to sign-in; temporary adventure fixtures have already been removed.

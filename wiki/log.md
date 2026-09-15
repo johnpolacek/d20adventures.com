@@ -15,6 +15,7 @@ Git owns routine implementation history. This log records durable wiki, planning
 - Validation: build and TypeScript passed; touched-file Biome passed; full lint passed with 7 pre-existing warnings and 3 informational diagnostics in scene/map scripts. All 15 production-compatible Playwright cases passed. A separate browser check created and removed one adventure in the isolated Convex project, verifying real welcome data, token display, navigation, sign-out, and zero page errors. Desktop/mobile public and welcome states were visually inspected.
 - Existing test limitation: the signed-out admin test expects development's `Access Denied` page. Production instead redirects to the pre-existing missing `/sign-in` route. That unrelated behavior is unchanged; the case passed separately against the isolated development server, bringing coverage to all 16 cases.
 - Added `PLAYWRIGHT_BASE_URL` support to target the worktree server without disturbing another checkout's port 3000. Plan: [Static homepage](plans/zzz-completed/feature-static-homepage.md).
+- Merged into `main` and removed the feature worktree and branch. Temporary adventure fixtures were removed; deletion of the isolated [d20adventures-feature-static-homepage Convex project](https://dashboard.convex.dev/t/john-polacek/d20adventures-feature-static-homepage) remains pending dashboard sign-in. No push or production deployment occurred.
 
 ## 2026-08-31
 
