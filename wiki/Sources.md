@@ -23,6 +23,8 @@ This page catalogs the source material used to initialize and maintain the wiki.
 
 | Source | Evidence | Confidence | Notes |
 |---|---|---|---|
+| `app/page.tsx`, `components/views/home-adventure.tsx`, `app/api/user/`, `proxy.ts` | Static homepage shell, client-loaded personalized welcome, API-based token refresh, and no homepage Clerk matcher. | High | Production-mode cache headers and authenticated browser tests cover the new boundary. |
+| Installed `@clerk/nextjs` 7.0.1 `app-router/server-actions.js` | `invalidateCacheAction` deletes a cache-marker cookie without invoking `auth()`. | High | Sign-in/sign-out can still POST this SDK action to static pages without Clerk middleware. |
 | `README.md` | Product overview, gameplay loop, public links, future multiplayer/community goals. | High | Primary product narrative. |
 | `package.json` | Current dependency and script surface: Next 16.1.6, React 19.2.4, Convex 1.32.0, AI SDK 6, Clerk 7. | High | More current than older technical docs for exact versions. |
 | Merge commit `fbd3e97` | Brought `feature/wiki-adventure-implementation` into `main`: migrated wiki source, runtime bridge, Convex content refs, admin authoring, and route conflict resolution. | High | Current source of truth for the post-merge review baseline. |

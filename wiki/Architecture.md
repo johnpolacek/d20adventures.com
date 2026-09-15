@@ -14,6 +14,7 @@ The application combines Next.js UI and server actions, Convex persistence and r
 
 ## Boundaries
 
+- **Homepage boundary** — `/` is prerendered and bypasses Clerk middleware. After client sign-in, `/api/user/active-adventure` returns session-owned adventure data with private/no-store caching. The global token provider posts to `/api/user/tokens`; Clerk's cookie-only cache-invalidation action remains on the current page during authentication transitions.
 - **Primary trust boundary** — authenticated user to server action / API route, then onward to Convex, S3, and AI providers. Authorization must be enforced before returning or mutating adventure, character, token, and content data.
 - **Realtime boundary** — Convex owns live session state for adventures, turns, current encounters, content refs, and generated history. Older duplicated polling/SSE risks still need separate verification before realtime refactors.
 - **Content boundary** — legacy S3 JSON remains for settings and plan metadata. Registered Realm of Myr adventures now compile markdown/JSON wiki source from repo-local fallback or canonical S3 source.

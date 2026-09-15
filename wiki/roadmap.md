@@ -41,5 +41,6 @@ Browse, fork, and play adventures created by other players. Adventures can be pu
 
 ## Closed
 
+- **Static homepage** (2026-09-15): public `/` prerenders without Clerk middleware; signed-in welcome and token reads use authenticated APIs. [Plan](plans/zzz-completed/feature-static-homepage.md).
 - ✅ **Release readiness** (2026-06-11) — `pnpm check` green, admin S3 writes validated, complete-manifest fallback, admin routes normalized, Midnight Summons end-to-end playthrough. Full detail: [Production Cutover](plans/production-cutover.md).
 - ✅ **Production cutover** (2026-06-12) — entire discovery + gameplay path on wiki runtime, legacy editor removed, March of Davos reconciled, prod S3 audit + rollback verified, deployed to production.
