@@ -1,0 +1,71 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "march-of-davos/the-gates-of-kordavos",
+  "set": "realm-of-myr/kordavos-south-gate",
+  "cast": [
+    {
+      "id": "garlan",
+      "name": "Garlan Ironfist",
+      "role": "Sergeant of the gate watch",
+      "height": 1.94,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/garlan-front.webp",
+        "back": "/stage/fixtures/march-of-davos/garlan-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/garlan-portrait.jpg"
+      },
+      "at": "sergeant",
+      "facing": "queueHead"
+    },
+    {
+      "id": "branka",
+      "name": "Branka Stoneveil",
+      "role": "Dwarf fighter",
+      "height": 1.38,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/branka-front.webp",
+        "back": "/stage/fixtures/march-of-davos/branka-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/branka-portrait.jpg"
+      },
+      "at": "front1",
+      "facing": "garlan"
+    },
+    {
+      "id": "cassia",
+      "name": "Cassia Verane",
+      "role": "Human wizard",
+      "height": 1.72,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/cassia-front.webp",
+        "back": "/stage/fixtures/march-of-davos/cassia-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/cassia-portrait.jpg"
+      },
+      "at": "front2",
+      "facing": "garlan"
+    },
+    {
+      "id": "yeva",
+      "name": "Yeva Softstep",
+      "role": "Halfling rogue",
+      "height": 1.08,
+      "art": { "front": "/stage/fixtures/march-of-davos/yeva-front.webp", "back": "/stage/fixtures/march-of-davos/yeva-back.webp", "portrait": "/stage/fixtures/march-of-davos/yeva-portrait.jpg" },
+      "at": "front3",
+      "facing": "garlan"
+    },
+    {
+      "id": "milos",
+      "name": "Milos Radan",
+      "role": "Human cleric",
+      "height": 1.8,
+      "art": { "front": "/stage/fixtures/march-of-davos/milos-front.webp", "back": "/stage/fixtures/march-of-davos/milos-back.webp", "portrait": "/stage/fixtures/march-of-davos/milos-portrait.jpg" },
+      "at": "front4",
+      "facing": "garlan"
+    }
+  ],
+  "shots": {
+    "party": { "position": [4.6, 2.35, 9.9], "target": [0.8, 0.95, 13.3], "fov": 46, "label": "Next in Line" },
+    "twoshot": { "subjects": ["garlan", "branka", "cassia"], "offset": [-0.1, 1.9, -6.03], "target": [0.2, 0.95, -0.03], "fov": 40, "label": "The Two-shot" },
+    "close": { "subject": "garlan", "distance": 2.5, "angle": 51.6, "height": 1.5, "lookHeight": 1.35, "fov": 46, "label": "Up Close" }
+  },
+  "shot": "gate"
+}

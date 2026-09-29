@@ -1,0 +1,481 @@
+import * as THREE from "three"
+import { OrbitControls } from "three/addons/controls/OrbitControls.js"
+import type { CrowdLibrary, CrowdLibraryMeta } from "./figures/cards"
+import { Crowd } from "./figures/crowd"
+import { type CastMember, Standees } from "./figures/standees"
+import { V } from "./kit/geometry"
+import { createRand, hashSeed } from "./kit/rng"
+import { birds, type Disposable, dust, type LifeUpdate, land } from "./life"
+import { createShared, type SharedUniforms } from "./materials/atmosphere"
+import { createMaterialLibrary, type MaterialLibrary } from "./materials/library"
+import { autoTier, DEFAULT_FLAGS, type Flags, TIERS, type TierName } from "./quality"
+import { Pipeline } from "./render/pipeline"
+import { skyMaterial } from "./sky"
+import { buildSetGeometry, populateCrowd } from "./spec/build"
+import { type ResolvedShot, resolveCast, resolveShots } from "./spec/resolve"
+import { type SetSpec, setSpecSchema } from "./spec/set"
+import { type StagingSpec, stagingSpecSchema } from "./spec/staging"
+
+// The Stage runtime: one set (plus an optional staging) rendered into a canvas it owns inside `container`.
+// Plain imperative three.js; the host (a React component) creates it, calls shot()/setTier()/pause(), and disposes it.
+
+export interface StageOptions {
+  container: HTMLElement
+  set: unknown
+  staging?: unknown
+  tier?: TierName | "auto"
+  flags?: Partial<Flags>
+  controls?: boolean
+  motion?: boolean
+  // Crowd art for a library id; defaults to the repo-hosted libraries under /stage/crowd/<id>/.
+  crowdLibrary?: (id: string) => Promise<CrowdLibrary | null>
+  onProgress?: (message: string) => void
+}
+
+export interface StageStats {
+  fps: number
+  calls: number
+  triangles: number
+  people: number
+  cards: number
+  tier: TierName
+  dpr: number
+  paintHeight: number
+  aa: string
+  ao: boolean
+  bloom: boolean
+  shot: string | null
+  camera: number[]
+  programs: number
+  frame: number
+}
+
+export async function defaultCrowdLibrary(id: string): Promise<CrowdLibrary | null> {
+  const base = `/stage/crowd/${id}`
+  const res = await fetch(`${base}/atlas.json`)
+  if (!res.ok) return null
+  const meta = (await res.json()) as CrowdLibraryMeta
+  return { meta, front: { rgb: `${base}/front-rgb.webp`, alpha: `${base}/front-a.webp` }, back: { rgb: `${base}/back-rgb.webp`, alpha: `${base}/back-a.webp` } }
+}
+
+export async function createStage(o: StageOptions): Promise<Stage> {
+  const set = setSpecSchema.parse(o.set)
+  const staging = o.staging ? stagingSpecSchema.parse(o.staging) : null
+  const library = set.crowd ? await (o.crowdLibrary ?? defaultCrowdLibrary)(set.crowd.library).catch(() => null) : null
+  const stage = new Stage(o, set, staging, library)
+  await stage.load()
+  return stage
+}
+
+type Transition = { from: { pos: THREE.Vector3; target: THREE.Vector3; fov: number }; to: { pos: THREE.Vector3; target: THREE.Vector3; fov: number }; start: number; duration: number }
+
+export class Stage {
+  readonly canvas: HTMLCanvasElement
+  readonly renderer: THREE.WebGLRenderer
+  readonly scene = new THREE.Scene()
+  readonly camera: THREE.PerspectiveCamera
+  readonly world = new THREE.Group()
+  readonly shared: SharedUniforms
+  readonly pipeline: Pipeline
+  readonly crowd: Crowd
+  readonly standees: Standees
+  readonly cast: CastMember[]
+  readonly shots: Record<string, ResolvedShot>
+  readonly controls: OrbitControls | null
+  readonly sun: THREE.DirectionalLight
+  tier: TierName
+  flags: Flags
+  motion: boolean
+  activeShot: string | null = null
+  ready = false
+
+  private materials: MaterialLibrary
+  private statics: THREE.Mesh[] = []
+  private extras: THREE.Object3D[] = []
+  private life: (LifeUpdate & Disposable)[] = []
+  private disposables: Disposable[] = []
+  private sky: THREE.Mesh
+  private envTexture: THREE.Texture
+  private transition: Transition | null = null
+  private raf = 0
+  private running = false
+  private paused = false
+  private visible = true
+  private last = 0
+  private fpsT = 0
+  private fpsN = 0
+  private fps = 0
+  private frame = 0
+  private stats0 = { calls: 0, triangles: 0 }
+  private resizeObserver: ResizeObserver
+  private intersection: IntersectionObserver | null = null
+  private onVisibility = () => this.sync()
+  private readyResolve: (() => void) | null = null
+  readonly firstFrame: Promise<void>
+
+  constructor(
+    private o: StageOptions,
+    readonly set: SetSpec,
+    readonly staging: StagingSpec | null,
+    library: CrowdLibrary | null
+  ) {
+    this.firstFrame = new Promise((r) => {
+      this.readyResolve = r
+    })
+    this.flags = { ...DEFAULT_FLAGS, ...o.flags }
+    this.motion = o.motion ?? !(typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches)
+    this.canvas = document.createElement("canvas")
+    this.canvas.style.cssText = "display:block;width:100%;height:100%;touch-action:none"
+    o.container.appendChild(this.canvas)
+    const renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: false, powerPreference: "high-performance" })
+    this.renderer = renderer
+    renderer.shadowMap.enabled = true
+    renderer.shadowMap.type = THREE.PCFShadowMap
+    renderer.info.autoReset = false
+    renderer.toneMapping = THREE.AgXToneMapping
+    renderer.toneMappingExposure = set.atmosphere.exposure
+    this.tier = o.tier && o.tier !== "auto" ? o.tier : autoTier(renderer.getContext())
+
+    const A = set.atmosphere
+    this.shared = createShared()
+    this.shared.sun.value.set(...A.sun.direction).normalize()
+    this.shared.wind.value = A.wind
+    const horizon = new THREE.Color(A.sky.horizon)
+    this.scene.fog = new THREE.FogExp2(horizon.clone(), A.fog.density)
+    this.camera = new THREE.PerspectiveCamera(58, 1, set.camera.near, set.camera.far)
+    this.scene.add(this.world)
+
+    // Light: the sun rakes across the set; the hemisphere fills the shadows with sky and warm ground bounce.
+    const sun = new THREE.DirectionalLight(A.sun.color, A.sun.intensity)
+    const target = V(...A.sun.target)
+    sun.position.copy(this.shared.sun.value).multiplyScalar(A.sun.distance).add(target)
+    sun.target.position.copy(target)
+    sun.castShadow = true
+    sun.shadow.mapSize.set(4096, 4096)
+    Object.assign(sun.shadow.camera, A.sun.shadow)
+    sun.shadow.camera.updateProjectionMatrix()
+    sun.shadow.bias = -0.0004
+    sun.shadow.normalBias = 0.6
+    this.sun = sun
+    this.scene.add(sun, sun.target)
+    this.scene.add(new THREE.HemisphereLight(A.hemisphere.sky, A.hemisphere.ground, A.hemisphere.intensity))
+
+    const skyColors = { horizon, mid: new THREE.Color(A.sky.mid), zenith: new THREE.Color(A.sky.zenith) }
+    this.sky = new THREE.Mesh(new THREE.SphereGeometry(Math.min(set.camera.far * 0.62, 1500), 48, 24), skyMaterial(this.shared, skyColors))
+    this.sky.renderOrder = -1
+    this.sky.frustumCulled = false
+    this.scene.add(this.sky)
+    const pmrem = new THREE.PMREMGenerator(renderer)
+    const envScene = new THREE.Scene()
+    const envSky = new THREE.Mesh(new THREE.SphereGeometry(100, 32, 16), skyMaterial(this.shared, skyColors))
+    envScene.add(envSky)
+    this.envTexture = pmrem.fromScene(envScene, 0.04).texture
+    envSky.geometry.dispose()
+    ;(envSky.material as THREE.Material).dispose()
+    pmrem.dispose()
+    this.scene.environment = this.envTexture
+    this.scene.environmentIntensity = A.environment
+
+    // The set itself: every builder into one batch, merged by material.
+    o.onProgress?.("Building the set")
+    const rand = createRand(hashSeed(set.seed, "stage"))
+    this.materials = createMaterialLibrary(set.materials, this.shared, rand.fork("materials"))
+    const built = buildSetGeometry(set, this.materials)
+    this.statics = built.batch.flush(this.world)
+    for (const e of built.extras) this.world.add(e)
+    this.extras = built.extras
+    if (set.land) this.disposables.push(land(this.world, this.shared, rand.fork("land"), set.land))
+    if (set.life.birds) this.life.push(birds(this.world, this.shared, rand.fork("birds"), set.life.birds))
+    if (set.life.dust) this.life.push(dust(this.world, this.shared, rand.fork("dust"), set.life.dust))
+
+    const maxAnisotropy = renderer.capabilities.getMaxAnisotropy()
+    this.crowd = new Crowd({
+      seeds: populateCrowd(set, built.footprints, built.anchors),
+      rand: rand.fork("crowd"),
+      camera: this.camera,
+      shared: this.shared,
+      library,
+      mode: this.flags.crowd,
+      cardRadius: this.flags.cardRadius ?? TIERS[this.tier].cardRadius,
+      maxAnisotropy,
+    })
+    this.world.add(this.crowd.group)
+    this.cast = resolveCast(set, staging)
+    this.standees = new Standees(this.cast, this.shared, maxAnisotropy)
+    this.world.add(this.standees.group)
+    this.shots = resolveShots(set, staging, this.cast)
+
+    this.pipeline = new Pipeline(renderer, this.scene, this.camera)
+    this.pipeline.mask.setSources([
+      // Crowd cards keep half the paint; named characters keep about 80% of the crisp render.
+      ...(this.crowd.cards ? [{ src: this.crowd.cards.mesh, keep: 0.625, custom: (common: Parameters<Crowd["maskProxy"]>[0]) => this.crowd.maskProxy(common, 0.625)! }] : []),
+      ...this.standees.maskSources(),
+    ])
+
+    if (o.controls !== false) {
+      const c = new OrbitControls(this.camera, this.canvas)
+      c.enableDamping = true
+      c.dampingFactor = 0.07
+      c.screenSpacePanning = true
+      c.maxDistance = set.camera.maxDistance
+      c.maxPolarAngle = Math.PI * 0.8
+      c.rotateSpeed = 0.5
+      c.zoomSpeed = 0.8
+      c.addEventListener("start", () => {
+        this.transition = null
+      })
+      this.controls = c
+    } else this.controls = null
+
+    this.resizeObserver = new ResizeObserver(() => this.resize())
+    this.resizeObserver.observe(o.container)
+    if (typeof IntersectionObserver !== "undefined") {
+      this.intersection = new IntersectionObserver((entries) => {
+        this.visible = entries.some((e) => e.isIntersecting)
+        this.sync()
+      })
+      this.intersection.observe(this.canvas)
+    }
+    document.addEventListener("visibilitychange", this.onVisibility)
+    this.applyTier()
+  }
+
+  // Waits for the character art and the crowd atlas (when cards are on), then starts the loop.
+  async load() {
+    this.o.onProgress?.("Loading characters")
+    await Promise.all([this.standees.load(), this.crowd.cards && this.flags.crowd !== "procedural" ? this.waitForAtlas() : Promise.resolve()])
+    const first = this.staging?.shot ?? Object.keys(this.shots)[0]
+    if (first) this.shot(first, { instant: true })
+    this.sync()
+  }
+  private waitForAtlas() {
+    return new Promise<void>((resolve) => {
+      const check = () => (this.crowd.cards?.ready || this.crowd.mode === "procedural" ? resolve() : setTimeout(check, 50))
+      check()
+    })
+  }
+
+  // ── Camera ──
+  private lens(fov: number) {
+    // Portrait screens keep the set in frame by widening the lens.
+    return this.camera.aspect >= 1 ? fov : Math.min(100, THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(fov) / 2) / Math.sqrt(this.camera.aspect))))
+  }
+  shot(name: string, { instant = false } = {}) {
+    const s = this.shots[name]
+    if (!s) return false
+    this.activeShot = name
+    const to = { pos: V(...s.position), target: V(...s.target), fov: this.lens(s.fov) }
+    if (instant || !this.motion) {
+      this.camera.position.copy(to.pos)
+      this.controls?.target.copy(to.target)
+      if (!this.controls) this.camera.lookAt(to.target)
+      this.camera.fov = to.fov
+      this.camera.updateProjectionMatrix()
+      this.controls?.update()
+      this.transition = null
+      this.standees.reset()
+    } else {
+      const target = this.controls ? this.controls.target.clone() : this.camera.getWorldDirection(V()).multiplyScalar(10).add(this.camera.position)
+      this.transition = { from: { pos: this.camera.position.clone(), target, fov: this.camera.fov }, to, start: performance.now(), duration: 2200 }
+    }
+    return true
+  }
+  private constrain() {
+    const { min, max } = this.set.camera
+    const p = this.camera.position
+    const before = p.clone()
+    p.set(THREE.MathUtils.clamp(p.x, min[0], max[0]), THREE.MathUtils.clamp(p.y, min[1], max[1]), THREE.MathUtils.clamp(p.z, min[2], max[2]))
+    if (this.controls && !before.equals(p)) this.controls.target.add(p.clone().sub(before))
+  }
+
+  // ── Quality ──
+  setTier(name: TierName) {
+    this.tier = name
+    this.applyTier()
+  }
+  setFlags(f: Partial<Flags>) {
+    this.flags = { ...this.flags, ...f }
+    this.applyTier()
+  }
+  private applyTier() {
+    const t = TIERS[this.tier]
+    const f = this.flags
+    const ratio = Math.min(window.devicePixelRatio || 1, f.dpr || t.ratio)
+    this.renderer.setPixelRatio(ratio)
+    const p = this.pipeline
+    p.paint.setHeight(t.paint)
+    p.paint.depthPaint = f.paint === "depth"
+    p.paint.strength = Math.min(1, f.brush)
+    p.paint.brush = Math.max(0.35, f.brush)
+    p.bloom.enabled = f.bloom ?? t.bloom
+    const aa = f.aa ?? t.aa
+    p.setAA(aa)
+    const cardMaterial = this.crowd.cards?.mesh.material as THREE.Material | undefined
+    if (cardMaterial && cardMaterial.alphaToCoverage !== (aa === "msaa")) {
+      cardMaterial.alphaToCoverage = aa === "msaa"
+      cardMaterial.needsUpdate = true
+    }
+    this.standees.setAlphaToCoverage(aa === "msaa")
+    p.setAO(f.ao ?? t.ao)
+    this.crowd.setMode(f.crowd)
+    this.crowd.setRadius(f.cardRadius ?? t.cardRadius)
+    if (this.sun.shadow.mapSize.x !== t.shadow) {
+      this.sun.shadow.mapSize.setScalar(t.shadow)
+      this.sun.shadow.map?.dispose()
+      this.sun.shadow.map = null
+    }
+    this.resize()
+  }
+  resize() {
+    const w = Math.max(1, this.o.container.clientWidth)
+    const h = Math.max(1, this.o.container.clientHeight)
+    this.camera.aspect = w / h
+    if (!this.transition && this.activeShot && this.shots[this.activeShot]) this.camera.fov = this.lens(this.shots[this.activeShot].fov)
+    this.camera.updateProjectionMatrix()
+    this.renderer.setSize(w, h, false)
+    this.pipeline.setSize(w, h, this.renderer.getPixelRatio())
+  }
+
+  // ── Loop ──
+  // Rendering stops while the tab is hidden, the canvas is off screen (a hidden overlay), or the host pauses.
+  pause() {
+    this.paused = true
+    this.sync()
+  }
+  resume() {
+    this.paused = false
+    this.sync()
+  }
+  private sync() {
+    const run = !this.paused && this.visible && document.visibilityState !== "hidden"
+    if (run && !this.running) {
+      this.running = true
+      this.last = performance.now()
+      this.raf = requestAnimationFrame(this.tick)
+    } else if (!run && this.running) {
+      this.running = false
+      cancelAnimationFrame(this.raf)
+    }
+  }
+  private tick = (now: number) => {
+    if (!this.running) return
+    this.raf = requestAnimationFrame(this.tick)
+    const raw = Math.max(0, (now - this.last) / 1000)
+    this.last = now
+    this.step(Math.min(raw, 0.05), raw)
+  }
+  private step(dt: number, raw: number) {
+    this.fpsT += raw
+    this.fpsN++
+    if (this.fpsT > 1) {
+      this.fps = Math.round(this.fpsN / this.fpsT)
+      this.fpsT = this.fpsN = 0
+    }
+    if (this.motion) {
+      this.shared.time.value += dt
+      this.crowd.update(dt)
+      for (const f of this.life) f(this.shared.time.value)
+    }
+    if (this.transition) {
+      const tr = this.transition
+      const t = THREE.MathUtils.clamp((performance.now() - tr.start) / tr.duration, 0, 1)
+      const e = t * t * (3 - 2 * t)
+      this.camera.position.lerpVectors(tr.from.pos, tr.to.pos, e)
+      const target = V().lerpVectors(tr.from.target, tr.to.target, e)
+      if (this.controls) this.controls.target.copy(target)
+      else this.camera.lookAt(target)
+      this.camera.fov = THREE.MathUtils.lerp(tr.from.fov, tr.to.fov, e)
+      this.camera.updateProjectionMatrix()
+      if (t === 1) this.transition = null
+    }
+    this.controls?.update()
+    this.constrain()
+    this.standees.update(dt, this.camera)
+    this.crowd.updateLOD(this.camera)
+    this.crowd.flush()
+    this.render()
+    if (++this.frame === 3) {
+      this.ready = true
+      this.readyResolve?.()
+    }
+  }
+  render() {
+    this.renderer.info.reset()
+    this.pipeline.render()
+    this.stats0 = { calls: this.renderer.info.render.calls, triangles: this.renderer.info.render.triangles }
+  }
+
+  // ── For hosts ──
+  stats(): StageStats {
+    return {
+      fps: this.fps,
+      ...this.stats0,
+      people: this.crowd.count,
+      cards: this.crowd.cardCount,
+      tier: this.tier,
+      dpr: this.renderer.getPixelRatio(),
+      paintHeight: this.pipeline.paint.size[1],
+      aa: this.pipeline.aa,
+      ao: this.pipeline.gtao.enabled,
+      bloom: this.pipeline.bloom.enabled,
+      shot: this.activeShot,
+      camera: this.camera.position.toArray().map((v) => +v.toFixed(2)),
+      programs: this.renderer.info.programs?.length ?? 0,
+      frame: this.frame,
+    }
+  }
+  // Programs that failed to compile or link (renderer.debug.checkShaderErrors is on by default).
+  programErrors() {
+    return (this.renderer.info.programs ?? []).filter((p) => (p as unknown as { diagnostics?: { runnable: boolean } }).diagnostics?.runnable === false).map((p) => p.name)
+  }
+  // Screen position (CSS px, relative to the canvas) of a cast member's head, for bubbles and plates.
+  project(castId: string) {
+    const head = this.standees.head(castId)
+    if (!head) return null
+    const d = head.distanceTo(this.camera.position)
+    head.project(this.camera)
+    const w = this.canvas.clientWidth
+    const h = this.canvas.clientHeight
+    return { x: (head.x * 0.5 + 0.5) * w, y: (-head.y * 0.5 + 0.5) * h, visible: head.z < 1 && Math.abs(head.x) < 1.05 && Math.abs(head.y) < 1.05, distance: d }
+  }
+  private ray = new THREE.Raycaster()
+  // The cast member under a canvas point (CSS px), if any.
+  pick(x: number, y: number) {
+    const ndc = new THREE.Vector2((x / this.canvas.clientWidth) * 2 - 1, -(y / this.canvas.clientHeight) * 2 + 1)
+    this.ray.setFromCamera(ndc, this.camera)
+    const hit = this.ray.intersectObject(this.standees.group, true)[0]
+    return (hit?.object.userData.castId as string | undefined) ?? null
+  }
+  // A PNG of the current view, rendered on demand (no preserveDrawingBuffer needed: read in the same task).
+  capture(): Promise<Blob | null> {
+    this.render()
+    return new Promise((resolve) => this.canvas.toBlob(resolve, "image/png"))
+  }
+
+  dispose() {
+    this.running = false
+    cancelAnimationFrame(this.raf)
+    document.removeEventListener("visibilitychange", this.onVisibility)
+    this.resizeObserver.disconnect()
+    this.intersection?.disconnect()
+    this.controls?.dispose()
+    for (const m of this.statics) m.geometry.dispose()
+    for (const e of this.extras)
+      e.traverse((o) => {
+        if ((o as THREE.Mesh).isMesh) (o as THREE.Mesh).geometry.dispose()
+      })
+    for (const l of this.life) l.dispose()
+    for (const d of this.disposables) d.dispose()
+    this.crowd.dispose()
+    this.standees.dispose()
+    this.materials.dispose()
+    this.pipeline.dispose()
+    this.sky.geometry.dispose()
+    ;(this.sky.material as THREE.Material).dispose()
+    this.envTexture.dispose()
+    this.sun.shadow.map?.dispose()
+    this.renderer.dispose()
+    this.renderer.forceContextLoss()
+    this.canvas.remove()
+  }
+}
