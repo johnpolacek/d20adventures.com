@@ -1,8 +1,8 @@
 # feature/stageview-engine
 
-[Plans](index.md) · [Wiki Home](../index.md) · [Stageview](stageview.md)
+[Plans](../index.md) · [Wiki Home](../../index.md) · [Stageview](../stageview.md)
 
-Status: Implemented and validated on `feature/stageview-engine` (2026-09-29); not merged · phase 2 of [Stageview](stageview.md)
+Status: Implemented and validated on `feature/stageview-engine` (2026-09-29); merged to main in `384a622` · phase 2 of [Stageview](../stageview.md)
 
 ## Goal
 

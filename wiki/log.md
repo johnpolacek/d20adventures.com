@@ -12,7 +12,7 @@ Git owns routine implementation history. This log records durable wiki, planning
 - Designed set spec v1 (`d20.stage.set`): JSON, zod-validated and bounded, interpreted only through kit builders and layouts, with material roles and a random stream per object. A minimal staging spec places the cast at marks and frames shots on them.
 - Ported the Kordavos gate as the first set, with a March of Davos dev staging. The Realm of Myr crowd library and character fixtures live in `public/stage/` (4.2 MB).
 - Added `/dev/stage`, `pnpm stage:check` (a Node dry build) and `pnpm stage:verify` (CDP, DPR 2 frames and native-pixel crops).
-- Validation: TypeScript, lint and build pass. All 7 shots are within 300 draw calls and 2.5M triangles. Ultra runs 21–28 fps at DPR 2, high 52–54 fps at DPR 1.5 (prototype 37–46), and the steady-state heap is 42 MB (prototype 234 MB). Faces hold up in native-pixel crops. Details: [feature-stageview-engine](plans/feature-stageview-engine.md). Not merged.
+- Validation: TypeScript, lint and build pass. All 7 shots are within 300 draw calls and 2.5M triangles. Ultra runs 21–28 fps at DPR 2, high 52–54 fps at DPR 1.5 (prototype 37–46), and the steady-state heap is 42 MB (prototype 234 MB). Faces hold up in native-pixel crops. Details: [feature-stageview-engine](plans/zzz-completed/feature-stageview-engine.md). Merged to main in `384a622`.
 
 ### Retired old 3D branches
 

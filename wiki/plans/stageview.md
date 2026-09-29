@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Roadmap](../roadmap.md) · [Architecture](../Architecture.md)
 
-Status: **phase 2 engine port implemented on `feature/stageview-engine` (2026-09-29), not merged; next: phase 3** · working name "Stageview" is a proposal · old 3D stack removed and merged to main (see [plan](zzz-completed/feature-remove-3d-stack.md)) · engine plan and results: [feature-stageview-engine](feature-stageview-engine.md)
+Status: **phase 2 engine port merged to main (2026-09-29); next: phase 3** · working name "Stageview" is a proposal · old 3D stack removed and merged to main (see [plan](zzz-completed/feature-remove-3d-stack.md)) · engine plan and results: [feature-stageview-engine](zzz-completed/feature-stageview-engine.md)
 
 ## Decision (2026-09-29)
 
@@ -105,7 +105,7 @@ The work splits into three layers:
 
 1. **Set.** A location, authored once and reused across encounters and adventures.
    - A **JSON spec** (`d20.stage.set` v1, zod-validated and bounded) keyed to the wiki **location entity**. Mapview already titles maps by location entity. Phase 2 keeps specs repo-local under `lib/stage/sets/<settingId>/`.
-   - The kit interprets it through parametric builders (fortifications, town, market, festival, checkpoint, primitives and layouts), so a set never runs code on player clients. See [feature-stageview-engine](feature-stageview-engine.md#set-spec-v1-d20stageset) for the format.
+   - The kit interprets it through parametric builders (fortifications, town, market, festival, checkpoint, primitives and layouts), so a set never runs code on player clients. See [feature-stageview-engine](zzz-completed/feature-stageview-engine.md#set-spec-v1-d20stageset) for the format.
    - It provides materials, objects, an atmosphere preset, named **marks**, **paths** (queue, exit), crowd **groups** (scatter with density rects, ranks, points, queues along paths, walkers, anchors), named **shots** and ambient life. Time-of-day and weather toggles and ambient **loops** come in phase 3.
 2. **Staging.** Per encounter, authored at authoring time and reviewable before publish, like Mapview.
    - Contents: the set and its toggles; cast (NPC id → figure recipe plus start mark, honouring `startNear`); party entry formation; establishing shot; ambient script (for example, the queue cycle); dressing toggles.
@@ -183,7 +183,7 @@ All 3D dependencies were imported only by these modules (verified via grep on 20
 1. **Clean slate** (feature worktree). **Done 2026-09-29 on `feature/remove-3d-stack`.**
    - Extract the map-only encounter panel, delete the inventory above, and drop the standee and mini token products.
    - Validation: build, TypeScript, lint, Playwright pass; the map rail and fullscreen map were checked on a fixture page. The real turn page was not rendered because the worktree database is empty.
-2. **Engine port.** **Implemented 2026-09-29 on `feature/stageview-engine`** ([plan and results](feature-stageview-engine.md)): every shot is within budget, and at DPR 2 the frames match the prototype and faces hold up in native-pixel crops. The Kordavos gate is also ported as the first JSON set (pulled forward from phase 3), with a static queue.
+2. **Engine port.** **Done 2026-09-29; merged to main** ([plan and results](zzz-completed/feature-stageview-engine.md)): every shot is within budget, and at DPR 2 the frames match the prototype and faces hold up in native-pixel crops. The Kordavos gate is also ported as the first JSON set (pulled forward from phase 3), with a static queue.
    The source is the **v5 prototype** (`~/Projects/d20-graphics-test-2/src/v5/`), not v4.
    - Port into `lib/stage/` as plain three.js TypeScript. Carry over:
      - the kit (`lib`, `materials` including `wood()`, `sky`)
