@@ -257,6 +257,31 @@ Findings:
   - **New tension:** the characters are now clearly higher-fidelity than the blocky world, and Garlan's armour is more saturated and metallic than the palette.
   - **Cost:** at DPR 2 on an M3, high quality drops from 60 to 26–33 fps. The 4× scene pixels are most of the cost; Kuwahara at 720p is about 10 ms.
   - **For the port:** lift the world rather than dull the characters. That means MSAA, more world surface detail, and tier tuning (for example, DPR 1.5 at high).
+- **World pass (same day).** The owner chose to lift the world in the prototype rather than dull the characters. Screenshots are in the demo repo as `previews/v5w-{before,after}-*.png`.
+  - **Illustrated crowd cards.** 16 variants were generated in the hero style, at 2K, then packed into an atlas.
+    - They render as one `InstancedMesh`: the shader turns each card toward the camera within a limit, derives normals from the alpha, casts shadows, and joins the mask at 50% paint.
+    - **Hybrid LOD:** cards within 60 m and at eye level; procedural pawns for steep views.
+    - The cards unify the party, two-shot and gate shots into one painting, and they are cheaper than pawns (2 triangles against about 1,100).
+  - **Other changes:**
+    - 4× MSAA with a resolved DepthTexture (it works in r180)
+    - Kuwahara radius scaled by depth, 40% near to 100% far
+    - a `wood()` shader for props
+    - quarter-resolution GTAO, about 1.2 ms
+    - a hero grade of about −13% saturation
+  - **Tiers on the M3 at Retina:**
+
+    | Tier | Settings | Result |
+    |---|---|---|
+    | Balanced | DPR 1 | 60 fps |
+    | High | DPR 1.5, FXAA, no bloom | about 43–46 fps (party view); about 37 fps in the gate view |
+    | Ultra | DPR 2, MSAA | about 21 fps |
+
+    MSAA costs about 5.5 ms at 1.5.
+  - **Remaining gaps:**
+    - The art is front-only, so crowds face the camera even from behind the queue. This needs back art.
+    - 16 variants repeat in dense areas.
+    - The pawn/card swap pops with no crossfade.
+    - Paving, canopies and tower silhouettes are still flat or blocky.
 - This brings back the avatar → full-body pipeline removed in phase 1 (`lib/encounterview/standee.ts` at `52ebdb9`, chroma key via `sharp`), retargeted to the world style. The prototype's `scripts/gen-standees.mjs` keys on distance from the green screen so that green cloaks survive. That script borrows `sharp` from this checkout, which phase 1 removed, so it will break after the next `pnpm install`.
 
 ## Unknowns
