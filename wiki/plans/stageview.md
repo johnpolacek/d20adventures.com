@@ -214,6 +214,34 @@ Options to prototype in the standalone demo before committing:
   - Risks: cards still read as flat when the camera orbits, and a detailed hero among blocky crowd figures makes the crowd look worse.
 - **C. Both.** Use B at mid range for named characters only, and A for close-ups.
 
+### Prototype result (2026-09-29)
+
+The prototype is `~/Projects/d20-graphics-test-2/kordavos-v5-closeups.html`, built from `src/v5/` (uncommitted in that repo).
+- Select a mode with `?closeup=procedural|portrait|standee`.
+- The party is recast as the March of Davos premades Branka, Cassia, Yeva and Milos.
+- Screenshots are in that repo's `previews/v5-*.png`.
+
+Findings:
+- **Procedural at 2.5 m** confirms the concern: Garlan has a blank face and mitten hands.
+- **A (portrait plates)** reads well as UI, but it avoids the problem rather than solving it. In-world figures stay generic, and the camera has to stop at about 5 m. The dark, dusk-lit portraits against the daylight world show that the plates are a UI layer.
+- **B (restyled standees)** works, unlike the earlier drop-in test.
+  - The generated art uses flat painted forms and a muted palette, conditioned on the portrait plus a screenshot of the world.
+  - In the scene the cards are lit through a normal map derived from the alpha, cast real shadows, lean toward the camera, and go through the paint pass.
+  - With that treatment the five named characters read as part of the painting at two-shot distance, and Garlan holds up at 2.5 m.
+  - At about 115° off-axis the card narrows but still reads as a turned figure.
+  - Where it breaks:
+    - behind the figure, because there is no back art yet
+    - at grazing angles
+    - when the rig's gestures are needed, because the cards have none
+  - The original, unrestyled Garlan PNG is visibly shinier and more detailed than the world.
+- **Cost and performance:** 5 image generations (`gemini-3.1-flash-image`, one per character, no retries). Standee mode runs about 70 fewer draw calls than procedural.
+- **Recommendation: C.**
+  - Named characters, meaning PCs and staged NPCs, use restyled standees in the world, with back art.
+  - Keep the camera within about 100° of each card's facing.
+  - Portrait plates carry dialogue and the hold prompt.
+  - The crowd stays procedural.
+- This brings back the avatar → full-body pipeline removed in phase 1 (`lib/encounterview/standee.ts` at `52ebdb9`, chroma key via `sharp`), retargeted to the world style. The prototype's `scripts/gen-standees.mjs` keys on distance from the green screen so that green cloaks survive. That script borrows `sharp` from this checkout, which phase 1 removed, so it will break after the next `pnpm install`.
+
 ## Unknowns
 
 - Who or what authored the demo, and at what cost. This sets the per-location authoring budget. The demo's set-specific code is about 1,050 LOC (architecture, checkpoint, market, festival, heroes).

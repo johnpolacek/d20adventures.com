@@ -6,6 +6,14 @@ Git owns routine implementation history. This log records durable wiki, planning
 
 ## 2026-09-29
 
+### Close-up prototype: restyled standees beat procedural figures up close
+
+- Built `kordavos-v5-closeups.html` in `d20-graphics-test-2`, which compares procedural figures, portrait plates (A) and restyled in-world standees (B). The party is recast as the March of Davos premades.
+- Procedural figures fail at 2.5 m. Portrait plates work as UI but cap the camera at about 5 m.
+- Restyled standees integrate at two-shot range and hold up at 2.5 m. They use art generated in the world's flat style, a normal map derived from the alpha, shadows, a camera-facing lean, and the paint pass. The prototype used 5 image generations.
+- Recommendation: restyled standees for named characters, plates for dialogue, and a procedural crowd. Details are in [Stageview](plans/stageview.md#prototype-result-2026-09-29).
+
+
 ### Removed the old 3D encounter stack on `feature/remove-3d-stack`
 
 - Executed phase 1 of [Stageview](plans/stageview.md) in a worktree, per the owner decision to discard the old stack and rebuild. There are no real players, so no data migration or refunds. Plan and results: [Remove 3D stack](plans/zzz-completed/feature-remove-3d-stack.md).
