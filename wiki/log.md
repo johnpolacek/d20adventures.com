@@ -6,6 +6,10 @@ Git owns routine implementation history. This log records durable wiki, planning
 
 ## 2026-09-29
 
+### Retired old 3D branches
+
+- Deleted the local branches `2d-maps` (6cfc22b), `minimap-claude` (4eb03bb) and `claude/competent-moore-d09a8e` (0a91c6f), and the remote `origin/claude/stoic-gates`. No worktrees remain, and `origin/prewiki-refactor` is kept.
+
 ### Deployed Convex prod; published the prototype
 
 - Ran `convex deploy` to prod (`marvelous-mink-850`). It shipped the phase 1 ledger-arg change and dropped the orphaned `visits` indexes from the 2026-08-31 removal. Convex warned that the account is above Free plan limits, and the leftover `d20adventures-feature-*` worktree projects add to that. The owner is deleting them.

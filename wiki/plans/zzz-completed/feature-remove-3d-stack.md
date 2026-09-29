@@ -89,7 +89,7 @@ Run in the worktree, with its isolated Convex project:
   - `images/minis/` (standee cutouts)
   - `images/minis3d/` (Hunyuan GLBs)
   - `images/scene-previews/` (rail snapshots)
-- **Git branches to retire:** `minimap-claude`, `claude/competent-moore-d09a8e`, `origin/claude/stoic-gates`. Not touched here.
+- **Git branches (retired 2026-09-29):** `minimap-claude`, `claude/competent-moore-d09a8e`, `2d-maps` and `origin/claude/stoic-gates` were deleted. Last commits: `2d-maps` 6cfc22b, `minimap-claude` 4eb03bb, `claude/competent-moore-d09a8e` 0a91c6f.
 - **External repo:** `~/Projects/asset-pipeline` (source of the generated props) is no longer needed.
 - **Environment:** `FAL_KEY` is unused now; drop it from the Vercel and local env files.
 - **Convex deploy (done 2026-09-29):** deployed to prod `marvelous-mink-850`. The push also dropped the orphaned `visits` table indexes left by the 2026-08-31 visit-tracking removal. Removing `usage_encounter_asset` from the `decrementTokens` args needed this deploy to take effect. Nothing depends on it.

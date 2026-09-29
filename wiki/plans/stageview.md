@@ -171,7 +171,7 @@ All 3D dependencies were imported only by these modules (verified via grep on 20
 - **Dependencies (removed):** `@react-three/fiber`, `@react-three/drei`, `@react-three/postprocessing`, `@gltf-transform/core|extensions|functions`, `n8ao` (a direct dependency with no imports; `postprocessing` was transitive) and `sharp` (nothing else used it). `three` and `@types/three` are kept.
 - **Re-homed first (done).** The 2D Mapview rail card, fullscreen view and below-xl button now live in `components/mapview/map-panel.tsx` (`MapRailPanel`, `MapPanel`), mounted from `components/adventure/turn.tsx`.
 - **Kept:** the Convex `usage_encounter_asset` literal in the ledger schema, while ledger rows exist. The standee and mini token costs and charge paths are gone.
-- **Branches to retire (not done):** `minimap-claude`, `claude/competent-moore-d09a8e`, and `origin/claude/stoic-gates`. `2d-maps` is already salvaged into Mapview.
+- **Branches retired (done 2026-09-29):** local `2d-maps`, `minimap-claude` and `claude/competent-moore-d09a8e`, and remote `origin/claude/stoic-gates`. Last commits, for restoring: `2d-maps` 6cfc22b, `minimap-claude` 4eb03bb, `claude/competent-moore-d09a8e` 0a91c6f.
 - **S3 prefixes to retire (not done; remote data):** `settings/<settingId>/scenes3d/`, `images/minis/`, `images/minis3d/`, `images/scene-previews/`.
 - **External repo no longer needed:** `~/Projects/asset-pipeline`.
 
