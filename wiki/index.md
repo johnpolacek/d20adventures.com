@@ -21,7 +21,7 @@ Player UI → Next.js server actions → Convex (state) and wiki source (S3 or r
 ## Core pages
 
 - **[Stageview](plans/stageview.md)** — the painted procedural 3D direction chosen 2026-09-29. Covers the demo assessment, measurements, the replacement architecture, and the removal inventory.
-- **[Remove 3D stack](plans/feature-remove-3d-stack.md)** — what the clean-slate removal deleted, the map-only panel that replaced the encounter overlay, validation, and leftovers (S3 prefixes, branches).
+- **[Remove 3D stack](plans/zzz-completed/feature-remove-3d-stack.md)** — what the clean-slate removal deleted, the map-only panel that replaced the encounter overlay, validation, and leftovers (S3 prefixes, branches).
 - **[Static homepage](plans/zzz-completed/feature-static-homepage.md)** — rendering boundary, Clerk cache-action behavior, authenticated API migration, and validation evidence.
 - **[Wiki Agent Guide](AGENTS.md)** — maintenance contract for this wiki directory.
 - **[Project Log](log.md)** — durable context changes and validation notes.

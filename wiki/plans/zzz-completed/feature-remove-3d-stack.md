@@ -1,12 +1,12 @@
 # feature/remove-3d-stack
 
-[Plans](index.md) · [Wiki Home](../index.md) · [Stageview](stageview.md)
+[Plans](../../index.md) · [Wiki Home](../index.md) · [Stageview](../stageview.md)
 
-Status: Implemented and validated on `feature/remove-3d-stack` (2026-09-29); not yet merged
+Status: Implemented and validated on `feature/remove-3d-stack` (2026-09-29); merged to main in `b06a42b`
 
 ## Goal
 
-Delete the old 3D encounter stack so [Stageview](stageview.md) starts from a clean slate. Owner decision (2026-09-29): remove the r3f encounter diorama, scene-kit sets, standees and Hunyuan minis entirely. There are no real players, only test accounts, so there is no data migration and no refund handling.
+Delete the old 3D encounter stack so [Stageview](../stageview.md) starts from a clean slate. Owner decision (2026-09-29): remove the r3f encounter diorama, scene-kit sets, standees and Hunyuan minis entirely. There are no real players, only test accounts, so there is no data migration and no refund handling.
 
 Keep working: the turn page's 2D Mapview rail card, its fullscreen map, and the below-xl entry button; Storyview in the right rail; `/admin/mapview` and map generation.
 
@@ -29,7 +29,7 @@ Totals against `52ebdb9`:
 - About 13,600 lines of TypeScript and scripts deleted whole-file (16,765 lines including READMEs, fixtures and the exemplar HTML). The full diff is 17,517 deletions, including 922 lockfile lines.
 - Binary assets: 45.4 MB (23.7 MB standees, 19.5 MB models), plus 24 KB of dev fixtures.
 
-`three` and `@types/three` stay for Stageview. `lib/scene-kit/README.md` went with the code; the design lives on in [Stageview](stageview.md).
+`three` and `@types/three` stay for Stageview. `lib/scene-kit/README.md` went with the code; the design lives on in [Stageview](../stageview.md).
 
 ## Map panel extraction
 

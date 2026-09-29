@@ -8,7 +8,7 @@ Git owns routine implementation history. This log records durable wiki, planning
 
 ### Removed the old 3D encounter stack on `feature/remove-3d-stack`
 
-- Executed phase 1 of [Stageview](plans/stageview.md) in a worktree, per the owner decision to discard the old stack and rebuild. There are no real players, so no data migration or refunds. Plan and results: [Remove 3D stack](plans/feature-remove-3d-stack.md).
+- Executed phase 1 of [Stageview](plans/stageview.md) in a worktree, per the owner decision to discard the old stack and rebuild. There are no real players, so no data migration or refunds. Plan and results: [Remove 3D stack](plans/zzz-completed/feature-remove-3d-stack.md).
 - Removed the r3f encounter view, scene-kit, scene sets and pipeline, dev pages and fixtures, the scene, mini and preview server actions, the dormant `miniatures-map.tsx`, and the 3D parts of `lib/map-utils.ts`. That is 173 files, about 13,600 lines of TypeScript and scripts, and 45.4 MB of standee and model assets. The 500-token standee and 2,000-token mini products went with them.
 - Removed 8 dependencies: `@react-three/{fiber,drei,postprocessing}`, `@gltf-transform/{core,extensions,functions}`, `n8ao` and `sharp`. `three` and `@types/three` stay.
 - Re-homed the 2D map as `components/mapview/map-panel.tsx` (rail card, fullscreen view, below-xl button), restoring its pre-encounter-view shape. The turn page shows it only when the encounter has a stored map.

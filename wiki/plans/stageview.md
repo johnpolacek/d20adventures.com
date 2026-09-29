@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Roadmap](../roadmap.md) · [Architecture](../Architecture.md)
 
-Status: **assessment + proposed plan** (2026-09-29) · working name "Stageview" is a proposal · old 3D stack removed on `feature/remove-3d-stack` (see [plan](feature-remove-3d-stack.md)); no Stageview code yet
+Status: **assessment + proposed plan** (2026-09-29) · working name "Stageview" is a proposal · old 3D stack removed and merged to main (see [plan](zzz-completed/feature-remove-3d-stack.md)); no Stageview code yet
 
 ## Decision (2026-09-29)
 
@@ -143,7 +143,7 @@ Runtime behaviour:
 
 ## Removal inventory (clean slate)
 
-**Done on `feature/remove-3d-stack` (2026-09-29; not yet merged).** Details, validation and leftovers are in [feature-remove-3d-stack](feature-remove-3d-stack.md). The list below is kept as the record of what was removed, with the deviations noted inline.
+**Done and merged to main (2026-09-29).** Details, validation and leftovers are in [feature-remove-3d-stack](zzz-completed/feature-remove-3d-stack.md). The list below is kept as the record of what was removed, with the deviations noted inline.
 
 All 3D dependencies were imported only by these modules (verified via grep on 2026-09-29).
 
