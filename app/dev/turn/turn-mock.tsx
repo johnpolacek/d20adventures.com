@@ -4,9 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { type CardInfo, CharacterCard } from "@/components/stage/character-card"
 import { IconButton, Pill, panel, StageHud, useCompact } from "@/components/stage/hud"
 import { type ChatLine, Journal, type JournalTurn } from "@/components/stage/journal"
+import { MovementOverlay } from "@/components/stage/movement-overlay"
 import { type CardCharacter, type CardMode, PromptCard } from "@/components/stage/prompt-card"
 import { RotatePrompt, requestLandscape, usePhonePortrait } from "@/components/stage/rotate-gate"
 import { type Bubble, Bubbles, Plate, type PlateLine } from "@/components/stage/stage-dialogue"
+import { type OrderEntry, TurnOrder } from "@/components/stage/turn-order"
 import { useStage } from "@/components/stage/use-stage"
 import type { TierName } from "@/lib/stage"
 import { BeatPlayer } from "@/lib/stage/beats"
@@ -21,6 +23,8 @@ const CHAT: ChatLine[] = [
   { from: "Milos", text: "I have the marks, let's not start a riot on day one" },
 ]
 const TIERS: TierName[] = ["balanced", "high", "ultra"]
+// Walking speed per turn in metres (D&D: 25 ft for the dwarf and the halfling, 30 ft otherwise).
+const SPEED: Record<string, number> = { branka: 7.5, cassia: 9, yeva: 7.5, milos: 9 }
 
 export function TurnMock() {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -37,6 +41,8 @@ export function TurnMock() {
   const compact = useCompact()
 
   const [phase, setPhase] = useState<Phase>("title")
+  const phaseRef = useRef<Phase>("title")
+  phaseRef.current = phase
   const [turnIndex, setTurnIndex] = useState(0)
   const [narrated, setNarrated] = useState(0)
   const [paragraphs, setParagraphs] = useState<string[]>([])
@@ -50,6 +56,10 @@ export function TurnMock() {
   const player = useRef<BeatPlayer | null>(null)
   const key = useRef(0)
   const pendingReply = useRef<string | null>(null)
+  const [used, setUsed] = useState(0)
+  const usedRef = useRef(0)
+  const hover = useRef<{ x: number; z: number } | null>(null)
+  const focused = useRef<string | null>(null)
 
   const party: CardCharacter[] = useMemo(() => (stage ? stage.cast.filter((c) => c.id !== "garlan").map((c) => ({ id: c.id, name: c.name, role: c.role, portrait: c.art.portrait })) : []), [stage])
   const nameOf = useCallback((id: string) => stage?.cast.find((c) => c.id === id)?.name ?? id, [stage])
@@ -96,8 +106,14 @@ export function TurnMock() {
       setTurnIndex(index)
       setParagraphs(ps)
       setNarrated(0)
-      setJournal((j) => [...j, { number: index + 1, title: t.title, paragraphs: ps, reply: reply && replyFrom ? { name: replyFrom, text: reply } : undefined, roll: rollInfo }])
+      setJournal((j) => [
+        ...j,
+        { number: index + 1, title: t.title, paragraphs: ps, reply: reply && replyFrom ? { name: replyFrom, text: reply, moved: usedRef.current || undefined } : undefined, roll: rollInfo },
+      ])
       setPhase("beats")
+      focused.current = null
+      usedRef.current = 0
+      setUsed(0)
       await player.current.play(t.beats(reply, roll))
       if (t.hold) {
         stage.shot(t.hold.shot)
@@ -142,12 +158,19 @@ export function TurnMock() {
     const success = total >= roll.dc
     setTimeout(() => advance(pendingReply.current ?? "", { total, success }, { name: nameOf(hold.actor), skill: roll.skill, dc: roll.dc, base, total, success }), 1500)
   }
-  const openCard = useCallback(
+  // Clicking a character takes the camera to them; clicking them again opens their card.
+  const focus = useCallback(
     (id: string) => {
       const c = stage?.cast.find((m) => m.id === id)
-      if (!c) return
-      setCard({ id, name: c.name, role: c.role, portrait: c.art.portrait, ...ABOUT[id] })
-      setOpen("card")
+      if (!stage || !c) return
+      if (focused.current === id) {
+        setCard({ id, name: c.name, role: c.role, portrait: c.art.portrait, ...ABOUT[id] })
+        setOpen("card")
+        return
+      }
+      focused.current = id
+      setOpen((o) => (o === "card" ? null : o))
+      stage.shot({ subject: id, distance: 2.6 + c.height * 0.8, angle: 18, height: Math.min(1.8, c.height * 0.95), lookHeight: c.height * 0.7, fov: 40 })
     },
     [stage]
   )
@@ -165,38 +188,78 @@ export function TurnMock() {
     return () => removeEventListener("keydown", onKey)
   }, [stage])
 
-  // A click (not a drag) on a character opens their card.
+  // On your turn the ground is walkable, BG3 style: hover to see the path, click to walk there (within your movement).
+  const moverId = phase === "hold" ? (TURNS[turnIndex].hold?.actor ?? null) : null
+  const remaining = moverId ? Math.max(0, (SPEED[moverId] ?? 9) - used) : 0
   useEffect(() => {
     const el = containerRef.current
     if (!el || !stage) return
     let down: [number, number] | null = null
+    const local = (e: PointerEvent) => {
+      const r = el.getBoundingClientRect()
+      return [e.clientX - r.left, e.clientY - r.top] as const
+    }
     const pd = (e: PointerEvent) => {
       down = [e.clientX, e.clientY]
     }
+    const pm = (e: PointerEvent) => {
+      if (e.buttons) return
+      const [x, y] = local(e)
+      const onChar = stage.pick(x, y)
+      hover.current = moverId && remaining > 0.3 && !onChar ? stage.groundAt(x, y) : null
+      el.style.cursor = onChar ? "pointer" : hover.current ? "crosshair" : ""
+    }
     const pu = (e: PointerEvent) => {
       if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6) return
-      const r = el.getBoundingClientRect()
-      const id = stage.pick(e.clientX - r.left, e.clientY - r.top)
-      if (id) openCard(id)
+      const [x, y] = local(e)
+      const id = stage.pick(x, y)
+      if (id) {
+        focus(id)
+        return
+      }
+      if (!moverId || remaining <= 0.3) return
+      const g = stage.groundAt(x, y)
+      if (!g) return
+      const r = stage.reach(moverId, g, remaining)
+      if (r.distance < 0.2) return
+      usedRef.current += r.distance
+      setUsed(usedRef.current)
+      const hold = TURNS[turnIndex].hold
+      stage.moveCast(moverId, [r.x, r.z], { speed: 1.4 }).then(() => {
+        if (hold && phaseRef.current === "hold") stage.shot(hold.shot)
+      })
+    }
+    const leave = () => {
+      hover.current = null
     }
     el.addEventListener("pointerdown", pd)
+    el.addEventListener("pointermove", pm)
     el.addEventListener("pointerup", pu)
+    el.addEventListener("pointerleave", leave)
     return () => {
       el.removeEventListener("pointerdown", pd)
+      el.removeEventListener("pointermove", pm)
       el.removeEventListener("pointerup", pu)
+      el.removeEventListener("pointerleave", leave)
     }
-  }, [stage, openCard])
+  }, [stage, focus, moverId, remaining, turnIndex])
 
   const hold = TURNS[turnIndex].hold
   const actorId = phase === "hold" || phase === "roll" ? (hold?.actor ?? null) : null
   const actor = party.find((c) => c.id === actorId) ?? null
   let mode: CardMode | null = null
-  if (phase === "hold" && hold) mode = { kind: "hold", prompt: hold.prompt, suggestion: hold.suggestion }
+  if (phase === "hold" && hold) mode = { kind: "hold", prompt: hold.prompt, suggestion: hold.suggestion, movement: { total: SPEED[hold.actor] ?? 9, used } }
   else if (phase === "roll" && hold?.roll) mode = { kind: "roll", roll: hold.roll }
   else if (phase === "thinking") mode = { kind: "thinking" }
   else if (phase === "done") mode = { kind: "done", next: "Next: The Harvest Festival" }
   const place = stage?.loops.get("gate-line")?.partyPosition ?? -1
   const status = phase === "done" || place < 0 ? "Your party: inside the city" : place === 0 ? "Your party: at the checkpoint" : `Your party: ${place} group${place > 1 ? "s" : ""} from the front`
+  const order: OrderEntry[] = [
+    ...party.map((c) => ({ id: c.id, name: c.name, portrait: c.portrait })),
+    ...(stage ? stage.cast.filter((c) => c.id === "garlan").map((c) => ({ id: c.id, name: c.name, portrait: c.art.portrait, npc: true })) : []),
+  ]
+  const activeId = actorId ?? (phase === "beats" && turnIndex > 0 ? "garlan" : null)
+  const orderLabel = actor ? `${actor.name.split(" ")[0]}'s turn` : activeId === "garlan" ? "Garlan" : undefined
   const views = stage ? Object.entries(stage.shots).map(([id, s]) => ({ id, label: s.label ?? id })) : []
 
   return (
@@ -212,7 +275,10 @@ export function TurnMock() {
       location={{ eyebrow: "Arrival at Kordavos", title: actor ? `${actor.name.split(" ")[0]}'s turn` : `Turn ${turnIndex + 1}`, status, hidden: !!plates.right }}
       views={views}
       activeView={stage?.activeShot ?? null}
-      onView={(id) => stage?.shot(id)}
+      onView={(id) => {
+        focused.current = null
+        stage?.shot(id)
+      }}
       hidden={hideUi || phase === "title"}
       compact={compact}
       actions={
@@ -243,6 +309,8 @@ export function TurnMock() {
         </>
       }
     >
+      {stage && !hideUi && moverId && <MovementOverlay stage={stage} actorId={moverId} remaining={remaining} hover={hover} />}
+      {stage && !hideUi && phase !== "title" && <TurnOrder order={order} activeId={activeId} label={orderLabel} compact={compact} onPick={focus} />}
       {stage && !hideUi && <Bubbles bubbles={bubbles} compact={compact} />}
       {!hideUi && plates.left && <Plate line={plates.left} compact={compact} />}
       {!hideUi && plates.right && <Plate line={plates.right} compact={compact} />}
@@ -254,7 +322,7 @@ export function TurnMock() {
           compact={compact}
           onReply={onReply}
           onRoll={onRoll}
-          onPick={openCard}
+          onPick={focus}
           onTop={mode.kind === "hold" || mode.kind === "roll" ? onCardTop : undefined}
         />
       )}
@@ -316,7 +384,7 @@ export function TurnMock() {
             <path d="m30 2 25 15v37L30 70 5 54V17Z" />
             <path d="M15 50V25h9v25m12 0V25h9v25M24 50V34l6-8 6 8v16M11 25h17m4 0h17M20 20v-6m20 6v-6M30 9v9M25 13h10M11 55h38" />
           </svg>
-          <div className="font-serif text-[clamp(28px,4vw,44px)] tracking-[-0.02em] [text-shadow:0_2px_25px_#000]">Arrival at Kordavos</div>
+          <div className="font-display text-[clamp(28px,3.6vw,46px)] [text-shadow:0_2px_25px_#000]">Arrival at Kordavos</div>
           <div className="text-[9px] tracking-[0.3em] text-stage-sage">THE MARCH OF DAVOS</div>
           {stage ? (
             <button

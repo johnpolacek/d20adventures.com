@@ -227,6 +227,13 @@ All 3D dependencies were imported only by these modules (verified via grep on 20
    - iOS Safari cannot lock orientation: it has no `screen.orientation.lock()`, iPhone has no element fullscreen, and installed web apps ignore the manifest's `orientation`. There the prompt is the only enforcement.
    - Android Chrome can lock to landscape after the page enters fullscreen, and when installed via the manifest's `"orientation": "landscape"`.
 7. **Mapview is for larger maps** (later on 2026-09-29): a city, wilderness travel, or exploring ruins, not a map per encounter. Encounters are staged; Mapview shows where the party is in the wider world. The current per-encounter battle-map generation needs a new plan.
+8. **Turns like Baldur's Gate 3, with movement** (later on 2026-09-29).
+   - An initiative bar sits across the top of the stage.
+   - On a character's turn the player may walk them within their speed: a range ring, a path preview, and blocking by the set's footprints.
+   - Then they act (the reply), which ends the turn.
+   - **Consequence: positions become game state.** This supersedes "positions stay visual only" in the Architecture section.
+   - Each character's position and facing is stored per turn. The GM's context includes where everyone stands. Moves are validated on the server, where the set's builders already run in Node and produce footprints. Beats start from the stored positions.
+   - Combat ranges, cover and pathfinding around obstacles (beyond straight lines) are follow-ups.
 
 ## Stage-first play (decided 2026-09-29)
 

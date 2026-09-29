@@ -118,7 +118,7 @@ export function StageHud({
           aria-live="polite"
         >
           <div className={cn(eyebrow, "mb-3 flex items-center gap-3 before:h-px before:w-7 before:bg-stage-gold", compact && "mb-1.5")}>{caption.chapter}</div>
-          <h1 className={cn("font-serif leading-[1.02] tracking-[-0.02em] [text-shadow:0_2px_25px_#1a0e0860]", compact ? "mb-1.5 text-2xl" : "mb-3 text-[clamp(34px,3.6vw,56px)]")}>{caption.title}</h1>
+          <h1 className={cn("font-display leading-[1.08] [text-shadow:0_2px_25px_#1a0e08a0]", compact ? "mb-1.5 text-xl" : "mb-3 text-[clamp(30px,3.1vw,48px)]")}>{caption.title}</h1>
           {caption.text && (
             <p key={caption.text} className={cn("fade-in font-serif text-stage-sage [text-shadow:0_1px_8px_#000c]", compact ? "line-clamp-3 text-[12px] leading-snug" : "text-[15px] leading-[1.65]")}>
               {caption.text}

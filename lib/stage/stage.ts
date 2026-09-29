@@ -1,5 +1,6 @@
 import * as THREE from "three"
 import { OrbitControls } from "three/addons/controls/OrbitControls.js"
+import type { Footprint } from "./builders/types"
 import type { CrowdLibrary, CrowdLibraryMeta } from "./figures/cards"
 import { Crowd } from "./figures/crowd"
 import { type CastMember, Standees } from "./figures/standees"
@@ -102,6 +103,8 @@ export class Stage {
 
   private materials: MaterialLibrary
   private statics: THREE.Mesh[] = []
+  // What the set's builders marked as solid (walls, stalls, tables), for walking the cast.
+  private footprints: Footprint[] = []
   private extras: THREE.Object3D[] = []
   private life: (LifeUpdate & Disposable)[] = []
   private disposables: Disposable[] = []
@@ -200,6 +203,7 @@ export class Stage {
     const rand = createRand(hashSeed(set.seed, "stage"))
     this.materials = createMaterialLibrary(set.materials, this.shared, rand.fork("materials"))
     const built = buildSetGeometry(set, this.materials)
+    this.footprints = built.footprints
     this.statics = built.batch.flush(this.world)
     for (const e of built.extras) this.world.add(e)
     this.extras = built.extras
@@ -660,15 +664,73 @@ export class Stage {
     const v = p.clone()
     const d = v.distanceTo(this.camera.position)
     v.project(this.camera)
-    return { x: (v.x * 0.5 + 0.5) * this.canvas.clientWidth, y: (-v.y * 0.5 + 0.5) * this.canvas.clientHeight, visible: v.z < 1 && Math.abs(v.x) < 1.05 && Math.abs(v.y) < 1.05, distance: d }
+    return {
+      x: (v.x * 0.5 + 0.5) * this.canvas.clientWidth,
+      y: (-v.y * 0.5 + 0.5) * this.canvas.clientHeight,
+      visible: v.z < 1 && Math.abs(v.x) < 1.05 && Math.abs(v.y) < 1.05,
+      behind: v.z > 1,
+      distance: d,
+    }
   }
   private ray = new THREE.Raycaster()
   // The cast member under a canvas point (CSS px), if any.
+  // The ground point under a canvas point (CSS px), on the y = 0 plane.
+  groundAt(x: number, y: number) {
+    const ndc = new THREE.Vector2((x / this.canvas.clientWidth) * 2 - 1, -(y / this.canvas.clientHeight) * 2 + 1)
+    this.ray.setFromCamera(ndc, this.camera)
+    const hit = this.ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), new THREE.Vector3())
+    return hit && hit.distanceTo(this.camera.position) < 400 ? { x: hit.x, z: hit.z } : null
+  }
+  private solid(x: number, z: number) {
+    for (const f of this.footprints) {
+      if (f.kind === "circle") {
+        if (Math.hypot(x - f.x, z - f.z) < f.r) return true
+        continue
+      }
+      const dx = x - f.x
+      const dz = z - f.z
+      const c = Math.cos(f.ry)
+      const s = Math.sin(f.ry)
+      if (Math.abs(dx * c - dz * s) < f.hw && Math.abs(dx * s + dz * c) < f.hd) return true
+    }
+    return false
+  }
+  // How far a cast member can walk toward a point in a straight line: stops at the first solid footprint or at `budget`
+  // metres. Returns where they would stop, the distance walked, and whether something or the budget cut it short.
+  reach(id: string, to: { x: number; z: number }, budget: number) {
+    const c = this.member(id)
+    const dx = to.x - c.x
+    const dz = to.z - c.z
+    const want = Math.hypot(dx, dz)
+    const limit = Math.min(want, budget)
+    const step = 0.2
+    let d = 0
+    let blocked = false
+    while (d + step <= limit) {
+      const t = (d + step) / Math.max(want, 1e-6)
+      if (this.solid(c.x + dx * t, c.z + dz * t)) {
+        blocked = true
+        break
+      }
+      d += step
+    }
+    if (!blocked && limit - d > 1e-3 && !this.solid(c.x + (dx * limit) / Math.max(want, 1e-6), c.z + (dz * limit) / Math.max(want, 1e-6))) d = limit
+    const t = d / Math.max(want, 1e-6)
+    return { x: c.x + dx * t, z: c.z + dz * t, distance: d, blocked, short: blocked || want > budget }
+  }
+  // Where a cast member stands (x, z) and faces (radians).
+  castAt(id: string) {
+    const c = this.member(id)
+    return { x: c.x, z: c.z, ry: c.ry, height: c.height }
+  }
   pick(x: number, y: number) {
     const ndc = new THREE.Vector2((x / this.canvas.clientWidth) * 2 - 1, -(y / this.canvas.clientHeight) * 2 + 1)
     this.ray.setFromCamera(ndc, this.camera)
-    const hit = this.ray.intersectObject(this.standees.group, true)[0]
-    return (hit?.object.userData.castId as string | undefined) ?? null
+    for (const hit of this.ray.intersectObject(this.standees.group, true)) {
+      const id = hit.object.userData.castId as string | undefined
+      if (id && (!hit.uv || this.standees.opaqueAt(id, hit.uv))) return id
+    }
+    return null
   }
   // A PNG of the current view, rendered on demand (no preserveDrawingBuffer needed: read in the same task).
   capture(): Promise<Blob | null> {

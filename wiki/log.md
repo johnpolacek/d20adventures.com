@@ -6,6 +6,12 @@ Git owns routine implementation history. This log records durable wiki, planning
 
 ## 2026-09-29
 
+### Turn page mock, revision 3: BG3-style turns and movement
+
+- Owner decision 8: turns work like Baldur's Gate 3, with an initiative bar, then movement within the character's speed on the stage, then the action (the reply). Positions become game state, superseding "visual only".
+- The mock shows the turn order bar, a range ring, path preview with distance, and walking blocked by set footprints. Clicking a character flies the camera to them; a second click opens their card. Headlines use the site's display serif.
+- Details: [feature-stage-turn-mock](plans/feature-stage-turn-mock.md).
+
 ### Turn page mock, revision 2: the prototype's presentation and the living line
 
 - The owner reviewed the docked-panel mock and preferred the Kordavos prototype's presentation: the full-screen cinematic HUD, the perspective bar, the living line and the warm styling. The mock was rebuilt that way. The narrative plays as the scene caption; the GM card carries the prompt, reply and roll; the story lives in a journal.

@@ -80,6 +80,22 @@ function edt(inside: Uint8Array, w: number, h: number) {
   }
   return g.map(Math.sqrt)
 }
+type AlphaMask = { w: number; h: number; inside: Uint8Array }
+// A coarse opacity mask of the art (256 px tall), for picking only the painted figure, not its transparent card.
+function alphaMask(img: HTMLImageElement): AlphaMask {
+  const h = 256
+  const w = Math.max(8, Math.round((h * img.width) / img.height))
+  const c = document.createElement("canvas")
+  c.width = w
+  c.height = h
+  const cx = c.getContext("2d", { willReadFrequently: true })!
+  cx.drawImage(img, 0, 0, w, h)
+  const px = cx.getImageData(0, 0, w, h).data
+  const inside = new Uint8Array(w * h)
+  for (let i = 0; i < w * h; i++) inside[i] = px[i * 4 + 3] > 127 ? 1 : 0
+  return { w, h, inside }
+}
+
 // Normal map from the silhouette alone: distance-to-edge, shaped into a rounded pillow, differentiated.
 function bulgeNormals(img: HTMLImageElement) {
   const H = 256
@@ -183,6 +199,8 @@ interface Standee {
   normalB?: THREE.Texture
   aspect: number
   aspectB: number
+  mask?: AlphaMask
+  maskB?: AlphaMask
 }
 
 const loadImage = (src: string) =>
@@ -243,6 +261,7 @@ export class Standees {
         const [front, back] = await Promise.all([loadImage(s.cast.art.front), s.cast.art.back ? loadImage(s.cast.art.back).catch(() => null) : Promise.resolve(null)])
         s.map = this.texFor(front)
         s.normal = bulgeNormals(front)
+        s.mask = alphaMask(front)
         s.mat.map = s.map
         s.mat.normalMap = s.normal
         s.depth.map = s.map
@@ -252,6 +271,7 @@ export class Standees {
         if (back) {
           s.mapB = this.texFor(back)
           s.normalB = bulgeNormals(back)
+          s.maskB = alphaMask(back)
           s.aspectB = back.width / back.height
           s.bu.uMapB.value = s.mapB
         }
@@ -310,6 +330,15 @@ export class Standees {
       if (s.mat.normalMap !== nm) s.mat.normalMap = nm
       s.depth.map = (showB ? s.mapB : s.map) ?? null
     }
+  }
+  // Whether a hit at this uv on a cast member's card lands on the painted figure (for picking).
+  opaqueAt(id: string, uv: { x: number; y: number }) {
+    const s = this.items.get(id)
+    const m = s && (s.back > 0.5 && s.maskB ? s.maskB : s.mask)
+    if (!m) return true
+    const x = Math.min(m.w - 1, Math.max(0, Math.floor(uv.x * m.w)))
+    const y = Math.min(m.h - 1, Math.max(0, Math.floor((1 - uv.y) * m.h)))
+    return m.inside[y * m.w + x] === 1
   }
   // World-space point just above the head, where a speech bubble anchors.
   head(id: string, out = new THREE.Vector3()) {

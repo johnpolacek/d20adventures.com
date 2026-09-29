@@ -27,7 +27,7 @@ export function CharacterCard({ info, compact = false, onClose }: { info: CardIn
         <img src={info.portrait} alt="" className="-mt-1 mb-3 block h-[132px] w-full border border-stage-brass/50 object-cover object-[50%_15%] [filter:sepia(.2)_saturate(.88)]" />
       )}
       <div className={eyebrow}>{info.role}</div>
-      <h2 className="mt-1.5 mb-2.5 font-serif text-[27px] font-normal">{info.name}</h2>
+      <h2 className="mt-1.5 mb-2.5 font-display text-[24px] font-normal leading-tight">{info.name}</h2>
       {info.about && <p className="mb-2 text-[12px] leading-[1.7] text-[#e6dac6]">{info.about}</p>}
       {info.lines && info.lines.length > 0 && (
         <>

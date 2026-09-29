@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Stageview](stageview.md)
 
-Status: Revision 2 (prototype presentation plus the living line) implemented and validated as a dev mock (2026-09-29); not merged · first slice of Stageview phase 4 (the stage-first turn page)
+Status: Revision 3 (BG3-style turns and movement on the prototype presentation) implemented and validated as a dev mock (2026-09-29); not merged · first slice of Stageview phase 4 (the stage-first turn page)
 
 ## Goal
 
@@ -34,6 +34,27 @@ Throughout:
 - The journal (top bar) holds every word of the story, the replies and the rolls, plus table chat.
 - Clicking a character opens their card. H hides the interface, and settings holds render quality and motion.
 - While the GM card is up, shots compose in the space above it (`Stage.setInsets`), so the character being asked stays in view.
+
+## Revision 3 (2026-09-29): Baldur's Gate 3 turns and movement
+
+The owner asked for three changes: clicking a character should take you to them, the headlines should use the site's display serif, and turns should be structured like BG3, with movement.
+
+- **Headlines:** the caption title, title card, card names, journal headings and the roll skill use `font-display` (Cinzel Decorative).
+- **Click to travel:** clicking a character on the stage (alpha-tested, so the transparent part of a card does not count) or a portrait flies the camera to them. A second click opens their card.
+- **Turn order bar** at the top: the party in initiative order, Garlan as an NPC, the active character larger in gold, and a label for whose turn it is.
+- **Movement on your turn:**
+  - a dashed range ring on the ground;
+  - hover to preview the path with its length (red past a solid footprint or out of reach);
+  - click to walk there.
+  
+  The GM card shows a movement meter (speed 7.5 m for the dwarf and halfling, 9 m otherwise). The camera re-frames the actor where they stop, and the journal records "Moves 4.2 m". The reply button is now **End turn**.
+- **Stage API:** `groundAt`, `reach` (straight-line walk against the set's footprints within a budget), `castAt`, and `projectPoint(...).behind`.
+- Checked with real mouse events over CDP:
+  - hover preview;
+  - a 1.8 m move, which drained the meter to 5.7 m;
+  - an over-budget or blocked preview;
+  - focusing Garlan and Yeva from the turn bar;
+  - Garlan's card on the second click.
 
 ## Built (kept for the real page)
 
@@ -79,4 +100,5 @@ Throughout:
 - [x] Revision 1: docked panel (replaced after owner review)
 - [x] Revision 2: prototype HUD, perspective bar, warm styling, queue loop (the Director as a set loop)
 - [x] Scripted gates encounter at `/dev/turn`; desktop and phone checks
-- [ ] Owner review of revision 2
+- [x] Revision 3: BG3 turn order, movement, click-to-focus, display-serif headlines
+- [ ] Owner review of revision 3

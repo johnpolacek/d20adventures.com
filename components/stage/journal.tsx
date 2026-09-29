@@ -11,7 +11,7 @@ export interface JournalTurn {
   number: number
   title: string
   paragraphs: string[]
-  reply?: { name: string; text: string }
+  reply?: { name: string; text: string; moved?: number }
   roll?: { name: string; skill: string; dc: number; base: number; total: number; success: boolean }
 }
 export interface ChatLine {
@@ -44,10 +44,11 @@ export function Journal({ turns, chat, compact = false, onClose }: { turns: Jour
         {tab === "story" &&
           turns.map((t) => (
             <article key={t.number} className="mb-6">
-              <h3 className="mb-2 font-serif text-[20px] text-[#f3d6a6]">{t.title}</h3>
+              <h3 className="mb-2 font-display text-[17px] text-[#f3d6a6]">{t.title}</h3>
               {t.reply && (
                 <div className="mb-2 border-l border-stage-brass/50 pl-3 font-serif text-[13px] text-stage-muted italic">
                   <span className="not-italic text-[9px] tracking-[0.2em] text-stage-gold uppercase">{t.reply.name}</span>
+                  {t.reply.moved ? <div className="not-italic text-[11px] text-[#e8c898]">Moves {t.reply.moved.toFixed(1)} m</div> : null}
                   <div>{t.reply.text}</div>
                 </div>
               )}
