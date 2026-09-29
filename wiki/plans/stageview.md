@@ -282,6 +282,13 @@ Findings:
     - 16 variants repeat in dense areas.
     - The pawn/card swap pops with no crossfade.
     - Paving, canopies and tower silhouettes are still flat or blocky.
+- **Back views (same day).** The owner asked for front and back.
+  - Generated a back view for each of the 16 crowd types and the 5 heroes, conditioned on each figure's own front art: 24 generations, including 3 retries for gear on the wrong hand.
+  - Crowd backs go in atlas layers 16–31. In the shader the card shows its back beyond 90° off the figure's facing, the camera-facing clamp re-centres on the facing plus 180°, and a colour dither across 80–100° hides the switch.
+  - Heroes and the character mask use the same logic.
+  - Cost: the same draw calls; the card texture memory doubles to about 64 MB; the HTML grows to 8.8 MB.
+  - A queue seen from behind now shows backs.
+  - Across the four prototype rounds (heroes, detailed heroes, crowd, backs) that is about 50 generations. For the production pipeline, budget one front plus one back generation per character and per crowd type.
 - This brings back the avatar → full-body pipeline removed in phase 1 (`lib/encounterview/standee.ts` at `52ebdb9`, chroma key via `sharp`), retargeted to the world style. The prototype's `scripts/gen-standees.mjs` keys on distance from the green screen so that green cloaks survive. That script borrows `sharp` from this checkout, which phase 1 removed, so it will break after the next `pnpm install`.
 
 ## Unknowns
