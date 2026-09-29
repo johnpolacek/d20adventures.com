@@ -6,6 +6,16 @@ Git owns routine implementation history. This log records durable wiki, planning
 
 ## 2026-09-29
 
+### Removed the old 3D encounter stack on `feature/remove-3d-stack`
+
+- Executed phase 1 of [Stageview](plans/stageview.md) in a worktree, per the owner decision to discard the old stack and rebuild. There are no real players, so no data migration or refunds. Plan and results: [Remove 3D stack](plans/feature-remove-3d-stack.md).
+- Removed the r3f encounter view, scene-kit, scene sets and pipeline, dev pages and fixtures, the scene, mini and preview server actions, the dormant `miniatures-map.tsx`, and the 3D parts of `lib/map-utils.ts`. That is 173 files, about 13,600 lines of TypeScript and scripts, and 45.4 MB of standee and model assets. The 500-token standee and 2,000-token mini products went with them.
+- Removed 8 dependencies: `@react-three/{fiber,drei,postprocessing}`, `@gltf-transform/{core,extensions,functions}`, `n8ao` and `sharp`. `three` and `@types/three` stay.
+- Re-homed the 2D map as `components/mapview/map-panel.tsx` (rail card, fullscreen view, below-xl button), restoring its pre-encounter-view shape. The turn page shows it only when the encounter has a stored map.
+- Kept for compatibility: the Convex `usage_encounter_asset` ledger literal, `map3d` / `map3dKey` and the `Encounter3D*` schemas, and the now-unused `image-proxy` route.
+- Validation: TypeScript clean; lint 0 warnings and 1 info (baseline 7 warnings and 3 infos); production build passes; 15 of 16 Playwright cases pass on a production server, and the sixteenth (the signed-out admin test) passes on a dev server, matching the known production limitation. The map panel was checked in a browser on a fixture page. The real turn page was not rendered because the worktree database is empty.
+- Open: S3 prefixes (`settings/<settingId>/scenes3d/`, `images/minis/`, `images/minis3d/`, `images/scene-previews/`), branches `minimap-claude`, `claude/competent-moore-d09a8e` and `origin/claude/stoic-gates`, the unused `FAL_KEY`, `~/Projects/asset-pipeline`, a Convex deploy for the narrowed token args, and the worktree's Convex project. Not merged; `wt:finish` has not been run.
+
 ### Assessed the Kordavos v4 painted 3D demo; owner chose it over the existing 3D stack
 
 - Evaluated `~/Projects/d20-graphics-test-2/kordavos-v4.html`. It is a 2.49 MB offline, plain three.js staging of March of Davos "The Gates of Kordavos".

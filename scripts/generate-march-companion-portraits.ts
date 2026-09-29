@@ -1,6 +1,6 @@
 // One-off: generate portraits for the March of Davos premade companions and
 // upload them to the public S3 bucket, mirroring the covert-cargo pcs layout.
-// Uses the same Gemini image model as the encounter standee pipeline.
+// Uses a Gemini image model (MODEL_ID below).
 // Run: node --env-file=.env --env-file=.env.local --import tsx scripts/generate-march-companion-portraits.ts
 // Then paste the printed URLs into the companion .json sheets and .md profiles.
 

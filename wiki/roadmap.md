@@ -16,7 +16,7 @@ A cinematic, immersive mode. Encounter narrative is presented one paragraph at a
 A tabletop-inspired visual layer: 2D standard D&D-style battle maps, AI-generated at authoring time from encounter text using a standard SVG piece set (designed in OpenPencil). Square grid first (hex-ready schema). A static scene backdrop per encounter — the narrative and choices remain the primary interface; the map shows where you are in the world. Plan: [Mapview](plans/mapview.md).
 
 ### Stageview (proposed; supersedes Miniview)
-A living, painted 3D stage for each encounter. It is built from procedural three.js sets per location, uses instanced animated crowds, and applies a painterly Kuwahara post-process. Per-turn beats stage the narrative, and the scene holds while it waits for players. On 2026-09-29 the owner chose this direction over the existing 3D stack. The old stack includes the r3f encounter diorama, scene-kit sets, standees, Hunyuan minis, and the dormant Miniview renderer, and it may be removed entirely. Plan: [Stageview](plans/stageview.md).
+A living, painted 3D stage for each encounter. It is built from procedural three.js sets per location, uses instanced animated crowds, and applies a painterly Kuwahara post-process. Per-turn beats stage the narrative, and the scene holds while it waits for players. On 2026-09-29 the owner chose this direction over the existing 3D stack. The old stack (the r3f encounter diorama, scene-kit sets, standees, Hunyuan minis, and the dormant Miniview renderer) was removed on `feature/remove-3d-stack` on 2026-09-29; until Stageview ships, the turn page offers only the 2D Mapview. Plans: [Stageview](plans/stageview.md), [Remove 3D stack](plans/feature-remove-3d-stack.md).
 
 ## Adventure Creation
 

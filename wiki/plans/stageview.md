@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Roadmap](../roadmap.md) · [Architecture](../Architecture.md)
 
-Status: **assessment + proposed plan** (2026-09-29) · working name "Stageview" is a proposal · no code changed yet
+Status: **assessment + proposed plan** (2026-09-29) · working name "Stageview" is a proposal · old 3D stack removed on `feature/remove-3d-stack` (see [plan](feature-remove-3d-stack.md)); no Stageview code yet
 
 ## Decision (2026-09-29)
 
@@ -143,29 +143,32 @@ Runtime behaviour:
 
 ## Removal inventory (clean slate)
 
-All 3D dependencies are imported only by these modules (verified via grep on 2026-09-29).
+**Done on `feature/remove-3d-stack` (2026-09-29; not yet merged).** Details, validation and leftovers are in [feature-remove-3d-stack](feature-remove-3d-stack.md). The list below is kept as the record of what was removed, with the deviations noted inline.
 
-- **Code:**
+All 3D dependencies were imported only by these modules (verified via grep on 2026-09-29).
+
+- **Code (removed):**
   - `components/encounterview/*` (2,431 LOC) and `lib/encounterview/*` (1,263)
   - `lib/scene-kit/*` (about 4,900), `lib/scene-sets/*`, `lib/scene-pipeline/*` and `scripts/scene-pipeline/*`
   - `scripts/encounterview-assets-build.mjs`
   - `app/dev/set-preview`, `app/dev/scene-preview`, `public/dev-fixtures`
   - `app/_actions/generate-encounter-scene.ts`, `app/_actions/generate-character-mini.ts`, `types/encounter-scene-3d.ts`
+  - Also removed: `app/_actions/scene-preview.ts` (rail snapshot upload) and the unreferenced `lib/map-preview-tokens.ts`.
   - The dormant `components/adventure/miniatures-map.tsx` (2,448) and `app/_actions/generate-encounter-map.ts`
   - The 3D-only parts of `lib/map-utils.ts`. Keep `inferEncounterSceneKit`, `findEncounterById` and the other helpers Mapview uses.
-- **Assets:** `public/standees/` (24 MB) and `public/models/encounter/` (20 MB, including KayKit and generated props).
-- **Dependencies:** `@react-three/fiber`, `@react-three/drei`, `@react-three/postprocessing` (which brings `postprocessing` and `n8ao`), and `@gltf-transform/*`. Also `sharp` if nothing else needs it; recheck. Keep `three`.
-- **Re-home first.** `EncounterRailPanel` / `EncounterPanel` also host the 2D Mapview rail and its fullscreen view (`components/adventure/turn.tsx:70,82`). Extract a map-only panel before deleting.
-- **Keep:** the Convex `usage_encounter_asset` literal, while ledger rows exist.
-- **Branches to retire:** `minimap-claude`, `claude/competent-moore-d09a8e`, and `origin/claude/stoic-gates`. `2d-maps` is already salvaged into Mapview.
-- **S3 prefixes to retire once replaced:** `scenes3d/`, `images/minis/`, `images/minis3d/`, `images/scene-previews/`.
+- **Assets (removed):** `public/standees/` (24 MB) and `public/models/encounter/` (20 MB, including KayKit and generated props).
+- **Dependencies (removed):** `@react-three/fiber`, `@react-three/drei`, `@react-three/postprocessing`, `@gltf-transform/core|extensions|functions`, `n8ao` (a direct dependency with no imports; `postprocessing` was transitive) and `sharp` (nothing else used it). `three` and `@types/three` are kept.
+- **Re-homed first (done).** The 2D Mapview rail card, fullscreen view and below-xl button now live in `components/mapview/map-panel.tsx` (`MapRailPanel`, `MapPanel`), mounted from `components/adventure/turn.tsx`.
+- **Kept:** the Convex `usage_encounter_asset` literal in the ledger schema, while ledger rows exist. The standee and mini token costs and charge paths are gone.
+- **Branches to retire (not done):** `minimap-claude`, `claude/competent-moore-d09a8e`, and `origin/claude/stoic-gates`. `2d-maps` is already salvaged into Mapview.
+- **S3 prefixes to retire (not done; remote data):** `settings/<settingId>/scenes3d/`, `images/minis/`, `images/minis3d/`, `images/scene-previews/`.
 - **External repo no longer needed:** `~/Projects/asset-pipeline`.
 
 ## Phases
 
-1. **Clean slate** (feature worktree).
+1. **Clean slate** (feature worktree). **Done 2026-09-29 on `feature/remove-3d-stack`.**
    - Extract the map-only encounter panel, delete the inventory above, and drop the standee and mini token products.
-   - Validation: build, TypeScript, lint, Playwright; the turn page still shows the map rail and fullscreen map.
+   - Validation: build, TypeScript, lint, Playwright pass; the map rail and fullscreen map were checked on a fixture page. The real turn page was not rendered because the worktree database is empty.
 2. **Engine port.**
    - `lib/stage/` TS port of the demo kit with the fixes above: fixed-res paint, MSAA, scoped fog, tiers, pause, dispose, head GLB, LOD.
    - Add `/dev/stage` and the verify script.

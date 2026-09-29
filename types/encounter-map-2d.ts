@@ -13,7 +13,7 @@ export type GridType = z.infer<typeof gridTypeSchema>
 export const groundTypeSchema = z.enum(["grass", "dirt", "stone", "sand", "cave", "wood", "snow"])
 export type GroundType = z.infer<typeof groundTypeSchema>
 
-// Superset of the 3D scene kits (so inferEncounterSceneKit output is always valid)
+// Superset of Encounter3DSceneKit (so inferEncounterSceneKit output is always valid)
 // plus 2D-only kits; the generation model picks the best fit from the narrative.
 export const mapSceneKitSchema = z.enum(["generic", "checkpoint", "city_gate", "courtyard", "ruins", "shrine", "camp", "road", "crypt", "cavern", "forest", "grove"])
 export type MapSceneKit = z.infer<typeof mapSceneKitSchema>

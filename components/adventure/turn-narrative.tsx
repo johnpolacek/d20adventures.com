@@ -3,8 +3,8 @@
 // Page-level turn narrative: owns the singleton per-page effects (auto-navigate
 // to newly created turns, NPC processing trigger, window auto-scroll) plus
 // page-only chrome (Go To Reply bar, storyview/original-replies bar, practice
-// reports). The shared render core lives in TurnNarrativeBody, also used by the
-// encounter view's turn modal — keep effects here so they fire exactly once.
+// reports). The shared render core lives in TurnNarrativeBody — keep effects here
+// so they fire exactly once even if another surface renders the body.
 
 import { useUser } from "@clerk/nextjs"
 import Link from "next/link"

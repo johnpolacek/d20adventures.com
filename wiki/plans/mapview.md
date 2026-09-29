@@ -10,7 +10,7 @@ Status: v1 merged to main (2026-07-03) · progress tracker archived at [zzz-comp
 
 ## Decisions (2026-07-02)
 
-- **Mapview is 2D.** The roadmap's original "realistic 3D tile map" vision is split off as a separate future **Miniview**. The 3D implementation was shelved on 2026-03-12 (`126200c`) because visual quality fell short; the renderer stays dormant (`components/adventure/miniatures-map.tsx`, `lib/map-utils.ts`, `app/_actions/generate-encounter-map.ts`, plus the `minimap-claude` branch with SSAO/HDR/archetype-token improvements).
+- **Mapview is 2D.** The roadmap's original "realistic 3D tile map" vision is split off as a separate future **Miniview**. The 3D implementation was shelved on 2026-03-12 (`126200c`) because visual quality fell short; the renderer stayed dormant (`components/adventure/miniatures-map.tsx`, `lib/map-utils.ts`, `app/_actions/generate-encounter-map.ts`, plus the `minimap-claude` branch with SSAO/HDR/archetype-token improvements). *Update 2026-09-29: the dormant renderer, its action and the 3D parts of `map-utils.ts` were deleted on `feature/remove-3d-stack`; the branch remains. Stageview supersedes Miniview.*
 - **AI-generated at authoring time, stored.** An author triggers generation per encounter; the result is reviewable before publish and deterministic for players. No play-time generation cost or latency.
 - **Storage reuses the existing externalization.** Per-encounter map JSON in S3 at `settings/{settingId}/maps/{adventurePlanId}/{encounterId}.json` with lazy hydration (`loadAdventurePlanFromStorage(..., { includeMaps: true })`) — already built in `lib/adventure-plan-storage.ts`.
 - **Standard piece set as SVG, designed in OpenPencil.** [OpenPencil](https://github.com/ZSeven-W/openpencil) (MIT, open-source AI-native vector design tool) is the design surface for the piece library. Workflow (verified 2026-07-02): pieces live as PenNode frames in the committed OpenPencil document `design/mapview-pieces.op` (one top-level frame per catalog pieceId, 96 units/cell, authored headlessly via `op insert --file` or interactively in the app); `scripts/mapview-pieces-compile.ts` compiles PenNode → SVG into the generated `components/mapview/pieces-art.ts`; the renderer prefers compiled art and falls back to code-drawn procedural SVG (kept for high-count natural clutter where per-instance seeded variation reads better). Note: OpenPencil has no native SVG export — the compiler covers the rect/ellipse/line/path/gradient/shadow subset we use. Crisp at any zoom, no runtime asset pipeline, zero runtime dependency on OpenPencil.
@@ -24,10 +24,10 @@ Status: v1 merged to main (2026-07-03) · progress tracker archived at [zzz-comp
 |---|---|
 | `2d-maps` branch (`ed402aa`): `types/encounter-map-2d.ts` | **Foundation.** Board/walls/terrain-kinds (`blocking/difficult/hazard/cover`)/zones (`spawn/objective/interest`)/labels/party-slots/NPC-starts/notes are right. Needs `gridType`, hex-compatible coords, and a `piece` concept replacing bare color+label rects. |
 | `2d-maps` branch: `lib/encounter-map-2d.ts` templates (`road/shrine/camp/courtyard/ruins/cavern/gate`) | Reuse as generation scaffolding / few-shot examples. |
-| 3D pipeline: `app/_actions/generate-encounter-map.ts` (scene-kit inference + `generateObject` against a zod schema, per-kit prompt guidance) | **Transplant directly** — retarget the schema from `encounter3dMapSchema` to the 2D schema. `inferEncounterSceneKit` in `lib/map-utils.ts` reuses as-is. |
+| 3D pipeline: `app/_actions/generate-encounter-map.ts` (scene-kit inference + `generateObject` against a zod schema, per-kit prompt guidance) | **Transplant directly** — retarget the schema from `encounter3dMapSchema` to the 2D schema. `inferEncounterSceneKit` in `lib/map-utils.ts` reuses as-is (it is the part of `map-utils.ts` that remains). |
 | `2d-maps` branch: 874-line `encounter-map-2d-editor.tsx` | Defer. AI generation means no editor in v1; keep as reference for a future manual touch-up surface. It mounted in the legacy plan editor (removed at cutover), so it would need re-homing anyway. |
-| `miniatures-map.tsx` (2,448 lines) + `map-utils.ts` scene rendering + `minimap-claude` branch | Stays dormant for Miniview. `claude/stoic-gates` deleted 2026-07-02 (strict subset of `minimap-claude`). |
-| Encounter schema: `map3d` / `map3dKey` optional fields | Leave untouched (legacy/Miniview). Mapview adds its own field (e.g. `map2d` / `map2dKey`). |
+| `miniatures-map.tsx` (2,448 lines) + `map-utils.ts` scene rendering + `minimap-claude` branch | Stayed dormant for Miniview. `claude/stoic-gates` deleted 2026-07-02 (strict subset of `minimap-claude`). **2026-09-29:** `miniatures-map.tsx`, the 3D `map-utils.ts` parts and `generate-encounter-map.ts` deleted on `feature/remove-3d-stack`; `minimap-claude` remains as a branch to retire. |
+| Encounter schema: `map3d` / `map3dKey` optional fields | Leave untouched (legacy). Mapview adds its own field (e.g. `map2d` / `map2dKey`). Still kept after the 3D removal, for data compatibility. |
 
 ## Known Gaps to Cover
 
@@ -63,4 +63,4 @@ The piece catalog grows demand-driven, per adventure — not speculatively. Rule
 - Manual map editor / touch-up surface
 - Gameview/Storyview/Mapview mode switcher
 - Positional game state or token movement
-- Miniview (3D miniatures) — separate future plan
+- Miniview (3D miniatures) — superseded by [Stageview](stageview.md); the old implementation was removed 2026-09-29

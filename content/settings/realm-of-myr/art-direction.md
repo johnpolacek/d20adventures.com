@@ -4,7 +4,7 @@ settingId: "realm-of-myr"
 title: "Realm of Myr — Art Direction"
 ---
 
-Authoritative look reference for every 3D scene set in this setting. Materials, palette and heraldry here override anything a model infers from encounter text. Not part of the wiki graph: the scene pipeline reads this file directly (scripts/scene-pipeline/brief.ts).
+Authoritative look reference for every painted scene set in this setting. Materials, palette and heraldry here override anything a model infers from encounter text. Not part of the wiki graph: scene-authoring tooling reads this file directly (the old scripts/scene-pipeline reader was removed; Stageview will read it).
 
 ## Overall
 
