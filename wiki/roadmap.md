@@ -13,6 +13,8 @@ The default experience. Text-driven, turn-by-turn play with the AI Game Master. 
 A cinematic, immersive mode. Encounter narrative is presented one paragraph at a time, with each paragraph read aloud via AI-generated text-to-speech. The player taps to advance between paragraphs. Decision points and dice rolls still occur — they are narrated just like the story text. Feels like an interactive audiobook.
 
 ### Mapview
+**Direction change (2026-09-29):** Mapview becomes the larger-scale map (a city, wilderness travel, exploring ruins), not a per-encounter backdrop, because encounters are staged in Stageview. The description below is the shipped per-encounter version.
+
 A tabletop-inspired visual layer: 2D standard D&D-style battle maps, AI-generated at authoring time from encounter text using a standard SVG piece set (designed in OpenPencil). Square grid first (hex-ready schema). A static scene backdrop per encounter — the narrative and choices remain the primary interface; the map shows where you are in the world. Plan: [Mapview](plans/mapview.md).
 
 ### Stageview (primary play screen; supersedes Miniview)

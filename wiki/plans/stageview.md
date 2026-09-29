@@ -201,7 +201,7 @@ All 3D dependencies were imported only by these modules (verified via grep on 20
    - The festival street becomes the `the-harvest-festival` set.
    - Generalize `Director` into set loops plus staging scripts.
    - Port the crowd library (the prototype's 16 variants, fronts and backs) as the Realm of Myr crowd library.
-4. **Stage-first turn page and character art** (revised for decision 5).
+4. **Stage-first turn page and character art** (revised for decision 5). A dev mock of the turn page with scripted turns ran on `feature/stage-turn-mock` on 2026-09-29 ([plan](feature-stage-turn-mock.md)). It adds beats, cast movement, panel insets and the landscape gate.
    - The turn page renders Stage full-bleed; see [Stage-first play](#stage-first-play-decided-2026-09-29).
    - Add a server-side generator: portrait → world-style front and back standee (reinstate keying with `sharp`). Store it per character in S3, and set a token price. Premades get art ahead of time; custom characters get it at creation.
    - Add per-turn beats generation and hold binding, portrait plates, NPC and PC cards, and Storyview (TTS) sync.
@@ -224,6 +224,7 @@ All 3D dependencies were imported only by these modules (verified via grep on 20
 6. **Phones play in landscape.** In portrait on a phone, play is blocked by a rotate prompt.
    - iOS Safari cannot lock orientation: it has no `screen.orientation.lock()`, iPhone has no element fullscreen, and installed web apps ignore the manifest's `orientation`. There the prompt is the only enforcement.
    - Android Chrome can lock to landscape after the page enters fullscreen, and when installed via the manifest's `"orientation": "landscape"`.
+7. **Mapview is for larger maps** (later on 2026-09-29): a city, wilderness travel, or exploring ruins, not a map per encounter. Encounters are staged; Mapview shows where the party is in the wider world. The current per-encounter battle-map generation needs a new plan.
 
 ## Stage-first play (decided 2026-09-29)
 
@@ -243,7 +244,7 @@ The turn page becomes the stage. Proposed shape, to settle in the phase 4 plan:
 - **Other modes (proposed, not yet decided).**
   - Gameview becomes the docked text layer plus the no-GPU fallback, not a peer mode.
   - Storyview becomes the stage's narration track.
-  - Mapview: retire it, or keep the battle map as a toggleable inset if tactical positions ever matter. Positions are visual only today.
+  - Mapview: decided (decision 7). It becomes the larger-scale map (city, travel, ruins), not an encounter backdrop.
 
 ## Open: close-ups of player characters
 

@@ -6,6 +6,7 @@ Active planning work for D20 Adventures. The wiki-adventure runtime is merged an
 
 ## Active
 
+- **[Stage-first turn mock](feature-stage-turn-mock.md)** — the stage-first turn page as a dev mock (`/dev/turn`) with scripted gate turns, beats, docked panel, dialogue plates and the landscape gate. On `feature/stage-turn-mock`; validated 2026-09-29, not merged.
 - **[Stageview](stageview.md)** — assessment and plan (2026-09-29) to replace the whole 3D stack (r3f encounter diorama, scene-kit, standees, Hunyuan minis) with the painted procedural three.js approach from the `d20-graphics-test-2` Kordavos v4 demo. Includes measurements, experiments, removal inventory, and phases. Owner decisions are recorded; phase 1 (clean slate) is merged to main.
 - **[Storyview](feature-storyview.md)** — token-funded TTS audio narration of turns (Gemini TTS, narrator + per-character voices) with a full-screen cinematic paragraph-at-a-time mode. On `feature/storyview` (worktree, branched off `feature/play-layout-refactor`).
 - **[Mapview](mapview.md)** — 2D D&D-style battle maps: AI-generated at authoring time from a standard SVG piece set, square grid, static encounter backdrop. v1 merged to main 2026-07-03; catalog growth (water/interiors/city pieces) is next.

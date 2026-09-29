@@ -311,11 +311,11 @@ export class Standees {
       s.depth.map = (showB ? s.mapB : s.map) ?? null
     }
   }
-  // World-space head position, for bubbles and plates.
+  // World-space point just above the head, where a speech bubble anchors.
   head(id: string, out = new THREE.Vector3()) {
     const s = this.items.get(id)
     if (!s) return null
-    return out.set(s.cast.x, s.cast.height * 0.92, s.cast.z)
+    return out.set(s.cast.x, s.cast.height * 1.04, s.cast.z)
   }
   reset() {
     for (const s of this.items.values()) s.yaw = null

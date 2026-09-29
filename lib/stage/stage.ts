@@ -12,9 +12,9 @@ import { autoTier, DEFAULT_FLAGS, type Flags, TIERS, type TierName } from "./qua
 import { Pipeline } from "./render/pipeline"
 import { skyMaterial } from "./sky"
 import { buildSetGeometry, populateCrowd } from "./spec/build"
-import { type ResolvedShot, resolveCast, resolveShots } from "./spec/resolve"
+import { frameShot, type ResolvedShot, resolveCast, resolveShots } from "./spec/resolve"
 import { type SetSpec, setSpecSchema } from "./spec/set"
-import { type StagingSpec, stagingSpecSchema } from "./spec/staging"
+import { type StagingShot, type StagingSpec, stagingSpecSchema } from "./spec/staging"
 
 // The Stage runtime: one set (plus an optional staging) rendered into a canvas it owns inside `container`.
 // Plain imperative three.js; the host (a React component) creates it, calls shot()/setTier()/pause(), and disposes it.
@@ -80,13 +80,13 @@ export class Stage {
   readonly crowd: Crowd
   readonly standees: Standees
   readonly cast: CastMember[]
-  readonly shots: Record<string, ResolvedShot>
   readonly controls: OrbitControls | null
   readonly sun: THREE.DirectionalLight
   tier: TierName
   flags: Flags
   motion: boolean
   activeShot: string | null = null
+  private activeFov: number | null = null
   ready = false
 
   private materials: MaterialLibrary
@@ -97,6 +97,9 @@ export class Stage {
   private sky: THREE.Mesh
   private envTexture: THREE.Texture
   private transition: Transition | null = null
+  private settleWaiters: (() => void)[] = []
+  private moves = new Map<string, { tx: number; tz: number; speed: number; resolve: () => void }>()
+  private insets = { right: 0, bottom: 0 }
   private raf = 0
   private running = false
   private paused = false
@@ -203,7 +206,6 @@ export class Stage {
     this.cast = resolveCast(set, staging)
     this.standees = new Standees(this.cast, this.shared, maxAnisotropy)
     this.world.add(this.standees.group)
-    this.shots = resolveShots(set, staging, this.cast)
 
     this.pipeline = new Pipeline(renderer, this.scene, this.camera)
     this.pipeline.mask.setSources([
@@ -260,10 +262,23 @@ export class Stage {
     // Portrait screens keep the set in frame by widening the lens.
     return this.camera.aspect >= 1 ? fov : Math.min(100, THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(fov) / 2) / Math.sqrt(this.camera.aspect))))
   }
-  shot(name: string, { instant = false } = {}) {
-    const s = this.shots[name]
+  // Set and staging shots, framed on where the cast stands now (group and subject shots follow the characters).
+  get shots(): Record<string, ResolvedShot> {
+    return resolveShots(this.set, this.staging, this.cast)
+  }
+  // A named shot, or an inline one (absolute, group or subject). Eased over 2.2 s unless instant or motion is off.
+  shot(which: string | StagingShot, { instant = false, duration = 2200 } = {}) {
+    let s: ResolvedShot | undefined
+    if (typeof which === "string") s = this.shots[which]
+    else
+      try {
+        s = frameShot(which, this.cast)
+      } catch {
+        s = undefined
+      }
     if (!s) return false
-    this.activeShot = name
+    this.activeShot = typeof which === "string" ? which : null
+    this.activeFov = s.fov
     const to = { pos: V(...s.position), target: V(...s.target), fov: this.lens(s.fov) }
     if (instant || !this.motion) {
       this.camera.position.copy(to.pos)
@@ -274,11 +289,121 @@ export class Stage {
       this.controls?.update()
       this.transition = null
       this.standees.reset()
+      this.settle()
     } else {
       const target = this.controls ? this.controls.target.clone() : this.camera.getWorldDirection(V()).multiplyScalar(10).add(this.camera.position)
-      this.transition = { from: { pos: this.camera.position.clone(), target, fov: this.camera.fov }, to, start: performance.now(), duration: 2200 }
+      this.transition = { from: { pos: this.camera.position.clone(), target, fov: this.camera.fov }, to, start: performance.now(), duration }
     }
     return true
+  }
+  // Resolves when the current camera move has finished.
+  shotSettled() {
+    return this.transition ? new Promise<void>((r) => this.settleWaiters.push(r)) : Promise.resolve()
+  }
+  private settle() {
+    const w = this.settleWaiters
+    this.settleWaiters = []
+    for (const r of w) r()
+  }
+  // Jump an in-progress camera move to its end.
+  finishShot() {
+    const tr = this.transition
+    if (!tr) return
+    this.camera.position.copy(tr.to.pos)
+    this.controls?.target.copy(tr.to.target)
+    if (!this.controls) this.camera.lookAt(tr.to.target)
+    this.camera.fov = tr.to.fov
+    this.camera.updateProjectionMatrix()
+    this.transition = null
+    this.settle()
+  }
+
+  // ── Cast ──
+  // A place on the set: a cast member, a mark, or a point [x, z].
+  point(ref: string | [number, number]): { x: number; z: number } {
+    if (Array.isArray(ref)) return { x: ref[0], z: ref[1] }
+    const c = this.cast.find((m) => m.id === ref)
+    if (c) return { x: c.x, z: c.z }
+    const m = this.set.marks[ref]
+    if (m) return { x: m.at[0], z: m.at[1] }
+    throw new Error(`unknown cast member or mark "${ref}"`)
+  }
+  private member(id: string) {
+    const c = this.cast.find((m) => m.id === id)
+    if (!c) throw new Error(`unknown cast member "${id}"`)
+    return c
+  }
+  // Walk a cast member to a mark or point, facing the way they go. Resolves on arrival.
+  moveCast(id: string, to: string | [number, number], { speed = 1.1 } = {}) {
+    const c = this.member(id)
+    const p = this.point(to)
+    this.moves.get(id)?.resolve()
+    this.moves.delete(id)
+    if (!this.motion) {
+      c.x = p.x
+      c.z = p.z
+      return Promise.resolve()
+    }
+    return new Promise<void>((resolve) => this.moves.set(id, { tx: p.x, tz: p.z, speed, resolve }))
+  }
+  // Every walk in progress arrives at once (skipping a beat sequence).
+  finishMoves() {
+    for (const [id, m] of this.moves) {
+      const c = this.member(id)
+      c.x = m.tx
+      c.z = m.tz
+      c.walking = false
+      m.resolve()
+    }
+    this.moves.clear()
+  }
+  // Turn a cast member toward another, a mark, a point, or to a heading in degrees.
+  faceCast(id: string, to: string | [number, number] | number) {
+    const c = this.member(id)
+    if (typeof to === "number") c.ry = THREE.MathUtils.degToRad(to)
+    else {
+      const p = this.point(to)
+      c.ry = Math.atan2(p.x - c.x, p.z - c.z)
+    }
+  }
+  // Place a cast member instantly (setting up a beat sequence).
+  placeCast(id: string, at: string | [number, number], facing?: string | [number, number] | number) {
+    const c = this.member(id)
+    const p = this.point(at)
+    this.moves.get(id)?.resolve()
+    this.moves.delete(id)
+    c.x = p.x
+    c.z = p.z
+    c.walking = false
+    if (facing !== undefined) this.faceCast(id, facing)
+  }
+  private stepMoves(dt: number) {
+    for (const [id, m] of this.moves) {
+      const c = this.member(id)
+      const dx = m.tx - c.x
+      const dz = m.tz - c.z
+      const dist = Math.hypot(dx, dz)
+      if (dist < 0.02) {
+        c.x = m.tx
+        c.z = m.tz
+        c.walking = false
+        m.resolve()
+        this.moves.delete(id)
+        continue
+      }
+      const step = Math.min(dist, m.speed * dt)
+      c.x += (dx / dist) * step
+      c.z += (dz / dist) * step
+      c.ry = Math.atan2(dx, dz)
+      c.walking = true
+    }
+  }
+
+  // UI laid over part of the canvas (a docked panel): shots compose in the uncovered area, and the scene continues
+  // under the panel. Implemented as a camera view offset, so framing, picking and projection all agree.
+  setInsets(insets: { right?: number; bottom?: number }) {
+    this.insets = { right: Math.max(0, insets.right ?? 0), bottom: Math.max(0, insets.bottom ?? 0) }
+    this.resize()
   }
   private constrain() {
     const { min, max } = this.set.camera
@@ -329,8 +454,12 @@ export class Stage {
   resize() {
     const w = Math.max(1, this.o.container.clientWidth)
     const h = Math.max(1, this.o.container.clientHeight)
-    this.camera.aspect = w / h
-    if (!this.transition && this.activeShot && this.shots[this.activeShot]) this.camera.fov = this.lens(this.shots[this.activeShot].fov)
+    const vw = Math.max(1, w - this.insets.right)
+    const vh = Math.max(1, h - this.insets.bottom)
+    this.camera.aspect = vw / vh
+    if (vw !== w || vh !== h) this.camera.setViewOffset(vw, vh, 0, 0, w, h)
+    else this.camera.clearViewOffset()
+    if (!this.transition && this.activeFov) this.camera.fov = this.lens(this.activeFov)
     this.camera.updateProjectionMatrix()
     this.renderer.setSize(w, h, false)
     this.pipeline.setSize(w, h, this.renderer.getPixelRatio())
@@ -372,6 +501,7 @@ export class Stage {
       this.fpsT = this.fpsN = 0
     }
     if (this.motion) {
+      this.stepMoves(dt)
       this.shared.time.value += dt
       this.crowd.update(dt)
       for (const f of this.life) f(this.shared.time.value)
@@ -386,7 +516,10 @@ export class Stage {
       else this.camera.lookAt(target)
       this.camera.fov = THREE.MathUtils.lerp(tr.from.fov, tr.to.fov, e)
       this.camera.updateProjectionMatrix()
-      if (t === 1) this.transition = null
+      if (t === 1) {
+        this.transition = null
+        this.settle()
+      }
     }
     this.controls?.update()
     this.constrain()

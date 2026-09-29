@@ -6,6 +6,13 @@ Git owns routine implementation history. This log records durable wiki, planning
 
 ## 2026-09-29
 
+### Stage-first turn page mock; Mapview repurposed
+
+- Built the stage-first turn page as a dev mock at `/dev/turn` on `feature/stage-turn-mock`. It plays five scripted gate turns: staged beats, head-anchored bubbles and portrait plates, holds with the GM prompt and composer, a Sleight of Hand roll, and the party walking through the gate.
+- Added the beat vocabulary and player (`lib/stage/beats.ts`), cast movement and live-framed shots, and `Stage.setInsets`, which composes shots around the docked panel. Added reusable components in `components/stage/`, including the landscape gate.
+- Checked on desktop at DPR 2, phone landscape and portrait (emulated), and tablet portrait (bottom sheet). Found that the mobile tier looks soft on 3× phones, so a real-phone measurement is needed. Details: [feature-stage-turn-mock](plans/feature-stage-turn-mock.md).
+- Owner decision 7: Mapview becomes the larger map (city, wilderness travel, ruins), not a per-encounter backdrop.
+
 ### Owner went all in: Stageview is the primary play screen
 
 - Decision 5: the turn page becomes the stage. The narrative, reply, dice, chat and history dock over a full-bleed Stage. Gameview becomes the text layer and the no-GPU fallback, and Storyview becomes the stage's narration track. The fate of Mapview is still open.
