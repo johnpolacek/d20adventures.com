@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Stageview](stageview.md)
 
-Status: Active (2026-09-29) · phase 2 of [Stageview](stageview.md)
+Status: Implemented and validated on `feature/stageview-engine` (2026-09-29); not merged · phase 2 of [Stageview](stageview.md)
 
 ## Goal
 
@@ -72,13 +72,62 @@ JSON only: no expressions, no code. Metres; `y` up; ground at `y = 0`; the set f
 - `scripts/stage-verify.ts` over CDP against system Chrome at `--force-device-scale-factor=2`, 1440×900 CSS: page ready, no exceptions, every program runnable, budgets per shot (≤ 300 draw calls, ≤ 2.5M triangles), a full screenshot per shot and native-pixel crops of each named character.
 - Compare against the prototype's `previews/v5b-*` and `v5w-*` shots.
 
+## Results (2026-09-29)
+
+About 6,700 lines of TypeScript under `lib/stage/` (Biome-formatted) plus a 1,770-line set spec (Biome expands its coordinate arrays). The Kordavos gate builds from JSON in about 240 ms in Node: 398 objects placed, 64 materials, 0.56M static triangles, 194 footprints, 32 lookout anchors and 1,587 people (155 walking).
+
+Measured on the M3 in Chrome 154, 1440×900 CSS, dev build, `motion=0` unless noted:
+
+| Tier | DPR | Paint | Gate | Party | Queue | Draw calls | Triangles (max) |
+|---|---|---|---|---|---|---|---|
+| Ultra (MSAA, AO, bloom) | 2 | 900 | 22 fps | 28 fps | 21 fps | 187–193 | 2.13M (ramparts) |
+| High (FXAA, AO) | 1.5 | 720 | 52 fps | 54 fps | 52 fps | 174–180 | 1.57M |
+| High, motion on | 1.5 | 720 | — | 44 fps | 40 fps | 174–178 | 1.38M |
+| Balanced | 1 | 540 | 66 fps (vsync) | 66 | 66 | 170–176 | 1.57M |
+| Mobile (card radius 40 m) | 1 | 480 | 66 fps (vsync) | 66 | 66 | 170–176 | 1.80M |
+
+- Prototype for comparison: high 37 fps (gate) and 43–46 (party); ultra about 21.
+- Every shot is within budget (≤ 300 draw calls, ≤ 2.5M triangles). The ramparts shot (a steep view, so every person is a pawn) needed coarser pawns: the average pawn fell from about 520 to about 313 triangles, and ramparts from 2.76M to 2.13M.
+- Steady-state JS heap is 42 MB after GC (prototype: 234 MB). Static geometry and the 64 MB card atlas drop their CPU copies after upload.
+- Ready in about 2 s on a warm dev server. There are 36–49 shader programs, all runnable.
+- The DPR 2 frames match the prototype's `v5w`/`v5b` shots. Native-pixel crops of Garlan at 2.5 m, and of Branka and Cassia in the party and two-shot, keep faces and costume detail.
+
+## Decisions and deviations
+
+- **Sets are JSON, not TS modules.** The interpreter runs only kit builders. Each object gets its own random stream (set seed plus its path), so editing one object leaves the rest of the set unchanged.
+- **Material roles.** A builder asks for roles such as `stone`, `trim` or `wall`. A role resolves through the object's `materials` map (inherited by children), then the builder's defaults, then the role's own name. Material-name params (a stall's `cloth`) resolve the same way.
+- **Layouts use `itemYaw`.** `yaw` belongs to the object envelope; on a layout it turns the whole row or scatter.
+- **Named characters are standees only.** The procedural hero rigs and the 1.8 MB MakeHuman head were not ported. A cast member is a position, a facing and a walk state.
+- **Pawns are coarse by design.** Hybrid LOD shows cards near the eye. `crowd=procedural` remains an A/B flag.
+- **Fog is scoped.** `stageMaterial()` patches each Stage material's own fog chunks, keyed in the program cache, and three's global `ShaderChunk` is untouched. The sun direction is a uniform.
+- **three r183.** `PCFSoftShadowMap` is deprecated, so shadows use `PCFShadowMap`. There is no `Clock`: frame time comes from rAF timestamps.
+- **Pixels for review come from the canvas.** CDP `Page.captureScreenshot` hangs on full-viewport captures of this page, and any CDP message over about 10 MB stalls the socket. `stage.capture()` renders a frame and reads the canvas in the same task; the verify script moves PNGs in 2 MB slices and cuts crops in the page.
+- **Ramparts shot moved** to `[-54, 70, 22]`, so it no longer clips the drum tower's hoarding.
+- **Assets are in the repo for now:** the Realm of Myr crowd library (2.0 MB) and the March of Davos standees and portraits (2.2 MB) under `public/stage/`. Phase 4 moves per-character art to S3.
+
+## Leftovers
+
+- Phase 3: generalize `Director` into set `loops` and staging scripts (the queue is static here), the festival street as its own set, time of day and weather toggles.
+- The spec has no `loops`, and staging has no scripts or beats yet.
+- Heraldry is limited to three named designs, with no parametric heraldry.
+- Pawn and card swaps still pop with no crossfade. The 16 crowd variants repeat in dense areas.
+- The mobile tier has not been measured on a phone.
+- Not yet measured on a production build (the numbers above are from the dev server).
+
+## Validation
+
+- `pnpm exec tsc --noEmit`: clean. `pnpm lint`: 0 warnings, 1 info (baseline). `pnpm build`: passes.
+- `pnpm stage:check`: the set and the staging pass (schema, params, materials, budget, crowd).
+- `pnpm stage:verify --tiers=ultra`: all 7 shots pass. High, balanced and mobile pass on gate, party and queue.
+- In the browser: pause stops frames and resume restarts them; `dispose()` releases the context and removes the canvas; clicking a standee opens its plate and head-anchored bubble.
+
 ## Progress
 
-- [ ] Kit, materials, sky, atmosphere
-- [ ] Render pipeline (paint, mask, GTAO, MSAA/FXAA, bloom, tiers)
-- [ ] Crowd (pawns, cards, LOD, walkers) and standees
-- [ ] Set/staging schemas, builders, interpreter
-- [ ] Kordavos gate set spec and dev staging; assets in `public/stage/`
-- [ ] `/dev/stage` viewer
-- [ ] `scripts/stage-verify.ts`; DPR 2 screenshots and crops reviewed
-- [ ] Wiki: stageview phases, log, index
+- [x] Kit, materials, sky, atmosphere
+- [x] Render pipeline (paint, mask, GTAO, MSAA/FXAA, bloom, tiers)
+- [x] Crowd (pawns, cards, LOD, walkers) and standees
+- [x] Set/staging schemas, builders, interpreter
+- [x] Kordavos gate set spec and dev staging; assets in `public/stage/`
+- [x] `/dev/stage` viewer
+- [x] `scripts/stage-verify.ts`; DPR 2 screenshots and crops reviewed
+- [x] Wiki: stageview phases, log, index

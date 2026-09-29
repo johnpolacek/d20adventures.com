@@ -6,6 +6,14 @@ Git owns routine implementation history. This log records durable wiki, planning
 
 ## 2026-09-29
 
+### Stageview phase 2: engine port with a declarative set spec (`feature/stageview-engine`)
+
+- Ported the v5 prototype into `lib/stage/` as plain three.js TypeScript on r183. It includes the kit, scoped-fog materials, sky, paint pass, character mask, GTAO, MSAA/FXAA, bloom, tiers, the crowd (pawns, front/back cards, hybrid LOD, walkers), standees, and pause and dispose.
+- Designed set spec v1 (`d20.stage.set`): JSON, zod-validated and bounded, interpreted only through kit builders and layouts, with material roles and a random stream per object. A minimal staging spec places the cast at marks and frames shots on them.
+- Ported the Kordavos gate as the first set, with a March of Davos dev staging. The Realm of Myr crowd library and character fixtures live in `public/stage/` (4.2 MB).
+- Added `/dev/stage`, `pnpm stage:check` (a Node dry build) and `pnpm stage:verify` (CDP, DPR 2 frames and native-pixel crops).
+- Validation: TypeScript, lint and build pass. All 7 shots are within 300 draw calls and 2.5M triangles. Ultra runs 21–28 fps at DPR 2, high 52–54 fps at DPR 1.5 (prototype 37–46), and the steady-state heap is 42 MB (prototype 234 MB). Faces hold up in native-pixel crops. Details: [feature-stageview-engine](plans/feature-stageview-engine.md). Not merged.
+
 ### Retired old 3D branches
 
 - Deleted the local branches `2d-maps` (6cfc22b), `minimap-claude` (4eb03bb) and `claude/competent-moore-d09a8e` (0a91c6f), and the remote `origin/claude/stoic-gates`. No worktrees remain, and `origin/prewiki-refactor` is kept.

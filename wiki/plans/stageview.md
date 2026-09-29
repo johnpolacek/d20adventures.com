@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Roadmap](../roadmap.md) · [Architecture](../Architecture.md)
 
-Status: **phase 1 done; prototype v5 approved (2026-09-29); next: phase 2 engine port** · working name "Stageview" is a proposal · old 3D stack removed and merged to main (see [plan](zzz-completed/feature-remove-3d-stack.md)); no Stageview code yet
+Status: **phase 2 engine port implemented on `feature/stageview-engine` (2026-09-29), not merged; next: phase 3** · working name "Stageview" is a proposal · old 3D stack removed and merged to main (see [plan](zzz-completed/feature-remove-3d-stack.md)) · engine plan and results: [feature-stageview-engine](feature-stageview-engine.md)
 
 ## Decision (2026-09-29)
 
@@ -78,6 +78,8 @@ Why the demo is faster despite 4× the triangles: 1,600 people cost 12 instanced
 
 ## Demo weaknesses to fix in the port
 
+Port status (phase 2): fixed-height paint, depth-scaled radius, MSAA, scoped fog, JS heap (42 MB steady state), capture without `preserveDrawingBuffer` and the ramparts clip are done. The head mesh is moot because hero rigs were not ported. Mobile is still unmeasured, and temporal paint stability still needs review in motion.
+
 - **Close-up fidelity.** Rigid lathe bodies with mitten hands look toy-like at conversation distance.
   - Mitigation: shot discipline (mid and long framing), and a CC0 MakeHuman-derived skinned body for named figures later.
   - Owner rejected "kid show" minis on 2026-07-04. The demo figures are realistically proportioned but still blocky.
@@ -102,8 +104,9 @@ Plain imperative three.js under `lib/stage/`, with **no r3f**. It is hosted in o
 The work splits into three layers:
 
 1. **Set.** A location, authored once and reused across encounters and adventures.
-   - A TS module `lib/stage/sets/<settingId>/<locationId>.ts`, keyed to the wiki **location entity**. Mapview already titles maps by location entity.
-   - It provides geometry, materials, an atmosphere preset, time-of-day and weather toggles, named **marks**, **paths** (queue, patrol, exit), crowd **zones** (density and kinds), named **shots**, and ambient **loops**.
+   - A **JSON spec** (`d20.stage.set` v1, zod-validated and bounded) keyed to the wiki **location entity**. Mapview already titles maps by location entity. Phase 2 keeps specs repo-local under `lib/stage/sets/<settingId>/`.
+   - The kit interprets it through parametric builders (fortifications, town, market, festival, checkpoint, primitives and layouts), so a set never runs code on player clients. See [feature-stageview-engine](feature-stageview-engine.md#set-spec-v1-d20stageset) for the format.
+   - It provides materials, objects, an atmosphere preset, named **marks**, **paths** (queue, exit), crowd **groups** (scatter with density rects, ranks, points, queues along paths, walkers, anchors), named **shots** and ambient life. Time-of-day and weather toggles and ambient **loops** come in phase 3.
 2. **Staging.** Per encounter, authored at authoring time and reviewable before publish, like Mapview.
    - Contents: the set and its toggles; cast (NPC id → figure recipe plus start mark, honouring `startNear`); party entry formation; establishing shot; ambient script (for example, the queue cycle); dressing toggles.
    - Stored per encounter in S3, next to maps.
@@ -180,7 +183,8 @@ All 3D dependencies were imported only by these modules (verified via grep on 20
 1. **Clean slate** (feature worktree). **Done 2026-09-29 on `feature/remove-3d-stack`.**
    - Extract the map-only encounter panel, delete the inventory above, and drop the standee and mini token products.
    - Validation: build, TypeScript, lint, Playwright pass; the map rail and fullscreen map were checked on a fixture page. The real turn page was not rendered because the worktree database is empty.
-2. **Engine port.** The source is the **v5 prototype** (`~/Projects/d20-graphics-test-2/src/v5/`), not v4.
+2. **Engine port.** **Implemented 2026-09-29 on `feature/stageview-engine`** ([plan and results](feature-stageview-engine.md)): every shot is within budget, and at DPR 2 the frames match the prototype and faces hold up in native-pixel crops. The Kordavos gate is also ported as the first JSON set (pulled forward from phase 3), with a static queue.
+   The source is the **v5 prototype** (`~/Projects/d20-graphics-test-2/src/v5/`), not v4.
    - Port into `lib/stage/` as plain three.js TypeScript. Carry over:
      - the kit (`lib`, `materials` including `wood()`, `sky`)
      - `paint` (fixed internal height, depth-scaled radius, 4-tap prefilter, mask-aware final pass)
@@ -193,7 +197,7 @@ All 3D dependencies were imported only by these modules (verified via grep on 20
    - Add `/dev/stage` and a verify script (shaders compile, stats within budget, a screenshot per shot at DPR 2).
    - Design the set format as a declarative spec from the start (decision 2).
 3. **First set and staging.**
-   - Port the v4/v5 gate as `realm-of-myr/kordavos-south-gate`, with staging for `march-of-davos/the-gates-of-kordavos`.
+   - Port the v4/v5 gate as `realm-of-myr/kordavos-south-gate`, with staging for `march-of-davos/the-gates-of-kordavos`. The set spec and a minimal dev staging (cast at marks, framed shots) landed in phase 2; staging scripts remain.
    - The festival street becomes the `the-harvest-festival` set.
    - Generalize `Director` into set loops plus staging scripts.
    - Port the crowd library (the prototype's 16 variants, fronts and backs) as the Realm of Myr crowd library.

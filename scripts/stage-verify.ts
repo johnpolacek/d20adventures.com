@@ -43,6 +43,7 @@ async function connect() {
   const pending = new Map<number, (m: Msg) => void>()
   const exceptions: string[] = []
   const consoleErrors: string[] = []
+  const consoleWarnings: string[] = []
   ws.onmessage = (e) => {
     const m = JSON.parse(String(e.data)) as Msg
     if (m.id && pending.has(m.id)) {
@@ -72,7 +73,7 @@ async function connect() {
     if (r.exceptionDetails) throw new Error(r.exceptionDetails.exception?.description ?? r.exceptionDetails.text)
     return r.result?.value as T
   }
-  return { ws, send, ev, exceptions, consoleErrors }
+  return { ws, send, ev, exceptions, consoleErrors, consoleWarnings }
 }
 
 async function main() {
@@ -130,6 +131,8 @@ async function main() {
     const errs = await ev<string[]>("window.__stage.programErrors()")
     if (errs.length) fail(`${tier}: shader programs failed: ${errs.join(", ")}`)
     else pass(`${tier}: ready in ${(readyMs / 1000).toFixed(1)} s (dev build); ${await ev<number>("window.__stage.stats().programs")} shader programs, all runnable`)
+    const heap = await ev<number | null>("performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) : null")
+    if (heap !== null) console.log(`NOTE: ${tier}: JS heap ${heap} MB after load`)
     const cast = await ev<{ id: string; height: number }[]>("window.__stage.cast.map(c => ({ id: c.id, height: c.height }))")
     const shots = (await ev<string[]>("Object.keys(window.__stage.shots)")).filter((s) => !onlyShots || onlyShots.includes(s))
     for (const shot of shots) {
@@ -172,6 +175,8 @@ async function main() {
   if (cdp.exceptions.length) fail(`page exceptions: ${cdp.exceptions.slice(0, 5).join(" | ")}`)
   const errors = cdp.consoleErrors.filter((e) => !/Download the React DevTools|favicon/i.test(e))
   if (errors.length) console.log(`NOTE: console errors: ${errors.slice(0, 5).join(" | ")}`)
+  const warnings = [...new Set(cdp.consoleWarnings)].filter((w) => /THREE|WebGL|GL_/i.test(w))
+  if (warnings.length) console.log(`NOTE: three/WebGL warnings: ${warnings.slice(0, 5).join(" | ")}`)
   console.log(failures ? `${failures} failure(s); screenshots in ${OUT}` : `All checks passed; screenshots in ${OUT}`)
   cdp.ws.close()
   process.exit(failures ? 1 : 0)

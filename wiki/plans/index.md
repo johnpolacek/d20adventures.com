@@ -7,6 +7,7 @@ Active planning work for D20 Adventures. The wiki-adventure runtime is merged an
 ## Active
 
 - **[Stageview](stageview.md)** — assessment and plan (2026-09-29) to replace the whole 3D stack (r3f encounter diorama, scene-kit, standees, Hunyuan minis) with the painted procedural three.js approach from the `d20-graphics-test-2` Kordavos v4 demo. Includes measurements, experiments, removal inventory, and phases. Owner decisions are recorded; phase 1 (clean slate) is merged to main.
+- **[Stageview engine](feature-stageview-engine.md)** — phase 2 on `feature/stageview-engine`: the v5 prototype ported into `lib/stage/`, set spec v1 (declarative JSON), the Kordavos gate as the first set, `/dev/stage` and the verify scripts. Implemented and validated 2026-09-29; not merged.
 - **[Storyview](feature-storyview.md)** — token-funded TTS audio narration of turns (Gemini TTS, narrator + per-character voices) with a full-screen cinematic paragraph-at-a-time mode. On `feature/storyview` (worktree, branched off `feature/play-layout-refactor`).
 - **[Mapview](mapview.md)** — 2D D&D-style battle maps: AI-generated at authoring time from a standard SVG piece set, square grid, static encounter backdrop. v1 merged to main 2026-07-03; catalog growth (water/interiors/city pieces) is next.
 - **[Testing Runbook](testing-runbook.md)** — canonical testing runbook for adventure plans and runtime play behavior.
