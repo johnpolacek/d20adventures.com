@@ -92,7 +92,7 @@ Run in the worktree, with its isolated Convex project:
 - **Git branches to retire:** `minimap-claude`, `claude/competent-moore-d09a8e`, `origin/claude/stoic-gates`. Not touched here.
 - **External repo:** `~/Projects/asset-pipeline` (source of the generated props) is no longer needed.
 - **Environment:** `FAL_KEY` is unused now; drop it from the Vercel and local env files.
-- **Convex deploy:** removing `usage_encounter_asset` from the `decrementTokens` args needs a Convex deploy to take effect. Nothing depends on it.
+- **Convex deploy (done 2026-09-29):** deployed to prod `marvelous-mink-850`. The push also dropped the orphaned `visits` table indexes left by the 2026-08-31 visit-tracking removal. Removing `usage_encounter_asset` from the `decrementTokens` args needed this deploy to take effect. Nothing depends on it.
 - **Convex project:** delete the worktree's Convex project `d20adventures-feature-remove-3d-stack` in the dashboard after `wt:finish`.
 - **Follow-ups:** decide whether to drop `map3d` / `map3dKey` and `Encounter3D*`; keep or delete `image-proxy` and the `drawer` variant once Stageview's needs are known.
 

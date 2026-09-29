@@ -6,6 +6,11 @@ Git owns routine implementation history. This log records durable wiki, planning
 
 ## 2026-09-29
 
+### Deployed Convex prod; published the prototype
+
+- Ran `convex deploy` to prod (`marvelous-mink-850`). It shipped the phase 1 ledger-arg change and dropped the orphaned `visits` indexes from the 2026-08-31 removal. Convex warned that the account is above Free plan limits, and the leftover `d20adventures-feature-*` worktree projects add to that. The owner is deleting them.
+- Published the Stageview prototype: public repo https://github.com/johnpolacek/d20-graphics-test-2 and site https://d20-graphics-test-2.vercel.app, where `/` redirects to the v5 standee view. The site serves static HTML only, and pushes redeploy it.
+
 ### Close-up prototype: restyled standees beat procedural figures up close
 
 - Built `kordavos-v5-closeups.html` in `d20-graphics-test-2`, which compares procedural figures, portrait plates (A) and restyled in-world standees (B). The party is recast as the March of Davos premades.
