@@ -1,6 +1,6 @@
 # feature/remove-3d-stack
 
-[Plans](../../index.md) · [Wiki Home](../index.md) · [Stageview](../stageview.md)
+[Plans](../index.md) · [Wiki Home](../../index.md) · [Stageview](../stageview.md)
 
 Status: Implemented and validated on `feature/remove-3d-stack` (2026-09-29); merged to main in `b06a42b`
 
