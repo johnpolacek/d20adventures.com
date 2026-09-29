@@ -240,6 +240,23 @@ Findings:
   - Keep the camera within about 100° of each card's facing.
   - Portrait plates carry dialogue and the hold prompt.
   - The crowd stays procedural.
+- **Detail follow-up (same day).** On a Retina screen the owner found the standees too flat. Causes:
+  - rendering capped at 1× DPR
+  - Kuwahara running at about 0.3 of physical pixels
+  - a "simple/flat" generation prompt
+  - 1024 px art
+
+  Fixes applied:
+  - DPR up to 2
+  - Kuwahara at a fixed internal height (540/720/900) with a 4-tap prefilter
+  - a depth-tested **character mask** so named characters keep about 20% of the paint (mask pass cost ≈0 ms)
+  - detailed-art prompt at 2K (`gemini-3.1-flash-image` with `imageSize` 2K → 1536×2752, keyed to 2048 tall; 5 generations)
+
+  Results:
+  - Faces and costume now read at native pixels.
+  - **New tension:** the characters are now clearly higher-fidelity than the blocky world, and Garlan's armour is more saturated and metallic than the palette.
+  - **Cost:** at DPR 2 on an M3, high quality drops from 60 to 26–33 fps. The 4× scene pixels are most of the cost; Kuwahara at 720p is about 10 ms.
+  - **For the port:** lift the world rather than dull the characters. That means MSAA, more world surface detail, and tier tuning (for example, DPR 1.5 at high).
 - This brings back the avatar → full-body pipeline removed in phase 1 (`lib/encounterview/standee.ts` at `52ebdb9`, chroma key via `sharp`), retargeted to the world style. The prototype's `scripts/gen-standees.mjs` keys on distance from the green screen so that green cloaks survive. That script borrows `sharp` from this checkout, which phase 1 removed, so it will break after the next `pnpm install`.
 
 ## Unknowns
