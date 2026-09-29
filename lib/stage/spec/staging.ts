@@ -29,8 +29,18 @@ const castMember = z
   .strict()
 
 const absoluteShot = z.object({ position: vec3, target: vec3, fov: num(10, 120), label: z.string().max(80).optional() }).strict()
-// A shot framed on the centroid of some cast members: camera at centroid + offset, looking at centroid + target.
-const groupShot = z.object({ subjects: z.array(idName).min(1).max(12), offset: vec3, target: vec3, fov: num(10, 120), label: z.string().max(80).optional() }).strict()
+// A shot framed on the centroid of some cast members: camera at centroid + offset, looking at centroid + target. With
+// `relative: "facing"` the offsets turn with the subjects' average facing (x to their left, z ahead of them).
+const groupShot = z
+  .object({
+    subjects: z.array(idName).min(1).max(12),
+    offset: vec3,
+    target: vec3,
+    relative: z.enum(["world", "facing"]).default("world"),
+    fov: num(10, 120),
+    label: z.string().max(80).optional(),
+  })
+  .strict()
 // A shot on one cast member: `distance` metres away at `angle` degrees off their facing, camera at `height`, looking at `lookHeight`.
 const subjectShot = z.object({ subject: idName, distance: size(100), angle: deg, height: num(0, 100), lookHeight: num(0, 100), fov: num(10, 120), label: z.string().max(80).optional() }).strict()
 export const stagingShot = z.union([absoluteShot, groupShot, subjectShot])
@@ -44,6 +54,34 @@ export const stagingSpecSchema = z
     set: z.string().regex(/^[a-z0-9][a-z0-9/-]{0,159}$/),
     cast: z.array(castMember).max(24),
     shots: z.record(idName, stagingShot).default({}),
+    // Who works each of the set's loops, the party's place in it, and what gets said.
+    loops: z
+      .record(
+        idName,
+        z
+          .object({
+            official: idName,
+            party: z
+              .object({
+                members: z.array(idName).min(1).max(12),
+                position: z.number().int().min(0).max(40).default(0),
+                lateral: z.array(num(-5, 5)).max(12).optional(),
+                pair: z.number().int().min(1).max(4).default(2),
+              })
+              .strict()
+              .optional(),
+            lines: z
+              .object({
+                next: z.array(z.string().max(200)).max(20).default([]),
+                question: z.array(z.string().max(200)).max(20).default([]),
+                replies: z.array(z.string().max(200)).max(60).default([]),
+                fees: z.array(z.string().max(200)).max(20).default([]),
+              })
+              .strict(),
+          })
+          .strict()
+      )
+      .default({}),
     shot: idName.optional(),
   })
   .strict()

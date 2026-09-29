@@ -222,7 +222,7 @@ export function populateCrowd(spec: SetSpec, footprints: Footprint[], anchors: A
         for (let i = 0; i < g.count && d <= L; i++) {
           const q = pointAt(pts, d)
           const lat = rand(-g.lateral, g.lateral)
-          seeds.push({ kind: pickKind(rand, g.mix), x: q.x - q.dz * lat, z: q.z + q.dx * lat, ry: Math.atan2(-q.dx, -q.dz) })
+          seeds.push({ kind: pickKind(rand, g.mix), x: q.x - q.dz * lat, z: q.z + q.dx * lat, ry: Math.atan2(-q.dx, -q.dz), group: g.id })
           d += rand(g.spacing[0], g.spacing[1])
         }
         break

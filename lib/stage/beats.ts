@@ -12,6 +12,8 @@ import type { Stage } from "./stage"
 //   { line: "garlan", text: "Next!" }    a spoken line: bubble at the head and a portrait plate; blocks for its duration
 //   { narrate: 2 }                       the narrative paragraph being told (the panel highlights it; TTS will sync here)
 //   { wait: 1.5 }                        a pause in seconds
+//   { cue: "gate-line:front" }           wait for a named moment (a loop bringing the party to the front); skip jumps to it
+//   { loop: "gate-line", do: "release" } tell a loop the party is done (they pass and the line carries on)
 const id = matName
 export const beatSchema = z.union([
   z.object({ shot: z.union([id, stagingShot]), cut: z.boolean().optional() }).strict(),
@@ -20,6 +22,8 @@ export const beatSchema = z.union([
   z.object({ line: id, text: z.string().min(1).max(400), duration: num(0.5, 20).optional() }).strict(),
   z.object({ narrate: z.number().int().min(0).max(200) }).strict(),
   z.object({ wait: num(0, 30) }).strict(),
+  z.object({ cue: z.string().min(1).max(80) }).strict(),
+  z.object({ loop: id, do: z.enum(["release"]) }).strict(),
 ])
 export type Beat = z.infer<typeof beatSchema>
 export const beatsSchema = z.array(beatSchema).max(200)
@@ -72,10 +76,19 @@ export class BeatPlayer {
         else if ("line" in b) {
           if (this.skipping) continue
           const seconds = b.duration ?? lineSeconds(b.text)
+          s.say({ castId: b.line, text: b.text, seconds })
           this.hooks.onLine?.(b.line, b.text, seconds)
           await this.sleep(seconds)
         } else if ("narrate" in b) this.hooks.onNarrate?.(b.narrate)
         else if ("wait" in b) await this.sleep(b.wait)
+        else if ("cue" in b) {
+          if (this.skipping) s.skipLoops()
+          await Promise.race([s.waitCue(b.cue), new Promise<void>((r) => (this.wake = r))])
+          if (this.skipping) {
+            s.skipLoops()
+            await s.waitCue(b.cue)
+          }
+        } else if ("loop" in b) s.loops.get(b.loop)?.release()
       }
     } finally {
       if (this.skipping) {

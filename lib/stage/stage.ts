@@ -6,6 +6,7 @@ import { type CastMember, Standees } from "./figures/standees"
 import { V } from "./kit/geometry"
 import { createRand, hashSeed } from "./kit/rng"
 import { birds, type Disposable, dust, type LifeUpdate, land } from "./life"
+import { QueueLoop } from "./loops/queue"
 import { createShared, type SharedUniforms } from "./materials/atmosphere"
 import { createMaterialLibrary, type MaterialLibrary } from "./materials/library"
 import { autoTier, DEFAULT_FLAGS, type Flags, TIERS, type TierName } from "./quality"
@@ -49,6 +50,16 @@ export interface StageStats {
   programs: number
   frame: number
 }
+
+// A spoken line: by a cast member, or by someone in the crowd (a world point to anchor the bubble).
+export interface StageLine {
+  castId?: string
+  point?: () => THREE.Vector3
+  name?: string
+  text: string
+  seconds: number
+}
+type Events = { line: StageLine; cue: string }
 
 export async function defaultCrowdLibrary(id: string): Promise<CrowdLibrary | null> {
   const base = `/stage/crowd/${id}`
@@ -98,6 +109,11 @@ export class Stage {
   private envTexture: THREE.Texture
   private transition: Transition | null = null
   private settleWaiters: (() => void)[] = []
+  private listeners: { [K in keyof Events]?: Set<(e: Events[K]) => void> } = {}
+  private cues = new Set<string>()
+  private cueWaiters = new Map<string, (() => void)[]>()
+  readonly loops = new Map<string, QueueLoop>()
+  private coinMesh: THREE.Mesh | null = null
   private moves = new Map<string, { tx: number; tz: number; speed: number; resolve: () => void }>()
   private insets = { right: 0, bottom: 0 }
   private raf = 0
@@ -207,6 +223,37 @@ export class Stage {
     this.standees = new Standees(this.cast, this.shared, maxAnisotropy)
     this.world.add(this.standees.group)
 
+    // Ambient loops (a queue at a checkpoint), fed by the staging's cast and lines.
+    const coinMat = this.materials.get("coin")
+    if (coinMat) {
+      this.coinMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.008, 10), coinMat)
+      this.coinMesh.castShadow = true
+    }
+    for (const spec of set.loops) {
+      const path = set.paths[spec.path]
+      const station = set.marks[spec.station]
+      if (!path || !station) continue
+      const loop: QueueLoop = new QueueLoop(
+        { ...spec, path: path as [number, number][], station: station.at },
+        staging?.loops[spec.id] ?? null,
+        this.crowd.groups.get(spec.crowd) ?? [],
+        this.cast,
+        {
+          crowdPose: (p, x, z, ry, walk) => this.crowd.setPose(p, x, z, ry, walk),
+          say: (who, text) => this.say({ ...who, text }),
+          cue: (name) => this.cue(name),
+          coin: (a, b) => {
+            if (!this.coinMesh) return
+            const m = this.coinMesh.clone()
+            m.position.copy(a)
+            this.world.add(m)
+            loop.addCoin(m, a, b)
+          },
+        },
+        rand.fork(`loop/${spec.id}`)
+      )
+      this.loops.set(spec.id, loop)
+    }
     this.pipeline = new Pipeline(renderer, this.scene, this.camera)
     this.pipeline.mask.setSources([
       // Crowd cards keep half the paint; named characters keep about 80% of the crisp render.
@@ -255,6 +302,42 @@ export class Stage {
       const check = () => (this.crowd.cards?.ready || this.crowd.mode === "procedural" ? resolve() : setTimeout(check, 50))
       check()
     })
+  }
+
+  // ── Events ──
+  on<K extends keyof Events>(type: K, fn: (e: Events[K]) => void) {
+    this.listeners[type] ??= new Set() as never
+    const set = this.listeners[type] as Set<(e: Events[K]) => void>
+    set.add(fn)
+    return () => {
+      set.delete(fn)
+    }
+  }
+  private emit<K extends keyof Events>(type: K, e: Events[K]) {
+    const set = this.listeners[type] as Set<(e: Events[K]) => void> | undefined
+    if (set) for (const fn of set) fn(e)
+  }
+  // A line spoken on stage (hosts render it: bubble, plate). Reading time scales with length.
+  say(line: Omit<StageLine, "seconds"> & { seconds?: number }) {
+    const seconds = line.seconds ?? Math.min(9, 1.3 + line.text.length * 0.052)
+    this.emit("line", { ...line, seconds })
+    return seconds
+  }
+  // Named moments (a loop's party reaching the front): fired once, awaited by beats.
+  cue(name: string) {
+    this.cues.add(name)
+    const w = this.cueWaiters.get(name) ?? []
+    this.cueWaiters.delete(name)
+    for (const r of w) r()
+    this.emit("cue", name)
+  }
+  waitCue(name: string) {
+    if (this.cues.has(name)) return Promise.resolve()
+    return new Promise<void>((r) => this.cueWaiters.set(name, [...(this.cueWaiters.get(name) ?? []), r]))
+  }
+  // Skipping: every loop jumps to the moment its beats are waiting for.
+  skipLoops() {
+    for (const l of this.loops.values()) l.skipToFront()
   }
 
   // ── Camera ──
@@ -502,6 +585,7 @@ export class Stage {
     }
     if (this.motion) {
       this.stepMoves(dt)
+      for (const l of this.loops.values()) l.update(dt)
       this.shared.time.value += dt
       this.crowd.update(dt)
       for (const f of this.life) f(this.shared.time.value)
@@ -571,6 +655,13 @@ export class Stage {
     const h = this.canvas.clientHeight
     return { x: (head.x * 0.5 + 0.5) * w, y: (-head.y * 0.5 + 0.5) * h, visible: head.z < 1 && Math.abs(head.x) < 1.05 && Math.abs(head.y) < 1.05, distance: d }
   }
+  // Screen position (CSS px) of any world point.
+  projectPoint(p: THREE.Vector3) {
+    const v = p.clone()
+    const d = v.distanceTo(this.camera.position)
+    v.project(this.camera)
+    return { x: (v.x * 0.5 + 0.5) * this.canvas.clientWidth, y: (-v.y * 0.5 + 0.5) * this.canvas.clientHeight, visible: v.z < 1 && Math.abs(v.x) < 1.05 && Math.abs(v.y) < 1.05, distance: d }
+  }
   private ray = new THREE.Raycaster()
   // The cast member under a canvas point (CSS px), if any.
   pick(x: number, y: number) {
@@ -601,6 +692,7 @@ export class Stage {
     for (const d of this.disposables) d.dispose()
     this.crowd.dispose()
     this.standees.dispose()
+    this.coinMesh?.geometry.dispose()
     this.materials.dispose()
     this.pipeline.dispose()
     this.sky.geometry.dispose()

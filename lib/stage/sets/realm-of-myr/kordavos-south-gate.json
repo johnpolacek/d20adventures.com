@@ -1686,8 +1686,8 @@
       {
         "type": "path",
         "path": "queue",
-        "start": 2.4,
-        "count": 118,
+        "start": 0,
+        "count": 124,
         "mix": {
           "traveler": 1,
           "packer": 1,
@@ -1696,7 +1696,8 @@
           "woman": 2,
           "porter": 1,
           "child": 1
-        }
+        },
+        "id": "gate-queue"
       }
     ]
   },
@@ -1742,30 +1743,49 @@
     ],
     "exit": [[10.4, -90], [10.4, 42], [13.4, 56], [13.4, 128]]
   },
+  "loops": [
+    {
+      "type": "queue",
+      "id": "gate-line",
+      "crowd": "gate-queue",
+      "path": "queue",
+      "station": "sergeant",
+      "counter": [-0.05, 1.1, 10.75],
+      "pass": [[1.2, 9.6], [1.4, 1]],
+      "passEnd": [-4, -85, 6, -85],
+      "castEnd": [-2, -36],
+      "recycle": {
+        "spawn": [[-27, 46, -27, 66], [27, 46, 27, 66]],
+        "via": [[-12.5, 44], [12.5, 44]],
+        "park": [-3, 44.3],
+        "parkJitter": [0.6, 1.7]
+      }
+    }
+  ],
   "shots": {
     "gate": {
       "position": [4, 2.6, 86],
       "target": [0, 44, 0],
       "fov": 72,
-      "label": "The Gates"
+      "label": "The gate"
     },
     "queue": {
       "position": [-4, 14, 50],
       "target": [0, 0.5, 22],
       "fov": 58,
-      "label": "The Long Line"
+      "label": "The line"
     },
     "checkpoint": {
       "position": [-3.4, 2.85, 14.6],
       "target": [2.2, 1.65, 11.1],
       "fov": 50,
-      "label": "The Checkpoint"
+      "label": "The checkpoint"
     },
     "ramparts": {
       "position": [-54, 70, 22],
       "target": [-4, 4, 40],
       "fov": 62,
-      "label": "From the Ramparts"
+      "label": "Ramparts"
     }
   },
   "life": {

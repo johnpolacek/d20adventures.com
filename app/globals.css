@@ -66,6 +66,17 @@
   --color-primary-900: #07070E;
   --color-primary-950: #000000;
 
+  /* Stageview: the painted stage's warm HUD (from the Kordavos prototype). */
+  --color-stage-ink: #1c1410;
+  --color-stage-panel: #21160f;
+  --color-stage-gold: #e3b67c;
+  --color-stage-brass: #c79a5a;
+  --color-stage-line: #f0d6b2;
+  --color-stage-cream: #f6ead4;
+  --color-stage-parchment: #f3e6c8;
+  --color-stage-muted: #c9b9a4;
+  --color-stage-sage: #e0e3d6;
+
   @keyframes accordion-down {
     from {
       height: 0;
@@ -241,6 +252,17 @@ button {
   to {
     opacity: 0;
   }
+}
+
+/* Stageview portrait plates slide in from their side. */
+@keyframes plate-in {
+  from {
+    opacity: 0;
+    transform: translateX(var(--plate-from, -70px));
+  }
+}
+.plate-in {
+  animation: plate-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .fade-in {

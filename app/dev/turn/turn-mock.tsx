@@ -1,21 +1,26 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { type CardInfo, CharacterCard } from "@/components/stage/character-card"
+import { IconButton, Pill, panel, StageHud, useCompact } from "@/components/stage/hud"
+import { type ChatLine, Journal, type JournalTurn } from "@/components/stage/journal"
+import { type CardCharacter, type CardMode, PromptCard } from "@/components/stage/prompt-card"
 import { RotatePrompt, requestLandscape, usePhonePortrait } from "@/components/stage/rotate-gate"
-import { PortraitPlate, SpeechBubble, type SpokenLine } from "@/components/stage/stage-dialogue"
-import { StageTurnLayout, useCompact } from "@/components/stage/stage-turn-layout"
-import { type ChatLine, type PanelCharacter, type PanelTurn, TurnPanel, type TurnPhase } from "@/components/stage/turn-panel"
+import { type Bubble, Bubbles, Plate, type PlateLine } from "@/components/stage/stage-dialogue"
 import { useStage } from "@/components/stage/use-stage"
-import { Button } from "@/components/ui/button"
+import type { TierName } from "@/lib/stage"
 import { BeatPlayer } from "@/lib/stage/beats"
-import { PARTY, START, TURNS } from "./gates-mock"
+import { ABOUT, TURNS } from "./gates-mock"
 
+type Phase = "title" | "beats" | "hold" | "roll" | "thinking" | "done"
 type RollOutcome = { total: number; success: boolean } | null
+type SpokenBubble = Bubble & { speaker: string }
 const CHAT: ChatLine[] = [
   { from: "Cassia", text: "I'm getting my folio out, obviously." },
   { from: "Yeva", text: "nobody tell Garlan about the purse" },
   { from: "Milos", text: "I have the marks, let's not start a riot on day one" },
 ]
+const TIERS: TierName[] = ["balanced", "high", "ultra"]
 
 export function TurnMock() {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -27,44 +32,55 @@ export function TurnMock() {
       setSpecs({ set, staging })
     })
   }, [])
-  const { stage, status, error } = useStage(containerRef, specs)
+  const { stage, status: loading, error } = useStage(containerRef, specs)
   const portrait = usePhonePortrait()
   const compact = useCompact()
 
-  const [phase, setPhase] = useState<TurnPhase>("start")
+  const [phase, setPhase] = useState<Phase>("title")
   const [turnIndex, setTurnIndex] = useState(0)
   const [narrated, setNarrated] = useState(0)
-  const [line, setLine] = useState<SpokenLine | null>(null)
-  const [open, setOpen] = useState(true)
-  const [history, setHistory] = useState<PanelTurn[]>([])
-  const [current, setCurrent] = useState<PanelTurn>({ number: 1, title: TURNS[0].title, paragraphs: [] })
+  const [paragraphs, setParagraphs] = useState<string[]>([])
+  const [journal, setJournal] = useState<JournalTurn[]>([])
+  const [bubbles, setBubbles] = useState<SpokenBubble[]>([])
+  const [plates, setPlates] = useState<{ left: PlateLine | null; right: PlateLine | null }>({ left: null, right: null })
+  const [open, setOpen] = useState<"journal" | "settings" | "card" | null>(null)
+  const [card, setCard] = useState<CardInfo | null>(null)
+  const [hideUi, setHideUi] = useState(false)
+  const [, setTick] = useState(0)
   const player = useRef<BeatPlayer | null>(null)
-  const lineKey = useRef(0)
-  const lineTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const key = useRef(0)
   const pendingReply = useRef<string | null>(null)
-  const lastRun = useRef<{ index: number; reply: string | null; roll: RollOutcome; cast: { id: string; x: number; z: number; ry: number }[] } | null>(null)
 
-  const party: PanelCharacter[] = useMemo(
-    () => (stage ? stage.cast.map((c) => ({ id: c.id, name: c.name, role: c.role, portrait: c.art.portrait, type: c.id === "garlan" ? "npc" : "pc", healthPercent: 100 })) : []),
-    [stage]
-  )
+  const party: CardCharacter[] = useMemo(() => (stage ? stage.cast.filter((c) => c.id !== "garlan").map((c) => ({ id: c.id, name: c.name, role: c.role, portrait: c.art.portrait })) : []), [stage])
   const nameOf = useCallback((id: string) => stage?.cast.find((c) => c.id === id)?.name ?? id, [stage])
 
-  // Stage set-up: the party one step back in the line, the sergeant watching its head, the gate behind the title card.
+  // Stage set-up: the line waits behind the title card; lines spoken on stage become bubbles and, for named characters, plates.
   useEffect(() => {
     if (!stage) return
-    for (const id of PARTY) stage.placeCast(id, START[id], "garlan")
-    stage.faceCast("garlan", "queueHead")
+    const loop = stage.loops.get("gate-line")
+    if (loop) loop.paused = true
     stage.shot("gate", { instant: true })
-    player.current = new BeatPlayer(stage, {
-      onNarrate: setNarrated,
-      onLine: (castId, text, seconds) => {
-        const c = stage.cast.find((m) => m.id === castId)
-        if (lineTimer.current) clearTimeout(lineTimer.current)
-        setLine({ key: ++lineKey.current, castId, name: c?.name ?? castId, role: c?.role, portrait: c?.art.portrait, text })
-        lineTimer.current = setTimeout(() => setLine(null), seconds * 1000)
-      },
+    player.current = new BeatPlayer(stage, { onNarrate: setNarrated })
+    const off = stage.on("line", (l) => {
+      const k = ++key.current
+      const c = l.castId ? stage.cast.find((m) => m.id === l.castId) : null
+      const point = l.point
+      const anchor = c ? () => stage.project(c.id) : point ? () => stage.projectPoint(point()) : null
+      if (!anchor) return
+      const speaker = c?.id ?? `crowd-${k}`
+      setBubbles((bs) => [...bs.filter((b) => b.speaker !== speaker), { key: k, anchor, text: l.text, named: !!c, speaker }])
+      setTimeout(() => setBubbles((bs) => bs.filter((b) => b.key !== k)), (l.seconds + 0.3) * 1000)
+      if (c) {
+        const side = c.id === "garlan" ? "right" : "left"
+        setPlates((p) => ({ ...p, [side]: { key: k, side, name: c.name, role: c.role, portrait: c.art.portrait, text: l.text } }))
+        setTimeout(() => setPlates((p) => (p[side]?.key === k ? { ...p, [side]: null } : p)), (l.seconds + 0.35) * 1000)
+      }
     })
+    const poll = setInterval(() => setTick((t) => t + 1), 500)
+    return () => {
+      off()
+      clearInterval(poll)
+    }
   }, [stage])
   useEffect(() => {
     if (!stage) return
@@ -73,16 +89,16 @@ export function TurnMock() {
   }, [stage, portrait])
 
   const runTurn = useCallback(
-    async (index: number, reply: string | null, roll: RollOutcome, replyFrom: string | null, rollInfo: PanelTurn["roll"]) => {
+    async (index: number, reply: string | null, roll: RollOutcome, replyFrom: string | null, rollInfo: JournalTurn["roll"]) => {
       if (!stage || !player.current) return
       const t = TURNS[index]
-      lastRun.current = { index, reply, roll, cast: stage.cast.map((c) => ({ id: c.id, x: c.x, z: c.z, ry: c.ry })) }
+      const ps = t.narrative(reply, roll)
       setTurnIndex(index)
-      setCurrent({ number: index + 1, title: t.title, paragraphs: t.narrative(reply, roll), reply: reply && replyFrom ? { name: replyFrom, text: reply } : undefined, roll: rollInfo })
+      setParagraphs(ps)
       setNarrated(0)
+      setJournal((j) => [...j, { number: index + 1, title: t.title, paragraphs: ps, reply: reply && replyFrom ? { name: replyFrom, text: reply } : undefined, roll: rollInfo }])
       setPhase("beats")
       await player.current.play(t.beats(reply, roll))
-      setLine(null)
       if (t.hold) {
         stage.shot(t.hold.shot)
         setPhase("hold")
@@ -93,26 +109,20 @@ export function TurnMock() {
 
   const start = () => {
     requestLandscape()
+    const loop = stage?.loops.get("gate-line")
+    if (loop) loop.paused = false
     runTurn(0, null, null, null, undefined)
   }
   const skip = () => {
     player.current?.skip()
-    setNarrated(current.paragraphs.length - 1)
-    setLine(null)
+    setNarrated(paragraphs.length - 1)
+    setBubbles([])
+    setPlates({ left: null, right: null })
   }
-  const replay = () => {
-    const r = lastRun.current
-    if (!stage || !r) return
-    for (const c of r.cast) {
-      stage.placeCast(c.id, [c.x, c.z])
-      const m = stage.cast.find((x) => x.id === c.id)
-      if (m) m.ry = c.ry
-    }
-    runTurn(r.index, r.reply, r.roll, current.reply?.name ?? null, current.roll)
-  }
-  const advance = (reply: string, roll: RollOutcome, rollInfo: PanelTurn["roll"]) => {
+  // While the GM card is up, shots compose in the space above it (the character being asked stays in view).
+  const onCardTop = useCallback((px: number) => stage?.setInsets({ bottom: px > 0 ? px + 12 : 0 }), [stage])
+  const advance = (reply: string, roll: RollOutcome, rollInfo: JournalTurn["roll"]) => {
     const from = TURNS[turnIndex].hold?.actor
-    setHistory((h) => [...h, current])
     setPhase("thinking")
     setTimeout(() => runTurn(turnIndex + 1, reply, roll, from ? nameOf(from) : null, rollInfo), 1600)
   }
@@ -121,89 +131,212 @@ export function TurnMock() {
     if (!hold) return
     if (hold.roll) {
       pendingReply.current = text
-      setCurrent((c) => ({ ...c, reply: undefined }))
       setPhase("roll")
-      return
-    }
-    advance(text, null, undefined)
+    } else advance(text, null, undefined)
   }
   const onRoll = (base: number) => {
     const hold = TURNS[turnIndex].hold
-    if (!hold?.roll) return
-    const total = base + hold.roll.modifier
-    const success = total >= hold.roll.dc
-    // Let the die settle on screen before the GM answers.
-    setTimeout(() => advance(pendingReply.current ?? "", { total, success }, { name: nameOf(hold.actor), skill: hold.roll!.skill, dc: hold.roll!.dc, base, total, success }), 1400)
+    const roll = hold?.roll
+    if (!hold || !roll) return
+    const total = base + roll.modifier
+    const success = total >= roll.dc
+    setTimeout(() => advance(pendingReply.current ?? "", { total, success }, { name: nameOf(hold.actor), skill: roll.skill, dc: roll.dc, base, total, success }), 1500)
   }
-  const onLook = (id: string) => {
-    const c = stage?.cast.find((m) => m.id === id)
-    if (!stage || !c) return
-    stage.shot({ subject: id, distance: 3.2, angle: 15, height: Math.min(1.75, c.height * 0.95), lookHeight: c.height * 0.72, fov: 40 })
-  }
+  const openCard = useCallback(
+    (id: string) => {
+      const c = stage?.cast.find((m) => m.id === id)
+      if (!c) return
+      setCard({ id, name: c.name, role: c.role, portrait: c.art.portrait, ...ABOUT[id] })
+      setOpen("card")
+    },
+    [stage]
+  )
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement).matches?.("input,textarea,select")) return
+      if (e.key === "h" || e.key === "H") setHideUi((h) => !h)
+      if (e.key === "Escape") setOpen(null)
+      const views = stage ? Object.keys(stage.shots) : []
+      const i = Number(e.key) - 1
+      if (i >= 0 && i < views.length) stage?.shot(views[i])
+    }
+    addEventListener("keydown", onKey)
+    return () => removeEventListener("keydown", onKey)
+  }, [stage])
+
+  // A click (not a drag) on a character opens their card.
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el || !stage) return
+    let down: [number, number] | null = null
+    const pd = (e: PointerEvent) => {
+      down = [e.clientX, e.clientY]
+    }
+    const pu = (e: PointerEvent) => {
+      if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6) return
+      const r = el.getBoundingClientRect()
+      const id = stage.pick(e.clientX - r.left, e.clientY - r.top)
+      if (id) openCard(id)
+    }
+    el.addEventListener("pointerdown", pd)
+    el.addEventListener("pointerup", pu)
+    return () => {
+      el.removeEventListener("pointerdown", pd)
+      el.removeEventListener("pointerup", pu)
+    }
+  }, [stage, openCard])
 
   const hold = TURNS[turnIndex].hold
-  const panel = (
-    <TurnPanel
-      adventure="The March of Davos"
-      encounter="The Gates of Kordavos"
-      turn={current}
-      history={history}
-      party={party}
-      actorId={phase === "hold" || phase === "roll" ? (hold?.actor ?? null) : null}
-      phase={phase}
-      narrated={narrated}
-      prompt={hold?.prompt ?? null}
-      suggestion={hold?.suggestion ?? null}
-      roll={hold?.roll ?? null}
-      chat={CHAT}
-      onLook={onLook}
-      onReply={onReply}
-      onRoll={onRoll}
-      onReplay={replay}
+  const actorId = phase === "hold" || phase === "roll" ? (hold?.actor ?? null) : null
+  const actor = party.find((c) => c.id === actorId) ?? null
+  let mode: CardMode | null = null
+  if (phase === "hold" && hold) mode = { kind: "hold", prompt: hold.prompt, suggestion: hold.suggestion }
+  else if (phase === "roll" && hold?.roll) mode = { kind: "roll", roll: hold.roll }
+  else if (phase === "thinking") mode = { kind: "thinking" }
+  else if (phase === "done") mode = { kind: "done", next: "Next: The Harvest Festival" }
+  const place = stage?.loops.get("gate-line")?.partyPosition ?? -1
+  const status = phase === "done" || place < 0 ? "Your party: inside the city" : place === 0 ? "Your party: at the checkpoint" : `Your party: ${place} group${place > 1 ? "s" : ""} from the front`
+  const views = stage ? Object.entries(stage.shots).map(([id, s]) => ({ id, label: s.label ?? id })) : []
+
+  return (
+    <StageHud
+      containerRef={containerRef}
+      brand={{ name: "KORDAVOS", eyebrow: "THE MARCH OF DAVOS" }}
+      caption={{
+        chapter: "March of Davos  /  Arrival",
+        title: phase === "title" ? "The Gates of Kordavos" : TURNS[turnIndex].title,
+        text: phase === "beats" ? paragraphs[narrated] : undefined,
+        hidden: !!plates.left || (compact && !!mode),
+      }}
+      location={{ eyebrow: "Arrival at Kordavos", title: actor ? `${actor.name.split(" ")[0]}'s turn` : `Turn ${turnIndex + 1}`, status, hidden: !!plates.right }}
+      views={views}
+      activeView={stage?.activeShot ?? null}
+      onView={(id) => stage?.shot(id)}
+      hidden={hideUi || phase === "title"}
       compact={compact}
-    />
-  )
-
-  const stageOverlay = (
-    <>
-      {line && (
-        <div className="absolute bottom-4 left-4 flex">
-          <PortraitPlate line={line} compact={compact} />
-        </div>
+      actions={
+        <>
+          <IconButton label="Journal" active={open === "journal"} onClick={() => setOpen(open === "journal" ? null : "journal")}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.35" aria-hidden="true">
+              <path d="M5 4h10a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z" />
+              <path d="M5 17a3 3 0 0 1 3-3h10M9 8h6" />
+            </svg>
+          </IconButton>
+          <IconButton label="Scene settings" active={open === "settings"} onClick={() => setOpen(open === "settings" ? null : "settings")}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.35" aria-hidden="true">
+              <path d="M5 3v18M12 3v18M19 3v18" />
+              <path d="M2 8h6M9 16h6M16 9h6" strokeWidth="3" />
+            </svg>
+          </IconButton>
+          <IconButton
+            label="Fullscreen"
+            onClick={() => {
+              if (document.fullscreenElement) document.exitFullscreen()
+              else document.documentElement.requestFullscreen?.().catch(() => {})
+            }}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.35" aria-hidden="true">
+              <path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5" />
+            </svg>
+          </IconButton>
+        </>
+      }
+    >
+      {stage && !hideUi && <Bubbles bubbles={bubbles} compact={compact} />}
+      {!hideUi && plates.left && <Plate line={plates.left} compact={compact} />}
+      {!hideUi && plates.right && <Plate line={plates.right} compact={compact} />}
+      {!hideUi && mode && (
+        <PromptCard
+          mode={mode}
+          actor={actor}
+          party={party}
+          compact={compact}
+          onReply={onReply}
+          onRoll={onRoll}
+          onPick={openCard}
+          onTop={mode.kind === "hold" || mode.kind === "roll" ? onCardTop : undefined}
+        />
       )}
-      {phase === "beats" && (
-        <div className="pointer-events-auto absolute right-14 bottom-4">
-          <Button variant="outline" className="rounded-full px-4 py-1 font-display text-xs tracking-wider" onClick={skip}>
+      {!hideUi && phase === "beats" && (
+        <div className={`absolute z-30 ${compact ? "right-4 bottom-[52px]" : "bottom-[122px] left-1/2 -translate-x-1/2"}`}>
+          <Pill className="rounded-full bg-stage-panel/60 px-5 backdrop-blur-md" onClick={skip}>
             Skip ▸▸
-          </Button>
+          </Pill>
         </div>
       )}
-    </>
-  )
-
-  const overlay = (
-    <>
-      {stage && line && <SpeechBubble stage={stage} line={line} compact={compact} />}
-      {(!stage || phase === "start") && (
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-black/35 px-6 text-center">
-          <div className="font-display text-xs uppercase tracking-[0.3em] text-primary-200" style={{ textShadow: "0 0 8px #000" }}>
-            The March of Davos
+      {!hideUi && open === "journal" && <Journal turns={journal} chat={CHAT} compact={compact} onClose={() => setOpen(null)} />}
+      {!hideUi && open === "card" && card && <CharacterCard info={card} compact={compact} onClose={() => setOpen(null)} />}
+      {!hideUi && open === "settings" && stage && (
+        <section className={`${panel} fade-in absolute top-[86px] right-10 z-40 w-[292px] p-6`}>
+          <h2 className="mb-2 font-serif text-[25px] font-normal">Set the scene</h2>
+          <div className="mt-5 border-t border-stage-line/25 pt-4">
+            <div className="mb-3 text-[10px] tracking-wide">Render quality</div>
+            <div className="flex gap-2">
+              {TIERS.map((t) => (
+                <Pill
+                  key={t}
+                  className="flex-1 capitalize"
+                  active={stage.tier === t}
+                  onClick={() => {
+                    stage.setTier(t)
+                    setTick((x) => x + 1)
+                  }}
+                >
+                  {t}
+                </Pill>
+              ))}
+            </div>
           </div>
-          <h1 className="font-display text-3xl font-bold text-amber-300 sm:text-5xl" style={{ textShadow: "0 0 12px #000, 0 0 32px #000" }}>
-            The Gates of Kordavos
-          </h1>
+          <div className="mt-5 flex gap-2 border-t border-stage-line/25 pt-4">
+            <Pill
+              className="flex-1"
+              active={stage.motion}
+              onClick={() => {
+                stage.motion = !stage.motion
+                setTick((x) => x + 1)
+              }}
+            >
+              {stage.motion ? "Motion on" : "Motion off"}
+            </Pill>
+            <Pill className="flex-1" onClick={() => setHideUi(true)}>
+              Hide interface
+            </Pill>
+          </div>
+        </section>
+      )}
+      {hideUi && phase !== "title" && (
+        <button type="button" onClick={() => setHideUi(false)} className="absolute right-4 bottom-4 z-40 rounded border border-white/25 bg-stage-panel/50 px-3 py-2 text-[10px] text-stage-cream">
+          Show interface · H
+        </button>
+      )}
+      {phase === "title" && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-5 bg-stage-ink/45 text-center">
+          <svg viewBox="0 0 60 72" aria-hidden="true" className="h-[70px] w-14 fill-none stroke-stage-gold" strokeWidth="1">
+            <path d="m30 2 25 15v37L30 70 5 54V17Z" />
+            <path d="M15 50V25h9v25m12 0V25h9v25M24 50V34l6-8 6 8v16M11 25h17m4 0h17M20 20v-6m20 6v-6M30 9v9M25 13h10M11 55h38" />
+          </svg>
+          <div className="font-serif text-[clamp(28px,4vw,44px)] tracking-[-0.02em] [text-shadow:0_2px_25px_#000]">Arrival at Kordavos</div>
+          <div className="text-[9px] tracking-[0.3em] text-stage-sage">THE MARCH OF DAVOS</div>
           {stage ? (
-            <Button variant="epic" className="mt-2" onClick={start}>
-              Play
-            </Button>
+            <button
+              type="button"
+              onClick={start}
+              className="mt-3 rounded-full border border-stage-gold bg-stage-panel/70 px-10 py-3 text-[12px] tracking-[0.3em] text-stage-gold shadow-[0_0_24px_#e3b67c33] backdrop-blur-md transition-colors hover:bg-stage-gold/15"
+            >
+              PLAY
+            </button>
           ) : (
-            <div className="font-serif text-sm text-primary-200">{error ?? status}</div>
+            <>
+              <div className="h-px w-44 overflow-hidden bg-stage-brass/30">
+                <div className="h-full w-3/5 animate-pulse bg-stage-gold" />
+              </div>
+              <div className="text-[10px] tracking-[0.2em] text-stage-muted">{(error ?? loading).toUpperCase()}</div>
+            </>
           )}
         </div>
       )}
       {portrait && <RotatePrompt />}
-    </>
+    </StageHud>
   )
-
-  return <StageTurnLayout containerRef={containerRef} stage={stage} panel={panel} overlay={overlay} stageOverlay={stageOverlay} open={open && phase !== "start"} onOpenChange={setOpen} />
 }

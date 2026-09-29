@@ -6,6 +6,12 @@ Git owns routine implementation history. This log records durable wiki, planning
 
 ## 2026-09-29
 
+### Turn page mock, revision 2: the prototype's presentation and the living line
+
+- The owner reviewed the docked-panel mock and preferred the Kordavos prototype's presentation: the full-screen cinematic HUD, the perspective bar, the living line and the warm styling. The mock was rebuilt that way. The narrative plays as the scene caption; the GM card carries the prompt, reply and roll; the story lives in a journal.
+- Generalized the prototype's `Director` into a data-driven queue loop (set `loops[]`, staging `loops{}`). Beats can wait on its cues and release it. The party now waits three groups back while Garlan works the line.
+- Details: [feature-stage-turn-mock](plans/feature-stage-turn-mock.md).
+
 ### Stage-first turn page mock; Mapview repurposed
 
 - Built the stage-first turn page as a dev mock at `/dev/turn` on `feature/stage-turn-mock`. It plays five scripted gate turns: staged beats, head-anchored bubbles and portrait plates, holds with the GM prompt and composer, a Sleight of Hand roll, and the party walking through the gate.

@@ -54,6 +54,18 @@ export function frameShot(s: StagingShot, cast: CastMember[]): ResolvedShot {
     }
     x /= s.subjects.length
     z /= s.subjects.length
+    if (s.relative === "facing") {
+      let fx = 0
+      let fz = 0
+      for (const id of s.subjects) {
+        const c = need(id)
+        fx += Math.sin(c.ry)
+        fz += Math.cos(c.ry)
+      }
+      const a = Math.atan2(fx, fz)
+      const rot = (v: [number, number, number]): [number, number, number] => [x + v[0] * Math.cos(a) + v[2] * Math.sin(a), v[1], z - v[0] * Math.sin(a) + v[2] * Math.cos(a)]
+      return { position: rot(s.offset), target: rot(s.target), fov: s.fov, label: s.label }
+    }
     return { position: [x + s.offset[0], s.offset[1], z + s.offset[2]], target: [x + s.target[0], s.target[1], z + s.target[2]], fov: s.fov, label: s.label }
   }
   const c = need(s.subject)

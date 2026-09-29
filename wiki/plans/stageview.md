@@ -199,9 +199,11 @@ All 3D dependencies were imported only by these modules (verified via grep on 20
 3. **First set and staging.**
    - Port the v4/v5 gate as `realm-of-myr/kordavos-south-gate`, with staging for `march-of-davos/the-gates-of-kordavos`. The set spec and a minimal dev staging (cast at marks, framed shots) landed in phase 2; staging scripts remain.
    - The festival street becomes the `the-harvest-festival` set.
-   - Generalize `Director` into set loops plus staging scripts.
+   - Generalize `Director` into set loops plus staging scripts. The queue loop was done early, on `feature/stage-turn-mock` (2026-09-29): the set spec's `loops[]`, the staging's `loops{}`, and beats that wait on loop cues.
    - Port the crowd library (the prototype's 16 variants, fronts and backs) as the Realm of Myr crowd library.
-4. **Stage-first turn page and character art** (revised for decision 5). A dev mock of the turn page with scripted turns ran on `feature/stage-turn-mock` on 2026-09-29 ([plan](feature-stage-turn-mock.md)). It adds beats, cast movement, panel insets and the landscape gate.
+4. **Stage-first turn page and character art** (revised for decision 5). A dev mock of the turn page with scripted turns ran on `feature/stage-turn-mock` on 2026-09-29 ([plan](feature-stage-turn-mock.md)).
+   - It adds beats, cast movement, framing insets and the landscape gate.
+   - After review the owner chose the prototype's presentation over a docked panel: a full-screen HUD with a scene caption, a perspective bar, the GM card, the journal on demand, and warm styling. That is the turn page's direction.
    - The turn page renders Stage full-bleed; see [Stage-first play](#stage-first-play-decided-2026-09-29).
    - Add a server-side generator: portrait → world-style front and back standee (reinstate keying with `sharp`). Store it per character in S3, and set a token price. Premades get art ahead of time; custom characters get it at creation.
    - Add per-turn beats generation and hold binding, portrait plates, NPC and PC cards, and Storyview (TTS) sync.

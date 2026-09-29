@@ -3,7 +3,8 @@ import type { StagingShot } from "@/lib/stage/spec/staging"
 
 // A canned run of March of Davos, encounter 1 ("The Gates of Kordavos"), for the stage-first turn page mock.
 // No Convex and no model: each GM turn is scripted, with the beats a per-turn generator would produce, and the player's
-// typed reply is quoted back as their line. The party waits one step back in the line and is called forward by "Next!".
+// typed reply is quoted back as their line. The set's queue loop keeps the line alive: the party waits three groups back
+// while Garlan works the travelers ahead, and the first turn's beats wait for its cues.
 
 export interface MockRoll {
   skill: string
@@ -27,11 +28,17 @@ export interface MockTurn {
 }
 
 export const PARTY = ["branka", "cassia", "yeva", "milos"] as const
-export const START: Record<string, [number, number]> = {
-  branka: [1.42, 13.9],
-  cassia: [0.22, 13.9],
-  yeva: [0.82, 14.75],
-  milos: [-0.4, 14.75],
+
+// Card text for the characters (from the premade sheets and Garlan's NPC entry).
+export const ABOUT: Record<string, { about: string; lines?: string[] }> = {
+  garlan: {
+    about: "A burly Asterian with a stern face, kind eyes and a well-groomed beard, in polished half-plate and the navy-and-gold tabard of the city guard. Diligent and fair.",
+    lines: ["Next!", "State your business in Kordavos.", "There is a fee of three marks for entrance."],
+  },
+  branka: { about: "A broad-shouldered dwarf with copper braids and a battered breastplate stamped with the old gate-ward sigil of Kordavos. Her family kept this gate for four generations." },
+  cassia: { about: "A precise Asterian cartographer-mage with ink-stained fingers, a grey travelling coat lined with map pockets, and a folio of charts of the tunnels beneath Kordavos." },
+  yeva: { about: "A quick halfling with sharp hazel eyes and dark curls under a festival cap. Half a dozen hidden pockets, and at least one item she was only holding for a friend." },
+  milos: { about: "A lean Valkaran Wayfinder priest in undyed robes, with a close-cropped grey beard, a bronze compass-star of the Church of Valkara, and a staff notched with the miles." },
 }
 
 const quote = (reply: string | null, fallback: string) => {
@@ -56,27 +63,22 @@ export const TURNS: MockTurn[] = [
       "However, before they can join the revelry, they find themselves in a long line of travelers, merchants, and villagers all waiting to be inspected by the city guard. A few guards move among the crowd, occasionally pulling aside individuals for further questioning.",
       "“Next!” shouts a burly Asterian guard with a stern face but kind eyes. Stepping forward, he inspects each person meticulously. “State your business in Kordavos,” he demands from each group. “There is a fee of three marks for entrance.”",
     ],
+    // The party waits three groups back while the loop works the line (Garlan's "Next!", travelers answering and paying).
     beats: () => [
       { narrate: 0 },
       { shot: "gate", cut: true },
       { wait: 7 },
       { narrate: 1 },
       { shot: "queue" },
-      { wait: 7 },
-      { narrate: 2 },
-      { shot: "checkpoint" },
-      { wait: 1.6 },
-      { line: "garlan", text: "Next!" },
-      { move: "branka", to: "front1" },
-      { move: "cassia", to: "front2" },
-      { move: "yeva", to: "front3" },
-      { move: "milos", to: "front4", wait: true },
-      { face: "branka", to: "garlan" },
-      { face: "cassia", to: "garlan" },
-      { face: "yeva", to: "garlan" },
-      { face: "milos", to: "garlan" },
+      { wait: 6.5 },
       { shot: "party" },
-      { wait: 1.4 },
+      { wait: 6 },
+      { shot: "checkpoint" },
+      { cue: "gate-line:called" },
+      { narrate: 2 },
+      { cue: "gate-line:front" },
+      { shot: "party" },
+      { wait: 1.2 },
       { line: "garlan", text: "State your business in Kordavos." },
       { line: "garlan", text: "There is a fee of three marks for entrance." },
     ],
@@ -218,16 +220,9 @@ export const TURNS: MockTurn[] = [
       { line: "garlan", text: "For the chapel." },
       { line: "garlan", text: "Let them through!" },
       { narrate: 1 },
+      { loop: "gate-line", do: "release" },
       { shot: { position: [3, 2.2, 17], target: [0, 5, -20], fov: 56 } },
-      { move: "branka", to: [1.2, 9.4], speed: 1.2 },
-      { move: "cassia", to: [0.4, 9.2], speed: 1.2 },
-      { move: "yeva", to: [1.7, 8.8], speed: 1.3 },
-      { move: "milos", to: [0.9, 9.8], speed: 1.1, wait: true },
-      { move: "branka", to: [-1.2, -14], speed: 1.3 },
-      { move: "cassia", to: [0.2, -15], speed: 1.3 },
-      { move: "yeva", to: [1.4, -13.5], speed: 1.4 },
-      { move: "milos", to: [0.8, -12.5], speed: 1.2 },
-      { wait: 4 },
+      { wait: 8 },
       { narrate: 2 },
       { shot: "gate" },
       { wait: 5 },
