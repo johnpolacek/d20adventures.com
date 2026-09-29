@@ -182,13 +182,34 @@ All 3D dependencies are imported only by these modules (verified via grep on 202
    - Build generic parametric sets for forest road, clearing, tavern interior, docks and crypt, to cover Midnight Summons, Covert Cargo and Road to Kordavos.
    - Build an agent authoring loop: brief → set module against the kit → verify screenshots → review in `/dev/stage` → publish.
 
-## Open decisions (owner)
+## Owner decisions (2026-09-29)
 
-1. **Mode.** Should Stageview replace the encounter overlay and serve as the Storyview backdrop, or become a separate fourth mode? Recommendation: replace, and serve as the backdrop. The roadmap's "Miniview" would be retired.
-2. **Characters.** All-procedural figures (recommended by the hybrid test) or illustrated standees for named characters?
-3. **Coverage.** Authored sets for key locations plus generic parametric sets (recommended), or aiming for AI-authored sets per encounter at authoring time?
-4. **Removal timing.** Remove now, so players have map only until phase 4 (recommended, given the decision), or keep the old view until parity?
-5. **Paid minis.** Were standee or mini purchases made in production? Check `usage_encounter_asset` ledger rows, and decide between refund, grandfathering, or ignoring them.
+1. **Mode.** The encounter overlay is removed, and Stageview replaces it.
+2. **Coverage.** The goal is AI-built custom sets for every encounter, generated during adventure-plan creation. This is not required for v1.
+   - Consequence: any author, including community authors, can create a set. A set is therefore untrusted input and must not be arbitrary JS run on player clients.
+   - Design the kit so a set is a **declarative spec** (JSON) that the kit interprets through parametric builders and primitives.
+   - The hand-built v1 sets should already use that spec wherever possible, so they act as few-shot exemplars for generation.
+3. **Removal timing.** Remove the old stack now. There are no real players, only test accounts.
+4. **Paid minis.** Not a concern. Only test accounts have made standee or mini purchases.
+
+## Open: close-ups of player characters
+
+The owner is not confident that procedural figures can make convincing close-ups, and suggested something like standees. Evidence so far:
+
+- An illustrated standee placed in the demo world clashes (`hybrid-standee.jpg`).
+- Procedural figures read well at mid and long range but look toy-like up close.
+
+Options to prototype in the standalone demo before committing:
+
+- **A. Portrait moments (recommended).**
+  - In-world figures stay procedural and never get a close-up.
+  - When a character speaks or acts, their painted portrait or full-body art slides in as a UI plate beside the head-anchored bubble. This is the classic CRPG split used by Baldur's Gate, Pillars and Disco Elysium.
+  - The figure recipe echoes the portrait's colours and gear, so the link between plate and figure reads.
+  - This keeps character-art generation (avatar → full-body painted plate), but as 2D UI rather than as in-world cards.
+- **B. Style-matched in-world standees.**
+  - Generate full-body cards conditioned on the avatar and on the world's flat painted style, then relight them in-scene (a normal or depth map from the image), grade them to the set palette, remove the die-cut outline, and apply the paint pass.
+  - Risks: cards still read as flat when the camera orbits, and a detailed hero among blocky crowd figures makes the crowd look worse.
+- **C. Both.** Use B at mid range for named characters only, and A for close-ups.
 
 ## Unknowns
 
