@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Roadmap](../roadmap.md) · [Architecture](../Architecture.md)
 
-Status: **assessment + proposed plan** (2026-09-29) · working name "Stageview" is a proposal · old 3D stack removed and merged to main (see [plan](zzz-completed/feature-remove-3d-stack.md)); no Stageview code yet
+Status: **phase 1 done; prototype v5 approved (2026-09-29); next: phase 2 engine port** · working name "Stageview" is a proposal · old 3D stack removed and merged to main (see [plan](zzz-completed/feature-remove-3d-stack.md)); no Stageview code yet
 
 ## Decision (2026-09-29)
 
@@ -122,16 +122,27 @@ Runtime behaviour:
   - A transition plays when an encounter changes.
   - The caption ticker becomes head-anchored bubbles.
   - Storyview paragraphs drive shots and beats in sync with the TTS narration.
-- **Characters.** Each character has a **figure recipe** JSON: build, height, skin, hair and beard, headgear, garment kind and colours, mantle, armour, weapon, shield colours and device.
-  - It is derived once from the character sheet and portrait description by an LLM or rules, and is editable.
-  - This replaces standee (500 tokens) and Hunyuan mini (2,000 tokens) generation. There are no per-character image or 3D costs.
-- **Quality tiers.**
+- **Characters (decided by the v5 prototype, 2026-09-29).**
+  - **Named characters (PCs and staged NPCs):** in-world **world-style standees** with front and back art.
+    - Generated once per character from the portrait plus the setting's style reference (`gemini-3.1-flash-image`, 2K, green screen, keyed on distance from green).
+    - In the scene each card is alpha-tested and lit through normals derived from the alpha. It casts and receives shadows, and the character mask keeps it at about 20% paint.
+    - The card leans toward the camera within ±60° of the character's facing, and switches from front to back beyond 90° with a dithered crossfade.
+  - **Portrait plates:** carry dialogue and the hold prompt.
+  - **Crowd:**
+    - Instanced illustrated cards drawn from a per-setting **crowd library** of about 16–24 variants with fronts and backs, in one `DataArrayTexture` atlas.
+    - Card detail is masked at about 50% paint.
+    - **Hybrid LOD:** cards within 60 m at eye level; procedural pawns for far or steep views.
+  - The earlier "figure recipe" idea is superseded.
+  - Cost: two generations per character (front and back) and two per crowd variant. A token price is still to be set, and generation needs server-side keying again (`sharp` was removed in phase 1).
+- **Quality tiers (measured on an M3 at Retina, party view).**
 
-| Tier | DPR | Shadows | Crowd | Paint internal res | Other |
-|---|---|---|---|---|---|
-| High | ≤ 1.5 | 4096 | full | 720p | — |
-| Balanced | 1 | 2048 | ×0.5 | 540p | no bloom |
-| Mobile | 1 | 1024 | ×0.25 plus impostors | 480p | — |
+| Tier | DPR | Paint internal height | AA | AO | Bloom | Measured |
+|---|---|---|---|---|---|---|
+| Balanced | 1 | 540 | none | off | off | 60 fps (vsync) |
+| High | 1.5 | 720 | FXAA | ¼ res | off | about 43–46 fps (party view; about 37 in the gate view) |
+| Ultra | 2 | 900 | 4× MSAA | ¼ res | on | about 21 fps |
+
+  A mobile tier is still unmeasured: DPR 1, 1024 shadows, fewer cards, and paint at 480.
 
 - **Rendering lifecycle.** Pause rendering when the overlay is hidden or the tab is hidden. The current r3f view ticks forever.
 - **Budgets:**
@@ -169,18 +180,28 @@ All 3D dependencies were imported only by these modules (verified via grep on 20
 1. **Clean slate** (feature worktree). **Done 2026-09-29 on `feature/remove-3d-stack`.**
    - Extract the map-only encounter panel, delete the inventory above, and drop the standee and mini token products.
    - Validation: build, TypeScript, lint, Playwright pass; the map rail and fullscreen map were checked on a fixture page. The real turn page was not rendered because the worktree database is empty.
-2. **Engine port.**
-   - `lib/stage/` TS port of the demo kit with the fixes above: fixed-res paint, MSAA, scoped fog, tiers, pause, dispose, head GLB, LOD.
-   - Add `/dev/stage` and the verify script.
+2. **Engine port.** The source is the **v5 prototype** (`~/Projects/d20-graphics-test-2/src/v5/`), not v4.
+   - Port into `lib/stage/` as plain three.js TypeScript. Carry over:
+     - the kit (`lib`, `materials` including `wood()`, `sky`)
+     - `paint` (fixed internal height, depth-scaled radius, 4-tap prefilter, mask-aware final pass)
+     - `mask` (depth-tested character mask)
+     - `cards` (instanced front/back crowd cards with hybrid LOD)
+     - `closeups` (hero standees and plates)
+     - AO (GTAO at quarter resolution with separable blur), and MSAA/FXAA
+     - `flags` and tiers
+   - Scope the global fog chunk patch to Stage materials. Add pause-when-hidden and dispose.
+   - Add `/dev/stage` and a verify script (shaders compile, stats within budget, a screenshot per shot at DPR 2).
+   - Design the set format as a declarative spec from the start (decision 2).
 3. **First set and staging.**
-   - Port the v4 gate as `realm-of-myr/kordavos-south-gate`, with staging for `march-of-davos/the-gates-of-kordavos`.
+   - Port the v4/v5 gate as `realm-of-myr/kordavos-south-gate`, with staging for `march-of-davos/the-gates-of-kordavos`.
    - The festival street becomes the `the-harvest-festival` set.
    - Generalize `Director` into set loops plus staging scripts.
-4. **Play integration.**
+   - Port the crowd library (the prototype's 16 variants, fronts and backs) as the Realm of Myr crowd library.
+4. **Character art pipeline and play integration.**
+   - Add a server-side generator: portrait → world-style front and back standee (reinstate keying with `sharp`). Store it per character in S3, and set a token price.
    - The encounter overlay hosts Stage when a staging exists.
-   - Add per-turn beats generation and hold binding, plus NPC and PC cards.
+   - Add per-turn beats generation and hold binding, portrait plates, and NPC and PC cards.
    - Add a rail still (captured frame) and Storyview sync.
-   - Generate figure recipes for PCs.
 5. **Coverage.**
    - Build generic parametric sets for forest road, clearing, tavern interior, docks and crypt, to cover Midnight Summons, Covert Cargo and Road to Kordavos.
    - Build an agent authoring loop: brief → set module against the kit → verify screenshots → review in `/dev/stage` → publish.
