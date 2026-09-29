@@ -131,3 +131,5 @@ Measured on the M3 in Chrome 154, 1440×900 CSS, dev build, `motion=0` unless no
 - [x] `/dev/stage` viewer
 - [x] `scripts/stage-verify.ts`; DPR 2 screenshots and crops reviewed
 - [x] Wiki: stageview phases, log, index
+
+Finished: 2026-09-29 (merged to main, policy: merge)
