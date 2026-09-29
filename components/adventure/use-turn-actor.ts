@@ -1,8 +1,8 @@
 "use client"
 
-// Whose-turn derivation shared by the turn page narrative, the encounter view's
-// bottom strip, and the encounter turn modal. Pure derivation from TurnContext —
-// no effects, so consumers can't accidentally double-trigger NPC processing.
+// Whose-turn derivation shared by the turn page narrative and any other turn UI.
+// Pure derivation from TurnContext — no effects, so consumers can't accidentally
+// double-trigger NPC processing.
 
 import { useUser } from "@clerk/nextjs"
 import { useTurnContext } from "@/lib/context/TurnContext"

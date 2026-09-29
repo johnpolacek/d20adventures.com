@@ -2,9 +2,10 @@
 
 // The reusable core of the turn UI: narrative history, NPC processing state,
 // reply form, waiting/game-over/final-encounter blocks, and turn advance.
-// Rendered by the turn page (variant="page") and the encounter view's turn
-// drawer (variant="drawer"). Render-only plus action handlers — the singleton
-// page effects (NPC trigger, auto-navigate) stay in TurnNarrative.
+// Rendered by the turn page (variant="page"). The "drawer" variant (a self-scrolling
+// container) has no host since the 3D encounter view was removed; it is kept for the
+// planned Stageview overlay. Render-only plus action handlers — the singleton page
+// effects (NPC trigger, auto-navigate) stay in TurnNarrative.
 
 import { useUser } from "@clerk/nextjs"
 import { AlertTriangle } from "lucide-react"

@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server"
 import { IMAGE_HOST } from "@/lib/config"
 
-// Same-origin proxy for character portraits used as WebGL textures (encounter view
-// portrait pawns). The public image hosts don't send CORS headers, so TextureLoader
-// can't read them cross-origin; proxying makes them same-origin. Host-allowlisted.
+// Same-origin proxy for public images used as WebGL textures. The public image hosts
+// don't send CORS headers, so TextureLoader can't read them cross-origin; proxying
+// makes them same-origin. Host-allowlisted. No caller since the 3D encounter view was
+// removed; kept for the planned Stageview.
 
 const ALLOWED_HOSTS = new Set([new URL(IMAGE_HOST).host, "d20-public.s3.us-east-1.amazonaws.com"])
 
