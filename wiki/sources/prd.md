@@ -36,6 +36,8 @@ Adventures can be experienced in three distinct modes. All modes share the same 
 
 **Mapview** adds a tabletop-inspired visual layer: a realistic 3D tile map — detailed terrain and character models evoking painted miniatures on a physical table — serves as a backdrop to the adventure. The narrative and choices remain the primary interface; the map shows where you are in the world.
 
+> **Note (2026-09-29, later):** The owner decided that Stageview, a painted 3D stage, becomes the primary play screen. The text turn UI docks over the stage, phones play in landscape, and Gameview becomes the text layer and the fallback. See [Stageview](../plans/stageview.md#stage-first-play-decided-2026-09-29).
+>
 > **Note (2026-09-29):** Mapview shipped as 2D battle maps ([Mapview plan](../plans/mapview.md)). The 3D-miniatures idea in the paragraph above was prototyped and then removed ([Remove 3D stack](../plans/zzz-completed/feature-remove-3d-stack.md)); the painted 3D direction is now [Stageview](../plans/stageview.md).
 
 ## Product Unknowns

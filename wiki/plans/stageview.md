@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Roadmap](../roadmap.md) · [Architecture](../Architecture.md)
 
-Status: **phase 2 engine port merged to main (2026-09-29); next: phase 3** · working name "Stageview" is a proposal · old 3D stack removed and merged to main (see [plan](zzz-completed/feature-remove-3d-stack.md)) · engine plan and results: [feature-stageview-engine](zzz-completed/feature-stageview-engine.md)
+Status: **phase 2 engine port merged to main (2026-09-29); owner went all in: Stageview is the primary play screen (decision 5); next: phase 3 and the stage-first turn page** · working name "Stageview" is a proposal · old 3D stack removed and merged to main (see [plan](zzz-completed/feature-remove-3d-stack.md)) · engine plan and results: [feature-stageview-engine](zzz-completed/feature-stageview-engine.md)
 
 ## Decision (2026-09-29)
 
@@ -201,14 +201,15 @@ All 3D dependencies were imported only by these modules (verified via grep on 20
    - The festival street becomes the `the-harvest-festival` set.
    - Generalize `Director` into set loops plus staging scripts.
    - Port the crowd library (the prototype's 16 variants, fronts and backs) as the Realm of Myr crowd library.
-4. **Character art pipeline and play integration.**
-   - Add a server-side generator: portrait → world-style front and back standee (reinstate keying with `sharp`). Store it per character in S3, and set a token price.
-   - The encounter overlay hosts Stage when a staging exists.
-   - Add per-turn beats generation and hold binding, portrait plates, and NPC and PC cards.
-   - Add a rail still (captured frame) and Storyview sync.
-5. **Coverage.**
-   - Build generic parametric sets for forest road, clearing, tavern interior, docks and crypt, to cover Midnight Summons, Covert Cargo and Road to Kordavos.
-   - Build an agent authoring loop: brief → set module against the kit → verify screenshots → review in `/dev/stage` → publish.
+4. **Stage-first turn page and character art** (revised for decision 5).
+   - The turn page renders Stage full-bleed; see [Stage-first play](#stage-first-play-decided-2026-09-29).
+   - Add a server-side generator: portrait → world-style front and back standee (reinstate keying with `sharp`). Store it per character in S3, and set a token price. Premades get art ahead of time; custom characters get it at creation.
+   - Add per-turn beats generation and hold binding, portrait plates, NPC and PC cards, and Storyview (TTS) sync.
+   - Add the phone landscape gate (decision 6) and the fallback for encounters without a staging.
+5. **Coverage.** Launch-critical under decision 5, because every encounter needs a stage.
+   - Build generic parametric sets for forest road, clearing, tavern interior, docks and crypt, to cover Midnight Summons, Covert Cargo and Road to Kordavos. March of Davos has 45 encounters.
+   - Generate a default staging from encounter frontmatter (`npcs[]`, `startNear`) and a set chosen by encounter kind (Mapview's `inferEncounterSceneKit` already classifies encounters), so authored stagings refine rather than gate play.
+   - Build an agent authoring loop: brief → set spec against the kit → `stage:check` → verify screenshots → review in `/dev/stage` → publish.
 
 ## Owner decisions (2026-09-29)
 
@@ -219,6 +220,30 @@ All 3D dependencies were imported only by these modules (verified via grep on 20
    - The hand-built v1 sets should already use that spec wherever possible, so they act as few-shot exemplars for generation.
 3. **Removal timing.** Remove the old stack now. There are no real players, only test accounts.
 4. **Paid minis.** Not a concern. Only test accounts have made standee or mini purchases.
+5. **Stageview is the primary play screen** (later on 2026-09-29, "all in"). It supersedes decision 1's overlay framing: the stage is the turn page rather than something opened from it.
+6. **Phones play in landscape.** In portrait on a phone, play is blocked by a rotate prompt.
+   - iOS Safari cannot lock orientation: it has no `screen.orientation.lock()`, iPhone has no element fullscreen, and installed web apps ignore the manifest's `orientation`. There the prompt is the only enforcement.
+   - Android Chrome can lock to landscape after the page enters fullscreen, and when installed via the manifest's `"orientation": "landscape"`.
+
+## Stage-first play (decided 2026-09-29)
+
+The turn page becomes the stage. Proposed shape, to settle in the phase 4 plan:
+
+- **Layout.** The Stage fills the viewport. The narrative, the reply composer, dice, chat and turn history dock over it in a collapsible panel: on the side in landscape, and a bottom sheet on tablets in portrait. There is no separate overlay route and no mode switch to reach the stage.
+- **Turn loop.**
+  - Beats play when a turn resolves.
+  - The hold (waiting for replies) frames the acting character and shows the GM prompt.
+  - Dialogue goes to portrait plates and head-anchored bubbles.
+  - Storyview narration drives shots and beats in time with the TTS paragraphs.
+- **Text stays whole.** Every word of the narrative remains readable in the docked panel. That covers screen readers, reduced motion, and players who skim.
+- **Fallbacks.**
+  - An encounter without an authored staging gets a generated default: a generic set by encounter kind, and the cast at default marks.
+  - A device without WebGL2, or one that fails the performance floor, gets the text layout (today's Gameview) with a still frame.
+  - Phones in portrait get the rotate prompt (decision 6).
+- **Other modes (proposed, not yet decided).**
+  - Gameview becomes the docked text layer plus the no-GPU fallback, not a peer mode.
+  - Storyview becomes the stage's narration track.
+  - Mapview: retire it, or keep the battle map as a toggleable inset if tactical positions ever matter. Positions are visual only today.
 
 ## Open: close-ups of player characters
 

@@ -6,6 +6,12 @@ Git owns routine implementation history. This log records durable wiki, planning
 
 ## 2026-09-29
 
+### Owner went all in: Stageview is the primary play screen
+
+- Decision 5: the turn page becomes the stage. The narrative, reply, dice, chat and history dock over a full-bleed Stage. Gameview becomes the text layer and the no-GPU fallback, and Storyview becomes the stage's narration track. The fate of Mapview is still open.
+- Decision 6: phones play in landscape. iOS Safari cannot lock orientation (no `screen.orientation.lock()`, no element fullscreen on iPhone, and the manifest `orientation` is ignored), so a rotate prompt blocks portrait play there. Android can lock after entering fullscreen or when installed.
+- Revised phases 4–5: a stage-first turn page with character art, and coverage becomes launch-critical, with default stagings generated from encounter frontmatter and a generic set per encounter kind. Details: [Stageview](plans/stageview.md#stage-first-play-decided-2026-09-29).
+
 ### Stageview phase 2: engine port with a declarative set spec (`feature/stageview-engine`)
 
 - Ported the v5 prototype into `lib/stage/` as plain three.js TypeScript on r183. It includes the kit, scoped-fog materials, sky, paint pass, character mask, GTAO, MSAA/FXAA, bloom, tiers, the crowd (pawns, front/back cards, hybrid LOD, walkers), standees, and pause and dispose.

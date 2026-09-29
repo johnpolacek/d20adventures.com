@@ -2,7 +2,7 @@
 
 **Home** · [Sources](Sources.md) · [Plans](plans/index.md) · [Roadmap](roadmap.md) · [Architecture](Architecture.md)
 
-A narrative RPG platform blending play-by-post adventure turns, realtime updates, authored adventure plans, and an AI Game Master. Adventures can be experienced as text-driven play (Gameview), a narrated paragraph-by-paragraph audiobook mode (Storyview), or with a 2D battle-map backdrop (Mapview). A painted 3D encounter stage is proposed as Stageview; the old 3D stack was removed on 2026-09-29 to make room for it — all sharing the same game state and switchable mid-adventure. This wiki was initialized from the existing Next.js, Convex, Clerk, S3, Stripe, SendGrid, and AI SDK codebase.
+A narrative RPG platform blending play-by-post adventure turns, realtime updates, authored adventure plans, and an AI Game Master. Adventures can be experienced as text-driven play (Gameview), a narrated paragraph-by-paragraph audiobook mode (Storyview), or with a 2D battle-map backdrop (Mapview). A painted 3D encounter stage, Stageview, is becoming the primary play screen (owner decision, 2026-09-29): the text turn UI docks over the stage, and Gameview remains the text layer and fallback. Its engine is merged, and the old 3D stack was removed on 2026-09-29 to make room for it. This wiki was initialized from the existing Next.js, Convex, Clerk, S3, Stripe, SendGrid, and AI SDK codebase.
 
 | | |
 |---|---|
@@ -20,7 +20,7 @@ Player UI → Next.js server actions → Convex (state) and wiki source (S3 or r
 
 ## Core pages
 
-- **[Stageview](plans/stageview.md)** — the painted procedural 3D direction chosen 2026-09-29. Covers the demo assessment, measurements, the replacement architecture, and the removal inventory.
+- **[Stageview](plans/stageview.md)** — the painted 3D stage, chosen 2026-09-29 and now the primary play screen. Covers owner decisions (including stage-first play and landscape on phones), architecture, phases and measurements.
 - **[Stageview engine](plans/zzz-completed/feature-stageview-engine.md)** — phase 2: the `lib/stage/` runtime, set spec v1 (declarative JSON sets), the Kordavos gate set, `/dev/stage`, and DPR 2 verification results.
 - **[Remove 3D stack](plans/zzz-completed/feature-remove-3d-stack.md)** — what the clean-slate removal deleted, the map-only panel that replaced the encounter overlay, validation, and leftovers (S3 prefixes, branches).
 - **[Static homepage](plans/zzz-completed/feature-static-homepage.md)** — rendering boundary, Clerk cache-action behavior, authenticated API migration, and validation evidence.
