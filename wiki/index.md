@@ -2,7 +2,7 @@
 
 **Home** · [Sources](Sources.md) · [Plans](plans/index.md) · [Roadmap](roadmap.md) · [Architecture](Architecture.md)
 
-A narrative RPG platform blending play-by-post adventure turns, realtime updates, authored adventure plans, and an AI Game Master. Adventures can be experienced as text-driven play (Gameview), a narrated paragraph-by-paragraph audiobook mode (Storyview), or with a 2D battle-map backdrop (Mapview; a 3D miniatures Miniview may follow) — all sharing the same game state and switchable mid-adventure. This wiki was initialized from the existing Next.js, Convex, Clerk, S3, Stripe, SendGrid, and AI SDK codebase.
+A narrative RPG platform blending play-by-post adventure turns, realtime updates, authored adventure plans, and an AI Game Master. Adventures can be experienced as text-driven play (Gameview), a narrated paragraph-by-paragraph audiobook mode (Storyview), or with a 2D battle-map backdrop (Mapview). A painted 3D encounter stage is proposed as Stageview, which will replace the existing 3D stack — all sharing the same game state and switchable mid-adventure. This wiki was initialized from the existing Next.js, Convex, Clerk, S3, Stripe, SendGrid, and AI SDK codebase.
 
 | | |
 |---|---|
@@ -20,6 +20,7 @@ Player UI → Next.js server actions → Convex (state) and wiki source (S3 or r
 
 ## Core pages
 
+- **[Stageview](plans/stageview.md)** — the painted procedural 3D direction chosen 2026-09-29. Covers the demo assessment, measurements, the replacement architecture, and the removal inventory.
 - **[Static homepage](plans/zzz-completed/feature-static-homepage.md)** — rendering boundary, Clerk cache-action behavior, authenticated API migration, and validation evidence.
 - **[Wiki Agent Guide](AGENTS.md)** — maintenance contract for this wiki directory.
 - **[Project Log](log.md)** — durable context changes and validation notes.

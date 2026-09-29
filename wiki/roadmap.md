@@ -15,8 +15,8 @@ A cinematic, immersive mode. Encounter narrative is presented one paragraph at a
 ### Mapview
 A tabletop-inspired visual layer: 2D standard D&D-style battle maps, AI-generated at authoring time from encounter text using a standard SVG piece set (designed in OpenPencil). Square grid first (hex-ready schema). A static scene backdrop per encounter — the narrative and choices remain the primary interface; the map shows where you are in the world. Plan: [Mapview](plans/mapview.md).
 
-### Miniview (future)
-A 3D miniatures view — realistic terrain and character models evoking painted miniatures on a physical table. A first implementation (react-three-fiber, AI scene generation) was shelved on 2026-03-12 because visual quality fell short of the painted-miniatures bar; the renderer is kept dormant for revival (`components/adventure/miniatures-map.tsx`, `lib/map-utils.ts`, and the `minimap-claude` branch with post-processing and archetype-token upgrades).
+### Stageview (proposed; supersedes Miniview)
+A living, painted 3D stage for each encounter. It is built from procedural three.js sets per location, uses instanced animated crowds, and applies a painterly Kuwahara post-process. Per-turn beats stage the narrative, and the scene holds while it waits for players. On 2026-09-29 the owner chose this direction over the existing 3D stack. The old stack includes the r3f encounter diorama, scene-kit sets, standees, Hunyuan minis, and the dormant Miniview renderer, and it may be removed entirely. Plan: [Stageview](plans/stageview.md).
 
 ## Adventure Creation
 

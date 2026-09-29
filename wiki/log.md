@@ -4,6 +4,27 @@
 
 Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.
 
+## 2026-09-29
+
+### Assessed the Kordavos v4 painted 3D demo; owner chose it over the existing 3D stack
+
+- Evaluated `~/Projects/d20-graphics-test-2/kordavos-v4.html`. It is a 2.49 MB offline, plain three.js staging of March of Davos "The Gates of Kordavos".
+- Measured all three renderers on an M3 in Chrome at 1440×900:
+
+| Renderer | Draw calls | Triangles | FPS |
+|---|---|---|---|
+| Demo | 226–251 | 4.7M | 60 (vsync cap) |
+| scene-kit gates set | 3,203 | 1.14M | 30–36 |
+| In-play r3f diorama | not measured | not measured | not measured |
+
+- The demo's paint pass drops from 37 to 15 fps at DPR 2. Its Kuwahara cost scales with roughly internalHeight⁴, so the pass needs a fixed internal resolution.
+- Two experiments, run with no repo change:
+  - Painting current-game screenshots adds cohesion but does not fix the scenes.
+  - An illustrated standee inside the demo world clashes with the procedural figures.
+  - Conclusion: use one procedural character vocabulary and keep portraits in the 2D UI.
+- Owner decision: **the existing 3D stack may be removed entirely** and rebuilt on the demo's approach. Wrote [Stageview](plans/stageview.md), covering the recipe, the demo's weaknesses, a set / staging / beats architecture, the removal inventory, phases, and open decisions. Comparison screenshots are in `plans/stageview/`.
+- The roadmap's Miniview entry is superseded by the Stageview proposal.
+
 ## 2026-09-15
 
 ### Prerendered the homepage and moved personalized reads behind APIs
