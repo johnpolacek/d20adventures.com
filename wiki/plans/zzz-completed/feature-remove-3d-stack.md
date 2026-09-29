@@ -106,3 +106,5 @@ Run in the worktree, with its isolated Convex project:
 - [x] Validate: TypeScript, lint, build, Playwright, map panel check.
 - [x] Update the wiki.
 - [ ] `wt:finish` (owner decision; not run).
+
+Finished: 2026-09-29 (merged to main, policy: merge)
