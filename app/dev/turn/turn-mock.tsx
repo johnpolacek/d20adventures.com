@@ -397,7 +397,7 @@ export function TurnMock() {
       )}
       {!hideUi && phase === "beats" && (
         <div className={`absolute z-30 ${compact ? "right-4 bottom-[52px]" : "bottom-[122px] left-1/2 -translate-x-1/2"}`}>
-          <Pill className="rounded-full bg-stage-panel/60 px-5 backdrop-blur-md" onClick={skip}>
+          <Pill className="rounded-full px-5" onClick={skip}>
             Skip ▸▸
           </Pill>
         </div>
@@ -456,12 +456,8 @@ export function TurnMock() {
           <div className="font-display text-[clamp(28px,3.6vw,46px)] [text-shadow:0_2px_25px_#000]">Arrival at Kordavos</div>
           <div className="text-[9px] tracking-[0.3em] text-stage-sage">THE MARCH OF DAVOS</div>
           {stage ? (
-            <button
-              type="button"
-              onClick={start}
-              className="mt-3 rounded-full border border-stage-gold bg-stage-panel/70 px-10 py-3 text-[12px] tracking-[0.3em] text-stage-gold shadow-[0_0_24px_#e3b67c33] backdrop-blur-md transition-colors hover:bg-stage-gold/15"
-            >
-              PLAY
+            <button type="button" onClick={start} className="stage-brass mt-3 rounded-full border px-11 py-3 font-display text-[15px] font-bold tracking-[0.3em] transition-[filter]">
+              Play
             </button>
           ) : (
             <>

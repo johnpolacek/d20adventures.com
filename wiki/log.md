@@ -6,6 +6,16 @@ Git owns routine implementation history. This log records durable wiki, planning
 
 ## 2026-09-29
 
+### Turn page mock, revision 5: textured surfaces
+
+- The site's original textures now appear on the stage UI:
+  - black-paper grain on panels;
+  - brass and dark-leather "buried" stone on buttons;
+  - parchment name tags;
+  - a textured d20;
+  - the rough gold rule above the perspective bar.
+- These are `stage-*` Tailwind utilities; see [feature-stage-turn-mock](plans/feature-stage-turn-mock.md).
+
 ### Turn page mock, revision 4: movement from the narrative
 
 - Per the owner, movement comes from what the player writes. A small model (`gemini-3.5-flash-lite`) maps the action onto the set's labelled places, the other characters, or a relative step, with a pace. The engine clamps the move to the character's speed and to walkable ground. Click-to-move remains as an override.

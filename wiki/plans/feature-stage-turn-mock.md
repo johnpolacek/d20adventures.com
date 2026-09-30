@@ -67,6 +67,19 @@ The owner suggested that AI translate narrative action into in-game movement, ra
 - **`scripts/stage-movement-eval.ts` (`pnpm stage:eval-movement`):** eight actions from the gate scene. **8/8 destinations and paces correct**, about 0.6–1.8 s per call. Pace needed the field to be required, not defaulted, and the rule stated on the field.
 - **In the browser:** Branka's speech-only reply kept her still. Yeva's "drifts toward the gap in the barrier" walked her 4.1 m to the gap before her roll.
 
+## Revision 5 (2026-09-29): textured surfaces
+
+At the owner's request, a little of the original site's texture comes back to the flat prototype UI. These are Tailwind `@utility` classes in `app/globals.css`, built from the site's existing pattern tiles:
+
+- `stage-grain`: black paper tinted warm, on panels and plates. Panels also get a soft inner bevel.
+- `stage-brass`: "buried" stone over a brass gradient with an embossed bevel. Used for the primary buttons (End turn, Play, active toggles). End turn and Play use Cinzel Decorative.
+- `stage-leather`: the same stone grain, dark, on secondary buttons and icon buttons.
+- `stage-parchment`: the party name tags.
+- `stage-die`: the d20.
+- `stage-rule`: the rough gold rule above the perspective bar.
+
+Note: Tailwind v4 dropped a plain `@layer components { … }` block from the build, so these are `@utility` classes instead.
+
 ## Built (kept for the real page)
 
 | Piece | Path |

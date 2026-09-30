@@ -22,15 +22,15 @@ export function useCompact() {
 }
 
 export const eyebrow = "font-sans text-[9px] font-medium uppercase tracking-[0.26em] text-stage-gold"
-export const panel = "rounded-md border border-stage-line/25 bg-stage-panel/95 shadow-[0_20px_50px_#0006] backdrop-blur-xl"
+export const panel = "stage-grain rounded-md border border-stage-line/25 bg-stage-panel/95 shadow-[0_20px_50px_#0006,inset_0_1px_0_#f0d6b214,inset_0_0_60px_#0000004d] backdrop-blur-xl"
 
 export function Pill({ active, className, children, ...rest }: React.ComponentProps<"button"> & { active?: boolean }) {
   return (
     <button
       type="button"
       className={cn(
-        "rounded-[3px] border px-3 py-2 font-sans text-[11px] tracking-wide transition-colors disabled:cursor-default disabled:opacity-40",
-        active ? "border-stage-brass/60 bg-stage-brass/15 text-stage-parchment" : "border-stage-line/25 text-stage-cream hover:border-stage-gold/60 hover:bg-white/5",
+        "rounded-[3px] border px-3 py-2 font-sans text-[11px] tracking-wide transition-[filter,border-color] disabled:cursor-default disabled:opacity-40",
+        active ? "stage-brass" : "stage-leather border-stage-line/25 text-stage-cream hover:border-stage-gold/60",
         className
       )}
       {...rest}
@@ -47,8 +47,8 @@ export function IconButton({ label, active, children, ...rest }: React.Component
       aria-label={label}
       title={label}
       className={cn(
-        "grid h-10 w-10 place-items-center rounded-full border backdrop-blur-md transition-colors [&_svg]:h-4 [&_svg]:w-4",
-        active ? "border-stage-gold bg-stage-panel/80" : "border-stage-line/25 bg-stage-panel/30 hover:border-stage-gold hover:bg-stage-panel/70"
+        "stage-leather grid h-10 w-10 place-items-center rounded-full border transition-[filter,border-color] [&_svg]:h-4 [&_svg]:w-4",
+        active ? "border-stage-gold" : "border-stage-line/25 hover:border-stage-gold"
       )}
       {...rest}
     >
@@ -137,10 +137,8 @@ export function StageHud({
           {location.status && <div className="mt-2 text-[10px] tracking-wide text-[#e8c898]">{location.status}</div>}
         </aside>
 
-        <nav
-          className={cn("absolute flex items-center justify-between gap-6 border-t border-stage-line/25", compact ? "right-4 bottom-0 left-4 h-11" : "right-10 bottom-0 left-10 h-24")}
-          aria-label="Perspectives"
-        >
+        <nav className={cn("absolute flex items-center justify-between gap-6", compact ? "right-4 bottom-0 left-4 h-11" : "right-10 bottom-0 left-10 h-24")} aria-label="Perspectives">
+          <div aria-hidden="true" className="stage-rule pointer-events-none absolute inset-x-0 top-0 h-px opacity-60" />
           {!compact && <span className="hidden shrink-0 text-[8px] tracking-[0.25em] text-[#c0c9be] xl:block">CHOOSE A PERSPECTIVE</span>}
           <div className="flex min-w-0 gap-1 overflow-x-auto [scrollbar-width:none]">
             {views.map((v, i) => (
@@ -152,7 +150,7 @@ export function StageHud({
                 className={cn(
                   "flex shrink-0 items-center gap-2.5 rounded-[3px] border whitespace-nowrap transition-colors",
                   compact ? "px-2 py-1 text-[10px]" : "px-4 py-3 text-[11px]",
-                  activeView === v.id ? "border-stage-brass/40 bg-[#be8250]/15 text-[#fbe7c9]" : "border-transparent text-[#bfc5b9] hover:bg-white/5 hover:text-white"
+                  activeView === v.id ? "stage-leather border-stage-brass/50 text-[#fbe7c9]" : "border-transparent text-[#bfc5b9] hover:bg-white/5 hover:text-white"
                 )}
               >
                 <small className={cn("text-[8px]", activeView === v.id ? "text-stage-gold" : "text-[#a6a58c]")}>{String(i + 1).padStart(2, "0")}</small>

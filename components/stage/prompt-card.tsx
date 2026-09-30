@@ -57,7 +57,8 @@ function PartyRow({ party, actorId, compact, onPick }: { party: CardCharacter[];
             <div
               className={cn(
                 "mt-1.5 truncate border px-1 py-1 text-center font-serif text-[11px] font-semibold",
-                c.id === actorId ? "border-stage-gold bg-stage-parchment text-[#2a1a10]" : "border-stage-brass/60 bg-stage-parchment/80 text-[#2a1a10]/80"
+                "stage-parchment",
+                c.id === actorId ? "border-stage-gold text-[#2a1a10]" : "border-stage-brass/60 text-[#2a1a10]/80 opacity-85"
               )}
             >
               {c.name.split(" ")[0]}
@@ -103,7 +104,7 @@ function D20({ onRoll, compact }: { onRoll: (n: number) => void; compact: boolea
       disabled={rolling || done}
       aria-label="Roll the d20"
       className={cn(
-        "grid place-items-center rounded-full border-2 border-stage-gold bg-[radial-gradient(circle_at_35%_30%,#4a3222,#1c1410)] font-serif text-stage-parchment shadow-[0_0_0_4px_#1c1410,0_0_0_5px_#c79a5a66,0_0_24px_#e3b67c44] transition-transform enabled:hover:scale-105 disabled:cursor-default",
+        "stage-die grid place-items-center rounded-full border-2 border-stage-gold font-serif text-stage-parchment shadow-[0_0_0_4px_#1c1410,0_0_0_5px_#c79a5a66,0_0_24px_#e3b67c44] transition-transform enabled:hover:scale-105 disabled:cursor-default",
         compact ? "h-14 w-14 text-xl" : "h-20 w-20 text-3xl",
         rolling && "animate-spin [animation-duration:1.2s]"
       )}
@@ -196,7 +197,7 @@ export function PromptCard({
             <Pill className="flex-1" onClick={() => mode.suggestion && setDraft(mode.suggestion)} disabled={!mode.suggestion}>
               Suggest
             </Pill>
-            <Pill className="flex-1" active onClick={send} disabled={!draft.trim()}>
+            <Pill className="flex-1 font-display text-[13px] font-bold tracking-[0.12em]" active onClick={send} disabled={!draft.trim()}>
               End turn
             </Pill>
           </div>

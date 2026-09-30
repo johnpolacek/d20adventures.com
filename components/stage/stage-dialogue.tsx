@@ -69,7 +69,7 @@ export function Plate({ line, compact = false }: { line: PlateLine; compact?: bo
     <div
       key={line.key}
       className={cn(
-        "plate-in pointer-events-none absolute z-20 flex items-stretch rounded-[5px] border border-stage-brass/60 bg-gradient-to-b from-[#2c1d13f4] to-[#21160ff4] shadow-[0_0_0_3px_#1c1410c0,0_0_0_4px_#c79a5a44,0_18px_44px_#0008]",
+        "plate-in pointer-events-none absolute z-20 flex items-stretch rounded-[5px] stage-grain border border-stage-brass/60 bg-[#27190ff4] shadow-[0_0_0_3px_#1c1410c0,0_0_0_4px_#c79a5a44,0_18px_44px_#0008,inset_0_1px_0_#f0d6b214,inset_0_0_40px_#0000004d]",
         compact ? "bottom-[54px] w-[min(330px,46vw)] p-1.5" : "bottom-[122px] w-[min(410px,calc(100%-28px))] p-[11px]",
         line.side === "left" ? (compact ? "left-4" : "left-11") : compact ? "right-4" : "right-10"
       )}
