@@ -12,7 +12,7 @@ import { type Bubble, Bubbles, Plate, type PlateLine } from "@/components/stage/
 import { type OrderEntry, TurnOrder } from "@/components/stage/turn-order"
 import { useStage } from "@/components/stage/use-stage"
 import type { TierName } from "@/lib/stage"
-import { BeatPlayer, readingSeconds } from "@/lib/stage/beats"
+import { BeatPlayer, lineSeconds, readingSeconds } from "@/lib/stage/beats"
 import { bearing } from "@/lib/stage/movement"
 import { cn } from "@/lib/utils"
 import { ABOUT, TURNS } from "./gates-mock"
@@ -26,6 +26,9 @@ const CHAT: ChatLine[] = [
   { from: "Milos", text: "I have the marks, let's not start a riot on day one" },
 ]
 const TIERS: TierName[] = ["balanced", "high", "ultra"]
+// Narration pace: how long paragraphs and spoken lines stay up, relative to their reading time.
+const PACES = { slow: 1.35, normal: 1, fast: 0.75 } as const
+type Pace = keyof typeof PACES
 // Walking speed per turn in metres (D&D: 25 ft for the dwarf and the halfling, 30 ft otherwise); the written action's
 // movement is clamped to it.
 const SPEED: Record<string, number> = { branka: 7.5, cassia: 9, yeva: 7.5, milos: 9 }
@@ -51,6 +54,10 @@ export function TurnMock() {
   const [narrated, setNarrated] = useState(0)
   const [paragraphs, setParagraphs] = useState<string[]>([])
   const paragraphsRef = useRef<string[]>([])
+  const [pace, setPace] = useState<Pace>("normal")
+  const paceRef = useRef<Pace>("normal")
+  paceRef.current = pace
+  const [drafts, setDrafts] = useState<Record<number, string>>({})
   const [journal, setJournal] = useState<JournalTurn[]>([])
   const [bubbles, setBubbles] = useState<SpokenBubble[]>([])
   const [plates, setPlates] = useState<{ left: PlateLine | null; right: PlateLine | null }>({ left: null, right: null })
@@ -75,7 +82,11 @@ export function TurnMock() {
     const loop = stage.loops.get("gate-line")
     if (loop) loop.paused = true
     stage.shot("gate", { instant: true })
-    player.current = new BeatPlayer(stage, { onNarrate: setNarrated, narrationSeconds: (n) => readingSeconds(paragraphsRef.current[n] ?? "") })
+    player.current = new BeatPlayer(stage, {
+      onNarrate: setNarrated,
+      narrationSeconds: (n) => readingSeconds(paragraphsRef.current[n] ?? "") * PACES[paceRef.current],
+      lineSeconds: (_, text) => lineSeconds(text) * PACES[paceRef.current],
+    })
     const off = stage.on("line", (l) => {
       const k = ++key.current
       const c = l.castId ? stage.cast.find((m) => m.id === l.castId) : null
@@ -128,13 +139,18 @@ export function TurnMock() {
       movedTo.current = undefined
       setNote(undefined)
       await player.current.play(t.beats(reply, roll))
-      if (t.hold) {
-        stage.shot(t.hold.shot)
-        setPhase("hold")
-      } else setPhase("done")
+      afterBeats(index)
     },
     [stage]
   )
+  // When the beats end, the GM asks the next character (framed on them) or the encounter is over.
+  const afterBeats = (index: number) => {
+    const hold = TURNS[index].hold
+    if (hold) {
+      stage?.shot(hold.shot)
+      setPhase("hold")
+    } else setPhase("done")
+  }
 
   const start = () => {
     requestLandscape()
@@ -142,11 +158,40 @@ export function TurnMock() {
     if (loop) loop.paused = false
     runTurn(0, null, null, null, undefined)
   }
+  const clearDialogue = () => {
+    setBubbles([])
+    setPlates({ left: null, right: null })
+  }
+  const clearDialogueRef = useRef(clearDialogue)
+  clearDialogueRef.current = clearDialogue
   const skip = () => {
     player.current?.skip()
     setNarrated(paragraphs.length - 1)
-    setBubbles([])
-    setPlates({ left: null, right: null })
+    clearDialogue()
+  }
+  const back = () => {
+    clearDialogue()
+    player.current?.back()
+  }
+  const next = () => {
+    clearDialogue()
+    player.current?.next()
+  }
+  // Replay the turn: from the narration it jumps back to the first paragraph; from the GM's question it plays the turn
+  // again and returns to the question (the reply being written is kept).
+  const replay = async () => {
+    const p = player.current
+    if (!p) return
+    clearDialogue()
+    if (p.playing) {
+      p.replay()
+      return
+    }
+    setOpen(null)
+    focused.current = null
+    setPhase("beats")
+    await p.replay()
+    afterBeats(turnIndex)
   }
   // While the GM card is up, shots compose in the space above it (the character being asked stays in view).
   const onCardTop = useCallback((px: number) => stage?.setInsets({ bottom: px > 0 ? px + 12 : 0 }), [stage])
@@ -249,6 +294,14 @@ export function TurnMock() {
       if ((e.target as HTMLElement).matches?.("input,textarea,select")) return
       if (e.key === "h" || e.key === "H") setHideUi((h) => !h)
       if (e.key === "Escape") setOpen(null)
+      if (phaseRef.current === "beats" && e.key === "ArrowLeft") {
+        clearDialogueRef.current()
+        player.current?.back()
+      }
+      if (phaseRef.current === "beats" && e.key === "ArrowRight") {
+        clearDialogueRef.current()
+        player.current?.next()
+      }
       const views = stage ? Object.keys(stage.shots) : []
       const i = Number(e.key) - 1
       if (i >= 0 && i < views.length) stage?.shot(views[i])
@@ -362,12 +415,22 @@ export function TurnMock() {
             count={paragraphs.length}
             hidden={phase !== "beats"}
             compact={compact}
-            action={
-              <Pill className="rounded-full px-4 py-1" onClick={skip}>
-                Skip ▸▸
-              </Pill>
-            }
+            onReplay={replay}
+            onBack={back}
+            onNext={next}
+            onSkip={skip}
           />
+        </div>
+      )}
+      {!hideUi && phase === "hold" && (
+        <div className={cn("absolute z-20", compact ? "bottom-[52px] left-4" : "bottom-[118px] left-10")}>
+          <Pill className="fade-in flex items-center gap-2 rounded-full px-4" onClick={replay}>
+            <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true" className="h-3 w-3">
+              <path d="M2.2 6a3.8 3.8 0 1 0 1.2-2.8" />
+              <path d="M2 1.4v2.4h2.4" />
+            </svg>
+            Replay turn
+          </Pill>
         </div>
       )}
       {!hideUi && plates.right && <Plate line={plates.right} compact={compact} />}
@@ -381,6 +444,8 @@ export function TurnMock() {
           onRoll={onRoll}
           onPick={focus}
           onTop={mode.kind === "hold" || mode.kind === "roll" ? onCardTop : undefined}
+          draft={drafts[turnIndex] ?? ""}
+          onDraft={(text) => setDrafts((d) => ({ ...d, [turnIndex]: text }))}
         />
       )}
       {!hideUi && open === "journal" && <Journal turns={journal} chat={CHAT} compact={compact} onClose={() => setOpen(null)} />}
@@ -402,6 +467,16 @@ export function TurnMock() {
                   }}
                 >
                   {t}
+                </Pill>
+              ))}
+            </div>
+          </div>
+          <div className="mt-5 border-t border-stage-line/25 pt-4">
+            <div className="mb-3 text-[10px] tracking-wide">Narration pace</div>
+            <div className="flex gap-2">
+              {(Object.keys(PACES) as Pace[]).map((p) => (
+                <Pill key={p} className="flex-1 capitalize" active={pace === p} onClick={() => setPace(p)}>
+                  {p}
                 </Pill>
               ))}
             </div>

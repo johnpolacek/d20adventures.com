@@ -91,6 +91,22 @@ Note: Tailwind v4 dropped a plain `@layer components { … }` block from the bui
 - **Paced for reading.** `BeatPlayer` has a narration clock. Each `narrate` beat holds the scene for `narrationSeconds(paragraph)`: reading time at about 200 wpm now (`readingSeconds`), audio length once voiced. The next paragraph, spoken lines and the end of the beats wait for it; shots, walks and waits carry on underneath.
   - Turn 1 went from about 35 s to about 50 s, with paragraphs at 0, 17.5 and 31.3 s.
 
+## Revision 7 (2026-09-29): text stays; slower, with back, forward and replay
+
+The owner decided the narration stays as text (no audio-only mode). Changes:
+
+- **Slower.** Paragraphs now read at about 170 wpm (`readingSeconds`), down from about 200. A pace setting (slow ×1.35, normal, fast ×0.75) in Scene settings scales paragraphs and spoken lines alike, through the new `lineSeconds` hook.
+- **Stepping.** The narration panel has ↻ (replay the turn), ‹ and › (previous or next paragraph; › on the last paragraph goes to the question) and Skip. ← and → do the same.
+- **How `BeatPlayer` does it:**
+  - It records a mark at the start of each paragraph: the shot, plus the positions and facings of the cast members the beats move or turn. `back()` and `replay()` restore a mark and play on from there. `next()` fast-forwards to the next paragraph.
+  - A loop's crowd carries on and isn't rewound. Cues it has already given resolve at once, and `release()` is idempotent.
+- **Replay from the question.** A "Replay turn" button next to the GM card plays the turn again and returns to the question. The reply being written is held by the page, so it survives the replay.
+- **Checked in the browser** (turn 1):
+  - Next and back each land in about 0.8–1 s, with the camera returning to the paragraph's shot (the gate, then the line).
+  - › on the last paragraph goes straight to the question.
+  - Replay from the question restarts at paragraph 1 and keeps the draft.
+  - No console errors.
+
 ## Built (kept for the real page)
 
 | Piece | Path |

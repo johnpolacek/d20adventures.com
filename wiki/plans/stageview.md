@@ -229,12 +229,15 @@ All 3D dependencies were imported only by these modules (verified via grep on 20
 7. **Mapview is for larger maps** (later on 2026-09-29): a city, wilderness travel, or exploring ruins, not a map per encounter. Encounters are staged; Mapview shows where the party is in the wider world. The current per-encounter battle-map generation needs a new plan.
 8. **Turns like Baldur's Gate 3, with movement** (later on 2026-09-29).
    - An initiative bar sits across the top of the stage.
-   - On a character's turn the player may walk them within their speed: a range ring, a path preview, and blocking by the set's footprints.
+   - On a character's turn they may move within their speed, blocked by the set's footprints. The move comes from the written action; see the last point.
    - Then they act (the reply), which ends the turn.
    - **Consequence: positions become game state.** This supersedes "positions stay visual only" in the Architecture section.
    - Each character's position and facing is stored per turn. The GM's context includes where everyone stands. Moves are validated on the server, where the set's builders already run in Node and produce footprints. Beats start from the stored positions.
    - Combat ranges, cover and pathfinding around obstacles (beyond straight lines) are follow-ups.
    - **Movement comes from the narrative** (owner, same day). The player writes the action, and a small model maps it onto the set's vocabulary: a labelled place (a mark with a `label`), another character, or a relative step, plus a pace. The engine clamps it to the character's speed and to walkable ground. Click-to-move was tried and then removed at the owner's request: movement comes only from the written action. The first eval: 8/8 destinations and paces on the gate scene, at about 0.7 s per call with `gemini-3.5-flash-lite` (`pnpm stage:eval-movement`).
+9. **Narration stays as text, paced for reading** (later on 2026-09-29).
+   - The stage shows the narrative one paragraph at a time. Each paragraph holds the scene for its reading time (about 170 wpm, with a player pace setting). Players can step back or forward a paragraph, replay the turn, or skip to the question.
+   - Voiced narration (Storyview's TTS) may be added later as an option on top of the text. The paragraph clock already takes an audio length in place of reading time. Audio does not replace the text.
 
 ## Stage-first play (decided 2026-09-29)
 

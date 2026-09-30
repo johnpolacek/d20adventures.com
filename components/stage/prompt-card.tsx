@@ -114,6 +114,8 @@ export function PromptCard({
   onRoll,
   onPick,
   onTop,
+  draft: draftProp,
+  onDraft,
 }: {
   mode: CardMode
   actor: CardCharacter | null
@@ -124,8 +126,13 @@ export function PromptCard({
   onPick: (id: string) => void
   // The card's top edge, in px from the bottom of the screen (so the stage can frame shots above it).
   onTop?: (px: number) => void
+  // The reply can be held by the caller (so it survives the card closing while the turn is replayed).
+  draft?: string
+  onDraft?: (text: string) => void
 }) {
-  const [draft, setDraft] = useState("")
+  const [ownDraft, setOwnDraft] = useState("")
+  const draft = onDraft ? (draftProp ?? "") : ownDraft
+  const setDraft = onDraft ?? setOwnDraft
   const ref = useRef<HTMLElement>(null)
   useEffect(() => {
     const el = ref.current
@@ -140,8 +147,10 @@ export function PromptCard({
     }
   }, [onTop])
   const key = mode.kind === "hold" ? mode.prompt : mode.kind
-  // A new prompt clears the draft.
-  useEffect(() => setDraft(""), [key])
+  // A new prompt clears the card's own draft.
+  useEffect(() => {
+    if (!onDraft) setOwnDraft("")
+  }, [key, onDraft])
   const send = () => draft.trim() && onReply(draft.trim())
   return (
     <section

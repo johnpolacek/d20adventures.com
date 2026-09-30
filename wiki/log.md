@@ -6,6 +6,14 @@ Git owns routine implementation history. This log records durable wiki, planning
 
 ## 2026-09-29
 
+### Turn page mock, revision 7: slower narration with back, forward and replay
+
+- Per the owner, the text stays.
+- Narration is slower (about 170 wpm) and has a pace setting.
+- The panel adds replay, previous and next controls, plus the arrow keys; a Replay turn button sits next to the GM's question.
+- `BeatPlayer` marks each paragraph's scene so it can step back and replay.
+- Details: [feature-stage-turn-mock](plans/feature-stage-turn-mock.md).
+
 ### Turn page mock, revision 6: narration panel, title top-left, AI-only movement
 
 - Removed click-to-move, so movement comes only from the written action.
