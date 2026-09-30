@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Stageview](stageview.md)
 
-Status: Revision 3 (BG3-style turns and movement on the prototype presentation) implemented and validated as a dev mock (2026-09-29); not merged · first slice of Stageview phase 4 (the stage-first turn page)
+Status: Revision 4 (movement from the narrative via a model, BG3-style turns, prototype presentation) implemented and validated as a dev mock (2026-09-29); not merged · first slice of Stageview phase 4 (the stage-first turn page)
 
 ## Goal
 
@@ -56,6 +56,17 @@ The owner asked for three changes: clicking a character should take you to them,
   - focusing Garlan and Yeva from the turn bar;
   - Garlan's card on the second click.
 
+## Revision 4 (2026-09-29): movement from the narrative
+
+The owner suggested that AI translate narrative action into in-game movement, rather than relying on clicks.
+
+- **`lib/stage/movement.ts`:** the intent schema and prompt. The model returns `stay`, a `place` (a labelled mark), a `character` (the engine stops 1.1 m short), or a `relative` step, plus a pace (walk, hurry, sneak), an optional facing, and a short summary for the log. It is given only the labelled places and nearby characters, each with its distance and bearing from the actor.
+- **Set spec:** marks can carry a `label`. The Kordavos gate gained labelled places: the gap in the barrier, the sergeant's table, the brazier, the searched cart, the banner pole, the great arch, and back in the line.
+- **`app/_actions/stage-movement.ts`:** a dev-only server action using `currentModel`. Ids the model was not offered collapse to `stay`.
+- **In the mock:** End turn runs the model unless the player already clicked to move. The character then walks the clamped path at their pace and is re-framed, and the GM card notes it ("Yeva moves toward the gap in the barrier (4.1 m)"). The journal records the move.
+- **`scripts/stage-movement-eval.ts` (`pnpm stage:eval-movement`):** eight actions from the gate scene. **8/8 destinations and paces correct**, about 0.6–1.8 s per call. Pace needed the field to be required, not defaulted, and the rule stated on the field.
+- **In the browser:** Branka's speech-only reply kept her still. Yeva's "drifts toward the gap in the barrier" walked her 4.1 m to the gap before her roll.
+
 ## Built (kept for the real page)
 
 | Piece | Path |
@@ -101,4 +112,5 @@ The owner asked for three changes: clicking a character should take you to them,
 - [x] Revision 2: prototype HUD, perspective bar, warm styling, queue loop (the Director as a set loop)
 - [x] Scripted gates encounter at `/dev/turn`; desktop and phone checks
 - [x] Revision 3: BG3 turn order, movement, click-to-focus, display-serif headlines
-- [ ] Owner review of revision 3
+- [x] Revision 4: narrative → movement via a model, with an eval
+- [ ] Owner review of revision 4

@@ -1703,11 +1703,13 @@
   },
   "marks": {
     "sergeant": {
-      "at": [2.3, 11.1]
+      "at": [2.3, 11.1],
+      "label": "the sergeant's post"
     },
     "queueHead": {
       "at": [0.8, 12.8],
-      "yaw": 180
+      "yaw": 180,
+      "label": "the front of the line"
     },
     "front1": {
       "at": [1.42, 12.8]
@@ -1720,6 +1722,34 @@
     },
     "front4": {
       "at": [-0.4, 13.65]
+    },
+    "barrierGap": {
+      "at": [1.3, 9.6],
+      "label": "the gap in the barrier"
+    },
+    "ledger": {
+      "at": [-0.9, 11.6],
+      "label": "the sergeant's table, with the ledger and the strongbox"
+    },
+    "brazier": {
+      "at": [3.9, 12.4],
+      "label": "the brazier"
+    },
+    "cart": {
+      "at": [5.0, 13.3],
+      "label": "the handcart being searched"
+    },
+    "banner": {
+      "at": [-3.3, 10.2],
+      "label": "the city banner pole"
+    },
+    "gateArch": {
+      "at": [1.4, 1],
+      "label": "the great arch, into the city"
+    },
+    "lineBack": {
+      "at": [0.8, 16.2],
+      "label": "back in the line"
     }
   },
   "paths": {

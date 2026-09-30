@@ -50,6 +50,7 @@
     "db:admin": "open https://dashboard.convex.dev",
     "stage:check": "tsx scripts/stage-check.ts",
     "stage:verify": "tsx scripts/stage-verify.ts",
+    "stage:eval-movement": "node --env-file=.env --env-file=.env.local --import tsx scripts/stage-movement-eval.ts",
     "test:wiki-adventures:batch-a": "tsx scripts/wiki-adventures-batch-a-check.ts",
     "test:wiki-adventures:batch-b": "tsx scripts/wiki-adventures-batch-b-check.ts",
     "test:wiki-adventures:batch-c": "tsx scripts/wiki-adventures-batch-c-check.ts",

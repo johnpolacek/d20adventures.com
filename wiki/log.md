@@ -6,6 +6,12 @@ Git owns routine implementation history. This log records durable wiki, planning
 
 ## 2026-09-29
 
+### Turn page mock, revision 4: movement from the narrative
+
+- Per the owner, movement comes from what the player writes. A small model (`gemini-3.5-flash-lite`) maps the action onto the set's labelled places, the other characters, or a relative step, with a pace. The engine clamps the move to the character's speed and to walkable ground. Click-to-move remains as an override.
+- Set marks can carry labels; the gate has nine labelled places. Added `pnpm stage:eval-movement`: 8/8 on the first gate cases.
+- Details: [feature-stage-turn-mock](plans/feature-stage-turn-mock.md).
+
 ### Turn page mock, revision 3: BG3-style turns and movement
 
 - Owner decision 8: turns work like Baldur's Gate 3, with an initiative bar, then movement within the character's speed on the stage, then the action (the reply). Positions become game state, superseding "visual only".

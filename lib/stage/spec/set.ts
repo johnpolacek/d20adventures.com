@@ -235,7 +235,9 @@ export const setSpecSchema = z
       })
       .strict()
       .optional(),
-    marks: z.record(name, z.object({ at: vec2, yaw: deg.optional() }).strict()).default({}),
+    // Named spots. A `label` makes a mark a place players can refer to ("the gap in the barrier"): the movement model
+    // may only send characters to labelled marks, other cast members, or relative steps.
+    marks: z.record(name, z.object({ at: vec2, yaw: deg.optional(), label: z.string().max(80).optional() }).strict()).default({}),
     loops: z.array(queueLoopSpec).max(8).default([]),
     paths: z.record(name, z.array(vec2).min(2).max(256)).default({}),
     shots: z.record(name, shot),

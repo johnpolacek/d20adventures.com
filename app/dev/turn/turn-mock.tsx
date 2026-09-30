@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { inferStageMovement } from "@/app/_actions/stage-movement"
 import { type CardInfo, CharacterCard } from "@/components/stage/character-card"
 import { IconButton, Pill, panel, StageHud, useCompact } from "@/components/stage/hud"
 import { type ChatLine, Journal, type JournalTurn } from "@/components/stage/journal"
@@ -12,6 +13,7 @@ import { type OrderEntry, TurnOrder } from "@/components/stage/turn-order"
 import { useStage } from "@/components/stage/use-stage"
 import type { TierName } from "@/lib/stage"
 import { BeatPlayer } from "@/lib/stage/beats"
+import { bearing } from "@/lib/stage/movement"
 import { ABOUT, TURNS } from "./gates-mock"
 
 type Phase = "title" | "beats" | "hold" | "roll" | "thinking" | "done"
@@ -60,6 +62,8 @@ export function TurnMock() {
   const usedRef = useRef(0)
   const hover = useRef<{ x: number; z: number } | null>(null)
   const focused = useRef<string | null>(null)
+  const movedTo = useRef<string | undefined>(undefined)
+  const [note, setNote] = useState<string | undefined>(undefined)
 
   const party: CardCharacter[] = useMemo(() => (stage ? stage.cast.filter((c) => c.id !== "garlan").map((c) => ({ id: c.id, name: c.name, role: c.role, portrait: c.art.portrait })) : []), [stage])
   const nameOf = useCallback((id: string) => stage?.cast.find((c) => c.id === id)?.name ?? id, [stage])
@@ -108,11 +112,19 @@ export function TurnMock() {
       setNarrated(0)
       setJournal((j) => [
         ...j,
-        { number: index + 1, title: t.title, paragraphs: ps, reply: reply && replyFrom ? { name: replyFrom, text: reply, moved: usedRef.current || undefined } : undefined, roll: rollInfo },
+        {
+          number: index + 1,
+          title: t.title,
+          paragraphs: ps,
+          reply: reply && replyFrom ? { name: replyFrom, text: reply, moved: usedRef.current || undefined, movedTo: movedTo.current } : undefined,
+          roll: rollInfo,
+        },
       ])
       setPhase("beats")
       focused.current = null
       usedRef.current = 0
+      movedTo.current = undefined
+      setNote(undefined)
       setUsed(0)
       await player.current.play(t.beats(reply, roll))
       if (t.hold) {
@@ -137,18 +149,75 @@ export function TurnMock() {
   }
   // While the GM card is up, shots compose in the space above it (the character being asked stays in view).
   const onCardTop = useCallback((px: number) => stage?.setInsets({ bottom: px > 0 ? px + 12 : 0 }), [stage])
-  const advance = (reply: string, roll: RollOutcome, rollInfo: JournalTurn["roll"]) => {
+  const advance = (reply: string, roll: RollOutcome, rollInfo: JournalTurn["roll"], wait = 1600) => {
     const from = TURNS[turnIndex].hold?.actor
     setPhase("thinking")
-    setTimeout(() => runTurn(turnIndex + 1, reply, roll, from ? nameOf(from) : null, rollInfo), 1600)
+    setTimeout(() => runTurn(turnIndex + 1, reply, roll, from ? nameOf(from) : null, rollInfo), wait)
   }
-  const onReply = (text: string) => {
+  // The written action decides where the character walks: the model picks a labelled place, a character or a step, and
+  // the stage clamps it to their speed and to what is walkable. Skipped when the player already moved by clicking.
+  const walkFromText = async (actorId: string, text: string) => {
+    if (!stage || usedRef.current >= 0.2) return
+    const me = stage.castAt(actorId)
+    const speed = (SPEED[actorId] ?? 9) - usedRef.current
+    const places = Object.entries(stage.set.marks)
+      .filter(([, m]) => m.label)
+      .map(([id, m]) => ({ id, label: m.label as string, distance: Math.hypot(m.at[0] - me.x, m.at[1] - me.z), direction: bearing(me, { x: m.at[0], z: m.at[1] }) }))
+    const characters = stage.cast.filter((c) => c.id !== actorId).map((c) => ({ id: c.id, name: c.name, distance: Math.hypot(c.x - me.x, c.z - me.z), direction: bearing(me, c) }))
+    const res = await inferStageMovement({ actor: { id: actorId, name: nameOf(actorId), speed }, action: text, places, characters })
+    if ("error" in res) {
+      console.warn("[stage] movement inference failed", res.error)
+      return
+    }
+    const it = res.intent
+    let target: { x: number; z: number } | null = null
+    if (it.move === "place" && it.place) target = stage.point(it.place)
+    else if (it.move === "character" && it.character) {
+      const t = stage.point(it.character)
+      const d = Math.hypot(t.x - me.x, t.z - me.z)
+      const k = Math.max(0, d - 1.1) / Math.max(d, 1e-6)
+      target = { x: me.x + (t.x - me.x) * k, z: me.z + (t.z - me.z) * k }
+    } else if (it.move === "relative" && it.direction) {
+      const m = it.meters ?? 0.7
+      const f = { x: Math.sin(me.ry), z: Math.cos(me.ry) }
+      const l = { x: Math.cos(me.ry), z: -Math.sin(me.ry) }
+      const v = it.direction === "forward" ? f : it.direction === "back" ? { x: -f.x, z: -f.z } : it.direction === "left" ? l : { x: -l.x, z: -l.z }
+      target = { x: me.x + v.x * m, z: me.z + v.z * m }
+    }
+    if (!target) {
+      setNote(`${nameOf(actorId).split(" ")[0]} stays put.`)
+      return
+    }
+    const r = stage.reach(actorId, target, speed)
+    if (r.distance < 0.2) return
+    usedRef.current += r.distance
+    setUsed(usedRef.current)
+    movedTo.current = it.summary
+    setNote(`${nameOf(actorId).split(" ")[0]} moves ${it.summary} (${r.distance.toFixed(1)} m${r.short ? ", as far as they can" : ""}).`)
+    const pace = it.pace === "hurry" ? 2.6 : it.pace === "sneak" ? 0.8 : 1.3
+    const hold = TURNS[turnIndex].hold
+    const arrived = stage.moveCast(actorId, [r.x, r.z], { speed: pace })
+    if (hold) stage.shot(hold.shot)
+    await arrived
+    // Frame them where they stopped.
+    if (hold) stage.shot(hold.shot)
+    if (it.face) {
+      try {
+        stage.faceCast(actorId, it.face)
+      } catch {
+        // an unknown id: keep the walking direction
+      }
+    }
+  }
+  const onReply = async (text: string) => {
     const hold = TURNS[turnIndex].hold
     if (!hold) return
+    setPhase("thinking")
+    await walkFromText(hold.actor, text)
     if (hold.roll) {
       pendingReply.current = text
       setPhase("roll")
-    } else advance(text, null, undefined)
+    } else advance(text, null, undefined, 700)
   }
   const onRoll = (base: number) => {
     const hold = TURNS[turnIndex].hold
@@ -250,7 +319,7 @@ export function TurnMock() {
   let mode: CardMode | null = null
   if (phase === "hold" && hold) mode = { kind: "hold", prompt: hold.prompt, suggestion: hold.suggestion, movement: { total: SPEED[hold.actor] ?? 9, used } }
   else if (phase === "roll" && hold?.roll) mode = { kind: "roll", roll: hold.roll }
-  else if (phase === "thinking") mode = { kind: "thinking" }
+  else if (phase === "thinking") mode = { kind: "thinking", note }
   else if (phase === "done") mode = { kind: "done", next: "Next: The Harvest Festival" }
   const place = stage?.loops.get("gate-line")?.partyPosition ?? -1
   const status = phase === "done" || place < 0 ? "Your party: inside the city" : place === 0 ? "Your party: at the checkpoint" : `Your party: ${place} group${place > 1 ? "s" : ""} from the front`

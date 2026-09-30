@@ -234,6 +234,7 @@ All 3D dependencies were imported only by these modules (verified via grep on 20
    - **Consequence: positions become game state.** This supersedes "positions stay visual only" in the Architecture section.
    - Each character's position and facing is stored per turn. The GM's context includes where everyone stands. Moves are validated on the server, where the set's builders already run in Node and produce footprints. Beats start from the stored positions.
    - Combat ranges, cover and pathfinding around obstacles (beyond straight lines) are follow-ups.
+   - **Movement comes from the narrative** (owner, same day). The player writes the action, and a small model maps it onto the set's vocabulary: a labelled place (a mark with a `label`), another character, or a relative step, plus a pace. The engine clamps it to the character's speed and to walkable ground. Click-to-move stays as an optional precise override. The first eval: 8/8 destinations and paces on the gate scene, at about 0.7 s per call with `gemini-3.5-flash-lite` (`pnpm stage:eval-movement`).
 
 ## Stage-first play (decided 2026-09-29)
 

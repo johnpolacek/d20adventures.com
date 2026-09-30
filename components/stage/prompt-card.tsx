@@ -25,7 +25,11 @@ export interface CardMovement {
   total: number
   used: number
 }
-export type CardMode = { kind: "hold"; prompt: string; suggestion?: string; movement?: CardMovement } | { kind: "roll"; roll: CardRoll } | { kind: "thinking" } | { kind: "done"; next: string }
+export type CardMode =
+  | { kind: "hold"; prompt: string; suggestion?: string; movement?: CardMovement }
+  | { kind: "roll"; roll: CardRoll }
+  | { kind: "thinking"; note?: string }
+  | { kind: "done"; next: string }
 
 function PartyRow({ party, actorId, compact, onPick }: { party: CardCharacter[]; actorId: string | null; compact: boolean; onPick: (id: string) => void }) {
   return (
@@ -212,7 +216,12 @@ export function PromptCard({
           </div>
         </div>
       )}
-      {mode.kind === "thinking" && <div className={cn(eyebrow, "animate-pulse py-1")}>The GM is writing…</div>}
+      {mode.kind === "thinking" && (
+        <div className="py-1">
+          <div className={cn(eyebrow, "animate-pulse")}>The GM is writing…</div>
+          {mode.note && <div className="mt-1.5 font-serif text-[13px] text-stage-sage italic">{mode.note}</div>}
+        </div>
+      )}
       {mode.kind === "done" && (
         <>
           <div className={eyebrow}>Encounter complete</div>
