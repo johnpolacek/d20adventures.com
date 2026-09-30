@@ -5,15 +5,16 @@ import { inferStageMovement } from "@/app/_actions/stage-movement"
 import { type CardInfo, CharacterCard } from "@/components/stage/character-card"
 import { IconButton, Pill, panel, StageHud, useCompact } from "@/components/stage/hud"
 import { type ChatLine, Journal, type JournalTurn } from "@/components/stage/journal"
-import { MovementOverlay } from "@/components/stage/movement-overlay"
+import { Narration } from "@/components/stage/narration"
 import { type CardCharacter, type CardMode, PromptCard } from "@/components/stage/prompt-card"
 import { RotatePrompt, requestLandscape, usePhonePortrait } from "@/components/stage/rotate-gate"
 import { type Bubble, Bubbles, Plate, type PlateLine } from "@/components/stage/stage-dialogue"
 import { type OrderEntry, TurnOrder } from "@/components/stage/turn-order"
 import { useStage } from "@/components/stage/use-stage"
 import type { TierName } from "@/lib/stage"
-import { BeatPlayer } from "@/lib/stage/beats"
+import { BeatPlayer, readingSeconds } from "@/lib/stage/beats"
 import { bearing } from "@/lib/stage/movement"
+import { cn } from "@/lib/utils"
 import { ABOUT, TURNS } from "./gates-mock"
 
 type Phase = "title" | "beats" | "hold" | "roll" | "thinking" | "done"
@@ -25,7 +26,8 @@ const CHAT: ChatLine[] = [
   { from: "Milos", text: "I have the marks, let's not start a riot on day one" },
 ]
 const TIERS: TierName[] = ["balanced", "high", "ultra"]
-// Walking speed per turn in metres (D&D: 25 ft for the dwarf and the halfling, 30 ft otherwise).
+// Walking speed per turn in metres (D&D: 25 ft for the dwarf and the halfling, 30 ft otherwise); the written action's
+// movement is clamped to it.
 const SPEED: Record<string, number> = { branka: 7.5, cassia: 9, yeva: 7.5, milos: 9 }
 
 export function TurnMock() {
@@ -48,6 +50,7 @@ export function TurnMock() {
   const [turnIndex, setTurnIndex] = useState(0)
   const [narrated, setNarrated] = useState(0)
   const [paragraphs, setParagraphs] = useState<string[]>([])
+  const paragraphsRef = useRef<string[]>([])
   const [journal, setJournal] = useState<JournalTurn[]>([])
   const [bubbles, setBubbles] = useState<SpokenBubble[]>([])
   const [plates, setPlates] = useState<{ left: PlateLine | null; right: PlateLine | null }>({ left: null, right: null })
@@ -58,9 +61,7 @@ export function TurnMock() {
   const player = useRef<BeatPlayer | null>(null)
   const key = useRef(0)
   const pendingReply = useRef<string | null>(null)
-  const [used, setUsed] = useState(0)
   const usedRef = useRef(0)
-  const hover = useRef<{ x: number; z: number } | null>(null)
   const focused = useRef<string | null>(null)
   const movedTo = useRef<string | undefined>(undefined)
   const [note, setNote] = useState<string | undefined>(undefined)
@@ -74,7 +75,7 @@ export function TurnMock() {
     const loop = stage.loops.get("gate-line")
     if (loop) loop.paused = true
     stage.shot("gate", { instant: true })
-    player.current = new BeatPlayer(stage, { onNarrate: setNarrated })
+    player.current = new BeatPlayer(stage, { onNarrate: setNarrated, narrationSeconds: (n) => readingSeconds(paragraphsRef.current[n] ?? "") })
     const off = stage.on("line", (l) => {
       const k = ++key.current
       const c = l.castId ? stage.cast.find((m) => m.id === l.castId) : null
@@ -108,6 +109,7 @@ export function TurnMock() {
       const t = TURNS[index]
       const ps = t.narrative(reply, roll)
       setTurnIndex(index)
+      paragraphsRef.current = ps
       setParagraphs(ps)
       setNarrated(0)
       setJournal((j) => [
@@ -125,7 +127,6 @@ export function TurnMock() {
       usedRef.current = 0
       movedTo.current = undefined
       setNote(undefined)
-      setUsed(0)
       await player.current.play(t.beats(reply, roll))
       if (t.hold) {
         stage.shot(t.hold.shot)
@@ -155,11 +156,11 @@ export function TurnMock() {
     setTimeout(() => runTurn(turnIndex + 1, reply, roll, from ? nameOf(from) : null, rollInfo), wait)
   }
   // The written action decides where the character walks: the model picks a labelled place, a character or a step, and
-  // the stage clamps it to their speed and to what is walkable. Skipped when the player already moved by clicking.
+  // the stage clamps it to their speed and to what is walkable.
   const walkFromText = async (actorId: string, text: string) => {
-    if (!stage || usedRef.current >= 0.2) return
+    if (!stage) return
     const me = stage.castAt(actorId)
-    const speed = (SPEED[actorId] ?? 9) - usedRef.current
+    const speed = SPEED[actorId] ?? 9
     const places = Object.entries(stage.set.marks)
       .filter(([, m]) => m.label)
       .map(([id, m]) => ({ id, label: m.label as string, distance: Math.hypot(m.at[0] - me.x, m.at[1] - me.z), direction: bearing(me, { x: m.at[0], z: m.at[1] }) }))
@@ -190,8 +191,7 @@ export function TurnMock() {
     }
     const r = stage.reach(actorId, target, speed)
     if (r.distance < 0.2) return
-    usedRef.current += r.distance
-    setUsed(usedRef.current)
+    usedRef.current = r.distance
     movedTo.current = it.summary
     setNote(`${nameOf(actorId).split(" ")[0]} moves ${it.summary} (${r.distance.toFixed(1)} m${r.short ? ", as far as they can" : ""}).`)
     const pace = it.pace === "hurry" ? 2.6 : it.pace === "sneak" ? 0.8 : 1.3
@@ -257,9 +257,7 @@ export function TurnMock() {
     return () => removeEventListener("keydown", onKey)
   }, [stage])
 
-  // On your turn the ground is walkable, BG3 style: hover to see the path, click to walk there (within your movement).
-  const moverId = phase === "hold" ? (TURNS[turnIndex].hold?.actor ?? null) : null
-  const remaining = moverId ? Math.max(0, (SPEED[moverId] ?? 9) - used) : 0
+  // Clicking a character focuses them (and opens their card on a second click); a drag orbits the camera instead.
   useEffect(() => {
     const el = containerRef.current
     if (!el || !stage) return
@@ -274,50 +272,29 @@ export function TurnMock() {
     const pm = (e: PointerEvent) => {
       if (e.buttons) return
       const [x, y] = local(e)
-      const onChar = stage.pick(x, y)
-      hover.current = moverId && remaining > 0.3 && !onChar ? stage.groundAt(x, y) : null
-      el.style.cursor = onChar ? "pointer" : hover.current ? "crosshair" : ""
+      el.style.cursor = stage.pick(x, y) ? "pointer" : ""
     }
     const pu = (e: PointerEvent) => {
       if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6) return
       const [x, y] = local(e)
       const id = stage.pick(x, y)
-      if (id) {
-        focus(id)
-        return
-      }
-      if (!moverId || remaining <= 0.3) return
-      const g = stage.groundAt(x, y)
-      if (!g) return
-      const r = stage.reach(moverId, g, remaining)
-      if (r.distance < 0.2) return
-      usedRef.current += r.distance
-      setUsed(usedRef.current)
-      const hold = TURNS[turnIndex].hold
-      stage.moveCast(moverId, [r.x, r.z], { speed: 1.4 }).then(() => {
-        if (hold && phaseRef.current === "hold") stage.shot(hold.shot)
-      })
-    }
-    const leave = () => {
-      hover.current = null
+      if (id) focus(id)
     }
     el.addEventListener("pointerdown", pd)
     el.addEventListener("pointermove", pm)
     el.addEventListener("pointerup", pu)
-    el.addEventListener("pointerleave", leave)
     return () => {
       el.removeEventListener("pointerdown", pd)
       el.removeEventListener("pointermove", pm)
       el.removeEventListener("pointerup", pu)
-      el.removeEventListener("pointerleave", leave)
     }
-  }, [stage, focus, moverId, remaining, turnIndex])
+  }, [stage, focus])
 
   const hold = TURNS[turnIndex].hold
   const actorId = phase === "hold" || phase === "roll" ? (hold?.actor ?? null) : null
   const actor = party.find((c) => c.id === actorId) ?? null
   let mode: CardMode | null = null
-  if (phase === "hold" && hold) mode = { kind: "hold", prompt: hold.prompt, suggestion: hold.suggestion, movement: { total: SPEED[hold.actor] ?? 9, used } }
+  if (phase === "hold" && hold) mode = { kind: "hold", prompt: hold.prompt, suggestion: hold.suggestion }
   else if (phase === "roll" && hold?.roll) mode = { kind: "roll", roll: hold.roll }
   else if (phase === "thinking") mode = { kind: "thinking", note }
   else if (phase === "done") mode = { kind: "done", next: "Next: The Harvest Festival" }
@@ -334,13 +311,7 @@ export function TurnMock() {
   return (
     <StageHud
       containerRef={containerRef}
-      brand={{ name: "KORDAVOS", eyebrow: "THE MARCH OF DAVOS" }}
-      caption={{
-        chapter: "March of Davos  /  Arrival",
-        title: phase === "title" ? "The Gates of Kordavos" : TURNS[turnIndex].title,
-        text: phase === "beats" ? paragraphs[narrated] : undefined,
-        hidden: !!plates.left || (compact && !!mode),
-      }}
+      title={{ eyebrow: "The March of Davos  ·  Arrival", text: "The Gates of Kordavos" }}
       location={{ eyebrow: "Arrival at Kordavos", title: actor ? `${actor.name.split(" ")[0]}'s turn` : `Turn ${turnIndex + 1}`, status, hidden: !!plates.right }}
       views={views}
       activeView={stage?.activeShot ?? null}
@@ -378,10 +349,27 @@ export function TurnMock() {
         </>
       }
     >
-      {stage && !hideUi && moverId && <MovementOverlay stage={stage} actorId={moverId} remaining={remaining} hover={hover} />}
       {stage && !hideUi && phase !== "title" && <TurnOrder order={order} activeId={activeId} label={orderLabel} compact={compact} onPick={focus} />}
       {stage && !hideUi && <Bubbles bubbles={bubbles} compact={compact} />}
-      {!hideUi && plates.left && <Plate line={plates.left} compact={compact} />}
+      {!hideUi && phase !== "title" && (
+        <div className={cn("pointer-events-none absolute z-20 flex flex-col gap-3", compact ? "bottom-[52px] left-4 w-[min(380px,48vw)]" : "bottom-[118px] left-10 w-[min(440px,34vw)]")}>
+          {/* On phones the bubble carries the line; a plate over the narration would cover half the screen. */}
+          {plates.left && !compact && <Plate line={plates.left} compact={compact} docked />}
+          <Narration
+            heading={`Turn ${turnIndex + 1}  ·  ${TURNS[turnIndex].title}`}
+            text={paragraphs[narrated]}
+            index={narrated}
+            count={paragraphs.length}
+            hidden={phase !== "beats"}
+            compact={compact}
+            action={
+              <Pill className="rounded-full px-4 py-1" onClick={skip}>
+                Skip ▸▸
+              </Pill>
+            }
+          />
+        </div>
+      )}
       {!hideUi && plates.right && <Plate line={plates.right} compact={compact} />}
       {!hideUi && mode && (
         <PromptCard
@@ -394,13 +382,6 @@ export function TurnMock() {
           onPick={focus}
           onTop={mode.kind === "hold" || mode.kind === "roll" ? onCardTop : undefined}
         />
-      )}
-      {!hideUi && phase === "beats" && (
-        <div className={`absolute z-30 ${compact ? "right-4 bottom-[52px]" : "bottom-[122px] left-1/2 -translate-x-1/2"}`}>
-          <Pill className="rounded-full px-5" onClick={skip}>
-            Skip ▸▸
-          </Pill>
-        </div>
       )}
       {!hideUi && open === "journal" && <Journal turns={journal} chat={CHAT} compact={compact} onClose={() => setOpen(null)} />}
       {!hideUi && open === "card" && card && <CharacterCard info={card} compact={compact} onClose={() => setOpen(null)} />}

@@ -20,16 +20,7 @@ export interface CardRoll {
   dc: number
   modifier: number
 }
-// Movement this turn, in metres (Baldur's Gate 3 style: walk first, then act).
-export interface CardMovement {
-  total: number
-  used: number
-}
-export type CardMode =
-  | { kind: "hold"; prompt: string; suggestion?: string; movement?: CardMovement }
-  | { kind: "roll"; roll: CardRoll }
-  | { kind: "thinking"; note?: string }
-  | { kind: "done"; next: string }
+export type CardMode = { kind: "hold"; prompt: string; suggestion?: string } | { kind: "roll"; roll: CardRoll } | { kind: "thinking"; note?: string } | { kind: "done"; next: string }
 
 function PartyRow({ party, actorId, compact, onPick }: { party: CardCharacter[]; actorId: string | null; compact: boolean; onPick: (id: string) => void }) {
   return (
@@ -170,16 +161,6 @@ export function PromptCard({
             </div>
           )}
           <p className={cn("font-serif text-stage-cream", compact ? "my-1.5 line-clamp-3 text-[12px] leading-snug" : "mt-3 mb-3 text-[15px] leading-[1.55]")}>{mode.prompt}</p>
-          {mode.movement && (
-            <div className={cn("flex items-center gap-2 text-left", compact ? "mb-1" : "mb-2")}>
-              <span className="text-[9px] tracking-[0.2em] text-stage-gold uppercase">Movement</span>
-              <span className="relative h-1 flex-1 overflow-hidden rounded-full bg-stage-line/15">
-                <span className="absolute inset-y-0 left-0 bg-stage-gold transition-all duration-500" style={{ width: `${Math.max(0, 1 - mode.movement.used / mode.movement.total) * 100}%` }} />
-              </span>
-              <span className="font-serif text-[12px] text-stage-parchment tabular-nums">{Math.max(0, mode.movement.total - mode.movement.used).toFixed(1)} m</span>
-              {!compact && <span className="text-[10px] text-stage-muted">{mode.movement.total - mode.movement.used > 0.3 ? "click the ground to move" : "no movement left"}</span>}
-            </div>
-          )}
           <textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}

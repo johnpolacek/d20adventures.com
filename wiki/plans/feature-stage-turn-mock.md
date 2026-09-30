@@ -80,6 +80,17 @@ At the owner's request, a little of the original site's texture comes back to th
 
 Note: Tailwind v4 dropped a plain `@layer components { … }` block from the build, so these are `@utility` classes instead.
 
+## Revision 6 (2026-09-29): narration panel, title, AI-only movement
+
+- **Movement from the text only.** Click-to-move is gone: no ground targeting, range ring or movement bar (`movement-overlay.tsx` deleted). The model's move from the written action is clamped to the character's speed. Clicking a character still focuses them.
+- **Title top-left.** The HUD's top-left now shows the adventure and chapter eyebrow and the encounter title in Cinzel Decorative. It replaces the old brand text and is kept clear of the centred turn order.
+- **Narration panel** (`components/stage/narration.tsx`, bottom-left):
+  - It shows one paragraph at a time and eases to each paragraph's height. The old text fades out, the panel resizes, then the new text fades in.
+  - It carries a turn heading, dots for paragraph position, and Skip.
+  - The speaker's plate docks above it; on phones the plate is dropped and the bubble carries the line.
+- **Paced for reading.** `BeatPlayer` has a narration clock. Each `narrate` beat holds the scene for `narrationSeconds(paragraph)`: reading time at about 200 wpm now (`readingSeconds`), audio length once voiced. The next paragraph, spoken lines and the end of the beats wait for it; shots, walks and waits carry on underneath.
+  - Turn 1 went from about 35 s to about 50 s, with paragraphs at 0, 17.5 and 31.3 s.
+
 ## Built (kept for the real page)
 
 | Piece | Path |

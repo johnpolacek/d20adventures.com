@@ -10,7 +10,9 @@ import type { Stage } from "./stage"
 //   { move: "branka", to: "front1" }     walk to a mark or point (does not block unless wait: true)
 //   { face: "garlan", to: "branka" }     turn toward a cast member, mark, point, or a heading in degrees
 //   { line: "garlan", text: "Next!" }    a spoken line: bubble at the head and a portrait plate; blocks for its duration
-//   { narrate: 2 }                       the narrative paragraph being told (the panel highlights it; TTS will sync here)
+//   { narrate: 2 }                       the narrative paragraph being told; it holds the scene for its reading time (or
+//                                        its audio, once voiced): the next paragraph, a spoken line and the end of the
+//                                        beats wait for it, while shots, walks and waits carry on underneath
 //   { wait: 1.5 }                        a pause in seconds
 //   { cue: "gate-line:front" }           wait for a named moment (a loop bringing the party to the front); skip jumps to it
 //   { loop: "gate-line", do: "release" } tell a loop the party is done (they pass and the line carries on)
@@ -31,16 +33,21 @@ export const beatsSchema = z.array(beatSchema).max(200)
 export interface BeatHooks {
   onLine?: (castId: string, text: string, seconds: number) => void
   onNarrate?: (paragraph: number) => void
+  // How long a paragraph holds the scene, in seconds: its reading time, or its audio's length when it is voiced.
+  narrationSeconds?: (paragraph: number) => number | Promise<number>
 }
 
 // Reading time for a spoken line: long enough to read in a bubble, short enough to keep the scene moving.
 export const lineSeconds = (text: string) => Math.min(9, 1.3 + text.length * 0.052)
+// Reading time for a narrated paragraph, at about 200 words a minute while the scene plays.
+export const readingSeconds = (text: string) => 1.5 + text.trim().split(/\s+/).length / 3.4
 
 // Plays beats in order. skip() finishes the sequence at once: camera moves and walks jump to their ends, lines and
 // waits are dropped, and the last narrated paragraph is still reported, so the scene lands where the beats would leave it.
 export class BeatPlayer {
   private skipping = false
   private wake: (() => void) | null = null
+  private narrationEnds = 0
   playing = false
 
   constructor(
@@ -60,8 +67,14 @@ export class BeatPlayer {
     })
   }
 
+  // Waits until the paragraph being narrated has had its time.
+  private narrated() {
+    return this.sleep((this.narrationEnds - performance.now()) / 1000)
+  }
+
   async play(input: Beat[]) {
     const beats = beatsSchema.parse(input)
+    this.narrationEnds = 0
     this.skipping = false
     this.playing = true
     const s = this.stage
@@ -74,13 +87,18 @@ export class BeatPlayer {
           else if (b.wait) await Promise.race([arrive, new Promise<void>((r) => (this.wake = r))])
         } else if ("face" in b) s.faceCast(b.face, b.to)
         else if ("line" in b) {
+          await this.narrated()
           if (this.skipping) continue
           const seconds = b.duration ?? lineSeconds(b.text)
           s.say({ castId: b.line, text: b.text, seconds })
           this.hooks.onLine?.(b.line, b.text, seconds)
           await this.sleep(seconds)
-        } else if ("narrate" in b) this.hooks.onNarrate?.(b.narrate)
-        else if ("wait" in b) await this.sleep(b.wait)
+        } else if ("narrate" in b) {
+          await this.narrated()
+          this.hooks.onNarrate?.(b.narrate)
+          const seconds = this.skipping ? 0 : ((await this.hooks.narrationSeconds?.(b.narrate)) ?? 0)
+          this.narrationEnds = performance.now() + seconds * 1000
+        } else if ("wait" in b) await this.sleep(b.wait)
         else if ("cue" in b) {
           if (this.skipping) s.skipLoops()
           await Promise.race([s.waitCue(b.cue), new Promise<void>((r) => (this.wake = r))])
@@ -90,6 +108,7 @@ export class BeatPlayer {
           }
         } else if ("loop" in b) s.loops.get(b.loop)?.release()
       }
+      await this.narrated()
     } finally {
       if (this.skipping) {
         s.finishShot()

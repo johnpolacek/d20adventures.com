@@ -6,6 +6,14 @@ Git owns routine implementation history. This log records durable wiki, planning
 
 ## 2026-09-29
 
+### Turn page mock, revision 6: narration panel, title top-left, AI-only movement
+
+- Removed click-to-move, so movement comes only from the written action.
+- The encounter title moved to the top left.
+- The narrative now sits in a height-easing panel that cross-fades each paragraph.
+- Beats are paced by a narration clock: reading time now, audio length once voiced.
+- Details: [feature-stage-turn-mock](plans/feature-stage-turn-mock.md).
+
 ### Turn page mock, revision 5: textured surfaces
 
 - The site's original textures now appear on the stage UI:

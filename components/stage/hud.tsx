@@ -1,9 +1,9 @@
 "use client"
 
 // The stage's heads-up display, in the Kordavos prototype's language: the painted world full-screen under a soft vignette;
-// a brand mark and icon buttons along the top; the scene caption (chapter, title, the line being narrated) bottom-left;
-// where the party stands bottom-right; and a perspective bar along the bottom. Everything else (the GM card, plates,
-// bubbles, the journal, character cards) is layered in as children.
+// the encounter's title top-left and icon buttons top-right; where the party stands bottom-right; and a perspective bar
+// along the bottom. Everything else (the narration, the GM card, plates, bubbles, the journal, character cards) is
+// layered in as children.
 
 import { type ReactNode, type RefObject, useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
@@ -64,8 +64,7 @@ export interface HudView {
 
 export function StageHud({
   containerRef,
-  brand,
-  caption,
+  title,
   location,
   views,
   activeView,
@@ -76,8 +75,7 @@ export function StageHud({
   children,
 }: {
   containerRef: RefObject<HTMLDivElement | null>
-  brand: { name: string; eyebrow: string }
-  caption: { chapter: string; title: string; text?: string; hidden?: boolean }
+  title: { eyebrow: string; text: string }
   location: { eyebrow: string; title: string; status?: string; hidden?: boolean }
   views: HudView[]
   activeView: string | null
@@ -96,35 +94,19 @@ export function StageHud({
       />
       <div className={cn("pointer-events-none absolute inset-0 transition-opacity duration-500 [&>*]:pointer-events-auto", hidden && "opacity-0 [&>*]:pointer-events-none")}>
         <header className={cn("absolute flex items-center justify-between", compact ? "top-3 right-4 left-4" : "top-7 right-10 left-10")}>
-          <div className="flex items-center gap-3.5">
-            <svg viewBox="0 0 50 58" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.2" className={cn("text-stage-gold", compact ? "h-8 w-7" : "h-12 w-10")}>
+          <div className="flex min-w-0 items-center gap-3.5">
+            <svg viewBox="0 0 50 58" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.2" className={cn("flex-none text-stage-gold", compact ? "h-8 w-7" : "h-12 w-10")}>
               <path d="M25 2 46 14v28L25 56 4 42V14Z" />
               <path d="M12 39V20h8v19m10 0V20h8v19M20 39V27l5-6 5 6v12M9 20h14m4 0h14M17 16v-4m16 4v-4M25 6v8M20 10h10M9 43h32" />
             </svg>
-            <div>
-              <div className={cn("font-serif tracking-[0.25em]", compact ? "text-sm" : "text-xl")}>{brand.name}</div>
-              {!compact && <div className="mt-1 text-[8px] tracking-[0.28em] text-stage-sage">{brand.eyebrow}</div>}
+            {/* Kept clear of the turn order centred at the top. */}
+            <div className={compact ? "max-w-[calc(50vw-158px)]" : "max-w-[calc(50vw-244px)]"}>
+              <div className={cn(eyebrow, compact && "text-[8px]")}>{title.eyebrow}</div>
+              <h1 className={cn("font-display leading-[1.12] [text-shadow:0_2px_18px_#1a0e08c0]", compact ? "mt-0.5 text-[15px]" : "mt-1.5 text-[clamp(20px,2vw,28px)]")}>{title.text}</h1>
             </div>
           </div>
           <div className="flex items-center gap-2.5">{actions}</div>
         </header>
-
-        <section
-          className={cn(
-            "pointer-events-none absolute transition-opacity duration-300",
-            compact ? "bottom-[56px] left-4 max-w-[40%]" : "bottom-[122px] left-11 max-w-[440px]",
-            caption.hidden && "opacity-0"
-          )}
-          aria-live="polite"
-        >
-          <div className={cn(eyebrow, "mb-3 flex items-center gap-3 before:h-px before:w-7 before:bg-stage-gold", compact && "mb-1.5")}>{caption.chapter}</div>
-          <h1 className={cn("font-display leading-[1.08] [text-shadow:0_2px_25px_#1a0e08a0]", compact ? "mb-1.5 text-xl" : "mb-3 text-[clamp(30px,3.1vw,48px)]")}>{caption.title}</h1>
-          {caption.text && (
-            <p key={caption.text} className={cn("fade-in font-serif text-stage-sage [text-shadow:0_1px_8px_#000c]", compact ? "line-clamp-3 text-[12px] leading-snug" : "text-[15px] leading-[1.65]")}>
-              {caption.text}
-            </p>
-          )}
-        </section>
 
         <aside className={cn("pointer-events-none absolute text-right transition-opacity duration-300", compact ? "hidden" : "right-10 bottom-[130px]", location.hidden && "opacity-0")}>
           <svg viewBox="0 0 60 60" aria-hidden="true" className="mb-3 ml-auto h-12 w-12 fill-none stroke-stage-gold" strokeWidth=".8">

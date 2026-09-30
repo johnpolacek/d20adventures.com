@@ -64,14 +64,21 @@ export interface PlateLine {
   text: string
 }
 
-export function Plate({ line, compact = false }: { line: PlateLine; compact?: boolean }) {
+// A plate is placed on its side of the screen, or docked in a column the caller lays out (above the narration).
+export function Plate({ line, compact = false, docked = false }: { line: PlateLine; compact?: boolean; docked?: boolean }) {
   return (
     <div
       key={line.key}
       className={cn(
-        "plate-in pointer-events-none absolute z-20 flex items-stretch rounded-[5px] stage-grain border border-stage-brass/60 bg-[#27190ff4] shadow-[0_0_0_3px_#1c1410c0,0_0_0_4px_#c79a5a44,0_18px_44px_#0008,inset_0_1px_0_#f0d6b214,inset_0_0_40px_#0000004d]",
-        compact ? "bottom-[54px] w-[min(330px,46vw)] p-1.5" : "bottom-[122px] w-[min(410px,calc(100%-28px))] p-[11px]",
-        line.side === "left" ? (compact ? "left-4" : "left-11") : compact ? "right-4" : "right-10"
+        "plate-in pointer-events-none z-20 flex items-stretch rounded-[5px] stage-grain border border-stage-brass/60 bg-[#27190ff4] shadow-[0_0_0_3px_#1c1410c0,0_0_0_4px_#c79a5a44,0_18px_44px_#0008,inset_0_1px_0_#f0d6b214,inset_0_0_40px_#0000004d]",
+        compact ? "p-1.5" : "p-[11px]",
+        docked
+          ? "w-full"
+          : cn(
+              "absolute",
+              compact ? "bottom-[54px] w-[min(330px,46vw)]" : "bottom-[122px] w-[min(410px,calc(100%-28px))]",
+              line.side === "left" ? (compact ? "left-4" : "left-11") : compact ? "right-4" : "right-10"
+            )
       )}
       style={{ ["--plate-from" as string]: line.side === "left" ? "-70px" : "70px" }}
     >
