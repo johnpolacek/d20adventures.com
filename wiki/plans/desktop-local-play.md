@@ -15,8 +15,11 @@ Recorded 2026-10-01:
 - Solo play runs the GM locally through the player's CLI and is free. AI-controlled party members can fill the party.
 - Supported CLIs include Claude Code, Codex, Gemini CLI, and Grok. The owner accepts the terms risk for Codex, Gemini, and Grok.
 - Multiplayer runs the GM on the server. A subscription grants tokens, roughly matching current token pricing.
-- Narration is optional and player-supplied through common voice-generation providers. Either support several, or pick one and make it an optional add-on the player sets up.
+- Narration is optional and player-supplied through common voice-generation providers. The provider choice is TBD.
 - Players can generate their own characters or use premades.
+- Local players supply their own art and narration through their CLIs or API keys. Tokens are not used in local play.
+- Adventure authoring moves into the desktop app. Admin stays on the web.
+- Phones are TBD. Focus on desktop.
 - Target players who are both AI-savvy and tabletop fans. Requiring an installed, signed-in CLI is acceptable.
 - Local play uses authored adventures with pre-baked art. Player-made adventures to share or sell come later.
 - The web app is deprecated once the desktop app ships. Only test accounts exist, so no player migration is expected.
@@ -58,7 +61,7 @@ pnpm workspace layout:
 | `packages/gm-core` | Turn pipeline, character generation, prompts, zod schemas, rules, port interfaces | Next, Convex, Clerk, AWS, Node built-ins |
 | `packages/stage` | Current `lib/stage/` runtime and set/staging specs | Next, Convex, Clerk |
 | `apps/desktop` | Tauri shell, Vite, React, stage-first play UI, solo and multiplayer clients | Next |
-| `apps/web` | Current Next app. After deprecation: multiplayer GM endpoints, accounts, billing, content distribution, marketing, downloads | |
+| `apps/web` | Current Next app. After deprecation: multiplayer GM endpoints, accounts, billing, content distribution, admin, marketing, downloads | |
 
 Ports:
 
@@ -140,19 +143,19 @@ No behavior change. Run on a worktree.
 - Subscription through the existing Stripe setup, granting tokens at roughly current pricing.
 - Multiplayer through the server GM, with Convex realtime state.
 - Pack downloads. Creator packs and selling come later.
+- Move adventure authoring from the web admin editor into the desktop app.
 
 ### Phase 5, deprecate web play
 
 - Remove web play routes and UI.
-- Keep the server for multiplayer GM, accounts, billing, content distribution, marketing, and downloads.
+- Keep the server for multiplayer GM, accounts, billing, content distribution, admin, marketing, and downloads.
 - Update architecture and testing docs to the desktop client.
 
 ## Open decisions
 
-- Narration: several voice providers, or one recommended add-on. Whether free system voices are a fallback.
-- Whether local players can spend tokens on narration or art instead of bringing their own keys or CLIs.
-- Phones. The [Stageview](stageview.md) decision for landscape phone play assumed the web app. Desktop CLIs cannot run on phones. Options are online-only play through a Tauri mobile build, or no phone play at launch.
-- Where admin and adventure authoring tools live after web deprecation. This affects creator packs later.
+- Voice provider: several providers, or one recommended add-on. Whether free system voices are a fallback.
+- Phones, deferred. The [Stageview](stageview.md) landscape phone decision assumed the web app, and desktop CLIs cannot run on phones.
+- Distribution channel beyond direct download, such as Steam or itch.io.
 - Saves moving between local and online play.
 - Default CLI and the minimum GM quality bar.
 - Pack format, versioning, and signing.

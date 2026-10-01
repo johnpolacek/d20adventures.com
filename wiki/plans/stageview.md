@@ -12,7 +12,7 @@ Owner decisions recorded on 2026-09-29:
 
 - Stageview becomes the primary play screen. Narrative, reply composer, dice, chat, and turn history dock over the stage. This replaces the earlier encounter-overlay proposal.
 - Keep the complete narrative readable. Gameview remains the text layer and fallback.
-- Phones play in landscape, with a rotate prompt in portrait. Platform fullscreen and orientation support need device validation. This assumed the web app. Phone play after web deprecation is open in [Desktop local play](desktop-local-play.md#open-decisions).
+- Phones play in landscape, with a rotate prompt in portrait. Platform fullscreen and orientation support need device validation. This assumed the web app. Phones are TBD after web deprecation. Focus is desktop (owner, 2026-10-01). See [Desktop local play](desktop-local-play.md#open-decisions).
 - The goal is custom sets generated during adventure authoring. Hand-built and generic sets can cover the first release.
 - Sets are bounded, declarative JSON interpreted by trusted builders. Community-authored sets must never execute arbitrary JavaScript on player devices.
 - Use illustrated front/back standees for named characters, portrait plates for dialogue, and instanced illustrated crowds with coarse procedural figures at distance or steep viewing angles.
