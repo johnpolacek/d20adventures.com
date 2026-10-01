@@ -198,6 +198,7 @@ export function PromptCard({
   draft: draftProp,
   onDraft,
   forcedRoll,
+  demo = false,
 }: {
   mode: CardMode
   actor: CardCharacter | null
@@ -213,6 +214,9 @@ export function PromptCard({
   onDraft?: (text: string) => void
   // Stageview checks: the player's natural roll, fixed.
   forcedRoll?: number
+  // A scripted demo: the reply can't be typed. The box stays disabled, with a note over it, until Suggest fills it in,
+  // and the suggestion then can't be edited.
+  demo?: boolean
 }) {
   const [ownDraft, setOwnDraft] = useState("")
   const draft = onDraft ? (draftProp ?? "") : ownDraft
@@ -254,19 +258,30 @@ export function PromptCard({
             </div>
           )}
           <p className={cn("font-serif text-stage-cream", compact ? "my-1.5 line-clamp-3 text-[12px] leading-snug" : "mt-3 mb-3 text-[15px] leading-[1.55]")}>{mode.prompt}</p>
-          <textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) send()
-            }}
-            rows={compact ? 1 : 3}
-            placeholder={`What does ${actor.name.split(" ")[0]} say and do?`}
-            className={cn(
-              "w-full resize-none rounded-[3px] border border-stage-line/25 bg-black/35 px-3 py-2 text-left font-serif text-stage-cream placeholder:text-stage-muted/60 focus:border-stage-gold/70 focus:outline-none",
-              compact ? "text-[12px]" : "text-[14px]"
+          <div className="relative">
+            <textarea
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) send()
+              }}
+              disabled={demo && !draft}
+              readOnly={demo}
+              rows={compact ? 1 : 3}
+              placeholder={`What does ${actor.name.split(" ")[0]} say and do?`}
+              className={cn(
+                "block w-full resize-none rounded-[3px] border border-stage-line/25 bg-black/35 px-3 py-2 text-left font-serif text-stage-cream placeholder:text-stage-muted/60 focus:border-stage-gold/70 focus:outline-none disabled:cursor-not-allowed",
+                compact ? "text-[12px]" : "text-[14px]"
+              )}
+            />
+            {demo && !draft && (
+              <div className="pointer-events-none absolute inset-0 grid place-items-center">
+                <span className={cn("font-sans font-medium tracking-[0.22em] text-stage-gold/90 uppercase [text-shadow:0_1px_4px_#000]", compact ? "text-[9px]" : "text-[11px]")}>
+                  Demo only · Click Suggest for a reply
+                </span>
+              </div>
             )}
-          />
+          </div>
           <div className={cn("flex gap-2", compact ? "mt-1.5 [&>button]:py-1" : "mt-2")}>
             <Pill className="flex-1" onClick={() => mode.suggestion && setDraft(mode.suggestion)} disabled={!mode.suggestion}>
               Suggest

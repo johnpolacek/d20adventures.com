@@ -528,6 +528,7 @@ export function TurnMock() {
           onPick={focus}
           onTop={mode.kind === "hold" || mode.kind === "roll" ? onCardTop : undefined}
           forcedRoll={FORCED_ROLL ?? undefined}
+          demo
           draft={drafts[turnIndex] ?? ""}
           onDraft={(text) => setDrafts((d) => ({ ...d, [turnIndex]: text }))}
         />

@@ -253,6 +253,7 @@ The round-1 speakers are framed from fixed points read off the verified subject 
   - Face-on, a true icosahedron's silhouette is a plain regular hexagon, which reads as any die. Photos of real d20s show them slightly from above and to one side (reference: the Wikimedia Commons photo "Würfel, Ikosaeder (W20) -- 2021 -- 5635.jpg").
   - So the outline is the computed convex hull of a true icosahedron, tilted 20°, turned 22° and rolled 8°, seen through a 30° lens, with rounded corners like tumbled dice.
   - The lab keeps two takes: the outline and the 3D d20, now shaded with no edge lines and a soft fill light.
+- **Demo reply box.** `PromptCard demo`: the reply box stays disabled under its placeholder, with "Demo only · Click Suggest for a reply" centred over it. Suggest fills it in and the note goes, but the text stays read-only, so what's sent always matches the script.
   - **The owner picked the 3D d20 for the roll card.**
     - `D20Solid` in `components/stage/d20.tsx` is a three.js icosahedron, shaded with a soft fill light and no edge lines. It rests face-on with a corner up and tumbles about a random axis, slowing, for each roll.
     - The number sits over its front face, stays upright and flips in place.
