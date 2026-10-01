@@ -6,6 +6,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
+import { D20Shape } from "./d20"
 import { eyebrow, Pill, panel } from "./hud"
 
 export interface CardCharacter {
@@ -63,9 +64,6 @@ function PartyRow({ party, actorId, compact, onPick }: { party: CardCharacter[];
   )
 }
 
-// The d20's outline, face on: a hexagon (no facet lines, so the number reads cleanly).
-const D20_HEX = "50,3 90.7,26.5 90.7,73.5 50,97 9.3,73.5 9.3,26.5"
-
 // A d20 in the stage's colours. Rolling, the die tumbles while the number stays upright and flips in place, slowing
 // as it settles; it lands on `land` when given and reports the natural roll. The GM's die rolls itself.
 function D20({ onRoll, compact, land, auto = false, disabled = false }: { onRoll: (n: number) => void; compact: boolean; land?: number; auto?: boolean; disabled?: boolean }) {
@@ -120,10 +118,7 @@ function D20({ onRoll, compact, land, auto = false, disabled = false }: { onRoll
       )}
     >
       <span className={cn("absolute inset-0", rolling && "d20-tumble")}>
-        <span className="stage-die absolute inset-0 [clip-path:polygon(50%_3%,90.7%_26.5%,90.7%_73.5%,50%_97%,9.3%_73.5%,9.3%_26.5%)]" />
-        <svg viewBox="0 0 100 100" fill="none" aria-hidden="true" className="absolute inset-0 h-full w-full">
-          <polygon points={D20_HEX} stroke="#e3b67c" strokeWidth="2.6" strokeLinejoin="round" />
-        </svg>
+        <D20Shape className="absolute inset-0 h-full w-full" />
       </span>
       <span
         key={shown ?? "roll"}

@@ -1,21 +1,16 @@
 "use client"
 
-// The d20 lab: takes on the die and its roll, in the stage's colours, each rolled on its own or all together. In every
-// take the number stays upright and changes in place, slowing as the die settles.
-//   Hexagon        the die's outline, tumbling in 3D
-//   Triangle face  the outline with the top face around the number (the classic d20 icon), tumbling
-//   3D d20         a real icosahedron in three.js that tumbles and settles with a face toward you
-//   Reel           a still die that shakes while the numbers run past like a slot reel
-//   Coin           the outline flipping over and over like a tossed coin
+// The d20 lab: takes on the die and its roll, in the stage's colours, each rolled on its own or all together. In both
+// the number stays upright and changes in place, slowing as the die settles.
+//   Outline   a real d20's silhouette (components/stage/d20.tsx), tumbling in 3D; the roll card's die
+//   3D d20    a real icosahedron in three.js, shaded with no edge lines, that tumbles and settles with a face toward you
 
 import { type ReactNode, useEffect, useRef, useState } from "react"
 import * as THREE from "three"
+import { D20Shape } from "@/components/stage/d20"
 import { Pill } from "@/components/stage/hud"
 import { cn } from "@/lib/utils"
 
-const HEX = "50,3 90.7,26.5 90.7,73.5 50,97 9.3,73.5 9.3,26.5"
-const FACE = "50,24 72.5,63 27.5,63"
-const CLIP = "[clip-path:polygon(50%_3%,90.7%_26.5%,90.7%_73.5%,50%_97%,9.3%_73.5%,9.3%_26.5%)]"
 const SECONDS = 1.2
 
 // Runs the number for one roll: random faces at a slowing pace, then the result.
@@ -65,59 +60,15 @@ function Number_({ shown, rolling, size = 32 }: { shown: number | null; rolling:
   )
 }
 
-function Outline({ face = false }: { face?: boolean }) {
-  return (
-    <>
-      <span className={cn("stage-die absolute inset-0", CLIP)} />
-      <svg viewBox="0 0 100 100" fill="none" aria-hidden="true" className="absolute inset-0 h-full w-full">
-        {face && <polygon points={FACE} stroke="#e3b67c" strokeOpacity=".7" strokeWidth="1.6" strokeLinejoin="round" fill="#f3e6c80a" />}
-        <polygon points={HEX} stroke="#e3b67c" strokeWidth="2.6" strokeLinejoin="round" />
-      </svg>
-    </>
-  )
-}
-
 const dieBox = "relative grid h-[110px] w-[110px] place-items-center [filter:drop-shadow(0_0_14px_#e3b67c40)_drop-shadow(0_3px_6px_#000b)]"
 
-function Tumble({ face, go }: { face?: boolean; go: number }) {
+function Tumble({ go }: { go: number }) {
   const { shown, rolling, roll } = useRoll()
   useRollOn(go, roll)
   return (
     <button type="button" onClick={roll} className={dieBox} aria-label="Roll">
       <span className={cn("absolute inset-0", rolling && "d20-tumble")}>
-        <Outline face={face} />
-      </span>
-      <span className={face ? "mt-[10%]" : ""}>
-        <Number_ shown={shown} rolling={rolling} size={face ? 28 : 34} />
-      </span>
-    </button>
-  )
-}
-
-function Reel({ go }: { go: number }) {
-  const { shown, rolling, roll } = useRoll()
-  useRollOn(go, roll)
-  return (
-    <button type="button" onClick={roll} className={dieBox} aria-label="Roll">
-      <span className={cn("absolute inset-0", rolling && "dice-shake")}>
-        <Outline />
-      </span>
-      <span className="relative h-[40px] overflow-hidden">
-        <span key={shown ?? "roll"} className={cn("block", rolling ? "dice-reel" : shown !== null && "d20-land")}>
-          <Number_ shown={shown} rolling={false} size={34} />
-        </span>
-      </span>
-    </button>
-  )
-}
-
-function Coin({ go }: { go: number }) {
-  const { shown, rolling, roll } = useRoll()
-  useRollOn(go, roll)
-  return (
-    <button type="button" onClick={roll} className={dieBox} aria-label="Roll">
-      <span className={cn("absolute inset-0", rolling && "dice-coin")}>
-        <Outline />
+        <D20Shape className="absolute inset-0 h-full w-full" />
       </span>
       <Number_ shown={shown} rolling={rolling} size={34} />
     </button>
@@ -125,7 +76,7 @@ function Coin({ go }: { go: number }) {
 }
 
 // A real d20: an icosahedron that tumbles about a random axis, slowing, and comes to rest with one face square to the
-// camera. The number sits over that face and never turns.
+// camera. Flat shading alone shows the facets (no edge lines). The number sits over that face and never turns.
 function Solid({ go }: { go: number }) {
   const { shown, rolling, roll } = useRoll()
   const host = useRef<HTMLDivElement>(null)
@@ -147,9 +98,12 @@ function Solid({ go }: { go: number }) {
     const sun = new THREE.DirectionalLight(0xffe2b0, 2.2)
     sun.position.set(-1.5, 2, 3)
     scene.add(sun)
+    // A soft fill from the lower right, so the facets in shadow still separate.
+    const fill = new THREE.DirectionalLight(0xc79a5a, 0.7)
+    fill.position.set(2, -1.5, 2)
+    scene.add(fill)
     const geo = new THREE.IcosahedronGeometry(1, 0)
-    const die = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0x5a3d27, roughness: 0.55, metalness: 0.15, flatShading: true }))
-    die.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({ color: 0xe3b67c })))
+    const die = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0x6b4a30, roughness: 0.5, metalness: 0.15, flatShading: true }))
     scene.add(die)
     // Rest: face 0 square to the camera, with one of its corners pointing up.
     const p = geo.getAttribute("position")
@@ -244,20 +198,11 @@ export function DiceLab() {
           </Pill>
         </div>
         <div className="grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-5">
-          <Take name="Hexagon" note="The die's outline, tumbling in 3D; the number flips in place.">
+          <Take name="Outline" note="A real d20's silhouette, tumbling in 3D; the number flips in place. On the roll card now.">
             <Tumble go={go} />
           </Take>
-          <Take name="Triangle face" note="The outline with the top face around the number: the classic d20 icon.">
-            <Tumble face go={go} />
-          </Take>
-          <Take name="3D d20" note="A real twenty-sided die that tumbles and settles with a face toward you.">
+          <Take name="3D d20" note="A real twenty-sided die, shaded with no lines, that tumbles and settles with a face toward you.">
             <Solid go={go} />
-          </Take>
-          <Take name="Reel" note="The die shakes while the numbers run past like a slot reel.">
-            <Reel go={go} />
-          </Take>
-          <Take name="Coin" note="The outline flips over and over like a tossed coin.">
-            <Coin go={go} />
           </Take>
         </div>
       </div>

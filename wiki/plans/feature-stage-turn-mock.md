@@ -249,6 +249,10 @@ The round-1 speakers are framed from fixed points read off the verified subject 
   4. Slot reel
   5. Coin flip
 - The owner asked to keep the turn page a scripted demo.
+- **Follow-up, the same day.** The d20's outline is now a real one, `components/stage/d20.tsx`, shared by the roll card and the lab.
+  - Face-on, a true icosahedron's silhouette is a plain regular hexagon, which reads as any die. Photos of real d20s show them slightly from above and to one side (reference: the Wikimedia Commons photo "Würfel, Ikosaeder (W20) -- 2021 -- 5635.jpg").
+  - So the outline is the computed convex hull of a true icosahedron, tilted 20°, turned 22° and rolled 8°, seen through a 30° lens, with rounded corners like tumbled dice.
+  - The lab keeps two takes: the outline (as on the card) and the 3D d20, now shaded with no edge lines and a soft fill light.
 
 ## Built (kept for the real page)
 

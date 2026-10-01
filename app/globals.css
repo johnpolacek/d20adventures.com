@@ -301,49 +301,6 @@ button {
     transform: scale(1);
   }
 }
-/* The d20 lab's other takes (app/dev/dice): a shake, a slot-reel number, and a coin flip. */
-@keyframes dice-shake {
-  0%,
-  100% {
-    transform: translate(0, 0) rotate(0);
-  }
-  25% {
-    transform: translate(-2px, 1px) rotate(-3deg);
-  }
-  75% {
-    transform: translate(2px, -1px) rotate(3deg);
-  }
-}
-@keyframes dice-reel {
-  from {
-    transform: translateY(-70%);
-    opacity: 0.4;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-@keyframes dice-coin {
-  from {
-    transform: perspective(320px) rotateY(0) scale(1);
-  }
-  40% {
-    transform: perspective(320px) rotateY(900deg) scale(1.12);
-  }
-  to {
-    transform: perspective(320px) rotateY(1440deg) scale(1);
-  }
-}
-.dice-shake {
-  animation: dice-shake 0.12s linear infinite;
-}
-.dice-reel {
-  animation: dice-reel 0.09s linear;
-}
-.dice-coin {
-  animation: dice-coin 1.2s cubic-bezier(0.25, 0.8, 0.3, 1);
-}
 .d20-tumble {
   animation: d20-tumble 1.2s cubic-bezier(0.2, 0.7, 0.3, 1);
 }
