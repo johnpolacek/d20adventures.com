@@ -63,16 +63,19 @@ function PartyRow({ party, actorId, compact, onPick }: { party: CardCharacter[];
   )
 }
 
-// A d20 in the stage's colours: spins for a moment, lands (on `land` when given), and reports the natural roll. The
-// GM's die rolls itself.
+// The d20's outline, face on: a hexagon (no facet lines, so the number reads cleanly).
+const D20_HEX = "50,3 90.7,26.5 90.7,73.5 50,97 9.3,73.5 9.3,26.5"
+
+// A d20 in the stage's colours. Rolling, the die tumbles while the number stays upright and flips in place, slowing
+// as it settles; it lands on `land` when given and reports the natural roll. The GM's die rolls itself.
 function D20({ onRoll, compact, land, auto = false, disabled = false }: { onRoll: (n: number) => void; compact: boolean; land?: number; auto?: boolean; disabled?: boolean }) {
   const [shown, setShown] = useState<number | null>(null)
   const [rolling, setRolling] = useState(false)
-  const timer = useRef<ReturnType<typeof setInterval> | null>(null)
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const started = useRef(false)
   useEffect(
     () => () => {
-      if (timer.current) clearInterval(timer.current)
+      if (timer.current) clearTimeout(timer.current)
     },
     []
   )
@@ -80,18 +83,22 @@ function D20({ onRoll, compact, land, auto = false, disabled = false }: { onRoll
     if (started.current) return
     started.current = true
     setRolling(true)
-    let t = 0
-    timer.current = setInterval(() => {
-      t += 60
-      setShown(1 + Math.floor(Math.random() * 20))
-      if (t >= 1200 && timer.current) {
-        clearInterval(timer.current)
+    let elapsed = 0
+    let delay = 45
+    const tick = () => {
+      elapsed += delay
+      if (elapsed >= 1200) {
         const n = land ?? 1 + Math.floor(Math.random() * 20)
         setShown(n)
         setRolling(false)
         onRoll(n)
+        return
       }
-    }, 60)
+      setShown(1 + Math.floor(Math.random() * 20))
+      delay *= 1.13
+      timer.current = setTimeout(tick, delay)
+    }
+    tick()
   }
   // The GM's die rolls once, shortly after the card appears.
   useEffect(() => {
@@ -107,13 +114,27 @@ function D20({ onRoll, compact, land, auto = false, disabled = false }: { onRoll
       disabled={auto || disabled || rolling || done}
       aria-label={auto ? "The GM's roll" : "Roll the d20"}
       className={cn(
-        "stage-die grid place-items-center rounded-full border-2 border-stage-gold font-serif text-stage-parchment shadow-[0_0_0_4px_#1c1410,0_0_0_5px_#c79a5a66,0_0_24px_#e3b67c44] transition-[transform,opacity] enabled:hover:scale-105 disabled:cursor-default",
+        "relative grid place-items-center [filter:drop-shadow(0_0_12px_#e3b67c40)_drop-shadow(0_3px_5px_#000b)] transition-[transform,opacity] enabled:hover:scale-105 disabled:cursor-default",
         disabled && !done && "opacity-40",
-        compact ? "h-14 w-14 text-xl" : "h-20 w-20 text-3xl",
-        rolling && "animate-spin [animation-duration:1.2s]"
+        compact ? "h-16 w-16" : "h-[92px] w-[92px]"
       )}
     >
-      {shown ?? <span className={cn("font-sans tracking-[0.2em]", compact ? "text-[9px]" : "text-[10px]")}>ROLL</span>}
+      <span className={cn("absolute inset-0", rolling && "d20-tumble")}>
+        <span className="stage-die absolute inset-0 [clip-path:polygon(50%_3%,90.7%_26.5%,90.7%_73.5%,50%_97%,9.3%_73.5%,9.3%_26.5%)]" />
+        <svg viewBox="0 0 100 100" fill="none" aria-hidden="true" className="absolute inset-0 h-full w-full">
+          <polygon points={D20_HEX} stroke="#e3b67c" strokeWidth="2.6" strokeLinejoin="round" />
+        </svg>
+      </span>
+      <span
+        key={shown ?? "roll"}
+        className={cn(
+          "relative font-serif leading-none text-stage-parchment [text-shadow:0_1px_3px_#000d]",
+          rolling ? "d20-flip" : done && "d20-land",
+          shown === null ? cn("font-sans tracking-[0.2em]", compact ? "text-[8px]" : "text-[10px]") : compact ? "text-xl" : "text-[32px]"
+        )}
+      >
+        {shown ?? "ROLL"}
+      </span>
     </button>
   )
 }
@@ -256,7 +277,7 @@ export function PromptCard({
               Suggest
             </Pill>
             <Pill className="flex-1 font-display text-[13px] font-bold tracking-[0.12em]" active onClick={send} disabled={!draft.trim()}>
-              End turn
+              Send
             </Pill>
           </div>
         </>

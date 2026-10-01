@@ -41,7 +41,7 @@ export function TurnOrder({ order, activeId, label, compact = false, onPick }: {
           )
         })}
       </div>
-      {label && !compact && <div className="mt-1.5 font-display text-[11px] tracking-[0.12em] text-stage-parchment [text-shadow:0_1px_6px_#000]">{label}</div>}
+      {label && <div className={cn("font-display tracking-[0.08em] text-stage-parchment [text-shadow:0_1px_8px_#000,0_0_2px_#000]", compact ? "mt-1 text-[13px]" : "mt-2 text-[19px]")}>{label}</div>}
     </div>
   )
 }

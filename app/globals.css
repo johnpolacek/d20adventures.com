@@ -265,11 +265,93 @@ button {
   animation: plate-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.fade-in {
-  @apply opacity-100 transition-opacity duration-1000 ease-in-out;
-  @starting-style {
-    opacity: 0;
+/* Stageview d20: the die tumbles in place (ending upright), the number flips over in place, and lands with a pop. */
+@keyframes d20-tumble {
+  0% {
+    transform: perspective(320px) rotateZ(0) rotateX(0) rotateY(0) scale(1);
   }
+  25% {
+    transform: perspective(320px) rotateZ(210deg) rotateX(38deg) rotateY(-22deg) scale(1.08);
+  }
+  50% {
+    transform: perspective(320px) rotateZ(430deg) rotateX(-26deg) rotateY(24deg) scale(1.05);
+  }
+  75% {
+    transform: perspective(320px) rotateZ(610deg) rotateX(12deg) rotateY(-10deg) scale(1.02);
+  }
+  100% {
+    transform: perspective(320px) rotateZ(720deg) rotateX(0) rotateY(0) scale(1);
+  }
+}
+@keyframes d20-flip {
+  from {
+    transform: perspective(200px) rotateX(85deg);
+    opacity: 0.35;
+  }
+  to {
+    transform: perspective(200px) rotateX(0);
+    opacity: 1;
+  }
+}
+@keyframes d20-land {
+  from {
+    transform: scale(1.35);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+/* The d20 lab's other takes (app/dev/dice): a shake, a slot-reel number, and a coin flip. */
+@keyframes dice-shake {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0);
+  }
+  25% {
+    transform: translate(-2px, 1px) rotate(-3deg);
+  }
+  75% {
+    transform: translate(2px, -1px) rotate(3deg);
+  }
+}
+@keyframes dice-reel {
+  from {
+    transform: translateY(-70%);
+    opacity: 0.4;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@keyframes dice-coin {
+  from {
+    transform: perspective(320px) rotateY(0) scale(1);
+  }
+  40% {
+    transform: perspective(320px) rotateY(900deg) scale(1.12);
+  }
+  to {
+    transform: perspective(320px) rotateY(1440deg) scale(1);
+  }
+}
+.dice-shake {
+  animation: dice-shake 0.12s linear infinite;
+}
+.dice-reel {
+  animation: dice-reel 0.09s linear;
+}
+.dice-coin {
+  animation: dice-coin 1.2s cubic-bezier(0.25, 0.8, 0.3, 1);
+}
+.d20-tumble {
+  animation: d20-tumble 1.2s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.d20-flip {
+  animation: d20-flip 0.11s ease-out;
+}
+.d20-land {
+  animation: d20-land 0.35s cubic-bezier(0.3, 1.6, 0.5, 1);
 }
 
 /* Stageview surfaces: a little of the site's original grain (black paper, "buried" stone and the rough rule) on the
@@ -323,4 +405,12 @@ button {
 @utility stage-rule {
   background: url("/images/app/art/texture-line.png") center / 100% 100%, #e3b67c;
   background-blend-mode: multiply;
+}
+
+/* Keep last: in this build, plain rules after a nested @starting-style are dropped. */
+.fade-in {
+  @apply opacity-100 transition-opacity duration-1000 ease-in-out;
+  @starting-style {
+    opacity: 0;
+  }
 }

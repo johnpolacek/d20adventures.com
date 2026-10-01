@@ -119,8 +119,9 @@ export function StageHud({
           {location.status && <div className="mt-2 text-[10px] tracking-wide text-[#e8c898]">{location.status}</div>}
         </aside>
 
+        {/* The rule over the perspective bar runs edge to edge. */}
+        <div aria-hidden="true" className={cn("stage-rule pointer-events-none absolute inset-x-0 h-px opacity-60", compact ? "bottom-11" : "bottom-24")} />
         <nav className={cn("absolute flex items-center justify-between gap-6", compact ? "right-4 bottom-0 left-4 h-11" : "right-10 bottom-0 left-10 h-24")} aria-label="Perspectives">
-          <div aria-hidden="true" className="stage-rule pointer-events-none absolute inset-x-0 top-0 h-px opacity-60" />
           {!compact && <span className="hidden shrink-0 text-[8px] tracking-[0.25em] text-[#c0c9be] xl:block">CHOOSE A PERSPECTIVE</span>}
           <div className="flex min-w-0 gap-1 overflow-x-auto [scrollbar-width:none]">
             {views.map((v, i) => (

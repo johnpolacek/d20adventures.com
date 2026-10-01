@@ -235,6 +235,21 @@ The round-1 speakers are framed from fixed points read off the verified subject 
 - Failure (`?roll=1`): 51 Continues, including the Deception branch.
 - Every turn in order, all nine journal entries, no console errors.
 
+## Revision 11 (2026-10-01): polish, and a d20 lab
+
+- The reply button says **Send**.
+- The rule over the perspective bar runs edge to edge.
+- The whose-turn label under the initiative bar is larger (19 px, and 13 px on phones, where it now shows too).
+- **The d20** on the roll card is a hexagon outline: the die's face-on silhouette, with a textured fill and no facet lines, so the number reads. It tumbles in place while the number stays upright, flips through faces at a slowing pace, and lands with a pop.
+- **Stylesheet gotcha:** plain rules placed after `.fade-in` (which nests `@starting-style`) in `app/globals.css` were silently dropped from the build. That also explains an earlier lost `@layer components` block. `.fade-in` now sits last, with a note.
+- **`/dev/dice`** (dev only): five takes on the die and its roll, side by side, to pick one for the card.
+  1. Hexagon
+  2. Triangle face, the classic d20 icon
+  3. A 3D icosahedron in three.js that tumbles and settles with a face toward you
+  4. Slot reel
+  5. Coin flip
+- The owner asked to keep the turn page a scripted demo.
+
 ## Built (kept for the real page)
 
 | Piece | Path |

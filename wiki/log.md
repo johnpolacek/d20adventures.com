@@ -6,6 +6,13 @@ Git owns routine implementation history. This log records durable wiki, planning
 
 ## 2026-09-30
 
+### Turn page mock, revision 11: polish and a d20 lab
+
+- Send instead of End turn, an edge-to-edge footer rule, and a larger turn label.
+- The d20 is now a plain hexagon that tumbles while its number flips upright in place.
+- Added `/dev/dice`, which compares five takes on the die.
+- Found that rules after `.fade-in` in `globals.css` were dropped from the build; `.fade-in` now sits last.
+
 ### Turn page mock, revision 10: two rounds, a pickpocket, and step-through
 
 - The gate scene now plays as written: the party meets in line (round 1), then faces Garlan (round 2).
