@@ -18,7 +18,7 @@ Reviewed against local main on 2026-10-01.
 
 - [Plans](plans/index.md): Stageview delivery and maintenance backlog.
 - [Stageview](plans/stageview.md): owner decisions, remaining phases, release questions.
-- [Desktop local play](plans/desktop-local-play.md): proposed Tauri app with free solo play through the player's own AI CLI, paid online multiplayer, and shared game packages.
+- [Desktop local play](plans/desktop-local-play.md): proposed Tauri app that replaces web play. Free solo play through the player's own AI CLI, subscription tokens for multiplayer.
 - [Stage engine](stage-engine.md): implemented runtime, set/staging specs, measured limits.
 - [Wiki adventures](wiki-adventures.md): authoring, compilation, source selection, and live content updates.
 - [Gameplay flows](gameplay-flows.md): creation, turns, dice, NPCs, and completion.

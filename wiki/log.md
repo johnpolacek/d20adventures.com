@@ -22,11 +22,11 @@ Details: [Stage-first turn mock](plans/feature-stage-turn-mock.md).
 
 ## 2026-10-01, desktop local play direction
 
-Owner proposed a Tauri desktop app. Solo play is free and runs the GM through the player's own installed AI CLI and subscription. Multiplayer keeps the server GM and becomes the paid online tier. The audience is AI-savvy tabletop players, and requiring a CLI is acceptable. Distribution is a notarized direct download. Local content is authored adventures with pre-baked art.
+Owner proposed a Tauri desktop app that becomes the only game client. Web play is deprecated once it ships. Solo play is free and runs the GM through the player's own installed AI CLI and subscription, including Claude Code, Codex, Gemini CLI, and Grok. Multiplayer keeps the server GM and is paid by a subscription granting tokens at roughly current pricing. Narration is an optional player-supplied voice provider. Players generate characters or use premades. The audience is AI-savvy tabletop players, and requiring a CLI is acceptable. Distribution is a notarized direct download. Local content is authored adventures with pre-baked art.
 
-Anthropic's Claude Code legal page, read the same day, permits an end user signing in to the unmodified Claude Code binary with their own subscription. The app must not touch credentials, intermediate usage, or use the Agent SDK for subscription play. Codex and Gemini CLI terms are unchecked.
+Anthropic's Claude Code legal page, read the same day, permits an end user signing in to the unmodified Claude Code binary with their own subscription. The app must not touch credentials, intermediate usage, or use the Agent SDK for subscription play. The owner accepts the terms risk for the other CLIs.
 
-Game logic and the stage-first UI will move into shared TypeScript packages during the Stageview rebuild. No code was written. See [Desktop local play](plans/desktop-local-play.md).
+Game logic moves into a shared TypeScript package for the server and desktop. Stageview's stage-first turn page will be built in the desktop app, not the web app. Phone play after web deprecation is open. No code was written. See [Desktop local play](plans/desktop-local-play.md).
 
 ## 2026-10-01, wiki reconciliation
 

@@ -19,9 +19,9 @@ Details and open decisions: [Stageview](plans/stageview.md). Mapview becomes the
 
 ## Next, desktop local play
 
-Proposed 2026-10-01. A Tauri desktop app where solo play is free and the GM runs through the player's own signed-in AI CLI. Online multiplayer keeps the server GM and becomes the paid subscription. Game logic and the stage-first UI move into shared packages during the Stageview rebuild.
+Proposed 2026-10-01. A Tauri desktop app becomes the only game client and web play is deprecated. Solo play is free and the GM runs through the player's own signed-in AI CLI. Multiplayer keeps the server GM, paid by a subscription that grants tokens. The stage-first turn page is built in the desktop app.
 
-First step is a spike measuring CLI latency, JSON validity, and GM quality. Details: [Desktop local play](plans/desktop-local-play.md).
+First step is a spike measuring CLI latency, JSON validity, GM quality, CLI image generation, and Clerk and Convex inside Tauri. Details: [Desktop local play](plans/desktop-local-play.md).
 
 ## Maintenance
 
