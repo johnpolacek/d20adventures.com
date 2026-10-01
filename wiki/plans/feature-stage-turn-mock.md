@@ -252,7 +252,11 @@ The round-1 speakers are framed from fixed points read off the verified subject 
 - **Follow-up, the same day.** The d20's outline is now a real one, `components/stage/d20.tsx`, shared by the roll card and the lab.
   - Face-on, a true icosahedron's silhouette is a plain regular hexagon, which reads as any die. Photos of real d20s show them slightly from above and to one side (reference: the Wikimedia Commons photo "Würfel, Ikosaeder (W20) -- 2021 -- 5635.jpg").
   - So the outline is the computed convex hull of a true icosahedron, tilted 20°, turned 22° and rolled 8°, seen through a 30° lens, with rounded corners like tumbled dice.
-  - The lab keeps two takes: the outline (as on the card) and the 3D d20, now shaded with no edge lines and a soft fill light.
+  - The lab keeps two takes: the outline and the 3D d20, now shaded with no edge lines and a soft fill light.
+  - **The owner picked the 3D d20 for the roll card.**
+    - `D20Solid` in `components/stage/d20.tsx` is a three.js icosahedron, shaded with a soft fill light and no edge lines. It rests face-on with a corner up and tumbles about a random axis, slowing, for each roll.
+    - The number sits over its front face, stays upright and flips in place.
+    - The contest card's two dice each get their own small WebGL canvas, alongside the stage's.
 
 ## Built (kept for the real page)
 

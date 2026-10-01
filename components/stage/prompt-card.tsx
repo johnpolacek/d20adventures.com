@@ -6,7 +6,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
-import { D20Shape } from "./d20"
+import { D20Solid } from "./d20"
 import { eyebrow, Pill, panel } from "./hud"
 
 export interface CardCharacter {
@@ -64,11 +64,12 @@ function PartyRow({ party, actorId, compact, onPick }: { party: CardCharacter[];
   )
 }
 
-// A d20 in the stage's colours. Rolling, the die tumbles while the number stays upright and flips in place, slowing
-// as it settles; it lands on `land` when given and reports the natural roll. The GM's die rolls itself.
+// A d20 in the stage's colours: a real 3D die that tumbles while the number over its face stays upright and flips in
+// place, slowing as it settles; it lands on `land` when given and reports the natural roll. The GM's die rolls itself.
 function D20({ onRoll, compact, land, auto = false, disabled = false }: { onRoll: (n: number) => void; compact: boolean; land?: number; auto?: boolean; disabled?: boolean }) {
   const [shown, setShown] = useState<number | null>(null)
   const [rolling, setRolling] = useState(false)
+  const [tumble, setTumble] = useState(0)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const started = useRef(false)
   useEffect(
@@ -81,6 +82,7 @@ function D20({ onRoll, compact, land, auto = false, disabled = false }: { onRoll
     if (started.current) return
     started.current = true
     setRolling(true)
+    setTumble((k) => k + 1)
     let elapsed = 0
     let delay = 45
     const tick = () => {
@@ -117,15 +119,13 @@ function D20({ onRoll, compact, land, auto = false, disabled = false }: { onRoll
         compact ? "h-16 w-16" : "h-[92px] w-[92px]"
       )}
     >
-      <span className={cn("absolute inset-0", rolling && "d20-tumble")}>
-        <D20Shape className="absolute inset-0 h-full w-full" />
-      </span>
+      <D20Solid size={compact ? 64 : 92} roll={tumble} className="absolute inset-0" />
       <span
         key={shown ?? "roll"}
         className={cn(
           "relative font-serif leading-none text-stage-parchment [text-shadow:0_1px_3px_#000d]",
           rolling ? "d20-flip" : done && "d20-land",
-          shown === null ? cn("font-sans tracking-[0.2em]", compact ? "text-[8px]" : "text-[10px]") : compact ? "text-xl" : "text-[32px]"
+          shown === null ? cn("font-sans tracking-[0.2em]", compact ? "text-[8px]" : "text-[10px]") : compact ? "text-base" : "text-[24px]"
         )}
       >
         {shown ?? "ROLL"}
