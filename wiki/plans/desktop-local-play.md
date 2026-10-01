@@ -155,7 +155,7 @@ No behavior change. Run on a worktree.
 
 - Voice provider: several providers, or one recommended add-on. Whether free system voices are a fallback.
 - Phones, deferred. The [Stageview](stageview.md) landscape phone decision assumed the web app, and desktop CLIs cannot run on phones.
-- Distribution channel beyond direct download, such as Steam or itch.io.
+- Distribution channel beyond direct download, such as Steam. Steam constraints read 2026-10-01: in-game purchases in a Steam build must go through the Steam Wallet microtransaction API, which supports recurring billing. Live-generated AI content needs a store-page disclosure and a description of guardrails. Steam Workshop could host player-made adventures.
 - Saves moving between local and online play.
 - Default CLI and the minimum GM quality bar.
 - Pack format, versioning, and signing.
