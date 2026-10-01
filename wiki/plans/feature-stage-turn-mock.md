@@ -254,6 +254,10 @@ The round-1 speakers are framed from fixed points read off the verified subject 
   - So the outline is the computed convex hull of a true icosahedron, tilted 20°, turned 22° and rolled 8°, seen through a 30° lens, with rounded corners like tumbled dice.
   - The lab keeps two takes: the outline and the 3D d20, now shaded with no edge lines and a soft fill light.
 - **Demo reply box.** `PromptCard demo`: the reply box stays disabled under its placeholder, with "Demo only · Click Suggest for a reply" centred over it. Suggest fills it in and the note goes, but the text stays read-only, so what's sent always matches the script.
+- **Public demo page:** `/demo/kordavos`, for sharing with friends and family. It's the same mock as `/dev/turn`, which stays dev-only, with `demo` set so it makes no model calls.
+  - No account and no Convex.
+  - Hidden from search engines (`noindex`).
+  - It goes live with a deploy. Production deploys from `main` on Vercel, and pushing needs the owner's go-ahead.
   - **The owner picked the 3D d20 for the roll card.**
     - `D20Solid` in `components/stage/d20.tsx` is a three.js icosahedron, shaded with a soft fill light and no edge lines. It rests face-on with a corner up and tumbles about a random axis, slowing, for each roll.
     - The number sits over its front face, stays upright and flips in place.

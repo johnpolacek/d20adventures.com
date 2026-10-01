@@ -33,7 +33,8 @@ type Pace = keyof typeof PACES
 // movement is clamped to it.
 const SPEED: Record<string, number> = { branka: 7.5, cassia: 9, yeva: 7.5, milos: 9 }
 
-export function TurnMock() {
+// `demo`: the public demo (/demo/kordavos) makes no model calls, so replies are never turned into movement.
+export function TurnMock({ demo = false }: { demo?: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [specs, setSpecs] = useState<{ set: unknown; staging: unknown } | null>(null)
   useEffect(() => {
@@ -322,7 +323,7 @@ export function TurnMock() {
     const hold = holdOf(turnIndex)
     if (!hold) return
     setPhase("thinking")
-    if (!hold.stay) await walkFromText(hold.actor, text)
+    if (!hold.stay && !demo) await walkFromText(hold.actor, text)
     if (hold.roll) {
       pendingReply.current = text
       setRolling({ actor: hold.actor, roll: hold.roll, prompt: hold.rollPrompt })
