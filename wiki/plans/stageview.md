@@ -238,6 +238,10 @@ All 3D dependencies were imported only by these modules (verified via grep on 20
 9. **Narration stays as text, paced for reading** (later on 2026-09-29).
    - The stage shows the narrative one paragraph at a time. Each paragraph holds the scene for its reading time (about 170 wpm, with a player pace setting). Players can step back or forward a paragraph, replay the turn, or skip to the question.
    - Voiced narration (Storyview's TTS) may be added later as an option on top of the text. The paragraph clock already takes an audio length in place of reading time. Audio does not replace the text.
+10. **An encounter opens with a staged intro, and the intro belongs to the adventure plan** (2026-09-30).
+   - The intro is the encounter's opening narrative, staged a paragraph at a time. Each stage has a framed camera move and its dialogue: people in a crowd, an NPC at work.
+   - When an adventure plan is staged, a model drafts each encounter's intro (shots and dialogue) from the encounter text. The plan's author edits it in admin, and it is stored with the plan rather than generated per playthrough.
+   - Then the turns start. A GM resolution can stop partway for a roll, including a contest where the GM's roll is shown first, and play on with the result.
 
 ## Stage-first play (decided 2026-09-29)
 

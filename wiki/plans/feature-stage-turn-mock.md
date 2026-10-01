@@ -107,6 +107,67 @@ The owner decided the narration stays as text (no audio-only mode). Changes:
   - Replay from the question restarts at paragraph 1 and keeps the draft.
   - No console errors.
 
+## Revision 8 (2026-09-30): staged intro, a full first turn, and a contest
+
+Owner feedback: the opening dialogue in the line was great, but the camera was too far back to see it. The owner wants:
+- camera moves in stages, each with its own dialogue and nicely framed;
+- the intro to be part of the adventure plan;
+- then a fully mocked turn: dialogue first, then a thief tries to pick a pocket, with a dice roll.
+
+Answers to my questions:
+- Scripted, with both outcomes.
+- A contest: the thief's roll is shown, then the player's.
+- The target is a merchant in line.
+- For real adventures, intros are drafted by AI and edited by the author (decision 10 in [stageview](stageview.md)).
+
+### Intro (three stages)
+
+1. The gate, wide.
+2. The line, framed from the east where it turns toward the counter, so faces show: a neighbour ahead, Oskar behind the party, and someone further back each speak.
+3. Garlan at the counter in a close two-shot: one "Next!" and one exchange, then the line stalls.
+
+### Turn 1: "A Purse in the Crowd" (Yeva)
+
+- Yeva's turn comes in the stalled line, with Oskar Venn, a spice-trader, looming behind her in the hold two-shot.
+- Her reply plays as a shot-reverse-shot with Oskar.
+- A cutpurse slips in at Oskar's shoulder.
+- **The contest card:** the GM's die rolls itself (Sleight of Hand 11 + 5 = 16), then Yeva rolls Perception (+3) to meet or beat it.
+- **Success:** Yeva grabs the cutpurse's wrist, he flees, and Oskar promises her a Harvest supper.
+- **Failure:** the purse is gone, and Oskar accuses the halfling.
+- Either way the line resumes, the party is called to the front, and the existing Garlan turns follow (Branka first).
+
+### Engine
+
+- **Queue loop:**
+  - `stalled` finishes the exchange at the counter, then waits.
+  - The staging can place other named characters in the line (`loops.<id>.cast`). They pass into the city rather than being recycled.
+  - Named characters standing still are left to the beats, and walk back to their place when the line moves.
+  - `speaker({ group | fromParty })` lets a beat give a line to someone in the queue.
+- **Beats:**
+  - `line` with `group` or `fromParty` speaks from the queue.
+  - `move` with `stop` halts short of a target.
+  - `loop` with `stall` or `resume` controls the line; loop controls run once per sequence, so stepping back doesn't move the line again.
+  - `play(beats, { append: true })` continues after a mid-turn roll, keeping the earlier paragraphs to step back to.
+- **Roll card:** a contest shows both sides and how it came out. `?roll=N` fixes the player's natural roll.
+
+### Art
+
+Oskar and the cutpurse were generated with the prototype's standee prompts and keying:
+- `gemini-3.1-flash-image` at 2K, 9:16, on a green screen;
+- conditioned on the world style reference plus a finished hero standee, for finish only;
+- backs generated from each front;
+- portraits cropped from the fronts.
+
+### Checked in the browser (1440×900 at DPR 2)
+
+- Both outcomes play end to end (forced rolls 20 and 1), with no console errors.
+- The intro takes about 65 s and the first turn about 100 s at normal pace.
+
+### Known gaps
+
+- Oskar's standee still shows his purse after it is stolen.
+- The cutpurse's spot and the east-side shots are fixed points tuned to this line's layout. Generated intros will need framing that solves for faces and occluders.
+
 ## Built (kept for the real page)
 
 | Piece | Path |
@@ -153,4 +214,5 @@ The owner decided the narration stays as text (no audio-only mode). Changes:
 - [x] Scripted gates encounter at `/dev/turn`; desktop and phone checks
 - [x] Revision 3: BG3 turn order, movement, click-to-focus, display-serif headlines
 - [x] Revision 4: narrative → movement via a model, with an eval
-- [ ] Owner review of revision 4
+- [x] Revision 8: staged intro, first turn with a contest
+- [ ] Owner review of revision 8

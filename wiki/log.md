@@ -4,6 +4,19 @@
 
 Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.
 
+## 2026-09-30
+
+### Turn page mock, revision 8: staged intro and a contested first turn
+
+- **Intro:** the encounter now opens with three stages, each with its own framing and dialogue: the gate, the line with people talking, and Garlan at the counter. Per the owner, intros like this belong to the adventure plan: AI-drafted and author-edited (decision 10).
+- **Turn 1:**
+  - Yeva talks with Oskar Venn, a spice merchant in line.
+  - A cutpurse goes for his purse, and the contest card shows the GM's Sleight of Hand roll, then Yeva's Perception.
+  - Both outcomes are scripted.
+- **Engine:** the queue loop gains stall and resume, named characters in line, and lines from people in the queue. Beats gain stop-short moves and appending after a roll.
+- **Art:** new standee art for the merchant and the cutpurse.
+- Details: [feature-stage-turn-mock](plans/feature-stage-turn-mock.md).
+
 ## 2026-09-29
 
 ### Turn page mock, revision 7: slower narration with back, forward and replay

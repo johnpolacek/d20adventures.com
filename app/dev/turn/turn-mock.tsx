@@ -15,7 +15,7 @@ import type { TierName } from "@/lib/stage"
 import { BeatPlayer, lineSeconds, readingSeconds } from "@/lib/stage/beats"
 import { bearing } from "@/lib/stage/movement"
 import { cn } from "@/lib/utils"
-import { ABOUT, TURNS } from "./gates-mock"
+import { ABOUT, FORCED_ROLL, type MockRoll, PARTY, TURNS } from "./gates-mock"
 
 type Phase = "title" | "beats" | "hold" | "roll" | "thinking" | "done"
 type RollOutcome = { total: number; success: boolean } | null
@@ -68,12 +68,18 @@ export function TurnMock() {
   const player = useRef<BeatPlayer | null>(null)
   const key = useRef(0)
   const pendingReply = useRef<string | null>(null)
+  // The roll on the card: the one the GM asks for after a reply, or a contest partway through the turn's beats.
+  const [rolling, setRolling] = useState<{ actor: string; roll: MockRoll; prompt?: string } | null>(null)
+  const contestRoll = useRef<((base: number) => void) | null>(null)
   const usedRef = useRef(0)
   const focused = useRef<string | null>(null)
   const movedTo = useRef<string | undefined>(undefined)
   const [note, setNote] = useState<string | undefined>(undefined)
 
-  const party: CardCharacter[] = useMemo(() => (stage ? stage.cast.filter((c) => c.id !== "garlan").map((c) => ({ id: c.id, name: c.name, role: c.role, portrait: c.art.portrait })) : []), [stage])
+  const party: CardCharacter[] = useMemo(
+    () => (stage ? stage.cast.filter((c) => (PARTY as readonly string[]).includes(c.id)).map((c) => ({ id: c.id, name: c.name, role: c.role, portrait: c.art.portrait })) : []),
+    [stage]
+  )
   const nameOf = useCallback((id: string) => stage?.cast.find((c) => c.id === id)?.name ?? id, [stage])
 
   // Stage set-up: the line waits behind the title card; lines spoken on stage become bubbles and, for named characters, plates.
@@ -126,7 +132,7 @@ export function TurnMock() {
       setJournal((j) => [
         ...j,
         {
-          number: index + 1,
+          number: index,
           title: t.title,
           paragraphs: ps,
           reply: reply && replyFrom ? { name: replyFrom, text: reply, moved: usedRef.current || undefined, movedTo: movedTo.current } : undefined,
@@ -139,9 +145,46 @@ export function TurnMock() {
       movedTo.current = undefined
       setNote(undefined)
       await player.current.play(t.beats(reply, roll))
+      const c = t.contest
+      if (c) {
+        // The beats stop for the contest; the rest of the turn plays out with its result.
+        const base = await new Promise<number>((resolve) => {
+          contestRoll.current = resolve
+          setRolling({ actor: c.actor, roll: c.roll, prompt: c.prompt })
+          setPhase("roll")
+        })
+        const versus = c.roll.versus
+        const total = base + c.roll.modifier
+        const success = total >= c.roll.dc
+        const outcome = { total, success }
+        await new Promise((r) => setTimeout(r, 1600))
+        const more = c.narrative(reply, outcome)
+        const all = [...ps, ...more]
+        paragraphsRef.current = all
+        setParagraphs(all)
+        setJournal((j) =>
+          j.map((e) =>
+            e.number === index
+              ? {
+                  ...e,
+                  paragraphs: all,
+                  rollAt: ps.length,
+                  roll: { name: nameOf(c.actor), skill: c.roll.skill, dc: c.roll.dc, base, total, success, versus: versus ? `${versus.name}'s ${versus.natural + versus.modifier}` : undefined },
+                }
+              : e
+          )
+        )
+        setRolling(null)
+        setPhase("beats")
+        const offset = ps.length
+        await player.current.play(
+          c.beats(reply, outcome).map((b) => ("narrate" in b ? { narrate: b.narrate + offset } : b)),
+          { append: true }
+        )
+      }
       afterBeats(index)
     },
-    [stage]
+    [stage, nameOf]
   )
   // When the beats end, the GM asks the next character (framed on them) or the encounter is over.
   const afterBeats = (index: number) => {
@@ -261,10 +304,17 @@ export function TurnMock() {
     await walkFromText(hold.actor, text)
     if (hold.roll) {
       pendingReply.current = text
+      setRolling({ actor: hold.actor, roll: hold.roll })
       setPhase("roll")
     } else advance(text, null, undefined, 700)
   }
   const onRoll = (base: number) => {
+    if (contestRoll.current) {
+      const resolve = contestRoll.current
+      contestRoll.current = null
+      resolve(base)
+      return
+    }
     const hold = TURNS[turnIndex].hold
     const roll = hold?.roll
     if (!hold || !roll) return
@@ -344,11 +394,11 @@ export function TurnMock() {
   }, [stage, focus])
 
   const hold = TURNS[turnIndex].hold
-  const actorId = phase === "hold" || phase === "roll" ? (hold?.actor ?? null) : null
+  const actorId = phase === "roll" ? (rolling?.actor ?? null) : phase === "hold" ? (hold?.actor ?? null) : null
   const actor = party.find((c) => c.id === actorId) ?? null
   let mode: CardMode | null = null
   if (phase === "hold" && hold) mode = { kind: "hold", prompt: hold.prompt, suggestion: hold.suggestion }
-  else if (phase === "roll" && hold?.roll) mode = { kind: "roll", roll: hold.roll }
+  else if (phase === "roll" && rolling) mode = { kind: "roll", roll: rolling.roll, prompt: rolling.prompt }
   else if (phase === "thinking") mode = { kind: "thinking", note }
   else if (phase === "done") mode = { kind: "done", next: "Next: The Harvest Festival" }
   const place = stage?.loops.get("gate-line")?.partyPosition ?? -1
@@ -357,7 +407,7 @@ export function TurnMock() {
     ...party.map((c) => ({ id: c.id, name: c.name, portrait: c.portrait })),
     ...(stage ? stage.cast.filter((c) => c.id === "garlan").map((c) => ({ id: c.id, name: c.name, portrait: c.art.portrait, npc: true })) : []),
   ]
-  const activeId = actorId ?? (phase === "beats" && turnIndex > 0 ? "garlan" : null)
+  const activeId = actorId ?? (phase === "beats" ? (TURNS[turnIndex].npc ?? null) : null)
   const orderLabel = actor ? `${actor.name.split(" ")[0]}'s turn` : activeId === "garlan" ? "Garlan" : undefined
   const views = stage ? Object.entries(stage.shots).map(([id, s]) => ({ id, label: s.label ?? id })) : []
 
@@ -365,7 +415,7 @@ export function TurnMock() {
     <StageHud
       containerRef={containerRef}
       title={{ eyebrow: "The March of Davos  ·  Arrival", text: "The Gates of Kordavos" }}
-      location={{ eyebrow: "Arrival at Kordavos", title: actor ? `${actor.name.split(" ")[0]}'s turn` : `Turn ${turnIndex + 1}`, status, hidden: !!plates.right }}
+      location={{ eyebrow: "Arrival at Kordavos", title: actor ? `${actor.name.split(" ")[0]}'s turn` : TURNS[turnIndex].intro ? "Intro" : `Turn ${turnIndex}`, status, hidden: !!plates.right }}
       views={views}
       activeView={stage?.activeShot ?? null}
       onView={(id) => {
@@ -409,7 +459,7 @@ export function TurnMock() {
           {/* On phones the bubble carries the line; a plate over the narration would cover half the screen. */}
           {plates.left && !compact && <Plate line={plates.left} compact={compact} docked />}
           <Narration
-            heading={`Turn ${turnIndex + 1}  ·  ${TURNS[turnIndex].title}`}
+            heading={`${TURNS[turnIndex].intro ? "Intro" : `Turn ${turnIndex}`}  ·  ${TURNS[turnIndex].title}`}
             text={paragraphs[narrated]}
             index={narrated}
             count={paragraphs.length}
@@ -444,6 +494,7 @@ export function TurnMock() {
           onRoll={onRoll}
           onPick={focus}
           onTop={mode.kind === "hold" || mode.kind === "roll" ? onCardTop : undefined}
+          forcedRoll={FORCED_ROLL ?? undefined}
           draft={drafts[turnIndex] ?? ""}
           onDraft={(text) => setDrafts((d) => ({ ...d, [turnIndex]: text }))}
         />

@@ -10,22 +10,32 @@ import type { Stage } from "./stage"
 //   { move: "branka", to: "front1" }     walk to a mark or point (does not block unless wait: true)
 //   { face: "garlan", to: "branka" }     turn toward a cast member, mark, point, or a heading in degrees
 //   { line: "garlan", text: "Next!" }    a spoken line: bubble at the head and a portrait plate; blocks for its duration
+//   { line: "gate-line", fromParty: -2, text }  a line from someone in a loop's queue (`group` counts from the front)
 //   { narrate: 2 }                       the narrative paragraph being told; it holds the scene for its reading time (or
 //                                        its audio, once voiced): the next paragraph, a spoken line and the end of the
 //                                        beats wait for it, while shots, walks and waits carry on underneath
 //   { wait: 1.5 }                        a pause in seconds
 //   { cue: "gate-line:front" }           wait for a named moment (a loop bringing the party to the front); skip jumps to it
-//   { loop: "gate-line", do: "release" } tell a loop the party is done (they pass and the line carries on)
+//   { loop: "gate-line", do: "release" } tell a loop the party is done (they pass and the line carries on); "stall" holds
+//                                        the line after the exchange at the counter, "resume" lets it move again
 const id = matName
 export const beatSchema = z.union([
   z.object({ shot: z.union([id, stagingShot]), cut: z.boolean().optional() }).strict(),
-  z.object({ move: id, to: z.union([id, vec2]), speed: num(0.3, 4).optional(), wait: z.boolean().optional() }).strict(),
+  z.object({ move: id, to: z.union([id, vec2]), speed: num(0.3, 4).optional(), stop: num(0, 5).optional(), wait: z.boolean().optional() }).strict(),
   z.object({ face: id, to: z.union([id, vec2, deg]) }).strict(),
-  z.object({ line: id, text: z.string().min(1).max(400), duration: num(0.5, 20).optional() }).strict(),
+  z
+    .object({
+      line: id,
+      text: z.string().min(1).max(400),
+      duration: num(0.5, 20).optional(),
+      group: z.number().int().min(0).max(200).optional(),
+      fromParty: z.number().int().min(-50).max(50).optional(),
+    })
+    .strict(),
   z.object({ narrate: z.number().int().min(0).max(200) }).strict(),
   z.object({ wait: num(0, 30) }).strict(),
   z.object({ cue: z.string().min(1).max(80) }).strict(),
-  z.object({ loop: id, do: z.enum(["release"]) }).strict(),
+  z.object({ loop: id, do: z.enum(["release", "stall", "resume"]) }).strict(),
 ])
 export type Beat = z.infer<typeof beatSchema>
 export const beatsSchema = z.array(beatSchema).max(200)
@@ -57,7 +67,8 @@ interface Mark {
 // - back() and replay() return to the start of an earlier paragraph (or the first) and play on from there. The camera
 //   and the cast the beats move are put back as they were then; a loop's crowd carries on, and cues it has already
 //   given resolve at once.
-// replay() also works after the beats have finished, to watch the turn again.
+// replay() also works after the beats have finished, to watch the turn again. play(beats, { append: true }) carries on
+// with more beats after the last ones (the rest of a turn after a roll), keeping the earlier paragraphs to step back to.
 export class BeatPlayer {
   private beats: Beat[] = []
   private skipping = false
@@ -66,6 +77,8 @@ export class BeatPlayer {
   private wake: (() => void) | null = null
   private narrationEnds = 0
   private marks = new Map<number, Mark>()
+  // Loop controls already given in this sequence: stepping back or replaying doesn't move the line again.
+  private looped = new Set<number>()
   private actors: string[] = []
   private lastShot: string | StagingShot | null = null
   private index = 0
@@ -126,14 +139,19 @@ export class BeatPlayer {
     }
   }
 
-  async play(input: Beat[]) {
-    this.beats = beatsSchema.parse(input)
+  async play(input: Beat[], { append = false } = {}) {
+    const more = beatsSchema.parse(input)
+    const from = append ? this.beats.length : 0
+    this.beats = append ? [...this.beats, ...more] : more
     const cast = new Set(this.stage.cast.map((c) => c.id))
     this.actors = [...new Set(this.beats.flatMap((b) => ("move" in b ? [b.move] : "face" in b ? [b.face] : [])))].filter((id) => cast.has(id))
-    this.marks.clear()
-    this.lastShot = this.stage.activeShot
-    this.marks.set(0, this.snapshot())
-    return this.run(0)
+    if (!append) {
+      this.marks.clear()
+      this.looped.clear()
+      this.lastShot = this.stage.activeShot
+      this.marks.set(0, this.snapshot())
+    }
+    return this.run(from)
   }
 
   // Watch the beats again from the start: during play it jumps back; afterwards it plays them through once more.
@@ -227,16 +245,19 @@ export class BeatPlayer {
       this.lastShot = b.shot
       s.shot(b.shot, { instant: this.skipping || !!b.cut })
     } else if ("move" in b) {
-      const arrive = s.moveCast(b.move, b.to, { speed: b.speed })
+      const arrive = s.moveCast(b.move, b.to, { speed: b.speed, stop: b.stop })
       if (this.skipping) s.finishMoves()
       else if (b.wait) await this.orWake(arrive)
     } else if ("face" in b) s.faceCast(b.face, b.to)
     else if ("line" in b) {
       await this.narrated()
       if (this.hurrying) return
+      const fromLoop = b.group !== undefined || b.fromParty !== undefined
+      const speaker = fromLoop ? s.loops.get(b.line)?.speaker({ group: b.group, fromParty: b.fromParty }) : { castId: b.line }
+      if (!speaker) return
       const seconds = b.duration ?? (await this.hooks.lineSeconds?.(b.line, b.text)) ?? lineSeconds(b.text)
-      s.say({ castId: b.line, text: b.text, seconds })
-      this.hooks.onLine?.(b.line, b.text, seconds)
+      s.say({ ...speaker, text: b.text, seconds })
+      if ("castId" in speaker) this.hooks.onLine?.(speaker.castId, b.text, seconds)
       await this.sleep(seconds)
     } else if ("narrate" in b) {
       if (this.stopAt !== null && i >= this.stopAt) {
@@ -258,6 +279,12 @@ export class BeatPlayer {
         s.skipLoops()
         await s.waitCue(b.cue)
       }
-    } else if ("loop" in b) s.loops.get(b.loop)?.release()
+    } else if ("loop" in b) {
+      if (this.looped.has(i)) return
+      this.looped.add(i)
+      const loop = s.loops.get(b.loop)
+      if (b.do === "release") loop?.release()
+      else if (loop) loop.stalled = b.do === "stall"
+    }
   }
 }

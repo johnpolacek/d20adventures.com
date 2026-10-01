@@ -12,6 +12,10 @@ import type { Rand } from "../kit/rng"
 //   held       the party has reached the front: the loop waits while the encounter's turns play out, until release()
 //
 // Those who pass walk through and are recycled: they reappear behind the stalls, walk back and rejoin at the tail.
+// Named characters can stand in the line too (the party, and others the staging places): they pass into the city
+// instead of being recycled. While they stand still they are the encounter's to move; when the line moves on, anyone
+// who has stepped out walks back to their place first.
+// A stalled loop finishes the exchange at the counter and then waits (the official busy with a cart) until resumed.
 // Cues: `<id>:next` on every call, `<id>:called` when the party is called up, `<id>:front` once it stands at the front.
 
 export interface QueueLoopSpec {
@@ -29,6 +33,7 @@ export interface QueueLoopSpec {
 export interface QueueLoopStaging {
   official: string
   party?: { members: string[]; position: number; lateral?: number[]; pair?: number }
+  cast?: { members: string[]; position: number; lateral?: number[] }[]
   lines: { next: string[]; question: string[]; replies: string[]; fees: string[] }
 }
 export interface LoopHost {
@@ -48,7 +53,7 @@ type Ent = {
   route: [number, number][] | null
   phase: "queue" | "passing" | "parking" | "parked" | "returning" | "city"
 }
-type Group = { members: Ent[]; party?: boolean; fresh?: boolean }
+type Group = { members: Ent[]; party?: boolean; cast?: boolean; fresh?: boolean }
 
 class Path {
   seg: { ax: number; az: number; bx: number; bz: number; dx: number; dz: number; d0: number; len: number }[] = []
@@ -78,6 +83,7 @@ export class QueueLoop {
   readonly id: string
   // A paused loop freezes the line (the title card before play); walkers and life elsewhere carry on.
   paused = false
+  stalled = false
   state: "arrive" | "question" | "held" = "arrive"
   groups: Group[] = []
   private waiting: Group[] = []
@@ -89,6 +95,7 @@ export class QueueLoop {
   private tail = 0
   private official: CastMember | null
   private partyEnts: Ent[] = []
+  private castOut = 0
 
   constructor(
     private spec: QueueLoopSpec,
@@ -111,13 +118,38 @@ export class QueueLoop {
     }
     const queue = [...pool]
     while (queue.length) this.groups.push({ members: queue.splice(0, Math.min(queue.length, rand.pick([1, 2, 2, 3]))) })
-    if (this.partyEnts.length) this.groups.splice(Math.min(party?.position ?? 0, this.groups.length), 0, { members: this.partyEnts, party: true })
+    // Named groups and the party take their places in the line, front first.
+    const placed: { position: number; group: Group }[] = []
+    for (const g of staging?.cast ?? []) {
+      const members = g.members.flatMap((id, i) => {
+        const c = cast.find((m) => m.id === id)
+        return c ? [{ cast: c, d: 0, target: 0, delay: 0, lat: g.lateral?.[i] ?? 0, route: null, phase: "queue" as const }] : []
+      })
+      if (members.length) placed.push({ position: g.position, group: { members, cast: true } })
+    }
+    if (this.partyEnts.length) placed.push({ position: party?.position ?? 0, group: { members: this.partyEnts, party: true } })
+    for (const p of placed.sort((a, b) => a.position - b.position)) this.groups.splice(Math.min(p.position, this.groups.length), 0, p.group)
     this.layout(true)
     this.poseAll()
   }
 
   get partyPosition() {
     return this.groups.findIndex((g) => g.party)
+  }
+  // Where a member stands in the line, at their current distance along it.
+  private slot(e: Ent) {
+    const p = this.path.at(e.d)
+    return { x: p.x - p.dz * e.lat, z: p.z + p.dx * e.lat }
+  }
+  // Who speaks for a place in the line: `group` counts from the front (0 is the group at the counter); `fromParty`
+  // counts from the party's group (-1 is the group just ahead of them, 1 the one behind).
+  speaker(at: { group?: number; fromParty?: number }): { castId: string } | { point: () => THREE.Vector3 } | null {
+    const i = at.fromParty !== undefined ? this.partyPosition + at.fromParty : (at.group ?? 0)
+    const e = this.groups[i]?.members[0]
+    if (!e || (at.fromParty !== undefined && this.partyPosition < 0)) return null
+    if (e.cast) return { castId: e.cast.id }
+    const p = e.npc!
+    return { point: () => new THREE.Vector3(p.x, 2.1 * p.s, p.z) }
   }
   private pos(e: Ent) {
     return e.cast ? { x: e.cast.x, z: e.cast.z } : { x: e.npc!.x, z: e.npc!.z }
@@ -194,9 +226,9 @@ export class QueueLoop {
     const front = this.groups.shift()
     if (!front) return
     const [ex0, ez0, ex1, ez1] = this.spec.passEnd
-    front.members.forEach((e, i) => {
+    front.members.forEach((e) => {
       e.phase = "passing"
-      const end: [number, number] = e.cast ? [this.spec.castEnd[0] + i * 1.3, this.spec.castEnd[1] - (i % 2)] : [this.rand(ex0, ex1), this.rand(ez0, ez1)]
+      const end: [number, number] = e.cast ? this.castEnd() : [this.rand(ex0, ex1), this.rand(ez0, ez1)]
       e.route = [...this.spec.pass.map((p) => [...p] as [number, number]), end]
     })
     this.moving.push(...front.members)
@@ -208,6 +240,11 @@ export class QueueLoop {
     this.host.cue(`${this.id}:next`)
     if (this.groups[0]?.party) this.host.cue(`${this.id}:called`)
   }
+  // Where the next named character to pass stops inside the city, so they don't stand on one another.
+  private castEnd(): [number, number] {
+    const k = this.castOut++
+    return [this.spec.castEnd[0] + (k % 5) * 1.3, this.spec.castEnd[1] - Math.floor(k / 5) * 1.2 - (k % 2) * 0.5]
+  }
   // The encounter is done with the party at the front: they pass and the line carries on.
   release() {
     if (this.state === "held") this.next(true)
@@ -217,6 +254,16 @@ export class QueueLoop {
     if (!this.groups.some((g) => g.party)) return
     while (this.groups[0] && !this.groups[0].party) {
       const g = this.groups.shift()!
+      if (g.cast) {
+        // Named characters ahead of the party have been through already.
+        for (const e of g.members) {
+          const [x, z] = this.castEnd()
+          e.phase = "city"
+          e.route = null
+          this.pose(e, x, z, Math.PI, false)
+        }
+        continue
+      }
       for (const e of g.members) e.phase = "queue"
       this.groups.push(g)
     }
@@ -266,7 +313,7 @@ export class QueueLoop {
         const p = this.pos(front.members[0])
         this.host.coin(new THREE.Vector3(p.x, 1.1, p.z), new THREE.Vector3(...this.spec.counter))
       })
-      cue(4, 8.8, () => this.next())
+      if (!this.stalled) cue(4, 8.8, () => this.next())
     }
     // Queue members creep forward in a ripple, facing the head of the line; the front group faces the official.
     for (const g of this.groups)
@@ -274,12 +321,23 @@ export class QueueLoop {
         if (e.delay > 0) e.delay -= dt
         const gap = e.target - e.d
         const moving = e.delay <= 0 && Math.abs(gap) > 0.02
+        // Named characters standing still are the encounter's to move; when the line moves on, anyone who has
+        // stepped out walks back to their place before shuffling up.
+        if (e.cast && !moving) continue
+        if (e.cast) {
+          const s = this.slot(e)
+          const off = Math.hypot(s.x - e.cast.x, s.z - e.cast.z)
+          if (off > 0.25) {
+            const k = Math.min(1, (dt * WALK) / off)
+            this.pose(e, e.cast.x + (s.x - e.cast.x) * k, e.cast.z + (s.z - e.cast.z) * k, Math.atan2(s.x - e.cast.x, s.z - e.cast.z), true)
+            continue
+          }
+        }
         if (moving) e.d += Math.sign(gap) * Math.min(Math.abs(gap), dt * SHUFFLE)
         const p = this.path.at(e.d)
         const x = p.x - p.dz * e.lat
         const z = p.z + p.dx * e.lat
         const facing = g === front && !moving && (this.state === "question" || this.state === "held") ? Math.atan2(this.spec.station[0] - x, this.spec.station[1] - z) : Math.atan2(-p.dx, -p.dz)
-        if (g.party && this.state === "held" && !moving) continue // the encounter's beats own the party while it is held
         this.pose(e, x, z, facing, moving)
       }
     // Those who have paid walk through; those recycled walk back to the tail.

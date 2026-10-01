@@ -19,8 +19,10 @@ export interface CardRoll {
   ability: string
   dc: number
   modifier: number
+  // A contest: the opposing roll, made by the GM on the card first; the player has to meet or beat its total (dc).
+  versus?: { name: string; skill: string; natural: number; modifier: number }
 }
-export type CardMode = { kind: "hold"; prompt: string; suggestion?: string } | { kind: "roll"; roll: CardRoll } | { kind: "thinking"; note?: string } | { kind: "done"; next: string }
+export type CardMode = { kind: "hold"; prompt: string; suggestion?: string } | { kind: "roll"; roll: CardRoll; prompt?: string } | { kind: "thinking"; note?: string } | { kind: "done"; next: string }
 
 function PartyRow({ party, actorId, compact, onPick }: { party: CardCharacter[]; actorId: string | null; compact: boolean; onPick: (id: string) => void }) {
   return (
@@ -61,11 +63,13 @@ function PartyRow({ party, actorId, compact, onPick }: { party: CardCharacter[];
   )
 }
 
-// A d20 in the stage's colours: spins for a moment, lands, and reports the natural roll.
-function D20({ onRoll, compact }: { onRoll: (n: number) => void; compact: boolean }) {
+// A d20 in the stage's colours: spins for a moment, lands (on `land` when given), and reports the natural roll. The
+// GM's die rolls itself.
+function D20({ onRoll, compact, land, auto = false, disabled = false }: { onRoll: (n: number) => void; compact: boolean; land?: number; auto?: boolean; disabled?: boolean }) {
   const [shown, setShown] = useState<number | null>(null)
   const [rolling, setRolling] = useState(false)
   const timer = useRef<ReturnType<typeof setInterval> | null>(null)
+  const started = useRef(false)
   useEffect(
     () => () => {
       if (timer.current) clearInterval(timer.current)
@@ -73,6 +77,8 @@ function D20({ onRoll, compact }: { onRoll: (n: number) => void; compact: boolea
     []
   )
   const roll = () => {
+    if (started.current) return
+    started.current = true
     setRolling(true)
     let t = 0
     timer.current = setInterval(() => {
@@ -80,28 +86,87 @@ function D20({ onRoll, compact }: { onRoll: (n: number) => void; compact: boolea
       setShown(1 + Math.floor(Math.random() * 20))
       if (t >= 1200 && timer.current) {
         clearInterval(timer.current)
-        const n = 1 + Math.floor(Math.random() * 20)
+        const n = land ?? 1 + Math.floor(Math.random() * 20)
         setShown(n)
         setRolling(false)
         onRoll(n)
       }
     }, 60)
   }
+  // The GM's die rolls once, shortly after the card appears.
+  useEffect(() => {
+    if (!auto) return
+    const t = setTimeout(roll, 500)
+    return () => clearTimeout(t)
+  }, [auto])
   const done = shown !== null && !rolling
   return (
     <button
       type="button"
       onClick={roll}
-      disabled={rolling || done}
-      aria-label="Roll the d20"
+      disabled={auto || disabled || rolling || done}
+      aria-label={auto ? "The GM's roll" : "Roll the d20"}
       className={cn(
-        "stage-die grid place-items-center rounded-full border-2 border-stage-gold font-serif text-stage-parchment shadow-[0_0_0_4px_#1c1410,0_0_0_5px_#c79a5a66,0_0_24px_#e3b67c44] transition-transform enabled:hover:scale-105 disabled:cursor-default",
+        "stage-die grid place-items-center rounded-full border-2 border-stage-gold font-serif text-stage-parchment shadow-[0_0_0_4px_#1c1410,0_0_0_5px_#c79a5a66,0_0_24px_#e3b67c44] transition-[transform,opacity] enabled:hover:scale-105 disabled:cursor-default",
+        disabled && !done && "opacity-40",
         compact ? "h-14 w-14 text-xl" : "h-20 w-20 text-3xl",
         rolling && "animate-spin [animation-duration:1.2s]"
       )}
     >
       {shown ?? <span className={cn("font-sans tracking-[0.2em]", compact ? "text-[9px]" : "text-[10px]")}>ROLL</span>}
     </button>
+  )
+}
+
+function Total({ natural, modifier }: { natural: number | null; modifier: number }) {
+  return <div className="mt-2 font-serif text-[13px] text-stage-parchment tabular-nums">{natural === null ? "\u00a0" : `${natural} + ${modifier} = ${natural + modifier}`}</div>
+}
+
+// The roll: the GM's roll for the other side first (in a contest), then the player's d20, then how it came out.
+function RollPanel({ roll, prompt, actor, compact, forced, onRoll }: { roll: CardRoll; prompt?: string; actor: CardCharacter; compact: boolean; forced?: number; onRoll: (n: number) => void }) {
+  const [theirs, setTheirs] = useState<number | null>(null)
+  const [mine, setMine] = useState<number | null>(null)
+  const total = mine === null ? null : mine + roll.modifier
+  const side = (name: string, skill: string, detail: string) => (
+    <>
+      <div className="text-[9px] tracking-[0.2em] text-stage-gold uppercase">{name}</div>
+      <div className={cn("font-display text-[#f3d6a6]", compact ? "text-base" : "mt-0.5 text-[22px]")}>{skill}</div>
+      <div className="mb-2.5 text-[10px] tracking-wider text-stage-muted uppercase">{detail}</div>
+    </>
+  )
+  return (
+    <div>
+      <div className={eyebrow}>{roll.versus ? "Contest" : "Dice roll needed"}</div>
+      {prompt && !compact && <p className="mx-auto mt-2 max-w-[440px] font-serif text-[14px] leading-[1.5] text-stage-cream">{prompt}</p>}
+      <div className={cn("flex items-start justify-center", compact ? "mt-1 gap-4" : "mt-3 gap-7")}>
+        {roll.versus && (
+          <>
+            <div className="flex flex-col items-center">
+              {side(roll.versus.name, roll.versus.skill, `the GM rolls · +${roll.versus.modifier}`)}
+              <D20 auto land={roll.versus.natural} compact={compact} onRoll={setTheirs} />
+              <Total natural={theirs} modifier={roll.versus.modifier} />
+            </div>
+            <div className={cn("self-center font-display text-stage-muted", compact ? "text-sm" : "text-lg")}>vs</div>
+          </>
+        )}
+        <div className="flex flex-col items-center">
+          {side(actor.name.split(" ")[0], roll.skill, `${roll.ability} · +${roll.modifier}${roll.versus ? "" : ` · target ${roll.dc}`}`)}
+          <D20
+            land={forced}
+            compact={compact}
+            disabled={!!roll.versus && theirs === null}
+            onRoll={(n) => {
+              setMine(n)
+              onRoll(n)
+            }}
+          />
+          <Total natural={mine} modifier={roll.modifier} />
+        </div>
+      </div>
+      <div className={cn("mt-1 h-4 text-[11px] tracking-[0.18em] uppercase", total === null ? "opacity-0" : total >= roll.dc ? "text-[#b7d38a]" : "text-[#e39a7c]")}>
+        {total === null ? "" : `${total} against ${roll.dc} · ${total >= roll.dc ? "success" : "failure"}`}
+      </div>
+    </div>
   )
 }
 
@@ -116,6 +181,7 @@ export function PromptCard({
   onTop,
   draft: draftProp,
   onDraft,
+  forcedRoll,
 }: {
   mode: CardMode
   actor: CardCharacter | null
@@ -129,6 +195,8 @@ export function PromptCard({
   // The reply can be held by the caller (so it survives the card closing while the turn is replayed).
   draft?: string
   onDraft?: (text: string) => void
+  // Stageview checks: the player's natural roll, fixed.
+  forcedRoll?: number
 }) {
   const [ownDraft, setOwnDraft] = useState("")
   const draft = onDraft ? (draftProp ?? "") : ownDraft
@@ -193,20 +261,7 @@ export function PromptCard({
           </div>
         </>
       )}
-      {mode.kind === "roll" && actor && (
-        <div className={cn("flex items-center justify-center", compact ? "gap-4" : "flex-col gap-2")}>
-          <div>
-            <div className={eyebrow}>Dice roll needed</div>
-            <div className={cn("font-display text-[#f3d6a6]", compact ? "text-lg" : "mt-1 text-[26px]")}>{mode.roll.skill}</div>
-            <div className="text-[10px] tracking-wider text-stage-muted uppercase">
-              {actor.name} · {mode.roll.ability} · target {mode.roll.dc} · +{mode.roll.modifier}
-            </div>
-          </div>
-          <div className={compact ? "" : "my-2"}>
-            <D20 onRoll={onRoll} compact={compact} />
-          </div>
-        </div>
-      )}
+      {mode.kind === "roll" && actor && <RollPanel key={`${actor.id}-${mode.roll.skill}`} roll={mode.roll} prompt={mode.prompt} actor={actor} compact={compact} forced={forcedRoll} onRoll={onRoll} />}
       {mode.kind === "thinking" && (
         <div className="py-1">
           <div className={cn(eyebrow, "animate-pulse")}>The GM is writing…</div>

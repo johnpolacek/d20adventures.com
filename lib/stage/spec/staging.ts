@@ -70,6 +70,19 @@ export const stagingSpecSchema = z
               })
               .strict()
               .optional(),
+            // Other named characters waiting in the line (a merchant just ahead of the party).
+            cast: z
+              .array(
+                z
+                  .object({
+                    members: z.array(idName).min(1).max(6),
+                    position: z.number().int().min(0).max(40),
+                    lateral: z.array(num(-5, 5)).max(6).optional(),
+                  })
+                  .strict()
+              )
+              .max(8)
+              .optional(),
             lines: z
               .object({
                 next: z.array(z.string().max(200)).max(20).default([]),

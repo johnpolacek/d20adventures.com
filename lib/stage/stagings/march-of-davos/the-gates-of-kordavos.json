@@ -68,6 +68,32 @@
       },
       "at": "front4",
       "facing": "garlan"
+    },
+    {
+      "id": "oskar",
+      "name": "Oskar Venn",
+      "role": "Spice-trader of the Saffron Road",
+      "height": 1.7,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/oskar-front.webp",
+        "back": "/stage/fixtures/march-of-davos/oskar-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/oskar-portrait.jpg"
+      },
+      "at": "lineBack",
+      "facing": 0
+    },
+    {
+      "id": "cutpurse",
+      "name": "Cutpurse",
+      "role": "Street thief",
+      "height": 1.62,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/cutpurse-front.webp",
+        "back": "/stage/fixtures/march-of-davos/cutpurse-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/cutpurse-portrait.jpg"
+      },
+      "at": [-6.0, 13.0],
+      "facing": 90
     }
   ],
   "shots": {
@@ -102,7 +128,7 @@
       "official": "garlan",
       "party": {
         "members": ["branka", "cassia", "yeva", "milos"],
-        "position": 3,
+        "position": 2,
         "lateral": [-0.62, 0.58, -0.02, 1.2],
         "pair": 2
       },
@@ -120,7 +146,13 @@
           "Coming home, sergeant. Same as every year."
         ],
         "fees": ["Three marks, then.", "There is a fee of three marks for entrance.", "Three marks. Keep your blades sheathed in the city."]
-      }
+      },
+      "cast": [
+        {
+          "members": ["oskar"],
+          "position": 3
+        }
+      ]
     }
   }
 }

@@ -3,7 +3,7 @@
 // The journal: every word of the story so far, the replies and the rolls, and the table chat. Opened from the top bar,
 // so the stage carries the scene and the text is always one tap away.
 
-import { useState } from "react"
+import { Fragment, useState } from "react"
 import { cn } from "@/lib/utils"
 import { eyebrow, panel } from "./hud"
 
@@ -12,11 +12,22 @@ export interface JournalTurn {
   title: string
   paragraphs: string[]
   reply?: { name: string; text: string; moved?: number; movedTo?: string }
-  roll?: { name: string; skill: string; dc: number; base: number; total: number; success: boolean }
+  roll?: { name: string; skill: string; dc: number; base: number; total: number; success: boolean; versus?: string }
+  // A roll called for partway through the turn is shown before this paragraph (otherwise above the story).
+  rollAt?: number
 }
 export interface ChatLine {
   from: string
   text: string
+}
+
+function RollLine({ roll }: { roll: NonNullable<JournalTurn["roll"]> }) {
+  return (
+    <div className="mb-2 text-[11px] tracking-wide text-[#e8c898]">
+      {roll.name} · {roll.skill}: {roll.base} + {roll.total - roll.base} = {roll.total} against {roll.versus ?? roll.dc},{" "}
+      <span className={roll.success ? "text-[#b7d38a]" : "text-[#e39a7c]"}>{roll.success ? "success" : "failure"}</span>
+    </div>
+  )
 }
 
 export function Journal({ turns, chat, compact = false, onClose }: { turns: JournalTurn[]; chat: ChatLine[]; compact?: boolean; onClose: () => void }) {
@@ -56,16 +67,12 @@ export function Journal({ turns, chat, compact = false, onClose }: { turns: Jour
                   <div>{t.reply.text}</div>
                 </div>
               )}
-              {t.roll && (
-                <div className="mb-2 text-[11px] tracking-wide text-[#e8c898]">
-                  {t.roll.name} · {t.roll.skill}: {t.roll.base} + {t.roll.total - t.roll.base} = {t.roll.total} against {t.roll.dc},{" "}
-                  <span className={t.roll.success ? "text-[#b7d38a]" : "text-[#e39a7c]"}>{t.roll.success ? "success" : "failure"}</span>
-                </div>
-              )}
+              {t.roll && t.rollAt === undefined && <RollLine roll={t.roll} />}
               {t.paragraphs.map((p, i) => (
-                <p key={i} className="mb-2.5 font-serif text-[13.5px] leading-[1.65] text-stage-sage">
-                  {p}
-                </p>
+                <Fragment key={i}>
+                  {t.roll && t.rollAt === i && <RollLine roll={t.roll} />}
+                  <p className="mb-2.5 font-serif text-[13.5px] leading-[1.65] text-stage-sage">{p}</p>
+                </Fragment>
               ))}
             </article>
           ))}

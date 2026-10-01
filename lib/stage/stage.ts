@@ -420,10 +420,16 @@ export class Stage {
     if (!c) throw new Error(`unknown cast member "${id}"`)
     return c
   }
-  // Walk a cast member to a mark or point, facing the way they go. Resolves on arrival.
-  moveCast(id: string, to: string | [number, number], { speed = 1.1 } = {}) {
+  // Walk a cast member to a mark or point, facing the way they go, stopping `stop` metres short (beside someone rather
+  // than on them). Resolves on arrival.
+  moveCast(id: string, to: string | [number, number], { speed = 1.1, stop = 0 } = {}) {
     const c = this.member(id)
-    const p = this.point(to)
+    let p = this.point(to)
+    if (stop > 0) {
+      const d = Math.hypot(p.x - c.x, p.z - c.z)
+      const k = Math.max(0, d - stop) / Math.max(d, 1e-6)
+      p = { x: c.x + (p.x - c.x) * k, z: c.z + (p.z - c.z) * k }
+    }
     this.moves.get(id)?.resolve()
     this.moves.delete(id)
     if (!this.motion) {
