@@ -168,6 +168,26 @@ Oskar and the cutpurse were generated with the prototype's standee prompts and k
 - Oskar's standee still shows his purse after it is stolen.
 - The cutpurse's spot and the east-side shots are fixed points tuned to this line's layout. Generated intros will need framing that solves for faces and occluders.
 
+## Revision 9 (2026-09-30): no tiny bubbles; hold wide, then move in
+
+Owner feedback: the bubbles were tiny in the wide opening. Pause, then zoom in to see the line and the bubbles.
+
+- **Bubbles show only when the speaker reads as a person on screen.**
+  - The stage now reports how many pixels a metre spans at a point (`ppm`).
+  - A bubble appears only when its speaker is at least about 70 px tall, and scales between 0.85 and 1.
+  - The old rule shrank bubbles with distance down to 60% (about 8 px text) and showed them out to 120 m.
+  - Wide shots stay quiet rather than showing unreadable text.
+- **The intro holds, then moves in.**
+  - The gate is held wide and silent for about 9 s, then the camera eases in to the line over 7 s and on to the party over 4.5 s.
+  - Shot beats take a `duration` for these slower moves.
+- **A stalled line is quiet.** A stalled loop now also holds an exchange that hasn't begun yet, restarting its timer when resumed. The first exchange had been starting under the title screen and playing over the wide gate shot.
+  - The counter stage waits for the camera to land, then resumes for one full exchange (question, answer, fee, coin) and one "Next!", using the `gate-line:next` cue, then stalls.
+  - After the pickpocket, the same thing happens at the counter before the party is called.
+- **Skipping respects the moment the beats wait for.** `skipLoops(cue)` calls the next group for `<id>:next` and only jumps to the party's turn for `called`/`front`. A skipped intro still leaves the party second in line.
+- **Checked:**
+  - Real time: no lines during the gate shot; chatter in the line at 13–14 px with speakers 230–530 px tall; the counter exchange spaced 53–62 s with Garlan about 650 px tall.
+  - The skip run and a full encounter run had no errors.
+
 ## Built (kept for the real page)
 
 | Piece | Path |

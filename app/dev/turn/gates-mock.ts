@@ -92,8 +92,9 @@ const onOskar: StagingShot = { subject: "oskar", distance: 2.8, angle: -24, heig
 // Where the cutpurse ends up: just north of Oskar, at his purse side, in view past his shoulder.
 const atOskarsPurse: [number, number] = [-0.7, 14.75]
 const toTheFront: Beat[] = [
+  { shot: atCounter },
+  { wait: 2.4 },
   { loop: "gate-line", do: "resume" },
-  { shot: "checkpoint" },
   { cue: "gate-line:called" },
   { cue: "gate-line:front" },
   { shot: "party" },
@@ -111,27 +112,29 @@ export const TURNS: MockTurn[] = [
       "However, before they can join the revelry, they find themselves in a long line of travelers, merchants, and villagers all waiting to be inspected by the city guard. A few guards move among the crowd, occasionally pulling aside individuals for further questioning.",
       "“Next!” shouts a burly Asterian guard with a stern face but kind eyes. Stepping forward, he inspects each person meticulously. “State your business in Kordavos,” he demands from each group. “There is a fee of three marks for entrance.”",
     ],
-    // Three stages. The gate, wide. The line, close enough to hear it: a neighbour ahead, the merchant behind the party,
-    // someone further back. Then Garlan at the counter: one "Next!" and one exchange, after which he takes his time
-    // with a carter and the line stops (the loop stalls), leaving the party second in line.
+    // Three stages. The gate, wide and quiet (the line waits, so nothing is said too far away to read), then a slow move
+    // in over the crowd. The line, close enough to hear it: a neighbour ahead, the merchant behind the party, someone
+    // further back. Then Garlan at the counter: one exchange and one "Next!", after which he takes his time with a
+    // carter and the line stops again, leaving the party second in line.
     beats: () => [
       { loop: "gate-line", do: "stall" },
       { narrate: 0 },
       { shot: "gate", cut: true },
-      { wait: 7 },
-      { shot: "queue" },
+      { wait: 9 },
+      { shot: "queue", duration: 7 },
       { narrate: 1 },
-      { shot: inLine },
+      { shot: inLine, duration: 4.5 },
       { wait: 1.5 },
       { line: "gate-line", fromParty: -1, text: "At this rate we'll see the Harvest fires from out here." },
       { line: "oskar", text: "Three marks a head, at Harvest! Highway robbery in a tabard." },
       { line: "gate-line", fromParty: 2, text: "They say he's searching every cart for tunnel-smugglers." },
       { narrate: 2 },
-      { shot: atCounter },
+      { shot: atCounter, duration: 3 },
+      { wait: 3 },
       { loop: "gate-line", do: "resume" },
-      { wait: 0.5 },
+      { cue: "gate-line:next" },
       { loop: "gate-line", do: "stall" },
-      { wait: 11 },
+      { wait: 3 },
     ],
     hold: {
       actor: "yeva",

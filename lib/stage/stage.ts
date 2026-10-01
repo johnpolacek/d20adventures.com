@@ -339,9 +339,13 @@ export class Stage {
     if (this.cues.has(name)) return Promise.resolve()
     return new Promise<void>((r) => this.cueWaiters.set(name, [...(this.cueWaiters.get(name) ?? []), r]))
   }
-  // Skipping: every loop jumps to the moment its beats are waiting for.
-  skipLoops() {
-    for (const l of this.loops.values()) l.skipToFront()
+  // Skipping: loops jump to the moment the beats are waiting for (the party's turn at the front unless a cue says which).
+  skipLoops(cue?: string) {
+    if (cue && this.cues.has(cue)) return
+    for (const l of this.loops.values()) {
+      if (cue) l.skipTo(cue)
+      else l.skipToFront()
+    }
   }
 
   // ── Camera ──
@@ -658,24 +662,24 @@ export class Stage {
   // Screen position (CSS px, relative to the canvas) of a cast member's head, for bubbles and plates.
   project(castId: string) {
     const head = this.standees.head(castId)
-    if (!head) return null
-    const d = head.distanceTo(this.camera.position)
-    head.project(this.camera)
-    const w = this.canvas.clientWidth
-    const h = this.canvas.clientHeight
-    return { x: (head.x * 0.5 + 0.5) * w, y: (-head.y * 0.5 + 0.5) * h, visible: head.z < 1 && Math.abs(head.x) < 1.05 && Math.abs(head.y) < 1.05, distance: d }
+    return head ? this.projectPoint(head) : null
   }
-  // Screen position (CSS px) of any world point.
+  // Screen position (CSS px) of any world point, and how many CSS px a metre spans there (how big things look).
   projectPoint(p: THREE.Vector3) {
     const v = p.clone()
     const d = v.distanceTo(this.camera.position)
+    const above = p.clone()
+    above.y += 1
     v.project(this.camera)
+    above.project(this.camera)
+    const h = this.canvas.clientHeight
     return {
       x: (v.x * 0.5 + 0.5) * this.canvas.clientWidth,
-      y: (-v.y * 0.5 + 0.5) * this.canvas.clientHeight,
+      y: (-v.y * 0.5 + 0.5) * h,
       visible: v.z < 1 && Math.abs(v.x) < 1.05 && Math.abs(v.y) < 1.05,
       behind: v.z > 1,
       distance: d,
+      ppm: Math.abs(above.y - v.y) * 0.5 * h,
     }
   }
   private ray = new THREE.Raycaster()

@@ -6,7 +6,8 @@ import type { Stage } from "./stage"
 // Beats: how a resolved turn plays out on the stage, in the set's vocabulary. Deterministic data (every player sees the same
 // sequence), validated like any other spec because it will be generated per turn by a model (Stageview phase 4).
 //
-//   { shot: "party" }                    camera move to a named or inline shot (does not block; follow with a wait)
+//   { shot: "party" }                    camera move to a named or inline shot (does not block; follow with a wait);
+//                                        `duration` in seconds for a slower move (2.2 by default), `cut` for none
 //   { move: "branka", to: "front1" }     walk to a mark or point (does not block unless wait: true)
 //   { face: "garlan", to: "branka" }     turn toward a cast member, mark, point, or a heading in degrees
 //   { line: "garlan", text: "Next!" }    a spoken line: bubble at the head and a portrait plate; blocks for its duration
@@ -20,7 +21,7 @@ import type { Stage } from "./stage"
 //                                        the line after the exchange at the counter, "resume" lets it move again
 const id = matName
 export const beatSchema = z.union([
-  z.object({ shot: z.union([id, stagingShot]), cut: z.boolean().optional() }).strict(),
+  z.object({ shot: z.union([id, stagingShot]), cut: z.boolean().optional(), duration: num(0.3, 20).optional() }).strict(),
   z.object({ move: id, to: z.union([id, vec2]), speed: num(0.3, 4).optional(), stop: num(0, 5).optional(), wait: z.boolean().optional() }).strict(),
   z.object({ face: id, to: z.union([id, vec2, deg]) }).strict(),
   z
@@ -243,7 +244,7 @@ export class BeatPlayer {
     const s = this.stage
     if ("shot" in b) {
       this.lastShot = b.shot
-      s.shot(b.shot, { instant: this.skipping || !!b.cut })
+      s.shot(b.shot, { instant: this.skipping || !!b.cut, duration: b.duration === undefined ? undefined : b.duration * 1000 })
     } else if ("move" in b) {
       const arrive = s.moveCast(b.move, b.to, { speed: b.speed, stop: b.stop })
       if (this.skipping) s.finishMoves()
@@ -273,10 +274,10 @@ export class BeatPlayer {
       this.narrationEnds = performance.now() + seconds * 1000
     } else if ("wait" in b) await this.sleep(b.wait)
     else if ("cue" in b) {
-      if (this.skipping) s.skipLoops()
+      if (this.skipping) s.skipLoops(b.cue)
       await this.orWake(s.waitCue(b.cue))
       if (this.skipping) {
-        s.skipLoops()
+        s.skipLoops(b.cue)
         await s.waitCue(b.cue)
       }
     } else if ("loop" in b) {

@@ -6,6 +6,14 @@ Git owns routine implementation history. This log records durable wiki, planning
 
 ## 2026-09-30
 
+### Turn page mock, revision 9: readable bubbles, a quiet wide opening
+
+- Bubbles appear only when the speaker is large enough on screen to read, and never shrink below a readable size.
+- The intro holds wide on the gate in silence, then eases in to the line, where the dialogue starts.
+- A stalled queue now holds an exchange that hasn't begun.
+- Skipping lands on the moment the beats wait for.
+- Details: [feature-stage-turn-mock](plans/feature-stage-turn-mock.md).
+
 ### Turn page mock, revision 8: staged intro and a contested first turn
 
 - **Intro:** the encounter now opens with three stages, each with its own framing and dialogue: the gate, the line with people talking, and Garlan at the counter. Per the owner, intros like this belong to the adventure plan: AI-drafted and author-edited (decision 10).

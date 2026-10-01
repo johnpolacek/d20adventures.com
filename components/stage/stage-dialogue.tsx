@@ -6,7 +6,11 @@
 import { useEffect, useRef } from "react"
 import { cn } from "@/lib/utils"
 
-export type Anchor = () => { x: number; y: number; visible: boolean; distance: number } | null
+export type Anchor = () => { x: number; y: number; visible: boolean; distance: number; ppm?: number } | null
+// A bubble shows only while its speaker reads as a person on screen (a wide shot hides it rather than shrinking it to
+// unreadable), and scales a little with them, never below a readable size.
+const SPEAKER_MIN_PX = 70
+const bubbleScale = (speakerPx: number) => Math.min(1, 0.85 + (speakerPx - SPEAKER_MIN_PX) / 400)
 export interface Bubble {
   key: number
   anchor: Anchor
@@ -23,9 +27,10 @@ function BubbleView({ bubble, compact }: { bubble: Bubble; compact: boolean }) {
       const p = bubble.anchor()
       const el = ref.current
       if (!p || !el) return
-      const on = p.visible && p.distance < 120
+      const speakerPx = (p.ppm ?? 1600 / p.distance) * 1.7
+      const on = p.visible && speakerPx >= SPEAKER_MIN_PX
       el.style.opacity = on ? "1" : "0"
-      if (on) el.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) translate(-50%, calc(-100% - 8px)) scale(${Math.min(1, Math.max(0.6, 16 / p.distance)).toFixed(3)})`
+      if (on) el.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) translate(-50%, calc(-100% - 8px)) scale(${bubbleScale(speakerPx).toFixed(3)})`
     }
     follow()
     return () => cancelAnimationFrame(raf)

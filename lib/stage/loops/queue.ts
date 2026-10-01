@@ -15,7 +15,8 @@ import type { Rand } from "../kit/rng"
 // Named characters can stand in the line too (the party, and others the staging places): they pass into the city
 // instead of being recycled. While they stand still they are the encounter's to move; when the line moves on, anyone
 // who has stepped out walks back to their place first.
-// A stalled loop finishes the exchange at the counter and then waits (the official busy with a cart) until resumed.
+// A stalled loop finishes an exchange already under way at the counter (one not yet begun waits), then calls no one
+// and questions no one (the official busy with a cart) until resumed.
 // Cues: `<id>:next` on every call, `<id>:called` when the party is called up, `<id>:front` once it stands at the front.
 
 export interface QueueLoopSpec {
@@ -251,6 +252,11 @@ export class QueueLoop {
   release() {
     if (this.state === "held") this.next(true)
   }
+  // Skip ahead to a moment beats are waiting for: the next call (`<id>:next`), or the party's turn at the front.
+  skipTo(cue: string) {
+    if (cue === `${this.id}:next`) this.next(true)
+    else if (cue.startsWith(`${this.id}:`)) this.skipToFront()
+  }
   // Skip ahead to the party's turn at the front (a player skipping the intro).
   skipToFront() {
     if (!this.groups.some((g) => g.party)) return
@@ -291,8 +297,10 @@ export class QueueLoop {
     if (this.paused) return
     const front = this.groups[0]
     this.t += dt
-    if (this.state === "arrive" && front && front.members.every((e) => Math.abs(e.d - e.target) < 0.03)) this.arrived()
-    if (this.state === "question" && front) {
+    if (this.state === "arrive" && front && !(this.stalled && !front.party) && front.members.every((e) => Math.abs(e.d - e.target) < 0.03)) this.arrived()
+    // An exchange not yet begun waits out a stall from its start.
+    if (this.state === "question" && this.stalled && this.step === 0) this.t = 0
+    else if (this.state === "question" && front) {
       const cue = (i: number, at: number, fn: () => void) => {
         if (this.step === i && this.t > at) {
           fn()
