@@ -4,6 +4,22 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-01, stage-first turn page demo merged
+
+The scripted gate-scene mock (`feature/stage-turn-mock`, 2026-09-29 to 10-01) is merged and public at `/demo/kordavos` for feedback. It makes no model calls and is noindexed. Owner decisions made along the way are recorded in [Stageview](plans/stageview.md#product-decisions):
+- Mapview is for larger maps.
+- Turns work like Baldur's Gate 3, with movement as game state, coming from the written action.
+- The narration stays as text, stepping through by default.
+- Intros are staged and belong to the adventure plan.
+- Rolls can interrupt a resolution, as contests.
+- The scene is played as written: the party meets in line, then faces the sergeant.
+
+Evidence:
+- The narrative-to-movement eval scored 8/8 on the gate scene with `gemini-3.5-flash-lite`.
+- Full step-throughs of both pickpocket outcomes ran with no console errors.
+
+Details: [Stage-first turn mock](plans/feature-stage-turn-mock.md).
+
 ## 2026-10-01, desktop local play direction
 
 Owner proposed a Tauri desktop app. Solo play is free and runs the GM through the player's own installed AI CLI and subscription. Multiplayer keeps the server GM and becomes the paid online tier. The audience is AI-savvy tabletop players, and requiring a CLI is acceptable. Distribution is a notarized direct download. Local content is authored adventures with pre-baked art.

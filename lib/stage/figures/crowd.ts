@@ -18,6 +18,8 @@ export interface WalkerSeed {
 }
 export interface PersonSeed {
   kind: PawnKind
+  // The crowd group this person came from, when the group has an id (a loop takes its people from there).
+  group?: string
   x: number
   y?: number
   z: number
@@ -54,7 +56,7 @@ interface Walker {
   d: number
   lat: number
 }
-interface Person extends CardPerson {
+export interface CrowdPerson extends CardPerson {
   kind: PawnKind
   i: number
   card: boolean
@@ -68,6 +70,8 @@ interface KindSlots {
   active: number
   dirty: boolean
 }
+
+type Person = CrowdPerson
 
 export interface CrowdOptions {
   seeds: PersonSeed[]
@@ -87,6 +91,7 @@ export class Crowd {
   group = new THREE.Group()
   people: Person[] = []
   walkers: Person[] = []
+  groups = new Map<string, Person[]>()
   kinds = new Map<PawnKind, KindSlots>()
   cards: CardLayer | null
   mode: CrowdMode
@@ -133,6 +138,11 @@ export class Crowd {
         } else p.walk = 0
       }
       this.people.push(p)
+      if (seed.group) {
+        const g = this.groups.get(seed.group) ?? []
+        g.push(p)
+        this.groups.set(seed.group, g)
+      }
       const list = byKind.get(p.kind) ?? []
       list.push(p)
       byKind.set(p.kind, list)

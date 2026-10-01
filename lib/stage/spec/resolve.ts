@@ -34,29 +34,49 @@ export function resolveCast(set: SetSpec, staging: StagingSpec | null): CastMemb
   })
 }
 
-// Set shots, then staging shots on top; group and subject shots are framed on the cast's current positions.
+// A staging shot framed on the cast's current positions: group shots on the centroid of their subjects, subject shots
+// at a distance and angle off one character's facing.
+export function frameShot(s: StagingShot, cast: CastMember[]): ResolvedShot {
+  if ("position" in s) return s
+  const byId = new Map(cast.map((c) => [c.id, c]))
+  const need = (id: string) => {
+    const c = byId.get(id)
+    if (!c) throw new Error(`shot frames unknown cast member "${id}"`)
+    return c
+  }
+  if ("subjects" in s) {
+    let x = 0
+    let z = 0
+    for (const id of s.subjects) {
+      const c = need(id)
+      x += c.x
+      z += c.z
+    }
+    x /= s.subjects.length
+    z /= s.subjects.length
+    if (s.relative === "facing") {
+      let fx = 0
+      let fz = 0
+      for (const id of s.subjects) {
+        const c = need(id)
+        fx += Math.sin(c.ry)
+        fz += Math.cos(c.ry)
+      }
+      const a = Math.atan2(fx, fz)
+      const rot = (v: [number, number, number]): [number, number, number] => [x + v[0] * Math.cos(a) + v[2] * Math.sin(a), v[1], z - v[0] * Math.sin(a) + v[2] * Math.cos(a)]
+      return { position: rot(s.offset), target: rot(s.target), fov: s.fov, label: s.label }
+    }
+    return { position: [x + s.offset[0], s.offset[1], z + s.offset[2]], target: [x + s.target[0], s.target[1], z + s.target[2]], fov: s.fov, label: s.label }
+  }
+  const c = need(s.subject)
+  const a = c.ry + s.angle * DEG
+  return { position: [c.x + Math.sin(a) * s.distance, s.height, c.z + Math.cos(a) * s.distance], target: [c.x, s.lookHeight, c.z], fov: s.fov, label: s.label }
+}
+
+// Set shots, then staging shots on top, framed on where the cast stands now.
 export function resolveShots(set: SetSpec, staging: StagingSpec | null, cast: CastMember[]): Record<string, ResolvedShot> {
   const out: Record<string, ResolvedShot> = {}
   for (const [k, s] of Object.entries(set.shots)) out[k] = { position: s.position, target: s.target, fov: s.fov, label: s.label }
-  const byId = new Map(cast.map((c) => [c.id, c]))
-  const frame = (s: StagingShot): ResolvedShot => {
-    if ("position" in s) return s
-    if ("subjects" in s) {
-      let x = 0
-      let z = 0
-      for (const id of s.subjects) {
-        const c = byId.get(id)!
-        x += c.x
-        z += c.z
-      }
-      x /= s.subjects.length
-      z /= s.subjects.length
-      return { position: [x + s.offset[0], s.offset[1], z + s.offset[2]], target: [x + s.target[0], s.target[1], z + s.target[2]], fov: s.fov, label: s.label }
-    }
-    const c = byId.get(s.subject)!
-    const a = c.ry + s.angle * DEG
-    return { position: [c.x + Math.sin(a) * s.distance, s.height, c.z + Math.cos(a) * s.distance], target: [c.x, s.lookHeight, c.z], fov: s.fov, label: s.label }
-  }
-  for (const [k, s] of Object.entries(staging?.shots ?? {})) out[k] = frame(s)
+  for (const [k, s] of Object.entries(staging?.shots ?? {})) out[k] = frameShot(s, cast)
   return out
 }

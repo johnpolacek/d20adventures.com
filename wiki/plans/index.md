@@ -9,6 +9,7 @@ Reviewed against local main on 2026-10-01. Implementation status does not imply 
 | Plan | Status | Next work |
 |---|---|---|
 | [Stageview](stageview.md) | Old 3D stack removed. Engine and first set merged on 2026-09-29. Gameplay integration is not built. | Staging scripts and festival set, then the stage-first turn page and encounter coverage. |
+| [Stage-first turn mock](feature-stage-turn-mock.md) | Scripted gate-scene demo merged 2026-10-01; public at `/demo/kordavos` for feedback. | Owner and playtester feedback, then the real turn page (Stageview phase 4). |
 | [Desktop local play](desktop-local-play.md) | Proposed 2026-10-01. Tauri app, free solo play through the player's own AI CLI, paid online multiplayer. No code yet. | Phase 0 spike: CLI latency, JSON validity, and GM quality. Then extract `gm-core`. |
 | [Maintenance follow-ups](maintenance.md) | Open findings and unverified follow-ups carried forward from completed work. | Test harness, authoring edge cases, narration validation, and environment cleanup. |
 

@@ -2,9 +2,9 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Stage engine](../stage-engine.md) · [Roadmap](../roadmap.md)
 
-Status: Active. Reviewed 2026-10-01 against local main.
+Status: Active. Reviewed 2026-10-01 against local main; turn-page demo merged 2026-10-01.
 
-The old 3D stack and engine port are complete. Stageview currently runs at `/dev/stage`. The player turn page still uses text, Storyview narration, and optional 2D maps.
+The old 3D stack and engine port are complete. Stageview currently runs at `/dev/stage`, and a scripted stage-first turn page for the gate scene runs at `/dev/turn` and publicly at `/demo/kordavos`. The player turn page still uses text, Storyview narration, and optional 2D maps.
 
 ## Product decisions
 
@@ -18,6 +18,16 @@ Owner decisions recorded on 2026-09-29:
 - Use illustrated front/back standees for named characters, portrait plates for dialogue, and instanced illustrated crowds with coarse procedural figures at distance or steep viewing angles.
 - No old mini purchases or assets require migration. At removal, the owner confirmed there were only test accounts.
 
+Owner decisions from the turn-page mock, 2026-09-29 to 2026-10-01 (details in [Stage-first turn mock](feature-stage-turn-mock.md)):
+
+- **Mapview** is for larger maps (a city, wilderness travel, exploring ruins), not a map per encounter.
+- **Turns work like Baldur's Gate 3, with movement, and positions become game state.** This supersedes "positions remain visual only".
+  - Movement comes from the player's written action. A model maps it to a labelled place, a character or a relative step, plus a pace, and the engine clamps it to the character's speed and walkable ground.
+  - Click-to-move was tried and removed.
+- **The narration stays as text and steps through by default.** Each paragraph and spoken line waits for Continue, and timed Auto playback is a setting. Voiced Storyview narration may come later as an option on top of the text.
+- **An encounter opens with a staged intro that belongs to the adventure plan.** Each stage has a framed shot and its dialogue; the intro is AI-drafted when the plan is staged and edited by the author.
+- **Rolls can interrupt a GM resolution.** In a contest, the GM's roll is shown on the card first. The roll card's die is a shaded 3D d20.
+
 ## Implemented
 
 | Work | Evidence |
@@ -28,12 +38,13 @@ Owner decisions recorded on 2026-09-29:
 | Kordavos south gate and development cast | `lib/stage/sets/realm-of-myr/kordavos-south-gate.json` and `lib/stage/stagings/march-of-davos/the-gates-of-kordavos.json`. |
 | Myr crowd library | 16 front/back variants under `public/stage/crowd/realm-of-myr/`. |
 | Development preview and verification | `/dev/stage`, `pnpm stage:check`, `pnpm stage:verify`. |
+| Stage-first turn page, scripted demo of the gate scene | Merged 2026-10-01. `/dev/turn`, public `/demo/kordavos` (no model calls, noindex), `/dev/dice`. Queue loop, beats with step-through, contest rolls, narrative-to-movement eval (`pnpm stage:eval-movement`). See [Stage-first turn mock](feature-stage-turn-mock.md). |
 
 ## Remaining phases
 
 ### Phase 3, staging and the next set
 
-- Generalize the prototype queue director into set loops and staging scripts. The current gate queue is static.
+- Generalize set loops and staging scripts. The gate's queue loop (stall/resume, named characters in line, cues) runs in the turn-page demo; other loop types and authored scripts remain.
 - Build the Harvest Festival street as its own set.
 - Add time-of-day and weather controls.
 - Keep set, staging, and character identities stable so later beats can reference them.
@@ -45,11 +56,11 @@ Owner decisions recorded on 2026-09-29:
 - Settle the dock layout. Current proposal is a side panel in landscape and a bottom sheet on portrait tablets.
 - Add a server-side character-art pipeline from portrait to world-style front/back standees. Restore server-side chroma keying, store art in S3, and decide token pricing. Premades can be prepared ahead of time.
 - Generate validated per-turn beats from resolved narrative. Proposed vocabulary is shots, movement to marks/paths, gestures, quoted dialogue, and effects.
-- Persist deterministic beats and starting/end poses so replay and multiplayer stay consistent. Positions remain visual only.
+- Persist deterministic beats and starting/end poses so replay and multiplayer stay consistent. Positions are game state (decision above).
 - Bind waiting-for-input holds, portrait plates, head-anchored dialogue, and character cards.
 - Synchronize beats and shots with [Storyview](../storyview.md) paragraphs.
 - Add the phone portrait gate, WebGL/performance fallback, and reduced-motion behavior.
-- Decide Mapview's role, either a toggleable inset or retirement. Do not expand maps speculatively before that decision.
+- Mapview becomes the larger-scale map (decision above); plan that separately.
 
 ### Phase 5, encounter coverage
 

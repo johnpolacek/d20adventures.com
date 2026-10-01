@@ -111,6 +111,7 @@ const crowdGroup = z.discriminatedUnion("type", [
   z
     .object({
       type: z.literal("path"),
+      id: name.optional(),
       path: pathRef,
       count: z.number().int().min(1).max(1000),
       start: num(0, 2000).default(0),
@@ -136,6 +137,30 @@ const crowdGroup = z.discriminatedUnion("type", [
   z.object({ type: z.literal("anchors"), tag: z.string().max(40), mix, jitter: num(0, 5).default(0.5), yaw: z.tuple([deg, deg]).default([-35, 35]) }).strict(),
 ])
 export type CrowdGroup = z.infer<typeof crowdGroup>
+
+// Ambient loops the set can run. A queue: an official works a line (a `path` crowd group with an id) at a station;
+// those who pass follow `pass` to a point in `passEnd` (cast members to `castEnd`), and are recycled: they reappear in a
+// `spawn` rectangle, walk by the nearest `via` point and park near `park` until there is room at the tail.
+const rect4 = z.tuple([coord, coord, coord, coord])
+export const queueLoopSpec = z
+  .object({
+    type: z.literal("queue"),
+    id: name,
+    crowd: name,
+    path: name,
+    station: name,
+    counter: vec3,
+    pass: z.array(vec2).min(1).max(16),
+    passEnd: rect4,
+    castEnd: vec2,
+    recycle: z.object({ spawn: z.array(rect4).min(1).max(8), via: z.array(vec2).min(1).max(8), park: vec2, parkJitter: z.tuple([num(0, 20), num(0, 20)]).default([0.6, 1.7]) }).strict(),
+    spacing: z
+      .object({ within: num(0.3, 5).default(0.75), between: num(0.3, 10).default(1.25), pair: num(0.3, 5).default(0.85) })
+      .strict()
+      .default({ within: 0.75, between: 1.25, pair: 0.85 }),
+  })
+  .strict()
+export type QueueLoopSpecInput = z.infer<typeof queueLoopSpec>
 
 const shot = z
   .object({
@@ -210,7 +235,10 @@ export const setSpecSchema = z
       })
       .strict()
       .optional(),
-    marks: z.record(name, z.object({ at: vec2, yaw: deg.optional() }).strict()).default({}),
+    // Named spots. A `label` makes a mark a place players can refer to ("the gap in the barrier"): the movement model
+    // may only send characters to labelled marks, other cast members, or relative steps.
+    marks: z.record(name, z.object({ at: vec2, yaw: deg.optional(), label: z.string().max(80).optional() }).strict()).default({}),
+    loops: z.array(queueLoopSpec).max(8).default([]),
     paths: z.record(name, z.array(vec2).min(2).max(256)).default({}),
     shots: z.record(name, shot),
     life: z

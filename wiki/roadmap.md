@@ -11,11 +11,11 @@ Stageview is the owner's chosen primary play screen, decided 2026-09-29. The eng
 Next work:
 
 1. Add staging scripts, set loops, and the Harvest Festival set.
-2. Build the stage-first turn page with docked narrative/input, character art, beats, and Storyview synchronization.
+2. Build the stage-first turn page with docked narrative/input, character art, beats, and Storyview synchronization. A scripted demo of the gate scene is merged and public at `/demo/kordavos` (2026-10-01): a staged intro, two rounds, step-through narration, and contest rolls with a 3D d20. See [Stage-first turn mock](plans/feature-stage-turn-mock.md).
 3. Cover encounters with authored or generic sets and default staging.
 4. Verify phone landscape handling, accessibility, reduced motion, and text fallback on devices that cannot run the stage.
 
-Details and open decisions: [Stageview](plans/stageview.md). Mapview's role is unresolved. It may become an inset or be retired.
+Details and open decisions: [Stageview](plans/stageview.md). Mapview becomes the larger-scale map (a city, wilderness travel, ruins), not a per-encounter backdrop (owner, 2026-09-29).
 
 ## Next, desktop local play
 

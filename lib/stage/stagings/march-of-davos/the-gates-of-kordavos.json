@@ -48,7 +48,11 @@
       "name": "Yeva Softstep",
       "role": "Halfling rogue",
       "height": 1.08,
-      "art": { "front": "/stage/fixtures/march-of-davos/yeva-front.webp", "back": "/stage/fixtures/march-of-davos/yeva-back.webp", "portrait": "/stage/fixtures/march-of-davos/yeva-portrait.jpg" },
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/yeva-front.webp",
+        "back": "/stage/fixtures/march-of-davos/yeva-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/yeva-portrait.jpg"
+      },
       "at": "front3",
       "facing": "garlan"
     },
@@ -57,15 +61,85 @@
       "name": "Milos Radan",
       "role": "Human cleric",
       "height": 1.8,
-      "art": { "front": "/stage/fixtures/march-of-davos/milos-front.webp", "back": "/stage/fixtures/march-of-davos/milos-back.webp", "portrait": "/stage/fixtures/march-of-davos/milos-portrait.jpg" },
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/milos-front.webp",
+        "back": "/stage/fixtures/march-of-davos/milos-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/milos-portrait.jpg"
+      },
       "at": "front4",
       "facing": "garlan"
+    },
+    {
+      "id": "oskar",
+      "name": "Oskar Venn",
+      "role": "Spice-trader of the Saffron Road",
+      "height": 1.7,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/oskar-front.webp",
+        "back": "/stage/fixtures/march-of-davos/oskar-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/oskar-portrait.jpg"
+      },
+      "at": "lineBack",
+      "facing": 0
     }
   ],
   "shots": {
-    "party": { "position": [4.6, 2.35, 9.9], "target": [0.8, 0.95, 13.3], "fov": 46, "label": "Next in Line" },
-    "twoshot": { "subjects": ["garlan", "branka", "cassia"], "offset": [-0.1, 1.9, -6.03], "target": [0.2, 0.95, -0.03], "fov": 40, "label": "The Two-shot" },
-    "close": { "subject": "garlan", "distance": 2.5, "angle": 51.6, "height": 1.5, "lookHeight": 1.35, "fov": 46, "label": "Up Close" }
+    "party": {
+      "subjects": ["branka", "cassia", "yeva", "milos"],
+      "offset": [-2.2, 3.2, 3.4],
+      "target": [0, 1.2, 0],
+      "relative": "facing",
+      "fov": 46,
+      "label": "Party"
+    },
+    "twoshot": {
+      "subjects": ["garlan", "branka", "cassia"],
+      "offset": [-0.1, 1.9, -6.03],
+      "target": [0.2, 0.95, -0.03],
+      "fov": 40,
+      "label": "Two-shot"
+    },
+    "close": {
+      "subject": "garlan",
+      "distance": 2.5,
+      "angle": 51.6,
+      "height": 1.5,
+      "lookHeight": 1.35,
+      "fov": 46,
+      "label": "Close"
+    }
   },
-  "shot": "gate"
+  "shot": "gate",
+  "loops": {
+    "gate-line": {
+      "official": "garlan",
+      "party": {
+        "members": ["branka", "cassia", "yeva", "milos"],
+        "position": 2,
+        "lateral": [-0.62, 0.58, -0.02, 1.2],
+        "pair": 2
+      },
+      "lines": {
+        "next": ["Next!"],
+        "question": ["State your business in Kordavos."],
+        "replies": [
+          "Grain for the festival, sergeant.",
+          "Visiting my sister in the Lower District.",
+          "Wool, from the high pastures.",
+          "Pilgrims, bound for the Church of Valkara.",
+          "Selling pots at the Harvest market.",
+          "Just passing through, on my honour.",
+          "Hired as a lute player for the Dragonbone.",
+          "Coming home, sergeant. Same as every year."
+        ],
+        "fees": ["Three marks, then.", "There is a fee of three marks for entrance.", "Three marks. Keep your blades sheathed in the city."]
+      },
+      "cast": [
+        {
+          "members": ["oskar"],
+          "position": 3
+        }
+      ]
+    }
+  }
 }
