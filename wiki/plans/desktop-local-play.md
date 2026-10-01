@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Stageview](stageview.md) · [Architecture](../Architecture.md) · [Roadmap](../roadmap.md)
 
-Status: Proposed 2026-10-01. No code yet.
+Status: Phase 0 findings recorded 2026-10-01 in `spike/desktop-local-play`. No-go for four-provider GM support under the current isolation rules. A Claude-first follow-up is recommended. Product phases remain proposed.
 
 A Tauri desktop app becomes the only game client. Solo play is free. The AI Game Master runs through an AI CLI the player already has installed and signed in to with their own subscription. Online multiplayer keeps the GM on the server and is paid by a subscription that grants tokens. The web app's play experience is deprecated once the desktop app ships. Stageview is rebuilding the turn page now, so the stage-first turn page should be built for the desktop app instead of the web app.
 
@@ -87,7 +87,7 @@ Long-running text modes, checked against installed CLIs on 2026-10-01:
 | Claude Code | `claude -p --input-format stream-json --output-format stream-json` |
 | Codex | `codex app-server`, JSON-RPC over stdio, marked experimental |
 | Gemini CLI | `gemini --acp`, Agent Client Protocol |
-| Grok | Not checked. FilmBrain notes it emits Claude Code's `stream-json` shape. |
+| Grok | `grok agent stdio`, Agent Client Protocol. Detected, GM run blocked by the isolation gate below. |
 
 Rules:
 
@@ -102,14 +102,80 @@ Rules:
 
 ### Phase 0, spike
 
-No product changes.
+Findings recorded 2026-10-01. No web app, root dependency, shared schema, production data, or billing changes. The throwaway app is [apps/desktop-spike](../../apps/desktop-spike/README.md), built in `spike/desktop-local-play` with `pnpm wt:create`. Its isolated Convex project is `d20adventures-spike-desktop-local-play`, deployment `gallant-squirrel-646`. Nothing was seeded. Setup, long builds, and live model trials were approved. Nothing was pushed.
 
-- Tauri test app launches each CLI in long-running mode and runs a real turn from `advance-turn-prompt-service`.
-- Measure calls per turn, latency per call, and JSON validity against current zod schemas.
-- Compare GM quality per CLI against `gemini-3.5-flash-lite`.
-- Generate one character portrait and one front/back standee through Codex and Grok. Check chroma keying locally.
-- Confirm Clerk sign-in and the Convex React client work inside a Tauri webview.
-- Go or no-go decision recorded in [the log](../log.md).
+**Recommendation: no-go for the planned four-provider GM promise today. Conditional go for a Claude-first prototype if the owner accepts narrower initial support.** Persistent Claude inference, native CLI image generation, local background removal, Clerk ticket sign-in, and Convex React connectivity worked. Codex, Gemini CLI, and Grok GM inference was not run because credential-preserving user-configuration isolation could not be established. This is a support gate in the tested versions, not proof that a future adapter is impossible. The original four-provider execution requirement remains unmet. Do not start the product migration on an assumption that all four work.
+
+#### GM measurement
+
+The fixture uses the actual `buildEncounterProgressionPrompt` and `buildTransitionsText` from `lib/services/advance-turn-prompt-service.ts`, authored Kordavos gate content, and Mira's completed three-mark fee payment. It validates against the exact `encounterProgressionSchema` declaration in `app/_actions/advance-turn.ts`. A second request uses the real roll-requirement service prompt and schema to test a schema change within the same process. Full prompts and source hashes are in [fixture.json](../../apps/desktop-spike/results/fixture.json). This is one legacy encounter-progression step followed by a separate warm schema probe. It does not measure the full reply, dice, NPC, AI-party, or current wiki-runtime pipeline.
+
+| Provider and tested version | Persistent GM outcome | Requests for progression | Progression wall time | Warm roll-schema wall time | Bare JSON and existing zod schemas |
+|---|---|---|---|---|---|
+| Claude Code 2.1.287, reported model `claude-opus-5-5` | Passed, one process for both requests | 1, no retry | 4.180 s | 1.451 s, 1 request | Both valid on first answer |
+| Codex 0.156.1, app-server | Blocked before GM launch | 0 | Not measured | Not measured | Not measured |
+| Gemini CLI 0.60.0, ACP | Blocked before GM launch | 0 | Not measured | Not measured | Not measured |
+| Grok 1.0.41, ACP | Blocked before GM launch | 0 | Not measured | Not measured | Not measured |
+| Google API baseline, `gemini-3.5-flash-lite` | Independent API requests | 1, no retry | 2.283 s | 0.615 s, 1 request | Both valid on first answer |
+
+Claude initialization took 0.781 s, included in its first call. Its startup event reported empty tools, skills, plugins, and MCP server arrays. Both requests reported one provider turn. Application inference requests and provider-reported turns are observable. Provider HTTP request counts are not. The CLI API duration field is cumulative session time, so per-call comparisons use measured wall time. The API baseline receives the same system prompt, fixture, and JSON schema, but no previous-request context. Evidence: [gm.json](../../apps/desktop-spike/results/gm.json) and [detect.json](../../apps/desktop-spike/results/detect.json).
+
+Qualitative review of this one sample:
+
+| Criterion | Claude | Gemini API baseline |
+|---|---|---|
+| Correct transition | `the-harvest-festival` | Same |
+| Player agency | No forced player decision or speech | Same |
+| Immediate consequence | Garlan accepts the fee and opens passage | Same |
+| Authored facts | Preserves Garlan, the fee, and festival. Adds festival atmosphere. | Preserves the core facts, but invents a stamped entry pass. |
+| Requested prose | Two short paragraphs, vivid scene detail | Two short paragraphs, brief and direct |
+| Routine payment roll | `none`, difficulty 0 | Same |
+
+Claude was more vivid and slightly better grounded in this sample. The baseline was faster. This is subjective feasibility evidence, not a model ranking or a reliability benchmark. No quality conclusion is available for the three blocked CLIs.
+
+#### Isolation findings
+
+The spike ports FilmBrain's known-path locator, minimal process environment, bounded execution, invocation flags, and image collection. FilmBrain's existing text adapters are one-shot. Persistent protocol support required a separate check. The harness never reads, copies, or stores CLI credentials. The installed binaries handle their own sign-in. A fresh prompt-only working directory and a small environment allowlist exclude the parent agent's API keys and configuration variables.
+
+- Claude safe mode alone still reported three built-in plugins. The first attempt was rejected. Explicit `enabledPlugins` false overrides, alongside empty setting sources, tools, and strict MCP configuration, produced empty capability arrays. Missing or nonempty capability evidence and tool-use events fail closed.
+- Codex `exec` supports `--ignore-user-config` and `--ignore-rules`. The installed `app-server` does not expose them and rejects `--ignore-user-config`. Ordinary configuration overrides do not establish that user settings, hooks, or MCP were never loaded. See [app-server documentation](https://learn.chatgpt.com/docs/app-server).
+- Gemini's installed settings loader loads user settings. `GEMINI_CLI_HOME` relocates both settings and OAuth storage. No supported mode was found that preserves sign-in while ignoring user settings. Its help parser exits successfully with an unknown option when `--help` is also present, which is not evidence of option support. See [configuration](https://geminicli.com/docs/reference/configuration/) and [ACP](https://geminicli.com/docs/cli/acp-mode/).
+- Grok exposes ACP through `agent stdio`, but rejects the ignore-config option. `GROK_HOME` covers configuration and authentication together. See [headless scripting](https://docs.x.ai/build/cli/headless-scripting) and [settings](https://docs.x.ai/build/settings/reference).
+
+Version/help probes and argument-parser probes are detection only, not long-running GM trials. [isolation-probes.json](../../apps/desktop-spike/results/isolation-probes.json) records their scope. Three providers therefore have no inference, latency, schema, or quality result. Do not work around this by copying authentication into a clean CLI home.
+
+The GUI PATH also contained terminal-injected wrappers. The locator now prefers known installed binaries. Final measurements use those direct paths. Earlier wrapper measurements are excluded from the canonical results.
+
+#### Images and local removal
+
+The native app launched separate Codex `exec` and Grok image jobs. These permit image generation only and are not GM sessions. Each requested one portrait or one paired front/back sheet. Codex used its default image-capable model, which was not reported in the saved result. Grok requested `grok-4.7`. Each process completed once without a retry. The native originals were then reprocessed locally without new model calls.
+
+| Provider | Artifact | Provider process time | Local background removal | Removal time | Fully transparent pixels |
+|---|---|---|---|---|---|
+| Codex 0.156.1 | Portrait, 1254 × 1254 | 44.022 s | Green key and despill | 0.211 s | 51.5% |
+| Codex 0.156.1 | Front/back sheet, 1536 × 1024 | 48.073 s | macOS Vision | 1.946 s | 69.5% |
+| Grok 1.0.41 | Portrait, 1024 × 1024 | 12.799 s | Green key and despill | 0.129 s | 66.0% |
+| Grok 1.0.41 | Front/back sheet, 1280 × 720 | 13.863 s | Green key and despill | 0.102 s | 73.6% |
+
+The Codex standee ignored the green-background prompt. Chroma key removed zero pixels, so the spike now detects that failure and falls back to [Apple Vision foreground masking](https://developer.apple.com/documentation/vision/vninstancemaskobservation). Both figures survived local segmentation. The fallback requires macOS 14 or newer and a Swift toolchain in this spike. It is not a Windows or Linux solution.
+
+Visual review found usable silhouettes and readable front/back views. There is some green fringing around hair. Portrait and standee details drift because they were separate text-only requests. Grok's poses are slightly angled. Art matching, print alignment, and production quality are not proven. [Review sheet](../../apps/desktop-spike/results/images/review-sheet.png), Codex above Grok, portraits left and sheets right. [Image evidence and hashes](../../apps/desktop-spike/results/image-run.json) link the originals, transparent PNGs, and split front/back files.
+
+#### Native webview
+
+The debug `.app` ran at `tauri://localhost`. Clerk React loaded and signed in the existing configured development test account through a 60-second single-use ticket and the real `useSignIn` hook. A debug-only native helper used the project's existing Clerk test configuration. It created no user or password. Ticket values passed only through memory. Evidence contains no tokens, cookies, passwords, or user IDs.
+
+The Convex React client connected by WebSocket and resolved `adventure:getAllAdventures` with zero adventures from the isolated empty project. [Bundled webview evidence](../../apps/desktop-spike/results/webview-bundled.json) records signed-in and connected booleans. [Development-origin evidence](../../apps/desktop-spike/results/webview-dev.json) records Clerk loading and Convex connectivity, with sign-in still false at that earlier stage.
+
+This proves ticket sign-in and client connectivity in a native webview. Interactive OAuth, external-browser redirects, deep links, release signing, and production Clerk domains remain untested. The existing app has plain `ConvexProvider` and no Clerk JWT backend configuration. This check does not prove authenticated Convex authorization. The spike is tied to its build checkout and installed Node runtime, not a distributable desktop product.
+
+#### Validation and next gate
+
+Passed: three focused environment, stream-lockdown, and chroma-key tests, scoped Biome checks, root TypeScript checking, Vite production build, Rust formatting and Clippy with warnings denied, debug Tauri app build, native UI trials, and local foreground segmentation. The source and dependencies are confined to `apps/desktop-spike/`. Root app source and dependencies are unchanged.
+
+Before phase 1, the owner must choose narrower initial CLI support or require resolution of all three isolation gates. A follow-up should run complete turn orchestration across combat, dice, NPC and AI-party fixtures, exercise restart/cancellation and usage limits, and test production authentication flows. The current results do not justify deprecating web play or promising four interchangeable local GM providers.
+
+See [decision log](../log.md) and [worktree lifecycle](spike-desktop-local-play.md). This is an evidence-backed recommendation, not an owner-approved change to the product scope.
 
 ### Phase 1, extract gm-core
 

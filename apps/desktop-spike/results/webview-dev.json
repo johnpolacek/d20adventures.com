@@ -1,0 +1,12 @@
+{
+  "adventureCount": 0,
+  "authMethod": "interactive-or-existing-session",
+  "backendAuth": "Existing unauthenticated ConvexProvider, no JWT integration",
+  "clerkLoaded": true,
+  "convexConnected": true,
+  "nativeTauri": true,
+  "origin": "http://127.0.0.1:1420",
+  "queryResolved": true,
+  "signedIn": false,
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko)"
+}

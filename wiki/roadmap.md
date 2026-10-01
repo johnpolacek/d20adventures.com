@@ -21,7 +21,7 @@ Details and open decisions: [Stageview](plans/stageview.md). Mapview becomes the
 
 Proposed 2026-10-01. A Tauri desktop app becomes the only game client and web play is deprecated. Solo play is free and the GM runs through the player's own signed-in AI CLI. Multiplayer keeps the server GM, paid by a subscription that grants tokens. The stage-first turn page is built in the desktop app.
 
-First step is a spike measuring CLI latency, JSON validity, GM quality, CLI image generation, and Clerk and Convex inside Tauri. Details: [Desktop local play](plans/desktop-local-play.md).
+Phase 0 findings are recorded. Claude passed an authored progression step and a warm schema probe in one process. Codex and Grok generated art with local background removal. Clerk ticket sign-in and Convex connectivity worked in Tauri. The three other persistent GM modes remain blocked by user-settings isolation, and a complete turn pipeline is unmeasured. Recommendation is no-go for four-provider support today, conditional go for a Claude-first follow-up. The owner has not accepted that scope change. Resolve this gate before extracting `gm-core` or migrating web play. Details: [Desktop local play](plans/desktop-local-play.md#phase-0-spike).
 
 ## Maintenance
 
