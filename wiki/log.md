@@ -2,563 +2,87 @@
 
 [Home](index.md) · [Sources](Sources.md) · [Plans](plans/index.md) · [Roadmap](roadmap.md) · [Architecture](Architecture.md)
 
-Git owns routine implementation history. This log records durable wiki, planning, validation, and project-context changes.
+This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
-## 2026-09-29
+## 2026-10-01, wiki reconciliation
 
-### Owner went all in: Stageview is the primary play screen
+- Audited plans against local main and Git history. Rebuilt the dashboard around active Stageview work, maintenance, and reference guides.
+- Removed 26 completed planning documents and seven obsolete comparison images. Preserved engine details in [Stage engine](stage-engine.md), current narration behavior in [Storyview](storyview.md), and content contracts in [Wiki adventures](wiki-adventures.md).
+- Rewrote Stageview to separate merged engine work from remaining staging, integration, and coverage. Corrected Mapview storage and integration status.
+- Updated the testing runbook, architecture, roadmap, source briefs, and agent-guide filenames. Condensed old log entries whose detailed implementation history is already in Git.
+- Carried unresolved checks and cleanup into [maintenance](plans/maintenance.md), including Storyview validation, the test wrapper, editor clearing, and remote resources.
+- Corrected older content-pinning claims. Current live adventures compile current source and re-pin provenance on advance. The rollback test covers separate artifact modules.
+- Recorded Storyview's implemented automatic split charging and paragraph reuse, which supersede the original on-demand-only plan.
+- Verification passed for 144 local links and heading anchors across 21 documents, documented pnpm scripts and explicit source paths, stale-reference searches, and diff whitespace. Routes were checked against the source tree. No app build, browser playthrough, deployment, or remote cleanup was performed.
 
-- Decision 5: the turn page becomes the stage. The narrative, reply, dice, chat and history dock over a full-bleed Stage. Gameview becomes the text layer and the no-GPU fallback, and Storyview becomes the stage's narration track. The fate of Mapview is still open.
-- Decision 6: phones play in landscape. iOS Safari cannot lock orientation (no `screen.orientation.lock()`, no element fullscreen on iPhone, and the manifest `orientation` is ignored), so a rotate prompt blocks portrait play there. Android can lock after entering fullscreen or when installed.
-- Revised phases 4–5: a stage-first turn page with character art, and coverage becomes launch-critical, with default stagings generated from encounter frontmatter and a generic set per encounter kind. Details: [Stageview](plans/stageview.md#stage-first-play-decided-2026-09-29).
+## 2026-09-29, Stageview direction and engine
 
-### Stageview phase 2: engine port with a declarative set spec (`feature/stageview-engine`)
+Owner chose Stageview as the future primary play screen, with docked text/input, complete readable narrative, phone landscape play, and text fallback. Community sets must be declarative data interpreted by trusted code.
 
-- Ported the v5 prototype into `lib/stage/` as plain three.js TypeScript on r183. It includes the kit, scoped-fog materials, sky, paint pass, character mask, GTAO, MSAA/FXAA, bloom, tiers, the crowd (pawns, front/back cards, hybrid LOD, walkers), standees, and pause and dispose.
-- Designed set spec v1 (`d20.stage.set`): JSON, zod-validated and bounded, interpreted only through kit builders and layouts, with material roles and a random stream per object. A minimal staging spec places the cast at marks and frames shots on them.
-- Ported the Kordavos gate as the first set, with a March of Davos dev staging. The Realm of Myr crowd library and character fixtures live in `public/stage/` (4.2 MB).
-- Added `/dev/stage`, `pnpm stage:check` (a Node dry build) and `pnpm stage:verify` (CDP, DPR 2 frames and native-pixel crops).
-- Validation: TypeScript, lint and build pass. All 7 shots are within 300 draw calls and 2.5M triangles. Ultra runs 21–28 fps at DPR 2, high 52–54 fps at DPR 1.5 (prototype 37–46), and the steady-state heap is 42 MB (prototype 234 MB). Faces hold up in native-pixel crops. Details: [feature-stageview-engine](plans/zzz-completed/feature-stageview-engine.md). Merged to main in `384a622`.
+The old r3f encounter stack was removed in merge `b06a42b`. The map-only panel replaced its map surface. Paid standee/mini products were removed while historical ledger data and legacy schema fields were retained. No player purchase migration was required.
 
-### Retired old 3D branches
+The v5 engine port merged in `384a622`: plain three.js, scoped atmosphere, painterly post-processing, instanced front/back crowd cards, standees, bounded set/staging specs, Kordavos gate, and a development preview. Named characters use detailed front/back art. Earlier procedural-only and overlay directions were superseded.
 
-- Deleted the local branches `2d-maps` (6cfc22b), `minimap-claude` (4eb03bb) and `claude/competent-moore-d09a8e` (0a91c6f), and the remote `origin/claude/stoic-gates`. No worktrees remain, and `origin/prewiki-refactor` is kept.
+Recorded validation: TypeScript, lint, build, set checks, and GPU verification passed. Every tested shot fit 300 draw calls and 2.5M triangles. Ultra at DPR 2 ran 21 to 28 fps, high at DPR 1.5 ran 52 to 54 fps with motion disabled, and steady-state JS heap was 42 MB. Mobile tier results came from the desktop, not a phone. See [engine details](stage-engine.md).
 
-### Deployed Convex prod; published the prototype
+Removal checks covered the extracted map panel on a fixture, not a real adventure turn. Fifteen production-compatible Playwright cases passed. The admin test passed separately in development, while production redirected to the missing sign-in route.
 
-- Ran `convex deploy` to prod (`marvelous-mink-850`). It shipped the phase 1 ledger-arg change and dropped the orphaned `visits` indexes from the 2026-08-31 removal. Convex warned that the account is above Free plan limits, and the leftover `d20adventures-feature-*` worktree projects add to that. The owner is deleting them.
-- Published the Stageview prototype: public repo https://github.com/johnpolacek/d20-graphics-test-2 and site https://d20-graphics-test-2.vercel.app, where `/` redirects to the v5 standee view. The site serves static HTML only, and pushes redeploy it.
+Convex production deployment to `marvelous-mink-850` shipped the ledger argument change and removed old visit indexes. The separate prototype repo/site was published. This does not establish deployment of later frontend commits.
 
-### Close-up prototype: restyled standees beat procedural figures up close
+Old local branches `2d-maps`, `minimap-claude`, and `claude/competent-moore-d09a8e`, plus remote `origin/claude/stoic-gates`, were retired. Remote asset and temporary-project cleanup remained separate work.
 
-- Built `kordavos-v5-closeups.html` in `d20-graphics-test-2`, which compares procedural figures, portrait plates (A) and restyled in-world standees (B). The party is recast as the March of Davos premades.
-- Procedural figures fail at 2.5 m. Portrait plates work as UI but cap the camera at about 5 m.
-- Restyled standees integrate at two-shot range and hold up at 2.5 m. They use art generated in the world's flat style, a normal map derived from the alpha, shadows, a camera-facing lean, and the paint pass. The prototype used 5 image generations.
-- Recommendation: restyled standees for named characters, plates for dialogue, and a procedural crowd. Details are in [Stageview](plans/stageview.md#prototype-result-2026-09-29).
+## 2026-09-15, static homepage
 
-### Removed the old 3D encounter stack on `feature/remove-3d-stack`
+The homepage became a static public shell with personalized welcome and token data loaded through private APIs. It bypasses Clerk middleware. Clerk's cookie-only cache action was verified separately.
 
-- Executed phase 1 of [Stageview](plans/stageview.md) in a worktree, per the owner decision to discard the old stack and rebuild. There are no real players, so no data migration or refunds. Plan and results: [Remove 3D stack](plans/zzz-completed/feature-remove-3d-stack.md).
-- Removed the r3f encounter view, scene-kit, scene sets and pipeline, dev pages and fixtures, the scene, mini and preview server actions, the dormant `miniatures-map.tsx`, and the 3D parts of `lib/map-utils.ts`. That is 173 files, about 13,600 lines of TypeScript and scripts, and 45.4 MB of standee and model assets. The 500-token standee and 2,000-token mini products went with them.
-- Removed 8 dependencies: `@react-three/{fiber,drei,postprocessing}`, `@gltf-transform/{core,extensions,functions}`, `n8ao` and `sharp`. `three` and `@types/three` stay.
-- Re-homed the 2D map as `components/mapview/map-panel.tsx` (rail card, fullscreen view, below-xl button), restoring its pre-encounter-view shape. The turn page shows it only when the encounter has a stored map.
-- Kept for compatibility: the Convex `usage_encounter_asset` ledger literal, `map3d` / `map3dKey` and the `Encounter3D*` schemas, and the now-unused `image-proxy` route.
-- Validation: TypeScript clean; lint 0 warnings and 1 info (baseline 7 warnings and 3 infos); production build passes; 15 of 16 Playwright cases pass on a production server, and the sixteenth (the signed-out admin test) passes on a dev server, matching the known production limitation. The map panel was checked in a browser on a fixture page. The real turn page was not rendered because the worktree database is empty.
-- Open: S3 prefixes (`settings/<settingId>/scenes3d/`, `images/minis/`, `images/minis3d/`, `images/scene-previews/`), branches `minimap-claude`, `claude/competent-moore-d09a8e` and `origin/claude/stoic-gates`, the unused `FAL_KEY`, `~/Projects/asset-pipeline`, a Convex deploy for the narrowed token args, and the worktree's Convex project. Not merged; `wt:finish` has not been run.
+Recorded validation: production build, TypeScript, lint, 15 production-compatible Playwright cases, and authenticated browser checks on an isolated Convex project. Public responses had cache hits and no Clerk auth headers. Temporary test adventures were removed.
 
-### Assessed the Kordavos v4 painted 3D demo; owner chose it over the existing 3D stack
+The feature merged in `46a0cfc`. No production deployment occurred in that session. The temporary Convex project still had a deletion reminder.
 
-- Evaluated `~/Projects/d20-graphics-test-2/kordavos-v4.html`. It is a 2.49 MB offline, plain three.js staging of March of Davos "The Gates of Kordavos".
-- Measured all three renderers on an M3 in Chrome at 1440×900:
+## 2026-08-31, public rendering
 
-| Renderer | Draw calls | Triangles | FPS |
-|---|---|---|---|
-| Demo | 226–251 | 4.7M | 60 (vsync cap) |
-| scene-kit gates set | 3,203 | 1.14M | 30–36 |
-| In-play r3f diorama | not measured | not measured | not measured |
+Removed request-wide visit tracking, root-layout request reads, and broad Clerk matching. Public content routes became static. The homepage remained dynamic at this point and was subsequently changed on September 15.
 
-- The demo's paint pass drops from 37 to 15 fps at DPR 2. Its Kuwahara cost scales with roughly internalHeight⁴, so the pass needs a fixed internal resolution.
-- Two experiments, run with no repo change:
-  - Painting current-game screenshots adds cohesion but does not fix the scenes.
-  - An illustrated standee inside the demo world clashes with the procedural figures.
-  - Conclusion: use one procedural character vocabulary and keep portraits in the 2D UI.
-- Owner decision: **the existing 3D stack may be removed entirely** and rebuilt on the demo's approach. Wrote [Stageview](plans/stageview.md), covering the recipe, the demo's weaknesses, a set / staging / beats architecture, the removal inventory, phases, and open decisions. Comparison screenshots are in `plans/stageview/`.
-- The roadmap's Miniview entry is superseded by the Stageview proposal.
+Recorded validation: build, TypeScript, lint, eight Playwright cases, and cache/header checks passed. The top-level test wrapper still waited on unused TCP port 4000.
 
-## 2026-09-15
+## 2026-08-25, adventure listing
 
-### Prerendered the homepage and moved personalized reads behind APIs
+Explicitly included Realm of Myr source files in Next.js output traces. Replaced positional adventure curation with one grid and independent loading, so one invalid adventure does not hide the others.
 
-- `/` now serves the public hero as static content and bypasses Clerk middleware. After sign-in, `HomeAdventure` fetches `/api/user/active-adventure`, preserves the existing adventure selection, and uses Clerk's client username for the player link. It cancels stale requests and keeps the public hero on empty/error/mismatched-user responses.
-- Moved the globally mounted token provider from a homepage-hosted Server Action to POST `/api/user/tokens`, preserving first-use grants and balance refresh. Both API responses use `private, no-store`, derive identity on the server, and reject anonymous callers.
-- Discovered Clerk 7's own sign-in/sign-out POST: `invalidateCacheAction` only deletes a cache-marker cookie. It works without middleware; the browser test distinguishes it from application data requests rather than forbidding all homepage POSTs.
-- Production build reports `○ /`; the prerender manifest includes `/` with no timed revalidation. Local production responses for `/` and `/privacy` return `x-nextjs-cache: HIT`, `s-maxage=31536000`, and no Clerk auth headers. Signed-in document HTML also stays public.
-- Validation: build and TypeScript passed; touched-file Biome passed; full lint passed with 7 pre-existing warnings and 3 informational diagnostics in scene/map scripts. All 15 production-compatible Playwright cases passed. A separate browser check created and removed one adventure in the isolated Convex project, verifying real welcome data, token display, navigation, sign-out, and zero page errors. Desktop/mobile public and welcome states were visually inspected.
-- Existing test limitation: the signed-out admin test expects development's `Access Denied` page. Production instead redirects to the pre-existing missing `/sign-in` route. That unrelated behavior is unchanged; the case passed separately against the isolated development server, bringing coverage to all 16 cases.
-- Added `PLAYWRIGHT_BASE_URL` support to target the worktree server without disturbing another checkout's port 3000. Plan: [Static homepage](plans/zzz-completed/feature-static-homepage.md).
-- Merged into `main` and removed the feature worktree and branch. Temporary adventure fixtures were removed; deletion of the isolated [d20adventures-feature-static-homepage Convex project](https://dashboard.convex.dev/t/john-polacek/d20adventures-feature-static-homepage) remains pending dashboard sign-in. No push or production deployment occurred.
+Recorded production S3 audit: three adventures lacked source, and March of Davos had incomplete source. All four used repo fallback. The focused production build carried 201 source files, and browser verification showed four working adventure cards.
 
-## 2026-08-31
+## 2026-07-06, live content changes
 
-### Restored static public rendering and removed request-wide visit tracking
+Changed live turn advancement to re-pin content provenance when the authored source changes. Current turn/encounter guards still reject concurrent stale advances. This superseded the earlier strict content-hash rejection.
 
-- Removed custom visit tracking end to end, including the root-layout mutation, pathname header plumbing, route generator, Convex functions/table, and visit-only testing support.
-- Moved header/footer pathname behavior to isolated client components so the root server layout has no request API. `/privacy`, `/terms`, `/_not-found`, `/about`, `/contact`, `/roadmap`, `/pay`, and `/unsubscribe` now build as static content.
-- Narrowed Clerk proxy matching to routes that need server auth. Unknown bot probes and static content no longer invoke Clerk middleware; `/` remains dynamic for the authenticated active-adventure experience.
-- Deduplicated homepage auth and skipped the Clerk user lookup when no active adventure will render. Kept `/mailing-list` explicitly dynamic for signed-in subscription state and the turn-order route dynamic for mutable gameplay.
-- Confirmed production ClerkJS targets `clerk.d20adventures.com`, not `/__clerk`; the observed same-origin proxy-path 404s are not initiated by current app configuration, so Clerk config remains unchanged.
-- Validation: production build, standalone TypeScript, lint, 8/8 Playwright tests, and production-mode cache/header smoke checks passed. The existing `pnpm test` wrapper still stalls on its unused TCP port 4000 prerequisite; direct `pnpm test:run` passes.
+## 2026-07-05, layout and narration
 
-## 2026-08-25
+Merged the responsive character/narrative/right-rail layout and Storyview v1. Narration used stable voices, cached audio, and generation claims. The original browser check covered playback, replay, and concurrent requests. Later code added automatic generation, shared charging, and incremental paragraph reuse.
 
-### Restored the setting adventure listing in production
+## 2026-07-03, Mapview
 
-- Diagnosed the blank Realm of Myr listing on the deployed `/settings/realm-of-myr/play` page: dynamic filesystem reads prevented Next.js output tracing from discovering the repo-local wiki source, while the production S3 audit showed that all four registered adventures still depend on that fallback.
-- Added an explicit server-trace include for `content/settings/realm-of-myr/`; a focused production build confirmed that the play-route trace now contains all 201 source files.
-- Replaced the Realm of Myr-only positional intro/full layout with one data-driven **Adventures** grid. One failed wiki source now leaves other fulfilled adventures available, and an all-failed load has a visible unavailable state instead of a blank section.
-- Browser verification against the production build rendered Covert Cargo, March of Davos, The Midnight Summons, and The Road to Kordavos with their play links and no console errors.
-- Validation: production S3 audit, public-flow check, touched-file Biome check, TypeScript, and focused Next.js production build passed.
+Merged Mapview v1, including the SVG catalog, admin generation, stored per-encounter maps, and player fullscreen view. Recorded a fresh-player Midnight Summons playthrough covering its seven encounters.
 
-## 2026-07-06
+Visual guarantees such as connected paths and tree density belong in code. The model prompt alone was insufficient. NPC staging must match the intro, with explicit `startNear` and stored token replacement after changes.
 
-### Content-hash drift no longer bricks live playthroughs (auto-re-pin)
+## 2026-06-12, wiki cutover and worktrees
 
-The play-layout-refactor merge edited the Midnight Summons encounter/location markdown, which changed the compiled content hash — and `commitWikiTurnAdvance`'s strict hash guard then dead-ended every in-progress adventure ("Stale turn advance: content hash changed") with no recovery path. Decision: since the runtime always compiles latest content, the pinned `contentRef` is provenance, not a load selector — on drift the mutation now logs and **re-pins the adventure to the content that generated the turn** (hash + contentVersion/versionId passed from the advance action) and continues. The turn/encounter guards remain the real concurrency protection. Old stuck adventures were wiped (owner call — all test data; `testing:deleteAll` needed a temporary guard bypass because Convex cloud isolates force `NODE_ENV=production` even on dev deployments). Verified end-to-end with a fresh playthrough: whitespace-edit to an encounter file mid-game, turn advance succeeded and the pin moved to the new hash.
+Completed the registered-adventure discovery and gameplay cutover. Kept legacy remote plan JSON as a fallback instead of deleting it. Reconciled richer March of Davos production source into the repo, then cleared its adventure source prefix so runtime used the complete repo source. Setting-level residue was recorded for later review.
 
-## 2026-07-04
+Cutover deployment was recorded for Convex production and frontend main `3857148`. Immutable artifact rollback was tested in memory. Live content re-pinning later changed the gameplay behavior, as recorded above.
 
-### Encounter view prototype (3D miniatures, narrative-driven)
+Added the [worktree workflow](plans/parallel-dev-worktrees.md): one isolated Convex project per branch, Portless URLs, shared S3/Clerk, and no-ff merges.
 
-First working prototype of a 3D tabletop view: an "Encounter" button on the turn page (beside Map/Game Chat) opens a fullscreen react-three-fiber diorama of the current turn — CC0 KayKit miniatures and props on a wooden table. Direction set by owner decisions that supersede the old Miniview salvage plan: **completely new implementation** (ignores the dormant `miniatures-map.tsx`, `map3d`, and the 2D `map2d` data), **staged from the narrative** (current + previous turn narratives → `gemini-3.5-flash` scene spec, per-turn on first open, cached in S3 at `settings/{settingId}/scenes3d/{adventureId}/{turnId}.json`). Pipeline mirrors mapview's proven pattern (tolerant zod generation schema + normalize/clamp, `structuredOutputs` off). Assets: 9 rigged characters (Adventurers + Skeletons, animation-stripped to `Idle`/`Death_A_Pose`, ~250KB each) + 27 props from Dungeon Remastered/Medieval Hexagon/Halloween Bits, ~3MB total, rebuilt via `scripts/encounterview-assets-build.mjs`; unmatched creatures render as portrait pawns (cone + billboard portrait via the new same-origin `/api/image-proxy`, since the image hosts lack CORS headers for WebGL textures). Learned: Gemini drifts field names between samples (`position` nesting, `rotation` vs `facing`) — fixed with an inline JSON template in the prompt plus coercing/hoisting preprocess steps in the schema, same guarantee-in-code lesson as mapview. Verified in-browser on the completed Midnight Summons run: the "Meeting at the Stones" turn staged a pillar circle with Wollandora beside it and Thalbern retreating — matching the narrative. Punted: stance poses beyond "down", animations, regenerate control, non-humanoid model packs, mode-switcher integration.
+## 2026-06-11, release hardening
 
-Avatar-derived standee minis (same day, owner feedback "chibi looks like a kid show — use the character's avatar"): each character's bust portrait goes to `gemini-3.1-flash-image` (verified live) with instructions to render the same character full-body in the same painted style on a green screen; sharp chroma-keys the cutout, cached in the public bucket keyed by portrait-URL hash (`lib/encounterview/standee.ts`, player-authed action `generate-character-mini.ts`). Rendered as die-cut card standees with a yaw-only billboard (manual atan2 — drei `<Billboard lockX lockZ>` degenerates under a near-overhead camera) and slight emissive so the art reads in dark scenes; KayKit figures remain the fallback when generation fails. First renders (Thalbern, Owlbear) came out collector-miniature quality, dramatically closer to the avatar mood.
+Implemented pre-write validation for admin source changes, complete-source fallback, canonical admin routes, and formatting cleanup for that baseline.
 
-Scene spec v2 (same day, owner feedback "trees are tiny / expected a forest / stones shouldn't be here yet"): forest density is now guaranteed in code — a seeded instanced tree perimeter per kit (`components/encounterview/forest-ring.tsx`, `KIT_FOREST_DENSITY`), with the viewer-side treeline shortened/thinned so it never walls off the stage; single trees scaled to tower over minis; N8AO + firefly motes + per-mini key light added. The mapview no-unearned-landmarks rule carried over the hard way: the model kept staging the destination standing stones during travel turns until the prompt got a worked example of that exact case. `version: 2` literal bump silently invalidates all v1 cached scenes.
+Authenticated Midnight Summons playthrough reached completion, including rolls and encounter transitions. Covert Cargo reached a live transition in practice mode, not a full recorded completion. Browser testing exposed and fixed legacy-plan reads and solo redirect handling that bridge tests missed.
 
-## 2026-07-05
+Converted the maintained wiki from HTML to Markdown.
 
-### Play layout refactor merged; Encounter joins the right rail
+## 2026-05, wiki foundations
 
-`feature/play-layout-refactor` finished into main via `wt:finish` (merge policy, plan archived to zzz-completed; one conflict in `turn.tsx` resolved by combining the branch's 3-column rail layout with main's `isSolo` gating and Encounter entry). The encounter view now follows the rail pattern: `EncounterPanel`/`EncounterRailPanel` share one portaled fullscreen overlay (mirroring `MapPanel`/`MapRailPanel`) — desktop gets an Encounter card docked under the mini map, below-xl keeps the floating button row. Solo runs hide chat in both rail and floating forms. The `feature-storyview` worktree remains active and untouched. Reminder outstanding: delete the `d20adventures-feature-play-layout-refactor` Convex project in the dashboard.
+Established authored markdown encounters, JSON character sheets, compiled runtime artifacts, Convex live adventure state, validated change sets, revision restore, and AI-assisted editing.
 
-### Encounter view: true 3D minis (fal Hunyuan3D) + token charging for all paid generations
-
-- **Token economy now covers the encounter view.** New `usage_encounter_asset` transaction type (convex schema + mutation + tokens action). Scene staging charges metered LLM usage via `usage_generate_object` (provider tokens × 0.01, charged before the scene is cached — unaffordable = not stored); standees charge a flat 100 tokens and 3D minis a flat 400 (`lib/encounterview/costs.ts`), charged before generation with `adjustment_refund` on failure. Cache hits are free; the triggering player pays. Verified against the live ledger. Mapview generation stays uncharged (admin authoring, not player-triggered).
-- **3D mini pipeline** (`lib/encounterview/mini3d.ts`): standee render → fal.ai `hunyuan3d-v3/image-to-3d` queue → GLB optimized server-side with gltf-transform (weld/quantize/prune + webp textures) → public bucket keyed by the standee's portrait hash. Jobs are async (1-2 min): a pending marker lives in the data bucket and the panel polls every 10s while open ("Sculpting 3D miniatures…"). Render order: 3D mini > standee > KayKit model > portrait pawn. **Gated on `FAL_KEY`** — without it the view stays on standees; the key still needs to be added to `.env`.
-
-### Storyview v1 built on feature/storyview (worktree), merged to main
-
-- Token-funded TTS narration of turns with a cinematic paragraph-at-a-time overlay. Plan and decisions: [plans/feature-storyview.md](plans/feature-storyview.md). Branched off `feature/play-layout-refactor` (its layout changes are the substrate for the turn-page UI).
-- Durable facts established: `@ai-sdk/google` (v3.0.43) has **no speech support** — Gemini TTS requires a direct REST `generateContent` call with `responseModalities: ["AUDIO"]`; it returns raw 24kHz/16-bit/mono PCM (wrap in a 44-byte WAV header, no transcode deps needed); Gemini multi-speaker caps at 2 voices, so per-segment single-voice synthesis is the scalable shape; measured cost ≈ 25 audio tokens/sec → ~31 D20 tokens for an ~80s turn (attribution LLM + TTS, at the standard 0.01 multiplier).
-- New Convex surface: `turnAudio` table (manifest keyed by narrative sha1, atomic generation claim), `usage_tts_audio` transaction type, `adventures.voiceAssignments` (stable per-adventure character voices).
-- Schema note: `usage_encounter_asset` was admitted into the branch's `tokenTransactionHistory` union so Convex seeds from main imported cleanly while the encounterview work was still uncommitted on main; the merge unions both new transaction types.
-
-## 2026-07-03
-
-### Mapview v1 merged to main
-
-Built end-to-end on `feature/mapview` (worktree) and merged no-ff (`d8f077f`): schema, 30-piece SVG catalog (OpenPencil-designed hero pieces + code-drawn procedural pieces), `gemini-3.5-flash` generation pipeline, `/admin/mapview` authoring lab, and a player-facing fullscreen Map panel wired into the turn page next to Game Chat. Validated with a full fresh-player playthrough of all 7 Midnight Summons encounters, iterating through many rounds of feedback (trail/river network rendering with edge-to-edge winding paths, tree density, day/dusk/night lighting, character-portrait tokens, 16:9 framing, direction-arrow labels). Established a durable pattern along the way: player-visible qualities (tree density, connected trails, no offscreen landmarks) must be guaranteed in code (`densifyForest`, `extendChainsToEdges`), not left to prompt wording — prompt-only rules are stochastic and can silently regress on the next regeneration. Worktree and branch removed; the throwaway Convex project `d20adventures-feature-mapview` still needs manual deletion in the dashboard. Next: catalog growth is demand-driven per adventure (river was the first addition beyond the v1 set; Covert Cargo will need docks/boat/water expanse next).
-
-## 2026-07-02
-
-### Scoped Mapview (2D), split off Miniview (3D), cleaned stale branches
-
-- **Mapview redefined as 2D** standard D&D-style battle maps — AI-generated at authoring time from encounter text using a standard SVG piece set designed in OpenPencil; square grid first with a hex-ready schema; static scene backdrop (no positional game state); developed on a standalone page before mode-switcher integration. Plan: [plans/mapview.md](plans/mapview.md); implementation on the `feature/mapview` worktree.
-- **Miniview split off** as a separate future roadmap item for the 3D miniatures vision. Established why the 3D feature was shelved (2026-03-12, `126200c`): visual quality fell short. The dormant renderer (`miniatures-map.tsx`, `map-utils.ts`, `generate-encounter-map.ts`) and the `minimap-claude` branch (SSAO/HDR/archetype tokens) are preserved for it.
-- **Salvage established**: the `2d-maps` branch (`ed402aa`) schema is the Mapview foundation (needs `gridType`, piece refs); the 3D pipeline's scene-kit inference + `generateObject` pattern transplants to 2D; the wiki migration deferred map data (`map3d-deferred` warnings), so wiki content-model attachment is a gap to solve.
-- **Branch cleanup**: deleted merged `feature/production-cutover`, `prewiki-refactor`, `update-deps`; deleted superseded `feature/wiki-adventure-migration` (planning docs; conclusions already implemented) and abandoned `token-usage` (13 months stale, 327 behind). Deleted `claude/stoic-gates` (strict subset of `minimap-claude`). Kept: `minimap-claude` (Miniview), `2d-maps` (Mapview salvage). `origin/claude/stoic-gates` still exists on the remote.
-
-## 2026-06-12
-
-### Bootstrapped the parallel dev worktree workflow
-
-- Added `scripts/wt.sh` and `pnpm wt:*` scripts (`doctor`, `create`, `seed`, `list`, `resume`, `dev`, `open`, `finish`, `clean`) for parallel feature development with git worktrees. Plan: [plans/parallel-dev-worktrees.md](plans/parallel-dev-worktrees.md); agent rules in `AGENTS.md`.
-- Key facts established: Convex dev deployments are one-per-user-per-project, so database isolation requires a **per-worktree Convex project** (`d20adventures-<slug>`, provisioned by `wt:create`, seedable from main via `wt:seed` using `convex export`/`import --replace-all`). Convex functions read no deployment env vars, so fresh projects need no env copying. S3 and Clerk remain shared (worktrees default to placeholder images).
-- URLs via Portless (already installed): `https://d20adventures.localhost` (main), `https://<slug>.d20adventures.localhost` (worktrees); `next dev` honors Portless's `PORT`.
-- Behavior change: `pnpm dev` no longer runs `kill:ports` (it killed sibling worktree servers); `pnpm dev:fresh` preserves the old behavior and `pnpm test` uses it so test runs still get clean ports.
-- Finish policy: merge (no-ff); completed plans archive to `plans/zzz-completed/`. Convex project deletion after finish is manual (dashboard; no CLI).
-- **Live-verified end-to-end** with a `feature/wt-smoke` worktree: main and the worktree ran dev servers simultaneously (Portless auto-assigned ports 4384/4103; both URLs returned 200); `wt:seed` cloned 976 documents; a row written via `visits:recordVisit` in the worktree's deployment (`cautious-panda-676`) was invisible from main's (`courteous-axolotl-753`); `wt:finish` archived the plan, merged no-ff, and removed the worktree. Three bugs found and fixed during verification: postinstall `convex codegen` fails pre-provisioning (install now uses `--ignore-scripts`), `convex --configure new` rewrites `convex/README.md`/`tsconfig.json` (now reverted automatically), and the plan-archive "Finished:" line wasn't staged before commit (now `git add`ed), which had blocked worktree removal. All smoke-test artifacts removed; the throwaway Convex project `d20adventures-feature-wt-smoke` must be deleted manually in the dashboard.
-
-## 2026-06-11
-
-### Ran the pre-prod assurance checks (cutover Units 5 & 7) — found prod S3 march-of-davos drift
-
-- **Unit 7 (rollback / content-ref pinning)** — added `scripts/wiki-adventures-rollback-check.ts` (`pnpm test:wiki-adventures:rollback`). It proves the safety chain with a shared in-memory published-repo + artifact-loader: publish v1 → pin v1 → publish a bad v2 (latest moves to v2) → the pinned adventure still resolves v1 (immutable, unaffected by the bad publish) → a fresh start during the bad publish would get v2 → rollback re-points `latest` to v1 → a fresh start after rollback gets v1, and v2 remains immutably readable. Made `InMemoryWikiAdventurePublishedRepository`'s object store injectable (optional constructor arg, default `new Map()`) so the loader can read what the repo publishes. Passes.
-- **Unit 5 (prod S3 wiki-source completeness audit)** — added `scripts/wiki-adventures-prod-s3-audit.ts` (`pnpm audit:wiki-adventures:prod-s3`, read-only, prod creds). Findings against bucket `d20-data`:
-  - The Midnight Summons, Covert Cargo, The Road to Kordavos: **no** wiki source in prod S3 → runtime falls back to the repo-bundled source. Safe; repo edits (incl. the new `availableCharacterOptions`) apply.
-  - **March of Davos: complete (116/116) prod S3 source, publish-valid — but it DRIFTS from the repo in 40/116 files** (encounters, NPCs) and its `adventure.md` lacks the `availableCharacterOptions` frontmatter added this cycle. Because the source is complete, the runtime serves the **prod S3 copy**, so after deploy March of Davos would run divergent content and its custom character-create would show no races/archetypes. The audit now flags this drift explicitly (`⚠ DRIFT FROM REPO`).
-- The cutover is **not yet deployed** (only `git push origin main`; no `convex:deploy`), so prod is unaffected for now — this is a **pre-deploy blocker for March of Davos only**.
-- **Drift investigated → prod S3 was canonical.** A content comparison of the 40 drifted files showed March of Davos was only rawly/partially migrated into the repo; the finished content lived in prod S3 (refined via the wiki authoring tools post-migration — its `_revisions/` history confirms it). Prod's `adventure.md` carries `Aftermath`/`Conclusion`/`Sequel Hooks` sections the repo lacked; prod's climax (`final-confrontation`) is plot-coherent (named antagonist Joran, the Key of Ilmarin, branching resolution) vs a generic repo draft; prod NPC sheets ~2× fuller. The ~17 repo-longer files were verbose raw-migration prose; prod's tighter versions were all complete (proper Intro/GM Notes/Transitions), so prod was canonical across the board.
-- **Resolved → repo-canonical, uniform.** Reconciled the prod S3 source into the repo (40 files; the richer adventure.md, climax, NPCs, and a 44→57 transition graph), re-added `availableCharacterOptions`, updated the march-of-davos bridge for the richer graph, then deleted the prod S3 `content/.../march-of-davos/` prefix (64 keys incl. `_revisions/`). The audit now shows it as `local (S3 partial, rejected)` → the runtime serves repo-bundled source for **all four** adventures; git holds the canonical content so the clear is reversible. 70 orphaned setting-level `npcs/` keys remain in prod S3, ignored by the runtime. All four adventures are deploy-ready; only the prod deploy itself remains.
-- Validation: `tsc`, `pnpm build`, `pnpm check` (431 files), the full wiki suite incl. the new rollback check, and the read-only prod audit all pass/run clean.
-
-### Removed the legacy editor and browser-verified the cutover (cutover Unit 4 partial)
-
-- Removed the legacy adventure-plan editor entirely (it was superseded by the wiki admin authoring at `/admin/wiki-adventures`, and for a wiki adventure its writes went to legacy JSON the runtime no longer reads): deleted the `/settings/[settingId]/[adventurePlanId]/edit` and `/settings/[settingId]/new` routes, `adventure-plan-actions.ts`, `adventure-plan-chat.ts`, `lib/adventure-plan-structure.ts`, and the editor-only components/hooks under `components/adventure-plans/` (kept `character-card.tsx` + `use-character-details.ts`, used by character creation). Replaced the one gameplay tie (`getAdventurePlan`, the final-encounter next-adventure card) with a small wiki-backed server action `app/_actions/get-adventure-plan.ts`. Removed the now-dead "New Adventure" button (setting home), the Draft Adventures section (play grid), and the dead `/create/adventure` on-ramp; repointed the dev/admin "Edit"/"Back to Plan"/"Open plan editor" links and the `/admin/adventure-plans/[settingId]/[planId]` redirect to the wiki admin route. ~25 files removed.
-- **Browser-verified the cutover end-to-end** (authenticated Clerk dev user, agent-browser, per the gameplay-playthrough-testing skill): the `/settings/realm-of-myr/play` grid renders all four cards from wiki source with correct titles, party badges, premade badges, teasers, and the intro/full curation order; premade character-select shows Thalbern from the wiki sheet; custom character-create shows the wiki `availableCharacterOptions` races; selecting the solo premade auto-starts and creates the adventure; turn 1 renders the wiki `broken-silence` encounter; the turn-page "Edit" link now targets the wiki admin route; and a player reply drove a Perception roll request → roll resolution → next turn with no server errors. This exercises the create/start, in-progress page, turn page, player-reply, and roll-result paths all reading the wiki runtime.
-- Validation: `tsc`, `pnpm build`, `pnpm check` (429 files), all bridge checks, and the public-flow check pass. Branch `feature/production-cutover`.
-- **Still open:** the legacy S3 `AdventurePlan` JSON for the four migrated adventures is retained as a now-unreached fallback (deletion deferred per decision until after this verification — it is now safe to delete, but kept pending an explicit go and the prod S3 audit). Units 5 (prod S3 completeness audit) and 7 (rollback verification) still need prod access / a manual run.
-
-### Routed the whole gameplay/runtime path onto the wiki runtime (cutover Units 1-grid)
-
-- Added `loadAdventurePlanForRuntime(settingId, planId)` (wiki plan view for registered wiki adventures, legacy S3 JSON otherwise) and routed every remaining unconditional legacy-plan reader through it: the in-progress adventure page, the per-turn page, practice setup, multiplayer join's premade lookup, `check-encounter-final`, `adventure-first-turn-service`, three reads in `adventure.ts` (roll-result instructions, active-adventure party info, `getNextAdventure`), the practice report action, and the player-profile plan image.
-- Cut the adventure-listing grid (`/settings/[settingId]/play`) onto `loadWikiAdventurePlanViewsForSetting`, ordered by planId so its positional intro/full card curation is preserved exactly; non-wiki settings still fall back to the legacy S3 directory listing.
-- **Result:** the entire gameplay/runtime path now reads compiled wiki artifacts for migrated adventures, so a stubbed or absent legacy plan can no longer 500 any play surface (the failure mode behind the three bugs fixed earlier this cycle). An audit confirmed the only remaining unconditional legacy `AdventurePlan` readers are the legacy adventure-plan editor — `app/settings/[settingId]/[adventurePlanId]/edit/page.tsx`, `app/_actions/adventure-plan-actions.ts`, `app/_actions/adventure-plan-chat.ts` — which is superseded by the wiki admin authoring at `/admin/wiki-adventures`. The branched runtime services (advance-turn, start/create-adventure, turn-reply, npc-turn) read the legacy plan only in their non-wiki else branch.
-- Validation: `tsc`, `pnpm build`, `pnpm check` (453 files), all four bridge checks, and `pnpm test:wiki-adventures:public-flow` pass. Branch `feature/production-cutover`.
-- **Open decisions before legacy retirement (Unit 4):** (1) what to do with the now-superseded legacy editor — for a wiki adventure its writes go to legacy JSON the runtime no longer reads, so editing there is silently inert and should be removed or redirected to `/admin/wiki-adventures`; (2) whether to delete the legacy S3 `AdventurePlan` JSON for the four migrated adventures (destructive — needs browser re-verify first). Units 5 (prod S3 completeness audit) and 7 (rollback verification) still need prod access / a manual run.
-- **Needs browser re-verify:** the runtime/display pages changed; the user's earlier playthroughs predate these edits. Gameplay turn-execution logic is unchanged, but the new front-door and runtime page reads should be exercised once authenticated.
-
-### Cut the gameplay-critical public pages onto the wiki runtime (cutover Units 1–3, 6)
-
-- Added `lib/wiki-adventures/plan-view.ts`, an adapter that builds the legacy `AdventurePlan` shape from compiled wiki `RuntimeArtifacts`, so the public listing/lobby, character-select, and character-create pages cut off the legacy S3 `AdventurePlan` JSON without any downstream UI rewrite. The start encounter is ordered first; premade sheets, party size, teaser/summary, and `availableCharacterOptions` all map through.
-- Compiler change (Unit 3): `manifest.teaser`/`manifest.summary` now populate from the `adventure.md` body sections — they were previously always `undefined` despite four readers (start/create/npc/runtime-context) — and a new optional `availableCharacterOptions { races, archetypes }` flows from frontmatter into `RuntimeManifest`. Added that frontmatter to the two custom-character adventures (Road to Kordavos, March of Davos), sourced from their legacy plans.
-- Branched the three pages on `isLocalWikiAdventure`; gated the prototype workbench server actions behind `requireAdmin` (Unit 6).
-- Added `scripts/wiki-adventures-public-flow-check.ts` / `pnpm test:wiki-adventures:public-flow`.
-- Validation: `tsc`, `pnpm build`, `pnpm check` (453 files), all four bridge checks, and the new public-flow check pass. Branch `feature/production-cutover`.
-- **Open decision before the grid + legacy retirement (Units 1-grid, 4, 5):** the registry `LOCAL_WIKI_ADVENTURES` is hardcoded to four adventures, while the legacy `/settings/[settingId]/play` grid enumerates every published JSON in S3. A registry-driven grid would not surface future admin-authored adventures, so a true grid cutover needs S3 enumeration of published wiki adventures (tied to the prod publish pipeline). Not yet started.
-
-### Planned the production cutover track
-
-- Assessed current state: the wiki-adventure runtime is merged and the post-merge hardening track is fully closed (all five release-readiness findings done, plus three further live-playthrough bugs fixed). Turn execution — create, start, advance, player-reply, NPC context — all branch on `isLocalWikiAdventure` and read compiled wiki artifacts.
-- Confirmed by code inspection that the remaining gap is the public front door: three pages still read the legacy `AdventurePlan` JSON unconditionally — listing (`app/settings/[settingId]/[adventurePlanId]/page.tsx`, which even reads legacy nested `sections[0].scenes[0].encounters[0]`), character-select, and character-create. The listing read is the same stub-legacy-plan failure mode that caused three runtime 500s this cycle.
-- Identified one runtime data gap: `availableCharacterOptions` (races/archetypes for the custom-character path, e.g. Road to Kordavos) is not compiled into `RuntimeManifest`, so it must be added before character-select/character-create can leave legacy JSON.
-- Added `wiki/plans/production-cutover.md` with seven work units (carry `availableCharacterOptions`; cut listing, character-select; retire/stub legacy dual-read; prod S3 completeness audit; gate prototype workbench actions; verify rollback under a bad publish), sequencing, acceptance gates, and risks — each anchored to file:line evidence.
-- Set the plan as current focus in `plans/index.md` and `roadmap.md`; moved the implementation review to Completed. No app code changed.
-
-### Found and fixed three runtime bugs via live authenticated playthroughs
-
-A multi-character roleplay test of Road to Kordavos surfaced a third bug: the player-reply roll path (`buildTurnReplyRollRequirement`) always read the legacy S3 `AdventurePlan` and looked up the encounter under `sections>scenes>encounters`. For wiki-migrated adventures whose legacy S3 plan is a stub (no encounters) — as Road to Kordavos's was — every player action 500'd with "Encounter not found", making the adventure unplayable. Fixed by routing registered wiki adventures through the compiled wiki runtime artifacts (`lib/services/adventure-turn-reply-service.ts`), proven live with the S3 plan re-stubbed. The Midnight Summons and Covert Cargo bridge cases pass because their legacy plans happened to contain the encounters. The NPC-turn DM context had the same legacy-plan dependency and was migrated the same way (`lib/services/npc-turn-service.ts`), also verified live with a re-stubbed plan; section/scene framing is omitted for wiki adventures (encounter-first design). The multi-character roleplay itself (3 PCs: Arcanist, Ranger, Dwarf Cleric) read as good quality: distinct NPC voices, autonomous NPC cross-talk, tracked continuity, and dice-integrated social actions.
-
-Ran authenticated browser playthroughs (agent-browser + a Clerk dev test user) to exercise the real public play flow, which surfaced two bugs that bridge tests could not:
-
-- **Solo auto-start never navigated.** Selecting the premade in a solo adventure created the adventure server-side but stranded the user on character-select: `PartyConfiguration` caught the server action's `NEXT_REDIRECT` and returned instead of re-throwing. Fixed by re-throwing the redirect (`components/adventure/PartyConfiguration.tsx`).
-- **adventurePatch dropped GM world-state on malformed AI output.** The model intermittently returns the structured patch fields (`openThreads`, `entityUpdates`, etc.) as arrays of strings; a single malformed field failed Zod for the whole patch, so the turn fell back to a summary-only patch and silently dropped that turn's discoveries, entity/character updates, and threads. Made each field independently resilient (`lib/wiki-adventures/adventure-patch.ts`). Encounter transitions are computed separately and were never affected.
-
-Verified encounter transitions work end-to-end: The Midnight Summons played to full completion (3 transitions, terminal encounter, completion UI), and Covert Cargo transitioned live (`the-shipment` → `the-disturbance`). Covert Cargo is a 2-player adventure, so solo verification used practice mode; driving it to its own completion screen was impractical here (heavy multi-PC + multi-NPC combat turns, compounded by intermittent LLM API connect-timeouts in the local environment) — not a product bug.
-
-### Closed the post-merge hardening track
-
-- Fixed `pnpm check` (Biome) to a green, build-stable state; generated files and wiki source excluded from Biome.
-- Gated admin canonical S3 source writes behind pre-write validation (compile-and-block before write).
-- Made S3 source preference complete-manifest-aware so a partial remote seed falls back to repo-local source.
-- Normalized the admin route family to a single canonical `/admin/wiki-adventures`, others redirect.
-- Ran the first authenticated end-to-end browser playthrough of The Midnight Summons to completion (selection, solo auto-start, first turn at `broken-silence`, Perception and Stealth rolls, branching through `owlbear-confrontation` and `meeting-at-the-stones`, terminal `back-home`, completion UI). Used a dedicated Clerk dev test user driven via agent-browser.
-- Found and fixed a real bug surfaced only by the live flow: solo auto-start created the adventure but never navigated to it, because the client caught the server action's `NEXT_REDIRECT` and returned instead of re-throwing (`components/adventure/PartyConfiguration.tsx`). Also stopped `start-adventure` from logging every redirect as a failure.
-
-### Converted the wiki to Markdown and re-assessed the roadmap
-
-- Migrated every wiki page from standalone HTML to GitHub-flavored Markdown: front door, log, sources ledger, architecture, the four source briefs, the plan dashboard and plans, and the archived eight-stage migration plan set. Dropped the inline "arcane console" CSS in favor of breadcrumb nav lines and Markdown tables.
-- Removed the old `roadmap.html` and three superseded plan pages (Midnight Summons playthrough test, sidebar section/scene navigation, LLM style policy) plus the `plans/features/` subplans.
-- Rewrote `roadmap.md` as a re-assessed Now / Next / Later / Deferred plan anchored on the implementation review findings.
-- Updated `AGENTS.md` source-of-truth, rules, and authoring guidance to reference Markdown pages. Verified all internal `.md` links resolve.
-
-### Audited merged wiki adventure implementation
-
-- Reviewed merge commit `fbd3e97`, which brought `feature/wiki-adventure-implementation` into `main` on 2026-06-10.
-- Confirmed the merged architecture adds registered local wiki adventure runtime support, Realm of Myr migrated source, admin wiki authoring, Convex content refs, guarded wiki turn advancement, and compatibility admin routes.
-- Validation evidence: focused wiki-adventure batch tests, admin-authoring test, all four bridge checks, `pnpm exec tsc --noEmit --pretty false`, and `pnpm build` passed. Build retains the existing missing `SENDGRID_API_KEY` warning.
-- `pnpm check` now runs far enough to report current Biome diagnostics and fails with 305 errors, 52 warnings, and 44 infos before truncation. This supersedes older log notes that described a Biome config/schema mismatch as the blocker.
-- Added `wiki/plans/wiki-adventure-implementation-review.md` and refreshed the roadmap, plan dashboard, source ledger, technical brief, architecture map, and migration plan status.
-- Residual risks to harden before production cutover: admin canonical S3 source writes before validation, partial S3 source overriding local fallback, mixed admin route names, repository-wide Biome cleanup, and authenticated manual playthrough coverage.
-
-## 2026-05-27
-
-### Added admin Adventure Plans top navigation
-
-- Added a focused plan at `wiki/plans/admin-adventure-plans-nav.html` and linked it from the planning dashboard.
-- Mounted admin-only header links for `/admin` and `/admin/adventure-plans`, labeled Admin and Plans.
-- Added a compatibility redirect from `/admin/wiki-adventures` to `/admin/adventure-plans`.
-- Validation: `pnpm generate:routes` passed and `pnpm exec tsc --noEmit` passed.
-
-## 2026-05-26
-
-### Converted admin chat proposals to auto-apply
-
-- Changed Adventure Plan Admin Chat so valid assistant text and structural proposals apply immediately after the assistant response and save through the existing plan update action.
-- Kept validation before mutation, preserved chat event auditing, and removed the extra Use-button step from newly generated proposals.
-- Validation: `pnpm exec tsc --noEmit` passed; `pnpm build` passed with the existing missing `SENDGRID_API_KEY` warning.
-
-### Implemented admin chat structural proposals
-
-- Extended Adventure Plan Admin Chat with a Plan Structure target and typed structural proposals for adding sections, scenes, and encounters.
-- Added shared validation and application logic for structural proposal JSON, including required summaries, encounter intros, GM instructions, and de-duplicated encounter IDs.
-- Updated the chat drawer to preview structural proposals and apply them through the existing editor state and save action only after the admin clicks Use.
-- Validation: `npx convex codegen` passed; `pnpm exec tsc --noEmit` passed; `pnpm build` passed with the existing missing `SENDGRID_API_KEY` warning.
-
-### Implemented admin chat thread context
-
-- Extended Admin Chat so each assistant request includes the stored per-plan thread discussion, with oldest-message trimming only when the prompt approaches the model context budget.
-- Added compact context-pressure metadata to assistant chat messages, including model id, estimated and reported token usage, included and omitted message counts, and warning status.
-- Updated the Admin Chat drawer to show context pressure only when usage is notable or prior thread messages were omitted.
-- Updated the admin chat feature plan and planning dashboard to record Unit 04, thread context and pressure reporting.
-- Validation: `npx convex codegen` completed; `pnpm exec tsc --noEmit` passed; `pnpm build` passed. `pnpm check` remains blocked by the known Biome config/schema mismatch.
-
-## 2026-05-25
-
-### Fixed admin chat review context
-
-- Updated Admin Chat to distinguish advisory review prompts from rewrite prompts so evaluation requests do not produce source-edit refusals or suggestion blocks.
-- Expanded Admin Chat context with a compact plan outline and full active-section scene and encounter details from the current editor state.
-- Added a section-review target for section-level analysis and used temporary gated server diagnostics during verification.
-- Validation: `pnpm exec tsc --noEmit` passed and `pnpm build` passed. `pnpm lint` remains blocked by the known Biome config/schema mismatch.
-
-## 2026-05-24
-
-### Restored March of Davos NPC and monster references
-
-- Audited March of Davos encounter prose against NPC frontmatter references and NPC sheets.
-- Added missing NPC/monster source records for the Forest Drake, Ancient Undead, Thaddeus Blackthorn, Joran Antonov, Eldrin Varokich, Clive Stonebrook, Mira Hearthstone, and Harron.
-- Attached missing encounter references across the Docks, Library, Wine Cellar, Masquerade Ball, and Covenant finale sequences.
-- Validation evidence: March of Davos bridge check, `pnpm exec tsc --noEmit`, and `pnpm build` passed.
-
-### Shifted admin authoring to chat-primary revisions
-
-- Changed the admin wiki authoring direction from approval-gated AI change-set queues to auto-applied chat and key-field edits backed by restorable S3 revisions.
-- Removed section/scene text editing, manual NPC add/remove editing, visible NPC IDs, and manual save/export/import as primary authoring controls.
-- Updated Stage 6 and final migration plan language so chat, validation, and revision restore are the primary adventure-plan editing model.
-
-### Simplified admin sections sidebar top bar
-
-- Removed outer padding, borders, and button chrome from the sidebar search/collapse row.
-- Changed the row to a flush segmented bar with search icon, full-height input, and borderless collapse icon separated only by vertical dividers.
-- Validation evidence: `pnpm exec biome check components/wiki-adventures/admin-wiki-adventure-editor.tsx`, `pnpm test:wiki-adventures:admin-authoring`, and `pnpm exec tsc --noEmit --pretty false` passed.
-
-### Aligned collapsed sections restore control
-
-- Moved the collapsed-state restore menu button inline with the page eyebrow row so titles align with the editor content.
-- Reduced the expanded sidebar collapse icon stroke to `0.75`.
-- Validation evidence: `pnpm exec biome check components/wiki-adventures/admin-wiki-adventure-editor.tsx`, `pnpm test:wiki-adventures:admin-authoring`, and `pnpm exec tsc --noEmit --pretty false` passed.
-
-### Cleaned up admin sections navigator controls
-
-- Enlarged the sidebar collapse icon within its button and removed repeated link-count badges from encounter rows.
-- Validation evidence: `pnpm exec biome check components/wiki-adventures/admin-wiki-adventure-editor.tsx`, `pnpm test:wiki-adventures:admin-authoring`, and `pnpm exec tsc --noEmit --pretty false` passed.
-
-### Refined admin wiki sections sidebar design
-
-- Improved the left adventure sections navigator surface, search row, selected page treatment, and collapse button styling.
-- Made the collapse control a compact integrated button beside search instead of a visually heavy standalone block.
-- Validation evidence: `pnpm exec biome check components/wiki-adventures/admin-wiki-adventure-editor.tsx`, `pnpm test:wiki-adventures:admin-authoring`, and `pnpm exec tsc --noEmit --pretty false` passed.
-
-### Added admin wiki sections sidebar toggle
-
-- Added a sidebar search-row toggle to hide the left adventure sections navigator on desktop admin wiki editor layouts.
-- When collapsed, the restore menu button appears as a square control at the upper-left of the selected page header.
-- Collapsed state gives the selected page more working width while preserving the chat rail and current selection.
-- Validation evidence: `pnpm exec biome check components/wiki-adventures/admin-wiki-adventure-editor.tsx`, `pnpm test:wiki-adventures:admin-authoring`, and `pnpm exec tsc --noEmit --pretty false` passed.
-
-## 2026-05-23
-
-### Expanded admin character detail display
-
-- Removed the character source file-path box from the admin character editor.
-- Added read-only sheet detail sections for appearance, personality, background, motivation, behavior, attributes, skills, equipment, spells, and special abilities when present.
-- Validation evidence: `pnpm exec biome check components/wiki-adventures/admin-wiki-adventure-editor.tsx`, `pnpm test:wiki-adventures:admin-authoring`, and `pnpm exec tsc --noEmit --pretty false` passed.
-
-### Redesigned admin wiki character editor layout
-
-- Added a dedicated character profile editor layout instead of reusing the module page editor for NPC and premade character markdown.
-- Changed character art to a square portrait treatment, removed repeated header/summary content, and kept one editable summary field with paired sheet metadata badges.
-- Kept character source writes scoped to markdown profile title, image, and summary fields; JSON sheet handling remains unchanged.
-- Validation evidence: `pnpm exec biome check components/wiki-adventures/admin-wiki-adventure-editor.tsx`, `pnpm test:wiki-adventures:admin-authoring`, and `pnpm exec tsc --noEmit --pretty false` passed.
-
-### Unified admin wiki character navigation
-
-- Changed the admin wiki editor navigation to show one `Characters` group instead of separate NPC profile, premade character, and sheet groups.
-- Paired character profile markdown and JSON sheets by id, preferring profile paths while preserving JSON-only orphan sheets.
-- Kept compiler, runtime artifacts, migrations, S3 source layout, and validation behavior unchanged.
-- Validation evidence: `pnpm exec biome check components/wiki-adventures/admin-wiki-adventure-editor.tsx` and `pnpm test:wiki-adventures:admin-authoring` passed.
-
-### Improved admin wiki chat sidebar design
-
-- Reworked the right sidebar in `components/wiki-adventures/admin-wiki-adventure-editor.tsx` into a full-height chat rail with a stronger header, source status chip, labeled prompt dock, custom apply button, and structured change log.
-- Preserved existing chat behavior and source-write flow while improving visual hierarchy, spacing, message contrast, and scroll containment.
-- Validation evidence: `pnpm exec biome check components/wiki-adventures/admin-wiki-adventure-editor.tsx` passed. Full `pnpm check` remains blocked by pre-existing repository-wide Biome diagnostics outside this change.
-
-### Reworked admin wiki editor toward classic module reading
-
-- Promoted March of Davos encounter hierarchy into durable `sectionTitle`, `sceneTitle`, and `moduleOrder` frontmatter.
-- Changed the admin wiki outline to use nested adventure section and scene groups instead of a flat encounter list.
-- Added module-style page editing with prominent art preview, replace/remove image controls, read-aloud intro, GM notes, and exits.
-- Expanded encounter NPC editing into a compact source-backed NPC panel with portraits, identity details, and sheet/profile summaries while preserving editable reference fields.
-- Validation evidence: `pnpm test:wiki-adventures:admin-authoring`, `pnpm test:wiki-adventures:march-of-davos-bridge`, `pnpm tsc --noEmit --pretty false`, `pnpm build`, and `git diff --check` passed.
-
-### Refined admin wiki editor into a navigable wiki map
-
-- Replaced the flat source-file list feel with grouped wiki navigation for adventure pages, encounters, NPC profiles, premade characters, and sheets.
-- Added parsed typed-link navigation, encounter transition visibility, backlinks, selected-page context, and a more structured editor layout.
-- Validation evidence: `pnpm test:wiki-adventures:admin-authoring`, `pnpm tsc --noEmit --pretty false`, and `pnpm build` passed. Local route smoke for `/admin/wiki-adventures/realm-of-myr/march-of-davos` returned `200 OK`.
-
-### Implemented admin wiki authoring rebuild
-
-- Added a per-adventure admin wiki editor at `/admin/wiki-adventures/{settingId}/{planId}` with chat-first improvement, key-field editing, validation status, and manual export/restore bundles.
-- Changed wiki adventure runtime loading to prefer canonical S3 `content/` source and fall back to migrated repo-local source when S3 source is not present.
-- Added admin source actions for listing migrated wiki adventures, loading source trees, applying AI chat writes, saving key fields, and exporting/importing source bundles.
-- Hid the visible legacy Adventure Plans admin entry in favor of Wiki Adventures.
-- Validation evidence: `pnpm test:wiki-adventures:admin-authoring`, all migrated adventure bridge checks, `pnpm test:wiki-adventures:batch-a`, `pnpm test:wiki-adventures:batch-b`, `pnpm tsc --noEmit --pretty false`, `pnpm build`, and `git diff --check` passed. Local route smoke checks for `/admin/wiki-adventures` and `/admin/wiki-adventures/realm-of-myr/covert-cargo` returned `200 OK`.
-
-### Implemented March of Davos wiki migration
-
-- Added `wiki/plans/march-of-davos-wiki-migration.html` and indexed `wiki/sources/adventure plans/the-march-of-davos-plan.json`.
-- Added `scripts/migrate-march-of-davos.ts` and `pnpm migrate:march-of-davos` to normalize the older nested source into wiki source files.
-- Generated 45 encounter files, 35 promoted NPC sheet/profile pairs, and a migration report; folded legacy stage text into GM notes.
-- Set the blank start field to `the-gates-of-kordavos` and inferred linear transitions across the legacy encounter order.
-- Added `scripts/wiki-adventures-march-of-davos-bridge-check.ts` and `pnpm test:wiki-adventures:march-of-davos-bridge`.
-- Validation evidence: `pnpm migrate:march-of-davos`, `pnpm test:wiki-adventures:march-of-davos-bridge`, `pnpm test:wiki-adventures:road-to-kordavos-bridge`, `pnpm test:wiki-adventures:covert-cargo-bridge`, `pnpm test:wiki-adventures:midnight-bridge`, `pnpm tsc --noEmit --pretty false`, `pnpm build`, and `git diff --check` passed. Signed-out local route checks for `/settings/realm-of-myr/play`, `/settings/realm-of-myr/march-of-davos/practice`, and `/settings/realm-of-myr/march-of-davos/character-select` returned `200 OK`.
-
-### Implemented Road to Kordavos wiki migration
-
-- Added `wiki/plans/road-to-kordavos-wiki-migration.html` and indexed `wiki/sources/adventure plans/the_road_to_kordavos_adventure_plan.json`.
-- Added `scripts/migrate-road-to-kordavos.ts` and `pnpm migrate:road-to-kordavos` to generate wiki source files and migration report.
-- Repaired the blank legacy start field to `well-met` and recorded the repair in the migration report.
-- Extended local wiki runtime support for saved player characters so custom-character adventures can start and transition without premade sheets.
-- Added `scripts/wiki-adventures-road-to-kordavos-bridge-check.ts` and `pnpm test:wiki-adventures:road-to-kordavos-bridge`.
-- Validation evidence: `pnpm migrate:road-to-kordavos`, `pnpm test:wiki-adventures:road-to-kordavos-bridge`, `pnpm test:wiki-adventures:covert-cargo-bridge`, `pnpm test:wiki-adventures:midnight-bridge`, `pnpm tsc --noEmit --pretty false`, `pnpm build`, and `git diff --check` passed. Signed-out local route checks for `/settings/realm-of-myr/play`, `/settings/realm-of-myr/the-road-to-kordavos/practice`, and `/settings/realm-of-myr/the-road-to-kordavos/character-select` returned `200 OK`.
-
-### Implemented Covert Cargo wiki trial
-
-- Added `wiki/plans/covert-cargo-wiki-trial.html` and indexed `wiki/sources/adventure plans/covert-cargo.json` as a legacy Realm of Myr source.
-- Added `scripts/migrate-covert-cargo.ts` and `pnpm migrate:covert-cargo` to generate Covert Cargo wiki source files and a migration report.
-- Repaired legacy source issues during migration: missing start encounter set to `the-shipment`, blank transition target dropped, and numeric premade IDs quoted in frontmatter.
-- Generalized the local wiki runtime bridge so Covert Cargo and The Midnight Summons share compiled-artifact create/start/advance behavior.
-- Added `scripts/wiki-adventures-covert-cargo-bridge-check.ts` and `pnpm test:wiki-adventures:covert-cargo-bridge` for the start-flow bridge proof.
-- Validation evidence: `pnpm migrate:covert-cargo`, `pnpm test:wiki-adventures:covert-cargo-bridge`, `pnpm test:wiki-adventures:midnight-bridge`, `pnpm tsc --noEmit --pretty false`, `pnpm build`, and `git diff --check` passed. Signed-out local route checks for `/settings/realm-of-myr/play`, `/settings/realm-of-myr/covert-cargo/practice`, and `/settings/realm-of-myr/covert-cargo/character-select` returned `200 OK`.
-
-## 2026-05-22
-
-### Implemented The Midnight Summons playthrough bridge
-
-- Added `lib/wiki-adventures/midnight-summons-runtime.ts` to load the migrated wiki source tree, compile publish-valid runtime artifacts, expose a pinned content ref, build first-turn characters from paired wiki sheets, and detect final encounters.
-- Updated `createAdventure` so The Midnight Summons pins wiki content, initializes `currentEncounterId`, and copies Thalbern from the migrated wiki character sheet.
-- Updated `startAdventure` so The Midnight Summons creates its first turn from compiled wiki artifacts instead of legacy nested AdventurePlan encounters.
-- Updated `advanceTurn` so The Midnight Summons uses the wiki gameplay context packet, wiki prompt, transition validator, adventure patch validator, and guarded `commitWikiTurnAdvance`.
-- Added `scripts/wiki-adventures-midnight-bridge-check.ts` and `pnpm test:wiki-adventures:midnight-bridge` to verify the bridge wiring, repaired transition, final encounter detection, and first-turn character assembly.
-- Validation evidence: `pnpm test:wiki-adventures:midnight-bridge`, `pnpm migrate:midnight-summons`, `pnpm tsc --noEmit --pretty false`, `pnpm build`, and `git diff --check` passed. A signed-out CLI HTTP check for `/settings/realm-of-myr/play` returned `200 OK`.
-- Authenticated browser smoke reached the first generated turn after selecting Thalbern, proving public selection, solo auto-start, and first-turn creation. The smoke exposed a Next Image/S3 asset issue, fixed by switching migrated URLs to the existing `d20-public.s3.us-east-1.amazonaws.com` asset host and allowing that host in Next config.
-- Remaining manual playthrough: submit player actions, advance branches, and verify completion UI.
-
-### Migrated The Midnight Summons into wiki source files
-
-- Added `scripts/migrate-midnight-summons.ts` and `pnpm migrate:midnight-summons` to migrate the legacy JSON source into authored wiki files.
-- Generated `content/settings/realm-of-myr/adventures/the-midnight-summons/adventure.md`, 7 encounter markdown files, paired Thalbern premade files, paired Wollandora/Owlbear NPC files, and `migration-report.json`.
-- Repaired the stale transition target `broken-silence -> wollandora-intervention` to `broken-silence -> timely-rescue` and recorded it in the migration report.
-- Converted legacy local image paths into full S3 URLs under `https://d20-public.s3.us-east-1.amazonaws.com/`, which matches the existing public S3 asset host.
-- Validation evidence: `pnpm migrate:midnight-summons` generated 14 source files plus the migration report and compiled the result in publish mode with status `passed`.
-
-### Expanded The Midnight Summons plan to cover full adventure migration
-
-- Added a full adventure migration scope section to `wiki/plans/midnight-summons-playthrough-test.html` covering the adventure root, section/scene wrappers, 7 encounters, 11 transition edges, 2 NPC records, Thalbern, and 11 image references.
-- Clarified that section/scene framing should not be lost even if runtime artifacts are encounter-first.
-- Added acceptance coverage requiring every legacy adventure object to be represented in wiki source or documented as intentionally transformed.
-
-### Clarified premade character migration for The Midnight Summons
-
-- Updated `wiki/plans/midnight-summons-playthrough-test.html` to state that existing premade characters are still inline legacy `AdventurePlan.premadePlayerCharacters[]` JSON, not authored wiki source files.
-- Added a premade migration section requiring paired `characters/thalbern.md` and `characters/thalbern.json` files, with the JSON sheet validating against `types/character.ts` `pcTemplateSchema`.
-- Called out the required standard attributes, runtime copy behavior, and S3 image URL publish requirement for Thalbern.
-
-### Audited The Midnight Summons plan for full solo playthrough coverage
-
-- Expanded `wiki/plans/midnight-summons-playthrough-test.html` with a full flow audit covering adventure listing, character selection, solo auto-start, first turn render, roll/action loop, branching transitions, terminal encounters, completion UI, post-completion record, and replay/new-run behavior.
-- Identified a legacy content issue: `broken-silence` references `wollandora-intervention`, but the JSON source contains `timely-rescue`. Publish validation should block this unless the migration corrects or aliases the transition.
-- Added explicit completion acceptance gates for terminal encounters, `isFinalEncounter`, Adventure `completed` status, `endedAt`, final controls, and Play Again isolation.
-
-### Added The Midnight Summons focused playthrough plan
-
-- Added `wiki/plans/midnight-summons-playthrough-test.html` as a focused plan for migrating and testing the single-player Realm of Myr adventure from the current public selection and Thalbern premade selection screens.
-- Indexed the new legacy JSON source at `wiki/sources/adventure plans/the-midnight-summons.json` in `wiki/Sources.html`.
-- Linked the playthrough plan from `wiki/plans/index.md`.
-- Current recommendation: use The Midnight Summons as the first live playthrough cutover candidate, starting with a preview-backed migration and blocking publish until full S3 asset URLs are present.
-
-## 2026-05-21
-
-### Implemented Wiki Adventure Batch F Convex session pinning
-
-- Added optional Convex `adventures` fields for `currentEncounterId`, pinned `contentRef`, accumulated `adventureSummaryMarkdown`, discoveries, entity updates, open threads, and resolved thread IDs.
-- Added optional Convex `turns` fields for embedded `adventurePatch`, transition decision data, and generated-by metadata.
-- Updated adventure creation and first-turn creation mutations to accept pinned content refs and initial current encounter state without breaking existing callers.
-- Added `commitWikiTurnAdvance` to reject stale current-turn, stale current-encounter, and stale content-hash writes before inserting the next turn and applying the adventure wiki patch.
-- Updated legacy finalization to maintain `currentEncounterId` as turns advance, preserving compatibility while Batch G/old-system removal decides when to switch live advancement fully to the wiki runtime path.
-- Added `lib/wiki-adventures/convex-session.ts` and `scripts/wiki-adventures-batch-f-check.ts` to verify content-pin guard behavior and adventure wiki patch accumulation without requiring production Convex state.
-- Validation evidence: `pnpm test:wiki-adventures:batch-f`, `pnpm test:wiki-adventures:batch-e`, `pnpm test:wiki-adventures:batch-d`, `pnpm test:wiki-adventures:batch-c`, `pnpm test:wiki-adventures:batch-b`, `pnpm test:wiki-adventures:batch-a`, `pnpm tsc --noEmit --pretty false`, and `pnpm build` passed in the implementation worktree.
-- Known repo-level validation caveat remains: `pnpm check` is blocked by the existing Biome configuration schema mismatch before checking project files.
-
-### Implemented Wiki Adventure Batch E gameplay runtime projection
-
-- Added `lib/wiki-adventures/artifact-loader.ts` with in-memory and S3 loaders for pinned published/preview runtime artifacts and `latest.json` resolution.
-- Added `lib/wiki-adventures/runtime-context.ts` to assemble the AI GM context packet from compiled artifacts plus live turn/session snapshots, preserving recent-turn and roll-context compatibility without reading legacy `AdventurePlan.sections[].scenes[]`.
-- Added `lib/wiki-adventures/transition-validator.ts` to validate current-encounter continuation, legal graph transitions, illegal targets, unresolved targets, stale content, and stale encounter results before session movement.
-- Added `lib/wiki-adventures/adventure-patch.ts` to validate the AI GM `adventurePatch` contract and align patch transition data with the accepted transition validator result.
-- Added `buildWikiEncounterProgressionPrompt` for compiled-artifact gameplay prompts that include content hash/version guards, current encounter sections, legal transition IDs, recent turns, roll context, player-character guardrails, and `adventurePatch` output requirements.
-- Added `scripts/wiki-adventures-batch-e-check.ts` and `pnpm test:wiki-adventures:batch-e` to verify publish/load, context packet assembly, prompt shape, legal/illegal/stale transition validation, and adventure patch validation.
-- Validation evidence: `pnpm test:wiki-adventures:batch-e`, `pnpm test:wiki-adventures:batch-d`, `pnpm test:wiki-adventures:batch-c`, `pnpm test:wiki-adventures:batch-b`, `pnpm test:wiki-adventures:batch-a`, `pnpm tsc --noEmit --pretty false`, and `pnpm build` passed in the implementation worktree.
-- Known repo-level validation caveat remains: `pnpm check` is blocked by the existing Biome configuration schema mismatch before checking project files.
-
-### Implemented Wiki Adventure Batch D AI authoring change-set tools
-
-- Added `lib/wiki-adventures/ai-authoring-tools.ts` with deterministic app-owned authoring tools that return `AuthoringChangeSet` proposals, file diffs, draft-preview validation before/after, risk notes, and mechanical-confirmation flags.
-- Covered the Stage 8 Batch D tool categories: create encounter, expand encounter, split encounter, link transition, repair missing transition target, summarize entity, add transition, and create paired character markdown/JSON files.
-- Added `proposeWikiAdventureAiChangeSet` to the wiki adventure server actions so the workbench can request validated change-set proposals without direct client-side source mutation or production S3 writes.
-- Updated the workbench AI panel to call the proposal action, display file-level diffs and validation status, and apply accepted proposals only to the local draft buffer for review.
-- Added `scripts/wiki-adventures-batch-d-check.ts` and `pnpm test:wiki-adventures:batch-d` to verify every tool returns change sets, previews diffs, runs validation, repairs an unresolved transition, and flags character-pair JSON as mechanical.
-- Validation evidence: `pnpm test:wiki-adventures:batch-d`, `pnpm test:wiki-adventures:batch-c`, `pnpm test:wiki-adventures:batch-b`, `pnpm test:wiki-adventures:batch-a`, `pnpm tsc --noEmit --pretty false`, and `pnpm build` passed in the implementation worktree.
-
-### Implemented Wiki Adventure Batch C authoring workbench
-
-- Added the first admin wiki authoring workbench route at `/admin/wiki-adventures`, linked from the admin dashboard.
-- Added `components/wiki-adventures/wiki-adventure-workbench.tsx` with source tree, markdown/JSON editor, save/dirty state, validation drawer, AI change-set queue, entity inspector, graph preview, compiled encounter preview, and publish center panels.
-- Added `app/_actions/wiki-adventures/workbench-actions.ts` so the workbench can run draft-preview or publish validation through the server-side compiler instead of client-only heuristics.
-- Added `lib/wiki-adventures/myr-fixture.ts` and `lib/wiki-adventures/workbench-demo.ts` to feed the workbench from the migrated representative Myr AdventurePlan and compiled runtime artifacts.
-- Added `scripts/wiki-adventures-batch-c-check.ts` and `pnpm test:wiki-adventures:batch-c` to verify the workbench model includes markdown/JSON source files, graph nodes, publish artifact preview, and draft-vs-publish transition validation behavior.
-- Validation evidence: `pnpm test:wiki-adventures:batch-c`, `pnpm test:wiki-adventures:batch-b`, `pnpm test:wiki-adventures:batch-a`, `pnpm tsc --noEmit --pretty false`, and `pnpm build` passed in the implementation worktree. A local signed-out HTTP check returned `200 OK` with the expected admin access-denied state for `/admin/wiki-adventures`.
-
-### Implemented Wiki Adventure Batch B preview/publish and Myr migration
-
-- Added `lib/wiki-adventures/published-repository.ts` with mutable draft preview artifact writes, immutable timestamp/hash published versions, `latest.json` pointer writes, unchanged-content publish no-op behavior, rollback pointer movement, and in-memory/S3-backed repository implementations.
-- Added `lib/wiki-adventures/myr-migration.ts` to convert legacy `AdventurePlan` JSON into wiki source files for `adventure.md`, encounter markdown, setting NPC markdown/JSON sheets, adventure premade character markdown/JSON sheets, full S3 URL asset fields, and migration reports.
-- Added `scripts/wiki-adventures-batch-b-check.ts` and `pnpm test:wiki-adventures:batch-b` to verify one representative Myr adventure migrates, compiles in publish mode with zero errors, writes preview artifacts, publishes immutable artifacts, no-ops unchanged publish, and rolls back the latest pointer.
-- Validation evidence: `pnpm test:wiki-adventures:batch-b`, `pnpm test:wiki-adventures:batch-a`, and `pnpm tsc --noEmit --pretty false` passed in the implementation worktree.
-- Known repo-level validation caveat remains: `pnpm check` is blocked by the existing Biome configuration schema mismatch before checking project files.
-
-### Started Wiki Adventure implementation Batch A
-
-- Implemented foundation modules under `lib/wiki-adventures/` for source models, content hashing, S3 key/version helpers, markdown/frontmatter parsing, typed wiki link extraction, change-set application with stale-hash checks, source services, validation reports, and runtime artifact compilation.
-- Added `scripts/wiki-adventures-batch-a-check.ts` and `pnpm test:wiki-adventures:batch-a` to verify the representative skeleton compile path, draft-vs-publish transition validation, character sheet validation, and approved change-set behavior.
-- Validation evidence: `pnpm test:wiki-adventures:batch-a` passed and `pnpm tsc --noEmit --pretty false` passed in the implementation worktree.
-- Known repo-level validation caveat: `pnpm check` is currently blocked by the existing Biome configuration schema mismatch before checking project files.
-
-### Audited and repaired wiki link navigation
-
-- Audited all 20 wiki HTML files for broken local references, invalid anchors, reachability from `wiki/index.html`, and return paths to core wiki pages.
-- Added consistent utility navigation to every wiki HTML page with links to the wiki home, source index, plans, roadmap, and architecture pages.
-- Added direct source brief links to `wiki/Sources.html` so the evidence ledger links to the product, technical, design, and marketing briefs.
-- Validation after repair found 0 broken local references, 0 invalid anchors, and 0 unreachable HTML pages.
-
-### Locked Stage 3 wiki content model direction
-
-- Updated `wiki/plans/wiki-adventure-migration/stage-03-content-model.html` to lock the content model around markdown-authored `encounter` files as the active gameplay unit.
-- Recorded the canonical S3 folder model: setting-level reusable NPCs, locations, factions, and items; adventure-level manifests, encounters, premade characters, and assets.
-- Added `wiki/plans/wiki-adventure-migration/stage-03-myr-skeleton.html` as a representative Myr skeleton with `adventure.md`, one encounter, one NPC, one location, premade character handling, transitions, and validation notes.
-- Planning nuance: a one-encounter skeleton can demonstrate the model, and the editor should allow planning-preview skeletons with unresolved transition targets. Publish readiness still requires every transition target to resolve or exist as a stub encounter.
-- Added image reference guidance: NPCs, premade PCs, setting locations, encounters, adventures, and other authored entities should support S3 image references through frontmatter and compiled asset validation.
-- Recorded that NPC and PC-like content should use the standard six ability scores from the current open D&D SRD 5.2 rules reference, stored under the existing schema field name `attributes`: Strength, Dexterity, Constitution, Intelligence, Wisdom, and Charisma.
-- Revised character planning to a hybrid model: JSON character sheets are the source of truth for default mechanical state, while paired markdown profiles provide wiki links, role notes, and retrieval context.
-- Locked authored NPC and premade PC JSON sheet field names to match `types/character.ts`; premade character sheets compile to `PCTemplate`, NPC sheets compile to `NPC`, and Convex `TurnCharacter` records are mutable session snapshots.
-- Updated future-stage planning references from stale `page`-based gameplay terminology to the locked `encounter`-based model.
-- Drafted Stage 4, Unit 01 index shape: published runtime artifacts include `manifest.json`, `encounters.json`, `entities.json`, `character-sheets.json`, `graph.json`, `retrieval-index.json`, and `validation-report.json`.
-- Drafted Stage 4, Unit 02 validation model with separate `draftPreview` and `publish` modes, stable validation finding codes, severity rules, and AI-fixable repair policy.
-- Drafted Stage 4, Unit 03 publish/index strategy: explicit compile pipeline, disposable preview bundles, immutable published versions, `latest.json` pointer, content hashes, session version pinning, and rollback rules.
-- Drafted Stage 4, Unit 04 S3 contract: source/preview/published prefixes, source layout, preview/published artifact layout, metadata/cache expectations, access policy expectations, and deletion/retention rules.
-- Drafted Stage 5, Unit 01 context assembly: the LLM gameplay prompt should be built from a typed context packet combining pinned published artifacts, deterministic linked context, live Convex session state, legal transition IDs, and the current JSON response contract.
-- Drafted Stage 5, Unit 02 transition model: the LLM proposes `nextEncounterId`, application code validates it against pinned `graph.json` and live Convex Adventure state, then records accepted or rejected transition patches without allowing stale or illegal target mutation.
-- Drafted Stage 5, Unit 03 dice and narrative compatibility: preserve lightweight D20 roll requirements, `[DiceRoll]` and `[OriginalReply]` narrative markers, mutable character session fields, encounter-scoped spell-use defaults, readable turn history, and practice-report compatibility without committing to a full D&D combat engine.
-- Drafted Stage 5, Unit 04 realtime session model: Convex remains the realtime authority for adventure sessions, participants, current turns, chat, transition/roll events, mutable character state, and generated history while S3 published artifacts remain the source of authored adventure content.
-- Advanced the planning dashboard to Stage 6 authoring and admin.
-- Drafted Stage 6, Unit 01 AI-assisted editor model: the new authoring UI should be wiki-first and diff-first, with AI producing structured change sets for markdown/JSON source files, draft-preview validation before writes, stale-write checks, and explicit human approval gates.
-- Drafted Stage 6, Unit 02 admin UX replacement: mapped current AdventurePlan editor capabilities to the wiki editor, preserving launch-critical authoring jobs while retiring the monolithic JSON form, section/scene nesting, direct AI mutation, and hidden runtime flags behind explicit source files, graph views, validation, and preview workflows.
-- Drafted Stage 6, Unit 03 draft/publish lifecycle: editable source files, disposable preview bundles, immutable published versions, explicit publish validation, version history, rollback through `latest.json`, permissions, and preview playthrough pinning.
-- Drafted Stage 6, Unit 04 design requirements: the wiki editor should be a dense operational workbench with file tree, markdown/JSON editor, AI change-set panel, validation drawer, graph/compiled preview, publish center, visible states, and accessibility requirements.
-- Drafted Stage 7 relaunch migration: implementation should happen in an isolated relaunch worktree, migrate Myr JSON templates to wiki source with validation proof, maintain delete/adapt/defer removal gates, and roll out through preview validation with deployment/content-pointer rollback.
-- Advanced the planning dashboard to Stage 8 final plan assembly.
-- Drafted Stage 8 final implementation assembly: implementation milestones, worktree start guidance, test and acceptance plan, launch gates, risk controls, and handoff prompt for future implementation agents.
-- Marked the Wiki Adventure Migration planning program implementation-ready; next work should start only in an isolated relaunch worktree after explicit approval.
-- Refined the runtime plan: Adventure Plans are stable authored S3 wiki templates, while live Adventures are AI-GM-controlled playthrough instances that evolve a backend Adventure wiki record in Convex through validated `adventurePatch` updates.
-- Locked implementation-contract addendum decisions: one shared active draft per Adventure Plan, change-set-only source writes, mutable latest preview per draft, timestamp/hash publish versions, full S3 URL asset fields, retained `planId` semantics, and embedded transition patches instead of a v1 `transition_events` table.
-- No app code changes were made.
-
-## 2026-05-20
-
-### Created Wiki Adventure Migration planning program
-
-- Added an active multi-stage planning track at `wiki/plans/wiki-adventure-migration/`.
-- Recorded user decisions: S3 is canonical wiki storage; required frontmatter plus pattern-guided markdown; AI-assisted generation/editing; complete relaunch in a worktree; old JSON/editor architecture can be removed; Myr templates must be migrated.
-- Updated the planning dashboard so Stage 1, Unit 01 - current-state dependency inventory is the current planning unit.
-- No app code changes were made; this is a planning-only artifact set.
-
-### Initialized HTML project wiki
-
-- Imported existing repo context into a new HTML-first project wiki at `wiki/`.
-- Classified lifecycle as existing product prototype / post-MVP import, so no `wiki/plans/mvp/` tree was created.
-- Created source briefs for product, technical, design, marketing, and architecture context because repository evidence supported each one.
-- Recorded ask-first automation policy for commits, code changes, pushes, dependency installs, and long commands.
-- Key unresolved context: confirm whether 2026-02-28 authorization/realtime findings are still open before starting corrective implementation.
+Migrated all four Myr adventures and replaced the legacy plan editor with chat and key-field editing. Chat changes apply directly through validated canonical writes. New community-adventure creation remained deferred.

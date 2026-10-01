@@ -1,46 +1,45 @@
 # Roadmap
 
-[Home](index.md) · [Sources](Sources.md) · [Plans](plans/index.md) · **Roadmap** · [Architecture](Architecture.md)
+[Home](index.md) · [Plans](plans/index.md) · [Architecture](Architecture.md) · [Log](log.md)
 
-## Experience Modes
+Reviewed 2026-10-01. This separates implemented behavior from the chosen next direction.
 
-Three distinct ways to experience the same adventure. All modes share the same game state and adventure content — players can switch freely between them mid-adventure.
+## Now, Stageview integration
 
-### Gameview (current)
-The default experience. Text-driven, turn-by-turn play with the AI Game Master. Players read encounter narrative, make choices, and roll dice. The foundation all other views build on.
+Stageview is the owner's chosen primary play screen, decided 2026-09-29. The engine, Myr crowd library, Kordavos gate set, and development preview are implemented. Players still use the existing text turn page.
 
-### Storyview
-A cinematic, immersive mode. Encounter narrative is presented one paragraph at a time, with each paragraph read aloud via AI-generated text-to-speech. The player taps to advance between paragraphs. Decision points and dice rolls still occur — they are narrated just like the story text. Feels like an interactive audiobook.
+Next work:
 
-### Mapview
-A tabletop-inspired visual layer: 2D standard D&D-style battle maps, AI-generated at authoring time from encounter text using a standard SVG piece set (designed in OpenPencil). Square grid first (hex-ready schema). A static scene backdrop per encounter — the narrative and choices remain the primary interface; the map shows where you are in the world. Plan: [Mapview](plans/mapview.md).
+1. Add staging scripts, set loops, and the Harvest Festival set.
+2. Build the stage-first turn page with docked narrative/input, character art, beats, and Storyview synchronization.
+3. Cover encounters with authored or generic sets and default staging.
+4. Verify phone landscape handling, accessibility, reduced motion, and text fallback on devices that cannot run the stage.
 
-### Stageview (primary play screen; supersedes Miniview)
-A living, painted 3D stage for each encounter. On 2026-09-29 the owner went all in: Stageview becomes the primary play screen, with the text turn UI docked over the stage, a landscape requirement on phones, and Gameview kept as the text layer and the no-GPU fallback. It is built from procedural three.js sets per location, uses instanced animated crowds, and applies a painterly Kuwahara post-process. Per-turn beats stage the narrative, and the scene holds while it waits for players. On 2026-09-29 the owner chose this direction over the existing 3D stack. The old stack (the r3f encounter diorama, scene-kit sets, standees, Hunyuan minis, and the dormant Miniview renderer) was removed on 2026-09-29 (merged to main); until Stageview ships, the turn page offers only the 2D Mapview. The engine port (phase 2) is merged to main (2026-09-29): sets are declarative JSON specs, and the Kordavos gate renders at `/dev/stage`. Plans: [Stageview](plans/stageview.md), [Stageview engine](plans/zzz-completed/feature-stageview-engine.md), [Remove 3D stack](plans/zzz-completed/feature-remove-3d-stack.md).
+Details and open decisions: [Stageview](plans/stageview.md). Mapview's role is unresolved. It may become an inset or be retired.
 
-## Adventure Creation
+## Maintenance
 
-Players can create and share their own settings and adventure plans. The wiki-adventure runtime provides the foundation — adventures are authored as structured markdown files that compile into a playable runtime. The creation surface exposes this authoring model to players directly, with tools for building encounters, NPCs, and branching narratives without touching the underlying files.
+[Maintenance follow-ups](plans/maintenance.md) tracks the test-wrapper issue, production admin sign-in behavior, editor clearing, legacy completion, narration coverage, technical audits, and remote cleanup.
 
-### Setting Builder
-Create a new world: define its name, lore, factions, and visual identity. Settings are the container for adventures — a setting can hold many adventures sharing the same NPCs, locations, and history.
+Security, realtime, and Convex audits remain proposed work. Older findings must be checked against current code before scheduling fixes.
 
-### Adventure Planner
-Build an adventure within a setting: write encounters, define transitions, place NPCs, and set branching conditions. The planner compiles and validates in real time, surfacing errors before publish.
+## Later, community creation
 
-### Community Library
-Browse, fork, and play adventures created by other players. Adventures can be published privately (invite-only), unlisted (link-share), or publicly (searchable in the library).
+- Setting creation with lore, factions, and visual identity.
+- New adventure creation beyond the current registered modules.
+- Community library, forks, and private/unlisted/public sharing.
 
-## Technical Architecture
+These ambitions need scoped plans. The current admin editor improves existing adventures and does not establish a complete community publishing workflow.
 
-- **Security Audit** — review adventure access control, per-character turn mutation, and Convex in-function auth checks.
-- **Realtime Audit** — verify Convex realtime subscriptions are correctly scoped; remove duplicated polling/SSE paths.
-- **Convex Audit** — index, validator, and query hardening (collect/filter hotspots, loose validators).
+## Implemented foundation
 
----
+| Feature | State |
+|---|---|
+| Wiki adventures | Four Myr migrations, public/runtime cutover, validated admin writes, source fallback, and revision restore. |
+| Play layout | Character rail, narrative, map/audio/chat surfaces, and responsive controls. |
+| Mapview | Stored 2D maps, SVG catalog, admin generation, player rail/fullscreen view. |
+| Storyview | Narration with stable voices, cached segments, incremental generation, and owner-controlled automatic narration. |
+| Public rendering | Request-wide visit tracking removed, public content routes static, homepage personalization loaded through private APIs. |
+| Stageview foundation | Old 3D stack removed and replacement engine merged. |
 
-## Closed
-
-- **Static homepage** (2026-09-15): public `/` prerenders without Clerk middleware; signed-in welcome and token reads use authenticated APIs. [Plan](plans/zzz-completed/feature-static-homepage.md).
-- ✅ **Release readiness** (2026-06-11) — `pnpm check` green, admin S3 writes validated, complete-manifest fallback, admin routes normalized, Midnight Summons end-to-end playthrough. Full detail: [Production Cutover](plans/production-cutover.md).
-- ✅ **Production cutover** (2026-06-12) — entire discovery + gameplay path on wiki runtime, legacy editor removed, March of Davos reconciled, prod S3 audit + rollback verified, deployed to production.
+Historical milestones are in [the log](log.md). Merged code and production deployment are separate facts.

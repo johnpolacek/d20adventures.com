@@ -1,52 +1,42 @@
 # Sources
 
-[Home](index.md) · **Sources** · [Plans](plans/index.md) · [Roadmap](roadmap.md) · [Architecture](Architecture.md)
+[Home](index.md) · [Plans](plans/index.md) · [Roadmap](roadmap.md) · [Architecture](Architecture.md)
 
-This page catalogs the source material used to initialize and maintain the wiki. Claims are tied to repository evidence, current project docs, or explicit user instructions rather than inferred certainty.
+Reviewed 2026-10-01. Current local source establishes implementation. Dated logs establish past validation and decisions. Remote state requires a fresh read.
 
-**Reader goal:** after two minutes, know which sources are authoritative, which are stale, and where unknowns remain.
+## Source index
 
-## Summary
+| Source | Establishes |
+|---|---|
+| `package.json`, `pnpm-lock.yaml` | Script names and declared/resolved dependencies. |
+| `app/`, `components/`, `proxy.ts`, `next.config.ts` | Routes, UI, auth matcher, and runtime content tracing. |
+| `lib/wiki-adventures/`, `content/settings/realm-of-myr/` | Four registered wiki adventures, compiler, source selection, admin writes, and runtime bridge. |
+| `app/_actions/advance-turn.ts`, `convex/adventure.ts` | Current live progression and content re-pinning behavior. |
+| `lib/services/turn-audio-service.ts`, `convex/turnAudio.ts` | Incremental narration, claims, manifests, charging, and auto mode. |
+| `lib/mapview/`, `components/mapview/` | Stored 2D maps, catalog, generation, placement, and rendering. |
+| `lib/stage/`, `public/stage/`, `app/dev/stage/` | Current Stage engine, declarative specs, assets, and preview. |
+| `tests/`, `scripts/wiki-adventures-*-check.ts`, `scripts/stage-*.ts` | Available verification and its actual scope. Tests are not evidence of passing until run. |
+| `scripts/wt.sh`, root and wiki `AGENTS.md` | Worktree behavior and automation policy. |
+| [Decision log](log.md) | Dated milestones, owner decisions, validation evidence, and limits. |
+| Git history through `0eedb26` | Pre-cleanup plans and implementation history. Deleted documents remain recoverable. |
 
-- **Application shape** *(confirmed from repo)* — Next.js App Router app with Convex backend, Clerk auth, S3 content storage, AI SDK integrations, Stripe, SendGrid, Playwright, Biome, and custom local skills.
-- **Product intent** *(confirmed from source doc)* — narrative turn-based RPG platform with an AI Game Master, authored adventure plans, character turns, rolls, NPC turns, and eventual multiplayer/community-creation ambitions.
-- **Fresh priorities** *(needs hardening)* — the wiki-adventure implementation is merged. Current priorities are post-merge validation cleanup, canonical S3 source-write safety, deployable repo-local fallback integrity, admin route naming, and manual playthrough coverage.
+## Retained migration inputs
+
+The files under `wiki/sources/adventure plans/` are legacy inputs, not current authored content. The four `scripts/migrate-*.ts` scripts still read their adventure JSON files. Preserve them unless the migration tooling is deliberately retired.
+
+The current authoring source is under `content/settings/realm-of-myr/` or the corresponding complete S3 source. March of Davos was reconciled from richer production source into the repo in June 2026, so rerunning its original migration can overwrite later authoring.
 
 ## Source briefs
 
-- **[Product brief](sources/prd.md)** — audience, gameplay loop, core workflows, constraints, and non-goals.
-- **[Technical brief](sources/technical-brief.md)** — stack, runtime boundaries, integration surfaces, validation posture, and known technical risks.
-- **[Design brief](sources/design-brief.md)** — interface principles, visual system direction, interaction patterns, and accessibility expectations.
-- **[Marketing brief](sources/marketing-brief.md)** — public-entry, launch, signup, and external-audience context.
+[Product](sources/prd.md) · [Technical](sources/technical-brief.md) · [Design](sources/design-brief.md) · [Marketing](sources/marketing-brief.md)
 
-## Source matrix
+Old root technical/assessment documents named in earlier wiki versions no longer exist. Their historical risk lists are not a substitute for inspecting current code.
 
-| Source | Evidence | Confidence | Notes |
-|---|---|---|---|
-| `app/page.tsx`, `components/views/home-adventure.tsx`, `app/api/user/`, `proxy.ts` | Static homepage shell, client-loaded personalized welcome, API-based token refresh, and no homepage Clerk matcher. | High | Production-mode cache headers and authenticated browser tests cover the new boundary. |
-| Installed `@clerk/nextjs` 7.0.1 `app-router/server-actions.js` | `invalidateCacheAction` deletes a cache-marker cookie without invoking `auth()`. | High | Sign-in/sign-out can still POST this SDK action to static pages without Clerk middleware. |
-| `README.md` | Product overview, gameplay loop, public links, future multiplayer/community goals. | High | Primary product narrative. |
-| `package.json` | Current dependency and script surface: Next 16.1.6, React 19.2.4, Convex 1.32.0, AI SDK 6, Clerk 7. | High | More current than older technical docs for exact versions. |
-| Merge commit `fbd3e97` | Brought `feature/wiki-adventure-implementation` into `main`: migrated wiki source, runtime bridge, Convex content refs, admin authoring, and route conflict resolution. | High | Current source of truth for the post-merge review baseline. |
-| `lib/wiki-adventures/` | Compiler, validation, source service, S3 key handling, local runtime, Convex session helpers, transition validation, admin authoring, and migration helpers. | High | Primary implementation surface for wiki-authored adventures. |
-| `content/settings/realm-of-myr/` | Migrated source for The Midnight Summons, Covert Cargo, The Road to Kordavos, March of Davos, NPC profiles, character sheets, and migration reports. | High | Repo-local fallback source for registered local wiki adventures. |
-| Production S3 audit, focused production build, and browser verification (2026-08-25) | S3 source coverage, output-file trace contents, and deployed/local listing behavior. | High | Three adventures have no canonical S3 source and March of Davos is incomplete, so all four currently require the explicitly traced repo-local fallback. |
-| `wiki/plans/zzz-completed/feature-remove-3d-stack.md`, commits `ed2eae4` and `e3e6770`, merged in `b06a42b` | Removal of the old 3D encounter stack and the map-only panel replacing it; measured removal size, lint baseline, and validation. | High | Not yet merged into `main`. S3 prefixes, retired branches and `FAL_KEY` cleanup are still open. |
-| Validation commands | Focused wiki-adventure batch tests, admin authoring, four bridge checks, TypeScript, and build pass after merge. `pnpm check` fails with current Biome diagnostics. | High | See the [implementation review](plans/wiki-adventure-implementation-review.md) for command-level detail. |
-| `TECHNICAL_DOCUMENTATION.md` | Architecture, runtime roles, data model, flows, LLM context guide, next milestones. | Medium | Strong structure, but dependency versions are older than `package.json`. |
-| `CODEBASE_ASSESSMENT.md` | Security findings, build/check status as of 2026-02-28, remediation phases. | Medium | Some status may be superseded by later code changes; use as risk context. |
-| `PRIORITY_ASSESSMENT_2026-02-28.md` | Convex, realtime, authorization, schema/index, and upgrade priorities. | Medium | Matches technical doc risk posture. |
-| `Roadmap.md` (repo root) | Prior stabilization cycle closed; fresh priorities were TBD at import time. | High | Canonical roadmap reset before wiki import. |
-| Repository tree | `app/`, `components/`, `convex/`, `lib/`, `types/`, `tests/`, `.agents/skills/`. | High | Confirms root target and repo-local skill convention. |
-| `wiki/sources/adventure plans/the-midnight-summons.json` | Legacy Realm of Myr source: 1-player party, Thalbern premade, 7 encounters, Wollandora and Owlbear NPCs, transition graph. | High | Primary source for the playthrough migration/test plan. |
-| `wiki/sources/adventure plans/covert-cargo.json` | Legacy Realm of Myr source: 2-player party, Lyra and Poppen premades, 9 encounters, 5 NPCs, branchy riverboat graph. | High | Primary source for the Covert Cargo migration and start-flow trial. |
-| `wiki/sources/adventure plans/the_road_to_kordavos_adventure_plan.json` | Legacy Realm of Myr source: 1-3 player custom-character adventure, 3 encounters, 4 NPCs, simple road-to-city graph. | High | Primary source for the Road to Kordavos migration and saved-character bridge. |
-| `wiki/sources/adventure plans/the-march-of-davos-plan.json` | Legacy Realm of Myr source: older nested format, 45 named encounters, inline NPC records, legacy stage blocks, no explicit transition graph. | High | Primary source for the March of Davos migration and normalization report. |
-| User instruction | Initialize the project wiki; prefer commits and pulls when confident. | High | Commit/pull preference lives in root `AGENTS.md` and `wiki/AGENTS.md`; pushes still require confirmation. |
+## Evidence limits
 
-## Known unknowns
+- Last recorded production S3 completeness audit: 2026-08-25. All four registered adventures then used repo fallback.
+- Last recorded Stage engine validation: 2026-09-29 on an M3 development build. No phone measurement.
+- Last recorded homepage browser/cache validation: 2026-09-15 on an isolated local production server.
+- October's documentation audit did not inspect current Vercel/Convex/S3 state, rerun gameplay, or delete remote resources.
 
-| Unknown | Why it matters | Safest next action |
-|---|---|---|
-| Authenticated end-to-end playthrough coverage after the merge. | Bridge tests validate runtime wiring, but user-facing creation, turns, completion, and admin edits need browser coverage. | Run at least one migrated adventure from character selection through completion with an authenticated account. |
-| Whether February 2026 security findings are already fully fixed. | Planning should not repeat completed work or miss remaining vulnerabilities. | Run a focused audit before creating an authorization plan. |
+Unknown deployment state, remaining temporary projects, and current audit findings are tracked in [maintenance](plans/maintenance.md).

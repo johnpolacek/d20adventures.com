@@ -1,45 +1,30 @@
-# AI-led narrative RPG sessions
+# Product brief
 
-[Home](../index.md) · [Sources](../Sources.md) · [Plans](../plans/index.md) · [Roadmap](../roadmap.md) · [Architecture](../Architecture.md)
+[Home](../index.md) · [Sources](../Sources.md) · [Roadmap](../roadmap.md) · [Plans](../plans/index.md)
 
-**Product source brief.** D20 Adventures is a turn-based narrative RPG platform where authored adventure plans are facilitated by an AI Game Master.
+Reviewed 2026-10-01 against local code and recorded owner decisions.
 
-**Status:** Last reviewed 2026-05-20. Evidence basis: `README.md`, `TECHNICAL_DOCUMENTATION.md`, repo tree. Confidence: medium.
+D20 Adventures is an AI-led narrative RPG. Players choose an authored adventure, select or create characters, respond with actions and dialogue, roll D20 checks, and progress through encounters.
 
-## Audience: Players and creators
+## Implemented experience
 
-Current experience centers on players joining/starting adventures and taking narrative turns. Future ambition includes multiplayer groups and community-created settings/adventure modules.
+- Solo, multiplayer lobby/join, and owner-controlled practice flows.
+- Wiki-authored adventures for The Midnight Summons, Covert Cargo, The Road to Kordavos, and March of Davos.
+- Text-driven turns, NPC behavior, character state, reports, chat, and completion.
+- Storyview audio with narrator/character voices, cached playback, and optional automatic narration.
+- Optional stored 2D Mapview encounter backdrops.
+- Admin chat and key-field editing of existing registered adventures.
 
-## Core outcome: Playable AI Game Master loop
+The rules remain lightweight narrative D20 checks rather than a full tabletop rules simulator.
 
-Players respond with actions/dialogue, roll when needed, receive generated narrative outcomes, and progress through encounters with NPC behavior.
+## Chosen next direction
 
-## Workflow: Create, join, start, play
+The owner chose Stageview as the primary play screen on 2026-09-29. A painted 3D stage will sit behind the complete docked turn UI. Phones will play in landscape, with a text fallback for devices that cannot run the stage.
 
-Adventure creation/lobby, join flow, first turn generation, player reply, roll requirement, roll resolution, NPC turns, and encounter advancement are core flows.
+The engine is merged. Stage-first gameplay, narration synchronization, character generation, and encounter coverage remain to be implemented. Mapview's future role is undecided.
 
-## Non-goal for now: Heavy RPG rules simulation
+## Later ambitions
 
-README explicitly favors simple D20 checks over complex mechanics while AI gameplay quality is being explored.
+Player-created settings and adventures, community browsing/forking, and private/unlisted/public sharing need separate plans. The existing wiki editor is not a complete community publishing product.
 
-## New Product Direction
-
-As of 2026-05-20, the active planning direction is a complete wiki-first relaunch: adventures become S3-backed markdown wikis, AI-assisted authoring/editing replaces the current Adventure Plan editor, and current Myr adventure plan templates will be migrated into the new wiki model.
-
-## Experience Modes
-
-Adventures can be experienced in three distinct modes. All modes share the same underlying game state and adventure content — players can switch between them freely at any point during play.
-
-**Gameview** is the current default: text-driven, turn-by-turn play with the AI Game Master. Players read encounter narrative, make choices, and roll dice.
-
-**Storyview** is a cinematic, immersive mode. Encounter narrative is presented one paragraph at a time, read aloud via AI-generated text-to-speech. Decision points and dice rolls still occur and are narrated. The player taps to advance. Feels like an interactive audiobook.
-
-**Mapview** adds a tabletop-inspired visual layer: a realistic 3D tile map — detailed terrain and character models evoking painted miniatures on a physical table — serves as a backdrop to the adventure. The narrative and choices remain the primary interface; the map shows where you are in the world.
-
-> **Note (2026-09-29, later):** The owner decided that Stageview, a painted 3D stage, becomes the primary play screen. The text turn UI docks over the stage, phones play in landscape, and Gameview becomes the text layer and the fallback. See [Stageview](../plans/stageview.md#stage-first-play-decided-2026-09-29).
->
-> **Note (2026-09-29):** Mapview shipped as 2D battle maps ([Mapview plan](../plans/mapview.md)). The 3D-miniatures idea in the paragraph above was prototyped and then removed ([Remove 3D stack](../plans/zzz-completed/feature-remove-3d-stack.md)); the painted 3D direction is now [Stageview](../plans/stageview.md).
-
-## Product Unknowns
-
-Current public launch state and active-user volume are unknown. The wiki-first relaunch is active planning direction, but implementation details remain unsettled until the planning program completes.
+The owner reported only test accounts when authorizing the old 3D removal on 2026-09-29. Current public launch status and usage metrics were not checked in this review.

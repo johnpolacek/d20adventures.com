@@ -18,7 +18,8 @@ This `wiki/` directory is the maintained knowledge and planning layer for `D20 A
 - Keep durable project knowledge, planning, decisions, and validation notes under `wiki/`.
 - Preserve exact source material under `wiki/sources/` only when provenance matters.
 - Update `index.md` when adding or materially changing durable pages.
-- Update `log.md` after bootstrapping, planning, validation, or material project changes that affect durable project context.
+- Update `log.md` after bootstrapping, planning, validation, or material project changes that affect durable project context. Keep results dated and separate local implementation from deployment.
+- After completed work, retain current contracts in reference pages and open items in active plans. Delete redundant completed plans after updating links. Git preserves the history.
 - Write pages as GitHub-flavored Markdown with a short breadcrumb nav line, relative `.md` links, and tables instead of decorative HTML. Keep pages concise and scannable.
 
 ## Boundaries

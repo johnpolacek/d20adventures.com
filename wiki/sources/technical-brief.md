@@ -1,34 +1,34 @@
-# Runtime and implementation surface
+# Technical brief
 
-[Home](../index.md) · [Sources](../Sources.md) · [Plans](../plans/index.md) · [Roadmap](../roadmap.md) · [Architecture](../Architecture.md)
+[Home](../index.md) · [Sources](../Sources.md) · [Architecture](../Architecture.md) · [Testing](../plans/testing-runbook.md)
 
-**Technical source brief.** The executable stack is a Next.js App Router app with Convex, Clerk, S3/CloudFront, AI SDK, Stripe, SendGrid, Playwright, Biome, TypeScript, and the merged wiki-adventure runtime bridge.
+Reviewed against local main on 2026-10-01.
 
-**Status:** Last reviewed 2026-08-31. Evidence basis: `package.json`, repo tree, production S3 and rendering audits, production builds, and browser verification. Confidence: high for the setting adventure listing, merged code shape, static public-route modes, and audited production S3 state.
+## Stack
 
-## Current versions
+`package.json` declares Next 16.1.6, React 19.2.4, Convex 1.32.0, AI SDK 6.0.116, Clerk Next.js 7.0.1, TypeScript 5.9.3, and three.js 0.183.2. Use the manifest and lockfile for dependency changes.
 
-`package.json` lists Next 16.1.6, React 19.2.4, Convex 1.32.0, AI SDK 6.0.116, Clerk Next.js 7.0.1, and TypeScript 5.9.3.
+The app also uses S3/CloudFront, Stripe, SendGrid, Playwright, Biome, and repository-local agent skills.
 
-## Version contradiction
+## Runtime
 
-`TECHNICAL_DOCUMENTATION.md` names older versions. Treat `package.json` as authoritative for installed dependency versions.
+- Next.js pages, actions, and APIs coordinate gameplay and access checks.
+- Convex owns live adventures, turn history, chat, token balances, and audio manifests.
+- The four registered Myr adventures use compiled wiki source. S3 source is preferred only when complete relative to the local source tree.
+- Source fallback is explicitly included in Next.js output traces.
+- Admin edits are compiled before canonical writes and are backed by restorable revisions.
+- Live turns adopt current source and re-pin provenance. Immutable published artifacts are a separate repository capability.
+- Mapview provides stored 2D maps. Storyview provides incremental audio and optional automatic narration.
+- Stageview's engine is implemented in a dev preview. Its primary-play-screen integration remains planned.
+
+See [Architecture](../Architecture.md), [Wiki adventures](../wiki-adventures.md), [Storyview](../storyview.md), and [Stage engine](../stage-engine.md).
+
+## Rendering
+
+Public content and the homepage are static. Personalized homepage and token reads use authenticated private APIs. Clerk middleware covers explicit authenticated route families. Request-wide visit tracking has been removed.
 
 ## Validation posture
 
-After merge, focused wiki-adventure test batches, admin-authoring and bridge checks, `pnpm exec tsc --noEmit --pretty false`, and `pnpm build` pass. On 2026-08-25, the setting adventure listing additionally passed its public-flow check, TypeScript, touched-file Biome check, focused production build, and browser verification. The play-route server trace now explicitly carries the 201 dynamically-read Realm of Myr fallback source files. On 2026-08-31, the public rendering audit made content-only routes static, removed request-wide visit tracking, and passed build, TypeScript, lint, and all eight Playwright tests.
+The latest recorded engine build, TypeScript, lint, and GPU checks are dated 2026-09-29. Homepage production-mode and authenticated browser checks are dated 2026-09-15. These results were not rerun for this documentation cleanup.
 
-## Runtime Boundaries
-
-| Boundary | Primary files | Notes |
-| --- | --- | --- |
-| UI and routes | `app/`, `components/` | App Router pages, client components, adventure UI, admin/content surfaces. |
-| Server actions and API routes | `app/_actions/`, `app/api/` | Game orchestration, uploads, AI generation, payments, streams, auth-sensitive mutations. |
-| Realtime persistence | `convex/`, `lib/convex/` | Game state, turns, chat, token ledger, realtime data layer. |
-| AI gameplay services | `lib/ai/`, `lib/services/` | Roll requirements, NPC turns, narrative generation, turn updates, prompt/finalization services. |
-| Content storage | `lib/s3-utils.ts`, `lib/wiki-adventures/`, `content/settings/realm-of-myr/`, `next.config.ts` | Legacy settings and non-migrated plan data remain in S3 JSON. Registered Realm of Myr adventures use complete S3 source when available and otherwise use repo-local wiki source, which must be explicitly included in Next.js server traces because it is read through dynamic filesystem paths. |
-| Wiki adventure bridge | `app/_actions/create-adventure.ts`, `app/_actions/start-adventure.ts`, `app/_actions/advance-turn.ts`, `convex/adventure.ts` | Create/start/advance can pin wiki content refs, load compiled wiki artifacts, validate transition targets, and commit guarded Convex turn advances for registered local wiki adventures. |
-
-## Current Architecture Shift
-
-The merged implementation moves registered Realm of Myr runtime content toward markdown/JSON wiki source with required frontmatter, JSON character sheets, paired markdown profiles, compiled runtime indexes, content hashes, and Convex-pinned current encounters. The cutover is incomplete by design: legacy S3 AdventurePlan JSON still participates in listing, titles, party size, public selection, and compatibility routes. Admin authoring can write canonical S3 wiki source directly, so pre-write validation and remote-source completeness checks are the next hardening needs.
+The production admin sign-in path, test wrapper, repository-wide formatting baseline, and additional gameplay/narration checks remain in [maintenance](../plans/maintenance.md). Use the [testing runbook](../plans/testing-runbook.md) to select current checks.

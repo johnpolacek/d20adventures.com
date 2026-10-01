@@ -2,7 +2,7 @@ import type { AdventureEncounter, AdventurePlan, AdventureSection, Encounter3DSc
 
 // Encounter lookup helpers plus the keyword heuristic that suggests a scene kit for
 // Mapview generation (see lib/mapview/generate.ts). The old 3D map assembly that lived
-// here was removed with the 3D encounter stack (wiki/plans/feature-remove-3d-stack.md).
+// here was removed with the 3D encounter stack (wiki/plans/stageview.md).
 
 const DEFAULT_SCENE_KIT: Encounter3DSceneKit = "generic"
 

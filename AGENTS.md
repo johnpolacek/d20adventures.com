@@ -7,14 +7,14 @@ Auto-commit local changes whenever confident that the code is good and there are
 
 ### Project Wiki
 
-- Read `wiki/index.html` before answering project-specific questions or making structural changes.
+- Read `wiki/index.md` before answering project-specific questions or making structural changes.
 - Keep durable project knowledge, plans, decisions, and project-context history under `wiki/`.
-- Use `wiki/Sources.html` as the source index.
+- Use `wiki/Sources.md` as the source index.
 - Create or update `wiki/plans/` before meaningful code, config, schema, dependency, architecture, test, build, or app behavior changes.
 - Do not create plans for small, local, reversible fixes that do not change product behavior, architecture, schema, dependencies, build configuration, public APIs, security posture, or durable project direction.
-- Sync recent codebase changes back into `wiki/log.html`, relevant plans, roadmap, and source docs when work happened before planning or made the wiki stale.
-- Update `wiki/index.html` when adding or materially changing durable wiki pages.
-- Update `wiki/log.html` after bootstrapping, planning, validation, or material project changes that affect durable project context.
+- Sync recent codebase changes back into `wiki/log.md`, relevant plans, roadmap, and source docs when work happened before planning or made the wiki stale.
+- Update `wiki/index.md` when adding or materially changing durable wiki pages.
+- Update `wiki/log.md` after bootstrapping, planning, validation, or material project changes that affect durable project context.
 
 ### Working Rules
 

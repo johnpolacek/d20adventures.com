@@ -1,186 +1,96 @@
-# Testing Runbook
+# Testing runbook
 
-[← All plans](index.md) · [Roadmap](../roadmap.md)
+[Plans](index.md) · [Wiki Home](../index.md) · [Maintenance](maintenance.md)
 
-Canonical testing runbook for adventure plans and runtime play behavior.
+Maintained reference. Commands and routes reviewed against local main on 2026-10-01. Historical results in [the log](../log.md) are not fresh test runs.
 
-1. Adventure plan authoring validation
-2. Practice run validation (owner-controlled party)
-3. On-demand practice report validation
-4. Campaign run and multiplayer validation
-5. Regression checks for auth, billing, and build integrity
+## Environment
 
-## Prerequisites
+Use the checkout's isolated Convex project and [worktree workflow](parallel-dev-worktrees.md). S3 buckets and Clerk remain shared. Authoring, map generation, token replacement, and real narration can write shared storage or spend tokens.
 
-### Environment
+Playwright's `tests/global-setup.ts` requires:
 
-Set local runtime env (`.env.local`) and test env (`.env.test`) with valid keys.
-
-Required for auth/playwright smoke:
-
-- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
-- `CLERK_SECRET_KEY`
 - `NEXT_PUBLIC_CONVEX_URL`
-- `TEST_USER_EMAIL`
-- `TEST_USER_PASSWORD`
-- `TEST_USER_ID`
-- `ADMIN_USER_IDS`
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY`
+- `TEST_USER_EMAIL`, `TEST_USER_PASSWORD`, and `TEST_USER_ID`
+- `ADMIN_USER_IDS`, including `TEST_USER_ID`
 
-`ADMIN_USER_IDS` must include `TEST_USER_ID` for admin-only plan authoring tests.
+Inspect the selected target before tests that mutate data. Use `PLAYWRIGHT_BASE_URL` for a worktree server. The config reads `.env`, `.env.local`, and `.env.test`. Existing process values take precedence because the dotenv calls do not enable override.
 
-### Install dependencies
+Install the matching browser when needed:
 
 ```bash
-pnpm install
 pnpm exec playwright install chromium
 ```
 
-### Start local stack
+Start the checkout through `pnpm wt:dev`. For a deliberate direct port, `pnpm dev` honors `PORT`. Avoid `dev:fresh` in parallel sessions because it kills shared ports.
+
+## Select checks by change
+
+| Change | Checks |
+|---|---|
+| Documentation | Relative file and heading links, documented routes/scripts, stale references, `git diff --check`. |
+| TypeScript/app behavior | `pnpm exec tsc --noEmit`, `pnpm lint`, focused checks below, then `pnpm build` when rendering/build behavior matters. |
+| Compiler/source contracts | Relevant `pnpm test:wiki-adventures:batch-a` through `batch-f`. |
+| Adventure content/runtime | Relevant bridge check: `midnight-bridge`, `covert-cargo-bridge`, `road-to-kordavos-bridge`, or `march-of-davos-bridge`, with the `test:wiki-adventures:` prefix. |
+| Admin authoring | `pnpm test:wiki-adventures:admin-authoring`, affected bridge checks, editor browser checks. |
+| Discovery and runtime loader | `pnpm test:wiki-adventures:public-flow`, affected bridge checks, authenticated selection/start. |
+| Published artifact repository | `pnpm test:wiki-adventures:rollback`. This tests in-memory published versions, not frozen content in live registered adventures. |
+| Auth/homepage | `pnpm test:auth` or `pnpm test:run` against the intended server. Specs live in `tests/auth.spec.ts`, `api-auth.spec.ts`, and `homepage.spec.ts`. |
+| Stage set/engine | `pnpm stage:check`, then GPU verification described below. |
+
+The production source audit is `pnpm audit:wiki-adventures:prod-s3`. It reads production storage. Run it when deployment/source coverage is in scope, not as a routine unit check.
+
+### Known harness limits
+
+- `pnpm test` runs `dev:fresh` and waits for TCP 3000 and 4000. Cloud Convex does not supply the old port-4000 service. Use `test:run` directly against a running selected server until this is fixed.
+- The signed-out admin test expects development's Access Denied page. September production runs redirected to a missing `/sign-in`. Report this as a known failure rather than claiming an entirely green production suite.
+- `pnpm lint` and `pnpm check` differ. The latter includes formatting and import order. Record pre-existing failures separately.
+
+## Wiki authoring checks
+
+Use `/admin/adventure-plans/{settingId}/{planId}` with an admin account and a deliberate test-content target.
+
+1. Edit adventure and encounter key fields. Wait for autosave, refresh, and confirm persistence.
+2. Apply an AI chat edit. Confirm the affected source and validation update.
+3. Submit an invalid reference or transition. Confirm the canonical write is blocked.
+4. Restore a revision or one file. Confirm content and revision history update.
+5. Confirm NPC sheets, premades, locations, and transitions compile and resolve.
+6. Verify signed-out/non-admin access is denied.
+
+The old `/settings/{settingId}/{planId}/edit` route, nested section/scene editor, and draft-toggle checklist are obsolete. Clearing fields has a known limitation tracked in [maintenance](maintenance.md).
+
+## Gameplay checks
+
+For automated authenticated playthroughs, use the repository's [gameplay playthrough skill](../../.agents/skills/gameplay-playthrough-testing/SKILL.md).
+
+| Scenario | Route and checks |
+|---|---|
+| Discovery | `/settings/realm-of-myr/play`. Four registered adventures, valid links, independent failure handling. |
+| Solo | Midnight Summons character selection, Thalbern, solo start, reply, roll, NPC turn, encounter transition, terminal completion, and Play Again. Exercise both terminal branches across separate runs when changing transition logic. |
+| Custom characters | Road to Kordavos character selection/create. Valid races/archetypes, saved sheet loaded, first encounter and turn progression. |
+| Multiplayer | Covert Cargo character selection, lobby, join/start, separate player control, chat, and turn progression. |
+| Practice | `/settings/{settingId}/{planId}/practice`. Management access, party bounds, owner control of selected PCs, denied joins and non-owner access. |
+| Reports | Generate a practice report. Verify persistence in turn/player views, typed findings, editor links, errors, and token behavior. |
+| Live source edits | Registered adventures load current source and re-pin provenance on advance. Verify turn/encounter concurrency guards still hold. Do not expect immutable snapshot playback. |
+| Unauthorized access | Signed-out and non-member adventure reads, actions, chat, and streams remain denied. |
+| Billing | Successful charges, insufficient funds, and refund/failure behavior for the flow changed. Storyview has its own post-generation debit policy. |
+
+## Visual features
+
+**Mapview:** Use stored maps for player checks. Confirm rail and floating entry, fullscreen/close/Escape, map location title, token staging, narrow layouts, and no-map behavior. Generating or re-placing maps writes shared S3.
+
+**Storyview:** Verify attributed dialogue with several characters, playback/navigation, free cached replay, narrative appends reusing prior audio, concurrent requests, on-demand 402, owner auto toggle, split charges, pause/resume, and phone layout. Placeholder TTS checks flow only, not real voices.
+
+**Stageview:** The preview is development-only and does not need gameplay records. The current check script validates repo-local sets and staging. Browser verification needs real-GPU Chrome with remote debugging. Setup and flags are documented in `scripts/stage-verify.ts`.
 
 ```bash
-pnpm dev
+pnpm stage:check
+STAGE_BASE=http://localhost:3057 STAGE_CDP_PORT=9478 pnpm stage:verify --tiers=ultra,high
 ```
 
-## Fast Preflight
+Inspect shader errors, draw/triangle counts, native-pixel character crops, every relevant shot, motion, pause/resume, and disposal. A mobile quality tier running on a desktop does not establish phone performance. Future stage-first gameplay needs a full authenticated playthrough as well as renderer verification.
 
-Run before manual plan testing:
+## Recording results
 
-```bash
-pnpm exec tsc --noEmit
-pnpm test:auth
-```
-
-Pass criteria:
-
-- Typecheck is clean.
-- Auth guardrails pass.
-
-## Adventure Plan Authoring
-
-Use a plan you can edit (owner/admin access). Path: `/settings/{settingId}/{adventurePlanId}/edit`
-
-### A. Core metadata
-
-1. Open the plan editor.
-2. Change title-adjacent metadata fields (teaser, overview, party min/max, image).
-3. Save and refresh.
-
-Pass: changes persist exactly; no sections/scenes/encounters are lost.
-
-### B. Encounter structure
-
-1. Add a new section, scene, and two encounters.
-2. Set unique encounter IDs and add a transition A → B.
-3. Save and refresh.
-
-Pass: structure and transitions persist with stable IDs.
-
-### C. Character references
-
-1. Add/edit NPCs and attach them to an encounter.
-2. Save and refresh.
-
-Pass: NPC refs resolve; no orphans.
-
-### D. Draft/publish behavior
-
-1. Toggle draft on, save, confirm it appears under draft adventures.
-2. Toggle draft off and save.
-
-Pass: draft plans are not mixed into published list; publish state persists.
-
-## Practice Run
-
-Entry: `/settings/{settingId}/{adventurePlanId}/practice`
-
-### A. Access control
-
-1. As owner/admin, open practice page — should succeed.
-2. As non-owner non-admin, open same URL — should be denied.
-
-### B. Party lineup validation
-
-1. Try invalid party sizes (below min, above max) — should block with error.
-2. Select valid lineup and start.
-
-### C. Practice run behavior
-
-1. Confirm run opens at `/settings/{settingId}/{adventurePlanId}/{adventureId}`.
-2. Confirm owner can take actions for all selected PCs.
-3. Confirm join attempts to the practice run are blocked.
-
-Pass: playable end-to-end with owner controlling all PCs; no join exposure.
-
-## Practice Report
-
-Generate reports from turn UI during a practice run.
-
-### A. Generation and persistence
-
-1. In an active practice run, click `Generate Practice Report`.
-2. Confirm report appears in the turn page report list and the player page `Practice Reports` section.
-
-Pass: report persists in both surfaces; failed generation shows error status.
-
-### B. Content expectations
-
-1. Report includes a summary.
-2. Findings are tagged `plan_edit` or `code_investigation`.
-3. If `planPath` exists, "Open plan editor" link navigates to editor with `focus` query param.
-
-Pass: report is diagnostic, not generic; findings are typed and linkable.
-
-## Campaign Run + Multiplayer
-
-Entry: `/settings/{settingId}/{adventurePlanId}/character-select`
-
-### A. Campaign creation and lobby
-
-1. Create campaign run (non-practice flow).
-2. Confirm lobby appears for multi-party plans.
-3. Confirm additional players can join with valid characters.
-
-Pass: lobby updates as players join.
-
-### B. Start and progression
-
-1. Start campaign from lobby.
-2. Progress through multiple turns and at least one encounter transition.
-
-Pass: turn progression stable; no regressions in roll handling, NPC processing, or turn advance.
-
-## Security Regression Checklist
-
-1. Signed-out: `/admin` blocked; `/api/adventure/{id}` returns `401`/`403`.
-2. Signed-in non-member: cannot access random adventure IDs.
-3. Practice run: non-owner cannot access run page, chat stream, or adventure stream endpoints.
-
-Pass: no unauthorized read/write access.
-
-## Billing/Token Regression Checklist
-
-Run when touching AI/report generation or paid flows.
-
-1. Verify report generation deducts tokens.
-2. Verify insufficient token path fails gracefully with user-visible error.
-3. Verify campaign join charges/refunds correctly on failure.
-
-Pass: token behavior is fail-closed; failed operations do not return false success.
-
-## Final Release Gate
-
-Before merging plan-related or runtime changes:
-
-```bash
-pnpm exec tsc --noEmit
-pnpm test:auth
-pnpm -s build
-```
-
-Then execute:
-
-1. One full practice run from plan setup to report generation.
-2. One campaign run with lobby/start/turn progression.
-3. One access-control check using a non-owner account.
-
-If any step fails, do not ship.
+For each meaningful change, record the commit/target, commands, environment, outcomes, and limits in its plan. Update the wiki log for durable findings. Do not convert an unchecked historical item into a pass without evidence.

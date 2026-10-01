@@ -2,22 +2,30 @@
 
 [Wiki Home](../index.md) · [Sources](../Sources.md) · [Roadmap](../roadmap.md) · [Architecture](../Architecture.md)
 
-Active planning work for D20 Adventures. The wiki-adventure runtime is merged and the production cutover is complete and deployed (2026-06-12). All prior plans are in [zzz-completed](zzz-completed/).
+Reviewed against local main on 2026-10-01. Implementation status does not imply production deployment.
 
-## Active
+## Active work
 
-- **[Stageview](stageview.md)** — assessment and plan (2026-09-29) to replace the whole 3D stack (r3f encounter diorama, scene-kit, standees, Hunyuan minis) with the painted procedural three.js approach from the `d20-graphics-test-2` Kordavos v4 demo. Includes measurements, experiments, removal inventory, and phases. Owner decisions are recorded; phase 1 (clean slate) is merged to main.
-- **[Storyview](feature-storyview.md)** — token-funded TTS audio narration of turns (Gemini TTS, narrator + per-character voices) with a full-screen cinematic paragraph-at-a-time mode. On `feature/storyview` (worktree, branched off `feature/play-layout-refactor`).
-- **[Mapview](mapview.md)** — 2D D&D-style battle maps: AI-generated at authoring time from a standard SVG piece set, square grid, static encounter backdrop. v1 merged to main 2026-07-03; catalog growth (water/interiors/city pieces) is next.
-- **[Testing Runbook](testing-runbook.md)** — canonical testing runbook for adventure plans and runtime play behavior.
-- **[Parallel Dev Worktrees](parallel-dev-worktrees.md)** — git worktree workflow with Portless URLs and per-worktree Convex projects (`pnpm wt:*` scripts).
+| Plan | Status | Next work |
+|---|---|---|
+| [Stageview](stageview.md) | Old 3D stack removed. Engine and first set merged on 2026-09-29. Gameplay integration is not built. | Staging scripts and festival set, then the stage-first turn page and encounter coverage. |
+| [Maintenance follow-ups](maintenance.md) | Open findings and unverified follow-ups carried forward from completed work. | Test harness, authoring edge cases, narration validation, and environment cleanup. |
 
-## Completed
+## Maintained references
 
-- **[Stageview engine](zzz-completed/feature-stageview-engine.md)** — phase 2 of Stageview: the v5 prototype ported into `lib/stage/`, set spec v1 (declarative JSON), the Kordavos gate as the first set, `/dev/stage` and the verify scripts (2026-09-29).
-- **[Remove 3D stack](zzz-completed/feature-remove-3d-stack.md)** — phase 1 of Stageview: deleted the old r3f encounter view, scene-kit, standee and mini stack (about 13,600 LOC, 45 MB of assets, 8 dependencies) and re-homed the 2D map rail as `components/mapview/map-panel.tsx` (2026-09-29).
-- **[Static homepage](zzz-completed/feature-static-homepage.md)** — prerendered public homepage, client-loaded welcome card, and authenticated API token refresh (2026-09-15).
-- **[Reduce Vercel Fluid Active CPU](zzz-completed/vercel-fluid-cpu.md)** — removed request-wide visit tracking and pathname headers, restored static public routes, narrowed Clerk middleware, and audited remaining dynamic rendering (2026-08-31).
-- **[Setting adventure listing hardening](zzz-completed/setting-adventure-listing.md)** — restored repo-local wiki content in production traces and replaced Realm of Myr's positional intro/full curation with one playable-adventure grid (2026-08-25).
+| Guide | Scope |
+|---|---|
+| [Mapview](mapview.md) | Implemented 2D maps, storage, generation, placement, and catalog rules. |
+| [Storyview](../storyview.md) | Implemented narration, incremental caching, and token charging. |
+| [Stage engine](../stage-engine.md) | Implemented set/staging specs, rendering, and dated performance evidence. |
+| [Wiki adventures](../wiki-adventures.md) | Content contracts, authoring, source selection, and turn persistence. |
+| [Testing runbook](testing-runbook.md) | Current commands, routes, browser checks, and known test limits. |
+| [Parallel dev worktrees](parallel-dev-worktrees.md) | Implemented pnpm wt commands and isolation rules. |
 
-All completed plans are archived in [zzz-completed/](zzz-completed/).
+## Plan lifecycle
+
+Create a plan before meaningful behavior, architecture, schema, dependency, build, or test changes. Record current state, remaining work, decisions, and validation. Small local fixes do not need a plan.
+
+`wt:finish` still moves branch plans into `wiki/plans/zzz-completed/`. During wiki maintenance, move useful contracts into reference pages, carry open work into an active plan, record the outcome in [the log](../log.md), and delete redundant completed plans. Git preserves implementation history.
+
+The completed-plan archive and obsolete Stageview comparison images were removed on 2026-10-01. Migration inputs under `wiki/sources/adventure plans/` remain because scripts still read them.

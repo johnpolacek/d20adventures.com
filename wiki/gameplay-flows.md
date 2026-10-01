@@ -1,71 +1,41 @@
-# Gameplay Flows
+# Gameplay flows
 
-[Home](index.md) · [Architecture](Architecture.md) · [Roadmap](roadmap.md)
+[Home](index.md) · [Architecture](Architecture.md) · [Wiki adventures](wiki-adventures.md) · [Testing](plans/testing-runbook.md)
 
-Core runtime flows for adventure creation, join, start, and turn progression.
+Reviewed against local main on 2026-10-01.
 
-## Adventure Creation and Lobby
+## Create, join, and start
 
-1. User selects characters and calls `createAdventure` (`app/_actions/create-adventure.ts`).
-2. Adventure is created in Convex with lobby status; `contentRef` is pinned at this point.
-3. For single-player eligible plans, `startAdventure` may auto-run immediately.
-4. Lobby UI subscribes via Convex realtime and offers join/start controls.
+1. Character selection calls `createAdventure`. Convex stores the adventure, participants, and content provenance.
+2. Eligible solo adventures auto-start. Multiplayer runs use the lobby and join/start controls.
+3. Join resolves the user's character and updates player assignments.
+4. Start loads content through `loadAdventurePlanForRuntime`, assembles PCs and encounter NPCs, and writes the first turn.
+5. Practice mode restricts access to the managing user and allows that user to control the chosen party.
 
-## Join Adventure
+Primary actions are under `app/_actions/create-adventure.ts`, `join-adventure.ts`, and `start-adventure.ts`.
 
-1. `joinAdventure` resolves/creates user character template.
-2. Convex `adventure.joinAdventure` mutation appends player assignment.
-3. Route redirects to adventure view.
+## Turn progression
 
-## Start Adventure
+1. A player submits narrative input through the adventure action.
+2. Roll evaluation determines whether a check is required.
+3. Required rolls are stored and resolved before completing the action.
+4. Narrative and character-state updates are applied.
+5. NPC turns resolve as needed.
+6. Turn advance loads current content, validates encounter progression, and commits the next turn and story patch.
+7. Terminal wiki encounters set completed status and an end timestamp.
 
-1. `startAdventure` loads the adventure plan via `loadAdventurePlanForRuntime` (wiki runtime for registered adventures, legacy S3 JSON otherwise).
-2. Builds first-turn character roster (PCs + encounter NPCs from the start encounter).
-3. Writes initial turn via `api.adventure.createTurn`.
-4. User is redirected into the play route.
+The live commit rejects changed current turns/encounters and duplicate turn order. Authored content can change during a run. The commit updates its content provenance rather than loading the original immutable version.
 
-## Turn Loop
+## State and presentation
 
-1. Player submits narrative reply through `processTurnReply` (`app/_actions/adventure.ts`).
-2. `getRollRequirementForAction` evaluates whether a dice roll is required.
-3. If a roll is needed, turn state stores roll requirements and waits.
-4. Player resolves the roll through `resolvePlayerRollResult`.
-5. Narrative and health/status updates are applied (including optional AI health analysis via `turn-update-service.ts`).
-6. NPC turns are processed through `processNpcTurnsAfterCurrent`.
-7. When the turn is complete, `advanceTurn` computes encounter progression and creates the next turn.
+Convex stores gameplay state. Client contexts and existing SSE/stream paths deliver updates. Realtime consolidation is still an audit topic.
 
-## Narrative Format
+Narrative strings retain dice and original-reply markers for parsing and display. Maps supply visual staging only. Storyview caches generated narration separately from the turn narrative.
 
-Narrative strings include machine-readable shortcodes:
+The current turn page renders text, optional [Mapview](plans/mapview.md), [Storyview](storyview.md), and chat where applicable. [Stageview](plans/stageview.md) gameplay is planned, not part of the current turn loop.
 
-- `[DiceRoll:...]` — preserves roll context in text history.
-- Original-reply markers used in some narrative display flows.
+## Costs and reports
 
-Parser/helpers: `lib/utils/parse-narrative.ts`.
+AI helpers and flow-specific services meter generation through the token ledger. Charging and failure behavior vary by flow. Storyview's on-demand and automatic cost rules are documented in its reference page.
 
-## AI Subsystem
-
-### Entry Points
-
-- `lib/ai/index.ts` — wrappers around `generateText`, `generateObject`, `streamObject`.
-- `lib/ai/llm.ts` — current model selection.
-
-### Token Metering
-
-1. Most generation functions require authenticated user context.
-2. Token usage is read from AI response usage metadata.
-3. Debits recorded through `decrementUserTokensAction` and Convex ledger mutations.
-
-### AI-Driven Gameplay Services
-
-- `roll-requirement-service.ts` — infer if a check is needed and which attribute.
-- `roll-modifier-service.ts` — infer/compute modifier.
-- `npc-turn-service.ts` — NPC action and outcome generation.
-- `turn-update-service.ts` — optional AI analysis of health/status outcomes.
-- `narrative-service.ts` — narrative append/normalization logic.
-
-## Frontend Contexts
-
-- `AdventureContext` — setting/plan/adventure metadata.
-- `TurnContext` — current turn and SSE lifecycle.
-- `TokenContext` — token balance and refresh behavior.
+Practice reports use wiki-backed plan context, store typed findings, and appear in turn and player views. Report checks, membership checks, and billing cases are in the [testing runbook](plans/testing-runbook.md).
