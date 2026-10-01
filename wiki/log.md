@@ -4,6 +4,14 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-01, desktop local play direction
+
+Owner proposed a Tauri desktop app. Solo play is free and runs the GM through the player's own installed AI CLI and subscription. Multiplayer keeps the server GM and becomes the paid online tier. The audience is AI-savvy tabletop players, and requiring a CLI is acceptable. Distribution is a notarized direct download. Local content is authored adventures with pre-baked art.
+
+Anthropic's Claude Code legal page, read the same day, permits an end user signing in to the unmodified Claude Code binary with their own subscription. The app must not touch credentials, intermediate usage, or use the Agent SDK for subscription play. Codex and Gemini CLI terms are unchecked.
+
+Game logic and the stage-first UI will move into shared TypeScript packages during the Stageview rebuild. No code was written. See [Desktop local play](plans/desktop-local-play.md).
+
 ## 2026-10-01, wiki reconciliation
 
 - Audited plans against local main and Git history. Rebuilt the dashboard around active Stageview work, maintenance, and reference guides.

@@ -17,6 +17,12 @@ Next work:
 
 Details and open decisions: [Stageview](plans/stageview.md). Mapview's role is unresolved. It may become an inset or be retired.
 
+## Next, desktop local play
+
+Proposed 2026-10-01. A Tauri desktop app where solo play is free and the GM runs through the player's own signed-in AI CLI. Online multiplayer keeps the server GM and becomes the paid subscription. Game logic and the stage-first UI move into shared packages during the Stageview rebuild.
+
+First step is a spike measuring CLI latency, JSON validity, and GM quality. Details: [Desktop local play](plans/desktop-local-play.md).
+
 ## Maintenance
 
 [Maintenance follow-ups](plans/maintenance.md) tracks the test-wrapper issue, production admin sign-in behavior, editor clearing, legacy completion, narration coverage, technical audits, and remote cleanup.

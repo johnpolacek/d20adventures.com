@@ -17,6 +17,8 @@ Reviewed 2026-10-01. Current local source establishes implementation. Dated logs
 | `lib/stage/`, `public/stage/`, `app/dev/stage/` | Current Stage engine, declarative specs, assets, and preview. |
 | `tests/`, `scripts/wiki-adventures-*-check.ts`, `scripts/stage-*.ts` | Available verification and its actual scope. Tests are not evidence of passing until run. |
 | `scripts/wt.sh`, root and wiki `AGENTS.md` | Worktree behavior and automation policy. |
+| `lib/ai/`, `lib/services/` | AI call wrappers, current model, in-wrapper token charging, and GM service coupling to Convex, S3, and tokens. |
+| [Claude Code legal and compliance](https://code.claude.com/docs/en/legal-and-compliance) | Permitted use of a player's own Claude subscription through the unmodified CLI. External, read 2026-10-01. |
 | [Decision log](log.md) | Dated milestones, owner decisions, validation evidence, and limits. |
 | Git history through `0eedb26` | Pre-cleanup plans and implementation history. Deleted documents remain recoverable. |
 

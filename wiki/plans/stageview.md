@@ -41,6 +41,7 @@ Owner decisions recorded on 2026-09-29:
 ### Phase 4, stage-first gameplay
 
 - Render Stageview across the turn-page viewport and dock the complete text turn UI over it.
+- Build the turn page as a shared `packages/game-ui` package with no Next or Clerk imports, so the [desktop app](desktop-local-play.md) can reuse it.
 - Settle the dock layout. Current proposal is a side panel in landscape and a bottom sheet on portrait tablets.
 - Add a server-side character-art pipeline from portrait to world-style front/back standees. Restore server-side chroma keying, store art in S3, and decide token pricing. Premades can be prepared ahead of time.
 - Generate validated per-turn beats from resolved narrative. Proposed vocabulary is shots, movement to marks/paths, gestures, quoted dialogue, and effects.
