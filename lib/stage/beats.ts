@@ -48,6 +48,8 @@ export interface BeatHooks {
   narrationSeconds?: (paragraph: number) => number | Promise<number>
   // How long a spoken line stays up (default lineSeconds; its audio's length when voiced).
   lineSeconds?: (castId: string, text: string) => number | Promise<number>
+  // Step mode: the player is waiting for continue() (true), or has moved on (false).
+  onWaiting?: (waiting: boolean) => void
 }
 
 // Reading time for a spoken line: long enough to read in a bubble, short enough to keep the scene moving.
@@ -61,7 +63,12 @@ interface Mark {
   cast: { id: string; x: number; z: number; ry: number }[]
 }
 
-// Plays beats in order, one paragraph at a time.
+// Plays beats in order, one paragraph at a time. Two modes:
+// - "auto": each paragraph and spoken line holds the scene for its reading time (or audio), then the beats carry on.
+// - "step": each paragraph and each spoken line waits for continue(); camera moves, walks and waits still play out on
+//   their own between them. continue() before the beats reach the wait hurries them there (waits and walks stop holding
+//   them up, loops skip to their cue) and lets that one wait pass, so it always means "on to the next thing".
+// Either way:
 // - skip() finishes the sequence at once. Camera moves and walks jump to their ends and lines and waits are dropped;
 //   the last paragraph is still reported, so the scene lands where the beats would leave it.
 // - next() does the same up to the next paragraph.
@@ -84,6 +91,11 @@ export class BeatPlayer {
   private lastShot: string | StagingShot | null = null
   private index = 0
   private section = -1
+  private paragraphPending = false
+  private atGate = false
+  private credit = false
+  private rushing = false
+  mode: "step" | "auto" = "auto"
   playing = false
 
   constructor(
@@ -91,8 +103,13 @@ export class BeatPlayer {
     private hooks: BeatHooks = {}
   ) {}
 
-  private get hurrying() {
+  // Leaving: what's left of this stretch is dropped (skipping to the end, or jumping back). Hurrying: nothing waits on a
+  // timer, a walk or a cue either (also while rushing to the next step).
+  private get leaving() {
     return this.skipping || this.jumpTo !== null
+  }
+  private get hurrying() {
+    return this.leaving || this.rushing
   }
 
   private sleep(seconds: number) {
@@ -113,9 +130,40 @@ export class BeatPlayer {
     return Promise.race([p, new Promise<void>((r) => (this.wake = r))])
   }
 
-  // Waits until the paragraph being narrated has had its time.
+  // Waits until the paragraph being narrated has had its time (auto), or until the player continues past it (step).
   private narrated() {
-    return this.sleep((this.narrationEnds - performance.now()) / 1000)
+    if (this.mode === "auto") return this.sleep((this.narrationEnds - performance.now()) / 1000)
+    if (!this.paragraphPending) return Promise.resolve()
+    this.paragraphPending = false
+    return this.gate()
+  }
+
+  // Step mode: wait for continue(), unless one already came in while the beats were on their way here.
+  private async gate() {
+    if (this.leaving) return
+    this.rushing = false
+    if (this.credit) {
+      this.credit = false
+      return
+    }
+    this.atGate = true
+    this.hooks.onWaiting?.(true)
+    await new Promise<void>((r) => (this.wake = r))
+    this.atGate = false
+    this.hooks.onWaiting?.(false)
+  }
+
+  // On to the next thing: past the paragraph or line being waited on (step), or to the next paragraph (auto).
+  continue() {
+    if (!this.playing) return
+    if (this.mode === "auto") return this.next()
+    if (this.atGate) {
+      this.wake?.()
+      return
+    }
+    this.credit = true
+    this.rushing = true
+    this.wake?.()
   }
 
   private snapshot(): Mark {
@@ -201,6 +249,9 @@ export class BeatPlayer {
     this.skipping = false
     this.stopAt = null
     this.narrationEnds = 0
+    this.paragraphPending = false
+    this.credit = false
+    this.rushing = false
     this.wake?.()
   }
 
@@ -210,6 +261,9 @@ export class BeatPlayer {
     this.stopAt = null
     this.jumpTo = null
     this.narrationEnds = 0
+    this.paragraphPending = false
+    this.credit = false
+    this.rushing = false
     let i = from
     try {
       for (;;) {
@@ -237,6 +291,12 @@ export class BeatPlayer {
       this.skipping = false
       this.stopAt = null
       this.jumpTo = null
+      this.credit = false
+      this.rushing = false
+      if (this.atGate) {
+        this.atGate = false
+        this.hooks.onWaiting?.(false)
+      }
     }
   }
 
@@ -252,14 +312,17 @@ export class BeatPlayer {
     } else if ("face" in b) s.faceCast(b.face, b.to)
     else if ("line" in b) {
       await this.narrated()
-      if (this.hurrying) return
+      if (this.leaving) return
       const fromLoop = b.group !== undefined || b.fromParty !== undefined
       const speaker = fromLoop ? s.loops.get(b.line)?.speaker({ group: b.group, fromParty: b.fromParty }) : { castId: b.line }
       if (!speaker) return
-      const seconds = b.duration ?? (await this.hooks.lineSeconds?.(b.line, b.text)) ?? lineSeconds(b.text)
+      // In step mode a line stays up until the player continues (the caller clears it then).
+      const step = this.mode === "step"
+      const seconds = step ? 600 : (b.duration ?? (await this.hooks.lineSeconds?.(b.line, b.text)) ?? lineSeconds(b.text))
       s.say({ ...speaker, text: b.text, seconds })
       if ("castId" in speaker) this.hooks.onLine?.(speaker.castId, b.text, seconds)
-      await this.sleep(seconds)
+      if (step) await this.gate()
+      else await this.sleep(seconds)
     } else if ("narrate" in b) {
       if (this.stopAt !== null && i >= this.stopAt) {
         this.skipping = false
@@ -270,13 +333,16 @@ export class BeatPlayer {
       if (!this.marks.has(i)) this.marks.set(i, this.snapshot())
       this.section = i
       this.hooks.onNarrate?.(b.narrate)
-      const seconds = this.skipping ? 0 : ((await this.hooks.narrationSeconds?.(b.narrate)) ?? 0)
-      this.narrationEnds = performance.now() + seconds * 1000
+      if (this.mode === "step") this.paragraphPending = !this.skipping
+      else {
+        const seconds = this.skipping ? 0 : ((await this.hooks.narrationSeconds?.(b.narrate)) ?? 0)
+        this.narrationEnds = performance.now() + seconds * 1000
+      }
     } else if ("wait" in b) await this.sleep(b.wait)
     else if ("cue" in b) {
-      if (this.skipping) s.skipLoops(b.cue)
+      if (this.skipping || this.rushing) s.skipLoops(b.cue)
       await this.orWake(s.waitCue(b.cue))
-      if (this.skipping) {
+      if (this.skipping || this.rushing) {
         s.skipLoops(b.cue)
         await s.waitCue(b.cue)
       }

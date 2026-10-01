@@ -17,7 +17,8 @@ import type { Rand } from "../kit/rng"
 // who has stepped out walks back to their place first.
 // A stalled loop finishes an exchange already under way at the counter (one not yet begun waits), then calls no one
 // and questions no one (the official busy with a cart) until resumed.
-// Cues: `<id>:next` on every call, `<id>:called` when the party is called up, `<id>:front` once it stands at the front.
+// Cues: `<id>:next` on every call, `<id>:called` when the party is called up, `<id>:front` once it stands at the front,
+// `<id>:settled` when a shuffle up the line has come to rest.
 
 export interface QueueLoopSpec {
   id: string
@@ -99,6 +100,7 @@ export class QueueLoop {
   private official: CastMember | null
   private partyEnts: Ent[] = []
   private castOut = 0
+  private shuffled = false
 
   constructor(
     private spec: QueueLoopSpec,
@@ -255,7 +257,20 @@ export class QueueLoop {
   // Skip ahead to a moment beats are waiting for: the next call (`<id>:next`), or the party's turn at the front.
   skipTo(cue: string) {
     if (cue === `${this.id}:next`) this.next(true)
+    else if (cue === `${this.id}:settled`) this.settle()
     else if (cue.startsWith(`${this.id}:`)) this.skipToFront()
+  }
+  // Everyone shuffling up the line arrives at once.
+  private settle() {
+    for (const g of this.groups)
+      for (const e of g.members) {
+        e.d = e.target
+        e.delay = 0
+        e.shuffling = false
+      }
+    this.poseAll()
+    this.shuffled = false
+    this.host.cue(`${this.id}:settled`)
   }
   // Skip ahead to the party's turn at the front (a player skipping the intro).
   skipToFront() {
@@ -311,9 +326,10 @@ export class QueueLoop {
         const q = this.line("question")
         if (q) this.say("official", q)
       })
+      // Named characters in the line answer in their own words (the encounter's), not the crowd's stock replies.
       cue(1, 3.2, () => {
         const r = this.line("replies")
-        if (r) this.say(front.members[0], r)
+        if (r && !front.cast) this.say(front.members[0], r)
       })
       cue(2, 5.6, () => {
         const f = this.line("fees")
@@ -360,6 +376,9 @@ export class QueueLoop {
         const facing = g === front && !moving && (this.state === "question" || this.state === "held") ? Math.atan2(this.spec.station[0] - x, this.spec.station[1] - z) : Math.atan2(-p.dx, -p.dz)
         this.pose(e, x, z, facing, moving)
       }
+    const shuffling = this.groups.some((g) => g.members.some((e) => Math.abs(e.target - e.d) > 0.02))
+    if (this.shuffled && !shuffling) this.host.cue(`${this.id}:settled`)
+    this.shuffled = shuffling
     // Those who have paid walk through; those recycled walk back to the tail.
     for (const e of [...this.moving, ...this.waiting.flatMap((g) => g.members)]) {
       if (!e.route?.length) continue

@@ -2,7 +2,8 @@
 
 // The narrative, one paragraph at a time, in a panel that eases to each paragraph's height: the old text fades out, the
 // panel resizes, and the new text fades in. Dots mark the paragraph's place in the turn; the controls replay the turn,
-// step back or on a paragraph, or skip to the end.
+// step back, move on (Continue when stepping through, which glows while the story waits on the reader; the next
+// paragraph when it plays itself), or skip to the end.
 
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
@@ -33,6 +34,9 @@ export function Narration({
   onBack,
   onNext,
   onSkip,
+  step = false,
+  waiting = false,
+  onContinue,
 }: {
   heading: string
   text: string | undefined
@@ -44,6 +48,9 @@ export function Narration({
   onBack: () => void
   onNext: () => void
   onSkip: () => void
+  step?: boolean
+  waiting?: boolean
+  onContinue?: () => void
 }) {
   const [shown, setShown] = useState(text)
   const [visible, setVisible] = useState(false)
@@ -98,11 +105,24 @@ export function Narration({
                 <path d="M7.5 2.5 4 6l3.5 3.5" />
               </svg>
             </Control>
-            <Control label="Next paragraph" onClick={onNext}>
-              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-                <path d="M4.5 2.5 8 6 4.5 9.5" />
-              </svg>
-            </Control>
+            {step ? (
+              <Pill
+                active
+                className={cn(
+                  "ml-1 rounded-full px-4 py-1 font-display text-[12px] font-bold tracking-[0.12em] transition-[filter,box-shadow]",
+                  waiting && "shadow-[0_0_0_2px_#e3b67c55,0_0_18px_#e3b67c66]"
+                )}
+                onClick={onContinue}
+              >
+                Continue ▸
+              </Pill>
+            ) : (
+              <Control label="Next paragraph" onClick={onNext}>
+                <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+                  <path d="M4.5 2.5 8 6 4.5 9.5" />
+                </svg>
+              </Control>
+            )}
             <Pill className="ml-1 rounded-full px-3.5 py-1" onClick={onSkip}>
               Skip ▸▸
             </Pill>

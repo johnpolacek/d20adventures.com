@@ -15,7 +15,7 @@ import type { TierName } from "@/lib/stage"
 import { BeatPlayer, lineSeconds, readingSeconds } from "@/lib/stage/beats"
 import { bearing } from "@/lib/stage/movement"
 import { cn } from "@/lib/utils"
-import { ABOUT, FORCED_ROLL, type MockRoll, PARTY, TURNS } from "./gates-mock"
+import { ABOUT, FORCED_ROLL, type MockHold, type MockRoll, PARTY, type Story, TURNS } from "./gates-mock"
 
 type Phase = "title" | "beats" | "hold" | "roll" | "thinking" | "done"
 type RollOutcome = { total: number; success: boolean } | null
@@ -58,6 +58,11 @@ export function TurnMock() {
   const paceRef = useRef<Pace>("normal")
   paceRef.current = pace
   const [drafts, setDrafts] = useState<Record<number, string>>({})
+  // Step through (each paragraph and line waits for Continue) or play on its own at reading pace.
+  const [stepMode, setStepMode] = useState(true)
+  const [waiting, setWaiting] = useState(false)
+  // What earlier rolls decided, for the scripted branches.
+  const storyRef = useRef<Story>({})
   const [journal, setJournal] = useState<JournalTurn[]>([])
   const [bubbles, setBubbles] = useState<SpokenBubble[]>([])
   const [plates, setPlates] = useState<{ left: PlateLine | null; right: PlateLine | null }>({ left: null, right: null })
@@ -90,6 +95,7 @@ export function TurnMock() {
     stage.shot("gate", { instant: true })
     player.current = new BeatPlayer(stage, {
       onNarrate: setNarrated,
+      onWaiting: setWaiting,
       narrationSeconds: (n) => readingSeconds(paragraphsRef.current[n] ?? "") * PACES[paceRef.current],
       lineSeconds: (_, text) => lineSeconds(text) * PACES[paceRef.current],
     })
@@ -119,12 +125,20 @@ export function TurnMock() {
     if (portrait) stage.pause()
     else stage.resume()
   }, [stage, portrait])
+  // The player is created with the stage, so it takes the mode once it exists too.
+  useEffect(() => {
+    if (player.current) player.current.mode = stepMode ? "step" : "auto"
+  }, [stepMode, stage])
+  const holdOf = (index: number): MockHold | null => {
+    const h = TURNS[index].hold
+    return typeof h === "function" ? h(storyRef.current) : h
+  }
 
   const runTurn = useCallback(
     async (index: number, reply: string | null, roll: RollOutcome, replyFrom: string | null, rollInfo: JournalTurn["roll"]) => {
       if (!stage || !player.current) return
       const t = TURNS[index]
-      const ps = t.narrative(reply, roll)
+      const ps = t.narrative(reply, roll, storyRef.current)
       setTurnIndex(index)
       paragraphsRef.current = ps
       setParagraphs(ps)
@@ -144,7 +158,7 @@ export function TurnMock() {
       usedRef.current = 0
       movedTo.current = undefined
       setNote(undefined)
-      await player.current.play(t.beats(reply, roll))
+      await player.current.play(t.beats(reply, roll, storyRef.current))
       const c = t.contest
       if (c) {
         // The beats stop for the contest; the rest of the turn plays out with its result.
@@ -188,7 +202,7 @@ export function TurnMock() {
   )
   // When the beats end, the GM asks the next character (framed on them) or the encounter is over.
   const afterBeats = (index: number) => {
-    const hold = TURNS[index].hold
+    const hold = holdOf(index)
     if (hold) {
       stage?.shot(hold.shot)
       setPhase("hold")
@@ -220,6 +234,13 @@ export function TurnMock() {
     clearDialogue()
     player.current?.next()
   }
+  // Continue: past the paragraph or line being read (step), or on to the next paragraph (auto).
+  const advanceStep = () => {
+    clearDialogue()
+    player.current?.continue()
+  }
+  const advanceRef = useRef(advanceStep)
+  advanceRef.current = advanceStep
   // Replay the turn: from the narration it jumps back to the first paragraph; from the GM's question it plays the turn
   // again and returns to the question (the reply being written is kept).
   const replay = async () => {
@@ -239,7 +260,7 @@ export function TurnMock() {
   // While the GM card is up, shots compose in the space above it (the character being asked stays in view).
   const onCardTop = useCallback((px: number) => stage?.setInsets({ bottom: px > 0 ? px + 12 : 0 }), [stage])
   const advance = (reply: string, roll: RollOutcome, rollInfo: JournalTurn["roll"], wait = 1600) => {
-    const from = TURNS[turnIndex].hold?.actor
+    const from = holdOf(turnIndex)?.actor
     setPhase("thinking")
     setTimeout(() => runTurn(turnIndex + 1, reply, roll, from ? nameOf(from) : null, rollInfo), wait)
   }
@@ -283,7 +304,7 @@ export function TurnMock() {
     movedTo.current = it.summary
     setNote(`${nameOf(actorId).split(" ")[0]} moves ${it.summary} (${r.distance.toFixed(1)} m${r.short ? ", as far as they can" : ""}).`)
     const pace = it.pace === "hurry" ? 2.6 : it.pace === "sneak" ? 0.8 : 1.3
-    const hold = TURNS[turnIndex].hold
+    const hold = holdOf(turnIndex)
     const arrived = stage.moveCast(actorId, [r.x, r.z], { speed: pace })
     if (hold) stage.shot(hold.shot)
     await arrived
@@ -298,13 +319,13 @@ export function TurnMock() {
     }
   }
   const onReply = async (text: string) => {
-    const hold = TURNS[turnIndex].hold
+    const hold = holdOf(turnIndex)
     if (!hold) return
     setPhase("thinking")
-    await walkFromText(hold.actor, text)
+    if (!hold.stay) await walkFromText(hold.actor, text)
     if (hold.roll) {
       pendingReply.current = text
-      setRolling({ actor: hold.actor, roll: hold.roll })
+      setRolling({ actor: hold.actor, roll: hold.roll, prompt: hold.rollPrompt })
       setPhase("roll")
     } else advance(text, null, undefined, 700)
   }
@@ -315,12 +336,14 @@ export function TurnMock() {
       resolve(base)
       return
     }
-    const hold = TURNS[turnIndex].hold
+    const hold = holdOf(turnIndex)
     const roll = hold?.roll
     if (!hold || !roll) return
     const total = base + roll.modifier
     const success = total >= roll.dc
-    setTimeout(() => advance(pendingReply.current ?? "", { total, success }, { name: nameOf(hold.actor), skill: roll.skill, dc: roll.dc, base, total, success }), 1500)
+    if (roll.key) storyRef.current = { ...storyRef.current, [roll.key]: success }
+    const versus = roll.versus ? `${roll.versus.name}'s ${roll.versus.natural + roll.versus.modifier}` : undefined
+    setTimeout(() => advance(pendingReply.current ?? "", { total, success }, { name: nameOf(hold.actor), skill: roll.skill, dc: roll.dc, base, total, success, versus }), 1500)
   }
   // Clicking a character takes the camera to them; clicking them again opens their card.
   const focus = useCallback(
@@ -348,9 +371,9 @@ export function TurnMock() {
         clearDialogueRef.current()
         player.current?.back()
       }
-      if (phaseRef.current === "beats" && e.key === "ArrowRight") {
-        clearDialogueRef.current()
-        player.current?.next()
+      if (phaseRef.current === "beats" && (e.key === "ArrowRight" || e.key === " " || e.key === "Enter")) {
+        e.preventDefault()
+        advanceRef.current()
       }
       const views = stage ? Object.keys(stage.shots) : []
       const i = Number(e.key) - 1
@@ -382,6 +405,8 @@ export function TurnMock() {
       const [x, y] = local(e)
       const id = stage.pick(x, y)
       if (id) focus(id)
+      // A click on the scene while the story is playing moves it on, like Continue.
+      else if (phaseRef.current === "beats") advanceRef.current()
     }
     el.addEventListener("pointerdown", pd)
     el.addEventListener("pointermove", pm)
@@ -393,7 +418,7 @@ export function TurnMock() {
     }
   }, [stage, focus])
 
-  const hold = TURNS[turnIndex].hold
+  const hold = holdOf(turnIndex)
   const actorId = phase === "roll" ? (rolling?.actor ?? null) : phase === "hold" ? (hold?.actor ?? null) : null
   const actor = party.find((c) => c.id === actorId) ?? null
   let mode: CardMode | null = null
@@ -415,7 +440,12 @@ export function TurnMock() {
     <StageHud
       containerRef={containerRef}
       title={{ eyebrow: "The March of Davos  ·  Arrival", text: "The Gates of Kordavos" }}
-      location={{ eyebrow: "Arrival at Kordavos", title: actor ? `${actor.name.split(" ")[0]}'s turn` : TURNS[turnIndex].intro ? "Intro" : `Turn ${turnIndex}`, status, hidden: !!plates.right }}
+      location={{
+        eyebrow: "Arrival at Kordavos",
+        title: actor ? `${actor.name.split(" ")[0]}'s turn` : TURNS[turnIndex].intro ? "Intro" : `Round ${TURNS[turnIndex].round}`,
+        status,
+        hidden: !!plates.right,
+      }}
       views={views}
       activeView={stage?.activeShot ?? null}
       onView={(id) => {
@@ -459,7 +489,7 @@ export function TurnMock() {
           {/* On phones the bubble carries the line; a plate over the narration would cover half the screen. */}
           {plates.left && !compact && <Plate line={plates.left} compact={compact} docked />}
           <Narration
-            heading={`${TURNS[turnIndex].intro ? "Intro" : `Turn ${turnIndex}`}  ·  ${TURNS[turnIndex].title}`}
+            heading={`${TURNS[turnIndex].intro ? "Intro" : `Round ${TURNS[turnIndex].round}`}  ·  ${TURNS[turnIndex].title}`}
             text={paragraphs[narrated]}
             index={narrated}
             count={paragraphs.length}
@@ -469,6 +499,9 @@ export function TurnMock() {
             onBack={back}
             onNext={next}
             onSkip={skip}
+            step={stepMode}
+            waiting={waiting}
+            onContinue={advanceStep}
           />
         </div>
       )}
@@ -523,6 +556,17 @@ export function TurnMock() {
             </div>
           </div>
           <div className="mt-5 border-t border-stage-line/25 pt-4">
+            <div className="mb-3 text-[10px] tracking-wide">Story</div>
+            <div className="flex gap-2">
+              <Pill className="flex-1" active={stepMode} onClick={() => setStepMode(true)}>
+                Step through
+              </Pill>
+              <Pill className="flex-1" active={!stepMode} onClick={() => setStepMode(false)}>
+                Auto
+              </Pill>
+            </div>
+          </div>
+          <div className={cn("mt-5 border-t border-stage-line/25 pt-4", stepMode && "hidden")}>
             <div className="mb-3 text-[10px] tracking-wide">Narration pace</div>
             <div className="flex gap-2">
               {(Object.keys(PACES) as Pace[]).map((p) => (

@@ -81,19 +81,6 @@
       },
       "at": "lineBack",
       "facing": 0
-    },
-    {
-      "id": "cutpurse",
-      "name": "Cutpurse",
-      "role": "Street thief",
-      "height": 1.62,
-      "art": {
-        "front": "/stage/fixtures/march-of-davos/cutpurse-front.webp",
-        "back": "/stage/fixtures/march-of-davos/cutpurse-back.webp",
-        "portrait": "/stage/fixtures/march-of-davos/cutpurse-portrait.jpg"
-      },
-      "at": [-6.0, 13.0],
-      "facing": 90
     }
   ],
   "shots": {

@@ -6,6 +6,14 @@ Git owns routine implementation history. This log records durable wiki, planning
 
 ## 2026-09-30
 
+### Turn page mock, revision 10: two rounds, a pickpocket, and step-through
+
+- The gate scene now plays as written: the party meets in line (round 1), then faces Garlan (round 2).
+- Yeva's round-1 turn is the pickpocket contest against Oskar, and her round-2 turn branches on it.
+- The story steps through by default (Continue, Space, a click). Auto playback stays as a setting.
+- The NPC cutpurse is retired.
+- Details: [feature-stage-turn-mock](plans/feature-stage-turn-mock.md).
+
 ### Turn page mock, revision 9: readable bubbles, a quiet wide opening
 
 - Bubbles appear only when the speaker is large enough on screen to read, and never shrink below a readable size.

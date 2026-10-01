@@ -188,6 +188,53 @@ Owner feedback: the bubbles were tiny in the wide opening. Pause, then zoom in t
   - Real time: no lines during the gate shot; chatter in the line at 13–14 px with speakers 230–530 px tall; the counter exchange spaced 53–62 s with Garlan about 650 px tall.
   - The skip run and a full encounter run had no errors.
 
+## Revision 10 (2026-09-30): the scene as written, in two rounds, stepped through
+
+The owner restated the scene's purpose. The characters meet for the first time while they wait in line:
+- Round 1: each of them can introduce themselves, or do anything else.
+- Round 2: whoever is first talks to the sergeant.
+- The rogue can pick a merchant's pocket during round 1.
+- It should be a step-through with obvious navigation, not autoplay.
+
+### Structure
+
+**Intro (3 stages):** the gate, the line, and the counter, as in revisions 8 and 9. It ends with the line stalled and the four turning to one another. The facings wait for the new `gate-line:settled` cue, because the line's last shuffle would otherwise turn them back.
+
+**Round 1, in line.** Every hold is marked `stay`, so the reply isn't turned into movement: the scene owns their places in line.
+1. Branka ("Strangers in Line"). Oskar remarks on pockets.
+2. Cassia ("Maps and Sigils"). Oskar introduces himself and waves his purse about.
+3. Yeva: the pickpocket. A contest with Oskar's Perception (12 + 1) shown first, against her Sleight of Hand (+5) ("Light Fingers").
+   - **Success:** she lifts the purse and finds a note sealed with green wax.
+   - **Failure:** Oskar grabs her wrist and shouts "Thief!", and Garlan looks up.
+4. Milos ("The Line Moves"). His reply depends on the outcome. The line then resumes and the party reaches the counter.
+
+**Round 2, at the counter.** The Garlan turns as before, except Yeva's, which branches on the purse:
+- **Purse taken:** she pays the party's twelve marks out of Oskar's purse. Garlan eyes the saffron embroidery, and Oskar pats his belt.
+- **Caught:** Garlan questions her, in a Deception contest against his Insight (11 + 3).
+
+**Script mechanics:**
+- Holds can depend on a `Story` that rolls write to through `roll.key`.
+- The NPC cutpurse and his art are gone.
+
+### Step-through
+
+`BeatPlayer.mode = "step"` (the default) makes every paragraph and every spoken line wait for `continue()`. Camera moves, walks and waits still play between them.
+- Pressing Continue before a wait is reached hurries there and lets that one pass, so it always means "on to the next thing".
+- Lines stay up until Continue.
+- The panel shows a brass **Continue ▸** that glows while the story waits. Space, Enter, → or a click on the scene also continue.
+- ← and ↻ (replay) work as before.
+- **Auto** in Scene settings keeps the timed playback and its pace setting.
+
+### Framing
+
+The round-1 speakers are framed from fixed points read off the verified subject shots, at the stalled line's fixed places, so a turned head can't move the camera behind someone. Oskar is framed right of centre to stay clear of the narration column. Named characters in the queue no longer get the crowd's stock replies.
+
+### Checked in the browser (1440×900, DPR 2)
+
+- Success (`?roll=20`): 49 Continues, about 2 minutes.
+- Failure (`?roll=1`): 51 Continues, including the Deception branch.
+- Every turn in order, all nine journal entries, no console errors.
+
 ## Built (kept for the real page)
 
 | Piece | Path |
