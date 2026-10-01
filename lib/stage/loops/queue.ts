@@ -52,6 +52,8 @@ type Ent = {
   lat: number
   route: [number, number][] | null
   phase: "queue" | "passing" | "parking" | "parked" | "returning" | "city"
+  // A named character the loop is walking up the line (so it settles them, standing, when they arrive).
+  shuffling?: boolean
 }
 type Group = { members: Ent[]; party?: boolean; cast?: boolean; fresh?: boolean }
 
@@ -321,10 +323,20 @@ export class QueueLoop {
         if (e.delay > 0) e.delay -= dt
         const gap = e.target - e.d
         const moving = e.delay <= 0 && Math.abs(gap) > 0.02
-        // Named characters standing still are the encounter's to move; when the line moves on, anyone who has
-        // stepped out walks back to their place before shuffling up.
-        if (e.cast && !moving) continue
+        // Named characters standing still are the encounter's to move: the loop settles them once, standing, when their
+        // shuffle up the line ends. When the line moves on, anyone who has stepped out walks back to their place first.
+        if (e.cast && !moving) {
+          if (e.shuffling) {
+            e.shuffling = false
+            const s = this.slot(e)
+            const p = this.path.at(e.d)
+            const facing = g === front && (this.state === "question" || this.state === "held") ? Math.atan2(this.spec.station[0] - s.x, this.spec.station[1] - s.z) : Math.atan2(-p.dx, -p.dz)
+            this.pose(e, s.x, s.z, facing, false)
+          }
+          continue
+        }
         if (e.cast) {
+          e.shuffling = true
           const s = this.slot(e)
           const off = Math.hypot(s.x - e.cast.x, s.z - e.cast.z)
           if (off > 0.25) {
