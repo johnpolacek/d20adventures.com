@@ -1,5 +1,6 @@
 use serde_json::Value;
 use std::{
+    io::Write,
     path::PathBuf,
     process::Command,
     sync::atomic::{AtomicBool, Ordering},
@@ -15,7 +16,7 @@ fn spike_dir() -> PathBuf {
 
 #[tauri::command]
 async fn run_suite(kind: String) -> Result<Value, String> {
-    if !["detect", "gm", "images", "turn"].contains(&kind.as_str()) {
+    if !["detect", "gm", "images", "turn", "refine"].contains(&kind.as_str()) {
         return Err("Unknown trial".into());
     }
     if RUNNING.swap(true, Ordering::SeqCst) {
@@ -42,6 +43,39 @@ async fn run_suite(kind: String) -> Result<Value, String> {
     .map_err(|_| "Harness task failed".to_string());
     RUNNING.store(false, Ordering::SeqCst);
     result?
+}
+
+#[tauri::command]
+fn read_trial_progress() -> Result<Value, String> {
+    let path = spike_dir().join("results/private/turn-progress.json");
+    let bytes = std::fs::read(path).map_err(|_| "No progress yet")?;
+    serde_json::from_slice(&bytes).map_err(|_| "Progress update in flight".into())
+}
+
+#[tauri::command]
+fn record_display(report: Value) -> Result<(), String> {
+    let mut clean = serde_json::Map::new();
+    for key in ["recordedAt", "provider", "variant", "name"] {
+        let value = report[key].as_str().ok_or("Missing display field")?;
+        if value.len() > 80 {
+            return Err("Display field too long".into());
+        }
+        clean.insert(key.into(), value.into());
+    }
+    for key in ["emittedAt", "displayedAt", "serviceElapsedMs"] {
+        clean.insert(
+            key.into(),
+            report[key].as_u64().ok_or("Invalid display timing")?.into(),
+        );
+    }
+    let dir = spike_dir().join("results/private");
+    std::fs::create_dir_all(&dir).map_err(|_| "Cannot create timing directory")?;
+    let mut file = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(dir.join("display-receipts.jsonl"))
+        .map_err(|_| "Cannot open display timings")?;
+    writeln!(file, "{}", Value::Object(clean)).map_err(|_| "Cannot write display timing".into())
 }
 
 #[tauri::command]
@@ -76,11 +110,8 @@ fn record_webview(report: Value) -> Result<(), String> {
     clean.insert("nativeTauri".into(), Value::Bool(true));
     let dir = spike_dir().join("results");
     std::fs::create_dir_all(&dir).map_err(|_| "Cannot create evidence directory")?;
-    let name = if clean["origin"].as_str().unwrap_or("").starts_with("tauri:") {
-        "webview-bundled.json"
-    } else {
-        "webview-dev.json"
-    };
+    // Preserve the original sign-in evidence when reopening the spike.
+    let name = "webview-latest.json";
     std::fs::write(dir.join(name), serde_json::to_vec_pretty(&clean).unwrap())
         .map_err(|_| "Cannot write evidence".into())
 }
@@ -111,6 +142,8 @@ fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             run_suite,
+            read_trial_progress,
+            record_display,
             record_webview,
             test_auth
         ])

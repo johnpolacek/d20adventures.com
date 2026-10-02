@@ -1,69 +1,59 @@
 import assert from "node:assert/strict"
 import { createHash } from "node:crypto"
-import { existsSync, readFileSync } from "node:fs"
-import { createRequire } from "node:module"
-import { dirname, join, relative, resolve } from "node:path"
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
 import vm from "node:vm"
 import ts from "typescript"
 import { z } from "zod"
+import { combinedAction } from "./combined-action.mjs"
 import { root, validate } from "./fixture.mjs"
+import { memoryCommit } from "./memory-commit.mjs"
+import { assertPatchPreserved, strictModelSchema } from "./strict-state.mjs"
+import { sourceLoader } from "./trusted-source.mjs"
 
 export const turnSystem =
   "You are running D20 Adventures game services. Use only the fictional context supplied in the current request. Do not use tools or inspect files. Follow the current request's output format, JSON or prose."
-const nodeRequire = createRequire(import.meta.url)
 const unavailable = () => {
   throw new Error("External storage unavailable in this fixture")
 }
 
-// Execute trusted repository modules unchanged, substituting only service
-// boundaries. This is a test harness, not an untrusted-code sandbox or core port.
-function sourceLoader(stubs, events) {
-  const cache = new Map()
-  const sources = {}
-  function load(name, from = join(root, "index.ts")) {
-    if (Object.hasOwn(stubs, name)) return stubs[name]
-    if (!name.startsWith(".") && !name.startsWith("@/")) return nodeRequire(name)
-    let path = name.startsWith("@/") ? join(root, name.slice(2)) : resolve(dirname(from), name)
-    if (!existsSync(path) || !path.endsWith(".ts")) {
-      path = [`${path}.ts`, join(path, "index.ts")].find(existsSync)
-    }
-    if (!path || !path.startsWith(root)) throw new Error(`Unresolved trusted source: ${name}`)
-    if (cache.has(path)) return cache.get(path)
-    const text = readFileSync(path, "utf8")
-    sources[relative(root, path)] = createHash("sha256").update(text).digest("hex")
-    const js = ts.transpileModule(text, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true } }).outputText
-    const exports = {}
-    cache.set(path, exports)
-    const fixedMath = Object.create(Math)
-    fixedMath.random = () => 0.8
-    vm.runInNewContext(
-      js,
-      {
-        exports,
-        require: (specifier) => load(specifier, path),
-        console: { log() {}, warn() {}, error: () => events.push("service_logged_error") },
-        process: { cwd: () => root, env: {} },
-        Math: fixedMath,
-        Date,
-        Buffer,
-        setTimeout,
-        clearTimeout,
-        URL,
-        structuredClone,
-      },
-      { filename: path, timeout: 5000 }
-    )
-    return exports
-  }
-  return { load, sources }
-}
-
-export async function completeTurn(session, onProgress = () => {}) {
+export async function completeTurn(session, onProgress = () => {}, options = {}) {
   const started = performance.now()
   const calls = [],
     events = [],
     writes = []
   let phase = "format-action"
+  const milestones = []
+  const cachedServices = []
+  let preflight
+  let stateAudit
+  const mark = (name, text) => {
+    milestones.push({ name, emittedAt: Date.now(), elapsedMs: Math.round(performance.now() - started), ...(text ? { text } : {}) })
+    onProgress(calls, milestones)
+  }
+  async function serviceInference(args, format) {
+    if (options.combined && phase === "format-action") {
+      assert.equal(format, "text")
+      assert.ok(!preflight, "Combined fixture expects one formatting request")
+      const combined = await combinedAction({ formatting: args, input: playerInput, character: characters.find((c) => c.id === player.id), encounter, narrative: turn.narrative, sources })
+      preflight = (await inference(combined, "json")).object
+      return { text: preflight.formattedAction }
+    }
+    if (options.combined && phase === "player-reply") {
+      const value = args.schema.shape.rollType ? preflight.rollRequirement : { modifier: preflight.situationalModifier }
+      cachedServices.push({ phase, prompt: args.prompt, value: structuredClone(value), source: "combined-action" })
+      return { object: structuredClone(args.schema.parse(value)) }
+    }
+    if (options.strictState && phase === "advance") {
+      const patchSchema = strictModelSchema(load("@/lib/wiki-adventures/adventure-patch").adventurePatchSchema)
+      args = {
+        ...args,
+        schema: args.schema.extend({ adventurePatch: patchSchema }).strict(),
+        prompt: `${args.prompt}\n\nUse the exact nested adventurePatch field names from the response schema. Record only established changes. Omit fields with no changes. Do not invent discoveries or character changes to fill the schema. Any transition must use fromEncounterId=${turn.encounterId} and toEncounterId equal to nextEncounterId. Unknown fields and malformed nested entries will be rejected.`,
+      }
+    }
+    return inference(args, format)
+  }
   async function inference(args, format) {
     const entry = { phase, format, prompt: args.prompt, ...(args.schema ? { schema: z.toJSONSchema(args.schema) } : {}), attempts: [] }
     calls.push(entry)
@@ -76,13 +66,16 @@ export async function completeTurn(session, onProgress = () => {}) {
         response = await session.ask(prompt)
       } catch (error) {
         entry.attempts.push({ elapsedMs: Math.round(performance.now() - start), failure: error.message })
-        onProgress(calls)
+        onProgress(calls, milestones)
         throw error
       }
       const validity = args.schema ? validate(response.text, args.schema) : { textValid: Boolean(response.text.trim()) && !response.text.trim().startsWith("{") }
       entry.attempts.push({ elapsedMs: Math.round(performance.now() - start), ...response, ...validity })
-      onProgress(calls)
-      if (!response.failed && (validity.schemaValid || validity.textValid)) return args.schema ? { object: structuredClone(validity.value) } : { text: response.text }
+      onProgress(calls, milestones)
+      if (!response.failed && (validity.schemaValid || validity.textValid)) {
+        if (phase === "roll-and-npc" && format === "text" && !milestones.some((m) => m.name === "roll-outcome-ready")) mark("roll-outcome-ready", response.text)
+        return args.schema ? { object: structuredClone(validity.value) } : { text: response.text }
+      }
       prompt = `Your previous answer failed validation. ${validity.issue ?? "Return the requested format."}\n\n${prompt}`
     }
     throw new Error("service_output_invalid")
@@ -125,6 +118,11 @@ export async function completeTurn(session, onProgress = () => {}) {
           providedKeysAbsentAfterValidation: Object.keys(proposedPatch ?? {}).filter((key) => args.adventurePatch?.[key] === undefined),
           committedPatch: snapshot(args.adventurePatch),
         })
+        if (options.strictState) {
+          const result = await commit(args)
+          stateAudit = assertPatchPreserved(proposedPatch, args.adventurePatch, records.get(args.adventureId), records.get(result.turnId))
+          return result
+        }
         const adventure = records.get(args.adventureId)
         assert.equal(adventure.currentTurnId, args.expectedCurrentTurnId)
         assert.equal(adventure.currentEncounterId, args.expectedCurrentEncounterId)
@@ -145,7 +143,7 @@ export async function completeTurn(session, onProgress = () => {}) {
     },
   }
   const stubs = {
-    "@/lib/ai": { generateObject: (args) => inference(args, "json"), generateText: (args) => inference(args, "text") },
+    "@/lib/ai": { generateObject: (args) => serviceInference(args, "json"), generateText: (args) => serviceInference(args, "text") },
     "@/lib/convex/server": { convex: store },
     "@/convex/_generated/api": { api },
     "@clerk/nextjs/server": { auth: async () => ({ userId: "fixture-player" }) },
@@ -158,6 +156,7 @@ export async function completeTurn(session, onProgress = () => {}) {
     "@/lib/mapview/load": { loadEncounterMap2D: async () => null },
   }
   const { load, sources } = sourceLoader(stubs, events)
+  const commit = options.strictState ? memoryCommit(records, sources) : null
   // Execute the actual submitReply mutation handler against an in-memory db.
   const dbSource = readFileSync(join(root, "convex/adventure.ts"), "utf8")
   sources["convex/adventure.ts"] = createHash("sha256").update(dbSource).digest("hex")
@@ -230,20 +229,27 @@ export async function completeTurn(session, onProgress = () => {}) {
       narrativeContext: turn.narrative,
       characterInfo: player,
     })
+    mark("action-ready", narrativeAction)
     phase = "player-reply"
     const actions = load("@/app/_actions/adventure")
     const reply = await actions.processTurnReply({ turnId: turn._id, characterId: player.id, narrativeAction, originalPlayerInput: playerInput })
     assert.ok(reply.rollRequired, "Contested deception must exercise the roll path")
+    mark("dice-ready", JSON.stringify(reply.rollRequired))
+    if (options.combined) assert.equal(cachedServices.length, 2, "Both preflight decisions must be consumed before rolling")
     phase = "roll-and-npc"
+    mark("dice-submitted")
     await actions.resolvePlayerRollResult({ turnId: turn._id, characterId: player.id, result: 20 })
     const completed = snapshot(records.get(turn._id))
     assert.ok(
       completed.characters.every((c) => c.isComplete),
       "Every actor must complete before advance"
     )
+    mark("actors-complete")
     phase = "advance"
     result = await load("@/app/_actions/advance-turn").advanceTurn({ turnId: turn._id, settingId: adventure.settingId, adventurePlanId: adventure.planId })
     assert.equal(records.get(adventure._id).currentTurnId, "turn-2")
+    if (options.strictState) assert.ok(stateAudit?.allSuppliedFieldsPreserved, "Structured state must survive commit")
+    mark("turn-complete")
     assert.ok(
       calls.every((c) => {
         const a = c.attempts.at(-1)
@@ -256,6 +262,7 @@ export async function completeTurn(session, onProgress = () => {}) {
   }
   return {
     status: failure ? "failed" : "completed",
+    ...(options.strictState ? { variant: options.combined ? "combined" : "strict", milestones, cachedServices, stateAudit } : {}),
     failure,
     elapsedMs: Math.round(performance.now() - started),
     inferenceRequests: calls.reduce((sum, c) => sum + c.attempts.length, 0),
@@ -271,7 +278,7 @@ export async function completeTurn(session, onProgress = () => {}) {
     writes,
     sourceHashes: sources,
     boundaries: [
-      "In-memory Convex storage, real submitReply handler",
+      options.strictState ? "In-memory Convex storage, real submitReply and commitWikiTurnAdvance handlers" : "In-memory Convex storage, real submitReply handler",
       "Fixture Clerk user, real access checks",
       "Repository wiki source, no remote S3",
       "No map, audio, billing, or UI dice animation",

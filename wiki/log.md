@@ -4,6 +4,16 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-02, desktop state validation and pre-roll batching
+
+Completed the authorized refinement in `spike/desktop-local-play`. Both native trial variants derive a strict nested model contract from the real adventure-patch schema and execute the real wiki commit handler over an in-memory database. Every accepted field survived in all eight runs. Invalid fields now trigger a correction in the spike instead of silently disappearing. Character updates are retained in the saved turn patch, but the existing game code does not apply them to live character fields. That remains explicit follow-up work.
+
+Combining player formatting, roll selection, and situational modifier reduced seven CLI requests to five, with the dice result still supplied separately. Claude's full turn changed from 23.149 to 22.528 s, Codex from 40.516 to 26.114 s, and Grok from 103.632 to 86.015 s. Native dice-readiness render times changed from 8.800 to 4.297 s, 14.532 to 6.756 s, and 52.735 to 24.187 s. Initial action text did not improve for every provider. The API text baseline changed from 13.390 s with five JSON-format retries to 6.523 s with one retry. These are single paired samples, not a stable latency benchmark.
+
+Claude and Grok saved richer state and advanced to the festival. Codex supplied summary-only patches and remained at the gate, omitting the fee waiver from its advancement summary. The API baseline invented some scene details. JSON validity and field retention therefore remain separate from narrative continuity and referential integrity. Gemini compatibility was not retested and does not block the other adapters.
+
+Recommendation: proceed to core extraction, retain both request paths, and use Claude for the first interactive demo while keeping Codex and Grok selectable. Apply character state and add broader gameplay coverage as the desktop is built. Ten focused tests, root TypeScript, scoped Biome, Rust checks, packaged native trials, render instrumentation, and exact-prompt/saved-state replay passed. See [phase 0](plans/desktop-local-play.md#strict-state-and-fewer-requests-2026-10-02). Changes committed locally, with no web app changes, push, merge, CLI credential access, or production mutation.
+
 ## 2026-10-01, desktop persistent adapters and complete turns
 
 Completed the follow-up in `spike/desktop-local-play`. Codex app-server and Gemini/Grok ACP adapters now launch with existing CLI homes and sign-in. User-configuration loading no longer rejects a provider. The native comparison passed both existing schemas on first answers for Claude, Codex, and Grok, using two requests in one persistent session each. Progression took 3.725 s, 11.678 s, and 20.464 s, respectively, versus 0.941 s for the API baseline. No observable model tool calls or host-operation requests occurred in the successful trials.

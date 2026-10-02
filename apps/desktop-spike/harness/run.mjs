@@ -6,7 +6,7 @@ import { fixture, root, spike, system, validate, wirePrompt } from "./fixture.mj
 import { createSession, sessionReport } from "./sessions.mjs"
 
 const kind = process.argv[2]
-if (!["fixture", "detect", "gm", "images", "turn"].includes(kind)) throw new Error("Unknown trial")
+if (!["fixture", "detect", "gm", "images", "turn", "refine"].includes(kind)) throw new Error("Unknown trial")
 const resultDir = join(spike, "results")
 mkdirSync(resultDir, { recursive: true })
 const cwd = mkdtempSync(join(tmpdir(), "d20-desktop-spike-"))
@@ -38,10 +38,10 @@ async function calls(session, fixtureCalls) {
 }
 
 try {
-  if (kind === "turn") {
+  if (kind === "turn" || kind === "refine") {
     const { turnTrials } = await import("./turn-trials.mjs")
-    report.results = await turnTrials(resultDir, report)
-    save("complete-turn", report)
+    report.results = await turnTrials(resultDir, report, kind === "refine")
+    save(kind === "refine" ? "refined-turn" : "complete-turn", report)
   } else if (kind === "images") {
     const { imageTrials } = await import("./images.mjs")
     report.results = await imageTrials(cwd, resultDir)

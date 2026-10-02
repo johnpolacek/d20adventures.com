@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Stageview](stageview.md) · [Architecture](../Architecture.md) · [Roadmap](../roadmap.md)
 
-Status: Phase 0 follow-up recorded 2026-10-01 in `spike/desktop-local-play`. Claude, Codex, and Grok completed native GM and full-turn trials. Gemini reached ACP but its personal-login path was rejected by the provider. Product phases remain proposed.
+Status: Phase 0 refinement recorded 2026-10-02 in `spike/desktop-local-play`. Strict nested output preserved accepted state in eight native trials. Combining pre-roll decisions reduced seven requests to five for the three working CLIs. Narrative continuity and character-state application remain open. Gemini compatibility is separate. Product phases remain proposed.
 
 A Tauri desktop app becomes the only game client. Solo play is free. The AI Game Master runs through an AI CLI the player already has installed and signed in to with their own subscription. Online multiplayer keeps the GM on the server and is paid by a subscription that grants tokens. The web app's play experience is deprecated once the desktop app ships. Stageview is rebuilding the turn page now, so the stage-first turn page should be built for the desktop app instead of the web app.
 
@@ -105,7 +105,7 @@ Rules:
 
 The throwaway app is [apps/desktop-spike](../../apps/desktop-spike/README.md), in the worktree created by `pnpm wt:create spike/desktop-local-play`. Its isolated Convex project is `d20adventures-spike-desktop-local-play`, deployment `gallant-squirrel-646`. No web app, root dependency, shared schema, billing, or production data changes. CLI credentials remained inside the installed CLIs. Long builds and live trials were approved. Nothing was pushed or merged.
 
-**Recommendation: go for further local-play development with Claude, Codex, and Grok adapters.** All three completed a real service-level turn from the Tauri app. Gemini cannot be claimed working with the tested login because the provider refused authentication. The concrete follow-ups are long turn latency, stronger world-state output validation, and Gemini account/client compatibility. This is a feasibility result, not release readiness or a reliability benchmark.
+**Recommendation: go to phase 1 core extraction.** The spike now demonstrates persistent CLI turns, strict world-state output, retained state, and earlier dice readiness through combined pre-roll decisions. Use Claude for the first interactive demo based on these samples, keeping Codex and Grok selectable. Preserve the separate-call path for comparison. Narrative continuity, applying character patches, broader gameplay, and local saves need implementation and coverage. Gemini remains a separate compatibility item after its provider rejected the tested login. These are feasibility samples, not release readiness or a reliability benchmark.
 
 #### Revised basis for restrictions, 2026-10-01
 
@@ -165,6 +165,39 @@ The full-turn test exposed a separate schema weakness. `wikiEncounterProgression
 
 An offline replay fed every saved model response through the same services and required exact equality for every generated prompt, including retries. It confirmed the committed patch and recorded rejected/discarded fields in `replayAudit`. No new inference was used for that audit. This makes the world-state limitation reviewable without rerunning models.
 
+#### Strict state and fewer requests, 2026-10-02
+
+Authorized follow-up stayed inside the spike and wiki. Both variants derive a strict model-facing schema from the real `adventurePatchSchema`, with exact nested names, unknown-key rejection, and no field-dropping recovery or string coercion. Invalid output gets one correction request, then the trial fails. Both use the real `commitWikiTurnAdvance` mutation handler against the in-memory database and assert that every accepted field survives validation and commit. This is stronger persistence coverage than the earlier simulated commit, but is still not a live Convex or SQLite save.
+
+The `strict` variant retains the seven-request sequence. The `combined` variant reuses the existing formatting, roll-selection, and situational-modifier instructions in one request. The current services consume those three results, calculate the attribute modifier locally, then submit the fixed die separately. NPC actions and advancement remain subsequent requests. All eight trials used fresh sessions, the same starting state, the same models as the prior run, and no web source changes. [Full results and replay](../../apps/desktop-spike/results/refined-turn.json), [installed versions](../../apps/desktop-spike/results/detect-refined.json).
+
+Times in seconds. Action and dice columns use a native React render proxy, recorded two animation frames after rendering and sampled through 250ms polling. Total is service wall time, including startup and local processing. This is not first-token streaming, physical screen timing, or time spent by a person deciding to roll.
+
+| Provider | Variant | Requests | Action rendered | Dice rendered | Full turn |
+|---|---|---|---|---|---|
+| Claude | strict | 7 | 3.784 | 8.800 | 23.149 |
+| Claude | combined | 5 | 4.297 | 4.297 | 22.528 |
+| Codex | strict | 7 | 6.731 | 14.532 | 40.516 |
+| Codex | combined | 5 | 6.523 | 6.756 | 26.114 |
+| Grok | strict | 7 | 20.552 | 52.735 | 103.632 |
+| Grok | combined | 5 | 24.188 | 24.187 | 86.015 |
+| API baseline | strict | 12 | 1.295 | 4.329 | 13.390 |
+| API baseline | combined | 6 | 1.000 | 1.001 | 6.523 |
+
+The first three CLI decisions became one request, reducing seven requests to five with no retries. Dice readiness improved substantially, while first action text was slightly slower for Claude and Grok because the response contained more work. Full-turn changes were 23.149 to 22.528 s for Claude, 40.516 to 26.114 s for Codex, and 103.632 to 86.015 s for Grok. The API baseline had five bare-JSON correction retries in the strict run and one in the combined run. As before, it uses portable text requests rather than the web app's provider-enforced structured output. All observable tool-event and host-denial counts were zero.
+
+Per-call times, prompts, schemas, raw responses, cached decisions, milestone timings, and saved state are in the evidence. Once the fixed die was submitted, outcome prose was ready in 2.391 / 2.858 s for Claude, 5.371 / 4.323 s for Codex, 9.124 / 14.992 s for Grok, and 1.021 / 0.882 s for the API baseline, strict / combined. The last API completion milestone was not captured by the polling render proxy, but its full service time and completed native result were recorded. Every other milestone has a render receipt.
+
+State and quality findings:
+
+- All eight runs retained every supplied patch field, with no summary fallback or dropped nested data. Claude and Grok supplied discoveries, NPC updates, or open threads. Codex supplied only `summaryDelta` in both runs, so its pass proves retention of that summary, not richer world-state generation.
+- Both Codex runs kept the scene at the gate, with the advancement summary omitting the earlier fee waiver and focusing on Garlan's next traveler. Claude and Grok retained the waiver and advanced to the festival. Strict JSON cannot establish narrative completeness.
+- The API baseline's strict narration changed the performer claim into a trade-envoy story and invented extra guards. Its combined narration introduced trade delegates and a resolved thread ID absent from the starting state. Shape validation does not enforce lore, referential integrity, or player agency.
+- No live run proposed a character update in this social scene. Canned tests prove that character updates survive in `turn.adventurePatch`. They also expose that the current mutation does not apply those updates to live character fields. No inventory/effect application semantics were invented in this spike.
+- Offline replay matched every live request and the full saved state, excluding database timestamps, for all eight runs. Canned tests additionally cover malformed fields, exhausted corrections, thread resolution, unchanged prior state, stale/duplicate advances, and the separate dice step.
+
+Ten tests, scoped Biome, root TypeScript, Rust formatting/Clippy, a packaged Tauri build, native execution/render checks, and exact-prompt/state replay passed. Original image and sign-in evidence is unchanged. This is one ordered pair per provider, with model variation and possible provider caching. It does not prove a repeatable speedup or broad gameplay reliability. The paired samples justify carrying strict output and optional pre-roll batching into the next stage, with Claude as the first demo provider. Gemini was not retried or excluded from future support. No push or merge.
+
 #### Images and native webview
 
 The earlier image and webview checks remain valid and were not rerun as model trials. Codex produced a portrait in 44.022 s and a front/back sheet in 48.073 s. Grok took 12.799 s and 13.863 s. Three backgrounds used local chroma key. Codex ignored the standee green-background prompt, so local macOS Vision supplied its mask. Both providers have transparent portraits and split front/back standees. [Image evidence](../../apps/desktop-spike/results/image-run.json), [review sheet](../../apps/desktop-spike/results/images/review-sheet.png), Codex above Grok. Visual limits are hair-edge fringing, portrait-to-standee detail drift, and slightly angled Grok poses.
@@ -175,7 +208,7 @@ Clerk previously signed in the configured test account using a 60-second single-
 
 Passed: five focused environment, stream, chroma-key, RPC denial, and timeout tests, scoped Biome, root TypeScript, Rust formatting and Clippy, a packaged debug Tauri build, native comparison/full-turn runs, and exact-prompt offline replay. All changes remain in the spike and wiki. The first trial is retained in [gm.json](../../apps/desktop-spike/results/gm.json), with its skips interpreted under the now-withdrawn rule.
 
-Next: carry the working adapters into the planned core extraction, expose the actual nested world-state schema to the model, retain validation diagnostics, and evaluate model selection or fewer serial calls against a turn-latency target. Keep Gemini as unavailable for this tested login until its provider compatibility is resolved through the CLI's own supported flow. Broaden coverage to combat, AI companions, failure/recovery, usage limits, and production auth before a release claim. Seven serial CLI requests, especially Grok's four-minute turn, need UX and performance work.
+Next: extract the shared core with the existing behavior and regression fixtures, then integrate the tested strict contract and optional combined pre-roll request into the desktop adapter. Define and implement character-patch application before claiming durable gameplay state. Add narrative continuity, combat, AI companions, failure/recovery, usage-limit, and production-auth coverage as those paths are built. Keep Gemini unavailable for the tested login until provider compatibility is resolved through its own supported flow. These are scoped follow-ups, not reasons to stop the other adapters.
 
 Protocol basis: installed Codex-generated JSON schemas, [Codex app-server](https://learn.chatgpt.com/docs/app-server), [Gemini ACP](https://geminicli.com/docs/cli/acp-mode/), [Grok ACP](https://docs.x.ai/build/cli/headless-scripting), and [ACP session setup](https://agentclientprotocol.com/protocol/v1/session-setup). FilmBrain provenance is in the [spike README](../../apps/desktop-spike/README.md). See the [log](../log.md) and [worktree lifecycle](spike-desktop-local-play.md).
 

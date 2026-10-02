@@ -2,7 +2,7 @@ import { ClerkProvider, SignIn, UserButton, useAuth, useSignIn } from "@clerk/re
 import { invoke } from "@tauri-apps/api/core"
 import { ConvexProvider, ConvexReactClient, useConvexConnectionState, useQuery } from "convex/react"
 import { makeFunctionReference } from "convex/server"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { createRoot } from "react-dom/client"
 import "./style.css"
 
@@ -18,6 +18,9 @@ function App() {
   const [result, setResult] = useState("")
   const [error, setError] = useState("")
   const [authMethod, setAuthMethod] = useState("interactive-or-existing-session")
+  const [progress, setProgress] = useState(null)
+  const startedAt = useRef(0)
+  const displayed = useRef(new Set())
   async function testSignIn() {
     setError("")
     try {
@@ -31,6 +34,10 @@ function App() {
     }
   }
   async function run(kind) {
+    startedAt.current = Date.now()
+    displayed.current.clear()
+    setProgress(null)
+    setResult("")
     setBusy(true)
     setError("")
     try {
@@ -41,6 +48,50 @@ function App() {
       setBusy(false)
     }
   }
+  useEffect(() => {
+    if (!busy) return
+    let active = true
+    const timer = setInterval(() => {
+      invoke("read_trial_progress")
+        .then((value) => {
+          if (active && Date.parse(value.recordedAt) >= startedAt.current) setProgress(value)
+        })
+        .catch(() => {})
+    }, 250)
+    return () => {
+      active = false
+      clearInterval(timer)
+    }
+  }, [busy])
+  useEffect(() => {
+    if (!progress) return
+    // Two frames after commit is a visible-render proxy, not first-token timing.
+    let secondFrame
+    const firstFrame = requestAnimationFrame(() => {
+      secondFrame = requestAnimationFrame(() => {
+        for (const mark of progress.milestones ?? []) {
+          const key = `${progress.provider}:${progress.variant}:${mark.name}`
+          if (displayed.current.has(key)) continue
+          displayed.current.add(key)
+          invoke("record_display", {
+            report: {
+              recordedAt: progress.recordedAt,
+              provider: progress.provider,
+              variant: progress.variant ?? "original",
+              name: mark.name,
+              emittedAt: mark.emittedAt,
+              displayedAt: Date.now(),
+              serviceElapsedMs: mark.elapsedMs,
+            },
+          }).catch(() => setError("Display timing recording failed."))
+        }
+      })
+    })
+    return () => {
+      cancelAnimationFrame(firstFrame)
+      if (secondFrame) cancelAnimationFrame(secondFrame)
+    }
+  }, [progress])
   useEffect(() => {
     invoke("record_webview", {
       report: {
@@ -60,13 +111,33 @@ function App() {
     <main>
       <h1>D20 Desktop Spike</h1>
       <nav>
-        {["detect", "gm", "images", "turn"].map((kind) => (
+        {["detect", "gm", "images", "turn", "refine"].map((kind) => (
           <button key={kind} disabled={busy} onClick={() => run(kind)}>
             {kind}
           </button>
         ))}
       </nav>
       {busy && <output>Trial running</output>}
+      {progress && (
+        <section aria-live="polite">
+          <h2>
+            {progress.provider} {progress.variant}
+          </h2>
+          {(progress.milestones ?? []).map((mark) => (
+            <p key={mark.name}>
+              <strong>
+                {mark.name}, {(mark.elapsedMs / 1000).toFixed(1)}s
+              </strong>
+              {mark.text && (
+                <>
+                  <br />
+                  {mark.text}
+                </>
+              )}
+            </p>
+          ))}
+        </section>
+      )}
       {error && <p role="alert">{error}</p>}
       <pre>{result}</pre>
       <h2>Webview checks</h2>
