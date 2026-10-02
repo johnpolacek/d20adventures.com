@@ -15,7 +15,7 @@ fn spike_dir() -> PathBuf {
 
 #[tauri::command]
 async fn run_suite(kind: String) -> Result<Value, String> {
-    if !["detect", "gm", "images"].contains(&kind.as_str()) {
+    if !["detect", "gm", "images", "turn"].contains(&kind.as_str()) {
         return Err("Unknown trial".into());
     }
     if RUNNING.swap(true, Ordering::SeqCst) {

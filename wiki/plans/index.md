@@ -10,7 +10,7 @@ Reviewed against local main on 2026-10-01. Implementation status does not imply 
 |---|---|---|
 | [Stageview](stageview.md) | Old 3D stack removed. Engine and first set merged on 2026-09-29. Gameplay integration is not built. | Staging scripts and festival set, then the stage-first turn page and encounter coverage. |
 | [Stage-first turn mock](feature-stage-turn-mock.md) | Scripted gate-scene demo merged 2026-10-01; public at `/demo/kordavos` for feedback. | Owner and playtester feedback, then the real turn page (Stageview phase 4). |
-| [Desktop local play](desktop-local-play.md) | Phase 0 partly measured. Claude, CLI images, Clerk ticket sign-in, and Convex connectivity passed. Blanket isolation requirement withdrawn 2026-10-01. Three GM providers remain untested. | Finish the three persistent adapters and measure them. Base restrictions on concrete behavior. Full turn and production auth coverage remain open. [Worktree](spike-desktop-local-play.md). |
+| [Desktop local play](desktop-local-play.md) | Phase 0 follow-up recorded. Claude, Codex, and Grok completed native full-turn trials. Gemini personal-login path rejected by provider. Art and native connectivity checks passed. | Core extraction with working adapters, explicit world-state schema, turn latency work, and Gemini compatibility follow-up. Broader gameplay and production auth coverage remain open. [Worktree](spike-desktop-local-play.md). |
 | [Maintenance follow-ups](maintenance.md) | Open findings and unverified follow-ups carried forward from completed work. | Test harness, authoring edge cases, narration validation, and environment cleanup. |
 
 ## Maintained references

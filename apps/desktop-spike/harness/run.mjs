@@ -1,11 +1,12 @@
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { ClaudeSession, detect } from "./cli.mjs"
+import { detect } from "./cli.mjs"
 import { fixture, root, spike, system, validate, wirePrompt } from "./fixture.mjs"
+import { createSession, sessionReport } from "./sessions.mjs"
 
 const kind = process.argv[2]
-if (!["fixture", "detect", "gm", "images"].includes(kind)) throw new Error("Unknown trial")
+if (!["fixture", "detect", "gm", "images", "turn"].includes(kind)) throw new Error("Unknown trial")
 const resultDir = join(spike, "results")
 mkdirSync(resultDir, { recursive: true })
 const cwd = mkdtempSync(join(tmpdir(), "d20-desktop-spike-"))
@@ -37,7 +38,11 @@ async function calls(session, fixtureCalls) {
 }
 
 try {
-  if (kind === "images") {
+  if (kind === "turn") {
+    const { turnTrials } = await import("./turn-trials.mjs")
+    report.results = await turnTrials(resultDir, report)
+    save("complete-turn", report)
+  } else if (kind === "images") {
     const { imageTrials } = await import("./images.mjs")
     report.results = await imageTrials(cwd, resultDir)
     save("image-run", report)
@@ -47,7 +52,7 @@ try {
     if (kind === "fixture") report.fixture = data.metadata
     else {
       report.providers = await detect(cwd)
-      save("detect", report)
+      save("detect-followup", report)
       if (kind === "gm") {
         report.results = []
         for (const provider of report.providers) {
@@ -55,23 +60,18 @@ try {
             report.results.push({ ...provider, status: "blocked", inferenceRequests: 0, latencyMs: null, jsonValidity: null, quality: "not measured" })
             continue
           }
-          const session = new ClaudeSession(cwd, system)
+          const session = createSession(provider.provider, cwd, system)
           try {
             const results = await calls(session, data.calls)
             report.results.push({
               ...provider,
-              model: session.model,
-              startupMs: session.startupMs ?? null,
-              lockdownVerified: Boolean(session.lockdownVerified),
-              capabilities: session.capabilities,
-              processCount: 1,
-              requests: session.requests,
+              ...sessionReport(session),
               results,
             })
           } finally {
             session.close()
           }
-          save("gm", report)
+          save("gm-followup", report)
         }
         // Baseline uses only the project's existing Google API key. No CLI credentials,
         // billing, Convex or app wrappers are used, and the key is never logged or saved.
@@ -102,7 +102,7 @@ try {
           )
           report.results.push({ provider: "google-api-baseline", model: "gemini-3.5-flash-lite", note: "Independent requests with identical prompt/schema/system, no CLI session context", results })
         } else report.results.push({ provider: "google-api-baseline", status: "blocked", reason: "Project Google API key not configured" })
-        save("gm", report)
+        save("gm-followup", report)
       }
     }
   }

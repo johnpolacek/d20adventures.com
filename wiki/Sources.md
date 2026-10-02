@@ -19,7 +19,7 @@ Reviewed 2026-10-01. Current local source establishes implementation. Dated logs
 | `scripts/wt.sh`, root and wiki `AGENTS.md` | Worktree behavior and automation policy. |
 | `lib/ai/`, `lib/services/` | AI call wrappers, current model, in-wrapper token charging, and GM service coupling to Convex, S3, and tokens. |
 | [Claude Code legal and compliance](https://code.claude.com/docs/en/legal-and-compliance) | Permitted use of a player's own Claude subscription through the unmodified CLI. External, read 2026-10-01. |
-| [Desktop spike](../apps/desktop-spike/README.md), its `harness/` and `results/` | Dated native CLI measurements, exact prompt/schema fixtures, image artifacts, local masking, Clerk ticket sign-in, and Convex connectivity. Limits and external protocol sources are in [phase 0](plans/desktop-local-play.md#phase-0-spike). |
+| [Desktop spike](../apps/desktop-spike/README.md), its `harness/` and `results/` | Dated native CLI measurements, complete service-turn traces, exact-prompt replay and patch-validation results, image artifacts, Clerk ticket sign-in, and Convex connectivity. Limits and external protocol sources are in [phase 0](plans/desktop-local-play.md#phase-0-spike). |
 | `~/Projects/aifilmcamp/apps/macos/Packages/FilmBrain/Sources/FilmBrain/` | Local reuse source for CLI locators, invocation builders, bounded processes, and image generation. No credential files copied. Read 2026-10-01. |
 | [Decision log](log.md) | Dated milestones, owner decisions, validation evidence, and limits. |
 | Git history through `0eedb26` | Pre-cleanup plans and implementation history. Deleted documents remain recoverable. |

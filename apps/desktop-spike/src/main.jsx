@@ -60,7 +60,7 @@ function App() {
     <main>
       <h1>D20 Desktop Spike</h1>
       <nav>
-        {["detect", "gm", "images"].map((kind) => (
+        {["detect", "gm", "images", "turn"].map((kind) => (
           <button key={kind} disabled={busy} onClick={() => run(kind)}>
             {kind}
           </button>

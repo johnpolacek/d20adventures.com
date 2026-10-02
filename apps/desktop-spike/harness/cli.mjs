@@ -101,13 +101,8 @@ export function gate(provider, help) {
     const missing = required.filter((flag) => !help.includes(flag))
     return missing.length ? { allowed: false, reason: `Missing flags: ${missing.join(", ")}` } : { allowed: true }
   }
-  const reasons = {
-    codex: "App-server does not expose exec's --ignore-user-config / --ignore-rules. Config overrides do not establish that user settings, hooks, and MCP were never loaded. No GM launched.",
-    gemini:
-      "Installed settings loader unconditionally loads user settings. GEMINI_CLI_HOME relocates both settings and OAuth storage. No supported credential-preserving ignore-settings mode established. No GM launched.",
-    grok: "ACP is available, but no ignore-user-settings mode is exposed. GROK_HOME relocates config, auth, plugins, and sessions together. No GM launched.",
-  }
-  return { allowed: false, reason: reasons[provider] }
+  const flag = { codex: "app-server", gemini: "--acp", grok: "agent" }[provider]
+  return help.includes(flag) ? { allowed: true } : { allowed: false, reason: "Persistent protocol not exposed by this installed CLI" }
 }
 
 export async function detect(cwd) {

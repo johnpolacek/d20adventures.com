@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Stageview](stageview.md) · [Architecture](../Architecture.md) · [Roadmap](../roadmap.md)
 
-Status: Phase 0 partially measured in `spike/desktop-local-play`. The blanket isolation requirement and resulting no-go recommendation were withdrawn on 2026-10-01. Codex, Gemini CLI, and Grok GM support remains untested. Product phases remain proposed.
+Status: Phase 0 follow-up recorded 2026-10-01 in `spike/desktop-local-play`. Claude, Codex, and Grok completed native GM and full-turn trials. Gemini reached ACP but its personal-login path was rejected by the provider. Product phases remain proposed.
 
 A Tauri desktop app becomes the only game client. Solo play is free. The AI Game Master runs through an AI CLI the player already has installed and signed in to with their own subscription. Online multiplayer keeps the GM on the server and is paid by a subscription that grants tokens. The web app's play experience is deprecated once the desktop app ships. Stageview is rebuilding the turn page now, so the stage-first turn page should be built for the desktop app instead of the web app.
 
@@ -88,12 +88,12 @@ Long-running text modes, checked against installed CLIs on 2026-10-01:
 | Claude Code | `claude -p --input-format stream-json --output-format stream-json` |
 | Codex | `codex app-server`, JSON-RPC over stdio, marked experimental |
 | Gemini CLI | `gemini --acp`, Agent Client Protocol |
-| Grok | `grok agent stdio`, Agent Client Protocol. Detected, GM inference not yet tested. |
+| Grok | `grok agent stdio`, Agent Client Protocol. |
 
 Rules:
 
 - Apply restrictions to specific unwanted behavior. Loading user settings or listing tools, skills, plugins, or MCP is not by itself a provider failure. Prefer supported controls that keep the GM focused on the supplied game state. Require a concrete reason for stricter isolation. Keep CLI credentials inside the installed CLI. See the revised basis in phase 0.
-- One process cannot switch `--json-schema`, and the GM uses a different shape per step. Put the schema in the prompt, validate with the existing zod schemas in `gm-core`, and retry once with the validation error.
+- The GM uses different shapes per step. The spike puts each schema in the prompt, validates with the existing zod schema, and retries once on failure. Codex app-server also exposes per-turn `outputSchema`, so a fixed process-level schema is not a universal limitation. Native structured-output modes were not used in this portable comparison.
 - One session per scene or encounter. Restart with a summary when the scene changes or context gets large. Keep the static GM prompt first so the prompt cache stays warm.
 - Detect installed CLIs and versions. Guide sign-in by telling the player to run the CLI's own login.
 - Handle usage-limit errors clearly. Let the player switch CLI and resume from the save.
@@ -103,97 +103,81 @@ Rules:
 
 ### Phase 0, spike
 
-Findings recorded 2026-10-01. No web app, root dependency, shared schema, production data, or billing changes. The throwaway app is [apps/desktop-spike](../../apps/desktop-spike/README.md), built in `spike/desktop-local-play` with `pnpm wt:create`. Its isolated Convex project is `d20adventures-spike-desktop-local-play`, deployment `gallant-squirrel-646`. Nothing was seeded. Setup, long builds, and live model trials were approved. Nothing was pushed.
+The throwaway app is [apps/desktop-spike](../../apps/desktop-spike/README.md), in the worktree created by `pnpm wt:create spike/desktop-local-play`. Its isolated Convex project is `d20adventures-spike-desktop-local-play`, deployment `gallant-squirrel-646`. No web app, root dependency, shared schema, billing, or production data changes. CLI credentials remained inside the installed CLIs. Long builds and live trials were approved. Nothing was pushed or merged.
 
-**Revised recommendation: continue phase 0 with all four providers in scope. The earlier no-go and Claude-first recommendation are withdrawn.** Claude inference, native CLI image generation, local background removal, Clerk ticket sign-in, and Convex React connectivity worked. Codex, Gemini CLI, and Grok GM inference was skipped under an overbroad trial rule. These providers are untested, not demonstrated unsuitable. The original four-provider execution requirement remains incomplete.
+**Recommendation: go for further local-play development with Claude, Codex, and Grok adapters.** All three completed a real service-level turn from the Tauri app. Gemini cannot be claimed working with the tested login because the provider refused authentication. The concrete follow-ups are long turn latency, stronger world-state output validation, and Gemini account/client compatibility. This is a feasibility result, not release readiness or a reliability benchmark.
 
 #### Revised basis for restrictions, 2026-10-01
 
-The owner challenged the original blanket requirement after reviewing the results. The spike established that the tested persistent modes lacked a verified ignore-settings path. It did not establish that user configuration would break gameplay, cause unwanted actions, or make those providers unsuitable. An inability to prove that no configuration was loaded was incorrectly promoted into a product blocker.
+The owner withdrew blanket configuration isolation as a reason to exclude a provider. The first spike skipped three CLIs because it could not prove that user settings were ignored. That did not establish a gameplay failure. The no-go and Claude-first recommendation were withdrawn. The follow-up keeps the existing CLI homes and sign-in, supplies all fictional context, applies supported controls for unwanted host actions, and measures actual behavior. A restriction needs a specific unwanted effect or documented path to one. Configuration loading alone is not a failure.
 
-| Concern | Basis and next check |
-|---|---|
-| User preferences and instructions | They may influence output. Measure schema validity, game consistency, and latency with the actual GM fixture. Configuration loading alone is not a failure. |
-| Tools, skills, plugins, and MCP | An inventory entry does not establish an unwanted action. Inspect the relevant execution and approval controls. Restrict a capability when it has a specific unwanted effect or a documented path to one, such as changing unrelated files or sending unrelated local data. Use the narrowest effective restriction. |
-| Hooks and startup behavior | These can be separate from model tool calls. Establish the actual behavior and supported controls when relevant. Do not infer unsafe execution merely from the absence of an ignore-settings flag. |
-| CLI credentials | The desktop app still must not read, copy, store, or relocate them. Continue using each installed CLI's own sign-in. |
+Claude retained its tested flags. Codex used a read-only sandbox with shell, file-edit, web, and agent features disabled for the fixture. Gemini received a tool-deny policy. The RPC client advertises no host filesystem or terminal services and declines permission requests. The successful runs emitted zero observable model tool calls and required zero host-operation denials. Codex and Grok did emit MCP startup notifications. This does not prove that user-configured startup processes never run.
 
-A concrete, documented unwanted action can justify a restriction before an incident occurs. A missing blanket off switch does not supply that basis. The goal is a working, predictable GM with appropriate control over its actions, not a proof that every user preference was absent.
+#### Persistent GM comparison
 
-The existing spike harness still implements the original trial gate and only has a Claude persistent adapter. Its saved `blocked` results are historical skips under that rule. New adapters and live measurements are still needed. This correction changes the plan and interpretation, not the recorded measurements or runtime permissions. No new model trials were run for this correction.
+The same authored Kordavos fee-payment fixture ran again through the real `buildEncounterProgressionPrompt` and `buildTransitionsText`, validated against `encounterProgressionSchema` in `app/_actions/advance-turn.ts`. A second routine-payment request used the real roll-requirement prompt and schema in the same persistent session. [Fixture and source hashes](../../apps/desktop-spike/results/fixture.json). [Native follow-up measurements](../../apps/desktop-spike/results/gm-followup.json).
 
-#### GM measurement
+| Provider | Model | Progression call | Warm schema-switch call | Result |
+|---|---|---|---|---|
+| Claude Code 2.1.287 | `claude-opus-5-5` | 3.725 s | 1.390 s | Both valid JSON and zod, no retry |
+| Codex 0.156.1, app-server | `gpt-6-astra`, low effort | 11.678 s | 8.834 s | Both valid JSON and zod, no retry |
+| Gemini CLI 0.60.0, ACP | No model reached | No inference | No inference | Authentication rejected |
+| Grok 1.0.41, ACP | `grok-4.7` | 20.464 s | 8.270 s | Both valid JSON and zod, no retry |
+| Google API baseline | `gemini-3.5-flash-lite` | 0.941 s | 0.551 s | Both valid JSON and zod, no retry |
 
-The fixture uses the actual `buildEncounterProgressionPrompt` and `buildTransitionsText` from `lib/services/advance-turn-prompt-service.ts`, authored Kordavos gate content, and Mira's completed three-mark fee payment. It validates against the exact `encounterProgressionSchema` declaration in `app/_actions/advance-turn.ts`. A second request uses the real roll-requirement service prompt and schema to test a schema change within the same process. Full prompts and source hashes are in [fixture.json](../../apps/desktop-spike/results/fixture.json). This is one legacy encounter-progression step followed by a separate warm schema probe. It does not measure the full reply, dice, NPC, AI-party, or current wiki-runtime pipeline.
+Each successful CLI used one launched client process and one session for two application inference requests. Initialization, included in the first call, took 0.661 s for Claude, 1.296 s for Codex, and 0.622 s for Grok. Grok may use a shared background leader. Provider HTTP call counts are not observable. The API baseline uses independent requests. Both fixtures use identical supplied prompts and schemas, while each CLI retains its own provider instructions and supported configuration.
 
-| Provider and tested version | Persistent GM outcome | Requests for progression | Progression wall time | Warm roll-schema wall time | Bare JSON and existing zod schemas |
+All four responding models chose `the-harvest-festival` and no roll for routine payment. Claude added the most atmosphere. Codex and Grok were more concise. The baseline was brief and much faster. None forced a new player decision in the progression sample. This single fixture supports a qualitative comparison, not a general model ranking.
+
+Gemini initialized ACP but `authenticate` returned error `-32000`. The message says this client is no longer supported for Gemini Code Assist for individuals and directs migration to Antigravity. It reproduced in diagnostic and native trials. No credentials were inspected, copied, or migrated, and no API key was substituted. This is the observed failure for this installation and login, not a universal claim about every Gemini account. It is unrelated to the withdrawn settings gate. There is no Gemini CLI GM quality or inference latency measurement.
+
+#### Complete gameplay turn
+
+The native `turn` action ran existing repository code unchanged through a trusted-source test loader. Mira falsely claims to be an invited festival performer to avoid the entrance fee. The flow formats her action, submits her reply, determines the deception check and modifier, resolves a fixed player die of 20, processes Garlan's response and its roll requirement, then executes the current wiki advancement path. All successful runs completed both actors and created turn 2 at `the-harvest-festival`.
+
+The storage boundary is in memory. The actual `submitReply` mutation handler runs against it. The wiki commit boundary is simulated with current-turn checks. Clerk supplies a fixture identity, with the real access checks still executed. Content compiles from the authored repository source. Map loading, audio, billing, production storage, and UI dice animation are outside this test. There is one PC and Garlan, with no AI companion or combat coverage. Random game choices use a fixed value. [Full prompts, calls, schema results, source hashes, and turn state](../../apps/desktop-spike/results/complete-turn.json).
+
+| Provider | Service calls | Inference requests | Complete turn time | JSON service requests | Strict world-state patch |
 |---|---|---|---|---|---|
-| Claude Code 2.1.287, reported model `claude-opus-5-5` | Passed, one process for both requests | 1, no retry | 4.180 s | 1.451 s, 1 request | Both valid on first answer |
-| Codex 0.156.1, app-server | Not tested, skipped under former rule | 0 | Not measured | Not measured | Not measured |
-| Gemini CLI 0.60.0, ACP | Not tested, skipped under former rule | 0 | Not measured | Not measured | Not measured |
-| Grok 1.0.41, ACP | Not tested, skipped under former rule | 0 | Not measured | Not measured | Not measured |
-| Google API baseline, `gemini-3.5-flash-lite` | Independent API requests | 1, no retry | 2.283 s | 0.615 s, 1 request | Both valid on first answer |
+| Claude | 7 | 7 | 31.474 s | 5/5 valid first answer | Invalid, existing summary fallback used |
+| Codex | 7 | 7 | 59.437 s | 5/5 valid first answer | Invalid, existing summary fallback used |
+| Gemini CLI | Authentication failed | 0 | No gameplay measurement | Not measured | Not measured |
+| Grok | 7 | 7 | 252.396 s | 5/5 valid first answer | Invalid, existing summary fallback used |
+| API baseline | 7 | 10 | 8.291 s | 5/8 valid attempts, all repaired within one retry per call | Accepted with some provided fields discarded |
 
-Claude initialization took 0.781 s, included in its first call. Its startup event reported empty tools, skills, plugins, and MCP server arrays. Both requests reported one provider turn. Application inference requests and provider-reported turns are observable. Provider HTTP request counts are not. The CLI API duration field is cumulative session time, so per-call comparisons use measured wall time. The API baseline receives the same system prompt, fixture, and JSON schema, but no previous-request context. Evidence: [gm.json](../../apps/desktop-spike/results/gm.json) and [detect.json](../../apps/desktop-spike/results/detect.json).
+Per-call wall time in seconds. The first call includes session initialization. Total turn time also includes fixture setup and local processing.
 
-Qualitative review of this one sample:
+| Call | Claude | Codex | Grok | API baseline |
+|---|---|---|---|---|
+| Player action formatting | 2.930 | 9.825 | 26.391 | 0.893 |
+| Player roll requirement | 4.126 | 8.937 | 37.901 | 0.511 + 0.495 retry |
+| Situational modifier | 2.334 | 7.813 | 30.415 | 0.575 + 0.510 retry |
+| Dice outcome prose | 4.508 | 13.967 | 55.043 | 0.640 |
+| NPC action | 4.471 | 4.892 | 29.919 | 0.811 |
+| NPC roll requirement | 1.681 | 3.210 | 30.545 | 0.386 |
+| Wiki advancement | 10.890 | 10.450 | 41.874 | 1.434 + 1.752 retry |
 
-| Criterion | Claude | Gemini API baseline |
-|---|---|---|
-| Correct transition | `the-harvest-festival` | Same |
-| Player agency | No forced player decision or speech | Same |
-| Immediate consequence | Garlan accepts the fee and opens passage | Same |
-| Authored facts | Preserves Garlan, the fee, and festival. Adds festival atmosphere. | Preserves the core facts, but invents a stamped entry pass. |
-| Requested prose | Two short paragraphs, vivid scene detail | Two short paragraphs, brief and direct |
-| Routine payment roll | `none`, difficulty 0 | Same |
+This comparison uses text requests with prompt-embedded JSON schemas for all backends. The baseline uses `generateText`, not the web app's provider-enforced `generateObject` path. Its three format retries therefore do not establish a production web regression. Later prompts differ when an earlier model decision or narrative differs. All three CLIs chose Deception DC 14, while the baseline chose DC 12. Claude applied a situational modifier of -1, the others 0.
 
-Claude was more vivid and slightly better grounded in this sample. The baseline was faster. This is subjective feasibility evidence, not a model ranking or a reliability benchmark. No quality conclusion is available for the three untested CLIs.
+Narrative review: Codex stayed concise and preserved player agency in the roll outcome. Claude was vivid but longer. Grok's roll prose ambiguously waved the waiting line toward the gates. The baseline used second person in roll/NPC prose despite the requested third person, then produced a longer advancement paragraph. These are sample-specific quality findings.
 
-#### Findings under the original isolation rule
+The full-turn test exposed a separate schema weakness. `wikiEncounterProgressionSchema` declares `adventurePatch` as `z.unknown()`. All three CLIs produced incorrect nested transition fields, so the real `validateAdventurePatch` path replaced their proposed world-state changes with a summary-only patch. The baseline's patch parsed, but fields such as `summary` and `resolvedThreads` were stripped and malformed discoveries were dropped. Valid top-level JSON is not sufficient to preserve structured game state.
 
-The following findings explain the original skips. They do not establish a current product blocker. The spike ports FilmBrain's known-path locator, minimal process environment, bounded execution, invocation flags, and image collection. FilmBrain's existing text adapters are one-shot. Persistent protocol support required a separate check. The harness never reads, copies, or stores CLI credentials. The installed binaries handle their own sign-in. A fresh prompt-only working directory and a small environment allowlist exclude the parent agent's API keys and configuration variables.
+An offline replay fed every saved model response through the same services and required exact equality for every generated prompt, including retries. It confirmed the committed patch and recorded rejected/discarded fields in `replayAudit`. No new inference was used for that audit. This makes the world-state limitation reviewable without rerunning models.
 
-- Claude safe mode alone still reported three built-in plugins. The first attempt was rejected. Explicit `enabledPlugins` false overrides, alongside empty setting sources, tools, and strict MCP configuration, produced empty capability arrays. Missing or nonempty capability evidence and tool-use events fail closed.
-- Codex `exec` supports `--ignore-user-config` and `--ignore-rules`. The installed `app-server` does not expose them and rejects `--ignore-user-config`. Ordinary configuration overrides do not establish that user settings, hooks, or MCP were never loaded. See [app-server documentation](https://learn.chatgpt.com/docs/app-server).
-- Gemini's installed settings loader loads user settings. `GEMINI_CLI_HOME` relocates both settings and OAuth storage. No supported mode was found that preserves sign-in while ignoring user settings. Its help parser exits successfully with an unknown option when `--help` is also present, which is not evidence of option support. See [configuration](https://geminicli.com/docs/reference/configuration/) and [ACP](https://geminicli.com/docs/cli/acp-mode/).
-- Grok exposes ACP through `agent stdio`, but rejects the ignore-config option. `GROK_HOME` covers configuration and authentication together. See [headless scripting](https://docs.x.ai/build/cli/headless-scripting) and [settings](https://docs.x.ai/build/settings/reference).
+#### Images and native webview
 
-Version/help probes and argument-parser probes are detection only, not long-running GM trials. [isolation-probes.json](../../apps/desktop-spike/results/isolation-probes.json) records their scope. Three providers therefore have no inference, latency, schema, or quality result. Do not work around this by copying authentication into a clean CLI home.
+The earlier image and webview checks remain valid and were not rerun as model trials. Codex produced a portrait in 44.022 s and a front/back sheet in 48.073 s. Grok took 12.799 s and 13.863 s. Three backgrounds used local chroma key. Codex ignored the standee green-background prompt, so local macOS Vision supplied its mask. Both providers have transparent portraits and split front/back standees. [Image evidence](../../apps/desktop-spike/results/image-run.json), [review sheet](../../apps/desktop-spike/results/images/review-sheet.png), Codex above Grok. Visual limits are hair-edge fringing, portrait-to-standee detail drift, and slightly angled Grok poses.
 
-The GUI PATH also contained terminal-injected wrappers. The locator now prefers known installed binaries. Final measurements use those direct paths. Earlier wrapper measurements are excluded from the canonical results.
-
-#### Images and local removal
-
-The native app launched separate Codex `exec` and Grok image jobs. These permit image generation only and are not GM sessions. Each requested one portrait or one paired front/back sheet. Codex used its default image-capable model, which was not reported in the saved result. Grok requested `grok-4.7`. Each process completed once without a retry. The native originals were then reprocessed locally without new model calls.
-
-| Provider | Artifact | Provider process time | Local background removal | Removal time | Fully transparent pixels |
-|---|---|---|---|---|---|
-| Codex 0.156.1 | Portrait, 1254 × 1254 | 44.022 s | Green key and despill | 0.211 s | 51.5% |
-| Codex 0.156.1 | Front/back sheet, 1536 × 1024 | 48.073 s | macOS Vision | 1.946 s | 69.5% |
-| Grok 1.0.41 | Portrait, 1024 × 1024 | 12.799 s | Green key and despill | 0.129 s | 66.0% |
-| Grok 1.0.41 | Front/back sheet, 1280 × 720 | 13.863 s | Green key and despill | 0.102 s | 73.6% |
-
-The Codex standee ignored the green-background prompt. Chroma key removed zero pixels, so the spike now detects that failure and falls back to [Apple Vision foreground masking](https://developer.apple.com/documentation/vision/vninstancemaskobservation). Both figures survived local segmentation. The fallback requires macOS 14 or newer and a Swift toolchain in this spike. It is not a Windows or Linux solution.
-
-Visual review found usable silhouettes and readable front/back views. There is some green fringing around hair. Portrait and standee details drift because they were separate text-only requests. Grok's poses are slightly angled. Art matching, print alignment, and production quality are not proven. [Review sheet](../../apps/desktop-spike/results/images/review-sheet.png), Codex above Grok, portraits left and sheets right. [Image evidence and hashes](../../apps/desktop-spike/results/image-run.json) link the originals, transparent PNGs, and split front/back files.
-
-#### Native webview
-
-The debug `.app` ran at `tauri://localhost`. Clerk React loaded and signed in the existing configured development test account through a 60-second single-use ticket and the real `useSignIn` hook. A debug-only native helper used the project's existing Clerk test configuration. It created no user or password. Ticket values passed only through memory. Evidence contains no tokens, cookies, passwords, or user IDs.
-
-The Convex React client connected by WebSocket and resolved `adventure:getAllAdventures` with zero adventures from the isolated empty project. [Bundled webview evidence](../../apps/desktop-spike/results/webview-bundled.json) records signed-in and connected booleans. [Development-origin evidence](../../apps/desktop-spike/results/webview-dev.json) records Clerk loading and Convex connectivity, with sign-in still false at that earlier stage.
-
-This proves ticket sign-in and client connectivity in a native webview. Interactive OAuth, external-browser redirects, deep links, release signing, and production Clerk domains remain untested. The existing app has plain `ConvexProvider` and no Clerk JWT backend configuration. This check does not prove authenticated Convex authorization. The spike is tied to its build checkout and installed Node runtime, not a distributable desktop product.
+Clerk previously signed in the configured test account using a 60-second single-use ticket in the packaged `tauri://localhost` webview. The real Convex React WebSocket and adventure query worked against the isolated empty project. [Original sign-in evidence](../../apps/desktop-spike/results/webview-bundled.json). On the follow-up launch, the app was signed out and Convex connected, recorded [separately](../../apps/desktop-spike/results/webview-bundled-followup.json). Session persistence and OAuth/deep-link flows are not established. Neither test proves Clerk JWT authorization in Convex.
 
 #### Validation and next work
 
-Passed: three focused environment, stream-lockdown, and chroma-key tests, scoped Biome checks, root TypeScript checking, Vite production build, Rust formatting and Clippy with warnings denied, debug Tauri app build, native UI trials, and local foreground segmentation. The source and dependencies are confined to `apps/desktop-spike/`. Root app source and dependencies are unchanged.
+Passed: five focused environment, stream, chroma-key, RPC denial, and timeout tests, scoped Biome, root TypeScript, Rust formatting and Clippy, a packaged debug Tauri build, native comparison/full-turn runs, and exact-prompt offline replay. All changes remain in the spike and wiki. The first trial is retained in [gm.json](../../apps/desktop-spike/results/gm.json), with its skips interpreted under the now-withdrawn rule.
 
-Continue the missing Codex, Gemini, and Grok persistent adapters and run the same GM fixture. Record configuration influences and the controls used. Any proposed restriction or provider exclusion must identify a specific failure or documented unwanted capability, its effect on local play, and why a narrower control is insufficient. Do not reject a provider solely because it loads user configuration.
+Next: carry the working adapters into the planned core extraction, expose the actual nested world-state schema to the model, retain validation diagnostics, and evaluate model selection or fewer serial calls against a turn-latency target. Keep Gemini as unavailable for this tested login until its provider compatibility is resolved through the CLI's own supported flow. Broaden coverage to combat, AI companions, failure/recovery, usage limits, and production auth before a release claim. Seven serial CLI requests, especially Grok's four-minute turn, need UX and performance work.
 
-Then measure complete turn orchestration across combat, dice, NPC and AI-party fixtures, exercise restart/cancellation and usage limits, and test production authentication flows. Four-provider support remains unproven until those providers run. The measured results do not justify deprecating web play yet.
-
-See [decision log](../log.md) and [worktree lifecycle](spike-desktop-local-play.md). The original measurements remain intact. The owner has not narrowed the intended provider set.
+Protocol basis: installed Codex-generated JSON schemas, [Codex app-server](https://learn.chatgpt.com/docs/app-server), [Gemini ACP](https://geminicli.com/docs/cli/acp-mode/), [Grok ACP](https://docs.x.ai/build/cli/headless-scripting), and [ACP session setup](https://agentclientprotocol.com/protocol/v1/session-setup). FilmBrain provenance is in the [spike README](../../apps/desktop-spike/README.md). See the [log](../log.md) and [worktree lifecycle](spike-desktop-local-play.md).
 
 ### Phase 1, extract gm-core
 

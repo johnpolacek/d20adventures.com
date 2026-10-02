@@ -7,7 +7,7 @@
     "dev": "vite --host 127.0.0.1 --port 1420 --strictPort",
     "build": "vite build",
     "tauri": "tauri",
-    "test": "node --test harness/lockdown.test.mjs",
+    "test": "node --test harness/*.test.mjs",
     "fixture": "node --import tsx harness/run.mjs fixture"
   },
   "dependencies": {

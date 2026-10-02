@@ -18,7 +18,7 @@ Reviewed against local main on 2026-10-01.
 
 - [Plans](plans/index.md): Stageview delivery and maintenance backlog.
 - [Stageview](plans/stageview.md): owner decisions, remaining phases, release questions.
-- [Desktop local play](plans/desktop-local-play.md): phase 0 partly measured. Claude, CLI art, and native auth/connectivity passed scoped checks. The blanket isolation gate was withdrawn. Three GM providers remain untested. Product phases remain proposed. Free solo play through the player's own AI CLI, subscription tokens for multiplayer.
+- [Desktop local play](plans/desktop-local-play.md): phase 0 follow-up measured. Claude, Codex, and Grok completed full service turns. Gemini login was rejected by its provider. Latency and structured world-state validation need work. Product phases remain proposed. Free solo play through the player's own AI CLI, subscription tokens for multiplayer.
 - [Stage engine](stage-engine.md): implemented runtime, set/staging specs, measured limits.
 - [Wiki adventures](wiki-adventures.md): authoring, compilation, source selection, and live content updates.
 - [Gameplay flows](gameplay-flows.md): creation, turns, dice, NPCs, and completion.
