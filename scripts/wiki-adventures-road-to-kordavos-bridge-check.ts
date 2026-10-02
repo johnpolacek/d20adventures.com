@@ -9,7 +9,7 @@ const PLAN_ID = "the-road-to-kordavos"
 function main() {
   const createAction = readFileSync("app/_actions/create-adventure.ts", "utf8")
   const startAction = readFileSync("app/_actions/start-adventure.ts", "utf8")
-  const advanceAction = readFileSync("app/_actions/advance-turn.ts", "utf8")
+  const advanceAction = readFileSync("packages/gm-core/src/orchestration/advance-turn.ts", "utf8")
   const migrationReport = JSON.parse(readFileSync("content/settings/realm-of-myr/adventures/the-road-to-kordavos/migration-report.json", "utf8")) as {
     warnings: Array<{ code: string }>
   }

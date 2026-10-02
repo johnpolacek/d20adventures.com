@@ -4,6 +4,16 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-02, shared GM core extraction
+
+Completed phase 1 locally in `feature/gm-core`, based on spike commit `7ff0b2d`. The pnpm workspace now contains `packages/gm-core`. Twenty gameplay service modules, eight character-generation operations, reply/roll/advance orchestration, shared schemas/types, and pure helpers use typed per-instance interfaces. `lib/gm-server` supplies the current model, billing, Clerk, Convex, content, and narration adapters. Existing server action and import paths remain compatible. No UI or Convex schema changes were needed. The strict-state and combined-call spike experiments were not promoted into the web runtime.
+
+Standalone package TypeScript and browser bundling passed without Node or web dependencies. Regression checks matched every prompt, schema, and recorded write in the seven-call pre-extraction GM turn, plus nine character-generation cases. Access, companions, independent runtimes, stale/duplicate/invalid transitions, content re-pinning, completion, retries, sanitation, and billing errors passed. Root TypeScript/lint, wiki batches A through F, four adventure bridges, public flow checks, and the Next production build passed. Root lint reported only two existing informational suggestions in unrelated scripts.
+
+All 16 Playwright tests passed against the isolated worktree after installing the matching Chromium and supplying Portless's local CA. An authenticated browser completed The Midnight Summons in seven turns on `patient-shepherd-476`, using the real `gemini-3.5-flash-lite` server adapter. The run covered failed and successful rolls, combat, NPC initiative, health changes from 100 to 80 to 60, no-roll NPC dialogue, encounter transitions, and final health 100. The ending UI and a fresh Convex read confirmed `status: completed`, an end timestamp, and `currentEncounterId: preparing-for-the-city`.
+
+The server and test browser were stopped. No push, merge, or production deployment was performed. One live adventure does not establish multiplayer, speech generation, or desktop reliability. The desktop shell is the next implementation step. Contracts and detailed evidence are in [GM core](gm-core.md), the [extraction plan](plans/feature-gm-core.md), and [desktop phase 1](plans/desktop-local-play.md#phase-1-extract-gm-core).
+
 ## 2026-10-02, desktop state validation and pre-roll batching
 
 Completed the authorized refinement in `spike/desktop-local-play`. Both native trial variants derive a strict nested model contract from the real adventure-patch schema and execute the real wiki commit handler over an in-memory database. Every accepted field survived in all eight runs. Invalid fields now trigger a correction in the spike instead of silently disappearing. Character updates are retained in the saved turn patch, but the existing game code does not apply them to live character fields. That remains explicit follow-up work.

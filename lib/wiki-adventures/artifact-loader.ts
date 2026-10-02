@@ -1,31 +1,13 @@
 import type { S3Client } from "@aws-sdk/client-s3"
 import { GetObjectCommand } from "@aws-sdk/client-s3"
+import type { ContentRef } from "@d20/gm-core/wiki-adventures/content-ref"
 import { streamToString } from "@/lib/s3-utils"
 import type { LatestPointer, RuntimeArtifactName } from "./published-repository"
 import { runtimeArtifactNames } from "./published-repository"
 import { latestPointerKey, publishedVersionPrefix } from "./s3-keys"
 import type { RuntimeArtifacts } from "./types"
 
-export type ContentRef =
-  | {
-      source: "published"
-      settingId: string
-      planId: string
-      versionId: string
-      contentHash: string
-    }
-  | {
-      source: "latest"
-      settingId: string
-      planId: string
-    }
-  | {
-      source: "preview"
-      settingId: string
-      planId: string
-      draftId: string
-      contentHash?: string
-    }
+export type { ContentRef } from "@d20/gm-core/wiki-adventures/content-ref"
 
 export interface WikiAdventureArtifactLoader {
   loadArtifacts(ref: ContentRef): Promise<{ ref: Exclude<ContentRef, { source: "latest" }>; artifacts: RuntimeArtifacts }>

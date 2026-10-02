@@ -2,22 +2,23 @@
 
 [Home](index.md) · [Plans](plans/index.md) · [Roadmap](roadmap.md) · [Architecture](Architecture.md)
 
-Reviewed 2026-10-01. Current local source establishes implementation. Dated logs establish past validation and decisions. Remote state requires a fresh read.
+GM core sources updated on 2026-10-02. Other sources reviewed 2026-10-01. Current local source establishes implementation. Dated logs establish past validation and decisions. Remote state requires a fresh read.
 
 ## Source index
 
 | Source | Establishes |
 |---|---|
-| `package.json`, `pnpm-lock.yaml` | Script names and declared/resolved dependencies. |
+| `package.json`, `pnpm-workspace.yaml`, `pnpm-lock.yaml` | Script names and declared/resolved dependencies. |
 | `app/`, `components/`, `proxy.ts`, `next.config.ts` | Routes, UI, auth matcher, and runtime content tracing. |
 | `lib/wiki-adventures/`, `content/settings/realm-of-myr/` | Four registered wiki adventures, compiler, source selection, admin writes, and runtime bridge. |
-| `app/_actions/advance-turn.ts`, `convex/adventure.ts` | Current live progression and content re-pinning behavior. |
+| `packages/gm-core/src/orchestration/advance-turn.ts`, `convex/adventure.ts` | Current live progression and content re-pinning behavior. |
 | `lib/services/turn-audio-service.ts`, `convex/turnAudio.ts` | Incremental narration, claims, manifests, charging, and auto mode. |
 | `lib/mapview/`, `components/mapview/` | Stored 2D maps, catalog, generation, placement, and rendering. |
 | `lib/stage/`, `public/stage/`, `app/dev/stage/` | Current Stage engine, declarative specs, assets, and preview. |
 | `tests/`, `scripts/wiki-adventures-*-check.ts`, `scripts/stage-*.ts` | Available verification and its actual scope. Tests are not evidence of passing until run. |
 | `scripts/wt.sh`, root and wiki `AGENTS.md` | Worktree behavior and automation policy. |
-| `lib/ai/`, `lib/services/` | AI call wrappers, current model, in-wrapper token charging, and GM service coupling to Convex, S3, and tokens. |
+| `packages/gm-core/`, `lib/gm-server/`, `lib/ai/` | Portable GM runtime and typed ports, server adapters, billing, current model, and compatibility wrappers. See [GM core](gm-core.md). |
+| `scripts/gm-core-check.ts`, `scripts/gm-server-check.ts`, `scripts/gm-core-fixtures/` | Extraction parity against `7ff0b2d`, browser dependency boundary, access/transition checks, and billing behavior. |
 | [Claude Code legal and compliance](https://code.claude.com/docs/en/legal-and-compliance) | Permitted use of a player's own Claude subscription through the unmodified CLI. External, read 2026-10-01. |
 | [Desktop spike](../apps/desktop-spike/README.md), its `harness/` and `results/` | Dated native CLI measurements, complete service-turn traces, exact-prompt/state replay, strict patch-retention checks, paired request-count and native render timings, image artifacts, Clerk ticket sign-in, and Convex connectivity. Limits and external protocol sources are in [phase 0](plans/desktop-local-play.md#phase-0-spike). |
 | `~/Projects/aifilmcamp/apps/macos/Packages/FilmBrain/Sources/FilmBrain/` | Local reuse source for CLI locators, invocation builders, bounded processes, and image generation. No credential files copied. Read 2026-10-01. |

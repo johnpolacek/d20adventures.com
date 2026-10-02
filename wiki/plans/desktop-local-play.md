@@ -214,13 +214,15 @@ Protocol basis: installed Codex-generated JSON schemas, [Codex app-server](https
 
 ### Phase 1, extract gm-core
 
-No behavior change. Run on a worktree.
+Completed locally on 2026-10-02 in `feature/gm-core`. Existing web behavior is preserved. Main integration and deployment are separate. See the [extraction plan](feature-gm-core.md) for evidence and [GM core](../gm-core.md) for contracts.
 
-- Create the pnpm workspace and `packages/gm-core` with the ports.
-- Move the 15 uncoupled services and the character generation actions. Put the six coupled services behind `Store` and `Billing`.
-- Move charging out of the `lib/ai/index.ts` wrapper.
-- Move turn orchestration out of `app/_actions/advance-turn.ts`.
-- Validate with build, TypeScript, lint, Playwright, and a full authenticated playthrough.
+- Added the pnpm workspace and `@d20/gm-core`, with per-instance model, store, content, identity, and narration interfaces. The model adapter consumes the billing interface.
+- Moved 20 gameplay service modules, eight character-generation operations, reply/roll/advance orchestration, shared schemas/types, and pure helpers. Storyview transport and caching stay in the host behind `Narration`.
+- Added `lib/gm-server` adapters. Text-model charging moved out of `lib/ai/index.ts`. Existing action and import paths remain compatible.
+- Package/browser boundary checks, exact seven-call GM replay, nine character prompt/schema cases, auth/companion/transition/billing checks, root TypeScript/lint, wiki checks, and production build passed.
+- All 16 Playwright tests passed. The Midnight Summons completed in seven real turns on isolated Convex, covering rolls, combat, NPC dialogue, damage, transitions, and persisted completion.
+
+The spike's strict patch contract and optional combined pre-roll request remain experimental. The next implementation step is the desktop shell using these interfaces. No push or merge was performed.
 
 ### Phase 2, desktop shell and stage-first play
 

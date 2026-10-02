@@ -31,6 +31,7 @@ Start the checkout through `pnpm wt:dev`. For a deliberate direct port, `pnpm de
 |---|---|
 | Documentation | Relative file and heading links, documented routes/scripts, stale references, `git diff --check`. |
 | TypeScript/app behavior | `pnpm exec tsc --noEmit`, `pnpm lint`, focused checks below, then `pnpm build` when rendering/build behavior matters. |
+| Shared GM runtime | `pnpm --filter @d20/gm-core check`, `pnpm test:gm-core`, then app checks and an authenticated full playthrough. See [GM core](../gm-core.md). |
 | Compiler/source contracts | Relevant `pnpm test:wiki-adventures:batch-a` through `batch-f`. |
 | Adventure content/runtime | Relevant bridge check: `midnight-bridge`, `covert-cargo-bridge`, `road-to-kordavos-bridge`, or `march-of-davos-bridge`, with the `test:wiki-adventures:` prefix. |
 | Admin authoring | `pnpm test:wiki-adventures:admin-authoring`, affected bridge checks, editor browser checks. |

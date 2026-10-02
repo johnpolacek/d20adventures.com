@@ -2,14 +2,15 @@
 
 [Home](index.md) · [Sources](Sources.md) · [Plans](plans/index.md) · [Roadmap](roadmap.md)
 
-Reviewed against local main on 2026-10-01.
+GM core references updated in `feature/gm-core` on 2026-10-02. Other sections last reviewed against local main on 2026-10-01.
 
 ## Runtime boundaries
 
 | Boundary | Implementation |
 |---|---|
 | UI | Next.js App Router, React, character/narrative rails, map and narration overlays. |
-| Server orchestration | Server actions and API routes coordinate access checks, content, AI generation, storage, and Convex writes. |
+| GM runtime | [GM core](gm-core.md) owns prompts, schemas, turn rules, character generation, and orchestration in `packages/gm-core`. |
+| Server adapters | `lib/gm-server` supplies Clerk, AI SDK, billing, Convex, content loaders, and narration scheduling. Existing actions remain entrypoints. |
 | Live state | Convex owns adventures, turns, players, chat, character state, token ledger, narration manifests, and accumulated story state. |
 | Auth | Clerk identifies users. Route/action helpers enforce ownership and membership. Direct Convex authorization remains an audit area. |
 | Authored content | Wiki markdown and JSON compile into bounded gameplay context. Registered adventures prefer complete S3 source and fall back to bundled repo source. |
