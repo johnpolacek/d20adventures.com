@@ -10,6 +10,7 @@ import { Narration } from "@/components/stage/narration"
 import { type CardCharacter, type CardMode, PromptCard } from "@/components/stage/prompt-card"
 import { Bubbles, Plate } from "@/components/stage/stage-dialogue"
 import { TurnOrder } from "@/components/stage/turn-order"
+import { Button } from "@/components/ui/button"
 import { useStage } from "@/components/stage/use-stage"
 import { parseNarrative } from "@/lib/utils/parse-narrative"
 import type { GameCommand } from "../runtime/game"
@@ -384,9 +385,9 @@ export function DesktopGame() {
               ))}
             </select>
           </label>
-          <Pill disabled={!loaded || busy || !providers.length || (!stage && !stageError)} onClick={() => void invoke({ kind: "start", provider: provider as "claude" })}>
+          <Button variant="epic" className="mt-2 text-xl" disabled={!loaded || busy || !providers.length || (!stage && !stageError)} onClick={() => void invoke({ kind: "start", provider: provider as "claude" })}>
             {busy ? "Starting…" : "Play"}
-          </Pill>
+          </Button>
           {!loaded && <p>Loading your saved adventure…</p>}
           {loaded && !providers.length && <p>Install and sign in to Claude Code, Codex, Grok, or Gemini CLI.</p>}
           {!stage && !stageError && <p>{loading}</p>}

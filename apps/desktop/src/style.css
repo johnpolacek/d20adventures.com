@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @source "../../../components/stage";
+@source "../../../components/ui/button.tsx";
 @source "./";
 @theme {
   --color-stage-ink: #1c1410;
