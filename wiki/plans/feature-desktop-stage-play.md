@@ -78,6 +78,17 @@ Resumed 2026-10-03 after review of the handoff. Owner decisions:
 - Replies took 18 s to 1 min, except one Milos reply at about 8.5 minutes. The first launch's render report read not ready because the window was hidden 20 s after launch.
 - The user save was backed up, swapped out, and restored with an identical SHA-256. The test save is kept as `validation-harvest-festival-2026-10-03.sqlite` beside it. Not covered natively: a festival dice check, the live move to Clan Conflict (tested with the real core in Node), and other providers.
 
+## New game and archive, 2026-10-03
+
+Owner chose basic save management next. Before this, a saved adventure could not be replaced, so a finished game stayed on "Adventure complete" until the save file was deleted by hand.
+
+- The title screen opens on launch. With a save it offers Continue and New game. A Menu button in the game returns to it.
+- New game asks for confirmation and the Game Master, then starts March of Davos fresh.
+- The replaced adventure moves to an `archive` table in the same SQLite file, in the same transaction as the new save. Nothing is deleted. There is no archive browser yet.
+- Test start-over with a saved and a completed adventure, the archive contents, reopening, and that a plain start still refuses to overwrite. Check the packaged app on an isolated save.
+
+Implemented. Twelve desktop tests pass, including start-over from a completed adventure, the archived save's contents, a second archive entry, and reopening. Desktop and root TypeScript, scoped Biome, and a release build with no Rust warnings passed. In the packaged app, a copy of the festival test save opened on the title screen showing "Round 3 · The Harvest Festival". Continue entered the game, Menu returned to the title, and New game asked for confirmation over the festival scene. Start new game began round 1 at the gate and switched the 3D set. The archive held the festival adventure. The user save was restored with an unchanged SHA-256. No model requests were needed.
+
 ## Remaining scope
 
 One local slot and four premade player-controlled characters. The gate and the Harvest Festival are the authored 3D sets. Add further sets, character creation, AI companions, save management, narration audio, and multiplayer separately. Equipment has no separate currency or quantity ledger. Native combat and the other providers were not tested in this playthrough. The five-call batching experiment remains separate. Distribution still needs Node packaging or onboarding, signing, notarization, and an updater.

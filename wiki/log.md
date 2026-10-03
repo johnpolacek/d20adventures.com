@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-03, desktop New game and archive
+
+A finished or unwanted adventure could not be replaced without deleting the save file. The desktop app now opens on a title screen with Continue and New game, and a Menu button returns to it. Starting over archives the old adventure in the same SQLite file and transaction. Twelve desktop tests, typechecks, lint, a release build, and a packaged-app check on an isolated save passed. See [the integration plan](plans/feature-desktop-stage-play.md#new-game-and-archive-2026-10-03).
+
 ## 2026-10-03, Harvest Festival desktop scene
 
 Resumed the handoff in `feature/desktop-stage-play` with owner decisions: keep four Codex drafts, regenerate Karim in Blackthorn black and gold, generate backs with the gate pipeline, keep performers on the ground in front of a low stage, and run the full native check. Added the Kordavos harvest square set and Harvest Festival staging, an encounter-to-scene map for desktop, festival map staging for the GM, and content-id cast ids so the unrelated `liora` NPC cannot collide. Engine additions are solid primitives, named stall goods, a ground `roads` flag, shared walk checks, and walk checks in `stage:check`. Native testing found and fixed a walk that stalled while the window was covered.

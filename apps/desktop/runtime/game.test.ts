@@ -121,3 +121,39 @@ test("real core advances through authored graph and atomically retains state acr
     cleanup()
   }
 })
+test("new game archives the saved adventure, even a finished one, and a plain start still refuses to overwrite", async () => {
+  const { store, path, cleanup } = setup()
+  try {
+    const run = game(store, pack, failLlm)
+    await run({ kind: "start", provider: "claude" })
+    const first = store.state!.adventure._id
+    store.state!.adventure.status = "completed"
+    store.state!.positions = { branka: { x: 1, z: 12, ry: 0 } }
+    store.save()
+    await assert.rejects(() => run({ kind: "start", provider: "codex" }), /already saved/)
+    assert.equal(store.state!.adventure._id, first)
+
+    await run({ kind: "start", provider: "codex", replace: true })
+    const second = store.state!.adventure._id
+    assert.notEqual(second, first)
+    assert.equal(store.state!.provider, "codex")
+    assert.equal(store.state!.adventure.status, "active")
+    assert.equal(store.current().encounterId, "the-gates-of-kordavos")
+    assert.equal(store.state!.turns.length, 1)
+    assert.deepEqual(store.state!.positions, {})
+
+    const reopened = new LocalStore(path)
+    assert.equal(reopened.state!.adventure._id, second)
+    const archived = (reopened.db.prepare("SELECT json FROM archive ORDER BY id").all() as { json: string }[]).map((r) => JSON.parse(r.json))
+    assert.equal(archived.length, 1)
+    assert.equal(archived[0].adventure._id, first)
+    assert.equal(archived[0].adventure.status, "completed")
+    assert.deepEqual(archived[0].positions, { branka: { x: 1, z: 12, ry: 0 } })
+    reopened.db.close()
+
+    await run({ kind: "start", provider: "claude", replace: true })
+    assert.equal((store.db.prepare("SELECT count(*) AS n FROM archive").get() as { n: number }).n, 2)
+  } finally {
+    cleanup()
+  }
+})

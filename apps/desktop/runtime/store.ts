@@ -41,7 +41,7 @@ export class LocalStore implements Store {
   ) {
     this.db = new DatabaseSync(path)
     this.db.exec(
-      "PRAGMA busy_timeout=1000; CREATE TABLE IF NOT EXISTS save (id INTEGER PRIMARY KEY CHECK(id=1), json TEXT NOT NULL); CREATE TABLE IF NOT EXISTS active (id INTEGER PRIMARY KEY CHECK(id=1), pid INTEGER NOT NULL)"
+      "PRAGMA busy_timeout=1000; CREATE TABLE IF NOT EXISTS save (id INTEGER PRIMARY KEY CHECK(id=1), json TEXT NOT NULL); CREATE TABLE IF NOT EXISTS active (id INTEGER PRIMARY KEY CHECK(id=1), pid INTEGER NOT NULL); CREATE TABLE IF NOT EXISTS archive (id INTEGER PRIMARY KEY, archived_at INTEGER NOT NULL, json TEXT NOT NULL)"
     )
     const row = this.db.prepare("SELECT json FROM save WHERE id=1").get() as { json: string } | undefined
     this.state = row ? JSON.parse(row.json) : null
@@ -81,6 +81,19 @@ export class LocalStore implements Store {
   }
   save() {
     this.db.prepare("INSERT OR REPLACE INTO save VALUES(1, ?)").run(JSON.stringify(this.state))
+  }
+  // Starting over: the current adventure moves to the archive in the same transaction that saves the new one.
+  replace(next: Save) {
+    this.db.exec("BEGIN IMMEDIATE")
+    try {
+      if (this.state) this.db.prepare("INSERT INTO archive (archived_at, json) VALUES (?, ?)").run(Date.now(), JSON.stringify(this.state))
+      this.db.prepare("INSERT OR REPLACE INTO save VALUES(1, ?)").run(JSON.stringify(next))
+      this.db.exec("COMMIT")
+    } catch (error) {
+      this.db.exec("ROLLBACK")
+      throw error
+    }
+    this.state = next
   }
   current() {
     if (!this.state) throw new Error("Start an adventure first.")

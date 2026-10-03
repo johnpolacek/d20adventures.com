@@ -13,7 +13,8 @@ import type { LocalStore } from "./store"
 export type Pack = { artifacts: RuntimeArtifacts; contentRef: Awaited<ReturnType<Content["loadWikiRuntime"]>>["contentRef"]; definition: { promptSlug: string } }
 export const commandSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("load") }),
-  z.object({ kind: z.literal("start"), provider: z.enum(["claude", "codex", "grok", "gemini"]) }),
+  // `replace` starts over, archiving the saved adventure.
+  z.object({ kind: z.literal("start"), provider: z.enum(["claude", "codex", "grok", "gemini"]), replace: z.boolean().optional() }),
   z.object({
     kind: z.literal("reply"),
     turnId: z.string(),
@@ -96,7 +97,7 @@ export function game(store: LocalStore, pack: Pack, llm: Llm) {
     const command = commandSchema.parse(input)
     if (command.kind === "load") return store.state
     if (command.kind === "start") {
-      if (store.state) throw new Error("An adventure is already saved. Continue it.")
+      if (store.state && !command.replace) throw new Error("An adventure is already saved. Continue it.")
       const encounter = artifacts.encounters[artifacts.manifest.startEncounterId]
       const id = randomUUID(),
         turnId = randomUUID()
@@ -105,7 +106,7 @@ export function game(store: LocalStore, pack: Pack, llm: Llm) {
         encounter,
         players: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"].map((characterId) => ({ characterId, userId: "local-player" })),
       })
-      store.state = {
+      store.replace({
         version: 1,
         provider: command.provider,
         rolls: {},
@@ -128,8 +129,7 @@ export function game(store: LocalStore, pack: Pack, llm: Llm) {
           adventureSummaryMarkdown: "",
         },
         turns: [{ _id: turnId, adventureId: id, encounterId: encounter.id, title: encounter.title, narrative: encounter.sections.intro ?? "", characters, order: 1 }],
-      }
-      store.save()
+      })
       return store.state
     }
     const turn = store.turn(command.turnId)

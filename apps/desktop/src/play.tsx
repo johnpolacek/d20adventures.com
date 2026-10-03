@@ -45,6 +45,9 @@ export function DesktopGame() {
   const [paragraph, setParagraph] = useState(0)
   const [auto, setAuto] = useState(false)
   const [reading, setReading] = useState(true)
+  // The title screen: shown on launch and from the Menu button. With a save it offers Continue and New game.
+  const [menu, setMenu] = useState(true)
+  const [confirmNew, setConfirmNew] = useState(false)
   const previousText = useRef<{ turn?: string; paragraphs: string[] }>({ paragraphs: [] })
   const [, redraw] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -197,6 +200,8 @@ export function DesktopGame() {
       if (e.key === "Escape") {
         setOpen(null)
         setCardId(null)
+        setConfirmNew(false)
+        if (saveRef.current) setMenu(false)
       }
       const view = Object.keys(stage?.shots ?? {})[Number(e.key) - 1]
       if (view) stage?.shot(view)
@@ -219,6 +224,15 @@ export function DesktopGame() {
   else if (save?.adventure.status === "completed") mode = { kind: "done", next: "Adventure complete" }
   else if (cardActor && rr) mode = { kind: "roll", roll: { skill: rr.rollType, ability: "", dc: rr.difficulty, modifier: rr.modifier ?? 0 } }
   else if (cardActor) mode = { kind: "hold", prompt: `What does ${cardActor.name.split(" ")[0]} do?` }
+  // Starting over archives the saved adventure. The menu stays open if the start fails.
+  const start = async () => {
+    const next = await invoke({ kind: "start", provider: provider as "claude", replace: Boolean(save) })
+    if (!next || next.adventure._id === save?.adventure._id) return
+    setMenu(false)
+    setConfirmNew(false)
+    setCardId(null)
+    setOpen(null)
+  }
   const reply = async (value: string) => {
     if (!turn || !actor) return
     const movement = stage ? context(stage, actor, value) : undefined
@@ -241,16 +255,17 @@ export function DesktopGame() {
       views={stage ? Object.entries(stage.shots).map(([id, s]) => ({ id, label: s.label ?? id })) : []}
       activeView={stage?.activeShot ?? null}
       onView={(id) => stage?.shot(id)}
-      hidden={hidden || !save}
+      hidden={hidden || !save || menu}
       compact={compact}
       actions={
         <>
+          <Pill onClick={() => setMenu(true)}>Menu</Pill>
           <Pill onClick={() => setOpen(open === "journal" ? null : "journal")}>Journal</Pill>
           <Pill onClick={() => setOpen(open === "settings" ? null : "settings")}>Scene settings</Pill>
         </>
       }
     >
-      {save && !hidden && (
+      {save && !hidden && !menu && (
         <>
           {stage && speech && (
             <>
@@ -375,32 +390,47 @@ export function DesktopGame() {
           Show interface · H
         </Pill>
       )}
-      {!save && (
+      {(!save || menu) && (
         <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-5 bg-stage-ink/55 text-center">
           <div className="text-[10px] tracking-[.3em] text-stage-gold">D20 ADVENTURES</div>
           <h1 className="font-display text-5xl">Arrival at Kordavos</h1>
           <div className="text-sm text-stage-cream">March of Davos</div>
-          <label className="mt-4 text-sm">
-            Game Master{" "}
-            <select aria-label="Game Master" value={provider} onChange={(e) => setProvider(e.target.value)} className="ml-3 rounded border border-stage-brass bg-stage-panel px-3 py-2">
-              {providers.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
-          </label>
-          <Button
-            variant="epic"
-            className="mt-2 text-xl"
-            disabled={!loaded || busy || !providers.length || (!stage && !stageError)}
-            onClick={() => void invoke({ kind: "start", provider: provider as "claude" })}
-          >
-            {busy ? "Starting…" : "Play"}
-          </Button>
-          {!loaded && <p>Loading your saved adventure…</p>}
-          {loaded && !providers.length && <p>Install and sign in to Claude Code, Codex, Grok, or Gemini CLI.</p>}
-          {!stage && !stageError && <p>{loading}</p>}
+          {save && !confirmNew ? (
+            <>
+              {turn && <div className="mt-4 text-sm text-stage-cream">{save.adventure.status === "completed" ? "Adventure complete" : `Round ${turn.order} · ${turn.title}`}</div>}
+              <Button variant="epic" className="mt-2 text-xl" disabled={busy} onClick={() => setMenu(false)}>
+                Continue
+              </Button>
+              <Pill disabled={busy} onClick={() => setConfirmNew(true)}>
+                New game
+              </Pill>
+            </>
+          ) : (
+            <>
+              {save && <p className="mt-4 text-sm">Start over at the gate? This adventure is kept in your save archive.</p>}
+              <label className="mt-4 text-sm">
+                Game Master{" "}
+                <select aria-label="Game Master" value={provider} onChange={(e) => setProvider(e.target.value)} className="ml-3 rounded border border-stage-brass bg-stage-panel px-3 py-2">
+                  {providers.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <Button variant="epic" className="mt-2 text-xl" disabled={!loaded || busy || !providers.length || Boolean(scene && !stage && !stageError)} onClick={() => void start()}>
+                {busy ? "Starting…" : save ? "Start new game" : "Play"}
+              </Button>
+              {save && (
+                <Pill disabled={busy} onClick={() => setConfirmNew(false)}>
+                  Cancel
+                </Pill>
+              )}
+              {!loaded && <p>Loading your saved adventure…</p>}
+              {loaded && !providers.length && <p>Install and sign in to Claude Code, Codex, Grok, or Gemini CLI.</p>}
+              {scene && !stage && !stageError && <p>{loading}</p>}
+            </>
+          )}
         </div>
       )}
       {(error || stageError) && (
