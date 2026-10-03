@@ -133,7 +133,8 @@ Remaining product work is tracked in [Stageview](plans/stageview.md).
 
 ## Recorded checks, 2026-10-03, Valkarr forest trail
 
-- Night set: `atmosphere.sky.gain` (0.25) dims the painted sky, its clouds and sun glow, and the fog colour follows it. The moon is the sun light, cool and high.
+- `fog.color` sets mist apart from the sky. `glow` is an additive, unlit, shadowless material, and `lightShaft` builds a soft open cone of moonlight with it. `tree` adds a `gnarled` kind.
+- Night set: `atmosphere.sky.gain` (0.22) dims the painted sky, its clouds and sun glow, and the fog colour follows it. The moon is the sun light, cool and high.
 - `pnpm stage:check`: 992 objects, 0.61M static triangles, 561 footprints, no crowd. All party walks clear in all three stagings. The owlbear's walk home is blocked by trees, which nothing asks for.
 - `stage:verify` at ultra, DPR 2, dev build: every view of the three stagings passes at 49–52 draw calls and 1.22M triangles, ready in about 4 s. Frame rates of 19–24 fps were noisy while other work shared the machine.
 

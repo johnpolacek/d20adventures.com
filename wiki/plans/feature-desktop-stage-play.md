@@ -140,6 +140,7 @@ Owner chose to build the forest trail first and asked for a repeatable way to ma
 - A moonlit deer trail through oaks, pines, and birches, ferns, bushes, boulders, a fallen log, the great oak, and a small clearing. Eight labelled places, three set views, and staging views for each character.
 - New standees for Thalbern, Wollandora, and the Owlbear, described in words rather than taken from the web portraits. The first owlbear had wings and was regenerated. Their painted portraits replace the bundled web portraits, including Thalbern's photographic one.
 - Desktop maps the three encounters to the forest scenes. A desktop test checks that every character in those real turns has a figure and a portrait.
+- Art-guided pass after comparing renders with the encounter art: blue-grey palette, darker mist with its own colour, a `gnarled` tree kind as the main near tree, two soft moonlight shafts behind the owlbear and over the great oak, and the trail camera cleared of trees. The first pass at the art's mist washed everything out pale and was pulled back.
 - Open: owner review on the web viewer, then one check in the packaged app.
 
 ## Remaining scope

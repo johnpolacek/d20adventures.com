@@ -164,8 +164,9 @@ export class Stage {
     this.shared.sun.value.set(...A.sun.direction).normalize()
     this.shared.wind.value = A.wind
     const horizon = new THREE.Color(A.sky.horizon)
-    // Fog takes the horizon as the sky draws it, dimmed by its gain, so distant trees fade into the night sky.
-    this.scene.fog = new THREE.FogExp2(horizon.clone().multiplyScalar(A.sky.gain), A.fog.density)
+    // Fog takes the horizon as the sky draws it, dimmed by its gain, so distant trees fade into the night sky, unless
+    // the set gives the mist its own colour.
+    this.scene.fog = new THREE.FogExp2(A.fog.color ? new THREE.Color(A.fog.color) : horizon.clone().multiplyScalar(A.sky.gain), A.fog.density)
     this.camera = new THREE.PerspectiveCamera(58, 1, set.camera.near, set.camera.far)
     this.scene.add(this.world)
 

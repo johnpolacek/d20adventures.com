@@ -21,11 +21,12 @@ function limb(b: Sink, mat: THREE.Material, a: THREE.Vector3, c: THREE.Vector3, 
 }
 
 // A tree. `oak`: a stout trunk forking into limbs under a broad crown of leaf masses. `pine`: a straight trunk under
-// stacked cones. `birch`: a slender pale trunk and a small, high crown. The trunk is solid; the crown is not.
+// stacked cones. `birch`: a slender pale trunk and a small, high crown. `gnarled`: an old crooked trunk whose twisting
+// limbs split into twigs, with a few sparse leaf clumps. The trunk is solid; the crown is not.
 export const tree = defineBuilder(
   z
     .object({
-      kind: z.enum(["oak", "pine", "birch"]).default("oak"),
+      kind: z.enum(["oak", "pine", "birch", "gnarled"]).default("oak"),
       height: size(60).default(12),
       girth: size(4).optional(),
       lean: num(0, 20).default(3),
@@ -38,6 +39,39 @@ export const tree = defineBuilder(
     const leanA = rand(0, TAU)
     const leanT = Math.tan((rand(0, p.lean) * Math.PI) / 180)
     const top = (y: number) => V(Math.cos(leanA) * leanT * y, y, Math.sin(leanA) * leanT * y)
+    if (p.kind === "gnarled") {
+      const r = p.girth ?? h * 0.045
+      // A crooked trunk in a few segments, each kinked away from the last.
+      let at = V(0, -0.2, 0)
+      const segs = 7
+      let drift = V(rand(-1, 1), 0, rand(-1, 1)).multiplyScalar(h * 0.012)
+      for (let i = 1; i <= segs; i++) {
+        drift = drift.clone().add(V(rand(-1, 1), 0, rand(-1, 1)).multiplyScalar(h * 0.01))
+        const next = V(at.x + drift.x, (h * 0.55 * i) / segs, at.z + drift.z)
+        limb(b, M.bark, at, next, r * (1 - (i - 1) * 0.09))
+        at = next
+      }
+      for (let i = 0; i < 5; i++) limb(b, M.bark, V(0, 0.9, 0), V(Math.cos(i * 1.3 + rand(0, 1)) * r * 2.2, -0.05, Math.sin(i * 1.3 + rand(0, 1)) * r * 2.2), r * 0.6)
+      // Limbs reach out and up, then split into twigs; a few ends carry leaves.
+      const limbs = 4 + Math.floor(rand(0, 3))
+      for (let i = 0; i < limbs; i++) {
+        const a = (i / limbs) * TAU + rand(-0.5, 0.5)
+        const from = V(at.x * rand(0.6, 1), h * rand(0.4, 0.56), at.z * rand(0.6, 1))
+        const mid = from.clone().add(V(Math.cos(a) * h * rand(0.14, 0.24), h * rand(0.08, 0.18), Math.sin(a) * h * rand(0.14, 0.24)))
+        limb(b, M.bark, from, mid, r * 0.45)
+        for (let k = 0; k < 2; k++) {
+          const b2 = a + rand(-0.9, 0.9)
+          const tip = mid.clone().add(V(Math.cos(b2) * h * rand(0.08, 0.16), h * rand(0.04, 0.16), Math.sin(b2) * h * rand(0.08, 0.16)))
+          limb(b, M.bark, mid, tip, r * 0.2)
+          if (rand() < 0.45) {
+            const s = h * rand(0.05, 0.09)
+            b.add(unitBlob(), leaves(), M4(tip.x, tip.y, tip.z, rand(0, TAU), s, s * 0.7, s), { uv: "keep" })
+          }
+        }
+      }
+      ctx.circle(0, 0, r + 0.3)
+      return
+    }
     if (p.kind === "pine") {
       const r = p.girth ?? h * 0.022
       b.add(unitTrunk(), M.bark, M4(top(h * 0.45).x, h * 0.45, top(h * 0.45).z, rand(0, TAU), r, h * 0.9, r), { uv: "keep" })
@@ -158,6 +192,24 @@ export const trail = defineBuilder(
     g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3))
     g.computeVertexNormals()
     ctx.b.add(g, ctx.mat(p.material), null, { uv: "planar" })
+    g.dispose()
+  }
+)
+
+// A shaft of moonlight falling through a gap in the canopy: an open, glowing cone, wider at the ground. Not solid.
+export const lightShaft = defineBuilder(
+  z
+    .object({
+      height: size(60).default(16),
+      top: size(10).default(0.8),
+      bottom: size(20).default(2.4),
+      tilt: num(-45, 45).default(0),
+      material: matName.default("moonbeam"),
+    })
+    .strict(),
+  (ctx, p) => {
+    const g = new THREE.CylinderGeometry(p.top, p.bottom, p.height, 20, 1, true)
+    ctx.b.add(g, ctx.mat(p.material), M4(0, p.height / 2, 0, 0, 1, 1, 1, 0, (p.tilt * Math.PI) / 180), { uv: "keep" })
     g.dispose()
   }
 )

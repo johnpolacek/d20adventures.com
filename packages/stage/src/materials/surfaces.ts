@@ -336,6 +336,26 @@ function leafMap(rand: Rand) {
   return t
 }
 
+// A shaft of light: brightest through the middle of its height, fading out at top and bottom, with faint streaks.
+function shaftMap(rand: Rand) {
+  const t = canvasTexture(256, 256, (c, w, h) => {
+    const g = c.createLinearGradient(0, 0, 0, h)
+    g.addColorStop(0, "rgba(255,255,255,0)")
+    g.addColorStop(0.25, "rgba(255,255,255,0.55)")
+    g.addColorStop(0.7, "rgba(255,255,255,0.4)")
+    g.addColorStop(1, "rgba(255,255,255,0)")
+    c.fillStyle = g
+    c.fillRect(0, 0, w, h)
+    c.globalCompositeOperation = "destination-out"
+    for (let i = 0; i < 40; i++) {
+      c.fillStyle = `rgba(0,0,0,${rand(0.1, 0.5)})`
+      c.fillRect(rand(0, w), 0, rand(2, 14), h)
+    }
+  })
+  t.wrapS = THREE.RepeatWrapping
+  return t
+}
+
 // Textures shared by the materials of one set, made on first use.
 export class TextureBank {
   private burlapTex?: THREE.Texture
@@ -354,6 +374,11 @@ export class TextureBank {
   leaves() {
     if (!this.leafTex) this.leafTex = this.keep(leafMap(this.rand))
     return this.leafTex
+  }
+  private shaftTex?: THREE.Texture
+  shaft() {
+    if (!this.shaftTex) this.shaftTex = this.keep(shaftMap(this.rand))
+    return this.shaftTex
   }
   keep<T extends THREE.Texture>(t: T) {
     this.owned.push(t)
@@ -396,6 +421,11 @@ transformed.x += sway * sway * uWind * ${amp} * .6 * (1.0 + sin(uTime * .9 + ph)
 
 export function foliage(ctx: MaterialContext, bank: TextureBank, name: string, color: string, roughness = 0.9) {
   return stageMaterial(new THREE.MeshStandardMaterial({ name, color, roughness, metalness: 0, map: bank.leaves(), alphaTest: 0.5, side: THREE.DoubleSide }), ctx.shared, "foliage")
+}
+export function glow(ctx: MaterialContext, bank: TextureBank, name: string, color: string, opacity = 0.35) {
+  const m = new THREE.MeshBasicMaterial({ name, color, map: bank.shaft(), transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })
+  m.userData.noShadow = true
+  return stageMaterial(m, ctx.shared, "glow")
 }
 export function burlap(ctx: MaterialContext, bank: TextureBank, name: string, color: string, roughness = 0.95) {
   const t = bank.burlap()

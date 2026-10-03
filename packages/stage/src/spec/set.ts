@@ -62,11 +62,13 @@ const cloth = z
   })
   .strict()
 const burlap = z.object({ type: z.literal("burlap"), color, roughness: unit.optional() }).strict()
+// Light in the air: additive, unlit and shadowless (shafts of moonlight through a canopy).
+const glow = z.object({ type: z.literal("glow"), color, opacity: unit.optional() }).strict()
 // Leaves: painted leaf clusters with gaps, for tree crowns, bushes and ferns.
 const foliage = z.object({ type: z.literal("foliage"), color, roughness: unit.optional() }).strict()
 const metal = z.object({ type: z.literal("metal"), color, roughness: unit.optional(), metalness: unit.optional() }).strict()
 const plain = z.object({ type: z.literal("plain"), color, roughness: unit.optional(), emissive: color.optional(), emissiveIntensity: num(0, 20).optional() }).strict()
-export const materialSpec = z.discriminatedUnion("type", [masonry, wood, cloth, burlap, foliage, metal, plain])
+export const materialSpec = z.discriminatedUnion("type", [masonry, wood, cloth, burlap, foliage, glow, metal, plain])
 export type MaterialSpec = z.infer<typeof materialSpec>
 
 // An object is `{ type, id?, at?, yaw?, materials?, ...params }`; params are checked by the builder named by `type`.
@@ -198,7 +200,8 @@ export const setSpecSchema = z
         hemisphere: z.object({ sky: color, ground: color, intensity: num(0, 5) }).strict(),
         // `gain` dims the whole painted sky, clouds and sun glow included: below 1 for dusk and night.
         sky: z.object({ horizon: color, mid: color, zenith: color, gain: num(0, 2).default(1) }).strict(),
-        fog: z.object({ density: num(0, 0.05) }).strict(),
+        // `color` sets mist apart from the sky: pale mist glowing between dark trees on a moonlit night.
+        fog: z.object({ density: num(0, 0.05), color: color.optional() }).strict(),
         environment: num(0, 3).default(0.32),
         exposure: num(0.1, 4).default(1.05),
         wind: num(0, 3).default(0.8),

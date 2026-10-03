@@ -1,5 +1,5 @@
 import { awning, bannerHanging, bannerPole, barrier, brazier, cart, ledgerTable, pennantPole, ropeLine } from "./checkpoint"
-import { bush, fern, log, rock, trail, tree } from "./forest"
+import { bush, fern, lightShaft, log, rock, trail, tree } from "./forest"
 import { archScreen, curtainWall, dome, drumTower, gatehouse, roundTower, skyline, squareTower } from "./fortifications"
 import { group, row, scatter } from "./layouts"
 import { barrelProp, basketProp, bunting, crateProp, farTown, goodsPile, gourds, house, lanternProp, potProp, sackProp, sail, sheaf, spearRack, stall, standard } from "./market"
@@ -57,6 +57,7 @@ export const BUILDERS: Record<string, BuilderDef> = {
   rock,
   log,
   trail,
+  lightShaft,
   // checkpoint and dressing
   barrier,
   ropeLine,
