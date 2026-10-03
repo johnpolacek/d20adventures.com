@@ -312,10 +312,35 @@ export function tatters(rand: Rand, holes = 6, depth = 0.16) {
   )
 }
 
+// Clusters of small painted leaves on a clear ground, tiling. Alpha-tested, so a crown reads as ragged foliage with
+// gaps of sky rather than a smooth ball. Pale, so each foliage material's colour tints it.
+function leafMap(rand: Rand) {
+  const t = canvasTexture(512, 512, (c, w, h) => {
+    c.clearRect(0, 0, w, h)
+    for (let i = 0; i < 1500; i++) {
+      const x = rand(0, w)
+      const y = rand(0, h)
+      const l = Math.round(rand(150, 255))
+      c.fillStyle = `rgb(${Math.round(l * rand(0.85, 1))}, ${l}, ${Math.round(l * rand(0.75, 0.95))})`
+      c.save()
+      c.translate(x, y)
+      c.rotate(rand(0, Math.PI * 2))
+      c.beginPath()
+      c.ellipse(0, 0, rand(5, 11), rand(2.5, 5), 0, 0, Math.PI * 2)
+      c.fill()
+      c.restore()
+    }
+  })
+  t.wrapS = t.wrapT = THREE.RepeatWrapping
+  t.repeat.set(3, 2)
+  return t
+}
+
 // Textures shared by the materials of one set, made on first use.
 export class TextureBank {
   private burlapTex?: THREE.Texture
   private fabricTex?: THREE.Texture
+  private leafTex?: THREE.Texture
   readonly owned: THREE.Texture[] = []
   constructor(private rand: Rand) {}
   burlap() {
@@ -325,6 +350,10 @@ export class TextureBank {
   fabric() {
     if (!this.fabricTex) this.fabricTex = this.keep(fabricMap(this.rand))
     return this.fabricTex
+  }
+  leaves() {
+    if (!this.leafTex) this.leafTex = this.keep(leafMap(this.rand))
+    return this.leafTex
   }
   keep<T extends THREE.Texture>(t: T) {
     this.owned.push(t)
@@ -365,6 +394,9 @@ transformed.x += sway * sway * uWind * ${amp} * .6 * (1.0 + sin(uTime * .9 + ph)
   })
 }
 
+export function foliage(ctx: MaterialContext, bank: TextureBank, name: string, color: string, roughness = 0.9) {
+  return stageMaterial(new THREE.MeshStandardMaterial({ name, color, roughness, metalness: 0, map: bank.leaves(), alphaTest: 0.5, side: THREE.DoubleSide }), ctx.shared, "foliage")
+}
 export function burlap(ctx: MaterialContext, bank: TextureBank, name: string, color: string, roughness = 0.95) {
   const t = bank.burlap()
   return stageMaterial(new THREE.MeshStandardMaterial({ name, color, roughness, metalness: 0, map: t, bumpMap: t, bumpScale: 1.6 }), ctx.shared, "burlap")

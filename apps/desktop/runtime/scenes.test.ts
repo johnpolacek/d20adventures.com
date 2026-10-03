@@ -55,7 +55,11 @@ const positions = (store: LocalStore, value: Record<string, { x: number; z: numb
   game(store, packs, { generateText: unused, generateObject: unused })({ kind: "positions", turnId, positions: value, appliedMovement })
 
 test("every authored scene is a real encounter, and every festival character has its own figure and portrait", async () => {
-  for (const id of Object.keys(SCENES)) assert.ok(pack.artifacts.encounters[id], `${id} is an encounter`)
+  for (const id of Object.keys(SCENES))
+    assert.ok(
+      Object.values(packs).some((p) => p.artifacts.encounters[id]),
+      `${id} is an encounter`
+    )
   const run = await setup()
   try {
     await advance(run.store, "the-harvest-festival")

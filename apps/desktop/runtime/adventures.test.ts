@@ -4,6 +4,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
+import { castIdFor, portraitFor, sceneFor } from "../src/scenes"
 import { adventureList, game, type Packs, transitionsOf } from "./game"
 import { LocalStore } from "./store"
 
@@ -60,7 +61,7 @@ test("the real core plays The Midnight Summons through the owlbear to its ending
   const store = new LocalStore(path, transitionsOf(packs))
   try {
     await game(store, packs, offline)({ kind: "start", provider: "claude", adventure: "the-midnight-summons" })
-    const route = ["owlbear-confrontation", "meeting-at-the-stones", "preparing-for-the-city"]
+    const route = ["owlbear-confrontation", "timely-rescue", "meeting-at-the-stones", "preparing-for-the-city"]
     for (const next of route) {
       store.current().characters.forEach((c) => {
         c.hasReplied = true
@@ -74,6 +75,13 @@ test("the real core plays The Midnight Summons through the owlbear to its ending
       await game(store, packs, llm)({ kind: "continue", turnId: store.current()._id })
       assert.equal(store.current().encounterId, next)
       if (next === "owlbear-confrontation") assert.ok(store.current().characters.some((c) => c.type === "npc" && /owlbear/i.test(c.name)))
+      // The forest encounters have a figure for every character in the turn. The meeting and the ending play in story view.
+      const scene = sceneFor(next)
+      assert.equal(Boolean(scene), ["owlbear-confrontation", "timely-rescue"].includes(next))
+      for (const c of store.current().characters) {
+        if (scene) assert.equal(castIdFor(scene.staging.cast, c), c.id)
+        assert.match(portraitFor(scene, c) ?? "", /^\/stage\/fixtures\/the-midnight-summons\/.+-portrait\.jpg$/)
+      }
     }
     assert.equal(store.state!.adventure.status, "completed")
     assert.equal(store.current().isFinalEncounter, true)

@@ -48,7 +48,7 @@ JSON only: no expressions, no code. Metres. `y` up. ground at `y = 0`. the set f
 | `format`, `version`, `id`, `settingId`, `locationId`, `title`, `seed` | Identity. `seed` drives every random choice (per object, so editing one object does not reshuffle the rest) |
 | `atmosphere` | Sun direction, colour, intensity, shadow box. hemisphere. sky colours. fog density (fog colour = sky horizon). environment intensity. exposure. wind |
 | `camera` | Near/far, bounds box, orbit limits |
-| `materials` | Name → `{ type: masonry \| wood \| cloth \| burlap \| metal \| plain, …params }`. cloth can carry `heraldry` (a named banner design) and `tatters`. Ground masonry draws the gate road's ruts and edge dust unless `roads: false` |
+| `materials` | Name → `{ type: masonry \| wood \| cloth \| burlap \| metal \| plain, …params }`. cloth can carry `heraldry` (a named banner design) and `tatters`. Ground masonry draws the gate road's ruts and edge dust unless `roads: false`. `foliage` is an alpha-tested painted leaf texture tinted by its colour |
 | `objects[]` | `{ type, id?, at?, yaw?, materials?, …params }` , `type` names a builder. params are validated by that builder's schema (unknown keys rejected, ranges clamped) |
 | `crowd` | `library` (crowd art id), `avoid` (rects and circles), `groups[]`: `scatter` (area, count, density rects, mix, facing), `line`, `points`, `path` (people along a path), `walkers` (loop or ping-pong along a path), `anchors` (people on builder-emitted anchors such as parapet lookouts) |
 | `marks` | Name → `{ at: [x, z], yaw? }` |
@@ -58,6 +58,7 @@ JSON only: no expressions, no code. Metres. `y` up. ground at `y = 0`. the set f
 
 **Builders.** Each builder declares a zod param schema and **material roles** with default material names (role `wall` → material `stone` unless the object overrides it). Builders author in local coordinates. the interpreter supplies a framed batch (`at` + `yaw`), so footprints and anchors land in world space.
 
+- Woodland: `tree` (`oak`, `pine`, `birch`, solid trunk), `fern`, `bush`, `rock` (solid), `log` (solid), `trail` (a worn strip along a polyline). Scatter layouts take `clear` circles that stay empty.
 - Primitives: `box`, `cylinder`, `cone`, `sphere`, `torus`, `lathe`, `beam`, `extrude` (polygon with holes), `opening` (arched window). `box` and `cylinder` take `solid: true` to register a footprint (a platform, a well).
 - Layouts: `group` (children in a local frame), `row` (items along a line at a random step), `scatter` (items in an area), each with `vary` (numeric ranges) and `choose` (discrete picks) per placement.
 - Kit (ported from v5): fortifications (`gatehouse`, `drumTower`, `curtainWall`, `roundTower`, `squareTower`, `archScreen`, `skyline`, `dome`), town (`house`, `farTown`), market (`stall` with goods `pots`, `baskets`, `cloth`, `sacks`, `arms`, or by name only `jewels`, `spices`, `none`, `sail`, `spearRack`, `standard`, `crate`, `barrel`, `sack`, `pot`, `basket`, `lantern`, `goodsPile`), festival (`bunting`, `sheaf`, `gourds`), checkpoint (`barrier`, `ropeLine`, `brazier`, `ledgerTable`, `cart`, `awning`, `bannerPole`), dressing (`banner`, `pennant`), ground (`groundDisc`, `land`).
@@ -129,6 +130,12 @@ Measured on the M3 in Chrome 154, 1440×900 CSS, dev build, `motion=0` unless no
 - In the browser: pause stops frames and resume restarts them. `dispose()` releases the context and removes the canvas. clicking a standee opens its plate and head-anchored bubble.
 
 Remaining product work is tracked in [Stageview](plans/stageview.md).
+
+## Recorded checks, 2026-10-03, Valkarr forest trail
+
+- Night set: `atmosphere.sky.gain` (0.25) dims the painted sky, its clouds and sun glow, and the fog colour follows it. The moon is the sun light, cool and high.
+- `pnpm stage:check`: 992 objects, 0.61M static triangles, 561 footprints, no crowd. All party walks clear in all three stagings. The owlbear's walk home is blocked by trees, which nothing asks for.
+- `stage:verify` at ultra, DPR 2, dev build: every view of the three stagings passes at 49–52 draw calls and 1.22M triangles, ready in about 4 s. Frame rates of 19–24 fps were noisy while other work shared the machine.
 
 ## Recorded checks, 2026-10-03, Kordavos harvest square
 

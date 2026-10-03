@@ -105,6 +105,11 @@ export const scatter = defineBuilder(
       count: z.number().int().min(1).max(500),
       itemYaw: z.union([deg, z.tuple([deg, deg])]).default([0, 360]),
       avoid: z.boolean().default(true),
+      // Circles [x, z, r] kept empty: a trail, a clearing.
+      clear: z
+        .array(z.tuple([coord, coord, num(0, 500)]))
+        .max(64)
+        .default([]),
       ...common,
     })
     .strict(),
@@ -116,6 +121,7 @@ export const scatter = defineBuilder(
       const x = r(x0, x1)
       const zz = r(z0, z1)
       if (p.avoid && ctx.blocked(x, zz)) continue
+      if (p.clear.some(([cx, cz, r]) => Math.hypot(x - cx, zz - cz) < r)) continue
       const yaw = (Array.isArray(p.itemYaw) ? r(p.itemYaw[0], p.itemYaw[1]) : p.itemYaw) * DEG
       ctx.place(pickItem(r, p), M4(x, 0, zz, yaw), r, `scatter/${placed}`)
       placed++

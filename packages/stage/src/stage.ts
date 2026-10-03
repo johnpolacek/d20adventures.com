@@ -164,7 +164,8 @@ export class Stage {
     this.shared.sun.value.set(...A.sun.direction).normalize()
     this.shared.wind.value = A.wind
     const horizon = new THREE.Color(A.sky.horizon)
-    this.scene.fog = new THREE.FogExp2(horizon.clone(), A.fog.density)
+    // Fog takes the horizon as the sky draws it, dimmed by its gain, so distant trees fade into the night sky.
+    this.scene.fog = new THREE.FogExp2(horizon.clone().multiplyScalar(A.sky.gain), A.fog.density)
     this.camera = new THREE.PerspectiveCamera(58, 1, set.camera.near, set.camera.far)
     this.scene.add(this.world)
 
@@ -184,13 +185,13 @@ export class Stage {
     this.scene.add(new THREE.HemisphereLight(A.hemisphere.sky, A.hemisphere.ground, A.hemisphere.intensity))
 
     const skyColors = { horizon, mid: new THREE.Color(A.sky.mid), zenith: new THREE.Color(A.sky.zenith) }
-    this.sky = new THREE.Mesh(new THREE.SphereGeometry(Math.min(set.camera.far * 0.62, 1500), 48, 24), skyMaterial(this.shared, skyColors))
+    this.sky = new THREE.Mesh(new THREE.SphereGeometry(Math.min(set.camera.far * 0.62, 1500), 48, 24), skyMaterial(this.shared, skyColors, A.sky.gain))
     this.sky.renderOrder = -1
     this.sky.frustumCulled = false
     this.scene.add(this.sky)
     const pmrem = new THREE.PMREMGenerator(renderer)
     const envScene = new THREE.Scene()
-    const envSky = new THREE.Mesh(new THREE.SphereGeometry(100, 32, 16), skyMaterial(this.shared, skyColors))
+    const envSky = new THREE.Mesh(new THREE.SphereGeometry(100, 32, 16), skyMaterial(this.shared, skyColors, A.sky.gain))
     envScene.add(envSky)
     this.envTexture = pmrem.fromScene(envScene, 0.04).texture
     envSky.geometry.dispose()

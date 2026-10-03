@@ -2,8 +2,12 @@
 export const SETS: Record<string, () => Promise<unknown>> = {
   "realm-of-myr/kordavos-south-gate": () => import("./realm-of-myr/kordavos-south-gate.json").then((m) => m.default),
   "realm-of-myr/kordavos-harvest-square": () => import("./realm-of-myr/kordavos-harvest-square.json").then((m) => m.default),
+  "realm-of-myr/valkarr-forest-trail": () => import("./realm-of-myr/valkarr-forest-trail.json").then((m) => m.default),
 }
 export const STAGINGS: Record<string, () => Promise<unknown>> = {
   "march-of-davos/the-gates-of-kordavos": () => import("../stagings/march-of-davos/the-gates-of-kordavos.json").then((m) => m.default),
   "march-of-davos/the-harvest-festival": () => import("../stagings/march-of-davos/the-harvest-festival.json").then((m) => m.default),
+  "the-midnight-summons/broken-silence": () => import("../stagings/the-midnight-summons/broken-silence.json").then((m) => m.default),
+  "the-midnight-summons/owlbear-confrontation": () => import("../stagings/the-midnight-summons/owlbear-confrontation.json").then((m) => m.default),
+  "the-midnight-summons/timely-rescue": () => import("../stagings/the-midnight-summons/timely-rescue.json").then((m) => m.default),
 }

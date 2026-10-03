@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-03, first forest set and the 3D authoring pattern
+
+Added a moonlit Valkarr forest trail for three Midnight Summons encounters, with woodland builders, a foliage material, night sky support, and standees for Thalbern, Wollandora, and the Owlbear. Recorded the authoring pattern: review on the web viewer first, then one check in the desktop app. See [Stage set authoring](stage-authoring.md).
+
 ## 2026-10-03, Midnight Summons fixes in the shared core and content
 
 NPCs that skip or pass keep their real status instead of "skipping" or "passing". The progression rule now moves on once events satisfy a listed transition and waits only for unmade player choices. Live replays advanced after the owlbear evasion and still waited at the meeting. Wollandora's greeting fits either arrival, and a Back Home typo is fixed. Both core changes also apply to web play. See [the fixes](plans/feature-desktop-stage-play.md#midnight-summons-fixes-2026-10-03).

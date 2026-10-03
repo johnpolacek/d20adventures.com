@@ -1,7 +1,11 @@
 import festivalSet from "@d20/stage/sets/realm-of-myr/kordavos-harvest-square.json"
 import gateSet from "@d20/stage/sets/realm-of-myr/kordavos-south-gate.json"
+import forestSet from "@d20/stage/sets/realm-of-myr/valkarr-forest-trail.json"
 import gateStaging from "@d20/stage/stagings/march-of-davos/the-gates-of-kordavos.json"
 import festivalStaging from "@d20/stage/stagings/march-of-davos/the-harvest-festival.json"
+import brokenSilence from "@d20/stage/stagings/the-midnight-summons/broken-silence.json"
+import owlbearConfrontation from "@d20/stage/stagings/the-midnight-summons/owlbear-confrontation.json"
+import timelyRescue from "@d20/stage/stagings/the-midnight-summons/timely-rescue.json"
 
 type Point = { x: number; z: number }
 type Who = { id: string; name: string }
@@ -21,6 +25,10 @@ gate.loops["gate-line"].party.position = 0
 export const SCENES: Record<string, Scene> = {
   "the-gates-of-kordavos": { set: gateSet, staging: gate, location: "Kordavos checkpoint", where: "The party stands in the line at Garlan's checkpoint outside the gate of Kordavos." },
   "the-harvest-festival": { set: festivalSet, staging: festivalStaging, location: "Harvest Festival", where: "The party has come up the street from the gate into the festival square." },
+  // The Midnight Summons: one moonlit stretch of deer trail for the walk, the owlbear, and the rescue.
+  "broken-silence": { set: forestSet, staging: brokenSilence, location: "Valkarr woods", where: "Thalbern walks a deer trail through the Valkarr woods at night toward the Old Standing Stones." },
+  "owlbear-confrontation": { set: forestSet, staging: owlbearConfrontation, location: "Valkarr woods", where: "An owlbear faces Thalbern across a small moonlit clearing on the deer trail." },
+  "timely-rescue": { set: forestSet, staging: timelyRescue, location: "Valkarr woods", where: "Thalbern lies wounded by the great oak beside the trail as Wollandora steps out of the trees." },
 }
 export const sceneFor = (encounterId: string | undefined) => (encounterId ? SCENES[encounterId] : undefined)
 
@@ -32,11 +40,11 @@ export function castIdFor(cast: readonly { id: string }[], c: Who) {
   return cast.some((s) => s.id === first) ? first : undefined
 }
 
-// Portraits for characters without a staged figure, from their web art. The app shows only bundled images.
+// Portraits for scenes where a character has no figure, cropped from their standee art. The app shows only bundled images.
 const PORTRAITS: Record<string, string> = {
-  thalbern: "/stage/portraits/realm-of-myr/thalbern.jpg",
-  wollandora: "/stage/portraits/realm-of-myr/wollandora.jpg",
-  owlbear: "/stage/portraits/realm-of-myr/owlbear.jpg",
+  thalbern: "/stage/fixtures/the-midnight-summons/thalbern-portrait.jpg",
+  wollandora: "/stage/fixtures/the-midnight-summons/wollandora-portrait.jpg",
+  owlbear: "/stage/fixtures/the-midnight-summons/owlbear-portrait.jpg",
 }
 
 // A character's portrait from the current scene, else from any authored scene, so story view keeps the party's faces.

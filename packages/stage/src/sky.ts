@@ -9,12 +9,12 @@ export interface SkyColors {
 
 // A painted sky: deep cerulean overhead, pale haze at the horizon, and heaped cumulus lit from the sun's side with cool
 // shadowed undersides. The horizon colour is also the fog colour, so the land dissolves seamlessly into the sky.
-export function skyMaterial(shared: SharedUniforms, colors: SkyColors) {
+export function skyMaterial(shared: SharedUniforms, colors: SkyColors, gain = 1) {
   return new THREE.ShaderMaterial({
     side: THREE.BackSide,
     depthWrite: false,
     fog: false,
-    uniforms: { uTime: shared.time, uSun: shared.sun, uHorizon: { value: colors.horizon }, uZenith: { value: colors.zenith }, uMid: { value: colors.mid }, uGain: { value: 1 } },
+    uniforms: { uTime: shared.time, uSun: shared.sun, uHorizon: { value: colors.horizon }, uZenith: { value: colors.zenith }, uMid: { value: colors.mid }, uGain: { value: gain } },
     vertexShader: "varying vec3 vDir; void main(){ vDir = position; vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_Position = p.xyww; }",
     fragmentShader: `varying vec3 vDir; uniform float uTime, uGain; uniform vec3 uHorizon, uZenith, uMid, uSun;
 ${NOISE}

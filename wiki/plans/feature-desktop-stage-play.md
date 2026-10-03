@@ -132,6 +132,16 @@ Owner approved fixing the playthrough findings. Two touch the shared GM core, so
 
 Implemented. `pnpm test:gm-core` passes with the one re-recorded rule line, and the fourteen desktop tests pass. Live Claude replays from the recorded save, two tries each: after the successful evasion, both moved on to Meeting at the Stones. After Thalbern promised help before hearing the mission, both stayed and waited for his answer. That is a small sample, not a guarantee. The greeting now reads "Thalbern. The forest is grateful you are here."
 
+## Midnight Summons forest trail, 2026-10-03
+
+Owner chose to build the forest trail first and asked for a repeatable way to make 3D locations. The pattern is [web review first, then the app](../stage-authoring.md).
+
+- One set, `realm-of-myr/valkarr-forest-trail`, serves Broken Silence, Owlbear Confrontation, and Timely Rescue, with a staging each. The Standing Stones and Thalbern's home stay in story view for now.
+- A moonlit deer trail through oaks, pines, and birches, ferns, bushes, boulders, a fallen log, the great oak, and a small clearing. Eight labelled places, three set views, and staging views for each character.
+- New standees for Thalbern, Wollandora, and the Owlbear, described in words rather than taken from the web portraits. The first owlbear had wings and was regenerated. Their painted portraits replace the bundled web portraits, including Thalbern's photographic one.
+- Desktop maps the three encounters to the forest scenes. A desktop test checks that every character in those real turns has a figure and a portrait.
+- Open: owner review on the web viewer, then one check in the packaged app.
+
 ## Remaining scope
 
 One local slot and four premade player-controlled characters. The gate and the Harvest Festival are the authored 3D sets. Add further sets, character creation, AI companions, save management, narration audio, and multiplayer separately. Equipment has no separate currency or quantity ledger. Native combat and the other providers were not tested in this playthrough. The five-call batching experiment remains separate. Distribution still needs Node packaging or onboarding, signing, notarization, and an updater.
