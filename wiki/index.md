@@ -4,7 +4,7 @@
 
 D20 Adventures is a narrative RPG with an AI Game Master, authored adventures, D20 checks, and live turn state in Convex.
 
-Desktop integration updated on 2026-10-02 in `feature/desktop-stage-play`. This worktree includes the committed GM core extraction. Main and production remain separate.
+Desktop integration updated on 2026-10-03 in `feature/desktop-stage-play`, including durable character-state application. This worktree includes the committed GM core extraction. Main and production remain separate.
 
 | Area | Current state |
 |---|---|
@@ -18,7 +18,7 @@ Desktop integration updated on 2026-10-02 in `feature/desktop-stage-play`. This 
 
 - [Plans](plans/index.md): Stageview delivery and maintenance backlog.
 - [Stageview](plans/stageview.md): owner decisions, remaining phases, release questions.
-- [Desktop local play](plans/desktop-local-play.md): core extraction, native client, and initial solo save/CLI flow implemented locally. Further sets, character-state application, provider coverage, and distribution remain open. Free solo play through the player's own AI CLI, subscription tokens for multiplayer.
+- [Desktop local play](plans/desktop-local-play.md): core extraction, native client, local saves, and character-state application implemented locally. Further sets, provider coverage, and distribution remain open. Free solo play through the player's own AI CLI, subscription tokens for multiplayer.
 - [Desktop Stageview integration](plans/feature-desktop-stage-play.md): native game client, local saves, live turn flow, validation, and limits.
 - [Stage engine](stage-engine.md): implemented runtime, set/staging specs, measured limits.
 - [Wiki adventures](wiki-adventures.md): authoring, compilation, source selection, and live content updates.

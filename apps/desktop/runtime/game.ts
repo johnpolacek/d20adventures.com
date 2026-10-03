@@ -6,6 +6,7 @@ import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventure
 import type { RuntimeArtifacts } from "@d20/gm-core/wiki-adventures/types"
 import { MOVEMENT_SYSTEM, movementIntentSchema, movementPrompt } from "@d20/stage/movement"
 import { z } from "zod"
+import { applyCharacterUpdates, characterContext, desktopPatchSchema } from "./characters"
 import type { LocalStore } from "./store"
 
 export type Pack = { artifacts: RuntimeArtifacts; contentRef: Awaited<ReturnType<Content["loadWikiRuntime"]>>["contentRef"]; definition: { promptSlug: string } }
@@ -50,7 +51,7 @@ export function game(store: LocalStore, pack: Pack, llm: Llm) {
   const tracked: Llm = {
     async generateText(args) {
       try {
-        return await llm.generateText(args)
+        return await llm.generateText({ ...args, prompt: args.prompt + characterContext(store.current().characters) })
       } catch (error) {
         inferenceFailure = error
         throw error
@@ -58,7 +59,13 @@ export function game(store: LocalStore, pack: Pack, llm: Llm) {
     },
     async generateObject(args) {
       try {
-        return await llm.generateObject(args)
+        const advancement = args.schema instanceof z.ZodObject && "adventurePatch" in args.schema.shape
+        const result = await llm.generateObject({ ...args, prompt: args.prompt + characterContext(store.current().characters, advancement) })
+        if (advancement) {
+          const patch = desktopPatchSchema.parse((result.object as { adventurePatch?: unknown }).adventurePatch ?? {})
+          applyCharacterUpdates(store.current().characters, patch.characterUpdates)
+        }
+        return result
       } catch (error) {
         inferenceFailure = error
         throw error

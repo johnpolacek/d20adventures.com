@@ -8,10 +8,10 @@ export function strictModelSchema(schema) {
   if (schema instanceof z.ZodOptional) return strictModelSchema(schema.unwrap()).optional()
   if (schema instanceof z.ZodPipe) return strictModelSchema(schema.in)
   if (schema instanceof z.ZodUnion) {
-    // openThreads accepts legacy string inputs. Require its canonical object form.
-    const object = schema.options.find((option) => option instanceof z.ZodObject)
-    assert.ok(object, "Unexpected union in adventure patch")
-    return strictModelSchema(object)
+    // Exclude legacy prose, retaining every canonical object operation.
+    const objects = schema.options.filter((option) => option instanceof z.ZodObject).map(strictModelSchema)
+    assert.ok(objects.length, "Unexpected union in adventure patch")
+    return objects.length === 1 ? objects[0] : z.union(objects)
   }
   if (schema instanceof z.ZodArray) return z.array(strictModelSchema(schema.element))
   if (schema instanceof z.ZodObject) return z.strictObject(Object.fromEntries(Object.entries(schema.shape).map(([key, value]) => [key, strictModelSchema(value)])))

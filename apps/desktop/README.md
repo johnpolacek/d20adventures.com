@@ -18,7 +18,11 @@ A single local adventure is stored in SQLite under the platform's app data direc
 
 The native bridge exposes a bounded set of game commands. Operations are serialized, with a SQLite process lease across app instances. Each accepted milestone commits independently. Failed inference blocks fallback writes and returns the last durable state. Individual CLI requests have a 120-second deadline, with one JSON correction. A native operation has an eight-minute deadline. CLI children are closed after the operation and when their parent exits.
 
-Current limits: one adventure slot, four premade player-controlled characters, one authored 3D set, no multiplayer or narration audio, and no signing/notarization/updater. World-state character patches retain the core's current semantics: they are recorded but not applied as inventory/effect changes. Combat and other providers were not covered by the native playthrough. The spike's five-call optimization remains separate.
+Character patches apply atomically on turn advancement. Equipment supports adding or removing one named item per operation, including transfers. Effects support add/refresh/removal and expire once per completed round. Health and status are absolute updates, with an empty status clearing it. Known spells track usage and recharge on encounter changes. Live values survive new encounters and restarts, including remembered NPCs, and feed the next GM request. Click a character twice to focus them and open their current sheet.
+
+The model must return explicit character operations or an empty update list. Invalid references receive one correction attempt, then fail without advancing. Item/effect/spell matching is exact after trimming and ignoring case. Existing version 1 saves bootstrap remembered state from stored character snapshots. Historical prose-only change notes remain readable and are not guessed at or replayed.
+
+Current limits: one adventure slot, four premade player-controlled characters, one authored 3D set, no multiplayer or narration audio, and no signing/notarization/updater. Equipment is a list of items, without a separate quantity or currency ledger. Combat and other providers were not covered by the native playthrough. The spike's five-call optimization remains separate.
 
 Validation:
 
@@ -29,5 +33,7 @@ pnpm --filter @d20/desktop check
 pnpm --filter @d20/stage check
 pnpm stage:check
 ```
+
+The eight desktop tests cover real core advancement, inventory transfers, conditions, effect expiry, spell usage, encounter transitions, NPC return, save/reopen, duplicate protection, model correction, and atomic rejection. Native character-card validation uses a temporary fixture save, separately from the earlier live Claude playthrough.
 
 Set `D20_RENDER_REPORT=1` when launching the native executable to write a one-time render readiness report to `render-report.json` beside the save. This opt-in local diagnostic contains renderer readiness, resource URLs, visibility, and JavaScript errors. It does not send telemetry.

@@ -33,8 +33,22 @@ Use two Rust build jobs because this Mac has 8 GB RAM. Check types, scoped lint,
 - Browser verification covered renderer loading, with no browser console errors. Game commands require native IPC, so the browser check was not a gameplay test. The native test above covered the actual bridge and local save.
 - The native test save was preserved as `~/Library/Application Support/com.d20adventures.desktop/validation-desktop-stage-2026-10-02.sqlite`. The app was returned to a fresh starting screen. Movement waits for completed actions and leaves failed checks in place.
 
+## Character-state follow-up, 2026-10-03
+
+Owner authorized applying recorded character changes. Continue in this clean integration worktree. Scope is the desktop host and reusable schema definitions, with no production deployment or web state migration.
+
+- Define typed item add/remove, effect set/remove, and spell-use changes. Keep historical descriptive patches readable, but require explicit operations for new desktop patches. Reject unknown character/item/spell references and malformed changes without committing a partial turn.
+- Apply health, status, equipment, effects, and spell usage atomically with the new turn. Preserve live state instead of reloading premade defaults on encounter changes. Remember NPC state when they leave the roster. Clear old roll flags, expire timed effects once per round, and retain the existing rule that spells recharge on encounter changes.
+- Supply current character state to local GM requests and show it in character cards. Derive open cards from live state so they update after a save.
+- Test add/remove/transfer, effect replacement/removal/expiry, spell use/reset, same-encounter rounds, encounter transitions, NPC return, save/reopen, duplicate/stale retries, and atomic rejection. Run shared-core regression checks, typechecks, scoped lint, desktop build, and native UI verification.
+- Do not reinterpret historical free-text inventory/effect notes or rewrite old turn snapshots. Existing saves continue from their current stored character values.
+
+Implemented and validated locally. Eight desktop tests cover the cases above, including real core transitions and SQLite reopen. Shared core/server regression checks passed, including unchanged web prompt/schema/write fixtures. Root and package typechecks, scoped Biome, and the native release build passed. The packaged app displayed Cassia at 65% health with a new gate token, a two-round effect, and a used spell from a deterministic test fixture. The original empty save was restored, and the fixture was preserved as `validation-character-state-2026-10-03.sqlite` beside it.
+
+An additional live Claude advancement used an isolated temporary save with a resolved token handoff in its narrative. Claude returned an explicit `inventoryChanges` add operation for `Bronze gate token`, and the real core committed it to Cassia's equipment in The Harvest Festival. This validates the new model contract and application path for that item event. It is not a full playthrough or live validation of every effect/spell operation.
+
 ## Remaining scope
 
-One local slot and four premade player-controlled characters. The gate is the only authored 3D set. Add further sets, character creation, AI companions, save management, narration audio, and multiplayer separately. Character patches are retained with existing core semantics, not applied as inventory/effect updates. Native combat and the other providers were not tested in this playthrough. The five-call batching experiment remains separate. Distribution still needs Node packaging or onboarding, signing, notarization, and an updater.
+One local slot and four premade player-controlled characters. The gate is the only authored 3D set. Add further sets, character creation, AI companions, save management, narration audio, and multiplayer separately. Equipment has no separate currency or quantity ledger. Native combat and the other providers were not tested in this playthrough. The five-call batching experiment remains separate. Distribution still needs Node packaging or onboarding, signing, notarization, and an updater.
 
 The worktree's isolated Convex project is `d20adventures-feature-desktop-stage-play`, deployment `adamant-hawk-913`. Desktop gameplay does not use it. Remove that project after the worktree is retired. Runtime details and commands are in [the desktop README](../../apps/desktop/README.md).

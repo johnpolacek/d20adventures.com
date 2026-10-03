@@ -2,6 +2,7 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { createInterface } from "node:readline"
 import { locate } from "../../desktop-spike/harness/cli.mjs"
+import { applyCharacterUpdates } from "./characters"
 import { commandSchema, game, type Pack } from "./game"
 import { localLlm } from "./llm"
 import { LocalStore } from "./store"
@@ -46,7 +47,9 @@ async function main() {
       const command = commandSchema.parse(JSON.parse(line))
       store = new LocalStore(savePath, pack.artifacts.graph.encounterTransitions)
       store.acquire()
-      model = localLlm(command.kind === "start" ? command.provider : (store.state?.provider ?? "claude"), scratch)
+      model = localLlm(command.kind === "start" ? command.provider : (store.state?.provider ?? "claude"), scratch, (patch) => {
+        applyCharacterUpdates(store!.current().characters, patch.characterUpdates)
+      })
       const state = await game(store, pack, model.llm)(command)
       const providers = ["claude", "codex", "grok", "gemini"].filter((name) => {
         try {

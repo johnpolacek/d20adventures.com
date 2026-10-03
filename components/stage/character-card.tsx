@@ -12,6 +12,7 @@ export interface CardInfo {
   portrait?: string
   about?: string
   lines?: string[]
+  details?: Array<{ label: string; items: string[] }>
 }
 
 export function CharacterCard({ info, compact = false, onClose }: { info: CardInfo; compact?: boolean; onClose: () => void }) {
@@ -29,6 +30,16 @@ export function CharacterCard({ info, compact = false, onClose }: { info: CardIn
       <div className={eyebrow}>{info.role}</div>
       <h2 className="mt-1.5 mb-2.5 font-display text-[24px] font-normal leading-tight">{info.name}</h2>
       {info.about && <p className="mb-2 text-[12px] leading-[1.7] text-[#e6dac6]">{info.about}</p>}
+      {info.details?.map((section) => (
+        <div key={section.label}>
+          <h3 className={cn(eyebrow, "mt-4 mb-2")}>{section.label}</h3>
+          <ul className="space-y-2 text-xs leading-relaxed text-stage-cream">
+            {section.items.map((item, index) => (
+              <li key={`${index}:${item}`}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      ))}
       {info.lines && info.lines.length > 0 && (
         <>
           <h3 className={cn(eyebrow, "mt-4 mb-2")}>Says</h3>

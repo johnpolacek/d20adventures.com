@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { characterUpdateSchema, effectChangeSchema, inventoryChangeSchema, spellUseChangeSchema } from "./character-updates"
 import type { TransitionValidationResult } from "./transition-validator"
 
 // The model intermittently malforms the structured world-state fields below — most often
@@ -37,14 +38,15 @@ export const adventurePatchSchema = z.object({
     .catch(undefined),
   characterUpdates: z
     .array(
-      z.object({
-        characterId: z.string(),
-        healthPercent: z.number().min(0).max(100).optional(),
-        status: z.string().optional(),
-        effectChanges: z.array(z.string()).optional(),
-        inventoryChanges: z.array(z.string()).optional(),
-        spellUseChanges: z.array(z.string()).optional(),
-      })
+      characterUpdateSchema
+        .extend({
+          // Historical web/spike patches used prose. Reading them remains supported.
+          // Hosts that apply updates must require the explicit operation contract.
+          effectChanges: z.array(z.union([z.string(), ...effectChangeSchema.options])).optional(),
+          inventoryChanges: z.array(z.union([z.string(), ...inventoryChangeSchema.options])).optional(),
+          spellUseChanges: z.array(z.union([z.string(), spellUseChangeSchema])).optional(),
+        })
+        .strip()
     )
     .optional()
     .catch(undefined),

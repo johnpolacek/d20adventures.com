@@ -11,7 +11,7 @@ Updated for the desktop integration worktree on 2026-10-02. Implementation statu
 | [Stageview](stageview.md) | Desktop gate scene connected to the real local turn flow in this worktree. | More authored sets, per-turn beats, and encounter coverage. |
 | [Stage-first turn mock](feature-stage-turn-mock.md) | Scripted gate-scene demo merged 2026-10-01; public at `/demo/kordavos` for feedback. | Owner and playtester feedback, then the real turn page (Stageview phase 4). |
 | [Desktop Stageview integration](feature-desktop-stage-play.md) | Implemented locally. Native validation recorded in its plan. | Review the app, extend set coverage, and package distribution. |
-| [Desktop local play](desktop-local-play.md) | Core extraction, desktop shell, and initial local save/CLI play implemented on unmerged branches. | More sets, save management, character-state application, optional pre-roll batching, broader gameplay, provider coverage, and distribution. |
+| [Desktop local play](desktop-local-play.md) | Core extraction, desktop shell, and initial local save/CLI play implemented on unmerged branches. | More sets, save management, optional pre-roll batching, broader gameplay, provider coverage, and distribution. |
 | [Maintenance follow-ups](maintenance.md) | Open findings and unverified follow-ups carried forward from completed work. | Test harness, authoring edge cases, narration validation, and environment cleanup. |
 
 ## Maintained references

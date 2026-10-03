@@ -3,7 +3,7 @@ import { readingSeconds } from "@d20/stage/beats"
 import gateSet from "@d20/stage/sets/realm-of-myr/kordavos-south-gate.json"
 import gateStaging from "@d20/stage/stagings/march-of-davos/the-gates-of-kordavos.json"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { type CardInfo, CharacterCard } from "@/components/stage/character-card"
+import { CharacterCard } from "@/components/stage/character-card"
 import { Pill, panel, StageHud, useCompact } from "@/components/stage/hud"
 import { Journal, type JournalTurn } from "@/components/stage/journal"
 import { Narration } from "@/components/stage/narration"
@@ -15,6 +15,7 @@ import { parseNarrative } from "@/lib/utils/parse-narrative"
 import type { GameCommand } from "../runtime/game"
 import type { Save } from "../runtime/store"
 import { send } from "./bridge"
+import { characterInfo } from "./character-info"
 import { applyMovement, context, stageId, positions as stagePositions } from "./movement"
 
 const prose = (text: string, originals = false) =>
@@ -41,7 +42,7 @@ export function DesktopGame() {
   const [error, setError] = useState<string | null>(null)
   const [draft, setDraft] = useState("")
   const [open, setOpen] = useState<"journal" | "settings" | null>(null)
-  const [card, setCard] = useState<CardInfo | null>(null)
+  const [cardId, setCardId] = useState<string | null>(null)
   const [hidden, setHidden] = useState(false)
   const [paragraph, setParagraph] = useState(0)
   const [auto, setAuto] = useState(false)
@@ -51,6 +52,8 @@ export function DesktopGame() {
   const containerRef = useRef<HTMLDivElement>(null)
   const compact = useCompact()
   const turn = save?.turns.find((t) => t._id === save.adventure.currentTurnId)
+  const cardCharacter = turn?.characters.find((c) => c.id === cardId)
+  const card = cardCharacter ? characterInfo(cardCharacter, portrait(cardCharacter.name)) : null
   const atGate = !turn || turn.encounterId === "the-gates-of-kordavos"
   const specs = useMemo(() => (atGate ? { set: gateSet, staging, tier: "balanced" as const } : null), [atGate])
   const { stage, status: loading, error: stageError } = useStage(containerRef, specs)
@@ -160,13 +163,7 @@ export function DesktopGame() {
         focused.current = id
         return
       }
-      setCard({
-        id: character.id,
-        name: character.name,
-        role: `${character.race} ${character.archetype}`,
-        portrait: portrait(character.name),
-        about: `${character.appearance ?? ""}\nHealth: ${character.healthPercent ?? 100}%`,
-      })
+      setCardId(character.id)
     },
     [stage]
   )
@@ -196,7 +193,7 @@ export function DesktopGame() {
       if (e.key.toLowerCase() === "h") setHidden((h) => !h)
       if (e.key === "Escape") {
         setOpen(null)
-        setCard(null)
+        setCardId(null)
       }
       const view = Object.keys(stage?.shots ?? {})[Number(e.key) - 1]
       if (view) stage?.shot(view)
@@ -321,7 +318,7 @@ export function DesktopGame() {
             </div>
           )}
           {open === "journal" && <Journal turns={journal} chat={[]} compact={compact} onClose={() => setOpen(null)} />}
-          {card && <CharacterCard info={card} compact={compact} onClose={() => setCard(null)} />}
+          {card && <CharacterCard info={card} compact={compact} onClose={() => setCardId(null)} />}
           {open === "settings" && (
             <section className={`${panel} absolute right-10 top-24 z-40 w-72 p-6`}>
               <h2 className="mb-4 font-serif text-2xl">Scene settings</h2>

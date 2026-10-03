@@ -4,6 +4,16 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-03, desktop character-state application
+
+Connected structured character patches to live desktop state in `feature/desktop-stage-play`. Health, status, item transfers, effect changes, and spell use now commit with the new turn. Encounter changes preserve the party's live values instead of replacing them with premade defaults. NPC state is remembered, old roll flags clear, effects expire once per round, and spells recharge on encounter changes. Character cards show the current saved values and GM requests receive them as context.
+
+New CLI advancement responses require explicit operations or an empty character-update list. Invalid references get one correction, then reject the turn without partial writes. Older saves remain readable, with no automatic replay of ambiguous prose notes or changes to historical turn snapshots. Shared schemas accept both historical notes and typed operations. Web application semantics remain unchanged.
+
+Eight desktop tests, shared core/server regression checks, root/package TypeScript, scoped lint, and a native release build passed. A temporary native fixture visibly showed a new item, 65% health, a timed effect, and a used spell. The original empty save was restored. This follow-up does not establish full combat or all-provider coverage. See [the integration plan](plans/feature-desktop-stage-play.md#character-state-follow-up-2026-10-03).
+
+A separate live Claude check advanced an isolated fixture to the festival, returned an explicit add operation, and persisted the Bronze gate token in Cassia's equipment. No user save, production data, or web gameplay was changed by the check.
+
 ## 2026-10-02, desktop Stageview and real local turns
 
 Implemented `apps/desktop` in the isolated `feature/desktop-stage-play` worktree, based on main plus the committed GM core branch. Extracted the renderer to `packages/stage` and retained the web demo. The Tauri client bundles March of Davos, stage assets, fonts, and a Node game worker. It uses the player's installed AI CLI, the shared GM core, and SQLite. Actions, dice, NPCs, authored transitions, journal, camera controls, and player movement are connected to real state. The gate has a 3D set. Later encounters use story view.

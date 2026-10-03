@@ -4,6 +4,7 @@ import type { AdventureRecord, Store, TurnRecord, WikiTurnCommit } from "@d20/gm
 import { type AdventurePatch, validateAdventurePatch } from "@d20/gm-core/wiki-adventures/adventure-patch"
 import { validateRuntimeTransition } from "@d20/gm-core/wiki-adventures/transition-validator"
 import type { MovementIntent } from "@d20/stage/movement"
+import { type CharacterStates, desktopPatchSchema, nextCharacterState, rememberCharacters } from "./characters"
 
 export type SavedAdventure = AdventureRecord & {
   currentTurnId: string
@@ -26,6 +27,7 @@ export type Save = {
   appliedMovement?: string[]
   movement: Record<string, { actorId: string; intent: MovementIntent }>
   positions: Record<string, { x: number; z: number; ry: number }>
+  characterStates?: CharacterStates
 }
 
 /** SQLite writes commit each milestone, including the natural die before inference. */
@@ -145,16 +147,24 @@ export class LocalStore implements Store {
       legalTransitions: this.transitions,
     })
     if (!transition.allowed) throw new Error("Illegal encounter transition.")
-    const patch = validateAdventurePatch(args.adventurePatch, transition)
+    const patch = validateAdventurePatch(desktopPatchSchema.parse(args.adventurePatch ?? {}), transition)
+    const { characters, characterStates } = nextCharacterState({
+      current: old.characters,
+      next: args.characters,
+      remembered: rememberCharacters(state.characterStates ? [old] : state.turns, state.characterStates),
+      updates: patch.characterUpdates,
+      encounterChanged: old.encounterId !== args.nextEncounterId,
+    })
     const turnId = randomUUID()
     const next = structuredClone(state)
+    next.characterStates = characterStates
     next.turns.push({
       _id: turnId,
       adventureId: args.adventureId,
       encounterId: args.nextEncounterId,
       title: args.title,
       narrative: args.narrative,
-      characters: args.characters,
+      characters,
       order: args.order,
       isFinalEncounter: args.isFinalEncounter,
       adventurePatch: patch,
