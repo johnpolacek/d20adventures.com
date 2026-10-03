@@ -17,6 +17,7 @@ import { buildSetGeometry, populateCrowd } from "./spec/build"
 import { frameShot, type ResolvedShot, resolveCast, resolveShots } from "./spec/resolve"
 import { type SetSpec, setSpecSchema } from "./spec/set"
 import { type StagingShot, type StagingSpec, stagingSpecSchema } from "./spec/staging"
+import { reachOver } from "./spec/walk"
 
 // The Stage runtime: one set (plus an optional staging) rendered into a canvas it owns inside `container`.
 // Plain imperative three.js; the host (a React component) creates it, calls shot()/setTier()/pause(), and disposes it.
@@ -441,7 +442,28 @@ export class Stage {
       c.z = p.z
       return Promise.resolve()
     }
-    return new Promise<void>((resolve) => this.moves.set(id, { tx: p.x, tz: p.z, speed, resolve }))
+    // Frames stop while the window is hidden or covered. The walk still arrives on time, so nothing awaiting it stalls.
+    const due = (Math.hypot(p.x - c.x, p.z - c.z) / speed) * 1000 + 1000
+    return new Promise<void>((resolve) => {
+      const timer = setTimeout(() => {
+        const m = this.moves.get(id)
+        if (!m) return
+        c.x = m.tx
+        c.z = m.tz
+        c.walking = false
+        this.moves.delete(id)
+        m.resolve()
+      }, due)
+      this.moves.set(id, {
+        tx: p.x,
+        tz: p.z,
+        speed,
+        resolve: () => {
+          clearTimeout(timer)
+          resolve()
+        },
+      })
+    })
   }
   // Every walk in progress arrives at once (skipping a beat sequence).
   finishMoves() {
@@ -691,42 +713,10 @@ export class Stage {
     const hit = this.ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), new THREE.Vector3())
     return hit && hit.distanceTo(this.camera.position) < 400 ? { x: hit.x, z: hit.z } : null
   }
-  private solid(x: number, z: number) {
-    for (const f of this.footprints) {
-      if (f.kind === "circle") {
-        if (Math.hypot(x - f.x, z - f.z) < f.r) return true
-        continue
-      }
-      const dx = x - f.x
-      const dz = z - f.z
-      const c = Math.cos(f.ry)
-      const s = Math.sin(f.ry)
-      if (Math.abs(dx * c - dz * s) < f.hw && Math.abs(dx * s + dz * c) < f.hd) return true
-    }
-    return false
-  }
   // How far a cast member can walk toward a point in a straight line: stops at the first solid footprint or at `budget`
   // metres. Returns where they would stop, the distance walked, and whether something or the budget cut it short.
   reach(id: string, to: { x: number; z: number }, budget: number) {
-    const c = this.member(id)
-    const dx = to.x - c.x
-    const dz = to.z - c.z
-    const want = Math.hypot(dx, dz)
-    const limit = Math.min(want, budget)
-    const step = 0.2
-    let d = 0
-    let blocked = false
-    while (d + step <= limit) {
-      const t = (d + step) / Math.max(want, 1e-6)
-      if (this.solid(c.x + dx * t, c.z + dz * t)) {
-        blocked = true
-        break
-      }
-      d += step
-    }
-    if (!blocked && limit - d > 1e-3 && !this.solid(c.x + (dx * limit) / Math.max(want, 1e-6), c.z + (dz * limit) / Math.max(want, 1e-6))) d = limit
-    const t = d / Math.max(want, 1e-6)
-    return { x: c.x + dx * t, z: c.z + dz * t, distance: d, blocked, short: blocked || want > budget }
+    return reachOver(this.footprints, this.member(id), to, budget)
   }
   // Where a cast member stands (x, z) and faces (radians).
   castAt(id: string) {
@@ -751,6 +741,9 @@ export class Stage {
   dispose() {
     this.running = false
     cancelAnimationFrame(this.raf)
+    // Walks in progress end where they are, so nothing awaiting them hangs on a disposed stage.
+    for (const m of this.moves.values()) m.resolve()
+    this.moves.clear()
     document.removeEventListener("visibilitychange", this.onVisibility)
     this.resizeObserver.disconnect()
     this.intersection?.disconnect()

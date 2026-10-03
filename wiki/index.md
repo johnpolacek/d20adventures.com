@@ -4,7 +4,7 @@
 
 D20 Adventures is a narrative RPG with an AI Game Master, authored adventures, D20 checks, and live turn state in Convex.
 
-Desktop integration updated on 2026-10-03 in `feature/desktop-stage-play`, including durable character-state application. This worktree includes the committed GM core extraction. Main and production remain separate.
+Desktop integration updated on 2026-10-03 in `feature/desktop-stage-play`, including durable character-state application and the Harvest Festival 3D scene. This worktree includes the committed GM core extraction. Main and production remain separate.
 
 | Area | Current state |
 |---|---|
@@ -12,12 +12,12 @@ Desktop integration updated on 2026-10-03 in `feature/desktop-stage-play`, inclu
 | Content | Four Realm of Myr adventures use the wiki runtime. Production cutover completed in June 2026. |
 | Current priority | Desktop Stageview is connected to the local GM flow in this worktree. Extend authored set coverage and finish distribution. |
 | Latest recorded renderer validation | 2026-09-29, engine build/typecheck/lint and GPU checks. Every tested shot stayed within 300 draw calls and 2.5M triangles. Phone performance remains unmeasured. |
-| Latest gameplay validation | 2026-10-02, native Claude gate-to-festival playthrough with dice and reopen persistence. The isolated GM core worktree also completed Midnight Summons in seven turns and passed 16 Playwright tests. No production deployment. |
+| Latest gameplay validation | 2026-10-03, native Claude gate-to-festival advance into the new festival set, with NPC focus and cards, saved walks, and reopen without replay. 2026-10-02, native Claude gate playthrough with dice and reopen persistence. The isolated GM core worktree also completed Midnight Summons in seven turns and passed 16 Playwright tests. No production deployment. |
 
 ## Work and references
 
 - [Plans](plans/index.md): Stageview delivery and maintenance backlog.
-- [Harvest Festival handoff](plans/harvest-festival-handoff.md): scene implementation paused at owner request. Current code, optional art drafts, and continuation steps.
+- [Harvest Festival handoff](plans/harvest-festival-handoff.md): handoff record. The festival scene was resumed and implemented on 2026-10-03.
 - [Stageview](plans/stageview.md): owner decisions, remaining phases, release questions.
 - [Desktop local play](plans/desktop-local-play.md): core extraction, native client, local saves, and character-state application implemented locally. Further sets, provider coverage, and distribution remain open. Free solo play through the player's own AI CLI, subscription tokens for multiplayer.
 - [Desktop Stageview integration](plans/feature-desktop-stage-play.md): native game client, local saves, live turn flow, validation, and limits.

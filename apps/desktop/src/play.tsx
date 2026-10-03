@@ -1,7 +1,5 @@
 import { findCurrentActor } from "@d20/gm-core/utils/turn-actors"
 import { readingSeconds } from "@d20/stage/beats"
-import gateSet from "@d20/stage/sets/realm-of-myr/kordavos-south-gate.json"
-import gateStaging from "@d20/stage/stagings/march-of-davos/the-gates-of-kordavos.json"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { CharacterCard } from "@/components/stage/character-card"
 import { Pill, panel, StageHud, useCompact } from "@/components/stage/hud"
@@ -10,14 +8,15 @@ import { Narration } from "@/components/stage/narration"
 import { type CardCharacter, type CardMode, PromptCard } from "@/components/stage/prompt-card"
 import { Bubbles, Plate } from "@/components/stage/stage-dialogue"
 import { TurnOrder } from "@/components/stage/turn-order"
-import { Button } from "@/components/ui/button"
 import { useStage } from "@/components/stage/use-stage"
+import { Button } from "@/components/ui/button"
 import { parseNarrative } from "@/lib/utils/parse-narrative"
 import type { GameCommand } from "../runtime/game"
 import type { Save } from "../runtime/store"
 import { send } from "./bridge"
 import { characterInfo } from "./character-info"
-import { applyMovement, context, stageId, positions as stagePositions } from "./movement"
+import { applyMovement, context, positions as stagePositions } from "./movement"
+import { castIdFor, portraitFor, sceneFor } from "./scenes"
 
 const prose = (text: string, originals = false) =>
   parseNarrative(text).flatMap((part) => {
@@ -28,10 +27,8 @@ const prose = (text: string, originals = false) =>
       ]
     return [part.value]
   })
-// The real intro starts at the checkpoint. The ambient queue must not move the party independently of game state.
-const staging = structuredClone(gateStaging)
-staging.loops["gate-line"].party.position = 0
-const portrait = (name: string) => gateStaging.cast.find((c) => c.id === stageId(name))?.art.portrait
+// The name a narrative calls someone by: "Zephyra" for Madam Zephyra, "Garlan" for Garlan Ironfist.
+const callName = (name: string) => name.split(" ").find((w) => !/^(Madam|Master|Mistress|Sergeant|Sir|Lady|Lord)$/.test(w)) ?? name
 
 export function DesktopGame() {
   const [save, setSave] = useState<Save | null>(null)
@@ -54,16 +51,18 @@ export function DesktopGame() {
   const compact = useCompact()
   const turn = save?.turns.find((t) => t._id === save.adventure.currentTurnId)
   const cardCharacter = turn?.characters.find((c) => c.id === cardId)
-  const card = cardCharacter ? characterInfo(cardCharacter, portrait(cardCharacter.name)) : null
-  const atGate = !turn || turn.encounterId === "the-gates-of-kordavos"
-  const specs = useMemo(() => (atGate ? { set: gateSet, staging, tier: "balanced" as const } : null), [atGate])
-  const { stage, status: loading, error: stageError } = useStage(containerRef, specs)
+  // The title screen shows the opening scene. Encounters without an authored scene play in story view.
+  const scene = sceneFor(turn?.encounterId ?? "the-gates-of-kordavos")
+  const portrait = (c: { id: string; name: string }) => portraitFor(scene, c)
+  const card = cardCharacter ? characterInfo(cardCharacter, portrait(cardCharacter)) : null
+  const specs = useMemo(() => (scene ? { set: scene.set, staging: scene.staging, tier: "balanced" as const } : null), [scene])
+  const { stage, stageRef, status: loading, error: stageError } = useStage(containerRef, specs)
   const actor = turn ? findCurrentActor(turn.characters) : undefined
   const text = useMemo(() => prose(turn?.narrative ?? ""), [turn?.narrative])
   const speech = useMemo(() => {
     const paragraphText = text[paragraph] ?? ""
     const quote = paragraphText.match(/[“"]([^”"]{1,240})[”"]/)?.[1]
-    const named = stage?.cast.filter((c) => paragraphText.includes(c.name.split(" ")[0])) ?? []
+    const named = stage?.cast.filter((c) => paragraphText.includes(callName(c.name))) ?? []
     return quote && named.length === 1 && reading ? { cast: named[0], text: quote } : null
   }, [stage, text, paragraph, reading])
   useEffect(() => {
@@ -117,25 +116,25 @@ export function DesktopGame() {
   }, [turn?._id, actor?.id])
   useEffect(() => {
     if (!stage) return
-    const loop = stage.loops.get("gate-line")
-    if (loop) loop.paused = true
-    stage.shot("gate", { instant: true })
+    for (const loop of stage.loops.values()) loop.paused = true
+    if (stage.staging?.shot) stage.shot(stage.staging.shot, { instant: true })
     const timer = setInterval(() => redraw((n) => n + 1), 1000)
     return () => clearInterval(timer)
   }, [stage])
   useEffect(() => {
-    if (!stage || !turn) return
+    // A stage being replaced for the next encounter must not take the new encounter's positions.
+    if (!stage || !turn || stageRef.current !== stage) return
     for (const [id, p] of Object.entries(saveRef.current?.positions ?? {})) {
       if (stage.cast.some((c) => c.id === id)) stage.placeCast(id, [p.x, p.z], (p.ry * 180) / Math.PI)
     }
-  }, [stage, turn?._id])
+  }, [stage, stageRef, turn?._id])
   useEffect(() => {
-    if (!stage || !save || !turn || busy) return
+    if (!stage || !save || !turn || busy || stageRef.current !== stage) return
     const pending = Object.entries(save.movement).find(([key]) => key.startsWith(`${turn._id}:`) && !save.appliedMovement?.includes(key) && !moved.current.has(key))
     if (!pending) return
     const [key, movement] = pending
     const c = turn.characters.find((c) => c.id === movement.actorId)
-    if (!c || !c.isComplete || !stage.cast.some((s) => s.id === stageId(c.name))) return
+    if (!c || !c.isComplete || !castIdFor(stage.cast, c)) return
     const check = save.rollChecks?.[key]
     if (check && c.rollResult === undefined) return
     moved.current.add(key)
@@ -143,8 +142,10 @@ export function DesktopGame() {
       busyRef.current = true
       setBusy(true)
       try {
-        const positions = check && c.rollResult! < check.dc ? stagePositions(stage) : await applyMovement(stage, c.name, movement.intent)
+        const positions = check && c.rollResult! < check.dc ? stagePositions(stage) : await applyMovement(stage, c, movement.intent)
         busyRef.current = false
+        // A walk cut off by a scene change belongs to a renderer that no longer exists.
+        if (stageRef.current !== stage) return
         await invoke({ kind: "positions", turnId: turn._id, positions, appliedMovement: key })
       } catch (error) {
         setError(`Could not save the movement: ${String(error)}`)
@@ -153,13 +154,14 @@ export function DesktopGame() {
         setBusy(false)
       }
     })()
-  }, [stage, save, turn, busy, invoke])
+  }, [stage, stageRef, save, turn, busy, invoke])
   const focus = useCallback(
     (id: string) => {
-      const character = saveRef.current?.turns.find((t) => t._id === saveRef.current?.adventure.currentTurnId)?.characters.find((c) => c.id === id || stageId(c.name) === id)
+      const characters = saveRef.current?.turns.find((t) => t._id === saveRef.current?.adventure.currentTurnId)?.characters
+      const character = characters?.find((c) => c.id === id) ?? characters?.find((c) => stage && castIdFor(stage.cast, c) === id)
       if (!character) return
-      const sid = stageId(character.name)
-      if (stage?.cast.some((c) => c.id === sid) && focused.current !== id) {
+      const sid = stage && castIdFor(stage.cast, character)
+      if (stage && sid && focused.current !== id) {
         stage.shot({ subject: sid, distance: 4, angle: 18, height: 1.6, lookHeight: 1.1, fov: 40 })
         focused.current = id
         return
@@ -203,20 +205,23 @@ export function DesktopGame() {
     return () => removeEventListener("keydown", fn)
   }, [stage])
   useEffect(() => {
-    if (stage && actor && !reading && stage.cast.some((c) => c.id === stageId(actor.name))) stage.shot({ subject: stageId(actor.name), distance: 5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 })
+    const sid = stage && actor && castIdFor(stage.cast, actor)
+    if (stage && sid && !reading) stage.shot({ subject: sid, distance: 5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 })
   }, [stage, actor?.id, reading])
   const onTop = useCallback((px: number) => stage?.setInsets({ bottom: px > 0 ? px + 12 : 0 }), [stage])
-  const party: CardCharacter[] = (turn?.characters ?? []).filter((c) => c.type === "pc").map((c) => ({ id: c.id, name: c.name, role: `${c.race} ${c.archetype}`, portrait: portrait(c.name) }))
+  const party: CardCharacter[] = (turn?.characters ?? []).filter((c) => c.type === "pc").map((c) => ({ id: c.id, name: c.name, role: `${c.race} ${c.archetype}`, portrait: portrait(c) }))
   const cardActor = party.find((c) => c.id === actor?.id) ?? null
   const rr = actor?.rollRequired
   let mode: CardMode | null = null
   if (busy) mode = { kind: "thinking", note: "The GM is resolving the action…" }
+  // Movement is read against the scene on screen, so wait for the next scene before taking an action.
+  else if (scene && !stage && !stageError) mode = { kind: "thinking", note: loading }
   else if (save?.adventure.status === "completed") mode = { kind: "done", next: "Adventure complete" }
   else if (cardActor && rr) mode = { kind: "roll", roll: { skill: rr.rollType, ability: "", dc: rr.difficulty, modifier: rr.modifier ?? 0 } }
   else if (cardActor) mode = { kind: "hold", prompt: `What does ${cardActor.name.split(" ")[0]} do?` }
   const reply = async (value: string) => {
     if (!turn || !actor) return
-    const movement = stage ? context(stage, actor.name, value) : undefined
+    const movement = stage ? context(stage, actor, value) : undefined
     await invoke({ kind: "reply", turnId: turn._id, characterId: actor.id, text: value, movement })
   }
   const journal: JournalTurn[] = (save?.turns ?? []).map((t) => ({
@@ -229,7 +234,7 @@ export function DesktopGame() {
       containerRef={containerRef}
       title={{ eyebrow: "MARCH OF DAVOS", text: turn?.title ?? "Arrival at Kordavos" }}
       location={{
-        eyebrow: atGate ? "Kordavos checkpoint" : "Story view",
+        eyebrow: scene?.location ?? "Story view",
         title: actor ? `${actor.name.split(" ")[0]}'s turn` : `Round ${turn?.order ?? 1}`,
         status: save ? `Saved locally · ${save.provider}` : "",
       }}
@@ -254,14 +259,14 @@ export function DesktopGame() {
             </>
           )}
           <TurnOrder
-            order={(turn?.characters ?? []).map((c) => ({ id: c.id, name: c.name, portrait: portrait(c.name), npc: c.type === "npc" }))}
+            order={(turn?.characters ?? []).map((c) => ({ id: c.id, name: c.name, portrait: portrait(c), npc: c.type === "npc" }))}
             activeId={actor?.id ?? null}
             label={actor?.name}
             compact={compact}
             onPick={focus}
           />
           <div
-            className={`pointer-events-none absolute z-20 ${!atGate && reading ? "left-1/2 top-1/2 w-[min(680px,75vw)] -translate-x-1/2 -translate-y-1/2" : "bottom-[118px] left-8 w-[min(460px,35vw)]"}`}
+            className={`pointer-events-none absolute z-20 ${!scene && reading ? "left-1/2 top-1/2 w-[min(680px,75vw)] -translate-x-1/2 -translate-y-1/2" : "bottom-[118px] left-8 w-[min(460px,35vw)]"}`}
           >
             {reading && (
               <Narration
@@ -385,7 +390,12 @@ export function DesktopGame() {
               ))}
             </select>
           </label>
-          <Button variant="epic" className="mt-2 text-xl" disabled={!loaded || busy || !providers.length || (!stage && !stageError)} onClick={() => void invoke({ kind: "start", provider: provider as "claude" })}>
+          <Button
+            variant="epic"
+            className="mt-2 text-xl"
+            disabled={!loaded || busy || !providers.length || (!stage && !stageError)}
+            onClick={() => void invoke({ kind: "start", provider: provider as "claude" })}
+          >
             {busy ? "Starting…" : "Play"}
           </Button>
           {!loaded && <p>Loading your saved adventure…</p>}

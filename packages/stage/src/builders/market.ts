@@ -157,6 +157,8 @@ export function lantern(b: Sink, M: M, x: number, y: number, z: number) {
 }
 
 const GOODS = ["pots", "baskets", "cloth", "sacks", "arms"] as const
+// Chosen only by name, so `random` stalls keep the picks they had.
+const NAMED_GOODS = ["jewels", "spices", "none"] as const
 // A trader's stall: four poles, a pitched cloth roof, a ragged valance, a counter with goods, and stock behind.
 function buildStall(
   ctx: BuildCtx,
@@ -186,9 +188,17 @@ function buildStall(
   for (const s of [-1, 1]) F.box(M.table, s * (w / 2 - 0.35), 0.45, d / 2 - 0.45, 0.1, 0.9, 0.7)
   F.box(M.clothDrab, 0, 0.6, d / 2 - 0.08, w - 0.5, 0.6, 0.03)
   const goods = p.goods === "random" ? rand.pick(GOODS) : p.goods
-  for (let gx = -w / 2 + 0.6; gx < w / 2 - 0.4; gx += rand(0.55, 0.8)) {
+  for (let gx = -w / 2 + 0.6; goods !== "none" && gx < w / 2 - 0.4; gx += rand(0.55, 0.8)) {
     const zc = d / 2 - 0.45
-    if (goods === "pots") pot(b, M, rand, gx, 0.97, zc, rand(0.3, 0.55))
+    if (goods === "jewels") {
+      // A shallow casket heaped with gold and stones.
+      F.box(M.chest, gx, 1.02, zc, 0.4, 0.1, 0.28)
+      for (let i = 0; i < 6; i++) F.sphere(rand.pick([M.coin, M.coin, M.goodsRed, M.goodsTeal]), gx + rand(-0.14, 0.14), 1.1, zc + rand(-0.08, 0.08), 0.035, 0.03, 0.035, 6)
+    } else if (goods === "spices") {
+      // Stoppered jars beside an open heap of chilli, saffron, paprika or herbs.
+      pot(b, M, rand, gx - 0.12, 0.97, zc - 0.18, rand(0.18, 0.26))
+      F.sphere(rand.pick([M.goodsRed, M.goodsYellow, M.gourd, M.goodsGreen]), gx + 0.12, 0.99, zc + 0.1, 0.15, 0.07, 0.15, 8)
+    } else if (goods === "pots") pot(b, M, rand, gx, 0.97, zc, rand(0.3, 0.55))
     else if (goods === "baskets") basket(b, M, rand, gx, 0.97, zc, rand(0.35, 0.5))
     else if (goods === "cloth")
       F.geo(
@@ -230,7 +240,7 @@ export const stall = defineBuilder(
       w: size(20).default(5),
       d: size(20).default(3.6),
       cloth: matName,
-      goods: z.enum(["random", ...GOODS]).default("random"),
+      goods: z.enum(["random", ...GOODS, ...NAMED_GOODS]).default("random"),
       back: z.boolean().default(true),
       sides: z.boolean().default(true),
       frontHeight: size(10).optional(),

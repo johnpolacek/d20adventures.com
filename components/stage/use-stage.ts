@@ -16,6 +16,9 @@ export function useStage(container: RefObject<HTMLDivElement | null>, opts: { se
     if (!el || !opts) return
     let cancelled = false
     let created: Stage | null = null
+    // A new set starts clean: no error or status left over from the one it replaces.
+    setError(null)
+    setStatus("Loading")
     ;(async () => {
       const { createStage } = await import("@d20/stage")
       created = await createStage({ container: el, set: opts.set, staging: opts.staging, tier: opts.tier ?? "auto", flags: opts.flags, onProgress: setStatus })
@@ -30,13 +33,15 @@ export function useStage(container: RefObject<HTMLDivElement | null>, opts: { se
       ;(window as unknown as { __stage?: Stage }).__stage = created
     })().catch((err) => {
       console.error(err)
-      setError(err instanceof Error ? err.message : String(err))
+      if (!cancelled) setError(err instanceof Error ? err.message : String(err))
     })
     return () => {
       cancelled = true
       created?.dispose()
       stageRef.current = null
       setStage(null)
+      const w = window as unknown as { __stage?: Stage }
+      if (w.__stage === created) delete w.__stage
     }
   }, [container, opts])
 

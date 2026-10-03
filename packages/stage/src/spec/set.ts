@@ -30,6 +30,7 @@ const masonry = z
     scale: num(0.1, 10).optional(),
     roughness: unit.optional(),
     ground: z.boolean().optional(),
+    roads: z.boolean().optional(),
     doubleSided: z.boolean().optional(),
   })
   .strict()

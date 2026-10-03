@@ -6,6 +6,7 @@ import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventure
 import type { RuntimeArtifacts } from "@d20/gm-core/wiki-adventures/types"
 import { MOVEMENT_SYSTEM, movementIntentSchema, movementPrompt } from "@d20/stage/movement"
 import { z } from "zod"
+import { spatialContext } from "../src/scenes"
 import { applyCharacterUpdates, characterContext, desktopPatchSchema } from "./characters"
 import type { LocalStore } from "./store"
 
@@ -44,8 +45,7 @@ export function game(store: LocalStore, pack: Pack, llm: Llm) {
     loadWikiRuntime: async () => pack,
     loadPlan: async () => buildAdventurePlanViewFromArtifacts(artifacts),
     loadLegacyPlan: async () => null,
-    spatialContext: async (_setting, _plan, encounter) =>
-      encounter === "the-gates-of-kordavos" ? `The party stands at Garlan's checkpoint. Saved stage positions in metres: ${JSON.stringify(store.state?.positions ?? {})}` : undefined,
+    spatialContext: async (_setting, _plan, encounter, characters) => spatialContext(encounter, characters, store.state?.positions ?? {}),
   }
   let inferenceFailure: unknown
   const tracked: Llm = {

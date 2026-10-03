@@ -7,6 +7,7 @@ import { Batch, DEG, M4, resetGeometryCache } from "../kit/geometry"
 import { createRand, hashSeed, type Rand } from "../kit/rng"
 import type { MaterialLibrary } from "../materials/library"
 import { type CrowdGroup, LIMITS, objectEnvelope, type SetSpec, setSpecSchema } from "./set"
+import { onFootprint } from "./walk"
 
 export class SetBuildError extends Error {
   constructor(
@@ -46,20 +47,7 @@ export function buildSetGeometry(spec: SetSpec, library: MaterialLibrary): Built
     const e = new THREE.Euler().setFromQuaternion(_q, "YXZ")
     return e.y
   }
-  const isBlocked = (x: number, z: number) => {
-    for (const f of footprints) {
-      if (f.kind === "circle") {
-        if (Math.hypot(x - f.x, z - f.z) < f.r) return true
-        continue
-      }
-      const dx = x - f.x
-      const dz = z - f.z
-      const c = Math.cos(f.ry)
-      const s = Math.sin(f.ry)
-      if (Math.abs(dx * c - dz * s) < f.hw && Math.abs(dx * s + dz * c) < f.hd) return true
-    }
-    return false
-  }
+  const isBlocked = (x: number, z: number) => onFootprint(footprints, x, z)
 
   function place(raw: Record<string, unknown>, parent: THREE.Matrix4, rand: Rand, path: string, depth: number, inherited: Record<string, string>) {
     if (depth > LIMITS.depth) throw new SetBuildError(path, `layouts nest deeper than ${LIMITS.depth}`)
@@ -170,15 +158,7 @@ export function populateCrowd(spec: SetSpec, footprints: Footprint[], anchors: A
     ...crowd.avoid.rects.map(([x, z, hw, hd, ry]) => ({ kind: "rect" as const, x, z, hw, hd, ry: ry * DEG })),
     ...crowd.avoid.circles.map(([x, z, r]) => ({ kind: "circle" as const, x, z, r })),
   ]
-  const blocked = (x: number, z: number) =>
-    blockers.some((f) => {
-      if (f.kind === "circle") return Math.hypot(x - f.x, z - f.z) < f.r
-      const dx = x - f.x
-      const dz = z - f.z
-      const c = Math.cos(f.ry)
-      const s = Math.sin(f.ry)
-      return Math.abs(dx * c - dz * s) < f.hw && Math.abs(dx * s + dz * c) < f.hd
-    })
+  const blocked = (x: number, z: number) => onFootprint(blockers, x, z)
   const resolvePath = (ref: string | [number, number][], at: string) => {
     if (Array.isArray(ref)) return ref
     const p = spec.paths[ref]

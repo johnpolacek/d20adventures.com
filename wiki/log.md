@@ -4,6 +4,12 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-03, Harvest Festival desktop scene
+
+Resumed the handoff in `feature/desktop-stage-play` with owner decisions: keep four Codex drafts, regenerate Karim in Blackthorn black and gold, generate backs with the gate pipeline, keep performers on the ground in front of a low stage, and run the full native check. Added the Kordavos harvest square set and Harvest Festival staging, an encounter-to-scene map for desktop, festival map staging for the GM, and content-id cast ids so the unrelated `liora` NPC cannot collide. Engine additions are solid primitives, named stall goods, a ground `roads` flag, shared walk checks, and walk checks in `stage:check`. Native testing found and fixed a walk that stalled while the window was covered.
+
+Eleven desktop tests, TypeScript, scoped Biome, `stage:check`, browser renderer checks at DPR 2, and two release builds passed. The packaged app with live Claude advanced from the gate to the festival on its second round, switched sets, focused and opened Madam Zephyra, saved Yeva's and Branka's walks, and reopened without replaying them. The user save was restored unchanged. Details: [the integration plan](plans/feature-desktop-stage-play.md#festival-results).
+
 ## 2026-10-03, Harvest Festival handoff
 
 Owner initially authorized the second desktop 3D scene, then stopped generation and requested a handoff. Only planning documents changed. No scene, staging, runtime, or UI code was written, and no new build or tests ran. Five character-image requests had already completed before cancellation was checked. Their paths and prompts are recorded in [the handoff](plans/harvest-festival-handoff.md). They remain unreviewed outside the repo and are not integrated. Work remains isolated on `feature/desktop-stage-play`.

@@ -22,6 +22,8 @@ export interface MasonryOptions {
   scale?: number
   roughness?: number
   ground?: boolean
+  // Ground only: the gate approach's wear (cart ruts down the middle, dust toward the edges). Off for town squares.
+  roads?: boolean
   doubleSided?: boolean
 }
 
@@ -45,8 +47,9 @@ export function masonry(ctx: MaterialContext, name: string, o: MasonryOptions = 
   const m = new THREE.MeshStandardMaterial({ name, color: "#ffffff", roughness: o.roughness ?? 0.92, metalness: 0, side: o.doubleSided ? THREE.DoubleSide : THREE.FrontSide })
   m.userData.uniforms = u
   const ground = !!o.ground
-  if (ground) m.defines = { MGROUND: "" }
-  return stageMaterial(m, ctx.shared, `masonry${ground ? "g" : ""}`, (s) => {
+  const roads = ground && o.roads !== false
+  if (ground) m.defines = roads ? { MGROUND: "", MROADS: "" } : { MGROUND: "" }
+  return stageMaterial(m, ctx.shared, `masonry${ground ? (roads ? "g" : "gs") : ""}`, (s) => {
     Object.assign(s.uniforms, u)
     s.vertexShader = s.vertexShader
       .replace("#include <common>", "#include <common>\nvarying vec2 vMUV; varying vec3 vMWorld; varying vec3 vMNormalW;")
@@ -98,8 +101,12 @@ mBase *= mix(.58, 1.0, smoothstep(0.0, 5.5, mW.y));
 mBase = mix(mBase, mBase * 1.32 + .015, clamp(vMNormalW.y, 0.0, 1.0) * .4 * mGrime);
 float mMortarAmt = (1.0 - smoothstep(mJoint * .15, mJoint * .5, mEdge)) * mSharp;
 #ifdef MGROUND
+#ifdef MROADS
 float mDust = clamp(smoothstep(.36, .72, mfbm(mW.xz * .045)) + smoothstep(18.0, 60.0, mW.z) * .75 + smoothstep(24.0, 60.0, abs(mW.x)) * .6, 0.0, 1.0);
 mDust = max(mDust, smoothstep(.25, 0.0, abs(abs(mW.x + sin(mW.z * .05) * 1.5) - 2.1)) * .7 * smoothstep(0.0, 14.0, mW.z));
+#else
+float mDust = smoothstep(.36, .72, mfbm(mW.xz * .045)) * .8;
+#endif
 vec3 mDirt = mix(vec3(.43, .3, .21), vec3(.62, .47, .33), mfbm(mW.xz * .31)) * (.82 + .3 * mnoise(mW.xz * 2.7));
 mBase = mix(mBase, mDirt, mDust);
 mMortarAmt *= 1.0 - mDust;

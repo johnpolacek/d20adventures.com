@@ -1,0 +1,124 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "march-of-davos/the-harvest-festival",
+  "set": "realm-of-myr/kordavos-harvest-square",
+  "cast": [
+    {
+      "id": "branka-stoneveil",
+      "name": "Branka Stoneveil",
+      "role": "Dwarf fighter",
+      "height": 1.38,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/branka-front.webp",
+        "back": "/stage/fixtures/march-of-davos/branka-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/branka-portrait.jpg"
+      },
+      "at": "party1",
+      "facing": 180
+    },
+    {
+      "id": "cassia-verane",
+      "name": "Cassia Verane",
+      "role": "Human wizard",
+      "height": 1.72,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/cassia-front.webp",
+        "back": "/stage/fixtures/march-of-davos/cassia-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/cassia-portrait.jpg"
+      },
+      "at": "party2",
+      "facing": 185
+    },
+    {
+      "id": "yeva-softstep",
+      "name": "Yeva Softstep",
+      "role": "Halfling rogue",
+      "height": 1.08,
+      "art": { "front": "/stage/fixtures/march-of-davos/yeva-front.webp", "back": "/stage/fixtures/march-of-davos/yeva-back.webp", "portrait": "/stage/fixtures/march-of-davos/yeva-portrait.jpg" },
+      "at": "party3",
+      "facing": 165
+    },
+    {
+      "id": "milos-radan",
+      "name": "Milos Radan",
+      "role": "Human cleric",
+      "height": 1.8,
+      "art": { "front": "/stage/fixtures/march-of-davos/milos-front.webp", "back": "/stage/fixtures/march-of-davos/milos-back.webp", "portrait": "/stage/fixtures/march-of-davos/milos-portrait.jpg" },
+      "at": "party4",
+      "facing": 180
+    },
+    {
+      "id": "karim-the-jewel-merchant",
+      "name": "Karim",
+      "role": "Jewel merchant",
+      "height": 1.78,
+      "art": { "front": "/stage/fixtures/march-of-davos/karim-front.webp", "back": "/stage/fixtures/march-of-davos/karim-back.webp", "portrait": "/stage/fixtures/march-of-davos/karim-portrait.jpg" },
+      "at": "karim",
+      "facing": [0, 15]
+    },
+    {
+      "id": "madam-zephyra",
+      "name": "Madam Zephyra",
+      "role": "Fortune teller",
+      "height": 1.84,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/zephyra-front.webp",
+        "back": "/stage/fixtures/march-of-davos/zephyra-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/zephyra-portrait.jpg"
+      },
+      "at": "zephyra",
+      "facing": [0, 12]
+    },
+    {
+      "id": "finnian-the-fire-eater",
+      "name": "Finnian",
+      "role": "Fire-eater",
+      "height": 1.12,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/finnian-front.webp",
+        "back": "/stage/fixtures/march-of-davos/finnian-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/finnian-portrait.jpg"
+      },
+      "at": "finnian",
+      "facing": [2, 12]
+    },
+    {
+      "id": "liora-the-spice-merchant",
+      "name": "Liora",
+      "role": "Spice merchant",
+      "height": 1.52,
+      "art": { "front": "/stage/fixtures/march-of-davos/liora-front.webp", "back": "/stage/fixtures/march-of-davos/liora-back.webp", "portrait": "/stage/fixtures/march-of-davos/liora-portrait.jpg" },
+      "at": "liora",
+      "facing": [0, 15]
+    },
+    {
+      "id": "merrick-the-musician",
+      "name": "Merrick",
+      "role": "Musician",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/merrick-front.webp",
+        "back": "/stage/fixtures/march-of-davos/merrick-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/merrick-portrait.jpg"
+      },
+      "at": "merrick",
+      "facing": [0, 12]
+    }
+  ],
+  "shots": {
+    "party": {
+      "subjects": ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+      "offset": [-2.2, 3.2, 3.6],
+      "target": [0, 1.2, 0],
+      "relative": "facing",
+      "fov": 46,
+      "label": "Party"
+    },
+    "jewels": { "subject": "karim-the-jewel-merchant", "distance": 3.4, "angle": 24, "height": 1.6, "lookHeight": 1.3, "fov": 46, "label": "Jewel stall" },
+    "spices": { "subject": "liora-the-spice-merchant", "distance": 3.2, "angle": -24, "height": 1.5, "lookHeight": 1.1, "fov": 46, "label": "Spice stall" },
+    "fortune": { "subject": "madam-zephyra", "distance": 3.6, "angle": 22, "height": 1.7, "lookHeight": 1.4, "fov": 46, "label": "Fortune teller" },
+    "fire": { "subject": "finnian-the-fire-eater", "distance": 3.4, "angle": -20, "height": 1.3, "lookHeight": 0.85, "fov": 46, "label": "Fire-eater" }
+  },
+  "shot": "square"
+}

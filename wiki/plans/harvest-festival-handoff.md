@@ -2,6 +2,8 @@
 
 [Home](../index.md) · [Plans](index.md) · [Desktop integration](feature-desktop-stage-play.md) · [Stage engine](../stage-engine.md)
 
+Status: resumed and implemented later on 2026-10-03. Owner decisions and results are in [the integration plan](feature-desktop-stage-play.md#festival-results). This page is kept as the handoff record.
+
 Prepared 2026-10-03. Owner stopped implementation and requested a handoff. No festival scene, staging, runtime, or UI code was written. No new validation or native build was run. Only planning and handoff documents changed.
 
 ## Resume here

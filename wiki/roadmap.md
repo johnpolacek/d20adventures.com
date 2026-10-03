@@ -10,7 +10,7 @@ Stageview is the owner's chosen primary play screen, decided 2026-09-29. The eng
 
 Next work:
 
-1. Add the Harvest Festival set and further authored staging.
+1. Add further authored sets and staging. The Harvest Festival set exists on desktop in `feature/desktop-stage-play` (2026-10-03). Clan Conflict is next in March of Davos.
 2. Extend the native turn UI with generated beats and narration synchronization. The gate scene now uses real local turns. The scripted web demo remains public at `/demo/kordavos`.
 3. Cover encounters with authored or generic sets and default staging.
 4. Verify phone landscape handling, accessibility, reduced motion, and text fallback on devices that cannot run the stage.

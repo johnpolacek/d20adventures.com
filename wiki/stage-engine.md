@@ -2,7 +2,7 @@
 
 [Home](index.md) · [Plans](plans/index.md) · [Stageview](plans/stageview.md) · [Testing](plans/testing-runbook.md)
 
-Status: Implemented reference. Engine merged in `384a622` on 2026-09-29. Moved to `packages/stage` for web and desktop in the unmerged `feature/desktop-stage-play` worktree on 2026-10-02. Native real-turn integration is recorded in [its plan](plans/feature-desktop-stage-play.md). Performance results below remain dated evidence.
+Status: Implemented reference. Engine merged in `384a622` on 2026-09-29. Moved to `packages/stage` for web and desktop in the unmerged `feature/desktop-stage-play` worktree on 2026-10-02. Native real-turn integration is recorded in [its plan](plans/feature-desktop-stage-play.md). The Kordavos harvest square, the second authored set, was added there on 2026-10-03. Performance results below remain dated evidence.
 
 ## Implementation basis
 
@@ -16,12 +16,13 @@ The engine ports the v5 prototype (`~/Projects/d20-graphics-test-2/src/v5/`, thr
 | Materials: masonry, wood, cloth, burlap, metal, plain, heraldry. height fog scoped to Stage materials | Beats, hold binding, Storyview sync (phase 4) |
 | Sky, sun, hemisphere, PMREM environment, AgX | Character art generator and S3 storage (phase 4) |
 | Post: 4× MSAA with resolved depth, FXAA, bloom, quarter-res GTAO, Kuwahara paint at fixed internal height with depth-scaled radius, character mask | Generated turn beats and narration synchronization |
-| Crowd: procedural pawns, instanced front/back cards, hybrid LOD, walkers | Festival street as its own set (phase 3) |
+| Crowd: procedural pawns, instanced front/back cards, hybrid LOD, walkers | Clan Conflict and later encounters (story view on desktop) |
 | Named characters as front/back standees with alpha-derived normals | Procedural hero rigs and the MakeHuman head (superseded by standees) |
 | Quality tiers, pause when hidden, `dispose()` | Mobile measurement |
 | Set spec + interpreter + parametric builders. the Kordavos gate as the first spec | |
 | Minimal staging spec (cast at marks, shots relative to cast) for `/dev/stage` | |
 | Native gate scene and HUD connected to local CLI GM turns, movement, and SQLite saves | Further sets and native gameplay coverage |
+| Kordavos harvest square and the Harvest Festival staging, selected by encounter on desktop | Raised cast placement (festival performers stand in front of the stage) |
 
 ## Module layout
 
@@ -32,7 +33,7 @@ The engine ports the v5 prototype (`~/Projects/d20-graphics-test-2/src/v5/`, thr
 | `packages/stage/src/render/` | Paint pass, character mask, scaled GTAO, composer pipeline, tiers |
 | `packages/stage/src/figures/` | Pawns, card layer and atlas, crowd population and LOD, standees |
 | `packages/stage/src/builders/` | Registry of parametric builders (zod params, material roles) |
-| `packages/stage/src/spec/` | Set and staging schemas, the interpreter |
+| `packages/stage/src/spec/` | Set and staging schemas, the interpreter, and `walk.ts` (footprint tests and straight-line reach, shared by the build, the crowd, the runtime and `stage:check`) |
 | `packages/stage/src/sets/`, `packages/stage/src/stagings/` | Repo-local specs (phase 2: the Kordavos gate and its dev staging) |
 | `packages/stage/src/stage.ts` | Runtime: renderer, camera, shots, loop, pause, dispose, stats |
 | `app/dev/stage/` | Dev-only viewer, `?set=&staging=&quality=` |
@@ -47,7 +48,7 @@ JSON only: no expressions, no code. Metres. `y` up. ground at `y = 0`. the set f
 | `format`, `version`, `id`, `settingId`, `locationId`, `title`, `seed` | Identity. `seed` drives every random choice (per object, so editing one object does not reshuffle the rest) |
 | `atmosphere` | Sun direction, colour, intensity, shadow box. hemisphere. sky colours. fog density (fog colour = sky horizon). environment intensity. exposure. wind |
 | `camera` | Near/far, bounds box, orbit limits |
-| `materials` | Name → `{ type: masonry \| wood \| cloth \| burlap \| metal \| plain, …params }`. cloth can carry `heraldry` (a named banner design) and `tatters` |
+| `materials` | Name → `{ type: masonry \| wood \| cloth \| burlap \| metal \| plain, …params }`. cloth can carry `heraldry` (a named banner design) and `tatters`. Ground masonry draws the gate road's ruts and edge dust unless `roads: false` |
 | `objects[]` | `{ type, id?, at?, yaw?, materials?, …params }` , `type` names a builder. params are validated by that builder's schema (unknown keys rejected, ranges clamped) |
 | `crowd` | `library` (crowd art id), `avoid` (rects and circles), `groups[]`: `scatter` (area, count, density rects, mix, facing), `line`, `points`, `path` (people along a path), `walkers` (loop or ping-pong along a path), `anchors` (people on builder-emitted anchors such as parapet lookouts) |
 | `marks` | Name → `{ at: [x, z], yaw? }` |
@@ -57,9 +58,9 @@ JSON only: no expressions, no code. Metres. `y` up. ground at `y = 0`. the set f
 
 **Builders.** Each builder declares a zod param schema and **material roles** with default material names (role `wall` → material `stone` unless the object overrides it). Builders author in local coordinates. the interpreter supplies a framed batch (`at` + `yaw`), so footprints and anchors land in world space.
 
-- Primitives: `box`, `cylinder`, `cone`, `sphere`, `torus`, `lathe`, `beam`, `extrude` (polygon with holes), `opening` (arched window).
+- Primitives: `box`, `cylinder`, `cone`, `sphere`, `torus`, `lathe`, `beam`, `extrude` (polygon with holes), `opening` (arched window). `box` and `cylinder` take `solid: true` to register a footprint (a platform, a well).
 - Layouts: `group` (children in a local frame), `row` (items along a line at a random step), `scatter` (items in an area), each with `vary` (numeric ranges) and `choose` (discrete picks) per placement.
-- Kit (ported from v5): fortifications (`gatehouse`, `drumTower`, `curtainWall`, `roundTower`, `squareTower`, `archScreen`, `skyline`, `dome`), town (`house`, `farTown`), market (`stall`, `sail`, `spearRack`, `standard`, `crate`, `barrel`, `sack`, `pot`, `basket`, `lantern`, `goodsPile`), festival (`bunting`, `sheaf`, `gourds`), checkpoint (`barrier`, `ropeLine`, `brazier`, `ledgerTable`, `cart`, `awning`, `bannerPole`), dressing (`banner`, `pennant`), ground (`groundDisc`, `land`).
+- Kit (ported from v5): fortifications (`gatehouse`, `drumTower`, `curtainWall`, `roundTower`, `squareTower`, `archScreen`, `skyline`, `dome`), town (`house`, `farTown`), market (`stall` with goods `pots`, `baskets`, `cloth`, `sacks`, `arms`, or by name only `jewels`, `spices`, `none`, `sail`, `spearRack`, `standard`, `crate`, `barrel`, `sack`, `pot`, `basket`, `lantern`, `goodsPile`), festival (`bunting`, `sheaf`, `gourds`), checkpoint (`barrier`, `ropeLine`, `brazier`, `ledgerTable`, `cart`, `awning`, `bannerPole`), dressing (`banner`, `pennant`), ground (`groundDisc`, `land`).
 
 **Limits** (untrusted input): object count, nesting depth, per-layout counts, crowd total, segment counts and extents are capped in the schemas.
 
@@ -70,6 +71,7 @@ JSON only: no expressions, no code. Metres. `y` up. ground at `y = 0`. the set f
 ## Verification
 
 - `pnpm exec tsc --noEmit`, `pnpm lint`, `pnpm build`.
+- `pnpm stage:check` also checks each staging's art files exist, fails if a cast member starts inside a solid footprint, and reports every straight walk from a cast member to a labelled mark or to conversation distance of another cast member that something blocks.
 - `scripts/stage-verify.ts` over CDP against system Chrome at `--force-device-scale-factor=2`, 1440×900 CSS: page ready, no exceptions, every program runnable, budgets per shot (≤ 300 draw calls, ≤ 2.5M triangles), a full screenshot per shot and native-pixel crops of each named character.
 - Compare against the prototype's `previews/v5b-*` and `v5w-*` shots.
 
@@ -110,7 +112,9 @@ Measured on the M3 in Chrome 154, 1440×900 CSS, dev build, `motion=0` unless no
 
 ## Current limits
 
-- Phase 3: generalize `Director` into set `loops` and staging scripts (the queue is static here), the festival street as its own set, time of day and weather toggles.
+- Phase 3: generalize `Director` into set `loops` and staging scripts (the queue is static here), time of day and weather toggles.
+- Cast stand on the ground plane. The festival performers stand in front of a low stage, with crowd cards (which take a `y`) on it.
+- Movement is a straight walk that stops at the first footprint. It does not route around stalls.
 - The spec has no `loops`, and staging has no scripts or beats yet.
 - Heraldry is limited to three named designs, with no parametric heraldry.
 - Pawn and card swaps still pop with no crossfade. The 16 crowd variants repeat in dense areas.
@@ -125,3 +129,11 @@ Measured on the M3 in Chrome 154, 1440×900 CSS, dev build, `motion=0` unless no
 - In the browser: pause stops frames and resume restarts them. `dispose()` releases the context and removes the canvas. clicking a standee opens its plate and head-anchored bubble.
 
 Remaining product work is tracked in [Stageview](plans/stageview.md).
+
+## Recorded checks, 2026-10-03, Kordavos harvest square
+
+- `pnpm stage:check`: both sets and stagings pass. The square places 138 objects, 0.12M static triangles, 76 footprints and 454 people (44 walking). The gate is unchanged: 0.56M static triangles and 1,593 people.
+- Walks: in the festival staging, 160 of 162 are clear. Every walk from the party to each labelled place and each NPC is clear. The two blocked walks are NPCs to the food stalls, which nothing asks for.
+- `stage:verify` on the festival (dev build, M3, 1440×900 CSS): all 8 shots pass. Ultra at DPR 2: 159–180 draw calls, 0.24–0.26M triangles, ready in 4.1 s. Balanced: 142–163 calls. Native-pixel crops of all five NPCs keep faces and costume detail. Frame rates in that run were noisy (6–31 fps ultra, 25–66 balanced) while other work shared the 8 GB machine, so they are not a benchmark.
+- `moveCast` also ends a walk on a timer at its expected arrival, and `dispose()` resolves walks in progress. Frames stop while a window is covered, and the native app's turn used to wait on the walk.
+- After the shared walk/footprint refactor and the ground `roads` flag, the gate's balanced shots still pass with the same counts (1.37–1.57M triangles, 172–179 calls).

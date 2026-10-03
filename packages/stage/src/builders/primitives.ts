@@ -8,11 +8,14 @@ import { defineBuilder, matName, num, segments, size, vec2, vec3 } from "./types
 // Each sits on the object's origin: `at` is the centre of its base, so a box with `at: [0, 0]` stands on the ground.
 
 const tilt = { pitch: num(-360, 360).default(0), roll: num(-360, 360).default(0) }
+// `solid` marks the footprint as something people walk around (a platform, a well) and the crowd keeps off.
+const solid = z.boolean().default(false)
 const uvMode = z.enum(["planar", "radial", "keep"]).optional()
 
-export const boxPrim = defineBuilder(z.object({ size: z.tuple([size(500), size(500), size(500)]), material: matName, ...tilt }).strict(), (ctx, p) => {
+export const boxPrim = defineBuilder(z.object({ size: z.tuple([size(500), size(500), size(500)]), material: matName, solid, ...tilt }).strict(), (ctx, p) => {
   const [w, h, d] = p.size
   ctx.b.add(new THREE.BoxGeometry(1, 1, 1), ctx.mat(p.material), M4(0, 0, 0, 0, 1, 1, 1, p.pitch * DEG, p.roll * DEG).multiply(M4(0, h / 2, 0, 0, w, h, d)))
+  if (p.solid) ctx.footprint(0, 0, w / 2, d / 2)
 })
 
 export const cylinderPrim = defineBuilder(
@@ -24,6 +27,7 @@ export const cylinderPrim = defineBuilder(
       open: z.boolean().default(false),
       material: matName,
       uv: uvMode,
+      solid,
       ...tilt,
     })
     .strict(),
@@ -36,6 +40,7 @@ export const cylinderPrim = defineBuilder(
       flat: p.segments <= 12,
     })
     g.dispose()
+    if (p.solid) ctx.circle(0, 0, Math.max(rb, rt))
   }
 )
 
