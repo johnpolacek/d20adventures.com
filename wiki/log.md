@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-02, desktop release build
+
+Ran `CARGO_BUILD_JOBS=2 pnpm tauri build` in `apps/desktop-spike` at the owner's request. Vite and the optimized Rust release build passed. Rust compilation took 2 minutes 48 seconds. Output: `apps/desktop-spike/src-tauri/target/release/d20-desktop-spike`. Bundling remains disabled, so no `.app` or installer was produced. The executable was not launched in this check. macOS memory pressure rose from normal to warning during compilation and remained at warning immediately afterward.
+
 ## 2026-10-02, desktop state validation and pre-roll batching
 
 Completed the authorized refinement in `spike/desktop-local-play`. Both native trial variants derive a strict nested model contract from the real adventure-patch schema and execute the real wiki commit handler over an in-memory database. Every accepted field survived in all eight runs. Invalid fields now trigger a correction in the spike instead of silently disappearing. Character updates are retained in the saved turn patch, but the existing game code does not apply them to live character fields. That remains explicit follow-up work.
