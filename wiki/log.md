@@ -6,7 +6,7 @@ This log retains durable decisions and dated evidence. Git owns detailed impleme
 
 ## 2026-10-03, The Midnight Summons played to the end on desktop
 
-The desktop app now bundles The Midnight Summons beside March of Davos, and New game picks the adventure. In the packaged app with live Claude, Thalbern finished the adventure in 7 rounds, including a three-round owlbear fight with an attack, an evasion, and Animal Handling, then the ending and starting over. The run found and fixed an end screen with no way forward. Open findings are an NPC status left as "passing", rounds the GM extends past an authored exit, and untested PC damage. Fourteen desktop tests, typechecks, lint, and release builds passed. Details: [the integration plan](plans/feature-desktop-stage-play.md#the-midnight-summons-2026-10-03).
+The desktop app now bundles The Midnight Summons beside March of Davos, and New game picks the adventure. In the packaged app with live Claude, Thalbern finished the adventure in 7 rounds, including a three-round owlbear fight with an attack, an evasion, and Animal Handling, then the ending and starting over. The run found and fixed an end screen with no way forward. A second run had Thalbern beaten to 10% health, rescued by Wollandora, and refuse the mission, reaching the Back Home ending in 11 rounds with his wounds carried through. Open findings are an NPC status left as "passing", rounds the GM extends past an authored exit, an authored greeting that ignores the rescue, and a content typo. Fourteen desktop tests, typechecks, lint, and release builds passed. Details: [the integration plan](plans/feature-desktop-stage-play.md#the-midnight-summons-2026-10-03).
 
 ## 2026-10-03, desktop New game and archive
 

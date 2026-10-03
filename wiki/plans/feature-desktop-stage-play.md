@@ -111,8 +111,15 @@ Findings:
 - Fixed: the finished adventure still said "Thalbern's turn" and offered no way forward. It now shows Adventure complete and an end panel with New game and Journal.
 - Twice the GM held an encounter one more round after its authored exit already applied: after the evasion, and after Thalbern promised help. Explicit actions moved it on. Not changed.
 - An NPC turn set Wollandora's status to "passing", which shows on her character card. Not fixed.
-- Untested: damage to Thalbern, critical health, and the Timely Rescue and Back Home branches, because every owlbear attack missed and Thalbern accepted.
+- Covered by the second run below: damage to Thalbern, critical health, and the Timely Rescue and Back Home branches.
 - Story view has no artwork, since the app only loads bundled images. Thalbern's web portrait is photographic, unlike the painted art elsewhere.
+A second live run on an isolated save played Thalbern recklessly and took the other ending in 11 rounds:
+
+- He shouted and charged, so the owlbear came with no check. In six rounds of melee, all six of his attacks missed (1 to 9 against 13). The owlbear hit three times, taking him from 100% to 75% with Bleeding, then 45%, then 10%.
+- At 10% the core moved to Timely Rescue. Wollandora drove the owlbear off, bound the wound, and helped him to the Stones. His 10% health and Bleeding carried through every later encounter.
+- At the Stones he pleaded injury, heard the request, and then refused. Back Home ended the adventure. The user save was restored unchanged, and the run is kept as `validation-midnight-summons-wounded-2026-10-03.sqlite`.
+- New findings: after the rescue, Wollandora's authored greeting still thanks him for his swiftness, though she carried him there. The GM again held the meeting one round past his first refusal. Back Home's authored text has a typo, "tobe". Bleeding is a label only and never costs health.
+- Still untested in this adventure: hiding from the owlbear at the start, and asking Wollandora for more, which leads to The Missing Relics.
 - Test harness only: keys typed into the app while it sat behind other windows were sometimes dropped. The harness now sets the text box through accessibility and checks it before sending.
 
 ## Remaining scope
