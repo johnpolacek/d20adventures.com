@@ -8,9 +8,9 @@
 //
 // Gated to development: notFound() elsewhere.
 
+import { SETS, STAGINGS } from "@d20/stage/sets"
 import { notFound } from "next/navigation"
 import { isDev } from "@/lib/auth-utils"
-import { SETS, STAGINGS } from "@/lib/stage/sets"
 import { StageViewer } from "./stage-viewer"
 
 type Params = Record<string, string | undefined>

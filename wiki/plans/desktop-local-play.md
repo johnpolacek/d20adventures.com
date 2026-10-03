@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Stageview](stageview.md) · [Architecture](../Architecture.md) · [Roadmap](../roadmap.md)
 
-Status: Phase 0 refinement recorded 2026-10-02 in `spike/desktop-local-play`. Strict nested output preserved accepted state in eight native trials. Combining pre-roll decisions reduced seven requests to five for the three working CLIs. Narrative continuity and character-state application remain open. Gemini compatibility is separate. Product phases remain proposed.
+Status: Phase 0 refinement recorded 2026-10-02 in `spike/desktop-local-play`. Strict nested output preserved accepted state in eight native trials. Combining pre-roll decisions reduced seven requests to five for the three working CLIs. Narrative continuity and character-state application remain open. Gemini compatibility is separate. Phase 1 is extracted. The phase 2 client and initial phase 3 local save/CLI flow are implemented in [Desktop Stageview integration](feature-desktop-stage-play.md), on an unmerged feature branch. Remaining product phases stay open.
 
 A Tauri desktop app becomes the only game client. Solo play is free. The AI Game Master runs through an AI CLI the player already has installed and signed in to with their own subscription. Online multiplayer keeps the GM on the server and is paid by a subscription that grants tokens. The web app's play experience is deprecated once the desktop app ships. Stageview is rebuilding the turn page now, so the stage-first turn page should be built for the desktop app instead of the web app.
 
@@ -50,7 +50,7 @@ Voice provider API keys are the player's own and may be stored locally in the ma
 | Images | `app/api/ai/generate/image/route.ts`, Replicate `flux-2-klein-4b`. | `Images` port. Local uses an image-capable CLI. |
 | Content | `lib/wiki-adventures/local-runtime.ts` compiles source using `node:fs` and S3. | `Content` port. Local play reads bundled, versioned packs. |
 | Narration | `lib/ai/tts.ts` calls the Gemini TTS API directly. | `Narration` port. Local uses the player's own voice provider. |
-| Stage | `lib/stage/`, plain three.js, client only. | Moves as a package unchanged. |
+| Stage | `packages/stage/`, plain three.js, client only. | Shared by web and desktop. |
 | Auth | Clerk in Next. | Not needed for local solo. Needed in the desktop app for online play and purchases. |
 
 ## Target architecture
@@ -60,7 +60,7 @@ pnpm workspace layout:
 | Package | Contents | Must not import |
 |---|---|---|
 | `packages/gm-core` | Turn pipeline, character generation, prompts, zod schemas, rules, port interfaces | Next, Convex, Clerk, AWS, Node built-ins |
-| `packages/stage` | Current `lib/stage/` runtime and set/staging specs | Next, Convex, Clerk |
+| `packages/stage` | Shared renderer runtime and set/staging specs | Next, Convex, Clerk |
 | `apps/desktop` | Tauri shell, Vite, React, stage-first play UI, solo and multiplayer clients | Next |
 | `apps/web` | Current Next app. After deprecation: multiplayer GM endpoints, accounts, billing, content distribution, admin, marketing, downloads | |
 
@@ -222,15 +222,19 @@ Completed locally on 2026-10-02 in `feature/gm-core`. Existing web behavior is p
 - Package/browser boundary checks, exact seven-call GM replay, nine character prompt/schema cases, auth/companion/transition/billing checks, root TypeScript/lint, wiki checks, and production build passed.
 - All 16 Playwright tests passed. The Midnight Summons completed in seven real turns on isolated Convex, covering rolls, combat, NPC dialogue, damage, transitions, and persisted completion.
 
-The spike's strict patch contract and optional combined pre-roll request remain experimental. The next implementation step is the desktop shell using these interfaces. No push or merge was performed.
+The spike's strict patch contract and optional combined pre-roll request remain experimental. The desktop shell now uses these interfaces in the integration worktree. No push or merge was performed.
 
 ### Phase 2, desktop shell and stage-first play
 
-- Create `apps/desktop` with Tauri, Vite, and React. Move `lib/stage/` to `packages/stage`.
+Implemented locally for March of Davos in `feature/desktop-stage-play`. The shared renderer is `packages/stage`. The native client uses the real GM core and SQLite saves. Only the gate has a 3D set. See the integration plan for validation and limits.
+
+- `apps/desktop` uses Tauri, Vite, and React. The renderer is shared through `packages/stage`.
 - Build the [Stageview](stageview.md) phase 4 turn page in the desktop app. Do not build it in the web app.
 - Freeze new play features on the web. Its text turn page keeps running until the desktop app ships.
 
 ### Phase 3, desktop solo
+
+Initial CLI generation, SQLite persistence, bundled content, and four premade player-controlled characters are implemented locally. The remaining items below are the wider solo product scope.
 
 - Rust CLI manager, SQLite saves, and pack loader.
 - Content packs compiled from authored adventures with pre-baked art. Packs are declarative data and never executable code, matching the Stageview set rule.

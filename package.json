@@ -71,7 +71,9 @@
     "audit:wiki-adventures:prod-s3": "node --env-file=.env --env-file=.env.local --import tsx scripts/wiki-adventures-prod-s3-audit.ts",
     "test:setup": "pnpm dev",
     "test:full": "pnpm test:setup && pnpm test",
-    "test:gm-core": "tsx scripts/gm-core-check.ts && tsx scripts/gm-server-check.ts"
+    "test:gm-core": "tsx scripts/gm-core-check.ts && tsx scripts/gm-server-check.ts",
+    "desktop:dev": "pnpm --filter @d20/desktop tauri dev",
+    "desktop:build": "pnpm --filter @d20/desktop tauri build"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.43",
@@ -141,7 +143,8 @@
     "uuid": "^13.0.0",
     "waait": "^1.0.5",
     "zod": "^4.3.6",
-    "zod-to-json-schema": "^3.25.1"
+    "zod-to-json-schema": "^3.25.1",
+    "@d20/stage": "workspace:*"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.6",

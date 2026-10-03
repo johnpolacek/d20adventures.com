@@ -120,29 +120,33 @@ export function StageHud({
         </aside>
 
         {/* The rule over the perspective bar runs edge to edge. */}
-        <div aria-hidden="true" className={cn("stage-rule pointer-events-none absolute inset-x-0 h-px opacity-60", compact ? "bottom-11" : "bottom-24")} />
-        <nav className={cn("absolute flex items-center justify-between gap-6", compact ? "right-4 bottom-0 left-4 h-11" : "right-10 bottom-0 left-10 h-24")} aria-label="Perspectives">
-          {!compact && <span className="hidden shrink-0 text-[8px] tracking-[0.25em] text-[#c0c9be] xl:block">CHOOSE A PERSPECTIVE</span>}
-          <div className="flex min-w-0 gap-1 overflow-x-auto [scrollbar-width:none]">
-            {views.map((v, i) => (
-              <button
-                key={v.id}
-                type="button"
-                aria-pressed={activeView === v.id}
-                onClick={() => onView(v.id)}
-                className={cn(
-                  "flex shrink-0 items-center gap-2.5 rounded-[3px] border whitespace-nowrap transition-colors",
-                  compact ? "px-2 py-1 text-[10px]" : "px-4 py-3 text-[11px]",
-                  activeView === v.id ? "stage-leather border-stage-brass/50 text-[#fbe7c9]" : "border-transparent text-[#bfc5b9] hover:bg-white/5 hover:text-white"
-                )}
-              >
-                <small className={cn("text-[8px]", activeView === v.id ? "text-stage-gold" : "text-[#a6a58c]")}>{String(i + 1).padStart(2, "0")}</small>
-                {v.label}
-              </button>
-            ))}
-          </div>
-          {!compact && <span className="hidden shrink-0 text-[10px] text-[#b9c2b8] lg:block">Drag to look · Scroll to zoom</span>}
-        </nav>
+        {views.length > 0 && (
+          <>
+            <div aria-hidden="true" className={cn("stage-rule pointer-events-none absolute inset-x-0 h-px opacity-60", compact ? "bottom-11" : "bottom-24")} />
+            <nav className={cn("absolute flex items-center justify-between gap-6", compact ? "right-4 bottom-0 left-4 h-11" : "right-10 bottom-0 left-10 h-24")} aria-label="Perspectives">
+              {!compact && <span className="hidden shrink-0 text-[8px] tracking-[0.25em] text-[#c0c9be] xl:block">CHOOSE A PERSPECTIVE</span>}
+              <div className="flex min-w-0 gap-1 overflow-x-auto [scrollbar-width:none]">
+                {views.map((v, i) => (
+                  <button
+                    key={v.id}
+                    type="button"
+                    aria-pressed={activeView === v.id}
+                    onClick={() => onView(v.id)}
+                    className={cn(
+                      "flex shrink-0 items-center gap-2.5 rounded-[3px] border whitespace-nowrap transition-colors",
+                      compact ? "px-2 py-1 text-[10px]" : "px-4 py-3 text-[11px]",
+                      activeView === v.id ? "stage-leather border-stage-brass/50 text-[#fbe7c9]" : "border-transparent text-[#bfc5b9] hover:bg-white/5 hover:text-white"
+                    )}
+                  >
+                    <small className={cn("text-[8px]", activeView === v.id ? "text-stage-gold" : "text-[#a6a58c]")}>{String(i + 1).padStart(2, "0")}</small>
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+              {!compact && <span className="hidden shrink-0 text-[10px] text-[#b9c2b8] lg:block">Drag to look · Scroll to zoom</span>}
+            </nav>
+          </>
+        )}
       </div>
       {children}
     </div>

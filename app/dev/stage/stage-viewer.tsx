@@ -3,8 +3,8 @@
 // Client half of /dev/stage: builds the set with the Stage runtime and shows a dense HUD for shots, tiers, the
 // quality switches and render stats. three.js loads inside the effect, so nothing WebGL touches the server bundle.
 
+import type { Flags, Stage, StageStats, TierName } from "@d20/stage"
 import { useEffect, useRef, useState } from "react"
-import type { Flags, Stage, StageStats, TierName } from "@/lib/stage"
 
 interface Props {
   setKey: string
@@ -55,7 +55,7 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
     let stage: Stage | null = null
     let interval: ReturnType<typeof setInterval> | null = null
     ;(async () => {
-      const [{ createStage }, { SETS, STAGINGS }] = await Promise.all([import("@/lib/stage"), import("@/lib/stage/sets")])
+      const [{ createStage }, { SETS, STAGINGS }] = await Promise.all([import("@d20/stage"), import("@d20/stage/sets")])
       const staging = stagingKey ? await STAGINGS[stagingKey]?.() : null
       const stagedSet = staging && typeof staging === "object" && "set" in staging ? String((staging as { set: string }).set) : null
       const key = params.set ? setKey : stagedSet && SETS[stagedSet] ? stagedSet : setKey

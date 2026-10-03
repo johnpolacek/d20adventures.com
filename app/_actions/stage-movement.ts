@@ -1,9 +1,9 @@
 "use server"
 
+import { MOVEMENT_SYSTEM, type MovementContext, type MovementIntent, movementIntentSchema, movementPrompt } from "@d20/stage/movement"
 import { generateObject } from "ai"
 import { currentModel } from "@/lib/ai/llm"
 import { isDev } from "@/lib/auth-utils"
-import { MOVEMENT_SYSTEM, type MovementContext, type MovementIntent, movementIntentSchema, movementPrompt } from "@/lib/stage/movement"
 
 // Dev-only while Stageview is a mock: maps a player's written action to a movement intent. The real turn loop will run
 // this server-side as part of resolving a reply (and charge it with the turn), then validate the move against the set.

@@ -1,0 +1,9 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "D20 Adventures",
+  "version": "0.1.0",
+  "identifier": "com.d20adventures.desktop",
+  "build": { "beforeDevCommand": "pnpm dev", "beforeBuildCommand": "pnpm build", "devUrl": "http://127.0.0.1:1422", "frontendDist": "../dist" },
+  "app": { "windows": [{ "label": "main", "title": "D20 Adventures", "width": 1440, "height": 960, "minWidth": 900, "minHeight": 650 }], "security": { "csp": "default-src 'self'; script-src 'self'; connect-src ipc: http://ipc.localhost 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:" } },
+  "bundle": { "active": true, "targets": ["app"], "resources": { "resources/runtime.cjs": "runtime.cjs", "resources/pack.json": "pack.json" }, "icon": ["icons/icon.png"] }
+}

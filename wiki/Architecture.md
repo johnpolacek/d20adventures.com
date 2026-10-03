@@ -37,7 +37,7 @@ Clerk's own cookie-only cache invalidation may still POST during sign-in/sign-ou
 
 - [Mapview](plans/mapview.md) loads per-encounter 2D maps from `maps2d/`. Missing maps hide the map surface.
 - [Storyview](storyview.md) generates and caches speech per paragraph, with on-demand or automatic shared charging.
-- [Stage engine](stage-engine.md) runs plain three.js under `lib/stage/`, with declarative sets, standees, instanced crowds, and painterly post-processing. It is currently used only by `/dev/stage`.
+- [Stage engine](stage-engine.md) runs plain three.js under `packages/stage/src/`, with declarative sets, standees, instanced crowds, and painterly post-processing. It is currently used only by `/dev/stage`.
 - [Stageview](plans/stageview.md) will replace the text-first layout with the stage-first turn page. This integration is not yet implemented.
 
 The old r3f encounter renderer, scene-kit, standee/mini generation, and paid mini products were removed. Historical ledger literals and legacy 3D schema fields remain for compatibility. New Stageview fixtures are separate from those retired assets.

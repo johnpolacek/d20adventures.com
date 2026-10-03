@@ -14,7 +14,7 @@ GM core sources updated on 2026-10-02. Other sources reviewed 2026-10-01. Curren
 | `packages/gm-core/src/orchestration/advance-turn.ts`, `convex/adventure.ts` | Current live progression and content re-pinning behavior. |
 | `lib/services/turn-audio-service.ts`, `convex/turnAudio.ts` | Incremental narration, claims, manifests, charging, and auto mode. |
 | `lib/mapview/`, `components/mapview/` | Stored 2D maps, catalog, generation, placement, and rendering. |
-| `lib/stage/`, `public/stage/`, `app/dev/stage/` | Current Stage engine, declarative specs, assets, and preview. |
+| `packages/stage/src/`, `public/stage/`, `app/dev/stage/` | Current Stage engine, declarative specs, assets, and preview. |
 | `tests/`, `scripts/wiki-adventures-*-check.ts`, `scripts/stage-*.ts` | Available verification and its actual scope. Tests are not evidence of passing until run. |
 | `scripts/wt.sh`, root and wiki `AGENTS.md` | Worktree behavior and automation policy. |
 | `packages/gm-core/`, `lib/gm-server/`, `lib/ai/` | Portable GM runtime and typed ports, server adapters, billing, current model, and compatibility wrappers. See [GM core](gm-core.md). |
@@ -22,6 +22,7 @@ GM core sources updated on 2026-10-02. Other sources reviewed 2026-10-01. Curren
 | [Claude Code legal and compliance](https://code.claude.com/docs/en/legal-and-compliance) | Permitted use of a player's own Claude subscription through the unmodified CLI. External, read 2026-10-01. |
 | [Desktop spike](../apps/desktop-spike/README.md), its `harness/` and `results/` | Dated native CLI measurements, complete service-turn traces, exact-prompt/state replay, strict patch-retention checks, paired request-count and native render timings, image artifacts, Clerk ticket sign-in, and Convex connectivity. Limits and external protocol sources are in [phase 0](plans/desktop-local-play.md#phase-0-spike). |
 | `~/Projects/aifilmcamp/apps/macos/Packages/FilmBrain/Sources/FilmBrain/` | Local reuse source for CLI locators, invocation builders, bounded processes, and image generation. No credential files copied. Read 2026-10-01. |
+| `apps/desktop/`, `packages/stage/` | Native client, bundled local GM runtime, SQLite persistence, shared renderer, and the desktop integration tests. |
 | [Decision log](log.md) | Dated milestones, owner decisions, validation evidence, and limits. |
 | Git history through `0eedb26` | Pre-cleanup plans and implementation history. Deleted documents remain recoverable. |
 

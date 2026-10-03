@@ -1,0 +1,33 @@
+{
+  "name": "@d20/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare:runtime": "tsx scripts/build-runtime.ts",
+    "dev": "pnpm prepare:runtime && vite --host 127.0.0.1 --port 1422 --strictPort",
+    "build": "pnpm prepare:runtime && vite build",
+    "check": "tsc -p tsconfig.json",
+    "test": "tsx --test runtime/*.test.ts",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@d20/gm-core": "workspace:*",
+    "@d20/stage": "workspace:*",
+    "@fontsource/cinzel-decorative": "^5.3.0",
+    "@fontsource/rethink-sans": "^5.3.0",
+    "@tauri-apps/api": "^2.0.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "three": "0.183.2",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.2.1",
+    "@tauri-apps/cli": "^2.0.0",
+    "esbuild": "^0.27.4",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3",
+    "vite": "^7.0.0"
+  }
+}

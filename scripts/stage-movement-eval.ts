@@ -3,11 +3,11 @@
 //
 //   node --env-file=.env --env-file=.env.local --import tsx scripts/stage-movement-eval.ts
 
+import { bearing, MOVEMENT_SYSTEM, type MovementContext, movementIntentSchema, movementPrompt } from "@d20/stage/movement"
+import { SETS } from "@d20/stage/sets"
+import { parseSet } from "@d20/stage/spec/build"
 import { generateObject } from "ai"
 import { currentModel } from "../lib/ai/llm"
-import { bearing, MOVEMENT_SYSTEM, type MovementContext, movementIntentSchema, movementPrompt } from "../lib/stage/movement"
-import { SETS } from "../lib/stage/sets"
-import { parseSet } from "../lib/stage/spec/build"
 
 type Case = { actor: string; name: string; action: string; expect: { move: string; place?: string | string[]; character?: string; pace?: string } }
 const CASES: Case[] = [

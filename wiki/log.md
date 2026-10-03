@@ -4,6 +4,14 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-02, desktop Stageview and real local turns
+
+Implemented `apps/desktop` in the isolated `feature/desktop-stage-play` worktree, based on main plus the committed GM core branch. Extracted the renderer to `packages/stage` and retained the web demo. The Tauri client bundles March of Davos, stage assets, fonts, and a Node game worker. It uses the player's installed AI CLI, the shared GM core, and SQLite. Actions, dice, NPCs, authored transitions, journal, camera controls, and player movement are connected to real state. The gate has a 3D set. Later encounters use story view.
+
+The packaged native Claude playthrough covered a failed Persuasion check, natural die persistence, no-roll replies, an NPC response, the gate-to-festival transition, and reopening the saved festival turn. The native renderer reported ready with no JavaScript errors. Three integration tests, root/package typechecks, scoped Biome, renderer content checks, frontend build, Next production build, and macOS release build passed. Details are in [the integration plan](plans/feature-desktop-stage-play.md).
+
+Local saves preserve retry checkpoints and reject stale input. The die is saved before inference. CLI errors cannot commit inherited fallback prose or silently skip a required check. World-state patches receive strict nested validation. Current core behavior still records character patches without applying inventory/effect changes. Only Claude and the social gate encounter were tested natively. One save slot, four premades, Node 24+, CLI sign-in, and unsigned distribution remain explicit limits. No production data changes, push, or merge into main.
+
 ## 2026-10-02, shared GM core extraction
 
 Completed phase 1 locally in `feature/gm-core`, based on spike commit `7ff0b2d`. The pnpm workspace now contains `packages/gm-core`. Twenty gameplay service modules, eight character-generation operations, reply/roll/advance orchestration, shared schemas/types, and pure helpers use typed per-instance interfaces. `lib/gm-server` supplies the current model, billing, Clerk, Convex, content, and narration adapters. Existing server action and import paths remain compatible. No UI or Convex schema changes were needed. The strict-state and combined-call spike experiments were not promoted into the web runtime.

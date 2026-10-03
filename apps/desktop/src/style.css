@@ -1,0 +1,124 @@
+@import "tailwindcss";
+@source "../../../components/stage";
+@source "./";
+@theme {
+  --color-stage-ink: #1c1410;
+  --color-stage-panel: #21160f;
+  --color-stage-gold: #e3b67c;
+  --color-stage-brass: #c79a5a;
+  --color-stage-line: #f0d6b2;
+  --color-stage-cream: #f6ead4;
+  --color-stage-parchment: #f3e6c8;
+  --color-stage-muted: #c9b9a4;
+  --color-stage-sage: #e0e3d6;
+  --font-display: "Cinzel Decorative", Georgia, serif;
+  --font-sans: "Rethink Sans", system-ui, sans-serif;
+}
+@keyframes d20-tumble {
+  0% {
+    transform: perspective(320px) rotateZ(0) rotateX(0) rotateY(0) scale(1);
+  }
+  25% {
+    transform: perspective(320px) rotateZ(210deg) rotateX(38deg) rotateY(-22deg) scale(1.08);
+  }
+  50% {
+    transform: perspective(320px) rotateZ(430deg) rotateX(-26deg) rotateY(24deg) scale(1.05);
+  }
+  75% {
+    transform: perspective(320px) rotateZ(610deg) rotateX(12deg) rotateY(-10deg) scale(1.02);
+  }
+  100% {
+    transform: perspective(320px) rotateZ(720deg) rotateX(0) rotateY(0) scale(1);
+  }
+}
+@keyframes d20-flip {
+  from {
+    transform: perspective(200px) rotateX(85deg);
+    opacity: 0.35;
+  }
+  to {
+    transform: perspective(200px) rotateX(0);
+    opacity: 1;
+  }
+}
+@keyframes d20-land {
+  from {
+    transform: scale(1.35);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+.d20-tumble {
+  animation: d20-tumble 1.2s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.d20-flip {
+  animation: d20-flip 0.11s ease-out;
+}
+.d20-land {
+  animation: d20-land 0.35s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+/* Stageview surfaces: a little of the site's original grain (black paper, "buried" stone and the rough rule) on the
+   prototype's flat panels and buttons. They set only background images, blends and bevels, so colour utilities still apply. */
+@utility stage-grain {
+  background-image: linear-gradient(#d2a06a, #d2a06a), url("/images/app/backgrounds/black-paper.png");
+  background-size: auto, 260px;
+  background-blend-mode: multiply, normal;
+}
+@utility stage-brass {
+  border-color: rgb(227 182 124 / 0.8);
+  background-color: #6f4a2a;
+  background-image: url("/images/app/backgrounds/buried.png"), linear-gradient(180deg, #a0713f, #6c4526 55%, #4c2f18);
+  background-size: 180px, auto;
+  background-blend-mode: overlay, normal;
+  color: #fff1d8;
+  text-shadow: 0 1px 2px #000c;
+  box-shadow:
+    inset 0 1px 0 #ffe2ae66,
+    inset 0 -3px 0 #0000004d,
+    inset 0 0 14px #0000004d,
+    0 2px 10px #0000008c;
+  &:hover:not(:disabled) {
+    filter: brightness(1.14);
+  }
+}
+@utility stage-leather {
+  background-color: #2a1b12;
+  background-image: url("/images/app/backgrounds/buried.png"), linear-gradient(180deg, #3a2819, #1f140d);
+  background-size: 180px, auto;
+  background-blend-mode: soft-light, normal;
+  box-shadow:
+    inset 0 1px 0 #f0d6b21c,
+    inset 0 -2px 0 #0000004d,
+    0 2px 8px #00000066;
+  &:hover:not(:disabled) {
+    filter: brightness(1.14);
+  }
+}
+@utility stage-parchment {
+  background-color: #efdfbc;
+  background-image: url("/images/app/backgrounds/buried.png"), radial-gradient(ellipse at center, transparent 50%, #9a6a3a40);
+  background-size: 140px, auto;
+  background-blend-mode: soft-light, normal;
+}
+@utility stage-die {
+  background-image: url("/images/app/backgrounds/buried.png"), radial-gradient(circle at 35% 30%, #5a3d27, #1c1410 75%);
+  background-size: 120px, auto;
+  background-blend-mode: overlay, normal;
+}
+@utility stage-rule {
+  background: url("/images/app/art/texture-line.png") center / 100% 100%, #e3b67c;
+  background-blend-mode: multiply;
+}
+
+/* Keep last: in this build, plain rules after a nested @starting-style are dropped. */
+.fade-in {
+  @apply opacity-100 transition-opacity duration-1000 ease-in-out;
+  @starting-style {
+    opacity: 0;
+  }
+}
+
+html,body,#root {margin:0;width:100%;height:100%;background:#1c1410;color:#f6ead4;}
+button {cursor:pointer;} textarea,select {color:inherit;}

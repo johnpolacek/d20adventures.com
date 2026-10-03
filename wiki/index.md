@@ -4,21 +4,22 @@
 
 D20 Adventures is a narrative RPG with an AI Game Master, authored adventures, D20 checks, and live turn state in Convex.
 
-GM core status updated on 2026-10-02 in `feature/gm-core`. Other areas last reviewed against local main on 2026-10-01.
+Desktop integration updated on 2026-10-02 in `feature/desktop-stage-play`. This worktree includes the committed GM core extraction. Main and production remain separate.
 
 | Area | Current state |
 |---|---|
 | Gameplay | Text turn UI with Storyview audio and optional 2D Mapview. |
 | Content | Four Realm of Myr adventures use the wiki runtime. Production cutover completed in June 2026. |
-| Current priority | Integrate Stageview as the primary play screen. Its engine and first set are merged, but gameplay integration is still future work. |
+| Current priority | Desktop Stageview is connected to the local GM flow in this worktree. Extend authored set coverage and finish distribution. |
 | Latest recorded renderer validation | 2026-09-29, engine build/typecheck/lint and GPU checks. Every tested shot stayed within 300 draw calls and 2.5M triangles. Phone performance remains unmeasured. |
-| Latest gameplay validation | 2026-10-02, seven-turn authenticated Midnight Summons completion on the isolated GM core worktree, plus 16 Playwright tests. No production deployment. |
+| Latest gameplay validation | 2026-10-02, native Claude gate-to-festival playthrough with dice and reopen persistence. The isolated GM core worktree also completed Midnight Summons in seven turns and passed 16 Playwright tests. No production deployment. |
 
 ## Work and references
 
 - [Plans](plans/index.md): Stageview delivery and maintenance backlog.
 - [Stageview](plans/stageview.md): owner decisions, remaining phases, release questions.
-- [Desktop local play](plans/desktop-local-play.md): phase 0 refinement measured. Strict output retains supplied state, and five-call turns reach dice sooner. Core extraction is complete locally in `feature/gm-core`, with package checks and a full live playthrough. Narrative continuity, character-state application, and Gemini compatibility remain open. The remaining product phases are proposed. Free solo play through the player's own AI CLI, subscription tokens for multiplayer.
+- [Desktop local play](plans/desktop-local-play.md): core extraction, native client, and initial solo save/CLI flow implemented locally. Further sets, character-state application, provider coverage, and distribution remain open. Free solo play through the player's own AI CLI, subscription tokens for multiplayer.
+- [Desktop Stageview integration](plans/feature-desktop-stage-play.md): native game client, local saves, live turn flow, validation, and limits.
 - [Stage engine](stage-engine.md): implemented runtime, set/staging specs, measured limits.
 - [Wiki adventures](wiki-adventures.md): authoring, compilation, source selection, and live content updates.
 - [GM core](gm-core.md): portable game runtime, typed interfaces, server adapters, and extraction checks.

@@ -2,38 +2,39 @@
 
 [Home](index.md) · [Plans](plans/index.md) · [Stageview](plans/stageview.md) · [Testing](plans/testing-runbook.md)
 
-Status: Implemented reference. Engine merged in `384a622` on 2026-09-29. Reviewed against local main on 2026-10-01. Performance and validation results below remain dated evidence.
+Status: Implemented reference. Engine merged in `384a622` on 2026-09-29. Moved to `packages/stage` for web and desktop in the unmerged `feature/desktop-stage-play` worktree on 2026-10-02. Native real-turn integration is recorded in [its plan](plans/feature-desktop-stage-play.md). Performance results below remain dated evidence.
 
 ## Implementation basis
 
-The engine ports the v5 prototype (`~/Projects/d20-graphics-test-2/src/v5/`, three r180, about 3,100 LOC of JS) into `lib/stage/` as plain three.js TypeScript on the app's three r183, with sets described by a **declarative JSON spec** (sets are untrusted input interpreted by trusted builders). The development viewer and verification script support DPR 2 native-pixel review.
+The engine ports the v5 prototype (`~/Projects/d20-graphics-test-2/src/v5/`, three r180, about 3,100 LOC of JS) into `packages/stage/src/` as plain three.js TypeScript on the app's three r183, with sets described by a **declarative JSON spec** (sets are untrusted input interpreted by trusted builders). The development viewer and verification script support DPR 2 native-pixel review.
 
 ## Scope
 
 | Implemented | Deferred or excluded |
 |---|---|
-| Kit: seeded RNG, `Batch`, primitives, `Frame` | Queue `Director` → set loops and staging scripts (phase 3) |
+| Kit: seeded RNG, `Batch`, primitives, `Frame`, queue loop and staging runtime | Further authored loops and encounter coverage |
 | Materials: masonry, wood, cloth, burlap, metal, plain, heraldry. height fog scoped to Stage materials | Beats, hold binding, Storyview sync (phase 4) |
 | Sky, sun, hemisphere, PMREM environment, AgX | Character art generator and S3 storage (phase 4) |
-| Post: 4× MSAA with resolved depth, FXAA, bloom, quarter-res GTAO, Kuwahara paint at fixed internal height with depth-scaled radius, character mask | Stage-first turn page integration (phase 4) |
+| Post: 4× MSAA with resolved depth, FXAA, bloom, quarter-res GTAO, Kuwahara paint at fixed internal height with depth-scaled radius, character mask | Generated turn beats and narration synchronization |
 | Crowd: procedural pawns, instanced front/back cards, hybrid LOD, walkers | Festival street as its own set (phase 3) |
 | Named characters as front/back standees with alpha-derived normals | Procedural hero rigs and the MakeHuman head (superseded by standees) |
 | Quality tiers, pause when hidden, `dispose()` | Mobile measurement |
 | Set spec + interpreter + parametric builders. the Kordavos gate as the first spec | |
 | Minimal staging spec (cast at marks, shots relative to cast) for `/dev/stage` | |
+| Native gate scene and HUD connected to local CLI GM turns, movement, and SQLite saves | Further sets and native gameplay coverage |
 
 ## Module layout
 
 | Path | Role |
 |---|---|
-| `lib/stage/kit/` | RNG, geometry cache, `Batch`, primitives, `Frame`, canvas textures |
-| `lib/stage/materials/` | Shader-patched materials, scoped atmosphere, heraldry, the material library built from a spec |
-| `lib/stage/render/` | Paint pass, character mask, scaled GTAO, composer pipeline, tiers |
-| `lib/stage/figures/` | Pawns, card layer and atlas, crowd population and LOD, standees |
-| `lib/stage/builders/` | Registry of parametric builders (zod params, material roles) |
-| `lib/stage/spec/` | Set and staging schemas, the interpreter |
-| `lib/stage/sets/`, `lib/stage/stagings/` | Repo-local specs (phase 2: the Kordavos gate and its dev staging) |
-| `lib/stage/stage.ts` | Runtime: renderer, camera, shots, loop, pause, dispose, stats |
+| `packages/stage/src/kit/` | RNG, geometry cache, `Batch`, primitives, `Frame`, canvas textures |
+| `packages/stage/src/materials/` | Shader-patched materials, scoped atmosphere, heraldry, the material library built from a spec |
+| `packages/stage/src/render/` | Paint pass, character mask, scaled GTAO, composer pipeline, tiers |
+| `packages/stage/src/figures/` | Pawns, card layer and atlas, crowd population and LOD, standees |
+| `packages/stage/src/builders/` | Registry of parametric builders (zod params, material roles) |
+| `packages/stage/src/spec/` | Set and staging schemas, the interpreter |
+| `packages/stage/src/sets/`, `packages/stage/src/stagings/` | Repo-local specs (phase 2: the Kordavos gate and its dev staging) |
+| `packages/stage/src/stage.ts` | Runtime: renderer, camera, shots, loop, pause, dispose, stats |
 | `app/dev/stage/` | Dev-only viewer, `?set=&staging=&quality=` |
 | `public/stage/` | Realm of Myr crowd library (16 variants, fronts and backs) and dev character fixtures |
 
@@ -76,7 +77,7 @@ JSON only: no expressions, no code. Metres. `y` up. ground at `y = 0`. the set f
 
 Results recorded 2026-09-29, not rerun in the documentation audit.
 
-About 6,700 lines of TypeScript under `lib/stage/` (Biome-formatted) plus a 1,770-line set spec (Biome expands its coordinate arrays). The Kordavos gate builds from JSON in about 240 ms in Node: 398 objects placed, 64 materials, 0.56M static triangles, 194 footprints, 32 lookout anchors and 1,587 people (155 walking).
+About 6,700 lines of TypeScript under `packages/stage/src/` (Biome-formatted) plus a 1,770-line set spec (Biome expands its coordinate arrays). The Kordavos gate builds from JSON in about 240 ms in Node: 398 objects placed, 64 materials, 0.56M static triangles, 194 footprints, 32 lookout anchors and 1,587 people (155 walking).
 
 Measured on the M3 in Chrome 154, 1440×900 CSS, dev build, `motion=0` unless noted:
 

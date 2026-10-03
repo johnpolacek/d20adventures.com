@@ -5,11 +5,11 @@
 //   pnpm exec tsx scripts/stage-check.ts path/to/set.json
 
 import { readFileSync } from "node:fs"
-import { createStubLibrary } from "../lib/stage/materials/library"
-import { SETS, STAGINGS } from "../lib/stage/sets"
-import { buildSetGeometry, parseSet, populateCrowd } from "../lib/stage/spec/build"
-import { resolveCast, resolveShots } from "../lib/stage/spec/resolve"
-import { stagingSpecSchema } from "../lib/stage/spec/staging"
+import { createStubLibrary } from "@d20/stage/materials/library"
+import { SETS, STAGINGS } from "@d20/stage/sets"
+import { buildSetGeometry, parseSet, populateCrowd } from "@d20/stage/spec/build"
+import { resolveCast, resolveShots } from "@d20/stage/spec/resolve"
+import { stagingSpecSchema } from "@d20/stage/spec/staging"
 
 async function checkSet(label: string, raw: unknown) {
   const t0 = performance.now()

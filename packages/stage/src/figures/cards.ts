@@ -181,7 +181,7 @@ function cardDepthMaterial(uniforms: CardUniforms, N: number) {
 const loadImage = (src: string) =>
   new Promise<HTMLImageElement>((resolve, reject) => {
     const i = new Image()
-    i.crossOrigin = "anonymous"
+    if (/^https?:/.test(src)) i.crossOrigin = "anonymous"
     i.onload = () => resolve(i)
     i.onerror = () => reject(new Error(`Could not load ${src}`))
     i.src = src
