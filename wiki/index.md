@@ -17,6 +17,7 @@ Desktop integration updated on 2026-10-03 in `feature/desktop-stage-play`, inclu
 ## Work and references
 
 - [Plans](plans/index.md): Stageview delivery and maintenance backlog.
+- [Harvest Festival handoff](plans/harvest-festival-handoff.md): scene implementation paused at owner request. Current code, optional art drafts, and continuation steps.
 - [Stageview](plans/stageview.md): owner decisions, remaining phases, release questions.
 - [Desktop local play](plans/desktop-local-play.md): core extraction, native client, local saves, and character-state application implemented locally. Further sets, provider coverage, and distribution remain open. Free solo play through the player's own AI CLI, subscription tokens for multiplayer.
 - [Desktop Stageview integration](plans/feature-desktop-stage-play.md): native game client, local saves, live turn flow, validation, and limits.

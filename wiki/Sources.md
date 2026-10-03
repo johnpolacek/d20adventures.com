@@ -24,6 +24,7 @@ GM core sources updated on 2026-10-02. Other sources reviewed 2026-10-01. Curren
 | `~/Projects/aifilmcamp/apps/macos/Packages/FilmBrain/Sources/FilmBrain/` | Local reuse source for CLI locators, invocation builders, bounded processes, and image generation. No credential files copied. Read 2026-10-01. |
 | `apps/desktop/`, `packages/stage/` | Native client, bundled local GM runtime, SQLite persistence, shared renderer, and the desktop integration tests. |
 | `apps/desktop/runtime/characters.ts`, `packages/gm-core/src/wiki-adventures/character-updates.ts` | Typed character operations, atomic application, encounter persistence, effect expiry, and spell usage. |
+| [Harvest Festival handoff](plans/harvest-festival-handoff.md) | Inspected integration points, authored festival roster, and unreviewed image draft provenance. No festival implementation or validation completed. |
 | [Decision log](log.md) | Dated milestones, owner decisions, validation evidence, and limits. |
 | Git history through `0eedb26` | Pre-cleanup plans and implementation history. Deleted documents remain recoverable. |
 

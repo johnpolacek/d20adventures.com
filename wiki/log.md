@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-03, Harvest Festival handoff
+
+Owner initially authorized the second desktop 3D scene, then stopped generation and requested a handoff. Only planning documents changed. No scene, staging, runtime, or UI code was written, and no new build or tests ran. Five character-image requests had already completed before cancellation was checked. Their paths and prompts are recorded in [the handoff](plans/harvest-festival-handoff.md). They remain unreviewed outside the repo and are not integrated. Work remains isolated on `feature/desktop-stage-play`.
+
 ## 2026-10-03, desktop character-state application
 
 Connected structured character patches to live desktop state in `feature/desktop-stage-play`. Health, status, item transfers, effect changes, and spell use now commit with the new turn. Encounter changes preserve the party's live values instead of replacing them with premade defaults. NPC state is remembered, old roll flags clear, effects expire once per round, and spells recharge on encounter changes. Character cards show the current saved values and GM requests receive them as context.

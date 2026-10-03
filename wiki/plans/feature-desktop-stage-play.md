@@ -47,6 +47,16 @@ Implemented and validated locally. Eight desktop tests cover the cases above, in
 
 An additional live Claude advancement used an isolated temporary save with a resolved token handoff in its narrative. Claude returned an explicit `inventoryChanges` add operation for `Bronze gate token`, and the real core committed it to Cassia's equipment in The Harvest Festival. This validates the new model contract and application path for that item event. It is not a full playthrough or live validation of every effect/spell operation.
 
+## Harvest Festival follow-up, 2026-10-03
+
+Owner initially authorized the festival scene, gate transition, and native validation, then stopped implementation and requested a handoff. No festival scene or runtime code changed. Continue from [the Harvest Festival handoff](harvest-festival-handoff.md) when implementation is requested again.
+
+- Author a separate Kordavos festival square with market stalls, a performance area, harvest dressing, walkable approaches, named destinations, ambient crowds, and camera views. Reuse the existing kit and authored five-NPC roster.
+- Add festival staging and local character art. Register both sets for the development viewer. Select desktop scenes by encounter, with the correct opening shot, portraits, and spatial context.
+- Keep the existing position reset when encounters change. Restore saved positions within an encounter and on reopen. Guard scene changes so stale renderers and pending movement cannot write into the next encounter.
+- Validate set/staging references, cast placement, destination reachability, core transitions, persisted movement, and unknown-scene fallback. Check types and scoped lint. Build with two Rust jobs and inspect the native scene and interactions using an isolated test save.
+- Record actual checks and limits. Commit locally when verified. No production content mutation, push, or merge.
+
 ## Remaining scope
 
 One local slot and four premade player-controlled characters. The gate is the only authored 3D set. Add further sets, character creation, AI companions, save management, narration audio, and multiplayer separately. Equipment has no separate currency or quantity ledger. Native combat and the other providers were not tested in this playthrough. The five-call batching experiment remains separate. Distribution still needs Node packaging or onboarding, signing, notarization, and an updater.
