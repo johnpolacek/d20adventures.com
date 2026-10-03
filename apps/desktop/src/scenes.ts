@@ -32,6 +32,13 @@ export function castIdFor(cast: readonly { id: string }[], c: Who) {
   return cast.some((s) => s.id === first) ? first : undefined
 }
 
+// Portraits for characters without a staged figure, from their web art. The app shows only bundled images.
+const PORTRAITS: Record<string, string> = {
+  thalbern: "/stage/portraits/realm-of-myr/thalbern.jpg",
+  wollandora: "/stage/portraits/realm-of-myr/wollandora.jpg",
+  owlbear: "/stage/portraits/realm-of-myr/owlbear.jpg",
+}
+
 // A character's portrait from the current scene, else from any authored scene, so story view keeps the party's faces.
 export function portraitFor(scene: Scene | undefined, c: Who) {
   for (const s of [scene, ...Object.values(SCENES)]) {
@@ -39,6 +46,7 @@ export function portraitFor(scene: Scene | undefined, c: Who) {
     const portrait = id && s.staging.cast.find((m) => m.id === id)?.art.portrait
     if (portrait) return portrait
   }
+  return PORTRAITS[c.id]
 }
 
 // Map staging for the GM's narration: the place, its named spots, and where each character in the turn stands now

@@ -12,7 +12,7 @@ Desktop integration updated on 2026-10-03 in `feature/desktop-stage-play`, inclu
 | Content | Four Realm of Myr adventures use the wiki runtime. Production cutover completed in June 2026. |
 | Current priority | Desktop Stageview is connected to the local GM flow in this worktree. Extend authored set coverage and finish distribution. |
 | Latest recorded renderer validation | 2026-09-29, engine build/typecheck/lint and GPU checks. Every tested shot stayed within 300 draw calls and 2.5M triangles. Phone performance remains unmeasured. |
-| Latest gameplay validation | 2026-10-03, native Claude gate-to-festival advance into the new festival set, with NPC focus and cards, saved walks, and reopen without replay. 2026-10-02, native Claude gate playthrough with dice and reopen persistence. The isolated GM core worktree also completed Midnight Summons in seven turns and passed 16 Playwright tests. No production deployment. |
+| Latest gameplay validation | 2026-10-03, native Claude playthrough of The Midnight Summons start to finish, including a fight, the ending, and starting over. Also a native gate-to-festival advance into the new festival set, with NPC focus and cards, saved walks, and reopen without replay. 2026-10-02, native Claude gate playthrough with dice and reopen persistence. The isolated GM core worktree also completed Midnight Summons in seven turns and passed 16 Playwright tests. No production deployment. |
 
 ## Work and references
 

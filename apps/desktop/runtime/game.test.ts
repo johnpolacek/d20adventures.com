@@ -4,10 +4,11 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
-import { game, type Pack } from "./game"
+import { game, type Packs } from "./game"
 import { LocalStore } from "./store"
 
-const pack: Pack = JSON.parse(readFileSync(new URL("../src-tauri/resources/pack.json", import.meta.url), "utf8"))
+const packs: Packs = JSON.parse(readFileSync(new URL("../src-tauri/resources/packs.json", import.meta.url), "utf8"))
+const pack = packs["march-of-davos"]
 const quiet = () => {}
 console.log = console.warn = console.error = quiet
 function setup() {
@@ -35,7 +36,7 @@ test("authored start survives reopening, duplicate start and overlapping work ar
   const { store, path, cleanup } = setup()
   try {
     store.acquire()
-    const run = game(store, pack, failLlm)
+    const run = game(store, packs, failLlm)
     await run({ kind: "start", provider: "claude" })
     assert.equal(store.current().encounterId, "the-gates-of-kordavos")
     assert.equal(store.current().characters.filter((c) => c.type === "pc").length, 4)
@@ -55,7 +56,7 @@ test("authored start survives reopening, duplicate start and overlapping work ar
 test("reply storage and real roll services keep dice across failures and reject stale input", async () => {
   const { store, path, cleanup } = setup()
   try {
-    const run = game(store, pack, failLlm)
+    const run = game(store, packs, failLlm)
     await run({ kind: "start", provider: "claude" })
     const turn = store.current(),
       pc = turn.characters.find((c) => c.type === "pc")!
@@ -80,7 +81,7 @@ test("reply storage and real roll services keep dice across failures and reject 
     const reloaded = new LocalStore(path)
     assert.equal(reloaded.state!.rolls[`${turn._id}:${pc.id}`], 14)
     reloaded.db.close()
-    await game(store, pack, good)({ kind: "roll", turnId: turn._id, characterId: pc.id, result: 1 })
+    await game(store, packs, good)({ kind: "roll", turnId: turn._id, characterId: pc.id, result: 1 })
     assert.equal(store.current().characters.find((c) => c.id === pc.id)!.rollResult, 16)
     assert.equal(store.current().characters.find((c) => c.id === pc.id)!.isComplete, true)
     await assert.rejects(() => run({ kind: "reply", turnId: "stale", characterId: pc.id, text: "another action" }), /already advanced/)
@@ -91,7 +92,7 @@ test("reply storage and real roll services keep dice across failures and reject 
 test("real core advances through authored graph and atomically retains state across restart", async () => {
   const { store, path, cleanup } = setup()
   try {
-    await game(store, pack, failLlm)({ kind: "start", provider: "codex" })
+    await game(store, packs, failLlm)({ kind: "start", provider: "codex" })
     const turn = store.current()
     turn.characters.forEach((c) => {
       c.isComplete = true
@@ -108,7 +109,7 @@ test("real core advances through authored graph and atomically retains state acr
         }),
       }),
     }
-    await game(store, pack, model)({ kind: "continue", turnId: turn._id })
+    await game(store, packs, model)({ kind: "continue", turnId: turn._id })
     assert.equal(store.current().encounterId, "the-harvest-festival")
     assert.equal(store.state!.turns.length, 2)
     assert.equal(store.state!.adventure.discoveries.length, 1)
@@ -116,7 +117,7 @@ test("real core advances through authored graph and atomically retains state acr
     const reopened = new LocalStore(path)
     assert.deepEqual(reopened.state, JSON.parse(JSON.stringify(store.state)))
     reopened.db.close()
-    await assert.rejects(() => game(store, pack, model)({ kind: "continue", turnId: turn._id }), /already advanced/)
+    await assert.rejects(() => game(store, packs, model)({ kind: "continue", turnId: turn._id }), /already advanced/)
   } finally {
     cleanup()
   }
@@ -124,7 +125,7 @@ test("real core advances through authored graph and atomically retains state acr
 test("new game archives the saved adventure, even a finished one, and a plain start still refuses to overwrite", async () => {
   const { store, path, cleanup } = setup()
   try {
-    const run = game(store, pack, failLlm)
+    const run = game(store, packs, failLlm)
     await run({ kind: "start", provider: "claude" })
     const first = store.state!.adventure._id
     store.state!.adventure.status = "completed"

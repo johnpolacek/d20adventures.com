@@ -11,10 +11,17 @@ import { applyCharacterUpdates, characterContext, desktopPatchSchema } from "./c
 import type { LocalStore } from "./store"
 
 export type Pack = { artifacts: RuntimeArtifacts; contentRef: Awaited<ReturnType<Content["loadWikiRuntime"]>>["contentRef"]; definition: { promptSlug: string } }
+// Bundled adventures keyed by plan id.
+export type Packs = Record<string, Pack>
+// The bundled adventures share no encounter ids, so one list of legal transitions serves every save.
+export const transitionsOf = (packs: Packs) => Object.values(packs).flatMap((p) => p.artifacts.graph.encounterTransitions)
+export const adventureList = (packs: Packs) => Object.entries(packs).map(([id, p]) => ({ id, title: p.artifacts.manifest.title, start: p.artifacts.manifest.startEncounterId }))
+// The heroes a new game starts with. March of Davos uses the four premades that have stage art.
+const PARTY: Record<string, string[]> = { "march-of-davos": ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"] }
 export const commandSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("load") }),
   // `replace` starts over, archiving the saved adventure.
-  z.object({ kind: z.literal("start"), provider: z.enum(["claude", "codex", "grok", "gemini"]), replace: z.boolean().optional() }),
+  z.object({ kind: z.literal("start"), provider: z.enum(["claude", "codex", "grok", "gemini"]), adventure: z.string().max(100).optional(), replace: z.boolean().optional() }),
   z.object({
     kind: z.literal("reply"),
     turnId: z.string(),
@@ -39,12 +46,16 @@ export const commandSchema = z.discriminatedUnion("kind", [
   }),
 ])
 export type GameCommand = z.infer<typeof commandSchema>
-export function game(store: LocalStore, pack: Pack, llm: Llm) {
-  const { artifacts } = pack
+export function game(store: LocalStore, packs: Packs, llm: Llm) {
+  const packFor = (plan: string) => {
+    const pack = packs[plan]
+    if (!pack) throw new Error("This adventure is not installed.")
+    return pack
+  }
   const content: Content = {
-    isWikiAdventure: (setting, plan) => setting === "realm-of-myr" && plan === "march-of-davos",
-    loadWikiRuntime: async () => pack,
-    loadPlan: async () => buildAdventurePlanViewFromArtifacts(artifacts),
+    isWikiAdventure: (setting, plan) => setting === "realm-of-myr" && plan in packs,
+    loadWikiRuntime: async (_setting, plan) => packFor(plan),
+    loadPlan: async (_setting, plan) => buildAdventurePlanViewFromArtifacts(packFor(plan).artifacts),
     loadLegacyPlan: async () => null,
     spatialContext: async (_setting, _plan, encounter, characters) => spatialContext(encounter, characters, store.state?.positions ?? {}),
   }
@@ -98,13 +109,15 @@ export function game(store: LocalStore, pack: Pack, llm: Llm) {
     if (command.kind === "load") return store.state
     if (command.kind === "start") {
       if (store.state && !command.replace) throw new Error("An adventure is already saved. Continue it.")
+      const plan = command.adventure ?? "march-of-davos"
+      const { artifacts } = packFor(plan)
       const encounter = artifacts.encounters[artifacts.manifest.startEncounterId]
       const id = randomUUID(),
         turnId = randomUUID()
       const characters = buildLocalWikiTurnCharacters({
         artifacts,
         encounter,
-        players: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"].map((characterId) => ({ characterId, userId: "local-player" })),
+        players: (PARTY[plan] ?? artifacts.manifest.premadeCharacterIds).map((characterId) => ({ characterId, userId: "local-player" })),
       })
       store.replace({
         version: 1,
@@ -114,9 +127,9 @@ export function game(store: LocalStore, pack: Pack, llm: Llm) {
         positions: {},
         adventure: {
           _id: id,
-          title: "March of Davos",
+          title: artifacts.manifest.title,
           settingId: "realm-of-myr",
-          planId: "march-of-davos",
+          planId: plan,
           ownerId: "local-player",
           playerIds: ["local-player"],
           currentTurnId: turnId,
@@ -145,7 +158,7 @@ export function game(store: LocalStore, pack: Pack, llm: Llm) {
       if (findCurrentActor(turn.characters)?.type === "pc") throw new Error("A player character still needs to act.")
       await autonomous()
       if (!findCurrentActor(store.current().characters)) {
-        await core.advanceTurn({ turnId: turn._id, settingId: "realm-of-myr", adventurePlanId: "march-of-davos" })
+        await core.advanceTurn({ turnId: turn._id, settingId: "realm-of-myr", adventurePlanId: store.state!.adventure.planId })
         // Deliberately let the new encounter's intro be read before the next NPC action.
       }
     } else {

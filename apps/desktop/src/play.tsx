@@ -35,6 +35,8 @@ export function DesktopGame() {
   const [loaded, setLoaded] = useState(false)
   const [providers, setProviders] = useState<string[]>([])
   const [provider, setProvider] = useState("claude")
+  const [adventures, setAdventures] = useState<{ id: string; title: string; start: string }[]>([])
+  const [adventure, setAdventure] = useState("march-of-davos")
   const [busy, setBusy] = useState(false)
   const busyRef = useRef(false)
   const [error, setError] = useState<string | null>(null)
@@ -54,8 +56,9 @@ export function DesktopGame() {
   const compact = useCompact()
   const turn = save?.turns.find((t) => t._id === save.adventure.currentTurnId)
   const cardCharacter = turn?.characters.find((c) => c.id === cardId)
-  // The title screen shows the opening scene. Encounters without an authored scene play in story view.
-  const scene = sceneFor(turn?.encounterId ?? "the-gates-of-kordavos")
+  const chosen = adventures.find((a) => a.id === adventure)
+  // The title screen shows the chosen adventure's opening scene. Encounters without an authored scene play in story view.
+  const scene = sceneFor(turn?.encounterId ?? chosen?.start ?? "the-gates-of-kordavos")
   const portrait = (c: { id: string; name: string }) => portraitFor(scene, c)
   const card = cardCharacter ? characterInfo(cardCharacter, portrait(cardCharacter)) : null
   const specs = useMemo(() => (scene ? { set: scene.set, staging: scene.staging, tier: "balanced" as const } : null), [scene])
@@ -88,6 +91,7 @@ export function DesktopGame() {
     try {
       const res = await send(command)
       setSave(res.state)
+      if (res.adventures) setAdventures(res.adventures)
       if (res.providers) {
         setProviders(res.providers)
         setProvider((p) => (res.providers!.includes(p) ? p : (res.providers![0] ?? "claude")))
@@ -217,16 +221,18 @@ export function DesktopGame() {
   const party: CardCharacter[] = (turn?.characters ?? []).filter((c) => c.type === "pc").map((c) => ({ id: c.id, name: c.name, role: `${c.race} ${c.archetype}`, portrait: portrait(c) }))
   const cardActor = party.find((c) => c.id === actor?.id) ?? null
   const rr = actor?.rollRequired
+  // A finished adventure ends on its final narration. Its last turn has characters but takes no more actions.
+  const ended = save?.adventure.status === "completed"
   let mode: CardMode | null = null
   if (busy) mode = { kind: "thinking", note: "The GM is resolving the action…" }
   // Movement is read against the scene on screen, so wait for the next scene before taking an action.
   else if (scene && !stage && !stageError) mode = { kind: "thinking", note: loading }
-  else if (save?.adventure.status === "completed") mode = { kind: "done", next: "Adventure complete" }
+  else if (ended) mode = null
   else if (cardActor && rr) mode = { kind: "roll", roll: { skill: rr.rollType, ability: "", dc: rr.difficulty, modifier: rr.modifier ?? 0 } }
   else if (cardActor) mode = { kind: "hold", prompt: `What does ${cardActor.name.split(" ")[0]} do?` }
   // Starting over archives the saved adventure. The menu stays open if the start fails.
   const start = async () => {
-    const next = await invoke({ kind: "start", provider: provider as "claude", replace: Boolean(save) })
+    const next = await invoke({ kind: "start", provider: provider as "claude", adventure, replace: Boolean(save) })
     if (!next || next.adventure._id === save?.adventure._id) return
     setMenu(false)
     setConfirmNew(false)
@@ -246,10 +252,10 @@ export function DesktopGame() {
   return (
     <StageHud
       containerRef={containerRef}
-      title={{ eyebrow: "MARCH OF DAVOS", text: turn?.title ?? "Arrival at Kordavos" }}
+      title={{ eyebrow: (save?.adventure.title ?? chosen?.title ?? "").toUpperCase(), text: turn?.title ?? "" }}
       location={{
         eyebrow: scene?.location ?? "Story view",
-        title: actor ? `${actor.name.split(" ")[0]}'s turn` : `Round ${turn?.order ?? 1}`,
+        title: ended ? "Adventure complete" : actor ? `${actor.name.split(" ")[0]}'s turn` : `Round ${turn?.order ?? 1}`,
         status: save ? `Saved locally · ${save.provider}` : "",
       }}
       views={stage ? Object.entries(stage.shots).map(([id, s]) => ({ id, label: s.label ?? id })) : []}
@@ -332,7 +338,24 @@ export function DesktopGame() {
               forcedRoll={turn && actor ? save.rolls[`${turn._id}:${actor.id}`] : undefined}
             />
           )}
-          {!busy && !reading && !mode && turn && (
+          {ended && !busy && !reading && (
+            <div className={`${panel} absolute bottom-28 left-1/2 z-30 -translate-x-1/2 p-6 text-center`}>
+              <div className="text-[10px] tracking-[.3em] text-stage-gold">THE END</div>
+              <p className="mt-2 mb-4 font-display text-2xl">{save.adventure.title}</p>
+              <Pill
+                onClick={() => {
+                  setConfirmNew(true)
+                  setMenu(true)
+                }}
+              >
+                New game
+              </Pill>
+              <Pill className="ml-2" onClick={() => setOpen("journal")}>
+                Journal
+              </Pill>
+            </div>
+          )}
+          {!ended && !busy && !reading && !mode && turn && (
             <div className={`${panel} absolute bottom-28 left-1/2 z-30 -translate-x-1/2 p-6 text-center`}>
               <p className="mb-3 font-serif text-xl">{actor ? `${actor.name}'s turn` : "The round is complete"}</p>
               <Pill onClick={() => void invoke({ kind: "continue", turnId: turn._id })}>{actor ? "Continue NPC turn" : "Continue adventure"}</Pill>
@@ -393,8 +416,8 @@ export function DesktopGame() {
       {(!save || menu) && (
         <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-5 bg-stage-ink/55 text-center">
           <div className="text-[10px] tracking-[.3em] text-stage-gold">D20 ADVENTURES</div>
-          <h1 className="font-display text-5xl">Arrival at Kordavos</h1>
-          <div className="text-sm text-stage-cream">March of Davos</div>
+          <h1 className="font-display text-5xl">{save && !confirmNew ? save.adventure.title : (chosen?.title ?? "")}</h1>
+          <div className="text-sm text-stage-cream">Realm of Myr</div>
           {save && !confirmNew ? (
             <>
               {turn && <div className="mt-4 text-sm text-stage-cream">{save.adventure.status === "completed" ? "Adventure complete" : `Round ${turn.order} · ${turn.title}`}</div>}
@@ -407,7 +430,19 @@ export function DesktopGame() {
             </>
           ) : (
             <>
-              {save && <p className="mt-4 text-sm">Start over at the gate? This adventure is kept in your save archive.</p>}
+              {save && <p className="mt-4 text-sm">Start a new adventure? This one is kept in your save archive.</p>}
+              {adventures.length > 1 && (
+                <label className="mt-4 text-sm">
+                  Adventure{" "}
+                  <select aria-label="Adventure" value={adventure} onChange={(e) => setAdventure(e.target.value)} className="ml-3 rounded border border-stage-brass bg-stage-panel px-3 py-2">
+                    {adventures.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               <label className="mt-4 text-sm">
                 Game Master{" "}
                 <select aria-label="Game Master" value={provider} onChange={(e) => setProvider(e.target.value)} className="ml-3 rounded border border-stage-brass bg-stage-panel px-3 py-2">

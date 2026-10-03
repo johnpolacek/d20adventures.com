@@ -89,6 +89,32 @@ Owner chose basic save management next. Before this, a saved adventure could not
 
 Implemented. Twelve desktop tests pass, including start-over from a completed adventure, the archived save's contents, a second archive entry, and reopening. Desktop and root TypeScript, scoped Biome, and a release build with no Rust warnings passed. In the packaged app, a copy of the festival test save opened on the title screen showing "Round 3 · The Harvest Festival". Continue entered the game, Menu returned to the title, and New game asked for confirmation over the festival scene. Start new game began round 1 at the gate and switched the 3D set. The archive held the festival adventure. The user save was restored with an unchanged SHA-256. No model requests were needed.
 
+## The Midnight Summons, 2026-10-03
+
+Owner chose to add The Midnight Summons and play it start to finish before a full March of Davos run. It has 7 encounters, one premade hero (Thalbern), fights, and a recorded web completion with the same core. March of Davos has 45 encounters and four heroes per round.
+
+- Bundle both adventures' packs. New game picks the adventure. The save records which one, and the core, store transitions, and titles follow it. The two adventures share no encounter ids.
+- Bundle portraits for Thalbern, Wollandora, and the Owlbear from their web images, since the app only loads local images. The adventure has no 3D sets and plays in story view.
+- Test starting each adventure and walking Midnight Summons' authored graph to completion with the real core. Then play it in the packaged app with live Claude on an isolated save, fix what breaks, and record the run.
+
+Implemented. The runtime bundles `packs.json` with both adventures. New game has an Adventure picker, and the save's plan drives the core, titles, and starting heroes. Fourteen desktop tests pass. The two new ones check that both adventures load with their own heroes and that an unknown one leaves the save untouched. They also walk the real core through the owlbear to Midnight Summons' ending, then reopen it. Desktop and root TypeScript, scoped Biome, `stage:check`, and release builds with no Rust warnings passed.
+
+The packaged app with live Claude played The Midnight Summons start to finish on an isolated save in 7 rounds:
+
+- Broken Silence: Thalbern crept toward the noise. Perception 4 against DC 8 failed, so the owlbear came.
+- Owlbear Confrontation, three rounds: his arrow hit (16 against 13), leaving the owlbear at 80% and off-balance. He evaded with Acrobatics (23 against 13), then calmed it with Animal Handling (21 against 16). The owlbear missed all three of its attacks.
+- Meeting at the Stones, two rounds: Wollandora explained the stolen relics, and Thalbern accepted. Preparing for the City ended the adventure. The save recorded 10 discoveries and a running summary.
+- Each reply or roll took 5–45 s, and each Continue took 15–30 s. Reopening the finished save showed its ending. New game from there started March of Davos and archived the finished adventure. The user save was restored with an unchanged SHA-256, and the run is kept as `validation-midnight-summons-2026-10-03.sqlite`.
+
+Findings:
+
+- Fixed: the finished adventure still said "Thalbern's turn" and offered no way forward. It now shows Adventure complete and an end panel with New game and Journal.
+- Twice the GM held an encounter one more round after its authored exit already applied: after the evasion, and after Thalbern promised help. Explicit actions moved it on. Not changed.
+- An NPC turn set Wollandora's status to "passing", which shows on her character card. Not fixed.
+- Untested: damage to Thalbern, critical health, and the Timely Rescue and Back Home branches, because every owlbear attack missed and Thalbern accepted.
+- Story view has no artwork, since the app only loads bundled images. Thalbern's web portrait is photographic, unlike the painted art elsewhere.
+- Test harness only: keys typed into the app while it sat behind other windows were sometimes dropped. The harness now sets the text box through accessibility and checks it before sending.
+
 ## Remaining scope
 
 One local slot and four premade player-controlled characters. The gate and the Harvest Festival are the authored 3D sets. Add further sets, character creation, AI companions, save management, narration audio, and multiplayer separately. Equipment has no separate currency or quantity ledger. Native combat and the other providers were not tested in this playthrough. The five-call batching experiment remains separate. Distribution still needs Node packaging or onboarding, signing, notarization, and an updater.

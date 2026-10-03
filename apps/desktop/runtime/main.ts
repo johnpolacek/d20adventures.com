@@ -3,13 +3,13 @@ import { dirname, join } from "node:path"
 import { createInterface } from "node:readline"
 import { locate } from "../../desktop-spike/harness/cli.mjs"
 import { applyCharacterUpdates } from "./characters"
-import { commandSchema, game, type Pack } from "./game"
+import { adventureList, commandSchema, game, type Packs, transitionsOf } from "./game"
 import { localLlm } from "./llm"
 import { LocalStore } from "./store"
 
 // stdout is only the IPC reply. Existing core debugging must not expose game prompts.
 console.log = console.warn = console.error = () => {}
-const pack: Pack = JSON.parse(readFileSync(join(__dirname, "pack.json"), "utf8"))
+const packs: Packs = JSON.parse(readFileSync(join(__dirname, "packs.json"), "utf8"))
 const savePath = process.argv[2]
 const scratch = mkdtempSync(join(dirname(savePath), "session-"))
 let store: LocalStore | undefined
@@ -45,12 +45,12 @@ async function main() {
   for await (const line of lines) {
     try {
       const command = commandSchema.parse(JSON.parse(line))
-      store = new LocalStore(savePath, pack.artifacts.graph.encounterTransitions)
+      store = new LocalStore(savePath, transitionsOf(packs))
       store.acquire()
       model = localLlm(command.kind === "start" ? command.provider : (store.state?.provider ?? "claude"), scratch, (patch) => {
         applyCharacterUpdates(store!.current().characters, patch.characterUpdates)
       })
-      const state = await game(store, pack, model.llm)(command)
+      const state = await game(store, packs, model.llm)(command)
       const providers = ["claude", "codex", "grok", "gemini"].filter((name) => {
         try {
           locate(name)
@@ -59,7 +59,7 @@ async function main() {
           return false
         }
       })
-      process.stdout.write(`${JSON.stringify({ state, providers })}\n`)
+      process.stdout.write(`${JSON.stringify({ state, providers, adventures: adventureList(packs) })}\n`)
     } catch (error) {
       process.stdout.write(`${JSON.stringify({ error: error instanceof Error ? error.message : "The game action failed.", state: store?.reload() ?? null })}\n`)
     } finally {

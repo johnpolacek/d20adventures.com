@@ -9,11 +9,12 @@ import { z } from "zod"
 import { strictModelSchema } from "../../desktop-spike/harness/strict-state.mjs"
 import { characterInfo } from "../src/character-info"
 import { applyCharacterUpdates, desktopPatchSchema, nextCharacterState } from "./characters"
-import { game, type Pack } from "./game"
+import { game, type Packs } from "./game"
 import { schemaLlm } from "./llm"
 import { LocalStore } from "./store"
 
-const pack: Pack = JSON.parse(readFileSync(new URL("../src-tauri/resources/pack.json", import.meta.url), "utf8"))
+const packs: Packs = JSON.parse(readFileSync(new URL("../src-tauri/resources/packs.json", import.meta.url), "utf8"))
+const pack = packs["march-of-davos"]
 console.log = console.warn = console.error = () => {}
 const unused = async (): Promise<never> => {
   throw new Error("Unexpected model request")
@@ -23,7 +24,7 @@ async function setup() {
   const dir = mkdtempSync(join(tmpdir(), "d20-character-state-"))
   const path = join(dir, "save.sqlite")
   let store = new LocalStore(path, pack.artifacts.graph.encounterTransitions)
-  await game(store, pack, offline)({ kind: "start", provider: "claude" })
+  await game(store, packs, offline)({ kind: "start", provider: "claude" })
   const pc = store.current().characters.find((c) => c.name.startsWith("Cassia"))!
   const giver = store.current().characters.find((c) => c.name.startsWith("Branka"))!
   const npc = store.current().characters.find((c) => c.type === "npc")!
@@ -73,7 +74,7 @@ async function advance(store: LocalStore, patch: unknown, encounter = store.curr
       return { object: schema.parse({ nextEncounterId: encounter, narrative: "The party continues.", adventurePatch: patch }) }
     },
   }
-  await game(store, pack, llm)({ kind: "continue", turnId: store.current()._id })
+  await game(store, packs, llm)({ kind: "continue", turnId: store.current()._id })
   return prompt
 }
 const byId = (store: LocalStore, id: string) => store.current().characters.find((c) => c.id === id)!
@@ -123,7 +124,7 @@ test("real turns transfer items, apply conditions/spell use, preserve history an
     assert.equal(c.rollRequired, undefined)
     assert.equal(c.rollResult, undefined)
     const snapshot = JSON.stringify(t.store.state)
-    await assert.rejects(() => game(t.store, pack, offline)({ kind: "continue", turnId: before._id }), /already advanced/)
+    await assert.rejects(() => game(t.store, packs, offline)({ kind: "continue", turnId: before._id }), /already advanced/)
     assert.equal(JSON.stringify(t.store.state), snapshot)
     t.reopen()
     assert.equal(JSON.stringify(t.store.state), snapshot)
