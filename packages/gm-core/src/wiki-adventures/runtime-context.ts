@@ -214,7 +214,7 @@ Allowed nextEncounterId values:
 ${packet.outputContract.allowedNextEncounterIds.join(", ")}
 
 Your Task:
-1. Continue the current encounter unless a listed transition condition is clearly satisfied by past player actions or roll outcomes.
+1. Decide from what has already happened, including roll outcomes. If events so far satisfy a listed transition condition, transition now rather than extending a situation that is already resolved. Continue the current encounter only when no listed condition is satisfied yet, or when one depends on a player choice that has not been made.
 2. If transitioning, set nextEncounterId to one of the listed transition target IDs.
 3. If not transitioning, set nextEncounterId to the current encounter ID.
 4. Return narrative for players. Do not write new player decisions, dialogue, or internal thoughts for: ${packet.outputContract.playerCharacterNames.join(", ")}.

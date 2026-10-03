@@ -122,6 +122,16 @@ A second live run on an isolated save played Thalbern recklessly and took the ot
 - Still untested in this adventure: hiding from the owlbear at the start, and asking Wollandora for more, which leads to The Missing Relics.
 - Test harness only: keys typed into the app while it sat behind other windows were sometimes dropped. The harness now sets the text box through accessibility and checks it before sending.
 
+## Midnight Summons fixes, 2026-10-03
+
+Owner approved fixing the playthrough findings. Two touch the shared GM core, so they also change web play.
+
+- NPC status: when an NPC skips or passes, the core replaced its status with "skipping" or "passing". Nothing reads those values, and they hid real conditions like Off-balance. Keep the existing status.
+- Extra rounds: the progression rule said to continue unless a condition is clearly satisfied. After Thalbern's successful evasion, the GM still held the owlbear fight a round. Reword it to transition once events satisfy a listed condition, and to continue only when none is met yet or it waits on a choice the player has not made. Re-record the rule in the core prompt fixture, then replay the held owlbear round with live Claude to see it advance. Also replay the meeting where Thalbern promised help before hearing the mission, which should still wait for his answer.
+- Content: make Wollandora's Standing Stones greeting fit arriving alone or with her, and fix "tobe" in Back Home.
+
+Implemented. `pnpm test:gm-core` passes with the one re-recorded rule line, and the fourteen desktop tests pass. Live Claude replays from the recorded save, two tries each: after the successful evasion, both moved on to Meeting at the Stones. After Thalbern promised help before hearing the mission, both stayed and waited for his answer. That is a small sample, not a guarantee. The greeting now reads "Thalbern. The forest is grateful you are here."
+
 ## Remaining scope
 
 One local slot and four premade player-controlled characters. The gate and the Harvest Festival are the authored 3D sets. Add further sets, character creation, AI companions, save management, narration audio, and multiplayer separately. Equipment has no separate currency or quantity ledger. Native combat and the other providers were not tested in this playthrough. The five-call batching experiment remains separate. Distribution still needs Node packaging or onboarding, signing, notarization, and an updater.

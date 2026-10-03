@@ -37,12 +37,8 @@ export function handleSkipPassNpcTurn(args: { turn: Turn; npc: TurnCharacter; ac
   const narrativeToAppend = normalizeNarrative(args.actionResult.narrative)
   const updatedCharacters = args.turn.characters.map((character) => {
     if (character.id === args.npc.id) {
-      return {
-        ...character,
-        hasReplied: true,
-        isComplete: true,
-        status: args.actionResult.actionType === "skip" ? "skipping" : "passing",
-      }
+      // Skipping or passing is not a condition. The NPC keeps whatever status it has.
+      return { ...character, hasReplied: true, isComplete: true }
     }
     return character
   })

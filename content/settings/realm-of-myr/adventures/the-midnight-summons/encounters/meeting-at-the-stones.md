@@ -17,9 +17,9 @@ image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-m
 
 ## Intro
 
-Thalbern arrives at the ancient Standing Stones. The air is thick with anticipation as the moonlight bathes the clearing in a silvery glow.
+The ancient Standing Stones rise around Thalbern. The air is thick with anticipation as the moonlight bathes the clearing in a silvery glow.
 
-"Thalbern, thank you for coming. The forest is grateful for your swiftness," Wollandora intones, her voice echoing softly in the stillness. The wise elf's silver hair glistens in the moonlight, and her eyes are a deep forest green, wise and kind, but currently troubled.
+"Thalbern. The forest is grateful you are here," Wollandora intones, her voice echoing softly in the stillness. The wise elf's silver hair glistens in the moonlight, and her eyes are a deep forest green, wise and kind, but currently troubled.
 
 ## GM Notes
 
