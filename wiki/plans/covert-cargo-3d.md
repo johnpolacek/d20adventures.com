@@ -105,6 +105,15 @@ Results:
 - Wider tug: beam from 4.6 m to about 5.6 m. The tug moves east, the gangway reaches it, and pilings, lines, lights and marks follow.
 - Validation as before, plus draw calls and frame rate with reflections on.
 
+Results:
+
+- Reflections: `render/mirror.ts` renders the scene from a camera mirrored in the water, with an oblique near plane at the surface, into a linear target at half the drawing buffer on high, 0.35 on balanced, 0.6 on ultra, off on mobile. Water with `mirror` mixes it into its specular, smeared mostly up and down by the ripples, so lit windows streak down the water as in the art. The pier's river and the cabin's view through the door use it.
+- Cost on the pier: 132 to 138 draw calls instead of 93 to 97, and 1.82M rendered triangles. Balanced measured 29 to 34 fps with the reflection and 36 to 40 without, on a busy dev build.
+- Cabin: a 3 m saloon whose bow curves round seven windows and a glazed door, rust posts between them, rust fascia, a roof overhanging as an upper deck with a rail all round, and a narrower pilothouse set back from the curve.
+- Tug: beam 5.6 m, moved 0.5 m east. The gangway grew to 7.2 m to reach it. Pilings, lines, stern props, lights and marks moved with it.
+- Young trees on the bank start aft of the stern, so none hangs over the pilothouse.
+- `stage:check`, typechecks, Biome and 25 desktop tests pass.
+
 ## Owner review
 
 Start the viewer in the worktree with `pnpm exec next dev -p 3057`, then open `http://localhost:3057/dev/stage?staging=covert-cargo/<encounter>&tier=balanced` for each encounter: the-shipment, the-transaction, the-disturbance, the-escape, the-fake, battle-on-the-boat, the-crate, return-to-the-city, the-end.

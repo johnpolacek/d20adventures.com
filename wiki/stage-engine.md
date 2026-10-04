@@ -190,3 +190,9 @@ Remaining product work is tracked in [Stageview](plans/stageview.md).
 - `rope` and `chain` builders: a sagging line between two points, rope with knots, chain with alternating oval links.
 - `stage:check`'s stub materials carry the card flags, so its triangle counts match what renders.
 - `scripts/stage-textures.ts` keys cut-outs on magenta when the subject is green.
+
+### Fifth pass: planar water reflection
+
+- Water with `mirror` (0..1) gets a true reflection: `render/mirror.ts` renders the scene from a camera mirrored in the water plane, with an oblique near plane so nothing below the surface draws, into a half-float target. Shadow maps are reused from the main render. The water shader samples it projectively and mixes it into its specular, offset by the ripple normal.
+- Tiers set its size as a share of the drawing buffer: mobile 0, balanced 0.35, high 0.5, ultra 0.6. A `mirror` flag overrides it. Sets without mirrored water pay nothing.
+- `riverboat` now has a rounded saloon bow with windows and a glazed door round it, rust posts and fascia following the curve, an overhanging upper deck with a rail all round, and a narrower pilothouse.

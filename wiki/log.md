@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-04, Covert Cargo water reflections, rounder and wider tug
+
+Owner picked water that reflects the boat and its windows, a rounder, taller cabin like the painting, and a wider boat. Stageview gained a tier-scaled planar reflection for water that opts in, so lit windows streak down the river as in the art. The tug is 5.6 m wide with a curved saloon bow of windows, a 3 m cabin and an overhanging upper deck. See [the plan](plans/covert-cargo-3d.md#fifth-pass-reflections-a-rounder-cabin-a-wider-tug).
+
 ## 2026-10-04, Covert Cargo leaf cards, crate hold, bigger tug
 
 Owner picked painted leaf cards, the crate hold's ropes, chains and posts, and a bigger boat. Crowns and bushes are now clusters of painted leaf cards, which cut the pier's triangles by more than half and paid for much denser woods. The cabin has knotted ropes, chains and iron-banded posts round the crate. The tug is 17 m. Within budget at 1.15M triangles. See [the plan](plans/covert-cargo-3d.md#fourth-pass-leaf-cards-the-crate-hold-a-bigger-tug).
