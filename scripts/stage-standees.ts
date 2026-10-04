@@ -23,7 +23,8 @@ const STYLE = "design/stage/styleref.jpg"
 const FINISH = "public/stage/fixtures/march-of-davos/yeva-front.webp"
 const PORTRAIT_BG = "#3b4256"
 
-type Figure = { out: string; who: string; look: string; ref?: string; head: number }
+// `backNote` adds to the back prompt when a back keeps coming out wrong (an open cloak drawn behind a front-facing body).
+type Figure = { out: string; who: string; look: string; ref?: string; head: number; backNote?: string }
 const stock = (who: string, look: string, head = 0.13): Figure => ({ out: "", who, look, head })
 // Stock figures stand in for created heroes: one per race and build, dressed for travel with no class gear, so any class
 // reads true. Heads are the share of figure height a portrait frames around.
@@ -119,6 +120,46 @@ const FIGURES: Record<string, Figure> = {
     ref: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/covert-cargo/pcs/b44179ad-0e8e-4d1e-8b17-8c436dbeb15a.png",
     head: 0.19,
   },
+  // Covert Cargo's cast, painted from their web portraits.
+  reinhard: {
+    out: "fixtures/covert-cargo/reinhard",
+    who: "Reinhard, Human male enforcer",
+    look: "A burly, broad-shouldered man with a square, scarred, scowling face, a heavy brow, close-cropped black hair and a strong jaw. A long dark green-black leather greatcoat with a high turned-up collar and buckles, worn open over a rust-brown tunic, dark trousers and heavy boots. A longsword in his right hand, point down.",
+    ref: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/covert-cargo/npcs/236683b0-4745-4a8c-ad9d-48ed3bbaf908.png",
+    head: 0.13,
+  },
+  silas: {
+    out: "fixtures/covert-cargo/silas",
+    who: "Silas, Human male rogue",
+    look: "Lean and wiry, a narrow hard face with grey stubble and watchful grey eyes in the shadow of a deep hood. A hooded charcoal cloak over close-fitting dark leather armour with straps and buckles, a belt with pouches, a coiled rope and grappling hook at his hip, dark boots. A long dagger in each hand, held low.",
+    ref: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/covert-cargo/npcs/3959ac3c-b63a-4e88-9cce-6a2d69f2bc52.png",
+    head: 0.13,
+    backNote:
+      "His deep hood is up and covers the whole back of his head, so no hair or scalp shows. The cloak hangs straight down his back from the shoulders to the calves and hides his back completely: we see the outside of the cloak, not his chest, belt, pouches or buckles. His hands and weapons show only at his sides.",
+  },
+  aelar: {
+    out: "fixtures/covert-cargo/aelar",
+    who: "Aelar Moonglimmer, Elf male operative",
+    look: "A lean, agile elf with a refined, lined face, sharp grey eyes and silver hair tied back from pointed ears. A dark shadowy cloak over close dark leather clothes, a moon-silver dagger at his belt, soft dark boots.",
+    ref: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/covert-cargo/npcs/e8e02409-93a9-4936-8b2e-b5a3d083889d.png",
+    head: 0.13,
+    backNote:
+      "The cloak hangs straight down his back from the shoulders to the calves and hides his back completely: we see the outside of the cloak, not his chest, belt, pouches or buckles. His hands and weapons show only at his sides.",
+  },
+  "elf-archer": {
+    out: "fixtures/covert-cargo/elf-archer",
+    who: "Elven Archer, Wood Elf female archer",
+    look: "Tall and slender with pointed ears, wavy pale blond hair in loose braids with small feathers, green eyes and a faint scar on her left cheekbone. A white blouse under a forest-green leather jerkin, dark red leather bracers, a quiver of arrows on her back, a longbow held in her left hand, leggings and soft boots.",
+    ref: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/covert-cargo/npcs/66faef7d-7d77-4aac-bdec-83850e136f5f.png",
+    head: 0.13,
+  },
+  "elf-fighter": {
+    out: "fixtures/covert-cargo/elf-fighter",
+    who: "Elven Fighter, Elf male fighter",
+    look: "Tall and lean with sharp angular features, green eyes and long silver hair tied back from pointed ears. A dark green hooded cloak over rust-brown reinforced leather armour with a baldric, a round wooden shield on his back, an elven longsword held point down in front of him, boots.",
+    ref: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/covert-cargo/npcs/ce082298-d090-47b2-a3b9-5af7c851dec7.png",
+    head: 0.13,
+  },
 }
 for (const [id, f] of Object.entries(FIGURES)) f.out ||= `heroes/${id}`
 
@@ -203,7 +244,8 @@ async function front(id: string) {
 async function back(id: string) {
   const { path } = await latest("front", id)
   if (!existsSync(path)) throw new Error(`No front for ${id}. Run front first.`)
-  await keep("back", id, await render(`${id} back`, BACK, [await jpeg(path, "#00ff00"), await jpeg(STYLE, "#000")]))
+  const note = FIGURES[id].backNote
+  await keep("back", id, await render(`${id} back`, note ? `${BACK}\n- ${note}` : BACK, [await jpeg(path, "#00ff00"), await jpeg(STYLE, "#000")]))
 }
 
 // Distance-from-green key (olive cloaks survive), eroded two pixels and despilled at the edge, cropped to the figure.
