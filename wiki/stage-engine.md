@@ -205,3 +205,11 @@ Remaining product work is tracked in [Stageview](plans/stageview.md).
 - The planar reflection leaves out grass, unpainted foliage, cards, mist and rocks. High renders it at 0.4 of the drawing buffer.
 - River view on high: 1.82M to 1.09M triangles, 138 to 125 calls. Balanced reads 66 fps, high 40 to 48, on a loaded dev machine.
 - Character shots swing clear: `stage.shot({ subject, ... })` tries turns of up to 180 degrees round the subject and then 75 and 55 percent of the distance, until the camera, clamped to the set's camera box, has 0.45 m of room and a clear line to the subject past every solid footprint. Walls that should block a camera must be `solid`.
+
+## Narration shots, 2026-10-04
+
+- `narrationShot(text, stage)` in `narration.ts` picks a view for a paragraph of narration. Two or more cast members named: the staging group shot framing most of them. One named: their own shot, or a shot on them. Nobody named: the set or staging shot whose key and label best match the paragraph through a small thesaurus (riverboat finds "The tug", water finds "The river"). Nothing matches: the opening shot for the first paragraph, otherwise the camera stays. A first word that describes rather than names ("Elven Archer") does not count as a name.
+- The desktop calls it as the player steps through a turn's narration with Continue. A quoted line still frames its speaker.
+- Named staging shots on one character swing clear of solid footprints like inline ones. When a shot is taken and the camera had to swing more than 60 degrees from the character's facing, the character turns toward it, so a standee is not seen side on, where front and back dissolve into each other.
+- On Covert Cargo's opening, 14 paragraphs moved through the river, the meeting, Poppen in the reeds, the tug and the named characters' shots.
+

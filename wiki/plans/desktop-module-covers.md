@@ -24,3 +24,12 @@ Owner request, 2026-10-04: "I want each adventure page to have some art that fee
 - The New game panel widened to 1160 px: the cover on the left, the adventure, the party and the heroes on the right.
 - Desktop typecheck, scoped Biome and 25 desktop tests pass. All four adventures rendered in the dev app with the titles and captions legible.
 
+## Owner feedback, same day
+
+"for the covers, i prefer edge to edge art with an emphasis on the art, with less text." The cover is now the painting edge to edge with only the title over its sky and the player count at its foot. The module code, colour band, wordmark and setting line are gone.
+
+The same review found two play problems, fixed in the stage engine and recorded in [the stage engine record](../stage-engine.md#narration-shots-2026-10-04):
+
+- The Lyra view on the pier looked into the tug's saloon. Named shots on one character now swing clear like turn shots, and a character the camera had to swing far round turns toward it, so their card is not seen edge on.
+- Continue did not move the camera. Each paragraph now picks a view: the speaker, the people it names, or the place it describes.
+

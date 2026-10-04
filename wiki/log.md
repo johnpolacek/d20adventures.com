@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-04, covers edge to edge, the camera follows the narration
+
+Owner asked for covers with the art edge to edge and less text, reported the Lyra view blocked, and expected Continue to change the view with the story. Covers now carry only the title and the player count. Each paragraph of narration picks a view from the people it names or the place it describes. Named character shots swing clear of cabins, and characters turn toward a camera that had to swing round them. Poppen's reed shot looks over his shoulder at the pier. See [the plan](plans/desktop-module-covers.md#owner-feedback-same-day).
+
 ## 2026-10-04, module covers for the desktop New game screen
 
 Owner asked for adventure art that feels like a D&D module. Each bundled adventure now has a painted portrait cover in the manner of a classic module, framed in our own trade dress with a module code, colour band, title and player count, beside the party setup. Covers come from the checked-in `scripts/adventure-covers.ts`. See [the plan](plans/desktop-module-covers.md).

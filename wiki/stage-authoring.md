@@ -51,6 +51,8 @@ The web viewer and the desktop app run the same `packages/stage` renderer and th
 - Time frames with a GPU sync and switch one feature off at a time, interleaving base and test runs. On a busy machine single runs swing by several milliseconds. Trust interleaved medians and work counts (triangles, calls, shadow-map texels) over one fps reading.
 - Dense foliage is costliest in the shadow map. Keep low growth and leaf cards out of it under soft or misty light, and cap the map with `sun.shadow.size`.
 - Hosts frame a character's turn with a generic shot in front of them. Mark walls and cabins `solid`, keep cast a step clear of posts, and hang ropes and chains away from the lines to doors, or the turn view lands behind them.
+- Name a staging's shots after what they show ("The river", "The tug", "The reeds"): narration picks views by matching paragraphs against those labels.
+- A character hiding in tall growth reads best from behind and above, looking past them at what they watch. A low front shot shows only stems.
 - Do not run Biome on generated set JSON. It reflows the arrays, and every regeneration then shows as a large diff.
 - Match a painting's light sources, not only its average colour. The pier's art reads from warm windows against blue mist. Point lights inside the saloon and the pilothouse, a lantern on the pier and a lamp on the bank gave that. Keep lamp lights inside walls, not outside them, or they wash the walls.
 - A cloaked character's back can come out as a front-facing body with the cloak drawn behind it. Give the figure a `backNote` in `scripts/stage-standees.ts` that says the cloak hangs down the back and hides it, and whether the hood is up.
