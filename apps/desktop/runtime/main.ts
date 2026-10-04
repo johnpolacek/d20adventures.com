@@ -3,8 +3,8 @@ import { dirname, join } from "node:path"
 import { createInterface } from "node:readline"
 import { locate } from "../../desktop-spike/harness/cli.mjs"
 import { applyCharacterUpdates } from "./characters"
-import { adventureList, commandSchema, game, type Packs, transitionsOf } from "./game"
-import { creationOptions, type HeroDraft, heroCommand, heroCommandSchema } from "./heroes"
+import { adventureList, commandSchema, type GameCommand, game, type Packs, transitionsOf } from "./game"
+import { creationOptions, type HeroCommand, type HeroDraft, heroCommand, heroCommandSchema } from "./heroes"
 import { localLlm } from "./llm"
 import { LocalStore } from "./store"
 
@@ -46,15 +46,16 @@ async function main() {
   for await (const line of lines) {
     try {
       const input = JSON.parse(line)
-      const command = ["heroDraft", "saveHero", "deleteHero"].includes(input?.kind) ? heroCommandSchema.parse(input) : commandSchema.parse(input)
+      const command = ["heroDraft", "saveHero", "deleteHero", "paintHero", "art"].includes(input?.kind) ? heroCommandSchema.parse(input) : commandSchema.parse(input)
       store = new LocalStore(savePath, transitionsOf(packs))
       store.acquire()
       model = localLlm("provider" in command ? command.provider : (store.state?.provider ?? "claude"), scratch, (patch) => {
         applyCharacterUpdates(store!.current().characters, patch.characterUpdates)
       })
-      let draft: HeroDraft | undefined
-      if (command.kind === "heroDraft" || command.kind === "saveHero" || command.kind === "deleteHero") draft = (await heroCommand(command, store, packs, model.llm)).draft
-      else await game(store, packs, model.llm)(command)
+      let hero: { draft?: HeroDraft; art?: unknown } = {}
+      if ("kind" in command && ["heroDraft", "saveHero", "deleteHero", "paintHero", "art"].includes(command.kind))
+        hero = await heroCommand(command as HeroCommand, store, packs, model.llm, { data: dirname(savePath), scratch })
+      else await game(store, packs, model.llm)(command as GameCommand)
       const state = store.state
       const providers = ["claude", "codex", "grok", "gemini"].filter((name) => {
         try {
@@ -64,7 +65,7 @@ async function main() {
           return false
         }
       })
-      process.stdout.write(`${JSON.stringify({ state, providers, adventures: adventureList(packs), heroes: store.heroes(), options: creationOptions(packs), draft })}\n`)
+      process.stdout.write(`${JSON.stringify({ state, providers, adventures: adventureList(packs), heroes: store.heroes(), options: creationOptions(packs), ...hero })}\n`)
     } catch (error) {
       process.stdout.write(`${JSON.stringify({ error: error instanceof Error ? error.message : "The game action failed.", state: store?.reload() ?? null, heroes: store?.heroes() })}\n`)
     } finally {

@@ -3,7 +3,7 @@ import { eyebrow, Pill, panel } from "@/components/stage/hud"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import type { Hero, HeroDraft } from "../runtime/heroes"
-import { defaultFigure, figuresFor } from "./figures"
+import { defaultFigure, type FigureArt, figuresFor } from "./figures"
 
 type Options = { races: string[]; archetypes: string[] }
 export type HeroIdea = { race: string; archetype: string; name: string; gender: string; idea: string }
@@ -27,9 +27,11 @@ const unnamed = (items: { name: string; description?: string }[] = []) => items.
 export function HeroCreator(props: {
   options: Options
   editing?: Hero
+  // Art painted for the hero being edited, offered beside the stock figures.
+  painted?: FigureArt
   busy: boolean
   onDraft: (idea: HeroIdea) => Promise<HeroDraft | undefined>
-  onSave: (hero: HeroDraft & { id?: string; figure: string }) => Promise<boolean>
+  onSave: (hero: HeroDraft & { id?: string; figure: string; painted?: boolean }) => Promise<boolean>
   onClose: () => void
 }) {
   const [idea, setIdea] = useState<HeroIdea>(() => ({
@@ -39,7 +41,7 @@ export function HeroCreator(props: {
     gender: props.editing?.gender ?? "",
     idea: "",
   }))
-  const [hero, setHero] = useState<(HeroDraft & { id?: string; figure: string }) | null>(props.editing ?? null)
+  const [hero, setHero] = useState<(HeroDraft & { id?: string; figure: string; painted?: boolean }) | null>(props.editing ?? null)
   const [lists, setLists] = useState(() => listText(props.editing))
   useEffect(() => {
     const fn = (e: KeyboardEvent) => {
@@ -102,14 +104,25 @@ export function HeroCreator(props: {
               <div>
                 <div className={cn(eyebrow, "mb-2")}>Figure</div>
                 <div className="grid grid-cols-2 gap-2">
+                  {props.painted && (
+                    <button
+                      type="button"
+                      aria-pressed={Boolean(hero.painted)}
+                      aria-label="Painted figure"
+                      onClick={() => setHero({ ...hero, painted: true })}
+                      className={cn("rounded-[3px] border bg-stage-ink/60 p-1", hero.painted ? "border-stage-gold" : "border-stage-line/20 opacity-70 hover:opacity-100")}
+                    >
+                      <img src={props.painted.front} alt="" className="block h-56 w-full object-contain" />
+                    </button>
+                  )}
                   {figuresFor(hero.race).map((f) => (
                     <button
                       key={f.id}
                       type="button"
-                      aria-pressed={hero.figure === f.id}
+                      aria-pressed={!hero.painted && hero.figure === f.id}
                       aria-label={`Figure ${f.id.endsWith("-a") ? 1 : 2}`}
-                      onClick={() => setHero({ ...hero, figure: f.id })}
-                      className={cn("rounded-[3px] border bg-stage-ink/60 p-1", hero.figure === f.id ? "border-stage-gold" : "border-stage-line/20 opacity-70 hover:opacity-100")}
+                      onClick={() => setHero({ ...hero, figure: f.id, painted: false })}
+                      className={cn("rounded-[3px] border bg-stage-ink/60 p-1", !hero.painted && hero.figure === f.id ? "border-stage-gold" : "border-stage-line/20 opacity-70 hover:opacity-100")}
                     >
                       <img src={f.art.front} alt="" className="block h-56 w-full object-contain" />
                     </button>

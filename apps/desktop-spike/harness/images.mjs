@@ -1,38 +1,11 @@
-import { randomUUID } from "node:crypto"
-import { copyFileSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync, writeFileSync } from "node:fs"
+import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { homedir } from "node:os"
-import { basename, extname, join, sep } from "node:path"
+import { basename, extname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { PNG } from "pngjs"
-import { locate, minimalEnv, runBounded } from "./cli.mjs"
+import { locate, runBounded } from "./cli.mjs"
+import { imageCommand, imageOutput } from "./image-cli.mjs"
 
-const forbidden = [
-  "read_file",
-  "write",
-  "search_replace",
-  "list_dir",
-  "grep",
-  "run_terminal_command",
-  "kill_command_or_subagent",
-  "get_command_or_subagent_output",
-  "spawn_subagent",
-  "scheduler_create",
-  "scheduler_delete",
-  "scheduler_list",
-  "monitor",
-  "search_tool",
-  "use_tool",
-  "workflow",
-  "todo_write",
-  "enter_plan_mode",
-  "exit_plan_mode",
-  "ask_user_question",
-  "send_feedback",
-  "image_edit",
-  "image_to_video",
-  "reference_to_video",
-  "video_gen",
-]
 const character =
   "Mira, an adult human fantasy ranger with dark curly hair, warm brown skin, a rust-red cloak, brown leather boots and armor, and a sheathed sword. Painterly tabletop RPG character art. No green clothing, no text, no border. Flat perfectly solid bright green #00ff00 background, no gradient, no cast shadow."
 export const imagePrompts = {
@@ -100,26 +73,6 @@ export function splitStandee(png, output, provider) {
   }
 }
 
-function grokImagePath(events) {
-  const visit = (value) => {
-    if (typeof value === "string") {
-      try {
-        return visit(JSON.parse(value))
-      } catch {
-        return null
-      }
-    }
-    if (Array.isArray(value)) return value.map(visit).find(Boolean)
-    if (!value || typeof value !== "object") return null
-    if (value.type === "ImageGen" && typeof value.path === "string") return value.path
-    return Object.values(value).map(visit).find(Boolean)
-  }
-  return events
-    .filter((e) => e.type === "user")
-    .map(visit)
-    .find(Boolean)
-}
-
 export async function imageTrials(cwd, resultDir) {
   const rows = []
   const output = join(resultDir, "images")
@@ -127,80 +80,10 @@ export async function imageTrials(cwd, resultDir) {
   for (const provider of ["codex", "grok"]) {
     for (const [kind, description] of Object.entries(imagePrompts)) {
       const instructions = `Use only your built-in ${provider === "codex" ? "image generation" : "image_gen"} tool exactly once to generate one ${kind === "portrait" ? "square" : "landscape"} image. Do not use any other tools or write files yourself. Then stop.\n\n${description}`
-      const env = minimalEnv()
       const executable = locate(provider)
       const version = await runBounded(executable, ["--version"], { cwd })
-      let args
-      if (provider === "codex") {
-        const settings = {
-          project_doc_max_bytes: 0,
-          "skills.include_instructions": false,
-          include_apps_instructions: false,
-          include_permissions_instructions: false,
-          include_collaboration_mode_instructions: false,
-          web_search: "disabled",
-          mcp_servers: {},
-          "features.shell_tool": false,
-          "features.apply_patch_freeform": false,
-          "features.unified_exec": false,
-          "features.apps": false,
-          "features.plugins": false,
-          "features.hooks": false,
-          "features.multi_agent": false,
-          "features.js_repl": false,
-          "features.view_image": false,
-          "features.image_generation": true,
-          "tools.update_plan.enabled": false,
-          "tools.experimental_request_user_input.enabled": false,
-        }
-        args = [
-          "--ask-for-approval",
-          "never",
-          "--sandbox",
-          "read-only",
-          "-C",
-          cwd,
-          ...Object.entries(settings).flatMap(([key, value]) => ["-c", `${key}=${typeof value === "object" ? "{}" : JSON.stringify(value)}`]),
-          "exec",
-          "--ephemeral",
-          "--ignore-user-config",
-          "--ignore-rules",
-          "--skip-git-repo-check",
-          "--color",
-          "never",
-          "--json",
-          "-",
-        ]
-      } else {
-        const promptPath = join(cwd, `${kind}.txt`)
-        writeFileSync(promptPath, instructions)
-        for (const source of ["CURSOR", "CLAUDE"]) for (const type of ["SKILLS", "RULES", "AGENTS", "MCPS", "HOOKS"]) env[`GROK_${source}_${type}_ENABLED`] = "0"
-        Object.assign(env, { GROK_MEMORY: "0", GROK_SUBAGENTS: "0", GROK_TOOL_SEARCH: "0", GROK_LSP_TOOLS: "0", GROK_DISABLE_AUTOUPDATER: "1" })
-        args = [
-          "--prompt-file",
-          promptPath,
-          "--verbatim",
-          "--output-format",
-          "streaming-messages-json",
-          "--tools",
-          "image_gen",
-          "--disallowed-tools",
-          forbidden.join(","),
-          "--allow",
-          "image_gen",
-          "--disable-web-search",
-          "--no-subagents",
-          "--no-plan",
-          "--permission-mode",
-          "dontAsk",
-          "--session-id",
-          randomUUID(),
-          "--model",
-          "grok-4.7",
-          ...["Bash(*)", "Read(**)", "Edit(**)", "Grep(**)", "MCPTool(*)"].flatMap((rule) => ["--deny", rule]),
-        ]
-      }
-      const result = await runBounded(executable, args, { cwd, env, input: provider === "codex" ? instructions : "", timeout: 240000, limit: 8_388_608 })
+      const command = imageCommand(provider, cwd, instructions, kind)
+      const result = await runBounded(executable, command.args, { cwd, env: command.env, input: command.input, timeout: 240000, limit: 8_388_608 })
       const events = result.stdout.split("\n").flatMap((line) => {
         try {
           return [JSON.parse(line)]
@@ -221,31 +104,8 @@ export async function imageTrials(cwd, resultDir) {
       }
       try {
         if (result.code !== 0 || result.timedOut || result.oversized) throw new Error("provider_failed")
-        const unexpected = events.some((e) => {
-          if (provider === "grok") return e.message?.content?.some((b) => b.type === "tool_use" && b.name !== "image_gen")
-          return ["command_execution", "file_change", "mcp_tool_call", "web_search"].includes(e.item?.type)
-        })
-        if (unexpected) throw new Error("unexpected_tool_event")
-        let path
-        let allowedRoot
-        if (provider === "codex") {
-          const thread = events.find((e) => e.type === "thread.started")?.thread_id
-          if (!/^[a-f0-9-]{16,64}$/.test(thread ?? "")) throw new Error("missing_thread_id")
-          allowedRoot = join(homedir(), ".codex", "generated_images", thread)
-          path = readdirSync(allowedRoot)
-            .filter((f) => /^[\w.-]+\.png$/.test(f))
-            .map((f) => join(allowedRoot, f))
-            .sort((a, b) => statSync(b).mtimeMs - statSync(a).mtimeMs)[0]
-        } else {
-          path = grokImagePath(events)
-          allowedRoot = join(homedir(), ".grok", "sessions")
-          if (!path || !path.split(sep).includes("images")) throw new Error("missing_image_output")
-        }
-        if (!path || ![".png", ".jpg", ".jpeg"].includes(extname(path).toLowerCase())) throw new Error("invalid_image_path")
-        const resolved = realpathSync(path)
-        if (!resolved.startsWith(realpathSync(allowedRoot) + sep)) throw new Error("output_outside_image_directory")
-        if (statSync(resolved).size > 20_971_520) throw new Error("image_too_large")
-        const original = join(output, `${provider}-${kind}-original${extname(path)}`)
+        const resolved = imageOutput(provider, events)
+        const original = join(output, `${provider}-${kind}-original${extname(resolved)}`)
         copyFileSync(resolved, original)
         let png = original
         if (extname(png) !== ".png") {

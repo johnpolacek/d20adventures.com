@@ -4,13 +4,16 @@ import { deg, matName, num, size, vec2, vec3 } from "../builders/types"
 // Staging spec v1 (`d20.stage.staging`), minimal for phase 2: which set, who stands where, and the shots that frame
 // them. Scripts, ambient loops and beats come later (Stageview phases 3–4).
 
-// Art must come from this app (`/stage/...`) or the project's asset bucket; a staging never points players' browsers
-// at an arbitrary host.
+// Art must come from this app (`/stage/...`), the project's asset bucket, or a blob URL the page made itself (a hero's
+// art painted on the player's machine); a staging never points players' browsers at an arbitrary host.
 const ASSET_HOSTS = [/^https:\/\/[a-z0-9-]+\.s3\.[a-z0-9-]+\.amazonaws\.com\//, /^https:\/\/[a-z0-9-]+\.s3\.amazonaws\.com\//]
 export const assetUrl = z
   .string()
   .max(1000)
-  .refine((u) => /^\/stage\/[A-Za-z0-9/_.-]+$/.test(u) || ASSET_HOSTS.some((re) => re.test(u)), "asset URLs must be /stage/… paths or the asset bucket")
+  .refine(
+    (u) => /^\/stage\/[A-Za-z0-9/_.-]+$/.test(u) || /^blob:[a-z]+:\/\/[A-Za-z0-9.:-]+\/[a-f0-9-]+$/.test(u) || ASSET_HOSTS.some((re) => re.test(u)),
+    "asset URLs must be /stage/… paths, page blobs or the asset bucket"
+  )
 
 const idName = matName
 // Where to look: degrees, another cast member, a mark, or a point.

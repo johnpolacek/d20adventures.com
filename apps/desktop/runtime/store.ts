@@ -29,8 +29,9 @@ export type Save = {
   movement: Record<string, { actorId: string; intent: MovementIntent }>
   positions: Record<string, { x: number; z: number; ry: number }>
   characterStates?: CharacterStates
-  // Each created hero's stock figure, by character id.
+  // Each created hero's stock figure, by character id, and the heroes who stand as their painted art instead.
   figures?: Record<string, string>
+  painted?: string[]
 }
 
 /** SQLite writes commit each milestone, including the natural die before inference. */

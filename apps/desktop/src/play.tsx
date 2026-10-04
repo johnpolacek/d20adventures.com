@@ -16,6 +16,7 @@ import type { Hero, HeroCommand, PartyChoice } from "../runtime/heroes"
 import type { Save } from "../runtime/store"
 import { send } from "./bridge"
 import { characterInfo } from "./character-info"
+import type { FigureArt } from "./figures"
 import { HeroCreator, type HeroIdea } from "./hero-creator"
 import { applyMovement, context, positions as stagePositions } from "./movement"
 import { NewGame } from "./new-game"
@@ -45,6 +46,20 @@ export function DesktopGame() {
   // The hero creator, over the new game screen. A hero it saves joins the party there.
   const [creator, setCreator] = useState<{ editing?: Hero } | null>(null)
   const [created, setCreated] = useState<string | null>(null)
+  // Painted hero art, kept as blob URLs, which the stage and the app's content policy accept.
+  const [art, setArt] = useState<Record<string, FigureArt>>({})
+  const [painting, setPainting] = useState<string | null>(null)
+  const askedArt = useRef(new Set<string>())
+  const keepArt = useCallback((incoming: Record<string, FigureArt>) => {
+    setArt((current) => {
+      const next = { ...current }
+      for (const [id, urls] of Object.entries(incoming)) {
+        for (const url of Object.values(current[id] ?? {})) URL.revokeObjectURL(url)
+        next[id] = { front: blobUrl(urls.front), back: blobUrl(urls.back), portrait: blobUrl(urls.portrait) }
+      }
+      return next
+    })
+  }, [])
   const [busy, setBusy] = useState(false)
   const busyRef = useRef(false)
   const [error, setError] = useState<string | null>(null)
@@ -68,19 +83,21 @@ export function DesktopGame() {
   // The title screen shows the chosen adventure's opening scene. Encounters without an authored scene play in story view.
   // In a game the scene holds the actual party, keyed by value so a reloaded save does not rebuild the stage.
   const authored = sceneFor(turn?.encounterId ?? chosen?.start ?? "the-gates-of-kordavos")
+  const painted = Object.fromEntries((save?.painted ?? []).flatMap((id) => (art[id] ? [[id, art[id]]] : [])))
   const partyKey = turn
     ? JSON.stringify([
         turn.characters.filter((c) => c.type === "pc").map((c) => ({ id: c.id, name: c.name, race: c.race, archetype: c.archetype, gender: c.gender, type: c.type })),
         save?.figures ?? {},
+        painted,
       ])
     : ""
   const scene = useMemo(() => {
     if (!authored || !partyKey) return authored
-    const [pcs, figures] = JSON.parse(partyKey)
-    return partyScene(authored, pcs, figures)
+    const [pcs, figures, paintedArt] = JSON.parse(partyKey)
+    return partyScene(authored, pcs, figures, paintedArt)
   }, [authored, partyKey])
   const figures = save?.figures
-  const portrait = (c: { id: string; name: string; type?: string; race?: string; gender?: string }) => portraitFor(scene, c, figures)
+  const portrait = (c: { id: string; name: string; type?: string; race?: string; gender?: string }) => portraitFor(scene, c, figures, painted)
   const card = cardCharacter ? characterInfo(cardCharacter, portrait(cardCharacter)) : null
   const specs = useMemo(() => (scene ? { set: scene.set, staging: scene.staging, tier: "balanced" as const } : null), [scene])
   const { stage, stageRef, status: loading, error: stageError } = useStage(containerRef, specs)
@@ -104,36 +121,48 @@ export function DesktopGame() {
   saveRef.current = save
   const focused = useRef<string | null>(null)
   const moved = useRef(new Set<string>())
-  const invoke = useCallback(async (command: GameCommand | HeroCommand) => {
-    if (busyRef.current) return
-    busyRef.current = true
-    setBusy(true)
-    setError(null)
-    try {
-      const res = await send(command)
-      setSave(res.state)
-      if (res.adventures) setAdventures(res.adventures)
-      if (res.heroes) setHeroes(res.heroes)
-      if (res.options) setOptions(res.options)
-      if (res.providers) {
-        setProviders(res.providers)
-        setProvider((p) => (res.providers!.includes(p) ? p : (res.providers![0] ?? "claude")))
+  const invoke = useCallback(
+    async (command: GameCommand | HeroCommand) => {
+      if (busyRef.current) return
+      busyRef.current = true
+      setBusy(true)
+      setError(null)
+      try {
+        const res = await send(command)
+        setSave(res.state)
+        if (res.adventures) setAdventures(res.adventures)
+        if (res.heroes) setHeroes(res.heroes)
+        if (res.art && Object.keys(res.art).length) keepArt(res.art)
+        if (res.options) setOptions(res.options)
+        if (res.providers) {
+          setProviders(res.providers)
+          setProvider((p) => (res.providers!.includes(p) ? p : (res.providers![0] ?? "claude")))
+        }
+        if (res.error) setError(res.error)
+        if (!res.error && command.kind === "reply") setDraft("")
+        return res
+      } catch (e) {
+        setError(String(e))
+        return null
+      } finally {
+        busyRef.current = false
+        setBusy(false)
+        setLoaded(true)
       }
-      if (res.error) setError(res.error)
-      if (!res.error && command.kind === "reply") setDraft("")
-      return res
-    } catch (e) {
-      setError(String(e))
-      return null
-    } finally {
-      busyRef.current = false
-      setBusy(false)
-      setLoaded(true)
-    }
-  }, [])
+    },
+    [keepArt]
+  )
   useEffect(() => {
     void invoke({ kind: "load" })
   }, [invoke])
+  // Fetch painted art once for roster heroes and for the saved party.
+  useEffect(() => {
+    if (busy || !loaded) return
+    const ids = [...new Set([...heroes.filter((h) => h.painted).map((h) => h.id), ...(save?.painted ?? [])])].filter((id) => !askedArt.current.has(id))
+    if (!ids.length) return
+    for (const id of ids) askedArt.current.add(id)
+    void invoke({ kind: "art", ids: ids.slice(0, 24) })
+  }, [busy, loaded, heroes, save?.painted, invoke])
   useEffect(() => {
     const old = previousText.current
     const firstChanged = old.turn === turn?._id ? text.findIndex((p, i) => p !== old.paragraphs[i]) : 0
@@ -266,6 +295,15 @@ export function DesktopGame() {
     setConfirmNew(false)
     setCardId(null)
     setOpen(null)
+  }
+  // Painting uses the Game Master's CLI when it can paint, else Grok, then Codex.
+  const painters: string[] = providers.filter((p) => p === "grok" || p === "codex")
+  const painter = (painters.includes(provider) ? provider : painters[0]) as "grok" | "codex" | undefined
+  const paintHero = async (hero: Hero) => {
+    if (!painter) return
+    setPainting(hero.id)
+    await invoke({ kind: "paintHero", provider: painter, id: hero.id })
+    setPainting(null)
   }
   const draftHero = async (idea: HeroIdea) => (await invoke({ kind: "heroDraft", provider: provider as "claude", adventure, ...idea }))?.draft
   const saveHero = async (hero: Omit<Hero, "id"> & { id?: string }) => {
@@ -492,6 +530,9 @@ export function DesktopGame() {
                   onStart={(chosenParty) => void start(chosenParty)}
                   onCreate={() => setCreator({})}
                   onEdit={(hero) => setCreator({ editing: hero })}
+                  art={art}
+                  painting={painting}
+                  onPaint={painter ? (hero) => void paintHero(hero) : undefined}
                   onDelete={(hero) => void invoke({ kind: "deleteHero", id: hero.id })}
                   onCancel={save ? () => setConfirmNew(false) : undefined}
                 />
@@ -501,7 +542,15 @@ export function DesktopGame() {
         </div>
       )}
       {creator && (
-        <HeroCreator options={creator.editing ? options : (chosen?.options ?? options)} editing={creator.editing} busy={busy} onDraft={draftHero} onSave={saveHero} onClose={() => setCreator(null)} />
+        <HeroCreator
+          options={creator.editing ? options : (chosen?.options ?? options)}
+          editing={creator.editing}
+          painted={creator.editing ? art[creator.editing.id] : undefined}
+          busy={busy}
+          onDraft={draftHero}
+          onSave={saveHero}
+          onClose={() => setCreator(null)}
+        />
       )}
       {(error || stageError) && (
         <div role="alert" className={`${panel} absolute left-1/2 top-28 z-[60] w-[min(600px,90vw)] -translate-x-1/2 p-4 text-sm`}>
@@ -516,4 +565,9 @@ export function DesktopGame() {
       )}
     </StageHud>
   )
+}
+
+function blobUrl(dataUrl: string) {
+  const bytes = Uint8Array.from(atob(dataUrl.slice(dataUrl.indexOf(",") + 1)), (c) => c.charCodeAt(0))
+  return URL.createObjectURL(new Blob([bytes], { type: "image/png" }))
 }

@@ -9,6 +9,8 @@ export type GameResponse = {
   heroes?: Hero[]
   options?: { races: string[]; archetypes: string[] }
   draft?: HeroDraft
+  // Painted hero art as data URLs, by hero id.
+  art?: Record<string, { front: string; back: string; portrait: string }>
   error?: string
 }
 export const send = (command: GameCommand | HeroCommand) => invoke<GameResponse>("game_command", { command })

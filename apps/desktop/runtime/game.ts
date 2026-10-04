@@ -151,6 +151,7 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
         movement: {},
         positions: {},
         figures: party.figures,
+        painted: party.painted,
         adventure: {
           _id: id,
           title: artifacts.manifest.title,

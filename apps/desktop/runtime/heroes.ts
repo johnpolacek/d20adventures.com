@@ -5,9 +5,15 @@ import { type PCTemplate, pcTemplateSchema } from "@d20/gm-core/types/character"
 import { z } from "zod"
 import { STOCK_FIGURES } from "../src/figures"
 import type { Pack, Packs } from "./game"
+import { PAINTERS, paint, readArt, storeArt } from "./paint"
 
-// A hero in the local roster: a player character sheet and the stock figure that stands for them.
-export const heroSchema = pcTemplateSchema.extend({ id: z.string().regex(/^hero-[a-z0-9-]{4,40}$/), figure: z.string().refine((id) => id in STOCK_FIGURES, "Unknown figure.") })
+// A hero in the local roster: a player character sheet and the stock figure that stands for them. `painted` heroes
+// stand as the art painted for them instead, while it exists.
+export const heroSchema = pcTemplateSchema.extend({
+  id: z.string().regex(/^hero-[a-z0-9-]{4,40}$/),
+  figure: z.string().refine((id) => id in STOCK_FIGURES, "Unknown figure."),
+  painted: z.boolean().optional(),
+})
 export type Hero = z.infer<typeof heroSchema>
 const provider = z.enum(["claude", "codex", "grok", "gemini"])
 const text = (max: number) => z.string().trim().max(max)
@@ -25,6 +31,9 @@ export const heroCommandSchema = z.discriminatedUnion("kind", [
   // A new hero arrives without an id.
   z.object({ kind: z.literal("saveHero"), hero: heroSchema.extend({ id: heroSchema.shape.id.optional() }) }),
   z.object({ kind: z.literal("deleteHero"), id: z.string().max(100) }),
+  z.object({ kind: z.literal("paintHero"), provider: z.enum(PAINTERS), id: z.string().max(100) }),
+  // Painted art for these heroes, as data URLs.
+  z.object({ kind: z.literal("art"), ids: z.array(z.string().max(100)).max(24) }),
 ])
 export type HeroCommand = z.infer<typeof heroCommandSchema>
 export type HeroDraft = Omit<Hero, "id" | "figure">
@@ -40,11 +49,27 @@ export function creationOptions(packs: Packs) {
   return { races: [...new Set(options.flatMap((o) => o.races))], archetypes: [...new Set(options.flatMap((o) => o.archetypes))] }
 }
 
-export async function heroCommand(input: HeroCommand, roster: Roster, packs: Packs, llm: Llm): Promise<{ draft?: HeroDraft }> {
+// `files` is where painted art lives and a scratch directory for the painting CLI.
+export async function heroCommand(
+  input: HeroCommand,
+  roster: Roster,
+  packs: Packs,
+  llm: Llm,
+  files?: { data: string; scratch: string }
+): Promise<{ draft?: HeroDraft; art?: ReturnType<typeof readArt> }> {
   const command = heroCommandSchema.parse(input)
   if (command.kind === "deleteHero") {
     roster.deleteHero(command.id)
     return {}
+  }
+  if (command.kind === "art") return { art: files ? readArt(files.data, command.ids) : {} }
+  if (command.kind === "paintHero") {
+    const hero = roster.heroes().find((h) => h.id === command.id)
+    if (!hero) throw new Error("That hero is no longer in your roster.")
+    if (!files) throw new Error("Painting needs the app's data folder.")
+    storeArt(files.data, hero.id, await paint(command.provider, hero, files.scratch))
+    roster.putHero({ ...hero, painted: true })
+    return { art: readArt(files.data, [hero.id]) }
   }
   const { races, archetypes } = creationOptions(packs)
   const hero = command.kind === "saveHero" ? command.hero : command
@@ -97,6 +122,7 @@ export function partyFor(pack: Pack, choices: PartyChoice[], roster: Hero[]) {
   if (choices.every((c) => c.ai)) throw new Error("Play at least one hero yourself.")
   const sheets: Record<string, PCTemplate> = {}
   const figures: Record<string, string> = {}
+  const painted: string[] = []
   for (const choice of choices) {
     if (m.premadeCharacterIds.includes(choice.id)) continue
     const hero = roster.find((h) => h.id === choice.id)
@@ -105,13 +131,15 @@ export function partyFor(pack: Pack, choices: PartyChoice[], roster: Hero[]) {
     if (!options) throw new Error(`${m.title} is played with its own heroes.`)
     if (!options.races.includes(hero.race) || !options.archetypes.includes(hero.archetype))
       throw new Error(`${hero.name} cannot join ${m.title}. It allows ${options.races.join(", ")} heroes who are ${options.archetypes.join(", ")}.`)
-    const { figure, ...sheet } = hero
+    const { figure, painted: art, ...sheet } = hero
     sheets[hero.id] = sheet
     figures[hero.id] = figure
+    if (art) painted.push(hero.id)
   }
   return {
     players: choices.map((c) => ({ characterId: c.id, userId: "local-player", ...(c.ai ? { controlledBy: "ai" as const } : {}) })),
     sheets,
     figures,
+    painted,
   }
 }

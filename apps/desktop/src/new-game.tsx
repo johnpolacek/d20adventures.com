@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import type { AdventureInfo } from "../runtime/game"
 import type { Hero, PartyChoice } from "../runtime/heroes"
-import { STOCK_FIGURES } from "./figures"
+import { type FigureArt, STOCK_FIGURES } from "./figures"
 import { portraitFor } from "./scenes"
 
 type Pick = { id: string; name: string; race: string; archetype: string; portrait?: string; hero?: Hero }
@@ -28,6 +28,10 @@ export function NewGame(props: {
   onStart: (party: PartyChoice[]) => void
   onCreate: () => void
   onEdit: (hero: Hero) => void
+  // Painting a hero's art, when an image-capable CLI is installed.
+  art: Record<string, FigureArt>
+  painting: string | null
+  onPaint?: (hero: Hero) => void
   onDelete: (hero: Hero) => void
   onCancel?: () => void
 }) {
@@ -37,7 +41,9 @@ export function NewGame(props: {
   const fits = (h: Hero) => Boolean(info?.options?.races.includes(h.race) && info.options.archetypes.includes(h.archetype))
   const picks: Pick[] = [
     ...(info?.premades ?? []).map((p) => ({ ...p, portrait: portraitFor(undefined, { ...p, type: "pc" }) })),
-    ...props.heroes.filter(fits).map((h) => ({ id: h.id, name: h.name, race: h.race, archetype: h.archetype, portrait: STOCK_FIGURES[h.figure]?.art.portrait, hero: h })),
+    ...props.heroes
+      .filter(fits)
+      .map((h) => ({ id: h.id, name: h.name, race: h.race, archetype: h.archetype, portrait: (h.painted && props.art[h.id]?.portrait) || STOCK_FIGURES[h.figure]?.art.portrait, hero: h })),
   ]
   const [min, max] = info?.players ?? [1, 1]
   // A hero just made from this screen joins the party if they fit and there is room.
@@ -134,11 +140,17 @@ export function NewGame(props: {
                   </button>
                   {p.hero && (
                     <div className="absolute top-3 right-3 flex gap-1">
-                      <Pill className="px-2 py-1 text-[10px]" onClick={() => props.onEdit(p.hero!)} aria-label={`Edit ${p.name}`}>
+                      <Pill className="px-2 py-1 text-[10px]" disabled={props.busy} onClick={() => props.onEdit(p.hero!)} aria-label={`Edit ${p.name}`}>
                         Edit
                       </Pill>
+                      {props.onPaint && (
+                        <Pill className="px-2 py-1 text-[10px]" disabled={props.busy} onClick={() => props.onPaint!(p.hero!)} aria-label={`Paint ${p.name}`}>
+                          {props.painting === p.id ? "Painting…" : "Paint"}
+                        </Pill>
+                      )}
                       <Pill
                         className="px-2 py-1 text-[10px]"
+                        disabled={props.busy}
                         aria-label={deleting === p.id ? `Confirm deleting ${p.name}` : `Delete ${p.name}`}
                         onBlur={() => setDeleting(null)}
                         onClick={() => {

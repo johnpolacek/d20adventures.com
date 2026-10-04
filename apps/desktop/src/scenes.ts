@@ -12,7 +12,7 @@ import owlbearConfrontation from "@d20/stage/stagings/the-midnight-summons/owlbe
 import preparingForTheCity from "@d20/stage/stagings/the-midnight-summons/preparing-for-the-city.json"
 import theMissingRelics from "@d20/stage/stagings/the-midnight-summons/the-missing-relics.json"
 import timelyRescue from "@d20/stage/stagings/the-midnight-summons/timely-rescue.json"
-import { type FigureOwner, heroFigure, PREMADE_FIGURES } from "./figures"
+import { type FigureArt, type FigureOwner, heroFigure, PREMADE_FIGURES } from "./figures"
 
 type Point = { x: number; z: number }
 type Who = { id: string; name: string; type?: string; race?: string; archetype?: string; gender?: string }
@@ -109,12 +109,12 @@ export function castIdFor(cast: readonly { id: string }[], c: Who) {
 // The scene with the adventure's actual party in it. A premade keeps its own slot, other heroes take the free slots in
 // order and then the spare spots, and unused slots leave. Shots and the gate queue follow. A created hero never claims a
 // premade's slot by sharing a first name. The authored party gets the authored staging back unchanged.
-export function partyScene(scene: Scene, characters: readonly Who[], chosen: Record<string, string> = {}): Scene {
+export function partyScene(scene: Scene, characters: readonly Who[], chosen: Record<string, string> = {}, painted: Record<string, FigureArt> = {}): Scene {
   const staging = structuredClone(scene.staging)
   const pcs = characters.filter((c) => c.type === "pc")
   const slots = new Map(scene.party.map((id) => [id, staging.cast.find((m) => m.id === id)!]))
   const rest = pcs.filter((pc) => {
-    const own = chosen[pc.id] ? undefined : castIdFor(staging.cast, pc)
+    const own = chosen[pc.id] || painted[pc.id] ? undefined : castIdFor(staging.cast, pc)
     if (!own || !slots.has(own)) return true
     slots.delete(own)
     return false
@@ -125,7 +125,7 @@ export function partyScene(scene: Scene, characters: readonly Who[], chosen: Rec
     const pc = rest.shift()
     if (pc) {
       const old = member.name
-      Object.assign(member, heroCast(pc, chosen))
+      Object.assign(member, heroCast(pc, chosen, painted))
       renamed.set(slot, { id: pc.id, label: old })
     } else staging.cast = staging.cast.filter((m) => m !== member)
   }
@@ -133,7 +133,7 @@ export function partyScene(scene: Scene, characters: readonly Who[], chosen: Rec
   for (const [i, pc] of rest.entries()) {
     const at = scene.spare?.[i]
     if (!at) throw new Error(`${scene.location} has no place for ${pc.name}.`)
-    staging.cast.push({ ...heroCast(pc, chosen), at, facing: staging.cast.find((m) => scene.party.includes(m.id))?.facing ?? 0 })
+    staging.cast.push({ ...heroCast(pc, chosen, painted), at, facing: staging.cast.find((m) => scene.party.includes(m.id))?.facing ?? 0 })
     added.push(pc.id)
   }
   const to = (id: string) => renamed.get(id)?.id ?? id
@@ -158,8 +158,8 @@ export function partyScene(scene: Scene, characters: readonly Who[], chosen: Rec
   for (const loop of Object.values(staging.loops ?? {})) if (loop.party) loop.party.members = [...loop.party.members.filter((id) => !removed.has(id)).map(to), ...added]
   return { ...scene, staging }
 }
-function heroCast(pc: Who, chosen: Record<string, string>) {
-  const figure = heroFigure(pc as FigureOwner, chosen)
+function heroCast(pc: Who, chosen: Record<string, string>, painted: Record<string, FigureArt>) {
+  const figure = heroFigure(pc as FigureOwner, chosen, painted)
   return { id: pc.id, name: pc.name, role: [pc.race, pc.archetype?.toLowerCase()].filter(Boolean).join(" "), height: figure.height, art: figure.art }
 }
 
@@ -172,8 +172,8 @@ const PORTRAITS: Record<string, string> = {
 
 // A character's portrait: a created hero's figure, else the current scene, else any authored scene, so story view keeps
 // the party's faces. Heroes with no art anywhere show their stock figure.
-export function portraitFor(scene: Scene | undefined, c: Who, chosen: Record<string, string> = {}) {
-  if (chosen[c.id]) return heroFigure(c as FigureOwner, chosen).art.portrait
+export function portraitFor(scene: Scene | undefined, c: Who, chosen: Record<string, string> = {}, painted: Record<string, FigureArt> = {}) {
+  if (chosen[c.id] || painted[c.id]) return heroFigure(c as FigureOwner, chosen, painted).art.portrait
   for (const s of [scene, ...Object.values(SCENES)]) {
     const id = s && castIdFor(s.staging.cast, c)
     const portrait = id && s.staging.cast.find((m) => m.id === id)?.art.portrait
