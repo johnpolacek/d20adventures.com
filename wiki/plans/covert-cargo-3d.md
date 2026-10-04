@@ -76,6 +76,15 @@ Results:
 - Gaps: foliage is still round leaf blobs, not the art's painted leaf masses, and big bushes look mottled up close. The water mirrors only the sky. The art's crate hold has ropes, chains and posts this cabin lacks. AgX tone mapping limits how saturated the lit windows can be.
 - `stage:check`, stage and desktop typechecks, Biome and 25 desktop tests pass. The Kordavos gate rendered cleanly after the grain change.
 
+## Fourth pass: leaf cards, the crate hold, a bigger tug
+
+2026-10-04, owner picked (a) painted leaf cards and (c) the crate hold's ropes, chains and posts, plus a bigger boat.
+
+- (a) Leaves: paint leaf clumps from the art on magenta, so green leaves key cleanly. A foliage material with a painted map builds each crown and bush blob as a cluster of crossed cards with rounded normals, so it shades like a mass of leaves. Cheaper in triangles than the spheres.
+- (c) Crate hold: heavy posts beside the crate, knotted ropes hanging from the beams, chains draped along the back wall, rope coils on the floor, as in The Crate's art. New `rope` and `chain` builders, and a painted rope texture.
+- Bigger tug: about 17 m by 4.6 m with a taller cabin. Pilings, mooring lines, stern props, lights and marks move to fit. The cast keeps its places on the foredeck and gangway.
+- Validation as before: `stage:check`, typechecks, Biome, desktop tests, renders against the art, the 2.5M triangle budget.
+
 ## Owner review
 
 Start the viewer in the worktree with `pnpm exec next dev -p 3057`, then open `http://localhost:3057/dev/stage?staging=covert-cargo/<encounter>&tier=balanced` for each encounter: the-shipment, the-transaction, the-disturbance, the-escape, the-fake, battle-on-the-boat, the-crate, return-to-the-city, the-end.
