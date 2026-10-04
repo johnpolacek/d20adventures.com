@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-04, Covert Cargo release check, partial
+
+Release build passed with no warnings. In the packaged app the pier scene renders correctly with reflections, painted wood and leaf cards, at a median 46 fps on the balanced tier under the title screen. The play view still needs a run while the Mac is free. See [the plan](plans/covert-cargo-3d.md#release-check-2026-10-04).
+
 ## 2026-10-04, Covert Cargo speed pass
 
 Owner asked to bring the river scenes back up. A frame bench found leaf drawing, leaf shadows in a 4096 map and the reflection as the main costs. Leaf cards no longer cast shadows on the pier, its shadow map is capped at 2048, leaf masses use fewer cards, painted wood is cheaper, and the reflection skips small growth. The river view went from 1.82M to 1.09M triangles. Balanced reads 66 fps and high 40 to 48 on a busy dev machine, with no visible change. See [the plan](plans/covert-cargo-3d.md#speed-pass).

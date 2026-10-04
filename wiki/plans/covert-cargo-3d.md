@@ -124,6 +124,13 @@ Results:
 - The viewer's fps on a busy dev build: balanced 66 on all three river views, high 40 to 48. Before the pass the same counter read 29 to 34 and 14 to 30. The machine's load average was about 17 from other work, so single runs swung by several milliseconds. Only interleaved runs and the work counts are firm.
 - Not measured: a release build. The dev viewer page is blocked in production, and the packaged app check still waits.
 
+## Release check, 2026-10-04
+
+- Release build with two Rust jobs: no warnings. The bundle carries all ten painted textures.
+- The app's render report (written only with `D20_RENDER_REPORT` set) now samples the stage's fps, draw calls and triangles each second for 50 s.
+- Packaged app on the pier save: the stage came up with no errors, on the balanced tier at pixel ratio 1, showing the river shot under the title screen. Reflections, painted wood, leaf cards and moss all render. 121 calls, 1.09M triangles. Median 46 fps, 40 to 59, over 21 s. Load average 3 to 5, swap 3.4 to 3.7 of 4 GB used.
+- Not yet measured: the play view. Two runs past the title screen came up hidden or behind other windows, where the stage does not draw, because the owner was using the Mac at the time. The owner's save was restored with an unchanged SHA-256.
+
 ## Owner review
 
 Start the viewer in the worktree with `pnpm exec next dev -p 3057`, then open `http://localhost:3057/dev/stage?staging=covert-cargo/<encounter>&tier=balanced` for each encounter: the-shipment, the-transaction, the-disturbance, the-escape, the-fake, battle-on-the-boat, the-crate, return-to-the-city, the-end.
