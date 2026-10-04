@@ -165,7 +165,7 @@ Remaining product work is tracked in [Stageview](plans/stageview.md).
 
 ### Second pass, matched to the art
 
-- Owner feedback: "I was expecting it to match the art more exactly for the boat and lighting." The first `riverboat` was a stepped box. It is now the tug in the art. The hull is lofted from stations, 12 m by 3.6 m. Params: `length`, `beam`, `draft`, `sheer`, `cabin`, `saloon`, `height`, `lit`.
+- Owner feedback: "I was expecting it to match the art more exactly for the boat and lighting." The first `riverboat` was a stepped box. It is now the tug in the art. The hull is lofted from stations, 12 m by 3.6 m. Params: `length`, `beam`, `draft`, `sheer`, `cabin`, `saloon`, `height`, `lit`. The pilothouse glass has its own `helm` role, defaulting to `window`, so it can glow dimmer than the saloon as in the art.
 - New `atmosphere.lights`: up to 8 static point lights with colour, intensity, distance and decay, and no shadows. They pool lamp and window light on the deck and the pier, and glint in the water. The water still mirrors only the sky, so the lit windows have no true reflection.
 - Pier: saturated blue night with a low misty sun disc, warm lights in the saloon and pilothouse, a lantern on the pier and a cold lamp on the bank. Dense bushes and ferns along both banks, with clear circles at the cameras and along the trail. Cabin: a neutral grade with grey-brown wood, warm lanterns and candles, and a cold teal light at the open door.
 - `pnpm stage:check`: the pier 1,859 objects and 1.24M static triangles (leaves 0.39M, dark leaves 0.28M, bark 0.15M). The cabin 212 objects and 0.11M.

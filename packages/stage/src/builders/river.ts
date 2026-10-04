@@ -225,6 +225,7 @@ export const riverboat = defineBuilder(
     const zs = z1 - Lc * p.saloon
     const F = new Frame(b, M4())
     const glow = p.lit ? M.window : M.void
+    const helm = p.lit ? M.helm : M.void
     F.box(M.cabin, 0, Hc / 2, zc, Wc, Hc, Lc)
     for (const [x, zz] of [
       [-1, z0],
@@ -272,9 +273,9 @@ export const riverboat = defineBuilder(
     ])
       F.box(M.rust, (x * Wp) / 2, py + Hp / 2, pz + (zz * Lp) / 2, 0.1, Hp, 0.1)
     for (const side of [-1, 1]) {
-      F.box(glow, (side * Wp) / 2, py + Hp * 0.7, pz, 0.03, Hp * 0.5, Lp - 0.12)
+      F.box(helm, (side * Wp) / 2, py + Hp * 0.7, pz, 0.03, Hp * 0.5, Lp - 0.12)
       for (const k of [-1, 0, 1]) F.box(M.rust, side * (Wp / 2 + 0.02), py + Hp * 0.7, pz + (k * Lp) / 3, 0.03, Hp * 0.5, 0.05)
-      F.box(glow, 0, py + Hp * 0.7, pz + (side * Lp) / 2, Wp - 0.12, Hp * 0.5, 0.03)
+      F.box(helm, 0, py + Hp * 0.7, pz + (side * Lp) / 2, Wp - 0.12, Hp * 0.5, 0.03)
       for (const k of [-1, 0, 1]) F.box(M.rust, (k * Wp) / 3, py + Hp * 0.7, pz + side * (Lp / 2 + 0.02), 0.05, Hp * 0.5, 0.03)
     }
     F.box(M.rust, 0, py + Hp * 0.96, pz, Wp + 0.04, 0.1, Lp + 0.04)
@@ -288,8 +289,8 @@ export const riverboat = defineBuilder(
     )
     // The stack behind the pilothouse and a gooseneck vent aft, both thin.
     const sz = pz - Lp / 2 - 0.3
-    F.cyl(M.iron, Wp * 0.18, py, sz, 0.08, 0.075, 2.3, 10)
-    F.cyl(M.iron, Wp * 0.18, py + 2.3, sz, 0.11, 0.1, 0.1, 10)
+    F.cyl(M.iron, Wp * 0.18, py, sz, 0.14, 0.13, 3.1, 12)
+    F.cyl(M.iron, Wp * 0.18, py + 3.1, sz, 0.18, 0.17, 0.14, 12)
     beam(b, M.iron, [-Wc * 0.25, py, z0 + 0.6], [-Wc * 0.25, py + 1.5, z0 + 0.6], 0.05, 6)
     beam(b, M.iron, [-Wc * 0.25, py + 1.5, z0 + 0.6], [-Wc * 0.25, py + 1.75, z0 + 0.35], 0.05, 6)
     // A rail round the cabin top aft of the pilothouse.
@@ -327,7 +328,7 @@ export const riverboat = defineBuilder(
       )
     ctx.footprint(0, zc, Wc / 2, Lc / 2)
   },
-  { hull: "hull", strake: "strake", deck: "deck", rust: "rust", cabin: "cabin", roof: "roof", window: "window", void: "void", iron: "iron", ring: "rust" }
+  { hull: "hull", strake: "strake", deck: "deck", rust: "rust", cabin: "cabin", roof: "roof", window: "window", helm: "window", void: "void", iron: "iron", ring: "rust" }
 )
 
 // A pier: boards across a walkway of `length` along +z, on pilings that reach below the water, with taller mooring posts

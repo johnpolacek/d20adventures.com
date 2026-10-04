@@ -106,7 +106,7 @@ function pierSet() {
     { type: "trail", id: "bank-trail", points: trailPts, width: 1.3 },
     // The gangway runs from the bank down to the tug's bow, as in the art.
     { type: "pier", id: "gangway", at: [-1.3, 0, 9.8], yaw: 137.4, length: 6.8, width: 1.5, depth: 3.4, span: 2.2, rickety: 0.5 },
-    { type: "riverboat", id: "tug", at: [4.6, 0, 0], length: 12, beam: 3.6, draft: 1.8, sheer: 0.9, cabin: 0.55, saloon: 0.4 },
+    { type: "riverboat", id: "tug", at: [4.6, 0, 0], length: 12, beam: 3.6, draft: 1.8, sheer: 0.9, cabin: 0.55, saloon: 0.4, materials: { helm: "helmGlass" } },
     { type: "lantern", at: [2.75, 0, 5.15], height: 1.45, post: true },
     { type: "crate", at: [5.3, 0, -5.25], yaw: 12, size: 0.6 },
     { type: "barrel", at: [3.95, 0, -5.3], r: 0.28, h: 0.75 },
@@ -317,7 +317,8 @@ function pierSet() {
       deck: { type: "wood", a: "#4e4a44", b: "#5c5650", c: "#403c38", plank: [0.16, 3.2], relief: 0.05, variance: 0.45, seed: 5.3, grime: 1.0 },
       cabin: { type: "wood", a: "#8aa0aa", b: "#9eb2ba", c: "#768c96", plank: [0.14, 40], relief: 0.05, variance: 0.45, seed: 8.1, grime: 1.5 },
       roof: { type: "wood", a: "#2c2a2a", b: "#363434", c: "#242222", plank: [0.3, 40], relief: 0.04, seed: 9.9, grime: 1.2 },
-      window: { type: "plain", color: "#5a3010", roughness: 1, emissive: "#ffac4c", emissiveIntensity: 2.3 },
+      window: { type: "plain", color: "#3a1806", roughness: 1, emissive: "#ff7a18", emissiveIntensity: 1.3 },
+      helmGlass: { type: "plain", color: "#1e0e06", roughness: 0.6, emissive: "#b4521a", emissiveIntensity: 0.32 },
       void: { type: "plain", color: "#0d0a09", roughness: 1 },
       plank: { type: "wood", a: "#3e3a34", b: "#4a453e", c: "#34302c", plank: [0, 40], relief: 0.05, variance: 0.6, seed: 3.3, grime: 1.3 },
       post: { type: "wood", a: "#2a2420", b: "#352d27", c: "#231e1b", plank: [0, 40], relief: 0.06, variance: 0.5, seed: 1.7, grime: 1.6 },
