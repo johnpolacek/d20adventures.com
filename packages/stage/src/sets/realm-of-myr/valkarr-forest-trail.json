@@ -8,9 +8,9 @@
   "seed": 3141,
   "atmosphere": {
     "sun": {
-      "direction": [0.1, 0.95, -0.3],
-      "color": "#aac4e6",
-      "intensity": 1.7,
+      "direction": [0.05, 0.75, -0.65],
+      "color": "#a7bfe0",
+      "intensity": 1.8,
       "target": [0, 0, -2],
       "distance": 200,
       "shadow": {
@@ -23,23 +23,31 @@
       }
     },
     "hemisphere": {
-      "sky": "#33465f",
-      "ground": "#0b0e12",
-      "intensity": 0.75
+      "sky": "#2c3d55",
+      "ground": "#07090c",
+      "intensity": 0.35
     },
     "sky": {
-      "horizon": "#7d93ad",
-      "mid": "#4a5f7d",
-      "zenith": "#1c2a44",
-      "gain": 0.22
+      "horizon": "#5f7ca4",
+      "mid": "#22324e",
+      "zenith": "#08101e",
+      "gain": 0.55,
+      "clouds": 0.2,
+      "stars": 0.7
     },
     "fog": {
       "density": 0.032,
-      "color": "#26313f"
+      "color": "#34445a"
     },
-    "environment": 0.3,
-    "exposure": 1.25,
-    "wind": 0.4
+    "environment": 0.2,
+    "exposure": 1.0,
+    "wind": 0.4,
+    "glow": "#6f86a8",
+    "fill": {
+      "color": "#ffdcb8",
+      "intensity": 8,
+      "distance": 14
+    }
   },
   "camera": {
     "near": 0.3,
@@ -123,7 +131,7 @@
     "moonbeam": {
       "type": "glow",
       "color": "#8fa8c8",
-      "opacity": 0.12
+      "opacity": 0.14
     }
   },
   "objects": [

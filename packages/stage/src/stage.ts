@@ -184,15 +184,23 @@ export class Stage {
     this.sun = sun
     this.scene.add(sun, sun.target)
     this.scene.add(new THREE.HemisphereLight(A.hemisphere.sky, A.hemisphere.ground, A.hemisphere.intensity))
+    if (A.fill) {
+      const fill = new THREE.PointLight(A.fill.color, A.fill.intensity, A.fill.distance, 1.4)
+      fill.position.set(0, 0.6, 0.5)
+      this.camera.add(fill)
+      this.scene.add(this.camera)
+    }
 
     const skyColors = { horizon, mid: new THREE.Color(A.sky.mid), zenith: new THREE.Color(A.sky.zenith) }
-    this.sky = new THREE.Mesh(new THREE.SphereGeometry(Math.min(set.camera.far * 0.62, 1500), 48, 24), skyMaterial(this.shared, skyColors, A.sky.gain))
+    const glow = A.glow ? new THREE.Color(A.glow) : undefined
+    if (glow) this.shared.sunTint.value.set(glow.r, glow.g, glow.b).multiplyScalar(1.45)
+    this.sky = new THREE.Mesh(new THREE.SphereGeometry(Math.min(set.camera.far * 0.62, 1500), 48, 24), skyMaterial(this.shared, skyColors, { ...A.sky, glow }))
     this.sky.renderOrder = -1
     this.sky.frustumCulled = false
     this.scene.add(this.sky)
     const pmrem = new THREE.PMREMGenerator(renderer)
     const envScene = new THREE.Scene()
-    const envSky = new THREE.Mesh(new THREE.SphereGeometry(100, 32, 16), skyMaterial(this.shared, skyColors, A.sky.gain))
+    const envSky = new THREE.Mesh(new THREE.SphereGeometry(100, 32, 16), skyMaterial(this.shared, skyColors, { ...A.sky, glow }))
     envScene.add(envSky)
     this.envTexture = pmrem.fromScene(envScene, 0.04).texture
     envSky.geometry.dispose()

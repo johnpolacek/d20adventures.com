@@ -198,10 +198,19 @@ export const setSpecSchema = z
           })
           .strict(),
         hemisphere: z.object({ sky: color, ground: color, intensity: num(0, 5) }).strict(),
-        // `gain` dims the whole painted sky, clouds and sun glow included: below 1 for dusk and night.
-        sky: z.object({ horizon: color, mid: color, zenith: color, gain: num(0, 2).default(1) }).strict(),
+        // `gain` dims the whole painted sky, clouds and sun glow included: below 1 for dusk and night. `clouds` thins the
+        // cumulus, and `stars` fades in a star field for night.
+        sky: z.object({ horizon: color, mid: color, zenith: color, gain: num(0, 2).default(1), clouds: unit.default(1), stars: unit.default(0) }).strict(),
         // `color` sets mist apart from the sky: pale mist glowing between dark trees on a moonlit night.
         fog: z.object({ density: num(0, 0.05), color: color.optional() }).strict(),
+        // The sky's glow around the sun (or moon) and the haze toward it. Warm sunlight when unset.
+        glow: color.optional(),
+        // A soft light that travels with the camera, keeping nearby characters readable at night (a game convention):
+        // warm against cool moonlight. `distance` is where it fades out, in metres.
+        fill: z
+          .object({ color, intensity: num(0, 50), distance: size(100).default(14) })
+          .strict()
+          .optional(),
         environment: num(0, 3).default(0.32),
         exposure: num(0.1, 4).default(1.05),
         wind: num(0, 3).default(0.8),

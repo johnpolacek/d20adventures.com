@@ -6,9 +6,11 @@ export interface SharedUniforms {
   time: { value: number }
   wind: { value: number }
   sun: { value: THREE.Vector3 }
+  // How the haze tints toward the sun: warm sunlight by default, set from the atmosphere's `glow` for a moon.
+  sunTint: { value: THREE.Vector3 }
 }
 export function createShared(): SharedUniforms {
-  return { time: { value: 0 }, wind: { value: 0.8 }, sun: { value: new THREE.Vector3(-0.8, 0.55, 0.32).normalize() } }
+  return { time: { value: 0 }, wind: { value: 0.8 }, sun: { value: new THREE.Vector3(-0.8, 0.55, 0.32).normalize() }, sunTint: { value: new THREE.Vector3(1.45, 1.18, 0.86) } }
 }
 
 type Shader = THREE.WebGLProgramParametersWithUniforms
@@ -19,7 +21,7 @@ type Shader = THREE.WebGLProgramParametersWithUniforms
 const FOG_PARS_VERTEX = "#ifdef USE_FOG\nvarying vec3 vFogView;\n#endif"
 const FOG_VERTEX = "#ifdef USE_FOG\nvFogView = mvPosition.xyz;\n#endif"
 const FOG_PARS_FRAGMENT = `#ifdef USE_FOG
-uniform vec3 fogColor; uniform vec3 uSunDir; varying vec3 vFogView;
+uniform vec3 fogColor; uniform vec3 uSunDir; uniform vec3 uSunTint; varying vec3 vFogView;
 #ifdef FOG_EXP2
 uniform float fogDensity;
 #else
@@ -42,7 +44,7 @@ const FOG_FRAGMENT = `#ifdef USE_FOG
  float optical = fd * exp(-k * max(cameraPosition.y, 0.0)) * dist * (abs(ry) > 1e-4 ? (1.0 - exp(-ry)) / ry : 1.0);
  float f = 1.0 - exp(-optical);
  float s = max(dot(dir, sunV), 0.0);
- vec3 haze = mix(fogColor, fogColor * vec3(1.45, 1.18, .86), pow(s, 5.0) * .75);
+ vec3 haze = mix(fogColor, fogColor * uSunTint, pow(s, 5.0) * .75);
  haze = mix(haze * vec3(1.08, .98, .9), haze, smoothstep(20.0, 220.0, dist));
  gl_FragColor.rgb = mix(gl_FragColor.rgb, haze, f);
 }
@@ -50,6 +52,7 @@ const FOG_FRAGMENT = `#ifdef USE_FOG
 
 export function patchFog(s: Shader, shared: SharedUniforms) {
   s.uniforms.uSunDir = shared.sun
+  s.uniforms.uSunTint = shared.sunTint
   s.vertexShader = s.vertexShader.replace("#include <fog_pars_vertex>", FOG_PARS_VERTEX).replace("#include <fog_vertex>", FOG_VERTEX)
   s.fragmentShader = s.fragmentShader.replace("#include <fog_pars_fragment>", FOG_PARS_FRAGMENT).replace("#include <fog_fragment>", FOG_FRAGMENT)
 }
