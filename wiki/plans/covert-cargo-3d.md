@@ -85,6 +85,17 @@ Results:
 - Bigger tug: about 17 m by 4.6 m with a taller cabin. Pilings, mooring lines, stern props, lights and marks move to fit. The cast keeps its places on the foredeck and gangway.
 - Validation as before: `stage:check`, typechecks, Biome, desktop tests, renders against the art, the 2.5M triangle budget.
 
+Results:
+
+- Leaves: two clumps painted on magenta and keyed, small oak leaves for crowns and broad ivy-like leaves for bushes. Every Covert Cargo set uses them. A crown mass is 14 cards, 28 triangles, against 192 for a leafy sphere, so card crowns carry 14 masses instead of 9.
+- Leaf cards vanished at distance because alpha thins in small mipmaps. The foliage shader now boosts alpha by mip level, and the cards cast leaf-shaped shadows.
+- The pier went from 1.39M to 0.66M static triangles even with 220 hill trees, 100 understory oaks, 680 big bushes and young trees leaning out behind the tug. 1.15M rendered at high, 35 to 42 fps on the dev build.
+- Crate hold: iron-banded 0.32 m posts, four knotted ropes, chains along the fore wall and down a post, two rope coils, a warm light above the crate. Rope is painted hemp. The close shot moved back to show the crate whole.
+- Tug: 17 m by 4.6 m, cabin 2.7 m, longer pilothouse. Pilings, lines, stern props, lights, the stern mark and the tug view moved to fit. The cast keeps its places.
+- Fog eased to 0.03 from 18 m, so the banks keep their greens.
+- Not changed: the old forest path's gold-green haze still hides most of its canopy.
+- `stage:check`, typechecks, Biome and 25 desktop tests pass.
+
 ## Owner review
 
 Start the viewer in the worktree with `pnpm exec next dev -p 3057`, then open `http://localhost:3057/dev/stage?staging=covert-cargo/<encounter>&tier=balanced` for each encounter: the-shipment, the-transaction, the-disturbance, the-escape, the-fake, battle-on-the-boat, the-crate, return-to-the-city, the-end.

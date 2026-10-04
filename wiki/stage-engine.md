@@ -182,3 +182,11 @@ Remaining product work is tracked in [Stageview](plans/stageview.md).
 - The material library loads painted textures and the stage waits for them before the first frame. Set specs accept textures only from `/stage/textures/`.
 - Grain: a flat face takes the axis that runs longest along it, projected into the face. Boxes keep their old grain. A lofted hull's planks now follow it to the bow instead of turning vertical.
 - Textures come from `scripts/stage-textures.ts`. The desktop build copies `public/stage`, so they ship with the app.
+
+### Fourth pass: leaf cards, rope and chain
+
+- `foliage` takes an optional painted `map`, a leaf clump cut out from the art. Builders then lay each crown or bush mass as crossed leaf cards with normals pointing out from the centre, so a mass shades like a rounded clump. Cards cost 28 triangles a mass against 192 for a leafy sphere.
+- The card foliage shader boosts alpha by the sampled mip level, so distant crowns keep their leaves. Card foliage casts leaf-shaped shadows through an alpha-tested depth material.
+- `rope` and `chain` builders: a sagging line between two points, rope with knots, chain with alternating oval links.
+- `stage:check`'s stub materials carry the card flags, so its triangle counts match what renders.
+- `scripts/stage-textures.ts` keys cut-outs on magenta when the subject is green.

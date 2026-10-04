@@ -46,6 +46,8 @@ The web viewer and the desktop app run the same `packages/stage` renderer and th
 - Bright emissive colours wash to peach under AgX tone mapping. Keep lit windows near intensity 0.8 with a deep orange for amber.
 - Fog with a `start` distance keeps the near bank's greens and fades only the distance, which reads like the paintings. Plain fog turned every view one flat blue.
 - Clear big bushes from camera lines by their size, not just their centre. A 4 m bush two metres from a camera fills the frame.
+- Paint green subjects such as leaves on magenta, not green, so the key leaves them whole.
+- Alpha-tested leaf cards disappear at distance unless alpha is boosted by mip level. Check far crowns, not just near bushes.
 - Do not run Biome on generated set JSON. It reflows the arrays, and every regeneration then shows as a large diff.
 - Match a painting's light sources, not only its average colour. The pier's art reads from warm windows against blue mist. Point lights inside the saloon and the pilothouse, a lantern on the pier and a lamp on the bank gave that. Keep lamp lights inside walls, not outside them, or they wash the walls.
 - A cloaked character's back can come out as a front-facing body with the cloak drawn behind it. Give the figure a `backNote` in `scripts/stage-standees.ts` that says the cloak hangs down the back and hides it, and whether the hood is up.
