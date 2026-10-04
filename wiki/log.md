@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-04, Covert Cargo painted textures, crate, hillside and fog
+
+Owner asked for wood like the art, a mossy wooded hillside beside the boat, a lot of fog, and a bigger, cooler boat and crate. No Blender or Godot was needed. Textures are painted from the art with the standee image model and wrapped along each board's grain. New detailed crate, a bigger tug, a heightfield hill with dense foliage and moss curtains, fog that starts 14 m out, and mist banks. Within budget at 2.42M triangles. Foliage shape and water reflections remain the main gaps. See [the plan](plans/covert-cargo-3d.md#third-pass-painted-textures-props-hillside-fog).
+
 ## 2026-10-04, Covert Cargo boat and light matched to the art
 
 Owner said the boat and lighting should match the art more exactly. The `riverboat` builder is now the painted tug with a lofted hull, lit saloon and glazed pilothouse. Sets gained static point lights. The pier is saturated blue with warm lamp light. The cabin is neutral and dim with warm lanterns and a teal door. Water reflections of the windows remain a gap. See [the plan](plans/covert-cargo-3d.md#owner-feedback-second-pass).

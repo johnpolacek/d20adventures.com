@@ -64,6 +64,18 @@ Desktop: map every encounter to its scene, with Lyra and Poppen as the party slo
 - Budget: stay within 2.5M triangles and 300 draw calls at high. Thick fog lets distant trees go.
 - Validation: `stage:check`, typechecks, Biome, desktop tests, renders at high against the art.
 
+Results:
+
+- Textures: seven painted with `gemini-3.1-flash-image` from crops of the art, made tileable, 150 to 270 KB each: weathered boards, crate oak, dark cabin wood, the boat's peeling paint, tarred hull, mossy bark, and hanging moss on green, keyed.
+- Engine: `painted` boards, `card` cut-outs and `mist` materials. A `heightfield` primitive, a `mist` bank builder and the `strongbox` crate. Fog has a `start` distance. Wood grain on curved faces now follows the surface, so the hull's planks run to the bow. Boxes are unchanged.
+- Crate: boards with gaps, corner posts and battens, a rimmed lid, iron corners and straps with rivets, a hasp and chain, ring handles, nails. A new close shot, "The crate up close", opens The Crate.
+- Tug: 14 m by 4 m, taller cabin and pilothouse, a rail round the whole cabin top, rope fenders. Painted hull, peeling blue-grey cabin, rust trim. Saloon windows amber.
+- Bank: the west bank climbs into a hill up to about 14 m, with 150 trees, 60 understory oaks and 380 large bushes on the slope, and moss curtains on near trees. Its foot keeps clear of the reeds, the landing, the trail and every camera. A new shot, "The wooded bank".
+- Fog: thicker, starting 14 m out, with mist banks down the river and along the hill, and a sheet over the water.
+- Budget at high: the pier 79 to 94 calls and 2.42M triangles, under 2.5M. The cabin 0.22M.
+- Gaps: foliage is still round leaf blobs, not the art's painted leaf masses, and big bushes look mottled up close. The water mirrors only the sky. The art's crate hold has ropes, chains and posts this cabin lacks. AgX tone mapping limits how saturated the lit windows can be.
+- `stage:check`, stage and desktop typechecks, Biome and 25 desktop tests pass. The Kordavos gate rendered cleanly after the grain change.
+
 ## Owner review
 
 Start the viewer in the worktree with `pnpm exec next dev -p 3057`, then open `http://localhost:3057/dev/stage?staging=covert-cargo/<encounter>&tier=balanced` for each encounter: the-shipment, the-transaction, the-disturbance, the-escape, the-fake, battle-on-the-boat, the-crate, return-to-the-city, the-end.

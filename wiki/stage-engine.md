@@ -170,3 +170,15 @@ Remaining product work is tracked in [Stageview](plans/stageview.md).
 - Pier: saturated blue night with a low misty sun disc, warm lights in the saloon and pilothouse, a lantern on the pier and a cold lamp on the bank. Dense bushes and ferns along both banks, with clear circles at the cameras and along the trail. Cabin: a neutral grade with grey-brown wood, warm lanterns and candles, and a cold teal light at the open door.
 - `pnpm stage:check`: the pier 1,859 objects and 1.24M static triangles (leaves 0.39M, dark leaves 0.28M, bark 0.15M). The cabin 212 objects and 0.11M.
 - `stage:verify`, dev build: the pier at high 88 to 91 calls and 2.30M triangles, under the 2.5M budget, 25 to 31 fps. At balanced 84 to 87 calls and 55 to 61 fps. The cabin at high 73 to 82 calls, 0.21M triangles and 52 to 69 fps.
+
+### Third pass: painted textures, props, hillside, fog
+
+- `painted` material: one board's grain from an image in `public/stage/textures/`, laid along each piece's grain with the wood shader's seams, worn edges, grime and optional nails. Each board shows its own patch of the painting. `size` is the metres the image covers across and along the grain. `tint` multiplies it.
+- `card` material: an alpha cut-out, double-sided, no shadow. Tree `moss` hangs as crossed cards when the moss material is a card.
+- `mist` material and `mist` builder: soft cloud cards faded at every edge, standing or flat over water.
+- `heightfield` primitive: a grid of heights from a set generator, which seats trees and bushes on the same function.
+- `strongbox` builder: a detailed cargo crate. `riverboat` gained a full roof rail, rope fenders, a `rope` role and a pilothouse that scales with the cabin height.
+- `atmosphere.fog.start`: haze begins this many metres out. Near things keep their colour, as in the art.
+- The material library loads painted textures and the stage waits for them before the first frame. Set specs accept textures only from `/stage/textures/`.
+- Grain: a flat face takes the axis that runs longest along it, projected into the face. Boxes keep their old grain. A lofted hull's planks now follow it to the bow instead of turning vertical.
+- Textures come from `scripts/stage-textures.ts`. The desktop build copies `public/stage`, so they ship with the app.
