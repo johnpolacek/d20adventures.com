@@ -52,14 +52,14 @@ const callNames = (name: string) => {
   if (first && DESCRIPTORS.test(first.toLowerCase())) return [name.toLowerCase()]
   return [...new Set([name, first].filter((n): n is string => Boolean(n)))].map((n) => n.toLowerCase())
 }
-const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+const literal = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 
 export function narrationShot(text: string, stage: NarrationStage, { first = false } = {}): NarrationShot | null {
   const lower = text.toLowerCase()
   const at = (c: { name: string }) =>
     Math.min(
       ...callNames(c.name)
-        .map((n) => lower.search(new RegExp(`\\b${escape(n)}\\b`)))
+        .map((n) => lower.search(new RegExp(`\\b${literal(n)}\\b`)))
         .filter((i) => i >= 0),
       Infinity
     )
