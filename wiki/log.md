@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-04, narration follows who each paragraph is about
+
+Owner found the camera stayed wide on a paragraph about Lyra and the Continue and Skip buttons wrapping. Narration views now read names and pronouns across paragraphs, so a paragraph about Lyra frames Lyra, and a newcomer introduced without a name is not mistaken for the last character. The buttons keep to one line with drawn arrows, and long narrations get smaller progress dots. See [the stage engine record](stage-engine.md#narration-shots-2026-10-04).
+
 ## 2026-10-04, covers edge to edge, the camera follows the narration
 
 Owner asked for covers with the art edge to edge and less text, reported the Lyra view blocked, and expected Continue to change the view with the story. Covers now carry only the title and the player count. Each paragraph of narration picks a view from the people it names or the place it describes. Named character shots swing clear of cabins, and characters turn toward a camera that had to swing round them. Poppen's reed shot looks over his shoulder at the pier. See [the plan](plans/desktop-module-covers.md#owner-feedback-same-day).
