@@ -4,6 +4,7 @@ import { archScreen, curtainWall, dome, drumTower, gatehouse, roundTower, skylin
 import { group, row, scatter } from "./layouts"
 import { barrelProp, basketProp, bunting, crateProp, farTown, goodsPile, gourds, house, lanternProp, potProp, sackProp, sail, sheaf, spearRack, stall, standard } from "./market"
 import { beamPrim, boxPrim, conePrim, cylinderPrim, extrudePrim, groundDisc, lathePrim, openingPrim, spherePrim, torusPrim } from "./primitives"
+import { pier, riverboat, ship } from "./river"
 import type { BuilderDef } from "./types"
 import { flagstones, grassPatch, mountain, rock, standingStone } from "./wilds"
 
@@ -63,6 +64,10 @@ export const BUILDERS: Record<string, BuilderDef> = {
   grass: grassPatch,
   mountain,
   standingStone,
+  // rivers and harbours
+  riverboat,
+  pier,
+  ship,
   // checkpoint and dressing
   barrier,
   ropeLine,

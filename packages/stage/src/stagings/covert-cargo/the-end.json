@@ -1,0 +1,85 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "covert-cargo/the-end",
+  "set": "realm-of-myr/old-forest-path",
+  "cast": [
+    {
+      "id": "lyra",
+      "name": "Lyra Silvanus",
+      "role": "Asterian arcanist",
+      "height": 1.7,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/lyra-front.webp",
+        "back": "/stage/fixtures/covert-cargo/lyra-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/lyra-portrait.jpg"
+      },
+      "at": [
+        -0.25,
+        4.6
+      ],
+      "facing": [
+        0.6,
+        -16
+      ]
+    },
+    {
+      "id": "poppen",
+      "name": "Poppen Quickfoot",
+      "role": "Halfling rogue",
+      "height": 1.06,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/poppen-front.webp",
+        "back": "/stage/fixtures/covert-cargo/poppen-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/poppen-portrait.jpg"
+      },
+      "at": [
+        0.8,
+        5.4
+      ],
+      "facing": [
+        0.6,
+        -16
+      ]
+    }
+  ],
+  "shots": {
+    "pair": {
+      "subjects": [
+        "lyra",
+        "poppen"
+      ],
+      "offset": [
+        -1.6,
+        1.4,
+        -4.6
+      ],
+      "target": [
+        0,
+        1.1,
+        0
+      ],
+      "fov": 50,
+      "label": "Lyra and Poppen"
+    },
+    "lyra": {
+      "subject": "lyra",
+      "distance": 3.2,
+      "angle": 22,
+      "height": 1.6,
+      "lookHeight": 1.394,
+      "fov": 44,
+      "label": "Lyra"
+    },
+    "poppen": {
+      "subject": "poppen",
+      "distance": 2.6,
+      "angle": 20,
+      "height": 0.9,
+      "lookHeight": 0.85,
+      "fov": 44,
+      "label": "Poppen"
+    }
+  },
+  "shot": "path"
+}
