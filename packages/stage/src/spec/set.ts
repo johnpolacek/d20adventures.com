@@ -252,6 +252,11 @@ export const setSpecSchema = z
           .object({ color, intensity: num(0, 50), distance: size(100).default(14) })
           .strict()
           .optional(),
+        // Lamps and lit windows: warm point lights that pool on decks and walls and glint in water. No shadows.
+        lights: z
+          .array(z.object({ at: vec3, color, intensity: num(0, 500), distance: num(0.5, 200), decay: num(0, 3).default(2) }).strict())
+          .max(8)
+          .default([]),
         environment: num(0, 3).default(0.32),
         exposure: num(0.1, 4).default(1.05),
         // The paint pass's colour grade: warm umber shadows and parchment highlights, or neutral for moonlight.

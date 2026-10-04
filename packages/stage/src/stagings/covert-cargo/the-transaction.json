@@ -15,8 +15,8 @@
         "portrait": "/stage/fixtures/covert-cargo/lyra-portrait.jpg"
       },
       "at": [
-        4.3,
-        -3.4
+        4.5,
+        3.3
       ],
       "facing": "npcs-1749184389465"
     },
@@ -31,8 +31,8 @@
         "portrait": "/stage/fixtures/covert-cargo/aelar-portrait.jpg"
       },
       "at": [
-        3.35,
-        -1.2
+        3.75,
+        4.55
       ],
       "facing": "npcs-1749181492795"
     },
@@ -47,8 +47,8 @@
         "portrait": "/stage/fixtures/covert-cargo/silas-portrait.jpg"
       },
       "at": [
-        2.35,
-        -1
+        2.75,
+        5.45
       ],
       "facing": "npcs-1749184389465"
     },
@@ -63,8 +63,8 @@
         "portrait": "/stage/fixtures/covert-cargo/reinhard-portrait.jpg"
       },
       "at": [
-        1.7,
-        -3.4
+        1.55,
+        7.1
       ],
       "facing": "npcs-1749181492795"
     },
@@ -79,10 +79,10 @@
         "portrait": "/stage/fixtures/covert-cargo/poppen-portrait.jpg"
       },
       "at": [
-        -0.9,
-        8.4
+        -1.2,
+        4.6
       ],
-      "facing": "pier"
+      "facing": "pierEnd"
     },
     {
       "id": "npcs-1749243735467",
@@ -118,16 +118,16 @@
         "npcs-1749181492795"
       ],
       "offset": [
-        -3.4,
-        1.9,
-        1.2
+        3.2,
+        1.7,
+        2.6
       ],
       "target": [
         0,
         1.3,
         0
       ],
-      "fov": 40,
+      "fov": 42,
       "label": "The handover"
     },
     "silas": {

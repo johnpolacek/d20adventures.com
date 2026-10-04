@@ -15,8 +15,8 @@
         "portrait": "/stage/fixtures/covert-cargo/elf-fighter-portrait.jpg"
       },
       "at": [
-        0.4,
-        4.6
+        -0.4,
+        6.6
       ],
       "facing": "reeds"
     },
@@ -31,8 +31,8 @@
         "portrait": "/stage/fixtures/covert-cargo/elf-archer-portrait.jpg"
       },
       "at": [
-        1.6,
-        3.2
+        0.8,
+        7.8
       ],
       "facing": "reeds"
     },
@@ -47,8 +47,8 @@
         "portrait": "/stage/fixtures/covert-cargo/reinhard-portrait.jpg"
       },
       "at": [
-        4.2,
-        -2.9
+        4.25,
+        3.05
       ],
       "facing": "pier"
     },
@@ -63,8 +63,8 @@
         "portrait": "/stage/fixtures/covert-cargo/silas-portrait.jpg"
       },
       "at": [
-        1.6,
-        -5.2
+        2.2,
+        6.2
       ],
       "facing": "reeds"
     },
@@ -79,8 +79,8 @@
         "portrait": "/stage/fixtures/covert-cargo/aelar-portrait.jpg"
       },
       "at": [
-        5,
-        -3.8
+        4.9,
+        3.75
       ],
       "facing": "reeds"
     },
@@ -95,8 +95,8 @@
         "portrait": "/stage/fixtures/covert-cargo/lyra-portrait.jpg"
       },
       "at": [
-        4.35,
-        -3.6
+        4.2,
+        3.9
       ],
       "facing": "pier"
     },
@@ -111,8 +111,8 @@
         "portrait": "/stage/fixtures/covert-cargo/poppen-portrait.jpg"
       },
       "at": [
-        -0.9,
-        8.4
+        -1.2,
+        4.6
       ],
       "facing": "npcs-1749243869357"
     }
@@ -125,16 +125,16 @@
         "poppen"
       ],
       "offset": [
-        -4.2,
-        2.2,
-        -2.5
+        -3.6,
+        2.1,
+        -4.2
       ],
       "target": [
         0,
         0.9,
         0
       ],
-      "fov": 48,
+      "fov": 50,
       "label": "The search"
     },
     "poppen": {

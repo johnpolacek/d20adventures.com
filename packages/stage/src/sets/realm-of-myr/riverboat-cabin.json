@@ -13,8 +13,8 @@
         0.38,
         1
       ],
-      "color": "#9cc8d0",
-      "intensity": 1.7,
+      "color": "#5fb6c6",
+      "intensity": 2.4,
       "target": [
         0,
         0,
@@ -31,9 +31,9 @@
       }
     },
     "hemisphere": {
-      "sky": "#7a6650",
-      "ground": "#24180f",
-      "intensity": 1.25
+      "sky": "#3e4c52",
+      "ground": "#1a140e",
+      "intensity": 0.65
     },
     "sky": {
       "horizon": "#4f8f98",
@@ -49,13 +49,65 @@
     },
     "glow": "#9fd0d0",
     "fill": {
-      "color": "#ffcf96",
-      "intensity": 7,
+      "color": "#ffdcb8",
+      "intensity": 2.5,
       "distance": 8
     },
+    "lights": [
+      {
+        "at": [
+          -0.6,
+          1.55,
+          -1.7
+        ],
+        "color": "#ffb060",
+        "intensity": 4.5,
+        "distance": 5
+      },
+      {
+        "at": [
+          -0.8,
+          1.55,
+          1.55
+        ],
+        "color": "#ffb060",
+        "intensity": 4,
+        "distance": 5
+      },
+      {
+        "at": [
+          -1.1,
+          1.15,
+          -2.5
+        ],
+        "color": "#ffa850",
+        "intensity": 2,
+        "distance": 2.5
+      },
+      {
+        "at": [
+          1.35,
+          0.85,
+          -2.2
+        ],
+        "color": "#ffa850",
+        "intensity": 1.6,
+        "distance": 2.5
+      },
+      {
+        "at": [
+          0.6,
+          1.5,
+          2.6
+        ],
+        "color": "#4fb4c4",
+        "intensity": 6,
+        "distance": 4
+      }
+    ],
     "environment": 0.25,
-    "exposure": 1.3,
-    "grade": "warm",
+    "exposure": 1.2,
+    "grade": "neutral",
     "wind": 0.2
   },
   "camera": {
@@ -76,9 +128,9 @@
   "materials": {
     "floor": {
       "type": "wood",
-      "a": "#4a3a2c",
-      "b": "#5a4634",
-      "c": "#3e3228",
+      "a": "#4a4038",
+      "b": "#585046",
+      "c": "#3c342e",
       "plank": [
         0.2,
         2.8
@@ -90,9 +142,9 @@
     },
     "panel": {
       "type": "wood",
-      "a": "#5a4330",
-      "b": "#6a4e37",
-      "c": "#4a3828",
+      "a": "#463c34",
+      "b": "#54483e",
+      "c": "#3a322c",
       "plank": [
         0.18,
         40
@@ -117,9 +169,9 @@
     },
     "post": {
       "type": "wood",
-      "a": "#3a2c22",
-      "b": "#47372a",
-      "c": "#30251d",
+      "a": "#3a322c",
+      "b": "#463c34",
+      "c": "#302824",
       "plank": [
         0,
         40
@@ -275,16 +327,17 @@
     },
     "crate": {
       "type": "wood",
-      "a": "#8a6a48",
-      "b": "#9c7a52",
-      "c": "#7a6a58",
+      "a": "#5e4630",
+      "b": "#6c5238",
+      "c": "#4e3e2e",
       "plank": [
         0.2,
         1.2
       ],
-      "relief": 0.045,
-      "variance": 0.4,
-      "seed": 2.6
+      "relief": 0.05,
+      "variance": 0.45,
+      "seed": 2.6,
+      "grime": 1.2
     },
     "crateDark": {
       "type": "wood",
@@ -317,13 +370,6 @@
       "roughness": 0.55,
       "metalness": 0.7
     },
-    "flame": {
-      "type": "plain",
-      "color": "#000000",
-      "roughness": 1,
-      "emissive": "#ffae55",
-      "emissiveIntensity": 5
-    },
     "pole": {
       "type": "wood",
       "a": "#4d382a",
@@ -345,6 +391,13 @@
     "sackB": {
       "type": "burlap",
       "color": "#a08a68"
+    },
+    "flame": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ffb262",
+      "emissiveIntensity": 1.8
     }
   },
   "objects": [

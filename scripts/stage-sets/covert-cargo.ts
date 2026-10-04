@@ -90,8 +90,8 @@ function pierSet() {
     [-600, -800],
   ]
   const trailPts: V2[] = [
-    [0.2, 7.5],
-    [-1.4, 11],
+    [-1.4, 10],
+    [-2.4, 12.5],
     [-3.2, 15.5],
     [-4.6, 20],
     [-5.4, 25],
@@ -100,29 +100,60 @@ function pierSet() {
     [-17, 44],
   ]
   const objects: Obj[] = [
-    { type: "extrude", id: "ground", at: [0, -0.6, 0], points: ground(land), holes: [ground(river)], depth: 0.6, plane: "xz", material: "ground" },
-    { type: "extrude", id: "river", at: [0, -0.49, 0], points: ground(wide), depth: 0.02, plane: "xz", material: "water" },
+    // The banks stand a metre above the water, so the tug's hull shows as in the art.
+    { type: "extrude", id: "ground", at: [0, -1.2, 0], points: ground(land), holes: [ground(river)], depth: 1.2, plane: "xz", material: "ground" },
+    { type: "extrude", id: "river", at: [0, -1.02, 0], points: ground(wide), depth: 0.02, plane: "xz", material: "water" },
     { type: "trail", id: "bank-trail", points: trailPts, width: 1.3 },
-    { type: "pier", id: "pier", at: [1.6, 0, 7.2], yaw: 180, length: 14.4, width: 2.2, depth: 2.6, rickety: 0.4 },
-    { type: "riverboat", id: "riverboat", at: [4.66, 0, 0], yaw: 180, length: 12, beam: 3.6, cabin: 0.5, aft: 0.12 },
-    { type: "box", id: "gangplank", at: [2.82, -0.04, -0.6], size: [0.5, 0.05, 0.85], material: "plank" },
-    { type: "lantern", at: [2.6, 0, -6.7], height: 1.3, post: true },
-    { type: "lantern", at: [3.25, 0, -2.0], height: 1.55, post: true },
-    { type: "crate", at: [5.75, 0, -3.3], yaw: 12, size: 0.7 },
-    { type: "barrel", at: [5.9, 0, -4.25], r: 0.3, h: 0.8 },
-    { type: "torus", at: [5.3, 0.05, -4.95], radius: 0.24, tube: 0.05, pitch: 90, material: "rope" },
-    // Mooring lines from the pier posts to the bitts.
-    { type: "beam", from: [2.65, 0.75, -5.6], to: [3.58, 0.3, -3.36], radius: 0.03, material: "rope" },
-    { type: "beam", from: [2.65, 0.7, 5.4], to: [3.58, 0.3, 5.4], radius: 0.03, material: "rope" },
+    // The gangway runs from the bank down to the tug's bow, as in the art.
+    { type: "pier", id: "gangway", at: [-1.3, 0, 9.8], yaw: 137.4, length: 6.8, width: 1.5, depth: 3.4, span: 2.2, rickety: 0.5 },
+    { type: "riverboat", id: "tug", at: [4.6, 0, 0], length: 12, beam: 3.6, draft: 1.8, sheer: 0.9, cabin: 0.55, saloon: 0.4 },
+    { type: "lantern", at: [2.75, 0, 5.15], height: 1.45, post: true },
+    { type: "crate", at: [5.3, 0, -5.25], yaw: 12, size: 0.6 },
+    { type: "barrel", at: [3.95, 0, -5.3], r: 0.28, h: 0.75 },
+    { type: "torus", at: [4.6, 0.05, 4.6], radius: 0.24, tube: 0.05, pitch: 90, material: "rope" },
+    // Tall mooring pilings round the tug, and lines to its bitts.
+    ...[
+      [3.05, 5.7, 2.3],
+      [2.55, 3.3, 1.8],
+      [2.7, -5.7, 1.6],
+      [6.6, -6.5, 2.7],
+      [6.95, -5.25, 2.2],
+    ].map(([x, zz, top]) => ({ type: "beam", from: [x, -3.4, zz], to: [x, top, zz], radius: 0.13, radiusTo: 0.11, segments: 8, material: "post" })),
+    { type: "beam", from: [3.05, 1.5, 5.7], to: [4.1, 0.4, 4.56], radius: 0.03, material: "rope" },
+    { type: "beam", from: [2.7, 1.2, -5.7], to: [4.0, 0.4, -5.5], radius: 0.03, material: "rope" },
+    { type: "beam", from: [6.6, 2.0, -6.5], to: [5.2, 0.4, -5.5], radius: 0.03, material: "rope" },
   ]
   // Stones and roots along both banks hide the cut where the ground meets the water.
   for (let zz = 40; zz >= -90; zz -= rnd(1.6, 3)) {
-    if (zz > -8 && zz < 14) continue
+    if (zz > -7 && zz < 16) continue
     objects.push({ type: "rock", at: [r2(center(zz) - width(zz) / 2 - rnd(0, 0.3)), r2(zz)], size: r2(rnd(0.45, 1.1)), flat: 0.5, materials: { stone: "bankStone" } })
   }
   for (let zz = 12; zz >= -90; zz -= rnd(1.6, 3))
     objects.push({ type: "rock", at: [r2(center(zz) + width(zz) / 2 + rnd(0, 0.3)), r2(zz)], size: r2(rnd(0.35, 0.85)), flat: 0.5, materials: { stone: "bankStone" } })
   objects.push({ type: "log", at: [17.2, -13], yaw: 70, length: 6, r: 0.32 })
+  for (const [id, area] of [
+    ["bank-bushes-west", [-3.4, -60, -0.1, 1.5]],
+    ["bank-bushes-west-near", [-4, 11.5, -0.1, 40]],
+    ["bank-bushes-east", [16.2, -70, 19.5, 30]],
+  ] as const)
+    objects.push({
+      type: "scatter",
+      id,
+      area,
+      count: 240,
+      avoid: false,
+      // Clear of the cameras that stand on the banks and of the trail.
+      clear: [[-3.6, 12.8, 2.6], [-4.4, 1.8, 2.2], [-7.4, 31, 2.4], ...clearAlong(trailPts, 1.2)],
+      items: [
+        { weight: 3, item: { type: "bush" }, vary: { size: [1.0, 2.3] } },
+        { weight: 2, item: { type: "fern" }, vary: { size: [0.9, 1.5] } },
+      ],
+    })
+  // Trees that lean out over the water toward the river view, and an ivy-hung giant behind the gangway.
+  objects.push({ type: "tree", id: "overhang", at: [18.6, 17.5], kind: "oak", height: 14, lean: 30, leanYaw: 215, moss: 1 })
+  objects.push({ type: "tree", id: "overhang-2", at: [17.6, 9.5], kind: "oak", height: 16, lean: 34, leanYaw: 195, moss: 1 })
+  objects.push({ type: "tree", id: "overhang-3", at: [-2.4, 16], kind: "oak", height: 15, lean: 28, leanYaw: -20, moss: 1 })
+  objects.push({ type: "tree", id: "gangway-giant", at: [-3.4, 6.6], kind: "ancient", height: 19, girth: 0.85, moss: 1 })
   objects.push({ type: "log", at: [-2.6, -24], yaw: -60, length: 5, r: 0.3 })
   // Old live oaks, hung with moss, lean out over the water from both banks.
   const oaks: [number, number, number, number, number][] = [
@@ -139,7 +170,7 @@ function pierSet() {
     [20.5, 22, 15, 12, 200],
   ]
   for (const [x, zz, h, lean, leanYaw] of oaks) objects.push({ type: "tree", at: [x, zz], kind: "oak", height: h, lean, leanYaw, moss: 0.85 })
-  const nearClear = [...clearAlong(trailPts, 2.4), [1.5, 0, 9], [0, 9, 3.5]] as [number, number, number][]
+  const nearClear = [...clearAlong(trailPts, 2.4), [-1.5, 10, 3.2], [-1.2, 5, 3]] as [number, number, number][]
   const woods = (id: string, area: number[], count: number, extra: [number, number, number][] = [], low = false, moss = 0.5) => ({
     type: "scatter",
     id,
@@ -180,14 +211,13 @@ function pierSet() {
   objects.push({
     type: "grass",
     id: "reeds-pier",
-    area: [-1.6, 3.5, 0.3, 12.5],
+    area: [-2.2, 1.5, 0.3, 8.6],
     count: 700,
     height: [0.8, 1.7],
     blades: [6, 11],
     lean: [0.1, 0.45],
     width: 0.03,
     material: "reeds",
-    clear: clearAlong(trailPts.slice(0, 3), 0.7),
   })
   objects.push({
     type: "grass",
@@ -199,99 +229,120 @@ function pierSet() {
     lean: [0.1, 0.5],
     width: 0.03,
     material: "reeds",
-    clear: [[0.2, 0, 7.6]],
+    clear: [
+      [-1.2, 10.2, 1.6],
+      [0.2, 7.5, 1.2],
+    ],
   })
   objects.push({ type: "grass", id: "reeds-east", area: [16.0, -40, 17.6, 40], count: 650, height: [0.6, 1.5], blades: [5, 10], lean: [0.1, 0.5], width: 0.03, material: "reeds" })
   objects.push({ type: "grass", id: "turf", area: [-14, -30, -0.8, 30], count: 1800, height: [0.12, 0.35], clear: clearAlong(trailPts, 0.8) })
   write(`${SETS}/mordava-river-pier.json`, {
     ...base("mordava-river-pier", "mordava-river-pier", "A quiet pier on the Mordava"),
     seed: 4212,
+    // Blue predawn mist that brightens to cyan down the river, and warm lamplight from the tug's saloon pooling on the
+    // deck and hull and glinting in the water.
     atmosphere: {
-      sun: { direction: [0.55, 0.32, -0.75], color: "#a9cfd6", intensity: 1.5, target: [3, 0, 0], distance: 200, shadow: { left: -40, right: 40, top: 40, bottom: -40, near: 10, far: 420 } },
-      hemisphere: { sky: "#3f7480", ground: "#0b1512", intensity: 0.85 },
-      sky: { horizon: "#5aa0a8", mid: "#23545f", zenith: "#0a1e2a", gain: 0.72, clouds: 0.2, stars: 0.1 },
-      fog: { density: 0.022, color: "#3f7e8a" },
-      glow: "#9fd0d0",
-      fill: { color: "#ffffff", intensity: 6, distance: 14 },
-      environment: 0.3,
-      exposure: 1.2,
+      sun: {
+        direction: [0.15, 0.6, -0.8],
+        disc: [-0.08, 0.1, -1],
+        color: "#a8dcec",
+        intensity: 1.5,
+        target: [3, 0, -4],
+        distance: 200,
+        shadow: { left: -40, right: 40, top: 40, bottom: -40, near: 10, far: 420 },
+      },
+      hemisphere: { sky: "#2f7cb2", ground: "#0b2430", intensity: 0.8 },
+      sky: { horizon: "#8ae2f2", mid: "#1f6a98", zenith: "#0a2c4c", gain: 0.95, clouds: 0.06, stars: 0 },
+      fog: { density: 0.024, color: "#2f7aa6" },
+      glow: "#c2f4f2",
+      fill: { color: "#ffffff", intensity: 3.5, distance: 12 },
+      lights: [
+        { at: [4.6, 1.1, 0.4], color: "#ffa046", intensity: 42, distance: 12 },
+        { at: [4.6, 1.1, 1.6], color: "#ffa046", intensity: 32, distance: 11 },
+        { at: [4.6, 3.0, 1.0], color: "#ffb060", intensity: 8, distance: 7 },
+        { at: [6.5, -0.5, 0.9], color: "#ff9a40", intensity: 12, distance: 7 },
+        { at: [2.75, 1.6, 5.15], color: "#ffbc6a", intensity: 6, distance: 7 },
+        { at: [-1.0, 2.6, 5.0], color: "#e2da74", intensity: 12, distance: 12 },
+      ],
+      environment: 0.32,
+      exposure: 1.0,
       grade: "neutral",
-      wind: 0.35,
+      wind: 0.3,
     },
     camera: { near: 0.2, far: 900, min: [-40, 0.3, -90], max: [40, 30, 60], maxDistance: 80 },
     materials: {
       ground: {
         type: "meadow",
-        grass: "#2c4a3c",
-        grassDark: "#15261f",
-        moss: "#2f5a40",
-        dry: "#465036",
-        dirt: "#29251f",
-        litter: "#3a3424",
-        dirtAmount: 0.35,
-        pebbles: 0.3,
-        litterAmount: 0.45,
-        flowers: 0.04,
+        grass: "#24483e",
+        grassDark: "#10262a",
+        moss: "#2a5844",
+        dry: "#3e5040",
+        dirt: "#22282a",
+        litter: "#2e3a30",
+        dirtAmount: 0.3,
+        pebbles: 0.25,
+        litterAmount: 0.4,
+        flowers: 0.02,
         relief: 0.8,
       },
       trail: {
         type: "meadow",
-        grass: "#33402f",
-        grassDark: "#222a20",
-        moss: "#34472e",
-        dry: "#444636",
-        dirt: "#332c24",
-        litter: "#45382a",
+        grass: "#2c4238",
+        grassDark: "#1c2a28",
+        moss: "#2e4a3a",
+        dry: "#3c4840",
+        dirt: "#2c2c2a",
+        litter: "#38382e",
         dirtAmount: 1.0,
         pebbles: 0.7,
         litterAmount: 0.5,
         flowers: 0,
         relief: 0.8,
       },
-      water: { type: "water", color: "#0a2329", reflect: 3.2, ripple: 0.35, flow: [0, -1] },
-      bark: { type: "wood", a: "#2c2b27", b: "#37352f", c: "#242320", plank: [0, 40], relief: 0.07, variance: 0.5, seed: 4.2, grime: 1.0 },
+      water: { type: "water", color: "#051a2c", reflect: 2.4, ripple: 0.1, flow: [0, -1] },
+      bark: { type: "wood", a: "#26302e", b: "#303c38", c: "#1e2624", plank: [0, 40], relief: 0.07, variance: 0.5, seed: 4.2, grime: 1.0 },
       birch: { type: "wood", a: "#8a9090", b: "#9aa0a0", c: "#6f7676", plank: [0, 40], relief: 0.04, variance: 0.6, seed: 7.7 },
-      leaves: { type: "foliage", color: "#26473c" },
-      leavesDark: { type: "foliage", color: "#163028" },
-      leavesLight: { type: "foliage", color: "#3a5e4c" },
-      fern: { type: "foliage", color: "#2c5240" },
-      moss: { type: "foliage", color: "#7c8f86" },
-      grass: { type: "grass", base: "#18291f", tip: "#46694c" },
-      reeds: { type: "grass", base: "#1c2b21", tip: "#7d9468" },
-      stone: { type: "rock", a: "#353d3b", b: "#4c5552", moss: "#22382a", mossLight: "#3d5a3a", lichen: "#6d7a72", mossAmount: 0.6, lichenAmount: 0.35, relief: 0.6 },
-      bankStone: { type: "rock", a: "#2c3331", b: "#424a47", moss: "#1d3226", mossLight: "#355038", lichen: "#62706a", mossAmount: 0.7, lichenAmount: 0.2, relief: 0.6 },
-      hull: { type: "wood", a: "#2a2420", b: "#342c26", c: "#211d1a", plank: [0.22, 6], relief: 0.05, variance: 0.4, seed: 2.2, grime: 1.4 },
-      deck: { type: "wood", a: "#5a4a3a", b: "#6a5642", c: "#4a3e33", plank: [0.16, 3.2], relief: 0.05, variance: 0.45, seed: 5.3, grime: 0.8 },
-      trim: { type: "wood", a: "#4a3a2c", b: "#5a4634", c: "#3e3228", plank: [0, 40], relief: 0.03, seed: 6.6, grime: 0.6 },
-      cabin: { type: "wood", a: "#5c4532", b: "#6c513a", c: "#4c3a2c", plank: [0.18, 40], relief: 0.05, variance: 0.4, seed: 8.1, grime: 1.0 },
-      roof: { type: "wood", a: "#2e2620", b: "#3a3028", c: "#26201b", plank: [0.3, 40], relief: 0.04, seed: 9.9, grime: 1.2 },
-      window: { type: "plain", color: "#3a1c08", roughness: 1, emissive: "#ff8a30", emissiveIntensity: 1.5 },
+      leaves: { type: "foliage", color: "#1e4c4a" },
+      leavesDark: { type: "foliage", color: "#103434" },
+      leavesLight: { type: "foliage", color: "#3a6e52" },
+      fern: { type: "foliage", color: "#285a46" },
+      moss: { type: "foliage", color: "#6a8c88" },
+      grass: { type: "grass", base: "#142a26", tip: "#3e6a52" },
+      reeds: { type: "grass", base: "#18302a", tip: "#6e9468" },
+      stone: { type: "rock", a: "#2e3a3c", b: "#465456", moss: "#1c3a32", mossLight: "#36584a", lichen: "#62767a", mossAmount: 0.6, lichenAmount: 0.3, relief: 0.6 },
+      bankStone: { type: "rock", a: "#26302f", b: "#3c4848", moss: "#183428", mossLight: "#2e5040", lichen: "#5a6c6c", mossAmount: 0.7, lichenAmount: 0.2, relief: 0.6 },
+      hull: { type: "wood", a: "#18222c", b: "#202c38", c: "#121a22", plank: [0.24, 6], relief: 0.05, variance: 0.4, seed: 2.2, grime: 1.3 },
+      strake: { type: "wood", a: "#46596a", b: "#536878", c: "#3a4b58", plank: [0.2, 6], relief: 0.05, variance: 0.45, seed: 3.8, grime: 1.4 },
+      rust: { type: "wood", a: "#742c20", b: "#8a3a2a", c: "#5e241a", plank: [0, 40], relief: 0.03, variance: 0.4, seed: 6.6, grime: 1.0 },
+      deck: { type: "wood", a: "#4e4a44", b: "#5c5650", c: "#403c38", plank: [0.16, 3.2], relief: 0.05, variance: 0.45, seed: 5.3, grime: 1.0 },
+      cabin: { type: "wood", a: "#8aa0aa", b: "#9eb2ba", c: "#768c96", plank: [0.14, 40], relief: 0.05, variance: 0.45, seed: 8.1, grime: 1.5 },
+      roof: { type: "wood", a: "#2c2a2a", b: "#363434", c: "#242222", plank: [0.3, 40], relief: 0.04, seed: 9.9, grime: 1.2 },
+      window: { type: "plain", color: "#5a3010", roughness: 1, emissive: "#ffac4c", emissiveIntensity: 2.3 },
       void: { type: "plain", color: "#0d0a09", roughness: 1 },
-      plank: { type: "wood", a: "#4e463c", b: "#5c5246", c: "#433c34", plank: [0, 40], relief: 0.05, variance: 0.6, seed: 3.3, grime: 1.3 },
-      post: { type: "wood", a: "#2f2924", b: "#3a332c", c: "#29241f", plank: [0, 40], relief: 0.06, variance: 0.5, seed: 1.7, grime: 1.6 },
+      plank: { type: "wood", a: "#3e3a34", b: "#4a453e", c: "#34302c", plank: [0, 40], relief: 0.05, variance: 0.6, seed: 3.3, grime: 1.3 },
+      post: { type: "wood", a: "#2a2420", b: "#352d27", c: "#231e1b", plank: [0, 40], relief: 0.06, variance: 0.5, seed: 1.7, grime: 1.6 },
       rope: { type: "plain", color: "#6b5a40", roughness: 1 },
       ...pick(gate, ["crate", "crateDark", "barrel", "iron", "flame", "pole"]),
     },
     objects,
     marks: {
-      pier: { at: [1.6, 0], label: "the pier" },
-      pierEnd: { at: [1.6, -6.2], label: "the end of the pier" },
-      gangplank: { at: [2.9, -0.6], label: "the gangplank" },
-      foredeck: { at: [4.6, -3.8], label: "the boat's foredeck" },
-      cabinDoor: { at: [4.66, -2.0], label: "the cabin door" },
-      bow: { at: [4.66, -5.3], label: "the bow" },
-      stern: { at: [4.66, 5.3], label: "the stern" },
-      reeds: { at: [-0.8, 8.2], label: "the reeds by the pier" },
-      bank: { at: [-1.4, 2], label: "the riverbank" },
-      treeline: { at: [-6, -3], label: "the treeline" },
+      pier: { at: [0.9, 7.8], label: "the gangway" },
+      pierEnd: { at: [2.85, 5.6], label: "the end of the gangway" },
+      foredeck: { at: [4.35, 3.6], label: "the tug's foredeck" },
+      cabinDoor: { at: [4.6, 2.6], label: "the saloon door" },
+      bow: { at: [4.6, 5.3], label: "the bow" },
+      stern: { at: [4.6, -5.45], label: "the stern" },
+      reeds: { at: [-1.2, 4.6], label: "the reeds by the gangway" },
+      bank: { at: [-2.4, 9.4], label: "the riverbank" },
+      treeline: { at: [-6, 4], label: "the treeline" },
       trail: { at: [-4.6, 20], label: "the bank trail into the woods" },
       woods: { at: [-12, 38], label: "deep in the woods along the trail" },
     },
     shots: {
-      river: { position: [11.5, 2.1, 15.5], target: [4, 1.7, -7], fov: 46, label: "The river" },
-      pier: { position: [-3.0, 2.0, 1.2], target: [3.6, 1.1, -4.5], fov: 52, label: "The pier" },
-      boat: { position: [10.5, 2.3, -11], target: [3.8, 1.4, -1], fov: 50, label: "The boat" },
-      reeds: { position: [-3.4, 1.0, 12], target: [1.6, 0.9, 3], fov: 50, label: "The reeds" },
+      river: { position: [11.2, 0.45, 20], target: [2.5, 2.3, -12], fov: 50, label: "The river" },
+      pier: { position: [-3.6, 1.9, 12.8], target: [4.2, 1.3, 2.5], fov: 50, label: "The gangway" },
+      boat: { position: [10.5, 1.9, 9.5], target: [4.4, 1.5, 0.5], fov: 50, label: "The tug" },
+      reeds: { position: [-4.4, 1.0, 1.8], target: [1.4, 0.9, 6.8], fov: 50, label: "The reeds" },
       trail: { position: [-7.4, 1.7, 31], target: [-1.5, 1.4, 12], fov: 52, label: "The trail" },
     },
     life: { dust: { count: 160, box: [-6, 0.4, -10, 10, 5, 12] } },
@@ -300,9 +351,9 @@ function pierSet() {
   staging(
     "the-shipment",
     "mordava-river-pier",
-    [on("lyra", [4.25, -3.3], "aelar"), on("aelar", [4.95, -2.5], "silas"), on("silas", [0.9, 2.6], "aelar"), on("reinhard", [2.1, -2.7], "lyra"), on("poppen", [-0.9, 8.4], "pier"), ...crew],
+    [on("lyra", [4.2, 3.45], "aelar"), on("aelar", [4.85, 2.75], "silas"), on("silas", [-1.7, 10.0], "aelar"), on("reinhard", [1.4, 7.25], "lyra"), on("poppen", [-1.2, 4.6], "pierEnd"), ...crew],
     {
-      exchange: { subjects: [CAST.lyra.id, CAST.aelar.id, CAST.silas.id, CAST.reinhard.id], offset: [4.6, 2.4, -6.8], target: [0, 1.1, 0], fov: 50, label: "The meeting" },
+      exchange: { subjects: [CAST.lyra.id, CAST.aelar.id, CAST.silas.id, CAST.reinhard.id], offset: [7.5, 2.4, 3.5], target: [0, 1.1, 0], fov: 52, label: "The meeting" },
       lyra: close("lyra"),
       aelar: close("aelar", 3.3, -25),
       poppen: close("poppen", 2.6, 15, 0.9, 0.85),
@@ -312,24 +363,24 @@ function pierSet() {
   staging(
     "the-transaction",
     "mordava-river-pier",
-    [on("lyra", [4.3, -3.4], "aelar"), on("aelar", [3.35, -1.2], "silas"), on("silas", [2.35, -1.0], "aelar"), on("reinhard", [1.7, -3.4], "silas"), on("poppen", [-0.9, 8.4], "pier"), ...crew],
-    { handover: { subjects: [CAST.aelar.id, CAST.silas.id], offset: [-3.4, 1.9, 1.2], target: [0, 1.3, 0], fov: 40, label: "The handover" }, silas: close("silas", 2.8, 30), lyra: close("lyra") },
+    [on("lyra", [4.5, 3.3], "aelar"), on("aelar", [3.75, 4.55], "silas"), on("silas", [2.75, 5.45], "aelar"), on("reinhard", [1.55, 7.1], "silas"), on("poppen", [-1.2, 4.6], "pierEnd"), ...crew],
+    { handover: { subjects: [CAST.aelar.id, CAST.silas.id], offset: [3.2, 1.7, 2.6], target: [0, 1.3, 0], fov: 42, label: "The handover" }, silas: close("silas", 2.8, 30), lyra: close("lyra") },
     "handover"
   )
   staging(
     "the-disturbance",
     "mordava-river-pier",
     [
-      on("fighter", [0.4, 4.6], "reeds"),
-      on("archer", [1.6, 3.2], "reeds"),
-      on("reinhard", [4.2, -2.9], "pier"),
-      on("silas", [1.6, -5.2], "reeds"),
-      on("aelar", [5.0, -3.8], "reeds"),
-      on("lyra", [4.35, -3.6], "pier"),
-      on("poppen", [-0.9, 8.4], "fighter"),
+      on("fighter", [-0.4, 6.6], "reeds"),
+      on("archer", [0.8, 7.8], "reeds"),
+      on("reinhard", [4.25, 3.05], "pier"),
+      on("silas", [2.2, 6.2], "reeds"),
+      on("aelar", [4.9, 3.75], "reeds"),
+      on("lyra", [4.2, 3.9], "pier"),
+      on("poppen", [-1.2, 4.6], "fighter"),
     ],
     {
-      search: { subjects: [CAST.fighter.id, CAST.archer.id, CAST.poppen.id], offset: [-4.2, 2.2, -2.5], target: [0, 0.9, 0], fov: 48, label: "The search" },
+      search: { subjects: [CAST.fighter.id, CAST.archer.id, CAST.poppen.id], offset: [-3.6, 2.1, -4.2], target: [0, 0.9, 0], fov: 50, label: "The search" },
       poppen: close("poppen", 2.4, 20, 0.85, 0.8),
       archer: close("archer", 3, -20),
     },
@@ -464,23 +515,32 @@ function cabinSet() {
     ...base("riverboat-cabin", "riverboat-cabin", "The riverboat's cabin"),
     seed: 5150,
     atmosphere: {
-      sun: { direction: [0.18, 0.38, 1], color: "#9cc8d0", intensity: 1.7, target: [0, 0, 1], distance: 30, shadow: { left: -8, right: 8, top: 8, bottom: -8, near: 1, far: 70 } },
-      hemisphere: { sky: "#7a6650", ground: "#24180f", intensity: 1.25 },
+      sun: { direction: [0.18, 0.38, 1], color: "#5fb6c6", intensity: 2.4, target: [0, 0, 1], distance: 30, shadow: { left: -8, right: 8, top: 8, bottom: -8, near: 1, far: 70 } },
+      hemisphere: { sky: "#3e4c52", ground: "#1a140e", intensity: 0.65 },
       sky: { horizon: "#4f8f98", mid: "#2a5e6a", zenith: "#102a34", gain: 0.7, clouds: 0.2, stars: 0.05 },
       fog: { density: 0.03, color: "#3e7a86" },
       glow: "#9fd0d0",
-      fill: { color: "#ffcf96", intensity: 7, distance: 8 },
+      fill: { color: "#ffdcb8", intensity: 2.5, distance: 8 },
+      // The hanging lanterns and the candles light the cabin, as in the crate's art.
+      lights: [
+        { at: [-0.6, 1.55, -1.7], color: "#ffb060", intensity: 4.5, distance: 5 },
+        { at: [-0.8, 1.55, 1.55], color: "#ffb060", intensity: 4, distance: 5 },
+        { at: [-1.1, 1.15, -2.5], color: "#ffa850", intensity: 2, distance: 2.5 },
+        { at: [1.35, 0.85, -2.2], color: "#ffa850", intensity: 1.6, distance: 2.5 },
+        // Cold river light through the open door, as in The Fake.
+        { at: [0.6, 1.5, 2.6], color: "#4fb4c4", intensity: 6, distance: 4 },
+      ],
       environment: 0.25,
-      exposure: 1.3,
-      grade: "warm",
+      exposure: 1.2,
+      grade: "neutral",
       wind: 0.2,
     },
     camera: { near: 0.08, far: 400, min: [-1.6, 0.35, -2.9], max: [1.6, 2.25, 5.4], maxDistance: 8 },
     materials: {
-      floor: { type: "wood", a: "#4a3a2c", b: "#5a4634", c: "#3e3228", plank: [0.2, 2.8], relief: 0.05, variance: 0.5, seed: 4.4, grime: 1.3 },
-      panel: { type: "wood", a: "#5a4330", b: "#6a4e37", c: "#4a3828", plank: [0.18, 40], relief: 0.04, variance: 0.45, seed: 2.9, grime: 1.1 },
+      floor: { type: "wood", a: "#4a4038", b: "#585046", c: "#3c342e", plank: [0.2, 2.8], relief: 0.05, variance: 0.5, seed: 4.4, grime: 1.3 },
+      panel: { type: "wood", a: "#463c34", b: "#54483e", c: "#3a322c", plank: [0.18, 40], relief: 0.04, variance: 0.45, seed: 2.9, grime: 1.1 },
       roof: { type: "wood", a: "#3a2e24", b: "#46382c", c: "#30261e", plank: [0.24, 40], relief: 0.04, seed: 7.2, grime: 1.3 },
-      post: { type: "wood", a: "#3a2c22", b: "#47372a", c: "#30251d", plank: [0, 40], relief: 0.06, variance: 0.5, seed: 1.9, grime: 1.4 },
+      post: { type: "wood", a: "#3a322c", b: "#463c34", c: "#302824", plank: [0, 40], relief: 0.06, variance: 0.5, seed: 1.9, grime: 1.4 },
       trim: { type: "wood", a: "#4a3a2c", b: "#5a4634", c: "#3e3228", plank: [0, 40], relief: 0.03, seed: 6.6, grime: 0.6 },
       door: { type: "wood", a: "#5c4230", b: "#6e5038", c: "#4a382a", plank: [0.14, 12], relief: 0.04, variance: 0.4, seed: 9.4 },
       wheel: { type: "wood", a: "#5a3a24", b: "#6e4a2e", c: "#4a3020", plank: [0, 40], relief: 0.02, seed: 3.7 },
@@ -499,7 +559,9 @@ function cabinSet() {
       leavesDark: { type: "foliage", color: "#163028" },
       leavesLight: { type: "foliage", color: "#3a5e4c" },
       moss: { type: "foliage", color: "#7c8f86" },
-      ...pick(gate, ["crate", "crateDark", "barrel", "iron", "flame", "pole", "sack", "sackB"]),
+      ...pick(gate, ["crate", "crateDark", "barrel", "iron", "pole", "sack", "sackB"]),
+      flame: { type: "plain", color: "#000000", roughness: 1, emissive: "#ffb262", emissiveIntensity: 1.8 },
+      crate: { type: "wood", a: "#5e4630", b: "#6c5238", c: "#4e3e2e", plank: [0.2, 1.2], relief: 0.05, variance: 0.45, seed: 2.6, grime: 1.2 },
     },
     objects,
     marks: {

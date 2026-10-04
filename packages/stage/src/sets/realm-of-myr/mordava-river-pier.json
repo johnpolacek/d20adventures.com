@@ -9,16 +9,21 @@
   "atmosphere": {
     "sun": {
       "direction": [
-        0.55,
-        0.32,
-        -0.75
+        0.15,
+        0.6,
+        -0.8
       ],
-      "color": "#a9cfd6",
+      "disc": [
+        -0.08,
+        0.1,
+        -1
+      ],
+      "color": "#a8dcec",
       "intensity": 1.5,
       "target": [
         3,
         0,
-        0
+        -4
       ],
       "distance": 200,
       "shadow": {
@@ -31,32 +36,94 @@
       }
     },
     "hemisphere": {
-      "sky": "#3f7480",
-      "ground": "#0b1512",
-      "intensity": 0.85
+      "sky": "#2f7cb2",
+      "ground": "#0b2430",
+      "intensity": 0.8
     },
     "sky": {
-      "horizon": "#5aa0a8",
-      "mid": "#23545f",
-      "zenith": "#0a1e2a",
-      "gain": 0.72,
-      "clouds": 0.2,
-      "stars": 0.1
+      "horizon": "#8ae2f2",
+      "mid": "#1f6a98",
+      "zenith": "#0a2c4c",
+      "gain": 0.95,
+      "clouds": 0.06,
+      "stars": 0
     },
     "fog": {
-      "density": 0.022,
-      "color": "#3f7e8a"
+      "density": 0.024,
+      "color": "#2f7aa6"
     },
-    "glow": "#9fd0d0",
+    "glow": "#c2f4f2",
     "fill": {
       "color": "#ffffff",
-      "intensity": 6,
-      "distance": 14
+      "intensity": 3.5,
+      "distance": 12
     },
-    "environment": 0.3,
-    "exposure": 1.2,
+    "lights": [
+      {
+        "at": [
+          4.6,
+          1.1,
+          0.4
+        ],
+        "color": "#ffa046",
+        "intensity": 42,
+        "distance": 12
+      },
+      {
+        "at": [
+          4.6,
+          1.1,
+          1.6
+        ],
+        "color": "#ffa046",
+        "intensity": 32,
+        "distance": 11
+      },
+      {
+        "at": [
+          4.6,
+          3,
+          1
+        ],
+        "color": "#ffb060",
+        "intensity": 8,
+        "distance": 7
+      },
+      {
+        "at": [
+          6.5,
+          -0.5,
+          0.9
+        ],
+        "color": "#ff9a40",
+        "intensity": 12,
+        "distance": 7
+      },
+      {
+        "at": [
+          2.75,
+          1.6,
+          5.15
+        ],
+        "color": "#ffbc6a",
+        "intensity": 6,
+        "distance": 7
+      },
+      {
+        "at": [
+          -1,
+          2.6,
+          5
+        ],
+        "color": "#e2da74",
+        "intensity": 12,
+        "distance": 12
+      }
+    ],
+    "environment": 0.32,
+    "exposure": 1,
     "grade": "neutral",
-    "wind": 0.35
+    "wind": 0.3
   },
   "camera": {
     "near": 0.2,
@@ -76,26 +143,26 @@
   "materials": {
     "ground": {
       "type": "meadow",
-      "grass": "#2c4a3c",
-      "grassDark": "#15261f",
-      "moss": "#2f5a40",
-      "dry": "#465036",
-      "dirt": "#29251f",
-      "litter": "#3a3424",
-      "dirtAmount": 0.35,
-      "pebbles": 0.3,
-      "litterAmount": 0.45,
-      "flowers": 0.04,
+      "grass": "#24483e",
+      "grassDark": "#10262a",
+      "moss": "#2a5844",
+      "dry": "#3e5040",
+      "dirt": "#22282a",
+      "litter": "#2e3a30",
+      "dirtAmount": 0.3,
+      "pebbles": 0.25,
+      "litterAmount": 0.4,
+      "flowers": 0.02,
       "relief": 0.8
     },
     "trail": {
       "type": "meadow",
-      "grass": "#33402f",
-      "grassDark": "#222a20",
-      "moss": "#34472e",
-      "dry": "#444636",
-      "dirt": "#332c24",
-      "litter": "#45382a",
+      "grass": "#2c4238",
+      "grassDark": "#1c2a28",
+      "moss": "#2e4a3a",
+      "dry": "#3c4840",
+      "dirt": "#2c2c2a",
+      "litter": "#38382e",
       "dirtAmount": 1,
       "pebbles": 0.7,
       "litterAmount": 0.5,
@@ -104,9 +171,9 @@
     },
     "water": {
       "type": "water",
-      "color": "#0a2329",
-      "reflect": 3.2,
-      "ripple": 0.35,
+      "color": "#051a2c",
+      "reflect": 2.4,
+      "ripple": 0.1,
       "flow": [
         0,
         -1
@@ -114,9 +181,9 @@
     },
     "bark": {
       "type": "wood",
-      "a": "#2c2b27",
-      "b": "#37352f",
-      "c": "#242320",
+      "a": "#26302e",
+      "b": "#303c38",
+      "c": "#1e2624",
       "plank": [
         0,
         40
@@ -141,75 +208,103 @@
     },
     "leaves": {
       "type": "foliage",
-      "color": "#26473c"
+      "color": "#1e4c4a"
     },
     "leavesDark": {
       "type": "foliage",
-      "color": "#163028"
+      "color": "#103434"
     },
     "leavesLight": {
       "type": "foliage",
-      "color": "#3a5e4c"
+      "color": "#3a6e52"
     },
     "fern": {
       "type": "foliage",
-      "color": "#2c5240"
+      "color": "#285a46"
     },
     "moss": {
       "type": "foliage",
-      "color": "#7c8f86"
+      "color": "#6a8c88"
     },
     "grass": {
       "type": "grass",
-      "base": "#18291f",
-      "tip": "#46694c"
+      "base": "#142a26",
+      "tip": "#3e6a52"
     },
     "reeds": {
       "type": "grass",
-      "base": "#1c2b21",
-      "tip": "#7d9468"
+      "base": "#18302a",
+      "tip": "#6e9468"
     },
     "stone": {
       "type": "rock",
-      "a": "#353d3b",
-      "b": "#4c5552",
-      "moss": "#22382a",
-      "mossLight": "#3d5a3a",
-      "lichen": "#6d7a72",
+      "a": "#2e3a3c",
+      "b": "#465456",
+      "moss": "#1c3a32",
+      "mossLight": "#36584a",
+      "lichen": "#62767a",
       "mossAmount": 0.6,
-      "lichenAmount": 0.35,
+      "lichenAmount": 0.3,
       "relief": 0.6
     },
     "bankStone": {
       "type": "rock",
-      "a": "#2c3331",
-      "b": "#424a47",
-      "moss": "#1d3226",
-      "mossLight": "#355038",
-      "lichen": "#62706a",
+      "a": "#26302f",
+      "b": "#3c4848",
+      "moss": "#183428",
+      "mossLight": "#2e5040",
+      "lichen": "#5a6c6c",
       "mossAmount": 0.7,
       "lichenAmount": 0.2,
       "relief": 0.6
     },
     "hull": {
       "type": "wood",
-      "a": "#2a2420",
-      "b": "#342c26",
-      "c": "#211d1a",
+      "a": "#18222c",
+      "b": "#202c38",
+      "c": "#121a22",
       "plank": [
-        0.22,
+        0.24,
         6
       ],
       "relief": 0.05,
       "variance": 0.4,
       "seed": 2.2,
+      "grime": 1.3
+    },
+    "strake": {
+      "type": "wood",
+      "a": "#46596a",
+      "b": "#536878",
+      "c": "#3a4b58",
+      "plank": [
+        0.2,
+        6
+      ],
+      "relief": 0.05,
+      "variance": 0.45,
+      "seed": 3.8,
       "grime": 1.4
+    },
+    "rust": {
+      "type": "wood",
+      "a": "#742c20",
+      "b": "#8a3a2a",
+      "c": "#5e241a",
+      "plank": [
+        0,
+        40
+      ],
+      "relief": 0.03,
+      "variance": 0.4,
+      "seed": 6.6,
+      "grime": 1
     },
     "deck": {
       "type": "wood",
-      "a": "#5a4a3a",
-      "b": "#6a5642",
-      "c": "#4a3e33",
+      "a": "#4e4a44",
+      "b": "#5c5650",
+      "c": "#403c38",
       "plank": [
         0.16,
         3.2
@@ -217,40 +312,27 @@
       "relief": 0.05,
       "variance": 0.45,
       "seed": 5.3,
-      "grime": 0.8
-    },
-    "trim": {
-      "type": "wood",
-      "a": "#4a3a2c",
-      "b": "#5a4634",
-      "c": "#3e3228",
-      "plank": [
-        0,
-        40
-      ],
-      "relief": 0.03,
-      "seed": 6.6,
-      "grime": 0.6
+      "grime": 1
     },
     "cabin": {
       "type": "wood",
-      "a": "#5c4532",
-      "b": "#6c513a",
-      "c": "#4c3a2c",
+      "a": "#8aa0aa",
+      "b": "#9eb2ba",
+      "c": "#768c96",
       "plank": [
-        0.18,
+        0.14,
         40
       ],
       "relief": 0.05,
-      "variance": 0.4,
+      "variance": 0.45,
       "seed": 8.1,
-      "grime": 1
+      "grime": 1.5
     },
     "roof": {
       "type": "wood",
-      "a": "#2e2620",
-      "b": "#3a3028",
-      "c": "#26201b",
+      "a": "#2c2a2a",
+      "b": "#363434",
+      "c": "#242222",
       "plank": [
         0.3,
         40
@@ -261,10 +343,10 @@
     },
     "window": {
       "type": "plain",
-      "color": "#3a1c08",
+      "color": "#5a3010",
       "roughness": 1,
-      "emissive": "#ff8a30",
-      "emissiveIntensity": 1.5
+      "emissive": "#ffac4c",
+      "emissiveIntensity": 2.3
     },
     "void": {
       "type": "plain",
@@ -273,9 +355,9 @@
     },
     "plank": {
       "type": "wood",
-      "a": "#4e463c",
-      "b": "#5c5246",
-      "c": "#433c34",
+      "a": "#3e3a34",
+      "b": "#4a453e",
+      "c": "#34302c",
       "plank": [
         0,
         40
@@ -287,9 +369,9 @@
     },
     "post": {
       "type": "wood",
-      "a": "#2f2924",
-      "b": "#3a332c",
-      "c": "#29241f",
+      "a": "#2a2420",
+      "b": "#352d27",
+      "c": "#231e1b",
       "plank": [
         0,
         40
@@ -376,7 +458,7 @@
       "id": "ground",
       "at": [
         0,
-        -0.6,
+        -1.2,
         0
       ],
       "points": [
@@ -897,7 +979,7 @@
           ]
         ]
       ],
-      "depth": 0.6,
+      "depth": 1.2,
       "plane": "xz",
       "material": "ground"
     },
@@ -906,7 +988,7 @@
       "id": "river",
       "at": [
         0,
-        -0.49,
+        -1.02,
         0
       ],
       "points": [
@@ -1416,12 +1498,12 @@
       "id": "bank-trail",
       "points": [
         [
-          0.2,
-          7.5
+          -1.4,
+          10
         ],
         [
-          -1.4,
-          11
+          -2.4,
+          12.5
         ],
         [
           -3.2,
@@ -1452,93 +1534,70 @@
     },
     {
       "type": "pier",
-      "id": "pier",
+      "id": "gangway",
       "at": [
-        1.6,
+        -1.3,
         0,
-        7.2
+        9.8
       ],
-      "yaw": 180,
-      "length": 14.4,
-      "width": 2.2,
-      "depth": 2.6,
-      "rickety": 0.4
+      "yaw": 137.4,
+      "length": 6.8,
+      "width": 1.5,
+      "depth": 3.4,
+      "span": 2.2,
+      "rickety": 0.5
     },
     {
       "type": "riverboat",
-      "id": "riverboat",
+      "id": "tug",
       "at": [
-        4.66,
+        4.6,
         0,
         0
       ],
-      "yaw": 180,
       "length": 12,
       "beam": 3.6,
-      "cabin": 0.5,
-      "aft": 0.12
-    },
-    {
-      "type": "box",
-      "id": "gangplank",
-      "at": [
-        2.82,
-        -0.04,
-        -0.6
-      ],
-      "size": [
-        0.5,
-        0.05,
-        0.85
-      ],
-      "material": "plank"
+      "draft": 1.8,
+      "sheer": 0.9,
+      "cabin": 0.55,
+      "saloon": 0.4
     },
     {
       "type": "lantern",
       "at": [
-        2.6,
+        2.75,
         0,
-        -6.7
+        5.15
       ],
-      "height": 1.3,
-      "post": true
-    },
-    {
-      "type": "lantern",
-      "at": [
-        3.25,
-        0,
-        -2
-      ],
-      "height": 1.55,
+      "height": 1.45,
       "post": true
     },
     {
       "type": "crate",
       "at": [
-        5.75,
+        5.3,
         0,
-        -3.3
+        -5.25
       ],
       "yaw": 12,
-      "size": 0.7
+      "size": 0.6
     },
     {
       "type": "barrel",
       "at": [
-        5.9,
+        3.95,
         0,
-        -4.25
+        -5.3
       ],
-      "r": 0.3,
-      "h": 0.8
+      "r": 0.28,
+      "h": 0.75
     },
     {
       "type": "torus",
       "at": [
-        5.3,
+        4.6,
         0.05,
-        -4.95
+        4.6
       ],
       "radius": 0.24,
       "tube": 0.05,
@@ -1548,14 +1607,99 @@
     {
       "type": "beam",
       "from": [
-        2.65,
-        0.75,
-        -5.6
+        3.05,
+        -3.4,
+        5.7
       ],
       "to": [
-        3.58,
-        0.3,
-        -3.36
+        3.05,
+        2.3,
+        5.7
+      ],
+      "radius": 0.13,
+      "radiusTo": 0.11,
+      "segments": 8,
+      "material": "post"
+    },
+    {
+      "type": "beam",
+      "from": [
+        2.55,
+        -3.4,
+        3.3
+      ],
+      "to": [
+        2.55,
+        1.8,
+        3.3
+      ],
+      "radius": 0.13,
+      "radiusTo": 0.11,
+      "segments": 8,
+      "material": "post"
+    },
+    {
+      "type": "beam",
+      "from": [
+        2.7,
+        -3.4,
+        -5.7
+      ],
+      "to": [
+        2.7,
+        1.6,
+        -5.7
+      ],
+      "radius": 0.13,
+      "radiusTo": 0.11,
+      "segments": 8,
+      "material": "post"
+    },
+    {
+      "type": "beam",
+      "from": [
+        6.6,
+        -3.4,
+        -6.5
+      ],
+      "to": [
+        6.6,
+        2.7,
+        -6.5
+      ],
+      "radius": 0.13,
+      "radiusTo": 0.11,
+      "segments": 8,
+      "material": "post"
+    },
+    {
+      "type": "beam",
+      "from": [
+        6.95,
+        -3.4,
+        -5.25
+      ],
+      "to": [
+        6.95,
+        2.2,
+        -5.25
+      ],
+      "radius": 0.13,
+      "radiusTo": 0.11,
+      "segments": 8,
+      "material": "post"
+    },
+    {
+      "type": "beam",
+      "from": [
+        3.05,
+        1.5,
+        5.7
+      ],
+      "to": [
+        4.1,
+        0.4,
+        4.56
       ],
       "radius": 0.03,
       "material": "rope"
@@ -1563,14 +1707,29 @@
     {
       "type": "beam",
       "from": [
-        2.65,
-        0.7,
-        5.4
+        2.7,
+        1.2,
+        -5.7
       ],
       "to": [
-        3.58,
-        0.3,
-        5.4
+        4,
+        0.4,
+        -5.5
+      ],
+      "radius": 0.03,
+      "material": "rope"
+    },
+    {
+      "type": "beam",
+      "from": [
+        6.6,
+        2,
+        -6.5
+      ],
+      "to": [
+        5.2,
+        0.4,
+        -5.5
       ],
       "radius": 0.03,
       "material": "rope"
@@ -1710,236 +1869,8 @@
     {
       "type": "rock",
       "at": [
-        0.68,
-        -9.18
-      ],
-      "size": 0.81,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        0.75,
-        -11.5
-      ],
-      "size": 0.58,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        1,
-        -14.37
-      ],
-      "size": 0.69,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        0.92,
-        -16.45
-      ],
-      "size": 1.05,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        1.19,
-        -18.77
-      ],
-      "size": 0.71,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        1.23,
-        -20.77
-      ],
-      "size": 0.73,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        1.28,
-        -22.83
-      ],
-      "size": 0.85,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        1.26,
-        -24.76
-      ],
-      "size": 0.75,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        1.48,
-        -27.57
-      ],
-      "size": 0.86,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        1.63,
-        -29.89
-      ],
-      "size": 0.9,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        1.81,
-        -32.81
-      ],
-      "size": 0.91,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        1.84,
-        -34.76
-      ],
-      "size": 0.68,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        2,
-        -36.82
-      ],
-      "size": 0.97,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        2.22,
-        -39.65
-      ],
-      "size": 0.98,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        2.18,
-        -41.36
-      ],
-      "size": 0.55,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        2.04,
-        -43.07
-      ],
-      "size": 0.59,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        2.36,
-        -45.55
-      ],
-      "size": 0.75,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        2.41,
-        -47.98
-      ],
-      "size": 1.05,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        2.25,
-        -50.82
-      ],
-      "size": 1.03,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        2.35,
-        -53.69
+        0.66,
+        -7.5
       ],
       "size": 0.63,
       "flat": 0.5,
@@ -1950,188 +1881,8 @@
     {
       "type": "rock",
       "at": [
-        2.54,
-        -55.31
-      ],
-      "size": 0.5,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        2.46,
-        -56.91
-      ],
-      "size": 0.6,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        2.55,
-        -59.55
-      ],
-      "size": 0.9,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        2.47,
-        -61.48
-      ],
-      "size": 0.6,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        2.51,
-        -63.6
-      ],
-      "size": 0.53,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        2.83,
-        -65.89
-      ],
-      "size": 1.04,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        2.6,
-        -68.38
-      ],
-      "size": 0.46,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        2.87,
-        -71.24
-      ],
-      "size": 1.08,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        2.77,
-        -73.63
-      ],
-      "size": 0.62,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        2.95,
-        -75.54
-      ],
-      "size": 0.82,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        2.81,
-        -77.22
-      ],
-      "size": 0.91,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        2.93,
-        -79.82
-      ],
-      "size": 0.47,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        2.84,
-        -81.57
-      ],
-      "size": 0.53,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        2.89,
-        -84.13
-      ],
-      "size": 0.47,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        2.94,
-        -86.97
-      ],
-      "size": 1.1,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        3.02,
-        -89.91
+        0.64,
+        -9.89
       ],
       "size": 0.72,
       "flat": 0.5,
@@ -2142,368 +1893,8 @@
     {
       "type": "rock",
       "at": [
-        15.92,
-        12
-      ],
-      "size": 0.79,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        15.88,
-        9.84
-      ],
-      "size": 0.55,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        16.12,
-        7
-      ],
-      "size": 0.53,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        16.29,
-        4.53
-      ],
-      "size": 0.52,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        16.33,
-        1.92
-      ],
-      "size": 0.45,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        16.6,
-        -0.12
-      ],
-      "size": 0.85,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        16.69,
-        -2.61
-      ],
-      "size": 0.81,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        16.72,
-        -4.49
-      ],
-      "size": 0.42,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        16.81,
-        -6.78
-      ],
-      "size": 0.74,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        16.93,
-        -9.71
-      ],
-      "size": 0.44,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        16.95,
-        -11.93
-      ],
-      "size": 0.68,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        17.18,
-        -14.26
-      ],
-      "size": 0.6,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        17.25,
-        -16.92
-      ],
-      "size": 0.73,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        17.31,
-        -18.56
-      ],
-      "size": 0.62,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        17.54,
-        -20.44
-      ],
-      "size": 0.5,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        17.61,
-        -22.37
-      ],
-      "size": 0.56,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        17.73,
-        -24.08
-      ],
-      "size": 0.76,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        17.91,
-        -26.96
-      ],
-      "size": 0.69,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        17.79,
-        -29.9
-      ],
-      "size": 0.73,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        18.12,
-        -32.34
-      ],
-      "size": 0.8,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        18.02,
-        -34
-      ],
-      "size": 0.39,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        18.09,
-        -35.75
-      ],
-      "size": 0.35,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        18.47,
-        -38.19
-      ],
-      "size": 0.45,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        18.33,
-        -39.98
-      ],
-      "size": 0.69,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        18.55,
-        -41.92
-      ],
-      "size": 0.85,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        18.77,
-        -44.11
-      ],
-      "size": 0.74,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        18.85,
-        -46.27
-      ],
-      "size": 0.38,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        19.11,
-        -48.19
-      ],
-      "size": 0.84,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        19.28,
-        -50
-      ],
-      "size": 0.6,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        19.19,
-        -51.78
-      ],
-      "size": 0.65,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        19.28,
-        -53.61
+        0.61,
+        -11.76
       ],
       "size": 0.49,
       "flat": 0.5,
@@ -2514,10 +1905,10 @@
     {
       "type": "rock",
       "at": [
-        19.6,
-        -56.12
+        0.89,
+        -13.87
       ],
-      "size": 0.59,
+      "size": 0.88,
       "flat": 0.5,
       "materials": {
         "stone": "bankStone"
@@ -2526,8 +1917,8 @@
     {
       "type": "rock",
       "at": [
-        19.67,
-        -59.11
+        0.98,
+        -16.76
       ],
       "size": 0.56,
       "flat": 0.5,
@@ -2538,10 +1929,10 @@
     {
       "type": "rock",
       "at": [
-        19.79,
-        -61.15
+        1.16,
+        -18.93
       ],
-      "size": 0.35,
+      "size": 0.69,
       "flat": 0.5,
       "materials": {
         "stone": "bankStone"
@@ -2550,8 +1941,380 @@
     {
       "type": "rock",
       "at": [
-        19.97,
-        -63.33
+        1.25,
+        -21.12
+      ],
+      "size": 0.8,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        1.4,
+        -23.58
+      ],
+      "size": 1.04,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        1.33,
+        -25.83
+      ],
+      "size": 0.86,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        1.55,
+        -28.31
+      ],
+      "size": 0.78,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        1.55,
+        -30.88
+      ],
+      "size": 0.71,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        1.88,
+        -33.47
+      ],
+      "size": 0.83,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        1.96,
+        -35.56
+      ],
+      "size": 0.7,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        1.93,
+        -38.27
+      ],
+      "size": 0.52,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        2.27,
+        -41.02
+      ],
+      "size": 0.71,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        2.31,
+        -42.83
+      ],
+      "size": 1.1,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        2.19,
+        -44.74
+      ],
+      "size": 0.54,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        2.25,
+        -46.98
+      ],
+      "size": 0.54,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        2.23,
+        -49.87
+      ],
+      "size": 1.03,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        2.28,
+        -52.71
+      ],
+      "size": 0.94,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        2.6,
+        -54.7
+      ],
+      "size": 0.61,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        2.63,
+        -56.4
+      ],
+      "size": 0.85,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        2.45,
+        -58.33
+      ],
+      "size": 0.77,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        2.66,
+        -60.89
+      ],
+      "size": 1.02,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        2.65,
+        -62.82
+      ],
+      "size": 1.03,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        2.65,
+        -64.59
+      ],
+      "size": 0.45,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        2.67,
+        -67.46
+      ],
+      "size": 1.05,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        2.62,
+        -69.09
+      ],
+      "size": 0.57,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        2.77,
+        -72.05
+      ],
+      "size": 0.89,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        2.91,
+        -74.02
+      ],
+      "size": 0.59,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        3.01,
+        -76.41
+      ],
+      "size": 0.95,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        2.85,
+        -78.99
+      ],
+      "size": 0.77,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        3.06,
+        -80.64
+      ],
+      "size": 1.05,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        2.92,
+        -82.42
+      ],
+      "size": 1.03,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        2.89,
+        -84.07
+      ],
+      "size": 1.01,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        2.92,
+        -87.06
+      ],
+      "size": 0.95,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        3.16,
+        -89.25
+      ],
+      "size": 0.92,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        15.82,
+        12
       ],
       "size": 0.47,
       "flat": 0.5,
@@ -2562,10 +2325,10 @@
     {
       "type": "rock",
       "at": [
-        20.38,
-        -66.22
+        16.07,
+        9.83
       ],
-      "size": 0.73,
+      "size": 0.63,
       "flat": 0.5,
       "materials": {
         "stone": "bankStone"
@@ -2574,10 +2337,10 @@
     {
       "type": "rock",
       "at": [
-        20.55,
-        -68.43
+        16.1,
+        7.74
       ],
-      "size": 0.83,
+      "size": 0.72,
       "flat": 0.5,
       "materials": {
         "stone": "bankStone"
@@ -2586,10 +2349,10 @@
     {
       "type": "rock",
       "at": [
-        20.68,
-        -71.16
+        16.23,
+        5.67
       ],
-      "size": 0.64,
+      "size": 0.56,
       "flat": 0.5,
       "materials": {
         "stone": "bankStone"
@@ -2598,44 +2361,8 @@
     {
       "type": "rock",
       "at": [
-        20.75,
-        -73.24
-      ],
-      "size": 0.6,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        20.95,
-        -75.54
-      ],
-      "size": 0.71,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        21.15,
-        -78.07
-      ],
-      "size": 0.71,
-      "flat": 0.5,
-      "materials": {
-        "stone": "bankStone"
-      }
-    },
-    {
-      "type": "rock",
-      "at": [
-        21.4,
-        -80.91
+        16.2,
+        3.79
       ],
       "size": 0.84,
       "flat": 0.5,
@@ -2646,10 +2373,10 @@
     {
       "type": "rock",
       "at": [
-        21.44,
-        -83.12
+        16.45,
+        0.8
       ],
-      "size": 0.83,
+      "size": 0.79,
       "flat": 0.5,
       "materials": {
         "stone": "bankStone"
@@ -2658,8 +2385,176 @@
     {
       "type": "rock",
       "at": [
-        21.6,
-        -86.08
+        16.46,
+        -2.08
+      ],
+      "size": 0.67,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        16.64,
+        -3.87
+      ],
+      "size": 0.63,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        16.91,
+        -6.55
+      ],
+      "size": 0.59,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        16.85,
+        -8.41
+      ],
+      "size": 0.43,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        17,
+        -10.94
+      ],
+      "size": 0.63,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        17.19,
+        -13.25
+      ],
+      "size": 0.53,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        17.1,
+        -15.9
+      ],
+      "size": 0.5,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        17.27,
+        -18.26
+      ],
+      "size": 0.71,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        17.38,
+        -20.27
+      ],
+      "size": 0.68,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        17.44,
+        -22.47
+      ],
+      "size": 0.74,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        17.83,
+        -25.22
+      ],
+      "size": 0.81,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        17.97,
+        -27.78
+      ],
+      "size": 0.36,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        17.99,
+        -30.44
+      ],
+      "size": 0.71,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        17.96,
+        -33.3
+      ],
+      "size": 0.42,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        18.06,
+        -35.01
       ],
       "size": 0.39,
       "flat": 0.5,
@@ -2670,10 +2565,274 @@
     {
       "type": "rock",
       "at": [
-        21.89,
-        -88.16
+        18.29,
+        -36.62
       ],
-      "size": 0.7,
+      "size": 0.82,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        18.24,
+        -38.49
+      ],
+      "size": 0.45,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        18.42,
+        -41.04
+      ],
+      "size": 0.58,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        18.69,
+        -44.03
+      ],
+      "size": 0.69,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        18.88,
+        -46.71
+      ],
+      "size": 0.56,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        18.95,
+        -48.4
+      ],
+      "size": 0.75,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        19.14,
+        -51.36
+      ],
+      "size": 0.81,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        19.3,
+        -53.68
+      ],
+      "size": 0.46,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        19.49,
+        -56.12
+      ],
+      "size": 0.39,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        19.77,
+        -58.1
+      ],
+      "size": 0.63,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        20.03,
+        -60.37
+      ],
+      "size": 0.39,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        19.98,
+        -62.55
+      ],
+      "size": 0.35,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        20.13,
+        -64.16
+      ],
+      "size": 0.4,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        20.41,
+        -66.09
+      ],
+      "size": 0.74,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        20.45,
+        -68.76
+      ],
+      "size": 0.78,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        20.76,
+        -71.71
+      ],
+      "size": 0.68,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        20.79,
+        -74.11
+      ],
+      "size": 0.55,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        20.99,
+        -76.4
+      ],
+      "size": 0.63,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        21.22,
+        -79.01
+      ],
+      "size": 0.67,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        21.46,
+        -81.63
+      ],
+      "size": 0.77,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        21.52,
+        -84.62
+      ],
+      "size": 0.59,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        21.88,
+        -87.56
+      ],
+      "size": 0.53,
+      "flat": 0.5,
+      "materials": {
+        "stone": "bankStone"
+      }
+    },
+    {
+      "type": "rock",
+      "at": [
+        21.8,
+        -89.27
+      ],
+      "size": 0.79,
       "flat": 0.5,
       "materials": {
         "stone": "bankStone"
@@ -2688,6 +2847,732 @@
       "yaw": 70,
       "length": 6,
       "r": 0.32
+    },
+    {
+      "type": "scatter",
+      "id": "bank-bushes-west",
+      "area": [
+        -3.4,
+        -60,
+        -0.1,
+        1.5
+      ],
+      "count": 240,
+      "avoid": false,
+      "clear": [
+        [
+          -3.6,
+          12.8,
+          2.6
+        ],
+        [
+          -4.4,
+          1.8,
+          2.2
+        ],
+        [
+          -7.4,
+          31,
+          2.4
+        ],
+        [
+          -1.4,
+          10,
+          1.2
+        ],
+        [
+          -1.9,
+          11.25,
+          1.2
+        ],
+        [
+          -2.4,
+          12.5,
+          1.2
+        ],
+        [
+          -2.4,
+          12.5,
+          1.2
+        ],
+        [
+          -2.8,
+          14,
+          1.2
+        ],
+        [
+          -3.2,
+          15.5,
+          1.2
+        ],
+        [
+          -3.2,
+          15.5,
+          1.2
+        ],
+        [
+          -3.67,
+          17,
+          1.2
+        ],
+        [
+          -4.13,
+          18.5,
+          1.2
+        ],
+        [
+          -4.6,
+          20,
+          1.2
+        ],
+        [
+          -4.6,
+          20,
+          1.2
+        ],
+        [
+          -4.8,
+          21.25,
+          1.2
+        ],
+        [
+          -5,
+          22.5,
+          1.2
+        ],
+        [
+          -5.2,
+          23.75,
+          1.2
+        ],
+        [
+          -5.4,
+          25,
+          1.2
+        ],
+        [
+          -5.4,
+          25,
+          1.2
+        ],
+        [
+          -5.92,
+          26.2,
+          1.2
+        ],
+        [
+          -6.44,
+          27.4,
+          1.2
+        ],
+        [
+          -6.96,
+          28.6,
+          1.2
+        ],
+        [
+          -7.48,
+          29.8,
+          1.2
+        ],
+        [
+          -8,
+          31,
+          1.2
+        ],
+        [
+          -8,
+          31,
+          1.2
+        ],
+        [
+          -8.67,
+          32.17,
+          1.2
+        ],
+        [
+          -9.33,
+          33.33,
+          1.2
+        ],
+        [
+          -10,
+          34.5,
+          1.2
+        ],
+        [
+          -10.67,
+          35.67,
+          1.2
+        ],
+        [
+          -11.33,
+          36.83,
+          1.2
+        ],
+        [
+          -12,
+          38,
+          1.2
+        ],
+        [
+          -12,
+          38,
+          1.2
+        ],
+        [
+          -13,
+          39.2,
+          1.2
+        ],
+        [
+          -14,
+          40.4,
+          1.2
+        ],
+        [
+          -15,
+          41.6,
+          1.2
+        ],
+        [
+          -16,
+          42.8,
+          1.2
+        ],
+        [
+          -17,
+          44,
+          1.2
+        ]
+      ],
+      "items": [
+        {
+          "weight": 3,
+          "item": {
+            "type": "bush"
+          },
+          "vary": {
+            "size": [
+              1,
+              2.3
+            ]
+          }
+        },
+        {
+          "weight": 2,
+          "item": {
+            "type": "fern"
+          },
+          "vary": {
+            "size": [
+              0.9,
+              1.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "type": "scatter",
+      "id": "bank-bushes-west-near",
+      "area": [
+        -4,
+        11.5,
+        -0.1,
+        40
+      ],
+      "count": 240,
+      "avoid": false,
+      "clear": [
+        [
+          -3.6,
+          12.8,
+          2.6
+        ],
+        [
+          -4.4,
+          1.8,
+          2.2
+        ],
+        [
+          -7.4,
+          31,
+          2.4
+        ],
+        [
+          -1.4,
+          10,
+          1.2
+        ],
+        [
+          -1.9,
+          11.25,
+          1.2
+        ],
+        [
+          -2.4,
+          12.5,
+          1.2
+        ],
+        [
+          -2.4,
+          12.5,
+          1.2
+        ],
+        [
+          -2.8,
+          14,
+          1.2
+        ],
+        [
+          -3.2,
+          15.5,
+          1.2
+        ],
+        [
+          -3.2,
+          15.5,
+          1.2
+        ],
+        [
+          -3.67,
+          17,
+          1.2
+        ],
+        [
+          -4.13,
+          18.5,
+          1.2
+        ],
+        [
+          -4.6,
+          20,
+          1.2
+        ],
+        [
+          -4.6,
+          20,
+          1.2
+        ],
+        [
+          -4.8,
+          21.25,
+          1.2
+        ],
+        [
+          -5,
+          22.5,
+          1.2
+        ],
+        [
+          -5.2,
+          23.75,
+          1.2
+        ],
+        [
+          -5.4,
+          25,
+          1.2
+        ],
+        [
+          -5.4,
+          25,
+          1.2
+        ],
+        [
+          -5.92,
+          26.2,
+          1.2
+        ],
+        [
+          -6.44,
+          27.4,
+          1.2
+        ],
+        [
+          -6.96,
+          28.6,
+          1.2
+        ],
+        [
+          -7.48,
+          29.8,
+          1.2
+        ],
+        [
+          -8,
+          31,
+          1.2
+        ],
+        [
+          -8,
+          31,
+          1.2
+        ],
+        [
+          -8.67,
+          32.17,
+          1.2
+        ],
+        [
+          -9.33,
+          33.33,
+          1.2
+        ],
+        [
+          -10,
+          34.5,
+          1.2
+        ],
+        [
+          -10.67,
+          35.67,
+          1.2
+        ],
+        [
+          -11.33,
+          36.83,
+          1.2
+        ],
+        [
+          -12,
+          38,
+          1.2
+        ],
+        [
+          -12,
+          38,
+          1.2
+        ],
+        [
+          -13,
+          39.2,
+          1.2
+        ],
+        [
+          -14,
+          40.4,
+          1.2
+        ],
+        [
+          -15,
+          41.6,
+          1.2
+        ],
+        [
+          -16,
+          42.8,
+          1.2
+        ],
+        [
+          -17,
+          44,
+          1.2
+        ]
+      ],
+      "items": [
+        {
+          "weight": 3,
+          "item": {
+            "type": "bush"
+          },
+          "vary": {
+            "size": [
+              1,
+              2.3
+            ]
+          }
+        },
+        {
+          "weight": 2,
+          "item": {
+            "type": "fern"
+          },
+          "vary": {
+            "size": [
+              0.9,
+              1.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "type": "scatter",
+      "id": "bank-bushes-east",
+      "area": [
+        16.2,
+        -70,
+        19.5,
+        30
+      ],
+      "count": 240,
+      "avoid": false,
+      "clear": [
+        [
+          -3.6,
+          12.8,
+          2.6
+        ],
+        [
+          -4.4,
+          1.8,
+          2.2
+        ],
+        [
+          -7.4,
+          31,
+          2.4
+        ],
+        [
+          -1.4,
+          10,
+          1.2
+        ],
+        [
+          -1.9,
+          11.25,
+          1.2
+        ],
+        [
+          -2.4,
+          12.5,
+          1.2
+        ],
+        [
+          -2.4,
+          12.5,
+          1.2
+        ],
+        [
+          -2.8,
+          14,
+          1.2
+        ],
+        [
+          -3.2,
+          15.5,
+          1.2
+        ],
+        [
+          -3.2,
+          15.5,
+          1.2
+        ],
+        [
+          -3.67,
+          17,
+          1.2
+        ],
+        [
+          -4.13,
+          18.5,
+          1.2
+        ],
+        [
+          -4.6,
+          20,
+          1.2
+        ],
+        [
+          -4.6,
+          20,
+          1.2
+        ],
+        [
+          -4.8,
+          21.25,
+          1.2
+        ],
+        [
+          -5,
+          22.5,
+          1.2
+        ],
+        [
+          -5.2,
+          23.75,
+          1.2
+        ],
+        [
+          -5.4,
+          25,
+          1.2
+        ],
+        [
+          -5.4,
+          25,
+          1.2
+        ],
+        [
+          -5.92,
+          26.2,
+          1.2
+        ],
+        [
+          -6.44,
+          27.4,
+          1.2
+        ],
+        [
+          -6.96,
+          28.6,
+          1.2
+        ],
+        [
+          -7.48,
+          29.8,
+          1.2
+        ],
+        [
+          -8,
+          31,
+          1.2
+        ],
+        [
+          -8,
+          31,
+          1.2
+        ],
+        [
+          -8.67,
+          32.17,
+          1.2
+        ],
+        [
+          -9.33,
+          33.33,
+          1.2
+        ],
+        [
+          -10,
+          34.5,
+          1.2
+        ],
+        [
+          -10.67,
+          35.67,
+          1.2
+        ],
+        [
+          -11.33,
+          36.83,
+          1.2
+        ],
+        [
+          -12,
+          38,
+          1.2
+        ],
+        [
+          -12,
+          38,
+          1.2
+        ],
+        [
+          -13,
+          39.2,
+          1.2
+        ],
+        [
+          -14,
+          40.4,
+          1.2
+        ],
+        [
+          -15,
+          41.6,
+          1.2
+        ],
+        [
+          -16,
+          42.8,
+          1.2
+        ],
+        [
+          -17,
+          44,
+          1.2
+        ]
+      ],
+      "items": [
+        {
+          "weight": 3,
+          "item": {
+            "type": "bush"
+          },
+          "vary": {
+            "size": [
+              1,
+              2.3
+            ]
+          }
+        },
+        {
+          "weight": 2,
+          "item": {
+            "type": "fern"
+          },
+          "vary": {
+            "size": [
+              0.9,
+              1.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "type": "tree",
+      "id": "overhang",
+      "at": [
+        18.6,
+        17.5
+      ],
+      "kind": "oak",
+      "height": 14,
+      "lean": 30,
+      "leanYaw": 215,
+      "moss": 1
+    },
+    {
+      "type": "tree",
+      "id": "overhang-2",
+      "at": [
+        17.6,
+        9.5
+      ],
+      "kind": "oak",
+      "height": 16,
+      "lean": 34,
+      "leanYaw": 195,
+      "moss": 1
+    },
+    {
+      "type": "tree",
+      "id": "overhang-3",
+      "at": [
+        -2.4,
+        16
+      ],
+      "kind": "oak",
+      "height": 15,
+      "lean": 28,
+      "leanYaw": -20,
+      "moss": 1
+    },
+    {
+      "type": "tree",
+      "id": "gangway-giant",
+      "at": [
+        -3.4,
+        6.6
+      ],
+      "kind": "ancient",
+      "height": 19,
+      "girth": 0.85,
+      "moss": 1
     },
     {
       "type": "log",
@@ -2843,43 +3728,28 @@
       "count": 150,
       "clear": [
         [
-          0.2,
-          7.5,
-          2.4
-        ],
-        [
-          -0.33,
-          8.67,
-          2.4
-        ],
-        [
-          -0.87,
-          9.83,
-          2.4
-        ],
-        [
           -1.4,
-          11,
+          10,
           2.4
         ],
         [
-          -1.4,
-          11,
+          -1.9,
+          11.25,
           2.4
         ],
         [
-          -1.85,
-          12.13,
+          -2.4,
+          12.5,
           2.4
         ],
         [
-          -2.3,
-          13.25,
+          -2.4,
+          12.5,
           2.4
         ],
         [
-          -2.75,
-          14.38,
+          -2.8,
+          14,
           2.4
         ],
         [
@@ -3028,14 +3898,14 @@
           2.4
         ],
         [
-          1.5,
-          0,
-          9
+          -1.5,
+          10,
+          3.2
         ],
         [
-          0,
-          9,
-          3.5
+          -1.2,
+          5,
+          3
         ]
       ],
       "items": [
@@ -3287,43 +4157,28 @@
       "count": 260,
       "clear": [
         [
-          0.2,
-          7.5,
-          1.1
-        ],
-        [
-          -0.33,
-          8.67,
-          1.1
-        ],
-        [
-          -0.87,
-          9.83,
-          1.1
-        ],
-        [
           -1.4,
-          11,
+          10,
           1.1
         ],
         [
-          -1.4,
-          11,
+          -1.9,
+          11.25,
           1.1
         ],
         [
-          -1.85,
-          12.13,
+          -2.4,
+          12.5,
           1.1
         ],
         [
-          -2.3,
-          13.25,
+          -2.4,
+          12.5,
           1.1
         ],
         [
-          -2.75,
-          14.38,
+          -2.8,
+          14,
           1.1
         ],
         [
@@ -3540,10 +4395,10 @@
       "type": "grass",
       "id": "reeds-pier",
       "area": [
-        -1.6,
-        3.5,
+        -2.2,
+        1.5,
         0.3,
-        12.5
+        8.6
       ],
       "count": 700,
       "height": [
@@ -3559,54 +4414,7 @@
         0.45
       ],
       "width": 0.03,
-      "material": "reeds",
-      "clear": [
-        [
-          0.2,
-          7.5,
-          0.7
-        ],
-        [
-          -0.33,
-          8.67,
-          0.7
-        ],
-        [
-          -0.87,
-          9.83,
-          0.7
-        ],
-        [
-          -1.4,
-          11,
-          0.7
-        ],
-        [
-          -1.4,
-          11,
-          0.7
-        ],
-        [
-          -1.85,
-          12.13,
-          0.7
-        ],
-        [
-          -2.3,
-          13.25,
-          0.7
-        ],
-        [
-          -2.75,
-          14.38,
-          0.7
-        ],
-        [
-          -3.2,
-          15.5,
-          0.7
-        ]
-      ]
+      "material": "reeds"
     },
     {
       "type": "grass",
@@ -3634,9 +4442,14 @@
       "material": "reeds",
       "clear": [
         [
+          -1.2,
+          10.2,
+          1.6
+        ],
+        [
           0.2,
-          0,
-          7.6
+          7.5,
+          1.2
         ]
       ]
     },
@@ -3681,43 +4494,28 @@
       ],
       "clear": [
         [
-          0.2,
-          7.5,
-          0.8
-        ],
-        [
-          -0.33,
-          8.67,
-          0.8
-        ],
-        [
-          -0.87,
-          9.83,
-          0.8
-        ],
-        [
           -1.4,
-          11,
+          10,
           0.8
         ],
         [
-          -1.4,
-          11,
+          -1.9,
+          11.25,
           0.8
         ],
         [
-          -1.85,
-          12.13,
+          -2.4,
+          12.5,
           0.8
         ],
         [
-          -2.3,
-          13.25,
+          -2.4,
+          12.5,
           0.8
         ],
         [
-          -2.75,
-          14.38,
+          -2.8,
+          14,
           0.8
         ],
         [
@@ -3871,71 +4669,64 @@
   "marks": {
     "pier": {
       "at": [
-        1.6,
-        0
+        0.9,
+        7.8
       ],
-      "label": "the pier"
+      "label": "the gangway"
     },
     "pierEnd": {
       "at": [
-        1.6,
-        -6.2
+        2.85,
+        5.6
       ],
-      "label": "the end of the pier"
-    },
-    "gangplank": {
-      "at": [
-        2.9,
-        -0.6
-      ],
-      "label": "the gangplank"
+      "label": "the end of the gangway"
     },
     "foredeck": {
       "at": [
-        4.6,
-        -3.8
+        4.35,
+        3.6
       ],
-      "label": "the boat's foredeck"
+      "label": "the tug's foredeck"
     },
     "cabinDoor": {
       "at": [
-        4.66,
-        -2
+        4.6,
+        2.6
       ],
-      "label": "the cabin door"
+      "label": "the saloon door"
     },
     "bow": {
       "at": [
-        4.66,
-        -5.3
+        4.6,
+        5.3
       ],
       "label": "the bow"
     },
     "stern": {
       "at": [
-        4.66,
-        5.3
+        4.6,
+        -5.45
       ],
       "label": "the stern"
     },
     "reeds": {
       "at": [
-        -0.8,
-        8.2
+        -1.2,
+        4.6
       ],
-      "label": "the reeds by the pier"
+      "label": "the reeds by the gangway"
     },
     "bank": {
       "at": [
-        -1.4,
-        2
+        -2.4,
+        9.4
       ],
       "label": "the riverbank"
     },
     "treeline": {
       "at": [
         -6,
-        -3
+        4
       ],
       "label": "the treeline"
     },
@@ -3957,56 +4748,56 @@
   "shots": {
     "river": {
       "position": [
-        11.5,
-        2.1,
-        15.5
+        11.2,
+        0.45,
+        20
       ],
       "target": [
-        4,
-        1.7,
-        -7
+        2.5,
+        2.3,
+        -12
       ],
-      "fov": 46,
+      "fov": 50,
       "label": "The river"
     },
     "pier": {
       "position": [
-        -3,
-        2,
-        1.2
+        -3.6,
+        1.9,
+        12.8
       ],
       "target": [
-        3.6,
-        1.1,
-        -4.5
+        4.2,
+        1.3,
+        2.5
       ],
-      "fov": 52,
-      "label": "The pier"
+      "fov": 50,
+      "label": "The gangway"
     },
     "boat": {
       "position": [
         10.5,
-        2.3,
-        -11
+        1.9,
+        9.5
       ],
       "target": [
-        3.8,
-        1.4,
-        -1
+        4.4,
+        1.5,
+        0.5
       ],
       "fov": 50,
-      "label": "The boat"
+      "label": "The tug"
     },
     "reeds": {
       "position": [
-        -3.4,
+        -4.4,
         1,
-        12
+        1.8
       ],
       "target": [
-        1.6,
+        1.4,
         0.9,
-        3
+        6.8
       ],
       "fov": 50,
       "label": "The reeds"

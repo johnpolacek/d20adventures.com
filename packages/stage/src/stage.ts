@@ -190,6 +190,11 @@ export class Stage {
     this.sun = sun
     this.scene.add(sun, sun.target)
     this.scene.add(new THREE.HemisphereLight(A.hemisphere.sky, A.hemisphere.ground, A.hemisphere.intensity))
+    for (const l of A.lights) {
+      const lamp = new THREE.PointLight(l.color, l.intensity, l.distance, l.decay)
+      lamp.position.set(...l.at)
+      this.scene.add(lamp)
+    }
     if (A.fill) {
       const fill = new THREE.PointLight(A.fill.color, A.fill.intensity, A.fill.distance, 1.4)
       fill.position.set(0, 0.6, 0.5)
