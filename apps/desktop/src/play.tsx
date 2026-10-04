@@ -11,12 +11,15 @@ import { TurnOrder } from "@/components/stage/turn-order"
 import { useStage } from "@/components/stage/use-stage"
 import { Button } from "@/components/ui/button"
 import { parseNarrative } from "@/lib/utils/parse-narrative"
-import type { GameCommand } from "../runtime/game"
+import type { AdventureInfo, GameCommand } from "../runtime/game"
+import type { Hero, HeroCommand, PartyChoice } from "../runtime/heroes"
 import type { Save } from "../runtime/store"
 import { send } from "./bridge"
 import { characterInfo } from "./character-info"
+import { HeroCreator, type HeroIdea } from "./hero-creator"
 import { applyMovement, context, positions as stagePositions } from "./movement"
-import { castIdFor, portraitFor, sceneFor } from "./scenes"
+import { NewGame } from "./new-game"
+import { castIdFor, partyScene, portraitFor, sceneFor } from "./scenes"
 
 const prose = (text: string, originals = false) =>
   parseNarrative(text).flatMap((part) => {
@@ -35,8 +38,13 @@ export function DesktopGame() {
   const [loaded, setLoaded] = useState(false)
   const [providers, setProviders] = useState<string[]>([])
   const [provider, setProvider] = useState("claude")
-  const [adventures, setAdventures] = useState<{ id: string; title: string; start: string }[]>([])
+  const [adventures, setAdventures] = useState<AdventureInfo[]>([])
   const [adventure, setAdventure] = useState("march-of-davos")
+  const [heroes, setHeroes] = useState<Hero[]>([])
+  const [options, setOptions] = useState<{ races: string[]; archetypes: string[] }>({ races: [], archetypes: [] })
+  // The hero creator, over the new game screen. A hero it saves joins the party there.
+  const [creator, setCreator] = useState<{ editing?: Hero } | null>(null)
+  const [created, setCreated] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const busyRef = useRef(false)
   const [error, setError] = useState<string | null>(null)
@@ -58,8 +66,21 @@ export function DesktopGame() {
   const cardCharacter = turn?.characters.find((c) => c.id === cardId)
   const chosen = adventures.find((a) => a.id === adventure)
   // The title screen shows the chosen adventure's opening scene. Encounters without an authored scene play in story view.
-  const scene = sceneFor(turn?.encounterId ?? chosen?.start ?? "the-gates-of-kordavos")
-  const portrait = (c: { id: string; name: string }) => portraitFor(scene, c)
+  // In a game the scene holds the actual party, keyed by value so a reloaded save does not rebuild the stage.
+  const authored = sceneFor(turn?.encounterId ?? chosen?.start ?? "the-gates-of-kordavos")
+  const partyKey = turn
+    ? JSON.stringify([
+        turn.characters.filter((c) => c.type === "pc").map((c) => ({ id: c.id, name: c.name, race: c.race, archetype: c.archetype, gender: c.gender, type: c.type })),
+        save?.figures ?? {},
+      ])
+    : ""
+  const scene = useMemo(() => {
+    if (!authored || !partyKey) return authored
+    const [pcs, figures] = JSON.parse(partyKey)
+    return partyScene(authored, pcs, figures)
+  }, [authored, partyKey])
+  const figures = save?.figures
+  const portrait = (c: { id: string; name: string; type?: string; race?: string; gender?: string }) => portraitFor(scene, c, figures)
   const card = cardCharacter ? characterInfo(cardCharacter, portrait(cardCharacter)) : null
   const specs = useMemo(() => (scene ? { set: scene.set, staging: scene.staging, tier: "balanced" as const } : null), [scene])
   const { stage, stageRef, status: loading, error: stageError } = useStage(containerRef, specs)
@@ -83,7 +104,7 @@ export function DesktopGame() {
   saveRef.current = save
   const focused = useRef<string | null>(null)
   const moved = useRef(new Set<string>())
-  const invoke = useCallback(async (command: GameCommand) => {
+  const invoke = useCallback(async (command: GameCommand | HeroCommand) => {
     if (busyRef.current) return
     busyRef.current = true
     setBusy(true)
@@ -92,13 +113,15 @@ export function DesktopGame() {
       const res = await send(command)
       setSave(res.state)
       if (res.adventures) setAdventures(res.adventures)
+      if (res.heroes) setHeroes(res.heroes)
+      if (res.options) setOptions(res.options)
       if (res.providers) {
         setProviders(res.providers)
         setProvider((p) => (res.providers!.includes(p) ? p : (res.providers![0] ?? "claude")))
       }
       if (res.error) setError(res.error)
       if (!res.error && command.kind === "reply") setDraft("")
-      return res.state
+      return res
     } catch (e) {
       setError(String(e))
       return null
@@ -218,8 +241,12 @@ export function DesktopGame() {
     if (stage && sid && !reading) stage.shot({ subject: sid, distance: 5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 })
   }, [stage, actor?.id, reading])
   const onTop = useCallback((px: number) => stage?.setInsets({ bottom: px > 0 ? px + 12 : 0 }), [stage])
-  const party: CardCharacter[] = (turn?.characters ?? []).filter((c) => c.type === "pc").map((c) => ({ id: c.id, name: c.name, role: `${c.race} ${c.archetype}`, portrait: portrait(c) }))
-  const cardActor = party.find((c) => c.id === actor?.id) ?? null
+  const party: CardCharacter[] = (turn?.characters ?? [])
+    .filter((c) => c.type === "pc")
+    .map((c) => ({ id: c.id, name: c.name, role: `${c.race} ${c.archetype}${c.controlledBy === "ai" ? " · AI" : ""}`, portrait: portrait(c) }))
+  // Heroes the AI plays take their turns like NPCs, through Continue.
+  const aiActor = actor?.type === "pc" && actor.controlledBy === "ai"
+  const cardActor = aiActor ? null : (party.find((c) => c.id === actor?.id) ?? null)
   const rr = actor?.rollRequired
   // A finished adventure ends on its final narration. Its last turn has characters but takes no more actions.
   const ended = save?.adventure.status === "completed"
@@ -231,13 +258,23 @@ export function DesktopGame() {
   else if (cardActor && rr) mode = { kind: "roll", roll: { skill: rr.rollType, ability: "", dc: rr.difficulty, modifier: rr.modifier ?? 0 } }
   else if (cardActor) mode = { kind: "hold", prompt: `What does ${cardActor.name.split(" ")[0]} do?` }
   // Starting over archives the saved adventure. The menu stays open if the start fails.
-  const start = async () => {
-    const next = await invoke({ kind: "start", provider: provider as "claude", adventure, replace: Boolean(save) })
+  const start = async (chosenParty: PartyChoice[]) => {
+    const next = (await invoke({ kind: "start", provider: provider as "claude", adventure, party: chosenParty, replace: Boolean(save) }))?.state
     if (!next || next.adventure._id === save?.adventure._id) return
+    setCreated(null)
     setMenu(false)
     setConfirmNew(false)
     setCardId(null)
     setOpen(null)
+  }
+  const draftHero = async (idea: HeroIdea) => (await invoke({ kind: "heroDraft", provider: provider as "claude", adventure, ...idea }))?.draft
+  const saveHero = async (hero: Omit<Hero, "id"> & { id?: string }) => {
+    const before = new Set(heroes.map((h) => h.id))
+    const res = await invoke({ kind: "saveHero", hero })
+    if (!res || res.error) return false
+    setCreator(null)
+    setCreated(res.heroes?.find((h) => !before.has(h.id))?.id ?? null)
+    return true
   }
   const reply = async (value: string) => {
     if (!turn || !actor) return
@@ -358,7 +395,9 @@ export function DesktopGame() {
           {!ended && !busy && !reading && !mode && turn && (
             <div className={`${panel} absolute bottom-28 left-1/2 z-30 -translate-x-1/2 p-6 text-center`}>
               <p className="mb-3 font-serif text-xl">{actor ? `${actor.name}'s turn` : "The round is complete"}</p>
-              <Pill onClick={() => void invoke({ kind: "continue", turnId: turn._id })}>{actor ? "Continue NPC turn" : "Continue adventure"}</Pill>
+              <Pill onClick={() => void invoke({ kind: "continue", turnId: turn._id })}>
+                {!actor ? "Continue adventure" : aiActor ? `Continue ${actor.name.split(" ")[0]}'s turn` : "Continue NPC turn"}
+              </Pill>
             </div>
           )}
           {open === "journal" && <Journal turns={journal} chat={[]} compact={compact} onClose={() => setOpen(null)} />}
@@ -416,10 +455,10 @@ export function DesktopGame() {
       {(!save || menu) && (
         <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-5 bg-stage-ink/55 text-center">
           <div className="text-[10px] tracking-[.3em] text-stage-gold">D20 ADVENTURES</div>
-          <h1 className="font-display text-5xl">{save && !confirmNew ? save.adventure.title : (chosen?.title ?? "")}</h1>
-          <div className="text-sm text-stage-cream">Realm of Myr</div>
           {save && !confirmNew ? (
             <>
+              <h1 className="font-display text-5xl">{save.adventure.title}</h1>
+              <div className="text-sm text-stage-cream">Realm of Myr</div>
               {turn && <div className="mt-4 text-sm text-stage-cream">{save.adventure.status === "completed" ? "Adventure complete" : `Round ${turn.order} · ${turn.title}`}</div>}
               <Button variant="epic" className="mt-2 text-xl" disabled={busy} onClick={() => setMenu(false)}>
                 Continue
@@ -430,46 +469,42 @@ export function DesktopGame() {
             </>
           ) : (
             <>
-              {save && <p className="mt-4 text-sm">Start a new adventure? This one is kept in your save archive.</p>}
-              {adventures.length > 1 && (
-                <label className="mt-4 text-sm">
-                  Adventure{" "}
-                  <select aria-label="Adventure" value={adventure} onChange={(e) => setAdventure(e.target.value)} className="ml-3 rounded border border-stage-brass bg-stage-panel px-3 py-2">
-                    {adventures.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.title}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
-              <label className="mt-4 text-sm">
-                Game Master{" "}
-                <select aria-label="Game Master" value={provider} onChange={(e) => setProvider(e.target.value)} className="ml-3 rounded border border-stage-brass bg-stage-panel px-3 py-2">
-                  {providers.map((p) => (
-                    <option key={p} value={p}>
-                      {p}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <Button variant="epic" className="mt-2 text-xl" disabled={!loaded || busy || !providers.length || Boolean(scene && !stage && !stageError)} onClick={() => void start()}>
-                {busy ? "Starting…" : save ? "Start new game" : "Play"}
-              </Button>
-              {save && (
-                <Pill disabled={busy} onClick={() => setConfirmNew(false)}>
-                  Cancel
-                </Pill>
-              )}
+              {save && <p className="text-sm">Start a new adventure? This one is kept in your save archive.</p>}
               {!loaded && <p>Loading your saved adventure…</p>}
               {loaded && !providers.length && <p>Install and sign in to Claude Code, Codex, Grok, or Gemini CLI.</p>}
-              {scene && !stage && !stageError && <p>{loading}</p>}
+              {loaded && adventures.length > 0 && (
+                <NewGame
+                  key={adventure}
+                  adventures={adventures}
+                  adventure={adventure}
+                  onAdventure={(id) => {
+                    setAdventure(id)
+                    setCreated(null)
+                  }}
+                  heroes={heroes}
+                  providers={providers}
+                  provider={provider}
+                  onProvider={setProvider}
+                  busy={busy}
+                  waiting={Boolean(scene && !stage && !stageError)}
+                  replacing={Boolean(save)}
+                  created={created}
+                  onStart={(chosenParty) => void start(chosenParty)}
+                  onCreate={() => setCreator({})}
+                  onEdit={(hero) => setCreator({ editing: hero })}
+                  onDelete={(hero) => void invoke({ kind: "deleteHero", id: hero.id })}
+                  onCancel={save ? () => setConfirmNew(false) : undefined}
+                />
+              )}
             </>
           )}
         </div>
       )}
+      {creator && (
+        <HeroCreator options={creator.editing ? options : (chosen?.options ?? options)} editing={creator.editing} busy={busy} onDraft={draftHero} onSave={saveHero} onClose={() => setCreator(null)} />
+      )}
       {(error || stageError) && (
-        <div role="alert" className={`${panel} absolute left-1/2 top-28 z-50 w-[min(600px,90vw)] -translate-x-1/2 p-4 text-sm`}>
+        <div role="alert" className={`${panel} absolute left-1/2 top-28 z-[60] w-[min(600px,90vw)] -translate-x-1/2 p-4 text-sm`}>
           <p>{error ?? stageError}</p>
           <Pill className="mt-3" disabled={busy} onClick={() => void invoke({ kind: "load" })}>
             Reload saved state
