@@ -1,8 +1,8 @@
 # Desktop Stageview integration
 
-[Plans](index.md) · [Wiki Home](../index.md) · [Desktop direction](desktop-local-play.md)
+[Plans](../index.md) · [Wiki Home](../../index.md) · [Desktop direction](../desktop-local-play.md)
 
-Status: Implemented locally, 2026-10-02. Owner requested the 3D interface in the desktop app connected to the real turn flow. Branch `feature/desktop-stage-play` includes the committed GM core branch. No merge into main or deployment.
+Status: Merged into main on 2026-10-03 (`e96a0de`) and archived. Started 2026-10-02. Owner requested the 3D interface in the desktop app connected to the real turn flow. Branch `feature/desktop-stage-play` included the committed GM core branch. Open work is under [Remaining scope](#remaining-scope).
 
 ## Scope
 
@@ -49,7 +49,7 @@ An additional live Claude advancement used an isolated temporary save with a res
 
 ## Harvest Festival follow-up, 2026-10-03
 
-Owner initially authorized the festival scene, gate transition, and native validation, then stopped implementation and requested a handoff. No festival scene or runtime code changed. Continue from [the Harvest Festival handoff](harvest-festival-handoff.md) when implementation is requested again.
+Owner initially authorized the festival scene, gate transition, and native validation, then stopped implementation and requested a handoff. No festival scene or runtime code changed. Continue from [the Harvest Festival handoff](../harvest-festival-handoff.md) when implementation is requested again.
 
 - Author a separate Kordavos festival square with market stalls, a performance area, harvest dressing, walkable approaches, named destinations, ambient crowds, and camera views. Reuse the existing kit and authored five-NPC roster.
 - Add festival staging and local character art. Register both sets for the development viewer. Select desktop scenes by encounter, with the correct opening shot, portraits, and spatial context.
@@ -72,7 +72,7 @@ Resumed 2026-10-03 after review of the handoff. Owner decisions:
 - Desktop: `src/scenes.ts` maps encounters to scenes, cast ids, portraits, the HUD place name, and the GM's map staging (named places and where everyone in the turn stands). `play.tsx` uses the staging's opening shot and pauses every loop. Speed comes from race. Scene changes reset `useStage`'s error and status, clear `window.__stage`, and ignore restores or position writes from a replaced renderer. The prompt card waits while the next scene loads, so an action is never read against the old one. Disposing a stage resolves its walks.
 - Native testing found that a walk stalled while the window was covered, because frames stop. A walk now also ends on a timer at its expected arrival.
 - Art: Karim's front and every back came from `gemini-3.1-flash-image` (2K, 9:16, green screen, keyed). Karim was conditioned on his web portrait, Liora's finished draft, and the world style reference. Backs were conditioned on each front and the style reference. Finnian's first back held the torch in the wrong hand and was regenerated once. His back hair reads redder than his front. Liora keeps the authored braided beard, which her web portrait does not show. Fronts are 1.5–2K px tall, which is about 1:1 at the close shot.
-- Checks: eleven desktop tests pass. The three new ones cover a real core gate-to-festival advance with every festival character on its own figure and portrait, the gate's first-name figures, Clan Conflict falling back to story view, position reset, retention through a festival round and reopening, stale and unknown position writes, and the festival map staging in the GM prompt. Desktop, stage, and root TypeScript, scoped Biome, and `stage:check` pass. Browser renderer results are in [the stage engine reference](../stage-engine.md#recorded-checks-2026-10-03-kordavos-harvest-square). The release build passed with no Rust warnings. Vite reports one main chunk of 932 kB, mostly three.js.
+- Checks: eleven desktop tests pass. The three new ones cover a real core gate-to-festival advance with every festival character on its own figure and portrait, the gate's first-name figures, Clan Conflict falling back to story view, position reset, retention through a festival round and reopening, stale and unknown position writes, and the festival map staging in the GM prompt. Desktop, stage, and root TypeScript, scoped Biome, and `stage:check` pass. Browser renderer results are in [the stage engine reference](../../stage-engine.md#recorded-checks-2026-10-03-kordavos-harvest-square). The release build passed with no Rust warnings. Vite reports one main chunk of 932 kB, mostly three.js.
 - Native, packaged release app with live Claude, on an isolated save: the 2026-10-02 playthrough rolled back to its completed gate round. The first Continue kept the party at the gate for a second round, which the core allows. Four real actions and Garlan's turn followed, and the second Continue advanced to The Harvest Festival with its five NPCs. The window switched from the gate set to the festival square, with the festival place name, eight views, and NPC portraits in turn order.
 - Pressing Madam Zephyra once framed her at her tent. Pressing again opened her card. Yeva's action became a walk toward the fortune tent facing Zephyra, clamped to 7.5 m and saved with its movement key. After relaunch on the rebuilt app, the festival returned on Branka's turn, the render report was ready with no errors, and saved positions were byte-identical after load, so nothing replayed. Branka's action then walked her toward Karim's stall and saved while cmux covered the window. Before the timer fix, a covered window held Milos's gate walk until the window came back.
 - Replies took 18 s to 1 min, except one Milos reply at about 8.5 minutes. The first launch's render report read not ready because the window was hidden 20 s after launch.
@@ -134,7 +134,7 @@ Implemented. `pnpm test:gm-core` passes with the one re-recorded rule line, and 
 
 ## Midnight Summons forest trail, 2026-10-03
 
-Owner chose to build the forest trail first and asked for a repeatable way to make 3D locations. The pattern is [web review first, then the app](../stage-authoring.md).
+Owner chose to build the forest trail first and asked for a repeatable way to make 3D locations. The pattern is [web review first, then the app](../../stage-authoring.md).
 
 - One set, `realm-of-myr/valkarr-forest-trail`, serves Broken Silence, Owlbear Confrontation, and Timely Rescue, with a staging each. The Standing Stones and Thalbern's home stay in story view for now.
 - A moonlit deer trail through oaks, pines, and birches, ferns, bushes, boulders, a fallen log, the great oak, and a small clearing. Eight labelled places, three set views, and staging views for each character.
@@ -195,6 +195,6 @@ Result: the packaged app with live Claude played both untested branches on an is
 
 One local slot and four premade player-controlled characters. The gate and the Harvest Festival are the authored 3D sets. Add further sets, character creation, AI companions, save management, narration audio, and multiplayer separately. Equipment has no separate currency or quantity ledger. Native combat and the other providers were not tested in this playthrough. The five-call batching experiment remains separate. Distribution still needs Node packaging or onboarding, signing, notarization, and an updater.
 
-The worktree's isolated Convex project is `d20adventures-feature-desktop-stage-play`, deployment `adamant-hawk-913`. Desktop gameplay does not use it. Remove that project after the worktree is retired. Runtime details and commands are in [the desktop README](../../apps/desktop/README.md).
+The worktree's isolated Convex project is `d20adventures-feature-desktop-stage-play`, deployment `adamant-hawk-913`. Desktop gameplay does not use it. Remove that project after the worktree is retired. Runtime details and commands are in [the desktop README](../../../apps/desktop/README.md).
 
 Finished: 2026-10-03 (merged to main, policy: merge)

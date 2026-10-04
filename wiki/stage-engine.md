@@ -2,7 +2,7 @@
 
 [Home](index.md) · [Plans](plans/index.md) · [Stageview](plans/stageview.md) · [Testing](plans/testing-runbook.md)
 
-Status: Implemented reference. Engine merged in `384a622` on 2026-09-29. Moved to `packages/stage` for web and desktop in the unmerged `feature/desktop-stage-play` worktree on 2026-10-02. Native real-turn integration is recorded in [its plan](plans/feature-desktop-stage-play.md). The Kordavos harvest square, the second authored set, was added there on 2026-10-03. Performance results below remain dated evidence.
+Status: Implemented reference. Engine merged in `384a622` on 2026-09-29. Moved to `packages/stage` for web and desktop in `feature/desktop-stage-play` on 2026-10-02, merged into main on 2026-10-03. Native real-turn integration is recorded in [its plan](plans/zzz-completed/feature-desktop-stage-play.md). The Kordavos harvest square, the second authored set, was added there on 2026-10-03. Performance results below remain dated evidence.
 
 ## Implementation basis
 

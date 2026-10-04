@@ -51,7 +51,7 @@ Owner decisions from the turn-page mock, 2026-09-29 to 2026-10-01 (details in [S
 
 ### Phase 4, stage-first gameplay
 
-The first real local client is implemented in [Desktop Stageview integration](feature-desktop-stage-play.md): native stage, player input, dice, NPCs, journal, local saves, and authored transitions. Remaining work includes richer generated beats, complete set coverage, and multiplayer.
+The first real local client is implemented in [Desktop Stageview integration](zzz-completed/feature-desktop-stage-play.md): native stage, player input, dice, NPCs, journal, local saves, and authored transitions. Remaining work includes richer generated beats, complete set coverage, and multiplayer.
 
 - Render Stageview across the turn-page viewport and dock the complete text turn UI over it.
 - Build the stage-first turn page in the [desktop app](desktop-local-play.md), not the web app. Web play is deprecated once the desktop app ships (owner decision, 2026-10-01).

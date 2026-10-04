@@ -1,6 +1,6 @@
 # Stage set authoring
 
-[Home](index.md) · [Stage engine](stage-engine.md) · [Desktop integration](plans/feature-desktop-stage-play.md)
+[Home](index.md) · [Stage engine](stage-engine.md) · [Desktop integration](plans/zzz-completed/feature-desktop-stage-play.md)
 
 Status: working pattern, 2026-10-03. Used for the Kordavos harvest square and the Valkarr forest trail. Owner direction: build and review 3D scenes on the web viewer first, then check them once in the desktop app.
 

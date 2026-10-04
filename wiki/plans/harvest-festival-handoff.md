@@ -1,8 +1,8 @@
 # Harvest Festival desktop handoff
 
-[Home](../index.md) · [Plans](index.md) · [Desktop integration](feature-desktop-stage-play.md) · [Stage engine](../stage-engine.md)
+[Home](../index.md) · [Plans](index.md) · [Desktop integration](zzz-completed/feature-desktop-stage-play.md) · [Stage engine](../stage-engine.md)
 
-Status: resumed and implemented later on 2026-10-03. Owner decisions and results are in [the integration plan](feature-desktop-stage-play.md#festival-results). This page is kept as the handoff record.
+Status: resumed and implemented later on 2026-10-03. Owner decisions and results are in [the integration plan](zzz-completed/feature-desktop-stage-play.md#festival-results). This page is kept as the handoff record.
 
 Prepared 2026-10-03. Owner stopped implementation and requested a handoff. No festival scene, staging, runtime, or UI code was written. No new validation or native build was run. Only planning and handoff documents changed.
 
@@ -12,7 +12,7 @@ Worktree: `/Users/johnpolacek/Projects/d20adventures.com.worktrees/feature-deskt
 
 Branch: `feature/desktop-stage-play`. Implementation HEAD when this handoff was prepared: `5a719ed`, desktop title font weights and Play button. Preserve that commit. Earlier commits are `2de01ec`, durable character updates, and `32db430`, desktop Stageview with real turns. Main is separate. Do not recreate the worktree, merge, push, deploy Convex, or rewrite user saves as part of this task.
 
-Read `AGENTS.md`, `wiki/index.md`, and the Harvest Festival section of `wiki/plans/feature-desktop-stage-play.md` first. Follow the existing Three.js skill and native/browser verification workflows as needed. This Mac has 8 GB RAM. Use two Rust build jobs and avoid redundant dev servers.
+Read `AGENTS.md`, `wiki/index.md`, and the Harvest Festival section of `wiki/plans/zzz-completed/feature-desktop-stage-play.md` first. Follow the existing Three.js skill and native/browser verification workflows as needed. This Mac has 8 GB RAM. Use two Rust build jobs and avoid redundant dev servers.
 
 ## Intended outcome
 

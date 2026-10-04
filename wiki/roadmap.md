@@ -6,7 +6,7 @@ Updated 2026-10-02 in the desktop integration worktree. This separates implement
 
 ## Now, Stageview integration
 
-Stageview is the owner's chosen primary play screen, decided 2026-09-29. The engine, Myr crowd library, Kordavos gate set, and development preview are implemented. The web retains the text turn page. The unmerged `feature/desktop-stage-play` worktree adds native Stageview connected to local CLI generation and SQLite saves. See [desktop integration](plans/feature-desktop-stage-play.md).
+Stageview is the owner's chosen primary play screen, decided 2026-09-29. The engine, Myr crowd library, Kordavos gate set, and development preview are implemented. The web retains the text turn page. The unmerged `feature/desktop-stage-play` worktree adds native Stageview connected to local CLI generation and SQLite saves. See [desktop integration](plans/zzz-completed/feature-desktop-stage-play.md).
 
 Next work:
 
