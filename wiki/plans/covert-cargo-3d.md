@@ -53,6 +53,17 @@ Desktop: map every encounter to its scene, with Lyra and Poppen as the party slo
 - Remaining gaps: the water mirrors only the sky, so the windows show glints, not the art's long reflections. Tree crowns are rounder and flatter than the painted oaks. The moss is thinner.
 - `stage:check`, stage and desktop typechecks, Biome and 25 desktop tests pass. The pier is 2.30M triangles at high, under the 2.5M budget.
 
+## Third pass: painted textures, props, hillside, fog
+
+2026-10-04, owner: the wood should look like the art's wood. The bank beside the boat should be a hillside thick with moss and trees, with a lot of fog. The boat and the crate are bigger and cooler in the art. No Blender or Godot, the owner chose (a) to (d) below.
+
+- (a) Painted textures. `scripts/stage-textures.ts` paints tileable textures with the standee image model, in the art's style: weathered boards, dark cabin wood, the boat's painted boards, a tarred hull, mossy bark, and hanging moss cut out from green. A new `painted` material wraps them along each board's grain with the wood shader's seams, wear and grime. Textures live in `public/stage/textures/`, so the desktop build copies them. The stage waits for them before its first frame.
+- (b) Props. A detailed `strongbox` builder for the crate: bevelled boards, iron corners and bands, rivets, a hasp, a chain and handles. The tug grows toward the art's size, with an upper deck walkway, more trim, fenders and a bow lamp.
+- (c) Hillside. A `heightfield` primitive from a grid of heights the generator computes, so trees, bushes and moss sit on the slope. Moss hangs as painted curtains on cards.
+- (d) Fog. Thicker height fog that pools low over the water, and soft mist banks between the tree rows.
+- Budget: stay within 2.5M triangles and 300 draw calls at high. Thick fog lets distant trees go.
+- Validation: `stage:check`, typechecks, Biome, desktop tests, renders at high against the art.
+
 ## Owner review
 
 Start the viewer in the worktree with `pnpm exec next dev -p 3057`, then open `http://localhost:3057/dev/stage?staging=covert-cargo/<encounter>&tier=balanced` for each encounter: the-shipment, the-transaction, the-disturbance, the-escape, the-fake, battle-on-the-boat, the-crate, return-to-the-city, the-end.
