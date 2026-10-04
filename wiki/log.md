@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-04, module covers for the desktop New game screen
+
+Owner asked for adventure art that feels like a D&D module. Each bundled adventure now has a painted portrait cover in the manner of a classic module, framed in our own trade dress with a module code, colour band, title and player count, beside the party setup. Covers come from the checked-in `scripts/adventure-covers.ts`. See [the plan](plans/desktop-module-covers.md).
+
 ## 2026-10-04, desktop heroes and Covert Cargo merged into main
 
 Owner merged `feature/desktop-heroes` into main as `5baadf7` with `wt:finish`. It brings hero creation, the local roster and AI companions, all four Myr adventures in the desktop app, and Covert Cargo in 3D with painted textures, leaf cards, water reflections and character shots that swing clear of walls. Both plans are archived under [plans/zzz-completed](plans/zzz-completed/feature-desktop-heroes.md). The worktree's Convex project still needs deleting in the dashboard.
