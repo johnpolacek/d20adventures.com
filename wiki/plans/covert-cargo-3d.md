@@ -114,6 +114,16 @@ Results:
 - Young trees on the bank start aft of the stern, so none hangs over the pilothouse.
 - `stage:check`, typechecks, Biome and 25 desktop tests pass.
 
+## Speed pass
+
+2026-10-04, owner picked (g): bring the river scenes back up after leaf cards and reflections.
+
+- Measured with a throwaway bench that times frames with a GPU sync and switches one feature off at a time. On high the river view cost 36.9 ms a frame: leaves 11.7, sun shadows 11.5 (half from leaf cards cutting shadows into a 4096 map), reflection 5.8. The high pipeline alone costs about 14 ms at 1440 by 900, measured on the small cabin.
+- Cuts: leaf cards cast no shadows on the pier, and bushes and ferns none anywhere they are marked. The pier caps its shadow map at 2048. Nine larger cards per leaf mass instead of fourteen. 170 hill trees instead of 220, nearer the foot. Painted wood skips noise the painting already carries. The reflection leaves out grass, reeds, ferns, moss, mist and stones, and renders at 0.4 of the screen on high.
+- Work per frame on the river view: 1.82M to 1.09M triangles, 138 to 125 draw calls, a quarter of the shadow-map texels on high. The look is unchanged in side-by-side renders.
+- The viewer's fps on a busy dev build: balanced 66 on all three river views, high 40 to 48. Before the pass the same counter read 29 to 34 and 14 to 30. The machine's load average was about 17 from other work, so single runs swung by several milliseconds. Only interleaved runs and the work counts are firm.
+- Not measured: a release build. The dev viewer page is blocked in production, and the packaged app check still waits.
+
 ## Owner review
 
 Start the viewer in the worktree with `pnpm exec next dev -p 3057`, then open `http://localhost:3057/dev/stage?staging=covert-cargo/<encounter>&tier=balanced` for each encounter: the-shipment, the-transaction, the-disturbance, the-escape, the-fake, battle-on-the-boat, the-crate, return-to-the-city, the-end.

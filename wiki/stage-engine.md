@@ -196,3 +196,11 @@ Remaining product work is tracked in [Stageview](plans/stageview.md).
 - Water with `mirror` (0..1) gets a true reflection: `render/mirror.ts` renders the scene from a camera mirrored in the water plane, with an oblique near plane so nothing below the surface draws, into a half-float target. Shadow maps are reused from the main render. The water shader samples it projectively and mixes it into its specular, offset by the ripple normal.
 - Tiers set its size as a share of the drawing buffer: mobile 0, balanced 0.35, high 0.5, ultra 0.6. A `mirror` flag overrides it. Sets without mirrored water pay nothing.
 - `riverboat` now has a rounded saloon bow with windows and a glazed door round it, rust posts and fascia following the curve, an overhanging upper deck with a rail all round, and a narrower pilothouse.
+
+### Speed pass, 2026-10-04
+
+- `atmosphere.sun.shadow.size` caps a set's shadow map below the tier's. The Mordava pier uses 2048.
+- `foliage.shadow: false` keeps a leaf material out of the shadow map. Card foliage casts plain card shadows when it casts at all: alpha-tested leaf shadows in a 4096 map cost several milliseconds.
+- Leaf masses are nine larger cards. Painted wood drops the ring and fibre noise and three grime octaves the painting already carries.
+- The planar reflection leaves out grass, unpainted foliage, cards, mist and rocks. High renders it at 0.4 of the drawing buffer.
+- River view on high: 1.82M to 1.09M triangles, 138 to 125 calls. Balanced reads 66 fps, high 40 to 48, on a loaded dev machine.

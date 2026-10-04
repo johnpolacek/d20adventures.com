@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-04, Covert Cargo speed pass
+
+Owner asked to bring the river scenes back up. A frame bench found leaf drawing, leaf shadows in a 4096 map and the reflection as the main costs. Leaf cards no longer cast shadows on the pier, its shadow map is capped at 2048, leaf masses use fewer cards, painted wood is cheaper, and the reflection skips small growth. The river view went from 1.82M to 1.09M triangles. Balanced reads 66 fps and high 40 to 48 on a busy dev machine, with no visible change. See [the plan](plans/covert-cargo-3d.md#speed-pass).
+
 ## 2026-10-04, Covert Cargo water reflections, rounder and wider tug
 
 Owner picked water that reflects the boat and its windows, a rounder, taller cabin like the painting, and a wider boat. Stageview gained a tier-scaled planar reflection for water that opts in, so lit windows streak down the river as in the art. The tug is 5.6 m wide with a curved saloon bow of windows, a 3 m cabin and an overhanging upper deck. See [the plan](plans/covert-cargo-3d.md#fifth-pass-reflections-a-rounder-cabin-a-wider-tug).
