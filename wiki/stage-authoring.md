@@ -38,3 +38,8 @@ The web viewer and the desktop app run the same `packages/stage` renderer and th
 - Clear tree scatter around every camera position, along trails, and along key walks with scatter `clear` circles.
 - Keep views near eye height. From above, standees read as flat cards.
 - Keep the crowd off the camera lines of close-ups and character focus with `crowd.avoid` circles.
+- Generate a set from a script when it has many computed parts. `scripts/stage-sets/covert-cargo.ts` writes four sets and nine stagings: bank rocks along a river curve, scatter clearings along trails, ground cut around a river. Rerun it rather than editing the JSON.
+- The `extrude` primitive's "xz" plane mirrors z. Write ground outlines with z negated, or build them in a builder.
+- Hanging moss and dense woods cost triangles fast. The first Mordava pier reached 3.2M rendered triangles. Fewer, closer trees with moss only on the near ones brought it to 1.8M with no visible loss in the mist.
+- Interiors light from the hemisphere and the camera fill. The cabin uses a warm hemisphere, a warm fill and the warm grade, with the sun shining in through the open door so its shafts fall across the floor.
+- A cloaked character's back can come out as a front-facing body with the cloak drawn behind it. Give the figure a `backNote` in `scripts/stage-standees.ts` that says the cloak hangs down the back and hides it, and whether the hood is up.

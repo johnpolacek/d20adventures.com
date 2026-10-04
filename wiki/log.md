@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-04, Covert Cargo in 3D
+
+Owner asked for the two-player adventure as a full 3D experience from its art. On `feature/desktop-heroes`: every Covert Cargo encounter now has a scene. The Mordava pier before dawn, the riverboat's lamplit cabin, the Kordavos riverfront and an old forest path, with standees for Reinhard, Silas, Aelar and the two elven crew. New `riverboat`, `pier`, `ship`, tree moss and `ancient` tree builders. A checked-in generator writes the sets. Renders match the art's key frames and stay within budget after trimming the pier from 3.2M to 1.8M triangles. The desktop maps all nine encounters and its tests pass. The packaged-app check waits on an unlocked screen. See [the plan](plans/covert-cargo-3d.md).
+
 ## 2026-10-04, desktop heroes, AI companions, and all four adventures
 
 Owner chose stock figures first with art painted through Codex or Grok as an upgrade, You or AI per hero with AI as the default, and a short creation flow. On `feature/desktop-heroes`, unmerged: the desktop app bundles all four Myr adventures, keeps a local hero roster, drafts a hero from race, class, name and an idea in one CLI call, and starts a party of premades and roster heroes within each adventure's rules. AI heroes play through the core's companion path. Scenes map any party onto their slots. Fourteen stock standees and four premade standees were painted with the checked-in `scripts/stage-standees.ts`. Paint makes a hero's standee through the player's own Codex or Grok, keyed locally. With live Claude, The Road to Kordavos played to its end with two created heroes, one played by the AI. The packaged app showed a Grok-painted hero at the Kordavos gate and ran an AI turn. See [the plan](plans/feature-desktop-heroes.md).
