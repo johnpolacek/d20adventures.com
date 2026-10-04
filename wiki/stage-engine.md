@@ -204,3 +204,4 @@ Remaining product work is tracked in [Stageview](plans/stageview.md).
 - Leaf masses are nine larger cards. Painted wood drops the ring and fibre noise and three grime octaves the painting already carries.
 - The planar reflection leaves out grass, unpainted foliage, cards, mist and rocks. High renders it at 0.4 of the drawing buffer.
 - River view on high: 1.82M to 1.09M triangles, 138 to 125 calls. Balanced reads 66 fps, high 40 to 48, on a loaded dev machine.
+- Character shots swing clear: `stage.shot({ subject, ... })` tries turns of up to 180 degrees round the subject and then 75 and 55 percent of the distance, until the camera, clamped to the set's camera box, has 0.45 m of room and a clear line to the subject past every solid footprint. Walls that should block a camera must be `solid`.

@@ -129,7 +129,11 @@ Results:
 - Release build with two Rust jobs: no warnings. The bundle carries all ten painted textures.
 - The app's render report (written only with `D20_RENDER_REPORT` set) now samples the stage's fps, draw calls and triangles each second for 50 s.
 - Packaged app on the pier save: the stage came up with no errors, on the balanced tier at pixel ratio 1, showing the river shot under the title screen. Reflections, painted wood, leaf cards and moss all render. 121 calls, 1.09M triangles. Median 46 fps, 40 to 59, over 21 s. Load average 3 to 5, swap 3.4 to 3.7 of 4 GB used.
-- Not yet measured: the play view. Two runs past the title screen came up hidden or behind other windows, where the stage does not draw, because the owner was using the Mac at the time. The owner's save was restored with an unchanged SHA-256.
+- Play view, measured while the owner was away, balanced tier, median of 21 one-second samples: the pier 51 to 52 fps (48 to 57), the cabin 58 (55 to 60), the riverfront 58 (53 to 61). Load average 2 to 5.6, swap 4 to 6.4 GB in use.
+- Found in the app: the desktop frames whoever's turn it is 5 m in front of them. On the bigger tug that put Lyra's turn camera inside the saloon, and in the cabin Poppen's turn looked at him through the cabin wall past a post, a chain and a rope.
+- Fixed in the engine: a shot on one character swings round them, then draws in, until the camera, clamped to the set's camera box, has elbow room and a clear line to them past every solid footprint, tested in 5 cm steps. The cabin's walls are now solid. The starboard rope and chain hang forward of the crate, a port rope moved off Lyra's spot, and Lyra stands clear of the port post in The Crate.
+- Checked again in a rebuilt app: Lyra's turn looks along the deck at her and the crew, and Poppen's turn shows him on deck with the river behind. Turn views in The Crate and Battle on the Boat, checked in the dev viewer, frame their character clear of posts.
+- The owner's save was restored with an unchanged SHA-256 after each run.
 
 ## Owner review
 

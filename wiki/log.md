@@ -4,9 +4,9 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
-## 2026-10-04, Covert Cargo release check, partial
+## 2026-10-04, Covert Cargo release check
 
-Release build passed with no warnings. In the packaged app the pier scene renders correctly with reflections, painted wood and leaf cards, at a median 46 fps on the balanced tier under the title screen. The play view still needs a run while the Mac is free. See [the plan](plans/covert-cargo-3d.md#release-check-2026-10-04).
+Release builds passed with no warnings. In the packaged app the play view ran at a median 51 to 52 fps on the pier and 58 in the cabin and on the riverfront, balanced tier, with the machine swapping. The check found turn cameras inside the tug's saloon and behind the cabin wall. Character shots now swing round the character until the view is clear, and the cabin walls are solid. A rebuilt app showed both turns framed cleanly. See [the plan](plans/covert-cargo-3d.md#release-check-2026-10-04).
 
 ## 2026-10-04, Covert Cargo speed pass
 
