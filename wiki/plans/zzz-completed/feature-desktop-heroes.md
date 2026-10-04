@@ -82,3 +82,5 @@ Status: Implemented locally, 2026-10-04. Branch `feature/desktop-heroes`. No mer
 - [x] Paint hero through Codex or Grok
 - [x] Build and packaged-app check
 - [x] Wiki and log
+
+Finished: 2026-10-04 (merged to main, policy: merge)
