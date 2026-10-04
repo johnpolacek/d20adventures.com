@@ -18,6 +18,18 @@ export interface NarrationStage {
 }
 export type NarrationShot = string | { subject: string }
 type Gender = "f" | "m"
+// What the reader knows of each cast member: gender for pronouns, and words they go by unnamed ("the elf", "the
+// soldier"): race, class and the like.
+export type NarrationPeople = Record<string, { gender?: Gender; words?: string[] } | undefined>
+export interface NarrationLine {
+  id: string
+  text: string
+}
+export interface NarrationBeat {
+  view: NarrationShot | null
+  // Who speaks in the paragraph, in order, each with their quoted words.
+  speech: NarrationLine[]
+}
 
 const TITLES = /^(madam|master|mistress|sergeant|sir|lady|lord|captain|brother|sister|father|mother)$/
 // A first word that describes rather than names ("Elven Archer"): such a character is only known by the full name.
@@ -61,13 +73,28 @@ const callNames = (name: string) => {
   return [...new Set([name, first].filter((n): n is string => Boolean(n)))].map((n) => n.toLowerCase())
 }
 const literal = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+// Speech tags round a quote: "…," Silas replies / "…" asked the elf / Aelar says, "…".
+const VERBS =
+  "says|said|replies|replied|asks|asked|answers|answered|whispers|whispered|calls|called|growls|growled|mutters|muttered|snaps|snapped|adds|added|continues|continued|shouts|shouted|hisses|hissed|murmurs|murmured|barks|barked|insists|insisted|declares|declared|offers|offered|warns|warned|tells|told|interjects|interjected|laughs|laughed|sneers|sneered|demands|demanded"
+const WORDS = "[\\w’']+(?:\\s+[\\w’']+){0,2}"
+const QUOTE = /[“"]([^”"]{1,400})[”"]/g
+const AFTER = new RegExp(`^[\\s,.!?…—-]*(?:(${WORDS})\\s+(?:${VERBS})\\b|(?:${VERBS})\\s+(${WORDS}))`, "i")
+const BEFORE = new RegExp(`(${WORDS})\\s+(?:${VERBS})\\b[^“"]{0,40}$`, "i")
+const LOOSE = new Set(["the", "a", "an", "lead", "old", "young", "tall", "other", "first", "second", "one", "of", "his", "her"])
 const positions = (text: string, re: RegExp) => [...text.matchAll(new RegExp(re.source, "gi"))].map((m) => m.index ?? 0)
 
 // Views for a turn's paragraphs, in order. `genders` maps cast ids to "f" or "m" so pronouns find their character.
 export function narrationShots(paragraphs: string[], stage: NarrationStage, genders: Record<string, Gender | undefined> = {}): (NarrationShot | null)[] {
+  return readNarration(paragraphs, stage, Object.fromEntries(Object.entries(genders).map(([id, gender]) => [id, { gender }]))).map((b) => b.view)
+}
+
+// A turn's paragraphs read in order: the view for each, and who speaks in it.
+export function readNarration(paragraphs: string[], stage: NarrationStage, people: NarrationPeople = {}): NarrationBeat[] {
+  const genders = Object.fromEntries(Object.entries(people).map(([id, p]) => [id, p?.gender]))
   const staged = Object.entries(stage.staging?.shots ?? {})
   let previous: Partial<Record<Gender, string>> = {}
   return paragraphs.map((text, index) => {
+    const beat = (view: NarrationShot | null): NarrationBeat => ({ view, speech })
     const lower = text.toLowerCase()
     // Every name mention, in order. A full name and its first name at the same spot count once.
     const mentions: { id: string; at: number }[] = []
@@ -90,6 +117,34 @@ export function narrationShots(paragraphs: string[], stage: NarrationStage, gend
         if (who) add(who, 1)
       }
     const ranked = [...refs].sort((a, b) => b[1] - a[1] || (mentions.find((m) => m.id === a[0])?.at ?? 1e9) - (mentions.find((m) => m.id === b[0])?.at ?? 1e9))
+    // Who says each quote: the speech tag beside it ("Silas replies", "asked the elf", "she said"), else the cast member
+    // named nearest to it. Several quotes from one speaker run together.
+    const spoken = new Map<string, string[]>()
+    for (const q of text.matchAll(QUOTE)) {
+      const start = q.index ?? 0
+      const end = start + q[0].length
+      const tag = text.slice(end, end + 80).match(AFTER) ?? text.slice(Math.max(0, start - 80), start).match(BEFORE)
+      const phrase = (tag?.[1] ?? tag?.[2] ?? "").toLowerCase()
+      let who: string | undefined
+      if (phrase) {
+        who = stage.cast.find((c) => callNames(c.name).some((n) => new RegExp(`\\b${literal(n)}\\b`).test(phrase)))?.id
+        const pronoun = phrase.split(/\s+/)[0]
+        const g: Gender | undefined = /^(she|her)$/.test(pronoun) ? "f" : /^(he|him)$/.test(pronoun) ? "m" : undefined
+        if (!who && g) {
+          const before = mentions.filter((m) => m.at < start && genders[m.id] === g)
+          who = before.length ? before[before.length - 1].id : previous[g]
+        }
+        if (!who) {
+          const asked = phrase.split(/\s+/).filter((w) => !LOOSE.has(w))
+          const fits = stage.cast.filter((c) => asked.some((w) => people[c.id]?.words?.includes(w) || callNames(c.name).includes(w)))
+          who = fits.find((c) => mentions.some((m) => m.id === c.id))?.id ?? fits[0]?.id
+        }
+      }
+      if (!who && mentions.length) who = [...mentions].sort((a, b) => Math.abs(a.at - start) - Math.abs(b.at - start))[0].id
+      if (who) spoken.set(who, [...(spoken.get(who) ?? []), q[1].trim()])
+    }
+    // A quote cut before its speech tag ends on a comma ("I have it here,” Silas says): it reads as a full stop.
+    const speech = [...spoken].map(([id, lines]) => ({ id, text: lines.map((l) => l.replace(/,$/, ".")).join(" ") }))
     previous = {}
     for (const [id] of ranked) {
       const g = genders[id]
@@ -98,7 +153,7 @@ export function narrationShots(paragraphs: string[], stage: NarrationStage, gend
     if (ranked.length) {
       const [top, second] = ranked
       const single = (id: string): NarrationShot => staged.find(([, s]) => "subject" in s && s.subject === id)?.[0] ?? { subject: id }
-      if (!second || top[1] >= 2 * second[1]) return single(top[0])
+      if (!second || top[1] >= 2 * second[1]) return beat(single(top[0]))
       const together = new Set(ranked.filter(([, n]) => n * 2 >= top[1]).map(([id]) => id))
       let best: { key: string; score: number } | null = null
       for (const [key, s] of staged) {
@@ -107,7 +162,7 @@ export function narrationShots(paragraphs: string[], stage: NarrationStage, gend
         const score = hits - 0.25 * (s.subjects.length - hits)
         if (hits >= 2 && (!best || score > best.score)) best = { key, score }
       }
-      return best ? best.key : single(top[0])
+      return beat(best ? best.key : single(top[0]))
     }
     const said = new Set(words(text))
     const label = (key: string, l?: string) => [...words(key.replace(/[-_]/g, " ")), ...words(l ?? "")]
@@ -120,7 +175,7 @@ export function narrationShots(paragraphs: string[], stage: NarrationStage, gend
       const hits = new Set(c.words.flatMap(expand).filter((w) => said.has(w)))
       if (hits.size && (!place || hits.size > place.score)) place = { key: c.key, score: hits.size }
     }
-    if (place) return place.key
-    return index === 0 ? (stage.staging?.shot ?? null) : null
+    if (place) return beat(place.key)
+    return beat(index === 0 ? (stage.staging?.shot ?? null) : null)
   })
 }
