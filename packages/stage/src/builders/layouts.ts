@@ -108,7 +108,7 @@ export const scatter = defineBuilder(
       // Circles [x, z, r] kept empty: a trail, a clearing.
       clear: z
         .array(z.tuple([coord, coord, num(0, 500)]))
-        .max(64)
+        .max(256)
         .default([]),
       ...common,
     })

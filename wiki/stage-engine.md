@@ -48,7 +48,7 @@ JSON only: no expressions, no code. Metres. `y` up. ground at `y = 0`. the set f
 | `format`, `version`, `id`, `settingId`, `locationId`, `title`, `seed` | Identity. `seed` drives every random choice (per object, so editing one object does not reshuffle the rest) |
 | `atmosphere` | Sun direction, colour, intensity, shadow box. hemisphere. sky colours. fog density (fog colour = sky horizon). environment intensity. exposure. wind |
 | `camera` | Near/far, bounds box, orbit limits |
-| `materials` | Name → `{ type: masonry \| wood \| cloth \| burlap \| metal \| plain, …params }`. cloth can carry `heraldry` (a named banner design) and `tatters`. Ground masonry draws the gate road's ruts and edge dust unless `roads: false`. `foliage` is an alpha-tested painted leaf texture tinted by its colour |
+| `materials` | Name → `{ type: masonry \| wood \| cloth \| burlap \| metal \| plain \| foliage \| glow \| rock \| meadow \| grass \| water, …params }`. cloth can carry `heraldry` (a named banner design) and `tatters`. Ground masonry draws the gate road's ruts and edge dust unless `roads: false`. `foliage` is an alpha-tested painted leaf texture tinted by its colour. `rock`, `meadow` and `water` are painted from world position, so they need no uv and never tile: rock has moss on upward faces and hollows and lichen on bare stone, meadow has grass and moss patches, bare earth, pebbles, fallen leaves and wildflowers, water mirrors the sky with drifting ripples. `grass` shades blades from root to tip and sways them |
 | `objects[]` | `{ type, id?, at?, yaw?, materials?, …params }` , `type` names a builder. params are validated by that builder's schema (unknown keys rejected, ranges clamped) |
 | `crowd` | `library` (crowd art id), `avoid` (rects and circles), `groups[]`: `scatter` (area, count, density rects, mix, facing), `line`, `points`, `path` (people along a path), `walkers` (loop or ping-pong along a path), `anchors` (people on builder-emitted anchors such as parapet lookouts) |
 | `marks` | Name → `{ at: [x, z], yaw? }` |
@@ -138,6 +138,14 @@ Remaining product work is tracked in [Stageview](plans/stageview.md).
 - Night set: `atmosphere.sky.gain` (0.22) dims the painted sky, its clouds and sun glow, and the fog colour follows it. The moon is the sun light, cool and high.
 - `pnpm stage:check`: 992 objects, 0.61M static triangles, 561 footprints, no crowd. All party walks clear in all three stagings. The owlbear's walk home is blocked by trees, which nothing asks for.
 - `stage:verify` at ultra, DPR 2, dev build: every view of the three stagings passes at 49–52 draw calls and 1.22M triangles, ready in about 4 s. Frame rates of 19–24 fps were noisy while other work shared the machine.
+
+## Recorded checks, 2026-10-03, Standing Stones art pass
+
+- New builders in `builders/wilds.ts`: `standingStone` and `rock` are rebuilt from seeded noise cut by fracture planes, with creased normals, so stones have flat broken faces and weathered curves. `flagstones` sets irregular slabs in turf along a polyline. `grass` fills an area with tufts of curved blades (or heather with a heather material). `mountain` builds a distant ridged peak.
+- `tree` adds `leanYaw` (lean toward a heading) and `low` (coarser leaf masses for distant woods). Scatter `clear` takes up to 256 circles.
+- `atmosphere.sky.moon` draws a crisp full moon at the sun's disc. `atmosphere.grade: "neutral"` turns off the paint pass's warm umber shadows and parchment highlights, which had warmed every night scene.
+- `pnpm stage:check`: the stones set places 1,415 objects, 1.19M static triangles, 671 footprints. Grass (0.35M) and leaves (0.41M) dominate. All party walks clear in both stagings.
+- `stage:verify` at balanced, DPR 2, dev build: 42–44 draw calls, 1.55–1.94M triangles, 36–61 fps while other work shared the machine.
 
 ## Recorded checks, 2026-10-03, Kordavos harvest square
 

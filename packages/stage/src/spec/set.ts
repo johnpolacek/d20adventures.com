@@ -68,7 +68,45 @@ const glow = z.object({ type: z.literal("glow"), color, opacity: unit.optional()
 const foliage = z.object({ type: z.literal("foliage"), color, roughness: unit.optional() }).strict()
 const metal = z.object({ type: z.literal("metal"), color, roughness: unit.optional(), metalness: unit.optional() }).strict()
 const plain = z.object({ type: z.literal("plain"), color, roughness: unit.optional(), emissive: color.optional(), emissiveIntensity: num(0, 20).optional() }).strict()
-export const materialSpec = z.discriminatedUnion("type", [masonry, wood, cloth, burlap, foliage, glow, metal, plain])
+// Field stone with moss and lichen, painted from world position (menhirs, boulders, flagstones).
+const rock = z
+  .object({
+    type: z.literal("rock"),
+    a: color.optional(),
+    b: color.optional(),
+    moss: color.optional(),
+    mossLight: color.optional(),
+    lichen: color.optional(),
+    mossAmount: unit.optional(),
+    lichenAmount: unit.optional(),
+    relief: num(0, 3).optional(),
+    scale: num(0.1, 10).optional(),
+    seed: num(0, 1000).optional(),
+  })
+  .strict()
+// A meadow floor: grass, moss, bare earth, pebbles, fallen leaves and wildflowers.
+const meadow = z
+  .object({
+    type: z.literal("meadow"),
+    grass: color.optional(),
+    grassDark: color.optional(),
+    moss: color.optional(),
+    dry: color.optional(),
+    dirt: color.optional(),
+    litter: color.optional(),
+    dirtAmount: unit.optional(),
+    pebbles: unit.optional(),
+    litterAmount: unit.optional(),
+    flowers: unit.optional(),
+    relief: num(0, 3).optional(),
+    seed: num(0, 1000).optional(),
+  })
+  .strict()
+// Grass blades and heather, dark at the root and `tip` coloured at the top.
+const grass = z.object({ type: z.literal("grass"), base: color.optional(), tip: color.optional(), roughness: unit.optional() }).strict()
+// Running water that mirrors the sky. `flow` is the downstream direction [x, z].
+const water = z.object({ type: z.literal("water"), color: color.optional(), reflect: num(0, 20).optional(), ripple: num(0, 5).optional(), flow: z.tuple([num(-1, 1), num(-1, 1)]).optional() }).strict()
+export const materialSpec = z.discriminatedUnion("type", [masonry, wood, cloth, burlap, foliage, glow, metal, plain, rock, meadow, grass, water])
 export type MaterialSpec = z.infer<typeof materialSpec>
 
 // An object is `{ type, id?, at?, yaw?, materials?, ...params }`; params are checked by the builder named by `type`.
@@ -201,8 +239,9 @@ export const setSpecSchema = z
           .strict(),
         hemisphere: z.object({ sky: color, ground: color, intensity: num(0, 5) }).strict(),
         // `gain` dims the whole painted sky, clouds and sun glow included: below 1 for dusk and night. `clouds` thins the
-        // cumulus, and `stars` fades in a star field for night.
-        sky: z.object({ horizon: color, mid: color, zenith: color, gain: num(0, 2).default(1), clouds: unit.default(1), stars: unit.default(0) }).strict(),
+        // cumulus, and `stars` fades in a star field for night. `moon` draws a crisp moon of that radius in degrees at the
+        // sun's disc, in place of the soft sun.
+        sky: z.object({ horizon: color, mid: color, zenith: color, gain: num(0, 2).default(1), clouds: unit.default(1), stars: unit.default(0), moon: num(0, 10).default(0) }).strict(),
         // `color` sets mist apart from the sky: pale mist glowing between dark trees on a moonlit night.
         fog: z.object({ density: num(0, 0.05), color: color.optional() }).strict(),
         // The sky's glow around the sun (or moon) and the haze toward it. Warm sunlight when unset.
@@ -215,6 +254,8 @@ export const setSpecSchema = z
           .optional(),
         environment: num(0, 3).default(0.32),
         exposure: num(0.1, 4).default(1.05),
+        // The paint pass's colour grade: warm umber shadows and parchment highlights, or neutral for moonlight.
+        grade: z.enum(["warm", "neutral"]).default("warm"),
         wind: num(0, 3).default(0.8),
       })
       .strict(),

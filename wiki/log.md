@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-03, Standing Stones matched to the art, neutral night light
+
+Owner feedback asked for neutral light, more ground detail, and stones much closer to the source art. Night sets now use a white camera fill and a neutral paint grade. New world-painted `rock`, `meadow`, `grass` and `water` materials and `flagstones`, `grass` and `mountain` builders give the ground and stones real detail. The Standing Stones were rebuilt and recomposed from measurements of the art, with the moon over the valley. See [the art pass](plans/feature-desktop-stage-play.md#standing-stones-art-pass-2026-10-03) and [authoring lessons](stage-authoring.md#lessons).
+
 ## 2026-10-03, first forest set and the 3D authoring pattern
 
 Added a moonlit Valkarr forest trail for three Midnight Summons encounters, with woodland builders, a foliage material, night sky support, and standees for Thalbern, Wollandora, and the Owlbear. Recorded the authoring pattern: review on the web viewer first, then one check in the desktop app. See [Stage set authoring](stage-authoring.md).

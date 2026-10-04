@@ -9,7 +9,7 @@ export interface SkyColors {
 
 // A painted sky: deep cerulean overhead, pale haze at the horizon, and heaped cumulus lit from the sun's side with cool
 // shadowed undersides. The horizon colour is also the fog colour, so the land dissolves seamlessly into the sky.
-export function skyMaterial(shared: SharedUniforms, colors: SkyColors, { gain = 1, clouds = 1, stars = 0, glow = new THREE.Color(1, 0.78, 0.5) } = {}) {
+export function skyMaterial(shared: SharedUniforms, colors: SkyColors, { gain = 1, clouds = 1, stars = 0, moon = 0, glow = new THREE.Color(1, 0.78, 0.5) } = {}) {
   return new THREE.ShaderMaterial({
     side: THREE.BackSide,
     depthWrite: false,
@@ -23,10 +23,11 @@ export function skyMaterial(shared: SharedUniforms, colors: SkyColors, { gain = 
       uGain: { value: gain },
       uClouds: { value: clouds },
       uStars: { value: stars },
+      uMoon: { value: (moon * Math.PI) / 180 },
       uGlow: { value: glow },
     },
     vertexShader: "varying vec3 vDir; void main(){ vDir = position; vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_Position = p.xyww; }",
-    fragmentShader: `varying vec3 vDir; uniform float uTime, uGain, uClouds, uStars; uniform vec3 uHorizon, uZenith, uMid, uSun, uGlow;
+    fragmentShader: `varying vec3 vDir; uniform float uTime, uGain, uClouds, uStars, uMoon; uniform vec3 uHorizon, uZenith, uMid, uSun, uGlow;
 ${NOISE}
 float cfbm(vec2 p){ float s = 0.0, a = .5; for (int i = 0; i < 6; i++){ s += a * mnoise(p); p = p * 2.03 + vec2(4.1, 1.3); a *= .5; } return s; }
 // Heaped cumulus: broad low-frequency masses with billowed, eroded edges.
@@ -44,7 +45,17 @@ void main(){
  vec3 c = mix(uHorizon, uMid, smoothstep(0.0, .28, y));
  c = mix(c, uZenith, smoothstep(.22, .95, y));
  float s = max(dot(d, sun), 0.0);
- c += uGlow * (pow(s, 7.0) * .32 + pow(s, 400.0) * 6.0);
+ c += uGlow * pow(s, 7.0) * .32;
+ if (uMoon > 0.0){
+  // A full moon: a crisp disc with darker seas, limb-darkened, in a tight halo.
+  vec3 ta = normalize(cross(sun, vec3(0.0, 1.0, 0.0))), tb = cross(ta, sun);
+  vec2 md = vec2(dot(d, ta), dot(d, tb)) / uMoon;
+  float r = dot(d, sun) > 0.0 ? length(md) : 9.0;
+  float seas = smoothstep(.48, .66, mfbm(md * 1.8 + 4.0));
+  vec3 face = vec3(.8, .9, 1.0) * (1.0 - seas * .3) * (1.0 - .22 * r * r) * 1.7;
+  c += uGlow * (pow(s, 90.0) * .9 + pow(s, 900.0) * .6);
+  c = mix(c, face / max(uGain, .05), 1.0 - smoothstep(.92, 1.0, r));
+ } else c += uGlow * pow(s, 400.0) * 6.0;
  if (d.y > -.02){
   vec2 uv = d.xz / (d.y + .16) * 1.25 + vec2(uTime * .006, uTime * .002);
   float cov = clouds(uv);

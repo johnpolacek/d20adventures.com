@@ -3,6 +3,7 @@ import type { Rand } from "../kit/rng"
 import type { MaterialSpec } from "../spec/set"
 import type { SharedUniforms } from "./atmosphere"
 import { bannerTexture } from "./heraldry"
+import { grass, meadow, rock, water } from "./nature"
 import { burlap, cloth, foliage, glow, masonry, metal, plain, TextureBank, tatters, wood } from "./surfaces"
 
 export interface MaterialLibrary {
@@ -43,6 +44,18 @@ export function createMaterialLibrary(specs: Record<string, MaterialSpec>, share
         break
       case "metal":
         m = metal(ctx, name, s.color, s.roughness, s.metalness)
+        break
+      case "rock":
+        m = rock(ctx, name, s)
+        break
+      case "meadow":
+        m = meadow(ctx, name, s)
+        break
+      case "grass":
+        m = grass(ctx, name, s)
+        break
+      case "water":
+        m = water(ctx, name, s)
         break
       case "plain":
         m = plain(ctx, name, s.emissive ? "#000000" : s.color, s.roughness ?? 0.85, s.emissive ? { emissive: new THREE.Color(s.emissive), emissiveIntensity: s.emissiveIntensity ?? 1 } : {})

@@ -155,6 +155,16 @@ Owner asked to review all of the adventure's art, match the renders to it, use t
 
 Done for review. Wollandora and the Owlbear were regenerated from their art. The first owlbear read as a plush toy, so a second, screeching and scarred one replaced it. The Standing Stones and the cottage were each reframed after the first render was compared with their art. The stones were backlit silhouettes until a new sun `disc` setting put the moon in the sky ahead while its light comes from the front, as the art does. The cottage became a close, sunlit view of the door, steps, and gear without mist or light shafts. All seven stagings pass `stage:check` and the balanced-tier browser check. The fourteen desktop tests pass, now requiring a scene for every Midnight Summons encounter.
 
+## Standing Stones art pass, 2026-10-03
+
+Owner feedback on the seven scenes: "instead of warm light, just neutral light. the ground needs more texture detail. the stones are not close enough to the source art. assess and improve greatly."
+
+- Assessment against the art: the stones read as smooth pale planks in a line, the ground as flat noise, the path as tiles, the river as a black sheet. The art has huge rough mossy menhirs in an arc, a flagstone clearing in lush grass and heather, a river on the right, and the full moon over a misty valley.
+- Neutral light: both night sets use a white camera fill and the new neutral paint grade. The warm grade had also tinted the moon cream.
+- Ground: new `meadow` ground and `grass` tufts in all three Midnight Summons sets, a forest-floor variant on the trail, and `flagstones` at the stones.
+- Stones: rebuilt as noise-shaped menhirs cut by fracture planes with a mossy `rock` material, sized and placed by measuring the art from the camera, broad faces toward the view. Added `mountain` peaks, a crisp moon, a reflective `water` river, undergrowth, and a clear sky wedge so the moon sits over the valley as in the art.
+- All checks pass: `stage:check`, stage and root typechecks, scoped Biome, and the fourteen desktop tests. Balanced-tier renders of every stones view and the forest and cottage views were compared with the art.
+
 ## Remaining scope
 
 One local slot and four premade player-controlled characters. The gate and the Harvest Festival are the authored 3D sets. Add further sets, character creation, AI companions, save management, narration audio, and multiplayer separately. Equipment has no separate currency or quantity ledger. Native combat and the other providers were not tested in this playthrough. The five-call batching experiment remains separate. Distribution still needs Node packaging or onboarding, signing, notarization, and an updater.

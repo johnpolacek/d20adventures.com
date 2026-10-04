@@ -24,8 +24,13 @@ The web viewer and the desktop app run the same `packages/stage` renderer and th
 
 ## Lessons
 
-- Night reads from contrast, not brightness. The first forest renders already matched the reference art's average brightness but looked like day: an even blue light and a bright sky. What worked: a dark sky with `clouds` thinned and faint `stars`, a cool moon `glow` (warm by default, which turned the sky orange), mist with its own `fog.color` that matches the sky's horizon so gaps between trees blend, low hemisphere light, and a soft warm `fill` light that travels with the camera so characters stay readable. Games commonly do the same.
+- Night reads from contrast, not brightness. The first forest renders already matched the reference art's average brightness but looked like day: an even blue light and a bright sky. What worked: a dark sky with `clouds` thinned and faint `stars`, a cool moon `glow` (warm by default, which turned the sky orange), mist with its own `fog.color` that matches the sky's horizon so gaps between trees blend, low hemisphere light, and a soft neutral `fill` light that travels with the camera so characters stay readable. Games commonly do the same. Set `grade: "neutral"` for moonlight: the paint pass's default warm grade tints night scenes orange-brown.
 - Frame the opening view like the encounter art. The first cottage and stones renders were far-off overviews, while the art is a close view of the door and gear, or of the first stone with the river beside it.
+- Measure the art to place things. From the camera height and field of view, a feature's pixel position gives its distance, height and offset. The Standing Stones' four stones, the river bank and the moon were placed that way, then tuned by render.
+- Keep the art's open sky open. A clear wedge in the tree scatters from the main view toward the moon kept the valley, mountains and moon in frame as the art has them.
+- Ground needs detail at eye height. Use a `meadow` ground, `grass` tufts in the near field, `flagstones` instead of a tiled strip, and `rock` for stones. Flat noise ground and a tiled path read as a game prototype.
+- Avoid thin dark contour lines in a material. The paint pass inks them, so noise cracks read as squiggles drawn on the stone.
+- Grass and leaves cost the most triangles. Use `low` trees for distant woods and keep dense grass to the near field.
 - Paintings cheat light. The stones art shows the moon ahead and the stones lit from the front, so `sun.disc` places the moon apart from the light.
 - Match characters to the owner's existing art for that character. Thalbern was first drawn from the written description and did not look like his art. Use the art for costume, hair, and colouring, painted as an original character rather than a photographic likeness.
 - Smooth-shaded leaf masses with the alpha `foliage` texture read as painted trees. Flat-shaded spheres read as a low-poly game.

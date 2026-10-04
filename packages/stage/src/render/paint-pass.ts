@@ -70,7 +70,7 @@ void main(){
  gl_FragColor = vec4(o.w > 0.0 ? o.rgb / o.w : texture2D(tColor, vUv).rgb, 1.0);
 }`
 // Canvas, brush grain aligned with the strokes, and a warm painterly grade.
-const FINAL = `uniform sampler2D tPaint, tOrig, tTensor, tNoise, tMask, tAO, tDepth; uniform vec2 res, pTexel; uniform float strength, grain, grade, vignette, detail, gs, aoStrength, aoDebug, near, far; varying vec2 vUv;
+const FINAL = `uniform sampler2D tPaint, tOrig, tTensor, tNoise, tMask, tAO, tDepth; uniform vec2 res, pTexel; uniform float strength, grain, grade, warmth, vignette, detail, gs, aoStrength, aoDebug, near, far; varying vec2 vUv;
 float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
 float lin(float z){ return 2.0 * near * far / (far + near - (z * 2.0 - 1.0) * (far - near)); }
 void main(){
@@ -96,12 +96,12 @@ void main(){
  c *= 1.0 + acc * .22 * st * (.35 + lum);
  float weave = (sin(fc.x * 1.9) * sin(fc.y * 1.9)) * .5 + .5;
  c *= 1.0 - weave * .025 * st;
- // Grade: a gentle S-curve, warm umber shadows, parchment highlights.
+ // Grade: a gentle S-curve, warm umber shadows, parchment highlights (the warmth is off for moonlit scenes).
  vec3 gc = c;
  gc = mix(gc, gc * gc * (3.0 - 2.0 * gc), .35);
  float l = dot(gc, vec3(.299, .587, .114));
- gc += vec3(.07, .02, -.01) * (1.0 - smoothstep(0.0, .5, l));
- gc *= mix(vec3(1.0), vec3(1.04, 1.0, .93), smoothstep(.45, 1.0, l));
+ gc += vec3(.07, .02, -.01) * (1.0 - smoothstep(0.0, .5, l)) * warmth;
+ gc *= mix(vec3(1.0), vec3(1.04, 1.0, .93), smoothstep(.45, 1.0, l) * warmth);
  gc = mix(vec3(l), gc, 1.12);
  c = mix(c, gc, grade);
  vec2 q = vUv - .5; c *= 1.0 - dot(q, q) * vignette;
@@ -126,6 +126,8 @@ export class PaintPass extends Pass {
   final: FullScreenQuad
   strength = 1
   brush = 1
+  // 1 tints the grade warm (umber shadows, parchment highlights); 0 keeps it neutral.
+  warmth = 1
   height = 720
   mask: CharacterMask | null = null
   camera: THREE.PerspectiveCamera | null = null
@@ -188,6 +190,7 @@ export class PaintPass extends Pass {
       strength: { value: 1 },
       grain: { value: 0.018 },
       grade: { value: 1 },
+      warmth: { value: 1 },
       vignette: { value: 0.55 },
       detail: { value: 0.2 },
       gs: { value: 1 },
@@ -265,6 +268,7 @@ export class PaintPass extends Pass {
     U.tOrig.value = readBuffer.texture
     U.tTensor.value = this.rtA.texture
     U.strength.value = this.strength
+    U.warmth.value = this.warmth
     U.tMask.value = drawn && this.mask ? this.mask.texture : this.black
     const aoOn = this.aoStrength > 0 && this.ao && this.depth && this.camera
     U.aoStrength.value = aoOn ? this.aoStrength : 0

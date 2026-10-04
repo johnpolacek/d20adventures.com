@@ -9,6 +9,7 @@ import { defineBuilder, matName, num, size, vec2 } from "./types"
 const unitTrunk = () => G("trunk8", () => new THREE.CylinderGeometry(0.62, 1, 1, 8, 1))
 const unitLimb = () => G("limb6", () => new THREE.CylinderGeometry(0.5, 1, 1, 6, 1))
 const unitBlob = () => G("blob12", () => new THREE.SphereGeometry(1, 12, 8))
+const unitBlobLow = () => G("blob7", () => new THREE.SphereGeometry(1, 7, 5))
 const unitCone = () => G("cone8", () => new THREE.ConeGeometry(1, 1, 8, 1))
 const unitBlade = () => G("blade4", () => new THREE.ConeGeometry(1, 1, 4, 1))
 
@@ -29,15 +30,22 @@ export const tree = defineBuilder(
       kind: z.enum(["oak", "pine", "birch", "gnarled"]).default("oak"),
       height: size(60).default(12),
       girth: size(4).optional(),
-      lean: num(0, 20).default(3),
+      lean: num(0, 40).default(3),
+      // Lean toward this heading (degrees, 0 = +x, 90 = +z) by exactly `lean` degrees, instead of a random one.
+      leanYaw: num(-360, 360).optional(),
+      // Fewer, coarser leaf masses: for distant woods that only the haze will see.
+      low: z.boolean().default(false),
     })
     .strict(),
   (ctx, p) => {
     const { b, M, rand } = ctx
     const h = p.height
     const leaves = () => rand.pick([M.leaves, M.leaves, M.leavesDark, M.leavesLight])
-    const leanA = rand(0, TAU)
-    const leanT = Math.tan((rand(0, p.lean) * Math.PI) / 180)
+    const blob = p.low ? unitBlobLow : unitBlob
+    const randA = rand(0, TAU)
+    const randL = rand(0, p.lean)
+    const leanA = p.leanYaw === undefined ? randA : (p.leanYaw * Math.PI) / 180
+    const leanT = Math.tan(((p.leanYaw === undefined ? randL : p.lean) * Math.PI) / 180)
     const top = (y: number) => V(Math.cos(leanA) * leanT * y, y, Math.sin(leanA) * leanT * y)
     if (p.kind === "gnarled") {
       const r = p.girth ?? h * 0.045
@@ -65,7 +73,7 @@ export const tree = defineBuilder(
           limb(b, M.bark, mid, tip, r * 0.2)
           if (rand() < 0.45) {
             const s = h * rand(0.05, 0.09)
-            b.add(unitBlob(), leaves(), M4(tip.x, tip.y, tip.z, rand(0, TAU), s, s * 0.7, s), { uv: "keep" })
+            b.add(blob(), leaves(), M4(tip.x, tip.y, tip.z, rand(0, TAU), s, s * 0.7, s), { uv: "keep" })
           }
         }
       }
@@ -103,12 +111,12 @@ export const tree = defineBuilder(
       ends.push(end)
     }
     const crown = top(h * 0.74)
-    const blobs = birch ? 5 : 9
+    const blobs = birch ? 5 : p.low ? 6 : 9
     for (let i = 0; i < blobs; i++) {
       const anchor = i < ends.length ? ends[i] : crown
       const s = h * (birch ? 0.11 : 0.17) * rand(0.75, 1.15)
       const off = V(rand(-1, 1) * spread * 0.5, rand(-0.2, 0.5) * s, rand(-1, 1) * spread * 0.5)
-      b.add(unitBlob(), leaves(), M4(anchor.x + off.x, anchor.y + off.y, anchor.z + off.z, rand(0, TAU), s, s * rand(0.65, 0.85), s), { uv: "keep" })
+      b.add(blob(), leaves(), M4(anchor.x + off.x, anchor.y + off.y, anchor.z + off.z, rand(0, TAU), s, s * rand(0.65, 0.85), s), { uv: "keep" })
     }
     ctx.circle(0, 0, r + 0.25)
   },
@@ -138,15 +146,6 @@ export const bush = defineBuilder(z.object({ size: size(5).default(1.2) }).stric
     const s = p.size * rand(0.4, 0.6)
     b.add(unitBlob(), rand.pick([M.leaves, M.leavesDark]), M4(rand(-0.4, 0.4) * p.size, s * 0.7, rand(-0.4, 0.4) * p.size, rand(0, TAU), s, s * 0.75, s), { uv: "keep" })
   }
-})
-
-// A boulder, half sunk, sometimes with a smaller one beside it. Solid.
-export const rock = defineBuilder(z.object({ size: size(10).default(1.2) }).strict(), (ctx, p) => {
-  const { b, M, rand } = ctx
-  const s = p.size
-  b.add(unitBlob(), M.stone, M4(0, s * 0.25, 0, rand(0, TAU), s, s * rand(0.55, 0.8), s * rand(0.7, 1), rand(-0.2, 0.2)), { uv: "planar", flat: true })
-  if (rand() < 0.5) b.add(unitBlob(), M.stone, M4(s * 0.9, s * 0.1, s * 0.3, rand(0, TAU), s * 0.4, s * 0.35, s * 0.45), { uv: "planar", flat: true })
-  ctx.circle(0, 0, s * 0.95)
 })
 
 // A fallen log along local x, with a broken branch or two. Solid.
@@ -211,34 +210,5 @@ export const lightShaft = defineBuilder(
     const g = new THREE.CylinderGeometry(p.top, p.bottom, p.height, 20, 1, true)
     ctx.b.add(g, ctx.mat(p.material), M4(0, p.height / 2, 0, 0, 1, 1, 1, 0, (p.tilt * Math.PI) / 180), { uv: "keep" })
     g.dispose()
-  }
-)
-
-// A standing stone: a tall, weathered slab narrowing toward its top, leaning a little. Solid.
-export const standingStone = defineBuilder(
-  z
-    .object({
-      height: size(20).default(4),
-      width: size(6).default(1.2),
-      depth: size(6).default(0.7),
-      lean: num(0, 20).default(4),
-    })
-    .strict(),
-  (ctx, p) => {
-    const { b, M, rand } = ctx
-    // Each stone gets its own weathered shape: a rough slab, narrower and rounded toward the top.
-    const g = new THREE.CylinderGeometry(0.55, 1, 1, 8, 6)
-    const pos = g.attributes.position
-    for (let i = 0; i < pos.count; i++) {
-      const y = pos.getY(i)
-      const k = rand(0.82, 1.14) * (y > 0.45 ? 0.75 : 1)
-      pos.setXYZ(i, pos.getX(i) * k, y + rand(-0.025, 0.025), pos.getZ(i) * k)
-    }
-    g.computeVertexNormals()
-    const lx = ((rand(-1, 1) * p.lean) / 180) * Math.PI
-    const lz = ((rand(-1, 1) * p.lean) / 180) * Math.PI
-    b.add(g, M.stone, M4(0, p.height / 2 - 0.3, 0, rand(0, Math.PI), p.width * 0.6, p.height + 0.3, p.depth * 0.75, lx, lz), { uv: "planar" })
-    g.dispose()
-    ctx.footprint(0, 0, p.width / 2 + 0.2, p.depth / 2 + 0.2)
   }
 )
