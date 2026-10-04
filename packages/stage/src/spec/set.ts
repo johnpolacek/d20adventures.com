@@ -92,7 +92,8 @@ const glow = z.object({ type: z.literal("glow"), color, opacity: unit.optional()
 const mist = z.object({ type: z.literal("mist"), color, opacity: unit.optional() }).strict()
 // Leaves: painted leaf clusters with gaps, for tree crowns, bushes and ferns.
 // With `map` (painted leaf clumps from scripts/stage-textures.ts) crowns and bushes are built from crossed leaf cards.
-const foliage = z.object({ type: z.literal("foliage"), color, roughness: unit.optional(), map: texture.optional() }).strict()
+// `shadow: false` keeps low growth (bushes, ferns) out of the shadow map, where dense foliage costs the most.
+const foliage = z.object({ type: z.literal("foliage"), color, roughness: unit.optional(), map: texture.optional(), shadow: z.boolean().optional() }).strict()
 const metal = z.object({ type: z.literal("metal"), color, roughness: unit.optional(), metalness: unit.optional() }).strict()
 const plain = z.object({ type: z.literal("plain"), color, roughness: unit.optional(), emissive: color.optional(), emissiveIntensity: num(0, 20).optional() }).strict()
 // Field stone with moss and lichen, painted from world position (menhirs, boulders, flagstones).
@@ -271,7 +272,8 @@ export const setSpecSchema = z
             intensity: num(0, 20),
             target: vec3.default([0, 0, 0]),
             distance: num(10, 2000).default(260),
-            shadow: z.object({ left: coord, right: coord, top: coord, bottom: coord, near: num(0.1, 1000), far: num(1, 5000) }).strict(),
+            // `size` caps the shadow map below the tier's: a misty or moonlit set with dense foliage gains little from 4096.
+            shadow: z.object({ left: coord, right: coord, top: coord, bottom: coord, near: num(0.1, 1000), far: num(1, 5000), size: z.number().int().min(512).max(4096).optional() }).strict(),
           })
           .strict(),
         hemisphere: z.object({ sky: color, ground: color, intensity: num(0, 5) }).strict(),

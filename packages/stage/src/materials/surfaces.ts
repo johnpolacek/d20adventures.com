@@ -201,10 +201,15 @@ float wHeight(vec2 P, out float id, out float seam, float foot, float sharp){
  id = mhash(vec2(col, row) * 1.13 + wSeed * 2.0);
  float fx = fract(a / pl), fy = pw > 0.0 ? fract(P.y / pw) : .5;
  seam = min(min(fx, 1.0 - fx) * pl, pw > 0.0 ? min(fy, 1.0 - fy) * pw : 9.0);
+ #ifdef WMAP
+ // The painting carries the grain; only the seams are shaped here.
+ return smoothstep(.002, .016 + foot * 1.5, seam - mnoise(P * 9.0) * .006);
+ #else
  float ring = mnoise(vec2(a * .8, P.y * 11.0 + id * 30.0) + mnoise(vec2(a * 2.0, P.y * 5.0)) * 2.2);
  float fine = mnoise(vec2(a * 1.9, P.y * 70.0 + id * 50.0));
  float groove = smoothstep(.002, .016 + foot * 1.5, seam - mnoise(P * 9.0) * .006);
  return groove * (.62 + .22 * ring + .1 * fine * sharp);
+ #endif
 }
 #ifdef WMAP
 // Nail heads near each board's ends: two across a wide board, one across a narrow one. 1 on a head, 0 elsewhere.
@@ -254,7 +259,11 @@ float wWearAmt = smoothstep(.06, .012, wSeam) * (1.0 - wSeamAmt);
 wCol = mix(wCol, wCol * 1.32 + .015, wWearAmt * .5 * wWear);
 wCol = mix(wCol, wDark, wSeamAmt * .8);
 wCol *= mix(.62, 1.0, smoothstep(0.0, 1.4, vMWorld.y));
+#ifdef WMAP
+wCol *= 1.0 - wGrime * .28 * smoothstep(.3, .7, mnoise(vMWorld.xz * 1.7 + vMWorld.y * .9));
+#else
 wCol *= 1.0 - wGrime * .28 * smoothstep(.4, .8, mfbm(vMWorld.xz * 1.7 + vMWorld.y * .9));
+#endif
 wCol = mix(wCol, wCol * 1.22 + .01, clamp(normalize(vMNormalW).y, 0.0, 1.0) * .3);
 #ifdef WMAP
 wCol = mix(wCol, mix(vec3(.05, .045, .04), vec3(.22, .09, .04), mnoise(wP * 60.0)), wNailAmt * .9);

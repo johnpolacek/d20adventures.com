@@ -79,6 +79,7 @@ export function createMaterialLibrary(specs: Record<string, MaterialSpec>, share
         break
       case "foliage":
         m = foliage(ctx, bank, name, s.color, s.roughness, s.map ? painted.get(s.map) : undefined)
+        if (s.shadow === false) m.userData.noShadow = true
         break
       case "glow":
         m = glow(ctx, bank, name, s.color, s.opacity)

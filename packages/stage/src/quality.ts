@@ -17,7 +17,7 @@ export interface Tier {
 export const TIERS = {
   mobile: { ratio: 1, paint: 480, shadow: 1024, bloom: false, aa: "off", ao: false, cardRadius: 40, mirror: 0 },
   balanced: { ratio: 1, paint: 540, shadow: 2048, bloom: false, aa: "off", ao: false, cardRadius: 60, mirror: 0.35 },
-  high: { ratio: 1.5, paint: 720, shadow: 4096, bloom: false, aa: "fxaa", ao: true, cardRadius: 60, mirror: 0.5 },
+  high: { ratio: 1.5, paint: 720, shadow: 4096, bloom: false, aa: "fxaa", ao: true, cardRadius: 60, mirror: 0.4 },
   ultra: { ratio: 2, paint: 900, shadow: 4096, bloom: true, aa: "msaa", ao: true, cardRadius: 60, mirror: 0.6 },
 } as const satisfies Record<string, Tier>
 export type TierName = keyof typeof TIERS

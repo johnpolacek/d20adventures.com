@@ -31,7 +31,7 @@ function leafCards(n: number, variant: number) {
     for (let i = 0; i < n; i++) {
       const c = new THREE.Vector3(rnd() * 2 - 1, rnd() * 2 - 1, rnd() * 2 - 1).normalize().multiplyScalar(0.25 + rnd() * 0.4)
       q.setFromEuler(new THREE.Euler(rnd() * Math.PI, rnd() * Math.PI * 2, rnd() * Math.PI))
-      const s = 0.95 + rnd() * 0.35
+      const s = 1.1 + rnd() * 0.4
       const corners = [
         [-0.5, -0.5, 0, 0],
         [0.5, -0.5, 1, 0],
@@ -60,7 +60,7 @@ function leafCards(n: number, variant: number) {
 
 // A mass of leaves: leafy sphere, or leaf cards when the material carries a painted leaf clump.
 function mass(b: Sink, mat: THREE.Material, m: THREE.Matrix4, rand: () => number, low = false) {
-  if (mat.userData.cards) b.add(leafCards(low ? 8 : 14, Math.floor(rand() * 4)), mat, m, { uv: "keep" })
+  if (mat.userData.cards) b.add(leafCards(low ? 6 : 9, Math.floor(rand() * 4)), mat, m, { uv: "keep" })
   else b.add(low ? unitBlobLow() : unitBlob(), mat, m, { uv: "keep" })
 }
 

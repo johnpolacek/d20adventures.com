@@ -16,7 +16,9 @@ export class PlanarMirror {
     private scene: THREE.Scene,
     private shared: SharedUniforms,
     private water: THREE.Object3D[],
-    level: number
+    level: number,
+    // Small or soft things the reflection leaves out (grass, reeds, ferns, moss, mist): costly to draw twice, lost in ripples.
+    private skip: THREE.Object3D[] = []
   ) {
     this.point = new THREE.Vector3(0, level, 0)
     this.target.texture.generateMipmaps = false
@@ -65,11 +67,12 @@ export class PlanarMirror {
     const prevTarget = r.getRenderTarget()
     const prevShadow = r.shadowMap.autoUpdate
     r.shadowMap.autoUpdate = false
-    for (const w of this.water) w.visible = false
+    const hidden = [...this.water, ...this.skip].filter((o) => o.visible)
+    for (const o of hidden) o.visible = false
     r.setRenderTarget(this.target)
     r.clear()
     r.render(this.scene, v)
-    for (const w of this.water) w.visible = true
+    for (const o of hidden) o.visible = true
     r.setRenderTarget(prevTarget)
     r.shadowMap.autoUpdate = prevShadow
   }

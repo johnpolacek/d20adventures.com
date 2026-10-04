@@ -101,6 +101,7 @@ export class Stage {
   // A planar reflection when the set has mirrored water, and the share of the drawing buffer it renders at.
   private mirror: PlanarMirror | null = null
   private mirrorScale = 0
+  private shadowCap = 4096
   motion: boolean
   activeShot: string | null = null
   private activeFov: number | null = null
@@ -188,7 +189,9 @@ export class Stage {
     sun.target.position.copy(target)
     sun.castShadow = true
     sun.shadow.mapSize.set(4096, 4096)
-    Object.assign(sun.shadow.camera, A.sun.shadow)
+    const { size: shadowCap, ...shadowBox } = A.sun.shadow
+    this.shadowCap = shadowCap ?? 4096
+    Object.assign(sun.shadow.camera, shadowBox)
     sun.shadow.camera.updateProjectionMatrix()
     sun.shadow.bias = -0.0004
     sun.shadow.normalBias = 0.6
@@ -240,7 +243,11 @@ export class Stage {
           return m.geometry.boundingBox?.max.y ?? 0
         })
       )
-      this.mirror = new PlanarMirror(renderer, this.scene, this.shared, water, level)
+      const skip = this.statics.filter((m) => {
+        const spec = set.materials[(m.material as THREE.Material).name]
+        return !!spec && (["grass", "mist", "card", "rock"].includes(spec.type) || (spec.type === "foliage" && !spec.map))
+      })
+      this.mirror = new PlanarMirror(renderer, this.scene, this.shared, water, level, skip)
     }
     for (const e of built.extras) this.world.add(e)
     this.extras = built.extras
@@ -602,8 +609,9 @@ export class Stage {
     this.mirrorScale = f.mirror ?? t.mirror
     this.crowd.setMode(f.crowd)
     this.crowd.setRadius(f.cardRadius ?? t.cardRadius)
-    if (this.sun.shadow.mapSize.x !== t.shadow) {
-      this.sun.shadow.mapSize.setScalar(t.shadow)
+    const shadowSize = Math.min(t.shadow, this.shadowCap)
+    if (this.sun.shadow.mapSize.x !== shadowSize) {
+      this.sun.shadow.mapSize.setScalar(shadowSize)
       this.sun.shadow.map?.dispose()
       this.sun.shadow.map = null
     }

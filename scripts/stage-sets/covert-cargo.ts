@@ -169,8 +169,8 @@ function pierSet() {
     const zz = rnd(-98, 38)
     return [foot(zz) - near - (far - near) * rnd() ** 2, zz] as V2
   }
-  for (let k = 0; k < 220; k++) {
-    const [x, zz] = slope(0.8, 50)
+  for (let k = 0; k < 170; k++) {
+    const [x, zz] = slope(0.8, 40)
     if (!clearOf(x, zz)) continue
     const near = foot(zz) - x < 14 && zz > -45
     objects.push({
@@ -339,7 +339,7 @@ function pierSet() {
         intensity: 1.5,
         target: [3, 0, -4],
         distance: 200,
-        shadow: { left: -40, right: 40, top: 40, bottom: -40, near: 10, far: 420 },
+        shadow: { left: -40, right: 40, top: 40, bottom: -40, near: 10, far: 420, size: 2048 },
       },
       hemisphere: { sky: "#2f7cb2", ground: "#0b2430", intensity: 0.8 },
       sky: { horizon: "#8ae2f2", mid: "#1f6a98", zenith: "#0a2c4c", gain: 0.95, clouds: 0.06, stars: 0 },
@@ -392,12 +392,13 @@ function pierSet() {
       water: { type: "water", color: "#051a2c", reflect: 2.4, ripple: 0.3, flow: [0, -1], mirror: 0.9 },
       bark: painted("bark-moss", "#98a6a2", [0, 40], { size: [1.6, 2.4], relief: 0.14, variance: 0.25 }),
       birch: { type: "wood", a: "#8a9090", b: "#9aa0a0", c: "#6f7676", plank: [0, 40], relief: 0.04, variance: 0.6, seed: 7.7 },
-      leaves: { type: "foliage", color: "#dce4b0", map: "/stage/textures/leaves-oak.webp" },
-      leavesDark: { type: "foliage", color: "#98a88c", map: "/stage/textures/leaves-oak.webp" },
-      leavesLight: { type: "foliage", color: "#f4f8b8", map: "/stage/textures/leaves-oak.webp" },
-      shrub: { type: "foliage", color: "#d0dcb0", map: "/stage/textures/leaves-broad.webp" },
-      shrubDark: { type: "foliage", color: "#94a488", map: "/stage/textures/leaves-broad.webp" },
-      fern: { type: "foliage", color: "#33642e" },
+      // Under the misty moon leaf shadows barely show, and they are the costliest thing in the shadow map.
+      leaves: { type: "foliage", color: "#dce4b0", map: "/stage/textures/leaves-oak.webp", shadow: false },
+      leavesDark: { type: "foliage", color: "#98a88c", map: "/stage/textures/leaves-oak.webp", shadow: false },
+      leavesLight: { type: "foliage", color: "#f4f8b8", map: "/stage/textures/leaves-oak.webp", shadow: false },
+      shrub: { type: "foliage", color: "#d0dcb0", map: "/stage/textures/leaves-broad.webp", shadow: false },
+      shrubDark: { type: "foliage", color: "#94a488", map: "/stage/textures/leaves-broad.webp", shadow: false },
+      fern: { type: "foliage", color: "#33642e", shadow: false },
       moss: { type: "card", map: "/stage/textures/moss-hanging.webp", tint: "#9cb4b0" },
       mist: { type: "mist", color: "#7cc4d8", opacity: 0.3 },
       grass: { type: "grass", base: "#142a26", tip: "#3e6a52" },
