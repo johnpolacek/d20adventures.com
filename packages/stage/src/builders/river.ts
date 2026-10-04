@@ -261,7 +261,7 @@ export const riverboat = defineBuilder(
     // The pilothouse, forward on the cabin top, with a rounded roof.
     const Lp = Math.min(2.1, Lc * 0.38)
     const Wp = Wc * 0.82
-    const Hp = 1.55
+    const Hp = Hc * 0.74
     const pz = z1 - Lp / 2 - 0.15
     const py = Hc + 0.1
     F.box(M.cabin, 0, py + Hp * 0.22, pz, Wp, Hp * 0.44, Lp)
@@ -298,14 +298,22 @@ export const riverboat = defineBuilder(
       b,
       M.rust,
       [
-        [-Wc / 2 - 0.08, pz - Lp / 2],
+        [-Wc / 2 - 0.08, z1 + 0.08],
         [-Wc / 2 - 0.08, z0 - 0.08],
         [Wc / 2 + 0.08, z0 - 0.08],
-        [Wc / 2 + 0.08, pz - Lp / 2],
+        [Wc / 2 + 0.08, z1 + 0.08],
       ],
       py,
-      0.75
+      0.75,
+      true
     )
+    // Rope fenders hanging over both sides amidships.
+    for (const side of [-1, 1])
+      for (const t of [0.3, 0.42, 0.54, 0.66]) {
+        const st = at(t)
+        F.cyl(M.rope, side * (sideAt(st, -0.25) + 0.13), -0.62, st.z, 0.12, 0.12, 0.45, 8)
+        beam(b, M.rope, V(side * (sideAt(st, -0.25) + 0.13), -0.17, st.z), V(side * (st.w - 0.05), st.top + 0.03, st.z), 0.012, 4)
+      }
     // Life rings on the cabin sides, bitts fore and aft.
     for (const side of [-1, 1])
       b.add(
@@ -328,7 +336,137 @@ export const riverboat = defineBuilder(
       )
     ctx.footprint(0, zc, Wc / 2, Lc / 2)
   },
-  { hull: "hull", strake: "strake", deck: "deck", rust: "rust", cabin: "cabin", roof: "roof", window: "window", helm: "window", void: "void", iron: "iron", ring: "rust" }
+  { hull: "hull", strake: "strake", deck: "deck", rust: "rust", cabin: "cabin", roof: "roof", window: "window", helm: "window", void: "void", iron: "iron", ring: "rust", rope: "rope" }
+)
+
+// A cargo strongbox, as in Covert Cargo's crate: rough boards laid across each face with gaps between them, corner
+// posts and a middle batten, a lid with a deep rim, skids underneath, iron corner plates and straps studded with rivets,
+// a hasp with a chain hanging from it, and ring handles at the ends. Width along x, the front faces +z. Solid.
+export const strongbox = defineBuilder(
+  z
+    .object({
+      width: size(4).default(1.35),
+      height: size(3).default(0.85),
+      depth: size(3).default(0.92),
+      lid: num(0.1, 0.4).default(0.24),
+      boards: z.number().int().min(2).max(8).default(4),
+      chain: z.boolean().default(true),
+    })
+    .strict(),
+  (ctx, p) => {
+    const { b, M, rand } = ctx
+    const F = new Frame(b, M4())
+    const W = p.width
+    const D = p.depth
+    const skid = 0.06
+    const H = p.height - skid
+    const Hl = H * p.lid
+    const Hb = H - Hl
+    const t = 0.035
+    const gap = 0.012
+    F.box(M.inner, 0, skid + H / 2, 0, W - 2 * t, H - 0.02, D - 2 * t)
+    for (const sx of [-0.36, 0.36]) F.box(M.wood, sx * W, skid / 2, 0, 0.12, skid, D + 0.02)
+    // Boards across one face of the body or the lid, from y0 up h, each a little proud or sunk and slightly askew.
+    const face = (y0: number, h: number, n: number, axis: "x" | "z", side: number) => {
+      const len = axis === "x" ? W : D
+      const off = axis === "x" ? D / 2 : W / 2
+      for (let i = 0; i < n; i++) {
+        const bh = h / n - gap
+        const y = y0 + (i + 0.5) * (h / n)
+        const proud = rand(-0.004, 0.006)
+        const tilt = rand(-0.006, 0.006)
+        if (axis === "x") F.box(M.wood, 0, y, side * (off - t / 2 + proud), len, bh, t, 0, 0, tilt)
+        else F.box(M.wood, side * (off - t / 2 + proud), y, 0, t, bh, len - 2 * t, 0, tilt, 0)
+      }
+    }
+    const n = p.boards
+    for (const side of [-1, 1]) {
+      face(skid, Hb, n, "x", side)
+      face(skid, Hb, n, "z", side)
+      face(skid + Hb + 0.004, Hl - 0.004, 2, "x", side)
+      face(skid + Hb + 0.004, Hl - 0.004, 2, "z", side)
+    }
+    // The lid's top: boards along x, overhanging a little.
+    const top = skid + H
+    const lb = Math.max(3, Math.round(D / 0.2))
+    for (let i = 0; i < lb; i++) {
+      const w = (D + 0.05) / lb
+      F.box(M.wood, rand(-0.006, 0.006), top + 0.018 + rand(-0.003, 0.003), -D / 2 - 0.025 + (i + 0.5) * w, W + 0.05, 0.036, w - gap, 0, rand(-0.008, 0.008))
+    }
+    // Corner posts on the front and back, a middle batten on each, and battens at the ends, proud of the boards.
+    const bw = 0.085
+    const bt = 0.03
+    for (const side of [-1, 1]) {
+      for (const sx of [-1, 1]) {
+        F.box(M.wood, sx * (W / 2 - bw / 2), skid + Hb / 2, side * (D / 2 + bt / 2), bw, Hb - 0.01, bt)
+        F.box(M.wood, sx * (W / 2 + bt / 2), skid + Hb / 2, side * (D / 2 - bw / 2), bt, Hb - 0.01, bw)
+      }
+      F.box(M.wood, 0, skid + Hb / 2, side * (D / 2 + bt / 2), bw * 1.2, Hb - 0.04, bt)
+      for (const sx of [-1, 1]) F.box(M.wood, sx * W * 0.25, skid + Hb / 2, side * (D / 2 + bt / 2), bw, Hb - 0.04, bt)
+    }
+    // The lid's rim: a proud band round its foot, so the lid reads apart from the body.
+    for (const side of [-1, 1]) {
+      F.box(M.wood, 0, skid + Hb + 0.035, side * (D / 2 + bt / 2 + 0.006), W + 2 * bt + 0.012, 0.07, bt + 0.012)
+      F.box(M.wood, side * (W / 2 + bt / 2 + 0.006), skid + Hb + 0.035, 0, bt + 0.012, 0.07, D + 2 * bt)
+    }
+    // Iron: corner plates folded round each vertical corner, straps over the lid and down the front, all riveted.
+    const it = 0.008
+    const rivet = (x: number, y: number, zz: number, nx: number, nz: number) =>
+      F.geo(
+        M.iron,
+        G("rivet", () => new THREE.SphereGeometry(1, 6, 4)),
+        M4(x + nx * (it + 0.004), y, zz + nz * (it + 0.004), 0, 0.011, 0.011, 0.011),
+        { uv: "keep" }
+      )
+    for (const sx of [-1, 1])
+      for (const sz of [-1, 1])
+        for (const [y, h] of [
+          [skid + 0.09, 0.16],
+          [skid + Hb - 0.08, 0.14],
+          [skid + Hb + Hl / 2, Hl - 0.02],
+        ] as const) {
+          const x = sx * (W / 2 + bt + it / 2)
+          const zz = sz * (D / 2 + bt + it / 2)
+          F.box(M.iron, sx * (W / 2 - 0.03), y, zz, 0.1, h * 0.8, it)
+          F.box(M.iron, x, y, sz * (D / 2 - 0.03), it, h * 0.8, 0.1)
+          for (const k of [-0.22, 0.22]) {
+            rivet(sx * (W / 2 - 0.05), y + k * h, sz * (D / 2 + bt), 0, sz)
+            rivet(sx * (W / 2 + bt), y + k * h, sz * (D / 2 - 0.05), sx, 0)
+          }
+        }
+    // Straps: across the lid front to back at the battens, then down the front of the lid as hinges' partners.
+    for (const sx of [-W * 0.25, W * 0.25]) {
+      F.box(M.iron, sx, top + 0.04, 0, 0.06, it, D + 0.06)
+      for (const side of [-1, 1]) F.box(M.iron, sx, skid + Hb + Hl / 2, side * (D / 2 + bt + it / 2 + 0.002), 0.06, Hl, it)
+      for (let k = 0; k < 5; k++)
+        F.geo(
+          M.iron,
+          G("rivet", () => new THREE.SphereGeometry(1, 6, 4)),
+          M4(sx, top + 0.046, -D / 2 + ((k + 0.5) * D) / 5, 0, 0.011, 0.008, 0.011),
+          { uv: "keep" }
+        )
+    }
+    // The hasp: a plate on the lid's front, a staple below it on the body, and a chain hanging from the staple.
+    const fz = D / 2 + bt
+    F.box(M.iron, 0, skid + Hb + 0.02, fz + 0.014, 0.07, 0.2, 0.012)
+    F.box(M.iron, 0, skid + Hb - 0.07, fz + 0.016, 0.1, 0.07, 0.014)
+    const ring = (r: number, tube: number) => G(`ring${r}-${tube}`, () => new THREE.TorusGeometry(r, tube, 6, 14))
+    F.geo(M.iron, ring(0.022, 0.006), M4(0, skid + Hb - 0.1, fz + 0.03, Math.PI / 2), { uv: "keep" })
+    if (p.chain) {
+      let y = skid + Hb - 0.13
+      for (let k = 0; k < 7; k++) {
+        F.geo(M.iron, ring(0.022, 0.0065), M4(rand(-0.004, 0.004), y, fz + 0.032, k % 2 ? 0 : Math.PI / 2, 1, 1.5, 1), { uv: "keep" })
+        y -= 0.052
+      }
+    }
+    // Ring handles on brackets at both ends.
+    for (const sx of [-1, 1]) {
+      F.box(M.iron, sx * (W / 2 + bt + 0.01), skid + Hb * 0.72, 0, 0.02, 0.06, 0.1)
+      F.geo(M.iron, ring(0.07, 0.011), M4(sx * (W / 2 + bt + 0.03), skid + Hb * 0.72 - 0.07, 0, Math.PI / 2), { uv: "keep" })
+    }
+    ctx.footprint(0, 0, W / 2 + 0.05, D / 2 + 0.05)
+  },
+  { wood: "crate", inner: "crateDark", iron: "iron" }
 )
 
 // A pier: boards across a walkway of `length` along +z, on pilings that reach below the water, with taller mooring posts

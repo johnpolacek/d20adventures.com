@@ -159,6 +159,31 @@ export const openingPrim = defineBuilder(
 )
 
 // A flat disc of paving or earth under everything.
+// Terrain from a grid of heights, row by row from the -z edge: `size` [width along x, depth along z] centred on the
+// origin, `cells` [nx, nz] cells, so (nx + 1) * (nz + 1) heights. A set generator computes the heights and seats trees
+// and bushes on the same function. Planar UVs follow the world, so ground materials tile across it.
+export const heightfieldPrim = defineBuilder(
+  z
+    .object({
+      size: z.tuple([size(2000), size(2000)]),
+      cells: z.tuple([z.number().int().min(1).max(160), z.number().int().min(1).max(160)]),
+      heights: z.array(num(-200, 500)).max(161 * 161),
+      material: matName,
+    })
+    .strict()
+    .refine((p) => p.heights.length === (p.cells[0] + 1) * (p.cells[1] + 1), "heights must hold (nx + 1) * (nz + 1) values"),
+  (ctx, p) => {
+    const [w, d] = p.size
+    const [nx, nz] = p.cells
+    const g = new THREE.PlaneGeometry(w, d, nx, nz).rotateX(-Math.PI / 2)
+    const pos = g.attributes.position
+    // PlaneGeometry's rows run from +y, which the rotation turns to -z: row 0 is the -z edge.
+    for (let i = 0; i < pos.count; i++) pos.setY(i, p.heights[i])
+    g.computeVertexNormals()
+    ctx.b.add(g, ctx.mat(p.material))
+  }
+)
+
 export const groundDisc = defineBuilder(z.object({ radius: size(3000).default(250), segments: segments(8, 128).default(64) }).strict(), (ctx, p) => {
   const g = new THREE.CircleGeometry(p.radius, p.segments)
   ctx.b.add(g, ctx.M.ground, new THREE.Matrix4().makeRotationX(-Math.PI / 2))

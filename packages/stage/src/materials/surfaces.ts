@@ -141,6 +141,12 @@ export interface WoodOptions {
   seed?: number
   grime?: number
   roughness?: number
+  // A painted board texture (see the `painted` material): its grain replaces the procedural colour and ring grain.
+  map?: THREE.Texture
+  // [across, along] the grain in metres that the map covers.
+  mapSize?: [number, number]
+  tint?: string
+  nails?: number
 }
 
 // Procedural timber: boards laid along the grain axis the Batch recorded for each piece (see woodGrain in kit/geometry),
@@ -158,11 +164,16 @@ export function wood(ctx: MaterialContext, name: string, o: WoodOptions = {}) {
     wVar: { value: o.variance ?? 0.35 },
     wSeed: { value: o.seed ?? 7.3 },
     wGrime: { value: o.grime ?? 0.6 },
+    wMap: { value: o.map ?? null },
+    wMapSize: { value: new THREE.Vector2(...(o.mapSize || [0.6, 1.2])) },
+    wTint: { value: new THREE.Color(o.tint || "#ffffff") },
+    wNails: { value: o.nails ?? 0 },
   }
   const m = new THREE.MeshStandardMaterial({ name, color: "#ffffff", roughness: o.roughness ?? 0.9, metalness: 0 })
   m.userData.wood = true
   m.userData.uniforms = u
-  return stageMaterial(m, ctx.shared, "wood", (s) => {
+  if (o.map) m.defines = { WMAP: "" }
+  return stageMaterial(m, ctx.shared, o.map ? "woodmap" : "wood", (s) => {
     Object.assign(s.uniforms, u)
     s.vertexShader = s.vertexShader
       .replace("#include <common>", "#include <common>\nattribute vec4 grain; varying vec4 vGr; varying vec2 vMUV; varying vec3 vMWorld; varying vec3 vMNormalW;")
@@ -173,6 +184,9 @@ export function wood(ctx: MaterialContext, name: string, o: WoodOptions = {}) {
         `#include <common>
 varying vec4 vGr; varying vec2 vMUV; varying vec3 vMWorld; varying vec3 vMNormalW;
 uniform vec3 wA, wB, wC, wDark; uniform vec2 wPlank; uniform float wRelief, wWear, wVar, wSeed, wGrime;
+#ifdef WMAP
+uniform sampler2D wMap; uniform vec2 wMapSize; uniform vec3 wTint; uniform float wNails;
+#endif
 ${NOISE}
 vec2 wCoord(){
  vec3 g = normalize(vGr.xyz), n = normalize(vMNormalW), c = cross(n, g);
@@ -192,6 +206,21 @@ float wHeight(vec2 P, out float id, out float seam, float foot, float sharp){
  float groove = smoothstep(.002, .016 + foot * 1.5, seam - mnoise(P * 9.0) * .006);
  return groove * (.62 + .22 * ring + .1 * fine * sharp);
 }
+#ifdef WMAP
+// Nail heads near each board's ends: two across a wide board, one across a narrow one. 1 on a head, 0 elsewhere.
+float wNail(vec2 P, float foot){
+ float pw = wPlank.x, pl = wPlank.y;
+ if (pw <= 0.0 || wNails <= 0.0) return 0.0;
+ float row = floor(P.y / pw);
+ float a = P.x + mhash(vec2(row * 1.37, wSeed)) * pl * 5.3;
+ float fx = fract(a / pl) * pl, fy = fract(P.y / pw) * pw;
+ float ex = min(fx, pl - fx) - .045;
+ float r = .0085 + foot * .5;
+ float d = pw > .15 ? min(length(vec2(ex, fy - pw * .27)), length(vec2(ex, fy - pw * .73))) : length(vec2(ex, fy - pw * .5));
+ float keep = step(1.0 - wNails, mhash(vec2(floor(a / pl + .5), row) + wSeed * 3.1));
+ return (1.0 - smoothstep(r * .6, r, d)) * keep;
+}
+#endif
 vec3 wPerturb(vec3 sp, vec3 n, vec2 dh, float fd){
  vec3 dx = dFdx(sp), dy = dFdy(sp), r1 = cross(dy, n), r2 = cross(n, dx);
  float det = dot(dx, r1) * fd;
@@ -204,11 +233,22 @@ vec3 wPerturb(vec3 sp, vec3 n, vec2 dh, float fd){
 vec2 wP = wCoord(); float wFoot = max(length(dFdx(wP)), length(dFdy(wP)));
 float wSharp = 1.0 - smoothstep(.012, .06, wFoot);
 float wId, wSeam; float wH = wHeight(wP, wId, wSeam, wFoot, wSharp);
+#ifdef WMAP
+// Each board shows its own patch of the painting; the gradient comes from the continuous coordinate so seams keep
+// their mip level.
+vec2 wT = vec2(wP.y / wMapSize.x, wP.x / wMapSize.y);
+vec4 wTex = textureGrad(wMap, wT + vec2(wId * 7.31, wId * 3.77), dFdx(wT), dFdy(wT));
+vec3 wCol = wTex.rgb * wTint * (1.0 + (wId - .5) * wVar);
+float wLum = dot(wTex.rgb, vec3(.3, .55, .15));
+wH *= .8 + .35 * wLum;
+float wNailAmt = wNail(wP, wFoot);
+#else
 vec3 wCol = mix(wA, wB, smoothstep(.15, .85, wId)) * (1.0 + (wId - .5) * wVar);
 wCol = mix(wCol, wC, smoothstep(.55, .9, mfbm(vec2(wP.x * .25, wP.y * 1.2) + wSeed)) * .55);
 float wGr = mnoise(vec2(wP.x * 1.6, wP.y * 34.0 + wId * 50.0));
 float wRing = .5 + .5 * sin(wP.y * 24.0 + mnoise(vec2(wP.x * 1.3, wP.y * 6.0)) * 8.0 + wId * 40.0);
 wCol *= mix(1.0, .8 + .34 * wGr, wSharp * .8 + .2) * mix(1.0, .9 + .2 * wRing, wSharp * .7 + .3);
+#endif
 float wSeamAmt = 1.0 - smoothstep(.002, .012 + wFoot, wSeam);
 float wWearAmt = smoothstep(.06, .012, wSeam) * (1.0 - wSeamAmt);
 wCol = mix(wCol, wCol * 1.32 + .015, wWearAmt * .5 * wWear);
@@ -216,14 +256,22 @@ wCol = mix(wCol, wDark, wSeamAmt * .8);
 wCol *= mix(.62, 1.0, smoothstep(0.0, 1.4, vMWorld.y));
 wCol *= 1.0 - wGrime * .28 * smoothstep(.4, .8, mfbm(vMWorld.xz * 1.7 + vMWorld.y * .9));
 wCol = mix(wCol, wCol * 1.22 + .01, clamp(normalize(vMNormalW).y, 0.0, 1.0) * .3);
+#ifdef WMAP
+wCol = mix(wCol, mix(vec3(.05, .045, .04), vec3(.22, .09, .04), mnoise(wP * 60.0)), wNailAmt * .9);
+#endif
 diffuseColor.rgb *= wCol;`
       )
       .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\nroughnessFactor = clamp(roughnessFactor * (.9 + .2 * wId) - wWearAmt * .12 + wSeamAmt * .06, .3, 1.0);")
       .replace(
         "#include <normal_fragment_maps>",
         `#include <normal_fragment_maps>
+#ifdef WMAP
+{ float wHn = wH + wNailAmt * .5;
+ normal = wPerturb(-vViewPosition, normal, vec2(dFdx(wHn), dFdy(wHn)) * wRelief * (wSharp * .7 + .3), faceDirection); }
+#else
 { float i0, s0; float hx = wHeight(wP + dFdx(wP), i0, s0, wFoot, wSharp), hy = wHeight(wP + dFdy(wP), i0, s0, wFoot, wSharp);
- normal = wPerturb(-vViewPosition, normal, vec2(hx - wH, hy - wH) * wRelief * (wSharp * .7 + .3), faceDirection); }`
+ normal = wPerturb(-vViewPosition, normal, vec2(hx - wH, hy - wH) * wRelief * (wSharp * .7 + .3), faceDirection); }
+#endif`
       )
   })
 }
@@ -356,8 +404,45 @@ function shaftMap(rand: Rand) {
   return t
 }
 
+// Soft cloud for mist banks: overlapping blurred puffs along a band, faded to nothing at every edge so a card never
+// shows its outline where it meets the ground or the sky.
+function mistMap(rand: Rand) {
+  return canvasTexture(512, 256, (c, w, h) => {
+    for (let i = 0; i < 70; i++) {
+      const x = rand(0.04, 0.96) * w
+      const y = h * (0.5 + rand(-0.18, 0.18))
+      const r = rand(0.12, 0.3) * h
+      const g = c.createRadialGradient(x, y, 0, x, y, r)
+      g.addColorStop(0, `rgba(255,255,255,${rand(0.12, 0.3)})`)
+      g.addColorStop(1, "rgba(255,255,255,0)")
+      c.fillStyle = g
+      c.fillRect(x - r, y - r, 2 * r, 2 * r)
+    }
+    c.globalCompositeOperation = "destination-in"
+    const fx = c.createLinearGradient(0, 0, w, 0)
+    fx.addColorStop(0, "rgba(0,0,0,0)")
+    fx.addColorStop(0.2, "rgba(0,0,0,1)")
+    fx.addColorStop(0.8, "rgba(0,0,0,1)")
+    fx.addColorStop(1, "rgba(0,0,0,0)")
+    c.fillStyle = fx
+    c.fillRect(0, 0, w, h)
+    const fy = c.createLinearGradient(0, 0, 0, h)
+    fy.addColorStop(0, "rgba(0,0,0,0)")
+    fy.addColorStop(0.35, "rgba(0,0,0,1)")
+    fy.addColorStop(0.65, "rgba(0,0,0,1)")
+    fy.addColorStop(1, "rgba(0,0,0,0)")
+    c.fillStyle = fy
+    c.fillRect(0, 0, w, h)
+  })
+}
+
 // Textures shared by the materials of one set, made on first use.
 export class TextureBank {
+  private mistTex?: THREE.Texture
+  mist() {
+    if (!this.mistTex) this.mistTex = this.keep(mistMap(this.rand))
+    return this.mistTex
+  }
   private burlapTex?: THREE.Texture
   private fabricTex?: THREE.Texture
   private leafTex?: THREE.Texture
@@ -421,6 +506,19 @@ transformed.x += sway * sway * uWind * ${amp} * .6 * (1.0 + sin(uTime * .9 + ph)
 
 export function foliage(ctx: MaterialContext, bank: TextureBank, name: string, color: string, roughness = 0.9) {
   return stageMaterial(new THREE.MeshStandardMaterial({ name, color, roughness, metalness: 0, map: bank.leaves(), alphaTest: 0.5, side: THREE.DoubleSide }), ctx.shared, "foliage")
+}
+// Mist banks: soft unlit cloud cards in the fog's colour, blended over the scene and fogged with it.
+export function mist(ctx: MaterialContext, bank: TextureBank, name: string, color: string, opacity = 0.5) {
+  const m = new THREE.MeshBasicMaterial({ name, color, map: bank.mist(), transparent: true, opacity, depthWrite: false, side: THREE.DoubleSide })
+  m.userData.noShadow = true
+  return stageMaterial(m, ctx.shared, "mist")
+}
+// A cut-out painting on a card (hanging moss): alpha-tested, lit from both sides, no shadow.
+export function card(ctx: MaterialContext, name: string, map: THREE.Texture, tint = "#ffffff", roughness = 0.95) {
+  const m = new THREE.MeshStandardMaterial({ name, color: tint, roughness, metalness: 0, map, alphaTest: 0.35, side: THREE.DoubleSide })
+  m.userData.noShadow = true
+  m.userData.card = true
+  return stageMaterial(m, ctx.shared, "card")
 }
 export function glow(ctx: MaterialContext, bank: TextureBank, name: string, color: string, opacity = 0.35) {
   const m = new THREE.MeshBasicMaterial({ name, color, map: bank.shaft(), transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })

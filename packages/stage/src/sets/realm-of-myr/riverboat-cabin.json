@@ -127,85 +127,97 @@
   },
   "materials": {
     "floor": {
-      "type": "wood",
-      "a": "#4a4038",
-      "b": "#585046",
-      "c": "#3c342e",
+      "type": "painted",
+      "map": "/stage/textures/boards-weathered.jpg",
+      "tint": "#9a9088",
       "plank": [
         0.2,
         2.8
       ],
-      "relief": 0.05,
-      "variance": 0.5,
-      "seed": 4.4,
-      "grime": 1.3
+      "size": [
+        0.5,
+        1.4
+      ],
+      "relief": 0.08,
+      "grime": 1.3,
+      "nails": 0.8,
+      "variance": 0.3
     },
     "panel": {
-      "type": "wood",
-      "a": "#463c34",
-      "b": "#54483e",
-      "c": "#3a322c",
+      "type": "painted",
+      "map": "/stage/textures/cabin-dark.jpg",
+      "tint": "#d6ccc2",
       "plank": [
         0.18,
         40
       ],
-      "relief": 0.04,
-      "variance": 0.45,
-      "seed": 2.9,
+      "size": [
+        0.6,
+        1.6
+      ],
+      "relief": 0.08,
       "grime": 1.1
     },
     "roof": {
-      "type": "wood",
-      "a": "#3a2e24",
-      "b": "#46382c",
-      "c": "#30261e",
+      "type": "painted",
+      "map": "/stage/textures/cabin-dark.jpg",
+      "tint": "#a49a90",
       "plank": [
         0.24,
         40
       ],
-      "relief": 0.04,
-      "seed": 7.2,
+      "size": [
+        0.5,
+        1.4
+      ],
+      "relief": 0.08,
       "grime": 1.3
     },
     "post": {
-      "type": "wood",
-      "a": "#3a322c",
-      "b": "#463c34",
-      "c": "#302824",
+      "type": "painted",
+      "map": "/stage/textures/cabin-dark.jpg",
+      "tint": "#bcb0a4",
       "plank": [
         0,
         40
       ],
-      "relief": 0.06,
-      "variance": 0.5,
-      "seed": 1.9,
+      "size": [
+        0.4,
+        1.2
+      ],
+      "relief": 0.08,
       "grime": 1.4
     },
     "trim": {
-      "type": "wood",
-      "a": "#4a3a2c",
-      "b": "#5a4634",
-      "c": "#3e3228",
+      "type": "painted",
+      "map": "/stage/textures/cabin-dark.jpg",
+      "tint": "#c8b8a8",
       "plank": [
         0,
         40
       ],
-      "relief": 0.03,
-      "seed": 6.6,
+      "size": [
+        0.5,
+        1.4
+      ],
+      "relief": 0.08,
       "grime": 0.6
     },
     "door": {
-      "type": "wood",
-      "a": "#5c4230",
-      "b": "#6e5038",
-      "c": "#4a382a",
+      "type": "painted",
+      "map": "/stage/textures/cabin-dark.jpg",
+      "tint": "#e6c8a8",
       "plank": [
         0.14,
         12
       ],
-      "relief": 0.04,
-      "variance": 0.4,
-      "seed": 9.4
+      "size": [
+        0.5,
+        1.4
+      ],
+      "relief": 0.08,
+      "grime": 1,
+      "nails": 0.6
     },
     "wheel": {
       "type": "wood",
@@ -220,18 +232,20 @@
       "seed": 3.7
     },
     "deck": {
-      "type": "wood",
-      "a": "#5a4a3a",
-      "b": "#6a5642",
-      "c": "#4a3e33",
+      "type": "painted",
+      "map": "/stage/textures/boards-weathered.jpg",
+      "tint": "#a8a098",
       "plank": [
         0.16,
         3.2
       ],
-      "relief": 0.05,
-      "variance": 0.45,
-      "seed": 5.3,
-      "grime": 0.8
+      "size": [
+        0.5,
+        1.4
+      ],
+      "relief": 0.08,
+      "grime": 0.8,
+      "nails": 0.7
     },
     "hull": {
       "type": "wood",
@@ -296,18 +310,20 @@
       "roughness": 1
     },
     "bark": {
-      "type": "wood",
-      "a": "#2c2b27",
-      "b": "#37352f",
-      "c": "#242320",
+      "type": "painted",
+      "map": "/stage/textures/bark-moss.jpg",
+      "tint": "#c0c8c0",
       "plank": [
         0,
         40
       ],
-      "relief": 0.07,
-      "variance": 0.5,
-      "seed": 4.2,
-      "grime": 1
+      "size": [
+        1.2,
+        1.8
+      ],
+      "relief": 0.12,
+      "grime": 1,
+      "variance": 0.2
     },
     "leaves": {
       "type": "foliage",
@@ -326,18 +342,21 @@
       "color": "#7c8f86"
     },
     "crate": {
-      "type": "wood",
-      "a": "#5e4630",
-      "b": "#6c5238",
-      "c": "#4e3e2e",
+      "type": "painted",
+      "map": "/stage/textures/crate-oak.jpg",
+      "tint": "#a8a090",
       "plank": [
         0.2,
         1.2
       ],
-      "relief": 0.05,
-      "variance": 0.45,
-      "seed": 2.6,
-      "grime": 1.2
+      "size": [
+        1.2,
+        2.4
+      ],
+      "relief": 0.1,
+      "grime": 1.2,
+      "nails": 1,
+      "variance": 0.35
     },
     "crateDark": {
       "type": "wood",
@@ -398,6 +417,12 @@
       "roughness": 1,
       "emissive": "#ffb262",
       "emissiveIntensity": 1.8
+    },
+    "crateIron": {
+      "type": "metal",
+      "color": "#2e2824",
+      "roughness": 0.75,
+      "metalness": 0.5
     }
   },
   "objects": [
@@ -1195,7 +1220,7 @@
       "material": "iron"
     },
     {
-      "type": "box",
+      "type": "strongbox",
       "id": "crate",
       "at": [
         0,
@@ -1203,103 +1228,12 @@
         -0.55
       ],
       "yaw": 6,
-      "size": [
-        1.35,
-        0.85,
-        0.92
-      ],
-      "material": "crate",
-      "solid": true
-    },
-    {
-      "type": "box",
-      "id": "crate-lid",
-      "at": [
-        0,
-        0.85,
-        -0.55
-      ],
-      "yaw": 6,
-      "size": [
-        1.42,
-        0.12,
-        0.98
-      ],
-      "material": "crate"
-    },
-    {
-      "type": "box",
-      "at": [
-        -0.48,
-        0,
-        -0.5
-      ],
-      "yaw": 6,
-      "size": [
-        0.07,
-        0.99,
-        0.96
-      ],
-      "material": "iron"
-    },
-    {
-      "type": "box",
-      "at": [
-        0,
-        0,
-        -0.55
-      ],
-      "yaw": 6,
-      "size": [
-        0.07,
-        0.99,
-        0.96
-      ],
-      "material": "iron"
-    },
-    {
-      "type": "box",
-      "at": [
-        0.48,
-        0,
-        -0.6
-      ],
-      "yaw": 6,
-      "size": [
-        0.07,
-        0.99,
-        0.96
-      ],
-      "material": "iron"
-    },
-    {
-      "type": "box",
-      "id": "hasp",
-      "at": [
-        0.05,
-        0.55,
-        -0.06
-      ],
-      "yaw": 6,
-      "size": [
-        0.13,
-        0.24,
-        0.04
-      ],
-      "material": "iron"
-    },
-    {
-      "type": "torus",
-      "id": "hasp-ring",
-      "at": [
-        0.05,
-        0.5,
-        -0.03
-      ],
-      "yaw": 6,
-      "radius": 0.06,
-      "tube": 0.014,
-      "material": "iron"
+      "width": 1.35,
+      "height": 0.97,
+      "depth": 0.92,
+      "materials": {
+        "iron": "crateIron"
+      }
     },
     {
       "type": "box",
@@ -1826,6 +1760,20 @@
       ],
       "fov": 55,
       "label": "The crate"
+    },
+    "chest": {
+      "position": [
+        -0.45,
+        1.2,
+        1.15
+      ],
+      "target": [
+        0.05,
+        0.42,
+        -0.55
+      ],
+      "fov": 50,
+      "label": "The crate up close"
     },
     "door": {
       "position": [

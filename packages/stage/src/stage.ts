@@ -168,6 +168,7 @@ export class Stage {
     const horizon = new THREE.Color(A.sky.horizon)
     // Fog takes the horizon as the sky draws it, dimmed by its gain, so distant trees fade into the night sky, unless
     // the set gives the mist its own colour.
+    this.shared.fogStart.value = A.fog.start
     this.scene.fog = new THREE.FogExp2(A.fog.color ? new THREE.Color(A.fog.color) : horizon.clone().multiplyScalar(A.sky.gain), A.fog.density)
     this.camera = new THREE.PerspectiveCamera(58, 1, set.camera.near, set.camera.far)
     this.scene.add(this.world)
@@ -223,7 +224,7 @@ export class Stage {
     // The set itself: every builder into one batch, merged by material.
     o.onProgress?.("Building the set")
     const rand = createRand(hashSeed(set.seed, "stage"))
-    this.materials = createMaterialLibrary(set.materials, this.shared, rand.fork("materials"))
+    this.materials = createMaterialLibrary(set.materials, this.shared, rand.fork("materials"), renderer.capabilities.getMaxAnisotropy())
     const built = buildSetGeometry(set, this.materials)
     this.footprints = built.footprints
     this.statics = built.batch.flush(this.world)
@@ -320,7 +321,7 @@ export class Stage {
   // Waits for the character art and the crowd atlas (when cards are on), then starts the loop.
   async load() {
     this.o.onProgress?.("Loading characters")
-    await Promise.all([this.standees.load(), this.crowd.cards && this.flags.crowd !== "procedural" ? this.waitForAtlas() : Promise.resolve()])
+    await Promise.all([this.standees.load(), this.materials.ready, this.crowd.cards && this.flags.crowd !== "procedural" ? this.waitForAtlas() : Promise.resolve()])
     const first = this.staging?.shot ?? Object.keys(this.shots)[0]
     if (first) this.shot(first, { instant: true })
     this.sync()

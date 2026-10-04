@@ -50,6 +50,30 @@ const wood = z
     roughness: unit.optional(),
   })
   .strict()
+// Painted textures from scripts/stage-textures.ts, served from public/stage/textures. A set is untrusted: that folder only.
+const texture = z.string().regex(/^\/stage\/textures\/[a-z0-9][a-z0-9-]{0,79}\.(jpg|webp|png)$/, "textures live in /stage/textures")
+// Boards painted from an image: `map` is one board's grain, laid along each piece's grain axis with the wood shader's
+// seams, worn arrises and grime. size = [across, along] the grain in metres that the image covers; tint multiplies it.
+// nails 0..1 sets nail heads near each board's ends.
+const painted = z
+  .object({
+    type: z.literal("painted"),
+    map: texture,
+    size: z.tuple([num(0.05, 20), num(0.05, 40)]).optional(),
+    tint: color.optional(),
+    dark: color.optional(),
+    plank: z.tuple([num(0, 5), num(0.05, 200)]).optional(),
+    relief: num(0, 1).optional(),
+    wear: num(0, 3).optional(),
+    variance: num(0, 2).optional(),
+    seed: num(0, 1000).optional(),
+    grime: num(0, 3).optional(),
+    nails: unit.optional(),
+    roughness: unit.optional(),
+  })
+  .strict()
+// Cut-out cards such as hanging moss: an image with alpha, lit from both sides, casting no shadow.
+const card = z.object({ type: z.literal("card"), map: texture, tint: color.optional(), roughness: unit.optional() }).strict()
 const cloth = z
   .object({
     type: z.literal("cloth"),
@@ -64,6 +88,8 @@ const cloth = z
 const burlap = z.object({ type: z.literal("burlap"), color, roughness: unit.optional() }).strict()
 // Light in the air: additive, unlit and shadowless (shafts of moonlight through a canopy).
 const glow = z.object({ type: z.literal("glow"), color, opacity: unit.optional() }).strict()
+// Mist banks: soft cloud cards in the fog's colour, unlit and shadowless (see the `mist` builder).
+const mist = z.object({ type: z.literal("mist"), color, opacity: unit.optional() }).strict()
 // Leaves: painted leaf clusters with gaps, for tree crowns, bushes and ferns.
 const foliage = z.object({ type: z.literal("foliage"), color, roughness: unit.optional() }).strict()
 const metal = z.object({ type: z.literal("metal"), color, roughness: unit.optional(), metalness: unit.optional() }).strict()
@@ -106,7 +132,7 @@ const meadow = z
 const grass = z.object({ type: z.literal("grass"), base: color.optional(), tip: color.optional(), roughness: unit.optional() }).strict()
 // Running water that mirrors the sky. `flow` is the downstream direction [x, z].
 const water = z.object({ type: z.literal("water"), color: color.optional(), reflect: num(0, 20).optional(), ripple: num(0, 5).optional(), flow: z.tuple([num(-1, 1), num(-1, 1)]).optional() }).strict()
-export const materialSpec = z.discriminatedUnion("type", [masonry, wood, cloth, burlap, foliage, glow, metal, plain, rock, meadow, grass, water])
+export const materialSpec = z.discriminatedUnion("type", [masonry, wood, painted, card, cloth, burlap, foliage, glow, mist, metal, plain, rock, meadow, grass, water])
 export type MaterialSpec = z.infer<typeof materialSpec>
 
 // An object is `{ type, id?, at?, yaw?, materials?, ...params }`; params are checked by the builder named by `type`.
@@ -243,7 +269,8 @@ export const setSpecSchema = z
         // sun's disc, in place of the soft sun.
         sky: z.object({ horizon: color, mid: color, zenith: color, gain: num(0, 2).default(1), clouds: unit.default(1), stars: unit.default(0), moon: num(0, 10).default(0) }).strict(),
         // `color` sets mist apart from the sky: pale mist glowing between dark trees on a moonlit night.
-        fog: z.object({ density: num(0, 0.05), color: color.optional() }).strict(),
+        // `start` keeps the near ground clear: haze builds only beyond it, in metres, as in a painting's aerial depth.
+        fog: z.object({ density: num(0, 0.05), color: color.optional(), start: num(0, 200).default(0) }).strict(),
         // The sky's glow around the sun (or moon) and the haze toward it. Warm sunlight when unset.
         glow: color.optional(),
         // A soft light that travels with the camera, keeping nearby characters readable at night (a game convention):

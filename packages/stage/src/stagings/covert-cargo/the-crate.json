@@ -15,8 +15,8 @@
         "portrait": "/stage/fixtures/covert-cargo/lyra-portrait.jpg"
       },
       "at": [
-        -0.65,
-        0.5
+        -1.05,
+        0.05
       ],
       "facing": "crate"
     },
@@ -31,8 +31,8 @@
         "portrait": "/stage/fixtures/covert-cargo/poppen-portrait.jpg"
       },
       "at": [
-        0.75,
-        0.55
+        0.95,
+        0.15
       ],
       "facing": "crate"
     }
@@ -57,5 +57,5 @@
       "label": "The pair"
     }
   },
-  "shot": "crate"
+  "shot": "chest"
 }

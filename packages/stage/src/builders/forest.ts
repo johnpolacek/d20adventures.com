@@ -14,8 +14,23 @@ const unitCone = () => G("cone8", () => new THREE.ConeGeometry(1, 1, 8, 1))
 const unitBlade = () => G("blade4", () => new THREE.ConeGeometry(1, 1, 4, 1))
 const unitBeard = () => G("beard5", () => new THREE.ConeGeometry(1, 1, 5, 1))
 
-// Beards of moss hanging from a point: long thin cones, point down, swaying a little apart.
+// A card hanging from its top edge: a unit plane from y = 0 down to y = -1, its texture's top at the top.
+const unitHang = () => G("hang", () => new THREE.PlaneGeometry(1, 1).translate(0, -0.5, 0))
+
+// Beards of moss hanging from a point: long thin cones, point down, swaying a little apart. With a `card` material
+// (a painting of hanging moss) they are curtains instead: pairs of crossed cards, longer and wider.
 function beards(b: Sink, mat: THREE.Material, rand: () => number, at: THREE.Vector3, n: number, reach: number) {
+  if (mat.userData.card) {
+    for (let i = 0; i < Math.ceil(n / 3); i++) {
+      const len = reach * (1.2 + rand() * 1.2)
+      const w = len * (0.55 + rand() * 0.3)
+      const x = at.x + (rand() - 0.5) * reach * 0.8
+      const zz = at.z + (rand() - 0.5) * reach * 0.8
+      const yaw = rand() * TAU
+      for (const turn of [0, Math.PI / 2]) b.add(unitHang(), mat, M4(x, at.y + len * 0.05, zz, yaw + turn, w, len, 1), { uv: "keep" })
+    }
+    return
+  }
   for (let i = 0; i < n; i++) {
     const len = reach * (0.45 + rand() * 0.75)
     const w = reach * (0.05 + rand() * 0.05)
@@ -284,4 +299,30 @@ export const lightShaft = defineBuilder(
     ctx.b.add(g, ctx.mat(p.material), M4(0, p.height / 2, 0, 0, 1, 1, 1, 0, (p.tilt * Math.PI) / 180), { uv: "keep" })
     g.dispose()
   }
+)
+
+// Mist: `layers` soft cloud cards standing across x, spread along z by `spacing`, or lying flat over water when `flat`.
+// Each card is `width` by `height`; the cloud fades out at every edge, so its foot can sink into the ground.
+export const mistBank = defineBuilder(
+  z
+    .object({
+      width: size(400).default(30),
+      height: size(100).default(6),
+      layers: z.number().int().min(1).max(24).default(3),
+      spacing: size(100).default(8),
+      flat: z.boolean().default(false),
+    })
+    .strict(),
+  (ctx, p) => {
+    const { b, M, rand } = ctx
+    const card = G("mistcard", () => new THREE.PlaneGeometry(1, 1))
+    for (let i = 0; i < p.layers; i++) {
+      const zz = (i - (p.layers - 1) / 2) * p.spacing + rand(-0.2, 0.2) * p.spacing
+      const w = p.width * rand(0.8, 1.2)
+      const h = p.height * rand(0.8, 1.2)
+      if (p.flat) b.add(card, M.mist, M4(rand(-0.1, 0.1) * w, rand(0, 0.3), zz, rand(-0.2, 0.2), w, h, 1, -Math.PI / 2), { uv: "keep" })
+      else b.add(card, M.mist, M4(rand(-0.1, 0.1) * w, h * 0.35, zz, rand(-0.15, 0.15), w, h, 1), { uv: "keep" })
+    }
+  },
+  { mist: "mist" }
 )
