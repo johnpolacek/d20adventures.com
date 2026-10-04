@@ -12,15 +12,21 @@ import owlbearConfrontation from "@d20/stage/stagings/the-midnight-summons/owlbe
 import preparingForTheCity from "@d20/stage/stagings/the-midnight-summons/preparing-for-the-city.json"
 import theMissingRelics from "@d20/stage/stagings/the-midnight-summons/the-missing-relics.json"
 import timelyRescue from "@d20/stage/stagings/the-midnight-summons/timely-rescue.json"
+import { type FigureOwner, heroFigure, PREMADE_FIGURES } from "./figures"
 
 type Point = { x: number; z: number }
-type Who = { id: string; name: string }
+type Who = { id: string; name: string; type?: string; race?: string; archetype?: string; gender?: string }
+type CastMember = { id: string; name: string; role?: string; height?: number; at: string | number[]; facing?: string | number | number[]; art: { front?: string; back?: string; portrait?: string } }
+type Shot = { subject?: string; subjects?: string[]; label?: string }
 export interface Scene {
   set: { title: string; marks: Record<string, { at: number[]; label?: string }> }
-  staging: { cast: { id: string; name: string; at: string | number[]; art: { portrait?: string } }[]; shot?: string }
+  staging: { cast: CastMember[]; shots?: Record<string, Shot>; loops?: Record<string, { party?: { members: string[] } }>; shot?: string }
   // The HUD's place name, and the opening line of the GM's map staging.
   location: string
   where: string
+  // Cast ids where the party stands, and spots for heroes beyond them.
+  party: string[]
+  spare?: [number, number][]
 }
 
 // The real intro starts at the checkpoint. The ambient queue must not move the party independently of game state.
@@ -29,21 +35,66 @@ gate.loops["gate-line"].party.position = 0
 
 // Encounters with an authored 3D scene. Any other encounter plays in story view with the same controls.
 export const SCENES: Record<string, Scene> = {
-  "the-gates-of-kordavos": { set: gateSet, staging: gate, location: "Kordavos checkpoint", where: "The party stands in the line at Garlan's checkpoint outside the gate of Kordavos." },
-  "the-harvest-festival": { set: festivalSet, staging: festivalStaging, location: "Harvest Festival", where: "The party has come up the street from the gate into the festival square." },
+  "the-gates-of-kordavos": {
+    set: gateSet,
+    staging: gate,
+    location: "Kordavos checkpoint",
+    where: "The party stands in the line at Garlan's checkpoint outside the gate of Kordavos.",
+    party: ["branka", "cassia", "yeva", "milos"],
+    spare: [[0.82, 14.5]],
+  },
+  "the-harvest-festival": {
+    set: festivalSet,
+    staging: festivalStaging,
+    location: "Harvest Festival",
+    where: "The party has come up the street from the gate into the festival square.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[-1, 19.3]],
+  },
   // The Midnight Summons: one moonlit stretch of deer trail for the walk, the owlbear, and the rescue.
-  "broken-silence": { set: forestSet, staging: brokenSilence, location: "Valkarr woods", where: "Thalbern walks a deer trail through the Valkarr woods at night toward the Old Standing Stones." },
-  "owlbear-confrontation": { set: forestSet, staging: owlbearConfrontation, location: "Valkarr woods", where: "An owlbear faces Thalbern across a small moonlit clearing on the deer trail." },
-  "timely-rescue": { set: forestSet, staging: timelyRescue, location: "Valkarr woods", where: "Thalbern lies wounded by the great oak beside the trail as Wollandora steps out of the trees." },
+  "broken-silence": {
+    set: forestSet,
+    staging: brokenSilence,
+    location: "Valkarr woods",
+    where: "Thalbern walks a deer trail through the Valkarr woods at night toward the Old Standing Stones.",
+    party: ["thalbern"],
+  },
+  "owlbear-confrontation": {
+    set: forestSet,
+    staging: owlbearConfrontation,
+    location: "Valkarr woods",
+    where: "An owlbear faces Thalbern across a small moonlit clearing on the deer trail.",
+    party: ["thalbern"],
+  },
+  "timely-rescue": {
+    set: forestSet,
+    staging: timelyRescue,
+    location: "Valkarr woods",
+    where: "Thalbern lies wounded by the great oak beside the trail as Wollandora steps out of the trees.",
+    party: ["thalbern"],
+  },
   "meeting-at-the-stones": {
     set: stonesSet,
     staging: meetingAtTheStones,
     location: "Old Standing Stones",
     where: "Moonlight fills the clearing where a line of ancient standing stones runs beside the river.",
+    party: ["thalbern"],
   },
-  "the-missing-relics": { set: stonesSet, staging: theMissingRelics, location: "Old Standing Stones", where: "Thalbern and Wollandora talk among the standing stones by the moonlit river." },
-  "preparing-for-the-city": { set: homeSet, staging: preparingForTheCity, location: "Thalbern's home", where: "Morning sun falls on Thalbern's stone and timber cottage at the edge of the woods." },
-  "back-home": { set: homeSet, staging: backHome, location: "Thalbern's home", where: "Morning sun falls on Thalbern's stone and timber cottage at the edge of the woods." },
+  "the-missing-relics": {
+    set: stonesSet,
+    staging: theMissingRelics,
+    location: "Old Standing Stones",
+    where: "Thalbern and Wollandora talk among the standing stones by the moonlit river.",
+    party: ["thalbern"],
+  },
+  "preparing-for-the-city": {
+    set: homeSet,
+    staging: preparingForTheCity,
+    location: "Thalbern's home",
+    where: "Morning sun falls on Thalbern's stone and timber cottage at the edge of the woods.",
+    party: ["thalbern"],
+  },
+  "back-home": { set: homeSet, staging: backHome, location: "Thalbern's home", where: "Morning sun falls on Thalbern's stone and timber cottage at the edge of the woods.", party: ["thalbern"] },
 }
 export const sceneFor = (encounterId: string | undefined) => (encounterId ? SCENES[encounterId] : undefined)
 
@@ -55,6 +106,63 @@ export function castIdFor(cast: readonly { id: string }[], c: Who) {
   return cast.some((s) => s.id === first) ? first : undefined
 }
 
+// The scene with the adventure's actual party in it. A premade keeps its own slot, other heroes take the free slots in
+// order and then the spare spots, and unused slots leave. Shots and the gate queue follow. A created hero never claims a
+// premade's slot by sharing a first name. The authored party gets the authored staging back unchanged.
+export function partyScene(scene: Scene, characters: readonly Who[], chosen: Record<string, string> = {}): Scene {
+  const staging = structuredClone(scene.staging)
+  const pcs = characters.filter((c) => c.type === "pc")
+  const slots = new Map(scene.party.map((id) => [id, staging.cast.find((m) => m.id === id)!]))
+  const rest = pcs.filter((pc) => {
+    const own = chosen[pc.id] ? undefined : castIdFor(staging.cast, pc)
+    if (!own || !slots.has(own)) return true
+    slots.delete(own)
+    return false
+  })
+  const renamed = new Map<string, { id: string; label: string }>()
+  const added: string[] = []
+  for (const [slot, member] of slots) {
+    const pc = rest.shift()
+    if (pc) {
+      const old = member.name
+      Object.assign(member, heroCast(pc, chosen))
+      renamed.set(slot, { id: pc.id, label: old })
+    } else staging.cast = staging.cast.filter((m) => m !== member)
+  }
+  const removed = new Set([...slots.keys()].filter((id) => !renamed.has(id)))
+  for (const [i, pc] of rest.entries()) {
+    const at = scene.spare?.[i]
+    if (!at) throw new Error(`${scene.location} has no place for ${pc.name}.`)
+    staging.cast.push({ ...heroCast(pc, chosen), at, facing: staging.cast.find((m) => scene.party.includes(m.id))?.facing ?? 0 })
+    added.push(pc.id)
+  }
+  const to = (id: string) => renamed.get(id)?.id ?? id
+  for (const m of staging.cast) if (typeof m.facing === "string") m.facing = removed.has(m.facing) ? 0 : to(m.facing)
+  const cut = (key: string) => {
+    delete staging.shots![key]
+    if (staging.shot === key) staging.shot = undefined
+  }
+  for (const [key, shot] of Object.entries(staging.shots ?? {})) {
+    if (shot.subjects) {
+      // Spare heroes join the party's own shot, not a framing of particular characters.
+      const party = shot.subjects.every((id) => scene.party.includes(id))
+      shot.subjects = [...shot.subjects.filter((id) => !removed.has(id)).map(to), ...(party ? added : [])]
+      if (!shot.subjects.length) cut(key)
+    } else if (shot.subject && removed.has(shot.subject)) cut(key)
+    else if (shot.subject && renamed.has(shot.subject)) {
+      const { id, label } = renamed.get(shot.subject)!
+      if (shot.label && label.startsWith(shot.label)) shot.label = pcs.find((pc) => pc.id === id)!.name.split(" ")[0]
+      shot.subject = id
+    }
+  }
+  for (const loop of Object.values(staging.loops ?? {})) if (loop.party) loop.party.members = [...loop.party.members.filter((id) => !removed.has(id)).map(to), ...added]
+  return { ...scene, staging }
+}
+function heroCast(pc: Who, chosen: Record<string, string>) {
+  const figure = heroFigure(pc as FigureOwner, chosen)
+  return { id: pc.id, name: pc.name, role: [pc.race, pc.archetype?.toLowerCase()].filter(Boolean).join(" "), height: figure.height, art: figure.art }
+}
+
 // Portraits for scenes where a character has no figure, cropped from their standee art. The app shows only bundled images.
 const PORTRAITS: Record<string, string> = {
   thalbern: "/stage/fixtures/the-midnight-summons/thalbern-portrait.jpg",
@@ -62,22 +170,24 @@ const PORTRAITS: Record<string, string> = {
   owlbear: "/stage/fixtures/the-midnight-summons/owlbear-portrait.jpg",
 }
 
-// A character's portrait from the current scene, else from any authored scene, so story view keeps the party's faces.
-export function portraitFor(scene: Scene | undefined, c: Who) {
+// A character's portrait: a created hero's figure, else the current scene, else any authored scene, so story view keeps
+// the party's faces. Heroes with no art anywhere show their stock figure.
+export function portraitFor(scene: Scene | undefined, c: Who, chosen: Record<string, string> = {}) {
+  if (chosen[c.id]) return heroFigure(c as FigureOwner, chosen).art.portrait
   for (const s of [scene, ...Object.values(SCENES)]) {
     const id = s && castIdFor(s.staging.cast, c)
     const portrait = id && s.staging.cast.find((m) => m.id === id)?.art.portrait
     if (portrait) return portrait
   }
-  return PORTRAITS[c.id]
+  return PORTRAITS[c.id] ?? PREMADE_FIGURES[c.id]?.art.portrait ?? (c.type === "pc" ? heroFigure(c as FigureOwner).art.portrait : undefined)
 }
 
 // Map staging for the GM's narration: the place, its named spots, and where each character in the turn stands now
 // (saved positions, else where the staging puts them). Ambient extras such as the gate's merchant are left out.
-export function spatialContext(encounterId: string, characters: readonly Who[], positions: Record<string, Point>) {
-  const scene = SCENES[encounterId]
-  if (!scene) return
-  const { set, staging } = scene
+export function spatialContext(encounterId: string, characters: readonly Who[], positions: Record<string, Point>, chosen: Record<string, string> = {}) {
+  const authored = SCENES[encounterId]
+  if (!authored) return
+  const { set, staging } = partyScene(authored, characters, chosen)
   const start = (at: string | number[]): Point => {
     const [x, z] = typeof at === "string" ? set.marks[at].at : at
     return { x, z }
@@ -90,5 +200,5 @@ export function spatialContext(encounterId: string, characters: readonly Who[], 
     const member = staging.cast.find((m) => m.id === castIdFor(staging.cast, c))
     return member ? [`${c.name} ${fmt(positions[member.id] ?? start(member.at))}`] : []
   })
-  return `${scene.where}\nNamed places, x and z in metres: ${places.join("; ")}.\nWhere everyone stands now, x and z in metres: ${people.join("; ")}.`
+  return `${authored.where}\nNamed places, x and z in metres: ${places.join("; ")}.\nWhere everyone stands now, x and z in metres: ${people.join("; ")}.`
 }

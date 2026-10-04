@@ -8,6 +8,7 @@ import { MOVEMENT_SYSTEM, movementIntentSchema, movementPrompt } from "@d20/stag
 import { z } from "zod"
 import { spatialContext } from "../src/scenes"
 import { applyCharacterUpdates, characterContext, desktopPatchSchema } from "./characters"
+import { partyFor } from "./heroes"
 import type { LocalStore } from "./store"
 
 export type Pack = { artifacts: RuntimeArtifacts; contentRef: Awaited<ReturnType<Content["loadWikiRuntime"]>>["contentRef"]; definition: { promptSlug: string } }
@@ -15,13 +16,40 @@ export type Pack = { artifacts: RuntimeArtifacts; contentRef: Awaited<ReturnType
 export type Packs = Record<string, Pack>
 // The bundled adventures share no encounter ids, so one list of legal transitions serves every save.
 export const transitionsOf = (packs: Packs) => Object.values(packs).flatMap((p) => p.artifacts.graph.encounterTransitions)
-export const adventureList = (packs: Packs) => Object.entries(packs).map(([id, p]) => ({ id, title: p.artifacts.manifest.title, start: p.artifacts.manifest.startEncounterId }))
-// The heroes a new game starts with. March of Davos uses the four premades that have stage art.
+// The heroes a new game suggests. March of Davos uses the four premades in its authored scenes.
 const PARTY: Record<string, string[]> = { "march-of-davos": ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"] }
+// What the new game screen offers for each adventure: its player range, premades, and the heroes it accepts.
+export const adventureList = (packs: Packs) =>
+  Object.entries(packs).map(([id, p]) => {
+    const m = p.artifacts.manifest
+    const premades = m.premadeCharacterIds.map((cid) => p.artifacts.characterSheets.premadeCharacters[cid].sheet)
+    return {
+      id,
+      title: m.title,
+      start: m.startEncounterId,
+      teaser: m.teaser ?? "",
+      players: [m.minPlayers ?? 1, m.maxPlayers ?? Math.max(1, premades.length)] as [number, number],
+      options: m.availableCharacterOptions ?? null,
+      premades: premades.map((s) => ({ id: s.id, name: s.name, race: s.race, archetype: s.archetype, gender: s.gender })),
+      party: PARTY[id] ?? m.premadeCharacterIds.slice(0, m.maxPlayers),
+    }
+  })
+export type AdventureInfo = ReturnType<typeof adventureList>[number]
 export const commandSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("load") }),
   // `replace` starts over, archiving the saved adventure.
-  z.object({ kind: z.literal("start"), provider: z.enum(["claude", "codex", "grok", "gemini"]), adventure: z.string().max(100).optional(), replace: z.boolean().optional() }),
+  z.object({
+    kind: z.literal("start"),
+    provider: z.enum(["claude", "codex", "grok", "gemini"]),
+    adventure: z.string().max(100).optional(),
+    replace: z.boolean().optional(),
+    // Who plays each hero. Without it, the suggested party, all played by the player.
+    party: z
+      .array(z.object({ id: z.string().max(100), ai: z.boolean() }))
+      .min(1)
+      .max(8)
+      .optional(),
+  }),
   z.object({
     kind: z.literal("reply"),
     turnId: z.string(),
@@ -57,7 +85,7 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
     loadWikiRuntime: async (_setting, plan) => packFor(plan),
     loadPlan: async (_setting, plan) => buildAdventurePlanViewFromArtifacts(packFor(plan).artifacts),
     loadLegacyPlan: async () => null,
-    spatialContext: async (_setting, _plan, encounter, characters) => spatialContext(encounter, characters, store.state?.positions ?? {}),
+    spatialContext: async (_setting, _plan, encounter, characters) => spatialContext(encounter, characters, store.state?.positions ?? {}, store.state?.figures),
   }
   let inferenceFailure: unknown
   const tracked: Llm = {
@@ -114,17 +142,15 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
       const encounter = artifacts.encounters[artifacts.manifest.startEncounterId]
       const id = randomUUID(),
         turnId = randomUUID()
-      const characters = buildLocalWikiTurnCharacters({
-        artifacts,
-        encounter,
-        players: (PARTY[plan] ?? artifacts.manifest.premadeCharacterIds).map((characterId) => ({ characterId, userId: "local-player" })),
-      })
+      const party = partyFor(packFor(plan), command.party ?? (PARTY[plan] ?? artifacts.manifest.premadeCharacterIds).map((id) => ({ id, ai: false })), store.heroes())
+      const characters = buildLocalWikiTurnCharacters({ artifacts, encounter, players: party.players, sheetsByCharacterId: party.sheets })
       store.replace({
         version: 1,
         provider: command.provider,
         rolls: {},
         movement: {},
         positions: {},
+        figures: party.figures,
         adventure: {
           _id: id,
           title: artifacts.manifest.title,
@@ -155,7 +181,8 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
     }
     if (store.state!.adventure.status === "completed") throw new Error("This adventure is complete.")
     if (command.kind === "continue") {
-      if (findCurrentActor(turn.characters)?.type === "pc") throw new Error("A player character still needs to act.")
+      const current = findCurrentActor(turn.characters)
+      if (current?.type === "pc" && current.controlledBy !== "ai") throw new Error("A player character still needs to act.")
       await autonomous()
       if (!findCurrentActor(store.current().characters)) {
         await core.advanceTurn({ turnId: turn._id, settingId: "realm-of-myr", adventurePlanId: store.state!.adventure.planId })
@@ -163,7 +190,7 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
       }
     } else {
       const actor = findCurrentActor(turn.characters)
-      if (actor?.id !== command.characterId || actor.type !== "pc") throw new Error("It is another character's turn.")
+      if (actor?.id !== command.characterId || actor.type !== "pc" || actor.controlledBy === "ai") throw new Error("It is another character's turn.")
       if (command.kind === "reply") {
         if (actor.hasReplied) throw new Error("This reply is already saved. Resolve the pending roll.")
         const action = await core.formatNarrativeAction({ characterName: actor.name, gender: actor.gender, playerInput: command.text, narrativeContext: turn.narrative, characterInfo: actor })
