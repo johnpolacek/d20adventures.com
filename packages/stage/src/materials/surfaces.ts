@@ -504,8 +504,23 @@ transformed.x += sway * sway * uWind * ${amp} * .6 * (1.0 + sin(uTime * .9 + ph)
   })
 }
 
-export function foliage(ctx: MaterialContext, bank: TextureBank, name: string, color: string, roughness = 0.9) {
-  return stageMaterial(new THREE.MeshStandardMaterial({ name, color, roughness, metalness: 0, map: bank.leaves(), alphaTest: 0.5, side: THREE.DoubleSide }), ctx.shared, "foliage")
+// Leaves. With a painted map (a clump of leaves cut out from the art) the builders lay crowns and bushes as clusters of
+// leaf cards instead of leafy spheres.
+export function foliage(ctx: MaterialContext, bank: TextureBank, name: string, color: string, roughness = 0.9, map?: THREE.Texture) {
+  const m = new THREE.MeshStandardMaterial({ name, color, roughness, metalness: 0, map: map ?? bank.leaves(), alphaTest: map ? 0.4 : 0.5, side: THREE.DoubleSide })
+  if (!map) return stageMaterial(m, ctx.shared, "foliage")
+  m.userData.cards = true
+  // Alpha-tested cards thin out and vanish in small mips, so distant crowns disappear. Boost alpha by the mip level
+  // being sampled, keeping the leaves' coverage at any distance.
+  return stageMaterial(m, ctx.shared, "foliagecards", (s) => {
+    s.fragmentShader = s.fragmentShader.replace(
+      "#include <alphatest_fragment>",
+      `{ vec2 ts = vec2(textureSize(map, 0)); vec2 dx = dFdx(vMapUv * ts), dy = dFdy(vMapUv * ts);
+ float mip = max(0.0, 0.5 * log2(max(dot(dx, dx), dot(dy, dy))));
+ diffuseColor.a *= 1.0 + mip * 0.3; }
+#include <alphatest_fragment>`
+    )
+  })
 }
 // Mist banks: soft unlit cloud cards in the fog's colour, blended over the scene and fogged with it.
 export function mist(ctx: MaterialContext, bank: TextureBank, name: string, color: string, opacity = 0.5) {

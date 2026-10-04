@@ -117,22 +117,22 @@ function pierSet() {
     { type: "trail", id: "bank-trail", points: trailPts, width: 1.3 },
     // The gangway runs from the bank down to the tug's bow, as in the art.
     { type: "pier", id: "gangway", at: [-1.3, 0, 9.8], yaw: 137.4, length: 6.8, width: 1.5, depth: 3.4, span: 2.2, rickety: 0.5 },
-    { type: "riverboat", id: "tug", at: [4.6, 0, -0.6], length: 14, beam: 4, draft: 2, sheer: 1, cabin: 0.55, saloon: 0.4, height: 2.35, materials: { helm: "helmGlass" } },
+    { type: "riverboat", id: "tug", at: [4.7, 0, -1], length: 17, beam: 4.6, draft: 2.2, sheer: 1.1, cabin: 0.55, saloon: 0.4, height: 2.7, materials: { helm: "helmGlass" } },
     { type: "lantern", at: [2.75, 0, 5.15], height: 1.45, post: true },
-    { type: "crate", at: [5.3, 0, -6.75], yaw: 12, size: 0.6 },
-    { type: "barrel", at: [3.95, 0, -6.8], r: 0.28, h: 0.75 },
+    { type: "crate", at: [5.4, 0, -8.3], yaw: 12, size: 0.6 },
+    { type: "barrel", at: [4.0, 0, -8.4], r: 0.28, h: 0.75 },
     { type: "torus", at: [4.6, 0.05, 4.6], radius: 0.24, tube: 0.05, pitch: 90, material: "rope" },
     // Tall mooring pilings round the tug, and lines to its bitts.
     ...[
       [3.05, 5.7, 2.3],
-      [2.55, 3.3, 1.8],
-      [2.3, -5.7, 1.6],
-      [6.6, -6.5, 2.7],
-      [6.95, -5.25, 2.2],
+      [2.25, 3.3, 1.8],
+      [1.9, -6.6, 1.6],
+      [7.45, -7.6, 2.7],
+      [7.45, -5.2, 2.2],
     ].map(([x, zz, top]) => ({ type: "beam", from: [x, -3.4, zz], to: [x, top, zz], radius: 0.13, radiusTo: 0.11, segments: 8, material: "post" })),
-    { type: "beam", from: [3.05, 1.5, 5.7], to: [4.1, 0.4, 4.72], radius: 0.03, material: "rope" },
-    { type: "beam", from: [2.3, 1.2, -5.7], to: [4.0, 0.4, -7.1], radius: 0.03, material: "rope" },
-    { type: "beam", from: [6.6, 2.0, -6.5], to: [5.2, 0.4, -7.1], radius: 0.03, material: "rope" },
+    { type: "beam", from: [3.05, 1.5, 5.7], to: [4.2, 0.4, 5.46], radius: 0.03, material: "rope" },
+    { type: "beam", from: [1.9, 1.2, -6.6], to: [4.1, 0.4, -9.0], radius: 0.03, material: "rope" },
+    { type: "beam", from: [7.45, 2.0, -7.6], to: [5.3, 0.4, -9.0], radius: 0.03, material: "rope" },
   ]
   // The west bank climbs steeply into wooded hills behind the tug, as in the art. Its foot keeps clear of the reeds,
   // the gangway's landing and the trail. Trees, bushes and moss sit on the same height function.
@@ -163,12 +163,13 @@ function pierSet() {
   const clearOf = (x: number, zz: number, reach = 0) => keepClear.every(([cx, cz, r]) => Math.hypot(x - cx, zz - cz) > r + reach)
   // Trees climb the hill, most of them near its foot where the camera sees them; understory oaks and big bushes
   // pile foliage up the slope into the wall of green beside the tug in the art.
+  const shrubs = { leaves: "shrub", leavesDark: "shrubDark" }
   const onHill = (x: number, zz: number, sink: number) => r2(Math.max(0, hill(x, zz)) - sink)
   const slope = (near: number, far: number) => {
     const zz = rnd(-98, 38)
     return [foot(zz) - near - (far - near) * rnd() ** 2, zz] as V2
   }
-  for (let k = 0; k < 150; k++) {
+  for (let k = 0; k < 220; k++) {
     const [x, zz] = slope(0.8, 50)
     if (!clearOf(x, zz)) continue
     const near = foot(zz) - x < 14 && zz > -45
@@ -182,23 +183,36 @@ function pierSet() {
       moss: near ? 0.95 : 0.35,
     })
   }
-  for (let k = 0; k < 60; k++) {
+  for (let k = 0; k < 100; k++) {
     const [x, zz] = slope(0.5, 14)
     if (zz < -60 || !clearOf(x, zz)) continue
     objects.push({ type: "tree", at: [r2(x), onHill(x, zz, 0.3), r2(zz)], kind: "oak", height: r2(rnd(6, 9)), lean: r2(rnd(8, 24)), leanYaw: r2(rnd(-30, 30)), moss: 1, low: true })
   }
-  for (let k = 0; k < 380; k++) {
+  for (let k = 0; k < 520; k++) {
     const [x, zz] = slope(-0.4, 22)
     const size = rnd(2.0, 4.6)
     if (!clearOf(x, zz, size * 0.7)) continue
-    objects.push({ type: "bush", at: [r2(x), onHill(x, zz, 0.3), r2(zz)], size: r2(size) })
+    objects.push({ type: "bush", at: [r2(x), onHill(x, zz, 0.3), r2(zz)], size: r2(size), materials: shrubs })
+  }
+  // The bank behind the tug is a wall of leaves down to the water, as in the art: big bushes at the water's edge and
+  // young trees leaning out over the river downstream of the gangway, where no camera stands.
+  for (let k = 0; k < 160; k++) {
+    const zz = rnd(-46, -3)
+    const x = rnd(-3, center(zz) - width(zz) / 2 + 0.4)
+    const size = rnd(2.4, 4.4)
+    objects.push({ type: "bush", at: [r2(x), onHill(x, zz, 0.3), r2(zz)], size: r2(size), materials: shrubs })
+  }
+  for (let k = 0; k < 26; k++) {
+    const zz = rnd(-44, -4)
+    const x = rnd(-2.5, center(zz) - width(zz) / 2 - 0.2)
+    objects.push({ type: "tree", at: [r2(x), onHill(x, zz, 0.3), r2(zz)], kind: "oak", height: r2(rnd(7, 11)), lean: r2(rnd(18, 34)), leanYaw: r2(rnd(-25, 25)), moss: 1, low: true })
   }
   // Ferns and small bushes on the flat strip between the hill and the water.
   for (let k = 0; k < 160; k++) {
     const zz = rnd(-60, 38)
     const x = rnd(foot(zz) + 0.2, -0.6)
     if (x >= -0.6 || !clearOf(x, zz, 1.4)) continue
-    objects.push(rnd() < 0.5 ? { type: "bush", at: [r2(x), 0, r2(zz)], size: r2(rnd(1.0, 2.2)) } : { type: "fern", at: [r2(x), 0, r2(zz)], size: r2(rnd(0.9, 1.5)) })
+    objects.push(rnd() < 0.5 ? { type: "bush", at: [r2(x), 0, r2(zz)], size: r2(rnd(1.0, 2.2)), materials: shrubs } : { type: "fern", at: [r2(x), 0, r2(zz)], size: r2(rnd(0.9, 1.5)) })
   }
   // Mist in banks down the river and along the hill, and a low sheet over the water.
   for (const [x, zz, w, h, layers, spacing] of [
@@ -231,7 +245,7 @@ function pierSet() {
       // Clear of the cameras that stand on the banks and of the trail.
       clear: [[-3.6, 12.8, 3.8], [-4.4, 1.8, 3], [-7.4, 31, 2.4], ...clearAlong(trailPts, 1.2)],
       items: [
-        { weight: 3, item: { type: "bush" }, vary: { size: [1.0, 2.3] } },
+        { weight: 3, item: { type: "bush", materials: shrubs }, vary: { size: [1.0, 2.3] } },
         { weight: 2, item: { type: "fern" }, vary: { size: [0.9, 1.5] } },
       ],
     })
@@ -280,7 +294,7 @@ function pierSet() {
     area: [18.5, -70, 40, 40],
     count: 200,
     items: [
-      { weight: 3, item: { type: "bush" }, vary: { size: [0.8, 1.9] } },
+      { weight: 3, item: { type: "bush", materials: shrubs }, vary: { size: [0.8, 1.9] } },
       { weight: 2, item: { type: "fern" }, vary: { size: [0.6, 1.2] } },
     ],
   })
@@ -329,14 +343,14 @@ function pierSet() {
       },
       hemisphere: { sky: "#2f7cb2", ground: "#0b2430", intensity: 0.8 },
       sky: { horizon: "#8ae2f2", mid: "#1f6a98", zenith: "#0a2c4c", gain: 0.95, clouds: 0.06, stars: 0 },
-      fog: { density: 0.042, color: "#3a88ac", start: 14 },
+      fog: { density: 0.03, color: "#3a88ac", start: 18 },
       glow: "#c2f4f2",
       fill: { color: "#ffffff", intensity: 3.5, distance: 12 },
       lights: [
-        { at: [4.6, 1.1, 0.4], color: "#ffa046", intensity: 42, distance: 12 },
-        { at: [4.6, 1.1, 1.6], color: "#ffa046", intensity: 32, distance: 11 },
-        { at: [4.6, 4.6, 0.12], color: "#ffb060", intensity: 4, distance: 6 },
-        { at: [6.5, -0.5, 0.9], color: "#ff9a40", intensity: 12, distance: 7 },
+        { at: [4.7, 1.25, 0.3], color: "#ffa046", intensity: 46, distance: 12 },
+        { at: [4.7, 1.25, 1.5], color: "#ffa046", intensity: 34, distance: 11 },
+        { at: [4.7, 5.3, 0.61], color: "#ffb060", intensity: 4, distance: 6 },
+        { at: [7.3, -0.5, 0.9], color: "#ff9a40", intensity: 12, distance: 7 },
         { at: [2.75, 1.6, 5.15], color: "#ffbc6a", intensity: 6, distance: 7 },
         { at: [-1.0, 2.6, 5.0], color: "#e2da74", intensity: 12, distance: 12 },
       ],
@@ -378,9 +392,11 @@ function pierSet() {
       water: { type: "water", color: "#051a2c", reflect: 2.4, ripple: 0.1, flow: [0, -1] },
       bark: painted("bark-moss", "#98a6a2", [0, 40], { size: [1.6, 2.4], relief: 0.14, variance: 0.25 }),
       birch: { type: "wood", a: "#8a9090", b: "#9aa0a0", c: "#6f7676", plank: [0, 40], relief: 0.04, variance: 0.6, seed: 7.7 },
-      leaves: { type: "foliage", color: "#2c5a2c" },
-      leavesDark: { type: "foliage", color: "#163a20" },
-      leavesLight: { type: "foliage", color: "#6a8c34" },
+      leaves: { type: "foliage", color: "#dce4b0", map: "/stage/textures/leaves-oak.webp" },
+      leavesDark: { type: "foliage", color: "#98a88c", map: "/stage/textures/leaves-oak.webp" },
+      leavesLight: { type: "foliage", color: "#f4f8b8", map: "/stage/textures/leaves-oak.webp" },
+      shrub: { type: "foliage", color: "#d0dcb0", map: "/stage/textures/leaves-broad.webp" },
+      shrubDark: { type: "foliage", color: "#94a488", map: "/stage/textures/leaves-broad.webp" },
       fern: { type: "foliage", color: "#33642e" },
       moss: { type: "card", map: "/stage/textures/moss-hanging.webp", tint: "#9cb4b0" },
       mist: { type: "mist", color: "#7cc4d8", opacity: 0.3 },
@@ -399,7 +415,7 @@ function pierSet() {
       void: { type: "plain", color: "#0d0a09", roughness: 1 },
       plank: painted("boards-weathered", "#7c7a74", [0, 40], { size: [0.8, 2.4], nails: 0.8, variance: 0.5, grime: 1.3 }),
       post: painted("cabin-dark", "#9c948c", [0, 40], { size: [0.6, 1.6], grime: 1.6 }),
-      rope: { type: "plain", color: "#6b5a40", roughness: 1 },
+      rope: painted("rope-hemp", "#9a8c74", [0, 40], { size: [0.25, 0.4], relief: 0.2, grime: 0.8 }),
       ...pick(gate, ["crate", "crateDark", "barrel", "iron", "flame", "pole"]),
     },
     objects,
@@ -409,7 +425,7 @@ function pierSet() {
       foredeck: { at: [4.35, 3.6], label: "the tug's foredeck" },
       cabinDoor: { at: [4.6, 2.6], label: "the saloon door" },
       bow: { at: [4.6, 5.3], label: "the bow" },
-      stern: { at: [4.6, -6.85], label: "the stern" },
+      stern: { at: [4.7, -8.6], label: "the stern" },
       reeds: { at: [-1.2, 4.6], label: "the reeds by the gangway" },
       bank: { at: [-2.4, 9.4], label: "the riverbank" },
       treeline: { at: [-6, 4], label: "the treeline" },
@@ -419,7 +435,7 @@ function pierSet() {
     shots: {
       river: { position: [10.8, 0.6, 15.5], target: [3.2, 2.1, -8], fov: 50, label: "The river" },
       pier: { position: [-3.6, 1.9, 12.8], target: [4.2, 1.3, 2.5], fov: 50, label: "The gangway" },
-      boat: { position: [10.5, 1.9, 9.5], target: [4.4, 1.5, 0.5], fov: 50, label: "The tug" },
+      boat: { position: [11.8, 2.0, 10.8], target: [4.5, 1.9, 0.3], fov: 50, label: "The tug" },
       reeds: { position: [-4.4, 1.0, 1.8], target: [1.4, 0.9, 6.8], fov: 50, label: "The reeds" },
       trail: { position: [-7.4, 1.7, 31], target: [-1.5, 1.4, 12], fov: 52, label: "The trail" },
       bank: { position: [5.2, 1.5, -12], target: [-6, 3.8, -4], fov: 55, label: "The wooded bank" },
@@ -549,10 +565,24 @@ function cabinSet() {
     // The crate: iron-banded, chained, too heavy to move.
     { type: "strongbox", id: "crate", at: [0, 0, -0.55], yaw: 6, width: 1.35, height: 0.97, depth: 0.92, materials: { iron: "crateIron" } },
     // Posts and hanging rope.
-    { type: "box", id: "post-port", at: [-1.2, 0, -0.45], size: [0.22, 2.36, 0.22], material: "post", solid: true },
-    { type: "box", id: "post-starboard", at: [1.25, 0, 0.55], size: [0.22, 2.36, 0.22], material: "post", solid: true },
-    { type: "beam", from: [-1.05, 2.36, -0.35], to: [-0.98, 0.25, -0.1], radius: 0.022, material: "rope" },
+    // The hold round the crate, as in its art: heavy iron-banded posts, knotted ropes hanging from the beams, chains
+    // along the fore wall and down a post, and rope coiled on the floor.
+    ...[
+      [-1.2, -0.45],
+      [1.25, 0.55],
+    ].flatMap(([x, zz]) => [
+      { type: "box", at: [x, 0, zz], size: [0.32, 2.36, 0.32], material: "post", solid: true },
+      ...[0.35, 1.55].map((y) => ({ type: "box", at: [x, y, zz], size: [0.34, 0.07, 0.34], material: "crateIron" })),
+    ]),
+    { type: "rope", from: [-0.98, 2.3, -0.2], to: [-0.72, 0.03, 0.25], sag: 0.04, radius: 0.026, knots: 3 },
+    { type: "rope", from: [-1.2, 2.25, 0.4], to: [-0.55, 0.03, 0.75], sag: 0.06, radius: 0.022, knots: 2 },
+    { type: "rope", from: [0.75, 2.3, -0.1], to: [1.1, 0.95, 0.5], sag: 0.12, radius: 0.026, knots: 2 },
+    { type: "rope", from: [-0.75, 0.03, 0.25], to: [0.55, 0.03, 0.35], sag: 0, radius: 0.026 },
     { type: "torus", at: [1.15, 0.05, -1.7], radius: 0.28, tube: 0.05, pitch: 90, material: "rope" },
+    { type: "torus", at: [1.15, 0.13, -1.7], radius: 0.22, tube: 0.05, pitch: 90, material: "rope" },
+    { type: "chain", from: [-1.65, 2.18, -2.9], to: [-0.1, 2.18, -2.9], sag: 0.22, link: 0.07, materials: { iron: "crateIron" } },
+    { type: "chain", from: [0.95, 2.18, -2.9], to: [1.68, 2.18, -2.9], sag: 0.14, link: 0.07, materials: { iron: "crateIron" } },
+    { type: "chain", from: [1.08, 2.2, 0.4], to: [0.95, 0.03, 0.15], sag: 0, link: 0.07, materials: { iron: "crateIron" } },
     // Stores along the walls, and candles.
     { type: "barrel", at: [-1.3, 0, 2.35], r: 0.32, h: 0.85 },
     { type: "barrel", at: [-0.65, 0, 2.55], r: 0.3, h: 0.8 },
@@ -602,6 +632,8 @@ function cabinSet() {
         { at: [-0.8, 1.55, 1.55], color: "#ffb060", intensity: 4, distance: 5 },
         { at: [-1.1, 1.15, -2.5], color: "#ffa850", intensity: 2, distance: 2.5 },
         { at: [1.35, 0.85, -2.2], color: "#ffa850", intensity: 1.6, distance: 2.5 },
+        // A warm light from above pools on the crate, as in its art.
+        { at: [0.05, 2.15, -0.4], color: "#ffc070", intensity: 5, distance: 3.2 },
         // Cold river light through the open door, as in The Fake.
         { at: [0.6, 1.5, 2.6], color: "#4fb4c4", intensity: 6, distance: 4 },
       ],
@@ -625,19 +657,19 @@ function cabinSet() {
       gauge: { type: "plain", color: "#d8cfb4", roughness: 0.8 },
       glass: { type: "plain", color: "#20383c", roughness: 0.3, emissive: "#4a96a2", emissiveIntensity: 0.9 },
       candle: { type: "plain", color: "#e6dcc0", roughness: 0.9 },
-      rope: { type: "plain", color: "#7a6448", roughness: 1 },
+      rope: painted("rope-hemp", "#c8b898", [0, 40], { size: [0.25, 0.4], relief: 0.2, grime: 0.6 }),
       parchment: { type: "plain", color: "#cbb78e", roughness: 1 },
       water: { type: "water", color: "#0a2329", reflect: 3.2, ripple: 0.35, flow: [1, 0] },
       bank: { type: "plain", color: "#1c3027", roughness: 1 },
       bark: painted("bark-moss", "#c0c8c0", [0, 40], { size: [1.2, 1.8], relief: 0.12, variance: 0.2 }),
-      leaves: { type: "foliage", color: "#26473c" },
-      leavesDark: { type: "foliage", color: "#163028" },
-      leavesLight: { type: "foliage", color: "#3a5e4c" },
+      leaves: { type: "foliage", color: "#b4c4b4", map: "/stage/textures/leaves-oak.webp" },
+      leavesDark: { type: "foliage", color: "#748478", map: "/stage/textures/leaves-oak.webp" },
+      leavesLight: { type: "foliage", color: "#d4e0c4", map: "/stage/textures/leaves-oak.webp" },
       moss: { type: "foliage", color: "#7c8f86" },
       ...pick(gate, ["crate", "crateDark", "barrel", "iron", "pole", "sack", "sackB"]),
       flame: { type: "plain", color: "#000000", roughness: 1, emissive: "#ffb262", emissiveIntensity: 1.8 },
       crateIron: { type: "metal", color: "#2e2824", roughness: 0.75, metalness: 0.5 },
-      crate: painted("crate-oak", "#a8a090", [0.2, 1.2], { size: [1.2, 2.4], nails: 1, grime: 1.2, relief: 0.1, variance: 0.35 }),
+      crate: painted("crate-oak", "#8e968c", [0.2, 1.2], { size: [1.2, 2.4], nails: 1, grime: 1.2, relief: 0.1, variance: 0.35 }),
     },
     objects,
     marks: {
@@ -651,7 +683,7 @@ function cabinSet() {
     shots: {
       cabin: { position: [-1.25, 1.65, -2.55], target: [0.55, 1.05, 3], fov: 60, label: "The cabin" },
       crate: { position: [0.55, 2.1, 1.95], target: [0, 0.45, -0.6], fov: 55, label: "The crate" },
-      chest: { position: [-0.45, 1.2, 1.15], target: [0.05, 0.42, -0.55], fov: 50, label: "The crate up close" },
+      chest: { position: [-0.5, 1.5, 1.8], target: [0.05, 0.38, -0.55], fov: 50, label: "The crate up close" },
       door: { position: [-0.15, 1.55, 0.05], target: [0.65, 1.3, 3], fov: 55, label: "The door" },
       helm: { position: [0.2, 1.45, 1.3], target: [0.2, 1.35, -3], fov: 58, label: "The helm" },
     },
@@ -827,9 +859,9 @@ function riverfrontSet() {
       rope: { type: "plain", color: "#4a3a2a", roughness: 1 },
       window: { type: "plain", color: "#1a1410", roughness: 1 },
       bark: { type: "wood", a: "#3a3228", b: "#4a3e32", c: "#2e2820", plank: [0, 40], relief: 0.07, variance: 0.5, seed: 4.2, grime: 0.8 },
-      leaves: { type: "foliage", color: "#4a6a32" },
-      leavesDark: { type: "foliage", color: "#33502a" },
-      leavesLight: { type: "foliage", color: "#6a8a40" },
+      leaves: { type: "foliage", color: "#d8e0c8", map: "/stage/textures/leaves-oak.webp" },
+      leavesDark: { type: "foliage", color: "#9aa890", map: "/stage/textures/leaves-oak.webp" },
+      leavesLight: { type: "foliage", color: "#f0f4d8", map: "/stage/textures/leaves-oak.webp" },
       trimWood: { type: "wood", a: "#5a4030", b: "#6e4f37", c: "#4a4038", plank: [0, 40], relief: 0.03, seed: 6.2 },
     },
     objects,
@@ -974,9 +1006,9 @@ function forestSet() {
         relief: 0.8,
       },
       bark: { type: "wood", a: "#56623a", b: "#6a7646", c: "#424a30", plank: [0, 40], relief: 0.09, variance: 0.8, seed: 4.9, grime: 0.5 },
-      leaves: { type: "foliage", color: "#4f6a2e" },
-      leavesDark: { type: "foliage", color: "#2f4220" },
-      leavesLight: { type: "foliage", color: "#7a8f3a" },
+      leaves: { type: "foliage", color: "#e0e4b8", map: "/stage/textures/leaves-oak.webp" },
+      leavesDark: { type: "foliage", color: "#a0a880", map: "/stage/textures/leaves-oak.webp" },
+      leavesLight: { type: "foliage", color: "#f4f0c0", map: "/stage/textures/leaves-oak.webp" },
       fern: { type: "foliage", color: "#4c6e32" },
       grass: { type: "grass", base: "#2a3c1c", tip: "#7a9a40" },
       stone: { type: "rock", a: "#4a5040", b: "#62684e", moss: "#3c5a22", mossLight: "#6a8a34", lichen: "#8a9474", mossAmount: 0.8, lichenAmount: 0.3, relief: 0.6 },

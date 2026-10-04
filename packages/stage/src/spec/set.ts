@@ -91,7 +91,8 @@ const glow = z.object({ type: z.literal("glow"), color, opacity: unit.optional()
 // Mist banks: soft cloud cards in the fog's colour, unlit and shadowless (see the `mist` builder).
 const mist = z.object({ type: z.literal("mist"), color, opacity: unit.optional() }).strict()
 // Leaves: painted leaf clusters with gaps, for tree crowns, bushes and ferns.
-const foliage = z.object({ type: z.literal("foliage"), color, roughness: unit.optional() }).strict()
+// With `map` (painted leaf clumps from scripts/stage-textures.ts) crowns and bushes are built from crossed leaf cards.
+const foliage = z.object({ type: z.literal("foliage"), color, roughness: unit.optional(), map: texture.optional() }).strict()
 const metal = z.object({ type: z.literal("metal"), color, roughness: unit.optional(), metalness: unit.optional() }).strict()
 const plain = z.object({ type: z.literal("plain"), color, roughness: unit.optional(), emissive: color.optional(), emissiveIntensity: num(0, 20).optional() }).strict()
 // Field stone with moss and lichen, painted from world position (menhirs, boulders, flagstones).

@@ -20,9 +20,11 @@ const OUT = "public/stage/textures"
 const ART = "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters"
 const SHIPMENT = `${ART}/the-shipment/dccea2c5-b22d-41e0-9467-95d8ea2301d5.png`
 const CRATE = `${ART}/the-crate/a3a863a9-dca9-48da-b3fe-e8c4ad90af3a.png`
+const DISTURBANCE = `${ART}/the-disturbance/e304a481-79a3-4c8d-a8da-ba9044991495.png`
 
-// `crop` is the reference's region to match, as fractions [left, top, width, height] of the art.
-type Texture = { subject: string; ref: string; crop: [number, number, number, number]; cutout?: boolean; size?: number }
+// `crop` is the reference's region to match, as fractions [left, top, width, height] of the art. Cut-outs are painted on
+// green, or on magenta when the subject itself is green (leaves).
+type Texture = { subject: string; ref: string; crop: [number, number, number, number]; cutout?: boolean; key?: "green" | "magenta"; size?: number }
 const TEXTURES: Record<string, Texture> = {
   "boards-weathered": {
     subject:
@@ -67,6 +69,30 @@ const TEXTURES: Record<string, Texture> = {
     cutout: true,
     size: 1024,
   },
+  "leaves-oak": {
+    subject:
+      "ONE dense rounded clump of small oval live-oak leaves on short twigs, filling most of the frame, its outer edge broken into separate leaf sprays with background showing between them: deep green leaves, dark blue-green in the hollows, yellow-green light on the leaf tips",
+    ref: SHIPMENT,
+    crop: [0.62, 0.0, 0.38, 0.5],
+    cutout: true,
+    key: "magenta",
+    size: 1024,
+  },
+  "leaves-broad": {
+    subject:
+      "ONE dense rounded clump of broad undergrowth leaves, heart-shaped and ivy-like, overlapping in layers and filling most of the frame, its outer edge broken into separate leaves with background showing between them: deep green with paler veins, dark in the hollows, soft highlights on the upper leaves",
+    ref: DISTURBANCE,
+    crop: [0.0, 0.45, 1.0, 0.55],
+    cutout: true,
+    key: "magenta",
+    size: 1024,
+  },
+  "rope-hemp": {
+    subject:
+      "the twisted strands of a thick old hemp rope, unrolled flat so they fill the frame: strands spiralling diagonally in parallel bands, worn tan-brown fibres with frayed hairs, dark grime in the grooves between strands",
+    ref: CRATE,
+    crop: [0.0, 0.0, 0.3, 0.7],
+  },
 }
 
 const TILE = (t: Texture) => `A square surface texture for a painted 3D game world, matching the reference image's painted art style.
@@ -85,9 +111,10 @@ const CUT = (t: Texture) => `A cut-out element for a painted 3D game world, matc
 Subject: ${t.subject}.
 
 Requirements:
-- Background: SOLID UNIFORM PURE GREEN (#00FF00) everywhere around and between the strands. No scenery, no branch, no text.
+- Background: SOLID UNIFORM PURE ${t.key === "magenta" ? "MAGENTA (#FF00FF)" : "GREEN (#00FF00)"} everywhere around and between the ${t.key === "magenta" ? "leaves" : "strands"}. No scenery, no branch, no text.
+- Even, soft light from above. No cast shadow on the background.
 - Painted in the reference's manner: oil painting, visible brushwork, its palette and soft misty light. NOT a photograph, NOT a 3D render.
-- Nothing green in the subject itself: the moss is grey-green to silver, never pure green.`
+- ${t.key === "magenta" ? "Nothing pink, purple or magenta in the subject itself." : "Nothing green in the subject itself: the moss is grey-green to silver, never pure green."}`
 
 async function reference(t: Texture) {
   const img = sharp(Buffer.from(await (await fetch(t.ref)).arrayBuffer()))
@@ -189,10 +216,12 @@ async function tile(path: string, size: number) {
 }
 
 // Distance from green keys the painting; a two-pixel erode drops the green fringe, then the spill is pulled out.
-async function cutout(path: string, size: number) {
+async function cutout(path: string, size: number, key: "green" | "magenta" = "green") {
   const { data, info } = await sharp(path).resize(size, size).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
   const { width: W, height: H } = info
-  for (let i = 0; i < data.length; i += 4) data[i + 3] = Math.round(255 * (1 - smooth(40, 120, data[i + 1] - Math.max(data[i], data[i + 2]))))
+  // How far each pixel leans toward the backdrop: green over red and blue, or red and blue over green.
+  const lean = (i: number) => (key === "green" ? data[i + 1] - Math.max(data[i], data[i + 2]) : Math.min(data[i], data[i + 2]) - data[i + 1])
+  for (let i = 0; i < data.length; i += 4) data[i + 3] = Math.round(255 * (1 - smooth(40, 120, lean(i))))
   let alpha = new Uint8Array(W * H).map((_, p) => data[p * 4 + 3])
   for (let pass = 0; pass < 1; pass++) {
     const src = alpha
@@ -212,7 +241,12 @@ async function cutout(path: string, size: number) {
   for (let p = 0; p < W * H; p++) {
     const i = p * 4
     data[i + 3] = alpha[p]
-    data[i + 1] = Math.min(data[i + 1], Math.round((data[i] + data[i + 2]) / 2 + 12))
+    if (key === "green") data[i + 1] = Math.min(data[i + 1], Math.round((data[i] + data[i + 2]) / 2 + 12))
+    else {
+      const cap = Math.round(data[i + 1] * 1.05 + 10)
+      data[i] = Math.min(data[i], cap)
+      data[i + 2] = Math.min(data[i + 2], cap)
+    }
   }
   return sharp(data, { raw: { width: W, height: H, channels: 4 } })
 }
@@ -222,7 +256,7 @@ async function make(id: string) {
   const { n, path } = await latest(id)
   if (!n) throw new Error(`${id}: no raw painting yet`)
   await mkdir(OUT, { recursive: true })
-  if (t.cutout) await (await cutout(path, t.size ?? 1024)).webp({ quality: 88, alphaQuality: 90 }).toFile(join(OUT, `${id}.webp`))
+  if (t.cutout) await (await cutout(path, t.size ?? 1024, t.key)).webp({ quality: 88, alphaQuality: 90 }).toFile(join(OUT, `${id}.webp`))
   else await (await tile(path, t.size ?? 1024)).jpeg({ quality: 86 }).toFile(join(OUT, `${id}.jpg`))
   console.log(`${id}: published from #${n}`)
 }

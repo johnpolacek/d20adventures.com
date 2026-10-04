@@ -78,7 +78,7 @@ export function createMaterialLibrary(specs: Record<string, MaterialSpec>, share
         m = burlap(ctx, bank, name, s.color, s.roughness)
         break
       case "foliage":
-        m = foliage(ctx, bank, name, s.color, s.roughness)
+        m = foliage(ctx, bank, name, s.color, s.roughness, s.map ? painted.get(s.map) : undefined)
         break
       case "glow":
         m = glow(ctx, bank, name, s.color, s.opacity)
@@ -126,6 +126,9 @@ export function createStubLibrary(specs: Record<string, MaterialSpec>): Material
   for (const [name, s] of Object.entries(specs)) {
     const m = new THREE.MeshBasicMaterial({ name })
     if (s.type === "wood" || s.type === "painted") m.userData.wood = true
+    // Builders choose geometry by these flags (leaf cards, moss curtains), so the check counts what will render.
+    if (s.type === "foliage" && s.map) m.userData.cards = true
+    if (s.type === "card") m.userData.card = true
     if (s.type === "cloth") m.userData.sway = true
     out.set(name, m)
   }

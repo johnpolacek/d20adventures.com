@@ -112,15 +112,18 @@
     },
     "leaves": {
       "type": "foliage",
-      "color": "#4f6a2e"
+      "color": "#e0e4b8",
+      "map": "/stage/textures/leaves-oak.webp"
     },
     "leavesDark": {
       "type": "foliage",
-      "color": "#2f4220"
+      "color": "#a0a880",
+      "map": "/stage/textures/leaves-oak.webp"
     },
     "leavesLight": {
       "type": "foliage",
-      "color": "#7a8f3a"
+      "color": "#f4f0c0",
+      "map": "/stage/textures/leaves-oak.webp"
     },
     "fern": {
       "type": "foliage",

@@ -96,6 +96,16 @@
       },
       {
         "at": [
+          0.05,
+          2.15,
+          -0.4
+        ],
+        "color": "#ffc070",
+        "intensity": 5,
+        "distance": 3.2
+      },
+      {
+        "at": [
           0.6,
           1.5,
           2.6
@@ -285,9 +295,19 @@
       "roughness": 0.9
     },
     "rope": {
-      "type": "plain",
-      "color": "#7a6448",
-      "roughness": 1
+      "type": "painted",
+      "map": "/stage/textures/rope-hemp.jpg",
+      "tint": "#c8b898",
+      "plank": [
+        0,
+        40
+      ],
+      "size": [
+        0.25,
+        0.4
+      ],
+      "relief": 0.2,
+      "grime": 0.6
     },
     "parchment": {
       "type": "plain",
@@ -327,15 +347,18 @@
     },
     "leaves": {
       "type": "foliage",
-      "color": "#26473c"
+      "color": "#b4c4b4",
+      "map": "/stage/textures/leaves-oak.webp"
     },
     "leavesDark": {
       "type": "foliage",
-      "color": "#163028"
+      "color": "#748478",
+      "map": "/stage/textures/leaves-oak.webp"
     },
     "leavesLight": {
       "type": "foliage",
-      "color": "#3a5e4c"
+      "color": "#d4e0c4",
+      "map": "/stage/textures/leaves-oak.webp"
     },
     "moss": {
       "type": "foliage",
@@ -344,7 +367,7 @@
     "crate": {
       "type": "painted",
       "map": "/stage/textures/crate-oak.jpg",
-      "tint": "#a8a090",
+      "tint": "#8e968c",
       "plank": [
         0.2,
         1.2
@@ -1237,50 +1260,152 @@
     },
     {
       "type": "box",
-      "id": "post-port",
       "at": [
         -1.2,
         0,
         -0.45
       ],
       "size": [
-        0.22,
+        0.32,
         2.36,
-        0.22
+        0.32
       ],
       "material": "post",
       "solid": true
     },
     {
       "type": "box",
-      "id": "post-starboard",
+      "at": [
+        -1.2,
+        0.35,
+        -0.45
+      ],
+      "size": [
+        0.34,
+        0.07,
+        0.34
+      ],
+      "material": "crateIron"
+    },
+    {
+      "type": "box",
+      "at": [
+        -1.2,
+        1.55,
+        -0.45
+      ],
+      "size": [
+        0.34,
+        0.07,
+        0.34
+      ],
+      "material": "crateIron"
+    },
+    {
+      "type": "box",
       "at": [
         1.25,
         0,
         0.55
       ],
       "size": [
-        0.22,
+        0.32,
         2.36,
-        0.22
+        0.32
       ],
       "material": "post",
       "solid": true
     },
     {
-      "type": "beam",
+      "type": "box",
+      "at": [
+        1.25,
+        0.35,
+        0.55
+      ],
+      "size": [
+        0.34,
+        0.07,
+        0.34
+      ],
+      "material": "crateIron"
+    },
+    {
+      "type": "box",
+      "at": [
+        1.25,
+        1.55,
+        0.55
+      ],
+      "size": [
+        0.34,
+        0.07,
+        0.34
+      ],
+      "material": "crateIron"
+    },
+    {
+      "type": "rope",
       "from": [
-        -1.05,
-        2.36,
-        -0.35
+        -0.98,
+        2.3,
+        -0.2
       ],
       "to": [
-        -0.98,
-        0.25,
+        -0.72,
+        0.03,
+        0.25
+      ],
+      "sag": 0.04,
+      "radius": 0.026,
+      "knots": 3
+    },
+    {
+      "type": "rope",
+      "from": [
+        -1.2,
+        2.25,
+        0.4
+      ],
+      "to": [
+        -0.55,
+        0.03,
+        0.75
+      ],
+      "sag": 0.06,
+      "radius": 0.022,
+      "knots": 2
+    },
+    {
+      "type": "rope",
+      "from": [
+        0.75,
+        2.3,
         -0.1
       ],
-      "radius": 0.022,
-      "material": "rope"
+      "to": [
+        1.1,
+        0.95,
+        0.5
+      ],
+      "sag": 0.12,
+      "radius": 0.026,
+      "knots": 2
+    },
+    {
+      "type": "rope",
+      "from": [
+        -0.75,
+        0.03,
+        0.25
+      ],
+      "to": [
+        0.55,
+        0.03,
+        0.35
+      ],
+      "sag": 0,
+      "radius": 0.026
     },
     {
       "type": "torus",
@@ -1293,6 +1418,72 @@
       "tube": 0.05,
       "pitch": 90,
       "material": "rope"
+    },
+    {
+      "type": "torus",
+      "at": [
+        1.15,
+        0.13,
+        -1.7
+      ],
+      "radius": 0.22,
+      "tube": 0.05,
+      "pitch": 90,
+      "material": "rope"
+    },
+    {
+      "type": "chain",
+      "from": [
+        -1.65,
+        2.18,
+        -2.9
+      ],
+      "to": [
+        -0.1,
+        2.18,
+        -2.9
+      ],
+      "sag": 0.22,
+      "link": 0.07,
+      "materials": {
+        "iron": "crateIron"
+      }
+    },
+    {
+      "type": "chain",
+      "from": [
+        0.95,
+        2.18,
+        -2.9
+      ],
+      "to": [
+        1.68,
+        2.18,
+        -2.9
+      ],
+      "sag": 0.14,
+      "link": 0.07,
+      "materials": {
+        "iron": "crateIron"
+      }
+    },
+    {
+      "type": "chain",
+      "from": [
+        1.08,
+        2.2,
+        0.4
+      ],
+      "to": [
+        0.95,
+        0.03,
+        0.15
+      ],
+      "sag": 0,
+      "link": 0.07,
+      "materials": {
+        "iron": "crateIron"
+      }
     },
     {
       "type": "barrel",
@@ -1763,13 +1954,13 @@
     },
     "chest": {
       "position": [
-        -0.45,
-        1.2,
-        1.15
+        -0.5,
+        1.5,
+        1.8
       ],
       "target": [
         0.05,
-        0.42,
+        0.38,
         -0.55
       ],
       "fov": 50,

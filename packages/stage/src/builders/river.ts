@@ -1,7 +1,7 @@
 import * as THREE from "three"
 import { z } from "zod"
 import { beam, Frame, G, M4, type Sink, shape, V, type Vec2 } from "../kit/geometry"
-import { defineBuilder, num, size } from "./types"
+import { defineBuilder, num, size, vec3 } from "./types"
 
 // Rivers and harbours: a riverboat with a lit cabin, a pier on pilings, and sailing ships at their moorings. Decks and
 // pier boards sit at y = 0, where people stand; hulls and pilings reach down past the set's water line.
@@ -259,7 +259,7 @@ export const riverboat = defineBuilder(
     F.box(M.void, -Wc * 0.2, 0.95, z0 - 0.015, 0.7, 1.8, 0.03)
     pane(Wc * 0.22, Hc * 0.62, z0 - 0.015, 0.36, 0.44, "z", true)
     // The pilothouse, forward on the cabin top, with a rounded roof.
-    const Lp = Math.min(2.1, Lc * 0.38)
+    const Lp = Math.min(2.6, Lc * 0.38)
     const Wp = Wc * 0.82
     const Hp = Hc * 0.74
     const pz = z1 - Lp / 2 - 0.15
@@ -467,6 +467,75 @@ export const strongbox = defineBuilder(
     ctx.footprint(0, 0, W / 2 + 0.05, D / 2 + 0.05)
   },
   { wood: "crate", inner: "crateDark", iron: "iron" }
+)
+
+// Points from a to b sagging by `sag` at the middle, as a hanging line does.
+function sagging(a: THREE.Vector3, c: THREE.Vector3, sag: number, n: number) {
+  return Array.from({ length: n + 1 }, (_, i) => {
+    const t = i / n
+    return a
+      .clone()
+      .lerp(c, t)
+      .add(V(0, -4 * sag * t * (1 - t), 0))
+  })
+}
+
+// A rope from `from` to `to` (in the object's frame), sagging between them, with knots along it.
+export const hangingRope = defineBuilder(
+  z
+    .object({
+      from: vec3,
+      to: vec3,
+      sag: num(0, 20).default(0.1),
+      radius: size(0.5).default(0.03),
+      knots: z.number().int().min(0).max(12).default(0),
+      segments: z.number().int().min(1).max(48).default(10),
+    })
+    .strict(),
+  (ctx, p) => {
+    const pts = sagging(V(...p.from), V(...p.to), p.sag, p.segments)
+    for (let i = 0; i < pts.length - 1; i++) beam(ctx.b, ctx.M.rope, pts[i], pts[i + 1], p.radius, 7)
+    for (let k = 0; k < p.knots; k++) {
+      const at = pts[Math.round(((k + 1) / (p.knots + 1)) * p.segments)]
+      ctx.b.add(
+        G("knot", () => new THREE.SphereGeometry(1, 8, 6)),
+        ctx.M.rope,
+        M4(at.x, at.y, at.z, ctx.rand(0, Math.PI), p.radius * 2.2, p.radius * 2.6, p.radius * 2.2),
+        { uv: "keep" }
+      )
+    }
+  },
+  { rope: "rope" }
+)
+
+// An iron chain from `from` to `to`, sagging between them: oval links, each turned a quarter from the last.
+export const chainLine = defineBuilder(
+  z
+    .object({
+      from: vec3,
+      to: vec3,
+      sag: num(0, 20).default(0.2),
+      link: size(0.3).default(0.06),
+    })
+    .strict(),
+  (ctx, p) => {
+    const a = V(...p.from)
+    const c = V(...p.to)
+    const n = Math.min(400, Math.max(2, Math.round((a.distanceTo(c) + p.sag * 1.5) / (p.link * 0.8))))
+    const pts = sagging(a, c, p.sag, n)
+    const ring = G(`link${p.link}`, () => new THREE.TorusGeometry(p.link * 0.36, p.link * 0.1, 5, 12).scale(1, 1.45, 1))
+    const up = V(0, 1, 0)
+    for (let i = 0; i < n; i++) {
+      const mid = pts[i]
+        .clone()
+        .add(pts[i + 1])
+        .multiplyScalar(0.5)
+      const dir = pts[i + 1].clone().sub(pts[i]).normalize()
+      const q = new THREE.Quaternion().setFromUnitVectors(up, dir).multiply(new THREE.Quaternion().setFromAxisAngle(up, i % 2 ? Math.PI / 2 : 0))
+      ctx.b.add(ring, ctx.M.iron, new THREE.Matrix4().compose(mid, q, V(1, 1, 1)), { uv: "keep" })
+    }
+  },
+  { iron: "iron" }
 )
 
 // A pier: boards across a walkway of `length` along +z, on pilings that reach below the water, with taller mooring posts

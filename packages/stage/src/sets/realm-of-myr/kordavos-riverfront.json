@@ -734,15 +734,18 @@
     },
     "leaves": {
       "type": "foliage",
-      "color": "#4a6a32"
+      "color": "#d8e0c8",
+      "map": "/stage/textures/leaves-oak.webp"
     },
     "leavesDark": {
       "type": "foliage",
-      "color": "#33502a"
+      "color": "#9aa890",
+      "map": "/stage/textures/leaves-oak.webp"
     },
     "leavesLight": {
       "type": "foliage",
-      "color": "#6a8a40"
+      "color": "#f0f4d8",
+      "map": "/stage/textures/leaves-oak.webp"
     },
     "trimWood": {
       "type": "wood",

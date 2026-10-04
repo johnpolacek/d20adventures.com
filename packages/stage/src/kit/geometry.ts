@@ -175,6 +175,11 @@ export class Batch implements Sink {
       for (const a of Object.values(merged.attributes)) (a as THREE.BufferAttribute).onUpload(dropArray)
       const m = new THREE.Mesh(merged, material)
       m.castShadow = cast && !material.userData.noShadow
+      // Leaf cards cast the shadow of their leaves, not of their squares.
+      if (material.userData.cards) {
+        const src = material as THREE.MeshStandardMaterial
+        m.customDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: src.map, alphaTest: src.alphaTest, side: THREE.DoubleSide })
+      }
       m.receiveShadow = receive
       m.matrixAutoUpdate = false
       m.name = `static:${material.name}`
