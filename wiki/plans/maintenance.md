@@ -15,6 +15,7 @@ Stageview delivery is tracked [separately](stageview.md). This pass changed docu
 | Cannot clear some editor fields | `updateSection` in `admin-wiki-adventure-editor.tsx` returns original content for a blank markdown section. Existing frontmatter fields can be set to an empty string. | Define supported clearing semantics and verify save/refresh. |
 | Legacy no-next-encounter completion | `markAdventureCompleteWithoutNextEncounter` sets timestamps without `status: "completed"`. The wiki terminal path does set status. | Verify remaining legacy reachability, then fix or remove the helper. |
 | Guard test differs from live mutation | `lib/wiki-adventures/convex-session.ts` rejects stale content, while live `commitWikiTurnAdvance` re-pins content. The rollback check tests separate artifact modules. | Align coverage with live content-edit behavior and keep module-level guarantees explicit. |
+| Desktop gate Party view blocked | The desktop starts the party at the head of the gate line. Its Party group shot then sits under the merchant stall canopy, with the authored party too. Seen in a 2026-10-03 browser check. | Reframe the Party shot for the desktop's queue position. |
 | Repository-wide formatting | Last recorded full Biome check on 2026-09-29 reported 24 formatting/import-order errors outside the removal branch. | Re-establish the baseline before a formatting cleanup. Lint passing does not imply check passing. |
 
 ## Validation still to establish

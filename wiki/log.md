@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-04, desktop heroes, AI companions, and all four adventures
+
+Owner chose stock figures first with art painted through Codex or Grok as an upgrade, You or AI per hero with AI as the default, and a short creation flow. On `feature/desktop-heroes`, unmerged: the desktop app bundles all four Myr adventures, keeps a local hero roster, drafts a hero from race, class, name and an idea in one CLI call, and starts a party of premades and roster heroes within each adventure's rules. AI heroes play through the core's companion path. Scenes map any party onto their slots. Fourteen stock standees and four premade standees were painted with the checked-in `scripts/stage-standees.ts`. Paint makes a hero's standee through the player's own Codex or Grok, keyed locally. With live Claude, The Road to Kordavos played to its end with two created heroes, one played by the AI. The packaged app showed a Grok-painted hero at the Kordavos gate and ran an AI turn. See [the plan](plans/feature-desktop-heroes.md).
+
 ## 2026-10-03, desktop Stageview merged into main
 
 Merged `feature/desktop-stage-play` into main as `e96a0de` with `wt:finish`. It brings the desktop app, the shared GM core, the stage package, both adventures' 3D sets and the Midnight Summons art. The branch plan is archived at [plans/zzz-completed](plans/zzz-completed/feature-desktop-stage-play.md). Remaining work is distribution, more 3D sets, and character creation. The worktree's Convex project still needs deleting in the dashboard.
