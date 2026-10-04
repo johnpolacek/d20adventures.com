@@ -10,7 +10,7 @@
 // never printed. Review every front against its description before keying: a pose or costume can come back wrong.
 
 import { existsSync } from "node:fs"
-import { appendFile, mkdir, readdir, readFile, writeFile } from "node:fs/promises"
+import { appendFile, mkdir, readdir, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import sharp from "sharp"
