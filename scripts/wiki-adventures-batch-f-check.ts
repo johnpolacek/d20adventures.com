@@ -6,7 +6,7 @@ function main() {
   const schema = readFileSync("convex/schema.ts", "utf8")
   const adventure = readFileSync("convex/adventure.ts", "utf8")
   const turns = readFileSync("convex/turns.ts", "utf8")
-  const finalization = readFileSync("lib/services/advance-turn-finalization-service.ts", "utf8")
+  const finalization = readFileSync("packages/gm-core/src/services/advance-turn-finalization-service.ts", "utf8")
 
   for (const required of ["currentEncounterId", "contentRef", "adventureSummaryMarkdown", "discoveries", "entityUpdates", "openThreads", "resolvedThreadIds"]) {
     assert.ok(schema.includes(required), `schema missing ${required}`)
@@ -17,7 +17,7 @@ function main() {
   assert.ok(adventure.includes("commitWikiTurnAdvance"), "guarded commit mutation missing")
   assert.ok(adventure.includes("Stale turn advance: current turn changed"), "stale current turn guard missing")
   assert.ok(adventure.includes("Stale turn advance: current encounter changed"), "stale current encounter guard missing")
-  assert.ok(adventure.includes("Stale turn advance: content hash changed"), "stale content hash guard missing")
+  assert.ok(adventure.includes("contentRefRepin"), "content drift must re-pin the runtime version")
   assert.ok(turns.includes("contentRef"), "turns patchAdventure does not allow contentRef")
   assert.ok(finalization.includes("currentEncounterId: args.newTurn.encounterId"), "legacy finalization does not maintain currentEncounterId")
 

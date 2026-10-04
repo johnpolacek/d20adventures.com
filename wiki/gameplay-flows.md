@@ -2,7 +2,7 @@
 
 [Home](index.md) · [Architecture](Architecture.md) · [Wiki adventures](wiki-adventures.md) · [Testing](plans/testing-runbook.md)
 
-Reviewed against local main on 2026-10-01.
+GM core references updated in `feature/gm-core` on 2026-10-02. Other sections last reviewed against local main on 2026-10-01.
 
 ## Create, join, and start
 
@@ -13,6 +13,8 @@ Reviewed against local main on 2026-10-01.
 5. Practice mode restricts access to the managing user and allows that user to control the chosen party.
 
 Primary actions are under `app/_actions/create-adventure.ts`, `join-adventure.ts`, and `start-adventure.ts`.
+
+The [shared GM core](gm-core.md) now owns reply, roll, NPC, companion, and advance orchestration. Server adapters preserve the current storage, model, auth, and narration behavior.
 
 ## Turn progression
 

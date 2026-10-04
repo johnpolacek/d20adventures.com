@@ -24,6 +24,7 @@ export function TurnOrder({ order, activeId, label, compact = false, onPick }: {
               type="button"
               onClick={() => onPick(c.id)}
               title={c.name}
+              aria-label={c.name}
               aria-current={active ? "true" : undefined}
               className={cn(
                 "relative overflow-hidden border bg-stage-ink p-[2px] shadow-[0_4px_14px_#0008] transition-all duration-300",
@@ -32,9 +33,17 @@ export function TurnOrder({ order, activeId, label, compact = false, onPick }: {
                 c.npc && !active && "border-[#8a4a3a]/70"
               )}
             >
-              {c.portrait && (
+              {c.portrait ? (
                 // biome-ignore lint/performance/noImgElement: portrait art from the stage assets
                 <img src={c.portrait} alt="" className="block h-full w-full object-cover object-top [filter:sepia(.2)_saturate(.88)]" />
+              ) : (
+                <span aria-hidden="true" className="grid h-full place-items-center font-display text-sm text-stage-gold">
+                  {c.name
+                    .split(" ")
+                    .slice(0, 2)
+                    .map((part) => part[0])
+                    .join("")}
+                </span>
               )}
               {c.npc && !compact && <span className="absolute inset-x-0 bottom-0 bg-[#3a1a12]/85 text-[7px] tracking-[0.2em] text-[#f0c9a8]">NPC</span>}
             </button>

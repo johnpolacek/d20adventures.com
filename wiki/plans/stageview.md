@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Stage engine](../stage-engine.md) · [Roadmap](../roadmap.md)
 
-Status: Active. Reviewed 2026-10-01 against local main; turn-page demo merged 2026-10-01.
+Status: Active. Desktop integration added 2026-10-02 in `feature/desktop-stage-play`, unmerged. The public scripted demo remains separate.
 
 The old 3D stack and engine port are complete. Stageview currently runs at `/dev/stage`, and a scripted stage-first turn page for the gate scene runs at `/dev/turn` and publicly at `/demo/kordavos`. The player turn page still uses text, Storyview narration, and optional 2D maps.
 
@@ -51,9 +51,11 @@ Owner decisions from the turn-page mock, 2026-09-29 to 2026-10-01 (details in [S
 
 ### Phase 4, stage-first gameplay
 
+The first real local client is implemented in [Desktop Stageview integration](feature-desktop-stage-play.md): native stage, player input, dice, NPCs, journal, local saves, and authored transitions. Remaining work includes richer generated beats, complete set coverage, and multiplayer.
+
 - Render Stageview across the turn-page viewport and dock the complete text turn UI over it.
 - Build the stage-first turn page in the [desktop app](desktop-local-play.md), not the web app. Web play is deprecated once the desktop app ships (owner decision, 2026-10-01).
-- Settle the dock layout. Current proposal is a side panel in landscape and a bottom sheet on portrait tablets.
+- Keep the cinematic HUD and bottom reply card. Desktop narration steps through before opening the reply or roll card.
 - Add a server-side character-art pipeline from portrait to world-style front/back standees. Restore server-side chroma keying, store art in S3, and decide token pricing. Premades can be prepared ahead of time.
 - Generate validated per-turn beats from resolved narrative. Proposed vocabulary is shots, movement to marks/paths, gestures, quoted dialogue, and effects.
 - Persist deterministic beats and starting/end poses so replay and multiplayer stay consistent. Positions are game state (decision above).

@@ -1,0 +1,433 @@
+{
+  "baseline": "7ff0b2d",
+  "playerInput": "I try to deceive Garlan into waiving the entrance fee by falsely claiming I am an invited Harvest Festival performer. \"The festival organizers are expecting me inside.\"",
+  "initialState": {
+    "_id": "turn-1",
+    "adventureId": "fixture-adventure",
+    "encounterId": "the-gates-of-kordavos",
+    "title": "The Gates of Kordavos",
+    "narrative": "As the adventurers approach the grand gates of Kordavos, they are greeted by the sight of towering stone archways adorned with vibrant Asterian and Valkaran banners fluttering in the breeze. The sound of laughter, music, and lively chatter fills the air, signaling the ongoing festivities of the Harvest Festival just beyond the gates.\n\nHowever, before they can join the revelry, they find themselves in a long line of travelers, merchants, and villagers all waiting to be inspected by the city guard. A few guards move among the crowd, occasionally pulling aside individuals for further questioning.\n\n\"Next!\" shouts a burly Asterian guard with a stern face but kind eyes. Stepping forward, he inspects each person meticulously. \"State your business in Kordavos,\" he demands from each group. \"There is a fee of three marks for entrance.\"",
+    "characters": [
+      {
+        "id": "mira",
+        "name": "Mira",
+        "type": "pc",
+        "userId": "fixture-player",
+        "race": "Human",
+        "archetype": "Ranger",
+        "gender": "female",
+        "attributes": {
+          "strength": 12,
+          "dexterity": 15,
+          "constitution": 12,
+          "intelligence": 10,
+          "wisdom": 14,
+          "charisma": 11
+        },
+        "skills": [],
+        "equipment": [],
+        "spells": [],
+        "image": "",
+        "healthPercent": 100,
+        "initiative": 20,
+        "hasReplied": false,
+        "isComplete": false
+      },
+      {
+        "id": "garlan-ironfist",
+        "name": "Garlan Ironfist",
+        "image": "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725143818361",
+        "archetype": "Fighter",
+        "race": "Human",
+        "gender": "Male",
+        "appearance": "A burly man with a stern face, kind eyes, and a well-groomed beard. He wears the polished armor of the Kordavos city guard, with a blue-and-gold tabard showcasing the city's crest.",
+        "personality": "Diligent and fair, Garlan takes his duty seriously but can show kindness to those who need it.",
+        "behavior": "Diligent and fair, Garlan takes his duty seriously but can show kindness to those who need it.",
+        "healthPercent": 100,
+        "type": "npc",
+        "initiative": 10,
+        "hasReplied": false,
+        "isComplete": false
+      }
+    ],
+    "order": 1
+  },
+  "finalState": [
+    {
+      "_id": "fixture-adventure",
+      "ownerId": "fixture-player",
+      "settingId": "realm-of-myr",
+      "planId": "march-of-davos",
+      "status": "active",
+      "playerIds": [
+        "fixture-player"
+      ],
+      "players": [
+        {
+          "userId": "fixture-player",
+          "characterId": "mira"
+        }
+      ],
+      "currentTurnId": "turn-2",
+      "currentEncounterId": "the-harvest-festival",
+      "contentRef": {
+        "source": "published",
+        "settingId": "realm-of-myr",
+        "planId": "march-of-davos",
+        "contentVersion": "2026-07-29T00-00-00Z-march-of-davos-companions",
+        "contentHash": "4779fd1b5eccd81fbe07d91259b623358948f9ceb3070ad23cb76957bdd28efc",
+        "versionId": "local-march-of-davos-companions",
+        "schemaVersion": "1"
+      }
+    },
+    {
+      "_id": "turn-1",
+      "adventureId": "fixture-adventure",
+      "encounterId": "the-gates-of-kordavos",
+      "title": "The Gates of Kordavos",
+      "narrative": "As the adventurers approach the grand gates of Kordavos, they are greeted by the sight of towering stone archways adorned with vibrant Asterian and Valkaran banners fluttering in the breeze. The sound of laughter, music, and lively chatter fills the air, signaling the ongoing festivities of the Harvest Festival just beyond the gates.\n\nHowever, before they can join the revelry, they find themselves in a long line of travelers, merchants, and villagers all waiting to be inspected by the city guard. A few guards move among the crowd, occasionally pulling aside individuals for further questioning.\n\n\"Next!\" shouts a burly Asterian guard with a stern face but kind eyes. Stepping forward, he inspects each person meticulously. \"State your business in Kordavos,\" he demands from each group. \"There is a fee of three marks for entrance.\"\n\n[OriginalReply: I try to deceive Garlan into waiving the entrance fee by falsely claiming I am an invited Harvest Festival performer. \"The festival organizers are expecting me inside.\"]\nI try to deceive Garlan into waiving the entrance fee by falsely claiming I am an invited Harvest Festival performer. \"The festival organizers are expecting me inside.\"\n\n[DiceRoll:rollType=Deception;baseRoll=20;modifier=-1;result=19;difficulty=14;character=Mira;image=;success=true]\n\nGarlan studies Mira for a long moment, then his stern expression softens as he nods and steps aside with a grunt of approval. \"Can't keep the festival waiting,\" he rumbles, waving her through the towering archway without collecting a single mark before turning back to bellow \"Next!\" at the line.\n\nGarlan calls after Mira as she passes beneath the archway, his kind eyes crinkling.\n\n\"Mind your purse in the crowds, performer. The festival draws more than music lovers, \" he says.\n\nHe turns back to the waiting line and plants his feet. He sizes up the next group of travelers with a meticulous eye.",
+      "characters": [
+        {
+          "id": "mira",
+          "name": "Mira",
+          "type": "pc",
+          "userId": "fixture-player",
+          "race": "Human",
+          "archetype": "Ranger",
+          "gender": "female",
+          "attributes": {
+            "strength": 12,
+            "dexterity": 15,
+            "constitution": 12,
+            "intelligence": 10,
+            "wisdom": 14,
+            "charisma": 11
+          },
+          "skills": [],
+          "equipment": [],
+          "spells": [],
+          "image": "",
+          "healthPercent": 100,
+          "initiative": 20,
+          "hasReplied": true,
+          "isComplete": true,
+          "rollResult": 19
+        },
+        {
+          "id": "garlan-ironfist",
+          "name": "Garlan Ironfist",
+          "image": "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725143818361",
+          "archetype": "Fighter",
+          "race": "Human",
+          "gender": "Male",
+          "appearance": "A burly man with a stern face, kind eyes, and a well-groomed beard. He wears the polished armor of the Kordavos city guard, with a blue-and-gold tabard showcasing the city's crest.",
+          "personality": "Diligent and fair, Garlan takes his duty seriously but can show kindness to those who need it.",
+          "behavior": "Diligent and fair, Garlan takes his duty seriously but can show kindness to those who need it.",
+          "healthPercent": 100,
+          "type": "npc",
+          "initiative": 10,
+          "hasReplied": true,
+          "isComplete": true
+        }
+      ],
+      "order": 1,
+      "updatedAt": 1790912610999
+    },
+    {
+      "_id": "turn-2",
+      "adventureId": "fixture-adventure",
+      "encounterId": "the-harvest-festival",
+      "title": "The Harvest Festival",
+      "narrative": "Behind Mira, Garlan's voice booms another \"Next!\" as the line shuffles forward. The shadow of the towering stone archway falls away, and the full warmth of the Harvest Festival rushes in to greet her.\n\nAsterian and Valkaran banners snap overhead in the breeze. Laughter, music, and lively chatter spill through the streets of Kordavos. The festival stretches out before her, alive and inviting, and the city's secrets wait somewhere within its revelry.\n\nBeyond the gates, are the sights, sounds, and smells of the annual Valkaran Harvest Festival. Stalls line the streets, showcasing crafts and goods from all over Thylún. Street performers are everywhere, jugglers, acrobats, and fire-eaters, each competing for the attention of the bustling crowds. The aroma of roasted meats, sweet pastries, and spiced wines is almost intoxicating, drawing people to the food stalls.\n\n\"Come, try your luck!\" a vendor shouts, gesturing to a game of chance where players can win small trinkets and toys. Another stall features a fortune teller, Madam Zephyra, who peers into a crystal ball, her face partially concealed by a veil. \"I see great things in your future, \" she whispers to a customer with a mysterious smile.\n\nIn the center of the square, a stage has been erected where musicians play lively Valkaran tunes, and dancers invite onlookers to join in the merriment. Children dart through the crowd, laughing and playing games. The atmosphere is infectious, making it hard for anyone to resist getting caught up in the celebration.",
+      "characters": [
+        {
+          "id": "mira",
+          "name": "Mira",
+          "type": "pc",
+          "userId": "fixture-player",
+          "race": "Human",
+          "archetype": "Ranger",
+          "gender": "female",
+          "attributes": {
+            "strength": 12,
+            "dexterity": 15,
+            "constitution": 12,
+            "intelligence": 10,
+            "wisdom": 14,
+            "charisma": 11
+          },
+          "skills": [],
+          "equipment": [],
+          "spells": [],
+          "image": "",
+          "healthPercent": 100,
+          "initiative": 17,
+          "hasReplied": false,
+          "isComplete": false,
+          "rollResult": 19
+        },
+        {
+          "id": "karim-the-jewel-merchant",
+          "name": "Karim the Jewel Merchant",
+          "image": "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725141974945",
+          "archetype": "Trader",
+          "race": "Human",
+          "gender": "Male",
+          "appearance": "A middle-aged man with a neatly trimmed beard, wearing an embroidered tunic adorned with various gemstones.",
+          "personality": "Charismatic, shrewd, always looking for the next big deal.",
+          "behavior": "Charismatic, shrewd, always looking for the next big deal.",
+          "healthPercent": 100,
+          "specialAbilities": [],
+          "type": "npc",
+          "initiative": 17,
+          "hasReplied": false,
+          "isComplete": false
+        },
+        {
+          "id": "madam-zephyra",
+          "name": "Madam Zephyra",
+          "image": "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725142158675",
+          "archetype": "Fortune Teller",
+          "race": "Elf",
+          "gender": "Female",
+          "appearance": "Tall and slender, with piercing green eyes that seem to see through one's soul, dressed in flowing, colorful robes with mystical symbols.",
+          "personality": "Mysterious, wise, speaks in riddles.",
+          "behavior": "Mysterious, wise, speaks in riddles.",
+          "healthPercent": 100,
+          "type": "npc",
+          "initiative": 17,
+          "hasReplied": false,
+          "isComplete": false
+        },
+        {
+          "id": "finnian-the-fire-eater",
+          "name": "Finnian the Fire-Eater",
+          "image": "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725142650394",
+          "archetype": "Performer",
+          "race": "Halfling",
+          "gender": "Male",
+          "appearance": "A small, nimble figure with a mischievous grin, wearing a leather vest and a bandana to keep his hair back.",
+          "personality": "Energetic, daring, loves to entertain and show off his skills.",
+          "behavior": "Energetic, daring, loves to entertain and show off his skills.",
+          "healthPercent": 100,
+          "type": "npc",
+          "initiative": 17,
+          "hasReplied": false,
+          "isComplete": false
+        },
+        {
+          "id": "liora-the-spice-merchant",
+          "name": "Liora the Spice Merchant",
+          "image": "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725142385947",
+          "archetype": "Trader",
+          "race": "Human",
+          "gender": "Female",
+          "appearance": "Short and stout with a braided beard and hair, dressed in earthy tones with a belt full of small, exotic spice jars.",
+          "personality": "Warm, knowledgeable, always ready to share a story or a cooking tip.",
+          "behavior": "Warm, knowledgeable, always ready to share a story or a cooking tip.",
+          "healthPercent": 100,
+          "type": "npc",
+          "initiative": 17,
+          "hasReplied": false,
+          "isComplete": false
+        },
+        {
+          "id": "merrick-the-musician",
+          "name": "Merrick the Musician",
+          "image": "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725142728914",
+          "archetype": "Bard",
+          "race": "Half-Elf",
+          "gender": "Male",
+          "appearance": "Lithe and graceful, with pointed ears and long, flowing hair, carrying a lute and wearing colorful, patchwork clothing.",
+          "personality": "Charming, soulful, enjoys bringing joy to others through music.",
+          "behavior": "Charming, soulful, enjoys bringing joy to others through music.",
+          "healthPercent": 100,
+          "type": "npc",
+          "initiative": 17,
+          "hasReplied": false,
+          "isComplete": false
+        }
+      ],
+      "order": 2
+    }
+  ],
+  "calls": [
+    {
+      "prompt": "Fix ONLY formatting and punctuation errors in this text. Do NOT change the content, words, or narrative style. Only fix:\n- Missing opening/closing quotation marks\n- Incorrect punctuation spacing\n- Capitalization errors\n- Basic grammar mistakes\n\nKeep the exact same words, dialogue, actions, and narrative voice. Return the corrected text with minimal changes.\n\nOriginal text:\nI try to deceive Garlan into waiving the entrance fee by falsely claiming I am an invited Harvest Festival performer. \"The festival organizers are expecting me inside.\"\n\nCorrected text:",
+      "response": "I try to deceive Garlan into waiving the entrance fee by falsely claiming I am an invited Harvest Festival performer. \"The festival organizers are expecting me inside.\""
+    },
+    {
+      "prompt": "\nEncounter Intro:\nAs the adventurers approach the grand gates of Kordavos, they are greeted by the sight of towering stone archways adorned with vibrant Asterian and Valkaran banners fluttering in the breeze. The sound of laughter, music, and lively chatter fills the air, signaling the ongoing festivities of the Harvest Festival just beyond the gates.\n\nHowever, before they can join the revelry, they find themselves in a long line of travelers, merchants, and villagers all waiting to be inspected by the city guard. A few guards move among the crowd, occasionally pulling aside individuals for further questioning.\n\n\"Next!\" shouts a burly Asterian guard with a stern face but kind eyes. Stepping forward, he inspects each person meticulously. \"State your business in Kordavos,\" he demands from each group. \"There is a fee of three marks for entrance.\"\nEncounter Instructions:\nThis is an opportunity for each player to introduce their character to the story.\nRecent Narrative Context:\nAs the adventurers approach the grand gates of Kordavos, they are greeted by the sight of towering stone archways adorned with vibrant Asterian and Valkaran banners fluttering in the breeze. The sound of laughter, music, and lively chatter fills the air, signaling the ongoing festivities of the Harvest Festival just beyond the gates.\n\nHowever, before they can join the revelry, they find themselves in a long line of travelers, merchants, and villagers all waiting to be inspected by the city guard. A few guards move among the crowd, occasionally pulling aside individuals for further questioning.\n\n\"Next!\" shouts a burly Asterian guard with a stern face but kind eyes. Stepping forward, he inspects each person meticulously. \"State your business in Kordavos,\" he demands from each group. \"There is a fee of three marks for entrance.\"\n\nCharacter Context:\nName: Mira\nArchetype: Ranger\nRace: Human\nAttributes: STR 12, DEX 15, CON 12, INT 10, WIS 14, CHA 11\n\n\nYou are a Dungeon Master adjudicating whether a dice roll is needed.\n\n1) First, respect the encounter instructions. If they explicitly allow an action without checks (e.g., paying a stated fee) and the player follows that procedure plainly, choose no roll.\n\n2) NEVER require rolls for basic social interactions between player characters, such as:\n   - Simple introductions, greetings, or conversations\n   - Approaching another party member to talk\n   - Sharing information within the party\n   - Basic cooperation or coordination\n   These are fundamental party interactions that should always succeed automatically.\n\n3) Default bias: prefer NO roll unless there is concrete uncertainty, opposition, concealment, meaningful risk, or real time pressure. Routine actions should succeed automatically.\n\n4) Passive observation actions: Actions like \"watching\", \"listening\", \"observing\", \"keeping watch\", or \"staying still and observing\" are passive and do NOT require Stealth rolls. These are routine observation actions that succeed automatically. Only require Perception if there's something specific and hidden to notice, and only if the narrative context suggests uncertainty about noticing it.\n\n5) Otherwise, call for a roll when the outcome is uncertain, opposed, risky, concealed, time‑sensitive, or dependent on skill. Use a general RPG rubric:\n   - Social influence: Persuasion (cooperation/charm), Deception (mislead/falsehoods), Intimidation (threat/pressure), Performance (entertain/present).\n   - Avoiding notice vs. manual finesse: Stealth (actively avoid being seen/heard while moving or acting - NOT for passive observation), Sleight of Hand (quick, precise, or concealed manipulation of small items) or specific special skills like pickpocketing, climbing walls, detecting or disabling traps, lockpicking, palming objects).\n   - Sleight of Hand specificity: Select Sleight of Hand ONLY when the player's text explicitly attempts theft, pickpocketing, palming/planting an item, a covert handoff, or concealed manipulation of an object against an observer. Do not infer theft intent from flourish, style, or glances. Plain payment or routine handover of coins, even with charm or flourish, does not require Sleight of Hand.\n   - Acrobatics specificity: Use Acrobatics ONLY for agility/precision stunts (balancing across a narrow beam, tumbling through hostile space, leaping a gap, vaulting obstacles, slipping bonds). Do NOT require Acrobatics for normal movement like walking, jogging, or threading through an ordinary crowd unless the text describes a stunt or the scene explicitly imposes obstacles/time pressure that demand acrobatic precision.\n   - Observation and reasoning: Perception (notice/sense something specific and hidden), Investigation (search/analyze evidence), Insight (read motives/intent).\n   - Physical challenges: Athletics (power/endurance), Acrobatics (agility/balance/precision movement).\n   - Knowledge and expertise: Arcana, History, Nature, Medicine, Religion as appropriate; Survival and Animal Handling for wilderness/creature control.\n   - Spellcasting: If the player is attempting to cast a specific spell (like Charm Person, Fireball, Detect Magic, Identify, etc.), use the spell name followed by \"Check\" (e.g., \"Charm Person Check\", \"Detect Magic Check\", \"Identify Check\") and adjust the difficulty based on the type of spell. If the action is general magical manipulation without a specific spell, use \"Arcana\".\n   - SPELL AVAILABILITY: Check the character's spell list. Spells marked as \"Used (unavailable this encounter)\" CANNOT be cast again until the next encounter. If a player attempts to cast a spell that is marked as used/unavailable, set rollType to \"none\" and difficulty to 0 - the spell simply fails to activate.\n   - Combat actions: if the action is an attack or contests defenses directly, treat as an Attack roll.\n\nIMPORTANT: There are good and evil characters. This is an important aspect of rpg. Do not sanitize the action or the character's intent.\n\n6) Movement and routine actions: actions like paying a fee, approaching/following someone at a normal pace, or catching up in a non-hostile, ordinary environment should not require a roll unless the narrative clearly frames it as a chase or obstacle course.\n\n7) If the action simply follows established procedure (e.g., pays fee, answers routine question) without concealment, opposition, or special risk, choose no roll. Paying a posted fee or routine handover, even with flair or charm, should not require a check.\n\n8) Already obtained knowledge: If the narrative context shows a character already SUCCEEDED at a knowledge check (Arcana, History, Religion, Nature, etc.) and learned specific information, they do NOT need another roll to simply share or recall that information. Check the narrative for previous successful rolls and what information was revealed. Simply communicating already-known facts is automatic.\n\n9) Select the most fitting single check and set a DC using:\n    - If NO roll is required, set \"rollType\" to \"none\" and \"difficulty\" to 0.\n\nDifficulty guidelines:\n- 5 very easy, 6-9 easy, 10-11 average, 12-14 moderate, 15-17 hard, 18-20 very hard, 21-25 nearly impossible.\n\nUse the character's abilities, spells, skills, and equipment when selecting the roll type and setting difficulty.\n\nAction: \"I try to deceive Garlan into waiving the entrance fee by falsely claiming I am an invited Harvest Festival performer. \"The festival organizers are expecting me inside.\"\"\n",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "rollType": {
+            "type": "string"
+          },
+          "difficulty": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "modifier": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "rollType",
+          "difficulty"
+        ],
+        "additionalProperties": false
+      },
+      "response": "{\"rollType\":\"Deception\",\"difficulty\":14,\"modifier\":0}"
+    },
+    {
+      "prompt": "\nGiven the following scenario, roll requirement, and character (paying attention to their archetype, skills, and how they might interact with the environment), determine if there should be an additional situational bonus or penalty (modifier) to the roll.\nThis modifier should reflect:\n1. Environmental factors (e.g., darkness, weather, noise).\n2. How the character's specific archetype (e.g., a Ranger's attunement to forests, a Rogue's expertise in shadows) or skills (e.g., Survival, Stealth, Perception proficiency in certain conditions) would uniquely affect their performance in THIS specific situation.\n\nNote: The character's raw ability score modifier (e.g., from Wisdom for Perception) has ALREADY been factored in. You are to provide ONLY the additional modifier based on the situation and the character's specific fitness for it.\n\nScenario: {\n  \"encounterIntro\": \"This is an opportunity for each player to introduce their character to the story.\",\n  \"encounterInstructions\": \"This is an opportunity for each player to introduce their character to the story.\",\n  \"narrativeContext\": \"As the adventurers approach the grand gates of Kordavos, they are greeted by the sight of towering stone archways adorned with vibrant Asterian and Valkaran banners fluttering in the breeze. The sound of laughter, music, and lively chatter fills the air, signaling the ongoing festivities of the Harvest Festival just beyond the gates.\\n\\nHowever, before they can join the revelry, they find themselves in a long line of travelers, merchants, and villagers all waiting to be inspected by the city guard. A few guards move among the crowd, occasionally pulling aside individuals for further questioning.\\n\\n\\\"Next!\\\" shouts a burly Asterian guard with a stern face but kind eyes. Stepping forward, he inspects each person meticulously. \\\"State your business in Kordavos,\\\" he demands from each group. \\\"There is a fee of three marks for entrance.\\\"\"\n}\nRoll Requirement: {\n  \"rollType\": \"Deception\",\n  \"difficulty\": 14,\n  \"modifier\": 0\n}\nCharacter: {\n  \"id\": \"mira\",\n  \"name\": \"Mira\",\n  \"type\": \"pc\",\n  \"userId\": \"fixture-player\",\n  \"race\": \"Human\",\n  \"archetype\": \"Ranger\",\n  \"gender\": \"female\",\n  \"attributes\": {\n    \"strength\": 12,\n    \"dexterity\": 15,\n    \"constitution\": 12,\n    \"intelligence\": 10,\n    \"wisdom\": 14,\n    \"charisma\": 11\n  },\n  \"skills\": [],\n  \"equipment\": [],\n  \"spells\": [],\n  \"image\": \"\",\n  \"healthPercent\": 100,\n  \"initiative\": 20,\n  \"hasReplied\": false,\n  \"isComplete\": false\n}\n\nRespond in JSON: { \"modifier\": number } (can be negative, zero, or positive).\n",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "modifier": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "modifier"
+        ],
+        "additionalProperties": false
+      },
+      "response": "{\"modifier\":-1}"
+    },
+    {
+      "prompt": "Context:\n\"Next!\" shouts a burly Asterian guard with a stern face but kind eyes. Stepping forward, he inspects each person meticulously. \"State your business in Kordavos,\" he demands from each group. \"There is a fee of three marks for entrance.\"\n\n[OriginalReply: I try to deceive Garlan into waiving the entrance fee by falsely claiming I am an invited Harvest Festival performer. \"The festival organizers are expecting me inside.\"]\nI try to deceive Garlan into waiving the entrance fee by falsely claiming I am an invited Harvest Festival performer. \"The festival organizers are expecting me inside.\"\n\nEncounter Instructions:\nThis is an opportunity for each player to introduce their character to the story.\n\nCRITICAL: The encounter instructions may contain conditional statements (e.g., \"If X is present...\"). Only reference characters, objects, or events mentioned in conditionals if those conditions are actually met in the current scene. Do NOT assume conditional elements are present unless explicitly confirmed.\n\nNPCs ACTUALLY PRESENT in this encounter:\nGarlan Ironfist\n\nIMPORTANT: Only reference NPCs listed above. Do NOT reference characters mentioned in conditional statements unless they are confirmed to be present.\n\nPlayer action (verbatim): \"\"\"[OriginalReply: I try to deceive Garlan into waiving the entrance fee by falsely claiming I am an invited Harvest Festival performer. \"The festival organizers are expecting me inside.\"]\nI try to deceive Garlan into waiving the entrance fee by falsely claiming I am an invited Harvest Festival performer. \"The festival organizers are expecting me inside.\"\"\"\"\n  \nA dice roll was made for Mira: Deception (Result: 19, Difficulty: 14, Margin: 5).\n\n  Guidelines:\n  - ALWAYS generate narrative if NPCs are present and the action relates to them (attacking, hiding from, avoiding, reacting to, interacting with, etc.). Actions that respond to NPC threats or presence should be narrated.\n  - Generate narrative for successful rolls that affect or respond to NPCs (e.g., successfully hiding from a monster, avoiding an attack, etc.).\n  - Do not narrate speech or actions for player characters.\n  - Only output nothing if the action is EXCLUSIVELY between player characters with no NPC involvement AND no environmental consequences.\n  - Do not invent new objects, people, events, or details. Use only the encounter instructions/intro and established narrative.\n  - Only reference NPCs that are actually present (listed above).\n\nWrite a single, concise, immersive third-person PRESENT-tense narrative paragraph (exactly two sentences, max 60 words) describing the immediate outcome of the roll. Focus on how the NPC(s) react, perceive, or are affected by the action, or describe the environmental/atmospheric result of the successful roll.\n\nWrite in third person PRESENT tense. Do not use lists, bullet points, or markdown formatting. Do not use semicolons. Never mention game mechanics, dice, or rules.\n\nOutput only the narrative paragraph.",
+      "response": "Garlan studies Mira for a long moment, then his stern expression softens as he nods and steps aside with a grunt of approval. \"Can't keep the festival waiting,\" he rumbles, waving her through the towering archway without collecting a single mark before turning back to bellow \"Next!\" at the line."
+    },
+    {
+      "prompt": "You are the DM for a tabletop RPG. Given the following context, decide what action the NPC should take this turn. Be creative and act as a real DM would. Output a short narrative for the action.\n\nAdventure Overview: The March of Davos, a wild frontier in the Realm of Myr, is a land of stark contrasts where the ancient ways of its native Valkaran people are constantly challenged by the expansionist Asterian Empire. Kordavos, the capital, serves as a vital trade hub and a nexus of underlying tensions, political intrigue, and forgotten magic. Adventurers are drawn into this dynamic setting, often arriving in Kordavos during the annual Valkaran Harvest Festival. Their journey quickly leads them into the heart of the city's conflicts, whether by investigating a missing noble shipment containing ancient Valkaran relics for the Blackthorn family or by seeking a vanished individual like Joran Antonov, who was pursuing dangerous truths about his father's mysterious death.\n\nAs the adventurers delve deeper, they become entangled with Kordavos's three powerful rival clans: the Blackthorns, who have aligned with Asterian customs to amass wealth and power; the opportunistic Raskov Clan, known for their smuggling operations; and the traditionalist Valtor Clan, deeply rooted in Valkaran heritage and the Church of Valkara. The investigation reveals that a mysterious organization, the Covenant of the Cowl, is at play. Initially suspected of being connected to the Raskovs, the Covenant is, in fact, the clandestine wing of the Valtor Clan, secretly working to undermine Asterian influence and restore Valkaran dominance, even orchestrating events like the sabotage of noble shipments.\n\nThe narrative escalates during a lavish Blackthorn Masquerade Ball, where political machinations come to a head. A shocking assassination occurs, directly linked to the Covenant and revealing their secret network of underground tunnels beneath the city. The pursuit into these catacombs leads to a climactic confrontation where Joran Antonov, previously a missing person, is dramatically revealed as the Champion of the Covenant. He accuses Astrid Blackthorn of his father's murder and reveals his possession of the \"Key of Ilmarin,\" an artifact with the power to magically secure or unlock any opening. At this critical juncture, the adventurers face a pivotal choice: expose the Valtor Clan's hidden operations, bring down the Covenant, or align with their radical agenda to preserve Valkaran traditions against the powerful Blackthorn family. This decision will determine the future of Kordavos and the delicate balance of power within the March of Davos.\n\nEncounter Intro: As the adventurers approach the grand gates of Kordavos, they are greeted by the sight of towering stone archways adorned with vibrant Asterian and Valkaran banners fluttering in the breeze. The sound of laughter, music, and lively chatter fills the air, signaling the ongoing festivities of the Harvest Festival just beyond the gates.\n\nHowever, before they can join the revelry, they find themselves in a long line of travelers, merchants, and villagers all waiting to be inspected by the city guard. A few guards move among the crowd, occasionally pulling aside individuals for further questioning.\n\n\"Next!\" shouts a burly Asterian guard with a stern face but kind eyes. Stepping forward, he inspects each person meticulously. \"State your business in Kordavos,\" he demands from each group. \"There is a fee of three marks for entrance.\"\n\nEncounter Instructions: This is an opportunity for each player to introduce their character to the story.\n\nNPC Behavior: Diligent and fair, Garlan takes his duty seriously but can show kindness to those who need it.\n\nRecent Narrative:\nAs the adventurers approach the grand gates of Kordavos, they are greeted by the sight of towering stone archways adorned with vibrant Asterian and Valkaran banners fluttering in the breeze. The sound of laughter, music, and lively chatter fills the air, signaling the ongoing festivities of the Harvest Festival just beyond the gates.\n\nHowever, before they can join the revelry, they find themselves in a long line of travelers, merchants, and villagers all waiting to be inspected by the city guard. A few guards move among the crowd, occasionally pulling aside individuals for further questioning.\n\n\"Next!\" shouts a burly Asterian guard with a stern face but kind eyes. Stepping forward, he inspects each person meticulously. \"State your business in Kordavos,\" he demands from each group. \"There is a fee of three marks for entrance.\"\n\n[OriginalReply: I try to deceive Garlan into waiving the entrance fee by falsely claiming I am an invited Harvest Festival performer. \"The festival organizers are expecting me inside.\"]\nI try to deceive Garlan into waiving the entrance fee by falsely claiming I am an invited Harvest Festival performer. \"The festival organizers are expecting me inside.\"\n\n[DiceRoll:rollType=Deception;baseRoll=20;modifier=-1;result=19;difficulty=14;character=Mira;image=;success=true]\n\nGarlan studies Mira for a long moment, then his stern expression softens as he nods and steps aside with a grunt of approval. \"Can't keep the festival waiting,\" he rumbles, waving her through the towering archway without collecting a single mark before turning back to bellow \"Next!\" at the line.\n\n\nNPC Details:\n- Name: Garlan Ironfist\n- Race: Human\n- Archetype: Fighter\n- Equipment: None\n- Skills: None\n- Spells: None\n- Health: 100%\n- Status: Normal\n\n\nYOUR TASK:\nYou are the DM. Your SOLE responsibility right now is to decide the action for ONE specific NPC.\n\n**THE CURRENT NPC IS: Garlan Ironfist** (ID: garlan-ironfist, Type: npc)\n\nCRITICAL: When the NPC attacks or uses equipment, you MUST use ONLY the weapons and items listed in their Equipment above. Do NOT invent or reference weapons they don't have.\n\nCRITICAL: When the NPC casts spells, they may ONLY use spells marked as \"Available\" in their Spells list above. Spells marked as \"Used (unavailable this encounter)\" have already been cast and CANNOT be used again until the next encounter. If the NPC has no available spells, they must use physical actions or equipment instead.\n\nCRITICAL: Pay close attention to the NPC's behavior and role. The NPC behavior section describes their specific responsibilities, motivations, and how they should act in this encounter. This is the most important context for determining their action.\n\n**CRITICAL: Dead or unconscious player characters (HP 0% or status \"Dead\"/\"Unconscious\") cannot act and should be ignored. Do NOT target them with attacks or actions. Focus only on active, conscious player characters. If a character is dead or unconscious, the NPC should acknowledge this in their narrative but not attempt to interact with them.**\n\n**IMPORTANT: Before deciding the NPC's action, carefully review the 'Recent Narrative' to understand what has ALREADY happened. If a player character has already completed a task (like casting a spell, detecting magic, or performing an action), the NPC should react to that completed action appropriately. Do NOT ask the player to do something they have already done. Instead, the NPC should respond to what has been completed or ask for the next step in the process.**\n\nBased on all the context provided, determine the most logical action for **Garlan Ironfist** to take. The 'Recent Narrative' describes what other characters have already done. Do NOT repeat or continue actions for other characters. Your response must be exclusively about **Garlan Ironfist**.\n\nIMPORTANT: If the NPC would realistically speak during this action (conversations, negotiations, threats, commands, etc.), include their actual dialogue in quotes. However, if the NPC is a non-speaking creature (like a mindless beast or monster) or the action doesn't involve speaking (pure physical actions, stealth, etc.), use descriptive narrative instead.\n\nSTYLE AND FORMAT RULES:\n- Write in present tense, third person.\n- No markdown, no lists, no bullets.\n- Do not use em dashes (—), en dashes, or semicolons. Use commas or periods instead.\n- Keep sentences short and clear.\n- **FORMATTING REQUIREMENT**: Write 1-2 compact paragraphs. Use \\n\\n (double newlines) between paragraphs. Each paragraph should use 1-2 short sentences.\n- Put each spoken line of dialogue on its own line. Dialogue should use straight quotes (\"...\") and may include dialogue tags like says/asks/replies.\n\nIf the NPC would realistically skip or pass their turn (e.g., waiting, observing, preparing, doing nothing), set actionType to \"skip\" or \"pass\" and provide appropriate narrative. For example:\n- Skip action: 'The goblin scout remains hidden in the shadows, carefully observing the party's movements before making his next move.'\n- Pass action: 'The wounded orc takes a defensive stance, catching his breath and waiting for an opening.'\n\nExamples:\n- Speaking NPC: 'Silas steps forward, his voice calm but firm. \"We need to complete this task quickly and quietly,\" he says, his eyes scanning the area for threats.'\n- Non-speaking creature: 'The dire wolf snarls, its hackles raised as it prepares to pounce on the nearest target.'\n- Physical action: 'The guard silently draws his sword, positioning himself to block the exit.'\n\nIf the NPC's action involves giving items to a player character, include an \"effects\" array. Each object in \"effects\" should have a \"targetId\" (the ID of the character receiving items) and an \"equipmentToAdd\" array listing the items ({name: string, description?: string}).\n\nTargetable Player Characters (alive and conscious): Mira (IDs: mira)\n\n\nRespond as JSON. The 'narrative' and 'actionSummary' fields must describe the action of **Garlan Ironfist** and no one else.\n{\n  actionSummary: string, // e.g., \"Faelar strums a tune on his lute to lighten the mood.\"\n  narrative: string, // e.g., \"Faelar, noticing the tension, pulls out his lute. 'A somber crowd for a festival!' he jests, beginning a lighthearted melody.\"\n  actionType: \"attack\" | \"skill\" | \"skip\" | \"pass\" | \"other\",\n  effects?: [ { targetId: string, equipmentToAdd?: [{name: string, description?: string}] } ]\n}",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "actionSummary": {
+            "type": "string"
+          },
+          "narrative": {
+            "type": "string"
+          },
+          "actionType": {
+            "default": "other",
+            "type": "string",
+            "enum": [
+              "attack",
+              "skill",
+              "skip",
+              "pass",
+              "other"
+            ]
+          },
+          "effects": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "targetId": {
+                  "type": "string"
+                },
+                "equipmentToAdd": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "targetId"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "actionSummary",
+          "narrative",
+          "actionType"
+        ],
+        "additionalProperties": false
+      },
+      "response": "{\"actionSummary\":\"Garlan offers Mira a friendly word of advice as she passes, then turns back to inspect the next travelers in line.\",\"narrative\":\"Garlan calls after Mira as she passes beneath the archway, his kind eyes crinkling.\\n\\n\\\"Mind your purse in the crowds, performer. The festival draws more than music lovers,\\\" he says.\\n\\nHe turns back to the waiting line and plants his feet. He sizes up the next group of travelers with a meticulous eye.\",\"actionType\":\"other\"}"
+    },
+    {
+      "prompt": "\nEncounter Intro:\nAs the adventurers approach the grand gates of Kordavos, they are greeted by the sight of towering stone archways adorned with vibrant Asterian and Valkaran banners fluttering in the breeze. The sound of laughter, music, and lively chatter fills the air, signaling the ongoing festivities of the Harvest Festival just beyond the gates.\n\nHowever, before they can join the revelry, they find themselves in a long line of travelers, merchants, and villagers all waiting to be inspected by the city guard. A few guards move among the crowd, occasionally pulling aside individuals for further questioning.\n\n\"Next!\" shouts a burly Asterian guard with a stern face but kind eyes. Stepping forward, he inspects each person meticulously. \"State your business in Kordavos,\" he demands from each group. \"There is a fee of three marks for entrance.\"\nEncounter Instructions:\nThis is an opportunity for each player to introduce their character to the story.\nRecent Narrative Context:\nAs the adventurers approach the grand gates of Kordavos, they are greeted by the sight of towering stone archways adorned with vibrant Asterian and Valkaran banners fluttering in the breeze. The sound of laughter, music, and lively chatter fills the air, signaling the ongoing festivities of the Harvest Festival just beyond the gates.\n\nHowever, before they can join the revelry, they find themselves in a long line of travelers, merchants, and villagers all waiting to be inspected by the city guard. A few guards move among the crowd, occasionally pulling aside individuals for further questioning.\n\n\"Next!\" shouts a burly Asterian guard with a stern face but kind eyes. Stepping forward, he inspects each person meticulously. \"State your business in Kordavos,\" he demands from each group. \"There is a fee of three marks for entrance.\"\n\n[OriginalReply: I try to deceive Garlan into waiving the entrance fee by falsely claiming I am an invited Harvest Festival performer. \"The festival organizers are expecting me inside.\"]\nI try to deceive Garlan into waiving the entrance fee by falsely claiming I am an invited Harvest Festival performer. \"The festival organizers are expecting me inside.\"\n\n[DiceRoll:rollType=Deception;baseRoll=20;modifier=-1;result=19;difficulty=14;character=Mira;image=;success=true]\n\nGarlan studies Mira for a long moment, then his stern expression softens as he nods and steps aside with a grunt of approval. \"Can't keep the festival waiting,\" he rumbles, waving her through the towering archway without collecting a single mark before turning back to bellow \"Next!\" at the line.\n\nCharacter Context:\nName: Garlan Ironfist\nArchetype: Fighter\nRace: Human\nPersonality: Diligent and fair, Garlan takes his duty seriously but can show kindness to those who need it.\n\n\nYou are a Dungeon Master adjudicating whether a dice roll is needed.\n\n1) First, respect the encounter instructions. If they explicitly allow an action without checks (e.g., paying a stated fee) and the player follows that procedure plainly, choose no roll.\n\n2) NEVER require rolls for basic social interactions between player characters, such as:\n   - Simple introductions, greetings, or conversations\n   - Approaching another party member to talk\n   - Sharing information within the party\n   - Basic cooperation or coordination\n   These are fundamental party interactions that should always succeed automatically.\n\n3) Default bias: prefer NO roll unless there is concrete uncertainty, opposition, concealment, meaningful risk, or real time pressure. Routine actions should succeed automatically.\n\n4) Passive observation actions: Actions like \"watching\", \"listening\", \"observing\", \"keeping watch\", or \"staying still and observing\" are passive and do NOT require Stealth rolls. These are routine observation actions that succeed automatically. Only require Perception if there's something specific and hidden to notice, and only if the narrative context suggests uncertainty about noticing it.\n\n5) Otherwise, call for a roll when the outcome is uncertain, opposed, risky, concealed, time‑sensitive, or dependent on skill. Use a general RPG rubric:\n   - Social influence: Persuasion (cooperation/charm), Deception (mislead/falsehoods), Intimidation (threat/pressure), Performance (entertain/present).\n   - Avoiding notice vs. manual finesse: Stealth (actively avoid being seen/heard while moving or acting - NOT for passive observation), Sleight of Hand (quick, precise, or concealed manipulation of small items) or specific special skills like pickpocketing, climbing walls, detecting or disabling traps, lockpicking, palming objects).\n   - Sleight of Hand specificity: Select Sleight of Hand ONLY when the player's text explicitly attempts theft, pickpocketing, palming/planting an item, a covert handoff, or concealed manipulation of an object against an observer. Do not infer theft intent from flourish, style, or glances. Plain payment or routine handover of coins, even with charm or flourish, does not require Sleight of Hand.\n   - Acrobatics specificity: Use Acrobatics ONLY for agility/precision stunts (balancing across a narrow beam, tumbling through hostile space, leaping a gap, vaulting obstacles, slipping bonds). Do NOT require Acrobatics for normal movement like walking, jogging, or threading through an ordinary crowd unless the text describes a stunt or the scene explicitly imposes obstacles/time pressure that demand acrobatic precision.\n   - Observation and reasoning: Perception (notice/sense something specific and hidden), Investigation (search/analyze evidence), Insight (read motives/intent).\n   - Physical challenges: Athletics (power/endurance), Acrobatics (agility/balance/precision movement).\n   - Knowledge and expertise: Arcana, History, Nature, Medicine, Religion as appropriate; Survival and Animal Handling for wilderness/creature control.\n   - Spellcasting: If the player is attempting to cast a specific spell (like Charm Person, Fireball, Detect Magic, Identify, etc.), use the spell name followed by \"Check\" (e.g., \"Charm Person Check\", \"Detect Magic Check\", \"Identify Check\") and adjust the difficulty based on the type of spell. If the action is general magical manipulation without a specific spell, use \"Arcana\".\n   - SPELL AVAILABILITY: Check the character's spell list. Spells marked as \"Used (unavailable this encounter)\" CANNOT be cast again until the next encounter. If a player attempts to cast a spell that is marked as used/unavailable, set rollType to \"none\" and difficulty to 0 - the spell simply fails to activate.\n   - Combat actions: if the action is an attack or contests defenses directly, treat as an Attack roll.\n\nIMPORTANT: There are good and evil characters. This is an important aspect of rpg. Do not sanitize the action or the character's intent.\n\n6) Movement and routine actions: actions like paying a fee, approaching/following someone at a normal pace, or catching up in a non-hostile, ordinary environment should not require a roll unless the narrative clearly frames it as a chase or obstacle course.\n\n7) If the action simply follows established procedure (e.g., pays fee, answers routine question) without concealment, opposition, or special risk, choose no roll. Paying a posted fee or routine handover, even with flair or charm, should not require a check.\n\n8) Already obtained knowledge: If the narrative context shows a character already SUCCEEDED at a knowledge check (Arcana, History, Religion, Nature, etc.) and learned specific information, they do NOT need another roll to simply share or recall that information. Check the narrative for previous successful rolls and what information was revealed. Simply communicating already-known facts is automatic.\n\n9) Select the most fitting single check and set a DC using:\n    - If NO roll is required, set \"rollType\" to \"none\" and \"difficulty\" to 0.\n\nDifficulty guidelines:\n- 5 very easy, 6-9 easy, 10-11 average, 12-14 moderate, 15-17 hard, 18-20 very hard, 21-25 nearly impossible.\n\nUse the character's abilities, spells, skills, and equipment when selecting the roll type and setting difficulty.\n\nAction: \"Garlan offers Mira a friendly word of advice as she passes, then turns back to inspect the next travelers in line.\"\n",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "rollType": {
+            "type": "string"
+          },
+          "difficulty": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "modifier": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "rollType",
+          "difficulty"
+        ],
+        "additionalProperties": false
+      },
+      "response": "{\"rollType\":\"none\",\"difficulty\":0,\"modifier\":0}"
+    },
+    {
+      "prompt": "Adventure: March of Davos\nContent Version: 2026-07-29T00-00-00Z-march-of-davos-companions\nContent Hash: 4779fd1b5eccd81fbe07d91259b623358948f9ceb3070ad23cb76957bdd28efc\n\nAdventure Summary:\nThe March of Davos, a wild frontier in the Realm of Myr, is a land of stark contrasts where the ancient ways of its native Valkaran people are constantly challenged by the expansionist Asterian Empire. Kordavos, the capital, serves as a vital trade hub and a nexus of underlying tensions, political intrigue, and forgotten magic. Adventurers are drawn into this dynamic setting, often arriving in Kordavos during the annual Valkaran Harvest Festival. Their journey quickly leads them into the heart of the city's conflicts, whether by investigating a missing noble shipment containing ancient Valkaran relics for the Blackthorn family or by seeking a vanished individual like Joran Antonov, who was pursuing dangerous truths about his father's mysterious death.\n\nAs the adventurers delve deeper, they become entangled with Kordavos's three powerful rival clans: the Blackthorns, who have aligned with Asterian customs to amass wealth and power; the opportunistic Raskov Clan, known for their smuggling operations; and the traditionalist Valtor Clan, deeply rooted in Valkaran heritage and the Church of Valkara. The investigation reveals that a mysterious organization, the Covenant of the Cowl, is at play. Initially suspected of being connected to the Raskovs, the Covenant is, in fact, the clandestine wing of the Valtor Clan, secretly working to undermine Asterian influence and restore Valkaran dominance, even orchestrating events like the sabotage of noble shipments.\n\nThe narrative escalates during a lavish Blackthorn Masquerade Ball, where political machinations come to a head. A shocking assassination occurs, directly linked to the Covenant and revealing their secret network of underground tunnels beneath the city. The pursuit into these catacombs leads to a climactic confrontation where Joran Antonov, previously a missing person, is dramatically revealed as the Champion of the Covenant. He accuses Astrid Blackthorn of his father's murder and reveals his possession of the \"Key of Ilmarin,\" an artifact with the power to magically secure or unlock any opening. At this critical juncture, the adventurers face a pivotal choice: expose the Valtor Clan's hidden operations, bring down the Covenant, or align with their radical agenda to preserve Valkaran traditions against the powerful Blackthorn family. This decision will determine the future of Kordavos and the delicate balance of power within the March of Davos.\n\nCurrent Encounter Title: The Gates of Kordavos\nCurrent Encounter ID: the-gates-of-kordavos\nCurrent Encounter Intro:\nAs the adventurers approach the grand gates of Kordavos, they are greeted by the sight of towering stone archways adorned with vibrant Asterian and Valkaran banners fluttering in the breeze. The sound of laughter, music, and lively chatter fills the air, signaling the ongoing festivities of the Harvest Festival just beyond the gates.\n\nHowever, before they can join the revelry, they find themselves in a long line of travelers, merchants, and villagers all waiting to be inspected by the city guard. A few guards move among the crowd, occasionally pulling aside individuals for further questioning.\n\n\"Next!\" shouts a burly Asterian guard with a stern face but kind eyes. Stepping forward, he inspects each person meticulously. \"State your business in Kordavos,\" he demands from each group. \"There is a fee of three marks for entrance.\"\nCurrent Encounter GM Notes:\nThis is an opportunity for each player to introduce their character to the story.\n\nNo previous turns available.\n\nThis Round So Far:\nAs the adventurers approach the grand gates of Kordavos, they are greeted by the sight of towering stone archways adorned with vibrant Asterian and Valkaran banners fluttering in the breeze. The sound of laughter, music, and lively chatter fills the air, signaling the ongoing festivities of the Harvest Festival just beyond the gates.\n\nHowever, before they can join the revelry, they find themselves in a long line of travelers, merchants, and villagers all waiting to be inspected by the city guard. A few guards move among the crowd, occasionally pulling aside individuals for further questioning.\n\n\"Next!\" shouts a burly Asterian guard with a stern face but kind eyes. Stepping forward, he inspects each person meticulously. \"State your business in Kordavos,\" he demands from each group. \"There is a fee of three marks for entrance.\"\n\n[OriginalReply: I try to deceive Garlan into waiving the entrance fee by falsely claiming I am an invited Harvest Festival performer. \"The festival organizers are expecting me inside.\"]\nI try to deceive Garlan into waiving the entrance fee by falsely claiming I am an invited Harvest Festival performer. \"The festival organizers are expecting me inside.\"\n\n[DiceRoll:rollType=Deception;baseRoll=20;modifier=-1;result=19;difficulty=14;character=Mira;image=;success=true]\n\nGarlan studies Mira for a long moment, then his stern expression softens as he nods and steps aside with a grunt of approval. \"Can't keep the festival waiting,\" he rumbles, waving her through the towering archway without collecting a single mark before turning back to bellow \"Next!\" at the line.\n\nGarlan calls after Mira as she passes beneath the archway, his kind eyes crinkling.\n\n\"Mind your purse in the crowds, performer. The festival draws more than music lovers, \" he says.\n\nHe turns back to the waiting line and plants his feet. He sizes up the next group of travelers with a meticulous eye.\n\nMost Recent Action/Event:\nHe turns back to the waiting line and plants his feet. He sizes up the next group of travelers with a meticulous eye.\n\nRoll Context:\nRegarding the most recent dice roll: Character 'Mira' attempted a 'Deception'. The result was 19 (difficulty: 14, modifier: -1). This roll was a SUCCESS.\n\nAvailable Transition Options for 'the-gates-of-kordavos':\nTransition Option 1 (leads to encounter ID: 'the-harvest-festival'):\n  Condition to check: To [[encounter:the-harvest-festival]] when After resolving The Gates of Kordavos, continue to The Harvest Festival.\n\nAllowed nextEncounterId values:\nthe-gates-of-kordavos, the-harvest-festival\n\nYour Task:\n1. Decide from what has already happened, including everything this round and roll outcomes. A player's action this round counts even when an NPC spoke after it. If events so far satisfy a listed transition condition, transition now rather than extending a situation that is already resolved. Continue the current encounter only when no listed condition is satisfied yet, or when one depends on a player choice that has not been made.\n2. If transitioning, set nextEncounterId to one of the listed transition target IDs.\n3. If not transitioning, set nextEncounterId to the current encounter ID.\n4. Return narrative for players. Do not write new player decisions, dialogue, or internal thoughts for: Mira.\n5. Include an adventurePatch that updates the live Adventure playthrough record with summaries, discoveries, entity updates, character updates, open threads, resolved threads, and transition details when applicable.\n\nRespond in JSON:\n{\n  \"nextEncounterId\": string,\n  \"narrative\": string,\n  \"adventurePatch\": object\n}",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "nextEncounterId": {
+            "type": "string"
+          },
+          "narrative": {
+            "type": "string"
+          },
+          "adventurePatch": {}
+        },
+        "required": [
+          "nextEncounterId",
+          "narrative"
+        ],
+        "additionalProperties": false
+      },
+      "response": "{\"nextEncounterId\":\"the-harvest-festival\",\"narrative\":\"Behind Mira, Garlan's voice booms another \\\"Next!\\\" as the line shuffles forward. The shadow of the towering stone archway falls away, and the full warmth of the Harvest Festival rushes in to greet her.\\n\\nAsterian and Valkaran banners snap overhead in the breeze. Laughter, music, and lively chatter spill through the streets of Kordavos. The festival stretches out before her, alive and inviting, and the city's secrets wait somewhere within its revelry.\",\"adventurePatch\":{\"encounterSummaries\":[{\"encounterId\":\"the-gates-of-kordavos\",\"title\":\"The Gates of Kordavos\",\"summary\":\"Mira arrived at the gates of Kordavos during the Harvest Festival. She deceived the gate guard Garlan Ironfist by posing as an invited festival performer, and he waved her through without collecting the three-mark entrance fee. Garlan warned her to mind her purse in the festival crowds.\"}],\"discoveries\":[{\"id\":\"kordavos-entrance-fee\",\"description\":\"Entry to Kordavos costs three marks, collected by the city guard at the gates.\"},{\"id\":\"festival-crowd-warning\",\"description\":\"Garlan Ironfist warned that the Harvest Festival draws more than music lovers, suggesting pickpockets or other trouble in the crowds.\"}],\"entityUpdates\":[{\"id\":\"garlan-ironfist\",\"name\":\"Garlan Ironfist\",\"type\":\"npc\",\"status\":\"Normal\",\"location\":\"Gates of Kordavos\",\"notes\":\"Believes Mira is an invited Harvest Festival performer. Waived her entrance fee and offered friendly advice.\"}],\"characterUpdates\":[{\"id\":\"mira\",\"location\":\"Kordavos, Harvest Festival\",\"notes\":\"Entered Kordavos without paying the entrance fee by posing as an invited festival performer. The city guard at the gates now knows her by that false identity.\"}],\"openThreads\":[{\"id\":\"false-performer-identity\",\"description\":\"Mira claimed to be an invited Harvest Festival performer. The lie could resurface if festival organizers or guards check her story.\"},{\"id\":\"festival-dangers\",\"description\":\"Garlan hinted that the festival crowds hold dangers beyond revelry.\"}],\"resolvedThreads\":[{\"id\":\"gate-entry\",\"description\":\"Mira passed the gate inspection and entered Kordavos.\"}],\"transition\":{\"from\":\"the-gates-of-kordavos\",\"to\":\"the-harvest-festival\",\"reason\":\"The gate encounter is resolved. Mira has passed inspection and entered the city.\"}}}"
+    }
+  ],
+  "writes": [
+    "adventure:submitReply",
+    "turns:updateTurn",
+    "turns:updateTurn",
+    "adventure:commitWikiTurnAdvance"
+  ]
+}

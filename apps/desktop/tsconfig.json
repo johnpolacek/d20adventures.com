@@ -1,0 +1,6 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": { "incremental": false, "plugins": [], "target": "ES2022", "paths": { "@/*": ["../../*"], "@/lib/utils": ["./src/utils.ts"] } },
+  "include": ["src", "runtime", "scripts"],
+  "exclude": ["node_modules", "dist", "src-tauri"]
+}

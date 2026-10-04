@@ -1,0 +1,61 @@
+import type { RollRequirement } from "../validations/roll-requirement-schema"
+import type { NPC, PC } from "./character"
+
+export interface Adventure {
+  id: string
+  title: string
+  adventurePlanId: string
+  settingId: string
+  ownerId?: string
+  runType?: "campaign" | "practice"
+  parentAdventureId?: string
+  parentTurnId?: string
+  status?: "waitingForPlayers" | "active" | "completed"
+  party: PC[]
+  turns: Turn[]
+  startedAt: string
+  endedAt?: string
+  pausedAt?: string
+  players?: { characterId: string; userId: string; controlledBy?: "ai" }[]
+  // Auto-narration toggle for initial render; live pause detail arrives via
+  // the turn-audio manifest (the adventure doc is not a live subscription).
+  storyview?: { autoEnabled: boolean }
+}
+
+export type TurnCharacter =
+  | (PC & {
+      type: "pc"
+      initiative: number
+      hasReplied?: boolean
+      isComplete?: boolean
+      rollRequired?: RollRequirement
+      rollResult?: number
+    })
+  | (NPC & {
+      type: "npc"
+      initiative: number
+      hasReplied?: boolean
+      isComplete?: boolean
+      rollRequired?: RollRequirement
+      rollResult?: number
+    })
+
+export interface Turn {
+  id: string
+  encounterId: string
+  title: string
+  narrative: string
+  characters: TurnCharacter[]
+  adventureId: string
+  isFinalEncounter?: boolean
+}
+
+export interface DiceRoll {
+  rollType: string
+  baseRoll: number
+  modifier: string | number
+  result: number
+  difficulty: number
+  character: string
+  success: boolean
+}

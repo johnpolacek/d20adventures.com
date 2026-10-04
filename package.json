@@ -70,7 +70,10 @@
     "test:wiki-adventures:rollback": "tsx scripts/wiki-adventures-rollback-check.ts",
     "audit:wiki-adventures:prod-s3": "node --env-file=.env --env-file=.env.local --import tsx scripts/wiki-adventures-prod-s3-audit.ts",
     "test:setup": "pnpm dev",
-    "test:full": "pnpm test:setup && pnpm test"
+    "test:full": "pnpm test:setup && pnpm test",
+    "test:gm-core": "tsx scripts/gm-core-check.ts && tsx scripts/gm-server-check.ts",
+    "desktop:dev": "pnpm --filter @d20/desktop tauri dev",
+    "desktop:build": "pnpm --filter @d20/desktop tauri build"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.43",
@@ -83,6 +86,7 @@
     "@clerk/backend": "^3.0.1",
     "@clerk/nextjs": "^7.0.1",
     "@clerk/themes": "^2.4.57",
+    "@d20/gm-core": "workspace:*",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/modifiers": "^9.0.0",
     "@dnd-kit/sortable": "^10.0.0",
@@ -139,7 +143,8 @@
     "uuid": "^13.0.0",
     "waait": "^1.0.5",
     "zod": "^4.3.6",
-    "zod-to-json-schema": "^3.25.1"
+    "zod-to-json-schema": "^3.25.1",
+    "@d20/stage": "workspace:*"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.6",
@@ -154,6 +159,7 @@
     "concurrently": "^9.2.1",
     "dotenv": "^17.3.1",
     "dotenv-cli": "^11.0.0",
+    "esbuild": "0.27.0",
     "kill-port": "^2.0.1",
     "tailwindcss": "^4.2.1",
     "ts-node": "^10.9.2",

@@ -283,9 +283,11 @@ export function PromptCard({
             )}
           </div>
           <div className={cn("flex gap-2", compact ? "mt-1.5 [&>button]:py-1" : "mt-2")}>
-            <Pill className="flex-1" onClick={() => mode.suggestion && setDraft(mode.suggestion)} disabled={!mode.suggestion}>
-              Suggest
-            </Pill>
+            {mode.suggestion && (
+              <Pill className="flex-1" onClick={() => mode.suggestion && setDraft(mode.suggestion)}>
+                Suggest
+              </Pill>
+            )}
             <Pill className="flex-1 font-display text-[13px] font-bold tracking-[0.12em]" active onClick={send} disabled={!draft.trim()}>
               Send
             </Pill>

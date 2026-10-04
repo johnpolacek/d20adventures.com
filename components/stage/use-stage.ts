@@ -1,7 +1,7 @@
 "use client"
 
+import type { Flags, Stage, TierName } from "@d20/stage"
 import { type RefObject, useEffect, useRef, useState } from "react"
-import type { Flags, Stage, TierName } from "@/lib/stage"
 
 // Creates a Stage in `container` for a set (and optional staging) and disposes it on unmount. three.js loads inside the
 // effect, so nothing WebGL touches the server bundle.
@@ -16,26 +16,32 @@ export function useStage(container: RefObject<HTMLDivElement | null>, opts: { se
     if (!el || !opts) return
     let cancelled = false
     let created: Stage | null = null
+    // A new set starts clean: no error or status left over from the one it replaces.
+    setError(null)
+    setStatus("Loading")
     ;(async () => {
-      const { createStage } = await import("@/lib/stage")
+      const { createStage } = await import("@d20/stage")
       created = await createStage({ container: el, set: opts.set, staging: opts.staging, tier: opts.tier ?? "auto", flags: opts.flags, onProgress: setStatus })
       if (cancelled) {
         created.dispose()
         return
       }
       await created.firstFrame
+      if (cancelled) return
       stageRef.current = created
       setStage(created)
       ;(window as unknown as { __stage?: Stage }).__stage = created
     })().catch((err) => {
       console.error(err)
-      setError(err instanceof Error ? err.message : String(err))
+      if (!cancelled) setError(err instanceof Error ? err.message : String(err))
     })
     return () => {
       cancelled = true
       created?.dispose()
       stageRef.current = null
       setStage(null)
+      const w = window as unknown as { __stage?: Stage }
+      if (w.__stage === created) delete w.__stage
     }
   }, [container, opts])
 

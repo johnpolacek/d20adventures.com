@@ -1,5 +1,5 @@
-import type { Beat } from "@/lib/stage/beats"
-import type { StagingShot } from "@/lib/stage/spec/staging"
+import type { Beat } from "@d20/stage/beats"
+import type { StagingShot } from "@d20/stage/spec/staging"
 
 // A canned run of March of Davos, encounter 1 ("The Gates of Kordavos"), for the stage-first turn page mock.
 // No Convex and no model: each GM turn is scripted, with the beats a per-turn generator would produce, and the player's

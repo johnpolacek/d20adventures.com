@@ -2,15 +2,17 @@
 
 [Wiki Home](../index.md) · [Sources](../Sources.md) · [Roadmap](../roadmap.md) · [Architecture](../Architecture.md)
 
-Reviewed against local main on 2026-10-01. Implementation status does not imply production deployment.
+Updated for the desktop integration worktree on 2026-10-02. Implementation status does not imply production deployment.
 
 ## Active work
 
 | Plan | Status | Next work |
 |---|---|---|
-| [Stageview](stageview.md) | Old 3D stack removed. Engine and first set merged on 2026-09-29. Gameplay integration is not built. | Staging scripts and festival set, then the stage-first turn page and encounter coverage. |
+| [Harvest Festival handoff](harvest-festival-handoff.md) | Implementation stopped at owner request. No scene code changed. | Resume from inspected integration points, authored NPCs, and validation steps. |
+| [Stageview](stageview.md) | Desktop gate scene connected to the real local turn flow in this worktree. | More authored sets, per-turn beats, and encounter coverage. |
 | [Stage-first turn mock](feature-stage-turn-mock.md) | Scripted gate-scene demo merged 2026-10-01; public at `/demo/kordavos` for feedback. | Owner and playtester feedback, then the real turn page (Stageview phase 4). |
-| [Desktop local play](desktop-local-play.md) | Proposed 2026-10-01. Tauri app becomes the only client. Free solo play through the player's own AI CLI, subscription tokens for multiplayer, web play deprecated. No code yet. | Phase 0 spike: CLI latency, JSON validity, GM quality, CLI images, Clerk and Convex in Tauri. Then extract `gm-core`. |
+| [Desktop Stageview integration](feature-desktop-stage-play.md) | Implemented locally. Native validation recorded in its plan. | Review the app, extend set coverage, and package distribution. |
+| [Desktop local play](desktop-local-play.md) | Core extraction, desktop shell, and initial local save/CLI play implemented on unmerged branches. | More sets, save management, optional pre-roll batching, broader gameplay, provider coverage, and distribution. |
 | [Maintenance follow-ups](maintenance.md) | Open findings and unverified follow-ups carried forward from completed work. | Test harness, authoring edge cases, narration validation, and environment cleanup. |
 
 ## Maintained references

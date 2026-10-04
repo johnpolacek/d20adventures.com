@@ -4,6 +4,120 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-03, GM decisions see the whole round, every Midnight Summons branch played
+
+Playing the last untested branches found that the GM's move-on decision saw only the last paragraph of the current round, so an NPC reply hid the player's action. That stalled Meeting at the Stones and explains earlier rounds held past an authored exit. The shared core now gives the decision the whole round, which also fixes web play. A live desktop run then hid from the owlbear, reached The Missing Relics, and ended in 7 rounds. Two content typos are fixed. Bleeding stays a label. See [the fix and run](plans/feature-desktop-stage-play.md#gm-decision-sees-the-whole-round-2026-10-03).
+
+## 2026-10-03, Standing Stones matched to the art, neutral night light
+
+Owner feedback asked for neutral light, more ground detail, and stones much closer to the source art. Night sets now use a white camera fill and a neutral paint grade. New world-painted `rock`, `meadow`, `grass` and `water` materials and `flagstones`, `grass` and `mountain` builders give the ground and stones real detail. The Standing Stones were rebuilt and recomposed from measurements of the art, with the moon over the valley. Follow-up: darker night skies, a wider river, and Wollandora regenerated much closer to her art, with neutral night grading for characters too. The owner approved it, and all seven scenes rendered without errors in a release build. See [the art pass](plans/feature-desktop-stage-play.md#standing-stones-art-pass-2026-10-03) and [authoring lessons](stage-authoring.md#lessons).
+
+## 2026-10-03, first forest set and the 3D authoring pattern
+
+Added a moonlit Valkarr forest trail for three Midnight Summons encounters, with woodland builders, a foliage material, night sky support, and standees for Thalbern, Wollandora, and the Owlbear. Recorded the authoring pattern: review on the web viewer first, then one check in the desktop app. See [Stage set authoring](stage-authoring.md).
+
+## 2026-10-03, Midnight Summons fixes in the shared core and content
+
+NPCs that skip or pass keep their real status instead of "skipping" or "passing". The progression rule now moves on once events satisfy a listed transition and waits only for unmade player choices. Live replays advanced after the owlbear evasion and still waited at the meeting. Wollandora's greeting fits either arrival, and a Back Home typo is fixed. Both core changes also apply to web play. See [the fixes](plans/feature-desktop-stage-play.md#midnight-summons-fixes-2026-10-03).
+
+## 2026-10-03, The Midnight Summons played to the end on desktop
+
+The desktop app now bundles The Midnight Summons beside March of Davos, and New game picks the adventure. In the packaged app with live Claude, Thalbern finished the adventure in 7 rounds, including a three-round owlbear fight with an attack, an evasion, and Animal Handling, then the ending and starting over. The run found and fixed an end screen with no way forward. A second run had Thalbern beaten to 10% health, rescued by Wollandora, and refuse the mission, reaching the Back Home ending in 11 rounds with his wounds carried through. Open findings are an NPC status left as "passing", rounds the GM extends past an authored exit, an authored greeting that ignores the rescue, and a content typo. Fourteen desktop tests, typechecks, lint, and release builds passed. Details: [the integration plan](plans/feature-desktop-stage-play.md#the-midnight-summons-2026-10-03).
+
+## 2026-10-03, desktop New game and archive
+
+A finished or unwanted adventure could not be replaced without deleting the save file. The desktop app now opens on a title screen with Continue and New game, and a Menu button returns to it. Starting over archives the old adventure in the same SQLite file and transaction. Twelve desktop tests, typechecks, lint, a release build, and a packaged-app check on an isolated save passed. See [the integration plan](plans/feature-desktop-stage-play.md#new-game-and-archive-2026-10-03).
+
+## 2026-10-03, Harvest Festival desktop scene
+
+Resumed the handoff in `feature/desktop-stage-play` with owner decisions: keep four Codex drafts, regenerate Karim in Blackthorn black and gold, generate backs with the gate pipeline, keep performers on the ground in front of a low stage, and run the full native check. Added the Kordavos harvest square set and Harvest Festival staging, an encounter-to-scene map for desktop, festival map staging for the GM, and content-id cast ids so the unrelated `liora` NPC cannot collide. Engine additions are solid primitives, named stall goods, a ground `roads` flag, shared walk checks, and walk checks in `stage:check`. Native testing found and fixed a walk that stalled while the window was covered.
+
+Eleven desktop tests, TypeScript, scoped Biome, `stage:check`, browser renderer checks at DPR 2, and two release builds passed. The packaged app with live Claude advanced from the gate to the festival on its second round, switched sets, focused and opened Madam Zephyra, saved Yeva's and Branka's walks, and reopened without replaying them. The user save was restored unchanged. Details: [the integration plan](plans/feature-desktop-stage-play.md#festival-results).
+
+## 2026-10-03, Harvest Festival handoff
+
+Owner initially authorized the second desktop 3D scene, then stopped generation and requested a handoff. Only planning documents changed. No scene, staging, runtime, or UI code was written, and no new build or tests ran. Five character-image requests had already completed before cancellation was checked. Their paths and prompts are recorded in [the handoff](plans/harvest-festival-handoff.md). They remain unreviewed outside the repo and are not integrated. Work remains isolated on `feature/desktop-stage-play`.
+
+## 2026-10-03, desktop character-state application
+
+Connected structured character patches to live desktop state in `feature/desktop-stage-play`. Health, status, item transfers, effect changes, and spell use now commit with the new turn. Encounter changes preserve the party's live values instead of replacing them with premade defaults. NPC state is remembered, old roll flags clear, effects expire once per round, and spells recharge on encounter changes. Character cards show the current saved values and GM requests receive them as context.
+
+New CLI advancement responses require explicit operations or an empty character-update list. Invalid references get one correction, then reject the turn without partial writes. Older saves remain readable, with no automatic replay of ambiguous prose notes or changes to historical turn snapshots. Shared schemas accept both historical notes and typed operations. Web application semantics remain unchanged.
+
+Eight desktop tests, shared core/server regression checks, root/package TypeScript, scoped lint, and a native release build passed. A temporary native fixture visibly showed a new item, 65% health, a timed effect, and a used spell. The original empty save was restored. This follow-up does not establish full combat or all-provider coverage. See [the integration plan](plans/feature-desktop-stage-play.md#character-state-follow-up-2026-10-03).
+
+A separate live Claude check advanced an isolated fixture to the festival, returned an explicit add operation, and persisted the Bronze gate token in Cassia's equipment. No user save, production data, or web gameplay was changed by the check.
+
+## 2026-10-02, desktop Stageview and real local turns
+
+Implemented `apps/desktop` in the isolated `feature/desktop-stage-play` worktree, based on main plus the committed GM core branch. Extracted the renderer to `packages/stage` and retained the web demo. The Tauri client bundles March of Davos, stage assets, fonts, and a Node game worker. It uses the player's installed AI CLI, the shared GM core, and SQLite. Actions, dice, NPCs, authored transitions, journal, camera controls, and player movement are connected to real state. The gate has a 3D set. Later encounters use story view.
+
+The packaged native Claude playthrough covered a failed Persuasion check, natural die persistence, no-roll replies, an NPC response, the gate-to-festival transition, and reopening the saved festival turn. The native renderer reported ready with no JavaScript errors. Three integration tests, root/package typechecks, scoped Biome, renderer content checks, frontend build, Next production build, and macOS release build passed. Details are in [the integration plan](plans/feature-desktop-stage-play.md).
+
+Local saves preserve retry checkpoints and reject stale input. The die is saved before inference. CLI errors cannot commit inherited fallback prose or silently skip a required check. World-state patches receive strict nested validation. Current core behavior still records character patches without applying inventory/effect changes. Only Claude and the social gate encounter were tested natively. One save slot, four premades, Node 24+, CLI sign-in, and unsigned distribution remain explicit limits. No production data changes, push, or merge into main.
+
+## 2026-10-02, shared GM core extraction
+
+Completed phase 1 locally in `feature/gm-core`, based on spike commit `7ff0b2d`. The pnpm workspace now contains `packages/gm-core`. Twenty gameplay service modules, eight character-generation operations, reply/roll/advance orchestration, shared schemas/types, and pure helpers use typed per-instance interfaces. `lib/gm-server` supplies the current model, billing, Clerk, Convex, content, and narration adapters. Existing server action and import paths remain compatible. No UI or Convex schema changes were needed. The strict-state and combined-call spike experiments were not promoted into the web runtime.
+
+Standalone package TypeScript and browser bundling passed without Node or web dependencies. Regression checks matched every prompt, schema, and recorded write in the seven-call pre-extraction GM turn, plus nine character-generation cases. Access, companions, independent runtimes, stale/duplicate/invalid transitions, content re-pinning, completion, retries, sanitation, and billing errors passed. Root TypeScript/lint, wiki batches A through F, four adventure bridges, public flow checks, and the Next production build passed. Root lint reported only two existing informational suggestions in unrelated scripts.
+
+All 16 Playwright tests passed against the isolated worktree after installing the matching Chromium and supplying Portless's local CA. An authenticated browser completed The Midnight Summons in seven turns on `patient-shepherd-476`, using the real `gemini-3.5-flash-lite` server adapter. The run covered failed and successful rolls, combat, NPC initiative, health changes from 100 to 80 to 60, no-roll NPC dialogue, encounter transitions, and final health 100. The ending UI and a fresh Convex read confirmed `status: completed`, an end timestamp, and `currentEncounterId: preparing-for-the-city`.
+
+The server and test browser were stopped. No push, merge, or production deployment was performed. One live adventure does not establish multiplayer, speech generation, or desktop reliability. The desktop shell is the next implementation step. Contracts and detailed evidence are in [GM core](gm-core.md), the [extraction plan](plans/feature-gm-core.md), and [desktop phase 1](plans/desktop-local-play.md#phase-1-extract-gm-core).
+
+## 2026-10-02, desktop state validation and pre-roll batching
+
+Completed the authorized refinement in `spike/desktop-local-play`. Both native trial variants derive a strict nested model contract from the real adventure-patch schema and execute the real wiki commit handler over an in-memory database. Every accepted field survived in all eight runs. Invalid fields now trigger a correction in the spike instead of silently disappearing. Character updates are retained in the saved turn patch, but the existing game code does not apply them to live character fields. That remains explicit follow-up work.
+
+Combining player formatting, roll selection, and situational modifier reduced seven CLI requests to five, with the dice result still supplied separately. Claude's full turn changed from 23.149 to 22.528 s, Codex from 40.516 to 26.114 s, and Grok from 103.632 to 86.015 s. Native dice-readiness render times changed from 8.800 to 4.297 s, 14.532 to 6.756 s, and 52.735 to 24.187 s. Initial action text did not improve for every provider. The API text baseline changed from 13.390 s with five JSON-format retries to 6.523 s with one retry. These are single paired samples, not a stable latency benchmark.
+
+Claude and Grok saved richer state and advanced to the festival. Codex supplied summary-only patches and remained at the gate, omitting the fee waiver from its advancement summary. The API baseline invented some scene details. JSON validity and field retention therefore remain separate from narrative continuity and referential integrity. Gemini compatibility was not retested and does not block the other adapters.
+
+Recommendation: proceed to core extraction, retain both request paths, and use Claude for the first interactive demo while keeping Codex and Grok selectable. Apply character state and add broader gameplay coverage as the desktop is built. Ten focused tests, root TypeScript, scoped Biome, Rust checks, packaged native trials, render instrumentation, and exact-prompt/saved-state replay passed. See [phase 0](plans/desktop-local-play.md#strict-state-and-fewer-requests-2026-10-02). Changes committed locally, with no web app changes, push, merge, CLI credential access, or production mutation.
+
+## 2026-10-01, desktop persistent adapters and complete turns
+
+Completed the follow-up in `spike/desktop-local-play`. Codex app-server and Gemini/Grok ACP adapters now launch with existing CLI homes and sign-in. User-configuration loading no longer rejects a provider. The native comparison passed both existing schemas on first answers for Claude, Codex, and Grok, using two requests in one persistent session each. Progression took 3.725 s, 11.678 s, and 20.464 s, respectively, versus 0.941 s for the API baseline. No observable model tool calls or host-operation requests occurred in the successful trials.
+
+A complete contested-social turn ran through the real player formatting, reply, roll, NPC, and current wiki advancement services, with in-memory storage and authored source. Claude, Codex, and Grok each completed seven calls with no retries and advanced to the festival. Total times were 31.474 s, 59.437 s, and 252.396 s. The `gemini-3.5-flash-lite` text API comparison completed in 8.291 s with ten requests, including three bare-JSON correction retries. This baseline did not use the web app's provider-enforced structured-output mode.
+
+Gemini CLI 0.60.0 initialized ACP but the provider rejected its personal-login path with error `-32000`, saying the client is no longer supported for Gemini Code Assist for individuals and directing migration to Antigravity. No GM inference occurred. No CLI credentials were inspected, copied, or migrated. This is an observed account/client failure, not the withdrawn settings gate or a universal statement about Gemini accounts.
+
+The turn audit found a concrete schema issue: the top-level wiki response leaves `adventurePatch` as `z.unknown()`. All three CLIs supplied invalid nested transition fields and the existing service used its summary fallback, losing proposed structured world-state updates. The baseline patch parsed with some provided fields discarded. Offline replay matched every live prompt exactly and recorded the post-validation patch without new inference. No web app fix was made in this spike.
+
+Recommendation: **go for further local-play development with the three working adapters.** Resolve Gemini compatibility, structured world-state output, and serial-call latency before broader support or release claims. Combat, AI companions, usage limits, production auth, and real persistence remain outside this turn fixture. The earlier art and native sign-in/connectivity evidence remains available. The follow-up launch was signed out, so persistent Clerk sign-in is not established.
+
+Validation passed for five focused tests, scoped Biome, root TypeScript, Rust formatting and Clippy, a packaged Tauri build, native runs, and exact-prompt replay. Results, per-call timing, source hashes, and limits are in [phase 0](plans/desktop-local-play.md#phase-0-spike). Changes are committed locally. No push, merge, production mutation, or web app change.
+
+## 2026-10-01, desktop isolation requirement reconsidered
+
+The owner challenged the blanket ban on user settings, tools, and MCP as a prerequisite for local CLI support. Restrictions need a concrete basis. The earlier no-go and Claude-first recommendation is withdrawn. All four providers remain in scope.
+
+The first spike established missing ignore-settings controls, not a gameplay failure or unavoidable unwanted action. Codex, Gemini CLI, and Grok GM modes were skipped before inference and remain untested. Their saved `blocked` statuses describe the former trial rule, not a failed provider benchmark. Claude's measured success and the image and webview results remain valid.
+
+The [revised phase 0 basis](plans/desktop-local-play.md#revised-basis-for-restrictions-2026-10-01) calls for testing output quality, JSON validity, latency, and relevant execution controls. A documented unwanted action can justify a narrow restriction. Configuration loading alone cannot. The app must still leave CLI credentials entirely inside the installed CLI.
+
+Updated the plan, roadmap, indexes, worktree status, and spike README. This is a documentation and interpretation correction. The existing harness still applies its original gate, and the three missing adapters and live trials remain work to do. No runtime permissions changed and no new model calls ran.
+
+## 2026-10-01, desktop phase 0 findings
+
+The recommendation in this entry was superseded by the reconsideration above. Measurements are unchanged.
+
+The isolated Tauri spike is in `apps/desktop-spike/` on `spike/desktop-local-play`, created with the approved worktree script. Its empty Convex project is `d20adventures-spike-desktop-local-play`, deployment `gallant-squirrel-646`. No web app, root dependency, shared schema, billing, production data, or CLI credential changes.
+
+Claude Code 2.1.287 ran an authored Kordavos progression fixture from the real prompt service and a separate roll-schema probe in one persistent process. Its startup reported no tools, settings-derived capabilities, skills, plugins, or MCP. Progression took 4.180 s, including 0.781 s initialization. The second request took 1.451 s. Both passed the existing zod schemas on the first answer, one inference request each. The `gemini-3.5-flash-lite` API baseline passed in 2.283 s and 0.615 s. Claude was more vivid and slightly better grounded in this one sample. A complete gameplay pipeline was not measured.
+
+Codex app-server, Gemini ACP, and Grok ACP were detected but blocked before GM inference. Their tested versions did not provide a verified way to ignore user settings while preserving existing CLI sign-in without handling credentials. No GM latency or quality result exists for those three. Claude also needed explicit built-in plugin overrides beyond safe mode. The final locator bypasses GUI PATH wrappers by preferring known installed binaries.
+
+Codex generated a portrait in 44.022 s and a front/back sheet in 48.073 s. Grok took 12.799 s and 13.863 s. All now have locally removed backgrounds and split standees. Three used chroma key. Codex ignored the standee's green-background instruction, so local macOS Vision supplied the mask. Visual review found usable silhouettes, some hair-edge fringing, and portrait-to-standee detail drift.
+
+Clerk signed in the existing test account in the packaged `tauri://localhost` webview through a single-use development ticket. The Convex React WebSocket connected and the real query resolved against the empty isolated database. OAuth redirects and authenticated Convex JWT authorization remain untested. No session secrets were saved in evidence.
+
+Recommendation: **no-go for the four-provider GM promise under the current isolation rules, conditional go for a Claude-first follow-up if the owner accepts narrower support.** The four-provider execution requirement remains unmet. This does not change the owner's product scope or authorize a web migration. The [phase 0 results](plans/desktop-local-play.md#phase-0-spike) contain metrics, source and artifact links, limitations, and the next gates.
+
+Validation passed for three focused tests, scoped Biome, root TypeScript, Vite production build, Rust formatting and Clippy, a packaged debug Tauri app, native UI trials, and local segmentation. Changes are committed locally. Nothing was pushed or merged. The worktree and isolated Convex project remain for review.
+
 ## 2026-10-01, stage-first turn page demo merged
 
 The scripted gate-scene mock (`feature/stage-turn-mock`, 2026-09-29 to 10-01) is merged and public at `/demo/kordavos` for feedback. It makes no model calls and is noindexed. Owner decisions made along the way are recorded in [Stageview](plans/stageview.md#product-decisions):

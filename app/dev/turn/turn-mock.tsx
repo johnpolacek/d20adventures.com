@@ -1,5 +1,8 @@
 "use client"
 
+import type { TierName } from "@d20/stage"
+import { BeatPlayer, lineSeconds, readingSeconds } from "@d20/stage/beats"
+import { bearing } from "@d20/stage/movement"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { inferStageMovement } from "@/app/_actions/stage-movement"
 import { type CardInfo, CharacterCard } from "@/components/stage/character-card"
@@ -11,9 +14,6 @@ import { RotatePrompt, requestLandscape, usePhonePortrait } from "@/components/s
 import { type Bubble, Bubbles, Plate, type PlateLine } from "@/components/stage/stage-dialogue"
 import { type OrderEntry, TurnOrder } from "@/components/stage/turn-order"
 import { useStage } from "@/components/stage/use-stage"
-import type { TierName } from "@/lib/stage"
-import { BeatPlayer, lineSeconds, readingSeconds } from "@/lib/stage/beats"
-import { bearing } from "@/lib/stage/movement"
 import { cn } from "@/lib/utils"
 import { ABOUT, FORCED_ROLL, type MockHold, type MockRoll, PARTY, type Story, TURNS } from "./gates-mock"
 
@@ -38,7 +38,7 @@ export function TurnMock({ demo = false }: { demo?: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [specs, setSpecs] = useState<{ set: unknown; staging: unknown } | null>(null)
   useEffect(() => {
-    import("@/lib/stage/sets").then(async ({ SETS, STAGINGS }) => {
+    import("@d20/stage/sets").then(async ({ SETS, STAGINGS }) => {
       const staging = await STAGINGS["march-of-davos/the-gates-of-kordavos"]()
       const set = await SETS["realm-of-myr/kordavos-south-gate"]()
       setSpecs({ set, staging })

@@ -2,16 +2,16 @@
 
 [Home](index.md) · [Plans](plans/index.md) · [Architecture](Architecture.md) · [Log](log.md)
 
-Reviewed 2026-10-01. This separates implemented behavior from the chosen next direction.
+Updated 2026-10-02 in the desktop integration worktree. This separates implemented behavior from the chosen next direction.
 
 ## Now, Stageview integration
 
-Stageview is the owner's chosen primary play screen, decided 2026-09-29. The engine, Myr crowd library, Kordavos gate set, and development preview are implemented. Players still use the existing text turn page.
+Stageview is the owner's chosen primary play screen, decided 2026-09-29. The engine, Myr crowd library, Kordavos gate set, and development preview are implemented. The web retains the text turn page. The unmerged `feature/desktop-stage-play` worktree adds native Stageview connected to local CLI generation and SQLite saves. See [desktop integration](plans/feature-desktop-stage-play.md).
 
 Next work:
 
-1. Add staging scripts, set loops, and the Harvest Festival set.
-2. Build the stage-first turn page with docked narrative/input, character art, beats, and Storyview synchronization. A scripted demo of the gate scene is merged and public at `/demo/kordavos` (2026-10-01): a staged intro, two rounds, step-through narration, and contest rolls with a 3D d20. See [Stage-first turn mock](plans/feature-stage-turn-mock.md).
+1. Add further authored sets and staging. The Harvest Festival set exists on desktop in `feature/desktop-stage-play` (2026-10-03). Clan Conflict is next in March of Davos.
+2. Extend the native turn UI with generated beats and narration synchronization. The gate scene now uses real local turns. The scripted web demo remains public at `/demo/kordavos`.
 3. Cover encounters with authored or generic sets and default staging.
 4. Verify phone landscape handling, accessibility, reduced motion, and text fallback on devices that cannot run the stage.
 
@@ -21,7 +21,7 @@ Details and open decisions: [Stageview](plans/stageview.md). Mapview becomes the
 
 Proposed 2026-10-01. A Tauri desktop app becomes the only game client and web play is deprecated. Solo play is free and the GM runs through the player's own signed-in AI CLI. Multiplayer keeps the server GM, paid by a subscription that grants tokens. The stage-first turn page is built in the desktop app.
 
-First step is a spike measuring CLI latency, JSON validity, GM quality, CLI image generation, and Clerk and Convex inside Tauri. Details: [Desktop local play](plans/desktop-local-play.md).
+Phase 0 refinement proves strict field retention and five-call turns for Claude, Codex, and Grok. Combined full-turn samples took 22.5, 26.1, and 86.0 seconds, with dice rendered at 4.3, 6.8, and 24.2 seconds. Core extraction is complete locally in `feature/gm-core`, with production build, 16 Playwright tests, and a seven-turn authenticated playthrough passing. The native shell and SQLite saves are now implemented locally. A packaged Claude run reached the festival and resumed after restart. Codex's summary missed established events in that sample. The October 3 follow-up now applies typed character patches to live desktop state and preserves them across encounters. Broader gameplay, save management, distribution, and production auth remain future work. Gemini compatibility is independent after its provider rejected the tested login. Art and scoped Clerk/Convex checks passed. Details: [Desktop local play](plans/desktop-local-play.md#phase-0-spike).
 
 ## Maintenance
 

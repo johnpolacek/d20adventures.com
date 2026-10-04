@@ -3,8 +3,8 @@
 // Client half of /dev/stage: builds the set with the Stage runtime and shows a dense HUD for shots, tiers, the
 // quality switches and render stats. three.js loads inside the effect, so nothing WebGL touches the server bundle.
 
+import type { Flags, Stage, StageStats, TierName } from "@d20/stage"
 import { useEffect, useRef, useState } from "react"
-import type { Flags, Stage, StageStats, TierName } from "@/lib/stage"
 
 interface Props {
   setKey: string
@@ -45,6 +45,13 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
   const [shots, setShots] = useState<[string, string | undefined][]>([])
   const [stats, setStats] = useState<StageStats | null>(null)
   const [hidden, setHidden] = useState(false)
+  // Everything below the shot buttons sits in a collapsed section; whether it was left open is remembered per browser.
+  const [more, setMore] = useState(false)
+  useEffect(() => {
+    try {
+      setMore(localStorage.getItem("stage-viewer-more") === "1")
+    } catch {}
+  }, [])
   const [speaker, setSpeaker] = useState<Speaker | null>(null)
   const bubbleRef = useRef<HTMLDivElement>(null)
 
@@ -55,7 +62,7 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
     let stage: Stage | null = null
     let interval: ReturnType<typeof setInterval> | null = null
     ;(async () => {
-      const [{ createStage }, { SETS, STAGINGS }] = await Promise.all([import("@/lib/stage"), import("@/lib/stage/sets")])
+      const [{ createStage }, { SETS, STAGINGS }] = await Promise.all([import("@d20/stage"), import("@d20/stage/sets")])
       const staging = stagingKey ? await STAGINGS[stagingKey]?.() : null
       const stagedSet = staging && typeof staging === "object" && "set" in staging ? String((staging as { set: string }).set) : null
       const key = params.set ? setKey : stagedSet && SETS[stagedSet] ? stagedSet : setKey
@@ -179,80 +186,94 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
               </button>
             ))}
           </div>
-          <div className="flex flex-wrap items-center gap-1">
-            <span className="w-10 opacity-60">tier</span>
-            {TIERS.map((t) => (
-              <button key={t} className={pill(stats?.tier === t)} onClick={() => set((s) => s.setTier(t))}>
-                {t}
-              </button>
-            ))}
-          </div>
-          <div className="flex flex-wrap items-center gap-1">
-            <span className="w-10 opacity-60">crowd</span>
-            {(["procedural", "cards", "hybrid"] as const).map((m) => (
-              <button key={m} className={pill(stage.flags.crowd === m)} onClick={() => set((s) => s.setFlags({ crowd: m }))}>
-                {m}
-              </button>
-            ))}
-            <span className="ml-2 w-6 opacity-60">aa</span>
-            {(["off", "fxaa", "msaa"] as const).map((m) => (
-              <button key={m} className={pill(stats?.aa === m)} onClick={() => set((s) => s.setFlags({ aa: m }))}>
-                {m}
-              </button>
-            ))}
-          </div>
-          <div className="flex flex-wrap items-center gap-1">
-            <span className="w-10 opacity-60">paint</span>
-            {(["uniform", "depth"] as const).map((m) => (
-              <button key={m} className={pill(stage.flags.paint === m)} onClick={() => set((s) => s.setFlags({ paint: m }))}>
-                {m}
-              </button>
-            ))}
-            <button className={pill(stage.flags.brush > 0.01)} onClick={() => set((s) => s.setFlags({ brush: s.flags.brush > 0.01 ? 0 : 1 }))}>
-              brush
-            </button>
-            <button className={pill(!!stats?.ao)} onClick={() => set((s) => s.setFlags({ ao: !s.pipeline.gtao.enabled }))}>
-              ao
-            </button>
-            <button className={pill(!!stats?.bloom)} onClick={() => set((s) => s.setFlags({ bloom: !s.pipeline.bloom.enabled }))}>
-              bloom
-            </button>
-            <button className={pill(stage.motion)} onClick={() => set((s) => (s.motion = !s.motion))}>
-              motion
-            </button>
-            <button
-              className={pill(false)}
-              onClick={async () => {
-                const blob = await stageRef.current?.capture()
-                if (!blob) return
-                const a = document.createElement("a")
-                a.href = URL.createObjectURL(blob)
-                a.download = `stage-${stats?.shot ?? "view"}.png`
-                a.click()
-                setTimeout(() => URL.revokeObjectURL(a.href), 2000)
-              }}
-            >
-              capture
-            </button>
-          </div>
-          {stats && (
-            <div className="font-mono text-[10px] opacity-75">
-              {stats.fps} fps · {stats.calls} calls · {(stats.triangles / 1e6).toFixed(2)}M tris · {stats.people} people / {stats.cards} cards · dpr {stats.dpr} · paint {stats.paintHeight}px ·{" "}
-              {stats.programs} programs
+          <details
+            open={more}
+            onToggle={(e) => {
+              const open = e.currentTarget.open
+              setMore(open)
+              try {
+                localStorage.setItem("stage-viewer-more", open ? "1" : "0")
+              } catch {}
+            }}
+          >
+            <summary className="cursor-pointer opacity-60 select-none">More</summary>
+            <div className="mt-1.5 space-y-1.5">
+              <div className="flex flex-wrap items-center gap-1">
+                <span className="w-10 opacity-60">tier</span>
+                {TIERS.map((t) => (
+                  <button key={t} className={pill(stats?.tier === t)} onClick={() => set((s) => s.setTier(t))}>
+                    {t}
+                  </button>
+                ))}
+              </div>
+              <div className="flex flex-wrap items-center gap-1">
+                <span className="w-10 opacity-60">crowd</span>
+                {(["procedural", "cards", "hybrid"] as const).map((m) => (
+                  <button key={m} className={pill(stage.flags.crowd === m)} onClick={() => set((s) => s.setFlags({ crowd: m }))}>
+                    {m}
+                  </button>
+                ))}
+                <span className="ml-2 w-6 opacity-60">aa</span>
+                {(["off", "fxaa", "msaa"] as const).map((m) => (
+                  <button key={m} className={pill(stats?.aa === m)} onClick={() => set((s) => s.setFlags({ aa: m }))}>
+                    {m}
+                  </button>
+                ))}
+              </div>
+              <div className="flex flex-wrap items-center gap-1">
+                <span className="w-10 opacity-60">paint</span>
+                {(["uniform", "depth"] as const).map((m) => (
+                  <button key={m} className={pill(stage.flags.paint === m)} onClick={() => set((s) => s.setFlags({ paint: m }))}>
+                    {m}
+                  </button>
+                ))}
+                <button className={pill(stage.flags.brush > 0.01)} onClick={() => set((s) => s.setFlags({ brush: s.flags.brush > 0.01 ? 0 : 1 }))}>
+                  brush
+                </button>
+                <button className={pill(!!stats?.ao)} onClick={() => set((s) => s.setFlags({ ao: !s.pipeline.gtao.enabled }))}>
+                  ao
+                </button>
+                <button className={pill(!!stats?.bloom)} onClick={() => set((s) => s.setFlags({ bloom: !s.pipeline.bloom.enabled }))}>
+                  bloom
+                </button>
+                <button className={pill(stage.motion)} onClick={() => set((s) => (s.motion = !s.motion))}>
+                  motion
+                </button>
+                <button
+                  className={pill(false)}
+                  onClick={async () => {
+                    const blob = await stageRef.current?.capture()
+                    if (!blob) return
+                    const a = document.createElement("a")
+                    a.href = URL.createObjectURL(blob)
+                    a.download = `stage-${stats?.shot ?? "view"}.png`
+                    a.click()
+                    setTimeout(() => URL.revokeObjectURL(a.href), 2000)
+                  }}
+                >
+                  capture
+                </button>
+              </div>
+              {stats && (
+                <div className="font-mono text-[10px] opacity-75">
+                  {stats.fps} fps · {stats.calls} calls · {(stats.triangles / 1e6).toFixed(2)}M tris · {stats.people} people / {stats.cards} cards · dpr {stats.dpr} · paint {stats.paintHeight}px ·{" "}
+                  {stats.programs} programs
+                </div>
+              )}
+              <div className="flex flex-wrap gap-2 opacity-60">
+                {sets.map((k) => (
+                  <a key={k} href={`/dev/stage?set=${k}&staging=none`} className={k === setKey && !stagingKey ? "underline" : ""}>
+                    {k}
+                  </a>
+                ))}
+                {stagings.map((k) => (
+                  <a key={k} href={`/dev/stage?staging=${k}`} className={k === stagingKey ? "underline" : ""}>
+                    {k}
+                  </a>
+                ))}
+              </div>
             </div>
-          )}
-          <div className="flex flex-wrap gap-2 opacity-60">
-            {sets.map((k) => (
-              <a key={k} href={`/dev/stage?set=${k}&staging=none`} className={k === setKey && !stagingKey ? "underline" : ""}>
-                {k}
-              </a>
-            ))}
-            {stagings.map((k) => (
-              <a key={k} href={`/dev/stage?staging=${k}`} className={k === stagingKey ? "underline" : ""}>
-                {k}
-              </a>
-            ))}
-          </div>
+          </details>
         </div>
       )}
     </div>

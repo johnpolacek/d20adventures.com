@@ -2,14 +2,15 @@
 
 [Home](index.md) · [Sources](Sources.md) · [Plans](plans/index.md) · [Roadmap](roadmap.md)
 
-Reviewed against local main on 2026-10-01.
+GM core references updated in `feature/gm-core` on 2026-10-02. Other sections last reviewed against local main on 2026-10-01.
 
 ## Runtime boundaries
 
 | Boundary | Implementation |
 |---|---|
 | UI | Next.js App Router, React, character/narrative rails, map and narration overlays. |
-| Server orchestration | Server actions and API routes coordinate access checks, content, AI generation, storage, and Convex writes. |
+| GM runtime | [GM core](gm-core.md) owns prompts, schemas, turn rules, character generation, and orchestration in `packages/gm-core`. |
+| Server adapters | `lib/gm-server` supplies Clerk, AI SDK, billing, Convex, content loaders, and narration scheduling. Existing actions remain entrypoints. |
 | Live state | Convex owns adventures, turns, players, chat, character state, token ledger, narration manifests, and accumulated story state. |
 | Auth | Clerk identifies users. Route/action helpers enforce ownership and membership. Direct Convex authorization remains an audit area. |
 | Authored content | Wiki markdown and JSON compile into bounded gameplay context. Registered adventures prefer complete S3 source and fall back to bundled repo source. |
@@ -36,7 +37,7 @@ Clerk's own cookie-only cache invalidation may still POST during sign-in/sign-ou
 
 - [Mapview](plans/mapview.md) loads per-encounter 2D maps from `maps2d/`. Missing maps hide the map surface.
 - [Storyview](storyview.md) generates and caches speech per paragraph, with on-demand or automatic shared charging.
-- [Stage engine](stage-engine.md) runs plain three.js under `lib/stage/`, with declarative sets, standees, instanced crowds, and painterly post-processing. It is currently used only by `/dev/stage`.
+- [Stage engine](stage-engine.md) runs plain three.js under `packages/stage/src/`, with declarative sets, standees, instanced crowds, and painterly post-processing. It is currently used only by `/dev/stage`.
 - [Stageview](plans/stageview.md) will replace the text-first layout with the stage-first turn page. This integration is not yet implemented.
 
 The old r3f encounter renderer, scene-kit, standee/mini generation, and paid mini products were removed. Historical ledger literals and legacy 3D schema fields remain for compatibility. New Stageview fixtures are separate from those retired assets.

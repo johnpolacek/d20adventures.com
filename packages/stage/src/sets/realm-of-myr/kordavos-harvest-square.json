@@ -1,0 +1,1572 @@
+{
+  "format": "d20.stage.set",
+  "version": 1,
+  "id": "kordavos-harvest-square",
+  "settingId": "realm-of-myr",
+  "locationId": "kordavos",
+  "title": "The Harvest Festival",
+  "seed": 1717,
+  "atmosphere": {
+    "sun": {
+      "direction": [-0.5, 0.7, 0.5],
+      "color": "#ffdcb0",
+      "intensity": 5.2,
+      "target": [0, 0, 0],
+      "distance": 260,
+      "shadow": {
+        "left": -80,
+        "right": 80,
+        "top": 80,
+        "bottom": -80,
+        "near": 10,
+        "far": 560
+      }
+    },
+    "hemisphere": {
+      "sky": "#a9c6e2",
+      "ground": "#6a4434",
+      "intensity": 0.28
+    },
+    "sky": {
+      "horizon": "#d2d2c6",
+      "mid": "#93b9d6",
+      "zenith": "#4a82b6"
+    },
+    "fog": {
+      "density": 0.0016
+    },
+    "environment": 0.32,
+    "exposure": 1.05,
+    "wind": 0.7
+  },
+  "camera": {
+    "near": 0.3,
+    "far": 2400,
+    "min": [-80, 0.6, -90],
+    "max": [80, 70, 100],
+    "maxDistance": 180
+  },
+  "materials": {
+    "dark": {
+      "type": "masonry",
+      "a": "#6a4a3a",
+      "b": "#7f624d",
+      "c": "#5a5553",
+      "block": [2.4, 1.2],
+      "grime": 1.3,
+      "relief": 0.08
+    },
+    "far": {
+      "type": "masonry",
+      "a": "#9b7a64",
+      "b": "#b2957a",
+      "c": "#8f8a86",
+      "block": [2.5, 1.2],
+      "grime": 0.6,
+      "relief": 0.03
+    },
+    "roof": {
+      "type": "masonry",
+      "a": "#5a3a30",
+      "b": "#7a4a38",
+      "c": "#4f4a48",
+      "mortar": "#2c2320",
+      "block": [0.55, 0.34],
+      "joint": 0.035,
+      "relief": 0.07,
+      "grime": 0.7
+    },
+    "roofFar": {
+      "type": "masonry",
+      "a": "#6b4a40",
+      "b": "#7c5646",
+      "c": "#5f5a58",
+      "block": [0.6, 0.4],
+      "relief": 0.02,
+      "grime": 0.4
+    },
+    "plaster": {
+      "type": "masonry",
+      "a": "#b39a78",
+      "b": "#c4ab86",
+      "c": "#9a8a78",
+      "block": [40, 40],
+      "grime": 1.3
+    },
+    "plasterB": {
+      "type": "masonry",
+      "a": "#a88462",
+      "b": "#b8966e",
+      "c": "#8f8070",
+      "block": [40, 40],
+      "grime": 1.3
+    },
+    "ground": {
+      "type": "masonry",
+      "a": "#9a7658",
+      "b": "#b08d6c",
+      "c": "#8a7c70",
+      "mortar": "#5d4636",
+      "block": [1.1, 0.8],
+      "relief": 0.045,
+      "grime": 0.35,
+      "ground": true,
+      "roads": false
+    },
+    "planks": {
+      "type": "wood",
+      "a": "#7a5a3c",
+      "b": "#8c6a48",
+      "c": "#6a5644",
+      "plank": [0.22, 2.4],
+      "relief": 0.05,
+      "variance": 0.45,
+      "seed": 7.3,
+      "grime": 0.6
+    },
+    "pole": {
+      "type": "wood",
+      "a": "#4d382a",
+      "b": "#644a35",
+      "c": "#453c34",
+      "plank": [0, 60],
+      "relief": 0.03,
+      "variance": 0.35,
+      "seed": 5.7,
+      "grime": 0.5
+    },
+    "table": {
+      "type": "wood",
+      "a": "#6a4b33",
+      "b": "#7e5b3e",
+      "c": "#5a4a3c",
+      "plank": [0.19, 1.9],
+      "relief": 0.045,
+      "variance": 0.4,
+      "seed": 11.2
+    },
+    "crate": {
+      "type": "wood",
+      "a": "#8a6a48",
+      "b": "#9c7a52",
+      "c": "#7a6a58",
+      "plank": [0.2, 1.2],
+      "relief": 0.045,
+      "variance": 0.4,
+      "seed": 2.6
+    },
+    "crateDark": {
+      "type": "wood",
+      "a": "#4a3526",
+      "b": "#5a4230",
+      "c": "#403830",
+      "plank": [0, 40],
+      "relief": 0.03,
+      "seed": 8.8
+    },
+    "barrel": {
+      "type": "wood",
+      "a": "#6a4a30",
+      "b": "#7c5a3a",
+      "c": "#5f4a3a",
+      "plank": [0.105, 1.4],
+      "relief": 0.05,
+      "variance": 0.45,
+      "seed": 4.4
+    },
+    "timber": {
+      "type": "wood",
+      "a": "#3a2a20",
+      "b": "#4a362a",
+      "c": "#3a3230",
+      "plank": [0, 40],
+      "relief": 0.03,
+      "seed": 6.1
+    },
+    "sack": {
+      "type": "burlap",
+      "color": "#c2b08c"
+    },
+    "sackB": {
+      "type": "burlap",
+      "color": "#a08a68"
+    },
+    "basket": {
+      "type": "burlap",
+      "color": "#b08a52"
+    },
+    "iron": {
+      "type": "metal",
+      "color": "#2e2a28",
+      "roughness": 0.55,
+      "metalness": 0.7
+    },
+    "brass": {
+      "type": "metal",
+      "color": "#a8823e",
+      "roughness": 0.38,
+      "metalness": 0.85
+    },
+    "coin": {
+      "type": "metal",
+      "color": "#d4a84a",
+      "roughness": 0.3,
+      "metalness": 0.95
+    },
+    "void": {
+      "type": "plain",
+      "color": "#0d0a09",
+      "roughness": 1
+    },
+    "flame": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ffae55",
+      "emissiveIntensity": 5
+    },
+    "fire": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ff8a3a",
+      "emissiveIntensity": 2.2
+    },
+    "coal": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ff5a1a",
+      "emissiveIntensity": 2.5
+    },
+    "crystal": {
+      "type": "plain",
+      "color": "#c8dcea",
+      "roughness": 0.08,
+      "emissive": "#86b4e0",
+      "emissiveIntensity": 0.7
+    },
+    "pottery": {
+      "type": "plain",
+      "color": "#a45a36",
+      "roughness": 0.7
+    },
+    "potteryB": {
+      "type": "plain",
+      "color": "#8a6a4e",
+      "roughness": 0.75
+    },
+    "goodsRed": {
+      "type": "plain",
+      "color": "#9a2e22",
+      "roughness": 0.8
+    },
+    "goodsGreen": {
+      "type": "plain",
+      "color": "#5a6a2e",
+      "roughness": 0.8
+    },
+    "goodsYellow": {
+      "type": "plain",
+      "color": "#c2963a",
+      "roughness": 0.7
+    },
+    "goodsTeal": {
+      "type": "plain",
+      "color": "#2a6a66",
+      "roughness": 0.8
+    },
+    "rope": {
+      "type": "plain",
+      "color": "#8a7454",
+      "roughness": 0.95
+    },
+    "straw": {
+      "type": "plain",
+      "color": "#c4a45a",
+      "roughness": 0.95
+    },
+    "gourd": {
+      "type": "plain",
+      "color": "#c0642a",
+      "roughness": 0.6
+    },
+    "chest": {
+      "type": "plain",
+      "color": "#3e2a1c",
+      "roughness": 0.8
+    },
+    "banner": {
+      "type": "cloth",
+      "color": "#ffffff",
+      "heraldry": "asterian",
+      "tatters": [2, 0.05],
+      "amp": 0.45
+    },
+    "bannerValkaran": {
+      "type": "cloth",
+      "color": "#ffffff",
+      "heraldry": "valkaran",
+      "tatters": [2, 0.06],
+      "amp": 0.4
+    },
+    "pennantOrange": {
+      "type": "cloth",
+      "color": "#b5602a",
+      "amp": 0.9,
+      "freq": 2.2
+    },
+    "pennantGreen": {
+      "type": "cloth",
+      "color": "#3f5a30",
+      "amp": 0.9,
+      "freq": 2.2
+    },
+    "tentRust": {
+      "type": "cloth",
+      "color": "#9a4a2a",
+      "tatters": [5, 0.1],
+      "amp": 0.22
+    },
+    "tentWine": {
+      "type": "cloth",
+      "color": "#5e2024",
+      "tatters": [3, 0.1],
+      "amp": 0.22
+    },
+    "tentTeal": {
+      "type": "cloth",
+      "color": "#2c5f5c",
+      "tatters": [4, 0.1],
+      "amp": 0.22
+    },
+    "tentOchre": {
+      "type": "cloth",
+      "color": "#a67a3c",
+      "tatters": [3, 0.1],
+      "amp": 0.22
+    },
+    "tentOrange": {
+      "type": "cloth",
+      "color": "#b0602a",
+      "tatters": [3, 0.08],
+      "amp": 0.22
+    },
+    "tentGreen": {
+      "type": "cloth",
+      "color": "#46603a",
+      "tatters": [3, 0.08],
+      "amp": 0.22
+    },
+    "tentCream": {
+      "type": "cloth",
+      "color": "#cdbf9e",
+      "tatters": [3, 0.08],
+      "amp": 0.22
+    },
+    "tentBlack": {
+      "type": "cloth",
+      "color": "#26201f",
+      "tatters": [1, 0.04],
+      "amp": 0.18
+    },
+    "tentGold": {
+      "type": "cloth",
+      "color": "#a8823a",
+      "tatters": [1, 0.04],
+      "amp": 0.2
+    },
+    "tentPlum": {
+      "type": "cloth",
+      "color": "#4e2c4c",
+      "tatters": [3, 0.08],
+      "amp": 0.2
+    },
+    "curtain": {
+      "type": "cloth",
+      "color": "#3f5a30",
+      "amp": 0.08
+    },
+    "clothDrab": {
+      "type": "cloth",
+      "color": "#7d6a50",
+      "amp": 0.12
+    },
+    "flagOrange": {
+      "type": "cloth",
+      "color": "#c2692c",
+      "amp": 0.5,
+      "freq": 2.4
+    },
+    "flagGreen": {
+      "type": "cloth",
+      "color": "#4a6a36",
+      "amp": 0.5,
+      "freq": 2.4
+    },
+    "flagCream": {
+      "type": "cloth",
+      "color": "#d8ccae",
+      "amp": 0.5,
+      "freq": 2.4
+    }
+  },
+  "objects": [
+    {
+      "type": "groundDisc",
+      "id": "ground",
+      "radius": 260
+    },
+    {
+      "type": "row",
+      "id": "houses-north-west",
+      "from": [-44, -29],
+      "to": [-8.5, -29],
+      "step": [8.5, 10.5],
+      "offset": [-1.5, 1.5],
+      "item": {
+        "type": "house"
+      },
+      "vary": {
+        "w": [7.5, 10],
+        "d": [8, 10],
+        "h": [10, 16]
+      }
+    },
+    {
+      "type": "row",
+      "id": "houses-north-east",
+      "from": [8.5, -29],
+      "to": [44, -29],
+      "step": [8.5, 10.5],
+      "offset": [-1.5, 1.5],
+      "item": {
+        "type": "house"
+      },
+      "vary": {
+        "w": [7.5, 10],
+        "d": [8, 10],
+        "h": [10, 16]
+      }
+    },
+    {
+      "type": "row",
+      "id": "street-north-west",
+      "from": [-9, -40],
+      "to": [-9, -84],
+      "step": [8.5, 11],
+      "offset": [-1, 1],
+      "item": {
+        "type": "house"
+      },
+      "vary": {
+        "w": [7.5, 10],
+        "d": [7, 9],
+        "h": [11, 18]
+      },
+      "itemYaw": 90
+    },
+    {
+      "type": "row",
+      "id": "street-north-east",
+      "from": [9, -40],
+      "to": [9, -84],
+      "step": [8.5, 11],
+      "offset": [-1, 1],
+      "item": {
+        "type": "house"
+      },
+      "vary": {
+        "w": [7.5, 10],
+        "d": [7, 9],
+        "h": [11, 18]
+      },
+      "itemYaw": -90
+    },
+    {
+      "type": "row",
+      "id": "houses-west",
+      "from": [-29.5, -22],
+      "to": [-29.5, 28],
+      "step": [8.5, 11],
+      "offset": [-1.5, 1.5],
+      "item": {
+        "type": "house"
+      },
+      "vary": {
+        "w": [7.5, 10.5],
+        "d": [8, 10],
+        "h": [10, 17]
+      },
+      "itemYaw": 90
+    },
+    {
+      "type": "row",
+      "id": "houses-east",
+      "from": [29.5, -22],
+      "to": [29.5, 28],
+      "step": [8.5, 11],
+      "offset": [-1.5, 1.5],
+      "item": {
+        "type": "house"
+      },
+      "vary": {
+        "w": [7.5, 10.5],
+        "d": [8, 10],
+        "h": [10, 17]
+      },
+      "itemYaw": -90
+    },
+    {
+      "type": "row",
+      "id": "houses-south-west",
+      "from": [-44, 34],
+      "to": [-9, 34],
+      "step": [8.5, 10.5],
+      "offset": [-1.5, 1.5],
+      "item": {
+        "type": "house"
+      },
+      "vary": {
+        "w": [7.5, 10],
+        "d": [8, 10],
+        "h": [10, 16]
+      },
+      "itemYaw": 180
+    },
+    {
+      "type": "row",
+      "id": "houses-south-east",
+      "from": [9, 34],
+      "to": [44, 34],
+      "step": [8.5, 10.5],
+      "offset": [-1.5, 1.5],
+      "item": {
+        "type": "house"
+      },
+      "vary": {
+        "w": [7.5, 10],
+        "d": [8, 10],
+        "h": [10, 16]
+      },
+      "itemYaw": 180
+    },
+    {
+      "type": "row",
+      "id": "street-south-west",
+      "from": [-9.5, 45],
+      "to": [-9.5, 80],
+      "step": [8.5, 11],
+      "offset": [-1, 1],
+      "item": {
+        "type": "house"
+      },
+      "vary": {
+        "w": [7.5, 10],
+        "d": [7, 9],
+        "h": [10, 15]
+      },
+      "itemYaw": 90
+    },
+    {
+      "type": "row",
+      "id": "street-south-east",
+      "from": [9.5, 45],
+      "to": [9.5, 80],
+      "step": [8.5, 11],
+      "offset": [-1, 1],
+      "item": {
+        "type": "house"
+      },
+      "vary": {
+        "w": [7.5, 10],
+        "d": [7, 9],
+        "h": [10, 15]
+      },
+      "itemYaw": -90
+    },
+    {
+      "type": "archScreen",
+      "id": "city-gate",
+      "at": [0, 0, 112],
+      "yaw": 180
+    },
+    {
+      "type": "skyline",
+      "id": "city-towers",
+      "kind": "towers",
+      "area": [-160, -360, 160, -150],
+      "count": 16
+    },
+    {
+      "type": "dome",
+      "id": "temple-valkara",
+      "at": [-34, -160],
+      "r": 14
+    },
+    {
+      "type": "dome",
+      "id": "temple-east",
+      "at": [52, -205],
+      "r": 10
+    },
+    {
+      "type": "farTown",
+      "id": "city",
+      "area": [-240, -240, 240, 240],
+      "center": [0, 0],
+      "radius": 230,
+      "height": [9, 17],
+      "exclude": [[-48, -46, 48, 46], [-16, -100, 16, -38], [-16, 38, 16, 125]],
+      "landmarks": [[-82, -96, 30], [96, -84, 26], [-128, 46, 24], [118, 74, 28]]
+    },
+    {
+      "type": "box",
+      "id": "music-stage",
+      "at": [0, -17.5],
+      "size": [11, 0.75, 5.2],
+      "material": "planks",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "id": "music-stage-skirt",
+      "at": [0, 0, -14.86],
+      "size": [11.04, 0.72, 0.05],
+      "material": "tentOrange"
+    },
+    {
+      "type": "box",
+      "id": "music-stage-step-low",
+      "at": [-4.3, -14.45],
+      "size": [1.6, 0.25, 0.8],
+      "material": "planks",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "id": "music-stage-step-high",
+      "at": [-4.3, -14.75],
+      "size": [1.6, 0.5, 0.25],
+      "material": "planks"
+    },
+    {
+      "type": "box",
+      "id": "music-stage-curtain",
+      "at": [0, 0.75, -19.95],
+      "size": [11, 3.6, 0.06],
+      "material": "curtain"
+    },
+    {
+      "type": "sail",
+      "id": "music-stage-canopy",
+      "cloth": "tentOrange",
+      "sag": 0.45,
+      "corners": [[-5.7, 4.6, -14.8], [5.7, 4.6, -14.8], [-5.7, 5.6, -20.2], [5.7, 5.6, -20.2]]
+    },
+    {
+      "type": "banner",
+      "at": [-3.4, 4.3, -19.85],
+      "w": 1.5,
+      "h": 3.2,
+      "material": "bannerValkaran"
+    },
+    {
+      "type": "banner",
+      "at": [3.4, 4.3, -19.85],
+      "w": 1.5,
+      "h": 3.2,
+      "material": "bannerValkaran"
+    },
+    {
+      "type": "barrel",
+      "at": [3.4, 0.75, -18.6],
+      "r": 0.32,
+      "h": 0.85
+    },
+    {
+      "type": "barrel",
+      "at": [-4.6, 0.75, -18.9],
+      "r": 0.3,
+      "h": 0.8
+    },
+    {
+      "type": "standard",
+      "at": [-7.6, -16.4],
+      "height": 7.6,
+      "pennant": "pennantOrange"
+    },
+    {
+      "type": "standard",
+      "at": [7.6, -16.4],
+      "height": 8.2,
+      "pennant": "pennantGreen"
+    },
+    {
+      "type": "sheaf",
+      "at": [-6.2, -14.9],
+      "size": 1.15,
+      "pair": true
+    },
+    {
+      "type": "sheaf",
+      "at": [5.9, -14.9],
+      "size": 1.1,
+      "pair": true
+    },
+    {
+      "type": "gourds",
+      "at": [-5.6, -14.3],
+      "count": 9
+    },
+    {
+      "type": "gourds",
+      "at": [6.6, -14.3],
+      "count": 8
+    },
+    {
+      "type": "stall",
+      "id": "karim-stall",
+      "at": [-15.5, 2.5],
+      "yaw": 90,
+      "w": 5.6,
+      "d": 3.6,
+      "cloth": "tentBlack",
+      "valance": "tentGold",
+      "goods": "jewels",
+      "frontHeight": 2.9,
+      "backRise": 0.8
+    },
+    {
+      "type": "bannerPole",
+      "at": [-13.1, 6.4],
+      "height": 5.6,
+      "banner": "banner",
+      "w": 0.9,
+      "h": 2.6
+    },
+    {
+      "type": "crate",
+      "at": [-14.4, -1.6],
+      "size": 0.7,
+      "stack": true
+    },
+    {
+      "type": "lantern",
+      "at": [-13.2, -1.3],
+      "height": 2.7,
+      "post": true
+    },
+    {
+      "type": "stall",
+      "id": "liora-stall",
+      "at": [15.5, 4.5],
+      "yaw": -90,
+      "w": 5.4,
+      "d": 3.6,
+      "cloth": "tentGreen",
+      "valance": "tentOrange",
+      "goods": "spices",
+      "frontHeight": 2.8,
+      "backRise": 0.9
+    },
+    {
+      "type": "bannerPole",
+      "at": [13.2, 8.8],
+      "height": 5.2,
+      "banner": "bannerValkaran",
+      "w": 0.9,
+      "h": 2.4
+    },
+    {
+      "type": "sack",
+      "at": [13.6, 0.6],
+      "size": 0.7
+    },
+    {
+      "type": "sack",
+      "at": [14.3, 0.3],
+      "size": 0.62
+    },
+    {
+      "type": "basket",
+      "at": [13.4, 0.0],
+      "size": 0.5
+    },
+    {
+      "type": "sheaf",
+      "at": [13.8, 9.4],
+      "size": 1.1,
+      "pair": true
+    },
+    {
+      "type": "gourds",
+      "at": [14.4, 10.1],
+      "count": 8
+    },
+    {
+      "type": "stall",
+      "id": "zephyra-tent",
+      "at": [-14.5, -9.5],
+      "yaw": 55,
+      "w": 4.6,
+      "d": 3.4,
+      "cloth": "tentPlum",
+      "valance": "tentTeal",
+      "goods": "none",
+      "frontHeight": 2.6,
+      "backRise": 0.9,
+      "backCloth": "tentPlum"
+    },
+    {
+      "type": "cylinder",
+      "at": [-13.48, 0.97, -8.78],
+      "radius": [0.1, 0.06],
+      "height": 0.07,
+      "material": "brass",
+      "segments": 12
+    },
+    {
+      "type": "sphere",
+      "at": [-13.48, 1.04, -8.78],
+      "radius": 0.13,
+      "material": "crystal",
+      "segments": 20
+    },
+    {
+      "type": "lantern",
+      "at": [-11.1, -11.1],
+      "height": 2.4,
+      "post": true
+    },
+    {
+      "type": "brazier",
+      "id": "fire-brazier",
+      "at": [11.6, -4.6]
+    },
+    {
+      "type": "stall",
+      "id": "game-stall",
+      "at": [13.5, 16.5],
+      "yaw": -90,
+      "w": 5,
+      "d": 3.4,
+      "cloth": "tentCream",
+      "valance": "tentOrange",
+      "goods": "pots",
+      "frontHeight": 2.8
+    },
+    {
+      "type": "cylinder",
+      "id": "game-wheel",
+      "at": [11.3, 1.9, 18.6],
+      "yaw": 90,
+      "pitch": 90,
+      "radius": 0.55,
+      "height": 0.07,
+      "material": "goodsYellow",
+      "segments": 20
+    },
+    {
+      "type": "beam",
+      "from": [11.4, 0, 18.6],
+      "to": [11.4, 1.95, 18.6],
+      "radius": 0.05,
+      "material": "pole"
+    },
+    {
+      "type": "row",
+      "id": "food-stalls-west",
+      "from": [-20.5, 9.5],
+      "to": [-20.5, 26],
+      "step": [6.2, 7],
+      "item": {
+        "type": "stall"
+      },
+      "vary": {
+        "w": [4.6, 5.6],
+        "d": [3.2, 3.6]
+      },
+      "choose": {
+        "cloth": ["tentOrange", "tentCream", "tentGreen"],
+        "goods": ["baskets", "pots", "sacks"]
+      },
+      "itemYaw": 90
+    },
+    {
+      "type": "brazier",
+      "at": [-17.2, 21.6]
+    },
+    {
+      "type": "row",
+      "id": "craft-stall-west",
+      "from": [-20.5, -21.5],
+      "to": [-20.5, -16],
+      "step": [6.2, 7],
+      "item": {
+        "type": "stall"
+      },
+      "vary": {
+        "w": [4.6, 5.6],
+        "d": [3.2, 3.6]
+      },
+      "choose": {
+        "cloth": ["tentRust", "tentOchre", "tentTeal"],
+        "goods": ["cloth", "pots", "baskets"]
+      },
+      "itemYaw": 90
+    },
+    {
+      "type": "stall",
+      "id": "stall-north-west",
+      "at": [-13, -21.5],
+      "w": 5.2,
+      "d": 3.4,
+      "cloth": "tentOchre",
+      "goods": "cloth"
+    },
+    {
+      "type": "row",
+      "id": "stalls-north-east",
+      "from": [12.5, -21.5],
+      "to": [19, -21.5],
+      "step": [6.2, 7],
+      "item": {
+        "type": "stall"
+      },
+      "vary": {
+        "w": [4.6, 5.6],
+        "d": [3.2, 3.6]
+      },
+      "choose": {
+        "cloth": ["tentRust", "tentOchre", "tentTeal", "tentWine"],
+        "goods": ["cloth", "pots", "baskets", "sacks"]
+      },
+      "itemYaw": 0
+    },
+    {
+      "type": "row",
+      "id": "craft-stalls-east",
+      "from": [20.5, -15],
+      "to": [20.5, -7],
+      "step": [6.2, 7],
+      "item": {
+        "type": "stall"
+      },
+      "vary": {
+        "w": [4.6, 5.6],
+        "d": [3.2, 3.6]
+      },
+      "choose": {
+        "cloth": ["tentRust", "tentWine", "tentOchre", "tentTeal"],
+        "goods": ["cloth", "pots", "baskets", "sacks"]
+      },
+      "itemYaw": -90
+    },
+    {
+      "type": "row",
+      "id": "food-stalls-east",
+      "from": [20.5, 10.5],
+      "to": [20.5, 26],
+      "step": [6.2, 7],
+      "item": {
+        "type": "stall"
+      },
+      "vary": {
+        "w": [4.6, 5.6],
+        "d": [3.2, 3.6]
+      },
+      "choose": {
+        "cloth": ["tentOrange", "tentGreen", "tentCream"],
+        "goods": ["baskets", "sacks", "pots"]
+      },
+      "itemYaw": -90
+    },
+    {
+      "type": "cart",
+      "at": [-8.6, 27.0],
+      "yaw": 30
+    },
+    {
+      "type": "goodsPile",
+      "at": [8.4, 27.2],
+      "yaw": -20
+    },
+    {
+      "type": "goodsPile",
+      "at": [-23, -4],
+      "yaw": 20
+    },
+    {
+      "type": "goodsPile",
+      "at": [23, 1.5],
+      "yaw": -30
+    },
+    {
+      "type": "goodsPile",
+      "at": [-23, 6.0],
+      "yaw": 60
+    },
+    {
+      "type": "barrel",
+      "at": [-18.4, 7.2],
+      "r": 0.38,
+      "h": 1.0
+    },
+    {
+      "type": "barrel",
+      "at": [-17.8, 7.9],
+      "r": 0.34,
+      "h": 0.9
+    },
+    {
+      "type": "lantern",
+      "at": [-5.4, 9.5],
+      "height": 3.2,
+      "post": true
+    },
+    {
+      "type": "lantern",
+      "at": [5.4, 9.5],
+      "height": 3.2,
+      "post": true
+    },
+    {
+      "type": "lantern",
+      "at": [-6.2, -3.0],
+      "height": 3.2,
+      "post": true
+    },
+    {
+      "type": "lantern",
+      "at": [5.6, -0.5],
+      "height": 3.2,
+      "post": true
+    },
+    {
+      "type": "bunting",
+      "from": [-24.5, 8.2, -21],
+      "to": [24.5, 8.0, -19],
+      "sag": 1.6
+    },
+    {
+      "type": "bunting",
+      "from": [-24.5, 7.8, -8.5],
+      "to": [24.5, 8.2, -6.5],
+      "sag": 1.8
+    },
+    {
+      "type": "bunting",
+      "from": [-24.5, 8.0, 4],
+      "to": [24.5, 7.8, 6],
+      "sag": 1.8
+    },
+    {
+      "type": "bunting",
+      "from": [-24.5, 7.6, 16.5],
+      "to": [24.5, 8.0, 18.5],
+      "sag": 1.6
+    },
+    {
+      "type": "bunting",
+      "from": [-7.6, 7.0, -16.4],
+      "to": [-5.7, 4.8, -14.8],
+      "sag": 0.3
+    },
+    {
+      "type": "bunting",
+      "from": [7.6, 7.4, -16.4],
+      "to": [5.7, 4.8, -14.8],
+      "sag": 0.3
+    },
+    {
+      "type": "sheaf",
+      "at": [-18.2, 8.8],
+      "size": 1.1,
+      "pair": true
+    },
+    {
+      "type": "sheaf",
+      "at": [18.4, -4.8],
+      "size": 1.1,
+      "pair": true
+    },
+    {
+      "type": "sheaf",
+      "at": [-6.0, 25.0],
+      "size": 1.2,
+      "pair": true
+    },
+    {
+      "type": "sheaf",
+      "at": [6.0, 25.2],
+      "size": 1.15,
+      "pair": true
+    },
+    {
+      "type": "gourds",
+      "at": [-18.6, 11.4],
+      "count": 8
+    },
+    {
+      "type": "gourds",
+      "at": [-6.6, 25.8],
+      "count": 9
+    },
+    {
+      "type": "gourds",
+      "at": [6.8, 25.6],
+      "count": 9
+    }
+  ],
+  "land": {
+    "inner": 250,
+    "outer": 1300,
+    "palette": ["#b0935c", "#9c8a52", "#8a8a54", "#b8a068", "#7d7a4a", "#a8864e"]
+  },
+  "crowd": {
+    "library": "realm-of-myr",
+    "avoid": {
+      "rects": [[0, 18.2, 3.6, 2.6, 0], [0, -17.5, 6.2, 3.2, 0]],
+      "circles": [
+        [-12.0, 1.0, 1.7],
+        [12.0, 3.0, 1.7],
+        [-12.43, -6.71, 1.7],
+        [10.5, -3.5, 2.4],
+        [-3.0, -13.4, 1.6],
+        [-11.8, 3.9, 1.0],
+        [11.8, 5.9, 1.0],
+        [-11.31, -8.48, 1.0],
+        [9.6, 15.2, 1.0],
+        [-16.6, 15.5, 1.0],
+        [8.8, -2.0, 1.0],
+        [-0.6, -13.6, 1.0],
+        [3.0, -10.2, 3.0],
+        [0, 4, 1.2],
+        [-8.93, 2.46, 1.5],
+        [-10.47, 1.73, 1.0],
+        [9.01, 4.15, 1.5],
+        [10.5, 3.57, 1.0],
+        [-9.46, -4.68, 1.5],
+        [-10.95, -5.7, 1.0],
+        [7.95, -1.26, 1.5],
+        [9.2, -2.4, 1.0],
+        [2.0, 14.4, 1.6],
+        [1.0, 16.2, 1.0],
+        [-10.12, 2.15, 1.2],
+        [-8.59, 3.08, 2.0],
+        [11.0, 4.96, 1.2],
+        [10.18, 6.56, 2.0],
+        [-10.71, -5.34, 1.2],
+        [-9.3, -4.23, 2.0],
+        [10.09, -1.34, 1.2],
+        [9.75, 0.43, 2.0],
+        [-2.17, -11.36, 1.2],
+        [-1.49, -9.7, 2.0]
+      ]
+    },
+    "groups": [
+      {
+        "type": "scatter",
+        "area": [-24, -23, 24, 27],
+        "count": 360,
+        "mix": {
+          "traveler": 2,
+          "packer": 1,
+          "pilgrim": 1,
+          "merchant": 2,
+          "woman": 3,
+          "porter": 1,
+          "child": 2
+        },
+        "density": [
+          {
+            "rect": [-6, -6, 6, 24],
+            "factor": 0.3
+          },
+          {
+            "rect": [-24, -23, -17, 27],
+            "factor": 1.8
+          },
+          {
+            "rect": [17, -23, 24, 27],
+            "factor": 1.8
+          },
+          {
+            "rect": [-12, -14, 12, -7],
+            "factor": 1.3
+          }
+        ]
+      },
+      {
+        "type": "scatter",
+        "area": [-12.5, -14, -6.5, -7],
+        "count": 12,
+        "mix": {
+          "woman": 2,
+          "child": 2,
+          "traveler": 1,
+          "merchant": 1
+        },
+        "face": {
+          "toward": [0, -17.5],
+          "jitter": 30,
+          "share": 0.85
+        }
+      },
+      {
+        "type": "scatter",
+        "area": [6.8, -14, 12.5, -8],
+        "count": 10,
+        "mix": {
+          "woman": 2,
+          "child": 2,
+          "traveler": 1,
+          "merchant": 1
+        },
+        "face": {
+          "toward": [0, -17.5],
+          "jitter": 30,
+          "share": 0.85
+        }
+      },
+      {
+        "type": "points",
+        "people": [
+          {
+            "kind": "woman",
+            "at": [5.3, -10.4],
+            "yaw": 5.0
+          },
+          {
+            "kind": "traveler",
+            "at": [4.6, -8.5],
+            "yaw": -46.7
+          },
+          {
+            "kind": "child",
+            "at": [3.0, -7.9],
+            "yaw": -90.0
+          },
+          {
+            "kind": "woman",
+            "at": [1.3, -8.6],
+            "yaw": -136.7
+          },
+          {
+            "kind": "merchant",
+            "at": [0.7, -10.3],
+            "yaw": 177.5
+          },
+          {
+            "kind": "woman",
+            "at": [1.4, -12.0],
+            "yaw": 131.6
+          },
+          {
+            "kind": "child",
+            "at": [3.1, -12.5],
+            "yaw": 87.5
+          },
+          {
+            "kind": "traveler",
+            "at": [4.8, -12.0],
+            "yaw": 45.0
+          }
+        ]
+      },
+      {
+        "type": "points",
+        "people": [
+          {
+            "kind": "traveler",
+            "at": [-2.6, -17.4],
+            "yaw": 0,
+            "y": 0.75
+          },
+          {
+            "kind": "woman",
+            "at": [-0.6, -17.9],
+            "yaw": 10,
+            "y": 0.75
+          },
+          {
+            "kind": "pilgrim",
+            "at": [1.2, -17.2],
+            "yaw": -10,
+            "y": 0.75
+          },
+          {
+            "kind": "merchant",
+            "at": [4.4, -17.7],
+            "yaw": -20,
+            "y": 0.75
+          }
+        ]
+      },
+      {
+        "type": "points",
+        "people": [
+          {
+            "kind": "child",
+            "at": [8.0, -5.6],
+            "yaw": 50.0
+          },
+          {
+            "kind": "traveler",
+            "at": [9.0, -6.6],
+            "yaw": 25.8
+          },
+          {
+            "kind": "woman",
+            "at": [10.6, -7.0],
+            "yaw": -1.6
+          },
+          {
+            "kind": "porter",
+            "at": [12.2, -6.4],
+            "yaw": -30.4
+          },
+          {
+            "kind": "merchant",
+            "at": [13.4, -5.0],
+            "yaw": -62.7
+          },
+          {
+            "kind": "child",
+            "at": [13.8, -3.4],
+            "yaw": -91.7
+          },
+          {
+            "kind": "woman",
+            "at": [13.4, -1.8],
+            "yaw": -120.4
+          },
+          {
+            "kind": "packer",
+            "at": [7.2, -4.4],
+            "yaw": 74.7
+          }
+        ]
+      },
+      {
+        "type": "points",
+        "people": [
+          {
+            "kind": "soldier",
+            "at": [17.6, -3.2],
+            "yaw": -100
+          },
+          {
+            "kind": "soldier",
+            "at": [18.2, -1.9],
+            "yaw": -75
+          },
+          {
+            "kind": "woman",
+            "at": [-16.4, 13.6],
+            "yaw": -90
+          },
+          {
+            "kind": "child",
+            "at": [-16.8, 14.4],
+            "yaw": -100
+          },
+          {
+            "kind": "traveler",
+            "at": [-16.2, 19.2],
+            "yaw": -80
+          },
+          {
+            "kind": "merchant",
+            "at": [-11.0, 5.2],
+            "yaw": -120
+          },
+          {
+            "kind": "woman",
+            "at": [11.2, 7.4],
+            "yaw": 110
+          },
+          {
+            "kind": "child",
+            "at": [-10.6, -9.8],
+            "yaw": -130
+          }
+        ]
+      },
+      {
+        "type": "walkers",
+        "path": [[-22, 12.5], [22, 12.5]],
+        "count": 14,
+        "mode": "pingpong",
+        "both": true,
+        "speed": [0.7, 1.2],
+        "lateral": [-1.4, 1.4],
+        "mix": {
+          "traveler": 2,
+          "packer": 1,
+          "pilgrim": 1,
+          "merchant": 2,
+          "woman": 2,
+          "porter": 1,
+          "child": 1
+        }
+      },
+      {
+        "type": "walkers",
+        "path": [[-7.5, 27], [-7.5, -3]],
+        "count": 8,
+        "mode": "pingpong",
+        "both": true,
+        "speed": [0.7, 1.1],
+        "lateral": [-0.8, 0.8],
+        "mix": {
+          "traveler": 2,
+          "woman": 2,
+          "merchant": 1,
+          "child": 1
+        }
+      },
+      {
+        "type": "walkers",
+        "path": [[0, 70], [0, 31]],
+        "count": 10,
+        "mode": "pingpong",
+        "both": true,
+        "speed": [0.8, 1.2],
+        "lateral": [-3, 3],
+        "mix": {
+          "traveler": 2,
+          "packer": 1,
+          "pilgrim": 1,
+          "merchant": 1,
+          "woman": 2,
+          "porter": 1
+        }
+      },
+      {
+        "type": "walkers",
+        "path": [[0, -31], [0, -80]],
+        "count": 12,
+        "mode": "pingpong",
+        "both": true,
+        "speed": [0.8, 1.2],
+        "lateral": [-3, 3],
+        "mix": {
+          "traveler": 2,
+          "packer": 1,
+          "pilgrim": 1,
+          "merchant": 1,
+          "woman": 2,
+          "porter": 1
+        }
+      }
+    ]
+  },
+  "marks": {
+    "karim": {
+      "at": [-12.0, 1.0]
+    },
+    "liora": {
+      "at": [12.0, 3.0]
+    },
+    "zephyra": {
+      "at": [-12.43, -6.71]
+    },
+    "finnian": {
+      "at": [10.5, -3.5]
+    },
+    "merrick": {
+      "at": [-3.0, -13.4]
+    },
+    "party1": {
+      "at": [-1.6, 17.6],
+      "yaw": 180
+    },
+    "party2": {
+      "at": [-0.3, 18.1],
+      "yaw": 180
+    },
+    "party3": {
+      "at": [0.9, 17.4],
+      "yaw": 180
+    },
+    "party4": {
+      "at": [0.4, 19.1],
+      "yaw": 180
+    },
+    "jewelStall": {
+      "at": [-11.8, 3.9],
+      "label": "Karim's jewel stall"
+    },
+    "spiceStall": {
+      "at": [11.8, 5.9],
+      "label": "Liora's spice stall"
+    },
+    "fortuneTent": {
+      "at": [-11.31, -8.48],
+      "label": "Madam Zephyra's fortune-telling tent"
+    },
+    "fireRing": {
+      "at": [8.8, -2.0],
+      "label": "the crowd watching the fire-eater"
+    },
+    "musicStage": {
+      "at": [-0.6, -13.6],
+      "label": "the front of the music stage"
+    },
+    "dancing": {
+      "at": [3.0, -10.2],
+      "label": "the dancing in front of the stage"
+    },
+    "gameStall": {
+      "at": [9.6, 15.2],
+      "label": "the game-of-chance stall"
+    },
+    "foodStalls": {
+      "at": [-16.6, 15.5],
+      "label": "the food stalls"
+    },
+    "square": {
+      "at": [0, 4],
+      "label": "the middle of the square"
+    },
+    "gateStreet": {
+      "at": [0, 26.5],
+      "label": "the street back toward the gate"
+    }
+  },
+  "shots": {
+    "square": {
+      "position": [1.5, 4.4, 28.5],
+      "target": [-1, 1.9, -6],
+      "fov": 54,
+      "label": "The square"
+    },
+    "stage": {
+      "position": [-6.5, 2.4, -3.8],
+      "target": [-0.5, 1.5, -15.5],
+      "fov": 50,
+      "label": "Music stage"
+    },
+    "overview": {
+      "position": [-21, 30, 26],
+      "target": [0, 0, -4],
+      "fov": 55,
+      "label": "Overview"
+    }
+  },
+  "life": {
+    "birds": {
+      "count": 40,
+      "center": [0, -5],
+      "spread": [30, 30],
+      "radius": [12, 40],
+      "height": [22, 50]
+    },
+    "dust": {
+      "count": 900,
+      "box": [-24, 0.3, -23, 24, 10, 27]
+    }
+  }
+}

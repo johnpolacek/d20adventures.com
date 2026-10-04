@@ -1,175 +1,28 @@
 "use server"
+
 import { auth } from "@clerk/nextjs/server"
-import { after } from "next/server"
 import { api } from "@/convex/_generated/api"
-import type { Id } from "@/convex/_generated/dataModel"
-import { assertAdventureAccess, assertAdventureAccessByTurn, assertPlayerCharacterControl } from "@/lib/adventure-access"
+import type { Doc, Id } from "@/convex/_generated/dataModel"
+import { assertAdventureAccess } from "@/lib/adventure-access"
 import { convex } from "@/lib/convex/server"
+import { createServerCore } from "@/lib/gm-server/core"
 import { readJsonFromS3 } from "@/lib/s3-utils"
-import { buildFirstTurnSetup } from "@/lib/services/adventure-first-turn-service"
-import { getEncounterInstructionsFromPlan, resolvePlayerRollNarrativeAndCharacters } from "@/lib/services/adventure-roll-result-service"
-import { buildTurnReplyRollRequirement } from "@/lib/services/adventure-turn-reply-service"
-import { processNpcTurnsAfterCurrent } from "@/lib/services/npc-turn-service"
-import { maybeTriggerStoryviewAutoGeneration } from "@/lib/services/turn-audio-service"
-import type { RollRequirement } from "@/lib/validations/roll-requirement-schema"
 import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
-import type { Adventure, TurnCharacter } from "@/types/adventure"
+import type { Adventure } from "@/types/adventure"
 import type { PC } from "@/types/character"
 
-// Using RollRequirement union (object | null) from validation schema
-
-export async function processTurnReply({
-  turnId,
-  characterId,
-  narrativeAction,
-  originalPlayerInput,
-}: {
-  turnId: Id<"turns">
-  characterId: string
-  narrativeAction: string
-  originalPlayerInput?: string
-}) {
-  const { userId } = await auth()
-  if (!userId) {
-    console.error("[processTurnReply] Unauthorized access attempt.")
-    throw new Error("Unauthorized")
-  }
-
-  const { turn, adventure } = await assertAdventureAccessByTurn(userId, turnId)
-
-  const characterPerformingAction = assertPlayerCharacterControl(userId, turn, characterId)
-  const rollRequirementDetails: RollRequirement = await buildTurnReplyRollRequirement({
-    turn,
-    adventure,
-    characterPerformingAction,
-    narrativeAction,
-    originalPlayerInput,
-  })
-
-  if (rollRequirementDetails?.rollType && typeof rollRequirementDetails.difficulty === "number") {
-    await convex.mutation(api.adventure.submitReply, {
-      turnId,
-      characterId,
-      narrativeAction,
-      originalPlayerInput,
-      rollRequirement: rollRequirementDetails,
-    })
-    after(() => maybeTriggerStoryviewAutoGeneration(turnId))
-    return { rollRequired: rollRequirementDetails }
-  }
-  await convex.mutation(api.adventure.submitReply, {
-    turnId,
-    characterId,
-    narrativeAction,
-    originalPlayerInput,
-    rollRequirement: undefined,
-  })
-  await processNpcTurnsAfterCurrent(turnId)
-  after(() => maybeTriggerStoryviewAutoGeneration(turnId))
-  return { rollRequired: null }
+export async function processTurnReply(args: { turnId: Id<"turns">; characterId: string; narrativeAction: string; originalPlayerInput?: string }) {
+  return createServerCore().processTurnReply(args)
 }
 
-export async function createAdventureWithFirstTurn(payload: {
-  planId: string
-  settingId: string
-  ownerId: string
-  playerIds: string[]
-  title: string
-  startedAt: number
-  playerInput: string
-  turn: {
-    encounterId: string
-    narrative: string
-    characters: TurnCharacter[]
-    order: number
-  }
-}) {
-  const { userId } = await auth()
-  if (!userId) throw new Error("Unauthorized")
-
-  const firstTurnSetup = await buildFirstTurnSetup({
-    settingId: payload.settingId,
-    planId: payload.planId,
-    encounterId: payload.turn.encounterId,
-    narrative: payload.turn.narrative,
-    playerInput: payload.playerInput,
-    characters: payload.turn.characters,
-  })
-
-  const turnWithTitle = {
-    ...payload.turn,
-    title: firstTurnSetup.turnTitle,
-  }
-
-  // Overwrite ownerId with the authenticated user
-  const result = await convex.mutation(api.adventure.createAdventureWithFirstTurn, {
-    ...payload,
-    settingId: payload.settingId,
-    ownerId: userId,
-    turn: turnWithTitle, // Pass the turn object with the title
-    rollRequirement: firstTurnSetup.rollRequirement,
-  })
-  after(() => maybeTriggerStoryviewAutoGeneration(result.turnId))
-  return result
+export async function createAdventureWithFirstTurn(
+  payload: Parameters<ReturnType<typeof createServerCore>["createAdventureWithFirstTurn"]>[0]
+): Promise<{ adventureId: Id<"adventures">; turnId: Id<"turns"> }> {
+  return (await createServerCore().createAdventureWithFirstTurn(payload)) as { adventureId: Id<"adventures">; turnId: Id<"turns"> }
 }
 
-export async function resolvePlayerRollResult({ turnId, characterId, result }: { turnId: Id<"turns">; characterId: string; result: number }) {
-  const { userId } = await auth()
-  if (!userId) throw new Error("Unauthorized")
-
-  // 1. Fetch and authorize turn access + character control
-  const { turn, adventure } = await assertAdventureAccessByTurn(userId, turnId)
-  const character = assertPlayerCharacterControl(userId, turn, characterId)
-  if (!character.rollRequired) throw new Error("No roll required for this character")
-  if (typeof character.rollResult === "number") throw new Error("Roll already completed")
-
-  // 2. Fetch the adventure plan (wiki runtime for migrated adventures, legacy S3 JSON otherwise)
-  const plan = await loadAdventurePlanForRuntime(adventure.settingId, adventure.planId)
-  if (!plan || !Array.isArray(plan.sections)) throw new Error("Adventure plan not found or invalid")
-
-  // 3. Extract encounter instructions
-  const encounterInstructions = getEncounterInstructionsFromPlan(plan, turn.encounterId)
-
-  // 4. Resolve narrative + character updates for the roll
-  const rollResolution = await resolvePlayerRollNarrativeAndCharacters({
-    turn: {
-      _id: turn._id,
-      encounterId: turn.encounterId,
-      title: turn.title,
-      narrative: turn.narrative,
-      characters: turn.characters as TurnCharacter[],
-      adventureId: turn.adventureId,
-      isFinalEncounter: turn.isFinalEncounter,
-    },
-    character: character as TurnCharacter & {
-      rollRequired: {
-        rollType: string
-        difficulty: number
-        modifier?: number
-      }
-    },
-    characterId,
-    baseRollResult: result,
-    encounterInstructions,
-  })
-
-  // 5. Patch the turn with the new narrative and character state
-  await convex.mutation(api.turns.updateTurn, {
-    turnId,
-    patch: {
-      narrative: rollResolution.narrative,
-      characters: rollResolution.characters,
-      updatedAt: Date.now(),
-    },
-  })
-
-  // After marking player complete, process NPCs
-  await processNpcTurnsAfterCurrent(turnId)
-
-  after(() => maybeTriggerStoryviewAutoGeneration(turnId))
-
-  // 6. Return the updated turn
-  return await convex.query(api.adventure.getTurnById, { turnId })
+export async function resolvePlayerRollResult(args: { turnId: Id<"turns">; characterId: string; result: number }): Promise<Doc<"turns"> | null> {
+  return (await createServerCore().resolvePlayerRollResult(args)) as Doc<"turns"> | null
 }
 
 export async function getActiveAdventureForUser() {

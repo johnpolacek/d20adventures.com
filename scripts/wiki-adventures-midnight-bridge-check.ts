@@ -11,7 +11,7 @@ import {
 function main() {
   const startAction = readFileSync("app/_actions/start-adventure.ts", "utf8")
   const createAction = readFileSync("app/_actions/create-adventure.ts", "utf8")
-  const advanceAction = readFileSync("app/_actions/advance-turn.ts", "utf8")
+  const advanceAction = readFileSync("packages/gm-core/src/orchestration/advance-turn.ts", "utf8")
 
   assert.ok(createAction.includes("contentRef: localWikiRuntime?.contentRef"), "createAdventure does not pin local wiki contentRef")
   assert.ok(createAction.includes("currentEncounterId: localWikiRuntime?.artifacts.manifest.startEncounterId"), "createAdventure does not initialize currentEncounterId")
