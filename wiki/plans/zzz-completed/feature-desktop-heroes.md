@@ -1,8 +1,8 @@
 # Desktop heroes
 
-[Plans](index.md) · [Wiki Home](../index.md) · [Desktop direction](desktop-local-play.md) · [Desktop Stageview](zzz-completed/feature-desktop-stage-play.md)
+[Plans](../index.md) · [Wiki Home](../../index.md) · [Desktop direction](../desktop-local-play.md) · [Desktop Stageview](feature-desktop-stage-play.md)
 
-Status: Implemented locally, 2026-10-04. Branch `feature/desktop-heroes`. No merge into main or deployment.
+Status: Merged into main on 2026-10-04 (`5baadf7`) and archived. Branch `feature/desktop-heroes`, which also carried [Covert Cargo in 3D](covert-cargo-3d.md). No deployment.
 
 ## Owner decisions, 2026-10-03
 
@@ -71,7 +71,7 @@ Status: Implemented locally, 2026-10-04. Branch `feature/desktop-heroes`. No mer
 - Packaged app on an isolated save, driven through macOS accessibility because cmux computer use was not set up on this Mac. The packaged runtime, run with the app's stripped environment, painted Hilde through Grok in 16 s. The app then opened on a March of Davos game with Hilde, Bram and Branka. The render report was ready with no JavaScript errors. Hilde stood at the gate as her painted standee, and her painted portrait showed in the turn order and on her roster card. Continue Bram's turn ran live Claude: Bram and Branka, both played by the AI, paid the gate fee, Garlan answered, and the turn passed to Hilde in 17 s. Garlan called her "the soot-aproned dwarf".
 - The user save was restored with an unchanged SHA-256. The test save and its art are kept in `validation-heroes-2026-10-04/` beside it.
 - Not covered natively: drafting a hero and pressing Paint from the app's own buttons. Both ran through the same runtime in the browser check and through the packaged runtime above.
-- Found, not changed: the gate's Party view sits under the merchant canopy with the authored party too, because the desktop starts the party at the head of the line. Recorded in [maintenance](maintenance.md).
+- Found, not changed: the gate's Party view sits under the merchant canopy with the authored party too, because the desktop starts the party at the head of the line. Recorded in [maintenance](../maintenance.md).
 
 ## Progress
 
