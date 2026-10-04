@@ -1,6 +1,6 @@
 import { findCurrentActor } from "@d20/gm-core/utils/turn-actors"
 import { readingSeconds } from "@d20/stage/beats"
-import { narrationShot } from "@d20/stage/narration"
+import { narrationShots } from "@d20/stage/narration"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { CharacterCard } from "@/components/stage/character-card"
 import { Pill, panel, StageHud, useCompact } from "@/components/stage/hud"
@@ -110,14 +110,24 @@ export function DesktopGame() {
     const named = stage?.cast.filter((c) => paragraphText.includes(callName(c.name))) ?? []
     return quote && named.length === 1 && reading ? { cast: named[0], text: quote } : null
   }, [stage, text, paragraph, reading])
-  // Each paragraph moves the camera to fit it: a speaker, the people it names, or the place it describes.
-  const told = text[paragraph] ?? ""
+  // Each paragraph moves the camera to fit it: a speaker, whoever the paragraph is about (by name and pronoun, so
+  // genders come from the turn's characters), or the place it describes.
+  const views = useMemo(() => {
+    if (!stage) return []
+    const genders: Record<string, "f" | "m" | undefined> = {}
+    for (const c of turn?.characters ?? []) {
+      const id = castIdFor(stage.cast, c)
+      const g = c.gender?.toLowerCase()
+      if (id && g) genders[id] = g.startsWith("f") ? "f" : g.startsWith("m") ? "m" : undefined
+    }
+    return narrationShots(text, stage, genders)
+  }, [stage, text, turn?.characters])
   useEffect(() => {
     if (!stage || !reading) return
     if (speech) return void stage.shot({ subject: speech.cast.id, distance: 5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 })
-    const view = narrationShot(told, stage, { first: paragraph === 0 })
+    const view = views[paragraph]
     if (view) stage.shot(typeof view === "string" ? view : { subject: view.subject, distance: 4.5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 })
-  }, [stage, speech, told, paragraph, reading])
+  }, [stage, speech, views, paragraph, reading])
   useEffect(() => {
     if (!auto || !reading || busy || !text.length) return
     const timer = setTimeout(() => (paragraph < text.length - 1 ? setParagraph((n) => n + 1) : setReading(false)), readingSeconds(text[paragraph] ?? "") * 1000)

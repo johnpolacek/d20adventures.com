@@ -87,13 +87,14 @@ export function Narration({
         <p className={cn("font-serif text-stage-cream transition-opacity duration-300", visible ? "opacity-100" : "opacity-0", compact ? "text-[12px] leading-snug" : "text-[15px] leading-[1.65]")}>
           {shown}
         </p>
-        <div className={cn("flex items-center justify-between", compact ? "mt-1.5" : "mt-3")}>
-          <div className="flex gap-1.5" role="presentation">
+        <div className={cn("flex items-center justify-between gap-3", compact ? "mt-1.5" : "mt-3")}>
+          {/* Long narrations get smaller dots, so the row stays one line beside the controls. */}
+          <div className={cn("flex min-w-0 flex-wrap", count > 10 ? "gap-[3px]" : "gap-1")} role="presentation">
             {Array.from({ length: count }, (_, i) => (
-              <span key={i} className={cn("h-1.5 w-1.5 rounded-full transition-colors duration-500", i <= index ? "bg-stage-gold" : "bg-stage-line/20")} />
+              <span key={i} className={cn("rounded-full transition-colors duration-500", count > 10 ? "h-1 w-1" : "h-1.5 w-1.5", i <= index ? "bg-stage-gold" : "bg-stage-line/20")} />
             ))}
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex shrink-0 items-center gap-1.5">
             <Control label="Replay the turn" onClick={onReplay}>
               <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
                 <path d="M2.2 6a3.8 3.8 0 1 0 1.2-2.8" />
@@ -109,12 +110,15 @@ export function Narration({
               <Pill
                 active
                 className={cn(
-                  "ml-1 rounded-full px-4 py-1 font-display text-[12px] font-bold tracking-[0.12em] transition-[filter,box-shadow]",
+                  "ml-1 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-1 font-display text-[12px] font-bold tracking-[0.12em] transition-[filter,box-shadow]",
                   waiting && "shadow-[0_0_0_2px_#e3b67c55,0_0_18px_#e3b67c66]"
                 )}
                 onClick={onContinue}
               >
-                Continue ▸
+                Continue
+                <svg viewBox="0 0 12 12" fill="currentColor" aria-hidden="true" className="h-2.5 w-2.5">
+                  <path d="M4 2.2 9 6l-5 3.8z" />
+                </svg>
               </Pill>
             ) : (
               <Control label="Next paragraph" onClick={onNext}>
@@ -123,8 +127,11 @@ export function Narration({
                 </svg>
               </Control>
             )}
-            <Pill className="ml-1 rounded-full px-3.5 py-1" onClick={onSkip}>
-              Skip ▸▸
+            <Pill className="ml-1 inline-flex items-center gap-1 whitespace-nowrap rounded-full px-3.5 py-1" onClick={onSkip}>
+              Skip
+              <svg viewBox="0 0 14 12" fill="currentColor" aria-hidden="true" className="h-2.5 w-3">
+                <path d="M2 2.2 6.5 6 2 9.8zM7.5 2.2 12 6l-4.5 3.8z" />
+              </svg>
             </Pill>
           </div>
         </div>
