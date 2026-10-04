@@ -1,8 +1,21 @@
 import festivalSet from "@d20/stage/sets/realm-of-myr/kordavos-harvest-square.json"
+import riverfrontSet from "@d20/stage/sets/realm-of-myr/kordavos-riverfront.json"
 import gateSet from "@d20/stage/sets/realm-of-myr/kordavos-south-gate.json"
+import pierSet from "@d20/stage/sets/realm-of-myr/mordava-river-pier.json"
+import pathSet from "@d20/stage/sets/realm-of-myr/old-forest-path.json"
 import stonesSet from "@d20/stage/sets/realm-of-myr/old-standing-stones.json"
+import cabinSet from "@d20/stage/sets/realm-of-myr/riverboat-cabin.json"
 import homeSet from "@d20/stage/sets/realm-of-myr/thalberns-forest-home.json"
 import forestSet from "@d20/stage/sets/realm-of-myr/valkarr-forest-trail.json"
+import battleOnTheBoat from "@d20/stage/stagings/covert-cargo/battle-on-the-boat.json"
+import returnToTheCity from "@d20/stage/stagings/covert-cargo/return-to-the-city.json"
+import theCrate from "@d20/stage/stagings/covert-cargo/the-crate.json"
+import theDisturbance from "@d20/stage/stagings/covert-cargo/the-disturbance.json"
+import theEnd from "@d20/stage/stagings/covert-cargo/the-end.json"
+import theEscape from "@d20/stage/stagings/covert-cargo/the-escape.json"
+import theFake from "@d20/stage/stagings/covert-cargo/the-fake.json"
+import theShipment from "@d20/stage/stagings/covert-cargo/the-shipment.json"
+import theTransaction from "@d20/stage/stagings/covert-cargo/the-transaction.json"
 import gateStaging from "@d20/stage/stagings/march-of-davos/the-gates-of-kordavos.json"
 import festivalStaging from "@d20/stage/stagings/march-of-davos/the-harvest-festival.json"
 import backHome from "@d20/stage/stagings/the-midnight-summons/back-home.json"
@@ -95,6 +108,19 @@ export const SCENES: Record<string, Scene> = {
     party: ["thalbern"],
   },
   "back-home": { set: homeSet, staging: backHome, location: "Thalbern's home", where: "Morning sun falls on Thalbern's stone and timber cottage at the edge of the woods.", party: ["thalbern"] },
+  // Covert Cargo: the pier before dawn for everything outside the boat, the cabin for everything in it.
+  "the-shipment": cargo(pierSet, theShipment, "Mordava pier", "Before dawn, a riverboat lies moored beside a rickety pier on a quiet, misty fork of the Mordava. Lyra waits on its foredeck."),
+  "the-transaction": cargo(pierSet, theTransaction, "Mordava pier", "Before dawn at the rickety pier on a misty fork of the Mordava, where the riverboat lies moored."),
+  "the-disturbance": cargo(pierSet, theDisturbance, "Mordava pier", "Before dawn at the riverboat's pier. Reeds crowd the bank by the pier, where something stirred."),
+  "the-escape": cargo(pierSet, theEscape, "Mordava woods", "A trail runs from the pier along the misty riverbank and into the woods toward Kordavos."),
+  "the-fake": cargo(cabinSet, theFake, "Riverboat cabin", "The riverboat's low, lamplit cabin. The crate sits in the middle and the only door opens aft onto the deck."),
+  "battle-on-the-boat": cargo(cabinSet, battleOnTheBoat, "Riverboat cabin", "The riverboat's low, lamplit cabin. The crate sits in the middle and the only door opens aft onto the deck."),
+  "the-crate": cargo(cabinSet, theCrate, "Riverboat cabin", "The riverboat's cabin, quiet now. The heavy iron-banded crate sits in the middle under hanging rope."),
+  "return-to-the-city": cargo(riverfrontSet, returnToTheCity, "Kordavos riverfront", "The quay along the river in Kordavos, ships at their moorings and the castle on its hill above the city."),
+  "the-end": cargo(pathSet, theEnd, "The old forest", "A mossy path winds between huge old trees in green-gold light."),
+}
+function cargo(set: unknown, staging: unknown, location: string, where: string): Scene {
+  return { set: set as Scene["set"], staging: staging as Scene["staging"], location, where, party: ["lyra", "poppen"] }
 }
 export const sceneFor = (encounterId: string | undefined) => (encounterId ? SCENES[encounterId] : undefined)
 
