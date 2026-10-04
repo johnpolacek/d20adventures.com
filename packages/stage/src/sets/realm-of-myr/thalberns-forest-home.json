@@ -1,0 +1,507 @@
+{
+  "format": "d20.stage.set",
+  "version": 1,
+  "id": "thalberns-forest-home",
+  "settingId": "realm-of-myr",
+  "locationId": "thalberns-forest-home",
+  "title": "Thalbern's Forest Home",
+  "seed": 1618,
+  "atmosphere": {
+    "sun": {
+      "direction": [-0.45, 0.72, 0.52],
+      "color": "#ffe2b8",
+      "intensity": 4.4,
+      "target": [0, 0, -2],
+      "distance": 220,
+      "shadow": {
+        "left": -40,
+        "right": 40,
+        "top": 40,
+        "bottom": -40,
+        "near": 10,
+        "far": 420
+      }
+    },
+    "hemisphere": {
+      "sky": "#bcd2e8",
+      "ground": "#4a3a28",
+      "intensity": 0.45
+    },
+    "sky": {
+      "horizon": "#d2d6c6",
+      "mid": "#93b9d6",
+      "zenith": "#4a82b6",
+      "clouds": 0.7
+    },
+    "fog": {
+      "density": 0.004,
+      "color": "#8fa890"
+    },
+    "environment": 0.35,
+    "exposure": 1.0,
+    "wind": 0.6
+  },
+  "camera": {
+    "near": 0.3,
+    "far": 900,
+    "min": [-50, 0.5, -60],
+    "max": [50, 40, 50],
+    "maxDistance": 80
+  },
+  "materials": {
+    "bark": {
+      "type": "wood",
+      "a": "#2f2c28",
+      "b": "#3a3630",
+      "c": "#262420",
+      "plank": [0, 40],
+      "relief": 0.07,
+      "variance": 0.5,
+      "seed": 4.2,
+      "grime": 1.0
+    },
+    "birch": {
+      "type": "wood",
+      "a": "#a4a8aa",
+      "b": "#b7bbbc",
+      "c": "#7f8486",
+      "plank": [0, 40],
+      "relief": 0.04,
+      "variance": 0.6,
+      "seed": 7.7
+    },
+    "ground": {
+      "type": "masonry",
+      "a": "#4a5a32",
+      "b": "#56663a",
+      "c": "#3e4c2c",
+      "mortar": "#2a301c",
+      "block": [40, 40],
+      "grime": 1.1,
+      "variance": 1.0,
+      "ground": true,
+      "roads": false
+    },
+    "path": {
+      "type": "masonry",
+      "a": "#9a8f78",
+      "b": "#a99d84",
+      "c": "#857b66",
+      "mortar": "#4a4436",
+      "block": [0.9, 0.7],
+      "joint": 0.07,
+      "relief": 0.05,
+      "grime": 1.0,
+      "ground": true,
+      "roads": false
+    },
+    "fieldstone": {
+      "type": "masonry",
+      "a": "#8a8a7c",
+      "b": "#9c9a8a",
+      "c": "#6f7068",
+      "mortar": "#4c4a40",
+      "block": [0.7, 0.45],
+      "joint": 0.08,
+      "relief": 0.1,
+      "grime": 1.6,
+      "variance": 0.8
+    },
+    "logs": {
+      "type": "wood",
+      "a": "#5a4130",
+      "b": "#6b4e38",
+      "c": "#4a3a2c",
+      "plank": [0.32, 6],
+      "relief": 0.08,
+      "variance": 0.5,
+      "seed": 2.2,
+      "grime": 0.8
+    },
+    "door": {
+      "type": "wood",
+      "a": "#3e2c20",
+      "b": "#4d3727",
+      "c": "#33271e",
+      "plank": [0.18, 3],
+      "relief": 0.05,
+      "variance": 0.4,
+      "seed": 9.4
+    },
+    "shingles": {
+      "type": "masonry",
+      "a": "#4a4a38",
+      "b": "#55533e",
+      "c": "#3c3e30",
+      "mortar": "#22231a",
+      "block": [0.5, 0.3],
+      "joint": 0.04,
+      "relief": 0.08,
+      "grime": 1.8,
+      "variance": 0.8
+    },
+    "trim": {
+      "type": "masonry",
+      "a": "#8a8a7c",
+      "b": "#9c9a8a",
+      "c": "#6f7068",
+      "block": [1.2, 0.5],
+      "grime": 1.0
+    },
+    "void": {
+      "type": "plain",
+      "color": "#0d0a09",
+      "roughness": 1
+    },
+    "stone": {
+      "type": "masonry",
+      "a": "#7c8070",
+      "b": "#8d9080",
+      "c": "#6a6e62",
+      "block": [2.6, 1.6],
+      "grime": 2.2,
+      "relief": 0.09,
+      "variance": 0.7
+    },
+    "iron": {
+      "type": "metal",
+      "color": "#2e2a28",
+      "roughness": 0.55,
+      "metalness": 0.7
+    },
+    "flame": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ffae55",
+      "emissiveIntensity": 3
+    },
+    "sack": {
+      "type": "burlap",
+      "color": "#8a7454"
+    },
+    "sackB": {
+      "type": "burlap",
+      "color": "#6f5c42"
+    },
+    "leather": {
+      "type": "plain",
+      "color": "#4a2e1c",
+      "roughness": 0.75
+    },
+    "bow": {
+      "type": "wood",
+      "a": "#7a5230",
+      "b": "#8a6038",
+      "c": "#6a4628",
+      "plank": [0, 20],
+      "relief": 0.03
+    },
+    "wool": {
+      "type": "plain",
+      "color": "#5b5240",
+      "roughness": 0.95
+    },
+    "leaves": {
+      "type": "foliage",
+      "color": "#4a6a30"
+    },
+    "leavesDark": {
+      "type": "foliage",
+      "color": "#34502a"
+    },
+    "leavesLight": {
+      "type": "foliage",
+      "color": "#6a8a3c"
+    },
+    "fern": {
+      "type": "foliage",
+      "color": "#5a7c34"
+    }
+  },
+  "objects": [
+    {
+      "type": "groundDisc",
+      "id": "ground",
+      "radius": 220
+    },
+    {
+      "type": "trail",
+      "id": "stone-path",
+      "points": [[0.2, 24], [0.6, 14], [0.2, 7], [0, -2.0]],
+      "width": 1.5,
+      "material": "path"
+    },
+    {
+      "type": "group",
+      "id": "cottage",
+      "at": [0, -6],
+      "children": [
+        {
+          "type": "box",
+          "size": [7.6, 2.0, 6.2],
+          "material": "fieldstone",
+          "solid": true
+        },
+        {
+          "type": "box",
+          "at": [0, 2.0, 0],
+          "size": [7.4, 1.2, 6.0],
+          "material": "logs"
+        },
+        {
+          "type": "extrude",
+          "at": [0, 3.2, 3.6],
+          "points": [[-4.5, 0], [4.5, 0], [0, 2.9]],
+          "depth": 7.2,
+          "material": "shingles"
+        },
+        {
+          "type": "box",
+          "at": [-2.7, 0, -1.4],
+          "size": [0.9, 6.2, 0.9],
+          "material": "fieldstone"
+        },
+        {
+          "type": "box",
+          "at": [0, 0.6, 2.93],
+          "size": [1.2, 2.1, 0.1],
+          "material": "door"
+        },
+        {
+          "type": "box",
+          "at": [-0.72, 0.6, 3.0],
+          "size": [0.2, 2.3, 0.22],
+          "material": "logs"
+        },
+        {
+          "type": "box",
+          "at": [0.72, 0.6, 3.0],
+          "size": [0.2, 2.3, 0.22],
+          "material": "logs"
+        },
+        {
+          "type": "box",
+          "at": [0, 2.8, 3.0],
+          "size": [1.7, 0.22, 0.24],
+          "material": "logs"
+        },
+        {
+          "type": "opening",
+          "at": [2.3, 1.4, 3.12],
+          "width": 0.9,
+          "height": 1.0,
+          "depth": 0.3,
+          "frame": 0.18
+        },
+        {
+          "type": "opening",
+          "at": [-2.3, 1.4, 3.12],
+          "width": 0.9,
+          "height": 1.0,
+          "depth": 0.3,
+          "frame": 0.18
+        },
+        {
+          "type": "box",
+          "at": [0, 0, 3.55],
+          "size": [2.6, 0.22, 0.9],
+          "material": "fieldstone",
+          "solid": true
+        },
+        {
+          "type": "box",
+          "at": [0, 0, 3.25],
+          "size": [2.1, 0.42, 0.42],
+          "material": "fieldstone"
+        },
+        {
+          "type": "lantern",
+          "at": [1.05, 0, 3.12],
+          "height": 2.25
+        },
+        {
+          "type": "box",
+          "at": [0, 0, 3.08],
+          "size": [1.5, 0.6, 0.1],
+          "material": "fieldstone"
+        }
+      ]
+    },
+    {
+      "type": "sack",
+      "at": [1.5, -2.05],
+      "size": 0.95
+    },
+    {
+      "type": "cylinder",
+      "at": [1.5, 0.82, -2.05],
+      "radius": 0.15,
+      "height": 0.75,
+      "roll": 90,
+      "material": "wool",
+      "segments": 12
+    },
+    {
+      "type": "cylinder",
+      "at": [2.05, 0, -2.25],
+      "radius": 0.09,
+      "height": 0.75,
+      "roll": -14,
+      "material": "leather",
+      "segments": 10
+    },
+    {
+      "type": "torus",
+      "at": [2.25, 0.95, -2.3],
+      "radius": 0.85,
+      "tube": 0.025,
+      "arc": 110,
+      "roll": 35,
+      "material": "bow",
+      "segments": 20
+    },
+    {
+      "type": "rock",
+      "at": [-3.9, -1.7999999999999998],
+      "size": 1.1
+    },
+    {
+      "type": "rock",
+      "at": [4.0, -1.5999999999999996],
+      "size": 0.9
+    },
+    {
+      "type": "rock",
+      "at": [-5.0, -4.0],
+      "size": 0.8
+    },
+    {
+      "type": "tree",
+      "id": "front-oak",
+      "at": [-3.4, 0.6],
+      "kind": "oak",
+      "height": 18,
+      "girth": 0.9
+    },
+    {
+      "type": "tree",
+      "at": [6.5, 3.5],
+      "kind": "pine",
+      "height": 20
+    },
+    {
+      "type": "scatter",
+      "id": "woods",
+      "area": [-60, -70, 60, 50],
+      "count": 260,
+      "clear": [[0, -6, 7.5], [0, 4, 6.5], [0, 12, 4], [0, 20, 4], [0.6, 12.5, 5], [-0.8, 3.5, 3.0]],
+      "items": [
+        {
+          "weight": 0.45,
+          "item": {
+            "type": "tree",
+            "kind": "pine"
+          },
+          "vary": {
+            "height": [15, 24]
+          }
+        },
+        {
+          "weight": 0.35,
+          "item": {
+            "type": "tree",
+            "kind": "oak"
+          },
+          "vary": {
+            "height": [12, 19]
+          }
+        },
+        {
+          "weight": 0.2,
+          "item": {
+            "type": "tree",
+            "kind": "birch"
+          },
+          "vary": {
+            "height": [10, 15]
+          }
+        }
+      ]
+    },
+    {
+      "type": "scatter",
+      "id": "ferns",
+      "area": [-16, -18, 16, 24],
+      "count": 320,
+      "avoid": true,
+      "clear": [[0, -1.7999999999999998, 2.2], [0.4, 12, 1.2], [0.3, 7, 1.2], [0.2, 20, 1.2], [-0.8, 3.5, 2.0], [0.2, 0.5, 1.2]],
+      "item": {
+        "type": "fern"
+      },
+      "vary": {
+        "size": [0.7, 1.4]
+      }
+    },
+    {
+      "type": "scatter",
+      "id": "bushes",
+      "area": [-18, -18, 18, 24],
+      "count": 60,
+      "clear": [[0, -6, 6], [0, 6, 3], [0.4, 12, 2.5]],
+      "item": {
+        "type": "bush"
+      },
+      "vary": {
+        "size": [0.9, 1.8]
+      }
+    }
+  ],
+  "marks": {
+    "thalbern": {
+      "at": [-2.1, -1.6]
+    },
+    "door": {
+      "at": [0, -1.5999999999999996],
+      "label": "the cottage door"
+    },
+    "gear": {
+      "at": [1.4, -0.9000000000000004],
+      "label": "the packed gear by the steps"
+    },
+    "boulder": {
+      "at": [-3.0, -1.0],
+      "label": "the mossy boulder by the cottage"
+    },
+    "pathOut": {
+      "at": [0.6, 18],
+      "label": "the path into the forest toward Kordavos"
+    }
+  },
+  "shots": {
+    "home": {
+      "position": [-0.8, 1.5, 3.5],
+      "target": [0.6, 1.4, -3.0],
+      "fov": 50,
+      "label": "The cottage"
+    },
+    "porch": {
+      "position": [3.8, 1.6, 4.5],
+      "target": [0, 1.4, -2.5],
+      "fov": 50,
+      "label": "The porch"
+    },
+    "woods": {
+      "position": [-7.5, 4.5, 15],
+      "target": [0, 1.6, -3],
+      "fov": 55,
+      "label": "The woods"
+    }
+  },
+  "life": {
+    "dust": {
+      "count": 260,
+      "box": [-8, 0.5, -6, 8, 6, 10]
+    }
+  }
+}

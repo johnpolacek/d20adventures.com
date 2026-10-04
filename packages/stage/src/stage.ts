@@ -161,7 +161,9 @@ export class Stage {
 
     const A = set.atmosphere
     this.shared = createShared()
-    this.shared.sun.value.set(...A.sun.direction).normalize()
+    // The sky draws the sun (or moon) at `disc` when set, a painter's cheat: the moon shows ahead while it lights the scene
+    // from where `direction` says.
+    this.shared.sun.value.set(...(A.sun.disc ?? A.sun.direction)).normalize()
     this.shared.wind.value = A.wind
     const horizon = new THREE.Color(A.sky.horizon)
     // Fog takes the horizon as the sky draws it, dimmed by its gain, so distant trees fade into the night sky, unless
@@ -173,7 +175,11 @@ export class Stage {
     // Light: the sun rakes across the set; the hemisphere fills the shadows with sky and warm ground bounce.
     const sun = new THREE.DirectionalLight(A.sun.color, A.sun.intensity)
     const target = V(...A.sun.target)
-    sun.position.copy(this.shared.sun.value).multiplyScalar(A.sun.distance).add(target)
+    sun.position
+      .set(...A.sun.direction)
+      .normalize()
+      .multiplyScalar(A.sun.distance)
+      .add(target)
     sun.target.position.copy(target)
     sun.castShadow = true
     sun.shadow.mapSize.set(4096, 4096)

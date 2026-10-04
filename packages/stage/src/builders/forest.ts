@@ -213,3 +213,32 @@ export const lightShaft = defineBuilder(
     g.dispose()
   }
 )
+
+// A standing stone: a tall, weathered slab narrowing toward its top, leaning a little. Solid.
+export const standingStone = defineBuilder(
+  z
+    .object({
+      height: size(20).default(4),
+      width: size(6).default(1.2),
+      depth: size(6).default(0.7),
+      lean: num(0, 20).default(4),
+    })
+    .strict(),
+  (ctx, p) => {
+    const { b, M, rand } = ctx
+    // Each stone gets its own weathered shape: a rough slab, narrower and rounded toward the top.
+    const g = new THREE.CylinderGeometry(0.55, 1, 1, 8, 6)
+    const pos = g.attributes.position
+    for (let i = 0; i < pos.count; i++) {
+      const y = pos.getY(i)
+      const k = rand(0.82, 1.14) * (y > 0.45 ? 0.75 : 1)
+      pos.setXYZ(i, pos.getX(i) * k, y + rand(-0.025, 0.025), pos.getZ(i) * k)
+    }
+    g.computeVertexNormals()
+    const lx = ((rand(-1, 1) * p.lean) / 180) * Math.PI
+    const lz = ((rand(-1, 1) * p.lean) / 180) * Math.PI
+    b.add(g, M.stone, M4(0, p.height / 2 - 0.3, 0, rand(0, Math.PI), p.width * 0.6, p.height + 0.3, p.depth * 0.75, lx, lz), { uv: "planar" })
+    g.dispose()
+    ctx.footprint(0, 0, p.width / 2 + 0.2, p.depth / 2 + 0.2)
+  }
+)

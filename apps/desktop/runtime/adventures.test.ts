@@ -75,9 +75,9 @@ test("the real core plays The Midnight Summons through the owlbear to its ending
       await game(store, packs, llm)({ kind: "continue", turnId: store.current()._id })
       assert.equal(store.current().encounterId, next)
       if (next === "owlbear-confrontation") assert.ok(store.current().characters.some((c) => c.type === "npc" && /owlbear/i.test(c.name)))
-      // The forest encounters have a figure for every character in the turn. The meeting and the ending play in story view.
+      // Every Midnight Summons encounter has a scene with a figure for every character in the turn.
       const scene = sceneFor(next)
-      assert.equal(Boolean(scene), ["owlbear-confrontation", "timely-rescue"].includes(next))
+      assert.ok(scene, next)
       for (const c of store.current().characters) {
         if (scene) assert.equal(castIdFor(scene.staging.cast, c), c.id)
         assert.match(portraitFor(scene, c) ?? "", /^\/stage\/fixtures\/the-midnight-summons\/.+-portrait\.jpg$/)

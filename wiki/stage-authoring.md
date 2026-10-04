@@ -25,6 +25,8 @@ The web viewer and the desktop app run the same `packages/stage` renderer and th
 ## Lessons
 
 - Night reads from contrast, not brightness. The first forest renders already matched the reference art's average brightness but looked like day: an even blue light and a bright sky. What worked: a dark sky with `clouds` thinned and faint `stars`, a cool moon `glow` (warm by default, which turned the sky orange), mist with its own `fog.color` that matches the sky's horizon so gaps between trees blend, low hemisphere light, and a soft warm `fill` light that travels with the camera so characters stay readable. Games commonly do the same.
+- Frame the opening view like the encounter art. The first cottage and stones renders were far-off overviews, while the art is a close view of the door and gear, or of the first stone with the river beside it.
+- Paintings cheat light. The stones art shows the moon ahead and the stones lit from the front, so `sun.disc` places the moon apart from the light.
 - Match characters to the owner's existing art for that character. Thalbern was first drawn from the written description and did not look like his art. Use the art for costume, hair, and colouring, painted as an original character rather than a photographic likeness.
 - Smooth-shaded leaf masses with the alpha `foliage` texture read as painted trees. Flat-shaded spheres read as a low-poly game.
 - Clear tree scatter around every camera position, along trails, and along key walks with scatter `clear` circles.

@@ -190,6 +190,8 @@ export const setSpecSchema = z
         sun: z
           .object({
             direction: vec3,
+            // Where the disc shows in the sky, if not where the light comes from.
+            disc: vec3.optional(),
             color,
             intensity: num(0, 20),
             target: vec3.default([0, 0, 0]),

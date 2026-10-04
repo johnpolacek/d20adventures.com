@@ -133,6 +133,7 @@ Remaining product work is tracked in [Stageview](plans/stageview.md).
 
 ## Recorded checks, 2026-10-03, Valkarr forest trail
 
+- `sun.disc` draws the sun or moon at a different place in the sky than its light comes from. `standingStone` builds irregular weathered monoliths, each with its own shape.
 - Night lighting: `sky.clouds` and `sky.stars`, `atmosphere.glow` (colour of the sky's glow and the haze toward the sun or moon), and `atmosphere.fill` (a soft point light carried with the camera). `fog.color` sets mist apart from the sky. `glow` is an additive, unlit, shadowless material, and `lightShaft` builds a soft open cone of moonlight with it. `tree` adds a `gnarled` kind.
 - Night set: `atmosphere.sky.gain` (0.22) dims the painted sky, its clouds and sun glow, and the fog colour follows it. The moon is the sun light, cool and high.
 - `pnpm stage:check`: 992 objects, 0.61M static triangles, 561 footprints, no crowd. All party walks clear in all three stagings. The owlbear's walk home is blocked by trees, which nothing asks for.

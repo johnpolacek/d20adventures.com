@@ -1,10 +1,16 @@
 import festivalSet from "@d20/stage/sets/realm-of-myr/kordavos-harvest-square.json"
 import gateSet from "@d20/stage/sets/realm-of-myr/kordavos-south-gate.json"
+import stonesSet from "@d20/stage/sets/realm-of-myr/old-standing-stones.json"
+import homeSet from "@d20/stage/sets/realm-of-myr/thalberns-forest-home.json"
 import forestSet from "@d20/stage/sets/realm-of-myr/valkarr-forest-trail.json"
 import gateStaging from "@d20/stage/stagings/march-of-davos/the-gates-of-kordavos.json"
 import festivalStaging from "@d20/stage/stagings/march-of-davos/the-harvest-festival.json"
+import backHome from "@d20/stage/stagings/the-midnight-summons/back-home.json"
 import brokenSilence from "@d20/stage/stagings/the-midnight-summons/broken-silence.json"
+import meetingAtTheStones from "@d20/stage/stagings/the-midnight-summons/meeting-at-the-stones.json"
 import owlbearConfrontation from "@d20/stage/stagings/the-midnight-summons/owlbear-confrontation.json"
+import preparingForTheCity from "@d20/stage/stagings/the-midnight-summons/preparing-for-the-city.json"
+import theMissingRelics from "@d20/stage/stagings/the-midnight-summons/the-missing-relics.json"
 import timelyRescue from "@d20/stage/stagings/the-midnight-summons/timely-rescue.json"
 
 type Point = { x: number; z: number }
@@ -29,6 +35,15 @@ export const SCENES: Record<string, Scene> = {
   "broken-silence": { set: forestSet, staging: brokenSilence, location: "Valkarr woods", where: "Thalbern walks a deer trail through the Valkarr woods at night toward the Old Standing Stones." },
   "owlbear-confrontation": { set: forestSet, staging: owlbearConfrontation, location: "Valkarr woods", where: "An owlbear faces Thalbern across a small moonlit clearing on the deer trail." },
   "timely-rescue": { set: forestSet, staging: timelyRescue, location: "Valkarr woods", where: "Thalbern lies wounded by the great oak beside the trail as Wollandora steps out of the trees." },
+  "meeting-at-the-stones": {
+    set: stonesSet,
+    staging: meetingAtTheStones,
+    location: "Old Standing Stones",
+    where: "Moonlight fills the clearing where a line of ancient standing stones runs beside the river.",
+  },
+  "the-missing-relics": { set: stonesSet, staging: theMissingRelics, location: "Old Standing Stones", where: "Thalbern and Wollandora talk among the standing stones by the moonlit river." },
+  "preparing-for-the-city": { set: homeSet, staging: preparingForTheCity, location: "Thalbern's home", where: "Morning sun falls on Thalbern's stone and timber cottage at the edge of the woods." },
+  "back-home": { set: homeSet, staging: backHome, location: "Thalbern's home", where: "Morning sun falls on Thalbern's stone and timber cottage at the edge of the woods." },
 }
 export const sceneFor = (encounterId: string | undefined) => (encounterId ? SCENES[encounterId] : undefined)
 

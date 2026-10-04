@@ -144,6 +144,17 @@ Owner chose to build the forest trail first and asked for a repeatable way to ma
 - Owner review: Thalbern did not look like his art, and it did not read as night. Regenerated Thalbern from his existing art, painted. Darkened the sky, thinned clouds, added stars, made the moon's glow cool, matched the mist to the horizon, and added a soft warm light that follows the camera at the owner's suggestion.
 - Open: further owner review on the web viewer, then one check in the packaged app.
 
+## Midnight Summons, every scene from its art, 2026-10-03
+
+Owner asked to review all of the adventure's art, match the renders to it, use the druid's art, and build every scene.
+
+- Characters from their existing art, painted: Thalbern (done), Wollandora (pale blond braids woven with leaves, freckles, gnarled staff), and the Owlbear (dark blue-black feathers, ear tufts, amber eyes, a bear's body).
+- Old Standing Stones (Meeting at the Stones, The Missing Relics): mossy monoliths along a river in a moonlit valley, the full moon in view, a flagstone path. New `standingStone` builder, water from a flat extruded shape.
+- Thalbern's forest home (Preparing for the City, Back Home): a sunlit morning, a stone-and-timber cottage with a heavy door and stone steps, his packed bag and bow by the steps, ferns, mossy stones, tall trees. Built from primitives in a group.
+- Then the desktop maps all seven encounters, renders are compared with the art, and the owner reviews all seven on the web viewer.
+
+Done for review. Wollandora and the Owlbear were regenerated from their art. The first owlbear read as a plush toy, so a second, screeching and scarred one replaced it. The Standing Stones and the cottage were each reframed after the first render was compared with their art. The stones were backlit silhouettes until a new sun `disc` setting put the moon in the sky ahead while its light comes from the front, as the art does. The cottage became a close, sunlit view of the door, steps, and gear without mist or light shafts. All seven stagings pass `stage:check` and the balanced-tier browser check. The fourteen desktop tests pass, now requiring a scene for every Midnight Summons encounter.
+
 ## Remaining scope
 
 One local slot and four premade player-controlled characters. The gate and the Harvest Festival are the authored 3D sets. Add further sets, character creation, AI companions, save management, narration audio, and multiplayer separately. Equipment has no separate currency or quantity ledger. Native combat and the other providers were not tested in this playthrough. The five-call batching experiment remains separate. Distribution still needs Node packaging or onboarding, signing, notarization, and an updater.
