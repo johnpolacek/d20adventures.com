@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-04, Covert Cargo boat and light matched to the art
+
+Owner said the boat and lighting should match the art more exactly. The `riverboat` builder is now the painted tug with a lofted hull, lit saloon and glazed pilothouse. Sets gained static point lights. The pier is saturated blue with warm lamp light. The cabin is neutral and dim with warm lanterns and a teal door. Water reflections of the windows remain a gap. See [the plan](plans/covert-cargo-3d.md#owner-feedback-second-pass).
+
 ## 2026-10-04, Covert Cargo in 3D
 
 Owner asked for the two-player adventure as a full 3D experience from its art. On `feature/desktop-heroes`: every Covert Cargo encounter now has a scene. The Mordava pier before dawn, the riverboat's lamplit cabin, the Kordavos riverfront and an old forest path, with standees for Reinhard, Silas, Aelar and the two elven crew. New `riverboat`, `pier`, `ship`, tree moss and `ancient` tree builders. A checked-in generator writes the sets. Renders match the art's key frames and stay within budget after trimming the pier from 3.2M to 1.8M triangles. The desktop maps all nine encounters and its tests pass. The packaged-app check waits on an unlocked screen. See [the plan](plans/covert-cargo-3d.md).

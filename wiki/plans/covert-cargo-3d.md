@@ -42,6 +42,17 @@ Desktop: map every encounter to its scene, with Lyra and Poppen as the party slo
 - Packaged-app check not done: the Mac's screen was locked, so the app could not draw or be captured. Three saves for it, made by the real core, are in `validation-covert-cargo-2026-10-04/` in the app's data folder: the opening at the pier, The Fake in the cabin, and Return to the City.
 - The user save was restored with an unchanged SHA-256.
 
+## Owner feedback, second pass
+
+2026-10-04: "I was expecting it to match the art more exactly for the boat and lighting."
+
+- The boat is rebuilt as the tug in the art: a curved hull rising to the bow, dark below a blue-grey strake with rust rails, a pale cabin, a glazed saloon forward with warm lit windows, a glazed pilothouse with a barrel roof, a thin stack, life rings.
+- New engine feature: static point lights in a set's atmosphere. Lamp and window light now pools on the deck and pier and glints in the water.
+- Pier lighting: saturated blue mist with warm saloon and pilothouse light, a lantern on the pier and a cold lamp on the bank. Dense bushes and ferns line both banks.
+- Cabin lighting: neutral grade, grey-brown wood, warm lanterns and candles, a darker crate, and a cold teal light at the open door.
+- Remaining gaps: the water mirrors only the sky, so the windows show glints, not the art's long reflections. Tree crowns are rounder and flatter than the painted oaks. The moss is thinner.
+- `stage:check`, stage and desktop typechecks, Biome and 25 desktop tests pass. The pier is 2.30M triangles at high, under the 2.5M budget.
+
 ## Owner review
 
 Start the viewer in the worktree with `pnpm exec next dev -p 3057`, then open `http://localhost:3057/dev/stage?staging=covert-cargo/<encounter>&tier=balanced` for each encounter: the-shipment, the-transaction, the-disturbance, the-escape, the-fake, battle-on-the-boat, the-crate, return-to-the-city, the-end.
