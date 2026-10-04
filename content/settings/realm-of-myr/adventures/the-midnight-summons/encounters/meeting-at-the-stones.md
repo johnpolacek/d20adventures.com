@@ -29,7 +29,7 @@ Legacy runtime flag: skipInitialNpcTurns was true.
 
 ## Transitions
 
-- To [[encounter:preparing-for-the-city]] when If Thalbern accepts or the mission
+- To [[encounter:preparing-for-the-city]] when If Thalbern accepts the mission
 - To [[encounter:back-home]] when If Thalbern refuses the mission
 - To [[encounter:the-missing-relics]] when If Thalbern asks for more information
 

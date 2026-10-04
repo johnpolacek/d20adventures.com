@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-03, GM decisions see the whole round, every Midnight Summons branch played
+
+Playing the last untested branches found that the GM's move-on decision saw only the last paragraph of the current round, so an NPC reply hid the player's action. That stalled Meeting at the Stones and explains earlier rounds held past an authored exit. The shared core now gives the decision the whole round, which also fixes web play. A live desktop run then hid from the owlbear, reached The Missing Relics, and ended in 7 rounds. Two content typos are fixed. Bleeding stays a label. See [the fix and run](plans/feature-desktop-stage-play.md#gm-decision-sees-the-whole-round-2026-10-03).
+
 ## 2026-10-03, Standing Stones matched to the art, neutral night light
 
 Owner feedback asked for neutral light, more ground detail, and stones much closer to the source art. Night sets now use a white camera fill and a neutral paint grade. New world-painted `rock`, `meadow`, `grass` and `water` materials and `flagstones`, `grass` and `mountain` builders give the ground and stones real detail. The Standing Stones were rebuilt and recomposed from measurements of the art, with the moon over the valley. Follow-up: darker night skies, a wider river, and Wollandora regenerated much closer to her art, with neutral night grading for characters too. The owner approved it, and all seven scenes rendered without errors in a release build. See [the art pass](plans/feature-desktop-stage-play.md#standing-stones-art-pass-2026-10-03) and [authoring lessons](stage-authoring.md#lessons).

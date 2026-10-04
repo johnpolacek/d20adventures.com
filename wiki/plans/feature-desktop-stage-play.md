@@ -119,7 +119,7 @@ A second live run on an isolated save played Thalbern recklessly and took the ot
 - At 10% the core moved to Timely Rescue. Wollandora drove the owlbear off, bound the wound, and helped him to the Stones. His 10% health and Bleeding carried through every later encounter.
 - At the Stones he pleaded injury, heard the request, and then refused. Back Home ended the adventure. The user save was restored unchanged, and the run is kept as `validation-midnight-summons-wounded-2026-10-03.sqlite`.
 - New findings: after the rescue, Wollandora's authored greeting still thanks him for his swiftness, though she carried him there. The GM again held the meeting one round past his first refusal. Back Home's authored text has a typo, "tobe". Bleeding is a label only and never costs health.
-- Still untested in this adventure: hiding from the owlbear at the start, and asking Wollandora for more, which leads to The Missing Relics.
+- Still untested in this adventure at the time: hiding from the owlbear at the start, and asking Wollandora for more, which leads to The Missing Relics. Both were played later, see [the whole-round fix](#gm-decision-sees-the-whole-round-2026-10-03).
 - Test harness only: keys typed into the app while it sat behind other windows were sometimes dropped. The harness now sets the text box through accessibility and checks it before sending.
 
 ## Midnight Summons fixes, 2026-10-03
@@ -172,6 +172,24 @@ Owner follow-up: "the sky should be darker. the druid should match the character
 - Wollandora regenerated from her art: a younger, freckled face, loose wavy pale hair with one braid across the crown and leaves tangled in it, and a tattered dark mantle overgrown with ivy and dead leaves. Four candidates were compared with the art. New back and portrait.
 - Neutral sets also turn off the standee shader's warm grade. It had turned her grey-green mantle sepia at night.
 - Owner approved the result. Packaged-app check: a release build opened a save at each of the seven encounters, made by the real core with a scripted GM. Every scene reported ready with no errors and matched its web render, including the new druid portrait in the HUD. The user save was restored byte for byte.
+
+## GM decision sees the whole round, 2026-10-03
+
+A live run of the untested branches stalled at Meeting at the Stones. Thalbern asked Wollandora for more twice, which should lead to The Missing Relics, and the GM kept the meeting going for three rounds.
+
+- Cause: the decision to move on sees earlier rounds and only the last paragraph of the current round. When an NPC answers after the player, that answer is all the GM sees, so the player's action is invisible. This also explains the earlier rounds held past an authored exit.
+- Change: the wiki decision prompt includes the whole current round, and its rule says a player's action counts even when an NPC replied after it. The shared core changes, so web play gets the fix too. The legacy plan prompt is unchanged.
+- Validation: `pnpm test:gm-core` with the one recorded prompt updated, the desktop tests, and replaying the stalled save in the packaged app with live Claude.
+
+Result: the packaged app with live Claude played both untested branches on an isolated save, ending in 7 rounds.
+
+- Broken Silence: Thalbern hid behind an oak. Stealth 23 against 12 succeeded, the owlbear passed by, and the next round went straight to Meeting at the Stones.
+- Meeting at the Stones held three rounds before the fix, though he asked for more twice. With the fixed runtime, the same moment moved to The Missing Relics at once.
+- The Missing Relics: Wollandora gave the authored lore and asked for his answer. The GM waited a round for his decision, then he accepted, and Preparing for the City ended the adventure.
+- Content typos fixed: "Valkrarr" in the opening, and "accepts or the mission" in two transitions.
+- Harness finding: the turn box waits for the scene to draw, so it stays on "Loading characters" while the app window is covered.
+- Every Midnight Summons branch has now been played live. The run is kept as `validation-midnight-summons-relics-2026-10-03.sqlite`, and the user save was restored unchanged.
+- Bleeding stays a label with no rules effect. The owner leans against adding it, since classic D&D has no bleeding, but is open to it.
 
 ## Remaining scope
 

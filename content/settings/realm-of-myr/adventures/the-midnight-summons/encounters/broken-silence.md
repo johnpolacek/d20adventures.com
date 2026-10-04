@@ -13,7 +13,7 @@ image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-m
 
 ## Intro
 
-Thalbern, a solitary ranger of the Valkarr woods, has always trusted the silence of the wilds more than the promises of men. Orphaned by border raiders and raised by the elves of the Valkrarr Forest, he has spent years living on the edge of Kordavos, guiding travelers, hunting for his own survival, and keeping his distance from the tangled politics of the city.
+Thalbern, a solitary ranger of the Valkarr woods, has always trusted the silence of the wilds more than the promises of men. Orphaned by border raiders and raised by the elves of the Valkarr Forest, he has spent years living on the edge of Kordavos, guiding travelers, hunting for his own survival, and keeping his distance from the tangled politics of the city.
 
 Yet on this night, a message delivered by a red squirrel bearing the unmistakable script of Wollandora, a trusted elven friend and druid, has drawn him from his hidden home. The note was simple and urgent: Meet me at the Old Standing Stones at midnight. The balance of the forest could depend on it.
 
