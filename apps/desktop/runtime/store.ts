@@ -5,6 +5,7 @@ import { type AdventurePatch, validateAdventurePatch } from "@d20/gm-core/wiki-a
 import { validateRuntimeTransition } from "@d20/gm-core/wiki-adventures/transition-validator"
 import type { MovementIntent } from "@d20/stage/movement"
 import { type CharacterStates, desktopPatchSchema, nextCharacterState, rememberCharacters } from "./characters"
+import type { Hero, Roster } from "./heroes"
 
 export type SavedAdventure = AdventureRecord & {
   currentTurnId: string
@@ -28,10 +29,13 @@ export type Save = {
   movement: Record<string, { actorId: string; intent: MovementIntent }>
   positions: Record<string, { x: number; z: number; ry: number }>
   characterStates?: CharacterStates
+  // Each created hero's stock figure, by character id, and the heroes who stand as their painted art instead.
+  figures?: Record<string, string>
+  painted?: string[]
 }
 
 /** SQLite writes commit each milestone, including the natural die before inference. */
-export class LocalStore implements Store {
+export class LocalStore implements Store, Roster {
   db: DatabaseSync
   state: Save | null
   private ownsLock = false
@@ -41,7 +45,7 @@ export class LocalStore implements Store {
   ) {
     this.db = new DatabaseSync(path)
     this.db.exec(
-      "PRAGMA busy_timeout=1000; CREATE TABLE IF NOT EXISTS save (id INTEGER PRIMARY KEY CHECK(id=1), json TEXT NOT NULL); CREATE TABLE IF NOT EXISTS active (id INTEGER PRIMARY KEY CHECK(id=1), pid INTEGER NOT NULL); CREATE TABLE IF NOT EXISTS archive (id INTEGER PRIMARY KEY, archived_at INTEGER NOT NULL, json TEXT NOT NULL)"
+      "PRAGMA busy_timeout=1000; CREATE TABLE IF NOT EXISTS save (id INTEGER PRIMARY KEY CHECK(id=1), json TEXT NOT NULL); CREATE TABLE IF NOT EXISTS active (id INTEGER PRIMARY KEY CHECK(id=1), pid INTEGER NOT NULL); CREATE TABLE IF NOT EXISTS archive (id INTEGER PRIMARY KEY, archived_at INTEGER NOT NULL, json TEXT NOT NULL); CREATE TABLE IF NOT EXISTS heroes (id TEXT PRIMARY KEY, updated_at INTEGER NOT NULL, json TEXT NOT NULL)"
     )
     const row = this.db.prepare("SELECT json FROM save WHERE id=1").get() as { json: string } | undefined
     this.state = row ? JSON.parse(row.json) : null
@@ -94,6 +98,16 @@ export class LocalStore implements Store {
       throw error
     }
     this.state = next
+  }
+  // The hero roster, oldest first. Saves hold their own copies of the heroes they started with.
+  heroes(): Hero[] {
+    return (this.db.prepare("SELECT json FROM heroes ORDER BY rowid").all() as { json: string }[]).map((r) => JSON.parse(r.json))
+  }
+  putHero(hero: Hero) {
+    this.db.prepare("INSERT INTO heroes VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET updated_at=excluded.updated_at, json=excluded.json").run(hero.id, Date.now(), JSON.stringify(hero))
+  }
+  deleteHero(id: string) {
+    this.db.prepare("DELETE FROM heroes WHERE id=?").run(id)
   }
   current() {
     if (!this.state) throw new Error("Start an adventure first.")

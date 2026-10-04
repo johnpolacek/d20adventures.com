@@ -1,0 +1,2763 @@
+{
+  "format": "d20.stage.set",
+  "version": 1,
+  "id": "kordavos-riverfront",
+  "settingId": "realm-of-myr",
+  "locationId": "kordavos-riverfront",
+  "title": "The Kordavos riverfront",
+  "seed": 9031,
+  "atmosphere": {
+    "sun": {
+      "direction": [
+        -0.45,
+        0.72,
+        0.52
+      ],
+      "color": "#fff0d4",
+      "intensity": 3.2,
+      "target": [
+        -8,
+        0,
+        -40
+      ],
+      "distance": 300,
+      "shadow": {
+        "left": -90,
+        "right": 90,
+        "top": 90,
+        "bottom": -90,
+        "near": 10,
+        "far": 700
+      }
+    },
+    "hemisphere": {
+      "sky": "#a0c6e6",
+      "ground": "#4f5a3c",
+      "intensity": 0.9
+    },
+    "sky": {
+      "horizon": "#d4e6ee",
+      "mid": "#86b6dc",
+      "zenith": "#3f7fc2",
+      "gain": 1,
+      "clouds": 1
+    },
+    "fog": {
+      "density": 0.0022,
+      "color": "#cddde4"
+    },
+    "environment": 0.35,
+    "exposure": 1.05,
+    "grade": "warm",
+    "wind": 0.9
+  },
+  "camera": {
+    "near": 0.3,
+    "far": 2400,
+    "min": [
+      -70,
+      0.5,
+      -220
+    ],
+    "max": [
+      40,
+      40,
+      60
+    ],
+    "maxDistance": 220
+  },
+  "materials": {
+    "stone": {
+      "type": "masonry",
+      "a": "#7c4a37",
+      "b": "#9d7454",
+      "c": "#6c6460",
+      "block": [
+        2.1,
+        1.02
+      ],
+      "grime": 1.35,
+      "variance": 0.55
+    },
+    "stoneRed": {
+      "type": "masonry",
+      "a": "#77392a",
+      "b": "#955a40",
+      "c": "#655956",
+      "block": [
+        1.8,
+        0.9
+      ],
+      "grime": 1.45,
+      "variance": 0.55
+    },
+    "trim": {
+      "type": "wood",
+      "a": "#5a4030",
+      "b": "#6e4f37",
+      "c": "#4a4038",
+      "plank": [
+        0,
+        40
+      ],
+      "relief": 0.03,
+      "seed": 6.2
+    },
+    "trimB": {
+      "type": "masonry",
+      "a": "#8c6048",
+      "b": "#a88464",
+      "c": "#7a6c64",
+      "block": [
+        2.2,
+        0.8
+      ],
+      "grime": 1.1,
+      "variance": 0.3
+    },
+    "dark": {
+      "type": "masonry",
+      "a": "#6a4a3a",
+      "b": "#7f624d",
+      "c": "#5a5553",
+      "block": [
+        2.4,
+        1.2
+      ],
+      "grime": 1.3,
+      "relief": 0.08
+    },
+    "carve": {
+      "type": "masonry",
+      "a": "#a7866a",
+      "b": "#b99a78",
+      "c": "#8a7d73",
+      "block": [
+        60,
+        60
+      ],
+      "grime": 1.1
+    },
+    "far": {
+      "type": "masonry",
+      "a": "#9b7a64",
+      "b": "#b2957a",
+      "c": "#8f8a86",
+      "block": [
+        2.5,
+        1.2
+      ],
+      "grime": 0.6,
+      "relief": 0.03
+    },
+    "roof": {
+      "type": "masonry",
+      "a": "#5a3a30",
+      "b": "#7a4a38",
+      "c": "#4f4a48",
+      "mortar": "#2c2320",
+      "block": [
+        0.55,
+        0.34
+      ],
+      "joint": 0.035,
+      "relief": 0.07,
+      "grime": 0.7
+    },
+    "roofFar": {
+      "type": "masonry",
+      "a": "#6b4a40",
+      "b": "#7c5646",
+      "c": "#5f5a58",
+      "block": [
+        0.6,
+        0.4
+      ],
+      "relief": 0.02,
+      "grime": 0.4
+    },
+    "plaster": {
+      "type": "masonry",
+      "a": "#b39a78",
+      "b": "#c4ab86",
+      "c": "#9a8a78",
+      "block": [
+        40,
+        40
+      ],
+      "grime": 1.3
+    },
+    "plasterB": {
+      "type": "masonry",
+      "a": "#a88462",
+      "b": "#b8966e",
+      "c": "#8f8070",
+      "block": [
+        40,
+        40
+      ],
+      "grime": 1.3
+    },
+    "ground": {
+      "type": "masonry",
+      "a": "#9a7658",
+      "b": "#b08d6c",
+      "c": "#8a7c70",
+      "mortar": "#5d4636",
+      "block": [
+        1.3,
+        0.95
+      ],
+      "relief": 0.045,
+      "grime": 0.3,
+      "ground": true
+    },
+    "wood": {
+      "type": "wood",
+      "a": "#5a4030",
+      "b": "#6e4f37",
+      "c": "#4a4038",
+      "plank": [
+        0.3,
+        3.2
+      ],
+      "relief": 0.04,
+      "variance": 0.5,
+      "seed": 3.1
+    },
+    "door": {
+      "type": "wood",
+      "a": "#4a3325",
+      "b": "#5d4130",
+      "c": "#3f3630",
+      "plank": [
+        0.41,
+        12
+      ],
+      "relief": 0.035,
+      "variance": 0.4,
+      "seed": 9.4
+    },
+    "pole": {
+      "type": "wood",
+      "a": "#4d382a",
+      "b": "#644a35",
+      "c": "#453c34",
+      "plank": [
+        0,
+        60
+      ],
+      "relief": 0.03,
+      "variance": 0.35,
+      "seed": 5.7,
+      "grime": 0.5
+    },
+    "table": {
+      "type": "wood",
+      "a": "#6a4b33",
+      "b": "#7e5b3e",
+      "c": "#5a4a3c",
+      "plank": [
+        0.19,
+        1.9
+      ],
+      "relief": 0.045,
+      "variance": 0.4,
+      "seed": 11.2
+    },
+    "crate": {
+      "type": "wood",
+      "a": "#8a6a48",
+      "b": "#9c7a52",
+      "c": "#7a6a58",
+      "plank": [
+        0.2,
+        1.2
+      ],
+      "relief": 0.045,
+      "variance": 0.4,
+      "seed": 2.6
+    },
+    "crateDark": {
+      "type": "wood",
+      "a": "#4a3526",
+      "b": "#5a4230",
+      "c": "#403830",
+      "plank": [
+        0,
+        40
+      ],
+      "relief": 0.03,
+      "seed": 8.8
+    },
+    "barrel": {
+      "type": "wood",
+      "a": "#6a4a30",
+      "b": "#7c5a3a",
+      "c": "#5f4a3a",
+      "plank": [
+        0.105,
+        1.4
+      ],
+      "relief": 0.05,
+      "variance": 0.45,
+      "seed": 4.4
+    },
+    "timber": {
+      "type": "wood",
+      "a": "#3a2a20",
+      "b": "#4a362a",
+      "c": "#3a3230",
+      "plank": [
+        0,
+        40
+      ],
+      "relief": 0.03,
+      "seed": 6.1
+    },
+    "sack": {
+      "type": "burlap",
+      "color": "#c2b08c"
+    },
+    "sackB": {
+      "type": "burlap",
+      "color": "#a08a68"
+    },
+    "basket": {
+      "type": "burlap",
+      "color": "#b08a52"
+    },
+    "iron": {
+      "type": "metal",
+      "color": "#2e2a28",
+      "roughness": 0.55,
+      "metalness": 0.7
+    },
+    "bronze": {
+      "type": "metal",
+      "color": "#8a6a3e",
+      "roughness": 0.42,
+      "metalness": 0.8
+    },
+    "steel": {
+      "type": "metal",
+      "color": "#8a8c8e",
+      "roughness": 0.3,
+      "metalness": 0.9
+    },
+    "coin": {
+      "type": "metal",
+      "color": "#d4a84a",
+      "roughness": 0.3,
+      "metalness": 0.95
+    },
+    "void": {
+      "type": "plain",
+      "color": "#0d0a09",
+      "roughness": 1
+    },
+    "flame": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ffae55",
+      "emissiveIntensity": 5
+    },
+    "fire": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ff8a3a",
+      "emissiveIntensity": 2.2
+    },
+    "coal": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ff5a1a",
+      "emissiveIntensity": 2.5
+    },
+    "pottery": {
+      "type": "plain",
+      "color": "#a45a36",
+      "roughness": 0.7
+    },
+    "potteryB": {
+      "type": "plain",
+      "color": "#8a6a4e",
+      "roughness": 0.75
+    },
+    "goodsRed": {
+      "type": "plain",
+      "color": "#9a2e22",
+      "roughness": 0.8
+    },
+    "goodsGreen": {
+      "type": "plain",
+      "color": "#5a6a2e",
+      "roughness": 0.8
+    },
+    "goodsYellow": {
+      "type": "plain",
+      "color": "#c2963a",
+      "roughness": 0.7
+    },
+    "goodsTeal": {
+      "type": "plain",
+      "color": "#2a6a66",
+      "roughness": 0.8
+    },
+    "shield": {
+      "type": "plain",
+      "color": "#7a2a22",
+      "roughness": 0.6
+    },
+    "rope": {
+      "type": "plain",
+      "color": "#4a3a2a",
+      "roughness": 1
+    },
+    "queueRope": {
+      "type": "plain",
+      "color": "#a8323a",
+      "roughness": 0.7
+    },
+    "straw": {
+      "type": "plain",
+      "color": "#c4a45a",
+      "roughness": 0.95
+    },
+    "gourd": {
+      "type": "plain",
+      "color": "#c0642a",
+      "roughness": 0.6
+    },
+    "parchment": {
+      "type": "plain",
+      "color": "#e2d6b8",
+      "roughness": 0.9
+    },
+    "leather": {
+      "type": "plain",
+      "color": "#4a2e1c",
+      "roughness": 0.75
+    },
+    "chest": {
+      "type": "plain",
+      "color": "#3e2a1c",
+      "roughness": 0.8
+    },
+    "banner": {
+      "type": "cloth",
+      "color": "#ffffff",
+      "heraldry": "asterian",
+      "tatters": [
+        5,
+        0.1
+      ],
+      "amp": 0.45
+    },
+    "bannerRust": {
+      "type": "cloth",
+      "color": "#ffffff",
+      "heraldry": "valkaran",
+      "tatters": [
+        8,
+        0.18
+      ],
+      "amp": 0.4
+    },
+    "bannerCity": {
+      "type": "cloth",
+      "color": "#ffffff",
+      "heraldry": "city",
+      "tatters": [
+        3,
+        0.08
+      ],
+      "amp": 0.4
+    },
+    "pennant": {
+      "type": "cloth",
+      "color": "#1f2d52",
+      "amp": 0.9,
+      "freq": 2.2
+    },
+    "pennantOrange": {
+      "type": "cloth",
+      "color": "#b5602a",
+      "amp": 0.9,
+      "freq": 2.2
+    },
+    "pennantGreen": {
+      "type": "cloth",
+      "color": "#3f5a30",
+      "amp": 0.9,
+      "freq": 2.2
+    },
+    "tentRed": {
+      "type": "cloth",
+      "color": "#8a2a20",
+      "tatters": [
+        4,
+        0.12
+      ],
+      "amp": 0.22
+    },
+    "tentRust": {
+      "type": "cloth",
+      "color": "#9a4a2a",
+      "tatters": [
+        5,
+        0.1
+      ],
+      "amp": 0.22
+    },
+    "tentWine": {
+      "type": "cloth",
+      "color": "#5e2024",
+      "tatters": [
+        3,
+        0.1
+      ],
+      "amp": 0.22
+    },
+    "tentTeal": {
+      "type": "cloth",
+      "color": "#2c5f5c",
+      "tatters": [
+        4,
+        0.1
+      ],
+      "amp": 0.22
+    },
+    "tentOchre": {
+      "type": "cloth",
+      "color": "#a67a3c",
+      "tatters": [
+        3,
+        0.1
+      ],
+      "amp": 0.22
+    },
+    "tentNavy": {
+      "type": "cloth",
+      "color": "#2a3a64",
+      "tatters": [
+        2,
+        0.06
+      ],
+      "amp": 0.18,
+      "shadow": false
+    },
+    "tentOrange": {
+      "type": "cloth",
+      "color": "#b0602a",
+      "tatters": [
+        3,
+        0.08
+      ],
+      "amp": 0.22
+    },
+    "tentGreen": {
+      "type": "cloth",
+      "color": "#46603a",
+      "tatters": [
+        3,
+        0.08
+      ],
+      "amp": 0.22
+    },
+    "tentCream": {
+      "type": "cloth",
+      "color": "#cdbf9e",
+      "tatters": [
+        3,
+        0.08
+      ],
+      "amp": 0.22
+    },
+    "clothDrab": {
+      "type": "cloth",
+      "color": "#7d6a50",
+      "amp": 0.12
+    },
+    "flagOrange": {
+      "type": "cloth",
+      "color": "#c2692c",
+      "amp": 0.5,
+      "freq": 2.4
+    },
+    "flagGreen": {
+      "type": "cloth",
+      "color": "#4a6a36",
+      "amp": 0.5,
+      "freq": 2.4
+    },
+    "flagCream": {
+      "type": "cloth",
+      "color": "#d8ccae",
+      "amp": 0.5,
+      "freq": 2.4
+    },
+    "paving": {
+      "type": "masonry",
+      "a": "#9a7658",
+      "b": "#b08d6c",
+      "c": "#8a7c70",
+      "mortar": "#5d4636",
+      "block": [
+        1.3,
+        0.95
+      ],
+      "relief": 0.045,
+      "grime": 0.3,
+      "ground": true
+    },
+    "meadow": {
+      "type": "meadow",
+      "grass": "#5f7a3a",
+      "grassDark": "#3e5428",
+      "moss": "#5a7a34",
+      "dry": "#8a8a50",
+      "dirt": "#6a5a40",
+      "litter": "#7a6040",
+      "dirtAmount": 0.3,
+      "pebbles": 0.3,
+      "litterAmount": 0.2,
+      "flowers": 0.3,
+      "relief": 0.5
+    },
+    "water": {
+      "type": "water",
+      "color": "#1d5560",
+      "reflect": 4,
+      "ripple": 0.6,
+      "flow": [
+        0,
+        -1
+      ]
+    },
+    "hill": {
+      "type": "plain",
+      "color": "#5f7a46",
+      "roughness": 1
+    },
+    "roofRed": {
+      "type": "masonry",
+      "a": "#9a4a30",
+      "b": "#b45e3a",
+      "c": "#7c3e2c",
+      "mortar": "#3a2018",
+      "block": [
+        0.55,
+        0.34
+      ],
+      "joint": 0.035,
+      "relief": 0.07,
+      "grime": 0.6
+    },
+    "roofRedFar": {
+      "type": "masonry",
+      "a": "#a65a3c",
+      "b": "#b86a46",
+      "c": "#8a4e3a",
+      "block": [
+        0.6,
+        0.4
+      ],
+      "relief": 0.02,
+      "grime": 0.3
+    },
+    "hull": {
+      "type": "wood",
+      "a": "#3a2c22",
+      "b": "#4a382a",
+      "c": "#30261e",
+      "plank": [
+        0.26,
+        8
+      ],
+      "relief": 0.05,
+      "variance": 0.4,
+      "seed": 2.4,
+      "grime": 1.1
+    },
+    "deck": {
+      "type": "wood",
+      "a": "#7a644a",
+      "b": "#8a7254",
+      "c": "#6a5640",
+      "plank": [
+        0.18,
+        4
+      ],
+      "relief": 0.04,
+      "seed": 5.1
+    },
+    "mast": {
+      "type": "wood",
+      "a": "#6a5038",
+      "b": "#7a5e42",
+      "c": "#5a4430",
+      "plank": [
+        0,
+        60
+      ],
+      "relief": 0.02,
+      "seed": 7.8
+    },
+    "sail": {
+      "type": "cloth",
+      "color": "#e8dcc2",
+      "amp": 0.3,
+      "freq": 0.8
+    },
+    "window": {
+      "type": "plain",
+      "color": "#1a1410",
+      "roughness": 1
+    },
+    "bark": {
+      "type": "wood",
+      "a": "#3a3228",
+      "b": "#4a3e32",
+      "c": "#2e2820",
+      "plank": [
+        0,
+        40
+      ],
+      "relief": 0.07,
+      "variance": 0.5,
+      "seed": 4.2,
+      "grime": 0.8
+    },
+    "leaves": {
+      "type": "foliage",
+      "color": "#d8e0c8",
+      "map": "/stage/textures/leaves-oak.webp"
+    },
+    "leavesDark": {
+      "type": "foliage",
+      "color": "#9aa890",
+      "map": "/stage/textures/leaves-oak.webp"
+    },
+    "leavesLight": {
+      "type": "foliage",
+      "color": "#f0f4d8",
+      "map": "/stage/textures/leaves-oak.webp"
+    },
+    "trimWood": {
+      "type": "wood",
+      "a": "#5a4030",
+      "b": "#6e4f37",
+      "c": "#4a4038",
+      "plank": [
+        0,
+        40
+      ],
+      "relief": 0.03,
+      "seed": 6.2
+    }
+  },
+  "objects": [
+    {
+      "type": "extrude",
+      "id": "right-bank",
+      "at": [
+        0,
+        -1.6,
+        0
+      ],
+      "points": [
+        [
+          -11.3,
+          -60
+        ],
+        [
+          -10.66,
+          -48
+        ],
+        [
+          -10.01,
+          -36
+        ],
+        [
+          -9.34,
+          -24
+        ],
+        [
+          -8.67,
+          -12
+        ],
+        [
+          -8,
+          0
+        ],
+        [
+          -7.33,
+          12
+        ],
+        [
+          -6.66,
+          24
+        ],
+        [
+          -5.99,
+          36
+        ],
+        [
+          -5.34,
+          48
+        ],
+        [
+          -4.7,
+          60
+        ],
+        [
+          -3.85,
+          72
+        ],
+        [
+          -3.01,
+          84
+        ],
+        [
+          -2.2,
+          96
+        ],
+        [
+          -1.42,
+          108
+        ],
+        [
+          -0.67,
+          120
+        ],
+        [
+          0.05,
+          132
+        ],
+        [
+          0.73,
+          144
+        ],
+        [
+          1.37,
+          156
+        ],
+        [
+          1.97,
+          168
+        ],
+        [
+          2.52,
+          180
+        ],
+        [
+          3.03,
+          192
+        ],
+        [
+          3.49,
+          204
+        ],
+        [
+          3.9,
+          216
+        ],
+        [
+          4.26,
+          228
+        ],
+        [
+          4.58,
+          240
+        ],
+        [
+          4.84,
+          252
+        ],
+        [
+          5.05,
+          264
+        ],
+        [
+          5.21,
+          276
+        ],
+        [
+          5.32,
+          288
+        ],
+        [
+          5.39,
+          300
+        ],
+        [
+          5.4,
+          312
+        ],
+        [
+          5.37,
+          324
+        ],
+        [
+          5.29,
+          336
+        ],
+        [
+          5.17,
+          348
+        ],
+        [
+          5,
+          360
+        ],
+        [
+          4.8,
+          372
+        ],
+        [
+          4.56,
+          384
+        ],
+        [
+          4.28,
+          396
+        ],
+        [
+          3.98,
+          408
+        ],
+        [
+          3.65,
+          420
+        ],
+        [
+          3.29,
+          432
+        ],
+        [
+          2.91,
+          444
+        ],
+        [
+          2.51,
+          456
+        ],
+        [
+          2.09,
+          468
+        ],
+        [
+          1.67,
+          480
+        ],
+        [
+          1.24,
+          492
+        ],
+        [
+          0.8,
+          504
+        ],
+        [
+          0.37,
+          516
+        ],
+        [
+          -0.06,
+          528
+        ],
+        [
+          -0.48,
+          540
+        ],
+        [
+          -0.89,
+          552
+        ],
+        [
+          -1.29,
+          564
+        ],
+        [
+          -1.66,
+          576
+        ],
+        [
+          -2.02,
+          588
+        ],
+        [
+          -2.34,
+          600
+        ],
+        [
+          -2.64,
+          612
+        ],
+        [
+          -2.91,
+          624
+        ],
+        [
+          -3.14,
+          636
+        ],
+        [
+          -3.34,
+          648
+        ],
+        [
+          -3.49,
+          660
+        ],
+        [
+          -3.6,
+          672
+        ],
+        [
+          -3.67,
+          684
+        ],
+        [
+          -3.7,
+          696
+        ],
+        [
+          800,
+          700
+        ],
+        [
+          800,
+          -60
+        ]
+      ],
+      "depth": 1.6,
+      "plane": "xz",
+      "material": "paving"
+    },
+    {
+      "type": "extrude",
+      "id": "left-bank",
+      "at": [
+        0,
+        -1.6,
+        0
+      ],
+      "points": [
+        [
+          -800,
+          -60
+        ],
+        [
+          -800,
+          700
+        ],
+        [
+          -55.14,
+          696
+        ],
+        [
+          -54.63,
+          684
+        ],
+        [
+          -54.08,
+          672
+        ],
+        [
+          -53.49,
+          660
+        ],
+        [
+          -52.86,
+          648
+        ],
+        [
+          -52.18,
+          636
+        ],
+        [
+          -51.47,
+          624
+        ],
+        [
+          -50.72,
+          612
+        ],
+        [
+          -49.94,
+          600
+        ],
+        [
+          -49.14,
+          588
+        ],
+        [
+          -48.3,
+          576
+        ],
+        [
+          -47.45,
+          564
+        ],
+        [
+          -46.57,
+          552
+        ],
+        [
+          -45.68,
+          540
+        ],
+        [
+          -44.78,
+          528
+        ],
+        [
+          -43.87,
+          516
+        ],
+        [
+          -42.96,
+          504
+        ],
+        [
+          -42.04,
+          492
+        ],
+        [
+          -41.13,
+          480
+        ],
+        [
+          -40.23,
+          468
+        ],
+        [
+          -39.33,
+          456
+        ],
+        [
+          -38.45,
+          444
+        ],
+        [
+          -37.59,
+          432
+        ],
+        [
+          -36.75,
+          420
+        ],
+        [
+          -35.94,
+          408
+        ],
+        [
+          -35.16,
+          396
+        ],
+        [
+          -34.4,
+          384
+        ],
+        [
+          -33.68,
+          372
+        ],
+        [
+          -33,
+          360
+        ],
+        [
+          -32.35,
+          348
+        ],
+        [
+          -31.75,
+          336
+        ],
+        [
+          -31.19,
+          324
+        ],
+        [
+          -30.68,
+          312
+        ],
+        [
+          -30.21,
+          300
+        ],
+        [
+          -29.8,
+          288
+        ],
+        [
+          -29.43,
+          276
+        ],
+        [
+          -29.11,
+          264
+        ],
+        [
+          -28.84,
+          252
+        ],
+        [
+          -28.62,
+          240
+        ],
+        [
+          -28.46,
+          228
+        ],
+        [
+          -28.34,
+          216
+        ],
+        [
+          -28.27,
+          204
+        ],
+        [
+          -28.25,
+          192
+        ],
+        [
+          -28.28,
+          180
+        ],
+        [
+          -28.35,
+          168
+        ],
+        [
+          -28.47,
+          156
+        ],
+        [
+          -28.63,
+          144
+        ],
+        [
+          -28.83,
+          132
+        ],
+        [
+          -29.07,
+          120
+        ],
+        [
+          -29.34,
+          108
+        ],
+        [
+          -29.64,
+          96
+        ],
+        [
+          -29.97,
+          84
+        ],
+        [
+          -30.33,
+          72
+        ],
+        [
+          -30.7,
+          60
+        ],
+        [
+          -31.34,
+          48
+        ],
+        [
+          -31.99,
+          36
+        ],
+        [
+          -32.66,
+          24
+        ],
+        [
+          -33.33,
+          12
+        ],
+        [
+          -34,
+          0
+        ],
+        [
+          -34.67,
+          -12
+        ],
+        [
+          -35.34,
+          -24
+        ],
+        [
+          -36.01,
+          -36
+        ],
+        [
+          -36.66,
+          -48
+        ],
+        [
+          -37.3,
+          -60
+        ]
+      ],
+      "depth": 1.6,
+      "plane": "xz",
+      "material": "meadow"
+    },
+    {
+      "type": "extrude",
+      "id": "river",
+      "at": [
+        0,
+        -1.58,
+        0
+      ],
+      "points": [
+        [
+          -38.3,
+          -60
+        ],
+        [
+          -37.66,
+          -48
+        ],
+        [
+          -37.01,
+          -36
+        ],
+        [
+          -36.34,
+          -24
+        ],
+        [
+          -35.67,
+          -12
+        ],
+        [
+          -35,
+          0
+        ],
+        [
+          -34.33,
+          12
+        ],
+        [
+          -33.66,
+          24
+        ],
+        [
+          -32.99,
+          36
+        ],
+        [
+          -32.34,
+          48
+        ],
+        [
+          -31.7,
+          60
+        ],
+        [
+          -31.33,
+          72
+        ],
+        [
+          -30.97,
+          84
+        ],
+        [
+          -30.64,
+          96
+        ],
+        [
+          -30.34,
+          108
+        ],
+        [
+          -30.07,
+          120
+        ],
+        [
+          -29.83,
+          132
+        ],
+        [
+          -29.63,
+          144
+        ],
+        [
+          -29.47,
+          156
+        ],
+        [
+          -29.35,
+          168
+        ],
+        [
+          -29.28,
+          180
+        ],
+        [
+          -29.25,
+          192
+        ],
+        [
+          -29.27,
+          204
+        ],
+        [
+          -29.34,
+          216
+        ],
+        [
+          -29.46,
+          228
+        ],
+        [
+          -29.62,
+          240
+        ],
+        [
+          -29.84,
+          252
+        ],
+        [
+          -30.11,
+          264
+        ],
+        [
+          -30.43,
+          276
+        ],
+        [
+          -30.8,
+          288
+        ],
+        [
+          -31.21,
+          300
+        ],
+        [
+          -31.68,
+          312
+        ],
+        [
+          -32.19,
+          324
+        ],
+        [
+          -32.75,
+          336
+        ],
+        [
+          -33.35,
+          348
+        ],
+        [
+          -34,
+          360
+        ],
+        [
+          -34.68,
+          372
+        ],
+        [
+          -35.4,
+          384
+        ],
+        [
+          -36.16,
+          396
+        ],
+        [
+          -36.94,
+          408
+        ],
+        [
+          -37.75,
+          420
+        ],
+        [
+          -38.59,
+          432
+        ],
+        [
+          -39.45,
+          444
+        ],
+        [
+          -40.33,
+          456
+        ],
+        [
+          -41.23,
+          468
+        ],
+        [
+          -42.13,
+          480
+        ],
+        [
+          -43.04,
+          492
+        ],
+        [
+          -43.96,
+          504
+        ],
+        [
+          -44.87,
+          516
+        ],
+        [
+          -45.78,
+          528
+        ],
+        [
+          -46.68,
+          540
+        ],
+        [
+          -47.57,
+          552
+        ],
+        [
+          -48.45,
+          564
+        ],
+        [
+          -49.3,
+          576
+        ],
+        [
+          -50.14,
+          588
+        ],
+        [
+          -50.94,
+          600
+        ],
+        [
+          -51.72,
+          612
+        ],
+        [
+          -52.47,
+          624
+        ],
+        [
+          -53.18,
+          636
+        ],
+        [
+          -53.86,
+          648
+        ],
+        [
+          -54.49,
+          660
+        ],
+        [
+          -55.08,
+          672
+        ],
+        [
+          -55.63,
+          684
+        ],
+        [
+          -56.14,
+          696
+        ],
+        [
+          -2.7,
+          696
+        ],
+        [
+          -2.67,
+          684
+        ],
+        [
+          -2.6,
+          672
+        ],
+        [
+          -2.49,
+          660
+        ],
+        [
+          -2.34,
+          648
+        ],
+        [
+          -2.14,
+          636
+        ],
+        [
+          -1.91,
+          624
+        ],
+        [
+          -1.64,
+          612
+        ],
+        [
+          -1.34,
+          600
+        ],
+        [
+          -1.02,
+          588
+        ],
+        [
+          -0.66,
+          576
+        ],
+        [
+          -0.29,
+          564
+        ],
+        [
+          0.11,
+          552
+        ],
+        [
+          0.52,
+          540
+        ],
+        [
+          0.94,
+          528
+        ],
+        [
+          1.37,
+          516
+        ],
+        [
+          1.8,
+          504
+        ],
+        [
+          2.24,
+          492
+        ],
+        [
+          2.67,
+          480
+        ],
+        [
+          3.09,
+          468
+        ],
+        [
+          3.51,
+          456
+        ],
+        [
+          3.91,
+          444
+        ],
+        [
+          4.29,
+          432
+        ],
+        [
+          4.65,
+          420
+        ],
+        [
+          4.98,
+          408
+        ],
+        [
+          5.28,
+          396
+        ],
+        [
+          5.56,
+          384
+        ],
+        [
+          5.8,
+          372
+        ],
+        [
+          6,
+          360
+        ],
+        [
+          6.17,
+          348
+        ],
+        [
+          6.29,
+          336
+        ],
+        [
+          6.37,
+          324
+        ],
+        [
+          6.4,
+          312
+        ],
+        [
+          6.39,
+          300
+        ],
+        [
+          6.32,
+          288
+        ],
+        [
+          6.21,
+          276
+        ],
+        [
+          6.05,
+          264
+        ],
+        [
+          5.84,
+          252
+        ],
+        [
+          5.58,
+          240
+        ],
+        [
+          5.26,
+          228
+        ],
+        [
+          4.9,
+          216
+        ],
+        [
+          4.49,
+          204
+        ],
+        [
+          4.03,
+          192
+        ],
+        [
+          3.52,
+          180
+        ],
+        [
+          2.97,
+          168
+        ],
+        [
+          2.37,
+          156
+        ],
+        [
+          1.73,
+          144
+        ],
+        [
+          1.05,
+          132
+        ],
+        [
+          0.33,
+          120
+        ],
+        [
+          -0.42,
+          108
+        ],
+        [
+          -1.2,
+          96
+        ],
+        [
+          -2.01,
+          84
+        ],
+        [
+          -2.85,
+          72
+        ],
+        [
+          -3.7,
+          60
+        ],
+        [
+          -4.34,
+          48
+        ],
+        [
+          -4.99,
+          36
+        ],
+        [
+          -5.66,
+          24
+        ],
+        [
+          -6.33,
+          12
+        ],
+        [
+          -7,
+          0
+        ],
+        [
+          -7.67,
+          -12
+        ],
+        [
+          -8.34,
+          -24
+        ],
+        [
+          -9.01,
+          -36
+        ],
+        [
+          -9.66,
+          -48
+        ],
+        [
+          -10.3,
+          -60
+        ]
+      ],
+      "depth": 0.02,
+      "plane": "xz",
+      "material": "water"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -9.08,
+        30
+      ],
+      "radius": 0.18,
+      "height": 0.7,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -8.69,
+        23
+      ],
+      "radius": 0.18,
+      "height": 0.7,
+      "material": "iron"
+    },
+    {
+      "type": "lantern",
+      "at": [
+        -7.89,
+        20
+      ],
+      "height": 3,
+      "post": true
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -8.3,
+        16
+      ],
+      "radius": 0.18,
+      "height": 0.7,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -7.91,
+        9
+      ],
+      "radius": 0.18,
+      "height": 0.7,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -7.51,
+        2
+      ],
+      "radius": 0.18,
+      "height": 0.7,
+      "material": "iron"
+    },
+    {
+      "type": "lantern",
+      "at": [
+        -6.71,
+        -1
+      ],
+      "height": 3,
+      "post": true
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -7.12,
+        -5
+      ],
+      "radius": 0.18,
+      "height": 0.7,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -6.73,
+        -12
+      ],
+      "radius": 0.18,
+      "height": 0.7,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -6.33,
+        -19
+      ],
+      "radius": 0.18,
+      "height": 0.7,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -5.94,
+        -26
+      ],
+      "radius": 0.18,
+      "height": 0.7,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -5.56,
+        -33
+      ],
+      "radius": 0.18,
+      "height": 0.7,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -5.17,
+        -40
+      ],
+      "radius": 0.18,
+      "height": 0.7,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -4.79,
+        -47
+      ],
+      "radius": 0.18,
+      "height": 0.7,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -4.42,
+        -54
+      ],
+      "radius": 0.18,
+      "height": 0.7,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -4.03,
+        -61
+      ],
+      "radius": 0.18,
+      "height": 0.7,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -3.53,
+        -68
+      ],
+      "radius": 0.18,
+      "height": 0.7,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -3.03,
+        -75
+      ],
+      "radius": 0.18,
+      "height": 0.7,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -2.55,
+        -82
+      ],
+      "radius": 0.18,
+      "height": 0.7,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -2.07,
+        -89
+      ],
+      "radius": 0.18,
+      "height": 0.7,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -1.6,
+        -96
+      ],
+      "radius": 0.18,
+      "height": 0.7,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -1.14,
+        -103
+      ],
+      "radius": 0.18,
+      "height": 0.7,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -0.69,
+        -110
+      ],
+      "radius": 0.18,
+      "height": 0.7,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -0.25,
+        -117
+      ],
+      "radius": 0.18,
+      "height": 0.7,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        0.18,
+        -124
+      ],
+      "radius": 0.18,
+      "height": 0.7,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        0.59,
+        -131
+      ],
+      "radius": 0.18,
+      "height": 0.7,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        1,
+        -138
+      ],
+      "radius": 0.18,
+      "height": 0.7,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        1.38,
+        -145
+      ],
+      "radius": 0.18,
+      "height": 0.7,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        1.76,
+        -152
+      ],
+      "radius": 0.18,
+      "height": 0.7,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        2.12,
+        -159
+      ],
+      "radius": 0.18,
+      "height": 0.7,
+      "material": "iron"
+    },
+    {
+      "type": "barrel",
+      "at": [
+        -5,
+        3
+      ],
+      "r": 0.4,
+      "h": 1
+    },
+    {
+      "type": "barrel",
+      "at": [
+        -5.6,
+        2.2
+      ],
+      "r": 0.4,
+      "h": 1
+    },
+    {
+      "type": "crate",
+      "at": [
+        -4.6,
+        -4
+      ],
+      "size": 0.9,
+      "stack": true
+    },
+    {
+      "type": "barrel",
+      "at": [
+        -4.4,
+        -5.2
+      ],
+      "r": 0.38,
+      "h": 0.95
+    },
+    {
+      "type": "ship",
+      "id": "cog-near",
+      "at": [
+        -11.71,
+        -1.58,
+        -14
+      ],
+      "yaw": 180,
+      "length": 20,
+      "beam": 6,
+      "masts": 2,
+      "height": 17,
+      "sails": "furled"
+    },
+    {
+      "type": "ship",
+      "id": "sloop",
+      "at": [
+        -9.45,
+        -1.58,
+        -46
+      ],
+      "yaw": 176,
+      "length": 14,
+      "beam": 4.8,
+      "masts": 1,
+      "height": 13,
+      "sails": "furled"
+    },
+    {
+      "type": "ship",
+      "id": "carrack",
+      "at": [
+        -15.96,
+        -1.58,
+        -95
+      ],
+      "yaw": 188,
+      "length": 24,
+      "beam": 7,
+      "masts": 3,
+      "height": 20,
+      "sails": "set"
+    },
+    {
+      "type": "ship",
+      "id": "cog-far",
+      "at": [
+        -27.82,
+        -1.58,
+        -30
+      ],
+      "yaw": 4,
+      "length": 16,
+      "beam": 5,
+      "masts": 2,
+      "height": 14,
+      "sails": "furled"
+    },
+    {
+      "type": "ship",
+      "id": "barge",
+      "at": [
+        -3.95,
+        -1.58,
+        -150
+      ],
+      "yaw": 182,
+      "length": 18,
+      "beam": 6,
+      "masts": 1,
+      "height": 12,
+      "sails": "set"
+    },
+    {
+      "type": "row",
+      "id": "right-front",
+      "from": [
+        6.5,
+        -6
+      ],
+      "to": [
+        10,
+        -230
+      ],
+      "step": [
+        8.5,
+        11
+      ],
+      "itemYaw": -90,
+      "yawJitter": 3,
+      "item": {
+        "type": "house",
+        "materials": {
+          "roof": "roofRed"
+        }
+      },
+      "vary": {
+        "h": [
+          9,
+          15
+        ],
+        "w": [
+          7,
+          10
+        ],
+        "d": [
+          8,
+          10
+        ]
+      }
+    },
+    {
+      "type": "row",
+      "id": "right-back",
+      "from": [
+        19,
+        4
+      ],
+      "to": [
+        24,
+        -240
+      ],
+      "step": [
+        8.5,
+        11
+      ],
+      "itemYaw": -90,
+      "yawJitter": 3,
+      "item": {
+        "type": "house",
+        "materials": {
+          "roof": "roofRed"
+        }
+      },
+      "vary": {
+        "h": [
+          11,
+          18
+        ],
+        "w": [
+          7,
+          10
+        ],
+        "d": [
+          8,
+          10
+        ]
+      }
+    },
+    {
+      "type": "row",
+      "id": "left-front",
+      "from": [
+        -46,
+        -16
+      ],
+      "to": [
+        -40,
+        -230
+      ],
+      "step": [
+        8.5,
+        11
+      ],
+      "itemYaw": 90,
+      "yawJitter": 3,
+      "item": {
+        "type": "house",
+        "materials": {
+          "roof": "roofRed"
+        }
+      },
+      "vary": {
+        "h": [
+          9,
+          14
+        ],
+        "w": [
+          7,
+          10
+        ],
+        "d": [
+          8,
+          10
+        ]
+      }
+    },
+    {
+      "type": "roundTower",
+      "at": [
+        9,
+        -42
+      ],
+      "r": 4.5,
+      "height": 22,
+      "sides": 16,
+      "roofHeight": 9,
+      "materials": {
+        "roof": "roofRed"
+      }
+    },
+    {
+      "type": "roundTower",
+      "at": [
+        11,
+        -96
+      ],
+      "r": 5,
+      "height": 26,
+      "sides": 16,
+      "roofHeight": 11,
+      "materials": {
+        "roof": "roofRed"
+      }
+    },
+    {
+      "type": "roundTower",
+      "at": [
+        8,
+        -150
+      ],
+      "r": 4,
+      "height": 20,
+      "sides": 16,
+      "roofHeight": 8,
+      "materials": {
+        "roof": "roofRed"
+      }
+    },
+    {
+      "type": "roundTower",
+      "at": [
+        -42,
+        -8
+      ],
+      "r": 4,
+      "height": 18,
+      "sides": 16,
+      "roofHeight": 8,
+      "materials": {
+        "roof": "roofRed"
+      }
+    },
+    {
+      "type": "roundTower",
+      "at": [
+        -38,
+        -120
+      ],
+      "r": 4.5,
+      "height": 21,
+      "sides": 16,
+      "roofHeight": 9,
+      "materials": {
+        "roof": "roofRed"
+      }
+    },
+    {
+      "type": "mountain",
+      "id": "castle-hill",
+      "at": [
+        34,
+        -235
+      ],
+      "radius": 110,
+      "height": 40,
+      "ridges": 0.25,
+      "stretch": 1.3,
+      "material": "hill"
+    },
+    {
+      "type": "squareTower",
+      "at": [
+        34,
+        33,
+        -240
+      ],
+      "width": 20,
+      "height": 62
+    },
+    {
+      "type": "roundTower",
+      "at": [
+        16,
+        31,
+        -226
+      ],
+      "r": 9,
+      "height": 46,
+      "sides": 20,
+      "roofHeight": 21.599999999999998,
+      "materials": {
+        "roof": "roofRed"
+      }
+    },
+    {
+      "type": "roundTower",
+      "at": [
+        52,
+        31,
+        -222
+      ],
+      "r": 8,
+      "height": 40,
+      "sides": 20,
+      "roofHeight": 19.2,
+      "materials": {
+        "roof": "roofRed"
+      }
+    },
+    {
+      "type": "roundTower",
+      "at": [
+        26,
+        31,
+        -258
+      ],
+      "r": 7,
+      "height": 54,
+      "sides": 20,
+      "roofHeight": 16.8,
+      "materials": {
+        "roof": "roofRed"
+      }
+    },
+    {
+      "type": "roundTower",
+      "at": [
+        46,
+        31,
+        -256
+      ],
+      "r": 7.5,
+      "height": 44,
+      "sides": 20,
+      "roofHeight": 18,
+      "materials": {
+        "roof": "roofRed"
+      }
+    },
+    {
+      "type": "curtainWall",
+      "at": [
+        34,
+        31,
+        -214
+      ],
+      "length": 34,
+      "height": 16
+    },
+    {
+      "type": "squareTower",
+      "at": [
+        13,
+        -72
+      ],
+      "width": 7,
+      "height": 24,
+      "materials": {
+        "roof": "roofRed"
+      }
+    },
+    {
+      "type": "squareTower",
+      "at": [
+        15,
+        -128
+      ],
+      "width": 8,
+      "height": 28,
+      "materials": {
+        "roof": "roofRed"
+      }
+    },
+    {
+      "type": "skyline",
+      "id": "far-towers",
+      "kind": "towers",
+      "area": [
+        -20,
+        -520,
+        140,
+        -230
+      ],
+      "count": 18,
+      "height": [
+        24,
+        52
+      ],
+      "radius": [
+        3,
+        6
+      ],
+      "materials": {
+        "roof": "roofRedFar"
+      }
+    },
+    {
+      "type": "skyline",
+      "id": "far-roofs",
+      "kind": "blocks",
+      "area": [
+        -30,
+        -260,
+        130,
+        -60
+      ],
+      "count": 50,
+      "height": [
+        8,
+        18
+      ],
+      "radius": [
+        6,
+        14
+      ],
+      "exclude": [
+        [
+          -40,
+          -260,
+          0,
+          40
+        ]
+      ],
+      "materials": {
+        "roof": "roofRedFar"
+      }
+    },
+    {
+      "type": "skyline",
+      "id": "left-roofs",
+      "kind": "blocks",
+      "area": [
+        -160,
+        -300,
+        -60,
+        -20
+      ],
+      "count": 40,
+      "height": [
+        7,
+        15
+      ],
+      "radius": [
+        6,
+        12
+      ],
+      "materials": {
+        "roof": "roofRedFar"
+      }
+    },
+    {
+      "type": "tree",
+      "at": [
+        2.5,
+        7
+      ],
+      "kind": "oak",
+      "height": 9
+    },
+    {
+      "type": "tree",
+      "at": [
+        3.2,
+        -2.5
+      ],
+      "kind": "oak",
+      "height": 8
+    },
+    {
+      "type": "tree",
+      "at": [
+        -52,
+        12
+      ],
+      "kind": "oak",
+      "height": 11
+    }
+  ],
+  "marks": {
+    "quay": {
+      "at": [
+        -3,
+        0
+      ],
+      "label": "the quay"
+    },
+    "quayEdge": {
+      "at": [
+        -6.66,
+        -6
+      ],
+      "label": "the edge of the quay"
+    },
+    "ships": {
+      "at": [
+        -6,
+        -16
+      ],
+      "label": "the moored ships"
+    },
+    "road": {
+      "at": [
+        0.5,
+        -20
+      ],
+      "label": "the road into the city"
+    },
+    "tower": {
+      "at": [
+        6,
+        -38
+      ],
+      "label": "the riverside tower"
+    }
+  },
+  "shots": {
+    "city": {
+      "position": [
+        -2,
+        9,
+        24
+      ],
+      "target": [
+        -6,
+        16,
+        -200
+      ],
+      "fov": 52,
+      "label": "The city"
+    },
+    "quay": {
+      "position": [
+        -1.5,
+        1.7,
+        16
+      ],
+      "target": [
+        -5,
+        1.8,
+        -20
+      ],
+      "fov": 52,
+      "label": "The quay"
+    },
+    "ships": {
+      "position": [
+        -6.5,
+        2.4,
+        8
+      ],
+      "target": [
+        -14,
+        5,
+        -30
+      ],
+      "fov": 55,
+      "label": "The ships"
+    }
+  },
+  "life": {
+    "birds": {
+      "count": 14,
+      "center": [
+        -18,
+        -60
+      ],
+      "spread": [
+        40,
+        60
+      ],
+      "radius": [
+        8,
+        24
+      ],
+      "height": [
+        14,
+        30
+      ]
+    }
+  }
+}

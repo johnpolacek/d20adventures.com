@@ -11,13 +11,14 @@ import { QueueLoop } from "./loops/queue"
 import { createShared, type SharedUniforms } from "./materials/atmosphere"
 import { createMaterialLibrary, type MaterialLibrary } from "./materials/library"
 import { autoTier, DEFAULT_FLAGS, type Flags, TIERS, type TierName } from "./quality"
+import { PlanarMirror } from "./render/mirror"
 import { Pipeline } from "./render/pipeline"
 import { skyMaterial } from "./sky"
 import { buildSetGeometry, populateCrowd } from "./spec/build"
 import { frameShot, type ResolvedShot, resolveCast, resolveShots } from "./spec/resolve"
 import { type SetSpec, setSpecSchema } from "./spec/set"
 import { type StagingShot, type StagingSpec, stagingSpecSchema } from "./spec/staging"
-import { reachOver } from "./spec/walk"
+import { onFootprint, reachOver } from "./spec/walk"
 
 // The Stage runtime: one set (plus an optional staging) rendered into a canvas it owns inside `container`.
 // Plain imperative three.js; the host (a React component) creates it, calls shot()/setTier()/pause(), and disposes it.
@@ -97,6 +98,10 @@ export class Stage {
   readonly sun: THREE.DirectionalLight
   tier: TierName
   flags: Flags
+  // A planar reflection when the set has mirrored water, and the share of the drawing buffer it renders at.
+  private mirror: PlanarMirror | null = null
+  private mirrorScale = 0
+  private shadowCap = 4096
   motion: boolean
   activeShot: string | null = null
   private activeFov: number | null = null
@@ -168,6 +173,7 @@ export class Stage {
     const horizon = new THREE.Color(A.sky.horizon)
     // Fog takes the horizon as the sky draws it, dimmed by its gain, so distant trees fade into the night sky, unless
     // the set gives the mist its own colour.
+    this.shared.fogStart.value = A.fog.start
     this.scene.fog = new THREE.FogExp2(A.fog.color ? new THREE.Color(A.fog.color) : horizon.clone().multiplyScalar(A.sky.gain), A.fog.density)
     this.camera = new THREE.PerspectiveCamera(58, 1, set.camera.near, set.camera.far)
     this.scene.add(this.world)
@@ -183,13 +189,20 @@ export class Stage {
     sun.target.position.copy(target)
     sun.castShadow = true
     sun.shadow.mapSize.set(4096, 4096)
-    Object.assign(sun.shadow.camera, A.sun.shadow)
+    const { size: shadowCap, ...shadowBox } = A.sun.shadow
+    this.shadowCap = shadowCap ?? 4096
+    Object.assign(sun.shadow.camera, shadowBox)
     sun.shadow.camera.updateProjectionMatrix()
     sun.shadow.bias = -0.0004
     sun.shadow.normalBias = 0.6
     this.sun = sun
     this.scene.add(sun, sun.target)
     this.scene.add(new THREE.HemisphereLight(A.hemisphere.sky, A.hemisphere.ground, A.hemisphere.intensity))
+    for (const l of A.lights) {
+      const lamp = new THREE.PointLight(l.color, l.intensity, l.distance, l.decay)
+      lamp.position.set(...l.at)
+      this.scene.add(lamp)
+    }
     if (A.fill) {
       const fill = new THREE.PointLight(A.fill.color, A.fill.intensity, A.fill.distance, 1.4)
       fill.position.set(0, 0.6, 0.5)
@@ -218,10 +231,24 @@ export class Stage {
     // The set itself: every builder into one batch, merged by material.
     o.onProgress?.("Building the set")
     const rand = createRand(hashSeed(set.seed, "stage"))
-    this.materials = createMaterialLibrary(set.materials, this.shared, rand.fork("materials"))
+    this.materials = createMaterialLibrary(set.materials, this.shared, rand.fork("materials"), renderer.capabilities.getMaxAnisotropy())
     const built = buildSetGeometry(set, this.materials)
     this.footprints = built.footprints
     this.statics = built.batch.flush(this.world)
+    const water = this.statics.filter((m) => (m.material as THREE.Material).userData.mirror)
+    if (water.length) {
+      const level = Math.max(
+        ...water.map((m) => {
+          m.geometry.computeBoundingBox()
+          return m.geometry.boundingBox?.max.y ?? 0
+        })
+      )
+      const skip = this.statics.filter((m) => {
+        const spec = set.materials[(m.material as THREE.Material).name]
+        return !!spec && (["grass", "mist", "card", "rock"].includes(spec.type) || (spec.type === "foliage" && !spec.map))
+      })
+      this.mirror = new PlanarMirror(renderer, this.scene, this.shared, water, level, skip)
+    }
     for (const e of built.extras) this.world.add(e)
     this.extras = built.extras
     if (set.land) this.disposables.push(land(this.world, this.shared, rand.fork("land"), set.land))
@@ -315,7 +342,7 @@ export class Stage {
   // Waits for the character art and the crowd atlas (when cards are on), then starts the loop.
   async load() {
     this.o.onProgress?.("Loading characters")
-    await Promise.all([this.standees.load(), this.crowd.cards && this.flags.crowd !== "procedural" ? this.waitForAtlas() : Promise.resolve()])
+    await Promise.all([this.standees.load(), this.materials.ready, this.crowd.cards && this.flags.crowd !== "procedural" ? this.waitForAtlas() : Promise.resolve()])
     const first = this.staging?.shot ?? Object.keys(this.shots)[0]
     if (first) this.shot(first, { instant: true })
     this.sync()
@@ -382,7 +409,7 @@ export class Stage {
     if (typeof which === "string") s = this.shots[which]
     else
       try {
-        s = frameShot(which, this.cast)
+        s = this.clearFrame(which)
       } catch {
         s = undefined
       }
@@ -405,6 +432,44 @@ export class Stage {
       this.transition = { from: { pos: this.camera.position.clone(), target, fov: this.camera.fov }, to, start: performance.now(), duration }
     }
     return true
+  }
+  // A shot on one character, swung round them (and then drawn in) until neither the camera nor its view of them passes
+  // through anything solid, such as a cabin the character stands in front of. Other shots frame as authored.
+  private clearFrame(which: StagingShot): ResolvedShot {
+    const first = frameShot(which, this.cast)
+    if (!("subject" in which) || !this.footprints.length) return first
+    const c = this.cast.find((m) => m.id === which.subject)
+    if (!c) return first
+    const clear = (x: number, z: number) => {
+      const len = Math.hypot(c.x - x, c.z - z)
+      // Fine steps: cabin walls are a hand's width thick.
+      const n = Math.max(2, Math.ceil(len / 0.05))
+      for (let i = 0; i <= n; i++) {
+        const t = i / n
+        if (t * len > len - 0.3) break
+        if (onFootprint(this.footprints, x + (c.x - x) * t, z + (c.z - z) * t)) return false
+      }
+      return true
+    }
+    // Where the set's camera box would pull the camera, so the test sees where it really ends up. It also needs elbow
+    // room: a camera brushing a post shows nothing but the post.
+    const { min, max } = this.set.camera
+    const fit = (r: ResolvedShot): ResolvedShot => ({ ...r, position: [0, 1, 2].map((i) => THREE.MathUtils.clamp(r.position[i], min[i], max[i])) as [number, number, number] })
+    const roomy = (x: number, z: number) =>
+      ![
+        [0, 0],
+        [0.45, 0],
+        [-0.45, 0],
+        [0, 0.45],
+        [0, -0.45],
+      ].some(([dx, dz]) => onFootprint(this.footprints, x + dx, z + dz))
+    for (const scale of [1, 0.75, 0.55])
+      for (const turn of [0, 30, -30, 60, -60, 90, -90, 135, -135, 180]) {
+        const r = fit(frameShot({ ...which, angle: which.angle + turn, distance: which.distance * scale }, this.cast))
+        const [x, , z] = r.position
+        if (Math.hypot(x - c.x, z - c.z) > 1.5 && roomy(x, z) && clear(x, z)) return r
+      }
+    return first
   }
   // Resolves when the current camera move has finished.
   shotSettled() {
@@ -579,10 +644,12 @@ export class Stage {
     }
     this.standees.setAlphaToCoverage(aa === "msaa")
     p.setAO(f.ao ?? t.ao)
+    this.mirrorScale = f.mirror ?? t.mirror
     this.crowd.setMode(f.crowd)
     this.crowd.setRadius(f.cardRadius ?? t.cardRadius)
-    if (this.sun.shadow.mapSize.x !== t.shadow) {
-      this.sun.shadow.mapSize.setScalar(t.shadow)
+    const shadowSize = Math.min(t.shadow, this.shadowCap)
+    if (this.sun.shadow.mapSize.x !== shadowSize) {
+      this.sun.shadow.mapSize.setScalar(shadowSize)
       this.sun.shadow.map?.dispose()
       this.sun.shadow.map = null
     }
@@ -600,6 +667,8 @@ export class Stage {
     this.camera.updateProjectionMatrix()
     this.renderer.setSize(w, h, false)
     this.pipeline.setSize(w, h, this.renderer.getPixelRatio())
+    const buffer = this.renderer.getDrawingBufferSize(new THREE.Vector2())
+    this.mirror?.setScale(this.mirrorScale, buffer.x, buffer.y)
   }
 
   // ── Loop ──
@@ -672,6 +741,7 @@ export class Stage {
   }
   render() {
     this.renderer.info.reset()
+    this.mirror?.render(this.camera)
     this.pipeline.render()
     this.stats0 = { calls: this.renderer.info.render.calls, triangles: this.renderer.info.render.triangles }
   }
@@ -778,6 +848,7 @@ export class Stage {
     this.coinMesh?.geometry.dispose()
     this.materials.dispose()
     this.pipeline.dispose()
+    this.mirror?.dispose()
     this.sky.geometry.dispose()
     ;(this.sky.material as THREE.Material).dispose()
     this.envTexture.dispose()

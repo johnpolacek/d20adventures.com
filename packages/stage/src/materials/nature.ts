@@ -255,6 +255,7 @@ export interface WaterOptions {
   reflect?: number
   ripple?: number
   flow?: [number, number]
+  mirror?: number
 }
 
 // Running water: a near-mirror that reflects the sky (and so the moon), roughened by ripples that drift downstream.
@@ -266,13 +267,22 @@ export function water(ctx: MaterialContext, name: string, o: WaterOptions = {}) 
     wReflect: { value: o.reflect ?? 3 },
     wRipple: { value: o.ripple ?? 1 },
     wFlow: { value: new THREE.Vector2(f[0] / len, f[1] / len) },
+    wMirror: { value: o.mirror ?? 0 },
   }
   const m = new THREE.MeshStandardMaterial({ name, color: o.color || "#081218", roughness: 0.07, metalness: 0 })
   m.userData.noShadow = true
   m.userData.uniforms = u
-  return stageMaterial(m, ctx.shared, "water", (s) => {
+  // The stage draws a planar reflection for water that asks for one (render/mirror.ts).
+  if (o.mirror) {
+    m.userData.mirror = true
+    m.defines = { WMIRROR: "" }
+  }
+  return stageMaterial(m, ctx.shared, o.mirror ? "watermirror" : "water", (s) => {
     Object.assign(s.uniforms, u)
     s.uniforms.uTime = ctx.shared.time
+    s.uniforms.tReflect = ctx.shared.reflectMap
+    s.uniforms.uReflectMatrix = ctx.shared.reflectMatrix
+    s.uniforms.uMirrorOn = ctx.shared.mirrorOn
     WORLD_VERTEX(s)
     s.fragmentShader = s.fragmentShader
       .replace(
@@ -280,6 +290,9 @@ export function water(ctx: MaterialContext, name: string, o: WaterOptions = {}) 
         `#include <common>
 varying vec3 vNWorld; varying vec3 vNNormalW;
 uniform float wReflect, wRipple, uTime; uniform vec2 wFlow;
+#ifdef WMIRROR
+uniform sampler2D tReflect; uniform mat4 uReflectMatrix; uniform float uMirrorOn, wMirror;
+#endif
 ${NOISE}
 float wH(vec2 p){
  vec2 a = vec2(wFlow.y, -wFlow.x);
@@ -296,6 +309,23 @@ float wH(vec2 p){
  vec3 nW = normalize(vec3(-g.x, 1.0, -g.y));
  normal = normalize((viewMatrix * vec4(nW, 0.0)).xyz); }`
       )
-      .replace("#include <lights_fragment_maps>", "#include <lights_fragment_maps>\n#if defined( USE_ENVMAP ) && defined( RE_IndirectSpecular )\nradiance *= wReflect;\n#endif")
+      .replace(
+        "#include <lights_fragment_maps>",
+        `#include <lights_fragment_maps>
+#if defined( USE_ENVMAP ) && defined( RE_IndirectSpecular )
+radiance *= wReflect;
+#endif
+#if defined( WMIRROR ) && defined( RE_IndirectSpecular )
+if (uMirrorOn > .5) {
+ // The ripples smear the reflection mostly up and down the screen, into the long streaks of lit windows on water.
+ vec3 nWr = normalize((vec4(normal, 0.0) * viewMatrix).xyz);
+ vec4 rc = uReflectMatrix * vec4(vNWorld, 1.0);
+ rc.x += nWr.x * .03 * rc.w;
+ rc.y += nWr.z * .12 * rc.w;
+ vec3 planar = textureProj(tReflect, rc).rgb;
+ radiance = mix(radiance, planar * wReflect, wMirror);
+}
+#endif`
+      )
   })
 }

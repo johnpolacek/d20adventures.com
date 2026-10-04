@@ -1,0 +1,164 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "covert-cargo/the-shipment",
+  "set": "realm-of-myr/mordava-river-pier",
+  "cast": [
+    {
+      "id": "lyra",
+      "name": "Lyra Silvanus",
+      "role": "Asterian arcanist",
+      "height": 1.7,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/lyra-front.webp",
+        "back": "/stage/fixtures/covert-cargo/lyra-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/lyra-portrait.jpg"
+      },
+      "at": [
+        4.2,
+        3.45
+      ],
+      "facing": "npcs-1749184389465"
+    },
+    {
+      "id": "npcs-1749184389465",
+      "name": "Aelar Moonglimmer",
+      "role": "Elf operative",
+      "height": 1.86,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/aelar-front.webp",
+        "back": "/stage/fixtures/covert-cargo/aelar-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/aelar-portrait.jpg"
+      },
+      "at": [
+        4.85,
+        2.75
+      ],
+      "facing": "npcs-1749181492795"
+    },
+    {
+      "id": "npcs-1749181492795",
+      "name": "Silas",
+      "role": "Rogue, the brains of the mission",
+      "height": 1.78,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/silas-front.webp",
+        "back": "/stage/fixtures/covert-cargo/silas-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/silas-portrait.jpg"
+      },
+      "at": [
+        -1.7,
+        10
+      ],
+      "facing": "npcs-1749184389465"
+    },
+    {
+      "id": "npcs-1749163978757",
+      "name": "Reinhard",
+      "role": "Enforcer",
+      "height": 1.92,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/reinhard-front.webp",
+        "back": "/stage/fixtures/covert-cargo/reinhard-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/reinhard-portrait.jpg"
+      },
+      "at": [
+        1.4,
+        7.25
+      ],
+      "facing": "lyra"
+    },
+    {
+      "id": "poppen",
+      "name": "Poppen Quickfoot",
+      "role": "Halfling rogue",
+      "height": 1.06,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/poppen-front.webp",
+        "back": "/stage/fixtures/covert-cargo/poppen-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/poppen-portrait.jpg"
+      },
+      "at": [
+        -1.2,
+        4.6
+      ],
+      "facing": "pierEnd"
+    },
+    {
+      "id": "npcs-1749243735467",
+      "name": "Elven Archer",
+      "role": "Wood elf archer",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/elf-archer-front.webp",
+        "back": "/stage/fixtures/covert-cargo/elf-archer-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/elf-archer-portrait.jpg"
+      },
+      "at": "bow",
+      "facing": "bank"
+    },
+    {
+      "id": "npcs-1749243869357",
+      "name": "Elven Fighter",
+      "role": "Elf fighter",
+      "height": 1.88,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/elf-fighter-front.webp",
+        "back": "/stage/fixtures/covert-cargo/elf-fighter-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/elf-fighter-portrait.jpg"
+      },
+      "at": "stern",
+      "facing": "pier"
+    }
+  ],
+  "shots": {
+    "exchange": {
+      "subjects": [
+        "lyra",
+        "npcs-1749184389465",
+        "npcs-1749181492795",
+        "npcs-1749163978757"
+      ],
+      "offset": [
+        7.5,
+        2.4,
+        3.5
+      ],
+      "target": [
+        0,
+        1.1,
+        0
+      ],
+      "fov": 52,
+      "label": "The meeting"
+    },
+    "lyra": {
+      "subject": "lyra",
+      "distance": 3.2,
+      "angle": 22,
+      "height": 1.6,
+      "lookHeight": 1.394,
+      "fov": 44,
+      "label": "Lyra"
+    },
+    "aelar": {
+      "subject": "npcs-1749184389465",
+      "distance": 3.3,
+      "angle": -25,
+      "height": 1.6,
+      "lookHeight": 1.5252,
+      "fov": 44,
+      "label": "Aelar"
+    },
+    "poppen": {
+      "subject": "poppen",
+      "distance": 2.6,
+      "angle": 15,
+      "height": 0.9,
+      "lookHeight": 0.85,
+      "fov": 44,
+      "label": "Poppen"
+    }
+  },
+  "shot": "river"
+}

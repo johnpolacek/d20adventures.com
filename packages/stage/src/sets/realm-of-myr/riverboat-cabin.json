@@ -1,0 +1,2017 @@
+{
+  "format": "d20.stage.set",
+  "version": 1,
+  "id": "riverboat-cabin",
+  "settingId": "realm-of-myr",
+  "locationId": "riverboat-cabin",
+  "title": "The riverboat's cabin",
+  "seed": 5150,
+  "atmosphere": {
+    "sun": {
+      "direction": [
+        0.18,
+        0.38,
+        1
+      ],
+      "color": "#5fb6c6",
+      "intensity": 2.4,
+      "target": [
+        0,
+        0,
+        1
+      ],
+      "distance": 30,
+      "shadow": {
+        "left": -8,
+        "right": 8,
+        "top": 8,
+        "bottom": -8,
+        "near": 1,
+        "far": 70
+      }
+    },
+    "hemisphere": {
+      "sky": "#3e4c52",
+      "ground": "#1a140e",
+      "intensity": 0.65
+    },
+    "sky": {
+      "horizon": "#4f8f98",
+      "mid": "#2a5e6a",
+      "zenith": "#102a34",
+      "gain": 0.7,
+      "clouds": 0.2,
+      "stars": 0.05
+    },
+    "fog": {
+      "density": 0.03,
+      "color": "#3e7a86"
+    },
+    "glow": "#9fd0d0",
+    "fill": {
+      "color": "#ffdcb8",
+      "intensity": 2.5,
+      "distance": 8
+    },
+    "lights": [
+      {
+        "at": [
+          -0.6,
+          1.55,
+          -1.7
+        ],
+        "color": "#ffb060",
+        "intensity": 4.5,
+        "distance": 5
+      },
+      {
+        "at": [
+          -0.8,
+          1.55,
+          1.55
+        ],
+        "color": "#ffb060",
+        "intensity": 4,
+        "distance": 5
+      },
+      {
+        "at": [
+          -1.1,
+          1.15,
+          -2.5
+        ],
+        "color": "#ffa850",
+        "intensity": 2,
+        "distance": 2.5
+      },
+      {
+        "at": [
+          1.35,
+          0.85,
+          -2.2
+        ],
+        "color": "#ffa850",
+        "intensity": 1.6,
+        "distance": 2.5
+      },
+      {
+        "at": [
+          0.05,
+          2.15,
+          -0.4
+        ],
+        "color": "#ffc070",
+        "intensity": 5,
+        "distance": 3.2
+      },
+      {
+        "at": [
+          0.6,
+          1.5,
+          2.6
+        ],
+        "color": "#4fb4c4",
+        "intensity": 6,
+        "distance": 4
+      }
+    ],
+    "environment": 0.25,
+    "exposure": 1.2,
+    "grade": "neutral",
+    "wind": 0.2
+  },
+  "camera": {
+    "near": 0.08,
+    "far": 400,
+    "min": [
+      -1.6,
+      0.35,
+      -2.9
+    ],
+    "max": [
+      1.6,
+      2.25,
+      5.4
+    ],
+    "maxDistance": 8
+  },
+  "materials": {
+    "floor": {
+      "type": "painted",
+      "map": "/stage/textures/boards-weathered.jpg",
+      "tint": "#9a9088",
+      "plank": [
+        0.2,
+        2.8
+      ],
+      "size": [
+        0.5,
+        1.4
+      ],
+      "relief": 0.08,
+      "grime": 1.3,
+      "nails": 0.8,
+      "variance": 0.3
+    },
+    "panel": {
+      "type": "painted",
+      "map": "/stage/textures/cabin-dark.jpg",
+      "tint": "#d6ccc2",
+      "plank": [
+        0.18,
+        40
+      ],
+      "size": [
+        0.6,
+        1.6
+      ],
+      "relief": 0.08,
+      "grime": 1.1
+    },
+    "roof": {
+      "type": "painted",
+      "map": "/stage/textures/cabin-dark.jpg",
+      "tint": "#a49a90",
+      "plank": [
+        0.24,
+        40
+      ],
+      "size": [
+        0.5,
+        1.4
+      ],
+      "relief": 0.08,
+      "grime": 1.3
+    },
+    "post": {
+      "type": "painted",
+      "map": "/stage/textures/cabin-dark.jpg",
+      "tint": "#bcb0a4",
+      "plank": [
+        0,
+        40
+      ],
+      "size": [
+        0.4,
+        1.2
+      ],
+      "relief": 0.08,
+      "grime": 1.4
+    },
+    "trim": {
+      "type": "painted",
+      "map": "/stage/textures/cabin-dark.jpg",
+      "tint": "#c8b8a8",
+      "plank": [
+        0,
+        40
+      ],
+      "size": [
+        0.5,
+        1.4
+      ],
+      "relief": 0.08,
+      "grime": 0.6
+    },
+    "door": {
+      "type": "painted",
+      "map": "/stage/textures/cabin-dark.jpg",
+      "tint": "#e6c8a8",
+      "plank": [
+        0.14,
+        12
+      ],
+      "size": [
+        0.5,
+        1.4
+      ],
+      "relief": 0.08,
+      "grime": 1,
+      "nails": 0.6
+    },
+    "wheel": {
+      "type": "wood",
+      "a": "#5a3a24",
+      "b": "#6e4a2e",
+      "c": "#4a3020",
+      "plank": [
+        0,
+        40
+      ],
+      "relief": 0.02,
+      "seed": 3.7
+    },
+    "deck": {
+      "type": "painted",
+      "map": "/stage/textures/boards-weathered.jpg",
+      "tint": "#a8a098",
+      "plank": [
+        0.16,
+        3.2
+      ],
+      "size": [
+        0.5,
+        1.4
+      ],
+      "relief": 0.08,
+      "grime": 0.8,
+      "nails": 0.7
+    },
+    "hull": {
+      "type": "wood",
+      "a": "#2a2420",
+      "b": "#342c26",
+      "c": "#211d1a",
+      "plank": [
+        0.22,
+        6
+      ],
+      "relief": 0.05,
+      "variance": 0.4,
+      "seed": 2.2,
+      "grime": 1.4
+    },
+    "brass": {
+      "type": "metal",
+      "color": "#a8823e",
+      "roughness": 0.35,
+      "metalness": 0.85
+    },
+    "gauge": {
+      "type": "plain",
+      "color": "#d8cfb4",
+      "roughness": 0.8
+    },
+    "glass": {
+      "type": "plain",
+      "color": "#20383c",
+      "roughness": 0.3,
+      "emissive": "#4a96a2",
+      "emissiveIntensity": 0.9
+    },
+    "candle": {
+      "type": "plain",
+      "color": "#e6dcc0",
+      "roughness": 0.9
+    },
+    "rope": {
+      "type": "painted",
+      "map": "/stage/textures/rope-hemp.jpg",
+      "tint": "#c8b898",
+      "plank": [
+        0,
+        40
+      ],
+      "size": [
+        0.25,
+        0.4
+      ],
+      "relief": 0.2,
+      "grime": 0.6
+    },
+    "parchment": {
+      "type": "plain",
+      "color": "#cbb78e",
+      "roughness": 1
+    },
+    "water": {
+      "type": "water",
+      "color": "#0a2329",
+      "reflect": 3.2,
+      "ripple": 0.35,
+      "flow": [
+        1,
+        0
+      ],
+      "mirror": 0.7
+    },
+    "bank": {
+      "type": "plain",
+      "color": "#1c3027",
+      "roughness": 1
+    },
+    "bark": {
+      "type": "painted",
+      "map": "/stage/textures/bark-moss.jpg",
+      "tint": "#c0c8c0",
+      "plank": [
+        0,
+        40
+      ],
+      "size": [
+        1.2,
+        1.8
+      ],
+      "relief": 0.12,
+      "grime": 1,
+      "variance": 0.2
+    },
+    "leaves": {
+      "type": "foliage",
+      "color": "#b4c4b4",
+      "map": "/stage/textures/leaves-oak.webp"
+    },
+    "leavesDark": {
+      "type": "foliage",
+      "color": "#748478",
+      "map": "/stage/textures/leaves-oak.webp"
+    },
+    "leavesLight": {
+      "type": "foliage",
+      "color": "#d4e0c4",
+      "map": "/stage/textures/leaves-oak.webp"
+    },
+    "moss": {
+      "type": "foliage",
+      "color": "#7c8f86"
+    },
+    "crate": {
+      "type": "painted",
+      "map": "/stage/textures/crate-oak.jpg",
+      "tint": "#8e968c",
+      "plank": [
+        0.2,
+        1.2
+      ],
+      "size": [
+        1.2,
+        2.4
+      ],
+      "relief": 0.1,
+      "grime": 1.2,
+      "nails": 1,
+      "variance": 0.35
+    },
+    "crateDark": {
+      "type": "wood",
+      "a": "#4a3526",
+      "b": "#5a4230",
+      "c": "#403830",
+      "plank": [
+        0,
+        40
+      ],
+      "relief": 0.03,
+      "seed": 8.8
+    },
+    "barrel": {
+      "type": "wood",
+      "a": "#6a4a30",
+      "b": "#7c5a3a",
+      "c": "#5f4a3a",
+      "plank": [
+        0.105,
+        1.4
+      ],
+      "relief": 0.05,
+      "variance": 0.45,
+      "seed": 4.4
+    },
+    "iron": {
+      "type": "metal",
+      "color": "#2e2a28",
+      "roughness": 0.55,
+      "metalness": 0.7
+    },
+    "pole": {
+      "type": "wood",
+      "a": "#4d382a",
+      "b": "#644a35",
+      "c": "#453c34",
+      "plank": [
+        0,
+        60
+      ],
+      "relief": 0.03,
+      "variance": 0.35,
+      "seed": 5.7,
+      "grime": 0.5
+    },
+    "sack": {
+      "type": "burlap",
+      "color": "#c2b08c"
+    },
+    "sackB": {
+      "type": "burlap",
+      "color": "#a08a68"
+    },
+    "flame": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ffb262",
+      "emissiveIntensity": 1.8
+    },
+    "crateIron": {
+      "type": "metal",
+      "color": "#2e2824",
+      "roughness": 0.75,
+      "metalness": 0.5
+    }
+  },
+  "objects": [
+    {
+      "type": "extrude",
+      "id": "water",
+      "at": [
+        0,
+        -0.49,
+        0
+      ],
+      "points": [
+        [
+          -200,
+          -300
+        ],
+        [
+          200,
+          -300
+        ],
+        [
+          200,
+          300
+        ],
+        [
+          -200,
+          300
+        ]
+      ],
+      "depth": 0.02,
+      "plane": "xz",
+      "material": "water"
+    },
+    {
+      "type": "box",
+      "id": "floor",
+      "at": [
+        0,
+        -0.1,
+        0
+      ],
+      "size": [
+        3.5,
+        0.1,
+        6.1
+      ],
+      "material": "floor"
+    },
+    {
+      "type": "box",
+      "id": "deck",
+      "at": [
+        0,
+        -0.1,
+        4.35
+      ],
+      "size": [
+        3.7,
+        0.1,
+        2.6
+      ],
+      "material": "deck"
+    },
+    {
+      "type": "box",
+      "id": "hull-port",
+      "at": [
+        -1.88,
+        -0.9,
+        1.3
+      ],
+      "size": [
+        0.16,
+        1.15,
+        8.8
+      ],
+      "material": "hull"
+    },
+    {
+      "type": "box",
+      "id": "hull-starboard",
+      "at": [
+        1.88,
+        -0.9,
+        1.3
+      ],
+      "size": [
+        0.16,
+        1.15,
+        8.8
+      ],
+      "material": "hull"
+    },
+    {
+      "type": "box",
+      "id": "hull-stern",
+      "at": [
+        0,
+        -0.9,
+        5.68
+      ],
+      "size": [
+        3.9,
+        1.15,
+        0.16
+      ],
+      "material": "hull"
+    },
+    {
+      "type": "box",
+      "id": "wall-port",
+      "at": [
+        -1.76,
+        0,
+        0
+      ],
+      "size": [
+        0.12,
+        2.4,
+        6.1
+      ],
+      "material": "panel",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "id": "wall-starboard",
+      "at": [
+        1.76,
+        0,
+        0
+      ],
+      "size": [
+        0.12,
+        2.4,
+        6.1
+      ],
+      "material": "panel",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "id": "wall-fore",
+      "at": [
+        0,
+        0,
+        -3
+      ],
+      "size": [
+        3.6,
+        2.4,
+        0.12
+      ],
+      "material": "panel",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "id": "wall-aft-port",
+      "at": [
+        -0.825,
+        0,
+        3
+      ],
+      "size": [
+        1.95,
+        2.4,
+        0.12
+      ],
+      "material": "panel",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "id": "wall-aft-starboard",
+      "at": [
+        1.425,
+        0,
+        3
+      ],
+      "size": [
+        0.75,
+        2.4,
+        0.12
+      ],
+      "material": "panel",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "id": "lintel",
+      "at": [
+        0.6,
+        1.95,
+        3
+      ],
+      "size": [
+        0.9,
+        0.45,
+        0.12
+      ],
+      "material": "panel"
+    },
+    {
+      "type": "box",
+      "id": "ceiling",
+      "at": [
+        0,
+        2.4,
+        0
+      ],
+      "size": [
+        3.6,
+        0.1,
+        6.2
+      ],
+      "material": "roof"
+    },
+    {
+      "type": "box",
+      "id": "roof-outside",
+      "at": [
+        0,
+        2.5,
+        0
+      ],
+      "size": [
+        3.9,
+        0.12,
+        6.5
+      ],
+      "material": "roof"
+    },
+    {
+      "type": "box",
+      "id": "door-frame-l",
+      "at": [
+        0.12,
+        0,
+        3.07
+      ],
+      "size": [
+        0.08,
+        2,
+        0.1
+      ],
+      "material": "trim"
+    },
+    {
+      "type": "box",
+      "id": "door-frame-r",
+      "at": [
+        1.08,
+        0,
+        3.07
+      ],
+      "size": [
+        0.08,
+        2,
+        0.1
+      ],
+      "material": "trim"
+    },
+    {
+      "type": "box",
+      "id": "door",
+      "at": [
+        1.11,
+        0.02,
+        3.52
+      ],
+      "size": [
+        0.07,
+        1.92,
+        0.88
+      ],
+      "material": "door"
+    },
+    {
+      "type": "torus",
+      "id": "porthole",
+      "at": [
+        1.15,
+        1.42,
+        3.52
+      ],
+      "yaw": 90,
+      "radius": 0.13,
+      "tube": 0.032,
+      "material": "brass"
+    },
+    {
+      "type": "cylinder",
+      "id": "porthole-glass",
+      "at": [
+        1.15,
+        1.42,
+        3.52
+      ],
+      "radius": 0.12,
+      "height": 0.03,
+      "roll": 90,
+      "material": "glass"
+    },
+    {
+      "type": "sphere",
+      "id": "door-knob",
+      "at": [
+        1.18,
+        1,
+        3.88
+      ],
+      "radius": 0.045,
+      "material": "brass"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -1.75,
+        0,
+        5.55
+      ],
+      "to": [
+        -1.75,
+        0.9,
+        5.55
+      ],
+      "radius": 0.035,
+      "material": "trim"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -0.9,
+        0,
+        5.55
+      ],
+      "to": [
+        -0.9,
+        0.9,
+        5.55
+      ],
+      "radius": 0.035,
+      "material": "trim"
+    },
+    {
+      "type": "beam",
+      "from": [
+        0,
+        0,
+        5.55
+      ],
+      "to": [
+        0,
+        0.9,
+        5.55
+      ],
+      "radius": 0.035,
+      "material": "trim"
+    },
+    {
+      "type": "beam",
+      "from": [
+        0.9,
+        0,
+        5.55
+      ],
+      "to": [
+        0.9,
+        0.9,
+        5.55
+      ],
+      "radius": 0.035,
+      "material": "trim"
+    },
+    {
+      "type": "beam",
+      "from": [
+        1.75,
+        0,
+        5.55
+      ],
+      "to": [
+        1.75,
+        0.9,
+        5.55
+      ],
+      "radius": 0.035,
+      "material": "trim"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -1.8,
+        0.9,
+        5.55
+      ],
+      "to": [
+        1.8,
+        0.9,
+        5.55
+      ],
+      "radius": 0.035,
+      "material": "trim"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -1.8,
+        0.9,
+        3.1
+      ],
+      "to": [
+        -1.8,
+        0.9,
+        5.55
+      ],
+      "radius": 0.035,
+      "material": "trim"
+    },
+    {
+      "type": "beam",
+      "from": [
+        1.8,
+        0.9,
+        3.1
+      ],
+      "to": [
+        1.8,
+        0.9,
+        5.55
+      ],
+      "radius": 0.035,
+      "material": "trim"
+    },
+    {
+      "type": "lantern",
+      "at": [
+        -1.5,
+        0,
+        5.3
+      ],
+      "height": 1.25,
+      "post": true
+    },
+    {
+      "type": "box",
+      "id": "helm-post",
+      "at": [
+        0.4,
+        0,
+        -2.78
+      ],
+      "size": [
+        0.18,
+        1,
+        0.22
+      ],
+      "material": "trim"
+    },
+    {
+      "type": "torus",
+      "id": "helm-wheel",
+      "at": [
+        0.4,
+        1.25,
+        -2.6
+      ],
+      "radius": 0.42,
+      "tube": 0.035,
+      "material": "wheel"
+    },
+    {
+      "type": "beam",
+      "at": [
+        0.4,
+        1.25,
+        -2.6
+      ],
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        0.56,
+        0,
+        0
+      ],
+      "radius": 0.025,
+      "radiusTo": 0.018,
+      "material": "wheel"
+    },
+    {
+      "type": "beam",
+      "at": [
+        0.4,
+        1.25,
+        -2.6
+      ],
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        0.4,
+        0.4,
+        0
+      ],
+      "radius": 0.025,
+      "radiusTo": 0.018,
+      "material": "wheel"
+    },
+    {
+      "type": "beam",
+      "at": [
+        0.4,
+        1.25,
+        -2.6
+      ],
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        0,
+        0.56,
+        0
+      ],
+      "radius": 0.025,
+      "radiusTo": 0.018,
+      "material": "wheel"
+    },
+    {
+      "type": "beam",
+      "at": [
+        0.4,
+        1.25,
+        -2.6
+      ],
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        -0.4,
+        0.4,
+        0
+      ],
+      "radius": 0.025,
+      "radiusTo": 0.018,
+      "material": "wheel"
+    },
+    {
+      "type": "beam",
+      "at": [
+        0.4,
+        1.25,
+        -2.6
+      ],
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        -0.56,
+        0,
+        0
+      ],
+      "radius": 0.025,
+      "radiusTo": 0.018,
+      "material": "wheel"
+    },
+    {
+      "type": "beam",
+      "at": [
+        0.4,
+        1.25,
+        -2.6
+      ],
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        -0.4,
+        -0.4,
+        0
+      ],
+      "radius": 0.025,
+      "radiusTo": 0.018,
+      "material": "wheel"
+    },
+    {
+      "type": "beam",
+      "at": [
+        0.4,
+        1.25,
+        -2.6
+      ],
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        0,
+        -0.56,
+        0
+      ],
+      "radius": 0.025,
+      "radiusTo": 0.018,
+      "material": "wheel"
+    },
+    {
+      "type": "beam",
+      "at": [
+        0.4,
+        1.25,
+        -2.6
+      ],
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        0.4,
+        -0.4,
+        0
+      ],
+      "radius": 0.025,
+      "radiusTo": 0.018,
+      "material": "wheel"
+    },
+    {
+      "type": "cylinder",
+      "id": "helm-hub",
+      "at": [
+        0.4,
+        1.25,
+        -2.66
+      ],
+      "radius": 0.07,
+      "height": 0.14,
+      "pitch": 90,
+      "material": "brass"
+    },
+    {
+      "type": "box",
+      "id": "console",
+      "at": [
+        -0.75,
+        0,
+        -2.72
+      ],
+      "size": [
+        1.6,
+        0.92,
+        0.5
+      ],
+      "material": "trim"
+    },
+    {
+      "type": "box",
+      "id": "chart",
+      "at": [
+        -0.7,
+        0.93,
+        -2.7
+      ],
+      "size": [
+        0.6,
+        0.02,
+        0.4
+      ],
+      "material": "parchment"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -0.35,
+        1.62,
+        -2.92
+      ],
+      "radius": 0.11,
+      "height": 0.05,
+      "pitch": 90,
+      "material": "brass"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -0.35,
+        1.62,
+        -2.89
+      ],
+      "radius": 0.085,
+      "height": 0.01,
+      "pitch": 90,
+      "material": "gauge"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -0.8,
+        1.62,
+        -2.92
+      ],
+      "radius": 0.11,
+      "height": 0.05,
+      "pitch": 90,
+      "material": "brass"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -0.8,
+        1.62,
+        -2.89
+      ],
+      "radius": 0.085,
+      "height": 0.01,
+      "pitch": 90,
+      "material": "gauge"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        1.25,
+        1.72,
+        -2.92
+      ],
+      "radius": 0.11,
+      "height": 0.05,
+      "pitch": 90,
+      "material": "brass"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        1.25,
+        1.72,
+        -2.89
+      ],
+      "radius": 0.085,
+      "height": 0.01,
+      "pitch": 90,
+      "material": "gauge"
+    },
+    {
+      "type": "lantern",
+      "at": [
+        -0.6,
+        1.72,
+        -1.7
+      ]
+    },
+    {
+      "type": "beam",
+      "from": [
+        -0.6,
+        2.38,
+        -1.7
+      ],
+      "to": [
+        -0.6,
+        2,
+        -1.7
+      ],
+      "radius": 0.012,
+      "material": "iron"
+    },
+    {
+      "type": "lantern",
+      "at": [
+        -0.8,
+        1.72,
+        1.55
+      ]
+    },
+    {
+      "type": "beam",
+      "from": [
+        -0.8,
+        2.38,
+        1.55
+      ],
+      "to": [
+        -0.8,
+        2,
+        1.55
+      ],
+      "radius": 0.012,
+      "material": "iron"
+    },
+    {
+      "type": "strongbox",
+      "id": "crate",
+      "at": [
+        0,
+        0,
+        -0.55
+      ],
+      "yaw": 6,
+      "width": 1.35,
+      "height": 0.97,
+      "depth": 0.92,
+      "materials": {
+        "iron": "crateIron"
+      }
+    },
+    {
+      "type": "box",
+      "at": [
+        -1.2,
+        0,
+        -0.45
+      ],
+      "size": [
+        0.32,
+        2.36,
+        0.32
+      ],
+      "material": "post",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "at": [
+        -1.2,
+        0.35,
+        -0.45
+      ],
+      "size": [
+        0.34,
+        0.07,
+        0.34
+      ],
+      "material": "crateIron"
+    },
+    {
+      "type": "box",
+      "at": [
+        -1.2,
+        1.55,
+        -0.45
+      ],
+      "size": [
+        0.34,
+        0.07,
+        0.34
+      ],
+      "material": "crateIron"
+    },
+    {
+      "type": "box",
+      "at": [
+        1.25,
+        0,
+        0.55
+      ],
+      "size": [
+        0.32,
+        2.36,
+        0.32
+      ],
+      "material": "post",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "at": [
+        1.25,
+        0.35,
+        0.55
+      ],
+      "size": [
+        0.34,
+        0.07,
+        0.34
+      ],
+      "material": "crateIron"
+    },
+    {
+      "type": "box",
+      "at": [
+        1.25,
+        1.55,
+        0.55
+      ],
+      "size": [
+        0.34,
+        0.07,
+        0.34
+      ],
+      "material": "crateIron"
+    },
+    {
+      "type": "rope",
+      "from": [
+        -0.98,
+        2.3,
+        -0.2
+      ],
+      "to": [
+        -0.72,
+        0.03,
+        0.25
+      ],
+      "sag": 0.04,
+      "radius": 0.026,
+      "knots": 3
+    },
+    {
+      "type": "rope",
+      "from": [
+        -1.45,
+        2.25,
+        -1
+      ],
+      "to": [
+        -0.95,
+        0.03,
+        -1.3
+      ],
+      "sag": 0.06,
+      "radius": 0.022,
+      "knots": 2
+    },
+    {
+      "type": "rope",
+      "from": [
+        0.75,
+        2.3,
+        -1.3
+      ],
+      "to": [
+        1.15,
+        0.95,
+        -0.6
+      ],
+      "sag": 0.12,
+      "radius": 0.026,
+      "knots": 2
+    },
+    {
+      "type": "rope",
+      "from": [
+        -0.75,
+        0.03,
+        0.25
+      ],
+      "to": [
+        0.55,
+        0.03,
+        0.35
+      ],
+      "sag": 0,
+      "radius": 0.026
+    },
+    {
+      "type": "torus",
+      "at": [
+        1.15,
+        0.05,
+        -1.7
+      ],
+      "radius": 0.28,
+      "tube": 0.05,
+      "pitch": 90,
+      "material": "rope"
+    },
+    {
+      "type": "torus",
+      "at": [
+        1.15,
+        0.13,
+        -1.7
+      ],
+      "radius": 0.22,
+      "tube": 0.05,
+      "pitch": 90,
+      "material": "rope"
+    },
+    {
+      "type": "chain",
+      "from": [
+        -1.65,
+        2.18,
+        -2.9
+      ],
+      "to": [
+        -0.1,
+        2.18,
+        -2.9
+      ],
+      "sag": 0.22,
+      "link": 0.07,
+      "materials": {
+        "iron": "crateIron"
+      }
+    },
+    {
+      "type": "chain",
+      "from": [
+        0.95,
+        2.18,
+        -2.9
+      ],
+      "to": [
+        1.68,
+        2.18,
+        -2.9
+      ],
+      "sag": 0.14,
+      "link": 0.07,
+      "materials": {
+        "iron": "crateIron"
+      }
+    },
+    {
+      "type": "chain",
+      "from": [
+        1.3,
+        2.2,
+        -1.5
+      ],
+      "to": [
+        1.15,
+        0.03,
+        -1.25
+      ],
+      "sag": 0,
+      "link": 0.07,
+      "materials": {
+        "iron": "crateIron"
+      }
+    },
+    {
+      "type": "barrel",
+      "at": [
+        -1.3,
+        0,
+        2.35
+      ],
+      "r": 0.32,
+      "h": 0.85
+    },
+    {
+      "type": "barrel",
+      "at": [
+        -0.65,
+        0,
+        2.55
+      ],
+      "r": 0.3,
+      "h": 0.8
+    },
+    {
+      "type": "sack",
+      "at": [
+        -1.35,
+        0,
+        1.55
+      ],
+      "size": 0.55
+    },
+    {
+      "type": "crate",
+      "at": [
+        1.32,
+        0,
+        -2.25
+      ],
+      "size": 0.6
+    },
+    {
+      "type": "box",
+      "id": "bench",
+      "at": [
+        1.47,
+        0,
+        1.6
+      ],
+      "size": [
+        0.45,
+        0.45,
+        1.6
+      ],
+      "material": "trim",
+      "solid": true
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -1.2,
+        0.93,
+        -2.6
+      ],
+      "radius": 0.03,
+      "height": 0.16,
+      "material": "candle"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -1.2,
+        1.1,
+        -2.6
+      ],
+      "radius": [
+        0.018,
+        0.03,
+        0.018
+      ],
+      "material": "flame"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -1.32,
+        0.86,
+        2.35
+      ],
+      "radius": 0.03,
+      "height": 0.16,
+      "material": "candle"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -1.32,
+        1.03,
+        2.35
+      ],
+      "radius": [
+        0.018,
+        0.03,
+        0.018
+      ],
+      "material": "flame"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        1.32,
+        0.62,
+        -2.2
+      ],
+      "radius": 0.03,
+      "height": 0.16,
+      "material": "candle"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        1.32,
+        0.79,
+        -2.2
+      ],
+      "radius": [
+        0.018,
+        0.03,
+        0.018
+      ],
+      "material": "flame"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        1.45,
+        0.47,
+        1.2
+      ],
+      "radius": 0.03,
+      "height": 0.16,
+      "material": "candle"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        1.45,
+        0.64,
+        1.2
+      ],
+      "radius": [
+        0.018,
+        0.03,
+        0.018
+      ],
+      "material": "flame"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        2.22,
+        -2.4
+      ],
+      "size": [
+        3.5,
+        0.16,
+        0.16
+      ],
+      "material": "post"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        2.22,
+        -1.5
+      ],
+      "size": [
+        3.5,
+        0.16,
+        0.16
+      ],
+      "material": "post"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        2.22,
+        -0.6
+      ],
+      "size": [
+        3.5,
+        0.16,
+        0.16
+      ],
+      "material": "post"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        2.22,
+        0.3
+      ],
+      "size": [
+        3.5,
+        0.16,
+        0.16
+      ],
+      "material": "post"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        2.22,
+        1.2
+      ],
+      "size": [
+        3.5,
+        0.16,
+        0.16
+      ],
+      "material": "post"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        2.22,
+        2.1
+      ],
+      "size": [
+        3.5,
+        0.16,
+        0.16
+      ],
+      "material": "post"
+    },
+    {
+      "type": "box",
+      "at": [
+        -1.695,
+        1.18,
+        -1.6
+      ],
+      "size": [
+        0.03,
+        0.46,
+        0.6
+      ],
+      "material": "glass"
+    },
+    {
+      "type": "box",
+      "at": [
+        -1.69,
+        1.13,
+        -1.6
+      ],
+      "size": [
+        0.05,
+        0.56,
+        0.72
+      ],
+      "material": "trim"
+    },
+    {
+      "type": "box",
+      "at": [
+        -1.695,
+        1.18,
+        0.4
+      ],
+      "size": [
+        0.03,
+        0.46,
+        0.6
+      ],
+      "material": "glass"
+    },
+    {
+      "type": "box",
+      "at": [
+        -1.69,
+        1.13,
+        0.4
+      ],
+      "size": [
+        0.05,
+        0.56,
+        0.72
+      ],
+      "material": "trim"
+    },
+    {
+      "type": "box",
+      "at": [
+        1.695,
+        1.18,
+        -1.6
+      ],
+      "size": [
+        0.03,
+        0.46,
+        0.6
+      ],
+      "material": "glass"
+    },
+    {
+      "type": "box",
+      "at": [
+        1.69,
+        1.13,
+        -1.6
+      ],
+      "size": [
+        0.05,
+        0.56,
+        0.72
+      ],
+      "material": "trim"
+    },
+    {
+      "type": "box",
+      "at": [
+        1.695,
+        1.18,
+        0.4
+      ],
+      "size": [
+        0.03,
+        0.46,
+        0.6
+      ],
+      "material": "glass"
+    },
+    {
+      "type": "box",
+      "at": [
+        1.69,
+        1.13,
+        0.4
+      ],
+      "size": [
+        0.05,
+        0.56,
+        0.72
+      ],
+      "material": "trim"
+    },
+    {
+      "type": "box",
+      "id": "far-bank-ground",
+      "at": [
+        0,
+        -0.49,
+        52
+      ],
+      "size": [
+        160,
+        0.5,
+        44
+      ],
+      "material": "bank"
+    },
+    {
+      "type": "scatter",
+      "id": "far-bank",
+      "area": [
+        -60,
+        30,
+        60,
+        70
+      ],
+      "count": 120,
+      "items": [
+        {
+          "weight": 1,
+          "item": {
+            "type": "tree",
+            "kind": "oak",
+            "low": true,
+            "moss": 0.5
+          },
+          "vary": {
+            "height": [
+              10,
+              18
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "marks": {
+    "crate": {
+      "at": [
+        0,
+        -0.55
+      ],
+      "label": "the crate"
+    },
+    "door": {
+      "at": [
+        0.6,
+        2.8
+      ],
+      "label": "the cabin door"
+    },
+    "helm": {
+      "at": [
+        0.4,
+        -2.3
+      ],
+      "label": "the helm"
+    },
+    "window": {
+      "at": [
+        -1.4,
+        0.4
+      ],
+      "label": "the side window"
+    },
+    "stores": {
+      "at": [
+        -1,
+        1.9
+      ],
+      "label": "the barrels and stores"
+    },
+    "deck": {
+      "at": [
+        0.2,
+        4.4
+      ],
+      "label": "the deck outside the cabin"
+    }
+  },
+  "shots": {
+    "cabin": {
+      "position": [
+        -1.25,
+        1.65,
+        -2.55
+      ],
+      "target": [
+        0.55,
+        1.05,
+        3
+      ],
+      "fov": 60,
+      "label": "The cabin"
+    },
+    "crate": {
+      "position": [
+        0.55,
+        2.1,
+        1.95
+      ],
+      "target": [
+        0,
+        0.45,
+        -0.6
+      ],
+      "fov": 55,
+      "label": "The crate"
+    },
+    "chest": {
+      "position": [
+        -0.5,
+        1.5,
+        1.8
+      ],
+      "target": [
+        0.05,
+        0.38,
+        -0.55
+      ],
+      "fov": 50,
+      "label": "The crate up close"
+    },
+    "door": {
+      "position": [
+        -0.15,
+        1.55,
+        0.05
+      ],
+      "target": [
+        0.65,
+        1.3,
+        3
+      ],
+      "fov": 55,
+      "label": "The door"
+    },
+    "helm": {
+      "position": [
+        0.2,
+        1.45,
+        1.3
+      ],
+      "target": [
+        0.2,
+        1.35,
+        -3
+      ],
+      "fov": 58,
+      "label": "The helm"
+    }
+  },
+  "life": {
+    "dust": {
+      "count": 90,
+      "box": [
+        -1.6,
+        0.4,
+        -2.8,
+        1.6,
+        2.2,
+        2.8
+      ]
+    }
+  }
+}

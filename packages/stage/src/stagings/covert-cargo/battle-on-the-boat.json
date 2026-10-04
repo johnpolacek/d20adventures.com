@@ -1,0 +1,105 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "covert-cargo/battle-on-the-boat",
+  "set": "realm-of-myr/riverboat-cabin",
+  "cast": [
+    {
+      "id": "npcs-1749163978757",
+      "name": "Reinhard",
+      "role": "Enforcer",
+      "height": 1.92,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/reinhard-front.webp",
+        "back": "/stage/fixtures/covert-cargo/reinhard-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/reinhard-portrait.jpg"
+      },
+      "at": [
+        0.25,
+        -1.75
+      ],
+      "facing": "lyra"
+    },
+    {
+      "id": "lyra",
+      "name": "Lyra Silvanus",
+      "role": "Asterian arcanist",
+      "height": 1.7,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/lyra-front.webp",
+        "back": "/stage/fixtures/covert-cargo/lyra-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/lyra-portrait.jpg"
+      },
+      "at": [
+        0.55,
+        1.05
+      ],
+      "facing": "npcs-1749163978757"
+    },
+    {
+      "id": "npcs-1749181492795",
+      "name": "Silas",
+      "role": "Rogue, the brains of the mission",
+      "height": 1.78,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/silas-front.webp",
+        "back": "/stage/fixtures/covert-cargo/silas-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/silas-portrait.jpg"
+      },
+      "at": [
+        0.6,
+        2.55
+      ],
+      "facing": "lyra"
+    },
+    {
+      "id": "poppen",
+      "name": "Poppen Quickfoot",
+      "role": "Halfling rogue",
+      "height": 1.06,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/poppen-front.webp",
+        "back": "/stage/fixtures/covert-cargo/poppen-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/poppen-portrait.jpg"
+      },
+      "at": [
+        -0.9,
+        4.45
+      ],
+      "facing": [
+        0.6,
+        2.8
+      ]
+    }
+  ],
+  "shots": {
+    "reinhard": {
+      "subject": "npcs-1749163978757",
+      "distance": 2,
+      "angle": 8,
+      "height": 1.35,
+      "lookHeight": 1.55,
+      "fov": 44,
+      "label": "Reinhard"
+    },
+    "lyra": {
+      "subject": "lyra",
+      "distance": 2,
+      "angle": 30,
+      "height": 1.6,
+      "lookHeight": 1.394,
+      "fov": 44,
+      "label": "Lyra"
+    },
+    "silas": {
+      "subject": "npcs-1749181492795",
+      "distance": 2.1,
+      "angle": 25,
+      "height": 1.6,
+      "lookHeight": 1.4596,
+      "fov": 44,
+      "label": "Silas"
+    }
+  },
+  "shot": "helm"
+}

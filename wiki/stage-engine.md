@@ -46,7 +46,7 @@ JSON only: no expressions, no code. Metres. `y` up. ground at `y = 0`. the set f
 | Field | Contents |
 |---|---|
 | `format`, `version`, `id`, `settingId`, `locationId`, `title`, `seed` | Identity. `seed` drives every random choice (per object, so editing one object does not reshuffle the rest) |
-| `atmosphere` | Sun direction, colour, intensity, shadow box. hemisphere. sky colours. fog density (fog colour = sky horizon). environment intensity. exposure. wind |
+| `atmosphere` | Sun direction, colour, intensity, shadow box. hemisphere. sky colours. fog density (fog colour = sky horizon). environment intensity. exposure. wind. `lights`: up to 8 static point lights, no shadows |
 | `camera` | Near/far, bounds box, orbit limits |
 | `materials` | Name → `{ type: masonry \| wood \| cloth \| burlap \| metal \| plain \| foliage \| glow \| rock \| meadow \| grass \| water, …params }`. cloth can carry `heraldry` (a named banner design) and `tatters`. Ground masonry draws the gate road's ruts and edge dust unless `roads: false`. `foliage` is an alpha-tested painted leaf texture tinted by its colour. `rock`, `meadow` and `water` are painted from world position, so they need no uv and never tile: rock has moss on upward faces and hollows and lichen on bare stone, meadow has grass and moss patches, bare earth, pebbles, fallen leaves and wildflowers, water mirrors the sky with drifting ripples. `grass` shades blades from root to tip and sways them |
 | `objects[]` | `{ type, id?, at?, yaw?, materials?, …params }` , `type` names a builder. params are validated by that builder's schema (unknown keys rejected, ranges clamped) |
@@ -154,3 +154,54 @@ Remaining product work is tracked in [Stageview](plans/stageview.md).
 - `stage:verify` on the festival (dev build, M3, 1440×900 CSS): all 8 shots pass. Ultra at DPR 2: 159–180 draw calls, 0.24–0.26M triangles, ready in 4.1 s. Balanced: 142–163 calls. Native-pixel crops of all five NPCs keep faces and costume detail. Frame rates in that run were noisy (6–31 fps ultra, 25–66 balanced) while other work shared the 8 GB machine, so they are not a benchmark.
 - `moveCast` also ends a walk on a timer at its expected arrival, and `dispose()` resolves walks in progress. Frames stop while a window is covered, and the native app's turn used to wait on the walk.
 - After the shared walk/footprint refactor and the ground `roads` flag, the gate's balanced shots still pass with the same counts (1.37–1.57M triangles, 172–179 calls).
+
+## Recorded checks, 2026-10-04, Covert Cargo
+
+- New builders in `builders/river.ts`: `riverboat`, a river tug (a lofted hull with a U section, a sheer that rises to the bow and a dark hull below a blue-grey strake, rust rub rails, a pale cabin with rust posts, a glazed saloon forward with lit windows, a glazed pilothouse with a barrel roof, stack, vent, life rings and bitts; the cabin is solid; rebuilt after the owner's review, below), `pier` (boards on pilings with mooring posts, `rickety` tilts and drops boards) and `ship` (stepped hull, sterncastle, one to three masts, sails set or furled, stays). Decks and boards sit at y = 0 so people stand on them, with the water lower.
+- `tree` adds `moss` (grey beards hanging from limbs and crowns) and an `ancient` kind: a smooth kinked taper, a buttress flare, snaking roots and great limbs. The `gnarled` trunk tapers each segment to half its radius, which reads as stacked cones at large girths, so it was left alone for the approved Midnight Summons sets.
+- Ground with a river cut: an `extrude` in the "xz" plane with the river as a hole, 0.6 m deep with its top at y = 0, and a water slab 0.49 m down. The primitive's "xz" plane mirrors z (a point `[x, z]` lands at world `(x, -z)`), so `scripts/stage-sets/covert-cargo.ts` writes those outlines mirrored. `river.ts` has its own `plan()` helper that does not mirror.
+- `pnpm stage:check`: the pier places 1,128 objects, 1.00M static triangles (leaves 0.56M, bark 0.15M) after cutting trees and moss from a first 1.75M. The cabin 212 objects and 0.11M, the riverfront 138 objects and 0.14M, the forest path 753 objects and 0.83M. All nine stagings pass with no one starting inside something solid.
+- `stage:verify` at high, DPR 2, dev build: the pier 88–89 calls and 1.81M triangles (the first version measured 3.21M, over budget), the cabin 73–86 calls and 0.21M, the riverfront 87 calls and 0.28M, the forest path 39–40 calls and 1.44M. 44–67 fps while other work shared the machine.
+
+### Second pass, matched to the art
+
+- Owner feedback: "I was expecting it to match the art more exactly for the boat and lighting." The first `riverboat` was a stepped box. It is now the tug in the art. The hull is lofted from stations, 12 m by 3.6 m. Params: `length`, `beam`, `draft`, `sheer`, `cabin`, `saloon`, `height`, `lit`. The pilothouse glass has its own `helm` role, defaulting to `window`, so it can glow dimmer than the saloon as in the art.
+- New `atmosphere.lights`: up to 8 static point lights with colour, intensity, distance and decay, and no shadows. They pool lamp and window light on the deck and the pier, and glint in the water. The water still mirrors only the sky, so the lit windows have no true reflection.
+- Pier: saturated blue night with a low misty sun disc, warm lights in the saloon and pilothouse, a lantern on the pier and a cold lamp on the bank. Dense bushes and ferns along both banks, with clear circles at the cameras and along the trail. Cabin: a neutral grade with grey-brown wood, warm lanterns and candles, and a cold teal light at the open door.
+- `pnpm stage:check`: the pier 1,859 objects and 1.24M static triangles (leaves 0.39M, dark leaves 0.28M, bark 0.15M). The cabin 212 objects and 0.11M.
+- `stage:verify`, dev build: the pier at high 88 to 91 calls and 2.30M triangles, under the 2.5M budget, 25 to 31 fps. At balanced 84 to 87 calls and 55 to 61 fps. The cabin at high 73 to 82 calls, 0.21M triangles and 52 to 69 fps.
+
+### Third pass: painted textures, props, hillside, fog
+
+- `painted` material: one board's grain from an image in `public/stage/textures/`, laid along each piece's grain with the wood shader's seams, worn edges, grime and optional nails. Each board shows its own patch of the painting. `size` is the metres the image covers across and along the grain. `tint` multiplies it.
+- `card` material: an alpha cut-out, double-sided, no shadow. Tree `moss` hangs as crossed cards when the moss material is a card.
+- `mist` material and `mist` builder: soft cloud cards faded at every edge, standing or flat over water.
+- `heightfield` primitive: a grid of heights from a set generator, which seats trees and bushes on the same function.
+- `strongbox` builder: a detailed cargo crate. `riverboat` gained a full roof rail, rope fenders, a `rope` role and a pilothouse that scales with the cabin height.
+- `atmosphere.fog.start`: haze begins this many metres out. Near things keep their colour, as in the art.
+- The material library loads painted textures and the stage waits for them before the first frame. Set specs accept textures only from `/stage/textures/`.
+- Grain: a flat face takes the axis that runs longest along it, projected into the face. Boxes keep their old grain. A lofted hull's planks now follow it to the bow instead of turning vertical.
+- Textures come from `scripts/stage-textures.ts`. The desktop build copies `public/stage`, so they ship with the app.
+
+### Fourth pass: leaf cards, rope and chain
+
+- `foliage` takes an optional painted `map`, a leaf clump cut out from the art. Builders then lay each crown or bush mass as crossed leaf cards with normals pointing out from the centre, so a mass shades like a rounded clump. Cards cost 28 triangles a mass against 192 for a leafy sphere.
+- The card foliage shader boosts alpha by the sampled mip level, so distant crowns keep their leaves. Card foliage casts leaf-shaped shadows through an alpha-tested depth material.
+- `rope` and `chain` builders: a sagging line between two points, rope with knots, chain with alternating oval links.
+- `stage:check`'s stub materials carry the card flags, so its triangle counts match what renders.
+- `scripts/stage-textures.ts` keys cut-outs on magenta when the subject is green.
+
+### Fifth pass: planar water reflection
+
+- Water with `mirror` (0..1) gets a true reflection: `render/mirror.ts` renders the scene from a camera mirrored in the water plane, with an oblique near plane so nothing below the surface draws, into a half-float target. Shadow maps are reused from the main render. The water shader samples it projectively and mixes it into its specular, offset by the ripple normal.
+- Tiers set its size as a share of the drawing buffer: mobile 0, balanced 0.35, high 0.5, ultra 0.6. A `mirror` flag overrides it. Sets without mirrored water pay nothing.
+- `riverboat` now has a rounded saloon bow with windows and a glazed door round it, rust posts and fascia following the curve, an overhanging upper deck with a rail all round, and a narrower pilothouse.
+
+### Speed pass, 2026-10-04
+
+- `atmosphere.sun.shadow.size` caps a set's shadow map below the tier's. The Mordava pier uses 2048.
+- `foliage.shadow: false` keeps a leaf material out of the shadow map. Card foliage casts plain card shadows when it casts at all: alpha-tested leaf shadows in a 4096 map cost several milliseconds.
+- Leaf masses are nine larger cards. Painted wood drops the ring and fibre noise and three grime octaves the painting already carries.
+- The planar reflection leaves out grass, unpainted foliage, cards, mist and rocks. High renders it at 0.4 of the drawing buffer.
+- River view on high: 1.82M to 1.09M triangles, 138 to 125 calls. Balanced reads 66 fps, high 40 to 48, on a loaded dev machine.
+- Character shots swing clear: `stage.shot({ subject, ... })` tries turns of up to 180 degrees round the subject and then 75 and 55 percent of the distance, until the camera, clamped to the set's camera box, has 0.45 m of room and a clear line to the subject past every solid footprint. Walls that should block a camera must be `solid`.

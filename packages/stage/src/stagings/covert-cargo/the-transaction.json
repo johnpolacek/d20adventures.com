@@ -1,0 +1,153 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "covert-cargo/the-transaction",
+  "set": "realm-of-myr/mordava-river-pier",
+  "cast": [
+    {
+      "id": "lyra",
+      "name": "Lyra Silvanus",
+      "role": "Asterian arcanist",
+      "height": 1.7,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/lyra-front.webp",
+        "back": "/stage/fixtures/covert-cargo/lyra-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/lyra-portrait.jpg"
+      },
+      "at": [
+        4.5,
+        3.3
+      ],
+      "facing": "npcs-1749184389465"
+    },
+    {
+      "id": "npcs-1749184389465",
+      "name": "Aelar Moonglimmer",
+      "role": "Elf operative",
+      "height": 1.86,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/aelar-front.webp",
+        "back": "/stage/fixtures/covert-cargo/aelar-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/aelar-portrait.jpg"
+      },
+      "at": [
+        3.75,
+        4.55
+      ],
+      "facing": "npcs-1749181492795"
+    },
+    {
+      "id": "npcs-1749181492795",
+      "name": "Silas",
+      "role": "Rogue, the brains of the mission",
+      "height": 1.78,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/silas-front.webp",
+        "back": "/stage/fixtures/covert-cargo/silas-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/silas-portrait.jpg"
+      },
+      "at": [
+        2.75,
+        5.45
+      ],
+      "facing": "npcs-1749184389465"
+    },
+    {
+      "id": "npcs-1749163978757",
+      "name": "Reinhard",
+      "role": "Enforcer",
+      "height": 1.92,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/reinhard-front.webp",
+        "back": "/stage/fixtures/covert-cargo/reinhard-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/reinhard-portrait.jpg"
+      },
+      "at": [
+        1.55,
+        7.1
+      ],
+      "facing": "npcs-1749181492795"
+    },
+    {
+      "id": "poppen",
+      "name": "Poppen Quickfoot",
+      "role": "Halfling rogue",
+      "height": 1.06,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/poppen-front.webp",
+        "back": "/stage/fixtures/covert-cargo/poppen-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/poppen-portrait.jpg"
+      },
+      "at": [
+        -1.2,
+        4.6
+      ],
+      "facing": "pierEnd"
+    },
+    {
+      "id": "npcs-1749243735467",
+      "name": "Elven Archer",
+      "role": "Wood elf archer",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/elf-archer-front.webp",
+        "back": "/stage/fixtures/covert-cargo/elf-archer-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/elf-archer-portrait.jpg"
+      },
+      "at": "bow",
+      "facing": "bank"
+    },
+    {
+      "id": "npcs-1749243869357",
+      "name": "Elven Fighter",
+      "role": "Elf fighter",
+      "height": 1.88,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/elf-fighter-front.webp",
+        "back": "/stage/fixtures/covert-cargo/elf-fighter-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/elf-fighter-portrait.jpg"
+      },
+      "at": "stern",
+      "facing": "pier"
+    }
+  ],
+  "shots": {
+    "handover": {
+      "subjects": [
+        "npcs-1749184389465",
+        "npcs-1749181492795"
+      ],
+      "offset": [
+        3.2,
+        1.7,
+        2.6
+      ],
+      "target": [
+        0,
+        1.3,
+        0
+      ],
+      "fov": 42,
+      "label": "The handover"
+    },
+    "silas": {
+      "subject": "npcs-1749181492795",
+      "distance": 2.8,
+      "angle": 30,
+      "height": 1.6,
+      "lookHeight": 1.4596,
+      "fov": 44,
+      "label": "Silas"
+    },
+    "lyra": {
+      "subject": "lyra",
+      "distance": 3.2,
+      "angle": 22,
+      "height": 1.6,
+      "lookHeight": 1.394,
+      "fov": 44,
+      "label": "Lyra"
+    }
+  },
+  "shot": "handover"
+}

@@ -78,7 +78,8 @@ function surfaceUV(g: THREE.BufferGeometry, mode: UVMode, r: number, orig: Array
 
 // Timber shaders run their grain along the long axis of each piece. Before the placement matrix bakes the geometry into
 // world space, each vertex records that axis (xyz, world space) and, on round pieces, the girth (w) that turns the wrapped
-// uv into metres. Flat faces choose the longer of their two in-plane axes; round pieces run along their own axis.
+// uv into metres. Flat faces take the axis that runs longest along the face (its extent times how much of it lies in the
+// face), projected into the face, so a curved hull's planks follow the hull to the bow. Round pieces run along their axis.
 const ROUND = new Set(["CylinderGeometry", "LatheGeometry"])
 function woodGrain(orig: THREE.BufferGeometry, g: THREE.BufferGeometry, matrix: THREE.Matrix4 | null, uvMode: UVMode) {
   g.computeBoundingBox()
@@ -92,22 +93,33 @@ function woodGrain(orig: THREE.BufferGeometry, g: THREE.BufferGeometry, matrix: 
   const out = new Float32Array(n.count * 4)
   const round = ROUND.has(orig.type)
   const girth = uvMode === "radial" ? 1 : Math.PI * Math.max(ext[0], ext[2])
+  const t = new THREE.Vector3()
   for (let i = 0; i < n.count; i++) {
-    let k = 1
-    if (!round) {
-      const na = [Math.abs(n.getX(i)), Math.abs(n.getY(i)), Math.abs(n.getZ(i))]
-      let best = -1
-      k = 0
-      for (let a = 0; a < 3; a++)
-        if (na[a] < 0.5 && ext[a] > best) {
-          best = ext[a]
-          k = a
-        }
+    if (round) {
+      out[i * 4] = dir[1].x
+      out[i * 4 + 1] = dir[1].y
+      out[i * 4 + 2] = dir[1].z
+      out[i * 4 + 3] = girth
+      continue
     }
-    out[i * 4] = dir[k].x
-    out[i * 4 + 1] = dir[k].y
-    out[i * 4 + 2] = dir[k].z
-    out[i * 4 + 3] = round ? girth : 0
+    const nn = [n.getX(i), n.getY(i), n.getZ(i)]
+    let best = -1
+    let k = 0
+    for (let a = 0; a < 3; a++) {
+      const score = ext[a] * Math.sqrt(Math.max(0, 1 - nn[a] * nn[a]))
+      if (score > best + 1e-9) {
+        best = score
+        k = a
+      }
+    }
+    t.set(0, 0, 0)
+    for (let a = 0; a < 3; a++) t.addScaledVector(col[a], (a === k ? 1 : 0) - nn[a] * nn[k])
+    if (t.lengthSq() < 1e-12) t.copy(dir[k])
+    t.normalize()
+    out[i * 4] = t.x
+    out[i * 4 + 1] = t.y
+    out[i * 4 + 2] = t.z
+    out[i * 4 + 3] = 0
   }
   return out
 }
