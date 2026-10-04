@@ -10,20 +10,32 @@ import { DesktopGame } from "./play"
 import "./style.css"
 createRoot(document.getElementById("root")!).render(<DesktopGame />)
 
+// Release checks (D20_RENDER_REPORT): whether the stage came up, any errors, and its frame rate and draw counts
+// sampled each second for the first 50 s. The app writes the report only when that variable is set.
 if (isTauri()) {
   const errors: string[] = []
   addEventListener("error", (e) => errors.push(e.message))
   addEventListener("unhandledrejection", (e) => errors.push(String(e.reason)))
-  setTimeout(
-    () =>
-      void invoke("render_report", {
-        report: {
-          ready: Boolean((window as unknown as { __stage?: unknown }).__stage),
-          errors,
-          visibility: document.visibilityState,
-          resources: performance.getEntriesByType("resource").map((e) => ({ name: e.name, duration: e.duration })),
-        },
-      }),
-    20000
-  )
+  const stage = () => (window as unknown as { __stage?: { stats: () => Record<string, unknown> } }).__stage
+  const samples: Record<string, unknown>[] = []
+  const sampler = setInterval(() => {
+    const s = stage()?.stats()
+    if (s) samples.push({ t: Math.round(performance.now() / 1000), visible: document.visibilityState, fps: s.fps, calls: s.calls, triangles: s.triangles, tier: s.tier, dpr: s.dpr, shot: s.shot })
+  }, 1000)
+  const report = (final: boolean) =>
+    void invoke("render_report", {
+      report: {
+        ready: Boolean(stage()),
+        final,
+        errors,
+        visibility: document.visibilityState,
+        resources: performance.getEntriesByType("resource").map((e) => ({ name: e.name, duration: e.duration })),
+        samples,
+      },
+    })
+  setTimeout(() => report(false), 20000)
+  setTimeout(() => {
+    clearInterval(sampler)
+    report(true)
+  }, 50000)
 }
