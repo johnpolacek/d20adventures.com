@@ -96,6 +96,15 @@ Results:
 - Not changed: the old forest path's gold-green haze still hides most of its canopy.
 - `stage:check`, typechecks, Biome and 25 desktop tests pass.
 
+## Fifth pass: reflections, a rounder cabin, a wider tug
+
+2026-10-04, owner picked (d) water that reflects the boat and its windows, (f) a rounder, taller cabin like the painting, and a wider boat.
+
+- (d) Planar reflection: on tiers that allow it, the stage renders the scene once more from a camera mirrored in the water plane, at reduced resolution, and the water shader samples it with ripple distortion. Opt-in per water material (`mirror`), so approved sets keep their look. Roughly doubles draw calls on the river sets.
+- (f) Cabin: a saloon with a rounded front and windows wrapping it, a taller cabin, an upper deck that overhangs it with a rail, and a pilothouse with a rounded front under its arched roof.
+- Wider tug: beam from 4.6 m to about 5.6 m. The tug moves east, the gangway reaches it, and pilings, lines, lights and marks follow.
+- Validation as before, plus draw calls and frame rate with reflections on.
+
 ## Owner review
 
 Start the viewer in the worktree with `pnpm exec next dev -p 3057`, then open `http://localhost:3057/dev/stage?staging=covert-cargo/<encounter>&tier=balanced` for each encounter: the-shipment, the-transaction, the-disturbance, the-escape, the-fake, battle-on-the-boat, the-crate, return-to-the-city, the-end.
