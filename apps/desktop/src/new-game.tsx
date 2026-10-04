@@ -75,7 +75,7 @@ export function NewGame(props: {
         </div>
         <div className="grid gap-7 md:grid-cols-[minmax(240px,330px)_1fr]">
           <div className="md:sticky md:top-0 md:self-start">
-            <ModuleCover id={info.id} title={info.title} players={info.players} setting={info.setting} />
+            <ModuleCover id={info.id} title={info.title} players={info.players} />
           </div>
           <div className="flex min-w-0 flex-col gap-5">
             {info.teaser && (

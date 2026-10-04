@@ -1,5 +1,6 @@
 import { findCurrentActor } from "@d20/gm-core/utils/turn-actors"
 import { readingSeconds } from "@d20/stage/beats"
+import { narrationShot } from "@d20/stage/narration"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { CharacterCard } from "@/components/stage/character-card"
 import { Pill, panel, StageHud, useCompact } from "@/components/stage/hud"
@@ -109,9 +110,14 @@ export function DesktopGame() {
     const named = stage?.cast.filter((c) => paragraphText.includes(callName(c.name))) ?? []
     return quote && named.length === 1 && reading ? { cast: named[0], text: quote } : null
   }, [stage, text, paragraph, reading])
+  // Each paragraph moves the camera to fit it: a speaker, the people it names, or the place it describes.
+  const told = text[paragraph] ?? ""
   useEffect(() => {
-    if (stage && speech) stage.shot({ subject: speech.cast.id, distance: 5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 })
-  }, [stage, speech])
+    if (!stage || !reading) return
+    if (speech) return void stage.shot({ subject: speech.cast.id, distance: 5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 })
+    const view = narrationShot(told, stage, { first: paragraph === 0 })
+    if (view) stage.shot(typeof view === "string" ? view : { subject: view.subject, distance: 4.5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 })
+  }, [stage, speech, told, paragraph, reading])
   useEffect(() => {
     if (!auto || !reading || busy || !text.length) return
     const timer = setTimeout(() => (paragraph < text.length - 1 ? setParagraph((n) => n + 1) : setReading(false)), readingSeconds(text[paragraph] ?? "") * 1000)

@@ -452,7 +452,8 @@ function pierSet() {
       exchange: { subjects: [CAST.lyra.id, CAST.aelar.id, CAST.silas.id, CAST.reinhard.id], offset: [7.5, 2.4, 3.5], target: [0, 1.1, 0], fov: 52, label: "The meeting" },
       lyra: close("lyra"),
       aelar: close("aelar", 3.3, -25),
-      poppen: close("poppen", 2.6, 15, 0.9, 0.85),
+      // Over his shoulder from above the reeds, looking past him to the boat he is watching.
+      poppen: close("poppen", 2.2, 170, 1.9, 1.45),
     },
     "river"
   )
@@ -477,7 +478,7 @@ function pierSet() {
     ],
     {
       search: { subjects: [CAST.fighter.id, CAST.archer.id, CAST.poppen.id], offset: [-3.6, 2.1, -4.2], target: [0, 0.9, 0], fov: 50, label: "The search" },
-      poppen: close("poppen", 2.4, 20, 0.85, 0.8),
+      poppen: close("poppen", 2.2, 170, 1.9, 1.45),
       archer: close("archer", 3, -20),
     },
     "reeds"

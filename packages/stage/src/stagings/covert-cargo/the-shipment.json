@@ -152,10 +152,10 @@
     },
     "poppen": {
       "subject": "poppen",
-      "distance": 2.6,
-      "angle": 15,
-      "height": 0.9,
-      "lookHeight": 0.85,
+      "distance": 2.2,
+      "angle": 170,
+      "height": 1.9,
+      "lookHeight": 1.45,
       "fov": 44,
       "label": "Poppen"
     }

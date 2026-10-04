@@ -28,11 +28,6 @@ export const adventureList = (packs: Packs) =>
       title: m.title,
       start: m.startEncounterId,
       teaser: m.teaser ?? "",
-      // The setting's name from its id: "realm-of-myr" is "Realm of Myr".
-      setting: m.settingId
-        .split("-")
-        .map((w, i) => (i > 0 && ["of", "the", "and"].includes(w) ? w : w[0].toUpperCase() + w.slice(1)))
-        .join(" "),
       players: [m.minPlayers ?? 1, m.maxPlayers ?? Math.max(1, premades.length)] as [number, number],
       options: m.availableCharacterOptions ?? null,
       premades: premades.map((s) => ({ id: s.id, name: s.name, race: s.race, archetype: s.archetype, gender: s.gender })),

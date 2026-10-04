@@ -401,18 +401,26 @@ export class Stage {
   }
   // Set and staging shots, framed on where the cast stands now (group and subject shots follow the characters).
   get shots(): Record<string, ResolvedShot> {
-    return resolveShots(this.set, this.staging, this.cast)
+    const out = resolveShots(this.set, this.staging, this.cast)
+    // Named shots on one character swing clear of walls and cabins like inline ones (see clearFrame).
+    for (const [k, s] of Object.entries(this.staging?.shots ?? {}))
+      if ("subject" in s)
+        try {
+          out[k] = this.clearFrame(s)
+        } catch {
+          // An unknown subject keeps the authored framing.
+        }
+    return out
   }
   // A named shot, or an inline one (absolute, group or subject). Eased over 2.2 s unless instant or motion is off.
   shot(which: string | StagingShot, { instant = false, duration = 2200 } = {}) {
     let s: ResolvedShot | undefined
-    if (typeof which === "string") s = this.shots[which]
-    else
-      try {
-        s = this.clearFrame(which)
-      } catch {
-        s = undefined
-      }
+    const authored = typeof which === "string" ? this.staging?.shots[which] : which
+    try {
+      s = authored && "subject" in authored ? this.clearFrame(authored, true) : typeof which === "string" ? this.shots[which] : frameShot(which, this.cast)
+    } catch {
+      s = undefined
+    }
     if (!s) return false
     this.activeShot = typeof which === "string" ? which : null
     this.activeFov = s.fov
@@ -435,7 +443,8 @@ export class Stage {
   }
   // A shot on one character, swung round them (and then drawn in) until neither the camera nor its view of them passes
   // through anything solid, such as a cabin the character stands in front of. Other shots frame as authored.
-  private clearFrame(which: StagingShot): ResolvedShot {
+  // With `turn`, a subject the camera had to swing far round turns toward it, so their card is never seen edge on.
+  private clearFrame(which: StagingShot, turn = false): ResolvedShot {
     const first = frameShot(which, this.cast)
     if (!("subject" in which) || !this.footprints.length) return first
     const c = this.cast.find((m) => m.id === which.subject)
@@ -464,10 +473,15 @@ export class Stage {
         [0, -0.45],
       ].some(([dx, dz]) => onFootprint(this.footprints, x + dx, z + dz))
     for (const scale of [1, 0.75, 0.55])
-      for (const turn of [0, 30, -30, 60, -60, 90, -90, 135, -135, 180]) {
-        const r = fit(frameShot({ ...which, angle: which.angle + turn, distance: which.distance * scale }, this.cast))
+      for (const swing of [0, 30, -30, 60, -60, 90, -90, 135, -135, 180]) {
+        const r = fit(frameShot({ ...which, angle: which.angle + swing, distance: which.distance * scale }, this.cast))
         const [x, , z] = r.position
-        if (Math.hypot(x - c.x, z - c.z) > 1.5 && roomy(x, z) && clear(x, z)) return r
+        if (Math.hypot(x - c.x, z - c.z) > 1.5 && roomy(x, z) && clear(x, z)) {
+          const bearing = Math.atan2(x - c.x, z - c.z)
+          const off = Math.atan2(Math.sin(bearing - c.ry), Math.cos(bearing - c.ry))
+          if (turn && Math.abs(off) > THREE.MathUtils.degToRad(60)) c.ry = bearing - THREE.MathUtils.degToRad(which.angle)
+          return r
+        }
       }
     return first
   }
