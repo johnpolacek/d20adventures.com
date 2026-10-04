@@ -196,3 +196,5 @@ Result: the packaged app with live Claude played both untested branches on an is
 One local slot and four premade player-controlled characters. The gate and the Harvest Festival are the authored 3D sets. Add further sets, character creation, AI companions, save management, narration audio, and multiplayer separately. Equipment has no separate currency or quantity ledger. Native combat and the other providers were not tested in this playthrough. The five-call batching experiment remains separate. Distribution still needs Node packaging or onboarding, signing, notarization, and an updater.
 
 The worktree's isolated Convex project is `d20adventures-feature-desktop-stage-play`, deployment `adamant-hawk-913`. Desktop gameplay does not use it. Remove that project after the worktree is retired. Runtime details and commands are in [the desktop README](../../apps/desktop/README.md).
+
+Finished: 2026-10-03 (merged to main, policy: merge)
