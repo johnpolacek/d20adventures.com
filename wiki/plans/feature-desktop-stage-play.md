@@ -165,6 +165,13 @@ Owner feedback on the seven scenes: "instead of warm light, just neutral light. 
 - Stones: rebuilt as noise-shaped menhirs cut by fracture planes with a mossy `rock` material, sized and placed by measuring the art from the camera, broad faces toward the view. Added `mountain` peaks, a crisp moon, a reflective `water` river, undergrowth, and a clear sky wedge so the moon sits over the valley as in the art.
 - All checks pass: `stage:check`, stage and root typechecks, scoped Biome, and the fourteen desktop tests. Balanced-tier renders of every stones view and the forest and cottage views were compared with the art.
 
+Owner follow-up: "the sky should be darker. the druid should match the character art more closely. the river should be wider."
+
+- Darker night skies at the stones and on the forest trail.
+- The river is about 18 m wide by the stones, with the far bank, its trees and rocks moved out.
+- Wollandora regenerated from her art: a younger, freckled face, loose wavy pale hair with one braid across the crown and leaves tangled in it, and a tattered dark mantle overgrown with ivy and dead leaves. Four candidates were compared with the art. New back and portrait.
+- Neutral sets also turn off the standee shader's warm grade. It had turned her grey-green mantle sepia at night.
+
 ## Remaining scope
 
 One local slot and four premade player-controlled characters. The gate and the Harvest Festival are the authored 3D sets. Add further sets, character creation, AI companions, save management, narration audio, and multiplayer separately. Equipment has no separate currency or quantity ledger. Native combat and the other providers were not tested in this playthrough. The five-call batching experiment remains separate. Distribution still needs Node packaging or onboarding, signing, notarization, and an updater.

@@ -143,7 +143,7 @@ Remaining product work is tracked in [Stageview](plans/stageview.md).
 
 - New builders in `builders/wilds.ts`: `standingStone` and `rock` are rebuilt from seeded noise cut by fracture planes, with creased normals, so stones have flat broken faces and weathered curves. `flagstones` sets irregular slabs in turf along a polyline. `grass` fills an area with tufts of curved blades (or heather with a heather material). `mountain` builds a distant ridged peak.
 - `tree` adds `leanYaw` (lean toward a heading) and `low` (coarser leaf masses for distant woods). Scatter `clear` takes up to 256 circles.
-- `atmosphere.sky.moon` draws a crisp full moon at the sun's disc. `atmosphere.grade: "neutral"` turns off the paint pass's warm umber shadows and parchment highlights, which had warmed every night scene.
+- `atmosphere.sky.moon` draws a crisp full moon at the sun's disc. `atmosphere.grade: "neutral"` turns off the paint pass's warm umber shadows and parchment highlights, which had warmed every night scene. It also turns off the standee shader's warm grade, through the shared `warmth` uniform.
 - `pnpm stage:check`: the stones set places 1,415 objects, 1.19M static triangles, 671 footprints. Grass (0.35M) and leaves (0.41M) dominate. All party walks clear in both stagings.
 - `stage:verify` at balanced, DPR 2, dev build: 42–44 draw calls, 1.55–1.94M triangles, 36–61 fps while other work shared the machine.
 

@@ -31,8 +31,8 @@
       "horizon": "#5f7ca4",
       "mid": "#22324e",
       "zenith": "#08101e",
-      "gain": 0.55,
-      "clouds": 0.2,
+      "gain": 0.42,
+      "clouds": 0.15,
       "stars": 0.7
     },
     "fog": {

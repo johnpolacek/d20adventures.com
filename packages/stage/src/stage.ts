@@ -277,6 +277,7 @@ export class Stage {
     }
     this.pipeline = new Pipeline(renderer, this.scene, this.camera)
     this.pipeline.paint.warmth = set.atmosphere.grade === "warm" ? 1 : 0
+    this.shared.warmth.value = this.pipeline.paint.warmth
     this.pipeline.mask.setSources([
       // Crowd cards keep half the paint; named characters keep about 80% of the crisp render.
       ...(this.crowd.cards ? [{ src: this.crowd.cards.mesh, keep: 0.625, custom: (common: Parameters<Crowd["maskProxy"]>[0]) => this.crowd.maskProxy(common, 0.625)! }] : []),

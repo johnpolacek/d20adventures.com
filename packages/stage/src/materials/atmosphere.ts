@@ -8,9 +8,11 @@ export interface SharedUniforms {
   sun: { value: THREE.Vector3 }
   // How the haze tints toward the sun: warm sunlight by default, set from the atmosphere's `glow` for a moon.
   sunTint: { value: THREE.Vector3 }
+  // 1 warms the colour grade of painted figures (as the paint pass does); 0 keeps it neutral for moonlit sets.
+  warmth: { value: number }
 }
 export function createShared(): SharedUniforms {
-  return { time: { value: 0 }, wind: { value: 0.8 }, sun: { value: new THREE.Vector3(-0.8, 0.55, 0.32).normalize() }, sunTint: { value: new THREE.Vector3(1.45, 1.18, 0.86) } }
+  return { time: { value: 0 }, wind: { value: 0.8 }, sun: { value: new THREE.Vector3(-0.8, 0.55, 0.32).normalize() }, sunTint: { value: new THREE.Vector3(1.45, 1.18, 0.86) }, warmth: { value: 1 } }
 }
 
 type Shader = THREE.WebGLProgramParametersWithUniforms

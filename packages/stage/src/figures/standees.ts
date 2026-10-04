@@ -153,7 +153,7 @@ function bulgeNormals(img: HTMLImageElement) {
 
 type BackUniforms = { uMapB: THREE.IUniform<THREE.Texture | null>; uBack: THREE.IUniform<number> }
 
-// Grade toward the set palette: warmed, umber in the shadows, painted saturation down about 13%, and the brightest painted
+// Grade toward the set palette: warmed with umber in the shadows (unless the set grades neutral), painted saturation down about 13%, and the brightest painted
 // metal eased toward the world's values (highlights lose a little chroma and peak brightness); mid-tones, and with them the
 // faces, are left alone. Below 80 degrees off its facing the card shows its front, above 100 its back; in between the colours
 // are dissolved with a screen-space dither and the alpha is blended.
@@ -161,8 +161,9 @@ function standeeMaterial(shared: SharedUniforms, back: BackUniforms) {
   const m = new THREE.MeshStandardMaterial({ color: "#fff", roughness: 0.95, metalness: 0, alphaTest: 0.5, side: THREE.DoubleSide, normalScale: new THREE.Vector2(1, 1) })
   return stageMaterial(m, shared, "standee", (s) => {
     Object.assign(s.uniforms, back)
+    s.uniforms.uWarmth = shared.warmth
     s.fragmentShader = s.fragmentShader
-      .replace("#include <common>", "#include <common>\nuniform sampler2D uMapB; uniform float uBack;")
+      .replace("#include <common>", "#include <common>\nuniform sampler2D uMapB; uniform float uBack, uWarmth;")
       .replace(
         "#include <map_fragment>",
         `#ifdef USE_MAP
@@ -175,8 +176,8 @@ function standeeMaterial(shared: SharedUniforms, back: BackUniforms) {
  diffuseColor *= sampledDiffuseColor;
 #endif
  { vec3 c = diffuseColor.rgb; float l = dot(c, vec3(.299, .587, .114));
-   float hi = smoothstep(.55, .95, l); c = mix(vec3(l), c, .87 - hi * .1); c *= 1.0 - hi * .14; c *= vec3(1.025, 1.0, .95);
-   c += vec3(.04, .016, -.01) * (1.0 - smoothstep(0.0, .55, l)); c = mix(c, c * c * (3.0 - 2.0 * c), .18);
+   float hi = smoothstep(.55, .95, l); c = mix(vec3(l), c, .87 - hi * .1); c *= 1.0 - hi * .14; c *= mix(vec3(1.0), vec3(1.025, 1.0, .95), uWarmth);
+   c += vec3(.04, .016, -.01) * (1.0 - smoothstep(0.0, .55, l)) * uWarmth; c = mix(c, c * c * (3.0 - 2.0 * c), .18);
    diffuseColor.rgb = c; }`
       )
       .replace("#include <normal_fragment_maps>", "#include <normal_fragment_maps>\n normal = normalize(normal + normalize(vViewPosition) * .3 * faceDirection);")

@@ -6,7 +6,7 @@ This log retains durable decisions and dated evidence. Git owns detailed impleme
 
 ## 2026-10-03, Standing Stones matched to the art, neutral night light
 
-Owner feedback asked for neutral light, more ground detail, and stones much closer to the source art. Night sets now use a white camera fill and a neutral paint grade. New world-painted `rock`, `meadow`, `grass` and `water` materials and `flagstones`, `grass` and `mountain` builders give the ground and stones real detail. The Standing Stones were rebuilt and recomposed from measurements of the art, with the moon over the valley. See [the art pass](plans/feature-desktop-stage-play.md#standing-stones-art-pass-2026-10-03) and [authoring lessons](stage-authoring.md#lessons).
+Owner feedback asked for neutral light, more ground detail, and stones much closer to the source art. Night sets now use a white camera fill and a neutral paint grade. New world-painted `rock`, `meadow`, `grass` and `water` materials and `flagstones`, `grass` and `mountain` builders give the ground and stones real detail. The Standing Stones were rebuilt and recomposed from measurements of the art, with the moon over the valley. Follow-up: darker night skies, a wider river, and Wollandora regenerated much closer to her art, with neutral night grading for characters too. See [the art pass](plans/feature-desktop-stage-play.md#standing-stones-art-pass-2026-10-03) and [authoring lessons](stage-authoring.md#lessons).
 
 ## 2026-10-03, first forest set and the 3D authoring pattern
 
