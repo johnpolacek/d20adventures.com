@@ -171,6 +171,7 @@ Owner follow-up: "the sky should be darker. the druid should match the character
 - The river is about 18 m wide by the stones, with the far bank, its trees and rocks moved out.
 - Wollandora regenerated from her art: a younger, freckled face, loose wavy pale hair with one braid across the crown and leaves tangled in it, and a tattered dark mantle overgrown with ivy and dead leaves. Four candidates were compared with the art. New back and portrait.
 - Neutral sets also turn off the standee shader's warm grade. It had turned her grey-green mantle sepia at night.
+- Owner approved the result. Packaged-app check: a release build opened a save at each of the seven encounters, made by the real core with a scripted GM. Every scene reported ready with no errors and matched its web render, including the new druid portrait in the HUD. The user save was restored byte for byte.
 
 ## Remaining scope
 
