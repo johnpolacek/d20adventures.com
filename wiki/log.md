@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-04, speech bubbles for every speaker
+
+Owner asked why some characters got speech bubbles and others not. A bubble needed a paragraph that named exactly one character. Speakers now come from the speech tag beside each quote, including pronouns and unnamed descriptions such as "the elf", so every quoted line in Covert Cargo's opening gets its speaker's bubble and plate. See [the stage engine record](stage-engine.md#narration-shots-2026-10-04).
+
 ## 2026-10-04, narration follows who each paragraph is about
 
 Owner found the camera stayed wide on a paragraph about Lyra and the Continue and Skip buttons wrapping. Narration views now read names and pronouns across paragraphs, so a paragraph about Lyra frames Lyra, and a newcomer introduced without a name is not mistaken for the last character. The buttons keep to one line with drawn arrows, and long narrations get smaller progress dots. See [the stage engine record](stage-engine.md#narration-shots-2026-10-04).
