@@ -322,7 +322,8 @@
       "flow": [
         1,
         0
-      ]
+      ],
+      "mirror": 0.7
     },
     "bank": {
       "type": "plain",

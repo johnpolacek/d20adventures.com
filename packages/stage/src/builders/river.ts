@@ -215,7 +215,9 @@ export const riverboat = defineBuilder(
         beam(b, M.rust, V(rub[i].x * side, rub[i].y, rub[i].z), V(rub[i + 1].x * side, rub[i + 1].y, rub[i + 1].z), 0.045, 5)
         beam(b, M.rust, V(cap[i].x * side, cap[i].y, cap[i].z), V(cap[i + 1].x * side, cap[i + 1].y, cap[i + 1].z), 0.04, 5)
       }
-    // The cabin: pale planking, rust corner posts and fascia, a lit glazed saloon forward and small windows aft.
+    // The cabin, as in the art: a saloon whose fore end rounds into a bow of lit windows round a glazed door, pale
+    // planking, rust posts between the panes and a rust fascia, small windows aft, and a roof that overhangs as an
+    // upper deck with a rail all round.
     const Wc = B * 0.72
     const Hc = p.height
     const Lc = L * p.cabin
@@ -223,47 +225,81 @@ export const riverboat = defineBuilder(
     const z1 = z0 + Lc
     const zc = (z0 + z1) / 2
     const zs = z1 - Lc * p.saloon
+    const Lr = Wc * 0.42
+    const zr = z1 - Lr
     const F = new Frame(b, M4())
     const glow = p.lit ? M.window : M.void
     const helm = p.lit ? M.helm : M.void
-    F.box(M.cabin, 0, Hc / 2, zc, Wc, Hc, Lc)
-    for (const [x, zz] of [
-      [-1, z0],
-      [1, z0],
-      [-1, z1],
-      [1, z1],
-      [-1, zs],
-      [1, zs],
-    ])
-      F.box(M.rust, (x * Wc) / 2, Hc / 2, zz, 0.1, Hc, 0.1)
-    F.box(M.rust, 0, Hc - 0.07, zc, Wc + 0.04, 0.14, Lc + 0.04)
-    F.box(M.rust, 0, 0.08, zc, Wc + 0.04, 0.16, Lc + 0.04)
-    F.box(M.roof, 0, Hc + 0.05, zc, Wc + 0.3, 0.1, Lc + 0.3)
-    const pane = (x: number, y: number, zz: number, w: number, h: number, axis: "x" | "z", lit: boolean) => {
-      const [sx, sz] = axis === "x" ? [0.03, w] : [w, 0.03]
-      F.box(M.rust, x, y, zz, sx + (axis === "x" ? 0.02 : 0.12), h + 0.12, sz + (axis === "x" ? 0.12 : 0.02))
-      F.box(lit ? glow : M.void, x + (axis === "x" ? Math.sign(x) * 0.012 : 0), y, zz + (axis === "z" ? Math.sign(zz - zc) * 0.012 : 0), sx, h, sz)
-      F.box(M.rust, x + (axis === "x" ? Math.sign(x) * 0.02 : 0), y, zz + (axis === "z" ? Math.sign(zz - zc) * 0.02 : 0), axis === "x" ? 0.02 : 0.05, h, axis === "x" ? 0.05 : 0.02)
-      F.box(M.rust, x + (axis === "x" ? Math.sign(x) * 0.02 : 0), y, zz + (axis === "z" ? Math.sign(zz - zc) * 0.02 : 0), axis === "x" ? 0.02 : w, 0.04, axis === "x" ? w : 0.02)
+    // The cabin's plan grown by `grow`: straight sides aft and an elliptical bow forward, `n` steps round the bow.
+    const outline = (grow: number, n = 16): Vec2[] => {
+      const hw = Wc / 2 + grow
+      const pts: Vec2[] = [
+        [-hw, z0 - grow],
+        [hw, z0 - grow],
+      ]
+      for (let i = 0; i <= n; i++) {
+        const a = (i / n) * Math.PI
+        pts.push([hw * Math.cos(a), zr + (Lr + grow) * Math.sin(a)])
+      }
+      return pts
+    }
+    // A point on the bow at angle a (0 starboard, PI/2 dead ahead) and its outward normal.
+    const bowAt = (a: number, grow: number) => {
+      const hw = Wc / 2 + grow
+      const n = V(Math.cos(a) / hw, 0, Math.sin(a) / (Lr + grow)).normalize()
+      return { x: hw * Math.cos(a), z: zr + (Lr + grow) * Math.sin(a), yaw: Math.atan2(n.x, n.z) }
+    }
+    plan(b, M.cabin, outline(0), 0, Hc)
+    const ring = (grow: number, y: number, r: number) => {
+      const pts = outline(grow)
+      for (let i = 0; i < pts.length; i++) {
+        const [ax, az] = pts[i]
+        const [cx, cz] = pts[(i + 1) % pts.length]
+        beam(b, M.rust, [ax, y, az], [cx, y, cz], r, 5)
+      }
+    }
+    ring(0.02, Hc - 0.08, 0.075)
+    ring(0.02, 0.09, 0.085)
+    plan(b, M.roof, outline(0.38), Hc, 0.12)
+    // A framed pane facing out along `yaw`: rust frame, glass, a mullion and a transom.
+    const pane = (x: number, y: number, zz: number, yaw: number, w: number, h: number, lit: boolean) => {
+      const out = (d: number) => [x + Math.sin(yaw) * d, zz + Math.cos(yaw) * d] as const
+      const [fx, fz] = out(0.005)
+      F.box(M.rust, fx, y, fz, w + 0.12, h + 0.12, 0.03, yaw)
+      const [gx, gz] = out(0.02)
+      F.box(lit ? glow : M.void, gx, y, gz, w, h, 0.02, yaw)
+      const [mx, mz] = out(0.035)
+      F.box(M.rust, mx, y, mz, 0.045, h, 0.02, yaw)
+      F.box(M.rust, mx, y + h * 0.12, mz, w, 0.04, 0.02, yaw)
     }
     for (const side of [-1, 1]) {
-      const x = side * (Wc / 2 + 0.015)
-      const big = Math.max(1, Math.floor((z1 - zs) / 0.95))
-      for (let i = 0; i < big; i++) pane(x, Hc * 0.56, zs + ((i + 0.5) * (z1 - zs)) / big, 0.7, 0.9, "x", true)
+      const x = side * (Wc / 2)
+      const yaw = (side * Math.PI) / 2
+      const big = Math.max(1, Math.floor((zr - zs) / 0.95))
+      for (let i = 0; i < big; i++) pane(x, Hc * 0.55, zs + ((i + 0.5) * (zr - zs)) / big, yaw, 0.72, Hc * 0.4, true)
       const small = Math.max(1, Math.floor((zs - z0) / 0.85))
-      for (let i = 0; i < small; i++) pane(x, Hc * 0.62, z0 + ((i + 0.5) * (zs - z0)) / small, 0.36, 0.44, "x", i % 3 !== 1)
+      for (let i = 0; i < small; i++) pane(x, Hc * 0.62, z0 + ((i + 0.5) * (zs - z0)) / small, yaw, 0.38, 0.48, i % 3 !== 1)
+      for (const zz of [z0, zs, zr]) F.box(M.rust, x + side * 0.04, Hc / 2, zz, 0.1, Hc, 0.1)
     }
-    // The saloon's fore face: a glazed door between two windows; the aft face: a door and a window.
-    pane(0, 0.98, z1 + 0.015, 0.72, 1.7, "z", true)
-    for (const sx of [-1, 1]) pane(sx * Wc * 0.31, Hc * 0.58, z1 + 0.015, 0.5, 0.8, "z", true)
+    // Round the bow: windows either side of a glazed door dead ahead, with posts between them.
+    const m = 7
+    for (let k = 0; k < m; k++) {
+      const a = (Math.PI * (k + 0.5)) / m
+      const { x, z: zz, yaw } = bowAt(a, 0)
+      if (k === (m - 1) / 2) pane(x, Math.min(1.0, Hc * 0.4), zz, yaw, 0.74, Math.min(1.8, Hc * 0.68), true)
+      else pane(x, Hc * 0.55, zz, yaw, 0.62, Hc * 0.4, true)
+      const post = bowAt((Math.PI * k) / m, 0.03)
+      if (k > 0) F.box(M.rust, post.x, Hc / 2, post.z, 0.09, Hc, 0.09, post.yaw)
+    }
+    // The aft face: a door and a small window.
     F.box(M.void, -Wc * 0.2, 0.95, z0 - 0.015, 0.7, 1.8, 0.03)
-    pane(Wc * 0.22, Hc * 0.62, z0 - 0.015, 0.36, 0.44, "z", true)
-    // The pilothouse, forward on the cabin top, with a rounded roof.
+    pane(Wc * 0.22, Hc * 0.62, z0, Math.PI, 0.38, 0.48, true)
+    // The pilothouse on the upper deck, just aft of the bow's curve, with a rounded roof.
     const Lp = Math.min(2.6, Lc * 0.38)
-    const Wp = Wc * 0.82
+    const Wp = Wc * 0.7
     const Hp = Hc * 0.74
-    const pz = z1 - Lp / 2 - 0.15
-    const py = Hc + 0.1
+    const pz = zr - Lp / 2 + 0.2
+    const py = Hc + 0.12
     F.box(M.cabin, 0, py + Hp * 0.22, pz, Wp, Hp * 0.44, Lp)
     for (const [x, zz] of [
       [-1, -1],
@@ -287,26 +323,14 @@ export const riverboat = defineBuilder(
       M4(0, py + Hp, pz, 0, 1, 0.32, 1),
       { uv: "keep" }
     )
-    // The stack behind the pilothouse and a gooseneck vent aft, both thin.
+    // The stack behind the pilothouse and a gooseneck vent aft.
     const sz = pz - Lp / 2 - 0.3
     F.cyl(M.iron, Wp * 0.18, py, sz, 0.14, 0.13, 3.1, 12)
     F.cyl(M.iron, Wp * 0.18, py + 3.1, sz, 0.18, 0.17, 0.14, 12)
     beam(b, M.iron, [-Wc * 0.25, py, z0 + 0.6], [-Wc * 0.25, py + 1.5, z0 + 0.6], 0.05, 6)
     beam(b, M.iron, [-Wc * 0.25, py + 1.5, z0 + 0.6], [-Wc * 0.25, py + 1.75, z0 + 0.35], 0.05, 6)
-    // A rail round the cabin top aft of the pilothouse.
-    railing(
-      b,
-      M.rust,
-      [
-        [-Wc / 2 - 0.08, z1 + 0.08],
-        [-Wc / 2 - 0.08, z0 - 0.08],
-        [Wc / 2 + 0.08, z0 - 0.08],
-        [Wc / 2 + 0.08, z1 + 0.08],
-      ],
-      py,
-      0.75,
-      true
-    )
+    // A rail round the upper deck's edge.
+    railing(b, M.rust, outline(0.32, 12), py, 0.85, true)
     // Rope fenders hanging over both sides amidships.
     for (const side of [-1, 1])
       for (const t of [0.3, 0.42, 0.54, 0.66]) {

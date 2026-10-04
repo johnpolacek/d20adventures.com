@@ -12,6 +12,10 @@ export interface SharedUniforms {
   warmth: { value: number }
   // Metres from the camera before the haze begins.
   fogStart: { value: number }
+  // The planar water reflection (render/mirror.ts): its texture, the matrix from world space into it, and 1 while drawn.
+  reflectMap: { value: THREE.Texture | null }
+  reflectMatrix: { value: THREE.Matrix4 }
+  mirrorOn: { value: number }
 }
 export function createShared(): SharedUniforms {
   return {
@@ -21,6 +25,9 @@ export function createShared(): SharedUniforms {
     sunTint: { value: new THREE.Vector3(1.45, 1.18, 0.86) },
     warmth: { value: 1 },
     fogStart: { value: 0 },
+    reflectMap: { value: null },
+    reflectMatrix: { value: new THREE.Matrix4() },
+    mirrorOn: { value: 0 },
   }
 }
 

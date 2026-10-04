@@ -132,7 +132,17 @@ const meadow = z
 // Grass blades and heather, dark at the root and `tip` coloured at the top.
 const grass = z.object({ type: z.literal("grass"), base: color.optional(), tip: color.optional(), roughness: unit.optional() }).strict()
 // Running water that mirrors the sky. `flow` is the downstream direction [x, z].
-const water = z.object({ type: z.literal("water"), color: color.optional(), reflect: num(0, 20).optional(), ripple: num(0, 5).optional(), flow: z.tuple([num(-1, 1), num(-1, 1)]).optional() }).strict()
+// `mirror` 0..1 blends in a true planar reflection of the set (lit windows, hulls, trees) where the tier draws one.
+const water = z
+  .object({
+    type: z.literal("water"),
+    color: color.optional(),
+    reflect: num(0, 20).optional(),
+    ripple: num(0, 5).optional(),
+    flow: z.tuple([num(-1, 1), num(-1, 1)]).optional(),
+    mirror: unit.optional(),
+  })
+  .strict()
 export const materialSpec = z.discriminatedUnion("type", [masonry, wood, painted, card, cloth, burlap, foliage, glow, mist, metal, plain, rock, meadow, grass, water])
 export type MaterialSpec = z.infer<typeof materialSpec>
 

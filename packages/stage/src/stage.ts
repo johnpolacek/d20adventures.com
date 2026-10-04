@@ -11,6 +11,7 @@ import { QueueLoop } from "./loops/queue"
 import { createShared, type SharedUniforms } from "./materials/atmosphere"
 import { createMaterialLibrary, type MaterialLibrary } from "./materials/library"
 import { autoTier, DEFAULT_FLAGS, type Flags, TIERS, type TierName } from "./quality"
+import { PlanarMirror } from "./render/mirror"
 import { Pipeline } from "./render/pipeline"
 import { skyMaterial } from "./sky"
 import { buildSetGeometry, populateCrowd } from "./spec/build"
@@ -97,6 +98,9 @@ export class Stage {
   readonly sun: THREE.DirectionalLight
   tier: TierName
   flags: Flags
+  // A planar reflection when the set has mirrored water, and the share of the drawing buffer it renders at.
+  private mirror: PlanarMirror | null = null
+  private mirrorScale = 0
   motion: boolean
   activeShot: string | null = null
   private activeFov: number | null = null
@@ -228,6 +232,16 @@ export class Stage {
     const built = buildSetGeometry(set, this.materials)
     this.footprints = built.footprints
     this.statics = built.batch.flush(this.world)
+    const water = this.statics.filter((m) => (m.material as THREE.Material).userData.mirror)
+    if (water.length) {
+      const level = Math.max(
+        ...water.map((m) => {
+          m.geometry.computeBoundingBox()
+          return m.geometry.boundingBox?.max.y ?? 0
+        })
+      )
+      this.mirror = new PlanarMirror(renderer, this.scene, this.shared, water, level)
+    }
     for (const e of built.extras) this.world.add(e)
     this.extras = built.extras
     if (set.land) this.disposables.push(land(this.world, this.shared, rand.fork("land"), set.land))
@@ -585,6 +599,7 @@ export class Stage {
     }
     this.standees.setAlphaToCoverage(aa === "msaa")
     p.setAO(f.ao ?? t.ao)
+    this.mirrorScale = f.mirror ?? t.mirror
     this.crowd.setMode(f.crowd)
     this.crowd.setRadius(f.cardRadius ?? t.cardRadius)
     if (this.sun.shadow.mapSize.x !== t.shadow) {
@@ -606,6 +621,8 @@ export class Stage {
     this.camera.updateProjectionMatrix()
     this.renderer.setSize(w, h, false)
     this.pipeline.setSize(w, h, this.renderer.getPixelRatio())
+    const buffer = this.renderer.getDrawingBufferSize(new THREE.Vector2())
+    this.mirror?.setScale(this.mirrorScale, buffer.x, buffer.y)
   }
 
   // ── Loop ──
@@ -678,6 +695,7 @@ export class Stage {
   }
   render() {
     this.renderer.info.reset()
+    this.mirror?.render(this.camera)
     this.pipeline.render()
     this.stats0 = { calls: this.renderer.info.render.calls, triangles: this.renderer.info.render.triangles }
   }
@@ -784,6 +802,7 @@ export class Stage {
     this.coinMesh?.geometry.dispose()
     this.materials.dispose()
     this.pipeline.dispose()
+    this.mirror?.dispose()
     this.sky.geometry.dispose()
     ;(this.sky.material as THREE.Material).dispose()
     this.envTexture.dispose()

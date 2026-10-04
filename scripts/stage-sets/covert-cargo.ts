@@ -116,23 +116,23 @@ function pierSet() {
     { type: "extrude", id: "river", at: [0, -1.02, 0], points: ground(wide), depth: 0.02, plane: "xz", material: "water" },
     { type: "trail", id: "bank-trail", points: trailPts, width: 1.3 },
     // The gangway runs from the bank down to the tug's bow, as in the art.
-    { type: "pier", id: "gangway", at: [-1.3, 0, 9.8], yaw: 137.4, length: 6.8, width: 1.5, depth: 3.4, span: 2.2, rickety: 0.5 },
-    { type: "riverboat", id: "tug", at: [4.7, 0, -1], length: 17, beam: 4.6, draft: 2.2, sheer: 1.1, cabin: 0.55, saloon: 0.4, height: 2.7, materials: { helm: "helmGlass" } },
+    { type: "pier", id: "gangway", at: [-1.3, 0, 9.8], yaw: 137.4, length: 7.2, width: 1.5, depth: 3.4, span: 2.2, rickety: 0.5 },
+    { type: "riverboat", id: "tug", at: [5.2, 0, -1], length: 17, beam: 5.6, draft: 2.3, sheer: 1.1, cabin: 0.55, saloon: 0.4, height: 3, materials: { helm: "helmGlass" } },
     { type: "lantern", at: [2.75, 0, 5.15], height: 1.45, post: true },
-    { type: "crate", at: [5.4, 0, -8.3], yaw: 12, size: 0.6 },
-    { type: "barrel", at: [4.0, 0, -8.4], r: 0.28, h: 0.75 },
+    { type: "crate", at: [5.9, 0, -8.3], yaw: 12, size: 0.6 },
+    { type: "barrel", at: [4.5, 0, -8.4], r: 0.28, h: 0.75 },
     { type: "torus", at: [4.6, 0.05, 4.6], radius: 0.24, tube: 0.05, pitch: 90, material: "rope" },
     // Tall mooring pilings round the tug, and lines to its bitts.
     ...[
       [3.05, 5.7, 2.3],
       [2.25, 3.3, 1.8],
       [1.9, -6.6, 1.6],
-      [7.45, -7.6, 2.7],
-      [7.45, -5.2, 2.2],
+      [8.45, -7.6, 2.7],
+      [8.45, -5.0, 2.2],
     ].map(([x, zz, top]) => ({ type: "beam", from: [x, -3.4, zz], to: [x, top, zz], radius: 0.13, radiusTo: 0.11, segments: 8, material: "post" })),
-    { type: "beam", from: [3.05, 1.5, 5.7], to: [4.2, 0.4, 5.46], radius: 0.03, material: "rope" },
-    { type: "beam", from: [1.9, 1.2, -6.6], to: [4.1, 0.4, -9.0], radius: 0.03, material: "rope" },
-    { type: "beam", from: [7.45, 2.0, -7.6], to: [5.3, 0.4, -9.0], radius: 0.03, material: "rope" },
+    { type: "beam", from: [3.05, 1.5, 5.7], to: [4.7, 0.4, 5.46], radius: 0.03, material: "rope" },
+    { type: "beam", from: [1.9, 1.2, -6.6], to: [4.6, 0.4, -9.0], radius: 0.03, material: "rope" },
+    { type: "beam", from: [8.45, 2.0, -7.6], to: [5.8, 0.4, -9.0], radius: 0.03, material: "rope" },
   ]
   // The west bank climbs steeply into wooded hills behind the tug, as in the art. Its foot keeps clear of the reeds,
   // the gangway's landing and the trail. Trees, bushes and moss sit on the same height function.
@@ -203,7 +203,7 @@ function pierSet() {
     objects.push({ type: "bush", at: [r2(x), onHill(x, zz, 0.3), r2(zz)], size: r2(size), materials: shrubs })
   }
   for (let k = 0; k < 26; k++) {
-    const zz = rnd(-44, -4)
+    const zz = rnd(-44, -13)
     const x = rnd(-2.5, center(zz) - width(zz) / 2 - 0.2)
     objects.push({ type: "tree", at: [r2(x), onHill(x, zz, 0.3), r2(zz)], kind: "oak", height: r2(rnd(7, 11)), lean: r2(rnd(18, 34)), leanYaw: r2(rnd(-25, 25)), moss: 1, low: true })
   }
@@ -347,10 +347,10 @@ function pierSet() {
       glow: "#c2f4f2",
       fill: { color: "#ffffff", intensity: 3.5, distance: 12 },
       lights: [
-        { at: [4.7, 1.25, 0.3], color: "#ffa046", intensity: 46, distance: 12 },
-        { at: [4.7, 1.25, 1.5], color: "#ffa046", intensity: 34, distance: 11 },
-        { at: [4.7, 5.3, 0.61], color: "#ffb060", intensity: 4, distance: 6 },
-        { at: [7.3, -0.5, 0.9], color: "#ff9a40", intensity: 12, distance: 7 },
+        { at: [5.2, 1.4, 0.9], color: "#ffa046", intensity: 46, distance: 12 },
+        { at: [5.2, 1.4, -0.6], color: "#ffa046", intensity: 34, distance: 11 },
+        { at: [5.2, 5.8, -0.73], color: "#ffb060", intensity: 4, distance: 6 },
+        { at: [7.9, -0.5, 0.9], color: "#ff9a40", intensity: 12, distance: 7 },
         { at: [2.75, 1.6, 5.15], color: "#ffbc6a", intensity: 6, distance: 7 },
         { at: [-1.0, 2.6, 5.0], color: "#e2da74", intensity: 12, distance: 12 },
       ],
@@ -389,7 +389,7 @@ function pierSet() {
         flowers: 0,
         relief: 0.8,
       },
-      water: { type: "water", color: "#051a2c", reflect: 2.4, ripple: 0.1, flow: [0, -1] },
+      water: { type: "water", color: "#051a2c", reflect: 2.4, ripple: 0.3, flow: [0, -1], mirror: 0.9 },
       bark: painted("bark-moss", "#98a6a2", [0, 40], { size: [1.6, 2.4], relief: 0.14, variance: 0.25 }),
       birch: { type: "wood", a: "#8a9090", b: "#9aa0a0", c: "#6f7676", plank: [0, 40], relief: 0.04, variance: 0.6, seed: 7.7 },
       leaves: { type: "foliage", color: "#dce4b0", map: "/stage/textures/leaves-oak.webp" },
@@ -423,9 +423,9 @@ function pierSet() {
       pier: { at: [0.9, 7.8], label: "the gangway" },
       pierEnd: { at: [2.85, 5.6], label: "the end of the gangway" },
       foredeck: { at: [4.35, 3.6], label: "the tug's foredeck" },
-      cabinDoor: { at: [4.6, 2.6], label: "the saloon door" },
-      bow: { at: [4.6, 5.3], label: "the bow" },
-      stern: { at: [4.7, -8.6], label: "the stern" },
+      cabinDoor: { at: [5.2, 2.7], label: "the saloon door" },
+      bow: { at: [5.2, 5.6], label: "the bow" },
+      stern: { at: [5.2, -8.6], label: "the stern" },
       reeds: { at: [-1.2, 4.6], label: "the reeds by the gangway" },
       bank: { at: [-2.4, 9.4], label: "the riverbank" },
       treeline: { at: [-6, 4], label: "the treeline" },
@@ -435,7 +435,7 @@ function pierSet() {
     shots: {
       river: { position: [10.8, 0.6, 15.5], target: [3.2, 2.1, -8], fov: 50, label: "The river" },
       pier: { position: [-3.6, 1.9, 12.8], target: [4.2, 1.3, 2.5], fov: 50, label: "The gangway" },
-      boat: { position: [11.8, 2.0, 10.8], target: [4.5, 1.9, 0.3], fov: 50, label: "The tug" },
+      boat: { position: [12.4, 2.1, 11.2], target: [5.0, 2.1, 0.2], fov: 50, label: "The tug" },
       reeds: { position: [-4.4, 1.0, 1.8], target: [1.4, 0.9, 6.8], fov: 50, label: "The reeds" },
       trail: { position: [-7.4, 1.7, 31], target: [-1.5, 1.4, 12], fov: 52, label: "The trail" },
       bank: { position: [5.2, 1.5, -12], target: [-6, 3.8, -4], fov: 55, label: "The wooded bank" },
@@ -659,7 +659,7 @@ function cabinSet() {
       candle: { type: "plain", color: "#e6dcc0", roughness: 0.9 },
       rope: painted("rope-hemp", "#c8b898", [0, 40], { size: [0.25, 0.4], relief: 0.2, grime: 0.6 }),
       parchment: { type: "plain", color: "#cbb78e", roughness: 1 },
-      water: { type: "water", color: "#0a2329", reflect: 3.2, ripple: 0.35, flow: [1, 0] },
+      water: { type: "water", color: "#0a2329", reflect: 3.2, ripple: 0.35, flow: [1, 0], mirror: 0.7 },
       bank: { type: "plain", color: "#1c3027", roughness: 1 },
       bark: painted("bark-moss", "#c0c8c0", [0, 40], { size: [1.2, 1.8], relief: 0.12, variance: 0.2 }),
       leaves: { type: "foliage", color: "#b4c4b4", map: "/stage/textures/leaves-oak.webp" },
