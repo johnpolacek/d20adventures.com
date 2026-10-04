@@ -520,11 +520,11 @@ function cabinSet() {
     { type: "box", id: "hull-starboard", at: [1.88, -0.9, 1.3], size: [0.16, 1.15, 8.8], material: "hull" },
     { type: "box", id: "hull-stern", at: [0, -0.9, 5.68], size: [3.9, 1.15, 0.16], material: "hull" },
     // Walls, ceiling and beams.
-    { type: "box", id: "wall-port", at: [-1.76, 0, 0], size: [0.12, 2.4, 6.1], material: "panel" },
-    { type: "box", id: "wall-starboard", at: [1.76, 0, 0], size: [0.12, 2.4, 6.1], material: "panel" },
-    { type: "box", id: "wall-fore", at: [0, 0, -3.0], size: [3.6, 2.4, 0.12], material: "panel" },
-    { type: "box", id: "wall-aft-port", at: [-0.825, 0, 3.0], size: [1.95, 2.4, 0.12], material: "panel" },
-    { type: "box", id: "wall-aft-starboard", at: [1.425, 0, 3.0], size: [0.75, 2.4, 0.12], material: "panel" },
+    { type: "box", id: "wall-port", at: [-1.76, 0, 0], size: [0.12, 2.4, 6.1], material: "panel", solid: true },
+    { type: "box", id: "wall-starboard", at: [1.76, 0, 0], size: [0.12, 2.4, 6.1], material: "panel", solid: true },
+    { type: "box", id: "wall-fore", at: [0, 0, -3.0], size: [3.6, 2.4, 0.12], material: "panel", solid: true },
+    { type: "box", id: "wall-aft-port", at: [-0.825, 0, 3.0], size: [1.95, 2.4, 0.12], material: "panel", solid: true },
+    { type: "box", id: "wall-aft-starboard", at: [1.425, 0, 3.0], size: [0.75, 2.4, 0.12], material: "panel", solid: true },
     { type: "box", id: "lintel", at: [0.6, 1.95, 3.0], size: [0.9, 0.45, 0.12], material: "panel" },
     { type: "box", id: "ceiling", at: [0, 2.4, 0], size: [3.6, 0.1, 6.2], material: "roof" },
     { type: "box", id: "roof-outside", at: [0, 2.5, 0], size: [3.9, 0.12, 6.5], material: "roof" },
@@ -576,14 +576,14 @@ function cabinSet() {
       ...[0.35, 1.55].map((y) => ({ type: "box", at: [x, y, zz], size: [0.34, 0.07, 0.34], material: "crateIron" })),
     ]),
     { type: "rope", from: [-0.98, 2.3, -0.2], to: [-0.72, 0.03, 0.25], sag: 0.04, radius: 0.026, knots: 3 },
-    { type: "rope", from: [-1.2, 2.25, 0.4], to: [-0.55, 0.03, 0.75], sag: 0.06, radius: 0.022, knots: 2 },
-    { type: "rope", from: [0.75, 2.3, -0.1], to: [1.1, 0.95, 0.5], sag: 0.12, radius: 0.026, knots: 2 },
+    { type: "rope", from: [-1.45, 2.25, -1.0], to: [-0.95, 0.03, -1.3], sag: 0.06, radius: 0.022, knots: 2 },
+    { type: "rope", from: [0.75, 2.3, -1.3], to: [1.15, 0.95, -0.6], sag: 0.12, radius: 0.026, knots: 2 },
     { type: "rope", from: [-0.75, 0.03, 0.25], to: [0.55, 0.03, 0.35], sag: 0, radius: 0.026 },
     { type: "torus", at: [1.15, 0.05, -1.7], radius: 0.28, tube: 0.05, pitch: 90, material: "rope" },
     { type: "torus", at: [1.15, 0.13, -1.7], radius: 0.22, tube: 0.05, pitch: 90, material: "rope" },
     { type: "chain", from: [-1.65, 2.18, -2.9], to: [-0.1, 2.18, -2.9], sag: 0.22, link: 0.07, materials: { iron: "crateIron" } },
     { type: "chain", from: [0.95, 2.18, -2.9], to: [1.68, 2.18, -2.9], sag: 0.14, link: 0.07, materials: { iron: "crateIron" } },
-    { type: "chain", from: [1.08, 2.2, 0.4], to: [0.95, 0.03, 0.15], sag: 0, link: 0.07, materials: { iron: "crateIron" } },
+    { type: "chain", from: [1.3, 2.2, -1.5], to: [1.15, 0.03, -1.25], sag: 0, link: 0.07, materials: { iron: "crateIron" } },
     // Stores along the walls, and candles.
     { type: "barrel", at: [-1.3, 0, 2.35], r: 0.32, h: 0.85 },
     { type: "barrel", at: [-0.65, 0, 2.55], r: 0.3, h: 0.8 },
@@ -712,7 +712,7 @@ function cabinSet() {
   staging(
     "the-crate",
     "riverboat-cabin",
-    [on("lyra", [-1.05, 0.05], "crate"), on("poppen", [0.95, 0.15], "crate")],
+    [on("lyra", [-0.95, 0.5], "crate"), on("poppen", [0.95, 0.15], "crate")],
     { pair: { subjects: [CAST.lyra.id, CAST.poppen.id], offset: [0.2, 0.9, 2.1], target: [0, 0.6, -0.6], fov: 58, label: "The pair" } },
     "chest"
   )

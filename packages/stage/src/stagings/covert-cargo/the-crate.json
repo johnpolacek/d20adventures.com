@@ -15,8 +15,8 @@
         "portrait": "/stage/fixtures/covert-cargo/lyra-portrait.jpg"
       },
       "at": [
-        -1.05,
-        0.05
+        -0.95,
+        0.5
       ],
       "facing": "crate"
     },

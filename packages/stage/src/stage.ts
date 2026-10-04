@@ -18,7 +18,7 @@ import { buildSetGeometry, populateCrowd } from "./spec/build"
 import { frameShot, type ResolvedShot, resolveCast, resolveShots } from "./spec/resolve"
 import { type SetSpec, setSpecSchema } from "./spec/set"
 import { type StagingShot, type StagingSpec, stagingSpecSchema } from "./spec/staging"
-import { reachOver } from "./spec/walk"
+import { onFootprint, reachOver } from "./spec/walk"
 
 // The Stage runtime: one set (plus an optional staging) rendered into a canvas it owns inside `container`.
 // Plain imperative three.js; the host (a React component) creates it, calls shot()/setTier()/pause(), and disposes it.
@@ -409,7 +409,7 @@ export class Stage {
     if (typeof which === "string") s = this.shots[which]
     else
       try {
-        s = frameShot(which, this.cast)
+        s = this.clearFrame(which)
       } catch {
         s = undefined
       }
@@ -432,6 +432,44 @@ export class Stage {
       this.transition = { from: { pos: this.camera.position.clone(), target, fov: this.camera.fov }, to, start: performance.now(), duration }
     }
     return true
+  }
+  // A shot on one character, swung round them (and then drawn in) until neither the camera nor its view of them passes
+  // through anything solid, such as a cabin the character stands in front of. Other shots frame as authored.
+  private clearFrame(which: StagingShot): ResolvedShot {
+    const first = frameShot(which, this.cast)
+    if (!("subject" in which) || !this.footprints.length) return first
+    const c = this.cast.find((m) => m.id === which.subject)
+    if (!c) return first
+    const clear = (x: number, z: number) => {
+      const len = Math.hypot(c.x - x, c.z - z)
+      // Fine steps: cabin walls are a hand's width thick.
+      const n = Math.max(2, Math.ceil(len / 0.05))
+      for (let i = 0; i <= n; i++) {
+        const t = i / n
+        if (t * len > len - 0.3) break
+        if (onFootprint(this.footprints, x + (c.x - x) * t, z + (c.z - z) * t)) return false
+      }
+      return true
+    }
+    // Where the set's camera box would pull the camera, so the test sees where it really ends up. It also needs elbow
+    // room: a camera brushing a post shows nothing but the post.
+    const { min, max } = this.set.camera
+    const fit = (r: ResolvedShot): ResolvedShot => ({ ...r, position: [0, 1, 2].map((i) => THREE.MathUtils.clamp(r.position[i], min[i], max[i])) as [number, number, number] })
+    const roomy = (x: number, z: number) =>
+      ![
+        [0, 0],
+        [0.45, 0],
+        [-0.45, 0],
+        [0, 0.45],
+        [0, -0.45],
+      ].some(([dx, dz]) => onFootprint(this.footprints, x + dx, z + dz))
+    for (const scale of [1, 0.75, 0.55])
+      for (const turn of [0, 30, -30, 60, -60, 90, -90, 135, -135, 180]) {
+        const r = fit(frameShot({ ...which, angle: which.angle + turn, distance: which.distance * scale }, this.cast))
+        const [x, , z] = r.position
+        if (Math.hypot(x - c.x, z - c.z) > 1.5 && roomy(x, z) && clear(x, z)) return r
+      }
+    return first
   }
   // Resolves when the current camera move has finished.
   shotSettled() {
