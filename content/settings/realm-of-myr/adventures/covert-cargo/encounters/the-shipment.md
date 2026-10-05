@@ -32,17 +32,17 @@ For her part, it was hard to resist getting the chance to interact with reclusiv
 
 She did not know much of her two escorts. There was Reinhard, a large gruff soldier type who was in charge of security for this little mission. Silas had recruited her, noticing her frequent visits to the Old Valkaran Archives section at the Grand Library. Where Varius was a stone wall of presence, Silas was a whisper. He was slender, moving with a liquid grace that spoke of a life spent in shadows. 
 
-Meanwhile, from his cleverly concealed vantage within a tangle of overgrown reeds, Poppen Quickfoot watched the scene unfold, a small smile playing on his lips. The cool water of the Mordava lapped just inches from his boots, but he remained utterly still, his senses stretched. Weeks of patient stakeouts had led him to this exact predawn hour, this quiet fork of the river, following the threads of rumor about a clandestine trade. His instinct, honed by a lifetime of seeking out hidden value, told him this was it—the score that would truly mark his arrival in Kordavos.
+Meanwhile, from his cleverly concealed vantage within a tangle of undergrowth at the treeline above the bank, Poppen Quickfoot watched the scene unfold, a small smile playing on his lips. Damp leaves brushed his cheek, but he remained utterly still, his senses stretched. Weeks of patient stakeouts had led him to this exact predawn hour, this quiet fork of the river, following the threads of rumor about a clandestine trade. His instinct, honed by a lifetime of seeking out hidden value, told him this was it—the score that would truly mark his arrival in Kordavos.
 
-His keen hazel eyes, accustomed to discerning worth from a glint in the dark, tracked the three figures on the pier. The hulking soldier, the robed woman, and the whispering shadow-man. A professional crew, indeed; no sloppy thugs. This wasn't just any cargo; this was an item of importance, something worth securing. Poppen’s mind raced, not just with the thought of fencing such a treasure, but with the delicious social connections such a coup would bring.
+His keen hazel eyes, accustomed to discerning worth from a glint in the dark, had tracked the three figures down the pier and aboard, and now followed their shapes past the lit windows. The hulking soldier, the robed woman, and the whispering shadow-man. A professional crew, indeed; no sloppy thugs. This wasn't just any cargo; this was an item of importance, something worth securing. Poppen’s mind raced, not just with the thought of fencing such a treasure, but with the delicious social connections such a coup would bring.
 
 A soft creak of wood from the ship cuts through the night's quiet hum as the cabin door opened. A figure emerges with a silent, deliberate grace that was distinctly elven. He is tall and lithe, clad in dark, practical leather armor. Two other elves, equally silent and alert, could be seen on the boat's deck, one near the bow and another by the stern, both armed with bows.
 
-The lead elf steps forward to the edge of his boat, his gaze settling on Lyra's escorts. His voice is low and clear, carrying easily across the water without being loud.
+The lead elf steps forward to the crate, his gaze settling on Lyra's escorts. His voice is low and clear, filling the cabin without being loud.
 
 "You have the arrangement?" asked the elf.
 
-“I have it here Aelar,” Silas replies, gliding from the shadows at the base of the pier. He removes a heavy scrollcase from its oilskin wrapping.
+“I have it here Aelar,” Silas replies, gliding from the shadows by the door. He removes a heavy scrollcase from its oilskin wrapping.
 
 "Very well," Aelar says, turning to give an order in Elvish to one of his crew. "The shipment is ready for your specialist's inspection."
 

@@ -12,7 +12,7 @@ import { SETS, STAGINGS } from "@d20/stage/sets"
 import { buildSetGeometry, parseSet, populateCrowd } from "@d20/stage/spec/build"
 import { resolveCast, resolveShots } from "@d20/stage/spec/resolve"
 import { stagingSpecSchema } from "@d20/stage/spec/staging"
-import { onFootprint, reachOver } from "@d20/stage/spec/walk"
+import { doorways, onFootprint, reachOver, routeOver } from "@d20/stage/spec/walk"
 
 async function checkSet(label: string, raw: unknown) {
   const t0 = performance.now()
@@ -47,12 +47,13 @@ async function checkSet(label: string, raw: unknown) {
   )
   const unused = Object.keys(set.materials).filter((n) => ![...built.batch.buckets.keys()].some((m) => m.name === n))
   if (unused.length) console.log(`  unused materials: ${unused.join(", ")}`)
-  return { set, footprints: built.footprints }
+  return { set, footprints: built.footprints, doors: doorways(built.anchors) }
 }
 
-// Every cast member walking straight to every labelled mark and to conversation distance of every other cast member,
-// as the desktop movement does (Stage.reach, then 1.1 m short of a person). Blocked walks stop at the first solid thing.
-function checkWalks(set: ReturnType<typeof parseSet>, footprints: Footprint[], cast: ReturnType<typeof resolveCast>) {
+// Every cast member walking to every labelled mark and to conversation distance of every other cast member, as the
+// desktop movement does (Stage.route: straight or through a doorway, then 1.1 m short of a person). Blocked walks stop
+// at the first solid thing.
+function checkWalks(set: ReturnType<typeof parseSet>, footprints: Footprint[], doors: ReturnType<typeof doorways>, cast: ReturnType<typeof resolveCast>) {
   const inside = cast.filter((c) => onFootprint(footprints, c.x, c.z))
   if (inside.length) throw new Error(`cast starts inside something solid: ${inside.map((c) => c.id).join(", ")}`)
   const places = Object.entries(set.marks).filter(([, m]) => m.label)
@@ -66,7 +67,7 @@ function checkWalks(set: ReturnType<typeof parseSet>, footprints: Footprint[], c
       const to = { x: c.x + (t.x - c.x) * k, z: c.z + (t.z - c.z) * k }
       const r = reachOver(footprints, c, to, Number.POSITIVE_INFINITY)
       walks++
-      if (r.blocked) blocked.push(`${c.id} -> ${t.id} (${r.distance.toFixed(1)} of ${Math.hypot(to.x - c.x, to.z - c.z).toFixed(1)} m)`)
+      if (r.blocked && !routeOver(footprints, doors, c, to)) blocked.push(`${c.id} -> ${t.id} (${r.distance.toFixed(1)} of ${Math.hypot(to.x - c.x, to.z - c.z).toFixed(1)} m)`)
     }
   }
   const solidPlaces = places.filter(([, m]) => onFootprint(footprints, m.at[0], m.at[1])).map(([id]) => id)
@@ -87,14 +88,15 @@ async function main() {
     const staging = stagingSpecSchema.parse(await load())
     const built = sets.get(staging.set)
     if (!built) throw new Error(`staging ${key}: unknown set ${staging.set}`)
-    const { set, footprints } = built
+    const { set, footprints, doors } = built
     const cast = resolveCast(set, staging)
     const shots = resolveShots(set, staging, cast)
     if (staging.shot && !shots[staging.shot]) throw new Error(`staging ${key}: unknown opening shot ${staging.shot}`)
+    for (const e of staging.entrances) if (e.shot && !shots[e.shot]) throw new Error(`staging ${key}: unknown entrance shot ${e.shot}`)
     const missing = staging.cast.flatMap((c) => Object.values(c.art)).filter((u) => u.startsWith("/stage/") && !existsSync(`public${u}`))
     if (missing.length) throw new Error(`staging ${key}: missing art ${missing.join(", ")}`)
     console.log(`PASS staging ${key}: ${cast.length} cast (${cast.map((c) => c.id).join(", ")}), ${Object.keys(shots).length} shots (${Object.keys(shots).join(", ")})`)
-    checkWalks(set, footprints, cast)
+    checkWalks(set, footprints, doors, cast)
   }
 }
 

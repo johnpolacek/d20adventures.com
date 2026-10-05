@@ -100,10 +100,10 @@ export const stagingSpecSchema = z
       .default({}),
     shot: idName.optional(),
     // Entrances the narration cues: while a turn's narration contains `when`, the cast member is offstage until the
-    // paragraph that says it, then walks on from `from` (a mark or point) to their place. Narration without the phrase,
-    // such as a later round's, finds them already in place.
+    // paragraph that says it, then walks on from `from` (a mark or point) to their place, seen from `shot` (a set or
+    // staging shot) when given. Narration without the phrase, such as a later round's, finds them already in place.
     entrances: z
-      .array(z.object({ cast: idName, when: z.string().min(3).max(120), from: z.union([idName, vec2]) }).strict())
+      .array(z.object({ cast: idName, when: z.string().min(3).max(120), from: z.union([idName, vec2]), shot: idName.optional() }).strict())
       .max(12)
       .default([]),
   })

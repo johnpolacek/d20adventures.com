@@ -154,6 +154,7 @@ export function DesktopGame() {
     if (!stage || !reading) return
     if (speech.length) return void stage.shot({ subject: speech[0].cast.id, distance: 5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 })
     if (arriving) {
+      if (arriving.shot) return void stage.shot(arriving.shot)
       // Facing the way they come: from beyond their place, looking back at where they enter.
       const home = stage.staging?.cast.find((c) => c.id === arriving.cast)?.at
       if (Array.isArray(home) && Array.isArray(arriving.from)) {

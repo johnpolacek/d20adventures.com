@@ -117,7 +117,8 @@ function pierSet() {
     { type: "trail", id: "bank-trail", points: trailPts, width: 1.3 },
     // The gangway runs from the bank down to the tug's bow, as in the art.
     { type: "pier", id: "gangway", at: [-1.3, 0, 9.8], yaw: 137.4, length: 7.2, width: 1.5, depth: 3.4, span: 2.2, rickety: 0.5 },
-    // The saloon is a room, its door open onto the foredeck: the shipment waits inside.
+    // The meeting happens in the saloon, a room about 7 by 4 m. Its bow door is the only way out, and a doorway in the
+    // aft bulkhead leads to Aelar's cabin.
     {
       type: "riverboat",
       id: "tug",
@@ -126,34 +127,54 @@ function pierSet() {
       beam: 5.6,
       draft: 2.3,
       sheer: 1.1,
-      cabin: 0.55,
-      saloon: 0.55,
+      cabin: 0.6,
+      width: 0.78,
+      saloon: 0.72,
       height: 3,
       interior: true,
-      materials: { helm: "helmGlass", panel: "panel", post: "post", night: "night" },
+      materials: { helm: "helmGlass", panel: "panel", post: "post", night: "night", door: "door", brass: "brass" },
     },
     { type: "lantern", at: [2.75, 0, 5.15], height: 1.45, post: true },
-    // The shipment in the saloon, as in the crate's art: iron-banded and chained, between banded posts, ropes hanging from
-    // the beams, a chain along the aft bulkhead and a lantern overhead.
-    { type: "strongbox", id: "shipment", at: [5.2, 0, -0.2], yaw: 180, width: 1.35, height: 0.97, depth: 0.92, materials: { wood: "crateOak", iron: "crateIron" } },
+    // The shipment, as in the crate's art: iron-banded and chained, its front aft, between banded posts, a chain sagging
+    // between them, ropes hanging from the beams and lanterns overhead.
+    { type: "strongbox", id: "shipment", at: [5.2, 0, -1.3], yaw: 180, width: 1.35, height: 0.97, depth: 0.92, materials: { wood: "crateOak", iron: "crateIron" } },
     ...[
-      [3.85, 0.35],
-      [6.55, 0.35],
+      [3.5, -2.0],
+      [6.75, -2.0],
     ].flatMap(([x, zz]) => [
       { type: "box", at: [x, 0, zz], size: [0.3, 2.9, 0.3], material: "post", solid: true },
       ...[0.4, 1.7].map((y) => ({ type: "box", at: [x, y, zz], size: [0.32, 0.07, 0.32], material: "crateIron" })),
     ]),
-    { type: "chain", from: [4.0, 2.55, 0.35], to: [6.4, 2.55, 0.35], sag: 0.35, link: 0.07, materials: { iron: "crateIron" } },
-    { type: "chain", from: [6.45, 2.4, 0.2], to: [6.1, 0.03, -0.25], sag: 0, link: 0.07, materials: { iron: "crateIron" } },
-    { type: "rope", from: [4.05, 2.85, 0.2], to: [4.35, 0.03, -0.45], sag: 0.05, radius: 0.026, knots: 3 },
-    { type: "rope", from: [4.35, 0.03, -0.45], to: [4.2, 0.03, -1.1], sag: 0, radius: 0.026 },
-    { type: "torus", at: [6.4, 0.05, -1.0], radius: 0.26, tube: 0.05, pitch: 90, material: "rope" },
-    { type: "torus", at: [6.4, 0.13, -1.0], radius: 0.2, tube: 0.05, pitch: 90, material: "rope" },
-    { type: "lantern", at: [4.3, 2.1, 1.0] },
-    { type: "beam", from: [4.3, 2.92, 1.0], to: [4.3, 2.38, 1.0], radius: 0.012, material: "iron" },
-    { type: "barrel", at: [3.75, 0, -1.6], r: 0.28, h: 0.75 },
-    { type: "barrel", at: [3.8, 0, -2.2], r: 0.3, h: 0.8 },
-    { type: "crate", at: [6.5, 0, -2.3], yaw: 10, size: 0.6 },
+    { type: "chain", from: [3.65, 2.6, -2.0], to: [6.6, 2.6, -2.0], sag: 0.4, link: 0.07, materials: { iron: "crateIron" } },
+    { type: "chain", from: [6.65, 2.4, -1.9], to: [6.3, 0.03, -1.45], sag: 0, link: 0.07, materials: { iron: "crateIron" } },
+    { type: "rope", from: [3.7, 2.9, -2.1], to: [4.2, 0.03, -2.0], sag: 0.05, radius: 0.026, knots: 3 },
+    { type: "rope", from: [4.2, 0.03, -2.0], to: [4.35, 0.03, -2.9], sag: 0, radius: 0.026 },
+    { type: "torus", at: [6.7, 0.05, -3.2], radius: 0.26, tube: 0.05, pitch: 90, material: "rope" },
+    { type: "torus", at: [6.7, 0.13, -3.2], radius: 0.2, tube: 0.05, pitch: 90, material: "rope" },
+    ...[
+      [4.3, -0.4],
+      [6.1, -3.4],
+    ].flatMap(([x, zz]) => [
+      { type: "lantern", at: [x, 2.2, zz], materials: { flame: "lamp" } },
+      { type: "beam", from: [x, 2.92, zz], to: [x, 2.48, zz], radius: 0.012, material: "iron" },
+    ]),
+    // Stores in the aft starboard corner, clear of Aelar's door.
+    { type: "barrel", at: [6.85, 0, -3.95], r: 0.3, h: 0.8 },
+    { type: "barrel", at: [6.25, 0, -4.05], r: 0.28, h: 0.75 },
+    { type: "sack", at: [5.6, 0, -4.05], size: 0.55 },
+    // The helm beside the door, with gauges on the starboard wall, as in the battle's art.
+    { type: "box", at: [6.2, 0, 1.78], size: [0.18, 1.0, 0.22], material: "trim", solid: true },
+    { type: "torus", at: [6.2, 1.25, 1.6], radius: 0.42, tube: 0.035, material: "wheel" },
+    ...[0, 1, 2, 3, 4, 5, 6, 7].map((i) => {
+      const a = (i * Math.PI) / 4
+      return { type: "beam", at: [6.2, 1.25, 1.6], from: [0, 0, 0], to: [r2(Math.cos(a) * 0.56), r2(Math.sin(a) * 0.56), 0], radius: 0.025, radiusTo: 0.018, material: "wheel" }
+    }),
+    { type: "cylinder", at: [6.2, 1.25, 1.54], radius: 0.07, height: 0.14, pitch: 90, material: "brass" },
+    { type: "box", at: [7.0, 0, 0.55], size: [0.45, 0.92, 1.1], material: "trim", solid: true },
+    ...[0.3, 0.8].flatMap((zz) => [
+      { type: "cylinder", at: [7.25, 1.6, zz], radius: 0.11, height: 0.05, roll: 90, material: "brass" },
+      { type: "cylinder", at: [7.22, 1.6, zz], radius: 0.085, height: 0.01, roll: 90, material: "gauge" },
+    ]),
     { type: "crate", at: [5.9, 0, -8.3], yaw: 12, size: 0.6 },
     { type: "barrel", at: [4.5, 0, -8.4], r: 0.28, h: 0.75 },
     { type: "torus", at: [4.6, 0.05, 4.6], radius: 0.24, tube: 0.05, pitch: 90, material: "rope" },
@@ -361,6 +382,21 @@ function pierSet() {
   })
   objects.push({ type: "grass", id: "reeds-east", area: [16.0, -40, 17.6, 40], count: 650, height: [0.6, 1.5], blades: [5, 10], lean: [0.1, 0.5], width: 0.03, material: "reeds" })
   objects.push({ type: "grass", id: "turf", area: [-7, -4, -0.8, 30], count: 1200, height: [0.12, 0.35], clear: clearAlong(trailPts, 0.8) })
+  // Poppen's hiding place in the bushes at the treeline, as in The Disturbance's art, far enough from the elves on deck.
+  // Clearing the spot after the forest is laid keeps every other tree and bush where it was.
+  const hideout: [number, number, number][] = [[-5.0, 4.3, 0.8]]
+  for (let i = objects.length - 1; i >= 0; i--) {
+    const o = objects[i] as { type: string; at?: number[]; size?: number }
+    if ((o.type !== "tree" && o.type !== "bush") || !o.at) continue
+    const reach = o.type === "bush" ? (o.size ?? 2) * 0.5 : 0.4
+    if (hideout.some(([cx, cz, r]) => Math.hypot(o.at![0] - cx, o.at![2] - cz) < r + reach)) objects.splice(i, 1)
+  }
+  for (const [x, zz, size] of [
+    [-4.15, 3.95, 1.4],
+    [-4.9, 5.55, 2.0],
+    [-5.0, 3.0, 1.8],
+  ])
+    objects.push({ type: "bush", at: [x, onHill(x, zz, 0.3), zz], size, materials: shrubs })
   write(`${SETS}/mordava-river-pier.json`, {
     ...base("mordava-river-pier", "mordava-river-pier", "A quiet pier on the Mordava"),
     seed: 4212,
@@ -382,13 +418,14 @@ function pierSet() {
       glow: "#c2f4f2",
       fill: { color: "#ffffff", intensity: 3.5, distance: 12 },
       lights: [
-        // Inside the saloon: the lantern's pool on the crate, as in its art.
-        { at: [5.1, 1.95, -1.45], color: "#ffb060", intensity: 10, distance: 5.5 },
+        // Inside the saloon: lamplight pooling on the crate's front, as in its art, and on the meeting by the door.
+        { at: [5.15, 2.2, -2.6], color: "#ffb060", intensity: 10, distance: 5.5 },
+        { at: [5.5, 2.3, 0.9], color: "#ffb060", intensity: 7, distance: 5 },
         // Lamplight spilling from the door and the bow windows onto the foredeck, and from the port windows over the deck
         // and water.
-        { at: [5.2, 1.6, 2.9], color: "#ffa046", intensity: 20, distance: 9 },
-        { at: [2.6, 1.5, 0.1], color: "#ffa046", intensity: 18, distance: 9 },
-        { at: [5.2, 5.8, -0.73], color: "#ffb060", intensity: 4, distance: 6 },
+        { at: [5.2, 1.6, 3.8], color: "#ffa046", intensity: 20, distance: 9 },
+        { at: [2.5, 1.5, -1.0], color: "#ffa046", intensity: 18, distance: 9 },
+        { at: [5.2, 5.8, -0.03], color: "#ffb060", intensity: 4, distance: 6 },
         { at: [7.9, -0.5, 0.9], color: "#ff9a40", intensity: 12, distance: 7 },
         { at: [2.75, 1.6, 5.15], color: "#ffbc6a", intensity: 6, distance: 7 },
         { at: [-1.0, 2.6, 5.0], color: "#e2da74", intensity: 12, distance: 12 },
@@ -455,10 +492,17 @@ function pierSet() {
       void: { type: "plain", color: "#0d0a09", roughness: 1 },
       night: { type: "plain", color: "#081820", roughness: 0.3, emissive: "#1c5470", emissiveIntensity: 0.35 },
       panel: painted("cabin-dark", "#b0a49a", [0.18, 40], { size: [0.6, 1.6], grime: 1.3 }),
+      door: painted("cabin-dark", "#e6c8a8", [0.14, 12], { nails: 0.6 }),
+      trim: painted("cabin-dark", "#c8b8a8", [0, 40], { grime: 0.6 }),
+      wheel: { type: "wood", a: "#5a3a24", b: "#6e4a2e", c: "#4a3020", plank: [0, 40], relief: 0.02, seed: 3.7 },
+      brass: { type: "metal", color: "#a8823e", roughness: 0.35, metalness: 0.85 },
+      gauge: { type: "plain", color: "#d8cfb4", roughness: 0.8 },
+      // Lantern glass seen up close in the saloon: amber, not blown to white.
+      lamp: { type: "plain", color: "#000000", roughness: 1, emissive: "#ff8a2a", emissiveIntensity: 1.6 },
       plank: painted("boards-weathered", "#7c7a74", [0, 40], { size: [0.8, 2.4], nails: 0.8, variance: 0.5, grime: 1.3 }),
       post: painted("cabin-dark", "#9c948c", [0, 40], { size: [0.6, 1.6], grime: 1.6 }),
       rope: painted("rope-hemp", "#9a8c74", [0, 40], { size: [0.25, 0.4], relief: 0.2, grime: 0.8 }),
-      ...pick(gate, ["crate", "crateDark", "barrel", "iron", "flame", "pole"]),
+      ...pick(gate, ["crate", "crateDark", "barrel", "iron", "flame", "pole", "sack", "sackB"]),
       crateOak: painted("crate-oak", "#8e968c", [0.2, 1.2], { size: [1.2, 2.4], nails: 1, grime: 1.2, relief: 0.1, variance: 0.35 }),
       crateIron: { type: "metal", color: "#2e2824", roughness: 0.75, metalness: 0.5 },
     },
@@ -467,18 +511,22 @@ function pierSet() {
       pier: { at: [0.9, 7.8], label: "the gangway" },
       pierEnd: { at: [2.85, 5.6], label: "the end of the gangway" },
       foredeck: { at: [4.6, 4.4], label: "the tug's foredeck" },
-      saloon: { at: [5.2, -1.5], label: "the tug's saloon" },
-      crate: { at: [5.2, -0.2], label: "the crate in the saloon" },
-      cabinDoor: { at: [5.2, 2.45], label: "the saloon door" },
+      saloon: { at: [5.6, 0.9], label: "the tug's saloon" },
+      crate: { at: [5.2, -1.3], label: "the crate in the saloon" },
+      cabinDoor: { at: [5.2, 3.35], label: "the saloon door" },
+      helm: { at: [6.2, 1.15], label: "the helm" },
       bow: { at: [5.2, 5.6], label: "the bow" },
       stern: { at: [5.2, -8.6], label: "the stern" },
       reeds: { at: [-1.2, 4.6], label: "the reeds by the gangway" },
       bank: { at: [-2.4, 9.4], label: "the riverbank" },
-      treeline: { at: [-6, 4], label: "the treeline" },
+      treeline: { at: [-5.0, 4.3], label: "the bushes at the treeline" },
       trail: { at: [-4.6, 20], label: "the bank trail into the woods" },
       woods: { at: [-12, 38], label: "deep in the woods along the trail" },
     },
     shots: {
+      // Inside first: "the boat's cabin" finds the cabin before the tug.
+      cabin: { position: [6.3, 2.2, 1.85], target: [4.6, 1.0, -3.0], fov: 60, label: "The cabin" },
+      crate: { position: [5.2, 1.55, -3.6], target: [5.2, 0.5, -1.3], fov: 50, label: "The crate" },
       river: { position: [10.8, 0.6, 15.5], target: [3.2, 2.1, -8], fov: 50, label: "The river" },
       pier: { position: [-3.6, 1.9, 12.8], target: [4.2, 1.3, 2.5], fov: 50, label: "The gangway" },
       boat: { position: [12.4, 2.1, 11.2], target: [5.0, 2.1, 0.2], fov: 50, label: "The tug" },
@@ -488,55 +536,91 @@ function pierSet() {
     },
     life: { dust: { count: 160, box: [-6, 0.4, -10, 10, 5, 12] } },
   })
-  const crew = [on("archer", "bow", "bank"), on("fighter", "stern", "pier")]
+  // The meeting, as the story needs it: the crate is too heavy to move, so Lyra checks it where it sits in the saloon.
+  // Neither side trusts the other, so Reinhard stays beside her and Silas by the only door. Aelar comes out of his cabin
+  // aft. His two elves guard the deck, one at the gangway and one at the stern, and Poppen watches the lit windows from
+  // the bushes at the treeline, too far for elven ears.
+  const crew = [on("archer", [4.2, 4.9], "pierEnd"), on("fighter", "stern", "bank")]
+  const boat: V2 = [5.2, 0.5]
+  const poppen = on("poppen", [-5.0, 4.3], boat)
+  // His face peeking over the leaves, as in The Disturbance's art.
+  const peeking = close("poppen", 2.2, 30, 1.15, 0.8)
   staging(
     "the-shipment",
     "mordava-river-pier",
-    [
-      on("lyra", [5.0, 1.2], [5.2, -0.2]),
-      on("aelar", [5.95, 2.85], "reinhard"),
-      on("silas", [-1.7, 10.0], "aelar"),
-      on("reinhard", [1.4, 7.25], "aelar"),
-      on("poppen", [-1.2, 4.6], "pierEnd"),
-      ...crew,
-    ],
+    [on("lyra", [5.0, 0.15], [5.2, -1.3]), on("reinhard", [6.15, 0.45], [5.2, -1.3]), on("silas", [4.45, 2.15], [5.0, 0.0]), on("aelar", [3.95, -0.55], "lyra"), poppen, ...crew],
     {
-      exchange: { subjects: [CAST.lyra.id, CAST.aelar.id, CAST.silas.id, CAST.reinhard.id], offset: [7.5, 2.4, 3.5], target: [0, 1.1, 0], fov: 52, label: "The meeting" },
-      // Inside the saloon, past the crate before her, the open door beyond.
-      lyra: { ...close("lyra", 3.4, 8, 1.55, 1.15), fov: 50 },
-      aelar: close("aelar", 3.3, -25),
-      // Over his shoulder from above the reeds, looking past him to the boat he is watching.
-      poppen: close("poppen", 2.2, 170, 1.9, 1.45),
+      exchange: { subjects: [CAST.lyra.id, CAST.aelar.id, CAST.silas.id, CAST.reinhard.id], offset: [1.31, 2.0, -3.95], target: [-0.29, 1.1, 0.45], fov: 56, label: "The meeting" },
+      // From aft, over the crate before her, Silas and the open door beyond.
+      lyra: { ...close("lyra", 3.55, 8, 1.55, 1.15), fov: 50 },
+      aelar: close("aelar", 2.6, -20),
+      // Across the saloon at Aelar's door, the crate in front: he comes out and along the port side.
+      arrival: { position: [6.6, 1.8, -0.4], target: [3.8, 1.2, -1.8], fov: 50, label: "Aelar's cabin" },
+      poppen: peeking,
     },
     "river",
-    // Aelar is inside until the narration opens the saloon door.
-    { entrances: [{ cast: CAST.aelar.id, when: "cabin door opened", from: [5.2, 1.7] }] }
+    // Aelar is in his cabin until the narration opens its door.
+    { entrances: [{ cast: CAST.aelar.id, when: "cabin door opened", from: [4.02, -4.05], shot: "arrival" }] }
   )
   staging(
     "the-transaction",
     "mordava-river-pier",
-    [on("lyra", [5.1, 1.55], "aelar"), on("aelar", [3.55, 4.85], "silas"), on("silas", [2.75, 5.45], "aelar"), on("reinhard", [1.55, 7.1], "silas"), on("poppen", [-1.2, 4.6], "pierEnd"), ...crew],
-    { handover: { subjects: [CAST.aelar.id, CAST.silas.id], offset: [3.2, 1.7, 2.6], target: [0, 1.3, 0], fov: 42, label: "The handover" }, silas: close("silas", 2.8, 30), lyra: close("lyra") },
+    [on("lyra", [5.55, 0.3], "silas"), on("reinhard", [6.35, 0.75], "silas"), on("silas", [4.65, 0.6], "aelar"), on("aelar", [3.95, -0.55], "silas"), poppen, ...crew],
+    {
+      handover: { subjects: [CAST.aelar.id, CAST.silas.id], offset: [1.8, 1.8, -1.03], target: [0, 1.3, 0], fov: 46, label: "The handover" },
+      // From his right, so Aelar's back is not in the way.
+      silas: close("silas", 2.8, -60),
+      lyra: close("lyra"),
+    },
     "handover"
   )
   staging(
     "the-disturbance",
     "mordava-river-pier",
     [
-      on("fighter", [-0.4, 6.6], "reeds"),
-      on("archer", [0.8, 7.8], "reeds"),
-      on("reinhard", [3.4, 3.2], "pier"),
-      on("silas", [2.2, 6.2], "reeds"),
-      on("aelar", [5.9, 3.6], "reeds"),
-      on("lyra", [4.3, 4.4], "pier"),
-      on("poppen", [-1.2, 4.6], "fighter"),
+      on("fighter", [-3.3, 5.0], "poppen"),
+      on("archer", [-2.0, 6.2], "poppen"),
+      on("reinhard", [6.15, 0.45], [5.2, -1.3]),
+      on("lyra", [5.0, 0.15], [5.2, 3.3]),
+      on("silas", [5.0, 3.4], "treeline"),
+      on("aelar", [5.7, 3.9], "treeline"),
+      on("poppen", [-5.0, 4.3], "fighter"),
     ],
     {
-      search: { subjects: [CAST.fighter.id, CAST.archer.id, CAST.poppen.id], offset: [-3.6, 2.1, -4.2], target: [0, 0.9, 0], fov: 50, label: "The search" },
-      poppen: close("poppen", 2.2, 170, 1.9, 1.45),
+      search: { subjects: [CAST.fighter.id, CAST.archer.id, CAST.poppen.id], offset: [2.43, 2.2, -3.57], target: [-0.3, 0.9, 0], fov: 50, label: "The search" },
+      poppen: peeking,
       archer: close("archer", 3, -20),
     },
-    "reeds"
+    "search"
+  )
+  // Inside, where The Fake and the battle happen: Silas blocks the door, the only way out.
+  staging(
+    "the-fake",
+    "mordava-river-pier",
+    [on("silas", [5.2, 2.35], "aelar"), on("aelar", [3.95, -0.55], "silas"), on("reinhard", [4.8, 0.4], "aelar"), on("lyra", [5.95, 0.1], "aelar"), poppen, ...crew],
+    {
+      // From aft over the crate: Aelar, Reinhard stepping toward him, and Silas in the doorway beyond.
+      standoff: { subjects: [CAST.silas.id, CAST.aelar.id, CAST.reinhard.id], offset: [0.35, 2.0, -4.03], target: [-0.15, 1.2, 0.27], fov: 56, label: "The standoff" },
+      silas: close("silas", 2.1, 25, 1.55),
+      aelar: close("aelar", 2.0, -20),
+    },
+    "standoff"
+  )
+  staging(
+    "battle-on-the-boat",
+    "mordava-river-pier",
+    [on("reinhard", [6.2, -0.35], "lyra"), on("lyra", [4.85, 0.75], "reinhard"), on("silas", [5.2, 2.35], "lyra"), poppen],
+    // Low, as in the battle's art, and clear of Lyra's shoulder.
+    { reinhard: close("reinhard", 2.0, 25, 1.35, 1.55), lyra: close("lyra", 2.0, 30), silas: close("silas", 2.1, 25) },
+    "reinhard"
+  )
+  staging(
+    "the-crate",
+    "mordava-river-pier",
+    // Poppen at the crate's end, where he is not hidden behind it.
+    [on("lyra", [4.65, -0.2], [4.65, -1.3]), on("poppen", [6.3, -0.9], [5.6, -1.3])],
+    { pair: { subjects: [CAST.lyra.id, CAST.poppen.id], offset: [-0.275, 1.7, -2.95], target: [-0.175, 0.6, -0.55], fov: 55, label: "The pair" } },
+    "crate"
   )
   staging(
     "the-escape",
@@ -548,229 +632,6 @@ function pierSet() {
       poppen: close("poppen", 2.6, 160, 0.9, 0.85),
     },
     "flight"
-  )
-}
-
-// ── The riverboat's cabin ──
-// A low panelled room, 3.4 m by 6 m, fore wall at z = -3 with the helm; the door is aft, open onto a strip of deck and
-// the teal water. The crate sits in the middle under hanging ropes and candlelight.
-function cabinSet() {
-  const objects: Obj[] = [
-    {
-      type: "extrude",
-      id: "water",
-      at: [0, -0.49, 0],
-      points: ground([
-        [-200, 300],
-        [200, 300],
-        [200, -300],
-        [-200, -300],
-      ]),
-      depth: 0.02,
-      plane: "xz",
-      material: "water",
-    },
-    { type: "box", id: "floor", at: [0, -0.1, 0], size: [3.5, 0.1, 6.1], material: "floor" },
-    { type: "box", id: "deck", at: [0, -0.1, 4.35], size: [3.7, 0.1, 2.6], material: "deck" },
-    { type: "box", id: "hull-port", at: [-1.88, -0.9, 1.3], size: [0.16, 1.15, 8.8], material: "hull" },
-    { type: "box", id: "hull-starboard", at: [1.88, -0.9, 1.3], size: [0.16, 1.15, 8.8], material: "hull" },
-    { type: "box", id: "hull-stern", at: [0, -0.9, 5.68], size: [3.9, 1.15, 0.16], material: "hull" },
-    // Walls, ceiling and beams.
-    { type: "box", id: "wall-port", at: [-1.76, 0, 0], size: [0.12, 2.4, 6.1], material: "panel", solid: true },
-    { type: "box", id: "wall-starboard", at: [1.76, 0, 0], size: [0.12, 2.4, 6.1], material: "panel", solid: true },
-    { type: "box", id: "wall-fore", at: [0, 0, -3.0], size: [3.6, 2.4, 0.12], material: "panel", solid: true },
-    { type: "box", id: "wall-aft-port", at: [-0.825, 0, 3.0], size: [1.95, 2.4, 0.12], material: "panel", solid: true },
-    { type: "box", id: "wall-aft-starboard", at: [1.425, 0, 3.0], size: [0.75, 2.4, 0.12], material: "panel", solid: true },
-    { type: "box", id: "lintel", at: [0.6, 1.95, 3.0], size: [0.9, 0.45, 0.12], material: "panel" },
-    { type: "box", id: "ceiling", at: [0, 2.4, 0], size: [3.6, 0.1, 6.2], material: "roof" },
-    { type: "box", id: "roof-outside", at: [0, 2.5, 0], size: [3.9, 0.12, 6.5], material: "roof" },
-    // The door, open outward on its hinge, with its porthole and knob.
-    { type: "box", id: "door-frame-l", at: [0.12, 0, 3.07], size: [0.08, 2.0, 0.1], material: "trim" },
-    { type: "box", id: "door-frame-r", at: [1.08, 0, 3.07], size: [0.08, 2.0, 0.1], material: "trim" },
-    { type: "box", id: "door", at: [1.11, 0.02, 3.52], size: [0.07, 1.92, 0.88], material: "door" },
-    { type: "torus", id: "porthole", at: [1.15, 1.42, 3.52], yaw: 90, radius: 0.13, tube: 0.032, material: "brass" },
-    { type: "cylinder", id: "porthole-glass", at: [1.15, 1.42, 3.52], radius: 0.12, height: 0.03, roll: 90, material: "glass" },
-    { type: "sphere", id: "door-knob", at: [1.18, 1.0, 3.88], radius: 0.045, material: "brass" },
-    // Railing round the deck outside.
-    ...[-1.75, -0.9, 0, 0.9, 1.75].map((x) => ({ type: "beam", from: [x, 0, 5.55], to: [x, 0.9, 5.55], radius: 0.035, material: "trim" })),
-    { type: "beam", from: [-1.8, 0.9, 5.55], to: [1.8, 0.9, 5.55], radius: 0.035, material: "trim" },
-    { type: "beam", from: [-1.8, 0.9, 3.1], to: [-1.8, 0.9, 5.55], radius: 0.035, material: "trim" },
-    { type: "beam", from: [1.8, 0.9, 3.1], to: [1.8, 0.9, 5.55], radius: 0.035, material: "trim" },
-    { type: "lantern", at: [-1.5, 0, 5.3], height: 1.25, post: true },
-    // The helm, gauges and lamps on the fore wall.
-    { type: "box", id: "helm-post", at: [0.4, 0, -2.78], size: [0.18, 1.0, 0.22], material: "trim" },
-    { type: "torus", id: "helm-wheel", at: [0.4, 1.25, -2.6], radius: 0.42, tube: 0.035, material: "wheel" },
-    ...[0, 1, 2, 3, 4, 5, 6, 7].map((i) => {
-      const a = (i * Math.PI) / 4
-      return { type: "beam", at: [0.4, 1.25, -2.6], from: [0, 0, 0], to: [r2(Math.cos(a) * 0.56), r2(Math.sin(a) * 0.56), 0], radius: 0.025, radiusTo: 0.018, material: "wheel" }
-    }),
-    { type: "cylinder", id: "helm-hub", at: [0.4, 1.25, -2.66], radius: 0.07, height: 0.14, pitch: 90, material: "brass" },
-    { type: "box", id: "console", at: [-0.75, 0, -2.72], size: [1.6, 0.92, 0.5], material: "trim" },
-    { type: "box", id: "chart", at: [-0.7, 0.93, -2.7], size: [0.6, 0.02, 0.4], material: "parchment" },
-    ...[
-      [-0.35, 1.62],
-      [-0.8, 1.62],
-      [1.25, 1.72],
-    ].flatMap(([x, y]) => [
-      { type: "cylinder", at: [x, y, -2.92], radius: 0.11, height: 0.05, pitch: 90, material: "brass" },
-      { type: "cylinder", at: [x, y, -2.89], radius: 0.085, height: 0.01, pitch: 90, material: "gauge" },
-    ]),
-    { type: "lantern", at: [-0.6, 1.72, -1.7] },
-    { type: "beam", from: [-0.6, 2.38, -1.7], to: [-0.6, 2.0, -1.7], radius: 0.012, material: "iron" },
-    { type: "lantern", at: [-0.8, 1.72, 1.55] },
-    { type: "beam", from: [-0.8, 2.38, 1.55], to: [-0.8, 2.0, 1.55], radius: 0.012, material: "iron" },
-    // The crate: iron-banded, chained, too heavy to move.
-    { type: "strongbox", id: "crate", at: [0, 0, -0.55], yaw: 6, width: 1.35, height: 0.97, depth: 0.92, materials: { iron: "crateIron" } },
-    // Posts and hanging rope.
-    // The hold round the crate, as in its art: heavy iron-banded posts, knotted ropes hanging from the beams, chains
-    // along the fore wall and down a post, and rope coiled on the floor.
-    ...[
-      [-1.2, -0.45],
-      [1.25, 0.55],
-    ].flatMap(([x, zz]) => [
-      { type: "box", at: [x, 0, zz], size: [0.32, 2.36, 0.32], material: "post", solid: true },
-      ...[0.35, 1.55].map((y) => ({ type: "box", at: [x, y, zz], size: [0.34, 0.07, 0.34], material: "crateIron" })),
-    ]),
-    { type: "rope", from: [-0.98, 2.3, -0.2], to: [-0.72, 0.03, 0.25], sag: 0.04, radius: 0.026, knots: 3 },
-    { type: "rope", from: [-1.45, 2.25, -1.0], to: [-0.95, 0.03, -1.3], sag: 0.06, radius: 0.022, knots: 2 },
-    { type: "rope", from: [0.75, 2.3, -1.3], to: [1.15, 0.95, -0.6], sag: 0.12, radius: 0.026, knots: 2 },
-    { type: "rope", from: [-0.75, 0.03, 0.25], to: [0.55, 0.03, 0.35], sag: 0, radius: 0.026 },
-    { type: "torus", at: [1.15, 0.05, -1.7], radius: 0.28, tube: 0.05, pitch: 90, material: "rope" },
-    { type: "torus", at: [1.15, 0.13, -1.7], radius: 0.22, tube: 0.05, pitch: 90, material: "rope" },
-    { type: "chain", from: [-1.65, 2.18, -2.9], to: [-0.1, 2.18, -2.9], sag: 0.22, link: 0.07, materials: { iron: "crateIron" } },
-    { type: "chain", from: [0.95, 2.18, -2.9], to: [1.68, 2.18, -2.9], sag: 0.14, link: 0.07, materials: { iron: "crateIron" } },
-    { type: "chain", from: [1.3, 2.2, -1.5], to: [1.15, 0.03, -1.25], sag: 0, link: 0.07, materials: { iron: "crateIron" } },
-    // Stores along the walls, and candles.
-    { type: "barrel", at: [-1.3, 0, 2.35], r: 0.32, h: 0.85 },
-    { type: "barrel", at: [-0.65, 0, 2.55], r: 0.3, h: 0.8 },
-    { type: "sack", at: [-1.35, 0, 1.55], size: 0.55 },
-    { type: "crate", at: [1.32, 0, -2.25], size: 0.6 },
-    { type: "box", id: "bench", at: [1.47, 0, 1.6], size: [0.45, 0.45, 1.6], material: "trim", solid: true },
-    ...[
-      [-1.2, 0.93, -2.6],
-      [-1.32, 0.86, 2.35],
-      [1.32, 0.62, -2.2],
-      [1.45, 0.47, 1.2],
-    ].flatMap(([x, y, zz]) => [
-      { type: "cylinder", at: [x, y, zz], radius: 0.03, height: 0.16, material: "candle" },
-      { type: "sphere", at: [x, y + 0.17, zz], radius: [0.018, 0.03, 0.018], material: "flame" },
-    ]),
-    // Ceiling beams and the side windows' glow.
-    ...[-2.4, -1.5, -0.6, 0.3, 1.2, 2.1].map((zz) => ({ type: "box", at: [0, 2.22, zz], size: [3.5, 0.16, 0.16], material: "post" })),
-    ...[-1, 1].flatMap((s) =>
-      [-1.6, 0.4].flatMap((zz) => [
-        { type: "box", at: [s * 1.695, 1.18, zz], size: [0.03, 0.46, 0.6], material: "glass" },
-        { type: "box", at: [s * 1.69, 1.13, zz], size: [0.05, 0.56, 0.72], material: "trim" },
-      ])
-    ),
-    // A far bank glimpsed through the door.
-    { type: "box", id: "far-bank-ground", at: [0, -0.49, 52], size: [160, 0.5, 44], material: "bank" },
-    {
-      type: "scatter",
-      id: "far-bank",
-      area: [-60, 30, 60, 70],
-      count: 120,
-      items: [{ weight: 1, item: { type: "tree", kind: "oak", low: true, moss: 0.5 }, vary: { height: [10, 18] } }],
-    },
-  ]
-  write(`${SETS}/riverboat-cabin.json`, {
-    ...base("riverboat-cabin", "riverboat-cabin", "The riverboat's cabin"),
-    seed: 5150,
-    atmosphere: {
-      sun: { direction: [0.18, 0.38, 1], color: "#5fb6c6", intensity: 2.4, target: [0, 0, 1], distance: 30, shadow: { left: -8, right: 8, top: 8, bottom: -8, near: 1, far: 70 } },
-      hemisphere: { sky: "#3e4c52", ground: "#1a140e", intensity: 0.65 },
-      sky: { horizon: "#4f8f98", mid: "#2a5e6a", zenith: "#102a34", gain: 0.7, clouds: 0.2, stars: 0.05 },
-      fog: { density: 0.03, color: "#3e7a86" },
-      glow: "#9fd0d0",
-      fill: { color: "#ffdcb8", intensity: 2.5, distance: 8 },
-      // The hanging lanterns and the candles light the cabin, as in the crate's art.
-      lights: [
-        { at: [-0.6, 1.55, -1.7], color: "#ffb060", intensity: 4.5, distance: 5 },
-        { at: [-0.8, 1.55, 1.55], color: "#ffb060", intensity: 4, distance: 5 },
-        { at: [-1.1, 1.15, -2.5], color: "#ffa850", intensity: 2, distance: 2.5 },
-        { at: [1.35, 0.85, -2.2], color: "#ffa850", intensity: 1.6, distance: 2.5 },
-        // A warm light from above pools on the crate, as in its art.
-        { at: [0.05, 2.15, -0.4], color: "#ffc070", intensity: 5, distance: 3.2 },
-        // Cold river light through the open door, as in The Fake.
-        { at: [0.6, 1.5, 2.6], color: "#4fb4c4", intensity: 6, distance: 4 },
-      ],
-      environment: 0.25,
-      exposure: 1.2,
-      grade: "neutral",
-      wind: 0.2,
-    },
-    camera: { near: 0.08, far: 400, min: [-1.6, 0.35, -2.9], max: [1.6, 2.25, 5.4], maxDistance: 8 },
-    materials: {
-      floor: painted("boards-weathered", "#9a9088", [0.2, 2.8], { nails: 0.8, grime: 1.3, variance: 0.3 }),
-      panel: painted("cabin-dark", "#d6ccc2", [0.18, 40], { size: [0.6, 1.6], grime: 1.1 }),
-      roof: painted("cabin-dark", "#a49a90", [0.24, 40], { grime: 1.3 }),
-      post: painted("cabin-dark", "#bcb0a4", [0, 40], { size: [0.4, 1.2], grime: 1.4 }),
-      trim: painted("cabin-dark", "#c8b8a8", [0, 40], { grime: 0.6 }),
-      door: painted("cabin-dark", "#e6c8a8", [0.14, 12], { nails: 0.6 }),
-      wheel: { type: "wood", a: "#5a3a24", b: "#6e4a2e", c: "#4a3020", plank: [0, 40], relief: 0.02, seed: 3.7 },
-      deck: painted("boards-weathered", "#a8a098", [0.16, 3.2], { nails: 0.7, grime: 0.8 }),
-      hull: { type: "wood", a: "#2a2420", b: "#342c26", c: "#211d1a", plank: [0.22, 6], relief: 0.05, variance: 0.4, seed: 2.2, grime: 1.4 },
-      brass: { type: "metal", color: "#a8823e", roughness: 0.35, metalness: 0.85 },
-      gauge: { type: "plain", color: "#d8cfb4", roughness: 0.8 },
-      glass: { type: "plain", color: "#20383c", roughness: 0.3, emissive: "#4a96a2", emissiveIntensity: 0.9 },
-      candle: { type: "plain", color: "#e6dcc0", roughness: 0.9 },
-      rope: painted("rope-hemp", "#c8b898", [0, 40], { size: [0.25, 0.4], relief: 0.2, grime: 0.6 }),
-      parchment: { type: "plain", color: "#cbb78e", roughness: 1 },
-      water: { type: "water", color: "#0a2329", reflect: 3.2, ripple: 0.35, flow: [1, 0], mirror: 0.7 },
-      bank: { type: "plain", color: "#1c3027", roughness: 1 },
-      bark: painted("bark-moss", "#c0c8c0", [0, 40], { size: [1.2, 1.8], relief: 0.12, variance: 0.2 }),
-      leaves: { type: "foliage", color: "#b4c4b4", map: "/stage/textures/leaves-oak.webp" },
-      leavesDark: { type: "foliage", color: "#748478", map: "/stage/textures/leaves-oak.webp" },
-      leavesLight: { type: "foliage", color: "#d4e0c4", map: "/stage/textures/leaves-oak.webp" },
-      moss: { type: "foliage", color: "#7c8f86" },
-      ...pick(gate, ["crate", "crateDark", "barrel", "iron", "pole", "sack", "sackB"]),
-      flame: { type: "plain", color: "#000000", roughness: 1, emissive: "#ffb262", emissiveIntensity: 1.8 },
-      crateIron: { type: "metal", color: "#2e2824", roughness: 0.75, metalness: 0.5 },
-      crate: painted("crate-oak", "#8e968c", [0.2, 1.2], { size: [1.2, 2.4], nails: 1, grime: 1.2, relief: 0.1, variance: 0.35 }),
-    },
-    objects,
-    marks: {
-      crate: { at: [0, -0.55], label: "the crate" },
-      door: { at: [0.6, 2.8], label: "the cabin door" },
-      helm: { at: [0.4, -2.3], label: "the helm" },
-      window: { at: [-1.4, 0.4], label: "the side window" },
-      stores: { at: [-1.0, 1.9], label: "the barrels and stores" },
-      deck: { at: [0.2, 4.4], label: "the deck outside the cabin" },
-    },
-    shots: {
-      cabin: { position: [-1.25, 1.65, -2.55], target: [0.55, 1.05, 3], fov: 60, label: "The cabin" },
-      crate: { position: [0.55, 2.1, 1.95], target: [0, 0.45, -0.6], fov: 55, label: "The crate" },
-      chest: { position: [-0.5, 1.5, 1.8], target: [0.05, 0.38, -0.55], fov: 50, label: "The crate up close" },
-      door: { position: [-0.15, 1.55, 0.05], target: [0.65, 1.3, 3], fov: 55, label: "The door" },
-      helm: { position: [0.2, 1.45, 1.3], target: [0.2, 1.35, -3], fov: 58, label: "The helm" },
-    },
-    life: { dust: { count: 90, box: [-1.6, 0.4, -2.8, 1.6, 2.2, 2.8] } },
-  })
-  const poppenOutside = on("poppen", [-0.9, 4.45], [0.6, 2.8])
-  staging(
-    "the-fake",
-    "riverboat-cabin",
-    [on("silas", [0.6, 2.55], "aelar"), on("reinhard", [-0.85, -1.55], "aelar"), on("aelar", [0.75, -1.65], "silas"), on("lyra", [-1.05, 0.15], "aelar"), poppenOutside],
-    {
-      standoff: { subjects: [CAST.silas.id, CAST.aelar.id, CAST.reinhard.id], offset: [-1.3, 0.3, 0.6], target: [0, 1.2, 0], relative: "world", fov: 62, label: "The standoff" },
-      silas: close("silas", 2.1, 25, 1.55, undefined),
-      aelar: close("aelar", 2.0, -20),
-    },
-    "door"
-  )
-  staging(
-    "battle-on-the-boat",
-    "riverboat-cabin",
-    [on("reinhard", [0.25, -1.75], "lyra"), on("lyra", [0.55, 1.05], "reinhard"), on("silas", [0.6, 2.55], "lyra"), poppenOutside],
-    { reinhard: close("reinhard", 2.0, 8, 1.35, 1.55), lyra: close("lyra", 2.0, 30), silas: close("silas", 2.1, 25) },
-    "helm"
-  )
-  staging(
-    "the-crate",
-    "riverboat-cabin",
-    [on("lyra", [-0.95, 0.5], "crate"), on("poppen", [0.95, 0.15], "crate")],
-    { pair: { subjects: [CAST.lyra.id, CAST.poppen.id], offset: [0.2, 0.9, 2.1], target: [0, 0.6, -0.6], fov: 58, label: "The pair" } },
-    "chest"
   )
 }
 
@@ -1100,7 +961,6 @@ function forestSet() {
 
 mkdirSync(STAGINGS, { recursive: true })
 pierSet()
-cabinSet()
 riverfrontSet()
 forestSet()
-console.log("Wrote 4 sets and 9 stagings for Covert Cargo.")
+console.log("Wrote 3 sets and 9 stagings for Covert Cargo.")

@@ -41,3 +41,30 @@ export function reachOver(footprints: readonly Footprint[], from: { x: number; z
   const t = d / Math.max(want, 1e-6)
   return { x: from.x + dx * t, z: from.z + dz * t, distance: d, blocked, short: blocked || want > budget }
 }
+
+type Point = { x: number; z: number }
+// A builder's doorways, from its "door" anchors in pairs: a point just inside and one just outside.
+export function doorways(anchors: readonly { tag: string; x: number; z: number }[]): [Point, Point][] {
+  const doors = anchors.filter((a) => a.tag === "door")
+  const out: [Point, Point][] = []
+  for (let i = 0; i + 1 < doors.length; i += 2) out.push([doors[i], doors[i + 1]])
+  return out
+}
+
+// The way from `from` to `to`: straight when nothing solid is in the way, else through the shortest doorway that clears
+// it, in at one side and out at the other. The points to walk through, ending at `to`; null when no doorway helps.
+export function routeOver(footprints: readonly Footprint[], doors: readonly [Point, Point][], from: Point, to: Point): Point[] | null {
+  const clear = (a: Point, b: Point) => !reachOver(footprints, a, b, Number.POSITIVE_INFINITY).blocked
+  if (clear(from, to)) return [to]
+  const far = (pts: Point[]) => pts.reduce((n, p, i) => n + Math.hypot(p.x - (i ? pts[i - 1] : from).x, p.z - (i ? pts[i - 1] : from).z), 0)
+  let best: Point[] | null = null
+  for (const [a, b] of doors)
+    for (const [p, q] of [
+      [a, b],
+      [b, a],
+    ]) {
+      if (!clear(from, p) || !clear(p, q) || !clear(q, to)) continue
+      if (!best || far([p, q, to]) < far(best)) best = [p, q, to]
+    }
+  return best
+}

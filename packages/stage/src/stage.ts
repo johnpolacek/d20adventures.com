@@ -18,7 +18,7 @@ import { buildSetGeometry, populateCrowd } from "./spec/build"
 import { frameShot, type ResolvedShot, resolveCast, resolveShots } from "./spec/resolve"
 import { type SetSpec, setSpecSchema } from "./spec/set"
 import { type StagingShot, type StagingSpec, stagingSpecSchema } from "./spec/staging"
-import { onFootprint, reachOver } from "./spec/walk"
+import { doorways, onFootprint, reachOver, routeOver } from "./spec/walk"
 
 // The Stage runtime: one set (plus an optional staging) rendered into a canvas it owns inside `container`.
 // Plain imperative three.js; the host (a React component) creates it, calls shot()/setTier()/pause(), and disposes it.
@@ -111,6 +111,7 @@ export class Stage {
   private statics: THREE.Mesh[] = []
   // What the set's builders marked as solid (walls, stalls, tables), for walking the cast.
   private footprints: Footprint[] = []
+  private doors: ReturnType<typeof doorways> = []
   private extras: THREE.Object3D[] = []
   private life: (LifeUpdate & Disposable)[] = []
   private disposables: Disposable[] = []
@@ -234,6 +235,7 @@ export class Stage {
     this.materials = createMaterialLibrary(set.materials, this.shared, rand.fork("materials"), renderer.capabilities.getMaxAnisotropy())
     const built = buildSetGeometry(set, this.materials)
     this.footprints = built.footprints
+    this.doors = doorways(built.anchors)
     this.statics = built.batch.flush(this.world)
     const water = this.statics.filter((m) => (m.material as THREE.Material).userData.mirror)
     if (water.length) {
@@ -829,6 +831,22 @@ export class Stage {
   // metres. Returns where they would stop, the distance walked, and whether something or the budget cut it short.
   reach(id: string, to: { x: number; z: number }, budget: number) {
     return reachOver(this.footprints, this.member(id), to, budget)
+  }
+  // The way a cast member walks toward a point: straight, or through a doorway when a wall is in the way, stopping at the
+  // first solid thing or after `budget` metres. The points to walk through, in order.
+  route(id: string, to: { x: number; z: number }, budget: number) {
+    const c = this.member(id)
+    const out: { x: number; z: number }[] = []
+    let from = { x: c.x, z: c.z }
+    let left = budget
+    for (const p of routeOver(this.footprints, this.doors, from, to) ?? [to]) {
+      const hit = reachOver(this.footprints, from, p, left)
+      out.push({ x: hit.x, z: hit.z })
+      if (hit.short) break
+      left -= hit.distance
+      from = p
+    }
+    return out
   }
   // Where a cast member stands (x, z) and faces (radians).
   castAt(id: string) {

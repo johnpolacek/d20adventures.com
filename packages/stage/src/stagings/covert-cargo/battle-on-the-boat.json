@@ -2,7 +2,7 @@
   "format": "d20.stage.staging",
   "version": 1,
   "id": "covert-cargo/battle-on-the-boat",
-  "set": "realm-of-myr/riverboat-cabin",
+  "set": "realm-of-myr/mordava-river-pier",
   "cast": [
     {
       "id": "npcs-1749163978757",
@@ -15,8 +15,8 @@
         "portrait": "/stage/fixtures/covert-cargo/reinhard-portrait.jpg"
       },
       "at": [
-        0.25,
-        -1.75
+        6.2,
+        -0.35
       ],
       "facing": "lyra"
     },
@@ -31,8 +31,8 @@
         "portrait": "/stage/fixtures/covert-cargo/lyra-portrait.jpg"
       },
       "at": [
-        0.55,
-        1.05
+        4.85,
+        0.75
       ],
       "facing": "npcs-1749163978757"
     },
@@ -47,8 +47,8 @@
         "portrait": "/stage/fixtures/covert-cargo/silas-portrait.jpg"
       },
       "at": [
-        0.6,
-        2.55
+        5.2,
+        2.35
       ],
       "facing": "lyra"
     },
@@ -63,12 +63,12 @@
         "portrait": "/stage/fixtures/covert-cargo/poppen-portrait.jpg"
       },
       "at": [
-        -0.9,
-        4.45
+        -5,
+        4.3
       ],
       "facing": [
-        0.6,
-        2.8
+        5.2,
+        0.5
       ]
     }
   ],
@@ -76,7 +76,7 @@
     "reinhard": {
       "subject": "npcs-1749163978757",
       "distance": 2,
-      "angle": 8,
+      "angle": 25,
       "height": 1.35,
       "lookHeight": 1.55,
       "fov": 44,
@@ -101,5 +101,5 @@
       "label": "Silas"
     }
   },
-  "shot": "helm"
+  "shot": "reinhard"
 }

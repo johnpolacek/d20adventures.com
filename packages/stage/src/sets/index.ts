@@ -6,7 +6,6 @@ export const SETS: Record<string, () => Promise<unknown>> = {
   "realm-of-myr/old-standing-stones": () => import("./realm-of-myr/old-standing-stones.json").then((m) => m.default),
   "realm-of-myr/thalberns-forest-home": () => import("./realm-of-myr/thalberns-forest-home.json").then((m) => m.default),
   "realm-of-myr/mordava-river-pier": () => import("./realm-of-myr/mordava-river-pier.json").then((m) => m.default),
-  "realm-of-myr/riverboat-cabin": () => import("./realm-of-myr/riverboat-cabin.json").then((m) => m.default),
   "realm-of-myr/kordavos-riverfront": () => import("./realm-of-myr/kordavos-riverfront.json").then((m) => m.default),
   "realm-of-myr/old-forest-path": () => import("./realm-of-myr/old-forest-path.json").then((m) => m.default),
 }

@@ -124,13 +124,14 @@ export const riverboat = defineBuilder(
       beam: size(12).default(3.6),
       draft: size(4).default(1.1),
       sheer: num(0, 3).default(0.9),
-      // The cabin's share of the length, and the share of it at the fore end that is the lit saloon.
+      // The cabin's share of the length and of the beam, and the share of its length at the fore end that is the lit saloon.
       cabin: num(0.3, 0.8).default(0.55),
+      width: num(0.4, 0.9).default(0.72),
       saloon: num(0, 1).default(0.4),
       height: size(4).default(2.1),
       lit: z.boolean().default(true),
-      // The saloon as a room people stand in: walls panelled inside, dark windows behind the lit panes, and its bow door
-      // standing open.
+      // The saloon as a room people stand in: walls panelled inside, dark windows behind the lit panes, its bow door
+      // standing open as the only way out, and a doorway aft into the owner's cabin.
       interior: z.boolean().default(false),
     })
     .strict(),
@@ -221,7 +222,7 @@ export const riverboat = defineBuilder(
     // The cabin, as in the art: a saloon whose fore end rounds into a bow of lit windows round a glazed door, pale
     // planking, rust posts between the panes and a rust fascia, small windows aft, and a roof that overhangs as an
     // upper deck with a rail all round.
-    const Wc = B * 0.72
+    const Wc = B * p.width
     const Hc = p.height
     const Lc = L * p.cabin
     const z0 = -L / 2 + L * 0.13
@@ -279,6 +280,11 @@ export const riverboat = defineBuilder(
       )
       F.box(M.panel, 0, Hc / 2, zs + 0.012, Wc - 2 * T, Hc, 0.024)
       ctx.footprint(0, (z0 + zs) / 2, hw, (zs - z0) / 2)
+      // The doorway to the owner's cabin, to port in the aft bulkhead.
+      const dx = -Wc * 0.27
+      F.box(M.void, dx, 0.98, zs + 0.03, 0.8, 1.96, 0.02)
+      for (const side of [-1, 1]) F.box(M.rust, dx + side * 0.45, 1.02, zs + 0.05, 0.1, 2.04, 0.06)
+      F.box(M.rust, dx, 2.04, zs + 0.05, 1.0, 0.1, 0.06)
       const walls: Vec2[] = [[hw, zs], ...outline(0).slice(2), [-hw, zs]]
       for (let i = 0; i < walls.length - 1; i++) {
         const [ax, az] = walls[i]
@@ -300,16 +306,25 @@ export const riverboat = defineBuilder(
       }
       // Beams across the ceiling.
       for (let k = 1; k <= 4; k++) F.box(M.post, 0, Hc - 0.09, zs + ((z1 - zs) * k) / 5, Wc - 0.3, 0.14, 0.14)
-      // The door stands open on its port hinge, its glazing lit.
+      // The door stands open on its port hinge, a porthole in it.
       const hinge = bowAt((Math.PI * 9) / 16, 0)
       for (const a of [(Math.PI * 7) / 16, (Math.PI * 9) / 16]) {
         const post = bowAt(a, 0)
         F.box(M.rust, post.x, 1.02, post.z, 0.1, 2.06, 0.14, post.yaw)
       }
       F.box(M.rust, 0, 2.08, z1 + 0.02, 0.9, 0.08, 0.14)
-      F.box(M.cabin, hinge.x - 0.05, 1.0, hinge.z + 0.4, 0.05, 1.96, 0.76)
-      F.box(glow, hinge.x - 0.05, 1.3, hinge.z + 0.4, 0.07, 0.7, 0.44)
+      F.box(M.door, hinge.x - 0.05, 1.0, hinge.z + 0.4, 0.05, 1.96, 0.76)
+      F.box(glow, hinge.x - 0.05, 1.45, hinge.z + 0.4, 0.07, 0.18, 0.18)
+      b.add(
+        G("porthole", () => new THREE.TorusGeometry(0.13, 0.03, 8, 20)),
+        M.brass,
+        M4(hinge.x - 0.05, 1.45, hinge.z + 0.4, Math.PI / 2),
+        { uv: "keep" }
+      )
       ctx.footprint(hinge.x - 0.05, hinge.z + 0.4, 0.05, 0.38)
+      // The way in and out, for walks: a step inside the doorway and a step outside it.
+      ctx.anchor("door", 0, 0, z1 - 0.6)
+      ctx.anchor("door", 0, 0, z1 + 0.6)
     }
     const ring = (grow: number, y: number, r: number) => {
       const pts = outline(grow)
@@ -357,8 +372,8 @@ export const riverboat = defineBuilder(
       const post = bowAt((Math.PI * k) / m, 0.03)
       if (k > 0) F.box(M.rust, post.x, Hc / 2, post.z, 0.09, Hc, 0.09, post.yaw)
     }
-    // The aft face: a door and a small window.
-    F.box(M.void, -Wc * 0.2, 0.95, z0 - 0.015, 0.7, 1.8, 0.03)
+    // The aft face: a door, unless the saloon is the way in, and a small window.
+    if (!p.interior) F.box(M.void, -Wc * 0.2, 0.95, z0 - 0.015, 0.7, 1.8, 0.03)
     pane(Wc * 0.22, Hc * 0.62, z0, Math.PI, 0.38, 0.48, true)
     // The pilothouse on the upper deck, just aft of the bow's curve, with a rounded roof.
     const Lp = Math.min(2.6, Lc * 0.38)
@@ -442,6 +457,8 @@ export const riverboat = defineBuilder(
     panel: "roof",
     post: "roof",
     night: "void",
+    door: "cabin",
+    brass: "rust",
   }
 )
 

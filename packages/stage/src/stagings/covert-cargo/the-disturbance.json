@@ -15,10 +15,10 @@
         "portrait": "/stage/fixtures/covert-cargo/elf-fighter-portrait.jpg"
       },
       "at": [
-        -0.4,
-        6.6
+        -3.3,
+        5
       ],
-      "facing": "reeds"
+      "facing": "poppen"
     },
     {
       "id": "npcs-1749243735467",
@@ -31,10 +31,10 @@
         "portrait": "/stage/fixtures/covert-cargo/elf-archer-portrait.jpg"
       },
       "at": [
-        0.8,
-        7.8
+        -2,
+        6.2
       ],
-      "facing": "reeds"
+      "facing": "poppen"
     },
     {
       "id": "npcs-1749163978757",
@@ -47,42 +47,13 @@
         "portrait": "/stage/fixtures/covert-cargo/reinhard-portrait.jpg"
       },
       "at": [
-        3.4,
-        3.2
+        6.15,
+        0.45
       ],
-      "facing": "pier"
-    },
-    {
-      "id": "npcs-1749181492795",
-      "name": "Silas",
-      "role": "Rogue, the brains of the mission",
-      "height": 1.78,
-      "art": {
-        "front": "/stage/fixtures/covert-cargo/silas-front.webp",
-        "back": "/stage/fixtures/covert-cargo/silas-back.webp",
-        "portrait": "/stage/fixtures/covert-cargo/silas-portrait.jpg"
-      },
-      "at": [
-        2.2,
-        6.2
-      ],
-      "facing": "reeds"
-    },
-    {
-      "id": "npcs-1749184389465",
-      "name": "Aelar Moonglimmer",
-      "role": "Elf operative",
-      "height": 1.86,
-      "art": {
-        "front": "/stage/fixtures/covert-cargo/aelar-front.webp",
-        "back": "/stage/fixtures/covert-cargo/aelar-back.webp",
-        "portrait": "/stage/fixtures/covert-cargo/aelar-portrait.jpg"
-      },
-      "at": [
-        5.9,
-        3.6
-      ],
-      "facing": "reeds"
+      "facing": [
+        5.2,
+        -1.3
+      ]
     },
     {
       "id": "lyra",
@@ -95,10 +66,45 @@
         "portrait": "/stage/fixtures/covert-cargo/lyra-portrait.jpg"
       },
       "at": [
-        4.3,
-        4.4
+        5,
+        0.15
       ],
-      "facing": "pier"
+      "facing": [
+        5.2,
+        3.3
+      ]
+    },
+    {
+      "id": "npcs-1749181492795",
+      "name": "Silas",
+      "role": "Rogue, the brains of the mission",
+      "height": 1.78,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/silas-front.webp",
+        "back": "/stage/fixtures/covert-cargo/silas-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/silas-portrait.jpg"
+      },
+      "at": [
+        5,
+        3.4
+      ],
+      "facing": "treeline"
+    },
+    {
+      "id": "npcs-1749184389465",
+      "name": "Aelar Moonglimmer",
+      "role": "Elf operative",
+      "height": 1.86,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/aelar-front.webp",
+        "back": "/stage/fixtures/covert-cargo/aelar-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/aelar-portrait.jpg"
+      },
+      "at": [
+        5.7,
+        3.9
+      ],
+      "facing": "treeline"
     },
     {
       "id": "poppen",
@@ -111,8 +117,8 @@
         "portrait": "/stage/fixtures/covert-cargo/poppen-portrait.jpg"
       },
       "at": [
-        -1.2,
-        4.6
+        -5,
+        4.3
       ],
       "facing": "npcs-1749243869357"
     }
@@ -125,12 +131,12 @@
         "poppen"
       ],
       "offset": [
-        -3.6,
-        2.1,
-        -4.2
+        2.43,
+        2.2,
+        -3.57
       ],
       "target": [
-        0,
+        -0.3,
         0.9,
         0
       ],
@@ -140,9 +146,9 @@
     "poppen": {
       "subject": "poppen",
       "distance": 2.2,
-      "angle": 170,
-      "height": 1.9,
-      "lookHeight": 1.45,
+      "angle": 30,
+      "height": 1.15,
+      "lookHeight": 0.8,
       "fov": 44,
       "label": "Poppen"
     },
@@ -156,5 +162,5 @@
       "label": "Elven"
     }
   },
-  "shot": "reeds"
+  "shot": "search"
 }

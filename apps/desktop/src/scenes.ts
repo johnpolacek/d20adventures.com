@@ -4,7 +4,6 @@ import gateSet from "@d20/stage/sets/realm-of-myr/kordavos-south-gate.json"
 import pierSet from "@d20/stage/sets/realm-of-myr/mordava-river-pier.json"
 import pathSet from "@d20/stage/sets/realm-of-myr/old-forest-path.json"
 import stonesSet from "@d20/stage/sets/realm-of-myr/old-standing-stones.json"
-import cabinSet from "@d20/stage/sets/realm-of-myr/riverboat-cabin.json"
 import homeSet from "@d20/stage/sets/realm-of-myr/thalberns-forest-home.json"
 import forestSet from "@d20/stage/sets/realm-of-myr/valkarr-forest-trail.json"
 import battleOnTheBoat from "@d20/stage/stagings/covert-cargo/battle-on-the-boat.json"
@@ -108,14 +107,19 @@ export const SCENES: Record<string, Scene> = {
     party: ["thalbern"],
   },
   "back-home": { set: homeSet, staging: backHome, location: "Thalbern's home", where: "Morning sun falls on Thalbern's stone and timber cottage at the edge of the woods.", party: ["thalbern"] },
-  // Covert Cargo: the pier before dawn for everything outside the boat, the cabin for everything in it.
-  "the-shipment": cargo(pierSet, theShipment, "Mordava pier", "Before dawn, a riverboat lies moored beside a rickety pier on a quiet, misty fork of the Mordava. Lyra waits on its foredeck."),
-  "the-transaction": cargo(pierSet, theTransaction, "Mordava pier", "Before dawn at the rickety pier on a misty fork of the Mordava, where the riverboat lies moored."),
-  "the-disturbance": cargo(pierSet, theDisturbance, "Mordava pier", "Before dawn at the riverboat's pier. Reeds crowd the bank by the pier, where something stirred."),
+  // Covert Cargo: the pier before dawn, inside and outside the boat. The meeting is in the saloon, Poppen in the bushes.
+  "the-shipment": cargo(
+    pierSet,
+    theShipment,
+    "Mordava pier",
+    "Before dawn, a riverboat lies moored beside a rickety pier on a quiet, misty fork of the Mordava. Lyra stands in its lamplit saloon before the crate, Reinhard beside her and Silas by the only door. Elves guard the deck, and Poppen hides in the bushes at the treeline."
+  ),
+  "the-transaction": cargo(pierSet, theTransaction, "Riverboat saloon", "The riverboat's lamplit saloon at the rickety pier, the crate in the middle and the only door opening forward onto the deck."),
+  "the-disturbance": cargo(pierSet, theDisturbance, "Mordava pier", "Before dawn at the riverboat's pier. Something stirred in the bushes at the treeline, up the bank from the gangway."),
   "the-escape": cargo(pierSet, theEscape, "Mordava woods", "A trail runs from the pier along the misty riverbank and into the woods toward Kordavos."),
-  "the-fake": cargo(cabinSet, theFake, "Riverboat cabin", "The riverboat's low, lamplit cabin. The crate sits in the middle and the only door opens aft onto the deck."),
-  "battle-on-the-boat": cargo(cabinSet, battleOnTheBoat, "Riverboat cabin", "The riverboat's low, lamplit cabin. The crate sits in the middle and the only door opens aft onto the deck."),
-  "the-crate": cargo(cabinSet, theCrate, "Riverboat cabin", "The riverboat's cabin, quiet now. The heavy iron-banded crate sits in the middle under hanging rope."),
+  "the-fake": cargo(pierSet, theFake, "Riverboat saloon", "The riverboat's lamplit saloon. The crate sits in the middle, and the only door opens forward onto the deck."),
+  "battle-on-the-boat": cargo(pierSet, battleOnTheBoat, "Riverboat saloon", "The riverboat's lamplit saloon. The crate sits in the middle, and the only door opens forward onto the deck."),
+  "the-crate": cargo(pierSet, theCrate, "Riverboat saloon", "The riverboat's saloon, quiet now. The heavy iron-banded crate sits in the middle under hanging rope."),
   "return-to-the-city": cargo(riverfrontSet, returnToTheCity, "Kordavos riverfront", "The quay along the river in Kordavos, ships at their moorings and the castle on its hill above the city."),
   "the-end": cargo(pathSet, theEnd, "The old forest", "A mossy path winds between huge old trees in green-gold light."),
 }
