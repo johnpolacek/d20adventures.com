@@ -206,6 +206,16 @@ Remaining product work is tracked in [Stageview](plans/stageview.md).
 - River view on high: 1.82M to 1.09M triangles, 138 to 125 calls. Balanced reads 66 fps, high 40 to 48, on a loaded dev machine.
 - Character shots swing clear: `stage.shot({ subject, ... })` tries turns of up to 180 degrees round the subject and then 75 and 55 percent of the distance, until the camera, clamped to the set's camera box, has 0.45 m of room and a clear line to the subject past every solid footprint. Walls that should block a camera must be `solid`.
 
+## Covert Cargo's crate inside the tug, 2026-10-04
+
+- Owner review: Covert Cargo opens with "Lyra stands inside the boat, the mysterious cargo crate before her", and the crate's art shows a dim hold. The crate now sits inside the tug's saloon, not on the foredeck.
+- `riverboat.interior: true` makes the saloon a room. Its walls follow the cabin outline round the bow, panelled inside, with dark night panes behind the lit windows and the bow door standing open on its port hinge. The aft cabin stays solid. Walls and the door leaf are footprints, so walks and camera lines stop at them and pass through the doorway.
+- The pier's saloon is 0.55 of the cabin, a room about 5 m long, so a camera can stand back from the crate. The crate faces aft between banded posts, a chain sags between them, a rope hangs to the floor, and a light above the crate's front pools on it.
+- Footprints can carry a `top`. A strongbox registers its height, and a character shot's sight line and elbow-room test pass over anything lower than the line at that point. Lyra's shot looks over the crate at her with the open door and the river behind her.
+- Staging `entrances` keep a cast member offstage until the paragraph containing `when`, then walk them on from `from`. `stage.setOnStage(id, on)` and `stage.isOnStage(id)` drive it. Aelar comes out of the saloon door at "the cabin door opened", and the camera looks back at the door from beyond his place.
+- Narration reads an entrance cue as naming the entrant, so "A figure emerges… He is tall" is about Aelar. A possessive name counts once ("Lyra's escorts" are not Lyra), and an unnamed description that fits the last character ("the lead elf" after Aelar) keeps their pronouns.
+- Limits: walks are straight lines. From inside the saloon, a walk toward the foredeck passes the door, but one toward the gangway stops at the wall. Saves made before this change keep their stored positions.
+
 ## Narration shots, 2026-10-04
 
 - Revised the same day after owner review: `narrationShots(paragraphs, stage, genders)` reads a turn's paragraphs in order. A paragraph is about whoever it refers to most: a name counts twice, a pronoun once for the nearest character of that gender named before it, else for the one the previous paragraph was about, unless the paragraph first brings in someone unnamed ("A figure emerges… He is tall"). One character with twice the next one's references gets their own shot, several share the staging group shot. "For her part… She had studied…" after Lyra's paragraph now frames Lyra, not the wide meeting.

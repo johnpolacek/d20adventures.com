@@ -33,3 +33,4 @@ The same review found two play problems, fixed in the stage engine and recorded 
 - The Lyra view on the pier looked into the tug's saloon. Named shots on one character now swing clear like turn shots, and a character the camera had to swing far round turns toward it, so their card is not seen edge on.
 - Continue did not move the camera. Each paragraph now picks a view: the speaker, the people it names, or the place it describes.
 
+A later round found Covert Cargo opening with Lyra outside and the crate on the foredeck, against the intro and the crate's art. The crate and Lyra are now inside the tug's saloon, and Aelar enters at "the cabin door opened". See [the stage engine record](../stage-engine.md#covert-cargos-crate-inside-the-tug-2026-10-04).
