@@ -206,6 +206,14 @@ Remaining product work is tracked in [Stageview](plans/stageview.md).
 - River view on high: 1.82M to 1.09M triangles, 138 to 125 calls. Balanced reads 66 fps, high 40 to 48, on a loaded dev machine.
 - Character shots swing clear: `stage.shot({ subject, ... })` tries turns of up to 180 degrees round the subject and then 75 and 55 percent of the distance, until the camera, clamped to the set's camera box, has 0.45 m of room and a clear line to the subject past every solid footprint. Walls that should block a camera must be `solid`.
 
+## Rooms and the saloon's finish, 2026-10-05
+
+- Owner: the interior did not meet the quality bar next to the crate, battle and fake paintings. The saloon read as an evenly lit box with flat blue window panels, striped thin timbers and pale box lanterns.
+- Sets can declare `rooms`: a box the camera stands in, with an `ambient` share for the sky's light, a camera `fill`, an `exposure` and up to eight lamps of its own. While the camera is inside, the hemisphere and environment fade to that share and the room's lamps replace the set's, over about a third of a second each way. One set of point lights serves outside and every room, so the light count and the shaders never change.
+- The saloon is dark but for its lamps, as in the crate's art: a warm pool on the crate, five ship's lanterns, a lamp by the door and cold river light at it. Outside, one lamp inside the saloon lights its door.
+- The riverboat builder's interior now has upright red-brown boards in narrow panels, ribs between the windows, a rail and skirting, a dark boarded ceiling with deep beams, carlins and knee braces, worn floorboards, window frames with sills and glazing bars, closed shutters on every other side window, and a planked door to the owner's cabin standing open against the bulkhead. The bow door has iron studs, strap hinges, a riveted brass porthole and a brass knob. New material roles: `floor`, `ceiling`.
+- The generator adds massive iron-bound posts with bolts, a header beam carrying the chain, knee braces, ship's lanterns of brass, glass and iron, a chart table with a candle and papers, gauges with needles, more rope and stores.
+
 ## Covert Cargo's meeting inside the boat, 2026-10-05
 
 - Owner review against the source: the meeting belongs inside the boat, with one larger interior. See [the plan](plans/covert-cargo-boat-meeting.md).

@@ -46,3 +46,7 @@ Intro edits in `the-shipment.md`: Poppen in undergrowth at the treeline, the thr
 - Stage and desktop typechecks, scoped Biome and 25 desktop tests pass.
 - Saves from before this change keep their stored positions, which may now sit inside walls or the crate.
 
+## Owner feedback: the interior's quality
+
+"I feel like the interior of the ship does not meet the quality bar." Compared closely with the crate, battle and fake paintings, then rebuilt: a dark lamplit room through the new set `rooms`, finished joinery and props. Checked shot by shot on the preview page and through the opening in the app. Stage and desktop typechecks, scoped Biome, `stage:check` and 25 desktop tests pass. See [the stage engine record](../stage-engine.md#rooms-and-the-saloons-finish-2026-10-05).
+

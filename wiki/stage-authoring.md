@@ -61,4 +61,8 @@ The web viewer and the desktop app run the same `packages/stage` renderer and th
 - Anchor every doorway people walk through as two `door` anchors, a step inside and a step outside, so walks route through it.
 - Give an entrance a `shot` when the room is crowded. The computed view from beyond the entrant's place can land on someone else.
 - A face peeking over leaves reads better than a view over a hidden character's shoulder. Tall reeds between the camera and the subject hide everything.
+- Give an interior a `room`. Without one the night sky's hemisphere and environment light every wall evenly, and the room looks flat. Inside, light only from lamps the art shows, a warm pool on what the scene is about, and darkness between.
+- Keep a lamp's light a hand below or beside its glass. A point light inside the glass blows it to white.
+- Lay wall boards in panels narrower than they are tall, so the painted grain runs upright. The grain follows a piece's longest side.
+- Windows seen from inside need frames, sills and glazing bars, and dark glass. Big plain panes read as blank blue screens.
 - A cloaked character's back can come out as a front-facing body with the cloak drawn behind it. Give the figure a `backNote` in `scripts/stage-standees.ts` that says the cloak hangs down the back and hides it, and whether the hood is up.
