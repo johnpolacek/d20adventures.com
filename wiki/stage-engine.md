@@ -206,6 +206,16 @@ Remaining product work is tracked in [Stageview](plans/stageview.md).
 - River view on high: 1.82M to 1.09M triangles, 138 to 125 calls. Balanced reads 66 fps, high 40 to 48, on a loaded dev machine.
 - Character shots swing clear: `stage.shot({ subject, ... })` tries turns of up to 180 degrees round the subject and then 75 and 55 percent of the distance, until the camera, clamped to the set's camera box, has 0.45 m of room and a clear line to the subject past every solid footprint. Walls that should block a camera must be `solid`.
 
+## Covert Cargo's meeting inside the boat, 2026-10-05
+
+- Owner review against the source: the meeting belongs inside the boat, with one larger interior. See [the plan](plans/covert-cargo-boat-meeting.md).
+- The tug's cabin is wider and longer (`riverboat.width` 0.78 of the beam, `cabin` 0.6, `saloon` 0.72), so the saloon is a room about 7.3 by 4.2 m. With `interior`, the bow door is the only way out, with a porthole in its leaf. The aft exterior door is gone, and a dark doorway in the aft bulkhead leads to the owner's cabin, which stays solid.
+- The Fake, Battle on the Boat and The Crate now play in the pier set's saloon. The separate `riverboat-cabin` set is retired, and the helm, gauges and crate hold moved into the saloon.
+- Staging: Lyra at the crate, Reinhard beside her, Silas by the door, Aelar out of his cabin on "the cabin door opened", one elf by the gangway and one at the stern, Poppen peeking from bushes at the treeline. The Shipment's intro lines that put people outside were edited to match.
+- Walks go through doorways. A builder anchors a doorway as a pair of `door` anchors, a step inside and a step outside. `routeOver` tries the straight line, then each doorway in either direction. `Stage.route` returns the points to walk through within the budget, the desktop walks them, and `stage:check` counts a walk through a door as clear.
+- A staging entrance can name the `shot` it is seen from. The computed arrival view would have put the camera on Silas.
+- Interior lanterns use a dimmer amber flame. The shared flame, emissive 5, reads as a white box up close.
+
 ## Covert Cargo's crate inside the tug, 2026-10-04
 
 - Owner review: Covert Cargo opens with "Lyra stands inside the boat, the mysterious cargo crate before her", and the crate's art shows a dim hold. The crate now sits inside the tug's saloon, not on the foredeck.

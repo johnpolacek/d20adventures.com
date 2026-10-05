@@ -8,6 +8,7 @@ Updated for the desktop integration worktree on 2026-10-02. Implementation statu
 
 | Plan | Status | Next work |
 |---|---|---|
+| [Covert Cargo: the meeting inside the boat](covert-cargo-boat-meeting.md) | Implemented on main 2026-10-05. One larger saloon for every boat encounter, restaged to the source, intro edited, walks through doors. | Owner play-through. |
 | [Desktop module covers](desktop-module-covers.md) | Implemented on main 2026-10-04. Painted module-style covers and a module cover layout for the New game screen. | Owner review. |
 | [Harvest Festival handoff](harvest-festival-handoff.md) | Implementation stopped at owner request. No scene code changed. | Resume from inspected integration points, authored NPCs, and validation steps. |
 | [Stageview](stageview.md) | Desktop gate scene connected to the real local turn flow in this worktree. | More authored sets, per-turn beats, and encounter coverage. |

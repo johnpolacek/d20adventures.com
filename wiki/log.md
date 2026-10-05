@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-05, Covert Cargo's meeting inside the boat
+
+Owner asked to check the 3D against the adventure's source and art. The source's later encounters put everyone in the cabin, while The Shipment's intro left the escorts on the pier and Poppen in reeds. Owner chose the logical staging: the whole meeting in one larger saloon, the elves guarding the deck, Poppen in the bushes at the treeline, and four intro lines edited to match. Every boat encounter now plays in that saloon, and walks route through its door. See [the plan](plans/covert-cargo-boat-meeting.md).
+
 ## 2026-10-04, the crate inside the tug
 
 Owner pointed out that Covert Cargo's crate belongs inside the boat, as in the original art. The tug's saloon is now a room with an open door. Lyra opens the adventure inside it with the crate before her, and the camera looks over the crate at her. Aelar is offstage until the narration opens the cabin door, then walks out of it. See [the stage engine record](stage-engine.md#covert-cargos-crate-inside-the-tug-2026-10-04).
