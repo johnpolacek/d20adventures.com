@@ -77,9 +77,9 @@ export function buildSetGeometry(spec: SetSpec, library: MaterialLibrary): Built
       mat: (name) => mat(overrides[name] ?? name),
       rand,
       frame,
-      footprint: (x, z, hw, hd, ry = 0) => {
+      footprint: (x, z, hw, hd, ry = 0, top) => {
         const p = toWorld(frame, x, 0, z)
-        footprints.push({ kind: "rect", x: p.x, z: p.z, hw, hd, ry: ry + worldYaw })
+        footprints.push({ kind: "rect", x: p.x, z: p.z, hw, hd, ry: ry + worldYaw, ...(top === undefined ? {} : { top: toWorld(frame, x, top, z).y }) })
       },
       circle: (x, z, r) => {
         const p = toWorld(frame, x, 0, z)

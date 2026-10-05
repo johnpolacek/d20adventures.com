@@ -216,6 +216,8 @@ const loadImage = (src: string) =>
 export class Standees {
   group = new THREE.Group()
   items = new Map<string, Standee>()
+  // Cast members not yet on stage (an entrance the narration has not reached).
+  offstage = new Set<string>()
 
   constructor(
     cast: CastMember[],
@@ -321,6 +323,7 @@ export class Standees {
       s.yaw = s.yaw === null ? target : s.yaw + wrap(target - s.yaw) * k
       s.grp.position.set(c.x, 0, c.z)
       s.grp.rotation.y = s.yaw
+      s.grp.visible = !this.offstage.has(c.id)
       s.mesh.position.y = Math.abs(Math.cos(c.stride)) * 0.035 * c.walk
       s.mesh.rotation.z = Math.sin(c.stride) * 0.035 * c.walk
       // The card is as wide as the art it shows; the shadow caster and the relief follow whichever view dominates.

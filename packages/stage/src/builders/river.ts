@@ -116,7 +116,7 @@ function loft(
 // An old river tug, as in Covert Cargo's art: a lofted hull that rises to the bow, dark below a blue-grey strake and a
 // rust rub rail; a pale cabin with rust trim, its forward saloon glazed and lit, small windows aft; a pilothouse with a
 // rounded roof on the cabin top, a thin stack and a gooseneck vent; rails, life rings and bitts. Bow toward +z. Decks are
-// at y = 0. The cabin is solid.
+// at y = 0. The cabin is solid, or with `interior` the saloon is a room with an open door.
 export const riverboat = defineBuilder(
   z
     .object({
@@ -129,6 +129,9 @@ export const riverboat = defineBuilder(
       saloon: num(0, 1).default(0.4),
       height: size(4).default(2.1),
       lit: z.boolean().default(true),
+      // The saloon as a room people stand in: walls panelled inside, dark windows behind the lit panes, and its bow door
+      // standing open.
+      interior: z.boolean().default(false),
     })
     .strict(),
   (ctx, p) => {
@@ -249,7 +252,65 @@ export const riverboat = defineBuilder(
       const n = V(Math.cos(a) / hw, 0, Math.sin(a) / (Lr + grow)).normalize()
       return { x: hw * Math.cos(a), z: zr + (Lr + grow) * Math.sin(a), yaw: Math.atan2(n.x, n.z) }
     }
-    plan(b, M.cabin, outline(0), 0, Hc)
+    // Inside, each window shows the dark river through a frame on the wall's inner face.
+    const T = 0.08
+    const inner = (x: number, y: number, zz: number, yaw: number, w: number, h: number) => {
+      const at = (d: number) => [x - Math.sin(yaw) * d, zz - Math.cos(yaw) * d] as const
+      const [fx, fz] = at(T + 0.03)
+      F.box(M.rust, fx, y, fz, w + 0.1, h + 0.1, 0.02, yaw)
+      const [gx, gz] = at(T + 0.045)
+      F.box(M.night, gx, y, gz, w, h, 0.02, yaw)
+    }
+    if (!p.interior) plan(b, M.cabin, outline(0), 0, Hc)
+    else {
+      // The aft cabin stays solid. The saloon's walls follow the outline round the bow, leaving a doorway dead ahead.
+      const hw = Wc / 2
+      plan(
+        b,
+        M.cabin,
+        [
+          [-hw, z0],
+          [hw, z0],
+          [hw, zs],
+          [-hw, zs],
+        ],
+        0,
+        Hc
+      )
+      F.box(M.panel, 0, Hc / 2, zs + 0.012, Wc - 2 * T, Hc, 0.024)
+      ctx.footprint(0, (z0 + zs) / 2, hw, (zs - z0) / 2)
+      const walls: Vec2[] = [[hw, zs], ...outline(0).slice(2), [-hw, zs]]
+      for (let i = 0; i < walls.length - 1; i++) {
+        const [ax, az] = walls[i]
+        const [cx, cz] = walls[i + 1]
+        const len = Math.hypot(cx - ax, cz - az)
+        const nx = (cz - az) / len
+        const nz = -(cx - ax) / len
+        const yaw = Math.atan2(nx, nz)
+        const mx = (ax + cx) / 2
+        const mz = (az + cz) / 2
+        if (Math.abs(mx) < 0.4 && mz > zr) {
+          // Over the doorway.
+          F.box(M.cabin, mx - (nx * T) / 2, 2.05 + (Hc - 2.05) / 2, mz - (nz * T) / 2, len + 0.04, Hc - 2.05, T, yaw)
+          continue
+        }
+        F.box(M.cabin, mx - (nx * T) / 2, Hc / 2, mz - (nz * T) / 2, len + 0.04, Hc, T, yaw)
+        F.box(M.panel, mx - nx * (T + 0.012), Hc / 2, mz - nz * (T + 0.012), len + 0.04, Hc, 0.024, yaw)
+        ctx.footprint(mx - (nx * T) / 2, mz - (nz * T) / 2, len / 2 + 0.02, T / 2 + 0.03, yaw)
+      }
+      // Beams across the ceiling.
+      for (let k = 1; k <= 4; k++) F.box(M.post, 0, Hc - 0.09, zs + ((z1 - zs) * k) / 5, Wc - 0.3, 0.14, 0.14)
+      // The door stands open on its port hinge, its glazing lit.
+      const hinge = bowAt((Math.PI * 9) / 16, 0)
+      for (const a of [(Math.PI * 7) / 16, (Math.PI * 9) / 16]) {
+        const post = bowAt(a, 0)
+        F.box(M.rust, post.x, 1.02, post.z, 0.1, 2.06, 0.14, post.yaw)
+      }
+      F.box(M.rust, 0, 2.08, z1 + 0.02, 0.9, 0.08, 0.14)
+      F.box(M.cabin, hinge.x - 0.05, 1.0, hinge.z + 0.4, 0.05, 1.96, 0.76)
+      F.box(glow, hinge.x - 0.05, 1.3, hinge.z + 0.4, 0.07, 0.7, 0.44)
+      ctx.footprint(hinge.x - 0.05, hinge.z + 0.4, 0.05, 0.38)
+    }
     const ring = (grow: number, y: number, r: number) => {
       const pts = outline(grow)
       for (let i = 0; i < pts.length; i++) {
@@ -276,7 +337,10 @@ export const riverboat = defineBuilder(
       const x = side * (Wc / 2)
       const yaw = (side * Math.PI) / 2
       const big = Math.max(1, Math.floor((zr - zs) / 0.95))
-      for (let i = 0; i < big; i++) pane(x, Hc * 0.55, zs + ((i + 0.5) * (zr - zs)) / big, yaw, 0.72, Hc * 0.4, true)
+      for (let i = 0; i < big; i++) {
+        pane(x, Hc * 0.55, zs + ((i + 0.5) * (zr - zs)) / big, yaw, 0.72, Hc * 0.4, true)
+        if (p.interior) inner(x, Hc * 0.55, zs + ((i + 0.5) * (zr - zs)) / big, yaw, 0.72, Hc * 0.4)
+      }
       const small = Math.max(1, Math.floor((zs - z0) / 0.85))
       for (let i = 0; i < small; i++) pane(x, Hc * 0.62, z0 + ((i + 0.5) * (zs - z0)) / small, yaw, 0.38, 0.48, i % 3 !== 1)
       for (const zz of [z0, zs, zr]) F.box(M.rust, x + side * 0.04, Hc / 2, zz, 0.1, Hc, 0.1)
@@ -286,8 +350,10 @@ export const riverboat = defineBuilder(
     for (let k = 0; k < m; k++) {
       const a = (Math.PI * (k + 0.5)) / m
       const { x, z: zz, yaw } = bowAt(a, 0)
-      if (k === (m - 1) / 2) pane(x, Math.min(1.0, Hc * 0.4), zz, yaw, 0.74, Math.min(1.8, Hc * 0.68), true)
-      else pane(x, Hc * 0.55, zz, yaw, 0.62, Hc * 0.4, true)
+      if (k !== (m - 1) / 2) {
+        pane(x, Hc * 0.55, zz, yaw, 0.62, Hc * 0.4, true)
+        if (p.interior) inner(x, Hc * 0.55, zz, yaw, 0.62, Hc * 0.4)
+      } else if (!p.interior) pane(x, Math.min(1.0, Hc * 0.4), zz, yaw, 0.74, Math.min(1.8, Hc * 0.68), true)
       const post = bowAt((Math.PI * k) / m, 0.03)
       if (k > 0) F.box(M.rust, post.x, Hc / 2, post.z, 0.09, Hc, 0.09, post.yaw)
     }
@@ -358,9 +424,25 @@ export const riverboat = defineBuilder(
         M4(bx, 0.22, bz, 0, 1, 0.44, 1),
         { uv: "keep" }
       )
-    ctx.footprint(0, zc, Wc / 2, Lc / 2)
+    if (!p.interior) ctx.footprint(0, zc, Wc / 2, Lc / 2)
   },
-  { hull: "hull", strake: "strake", deck: "deck", rust: "rust", cabin: "cabin", roof: "roof", window: "window", helm: "window", void: "void", iron: "iron", ring: "rust", rope: "rope" }
+  {
+    hull: "hull",
+    strake: "strake",
+    deck: "deck",
+    rust: "rust",
+    cabin: "cabin",
+    roof: "roof",
+    window: "window",
+    helm: "window",
+    void: "void",
+    iron: "iron",
+    ring: "rust",
+    rope: "rope",
+    panel: "roof",
+    post: "roof",
+    night: "void",
+  }
 )
 
 // A cargo strongbox, as in Covert Cargo's crate: rough boards laid across each face with gaps between them, corner
@@ -488,7 +570,7 @@ export const strongbox = defineBuilder(
       F.box(M.iron, sx * (W / 2 + bt + 0.01), skid + Hb * 0.72, 0, 0.02, 0.06, 0.1)
       F.geo(M.iron, ring(0.07, 0.011), M4(sx * (W / 2 + bt + 0.03), skid + Hb * 0.72 - 0.07, 0, Math.PI / 2), { uv: "keep" })
     }
-    ctx.footprint(0, 0, W / 2 + 0.05, D / 2 + 0.05)
+    ctx.footprint(0, 0, W / 2 + 0.05, D / 2 + 0.05, 0, p.height + 0.05)
   },
   { wood: "crate", inner: "crateDark", iron: "iron" }
 )

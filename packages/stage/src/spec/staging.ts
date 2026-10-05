@@ -99,6 +99,13 @@ export const stagingSpecSchema = z
       )
       .default({}),
     shot: idName.optional(),
+    // Entrances the narration cues: while a turn's narration contains `when`, the cast member is offstage until the
+    // paragraph that says it, then walks on from `from` (a mark or point) to their place. Narration without the phrase,
+    // such as a later round's, finds them already in place.
+    entrances: z
+      .array(z.object({ cast: idName, when: z.string().min(3).max(120), from: z.union([idName, vec2]) }).strict())
+      .max(12)
+      .default([]),
   })
   .strict()
   .superRefine((s, ctx) => {
@@ -107,6 +114,7 @@ export const stagingSpecSchema = z
       if (ids.has(c.id)) ctx.addIssue({ code: "custom", message: `duplicate cast id ${c.id}`, path: ["cast"] })
       ids.add(c.id)
     }
+    for (const e of s.entrances) if (!ids.has(e.cast)) ctx.addIssue({ code: "custom", message: `entrance for unknown cast member ${e.cast}`, path: ["entrances"] })
     for (const [key, shot] of Object.entries(s.shots)) {
       const refs = "subjects" in shot ? shot.subjects : "subject" in shot ? [shot.subject] : []
       for (const r of refs) if (!ids.has(r)) ctx.addIssue({ code: "custom", message: `shot ${key} frames unknown cast member ${r}`, path: ["shots", key] })

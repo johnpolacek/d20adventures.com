@@ -47,8 +47,8 @@
         "portrait": "/stage/fixtures/covert-cargo/reinhard-portrait.jpg"
       },
       "at": [
-        4.25,
-        3.05
+        3.4,
+        3.2
       ],
       "facing": "pier"
     },
@@ -79,8 +79,8 @@
         "portrait": "/stage/fixtures/covert-cargo/aelar-portrait.jpg"
       },
       "at": [
-        4.9,
-        3.75
+        5.9,
+        3.6
       ],
       "facing": "reeds"
     },
@@ -95,8 +95,8 @@
         "portrait": "/stage/fixtures/covert-cargo/lyra-portrait.jpg"
       },
       "at": [
-        4.2,
-        3.9
+        4.3,
+        4.4
       ],
       "facing": "pier"
     },

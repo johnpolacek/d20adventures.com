@@ -15,10 +15,13 @@
         "portrait": "/stage/fixtures/covert-cargo/lyra-portrait.jpg"
       },
       "at": [
-        4.2,
-        3.45
+        5,
+        1.2
       ],
-      "facing": "npcs-1749184389465"
+      "facing": [
+        5.2,
+        -0.2
+      ]
     },
     {
       "id": "npcs-1749184389465",
@@ -31,10 +34,10 @@
         "portrait": "/stage/fixtures/covert-cargo/aelar-portrait.jpg"
       },
       "at": [
-        4.85,
-        2.75
+        5.95,
+        2.85
       ],
-      "facing": "npcs-1749181492795"
+      "facing": "npcs-1749163978757"
     },
     {
       "id": "npcs-1749181492795",
@@ -66,7 +69,7 @@
         1.4,
         7.25
       ],
-      "facing": "lyra"
+      "facing": "npcs-1749184389465"
     },
     {
       "id": "poppen",
@@ -134,11 +137,11 @@
     },
     "lyra": {
       "subject": "lyra",
-      "distance": 3.2,
-      "angle": 22,
-      "height": 1.6,
-      "lookHeight": 1.394,
-      "fov": 44,
+      "distance": 3.4,
+      "angle": 8,
+      "height": 1.55,
+      "lookHeight": 1.15,
+      "fov": 50,
       "label": "Lyra"
     },
     "aelar": {
@@ -160,5 +163,15 @@
       "label": "Poppen"
     }
   },
-  "shot": "river"
+  "shot": "river",
+  "entrances": [
+    {
+      "cast": "npcs-1749184389465",
+      "when": "cabin door opened",
+      "from": [
+        5.2,
+        1.7
+      ]
+    }
+  ]
 }

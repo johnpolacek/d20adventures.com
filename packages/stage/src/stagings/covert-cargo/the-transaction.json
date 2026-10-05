@@ -15,8 +15,8 @@
         "portrait": "/stage/fixtures/covert-cargo/lyra-portrait.jpg"
       },
       "at": [
-        4.5,
-        3.3
+        5.1,
+        1.55
       ],
       "facing": "npcs-1749184389465"
     },
@@ -31,8 +31,8 @@
         "portrait": "/stage/fixtures/covert-cargo/aelar-portrait.jpg"
       },
       "at": [
-        3.75,
-        4.55
+        3.55,
+        4.85
       ],
       "facing": "npcs-1749181492795"
     },

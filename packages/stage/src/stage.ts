@@ -449,14 +449,15 @@ export class Stage {
     if (!("subject" in which) || !this.footprints.length) return first
     const c = this.cast.find((m) => m.id === which.subject)
     if (!c) return first
-    const clear = (x: number, z: number) => {
+    // The sight line falls from the camera to the subject's look height, and passes over anything lower (a crate).
+    const clear = (x: number, y: number, z: number) => {
       const len = Math.hypot(c.x - x, c.z - z)
       // Fine steps: cabin walls are a hand's width thick.
       const n = Math.max(2, Math.ceil(len / 0.05))
       for (let i = 0; i <= n; i++) {
         const t = i / n
         if (t * len > len - 0.3) break
-        if (onFootprint(this.footprints, x + (c.x - x) * t, z + (c.z - z) * t)) return false
+        if (onFootprint(this.footprints, x + (c.x - x) * t, z + (c.z - z) * t, y + (which.lookHeight - y) * t)) return false
       }
       return true
     }
@@ -464,19 +465,19 @@ export class Stage {
     // room: a camera brushing a post shows nothing but the post.
     const { min, max } = this.set.camera
     const fit = (r: ResolvedShot): ResolvedShot => ({ ...r, position: [0, 1, 2].map((i) => THREE.MathUtils.clamp(r.position[i], min[i], max[i])) as [number, number, number] })
-    const roomy = (x: number, z: number) =>
+    const roomy = (x: number, y: number, z: number) =>
       ![
         [0, 0],
         [0.45, 0],
         [-0.45, 0],
         [0, 0.45],
         [0, -0.45],
-      ].some(([dx, dz]) => onFootprint(this.footprints, x + dx, z + dz))
+      ].some(([dx, dz]) => onFootprint(this.footprints, x + dx, z + dz, y - 0.3))
     for (const scale of [1, 0.75, 0.55])
       for (const swing of [0, 30, -30, 60, -60, 90, -90, 135, -135, 180]) {
         const r = fit(frameShot({ ...which, angle: which.angle + swing, distance: which.distance * scale }, this.cast))
-        const [x, , z] = r.position
-        if (Math.hypot(x - c.x, z - c.z) > 1.5 && roomy(x, z) && clear(x, z)) {
+        const [x, y, z] = r.position
+        if (Math.hypot(x - c.x, z - c.z) > 1.5 && roomy(x, y, z) && clear(x, y, z)) {
           const bearing = Math.atan2(x - c.x, z - c.z)
           const off = Math.atan2(Math.sin(bearing - c.ry), Math.cos(bearing - c.ry))
           if (turn && Math.abs(off) > THREE.MathUtils.degToRad(60)) c.ry = bearing - THREE.MathUtils.degToRad(which.angle)
@@ -581,6 +582,15 @@ export class Stage {
       const p = this.point(to)
       c.ry = Math.atan2(p.x - c.x, p.z - c.z)
     }
+  }
+  // Take a cast member off the stage (hidden, still placed) or bring them back.
+  setOnStage(id: string, on: boolean) {
+    this.member(id)
+    if (on) this.standees.offstage.delete(id)
+    else this.standees.offstage.add(id)
+  }
+  isOnStage(id: string) {
+    return !this.standees.offstage.has(id)
   }
   // Place a cast member instantly (setting up a beat sequence).
   placeCast(id: string, at: string | [number, number], facing?: string | [number, number] | number) {

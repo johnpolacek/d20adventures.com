@@ -2,9 +2,11 @@ import type { StagingShot } from "./spec/staging"
 
 // Which view fits each paragraph of a turn's narration, so the camera follows the story as the player reads on.
 //
-// A paragraph is about whoever it refers to most: each name counts twice, and each pronoun counts once for the character
-// it points back to (the nearest one of that gender named before it in the paragraph, else the one the previous
-// paragraph was about). "For her part, she had studied…" after a paragraph about Lyra is about Lyra.
+// A paragraph is about whoever it refers to most: each name counts twice (once as a possessive: "Lyra's escorts" are
+// not Lyra), and each pronoun counts once for the character it points back to (the nearest one of that gender named
+// before it in the paragraph, else the one the previous paragraph was about). "For her part, she had studied…" after a
+// paragraph about Lyra is about Lyra. A staging's entrance cue ("the cabin door opened") names whoever enters there, so
+// "A figure emerges… He is tall" is about them.
 //   - One character clearly leads (twice the references of the next): their own shot, or a shot on them.
 //   - Several share it: the staging's group shot that frames most of them.
 //   - Nobody: the set or staging shot whose label best matches the paragraph's words, through a small thesaurus
@@ -14,7 +16,7 @@ import type { StagingShot } from "./spec/staging"
 export interface NarrationStage {
   cast: { id: string; name: string }[]
   set: { shots: Record<string, { label?: string }> }
-  staging: { shot?: string; shots: Record<string, StagingShot> } | null
+  staging: { shot?: string; shots: Record<string, StagingShot>; entrances?: { cast: string; when: string }[] } | null
 }
 export type NarrationShot = string | { subject: string }
 type Gender = "f" | "m"
@@ -36,7 +38,7 @@ const TITLES = /^(madam|master|mistress|sergeant|sir|lady|lord|captain|brother|s
 const DESCRIPTORS = /^(elven|elvish|dwarven|human|halfling|gnomish|orcish|old|young|tall|hooded|the|a|an)$/
 const PRONOUNS: Record<Gender, RegExp> = { f: /\b(she|her|hers|herself)\b/gi, m: /\b(he|him|his|himself)\b/gi }
 // Someone the paragraph brings in without a name ("A figure emerges… He is tall"): later pronouns are theirs, not the
-// previous paragraph's character's.
+// previous paragraph's character's, unless the words fit that character ("the lead elf" after a paragraph about Aelar).
 const STRANGER =
   /\b(a|an|the|another|one)\s+(\w+\s+)?(figure|man|woman|elf|dwarf|halfling|gnome|orc|stranger|guard|soldier|person|someone|creature|beast|boy|girl|rider|sailor|smuggler|captain|leader)\b/gi
 // Words that mean the same place or thing in a shot label and in narration.
@@ -97,22 +99,30 @@ export function readNarration(paragraphs: string[], stage: NarrationStage, peopl
     const beat = (view: NarrationShot | null): NarrationBeat => ({ view, speech })
     const lower = text.toLowerCase()
     // Every name mention, in order. A full name and its first name at the same spot count once.
-    const mentions: { id: string; at: number }[] = []
+    const mentions: { id: string; at: number; weight: number }[] = []
     for (const c of stage.cast) {
-      const spots = new Set<number>()
-      for (const n of callNames(c.name)) for (const at of positions(lower, new RegExp(`\\b${literal(n)}\\b`))) spots.add(at)
-      const sorted = [...spots].sort((a, b) => a - b).filter((at, i, all) => i === 0 || at - all[i - 1] > 2)
-      for (const at of sorted) mentions.push({ id: c.id, at })
+      const spots = new Map<number, number>()
+      for (const n of callNames(c.name))
+        for (const at of positions(lower, new RegExp(`\\b${literal(n)}\\b`))) spots.set(at, Math.min(spots.get(at) ?? 2, /^['’]s\b/.test(lower.slice(at + n.length)) ? 1 : 2))
+      const sorted = [...spots].sort((a, b) => a[0] - b[0]).filter(([at], i, all) => i === 0 || at - all[i - 1][0] > 2)
+      for (const [at, weight] of sorted) mentions.push({ id: c.id, at, weight })
     }
+    for (const e of stage.staging?.entrances ?? []) {
+      const at = lower.indexOf(e.when.toLowerCase())
+      if (at >= 0 && stage.cast.some((c) => c.id === e.cast)) mentions.push({ id: e.cast, at, weight: 2 })
+    }
+    mentions.sort((a, b) => a.at - b.at)
     const refs = new Map<string, number>()
     const add = (id: string, n: number) => refs.set(id, (refs.get(id) ?? 0) + n)
-    for (const m of mentions) add(m.id, 2)
-    const strangers = positions(lower, STRANGER)
+    for (const m of mentions) add(m.id, m.weight)
+    const strangers = [...lower.matchAll(new RegExp(STRANGER.source, "gi"))].map((m) => ({ at: m.index ?? 0, noun: m[3] }))
+    const fits = (id: string, noun: string) => Boolean(people[id]?.words?.includes(noun))
     for (const g of ["f", "m"] as Gender[])
       for (const at of positions(lower, PRONOUNS[g])) {
         const before = mentions.filter((m) => m.at < at && genders[m.id] === g)
         const named = mentions.filter((m) => genders[m.id] === g)
-        const carried = strangers.some((s) => s < at) ? undefined : previous[g]
+        const was = previous[g]
+        const carried = was && !strangers.some((s) => s.at < at && !fits(was, s.noun)) ? was : undefined
         const who = before.length ? before[before.length - 1].id : named.length ? named[0].id : carried
         if (who) add(who, 1)
       }

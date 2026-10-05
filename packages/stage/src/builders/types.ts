@@ -4,7 +4,8 @@ import type { Sink } from "../kit/geometry"
 import type { Rand } from "../kit/rng"
 
 // Where the crowd may not stand: a rotated rectangle [x, z, halfWidth, halfDepth, yaw radians] or a circle [x, z, r].
-export type Footprint = { kind: "rect"; x: number; z: number; hw: number; hd: number; ry: number } | { kind: "circle"; x: number; z: number; r: number }
+// `top`, when given, is the world height of something low (a crate) that a camera can see over.
+export type Footprint = { kind: "rect"; x: number; z: number; hw: number; hd: number; ry: number; top?: number } | { kind: "circle"; x: number; z: number; r: number }
 export interface Anchor {
   tag: string
   x: number
@@ -21,7 +22,7 @@ export interface BuildCtx {
   mat: (name: string) => THREE.Material
   rand: Rand
   frame: THREE.Matrix4
-  footprint: (x: number, z: number, hw: number, hd: number, ry?: number) => void
+  footprint: (x: number, z: number, hw: number, hd: number, ry?: number, top?: number) => void
   circle: (x: number, z: number, r: number) => void
   anchor: (tag: string, x: number, y: number, z: number) => void
   // Standalone meshes (not merged): the land ring, anything with its own attributes.

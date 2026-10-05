@@ -129,13 +129,45 @@ export function DesktopGame() {
         : [],
     [stage, beats, paragraph, reading]
   )
-  // Each paragraph moves the camera to fit it: its first speaker, whoever it is about, or the place it describes.
+  // Entrances the scene ties to the narration: offstage until the paragraph that brings them on ("the cabin door
+  // opened"), then they walk on from the door to their place. Narration without the phrase finds them in place.
+  const cues = useMemo(() => (stage?.staging?.entrances ?? []).map((e) => ({ ...e, at: text.findIndex((p) => p.toLowerCase().includes(e.when.toLowerCase())) })), [stage, text])
+  const arriving = reading ? cues.find((e) => e.at === paragraph) : undefined
+  useEffect(() => {
+    if (!stage) return
+    for (const e of cues) {
+      const home = stage.staging?.cast.find((c) => c.id === e.cast)
+      if (!home) continue
+      if (reading && e.at >= 0 && paragraph < e.at) {
+        stage.placeCast(e.cast, e.from)
+        stage.setOnStage(e.cast, false)
+      } else if (!stage.isOnStage(e.cast)) {
+        stage.setOnStage(e.cast, true)
+        if (reading && paragraph === e.at) void stage.moveCast(e.cast, home.at, { speed: 0.9 }).then(() => stage.faceCast(e.cast, home.facing))
+        else stage.placeCast(e.cast, home.at, home.facing)
+      }
+    }
+  }, [stage, cues, reading, paragraph])
+  // Each paragraph moves the camera to fit it: its first speaker, someone making an entrance, whoever it is about, or
+  // the place it describes.
   useEffect(() => {
     if (!stage || !reading) return
     if (speech.length) return void stage.shot({ subject: speech[0].cast.id, distance: 5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 })
+    if (arriving) {
+      // Facing the way they come: from beyond their place, looking back at where they enter.
+      const home = stage.staging?.cast.find((c) => c.id === arriving.cast)?.at
+      if (Array.isArray(home) && Array.isArray(arriving.from)) {
+        const [fx, fz] = arriving.from
+        const [hx, hz] = home
+        const d = Math.hypot(hx - fx, hz - fz) || 1
+        const k = 3.6 / d
+        return void stage.shot({ position: [hx + (hx - fx) * k, 1.75, hz + (hz - fz) * k], target: [(fx + hx) / 2, 1.3, (fz + hz) / 2], fov: 50 })
+      }
+      return void stage.shot({ subject: arriving.cast, distance: 5.5, angle: 12, height: 1.8, lookHeight: 1.2, fov: 48 })
+    }
     const view = beats[paragraph]?.view
     if (view) stage.shot(typeof view === "string" ? view : { subject: view.subject, distance: 4.5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 })
-  }, [stage, speech, beats, paragraph, reading])
+  }, [stage, speech, arriving, beats, paragraph, reading])
   useEffect(() => {
     if (!auto || !reading || busy || !text.length) return
     const timer = setTimeout(() => (paragraph < text.length - 1 ? setParagraph((n) => n + 1) : setReading(false)), readingSeconds(text[paragraph] ?? "") * 1000)

@@ -2,8 +2,10 @@ import type { Footprint } from "../builders/types"
 
 // Whether a ground point is inside a solid footprint (walls, stalls, tables): what the cast walks around and the crowd
 // keeps off. Shared by the set build, the crowd, the runtime and `stage:check`, so they agree on what is walkable.
-export function onFootprint(footprints: readonly Footprint[], x: number, z: number) {
+// With `above`, a footprint whose top is lower is passed over: a sight line at that height clears a crate.
+export function onFootprint(footprints: readonly Footprint[], x: number, z: number, above = -Infinity) {
   for (const f of footprints) {
+    if (f.kind === "rect" && f.top !== undefined && f.top < above) continue
     if (f.kind === "circle") {
       if (Math.hypot(x - f.x, z - f.z) < f.r) return true
       continue
