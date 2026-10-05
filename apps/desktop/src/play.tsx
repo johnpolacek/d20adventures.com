@@ -7,11 +7,12 @@ import { Pill, panel, StageHud, useCompact } from "@/components/stage/hud"
 import { Journal, type JournalTurn } from "@/components/stage/journal"
 import { Narration } from "@/components/stage/narration"
 import { type CardCharacter, type CardMode, PromptCard } from "@/components/stage/prompt-card"
+import { ROLL_SECONDS, type RollResultData } from "@/components/stage/roll-result"
 import { Bubbles, Plate } from "@/components/stage/stage-dialogue"
 import { TurnOrder } from "@/components/stage/turn-order"
 import { useStage } from "@/components/stage/use-stage"
 import { Button } from "@/components/ui/button"
-import { parseNarrative } from "@/lib/utils/parse-narrative"
+import { type NarrativePart, parseNarrative } from "@/lib/utils/parse-narrative"
 import type { AdventureInfo, GameCommand } from "../runtime/game"
 import type { Hero, HeroCommand, PartyChoice } from "../runtime/heroes"
 import type { Save } from "../runtime/store"
@@ -23,15 +24,22 @@ import { applyMovement, context, positions as stagePositions } from "./movement"
 import { NewGame } from "./new-game"
 import { castIdFor, partyScene, portraitFor, sceneFor } from "./scenes"
 
-const prose = (text: string, originals = false) =>
+type Roll = Extract<NarrativePart, { type: "diceroll" }>
+// A turn's narrative as paragraphs. A dice roll keeps its sentence, which the camera and screen readers read, and its
+// numbers, which the narration shows as the roll itself.
+const story = (text: string, originals = false): { text: string; roll?: Roll }[] =>
   parseNarrative(text).flatMap((part) => {
-    if (part.type === "original-reply") return originals ? [`Player action: ${part.value}`] : []
+    if (part.type === "original-reply") return originals ? [{ text: `Player action: ${part.value}` }] : []
     if (part.type === "diceroll")
       return [
-        `${part.character} · ${part.rollType}: ${part.baseRoll ?? part.result}${part.modifier !== undefined ? ` + ${part.modifier} = ${part.result}` : ""}, DC ${part.difficulty}. ${part.success ? "Success" : "Failure"}.`,
+        {
+          text: `${part.character} · ${part.rollType}: ${part.baseRoll ?? part.result}${part.modifier !== undefined ? ` + ${part.modifier} = ${part.result}` : ""}, DC ${part.difficulty}. ${part.success ? "Success" : "Failure"}.`,
+          roll: part,
+        },
       ]
-    return [part.value]
+    return [{ text: part.value }]
   })
+const prose = (text: string, originals = false) => story(text, originals).map((p) => p.text)
 
 export function DesktopGame() {
   const [save, setSave] = useState<Save | null>(null)
@@ -101,7 +109,26 @@ export function DesktopGame() {
   const specs = useMemo(() => (scene ? { set: scene.set, staging: scene.staging, tier: "balanced" as const } : null), [scene])
   const { stage, stageRef, status: loading, error: stageError } = useStage(containerRef, specs)
   const actor = turn ? findCurrentActor(turn.characters) : undefined
-  const text = useMemo(() => prose(turn?.narrative ?? ""), [turn?.narrative])
+  const paragraphs = useMemo(() => story(turn?.narrative ?? ""), [turn?.narrative])
+  const text = useMemo(() => paragraphs.map((p) => p.text), [paragraphs])
+  // The paragraph's dice roll, for the narration to show: the numbers from the roll, the roller's portrait from the scene.
+  const rolled = paragraphs[paragraph]?.roll
+  const roller = rolled ? turn?.characters.find((c) => c.name === rolled.character) : undefined
+  const rollerPortrait = roller ? portrait(roller) : undefined
+  const roll = useMemo<RollResultData | undefined>(
+    () =>
+      rolled && {
+        character: rolled.character,
+        check: rolled.rollType,
+        natural: rolled.baseRoll ?? rolled.result,
+        modifier: rolled.modifier,
+        total: rolled.result,
+        dc: rolled.difficulty,
+        success: rolled.success,
+        portrait: rollerPortrait,
+      },
+    [rolled, rollerPortrait]
+  )
   // The narration read paragraph by paragraph: who each one is about (by name and pronoun, so genders come from the
   // turn's characters) and who speaks in it (by the speech tag beside each quote: "asked the elf" finds the elf by race).
   const beats = useMemo(() => {
@@ -171,9 +198,11 @@ export function DesktopGame() {
   }, [stage, speech, arriving, beats, paragraph, reading])
   useEffect(() => {
     if (!auto || !reading || busy || !text.length) return
-    const timer = setTimeout(() => (paragraph < text.length - 1 ? setParagraph((n) => n + 1) : setReading(false)), readingSeconds(text[paragraph] ?? "") * 1000)
+    // A roll stays up until the die has landed and the verdict has had a moment.
+    const seconds = paragraphs[paragraph]?.roll ? ROLL_SECONDS + 1.5 : readingSeconds(text[paragraph] ?? "")
+    const timer = setTimeout(() => (paragraph < text.length - 1 ? setParagraph((n) => n + 1) : setReading(false)), seconds * 1000)
     return () => clearTimeout(timer)
-  }, [auto, reading, busy, text, paragraph])
+  }, [auto, reading, busy, text, paragraphs, paragraph])
   const saveRef = useRef(save)
   saveRef.current = save
   const focused = useRef<string | null>(null)
@@ -425,6 +454,7 @@ export function DesktopGame() {
               <Narration
                 heading={`Round ${turn?.order} · ${turn?.title}`}
                 text={text[paragraph]}
+                roll={roll}
                 index={paragraph}
                 count={text.length}
                 compact={compact}

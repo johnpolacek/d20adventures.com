@@ -60,6 +60,60 @@
   animation: d20-land 0.35s cubic-bezier(0.3, 1.6, 0.5, 1);
 }
 
+/* A roll result: the total rises in, the verdict stamps down, and rays turn slowly behind a natural 20. */
+@keyframes roll-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes roll-stamp {
+  from {
+    opacity: 0;
+    transform: rotate(-8deg) scale(1.9);
+  }
+  60% {
+    opacity: 1;
+    transform: rotate(-2deg) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(-3deg) scale(1);
+  }
+}
+@keyframes roll-rays {
+  from {
+    opacity: 0;
+    transform: rotate(0);
+  }
+  10% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: rotate(360deg);
+  }
+}
+.roll-rise {
+  display: inline-block;
+  animation: roll-rise 0.35s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+.roll-stamp {
+  transform: rotate(-3deg);
+}
+.roll-stamp-in {
+  animation: roll-stamp 0.45s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+.roll-rays {
+  background: repeating-conic-gradient(from 0deg, #ffd88a40 0deg 5deg, transparent 5deg 18deg);
+  mask-image: radial-gradient(circle, #000 30%, transparent 70%);
+  animation: roll-rays 14s linear infinite;
+}
+
 /* Stageview surfaces: a little of the site's original grain (black paper, "buried" stone and the rough rule) on the
    prototype's flat panels and buttons. They set only background images, blends and bevels, so colour utilities still apply. */
 @utility stage-grain {
