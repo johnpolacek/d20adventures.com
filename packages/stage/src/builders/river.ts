@@ -19,6 +19,9 @@ function plan(b: Sink, mat: THREE.Material, pts: Vec2[], y0: number, depth: numb
 }
 const scale = (pts: Vec2[], sx: number, sz: number): Vec2[] => pts.map(([x, zz]) => [x * sx, zz * sz])
 
+// A point on the ground [x, z] lifted to height y, as box arguments.
+const pick3 = ([x, zz]: readonly [number, number], y: number) => [x, y, zz] as const
+
 // A hull seen from above: a square-cut stern at -z, straight sides, and a bow that curves to a point at +z.
 function hullOutline(L: number, B: number, bow = 0.3, n = 10): Vec2[] {
   const half = B / 2
@@ -253,18 +256,29 @@ export const riverboat = defineBuilder(
       const n = V(Math.cos(a) / hw, 0, Math.sin(a) / (Lr + grow)).normalize()
       return { x: hw * Math.cos(a), z: zr + (Lr + grow) * Math.sin(a), yaw: Math.atan2(n.x, n.z) }
     }
-    // Inside, each window shows the dark river through a frame on the wall's inner face.
+    // Inside, a window is a deep timber frame on the wall's inner face: jambs, a head and a sill, dark glass with glazing
+    // bars, and on every other window along the sides a pair of closed shutters.
     const T = 0.08
-    const inner = (x: number, y: number, zz: number, yaw: number, w: number, h: number) => {
-      const at = (d: number) => [x - Math.sin(yaw) * d, zz - Math.cos(yaw) * d] as const
-      const [fx, fz] = at(T + 0.03)
-      F.box(M.rust, fx, y, fz, w + 0.1, h + 0.1, 0.02, yaw)
-      const [gx, gz] = at(T + 0.045)
-      F.box(M.night, gx, y, gz, w, h, 0.02, yaw)
+    const L0 = T + 0.024
+    const knob = G("knob", () => new THREE.SphereGeometry(1, 10, 8))
+    const inner = (x: number, y: number, zz: number, yaw: number, w: number, h: number, shut = false) => {
+      const at = (d: number, o = 0) => [x - Math.sin(yaw) * d + Math.cos(yaw) * o, zz - Math.cos(yaw) * d - Math.sin(yaw) * o] as const
+      for (const o of [-1, 1]) F.box(M.post, ...pick3(at(L0 + 0.05, o * (w / 2 + 0.05)), y), 0.1, h + 0.2, 0.1, yaw)
+      F.box(M.post, ...pick3(at(L0 + 0.05), y + h / 2 + 0.05), w + 0.2, 0.1, 0.1, yaw)
+      F.box(M.post, ...pick3(at(L0 + 0.08), y - h / 2 - 0.04), w + 0.34, 0.06, 0.16, yaw)
+      F.box(M.night, ...pick3(at(L0 + 0.01), y), w, h, 0.01, yaw)
+      if (shut) {
+        for (const o of [-1, 1]) F.box(M.panel, ...pick3(at(L0 + 0.06, (o * w) / 4), y), w / 2 - 0.01, h, 0.03, yaw)
+        for (const o of [-1, 1]) for (const dy of [-0.3, 0.3]) F.box(M.iron, ...pick3(at(L0 + 0.08, (o * w) / 4), y + dy * h), w / 2 - 0.06, 0.04, 0.01, yaw)
+        return
+      }
+      F.box(M.post, ...pick3(at(L0 + 0.025), y), 0.035, h, 0.02, yaw)
+      for (const dy of [-1, 1]) F.box(M.post, ...pick3(at(L0 + 0.025), y + (dy * h) / 6), w, 0.03, 0.02, yaw)
     }
     if (!p.interior) plan(b, M.cabin, outline(0), 0, Hc)
     else {
-      // The aft cabin stays solid. The saloon's walls follow the outline round the bow, leaving a doorway dead ahead.
+      // The aft cabin stays solid. The saloon's walls follow the outline round the bow, leaving a doorway dead ahead. Inside
+      // they are lined with upright boards, and ribs, a rail and a skirting run along the sides as in a ship's hold.
       const hw = Wc / 2
       plan(
         b,
@@ -278,13 +292,30 @@ export const riverboat = defineBuilder(
         0,
         Hc
       )
-      F.box(M.panel, 0, Hc / 2, zs + 0.012, Wc - 2 * T, Hc, 0.024)
       ctx.footprint(0, (z0 + zs) / 2, hw, (zs - z0) / 2)
-      // The doorway to the owner's cabin, to port in the aft bulkhead.
+      // Upright boards: a lining in panels narrower than they are tall, so the grain runs up the wall.
+      const lining = (cx: number, cz: number, yaw: number, len: number, y0 = 0, y1 = Hc) => {
+        const n = Math.max(1, Math.ceil(len / 0.9))
+        for (let j = 0; j < n; j++) {
+          const o = -len / 2 + ((j + 0.5) * len) / n
+          F.box(M.panel, cx + Math.cos(yaw) * o, (y0 + y1) / 2, cz - Math.sin(yaw) * o, len / n - 0.006, y1 - y0, 0.024, yaw)
+        }
+      }
+      lining(0, zs + 0.012, 0, Wc - 2 * T)
+      // The doorway to the owner's cabin, to port in the aft bulkhead: a timber frame, and the planked door standing open
+      // flat against the bulkhead, strap hinges and a ring pull.
       const dx = -Wc * 0.27
       F.box(M.void, dx, 0.98, zs + 0.03, 0.8, 1.96, 0.02)
-      for (const side of [-1, 1]) F.box(M.rust, dx + side * 0.45, 1.02, zs + 0.05, 0.1, 2.04, 0.06)
-      F.box(M.rust, dx, 2.04, zs + 0.05, 1.0, 0.1, 0.06)
+      for (const side of [-1, 1]) F.box(M.post, dx + side * 0.46, 1.04, zs + 0.06, 0.12, 2.08, 0.1)
+      F.box(M.post, dx, 2.1, zs + 0.06, 1.06, 0.14, 0.1)
+      F.box(M.door, dx + 0.94, 0.98, zs + 0.05, 0.78, 1.92, 0.05)
+      for (const y of [0.35, 1.6]) F.box(M.iron, dx + 0.82, y, zs + 0.08, 0.5, 0.05, 0.01)
+      b.add(
+        G("ring", () => new THREE.TorusGeometry(0.24, 0.055, 8, 20)),
+        M.iron,
+        M4(dx + 1.22, 1.0, zs + 0.085, 0, 0.3, 0.3, 0.3),
+        { uv: "keep" }
+      )
       const walls: Vec2[] = [[hw, zs], ...outline(0).slice(2), [-hw, zs]]
       for (let i = 0; i < walls.length - 1; i++) {
         const [ax, az] = walls[i]
@@ -298,30 +329,77 @@ export const riverboat = defineBuilder(
         if (Math.abs(mx) < 0.4 && mz > zr) {
           // Over the doorway.
           F.box(M.cabin, mx - (nx * T) / 2, 2.05 + (Hc - 2.05) / 2, mz - (nz * T) / 2, len + 0.04, Hc - 2.05, T, yaw)
+          lining(mx - nx * (T + 0.012), mz - nz * (T + 0.012), yaw, len + 0.04, 2.05, Hc)
           continue
         }
         F.box(M.cabin, mx - (nx * T) / 2, Hc / 2, mz - (nz * T) / 2, len + 0.04, Hc, T, yaw)
-        F.box(M.panel, mx - nx * (T + 0.012), Hc / 2, mz - nz * (T + 0.012), len + 0.04, Hc, 0.024, yaw)
+        lining(mx - nx * (T + 0.012), mz - nz * (T + 0.012), yaw, len + 0.04)
         ctx.footprint(mx - (nx * T) / 2, mz - (nz * T) / 2, len / 2 + 0.02, T / 2 + 0.03, yaw)
       }
-      // Beams across the ceiling.
-      for (let k = 1; k <= 4; k++) F.box(M.post, 0, Hc - 0.09, zs + ((z1 - zs) * k) / 5, Wc - 0.3, 0.14, 0.14)
-      // The door stands open on its port hinge, a porthole in it.
+      // Along each side: ribs between the windows, a rail under them, and a skirting board.
+      const big = Math.max(1, Math.floor((zr - zs) / 0.95))
+      for (const side of [-1, 1]) {
+        const x = side * (hw - L0)
+        for (let i = 0; i <= big; i++) F.box(M.post, x - side * 0.07, Hc / 2, zs + 0.07 + (i * (zr - zs - 0.07)) / big, 0.14, Hc, 0.16)
+        F.box(M.post, x - side * 0.04, Hc * 0.55 - Hc * 0.2 - 0.1, (zs + zr) / 2, 0.08, 0.07, zr - zs)
+        F.box(M.post, x - side * 0.02, 0.08, (zs + zr) / 2, 0.04, 0.16, zr - zs)
+      }
+      // The ceiling: dark boards, two fore-and-aft carlins, and deep beams across with knee braces down to the ribs.
+      const inside = (zz: number) => (zz <= zr ? hw - L0 : hw * Math.sqrt(Math.max(0, 1 - ((zz - zr) / Lr) ** 2)) - L0 - 0.05)
+      const deck: Vec2[] = [
+        [hw - L0, zs],
+        ...outline(-L0, 16)
+          .slice(2)
+          .filter(([, zz]) => zz >= zr),
+        [-hw + L0, zs],
+      ]
+      plan(b, M.ceiling, deck, Hc - 0.035, 0.03)
+      plan(b, M.floor, deck, 0, 0.006)
+      for (const side of [-1, 1]) F.box(M.post, side * Wc * 0.25, Hc - 0.12, (zs + zr) / 2, 0.16, 0.18, zr - zs)
+      const beams = Math.round((z1 - 0.6 - zs) / 1.1)
+      for (let k = 1; k <= beams; k++) {
+        const zz = zs + ((z1 - 0.6 - zs) * k) / (beams + 0.4)
+        const half = inside(zz)
+        F.box(M.post, 0, Hc - 0.17, zz, half * 2, 0.26, 0.2)
+        if (zz < zr) for (const side of [-1, 1]) F.box(M.post, side * (half - 0.2), Hc - 0.48, zz, 0.11, 0.48, 0.14, 0, 0, (side * Math.PI) / 4)
+      }
+      // The door stands open on its port hinge: planks with iron studs, strap hinges, a brass porthole ringed with rivets,
+      // and a round brass knob.
       const hinge = bowAt((Math.PI * 9) / 16, 0)
       for (const a of [(Math.PI * 7) / 16, (Math.PI * 9) / 16]) {
         const post = bowAt(a, 0)
         F.box(M.rust, post.x, 1.02, post.z, 0.1, 2.06, 0.14, post.yaw)
+        F.box(M.post, post.x - Math.sin(post.yaw) * 0.11, 1.04, post.z - Math.cos(post.yaw) * 0.11, 0.12, 2.08, 0.06, post.yaw)
       }
       F.box(M.rust, 0, 2.08, z1 + 0.02, 0.9, 0.08, 0.14)
-      F.box(M.door, hinge.x - 0.05, 1.0, hinge.z + 0.4, 0.05, 1.96, 0.76)
-      F.box(glow, hinge.x - 0.05, 1.45, hinge.z + 0.4, 0.07, 0.18, 0.18)
+      F.box(M.post, 0, 2.12, z1 - 0.09, 1.0, 0.14, 0.06)
+      const lx = hinge.x - 0.05
+      const lz = hinge.z + 0.4
+      F.box(M.door, lx, 1.0, lz, 0.05, 1.96, 0.76)
       b.add(
-        G("porthole", () => new THREE.TorusGeometry(0.13, 0.03, 8, 20)),
-        M.brass,
-        M4(hinge.x - 0.05, 1.45, hinge.z + 0.4, Math.PI / 2),
+        G("portglass", () => new THREE.CylinderGeometry(0.13, 0.13, 0.06, 20).rotateZ(Math.PI / 2)),
+        glow,
+        M4(lx, 1.45, lz),
         { uv: "keep" }
       )
-      ctx.footprint(hinge.x - 0.05, hinge.z + 0.4, 0.05, 0.38)
+      b.add(
+        G("porthole", () => new THREE.TorusGeometry(0.15, 0.04, 8, 24)),
+        M.brass,
+        M4(lx, 1.45, lz, Math.PI / 2),
+        { uv: "keep" }
+      )
+      for (const side of [-1, 1]) {
+        const fx = lx + side * 0.03
+        for (let k = 0; k < 10; k++) {
+          const a = (k / 10) * Math.PI * 2
+          b.add(knob, M.brass, M4(fx + side * 0.012, 1.45 + Math.sin(a) * 0.15, lz + Math.cos(a) * 0.15, 0, 0.012, 0.012, 0.012), { uv: "keep" })
+        }
+        for (const y of [0.3, 1.0, 1.75]) F.box(M.iron, fx, y, lz - 0.15, 0.01, 0.06, 0.48)
+        for (const y of [0.55, 0.8, 1.15, 1.75])
+          for (const zo of [-0.28, 0.28]) if (Math.abs(y - 1.45) > 0.25 || Math.abs(zo) > 0.2) b.add(knob, M.iron, M4(fx + side * 0.008, y, lz + zo, 0, 0.014, 0.014, 0.014), { uv: "keep" })
+        b.add(knob, M.brass, M4(fx + side * 0.04, 1.0, lz + 0.3, 0, 0.05, 0.05, 0.05), { uv: "keep" })
+      }
+      ctx.footprint(lx, lz, 0.05, 0.38)
       // The way in and out, for walks: a step inside the doorway and a step outside it.
       ctx.anchor("door", 0, 0, z1 - 0.6)
       ctx.anchor("door", 0, 0, z1 + 0.6)
@@ -354,7 +432,7 @@ export const riverboat = defineBuilder(
       const big = Math.max(1, Math.floor((zr - zs) / 0.95))
       for (let i = 0; i < big; i++) {
         pane(x, Hc * 0.55, zs + ((i + 0.5) * (zr - zs)) / big, yaw, 0.72, Hc * 0.4, true)
-        if (p.interior) inner(x, Hc * 0.55, zs + ((i + 0.5) * (zr - zs)) / big, yaw, 0.72, Hc * 0.4)
+        if (p.interior) inner(x, Hc * 0.55, zs + ((i + 0.5) * (zr - zs)) / big, yaw, 0.72, Hc * 0.4, i % 2 === 1)
       }
       const small = Math.max(1, Math.floor((zs - z0) / 0.85))
       for (let i = 0; i < small; i++) pane(x, Hc * 0.62, z0 + ((i + 0.5) * (zs - z0)) / small, yaw, 0.38, 0.48, i % 3 !== 1)
@@ -459,6 +537,8 @@ export const riverboat = defineBuilder(
     night: "void",
     door: "cabin",
     brass: "rust",
+    floor: "deck",
+    ceiling: "roof",
   }
 )
 

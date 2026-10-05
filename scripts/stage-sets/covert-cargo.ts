@@ -132,37 +132,62 @@ function pierSet() {
       saloon: 0.72,
       height: 3,
       interior: true,
-      materials: { helm: "helmGlass", panel: "panel", post: "post", night: "night", door: "door", brass: "brass" },
+      materials: { helm: "helmGlass", panel: "panel", post: "timber", night: "night", door: "door", brass: "brass", floor: "saloonFloor", ceiling: "ceiling" },
     },
     { type: "lantern", at: [2.75, 0, 5.15], height: 1.45, post: true },
-    // The shipment, as in the crate's art: iron-banded and chained, its front aft, between banded posts, a chain sagging
-    // between them, ropes hanging from the beams and lanterns overhead.
+    // The shipment, as in the crate's art: iron-banded and chained, its front aft, between two massive weathered posts
+    // bound with iron and joined by a header beam, a chain sagging along the beam, knotted ropes hanging from the beams.
     { type: "strongbox", id: "shipment", at: [5.2, 0, -1.3], yaw: 180, width: 1.35, height: 0.97, depth: 0.92, materials: { wood: "crateOak", iron: "crateIron" } },
     ...[
-      [3.5, -2.0],
-      [6.75, -2.0],
-    ].flatMap(([x, zz]) => [
-      { type: "box", at: [x, 0, zz], size: [0.3, 2.9, 0.3], material: "post", solid: true },
-      ...[0.4, 1.7].map((y) => ({ type: "box", at: [x, y, zz], size: [0.32, 0.07, 0.32], material: "crateIron" })),
+      [3.5, -2.0, -1],
+      [6.75, -2.0, 1],
+    ].flatMap(([x, zz, side]) => [
+      { type: "box", at: [x, 0, zz], size: [0.4, 2.75, 0.4], material: "timber", solid: true },
+      ...[0.35, 1.25, 2.1].map((y) => ({ type: "box", at: [x, y, zz], size: [0.42, 0.08, 0.42], material: "crateIron" })),
+      ...[0.39, 1.29, 2.14].flatMap((y) => [-0.12, 0.12].map((o) => ({ type: "sphere", at: [r2(x + o), y, r2(zz - 0.215)], radius: 0.022, material: "crateIron" }))),
+      { type: "box", at: [r2(x - side * 0.22), 2.0, zz], size: [0.12, 0.62, 0.16], material: "timber", roll: side * 45 },
     ]),
-    { type: "chain", from: [3.65, 2.6, -2.0], to: [6.6, 2.6, -2.0], sag: 0.4, link: 0.07, materials: { iron: "crateIron" } },
-    { type: "chain", from: [6.65, 2.4, -1.9], to: [6.3, 0.03, -1.45], sag: 0, link: 0.07, materials: { iron: "crateIron" } },
-    { type: "rope", from: [3.7, 2.9, -2.1], to: [4.2, 0.03, -2.0], sag: 0.05, radius: 0.026, knots: 3 },
-    { type: "rope", from: [4.2, 0.03, -2.0], to: [4.35, 0.03, -2.9], sag: 0, radius: 0.026 },
-    { type: "torus", at: [6.7, 0.05, -3.2], radius: 0.26, tube: 0.05, pitch: 90, material: "rope" },
-    { type: "torus", at: [6.7, 0.13, -3.2], radius: 0.2, tube: 0.05, pitch: 90, material: "rope" },
+    { type: "box", at: [5.125, 2.42, -2.0], size: [3.65, 0.3, 0.34], material: "timber" },
+    { type: "chain", from: [3.8, 2.38, -1.8], to: [6.45, 2.38, -1.8], sag: 0.5, link: 0.075, materials: { iron: "crateIron" } },
+    { type: "chain", from: [6.55, 2.3, -1.78], to: [6.3, 0.03, -1.4], sag: 0, link: 0.075, materials: { iron: "crateIron" } },
+    { type: "rope", from: [3.75, 2.8, -1.75], to: [4.25, 0.03, -2.1], sag: 0.05, radius: 0.03, knots: 3 },
+    { type: "rope", from: [4.25, 0.03, -2.1], to: [4.4, 0.03, -2.9], sag: 0, radius: 0.03 },
+    { type: "rope", from: [6.45, 2.8, -2.3], to: [6.9, 1.2, -2.9], sag: 0.15, radius: 0.028, knots: 2 },
+    { type: "rope", from: [4.1, 2.8, 0.5], to: [3.55, 1.0, 0.9], sag: 0.2, radius: 0.026, knots: 1 },
+    ...[0.05, 0.13, 0.21].map((y, i) => ({ type: "torus", at: [6.75, y, -3.15], radius: 0.28 - i * 0.04, tube: 0.05, pitch: 90, material: "rope" })),
+    // Ship's lanterns: brass and glass in an iron cage, two hanging from the beams and three on brackets on the ribs.
     ...[
-      [4.3, -0.4],
-      [6.1, -3.4],
-    ].flatMap(([x, zz]) => [
-      { type: "lantern", at: [x, 2.2, zz], materials: { flame: "lamp" } },
-      { type: "beam", from: [x, 2.92, zz], to: [x, 2.48, zz], radius: 0.012, material: "iron" },
+      [4.3, 1.95, -0.4, 0],
+      [3.65, 1.95, -3.55, 0],
+      [6.98, 1.6, -0.01, -1],
+      [3.42, 1.6, -1.1, 1],
+      [6.98, 1.6, 1.07, -1],
+    ].flatMap(([x, y, zz, wall]) => [
+      { type: "cylinder", at: [x, y, zz], radius: 0.075, height: 0.05, material: "brass" },
+      { type: "cylinder", at: [x, y + 0.05, zz], radius: 0.06, height: 0.2, material: "lamp" },
+      ...[0, 1, 2, 3].map((k) => {
+        const a = (k * Math.PI) / 2 + Math.PI / 4
+        return {
+          type: "beam",
+          from: [r2(x + Math.cos(a) * 0.068), y + 0.05, r2(zz + Math.sin(a) * 0.068)],
+          to: [r2(x + Math.cos(a) * 0.068), y + 0.25, r2(zz + Math.sin(a) * 0.068)],
+          radius: 0.01,
+          material: "iron",
+        }
+      }),
+      { type: "cylinder", at: [x, y + 0.25, zz], radius: [0.085, 0.03], height: 0.08, material: "brass" },
+      { type: "torus", at: [x, y + 0.36, zz], radius: 0.035, tube: 0.01, material: "iron" },
+      wall
+        ? { type: "beam", from: [r2(x + wall * 0.14), y + 0.39, zz], to: [x, y + 0.39, zz], radius: 0.012, material: "iron" }
+        : { type: "beam", from: [x, 2.72, zz], to: [x, y + 0.39, zz], radius: 0.01, material: "iron" },
     ]),
     // Stores in the aft starboard corner, clear of Aelar's door.
     { type: "barrel", at: [6.85, 0, -3.95], r: 0.3, h: 0.8 },
     { type: "barrel", at: [6.25, 0, -4.05], r: 0.28, h: 0.75 },
+    { type: "barrel", at: [6.85, 0.8, -3.95], r: 0.26, h: 0.62 },
     { type: "sack", at: [5.6, 0, -4.05], size: 0.55 },
-    // The helm beside the door, with gauges on the starboard wall, as in the battle's art.
+    { type: "crate", at: [6.85, 0, -2.95], yaw: 8, size: 0.55 },
+    // The helm beside the door, a chart table and brass gauges on the starboard wall, as in the battle's art.
     { type: "box", at: [6.2, 0, 1.78], size: [0.18, 1.0, 0.22], material: "trim", solid: true },
     { type: "torus", at: [6.2, 1.25, 1.6], radius: 0.42, tube: 0.035, material: "wheel" },
     ...[0, 1, 2, 3, 4, 5, 6, 7].map((i) => {
@@ -170,10 +195,26 @@ function pierSet() {
       return { type: "beam", at: [6.2, 1.25, 1.6], from: [0, 0, 0], to: [r2(Math.cos(a) * 0.56), r2(Math.sin(a) * 0.56), 0], radius: 0.025, radiusTo: 0.018, material: "wheel" }
     }),
     { type: "cylinder", at: [6.2, 1.25, 1.54], radius: 0.07, height: 0.14, pitch: 90, material: "brass" },
-    { type: "box", at: [7.0, 0, 0.55], size: [0.45, 0.92, 1.1], material: "trim", solid: true },
-    ...[0.3, 0.8].flatMap((zz) => [
-      { type: "cylinder", at: [7.25, 1.6, zz], radius: 0.11, height: 0.05, roll: 90, material: "brass" },
-      { type: "cylinder", at: [7.22, 1.6, zz], radius: 0.085, height: 0.01, roll: 90, material: "gauge" },
+    { type: "box", at: [6.95, 0, 0.55], size: [0.55, 0.88, 1.1], material: "timber", solid: true },
+    { type: "box", at: [6.95, 0.88, 0.55], size: [0.62, 0.05, 1.18], material: "trim" },
+    { type: "box", at: [6.9, 0.93, 0.5], size: [0.42, 0.01, 0.6], yaw: 8, material: "parchment" },
+    { type: "box", at: [7.0, 0.93, 0.95], size: [0.22, 0.06, 0.16], yaw: -12, material: "door" },
+    ...[
+      [7.0, 0.93, 0.2],
+      [3.45, 1.0, 0.4],
+      [3.45, 1.0, -2.6],
+    ].flatMap(([x, y, zz]) => [
+      { type: "cylinder", at: [x, y, zz], radius: 0.028, height: 0.14, material: "candle" },
+      { type: "sphere", at: [x, y + 0.16, zz], radius: [0.016, 0.028, 0.016], material: "flame" },
+    ]),
+    // Brass-cased gauges with dark dials on the aft bulkhead, above the stores, as behind Reinhard in the battle's art.
+    ...[
+      [6.5, 0.1, 30],
+      [6.92, 0.13, -50],
+    ].flatMap(([x, r, a]) => [
+      { type: "cylinder", at: [x, 1.85, -4.41], radius: r + 0.025, height: 0.06, pitch: 90, material: "brass" },
+      { type: "cylinder", at: [x, 1.85, -4.35], radius: r, height: 0.01, pitch: 90, material: "gauge" },
+      { type: "box", at: [x, 1.85, -4.335], size: [0.014, r * 0.85, 0.01], roll: a, material: "brass" },
     ]),
     { type: "crate", at: [5.9, 0, -8.3], yaw: 12, size: 0.6 },
     { type: "barrel", at: [4.5, 0, -8.4], r: 0.28, h: 0.75 },
@@ -418,9 +459,8 @@ function pierSet() {
       glow: "#c2f4f2",
       fill: { color: "#ffffff", intensity: 3.5, distance: 12 },
       lights: [
-        // Inside the saloon: lamplight pooling on the crate's front, as in its art, and on the meeting by the door.
-        { at: [5.15, 2.2, -2.6], color: "#ffb060", intensity: 10, distance: 5.5 },
-        { at: [5.5, 2.3, 0.9], color: "#ffb060", intensity: 7, distance: 5 },
+        // The saloon's lamplight, seen from outside through its door.
+        { at: [5.2, 2.2, 0.8], color: "#ffb060", intensity: 8, distance: 6 },
         // Lamplight spilling from the door and the bow windows onto the foredeck, and from the port windows over the deck
         // and water.
         { at: [5.2, 1.6, 3.8], color: "#ffa046", intensity: 20, distance: 9 },
@@ -435,6 +475,26 @@ function pierSet() {
       grade: "neutral",
       wind: 0.3,
     },
+    // Inside the saloon the night sky's light falls away and its own lamps take over, as in the crate's art: a warm pool
+    // on the crate, lanterns glowing on the beams and ribs, cold river light at the door, and darkness between.
+    rooms: [
+      {
+        box: [3.0, -0.5, -4.45, 7.4, 3.1, 2.95],
+        ambient: 0.1,
+        fill: 1.6,
+        exposure: 1.15,
+        lights: [
+          { at: [5.15, 2.3, -2.2], color: "#ffb466", intensity: 14, distance: 3.4 },
+          { at: [4.3, 1.7, -0.4], color: "#ffa850", intensity: 3, distance: 3.2 },
+          { at: [3.75, 1.7, -3.4], color: "#ffa850", intensity: 3, distance: 3.2 },
+          { at: [6.7, 1.45, -0.01], color: "#ffa850", intensity: 3, distance: 3 },
+          { at: [3.7, 1.45, -1.1], color: "#ffa850", intensity: 2.5, distance: 3 },
+          { at: [6.7, 1.45, 1.07], color: "#ffa850", intensity: 2.5, distance: 3 },
+          { at: [5.2, 1.6, 3.3], color: "#4fb4c4", intensity: 5, distance: 4.5 },
+          { at: [5.6, 2.2, 1.6], color: "#ffa850", intensity: 3, distance: 3.5 },
+        ],
+      },
+    ],
     camera: { near: 0.2, far: 900, min: [-40, 0.3, -90], max: [40, 30, 60], maxDistance: 80 },
     materials: {
       ground: {
@@ -490,15 +550,22 @@ function pierSet() {
       window: { type: "plain", color: "#3a1806", roughness: 1, emissive: "#ff7410", emissiveIntensity: 0.8 },
       helmGlass: { type: "plain", color: "#0a0808", roughness: 0.4, emissive: "#7a3410", emissiveIntensity: 0.14 },
       void: { type: "plain", color: "#0d0a09", roughness: 1 },
-      night: { type: "plain", color: "#081820", roughness: 0.3, emissive: "#1c5470", emissiveIntensity: 0.35 },
-      panel: painted("cabin-dark", "#b0a49a", [0.18, 40], { size: [0.6, 1.6], grime: 1.3 }),
-      door: painted("cabin-dark", "#e6c8a8", [0.14, 12], { nails: 0.6 }),
+      // The saloon, as in the battle's and the crate's art: red-brown upright boards, heavy weathered grey-brown timbers,
+      // a dark ceiling, worn pale floorboards and night-dark glass.
+      night: { type: "plain", color: "#04101a", roughness: 0.2, emissive: "#123c52", emissiveIntensity: 0.22 },
+      panel: painted("cabin-dark", "#c48a68", [0.16, 40], { size: [0.6, 1.6], grime: 1.2, variance: 0.45 }),
+      timber: painted("cabin-dark", "#a8988a", [0, 40], { size: [0.9, 2.6], grime: 1.6, relief: 0.1, variance: 0.25 }),
+      ceiling: painted("cabin-dark", "#6e5a4c", [0.16, 40], { grime: 1.4 }),
+      saloonFloor: painted("boards-weathered", "#b8a084", [0.2, 3.2], { nails: 0.8, grime: 1.4, variance: 0.4 }),
+      door: painted("cabin-dark", "#e0a878", [0.14, 12], { grime: 0.8 }),
+      parchment: { type: "plain", color: "#9c8866", roughness: 1 },
+      candle: { type: "plain", color: "#e6dcc0", roughness: 0.9 },
       trim: painted("cabin-dark", "#c8b8a8", [0, 40], { grime: 0.6 }),
       wheel: { type: "wood", a: "#5a3a24", b: "#6e4a2e", c: "#4a3020", plank: [0, 40], relief: 0.02, seed: 3.7 },
       brass: { type: "metal", color: "#a8823e", roughness: 0.35, metalness: 0.85 },
-      gauge: { type: "plain", color: "#d8cfb4", roughness: 0.8 },
+      gauge: { type: "plain", color: "#1e1c18", roughness: 0.6 },
       // Lantern glass seen up close in the saloon: amber, not blown to white.
-      lamp: { type: "plain", color: "#000000", roughness: 1, emissive: "#ff8a2a", emissiveIntensity: 1.6 },
+      lamp: { type: "plain", color: "#000000", roughness: 1, emissive: "#ff6a10", emissiveIntensity: 0.6 },
       plank: painted("boards-weathered", "#7c7a74", [0, 40], { size: [0.8, 2.4], nails: 0.8, variance: 0.5, grime: 1.3 }),
       post: painted("cabin-dark", "#9c948c", [0, 40], { size: [0.6, 1.6], grime: 1.6 }),
       rope: painted("rope-hemp", "#9a8c74", [0, 40], { size: [0.25, 0.4], relief: 0.2, grime: 0.8 }),

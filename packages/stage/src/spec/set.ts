@@ -10,6 +10,11 @@ import { HERALDRY } from "../materials/heraldry"
 export const LIMITS = { objects: 4000, placed: 30000, depth: 6, vertices: 14_000_000, people: 4000, materials: 128 }
 
 const color = z.string().regex(/^#[0-9a-fA-F]{6}$/, "colours are #rrggbb")
+// Point lights: warm lamps that pool on surfaces nearby and fade out by `distance`, in metres. No shadows.
+const lamps = z
+  .array(z.object({ at: vec3, color, intensity: num(0, 500), distance: num(0.5, 200), decay: num(0, 3).default(2) }).strict())
+  .max(8)
+  .default([])
 const name = matName
 const slug = z.string().regex(/^[a-z0-9][a-z0-9-]{0,79}$/, "ids are lowercase slugs")
 const unit = num(0, 1)
@@ -293,10 +298,7 @@ export const setSpecSchema = z
           .strict()
           .optional(),
         // Lamps and lit windows: warm point lights that pool on decks and walls and glint in water. No shadows.
-        lights: z
-          .array(z.object({ at: vec3, color, intensity: num(0, 500), distance: num(0.5, 200), decay: num(0, 3).default(2) }).strict())
-          .max(8)
-          .default([]),
+        lights: lamps,
         environment: num(0, 3).default(0.32),
         exposure: num(0.1, 4).default(1.05),
         // The paint pass's colour grade: warm umber shadows and parchment highlights, or neutral for moonlight.
@@ -304,6 +306,23 @@ export const setSpecSchema = z
         wind: num(0, 3).default(0.8),
       })
       .strict(),
+    // Rooms the camera can stand in, such as a boat's saloon. While it is inside one (`box` is [x0, y0, z0, x1, y1, z1]),
+    // the sky's light (hemisphere and environment) drops to `ambient` of itself, the camera's fill to `fill`, and the
+    // room's own lamps replace the set's lights, so the room is dark but for its lamps, as in a painting.
+    rooms: z
+      .array(
+        z
+          .object({
+            box: z.tuple([coord, coord, coord, coord, coord, coord]),
+            ambient: unit.default(0.25),
+            fill: num(0, 50).optional(),
+            exposure: num(0.1, 4).optional(),
+            lights: lamps,
+          })
+          .strict()
+      )
+      .max(4)
+      .default([]),
     camera: z
       .object({
         near: num(0.05, 10).default(0.3),

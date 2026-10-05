@@ -112,6 +112,12 @@ export class Stage {
   // What the set's builders marked as solid (walls, stalls, tables), for walking the cast.
   private footprints: Footprint[] = []
   private doors: ReturnType<typeof doorways> = []
+  private hemisphere: THREE.HemisphereLight
+  private fill: THREE.PointLight | null = null
+  private lamps: THREE.PointLight[] = []
+  // How far the camera is into a room (0 outside, 1 in), and which room.
+  private indoors = 0
+  private room: SetSpec["rooms"][number] | null = null
   private extras: THREE.Object3D[] = []
   private life: (LifeUpdate & Disposable)[] = []
   private disposables: Disposable[] = []
@@ -198,16 +204,20 @@ export class Stage {
     sun.shadow.normalBias = 0.6
     this.sun = sun
     this.scene.add(sun, sun.target)
-    this.scene.add(new THREE.HemisphereLight(A.hemisphere.sky, A.hemisphere.ground, A.hemisphere.intensity))
-    for (const l of A.lights) {
-      const lamp = new THREE.PointLight(l.color, l.intensity, l.distance, l.decay)
-      lamp.position.set(...l.at)
+    this.hemisphere = new THREE.HemisphereLight(A.hemisphere.sky, A.hemisphere.ground, A.hemisphere.intensity)
+    this.scene.add(this.hemisphere)
+    // One set of lamps serves outside and every room, so the light count, and with it the shaders, never changes.
+    const count = Math.max(A.lights.length, ...set.rooms.map((r) => r.lights.length))
+    for (let i = 0; i < count; i++) {
+      const lamp = new THREE.PointLight()
+      this.lamps.push(lamp)
       this.scene.add(lamp)
     }
+    this.light(A.lights, 1)
     if (A.fill) {
-      const fill = new THREE.PointLight(A.fill.color, A.fill.intensity, A.fill.distance, 1.4)
-      fill.position.set(0, 0.6, 0.5)
-      this.camera.add(fill)
+      this.fill = new THREE.PointLight(A.fill.color, A.fill.intensity, A.fill.distance, 1.4)
+      this.fill.position.set(0, 0.6, 0.5)
+      this.camera.add(this.fill)
       this.scene.add(this.camera)
     }
 
@@ -756,6 +766,7 @@ export class Stage {
     }
     this.controls?.update()
     this.constrain()
+    this.lightRoom(dt)
     this.standees.update(dt, this.camera)
     this.crowd.updateLOD(this.camera)
     this.crowd.flush()
@@ -764,6 +775,38 @@ export class Stage {
       this.ready = true
       this.readyResolve?.()
     }
+  }
+  // Lamps from a light list at a share of their strength. Unused lamps go dark.
+  private light(list: SetSpec["atmosphere"]["lights"], k: number) {
+    this.lamps.forEach((lamp, i) => {
+      const l = list[i]
+      if (!l) return void (lamp.intensity = 0)
+      lamp.position.set(...l.at)
+      lamp.color.set(l.color)
+      lamp.distance = l.distance
+      lamp.decay = l.decay
+      lamp.intensity = l.intensity * k
+    })
+  }
+  // Inside a room the sky's light fades and the room's lamps take over: the set's lamps dim out, then the room's come up,
+  // over about half a second as the camera passes the wall.
+  private lightRoom(dt: number) {
+    const { x, y, z } = this.camera.position
+    const inside = this.set.rooms.find(({ box: b }) => x > b[0] && y > b[1] && z > b[2] && x < b[3] && y < b[4] && z < b[5])
+    if (inside) this.room = inside
+    const want = inside ? 1 : 0
+    if (want === this.indoors || !this.room) return
+    this.indoors = this.motion ? THREE.MathUtils.clamp(this.indoors + Math.sign(want - this.indoors) * dt * 3, 0, 1) : want
+    const m = this.indoors
+    const r = this.room
+    const A = this.set.atmosphere
+    const mix = (a: number, b: number) => a + (b - a) * m
+    this.hemisphere.intensity = mix(A.hemisphere.intensity, A.hemisphere.intensity * r.ambient)
+    this.scene.environmentIntensity = mix(A.environment, A.environment * r.ambient)
+    if (this.fill && A.fill) this.fill.intensity = mix(A.fill.intensity, r.fill ?? A.fill.intensity * r.ambient)
+    this.renderer.toneMappingExposure = mix(A.exposure, r.exposure ?? A.exposure)
+    if (m < 0.5) this.light(A.lights, 1 - 2 * m)
+    else this.light(r.lights, 2 * m - 1)
   }
   render() {
     this.renderer.info.reset()
