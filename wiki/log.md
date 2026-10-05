@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-05, dice sounds
+
+Owner chose a dice sound as the die lands. Rolls now clatter, land with a tock and end on a short cue for the verdict, all made in Web Audio. Scene settings has a sound switch. See [the plan](plans/roll-results.md).
+
 ## 2026-10-05, dice rolls as the hero of the narration
 
 Owner wanted better graphics for roll results: "This is D20 adventures so the dice rolls are the hero." A roll in the narration was one sentence of numbers. It now shows the roller, a 3D d20 that tumbles and lands on the roll, the total against the DC, and a stamped verdict, with natural 20s and 1s called out as criticals. See [the plan](plans/roll-results.md).

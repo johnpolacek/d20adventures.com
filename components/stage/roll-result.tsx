@@ -7,6 +7,7 @@
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import { D20Solid } from "./d20"
+import { land, rattle, verdict as sound, type Verdict } from "./dice-sound"
 import { eyebrow } from "./hud"
 
 export interface RollResultData {
@@ -31,11 +32,15 @@ export function RollResult({ roll, compact = false }: { roll: RollResultData; co
   const [face, setFace] = useState(() => 1 + Math.floor(Math.random() * 20))
   const [tumble, setTumble] = useState(0)
   useEffect(() => {
+    // The verdict's cue: a critical when a natural 20 or 1 decides the roll.
+    const cue: Verdict = roll.success ? (roll.natural === 20 ? "critical-success" : "success") : roll.natural === 1 ? "critical-failure" : "failure"
     if (typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setFace(roll.natural)
+      sound(cue)
       return void setStep(3)
     }
     setTumble((k) => k + 1)
+    rattle(LAND / 1000 - 0.05)
     // The number flickers while the die tumbles, slowing as it settles.
     const timers: ReturnType<typeof setTimeout>[] = []
     let at = 0
@@ -47,14 +52,20 @@ export function RollResult({ roll, compact = false }: { roll: RollResultData; co
       setTimeout(() => {
         setFace(roll.natural)
         setStep(1)
+        land()
       }, LAND)
     )
     timers.push(setTimeout(() => setStep(2), TOTAL))
-    timers.push(setTimeout(() => setStep(3), VERDICT))
+    timers.push(
+      setTimeout(() => {
+        setStep(3)
+        sound(cue)
+      }, VERDICT)
+    )
     return () => {
       for (const t of timers) clearTimeout(t)
     }
-  }, [roll.natural])
+  }, [roll.natural, roll.success])
 
   const crit = roll.natural === 20 && roll.success ? "high" : roll.natural === 1 && !roll.success ? "low" : null
   const verdict = crit === "high" ? "Critical success" : crit === "low" ? "Critical failure" : roll.success ? "Success" : "Failure"

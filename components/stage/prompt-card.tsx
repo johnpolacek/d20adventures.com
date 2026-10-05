@@ -7,6 +7,7 @@
 import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import { D20Solid } from "./d20"
+import { land as landSound, rattle } from "./dice-sound"
 import { eyebrow, Pill, panel } from "./hud"
 
 export interface CardCharacter {
@@ -83,6 +84,7 @@ function D20({ onRoll, compact, land, auto = false, disabled = false }: { onRoll
     started.current = true
     setRolling(true)
     setTumble((k) => k + 1)
+    rattle(1.15)
     let elapsed = 0
     let delay = 45
     const tick = () => {
@@ -91,6 +93,7 @@ function D20({ onRoll, compact, land, auto = false, disabled = false }: { onRoll
         const n = land ?? 1 + Math.floor(Math.random() * 20)
         setShown(n)
         setRolling(false)
+        landSound()
         onRoll(n)
         return
       }

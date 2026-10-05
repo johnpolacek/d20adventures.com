@@ -3,6 +3,7 @@ import { readingSeconds } from "@d20/stage/beats"
 import { readNarration } from "@d20/stage/narration"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { CharacterCard } from "@/components/stage/character-card"
+import { setSoundOn, soundOn } from "@/components/stage/dice-sound"
 import { Pill, panel, StageHud, useCompact } from "@/components/stage/hud"
 import { Journal, type JournalTurn } from "@/components/stage/journal"
 import { Narration } from "@/components/stage/narration"
@@ -76,6 +77,7 @@ export function DesktopGame() {
   const [hidden, setHidden] = useState(false)
   const [paragraph, setParagraph] = useState(0)
   const [auto, setAuto] = useState(false)
+  const [sound, setSound] = useState(soundOn)
   const [reading, setReading] = useState(true)
   // The title screen: shown on launch and from the Menu button. With a save it offers Continue and New game.
   const [menu, setMenu] = useState(true)
@@ -565,7 +567,16 @@ export function DesktopGame() {
               >
                 Motion {stage?.motion ? "on" : "off"}
               </Pill>
-              <Pill className="ml-2" onClick={() => setHidden(true)}>
+              <Pill
+                className="ml-2"
+                onClick={() => {
+                  setSoundOn(!sound)
+                  setSound(!sound)
+                }}
+              >
+                Sound {sound ? "on" : "off"}
+              </Pill>
+              <Pill className="mt-2" onClick={() => setHidden(true)}>
                 Hide UI
               </Pill>
             </section>
