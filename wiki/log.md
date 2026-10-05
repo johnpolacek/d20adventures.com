@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-05, saloon wood and windows
+
+Owner found the wood short of the paintings' detail and chose windows with depth. Four wood textures were painted from the interior paintings, and the saloon's windows became real openings with one-sided glass: warm from outside with the room showing through, clear from inside onto the night. See [the stage engine record](stage-engine.md#saloon-wood-and-windows-2026-10-05).
+
 ## 2026-10-05, the saloon raised to the art
 
 Owner found the boat's interior below the quality bar. Against the crate, battle and fake paintings it was evenly lit, with flat blue window panels, striped thin timbers and box lanterns. Sets can now declare rooms that dim the sky's light and switch to their own lamps while the camera is inside. The saloon was rebuilt with upright red-brown boards, ribs, deep beams and knee braces, framed and shuttered windows, iron-bound posts, ship's lanterns, a studded porthole door, a chart table and gauges. See [the stage engine record](stage-engine.md#rooms-and-the-saloons-finish-2026-10-05).

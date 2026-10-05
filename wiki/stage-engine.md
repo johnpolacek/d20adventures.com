@@ -206,6 +206,13 @@ Remaining product work is tracked in [Stageview](plans/stageview.md).
 - River view on high: 1.82M to 1.09M triangles, 138 to 125 calls. Balanced reads 66 fps, high 40 to 48, on a loaded dev machine.
 - Character shots swing clear: `stage.shot({ subject, ... })` tries turns of up to 180 degrees round the subject and then 75 and 55 percent of the distance, until the camera, clamped to the set's camera box, has 0.45 m of room and a clear line to the subject past every solid footprint. Walls that should block a camera must be `solid`.
 
+## Saloon wood and windows, 2026-10-05
+
+- Owner: the wood still lacked the paintings' detail, and asked for windows with depth. The interior had used `cabin-dark`, a low-contrast smoky board that showed almost no grain once tinted and dimly lit.
+- Four textures painted from the interior paintings at 1536 px with `scripts/stage-textures.ts`: `cabin-planks` (the battle's red-brown wall boards, a knot), `timber-hold` (the hold's cracked grey-brown timber), `door-oak` (the Fake's honey oak door) and `floor-worn` (the hold's worn floor). Walls, posts and beams, ceiling, floor, door and the helm's trim use them.
+- A `glass` material: see-through and one-sided, drawn as single panes. A window's outer pane faces out and glows warm while the room shows through; from inside it is culled, and a faint inner pane faces in.
+- With `interior`, the riverboat's bow has seven flat panels, one per window, and the saloon's walls are built around real openings: piers, sills and heads in the planking and lining, a rust frame, sill, mullion and two transoms outside, the timber frame inside. Footprints still close every window and leave the doorway open. A second outdoor lamp lights the aft saloon for the view in.
+
 ## Rooms and the saloon's finish, 2026-10-05
 
 - Owner: the interior did not meet the quality bar next to the crate, battle and fake paintings. The saloon read as an evenly lit box with flat blue window panels, striped thin timbers and pale box lanterns.

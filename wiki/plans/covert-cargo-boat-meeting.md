@@ -50,3 +50,7 @@ Intro edits in `the-shipment.md`: Poppen in undergrowth at the treeline, the thr
 
 "I feel like the interior of the ship does not meet the quality bar." Compared closely with the crate, battle and fake paintings, then rebuilt: a dark lamplit room through the new set `rooms`, finished joinery and props. Checked shot by shot on the preview page and through the opening in the app. Stage and desktop typechecks, scoped Biome, `stage:check` and 25 desktop tests pass. See [the stage engine record](../stage-engine.md#rooms-and-the-saloons-finish-2026-10-05).
 
+## Owner feedback: wood detail and windows
+
+"the texture of the wood is still not at the detail i was expecting. also lets do b." New interior wood textures painted from the battle, crate and Fake paintings, and see-through windows. Checked on the preview page inside and out. Stage and desktop typechecks, scoped Biome, `stage:check` and 25 desktop tests pass. See [the stage engine record](../stage-engine.md#saloon-wood-and-windows-2026-10-05).
+

@@ -65,4 +65,6 @@ The web viewer and the desktop app run the same `packages/stage` renderer and th
 - Keep a lamp's light a hand below or beside its glass. A point light inside the glass blows it to white.
 - Lay wall boards in panels narrower than they are tall, so the painted grain runs upright. The grain follows a piece's longest side.
 - Windows seen from inside need frames, sills and glazing bars, and dark glass. Big plain panes read as blank blue screens.
+- Paint an interior's textures from the paintings of that interior, at 1536 px, and tint them near white. A dark texture tinted to a colour loses its grain under lamplight.
+- A window people should see through needs a real opening and one-sided `glass`: glowing from outside with the room behind it, clear from inside.
 - A cloaked character's back can come out as a front-facing body with the cloak drawn behind it. Give the figure a `backNote` in `scripts/stage-standees.ts` that says the cloak hangs down the back and hides it, and whether the hood is up.
