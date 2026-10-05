@@ -28,4 +28,5 @@ Started and implemented 2026-10-05 at owner request: "we could use better graphi
 - Numbers use the serif face: the display face draws a 1 like a Roman I.
 - The narration keeps the roll's sentence for screen readers and for the camera, and autoplay holds a roll for its animation plus a beat.
 - Checked in the app on a copy of the owner's save (Poppen's natural 1 on Stealth) and on a temporary lab page for success, failure and both criticals. Desktop and web typechecks, scoped Biome and 25 desktop tests pass.
+- Follow-up the same day, at owner request: on a critical the die itself changes as it lands. `D20Solid` takes a `tone`: burnished gold with a dark number on a natural 20, charred near-black with embers glowing through and an ember number on a natural 1. Checked on a temporary lab page; desktop typecheck, scoped Biome and 25 desktop tests pass.
 

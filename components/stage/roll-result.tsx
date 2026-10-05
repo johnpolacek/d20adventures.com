@@ -2,7 +2,7 @@
 
 // A dice roll in the narration, as the hero of its paragraph: the d20 tumbles and lands on the natural roll, the
 // modifier and the total follow against the DC, and the verdict stamps in. A natural 20 or 1 that decides the roll is
-// called out as a critical. Reduced motion shows the result at once.
+// called out as a critical: the die turns gold, or charred with embers, as it lands. Reduced motion shows the result at once.
 
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
@@ -77,7 +77,7 @@ export function RollResult({ roll, compact = false }: { roll: RollResultData; co
           className="absolute inset-0 transition-[filter] duration-500"
           style={{ filter: landed ? `drop-shadow(0 0 ${crit ? 22 : 12}px ${tone}${crit ? "cc" : "80"}) drop-shadow(0 3px 6px #000c)` : "drop-shadow(0 3px 6px #000c)" }}
         >
-          <D20Solid size={size} roll={tumble} />
+          <D20Solid size={size} roll={tumble} tone={landed && crit ? (crit === "high" ? "gold" : "char") : undefined} />
         </div>
         <span
           key={landed ? "landed" : face}
@@ -85,7 +85,8 @@ export function RollResult({ roll, compact = false }: { roll: RollResultData; co
             "relative font-serif font-bold leading-none tabular-nums [text-shadow:0_1px_4px_#000,0_0_2px_#000]",
             landed ? "d20-land" : "d20-flip",
             compact ? "text-[24px]" : "text-[40px]",
-            crit === "high" && landed ? "text-[#ffe2a0]" : crit === "low" && landed ? "text-[#ff9a80]" : "text-stage-parchment"
+            // Dark on the gold die, ember red on the charred one.
+            crit === "high" && landed ? "text-[#3a220c] [text-shadow:0_1px_0_#ffe8b080]" : crit === "low" && landed ? "text-[#ff7a5a]" : "text-stage-parchment"
           )}
         >
           {face}
