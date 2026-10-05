@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-05, dice rolls as the hero of the narration
+
+Owner wanted better graphics for roll results: "This is D20 adventures so the dice rolls are the hero." A roll in the narration was one sentence of numbers. It now shows the roller, a 3D d20 that tumbles and lands on the roll, the total against the DC, and a stamped verdict, with natural 20s and 1s called out as criticals. See [the plan](plans/roll-results.md).
+
 ## 2026-10-05, saloon wood and windows
 
 Owner found the wood short of the paintings' detail and chose windows with depth. Four wood textures were painted from the interior paintings, and the saloon's windows became real openings with one-sided glass: warm from outside with the room showing through, clear from inside onto the night. See [the stage engine record](stage-engine.md#saloon-wood-and-windows-2026-10-05).
