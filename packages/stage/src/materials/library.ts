@@ -105,6 +105,15 @@ export function createMaterialLibrary(specs: Record<string, MaterialSpec>, share
       case "plain":
         m = plain(ctx, name, s.emissive ? "#000000" : s.color, s.roughness ?? 0.85, s.emissive ? { emissive: new THREE.Color(s.emissive), emissiveIntensity: s.emissiveIntensity ?? 1 } : {})
         break
+      case "glass":
+        m = plain(ctx, name, s.color, s.roughness ?? 0.15, {
+          transparent: true,
+          opacity: s.opacity,
+          depthWrite: false,
+          ...(s.emissive ? { emissive: new THREE.Color(s.emissive), emissiveIntensity: s.emissiveIntensity ?? 1 } : {}),
+        })
+        m.userData.glass = true
+        break
     }
     out.set(name, m)
   }

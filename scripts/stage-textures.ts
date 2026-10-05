@@ -21,6 +21,8 @@ const ART = "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/
 const SHIPMENT = `${ART}/the-shipment/dccea2c5-b22d-41e0-9467-95d8ea2301d5.png`
 const CRATE = `${ART}/the-crate/a3a863a9-dca9-48da-b3fe-e8c4ad90af3a.png`
 const DISTURBANCE = `${ART}/the-disturbance/e304a481-79a3-4c8d-a8da-ba9044991495.png`
+const BATTLE = `${ART}/battle-on-the-boat/088f0e14-cd0f-4312-821b-fac650a518f6.png`
+const FAKE = `${ART}/the-fake/7b96ca3c-db72-4559-8f8d-59dacbba3185.png`
 
 // `crop` is the reference's region to match, as fractions [left, top, width, height] of the art. Cut-outs are painted on
 // green, or on magenta when the subject itself is green (leaves).
@@ -86,6 +88,36 @@ const TEXTURES: Record<string, Texture> = {
     cutout: true,
     key: "magenta",
     size: 1024,
+  },
+  // The tug's saloon, from the paintings inside it: the battle's red-brown wall boards, the hold's massive timbers, the
+  // fake's oak door and the hold's worn floor. Painted larger, since the camera comes close indoors.
+  "cabin-planks": {
+    subject:
+      "the face of ONE old ship's cabin wall plank, its grain running straight up and down the frame: rich red-brown and mahogany wood with darker umber grain lines and streaks, one small dark knot, warm amber light catching the raised grain, worn and scuffed, thick visible brushstrokes",
+    ref: BATTLE,
+    crop: [0.8, 0.2, 0.2, 0.7],
+    size: 1536,
+  },
+  "timber-hold": {
+    subject:
+      "the face of ONE massive old weathered ship's timber, its grain running straight up and down the frame: grey-brown and smoky olive wood, deep dark cracks and checks along the grain, rough adze marks, worn pale ridges of grain catching warm light, grime packed in the cracks",
+    ref: CRATE,
+    crop: [0.25, 0.0, 0.4, 0.55],
+    size: 1536,
+  },
+  "door-oak": {
+    subject:
+      "the face of ONE old oak door plank, its grain running straight up and down the frame: warm honey and copper-brown wood with dark brown grain lines, dents and scratches, a weathered sheen, thick visible brushstrokes",
+    ref: FAKE,
+    crop: [0.2, 0.0, 0.25, 0.9],
+    size: 1536,
+  },
+  "floor-worn": {
+    subject:
+      "the face of ONE worn old floorboard in a ship's hold, its grain running straight up and down the frame: pale warm tan and honey wood worn smooth along the middle, darker brown grain lines and grime toward the edges, small splits and dents",
+    ref: CRATE,
+    crop: [0.35, 0.82, 0.5, 0.18],
+    size: 1536,
   },
   "rope-hemp": {
     subject:

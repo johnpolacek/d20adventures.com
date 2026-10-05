@@ -132,7 +132,7 @@ function pierSet() {
       saloon: 0.72,
       height: 3,
       interior: true,
-      materials: { helm: "helmGlass", panel: "panel", post: "timber", night: "night", door: "door", brass: "brass", floor: "saloonFloor", ceiling: "ceiling" },
+      materials: { helm: "helmGlass", panel: "panel", post: "timber", night: "night", door: "door", brass: "brass", floor: "saloonFloor", ceiling: "ceiling", pane: "windowGlass" },
     },
     { type: "lantern", at: [2.75, 0, 5.15], height: 1.45, post: true },
     // The shipment, as in the crate's art: iron-banded and chained, its front aft, between two massive weathered posts
@@ -459,8 +459,9 @@ function pierSet() {
       glow: "#c2f4f2",
       fill: { color: "#ffffff", intensity: 3.5, distance: 12 },
       lights: [
-        // The saloon's lamplight, seen from outside through its door.
+        // The saloon's lamplight, seen from outside through its door and windows.
         { at: [5.2, 2.2, 0.8], color: "#ffb060", intensity: 8, distance: 6 },
+        { at: [5.2, 2.2, -2.6], color: "#ffb060", intensity: 7, distance: 5 },
         // Lamplight spilling from the door and the bow windows onto the foredeck, and from the port windows over the deck
         // and water.
         { at: [5.2, 1.6, 3.8], color: "#ffa046", intensity: 20, distance: 9 },
@@ -552,15 +553,17 @@ function pierSet() {
       void: { type: "plain", color: "#0d0a09", roughness: 1 },
       // The saloon, as in the battle's and the crate's art: red-brown upright boards, heavy weathered grey-brown timbers,
       // a dark ceiling, worn pale floorboards and night-dark glass.
-      night: { type: "plain", color: "#04101a", roughness: 0.2, emissive: "#123c52", emissiveIntensity: 0.22 },
-      panel: painted("cabin-dark", "#c48a68", [0.16, 40], { size: [0.6, 1.6], grime: 1.2, variance: 0.45 }),
-      timber: painted("cabin-dark", "#a8988a", [0, 40], { size: [0.9, 2.6], grime: 1.6, relief: 0.1, variance: 0.25 }),
-      ceiling: painted("cabin-dark", "#6e5a4c", [0.16, 40], { grime: 1.4 }),
-      saloonFloor: painted("boards-weathered", "#b8a084", [0.2, 3.2], { nails: 0.8, grime: 1.4, variance: 0.4 }),
-      door: painted("cabin-dark", "#e0a878", [0.14, 12], { grime: 0.8 }),
+      // Glass: warm lamplight glowing in the saloon's windows from outside, the room showing through; faint from inside.
+      windowGlass: { type: "glass", color: "#ffa850", opacity: 0.24, emissive: "#ff8a30", emissiveIntensity: 0.35, roughness: 0.1 },
+      night: { type: "glass", color: "#0c1c26", opacity: 0.18, roughness: 0.1 },
+      panel: painted("cabin-planks", "#a08a80", [0.16, 40], { size: [0.5, 1.6], grime: 0.9, relief: 0.14, variance: 0.35 }),
+      timber: painted("timber-hold", "#a49a90", [0, 40], { size: [0.7, 2.2], grime: 1.1, relief: 0.1, variance: 0.25 }),
+      ceiling: painted("timber-hold", "#6c6058", [0.18, 40], { size: [0.7, 2.2], grime: 1.4, relief: 0.1 }),
+      saloonFloor: painted("floor-worn", "#efe2d2", [0.2, 3.2], { size: [0.6, 1.8], nails: 0.8, grime: 1.1, relief: 0.12, variance: 0.3 }),
+      door: painted("door-oak", "#ffffff", [0, 12], { size: [0.6, 1.8], grime: 0.6, relief: 0.14 }),
       parchment: { type: "plain", color: "#9c8866", roughness: 1 },
       candle: { type: "plain", color: "#e6dcc0", roughness: 0.9 },
-      trim: painted("cabin-dark", "#c8b8a8", [0, 40], { grime: 0.6 }),
+      trim: painted("door-oak", "#c8a890", [0, 40], { size: [0.6, 1.8], grime: 0.8 }),
       wheel: { type: "wood", a: "#5a3a24", b: "#6e4a2e", c: "#4a3020", plank: [0, 40], relief: 0.02, seed: 3.7 },
       brass: { type: "metal", color: "#a8823e", roughness: 0.35, metalness: 0.85 },
       gauge: { type: "plain", color: "#1e1c18", roughness: 0.6 },

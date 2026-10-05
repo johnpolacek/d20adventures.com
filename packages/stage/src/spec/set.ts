@@ -101,6 +101,9 @@ const mist = z.object({ type: z.literal("mist"), color, opacity: unit.optional()
 const foliage = z.object({ type: z.literal("foliage"), color, roughness: unit.optional(), map: texture.optional(), shadow: z.boolean().optional() }).strict()
 const metal = z.object({ type: z.literal("metal"), color, roughness: unit.optional(), metalness: unit.optional() }).strict()
 const plain = z.object({ type: z.literal("plain"), color, roughness: unit.optional(), emissive: color.optional(), emissiveIntensity: num(0, 20).optional() }).strict()
+// Window glass: see-through, seen from the front of each pane only, so a lit window glows from outside while the room
+// behind it shows through, and from inside the night shows through it.
+const glass = z.object({ type: z.literal("glass"), color, opacity: unit.default(0.35), roughness: unit.optional(), emissive: color.optional(), emissiveIntensity: num(0, 20).optional() }).strict()
 // Field stone with moss and lichen, painted from world position (menhirs, boulders, flagstones).
 const rock = z
   .object({
@@ -149,7 +152,7 @@ const water = z
     mirror: unit.optional(),
   })
   .strict()
-export const materialSpec = z.discriminatedUnion("type", [masonry, wood, painted, card, cloth, burlap, foliage, glow, mist, metal, plain, rock, meadow, grass, water])
+export const materialSpec = z.discriminatedUnion("type", [masonry, wood, painted, card, cloth, burlap, foliage, glow, mist, metal, plain, glass, rock, meadow, grass, water])
 export type MaterialSpec = z.infer<typeof materialSpec>
 
 // An object is `{ type, id?, at?, yaw?, materials?, ...params }`; params are checked by the builder named by `type`.
