@@ -43,6 +43,16 @@ fn site_url() -> String {
         .trim_end_matches('/')
         .to_string()
 }
+// Saves, rosters and downloaded packs. Development builds can use another folder with D20_DATA_DIR, so a test run
+// never touches real saves. Overriding HOME instead would also hide the login Keychain.
+fn data_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
+    if cfg!(debug_assertions) {
+        if let Some(dir) = std::env::var_os("D20_DATA_DIR") {
+            return Ok(PathBuf::from(dir));
+        }
+    }
+    app.path().app_data_dir().map_err(|e| e.to_string())
+}
 // The account link's device token. Development builds keep their own item so they never touch the shipped app's link.
 fn keychain() -> Result<keyring::Entry, String> {
     let service = if cfg!(debug_assertions) {
@@ -108,7 +118,7 @@ fn open_site(path: String) -> Result<(), String> {
     Ok(())
 }
 async fn run_runtime(app: &tauri::AppHandle, command: &Value) -> Result<Value, String> {
-    let data = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    let data = data_dir(app)?;
     std::fs::create_dir_all(&data).map_err(|e| e.to_string())?;
     let resources = if cfg!(debug_assertions) {
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resources")

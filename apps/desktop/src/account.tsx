@@ -15,14 +15,13 @@ export function Account(props: { onPacks: () => void }) {
   const [busy, setBusy] = useState(false)
   const polling = useRef<Waiting | null>(null)
 
-  const { onPacks } = props
-  const settle = useCallback(
-    (res: AccountResponse) => {
-      if (res.updated?.length) onPacks()
-      if (res.failed?.length) setError("Some adventures could not download. They will retry next time.")
-    },
-    [onPacks]
-  )
+  // The parent passes a new callback each render. Keep the latest without re-running the status check.
+  const onPacks = useRef(props.onPacks)
+  onPacks.current = props.onPacks
+  const settle = useCallback((res: AccountResponse) => {
+    if (res.updated?.length) onPacks.current()
+    if (res.failed?.length) setError("Some adventures could not download. They will retry next time.")
+  }, [])
 
   useEffect(() => {
     void account({ kind: "accountStatus" }).then((res) => {

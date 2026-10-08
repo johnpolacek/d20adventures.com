@@ -118,7 +118,9 @@ What downloads is the story: the compiled runtime the local GM plays. Art, set f
 
 Validation: 38 desktop runtime tests, including 5 pack tests, and 9 store tests passed, with both TypeScript projects, gm-core's boundary check, and Biome. End to end with a free-only runtime against the worktree's dev server serving a local pack folder: before linking only The Midnight Summons was playable. Linking downloaded March of Davos, which the account owned, and skipped the bundled starter. Covert Cargo returned 403 until granted, then downloaded on the next status. A repeat status downloaded nothing. A hand-edited pack was ignored and replaced on the next sync. The test device was unlinked afterwards.
 
-Not done: uploading packs to S3, which writes to the shared data bucket and needs owner approval. Downloads already on disk stay playable after unlinking or losing ownership. The in-app check of linking and downloads remains.
+Not done: uploading packs to S3, which writes to the shared data bucket and needs owner approval. Downloads already on disk stay playable after unlinking or losing ownership.
+
+In-app check, 2026-10-08, debug build with only the free starter bundled: with a linked token in the development Keychain item, the app read it at launch, called the website once for the account and library, and downloaded March of Davos and Covert Cargo. Two fixes came from this run. The account check re-ran on every screen update, because the parent passed a new callback each render. And isolating test data by overriding `HOME` also hid the login Keychain, so debug builds now accept `D20_DATA_DIR` for a separate data folder. The Link account and Unlink buttons, which write and delete the Keychain item, were not clicked: computer use was not set up.
 
 ## Security
 
