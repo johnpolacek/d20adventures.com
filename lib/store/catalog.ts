@@ -9,9 +9,10 @@ export type CatalogEntry = {
 }
 
 // Alpha, owner 2026-10-08: every adventure is free. March of Davos shows its $5 price crossed out.
+// The order is the New game screen's tab order.
 export const CATALOG: CatalogEntry[] = [
-  { id: "the-midnight-summons", settingId: "realm-of-myr", priceCents: 0, free: true },
   { id: "march-of-davos", settingId: "realm-of-myr", priceCents: 0, free: true, listPriceCents: 500 },
+  { id: "the-midnight-summons", settingId: "realm-of-myr", priceCents: 0, free: true },
   { id: "covert-cargo", settingId: "realm-of-myr", priceCents: 0, free: true },
   { id: "the-road-to-kordavos", settingId: "realm-of-myr", priceCents: 0, free: true },
 ]
