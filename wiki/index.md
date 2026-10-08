@@ -19,7 +19,8 @@ Desktop integration updated on 2026-10-03 in `feature/desktop-stage-play`, inclu
 - [Plans](plans/index.md): Stageview delivery and maintenance backlog.
 - [Harvest Festival handoff](plans/harvest-festival-handoff.md): handoff record. The festival scene was resumed and implemented on 2026-10-03.
 - [Stageview](plans/stageview.md): owner decisions, remaining phases, release questions.
-- [Desktop local play](plans/desktop-local-play.md): core extraction, native client, local saves, and character-state application implemented locally. Further sets, provider coverage, and distribution remain open. Free solo play through the player's own AI CLI, subscription tokens for multiplayer.
+- [Desktop local play](plans/desktop-local-play.md): core extraction, native client, local saves, and character-state application implemented locally. Further sets, provider coverage, and distribution remain open. Free solo play through the player's own AI CLI. Multiplayer through a host's app, free. Revenue from selling adventures, decided 2026-10-07.
+- [Adventure store](plans/feature-adventure-store.md): buying adventures on the website, linking the desktop app, and pack downloads.
 - [Desktop Stageview integration](plans/zzz-completed/feature-desktop-stage-play.md): native game client, local saves, live turn flow, validation, and limits.
 - [Stage engine](stage-engine.md): implemented runtime, set/staging specs, measured limits.
 - [Stage set authoring](stage-authoring.md): the pattern for new 3D locations, web review first, then the desktop app.

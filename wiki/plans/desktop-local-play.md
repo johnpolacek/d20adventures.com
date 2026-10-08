@@ -4,7 +4,7 @@
 
 Status: Phase 0 refinement recorded 2026-10-02 in `spike/desktop-local-play`. Strict nested output preserved accepted state in eight native trials. Combining pre-roll decisions reduced seven requests to five for the three working CLIs. Narrative continuity remains open. Character-state application was completed locally on 2026-10-03 in the integration worktree. Gemini compatibility is separate. Phase 1 is extracted. The phase 2 client and initial phase 3 local save/CLI flow are implemented in [Desktop Stageview integration](zzz-completed/feature-desktop-stage-play.md), on an unmerged feature branch. Remaining product phases stay open.
 
-A Tauri desktop app becomes the only game client. Solo play is free. The AI Game Master runs through an AI CLI the player already has installed and signed in to with their own subscription. Online multiplayer keeps the GM on the server and is paid by a subscription that grants tokens. The web app's play experience is deprecated once the desktop app ships. Stageview is rebuilding the turn page now, so the stage-first turn page should be built for the desktop app instead of the web app.
+A Tauri desktop app becomes the only game client. Solo play is free. The AI Game Master runs through an AI CLI the player already has installed and signed in to with their own subscription. Multiplayer runs through a host: one player's app runs the GM through their CLI, and friends join from a browser. Revenue comes from selling adventures, decided 2026-10-07. The web app's play experience is deprecated once the desktop app ships. Stageview is rebuilding the turn page now, so the stage-first turn page should be built for the desktop app instead of the web app.
 
 ## Owner decisions
 
@@ -14,7 +14,7 @@ Recorded 2026-10-01:
 - Ship as a notarized direct download. No Mac App Store, because its sandbox blocks running the player's installed CLIs.
 - Solo play runs the GM locally through the player's CLI and is free. AI-controlled party members can fill the party.
 - Supported CLIs include Claude Code, Codex, Gemini CLI, and Grok. The owner accepts the terms risk for Codex, Gemini, and Grok.
-- Multiplayer runs the GM on the server. A subscription grants tokens, roughly matching current token pricing.
+- Multiplayer runs the GM on the server. A subscription grants tokens, roughly matching current token pricing. Superseded on 2026-10-07, below.
 - Narration is optional and player-supplied through common voice-generation providers. The provider choice is TBD.
 - Players can generate their own characters or use premades.
 - Local players supply their own art and narration through their CLIs or API keys. Tokens are not used in local play.
@@ -25,6 +25,17 @@ Recorded 2026-10-01:
 - The web app is deprecated once the desktop app ships. Only test accounts exist, so no player migration is expected.
 - Server and desktop share one TypeScript game-logic library.
 - Later on 2026-10-01, the owner challenged the blanket ban on user settings, tools, and MCP as a prerequisite for CLI support. Restrictions need a concrete basis. Configuration loading alone does not disqualify a provider. The credential-handling rule remains in force.
+
+Recorded 2026-10-07, revenue and multiplayer:
+
+- Revenue comes from selling adventures, not from AI access or a subscription.
+- First-party adventures sell first. A creator marketplace with a revenue cut comes later.
+- Solo play and host mode are free.
+- Host mode: one player's desktop app runs the GM through their CLI for the whole party. Guests need no CLI and join from a browser. Home Wi-Fi first, then a website relay for remote friends.
+- This replaces "Multiplayer runs the GM on the server. A subscription grants tokens." Whether a server GM stays for groups with no CLI is open.
+- Implementation: [Adventure store](feature-adventure-store.md). Host mode gets its own plan after the store.
+
+Reasoning from the 2026-10-05 to 10-07 discussion: relay and asset costs are about 1 to 5 cents per hosted game. A paid host subscription would charge for a feature powered by the host's AI subscription, which sits badly with the policy basis below. Selling content avoids that. Benchmarks for a later creator cut: itch.io 10% by default, DriveThruRPG about 30 to 35%, Steam 30%, DMs Guild 50%.
 
 ## Policy basis
 
@@ -244,18 +255,21 @@ Initial CLI generation, SQLite persistence, bundled content, and four premade pl
 - Onboarding for CLI detection, sign-in guidance, and provider choice.
 - Notarized DMG and the Tauri updater.
 
-### Phase 4, online multiplayer
+### Phase 4, store and multiplayer
 
-- Account sign-in in the desktop app.
-- Subscription through the existing Stripe setup, granting tokens at roughly current pricing.
-- Multiplayer through the server GM, with Convex realtime state.
-- Pack downloads. Creator packs and selling come later.
+Revised 2026-10-07. See [Adventure store](feature-adventure-store.md).
+
+- Linking the desktop app to a website account.
+- Buying first-party adventures on the website through Stripe Checkout.
+- Pack downloads unlocked by purchase. The free starter stays bundled.
+- Host mode: guests join the host's game from a browser. Home Wi-Fi first, then a website relay.
+- Creator packs and a marketplace cut come later.
 - Move adventure authoring from the web admin editor into the desktop app.
 
 ### Phase 5, deprecate web play
 
 - Remove web play routes and UI.
-- Keep the server for multiplayer GM, accounts, billing, content distribution, admin, marketing, and downloads.
+- Keep the server for accounts, the store, the host relay, content distribution, admin, marketing, and downloads.
 - Update architecture and testing docs to the desktop client.
 
 ## Open decisions
@@ -267,6 +281,11 @@ Initial CLI generation, SQLite persistence, bundled content, and four premade pl
 - Default CLI and the minimum GM quality bar.
 - Pack format, versioning, and signing.
 - Timing for Windows and Linux builds.
+- Which adventure is free. Proposed: The Midnight Summons free and the other three paid. Alternative: all paid, each with a free first encounter.
+- Price per adventure. $5 is the working figure.
+- Whether a server GM stays for groups where nobody has a CLI.
+- Host mode under provider terms. Nobody pays for the host's usage, but a party driving one account stretches "ordinary, individual usage". Ask Anthropic before shipping.
+- The creator revenue cut, when the marketplace opens.
 
 ## Risks
 

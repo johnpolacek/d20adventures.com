@@ -4,6 +4,12 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-07, selling adventures
+
+Owner chose to make money by selling adventures rather than a host subscription. First-party adventures sell first, and a creator marketplace with a revenue cut comes later. Solo play and host mode are free. Host mode lets one player's app run the GM through their CLI while friends join from a browser. This replaces the 2026-10-01 server-GM token subscription for multiplayer. Estimated relay and asset cost is 1 to 5 cents per hosted game. A paid host subscription would have charged for a feature powered by the host's AI subscription. See [Desktop local play](plans/desktop-local-play.md#owner-decisions) and the [Adventure store plan](plans/feature-adventure-store.md).
+
+Found while planning: the token ledger's Convex mutations are public and accept any user id. Recorded in [Maintenance](plans/maintenance.md).
+
 ## 2026-10-05, dice sounds
 
 Owner chose a dice sound as the die lands. Rolls now clatter, land with a tock and end on a short cue for the verdict, all made in Web Audio. Scene settings has a sound switch. See [the plan](plans/roll-results.md).

@@ -10,6 +10,7 @@ Stageview delivery is tracked [separately](stageview.md). This pass changed docu
 
 | Item | Evidence | Next action |
 |---|---|---|
+| Public token mutations | Found 2026-10-08. `convex/userTokenManagement.ts` exports `incrementTokens`, `decrementTokens` and `splitDecrementTokens` as public mutations taking any user id. Convex has no auth config, and the Next server calls with an unauthenticated client. Anyone with the public Convex URL can credit or drain tokens. | Guard with a server secret or Convex auth before any paid flow ships. The [Adventure store](feature-adventure-store.md) uses a server secret from the start. |
 | Test wrapper waits on unused port 4000 | `package.json` has `test:wait` waiting on 3000 and 4000. Worktrees use cloud Convex and configurable Next ports. | Make the wrapper target the selected server and actual readiness signal. Until then, invoke `test:run` directly. |
 | Production signed-out admin test | September checks recorded a redirect to missing `/sign-in`. `tests/auth.spec.ts` expects the development Access Denied view. | Align the production sign-in route and assertion. Keep this distinct from passing development coverage. |
 | Cannot clear some editor fields | `updateSection` in `admin-wiki-adventure-editor.tsx` returns original content for a blank markdown section. Existing frontmatter fields can be set to an empty string. | Define supported clearing semantics and verify save/refresh. |

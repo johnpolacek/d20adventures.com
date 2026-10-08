@@ -8,6 +8,7 @@ Updated for the desktop integration worktree on 2026-10-02. Implementation statu
 
 | Plan | Status | Next work |
 |---|---|---|
+| [Adventure store](feature-adventure-store.md) | Planned 2026-10-08. Owner chose selling first-party adventures, with solo and host mode free. | Phase 1, catalog and entitlements. Stripe test keys for phase 2. |
 | [Roll results in the narration](roll-results.md) | Implemented on main 2026-10-05. A roll's paragraph shows the d20 landing, the total against the DC and a stamped verdict. | Owner review. |
 | [Covert Cargo: the meeting inside the boat](covert-cargo-boat-meeting.md) | Implemented on main 2026-10-05. One larger saloon for every boat encounter, restaged to the source, intro edited, walks through doors. | Owner play-through. |
 | [Desktop module covers](desktop-module-covers.md) | Implemented on main 2026-10-04. Painted module-style covers and a module cover layout for the New game screen. | Owner review. |
@@ -17,7 +18,7 @@ Updated for the desktop integration worktree on 2026-10-02. Implementation statu
 | [Covert Cargo in 3D](zzz-completed/covert-cargo-3d.md) | Merged into main 2026-10-04 and archived. Four sets, nine stagings and five character standees from the adventure's art, painted textures, leaf cards and water reflections, checked in the packaged app. | Owner play-through. The End's forest haze. |
 | [Desktop heroes](zzz-completed/feature-desktop-heroes.md) | Merged into main 2026-10-04 and archived. Hero creation, a local roster, party setup with AI companions, all four Myr adventures, stock figures, and art painted through Codex or Grok. | Delete the worktree's Convex project in the dashboard. |
 | [Desktop Stageview integration](zzz-completed/feature-desktop-stage-play.md) | Merged into main 2026-10-03 and archived. Both bundled adventures play in the desktop app, The Midnight Summons on every branch with 3D scenes. | Package distribution and more 3D sets. Character creation is in [Desktop heroes](zzz-completed/feature-desktop-heroes.md). |
-| [Desktop local play](desktop-local-play.md) | Core extraction, desktop shell, and initial local save/CLI play implemented on unmerged branches. | More sets, save management, optional pre-roll batching, broader gameplay, provider coverage, and distribution. |
+| [Desktop local play](desktop-local-play.md) | Core extraction, desktop shell, and initial local save/CLI play implemented. Revenue and multiplayer direction revised 2026-10-07. | More sets, save management, optional pre-roll batching, broader gameplay, provider coverage, and distribution. |
 | [Maintenance follow-ups](maintenance.md) | Open findings and unverified follow-ups carried forward from completed work. | Test harness, authoring edge cases, narration validation, and environment cleanup. |
 
 ## Maintained references
