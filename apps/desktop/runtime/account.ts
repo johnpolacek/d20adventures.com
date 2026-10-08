@@ -1,6 +1,8 @@
 import { hostname } from "node:os"
 import { z } from "zod"
 import type { LibraryEntry } from "../../../lib/store/catalog"
+import type { Packs } from "./game"
+import { syncPacks } from "./packs"
 
 // Linking this computer to a website account. Rust adds the Keychain token to each command
 // and stores or clears it from storeToken and clearToken, so the token never reaches the webview.
@@ -15,10 +17,14 @@ export type AccountCommand = z.infer<typeof accountCommandSchema>
 
 export type AccountState = { linked: false } | { linked: true; account: string; device: string } | { linked: "offline" }
 export type LinkState = { status: "waiting"; userCode: string; pollSecret: string; verifyPath: string; expiresAt: number; interval: number } | { status: "pending" } | { status: "expired" }
+export type OwnedAdventure = LibraryEntry & { pack?: { version: string; builtAt: number } }
 export type AccountResponse = {
   account: AccountState
   link?: LinkState
-  adventures?: LibraryEntry[]
+  adventures?: OwnedAdventure[]
+  // Story packs downloaded or replaced on this call, and ones that failed to download.
+  updated?: string[]
+  failed?: string[]
   storeToken?: string
   clearToken?: boolean
   error?: string
@@ -27,7 +33,10 @@ export type AccountResponse = {
 type Fetch = typeof fetch
 const deviceName = () => hostname().replace(/\.local$/, "") || "Desktop app"
 
-export async function accountCommand(command: AccountCommand, site: string, fetchImpl: Fetch = fetch): Promise<AccountResponse> {
+// With packs, a linked status also downloads the story packs of owned adventures.
+type PackPlace = { data: string; bundled: Packs }
+
+export async function accountCommand(command: AccountCommand, site: string, fetchImpl: Fetch = fetch, packs?: PackPlace): Promise<AccountResponse> {
   const call = (path: string, init: RequestInit = {}, bearer?: string) =>
     fetchImpl(`${site}${path}`, {
       ...init,
@@ -43,8 +52,10 @@ export async function accountCommand(command: AccountCommand, site: string, fetc
       if (!me.ok) return { account: { linked: "offline" } }
       const { account, device } = (await me.json()) as { account: string; device: string }
       const library = await call("/api/desktop/library", {}, bearer)
-      const adventures = library.ok ? ((await library.json()) as { adventures: LibraryEntry[] }).adventures : undefined
-      return { account: { linked: true, account, device }, adventures }
+      const adventures = library.ok ? ((await library.json()) as { adventures: OwnedAdventure[] }).adventures : undefined
+      if (!packs || !adventures) return { account: { linked: true, account, device }, adventures }
+      const synced = await syncPacks({ library: adventures, ...packs, fetchPack: (id) => call(`/api/desktop/packs/${id}`, {}, bearer) })
+      return { account: { linked: true, account, device }, adventures, ...synced }
     } catch {
       return { account: { linked: "offline" } }
     }

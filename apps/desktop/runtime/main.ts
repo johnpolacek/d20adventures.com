@@ -7,11 +7,12 @@ import { applyCharacterUpdates } from "./characters"
 import { adventureList, commandSchema, type GameCommand, game, type Packs, transitionsOf } from "./game"
 import { creationOptions, type HeroCommand, type HeroDraft, heroCommand, heroCommandSchema } from "./heroes"
 import { localLlm } from "./llm"
+import { loadPacks } from "./packs"
 import { LocalStore } from "./store"
 
 // stdout is only the IPC reply. Existing core debugging must not expose game prompts.
 console.log = console.warn = console.error = () => {}
-const packs: Packs = JSON.parse(readFileSync(join(__dirname, "packs.json"), "utf8"))
+const bundled: Packs = JSON.parse(readFileSync(join(__dirname, "packs.json"), "utf8"))
 const savePath = process.argv[2]
 const scratch = mkdtempSync(join(dirname(savePath), "session-"))
 let store: LocalStore | undefined
@@ -49,11 +50,13 @@ async function main() {
       const input = JSON.parse(line)
       // Account commands talk to the website only. They never open the save, so they can run beside a game action.
       if (typeof input?.kind === "string" && input.kind.startsWith("account")) {
-        const response = await accountCommand(accountCommandSchema.parse(input), (process.env.D20_SITE_URL ?? "https://d20adventures.com").replace(/\/$/, ""))
+        const site = (process.env.D20_SITE_URL ?? "https://d20adventures.com").replace(/\/$/, "")
+        const response = await accountCommand(accountCommandSchema.parse(input), site, fetch, { data: dirname(savePath), bundled })
         process.stdout.write(`${JSON.stringify(response)}\n`)
         return
       }
       const command = ["heroDraft", "saveHero", "deleteHero", "paintHero", "art"].includes(input?.kind) ? heroCommandSchema.parse(input) : commandSchema.parse(input)
+      const packs = await loadPacks(bundled, dirname(savePath))
       store = new LocalStore(savePath, transitionsOf(packs))
       store.acquire()
       model = localLlm("provider" in command ? command.provider : (store.state?.provider ?? "claude"), scratch, (patch) => {

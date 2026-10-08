@@ -9,7 +9,10 @@ const app = fileURLToPath(new URL("../", import.meta.url))
 const root = resolve(app, "../..")
 process.chdir(root)
 // The bundled adventures, keyed by plan id. Each save plays one of them.
-const ADVENTURES = ["march-of-davos", "the-midnight-summons", "covert-cargo", "the-road-to-kordavos"]
+// D20_BUNDLE=free bundles only the free starter, as a store build does. Others then download as story packs.
+const ALL = ["march-of-davos", "the-midnight-summons", "covert-cargo", "the-road-to-kordavos"]
+const FREE = ["the-midnight-summons"]
+const ADVENTURES = process.env.D20_BUNDLE === "free" ? FREE : ALL
 const packs = Object.fromEntries(ADVENTURES.map((id) => [id, loadLocalWikiAdventureRuntime("realm-of-myr", id)]))
 await mkdir(resolve(app, "src-tauri/resources"), { recursive: true })
 await rm(resolve(app, "src-tauri/resources/pack.json"), { force: true })

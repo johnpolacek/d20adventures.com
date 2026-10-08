@@ -1,22 +1,35 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { eyebrow, Pill, panel } from "@/components/stage/hud"
 import { cn } from "@/lib/utils"
-import type { AccountState, LinkState } from "../runtime/account"
+import type { AccountResponse, AccountState, LinkState } from "../runtime/account"
 import { account, openSite } from "./bridge"
 
 type Waiting = Extract<LinkState, { status: "waiting" }>
 
 // Links this computer to a website account: the app shows a code, the player approves it on the website.
-export function Account() {
+// Once linked, each status check downloads the story packs of owned adventures. onPacks reloads the game's list.
+export function Account(props: { onPacks: () => void }) {
   const [state, setState] = useState<AccountState | null>(null)
   const [link, setLink] = useState<Waiting | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const polling = useRef<Waiting | null>(null)
 
+  const { onPacks } = props
+  const settle = useCallback(
+    (res: AccountResponse) => {
+      if (res.updated?.length) onPacks()
+      if (res.failed?.length) setError("Some adventures could not download. They will retry next time.")
+    },
+    [onPacks]
+  )
+
   useEffect(() => {
-    void account({ kind: "accountStatus" }).then((res) => setState(res.account ?? { linked: "offline" }))
-  }, [])
+    void account({ kind: "accountStatus" }).then((res) => {
+      setState(res.account ?? { linked: "offline" })
+      settle(res)
+    })
+  }, [settle])
 
   const stop = useCallback(() => {
     polling.current = null
@@ -38,10 +51,11 @@ export function Account() {
     }
     if (res?.account?.linked === true) {
       stop()
+      settle(res)
       return setState(res.account)
     }
     setTimeout(poll, current.interval * 1000)
-  }, [stop])
+  }, [stop, settle])
 
   const start = async () => {
     setBusy(true)

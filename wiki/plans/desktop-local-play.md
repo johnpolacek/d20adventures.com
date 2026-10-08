@@ -279,7 +279,7 @@ Revised 2026-10-07. See [Adventure store](feature-adventure-store.md).
 - Distribution channel beyond direct download, such as Steam. Steam constraints read 2026-10-01: in-game purchases in a Steam build must go through the Steam Wallet microtransaction API, which supports recurring billing. Live-generated AI content needs a store-page disclosure and a description of guardrails. Steam Workshop could host player-made adventures.
 - Saves moving between local and online play.
 - Default CLI and the minimum GM quality bar.
-- Pack format, versioning, and signing.
+- Pack signing. The story pack format and versioning are in [Adventure store](feature-adventure-store.md).
 - Timing for Windows and Linux builds.
 - Which adventure is free. Proposed: The Midnight Summons free and the other three paid. Alternative: all paid, each with a free first encounter.
 - Price per adventure. $5 is the working figure.

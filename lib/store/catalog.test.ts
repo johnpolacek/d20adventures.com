@@ -14,10 +14,17 @@ test("Stripe's 50 cent minimum holds for every paid adventure", () => {
   for (const entry of CATALOG.filter((e) => !e.free)) assert.ok(entry.priceCents >= 50, entry.id)
 })
 
-test("every catalog adventure is a bundled desktop adventure", async () => {
+test("the desktop build bundles every catalog adventure, or only the free ones for a store build", async () => {
   const { readFile } = await import("node:fs/promises")
   const build = await readFile(new URL("../../apps/desktop/scripts/build-runtime.ts", import.meta.url), "utf8")
-  for (const entry of CATALOG) assert.ok(build.includes(`"${entry.id}"`), entry.id)
+  const list = (name: string) => JSON.parse(build.match(new RegExp(`const ${name} = (\\[.*\\])`))?.[1] ?? "[]") as string[]
+  assert.deepEqual(list("ALL").sort(), CATALOG.map((e) => e.id).sort())
+  assert.deepEqual(
+    list("FREE").sort(),
+    CATALOG.filter((e) => e.free)
+      .map((e) => e.id)
+      .sort()
+  )
 })
 
 test("library marks free and owned adventures and ignores unknown ids", () => {

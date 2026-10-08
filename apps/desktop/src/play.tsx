@@ -591,7 +591,7 @@ export function DesktopGame() {
       )}
       {(!save || menu) && (
         <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-5 bg-stage-ink/55 text-center">
-          <Account />
+          <Account onPacks={() => void invoke({ kind: "load" })} />
           <div className="text-[10px] tracking-[.3em] text-stage-gold">D20 ADVENTURES</div>
           {save && !confirmNew ? (
             <>

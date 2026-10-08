@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Desktop direction](desktop-local-play.md) · [GM core](../gm-core.md)
 
-Status: Phases 1 and 3 implemented 2026-10-08 in branch `feature/adventure-store`, isolated Convex project `d20adventures-feature-adventure-store`. Not merged or deployed. Web checkout waits until beta.
+Status: Phases 1, 3 and 4 implemented 2026-10-08 in branch `feature/adventure-store`, isolated Convex project `d20adventures-feature-adventure-store`. Not merged or deployed. No packs uploaded to S3. Web checkout waits until beta.
 
 A player buys an adventure on the website, then plays it in the desktop app. First-party adventures only.
 
@@ -69,7 +69,7 @@ The New game screen shows owned adventures and locked ones with their price. Buy
 | 1. Catalog and entitlements | Catalog, `entitlements` table, secret-guarded Convex functions, library query, tests. | Nothing external. |
 | 2. Web checkout, beta | Store UI on the website, Checkout route, webhook, Stripe test-mode run. | Beta. Stripe test keys for the D20 account. |
 | 3. Desktop link | Link API and page, device token table, Keychain storage, linked-device list. | Phase 1. |
-| 4. Pack delivery | Per-adventure pack build, S3 upload script, download API, desktop downloader, hash check, asset protocol. | Phases 1 and 3. |
+| 4. Pack delivery | Story packs: per-adventure build, S3 upload script, download API, desktop sync, hash and version checks. Art and 3D scenes as downloadable data come later. | Phases 1 and 3. |
 | 5. Desktop library | Owned and locked adventures, refresh after linking. The Buy hand-off waits for phase 2. | Phases 3 and 4. |
 | 6. Release | Production Stripe keys and webhook, live purchase test, refund check. | Owner approval. |
 
@@ -104,11 +104,28 @@ Desktop:
 
 Validation: Biome, both TypeScript projects, `cargo check` and rustfmt passed. `pnpm test:store` ran 9 tests and the desktop runtime suite ran 33, including 8 new account tests. End to end against the worktree's dev server, through the bundled `runtime.cjs` and a real Clerk session in a browser: link start, pending poll, approval on `/desktop/link`, a token on the next poll, a refused replay, account and library with a granted adventure, the device on the website list, unlink, and 401 for the old token. The Rust Keychain path and the start-screen control were not exercised in the running app.
 
+## Phase 4 record, 2026-10-08
+
+What downloads is the story: the compiled runtime the local GM plays. Art, set fixtures and 3D scene specs still ship in the app. The desktop's scene table (`apps/desktop/src/scenes.ts`) imports sets and stagings as code, so making them downloadable means moving that table into pack data. That is needed before adding an adventure without an app update, and before creator packs.
+
+- `@d20/gm-core/packs`: the format. A pack is `{ format: 1, id, version, builtAt, runtime }`. The version is the first 16 hex characters of the runtime's SHA-256, so a bundled and a downloaded copy of the same content share a version.
+- `scripts/desktop-packs.ts`: builds a pack per catalog adventure and `index.json`. `--out <dir>` writes a folder, and `--upload` writes `desktop-packs/` in the private data bucket. The index is written last.
+- `lib/desktop/packs.ts`: reads the index and packs from S3, or from `DESKTOP_PACKS_DIR` in development. The index is cached for a minute.
+- `GET /api/desktop/packs/[id]`: needs a linked device and ownership. It returns the pack with an `X-Pack-Sha256` header. `/api/desktop/library` adds each owned adventure's current pack version.
+- `apps/desktop/runtime/packs.ts`: loads bundled packs plus valid downloads from `<app data>/packs/`, with downloads taking precedence. A file whose version does not match its content is ignored. Sync downloads owned packs it lacks, checks the hash and version, writes through a temporary file, and removes a download when the bundled copy is current.
+- A linked status check syncs packs. The start screen reloads the adventure list when anything changed.
+- `D20_BUNDLE=free pnpm build` in `apps/desktop` bundles only the free starter, as a store build will. The default still bundles all four, so development play is unchanged.
+
+Validation: 38 desktop runtime tests, including 5 pack tests, and 9 store tests passed, with both TypeScript projects, gm-core's boundary check, and Biome. End to end with a free-only runtime against the worktree's dev server serving a local pack folder: before linking only The Midnight Summons was playable. Linking downloaded March of Davos, which the account owned, and skipped the bundled starter. Covert Cargo returned 403 until granted, then downloaded on the next status. A repeat status downloaded nothing. A hand-edited pack was ignored and replaced on the next sync. The test device was unlinked afterwards.
+
+Not done: uploading packs to S3, which writes to the shared data bucket and needs owner approval. Downloads already on disk stay playable after unlinking or losing ownership. The in-app check of linking and downloads remains.
+
+## Security
 
 - Pre-existing, found 2026-10-08: `convex/userTokenManagement.ts` exposes `incrementTokens` and `decrementTokens` as public mutations that take any user id with no check. Anyone with the public Convex URL can credit or drain any account's tokens. The same pattern would let anyone grant themselves adventures, so store functions use the server secret from the start. The token fix is tracked in [Maintenance](maintenance.md).
 - Grants come only from a verified Stripe webhook or an admin action.
 - Device tokens are random, stored hashed, revocable, and never logged.
-- Packs are local files and can be copied. Accepted for now. Pack signing stays an open decision.
+- Packs are local files and can be copied. Accepted for now. Packs are hash-checked in transit and version-checked on disk, but not signed. Signing stays an open decision.
 
 ## Validation
 
