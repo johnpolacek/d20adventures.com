@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Desktop direction](desktop-local-play.md) · [GM core](../gm-core.md)
 
-Status: Phases 1, 3, 4 and 5 implemented 2026-10-08 in branch `feature/adventure-store`, isolated Convex project `d20adventures-feature-adventure-store`. Not merged or deployed. No packs uploaded to S3. Web checkout waits until beta.
+Status: Merged into main 2026-10-08 from `feature/adventure-store`. Alpha: every adventure free, a linked account required to play. Not deployed. Open: the alpha release (website, Convex and the store secret in production), the S3 pack upload and web checkout at beta.
 
 A player buys an adventure on the website, then plays it in the desktop app. First-party adventures only.
 
@@ -86,7 +86,7 @@ The New game screen shows owned adventures and locked ones with their price. Buy
 
 Validation on the worktree deployment: a wrong secret was refused, a grant was created, a replayed session and a second session for an owned adventure both returned the first row, and another user owned nothing. Biome and TypeScript passed. The library route was not exercised through a signed-in browser.
 
-`STORE_SERVER_SECRET` must be set in each Convex deployment and in the matching Next environment. It is set for this worktree only.
+`STORE_SERVER_SECRET` must be set in each Convex deployment and in the matching Next environment. Since the 2026-10-08 merge it is set on main's development deployment and in its `.env.local`. Production does not have it yet.
 
 ## Phase 3 record, 2026-10-08
 
@@ -143,6 +143,16 @@ The desktop runtime tests read `src-tauri/resources/packs.json`. After a free-on
 - Checked in a browser with the bridge answered from fixtures: the gate, the waiting code, and a linked account reaching New game. Not yet seen in the running app.
 - A release build needs the website's desktop API deployed, or nobody can link and play.
 
+## Review locally
+
+1. Start the website: `pnpm exec next dev -p 3058` in the repo root.
+2. Start the app with the account requirement on: `D20_REQUIRE_ACCOUNT=1 D20_SITE_URL=http://localhost:3058 pnpm tauri dev` in `apps/desktop`.
+3. The title screen shows Link your account. Link account opens `/desktop/link` in the browser. Sign in, then Link.
+4. The app shows the account top right and the New game screen, with March of Davos at $5 crossed out.
+5. Unlink returns to the link step.
+
+Without `D20_REQUIRE_ACCOUNT` a development build plays without linking. Without `D20_SITE_URL` it points at the production site, which does not have the desktop API yet.
+
 ## Security
 
 - Pre-existing, found 2026-10-08: `convex/userTokenManagement.ts` exposes `incrementTokens` and `decrementTokens` as public mutations that take any user id with no check. Anyone with the public Convex URL can credit or drain any account's tokens. The same pattern would let anyone grant themselves adventures, so store functions use the server secret from the start. The token fix is tracked in [Maintenance](maintenance.md).
@@ -164,4 +174,3 @@ The desktop runtime tests read `src-tauri/resources/packs.json`. After a free-on
 - Whether a refund removes the adventure.
 - Stripe Tax at checkout, or price including tax.
 
-Finished: 2026-10-08 (merged to main, policy: merge)
