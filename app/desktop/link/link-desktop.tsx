@@ -2,17 +2,38 @@
 
 import { SignInButton, useUser } from "@clerk/nextjs"
 import { useCallback, useEffect, useState } from "react"
-import { Heading } from "@/components/typography/heading"
+import { eyebrow, Pill, panel } from "@/components/stage/hud"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
 
 type Pending = { deviceName: string; approved: boolean }
 type Device = { id: string; name: string; createdAt: number; lastSeenAt?: number }
 
+const clean = (code: string) => code.toUpperCase().replace(/[^A-Z0-9]/g, "")
 const formatCode = (code: string) => {
-  const c = code.toUpperCase().replace(/[^A-Z0-9]/g, "")
+  const c = clean(code)
   return c.length === 8 ? `${c.slice(0, 4)}-${c.slice(4)}` : code
+}
+
+// The code from the app, as two rows of parchment tiles.
+function CodeTiles({ code }: { code: string }) {
+  const c = clean(code)
+  const tile = "stage-parchment grid h-12 w-9 place-items-center rounded-[3px] font-display text-2xl text-stage-ink shadow-[inset_0_-2px_0_#0003,0_2px_6px_#0008]"
+  return (
+    <div className="flex items-center justify-center gap-1.5" role="img" aria-label={`Code ${formatCode(code)}`}>
+      {[...c.slice(0, 4)].map((ch, i) => (
+        <span key={`a${i}`} className={tile}>
+          {ch}
+        </span>
+      ))}
+      <span className="mx-1 h-[2px] w-3 bg-stage-gold/70" />
+      {[...c.slice(4)].map((ch, i) => (
+        <span key={`b${i}`} className={tile}>
+          {ch}
+        </span>
+      ))}
+    </div>
+  )
 }
 
 // The player confirms the code their desktop app shows. The app finishes linking on its own.
@@ -65,75 +86,86 @@ export function LinkDesktop({ initialCode }: { initialCode: string }) {
     if (res.ok) setDevices((d) => d.filter((device) => device.id !== id))
   }
 
-  if (!isLoaded) return null
-
   return (
-    <div className="container py-8 md:py-12">
-      <div className="mx-auto max-w-md space-y-6">
-        <Heading variant="h2" className="font-heading text-3xl md:text-4xl font-bold text-center">
-          Link the desktop app
-        </Heading>
-        <Card className="p-6 space-y-4">
+    <section className="relative grid min-h-screen place-items-center overflow-hidden px-4 pt-28 pb-16">
+      <img src="/stage/covers/march-of-davos.jpg" alt="" className="absolute inset-0 h-full w-full scale-105 object-cover blur-[2px]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,#0008,#000d_70%)]" />
+      {isLoaded && (
+        <div className={cn(panel, "relative w-full max-w-md px-8 py-9 text-center text-stage-cream")}>
+          <div className={eyebrow}>D20 Adventures · Desktop</div>
+          <h1 className="mt-3 font-display text-3xl leading-tight">{linked ? "Linked" : "Link this computer"}</h1>
+          <div className="mx-auto mt-5 mb-7 h-px w-32 bg-gradient-to-r from-transparent via-stage-gold/80 to-transparent" />
+
           {!isSignedIn ? (
-            <div className="space-y-4 text-center">
-              <p className="text-muted-foreground">Sign in to link this computer to your account.</p>
+            <div className="space-y-6">
+              <p className="font-serif text-stage-cream/85">Sign in to link the app to your account.</p>
               <SignInButton mode="modal">
                 <Button variant="epic">Sign in</Button>
               </SignInButton>
             </div>
           ) : linked ? (
-            <div className="space-y-2 text-center">
-              <p className="text-lg font-medium">{linked} is linked.</p>
-              <p className="text-muted-foreground">Return to the app.</p>
+            <div className="space-y-2 font-serif">
+              <p className="text-lg">{linked}</p>
+              <p className="text-stage-cream/75">Return to the app. Your adventures download there.</p>
             </div>
           ) : pending ? (
-            <div className="space-y-4 text-center">
-              <p className="text-muted-foreground">Code {formatCode(code)}</p>
-              <p className="text-lg font-medium">Link {pending.deviceName}?</p>
-              <div className="flex justify-center">
-                <Button variant="epic" onClick={approve} disabled={busy}>
-                  {busy ? "Linking..." : "Link this computer"}
-                </Button>
+            <div className="space-y-6">
+              <CodeTiles code={code} />
+              <div>
+                <div className={eyebrow}>Computer</div>
+                <p className="mt-1 font-serif text-lg">{pending.deviceName}</p>
               </div>
+              <Button variant="epic" onClick={approve} disabled={busy}>
+                {busy ? "Linking..." : "Link"}
+              </Button>
             </div>
           ) : (
             <form
-              className="space-y-3"
+              className="space-y-6"
               onSubmit={(e) => {
                 e.preventDefault()
                 void lookup(code)
               }}
             >
-              <label htmlFor="link-code" className="text-sm text-muted-foreground">
+              <label htmlFor="link-code" className={cn(eyebrow, "block")}>
                 Code shown in the app
               </label>
-              <Input id="link-code" value={code} onChange={(e) => setCode(e.target.value)} placeholder="ABCD-EFGH" autoComplete="off" className="text-center text-lg tracking-widest uppercase" />
-              <div className="flex justify-center">
-                <Button type="submit" variant="epic" disabled={!code.trim()}>
-                  Continue
-                </Button>
-              </div>
+              <input
+                id="link-code"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="ABCD-EFGH"
+                autoComplete="off"
+                spellCheck={false}
+                className="stage-parchment w-full rounded-[3px] px-4 py-3 text-center font-display text-2xl tracking-[0.3em] text-stage-ink uppercase placeholder:text-stage-ink/30 focus:outline-none focus:ring-2 focus:ring-stage-gold"
+              />
+              <Button type="submit" variant="epic" disabled={clean(code).length !== 8}>
+                Continue
+              </Button>
             </form>
           )}
-          {error && <p className="text-sm text-destructive text-center">{error}</p>}
-        </Card>
-        {isSignedIn && devices.length > 0 && (
-          <Card className="p-6 space-y-3">
-            <h3 className="font-medium">Linked computers</h3>
-            {devices.map((device) => (
-              <div key={device.id} className="flex items-center justify-between gap-4 text-sm">
-                <span>
-                  {device.name}
-                  <span className="text-muted-foreground"> · since {new Date(device.createdAt).toLocaleDateString()}</span>
-                </span>
-                <Button variant="outline" className="text-sm text-white" onClick={() => revoke(device.id)}>
-                  Unlink
-                </Button>
-              </div>
-            ))}
-          </Card>
-        )}
-      </div>
-    </div>
+
+          {error && <p className="mt-5 font-serif text-sm text-red-300">{error}</p>}
+
+          {isSignedIn && devices.length > 0 && (
+            <div className="mt-9 text-left">
+              <div className="stage-rule mb-5 h-px w-full opacity-60" />
+              <div className={cn(eyebrow, "mb-3")}>Linked computers</div>
+              <ul className="space-y-2">
+                {devices.map((device) => (
+                  <li key={device.id} className="stage-leather flex items-center justify-between gap-4 rounded-[3px] border border-stage-line/20 px-3 py-2">
+                    <div className="min-w-0">
+                      <div className="truncate font-serif">{device.name}</div>
+                      <div className="text-[11px] text-stage-muted">Linked {new Date(device.createdAt).toLocaleDateString()}</div>
+                    </div>
+                    <Pill onClick={() => revoke(device.id)}>Unlink</Pill>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+    </section>
   )
 }
