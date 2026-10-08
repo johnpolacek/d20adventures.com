@@ -8,6 +8,10 @@ This log retains durable decisions and dated evidence. Git owns detailed impleme
 
 Owner set the store work as alpha: web checkout waits until at least beta, and testers get adventures as grants. Implemented on `feature/adventure-store`: the catalog and entitlements, and linking the desktop app to a website account with a code approved on the website, the token in the Keychain. Not merged or deployed. See the [Adventure store plan](plans/feature-adventure-store.md).
 
+## 2026-10-08, stable signing for desktop dev builds
+
+Owner was re-approving Keychain access after every desktop rebuild. Debug builds were ad-hoc signed, and that signature changes each build. They now sign with the owner's Apple Development certificate before launch, so one "Always Allow" lasts. See [Desktop local play](plans/desktop-local-play.md#phase-2-desktop-shell-and-stage-first-play).
+
 ## 2026-10-07, selling adventures
 
 Owner chose to make money by selling adventures rather than a host subscription. First-party adventures sell first, and a creator marketplace with a revenue cut comes later. Solo play and host mode are free. Host mode lets one player's app run the GM through their CLI while friends join from a browser. This replaces the 2026-10-01 server-GM token subscription for multiplayer. Estimated relay and asset cost is 1 to 5 cents per hosted game. A paid host subscription would have charged for a feature powered by the host's AI subscription. See [Desktop local play](plans/desktop-local-play.md#owner-decisions) and the [Adventure store plan](plans/feature-adventure-store.md).

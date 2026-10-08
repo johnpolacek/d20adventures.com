@@ -242,6 +242,7 @@ Implemented locally for March of Davos in `feature/desktop-stage-play`. The shar
 - `apps/desktop` uses Tauri, Vite, and React. The renderer is shared through `packages/stage`.
 - Build the [Stageview](stageview.md) phase 4 turn page in the desktop app. Do not build it in the web app.
 - Freeze new play features on the web. Its text turn page keeps running until the desktop app ships.
+- macOS debug builds launch through `apps/desktop/scripts/macos-dev-run.sh`, a Cargo runner that signs with the local Apple Development certificate. Ad-hoc signatures change on every rebuild, so the Keychain asked again each time. Added 2026-10-08.
 
 ### Phase 3, desktop solo
 
