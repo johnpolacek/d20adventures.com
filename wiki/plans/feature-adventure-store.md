@@ -145,11 +145,11 @@ The desktop runtime tests read `src-tauri/resources/packs.json`. After a free-on
 
 ## Review locally
 
-1. Start the website: `pnpm exec next dev -p 3058` in the repo root.
-2. Start the app with the account requirement on: `D20_REQUIRE_ACCOUNT=1 D20_SITE_URL=http://localhost:3058 pnpm tauri dev` in `apps/desktop`.
-3. The title screen shows Link your account. Link account opens `/desktop/link` in the browser. Sign in, then Link.
-4. The app shows the account top right and the New game screen, with March of Davos at $5 crossed out.
-5. Unlink returns to the link step.
+Run `pnpm desktop:review` in the repo root. It starts the website on port 3058 and the app with the account requirement on, and quitting either stops both.
+
+1. The title screen shows Link your account. Link account opens `/desktop/link` in the browser. Sign in, then Link.
+2. The app shows the account top right and the New game screen, with March of Davos at $5 crossed out.
+3. Unlink returns to the link step.
 
 Without `D20_REQUIRE_ACCOUNT` a development build plays without linking. Without `D20_SITE_URL` it points at the production site, which does not have the desktop API yet.
 
