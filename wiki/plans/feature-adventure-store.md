@@ -6,7 +6,9 @@ Status: Phases 1, 3, 4 and 5 implemented 2026-10-08 in branch `feature/adventure
 
 A player buys an adventure on the website, then plays it in the desktop app. First-party adventures only.
 
-Owner, 2026-10-08: this is alpha. Web checkout waits until at least beta. Every adventure is free in alpha, so no grant tool is needed. March of Davos shows its $5 price crossed out beside FREE, on its New game tab and on its cover. Because the store build bundles every free adventure, an alpha build plays all four without linking or downloads. Linking, story packs and locked adventures stay in place for beta. The creator marketplace and host mode are later plans. Owner decision and reasoning: [Desktop local play](desktop-local-play.md#owner-decisions).
+Owner, 2026-10-08: this is alpha. Web checkout waits until at least beta. Every adventure is free in alpha, so no grant tool is needed. March of Davos shows its $5 price crossed out beside FREE, on its New game tab and on its cover. Because the store build bundles every free adventure, an alpha build plays all four without linking or downloads. Linking, story packs and locked adventures stay in place for beta.
+
+Owner, 2026-10-08: playing needs a linked account, alpha included. Until the computer is linked, the title screen shows only Link your account. A stored Keychain token lets play start while the website check runs, so a linked player can play offline. A revoked token returns the title screen to the link step. Development builds skip the requirement unless `D20_REQUIRE_ACCOUNT` is set, so local playtests and checks still run without the website. Rust's `account_info` answers both questions without a network call. The creator marketplace and host mode are later plans. Owner decision and reasoning: [Desktop local play](desktop-local-play.md#owner-decisions).
 
 ## Current state
 
@@ -133,6 +135,13 @@ In-app check, 2026-10-08, debug build with only the free starter bundled: with a
 Validation: desktop TypeScript, 38 runtime tests and Biome passed. A free-only build wrote a catalog of all four adventures. The screen was checked in a browser with the app's bridge answered from fixtures, as not linked, linked without the adventure, and owned with a failed download. The 3D stage does not run in that headless browser, so its error box was dismissed for the captures. Not yet seen in the running app.
 
 The desktop runtime tests read `src-tauri/resources/packs.json`. After a free-only build, 22 of them fail until the default build runs again.
+
+## Account required, 2026-10-08
+
+- `useAccount` in `apps/desktop/src/account.tsx` holds the link state for the whole title screen. `AccountBadge` shows the account and Unlink top right. `LinkGate` replaces Continue and New game while play is gated, and shows the code as parchment tiles while waiting.
+- If the account is unlinked or revoked mid-game, the title screen comes back.
+- Checked in a browser with the bridge answered from fixtures: the gate, the waiting code, and a linked account reaching New game. Not yet seen in the running app.
+- A release build needs the website's desktop API deployed, or nobody can link and play.
 
 ## Security
 

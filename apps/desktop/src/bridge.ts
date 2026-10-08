@@ -20,3 +20,5 @@ export const send = (command: GameCommand | HeroCommand) => invoke<GameResponse>
 type AccountRequest = AccountCommand extends infer C ? (C extends { token?: string } ? Omit<C, "token"> : never) : never
 export const account = (command: AccountRequest) => invoke<AccountResponse & { error?: string }>("account_command", { command })
 export const openSite = (path: string) => invoke<void>("open_site", { path })
+// Whether play needs a linked account, and whether a token is stored. Answered by Rust without a network call.
+export const accountInfo = () => invoke<{ required: boolean; linked: boolean }>("account_info")

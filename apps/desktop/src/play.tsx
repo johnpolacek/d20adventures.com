@@ -17,7 +17,7 @@ import { type NarrativePart, parseNarrative } from "@/lib/utils/parse-narrative"
 import type { AdventureInfo, CatalogInfo, GameCommand } from "../runtime/game"
 import type { Hero, HeroCommand, PartyChoice } from "../runtime/heroes"
 import type { Save } from "../runtime/store"
-import { Account } from "./account"
+import { AccountBadge, LinkGate, useAccount } from "./account"
 import { send } from "./bridge"
 import { characterInfo } from "./character-info"
 import type { FigureArt } from "./figures"
@@ -52,10 +52,8 @@ export function DesktopGame() {
   const [adventure, setAdventure] = useState("march-of-davos")
   // Set once the player picks an adventure, so loading never moves their choice.
   const pickedAdventure = useRef(false)
-  // Every adventure for sale, and what the linked account owns, for the locked ones on the new game screen.
+  // Every adventure for sale, for the locked ones on the new game screen.
   const [catalog, setCatalog] = useState<CatalogInfo[]>([])
-  const [library, setLibrary] = useState<{ linked: boolean | "offline"; owned: string[]; failed: string[] }>({ linked: false, owned: [], failed: [] })
-  const linkRef = useRef<(() => void) | null>(null)
   const [heroes, setHeroes] = useState<Hero[]>([])
   const [options, setOptions] = useState<{ races: string[]; archetypes: string[] }>({ races: [], archetypes: [] })
   // The hero creator, over the new game screen. A hero it saves joins the party there.
@@ -252,6 +250,11 @@ export function DesktopGame() {
     },
     [keepArt]
   )
+  // Playing needs a linked account. The title screen holds at the link step until there is one.
+  const acct = useAccount({ onPacks: () => void invoke({ kind: "load" }) })
+  useEffect(() => {
+    if (acct.gated) setMenu(true)
+  }, [acct.gated])
   useEffect(() => {
     void invoke({ kind: "load" })
   }, [invoke])
@@ -602,19 +605,11 @@ export function DesktopGame() {
       )}
       {(!save || menu) && (
         <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-5 bg-stage-ink/55 text-center">
-          <Account
-            onPacks={() => void invoke({ kind: "load" })}
-            onStatus={(res) =>
-              setLibrary((cur) => ({
-                linked: res.account.linked,
-                owned: res.account.linked === true ? (res.adventures ?? []).filter((a) => a.owned).map((a) => a.id) : res.account.linked === "offline" ? cur.owned : [],
-                failed: res.failed ?? [],
-              }))
-            }
-            linkRef={linkRef}
-          />
+          <AccountBadge account={acct} />
           <div className="text-[10px] tracking-[.3em] text-stage-gold">D20 ADVENTURES</div>
-          {save && !confirmNew ? (
+          {!acct.ready ? null : acct.gated ? (
+            <LinkGate account={acct} />
+          ) : save && !confirmNew ? (
             <>
               <h1 className="font-display text-5xl">{save.adventure.title}</h1>
               <div className="text-sm text-stage-cream">Realm of Myr</div>
@@ -657,10 +652,10 @@ export function DesktopGame() {
                   onPaint={painter ? (hero) => void paintHero(hero) : undefined}
                   onDelete={(hero) => void invoke({ kind: "deleteHero", id: hero.id })}
                   onCancel={save ? () => setConfirmNew(false) : undefined}
-                  locked={catalog.filter((c) => !adventures.some((a) => a.id === c.id)).map((c): Locked => ({ ...c, owned: library.owned.includes(c.id), failed: library.failed.includes(c.id) }))}
+                  locked={catalog.filter((c) => !adventures.some((a) => a.id === c.id)).map((c): Locked => ({ ...c, owned: acct.owned.includes(c.id), failed: acct.failed.includes(c.id) }))}
                   listPrices={Object.fromEntries(catalog.flatMap((c) => (c.free && c.listPriceCents ? [[c.id, c.listPriceCents]] : [])))}
-                  linked={library.linked}
-                  onLink={() => linkRef.current?.()}
+                  linked={acct.state?.linked ?? false}
+                  onLink={() => void acct.start()}
                 />
               )}
             </>

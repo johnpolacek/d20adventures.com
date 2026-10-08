@@ -105,6 +105,16 @@ async fn account_command(app: tauri::AppHandle, mut command: Value) -> Result<Va
     }
     Ok(response)
 }
+// Playing needs a linked account (owner, 2026-10-08). Development builds skip that unless D20_REQUIRE_ACCOUNT is set,
+// so local playtests and checks keep working without the website.
+#[tauri::command]
+fn account_info() -> Value {
+    let required = !cfg!(debug_assertions) || std::env::var_os("D20_REQUIRE_ACCOUNT").is_some();
+    let linked = keychain()
+        .and_then(|entry| entry.get_password().map_err(|e| e.to_string()))
+        .is_ok();
+    serde_json::json!({ "required": required, "linked": linked })
+}
 // Opens a page of the game's website in the player's browser.
 #[tauri::command]
 fn open_site(path: String) -> Result<(), String> {
@@ -171,6 +181,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             game_command,
             account_command,
+            account_info,
             open_site,
             render_report
         ])
