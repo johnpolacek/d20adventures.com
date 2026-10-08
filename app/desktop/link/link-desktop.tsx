@@ -4,6 +4,7 @@ import { SignInButton, useUser } from "@clerk/nextjs"
 import { useCallback, useEffect, useState } from "react"
 import { eyebrow, Pill, panel } from "@/components/stage/hud"
 import { Button } from "@/components/ui/button"
+import Image from "@/components/ui/native-image"
 import { cn } from "@/lib/utils"
 
 type Pending = { deviceName: string; approved: boolean }
@@ -88,7 +89,7 @@ export function LinkDesktop({ initialCode }: { initialCode: string }) {
 
   return (
     <section className="relative grid min-h-screen place-items-center overflow-hidden px-4 pt-28 pb-16">
-      <img src="/stage/covers/march-of-davos.jpg" alt="" className="absolute inset-0 h-full w-full scale-105 object-cover blur-[2px]" />
+      <Image fill src="/stage/covers/march-of-davos.jpg" alt="" className="scale-105 object-cover blur-[2px]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,#0008,#000d_70%)]" />
       {isLoaded && (
         <div className={cn(panel, "relative w-full max-w-md px-8 py-9 text-center text-stage-cream")}>
