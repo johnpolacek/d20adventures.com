@@ -2,6 +2,7 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { createInterface } from "node:readline"
 import { locate } from "../../desktop-spike/harness/cli.mjs"
+import { accountCommand, accountCommandSchema } from "./account"
 import { applyCharacterUpdates } from "./characters"
 import { adventureList, commandSchema, type GameCommand, game, type Packs, transitionsOf } from "./game"
 import { creationOptions, type HeroCommand, type HeroDraft, heroCommand, heroCommandSchema } from "./heroes"
@@ -46,6 +47,12 @@ async function main() {
   for await (const line of lines) {
     try {
       const input = JSON.parse(line)
+      // Account commands talk to the website only. They never open the save, so they can run beside a game action.
+      if (typeof input?.kind === "string" && input.kind.startsWith("account")) {
+        const response = await accountCommand(accountCommandSchema.parse(input), (process.env.D20_SITE_URL ?? "https://d20adventures.com").replace(/\/$/, ""))
+        process.stdout.write(`${JSON.stringify(response)}\n`)
+        return
+      }
       const command = ["heroDraft", "saveHero", "deleteHero", "paintHero", "art"].includes(input?.kind) ? heroCommandSchema.parse(input) : commandSchema.parse(input)
       store = new LocalStore(savePath, transitionsOf(packs))
       store.acquire()

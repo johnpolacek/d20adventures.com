@@ -8,7 +8,7 @@ Updated for the desktop integration worktree on 2026-10-02. Implementation statu
 
 | Plan | Status | Next work |
 |---|---|---|
-| [Adventure store](feature-adventure-store.md) | Planned 2026-10-08. Owner chose selling first-party adventures, with solo and host mode free. | Phase 1, catalog and entitlements. Stripe test keys for phase 2. |
+| [Adventure store](feature-adventure-store.md) | Alpha. Catalog, entitlements, and desktop account linking implemented 2026-10-08 on `feature/adventure-store`. Web checkout waits for beta. | Pack delivery, then the desktop library. |
 | [Roll results in the narration](roll-results.md) | Implemented on main 2026-10-05. A roll's paragraph shows the d20 landing, the total against the DC and a stamped verdict. | Owner review. |
 | [Covert Cargo: the meeting inside the boat](covert-cargo-boat-meeting.md) | Implemented on main 2026-10-05. One larger saloon for every boat encounter, restaged to the source, intro edited, walks through doors. | Owner play-through. |
 | [Desktop module covers](desktop-module-covers.md) | Implemented on main 2026-10-04. Painted module-style covers and a module cover layout for the New game screen. | Owner review. |

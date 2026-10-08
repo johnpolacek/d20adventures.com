@@ -1,15 +1,6 @@
 import { v } from "convex/values"
 import { mutation, query } from "./_generated/server"
-
-// Convex has no auth config, so every function is public. Store functions only answer
-// the Next server, which proves the caller and passes this shared secret.
-function requireServer(secret: string) {
-  const expected = process.env.STORE_SERVER_SECRET
-  if (!expected || secret.length !== expected.length) throw new Error("Forbidden")
-  let diff = 0
-  for (let i = 0; i < expected.length; i++) diff |= secret.charCodeAt(i) ^ expected.charCodeAt(i)
-  if (diff !== 0) throw new Error("Forbidden")
-}
+import { requireServer } from "./serverSecret"
 
 /** Adventure ids the user owns through purchase or grant. */
 export const ownedAdventures = query({

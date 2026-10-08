@@ -220,6 +220,33 @@ export default defineSchema({
     .index("by_user_adventure", ["userId", "adventureId"])
     .index("by_stripe_session", ["stripeSessionId"]),
 
+  // A desktop app waiting to be linked. The player approves the short code on the website,
+  // then the app redeems its poll secret for a device token. Secrets are stored as SHA-256 hashes.
+  deviceLinks: defineTable({
+    userCode: v.string(),
+    pollHash: v.string(),
+    deviceName: v.string(),
+    createdAt: v.number(),
+    expiresAt: v.number(),
+    userId: v.optional(v.string()), // Clerk User ID, set on approval
+    approvedAt: v.optional(v.number()),
+  })
+    .index("by_user_code", ["userCode"])
+    .index("by_poll_hash", ["pollHash"])
+    .index("by_expires", ["expiresAt"]),
+
+  // Linked desktop apps. The app keeps its token in the Keychain.
+  devices: defineTable({
+    userId: v.string(), // Clerk User ID
+    tokenHash: v.string(),
+    name: v.string(),
+    createdAt: v.number(),
+    lastSeenAt: v.optional(v.number()),
+    revokedAt: v.optional(v.number()),
+  })
+    .index("by_token_hash", ["tokenHash"])
+    .index("by_user", ["userId"]),
+
   userTokenLedger: defineTable({
     userId: v.string(), // Clerk User ID
     alltimeTokens: v.number(), // Total tokens ever granted or purchased by the user

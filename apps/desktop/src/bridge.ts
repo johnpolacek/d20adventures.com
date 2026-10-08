@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core"
+import type { AccountCommand, AccountResponse } from "../runtime/account"
 import type { AdventureInfo, GameCommand } from "../runtime/game"
 import type { Hero, HeroCommand, HeroDraft } from "../runtime/heroes"
 import type { Save } from "../runtime/store"
@@ -14,3 +15,7 @@ export type GameResponse = {
   error?: string
 }
 export const send = (command: GameCommand | HeroCommand) => invoke<GameResponse>("game_command", { command })
+// Rust adds the Keychain token, so the webview never sends or sees it.
+type AccountRequest = AccountCommand extends infer C ? (C extends { token?: string } ? Omit<C, "token"> : never) : never
+export const account = (command: AccountRequest) => invoke<AccountResponse & { error?: string }>("account_command", { command })
+export const openSite = (path: string) => invoke<void>("open_site", { path })

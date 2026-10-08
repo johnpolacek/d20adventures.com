@@ -2,9 +2,11 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Desktop direction](desktop-local-play.md) · [GM core](../gm-core.md)
 
-Status: Phase 1 implemented 2026-10-08 in branch `feature/adventure-store`, isolated Convex project `d20adventures-feature-adventure-store`. Not merged or deployed. Phase 2 needs Stripe test keys.
+Status: Phases 1 and 3 implemented 2026-10-08 in branch `feature/adventure-store`, isolated Convex project `d20adventures-feature-adventure-store`. Not merged or deployed. Web checkout waits until beta.
 
-A player buys an adventure on the website, then plays it in the desktop app. First-party adventures only. The creator marketplace and host mode are later plans. Owner decision and reasoning: [Desktop local play](desktop-local-play.md#owner-decisions).
+A player buys an adventure on the website, then plays it in the desktop app. First-party adventures only.
+
+Owner, 2026-10-08: this is alpha. Web checkout waits until at least beta. During alpha, testers get adventures as grants (`source: "grant"`), for now through `npx convex run store:grantAdventure` with the server secret. The creator marketplace and host mode are later plans. Owner decision and reasoning: [Desktop local play](desktop-local-play.md#owner-decisions).
 
 ## Current state
 
@@ -65,10 +67,10 @@ The New game screen shows owned adventures and locked ones with their price. Buy
 | Phase | Scope | Needs |
 |---|---|---|
 | 1. Catalog and entitlements | Catalog, `entitlements` table, secret-guarded Convex functions, library query, tests. | Nothing external. |
-| 2. Web checkout | Store UI on the website, Checkout route, webhook, Stripe test-mode run. | Stripe test keys for the D20 account. |
+| 2. Web checkout, beta | Store UI on the website, Checkout route, webhook, Stripe test-mode run. | Beta. Stripe test keys for the D20 account. |
 | 3. Desktop link | Link API and page, device token table, Keychain storage, linked-device list. | Phase 1. |
 | 4. Pack delivery | Per-adventure pack build, S3 upload script, download API, desktop downloader, hash check, asset protocol. | Phases 1 and 3. |
-| 5. Desktop library | Owned and locked adventures, Buy hand-off, refresh after purchase. | Phases 2 to 4. |
+| 5. Desktop library | Owned and locked adventures, refresh after linking. The Buy hand-off waits for phase 2. | Phases 3 and 4. |
 | 6. Release | Production Stripe keys and webhook, live purchase test, refund check. | Owner approval. |
 
 ## Phase 1 record, 2026-10-08
@@ -84,7 +86,24 @@ Validation on the worktree deployment: a wrong secret was refused, a grant was c
 
 `STORE_SERVER_SECRET` must be set in each Convex deployment and in the matching Next environment. It is set for this worktree only.
 
-## Security
+## Phase 3 record, 2026-10-08
+
+Website:
+
+- `convex/devices.ts`: pending links and linked devices, all behind the server secret. Links expire after 10 minutes, are single use, and store only SHA-256 hashes of the poll secret and device token.
+- `convex/serverSecret.ts` and `lib/convex/server-secret.ts`: the shared secret check, now used by store and device functions.
+- `lib/desktop/link.ts`: eight-character codes without 0, O, 1 or I, secrets, hashing, bearer parsing, device names.
+- API routes under `app/api/desktop/`: `link` and `link/token` for the app, `link/approve` and `devices` for the signed-in player, and `me`, `library`, `unlink` for a linked app's bearer token.
+- `/desktop/link`: sign in, confirm the code, see linked computers and unlink them.
+
+Desktop:
+
+- `runtime/account.ts`: account commands. They reach the website only and never open the save.
+- `src-tauri/src/main.rs`: `account_command` adds the Keychain token to each command and stores or clears it from the reply, so the webview never sees it. It skips the game lock. `open_site` opens website pages in the default browser. Development builds use their own Keychain item. The site defaults to `https://d20adventures.com`, and `D20_SITE_URL` points it at a local server.
+- `src/account.tsx`: Link account on the start screen. It shows the code, opens the website, polls, then shows the account with Unlink.
+
+Validation: Biome, both TypeScript projects, `cargo check` and rustfmt passed. `pnpm test:store` ran 9 tests and the desktop runtime suite ran 33, including 8 new account tests. End to end against the worktree's dev server, through the bundled `runtime.cjs` and a real Clerk session in a browser: link start, pending poll, approval on `/desktop/link`, a token on the next poll, a refused replay, account and library with a granted adventure, the device on the website list, unlink, and 401 for the old token. The Rust Keychain path and the start-screen control were not exercised in the running app.
+
 
 - Pre-existing, found 2026-10-08: `convex/userTokenManagement.ts` exposes `incrementTokens` and `decrementTokens` as public mutations that take any user id with no check. Anyone with the public Convex URL can credit or drain any account's tokens. The same pattern would let anyone grant themselves adventures, so store functions use the server secret from the start. The token fix is tracked in [Maintenance](maintenance.md).
 - Grants come only from a verified Stripe webhook or an admin action.
@@ -98,6 +117,9 @@ Validation on the worktree deployment: a wrong secret was refused, a grant was c
 - Desktop: link, list, download, and play a purchased adventure in the packaged app.
 
 ## Open decisions
+
+- An admin grant tool for alpha testers, instead of `npx convex run`.
+- Unsigned development builds may prompt for Keychain access after each rebuild.
 
 - Which adventure is free, and the price. Defaults above.
 - Whether a refund removes the adventure.

@@ -17,6 +17,7 @@ import { type NarrativePart, parseNarrative } from "@/lib/utils/parse-narrative"
 import type { AdventureInfo, GameCommand } from "../runtime/game"
 import type { Hero, HeroCommand, PartyChoice } from "../runtime/heroes"
 import type { Save } from "../runtime/store"
+import { Account } from "./account"
 import { send } from "./bridge"
 import { characterInfo } from "./character-info"
 import type { FigureArt } from "./figures"
@@ -590,6 +591,7 @@ export function DesktopGame() {
       )}
       {(!save || menu) && (
         <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-5 bg-stage-ink/55 text-center">
+          <Account />
           <div className="text-[10px] tracking-[.3em] text-stage-gold">D20 ADVENTURES</div>
           {save && !confirmNew ? (
             <>
