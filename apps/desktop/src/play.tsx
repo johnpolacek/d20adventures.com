@@ -14,7 +14,7 @@ import { TurnOrder } from "@/components/stage/turn-order"
 import { useStage } from "@/components/stage/use-stage"
 import { Button } from "@/components/ui/button"
 import { type NarrativePart, parseNarrative } from "@/lib/utils/parse-narrative"
-import type { AdventureInfo, GameCommand } from "../runtime/game"
+import type { AdventureInfo, CatalogInfo, GameCommand } from "../runtime/game"
 import type { Hero, HeroCommand, PartyChoice } from "../runtime/heroes"
 import type { Save } from "../runtime/store"
 import { Account } from "./account"
@@ -23,7 +23,7 @@ import { characterInfo } from "./character-info"
 import type { FigureArt } from "./figures"
 import { HeroCreator, type HeroIdea } from "./hero-creator"
 import { applyMovement, context, positions as stagePositions } from "./movement"
-import { NewGame } from "./new-game"
+import { type Locked, NewGame } from "./new-game"
 import { castIdFor, partyScene, portraitFor, sceneFor } from "./scenes"
 
 type Roll = Extract<NarrativePart, { type: "diceroll" }>
@@ -50,6 +50,12 @@ export function DesktopGame() {
   const [provider, setProvider] = useState("claude")
   const [adventures, setAdventures] = useState<AdventureInfo[]>([])
   const [adventure, setAdventure] = useState("march-of-davos")
+  // Set once the player picks an adventure, so loading never moves their choice.
+  const pickedAdventure = useRef(false)
+  // Every adventure for sale, and what the linked account owns, for the locked ones on the new game screen.
+  const [catalog, setCatalog] = useState<CatalogInfo[]>([])
+  const [library, setLibrary] = useState<{ linked: boolean | "offline"; owned: string[]; failed: string[] }>({ linked: false, owned: [], failed: [] })
+  const linkRef = useRef<(() => void) | null>(null)
   const [heroes, setHeroes] = useState<Hero[]>([])
   const [options, setOptions] = useState<{ races: string[]; archetypes: string[] }>({ races: [], archetypes: [] })
   // The hero creator, over the new game screen. A hero it saves joins the party there.
@@ -219,7 +225,12 @@ export function DesktopGame() {
       try {
         const res = await send(command)
         setSave(res.state)
-        if (res.adventures) setAdventures(res.adventures)
+        if (res.adventures) {
+          const playable = res.adventures
+          setAdventures(playable)
+          if (!pickedAdventure.current && playable.length) setAdventure((cur) => (playable.some((a) => a.id === cur) ? cur : playable[0].id))
+        }
+        if (res.catalog) setCatalog(res.catalog)
         if (res.heroes) setHeroes(res.heroes)
         if (res.art && Object.keys(res.art).length) keepArt(res.art)
         if (res.options) setOptions(res.options)
@@ -591,7 +602,17 @@ export function DesktopGame() {
       )}
       {(!save || menu) && (
         <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-5 bg-stage-ink/55 text-center">
-          <Account onPacks={() => void invoke({ kind: "load" })} />
+          <Account
+            onPacks={() => void invoke({ kind: "load" })}
+            onStatus={(res) =>
+              setLibrary((cur) => ({
+                linked: res.account.linked,
+                owned: res.account.linked === true ? (res.adventures ?? []).filter((a) => a.owned).map((a) => a.id) : res.account.linked === "offline" ? cur.owned : [],
+                failed: res.failed ?? [],
+              }))
+            }
+            linkRef={linkRef}
+          />
           <div className="text-[10px] tracking-[.3em] text-stage-gold">D20 ADVENTURES</div>
           {save && !confirmNew ? (
             <>
@@ -616,6 +637,7 @@ export function DesktopGame() {
                   adventures={adventures}
                   adventure={adventure}
                   onAdventure={(id) => {
+                    pickedAdventure.current = true
                     setAdventure(id)
                     setCreated(null)
                   }}
@@ -635,6 +657,9 @@ export function DesktopGame() {
                   onPaint={painter ? (hero) => void paintHero(hero) : undefined}
                   onDelete={(hero) => void invoke({ kind: "deleteHero", id: hero.id })}
                   onCancel={save ? () => setConfirmNew(false) : undefined}
+                  locked={catalog.filter((c) => !adventures.some((a) => a.id === c.id)).map((c): Locked => ({ ...c, owned: library.owned.includes(c.id), failed: library.failed.includes(c.id) }))}
+                  linked={library.linked}
+                  onLink={() => linkRef.current?.()}
                 />
               )}
             </>

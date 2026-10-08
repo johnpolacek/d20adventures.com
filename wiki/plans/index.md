@@ -8,7 +8,7 @@ Updated for the desktop integration worktree on 2026-10-02. Implementation statu
 
 | Plan | Status | Next work |
 |---|---|---|
-| [Adventure store](feature-adventure-store.md) | Alpha. Catalog, entitlements, desktop account linking, and story pack downloads implemented 2026-10-08 on `feature/adventure-store`. Web checkout waits for beta. | In-app check, then the desktop library. Pack upload to S3 needs approval. |
+| [Adventure store](feature-adventure-store.md) | Alpha. Catalog, entitlements, desktop account linking, story pack downloads, and locked adventures on New game implemented 2026-10-08 on `feature/adventure-store`. Web checkout waits for beta. | Locked adventures in the running app, pack upload to S3 with approval, an alpha grant tool, then merge. |
 | [Roll results in the narration](roll-results.md) | Implemented on main 2026-10-05. A roll's paragraph shows the d20 landing, the total against the DC and a stamped verdict. | Owner review. |
 | [Covert Cargo: the meeting inside the boat](covert-cargo-boat-meeting.md) | Implemented on main 2026-10-05. One larger saloon for every boat encounter, restaged to the source, intro edited, walks through doors. | Owner play-through. |
 | [Desktop module covers](desktop-module-covers.md) | Implemented on main 2026-10-04. Painted module-style covers and a module cover layout for the New game screen. | Owner review. |

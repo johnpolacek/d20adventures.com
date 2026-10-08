@@ -35,6 +35,8 @@ export const adventureList = (packs: Packs) =>
     }
   })
 export type AdventureInfo = ReturnType<typeof adventureList>[number]
+// An adventure for sale, from the build's catalog.json. Locked ones have no pack yet.
+export type CatalogInfo = Pick<AdventureInfo, "id" | "title" | "teaser" | "players"> & { priceCents: number; free: boolean }
 export const commandSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("load") }),
   // `replace` starts over, archiving the saved adventure.

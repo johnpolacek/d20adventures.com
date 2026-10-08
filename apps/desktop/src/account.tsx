@@ -8,7 +8,8 @@ type Waiting = Extract<LinkState, { status: "waiting" }>
 
 // Links this computer to a website account: the app shows a code, the player approves it on the website.
 // Once linked, each status check downloads the story packs of owned adventures. onPacks reloads the game's list.
-export function Account(props: { onPacks: () => void }) {
+// onStatus reports what the website says the account owns. linkRef lets other screens start linking.
+export function Account(props: { onPacks: () => void; onStatus?: (res: AccountResponse) => void; linkRef?: { current: (() => void) | null } }) {
   const [state, setState] = useState<AccountState | null>(null)
   const [link, setLink] = useState<Waiting | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -18,7 +19,10 @@ export function Account(props: { onPacks: () => void }) {
   // The parent passes a new callback each render. Keep the latest without re-running the status check.
   const onPacks = useRef(props.onPacks)
   onPacks.current = props.onPacks
+  const onStatus = useRef(props.onStatus)
+  onStatus.current = props.onStatus
   const settle = useCallback((res: AccountResponse) => {
+    onStatus.current?.(res)
     if (res.updated?.length) onPacks.current()
     if (res.failed?.length) setError("Some adventures could not download. They will retry next time.")
   }, [])
@@ -78,11 +82,13 @@ export function Account(props: { onPacks: () => void }) {
     try {
       const res = await account({ kind: "accountUnlink" })
       setState(res.account ?? { linked: false })
+      onStatus.current?.(res)
     } finally {
       setBusy(false)
     }
   }
 
+  if (props.linkRef) props.linkRef.current = state?.linked === true || link ? null : () => void start()
   if (!state) return null
   return (
     <div className="absolute right-5 top-5 z-50 flex flex-col items-end gap-2 text-left">

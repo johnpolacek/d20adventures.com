@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Desktop direction](desktop-local-play.md) · [GM core](../gm-core.md)
 
-Status: Phases 1, 3 and 4 implemented 2026-10-08 in branch `feature/adventure-store`, isolated Convex project `d20adventures-feature-adventure-store`. Not merged or deployed. No packs uploaded to S3. Web checkout waits until beta.
+Status: Phases 1, 3, 4 and 5 implemented 2026-10-08 in branch `feature/adventure-store`, isolated Convex project `d20adventures-feature-adventure-store`. Not merged or deployed. No packs uploaded to S3. Web checkout waits until beta.
 
 A player buys an adventure on the website, then plays it in the desktop app. First-party adventures only.
 
@@ -70,7 +70,7 @@ The New game screen shows owned adventures and locked ones with their price. Buy
 | 2. Web checkout, beta | Store UI on the website, Checkout route, webhook, Stripe test-mode run. | Beta. Stripe test keys for the D20 account. |
 | 3. Desktop link | Link API and page, device token table, Keychain storage, linked-device list. | Phase 1. |
 | 4. Pack delivery | Story packs: per-adventure build, S3 upload script, download API, desktop sync, hash and version checks. Art and 3D scenes as downloadable data come later. | Phases 1 and 3. |
-| 5. Desktop library | Owned and locked adventures, refresh after linking. The Buy hand-off waits for phase 2. | Phases 3 and 4. |
+| 5. Desktop library | Locked adventures with prices on the New game screen, refresh after linking. The Buy hand-off waits for phase 2. | Phases 3 and 4. |
 | 6. Release | Production Stripe keys and webhook, live purchase test, refund check. | Owner approval. |
 
 ## Phase 1 record, 2026-10-08
@@ -121,6 +121,18 @@ Validation: 38 desktop runtime tests, including 5 pack tests, and 9 store tests 
 Not done: uploading packs to S3, which writes to the shared data bucket and needs owner approval. Downloads already on disk stay playable after unlinking or losing ownership.
 
 In-app check, 2026-10-08, debug build with only the free starter bundled: with a linked token in the development Keychain item, the app read it at launch, called the website once for the account and library, and downloaded March of Davos and Covert Cargo. Two fixes came from this run. The account check re-ran on every screen update, because the parent passed a new callback each render. And isolating test data by overriding `HOME` also hid the login Keychain, so debug builds now accept `D20_DATA_DIR` for a separate data folder. The owner then clicked Unlink and Link account in the running app. Unlink revoked the device and deleted the Keychain item. Link account opened the website, polled, and after approval saved a new item and loaded the library. The owner found the `/desktop/link` page ugly, so it was redrawn in the desktop's stage look: a painted cover behind a leather panel, gold labels, the code as parchment tiles, and linked computers listed under a rule. Checked at desktop and phone widths, signed out, with a pending code, with a bad code, and with the entry form.
+
+## Phase 5 record, 2026-10-08
+
+- The desktop build writes `catalog.json` beside `packs.json`: every catalog adventure's title, teaser, player range, price and free flag, bundled or not. The runtime returns it with each game response.
+- The New game screen lists playable adventures first, then the rest as tabs with a lock and their price, or "Owned" when the account owns one that has not downloaded.
+- A locked adventure shows its cover under a brass lock, its teaser, and a panel. Not linked: the price and "Already own it? Link your account to download it." with a Link account button. Linked without it: the price and "The store opens soon." Owned: downloading, or the download failed and retries next launch. Play reads Locked.
+- The start screen picks the first playable adventure until the player chooses one, so a free-only build opens on The Midnight Summons.
+- The account control reports ownership to the game screen and lets it start linking.
+
+Validation: desktop TypeScript, 38 runtime tests and Biome passed. A free-only build wrote a catalog of all four adventures. The screen was checked in a browser with the app's bridge answered from fixtures, as not linked, linked without the adventure, and owned with a failed download. The 3D stage does not run in that headless browser, so its error box was dismissed for the captures. Not yet seen in the running app.
+
+The desktop runtime tests read `src-tauri/resources/packs.json`. After a free-only build, 22 of them fail until the default build runs again.
 
 ## Security
 
