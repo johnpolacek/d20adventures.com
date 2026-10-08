@@ -658,6 +658,7 @@ export function DesktopGame() {
                   onDelete={(hero) => void invoke({ kind: "deleteHero", id: hero.id })}
                   onCancel={save ? () => setConfirmNew(false) : undefined}
                   locked={catalog.filter((c) => !adventures.some((a) => a.id === c.id)).map((c): Locked => ({ ...c, owned: library.owned.includes(c.id), failed: library.failed.includes(c.id) }))}
+                  listPrices={Object.fromEntries(catalog.flatMap((c) => (c.free && c.listPriceCents ? [[c.id, c.listPriceCents]] : [])))}
                   linked={library.linked}
                   onLink={() => linkRef.current?.()}
                 />

@@ -4,14 +4,16 @@ export type CatalogEntry = {
   settingId: string
   priceCents: number
   free: boolean
+  // A free adventure's usual price, shown crossed out beside FREE.
+  listPriceCents?: number
 }
 
-// Owner defaults pending confirmation (wiki/plans/feature-adventure-store.md): one free starter, the rest $5.
+// Alpha, owner 2026-10-08: every adventure is free. March of Davos shows its $5 price crossed out.
 export const CATALOG: CatalogEntry[] = [
   { id: "the-midnight-summons", settingId: "realm-of-myr", priceCents: 0, free: true },
-  { id: "march-of-davos", settingId: "realm-of-myr", priceCents: 500, free: false },
-  { id: "covert-cargo", settingId: "realm-of-myr", priceCents: 500, free: false },
-  { id: "the-road-to-kordavos", settingId: "realm-of-myr", priceCents: 500, free: false },
+  { id: "march-of-davos", settingId: "realm-of-myr", priceCents: 0, free: true, listPriceCents: 500 },
+  { id: "covert-cargo", settingId: "realm-of-myr", priceCents: 0, free: true },
+  { id: "the-road-to-kordavos", settingId: "realm-of-myr", priceCents: 0, free: true },
 ]
 
 export const catalogEntry = (id: string) => CATALOG.find((entry) => entry.id === id)

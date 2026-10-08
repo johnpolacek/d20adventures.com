@@ -282,8 +282,7 @@ Revised 2026-10-07. See [Adventure store](feature-adventure-store.md).
 - Default CLI and the minimum GM quality bar.
 - Pack signing. The story pack format and versioning are in [Adventure store](feature-adventure-store.md).
 - Timing for Windows and Linux builds.
-- Which adventure is free. Proposed: The Midnight Summons free and the other three paid. Alternative: all paid, each with a free first encounter.
-- Price per adventure. $5 is the working figure.
+- Beta prices. In alpha every adventure is free, with March of Davos shown at $5 crossed out (owner, 2026-10-08).
 - Whether a server GM stays for groups where nobody has a CLI.
 - Host mode under provider terms. Nobody pays for the host's usage, but a party driving one account stretches "ordinary, individual usage". Ask Anthropic before shipping.
 - The creator revenue cut, when the marketplace opens.

@@ -14,6 +14,16 @@ export type Locked = CatalogInfo & { owned: boolean; failed: boolean }
 
 const price = (cents: number) => `$${(cents / 100).toFixed(cents % 100 ? 2 : 0)}`
 
+// A free adventure's usual price struck through, then FREE.
+// On brass the colours lift to cream so they stay readable.
+function FreeTag({ cents, onBrass }: { cents: number; onBrass?: boolean }) {
+  return (
+    <span className="whitespace-nowrap">
+      <s className={onBrass ? "text-stage-cream/70" : "text-stage-muted"}>{price(cents)}</s> <span className={cn("font-semibold", onBrass ? "text-stage-cream" : "text-stage-gold")}>FREE</span>
+    </span>
+  )
+}
+
 function LockIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 16 16" className="-mt-0.5 mr-1.5 inline h-3 w-3 fill-current">
@@ -49,6 +59,8 @@ export function NewGame(props: {
   onCancel?: () => void
   // Adventures for sale that are not playable here yet, and whether this computer is linked to an account.
   locked: Locked[]
+  // Usual prices of free adventures, by id, shown crossed out.
+  listPrices: Record<string, number>
   linked: boolean | "offline"
   onLink?: () => void
 }) {
@@ -72,8 +84,21 @@ export function NewGame(props: {
   const tabs = (
     <div className="flex flex-wrap gap-2" role="tablist" aria-label="Adventure">
       {props.adventures.map((a) => (
-        <Pill key={a.id} role="tab" aria-selected={a.id === props.adventure} active={a.id === props.adventure} onClick={() => props.onAdventure(a.id)} disabled={props.busy}>
+        <Pill
+          key={a.id}
+          role="tab"
+          aria-selected={a.id === props.adventure}
+          aria-label={props.listPrices[a.id] ? `${a.title}, free, usually ${price(props.listPrices[a.id])}` : undefined}
+          active={a.id === props.adventure}
+          onClick={() => props.onAdventure(a.id)}
+          disabled={props.busy}
+        >
           {a.title}
+          {props.listPrices[a.id] && (
+            <span className="ml-2">
+              <FreeTag cents={props.listPrices[a.id]} />
+            </span>
+          )}
         </Pill>
       ))}
       {props.locked.map((a) => (
@@ -111,8 +136,13 @@ export function NewGame(props: {
       <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-7 pb-5">
         {tabs}
         <div className="grid gap-7 md:grid-cols-[minmax(240px,330px)_1fr]">
-          <div className="md:sticky md:top-0 md:self-start">
+          <div className="relative md:sticky md:top-0 md:self-start">
             <ModuleCover id={info.id} title={info.title} players={info.players} />
+            {props.listPrices[info.id] && (
+              <div className="stage-brass absolute bottom-3 left-3 rounded-[3px] border px-3 py-1.5 font-sans text-sm tracking-wide">
+                <FreeTag cents={props.listPrices[info.id]} onBrass />
+              </div>
+            )}
           </div>
           <div className="flex min-w-0 flex-col gap-5">
             {info.teaser && (

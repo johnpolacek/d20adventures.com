@@ -6,7 +6,7 @@ Status: Phases 1, 3, 4 and 5 implemented 2026-10-08 in branch `feature/adventure
 
 A player buys an adventure on the website, then plays it in the desktop app. First-party adventures only.
 
-Owner, 2026-10-08: this is alpha. Web checkout waits until at least beta. During alpha, testers get adventures as grants (`source: "grant"`), for now through `npx convex run store:grantAdventure` with the server secret. The creator marketplace and host mode are later plans. Owner decision and reasoning: [Desktop local play](desktop-local-play.md#owner-decisions).
+Owner, 2026-10-08: this is alpha. Web checkout waits until at least beta. Every adventure is free in alpha, so no grant tool is needed. March of Davos shows its $5 price crossed out beside FREE, on its New game tab and on its cover. Because the store build bundles every free adventure, an alpha build plays all four without linking or downloads. Linking, story packs and locked adventures stay in place for beta. The creator marketplace and host mode are later plans. Owner decision and reasoning: [Desktop local play](desktop-local-play.md#owner-decisions).
 
 ## Current state
 
@@ -22,7 +22,7 @@ Owner, 2026-10-08: this is alpha. Web checkout waits until at least beta. During
 
 One typed catalog lists each adventure: id, title, price in cents, whether it is free, and the current pack version and hash. The web app, the API routes, and the desktop app read the same list. Prices live in code and go to Stripe as inline `price_data`, so no Stripe dashboard products are needed.
 
-Proposed defaults, pending owner confirmation: The Midnight Summons free, the other three at $5.
+Alpha, owner 2026-10-08: all four free. March of Davos carries a $5 list price, shown crossed out. A free entry's optional `listPriceCents` is display only.
 
 ### Entitlements
 
@@ -149,9 +149,8 @@ The desktop runtime tests read `src-tauri/resources/packs.json`. After a free-on
 
 ## Open decisions
 
-- An admin grant tool for alpha testers, instead of `npx convex run`.
 - Unsigned development builds may prompt for Keychain access after each rebuild.
 
-- Which adventure is free, and the price. Defaults above.
+- Beta prices. March of Davos is listed at $5. The other three have no stated price.
 - Whether a refund removes the adventure.
 - Stripe Tax at checkout, or price including tax.

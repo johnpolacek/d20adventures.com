@@ -6,7 +6,7 @@ This log retains durable decisions and dated evidence. Git owns detailed impleme
 
 ## 2026-10-08, alpha store scope and desktop linking
 
-Owner set the store work as alpha: web checkout waits until at least beta, and testers get adventures as grants. Implemented on `feature/adventure-store`: the catalog and entitlements, and linking the desktop app to a website account with a code approved on the website, the token in the Keychain. Not merged or deployed. See the [Adventure store plan](plans/feature-adventure-store.md).
+Owner set the store work as alpha: web checkout waits until at least beta. Every adventure is free in alpha, with March of Davos shown at $5 crossed out, so no grant tool is needed. Implemented on `feature/adventure-store`: the catalog and entitlements, and linking the desktop app to a website account with a code approved on the website, the token in the Keychain. Not merged or deployed. See the [Adventure store plan](plans/feature-adventure-store.md).
 
 ## 2026-10-08, stable signing for desktop dev builds
 
