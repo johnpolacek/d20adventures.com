@@ -163,3 +163,5 @@ The desktop runtime tests read `src-tauri/resources/packs.json`. After a free-on
 - Beta prices. March of Davos is listed at $5. The other three have no stated price.
 - Whether a refund removes the adventure.
 - Stripe Tax at checkout, or price including tax.
+
+Finished: 2026-10-08 (merged to main, policy: merge)
