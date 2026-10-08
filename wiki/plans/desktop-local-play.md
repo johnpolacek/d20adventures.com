@@ -34,6 +34,7 @@ Recorded 2026-10-07, revenue and multiplayer:
 - Host mode: one player's desktop app runs the GM through their CLI for the whole party. Guests need no CLI and join from a browser. Home Wi-Fi first, then a website relay for remote friends.
 - This replaces "Multiplayer runs the GM on the server. A subscription grants tokens." Whether a server GM stays for groups with no CLI is open.
 - Implementation: [Adventure store](feature-adventure-store.md). Host mode gets its own plan after the store.
+- Added 2026-10-08: playing needs a linked D20 Adventures account, alpha included. Every adventure is free in alpha. This changes the earlier assumption that solo play needs no account.
 
 Reasoning from the 2026-10-05 to 10-07 discussion: relay and asset costs are about 1 to 5 cents per hosted game. A paid host subscription would charge for a feature powered by the host's AI subscription, which sits badly with the policy basis below. Selling content avoids that. Benchmarks for a later creator cut: itch.io 10% by default, DriveThruRPG about 30 to 35%, Steam 30%, DMs Guild 50%.
 
@@ -280,10 +281,9 @@ Revised 2026-10-07. See [Adventure store](feature-adventure-store.md).
 - Distribution channel beyond direct download, such as Steam. Steam constraints read 2026-10-01: in-game purchases in a Steam build must go through the Steam Wallet microtransaction API, which supports recurring billing. Live-generated AI content needs a store-page disclosure and a description of guardrails. Steam Workshop could host player-made adventures.
 - Saves moving between local and online play.
 - Default CLI and the minimum GM quality bar.
-- Pack format, versioning, and signing.
+- Pack signing. The story pack format and versioning are in [Adventure store](feature-adventure-store.md).
 - Timing for Windows and Linux builds.
-- Which adventure is free. Proposed: The Midnight Summons free and the other three paid. Alternative: all paid, each with a free first encounter.
-- Price per adventure. $5 is the working figure.
+- Beta prices. In alpha every adventure is free, with March of Davos shown at $5 crossed out (owner, 2026-10-08).
 - Whether a server GM stays for groups where nobody has a CLI.
 - Host mode under provider terms. Nobody pays for the host's usage, but a party driving one account stretches "ordinary, individual usage". Ask Anthropic before shipping.
 - The creator revenue cut, when the marketplace opens.

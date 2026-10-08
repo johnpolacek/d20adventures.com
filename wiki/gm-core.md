@@ -18,6 +18,8 @@ Call `createGmCore(ports)` to create a runtime. Each instance retains its own de
 | `identity` | Return the current authenticated user ID, or null. Core access checks still enforce adventure membership and human character control. |
 | `sleep` | Optional delay implementation. Tests replace delays. Production keeps the existing timing. |
 
+`@d20/gm-core/packs` defines the story pack format the website serves and the desktop app checks: one adventure's runtime with a content version. It hashes with Web Crypto, so it stays free of Node imports. See [Adventure store](plans/feature-adventure-store.md).
+
 Records and IDs crossing the core boundary are plain TypeScript values. The server store converts string IDs to Convex's branded IDs. It preserves full documents for existing host callers. The store does not add new authorization rules or change the existing Convex mutation contract.
 
 `lib/gm-server` implements the current host. Content reads still use S3 and repo fallback. Clerk supplies identity. The existing model and style prompt remain in `lib/ai`. Text-model charging now lives in `lib/gm-server/billing.ts`. Storyview's transport, caching, and speech charging remain in their existing server services.

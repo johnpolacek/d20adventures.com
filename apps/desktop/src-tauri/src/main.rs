@@ -30,6 +30,38 @@ fn node() -> Result<PathBuf, String> {
         .find(|p| p.is_file())
         .ok_or("Install Node.js 24 or newer to run the local GM.".into())
 }
+// The game's website. Development builds can point at a local server with D20_SITE_URL.
+fn site_url() -> String {
+    std::env::var("D20_SITE_URL")
+        .ok()
+        .filter(|url| {
+            url.starts_with("https://")
+                || url.starts_with("http://localhost:")
+                || url.starts_with("http://127.0.0.1:")
+        })
+        .unwrap_or_else(|| "https://d20adventures.com".into())
+        .trim_end_matches('/')
+        .to_string()
+}
+// Saves, rosters and downloaded packs. Development builds can use another folder with D20_DATA_DIR, so a test run
+// never touches real saves. Overriding HOME instead would also hide the login Keychain.
+fn data_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
+    if cfg!(debug_assertions) {
+        if let Some(dir) = std::env::var_os("D20_DATA_DIR") {
+            return Ok(PathBuf::from(dir));
+        }
+    }
+    app.path().app_data_dir().map_err(|e| e.to_string())
+}
+// The account link's device token. Development builds keep their own item so they never touch the shipped app's link.
+fn keychain() -> Result<keyring::Entry, String> {
+    let service = if cfg!(debug_assertions) {
+        "com.d20adventures.desktop.dev"
+    } else {
+        "com.d20adventures.desktop"
+    };
+    keyring::Entry::new(service, "account").map_err(|e| e.to_string())
+}
 #[tauri::command]
 async fn game_command(
     app: tauri::AppHandle,
@@ -40,7 +72,63 @@ async fn game_command(
         .0
         .try_lock()
         .map_err(|_| "A game action is already running.")?;
-    let data = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    run_runtime(&app, &command).await
+}
+// Account actions only reach the website, so they skip the game lock. The token travels from the Keychain
+// to the runtime over stdin and back, and the webview never sees it.
+#[tauri::command]
+async fn account_command(app: tauri::AppHandle, mut command: Value) -> Result<Value, String> {
+    let kind = command
+        .get("kind")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    if !kind.starts_with("account") {
+        return Err("Unknown account action.".into());
+    }
+    let entry = keychain()?;
+    if let Some(fields) = command.as_object_mut() {
+        fields.remove("token");
+        if let Ok(token) = entry.get_password() {
+            fields.insert("token".into(), Value::String(token));
+        }
+    }
+    let mut response = run_runtime(&app, &command).await?;
+    if let Some(fields) = response.as_object_mut() {
+        if let Some(Value::String(token)) = fields.remove("storeToken") {
+            entry
+                .set_password(&token)
+                .map_err(|e| format!("Could not save the account link: {e}"))?;
+        }
+        if fields.remove("clearToken") == Some(Value::Bool(true)) {
+            let _ = entry.delete_credential();
+        }
+    }
+    Ok(response)
+}
+// Playing needs a linked account (owner, 2026-10-08). Development builds skip that unless D20_REQUIRE_ACCOUNT is set,
+// so local playtests and checks keep working without the website.
+#[tauri::command]
+fn account_info() -> Value {
+    let required = !cfg!(debug_assertions) || std::env::var_os("D20_REQUIRE_ACCOUNT").is_some();
+    let linked = keychain()
+        .and_then(|entry| entry.get_password().map_err(|e| e.to_string()))
+        .is_ok();
+    serde_json::json!({ "required": required, "linked": linked })
+}
+// Opens a page of the game's website in the player's browser.
+#[tauri::command]
+fn open_site(path: String) -> Result<(), String> {
+    if !path.starts_with('/') || path.starts_with("//") {
+        return Err("Invalid page.".into());
+    }
+    std::process::Command::new("/usr/bin/open")
+        .arg(format!("{}{}", site_url(), path))
+        .spawn()
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+async fn run_runtime(app: &tauri::AppHandle, command: &Value) -> Result<Value, String> {
+    let data = data_dir(app)?;
     std::fs::create_dir_all(&data).map_err(|e| e.to_string())?;
     let resources = if cfg!(debug_assertions) {
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resources")
@@ -57,6 +145,7 @@ async fn game_command(
                 .iter()
                 .filter_map(|key| std::env::var(key).ok().map(|value| (*key, value))),
         )
+        .env("D20_SITE_URL", site_url())
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
@@ -89,7 +178,13 @@ fn render_report(app: tauri::AppHandle, report: Value) -> Result<(), String> {
 fn main() {
     tauri::Builder::default()
         .manage(GameLock(Mutex::new(())))
-        .invoke_handler(tauri::generate_handler![game_command, render_report])
+        .invoke_handler(tauri::generate_handler![
+            game_command,
+            account_command,
+            account_info,
+            open_site,
+            render_report
+        ])
         .run(tauri::generate_context!())
         .expect("D20 Adventures failed to start");
 }

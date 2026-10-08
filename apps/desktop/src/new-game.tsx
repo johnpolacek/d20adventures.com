@@ -1,14 +1,36 @@
-import { useEffect, useState } from "react"
+import { type ReactNode, useEffect, useState } from "react"
 import { eyebrow, Pill, panel } from "@/components/stage/hud"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import type { AdventureInfo } from "../runtime/game"
+import type { AdventureInfo, CatalogInfo } from "../runtime/game"
 import type { Hero, PartyChoice } from "../runtime/heroes"
 import { type FigureArt, STOCK_FIGURES } from "./figures"
 import { ModuleCover } from "./module-cover"
 import { portraitFor } from "./scenes"
 
 type Pick = { id: string; name: string; race: string; archetype: string; portrait?: string; hero?: Hero }
+// An adventure for sale that this app cannot play yet. Owned ones are downloading, or failed to.
+export type Locked = CatalogInfo & { owned: boolean; failed: boolean }
+
+const price = (cents: number) => `$${(cents / 100).toFixed(cents % 100 ? 2 : 0)}`
+
+// A free adventure's usual price struck through, then FREE.
+// On brass the colours lift to cream so they stay readable.
+function FreeTag({ cents, onBrass }: { cents: number; onBrass?: boolean }) {
+  return (
+    <span className="whitespace-nowrap">
+      <s className={onBrass ? "text-stage-cream/70" : "text-stage-muted"}>{price(cents)}</s> <span className={cn("font-semibold", onBrass ? "text-stage-cream" : "text-stage-gold")}>FREE</span>
+    </span>
+  )
+}
+
+function LockIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 16 16" className="-mt-0.5 mr-1.5 inline h-3 w-3 fill-current">
+      <path d="M4 7V5a4 4 0 1 1 8 0v2h.5A1.5 1.5 0 0 1 14 8.5v5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 13.5v-5A1.5 1.5 0 0 1 3.5 7H4Zm2 0h4V5a2 2 0 1 0-4 0v2Z" />
+    </svg>
+  )
+}
 
 // New game: the adventure, who goes, who plays each hero, and which CLI runs the GM. The first hero is the player's,
 // the rest default to AI. Roster heroes appear only where the adventure accepts their race and class. Keyed by
@@ -35,8 +57,15 @@ export function NewGame(props: {
   onPaint?: (hero: Hero) => void
   onDelete: (hero: Hero) => void
   onCancel?: () => void
+  // Adventures for sale that are not playable here yet, and whether this computer is linked to an account.
+  locked: Locked[]
+  // Usual prices of free adventures, by id, shown crossed out.
+  listPrices: Record<string, number>
+  linked: boolean | "offline"
+  onLink?: () => void
 }) {
   const info = props.adventures.find((a) => a.id === props.adventure)
+  const lockedInfo = info ? undefined : props.locked.find((a) => a.id === props.adventure)
   const [party, setParty] = useState<PartyChoice[]>(() => (info?.party ?? []).map((id, i) => ({ id, ai: i > 0 })))
   const [deleting, setDeleting] = useState<string | null>(null)
   const fits = (h: Hero) => Boolean(info?.options?.races.includes(h.race) && info.options.archetypes.includes(h.archetype))
@@ -52,6 +81,45 @@ export function NewGame(props: {
   useEffect(() => {
     if (joining) setParty((p) => (p.some((c) => c.id === joining) || p.length >= max ? p : [...p, { id: joining, ai: p.some((c) => !c.ai) }]))
   }, [joining, max])
+  const tabs = (
+    <div className="flex flex-wrap gap-2" role="tablist" aria-label="Adventure">
+      {props.adventures.map((a) => (
+        <Pill
+          key={a.id}
+          role="tab"
+          aria-selected={a.id === props.adventure}
+          aria-label={props.listPrices[a.id] ? `${a.title}, free, usually ${price(props.listPrices[a.id])}` : undefined}
+          active={a.id === props.adventure}
+          onClick={() => props.onAdventure(a.id)}
+          disabled={props.busy}
+        >
+          {a.title}
+          {props.listPrices[a.id] && (
+            <span className="ml-2">
+              <FreeTag cents={props.listPrices[a.id]} />
+            </span>
+          )}
+        </Pill>
+      ))}
+      {props.locked.map((a) => (
+        <Pill
+          key={a.id}
+          role="tab"
+          aria-selected={a.id === props.adventure}
+          aria-label={`${a.title}, ${a.owned ? "owned, not downloaded" : `locked, ${price(a.priceCents)}`}`}
+          active={a.id === props.adventure}
+          onClick={() => props.onAdventure(a.id)}
+          disabled={props.busy}
+          className="text-stage-cream/70"
+        >
+          <LockIcon />
+          {a.title}
+          <span className="ml-2 text-stage-gold">{a.owned ? "Owned" : price(a.priceCents)}</span>
+        </Pill>
+      ))}
+    </div>
+  )
+  if (lockedInfo) return <LockedAdventure info={lockedInfo} tabs={tabs} linked={props.linked} onLink={props.onLink} onCancel={props.onCancel} busy={props.busy} />
   if (!info) return null
   const ready = party.length >= min && party.length <= max && party.some((c) => !c.ai)
   const toggle = (id: string) =>
@@ -66,16 +134,15 @@ export function NewGame(props: {
   return (
     <section className={cn(panel, "flex max-h-[90vh] w-[min(1160px,96vw)] flex-col text-left")}>
       <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-7 pb-5">
-        <div className="flex flex-wrap gap-2" role="tablist" aria-label="Adventure">
-          {props.adventures.map((a) => (
-            <Pill key={a.id} role="tab" aria-selected={a.id === props.adventure} active={a.id === props.adventure} onClick={() => props.onAdventure(a.id)} disabled={props.busy}>
-              {a.title}
-            </Pill>
-          ))}
-        </div>
+        {tabs}
         <div className="grid gap-7 md:grid-cols-[minmax(240px,330px)_1fr]">
-          <div className="md:sticky md:top-0 md:self-start">
+          <div className="relative md:sticky md:top-0 md:self-start">
             <ModuleCover id={info.id} title={info.title} players={info.players} />
+            {props.listPrices[info.id] && (
+              <div className="stage-brass absolute bottom-3 left-3 rounded-[3px] border px-3 py-1.5 font-sans text-sm tracking-wide">
+                <FreeTag cents={props.listPrices[info.id]} onBrass />
+              </div>
+            )}
           </div>
           <div className="flex min-w-0 flex-col gap-5">
             {info.teaser && (
@@ -211,6 +278,68 @@ export function NewGame(props: {
         )}
         <Button variant="epic" className="text-xl" disabled={props.busy || props.waiting || !ready || !props.providers.length} onClick={() => props.onStart(party)}>
           {props.busy ? "Starting…" : props.replacing ? "Start new game" : "Play"}
+        </Button>
+      </div>
+    </section>
+  )
+}
+
+// A locked adventure: its cover under a lock, its teaser, and how to get it.
+function LockedAdventure(props: { info: Locked; tabs: ReactNode; linked: boolean | "offline"; onLink?: () => void; onCancel?: () => void; busy: boolean }) {
+  const { info } = props
+  const status = info.owned
+    ? info.failed
+      ? "The download failed. It tries again next time the app opens."
+      : "Downloading…"
+    : props.linked === "offline"
+      ? "D20 Adventures cannot be reached. Adventures you own download when it can."
+      : props.linked
+        ? "The store opens soon."
+        : "Already own it? Link your account to download it."
+  return (
+    <section className={cn(panel, "flex max-h-[90vh] w-[min(1160px,96vw)] flex-col text-left")}>
+      <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-7 pb-5">
+        {props.tabs}
+        <div className="grid gap-7 md:grid-cols-[minmax(240px,330px)_1fr]">
+          <div className="relative md:sticky md:top-0 md:self-start">
+            <ModuleCover id={info.id} title={info.title} players={info.players} className="[filter:grayscale(.55)_brightness(.7)]" />
+            <div className="absolute inset-0 grid place-items-center">
+              <div className="stage-brass grid h-16 w-16 place-items-center rounded-full border">
+                <svg aria-hidden="true" viewBox="0 0 16 16" className="h-7 w-7 fill-current">
+                  <path d="M4 7V5a4 4 0 1 1 8 0v2h.5A1.5 1.5 0 0 1 14 8.5v5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 13.5v-5A1.5 1.5 0 0 1 3.5 7H4Zm2 0h4V5a2 2 0 1 0-4 0v2Z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div className="flex min-w-0 flex-col gap-5">
+            {info.teaser && (
+              <div>
+                <div className={cn(eyebrow, "mb-2")}>The adventure</div>
+                <p className="max-w-[70ch] font-serif text-[15px] leading-relaxed text-stage-cream/90">{info.teaser}</p>
+              </div>
+            )}
+            <div className="stage-leather max-w-md rounded-[3px] border border-stage-line/25 p-5">
+              <div className={eyebrow}>{info.owned ? "In your library" : "Not in your library"}</div>
+              {!info.owned && <div className="mt-2 font-display text-4xl text-stage-cream">{price(info.priceCents)}</div>}
+              <p className="mt-3 font-serif text-[15px] text-stage-cream/85">{status}</p>
+              {!info.owned && !props.linked && props.onLink && (
+                <Pill className="mt-4" onClick={props.onLink}>
+                  Link account
+                </Pill>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-4 border-t border-stage-line/15 px-7 py-5">
+        <div className="flex-1" />
+        {props.onCancel && (
+          <Pill disabled={props.busy} onClick={props.onCancel}>
+            Cancel
+          </Pill>
+        )}
+        <Button variant="epic" className="text-xl" disabled>
+          Locked
         </Button>
       </div>
     </section>
