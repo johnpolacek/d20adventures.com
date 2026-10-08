@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Desktop direction](desktop-local-play.md) · [GM core](../gm-core.md)
 
-Status: Planned 2026-10-08. Branch `feature/adventure-store`. Nothing implemented yet.
+Status: Phase 1 implemented 2026-10-08 in branch `feature/adventure-store`, isolated Convex project `d20adventures-feature-adventure-store`. Not merged or deployed. Phase 2 needs Stripe test keys.
 
 A player buys an adventure on the website, then plays it in the desktop app. First-party adventures only. The creator marketplace and host mode are later plans. Owner decision and reasoning: [Desktop local play](desktop-local-play.md#owner-decisions).
 
@@ -70,6 +70,19 @@ The New game screen shows owned adventures and locked ones with their price. Buy
 | 4. Pack delivery | Per-adventure pack build, S3 upload script, download API, desktop downloader, hash check, asset protocol. | Phases 1 and 3. |
 | 5. Desktop library | Owned and locked adventures, Buy hand-off, refresh after purchase. | Phases 2 to 4. |
 | 6. Release | Production Stripe keys and webhook, live purchase test, refund check. | Owner approval. |
+
+## Phase 1 record, 2026-10-08
+
+- `lib/store/catalog.ts`: the catalog and `libraryOf`, which marks free and owned adventures.
+- `convex/schema.ts`: the `entitlements` table with user, user and adventure, and Stripe session indexes.
+- `convex/store.ts`: `ownedAdventures` and `grantAdventure`, both requiring `STORE_SERVER_SECRET`. Grants are idempotent by Stripe session and by existing ownership.
+- `lib/store/server.ts`: server helpers that add the secret. `grantAdventure` rejects ids outside the catalog.
+- `app/api/store/library/route.ts`: the signed-in user's catalog with owned flags.
+- `pnpm test:store`: five catalog tests, including a check that every catalog id is a bundled desktop adventure.
+
+Validation on the worktree deployment: a wrong secret was refused, a grant was created, a replayed session and a second session for an owned adventure both returned the first row, and another user owned nothing. Biome and TypeScript passed. The library route was not exercised through a signed-in browser.
+
+`STORE_SERVER_SECRET` must be set in each Convex deployment and in the matching Next environment. It is set for this worktree only.
 
 ## Security
 

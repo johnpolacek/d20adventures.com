@@ -205,6 +205,21 @@ export default defineSchema({
     .index("by_adventure", ["adventureId"])
     .index("by_encounter", ["encounterId"]),
 
+  // Purchased or granted adventures. Free catalog adventures have no rows.
+  entitlements: defineTable({
+    userId: v.string(), // Clerk User ID
+    adventureId: v.string(),
+    source: v.union(v.literal("purchase"), v.literal("grant")),
+    stripeSessionId: v.optional(v.string()),
+    amountCents: v.optional(v.number()),
+    currency: v.optional(v.string()),
+    createdAt: v.number(),
+    revokedAt: v.optional(v.number()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_adventure", ["userId", "adventureId"])
+    .index("by_stripe_session", ["stripeSessionId"]),
+
   userTokenLedger: defineTable({
     userId: v.string(), // Clerk User ID
     alltimeTokens: v.number(), // Total tokens ever granted or purchased by the user
