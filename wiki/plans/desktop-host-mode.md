@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Desktop local play](desktop-local-play.md) · [Desktop home screen](zzz-completed/feature-desktop-home.md) · [Adventure store](feature-adventure-store.md)
 
-Status: Planned 2026-10-08, redrawn the same day for website-only play. Owner chose Stageview on the web for guests. Not started.
+Status: Paused 2026-10-08 by the owner, to get the game right first. Built work waits unmerged on `feature/host-mode`: hosted games, the GM job queue, the host worker, hosting screens, and the guest play page. Convex lockdown was not started.
 
 ## Goal
 
