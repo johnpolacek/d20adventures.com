@@ -32,7 +32,7 @@ Updated for the desktop integration worktree on 2026-10-02. Implementation statu
 | [Stage engine](../stage-engine.md) | Implemented set/staging specs, rendering, and dated performance evidence. |
 | [Wiki adventures](../wiki-adventures.md) | Content contracts, authoring, source selection, and turn persistence. |
 | [Testing runbook](testing-runbook.md) | Current commands, routes, browser checks, and known test limits. |
-| [Parallel dev worktrees](parallel-dev-worktrees.md) | Implemented pnpm wt commands and isolation rules. |
+| [Parallel dev worktrees](parallel-dev-worktrees.md) | Retired 2026-10-08 by the owner. Feature work happens on branches off main. Kept for reference. |
 
 ## Plan lifecycle
 

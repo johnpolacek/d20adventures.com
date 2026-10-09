@@ -38,25 +38,13 @@ Auto-commit local changes whenever confident that the code is good and there are
 - Create plans before code: meaningful-only
 <!-- PROJECT-HTML-WIKI-SKILL:END -->
 
-## Parallel Dev Worktrees
+## Branches
 
-This repo supports parallel feature development with git worktrees. Full design: `wiki/plans/parallel-dev-worktrees.md`. Use the `wt:*` scripts instead of raw `git worktree` commands.
+Owner decision, 2026-10-08: feature work happens on branches off `main` in the main checkout, not in git worktrees.
 
-- `pnpm wt:doctor` — environment and isolation checks
-- `pnpm wt:create <branch>` — sibling worktree at `../d20adventures.com.worktrees/<slug>`, env copied with Convex pointers stripped, `pnpm install`, fresh isolated Convex project `d20adventures-<slug>`, plan skeleton at `wiki/plans/<slug>.md`
-- `pnpm wt:seed <branch>` — clone main's Convex data into the worktree's project (replaces its data)
-- `pnpm wt:list` / `pnpm wt:resume <branch>` — status, URLs, plans
-- `pnpm wt:dev` — start the dev server behind the checkout's Portless URL (`https://d20adventures.localhost` on main, `https://<slug>.d20adventures.localhost` in worktrees)
-- `pnpm wt:open [branch]` — open the worktree URL
-- `pnpm wt:finish <branch>` — requires clean checkouts; archives the plan to `wiki/plans/zzz-completed/`, merges with `--no-ff`, removes the worktree and branch
-- `pnpm wt:clean` — prune stale metadata only (never deletes work)
-
-Rules:
-
-- One worktree per feature branch; `main` stays the integration checkout.
-- Each worktree gets its own Convex project (isolated database). Never copy `CONVEX_DEPLOYMENT` / `NEXT_PUBLIC_CONVEX_URL` between worktrees.
-- S3 buckets and the Clerk dev instance are shared across worktrees. Worktrees default to `NEXT_PUBLIC_USE_PLACEHOLDER_IMAGES=true`; avoid parallel work that mutates shared user/token state in Clerk.
-- `pnpm dev` no longer kills ports (that would kill sibling worktree servers). Use `pnpm dev:fresh` for the old kill-ports-first behavior.
-- Never delete, reset, or force-clean a dirty worktree without explicit user approval. Do not merge when either checkout is dirty.
-- Finish policy is merge (no-ff), preserving feature history.
-- After `wt:finish`, delete the worktree's Convex project `d20adventures-<slug>` in the Convex dashboard (no CLI for project deletion).
+- Create a feature branch from an up-to-date `main` (`git switch -c feature/<name>`). Never create git worktrees or run `pnpm wt:create`.
+- Put the feature's plan at `wiki/plans/<slug>.md` on the branch before meaningful work.
+- The branch shares main's dev Convex deployment, S3 buckets, and Clerk dev instance. Keep schema changes additive until the branch merges.
+- `pnpm dev` does not kill ports. Use `pnpm dev:fresh` to kill ports first.
+- Merge with `--no-ff` to preserve feature history. Do not merge with uncommitted changes.
+- The `wt:*` scripts and `wiki/plans/parallel-dev-worktrees.md` remain for reference only.
