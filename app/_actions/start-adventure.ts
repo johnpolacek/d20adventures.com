@@ -8,9 +8,9 @@ import type { Id } from "@/convex/_generated/dataModel"
 import { convex } from "@/lib/convex/server"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import { maybeTriggerStoryviewAutoGeneration } from "@/lib/services/turn-audio-service"
-import { buildLocalWikiTurnCharacters, isLocalWikiAdventure, loadWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
+import { isLocalWikiAdventure } from "@/lib/wiki-adventures/local-runtime"
+import { startWikiAdventure } from "@/lib/wiki-adventures/start"
 import type { AdventurePlan } from "@/types/adventure-plan"
-import type { PCTemplate } from "@/types/character"
 
 interface StartAdventureArgs {
   settingId: string
@@ -74,38 +74,7 @@ export async function startAdventure({ settingId, adventurePlanId, adventureId }
     }
 
     if (isLocalWikiAdventure(settingId, adventurePlanId)) {
-      const { definition, artifacts, contentRef } = await loadWikiAdventureRuntime(settingId, adventurePlanId)
-      const firstEncounter = artifacts.encounters[artifacts.manifest.startEncounterId]
-      if (!firstEncounter) throw new Error(`${adventurePlanId} start encounter is missing from compiled wiki artifacts`)
-      const { characters: existingPlayerCharacters, sheetsByCharacterId } = await loadExistingPlayerCharacters(adventure.players ?? [])
-      const characters = buildLocalWikiTurnCharacters({
-        artifacts,
-        encounter: firstEncounter,
-        players: adventure.players ?? [],
-        existingPlayerCharacters,
-        sheetsByCharacterId,
-      })
-      const turnId = await convex.mutation(api.adventure.createTurn, {
-        adventureId: adventureId as Id<"adventures">,
-        encounterId: firstEncounter.id,
-        title: firstEncounter.title,
-        narrative: firstEncounter.sections.intro ?? firstEncounter.sections.body ?? "",
-        characters,
-        order: 1,
-        generatedBy: { promptVersion: `wiki-${definition.promptSlug}-start-v1`, contextHash: contentRef.contentHash },
-      })
-      await convex.mutation(api.adventure.patchAdventure, {
-        adventureId: adventureId as Id<"adventures">,
-        patch: {
-          status: "active",
-          currentTurnId: turnId,
-          currentEncounterId: firstEncounter.id,
-          contentRef,
-          adventureSummaryMarkdown: artifacts.manifest.summary,
-          updatedAt: Date.now(),
-        },
-      })
-      after(() => maybeTriggerStoryviewAutoGeneration(turnId))
+      await startWikiAdventure(adventure)
       return redirect(`/settings/${settingId}/${adventurePlanId}/${adventureId}`)
     }
 
@@ -245,28 +214,4 @@ export async function startAdventure({ settingId, adventurePlanId, adventureId }
 
   // Redirect to the adventure page (which will show the first turn)
   return redirect(`/settings/${settingId}/${adventurePlanId}/${adventureId}`)
-}
-
-async function loadExistingPlayerCharacters(players: Array<{ userId: string; characterId: string }>) {
-  const characters = []
-  // Keyed by the storage key so lookups don't depend on a saved character's
-  // file name matching the id inside its sheet.
-  const sheetsByCharacterId: Record<string, PCTemplate> = {}
-
-  for (const player of players) {
-    if (!player.characterId.startsWith("characters/")) continue
-    const sheet = (await readJsonFromS3(player.characterId)) as PCTemplate
-    sheetsByCharacterId[player.characterId] = sheet
-    characters.push({
-      ...sheet,
-      id: sheet.id,
-      type: "pc" as const,
-      userId: player.userId,
-      initiative: 0,
-      hasReplied: false,
-      isComplete: false,
-    })
-  }
-
-  return { characters, sheetsByCharacterId }
 }

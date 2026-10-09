@@ -6,12 +6,14 @@ import type { Doc, Id } from "@/convex/_generated/dataModel"
 import { assertAdventureAccess } from "@/lib/adventure-access"
 import { convex } from "@/lib/convex/server"
 import { createServerCore } from "@/lib/gm-server/core"
+import { refuseHostedTurn } from "@/lib/host/guard"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
 import type { Adventure } from "@/types/adventure"
 import type { PC } from "@/types/character"
 
 export async function processTurnReply(args: { turnId: Id<"turns">; characterId: string; narrativeAction: string; originalPlayerInput?: string }) {
+  await refuseHostedTurn(args.turnId)
   return createServerCore().processTurnReply(args)
 }
 
@@ -22,6 +24,7 @@ export async function createAdventureWithFirstTurn(
 }
 
 export async function resolvePlayerRollResult(args: { turnId: Id<"turns">; characterId: string; result: number }): Promise<Doc<"turns"> | null> {
+  await refuseHostedTurn(args.turnId)
   return (await createServerCore().resolvePlayerRollResult(args)) as Doc<"turns"> | null
 }
 

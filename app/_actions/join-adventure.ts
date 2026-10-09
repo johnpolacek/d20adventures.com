@@ -27,19 +27,23 @@ export async function joinAdventure({ settingId, adventurePlanId, adventureId, c
   }
 
   let chargedTokens = 0
+  // Joining a hosted game is free: the host's app runs its GM.
+  const hosted = Boolean((await convex.query(api.adventure.getAdventureById, { adventureId: adventureId as Id<"adventures"> }))?.host)
   try {
-    const tokenResult = await decrementUserTokensAction({
-      tokensUsed: 1,
-      transactionType: "usage_join_adventure",
-    })
+    if (!hosted) {
+      const tokenResult = await decrementUserTokensAction({
+        tokensUsed: 1,
+        transactionType: "usage_join_adventure",
+      })
 
-    if (!tokenResult.success) {
-      if (tokenResult.errorCode === "INSUFFICIENT_TOKENS") {
-        throw new Error("Insufficient tokens to join adventure. Please purchase more tokens to continue.")
+      if (!tokenResult.success) {
+        if (tokenResult.errorCode === "INSUFFICIENT_TOKENS") {
+          throw new Error("Insufficient tokens to join adventure. Please purchase more tokens to continue.")
+        }
+        throw new Error(`Failed to deduct tokens: ${tokenResult.error}`)
       }
-      throw new Error(`Failed to deduct tokens: ${tokenResult.error}`)
+      chargedTokens = tokenResult.data.chargedTokens
     }
-    chargedTokens = tokenResult.data.chargedTokens
 
     const userCharKey = `characters/${userId}/${characterId.split("/").pop()?.replace(".json", "")}.json`
     let exists = false

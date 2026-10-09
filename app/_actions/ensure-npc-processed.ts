@@ -16,7 +16,9 @@ export async function ensureNpcProcessed(turnId: Id<"turns">): Promise<{ status:
   }
 
   console.log(`[ensureNpcProcessed] Checking turn ${turnId} for pending NPC actions.`)
-  const { turn } = await assertAdventureAccessByTurn(userId, turnId)
+  const { adventure, turn } = await assertAdventureAccessByTurn(userId, turnId)
+  // A hosted game's NPCs act in the host's app, through Continue.
+  if (adventure.host) return { status: "hosted" }
 
   const characters = turn.characters || []
   const currentActor = findCurrentActor(characters)
