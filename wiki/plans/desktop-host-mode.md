@@ -1,8 +1,8 @@
 # Desktop host mode
 
-[Plans](index.md) · [Wiki Home](../index.md) · [Desktop local play](desktop-local-play.md) · [Desktop home screen](feature-desktop-home.md) · [Adventure store](feature-adventure-store.md)
+[Plans](index.md) · [Wiki Home](../index.md) · [Desktop local play](desktop-local-play.md) · [Desktop home screen](zzz-completed/feature-desktop-home.md) · [Adventure store](feature-adventure-store.md)
 
-Status: Planned 2026-10-08, redrawn the same day for website-only play. Design awaits owner confirmation. Not started.
+Status: Planned 2026-10-08, redrawn the same day for website-only play. Owner chose Stageview on the web for guests. Not started.
 
 ## Goal
 
@@ -13,6 +13,7 @@ One player's desktop app runs the GM through their own CLI for the whole party. 
 - No home Wi-Fi mode. Friends join through the website. This replaces "home Wi-Fi first, then a website relay".
 - The host's copy of an adventure covers the table. Guests need not own it.
 - Guests make characters with the website's existing character creation.
+- Guests see the stage-first 3D play view on the website, built before host mode ships. Not today's text turn page.
 
 ## Current state
 
@@ -33,20 +34,20 @@ A hosted game is an ordinary website adventure whose GM work runs on the host's 
 - **Joining**: guests use the existing lobby link, sign in, pick or create a character, and join. No join token is charged for a hosted game.
 - **GM work**: when a guest acts, the website records the action as a GM job instead of calling Gemini. While hosting, the desktop app polls for jobs and runs gm-core through the host's CLI, against a website-backed `Store` adapter. No tokens are charged.
 - **Host's seat**: the host plays from the desktop app's Stageview through the same routes. Stage-only state (positions, movement, figures) is kept with the hosted adventure.
-- **Guests' view**: today's web turn page, updated over the existing SSE stream. Stageview on the web comes later.
+- **Guests' view**: the desktop app's stage-first play view, built for the website with a website-backed bridge. Turn updates arrive over the existing SSE stream.
 - **Host away**: the game waits. Guests see that the host's GM is offline.
 - **Home screen**: hosted games appear under Your adventures. Games the linked account joined as a guest appear too and open on the website.
 
 ## Phases
 
 1. Website: a hosted flag on adventures, device-token host routes (create, store operations, job queue), server actions that queue GM work for hosted games, and no token charges for them.
+1. Website: the stage-first play view for guests, shared with the desktop app's play UI.
 2. Desktop: a host worker while hosting, the website `Store` adapter, the host's own turns, and the invite link.
 3. Home screen: hosted and joined games in Your adventures.
 4. Ship gate: provider terms, below.
 
 ## Open decisions
 
-- Guests' view: today's text turn page first, or Stageview on the web first. Proposed: the text turn page.
 - Locking down the public Convex adventure and turn mutations before hosted games ship. Proposed: yes, as phase 1 work.
 - Relay cost ceiling per hosted game.
 - Host mode under provider terms. A party driving one account stretches "ordinary, individual usage". Ask Anthropic before shipping.
