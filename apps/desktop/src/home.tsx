@@ -62,11 +62,10 @@ export function Home(props: {
     <div className="absolute inset-0 z-40 overflow-y-auto text-stage-cream">
       {props.account}
       <header className="flex min-h-[64vh] flex-col justify-end bg-gradient-to-b from-stage-ink/40 via-transparent to-stage-ink px-12 pt-24 pb-12">
-        <div className={eyebrow}>D20 Adventures</div>
         {props.save ? (
           <>
-            <h1 className="mt-3 font-display text-[clamp(40px,5.5vw,72px)] leading-none [text-shadow:0_2px_24px_#000c]">{props.save.adventure.title}</h1>
-            <p className="mt-4 font-serif text-lg text-stage-cream/90 [text-shadow:0_1px_8px_#000]">
+            <h1 className="font-display text-[clamp(40px,5.5vw,72px)] leading-none [text-shadow:0_2px_24px_#000c]">{props.save.adventure.title}</h1>
+            <p className={cn(eyebrow, "mt-5 text-[12px] [text-shadow:0_1px_8px_#000]")}>
               {props.save.adventure.status === "completed" ? "Adventure complete" : `Round ${turn?.order ?? 1} · ${turn?.title ?? ""}`}
               {pcs.length > 0 && <span className="text-stage-cream/70"> · {pcs.join(", ")}</span>}
             </p>
@@ -78,7 +77,7 @@ export function Home(props: {
           </>
         ) : props.starter ? (
           <>
-            <h1 className="mt-3 font-display text-[clamp(40px,5.5vw,72px)] leading-none [text-shadow:0_2px_24px_#000c]">{props.starter.title}</h1>
+            <h1 className="font-display text-[clamp(40px,5.5vw,72px)] leading-none [text-shadow:0_2px_24px_#000c]">{props.starter.title}</h1>
             {props.starter.teaser && <p className="mt-4 max-w-[60ch] font-serif text-lg text-stage-cream/90 [text-shadow:0_1px_8px_#000]">{props.starter.teaser}</p>}
             <div className="mt-6">
               <Button variant="epic" className="text-xl" disabled={props.busy} onClick={() => props.onAdventure(props.starter!.id)}>
