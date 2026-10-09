@@ -66,6 +66,8 @@ export const commandSchema = z.discriminatedUnion("kind", [
       })
       .optional(),
   }),
+  // Swaps an archived adventure in as the current save.
+  z.object({ kind: z.literal("resume"), archiveId: z.number().int().positive() }),
   z.object({ kind: z.literal("roll"), turnId: z.string(), characterId: z.string(), result: z.number().int().min(1).max(20) }),
   z.object({ kind: z.literal("continue"), turnId: z.string() }),
   z.object({
@@ -137,6 +139,10 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
     inferenceFailure = undefined
     const command = commandSchema.parse(input)
     if (command.kind === "load") return store.state
+    if (command.kind === "resume") {
+      store.resume(command.archiveId)
+      return store.state
+    }
     if (command.kind === "start") {
       if (store.state && !command.replace) throw new Error("An adventure is already saved. Continue it.")
       const plan = command.adventure ?? "march-of-davos"

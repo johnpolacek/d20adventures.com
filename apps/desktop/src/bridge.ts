@@ -2,13 +2,14 @@ import { invoke } from "@tauri-apps/api/core"
 import type { AccountCommand, AccountResponse } from "../runtime/account"
 import type { AdventureInfo, CatalogInfo, GameCommand } from "../runtime/game"
 import type { Hero, HeroCommand, HeroDraft } from "../runtime/heroes"
-import type { Save } from "../runtime/store"
+import type { Save, SaveSummary } from "../runtime/store"
 export type GameResponse = {
   state: Save | null
   providers?: string[]
   adventures?: AdventureInfo[]
   catalog?: CatalogInfo[]
   heroes?: Hero[]
+  saves?: SaveSummary[]
   options?: { races: string[]; archetypes: string[] }
   draft?: HeroDraft
   // Painted hero art as data URLs, by hero id.

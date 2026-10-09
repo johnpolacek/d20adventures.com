@@ -7,6 +7,64 @@ import type { Llm } from "@d20/gm-core"
 import { game, type Packs } from "./game"
 import { LocalStore } from "./store"
 
+test("saved adventures list newest first and resume swaps the archived one in", async () => {
+  const { store, path, cleanup } = setup()
+  try {
+    const run = game(store, packs, failLlm)
+    assert.deepEqual(store.saves(), [])
+    await run({ kind: "start", provider: "claude" })
+    const first = store.state!.adventure._id
+    store.state!.adventure.status = "completed"
+    store.save()
+    await run({ kind: "start", provider: "codex", replace: true })
+    const second = store.state!.adventure._id
+    await run({ kind: "start", provider: "claude", replace: true })
+    const third = store.state!.adventure._id
+
+    const listed = store.saves()
+    assert.deepEqual(
+      listed.map((s) => s.adventureId),
+      [third, second, first]
+    )
+    assert.equal(listed[0].archiveId, undefined)
+    assert.equal(listed[2].status, "completed")
+    assert.equal(listed[0].round, 1)
+    assert.equal(listed[0].planId, "march-of-davos")
+    assert.ok(listed[0].party.length > 0)
+
+    await run({ kind: "resume", archiveId: listed[2].archiveId! })
+    assert.equal(store.state!.adventure._id, first)
+    assert.deepEqual(
+      store.saves().map((s) => s.adventureId),
+      [first, third, second]
+    )
+    await assert.rejects(() => run({ kind: "resume", archiveId: listed[2].archiveId! }), /no longer saved/)
+    assert.equal(store.state!.adventure._id, first)
+
+    const reopened = new LocalStore(path)
+    assert.equal(reopened.state!.adventure._id, first)
+    assert.equal(reopened.saves().length, 3)
+    reopened.db.close()
+  } finally {
+    cleanup()
+  }
+})
+test("archives from before summaries are listed after reopening", async () => {
+  const { store, path, cleanup } = setup()
+  try {
+    const run = game(store, packs, failLlm)
+    await run({ kind: "start", provider: "claude" })
+    const first = store.state!.adventure._id
+    await run({ kind: "start", provider: "claude", replace: true })
+    store.db.prepare("UPDATE archive SET summary=NULL").run()
+    const reopened = new LocalStore(path)
+    assert.equal(reopened.saves()[1].adventureId, first)
+    reopened.db.close()
+  } finally {
+    cleanup()
+  }
+})
+
 const packs: Packs = JSON.parse(readFileSync(new URL("../src-tauri/resources/packs.json", import.meta.url), "utf8"))
 const pack = packs["march-of-davos"]
 const quiet = () => {}
