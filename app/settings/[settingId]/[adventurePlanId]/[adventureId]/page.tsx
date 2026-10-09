@@ -81,6 +81,9 @@ export default async function AdventurePage(props: { params: Promise<{ settingId
 
   if (!adventure) return notFound()
 
+  // A hosted game plays on its own page once it starts, with the GM in the host's app.
+  if (currentTurn && (adventureData?.adventure as { host?: unknown } | undefined)?.host) redirect(`/play/${adventureId}`)
+
   // If there's a current turn, redirect to the turn-specific URL
   if (currentTurn) {
     const turnOrder = (adventureData?.currentTurn as { order?: number })?.order
