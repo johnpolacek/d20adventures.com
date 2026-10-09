@@ -35,7 +35,17 @@ export type Save = {
 }
 
 // A save as the home screen lists it. The current save has no archive id.
-export type SaveSummary = { archiveId?: number; adventureId: string; planId: string; title: string; status: SavedAdventure["status"]; round: number; turnTitle: string; party: string[]; playedAt?: number }
+export type SaveSummary = {
+  archiveId?: number
+  adventureId: string
+  planId: string
+  title: string
+  status: SavedAdventure["status"]
+  round: number
+  turnTitle: string
+  party: string[]
+  playedAt?: number
+}
 export const summarize = (save: Save, archiveId?: number, playedAt?: number): SaveSummary => {
   const turn = save.turns.find((t) => t._id === save.adventure.currentTurnId)
   return {
