@@ -13,6 +13,9 @@ import type { Realm } from "./realm"
 const played = (ms?: number) =>
   ms ? new Date(ms).toLocaleDateString(undefined, { month: "short", day: "numeric", year: new Date(ms).getFullYear() === new Date().getFullYear() ? undefined : "numeric" }) : ""
 
+// Adventure covers take a quarter of the width, so a row of four fills the screen. Longer rows scroll.
+const quarter = "w-[calc((100%-4.5rem)/4)] shrink-0"
+
 function Shelf({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
   return (
     <section>
@@ -20,7 +23,7 @@ function Shelf({ title, action, children }: { title: string; action?: ReactNode;
         <h2 className={eyebrow}>{title}</h2>
         {action}
       </div>
-      <ul className="flex gap-5 overflow-x-auto pb-3">{children}</ul>
+      <ul className="flex gap-6 overflow-x-auto pb-3">{children}</ul>
     </section>
   )
 }
@@ -91,7 +94,7 @@ export function Home(props: {
             {props.saves.map((s) => {
               const current = s.archiveId === undefined
               return (
-                <li key={s.archiveId ?? "current"} className="w-60 shrink-0">
+                <li key={s.archiveId ?? "current"} className={quarter}>
                   <button
                     type="button"
                     disabled={props.busy}
@@ -176,7 +179,7 @@ export function Home(props: {
         </Shelf>
         <Shelf title="New adventure">
           {props.adventures.map((a) => (
-            <li key={a.id} className="w-60 shrink-0">
+            <li key={a.id} className={quarter}>
               <button
                 type="button"
                 disabled={props.busy}
@@ -190,7 +193,7 @@ export function Home(props: {
             </li>
           ))}
           {props.locked.map((a) => (
-            <li key={a.id} className="w-60 shrink-0">
+            <li key={a.id} className={quarter}>
               <button
                 type="button"
                 disabled={props.busy}
@@ -210,7 +213,7 @@ export function Home(props: {
         {props.realm && (
           <section>
             <h2 className={cn(eyebrow, "mb-4")}>The setting</h2>
-            <button type="button" onClick={props.onRealm} className="group relative block h-72 w-full max-w-5xl overflow-hidden rounded-[4px] text-left shadow-[0_18px_40px_#000a]">
+            <button type="button" onClick={props.onRealm} className="group relative block h-80 w-full overflow-hidden rounded-[4px] text-left shadow-[0_18px_40px_#000a]">
               <img src={props.realm.image} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
               <div className="absolute inset-0 bg-gradient-to-r from-stage-ink/90 via-stage-ink/50 to-transparent" />
               <div className="relative flex h-full max-w-xl flex-col justify-end p-8">
