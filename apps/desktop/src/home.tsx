@@ -95,18 +95,31 @@ export function Home(props: {
                 </Button>
               )
             )}
-            <nav className="flex flex-wrap justify-center gap-2" aria-label="Home">
-              {props.saves.length > 0 && <Pill onClick={() => jump("your-adventures")}>Your adventures</Pill>}
-              <Pill onClick={() => jump("new-adventure")}>New adventure</Pill>
-              <Pill onClick={() => jump("heroes")}>Heroes</Pill>
-              {props.realm && <Pill onClick={props.onRealm}>{props.realm.name}</Pill>}
+            <nav className="flex flex-wrap justify-center gap-3" aria-label="Home">
+              {(
+                [
+                  ["Adventures", "adventures"],
+                  ["Characters", "characters"],
+                  ["Settings", "settings"],
+                ] as const
+              ).map(([label, id]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => jump(id)}
+                  className="rounded-full border border-white/80 px-6 py-2 font-sans text-sm text-white transition-colors hover:bg-white/15"
+                  style={textShadowSpreadLight}
+                >
+                  {label}
+                </button>
+              ))}
             </nav>
           </div>
         </div>
       </header>
       <div className="space-y-12 bg-stage-ink px-12 pt-8 pb-20">
         {props.saves.length > 0 && (
-          <Shelf id="your-adventures" title="Your adventures">
+          <Shelf id="adventures" title="Your adventures">
             {props.saves.map((s) => {
               const current = s.archiveId === undefined
               return (
@@ -132,13 +145,46 @@ export function Home(props: {
             })}
           </Shelf>
         )}
+        <Shelf id={props.saves.length > 0 ? "new-adventure" : "adventures"} title="New adventure">
+          {props.adventures.map((a) => (
+            <li key={a.id} className={quarter}>
+              <button
+                type="button"
+                disabled={props.busy}
+                onClick={() => props.onAdventure(a.id)}
+                className="group block w-full text-left disabled:cursor-default"
+                aria-label={`New game of ${a.title}`}
+              >
+                <ModuleCover id={a.id} title={a.title} players={a.players} className="transition-transform group-hover:-translate-y-1" />
+                <div className="mt-2 text-[12px]">{props.listPrices[a.id] && <FreeTag cents={props.listPrices[a.id]} />}</div>
+              </button>
+            </li>
+          ))}
+          {props.locked.map((a) => (
+            <li key={a.id} className={quarter}>
+              <button
+                type="button"
+                disabled={props.busy}
+                onClick={() => props.onAdventure(a.id)}
+                className="group block w-full text-left disabled:cursor-default"
+                aria-label={`${a.title}, ${a.owned ? "owned, not downloaded" : `locked, ${price(a.priceCents)}`}`}
+              >
+                <ModuleCover id={a.id} title={a.title} players={a.players} className="[filter:grayscale(.55)_brightness(.7)] transition-transform group-hover:-translate-y-1" />
+                <div className="mt-2 text-[12px] text-stage-gold">
+                  <LockIcon />
+                  {a.owned ? "Owned" : price(a.priceCents)}
+                </div>
+              </button>
+            </li>
+          ))}
+        </Shelf>
         <Shelf
-          id="heroes"
-          title="Heroes"
+          id="characters"
+          title="Characters"
           action={
             props.heroes.length > 0 && (
               <Pill disabled={props.busy || !props.canCreate} onClick={props.onCreateHero}>
-                New hero
+                New character
               </Pill>
             )
           }
@@ -189,47 +235,14 @@ export function Home(props: {
                 onClick={props.onCreateHero}
                 className="stage-leather grid aspect-[3/4] w-full place-items-center rounded-[3px] border border-dashed border-stage-line/40 font-serif text-sm hover:border-stage-gold/60 disabled:cursor-default disabled:opacity-40"
               >
-                New hero
+                New character
               </button>
             </li>
           )}
         </Shelf>
-        <Shelf id="new-adventure" title="New adventure">
-          {props.adventures.map((a) => (
-            <li key={a.id} className={quarter}>
-              <button
-                type="button"
-                disabled={props.busy}
-                onClick={() => props.onAdventure(a.id)}
-                className="group block w-full text-left disabled:cursor-default"
-                aria-label={`New game of ${a.title}`}
-              >
-                <ModuleCover id={a.id} title={a.title} players={a.players} className="transition-transform group-hover:-translate-y-1" />
-                <div className="mt-2 text-[12px]">{props.listPrices[a.id] && <FreeTag cents={props.listPrices[a.id]} />}</div>
-              </button>
-            </li>
-          ))}
-          {props.locked.map((a) => (
-            <li key={a.id} className={quarter}>
-              <button
-                type="button"
-                disabled={props.busy}
-                onClick={() => props.onAdventure(a.id)}
-                className="group block w-full text-left disabled:cursor-default"
-                aria-label={`${a.title}, ${a.owned ? "owned, not downloaded" : `locked, ${price(a.priceCents)}`}`}
-              >
-                <ModuleCover id={a.id} title={a.title} players={a.players} className="[filter:grayscale(.55)_brightness(.7)] transition-transform group-hover:-translate-y-1" />
-                <div className="mt-2 text-[12px] text-stage-gold">
-                  <LockIcon />
-                  {a.owned ? "Owned" : price(a.priceCents)}
-                </div>
-              </button>
-            </li>
-          ))}
-        </Shelf>
         {props.realm && (
-          <section>
-            <h2 className={cn(eyebrow, "mb-4")}>The setting</h2>
+          <section id="settings" className="scroll-mt-8">
+            <h2 className={cn(eyebrow, "mb-4")}>Settings</h2>
             <button type="button" onClick={props.onRealm} className="group relative block h-80 w-full overflow-hidden rounded-[4px] text-left shadow-[0_18px_40px_#000a]">
               <img src={props.realm.image} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
               <div className="absolute inset-0 bg-gradient-to-r from-stage-ink/90 via-stage-ink/50 to-transparent" />
