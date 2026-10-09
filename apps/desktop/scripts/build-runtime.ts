@@ -40,4 +40,14 @@ await rm(resolve(app, "public"), { recursive: true, force: true })
 await mkdir(resolve(app, "public/images/app"), { recursive: true })
 await cp(resolve(root, "public/stage"), resolve(app, "public/stage"), { recursive: true })
 for (const name of ["backgrounds", "art"]) await cp(resolve(root, `public/images/app/${name}`), resolve(app, `public/images/app/${name}`), { recursive: true })
+// The host worker runs beside the app while it hosts a website game.
+await build({
+  entryPoints: [resolve(app, "runtime/host-main.ts")],
+  outfile: resolve(app, "src-tauri/resources/host.cjs"),
+  bundle: true,
+  platform: "node",
+  target: "node24",
+  format: "cjs",
+  define: { "process.env.NODE_ENV": '"production"' },
+})
 console.log(`Bundled ${ADVENTURES.join(", ")}, the local GM runtime, and Stageview assets.`)

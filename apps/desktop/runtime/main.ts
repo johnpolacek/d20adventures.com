@@ -6,6 +6,7 @@ import { accountCommand, accountCommandSchema } from "./account"
 import { applyCharacterUpdates } from "./characters"
 import { adventureList, type CatalogInfo, commandSchema, type GameCommand, game, type Packs, transitionsOf } from "./game"
 import { creationOptions, type HeroCommand, type HeroDraft, heroCommand, heroCommandSchema } from "./heroes"
+import { hostCommand, hostCommandSchema } from "./host-commands"
 import { localLlm } from "./llm"
 import { loadPacks } from "./packs"
 import { LocalStore } from "./store"
@@ -60,6 +61,17 @@ async function main() {
         const site = (process.env.D20_SITE_URL ?? "https://d20adventures.com").replace(/\/$/, "")
         const response = await accountCommand(accountCommandSchema.parse(input), site, fetch, { data: dirname(savePath), bundled })
         process.stdout.write(`${JSON.stringify(response)}\n`)
+        return
+      }
+      // Host commands talk to the website too, reading only the hero roster.
+      if (typeof input?.kind === "string" && input.kind.startsWith("host")) {
+        const site = (process.env.D20_SITE_URL ?? "https://d20adventures.com").replace(/\/$/, "")
+        const roster = new LocalStore(savePath)
+        try {
+          process.stdout.write(`${JSON.stringify(await hostCommand(hostCommandSchema.parse(input), site, () => roster.heroes()))}\n`)
+        } finally {
+          roster.db.close()
+        }
         return
       }
       const command = ["heroDraft", "saveHero", "deleteHero", "paintHero", "art"].includes(input?.kind) ? heroCommandSchema.parse(input) : commandSchema.parse(input)

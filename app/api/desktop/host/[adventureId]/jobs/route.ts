@@ -4,7 +4,7 @@ import type { Id } from "@/convex/_generated/dataModel"
 import { convex } from "@/lib/convex/server"
 import { serverSecret } from "@/lib/convex/server-secret"
 import { deviceFromRequest } from "@/lib/desktop/server"
-import { hostErrorResponse } from "@/lib/host/server"
+import { type HostedAction, hostErrorResponse, hostedAdventure, queueAction } from "@/lib/host/server"
 
 // The host's app asks for the next GM job, which also tells guests it is online, and reports each one done or failed.
 export async function POST(request: Request, { params }: { params: Promise<{ adventureId: string }> }) {
@@ -12,8 +12,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ adv
   if (error) return error
   try {
     const adventureId = (await params).adventureId as Id<"adventures">
-    const body = (await request.json()) as { op?: string; jobId?: string; error?: string }
+    const body = (await request.json()) as { op?: string; jobId?: string; error?: string } & Partial<HostedAction>
     if (body.op === "claim") return NextResponse.json({ job: await convex.mutation(api.hosting.claimJob, { secret: serverSecret(), adventureId, userId: device.userId }) })
+    // The host plays too. Their actions queue like a guest's, so the worker takes every action in order.
+    if (body.op === "queue") {
+      const adventure = await hostedAdventure(adventureId, device.userId)
+      return NextResponse.json({ jobId: await queueAction(adventure, device.userId, body as HostedAction) })
+    }
     if (body.op === "finish" && body.jobId) {
       await convex.mutation(api.hosting.finishJob, { secret: serverSecret(), jobId: body.jobId as Id<"gmJobs">, userId: device.userId, error: body.error?.slice(0, 500) })
       return NextResponse.json({ ok: true })

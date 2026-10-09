@@ -2,6 +2,7 @@ import type { Store } from "@d20/gm-core"
 import { NextResponse } from "next/server"
 import { api } from "@/convex/_generated/api"
 import type { Doc, Id } from "@/convex/_generated/dataModel"
+import { assertPlayerCharacterControl } from "@/lib/adventure-access"
 import { convex } from "@/lib/convex/server"
 import { serverSecret } from "@/lib/convex/server-secret"
 import { serverStore } from "@/lib/gm-server/store"
@@ -125,3 +126,25 @@ export async function hostedSummary(adventure: Doc<"adventures">, origin: string
   }
 }
 export type HostedSummary = Awaited<ReturnType<typeof hostedSummary>>
+
+export type HostedAction =
+  | { turnId: string; kind: "reply"; characterId: string; text: string; movement?: unknown }
+  | { turnId: string; kind: "roll"; characterId: string; result: number }
+  | { turnId: string; kind: "continue" }
+
+/** Queues a player's action for the host's GM, after checking the turn is current and the player controls the character. */
+export async function queueAction(adventure: Doc<"adventures">, userId: string, action: HostedAction) {
+  if (!adventure.host) throw new HostError(400, "This game is not hosted.")
+  const turn = await convex.query(api.adventure.getTurnById, { turnId: action.turnId as Id<"turns"> }).catch(() => null)
+  if (!turn || turn.adventureId !== adventure._id) throw new HostError(404, "Turn not found.")
+  const base = { secret: serverSecret(), adventureId: adventure._id, turnId: turn._id, userId }
+  if (action.kind === "continue") return convex.mutation(api.hosting.queueJob, { ...base, kind: "continue" })
+  assertPlayerCharacterControl(userId, turn, action.characterId)
+  if (action.kind === "reply") {
+    const text = typeof action.text === "string" ? action.text.trim() : ""
+    if (!text || text.length > 4000) throw new HostError(400, "Write an action of up to 4000 characters.")
+    return convex.mutation(api.hosting.queueJob, { ...base, kind: "reply", characterId: action.characterId, text, movement: action.movement })
+  }
+  if (!Number.isInteger(action.result) || action.result < 1 || action.result > 20) throw new HostError(400, "A roll is a whole number from 1 to 20.")
+  return convex.mutation(api.hosting.queueJob, { ...base, kind: "roll", characterId: action.characterId, result: action.result })
+}

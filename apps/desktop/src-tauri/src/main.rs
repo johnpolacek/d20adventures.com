@@ -1,9 +1,15 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use serde_json::Value;
 use std::{path::PathBuf, process::Stdio};
-use tauri::Manager;
-use tokio::{io::AsyncWriteExt, process::Command, sync::Mutex};
+use tauri::{Emitter, Manager};
+use tokio::{
+    io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
+    process::{Child, Command},
+    sync::Mutex,
+};
 struct GameLock(Mutex<()>);
+// The host worker while this app hosts a website game: the adventure and its process.
+struct HostWorker(Mutex<Option<(String, Child)>>);
 fn node() -> Result<PathBuf, String> {
     let home = std::env::var("HOME").unwrap_or_default();
     let mut candidates: Vec<PathBuf> = [
@@ -105,6 +111,92 @@ async fn account_command(app: tauri::AppHandle, mut command: Value) -> Result<Va
     }
     Ok(response)
 }
+// Hosting reaches the website with the device token, which Rust adds here as for account actions.
+#[tauri::command]
+async fn host_command(app: tauri::AppHandle, mut command: Value) -> Result<Value, String> {
+    let kind = command
+        .get("kind")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    if !kind.starts_with("host") {
+        return Err("Unknown host action.".into());
+    }
+    if let Some(fields) = command.as_object_mut() {
+        fields.remove("token");
+        if let Ok(token) = keychain()?.get_password() {
+            fields.insert("token".into(), Value::String(token));
+        }
+    }
+    run_runtime(&app, &command).await
+}
+// Starts the host worker for one hosted game, replacing any other. Its events reach the webview as "host-event".
+#[tauri::command]
+async fn host_start(
+    app: tauri::AppHandle,
+    worker: tauri::State<'_, HostWorker>,
+    adventure_id: String,
+    provider: String,
+) -> Result<(), String> {
+    let token = keychain()?
+        .get_password()
+        .map_err(|_| "Link this computer to your D20 Adventures account to host a game.")?;
+    let mut slot = worker.0.lock().await;
+    if let Some((_, mut old)) = slot.take() {
+        let _ = old.kill().await;
+    }
+    let data = data_dir(&app)?;
+    std::fs::create_dir_all(&data).map_err(|e| e.to_string())?;
+    let mut child = runtime_command(&app, "host.cjs", &data)?
+        .stdout(Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("Could not start hosting: {e}"))?;
+    let start = serde_json::json!({
+        "adventureId": adventure_id,
+        "provider": provider,
+        "token": token,
+        "site": site_url(),
+        "data": data.to_string_lossy(),
+    });
+    let mut stdin = child.stdin.take().ok_or("Missing host input pipe")?;
+    stdin
+        .write_all(format!("{}\n", start).as_bytes())
+        .await
+        .map_err(|e| e.to_string())?;
+    // Kept open with the process: the worker also stops when its input closes.
+    child.stdin = Some(stdin);
+    let stdout = child.stdout.take().ok_or("Missing host output pipe")?;
+    let events = app.clone();
+    let id = adventure_id.clone();
+    tauri::async_runtime::spawn(async move {
+        let mut lines = BufReader::new(stdout).lines();
+        while let Ok(Some(line)) = lines.next_line().await {
+            if let Ok(event) = serde_json::from_str::<Value>(&line) {
+                let _ = events.emit(
+                    "host-event",
+                    serde_json::json!({ "adventureId": id, "event": event }),
+                );
+            }
+        }
+        let _ = events.emit(
+            "host-event",
+            serde_json::json!({ "adventureId": id, "event": { "type": "stopped" } }),
+        );
+    });
+    *slot = Some((adventure_id, child));
+    Ok(())
+}
+#[tauri::command]
+async fn host_stop(worker: tauri::State<'_, HostWorker>) -> Result<(), String> {
+    if let Some((_, mut child)) = worker.0.lock().await.take() {
+        let _ = child.kill().await;
+    }
+    Ok(())
+}
+// Which hosted game, if any, this app is running the GM for.
+#[tauri::command]
+async fn host_running(worker: tauri::State<'_, HostWorker>) -> Result<Option<String>, String> {
+    Ok(worker.0.lock().await.as_ref().map(|(id, _)| id.clone()))
+}
 // Playing needs a linked account (owner, 2026-10-08). Development builds skip that unless D20_REQUIRE_ACCOUNT is set,
 // so local playtests and checks keep working without the website.
 #[tauri::command]
@@ -127,18 +219,22 @@ fn open_site(path: String) -> Result<(), String> {
         .map_err(|e| e.to_string())?;
     Ok(())
 }
-async fn run_runtime(app: &tauri::AppHandle, command: &Value) -> Result<Value, String> {
-    let data = data_dir(app)?;
-    std::fs::create_dir_all(&data).map_err(|e| e.to_string())?;
+// A Node process for one of the bundled runtime scripts, with a minimal environment.
+fn runtime_command(
+    app: &tauri::AppHandle,
+    script: &str,
+    data: &PathBuf,
+) -> Result<Command, String> {
     let resources = if cfg!(debug_assertions) {
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resources")
     } else {
         app.path().resource_dir().map_err(|e| e.to_string())?
     };
-    let mut child = Command::new(node()?)
-        .arg(resources.join("runtime.cjs"))
+    let mut command = Command::new(node()?);
+    command
+        .arg(resources.join(script))
         .arg(data.join("adventure.sqlite"))
-        .current_dir(&data)
+        .current_dir(data)
         .env_clear()
         .envs(
             ["HOME", "PATH", "USER", "LOGNAME", "LANG", "TMPDIR"]
@@ -147,9 +243,15 @@ async fn run_runtime(app: &tauri::AppHandle, command: &Value) -> Result<Value, S
         )
         .env("D20_SITE_URL", site_url())
         .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
         .stderr(Stdio::null())
-        .kill_on_drop(true)
+        .kill_on_drop(true);
+    Ok(command)
+}
+async fn run_runtime(app: &tauri::AppHandle, command: &Value) -> Result<Value, String> {
+    let data = data_dir(app)?;
+    std::fs::create_dir_all(&data).map_err(|e| e.to_string())?;
+    let mut child = runtime_command(app, "runtime.cjs", &data)?
+        .stdout(Stdio::piped())
         .spawn()
         .map_err(|e| format!("Could not start the local GM: {e}"))?;
     let mut stdin = child.stdin.take().ok_or("Missing game input pipe")?;
@@ -178,9 +280,14 @@ fn render_report(app: tauri::AppHandle, report: Value) -> Result<(), String> {
 fn main() {
     tauri::Builder::default()
         .manage(GameLock(Mutex::new(())))
+        .manage(HostWorker(Mutex::new(None)))
         .invoke_handler(tauri::generate_handler![
             game_command,
             account_command,
+            host_command,
+            host_start,
+            host_stop,
+            host_running,
             account_info,
             open_site,
             render_report
