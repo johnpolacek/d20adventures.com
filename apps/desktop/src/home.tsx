@@ -1,5 +1,6 @@
 import { type ReactNode, useState } from "react"
 import { eyebrow, Pill } from "@/components/stage/hud"
+import { textShadowSpreadLight } from "@/components/typography/styles"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import type { AdventureInfo } from "../runtime/game"
@@ -16,9 +17,9 @@ const played = (ms?: number) =>
 // Adventure covers take a quarter of the width, so a row of four fills the screen. Longer rows scroll.
 const quarter = "w-[calc((100%-4.5rem)/4)] shrink-0"
 
-function Shelf({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
+function Shelf({ id, title, action, children }: { id: string; title: string; action?: ReactNode; children: ReactNode }) {
   return (
-    <section>
+    <section id={id} className="scroll-mt-8">
       <div className="mb-4 flex items-center justify-between gap-4">
         <h2 className={eyebrow}>{title}</h2>
         {action}
@@ -28,8 +29,8 @@ function Shelf({ title, action, children }: { title: string; action?: ReactNode;
   )
 }
 
-// Home: the latest adventure over its live scene with Continue, then shelves of saved adventures, heroes, adventures
-// to start, and the Realm. The stage behind shows through the banner.
+// Home: the website's title screen with Continue and quick links, then shelves of saved adventures, heroes, adventures
+// to start, and the Realm.
 export function Home(props: {
   save: Save | null
   saves: SaveSummary[]
@@ -58,38 +59,54 @@ export function Home(props: {
   const turn = props.save?.turns.find((t) => t._id === props.save?.adventure.currentTurnId)
   const players = (id: string): [number, number] => props.adventures.find((a) => a.id === id)?.players ?? props.locked.find((a) => a.id === id)?.players ?? [1, 4]
   const pcs = (turn?.characters ?? []).filter((c) => c.type === "pc").map((c) => c.name.split(" ")[0])
+  const jump = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" })
   return (
     <div className="absolute inset-0 z-40 overflow-y-auto text-stage-cream">
       {props.account}
-      <header className="flex min-h-[64vh] flex-col justify-end bg-gradient-to-b from-stage-ink/40 via-transparent to-stage-ink px-12 pt-24 pb-12">
-        {props.save ? (
-          <>
-            <h1 className="font-display text-[clamp(40px,5.5vw,72px)] leading-none [text-shadow:0_2px_24px_#000c]">{props.save.adventure.title}</h1>
-            <p className={cn(eyebrow, "mt-5 text-[12px] [text-shadow:0_1px_8px_#000]")}>
-              {props.save.adventure.status === "completed" ? "Adventure complete" : `Round ${turn?.order ?? 1} · ${turn?.title ?? ""}`}
-              {pcs.length > 0 && <span className="text-stage-cream/70"> · {pcs.join(", ")}</span>}
-            </p>
-            <div className="mt-6">
-              <Button variant="epic" className="text-xl" disabled={props.busy} onClick={props.onContinue}>
-                Continue
-              </Button>
-            </div>
-          </>
-        ) : props.starter ? (
-          <>
-            <h1 className="font-display text-[clamp(40px,5.5vw,72px)] leading-none [text-shadow:0_2px_24px_#000c]">{props.starter.title}</h1>
-            {props.starter.teaser && <p className="mt-4 max-w-[60ch] font-serif text-lg text-stage-cream/90 [text-shadow:0_1px_8px_#000]">{props.starter.teaser}</p>}
-            <div className="mt-6">
-              <Button variant="epic" className="text-xl" disabled={props.busy} onClick={() => props.onAdventure(props.starter!.id)}>
-                Begin
-              </Button>
-            </div>
-          </>
-        ) : null}
+      {/* The title screen, as on the website, with quick ways into the game below the die. */}
+      <header className="relative h-screen min-h-[640px] overflow-hidden">
+        <img src="/images/app/backgrounds/d20-hero.png" alt="" className="fade-in absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-stage-ink" />
+        <h1 className="fade-in relative mt-[12vh] text-center font-display text-[clamp(40px,5vw,72px)] delay-[400ms]" style={textShadowSpreadLight}>
+          EXpeRienCe <span className="inline-block scale-90">tHe</span> Thrill
+        </h1>
+        <div className="absolute inset-x-0 bottom-[5vh] flex flex-col items-center text-center">
+          <div className="fade-in font-display text-2xl font-bold delay-[600ms]" style={textShadowSpreadLight}>
+            Of tHe
+          </div>
+          <div className="fade-in -mt-3 font-display text-[clamp(80px,9vw,128px)] leading-none delay-[800ms]" style={textShadowSpreadLight}>
+            D20
+          </div>
+          <div className="fade-in mt-6 flex flex-col items-center gap-4 delay-[1000ms]">
+            {props.save ? (
+              <>
+                <p className={cn(eyebrow, "text-[12px]")} style={textShadowSpreadLight}>
+                  {props.save.adventure.title} · {props.save.adventure.status === "completed" ? "Adventure complete" : `Round ${turn?.order ?? 1} · ${turn?.title ?? ""}`}
+                  {pcs.length > 0 && <span className="text-stage-cream/70"> · {pcs.join(", ")}</span>}
+                </p>
+                <Button variant="epic" size="lg" disabled={props.busy} onClick={props.onContinue}>
+                  Continue
+                </Button>
+              </>
+            ) : (
+              props.starter && (
+                <Button variant="epic" size="lg" disabled={props.busy} onClick={() => props.onAdventure(props.starter!.id)}>
+                  Begin
+                </Button>
+              )
+            )}
+            <nav className="flex flex-wrap justify-center gap-2" aria-label="Home">
+              {props.saves.length > 0 && <Pill onClick={() => jump("your-adventures")}>Your adventures</Pill>}
+              <Pill onClick={() => jump("new-adventure")}>New adventure</Pill>
+              <Pill onClick={() => jump("heroes")}>Heroes</Pill>
+              {props.realm && <Pill onClick={props.onRealm}>{props.realm.name}</Pill>}
+            </nav>
+          </div>
+        </div>
       </header>
-      <div className="space-y-12 bg-stage-ink px-12 pt-2 pb-20">
+      <div className="space-y-12 bg-stage-ink px-12 pt-8 pb-20">
         {props.saves.length > 0 && (
-          <Shelf title="Your adventures">
+          <Shelf id="your-adventures" title="Your adventures">
             {props.saves.map((s) => {
               const current = s.archiveId === undefined
               return (
@@ -116,6 +133,7 @@ export function Home(props: {
           </Shelf>
         )}
         <Shelf
+          id="heroes"
           title="Heroes"
           action={
             props.heroes.length > 0 && (
@@ -176,7 +194,7 @@ export function Home(props: {
             </li>
           )}
         </Shelf>
-        <Shelf title="New adventure">
+        <Shelf id="new-adventure" title="New adventure">
           {props.adventures.map((a) => (
             <li key={a.id} className={quarter}>
               <button
