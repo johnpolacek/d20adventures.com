@@ -8,6 +8,7 @@ Updated for the desktop integration worktree on 2026-10-02. Implementation statu
 
 | Plan | Status | Next work |
 |---|---|---|
+| [Desktop host mode](desktop-host-mode.md) | Planned 2026-10-08. Owner asked to start it alongside the home screen. | Owner answers on guest identity, ownership, guest heroes, and relay. Then the local network host and browser guest. |
 | [Adventure store](feature-adventure-store.md) | Merged into main 2026-10-08. Alpha. Catalog, entitlements, desktop account linking, story pack downloads, and locked adventures on New game implemented 2026-10-08 on `feature/adventure-store`. Web checkout waits for beta. | Owner review in the running app, then the alpha release: deploy the website and Convex, set the store secret. Pack upload and checkout wait for beta. |
 | [Roll results in the narration](roll-results.md) | Implemented on main 2026-10-05. A roll's paragraph shows the d20 landing, the total against the DC and a stamped verdict. | Owner review. |
 | [Covert Cargo: the meeting inside the boat](covert-cargo-boat-meeting.md) | Implemented on main 2026-10-05. One larger saloon for every boat encounter, restaged to the source, intro edited, walks through doors. | Owner play-through. |
