@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-08, host mode built on `feature/host-mode`
+
+Owner asked to work in branches off main, not worktrees. Built on `feature/host-mode`: hosted website games whose GM jobs run in the host's desktop app through the host's CLI, a job queue in Convex, device-token host routes, the host worker, hosting screens in the app, and a stage-first play page for guests that shares the app's play view. An end-to-end run against the dev server processed a host's reply through Claude. Convex lockdown and the app's hosting screens in the running app remain. See [Desktop host mode](plans/desktop-host-mode.md).
+
 ## 2026-10-08, desktop home screen merged; guests get Stageview
 
 The desktop home screen merged into main from `feature/desktop-home`: saved adventures with resume, heroes, new adventures and a Realm of Myr page built from the website's setting data. Owner review found cover titles overflowing small covers. Cover type now scales with the cover. See [the plan](plans/zzz-completed/feature-desktop-home.md). Owner chose the stage-first 3D view on the website for host mode guests, ahead of today's text turn page. See [Desktop host mode](plans/desktop-host-mode.md).

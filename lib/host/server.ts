@@ -24,10 +24,11 @@ export class HostError extends Error {
   }
 }
 
-export const hostErrorResponse = (error: unknown) =>
-  error instanceof HostError
-    ? NextResponse.json({ error: error.message }, { status: error.status })
-    : NextResponse.json({ error: error instanceof Error ? error.message : "Host request failed." }, { status: 500 })
+// Host and access errors carry their status. Anything else is a server failure.
+export const hostErrorResponse = (error: unknown) => {
+  const status = typeof (error as { status?: unknown })?.status === "number" ? (error as { status: number }).status : 500
+  return NextResponse.json({ error: error instanceof Error ? error.message : "Host request failed." }, { status })
+}
 
 // The site's public origin, for invite links.
 export const siteOrigin = (request: Request) => (process.env.NEXT_PUBLIC_APP_URL ?? new URL(request.url).origin).replace(/\/$/, "")
