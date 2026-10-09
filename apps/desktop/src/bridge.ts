@@ -23,3 +23,6 @@ export const account = (command: AccountRequest) => invoke<AccountResponse & { e
 export const openSite = (path: string) => invoke<void>("open_site", { path })
 // Whether play needs a linked account, and whether a token is stored. Answered by Rust without a network call.
 export const accountInfo = () => invoke<{ required: boolean; linked: boolean }>("account_info")
+// The window filling the screen. Rust owns it, since the webview may not resize its own window.
+export const toggleFullscreen = () => invoke<boolean>("toggle_fullscreen")
+export const isFullscreen = () => invoke<boolean>("is_fullscreen")

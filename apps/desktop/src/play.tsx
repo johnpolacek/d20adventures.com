@@ -20,6 +20,7 @@ import { AccountBadge, LinkGate, useAccount } from "./account"
 import { openSite, send } from "./bridge"
 import { characterInfo } from "./character-info"
 import type { FigureArt } from "./figures"
+import { FullscreenButton } from "./fullscreen"
 import { HeroCreator, type HeroIdea } from "./hero-creator"
 import { Home } from "./home"
 import { applyMovement, context, positions as stagePositions } from "./movement"
@@ -464,6 +465,7 @@ export function DesktopGame() {
           <Pill onClick={() => setScreen("home")}>Home</Pill>
           <Pill onClick={() => setOpen(open === "journal" ? null : "journal")}>Journal</Pill>
           <Pill onClick={() => setOpen(open === "settings" ? null : "settings")}>Scene settings</Pill>
+          <FullscreenButton className="h-10 w-10" />
         </>
       }
     >
@@ -620,6 +622,7 @@ export function DesktopGame() {
           {acct.gated && <LinkGate account={acct} />}
         </div>
       )}
+      {screen !== null && <FullscreenButton className="fixed top-5 right-5 z-[70]" />}
       {acct.ready && !acct.gated && loaded && (
         <>
           {screen === "home" && (
