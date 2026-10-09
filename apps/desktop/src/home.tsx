@@ -2,6 +2,7 @@ import { type ReactNode, useState } from "react"
 import { eyebrow, Pill } from "@/components/stage/hud"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import type { HostedSummary } from "../../../lib/host/server"
 import type { AdventureInfo } from "../runtime/game"
 import type { Hero } from "../runtime/heroes"
 import type { Save, SaveSummary } from "../runtime/store"
@@ -50,6 +51,10 @@ export function Home(props: {
   onPaintHero?: (hero: Hero) => void
   onDeleteHero: (hero: Hero) => void
   onRealm: () => void
+  // Website games this account hosts, and the one whose GM this app is running.
+  hosted: HostedSummary[]
+  hostingNow: string | null
+  onOpenHosted: (adventureId: string) => void
 }) {
   const [deleting, setDeleting] = useState<string | null>(null)
   const turn = props.save?.turns.find((t) => t._id === props.save?.adventure.currentTurnId)
@@ -86,7 +91,7 @@ export function Home(props: {
         ) : null}
       </header>
       <div className="space-y-12 bg-stage-ink px-12 pt-2 pb-20">
-        {props.saves.length > 0 && (
+        {props.saves.length + props.hosted.length > 0 && (
           <Shelf title="Your adventures">
             {props.saves.map((s) => {
               const current = s.archiveId === undefined
@@ -111,6 +116,28 @@ export function Home(props: {
                 </li>
               )
             })}
+            {props.hosted.map((h) => (
+              <li key={h.adventureId} className="w-60 shrink-0">
+                <button
+                  type="button"
+                  disabled={props.busy}
+                  onClick={() => props.onOpenHosted(h.adventureId)}
+                  className="group block w-full text-left disabled:cursor-default"
+                  aria-label={`Open hosted game ${h.title}`}
+                >
+                  <ModuleCover
+                    id={h.planId}
+                    title={h.title}
+                    players={players(h.planId)}
+                    className={cn("transition-[filter,transform] group-hover:-translate-y-1", h.status === "completed" && "[filter:saturate(.5)_brightness(.8)]")}
+                  />
+                  <div className="mt-2 truncate text-[13px]">{h.status === "completed" ? "Complete" : h.round ? `Round ${h.round} · ${h.turnTitle}` : "Waiting for players"}</div>
+                  <div className="truncate text-[11px] text-stage-muted">
+                    {props.hostingNow === h.adventureId ? "Hosting now" : "Hosted"} · {h.players} at the table
+                  </div>
+                </button>
+              </li>
+            ))}
           </Shelf>
         )}
         <Shelf

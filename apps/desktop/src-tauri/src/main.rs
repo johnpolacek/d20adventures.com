@@ -1,15 +1,16 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use serde_json::Value;
+use std::sync::Arc;
 use std::{path::PathBuf, process::Stdio};
-use tauri::{Emitter, Manager};
+use tauri::Manager;
 use tokio::{
     io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
     process::{Child, Command},
     sync::Mutex,
 };
 struct GameLock(Mutex<()>);
-// The host worker while this app hosts a website game: the adventure and its process.
-struct HostWorker(Mutex<Option<(String, Child)>>);
+// The host worker while this app hosts a website game: the adventure, its process, and its latest event.
+struct HostWorker(Mutex<Option<(String, Child)>>, Arc<std::sync::Mutex<Value>>);
 fn node() -> Result<PathBuf, String> {
     let home = std::env::var("HOME").unwrap_or_default();
     let mut candidates: Vec<PathBuf> = [
@@ -129,7 +130,7 @@ async fn host_command(app: tauri::AppHandle, mut command: Value) -> Result<Value
     }
     run_runtime(&app, &command).await
 }
-// Starts the host worker for one hosted game, replacing any other. Its events reach the webview as "host-event".
+// Starts the host worker for one hosted game, replacing any other.
 #[tauri::command]
 async fn host_start(
     app: tauri::AppHandle,
@@ -165,22 +166,16 @@ async fn host_start(
     // Kept open with the process: the worker also stops when its input closes.
     child.stdin = Some(stdin);
     let stdout = child.stdout.take().ok_or("Missing host output pipe")?;
-    let events = app.clone();
-    let id = adventure_id.clone();
+    let last = worker.1.clone();
+    *last.lock().unwrap() = serde_json::json!({ "type": "starting" });
     tauri::async_runtime::spawn(async move {
         let mut lines = BufReader::new(stdout).lines();
         while let Ok(Some(line)) = lines.next_line().await {
             if let Ok(event) = serde_json::from_str::<Value>(&line) {
-                let _ = events.emit(
-                    "host-event",
-                    serde_json::json!({ "adventureId": id, "event": event }),
-                );
+                *last.lock().unwrap() = event;
             }
         }
-        let _ = events.emit(
-            "host-event",
-            serde_json::json!({ "adventureId": id, "event": { "type": "stopped" } }),
-        );
+        *last.lock().unwrap() = serde_json::json!({ "type": "stopped" });
     });
     *slot = Some((adventure_id, child));
     Ok(())
@@ -192,10 +187,12 @@ async fn host_stop(worker: tauri::State<'_, HostWorker>) -> Result<(), String> {
     }
     Ok(())
 }
-// Which hosted game, if any, this app is running the GM for.
+// Which hosted game, if any, this app is running the GM for, and what its worker last reported.
 #[tauri::command]
-async fn host_running(worker: tauri::State<'_, HostWorker>) -> Result<Option<String>, String> {
-    Ok(worker.0.lock().await.as_ref().map(|(id, _)| id.clone()))
+async fn host_running(worker: tauri::State<'_, HostWorker>) -> Result<Value, String> {
+    let id = worker.0.lock().await.as_ref().map(|(id, _)| id.clone());
+    let event = worker.1.lock().unwrap().clone();
+    Ok(serde_json::json!({ "adventureId": id, "event": event }))
 }
 // Playing needs a linked account (owner, 2026-10-08). Development builds skip that unless D20_REQUIRE_ACCOUNT is set,
 // so local playtests and checks keep working without the website.
@@ -280,7 +277,10 @@ fn render_report(app: tauri::AppHandle, report: Value) -> Result<(), String> {
 fn main() {
     tauri::Builder::default()
         .manage(GameLock(Mutex::new(())))
-        .manage(HostWorker(Mutex::new(None)))
+        .manage(HostWorker(
+            Mutex::new(None),
+            Arc::new(std::sync::Mutex::new(Value::Null)),
+        ))
         .invoke_handler(tauri::generate_handler![
             game_command,
             account_command,

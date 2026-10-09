@@ -62,6 +62,8 @@ export function NewGame(props: {
   listPrices: Record<string, number>
   linked: boolean | "offline"
   onLink?: () => void
+  // Hosting the adventure on the website for friends instead, with the player's hero seated. Only when linked.
+  onHost?: (party: PartyChoice[]) => void
 }) {
   const info = props.adventures.find((a) => a.id === props.adventure)
   const lockedInfo = info ? undefined : props.locked.find((a) => a.id === props.adventure)
@@ -273,6 +275,11 @@ export function NewGame(props: {
         {props.onCancel && (
           <Pill disabled={props.busy} onClick={props.onCancel}>
             Cancel
+          </Pill>
+        )}
+        {props.onHost && (
+          <Pill disabled={props.busy || !party.some((c) => !c.ai) || !props.providers.length} onClick={() => props.onHost!(party)}>
+            Host online
           </Pill>
         )}
         <Button variant="epic" className="text-xl" disabled={props.busy || props.waiting || !ready || !props.providers.length} onClick={() => props.onStart(party)}>

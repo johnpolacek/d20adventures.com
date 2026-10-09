@@ -16,7 +16,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ adve
       adventure.currentTurnId ? convex.query(api.adventure.getTurnById, { turnId: adventure.currentTurnId }) : null,
       convex.query(api.hosting.recentJobs, { secret: serverSecret(), adventureId: adventure._id }),
     ])
-    return NextResponse.json({ adventure, turn, jobs, summary: await hostedSummary(adventure, siteOrigin(request)) })
+    return NextResponse.json({ adventure, turn, jobs, summary: await hostedSummary(adventure, siteOrigin(request)), userId: device.userId })
   } catch (e) {
     return hostErrorResponse(e)
   }

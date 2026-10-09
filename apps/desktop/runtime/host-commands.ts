@@ -1,3 +1,4 @@
+import type { AdventureRecord, TurnRecord } from "@d20/gm-core"
 import { z } from "zod"
 import type { HostedSummary } from "../../../lib/host/server"
 import type { Hero } from "./heroes"
@@ -26,7 +27,8 @@ export const hostCommandSchema = z.discriminatedUnion("kind", [
 export type HostCommand = z.infer<typeof hostCommandSchema>
 
 export type HostedJob = { _id: string; turnId: string; kind: "reply" | "roll" | "continue"; characterId?: string; status: "queued" | "running" | "done" | "failed"; error?: string; createdAt: number }
-export type HostedState = { adventure: Record<string, unknown> & { _id: string; status?: string }; turn: (Record<string, unknown> & { _id: string }) | null; jobs: HostedJob[]; summary: HostedSummary }
+// A hosted game as the website keeps it, and who is asking, so the play view knows which heroes are theirs.
+export type HostedState = { adventure: AdventureRecord & { status?: string; currentTurnId?: string }; turn: TurnRecord | null; jobs: HostedJob[]; summary: HostedSummary; userId: string }
 export type HostResponse = { hosted?: HostedSummary[]; created?: HostedSummary; state?: HostedState; error?: string }
 
 export async function hostCommand(command: HostCommand, site: string, heroes: () => Hero[], fetchImpl: typeof fetch = fetch): Promise<HostResponse> {

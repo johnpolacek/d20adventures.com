@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Pill, panel } from "@/components/stage/hud"
+import type { HostedSummary } from "../../../lib/host/server"
 import type { AdventureInfo, CatalogInfo, GameCommand } from "../runtime/game"
 import type { Hero, HeroCommand, PartyChoice } from "../runtime/heroes"
+import type { HostedState } from "../runtime/host-commands"
 import type { Save, SaveSummary } from "../runtime/store"
 import { AccountBadge, LinkGate, useAccount } from "./account"
-import { send } from "./bridge"
+import { type HostWorkerState, host, hostRunning, hostStart, send } from "./bridge"
 import type { FigureArt } from "./figures"
 import { HeroCreator, type HeroIdea } from "./hero-creator"
 import { Home } from "./home"
+import { hostedSave, hostedWork } from "./hosted"
+import { HostedLobby } from "./hosted-lobby"
 import { type Locked, NewGame } from "./new-game"
 import { RealmPage, useRealm } from "./realm"
 import { StagePlay } from "./stage-play"
@@ -145,28 +149,111 @@ export function DesktopGame() {
     setCreated(res.heroes?.find((h) => !before.has(h.id))?.id ?? null)
     return true
   }
+  // Hosted games: the one on screen, its state from the website, and every game this account hosts. While a game is
+  // on screen the app polls it, and the host worker runs its GM jobs, even after the host goes home.
+  const [hosting, setHosting] = useState<string | null>(null)
+  const [hosted, setHosted] = useState<HostedState | null>(null)
+  const [hostedList, setHostedList] = useState<HostedSummary[]>([])
+  const [worker, setWorker] = useState<HostWorkerState | null>(null)
+  const [sending, setSending] = useState(false)
+  const shownFailure = useRef<string | null>(null)
+  const linked = acct.state?.linked === true
+  useEffect(() => {
+    if (!linked || screen !== "home") return
+    void host({ kind: "hostList" }).then((r) => r.hosted && setHostedList(r.hosted))
+  }, [linked, screen])
+  useEffect(() => {
+    if (!hosting) return
+    let live = true
+    const tick = async () => {
+      const [res, w] = await Promise.all([host({ kind: "hostState", adventureId: hosting }), hostRunning().catch(() => null)])
+      if (!live) return
+      if (res.state) setHosted(res.state)
+      if (res.error) setError(res.error)
+      setWorker(w)
+    }
+    void tick()
+    const timer = setInterval(tick, 1500)
+    return () => {
+      live = false
+      clearInterval(timer)
+    }
+  }, [hosting])
+  const work = hosting && hosted ? hostedWork(hosted) : null
+  useEffect(() => {
+    if (work?.failed && shownFailure.current !== work.failed.id) {
+      shownFailure.current = work.failed.id
+      setError(work.failed.error)
+    }
+  }, [work?.failed])
+  const openHosted = async (adventureId: string) => {
+    setHosted(null)
+    setHosting(adventureId)
+    setScreen(null)
+    await hostStart(adventureId, provider).catch((e) => setError(String(e)))
+  }
+  const hostGame = async (party: PartyChoice[]) => {
+    const you = party.find((c) => !c.ai)
+    if (!you) return
+    setSending(true)
+    const res = await host({ kind: "hostCreate", planId: adventure, characterId: you.id })
+    setSending(false)
+    if (res.error || !res.created) return setError(res.error ?? "Could not host the game.")
+    await openHosted(res.created.adventureId)
+  }
+  const act = async (fn: () => ReturnType<typeof host>) => {
+    setSending(true)
+    const res = await fn()
+    setSending(false)
+    if (res.state) setHosted(res.state)
+    if (res.error) setError(res.error)
+    return !res.error
+  }
+  const goHome = () => {
+    setHosting(null)
+    setHosted(null)
+    setScreen("home")
+  }
+  const gmLabel = (() => {
+    if (!hosting) return ""
+    if (worker?.adventureId !== hosting) return "GM stopped"
+    const type = worker.event?.type
+    return type === "working" ? "GM working" : type === "offline" ? "GM offline" : type === "stopped" ? "GM stopped" : "GM ready"
+  })()
+  const hostedView = hosting && hosted ? hostedSave(hosted) : null
   const onEscape = useCallback(() => setScreen((s) => (s === "new" || s === "realm" ? "home" : saveRef.current ? null : s)), [])
   const onError = useCallback((message: string) => setError(message), [])
   return (
     <StagePlay
-      save={save}
-      busy={busy}
+      save={hosting ? hostedView : save}
+      busy={hosting ? sending || Boolean(work?.busy) : busy}
       art={art}
       fallbackEncounter={chosen?.start}
-      controls={() => true}
-      status={save ? `Saved locally · ${save.provider}` : ""}
-      overlay={screen !== null}
-      actions={<Pill onClick={() => setScreen("home")}>Home</Pill>}
-      endActions={<Pill onClick={() => setScreen("home")}>Home</Pill>}
+      controls={hosting ? (c) => (c as { userId?: string }).userId === hosted?.userId : () => true}
+      status={hosting ? `Hosting · ${hosted?.summary.players ?? 1} at the table · ${gmLabel}` : save ? `Saved locally · ${save.provider}` : ""}
+      overlay={screen !== null || Boolean(hosting && !hostedView)}
+      actions={<Pill onClick={goHome}>Home</Pill>}
+      endActions={<Pill onClick={goHome}>Home</Pill>}
       onReply={async (turnId, characterId, text, movement) => {
+        if (hosting) return act(() => host({ kind: "hostAct", adventureId: hosting, turnId, action: { kind: "reply", characterId, text } }))
         const res = await invoke({ kind: "reply", turnId, characterId, text, movement })
         return Boolean(res && !res.error)
       }}
-      onRoll={(turnId, characterId, result) => void invoke({ kind: "roll", turnId, characterId, result })}
-      onContinue={(turnId) => void invoke({ kind: "continue", turnId })}
-      onPositions={async (turnId, positions, appliedMovement) => {
-        await invoke({ kind: "positions", turnId, positions, appliedMovement })
+      onRoll={(turnId, characterId, result) => {
+        if (hosting) void act(() => host({ kind: "hostAct", adventureId: hosting, turnId, action: { kind: "roll", characterId, result } }))
+        else void invoke({ kind: "roll", turnId, characterId, result })
       }}
+      onContinue={(turnId) => {
+        if (hosting) void act(() => host({ kind: "hostAct", adventureId: hosting, turnId, action: { kind: "continue" } }))
+        else void invoke({ kind: "continue", turnId })
+      }}
+      onPositions={
+        hosting
+          ? undefined
+          : async (turnId, positions, appliedMovement) => {
+              await invoke({ kind: "positions", turnId, positions, appliedMovement })
+            }
+      }
       onEscape={onEscape}
       onError={onError}
       onStage={setStageState}
@@ -176,6 +263,9 @@ export function DesktopGame() {
           <div className="text-[10px] tracking-[.3em] text-stage-gold">D20 ADVENTURES</div>
           {acct.gated && <LinkGate account={acct} />}
         </div>
+      )}
+      {hosting && hosted && !hosted.turn && screen === null && (
+        <HostedLobby summary={hosted.summary} gm={gmLabel} busy={sending} onStart={() => void act(() => host({ kind: "hostStart", adventureId: hosting }))} onHome={goHome} />
       )}
       {acct.ready && !acct.gated && loaded && (
         <>
@@ -205,6 +295,9 @@ export function DesktopGame() {
               onPaintHero={painter ? (hero) => void paintHero(hero) : undefined}
               onDeleteHero={(hero) => void invoke({ kind: "deleteHero", id: hero.id })}
               onRealm={() => setScreen("realm")}
+              hosted={hostedList}
+              hostingNow={worker?.adventureId ?? null}
+              onOpenHosted={(id) => void openHosted(id)}
             />
           )}
           {screen === "realm" && realm && <RealmPage realm={realm} onClose={() => setScreen("home")} />}
@@ -236,6 +329,7 @@ export function DesktopGame() {
                   listPrices={listPrices}
                   linked={acct.state?.linked ?? false}
                   onLink={() => void acct.start()}
+                  onHost={linked ? (party) => void hostGame(party) : undefined}
                 />
               )}
             </div>
