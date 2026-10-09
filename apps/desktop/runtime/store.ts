@@ -34,6 +34,33 @@ export type Save = {
   painted?: string[]
 }
 
+// A save as the home screen lists it. The current save has no archive id.
+export type SaveSummary = {
+  archiveId?: number
+  adventureId: string
+  planId: string
+  title: string
+  status: SavedAdventure["status"]
+  round: number
+  turnTitle: string
+  party: string[]
+  playedAt?: number
+}
+export const summarize = (save: Save, archiveId?: number, playedAt?: number): SaveSummary => {
+  const turn = save.turns.find((t) => t._id === save.adventure.currentTurnId)
+  return {
+    archiveId,
+    adventureId: save.adventure._id,
+    planId: save.adventure.planId,
+    title: save.adventure.title,
+    status: save.adventure.status,
+    round: turn?.order ?? 1,
+    turnTitle: turn?.title ?? "",
+    party: (turn?.characters ?? []).filter((c) => c.type === "pc").map((c) => c.name),
+    playedAt,
+  }
+}
+
 /** SQLite writes commit each milestone, including the natural die before inference. */
 export class LocalStore implements Store, Roster {
   db: DatabaseSync
@@ -47,6 +74,11 @@ export class LocalStore implements Store, Roster {
     this.db.exec(
       "PRAGMA busy_timeout=1000; CREATE TABLE IF NOT EXISTS save (id INTEGER PRIMARY KEY CHECK(id=1), json TEXT NOT NULL); CREATE TABLE IF NOT EXISTS active (id INTEGER PRIMARY KEY CHECK(id=1), pid INTEGER NOT NULL); CREATE TABLE IF NOT EXISTS archive (id INTEGER PRIMARY KEY, archived_at INTEGER NOT NULL, json TEXT NOT NULL); CREATE TABLE IF NOT EXISTS heroes (id TEXT PRIMARY KEY, updated_at INTEGER NOT NULL, json TEXT NOT NULL)"
     )
+    // Archived saves keep a summary beside the full save, so listing them never parses whole adventures.
+    const columns = this.db.prepare("PRAGMA table_info(archive)").all() as { name: string }[]
+    if (!columns.some((c) => c.name === "summary")) this.db.exec("ALTER TABLE archive ADD COLUMN summary TEXT")
+    for (const r of this.db.prepare("SELECT id, archived_at, json FROM archive WHERE summary IS NULL").all() as { id: number; archived_at: number; json: string }[])
+      this.db.prepare("UPDATE archive SET summary=? WHERE id=?").run(JSON.stringify(summarize(JSON.parse(r.json))), r.id)
     const row = this.db.prepare("SELECT json FROM save WHERE id=1").get() as { json: string } | undefined
     this.state = row ? JSON.parse(row.json) : null
     if (this.state && this.state.version !== 1) throw new Error("This save needs a newer version of D20 Adventures.")
@@ -90,7 +122,7 @@ export class LocalStore implements Store, Roster {
   replace(next: Save) {
     this.db.exec("BEGIN IMMEDIATE")
     try {
-      if (this.state) this.db.prepare("INSERT INTO archive (archived_at, json) VALUES (?, ?)").run(Date.now(), JSON.stringify(this.state))
+      this.archiveCurrent()
       this.db.prepare("INSERT OR REPLACE INTO save VALUES(1, ?)").run(JSON.stringify(next))
       this.db.exec("COMMIT")
     } catch (error) {
@@ -98,6 +130,39 @@ export class LocalStore implements Store, Roster {
       throw error
     }
     this.state = next
+  }
+  // Resuming an archived adventure swaps it with the current one, in one transaction.
+  resume(archiveId: number) {
+    this.db.exec("BEGIN IMMEDIATE")
+    let next: Save
+    try {
+      const row = this.db.prepare("SELECT json FROM archive WHERE id=?").get(archiveId) as { json: string } | undefined
+      if (!row) throw new Error("That adventure is no longer saved.")
+      next = JSON.parse(row.json)
+      if (next.version !== 1) throw new Error("This save needs a newer version of D20 Adventures.")
+      this.db.prepare("DELETE FROM archive WHERE id=?").run(archiveId)
+      this.archiveCurrent()
+      this.db.prepare("INSERT OR REPLACE INTO save VALUES(1, ?)").run(row.json)
+      this.db.exec("COMMIT")
+    } catch (error) {
+      this.db.exec("ROLLBACK")
+      throw error
+    }
+    this.state = next
+  }
+  private archiveCurrent() {
+    if (!this.state) return
+    const now = Date.now()
+    this.db.prepare("INSERT INTO archive (archived_at, json, summary) VALUES (?, ?, ?)").run(now, JSON.stringify(this.state), JSON.stringify(summarize(this.state)))
+  }
+  // Every saved adventure, the current one first, then the archive from the most recently played.
+  saves(): SaveSummary[] {
+    const archived = (this.db.prepare("SELECT id, archived_at, summary FROM archive ORDER BY archived_at DESC, id DESC").all() as { id: number; archived_at: number; summary: string }[]).map((r) => ({
+      ...(JSON.parse(r.summary) as SaveSummary),
+      archiveId: r.id,
+      playedAt: r.archived_at,
+    }))
+    return this.state ? [summarize(this.state), ...archived] : archived
   }
   // The hero roster, oldest first. Saves hold their own copies of the heroes they started with.
   heroes(): Hero[] {

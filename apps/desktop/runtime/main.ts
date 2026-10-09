@@ -82,9 +82,13 @@ async function main() {
           return false
         }
       })
-      process.stdout.write(`${JSON.stringify({ state, providers, adventures: adventureList(packs), catalog, heroes: store.heroes(), options: creationOptions(packs), ...hero })}\n`)
+      process.stdout.write(
+        `${JSON.stringify({ state, providers, adventures: adventureList(packs), catalog, heroes: store.heroes(), saves: store.saves(), options: creationOptions(packs), ...hero })}\n`
+      )
     } catch (error) {
-      process.stdout.write(`${JSON.stringify({ error: error instanceof Error ? error.message : "The game action failed.", state: store?.reload() ?? null, heroes: store?.heroes() })}\n`)
+      process.stdout.write(
+        `${JSON.stringify({ error: error instanceof Error ? error.message : "The game action failed.", state: store?.reload() ?? null, heroes: store?.heroes(), saves: store?.saves() })}\n`
+      )
     } finally {
       clearInterval(parentWatch)
       clearTimeout(deadline)
