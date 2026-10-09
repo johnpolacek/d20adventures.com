@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Desktop local play](desktop-local-play.md) · [Desktop home screen](zzz-completed/feature-desktop-home.md) · [Adventure store](feature-adventure-store.md)
 
-Status: Planned 2026-10-08, redrawn the same day for website-only play. Owner chose Stageview on the web for guests. Not started.
+Status: In progress on `feature/host-mode`, a branch in the main checkout, from 2026-10-08. Owner chose Stageview on the web for guests.
 
 ## Goal
 
@@ -45,6 +45,16 @@ A hosted game is an ordinary website adventure whose GM work runs on the host's 
 2. Desktop: a host worker while hosting, the website `Store` adapter, the host's own turns, and the invite link.
 3. Home screen: hosted and joined games in Your adventures.
 4. Ship gate: provider terms, below.
+
+## Build steps
+
+- [ ] Convex: a `host` field on adventures, and a `gmJobs` queue answered only by the Next server.
+- [ ] Website: device-token host routes to create and list hosted games, claim and finish jobs, and run `Store` operations on the host's own games.
+- [ ] Website: guest actions for hosted games queue jobs. The text turn page's server actions refuse hosted games, so the server never runs their GM.
+- [ ] Desktop: a host worker process with a website `Store`, the host's CLI, and the adventure packs.
+- [ ] Desktop: Host on party setup, the invite link, and hosted games on home.
+- [ ] Website: the stage-first play view for guests.
+- [ ] Convex: lock down public adventure and turn functions.
 
 ## Open decisions
 
