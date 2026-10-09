@@ -229,6 +229,7 @@ export function CharactersPage(props: {
   )
 }
 
+// Explore opens the setting's page on the website.
 export function SettingsPage(props: { realm: Realm | null; account: ReactNode; onNavigate: (page: Page | "home") => void; onRealm: () => void }) {
   return (
     <PageShell page="settings" title="Settings" account={props.account} onNavigate={props.onNavigate}>

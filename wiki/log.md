@@ -6,7 +6,7 @@ This log retains durable decisions and dated evidence. Git owns detailed impleme
 
 ## 2026-10-08, desktop title screen and pages
 
-Owner review of the desktop home: it now opens on the website's title screen, the d20 painting with "Experience the Thrill of the D20", Continue for the saved adventure, and white outline buttons. Adventures, Characters and Settings are separate pages styled after the website, with the Realm of Myr page under Settings. This replaces the shelves under a live-scene banner in [the home screen plan](plans/zzz-completed/feature-desktop-home.md).
+Owner review of the desktop home: it now opens on the website's title screen, the d20 painting with "Experience the Thrill of the D20", Continue for the saved adventure, and white outline buttons. Adventures, Characters and Settings are separate pages styled after the website. The Realm of Myr card's Explore opens the website's setting page, so the app no longer has its own Realm page. This replaces the shelves under a live-scene banner in [the home screen plan](plans/zzz-completed/feature-desktop-home.md).
 
 ## 2026-10-08, host mode paused
 
