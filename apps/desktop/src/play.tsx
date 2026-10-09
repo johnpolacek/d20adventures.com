@@ -12,18 +12,19 @@ import { ROLL_SECONDS, type RollResultData } from "@/components/stage/roll-resul
 import { Bubbles, Plate } from "@/components/stage/stage-dialogue"
 import { TurnOrder } from "@/components/stage/turn-order"
 import { useStage } from "@/components/stage/use-stage"
-import { Button } from "@/components/ui/button"
 import { type NarrativePart, parseNarrative } from "@/lib/utils/parse-narrative"
 import type { AdventureInfo, CatalogInfo, GameCommand } from "../runtime/game"
 import type { Hero, HeroCommand, PartyChoice } from "../runtime/heroes"
-import type { Save } from "../runtime/store"
+import type { Save, SaveSummary } from "../runtime/store"
 import { AccountBadge, LinkGate, useAccount } from "./account"
 import { send } from "./bridge"
 import { characterInfo } from "./character-info"
 import type { FigureArt } from "./figures"
 import { HeroCreator, type HeroIdea } from "./hero-creator"
+import { Home } from "./home"
 import { applyMovement, context, positions as stagePositions } from "./movement"
 import { type Locked, NewGame } from "./new-game"
+import { RealmPage, useRealm } from "./realm"
 import { castIdFor, partyScene, portraitFor, sceneFor } from "./scenes"
 
 type Roll = Extract<NarrativePart, { type: "diceroll" }>
@@ -55,6 +56,8 @@ export function DesktopGame() {
   // Every adventure for sale, for the locked ones on the new game screen.
   const [catalog, setCatalog] = useState<CatalogInfo[]>([])
   const [heroes, setHeroes] = useState<Hero[]>([])
+  const [saves, setSaves] = useState<SaveSummary[]>([])
+  const realm = useRealm()
   const [options, setOptions] = useState<{ races: string[]; archetypes: string[] }>({ races: [], archetypes: [] })
   // The hero creator, over the new game screen. A hero it saves joins the party there.
   const [creator, setCreator] = useState<{ editing?: Hero } | null>(null)
@@ -84,9 +87,8 @@ export function DesktopGame() {
   const [auto, setAuto] = useState(false)
   const [sound, setSound] = useState(soundOn)
   const [reading, setReading] = useState(true)
-  // The title screen: shown on launch and from the Menu button. With a save it offers Continue and New game.
-  const [menu, setMenu] = useState(true)
-  const [confirmNew, setConfirmNew] = useState(false)
+  // Over the stage: home on launch and from the Home button, party setup for a new game, or the Realm page. Null in play.
+  const [screen, setScreen] = useState<"home" | "new" | "realm" | null>("home")
   const previousText = useRef<{ turn?: string; paragraphs: string[] }>({ paragraphs: [] })
   const [, redraw] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -230,6 +232,7 @@ export function DesktopGame() {
         }
         if (res.catalog) setCatalog(res.catalog)
         if (res.heroes) setHeroes(res.heroes)
+        if (res.saves) setSaves(res.saves)
         if (res.art && Object.keys(res.art).length) keepArt(res.art)
         if (res.options) setOptions(res.options)
         if (res.providers) {
@@ -250,10 +253,10 @@ export function DesktopGame() {
     },
     [keepArt]
   )
-  // Playing needs a linked account. The title screen holds at the link step until there is one.
+  // Playing needs a linked account. Home holds at the link step until there is one.
   const acct = useAccount({ onPacks: () => void invoke({ kind: "load" }) })
   useEffect(() => {
-    if (acct.gated) setMenu(true)
+    if (acct.gated) setScreen("home")
   }, [acct.gated])
   useEffect(() => {
     void invoke({ kind: "load" })
@@ -359,8 +362,7 @@ export function DesktopGame() {
       if (e.key === "Escape") {
         setOpen(null)
         setCardId(null)
-        setConfirmNew(false)
-        if (saveRef.current) setMenu(false)
+        setScreen((s) => (s === "new" || s === "realm" ? "home" : saveRef.current ? null : s))
       }
       const view = Object.keys(stage?.shots ?? {})[Number(e.key) - 1]
       if (view) stage?.shot(view)
@@ -389,16 +391,29 @@ export function DesktopGame() {
   else if (ended) mode = null
   else if (cardActor && rr) mode = { kind: "roll", roll: { skill: rr.rollType, ability: "", dc: rr.difficulty, modifier: rr.modifier ?? 0 } }
   else if (cardActor) mode = { kind: "hold", prompt: `What does ${cardActor.name.split(" ")[0]} do?` }
-  // Starting over archives the saved adventure. The menu stays open if the start fails.
+  // A new game moves the saved adventure to the archive, where home lists it. Party setup stays open if the start fails.
   const start = async (chosenParty: PartyChoice[]) => {
     const next = (await invoke({ kind: "start", provider: provider as "claude", adventure, party: chosenParty, replace: Boolean(save) }))?.state
     if (!next || next.adventure._id === save?.adventure._id) return
     setCreated(null)
-    setMenu(false)
-    setConfirmNew(false)
+    setScreen(null)
     setCardId(null)
     setOpen(null)
   }
+  const resume = async (archiveId: number) => {
+    const res = await invoke({ kind: "resume", archiveId })
+    if (!res || res.error) return
+    setScreen(null)
+    setCardId(null)
+    setOpen(null)
+  }
+  const pickAdventure = (id: string) => {
+    pickedAdventure.current = true
+    setAdventure(id)
+    setCreated(null)
+  }
+  const locked = catalog.filter((c) => !adventures.some((a) => a.id === c.id)).map((c): Locked => ({ ...c, owned: acct.owned.includes(c.id), failed: acct.failed.includes(c.id) }))
+  const listPrices: Record<string, number> = Object.fromEntries(catalog.flatMap((c) => (c.free && c.listPriceCents ? [[c.id, c.listPriceCents]] : [])))
   // Painting uses the Game Master's CLI when it can paint, else Grok, then Codex.
   const painters: string[] = providers.filter((p) => p === "grok" || p === "codex")
   const painter = (painters.includes(provider) ? provider : painters[0]) as "grok" | "codex" | undefined
@@ -439,17 +454,17 @@ export function DesktopGame() {
       views={stage ? Object.entries(stage.shots).map(([id, s]) => ({ id, label: s.label ?? id })) : []}
       activeView={stage?.activeShot ?? null}
       onView={(id) => stage?.shot(id)}
-      hidden={hidden || !save || menu}
+      hidden={hidden || !save || screen !== null}
       compact={compact}
       actions={
         <>
-          <Pill onClick={() => setMenu(true)}>Menu</Pill>
+          <Pill onClick={() => setScreen("home")}>Home</Pill>
           <Pill onClick={() => setOpen(open === "journal" ? null : "journal")}>Journal</Pill>
           <Pill onClick={() => setOpen(open === "settings" ? null : "settings")}>Scene settings</Pill>
         </>
       }
     >
-      {save && !hidden && !menu && (
+      {save && !hidden && screen === null && (
         <>
           {stage && speech.length > 0 && (
             <>
@@ -521,14 +536,7 @@ export function DesktopGame() {
             <div className={`${panel} absolute bottom-28 left-1/2 z-30 -translate-x-1/2 p-6 text-center`}>
               <div className="text-[10px] tracking-[.3em] text-stage-gold">THE END</div>
               <p className="mt-2 mb-4 font-display text-2xl">{save.adventure.title}</p>
-              <Pill
-                onClick={() => {
-                  setConfirmNew(true)
-                  setMenu(true)
-                }}
-              >
-                New game
-              </Pill>
+              <Pill onClick={() => setScreen("home")}>Home</Pill>
               <Pill className="ml-2" onClick={() => setOpen("journal")}>
                 Journal
               </Pill>
@@ -603,46 +611,58 @@ export function DesktopGame() {
           Show interface · H
         </Pill>
       )}
-      {(!save || menu) && (
+      {screen !== null && (!acct.ready || acct.gated || !loaded) && (
         <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-5 bg-stage-ink/55 text-center">
-          <AccountBadge account={acct} />
           <div className="text-[10px] tracking-[.3em] text-stage-gold">D20 ADVENTURES</div>
-          {!acct.ready ? null : acct.gated ? (
-            <LinkGate account={acct} />
-          ) : save && !confirmNew ? (
-            <>
-              <h1 className="font-display text-5xl">{save.adventure.title}</h1>
-              <div className="text-sm text-stage-cream">Realm of Myr</div>
-              {turn && <div className="mt-4 text-sm text-stage-cream">{save.adventure.status === "completed" ? "Adventure complete" : `Round ${turn.order} · ${turn.title}`}</div>}
-              <Button variant="epic" className="mt-2 text-xl" disabled={busy} onClick={() => setMenu(false)}>
-                Continue
-              </Button>
-              <Pill disabled={busy} onClick={() => setConfirmNew(true)}>
-                New game
-              </Pill>
-            </>
-          ) : (
-            <>
-              {save && <p className="text-sm">Start a new adventure? This one is kept in your save archive.</p>}
-              {!loaded && <p>Loading your saved adventure…</p>}
-              {loaded && !providers.length && <p>Install and sign in to Claude Code, Codex, Grok, or Gemini CLI.</p>}
-              {loaded && adventures.length > 0 && (
+          {acct.gated && <LinkGate account={acct} />}
+        </div>
+      )}
+      {acct.ready && !acct.gated && loaded && (
+        <>
+          {screen === "home" && (
+            <Home
+              save={save}
+              saves={saves}
+              adventures={adventures}
+              locked={locked}
+              listPrices={listPrices}
+              starter={chosen}
+              heroes={heroes}
+              art={art}
+              realm={realm}
+              busy={busy}
+              painting={painting}
+              canCreate={providers.length > 0}
+              account={<AccountBadge account={acct} />}
+              onContinue={() => setScreen(null)}
+              onResume={(id) => void resume(id)}
+              onAdventure={(id) => {
+                pickAdventure(id)
+                setScreen("new")
+              }}
+              onCreateHero={() => setCreator({})}
+              onEditHero={(hero) => setCreator({ editing: hero })}
+              onPaintHero={painter ? (hero) => void paintHero(hero) : undefined}
+              onDeleteHero={(hero) => void invoke({ kind: "deleteHero", id: hero.id })}
+              onRealm={() => setScreen("realm")}
+            />
+          )}
+          {screen === "realm" && realm && <RealmPage realm={realm} onClose={() => setScreen("home")} />}
+          {screen === "new" && (
+            <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-5 bg-stage-ink/70 text-center">
+              {!providers.length && <p>Install and sign in to Claude Code, Codex, Grok, or Gemini CLI.</p>}
+              {adventures.length > 0 && (
                 <NewGame
                   key={adventure}
                   adventures={adventures}
                   adventure={adventure}
-                  onAdventure={(id) => {
-                    pickedAdventure.current = true
-                    setAdventure(id)
-                    setCreated(null)
-                  }}
+                  onAdventure={pickAdventure}
                   heroes={heroes}
                   providers={providers}
                   provider={provider}
                   onProvider={setProvider}
                   busy={busy}
                   waiting={Boolean(scene && !stage && !stageError)}
-                  replacing={Boolean(save)}
                   created={created}
                   onStart={(chosenParty) => void start(chosenParty)}
                   onCreate={() => setCreator({})}
@@ -651,20 +671,20 @@ export function DesktopGame() {
                   painting={painting}
                   onPaint={painter ? (hero) => void paintHero(hero) : undefined}
                   onDelete={(hero) => void invoke({ kind: "deleteHero", id: hero.id })}
-                  onCancel={save ? () => setConfirmNew(false) : undefined}
-                  locked={catalog.filter((c) => !adventures.some((a) => a.id === c.id)).map((c): Locked => ({ ...c, owned: acct.owned.includes(c.id), failed: acct.failed.includes(c.id) }))}
-                  listPrices={Object.fromEntries(catalog.flatMap((c) => (c.free && c.listPriceCents ? [[c.id, c.listPriceCents]] : [])))}
+                  onCancel={() => setScreen("home")}
+                  locked={locked}
+                  listPrices={listPrices}
                   linked={acct.state?.linked ?? false}
                   onLink={() => void acct.start()}
                 />
               )}
-            </>
+            </div>
           )}
-        </div>
+        </>
       )}
       {creator && (
         <HeroCreator
-          options={creator.editing ? options : (chosen?.options ?? options)}
+          options={creator.editing || screen !== "new" ? options : (chosen?.options ?? options)}
           editing={creator.editing}
           painted={creator.editing ? art[creator.editing.id] : undefined}
           busy={busy}

@@ -12,11 +12,11 @@ type Pick = { id: string; name: string; race: string; archetype: string; portrai
 // An adventure for sale that this app cannot play yet. Owned ones are downloading, or failed to.
 export type Locked = CatalogInfo & { owned: boolean; failed: boolean }
 
-const price = (cents: number) => `$${(cents / 100).toFixed(cents % 100 ? 2 : 0)}`
+export const price = (cents: number) => `$${(cents / 100).toFixed(cents % 100 ? 2 : 0)}`
 
 // A free adventure's usual price struck through, then FREE.
 // On brass the colours lift to cream so they stay readable.
-function FreeTag({ cents, onBrass }: { cents: number; onBrass?: boolean }) {
+export function FreeTag({ cents, onBrass }: { cents: number; onBrass?: boolean }) {
   return (
     <span className="whitespace-nowrap">
       <s className={onBrass ? "text-stage-cream/70" : "text-stage-muted"}>{price(cents)}</s> <span className={cn("font-semibold", onBrass ? "text-stage-cream" : "text-stage-gold")}>FREE</span>
@@ -24,7 +24,7 @@ function FreeTag({ cents, onBrass }: { cents: number; onBrass?: boolean }) {
   )
 }
 
-function LockIcon() {
+export function LockIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 16 16" className="-mt-0.5 mr-1.5 inline h-3 w-3 fill-current">
       <path d="M4 7V5a4 4 0 1 1 8 0v2h.5A1.5 1.5 0 0 1 14 8.5v5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 13.5v-5A1.5 1.5 0 0 1 3.5 7H4Zm2 0h4V5a2 2 0 1 0-4 0v2Z" />
@@ -46,7 +46,6 @@ export function NewGame(props: {
   busy: boolean
   // The opening scene is still loading.
   waiting: boolean
-  replacing: boolean
   created: string | null
   onStart: (party: PartyChoice[]) => void
   onCreate: () => void
@@ -277,7 +276,7 @@ export function NewGame(props: {
           </Pill>
         )}
         <Button variant="epic" className="text-xl" disabled={props.busy || props.waiting || !ready || !props.providers.length} onClick={() => props.onStart(party)}>
-          {props.busy ? "Starting…" : props.replacing ? "Start new game" : "Play"}
+          {props.busy ? "Starting…" : "Play"}
         </Button>
       </div>
     </section>

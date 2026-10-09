@@ -37,12 +37,17 @@ The desktop app opens on a general home screen instead of the current save's tit
 ## Progress
 
 - [x] Plan and owner decisions
-- [ ] Runtime: `saves` and `resume` commands with tests
-- [ ] Realm snapshot script and bundled data
-- [ ] Home screen shelves and banner
-- [ ] Realm page
-- [ ] Menu returns home; New game without the archive warning
-- [ ] Typecheck, runtime tests, and a check in the running app
+- [x] Runtime: a save list on every response and a `resume` command, with tests. Archived saves keep a summary column, backfilled for older archives.
+- [x] Realm snapshot script and bundled data: five places, 1.3 MB of paintings.
+- [x] Home screen shelves and banner
+- [x] Realm page
+- [x] Home button in play and on the ending replaces Menu and New game. Party setup has no archive warning.
+- [x] Typecheck, lint, 40 runtime tests. Browser check against the real runtime and a copy of the owner's saves: home, Realm, a new game, back home, and resuming the older adventure.
+- [ ] Owner review in the running app
+
+## Validation, 2026-10-08
+
+The packaged webview could not be screenshotted from the session, since window capture returned a blank frame. The UI was checked in system Chrome with the GPU, with the Tauri bridge forwarded to the real `runtime.cjs` and a copy of the owner's app data. No real saves were touched.
 
 ## Open
 
