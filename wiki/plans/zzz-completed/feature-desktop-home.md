@@ -54,3 +54,5 @@ The packaged webview could not be screenshotted from the session, since window c
 
 - Deleting saves. Not in this pass.
 - Other settings. The Realm shelf assumes one setting until a second ships.
+
+Finished: 2026-10-08 (merged to main, policy: merge)
