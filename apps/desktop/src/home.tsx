@@ -91,7 +91,7 @@ export function Home(props: {
             {props.saves.map((s) => {
               const current = s.archiveId === undefined
               return (
-                <li key={s.archiveId ?? "current"} className="w-48 shrink-0">
+                <li key={s.archiveId ?? "current"} className="w-60 shrink-0">
                   <button
                     type="button"
                     disabled={props.busy}
@@ -126,7 +126,7 @@ export function Home(props: {
           {props.heroes.map((h) => {
             const portrait = (h.painted && props.art[h.id]?.portrait) || STOCK_FIGURES[h.figure]?.art.portrait
             return (
-              <li key={h.id} className="group relative w-36 shrink-0">
+              <li key={h.id} className="group relative w-44 shrink-0">
                 <button type="button" disabled={props.busy} onClick={() => props.onEditHero(h)} className="block w-full text-left" aria-label={`Edit ${h.name}`}>
                   {portrait ? (
                     <img src={portrait} alt="" className="aspect-[3/4] w-full rounded-[3px] border border-stage-brass/50 object-cover object-[50%_15%] [filter:sepia(.2)_saturate(.88)]" />
@@ -162,7 +162,7 @@ export function Home(props: {
             )
           })}
           {props.heroes.length === 0 && (
-            <li className="w-36 shrink-0">
+            <li className="w-44 shrink-0">
               <button
                 type="button"
                 disabled={props.busy || !props.canCreate}
@@ -176,7 +176,7 @@ export function Home(props: {
         </Shelf>
         <Shelf title="New adventure">
           {props.adventures.map((a) => (
-            <li key={a.id} className="w-48 shrink-0">
+            <li key={a.id} className="w-60 shrink-0">
               <button
                 type="button"
                 disabled={props.busy}
@@ -184,13 +184,13 @@ export function Home(props: {
                 className="group block w-full text-left disabled:cursor-default"
                 aria-label={`New game of ${a.title}`}
               >
-                <ModuleCover small id={a.id} title={a.title} players={a.players} className="transition-transform group-hover:-translate-y-1" />
+                <ModuleCover id={a.id} title={a.title} players={a.players} className="transition-transform group-hover:-translate-y-1" />
                 <div className="mt-2 text-[12px]">{props.listPrices[a.id] && <FreeTag cents={props.listPrices[a.id]} />}</div>
               </button>
             </li>
           ))}
           {props.locked.map((a) => (
-            <li key={a.id} className="w-48 shrink-0">
+            <li key={a.id} className="w-60 shrink-0">
               <button
                 type="button"
                 disabled={props.busy}
@@ -198,7 +198,7 @@ export function Home(props: {
                 className="group block w-full text-left disabled:cursor-default"
                 aria-label={`${a.title}, ${a.owned ? "owned, not downloaded" : `locked, ${price(a.priceCents)}`}`}
               >
-                <ModuleCover small id={a.id} title={a.title} players={a.players} className="[filter:grayscale(.55)_brightness(.7)] transition-transform group-hover:-translate-y-1" />
+                <ModuleCover id={a.id} title={a.title} players={a.players} className="[filter:grayscale(.55)_brightness(.7)] transition-transform group-hover:-translate-y-1" />
                 <div className="mt-2 text-[12px] text-stage-gold">
                   <LockIcon />
                   {a.owned ? "Owned" : price(a.priceCents)}

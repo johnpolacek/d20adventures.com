@@ -43,7 +43,8 @@ The desktop app opens on a general home screen instead of the current save's tit
 - [x] Realm page
 - [x] Home button in play and on the ending replaces Menu and New game. Party setup has no archive warning.
 - [x] Typecheck, lint, 40 runtime tests. Browser check against the real runtime and a copy of the owner's saves: home, Realm, a new game, back home, and resuming the older adventure.
-- [ ] Owner review in the running app
+- [x] Owner review, 2026-10-08: cover titles overflowed and cards were small. Cover type now scales with the cover and shrinks to fit the longest word. Shelf covers are 240 px wide.
+- [ ] Owner review of the merged build
 
 ## Validation, 2026-10-08
 
