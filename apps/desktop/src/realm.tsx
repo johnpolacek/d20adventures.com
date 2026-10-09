@@ -49,7 +49,7 @@ export function RealmPage({ realm, onClose }: { realm: Realm; onClose: () => voi
   return (
     <div className="absolute inset-0 z-40 overflow-y-auto bg-stage-ink text-stage-cream">
       <Pill className="fixed top-7 left-10 z-10" onClick={onClose}>
-        Home
+        Settings
       </Pill>
       <header className="relative flex h-[62vh] min-h-[380px] items-end overflow-hidden">
         <img src={realm.image} alt="" className="absolute inset-0 h-full w-full object-cover" />

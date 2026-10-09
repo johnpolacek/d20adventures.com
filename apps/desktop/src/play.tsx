@@ -24,6 +24,7 @@ import { HeroCreator, type HeroIdea } from "./hero-creator"
 import { Home } from "./home"
 import { applyMovement, context, positions as stagePositions } from "./movement"
 import { type Locked, NewGame } from "./new-game"
+import { AdventuresPage, CharactersPage, type Page, SettingsPage } from "./pages"
 import { RealmPage, useRealm } from "./realm"
 import { castIdFor, partyScene, portraitFor, sceneFor } from "./scenes"
 
@@ -88,7 +89,8 @@ export function DesktopGame() {
   const [sound, setSound] = useState(soundOn)
   const [reading, setReading] = useState(true)
   // Over the stage: home on launch and from the Home button, party setup for a new game, or the Realm page. Null in play.
-  const [screen, setScreen] = useState<"home" | "new" | "realm" | null>("home")
+  const [screen, setScreen] = useState<"home" | Page | "new" | "realm" | null>("home")
+  const navigate = (page: Page | "home") => setScreen(page)
   const previousText = useRef<{ turn?: string; paragraphs: string[] }>({ paragraphs: [] })
   const [, redraw] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -362,7 +364,8 @@ export function DesktopGame() {
       if (e.key === "Escape") {
         setOpen(null)
         setCardId(null)
-        setScreen((s) => (s === "new" || s === "realm" ? "home" : saveRef.current ? null : s))
+        // Escape steps back: party setup to Adventures, the Realm to Settings, a page to the title screen, then into play.
+        setScreen((s) => (s === "new" ? "adventures" : s === "realm" ? "settings" : s === "adventures" || s === "characters" || s === "settings" ? "home" : saveRef.current ? null : s))
       }
       const view = Object.keys(stage?.shots ?? {})[Number(e.key) - 1]
       if (view) stage?.shot(view)
@@ -622,32 +625,51 @@ export function DesktopGame() {
           {screen === "home" && (
             <Home
               save={save}
+              starter={chosen}
+              busy={busy}
+              account={<AccountBadge account={acct} />}
+              onContinue={() => setScreen(null)}
+              onAdventure={(id) => {
+                pickAdventure(id)
+                setScreen("new")
+              }}
+              onNavigate={navigate}
+            />
+          )}
+          {screen === "adventures" && (
+            <AdventuresPage
               saves={saves}
               adventures={adventures}
               locked={locked}
               listPrices={listPrices}
-              starter={chosen}
-              heroes={heroes}
-              art={art}
-              realm={realm}
               busy={busy}
-              painting={painting}
-              canCreate={providers.length > 0}
               account={<AccountBadge account={acct} />}
+              onNavigate={navigate}
               onContinue={() => setScreen(null)}
               onResume={(id) => void resume(id)}
               onAdventure={(id) => {
                 pickAdventure(id)
                 setScreen("new")
               }}
-              onCreateHero={() => setCreator({})}
-              onEditHero={(hero) => setCreator({ editing: hero })}
-              onPaintHero={painter ? (hero) => void paintHero(hero) : undefined}
-              onDeleteHero={(hero) => void invoke({ kind: "deleteHero", id: hero.id })}
-              onRealm={() => setScreen("realm")}
             />
           )}
-          {screen === "realm" && realm && <RealmPage realm={realm} onClose={() => setScreen("home")} />}
+          {screen === "characters" && (
+            <CharactersPage
+              heroes={heroes}
+              art={art}
+              busy={busy}
+              painting={painting}
+              canCreate={providers.length > 0}
+              account={<AccountBadge account={acct} />}
+              onNavigate={navigate}
+              onCreate={() => setCreator({})}
+              onEdit={(hero) => setCreator({ editing: hero })}
+              onPaint={painter ? (hero) => void paintHero(hero) : undefined}
+              onDelete={(hero) => void invoke({ kind: "deleteHero", id: hero.id })}
+            />
+          )}
+          {screen === "settings" && <SettingsPage realm={realm} account={<AccountBadge account={acct} />} onNavigate={navigate} onRealm={() => setScreen("realm")} />}
+          {screen === "realm" && realm && <RealmPage realm={realm} onClose={() => setScreen("settings")} />}
           {screen === "new" && (
             <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-5 bg-stage-ink/70 text-center">
               {!providers.length && <p>Install and sign in to Claude Code, Codex, Grok, or Gemini CLI.</p>}
@@ -671,7 +693,7 @@ export function DesktopGame() {
                   painting={painting}
                   onPaint={painter ? (hero) => void paintHero(hero) : undefined}
                   onDelete={(hero) => void invoke({ kind: "deleteHero", id: hero.id })}
-                  onCancel={() => setScreen("home")}
+                  onCancel={() => setScreen("adventures")}
                   locked={locked}
                   listPrices={listPrices}
                   linked={acct.state?.linked ?? false}
