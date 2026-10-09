@@ -264,7 +264,7 @@ Revised 2026-10-07. See [Adventure store](feature-adventure-store.md).
 - Linking the desktop app to a website account.
 - Buying first-party adventures on the website through Stripe Checkout.
 - Pack downloads unlocked by purchase. The free starter stays bundled.
-- Host mode: guests join the host's game from a browser. Home Wi-Fi first, then a website relay.
+- Host mode: guests join the host's game from a browser, through the website. Home Wi-Fi dropped 2026-10-08. See [Desktop host mode](desktop-host-mode.md).
 - Creator packs and a marketplace cut come later.
 - Move adventure authoring from the web admin editor into the desktop app.
 

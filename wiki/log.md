@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-08, host mode through the website only
+
+Owner dropped the home Wi-Fi mode: friends join a hosted game through the website. The host's copy of an adventure covers the table, and guests make characters with the website's existing character creation. See [Desktop host mode](plans/desktop-host-mode.md).
+
 ## 2026-10-08, desktop home screen and host mode
 
 Owner asked for a general home screen in the desktop app: start an adventure, learn about the setting, see adventures you play in or run, and your characters. Chosen layout: library shelves under a Continue banner over the live scene. Realm content reuses the website's setting data, shipped with the app. Owner also chose to start host mode now rather than after the home screen. The home screen is in progress on `feature/desktop-home`. Host mode is planned in [Desktop host mode](plans/desktop-host-mode.md), with guest identity, adventure ownership, guest heroes, relay transport, and provider terms open.

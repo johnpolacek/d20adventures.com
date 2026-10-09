@@ -2,45 +2,56 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Desktop local play](desktop-local-play.md) · [Desktop home screen](feature-desktop-home.md) · [Adventure store](feature-adventure-store.md)
 
-Status: Planned 2026-10-08. Owner asked to start it alongside the [home screen](feature-desktop-home.md), which lists hosted and joined games. Not started.
+Status: Planned 2026-10-08, redrawn the same day for website-only play. Design awaits owner confirmation. Not started.
 
 ## Goal
 
-One player's desktop app runs the GM through their own CLI for the whole party. Friends join from a browser, with no CLI and no install. Free. Home Wi-Fi first, then a website relay for remote friends. Decided 2026-10-07 in [Desktop local play](desktop-local-play.md).
+One player's desktop app runs the GM through their own CLI for the whole party. Friends join from a browser, with no CLI and no install. Free. Decided 2026-10-07 in [Desktop local play](desktop-local-play.md).
+
+## Owner decisions, 2026-10-08
+
+- No home Wi-Fi mode. Friends join through the website. This replaces "home Wi-Fi first, then a website relay".
+- The host's copy of an adventure covers the table. Guests need not own it.
+- Guests make characters with the website's existing character creation.
 
 ## Current state
 
 - Each game command spawns a short-lived Node process (`src-tauri/resources/runtime.cjs`) behind a Rust mutex. There is no long-lived server and no networking crate.
 - Local saves hard-code `ownerId` and `playerIds` to `local-player` (`apps/desktop/runtime/game.ts`).
 - GM core already enforces per-character control for several players (`packages/gm-core/src/access.ts`), from the web app's multiplayer.
-- The play UI talks to the runtime only through `apps/desktop/src/bridge.ts`, which makes a browser bridge possible.
+- The play UI talks to the runtime only through `apps/desktop/src/bridge.ts`.
+- The website already has multiplayer: an invite link to the adventure lobby, character pick or creation (`characters/<userId>/` in S3, `pcTemplateSchema`), and `joinAdventure` (`app/_actions/join-adventure.ts`, `convex/adventure.ts`).
+- Web turns run the GM in Next server actions with Gemini and charge the acting player's tokens (`lib/gm-server/`). Clients get turns over SSE that polls Convex every 2 s (`app/api/adventure/stream/[adventureId]`).
+- Desktop device tokens authenticate only `app/api/desktop/*` routes. Adventure and turn Convex mutations are public, recorded in [Maintenance](maintenance.md).
+- Stageview is not on the web. Guests would see today's text turn page.
 
 ## Proposed design
 
-- **Host**: from the home screen, host a new or saved adventure. The app starts a long-lived runtime process that serves HTTP on the local network and runs every game command for the session, the host's included.
-- **Invite**: a URL with a join token, shown as text and a QR code. Stopping the host or quitting the app closes it.
-- **Guests**: open the URL in a browser, give a name, and take an open seat. A seat is a party member the AI plays until someone claims it.
-- **Guest client**: a browser build of the desktop play UI with an HTTP bridge, served by the host. Stage assets come from the host over the local network.
-- **Turns**: guests act only for their seat. State updates reach every client over server-sent events.
-- **Desktop as guest**: the home screen can join a game too. Joined games appear under Your adventures while the host is online.
-- **Relay**: the host connects out to the website, and guests connect there. Transport is open (Convex tables or a WebSocket service).
+A hosted game is an ordinary website adventure whose GM work runs on the host's desktop app instead of the server.
+
+- **Hosting**: from the desktop home screen, the host picks an adventure and hosts it. The app creates the website adventure through a device-token route and shows the invite link.
+- **Joining**: guests use the existing lobby link, sign in, pick or create a character, and join. No join token is charged for a hosted game.
+- **GM work**: when a guest acts, the website records the action as a GM job instead of calling Gemini. While hosting, the desktop app polls for jobs and runs gm-core through the host's CLI, against a website-backed `Store` adapter. No tokens are charged.
+- **Host's seat**: the host plays from the desktop app's Stageview through the same routes. Stage-only state (positions, movement, figures) is kept with the hosted adventure.
+- **Guests' view**: today's web turn page, updated over the existing SSE stream. Stageview on the web comes later.
+- **Host away**: the game waits. Guests see that the host's GM is offline.
+- **Home screen**: hosted games appear under Your adventures. Games the linked account joined as a guest appear too and open on the website.
 
 ## Phases
 
-1. Long-lived host runtime, local network server, invite, browser guest client, seat claiming.
-2. Desktop join, and hosted and joined games on the home screen.
-3. Website relay for remote friends.
+1. Website: a hosted flag on adventures, device-token host routes (create, store operations, job queue), server actions that queue GM work for hosted games, and no token charges for them.
+2. Desktop: a host worker while hosting, the website `Store` adapter, the host's own turns, and the invite link.
+3. Home screen: hosted and joined games in Your adventures.
 4. Ship gate: provider terms, below.
 
 ## Open decisions
 
-- Guest identity on the local network: a name only, or a linked website account. Proposed: a name only, with accounts required for the relay.
-- Whether guests must own a paid adventure. Proposed: no, the host's copy covers the table, as with a printed module.
-- Guest heroes: premade and AI seats only, or hero creation in the browser through the host's CLI.
-- Relay transport and cost ceiling.
+- Guests' view: today's text turn page first, or Stageview on the web first. Proposed: the text turn page.
+- Locking down the public Convex adventure and turn mutations before hosted games ship. Proposed: yes, as phase 1 work.
+- Relay cost ceiling per hosted game.
 - Host mode under provider terms. A party driving one account stretches "ordinary, individual usage". Ask Anthropic before shipping.
 
 ## Security
 
-- Bind to the local network only, require the join token on every request, and accept only game actions for the guest's own seat.
-- The guest client gets no file, CLI, or account access. The device token stays in the host's Keychain.
+- Guests act only for their own character.
+- Guests get no access to the host's files, CLI, or account. The device token stays in the host's Keychain.
