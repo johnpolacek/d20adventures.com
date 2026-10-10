@@ -18,6 +18,11 @@ export const siteOutline =
 export const siteField =
   "w-full min-w-0 rounded-md border border-white/20 bg-transparent px-3 py-2 text-base text-white outline-none transition-[color,box-shadow] placeholder:text-white/50 placeholder:italic focus-visible:border-primary-400 focus-visible:ring-[3px] focus-visible:ring-primary-400/50 disabled:opacity-50"
 
+/** One choice among several: the outline control, filled with the primary colour when chosen. */
+export function Option({ active, className, ...rest }: ComponentProps<"button"> & { active?: boolean }) {
+  return <button type="button" {...rest} className={cn(siteOutline, "px-3 py-1.5 text-sm", active && "border-primary-400 bg-primary-600 text-white hover:bg-primary-600", className)} />
+}
+
 const chipTones = {
   dark: "bg-black/80 text-white",
   amber: "bg-amber-500/90 font-semibold text-black",
