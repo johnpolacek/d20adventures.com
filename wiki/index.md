@@ -32,7 +32,7 @@ Desktop integration updated on 2026-10-03 in `feature/desktop-stage-play`, inclu
 - [Mapview](plans/mapview.md): stored 2D maps, generation, and token placement.
 - [Storyview](storyview.md): narration, caching, automatic generation, and charging.
 - [Testing runbook](plans/testing-runbook.md): commands, routes, and coverage limits.
-- [Worktree guide](plans/parallel-dev-worktrees.md): retired 2026-10-08. Feature work happens on branches off main.
+- [Worktree guide](plans/parallel-dev-worktrees.md): retired 2026-10-08. Since 2026-10-10 work happens directly on main while the project is in alpha. Worktrees return at beta.
 - [Wiki maintenance guide](AGENTS.md): documentation rules.
 
 ## Product context

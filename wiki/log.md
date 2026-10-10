@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-10, work on main during alpha
+
+Owner: "we are back in alpha with no players so can just work off main. eventually when in beta we will do worktrees." Work is committed directly on main, with no feature branches and no worktrees. This replaces the 2026-10-08 decision to use feature branches off main. `AGENTS.md` carries the rule.
+
 ## 2026-10-10, open branches merged into main
 
 Owner asked for everything on main and the old worktrees and branches removed. Merged `feature/desktop-site-style`, `feature/covert-cargo-rescue`, `feature/host-mode`, and the desktop spike's last log entry. Host mode is on main but not shipped. The Convex lockdown and Anthropic's answer on provider terms still gate it, and the app's hosting screens have not been tried in the running app. Removed the gm-core, stage-turn-mock, and desktop spike worktrees, and deleted every merged local branch. The worktrees' Convex projects still need deleting in the dashboard.

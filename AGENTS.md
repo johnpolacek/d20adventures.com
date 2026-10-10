@@ -40,11 +40,9 @@ Auto-commit local changes whenever confident that the code is good and there are
 
 ## Branches
 
-Owner decision, 2026-10-08: feature work happens on branches off `main` in the main checkout, not in git worktrees.
+Owner decision, 2026-10-10: the project is back in alpha with no players, so work happens directly on `main`. This replaces the 2026-10-08 decision to use feature branches. Worktrees return at beta.
 
-- Create a feature branch from an up-to-date `main` (`git switch -c feature/<name>`). Never create git worktrees or run `pnpm wt:create`.
-- Put the feature's plan at `wiki/plans/<slug>.md` on the branch before meaningful work.
-- The branch shares main's dev Convex deployment, S3 buckets, and Clerk dev instance. Keep schema changes additive until the branch merges.
+- Commit to `main` in the main checkout. Do not create feature branches or git worktrees, and do not run `pnpm wt:create`.
+- Put a feature's plan at `wiki/plans/<slug>.md` before meaningful work.
 - `pnpm dev` does not kill ports. Use `pnpm dev:fresh` to kill ports first.
-- Merge with `--no-ff` to preserve feature history. Do not merge with uncommitted changes.
-- The `wt:*` scripts and `wiki/plans/parallel-dev-worktrees.md` remain for reference only.
+- The `wt:*` scripts and `wiki/plans/parallel-dev-worktrees.md` remain for reference until beta.
