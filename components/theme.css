@@ -17,16 +17,17 @@
   --color-primary-900: #07070E;
   --color-primary-950: #000000;
 
-  /* Stageview: the painted stage's warm HUD (from the Kordavos prototype). */
-  --color-stage-ink: #1c1410;
-  --color-stage-panel: #21160f;
-  --color-stage-gold: #e3b67c;
-  --color-stage-brass: #c79a5a;
-  --color-stage-line: #f0d6b2;
-  --color-stage-cream: #f6ead4;
-  --color-stage-parchment: #f3e6c8;
-  --color-stage-muted: #c9b9a4;
-  --color-stage-sage: #e0e3d6;
+  /* Stageview's HUD, in the website's colours: black ground and panels, white text, amber accents and the primary
+     scale for frames. The names are from the warm Kordavos prototype and wait for a rename. */
+  --color-stage-ink: #000000;
+  --color-stage-panel: #000000;
+  --color-stage-gold: #fcd34d;
+  --color-stage-brass: #7067b7;
+  --color-stage-line: #ffffff;
+  --color-stage-cream: #ffffff;
+  --color-stage-parchment: #fef3c7;
+  --color-stage-muted: #b3b3b8;
+  --color-stage-sage: #d9d9de;
 }
 
 /* Stageview portrait plates slide in from their side. */
@@ -140,55 +141,47 @@
   animation: roll-rays 14s linear infinite;
 }
 
-/* Stageview surfaces: a little of the site's original grain (black paper, "buried" stone and the rough rule) on the
-   prototype's flat panels and buttons. They set only background images, blends and bevels, so colour utilities still apply. */
+/* Stageview surfaces, in the website's materials: black paper for panels, the blue stone of its buttons, navy for
+   quiet controls and its paper for writing. They set only backgrounds, borders and bevels, so colour utilities still apply. */
 @utility stage-grain {
-  background-image: linear-gradient(#d2a06a, #d2a06a), url("/images/app/backgrounds/black-paper.png");
-  background-size: auto, 260px;
-  background-blend-mode: multiply, normal;
+  background-image: url("/images/app/backgrounds/black-paper.png");
+  background-size: 260px;
 }
 @utility stage-brass {
-  border-color: rgb(227 182 124 / 0.8);
-  background-color: #6f4a2a;
-  background-image: url("/images/app/backgrounds/buried.png"), linear-gradient(180deg, #a0713f, #6c4526 55%, #4c2f18);
-  background-size: 180px, auto;
-  background-blend-mode: overlay, normal;
-  color: #fff1d8;
-  text-shadow: 0 1px 2px #000c;
+  border-color: rgb(0 0 0 / 0.66);
+  background-color: #2563eb;
+  background-image: url("/images/app/backgrounds/buried.png");
+  background-size: 180px;
+  color: #eff6ff;
+  text-shadow: 0 0 2px #000, 0 0 2px #000, 0 0 2px #000;
   box-shadow:
-    inset 0 1px 0 #ffe2ae66,
-    inset 0 -3px 0 #0000004d,
-    inset 0 0 14px #0000004d,
+    inset 0 2px 0 #ffffff66,
+    inset 0 -3px 0 #00000066,
+    inset 0 0 14px #00000059,
     0 2px 10px #0000008c;
+  filter: brightness(1.1) saturate(1.2);
   &:hover:not(:disabled) {
-    filter: brightness(1.14);
+    filter: brightness(1.22) saturate(1.2);
   }
 }
 @utility stage-leather {
-  background-color: #2a1b12;
-  background-image: url("/images/app/backgrounds/buried.png"), linear-gradient(180deg, #3a2819, #1f140d);
-  background-size: 180px, auto;
-  background-blend-mode: soft-light, normal;
-  box-shadow:
-    inset 0 1px 0 #f0d6b21c,
-    inset 0 -2px 0 #0000004d,
-    0 2px 8px #00000066;
+  background-color: rgb(23 37 84 / 0.7);
+  box-shadow: 0 2px 8px #00000066;
   &:hover:not(:disabled) {
-    filter: brightness(1.14);
+    background-color: rgb(23 37 84 / 0.9);
   }
 }
 @utility stage-parchment {
-  background-color: #efdfbc;
-  background-image: url("/images/app/backgrounds/buried.png"), radial-gradient(ellipse at center, transparent 50%, #9a6a3a40);
-  background-size: 140px, auto;
-  background-blend-mode: soft-light, normal;
+  background-color: #fffbeb;
+  background-image: url("/images/app/backgrounds/paper-texture.png");
+  background-size: 220px;
 }
 @utility stage-die {
-  background-image: url("/images/app/backgrounds/buried.png"), radial-gradient(circle at 35% 30%, #5a3d27, #1c1410 75%);
+  background-image: url("/images/app/backgrounds/buried.png"), radial-gradient(circle at 35% 30%, #302b5a, #07070e 75%);
   background-size: 120px, auto;
   background-blend-mode: overlay, normal;
 }
 @utility stage-rule {
-  background: url("/images/app/art/texture-line.png") center / 100% 100%, #e3b67c;
-  background-blend-mode: multiply;
+  background: url("/images/app/art/texture-line.png") center / 100% 100%;
+  opacity: 0.5;
 }
