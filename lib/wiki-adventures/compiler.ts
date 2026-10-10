@@ -24,6 +24,8 @@ const adventureFrontmatterSchema = z.object({
     })
     .optional(),
   nextAdventure: z.string().optional(),
+  playerDeath: z.boolean().optional(),
+  rescue: z.object({ encounter: z.string().min(1), atHealthPercent: z.number().min(1).max(100) }).optional(),
 })
 
 const commonFrontmatterSchema = z.object({
@@ -123,6 +125,19 @@ export function compileAdventureSourceTree(files: SourceFile[], options: Compile
     })
   }
 
+  if (adventure?.rescue && !encounterIds.has(adventure.rescue.encounter)) {
+    findings.push({
+      code: "transition.target.missing",
+      severity: "error",
+      sourcePath: adventureFile!.path,
+      sourceId: adventure.id,
+      sourceType: "adventure",
+      message: `Rescue encounter "${adventure.rescue.encounter}" does not resolve to an encounter.`,
+      target: { type: "encounter", id: adventure.rescue.encounter },
+      aiFixable: true,
+    })
+  }
+
   const runtimeEncounters: Record<string, RuntimeEncounter> = {}
   const transitions: RuntimeTransition[] = []
   for (const file of encounters) {
@@ -170,6 +185,8 @@ export function compileAdventureSourceTree(files: SourceFile[], options: Compile
     premadeCharacterIds: adventure?.premadeCharacters ?? [],
     availableCharacterOptions: adventure?.availableCharacterOptions,
     nextAdventureId: adventure?.nextAdventure,
+    playerDeath: adventure?.playerDeath,
+    rescue: adventure?.rescue && { encounterId: adventure.rescue.encounter, atHealthPercent: adventure.rescue.atHealthPercent },
     sourcePath: adventureFile?.path ?? "",
     contentHash: hashJson(files.map((file) => ({ path: file.path, hash: file.hash }))),
     validation: {

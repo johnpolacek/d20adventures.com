@@ -1,0 +1,47 @@
+{
+  "id": "thalbern-npc",
+  "type": "npc",
+  "name": "Thalbern",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/characters/demo-ranger.png",
+  "archetype": "Ranger",
+  "race": "Human",
+  "gender": "Male",
+  "appearance": "Lean, weathered, with sharp green eyes and long, tangled brown hair. Wears a cloak of forest hues and carries a longbow.",
+  "personality": "Solitary, cautious, loyal to those who earn his trust, and deeply connected to nature.",
+  "background": "Orphaned by border raiders, raised by elves in the Valkarr forest. Lives on the edge of Kordavos, guiding travelers and hunting for survival. The druid Wollandora has sent him after Valkaran relics taken from the elven vaults, and after the riverboat seen carrying them downstream toward Kordavos.",
+  "motivation": "To find the stolen relics before they disappear into the city, and to protect the forest and its people from outside threats.",
+  "behavior": "Prefers silence and observation and avoids city politics. Acts decisively when someone is about to die in front of him, shooting to disarm and drive off rather than to kill. Says little about his errand.",
+  "healthPercent": 100,
+  "equipment": [
+    {
+      "name": "Longbow",
+      "description": "A finely crafted elven bow, silent and deadly."
+    },
+    {
+      "name": "Quiver",
+      "description": "A quiver filled with arrows."
+    },
+    {
+      "name": "Sword",
+      "description": "A practical blade for close encounters."
+    },
+    {
+      "name": "Dagger",
+      "description": "A small blade for quick strikes."
+    },
+    {
+      "name": "Herb Pouch",
+      "description": "Forest herbs and clean linen for dressing wounds."
+    }
+  ],
+  "skills": ["Stealth", "Tracking", "Archery", "Survival", "Nature Lore", "Healing"],
+  "status": "",
+  "attributes": {
+    "strength": 13,
+    "dexterity": 17,
+    "constitution": 13,
+    "intelligence": 11,
+    "wisdom": 13,
+    "charisma": 10
+  }
+}

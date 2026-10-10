@@ -137,6 +137,7 @@ export function createAdventure(ports: GmPorts) {
       characterId,
       baseRollResult: result,
       encounterInstructions,
+      playerDeath: plan.playerDeath,
     })
 
     // 5. Patch the turn with the new narrative and character state

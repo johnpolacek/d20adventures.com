@@ -130,6 +130,7 @@ export function createAiPcTurnService(ports: GmPorts) {
       characterId,
       baseRollResult: baseRoll,
       encounterInstructions,
+      playerDeath: plan.playerDeath,
     })
 
     await ports.store.updateTurn({

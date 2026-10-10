@@ -13,6 +13,7 @@ import theDisturbance from "@d20/stage/stagings/covert-cargo/the-disturbance.jso
 import theEnd from "@d20/stage/stagings/covert-cargo/the-end.json"
 import theEscape from "@d20/stage/stagings/covert-cargo/the-escape.json"
 import theFake from "@d20/stage/stagings/covert-cargo/the-fake.json"
+import theRanger from "@d20/stage/stagings/covert-cargo/the-ranger.json"
 import theShipment from "@d20/stage/stagings/covert-cargo/the-shipment.json"
 import theTransaction from "@d20/stage/stagings/covert-cargo/the-transaction.json"
 import gateStaging from "@d20/stage/stagings/march-of-davos/the-gates-of-kordavos.json"
@@ -120,6 +121,12 @@ export const SCENES: Record<string, Scene> = {
   "the-fake": cargo(pierSet, theFake, "Riverboat saloon", "The riverboat's lamplit saloon. The crate sits in the middle, and the only door opens forward onto the deck."),
   "battle-on-the-boat": cargo(pierSet, battleOnTheBoat, "Riverboat saloon", "The riverboat's lamplit saloon. The crate sits in the middle, and the only door opens forward onto the deck."),
   "the-crate": cargo(pierSet, theCrate, "Riverboat saloon", "The riverboat's saloon, quiet now. The heavy iron-banded crate sits in the middle under hanging rope."),
+  "the-ranger": cargo(
+    pierSet,
+    theRanger,
+    "Riverboat saloon",
+    "The riverboat's lamplit saloon after the fight. A ranger with a longbow stands in the only door, which opens forward onto the deck, and the crate sits in the middle."
+  ),
   "return-to-the-city": cargo(riverfrontSet, returnToTheCity, "Kordavos riverfront", "The quay along the river in Kordavos, ships at their moorings and the castle on its hill above the city."),
   "the-end": cargo(pathSet, theEnd, "The old forest", "A mossy path winds between huge old trees in green-gold light."),
 }

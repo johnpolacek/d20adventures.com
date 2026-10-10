@@ -32,6 +32,7 @@ Legacy runtime flag: skipInitialNpcTurns was true.
 ## Transitions
 
 - To [[encounter:battle-on-the-boat]] when After this encounter, always transition immediately to the Battle on the Boat encounter.
+- To [[encounter:the-ranger]] when a player character is at half health or less. The adventure's rescue rule applies this one, not the GM.
 
 ## Migration Context
 

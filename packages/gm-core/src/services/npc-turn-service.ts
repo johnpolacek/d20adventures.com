@@ -2,6 +2,7 @@ import type { GmPorts } from "../ports"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import { isAiControlledPc } from "../utils/turn-actors"
+import { gmNotesWithRules, keepPlayersAlive, type SafetyRules } from "../wiki-adventures/player-safety"
 import { createAiPcTurnService } from "./ai-pc-turn-service"
 import { createNpcTurnBranchService, handleSkipPassNpcTurn, type NpcTurnBranchResult } from "./npc-turn-branch-service"
 import { buildDeadCharacterCompletion, buildNpcTurnUpdatePatch } from "./npc-turn-effects-service"
@@ -16,6 +17,7 @@ type DmEncounterContext = {
   adventureOverview?: string
   sectionTitle?: string
   sceneTitle?: string
+  rules?: SafetyRules
 }
 
 export function createNpcTurnService(ports: GmPorts) {
@@ -29,8 +31,9 @@ export function createNpcTurnService(ports: GmPorts) {
       const { artifacts } = await loadWikiAdventureRuntime(settingId, planId)
       const encounter = artifacts.encounters[encounterId]
       return {
-        encounterContext: encounter ? { intro: encounter.sections.intro ?? encounter.sections.body, instructions: encounter.sections.gmNotes } : {},
+        encounterContext: encounter ? { intro: encounter.sections.intro ?? encounter.sections.body, instructions: gmNotesWithRules(artifacts.manifest, encounter.sections.gmNotes) } : {},
         adventureOverview: artifacts.manifest.summary || undefined,
+        rules: artifacts.manifest,
       }
     }
 
@@ -216,7 +219,7 @@ export function createNpcTurnService(ports: GmPorts) {
       )
     )
 
-    const { encounterContext, sectionContext, sceneContext, adventureOverview, sectionTitle, sceneTitle } = await resolveDmContext(adventure.settingId, adventure.planId, turn.encounterId)
+    const { encounterContext, sectionContext, sceneContext, adventureOverview, sectionTitle, sceneTitle, rules } = await resolveDmContext(adventure.settingId, adventure.planId, turn.encounterId)
 
     console.log(
       "[LLM DM] Resolved encounter context",
@@ -387,7 +390,7 @@ export function createNpcTurnService(ports: GmPorts) {
       const turnPatch = buildNpcTurnUpdatePatch({
         currentNarrative: turn.narrative || "",
         narrativeToAppend: result.narrativeToAppend,
-        updatedCharacters: result.updatedCharacters,
+        updatedCharacters: keepPlayersAlive(rules, result.updatedCharacters),
       })
 
       console.log(

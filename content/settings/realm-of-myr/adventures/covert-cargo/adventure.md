@@ -9,6 +9,10 @@ maxPlayers: 2
 premadeCharacters:
   - "1749159962941"
   - "1749307435667"
+playerDeath: false
+rescue:
+  encounter: "the-ranger"
+  atHealthPercent: 50
 image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/0897705a-12e6-42d8-9d96-d38faa1063ca.png?t=1749244724241"
 ---
 
