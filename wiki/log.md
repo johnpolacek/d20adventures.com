@@ -20,6 +20,8 @@ Implemented the same day on `feature/desktop-site-style`: one shared theme style
 
 Owner, same day: the Adventures page keeps three intro adventures in a row with the featured adventure full width below, and it is the one place to choose an adventure. Begin on the title screen opens it, and party setup lost its row of adventure tabs.
 
+Owner, same day: "put this branch on main. let's work on main". `feature/desktop-site-style` merged into main and was deleted. The rest of the desktop site style work is committed on main.
+
 ## 2026-10-10, Covert Cargo rescue and no player deaths
 
 Owner found Covert Cargo badly balanced and asked for Thalbern to step in when anyone falls to half health, with no player deaths in this intro adventure. Decided: two authored manifest rules enforced by the GM core, `playerDeath: false` and `rescue`, because the GM never sees health numbers when it picks the next encounter. Covert Cargo gains Thalbern as an NPC, the encounter The Ranger, and rescue transitions from its five boat encounters. Implemented on `feature/covert-cargo-rescue`, not merged or deployed. GM core, wiki adventure, stage and 42 desktop checks pass. No live model play-through yet. See [the plan](plans/covert-cargo-rescue.md) and [the contract](wiki-adventures.md#safety-rules).

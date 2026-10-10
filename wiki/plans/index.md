@@ -8,7 +8,7 @@ Updated for the desktop integration worktree on 2026-10-02. Implementation statu
 
 | Plan | Status | Next work |
 |---|---|---|
-| [Desktop site style](desktop-site-style.md) | In progress on `feature/desktop-site-style`. Shared theme, the site's header, title screen, pages, New game, and hero creator implemented 2026-10-10. The HUD is recoloured in one revertable commit. | Owner review of the HUD over each set. Then HUD components, literal colours, the link page, and cleanup. |
+| [Desktop site style](desktop-site-style.md) | In progress on main. Shared theme, the site's header, title screen, pages, party setup, and hero creator merged 2026-10-10. The HUD is recoloured in one revertable commit. Adventures is the one place to choose an adventure. | Owner review of the HUD over each set. Then HUD components, literal colours, the link page, and cleanup, on main. |
 | [Covert Cargo: Thalbern's rescue](covert-cargo-rescue.md) | Merged into main 2026-10-10. No player deaths, and Thalbern steps in when a hero falls to half health. | Owner play-through and a look at the new staging. |
 | [Desktop home screen](zzz-completed/feature-desktop-home.md) | Merged into main 2026-10-08 and archived. Home with saved adventures and resume, heroes, new adventures, and the Realm of Myr page. | Owner review of the merged build. Delete the worktree's Convex project in the dashboard. |
 | [Desktop host mode](desktop-host-mode.md) | Merged into main 2026-10-10, not shipped. Hosted games, GM job queue, host worker, hosting screens, and the guest play page. End-to-end run passed against dev. | Owner review in the running app, Convex lockdown, provider terms, then ship. |

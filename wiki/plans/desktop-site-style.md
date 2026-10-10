@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Desktop direction](desktop-local-play.md) · [Design brief](../sources/design-brief.md)
 
-Status: In progress on `feature/desktop-site-style`. Phases 0, 1, and 2 and step 1 of phase 3 implemented 2026-10-10. Waiting on the owner's review of the recoloured HUD over each set.
+Status: In progress on main. Phases 0, 1, and 2 and step 1 of phase 3 implemented and merged into main 2026-10-10. Waiting on the owner's review of the recoloured HUD over each set.
 
 Owner request, 2026-10-10: "I think the style of UI on the desktop app is too different from the website and I prefer the design of the website. please do a thorough style pass and make a plan to comprehensively update the UI of the app to look more like the website"
 
@@ -230,8 +230,8 @@ This changes the website's stage pages as well, which keeps both in step.
 
 ## Order and branches
 
-- Branch: `feature/desktop-site-style`, off main.
-- `feature/covert-cargo-rescue` and `feature/host-mode` merged into main on 2026-10-10, so the screen files are stable. No phase waits on another branch.
+- Owner, 2026-10-10: "put this branch on main. let's work on main". `feature/desktop-site-style` merged into main that day and was deleted. The remaining phases are committed on main.
+- `feature/covert-cargo-rescue` and `feature/host-mode` merged into main earlier the same day, so the screen files are stable.
 
 ## Validation
 
