@@ -1,0 +1,187 @@
+/* Shared by the website (app/globals.css) and the desktop app (apps/desktop/src/style.css): colour and type tokens, the
+   dice and roll animations, and the Stageview surface textures. Each app sets its own fonts and base rules, and keeps
+   `.fade-in` last in its own stylesheet. */
+@theme {
+  --text-xxxs: 0.5rem;
+  --text-xxs: 0.625rem;
+
+  --color-primary-50: #CBC8E5;
+  --color-primary-100: #BEBADE;
+  --color-primary-200: #A49ED1;
+  --color-primary-300: #8A83C4;
+  --color-primary-400: #7067B7;
+  --color-primary-500: #594FA6;
+  --color-primary-600: #453D80;
+  --color-primary-700: #302B5A;
+  --color-primary-800: #1C1934;
+  --color-primary-900: #07070E;
+  --color-primary-950: #000000;
+
+  /* Stageview's HUD, in the website's colours: black ground and panels, white text, amber accents and the primary
+     scale for frames. The names are from the warm Kordavos prototype and wait for a rename. */
+  --color-stage-ink: #000000;
+  --color-stage-panel: #000000;
+  --color-stage-gold: #fcd34d;
+  --color-stage-brass: #7067b7;
+  --color-stage-line: #ffffff;
+  --color-stage-cream: #ffffff;
+  --color-stage-parchment: #fef3c7;
+  --color-stage-muted: #b3b3b8;
+  --color-stage-sage: #d9d9de;
+}
+
+/* Stageview portrait plates slide in from their side. */
+@keyframes plate-in {
+  from {
+    opacity: 0;
+    transform: translateX(var(--plate-from, -70px));
+  }
+}
+.plate-in {
+  animation: plate-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Stageview d20: the die tumbles in place (ending upright), the number flips over in place, and lands with a pop. */
+@keyframes d20-tumble {
+  0% {
+    transform: perspective(320px) rotateZ(0) rotateX(0) rotateY(0) scale(1);
+  }
+  25% {
+    transform: perspective(320px) rotateZ(210deg) rotateX(38deg) rotateY(-22deg) scale(1.08);
+  }
+  50% {
+    transform: perspective(320px) rotateZ(430deg) rotateX(-26deg) rotateY(24deg) scale(1.05);
+  }
+  75% {
+    transform: perspective(320px) rotateZ(610deg) rotateX(12deg) rotateY(-10deg) scale(1.02);
+  }
+  100% {
+    transform: perspective(320px) rotateZ(720deg) rotateX(0) rotateY(0) scale(1);
+  }
+}
+@keyframes d20-flip {
+  from {
+    transform: perspective(200px) rotateX(85deg);
+    opacity: 0.35;
+  }
+  to {
+    transform: perspective(200px) rotateX(0);
+    opacity: 1;
+  }
+}
+@keyframes d20-land {
+  from {
+    transform: scale(1.35);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+.d20-tumble {
+  animation: d20-tumble 1.2s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.d20-flip {
+  animation: d20-flip 0.11s ease-out;
+}
+.d20-land {
+  animation: d20-land 0.35s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+/* A roll result: the total rises in, the verdict stamps down, and rays turn slowly behind a natural 20. */
+@keyframes roll-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes roll-stamp {
+  from {
+    opacity: 0;
+    transform: rotate(-8deg) scale(1.9);
+  }
+  60% {
+    opacity: 1;
+    transform: rotate(-2deg) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(-3deg) scale(1);
+  }
+}
+@keyframes roll-rays {
+  from {
+    opacity: 0;
+    transform: rotate(0);
+  }
+  10% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: rotate(360deg);
+  }
+}
+.roll-rise {
+  display: inline-block;
+  animation: roll-rise 0.35s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+.roll-stamp {
+  transform: rotate(-3deg);
+}
+.roll-stamp-in {
+  animation: roll-stamp 0.45s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+.roll-rays {
+  background: repeating-conic-gradient(from 0deg, #ffd88a40 0deg 5deg, transparent 5deg 18deg);
+  mask-image: radial-gradient(circle, #000 30%, transparent 70%);
+  animation: roll-rays 14s linear infinite;
+}
+
+/* Stageview surfaces, in the website's materials: black paper for panels, the blue stone of its buttons, navy for
+   quiet controls and its paper for writing. They set only backgrounds, borders and bevels, so colour utilities still apply. */
+@utility stage-grain {
+  background-image: url("/images/app/backgrounds/black-paper.png");
+  background-size: 260px;
+}
+@utility stage-brass {
+  border-color: rgb(0 0 0 / 0.66);
+  background-color: #2563eb;
+  background-image: url("/images/app/backgrounds/buried.png");
+  background-size: 180px;
+  color: #eff6ff;
+  text-shadow: 0 0 2px #000, 0 0 2px #000, 0 0 2px #000;
+  box-shadow:
+    inset 0 2px 0 #ffffff66,
+    inset 0 -3px 0 #00000066,
+    inset 0 0 14px #00000059,
+    0 2px 10px #0000008c;
+  filter: brightness(1.1) saturate(1.2);
+  &:hover:not(:disabled) {
+    filter: brightness(1.22) saturate(1.2);
+  }
+}
+@utility stage-leather {
+  background-color: rgb(23 37 84 / 0.7);
+  box-shadow: 0 2px 8px #00000066;
+  &:hover:not(:disabled) {
+    background-color: rgb(23 37 84 / 0.9);
+  }
+}
+@utility stage-parchment {
+  background-color: #fffbeb;
+  background-image: url("/images/app/backgrounds/paper-texture.png");
+  background-size: 220px;
+}
+@utility stage-die {
+  background-image: url("/images/app/backgrounds/buried.png"), radial-gradient(circle at 35% 30%, #302b5a, #07070e 75%);
+  background-size: 120px, auto;
+  background-blend-mode: overlay, normal;
+}
+@utility stage-rule {
+  background: url("/images/app/art/texture-line.png") center / 100% 100%;
+  opacity: 0.5;
+}

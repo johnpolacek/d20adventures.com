@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Desktop direction](desktop-local-play.md) · [Design brief](../sources/design-brief.md)
 
-Status: Proposed 2026-10-10. Audit done. No code changed. Three owner decisions open.
+Status: In progress on `feature/desktop-site-style`. Phases 0, 1, and 2 and step 1 of phase 3 implemented 2026-10-10. Waiting on the owner's review of the recoloured HUD over each set.
 
 Owner request, 2026-10-10: "I think the style of UI on the desktop app is too different from the website and I prefer the design of the website. please do a thorough style pass and make a plan to comprehensively update the UI of the app to look more like the website"
 
@@ -19,7 +19,7 @@ Owner request, 2026-10-10: "I think the style of UI on the desktop app is too di
 Limits:
 
 - No desktop screenshots. The app does not render in a browser without the Tauri bridge, and the checkout was mid-merge on `feature/host-mode` during the audit.
-- `hosted-lobby.tsx` and `stage-play.tsx` on `feature/host-mode` were not audited.
+- `hosted-lobby.tsx`, `stage-play.tsx`, and the website's `components/hosted/hosted-play.tsx` reached main after the audit. A later read found they use only `panel`, `eyebrow`, and `Pill`, so the HUD work covers them.
 
 ### Finding
 
@@ -79,7 +79,9 @@ The app and the website share the display font, the d20 painting, and the epic b
 | Locked adventure | `new-game.tsx` | Brass lock badge. Leather price box. |
 | Hero creator | `hero-creator.tsx` | Brown `panel` dialog. Ink fields. Gold eyebrows. `Pill` choices. |
 | Account | `account.tsx` | Parchment code tiles. Brown panel. `Pill` actions. |
-| Play, inline cards | `play.tsx` | End card, round card, scene settings, and the error alert use `panel` and `Pill`. |
+| Play, inline cards | `stage-play.tsx`, `play.tsx` | End card, round card, scene settings, and the error alert use `panel` and `Pill`. |
+| Hosted lobby | `hosted-lobby.tsx` | Brown `panel`, gold eyebrows, brass field, `Pill` actions. |
+| Hosted play, website | `components/hosted/hosted-play.tsx` | Waiting and offline cards use `panel`, `eyebrow`, and `Pill`. |
 | Stage HUD | `components/stage/*` | All brown and gold. Shared with the website's stage pages. |
 | Link page, website | `app/desktop/link/link-desktop.tsx` | A website page built in the app's look. It should follow the site too. |
 
@@ -109,11 +111,19 @@ One look. The website's design is the source. The app uses the site's tokens and
 
 ## Owner decisions
 
-Work can start on the defaults. Each is cheap to change before its phase.
+Owner, 2026-10-10: "a c e", the three defaults.
 
-1. HUD scope. Default: restyle the in-game HUD too, as phase 3. The alternative keeps the warm HUD and restyles only the screens around the game.
-2. Header. Default: the site's parchment header on every screen outside play, in its compact form, holding the logo, the page nav, the account, and fullscreen. The title screen gets the large form. The alternative keeps no header and restyles the nav buttons only.
-3. Covers. Default: keep the 3:4 module covers and set them in the site's card frame. This holds the 2026-10-04 request for module-style, edge-to-edge art. The alternative is the site's 16:9 cards, which would drop the module covers.
+1. HUD scope: the in-game HUD is restyled too, as phase 3.
+2. Header: the site's parchment header on every screen outside play, in its compact form, holding the logo, the page nav, the account, and fullscreen. The title screen gets the large form.
+3. Covers: the 3:4 module covers stay, set in the site's card frame. This holds the 2026-10-04 request for module-style, edge-to-edge art.
+
+Owner, 2026-10-10, after phase 1: "For Adventures, I still want the 3 intro adventures at the top in a 3-col then the featured adventure in full width below."
+
+4. Adventures layout: the three intro adventures in one row of three, then the featured adventure across the full width. The site's own list, every adventure in one grid, does not replace it. Later phases keep this.
+
+Owner, 2026-10-10, with screenshots of party setup after Begin and of the Adventures page: "why do we have 2 layouts?"
+
+5. One place to choose an adventure: the Adventures page. Begin on the title screen opens it. Party setup is for the adventure already chosen and has no adventure tabs.
 
 ## Work
 
@@ -125,7 +135,7 @@ Work can start on the defaults. Each is cheap to change before its phase.
 - Set the desktop root to the site's base: black ground, white serif text, 18px root.
 - Add `components/graphics`, `components/typography`, and the needed `components/ui` files to the desktop `@source` list. Today only `components/stage` and `button.tsx` are scanned.
 - Copy `public/images/d20.jpg` in `scripts/build-runtime.ts`.
-- Add a small set of site primitives the app can import without Next: card frame, section plate, mono chip, field. Put them beside the existing shared components. The website keeps its current markup. Adopting the primitives on the website is a later cleanup.
+- Add a small set of site primitives the app can import without Next: card frame, section plate, mono chip, field. Put them beside the existing shared components. The website keeps its current markup. Adopting the primitives on the website is a later cleanup. These landed with phase 1, when they had their first users.
 - Add a browser preview for the desktop screens with a mocked bridge, dev only, so screens can be captured without the Tauri app. Optional, but validation is slow without it.
 
 ### Phase 1, screens around the game
@@ -143,11 +153,11 @@ Work can start on the defaults. Each is cheap to change before its phase.
 - New game: black panel, site outline buttons for tabs and party toggles, site card for heroes, styled select.
 - Locked adventure: mono chips, amber price, site lock badge.
 - Hero creator: black dialog with the `primary` border the character sheet uses, mono labels, site fields.
-- Hosted lobby, once `feature/host-mode` is on main.
+- Hosted lobby: black panel, mono labels, site field and outline buttons.
 
 ### Phase 3, the stage HUD
 
-Applies if decision 1 holds. This changes the website's stage pages as well, which keeps both in step.
+This changes the website's stage pages as well, which keeps both in step.
 
 - Step 1, retint by token. Change the nine `stage-*` colour values and the six texture utilities to the mapping above. One commit. The whole HUD turns to the site's palette at once, and it reverts in one step.
 - Owner review of step 1 over every authored set before more work.
@@ -161,18 +171,74 @@ Applies if decision 1 holds. This changes the website's stage pages as well, whi
 - Delete unused `stage-*` utilities and the duplicated CSS.
 - Update the design brief, the Stageview plan, and the stage engine record where they describe the warm HUD.
 
+## Results, 2026-10-10
+
+### Phase 0
+
+- `components/theme.css` holds the tokens, the dice and roll animations, and the stage surfaces. Both stylesheets import it. The website's built CSS has the same rules as before.
+- The desktop app has the `primary` scale, `text-xxs`, Syne Mono, and the site's base: black ground, white serif text, 18px root.
+- `.fade-in` stays last in each app's own stylesheet, not in the shared file, so the Next build quirk does not bite.
+- The desktop's `text-wrap: pretty` rule sits in the base layer. Unlayered, it overrode `truncate`.
+- Browser preview: `pnpm exec vite --host 127.0.0.1 --port <port>` in `apps/desktop`, then open the page. Bridge calls go to the dev server, which runs the real runtime on a scratch data folder. See the [testing runbook](testing-runbook.md).
+
+### Phase 1
+
+- `AppHeader` in the compact and large forms, with the logo, page links, account, and fullscreen. One frame in `play.tsx` puts it over every screen outside play.
+- Title screen: the site's sizes, no capsule buttons, and the saved adventure as a primary chip with an amber title.
+- Adventures, Characters, and Settings use the site's `ImageHeader`, section plates, black ringed cards, mono chips, and the red delete control with its confirm step. Covers stay 3:4.
+- Account: emboss buttons in the header, paper code tiles, the site's panel for the link step.
+- `components/ui/site.tsx` holds the shared class strings and parts.
+
+### Phase 2
+
+- New game and the locked adventure: black ringed card, mono labels, indigo choices, amber names, outline buttons. The opening scene still shows behind party setup.
+- Hero creator: the character sheet's primary gradient and border, the site's fields.
+- Hosted lobby: the same card, labels, and buttons. Not seen running. It needs a hosted game.
+
+### Phase 3, step 1
+
+- The nine `stage-*` colours and six surface utilities changed in one commit, 9f67a11. Reverting it restores the warm HUD.
+- Checked over the Kordavos gate in the desktop preview and in `/dev/turn`: narration, journal, scene settings, turn order, and the perspective bar read clearly.
+- Still warm: the vignette behind the HUD, about 55 literal colours, and the d20. Labels are still tracked sans. Those are steps 2 and 3.
+- The website's `/desktop/link` page turned black with the tokens. Its layout still waits for phase 4.
+
+### Checks
+
+- Desktop typecheck, 47 desktop tests, scoped Biome, and a desktop production build. The preview is absent from the production bundle and Syne Mono is in it.
+- The website in `next dev`: home, `/desktop/link`, and `/dev/turn` render, and the shared tokens, animations, and surfaces resolve.
+- Screens captured at 1440 by 900 at DPR 1 in headless Chromium with the Metal renderer. Not yet judged at DPR 2 or in the packaged app.
+
+### One adventure picker
+
+- Before: Begin went straight to party setup for March of Davos, and party setup had its own row of adventure tabs. That row was the first picker, from 2026-10-04. The Adventures page came on 2026-10-08 and the tabs stayed.
+- Now: Begin opens the Adventures page. Party setup has no tabs. Cancel and Escape return to Adventures.
+- Locked adventures are reached from their cards on the Adventures page, as before.
+- Checked in WebKit: Begin shows the intro row and the featured panel, a card opens party setup with no tabs, and Cancel returns.
+
+### Adventures layout, checked
+
+- The page already had the owner's layout when the note in decision 4 arrived. No code changed.
+- Rendered in WebKit, the engine the app uses, at 1440 wide: three intro cards of 365px in one row, then the featured panel at 1224px.
+- Two things sit above the intro row: the image header, which puts the cards at mid-screen, and Your Adventures when saves exist.
+
+### Not done
+
+- HUD over the other authored sets. Only the gate was seen.
+- The link step, the link code panel, the locked adventure, and the hosted lobby were not seen running.
+- Small windows near the 900 by 650 minimum.
+- The Tauri window's own background colour was not checked.
+
 ## Order and branches
 
-- Branch: a new feature branch off main. The plan's own branch merged 2026-10-10.
-- `feature/covert-cargo-rescue` changes `pages.tsx`. `feature/host-mode` rewrites `home.tsx` and `play.tsx` and adds `stage-play.tsx` and `hosted-lobby.tsx`. Both merged into main 2026-10-10, so phase 1 can start.
-- Phase 0 touches only stylesheets, the build script, and new files. It can start now.
+- Branch: `feature/desktop-site-style`, off main.
+- `feature/covert-cargo-rescue` and `feature/host-mode` merged into main on 2026-10-10, so the screen files are stable. No phase waits on another branch.
 
 ## Validation
 
 - Desktop typecheck and tests, scoped Biome, root typecheck for the shared files.
 - Each screen beside its website counterpart at 1440 by 900 and at DPR 2: title, adventures, characters, settings, new game, locked adventure, hero creator, link gate.
 - HUD over every authored set at DPR 2, with native-pixel crops of text over the brightest part of each scene. The compact layout too.
-- Website pages that use the HUD still render: `/dev/turn`, `/dev/dice`, `/desktop/link`, and the hosted play page once merged.
+- Website pages that use the HUD still render: `/dev/turn`, `/dev/dice`, `/desktop/link`, and the hosted play page at `/play/[adventureId]`.
 - Body text holds 4.5 to 1 contrast on every panel.
 - A search for `stage-*` classes and warm hex literals returns only what was agreed to keep.
 - The packaged app, not only the dev build, since fonts and images are bundled.
@@ -180,7 +246,6 @@ Applies if decision 1 holds. This changes the website's stage pages as well, whi
 ## Risks and unknowns
 
 - Legibility. The warm HUD was tuned over warm painted scenes. Black and blue panels over them are untested. Step 1 of phase 3 exists to find out early.
-- Two requests pull against each other: module covers at 3:4, and the site's 16:9 cards. Decision 3 settles it.
 - A shared stylesheet must build under both Next and Vite. Both use Tailwind 4.2, but the desktop build already has one known quirk with `@starting-style`.
 - The 18px root changes every rem size in the app. HUD sizes are fixed px and do not move. Screen layouts need a pass.
 

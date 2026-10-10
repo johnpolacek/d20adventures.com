@@ -14,7 +14,11 @@ Owner resumed host mode to invite a browser player from party setup. Merged `mai
 
 ## 2026-10-10, desktop site style plan
 
-Owner: the desktop app's UI is too different from the website, and the website's design is preferred. An audit found the app and the site share only the display font, the d20 painting, and the epic button. The site is black, blue, indigo, and amber with mono labels. The app is brown, gold, and cream, because its screens were built from the stage HUD's parts. The plan moves the app to the site's tokens and components in four phases, with the HUD last and reviewed over every set first. Three owner decisions are open: HUD scope, the header, and cover format. No code changed. See [Desktop site style](plans/desktop-site-style.md).
+Owner: the desktop app's UI is too different from the website, and the website's design is preferred. An audit found the app and the site share only the display font, the d20 painting, and the epic button. The site is black, blue, indigo, and amber with mono labels. The app is brown, gold, and cream, because its screens were built from the stage HUD's parts. The plan moves the app to the site's tokens and components in four phases, with the HUD last and reviewed over every set first. The owner chose the three defaults the same day: restyle the HUD too, add the site's parchment header outside play, and keep the 3:4 module covers in the site's card frame. See [Desktop site style](plans/desktop-site-style.md).
+
+Implemented the same day on `feature/desktop-site-style`: one shared theme stylesheet for the website and the app, the site's header on every screen outside play, and the title screen, pages, New game, hero creator, and hosted lobby in the site's look. The HUD's colours and surfaces changed in one commit, so it reverts in one step. HUD type, literal colours, and components wait for the owner's review over each set. The desktop app also opens in a browser tab in development now, for screen checks without Tauri.
+
+Owner, same day: the Adventures page keeps three intro adventures in a row with the featured adventure full width below, and it is the one place to choose an adventure. Begin on the title screen opens it, and party setup lost its row of adventure tabs.
 
 ## 2026-10-10, Covert Cargo rescue and no player deaths
 

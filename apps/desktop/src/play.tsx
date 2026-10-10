@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Pill, panel } from "@/components/stage/hud"
+import { cn } from "@/lib/utils"
 import type { HostedSummary } from "../../../lib/host/server"
 import type { AdventureInfo, CatalogInfo, GameCommand } from "../runtime/game"
 import type { Hero, HeroCommand, PartyChoice } from "../runtime/heroes"
 import type { HostedState } from "../runtime/host-commands"
 import type { Save, SaveSummary } from "../runtime/store"
-import { AccountBadge, LinkGate, useAccount } from "./account"
+import { AccountBadge, AccountNotice, LinkGate, useAccount } from "./account"
+import { AppHeader } from "./app-header"
 import { type HostWorkerState, host, hostRunning, hostStart, openSite, send } from "./bridge"
 import type { FigureArt } from "./figures"
 import { FullscreenButton } from "./fullscreen"
@@ -101,6 +103,8 @@ export function DesktopGame() {
   )
   // Playing needs a linked account. Home holds at the link step until there is one.
   const acct = useAccount({ onPacks: () => void invoke({ kind: "load" }) })
+  // The title screen and its pages wait for the account check and the first load.
+  const ready = acct.ready && !acct.gated && loaded
   useEffect(() => {
     if (acct.gated) setScreen("home")
   }, [acct.gated])
@@ -263,103 +267,106 @@ export function DesktopGame() {
       onError={onError}
       onStage={setStageState}
     >
-      {screen !== null && (!acct.ready || acct.gated || !loaded) && (
-        // Opaque, so the stage loading behind never flashes through before the title screen.
-        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-5 bg-stage-ink text-center">{acct.gated && <LinkGate account={acct} />}</div>
-      )}
       {hosting && hosted && !hosted.turn && screen === null && (
         <HostedLobby summary={hosted.summary} gm={gmLabel} busy={sending} onStart={() => void act(() => host({ kind: "hostStart", adventureId: hosting }))} onHome={goHome} />
       )}
-      {screen !== null && <FullscreenButton className="fixed top-5 right-5 z-[70]" />}
-      {acct.ready && !acct.gated && loaded && (
-        <>
-          {screen === "home" && (
-            <Home
-              save={save}
-              starter={chosen}
-              busy={busy}
-              account={<AccountBadge account={acct} />}
-              onContinue={() => setScreen(null)}
-              onAdventure={(id) => {
-                pickAdventure(id)
-                setScreen("new")
-              }}
-              onNavigate={navigate}
-            />
-          )}
-          {screen === "adventures" && (
-            <AdventuresPage
-              saves={saves}
-              adventures={adventures}
-              locked={locked}
-              listPrices={listPrices}
-              busy={busy}
-              account={<AccountBadge account={acct} />}
-              onNavigate={navigate}
-              onContinue={() => setScreen(null)}
-              onResume={(id) => void resume(id)}
-              onRemove={(archiveId) => void invoke({ kind: "remove", archiveId })}
-              onAdventure={(id) => {
-                pickAdventure(id)
-                setScreen("new")
-              }}
-              hosted={hostedList}
-              hostingNow={worker?.adventureId ?? null}
-              onOpenHosted={(id) => void openHosted(id)}
-            />
-          )}
-          {screen === "characters" && (
-            <CharactersPage
-              heroes={heroes}
-              art={art}
-              busy={busy}
-              painting={painting}
-              canCreate={providers.length > 0}
-              account={<AccountBadge account={acct} />}
-              onNavigate={navigate}
-              onCreate={() => setCreator({})}
-              onEdit={(hero) => setCreator({ editing: hero })}
-              onPaint={painter ? (hero) => void paintHero(hero) : undefined}
-              onDelete={(hero) => void invoke({ kind: "deleteHero", id: hero.id })}
-            />
-          )}
-          {screen === "settings" && (
-            <SettingsPage realm={realm} account={<AccountBadge account={acct} />} onNavigate={navigate} onRealm={() => void openSite(`/settings/${realm?.id ?? "realm-of-myr"}`)} />
-          )}
-          {screen === "new" && (
-            <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-5 bg-stage-ink/70 text-center">
-              {!providers.length && <p>Install and sign in to Claude Code, Codex, Grok, or Gemini CLI.</p>}
-              {adventures.length > 0 && (
-                <NewGame
-                  key={adventure}
-                  adventures={adventures}
-                  adventure={adventure}
-                  onAdventure={pickAdventure}
-                  heroes={heroes}
-                  providers={providers}
-                  provider={provider}
-                  onProvider={setProvider}
-                  busy={busy}
-                  waiting={stageState.waiting}
-                  created={created}
-                  onStart={(chosenParty) => void start(chosenParty)}
-                  onCreate={() => setCreator({})}
-                  onEdit={(hero) => setCreator({ editing: hero })}
-                  art={art}
-                  painting={painting}
-                  onPaint={painter ? (hero) => void paintHero(hero) : undefined}
-                  onDelete={(hero) => void invoke({ kind: "deleteHero", id: hero.id })}
-                  onCancel={() => setScreen("adventures")}
-                  locked={locked}
-                  listPrices={listPrices}
-                  linked={acct.state?.linked ?? false}
-                  onLink={() => void acct.start()}
-                  onHost={linked ? (party) => void hostGame(party) : undefined}
-                />
-              )}
-            </div>
-          )}
-        </>
+      {screen !== null && (
+        // Every screen outside play sits under the website's header. Opaque, so the stage loading behind never flashes
+        // through before the title screen. Party setup alone lets the opening scene show.
+        <div className={cn("absolute inset-0 z-40 flex flex-col font-serif text-white", screen !== "new" && "bg-black")}>
+          <AppHeader
+            page={screen === "new" ? "adventures" : screen}
+            big={screen === "home"}
+            account={<AccountBadge account={acct} />}
+            trailing={<FullscreenButton className="h-9 w-9 text-yellow-950 opacity-70 drop-shadow-none [&_svg]:h-6 [&_svg]:w-6" />}
+            onNavigate={ready ? navigate : undefined}
+          />
+          <div className="relative min-h-0 flex-1">
+            {!ready && (
+              <div className="absolute inset-0 grid place-items-center">
+                {acct.gated && (
+                  <>
+                    <img src="/images/app/backgrounds/d20-hero.png" alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" />
+                    <div className="relative">
+                      <LinkGate account={acct} />
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+            {ready && (
+              <>
+                {screen === "home" && <Home save={save} busy={busy} onContinue={() => setScreen(null)} onBegin={() => setScreen("adventures")} />}
+                {screen === "adventures" && (
+                  <AdventuresPage
+                    saves={saves}
+                    adventures={adventures}
+                    locked={locked}
+                    listPrices={listPrices}
+                    busy={busy}
+                    onContinue={() => setScreen(null)}
+                    onResume={(id) => void resume(id)}
+                    onRemove={(archiveId) => void invoke({ kind: "remove", archiveId })}
+                    onAdventure={(id) => {
+                      pickAdventure(id)
+                      setScreen("new")
+                    }}
+                    hosted={hostedList}
+                    hostingNow={worker?.adventureId ?? null}
+                    onOpenHosted={(id) => void openHosted(id)}
+                  />
+                )}
+                {screen === "characters" && (
+                  <CharactersPage
+                    heroes={heroes}
+                    art={art}
+                    busy={busy}
+                    painting={painting}
+                    canCreate={providers.length > 0}
+                    onCreate={() => setCreator({})}
+                    onEdit={(hero) => setCreator({ editing: hero })}
+                    onPaint={painter ? (hero) => void paintHero(hero) : undefined}
+                    onDelete={(hero) => void invoke({ kind: "deleteHero", id: hero.id })}
+                  />
+                )}
+                {screen === "settings" && <SettingsPage realm={realm} onRealm={() => void openSite(`/settings/${realm?.id ?? "realm-of-myr"}`)} />}
+                {screen === "new" && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-black/70 text-center">
+                    {!providers.length && <p>Install and sign in to Claude Code, Codex, Grok, or Gemini CLI.</p>}
+                    {adventures.length > 0 && (
+                      <NewGame
+                        key={adventure}
+                        adventures={adventures}
+                        adventure={adventure}
+                        heroes={heroes}
+                        providers={providers}
+                        provider={provider}
+                        onProvider={setProvider}
+                        busy={busy}
+                        waiting={stageState.waiting}
+                        created={created}
+                        onStart={(chosenParty) => void start(chosenParty)}
+                        onCreate={() => setCreator({})}
+                        onEdit={(hero) => setCreator({ editing: hero })}
+                        art={art}
+                        painting={painting}
+                        onPaint={painter ? (hero) => void paintHero(hero) : undefined}
+                        onDelete={(hero) => void invoke({ kind: "deleteHero", id: hero.id })}
+                        onCancel={() => setScreen("adventures")}
+                        locked={locked}
+                        listPrices={listPrices}
+                        linked={acct.state?.linked ?? false}
+                        onLink={() => void acct.start()}
+                        onHost={linked ? (party) => void hostGame(party) : undefined}
+                      />
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+            <AccountNotice account={acct} />
+          </div>
+        </div>
       )}
       {creator && (
         <HeroCreator

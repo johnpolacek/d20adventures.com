@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
-import { eyebrow, Pill, panel } from "@/components/stage/hud"
 import { Button } from "@/components/ui/button"
+import { Option, siteField, siteLabel, siteOutline } from "@/components/ui/site"
 import { cn } from "@/lib/utils"
 import type { Hero, HeroDraft } from "../runtime/heroes"
 import { defaultFigure, type FigureArt, figuresFor } from "./figures"
@@ -8,7 +8,9 @@ import { defaultFigure, type FigureArt, figuresFor } from "./figures"
 type Options = { races: string[]; archetypes: string[] }
 export type HeroIdea = { race: string; archetype: string; name: string; gender: string; idea: string }
 const ATTRIBUTES = ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"] as const
-const field = "w-full rounded-[3px] border border-stage-line/25 bg-stage-ink/70 px-3 py-2 text-sm text-stage-cream placeholder:text-stage-muted/60 focus:border-stage-gold focus:outline-none"
+const field = cn(siteField, "bg-black/30")
+// A figure to choose: ringed in the primary colour when chosen.
+const figure = (chosen: boolean) => cn("rounded-md border bg-black/30 p-1 transition-all", chosen ? "border-primary-400 ring-2 ring-primary-500" : "border-white/10 opacity-70 hover:opacity-100")
 const lines = (text: string) =>
   text
     .split("\n")
@@ -70,14 +72,19 @@ export function HeroCreator(props: {
     })
   }
   return (
-    <div className="absolute inset-0 z-50 grid place-items-center bg-stage-ink/60">
-      <section role="dialog" aria-label={hero ? "Review hero" : "New hero"} className={cn(panel, "relative flex max-h-[90vh] w-[min(980px,95vw)] flex-col gap-5 overflow-y-auto p-7 text-left")}>
-        <button type="button" onClick={props.onClose} aria-label="Close" className="absolute top-3 right-4 text-[24px] leading-none text-stage-muted hover:text-stage-cream">
+    <div className="absolute inset-0 z-50 grid place-items-center bg-black/80 font-serif text-white">
+      {/* The website's character sheet: a deep primary gradient with a primary border. */}
+      <section
+        role="dialog"
+        aria-label={hero ? "Review hero" : "New hero"}
+        className="relative flex max-h-[90vh] w-[min(56rem,95vw)] flex-col gap-5 overflow-y-auto rounded-lg border border-primary-600 bg-gradient-to-br from-primary-900/95 via-primary-800/95 to-primary-900/95 p-7 text-left shadow-lg"
+      >
+        <button type="button" onClick={props.onClose} aria-label="Close" className="absolute top-3 right-4 text-2xl leading-none text-white/60 hover:text-white">
           ×
         </button>
         {!hero ? (
           <>
-            <h2 className="font-display text-3xl">New hero</h2>
+            <h2 className="font-display text-3xl font-bold text-amber-300">New hero</h2>
             <Choice label="Race" values={props.options.races} value={idea.race} onPick={(v) => set("race", v)} />
             <Choice label="Class" values={props.options.archetypes} value={idea.archetype} onPick={(v) => set("archetype", v)} />
             <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">
@@ -91,8 +98,8 @@ export function HeroCreator(props: {
             <Labeled label="Idea">
               <textarea className={cn(field, "resize-none")} rows={2} maxLength={600} value={idea.idea} onChange={(e) => set("idea", e.target.value)} />
             </Labeled>
-            <div className="sticky -bottom-7 z-10 -mx-7 -mb-7 flex items-center justify-end gap-3 border-t border-stage-line/15 bg-stage-panel px-7 py-4">
-              {props.busy && <span className="text-sm text-stage-muted">The GM is writing your hero…</span>}
+            <div className="sticky -bottom-7 z-10 -mx-7 -mb-7 flex items-center justify-end gap-3 border-t border-primary-700 bg-primary-900 px-7 py-4">
+              {props.busy && <span className="text-sm text-white/70 italic">The GM is writing your hero…</span>}
               <Button variant="epic" className="text-lg" disabled={props.busy || !idea.name.trim()} onClick={() => void create()}>
                 Create hero
               </Button>
@@ -102,7 +109,7 @@ export function HeroCreator(props: {
           <>
             <div className="grid gap-6 md:grid-cols-[220px_1fr]">
               <div>
-                <div className={cn(eyebrow, "mb-2")}>Figure</div>
+                <div className={cn(siteLabel, "mb-2")}>Figure</div>
                 <div className="grid grid-cols-2 gap-2">
                   {props.painted && (
                     <button
@@ -110,7 +117,7 @@ export function HeroCreator(props: {
                       aria-pressed={Boolean(hero.painted)}
                       aria-label="Painted figure"
                       onClick={() => setHero({ ...hero, painted: true })}
-                      className={cn("rounded-[3px] border bg-stage-ink/60 p-1", hero.painted ? "border-stage-gold" : "border-stage-line/20 opacity-70 hover:opacity-100")}
+                      className={figure(Boolean(hero.painted))}
                     >
                       <img src={props.painted.front} alt="" className="block h-56 w-full object-contain" />
                     </button>
@@ -122,7 +129,7 @@ export function HeroCreator(props: {
                       aria-pressed={!hero.painted && hero.figure === f.id}
                       aria-label={`Figure ${f.id.endsWith("-a") ? 1 : 2}`}
                       onClick={() => setHero({ ...hero, figure: f.id, painted: false })}
-                      className={cn("rounded-[3px] border bg-stage-ink/60 p-1", !hero.painted && hero.figure === f.id ? "border-stage-gold" : "border-stage-line/20 opacity-70 hover:opacity-100")}
+                      className={figure(!hero.painted && hero.figure === f.id)}
                     >
                       <img src={f.art.front} alt="" className="block h-56 w-full object-contain" />
                     </button>
@@ -132,7 +139,7 @@ export function HeroCreator(props: {
               <div className="grid content-start gap-3">
                 <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">
                   <Labeled label="Name">
-                    <input className={cn(field, "font-serif text-lg")} value={hero.name} maxLength={80} onChange={(e) => setHero({ ...hero, name: e.target.value })} />
+                    <input className={cn(field, "font-display text-lg text-amber-300")} value={hero.name} maxLength={80} onChange={(e) => setHero({ ...hero, name: e.target.value })} />
                   </Labeled>
                   <Labeled label="Gender">
                     <input className={field} value={hero.gender ?? ""} maxLength={40} onChange={(e) => setHero({ ...hero, gender: e.target.value })} />
@@ -188,11 +195,11 @@ export function HeroCreator(props: {
                 </Labeled>
               ))}
             </div>
-            <div className="sticky -bottom-7 z-10 -mx-7 -mb-7 flex items-center justify-end gap-3 border-t border-stage-line/15 bg-stage-panel px-7 py-4">
+            <div className="sticky -bottom-7 z-10 -mx-7 -mb-7 flex items-center justify-end gap-3 border-t border-primary-700 bg-primary-900 px-7 py-4">
               {!props.editing && (
-                <Pill disabled={props.busy} onClick={() => setHero(null)}>
+                <button type="button" className={cn(siteOutline, "px-4 py-2 text-sm")} disabled={props.busy} onClick={() => setHero(null)}>
                   Back
-                </Pill>
+                </button>
               )}
               <Button variant="epic" className="text-lg" disabled={props.busy || !hero.name.trim() || !hero.appearance.trim()} onClick={save}>
                 Save hero
@@ -212,7 +219,7 @@ function listText(h?: Pick<HeroDraft, "skills" | "equipment" | "spells" | "speci
 function Labeled({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="grid gap-1">
-      <span className={eyebrow}>{label}</span>
+      <span className={siteLabel}>{label}</span>
       {children}
     </label>
   )
@@ -221,12 +228,12 @@ function Labeled({ label, children }: { label: string; children: React.ReactNode
 function Choice({ label, values, value, onPick }: { label: string; values: string[]; value: string; onPick: (v: string) => void }) {
   return (
     <div>
-      <div className={cn(eyebrow, "mb-2")}>{label}</div>
+      <div className={cn(siteLabel, "mb-2")}>{label}</div>
       <div className="flex flex-wrap gap-2">
         {values.map((v) => (
-          <Pill key={v} aria-pressed={v === value} active={v === value} onClick={() => onPick(v)}>
+          <Option key={v} aria-pressed={v === value} active={v === value} onClick={() => onPick(v)}>
             {v}
-          </Pill>
+          </Option>
         ))}
       </div>
     </div>

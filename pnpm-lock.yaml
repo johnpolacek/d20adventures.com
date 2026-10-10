@@ -291,6 +291,9 @@ importers:
       '@fontsource/rethink-sans':
         specifier: ^5.3.0
         version: 5.3.0
+      '@fontsource/syne-mono':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@tauri-apps/api':
         specifier: ^2.0.0
         version: 2.12.1
@@ -1067,6 +1070,9 @@ packages:
 
   '@fontsource/rethink-sans@5.3.0':
     resolution: {integrity: sha512-l1mWg2mBT1NsAVqIOx8aKPWWy98GO8T4s4OdGKT+vBdXTbe8L62Seykiajc9PLQlzo+LrGs4fLR5e5krLAhcqA==}
+
+  '@fontsource/syne-mono@5.3.0':
+    resolution: {integrity: sha512-2kxuhmZ4+93IFSeS8jqTQ3QYG6z0gDWKAlJ4pU1/gm/ZzYCLyHwviYYu45+1fqsILDDrfvHEKERyWItkY89tag==}
 
   '@hapi/address@5.1.1':
     resolution: {integrity: sha512-A+po2d/dVoY7cYajycYI43ZbYMXukuopIsqCjh5QzsBCipDtdofHntljDlpccMjIfTy6UOkg+5KPriwYch2bXA==}
@@ -4549,6 +4555,8 @@ snapshots:
   '@fontsource/cinzel-decorative@5.3.0': {}
 
   '@fontsource/rethink-sans@5.3.0': {}
+
+  '@fontsource/syne-mono@5.3.0': {}
 
   '@hapi/address@5.1.1':
     dependencies:
