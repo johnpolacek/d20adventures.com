@@ -186,6 +186,10 @@ Eight desktop tests, shared core/server regression checks, root/package TypeScri
 
 A separate live Claude check advanced an isolated fixture to the festival, returned an explicit add operation, and persisted the Bronze gate token in Cassia's equipment. No user save, production data, or web gameplay was changed by the check.
 
+## 2026-10-02, desktop release build
+
+Ran `CARGO_BUILD_JOBS=2 pnpm tauri build` in `apps/desktop-spike` at the owner's request. Vite and the optimized Rust release build passed. Rust compilation took 2 minutes 48 seconds. Output: `apps/desktop-spike/src-tauri/target/release/d20-desktop-spike`. Bundling remains disabled, so no `.app` or installer was produced. The executable was not launched in this check. macOS memory pressure rose from normal to warning during compilation and remained at warning immediately afterward.
+
 ## 2026-10-02, desktop Stageview and real local turns
 
 Implemented `apps/desktop` in the isolated `feature/desktop-stage-play` worktree, based on main plus the committed GM core branch. Extracted the renderer to `packages/stage` and retained the web demo. The Tauri client bundles March of Davos, stage assets, fonts, and a Node game worker. It uses the player's installed AI CLI, the shared GM core, and SQLite. Actions, dice, NPCs, authored transitions, journal, camera controls, and player movement are connected to real state. The gate has a 3D set. Later encounters use story view.
