@@ -294,6 +294,9 @@ importers:
       '@tauri-apps/api':
         specifier: ^2.0.0
         version: 2.12.1
+      lucide-react:
+        specifier: ^0.577.0
+        version: 0.577.0(react@19.2.4)
       pngjs:
         specifier: ^7.0.0
         version: 7.0.0

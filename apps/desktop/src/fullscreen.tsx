@@ -1,6 +1,6 @@
 import { isTauri } from "@tauri-apps/api/core"
+import { Expand, Shrink } from "lucide-react"
 import { useEffect, useState } from "react"
-import { textShadowSpreadLight } from "@/components/typography/styles"
 import { cn } from "@/lib/utils"
 import { isFullscreen, toggleFullscreen } from "./bridge"
 
@@ -23,18 +23,16 @@ export function useFullscreen() {
 
 export function FullscreenButton({ className }: { className?: string }) {
   const { full, toggle } = useFullscreen()
+  const Icon = full ? Shrink : Expand
   return (
     <button
       type="button"
       onClick={() => void toggle()}
       aria-label={full ? "Exit full screen" : "Full screen"}
       title={full ? "Exit full screen" : "Full screen"}
-      className={cn("grid h-12 w-12 place-items-center rounded-full border border-white/80 text-white transition-colors hover:bg-white/15", className)}
-      style={textShadowSpreadLight}
+      className={cn("grid h-12 w-12 place-items-center text-white opacity-85 drop-shadow-[0_1px_6px_#000] transition-opacity hover:opacity-100", className)}
     >
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6 fill-none stroke-current" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        {full ? <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" /> : <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />}
-      </svg>
+      <Icon aria-hidden="true" className="h-7 w-7" strokeWidth={1.75} />
     </button>
   )
 }

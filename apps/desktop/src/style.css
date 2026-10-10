@@ -177,3 +177,9 @@
 
 html,body,#root {margin:0;width:100%;height:100%;background:#1c1410;color:#f6ead4;}
 button {cursor:pointer;} textarea,select {color:inherit;}
+
+/* The window's own background matches the game's ink, so nothing white shows before the first paint. */
+html,
+body {
+  background: #1c1410;
+}

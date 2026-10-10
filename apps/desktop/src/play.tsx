@@ -617,10 +617,8 @@ export function DesktopGame() {
         </Pill>
       )}
       {screen !== null && (!acct.ready || acct.gated || !loaded) && (
-        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-5 bg-stage-ink/55 text-center">
-          <div className="text-[10px] tracking-[.3em] text-stage-gold">D20 ADVENTURES</div>
-          {acct.gated && <LinkGate account={acct} />}
-        </div>
+        // Opaque, so the stage loading behind never flashes through before the title screen.
+        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-5 bg-stage-ink text-center">{acct.gated && <LinkGate account={acct} />}</div>
       )}
       {screen !== null && <FullscreenButton className="fixed top-5 right-5 z-[70]" />}
       {acct.ready && !acct.gated && loaded && (
