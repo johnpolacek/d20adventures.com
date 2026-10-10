@@ -5,7 +5,7 @@ import { useParams, usePathname } from "next/navigation"
 import React, { useEffect, useState } from "react"
 import wait from "waait"
 import { ensureNpcProcessed } from "@/app/_actions/ensure-npc-processed"
-import AdventureLobby from "@/components/adventure/adventure-lobby"
+import AdventureLobby, { type LobbyInvite } from "@/components/adventure/adventure-lobby"
 import Turn from "@/components/adventure/turn"
 import type { MapTokens } from "@/components/mapview/encounter-map-2d"
 import AccountRequired from "@/components/nav/account-required"
@@ -26,6 +26,8 @@ function AdventureHomeContent({
   adventurePlan,
   encounterMap,
   mapTokens,
+  invite,
+  hosted,
 }: {
   initialImage: string
   initialSubtitle: string
@@ -33,6 +35,9 @@ function AdventureHomeContent({
   adventurePlan?: AdventurePlan
   encounterMap?: Encounter2DMap | null
   mapTokens?: MapTokens
+  invite?: LobbyInvite
+  // A hosted game plays on its own page, with the GM in the host's app.
+  hosted?: boolean
 }) {
   const { adventurePlanId, settingId } = useParams()
   const { isSignedIn, isLoaded } = useUser()
@@ -42,6 +47,11 @@ function AdventureHomeContent({
   const [lastEncounterId, setLastEncounterId] = useState<string | null>(null)
 
   const turn = useTurn()
+  // When the host starts, everyone waiting in the lobby leaves for the play page.
+  const startedHosted = Boolean(hosted && turn)
+  useEffect(() => {
+    if (startedHosted) window.location.assign(`/play/${adventure.id}`)
+  }, [startedHosted, adventure.id])
 
   useEffect(() => {
     // Only update image if the encounter actually changed
@@ -105,14 +115,14 @@ function AdventureHomeContent({
   return (
     <div className={cn("flex flex-col items-center relative", isSignedIn && "min-h-screen")}>
       <ImageHeader variant={turn ? "default" : "compact"} imageUrl={imageUrl} title={adventure.title} subtitle={turn?.title} imageAlt={turn?.title || adventure.title} />
-      {turn ? (
+      {turn && !hosted ? (
         <Turn nextAdventure={adventurePlan?.nextAdventure} encounter={currentEncounter} encounterMap={encounterMap} mapTokens={mapTokens} isSolo={(adventurePlan?.party?.[1] ?? 1) === 1} />
       ) : (
         <>
-          <AdventureLobby adventure={adventure} adventurePlan={adventurePlan} />
+          <AdventureLobby adventure={adventure} adventurePlan={adventurePlan} invite={invite} />
           {!isSignedIn && isLoaded && (
             <div className="-mt-12 pb-24">
-              <AccountRequired redirectUrl={pathname} />
+              <AccountRequired redirectUrl={invite?.as ? `${pathname}?as=${encodeURIComponent(invite.as)}` : pathname} />
             </div>
           )}
         </>

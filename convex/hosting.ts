@@ -12,13 +12,19 @@ const ABANDONED_MS = 10 * 60 * 1000
 const SEEN_EVERY_MS = 30 * 1000
 
 export const setHost = mutation({
-  args: { secret: v.string(), adventureId: v.id("adventures"), userId: v.string(), deviceId: v.id("devices") },
-  handler: async (ctx, { secret, adventureId, userId, deviceId }) => {
+  args: {
+    secret: v.string(),
+    adventureId: v.id("adventures"),
+    userId: v.string(),
+    deviceId: v.id("devices"),
+    seats: v.optional(v.array(v.object({ id: v.string(), name: v.string(), key: v.optional(v.string()) }))),
+  },
+  handler: async (ctx, { secret, adventureId, userId, deviceId, seats }) => {
     requireServer(secret)
     const adventure = await ctx.db.get(adventureId)
     if (!adventure) throw new Error("Adventure not found")
     if (adventure.ownerId !== userId) throw new Error("Only the adventure's owner can host it")
-    await ctx.db.patch(adventureId, { host: { userId, deviceId, seenAt: Date.now() }, updatedAt: Date.now() })
+    await ctx.db.patch(adventureId, { host: { userId, deviceId, seenAt: Date.now(), ...(seats?.length ? { seats } : {}) }, updatedAt: Date.now() })
   },
 })
 

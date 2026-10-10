@@ -1,5 +1,6 @@
 "use client"
 
+import type { LobbyInvite } from "@/components/adventure/adventure-lobby"
 import type { MapTokens } from "@/components/mapview/encounter-map-2d"
 import AdventureHomeContent from "@/components/views/adventure-home-content"
 import { AdventureProvider } from "@/lib/context/AdventureContext"
@@ -18,6 +19,8 @@ function AdventureHome({
   disableSSE = false,
   encounterMap,
   mapTokens,
+  invite,
+  hosted,
 }: {
   adventurePlanId: string
   settingId: string
@@ -28,6 +31,8 @@ function AdventureHome({
   disableSSE?: boolean
   encounterMap?: Encounter2DMap | null
   mapTokens?: MapTokens
+  invite?: LobbyInvite
+  hosted?: boolean
 }) {
   return (
     <AdventureProvider settingId={settingId} adventurePlanId={adventurePlanId} adventure={adventure}>
@@ -39,6 +44,8 @@ function AdventureHome({
           adventurePlan={adventurePlan}
           encounterMap={encounterMap}
           mapTokens={mapTokens}
+          invite={invite}
+          hosted={hosted}
         />
       </TurnProvider>
     </AdventureProvider>

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { convex } from "@/lib/convex/server"
+import { openSeats, seatHero, sheetId } from "@/lib/host/seats"
 import { readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 import { toPCTemplate } from "@/lib/utils/character-mapping"
 import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
@@ -28,7 +29,12 @@ export async function joinAdventure({ settingId, adventurePlanId, adventureId, c
 
   let chargedTokens = 0
   // Joining a hosted game is free: the host's app runs its GM.
-  const hosted = Boolean((await convex.query(api.adventure.getAdventureById, { adventureId: adventureId as Id<"adventures"> }))?.host)
+  const joining = await convex.query(api.adventure.getAdventureById, { adventureId: adventureId as Id<"adventures"> })
+  const hosted = Boolean(joining?.host)
+  // With held seats, a guest joins only as one of the heroes the host invited, and only while it is open.
+  const held = Boolean(joining?.host?.seats?.length)
+  const seat = joining && held ? openSeats(joining).find((s) => s.id === sheetId(characterId)) : undefined
+  if (held && !seat) throw new Error("That hero is not open in this game.")
   try {
     if (!hosted) {
       const tokenResult = await decrementUserTokensAction({
@@ -45,7 +51,7 @@ export async function joinAdventure({ settingId, adventurePlanId, adventureId, c
       chargedTokens = tokenResult.data.chargedTokens
     }
 
-    const userCharKey = `characters/${userId}/${characterId.split("/").pop()?.replace(".json", "")}.json`
+    const userCharKey = `characters/${userId}/${sheetId(characterId)}.json`
     let exists = false
     try {
       await readJsonFromS3(userCharKey)
@@ -55,9 +61,9 @@ export async function joinAdventure({ settingId, adventurePlanId, adventureId, c
       let characterData: PCTemplate | unknown
       try {
         const plan = await loadAdventurePlanForRuntime(settingId, adventurePlanId)
-        characterData = plan.premadePlayerCharacters?.find((pc) => pc.id === characterId.split("/").pop()?.replace(".json", ""))
+        characterData = seat ? await seatHero(seat, plan.premadePlayerCharacters) : plan.premadePlayerCharacters?.find((pc) => pc.id === sheetId(characterId))
       } catch {}
-      if (!characterData) {
+      if (!characterData && !held) {
         try {
           const customChar = await readJsonFromS3(characterId)
           characterData = customChar

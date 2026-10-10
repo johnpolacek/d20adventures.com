@@ -8,8 +8,8 @@ const token = z.string().optional()
 const id = z.string().min(1).max(100)
 export const hostCommandSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("hostList"), token }),
-  // The host's character: a premade of the adventure, or a hero from the roster by id.
-  z.object({ kind: z.literal("hostCreate"), planId: id, characterId: id, token }),
+  // The host's character and the heroes held for invited players: premades of the adventure, or roster heroes by id.
+  z.object({ kind: z.literal("hostCreate"), planId: id, characterId: id, invites: z.array(id).max(8).default([]), token }),
   z.object({ kind: z.literal("hostState"), adventureId: id, token }),
   z.object({ kind: z.literal("hostStart"), adventureId: id, token }),
   z.object({
@@ -50,10 +50,14 @@ export async function hostCommand(command: HostCommand, site: string, heroes: ()
       case "hostList":
         return { hosted: ((await call("/api/desktop/host")) as { hosted: HostedSummary[] }).hosted }
       case "hostCreate": {
-        const hero = heroes().find((h) => h.id === command.characterId)
+        const roster = heroes()
         // Roster heroes travel as their sheet, without the stock figure and painting that only this app uses.
-        const character = hero ? { sheet: (({ figure: _f, painted: _p, ...sheet }) => sheet)(hero) } : { premadeId: command.characterId }
-        return { created: ((await call("/api/desktop/host", { planId: command.planId, character })) as { hosted: HostedSummary }).hosted }
+        const character = (characterId: string) => {
+          const hero = roster.find((h) => h.id === characterId)
+          return hero ? { sheet: (({ figure: _f, painted: _p, ...sheet }) => sheet)(hero) } : { premadeId: characterId }
+        }
+        const body = { planId: command.planId, character: character(command.characterId), invites: command.invites.map(character) }
+        return { created: ((await call("/api/desktop/host", body)) as { hosted: HostedSummary }).hosted }
       }
       case "hostState":
         return { state: (await call(`/api/desktop/host/${command.adventureId}`)) as HostedState }

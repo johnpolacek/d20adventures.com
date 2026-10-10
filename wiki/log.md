@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-10, invite a player to a seat from party setup
+
+Owner: "i want to be able to invite another player to play as poppen from this screen". Each party seat is now You, AI, or Invite. An invited seat hosts the game on the website with that hero held, and its link opens to joining as that hero. Checking it found that the website lobby returned 404 to everyone not already in the game, so no invite link had worked. That is fixed for games still waiting for players. Held seats set aside the 2026-10-08 decision that guests make their own characters, and the app no longer starts an open table. Details in [Desktop host mode](plans/desktop-host-mode.md).
+
 ## 2026-10-10, desktop header matches the website
 
 Owner asked for the app's header to match the website's type, and for the linked account to be the round picture, without tokens, which are being deprecated. The app dropped the Cinzel Decorative 700 face, since the website has 400 alone. `/api/desktop/me` now returns the account picture as a data URL, and the header shows it with a menu holding the account and Unlink. Details in [Desktop site style](plans/desktop-site-style.md).

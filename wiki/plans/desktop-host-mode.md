@@ -66,6 +66,45 @@ A hosted game is an ordinary website adventure whose GM work runs on the host's 
 - 2026-10-10: the production website cannot host yet. `/api/desktop/host` returns 404, and `/api/desktop/link` and `/api/desktop/me` return 500, so the app shows Account offline. Production needs the current website and Convex deployed.
 - 2026-10-10: `pnpm dev` starts Convex, the website, and the app with `D20_SITE_URL` set to the local website, so linking and hosting can be tested without production. Invite links from that app are localhost links. `pnpm desktop:dev` still targets d20adventures.com.
 
+## Invite seats, 2026-10-10
+
+Owner, at party setup with Lyra and Poppen seated: "i want to be able to invite another player to play as poppen from this screen". Chosen: a per-seat Invite choice, a link that joins as that hero, and no AI companions in hosted games yet.
+
+### Design
+
+- Party setup: each seat is You, AI, or Invite. Invite shows for adventures with more than one seat.
+- With any seat on Invite, the main button reads Invite and hosts the game. The separate Invite players button is gone.
+- An invited game needs exactly one You seat and no AI seats. Otherwise the button is off and one line says why.
+- Unlinked or offline, Invite starts linking first, as before.
+- The website holds each invited hero for a guest: `host.seats` on the adventure, with the hero's id and name. A roster hero's sheet is saved to the host's account and the seat carries its key.
+- Each seat has its own link, the lobby link with `?as=<hero id>`. The app's lobby lists each open seat with its link and Copy.
+- On the website, a guest with that link signs in and sees one card, Join as that hero. Without `as`, they see every open seat.
+- In a game with seats, guests join only as a held hero. Their own characters and the other premades are not offered. `joinAdventure` in Convex refuses any other hero, and a hero already taken.
+
+### Built, 2026-10-10
+
+- App: `new-game.tsx` seats, `hosted-lobby.tsx` seat links, `hostCreate` with `invites`.
+- Website: `host.seats` in the schema, `lib/host/seats.ts`, the join action and `joinAdventure`, and the lobby's held-seat view.
+- Party rows are one column where Invite shows. Three choices left no room for the names in two.
+- Found while checking: the lobby page returned 404 to anyone not already in the game, signed in or not, so no invite link opened. `loadAdventureWithNpc` asks for a player. `loadAdventureLobby` now loads a game still waiting for players for anyone with its link. The lobby's polling route answers a signed-in guest the same way.
+- Found while checking: a guest waiting in the lobby stayed there when the host started, and would have seen the text turn view. The lobby of a hosted game now leaves for `/play/<id>` when the first turn arrives.
+- The website lobby still shows Start Adventure to any seated player, guests included. It starts a hosted game the same way the app does.
+
+### Checked, 2026-10-10
+
+- In the running app against the local website and dev Convex: Covert Cargo with Lyra on You and Poppen on Invite. Invite hosted the game and the lobby showed one link for Poppen.
+- In a browser as the test user: signed out, the link showed the party and the sign-in prompt. Signed in, it showed one card, Play as Poppen Quickfoot. Join seated Poppen, and the app's lobby listed both heroes with no link left.
+- Start in the app moved the guest's browser to `/play/<id>`, which showed Poppen's turn and "Hosted · GM online".
+- 49 desktop tests and 12 store, link, and seat tests pass. Both typechecks pass.
+- Not checked: a roster hero as an invited seat, more than one invited seat, a second guest trying a taken seat, the amber note for an AI seat beside an invited one, and any turn played by the guest.
+- That test game is still in dev Convex, hosted by the owner's account with the test user as Poppen.
+
+### Contradiction
+
+- 2026-10-08: "Guests make characters with the website's existing character creation." Held seats do not allow that.
+- The website still supports a hosted game without seats, where guests bring any character. The app no longer has a way to start one.
+- Open: whether a seat can be held for "any hero".
+
 ## Known gaps
 
 - Hosted games keep no stage positions, so movement is not read or walked.

@@ -5,14 +5,28 @@ import { siteCard, siteField, siteLabel, siteOutline } from "@/components/ui/sit
 import { cn } from "@/lib/utils"
 import type { HostedSummary } from "../../../lib/host/server"
 
-// A hosted game before it starts: the invite link for friends, who has joined, and Start.
-export function HostedLobby(props: { summary: HostedSummary; gm: string; busy: boolean; onStart: () => void; onHome: () => void }) {
+// A link to send a friend, with Copy.
+function InviteLink({ label, url }: { label: string; url: string }) {
   const [copied, setCopied] = useState(false)
   const copy = () =>
-    void navigator.clipboard.writeText(props.summary.invite).then(() => {
+    void navigator.clipboard.writeText(url).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 1500)
     })
+  return (
+    <div className="flex gap-2">
+      <input readOnly value={url} onFocus={(e) => e.currentTarget.select()} aria-label={label} className={cn(siteField, "flex-1 text-sm")} />
+      <button type="button" className={cn(siteOutline, "px-4 text-sm")} onClick={copy}>
+        {copied ? "Copied" : "Copy"}
+      </button>
+    </div>
+  )
+}
+
+// A hosted game before it starts: a link for each hero held for a friend, who has joined, and Start. A game hosted
+// without held seats has one link, and guests bring their own heroes.
+export function HostedLobby(props: { summary: HostedSummary; gm: string; busy: boolean; onStart: () => void; onHome: () => void }) {
+  const seats = props.summary.seats ?? []
   return (
     <div className="absolute inset-0 z-40 grid place-items-center bg-black/70 font-serif text-white">
       <section className={cn(siteCard, "w-[min(34rem,92vw)] p-8 text-left backdrop-blur-xl")}>
@@ -20,13 +34,18 @@ export function HostedLobby(props: { summary: HostedSummary; gm: string; busy: b
         <h1 className="mt-2 font-display text-4xl font-bold text-amber-300" style={textShadow}>
           {props.summary.title}
         </h1>
-        <div className={cn(siteLabel, "mt-7 mb-2")}>Invite link</div>
-        <div className="flex gap-2">
-          <input readOnly value={props.summary.invite} onFocus={(e) => e.currentTarget.select()} aria-label="Invite link" className={cn(siteField, "flex-1 text-sm")} />
-          <button type="button" className={cn(siteOutline, "px-4 text-sm")} onClick={copy}>
-            {copied ? "Copied" : "Copy"}
-          </button>
-        </div>
+        {seats.map((seat) => (
+          <div key={seat.id}>
+            <div className={cn(siteLabel, "mt-7 mb-2")}>Invite · {seat.name}</div>
+            <InviteLink label={`Invite link for ${seat.name}`} url={seat.invite} />
+          </div>
+        ))}
+        {!props.summary.held && (
+          <>
+            <div className={cn(siteLabel, "mt-7 mb-2")}>Invite link</div>
+            <InviteLink label="Invite link" url={props.summary.invite} />
+          </>
+        )}
         <div className={cn(siteLabel, "mt-7 mb-2")}>At the table · {props.summary.party.length}</div>
         <ul className="space-y-1 font-display text-lg">
           {props.summary.party.map((name) => (

@@ -14,14 +14,16 @@ export async function GET(request: Request) {
   return NextResponse.json({ hosted: await Promise.all(adventures.slice(0, 30).map((a) => hostedSummary(a, origin))) })
 }
 
-// Hosts a new game: the adventure waits in its website lobby for friends, with the host's character already seated.
+// Hosts a new game: the adventure waits in its website lobby for friends, with the host's character already seated
+// and a seat held for each invited hero.
 export async function POST(request: Request) {
   const { device, error } = await deviceFromRequest(request)
   if (error) return error
   try {
-    const body = (await request.json()) as { planId?: unknown; character?: HostCharacter }
+    const body = (await request.json()) as { planId?: unknown; character?: HostCharacter; invites?: unknown }
     if (typeof body.planId !== "string" || !body.character) return NextResponse.json({ error: "Choose an adventure and a character." }, { status: 400 })
-    const adventureId = await createHostedAdventure({ userId: device.userId, deviceId: device.deviceId, planId: body.planId, character: body.character })
+    const invites = Array.isArray(body.invites) ? (body.invites.slice(0, 8) as HostCharacter[]) : []
+    const adventureId = await createHostedAdventure({ userId: device.userId, deviceId: device.deviceId, planId: body.planId, character: body.character, invites })
     const adventure = await convex.query(api.adventure.getAdventureById, { adventureId })
     if (!adventure) throw new Error("The hosted game was not saved.")
     return NextResponse.json({ hosted: await hostedSummary(adventure, siteOrigin(request)) })

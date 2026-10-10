@@ -101,6 +101,16 @@ export const joinAdventure = mutation({
       throw new Error("Character is already taken")
     }
 
+    // A hosted game with held seats takes only those heroes, each once. Each player's copy of a hero has its own
+    // key, so heroes are matched by sheet id.
+    const seats = adventure.host?.seats
+    if (seats?.length) {
+      const sheetId = (characterId: string) => characterId.split("/").pop()?.replace(".json", "")
+      const hero = sheetId(args.characterId)
+      if (!seats.some((s) => s.id === hero)) throw new Error("This game's seats are held for other heroes")
+      if (adventure.players?.some((p) => sheetId(p.characterId) === hero)) throw new Error("Character is already taken")
+    }
+
     // Add the player to the adventure
     const updatedPlayers = [
       ...(adventure.players || []),

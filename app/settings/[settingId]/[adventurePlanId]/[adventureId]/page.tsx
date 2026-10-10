@@ -1,8 +1,9 @@
 import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
-import { loadAdventureWithNpc } from "@/app/_actions/load-adventure"
+import { loadAdventureLobby, loadAdventureWithNpc } from "@/app/_actions/load-adventure"
 import AdventureHome from "@/components/views/adventure-home"
-import type { Id } from "@/convex/_generated/dataModel"
+import type { Doc, Id } from "@/convex/_generated/dataModel"
+import { openSeats, seatHero } from "@/lib/host/seats"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import { mapConvexTurnToTurn, reverseSlugify } from "@/lib/utils"
 import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
@@ -71,11 +72,13 @@ function findEncounter(adventurePlan: AdventurePlan, encounterIdToFind: string |
   return null
 }
 
-export default async function AdventurePage(props: { params: Promise<{ settingId: string; adventurePlanId: string; adventureId: string }> }) {
+export default async function AdventurePage(props: { params: Promise<{ settingId: string; adventurePlanId: string; adventureId: string }>; searchParams: Promise<{ as?: string | string[] }> }) {
   const { adventurePlanId, adventureId, settingId } = await props.params
   const adventurePlan = await loadAdventurePlanForRuntime(settingId, adventurePlanId)
   if (!adventurePlan) return notFound()
-  const adventureData = await loadAdventureWithNpc(adventureId as Id<"adventures">)
+  // Players load their game. Anyone else sees it only while it waits for players, which is how an invite link opens.
+  const playing = await loadAdventureWithNpc(adventureId as Id<"adventures">)
+  const adventureData = playing ?? (await loadAdventureLobby(adventureId as Id<"adventures">))
   const adventure = mapConvexAdventureToAdventure(adventureData?.adventure)
   const currentTurn = mapConvexTurnToTurn(adventureData?.currentTurn)
 
@@ -118,6 +121,15 @@ export default async function AdventurePage(props: { params: Promise<{ settingId
 
   const encounter = findEncounter(adventurePlan, currentTurn?.encounterId)
 
+  // A hosted game's held seats: the heroes still open, and the one this guest's link names.
+  const raw = adventureData?.adventure as Doc<"adventures"> | undefined
+  let invite: { seats: PCTemplate[]; as?: string } | undefined
+  if (raw?.host?.seats?.length) {
+    const heroes = await Promise.all(openSeats(raw).map((seat) => seatHero(seat, adventurePlan.premadePlayerCharacters)))
+    const { as } = await props.searchParams
+    invite = { seats: heroes.filter((pc): pc is PCTemplate => !!pc), as: typeof as === "string" ? as : undefined }
+  }
+
   return (
     <AdventureHome
       settingId={settingId}
@@ -126,6 +138,10 @@ export default async function AdventurePage(props: { params: Promise<{ settingId
       encounterImage={encounter?.image || adventurePlan.image}
       currentTurn={currentTurn}
       adventurePlan={adventurePlan}
+      invite={invite}
+      hosted={Boolean(raw?.host)}
+      // The turn stream answers players only.
+      disableSSE={!playing}
     />
   )
 }

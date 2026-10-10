@@ -19,13 +19,17 @@ import { InviteLink } from "./invite-link"
 import { PartyLobbyGrid } from "./party-lobby-grid"
 import { StartAdventureButton } from "./start-adventure-button"
 
+// A hosted game's held seats: the heroes still open when the page loaded, and the one this guest's link names.
+export type LobbyInvite = { seats: PCTemplate[]; as?: string }
+
 interface AdventureLobbyProps {
   adventure: Adventure
   adventurePlan?: AdventurePlan
+  invite?: LobbyInvite
 }
 
 // Waiting room of an existing adventure, before it begins
-export default function AdventureLobby({ adventure: initialAdventure, adventurePlan }: AdventureLobbyProps) {
+export default function AdventureLobby({ adventure: initialAdventure, adventurePlan, invite }: AdventureLobbyProps) {
   const { user, isSignedIn, isLoaded } = useUser()
   const params = useParams()
   const [isJoining, setIsJoining] = useState(false)
@@ -174,7 +178,11 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
 
   const party = adventure.party
   const userCharacter = party?.find((pc) => pc.userId === user?.id && pc.controlledBy !== "ai")
-  const availableCharacters = adventurePlan?.premadePlayerCharacters?.filter((pc) => !party?.some((partyMember) => partyMember.id === pc.id)) || []
+  const notSeated = (pc: PCTemplate) => !party?.some((partyMember) => partyMember.id === pc.id)
+  // With held seats, a guest joins only as one of them: the hero their link names, or any still open.
+  const openSeats = invite?.seats.filter(notSeated) ?? []
+  const namedSeat = openSeats.find((pc) => pc.id === invite?.as)
+  const availableCharacters = invite ? (namedSeat ? [namedSeat] : openSeats) : adventurePlan?.premadePlayerCharacters?.filter(notSeated) || []
   const isOwner = user?.id === adventure.ownerId
 
   // Always show the party grid and teaser, even if not signed in
@@ -240,7 +248,8 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
             ) : (
               <>
                 {joinError && !/redirect/i.test(joinError) && <div className="text-center text-red-400 text-sm mb-4 bg-red-900/20 px-4 py-2 rounded">{joinError}</div>}
-                {userCharacters.length > 0 && (
+                {invite && availableCharacters.length === 0 && <p className="text-center text-white/80">Every seat at this table is taken.</p>}
+                {!invite && userCharacters.length > 0 && (
                   <>
                     <h2 className="text-2xl font-display text-amber-400 mb-6">Join with Your Character</h2>
                     <div className="w-full flex flex-wrap gap-6 justify-center mb-8">
@@ -261,14 +270,18 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
                     </div>
                   </>
                 )}
-                <Link href={`/player/${user?.username}/characters/new?redirectToAdventure=${encodeURIComponent(window.location.pathname)}`}>
-                  <Button variant="epic" size="lg" className="mb-4">
-                    Create New Character
-                  </Button>
-                </Link>
+                {!invite && (
+                  <Link href={`/player/${user?.username}/characters/new?redirectToAdventure=${encodeURIComponent(window.location.pathname)}`}>
+                    <Button variant="epic" size="lg" className="mb-4">
+                      Create New Character
+                    </Button>
+                  </Link>
+                )}
                 {availableCharacters.length > 0 && (
                   <>
-                    <h3 className="text-lg font-display text-amber-400 my-8 w-full text-center">Or join with a premade character:</h3>
+                    <h3 className="text-lg font-display text-amber-400 my-8 w-full text-center">
+                      {!invite ? "Or join with a premade character:" : availableCharacters.length === 1 ? `Play as ${availableCharacters[0].name}` : "Choose your hero"}
+                    </h3>
                     <div className="w-full flex flex-wrap gap-6 justify-center mb-8">
                       {availableCharacters.map((char) => (
                         <div key={char.id} className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4">
@@ -290,7 +303,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
         )}
         {/* Owner can fill open slots with AI companions from the remaining premades.
             Secondary to inviting humans, so the roster stays collapsed until asked for. */}
-        {isSignedIn && isOwner && userCharacter && hasEmptySlots && availableCharacters.length > 0 && (
+        {isSignedIn && isOwner && userCharacter && hasEmptySlots && !invite && availableCharacters.length > 0 && (
           <div className="w-full flex flex-col items-center justify-center mb-8">
             {joinError && <div className="text-center text-red-400 text-sm mb-4 bg-red-900/20 px-4 py-2 rounded">{joinError}</div>}
             <Button

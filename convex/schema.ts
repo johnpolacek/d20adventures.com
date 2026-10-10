@@ -88,7 +88,16 @@ export default defineSchema({
     resolvedThreadIds: v.optional(v.array(v.string())),
     // A hosted game: the host's desktop app runs its GM through the host's own CLI, never the server.
     // seenAt is when the host's app last asked for GM work, so guests can tell it is online.
-    host: v.optional(v.object({ userId: v.string(), deviceId: v.id("devices"), seenAt: v.optional(v.number()) })),
+    // seats are the heroes the host holds for invited players. A hero from the host's roster carries the key of its
+    // sheet in the host's account. With seats, guests join only as one of them.
+    host: v.optional(
+      v.object({
+        userId: v.string(),
+        deviceId: v.id("devices"),
+        seenAt: v.optional(v.number()),
+        seats: v.optional(v.array(v.object({ id: v.string(), name: v.string(), key: v.optional(v.string()) }))),
+      })
+    ),
     title: v.string(),
     createdAt: v.number(),
     updatedAt: v.number(),

@@ -5,7 +5,9 @@ import { join } from "node:path"
 import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
 import { game, type Packs } from "./game"
+import type { Hero } from "./heroes"
 import { type HostEvent, type HostJob, type HostPost, hostLoop, remoteStore } from "./host"
+import { hostCommand } from "./host-commands"
 import { LocalStore } from "./store"
 
 const packs: Packs = JSON.parse(readFileSync(new URL("../src-tauri/resources/packs.json", import.meta.url), "utf8"))
@@ -149,4 +151,21 @@ test("the website store sends each operation to the host store route", async () 
   assert.deepEqual(await store.getTurn({ turnId: "t1" }), { _id: "t1" })
   assert.deepEqual(calls, [["/api/desktop/host/store", { op: "getTurn", args: { turnId: "t1" } }]])
   await assert.rejects(() => store.createTurn({} as never), /authored adventures only/)
+})
+
+test("hosting sends the host's hero and each hero held for a guest, premades by id and roster heroes as sheets", async () => {
+  const sent: unknown[] = []
+  const fetchImpl = (async (_url: string, init: RequestInit = {}) => {
+    sent.push(JSON.parse(String(init.body)))
+    return new Response(JSON.stringify({ hosted: { adventureId: "a1" } }))
+  }) as typeof fetch
+  const brakka = { id: "brakka", name: "Brakka", figure: "fighter", painted: true } as unknown as Hero
+  const res = await hostCommand(
+    { kind: "hostCreate", planId: "covert-cargo", characterId: "lyra-silvanus", invites: ["poppen-quickfoot", "brakka"], token: "t" },
+    "https://site.test",
+    () => [brakka],
+    fetchImpl
+  )
+  assert.equal(res.created?.adventureId, "a1")
+  assert.deepEqual(sent, [{ planId: "covert-cargo", character: { premadeId: "lyra-silvanus" }, invites: [{ premadeId: "poppen-quickfoot" }, { sheet: { id: "brakka", name: "Brakka" } }] }])
 })

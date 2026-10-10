@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server"
 import { type NextRequest, NextResponse } from "next/server"
-import { loadAdventureWithNpc } from "@/app/_actions/load-adventure"
+import { loadAdventureLobby, loadAdventureWithNpc } from "@/app/_actions/load-adventure"
 import type { Id } from "@/convex/_generated/dataModel"
 import { AdventureAccessError, assertAdventureAccess } from "@/lib/adventure-access"
 import { readJsonFromS3 } from "@/lib/s3-utils"
@@ -49,9 +49,17 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   try {
     const { adventureId } = await params
     const { userId } = await auth()
-    await assertAdventureAccess(userId, adventureId as Id<"adventures">)
+    // An invited guest polls the lobby before joining. A game still waiting for players answers them too.
+    const lobby = await assertAdventureAccess(userId, adventureId as Id<"adventures">).then(
+      () => null,
+      async (error) => {
+        const waiting = userId ? await loadAdventureLobby(adventureId as Id<"adventures">) : null
+        if (!waiting) throw error
+        return waiting
+      }
+    )
 
-    const adventureData = await loadAdventureWithNpc(adventureId as Id<"adventures">)
+    const adventureData = lobby ?? (await loadAdventureWithNpc(adventureId as Id<"adventures">))
 
     if (!adventureData?.adventure) {
       return NextResponse.json({ error: "Adventure not found" }, { status: 404 })

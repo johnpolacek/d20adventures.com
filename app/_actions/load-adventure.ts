@@ -19,6 +19,14 @@ export async function loadAdventureWithNpc(adventureId: Id<"adventures">) {
   return convex.mutation(api.adventure.getCurrentAdventureWithNpcProcessing, { adventureId, refreshKey: Date.now() })
 }
 
+// A game still waiting for players, for anyone holding its invite link, signed in or not. Nothing has been played
+// yet, so the lobby shows only the party.
+export async function loadAdventureLobby(adventureId: Id<"adventures">) {
+  const adventure = await convex.query(api.adventure.getAdventureById, { adventureId }).catch(() => null)
+  if (!adventure || adventure.status !== "waitingForPlayers" || adventure.currentTurnId || (adventure.runType ?? "campaign") === "practice") return null
+  return { adventure, currentTurn: null }
+}
+
 export async function loadAdventureWithTurnByOrder(adventureId: Id<"adventures">, turnOrder: number) {
   const { userId } = await auth()
   if (!userId) return null

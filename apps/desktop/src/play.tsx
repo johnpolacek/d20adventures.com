@@ -199,11 +199,9 @@ export function DesktopGame() {
     setScreen(null)
     await hostStart(adventureId, provider).catch((e) => setError(String(e)))
   }
-  const hostGame = async (party: PartyChoice[]) => {
-    const you = party.find((c) => !c.ai)
-    if (!you) return
+  const hostGame = async (you: string, invites: string[]) => {
     setSending(true)
-    const res = await host({ kind: "hostCreate", planId: adventure, characterId: you.id })
+    const res = await host({ kind: "hostCreate", planId: adventure, characterId: you, invites })
     setSending(false)
     if (res.error || !res.created) return setError(res.error ?? "Could not host the game.")
     await openHosted(res.created.adventureId)
@@ -342,7 +340,7 @@ export function DesktopGame() {
                         providers={providers}
                         provider={provider}
                         onProvider={setProvider}
-                        busy={busy}
+                        busy={busy || sending}
                         waiting={stageState.waiting}
                         created={created}
                         onStart={(chosenParty) => void start(chosenParty)}
@@ -357,7 +355,7 @@ export function DesktopGame() {
                         listPrices={listPrices}
                         linked={acct.state?.linked ?? false}
                         onLink={() => void acct.start()}
-                        onHost={(party) => void hostGame(party)}
+                        onHost={(you, invites) => void hostGame(you, invites)}
                       />
                     )}
                   </div>
