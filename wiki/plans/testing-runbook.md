@@ -90,6 +90,13 @@ pnpm stage:check
 STAGE_BASE=http://localhost:3057 STAGE_CDP_PORT=9478 pnpm stage:verify --tiers=ultra,high
 ```
 
+**Desktop screens in a browser:** In development the desktop app opens in a browser tab without Tauri. Bridge calls go to the dev server, which runs the real runtime script against a scratch data folder. It never starts the GM's CLI unless `D20_PREVIEW_GM` is set. `D20_PREVIEW_DATA_DIR` points it at a copy of a data folder with saves and heroes, and `D20_REQUIRE_ACCOUNT` shows the link step. Run `pnpm prepare:runtime` once first if `src-tauri/resources/runtime.cjs` is missing. Headless Chromium needs `--use-angle=metal --ignore-gpu-blocklist --enable-gpu` for the stage to render.
+
+```bash
+cd apps/desktop
+D20_PREVIEW_DATA_DIR=/path/to/copy pnpm exec vite --host 127.0.0.1 --port 1433 --strictPort
+```
+
 Inspect shader errors, draw/triangle counts, native-pixel character crops, every relevant shot, motion, pause/resume, and disposal. A mobile quality tier running on a desktop does not establish phone performance. Future stage-first gameplay needs a full authenticated playthrough as well as renderer verification.
 
 ## Recording results

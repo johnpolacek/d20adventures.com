@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Desktop direction](desktop-local-play.md) · [Design brief](../sources/design-brief.md)
 
-Status: In progress on `feature/desktop-site-style`. Audit done 2026-10-10. Owner decisions made the same day. Phase 0 is next.
+Status: In progress on `feature/desktop-site-style`. Phases 0, 1, and 2 and step 1 of phase 3 implemented 2026-10-10. Waiting on the owner's review of the recoloured HUD over each set.
 
 Owner request, 2026-10-10: "I think the style of UI on the desktop app is too different from the website and I prefer the design of the website. please do a thorough style pass and make a plan to comprehensively update the UI of the app to look more like the website"
 
@@ -127,7 +127,7 @@ Owner, 2026-10-10: "a c e", the three defaults.
 - Set the desktop root to the site's base: black ground, white serif text, 18px root.
 - Add `components/graphics`, `components/typography`, and the needed `components/ui` files to the desktop `@source` list. Today only `components/stage` and `button.tsx` are scanned.
 - Copy `public/images/d20.jpg` in `scripts/build-runtime.ts`.
-- Add a small set of site primitives the app can import without Next: card frame, section plate, mono chip, field. Put them beside the existing shared components. The website keeps its current markup. Adopting the primitives on the website is a later cleanup.
+- Add a small set of site primitives the app can import without Next: card frame, section plate, mono chip, field. Put them beside the existing shared components. The website keeps its current markup. Adopting the primitives on the website is a later cleanup. These landed with phase 1, when they had their first users.
 - Add a browser preview for the desktop screens with a mocked bridge, dev only, so screens can be captured without the Tauri app. Optional, but validation is slow without it.
 
 ### Phase 1, screens around the game
@@ -162,6 +162,50 @@ This changes the website's stage pages as well, which keeps both in step.
 - Restyle `app/desktop/link/link-desktop.tsx` to the site.
 - Delete unused `stage-*` utilities and the duplicated CSS.
 - Update the design brief, the Stageview plan, and the stage engine record where they describe the warm HUD.
+
+## Results, 2026-10-10
+
+### Phase 0
+
+- `components/theme.css` holds the tokens, the dice and roll animations, and the stage surfaces. Both stylesheets import it. The website's built CSS has the same rules as before.
+- The desktop app has the `primary` scale, `text-xxs`, Syne Mono, and the site's base: black ground, white serif text, 18px root.
+- `.fade-in` stays last in each app's own stylesheet, not in the shared file, so the Next build quirk does not bite.
+- The desktop's `text-wrap: pretty` rule sits in the base layer. Unlayered, it overrode `truncate`.
+- Browser preview: `pnpm exec vite --host 127.0.0.1 --port <port>` in `apps/desktop`, then open the page. Bridge calls go to the dev server, which runs the real runtime on a scratch data folder. See the [testing runbook](testing-runbook.md).
+
+### Phase 1
+
+- `AppHeader` in the compact and large forms, with the logo, page links, account, and fullscreen. One frame in `play.tsx` puts it over every screen outside play.
+- Title screen: the site's sizes, no capsule buttons, and the saved adventure as a primary chip with an amber title.
+- Adventures, Characters, and Settings use the site's `ImageHeader`, section plates, black ringed cards, mono chips, and the red delete control with its confirm step. Covers stay 3:4.
+- Account: emboss buttons in the header, paper code tiles, the site's panel for the link step.
+- `components/ui/site.tsx` holds the shared class strings and parts.
+
+### Phase 2
+
+- New game and the locked adventure: black ringed card, mono labels, indigo choices, amber names, outline buttons. The opening scene still shows behind party setup.
+- Hero creator: the character sheet's primary gradient and border, the site's fields.
+- Hosted lobby: the same card, labels, and buttons. Not seen running. It needs a hosted game.
+
+### Phase 3, step 1
+
+- The nine `stage-*` colours and six surface utilities changed in one commit, 9f67a11. Reverting it restores the warm HUD.
+- Checked over the Kordavos gate in the desktop preview and in `/dev/turn`: narration, journal, scene settings, turn order, and the perspective bar read clearly.
+- Still warm: the vignette behind the HUD, about 55 literal colours, and the d20. Labels are still tracked sans. Those are steps 2 and 3.
+- The website's `/desktop/link` page turned black with the tokens. Its layout still waits for phase 4.
+
+### Checks
+
+- Desktop typecheck, 47 desktop tests, scoped Biome, and a desktop production build. The preview is absent from the production bundle and Syne Mono is in it.
+- The website in `next dev`: home, `/desktop/link`, and `/dev/turn` render, and the shared tokens, animations, and surfaces resolve.
+- Screens captured at 1440 by 900 at DPR 1 in headless Chromium with the Metal renderer. Not yet judged at DPR 2 or in the packaged app.
+
+### Not done
+
+- HUD over the other authored sets. Only the gate was seen.
+- The link step, the link code panel, the locked adventure, and the hosted lobby were not seen running.
+- Small windows near the 900 by 650 minimum.
+- The Tauri window's own background colour was not checked.
 
 ## Order and branches
 
