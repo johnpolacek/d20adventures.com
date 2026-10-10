@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import slugify from "slugify"
-import { joinAdventure } from "@/app/_actions/join-adventure"
+import { joinAdventure, requestSeat } from "@/app/_actions/join-adventure"
 import { Button } from "@/components/ui/button"
 import type { Id } from "@/convex/_generated/dataModel"
 import { CharacterSelectCard } from "@/components/ui/character-select-card"
@@ -19,8 +19,10 @@ import { InviteLink } from "./invite-link"
 import { PartyLobbyGrid } from "./party-lobby-grid"
 import { StartAdventureButton } from "./start-adventure-button"
 
-// A hosted game's held seats: the heroes still open when the page loaded, and the one this guest's link names.
-export type LobbyInvite = { seats: PCTemplate[]; as?: string }
+// A hosted game's seats for guests when the page loaded: the held heroes still open, the seat this guest's link
+// names ("any" for a hero of their own), how many seats take a guest's own hero, and this guest's request for one.
+type SeatRequest = { name: string; status: "pending" | "rejected"; note?: string }
+export type LobbyInvite = { seats: PCTemplate[]; as?: string; open: number; request?: SeatRequest }
 
 interface AdventureLobbyProps {
   adventure: Adventure
@@ -42,6 +44,10 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
   const [joinError, setJoinError] = useState<string | null>(null)
   const [playerNames, setPlayerNames] = useState<Record<string, string>>({})
   const hasFetchedUserChars = useRef(false)
+  // The open seats and this guest's request, kept current by the poll below.
+  const [seat, setSeat] = useState<{ open: number; request?: SeatRequest }>({ open: invite?.open ?? 0, request: invite?.request })
+  const [askingId, setAskingId] = useState<string | null>(null)
+  const [changingHero, setChangingHero] = useState(false)
 
   // Polling for adventure updates (only when signed in)
   useEffect(() => {
@@ -53,6 +59,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
         if (response.ok) {
           const updatedAdventure = await response.json()
           setAdventure(updatedAdventure)
+          if (updatedAdventure.seat) setSeat(updatedAdventure.seat)
         }
       } catch (error) {
         console.error("Failed to poll adventure updates:", error)
@@ -129,6 +136,20 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
     }
   }
 
+  // Asks the host for an open seat with one of the guest's own heroes.
+  const handleAskForSeat = async (characterId: string, name: string) => {
+    if (askingId) return
+    setAskingId(characterId)
+    setJoinError(null)
+    const { error } = await requestSeat({ adventureId: adventure.id, characterId }).catch(() => ({ error: "The host could not be asked." }))
+    if (error) setJoinError(error)
+    else {
+      setSeat((s) => ({ ...s, request: { name, status: "pending" } }))
+      setChangingHero(false)
+    }
+    setAskingId(null)
+  }
+
   // Add a handler for clicking a character slot to open the modal
   const handlePartySlotClick = (character: PC | PCTemplate) => {
     setModalCharacter(character)
@@ -179,10 +200,17 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
   const party = adventure.party
   const userCharacter = party?.find((pc) => pc.userId === user?.id && pc.controlledBy !== "ai")
   const notSeated = (pc: PCTemplate) => !party?.some((partyMember) => partyMember.id === pc.id)
-  // With held seats, a guest joins only as one of them: the hero their link names, or any still open.
+  // In a game with seats for guests, a guest takes a held hero (the one their link names, or any still open) or
+  // asks the host for an open seat with a hero of their own.
   const openSeats = invite?.seats.filter(notSeated) ?? []
   const namedSeat = openSeats.find((pc) => pc.id === invite?.as)
-  const availableCharacters = invite ? (namedSeat ? [namedSeat] : openSeats) : adventurePlan?.premadePlayerCharacters?.filter(notSeated) || []
+  const heldSeats = invite?.as === "any" && seat.open > 0 ? [] : namedSeat ? [namedSeat] : openSeats
+  const availableCharacters = invite ? heldSeats : adventurePlan?.premadePlayerCharacters?.filter(notSeated) || []
+  const waitingOnHost = seat.request?.status === "pending" && !changingHero
+  const bringOwn = Boolean(invite) && seat.open > 0 && !namedSeat && !waitingOnHost
+  // Over the heroes a guest may take directly, which follow their own heroes when both are offered.
+  const takeHero = availableCharacters.length === 1 ? `Play as ${availableCharacters[0].name}` : "Choose your hero"
+  const takeHeading = !invite ? "Or join with a premade character:" : bringOwn ? `Or ${takeHero.charAt(0).toLowerCase()}${takeHero.slice(1)}` : takeHero
   const isOwner = user?.id === adventure.ownerId
 
   // Always show the party grid and teaser, even if not signed in
@@ -214,6 +242,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
           userId={user?.id}
           onCharacterClick={handlePartySlotClick}
           availableCharacters={availableCharacters}
+          seats={invite ? (party?.length ?? 0) + openSeats.length + seat.open : undefined}
           onJoinClick={isSignedIn ? handleJoinAdventure : undefined}
           onRemoveAiCompanion={isOwner ? handleRemoveAiCompanion : undefined}
           isJoining={isJoining}
@@ -248,10 +277,24 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
             ) : (
               <>
                 {joinError && !/redirect/i.test(joinError) && <div className="text-center text-red-400 text-sm mb-4 bg-red-900/20 px-4 py-2 rounded">{joinError}</div>}
-                {invite && availableCharacters.length === 0 && <p className="text-center text-white/80">Every seat at this table is taken.</p>}
-                {!invite && userCharacters.length > 0 && (
+                {invite && availableCharacters.length === 0 && seat.open < 1 && <p className="text-center text-white/80">Every seat at this table is taken.</p>}
+                {waitingOnHost && seat.open > 0 && (
+                  <div className="mb-8 flex flex-col items-center gap-4 text-center">
+                    <p className="text-white/80">Waiting for the host to approve {seat.request?.name}.</p>
+                    <Button variant="outline" size="sm" onClick={() => setChangingHero(true)}>
+                      Choose another hero
+                    </Button>
+                  </div>
+                )}
+                {seat.request?.status === "rejected" && (
+                  <p className="mb-8 max-w-xl rounded bg-amber-900/20 px-4 py-2 text-center text-amber-200">
+                    The host declined {seat.request.name}
+                    {seat.request.note ? `: ${seat.request.note}` : "."}
+                  </p>
+                )}
+                {(!invite || bringOwn) && userCharacters.length > 0 && (
                   <>
-                    <h2 className="text-2xl font-display text-amber-400 mb-6">Join with Your Character</h2>
+                    <h2 className="text-2xl font-display text-amber-400 mb-6">{invite ? "Bring your own hero" : "Join with Your Character"}</h2>
                     <div className="w-full flex flex-wrap gap-6 justify-center mb-8">
                       {userCharacters.map((char) => {
                         const charJoinId = `characters/${user?.id}/${slugify(char.name, { lower: true, strict: true })}.json`
@@ -260,9 +303,9 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
                             <CharacterSelectCard
                               className="ring-white/20"
                               character={char}
-                              buttonLabel={isJoining && joiningCharacterId === charJoinId ? "Joining..." : "Join"}
-                              disabled={isJoining}
-                              onButtonClick={() => handleJoinAdventure(charJoinId)}
+                              buttonLabel={invite ? (askingId === charJoinId ? "Asking..." : "Ask to join") : isJoining && joiningCharacterId === charJoinId ? "Joining..." : "Join"}
+                              disabled={isJoining || askingId !== null}
+                              onButtonClick={() => (invite ? handleAskForSeat(charJoinId, char.name) : handleJoinAdventure(charJoinId))}
                             />
                           </div>
                         )
@@ -270,7 +313,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
                     </div>
                   </>
                 )}
-                {!invite && (
+                {(!invite || bringOwn) && (
                   <Link href={`/player/${user?.username}/characters/new?redirectToAdventure=${encodeURIComponent(window.location.pathname)}`}>
                     <Button variant="epic" size="lg" className="mb-4">
                       Create New Character
@@ -279,9 +322,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
                 )}
                 {availableCharacters.length > 0 && (
                   <>
-                    <h3 className="text-lg font-display text-amber-400 my-8 w-full text-center">
-                      {!invite ? "Or join with a premade character:" : availableCharacters.length === 1 ? `Play as ${availableCharacters[0].name}` : "Choose your hero"}
-                    </h3>
+                    <h3 className="text-lg font-display text-amber-400 my-8 w-full text-center">{takeHeading}</h3>
                     <div className="w-full flex flex-wrap gap-6 justify-center mb-8">
                       {availableCharacters.map((char) => (
                         <div key={char.id} className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4">

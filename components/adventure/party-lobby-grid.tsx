@@ -15,10 +15,23 @@ interface PartyLobbyGridProps {
   isJoining?: boolean
   availableCharacters?: PCTemplate[]
   playerNames?: Record<string, string>
+  // How many seats to show, where the host set fewer than the adventure allows.
+  seats?: number
 }
 
-export function PartyLobbyGrid({ adventure, adventurePlan, userId, onCharacterClick, onJoinClick, onRemoveAiCompanion, isJoining = false, availableCharacters = [], playerNames = {} }: PartyLobbyGridProps) {
-  const maxParty = adventurePlan.party?.[1] || 4
+export function PartyLobbyGrid({
+  adventure,
+  adventurePlan,
+  userId,
+  onCharacterClick,
+  onJoinClick,
+  onRemoveAiCompanion,
+  isJoining = false,
+  availableCharacters = [],
+  playerNames = {},
+  seats,
+}: PartyLobbyGridProps) {
+  const maxParty = seats ?? (adventurePlan.party?.[1] || 4)
   const party = adventure.party || []
   const { user } = useUser()
 

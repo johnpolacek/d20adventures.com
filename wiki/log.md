@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-10, any hero seat with the host's approval
+
+Owner: an any hero seat, "if allowed on the adventure, host has right to approve or reject with note". Where an adventure takes custom heroes, party setup can add a seat for a guest's own hero. The guest asks to join with one, and the host approves or rejects it in the app's lobby, with an optional note on a rejection. This restores the 2026-10-08 decision that guests may bring their own characters, now behind the host's approval. Details in [Desktop host mode](plans/desktop-host-mode.md).
+
 ## 2026-10-10, invite a player to a seat from party setup
 
 Owner: "i want to be able to invite another player to play as poppen from this screen". Each party seat is now You, AI, or Invite. An invited seat hosts the game on the website with that hero held, and its link opens to joining as that hero. Checking it found that the website lobby returned 404 to everyone not already in the game, so no invite link had worked. That is fixed for games still waiting for players. Held seats set aside the 2026-10-08 decision that guests make their own characters, and the app no longer starts an open table. Details in [Desktop host mode](plans/desktop-host-mode.md).

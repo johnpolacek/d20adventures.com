@@ -18,13 +18,78 @@ export const setHost = mutation({
     userId: v.string(),
     deviceId: v.id("devices"),
     seats: v.optional(v.array(v.object({ id: v.string(), name: v.string(), key: v.optional(v.string()) }))),
+    open: v.optional(v.number()),
   },
-  handler: async (ctx, { secret, adventureId, userId, deviceId, seats }) => {
+  handler: async (ctx, { secret, adventureId, userId, deviceId, seats, open }) => {
     requireServer(secret)
     const adventure = await ctx.db.get(adventureId)
     if (!adventure) throw new Error("Adventure not found")
     if (adventure.ownerId !== userId) throw new Error("Only the adventure's owner can host it")
-    await ctx.db.patch(adventureId, { host: { userId, deviceId, seenAt: Date.now(), ...(seats?.length ? { seats } : {}) }, updatedAt: Date.now() })
+    await ctx.db.patch(adventureId, { host: { userId, deviceId, seenAt: Date.now(), ...(seats?.length ? { seats } : {}), ...(open ? { open } : {}) }, updatedAt: Date.now() })
+  },
+})
+
+const sheetId = (characterId: string) => characterId.split("/").pop()?.replace(".json", "")
+// Open seats not yet filled: every guest whose hero is not one the host held sits in an open seat.
+const openLeft = (adventure: Doc<"adventures">) => {
+  const host = adventure.host
+  if (!host?.open) return 0
+  const held = new Set((host.seats ?? []).map((s) => s.id))
+  return host.open - (adventure.players ?? []).filter((p) => p.userId !== host.userId && !held.has(sheetId(p.characterId) ?? "")).length
+}
+const waiting = (adventure: Doc<"adventures"> | null) => {
+  if (!adventure?.host) throw new Error("This adventure is not hosted")
+  if (adventure.status !== "waitingForPlayers" || adventure.currentTurnId) throw new Error("This game has already started")
+  return { adventure, host: adventure.host }
+}
+
+/** A guest asks for an open seat with a hero of their own. Asking again replaces their earlier request. */
+export const requestSeat = mutation({
+  args: {
+    secret: v.string(),
+    adventureId: v.id("adventures"),
+    userId: v.string(),
+    player: v.string(),
+    characterId: v.string(),
+    name: v.string(),
+    race: v.optional(v.string()),
+    archetype: v.optional(v.string()),
+  },
+  handler: async (ctx, { secret, adventureId, ...request }) => {
+    requireServer(secret)
+    const { adventure, host } = waiting(await ctx.db.get(adventureId))
+    if (adventure.playerIds.includes(request.userId)) throw new Error("You are already in this game")
+    if (openLeft(adventure) < 1) throw new Error("This game has no open seat")
+    const hero = sheetId(request.characterId)
+    if (host.seats?.some((s) => s.id === hero) || adventure.players?.some((p) => sheetId(p.characterId) === hero)) throw new Error("That hero is already at this table")
+    const others = (host.requests ?? []).filter((r) => r.userId !== request.userId)
+    await ctx.db.patch(adventureId, { host: { ...host, requests: [...others, { ...request, status: "pending" as const, at: Date.now() }] }, updatedAt: Date.now() })
+  },
+})
+
+/** The host approves a guest's request, which seats their hero, or rejects it with a note the guest sees. */
+export const answerSeat = mutation({
+  args: { secret: v.string(), adventureId: v.id("adventures"), hostUserId: v.string(), userId: v.string(), approve: v.boolean(), note: v.optional(v.string()) },
+  handler: async (ctx, { secret, adventureId, hostUserId, userId, approve, note }) => {
+    requireServer(secret)
+    const { adventure, host } = waiting(await ctx.db.get(adventureId))
+    if (host.userId !== hostUserId) throw new Error("You are not hosting this adventure")
+    const request = host.requests?.find((r) => r.userId === userId && r.status === "pending")
+    if (!request) throw new Error("That request is no longer waiting")
+    const others = (host.requests ?? []).filter((r) => r.userId !== userId)
+    if (!approve) {
+      const rejected = { ...request, status: "rejected" as const, note: note?.trim().slice(0, 300) || undefined }
+      return ctx.db.patch(adventureId, { host: { ...host, requests: [...others, rejected] }, updatedAt: Date.now() })
+    }
+    // They took a held seat while this request waited.
+    if (adventure.playerIds.includes(userId)) return ctx.db.patch(adventureId, { host: { ...host, requests: others } })
+    if (openLeft(adventure) < 1) throw new Error("This game has no open seat")
+    await ctx.db.patch(adventureId, {
+      host: { ...host, requests: others },
+      players: [...(adventure.players ?? []), { userId, characterId: request.characterId }],
+      playerIds: [...adventure.playerIds, userId],
+      updatedAt: Date.now(),
+    })
   },
 })
 

@@ -1,8 +1,9 @@
 import { auth } from "@clerk/nextjs/server"
 import { type NextRequest, NextResponse } from "next/server"
 import { loadAdventureLobby, loadAdventureWithNpc } from "@/app/_actions/load-adventure"
-import type { Id } from "@/convex/_generated/dataModel"
+import type { Doc, Id } from "@/convex/_generated/dataModel"
 import { AdventureAccessError, assertAdventureAccess } from "@/lib/adventure-access"
+import { guestSeat } from "@/lib/host/seats"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import type { Adventure } from "@/types/adventure"
 import type { PC, PCTemplate } from "@/types/character"
@@ -95,7 +96,9 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       party = partyResults.filter((pc: PC | undefined): pc is PC => !!pc)
     }
 
-    return NextResponse.json({ ...adventure, party })
+    // In a hosted game, the open seats left and this guest's request for one.
+    const raw = adventureData.adventure as Doc<"adventures">
+    return NextResponse.json({ ...adventure, party, ...(raw.host ? { seat: guestSeat(raw, userId) } : {}) })
   } catch (error) {
     if (error instanceof AdventureAccessError) {
       return NextResponse.json({ error: error.message }, { status: error.status })

@@ -1,9 +1,11 @@
+import { auth } from "@clerk/nextjs/server"
 import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 import { loadAdventureLobby, loadAdventureWithNpc } from "@/app/_actions/load-adventure"
+import type { LobbyInvite } from "@/components/adventure/adventure-lobby"
 import AdventureHome from "@/components/views/adventure-home"
 import type { Doc, Id } from "@/convex/_generated/dataModel"
-import { openSeats, seatHero } from "@/lib/host/seats"
+import { guestSeat, openSeats, seatHero } from "@/lib/host/seats"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import { mapConvexTurnToTurn, reverseSlugify } from "@/lib/utils"
 import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
@@ -121,13 +123,14 @@ export default async function AdventurePage(props: { params: Promise<{ settingId
 
   const encounter = findEncounter(adventurePlan, currentTurn?.encounterId)
 
-  // A hosted game's held seats: the heroes still open, and the one this guest's link names.
+  // A hosted game's seats for guests: the held heroes still open, the seat this guest's link names, how many seats
+  // take a guest's own hero, and this guest's request for one.
   const raw = adventureData?.adventure as Doc<"adventures"> | undefined
-  let invite: { seats: PCTemplate[]; as?: string } | undefined
-  if (raw?.host?.seats?.length) {
+  let invite: LobbyInvite | undefined
+  if (raw?.host?.seats?.length || raw?.host?.open) {
     const heroes = await Promise.all(openSeats(raw).map((seat) => seatHero(seat, adventurePlan.premadePlayerCharacters)))
     const { as } = await props.searchParams
-    invite = { seats: heroes.filter((pc): pc is PCTemplate => !!pc), as: typeof as === "string" ? as : undefined }
+    invite = { seats: heroes.filter((pc): pc is PCTemplate => !!pc), as: typeof as === "string" ? as : undefined, ...guestSeat(raw, (await auth()).userId) }
   }
 
   return (

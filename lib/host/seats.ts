@@ -8,8 +8,26 @@ import type { PCTemplate } from "@/types/character"
 type Seated = Pick<Doc<"adventures">, "host" | "players">
 type Seat = NonNullable<NonNullable<Doc<"adventures">["host"]>["seats"]>[number]
 
+/** The message a Convex function threw, without the request id and stack around it. */
+export const thrownMessage = (error: unknown, fallback: string) => /Uncaught Error: (.+?)(\n|$)/.exec(String(error))?.[1] ?? fallback
+
 /** A character's sheet id, from its id or from its key in an account. */
 export const sheetId = (characterId: string) => characterId.split("/").pop()?.replace(".json", "") ?? ""
+
+/** How many seats still take a guest's own hero. Every guest whose hero the host did not hold sits in one. */
+export function openLeft(adventure: Seated) {
+  const host = adventure.host
+  if (!host?.open) return 0
+  const held = new Set((host.seats ?? []).map((s) => s.id))
+  return host.open - (adventure.players ?? []).filter((p) => p.userId !== host.userId && !held.has(sheetId(p.characterId))).length
+}
+
+/** What a guest sees of the open seats: how many are left, and their own request with the host's answer. */
+export function guestSeat(adventure: Seated, userId: string | null | undefined) {
+  const request = userId ? adventure.host?.requests?.find((r) => r.userId === userId) : undefined
+  return { open: openLeft(adventure), request: request && { name: request.name, status: request.status, note: request.note } }
+}
+export type GuestSeat = ReturnType<typeof guestSeat>
 
 /** The held seats nobody has taken yet. */
 export const openSeats = (adventure: Seated): Seat[] => (adventure.host?.seats ?? []).filter((s) => !adventure.players?.some((p) => sheetId(p.characterId) === s.id))

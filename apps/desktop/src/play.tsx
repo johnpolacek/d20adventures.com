@@ -199,9 +199,9 @@ export function DesktopGame() {
     setScreen(null)
     await hostStart(adventureId, provider).catch((e) => setError(String(e)))
   }
-  const hostGame = async (you: string, invites: string[]) => {
+  const hostGame = async (you: string, invites: string[], open: number) => {
     setSending(true)
-    const res = await host({ kind: "hostCreate", planId: adventure, characterId: you, invites })
+    const res = await host({ kind: "hostCreate", planId: adventure, characterId: you, invites, open })
     setSending(false)
     if (res.error || !res.created) return setError(res.error ?? "Could not host the game.")
     await openHosted(res.created.adventureId)
@@ -266,7 +266,14 @@ export function DesktopGame() {
       onStage={setStageState}
     >
       {hosting && hosted && !hosted.turn && screen === null && (
-        <HostedLobby summary={hosted.summary} gm={gmLabel} busy={sending} onStart={() => void act(() => host({ kind: "hostStart", adventureId: hosting }))} onHome={goHome} />
+        <HostedLobby
+          summary={hosted.summary}
+          gm={gmLabel}
+          busy={sending}
+          onAnswer={(userId, approve, note) => void act(() => host({ kind: "hostAnswer", adventureId: hosting, userId, approve, note }))}
+          onStart={() => void act(() => host({ kind: "hostStart", adventureId: hosting }))}
+          onHome={goHome}
+        />
       )}
       {screen !== null && (
         // Every screen outside play sits under the website's header. Opaque, so the stage loading behind never flashes
@@ -355,7 +362,7 @@ export function DesktopGame() {
                         listPrices={listPrices}
                         linked={acct.state?.linked ?? false}
                         onLink={() => void acct.start()}
-                        onHost={(you, invites) => void hostGame(you, invites)}
+                        onHost={(you, invites, open) => void hostGame(you, invites, open)}
                       />
                     )}
                   </div>

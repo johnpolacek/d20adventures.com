@@ -9,8 +9,9 @@ import { ModuleCover } from "./module-cover"
 import { portraitFor } from "./scenes"
 
 type Pick = { id: string; name: string; race: string; archetype: string; portrait?: string; hero?: Hero }
-// Who plays a seated hero: the player, the AI, or a friend invited through the website.
-type Seat = { id: string; who: "you" | "ai" | "invite" }
+// Who plays a seated hero: the player, the AI, or a friend invited through the website. An open seat has no hero
+// yet: a guest brings their own, and the host approves it.
+type Seat = { id: string; who: "you" | "ai" | "invite"; open?: boolean }
 // The small controls over a roster hero's card.
 const mini = cn(siteOutline, "px-2 py-0.5 font-mono text-xxs")
 // An adventure for sale that this app cannot play yet. Owned ones are downloading, or failed to.
@@ -66,7 +67,8 @@ export function NewGame(props: {
   onLink?: () => void
   // Hosting the adventure on the website for friends instead: the player's hero, and the heroes held for guests.
   // Needs a linked account, so Invite links first.
-  onHost?: (you: string, invites: string[]) => void
+  // open is how many more seats take a guest's own hero.
+  onHost?: (you: string, invites: string[], open: number) => void
 }) {
   const info = props.adventures.find((a) => a.id === props.adventure)
   const lockedInfo = info ? undefined : props.locked.find((a) => a.id === props.adventure)
@@ -89,9 +91,10 @@ export function NewGame(props: {
   if (!info) return null
   const sized = party.length >= min && party.length <= max
   const yours = party.filter((c) => c.who === "you")
-  const invites = party.filter((c) => c.who === "invite").map((c) => c.id)
-  // Any invited hero makes it a hosted game, which takes one hero for the player and has no AI heroes yet.
-  const hosting = invites.length > 0
+  const invites = party.filter((c) => c.who === "invite" && !c.open).map((c) => c.id)
+  const open = party.filter((c) => c.open).length
+  // Any invited seat makes it a hosted game, which takes one hero for the player and has no AI heroes yet.
+  const hosting = invites.length + open > 0
   const hostable = yours.length === 1 && !party.some((c) => c.who === "ai")
   const ready = sized && yours.length > 0 && (!hosting || hostable)
   const canInvite = Boolean(props.onHost) && max > 1
@@ -100,7 +103,8 @@ export function NewGame(props: {
     setParty((p) => {
       if (p.some((c) => c.id === id)) {
         const rest = p.filter((c) => c.id !== id)
-        return rest.length && !rest.some((c) => c.who === "you") ? rest.map((c, i) => (i === 0 ? { ...c, who: "you" } : c)) : rest
+        const first = rest.findIndex((c) => !c.open)
+        return first >= 0 && !rest.some((c) => c.who === "you") ? rest.map((c, i) => (i === first ? { ...c, who: "you" } : c)) : rest
       }
       return p.length < max ? [...p, { id, who: joinAs(p) }] : p
     })
@@ -132,6 +136,20 @@ export function NewGame(props: {
               {/* One column when seats can be invited: three choices leave no room for a second. */}
               <ul className={cn("grid gap-2", !canInvite && "sm:grid-cols-2")}>
                 {party.map((choice) => {
+                  if (choice.open)
+                    return (
+                      <li key={choice.id} className="flex items-center gap-3 rounded-lg border border-dashed border-white/20 bg-black/50 p-2">
+                        <span className="grid h-12 w-10 shrink-0 place-items-center rounded border border-white/10 bg-white/5 font-display text-lg text-white/40">?</span>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate font-display text-base">Any hero</div>
+                          <div className="text-xs text-white/70">A guest's own, with your approval</div>
+                        </div>
+                        <Chip tone="primary">Invite</Chip>
+                        <button type="button" aria-label="Remove the open seat" onClick={() => toggle(choice.id)} className="px-2 text-xl leading-none text-white/50 hover:text-white">
+                          ×
+                        </button>
+                      </li>
+                    )
                   const p = picks.find((x) => x.id === choice.id)
                   if (!p) return null
                   return (
@@ -231,6 +249,18 @@ export function NewGame(props: {
                     </button>
                   </li>
                 )}
+                {info.options && canInvite && (
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => setParty((p) => (p.length < max ? [...p, { id: `open-${Date.now()}`, who: "invite", open: true }] : p))}
+                      disabled={props.busy || party.length >= max}
+                      className="grid h-full min-h-[10rem] w-full place-items-center rounded-lg border border-dashed border-white/30 bg-black p-2 font-display text-sm text-white/60 transition-colors hover:border-sky-300/60 hover:text-white disabled:cursor-default disabled:opacity-40"
+                    >
+                      Any hero
+                    </button>
+                  </li>
+                )}
               </ul>
             </div>
           </div>
@@ -264,7 +294,7 @@ export function NewGame(props: {
             variant="epic"
             className="text-xl"
             disabled={props.busy || !ready || !props.providers.length}
-            onClick={() => (props.linked === true ? props.onHost?.(yours[0].id, invites) : props.onLink?.())}
+            onClick={() => (props.linked === true ? props.onHost?.(yours[0].id, invites, open) : props.onLink?.())}
           >
             {props.busy ? "Inviting…" : "Invite"}
           </Button>

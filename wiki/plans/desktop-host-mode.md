@@ -103,7 +103,37 @@ Owner, at party setup with Lyra and Poppen seated: "i want to be able to invite 
 
 - 2026-10-08: "Guests make characters with the website's existing character creation." Held seats do not allow that.
 - The website still supports a hosted game without seats, where guests bring any character. The app no longer has a way to start one.
-- Open: whether a seat can be held for "any hero".
+- Settled 2026-10-10 by the any hero seat below.
+
+## Any hero seat, 2026-10-10
+
+Owner: an "any hero" seat, "if allowed on the adventure, host has right to approve or reject with note".
+
+### Design
+
+- Allowed where the adventure takes custom heroes, which is `availableCharacterOptions` in its manifest. March of Davos and The Road to Kordavos do. Covert Cargo and The Midnight Summons do not.
+- Party setup: an Any hero tile beside New hero adds a seat for a guest's own hero. It counts toward the party size and is always an invited seat.
+- The website keeps the count as `host.open`, and guests' requests as `host.requests`: who asks, their hero's key, name, race and class, the status, and the host's note.
+- A guest with the link signs in and asks to join with one of their own heroes, or makes one first. One request per guest. Asking again replaces it.
+- The host's lobby in the app lists each request with Approve and Reject. Reject takes an optional note.
+- Approve seats the hero. Reject keeps the request with its note, which the guest sees, and they may ask again with another hero.
+- A game with held or open seats refuses a direct join by any other hero, so approval cannot be skipped.
+- The open seats share one link, the lobby link with `?as=any`.
+
+### Built and checked, 2026-10-10
+
+- App: the Any hero tile and seat in `new-game.tsx`, requests with Approve and Reject in `hosted-lobby.tsx`, `hostCreate` with `open`, and `hostAnswer`.
+- Website: `host.open` and `host.requests` in the schema, `requestSeat` and `answerSeat` in `convex/hosting.ts`, the `requestSeat` action, the answer on `POST /api/desktop/host/<id>`, and the lobby's own-hero view. The lobby's poll carries the open seats and the guest's request.
+- The website lobby shows only the host's seats in a game with seats for guests, not the adventure's maximum.
+- A note goes with a rejection only. Approval has none.
+- The host sees the hero's name, race, class, and the guest's username. Not the sheet.
+- The website does not check a guest's hero against the adventure's allowed races and classes. The host decides.
+- Checked in the running app against the local website and dev Convex, with March of Davos: Branka on You, Cassia on Invite, and one Any hero seat. The lobby showed a link for Cassia and one for any hero.
+- As the test user with the any hero link: the guest's own heroes showed with Ask to join. A hero already at the table was refused with a message. A request showed in the app as Thora Battlehammer, Dwarf Cleric, d20playtest.
+- Reject in the app showed the guest "The host declined Thora Battlehammer." A rejection with a note, sent straight to Convex, showed the note. Approve seated Thalbern, the app listed both heroes, and the any hero link went away.
+- Not checked: typing a note in the app's field, two open seats, a guest making a new hero from the lobby, and Choose another hero while waiting.
+- No tests were added. Owner prefers throwaway checks.
+- That March of Davos test game is still in dev Convex, with the test user seated as Thalbern.
 
 ## Known gaps
 

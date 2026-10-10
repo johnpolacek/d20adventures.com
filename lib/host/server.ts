@@ -6,7 +6,7 @@ import { assertPlayerCharacterControl } from "@/lib/adventure-access"
 import { convex } from "@/lib/convex/server"
 import { serverSecret } from "@/lib/convex/server-secret"
 import { serverStore } from "@/lib/gm-server/store"
-import { openSeats } from "@/lib/host/seats"
+import { openLeft, openSeats } from "@/lib/host/seats"
 import { readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 import { toPCTemplate } from "@/lib/utils/character-mapping"
 import { isLocalWikiAdventure, loadWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
@@ -39,8 +39,8 @@ export const inviteUrl = (origin: string, adventure: Pick<Doc<"adventures">, "_i
 /** A character at a hosted table: a premade from the adventure, or a hero sheet from the host's app. */
 export type HostCharacter = { premadeId: string } | { sheet: unknown }
 
-/** Hosts a game with the host's character seated and a seat held for each invited hero. */
-export async function createHostedAdventure(args: { userId: string; deviceId: Id<"devices">; planId: string; character: HostCharacter; invites?: HostCharacter[] }) {
+/** Hosts a game with the host's character seated, a seat held for each invited hero, and open seats for guests' own heroes. */
+export async function createHostedAdventure(args: { userId: string; deviceId: Id<"devices">; planId: string; character: HostCharacter; invites?: HostCharacter[]; open?: number }) {
   if (!isLocalWikiAdventure(SETTING, args.planId)) throw new HostError(404, "This adventure cannot be hosted.")
   const { artifacts, contentRef } = await loadWikiAdventureRuntime(SETTING, args.planId)
   const manifest = artifacts.manifest
@@ -58,7 +58,10 @@ export async function createHostedAdventure(args: { userId: string; deviceId: Id
   const held = (args.invites ?? []).map(resolve)
   const ids = [mine.id, ...held.map((h) => h.id)]
   if (new Set(ids).size !== ids.length) throw new HostError(400, "A hero can join the party only once.")
-  if (manifest.maxPlayers && ids.length > manifest.maxPlayers) throw new HostError(400, `${manifest.title} seats ${manifest.maxPlayers} at most.`)
+  const open = args.open ?? 0
+  if (!Number.isInteger(open) || open < 0) throw new HostError(400, "The open seats are not valid.")
+  if (open && !manifest.availableCharacterOptions) throw new HostError(400, `${manifest.title} takes its own heroes only.`)
+  if (manifest.maxPlayers && ids.length + open > manifest.maxPlayers) throw new HostError(400, `${manifest.title} seats ${manifest.maxPlayers} at most.`)
   const keyOf = (id: string) => `characters/${args.userId}/${id}.json`
   const characterId = keyOf(mine.id)
   // A held roster hero's sheet waits in the host's account for the guest who takes the seat.
@@ -78,7 +81,7 @@ export async function createHostedAdventure(args: { userId: string; deviceId: Id
     currentEncounterId: manifest.startEncounterId,
     adventureSummaryMarkdown: manifest.summary,
   })
-  await convex.mutation(api.hosting.setHost, { secret: serverSecret(), adventureId, userId: args.userId, deviceId: args.deviceId, seats })
+  await convex.mutation(api.hosting.setHost, { secret: serverSecret(), adventureId, userId: args.userId, deviceId: args.deviceId, seats, open })
   return adventureId
 }
 
@@ -131,9 +134,15 @@ export async function hostedSummary(adventure: Doc<"adventures">, origin: string
     party: names.filter(Boolean),
     players: adventure.playerIds.length,
     invite: inviteUrl(origin, adventure),
-    // How many heroes the host held for guests, then the seats nobody has taken, each with the link that joins as
-    // that hero.
-    held: adventure.host?.seats?.length ?? 0,
+    // How many seats the host set aside for guests, held heroes and open ones together, then the held seats nobody
+    // has taken, each with the link that joins as that hero.
+    held: (adventure.host?.seats?.length ?? 0) + (adventure.host?.open ?? 0),
+    // Seats still open to a guest's own hero, their link, and the guests waiting on the host's answer.
+    open: openLeft(adventure),
+    openInvite: `${inviteUrl(origin, adventure)}?as=any`,
+    requests: (adventure.host?.requests ?? [])
+      .filter((r) => r.status === "pending" && !adventure.playerIds.includes(r.userId))
+      .map((r) => ({ userId: r.userId, player: r.player, name: r.name, race: r.race, archetype: r.archetype })),
     seats: openSeats(adventure).map((s) => ({ id: s.id, name: s.name, invite: `${inviteUrl(origin, adventure)}?as=${s.id}` })),
     updatedAt: adventure.updatedAt,
   }

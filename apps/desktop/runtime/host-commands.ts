@@ -9,7 +9,10 @@ const id = z.string().min(1).max(100)
 export const hostCommandSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("hostList"), token }),
   // The host's character and the heroes held for invited players: premades of the adventure, or roster heroes by id.
-  z.object({ kind: z.literal("hostCreate"), planId: id, characterId: id, invites: z.array(id).max(8).default([]), token }),
+  // open is how many more seats take a guest's own hero.
+  z.object({ kind: z.literal("hostCreate"), planId: id, characterId: id, invites: z.array(id).max(8).default([]), open: z.number().int().min(0).max(8).default(0), token }),
+  // The host's answer to a guest asking for an open seat. A rejection may carry a note for the guest.
+  z.object({ kind: z.literal("hostAnswer"), adventureId: id, userId: id, approve: z.boolean(), note: z.string().trim().max(300).optional(), token }),
   z.object({ kind: z.literal("hostState"), adventureId: id, token }),
   z.object({ kind: z.literal("hostStart"), adventureId: id, token }),
   z.object({
@@ -56,10 +59,13 @@ export async function hostCommand(command: HostCommand, site: string, heroes: ()
           const hero = roster.find((h) => h.id === characterId)
           return hero ? { sheet: (({ figure: _f, painted: _p, ...sheet }) => sheet)(hero) } : { premadeId: characterId }
         }
-        const body = { planId: command.planId, character: character(command.characterId), invites: command.invites.map(character) }
+        const body = { planId: command.planId, character: character(command.characterId), invites: command.invites.map(character), open: command.open }
         return { created: ((await call("/api/desktop/host", body)) as { hosted: HostedSummary }).hosted }
       }
       case "hostState":
+        return { state: (await call(`/api/desktop/host/${command.adventureId}`)) as HostedState }
+      case "hostAnswer":
+        await call(`/api/desktop/host/${command.adventureId}`, { action: "answer", userId: command.userId, approve: command.approve, note: command.note })
         return { state: (await call(`/api/desktop/host/${command.adventureId}`)) as HostedState }
       case "hostStart":
         await call(`/api/desktop/host/${command.adventureId}`, { action: "start" })

@@ -1,11 +1,12 @@
 "use server"
 
-import { auth } from "@clerk/nextjs/server"
+import { auth, currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { convex } from "@/lib/convex/server"
-import { openSeats, seatHero, sheetId } from "@/lib/host/seats"
+import { serverSecret } from "@/lib/convex/server-secret"
+import { openLeft, openSeats, seatHero, sheetId, thrownMessage } from "@/lib/host/seats"
 import { readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 import { toPCTemplate } from "@/lib/utils/character-mapping"
 import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
@@ -96,4 +97,21 @@ export async function joinAdventure({ settingId, adventurePlanId, adventureId, c
 
   console.log("🎲 Successfully joined adventure, redirecting...")
   redirect(`/settings/${settingId}/${adventurePlanId}/${adventureId}`)
+}
+
+// A guest asks the host for an open seat with a hero from their own account. The host approves or rejects it in
+// their app, and the lobby shows the answer. Returns why it could not be asked, if so.
+export async function requestSeat({ adventureId, characterId }: { adventureId: string; characterId: string }): Promise<{ error?: string }> {
+  const user = await currentUser()
+  if (!user) return { error: "Sign in to ask for a seat." }
+  const adventure = await convex.query(api.adventure.getAdventureById, { adventureId: adventureId as Id<"adventures"> }).catch(() => null)
+  if (!adventure?.host || openLeft(adventure) < 1) return { error: "This game has no open seat." }
+  const key = `characters/${user.id}/${sheetId(characterId)}.json`
+  const hero = toPCTemplate(await readJsonFromS3(key).catch(() => null))
+  if (!hero) return { error: "That hero is not in your account." }
+  const request = { userId: user.id, player: user.username ?? user.firstName ?? "A guest", characterId: key, name: hero.name, race: hero.race, archetype: hero.archetype }
+  return convex.mutation(api.hosting.requestSeat, { secret: serverSecret(), adventureId: adventure._id, ...request }).then(
+    () => ({}),
+    (e) => ({ error: thrownMessage(e, "The host could not be asked.") })
+  )
 }
