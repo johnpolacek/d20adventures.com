@@ -204,6 +204,17 @@ fn account_info() -> Value {
         .is_ok();
     serde_json::json!({ "required": required, "linked": linked })
 }
+// Fills the screen, or returns to a window. Answers whether the window is now fullscreen.
+#[tauri::command]
+fn toggle_fullscreen(window: tauri::WebviewWindow) -> Result<bool, String> {
+    let full = !window.is_fullscreen().map_err(|e| e.to_string())?;
+    window.set_fullscreen(full).map_err(|e| e.to_string())?;
+    Ok(full)
+}
+#[tauri::command]
+fn is_fullscreen(window: tauri::WebviewWindow) -> Result<bool, String> {
+    window.is_fullscreen().map_err(|e| e.to_string())
+}
 // Opens a page of the game's website in the player's browser.
 #[tauri::command]
 fn open_site(path: String) -> Result<(), String> {
@@ -290,6 +301,8 @@ fn main() {
             host_running,
             account_info,
             open_site,
+            toggle_fullscreen,
+            is_fullscreen,
             render_report
         ])
         .run(tauri::generate_context!())

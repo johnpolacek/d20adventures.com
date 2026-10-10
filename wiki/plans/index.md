@@ -9,7 +9,7 @@ Updated for the desktop integration worktree on 2026-10-02. Implementation statu
 | Plan | Status | Next work |
 |---|---|---|
 | [Desktop home screen](zzz-completed/feature-desktop-home.md) | Merged into main 2026-10-08 and archived. Home with saved adventures and resume, heroes, new adventures, and the Realm of Myr page. | Owner review of the merged build. Delete the worktree's Convex project in the dashboard. |
-| [Desktop host mode](desktop-host-mode.md) | Built 2026-10-08 on `feature/host-mode`, not merged. Hosted games, GM job queue, host worker, hosting screens, and the guest play page. End-to-end run passed against dev. | Owner review in the app, Convex lockdown, then merge. |
+| [Desktop host mode](desktop-host-mode.md) | Resumed 2026-10-10 on `feature/host-mode`, not merged. Built 2026-10-08: hosted games, GM job queue, host worker, hosting screens, and the guest play page. End-to-end run passed against dev. | Owner review in the app, Convex lockdown, then merge. |
 | [Adventure store](feature-adventure-store.md) | Merged into main 2026-10-08. Alpha. Catalog, entitlements, desktop account linking, story pack downloads, and locked adventures on New game implemented 2026-10-08 on `feature/adventure-store`. Web checkout waits for beta. | Owner review in the running app, then the alpha release: deploy the website and Convex, set the store secret. Pack upload and checkout wait for beta. |
 | [Roll results in the narration](roll-results.md) | Implemented on main 2026-10-05. A roll's paragraph shows the d20 landing, the total against the DC and a stamped verdict. | Owner review. |
 | [Covert Cargo: the meeting inside the boat](covert-cargo-boat-meeting.md) | Implemented on main 2026-10-05. One larger saloon for every boat encounter, restaged to the source, intro edited, walks through doors. | Owner play-through. |
@@ -32,7 +32,7 @@ Updated for the desktop integration worktree on 2026-10-02. Implementation statu
 | [Stage engine](../stage-engine.md) | Implemented set/staging specs, rendering, and dated performance evidence. |
 | [Wiki adventures](../wiki-adventures.md) | Content contracts, authoring, source selection, and turn persistence. |
 | [Testing runbook](testing-runbook.md) | Current commands, routes, browser checks, and known test limits. |
-| [Parallel dev worktrees](parallel-dev-worktrees.md) | Implemented pnpm wt commands and isolation rules. |
+| [Parallel dev worktrees](parallel-dev-worktrees.md) | Retired 2026-10-08 by the owner. Feature work happens on branches off main. Kept for reference. |
 
 ## Plan lifecycle
 

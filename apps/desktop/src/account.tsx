@@ -152,7 +152,7 @@ function Waiting({ account: a }: { account: Account }) {
 export function AccountBadge({ account: a }: { account: Account }) {
   if (!a.ready || !a.state || a.gated) return null
   return (
-    <div className="absolute right-5 top-5 z-50 flex flex-col items-end gap-2 text-left">
+    <div className="absolute right-20 top-8 z-50 flex flex-col items-end gap-2 text-left">
       {a.state.linked === true ? (
         <div className="flex items-center gap-3 text-xs text-stage-cream">
           <span>{a.state.account}</span>

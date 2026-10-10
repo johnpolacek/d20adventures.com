@@ -56,8 +56,9 @@ export function StagePlay(props: {
   status: string
   // Something over the stage, such as the home screen, which hides the play interface.
   overlay: boolean
-  // Header buttons before Journal and Scene settings.
+  // Header buttons before Journal and Scene settings, and after them.
   actions?: ReactNode
+  trailingActions?: ReactNode
   // Each resolves to whether the action was accepted.
   onReply: (turnId: string, characterId: string, text: string, movement: ReturnType<typeof context> | undefined) => Promise<boolean>
   onRoll: (turnId: string, characterId: string, result: number) => void
@@ -363,6 +364,7 @@ export function StagePlay(props: {
           {props.actions}
           <Pill onClick={() => setOpen(open === "journal" ? null : "journal")}>Journal</Pill>
           <Pill onClick={() => setOpen(open === "settings" ? null : "settings")}>Scene settings</Pill>
+          {props.trailingActions}
         </>
       }
     >

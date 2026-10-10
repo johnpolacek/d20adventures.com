@@ -4,6 +4,18 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-10, host mode resumed
+
+Owner resumed host mode to invite a browser player from party setup. Merged `main` into `feature/host-mode` for review in the running app.
+
+## 2026-10-08, desktop title screen and pages
+
+Owner review of the desktop home: it now opens on the website's title screen, the d20 painting with "Experience the Thrill of the D20", Continue for the saved adventure, and white outline buttons. Adventures, Characters and Settings are separate pages styled after the website. The Realm of Myr card's Explore opens the website's setting page, so the app no longer has its own Realm page. This replaces the shelves under a live-scene banner in [the home screen plan](plans/zzz-completed/feature-desktop-home.md).
+
+## 2026-10-08, host mode paused
+
+Owner paused host mode to get the game right before hosting. Its work stays unmerged on `feature/host-mode`. See [Desktop host mode](plans/desktop-host-mode.md).
+
 ## 2026-10-08, host mode built on `feature/host-mode`
 
 Owner asked to work in branches off main, not worktrees. Built on `feature/host-mode`: hosted website games whose GM jobs run in the host's desktop app through the host's CLI, a job queue in Convex, device-token host routes, the host worker, hosting screens in the app, and a stage-first play page for guests that shares the app's play view. An end-to-end run against the dev server processed a host's reply through Claude. Convex lockdown and the app's hosting screens in the running app remain. See [Desktop host mode](plans/desktop-host-mode.md).

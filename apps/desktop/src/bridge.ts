@@ -32,3 +32,6 @@ export const hostStart = (adventureId: string, provider: string) => invoke<void>
 export const hostStop = () => invoke<void>("host_stop")
 export type HostWorkerState = { adventureId: string | null; event: HostEvent | { type: "starting" | "stopped" } | null }
 export const hostRunning = () => invoke<HostWorkerState>("host_running")
+// The window filling the screen. Rust owns it, since the webview may not resize its own window.
+export const toggleFullscreen = () => invoke<boolean>("toggle_fullscreen")
+export const isFullscreen = () => invoke<boolean>("is_fullscreen")

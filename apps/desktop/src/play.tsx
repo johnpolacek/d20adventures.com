@@ -6,14 +6,16 @@ import type { Hero, HeroCommand, PartyChoice } from "../runtime/heroes"
 import type { HostedState } from "../runtime/host-commands"
 import type { Save, SaveSummary } from "../runtime/store"
 import { AccountBadge, LinkGate, useAccount } from "./account"
-import { type HostWorkerState, host, hostRunning, hostStart, send } from "./bridge"
+import { type HostWorkerState, host, hostRunning, hostStart, openSite, send } from "./bridge"
 import type { FigureArt } from "./figures"
+import { FullscreenButton } from "./fullscreen"
 import { HeroCreator, type HeroIdea } from "./hero-creator"
 import { Home } from "./home"
 import { hostedSave, hostedWork } from "./hosted"
 import { HostedLobby } from "./hosted-lobby"
 import { type Locked, NewGame } from "./new-game"
-import { RealmPage, useRealm } from "./realm"
+import { AdventuresPage, CharactersPage, type Page, SettingsPage } from "./pages"
+import { useRealm } from "./realm"
 import { StagePlay } from "./stage-play"
 
 export function DesktopGame() {
@@ -51,8 +53,9 @@ export function DesktopGame() {
   const [busy, setBusy] = useState(false)
   const busyRef = useRef(false)
   const [error, setError] = useState<string | null>(null)
-  // Over the stage: home on launch and from the Home button, party setup for a new game, or the Realm page. Null in play.
-  const [screen, setScreen] = useState<"home" | "new" | "realm" | null>("home")
+  // Over the stage: the title screen on launch and from the Home button, its pages, or party setup. Null in play.
+  const [screen, setScreen] = useState<"home" | Page | "new" | null>("home")
+  const navigate = (page: Page | "home") => setScreen(page)
   const chosen = adventures.find((a) => a.id === adventure)
   const [stageState, setStageState] = useState<{ waiting: boolean; error: string | null }>({ waiting: false, error: null })
   const stageError = stageState.error
@@ -221,7 +224,8 @@ export function DesktopGame() {
     return type === "working" ? "GM working" : type === "offline" ? "GM offline" : type === "stopped" ? "GM stopped" : "GM ready"
   })()
   const hostedView = hosting && hosted ? hostedSave(hosted) : null
-  const onEscape = useCallback(() => setScreen((s) => (s === "new" || s === "realm" ? "home" : saveRef.current ? null : s)), [])
+  // Escape steps back: party setup to Adventures, a page to the title screen, then into play.
+  const onEscape = useCallback(() => setScreen((s) => (s === "new" ? "adventures" : s === "adventures" || s === "characters" || s === "settings" ? "home" : saveRef.current ? null : s)), [])
   const onError = useCallback((message: string) => setError(message), [])
   return (
     <StagePlay
@@ -233,6 +237,7 @@ export function DesktopGame() {
       status={hosting ? `Hosting · ${hosted?.summary.players ?? 1} at the table · ${gmLabel}` : save ? `Saved locally · ${save.provider}` : ""}
       overlay={screen !== null || Boolean(hosting && !hostedView)}
       actions={<Pill onClick={goHome}>Home</Pill>}
+      trailingActions={<FullscreenButton className="h-10 w-10" />}
       endActions={<Pill onClick={goHome}>Home</Pill>}
       onReply={async (turnId, characterId, text, movement) => {
         if (hosting) return act(() => host({ kind: "hostAct", adventureId: hosting, turnId, action: { kind: "reply", characterId, text } }))
@@ -267,40 +272,61 @@ export function DesktopGame() {
       {hosting && hosted && !hosted.turn && screen === null && (
         <HostedLobby summary={hosted.summary} gm={gmLabel} busy={sending} onStart={() => void act(() => host({ kind: "hostStart", adventureId: hosting }))} onHome={goHome} />
       )}
+      {screen !== null && <FullscreenButton className="fixed top-5 right-5 z-[70]" />}
       {acct.ready && !acct.gated && loaded && (
         <>
           {screen === "home" && (
             <Home
               save={save}
+              starter={chosen}
+              busy={busy}
+              account={<AccountBadge account={acct} />}
+              onContinue={() => setScreen(null)}
+              onAdventure={(id) => {
+                pickAdventure(id)
+                setScreen("new")
+              }}
+              onNavigate={navigate}
+            />
+          )}
+          {screen === "adventures" && (
+            <AdventuresPage
               saves={saves}
               adventures={adventures}
               locked={locked}
               listPrices={listPrices}
-              starter={chosen}
-              heroes={heroes}
-              art={art}
-              realm={realm}
               busy={busy}
-              painting={painting}
-              canCreate={providers.length > 0}
               account={<AccountBadge account={acct} />}
+              onNavigate={navigate}
               onContinue={() => setScreen(null)}
               onResume={(id) => void resume(id)}
               onAdventure={(id) => {
                 pickAdventure(id)
                 setScreen("new")
               }}
-              onCreateHero={() => setCreator({})}
-              onEditHero={(hero) => setCreator({ editing: hero })}
-              onPaintHero={painter ? (hero) => void paintHero(hero) : undefined}
-              onDeleteHero={(hero) => void invoke({ kind: "deleteHero", id: hero.id })}
-              onRealm={() => setScreen("realm")}
               hosted={hostedList}
               hostingNow={worker?.adventureId ?? null}
               onOpenHosted={(id) => void openHosted(id)}
             />
           )}
-          {screen === "realm" && realm && <RealmPage realm={realm} onClose={() => setScreen("home")} />}
+          {screen === "characters" && (
+            <CharactersPage
+              heroes={heroes}
+              art={art}
+              busy={busy}
+              painting={painting}
+              canCreate={providers.length > 0}
+              account={<AccountBadge account={acct} />}
+              onNavigate={navigate}
+              onCreate={() => setCreator({})}
+              onEdit={(hero) => setCreator({ editing: hero })}
+              onPaint={painter ? (hero) => void paintHero(hero) : undefined}
+              onDelete={(hero) => void invoke({ kind: "deleteHero", id: hero.id })}
+            />
+          )}
+          {screen === "settings" && (
+            <SettingsPage realm={realm} account={<AccountBadge account={acct} />} onNavigate={navigate} onRealm={() => void openSite(`/settings/${realm?.id ?? "realm-of-myr"}`)} />
+          )}
           {screen === "new" && (
             <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-5 bg-stage-ink/70 text-center">
               {!providers.length && <p>Install and sign in to Claude Code, Codex, Grok, or Gemini CLI.</p>}
@@ -324,7 +350,7 @@ export function DesktopGame() {
                   painting={painting}
                   onPaint={painter ? (hero) => void paintHero(hero) : undefined}
                   onDelete={(hero) => void invoke({ kind: "deleteHero", id: hero.id })}
-                  onCancel={() => setScreen("home")}
+                  onCancel={() => setScreen("adventures")}
                   locked={locked}
                   listPrices={listPrices}
                   linked={acct.state?.linked ?? false}

@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Desktop local play](desktop-local-play.md) · [Desktop home screen](zzz-completed/feature-desktop-home.md) · [Adventure store](feature-adventure-store.md)
 
-Status: In progress on `feature/host-mode`, a branch in the main checkout, from 2026-10-08. Owner chose Stageview on the web for guests.
+Status: Resumed 2026-10-10 on `feature/host-mode`, after a pause from 2026-10-08. Main merged in for review in the running app. Convex lockdown not started.
 
 ## Goal
 
