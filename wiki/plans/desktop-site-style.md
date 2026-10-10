@@ -121,6 +121,10 @@ Owner, 2026-10-10, after phase 1: "For Adventures, I still want the 3 intro adve
 
 4. Adventures layout: the three intro adventures in one row of three, then the featured adventure across the full width. The site's own list, every adventure in one grid, does not replace it. Later phases keep this.
 
+Owner, 2026-10-10, with screenshots of party setup after Begin and of the Adventures page: "why do we have 2 layouts?"
+
+5. One place to choose an adventure: the Adventures page. Begin on the title screen opens it. Party setup is for the adventure already chosen and has no adventure tabs.
+
 ## Work
 
 ### Phase 0, shared theme
@@ -203,6 +207,13 @@ This changes the website's stage pages as well, which keeps both in step.
 - Desktop typecheck, 47 desktop tests, scoped Biome, and a desktop production build. The preview is absent from the production bundle and Syne Mono is in it.
 - The website in `next dev`: home, `/desktop/link`, and `/dev/turn` render, and the shared tokens, animations, and surfaces resolve.
 - Screens captured at 1440 by 900 at DPR 1 in headless Chromium with the Metal renderer. Not yet judged at DPR 2 or in the packaged app.
+
+### One adventure picker
+
+- Before: Begin went straight to party setup for March of Davos, and party setup had its own row of adventure tabs. That row was the first picker, from 2026-10-04. The Adventures page came on 2026-10-08 and the tabs stayed.
+- Now: Begin opens the Adventures page. Party setup has no tabs. Cancel and Escape return to Adventures.
+- Locked adventures are reached from their cards on the Adventures page, as before.
+- Checked in WebKit: Begin shows the intro row and the featured panel, a card opens party setup with no tabs, and Cancel returns.
 
 ### Adventures layout, checked
 

@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Chip, Option, siteCard, siteLabel, siteOutline, sitePanel } from "@/components/ui/site"
 import { cn } from "@/lib/utils"
@@ -16,15 +16,6 @@ export type Locked = CatalogInfo & { owned: boolean; failed: boolean }
 
 export const price = (cents: number) => `$${(cents / 100).toFixed(cents % 100 ? 2 : 0)}`
 
-// A free adventure's usual price struck through, then FREE.
-export function FreeTag({ cents }: { cents: number }) {
-  return (
-    <span className="whitespace-nowrap">
-      <s className="opacity-60">{price(cents)}</s> <span className="font-semibold text-amber-300">FREE</span>
-    </span>
-  )
-}
-
 export function LockIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 16 16" className="-mt-0.5 mr-1.5 inline h-3 w-3 fill-current">
@@ -33,13 +24,12 @@ export function LockIcon() {
   )
 }
 
-// New game: the adventure, who goes, who plays each hero, and which CLI runs the GM. The first hero is the player's,
-// the rest default to AI. Roster heroes appear only where the adventure accepts their race and class. Keyed by
-// adventure, so switching adventures starts from that adventure's suggested party.
+// Party setup for the adventure chosen on the Adventures page: who goes, who plays each hero, and which CLI runs the
+// GM. The first hero is the player's, the rest default to AI. Roster heroes appear only where the adventure accepts
+// their race and class. Keyed by adventure, so each starts from its own suggested party.
 export function NewGame(props: {
   adventures: AdventureInfo[]
   adventure: string
-  onAdventure: (id: string) => void
   heroes: Hero[]
   providers: string[]
   provider: string
@@ -83,45 +73,7 @@ export function NewGame(props: {
   useEffect(() => {
     if (joining) setParty((p) => (p.some((c) => c.id === joining) || p.length >= max ? p : [...p, { id: joining, ai: p.some((c) => !c.ai) }]))
   }, [joining, max])
-  const tabs = (
-    <div className="flex flex-wrap gap-2" role="tablist" aria-label="Adventure">
-      {props.adventures.map((a) => (
-        <Option
-          key={a.id}
-          role="tab"
-          aria-selected={a.id === props.adventure}
-          aria-label={props.listPrices[a.id] ? `${a.title}, free, usually ${price(props.listPrices[a.id])}` : undefined}
-          active={a.id === props.adventure}
-          onClick={() => props.onAdventure(a.id)}
-          disabled={props.busy}
-        >
-          {a.title}
-          {props.listPrices[a.id] && (
-            <span className="ml-2">
-              <FreeTag cents={props.listPrices[a.id]} />
-            </span>
-          )}
-        </Option>
-      ))}
-      {props.locked.map((a) => (
-        <Option
-          key={a.id}
-          role="tab"
-          aria-selected={a.id === props.adventure}
-          aria-label={`${a.title}, ${a.owned ? "owned, not downloaded" : `locked, ${price(a.priceCents)}`}`}
-          active={a.id === props.adventure}
-          onClick={() => props.onAdventure(a.id)}
-          disabled={props.busy}
-          className="text-white/70"
-        >
-          <LockIcon />
-          {a.title}
-          <span className="ml-2 text-amber-300">{a.owned ? "Owned" : price(a.priceCents)}</span>
-        </Option>
-      ))}
-    </div>
-  )
-  if (lockedInfo) return <LockedAdventure info={lockedInfo} tabs={tabs} linked={props.linked} onLink={props.onLink} onCancel={props.onCancel} busy={props.busy} />
+  if (lockedInfo) return <LockedAdventure info={lockedInfo} linked={props.linked} onLink={props.onLink} onCancel={props.onCancel} busy={props.busy} />
   if (!info) return null
   const ready = party.length >= min && party.length <= max && party.some((c) => !c.ai)
   const toggle = (id: string) =>
@@ -136,7 +88,6 @@ export function NewGame(props: {
   return (
     <section className={cn(siteCard, "flex max-h-[94%] w-[min(72rem,96vw)] flex-col text-left backdrop-blur-xl")}>
       <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-7 pb-5">
-        {tabs}
         <div className="grid gap-7 md:grid-cols-[minmax(240px,330px)_1fr]">
           <div className="relative md:sticky md:top-0 md:self-start">
             <ModuleCover id={info.id} title={info.title} players={info.players} />
@@ -299,7 +250,7 @@ export function NewGame(props: {
 }
 
 // A locked adventure: its cover under a lock, its teaser, and how to get it.
-function LockedAdventure(props: { info: Locked; tabs: ReactNode; linked: boolean | "offline"; onLink?: () => void; onCancel?: () => void; busy: boolean }) {
+function LockedAdventure(props: { info: Locked; linked: boolean | "offline"; onLink?: () => void; onCancel?: () => void; busy: boolean }) {
   const { info } = props
   const status = info.owned
     ? info.failed
@@ -313,7 +264,6 @@ function LockedAdventure(props: { info: Locked; tabs: ReactNode; linked: boolean
   return (
     <section className={cn(siteCard, "flex max-h-[94%] w-[min(72rem,96vw)] flex-col text-left backdrop-blur-xl")}>
       <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-7 pb-5">
-        {props.tabs}
         <div className="grid gap-7 md:grid-cols-[minmax(240px,330px)_1fr]">
           <div className="relative md:sticky md:top-0 md:self-start">
             <ModuleCover id={info.id} title={info.title} players={info.players} className="[filter:grayscale(.55)_brightness(.7)]" />

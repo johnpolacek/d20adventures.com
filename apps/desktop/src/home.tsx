@@ -1,18 +1,11 @@
 import { textShadowSpread, textShadowSpreadLight } from "@/components/typography/styles"
 import { Button } from "@/components/ui/button"
 import { Chip } from "@/components/ui/site"
-import type { AdventureInfo } from "../runtime/game"
 import type { Save } from "../runtime/store"
 
-// Home: the website's title screen, with Continue for the saved adventure. The header above it leads to the pages.
-export function Home(props: {
-  save: Save | null
-  // The adventure a first game starts when nothing is saved.
-  starter?: AdventureInfo
-  busy: boolean
-  onContinue: () => void
-  onAdventure: (id: string) => void
-}) {
+// Home: the website's title screen, with Continue for the saved adventure, or Begin, which opens the Adventures page
+// to choose one. The header above it leads to the pages.
+export function Home(props: { save: Save | null; busy: boolean; onContinue: () => void; onBegin: () => void }) {
   const turn = props.save?.turns.find((t) => t._id === props.save?.adventure.currentTurnId)
   const pcs = (turn?.characters ?? []).filter((c) => c.type === "pc").map((c) => c.name.split(" ")[0])
   return (
@@ -49,11 +42,9 @@ export function Home(props: {
               </Button>
             </>
           ) : (
-            props.starter && (
-              <Button variant="epic" size="lg" disabled={props.busy} onClick={() => props.onAdventure(props.starter!.id)}>
-                Begin
-              </Button>
-            )
+            <Button variant="epic" size="lg" disabled={props.busy} onClick={props.onBegin}>
+              Begin
+            </Button>
           )}
         </div>
       </div>

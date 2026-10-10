@@ -296,18 +296,7 @@ export function DesktopGame() {
             )}
             {ready && (
               <>
-                {screen === "home" && (
-                  <Home
-                    save={save}
-                    starter={chosen}
-                    busy={busy}
-                    onContinue={() => setScreen(null)}
-                    onAdventure={(id) => {
-                      pickAdventure(id)
-                      setScreen("new")
-                    }}
-                  />
-                )}
+                {screen === "home" && <Home save={save} busy={busy} onContinue={() => setScreen(null)} onBegin={() => setScreen("adventures")} />}
                 {screen === "adventures" && (
                   <AdventuresPage
                     saves={saves}
@@ -349,7 +338,6 @@ export function DesktopGame() {
                         key={adventure}
                         adventures={adventures}
                         adventure={adventure}
-                        onAdventure={pickAdventure}
                         heroes={heroes}
                         providers={providers}
                         provider={provider}
