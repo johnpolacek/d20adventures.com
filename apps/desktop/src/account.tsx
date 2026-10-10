@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Pill, panel } from "@/components/stage/hud"
+import { textShadowSpreadLight } from "@/components/typography/styles"
 import { Button } from "@/components/ui/button"
+import { Rule, siteCard, siteOutline, sitePanel } from "@/components/ui/site"
 import { cn } from "@/lib/utils"
 import type { AccountResponse, AccountState, LinkState } from "../runtime/account"
 import { account, accountInfo, openSite } from "./bridge"
@@ -113,18 +114,19 @@ export function useAccount(opts: { onPacks: () => void }) {
 
 export type Account = ReturnType<typeof useAccount>
 
-// The code from the app, as parchment tiles, matching the website's link page.
+// The code from the app, as paper tiles.
 function CodeTiles({ code }: { code: string }) {
   const c = code.replace(/[^A-Z0-9]/g, "")
-  const tile = "stage-parchment grid h-12 w-9 place-items-center rounded-[3px] font-display text-2xl text-stage-ink shadow-[inset_0_-2px_0_#0003,0_2px_6px_#0008]"
+  const tile =
+    "grid h-12 w-9 place-items-center rounded-sm bg-amber-50 bg-[url('/images/app/backgrounds/paper-texture.png')] bg-[length:120px] font-display text-2xl font-bold text-primary-700 ring-2 ring-black"
   return (
-    <div className="flex items-center justify-center gap-1.5" role="img" aria-label={`Code ${code}`}>
+    <div className="flex items-center justify-center gap-2" role="img" aria-label={`Code ${code}`}>
       {[...c.slice(0, 4)].map((ch, i) => (
         <span key={`a${i}`} className={tile}>
           {ch}
         </span>
       ))}
-      <span className="mx-1 h-[2px] w-3 bg-stage-gold/70" />
+      <span className="mx-1 h-[2px] w-3 bg-amber-400/70" />
       {[...c.slice(4)].map((ch, i) => (
         <span key={`b${i}`} className={tile}>
           {ch}
@@ -139,39 +141,51 @@ function Waiting({ account: a }: { account: Account }) {
   return (
     <div className="space-y-4">
       <CodeTiles code={a.link.userCode} />
-      <p className="font-serif text-sm text-stage-cream/80">Approve this code on the website.</p>
+      <p className="text-sm text-gray-300">Approve this code on the website.</p>
       <div className="flex justify-center gap-2">
-        <Pill onClick={() => void openSite(a.link!.verifyPath)}>Open website</Pill>
-        <Pill onClick={a.stop}>Cancel</Pill>
+        <button type="button" className={cn(siteOutline, "px-3 py-1 text-sm")} onClick={() => void openSite(a.link!.verifyPath)}>
+          Open website
+        </button>
+        <button type="button" className={cn(siteOutline, "px-3 py-1 text-sm")} onClick={a.stop}>
+          Cancel
+        </button>
       </div>
     </div>
   )
 }
 
-// Top right of the title screen: the linked account with Unlink, or Link account when play does not need one.
+// In the header: the linked account with Unlink, or Link account when play does not need one.
 export function AccountBadge({ account: a }: { account: Account }) {
   if (!a.ready || !a.state || a.gated) return null
+  const button = "my-2 px-4 py-1 font-display text-sm normal-case tracking-normal"
+  if (a.state.linked === true)
+    return (
+      <>
+        <span className="font-display text-sm font-bold tracking-wide text-yellow-950/80">{a.state.account}</span>
+        <Button variant="emboss" className={button} disabled={a.busy} onClick={() => void a.unlink()}>
+          Unlink
+        </Button>
+      </>
+    )
+  if (a.state.linked === "offline") return <span className="font-display text-sm font-bold tracking-wide text-yellow-950/60">Account offline</span>
   return (
-    <div className="absolute right-20 top-8 z-50 flex flex-col items-end gap-2 text-left">
-      {a.state.linked === true ? (
-        <div className="flex items-center gap-3 text-xs text-stage-cream">
-          <span>{a.state.account}</span>
-          <Pill disabled={a.busy} onClick={() => void a.unlink()}>
-            Unlink
-          </Pill>
-        </div>
-      ) : a.state.linked === "offline" ? (
-        <div className="text-xs text-stage-muted">Account offline</div>
-      ) : a.link ? (
-        <div className={cn(panel, "w-80 p-4 text-center")}>
+    <Button variant="emboss" className={button} disabled={a.busy || Boolean(a.link)} onClick={() => void a.start()}>
+      Link account
+    </Button>
+  )
+}
+
+// Below the header, at the right: the code to approve while linking, and any account error.
+export function AccountNotice({ account: a }: { account: Account }) {
+  if (!a.ready || a.gated || !(a.link || a.error)) return null
+  return (
+    <div className="absolute top-4 right-8 z-30 flex flex-col items-end gap-2">
+      {a.link && (
+        <div className={cn(siteCard, "w-80 p-5 text-center")}>
           <Waiting account={a} />
         </div>
-      ) : (
-        <Pill disabled={a.busy} onClick={() => void a.start()}>
-          Link account
-        </Pill>
       )}
-      {a.error && <div className="text-xs text-stage-cream">{a.error}</div>}
+      {a.error && <div className="rounded bg-black/80 px-3 py-1 text-sm text-red-300">{a.error}</div>}
     </div>
   )
 }
@@ -179,20 +193,22 @@ export function AccountBadge({ account: a }: { account: Account }) {
 // In place of the title screen's choices until this computer is linked.
 export function LinkGate({ account: a }: { account: Account }) {
   return (
-    <div className={cn(panel, "w-[min(460px,92vw)] px-8 py-9 text-center text-stage-cream")}>
-      <h1 className="font-display text-4xl leading-tight">Link your account</h1>
-      <div className="mx-auto mt-5 mb-6 h-px w-32 bg-gradient-to-r from-transparent via-stage-gold/80 to-transparent" />
+    <div className={cn(sitePanel, "w-[min(28rem,92vw)] px-8 py-9 text-center text-white")}>
+      <h1 className="font-display text-3xl font-bold leading-tight text-amber-400" style={textShadowSpreadLight}>
+        Link your account
+      </h1>
+      <Rule className="mx-auto mt-5 mb-6 w-48" />
       {a.link ? (
         <Waiting account={a} />
       ) : (
         <div className="space-y-6">
-          <p className="text-balance font-serif text-stage-cream/85">Link this computer to your D20 Adventures account to play.</p>
+          <p className="text-balance text-lg">Link this computer to your D20 Adventures account to play.</p>
           <Button variant="epic" disabled={a.busy} onClick={() => void a.start()}>
             {a.busy ? "Opening…" : "Link account"}
           </Button>
         </div>
       )}
-      {a.error && <p className="mt-5 font-serif text-sm text-red-300">{a.error}</p>}
+      {a.error && <p className="mt-5 text-sm text-red-300">{a.error}</p>}
     </div>
   )
 }

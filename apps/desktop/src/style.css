@@ -4,6 +4,9 @@
 @source "../../../components/graphics";
 @source "../../../components/typography";
 @source "../../../components/ui/button.tsx";
+@source "../../../components/ui/image-header.tsx";
+@source "../../../components/ui/native-image.tsx";
+@source "../../../components/ui/site.tsx";
 @source "./";
 @theme {
   --font-display: "Cinzel Decorative", Georgia, serif;
@@ -33,10 +36,13 @@ html,
 body {
   overscroll-behavior: none;
 }
-div,
-p,
-textarea {
-  text-wrap: pretty;
+/* In the base layer, so truncate and whitespace utilities still win. */
+@layer base {
+  div,
+  p,
+  textarea {
+    text-wrap: pretty;
+  }
 }
 button {
   cursor: pointer;

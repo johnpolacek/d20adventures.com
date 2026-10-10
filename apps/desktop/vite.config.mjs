@@ -8,7 +8,8 @@ import { defineConfig } from "vite"
 
 // The app in a browser tab, without Tauri (development only). The page's bridge calls arrive at /__preview and are
 // answered as Rust would: game commands run the same runtime script against a scratch data folder, or the folder in
-// D20_PREVIEW_DATA_DIR. Commands that start the GM's CLI are refused unless D20_PREVIEW_GM is set.
+// D20_PREVIEW_DATA_DIR. Commands that start the GM's CLI are refused unless D20_PREVIEW_GM is set. D20_REQUIRE_ACCOUNT
+// shows the link step, as it does in the app.
 const GM_COMMANDS = ["start", "reply", "continue", "heroDraft", "paintHero"]
 function preview() {
   const data = process.env.D20_PREVIEW_DATA_DIR ?? join(tmpdir(), "d20-desktop-preview")
@@ -36,7 +37,7 @@ function preview() {
       if (GM_COMMANDS.includes(args?.command?.kind) && !process.env.D20_PREVIEW_GM) throw new Error("The preview does not run the GM.")
       return game(args.command)
     }
-    if (cmd === "account_info") return { required: false, linked: false }
+    if (cmd === "account_info") return { required: Boolean(process.env.D20_REQUIRE_ACCOUNT), linked: false }
     if (cmd === "account_command") return { account: { linked: false } }
     if (cmd === "host_running") return { adventureId: null, event: null }
     if (cmd === "is_fullscreen" || cmd === "toggle_fullscreen") return false
