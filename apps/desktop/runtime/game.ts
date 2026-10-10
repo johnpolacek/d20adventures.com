@@ -28,6 +28,8 @@ export const adventureList = (packs: Packs) =>
       title: m.title,
       start: m.startEncounterId,
       teaser: m.teaser ?? "",
+      // Encounters, which the Adventures page counts as scenes.
+      scenes: Object.keys(p.artifacts.encounters).length,
       players: [m.minPlayers ?? 1, m.maxPlayers ?? Math.max(1, premades.length)] as [number, number],
       options: m.availableCharacterOptions ?? null,
       premades: premades.map((s) => ({ id: s.id, name: s.name, race: s.race, archetype: s.archetype, gender: s.gender })),
