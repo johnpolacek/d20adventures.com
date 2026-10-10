@@ -8,7 +8,7 @@ Updated for the desktop integration worktree on 2026-10-02. Implementation statu
 
 | Plan | Status | Next work |
 |---|---|---|
-| [Covert Cargo: Thalbern's rescue](covert-cargo-rescue.md) | Implemented 2026-10-10 on `feature/covert-cargo-rescue`. No player deaths, and Thalbern steps in when a hero falls to half health. | Owner play-through, a look at the new staging, then merge. Encounter art and a 2D map for The Ranger. |
+| [Covert Cargo: Thalbern's rescue](covert-cargo-rescue.md) | Implemented 2026-10-10 on `feature/covert-cargo-rescue`. No player deaths, and Thalbern steps in when a hero falls to half health. | Owner play-through, a look at the new staging, then merge. |
 | [Desktop home screen](zzz-completed/feature-desktop-home.md) | Merged into main 2026-10-08 and archived. Home with saved adventures and resume, heroes, new adventures, and the Realm of Myr page. | Owner review of the merged build. Delete the worktree's Convex project in the dashboard. |
 | [Desktop host mode](desktop-host-mode.md) | Paused 2026-10-08. Built work waits unmerged on `feature/host-mode`. | Resume after the game itself is right. |
 | [Adventure store](feature-adventure-store.md) | Merged into main 2026-10-08. Alpha. Catalog, entitlements, desktop account linking, story pack downloads, and locked adventures on New game implemented 2026-10-08 on `feature/adventure-store`. Web checkout waits for beta. | Owner review in the running app, then the alpha release: deploy the website and Convex, set the store secret. Pack upload and checkout wait for beta. |

@@ -49,7 +49,8 @@ Two authored adventure rules, enforced by the GM core rather than judged by the 
 
 ## Open
 
-- The Ranger has no painted encounter image and no stored 2D map.
+- The Ranger needs no 2D map. Per-encounter maps gave way to 3D staging (owner, 2026-09-29, restated 2026-10-10).
+- The Ranger has no encounter painting. Only the web turn page shows one, and it falls back to the adventure cover. Thalbern's own standee and portrait are in use.
 - The new staging is placed from existing saloon marks. It still needs a look in the preview page and the app.
 - On the web, premade heroes return to full health on every encounter change. On desktop they keep their wounds, and Thalbern's healing depends on the GM's patch.
 - The Midnight Summons still leaves its own rescue to the GM's judgment. It could adopt the same rule.
