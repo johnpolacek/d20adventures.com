@@ -14,7 +14,7 @@ Owner resumed host mode to invite a browser player from party setup. Merged `mai
 
 ## 2026-10-10, desktop site style plan
 
-Owner: the desktop app's UI is too different from the website, and the website's design is preferred. An audit found the app and the site share only the display font, the d20 painting, and the epic button. The site is black, blue, indigo, and amber with mono labels. The app is brown, gold, and cream, because its screens were built from the stage HUD's parts. The plan moves the app to the site's tokens and components in four phases, with the HUD last and reviewed over every set first. Three owner decisions are open: HUD scope, the header, and cover format. No code changed. See [Desktop site style](plans/desktop-site-style.md).
+Owner: the desktop app's UI is too different from the website, and the website's design is preferred. An audit found the app and the site share only the display font, the d20 painting, and the epic button. The site is black, blue, indigo, and amber with mono labels. The app is brown, gold, and cream, because its screens were built from the stage HUD's parts. The plan moves the app to the site's tokens and components in four phases, with the HUD last and reviewed over every set first. The owner chose the three defaults the same day: restyle the HUD too, add the site's parchment header outside play, and keep the 3:4 module covers in the site's card frame. See [Desktop site style](plans/desktop-site-style.md).
 
 ## 2026-10-10, Covert Cargo rescue and no player deaths
 
