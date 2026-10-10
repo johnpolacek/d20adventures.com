@@ -357,7 +357,7 @@ export function DesktopGame() {
                         listPrices={listPrices}
                         linked={acct.state?.linked ?? false}
                         onLink={() => void acct.start()}
-                        onHost={linked ? (party) => void hostGame(party) : undefined}
+                        onHost={(party) => void hostGame(party)}
                       />
                     )}
                   </div>

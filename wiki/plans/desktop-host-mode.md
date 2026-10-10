@@ -62,6 +62,8 @@ A hosted game is an ordinary website adventure whose GM work runs on the host's 
 - End to end against the dev server and dev Convex: the app's routes hosted Covert Cargo with a premade, a test guest joined, the host started it, and the host could not act for the guest's hero. The bundled `host.cjs` worker ran the host's reply through Claude, and the turn saved on the website.
 - The guest page rendered the 3D scene in Chrome for the signed-in test user. The Clerk proxy now covers `/play`.
 - Not yet exercised: the app's own Host online, lobby and hosted play screens in the running app. They typecheck and share the tested routes and play view.
+- 2026-10-10: party setup always shows Invite players for adventures with more than one seat. Unlinked, it starts linking first. Offline, it is disabled. Host online was hidden until linked, so the owner found no way to invite.
+- 2026-10-10: the production website cannot host yet. `/api/desktop/host` returns 404, and `/api/desktop/link` and `/api/desktop/me` return 500, so the app shows Account offline. Production needs the current website and Convex deployed.
 
 ## Known gaps
 

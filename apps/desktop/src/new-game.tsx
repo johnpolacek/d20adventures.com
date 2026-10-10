@@ -53,7 +53,8 @@ export function NewGame(props: {
   listPrices: Record<string, number>
   linked: boolean | "offline"
   onLink?: () => void
-  // Hosting the adventure on the website for friends instead, with the player's hero seated. Only when linked.
+  // Hosting the adventure on the website for friends instead, with the player's hero seated. Needs a linked account,
+  // so Invite players links first.
   onHost?: (party: PartyChoice[]) => void
 }) {
   const info = props.adventures.find((a) => a.id === props.adventure)
@@ -236,9 +237,15 @@ export function NewGame(props: {
             Cancel
           </button>
         )}
-        {props.onHost && (
-          <button type="button" className={cn(siteOutline, "px-4 py-2 text-sm")} disabled={props.busy || !party.some((c) => !c.ai) || !props.providers.length} onClick={() => props.onHost!(party)}>
-            Host online
+        {props.onHost && max > 1 && (
+          <button
+            type="button"
+            className={cn(siteOutline, "px-4 py-2 text-sm")}
+            disabled={props.busy || props.linked === "offline" || !party.some((c) => !c.ai) || !props.providers.length}
+            title={props.linked === "offline" ? "D20 Adventures cannot be reached" : undefined}
+            onClick={() => (props.linked === true ? props.onHost!(party) : props.onLink?.())}
+          >
+            Invite players
           </button>
         )}
         <Button variant="epic" className="text-xl" disabled={props.busy || props.waiting || !ready || !props.providers.length} onClick={() => props.onStart(party)}>
