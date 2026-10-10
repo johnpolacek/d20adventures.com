@@ -40,6 +40,8 @@ await rm(resolve(app, "public"), { recursive: true, force: true })
 await mkdir(resolve(app, "public/images/app"), { recursive: true })
 await cp(resolve(root, "public/stage"), resolve(app, "public/stage"), { recursive: true })
 for (const name of ["backgrounds", "art"]) await cp(resolve(root, `public/images/app/${name}`), resolve(app, `public/images/app/${name}`), { recursive: true })
+// The header's logo.
+await cp(resolve(root, "public/images/d20.jpg"), resolve(app, "public/images/d20.jpg"))
 // The host worker runs beside the app while it hosts a website game.
 await build({
   entryPoints: [resolve(app, "runtime/host-main.ts")],
