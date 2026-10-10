@@ -213,7 +213,13 @@ export function AdventuresPage(props: {
                       <Details items={details(a)} />
                       <div className="flex items-center justify-between font-sans text-[12px]">
                         <PriceTag a={a} listPrices={props.listPrices} />
-                        <span className="font-sans text-[11px] uppercase tracking-[0.2em] text-stage-cream/60 transition-colors group-hover:text-stage-gold">{a.locked ? "Details" : "Play"} →</span>
+                        {a.locked ? (
+                          <span className="font-sans text-[11px] uppercase tracking-[0.2em] text-stage-cream/60 transition-colors group-hover:text-stage-gold">Details →</span>
+                        ) : (
+                          <Button asChild variant="epic" className="border-[3px] px-4 py-1 text-[11px]">
+                            <span>Play</span>
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
