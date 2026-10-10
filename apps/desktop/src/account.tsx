@@ -154,7 +154,7 @@ function Waiting({ account: a }: { account: Account }) {
   )
 }
 
-// In the header: the linked account with Unlink, or Link account when play does not need one.
+// In the header: the linked account with Unlink, or Link account when play does not need one or the link is unconfirmed.
 export function AccountBadge({ account: a }: { account: Account }) {
   if (!a.ready || !a.state || a.gated) return null
   const button = "my-2 px-4 py-1 font-display text-sm normal-case tracking-normal"
@@ -167,7 +167,7 @@ export function AccountBadge({ account: a }: { account: Account }) {
         </Button>
       </>
     )
-  if (a.state.linked === "offline") return <span className="font-display text-sm font-bold tracking-wide text-yellow-950/60">Account offline</span>
+  // Offline too: a stored token the website could not confirm. Linking again replaces it.
   return (
     <Button variant="emboss" className={button} disabled={a.busy || Boolean(a.link)} onClick={() => void a.start()}>
       Link account

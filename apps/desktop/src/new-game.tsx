@@ -241,8 +241,7 @@ export function NewGame(props: {
           <button
             type="button"
             className={cn(siteOutline, "px-4 py-2 text-sm")}
-            disabled={props.busy || props.linked === "offline" || !party.some((c) => !c.ai) || !props.providers.length}
-            title={props.linked === "offline" ? "D20 Adventures cannot be reached" : undefined}
+            disabled={props.busy || !party.some((c) => !c.ai) || !props.providers.length}
             onClick={() => (props.linked === true ? props.onHost!(party) : props.onLink?.())}
           >
             Invite players
