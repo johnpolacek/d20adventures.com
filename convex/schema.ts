@@ -86,6 +86,9 @@ export default defineSchema({
     entityUpdates: v.optional(v.array(v.any())),
     openThreads: v.optional(v.array(v.any())),
     resolvedThreadIds: v.optional(v.array(v.string())),
+    // A hosted game: the host's desktop app runs its GM through the host's own CLI, never the server.
+    // seenAt is when the host's app last asked for GM work, so guests can tell it is online.
+    host: v.optional(v.object({ userId: v.string(), deviceId: v.id("devices"), seenAt: v.optional(v.number()) })),
     title: v.string(),
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -93,6 +96,27 @@ export default defineSchema({
     .index("by_owner", ["ownerId"])
     .index("by_player", ["playerIds"])
     .index("by_started", ["startedAt"]),
+
+  // GM work for hosted games, done by the host's desktop app one job at a time per adventure.
+  gmJobs: defineTable({
+    adventureId: v.id("adventures"),
+    turnId: v.id("turns"),
+    kind: v.union(v.literal("reply"), v.literal("roll"), v.literal("continue")),
+    // Who asked, and for which character. Continue jobs have no character.
+    userId: v.string(),
+    characterId: v.optional(v.string()),
+    text: v.optional(v.string()),
+    result: v.optional(v.number()),
+    // The guest's stage context for a reply, so the host can read movement from it.
+    movement: v.optional(v.any()),
+    status: v.union(v.literal("queued"), v.literal("running"), v.literal("done"), v.literal("failed")),
+    error: v.optional(v.string()),
+    createdAt: v.number(),
+    startedAt: v.optional(v.number()),
+    finishedAt: v.optional(v.number()),
+  })
+    .index("by_adventure_status", ["adventureId", "status"])
+    .index("by_adventure", ["adventureId"]),
 
   adventure_reports: defineTable({
     adventureId: v.id("adventures"),

@@ -163,8 +163,8 @@ Applies if decision 1 holds. This changes the website's stage pages as well, whi
 
 ## Order and branches
 
-- Branch: `feature/desktop-site-style`, off main.
-- `feature/covert-cargo-rescue` changes `pages.tsx`. `feature/host-mode` rewrites `home.tsx` and `play.tsx` and adds `stage-play.tsx` and `hosted-lobby.tsx`. Start phase 1 after both are on main, or expect conflicts in every screen file.
+- Branch: a new feature branch off main. The plan's own branch merged 2026-10-10.
+- `feature/covert-cargo-rescue` changes `pages.tsx`. `feature/host-mode` rewrites `home.tsx` and `play.tsx` and adds `stage-play.tsx` and `hosted-lobby.tsx`. Both merged into main 2026-10-10, so phase 1 can start.
 - Phase 0 touches only stylesheets, the build script, and new files. It can start now.
 
 ## Validation

@@ -4,6 +4,14 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-10, open branches merged into main
+
+Owner asked for everything on main and the old worktrees and branches removed. Merged `feature/desktop-site-style`, `feature/covert-cargo-rescue`, `feature/host-mode`, and the desktop spike's last log entry. Host mode is on main but not shipped. The Convex lockdown and Anthropic's answer on provider terms still gate it, and the app's hosting screens have not been tried in the running app. Removed the gm-core, stage-turn-mock, and desktop spike worktrees and their branches. Their Convex projects still need deleting in the dashboard.
+
+## 2026-10-10, host mode resumed
+
+Owner resumed host mode to invite a browser player from party setup. Merged `main` into `feature/host-mode` for review in the running app.
+
 ## 2026-10-10, desktop site style plan
 
 Owner: the desktop app's UI is too different from the website, and the website's design is preferred. An audit found the app and the site share only the display font, the d20 painting, and the epic button. The site is black, blue, indigo, and amber with mono labels. The app is brown, gold, and cream, because its screens were built from the stage HUD's parts. The plan moves the app to the site's tokens and components in four phases, with the HUD last and reviewed over every set first. Three owner decisions are open: HUD scope, the header, and cover format. No code changed. See [Desktop site style](plans/desktop-site-style.md).
@@ -23,6 +31,10 @@ Owner review of the desktop home: it now opens on the website's title screen, th
 ## 2026-10-08, host mode paused
 
 Owner paused host mode to get the game right before hosting. Its work stays unmerged on `feature/host-mode`. See [Desktop host mode](plans/desktop-host-mode.md).
+
+## 2026-10-08, host mode built on `feature/host-mode`
+
+Owner asked to work in branches off main, not worktrees. Built on `feature/host-mode`: hosted website games whose GM jobs run in the host's desktop app through the host's CLI, a job queue in Convex, device-token host routes, the host worker, hosting screens in the app, and a stage-first play page for guests that shares the app's play view. An end-to-end run against the dev server processed a host's reply through Claude. Convex lockdown and the app's hosting screens in the running app remain. See [Desktop host mode](plans/desktop-host-mode.md).
 
 ## 2026-10-08, desktop home screen merged; guests get Stageview
 

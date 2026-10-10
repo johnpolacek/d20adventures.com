@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Desktop local play](desktop-local-play.md) · [Desktop home screen](zzz-completed/feature-desktop-home.md) · [Adventure store](feature-adventure-store.md)
 
-Status: Paused 2026-10-08 by the owner, to get the game right first. Built work waits unmerged on `feature/host-mode`: hosted games, the GM job queue, the host worker, hosting screens, and the guest play page. Convex lockdown was not started.
+Status: Merged into main 2026-10-10, not shipped. Paused 2026-10-08, resumed 2026-10-10. The app's hosting screens are untested in the running app. Convex lockdown not started.
 
 ## Goal
 
@@ -45,6 +45,30 @@ A hosted game is an ordinary website adventure whose GM work runs on the host's 
 2. Desktop: a host worker while hosting, the website `Store` adapter, the host's own turns, and the invite link.
 3. Home screen: hosted and joined games in Your adventures.
 4. Ship gate: provider terms, below.
+
+## Build steps
+
+- [x] Convex: a `host` field on adventures, and a `gmJobs` queue answered only by the Next server (`convex/hosting.ts`).
+- [x] Website: device-token host routes to create, list, start and read hosted games, queue the host's actions, claim and finish jobs, and run `Store` operations on the host's own games (`app/api/desktop/host/`, `lib/host/server.ts`).
+- [x] Website: guest actions for hosted games queue jobs (`app/_actions/hosted.ts`). The server's GM actions refuse hosted games, `ensureNpcProcessed` skips them, and joining one costs no tokens.
+- [x] Desktop: a host worker process (`runtime/host.ts`, `host-main.ts`, bundled as `host.cjs`) with a website `Store`, the host's CLI, and the adventure packs. Rust starts and stops it and keeps its last status.
+- [x] Desktop: Host online on party setup, the invite lobby, hosted play through the shared play view, and hosted games on home.
+- [x] Website: the stage-first play page for guests at `/play/[adventureId]`. The play view is shared with the app (`apps/desktop/src/stage-play.tsx`). Lobby and turn pages send hosted games there.
+- [ ] Convex: lock down public adventure and turn functions.
+
+## Validation, 2026-10-08
+
+- Desktop runtime: 44 tests, including four for the host worker: a guest's reply and roll, refused jobs that leave the game unchanged, advancing an encounter, and the website store.
+- End to end against the dev server and dev Convex: the app's routes hosted Covert Cargo with a premade, a test guest joined, the host started it, and the host could not act for the guest's hero. The bundled `host.cjs` worker ran the host's reply through Claude, and the turn saved on the website.
+- The guest page rendered the 3D scene in Chrome for the signed-in test user. The Clerk proxy now covers `/play`.
+- Not yet exercised: the app's own Host online, lobby and hosted play screens in the running app. They typecheck and share the tested routes and play view.
+
+## Known gaps
+
+- Hosted games keep no stage positions, so movement is not read or walked.
+- The journal shows only the current turn.
+- No AI companions in hosted parties yet.
+- The app's home does not yet list games the account joined as a guest.
 
 ## Open decisions
 

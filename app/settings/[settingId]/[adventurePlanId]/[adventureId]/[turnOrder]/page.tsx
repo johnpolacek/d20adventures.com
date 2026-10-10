@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { getTurnNavigationInfo, loadAdventureWithTurnByOrder } from "@/app/_actions/load-adventure"
 import TurnNavigation from "@/components/adventure/turn-navigation"
 import { Button } from "@/components/ui/button"
@@ -109,6 +109,8 @@ export default async function TurnPage({ params }: PageProps) {
 
   if (!adventure) return notFound()
   if (!currentTurn) return notFound()
+  // Hosted games play on their own page, where the host's app runs the GM.
+  if ((adventureData?.adventure as { host?: unknown } | undefined)?.host) redirect(`/play/${adventureId}`)
 
   const encounter = findEncounter(adventurePlan, currentTurn?.encounterId)
   const encounterMap = await loadEncounterMap2D(settingId, adventurePlanId, currentTurn?.encounterId)

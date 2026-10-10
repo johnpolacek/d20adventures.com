@@ -4,6 +4,7 @@ import { Pill } from "@/components/stage/hud"
 import { textShadowSpreadLight } from "@/components/typography/styles"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import type { HostedSummary } from "../../../lib/host/server"
 import type { AdventureInfo } from "../runtime/game"
 import type { Hero } from "../runtime/heroes"
 import type { SaveSummary } from "../runtime/store"
@@ -133,6 +134,10 @@ export function AdventuresPage(props: {
   // Deletes a saved adventure: an archived one by id, or the current one.
   onRemove: (archiveId?: number) => void
   onAdventure: (id: string) => void
+  // Website games this account hosts, and the one whose GM this app is running.
+  hosted: HostedSummary[]
+  hostingNow: string | null
+  onOpenHosted: (adventureId: string) => void
 }) {
   const [removing, setRemoving] = useState<string | null>(null)
   const players = (id: string): [number, number] => props.adventures.find((a) => a.id === id)?.players ?? props.locked.find((a) => a.id === id)?.players ?? [1, 4]
@@ -141,7 +146,7 @@ export function AdventuresPage(props: {
   const intro = listed.filter((a) => a.id !== FEATURED)
   return (
     <PageShell page="adventures" title="Adventures" account={props.account} onNavigate={props.onNavigate}>
-      {props.saves.length > 0 && (
+      {props.saves.length + props.hosted.length > 0 && (
         <section>
           <SectionTitle>Your Adventures</SectionTitle>
           <ul className="grid grid-cols-3 gap-8">
@@ -190,6 +195,28 @@ export function AdventuresPage(props: {
                 </li>
               )
             })}
+            {props.hosted.map((h) => (
+              <li key={h.adventureId}>
+                <button
+                  type="button"
+                  disabled={props.busy}
+                  onClick={() => props.onOpenHosted(h.adventureId)}
+                  className="group block w-full text-left disabled:cursor-default"
+                  aria-label={`Open hosted game ${h.title}`}
+                >
+                  <ModuleCover
+                    id={h.planId}
+                    title={h.title}
+                    players={players(h.planId)}
+                    className={cn("transition-[filter,transform] group-hover:-translate-y-1", h.status === "completed" && "[filter:saturate(.5)_brightness(.8)]")}
+                  />
+                  <div className="mt-3 truncate text-[13px]">{h.status === "completed" ? "Complete" : h.round ? `Round ${h.round} · ${h.turnTitle}` : "Waiting for players"}</div>
+                  <div className="truncate text-[11px] text-stage-muted">
+                    {props.hostingNow === h.adventureId ? "Hosting now" : "Hosted"} · {h.players} at the table
+                  </div>
+                </button>
+              </li>
+            ))}
           </ul>
         </section>
       )}

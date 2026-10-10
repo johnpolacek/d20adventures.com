@@ -3,7 +3,8 @@ import { z } from "zod"
 import { createSession } from "../../desktop-spike/harness/sessions.mjs"
 import { desktopPatchSchema } from "./characters"
 
-export function localLlm(provider: string, cwd: string, validatePatch?: (patch: { characterUpdates?: unknown }) => void) {
+// `strict` holds advancement to the local game's world-state contract. Hosted games keep the website's contract.
+export function localLlm(provider: string, cwd: string, validatePatch?: (patch: { characterUpdates?: unknown }) => void, strict = true) {
   let session: ReturnType<typeof createSession> | undefined
   const ask = async (prompt: string) => {
     session ??= createSession(
@@ -20,17 +21,17 @@ export function localLlm(provider: string, cwd: string, validatePatch?: (patch: 
     if (result.failed || !result.text.trim()) throw new Error(`${provider} could not finish this request. Check its sign-in or usage limit, then retry.`)
     return result.text.trim()
   }
-  return { llm: schemaLlm(ask, validatePatch), close: () => session?.close() }
+  return { llm: schemaLlm(ask, validatePatch, strict), close: () => session?.close() }
 }
 
-export function schemaLlm(ask: (prompt: string) => Promise<string>, validatePatch?: (patch: { characterUpdates?: unknown }) => void): Llm {
+export function schemaLlm(ask: (prompt: string) => Promise<string>, validatePatch?: (patch: { characterUpdates?: unknown }) => void, strict = true): Llm {
   return {
     async generateText({ prompt, system }) {
       return { text: await ask(`${system ?? ""}\n${prompt}\nReturn only the requested prose.`) }
     },
     async generateObject({ schema, prompt, system }) {
       // Require the spike's strict world-state contract before core validation.
-      const advancement = schema instanceof z.ZodObject && "adventurePatch" in schema.shape
+      const advancement = strict && schema instanceof z.ZodObject && "adventurePatch" in schema.shape
       const effective = advancement ? schema.extend({ adventurePatch: desktopPatchSchema.required({ characterUpdates: true }) }) : schema
       const jsonSchema = z.toJSONSchema(effective, { unrepresentable: "any" })
       let correction = ""
