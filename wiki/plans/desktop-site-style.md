@@ -117,6 +117,10 @@ Owner, 2026-10-10: "a c e", the three defaults.
 2. Header: the site's parchment header on every screen outside play, in its compact form, holding the logo, the page nav, the account, and fullscreen. The title screen gets the large form.
 3. Covers: the 3:4 module covers stay, set in the site's card frame. This holds the 2026-10-04 request for module-style, edge-to-edge art.
 
+Owner, 2026-10-10, after phase 1: "For Adventures, I still want the 3 intro adventures at the top in a 3-col then the featured adventure in full width below."
+
+4. Adventures layout: the three intro adventures in one row of three, then the featured adventure across the full width. The site's own list, every adventure in one grid, does not replace it. Later phases keep this.
+
 ## Work
 
 ### Phase 0, shared theme
@@ -199,6 +203,12 @@ This changes the website's stage pages as well, which keeps both in step.
 - Desktop typecheck, 47 desktop tests, scoped Biome, and a desktop production build. The preview is absent from the production bundle and Syne Mono is in it.
 - The website in `next dev`: home, `/desktop/link`, and `/dev/turn` render, and the shared tokens, animations, and surfaces resolve.
 - Screens captured at 1440 by 900 at DPR 1 in headless Chromium with the Metal renderer. Not yet judged at DPR 2 or in the packaged app.
+
+### Adventures layout, checked
+
+- The page already had the owner's layout when the note in decision 4 arrived. No code changed.
+- Rendered in WebKit, the engine the app uses, at 1440 wide: three intro cards of 365px in one row, then the featured panel at 1224px.
+- Two things sit above the intro row: the image header, which puts the cards at mid-screen, and Your Adventures when saves exist.
 
 ### Not done
 
