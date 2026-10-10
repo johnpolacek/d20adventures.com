@@ -6,7 +6,9 @@ From the repository root:
 
 ```sh
 pnpm install --ignore-scripts
-pnpm desktop:dev
+pnpm dev            # Convex, the website, and the app pointed at the local website
+pnpm dev:app        # the app alone, pointed at a local website that is already running
+pnpm desktop:dev    # the app alone, pointed at d20adventures.com
 CARGO_BUILD_JOBS=2 pnpm desktop:build
 ```
 

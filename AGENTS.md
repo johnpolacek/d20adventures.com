@@ -44,5 +44,6 @@ Owner decision, 2026-10-10: the project is back in alpha with no players, so wor
 
 - Commit to `main` in the main checkout. Do not create feature branches or git worktrees, and do not run `pnpm wt:create`.
 - Put a feature's plan at `wiki/plans/<slug>.md` before meaningful work.
+- `pnpm dev` starts Convex, the website, and the desktop app pointed at the local website. `pnpm dev:web` starts the website alone, and `pnpm dev:app` the app alone.
 - `pnpm dev` does not kill ports. Use `pnpm dev:fresh` to kill ports first.
 - The `wt:*` scripts and `wiki/plans/parallel-dev-worktrees.md` remain for reference until beta.

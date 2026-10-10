@@ -208,7 +208,7 @@ cmd_dev() {
   if [ "$branch" = "main" ]; then name="$PROJECT_NAME"; else name="$(slugify "$branch").$PROJECT_NAME"; fi
   command -v portless >/dev/null 2>&1 || { echo "ERROR: portless not installed (npm install -g portless)" >&2; exit 1; }
   echo "== $(url_for_branch "$branch") =="
-  exec portless "$name" pnpm dev
+  exec portless "$name" pnpm dev:web
 }
 
 cmd_open() {

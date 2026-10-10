@@ -10,13 +10,13 @@ Drive a real authenticated adventure in a browser to exercise the live runtime (
 ## 1. Start the app
 
 ```bash
-pnpm dev    # Convex + Next on :3000; confirm `next-server` (this project's cwd) owns :3000
+pnpm dev:web    # Convex + Next on :3000 (`pnpm dev` also opens the desktop app); confirm `next-server` (this project's cwd) owns :3000
 ```
 A stray `wikibop-2` dev server may also be running on the machine — verify the :3000 owner's cwd is this repo.
 
 ## 2. Test env flags (local only; revert when done)
 
-Add to `.env.local` (gitignored), then **restart `pnpm dev`** (env is read at startup):
+Add to `.env.local` (gitignored), then **restart `pnpm dev:web`** (env is read at startup):
 - `NEXT_PUBLIC_USE_PLACEHOLDER_IMAGES=true` — disables Replicate image generation (returns placeholders). Replicate (`104.18.x`) is often unreachable from dev machines and its connect-timeouts bog down heavy multi-NPC turns; **it is never on the gameplay/LLM path**, so disabling it is safe and recommended. The text model (`gemini-3.5-flash-lite`) is fast and is the real engine.
 
 In `.env`, add the test user's Clerk id to `ADMIN_USER_IDS` (comma-separated) for **admin + practice-mode** access, then restart.

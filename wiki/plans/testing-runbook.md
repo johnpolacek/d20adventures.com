@@ -23,7 +23,7 @@ Install the matching browser when needed:
 pnpm exec playwright install chromium
 ```
 
-Start the checkout through `pnpm wt:dev`. For a deliberate direct port, `pnpm dev` honors `PORT`. Avoid `dev:fresh` in parallel sessions because it kills shared ports.
+Start the checkout through `pnpm wt:dev`. For a deliberate direct port, `pnpm dev:web` honors `PORT`. `pnpm dev` also opens the desktop app, pointed at that port. Avoid `dev:fresh` in parallel sessions because it kills shared ports.
 
 ## Select checks by change
 
@@ -44,7 +44,7 @@ The production source audit is `pnpm audit:wiki-adventures:prod-s3`. It reads pr
 
 ### Known harness limits
 
-- `pnpm test` runs `dev:fresh` and waits for TCP 3000 and 4000. Cloud Convex does not supply the old port-4000 service. Use `test:run` directly against a running selected server until this is fixed.
+- `pnpm test` kills ports, runs `dev:web`, and waits for TCP 3000 and 4000. Cloud Convex does not supply the old port-4000 service. Use `test:run` directly against a running selected server until this is fixed.
 - The signed-out admin test expects development's Access Denied page. September production runs redirected to a missing `/sign-in`. Report this as a known failure rather than claiming an entirely green production suite.
 - `pnpm lint` and `pnpm check` differ. The latter includes formatting and import order. Record pre-existing failures separately.
 

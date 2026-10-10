@@ -64,6 +64,7 @@ A hosted game is an ordinary website adventure whose GM work runs on the host's 
 - Not yet exercised: the app's own Host online, lobby and hosted play screens in the running app. They typecheck and share the tested routes and play view.
 - 2026-10-10: party setup always shows Invite players for adventures with more than one seat. Unlinked or offline, it starts linking first. The header shows Link account in place of Account offline. Host online was hidden until linked, so the owner found no way to invite.
 - 2026-10-10: the production website cannot host yet. `/api/desktop/host` returns 404, and `/api/desktop/link` and `/api/desktop/me` return 500, so the app shows Account offline. Production needs the current website and Convex deployed.
+- 2026-10-10: `pnpm dev` starts Convex, the website, and the app with `D20_SITE_URL` set to the local website, so linking and hosting can be tested without production. Invite links from that app are localhost links. `pnpm desktop:dev` still targets d20adventures.com.
 
 ## Known gaps
 

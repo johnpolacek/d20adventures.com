@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-10, pnpm dev starts the desktop app too
+
+Owner: "should we just make pnpm dev automatically spin up everything we need". `pnpm dev` now runs Convex, the website, and the desktop app with `D20_SITE_URL` pointed at the local website. `pnpm dev:web` is the old website-only command, used by `pnpm test`, `test:setup`, and `wt:dev`. `pnpm dev:app` starts the app alone against the local website. Quitting the app leaves the website running. `pnpm desktop:dev` still targets d20adventures.com. Not yet run end to end.
+
 ## 2026-10-10, work on main during alpha
 
 Owner: "we are back in alpha with no players so can just work off main. eventually when in beta we will do worktrees." Work is committed directly on main, with no feature branches and no worktrees. This replaces the 2026-10-08 decision to use feature branches off main. `AGENTS.md` carries the rule.

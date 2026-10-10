@@ -26,7 +26,7 @@ Support multiple feature branches developed in parallel via git worktrees, each 
   - `wt:create <branch>` , worktree + env strip/augment + `pnpm install --ignore-scripts` + new Convex project + plan skeleton
   - `wt:seed <branch>` , clone main's Convex data into the worktree's project
   - `wt:list` / `wt:resume <branch>` , status, URLs, plans, next steps
-  - `wt:dev` , run `pnpm dev` behind the branch's Portless name
+  - `wt:dev` , run `pnpm dev:web` behind the branch's Portless name
   - `wt:open <branch>` , open the worktree URL
   - `wt:finish <branch>` , clean checks, ff-pull, overlap check, plan → `zzz-completed/`, merge (no-ff), remove worktree + branch, prune
   - `wt:clean` , prune stale worktree metadata, report orphans (no destructive deletes)
