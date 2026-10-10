@@ -20,6 +20,7 @@ export function useAccount(opts: { onPacks: () => void }) {
   const [link, setLink] = useState<Waiting | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [menu, setMenu] = useState(false)
   const polling = useRef<Waiting | null>(null)
 
   // The parent passes a new callback each render. Keep the latest without re-running the status check.
@@ -87,6 +88,7 @@ export function useAccount(opts: { onPacks: () => void }) {
 
   const unlink = useCallback(async () => {
     setBusy(true)
+    setMenu(false)
     try {
       settle(await account({ kind: "accountUnlink" }))
     } finally {
@@ -106,6 +108,8 @@ export function useAccount(opts: { onPacks: () => void }) {
     link,
     error,
     busy,
+    menu,
+    setMenu,
     start,
     stop,
     unlink,
@@ -154,32 +158,70 @@ function Waiting({ account: a }: { account: Account }) {
   )
 }
 
-// In the header: the linked account with Unlink, or Link account when play does not need one or the link is unconfirmed.
+// In the header: the linked account's picture, as the website's user button, which opens the account menu. Otherwise
+// Link account, when play does not need one or the link is unconfirmed.
 export function AccountBadge({ account: a }: { account: Account }) {
   if (!a.ready || !a.state || a.gated) return null
-  const button = "my-2 px-4 py-1 font-display text-sm normal-case tracking-normal"
   if (a.state.linked === true)
     return (
-      <>
-        <span className="font-display text-sm font-bold tracking-wide text-yellow-950/80">{a.state.account}</span>
-        <Button variant="emboss" className={button} disabled={a.busy} onClick={() => void a.unlink()}>
-          Unlink
-        </Button>
-      </>
+      <button
+        type="button"
+        data-account-menu
+        aria-haspopup="menu"
+        aria-expanded={a.menu}
+        aria-label={`Account, ${a.state.account}`}
+        onClick={() => a.setMenu(!a.menu)}
+        // Undoes the header's paper filter, which doubles saturation and turns hues 30 degrees.
+        className="my-2 grid h-7 w-7 shrink-0 place-items-center overflow-hidden rounded-full bg-primary-600 font-display text-sm text-white hue-rotate-30 saturate-50"
+      >
+        {a.state.avatar ? <img src={a.state.avatar} alt="" className="h-full w-full object-cover" /> : a.state.account.slice(0, 1).toUpperCase()}
+      </button>
     )
   // Offline too: a stored token the website could not confirm. Linking again replaces it.
   return (
-    <Button variant="emboss" className={button} disabled={a.busy || Boolean(a.link)} onClick={() => void a.start()}>
+    <Button variant="emboss" className="my-2 px-4 py-1 font-display text-sm normal-case tracking-normal" disabled={a.busy || Boolean(a.link)} onClick={() => void a.start()}>
       Link account
     </Button>
   )
 }
 
-// Below the header, at the right: the code to approve while linking, and any account error.
+// Opened from the picture in the header: who is linked, and Unlink. Closes on Escape or a click elsewhere.
+function AccountMenu({ account: a }: { account: Account }) {
+  const { setMenu } = a
+  useEffect(() => {
+    const down = (e: PointerEvent) => {
+      if (!(e.target instanceof Element && e.target.closest("[data-account-menu]"))) setMenu(false)
+    }
+    // Captured, so Escape closes the menu without also leaving the page.
+    const key = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return
+      e.stopPropagation()
+      setMenu(false)
+    }
+    addEventListener("pointerdown", down)
+    addEventListener("keydown", key, true)
+    return () => {
+      removeEventListener("pointerdown", down)
+      removeEventListener("keydown", key, true)
+    }
+  }, [setMenu])
+  if (a.state?.linked !== true) return null
+  return (
+    <div data-account-menu role="menu" className={cn(siteCard, "w-64 p-3")}>
+      <p className="truncate px-1 text-sm text-gray-300">{a.state.account}</p>
+      <button type="button" role="menuitem" className={cn(siteOutline, "mt-3 w-full px-3 py-1 text-sm")} disabled={a.busy} onClick={() => void a.unlink()}>
+        Unlink
+      </button>
+    </div>
+  )
+}
+
+// Below the header, at the right: the account menu, the code to approve while linking, and any account error.
 export function AccountNotice({ account: a }: { account: Account }) {
-  if (!a.ready || a.gated || !(a.link || a.error)) return null
+  if (!a.ready || a.gated || !(a.menu || a.link || a.error)) return null
   return (
     <div className="absolute top-4 right-8 z-30 flex flex-col items-end gap-2">
+      {a.menu && <AccountMenu account={a} />}
       {a.link && (
         <div className={cn(siteCard, "w-80 p-5 text-center")}>
           <Waiting account={a} />

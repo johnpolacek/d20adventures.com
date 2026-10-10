@@ -1,5 +1,4 @@
 import "@fontsource/cinzel-decorative/400.css"
-import "@fontsource/cinzel-decorative/700.css"
 import "@fontsource/rethink-sans/400.css"
 import "@fontsource/rethink-sans/500.css"
 import "@fontsource/rethink-sans/600.css"

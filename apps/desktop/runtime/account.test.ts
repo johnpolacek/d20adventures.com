@@ -33,6 +33,15 @@ test("status with a valid token returns the account and library", async () => {
   assert.ok(calls.every((c) => c.auth === `Bearer ${"t".repeat(43)}`))
 })
 
+test("status carries the account picture when it is an image data URL", async () => {
+  const me = { account: "a@b.test", device: "Mac" }
+  const status = async (avatar: string) =>
+    (await accountCommand({ kind: "accountStatus", token: "t".repeat(43) }, SITE, site({ "/api/desktop/me": [200, { ...me, avatar }], "/api/desktop/library": [200, { adventures: [] }] }).fetchImpl))
+      .account
+  assert.deepEqual(await status("data:image/png;base64,AAAA"), { linked: true, ...me, avatar: "data:image/png;base64,AAAA" })
+  assert.deepEqual(await status("https://example.test/a.png"), { linked: true, ...me })
+})
+
 test("a revoked token is cleared", async () => {
   const { fetchImpl } = site({ "/api/desktop/me": [401, { error: "This computer is not linked." }] })
   assert.deepEqual(await accountCommand({ kind: "accountStatus", token: "t".repeat(43) }, SITE, fetchImpl), { account: { linked: false }, clearToken: true })

@@ -138,7 +138,7 @@ The desktop runtime tests read `src-tauri/resources/packs.json`. After a free-on
 
 ## Account required, 2026-10-08
 
-- `useAccount` in `apps/desktop/src/account.tsx` holds the link state for the whole title screen. `AccountBadge` shows the account and Unlink top right. `LinkGate` replaces Continue and New game while play is gated, and shows the code as parchment tiles while waiting.
+- `useAccount` in `apps/desktop/src/account.tsx` holds the link state for the whole title screen. `AccountBadge` shows the account picture top right, which opens a menu with the account and Unlink (2026-10-10). `LinkGate` replaces Continue and New game while play is gated, and shows the code as parchment tiles while waiting.
 - If the account is unlinked or revoked mid-game, the title screen comes back.
 - Checked in a browser with the bridge answered from fixtures: the gate, the waiting code, and a linked account reaching New game. Not yet seen in the running app.
 - A release build needs the website's desktop API deployed, or nobody can link and play.

@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-10, desktop header matches the website
+
+Owner asked for the app's header to match the website's type, and for the linked account to be the round picture, without tokens, which are being deprecated. The app dropped the Cinzel Decorative 700 face, since the website has 400 alone. `/api/desktop/me` now returns the account picture as a data URL, and the header shows it with a menu holding the account and Unlink. Details in [Desktop site style](plans/desktop-site-style.md).
+
 ## 2026-10-10, pnpm dev starts the desktop app too
 
 Owner: "should we just make pnpm dev automatically spin up everything we need". `pnpm dev` now runs Convex, the website, and the desktop app with `D20_SITE_URL` pointed at the local website. `pnpm dev:web` is the old website-only command, used by `pnpm test`, `test:setup`, and `wt:dev`. `pnpm dev:app` starts the app alone against the local website. Quitting the app leaves the website running. `pnpm desktop:dev` still targets d20adventures.com. Not yet run end to end.

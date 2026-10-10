@@ -15,7 +15,7 @@ export const accountCommandSchema = z.discriminatedUnion("kind", [
 ])
 export type AccountCommand = z.infer<typeof accountCommandSchema>
 
-export type AccountState = { linked: false } | { linked: true; account: string; device: string } | { linked: "offline" }
+export type AccountState = { linked: false } | { linked: true; account: string; device: string; avatar?: string } | { linked: "offline" }
 export type LinkState = { status: "waiting"; userCode: string; pollSecret: string; verifyPath: string; expiresAt: number; interval: number } | { status: "pending" } | { status: "expired" }
 export type OwnedAdventure = LibraryEntry & { pack?: { version: string; builtAt: number } }
 export type AccountResponse = {
@@ -50,12 +50,13 @@ export async function accountCommand(command: AccountCommand, site: string, fetc
       const me = await call("/api/desktop/me", {}, bearer)
       if (me.status === 401) return { account: { linked: false }, clearToken: true }
       if (!me.ok) return { account: { linked: "offline" } }
-      const { account, device } = (await me.json()) as { account: string; device: string }
+      const { account, device, avatar } = (await me.json()) as { account: string; device: string; avatar?: string }
+      const linked: AccountState = { linked: true, account, device, ...(avatar?.startsWith("data:image/") ? { avatar } : {}) }
       const library = await call("/api/desktop/library", {}, bearer)
       const adventures = library.ok ? ((await library.json()) as { adventures: OwnedAdventure[] }).adventures : undefined
-      if (!packs || !adventures) return { account: { linked: true, account, device }, adventures }
+      if (!packs || !adventures) return { account: linked, adventures }
       const synced = await syncPacks({ library: adventures, ...packs, fetchPack: (id) => call(`/api/desktop/packs/${id}`, {}, bearer) })
-      return { account: { linked: true, account, device }, adventures, ...synced }
+      return { account: linked, adventures, ...synced }
     } catch {
       return { account: { linked: "offline" } }
     }

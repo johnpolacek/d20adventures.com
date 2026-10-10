@@ -221,6 +221,19 @@ This changes the website's stage pages as well, which keeps both in step.
 - Rendered in WebKit, the engine the app uses, at 1440 wide: three intro cards of 365px in one row, then the featured panel at 1224px.
 - Two things sit above the intro row: the image header, which puts the cards at mid-screen, and Your Adventures when saves exist.
 
+### Header font and account picture
+
+Owner, 2026-10-10: "Can we make the header of the app look more like the website. the font looks completely different. and then for the signed in user i want it to look like the circle avatar (we don't need to show tokens as those are being deprecated)".
+
+- Cause of the font gap: the app loaded Cinzel Decorative at 400 and 700. The website loads 400 alone, so its bold is the browser's own thickening of the regular face. The app's real 700 face is far heavier.
+- The app now loads 400 alone. This changes every bold display heading in the app and the HUD, not the header only.
+- The linked account is a round picture in the header, as the website's user button. It opens a small menu below the header with the account and Unlink. No token count.
+- `/api/desktop/me` returns `avatar`, the Clerk picture at 96px as a data URL. The app's content policy allows no remote images. The runtime passes it on only when it is an image data URL.
+- Without a picture the circle shows the account's first letter.
+- The header's paper filter doubles saturation and turns hues 30 degrees. The picture reverses both.
+- Seen in the running app against the local website: header type, picture, and the menu. The page below was black in the captures, because the window was covered and its fade-in had not run. Not seen in the foreground.
+- The production website needs a deploy before the picture shows there. Until then the app shows the letter.
+
 ### Not done
 
 - HUD over the other authored sets. Only the gate was seen.
