@@ -49,6 +49,30 @@ test("saved adventures list newest first and resume swaps the archived one in", 
     cleanup()
   }
 })
+test("removing a saved adventure deletes an archived one by id, or the current one", async () => {
+  const { store, path, cleanup } = setup()
+  try {
+    const run = game(store, packs, failLlm)
+    await run({ kind: "start", provider: "claude" })
+    const first = store.state!.adventure._id
+    await run({ kind: "start", provider: "claude", replace: true })
+    const archived = store.saves()[1]
+    assert.equal(archived.adventureId, first)
+    await run({ kind: "remove", archiveId: archived.archiveId })
+    assert.equal(store.saves().length, 1)
+    await assert.rejects(() => run({ kind: "remove", archiveId: archived.archiveId }), /no longer saved/)
+    await run({ kind: "remove" })
+    assert.equal(store.state, null)
+    assert.deepEqual(store.saves(), [])
+    const reopened = new LocalStore(path)
+    assert.equal(reopened.state, null)
+    reopened.db.close()
+    await run({ kind: "start", provider: "claude" })
+    assert.equal(store.saves().length, 1)
+  } finally {
+    cleanup()
+  }
+})
 test("archives from before summaries are listed after reopening", async () => {
   const { store, path, cleanup } = setup()
   try {

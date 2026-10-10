@@ -28,6 +28,8 @@ export const adventureList = (packs: Packs) =>
       title: m.title,
       start: m.startEncounterId,
       teaser: m.teaser ?? "",
+      // Encounters, which the Adventures page counts as scenes.
+      scenes: Object.keys(p.artifacts.encounters).length,
       players: [m.minPlayers ?? 1, m.maxPlayers ?? Math.max(1, premades.length)] as [number, number],
       options: m.availableCharacterOptions ?? null,
       premades: premades.map((s) => ({ id: s.id, name: s.name, race: s.race, archetype: s.archetype, gender: s.gender })),
@@ -68,6 +70,8 @@ export const commandSchema = z.discriminatedUnion("kind", [
   }),
   // Swaps an archived adventure in as the current save.
   z.object({ kind: z.literal("resume"), archiveId: z.number().int().positive() }),
+  // Removes a saved adventure for good: an archived one by id, or the current one without an id.
+  z.object({ kind: z.literal("remove"), archiveId: z.number().int().positive().optional() }),
   z.object({ kind: z.literal("roll"), turnId: z.string(), characterId: z.string(), result: z.number().int().min(1).max(20) }),
   z.object({ kind: z.literal("continue"), turnId: z.string() }),
   z.object({
@@ -141,6 +145,10 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
     if (command.kind === "load") return store.state
     if (command.kind === "resume") {
       store.resume(command.archiveId)
+      return store.state
+    }
+    if (command.kind === "remove") {
+      store.remove(command.archiveId)
       return store.state
     }
     if (command.kind === "start") {

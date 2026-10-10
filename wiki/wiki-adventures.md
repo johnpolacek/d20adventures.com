@@ -11,7 +11,7 @@ The four registered Realm of Myr adventures use authored markdown and JSON compi
 | Concern | Current contract |
 |---|---|
 | Registry | `LOCAL_WIKI_ADVENTURES` in `lib/wiki-adventures/local-runtime.ts` registers The Midnight Summons, Covert Cargo, The Road to Kordavos, and March of Davos. |
-| Manifest | Adventure `adventure.md` frontmatter supplies identity, start encounter, party limits, premades, character options, and asset metadata. |
+| Manifest | Adventure `adventure.md` frontmatter supplies identity, start encounter, party limits, premades, character options, asset metadata, and the optional [safety rules](#safety-rules). |
 | Encounters | Markdown files carry stable IDs, NPC/location refs, transitions, intro, and GM notes. NPC refs can include `startNear`. |
 | Characters | JSON sheets hold mechanical data. Paired markdown profiles hold authored narrative context. |
 | Entities | NPCs, locations, factions, and items support context retrieval. Encounter location refs also supply map titles. |
@@ -22,6 +22,24 @@ The four registered Realm of Myr adventures use authored markdown and JSON compi
 The current runtime uses `loadAdventurePlanForRuntime` in `lib/wiki-adventures/plan-view.ts`. Registered adventures are adapted from compiled wiki artifacts into the UI's `AdventurePlan` shape. Other plans retain the legacy S3 JSON loader.
 
 Do not delete the legacy JSON source files under `wiki/sources/adventure plans/`. The migration scripts read them. Legacy remote plan data was deliberately retained at cutover as a fallback.
+
+## Safety rules
+
+Two optional manifest fields, enforced by the GM core in `packages/gm-core/src/wiki-adventures/player-safety.ts`. Added 2026-10-10 for Covert Cargo.
+
+| Field | Contract |
+|---|---|
+| `playerDeath: false` | Player characters keep at least 1% health and never take the status "dead". Applies to NPC effects, roll outcomes, and advance patches. The GM's notes for every encounter gain a line saying so. |
+| `rescue.encounter`, `rescue.atHealthPercent` | At the end of a round, when the encounter would otherwise continue and a player character is at or below the threshold, play moves to the rescue encounter. Once per playthrough. |
+
+- A rescue fires only from an encounter that authors a transition to the rescue encounter. Add `- To [[encounter:<id>]] when ...` wherever a fight can happen.
+- The model is never offered that transition. The health check alone triggers it.
+- A fight already won or fled follows the transition the GM chose.
+- The rescue encounter's intro follows the GM's narration of the round, so write it to open mid-fight.
+- The compiler rejects a `rescue.encounter` that is not an encounter.
+- Legacy plans ignore both fields.
+
+An NPC who is also another adventure's premade needs its own ID. Covert Cargo's Thalbern is `thalbern-npc`, since `thalbern` is the Midnight Summons premade.
 
 ## Admin authoring
 

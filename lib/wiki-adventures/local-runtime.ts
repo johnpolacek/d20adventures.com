@@ -61,6 +61,8 @@ export const LOCAL_WIKI_ADVENTURES = [
       "content/settings/realm-of-myr/npcs/npcs-1749243735467.md",
       "content/settings/realm-of-myr/npcs/npcs-1749243869357.json",
       "content/settings/realm-of-myr/npcs/npcs-1749243869357.md",
+      "content/settings/realm-of-myr/npcs/thalbern-npc.json",
+      "content/settings/realm-of-myr/npcs/thalbern-npc.md",
     ],
     promptSlug: "covert-cargo",
   },

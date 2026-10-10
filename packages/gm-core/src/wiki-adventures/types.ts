@@ -96,6 +96,10 @@ export type RuntimeManifest = {
   premadeCharacterIds: string[]
   availableCharacterOptions?: { races: string[]; archetypes: string[] }
   nextAdventureId?: string
+  // false: player characters never die here. See wiki-adventures/player-safety.ts.
+  playerDeath?: boolean
+  // An encounter the core enters itself when a player character's health falls to the threshold.
+  rescue?: { encounterId: string; atHealthPercent: number }
   sourcePath: string
   contentHash: string
   validation: Pick<ValidationReport, "mode" | "status"> & ValidationReport["summary"]

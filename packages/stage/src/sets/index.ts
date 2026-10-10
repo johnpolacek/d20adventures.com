@@ -26,6 +26,7 @@ export const STAGINGS: Record<string, () => Promise<unknown>> = {
   "covert-cargo/the-fake": () => import("../stagings/covert-cargo/the-fake.json").then((m) => m.default),
   "covert-cargo/battle-on-the-boat": () => import("../stagings/covert-cargo/battle-on-the-boat.json").then((m) => m.default),
   "covert-cargo/the-crate": () => import("../stagings/covert-cargo/the-crate.json").then((m) => m.default),
+  "covert-cargo/the-ranger": () => import("../stagings/covert-cargo/the-ranger.json").then((m) => m.default),
   "covert-cargo/return-to-the-city": () => import("../stagings/covert-cargo/return-to-the-city.json").then((m) => m.default),
   "covert-cargo/the-end": () => import("../stagings/covert-cargo/the-end.json").then((m) => m.default),
 }

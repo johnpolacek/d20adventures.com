@@ -38,6 +38,7 @@ Aelar will order his two elves to investigate. Everyone else will stay with the 
 - To [[encounter:the-transaction]] when If Poppen successfully hides, then the transaction will proceed as Silas will be eager to have the matter concluded, even if he has to skip Lyra's verification.
 - To [[encounter:the-escape]] when If the characters flee
 - To [[encounter:battle-on-the-boat]] when If it turns into a battle
+- To [[encounter:the-ranger]] when a player character is at half health or less. The adventure's rescue rule applies this one, not the GM.
 
 ## Migration Context
 

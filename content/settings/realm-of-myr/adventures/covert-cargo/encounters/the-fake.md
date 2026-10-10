@@ -38,6 +38,7 @@ Unless charmed, Silas will try to detect if Lyra is lying. Reinhard will do what
 
 - To [[encounter:battle-on-the-boat]] when If Lyra or Poppen attack
 - To [[encounter:the-transaction]] when Ultimately Silas wants to make this deal even if he isn't sure about the relic's authenticity.
+- To [[encounter:the-ranger]] when a player character is at half health or less. The adventure's rescue rule applies this one, not the GM.
 
 ## Migration Context
 

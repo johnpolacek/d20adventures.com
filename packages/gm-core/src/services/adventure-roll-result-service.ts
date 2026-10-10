@@ -1,6 +1,7 @@
 import type { GmPorts } from "../ports"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
+import { gmNotesWithRules, keepPlayersAlive } from "../wiki-adventures/player-safety"
 import { appendNarrative } from "./narrative-service"
 import { detectSpellFromRollType, markSpellAsUsed } from "./spell-tracking-service"
 import { createTurnUpdateService } from "./turn-update-service"
@@ -102,6 +103,8 @@ export function createAdventureRollResultService(ports: GmPorts) {
     characterId: string
     baseRollResult: number
     encounterInstructions: string
+    // The adventure's `playerDeath` rule. False keeps player characters alive through the roll's outcome.
+    playerDeath?: boolean
   }): Promise<{
     narrative: string
     characters: TurnCharacter[]
@@ -124,7 +127,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
 
     const rollOutcomePrompt = buildRollOutcomePrompt({
       narrativeContext,
-      encounterInstructions: args.encounterInstructions,
+      encounterInstructions: gmNotesWithRules(args, args.encounterInstructions) ?? "",
       presentNpcs,
       playerActionText,
       characterName: args.character.name,
@@ -199,7 +202,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
 
     return {
       narrative: newNarrative,
-      characters: updatedCharacters,
+      characters: keepPlayersAlive(args, updatedCharacters),
     }
   }
   return { resolvePlayerRollNarrativeAndCharacters }

@@ -71,5 +71,6 @@ export function buildAdventurePlanViewFromArtifacts(artifacts: RuntimeArtifacts)
     npcs,
     availableCharacterOptions: manifest.availableCharacterOptions,
     nextAdventure: manifest.nextAdventureId,
+    playerDeath: manifest.playerDeath,
   }
 }

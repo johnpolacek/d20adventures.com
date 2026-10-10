@@ -132,6 +132,15 @@ export class LocalStore implements Store, Roster {
     this.state = next
   }
   // Resuming an archived adventure swaps it with the current one, in one transaction.
+  // Removing a saved adventure deletes it. Without an id it is the current one, and no adventure is current after.
+  remove(archiveId?: number) {
+    if (archiveId === undefined) {
+      this.db.prepare("DELETE FROM save WHERE id=1").run()
+      this.state = null
+      return
+    }
+    if (this.db.prepare("DELETE FROM archive WHERE id=?").run(archiveId).changes === 0) throw new Error("That adventure is no longer saved.")
+  }
   resume(archiveId: number) {
     this.db.exec("BEGIN IMMEDIATE")
     let next: Save

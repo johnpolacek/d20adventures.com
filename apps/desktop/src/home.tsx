@@ -21,7 +21,7 @@ export function Home(props: {
   const turn = props.save?.turns.find((t) => t._id === props.save?.adventure.currentTurnId)
   const pcs = (turn?.characters ?? []).filter((c) => c.type === "pc").map((c) => c.name.split(" ")[0])
   return (
-    <div className="absolute inset-0 z-40 overflow-hidden text-stage-cream">
+    <div className="absolute inset-0 z-40 overflow-hidden bg-stage-ink text-stage-cream">
       <img src="/images/app/backgrounds/d20-hero.png" alt="" className="fade-in absolute inset-0 h-full w-full object-cover" />
       {props.account}
       <h1 className="fade-in relative mt-[12vh] text-center font-display text-[clamp(40px,5vw,72px)] delay-[400ms]" style={textShadowSpreadLight}>

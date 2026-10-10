@@ -23,7 +23,7 @@ The [shared GM core](gm-core.md) now owns reply, roll, NPC, companion, and advan
 3. Required rolls are stored and resolved before completing the action.
 4. Narrative and character-state updates are applied.
 5. NPC turns resolve as needed.
-6. Turn advance loads current content, validates encounter progression, and commits the next turn and story patch.
+6. Turn advance loads current content, validates encounter progression, and commits the next turn and story patch. An adventure's [safety rules](wiki-adventures.md#safety-rules) can keep player characters alive and send a badly hurt party to a rescue encounter.
 7. Terminal wiki encounters set completed status and an end timestamp.
 
 The live commit rejects changed current turns/encounters and duplicate turn order. Authored content can change during a run. The commit updates its content provenance rather than loading the original immutable version.

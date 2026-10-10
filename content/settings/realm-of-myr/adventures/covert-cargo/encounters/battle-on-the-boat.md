@@ -30,6 +30,7 @@ The cabin door clicks shut, the sound unnaturally loud in the sudden stillness. 
 - To [[encounter:the-fake]] when If Poppen tries to cause a distraction outside the boat or gets spotted
 - To [[encounter:the-escape]] when If Lyra successfully flees and evades capture
 - To [[encounter:the-crate]] when If Lyra and/or Poppen overcome Silas and Reinhard
+- To [[encounter:the-ranger]] when a player character is at half health or less. The adventure's rescue rule applies this one, not the GM.
 
 ## Migration Context
 

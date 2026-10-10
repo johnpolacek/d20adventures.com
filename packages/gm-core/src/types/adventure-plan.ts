@@ -23,6 +23,8 @@ export interface AdventurePlan {
     archetypes: string[]
   }
   nextAdventure?: string
+  // Wiki adventures only. False: player characters never die here.
+  playerDeath?: boolean
 }
 
 export const RULES_PRESETS = [

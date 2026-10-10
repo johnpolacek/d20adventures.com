@@ -63,6 +63,7 @@ Legacy runtime flag: skipInitialNpcTurns was true.
 - To [[encounter:the-transaction]] when If Lyra verbally confirms the magic properties of the shipment
 - To [[encounter:the-fake]] when If Lyra says the shipment has no magical properties
 - To [[encounter:the-disturbance]] when If Poppen causes a distraction or anyone notices his presence
+- To [[encounter:the-ranger]] when a player character is at half health or less. The adventure's rescue rule applies this one, not the GM.
 
 ## Migration Context
 

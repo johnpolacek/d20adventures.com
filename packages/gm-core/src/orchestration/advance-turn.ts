@@ -19,6 +19,7 @@ import type { AdventurePlan } from "../types/adventure-plan"
 import { mapConvexTurnToTurn } from "../utils/game-utils"
 import { validateAdventurePatch } from "../wiki-adventures/adventure-patch"
 import { buildLocalWikiTurnCharacters, isLocalWikiFinalEncounter } from "../wiki-adventures/characters"
+import { keepPatchedPlayersAlive, keepPlayersAlive, pendingRescue } from "../wiki-adventures/player-safety"
 import { assembleGameplayContextPacket, buildWikiEncounterProgressionPrompt } from "../wiki-adventures/runtime-context"
 import { validatePacketTransition } from "../wiki-adventures/transition-validator"
 
@@ -109,9 +110,16 @@ export function createAdvanceTurn(ports: GmPorts) {
       const prompt = buildWikiEncounterProgressionPrompt(packet)
       await wait(1000)
       const llmResult = (await generateObject({ prompt, schema: wikiEncounterProgressionSchema })).object
-      const transition = validatePacketTransition(packet, llmResult.nextEncounterId)
+      let transition = validatePacketTransition(packet, llmResult.nextEncounterId)
       if (!transition.allowed) {
         throw new Error(`Wiki transition rejected: ${transition.rejectedReason} (${turn.encounterId} -> ${transition.nextEncounterId})`)
+      }
+      // A badly hurt party is rescued only when the encounter would otherwise go on. A fight already won or fled
+      // follows its own transition.
+      const rescue = pendingRescue({ artifacts, encounterId: turn.encounterId, characters: turn.characters as TurnCharacter[], playedEncounterIds: allTurns.map((row) => row.encounterId) })
+      if (transition.kind === "continue" && rescue) {
+        console.log(`[advanceTurn:${requestId}] Rescue triggered: ${turn.encounterId} -> ${rescue.toEncounterId}`)
+        transition = { allowed: true, kind: "transition", nextEncounterId: rescue.toEncounterId, transition: rescue }
       }
       let adventurePatch
       try {
@@ -125,10 +133,11 @@ export function createAdvanceTurn(ports: GmPorts) {
           transition
         )
       }
+      if (adventurePatch.characterUpdates) adventurePatch.characterUpdates = keepPatchedPlayersAlive(artifacts.manifest, adventurePatch.characterUpdates, turn.characters as TurnCharacter[])
       const nextEncounter = artifacts.encounters[transition.nextEncounterId]
       if (!nextEncounter) throw new Error(`Next encounter ${transition.nextEncounterId} missing from wiki artifacts`)
       const isTransition = transition.nextEncounterId !== turn.encounterId
-      const characters = isTransition
+      const nextCharacters = isTransition
         ? buildLocalWikiTurnCharacters({
             artifacts,
             encounter: nextEncounter,
@@ -148,6 +157,7 @@ export function createAdvanceTurn(ports: GmPorts) {
               initiative: Math.floor(Math.random() * 20) + 1,
             }))
             .sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
+      const characters = keepPlayersAlive(artifacts.manifest, nextCharacters)
       const narrative = isTransition ? appendNarrative(normalizeNarrative(llmResult.narrative), normalizeNarrative(nextEncounter.sections.intro ?? "")) : normalizeNarrative(llmResult.narrative)
       const isFinalEncounter = isLocalWikiFinalEncounter(artifacts, nextEncounter.id)
       const commitResult = await ports.store.commitWikiTurnAdvance({

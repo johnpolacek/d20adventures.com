@@ -1,6 +1,7 @@
 import { buildRecentTurnHistory, buildRollInfo, getEncounterTurnStatus, getRecentTurnsForContext } from "../services/advance-turn-prompt-service"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import type { ContentRef } from "./content-ref"
+import { gmNotesWithRules } from "./player-safety"
 import type { RuntimeArtifacts, RuntimeEncounter, RuntimeEntityRecord, RuntimeTransition } from "./types"
 
 export type RuntimeTurnRow = {
@@ -90,7 +91,11 @@ export function assembleGameplayContextPacket(args: {
 
   const recentTurns = getRecentTurnsForContext(args.session.allTurns, args.session.currentTurnOrder, args.session.adventureInstanceId)
   const turnStatus = getEncounterTurnStatus(args.session.allTurns, currentEncounter.id, args.session.currentTurnOrder)
-  const legalTransitions = args.artifacts.graph.encounterTransitions.filter((transition) => transition.fromEncounterId === currentEncounter.id && transition.publishResolved)
+  // The rescue transition is the core's to take, on health. The model is never offered it.
+  const rescueEncounterId = args.artifacts.manifest.rescue?.encounterId
+  const legalTransitions = args.artifacts.graph.encounterTransitions.filter(
+    (transition) => transition.fromEncounterId === currentEncounter.id && transition.publishResolved && transition.toEncounterId !== rescueEncounterId
+  )
   const liveCharacters = args.session.currentTurn.characters
   const npcIds = new Set(currentEncounter.npcRefs.map((ref) => ref.id))
   const liveIds = new Set(liveCharacters.map((character) => character.id))
@@ -116,7 +121,7 @@ export function assembleGameplayContextPacket(args: {
       summary: currentEncounter.summary,
       sections: currentEncounter.sections,
       intro: currentEncounter.sections.intro ?? currentEncounter.sections.body ?? "",
-      gmNotes: currentEncounter.sections.gmNotes,
+      gmNotes: gmNotesWithRules(args.artifacts.manifest, currentEncounter.sections.gmNotes),
       checks: currentEncounter.sections.checks,
       locationId: currentEncounter.locationId,
       npcRefs: currentEncounter.npcRefs,
