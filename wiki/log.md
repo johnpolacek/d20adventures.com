@@ -8,6 +8,10 @@ This log retains durable decisions and dated evidence. Git owns detailed impleme
 
 Owner found Covert Cargo badly balanced and asked for Thalbern to step in when anyone falls to half health, with no player deaths in this intro adventure. Decided: two authored manifest rules enforced by the GM core, `playerDeath: false` and `rescue`, because the GM never sees health numbers when it picks the next encounter. Covert Cargo gains Thalbern as an NPC, the encounter The Ranger, and rescue transitions from its five boat encounters. Implemented on `feature/covert-cargo-rescue`, not merged or deployed. GM core, wiki adventure, stage and 42 desktop checks pass. No live model play-through yet. See [the plan](plans/covert-cargo-rescue.md) and [the contract](wiki-adventures.md#safety-rules).
 
+## 2026-10-10, removing saved adventures
+
+Owner asked how to end an adventure. Starting a new one already keeps the old one under Your Adventures. Added Remove, with a confirm step, on each saved adventure. It deletes an archived save, or the current one, after which no adventure is current.
+
 ## 2026-10-08, desktop title screen and pages
 
 Owner review of the desktop home: it now opens on the website's title screen, the d20 painting with "Experience the Thrill of the D20", Continue for the saved adventure, and white outline buttons. Adventures, Characters and Settings are separate pages styled after the website. The Realm of Myr card's Explore opens the website's setting page, so the app no longer has its own Realm page. This replaces the shelves under a live-scene banner in [the home screen plan](plans/zzz-completed/feature-desktop-home.md).

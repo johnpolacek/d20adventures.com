@@ -83,8 +83,11 @@ export function AdventuresPage(props: {
   onNavigate: (page: Page | "home") => void
   onContinue: () => void
   onResume: (archiveId: number) => void
+  // Deletes a saved adventure: an archived one by id, or the current one.
+  onRemove: (archiveId?: number) => void
   onAdventure: (id: string) => void
 }) {
+  const [removing, setRemoving] = useState<string | null>(null)
   const players = (id: string): [number, number] => props.adventures.find((a) => a.id === id)?.players ?? props.locked.find((a) => a.id === id)?.players ?? [1, 4]
   return (
     <PageShell page="adventures" title="Adventures" account={props.account} onNavigate={props.onNavigate}>
@@ -94,8 +97,9 @@ export function AdventuresPage(props: {
           <ul className="grid grid-cols-2 gap-6 lg:grid-cols-4">
             {props.saves.map((s) => {
               const current = s.archiveId === undefined
+              const key = String(s.archiveId ?? "current")
               return (
-                <li key={s.archiveId ?? "current"}>
+                <li key={key} className="group relative">
                   <button
                     type="button"
                     disabled={props.busy}
@@ -112,6 +116,22 @@ export function AdventuresPage(props: {
                     <div className="mt-3 truncate text-[13px]">{s.status === "completed" ? "Complete" : `Round ${s.round} · ${s.turnTitle}`}</div>
                     <div className="truncate text-[11px] text-stage-muted">{current ? "Playing now" : `Played ${played(s.playedAt)}`}</div>
                   </button>
+                  <Pill
+                    className={cn(
+                      "absolute top-2 right-2 px-2 py-1 text-[10px] opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100",
+                      removing === key && "opacity-100"
+                    )}
+                    disabled={props.busy}
+                    aria-label={removing === key ? `Confirm removing ${s.title}` : `Remove ${s.title}`}
+                    onBlur={() => setRemoving(null)}
+                    onClick={() => {
+                      if (removing !== key) return setRemoving(key)
+                      setRemoving(null)
+                      props.onRemove(s.archiveId)
+                    }}
+                  >
+                    {removing === key ? "Confirm" : "Remove"}
+                  </Pill>
                 </li>
               )
             })}
