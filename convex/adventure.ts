@@ -696,8 +696,9 @@ export const getAllAdventures = query({
 })
 
 // Admin cleanup: delete an adventure and every dependent row (turns, turn
-// audio manifests, chat, reports). Authorization happens in the calling
-// server action (requireAdmin) — keep this mutation out of client reach.
+// audio manifests, chat, reports, a hosted game's GM jobs). Authorization
+// happens in the calling server action (requireAdmin) — keep this mutation
+// out of client reach.
 export const deleteAdventureCascade = mutation({
   args: {
     adventureId: v.id("adventures"),
@@ -739,6 +740,14 @@ export const deleteAdventureCascade = mutation({
       await ctx.db.delete(report._id)
     }
 
+    const jobs = await ctx.db
+      .query("gmJobs")
+      .withIndex("by_adventure", (q) => q.eq("adventureId", args.adventureId))
+      .collect()
+    for (const job of jobs) {
+      await ctx.db.delete(job._id)
+    }
+
     await ctx.db.delete(args.adventureId)
 
     return {
@@ -746,6 +755,7 @@ export const deleteAdventureCascade = mutation({
       deletedAudioManifests: audioCount,
       deletedChatMessages: chatMessages.length,
       deletedReports: reports.length,
+      deletedJobs: jobs.length,
     }
   },
 })

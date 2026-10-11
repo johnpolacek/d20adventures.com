@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-10, the owner's dev adventures cleared
+
+Owner: "please remove all my test adventures. i want to start fresh." All eight adventures owned by the owner's account in dev Convex were deleted, four hosted that day and four from July to September, after a snapshot export. `deleteAdventureCascade` now also deletes a hosted game's GM jobs. The test user's two adventures were left, and so were two audio rows whose adventures were already gone. Production was not touched.
+
 ## 2026-10-10, the host can remove a seated guest
 
 Owner chose Remove for a seated guest. Before the game starts, the host removes a guest from the app's lobby with an optional note. The seat opens again, the guest sees the note, and that guest needs the host's approval to sit down again. Details in [Desktop host mode](plans/desktop-host-mode.md).

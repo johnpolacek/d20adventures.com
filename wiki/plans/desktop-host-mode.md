@@ -97,7 +97,7 @@ Owner, at party setup with Lyra and Poppen seated: "i want to be able to invite 
 - Start in the app moved the guest's browser to `/play/<id>`, which showed Poppen's turn and "Hosted · GM online".
 - 49 desktop tests and 12 store, link, and seat tests pass. Both typechecks pass.
 - Not checked: a roster hero as an invited seat, more than one invited seat, a second guest trying a taken seat, the amber note for an AI seat beside an invited one, and any turn played by the guest.
-- That test game is still in dev Convex, hosted by the owner's account with the test user as Poppen.
+- That test game was removed from dev Convex later the same day, with the owner's other dev adventures.
 
 ### Contradiction
 
@@ -133,7 +133,7 @@ Owner: an "any hero" seat, "if allowed on the adventure, host has right to appro
 - Reject in the app showed the guest "The host declined Thora Battlehammer." A rejection with a note, sent straight to Convex, showed the note. Approve seated Thalbern, the app listed both heroes, and the any hero link went away.
 - Not checked: typing a note in the app's field, two open seats, a guest making a new hero from the lobby, and Choose another hero while waiting.
 - No tests were added. Owner prefers throwaway checks.
-- That March of Davos test game is still in dev Convex, with the test user seated as Thalbern.
+- That March of Davos test game was removed from dev Convex later the same day.
 
 ## Auto-approve and hero sheets, 2026-10-10
 
@@ -166,7 +166,7 @@ Owner chose Remove for a seated guest, since automatic seating needs a way to un
 - Ask me: the guest's buttons read Ask to join. The request showed in the app with Sheet, Reject, and Approve. Sheet showed Thalbern's sheet under the request.
 - Approve seated Thalbern, and the guest's page loaded again as a player without being touched.
 - Not checked: Start after an approval, and a guest whose sheet cannot be read.
-- Two more March of Davos test games are in dev Convex, each with the test user seated.
+- The two March of Davos test games were removed from dev Convex later the same day.
 
 ## Known gaps
 
