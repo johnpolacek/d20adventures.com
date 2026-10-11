@@ -6,8 +6,6 @@ import { assertAdventureAccess, assertAdventureAccessByTurn } from "@/lib/advent
 import { postTableChat } from "@/lib/host/chat"
 import { type HostedAction, queueAction } from "@/lib/host/server"
 
-export type { HostedAction }
-
 // A player's action in a hosted game waits for the host's app, which runs the GM. Players see the result on the turn.
 export async function queueHostedAction(action: HostedAction) {
   const { userId } = await auth()

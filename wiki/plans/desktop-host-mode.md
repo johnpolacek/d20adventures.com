@@ -283,11 +283,38 @@ Owner: "Do we have chat working so the participants in the session can chat?" It
 - Website lobby: the existing chat button shows for a seated guest of any hosted game, one-seat games included.
 - The app offers chat only where the website's state carries it, so an older website shows none.
 
+### Built and checked, 2026-10-11
+
+- Website: `lib/host/chat.ts`, `chat` on both state routes, the `chat` action on the host route, `sendHostedChat`, and the lobby's chat button for hosted games.
+- Shared play view: the Chat button and its count in `stage-play.tsx`, and the live tab with its box in `components/stage/journal.tsx`.
+- App: `hostChat`, and Table chat in `hosted-lobby.tsx`.
+- Checked against the local website and dev Convex, with a device linked to the test user as host of The Midnight Summons.
+- The app's route took a line and refused an empty one. State carried the chat, named "d20playtest · Thalbern".
+- The website lobby of that one-seat game showed Chat, the app's line in it, and sent a line back.
+- The play page showed Chat beside Journal. A new line made it "Chat · 1". Opening it showed every line at the newest, and cleared the count.
+- A line arriving with the chat open showed without a count. One arriving with the story open counted.
+- Sending from the box added the line and emptied the box.
+- Not checked: the app's lobby chat and the app's own play view. Computer use was unavailable. They share the routes and the view checked here. Also not checked: two different accounts talking.
+- Both typechecks and 47 desktop runtime tests pass. No tests were added.
+
+### Found: guests could not act from the website
+
+- Sending chat from the play page failed with "HostedAction is not defined". So did a guest's reply.
+- `app/_actions/hosted.ts` re-exported a type. In a server actions file that broke every action in it at run time.
+- So no website guest could reply, roll, or continue since the play page was built on 2026-10-08. No guest turn had been played before.
+- Fixed by dropping the re-export. Nothing imported it.
+- Checked after the fix: the guest's reply queued, the bundled `host.cjs` worker ran it through Claude, and the GM asked for a Perception roll.
+- The guest rolled on the page, the worker resolved it, and the page showed the roll and the new narration. That is a guest's first full turn through the website.
+- Seen then: headless Chromium has no WebGL, and the play page crashed when the roll prompt came up. The die makes its own renderer with no fallback. The scene itself falls back to story view.
+- The throwaway game, the test device, and the browsers were removed afterward.
+
 ## Known gaps
 
 - Hosted games keep no stage positions, so movement is not read or walked.
 - The journal shows only the current turn.
 - No AI companions in hosted parties yet.
+- A browser without WebGL crashes at a roll prompt, since the die has no fallback.
+- The play view's chat shows the latest 50 lines, with no way to load older ones.
 - The app's home does not yet list games the account joined as a guest.
 
 ## Open decisions

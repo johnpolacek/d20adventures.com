@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-11, table chat in hosted games, and guests can act from the website
+
+Owner: "Do we have chat working so the participants in the session can chat?" Hosted games had none. The play view now has a Chat button that opens the journal's Table chat, live, with a box to send and a count of new lines. The app's lobby has the same chat, and the website lobby shows its chat button in any hosted game. Checking it found that no website guest could reply, roll, or continue: a type re-export in `app/_actions/hosted.ts` broke every action in the file. Fixed, and a guest's reply and roll then ran through the host worker and Claude. The app's own screens were not checked, since computer use was unavailable. Details in [Desktop host mode](plans/desktop-host-mode.md).
+
 ## 2026-10-11, the host can invite the only hero and watch
 
 Owner: "can we make it possible for me to invite a different player to play the solo adventure and just watch?" Invite showed only for adventures with more than one seat, and a hosted game needed a hero for the host. Now Invite shows on every adventure. A party of one invited hero leaves the host none: the guest plays and the host watches. Start waits for a guest to be seated. Checked on the local website with the test user as host. The app's own screens were not checked, since computer use was unavailable. Details in [Desktop host mode](plans/desktop-host-mode.md).
