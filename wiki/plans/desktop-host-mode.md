@@ -245,6 +245,23 @@ Owner: "can we make it possible for me to invite a different player to play the 
 - Start is refused until a guest is seated.
 - The app's lobby shows "You watch" at the table. In play every hero's turn reads Waiting for that hero, and the host can still continue NPC turns.
 
+### Built and checked, 2026-10-11
+
+- App: Invite on every adventure and the watching party in `new-game.tsx`, `hostCreate` with `watch`, "You watch" and the held Start in `hosted-lobby.tsx`, and "Hosting · watching" in play.
+- Website: `watch` on `POST /api/desktop/host` and `createHostedAdventure`, `hostWatches` in `lib/host/seats.ts`, `watching` in the summary, and the refusal in `seatHost`.
+- Checked against the local website and dev Convex, with a device linked to the test user as host and The Midnight Summons.
+- No hero and one invite without `watch` was refused as before. `watch` with nothing invited was refused: "Invite a hero to watch them play."
+- `watch` with Thalbern invited made the game: no players, one held seat with its link, `watching` true.
+- Start with nobody seated was refused: "Nobody has joined yet." The game stayed in its lobby.
+- A signed-out visitor to the link saw the game, one empty slot, and the sign-in prompt.
+- With a guest seated, Start made turn 1 with Thalbern alone, the guest's. The host was refused acting for Thalbern.
+- The play page as the host showed "Thalbern's turn", "Waiting for Thalbern", and no reply box. The app shares that view.
+- The guest was a stand-in seated straight through Convex, since the check had one test account. The join page itself is unchanged from the invite seat work.
+- Not checked: party setup, the lobby, and play in the running app. Computer use was unavailable. Also not checked: a real guest joining, a turn played while the host watches, and a lone Any hero seat.
+- Both typechecks and 47 desktop runtime tests pass. No tests were added.
+- The throwaway game, the test device, and the browser were removed afterward.
+- The lobby on the website does not tell a guest that the host watches.
+
 ## Known gaps
 
 - Hosted games keep no stage positions, so movement is not read or walked.

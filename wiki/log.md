@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-11, the host can invite the only hero and watch
+
+Owner: "can we make it possible for me to invite a different player to play the solo adventure and just watch?" Invite showed only for adventures with more than one seat, and a hosted game needed a hero for the host. Now Invite shows on every adventure. A party of one invited hero leaves the host none: the guest plays and the host watches. Start waits for a guest to be seated. Checked on the local website with the test user as host. The app's own screens were not checked, since computer use was unavailable. Details in [Desktop host mode](plans/desktop-host-mode.md).
+
 ## 2026-10-11, turn cameras stay inside the saloon
 
 Owner, playtesting Covert Cargo's The Shipment: on Lyra's turn the camera went out on deck and looked in through the door. The swing found its first clear view there, five metres back through the open door, and turned her round to face it. A character in a room is now framed from inside the room, past the others there when a spot allows. Lyra's turn frames her from aft over the crate. Checked in `/dev/stage` across the six saloon stagings. Named shots did not move. Poppen's turn in The Crate shows only his head over the crate. See [the stage engine](stage-engine.md).
