@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-11, untagged quotes go to the sentence's subject
+
+Owner, in The Shipment: Lyra's line showed in a bubble over Silas and on his plate. The paragraph had no speech tag, so the reader gave the quote to the nearest name. `readNarration` now gives an untagged quote to whoever the sentence beside it is about. Checked against 16 paragraph cases by script, not in the app. See [Stage engine](stage-engine.md).
+
 ## 2026-10-11, suggested replies in hosted games
 
 Owner kept suggestions automatic and chose hosted games next. A player's page now asks the host's GM for suggestions as a `suggest` job, for a hero that player controls. The host worker writes them through the host's CLI and the replies come back on the job, which both the app and the website's play page read from their polls. Asking again for the same hero and turn answers with the same job. Suggest jobs never mark the GM busy, never show an error, and wait behind players' actions. Checked against the local website and dev Convex with a throwaway Midnight Summons game: the play page asked on its own, the bundled worker ran the job through Claude, and three chips appeared and filled the reply box. Not checked: the app's own play view as host, two accounts, and the host offline. See [the plan](plans/turn-suggestions.md).

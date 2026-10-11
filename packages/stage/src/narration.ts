@@ -81,7 +81,8 @@ const VERBS =
 const WORDS = "[\\w’']+(?:\\s+[\\w’']+){0,2}"
 const QUOTE = /[“"]([^”"]{1,400})[”"]/g
 const AFTER = new RegExp(`^[\\s,.!?…—-]*(?:(${WORDS})\\s+(?:${VERBS})\\b|(?:${VERBS})\\s+(${WORDS}))`, "i")
-const BEFORE = new RegExp(`(${WORDS})\\s+(?:${VERBS})\\b[^“"]{0,40}$`, "i")
+// A tag before the quote sits in its sentence ("Aelar says, “…”") or closes the one just before ("…” Silas asks. “…”").
+const BEFORE = new RegExp(`(${WORDS})\\s+(?:${VERBS})\\b[^“".!?…]{0,40}[.!?…]?\\s*$`, "i")
 const LOOSE = new Set(["the", "a", "an", "lead", "old", "young", "tall", "other", "first", "second", "one", "of", "his", "her"])
 const positions = (text: string, re: RegExp) => [...text.matchAll(new RegExp(re.source, "gi"))].map((m) => m.index ?? 0)
 
@@ -127,8 +128,26 @@ export function readNarration(paragraphs: string[], stage: NarrationStage, peopl
         if (who) add(who, 1)
       }
     const ranked = [...refs].sort((a, b) => b[1] - a[1] || (mentions.find((m) => m.id === a[0])?.at ?? 1e9) - (mentions.find((m) => m.id === b[0])?.at ?? 1e9))
-    // Who says each quote: the speech tag beside it ("Silas replies", "asked the elf", "she said"), else the cast member
-    // named nearest to it. Several quotes from one speaker run together.
+    // Who says each quote: the speech tag beside it ("Silas replies", "asked the elf", "she said"), else whoever the
+    // sentence beside it is about, else the cast member named nearest to it. Several quotes from one speaker run together.
+    const antecedent = (g: Gender, at: number) => {
+      const before = mentions.filter((m) => m.at < at && genders[m.id] === g)
+      return before.length ? before[before.length - 1].id : previous[g]
+    }
+    // Who a sentence is about: the pronoun it opens on, else the name it opens on, else the first name in it that is
+    // not a possessive. "Lyra adjusts her spectacles and gives Silas a small nod." is about Lyra, "At Lyra's nod, Silas
+    // steps forward." about Silas.
+    const subject = (from: number, to: number) => {
+      const lead = text
+        .slice(from, to)
+        .match(/^\s*(she|her|he|his)\b/i)?.[1]
+        .toLowerCase()
+      const led = lead && antecedent(/^(she|her)$/.test(lead) ? "f" : "m", from)
+      if (led) return led
+      const inside = mentions.filter((m) => m.at >= from && m.at < to)
+      const opens = inside[0] && !text.slice(from, inside[0].at).trim()
+      return (opens ? inside[0] : (inside.find((m) => m.weight === 2) ?? inside[0]))?.id
+    }
     const spoken = new Map<string, string[]>()
     for (const q of text.matchAll(QUOTE)) {
       const start = q.index ?? 0
@@ -140,15 +159,18 @@ export function readNarration(paragraphs: string[], stage: NarrationStage, peopl
         who = stage.cast.find((c) => callNames(c.name).some((n) => new RegExp(`\\b${literal(n)}\\b`).test(phrase)))?.id
         const pronoun = phrase.split(/\s+/)[0]
         const g: Gender | undefined = /^(she|her)$/.test(pronoun) ? "f" : /^(he|him)$/.test(pronoun) ? "m" : undefined
-        if (!who && g) {
-          const before = mentions.filter((m) => m.at < start && genders[m.id] === g)
-          who = before.length ? before[before.length - 1].id : previous[g]
-        }
+        if (!who && g) who = antecedent(g, start)
         if (!who) {
           const asked = phrase.split(/\s+/).filter((w) => !LOOSE.has(w))
           const fits = stage.cast.filter((c) => asked.some((w) => people[c.id]?.words?.includes(w) || callNames(c.name).includes(w)))
           who = fits.find((c) => mentions.some((m) => m.id === c.id))?.id ?? fits[0]?.id
         }
+      }
+      // No tag: the action beside the quote names its speaker, the sentence before it first, else the one after.
+      if (!who) {
+        const lead = text.slice(0, start).match(/[^.!?…“”"]+[.!?…:,—\s-]*$/)
+        const trail = text.slice(end).match(/^[^.!?…“”"]+/)
+        who = (lead && subject(lead.index ?? 0, start)) || (trail ? subject(end, end + trail[0].length) : undefined)
       }
       if (!who && mentions.length) who = [...mentions].sort((a, b) => Math.abs(a.at - start) - Math.abs(b.at - start))[0].id
       if (who) spoken.set(who, [...(spoken.get(who) ?? []), q[1].trim()])
