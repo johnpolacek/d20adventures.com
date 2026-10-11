@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-11, the host's app runs NPC turns by itself
+
+Owner chose this for hosted games. After a job that changed the game, the host worker queues its own Continue when an NPC, an AI hero, or the round's end is next, before reporting the first job done. A Continue job now also ends the round. Each is queued once, and never when no person has a living hero. Narration that arrives while a player is still reading no longer jumps them forward. Runtime tests only, no hosted game was played. See [Desktop host mode](plans/desktop-host-mode.md).
+
 ## 2026-10-11, NPC turns run without a click in local play
 
 Owner, at Reinhard's turn: "how come we have to click Continue NPC turn, shouldn't it just automatically do it". No decision stood behind the button. In local play the app now continues on its own once the narration has been read: NPC turns, AI heroes' turns, and the end of a round. New narration is read before the next one starts. A failure is tried once and leaves the button. Checked in the app's browser preview on a copy of the owner's save with the Claude CLI, which caught a first version firing before the new narration was read. Hosted games are unchanged. See [Desktop local play](plans/desktop-local-play.md).

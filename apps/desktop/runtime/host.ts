@@ -1,7 +1,7 @@
 import { type AdventureRecord, type Content, createGmCore, type Llm, type Store } from "@d20/gm-core"
 import { type ActionSuggestion, suggestActions } from "@d20/gm-core/services/ai-pc-turn-service"
 import type { TurnCharacter } from "@d20/gm-core/types/adventure"
-import { findCurrentActor } from "@d20/gm-core/utils/turn-actors"
+import { findCurrentActor, isDeadActor } from "@d20/gm-core/utils/turn-actors"
 import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventures/plan-view"
 import { spatialContext } from "../src/scenes"
 import type { Packs } from "./game"
@@ -60,6 +60,20 @@ function hostContent(packs: Packs): Content {
   }
 }
 
+// Website turns carry who plays each hero, which the core's character type leaves out.
+type Actor = TurnCharacter & { controlledBy?: "ai"; userId?: string }
+
+/**
+ * What the GM carries on with by itself: the NPC or AI hero whose turn it is, or "round" once everyone has acted.
+ * Null while a player's hero is up, or when no player has a living hero left, so a game never plays itself.
+ */
+export function selfRunning(characters: Actor[]): string | null {
+  const actor = findCurrentActor(characters)
+  if (actor?.type === "pc" && actor.controlledBy !== "ai") return null
+  if (!characters.some((c) => c.type === "pc" && c.controlledBy !== "ai" && !isDeadActor(c))) return null
+  return actor?.id ?? "round"
+}
+
 /** Runs one job against the hosted game. Throws with a message players can read when it cannot. A suggest job returns its replies. */
 export async function runHostJob(job: HostJob, store: Store, packs: Packs, llm: Llm): Promise<ActionSuggestion[] | undefined> {
   // Some inherited web services recover failed inference with default prose or no roll. A hosted game must keep
@@ -95,19 +109,18 @@ export async function runHostJob(job: HostJob, store: Store, packs: Packs, llm: 
   if (adventure.status === "completed") throw new Error("This adventure is complete.")
   const turn = await store.getTurn({ turnId: job.turnId })
   if (!turn) throw new Error("The turn is missing.")
-  // Website turns carry who plays each hero, which the core's character type leaves out.
-  type Actor = TurnCharacter & { controlledBy?: "ai"; userId?: string }
   const actor = findCurrentActor(turn.characters) as Actor | undefined
   if (job.kind === "continue") {
     if (actor?.type === "pc" && actor.controlledBy !== "ai") throw new Error("A player character still needs to act.")
+    let next = actor
     if (actor) {
       await core.processNpcTurnsAfterCurrent(turn._id)
       const after = await store.getTurn({ turnId: turn._id })
-      const next = after ? (findCurrentActor(after.characters) as Actor | undefined) : undefined
+      next = after ? (findCurrentActor(after.characters) as Actor | undefined) : undefined
       if (next?.type === "npc" || next?.controlledBy === "ai") throw new Error("The GM could not finish this character's turn. Continue to retry.")
-    } else {
-      await core.advanceTurn({ turnId: turn._id, settingId: adventure.settingId, adventurePlanId: adventure.planId })
     }
+    // With everyone done the round ends in the same job, as it does in local play.
+    if (!next) await core.advanceTurn({ turnId: turn._id, settingId: adventure.settingId, adventurePlanId: adventure.planId })
     return
   }
   if (!actor || actor.id !== job.characterId || actor.type !== "pc" || actor.controlledBy === "ai" || actor.userId !== job.userId) throw new Error("It is another character's turn.")
@@ -150,6 +163,23 @@ export async function hostLoop(opts: {
 }) {
   const jobs = `/api/desktop/host/${opts.adventureId}/jobs`
   let idle = false
+  // Turns that need no player run on their own: the worker queues a Continue for them. Each is queued once, so one
+  // that fails waits for a player's Continue instead of being retried for ever.
+  let followed: string | null = null
+  const follow = async () => {
+    try {
+      const adventure = (await opts.store.getAdventure({ adventureId: opts.adventureId })) as (AdventureRecord & { currentTurnId?: string; status?: string }) | null
+      if (!adventure?.currentTurnId || adventure.status === "completed") return false
+      const turn = await opts.store.getTurn({ turnId: adventure.currentTurnId })
+      const who = turn && selfRunning(turn.characters)
+      if (!turn || !who || followed === `${turn._id}:${who}`) return false
+      followed = `${turn._id}:${who}`
+      await opts.post(jobs, { op: "queue", turnId: turn._id, kind: "continue" })
+      return true
+    } catch {
+      return false
+    }
+  }
   while (!opts.stopped()) {
     let job: HostJob | null
     try {
@@ -161,6 +191,8 @@ export async function hostLoop(opts: {
       continue
     }
     if (!job) {
+      // Going idle, in case the game was left on such a turn: the app reopened, or a job stopped partway.
+      if (!idle && (await follow())) continue
       if (!idle) opts.emit({ type: "idle" })
       idle = true
       await opts.wait(1500)
@@ -170,6 +202,8 @@ export async function hostLoop(opts: {
     opts.emit({ type: "working", job: { _id: job._id, kind: job.kind, characterId: job.characterId } })
     try {
       const suggestions = await runHostJob(job, opts.store, opts.packs, opts.llm)
+      // Queued before this job is reported done, so no screen sees the game waiting on a Continue.
+      if (job.kind !== "suggest") await follow()
       await opts.post(jobs, { op: "finish", jobId: job._id, suggestions })
       opts.emit({ type: "done", jobId: job._id })
     } catch (error) {

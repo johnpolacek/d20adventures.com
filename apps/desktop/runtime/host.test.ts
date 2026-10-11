@@ -5,7 +5,7 @@ import { join } from "node:path"
 import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
 import { game, type Packs } from "./game"
-import { type HostEvent, type HostJob, type HostPost, hostLoop, remoteStore } from "./host"
+import { type HostEvent, type HostJob, type HostPost, hostLoop, remoteStore, selfRunning } from "./host"
 import { LocalStore } from "./store"
 
 const packs: Packs = JSON.parse(readFileSync(new URL("../src-tauri/resources/packs.json", import.meta.url), "utf8"))
@@ -47,19 +47,26 @@ async function hosted() {
   }
 }
 
-async function drain(store: LocalStore, jobs: HostJob[], llm: Llm) {
+// The worker's own Continue jobs are kept in `queued`. With `follow` they also join the queue, as on the website.
+async function drain(store: LocalStore, jobs: HostJob[], llm: Llm, follow = false) {
   const finished: { jobId: string; error?: string; suggestions?: unknown }[] = []
+  const queued: { turnId: string; kind: string }[] = []
   const events: HostEvent[] = []
   const post: HostPost = async (path, body) => {
-    const b = body as { op: string; jobId: string; error?: string; suggestions?: unknown }
+    const b = body as { op: string; jobId: string; error?: string; suggestions?: unknown; turnId: string; kind: HostJob["kind"] }
     assert.match(path, /^\/api\/desktop\/host\/[^/]+\/jobs$/)
     if (b.op === "claim") return { job: jobs.shift() ?? null }
+    if (b.op === "queue") {
+      queued.push({ turnId: b.turnId, kind: b.kind })
+      if (follow) jobs.push({ _id: `auto-${queued.length}`, adventureId: store.state!.adventure._id, turnId: b.turnId, kind: b.kind, userId: "host" })
+      return { jobId: `auto-${queued.length}` }
+    }
     finished.push({ jobId: b.jobId, error: b.error, ...(b.suggestions ? { suggestions: b.suggestions } : {}) })
     return { ok: true }
   }
   let stop = false
   await hostLoop({ adventureId: store.state!.adventure._id, post, store, packs, llm, emit: (e) => events.push(e), stopped: () => stop, wait: async () => void (stop = true) })
-  return { finished, events }
+  return { finished, events, queued }
 }
 
 const job = (base: Omit<HostJob, "_id">, id = "job-1"): HostJob => ({ _id: id, ...base })
@@ -168,6 +175,63 @@ test("a suggest job finishes with replies for the guest's own hero and changes n
   } finally {
     cleanup()
   }
+})
+
+test("the worker continues on its own with an AI hero's turn and the round's end, once each, and never past a player", async () => {
+  const { store, turn, pc, adventureId, cleanup } = await hosted()
+  try {
+    const friend = store.current().characters.find((c) => c.type === "pc" && c.id !== pc.id)!
+    Object.assign(friend, { controlledBy: "ai", isComplete: false, hasReplied: false, initiative: 10 })
+    store.save()
+    const skip = [job({ adventureId, turnId: turn._id, kind: "skip", userId: "guest", characterId: pc.id }, "skip")]
+    // The AI hero's turn fails: it was queued once and is not queued again.
+    const failed = await drain(store, skip, failLlm, true)
+    assert.deepEqual(failed.queued, [{ turnId: turn._id, kind: "continue" }])
+    assert.deepEqual(
+      failed.finished.map((f) => [f.jobId, Boolean(f.error)]),
+      [
+        ["skip", false],
+        ["auto-1", true],
+      ]
+    )
+    assert.equal(store.current()._id, turn._id)
+    // A worker starting on that turn takes it up, plays the hero, and ends the round in the same job.
+    const model: Llm = {
+      generateText: async () => ({ text: `${friend.name} keeps an eye on the gate.` }),
+      generateObject: async ({ schema }) => {
+        const answers = [
+          { rollType: "none", difficulty: 0 },
+          { nextEncounterId: "the-harvest-festival", narrative: "The guard waves the party into the festival.", adventurePatch: { summaryDelta: "Paid the gate fee." } },
+        ]
+        for (const answer of answers) {
+          const parsed = schema.safeParse(answer)
+          if (parsed.success) return { object: parsed.data }
+        }
+        throw new Error("offline")
+      },
+    }
+    const resumed = await drain(store, [], model, true)
+    assert.deepEqual(resumed.queued[0], { turnId: turn._id, kind: "continue" })
+    assert.equal(resumed.finished[0].error, undefined)
+    assert.equal(store.current().encounterId, "the-harvest-festival")
+    assert.match(store.state!.turns.find((t) => t._id === turn._id)!.narrative, /keeps an eye on the gate/)
+    // In the new round it stops at a player's hero, or at a turn the GM could not finish.
+    assert.ok(resumed.finished[resumed.finished.length - 1].error || selfRunning(store.current().characters) === null)
+  } finally {
+    cleanup()
+  }
+})
+
+test("nothing is queued while a player is up, or once no player has a living hero", () => {
+  const hero = { id: "h", name: "Hero", type: "pc", initiative: 10 } as Parameters<typeof selfRunning>[0][number]
+  const ai = { ...hero, id: "a", controlledBy: "ai" as const, initiative: 5 }
+  const npc = { ...hero, id: "n", type: "npc", initiative: 1 } as typeof hero
+  assert.equal(selfRunning([hero, npc]), null)
+  assert.equal(selfRunning([{ ...hero, isComplete: true }, ai, npc]), "a")
+  assert.equal(selfRunning([{ ...hero, isComplete: true }, { ...ai, isComplete: true }, npc]), "n")
+  assert.equal(selfRunning([hero, ai, npc].map((c) => ({ ...c, isComplete: true }))), "round")
+  assert.equal(selfRunning([{ ...hero, healthPercent: 0 }, ai, npc]), null)
+  assert.equal(selfRunning([ai, npc]), null)
 })
 
 test("continue advances a finished round to the next encounter", async () => {

@@ -2,6 +2,7 @@ import type { AdventureRecord, TurnRecord } from "@d20/gm-core"
 import { z } from "zod"
 import type { GuestHero, HostedSummary } from "../../../lib/host/server"
 import type { Hero } from "./heroes"
+import { selfRunning } from "./host"
 
 // Hosting a game on the website. Rust adds the Keychain token to each command, as for account commands.
 const token = z.string().optional()
@@ -120,9 +121,14 @@ export async function hostCommand(command: HostCommand, site: string, heroes: ()
       case "hostChat":
         await call(`/api/desktop/host/${command.adventureId}`, { action: "chat", text: command.text })
         return { state: (await call(`/api/desktop/host/${command.adventureId}`)) as HostedState }
-      case "hostStart":
+      case "hostStart": {
         await call(`/api/desktop/host/${command.adventureId}`, { action: "start" })
+        const state = (await call(`/api/desktop/host/${command.adventureId}`)) as HostedState
+        // An opening turn that belongs to an NPC or AI hero runs on its own.
+        if (!state.turn || !selfRunning(state.turn.characters)) return { state }
+        await call(`/api/desktop/host/${command.adventureId}/jobs`, { op: "queue", turnId: state.turn._id, kind: "continue" }).catch(() => {})
         return { state: (await call(`/api/desktop/host/${command.adventureId}`)) as HostedState }
+      }
       case "hostAct": {
         const { jobId } = (await call(`/api/desktop/host/${command.adventureId}/jobs`, { op: "queue", turnId: command.turnId, ...command.action })) as { jobId?: string }
         return { jobId, state: (await call(`/api/desktop/host/${command.adventureId}`)) as HostedState }

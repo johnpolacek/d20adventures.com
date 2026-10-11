@@ -312,6 +312,27 @@ Owner: "Do we have chat working so the participants in the session can chat?" It
 
 The host's GM writes each player's suggested replies as a `suggest` job. See [Suggested replies](turn-suggestions.md).
 
+## Turns that need no player, 2026-10-11
+
+Owner, after local play stopped asking for "Continue NPC turn": the host's app should run these turns itself in a hosted game.
+
+### Design
+
+- **The worker queues its own Continue.** After a job that changed the game, it looks at who is up. An NPC, an AI hero, or nobody once the round is done: it queues a `continue` job before reporting the first job done, so no screen sees the game waiting.
+- **Continue also ends the round.** A `continue` job runs the NPCs and AI heroes, then advances the turn if nobody is left, as local play does. Before, the round's end was a second job.
+- **Once per character.** Each is queued once. A job that fails queues nothing, so the Continue button stays on every screen to retry.
+- **A player must be left.** With no living hero played by a person, nothing is queued, so a game cannot play itself on the host's AI.
+- **Start and reopen.** Starting the game queues the opening turn if an NPC or AI hero has it. A worker that goes idle checks once, which covers reopening the app.
+- **Reading is not interrupted.** Narration that arrives while a player is still reading an earlier paragraph no longer jumps them forward. This holds in every game, and is what lets the GM run ahead.
+
+### Built and checked, 2026-10-11
+
+- `apps/desktop/runtime/host.ts`: `selfRunning` decides, `hostLoop` queues, and `continue` ends the round. `host-commands.ts` queues the opening turn on start. `apps/desktop/src/stage-play.tsx` holds the reader's place.
+- Runtime tests: after a guest's skip the worker queues one Continue for an AI hero. When it fails it is not queued again. A new worker takes the turn up, plays the hero, and ends the round in one job. Nothing is queued while a player is up, or with no living hero played by a person.
+- 53 desktop runtime tests, the desktop and website type checks, and Biome pass.
+- Not checked: a hosted game end to end with the website and a real GM, the reader's place holding on a live page, and the opening turn after Start.
+- The Continue button remains on every screen for a turn the GM could not finish, or while the host's app is offline.
+
 ## Known gaps
 
 - Hosted games keep no stage positions, so movement is not read or walked.

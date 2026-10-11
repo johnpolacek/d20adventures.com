@@ -235,10 +235,14 @@ export function StagePlay(props: {
     onStage?.({ waiting: Boolean(scene && !stage && !stageError), error: stageError ?? null })
   }, [onStage, scene, stage, stageError])
 
+  const readingRef = useRef(reading)
+  readingRef.current = reading
   useEffect(() => {
     const old = previousText.current
-    const firstChanged = old.turn === turn?._id ? text.findIndex((p, i) => p !== old.paragraphs[i]) : 0
-    setParagraph(Math.max(0, firstChanged))
+    const sameTurn = old.turn === turn?._id
+    const firstChanged = sameTurn ? text.findIndex((p, i) => p !== old.paragraphs[i]) : 0
+    // Narration that arrives while an earlier paragraph is still being read waits its turn.
+    setParagraph((p) => (sameTurn && readingRef.current && firstChanged > p ? p : Math.max(0, firstChanged)))
     setReading(true)
     previousText.current = { turn: turn?._id, paragraphs: text }
   }, [text, turn?._id])
