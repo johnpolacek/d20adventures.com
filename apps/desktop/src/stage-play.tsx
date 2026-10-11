@@ -67,6 +67,9 @@ export function StagePlay(props: {
   // Replies offered on a hero's turn, which fill the reply box. Without it none are offered.
   onSuggest?: (turnId: string, characterId: string) => Promise<CardSuggestion[]>
   onContinue: (turnId: string) => void
+  // NPC turns, AI heroes' turns and the end of a round run on their own once the narration has been read. One that
+  // fails leaves the Continue button, to retry. Without it Continue always waits for a click.
+  autoContinue?: boolean
   // Where the cast stands after a walk. Without it, walks are not saved.
   onPositions?: (turnId: string, positions: Positions, appliedMovement: string) => Promise<void>
   // The table chat of a game with other players, and how a line is sent. Resolves to whether it was taken.
@@ -373,6 +376,17 @@ export function StagePlay(props: {
   else if (ended) mode = null
   else if (cardActor && rr) mode = { kind: "roll", roll: { skill: rr.rollType, ability: "", dc: rr.difficulty, modifier: rr.modifier ?? 0 } }
   else if (cardActor) mode = { kind: "hold", prompt: `What does ${cardActor.name.split(" ")[0]} do?`, suggestions: holdKey ? (offered?.key === holdKey ? offered.list : "loading") : undefined }
+  // What Continue would run: an NPC's or AI hero's turn, or the end of the round. Each is tried once on its own.
+  // Narration that has just arrived is unread, though `reading` only says so after the effect above has run.
+  const unseen = reading || previousText.current.paragraphs !== text
+  const continueKey = !ended && !busy && !unseen && !mode && !props.overlay && turn && !(actor?.type === "pc" && !aiActor) ? `${turn._id}:${actor?.id ?? "round"}` : null
+  const [continued, setContinued] = useState<string | null>(null)
+  const { autoContinue, onContinue } = props
+  useEffect(() => {
+    if (!autoContinue || !continueKey || continued === continueKey) return
+    setContinued(continueKey)
+    onContinue(continueKey.split(":")[0])
+  }, [autoContinue, continueKey, continued, onContinue])
   const reply = async (value: string) => {
     if (!turn || !actor) return
     const movement = stage ? context(stage, actor, value) : undefined
@@ -493,7 +507,7 @@ export function StagePlay(props: {
               </Pill>
             </div>
           )}
-          {!ended && !busy && !reading && !mode && turn && (
+          {!ended && !busy && !reading && !mode && turn && !(autoContinue && continueKey && continued !== continueKey) && (
             <div className={`${panel} absolute bottom-28 left-1/2 z-30 -translate-x-1/2 p-6 text-center`}>
               <p className="mb-3 font-serif text-xl">{actor ? `${actor.name}'s turn` : "The round is complete"}</p>
               {/* Another player's hero acts from their own screen. */}

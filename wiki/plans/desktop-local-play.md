@@ -252,6 +252,7 @@ Initial CLI generation, SQLite persistence, bundled content, and four premade pl
 - Rust CLI manager, SQLite saves, and pack loader.
 - Content packs compiled from authored adventures with pre-baked art. Packs are declarative data and never executable code, matching the Stageview set rule.
 - AI party members through the existing `ai-pc-turn-service`. Implemented 2026-10-04 in [Desktop heroes](zzz-completed/feature-desktop-heroes.md), merged into main.
+- Turns that need no player run on their own. Implemented 2026-10-11 for local play: once the narration has been read, an NPC's turn, an AI hero's turn, or the end of the round starts without a click. A failed one is tried once, then leaves the Continue button to retry. Hosted games still use the button, since every screen at the table would ask at once.
 - Premade characters, plus generated characters through the player's CLI. Implemented 2026-10-04 with a local roster, stock standees, and art painted through Codex or Grok.
 - Optional narration add-on with the player's own voice provider key.
 - Onboarding for CLI detection, sign-in guidance, and provider choice.

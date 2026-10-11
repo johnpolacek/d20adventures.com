@@ -273,6 +273,7 @@ export function DesktopGame() {
         if (hosting) void act(() => host({ kind: "hostAct", adventureId: hosting, turnId, action: { kind: "roll", characterId, result } }))
         else void invoke({ kind: "roll", turnId, characterId, result })
       }}
+      autoContinue={!hosting}
       onContinue={(turnId) => {
         if (hosting) void act(() => host({ kind: "hostAct", adventureId: hosting, turnId, action: { kind: "continue" } }))
         else void invoke({ kind: "continue", turnId })
