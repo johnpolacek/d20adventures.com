@@ -1,6 +1,6 @@
 import type { AdventureRecord, TurnRecord } from "@d20/gm-core"
 import { z } from "zod"
-import type { HostedSummary } from "../../../lib/host/server"
+import type { GuestHero, HostedSummary } from "../../../lib/host/server"
 import type { Hero } from "./heroes"
 
 // Hosting a game on the website. Rust adds the Keychain token to each command, as for account commands.
@@ -9,8 +9,19 @@ const id = z.string().min(1).max(100)
 export const hostCommandSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("hostList"), token }),
   // The host's character and the heroes held for invited players: premades of the adventure, or roster heroes by id.
-  // open is how many more seats take a guest's own hero.
-  z.object({ kind: z.literal("hostCreate"), planId: id, characterId: id, invites: z.array(id).max(8).default([]), open: z.number().int().min(0).max(8).default(0), token }),
+  // open is how many more seats take a guest's own hero. They are seated at once, unless approve is set: then the
+  // host answers each one.
+  z.object({
+    kind: z.literal("hostCreate"),
+    planId: id,
+    characterId: id,
+    invites: z.array(id).max(8).default([]),
+    open: z.number().int().min(0).max(8).default(0),
+    approve: z.boolean().default(false),
+    token,
+  }),
+  // A guest's hero sheet, for one asking to join or one at the table.
+  z.object({ kind: z.literal("hostSheet"), adventureId: id, userId: id, token }),
   // The host's answer to a guest asking for an open seat. A rejection may carry a note for the guest.
   z.object({ kind: z.literal("hostAnswer"), adventureId: id, userId: id, approve: z.boolean(), note: z.string().trim().max(300).optional(), token }),
   z.object({ kind: z.literal("hostState"), adventureId: id, token }),
@@ -32,7 +43,7 @@ export type HostCommand = z.infer<typeof hostCommandSchema>
 export type HostedJob = { _id: string; turnId: string; kind: "reply" | "roll" | "continue"; characterId?: string; status: "queued" | "running" | "done" | "failed"; error?: string; createdAt: number }
 // A hosted game as the website keeps it, and who is asking, so the play view knows which heroes are theirs.
 export type HostedState = { adventure: AdventureRecord & { status?: string; currentTurnId?: string }; turn: TurnRecord | null; jobs: HostedJob[]; summary: HostedSummary; userId: string }
-export type HostResponse = { hosted?: HostedSummary[]; created?: HostedSummary; state?: HostedState; error?: string }
+export type HostResponse = { hosted?: HostedSummary[]; created?: HostedSummary; state?: HostedState; sheet?: GuestHero; error?: string }
 
 export async function hostCommand(command: HostCommand, site: string, heroes: () => Hero[], fetchImpl: typeof fetch = fetch): Promise<HostResponse> {
   if (!command.token) return { error: "Link this computer to your D20 Adventures account to host a game." }
@@ -59,11 +70,13 @@ export async function hostCommand(command: HostCommand, site: string, heroes: ()
           const hero = roster.find((h) => h.id === characterId)
           return hero ? { sheet: (({ figure: _f, painted: _p, ...sheet }) => sheet)(hero) } : { premadeId: characterId }
         }
-        const body = { planId: command.planId, character: character(command.characterId), invites: command.invites.map(character), open: command.open }
+        const body = { planId: command.planId, character: character(command.characterId), invites: command.invites.map(character), open: command.open, approve: command.approve }
         return { created: ((await call("/api/desktop/host", body)) as { hosted: HostedSummary }).hosted }
       }
       case "hostState":
         return { state: (await call(`/api/desktop/host/${command.adventureId}`)) as HostedState }
+      case "hostSheet":
+        return { sheet: ((await call(`/api/desktop/host/${command.adventureId}`, { action: "sheet", userId: command.userId })) as { sheet: GuestHero }).sheet }
       case "hostAnswer":
         await call(`/api/desktop/host/${command.adventureId}`, { action: "answer", userId: command.userId, approve: command.approve, note: command.note })
         return { state: (await call(`/api/desktop/host/${command.adventureId}`)) as HostedState }

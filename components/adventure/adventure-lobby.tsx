@@ -20,9 +20,11 @@ import { PartyLobbyGrid } from "./party-lobby-grid"
 import { StartAdventureButton } from "./start-adventure-button"
 
 // A hosted game's seats for guests when the page loaded: the held heroes still open, the seat this guest's link
-// names ("any" for a hero of their own), how many seats take a guest's own hero, and this guest's request for one.
+// names ("any" for a hero of their own), how many seats take a guest's own hero, whether the host approves those
+// heroes, and this guest's request for one.
 type SeatRequest = { name: string; status: "pending" | "rejected"; note?: string }
-export type LobbyInvite = { seats: PCTemplate[]; as?: string; open: number; request?: SeatRequest }
+type OpenSeats = { open: number; approve: boolean; request?: SeatRequest }
+export type LobbyInvite = OpenSeats & { seats: PCTemplate[]; as?: string }
 
 interface AdventureLobbyProps {
   adventure: Adventure
@@ -45,7 +47,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
   const [playerNames, setPlayerNames] = useState<Record<string, string>>({})
   const hasFetchedUserChars = useRef(false)
   // The open seats and this guest's request, kept current by the poll below.
-  const [seat, setSeat] = useState<{ open: number; request?: SeatRequest }>({ open: invite?.open ?? 0, request: invite?.request })
+  const [seat, setSeat] = useState<OpenSeats>({ open: invite?.open ?? 0, approve: invite?.approve ?? false, request: invite?.request })
   const [askingId, setAskingId] = useState<string | null>(null)
   const [changingHero, setChangingHero] = useState(false)
 
@@ -136,12 +138,14 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
     }
   }
 
-  // Asks the host for an open seat with one of the guest's own heroes.
+  // Takes an open seat with one of the guest's own heroes, or asks the host for it where the host approves heroes.
   const handleAskForSeat = async (characterId: string, name: string) => {
     if (askingId) return
     setAskingId(characterId)
     setJoinError(null)
-    const { error } = await requestSeat({ adventureId: adventure.id, characterId }).catch(() => ({ error: "The host could not be asked." }))
+    const { seated, error }: { seated?: boolean; error?: string } = await requestSeat({ adventureId: adventure.id, characterId }).catch(() => ({ error: "That seat could not be taken." }))
+    // Seated at once: load again as a player.
+    if (seated) return window.location.replace(window.location.pathname)
     if (error) setJoinError(error)
     else {
       setSeat((s) => ({ ...s, request: { name, status: "pending" } }))
@@ -149,6 +153,14 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
     }
     setAskingId(null)
   }
+
+  // Seated by the host's approval while this page was open. It loaded for a guest, without the turn stream, so it
+  // loads again as a player.
+  const mine = (pc: PC) => pc.userId === user?.id && pc.controlledBy !== "ai"
+  const seatedSinceLoad = Boolean(user?.id && adventure.party?.some(mine) && !initialAdventure.party?.some(mine))
+  useEffect(() => {
+    if (invite && seatedSinceLoad) window.location.replace(window.location.pathname)
+  }, [invite, seatedSinceLoad])
 
   // Add a handler for clicking a character slot to open the modal
   const handlePartySlotClick = (character: PC | PCTemplate) => {
@@ -207,6 +219,11 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
   const heldSeats = invite?.as === "any" && seat.open > 0 ? [] : namedSeat ? [namedSeat] : openSeats
   const availableCharacters = invite ? heldSeats : adventurePlan?.premadePlayerCharacters?.filter(notSeated) || []
   const waitingOnHost = seat.request?.status === "pending" && !changingHero
+  // Join seats a guest's own hero at once. Ask to join waits for the host.
+  const ownHeroLabel = (id: string) => {
+    const busy = invite ? askingId === id : isJoining && joiningCharacterId === id
+    return invite && seat.approve ? (busy ? "Asking..." : "Ask to join") : busy ? "Joining..." : "Join"
+  }
   const bringOwn = Boolean(invite) && seat.open > 0 && !namedSeat && !waitingOnHost
   // Over the heroes a guest may take directly, which follow their own heroes when both are offered.
   const takeHero = availableCharacters.length === 1 ? `Play as ${availableCharacters[0].name}` : "Choose your hero"
@@ -303,7 +320,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
                             <CharacterSelectCard
                               className="ring-white/20"
                               character={char}
-                              buttonLabel={invite ? (askingId === charJoinId ? "Asking..." : "Ask to join") : isJoining && joiningCharacterId === charJoinId ? "Joining..." : "Join"}
+                              buttonLabel={ownHeroLabel(charJoinId)}
                               disabled={isJoining || askingId !== null}
                               onButtonClick={() => (invite ? handleAskForSeat(charJoinId, char.name) : handleJoinAdventure(charJoinId))}
                             />

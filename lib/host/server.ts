@@ -40,7 +40,16 @@ export const inviteUrl = (origin: string, adventure: Pick<Doc<"adventures">, "_i
 export type HostCharacter = { premadeId: string } | { sheet: unknown }
 
 /** Hosts a game with the host's character seated, a seat held for each invited hero, and open seats for guests' own heroes. */
-export async function createHostedAdventure(args: { userId: string; deviceId: Id<"devices">; planId: string; character: HostCharacter; invites?: HostCharacter[]; open?: number }) {
+export async function createHostedAdventure(args: {
+  userId: string
+  deviceId: Id<"devices">
+  planId: string
+  character: HostCharacter
+  invites?: HostCharacter[]
+  open?: number
+  // Whether the host approves each guest's own hero. Otherwise an open seat takes the guest at once.
+  approve?: boolean
+}) {
   if (!isLocalWikiAdventure(SETTING, args.planId)) throw new HostError(404, "This adventure cannot be hosted.")
   const { artifacts, contentRef } = await loadWikiAdventureRuntime(SETTING, args.planId)
   const manifest = artifacts.manifest
@@ -81,7 +90,7 @@ export async function createHostedAdventure(args: { userId: string; deviceId: Id
     currentEncounterId: manifest.startEncounterId,
     adventureSummaryMarkdown: manifest.summary,
   })
-  await convex.mutation(api.hosting.setHost, { secret: serverSecret(), adventureId, userId: args.userId, deviceId: args.deviceId, seats, open })
+  await convex.mutation(api.hosting.setHost, { secret: serverSecret(), adventureId, userId: args.userId, deviceId: args.deviceId, seats, open, approve: args.approve })
   return adventureId
 }
 
@@ -132,6 +141,8 @@ export async function hostedSummary(adventure: Doc<"adventures">, origin: string
     round: turn?.order ?? 0,
     turnTitle: turn?.title ?? "",
     party: names.filter(Boolean),
+    // The guests at the table, whose hero sheets the host may open.
+    guests: (adventure.players ?? []).map((p, i) => ({ userId: p.userId, name: names[i] })).filter((g) => g.name && g.userId !== adventure.host?.userId),
     players: adventure.playerIds.length,
     invite: inviteUrl(origin, adventure),
     // How many seats the host set aside for guests, held heroes and open ones together, then the held seats nobody
@@ -139,6 +150,7 @@ export async function hostedSummary(adventure: Doc<"adventures">, origin: string
     held: (adventure.host?.seats?.length ?? 0) + (adventure.host?.open ?? 0),
     // Seats still open to a guest's own hero, their link, and the guests waiting on the host's answer.
     open: openLeft(adventure),
+    approval: Boolean(adventure.host?.approve),
     openInvite: `${inviteUrl(origin, adventure)}?as=any`,
     requests: (adventure.host?.requests ?? [])
       .filter((r) => r.status === "pending" && !adventure.playerIds.includes(r.userId))
@@ -148,6 +160,16 @@ export async function hostedSummary(adventure: Doc<"adventures">, origin: string
   }
 }
 export type HostedSummary = Awaited<ReturnType<typeof hostedSummary>>
+
+/** A guest's hero as the host reads it: the hero they ask to bring, or the one they are seated with. */
+export async function guestHero(adventure: Doc<"adventures">, userId: string) {
+  const key = adventure.host?.requests?.find((r) => r.userId === userId)?.characterId ?? adventure.players?.find((p) => p.userId === userId)?.characterId
+  const pc = key?.startsWith("characters/") ? toPCTemplate(await readJsonFromS3(key).catch(() => null)) : null
+  if (!pc) throw new HostError(404, "That hero's sheet could not be read.")
+  const { name, race, archetype, gender, appearance, personality, background, motivation, attributes, skills, specialAbilities, spells, equipment } = pc
+  return { name, race, archetype, gender, appearance, personality, background, motivation, attributes, skills, specialAbilities, spells, equipment }
+}
+export type GuestHero = Awaited<ReturnType<typeof guestHero>>
 
 export type HostedAction =
   | { turnId: string; kind: "reply"; characterId: string; text: string; movement?: unknown }

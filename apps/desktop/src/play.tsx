@@ -199,9 +199,9 @@ export function DesktopGame() {
     setScreen(null)
     await hostStart(adventureId, provider).catch((e) => setError(String(e)))
   }
-  const hostGame = async (you: string, invites: string[], open: number) => {
+  const hostGame = async (you: string, invites: string[], open: number, approve: boolean) => {
     setSending(true)
-    const res = await host({ kind: "hostCreate", planId: adventure, characterId: you, invites, open })
+    const res = await host({ kind: "hostCreate", planId: adventure, characterId: you, invites, open, approve })
     setSending(false)
     if (res.error || !res.created) return setError(res.error ?? "Could not host the game.")
     await openHosted(res.created.adventureId)
@@ -271,6 +271,7 @@ export function DesktopGame() {
           gm={gmLabel}
           busy={sending}
           onAnswer={(userId, approve, note) => void act(() => host({ kind: "hostAnswer", adventureId: hosting, userId, approve, note }))}
+          onSheet={(userId) => host({ kind: "hostSheet", adventureId: hosting, userId }).then((r) => r.sheet ?? null)}
           onStart={() => void act(() => host({ kind: "hostStart", adventureId: hosting }))}
           onHome={goHome}
         />
@@ -362,7 +363,7 @@ export function DesktopGame() {
                         listPrices={listPrices}
                         linked={acct.state?.linked ?? false}
                         onLink={() => void acct.start()}
-                        onHost={(you, invites, open) => void hostGame(you, invites, open)}
+                        onHost={(you, invites, open, approve) => void hostGame(you, invites, open, approve)}
                       />
                     )}
                   </div>

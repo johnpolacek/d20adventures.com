@@ -3,7 +3,7 @@ import { textShadow } from "@/components/typography/styles"
 import { Button } from "@/components/ui/button"
 import { siteCard, siteField, siteLabel, siteOutline } from "@/components/ui/site"
 import { cn } from "@/lib/utils"
-import type { HostedSummary } from "../../../lib/host/server"
+import type { GuestHero, HostedSummary } from "../../../lib/host/server"
 
 // A link to send a friend, with Copy.
 function InviteLink({ label, url }: { label: string; url: string }) {
@@ -24,9 +24,100 @@ function InviteLink({ label, url }: { label: string; url: string }) {
 }
 
 type SeatRequest = NonNullable<HostedSummary["requests"]>[number]
+type ReadSheet = (userId: string) => Promise<GuestHero | null>
+
+const ATTRIBUTES = [
+  ["strength", "Str"],
+  ["dexterity", "Dex"],
+  ["constitution", "Con"],
+  ["intelligence", "Int"],
+  ["wisdom", "Wis"],
+  ["charisma", "Cha"],
+] as const
+
+// A guest's hero sheet, as the host reads it before or after seating them.
+function HeroSheet({ hero }: { hero: GuestHero }) {
+  const lists = [
+    ["Skills", hero.skills],
+    ["Abilities", hero.specialAbilities],
+    ["Spells", hero.spells?.map((s) => s.name)],
+    ["Equipment", hero.equipment?.map((e) => e.name)],
+  ] as const
+  const prose = [
+    ["Appearance", hero.appearance],
+    ["Background", hero.background],
+    ["Personality", hero.personality],
+    ["Motivation", hero.motivation],
+  ] as const
+  return (
+    <div className="mt-3 space-y-3 border-t border-white/10 pt-3 text-sm text-gray-300">
+      <dl className="grid grid-cols-6 gap-1 text-center">
+        {ATTRIBUTES.map(([key, label]) => (
+          <div key={key} className="rounded bg-white/5 py-1">
+            <dt className="font-mono text-xxs uppercase text-primary-200">{label}</dt>
+            <dd className="font-display text-base text-white">{hero.attributes[key]}</dd>
+          </div>
+        ))}
+      </dl>
+      {prose.map(
+        ([label, text]) =>
+          text && (
+            <p key={label}>
+              <span className={cn(siteLabel, "mr-2")}>{label}</span>
+              {text}
+            </p>
+          )
+      )}
+      {lists.map(([label, items]) =>
+        items?.length ? (
+          <p key={label}>
+            <span className={cn(siteLabel, "mr-2")}>{label}</span>
+            {items.join(", ")}
+          </p>
+        ) : null
+      )}
+    </div>
+  )
+}
+
+// Sheet opens a guest's hero under their row. It is read from the website when first opened.
+function useSheet(userId: string, read: ReadSheet) {
+  const [hero, setHero] = useState<GuestHero | null>(null)
+  const [open, setOpen] = useState(false)
+  const [reading, setReading] = useState(false)
+  const toggle = async () => {
+    if (open) return setOpen(false)
+    setOpen(true)
+    if (hero) return
+    setReading(true)
+    setHero(await read(userId).catch(() => null))
+    setReading(false)
+  }
+  const button = (
+    <button type="button" className={cn(siteOutline, "px-3 py-1 text-sm")} aria-expanded={open} disabled={reading} onClick={() => void toggle()}>
+      Sheet
+    </button>
+  )
+  return { button, sheet: open && hero ? <HeroSheet hero={hero} /> : null }
+}
+
+// A guest at the table, with their hero's sheet.
+function Guest({ guest, onSheet }: { guest: { userId: string; name: string }; onSheet: ReadSheet }) {
+  const { button, sheet } = useSheet(guest.userId, onSheet)
+  return (
+    <li>
+      <div className="flex items-center gap-3">
+        <span className="min-w-0 flex-1 truncate font-display text-lg">{guest.name}</span>
+        {button}
+      </div>
+      {sheet}
+    </li>
+  )
+}
 
 // A guest asking for an open seat with their own hero: Approve seats them, Reject takes an optional note for them.
-function Request({ request, busy, onAnswer }: { request: SeatRequest; busy: boolean; onAnswer: (approve: boolean, note?: string) => void }) {
+function Request({ request, busy, onAnswer, onSheet }: { request: SeatRequest; busy: boolean; onAnswer: (approve: boolean, note?: string) => void; onSheet: ReadSheet }) {
+  const { button, sheet } = useSheet(request.userId, onSheet)
   const [note, setNote] = useState<string | null>(null)
   // Reject opens the note field with the cursor in it.
   const field = useRef<HTMLInputElement>(null)
@@ -45,6 +136,7 @@ function Request({ request, busy, onAnswer }: { request: SeatRequest; busy: bool
         </div>
         {note === null && (
           <>
+            {button}
             <button type="button" className={cn(siteOutline, "px-3 py-1 text-sm")} disabled={busy} onClick={() => setNote("")}>
               Reject
             </button>
@@ -79,6 +171,7 @@ function Request({ request, busy, onAnswer }: { request: SeatRequest; busy: bool
           </button>
         </form>
       )}
+      {sheet}
     </li>
   )
 }
@@ -91,14 +184,17 @@ export function HostedLobby(props: {
   gm: string
   busy: boolean
   onAnswer: (userId: string, approve: boolean, note?: string) => void
+  onSheet: ReadSheet
   onStart: () => void
   onHome: () => void
 }) {
   const seats = props.summary.seats ?? []
   const requests = props.summary.requests ?? []
+  const guests = props.summary.guests ?? []
+  const hostHeroes = props.summary.party.slice(0, props.summary.party.length - guests.length)
   return (
     <div className="absolute inset-0 z-40 grid place-items-center bg-black/70 font-serif text-white">
-      <section className={cn(siteCard, "w-[min(34rem,92vw)] p-8 text-left backdrop-blur-xl")}>
+      <section className={cn(siteCard, "max-h-[94%] w-[min(34rem,92vw)] overflow-y-auto p-8 text-left backdrop-blur-xl")}>
         <div className={siteLabel}>Hosting</div>
         <h1 className="mt-2 font-display text-4xl font-bold text-amber-300" style={textShadow}>
           {props.summary.title}
@@ -111,7 +207,9 @@ export function HostedLobby(props: {
         ))}
         {props.summary.open > 0 && (
           <>
-            <div className={cn(siteLabel, "mt-7 mb-2")}>Invite · Any hero · {props.summary.open} open</div>
+            <div className={cn(siteLabel, "mt-7 mb-2")}>
+              Invite · Any hero · {props.summary.open} open · {props.summary.approval ? "you approve" : "auto-approve"}
+            </div>
             <InviteLink label="Invite link for any hero" url={props.summary.openInvite} />
           </>
         )}
@@ -120,7 +218,7 @@ export function HostedLobby(props: {
             <div className={cn(siteLabel, "mt-7 mb-2")}>Asking to join · {requests.length}</div>
             <ul className="space-y-2">
               {requests.map((r) => (
-                <Request key={`${r.userId}:${r.name}`} request={r} busy={props.busy} onAnswer={(approve, note) => props.onAnswer(r.userId, approve, note)} />
+                <Request key={`${r.userId}:${r.name}`} request={r} busy={props.busy} onAnswer={(approve, note) => props.onAnswer(r.userId, approve, note)} onSheet={props.onSheet} />
               ))}
             </ul>
           </>
@@ -132,9 +230,14 @@ export function HostedLobby(props: {
           </>
         )}
         <div className={cn(siteLabel, "mt-7 mb-2")}>At the table · {props.summary.party.length}</div>
-        <ul className="space-y-1 font-display text-lg">
-          {props.summary.party.map((name) => (
-            <li key={name}>{name}</li>
+        <ul className="space-y-1">
+          {hostHeroes.map((name) => (
+            <li key={name} className="font-display text-lg">
+              {name}
+            </li>
+          ))}
+          {guests.map((guest) => (
+            <Guest key={guest.userId} guest={guest} onSheet={props.onSheet} />
           ))}
         </ul>
         <div className="mt-8 flex items-center gap-3">

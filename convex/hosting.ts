@@ -19,13 +19,17 @@ export const setHost = mutation({
     deviceId: v.id("devices"),
     seats: v.optional(v.array(v.object({ id: v.string(), name: v.string(), key: v.optional(v.string()) }))),
     open: v.optional(v.number()),
+    approve: v.optional(v.boolean()),
   },
-  handler: async (ctx, { secret, adventureId, userId, deviceId, seats, open }) => {
+  handler: async (ctx, { secret, adventureId, userId, deviceId, seats, open, approve }) => {
     requireServer(secret)
     const adventure = await ctx.db.get(adventureId)
     if (!adventure) throw new Error("Adventure not found")
     if (adventure.ownerId !== userId) throw new Error("Only the adventure's owner can host it")
-    await ctx.db.patch(adventureId, { host: { userId, deviceId, seenAt: Date.now(), ...(seats?.length ? { seats } : {}), ...(open ? { open } : {}) }, updatedAt: Date.now() })
+    await ctx.db.patch(adventureId, {
+      host: { userId, deviceId, seenAt: Date.now(), ...(seats?.length ? { seats } : {}), ...(open ? { open } : {}), ...(open && approve ? { approve } : {}) },
+      updatedAt: Date.now(),
+    })
   },
 })
 
@@ -43,7 +47,10 @@ const waiting = (adventure: Doc<"adventures"> | null) => {
   return { adventure, host: adventure.host }
 }
 
-/** A guest asks for an open seat with a hero of their own. Asking again replaces their earlier request. */
+/**
+ * A guest takes an open seat with a hero of their own. They are seated at once, unless the host approves heroes: then
+ * it waits as a request, and asking again replaces their earlier one. Returns whether they were seated.
+ */
 export const requestSeat = mutation({
   args: {
     secret: v.string(),
@@ -63,7 +70,17 @@ export const requestSeat = mutation({
     const hero = sheetId(request.characterId)
     if (host.seats?.some((s) => s.id === hero) || adventure.players?.some((p) => sheetId(p.characterId) === hero)) throw new Error("That hero is already at this table")
     const others = (host.requests ?? []).filter((r) => r.userId !== request.userId)
-    await ctx.db.patch(adventureId, { host: { ...host, requests: [...others, { ...request, status: "pending" as const, at: Date.now() }] }, updatedAt: Date.now() })
+    if (host.approve) {
+      await ctx.db.patch(adventureId, { host: { ...host, requests: [...others, { ...request, status: "pending" as const, at: Date.now() }] }, updatedAt: Date.now() })
+      return { seated: false }
+    }
+    await ctx.db.patch(adventureId, {
+      host: { ...host, requests: others },
+      players: [...(adventure.players ?? []), { userId: request.userId, characterId: request.characterId }],
+      playerIds: [...adventure.playerIds, request.userId],
+      updatedAt: Date.now(),
+    })
+    return { seated: true }
   },
 })
 

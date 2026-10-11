@@ -4,7 +4,7 @@ import { convex } from "@/lib/convex/server"
 import { serverSecret } from "@/lib/convex/server-secret"
 import { deviceFromRequest } from "@/lib/desktop/server"
 import { thrownMessage } from "@/lib/host/seats"
-import { HostError, hostErrorResponse, hostedAdventure, hostedSummary, siteOrigin } from "@/lib/host/server"
+import { guestHero, HostError, hostErrorResponse, hostedAdventure, hostedSummary, siteOrigin } from "@/lib/host/server"
 import { startWikiAdventure } from "@/lib/wiki-adventures/start"
 
 // A hosted game's state for the host's app: the adventure, its current turn, and recent GM work.
@@ -23,13 +23,18 @@ export async function GET(request: Request, { params }: { params: Promise<{ adve
   }
 }
 
-// The host answers a guest's request for an open seat, or starts the game once friends have joined in the lobby.
+// The host reads a guest's hero sheet, answers a guest's request for an open seat, or starts the game once friends
+// have joined in the lobby.
 export async function POST(request: Request, { params }: { params: Promise<{ adventureId: string }> }) {
   const { device, error } = await deviceFromRequest(request)
   if (error) return error
   try {
     const adventure = await hostedAdventure((await params).adventureId, device.userId)
     const { action, ...body } = (await request.json()) as { action?: string; userId?: unknown; approve?: unknown; note?: unknown }
+    if (action === "sheet") {
+      if (typeof body.userId !== "string") return NextResponse.json({ error: "Choose a guest." }, { status: 400 })
+      return NextResponse.json({ sheet: await guestHero(adventure, body.userId) })
+    }
     if (action === "answer") {
       if (typeof body.userId !== "string" || typeof body.approve !== "boolean") return NextResponse.json({ error: "Choose a request to answer." }, { status: 400 })
       const note = typeof body.note === "string" ? body.note : undefined

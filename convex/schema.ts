@@ -89,9 +89,8 @@ export default defineSchema({
     // A hosted game: the host's desktop app runs its GM through the host's own CLI, never the server.
     // seenAt is when the host's app last asked for GM work, so guests can tell it is online.
     // seats are the heroes the host holds for invited players. A hero from the host's roster carries the key of its
-    // sheet in the host's account. open is how many more seats take a guest's own hero, once the host approves the
-    // guest's request. A rejected request stays, with the host's note, until the guest asks again. With seats or open
-    // seats, guests join no other way.
+    // sheet in the host's account. open is how many more seats take a guest's own hero. A rejected request stays,
+    // with the host's note, until the guest asks again. With seats or open seats, guests join no other way.
     host: v.optional(
       v.object({
         userId: v.string(),
@@ -99,6 +98,8 @@ export default defineSchema({
         seenAt: v.optional(v.number()),
         seats: v.optional(v.array(v.object({ id: v.string(), name: v.string(), key: v.optional(v.string()) }))),
         open: v.optional(v.number()),
+        // True when the host approves each guest's own hero. Otherwise an open seat takes the guest at once.
+        approve: v.optional(v.boolean()),
         requests: v.optional(
           v.array(
             v.object({

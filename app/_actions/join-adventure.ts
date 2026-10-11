@@ -99,9 +99,10 @@ export async function joinAdventure({ settingId, adventurePlanId, adventureId, c
   redirect(`/settings/${settingId}/${adventurePlanId}/${adventureId}`)
 }
 
-// A guest asks the host for an open seat with a hero from their own account. The host approves or rejects it in
-// their app, and the lobby shows the answer. Returns why it could not be asked, if so.
-export async function requestSeat({ adventureId, characterId }: { adventureId: string; characterId: string }): Promise<{ error?: string }> {
+// A guest takes an open seat with a hero from their own account. They are seated at once, unless the host approves
+// heroes: then the host answers in their app, and the lobby shows the answer. Returns whether they were seated, or
+// why it could not be done.
+export async function requestSeat({ adventureId, characterId }: { adventureId: string; characterId: string }): Promise<{ seated?: boolean; error?: string }> {
   const user = await currentUser()
   if (!user) return { error: "Sign in to ask for a seat." }
   const adventure = await convex.query(api.adventure.getAdventureById, { adventureId: adventureId as Id<"adventures"> }).catch(() => null)
@@ -111,7 +112,7 @@ export async function requestSeat({ adventureId, characterId }: { adventureId: s
   if (!hero) return { error: "That hero is not in your account." }
   const request = { userId: user.id, player: user.username ?? user.firstName ?? "A guest", characterId: key, name: hero.name, race: hero.race, archetype: hero.archetype }
   return convex.mutation(api.hosting.requestSeat, { secret: serverSecret(), adventureId: adventure._id, ...request }).then(
-    () => ({}),
-    (e) => ({ error: thrownMessage(e, "The host could not be asked.") })
+    (res) => ({ seated: res.seated }),
+    (e) => ({ error: thrownMessage(e, "That seat could not be taken.") })
   )
 }

@@ -135,6 +135,26 @@ Owner: an "any hero" seat, "if allowed on the adventure, host has right to appro
 - No tests were added. Owner prefers throwaway checks.
 - That March of Davos test game is still in dev Convex, with the test user seated as Thalbern.
 
+## Auto-approve and hero sheets, 2026-10-10
+
+Owner: "let's also have auto-approve be the default", with the host able to open a guest's hero sheet.
+
+- An any hero seat seats the guest's hero at once by default. `host.approve` on the adventure turns on the host's approval, set in party setup as Ask me beside Auto-approve. One setting covers every open seat of the game.
+- The guest's button reads Join when seats are automatic, and Ask to join when the host approves.
+- The app's lobby opens a guest's sheet from a request and from a guest at the table: attributes, appearance, background, skills, abilities, spells, and equipment. No portrait, since the app's content policy allows no remote images.
+- A guest seated while their lobby page was open, by approval or at once, loads the page again as a player. The turn stream answers players only, so without this they would miss the start.
+- Not built: changing the setting from the lobby, and removing a seated guest.
+
+### Checked, 2026-10-10
+
+- In the running app against the local website and dev Convex, with March of Davos and two any hero seats.
+- Default: the seats showed Auto-approve chosen. The guest's buttons read Join. Join seated Thora at once, and the guest's page loaded again as a player.
+- The app's lobby read "auto-approve", listed Thora at the table with Sheet, and Sheet showed her attributes, appearance, background, personality, motivation, skills, abilities, spells, and equipment.
+- Ask me: the guest's buttons read Ask to join. The request showed in the app with Sheet, Reject, and Approve. Sheet showed Thalbern's sheet under the request.
+- Approve seated Thalbern, and the guest's page loaded again as a player without being touched.
+- Not checked: Start after an approval, and a guest whose sheet cannot be read.
+- Two more March of Davos test games are in dev Convex, each with the test user seated.
+
 ## Known gaps
 
 - Hosted games keep no stage positions, so movement is not read or walked.

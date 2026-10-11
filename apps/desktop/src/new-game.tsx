@@ -67,13 +67,15 @@ export function NewGame(props: {
   onLink?: () => void
   // Hosting the adventure on the website for friends instead: the player's hero, and the heroes held for guests.
   // Needs a linked account, so Invite links first.
-  // open is how many more seats take a guest's own hero.
-  onHost?: (you: string, invites: string[], open: number) => void
+  // open is how many more seats take a guest's own hero, and approve whether the host answers each of those.
+  onHost?: (you: string, invites: string[], open: number, approve: boolean) => void
 }) {
   const info = props.adventures.find((a) => a.id === props.adventure)
   const lockedInfo = info ? undefined : props.locked.find((a) => a.id === props.adventure)
   const [party, setParty] = useState<Seat[]>(() => (info?.party ?? []).map((id, i) => ({ id, who: i > 0 ? "ai" : "you" })))
   const [deleting, setDeleting] = useState<string | null>(null)
+  // Whether the host approves each hero a guest brings to an open seat. Off, the guest is seated at once.
+  const [askFirst, setAskFirst] = useState(false)
   const fits = (h: Hero) => Boolean(info?.options?.races.includes(h.race) && info.options.archetypes.includes(h.archetype))
   const picks: Pick[] = [
     ...(info?.premades ?? []).map((p) => ({ ...p, portrait: portraitFor(undefined, { ...p, type: "pc" }) })),
@@ -142,9 +144,16 @@ export function NewGame(props: {
                         <span className="grid h-12 w-10 shrink-0 place-items-center rounded border border-white/10 bg-white/5 font-display text-lg text-white/40">?</span>
                         <div className="min-w-0 flex-1">
                           <div className="truncate font-display text-base">Any hero</div>
-                          <div className="text-xs text-white/70">A guest's own, with your approval</div>
+                          <div className="text-xs text-white/70">A guest's own hero</div>
                         </div>
-                        <Chip tone="primary">Invite</Chip>
+                        <fieldset className="flex" aria-label="Approving a guest's hero">
+                          <Option active={!askFirst} aria-pressed={!askFirst} className="rounded-r-none" onClick={() => setAskFirst(false)}>
+                            Auto-approve
+                          </Option>
+                          <Option active={askFirst} aria-pressed={askFirst} className="-ml-0.5 rounded-l-none" onClick={() => setAskFirst(true)}>
+                            Ask me
+                          </Option>
+                        </fieldset>
                         <button type="button" aria-label="Remove the open seat" onClick={() => toggle(choice.id)} className="px-2 text-xl leading-none text-white/50 hover:text-white">
                           ×
                         </button>
@@ -294,7 +303,7 @@ export function NewGame(props: {
             variant="epic"
             className="text-xl"
             disabled={props.busy || !ready || !props.providers.length}
-            onClick={() => (props.linked === true ? props.onHost?.(yours[0].id, invites, open) : props.onLink?.())}
+            onClick={() => (props.linked === true ? props.onHost?.(yours[0].id, invites, open, askFirst) : props.onLink?.())}
           >
             {props.busy ? "Inviting…" : "Invite"}
           </Button>
