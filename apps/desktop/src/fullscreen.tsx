@@ -30,9 +30,9 @@ export function FullscreenButton({ className }: { className?: string }) {
       onClick={() => void toggle()}
       aria-label={full ? "Exit full screen" : "Full screen"}
       title={full ? "Exit full screen" : "Full screen"}
-      className={cn("grid h-12 w-12 place-items-center text-white opacity-85 drop-shadow-[0_1px_6px_#000] transition-opacity hover:opacity-100", className)}
+      className={cn("grid h-8 w-8 place-items-center text-white opacity-85 drop-shadow-[0_1px_6px_#000] transition-opacity hover:opacity-100", className)}
     >
-      <Icon aria-hidden="true" className="h-7 w-7" strokeWidth={1.75} />
+      <Icon aria-hidden="true" className="h-5 w-5" strokeWidth={1.75} />
     </button>
   )
 }

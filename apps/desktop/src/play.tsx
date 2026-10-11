@@ -249,7 +249,7 @@ export function DesktopGame() {
       actions={<Pill onClick={goHome}>Home</Pill>}
       chat={hosting ? hosted?.chat : undefined}
       onChat={hosting && hosted?.chat ? say : undefined}
-      trailingActions={<FullscreenButton className="h-10 w-10" />}
+      trailingActions={<FullscreenButton />}
       endActions={<Pill onClick={goHome}>Home</Pill>}
       onReply={async (turnId, characterId, text, movement) => {
         if (hosting) return act(() => host({ kind: "hostAct", adventureId: hosting, turnId, action: { kind: "reply", characterId, text } }))
@@ -298,7 +298,7 @@ export function DesktopGame() {
             page={screen === "new" ? "adventures" : screen}
             big={screen === "home"}
             account={<AccountBadge account={acct} />}
-            trailing={<FullscreenButton className="h-9 w-9 text-yellow-950 opacity-70 drop-shadow-none [&_svg]:h-6 [&_svg]:w-6" />}
+            trailing={<FullscreenButton className="text-yellow-950 opacity-70 drop-shadow-none" />}
             onNavigate={ready ? navigate : undefined}
           />
           <div className="relative min-h-0 flex-1">
