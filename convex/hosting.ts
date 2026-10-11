@@ -20,14 +20,23 @@ export const setHost = mutation({
     seats: v.optional(v.array(v.object({ id: v.string(), name: v.string(), key: v.optional(v.string()) }))),
     open: v.optional(v.number()),
     approve: v.optional(v.boolean()),
+    pick: v.optional(v.boolean()),
   },
-  handler: async (ctx, { secret, adventureId, userId, deviceId, seats, open, approve }) => {
+  handler: async (ctx, { secret, adventureId, userId, deviceId, seats, open, approve, pick }) => {
     requireServer(secret)
     const adventure = await ctx.db.get(adventureId)
     if (!adventure) throw new Error("Adventure not found")
     if (adventure.ownerId !== userId) throw new Error("Only the adventure's owner can host it")
     await ctx.db.patch(adventureId, {
-      host: { userId, deviceId, seenAt: Date.now(), ...(seats?.length ? { seats } : {}), ...(open ? { open } : {}), ...(open && approve ? { approve } : {}) },
+      host: {
+        userId,
+        deviceId,
+        seenAt: Date.now(),
+        ...(seats?.length ? { seats } : {}),
+        ...(open ? { open } : {}),
+        ...(open && approve ? { approve } : {}),
+        ...(pick && seats?.length ? { pick } : {}),
+      },
       updatedAt: Date.now(),
     })
   },
@@ -127,6 +136,20 @@ export const removeGuest = mutation({
       playerIds: adventure.playerIds.filter((id) => id !== userId),
       updatedAt: Date.now(),
     })
+  },
+})
+
+/** Where guests choose first, the host takes a held hero nobody chose, as the game starts. */
+export const seatHost = mutation({
+  args: { secret: v.string(), adventureId: v.id("adventures"), userId: v.string(), characterId: v.string() },
+  handler: async (ctx, { secret, adventureId, userId, characterId }) => {
+    requireServer(secret)
+    const { adventure, host } = waiting(await ctx.db.get(adventureId))
+    if (host.userId !== userId) throw new Error("You are not hosting this adventure")
+    if (adventure.players?.some((p) => p.userId === userId)) return
+    const hero = sheetId(characterId)
+    if (!host.seats?.some((s) => s.id === hero) || adventure.players?.some((p) => sheetId(p.characterId) === hero)) throw new Error("That hero is not open")
+    await ctx.db.patch(adventureId, { players: [{ userId, characterId }, ...(adventure.players ?? [])], updatedAt: Date.now() })
   },
 })
 

@@ -21,9 +21,10 @@ import { StartAdventureButton } from "./start-adventure-button"
 
 // A hosted game's seats for guests when the page loaded: the held heroes still open, the seat this guest's link
 // names ("any" for a hero of their own), how many seats take a guest's own hero, whether the host approves this
-// guest's hero, whether the host removed this guest, and this guest's request with the host's answer.
+// guest's hero, whether the host removed this guest, how many held seats are kept for a host who plays the hero
+// their guests leave, and this guest's request with the host's answer.
 type SeatRequest = { name: string; status: "pending" | "rejected" | "removed"; note?: string }
-type OpenSeats = { open: number; approve: boolean; removed: boolean; request?: SeatRequest }
+type OpenSeats = { open: number; approve: boolean; removed: boolean; keep?: number; request?: SeatRequest }
 export type LobbyInvite = OpenSeats & { seats: PCTemplate[]; as?: string }
 
 interface AdventureLobbyProps {
@@ -47,7 +48,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
   const [playerNames, setPlayerNames] = useState<Record<string, string>>({})
   const hasFetchedUserChars = useRef(false)
   // The open seats and this guest's request, kept current by the poll below.
-  const [seat, setSeat] = useState<OpenSeats>({ open: invite?.open ?? 0, approve: invite?.approve ?? false, removed: invite?.removed ?? false, request: invite?.request })
+  const [seat, setSeat] = useState<OpenSeats>({ open: invite?.open ?? 0, approve: invite?.approve ?? false, removed: invite?.removed ?? false, keep: invite?.keep, request: invite?.request })
   const [askingId, setAskingId] = useState<string | null>(null)
   const [changingHero, setChangingHero] = useState(false)
 
@@ -216,7 +217,8 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
   const notSeated = (pc: PCTemplate) => !party?.some((partyMember) => partyMember.id === pc.id)
   // In a game with seats for guests, a guest takes a held hero (the one their link names, or any still open) or
   // asks the host for an open seat with a hero of their own.
-  const openSeats = invite?.seats.filter(notSeated) ?? []
+  const unseated = invite?.seats.filter(notSeated) ?? []
+  const openSeats = unseated.length > (seat.keep ?? 0) ? unseated : []
   const namedSeat = openSeats.find((pc) => pc.id === invite?.as)
   // A guest the host removed takes no held seat. They may ask for an open one.
   const heldSeats = seat.removed || (invite?.as === "any" && seat.open > 0) ? [] : namedSeat ? [namedSeat] : openSeats
@@ -262,7 +264,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
           userId={user?.id}
           onCharacterClick={handlePartySlotClick}
           availableCharacters={availableCharacters}
-          seats={invite ? (party?.length ?? 0) + openSeats.length + seat.open : undefined}
+          seats={invite ? (party?.length ?? 0) + unseated.length + seat.open : undefined}
           onJoinClick={isSignedIn ? handleJoinAdventure : undefined}
           onRemoveAiCompanion={isOwner ? handleRemoveAiCompanion : undefined}
           isJoining={isJoining}

@@ -4,7 +4,7 @@ import { convex } from "@/lib/convex/server"
 import { serverSecret } from "@/lib/convex/server-secret"
 import { deviceFromRequest } from "@/lib/desktop/server"
 import { thrownMessage } from "@/lib/host/seats"
-import { guestHero, HostError, hostErrorResponse, hostedAdventure, hostedSummary, siteOrigin } from "@/lib/host/server"
+import { guestHero, HostError, hostErrorResponse, hostedAdventure, hostedSummary, seatHost, siteOrigin } from "@/lib/host/server"
 import { startWikiAdventure } from "@/lib/wiki-adventures/start"
 
 // A hosted game's state for the host's app: the adventure, its current turn, and recent GM work.
@@ -53,7 +53,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ adv
     }
     if (action !== "start") return NextResponse.json({ error: "Unknown action." }, { status: 400 })
     if (adventure.status !== "waitingForPlayers" || adventure.currentTurnId) return NextResponse.json({ error: "This game has already started." }, { status: 409 })
-    const turnId = await startWikiAdventure(adventure)
+    const turnId = await startWikiAdventure(await seatHost(adventure))
     return NextResponse.json({ turnId })
   } catch (e) {
     return hostErrorResponse(e)

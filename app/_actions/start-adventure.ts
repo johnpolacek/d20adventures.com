@@ -6,6 +6,7 @@ import { after } from "next/server"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { convex } from "@/lib/convex/server"
+import { seatHost } from "@/lib/host/server"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import { maybeTriggerStoryviewAutoGeneration } from "@/lib/services/turn-audio-service"
 import { isLocalWikiAdventure } from "@/lib/wiki-adventures/local-runtime"
@@ -74,7 +75,7 @@ export async function startAdventure({ settingId, adventurePlanId, adventureId }
     }
 
     if (isLocalWikiAdventure(settingId, adventurePlanId)) {
-      await startWikiAdventure(adventure)
+      await startWikiAdventure(await seatHost(adventure))
       return redirect(`/settings/${settingId}/${adventurePlanId}/${adventureId}`)
     }
 

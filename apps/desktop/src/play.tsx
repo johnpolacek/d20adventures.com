@@ -199,7 +199,7 @@ export function DesktopGame() {
     setScreen(null)
     await hostStart(adventureId, provider).catch((e) => setError(String(e)))
   }
-  const hostGame = async (you: string, invites: string[], open: number, approve: boolean) => {
+  const hostGame = async (you: string | undefined, invites: string[], open: number, approve: boolean) => {
     setSending(true)
     const res = await host({ kind: "hostCreate", planId: adventure, characterId: you, invites, open, approve })
     setSending(false)

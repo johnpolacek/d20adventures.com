@@ -37,8 +37,9 @@ export function LockIcon() {
 
 // Party setup for the adventure chosen on the Adventures page: who goes, who plays each hero, and which CLI runs the
 // GM. The first hero is the player's, the rest default to AI. A hero set to Invite makes it a game hosted on the
-// website, with that hero held for a friend. Roster heroes appear only where the adventure accepts their race and
-// class. Keyed by adventure, so each starts from its own suggested party.
+// website, with that hero held for a friend. With every hero on Invite, guests choose first and the player gets a
+// hero they leave. Roster heroes appear only where the adventure accepts their race and class. Keyed by adventure,
+// so each starts from its own suggested party.
 export function NewGame(props: {
   adventures: AdventureInfo[]
   adventure: string
@@ -66,9 +67,9 @@ export function NewGame(props: {
   linked: boolean | "offline"
   onLink?: () => void
   // Hosting the adventure on the website for friends instead: the player's hero, and the heroes held for guests.
-  // Needs a linked account, so Invite links first.
+  // Needs a linked account, so Invite links first. Without a hero for the player, guests choose first.
   // open is how many more seats take a guest's own hero, and approve whether the host answers each of those.
-  onHost?: (you: string, invites: string[], open: number, approve: boolean) => void
+  onHost?: (you: string | undefined, invites: string[], open: number, approve: boolean) => void
 }) {
   const info = props.adventures.find((a) => a.id === props.adventure)
   const lockedInfo = info ? undefined : props.locked.find((a) => a.id === props.adventure)
@@ -95,10 +96,12 @@ export function NewGame(props: {
   const yours = party.filter((c) => c.who === "you")
   const invites = party.filter((c) => c.who === "invite" && !c.open).map((c) => c.id)
   const open = party.filter((c) => c.open).length
-  // Any invited seat makes it a hosted game, which takes one hero for the player and has no AI heroes yet.
+  // Any invited seat makes it a hosted game, which takes one hero for the player and has no AI heroes yet. With
+  // every hero invited, guests choose first and the player gets a hero they leave.
   const hosting = invites.length + open > 0
-  const hostable = yours.length === 1 && !party.some((c) => c.who === "ai")
-  const ready = sized && yours.length > 0 && (!hosting || hostable)
+  const guestsChoose = yours.length === 0 && invites.length > 1
+  const hostable = (yours.length === 1 || guestsChoose) && !party.some((c) => c.who === "ai")
+  const ready = sized && (hosting ? hostable : yours.length > 0)
   const canInvite = Boolean(props.onHost) && max > 1
   const seat = (id: string, who: Seat["who"]) => setParty((cur) => cur.map((c) => (c.id === id ? { ...c, who } : c)))
   const toggle = (id: string) =>
@@ -177,8 +180,9 @@ export function NewGame(props: {
                             active={choice.who === who}
                             aria-pressed={choice.who === who}
                             className={cn(i > 0 && "-ml-0.5 rounded-l-none", i < all.length - 1 && "rounded-r-none")}
-                            // The party always keeps a hero for the player.
-                            disabled={who !== "you" && choice.who === "you" && yours.length === 1}
+                            // The party keeps a hero for the player, unless another hero is invited: then this one
+                            // can be too.
+                            disabled={who !== "you" && choice.who === "you" && yours.length === 1 && !(who === "invite" && invites.length > 0)}
                             onClick={() => seat(p.id, who)}
                           >
                             {label}
@@ -293,6 +297,9 @@ export function NewGame(props: {
         </label>
         <div className="flex-1" />
         {hosting && sized && !hostable && <p className="text-sm text-amber-300">An invited game takes one hero for you and no AI heroes yet.</p>}
+        {guestsChoose && hostable && (
+          <p className="text-sm text-white/70">{invites.length > 2 ? "Your guests choose first. You play the hero left." : "Your guest chooses a hero. You play the other."}</p>
+        )}
         {props.onCancel && (
           <button type="button" className={cn(siteOutline, "px-4 py-2 text-sm")} disabled={props.busy} onClick={props.onCancel}>
             Cancel
@@ -303,7 +310,7 @@ export function NewGame(props: {
             variant="epic"
             className="text-xl"
             disabled={props.busy || !ready || !props.providers.length}
-            onClick={() => (props.linked === true ? props.onHost?.(yours[0].id, invites, open, askFirst) : props.onLink?.())}
+            onClick={() => (props.linked === true ? props.onHost?.(yours[0]?.id, invites, open, askFirst) : props.onLink?.())}
           >
             {props.busy ? "Inviting…" : "Invite"}
           </Button>

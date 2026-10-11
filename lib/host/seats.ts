@@ -22,20 +22,30 @@ export function openLeft(adventure: Seated) {
   return host.open - (adventure.players ?? []).filter((p) => p.userId !== host.userId && !held.has(sheetId(p.characterId))).length
 }
 
+/** Whether the host still waits for a hero: guests choose first, and the host plays a held hero they leave. */
+export const hostWaits = (adventure: Seated) => Boolean(adventure.host?.pick && !adventure.players?.some((p) => p.userId === adventure.host?.userId))
+
 /**
  * What a guest sees of the seats: how many take a hero of their own, whether the host approves theirs, whether the
- * host removed them, and their own request with the host's answer.
+ * host removed them, how many held seats are kept for the host, and their own request with the host's answer.
  */
 export function guestSeat(adventure: Seated, userId: string | null | undefined) {
   const host = adventure.host
   const request = userId ? host?.requests?.find((r) => r.userId === userId) : undefined
   const removed = Boolean(userId && host?.removed?.includes(userId))
-  return { open: openLeft(adventure), approve: Boolean(host?.approve) || removed, removed, request: request && { name: request.name, status: request.status, note: request.note } }
+  const keep = hostWaits(adventure) ? 1 : 0
+  return { open: openLeft(adventure), approve: Boolean(host?.approve) || removed, removed, keep, request: request && { name: request.name, status: request.status, note: request.note } }
 }
 export type GuestSeat = ReturnType<typeof guestSeat>
 
 /** The held seats nobody has taken yet. */
 export const openSeats = (adventure: Seated): Seat[] => (adventure.host?.seats ?? []).filter((s) => !adventure.players?.some((p) => sheetId(p.characterId) === s.id))
+
+/** The held seats a guest may take. While the host waits for a hero, the last one is theirs. */
+export function guestSeats(adventure: Seated): Seat[] {
+  const open = openSeats(adventure)
+  return hostWaits(adventure) && open.length < 2 ? [] : open
+}
 
 /** A held seat's hero: the sheet from the host's roster, or the adventure's premade. */
 export async function seatHero(seat: Seat, premades: PCTemplate[] = []): Promise<PCTemplate | null> {

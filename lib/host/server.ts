@@ -6,7 +6,7 @@ import { assertPlayerCharacterControl } from "@/lib/adventure-access"
 import { convex } from "@/lib/convex/server"
 import { serverSecret } from "@/lib/convex/server-secret"
 import { serverStore } from "@/lib/gm-server/store"
-import { openLeft, openSeats } from "@/lib/host/seats"
+import { hostWaits, openLeft, openSeats } from "@/lib/host/seats"
 import { readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 import { toPCTemplate } from "@/lib/utils/character-mapping"
 import { isLocalWikiAdventure, loadWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
@@ -39,12 +39,15 @@ export const inviteUrl = (origin: string, adventure: Pick<Doc<"adventures">, "_i
 /** A character at a hosted table: a premade from the adventure, or a hero sheet from the host's app. */
 export type HostCharacter = { premadeId: string } | { sheet: unknown }
 
-/** Hosts a game with the host's character seated, a seat held for each invited hero, and open seats for guests' own heroes. */
+/**
+ * Hosts a game with the host's character seated, a seat held for each invited hero, and open seats for guests' own
+ * heroes. Without a character, guests choose among the invited heroes and the host plays one they leave.
+ */
 export async function createHostedAdventure(args: {
   userId: string
   deviceId: Id<"devices">
   planId: string
-  character: HostCharacter
+  character?: HostCharacter
   invites?: HostCharacter[]
   open?: number
   // Whether the host approves each guest's own hero. Otherwise an open seat takes the guest at once.
@@ -63,18 +66,18 @@ export async function createHostedAdventure(args: {
     if (!pc || !id || !/^[a-z0-9-]{1,80}$/.test(id)) throw new HostError(400, "The character sheet is not valid.")
     return { id, pc, premade }
   }
-  const mine = resolve(args.character)
+  const mine = args.character ? resolve(args.character) : null
   const held = (args.invites ?? []).map(resolve)
-  const ids = [mine.id, ...held.map((h) => h.id)]
+  if (!mine && held.length < 2) throw new HostError(400, "Choose a hero for yourself, or invite at least two.")
+  const ids = [...(mine ? [mine.id] : []), ...held.map((h) => h.id)]
   if (new Set(ids).size !== ids.length) throw new HostError(400, "A hero can join the party only once.")
   const open = args.open ?? 0
   if (!Number.isInteger(open) || open < 0) throw new HostError(400, "The open seats are not valid.")
   if (open && !manifest.availableCharacterOptions) throw new HostError(400, `${manifest.title} takes its own heroes only.`)
   if (manifest.maxPlayers && ids.length + open > manifest.maxPlayers) throw new HostError(400, `${manifest.title} seats ${manifest.maxPlayers} at most.`)
   const keyOf = (id: string) => `characters/${args.userId}/${id}.json`
-  const characterId = keyOf(mine.id)
   // A held roster hero's sheet waits in the host's account for the guest who takes the seat.
-  await Promise.all([mine, ...held.filter((h) => !h.premade)].map((h) => updateJsonOnS3(keyOf(h.id), h.pc)))
+  await Promise.all([...(mine ? [mine] : []), ...held.filter((h) => !h.premade)].map((h) => updateJsonOnS3(keyOf(h.id), h.pc)))
   const seats = held.map((h) => ({ id: h.id, name: h.pc.name, ...(h.premade ? {} : { key: keyOf(h.id) }) }))
   const adventureId = await convex.mutation(api.adventure.createAdventure, {
     planId: args.planId,
@@ -82,7 +85,7 @@ export async function createHostedAdventure(args: {
     ownerId: args.userId,
     runType: "campaign",
     playerIds: [args.userId],
-    players: [{ userId: args.userId, characterId }],
+    players: mine ? [{ userId: args.userId, characterId: keyOf(mine.id) }] : [],
     status: "waitingForPlayers",
     title: manifest.title,
     startedAt: Date.now(),
@@ -90,8 +93,25 @@ export async function createHostedAdventure(args: {
     currentEncounterId: manifest.startEncounterId,
     adventureSummaryMarkdown: manifest.summary,
   })
-  await convex.mutation(api.hosting.setHost, { secret: serverSecret(), adventureId, userId: args.userId, deviceId: args.deviceId, seats, open, approve: args.approve })
+  await convex.mutation(api.hosting.setHost, { secret: serverSecret(), adventureId, userId: args.userId, deviceId: args.deviceId, seats, open, approve: args.approve, pick: !mine })
   return adventureId
+}
+
+/** Where guests choose first, seats the host as a held hero nobody chose. Called as the game starts. */
+export async function seatHost(adventure: Doc<"adventures">) {
+  const host = adventure.host
+  if (!host || !hostWaits(adventure)) return adventure
+  const seat = openSeats(adventure)[0]
+  if (!seat) throw new HostError(409, "No hero is left for the host.")
+  const characterId = seat.key ?? `characters/${host.userId}/${seat.id}.json`
+  if (!seat.key) {
+    const { artifacts } = await loadWikiAdventureRuntime(adventure.settingId, adventure.planId)
+    const pc = toPCTemplate(artifacts.characterSheets.premadeCharacters[seat.id]?.sheet)
+    if (!pc) throw new HostError(500, `${seat.name}'s sheet could not be read.`)
+    await updateJsonOnS3(characterId, pc)
+  }
+  await convex.mutation(api.hosting.seatHost, { secret: serverSecret(), adventureId: adventure._id, userId: host.userId, characterId })
+  return (await convex.query(api.adventure.getAdventureById, { adventureId: adventure._id })) ?? adventure
 }
 
 /** The adventure, if this account hosts it. */
@@ -155,7 +175,9 @@ export async function hostedSummary(adventure: Doc<"adventures">, origin: string
     requests: (adventure.host?.requests ?? [])
       .filter((r) => r.status === "pending" && !adventure.playerIds.includes(r.userId))
       .map((r) => ({ userId: r.userId, player: r.player, name: r.name, race: r.race, archetype: r.archetype })),
-    seats: openSeats(adventure).map((s) => ({ id: s.id, name: s.name, invite: `${inviteUrl(origin, adventure)}?as=${s.id}` })),
+    seats: hostWaits(adventure) ? [] : openSeats(adventure).map((s) => ({ id: s.id, name: s.name, invite: `${inviteUrl(origin, adventure)}?as=${s.id}` })),
+    // Where guests choose first and the host plays a hero they leave: the heroes nobody has chosen yet.
+    left: hostWaits(adventure) ? openSeats(adventure).map((s) => s.name) : [],
     updatedAt: adventure.updatedAt,
   }
 }

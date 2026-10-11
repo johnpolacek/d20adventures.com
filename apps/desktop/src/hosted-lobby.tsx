@@ -193,8 +193,9 @@ function Request({ request, busy, onAnswer, onSheet }: { request: SeatRequest; b
 }
 
 // A hosted game before it starts: a link for each hero held for a friend and one for the seats open to a guest's
-// own hero, the guests asking for those, who has joined, and Start. A game hosted without seats for guests has one
-// link, and guests bring their own heroes.
+// own hero, the guests asking for those, who has joined, and Start. Where guests choose first, one link serves every
+// hero and the host plays one they leave. A game hosted without seats for guests has one link, and guests bring
+// their own heroes.
 export function HostedLobby(props: {
   summary: HostedSummary
   gm: string
@@ -208,6 +209,8 @@ export function HostedLobby(props: {
   const seats = props.summary.seats ?? []
   const requests = props.summary.requests ?? []
   const guests = props.summary.guests ?? []
+  // The heroes nobody has chosen, where guests choose first. Guests take all but the last, which is the host's.
+  const left = props.summary.left ?? []
   const hostHeroes = props.summary.party.slice(0, props.summary.party.length - guests.length)
   return (
     <div className="absolute inset-0 z-40 grid place-items-center bg-black/70 font-serif text-white">
@@ -222,6 +225,12 @@ export function HostedLobby(props: {
             <InviteLink label={`Invite link for ${seat.name}`} url={seat.invite} />
           </div>
         ))}
+        {left.length > 1 && (
+          <>
+            <div className={cn(siteLabel, "mt-7 mb-2")}>Invite · Guest's choice · {left.length - 1} open</div>
+            <InviteLink label="Invite link for a guest's choice of hero" url={props.summary.invite} />
+          </>
+        )}
         {props.summary.open > 0 && (
           <>
             <div className={cn(siteLabel, "mt-7 mb-2")}>
@@ -246,8 +255,9 @@ export function HostedLobby(props: {
             <InviteLink label="Invite link" url={props.summary.invite} />
           </>
         )}
-        <div className={cn(siteLabel, "mt-7 mb-2")}>At the table · {props.summary.party.length}</div>
+        <div className={cn(siteLabel, "mt-7 mb-2")}>At the table · {props.summary.party.length + (left.length ? 1 : 0)}</div>
         <ul className="space-y-1">
+          {left.length > 0 && <li className={cn("font-display text-lg", left.length > 1 && "text-white/60")}>{left.length > 1 ? "You play the hero left" : left[0]}</li>}
           {hostHeroes.map((name) => (
             <li key={name} className="font-display text-lg">
               {name}

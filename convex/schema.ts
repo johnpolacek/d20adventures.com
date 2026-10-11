@@ -101,6 +101,8 @@ export default defineSchema({
         open: v.optional(v.number()),
         // True when the host approves each guest's own hero. Otherwise an open seat takes the guest at once.
         approve: v.optional(v.boolean()),
+        // True when guests choose among every held hero and the host plays one they leave, seated as the game starts.
+        pick: v.optional(v.boolean()),
         // Guests the host removed from the table. They take no held seat, and their next request waits for the host.
         removed: v.optional(v.array(v.string())),
         requests: v.optional(

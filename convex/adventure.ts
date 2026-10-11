@@ -110,6 +110,12 @@ export const joinAdventure = mutation({
       const hero = sheetId(args.characterId)
       if (!seats.some((s) => s.id === hero)) throw new Error("This game's seats are held for other heroes")
       if (adventure.players?.some((p) => sheetId(p.characterId) === hero)) throw new Error("Character is already taken")
+      // Where guests choose first, the last held hero is the host's.
+      const host = adventure.host
+      if (host?.pick && !adventure.players?.some((p) => p.userId === host.userId)) {
+        const left = seats.filter((s) => !adventure.players?.some((p) => sheetId(p.characterId) === s.id)).length
+        if (left < 2) throw new Error("Every seat at this table is taken")
+      }
     }
 
     // Add the player to the adventure
@@ -125,7 +131,7 @@ export const joinAdventure = mutation({
 
     await ctx.db.patch(args.adventureId, {
       players: updatedPlayers,
-      playerIds: [...adventure.playerIds, args.userId],
+      playerIds: adventure.playerIds.includes(args.userId) ? adventure.playerIds : [...adventure.playerIds, args.userId],
       updatedAt: now,
     })
 

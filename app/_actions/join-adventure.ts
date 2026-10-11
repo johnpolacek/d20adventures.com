@@ -6,7 +6,7 @@ import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { convex } from "@/lib/convex/server"
 import { serverSecret } from "@/lib/convex/server-secret"
-import { openLeft, openSeats, seatHero, sheetId, thrownMessage } from "@/lib/host/seats"
+import { guestSeats, openLeft, seatHero, sheetId, thrownMessage } from "@/lib/host/seats"
 import { readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 import { toPCTemplate } from "@/lib/utils/character-mapping"
 import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
@@ -34,7 +34,7 @@ export async function joinAdventure({ settingId, adventurePlanId, adventureId, c
   const hosted = Boolean(joining?.host)
   // With held seats, a guest joins only as one of the heroes the host invited, and only while it is open.
   const held = Boolean(joining?.host?.seats?.length)
-  const seat = joining && held ? openSeats(joining).find((s) => s.id === sheetId(characterId)) : undefined
+  const seat = joining && held ? guestSeats(joining).find((s) => s.id === sheetId(characterId)) : undefined
   if (held && (!seat || joining?.host?.removed?.includes(userId))) throw new Error("That hero is not open in this game.")
   try {
     if (!hosted) {

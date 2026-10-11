@@ -15,19 +15,20 @@ export async function GET(request: Request) {
 }
 
 // Hosts a new game: the adventure waits in its website lobby for friends, with the host's character already seated
-// a seat held for each invited hero, and open seats for guests' own heroes.
+// a seat held for each invited hero, and open seats for guests' own heroes. Without a character, guests choose among
+// the invited heroes and the host plays one they leave.
 export async function POST(request: Request) {
   const { device, error } = await deviceFromRequest(request)
   if (error) return error
   try {
     const body = (await request.json()) as { planId?: unknown; character?: HostCharacter; invites?: unknown; open?: unknown; approve?: unknown }
-    if (typeof body.planId !== "string" || !body.character) return NextResponse.json({ error: "Choose an adventure and a character." }, { status: 400 })
     const invites = Array.isArray(body.invites) ? (body.invites.slice(0, 8) as HostCharacter[]) : []
+    if (typeof body.planId !== "string" || (!body.character && invites.length < 2)) return NextResponse.json({ error: "Choose an adventure and a character." }, { status: 400 })
     const adventureId = await createHostedAdventure({
       userId: device.userId,
       deviceId: device.deviceId,
       planId: body.planId,
-      character: body.character,
+      character: body.character ?? undefined,
       invites,
       open: typeof body.open === "number" ? body.open : 0,
       approve: body.approve === true,

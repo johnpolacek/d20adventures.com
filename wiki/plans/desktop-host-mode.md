@@ -168,6 +168,39 @@ Owner chose Remove for a seated guest, since automatic seating needs a way to un
 - Not checked: Start after an approval, and a guest whose sheet cannot be read.
 - The two March of Davos test games were removed from dev Convex later the same day.
 
+## Guests choose first, 2026-10-10
+
+Owner, at Covert Cargo's party setup with Lyra on You and Poppen on Invite: "there does not seem to be a way to invite a player to be either character in this screen."
+
+### Cause
+
+- The only You seat could not switch to Invite, so one hero always stayed with the host.
+- Covert Cargo takes its own heroes only, so it has no Any hero seat either.
+
+### Design
+
+- Party setup: the last You seat can switch to Invite when another hero is already invited.
+- With every hero on Invite, guests choose first and the host plays the hero left. One line under the party says so.
+- It needs at least two invited heroes and no AI heroes.
+- The website keeps it as `host.pick`. Every hero is a held seat and the host has no hero in `players` until the game starts.
+- Guests take any held seat but the last one. That one is the host's.
+- Start seats the host as the first held hero nobody chose, then makes the first turn. Start from the website lobby does the same.
+- The app's lobby shows one link, the plain lobby link, and the host's row reads the hero left once only one is.
+
+### Built and checked, 2026-10-10
+
+- App: the last You seat's Invite in `new-game.tsx`, the line "Your guest chooses a hero. You play the other.", `hostCreate` without a character, and the lobby's one link and host row in `hosted-lobby.tsx`.
+- Website: `host.pick` in the schema, `seatHost` in `convex/hosting.ts` and `lib/host/server.ts`, the last seat rule in `joinAdventure`, and `keep` on the lobby's seats.
+- Checked in the running app against the local website and dev Convex, with Covert Cargo and both heroes on Invite.
+- The app's lobby showed "Invite · Guest's choice · 1 open" with one link, and "You play the hero left".
+- As the test user with that link: Choose your hero showed Lyra and Poppen. Join as Lyra seated them.
+- The app then listed Poppen Quickfoot for the host and Lyra with Sheet and Remove. The link went away.
+- A second guest asking for Poppen was refused: "Every seat at this table is taken".
+- Start seated the host as Poppen, made turn 1 with both heroes, and moved the guest to the play page.
+- Not checked: three or more invited heroes, a roster hero left for the host, Start before any guest joins, and Start from the website lobby.
+- Seen, not changed: a seated guest's website lobby shows the host's seat as Empty and reads "Waiting for more players".
+- The test game was removed from dev Convex afterward. No tests were added.
+
 ## Known gaps
 
 - Hosted games keep no stage positions, so movement is not read or walked.

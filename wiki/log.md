@@ -4,9 +4,13 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-10, guests can choose among every hero
+
+Owner, at Covert Cargo's party setup: "there does not seem to be a way to invite a player to be either character in this screen." The last You seat could not switch to Invite. Now it can when another hero is invited. With every hero on Invite, guests choose first and the host plays the hero left, seated when the game starts. Details in [Desktop host mode](plans/desktop-host-mode.md).
+
 ## 2026-10-10, the owner's dev adventures cleared
 
-Owner: "please remove all my test adventures. i want to start fresh." All eight adventures owned by the owner's account in dev Convex were deleted, four hosted that day and four from July to September, after a snapshot export. `deleteAdventureCascade` now also deletes a hosted game's GM jobs. The test user's two adventures were left, and so were two audio rows whose adventures were already gone. Production was not touched.
+Owner: "please remove all my test adventures. i want to start fresh." All eight adventures owned by the owner's account in dev Convex were deleted, four hosted that day and four from July to September, after a snapshot export. `deleteAdventureCascade` now also deletes a hosted game's GM jobs. The owner deleted the test user's two adventures the same day. Two audio rows whose adventures were already gone remain. Production was not touched.
 
 ## 2026-10-10, the host can remove a seated guest
 
