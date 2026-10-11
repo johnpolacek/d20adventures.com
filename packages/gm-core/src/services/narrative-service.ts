@@ -37,7 +37,8 @@ Pay special attention to:
  Given the above, decide if a D&D-style roll is required. If so, return the type of roll and a difficulty (DC) between 5 and 20.
 
 For spellcasting actions:
-- If the player is attempting to cast a specific spell (like Charm Person, Fireball, Detect Magic, etc.), use the spell name followed by "Check" (e.g., "Charm Person Check", "Fireball Check") and adjust the difficulty based on the type of spell.
+- If the player is attempting to cast a specific spell (like Charm Person, Fireball, Detect Magic, etc.), use the spell name followed by "Check" (e.g., "Charm Person Check", "Fireball Check").
+- Set a spell's difficulty by what it works against, not by how powerful it sounds. A spell that no creature resists (it makes fog, light or sound, moves an object, or senses or reads something: Fog Cloud, Light, Mage Hand, Detect Magic) is easy, DC 5 to 8. A spell that works against a creature's mind or body (Charm Person, Ray of Frost) is DC 10 or more.
 - If the player is attempting a general magical action without a specific spell, use "Arcana Check".
 
  For non-spellcasting actions, use the appropriate skill check (Perception, Investigation, Stealth, Athletics, Acrobatics, Survival, Deception, Persuasion, Intimidation, Insight, Nature, Animal Handling, Medicine, History, Sleight of Hand, Performance, Attack, etc.)

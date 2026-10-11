@@ -6,7 +6,7 @@ This log retains durable decisions and dated evidence. Git owns detailed impleme
 
 ## 2026-10-11, known spells are cast with Intelligence
 
-Owner was surprised by Lyra's Fog Cloud check: 11 - 1 = 10 against DC 13. The roll's ability bonus came from a short list of spell names in `modifier-utils.ts`, and Fog Cloud was not on it, so she rolled with no Intelligence and only the GM's -1 for the situation. A check named for any spell on the character's own list now uses Intelligence. With it that roll is 13, a success. The DC itself is the GM's choice under "adjust the difficulty based on the type of spell". Whether spells nobody resists should be easier, or need no roll, is an open owner decision.
+Owner was surprised by Lyra's Fog Cloud check: 11 - 1 = 10 against DC 13. The roll's ability bonus came from a short list of spell names in `modifier-utils.ts`, and Fog Cloud was not on it, so she rolled with no Intelligence and only the GM's -1 for the situation. A check named for any spell on the character's own list now uses Intelligence. With it that roll is 13, a success. The DC itself is the GM's choice under "adjust the difficulty based on the type of spell". Owner then chose an easy check for spells nobody resists, DC 5 to 8, in the roll rules of `roll-requirement-service.ts` and `narrative-service.ts`. One run through the Claude CLI with Lyra: Fog Cloud DC 8, Detect Magic DC 8, Light DC 5, Ray of Frost DC 13, Charm Person DC 16. See [Gameplay flows](gameplay-flows.md).
 
 ## 2026-10-11, the boat fight no longer leads to The Fake
 
