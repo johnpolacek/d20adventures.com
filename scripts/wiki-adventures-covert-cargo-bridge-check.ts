@@ -108,7 +108,7 @@ async function main() {
       allTurns: [],
     },
   })
-  assert.deepEqual(packet.outputContract.allowedNextEncounterIds, ["battle-on-the-boat", "the-fake", "the-escape", "the-crate"], "the GM is never offered the rescue")
+  assert.deepEqual(packet.outputContract.allowedNextEncounterIds, ["battle-on-the-boat", "the-escape", "the-crate"], "the GM is never offered the rescue")
   assert.equal(buildWikiEncounterProgressionPrompt(packet).includes("the-ranger"), false)
   assert.match(packet.currentEncounter.gmNotes ?? "", /cannot die/)
 

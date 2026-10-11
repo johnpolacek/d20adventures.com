@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-11, the boat fight no longer leads to The Fake
+
+Owner, in Covert Cargo: after Lyra confirmed the magic and the fight began, the NPCs reacted as if she had called the relic worthless. Battle on the Boat had a transition to The Fake "if Poppen tries to cause a distraction outside the boat or gets spotted". Poppen knocked on the door as the harbor watch, so the GM followed it, and The Fake's intro was added after the elves had left. The transition came from the legacy plan and is removed. The Fake is now reached only from The Shipment. The website's S3 copy of the adventure is not changed.
+
 ## 2026-10-11, the host's app runs NPC turns by itself
 
 Owner chose this for hosted games. After a job that changed the game, the host worker queues its own Continue when an NPC, an AI hero, or the round's end is next, before reporting the first job done. A Continue job now also ends the round. Each is queued once, and never when no person has a living hero. Narration that arrives while a player is still reading no longer jumps them forward. Runtime tests only, no hosted game was played. See [Desktop host mode](plans/desktop-host-mode.md).
