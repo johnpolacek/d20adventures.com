@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-10, pushes to main no longer wait for a yes
+
+Owner approved every push that day and agreed to drop the question. `AGENTS.md` now reads "Push changes: allow". This holds during alpha, with work on main.
+
 ## 2026-10-10, guests can choose among every hero
 
 Owner, at Covert Cargo's party setup: "there does not seem to be a way to invite a player to be either character in this screen." The last You seat could not switch to Invite. Now it can when another hero is invited. With every hero on Invite, guests choose first and the host plays the hero left, seated when the game starts. On the website, a guest's lobby now shows the host's seat and waits for the host, and only the host can start a hosted game. Details in [Desktop host mode](plans/desktop-host-mode.md).

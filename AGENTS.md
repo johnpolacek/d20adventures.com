@@ -32,7 +32,7 @@ Auto-commit local changes whenever confident that the code is good and there are
 
 - Commit docs-only wiki changes: allow
 - Commit code changes: allow
-- Push changes: ask
+- Push changes: allow
 - Install dependencies: allow
 - Run long commands: ask
 - Create plans before code: meaningful-only
