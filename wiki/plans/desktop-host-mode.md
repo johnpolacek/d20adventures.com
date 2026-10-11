@@ -201,6 +201,19 @@ Owner, at Covert Cargo's party setup with Lyra on You and Poppen on Invite: "the
 - Seen then: a seated guest's website lobby showed the host's seat as Empty and read "Waiting for more players". Fixed below.
 - The test game was removed from dev Convex afterward. No tests were added.
 
+### Guest plays, 2026-10-10
+
+Owner, on the same screen with Lyra on You and Poppen on Invite: "I want to invite a player to do either player for this adventure but that is not clear it is possible to do from this screen".
+
+- Setting both seats to Invite was the only way in, and nothing said so.
+- Party setup now shows a choice under the party once a hero is invited: Guest plays, then the invited hero's name, or Either hero.
+- Either hero puts every hero on Invite and adds "You play the other." The named choice gives the player their hero back.
+- With more than two heroes the choices read Invited heroes and Their choice.
+- It is hidden while a hero is on AI, since an invited game takes none yet.
+- The line by the Invite button is gone. The choice carries it.
+- Checked in the running app with Covert Cargo, by reading each control's pressed state: Either hero set both rows to Invite with Invite enabled, and Poppen Quickfoot set Lyra back to You.
+- Not checked: three or more heroes, and the look in the foreground. The window was covered, so captures showed stale highlights.
+
 ### The guest's lobby waits for the host, 2026-10-10
 
 Owner chose both follow-ups.

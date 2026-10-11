@@ -77,6 +77,8 @@ export function NewGame(props: {
   const [deleting, setDeleting] = useState<string | null>(null)
   // Whether the host approves each hero a guest brings to an open seat. Off, the guest is seated at once.
   const [askFirst, setAskFirst] = useState(false)
+  // The hero the player last held, so leaving a guest's choice of hero gives it back.
+  const [lastYou, setLastYou] = useState<string | null>(null)
   const fits = (h: Hero) => Boolean(info?.options?.races.includes(h.race) && info.options.archetypes.includes(h.archetype))
   const picks: Pick[] = [
     ...(info?.premades ?? []).map((p) => ({ ...p, portrait: portraitFor(undefined, { ...p, type: "pc" }) })),
@@ -103,7 +105,19 @@ export function NewGame(props: {
   const hostable = (yours.length === 1 || guestsChoose) && !party.some((c) => c.who === "ai")
   const ready = sized && (hosting ? hostable : yours.length > 0)
   const canInvite = Boolean(props.onHost) && max > 1
-  const seat = (id: string, who: Seat["who"]) => setParty((cur) => cur.map((c) => (c.id === id ? { ...c, who } : c)))
+  const seat = (id: string, who: Seat["who"]) => {
+    if (who !== "you" && yours[0]?.id === id) setLastYou(id)
+    setParty((cur) => cur.map((c) => (c.id === id ? { ...c, who } : c)))
+  }
+  // Which hero a guest plays: the one invited, or their choice among them all, with the player on the hero left.
+  const held = party.filter((c) => !c.open)
+  const back = held.find((c) => c.id === lastYou) ?? held[0]
+  const theirs = guestsChoose ? held.filter((c) => c.id !== back?.id) : held.filter((c) => c.who === "invite")
+  const guestPlays = canInvite && invites.length > 0 && yours.length < 2 && held.length > 1 && !party.some((c) => c.who === "ai")
+  const chooseAny = (on: boolean) => {
+    if (on) setLastYou(yours[0]?.id ?? null)
+    setParty((cur) => cur.map((c) => (c.open ? c : on ? { ...c, who: "invite" } : c.id === back?.id ? { ...c, who: "you" } : c)))
+  }
   const toggle = (id: string) =>
     setParty((p) => {
       if (p.some((c) => c.id === id)) {
@@ -196,6 +210,20 @@ export function NewGame(props: {
                   )
                 })}
               </ul>
+              {guestPlays && (
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <span className={siteLabel}>{theirs.length > 1 ? "Guests play" : "Guest plays"}</span>
+                  <fieldset className="flex" aria-label="Which hero a guest plays">
+                    <Option active={!guestsChoose} aria-pressed={!guestsChoose} className="rounded-r-none" onClick={() => guestsChoose && chooseAny(false)}>
+                      {theirs.length > 1 ? "Invited heroes" : (picks.find((p) => p.id === theirs[0]?.id)?.name ?? "Invited hero")}
+                    </Option>
+                    <Option active={guestsChoose} aria-pressed={guestsChoose} className="-ml-0.5 rounded-l-none" onClick={() => guestsChoose || chooseAny(true)}>
+                      {held.length > 2 ? "Their choice" : "Either hero"}
+                    </Option>
+                  </fieldset>
+                  {guestsChoose && <span className="text-sm text-white/70">{held.length > 2 ? "You play the hero left." : "You play the other."}</span>}
+                </div>
+              )}
             </div>
             <div>
               <div className={cn(siteLabel, "mb-2")}>Heroes</div>
@@ -297,9 +325,6 @@ export function NewGame(props: {
         </label>
         <div className="flex-1" />
         {hosting && sized && !hostable && <p className="text-sm text-amber-300">An invited game takes one hero for you and no AI heroes yet.</p>}
-        {guestsChoose && hostable && (
-          <p className="text-sm text-white/70">{invites.length > 2 ? "Your guests choose first. You play the hero left." : "Your guest chooses a hero. You play the other."}</p>
-        )}
         {props.onCancel && (
           <button type="button" className={cn(siteOutline, "px-4 py-2 text-sm")} disabled={props.busy} onClick={props.onCancel}>
             Cancel
