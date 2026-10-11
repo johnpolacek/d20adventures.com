@@ -19,6 +19,9 @@ export type GameResponse = {
   error?: string
 }
 export const send = (command: GameCommand | HeroCommand) => invoke<GameResponse>("game_command", { command })
+// Replies offered on a hero's turn. Rust runs it outside the game lock, so it never holds up an action.
+export const suggest = (turnId: string, characterId: string) =>
+  invoke<{ suggestions?: { label: string; text: string }[]; error?: string }>("suggest_command", { command: { kind: "suggest", turnId, characterId } })
 // Rust adds the Keychain token, so the webview never sends or sees it.
 type AccountRequest = AccountCommand extends infer C ? (C extends { token?: string } ? Omit<C, "token"> : never) : never
 export const account = (command: AccountRequest) => invoke<AccountResponse & { error?: string }>("account_command", { command })

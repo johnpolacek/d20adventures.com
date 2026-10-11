@@ -10,7 +10,7 @@ import { defineConfig } from "vite"
 // answered as Rust would: game commands run the same runtime script against a scratch data folder, or the folder in
 // D20_PREVIEW_DATA_DIR. Commands that start the GM's CLI are refused unless D20_PREVIEW_GM is set. D20_REQUIRE_ACCOUNT
 // shows the link step, as it does in the app.
-const GM_COMMANDS = ["start", "reply", "continue", "heroDraft", "paintHero"]
+const GM_COMMANDS = ["start", "reply", "continue", "suggest", "heroDraft", "paintHero"]
 function preview() {
   const data = process.env.D20_PREVIEW_DATA_DIR ?? join(tmpdir(), "d20-desktop-preview")
   const runtime = fileURLToPath(new URL("./src-tauri/resources/runtime.cjs", import.meta.url))
@@ -33,7 +33,7 @@ function preview() {
       child.stdin.end(`${JSON.stringify(command)}\n`)
     })
   const answer = async (cmd, args) => {
-    if (cmd === "game_command") {
+    if (cmd === "game_command" || cmd === "suggest_command") {
       if (GM_COMMANDS.includes(args?.command?.kind) && !process.env.D20_PREVIEW_GM) throw new Error("The preview does not run the GM.")
       return game(args.command)
     }

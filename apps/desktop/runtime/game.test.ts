@@ -4,7 +4,8 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
-import { game, type Packs } from "./game"
+import { findCurrentActor } from "@d20/gm-core/utils/turn-actors"
+import { game, type Packs, suggest } from "./game"
 import { LocalStore } from "./store"
 
 test("saved adventures list newest first and resume swaps the archived one in", async () => {
@@ -89,6 +90,40 @@ test("archives from before summaries are listed after reopening", async () => {
   }
 })
 
+test("suggested replies come from what the players have read, for the hero whose turn it is", async () => {
+  const { store, cleanup } = setup()
+  try {
+    await game(store, packs, failLlm)({ kind: "start", provider: "claude" })
+    const turn = store.current()
+    const actor = findCurrentActor(turn.characters)!
+    assert.equal(actor.type, "pc")
+    const other = turn.characters.find((c) => c.id !== actor.id)!
+    let prompt = ""
+    const four = [1, 2, 3, 4].map((n) => ({ label: `Choice ${n}`, text: `${actor.name} tries idea ${n}.` }))
+    const llm: Llm = {
+      generateText: failLlm.generateText,
+      generateObject: async (args) => {
+        prompt = args.prompt
+        return { object: args.schema.parse({ suggestions: four }) }
+      },
+    }
+    const before = JSON.stringify(store.state)
+    assert.deepEqual(await suggest(store.state, llm, { kind: "suggest", turnId: turn._id, characterId: actor.id }), four.slice(0, 3))
+    assert.equal(JSON.stringify(store.state), before)
+    assert.ok(prompt.includes(`Name: ${actor.name}`) && prompt.includes(turn.narrative))
+    // Only the hero's own saved state, and none of the encounter's GM instructions.
+    assert.ok(prompt.includes(`"id":"${actor.id}"`) && !prompt.includes(`"id":"${other.id}"`))
+    const gmNotes = pack.artifacts.encounters[turn.encounterId].sections.gmNotes
+    assert.ok(gmNotes && !prompt.includes(gmNotes.slice(0, 80)))
+
+    await assert.rejects(() => suggest(store.state, llm, { kind: "suggest", turnId: turn._id, characterId: other.id }), /another character/)
+    await assert.rejects(() => suggest(store.state, llm, { kind: "suggest", turnId: "stale", characterId: actor.id }), /another character/)
+    await assert.rejects(() => suggest(null, llm, { kind: "suggest", turnId: turn._id, characterId: actor.id }), /another character/)
+    await assert.rejects(() => suggest(store.state, failLlm, { kind: "suggest", turnId: turn._id, characterId: actor.id }), /offline/)
+  } finally {
+    cleanup()
+  }
+})
 const packs: Packs = JSON.parse(readFileSync(new URL("../src-tauri/resources/packs.json", import.meta.url), "utf8"))
 const pack = packs["march-of-davos"]
 const quiet = () => {}

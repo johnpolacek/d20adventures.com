@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-11, suggested replies on a hero's turn
+
+Owner, at Lyra's turn in The Shipment: "could we offer suggestions that the player can accept (will fill in the text area)". The GM card now shows three short chips over the reply box in local play. Clicking one fills the box with a full reply, which the player can edit before Send. The player's own AI writes them from the turn's narrative, the hero's sheet and saved state, and who else is present. It never sees the encounter's GM notes. The request starts when the hero's turn comes up and runs outside the game lock, so it cannot block Send. Checked on a copy of the owner's Covert Cargo save: Claude returned three replies in about 5 seconds, and in the browser preview the chips loaded, filled the box, and enabled Send. Runtime tests, desktop and GM core type checks, GM core checks, and `cargo check` passed. The AI companion's prompt is byte for byte the same. Not yet seen in the packaged app. Hosted games offer none yet. See [the plan](plans/turn-suggestions.md).
+
 ## 2026-10-11, table chat in hosted games, and guests can act from the website
 
 Owner: "Do we have chat working so the participants in the session can chat?" Hosted games had none. The play view now has a Chat button that opens the journal's Table chat, live, with a box to send and a count of new lines. The app's lobby has the same chat, and the website lobby shows its chat button in any hosted game. Checking it found that no website guest could reply, roll, or continue: a type re-export in `app/_actions/hosted.ts` broke every action in the file. Fixed, and a guest's reply and roll then ran through the host worker and Claude. The app's own screens were not checked, since computer use was unavailable. Details in [Desktop host mode](plans/desktop-host-mode.md).

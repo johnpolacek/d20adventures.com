@@ -8,7 +8,7 @@ import type { HostedState } from "../runtime/host-commands"
 import type { Save, SaveSummary } from "../runtime/store"
 import { AccountBadge, AccountNotice, LinkGate, useAccount } from "./account"
 import { AppHeader } from "./app-header"
-import { type HostWorkerState, host, hostRunning, hostStart, openSite, send } from "./bridge"
+import { type HostWorkerState, host, hostRunning, hostStart, openSite, send, suggest } from "./bridge"
 import type { FigureArt } from "./figures"
 import { FullscreenButton } from "./fullscreen"
 import { HeroCreator, type HeroIdea } from "./hero-creator"
@@ -256,6 +256,7 @@ export function DesktopGame() {
         const res = await invoke({ kind: "reply", turnId, characterId, text, movement })
         return Boolean(res && !res.error)
       }}
+      onSuggest={hosting ? undefined : async (turnId, characterId) => (await suggest(turnId, characterId)).suggestions ?? []}
       onRoll={(turnId, characterId, result) => {
         if (hosting) void act(() => host({ kind: "hostAct", adventureId: hosting, turnId, action: { kind: "roll", characterId, result } }))
         else void invoke({ kind: "roll", turnId, characterId, result })

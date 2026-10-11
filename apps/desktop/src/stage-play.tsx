@@ -7,7 +7,7 @@ import { setSoundOn, soundOn } from "@/components/stage/dice-sound"
 import { Pill, panel, StageHud, useCompact } from "@/components/stage/hud"
 import { type ChatLine, Journal, type JournalTurn } from "@/components/stage/journal"
 import { Narration } from "@/components/stage/narration"
-import { type CardCharacter, type CardMode, PromptCard } from "@/components/stage/prompt-card"
+import { type CardCharacter, type CardMode, type CardSuggestion, PromptCard } from "@/components/stage/prompt-card"
 import { ROLL_SECONDS, type RollResultData } from "@/components/stage/roll-result"
 import { Bubbles, Plate } from "@/components/stage/stage-dialogue"
 import { TurnOrder } from "@/components/stage/turn-order"
@@ -62,6 +62,8 @@ export function StagePlay(props: {
   // Each resolves to whether the action was accepted.
   onReply: (turnId: string, characterId: string, text: string, movement: ReturnType<typeof context> | undefined) => Promise<boolean>
   onRoll: (turnId: string, characterId: string, result: number) => void
+  // Replies offered on a hero's turn, which fill the reply box. Without it none are offered.
+  onSuggest?: (turnId: string, characterId: string) => Promise<CardSuggestion[]>
   onContinue: (turnId: string) => void
   // Where the cast stands after a walk. Without it, walks are not saved.
   onPositions?: (turnId: string, positions: Positions, appliedMovement: string) => Promise<void>
@@ -340,13 +342,35 @@ export function StagePlay(props: {
   const rr = actor?.rollRequired
   // A finished adventure ends on its final narration. Its last turn has characters but takes no more actions.
   const ended = save?.adventure.status === "completed"
+  // Suggested replies are asked for once per hero's turn, as soon as it comes up with the game on screen, so they are
+  // often there once the narration has been read. A request that fails offers none.
+  const suggestRef = useRef(props.onSuggest)
+  suggestRef.current = props.onSuggest
+  const asked = useRef(new Map<string, Promise<CardSuggestion[]>>())
+  const [offered, setOffered] = useState<{ key: string; list: CardSuggestion[] } | null>(null)
+  const holdTurn = turn?._id
+  const holdActor = cardActor?.id
+  const holdKey = props.onSuggest && holdTurn && holdActor && !rr && !ended && !props.overlay ? `${holdTurn}:${holdActor}` : null
+  useEffect(() => {
+    if (!holdKey || !holdTurn || !holdActor) return
+    let live = true
+    let request = asked.current.get(holdKey)
+    if (!request) {
+      request = (suggestRef.current?.(holdTurn, holdActor) ?? Promise.resolve([])).catch(() => [])
+      asked.current.set(holdKey, request)
+    }
+    void request.then((list) => live && setOffered({ key: holdKey, list }))
+    return () => {
+      live = false
+    }
+  }, [holdKey, holdTurn, holdActor])
   let mode: CardMode | null = null
   if (busy) mode = { kind: "thinking", note: "The GM is resolving the action…" }
   // Movement is read against the scene on screen, so wait for the next scene before taking an action.
   else if (scene && !stage && !stageError) mode = { kind: "thinking", note: loading }
   else if (ended) mode = null
   else if (cardActor && rr) mode = { kind: "roll", roll: { skill: rr.rollType, ability: "", dc: rr.difficulty, modifier: rr.modifier ?? 0 } }
-  else if (cardActor) mode = { kind: "hold", prompt: `What does ${cardActor.name.split(" ")[0]} do?` }
+  else if (cardActor) mode = { kind: "hold", prompt: `What does ${cardActor.name.split(" ")[0]} do?`, suggestions: holdKey ? (offered?.key === holdKey ? offered.list : "loading") : undefined }
   const reply = async (value: string) => {
     if (!turn || !actor) return
     const movement = stage ? context(stage, actor, value) : undefined

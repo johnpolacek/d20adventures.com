@@ -1,3 +1,4 @@
+import { z } from "zod"
 import type { GmPorts } from "../ports"
 import type { TurnCharacter } from "../types/adventure"
 import { rollD20 } from "../utils/game-utils"
@@ -5,8 +6,14 @@ import { isAiControlledPc, isDeadActor } from "../utils/turn-actors"
 import { createAdventureRollResultService, getEncounterInstructionsFromPlan } from "./adventure-roll-result-service"
 import { createAdventureTurnReplyService } from "./adventure-turn-reply-service"
 
-function buildAiPcIntentPrompt(character: TurnCharacter, narrative: string, sceneRoster: string): string {
+// The character as a player knows them. Each line ends with a newline.
+function characterSheet(character: TurnCharacter): string {
   const availableSpells = (character.spells || []).filter((spell) => !spell.isUsed)
+  return `Name: ${character.name}
+${character.archetype ? `Class/Archetype: ${character.archetype}\n` : ""}${character.race ? `Race: ${character.race}\n` : ""}${character.personality ? `Personality: ${character.personality}\n` : ""}${character.background ? `Background: ${character.background}\n` : ""}${character.motivation ? `Motivation: ${character.motivation}\n` : ""}${character.behavior ? `How they act: ${character.behavior}\n` : ""}${character.appearance ? `Appearance: ${character.appearance}\n` : ""}${character.specialAbilities?.length ? `Special Abilities: ${character.specialAbilities.join(", ")}\n` : ""}${availableSpells.length ? `Spells: ${availableSpells.map((s) => s.name).join(", ")}\n` : ""}${character.skills?.length ? `Skills: ${character.skills.join(", ")}\n` : ""}${character.equipment?.length ? `Equipment: ${character.equipment.map((e) => e.name).join(", ")}\n` : ""}`
+}
+
+function buildAiPcIntentPrompt(character: TurnCharacter, narrative: string, sceneRoster: string): string {
   return `You are the PLAYER (not the GM) roleplaying as the character below. Players describe their character's intent and attempt only. The GM determines all outcomes, results, and perceptions.
 
 Given the recent narrative, write a short narrative describing what the character does next. Include a character action and, only when natural, one brief line of dialogue in the character's voice. Use third person for actions and put dialogue in quotes. Be creative, stay in character, and keep the reply concise, 1-2 short sentences total.
@@ -30,8 +37,7 @@ WRONG: "He swings his sword and feels the blade connect with armor."
 RIGHT: "He raises his blade and lunges forward with a powerful overhead strike."
 
 Character:
-Name: ${character.name}
-${character.archetype ? `Class/Archetype: ${character.archetype}\n` : ""}${character.race ? `Race: ${character.race}\n` : ""}${character.personality ? `Personality: ${character.personality}\n` : ""}${character.background ? `Background: ${character.background}\n` : ""}${character.motivation ? `Motivation: ${character.motivation}\n` : ""}${character.behavior ? `How they act: ${character.behavior}\n` : ""}${character.appearance ? `Appearance: ${character.appearance}\n` : ""}${character.specialAbilities?.length ? `Special Abilities: ${character.specialAbilities.join(", ")}\n` : ""}${availableSpells.length ? `Spells: ${availableSpells.map((s) => s.name).join(", ")}\n` : ""}${character.skills?.length ? `Skills: ${character.skills.join(", ")}\n` : ""}${character.equipment?.length ? `Equipment: ${character.equipment.map((e) => e.name).join(", ")}\n` : ""}
+${characterSheet(character)}
 Others present in the scene: ${sceneRoster || "None"}
 
 Recent Narrative:
@@ -47,6 +53,42 @@ function buildSceneRoster(characters: TurnCharacter[], selfId: string): string {
       return `${c.name}${hurt}`
     })
     .join("; ")
+}
+
+export const actionSuggestionsSchema = z.object({
+  suggestions: z
+    .array(z.object({ label: z.string().min(1).max(60), text: z.string().min(1).max(600) }))
+    .min(1)
+    .max(4),
+})
+export type ActionSuggestion = z.infer<typeof actionSuggestionsSchema>["suggestions"][number]
+
+// Replies offered to a player for their own character's turn. Like the AI companion's intent, they are written from
+// the narrative the players have read, never from the encounter's GM instructions.
+export function buildActionSuggestionsPrompt(character: TurnCharacter, narrative: string, allCharacters: TurnCharacter[]): string {
+  return `You are helping a PLAYER (not the GM) choose what their character does next. Players describe their character's intent and attempt only. The GM determines all outcomes, results, and perceptions.
+
+Given the recent narrative, offer 3 different things the character below could do now. Make them distinct approaches that fit this moment and this character, such as speaking to someone, a careful or clever move, and a bold action.
+
+For each suggestion give:
+- label: 2 or 3 words naming the choice, at most 20 characters, such as "Question the guard".
+- text: the reply the player would send, 1-2 short sentences. Use third person for actions and put any dialogue in quotes, in the character's voice.
+
+Constraints:
+- Respond to what is happening now in the narrative. Name the people and things the character acts on.
+- Use only abilities, spells, skills, and equipment the character has.
+- Show concrete actions that others in the scene could observe.
+- Do not use em dashes, en dashes, or semicolons. Use commas or periods instead.
+- Stop each text BEFORE any result, outcome, or feedback from the action.
+- Do NOT describe what the character perceives, senses, learns, or discovers.
+- Do NOT invent people, places, items, or facts that the narrative has not established.
+
+Character:
+${characterSheet(character)}
+Others present in the scene: ${buildSceneRoster(allCharacters, character.id) || "None"}
+
+Recent Narrative:
+${narrative}`
 }
 
 export function createAiPcTurnService(ports: GmPorts) {

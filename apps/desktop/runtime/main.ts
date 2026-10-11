@@ -4,7 +4,7 @@ import { createInterface } from "node:readline"
 import { locate } from "../../desktop-spike/harness/cli.mjs"
 import { accountCommand, accountCommandSchema } from "./account"
 import { applyCharacterUpdates } from "./characters"
-import { adventureList, type CatalogInfo, commandSchema, type GameCommand, game, type Packs, transitionsOf } from "./game"
+import { adventureList, type CatalogInfo, commandSchema, type GameCommand, game, type Packs, suggest, suggestCommandSchema, transitionsOf } from "./game"
 import { creationOptions, type HeroCommand, type HeroDraft, heroCommand, heroCommandSchema } from "./heroes"
 import { hostCommand, hostCommandSchema } from "./host-commands"
 import { localLlm } from "./llm"
@@ -72,6 +72,15 @@ async function main() {
         } finally {
           roster.db.close()
         }
+        return
+      }
+      // Suggested replies read the save and write nothing. They take no lock, so they can run beside a game action.
+      if (input?.kind === "suggest") {
+        const reader = new LocalStore(savePath)
+        const save = reader.state
+        reader.db.close()
+        model = localLlm(save?.provider ?? "claude", scratch)
+        process.stdout.write(`${JSON.stringify({ suggestions: await suggest(save, model.llm, suggestCommandSchema.parse(input)) })}\n`)
         return
       }
       const command = ["heroDraft", "saveHero", "deleteHero", "paintHero", "art"].includes(input?.kind) ? heroCommandSchema.parse(input) : commandSchema.parse(input)

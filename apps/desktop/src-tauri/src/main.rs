@@ -81,6 +81,18 @@ async fn game_command(
         .map_err(|_| "A game action is already running.")?;
     run_runtime(&app, &command).await
 }
+// Suggested replies only read the save, so they skip the game lock and never hold up a game action.
+#[tauri::command]
+async fn suggest_command(app: tauri::AppHandle, command: Value) -> Result<Value, String> {
+    let kind = command
+        .get("kind")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    if kind != "suggest" {
+        return Err("Unknown suggestion request.".into());
+    }
+    run_runtime(&app, &command).await
+}
 // Account actions only reach the website, so they skip the game lock. The token travels from the Keychain
 // to the runtime over stdin and back, and the webview never sees it.
 #[tauri::command]
@@ -294,6 +306,7 @@ fn main() {
         ))
         .invoke_handler(tauri::generate_handler![
             game_command,
+            suggest_command,
             account_command,
             host_command,
             host_start,

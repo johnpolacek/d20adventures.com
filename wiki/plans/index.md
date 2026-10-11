@@ -8,6 +8,7 @@ Updated for the desktop integration worktree on 2026-10-02. Implementation statu
 
 | Plan | Status | Next work |
 |---|---|---|
+| [Suggested replies on a hero's turn](turn-suggestions.md) | Implemented on main 2026-10-11 for local play. Three chips over the reply box, written by the player's AI, fill the box when clicked. | Owner review. Hosted games, and a setting to turn them off. |
 | [Desktop site style](desktop-site-style.md) | In progress on main. Shared theme, the site's header, title screen, pages, party setup, and hero creator merged 2026-10-10. The HUD is recoloured in one revertable commit. Adventures is the one place to choose an adventure. | Owner review of the HUD over each set. Then HUD components, literal colours, the link page, and cleanup, on main. |
 | [Covert Cargo: Thalbern's rescue](covert-cargo-rescue.md) | Merged into main 2026-10-10. No player deaths, and Thalbern steps in when a hero falls to half health. | Owner play-through and a look at the new staging. |
 | [Desktop home screen](zzz-completed/feature-desktop-home.md) | Merged into main 2026-10-08 and archived. Home with saved adventures and resume, heroes, new adventures, and the Realm of Myr page. | Owner review of the merged build. Delete the worktree's Convex project in the dashboard. |

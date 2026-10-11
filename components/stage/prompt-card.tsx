@@ -24,7 +24,18 @@ export interface CardRoll {
   // A contest: the opposing roll, made by the GM on the card first; the player has to meet or beat its total (dc).
   versus?: { name: string; skill: string; natural: number; modifier: number }
 }
-export type CardMode = { kind: "hold"; prompt: string; suggestion?: string } | { kind: "roll"; roll: CardRoll; prompt?: string } | { kind: "thinking"; note?: string } | { kind: "done"; next: string }
+// A reply offered to the player: a few words for its chip, and the reply itself.
+export interface CardSuggestion {
+  label: string
+  text: string
+}
+// `suggestions` are chips over the reply box that fill it in, blank while they are being written. `suggestion` is
+// the demo's one scripted reply, behind its Suggest button.
+export type CardMode =
+  | { kind: "hold"; prompt: string; suggestion?: string; suggestions?: CardSuggestion[] | "loading" }
+  | { kind: "roll"; roll: CardRoll; prompt?: string }
+  | { kind: "thinking"; note?: string }
+  | { kind: "done"; next: string }
 
 function PartyRow({ party, actorId, compact, onPick }: { party: CardCharacter[]; actorId: string | null; compact: boolean; onPick: (id: string) => void }) {
   return (
@@ -225,6 +236,7 @@ export function PromptCard({
   const draft = onDraft ? (draftProp ?? "") : ownDraft
   const setDraft = onDraft ?? setOwnDraft
   const ref = useRef<HTMLElement>(null)
+  const box = useRef<HTMLTextAreaElement>(null)
   useEffect(() => {
     const el = ref.current
     if (!el || !onTop) return
@@ -261,8 +273,33 @@ export function PromptCard({
             </div>
           )}
           <p className={cn("font-serif text-stage-cream", compact ? "my-1.5 line-clamp-3 text-[12px] leading-snug" : "mt-3 mb-3 text-[15px] leading-[1.55]")}>{mode.prompt}</p>
+          {mode.suggestions && mode.suggestions.length > 0 && (
+            <div className={cn("flex gap-1.5", compact ? "mb-1.5 [&>button]:py-1" : "mb-2")}>
+              {mode.suggestions === "loading"
+                ? [0, 1, 2].map((i) => (
+                    <Pill key={i} className="flex-1 animate-pulse" disabled aria-hidden>
+                      &nbsp;
+                    </Pill>
+                  ))
+                : mode.suggestions.map((s) => (
+                    <Pill
+                      key={s.text}
+                      className="min-w-0 flex-1 truncate px-2"
+                      active={draft === s.text}
+                      title={s.text}
+                      onClick={() => {
+                        setDraft(s.text)
+                        box.current?.focus()
+                      }}
+                    >
+                      {s.label}
+                    </Pill>
+                  ))}
+            </div>
+          )}
           <div className="relative">
             <textarea
+              ref={box}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => {
