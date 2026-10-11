@@ -35,7 +35,7 @@ export async function joinAdventure({ settingId, adventurePlanId, adventureId, c
   // With held seats, a guest joins only as one of the heroes the host invited, and only while it is open.
   const held = Boolean(joining?.host?.seats?.length)
   const seat = joining && held ? openSeats(joining).find((s) => s.id === sheetId(characterId)) : undefined
-  if (held && !seat) throw new Error("That hero is not open in this game.")
+  if (held && (!seat || joining?.host?.removed?.includes(userId))) throw new Error("That hero is not open in this game.")
   try {
     if (!hosted) {
       const tokenResult = await decrementUserTokensAction({

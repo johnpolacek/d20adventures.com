@@ -20,6 +20,8 @@ export const hostCommandSchema = z.discriminatedUnion("kind", [
     approve: z.boolean().default(false),
     token,
   }),
+  // The host removes a seated guest before the game starts, with an optional note for them.
+  z.object({ kind: z.literal("hostRemove"), adventureId: id, userId: id, note: z.string().trim().max(300).optional(), token }),
   // A guest's hero sheet, for one asking to join or one at the table.
   z.object({ kind: z.literal("hostSheet"), adventureId: id, userId: id, token }),
   // The host's answer to a guest asking for an open seat. A rejection may carry a note for the guest.
@@ -77,6 +79,9 @@ export async function hostCommand(command: HostCommand, site: string, heroes: ()
         return { state: (await call(`/api/desktop/host/${command.adventureId}`)) as HostedState }
       case "hostSheet":
         return { sheet: ((await call(`/api/desktop/host/${command.adventureId}`, { action: "sheet", userId: command.userId })) as { sheet: GuestHero }).sheet }
+      case "hostRemove":
+        await call(`/api/desktop/host/${command.adventureId}`, { action: "remove", userId: command.userId, note: command.note })
+        return { state: (await call(`/api/desktop/host/${command.adventureId}`)) as HostedState }
       case "hostAnswer":
         await call(`/api/desktop/host/${command.adventureId}`, { action: "answer", userId: command.userId, approve: command.approve, note: command.note })
         return { state: (await call(`/api/desktop/host/${command.adventureId}`)) as HostedState }

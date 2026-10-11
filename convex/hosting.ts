@@ -70,7 +70,8 @@ export const requestSeat = mutation({
     const hero = sheetId(request.characterId)
     if (host.seats?.some((s) => s.id === hero) || adventure.players?.some((p) => sheetId(p.characterId) === hero)) throw new Error("That hero is already at this table")
     const others = (host.requests ?? []).filter((r) => r.userId !== request.userId)
-    if (host.approve) {
+    // A guest the host removed comes back only with the host's approval.
+    if (host.approve || host.removed?.includes(request.userId)) {
       await ctx.db.patch(adventureId, { host: { ...host, requests: [...others, { ...request, status: "pending" as const, at: Date.now() }] }, updatedAt: Date.now() })
       return { seated: false }
     }
@@ -105,6 +106,25 @@ export const answerSeat = mutation({
       host: { ...host, requests: others },
       players: [...(adventure.players ?? []), { userId, characterId: request.characterId }],
       playerIds: [...adventure.playerIds, userId],
+      updatedAt: Date.now(),
+    })
+  },
+})
+
+/** The host removes a seated guest before the game starts, with a note the guest sees. Their seat opens again. */
+export const removeGuest = mutation({
+  args: { secret: v.string(), adventureId: v.id("adventures"), hostUserId: v.string(), userId: v.string(), name: v.string(), note: v.optional(v.string()) },
+  handler: async (ctx, { secret, adventureId, hostUserId, userId, name, note }) => {
+    requireServer(secret)
+    const { adventure, host } = waiting(await ctx.db.get(adventureId))
+    if (host.userId !== hostUserId) throw new Error("You are not hosting this adventure")
+    const seated = adventure.players?.find((p) => p.userId === userId)
+    if (!seated || userId === host.userId) throw new Error("That guest is not at this table")
+    const record = { userId, player: "", characterId: seated.characterId, name, status: "removed" as const, note: note?.trim().slice(0, 300) || undefined, at: Date.now() }
+    await ctx.db.patch(adventureId, {
+      host: { ...host, removed: [...new Set([...(host.removed ?? []), userId])], requests: [...(host.requests ?? []).filter((r) => r.userId !== userId), record] },
+      players: (adventure.players ?? []).filter((p) => p.userId !== userId),
+      playerIds: adventure.playerIds.filter((id) => id !== userId),
       updatedAt: Date.now(),
     })
   },

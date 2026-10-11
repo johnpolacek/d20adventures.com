@@ -23,8 +23,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ adve
   }
 }
 
-// The host reads a guest's hero sheet, answers a guest's request for an open seat, or starts the game once friends
-// have joined in the lobby.
+// The host reads a guest's hero sheet, answers a guest's request for an open seat, removes a seated guest, or starts
+// the game once friends have joined in the lobby.
 export async function POST(request: Request, { params }: { params: Promise<{ adventureId: string }> }) {
   const { device, error } = await deviceFromRequest(request)
   if (error) return error
@@ -34,6 +34,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ adv
     if (action === "sheet") {
       if (typeof body.userId !== "string") return NextResponse.json({ error: "Choose a guest." }, { status: 400 })
       return NextResponse.json({ sheet: await guestHero(adventure, body.userId) })
+    }
+    if (action === "remove") {
+      if (typeof body.userId !== "string") return NextResponse.json({ error: "Choose a guest." }, { status: 400 })
+      const removal = { userId: body.userId, name: (await guestHero(adventure, body.userId)).name, note: typeof body.note === "string" ? body.note : undefined }
+      await convex.mutation(api.hosting.removeGuest, { secret: serverSecret(), adventureId: adventure._id, hostUserId: device.userId, ...removal }).catch((e) => {
+        throw new HostError(409, thrownMessage(e, "The guest could not be removed."))
+      })
+      return NextResponse.json({ removed: true })
     }
     if (action === "answer") {
       if (typeof body.userId !== "string" || typeof body.approve !== "boolean") return NextResponse.json({ error: "Choose a request to answer." }, { status: 400 })

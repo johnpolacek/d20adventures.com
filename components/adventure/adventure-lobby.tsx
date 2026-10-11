@@ -20,10 +20,10 @@ import { PartyLobbyGrid } from "./party-lobby-grid"
 import { StartAdventureButton } from "./start-adventure-button"
 
 // A hosted game's seats for guests when the page loaded: the held heroes still open, the seat this guest's link
-// names ("any" for a hero of their own), how many seats take a guest's own hero, whether the host approves those
-// heroes, and this guest's request for one.
-type SeatRequest = { name: string; status: "pending" | "rejected"; note?: string }
-type OpenSeats = { open: number; approve: boolean; request?: SeatRequest }
+// names ("any" for a hero of their own), how many seats take a guest's own hero, whether the host approves this
+// guest's hero, whether the host removed this guest, and this guest's request with the host's answer.
+type SeatRequest = { name: string; status: "pending" | "rejected" | "removed"; note?: string }
+type OpenSeats = { open: number; approve: boolean; removed: boolean; request?: SeatRequest }
 export type LobbyInvite = OpenSeats & { seats: PCTemplate[]; as?: string }
 
 interface AdventureLobbyProps {
@@ -47,7 +47,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
   const [playerNames, setPlayerNames] = useState<Record<string, string>>({})
   const hasFetchedUserChars = useRef(false)
   // The open seats and this guest's request, kept current by the poll below.
-  const [seat, setSeat] = useState<OpenSeats>({ open: invite?.open ?? 0, approve: invite?.approve ?? false, request: invite?.request })
+  const [seat, setSeat] = useState<OpenSeats>({ open: invite?.open ?? 0, approve: invite?.approve ?? false, removed: invite?.removed ?? false, request: invite?.request })
   const [askingId, setAskingId] = useState<string | null>(null)
   const [changingHero, setChangingHero] = useState(false)
 
@@ -158,9 +158,11 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
   // loads again as a player.
   const mine = (pc: PC) => pc.userId === user?.id && pc.controlledBy !== "ai"
   const seatedSinceLoad = Boolean(user?.id && adventure.party?.some(mine) && !initialAdventure.party?.some(mine))
+  // Removed by the host while this page was open: it loads again as a guest.
+  const removedSinceLoad = Boolean(user?.id && seat.request?.status === "removed" && initialAdventure.party?.some(mine) && !adventure.party?.some(mine))
   useEffect(() => {
-    if (invite && seatedSinceLoad) window.location.replace(window.location.pathname)
-  }, [invite, seatedSinceLoad])
+    if (invite && (seatedSinceLoad || removedSinceLoad)) window.location.replace(window.location.pathname)
+  }, [invite, seatedSinceLoad, removedSinceLoad])
 
   // Add a handler for clicking a character slot to open the modal
   const handlePartySlotClick = (character: PC | PCTemplate) => {
@@ -216,7 +218,8 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
   // asks the host for an open seat with a hero of their own.
   const openSeats = invite?.seats.filter(notSeated) ?? []
   const namedSeat = openSeats.find((pc) => pc.id === invite?.as)
-  const heldSeats = invite?.as === "any" && seat.open > 0 ? [] : namedSeat ? [namedSeat] : openSeats
+  // A guest the host removed takes no held seat. They may ask for an open one.
+  const heldSeats = seat.removed || (invite?.as === "any" && seat.open > 0) ? [] : namedSeat ? [namedSeat] : openSeats
   const availableCharacters = invite ? heldSeats : adventurePlan?.premadePlayerCharacters?.filter(notSeated) || []
   const waitingOnHost = seat.request?.status === "pending" && !changingHero
   // Join seats a guest's own hero at once. Ask to join waits for the host.
@@ -224,7 +227,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
     const busy = invite ? askingId === id : isJoining && joiningCharacterId === id
     return invite && seat.approve ? (busy ? "Asking..." : "Ask to join") : busy ? "Joining..." : "Join"
   }
-  const bringOwn = Boolean(invite) && seat.open > 0 && !namedSeat && !waitingOnHost
+  const bringOwn = Boolean(invite) && seat.open > 0 && (!namedSeat || seat.removed) && !waitingOnHost
   // Over the heroes a guest may take directly, which follow their own heroes when both are offered.
   const takeHero = availableCharacters.length === 1 ? `Play as ${availableCharacters[0].name}` : "Choose your hero"
   const takeHeading = !invite ? "Or join with a premade character:" : bringOwn ? `Or ${takeHero.charAt(0).toLowerCase()}${takeHero.slice(1)}` : takeHero
@@ -294,7 +297,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
             ) : (
               <>
                 {joinError && !/redirect/i.test(joinError) && <div className="text-center text-red-400 text-sm mb-4 bg-red-900/20 px-4 py-2 rounded">{joinError}</div>}
-                {invite && availableCharacters.length === 0 && seat.open < 1 && <p className="text-center text-white/80">Every seat at this table is taken.</p>}
+                {invite && availableCharacters.length === 0 && seat.open < 1 && !seat.removed && <p className="text-center text-white/80">Every seat at this table is taken.</p>}
                 {waitingOnHost && seat.open > 0 && (
                   <div className="mb-8 flex flex-col items-center gap-4 text-center">
                     <p className="text-white/80">Waiting for the host to approve {seat.request?.name}.</p>
@@ -303,9 +306,9 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
                     </Button>
                   </div>
                 )}
-                {seat.request?.status === "rejected" && (
+                {seat.request && seat.request.status !== "pending" && (
                   <p className="mb-8 max-w-xl rounded bg-amber-900/20 px-4 py-2 text-center text-amber-200">
-                    The host declined {seat.request.name}
+                    The host {seat.request.status === "removed" ? "removed" : "declined"} {seat.request.name}
                     {seat.request.note ? `: ${seat.request.note}` : "."}
                   </p>
                 )}

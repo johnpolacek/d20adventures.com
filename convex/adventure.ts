@@ -105,6 +105,7 @@ export const joinAdventure = mutation({
     // key, so heroes are matched by sheet id. Its open seats fill only through the host's approval, in hosting.ts.
     const seats = adventure.host?.seats ?? []
     if (seats.length || adventure.host?.open) {
+      if (adventure.host?.removed?.includes(args.userId)) throw new Error("The host removed you from this table")
       const sheetId = (characterId: string) => characterId.split("/").pop()?.replace(".json", "")
       const hero = sheetId(args.characterId)
       if (!seats.some((s) => s.id === hero)) throw new Error("This game's seats are held for other heroes")

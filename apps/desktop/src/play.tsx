@@ -272,6 +272,7 @@ export function DesktopGame() {
           busy={sending}
           onAnswer={(userId, approve, note) => void act(() => host({ kind: "hostAnswer", adventureId: hosting, userId, approve, note }))}
           onSheet={(userId) => host({ kind: "hostSheet", adventureId: hosting, userId }).then((r) => r.sheet ?? null)}
+          onRemove={(userId, note) => void act(() => host({ kind: "hostRemove", adventureId: hosting, userId, note }))}
           onStart={() => void act(() => host({ kind: "hostStart", adventureId: hosting }))}
           onHome={goHome}
         />

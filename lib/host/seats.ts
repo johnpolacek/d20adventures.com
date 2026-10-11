@@ -22,10 +22,15 @@ export function openLeft(adventure: Seated) {
   return host.open - (adventure.players ?? []).filter((p) => p.userId !== host.userId && !held.has(sheetId(p.characterId))).length
 }
 
-/** What a guest sees of the open seats: how many are left, whether the host approves heroes, and their own request with the host's answer. */
+/**
+ * What a guest sees of the seats: how many take a hero of their own, whether the host approves theirs, whether the
+ * host removed them, and their own request with the host's answer.
+ */
 export function guestSeat(adventure: Seated, userId: string | null | undefined) {
-  const request = userId ? adventure.host?.requests?.find((r) => r.userId === userId) : undefined
-  return { open: openLeft(adventure), approve: Boolean(adventure.host?.approve), request: request && { name: request.name, status: request.status, note: request.note } }
+  const host = adventure.host
+  const request = userId ? host?.requests?.find((r) => r.userId === userId) : undefined
+  const removed = Boolean(userId && host?.removed?.includes(userId))
+  return { open: openLeft(adventure), approve: Boolean(host?.approve) || removed, removed, request: request && { name: request.name, status: request.status, note: request.note } }
 }
 export type GuestSeat = ReturnType<typeof guestSeat>
 

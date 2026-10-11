@@ -101,15 +101,61 @@ function useSheet(userId: string, read: ReadSheet) {
   return { button, sheet: open && hero ? <HeroSheet hero={hero} /> : null }
 }
 
-// A guest at the table, with their hero's sheet.
-function Guest({ guest, onSheet }: { guest: { userId: string; name: string }; onSheet: ReadSheet }) {
+// Reject and Remove each take an optional note for the guest, in a field that opens under the row with the cursor
+// in it.
+function useNote(action: string, who: string, busy: boolean, onSend: (note?: string) => void) {
+  const [note, setNote] = useState<string | null>(null)
+  const field = useRef<HTMLInputElement>(null)
+  const open = note !== null
+  useEffect(() => {
+    if (open) field.current?.focus()
+  }, [open])
+  const form = open && (
+    <form
+      className="mt-3 flex gap-2"
+      onSubmit={(e) => {
+        e.preventDefault()
+        onSend(note.trim() || undefined)
+      }}
+    >
+      <input
+        ref={field}
+        value={note}
+        maxLength={300}
+        onChange={(e) => setNote(e.target.value)}
+        placeholder="Note for the guest"
+        aria-label={`Note for ${who}`}
+        className={cn(siteField, "flex-1 text-sm")}
+      />
+      <button type="button" className={cn(siteOutline, "px-3 text-sm")} onClick={() => setNote(null)}>
+        Cancel
+      </button>
+      <button type="submit" className={cn(siteOutline, "border-red-400/60 bg-red-600/80 px-3 text-sm text-white hover:bg-red-600")} disabled={busy}>
+        {action}
+      </button>
+    </form>
+  )
+  return { open, start: () => setNote(""), form }
+}
+
+// A guest at the table, with their hero's sheet. Remove takes them out before the game starts, with an optional note.
+function Guest({ guest, busy, onSheet, onRemove }: { guest: { userId: string; name: string }; busy: boolean; onSheet: ReadSheet; onRemove: (note?: string) => void }) {
   const { button, sheet } = useSheet(guest.userId, onSheet)
+  const note = useNote("Remove", guest.name, busy, onRemove)
   return (
     <li>
       <div className="flex items-center gap-3">
         <span className="min-w-0 flex-1 truncate font-display text-lg">{guest.name}</span>
-        {button}
+        {!note.open && (
+          <>
+            {button}
+            <button type="button" className={cn(siteOutline, "px-3 py-1 text-sm")} disabled={busy} onClick={note.start}>
+              Remove
+            </button>
+          </>
+        )}
       </div>
+      {note.form}
       {sheet}
     </li>
   )
@@ -118,13 +164,7 @@ function Guest({ guest, onSheet }: { guest: { userId: string; name: string }; on
 // A guest asking for an open seat with their own hero: Approve seats them, Reject takes an optional note for them.
 function Request({ request, busy, onAnswer, onSheet }: { request: SeatRequest; busy: boolean; onAnswer: (approve: boolean, note?: string) => void; onSheet: ReadSheet }) {
   const { button, sheet } = useSheet(request.userId, onSheet)
-  const [note, setNote] = useState<string | null>(null)
-  // Reject opens the note field with the cursor in it.
-  const field = useRef<HTMLInputElement>(null)
-  const noting = note !== null
-  useEffect(() => {
-    if (noting) field.current?.focus()
-  }, [noting])
+  const note = useNote("Reject", request.player, busy, (text) => onAnswer(false, text))
   return (
     <li className="rounded-lg border border-white/10 bg-black/50 p-3">
       <div className="flex items-center gap-3">
@@ -134,10 +174,10 @@ function Request({ request, busy, onAnswer, onSheet }: { request: SeatRequest; b
             {[request.race, request.archetype].filter(Boolean).join(" ")} · {request.player}
           </div>
         </div>
-        {note === null && (
+        {!note.open && (
           <>
             {button}
-            <button type="button" className={cn(siteOutline, "px-3 py-1 text-sm")} disabled={busy} onClick={() => setNote("")}>
+            <button type="button" className={cn(siteOutline, "px-3 py-1 text-sm")} disabled={busy} onClick={note.start}>
               Reject
             </button>
             <button type="button" className={cn(siteOutline, "border-primary-400 bg-primary-600 px-3 py-1 text-sm hover:bg-primary-600")} disabled={busy} onClick={() => onAnswer(true)}>
@@ -146,31 +186,7 @@ function Request({ request, busy, onAnswer, onSheet }: { request: SeatRequest; b
           </>
         )}
       </div>
-      {note !== null && (
-        <form
-          className="mt-3 flex gap-2"
-          onSubmit={(e) => {
-            e.preventDefault()
-            onAnswer(false, note.trim() || undefined)
-          }}
-        >
-          <input
-            ref={field}
-            value={note}
-            maxLength={300}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Note for the guest"
-            aria-label={`Note for ${request.player}`}
-            className={cn(siteField, "flex-1 text-sm")}
-          />
-          <button type="button" className={cn(siteOutline, "px-3 text-sm")} onClick={() => setNote(null)}>
-            Cancel
-          </button>
-          <button type="submit" className={cn(siteOutline, "border-red-400/60 bg-red-600/80 px-3 text-sm text-white hover:bg-red-600")} disabled={busy}>
-            Reject
-          </button>
-        </form>
-      )}
+      {note.form}
       {sheet}
     </li>
   )
@@ -185,6 +201,7 @@ export function HostedLobby(props: {
   busy: boolean
   onAnswer: (userId: string, approve: boolean, note?: string) => void
   onSheet: ReadSheet
+  onRemove: (userId: string, note?: string) => void
   onStart: () => void
   onHome: () => void
 }) {
@@ -237,7 +254,7 @@ export function HostedLobby(props: {
             </li>
           ))}
           {guests.map((guest) => (
-            <Guest key={guest.userId} guest={guest} onSheet={props.onSheet} />
+            <Guest key={guest.userId} guest={guest} busy={props.busy} onSheet={props.onSheet} onRemove={(note) => props.onRemove(guest.userId, note)} />
           ))}
         </ul>
         <div className="mt-8 flex items-center gap-3">

@@ -143,7 +143,20 @@ Owner: "let's also have auto-approve be the default", with the host able to open
 - The guest's button reads Join when seats are automatic, and Ask to join when the host approves.
 - The app's lobby opens a guest's sheet from a request and from a guest at the table: attributes, appearance, background, skills, abilities, spells, and equipment. No portrait, since the app's content policy allows no remote images.
 - A guest seated while their lobby page was open, by approval or at once, loads the page again as a player. The turn stream answers players only, so without this they would miss the start.
-- Not built: changing the setting from the lobby, and removing a seated guest.
+- Not built: changing the setting from the lobby.
+
+### Removing a guest, 2026-10-10
+
+Owner chose Remove for a seated guest, since automatic seating needs a way to undo a seat.
+
+- In the app's lobby each guest at the table has Remove, with an optional note. It works before the game starts.
+- Removing frees the seat. A held hero's link shows again, and an open seat opens again.
+- The guest sees "The host removed" with the hero's name and the note.
+- `host.removed` lists the guests the host removed. Such a guest cannot take a held seat, and their next request for an open seat waits for the host even when seats are automatic. Otherwise they could sit straight back down.
+- A guest removed while their lobby page is open loads it again as a guest.
+- Checked in the running app, 2026-10-10, on the auto-approve test game: Remove took Thora from the table and reopened the seat. The guest's open page changed to "The host removed Thora Battlehammer." with Ask to join on their heroes. Asking again waited as a request, and Approve seated her.
+- A removal with a note, sent straight to Convex on the Ask me test game, showed the guest the note.
+- Not checked: removing a guest from a held seat, and typing the note in the app's field.
 
 ### Checked, 2026-10-10
 
