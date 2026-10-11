@@ -75,6 +75,19 @@ export function getPrimaryAttributeForRoll(rollType: string): keyof Attributes |
 }
 
 /**
+ * Whether a roll is a check for one of the character's own spells ("Fog Cloud Check"). The spell names listed in
+ * getPrimaryAttributeForRoll cover only a few, so any other spell would be cast with no ability behind it.
+ */
+function castsOwnSpell(character: object, rollType: string): boolean {
+  const spells = "spells" in character && Array.isArray(character.spells) ? character.spells : []
+  const roll = rollType.toLowerCase()
+  return spells.some((spell: unknown) => {
+    const name = typeof spell === "string" ? spell : spell && typeof spell === "object" && "name" in spell ? spell.name : undefined
+    return typeof name === "string" && name.trim() !== "" && roll.includes(name.trim().toLowerCase())
+  })
+}
+
+/**
  * Calculate base mechanical modifier from character attributes for a given roll type
  */
 export function calculateAttributeModifier(character: unknown, rollType: string): number {
@@ -83,7 +96,7 @@ export function calculateAttributeModifier(character: unknown, rollType: string)
     return 0
   }
 
-  const primaryAttribute = getPrimaryAttributeForRoll(rollType)
+  const primaryAttribute = getPrimaryAttributeForRoll(rollType) ?? (castsOwnSpell(character, rollType) ? "intelligence" : null)
   if (!primaryAttribute) {
     return 0
   }

@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-11, known spells are cast with Intelligence
+
+Owner was surprised by Lyra's Fog Cloud check: 11 - 1 = 10 against DC 13. The roll's ability bonus came from a short list of spell names in `modifier-utils.ts`, and Fog Cloud was not on it, so she rolled with no Intelligence and only the GM's -1 for the situation. A check named for any spell on the character's own list now uses Intelligence. With it that roll is 13, a success. The DC itself is the GM's choice under "adjust the difficulty based on the type of spell". Whether spells nobody resists should be easier, or need no roll, is an open owner decision.
+
 ## 2026-10-11, the boat fight no longer leads to The Fake
 
 Owner, in Covert Cargo: after Lyra confirmed the magic and the fight began, the NPCs reacted as if she had called the relic worthless. Battle on the Boat had a transition to The Fake "if Poppen tries to cause a distraction outside the boat or gets spotted". Poppen knocked on the door as the harbor watch, so the GM followed it, and The Fake's intro was added after the elves had left. The transition came from the legacy plan and is removed. The Fake is now reached only from The Shipment. The website's S3 copy of the adventure is not changed.

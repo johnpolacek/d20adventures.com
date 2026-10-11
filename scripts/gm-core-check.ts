@@ -3,6 +3,7 @@ import { readdirSync, readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { createGmCore, type GmPorts, type Store } from "@d20/gm-core"
 import { assertPlayerCharacterControl } from "@d20/gm-core/access"
+import { calculateAttributeModifier } from "@d20/gm-core/utils/modifier-utils"
 import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventures/plan-view"
 import { build } from "esbuild"
 import ts from "typescript"
@@ -302,6 +303,16 @@ async function packageBoundary() {
   assert.ok(bundle.outputFiles[0].text.includes("createGmCore"))
 }
 
+// A check for a spell the character knows is cast with Intelligence, whatever the spell is called.
+function spellModifiers() {
+  const lyra = { attributes: { strength: 8, dexterity: 10, constitution: 10, intelligence: 16, wisdom: 14, charisma: 12 }, spells: [{ name: "Fog Cloud" }, { name: "Charm Person" }] }
+  assert.equal(calculateAttributeModifier(lyra, "Fog Cloud Check"), 3)
+  assert.equal(calculateAttributeModifier(lyra, "Charm Person Check"), 3)
+  assert.equal(calculateAttributeModifier(lyra, "Stealth"), 0)
+  assert.equal(calculateAttributeModifier(lyra, "Lockpicking Check"), 0)
+  assert.equal(calculateAttributeModifier({ ...lyra, spells: [] }, "Fog Cloud Check"), 0)
+}
+
 async function main() {
   const originalRandom = Math.random
   const originalConsole = { ...console }
@@ -309,6 +320,7 @@ async function main() {
   console.log = console.warn = console.error = () => {}
   try {
     await packageBoundary()
+    spellModifiers()
     await replayTurn()
     await characterPrompts()
     await accessAndInstanceIsolation()
@@ -317,7 +329,7 @@ async function main() {
     Object.assign(console, originalConsole)
   }
   console.log(
-    "GM core: browser bundle, dependency boundary, 7-call prompt/schema/write parity, 9 character prompts, access, AI companion, instance isolation, duplicate/stale/invalid transitions passed."
+    "GM core: browser bundle, dependency boundary, 7-call prompt/schema/write parity, 9 character prompts, spell modifiers, access, AI companion, instance isolation, duplicate/stale/invalid transitions passed."
   )
 }
 main().catch((error) => {
