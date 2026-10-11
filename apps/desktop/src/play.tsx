@@ -13,7 +13,7 @@ import type { FigureArt } from "./figures"
 import { FullscreenButton } from "./fullscreen"
 import { HeroCreator, type HeroIdea } from "./hero-creator"
 import { Home } from "./home"
-import { hostedSave, hostedWork } from "./hosted"
+import { hostedSave, hostedWork, useHostedSuggest } from "./hosted"
 import { HostedLobby } from "./hosted-lobby"
 import { type Locked, NewGame } from "./new-game"
 import { AdventuresPage, CharactersPage, type Page, SettingsPage } from "./pages"
@@ -222,6 +222,13 @@ export function DesktopGame() {
     if (res.error) setError(res.error)
     return !res.error
   }
+  // Suggested replies for the host's own hero. Asking does not mark the GM busy, as an action does.
+  const suggestHosted = useHostedSuggest(hosting ? hosted : null, async (turnId, characterId) => {
+    if (!hosting) return undefined
+    const res = await host({ kind: "hostAct", adventureId: hosting, turnId, action: { kind: "suggest", characterId } })
+    if (res.error) throw new Error(res.error)
+    return res.jobId
+  })
   const goHome = () => {
     setHosting(null)
     setHosted(null)
@@ -256,7 +263,7 @@ export function DesktopGame() {
         const res = await invoke({ kind: "reply", turnId, characterId, text, movement })
         return Boolean(res && !res.error)
       }}
-      onSuggest={hosting ? undefined : async (turnId, characterId) => (await suggest(turnId, characterId)).suggestions ?? []}
+      onSuggest={hosting ? suggestHosted : async (turnId, characterId) => (await suggest(turnId, characterId)).suggestions ?? []}
       onRoll={(turnId, characterId, result) => {
         if (hosting) void act(() => host({ kind: "hostAct", adventureId: hosting, turnId, action: { kind: "roll", characterId, result } }))
         else void invoke({ kind: "roll", turnId, characterId, result })

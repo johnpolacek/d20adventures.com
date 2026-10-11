@@ -134,7 +134,8 @@ export default defineSchema({
   gmJobs: defineTable({
     adventureId: v.id("adventures"),
     turnId: v.id("turns"),
-    kind: v.union(v.literal("reply"), v.literal("roll"), v.literal("continue")),
+    // A suggest job changes nothing in the game. It finishes with replies the player could send for their hero.
+    kind: v.union(v.literal("reply"), v.literal("roll"), v.literal("continue"), v.literal("suggest")),
     // Who asked, and for which character. Continue jobs have no character.
     userId: v.string(),
     characterId: v.optional(v.string()),
@@ -142,6 +143,7 @@ export default defineSchema({
     result: v.optional(v.number()),
     // The guest's stage context for a reply, so the host can read movement from it.
     movement: v.optional(v.any()),
+    suggestions: v.optional(v.array(v.object({ label: v.string(), text: v.string() }))),
     status: v.union(v.literal("queued"), v.literal("running"), v.literal("done"), v.literal("failed")),
     error: v.optional(v.string()),
     createdAt: v.number(),

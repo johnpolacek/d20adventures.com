@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto"
 import { type Content, createGmCore, type Llm } from "@d20/gm-core"
-import { type ActionSuggestion, actionSuggestionsSchema, buildActionSuggestionsPrompt } from "@d20/gm-core/services/ai-pc-turn-service"
+import { type ActionSuggestion, suggestActions } from "@d20/gm-core/services/ai-pc-turn-service"
 import { findCurrentActor } from "@d20/gm-core/utils/turn-actors"
 import { buildLocalWikiTurnCharacters } from "@d20/gm-core/wiki-adventures/characters"
 import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventures/plan-view"
@@ -91,8 +91,7 @@ export async function suggest(save: Save | null, llm: Llm, input: z.infer<typeof
   const turn = save?.adventure.status === "active" ? save.turns.find((t) => t._id === save.adventure.currentTurnId) : undefined
   const actor = turn?._id === command.turnId ? findCurrentActor(turn.characters) : undefined
   if (!turn || actor?.id !== command.characterId || actor.type !== "pc" || actor.controlledBy === "ai" || actor.hasReplied) throw new Error("It is another character's turn.")
-  const prompt = buildActionSuggestionsPrompt(actor, turn.narrative, turn.characters) + characterContext([actor])
-  return (await llm.generateObject({ prompt, schema: actionSuggestionsSchema })).object.suggestions.slice(0, 3)
+  return suggestActions(llm, actor, turn.narrative, turn.characters, characterContext([actor]))
 }
 export function game(store: LocalStore, packs: Packs, llm: Llm) {
   const packFor = (plan: string) => {

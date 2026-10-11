@@ -172,7 +172,7 @@ export const queueJob = mutation({
     secret: v.string(),
     adventureId: v.id("adventures"),
     turnId: v.id("turns"),
-    kind: v.union(v.literal("reply"), v.literal("roll"), v.literal("continue")),
+    kind: v.union(v.literal("reply"), v.literal("roll"), v.literal("continue"), v.literal("suggest")),
     userId: v.string(),
     characterId: v.optional(v.string()),
     text: v.optional(v.string()),
@@ -184,13 +184,15 @@ export const queueJob = mutation({
     const adventure = await ctx.db.get(job.adventureId)
     if (!adventure?.host) throw new Error("This adventure is not hosted")
     if (adventure.currentTurnId !== job.turnId) throw new Error("This turn has already advanced")
-    // One waiting job per character and turn, so a double click is not two actions.
+    // One waiting job per character and turn, so a double click is not two actions. Suggested replies are written
+    // once per character and turn, so asking again answers with the finished job.
     const pending = await ctx.db
       .query("gmJobs")
       .withIndex("by_adventure", (q) => q.eq("adventureId", job.adventureId))
       .order("desc")
       .take(20)
-    const same = pending.find((j) => (j.status === "queued" || j.status === "running") && j.turnId === job.turnId && j.kind === job.kind && j.characterId === job.characterId)
+    const live = (j: Doc<"gmJobs">) => j.status === "queued" || j.status === "running" || (j.kind === "suggest" && j.status === "done")
+    const same = pending.find((j) => live(j) && j.turnId === job.turnId && j.kind === job.kind && j.characterId === job.characterId)
     if (same) return same._id
     return await ctx.db.insert("gmJobs", { ...job, status: "queued", createdAt: Date.now() })
   },
@@ -213,11 +215,13 @@ export const claimJob = mutation({
       if (now - (running.startedAt ?? running.createdAt) < ABANDONED_MS) return null
       await ctx.db.patch(running._id, { status: "failed", error: "The host's game stopped before finishing this action.", finishedAt: now })
     }
-    const next = await ctx.db
+    const queued = await ctx.db
       .query("gmJobs")
       .withIndex("by_adventure_status", (q) => q.eq("adventureId", adventureId).eq("status", "queued"))
       .order("asc")
-      .first()
+      .take(20)
+    // Players' actions go first, so suggested replies never hold one up in the queue.
+    const next = queued.find((j) => j.kind !== "suggest") ?? queued[0]
     if (!next) return null
     await ctx.db.patch(next._id, { status: "running", startedAt: now })
     return { ...next, status: "running" as const, startedAt: now }
@@ -225,15 +229,21 @@ export const claimJob = mutation({
 })
 
 export const finishJob = mutation({
-  args: { secret: v.string(), jobId: v.id("gmJobs"), userId: v.string(), error: v.optional(v.string()) },
-  handler: async (ctx, { secret, jobId, userId, error }) => {
+  args: {
+    secret: v.string(),
+    jobId: v.id("gmJobs"),
+    userId: v.string(),
+    error: v.optional(v.string()),
+    suggestions: v.optional(v.array(v.object({ label: v.string(), text: v.string() }))),
+  },
+  handler: async (ctx, { secret, jobId, userId, error, suggestions }) => {
     requireServer(secret)
     const job = await ctx.db.get(jobId)
     if (!job) throw new Error("Job not found")
     const adventure = await ctx.db.get(job.adventureId)
     if (adventure?.host?.userId !== userId) throw new Error("You are not hosting this adventure")
     if (job.status !== "running") return
-    await ctx.db.patch(jobId, { status: error ? "failed" : "done", error, finishedAt: Date.now() })
+    await ctx.db.patch(jobId, { status: error ? "failed" : "done", error, finishedAt: Date.now(), ...(job.kind === "suggest" && !error && suggestions ? { suggestions } : {}) })
   },
 })
 
@@ -248,13 +258,14 @@ export const recentJobs = query({
       .order("desc")
       .take(10)
     return jobs.map(
-      (j): Pick<Doc<"gmJobs">, "_id" | "turnId" | "kind" | "characterId" | "status" | "error" | "createdAt"> => ({
+      (j): Pick<Doc<"gmJobs">, "_id" | "turnId" | "kind" | "characterId" | "status" | "error" | "suggestions" | "createdAt"> => ({
         _id: j._id,
         turnId: j.turnId,
         kind: j.kind,
         characterId: j.characterId,
         status: j.status,
         error: j.error,
+        suggestions: j.suggestions,
         createdAt: j.createdAt,
       })
     )

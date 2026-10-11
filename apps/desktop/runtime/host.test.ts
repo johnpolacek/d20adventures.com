@@ -48,13 +48,13 @@ async function hosted() {
 }
 
 async function drain(store: LocalStore, jobs: HostJob[], llm: Llm) {
-  const finished: { jobId: string; error?: string }[] = []
+  const finished: { jobId: string; error?: string; suggestions?: unknown }[] = []
   const events: HostEvent[] = []
   const post: HostPost = async (path, body) => {
-    const b = body as { op: string; jobId: string; error?: string }
+    const b = body as { op: string; jobId: string; error?: string; suggestions?: unknown }
     assert.match(path, /^\/api\/desktop\/host\/[^/]+\/jobs$/)
     if (b.op === "claim") return { job: jobs.shift() ?? null }
-    finished.push({ jobId: b.jobId, error: b.error })
+    finished.push({ jobId: b.jobId, error: b.error, ...(b.suggestions ? { suggestions: b.suggestions } : {}) })
     return { ok: true }
   }
   let stop = false
@@ -116,6 +116,33 @@ test("jobs for someone else's character, a stale turn, or a failed model fail wi
     )
     assert.equal(events.filter((e) => e.type === "failed").length, 4)
     assert.equal(JSON.stringify(store.state), before)
+  } finally {
+    cleanup()
+  }
+})
+
+test("a suggest job finishes with replies for the guest's own hero and changes nothing", async () => {
+  const { store, turn, pc, adventureId, cleanup } = await hosted()
+  try {
+    const before = JSON.stringify(store.state)
+    const four = [1, 2, 3, 4].map((n) => ({ label: `Choice ${n}`, text: `${pc.name} tries idea ${n}.` }))
+    let prompt = ""
+    const model: Llm = {
+      ...failLlm,
+      generateObject: async (args) => {
+        prompt = args.prompt
+        return { object: args.schema.parse({ suggestions: four }) }
+      },
+    }
+    const ask = (userId: string, id: string) => job({ adventureId, turnId: turn._id, kind: "suggest", userId, characterId: pc.id }, id)
+    const { finished } = await drain(store, [ask("guest", "a"), ask("host", "b")], model)
+    assert.deepEqual(finished, [
+      { jobId: "a", error: undefined, suggestions: four.slice(0, 3) },
+      { jobId: "b", error: "It is another character's turn." },
+    ])
+    assert.ok(prompt.includes(`Name: ${pc.name}`) && prompt.includes(turn.narrative))
+    assert.equal(JSON.stringify(store.state), before)
+    assert.equal((await drain(store, [ask("guest", "c")], failLlm)).finished[0].error, "offline")
   } finally {
     cleanup()
   }

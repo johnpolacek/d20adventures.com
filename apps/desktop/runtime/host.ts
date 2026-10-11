@@ -1,4 +1,5 @@
 import { type AdventureRecord, type Content, createGmCore, type Llm, type Store } from "@d20/gm-core"
+import { type ActionSuggestion, suggestActions } from "@d20/gm-core/services/ai-pc-turn-service"
 import type { TurnCharacter } from "@d20/gm-core/types/adventure"
 import { findCurrentActor } from "@d20/gm-core/utils/turn-actors"
 import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventures/plan-view"
@@ -7,12 +8,13 @@ import type { Packs } from "./game"
 
 // Host mode: the game lives on the website, and this app runs its GM. Guests' actions and the host's own wait on the
 // website as jobs. The worker claims one at a time, runs it through the host's CLI, and reports it done or failed.
+// A suggest job changes nothing in the game: it writes replies a player could send, which finish the job with it.
 
 export type HostJob = {
   _id: string
   adventureId: string
   turnId: string
-  kind: "reply" | "roll" | "continue"
+  kind: "reply" | "roll" | "continue" | "suggest"
   userId: string
   characterId?: string
   text?: string
@@ -58,8 +60,8 @@ function hostContent(packs: Packs): Content {
   }
 }
 
-/** Runs one job against the hosted game. Throws with a message players can read when it cannot. */
-export async function runHostJob(job: HostJob, store: Store, packs: Packs, llm: Llm) {
+/** Runs one job against the hosted game. Throws with a message players can read when it cannot. A suggest job returns its replies. */
+export async function runHostJob(job: HostJob, store: Store, packs: Packs, llm: Llm): Promise<ActionSuggestion[] | undefined> {
   // Some inherited web services recover failed inference with default prose or no roll. A hosted game must keep
   // its last good state instead, so a failed job can simply be retried.
   let inferenceFailure: unknown
@@ -109,8 +111,9 @@ export async function runHostJob(job: HostJob, store: Store, packs: Packs, llm: 
     return
   }
   if (!actor || actor.id !== job.characterId || actor.type !== "pc" || actor.controlledBy === "ai" || actor.userId !== job.userId) throw new Error("It is another character's turn.")
+  if (job.kind !== "roll" && actor.hasReplied) throw new Error("This reply is already saved. Resolve the pending roll.")
+  if (job.kind === "suggest") return suggestActions(llm, actor, turn.narrative, turn.characters)
   if (job.kind === "reply") {
-    if (actor.hasReplied) throw new Error("This reply is already saved. Resolve the pending roll.")
     const text = job.text?.trim()
     if (!text) throw new Error("The action is empty.")
     const action = await core.formatNarrativeAction({ characterName: actor.name, gender: actor.gender, playerInput: text, narrativeContext: turn.narrative, characterInfo: actor })
@@ -161,8 +164,8 @@ export async function hostLoop(opts: {
     idle = false
     opts.emit({ type: "working", job: { _id: job._id, kind: job.kind, characterId: job.characterId } })
     try {
-      await runHostJob(job, opts.store, opts.packs, opts.llm)
-      await opts.post(jobs, { op: "finish", jobId: job._id })
+      const suggestions = await runHostJob(job, opts.store, opts.packs, opts.llm)
+      await opts.post(jobs, { op: "finish", jobId: job._id, suggestions })
       opts.emit({ type: "done", jobId: job._id })
     } catch (error) {
       const message = error instanceof Error ? error.message : "The GM could not finish this action."

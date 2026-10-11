@@ -308,6 +308,10 @@ Owner: "Do we have chat working so the participants in the session can chat?" It
 - Seen then: headless Chromium has no WebGL, and the play page crashed when the roll prompt came up. The die makes its own renderer with no fallback. The scene itself falls back to story view.
 - The throwaway game, the test device, and the browsers were removed afterward.
 
+## Suggested replies, 2026-10-11
+
+The host's GM writes each player's suggested replies as a `suggest` job. See [Suggested replies](turn-suggestions.md).
+
 ## Known gaps
 
 - Hosted games keep no stage positions, so movement is not read or walked.

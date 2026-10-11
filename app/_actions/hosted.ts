@@ -7,10 +7,11 @@ import { postTableChat } from "@/lib/host/chat"
 import { type HostedAction, queueAction } from "@/lib/host/server"
 
 // A player's action in a hosted game waits for the host's app, which runs the GM. Players see the result on the turn.
-export async function queueHostedAction(action: HostedAction) {
+// Returns the job's id, by which a request for suggested replies finds its answer.
+export async function queueHostedAction(action: HostedAction): Promise<string> {
   const { userId } = await auth()
   const { adventure } = await assertAdventureAccessByTurn(userId, action.turnId as Id<"turns">)
-  await queueAction(adventure, userId!, action)
+  return queueAction(adventure, userId!, action)
 }
 
 // A player says something in a hosted game's table chat. Returns the chat with their line in it.

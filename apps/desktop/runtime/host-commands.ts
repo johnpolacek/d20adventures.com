@@ -40,13 +40,25 @@ export const hostCommandSchema = z.discriminatedUnion("kind", [
       z.object({ kind: z.literal("reply"), characterId: id, text: z.string().trim().min(1).max(4000) }),
       z.object({ kind: z.literal("roll"), characterId: id, result: z.number().int().min(1).max(20) }),
       z.object({ kind: z.literal("continue") }),
+      // Replies the host's GM offers for the hero's turn. They come back on the job, by the id returned here.
+      z.object({ kind: z.literal("suggest"), characterId: id }),
     ]),
     token,
   }),
 ])
 export type HostCommand = z.infer<typeof hostCommandSchema>
 
-export type HostedJob = { _id: string; turnId: string; kind: "reply" | "roll" | "continue"; characterId?: string; status: "queued" | "running" | "done" | "failed"; error?: string; createdAt: number }
+export type HostedJob = {
+  _id: string
+  turnId: string
+  kind: "reply" | "roll" | "continue" | "suggest"
+  characterId?: string
+  status: "queued" | "running" | "done" | "failed"
+  error?: string
+  // A finished suggest job's replies.
+  suggestions?: { label: string; text: string }[]
+  createdAt: number
+}
 // A hosted game as the website keeps it, and who is asking, so the play view knows which heroes are theirs. A
 // website from before table chat sends no chat.
 export type HostedState = {
@@ -57,7 +69,7 @@ export type HostedState = {
   summary: HostedSummary
   userId: string
 }
-export type HostResponse = { hosted?: HostedSummary[]; created?: HostedSummary; state?: HostedState; sheet?: GuestHero; error?: string }
+export type HostResponse = { hosted?: HostedSummary[]; created?: HostedSummary; state?: HostedState; sheet?: GuestHero; jobId?: string; error?: string }
 
 export async function hostCommand(command: HostCommand, site: string, heroes: () => Hero[], fetchImpl: typeof fetch = fetch): Promise<HostResponse> {
   if (!command.token) return { error: "Link this computer to your D20 Adventures account to host a game." }
@@ -110,9 +122,10 @@ export async function hostCommand(command: HostCommand, site: string, heroes: ()
       case "hostStart":
         await call(`/api/desktop/host/${command.adventureId}`, { action: "start" })
         return { state: (await call(`/api/desktop/host/${command.adventureId}`)) as HostedState }
-      case "hostAct":
-        await call(`/api/desktop/host/${command.adventureId}/jobs`, { op: "queue", turnId: command.turnId, ...command.action })
-        return { state: (await call(`/api/desktop/host/${command.adventureId}`)) as HostedState }
+      case "hostAct": {
+        const { jobId } = (await call(`/api/desktop/host/${command.adventureId}/jobs`, { op: "queue", turnId: command.turnId, ...command.action })) as { jobId?: string }
+        return { jobId, state: (await call(`/api/desktop/host/${command.adventureId}`)) as HostedState }
+      }
     }
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Hosting failed." }

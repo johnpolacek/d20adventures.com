@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-11, suggested replies in hosted games
+
+Owner kept suggestions automatic and chose hosted games next. A player's page now asks the host's GM for suggestions as a `suggest` job, for a hero that player controls. The host worker writes them through the host's CLI and the replies come back on the job, which both the app and the website's play page read from their polls. Asking again for the same hero and turn answers with the same job. Suggest jobs never mark the GM busy, never show an error, and wait behind players' actions. Checked against the local website and dev Convex with a throwaway Midnight Summons game: the play page asked on its own, the bundled worker ran the job through Claude, and three chips appeared and filled the reply box. Not checked: the app's own play view as host, two accounts, and the host offline. See [the plan](plans/turn-suggestions.md).
+
 ## 2026-10-11, suggested replies on a hero's turn
 
 Owner, at Lyra's turn in The Shipment: "could we offer suggestions that the player can accept (will fill in the text area)". The GM card now shows three short chips over the reply box in local play. Clicking one fills the box with a full reply, which the player can edit before Send. The player's own AI writes them from the turn's narrative, the hero's sheet and saved state, and who else is present. It never sees the encounter's GM notes. The request starts when the hero's turn comes up and runs outside the game lock, so it cannot block Send. Checked on a copy of the owner's Covert Cargo save: Claude returned three replies in about 5 seconds, and in the browser preview the chips loaded, filled the box, and enabled Send. Runtime tests, desktop and GM core type checks, GM core checks, and `cargo check` passed. The AI companion's prompt is byte for byte the same. Not yet seen in the packaged app. Hosted games offer none yet. See [the plan](plans/turn-suggestions.md).

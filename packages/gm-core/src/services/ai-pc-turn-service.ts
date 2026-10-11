@@ -1,5 +1,5 @@
 import { z } from "zod"
-import type { GmPorts } from "../ports"
+import type { GmPorts, Llm } from "../ports"
 import type { TurnCharacter } from "../types/adventure"
 import { rollD20 } from "../utils/game-utils"
 import { isAiControlledPc, isDeadActor } from "../utils/turn-actors"
@@ -55,7 +55,7 @@ function buildSceneRoster(characters: TurnCharacter[], selfId: string): string {
     .join("; ")
 }
 
-export const actionSuggestionsSchema = z.object({
+const actionSuggestionsSchema = z.object({
   suggestions: z
     .array(z.object({ label: z.string().min(1).max(60), text: z.string().min(1).max(600) }))
     .min(1)
@@ -63,9 +63,7 @@ export const actionSuggestionsSchema = z.object({
 })
 export type ActionSuggestion = z.infer<typeof actionSuggestionsSchema>["suggestions"][number]
 
-// Replies offered to a player for their own character's turn. Like the AI companion's intent, they are written from
-// the narrative the players have read, never from the encounter's GM instructions.
-export function buildActionSuggestionsPrompt(character: TurnCharacter, narrative: string, allCharacters: TurnCharacter[]): string {
+function buildActionSuggestionsPrompt(character: TurnCharacter, narrative: string, allCharacters: TurnCharacter[]): string {
   return `You are helping a PLAYER (not the GM) choose what their character does next. Players describe their character's intent and attempt only. The GM determines all outcomes, results, and perceptions.
 
 Given the recent narrative, offer 3 different things the character below could do now. Make them distinct approaches that fit this moment and this character, such as speaking to someone, a careful or clever move, and a bold action.
@@ -89,6 +87,14 @@ Others present in the scene: ${buildSceneRoster(allCharacters, character.id) || 
 
 Recent Narrative:
 ${narrative}`
+}
+
+// Replies offered to a player for their own character's turn, three at most. Like the AI companion's intent, they are
+// written from the narrative the players have read, never from the encounter's GM instructions. `context` is added
+// to the prompt as it stands, such as the character's saved state.
+export async function suggestActions(llm: Llm, character: TurnCharacter, narrative: string, allCharacters: TurnCharacter[], context = ""): Promise<ActionSuggestion[]> {
+  const prompt = buildActionSuggestionsPrompt(character, narrative, allCharacters) + context
+  return (await llm.generateObject({ prompt, schema: actionSuggestionsSchema })).object.suggestions.slice(0, 3)
 }
 
 export function createAiPcTurnService(ports: GmPorts) {

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { queueHostedAction, sendHostedChat } from "@/app/_actions/hosted"
-import { hostedSave, hostedWork } from "@/apps/desktop/src/hosted"
+import { hostedSave, hostedWork, useHostedSuggest } from "@/apps/desktop/src/hosted"
 import { StagePlay } from "@/apps/desktop/src/stage-play"
 import { eyebrow, Pill, panel } from "@/components/stage/hud"
 import type { ChatLine } from "@/components/stage/journal"
@@ -64,6 +64,7 @@ export function HostedPlay({ adventureId }: { adventureId: string }) {
       return false
     }
   }
+  const suggest = useHostedSuggest(state, (turnId, characterId) => queueHostedAction({ turnId, kind: "suggest", characterId }))
   const onError = useCallback((message: string) => setError(message), [])
   const save = state ? hostedSave(state) : null
   return (
@@ -80,6 +81,7 @@ export function HostedPlay({ adventureId }: { adventureId: string }) {
         </a>
       }
       onReply={(turnId, characterId, text, movement) => act({ turnId: turnId as Id<"turns">, kind: "reply", characterId, text, movement })}
+      onSuggest={suggest}
       onRoll={(turnId, characterId, result) => void act({ turnId: turnId as Id<"turns">, kind: "roll", characterId, result })}
       onContinue={(turnId) => void act({ turnId: turnId as Id<"turns">, kind: "continue" })}
       chat={state?.chat}

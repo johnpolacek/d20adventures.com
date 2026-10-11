@@ -207,6 +207,8 @@ export type HostedAction =
   | { turnId: string; kind: "reply"; characterId: string; text: string; movement?: unknown }
   | { turnId: string; kind: "roll"; characterId: string; result: number }
   | { turnId: string; kind: "continue" }
+  // Replies the host's GM offers for the player's hero. It changes nothing in the game.
+  | { turnId: string; kind: "suggest"; characterId: string }
 
 /** Queues a player's action for the host's GM, after checking the turn is current and the player controls the character. */
 export async function queueAction(adventure: Doc<"adventures">, userId: string, action: HostedAction) {
@@ -216,6 +218,7 @@ export async function queueAction(adventure: Doc<"adventures">, userId: string, 
   const base = { secret: serverSecret(), adventureId: adventure._id, turnId: turn._id, userId }
   if (action.kind === "continue") return convex.mutation(api.hosting.queueJob, { ...base, kind: "continue" })
   assertPlayerCharacterControl(userId, turn, action.characterId)
+  if (action.kind === "suggest") return convex.mutation(api.hosting.queueJob, { ...base, kind: "suggest", characterId: action.characterId })
   if (action.kind === "reply") {
     const text = typeof action.text === "string" ? action.text.trim() : ""
     if (!text || text.length > 4000) throw new HostError(400, "Write an action of up to 4000 characters.")
