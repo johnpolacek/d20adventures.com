@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-11, turn cameras stay inside the saloon
+
+Owner, playtesting Covert Cargo's The Shipment: on Lyra's turn the camera went out on deck and looked in through the door. The swing found its first clear view there, five metres back through the open door, and turned her round to face it. A character in a room is now framed from inside the room, past the others there when a spot allows. Lyra's turn frames her from aft over the crate. Checked in `/dev/stage` across the six saloon stagings. Named shots did not move. Poppen's turn in The Crate shows only his head over the crate. See [the stage engine](stage-engine.md).
+
 ## 2026-10-10, pushes to main no longer wait for a yes
 
 Owner approved every push that day and agreed to drop the question. `AGENTS.md` now reads "Push changes: allow". This holds during alpha, with work on main.

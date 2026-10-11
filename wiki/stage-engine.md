@@ -205,6 +205,7 @@ Remaining product work is tracked in [Stageview](plans/stageview.md).
 - The planar reflection leaves out grass, unpainted foliage, cards, mist and rocks. High renders it at 0.4 of the drawing buffer.
 - River view on high: 1.82M to 1.09M triangles, 138 to 125 calls. Balanced reads 66 fps, high 40 to 48, on a loaded dev machine.
 - Character shots swing clear: `stage.shot({ subject, ... })` tries turns of up to 180 degrees round the subject and then 75 and 55 percent of the distance, until the camera, clamped to the set's camera box, has 0.45 m of room and a clear line to the subject past every solid footprint. Walls that should block a camera must be `solid`.
+- Someone standing in a room (`set.rooms`) is framed from inside it. The swing first looks for a spot in the room with nobody else in the sight line, then any spot in the room, and only then a camera outside looking in through a door.
 
 ## Saloon wood and windows, 2026-10-05
 

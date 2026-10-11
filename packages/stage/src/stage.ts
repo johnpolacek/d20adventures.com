@@ -485,17 +485,33 @@ export class Stage {
         [0, 0.45],
         [0, -0.45],
       ].some(([dx, dz]) => onFootprint(this.footprints, x + dx, z + dz, y - 0.3))
-    for (const scale of [1, 0.75, 0.55])
-      for (const swing of [0, 30, -30, 60, -60, 90, -90, 135, -135, 180]) {
-        const r = fit(frameShot({ ...which, angle: which.angle + swing, distance: which.distance * scale }, this.cast))
-        const [x, y, z] = r.position
-        if (Math.hypot(x - c.x, z - c.z) > 1.5 && roomy(x, y, z) && clear(x, y, z)) {
-          const bearing = Math.atan2(x - c.x, z - c.z)
-          const off = Math.atan2(Math.sin(bearing - c.ry), Math.cos(bearing - c.ry))
-          if (turn && Math.abs(off) > THREE.MathUtils.degToRad(60)) c.ry = bearing - THREE.MathUtils.degToRad(which.angle)
-          return r
+    // Whether nobody else stands in the sight line. A shorter person in front is looked over.
+    const open = (x: number, y: number, z: number) =>
+      !this.cast.some((m) => {
+        if (m === c || !this.isOnStage(m.id)) return false
+        const dx = c.x - x
+        const dz = c.z - z
+        const t = ((m.x - x) * dx + (m.z - z) * dz) / (dx * dx + dz * dz)
+        return t > 0 && t < 1 && Math.hypot(x + dx * t - m.x, z + dz * t - m.z) < 0.4 && y + (which.lookHeight - y) * t < m.height
+      })
+    // Someone in a room is framed from inside it, and past the others there if any spot allows. A camera out on deck,
+    // looking in through the door, is tried only when nowhere in the room gives a clear view.
+    const room = this.set.rooms.find(({ box: b }) => c.x > b[0] && c.z > b[2] && c.x < b[3] && c.z < b[5])?.box
+    // Strictest first: in the room and past the others, then in the room, then anywhere.
+    for (const pass of room ? [2, 1, 0] : [0])
+      for (const scale of [1, 0.75, 0.55])
+        for (const swing of [0, 30, -30, 60, -60, 90, -90, 135, -135, 180]) {
+          const r = fit(frameShot({ ...which, angle: which.angle + swing, distance: which.distance * scale }, this.cast))
+          const [x, y, z] = r.position
+          if (room && pass && !(x > room[0] && y > room[1] && z > room[2] && x < room[3] && y < room[4] && z < room[5])) continue
+          if (pass === 2 && !open(x, y, z)) continue
+          if (Math.hypot(x - c.x, z - c.z) > 1.5 && roomy(x, y, z) && clear(x, y, z)) {
+            const bearing = Math.atan2(x - c.x, z - c.z)
+            const off = Math.atan2(Math.sin(bearing - c.ry), Math.cos(bearing - c.ry))
+            if (turn && Math.abs(off) > THREE.MathUtils.degToRad(60)) c.ry = bearing - THREE.MathUtils.degToRad(which.angle)
+            return r
+          }
         }
-      }
     return first
   }
   // Resolves when the current camera move has finished.
