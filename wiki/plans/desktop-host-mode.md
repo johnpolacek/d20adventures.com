@@ -210,7 +210,7 @@ Owner chose both follow-ups.
 - The `startAdventure` action refuses anyone but the host in a hosted game. It had no check before.
 - Checked on the local website with a throwaway hosted game in dev Convex, as the test user: the Host seat before joining, Poppen with the Host tag after joining as Lyra, the waiting line, and no Start button.
 - Not checked: the action's refusal itself, since no button reaches it now, and the host's own view of the website lobby.
-- Seen, not changed: a seated guest still gets the Invite Players box, even with no seat left to give.
+- A seated guest no longer gets the Invite Players box in a hosted game. Only the host invites, from the app. Checked the same way.
 - The throwaway game was removed afterward.
 
 ## Known gaps

@@ -237,6 +237,8 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
   const takeHero = availableCharacters.length === 1 ? `Play as ${availableCharacters[0].name}` : "Choose your hero"
   const takeHeading = !invite ? "Or join with a premade character:" : bringOwn ? `Or ${takeHero.charAt(0).toLowerCase()}${takeHero.slice(1)}` : takeHero
   const isOwner = user?.id === adventure.ownerId
+  // In a hosted game the host invites and starts, from their app.
+  const guestOfHost = Boolean(hosted && !isOwner)
 
   // Always show the party grid and teaser, even if not signed in
   const showTeaser = adventurePlan?.teaser
@@ -282,8 +284,8 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
           </div>
         )}
         {/* Start Adventure Button for signed-in users with a character */}
-        {isSignedIn && userCharacter && hosted && !isOwner && <h3 className="font-display mb-6 text-2xl opacity-70 text-center">Waiting for the host to start...</h3>}
-        {isSignedIn && userCharacter && !(hosted && !isOwner) && (
+        {isSignedIn && userCharacter && guestOfHost && <h3 className="font-display mb-6 text-2xl opacity-70 text-center">Waiting for the host to start...</h3>}
+        {isSignedIn && userCharacter && !guestOfHost && (
           <StartAdventureButton
             canStartAdventure={canStartAdventure}
             partyIsFull={partyIsFull}
@@ -403,7 +405,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
             )}
           </div>
         )}
-        {isSignedIn && userCharacter && hasEmptySlots && <InviteLink inviteLink={inviteLink} />}
+        {isSignedIn && userCharacter && hasEmptySlots && !guestOfHost && <InviteLink inviteLink={inviteLink} />}
         {isSignedIn && userCharacter && maxParty > 1 && (
           <div className="fixed top-20 right-8 z-50">
             <GameChat />
