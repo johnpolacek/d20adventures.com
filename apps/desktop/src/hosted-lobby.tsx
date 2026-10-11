@@ -23,6 +23,49 @@ function InviteLink({ label, url }: { label: string; url: string }) {
   )
 }
 
+// The table chat, shared with the guests' lobby and the game: the lines so far and a box to send one.
+function TableChat({ chat, onSend }: { chat: { from: string; text: string }[]; onSend: (text: string) => Promise<boolean> }) {
+  const [draft, setDraft] = useState("")
+  const [sending, setSending] = useState(false)
+  const list = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (list.current) list.current.scrollTop = list.current.scrollHeight
+  }, [chat.length])
+  const send = async () => {
+    const text = draft.trim()
+    if (!text || sending) return
+    setSending(true)
+    if (await onSend(text)) setDraft("")
+    setSending(false)
+  }
+  return (
+    <>
+      <div className={cn(siteLabel, "mt-7 mb-2")}>Table chat</div>
+      {chat.length > 0 && (
+        <div ref={list} className="mb-2 max-h-40 space-y-1 overflow-y-auto text-sm">
+          {chat.map((m, i) => (
+            <p key={i}>
+              <span className="text-amber-300">{m.from}</span> <span className="text-gray-300">{m.text}</span>
+            </p>
+          ))}
+        </div>
+      )}
+      <form
+        className="flex gap-2"
+        onSubmit={(e) => {
+          e.preventDefault()
+          void send()
+        }}
+      >
+        <input value={draft} maxLength={1000} onChange={(e) => setDraft(e.target.value)} placeholder="Say something" aria-label="Table chat message" className={cn(siteField, "flex-1 text-sm")} />
+        <button type="submit" className={cn(siteOutline, "px-4 text-sm")} disabled={sending || !draft.trim()}>
+          Send
+        </button>
+      </form>
+    </>
+  )
+}
+
 type SeatRequest = NonNullable<HostedSummary["requests"]>[number]
 type ReadSheet = (userId: string) => Promise<GuestHero | null>
 
@@ -195,9 +238,13 @@ function Request({ request, busy, onAnswer, onSheet }: { request: SeatRequest; b
 // A hosted game before it starts: a link for each hero held for a friend and one for the seats open to a guest's
 // own hero, the guests asking for those, who has joined, and Start. Where guests choose first, one link serves every
 // hero and the host plays one they leave. A host who watches has no hero, and starts once a guest has joined. A game
-// hosted without seats for guests has one link, and guests bring their own heroes.
+// hosted without seats for guests has one link, and guests bring their own heroes. The table chat reaches guests
+// seated in their lobby.
 export function HostedLobby(props: {
   summary: HostedSummary
+  // The table chat, where the website carries it.
+  chat?: { from: string; text: string }[]
+  onChat: (text: string) => Promise<boolean>
   gm: string
   busy: boolean
   onAnswer: (userId: string, approve: boolean, note?: string) => void
@@ -268,6 +315,7 @@ export function HostedLobby(props: {
             <Guest key={guest.userId} guest={guest} busy={props.busy} onSheet={props.onSheet} onRemove={(note) => props.onRemove(guest.userId, note)} />
           ))}
         </ul>
+        {props.chat && <TableChat chat={props.chat} onSend={props.onChat} />}
         <div className="mt-8 flex items-center gap-3">
           <span className="font-mono text-xs text-white/60">{props.gm}</span>
           <div className="flex-1" />

@@ -1,14 +1,15 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { queueHostedAction } from "@/app/_actions/hosted"
+import { queueHostedAction, sendHostedChat } from "@/app/_actions/hosted"
 import { hostedSave, hostedWork } from "@/apps/desktop/src/hosted"
 import { StagePlay } from "@/apps/desktop/src/stage-play"
 import { eyebrow, Pill, panel } from "@/components/stage/hud"
+import type { ChatLine } from "@/components/stage/journal"
 import type { Id } from "@/convex/_generated/dataModel"
 import { cn } from "@/lib/utils"
 
-type State = Parameters<typeof hostedSave>[0] & { hostOnline: boolean; userId: string }
+type State = Parameters<typeof hostedSave>[0] & { hostOnline: boolean; userId: string; chat: ChatLine[] }
 
 // A guest's view of a hosted game, polled from the website. Actions queue for the host's app, which runs the GM.
 export function HostedPlay({ adventureId }: { adventureId: string }) {
@@ -52,6 +53,17 @@ export function HostedPlay({ adventureId }: { adventureId: string }) {
       setSending(false)
     }
   }
+  // A line in the table chat. The answer is the chat with the line in it, shown without waiting for the next poll.
+  const say = async (text: string) => {
+    try {
+      const chat = await sendHostedChat({ adventureId, text })
+      setState((s) => s && { ...s, chat })
+      return true
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "The message was not sent.")
+      return false
+    }
+  }
   const onError = useCallback((message: string) => setError(message), [])
   const save = state ? hostedSave(state) : null
   return (
@@ -70,6 +82,8 @@ export function HostedPlay({ adventureId }: { adventureId: string }) {
       onReply={(turnId, characterId, text, movement) => act({ turnId: turnId as Id<"turns">, kind: "reply", characterId, text, movement })}
       onRoll={(turnId, characterId, result) => void act({ turnId: turnId as Id<"turns">, kind: "roll", characterId, result })}
       onContinue={(turnId) => void act({ turnId: turnId as Id<"turns">, kind: "continue" })}
+      chat={state?.chat}
+      onChat={say}
       onError={onError}
     >
       {state && !save && (

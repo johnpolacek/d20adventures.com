@@ -406,7 +406,8 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
           </div>
         )}
         {isSignedIn && userCharacter && hasEmptySlots && !guestOfHost && <InviteLink inviteLink={inviteLink} />}
-        {isSignedIn && userCharacter && maxParty > 1 && (
+        {/* A hosted game has its host to talk to, even with one seat. */}
+        {isSignedIn && userCharacter && (maxParty > 1 || hosted) && (
           <div className="fixed top-20 right-8 z-50">
             <GameChat />
           </div>

@@ -5,7 +5,7 @@ import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } fro
 import { CharacterCard } from "@/components/stage/character-card"
 import { setSoundOn, soundOn } from "@/components/stage/dice-sound"
 import { Pill, panel, StageHud, useCompact } from "@/components/stage/hud"
-import { Journal, type JournalTurn } from "@/components/stage/journal"
+import { type ChatLine, Journal, type JournalTurn } from "@/components/stage/journal"
 import { Narration } from "@/components/stage/narration"
 import { type CardCharacter, type CardMode, PromptCard } from "@/components/stage/prompt-card"
 import { ROLL_SECONDS, type RollResultData } from "@/components/stage/roll-result"
@@ -65,6 +65,9 @@ export function StagePlay(props: {
   onContinue: (turnId: string) => void
   // Where the cast stands after a walk. Without it, walks are not saved.
   onPositions?: (turnId: string, positions: Positions, appliedMovement: string) => Promise<void>
+  // The table chat of a game with other players, and how a line is sent. Resolves to whether it was taken.
+  chat?: ChatLine[]
+  onChat?: (text: string) => Promise<boolean>
   // Buttons on the closing panel beside Journal.
   endActions?: ReactNode
   onEscape?: () => void
@@ -78,7 +81,16 @@ export function StagePlay(props: {
   const busy = props.busy || walking
 
   const [draft, setDraft] = useState("")
-  const [open, setOpen] = useState<"journal" | "settings" | null>(null)
+  const [open, setOpen] = useState<"journal" | "chat" | "settings" | null>(null)
+  // The Chat button counts the lines said since the chat was last open. Lines already there when it loads are read.
+  const chat = props.chat ?? []
+  const lastChat = chat[chat.length - 1]?.at ?? 0
+  const [chatRead, setChatRead] = useState<number | null>(null)
+  const chatLoaded = props.chat !== undefined
+  useEffect(() => {
+    if (chatLoaded && (chatRead === null || open === "chat")) setChatRead(lastChat)
+  }, [chatLoaded, chatRead, open, lastChat])
+  const unread = chatRead === null ? 0 : chat.filter((m) => (m.at ?? 0) > chatRead).length
   const [cardId, setCardId] = useState<string | null>(null)
   const [hidden, setHidden] = useState(false)
   const [paragraph, setParagraph] = useState(0)
@@ -363,6 +375,11 @@ export function StagePlay(props: {
         <>
           {props.actions}
           <Pill onClick={() => setOpen(open === "journal" ? null : "journal")}>Journal</Pill>
+          {props.onChat && (
+            <Pill active={unread > 0} onClick={() => setOpen(open === "chat" ? null : "chat")}>
+              Chat{unread > 0 ? ` · ${unread}` : ""}
+            </Pill>
+          )}
           <Pill onClick={() => setOpen(open === "settings" ? null : "settings")}>Scene settings</Pill>
           {props.trailingActions}
         </>
@@ -457,7 +474,17 @@ export function StagePlay(props: {
               )}
             </div>
           )}
-          {open === "journal" && <Journal turns={journal} chat={[]} compact={compact} onClose={() => setOpen(null)} />}
+          {(open === "journal" || open === "chat") && (
+            <Journal
+              turns={journal}
+              chat={chat}
+              compact={compact}
+              onClose={() => setOpen(null)}
+              tab={open === "chat" ? "chat" : "story"}
+              onTab={(tab) => setOpen(tab === "chat" ? "chat" : "journal")}
+              onChat={props.onChat}
+            />
+          )}
           {card && <CharacterCard info={card} compact={compact} onClose={() => setCardId(null)} />}
           {open === "settings" && (
             <section className={`${panel} absolute right-10 top-24 z-40 w-72 p-6`}>

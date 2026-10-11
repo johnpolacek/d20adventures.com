@@ -262,6 +262,27 @@ Owner: "can we make it possible for me to invite a different player to play the 
 - The throwaway game, the test device, and the browser were removed afterward.
 - The lobby on the website does not tell a guest that the host watches.
 
+## Table chat, 2026-10-11
+
+Owner: "Do we have chat working so the participants in the session can chat?" It was not. Owner chose chat in the play view and in both lobbies.
+
+### Before
+
+- The website's text turn page and its lobby had chat, for adventures with more than one seat: `chat_messages` in Convex, `sendChatMessage`, and a stream route.
+- The stage play view had a Table chat tab in the journal, fed an empty list, with no way to send.
+- The app had no route to chat. Sending needed a website sign-in.
+
+### Design
+
+- One chat per game, in the existing `chat_messages`. Lobby and play share it.
+- Both state polls carry the latest 50 lines: `GET /api/hosted/<id>` for guests and `GET /api/desktop/host/<id>` for the app.
+- Guests send through a server action. The app sends through `hostChat`, a `chat` action on `POST /api/desktop/host/<id>`.
+- The server names the sender: their username, then their hero's name when they have one.
+- Play view: a Chat button beside Journal opens the journal on Table chat, with a box to send. It counts lines that arrived since the chat was last open.
+- App lobby: Table chat under the table, with a box to send.
+- Website lobby: the existing chat button shows for a seated guest of any hosted game, one-seat games included.
+- The app offers chat only where the website's state carries it, so an older website shows none.
+
 ## Known gaps
 
 - Hosted games keep no stage positions, so movement is not read or walked.

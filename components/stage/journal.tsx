@@ -3,9 +3,9 @@
 // The journal: every word of the story so far, the replies and the rolls, and the table chat. Opened from the top bar,
 // so the stage carries the scene and the text is always one tap away.
 
-import { Fragment, useState } from "react"
+import { Fragment, useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
-import { eyebrow, panel } from "./hud"
+import { eyebrow, Pill, panel } from "./hud"
 
 export interface JournalTurn {
   number: number
@@ -19,7 +19,10 @@ export interface JournalTurn {
 export interface ChatLine {
   from: string
   text: string
+  // When it was said, where the chat is live.
+  at?: number
 }
+export type JournalTab = "story" | "chat"
 
 function RollLine({ roll }: { roll: NonNullable<JournalTurn["roll"]> }) {
   return (
@@ -30,8 +33,67 @@ function RollLine({ roll }: { roll: NonNullable<JournalTurn["roll"]> }) {
   )
 }
 
-export function Journal({ turns, chat, compact = false, onClose }: { turns: JournalTurn[]; chat: ChatLine[]; compact?: boolean; onClose: () => void }) {
-  const [tab, setTab] = useState<"story" | "chat">("story")
+// The box under the table chat. It keeps the line until the chat takes it.
+function ChatBox({ onSend }: { onSend: (text: string) => Promise<boolean> }) {
+  const [draft, setDraft] = useState("")
+  const [sending, setSending] = useState(false)
+  const send = async () => {
+    const text = draft.trim()
+    if (!text || sending) return
+    setSending(true)
+    if (await onSend(text).catch(() => false)) setDraft("")
+    setSending(false)
+  }
+  return (
+    <form
+      className="flex gap-2 border-t border-stage-line/20 px-5 py-3"
+      onSubmit={(e) => {
+        e.preventDefault()
+        void send()
+      }}
+    >
+      <input
+        value={draft}
+        maxLength={1000}
+        onChange={(e) => setDraft(e.target.value)}
+        placeholder="Say something"
+        aria-label="Table chat message"
+        className="min-w-0 flex-1 rounded-[3px] border border-stage-line/25 bg-black/35 px-3 py-2 font-serif text-[13px] text-stage-cream placeholder:text-stage-muted/60 focus:border-stage-gold/70 focus:outline-none"
+      />
+      <Pill type="submit" disabled={sending || !draft.trim()}>
+        Send
+      </Pill>
+    </form>
+  )
+}
+
+// The caller may own which tab shows, to open on the chat and to know when it is read. With onChat, the chat takes
+// new lines.
+export function Journal({
+  turns,
+  chat,
+  compact = false,
+  onClose,
+  tab: shown,
+  onTab,
+  onChat,
+}: {
+  turns: JournalTurn[]
+  chat: ChatLine[]
+  compact?: boolean
+  onClose: () => void
+  tab?: JournalTab
+  onTab?: (tab: JournalTab) => void
+  onChat?: (text: string) => Promise<boolean>
+}) {
+  const [own, setOwn] = useState<JournalTab>("story")
+  const tab = shown ?? own
+  const setTab = onTab ?? setOwn
+  // The chat stays on its newest line.
+  const scroller = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (tab === "chat" && scroller.current) scroller.current.scrollTop = scroller.current.scrollHeight
+  }, [tab, chat.length])
   return (
     <section className={cn(panel, "fade-in absolute z-40 flex flex-col", compact ? "top-12 right-3 bottom-12 w-[min(380px,60vw)]" : "top-[86px] right-10 bottom-[118px] w-[380px]")}>
       <div className="flex items-center justify-between border-b border-stage-line/20 px-5 pt-4 pb-2">
@@ -51,7 +113,7 @@ export function Journal({ turns, chat, compact = false, onClose }: { turns: Jour
           ×
         </button>
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 [scrollbar-width:thin]">
+      <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto px-5 py-4 [scrollbar-width:thin]">
         {tab === "story" &&
           turns.map((t) => (
             <article key={t.number} className="mb-6">
@@ -83,6 +145,7 @@ export function Journal({ turns, chat, compact = false, onClose }: { turns: Jour
             </p>
           ))}
       </div>
+      {tab === "chat" && onChat && <ChatBox onSend={onChat} />}
     </section>
   )
 }

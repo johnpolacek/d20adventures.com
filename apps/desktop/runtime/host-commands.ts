@@ -29,6 +29,8 @@ export const hostCommandSchema = z.discriminatedUnion("kind", [
   // The host's answer to a guest asking for an open seat. A rejection may carry a note for the guest.
   z.object({ kind: z.literal("hostAnswer"), adventureId: id, userId: id, approve: z.boolean(), note: z.string().trim().max(300).optional(), token }),
   z.object({ kind: z.literal("hostState"), adventureId: id, token }),
+  // The host says something in the table chat.
+  z.object({ kind: z.literal("hostChat"), adventureId: id, text: z.string().trim().min(1).max(1000), token }),
   z.object({ kind: z.literal("hostStart"), adventureId: id, token }),
   z.object({
     kind: z.literal("hostAct"),
@@ -45,8 +47,16 @@ export const hostCommandSchema = z.discriminatedUnion("kind", [
 export type HostCommand = z.infer<typeof hostCommandSchema>
 
 export type HostedJob = { _id: string; turnId: string; kind: "reply" | "roll" | "continue"; characterId?: string; status: "queued" | "running" | "done" | "failed"; error?: string; createdAt: number }
-// A hosted game as the website keeps it, and who is asking, so the play view knows which heroes are theirs.
-export type HostedState = { adventure: AdventureRecord & { status?: string; currentTurnId?: string }; turn: TurnRecord | null; jobs: HostedJob[]; summary: HostedSummary; userId: string }
+// A hosted game as the website keeps it, and who is asking, so the play view knows which heroes are theirs. A
+// website from before table chat sends no chat.
+export type HostedState = {
+  adventure: AdventureRecord & { status?: string; currentTurnId?: string }
+  turn: TurnRecord | null
+  jobs: HostedJob[]
+  chat?: { from: string; text: string; at: number }[]
+  summary: HostedSummary
+  userId: string
+}
 export type HostResponse = { hosted?: HostedSummary[]; created?: HostedSummary; state?: HostedState; sheet?: GuestHero; error?: string }
 
 export async function hostCommand(command: HostCommand, site: string, heroes: () => Hero[], fetchImpl: typeof fetch = fetch): Promise<HostResponse> {
@@ -93,6 +103,9 @@ export async function hostCommand(command: HostCommand, site: string, heroes: ()
         return { state: (await call(`/api/desktop/host/${command.adventureId}`)) as HostedState }
       case "hostAnswer":
         await call(`/api/desktop/host/${command.adventureId}`, { action: "answer", userId: command.userId, approve: command.approve, note: command.note })
+        return { state: (await call(`/api/desktop/host/${command.adventureId}`)) as HostedState }
+      case "hostChat":
+        await call(`/api/desktop/host/${command.adventureId}`, { action: "chat", text: command.text })
         return { state: (await call(`/api/desktop/host/${command.adventureId}`)) as HostedState }
       case "hostStart":
         await call(`/api/desktop/host/${command.adventureId}`, { action: "start" })

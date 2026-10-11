@@ -214,6 +214,14 @@ export function DesktopGame() {
     if (res.error) setError(res.error)
     return !res.error
   }
+  // A line in the table chat. It does not mark the GM busy, as an action does.
+  const say = async (text: string) => {
+    if (!hosting) return false
+    const res = await host({ kind: "hostChat", adventureId: hosting, text })
+    if (res.state) setHosted(res.state)
+    if (res.error) setError(res.error)
+    return !res.error
+  }
   const goHome = () => {
     setHosting(null)
     setHosted(null)
@@ -239,6 +247,8 @@ export function DesktopGame() {
       status={hosting ? `Hosting · ${hosted?.summary.watching ? "watching" : `${hosted?.summary.players ?? 1} at the table`} · ${gmLabel}` : save ? `Saved locally · ${save.provider}` : ""}
       overlay={screen !== null || Boolean(hosting && !hostedView)}
       actions={<Pill onClick={goHome}>Home</Pill>}
+      chat={hosting ? hosted?.chat : undefined}
+      onChat={hosting && hosted?.chat ? say : undefined}
       trailingActions={<FullscreenButton className="h-10 w-10" />}
       endActions={<Pill onClick={goHome}>Home</Pill>}
       onReply={async (turnId, characterId, text, movement) => {
@@ -268,6 +278,8 @@ export function DesktopGame() {
       {hosting && hosted && !hosted.turn && screen === null && (
         <HostedLobby
           summary={hosted.summary}
+          chat={hosted.chat}
+          onChat={say}
           gm={gmLabel}
           busy={sending}
           onAnswer={(userId, approve, note) => void act(() => host({ kind: "hostAnswer", adventureId: hosting, userId, approve, note }))}
