@@ -11,7 +11,7 @@ export const hostCommandSchema = z.discriminatedUnion("kind", [
   // The host's character and the heroes held for invited players: premades of the adventure, or roster heroes by id.
   // open is how many more seats take a guest's own hero. They are seated at once, unless approve is set: then the
   // host answers each one. Without a character, guests choose among the invited heroes and the host plays one they
-  // leave.
+  // leave, or with watch the host has no hero.
   z.object({
     kind: z.literal("hostCreate"),
     planId: id,
@@ -19,6 +19,7 @@ export const hostCommandSchema = z.discriminatedUnion("kind", [
     invites: z.array(id).max(8).default([]),
     open: z.number().int().min(0).max(8).default(0),
     approve: z.boolean().default(false),
+    watch: z.boolean().default(false),
     token,
   }),
   // The host removes a seated guest before the game starts, with an optional note for them.
@@ -79,6 +80,7 @@ export async function hostCommand(command: HostCommand, site: string, heroes: ()
           invites: command.invites.map(character),
           open: command.open,
           approve: command.approve,
+          watch: command.watch,
         }
         return { created: ((await call("/api/desktop/host", body)) as { hosted: HostedSummary }).hosted }
       }

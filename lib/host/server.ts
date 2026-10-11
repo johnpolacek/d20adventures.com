@@ -6,7 +6,7 @@ import { assertPlayerCharacterControl } from "@/lib/adventure-access"
 import { convex } from "@/lib/convex/server"
 import { serverSecret } from "@/lib/convex/server-secret"
 import { serverStore } from "@/lib/gm-server/store"
-import { hostWaits, openLeft, openSeats } from "@/lib/host/seats"
+import { hostWaits, hostWatches, openLeft, openSeats } from "@/lib/host/seats"
 import { readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 import { toPCTemplate } from "@/lib/utils/character-mapping"
 import { isLocalWikiAdventure, loadWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
@@ -41,7 +41,8 @@ export type HostCharacter = { premadeId: string } | { sheet: unknown }
 
 /**
  * Hosts a game with the host's character seated, a seat held for each invited hero, and open seats for guests' own
- * heroes. Without a character, guests choose among the invited heroes and the host plays one they leave.
+ * heroes. Without a character, guests choose among the invited heroes and the host plays one they leave, or with
+ * watch the host has no hero and the guests play.
  */
 export async function createHostedAdventure(args: {
   userId: string
@@ -52,6 +53,7 @@ export async function createHostedAdventure(args: {
   open?: number
   // Whether the host approves each guest's own hero. Otherwise an open seat takes the guest at once.
   approve?: boolean
+  watch?: boolean
 }) {
   if (!isLocalWikiAdventure(SETTING, args.planId)) throw new HostError(404, "This adventure cannot be hosted.")
   const { artifacts, contentRef } = await loadWikiAdventureRuntime(SETTING, args.planId)
@@ -68,11 +70,13 @@ export async function createHostedAdventure(args: {
   }
   const mine = args.character ? resolve(args.character) : null
   const held = (args.invites ?? []).map(resolve)
-  if (!mine && held.length < 2) throw new HostError(400, "Choose a hero for yourself, or invite at least two.")
+  const watch = Boolean(args.watch) && !mine
+  if (!mine && !watch && held.length < 2) throw new HostError(400, "Choose a hero for yourself, or invite at least two.")
   const ids = [...(mine ? [mine.id] : []), ...held.map((h) => h.id)]
   if (new Set(ids).size !== ids.length) throw new HostError(400, "A hero can join the party only once.")
   const open = args.open ?? 0
   if (!Number.isInteger(open) || open < 0) throw new HostError(400, "The open seats are not valid.")
+  if (watch && held.length + open < 1) throw new HostError(400, "Invite a hero to watch them play.")
   if (open && !manifest.availableCharacterOptions) throw new HostError(400, `${manifest.title} takes its own heroes only.`)
   if (manifest.maxPlayers && ids.length + open > manifest.maxPlayers) throw new HostError(400, `${manifest.title} seats ${manifest.maxPlayers} at most.`)
   const keyOf = (id: string) => `characters/${args.userId}/${id}.json`
@@ -93,13 +97,17 @@ export async function createHostedAdventure(args: {
     currentEncounterId: manifest.startEncounterId,
     adventureSummaryMarkdown: manifest.summary,
   })
-  await convex.mutation(api.hosting.setHost, { secret: serverSecret(), adventureId, userId: args.userId, deviceId: args.deviceId, seats, open, approve: args.approve, pick: !mine })
+  await convex.mutation(api.hosting.setHost, { secret: serverSecret(), adventureId, userId: args.userId, deviceId: args.deviceId, seats, open, approve: args.approve, pick: !mine && !watch })
   return adventureId
 }
 
-/** Where guests choose first, seats the host as a held hero nobody chose. Called as the game starts. */
+/**
+ * Where guests choose first, seats the host as a held hero nobody chose. Called as the game starts. A host who
+ * watches needs a guest at the table first.
+ */
 export async function seatHost(adventure: Doc<"adventures">) {
   const host = adventure.host
+  if (hostWatches(adventure) && !adventure.players?.length) throw new HostError(409, "Nobody has joined yet.")
   if (!host || !hostWaits(adventure)) return adventure
   const seat = openSeats(adventure)[0]
   if (!seat) throw new HostError(409, "No hero is left for the host.")
@@ -178,6 +186,8 @@ export async function hostedSummary(adventure: Doc<"adventures">, origin: string
     seats: hostWaits(adventure) ? [] : openSeats(adventure).map((s) => ({ id: s.id, name: s.name, invite: `${inviteUrl(origin, adventure)}?as=${s.id}` })),
     // Where guests choose first and the host plays a hero they leave: the heroes nobody has chosen yet.
     left: hostWaits(adventure) ? openSeats(adventure).map((s) => s.name) : [],
+    // The host has no hero and watches the guests play.
+    watching: hostWatches(adventure),
     updatedAt: adventure.updatedAt,
   }
 }

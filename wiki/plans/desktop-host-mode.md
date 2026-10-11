@@ -226,6 +226,25 @@ Owner chose both follow-ups.
 - A seated guest no longer gets the Invite Players box in a hosted game. Only the host invites, from the app. Checked the same way.
 - The throwaway game was removed afterward.
 
+## Host watches, 2026-10-11
+
+Owner: "can we make it possible for me to invite a different player to play the solo adventure and just watch?"
+
+### Cause
+
+- Invite showed only for adventures with more than one seat.
+- A hosted game needed a hero for the host, or two invited heroes with the host on the one left.
+
+### Design
+
+- Party setup: Invite shows on every adventure. A party of one hero can be invited, and the host watches.
+- The same holds for a party of one Any hero seat, where the adventure takes custom heroes.
+- One line under the party says the host watches.
+- The website gets `watch` with the new game. The host has no hero in `players` and `host.pick` is off. Nothing new is stored: a host with no hero and no `pick` is watching.
+- The host stays in `playerIds`, as before a guests-choose game starts.
+- Start is refused until a guest is seated.
+- The app's lobby shows "You watch" at the table. In play every hero's turn reads Waiting for that hero, and the host can still continue NPC turns.
+
 ## Known gaps
 
 - Hosted games keep no stage positions, so movement is not read or walked.

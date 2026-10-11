@@ -194,8 +194,8 @@ function Request({ request, busy, onAnswer, onSheet }: { request: SeatRequest; b
 
 // A hosted game before it starts: a link for each hero held for a friend and one for the seats open to a guest's
 // own hero, the guests asking for those, who has joined, and Start. Where guests choose first, one link serves every
-// hero and the host plays one they leave. A game hosted without seats for guests has one link, and guests bring
-// their own heroes.
+// hero and the host plays one they leave. A host who watches has no hero, and starts once a guest has joined. A game
+// hosted without seats for guests has one link, and guests bring their own heroes.
 export function HostedLobby(props: {
   summary: HostedSummary
   gm: string
@@ -258,6 +258,7 @@ export function HostedLobby(props: {
         <div className={cn(siteLabel, "mt-7 mb-2")}>At the table · {props.summary.party.length + (left.length ? 1 : 0)}</div>
         <ul className="space-y-1">
           {left.length > 0 && <li className={cn("font-display text-lg", left.length > 1 && "text-white/60")}>{left.length > 1 ? "You play the hero left" : left[0]}</li>}
+          {props.summary.watching && <li className="font-display text-lg text-white/60">You watch</li>}
           {hostHeroes.map((name) => (
             <li key={name} className="font-display text-lg">
               {name}
@@ -273,7 +274,7 @@ export function HostedLobby(props: {
           <button type="button" className={cn(siteOutline, "px-4 py-2 text-sm")} onClick={props.onHome}>
             Home
           </button>
-          <Button variant="epic" className="text-xl" disabled={props.busy} onClick={props.onStart}>
+          <Button variant="epic" className="text-xl" disabled={props.busy || (props.summary.watching && guests.length === 0)} onClick={props.onStart}>
             Start
           </Button>
         </div>

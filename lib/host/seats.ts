@@ -25,6 +25,9 @@ export function openLeft(adventure: Seated) {
 /** Whether the host still waits for a hero: guests choose first, and the host plays a held hero they leave. */
 export const hostWaits = (adventure: Seated) => Boolean(adventure.host?.pick && !adventure.players?.some((p) => p.userId === adventure.host?.userId))
 
+/** Whether the host only watches: they have no hero, and none is kept for them. */
+export const hostWatches = (adventure: Seated) => Boolean(adventure.host && !adventure.host.pick && !adventure.players?.some((p) => p.userId === adventure.host?.userId))
+
 /**
  * What a guest sees of the seats: how many take a hero of their own, whether the host approves theirs, whether the
  * host removed them, how many held seats are kept for the host, and their own request with the host's answer.

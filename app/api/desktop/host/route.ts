@@ -16,14 +16,14 @@ export async function GET(request: Request) {
 
 // Hosts a new game: the adventure waits in its website lobby for friends, with the host's character already seated
 // a seat held for each invited hero, and open seats for guests' own heroes. Without a character, guests choose among
-// the invited heroes and the host plays one they leave.
+// the invited heroes and the host plays one they leave, or with watch the host has no hero.
 export async function POST(request: Request) {
   const { device, error } = await deviceFromRequest(request)
   if (error) return error
   try {
-    const body = (await request.json()) as { planId?: unknown; character?: HostCharacter; invites?: unknown; open?: unknown; approve?: unknown }
+    const body = (await request.json()) as { planId?: unknown; character?: HostCharacter; invites?: unknown; open?: unknown; approve?: unknown; watch?: unknown }
     const invites = Array.isArray(body.invites) ? (body.invites.slice(0, 8) as HostCharacter[]) : []
-    if (typeof body.planId !== "string" || (!body.character && invites.length < 2)) return NextResponse.json({ error: "Choose an adventure and a character." }, { status: 400 })
+    if (typeof body.planId !== "string" || (!body.character && invites.length < 2 && body.watch !== true)) return NextResponse.json({ error: "Choose an adventure and a character." }, { status: 400 })
     const adventureId = await createHostedAdventure({
       userId: device.userId,
       deviceId: device.deviceId,
@@ -32,6 +32,7 @@ export async function POST(request: Request) {
       invites,
       open: typeof body.open === "number" ? body.open : 0,
       approve: body.approve === true,
+      watch: body.watch === true,
     })
     const adventure = await convex.query(api.adventure.getAdventureById, { adventureId })
     if (!adventure) throw new Error("The hosted game was not saved.")

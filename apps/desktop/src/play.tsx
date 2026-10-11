@@ -199,9 +199,9 @@ export function DesktopGame() {
     setScreen(null)
     await hostStart(adventureId, provider).catch((e) => setError(String(e)))
   }
-  const hostGame = async (you: string | undefined, invites: string[], open: number, approve: boolean) => {
+  const hostGame = async (you: string | undefined, invites: string[], open: number, approve: boolean, watch: boolean) => {
     setSending(true)
-    const res = await host({ kind: "hostCreate", planId: adventure, characterId: you, invites, open, approve })
+    const res = await host({ kind: "hostCreate", planId: adventure, characterId: you, invites, open, approve, watch })
     setSending(false)
     if (res.error || !res.created) return setError(res.error ?? "Could not host the game.")
     await openHosted(res.created.adventureId)
@@ -236,7 +236,7 @@ export function DesktopGame() {
       art={art}
       fallbackEncounter={chosen?.start}
       controls={hosting ? (c) => (c as { userId?: string }).userId === hosted?.userId : () => true}
-      status={hosting ? `Hosting · ${hosted?.summary.players ?? 1} at the table · ${gmLabel}` : save ? `Saved locally · ${save.provider}` : ""}
+      status={hosting ? `Hosting · ${hosted?.summary.watching ? "watching" : `${hosted?.summary.players ?? 1} at the table`} · ${gmLabel}` : save ? `Saved locally · ${save.provider}` : ""}
       overlay={screen !== null || Boolean(hosting && !hostedView)}
       actions={<Pill onClick={goHome}>Home</Pill>}
       trailingActions={<FullscreenButton className="h-10 w-10" />}
@@ -364,7 +364,7 @@ export function DesktopGame() {
                         listPrices={listPrices}
                         linked={acct.state?.linked ?? false}
                         onLink={() => void acct.start()}
-                        onHost={(you, invites, open, approve) => void hostGame(you, invites, open, approve)}
+                        onHost={(you, invites, open, approve, watch) => void hostGame(you, invites, open, approve, watch)}
                       />
                     )}
                   </div>
