@@ -34,10 +34,10 @@ export function D20Shape({ className }: { className?: string }) {
   )
 }
 
-// How a die's material looks: the stage's brown, burnished gold for a critical success, and charred black with embers
+// How a die's material looks: indigo, burnished gold for a critical success, and charred black with embers
 // glowing through for a critical failure.
 const TONES = {
-  base: { color: 0x6b4a30, emissive: 0x000000, glow: 0, metalness: 0.15, roughness: 0.5 },
+  base: { color: 0x4338ca, emissive: 0x000000, glow: 0, metalness: 0.15, roughness: 0.5 },
   gold: { color: 0xd8a64c, emissive: 0x7a5410, glow: 0.45, metalness: 0.7, roughness: 0.3 },
   char: { color: 0x1c1410, emissive: 0x6a1404, glow: 0.3, metalness: 0.05, roughness: 0.9 },
 }
