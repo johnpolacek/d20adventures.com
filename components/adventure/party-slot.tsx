@@ -14,9 +14,22 @@ interface PartySlotProps {
   onRemoveClick?: () => void
   isJoining?: boolean
   playerName?: string
+  // An empty slot kept for a host who plays the hero their guests leave.
+  hostSeat?: boolean
 }
 
-export function PartySlot({ character, isUserCharacter = false, aiControlled = false, isAvailable = false, onClick, onJoinClick, onRemoveClick, isJoining = false, playerName }: PartySlotProps) {
+export function PartySlot({
+  character,
+  isUserCharacter = false,
+  aiControlled = false,
+  isAvailable = false,
+  onClick,
+  onJoinClick,
+  onRemoveClick,
+  isJoining = false,
+  playerName,
+  hostSeat = false,
+}: PartySlotProps) {
   if (character) {
     return (
       <Card
@@ -70,8 +83,8 @@ export function PartySlot({ character, isUserCharacter = false, aiControlled = f
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
       </div>
       <div className="pb-6 -mt-10 z-10 relative flex flex-col justify-center items-center">
-        <div className="font-bold text-3xl mb-1 truncate w-full text-center text-white/50">Empty</div>
-        <div className="text-base mb-4 text-center text-white/40">Available Slot</div>
+        <div className="font-bold text-3xl mb-1 truncate w-full text-center text-white/50">{hostSeat ? "Host" : "Empty"}</div>
+        <div className="text-base mb-4 text-center text-white/40">{hostSeat ? "Plays the hero left" : "Available Slot"}</div>
         {isAvailable && onJoinClick && (
           <Button size="sm" variant="epic" className="text-sm" onClick={onJoinClick} disabled={isJoining}>
             {isJoining ? "Joining..." : "Join"}

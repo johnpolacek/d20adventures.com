@@ -73,6 +73,8 @@ export async function startAdventure({ settingId, adventurePlanId, adventureId }
     if (!adventure) {
       throw new Error("Adventure not found")
     }
+    // A hosted game's GM runs in the host's app, so only the host starts it.
+    if (adventure.host && adventure.host.userId !== userId) throw new Error("Only the host can start this game.")
 
     if (isLocalWikiAdventure(settingId, adventurePlanId)) {
       await startWikiAdventure(await seatHost(adventure))

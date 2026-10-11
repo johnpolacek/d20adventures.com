@@ -17,6 +17,8 @@ interface PartyLobbyGridProps {
   playerNames?: Record<string, string>
   // How many seats to show, where the host set fewer than the adventure allows.
   seats?: number
+  // The seat of a host who plays the hero their guests leave, with that hero once only one is left.
+  hostSeat?: { hero?: PCTemplate }
 }
 
 export function PartyLobbyGrid({
@@ -30,6 +32,7 @@ export function PartyLobbyGrid({
   availableCharacters = [],
   playerNames = {},
   seats,
+  hostSeat,
 }: PartyLobbyGridProps) {
   const maxParty = seats ?? (adventurePlan.party?.[1] || 4)
   const party = adventure.party || []
@@ -49,6 +52,7 @@ export function PartyLobbyGrid({
   // Build the slots array, placing the user in the 2nd slot (index 1) if present
   const slots: React.ReactNode[] = []
   let charIdx = 0
+  let hostShown = false
   for (let i = 0; i < maxParty; i++) {
     if (i === 1 && userChar) {
       // 2nd slot: user character
@@ -71,6 +75,10 @@ export function PartyLobbyGrid({
         />
       )
       charIdx++
+    } else if (hostSeat && !hostShown) {
+      const hero = hostSeat.hero
+      hostShown = true
+      slots.push(hero ? <PartySlot key="host" character={hero} playerName="Host" onClick={() => onCharacterClick?.(hero)} /> : <PartySlot key="host" hostSeat />)
     } else {
       // If there are available premade characters, allow joining with the first available
       let joinableChar: PCTemplate | undefined

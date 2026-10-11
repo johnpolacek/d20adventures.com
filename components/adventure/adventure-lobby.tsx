@@ -31,10 +31,12 @@ interface AdventureLobbyProps {
   adventure: Adventure
   adventurePlan?: AdventurePlan
   invite?: LobbyInvite
+  // The GM runs in the host's app, so only the host starts the game.
+  hosted?: boolean
 }
 
 // Waiting room of an existing adventure, before it begins
-export default function AdventureLobby({ adventure: initialAdventure, adventurePlan, invite }: AdventureLobbyProps) {
+export default function AdventureLobby({ adventure: initialAdventure, adventurePlan, invite, hosted }: AdventureLobbyProps) {
   const { user, isSignedIn, isLoaded } = useUser()
   const params = useParams()
   const [isJoining, setIsJoining] = useState(false)
@@ -219,6 +221,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
   // asks the host for an open seat with a hero of their own.
   const unseated = invite?.seats.filter(notSeated) ?? []
   const openSeats = unseated.length > (seat.keep ?? 0) ? unseated : []
+  const hostSeat = seat.keep ? { hero: unseated.length === 1 ? unseated[0] : undefined } : undefined
   const namedSeat = openSeats.find((pc) => pc.id === invite?.as)
   // A guest the host removed takes no held seat. They may ask for an open one.
   const heldSeats = seat.removed || (invite?.as === "any" && seat.open > 0) ? [] : namedSeat ? [namedSeat] : openSeats
@@ -265,6 +268,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
           onCharacterClick={handlePartySlotClick}
           availableCharacters={availableCharacters}
           seats={invite ? (party?.length ?? 0) + unseated.length + seat.open : undefined}
+          hostSeat={hostSeat}
           onJoinClick={isSignedIn ? handleJoinAdventure : undefined}
           onRemoveAiCompanion={isOwner ? handleRemoveAiCompanion : undefined}
           isJoining={isJoining}
@@ -278,7 +282,8 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
           </div>
         )}
         {/* Start Adventure Button for signed-in users with a character */}
-        {isSignedIn && userCharacter && (
+        {isSignedIn && userCharacter && hosted && !isOwner && <h3 className="font-display mb-6 text-2xl opacity-70 text-center">Waiting for the host to start...</h3>}
+        {isSignedIn && userCharacter && !(hosted && !isOwner) && (
           <StartAdventureButton
             canStartAdventure={canStartAdventure}
             partyIsFull={partyIsFull}

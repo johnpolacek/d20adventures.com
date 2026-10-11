@@ -6,7 +6,7 @@ This log retains durable decisions and dated evidence. Git owns detailed impleme
 
 ## 2026-10-10, guests can choose among every hero
 
-Owner, at Covert Cargo's party setup: "there does not seem to be a way to invite a player to be either character in this screen." The last You seat could not switch to Invite. Now it can when another hero is invited. With every hero on Invite, guests choose first and the host plays the hero left, seated when the game starts. Details in [Desktop host mode](plans/desktop-host-mode.md).
+Owner, at Covert Cargo's party setup: "there does not seem to be a way to invite a player to be either character in this screen." The last You seat could not switch to Invite. Now it can when another hero is invited. With every hero on Invite, guests choose first and the host plays the hero left, seated when the game starts. On the website, a guest's lobby now shows the host's seat and waits for the host, and only the host can start a hosted game. Details in [Desktop host mode](plans/desktop-host-mode.md).
 
 ## 2026-10-10, the owner's dev adventures cleared
 

@@ -119,7 +119,7 @@ function AdventureHomeContent({
         <Turn nextAdventure={adventurePlan?.nextAdventure} encounter={currentEncounter} encounterMap={encounterMap} mapTokens={mapTokens} isSolo={(adventurePlan?.party?.[1] ?? 1) === 1} />
       ) : (
         <>
-          <AdventureLobby adventure={adventure} adventurePlan={adventurePlan} invite={invite} />
+          <AdventureLobby adventure={adventure} adventurePlan={adventurePlan} invite={invite} hosted={hosted} />
           {!isSignedIn && isLoaded && (
             <div className="-mt-12 pb-24">
               <AccountRequired redirectUrl={invite?.as ? `${pathname}?as=${encodeURIComponent(invite.as)}` : pathname} />

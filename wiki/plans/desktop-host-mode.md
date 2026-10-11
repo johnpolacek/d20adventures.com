@@ -198,8 +198,20 @@ Owner, at Covert Cargo's party setup with Lyra on You and Poppen on Invite: "the
 - A second guest asking for Poppen was refused: "Every seat at this table is taken".
 - Start seated the host as Poppen, made turn 1 with both heroes, and moved the guest to the play page.
 - Not checked: three or more invited heroes, a roster hero left for the host, Start before any guest joins, and Start from the website lobby.
-- Seen, not changed: a seated guest's website lobby shows the host's seat as Empty and reads "Waiting for more players".
+- Seen then: a seated guest's website lobby showed the host's seat as Empty and read "Waiting for more players". Fixed below.
 - The test game was removed from dev Convex afterward. No tests were added.
+
+### The guest's lobby waits for the host, 2026-10-10
+
+Owner chose both follow-ups.
+
+- The website lobby shows the host's seat where the host plays the hero left. It reads "Host, Plays the hero left", then that hero with a Host tag once one hero is left.
+- In a hosted game, a seated guest sees "Waiting for the host to start..." in place of Start Adventure. The host still sees Start Adventure.
+- The `startAdventure` action refuses anyone but the host in a hosted game. It had no check before.
+- Checked on the local website with a throwaway hosted game in dev Convex, as the test user: the Host seat before joining, Poppen with the Host tag after joining as Lyra, the waiting line, and no Start button.
+- Not checked: the action's refusal itself, since no button reaches it now, and the host's own view of the website lobby.
+- Seen, not changed: a seated guest still gets the Invite Players box, even with no seat left to give.
+- The throwaway game was removed afterward.
 
 ## Known gaps
 
