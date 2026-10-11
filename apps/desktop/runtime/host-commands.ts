@@ -39,6 +39,7 @@ export const hostCommandSchema = z.discriminatedUnion("kind", [
     action: z.discriminatedUnion("kind", [
       z.object({ kind: z.literal("reply"), characterId: id, text: z.string().trim().min(1).max(4000) }),
       z.object({ kind: z.literal("roll"), characterId: id, result: z.number().int().min(1).max(20) }),
+      z.object({ kind: z.literal("skip"), characterId: id }),
       z.object({ kind: z.literal("continue") }),
       // Replies the host's GM offers for the hero's turn. They come back on the job, by the id returned here.
       z.object({ kind: z.literal("suggest"), characterId: id }),
@@ -51,7 +52,7 @@ export type HostCommand = z.infer<typeof hostCommandSchema>
 export type HostedJob = {
   _id: string
   turnId: string
-  kind: "reply" | "roll" | "continue" | "suggest"
+  kind: "reply" | "roll" | "continue" | "suggest" | "skip"
   characterId?: string
   status: "queued" | "running" | "done" | "failed"
   error?: string

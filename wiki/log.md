@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-11, skip a hero's turn
+
+Owner, at Lyra's turn: "Can we get a small Skip button to the left of Send (text only button)". The GM card now has it. A skip marks the hero done for the round, writes nothing into the story, and asks no AI. Local play has a `skip` command and hosted games a `skip` job, which the website's play page also sends. Checked in the app's browser preview on a copy of the owner's save. Hosted play is covered by a runtime test only. See [Skip a hero's turn](plans/skip-turn.md).
+
 ## 2026-10-11, untagged quotes go to the sentence's subject
 
 Owner, in The Shipment: Lyra's line showed in a bubble over Silas and on his plate. The paragraph had no speech tag, so the reader gave the quote to the nearest name. `readNarration` now gives an untagged quote to whoever the sentence beside it is about. Checked against 16 paragraph cases by script, not in the app. See [Stage engine](stage-engine.md).

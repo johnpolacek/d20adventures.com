@@ -74,6 +74,8 @@ export const commandSchema = z.discriminatedUnion("kind", [
   // Removes a saved adventure for good: an archived one by id, or the current one without an id.
   z.object({ kind: z.literal("remove"), archiveId: z.number().int().positive().optional() }),
   z.object({ kind: z.literal("roll"), turnId: z.string(), characterId: z.string(), result: z.number().int().min(1).max(20) }),
+  // Ends a hero's turn with no reply. Nothing is written into the story and the GM is not asked.
+  z.object({ kind: z.literal("skip"), turnId: z.string(), characterId: z.string() }),
   z.object({ kind: z.literal("continue"), turnId: z.string() }),
   z.object({
     kind: z.literal("positions"),
@@ -228,6 +230,10 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
           store.state!.movement[`${turn._id}:${actor.id}`] = { actorId: actor.id, intent }
         }
         await core.processTurnReply({ turnId: turn._id, characterId: actor.id, narrativeAction: action, originalPlayerInput: command.text })
+      } else if (command.kind === "skip") {
+        if (actor.hasReplied) throw new Error("This reply is already saved. Resolve the pending roll.")
+        Object.assign(actor, { hasReplied: true, isComplete: true })
+        store.save()
       } else {
         if (!actor.rollRequired || actor.rollResult !== undefined) throw new Error("There is no pending roll.")
         const key = `${turn._id}:${actor.id}`

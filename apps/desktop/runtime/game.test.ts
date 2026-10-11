@@ -206,6 +206,36 @@ test("reply storage and real roll services keep dice across failures and reject 
     cleanup()
   }
 })
+test("skip ends the hero's turn with nothing written and no AI, and only for the hero whose turn it is", async () => {
+  const { store, path, cleanup } = setup()
+  try {
+    const run = game(store, packs, failLlm)
+    await run({ kind: "start", provider: "claude" })
+    const turn = store.current()
+    const pcs = turn.characters.filter((c) => c.type === "pc")
+    turn.characters.forEach((c) => {
+      c.initiative = c.id === pcs[0].id ? 20 : c.id === pcs[1].id ? 10 : 0
+    })
+    store.save()
+    const narrative = turn.narrative
+    await assert.rejects(() => run({ kind: "skip", turnId: turn._id, characterId: pcs[1].id }), /another character/)
+    await assert.rejects(() => run({ kind: "skip", turnId: "stale", characterId: pcs[0].id }), /already advanced/)
+    await run({ kind: "skip", turnId: turn._id, characterId: pcs[0].id })
+    const skipped = store.current().characters.find((c) => c.id === pcs[0].id)!
+    assert.equal(skipped.hasReplied && skipped.isComplete, true)
+    assert.equal(store.current().narrative, narrative)
+    assert.equal(findCurrentActor(store.current().characters)?.id, pcs[1].id)
+    const reopened = new LocalStore(path)
+    assert.equal(reopened.current().characters.find((c) => c.id === pcs[0].id)!.isComplete, true)
+    reopened.db.close()
+    // A hero with a reply sent and a roll pending cannot be skipped.
+    Object.assign(store.current().characters.find((c) => c.id === pcs[1].id)!, { hasReplied: true })
+    store.save()
+    await assert.rejects(() => run({ kind: "skip", turnId: turn._id, characterId: pcs[1].id }), /pending roll/)
+  } finally {
+    cleanup()
+  }
+})
 test("real core advances through authored graph and atomically retains state across restart", async () => {
   const { store, path, cleanup } = setup()
   try {

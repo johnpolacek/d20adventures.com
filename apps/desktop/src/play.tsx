@@ -263,6 +263,11 @@ export function DesktopGame() {
         const res = await invoke({ kind: "reply", turnId, characterId, text, movement })
         return Boolean(res && !res.error)
       }}
+      onSkip={async (turnId, characterId) => {
+        if (hosting) return act(() => host({ kind: "hostAct", adventureId: hosting, turnId, action: { kind: "skip", characterId } }))
+        const res = await invoke({ kind: "skip", turnId, characterId })
+        return Boolean(res && !res.error)
+      }}
       onSuggest={hosting ? suggestHosted : async (turnId, characterId) => (await suggest(turnId, characterId)).suggestions ?? []}
       onRoll={(turnId, characterId, result) => {
         if (hosting) void act(() => host({ kind: "hostAct", adventureId: hosting, turnId, action: { kind: "roll", characterId, result } }))

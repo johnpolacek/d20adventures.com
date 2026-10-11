@@ -172,7 +172,7 @@ export const queueJob = mutation({
     secret: v.string(),
     adventureId: v.id("adventures"),
     turnId: v.id("turns"),
-    kind: v.union(v.literal("reply"), v.literal("roll"), v.literal("continue"), v.literal("suggest")),
+    kind: v.union(v.literal("reply"), v.literal("roll"), v.literal("continue"), v.literal("suggest"), v.literal("skip")),
     userId: v.string(),
     characterId: v.optional(v.string()),
     text: v.optional(v.string()),

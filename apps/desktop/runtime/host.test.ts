@@ -121,6 +121,28 @@ test("jobs for someone else's character, a stale turn, or a failed model fail wi
   }
 })
 
+test("a skip job ends the guest's own hero's turn with nothing written and no AI", async () => {
+  const { store, turn, pc, adventureId, cleanup } = await hosted()
+  try {
+    const narrative = turn.narrative
+    const ask = (userId: string, id: string) => job({ adventureId, turnId: turn._id, kind: "skip", userId, characterId: pc.id }, id)
+    const { finished } = await drain(store, [ask("host", "a"), ask("guest", "b"), ask("guest", "c")], failLlm)
+    assert.deepEqual(
+      finished.map((f) => [f.jobId, f.error]),
+      [
+        ["a", "It is another character's turn."],
+        ["b", undefined],
+        ["c", "It is another character's turn."],
+      ]
+    )
+    const skipped = store.current().characters.find((c) => c.id === pc.id)!
+    assert.equal(skipped.hasReplied && skipped.isComplete, true)
+    assert.equal(store.current().narrative, narrative)
+  } finally {
+    cleanup()
+  }
+})
+
 test("a suggest job finishes with replies for the guest's own hero and changes nothing", async () => {
   const { store, turn, pc, adventureId, cleanup } = await hosted()
   try {

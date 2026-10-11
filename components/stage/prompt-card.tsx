@@ -206,6 +206,7 @@ export function PromptCard({
   party,
   compact = false,
   onReply,
+  onSkip,
   onRoll,
   onPick,
   onTop,
@@ -219,6 +220,8 @@ export function PromptCard({
   party: CardCharacter[]
   compact?: boolean
   onReply: (text: string) => void
+  // Ends the hero's turn with no reply. Without it there is no Skip button.
+  onSkip?: () => void
   onRoll: (n: number) => void
   onPick: (id: string) => void
   // The card's top edge, in px from the bottom of the screen (so the stage can frame shots above it).
@@ -323,6 +326,11 @@ export function PromptCard({
             )}
           </div>
           <div className={cn("flex gap-2", compact ? "mt-1.5 [&>button]:py-1" : "mt-2")}>
+            {onSkip && (
+              <button type="button" onClick={onSkip} className="px-2 font-sans text-[11px] tracking-wide text-stage-muted transition-colors hover:text-stage-cream">
+                Skip
+              </button>
+            )}
             {mode.suggestion && (
               <Pill className="flex-1" onClick={() => mode.suggestion && setDraft(mode.suggestion)}>
                 Suggest

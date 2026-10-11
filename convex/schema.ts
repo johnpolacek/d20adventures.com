@@ -135,7 +135,7 @@ export default defineSchema({
     adventureId: v.id("adventures"),
     turnId: v.id("turns"),
     // A suggest job changes nothing in the game. It finishes with replies the player could send for their hero.
-    kind: v.union(v.literal("reply"), v.literal("roll"), v.literal("continue"), v.literal("suggest")),
+    kind: v.union(v.literal("reply"), v.literal("roll"), v.literal("continue"), v.literal("suggest"), v.literal("skip")),
     // Who asked, and for which character. Continue jobs have no character.
     userId: v.string(),
     characterId: v.optional(v.string()),

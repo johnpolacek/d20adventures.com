@@ -61,6 +61,8 @@ export function StagePlay(props: {
   trailingActions?: ReactNode
   // Each resolves to whether the action was accepted.
   onReply: (turnId: string, characterId: string, text: string, movement: ReturnType<typeof context> | undefined) => Promise<boolean>
+  // Ends a hero's turn with no reply. Without it the card has no Skip button.
+  onSkip?: (turnId: string, characterId: string) => Promise<boolean>
   onRoll: (turnId: string, characterId: string, result: number) => void
   // Replies offered on a hero's turn, which fill the reply box. Without it none are offered.
   onSuggest?: (turnId: string, characterId: string) => Promise<CardSuggestion[]>
@@ -376,6 +378,9 @@ export function StagePlay(props: {
     const movement = stage ? context(stage, actor, value) : undefined
     if (await props.onReply(turn._id, actor.id, value, movement)) setDraft("")
   }
+  const skip = async () => {
+    if (turn && actor && (await props.onSkip?.(turn._id, actor.id))) setDraft("")
+  }
   const journal: JournalTurn[] = (save?.turns ?? []).map((t) => ({
     number: t.order,
     title: t.title,
@@ -467,6 +472,7 @@ export function StagePlay(props: {
               party={party}
               compact={compact}
               onReply={reply}
+              onSkip={props.onSkip ? skip : undefined}
               onRoll={(result) => {
                 if (turn && actor) props.onRoll(turn._id, actor.id, result)
               }}
