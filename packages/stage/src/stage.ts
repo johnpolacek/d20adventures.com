@@ -621,9 +621,14 @@ export class Stage {
     return !this.standees.offstage.has(id)
   }
   // Lay a cast member on the ground where they stand (a fall), or stand them up again.
-  // `instant` skips the fall, for someone already down when the scene is shown.
-  setDown(id: string, down: boolean, instant = false) {
-    this.member(id)
+  // They fall onto their back, away from the way they face. `lands` (a mark or point) turns them so the head comes
+  // down there. `instant` skips the fall, for someone already down when the scene is shown.
+  setDown(id: string, down: boolean, instant = false, lands?: string | [number, number]) {
+    const c = this.member(id)
+    if (down && lands !== undefined && !this.standees.down.has(id)) {
+      const p = this.point(lands)
+      c.ry = Math.atan2(c.x - p.x, c.z - p.z)
+    }
     this.standees.lay(id, down, instant)
   }
   isDown(id: string) {

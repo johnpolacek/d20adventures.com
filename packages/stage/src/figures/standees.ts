@@ -237,7 +237,10 @@ export class Standees {
     if (down) this.down.add(id)
     else this.down.delete(id)
     const s = this.items.get(id)
-    if (s && instant) s.fall = down ? 1 : 0
+    if (s && instant) {
+      s.fall = down ? 1 : 0
+      s.yaw = null
+    }
   }
   // Full mip chain, trilinear, and the GPU's best anisotropy: the card is often minified and viewed at a slant.
   private texFor(img: HTMLImageElement) {
@@ -333,11 +336,16 @@ export class Standees {
         target = rest + THREE.MathUtils.clamp(wrap(toCam - rest) * GAIN, -LEAN, LEAN)
         s.back = 0
       }
+      // Someone down lies on their back, head away from the way they faced, whatever the camera does.
+      if (this.down.has(c.id)) {
+        target = c.ry
+        s.back = 0
+      }
       s.yaw = s.yaw === null ? target : s.yaw + wrap(target - s.yaw) * k
       s.grp.position.set(c.x, 0, c.z)
       s.grp.rotation.y = s.yaw
       s.grp.visible = !this.offstage.has(c.id)
-      s.fall += ((this.down.has(c.id) ? 1 : 0) - s.fall) * Math.min(1, dt * 5)
+      s.fall += ((this.down.has(c.id) ? 1 : 0) - s.fall) * Math.min(1, dt * 3.5)
       // Just above the ground, so the fallen card does not fight the floor for depth.
       s.mesh.position.y = Math.abs(Math.cos(c.stride)) * 0.035 * c.walk + s.fall * 0.03
       s.mesh.rotation.z = Math.sin(c.stride) * 0.035 * c.walk

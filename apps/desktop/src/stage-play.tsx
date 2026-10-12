@@ -38,6 +38,9 @@ const prose = (text: string, originals = false) => story(text, originals).map((p
 
 type Character = Save["turns"][number]["characters"][number]
 type Positions = Record<string, { x: number; z: number; ry: number }>
+// How long someone stays on their feet after the paragraph that fells them begins, in milliseconds: about the time the
+// camera takes to reach them.
+const FALL_DELAY = 1500
 
 // The stage-first play view: the 3D scene, the narration read paragraph by paragraph, and the prompt card for the
 // player's own heroes. The desktop app plays local saves in it, and hosted games on the app and the website. The
@@ -242,26 +245,36 @@ export function StagePlay(props: {
   // out. They stay until their paragraph. Then a runner makes for their way out and is gone, and the rest lie down.
   const exits = useMemo(() => {
     const authored = stage?.staging?.exits ?? []
-    const out = new Map<string, { run: boolean; to?: string | [number, number]; at: number }>()
-    for (const e of authored) if (e.when) out.set(e.cast, { run: Boolean(e.to), to: e.to, at: text.findIndex((p) => p.toLowerCase().includes(e.when!.toLowerCase())) })
-    for (const [id, how] of gone) if (!out.has(id)) out.set(id, { run: how === "fled", to: authored.find((e) => e.cast === id)?.to, at: leftAt[id] ?? -1 })
+    const out = new Map<string, { run: boolean; to?: string | [number, number]; lands?: string | [number, number]; shot?: string; at: number }>()
+    for (const e of authored) if (e.when) out.set(e.cast, { run: Boolean(e.to), to: e.to, lands: e.lands, shot: e.shot, at: text.findIndex((p) => p.toLowerCase().includes(e.when!.toLowerCase())) })
+    for (const [id, how] of gone) {
+      const way = authored.find((e) => e.cast === id)
+      if (!out.has(id)) out.set(id, { run: how === "fled", to: way?.to, lands: way?.lands, shot: way?.shot, at: leftAt[id] ?? -1 })
+    }
     return out
   }, [stage, text, gone, leftAt])
+  // The exit this paragraph shows, when its staging says where to watch it from.
+  const departing = reading ? [...exits.values()].find((e) => e.at === paragraph && e.shot) : undefined
   const ran = useRef(new Set<string>())
   const ranOn = useRef(stage)
   useEffect(() => {
     if (!stage) return
     if (ranOn.current !== stage) ran.current.clear()
     ranOn.current = stage
+    const falls: ReturnType<typeof setTimeout>[] = []
     for (const [id, e] of exits) {
       const home = stage.staging?.cast.find((c) => c.id === id)
       if (reading && e.at >= 0 && paragraph < e.at) {
         // Not yet: back on their feet in their place, as when the reader steps back.
-        if (ran.current.delete(id) && home) stage.placeCast(id, home.at, home.facing)
+        if ((ran.current.delete(id) || stage.isDown(id)) && home) stage.placeCast(id, home.at, home.facing)
         stage.setOnStage(id, true)
         stage.setDown(id, false)
-      } else if (!e.run) stage.setDown(id, true, !(reading && paragraph === e.at))
-      else if (stage.isOnStage(id) && !ran.current.has(id)) {
+      } else if (!e.run) {
+        // On their paragraph they stand a moment longer, so the camera is there to see them go down. Reading on
+        // before that finds them already down.
+        if (!(reading && paragraph === e.at)) stage.setDown(id, true, true, e.lands)
+        else if (!stage.isDown(id)) falls.push(setTimeout(() => stage.setDown(id, true, false, e.lands), FALL_DELAY))
+      } else if (stage.isOnStage(id) && !ran.current.has(id)) {
         ran.current.add(id)
         if (!(reading && paragraph === e.at && e.to)) stage.setOnStage(id, false)
         else {
@@ -275,12 +288,14 @@ export function StagePlay(props: {
         }
       }
     }
+    return () => falls.forEach(clearTimeout)
   }, [stage, exits, reading, paragraph])
   // Each paragraph moves the camera to fit it: its first speaker, someone making an entrance, whoever it is about, or
   // the place it describes.
   useEffect(() => {
     if (!stage || !reading) return
     if (speech.length) return void stage.shot({ subject: speech[0].cast.id, distance: 5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 })
+    if (departing?.shot) return void stage.shot(departing.shot)
     if (arriving) {
       if (arriving.shot) return void stage.shot(arriving.shot)
       // Facing the way they come: from beyond their place, looking back at where they enter.
@@ -296,7 +311,7 @@ export function StagePlay(props: {
     }
     const view = beats[paragraph]?.view
     if (view) stage.shot(typeof view === "string" ? view : { subject: view.subject, distance: 4.5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 })
-  }, [stage, speech, arriving, beats, paragraph, reading])
+  }, [stage, speech, departing, arriving, beats, paragraph, reading])
   useEffect(() => {
     if (!auto || !reading || busy || !text.length) return
     // A roll stays up until the die has landed and the verdict has had a moment.

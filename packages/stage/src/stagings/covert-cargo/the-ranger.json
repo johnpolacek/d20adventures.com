@@ -154,6 +154,20 @@
       "lookHeight": 0.8,
       "fov": 44,
       "label": "Poppen"
+    },
+    "fall": {
+      "position": [
+        6.3,
+        2.2,
+        1.85
+      ],
+      "target": [
+        5.3,
+        0.7,
+        -0.5
+      ],
+      "fov": 56,
+      "label": "The fall"
     }
   },
   "shot": "reinhard",
@@ -171,7 +185,12 @@
   "exits": [
     {
       "cast": "npcs-1749163978757",
-      "when": "The arrow takes Reinhard"
+      "when": "The arrow takes Reinhard",
+      "lands": [
+        4.3,
+        -0.4
+      ],
+      "shot": "fall"
     },
     {
       "cast": "npcs-1749181492795",

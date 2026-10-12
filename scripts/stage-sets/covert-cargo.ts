@@ -696,6 +696,9 @@ function pierSet() {
     { reinhard: close("reinhard", 2.0, 25, 1.35, 1.55), lyra: close("lyra", 2.0, 30), silas: close("silas", 2.1, 25) },
     "reinhard"
   )
+  // Where Reinhard's head comes down, and the facing that lays his body the same way in the next scene.
+  const FELL: V2 = [4.3, -0.4]
+  const fallen = { ...on("reinhard", [6.2, -0.35], [r2(2 * 6.2 - FELL[0]), r2(2 * -0.35 - FELL[1])]), down: true }
   // The rescue, where the battle left everyone. A stranger walks out of the woods beside Poppen's bushes and shoots
   // through the lit window: Reinhard falls on that line, and Silas runs for the bow when the game says he has fled.
   // Nobody knows the ranger's name yet, so the scene does not show it.
@@ -717,12 +720,15 @@ function pierSet() {
       treeline: { subjects: [CAST.thalbern.id, CAST.poppen.id], offset: [1.95, 1.55, 1.3], target: [0, 1.1, 0], fov: 55, label: "The treeline" },
       ranger: close("thalbern", 2.4, 25, 1.6, 1.49, "The archer"),
       poppen: peeking,
+      // From above the helm, down at Reinhard and the open floor before the crate, where he falls. Lyra is on the left.
+      fall: { position: [6.3, 2.2, 1.85], target: [5.3, 0.7, -0.5], fov: 56, label: "The fall" },
     },
     "reinhard",
     {
       entrances: [{ cast: CAST.thalbern.id, when: "rises out of the ferns", from: [-5.6, 0.6], shot: "treeline" }],
       exits: [
-        { cast: CAST.reinhard.id, when: "The arrow takes Reinhard" },
+        // Onto the open boards before the crate. Behind him are the wall, a post and the crate's chain.
+        { cast: CAST.reinhard.id, when: "The arrow takes Reinhard", lands: FELL, shot: "fall" },
         { cast: CAST.silas.id, to: "bow" },
       ],
     }
@@ -732,7 +738,7 @@ function pierSet() {
   staging(
     "the-rangers-aid",
     "mordava-river-pier",
-    [on("thalbern", [5.2, 2.0], "lyra"), on("lyra", [4.85, 0.75], "thalbern"), on("poppen", "foredeck", "cabinDoor"), { ...on("reinhard", [6.2, -0.35], "lyra"), down: true }],
+    [on("thalbern", [5.2, 2.0], "lyra"), on("lyra", [4.85, 0.75], "thalbern"), on("poppen", "foredeck", "cabinDoor"), fallen],
     {
       ranger: close("thalbern", 2.1, 25, 1.6, 1.49),
       // From aft over the crate: the ranger kneeling by Lyra, the door behind them.

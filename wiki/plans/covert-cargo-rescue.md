@@ -101,3 +101,11 @@ Two encounters pace it, each with an authored intro and staging.
 - Passed: `pnpm test:gm-core`, the Covert Cargo bridge and public flow checks, `pnpm stage:check`, 54 desktop tests against a rebuilt pack, stage, GM core and desktop typechecks, scoped Biome.
 - Looked at in the stage preview at the high tier: the treeline two-shot, the saloon with Reinhard on the floor, and Thalbern in the doorway.
 - Not done: a play-through with a live model. The fall, Silas's run and both entrances have not been watched in the app.
+
+### Owner play-through, 2026-10-12
+
+- "The scene is working pretty good." The fall did not show: Reinhard was gone from the view on his paragraph.
+- Cause: he fell at once, and the shot on him looks at head height. He lay below the frame before the camera arrived.
+- Fix: the fall waits 1.5 seconds, lands on the open boards before the crate, and is seen from a new shot above the helm. The body lies the same way in The Ranger's Aid.
+- Looked at in the stage preview: the fall shot with Lyra and Reinhard, and the body before the crate.
+- Not yet watched in the app.
