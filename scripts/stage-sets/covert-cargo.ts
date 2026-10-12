@@ -60,6 +60,18 @@ const CAST = {
   aelar: { id: "npcs-1749184389465", name: "Aelar Moonglimmer", role: "Elf operative", height: 1.86, art: art("aelar") },
   archer: { id: "npcs-1749243735467", name: "Elven Archer", role: "Wood elf archer", height: 1.8, art: art("elf-archer") },
   fighter: { id: "npcs-1749243869357", name: "Elven Fighter", role: "Elf fighter", height: 1.88, art: art("elf-fighter") },
+  // His standee from The Midnight Summons, where he is the hero.
+  thalbern: {
+    id: "thalbern-npc",
+    name: "Thalbern",
+    role: "Ranger of the Valkarr woods",
+    height: 1.82,
+    art: {
+      front: "/stage/fixtures/the-midnight-summons/thalbern-front.webp",
+      back: "/stage/fixtures/the-midnight-summons/thalbern-back.webp",
+      portrait: "/stage/fixtures/the-midnight-summons/thalbern-portrait.jpg",
+    },
+  },
 }
 type Who = keyof typeof CAST
 const on = (who: Who, at: string | V2, facing: string | number | V2) => ({ ...CAST[who], at, facing: typeof facing === "string" && facing in CAST ? CAST[facing as Who].id : facing })
@@ -684,6 +696,52 @@ function pierSet() {
     { reinhard: close("reinhard", 2.0, 25, 1.35, 1.55), lyra: close("lyra", 2.0, 30), silas: close("silas", 2.1, 25) },
     "reinhard"
   )
+  // The rescue, where the battle left everyone. A stranger walks out of the woods beside Poppen's bushes and shoots
+  // through the lit window: Reinhard falls on that line, and Silas runs for the bow when the game says he has fled.
+  // Nobody knows the ranger's name yet, so the scene does not show it.
+  staging(
+    "the-ranger",
+    "mordava-river-pier",
+    [
+      on("reinhard", [6.2, -0.35], "lyra"),
+      on("lyra", [4.85, 0.75], "reinhard"),
+      on("silas", [5.2, 2.35], "lyra"),
+      poppen,
+      { ...on("thalbern", [-3.9, 2.3], boat), name: "The Ranger", role: "A stranger with a longbow" },
+    ],
+    {
+      reinhard: close("reinhard", 2.0, 25, 1.35, 1.55),
+      lyra: close("lyra", 2.0, 30),
+      silas: close("silas", 2.1, 25),
+      // From the bank side of the reeds and a little upstream, so both stand clear of each other against the woods.
+      treeline: { subjects: [CAST.thalbern.id, CAST.poppen.id], offset: [1.95, 1.55, 1.3], target: [0, 1.1, 0], fov: 55, label: "The treeline" },
+      ranger: close("thalbern", 2.4, 25, 1.6, 1.49, "The archer"),
+      poppen: peeking,
+    },
+    "reinhard",
+    {
+      entrances: [{ cast: CAST.thalbern.id, when: "rises out of the ferns", from: [-5.6, 0.6], shot: "treeline" }],
+      exits: [
+        { cast: CAST.reinhard.id, when: "The arrow takes Reinhard" },
+        { cast: CAST.silas.id, to: "bow" },
+      ],
+    }
+  )
+  // Afterwards: Reinhard lies where he fell, and the ranger comes in through the door to see to Lyra. Poppen has come
+  // down as far as the foredeck.
+  staging(
+    "the-rangers-aid",
+    "mordava-river-pier",
+    [on("thalbern", [5.2, 2.0], "lyra"), on("lyra", [4.85, 0.75], "thalbern"), on("poppen", "foredeck", "cabinDoor"), { ...on("reinhard", [6.2, -0.35], "lyra"), down: true }],
+    {
+      ranger: close("thalbern", 2.1, 25, 1.6, 1.49),
+      // From aft over the crate: the ranger kneeling by Lyra, the door behind them.
+      tending: { subjects: [CAST.thalbern.id, CAST.lyra.id], offset: [0.5, 1.7, -3.4], target: [0, 1.2, 0], fov: 52, label: "The tending" },
+      poppen: close("poppen", 2.4, 20, 1.0, 0.85),
+    },
+    "cabin",
+    { entrances: [{ cast: CAST.thalbern.id, when: "ducks through the saloon door", from: [5.2, 3.3], shot: "ranger" }] }
+  )
   staging(
     "the-crate",
     "mordava-river-pier",
@@ -1033,4 +1091,4 @@ mkdirSync(STAGINGS, { recursive: true })
 pierSet()
 riverfrontSet()
 forestSet()
-console.log("Wrote 3 sets and 9 stagings for Covert Cargo.")
+console.log("Wrote 3 sets and 11 stagings for Covert Cargo.")

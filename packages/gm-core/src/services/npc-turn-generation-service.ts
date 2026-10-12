@@ -7,7 +7,7 @@ import { formatSpellsForPrompt } from "./spell-tracking-service"
 const npcActionSchema = z.object({
   actionSummary: z.string(),
   narrative: z.string(),
-  actionType: z.enum(["attack", "skill", "skip", "pass", "other"]).default("other"),
+  actionType: z.enum(["attack", "skill", "skip", "pass", "flee", "other"]).default("other"),
   effects: z
     .array(
       z.object({
@@ -147,6 +147,8 @@ Examples:
 - Non-speaking creature: 'The dire wolf snarls, its hackles raised as it prepares to pounce on the nearest target.'
 - Physical action: 'The guard silently draws his sword, positioning himself to block the exit.'
 
+If the NPC runs away and leaves the scene for good, set actionType to "flee" and narrate them going. They are then out of the encounter and take no further turns. Use it only when they actually get away this turn, not for backing off or taking cover.
+
 If the NPC's action involves giving items to a player character, include an "effects" array. Each object in "effects" should have a "targetId" (the ID of the character receiving items) and an "equipmentToAdd" array listing the items ({name: string, description?: string}).
 
 Targetable Player Characters (alive and conscious): ${args.alivePlayerCharacters.map((character) => character.name).join(", ")} (IDs: ${args.alivePlayerCharacters.map((character) => character.id).join(", ")})
@@ -156,7 +158,7 @@ Respond as JSON. The 'narrative' and 'actionSummary' fields must describe the ac
 {
   actionSummary: string, // e.g., "Faelar strums a tune on his lute to lighten the mood."
   narrative: string, // e.g., "Faelar, noticing the tension, pulls out his lute. 'A somber crowd for a festival!' he jests, beginning a lighthearted melody."
-  actionType: "attack" | "skill" | "skip" | "pass" | "other",
+  actionType: "attack" | "skill" | "skip" | "pass" | "flee" | "other",
   effects?: [ { targetId: string, equipmentToAdd?: [{name: string, description?: string}] } ]
 }`
 }

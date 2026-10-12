@@ -23,6 +23,8 @@ export interface CastMember {
   walking: boolean
   walk: number
   stride: number
+  // Lying where they fell when the scene opens (a body).
+  down?: boolean
 }
 
 const LEAN = THREE.MathUtils.degToRad(60)
@@ -194,6 +196,8 @@ interface Standee {
   yaw: number | null
   loaded: boolean
   back: number
+  // 0 standing, 1 lying on the ground.
+  fall: number
   map?: THREE.Texture
   normal?: THREE.Texture
   mapB?: THREE.Texture
@@ -218,6 +222,8 @@ export class Standees {
   items = new Map<string, Standee>()
   // Cast members not yet on stage (an entrance the narration has not reached).
   offstage = new Set<string>()
+  // Cast members lying where they fell. The card tips back onto the ground.
+  down = new Set<string>()
 
   constructor(
     cast: CastMember[],
@@ -226,6 +232,12 @@ export class Standees {
   ) {
     this.group.name = "standees"
     for (const c of cast) this.make(c)
+  }
+  lay(id: string, down: boolean, instant = false) {
+    if (down) this.down.add(id)
+    else this.down.delete(id)
+    const s = this.items.get(id)
+    if (s && instant) s.fall = down ? 1 : 0
   }
   // Full mip chain, trilinear, and the GPU's best anisotropy: the card is often minified and viewed at a slant.
   private texFor(img: HTMLImageElement) {
@@ -254,7 +266,8 @@ export class Standees {
     mesh.userData.castId = cast.id
     grp.add(mesh)
     this.group.add(grp)
-    const s: Standee = { cast, grp, mesh, mat, depth, bu, yaw: null, loaded: false, back: 0, aspect: 0.4, aspectB: 0.4 }
+    const s: Standee = { cast, grp, mesh, mat, depth, bu, yaw: null, loaded: false, back: 0, fall: cast.down ? 1 : 0, aspect: 0.4, aspectB: 0.4 }
+    if (cast.down) this.down.add(cast.id)
     this.items.set(cast.id, s)
   }
   // Resolves when every front has loaded (backs may still be arriving); a failed image leaves that character hidden.
@@ -324,8 +337,11 @@ export class Standees {
       s.grp.position.set(c.x, 0, c.z)
       s.grp.rotation.y = s.yaw
       s.grp.visible = !this.offstage.has(c.id)
-      s.mesh.position.y = Math.abs(Math.cos(c.stride)) * 0.035 * c.walk
+      s.fall += ((this.down.has(c.id) ? 1 : 0) - s.fall) * Math.min(1, dt * 5)
+      // Just above the ground, so the fallen card does not fight the floor for depth.
+      s.mesh.position.y = Math.abs(Math.cos(c.stride)) * 0.035 * c.walk + s.fall * 0.03
       s.mesh.rotation.z = Math.sin(c.stride) * 0.035 * c.walk
+      s.mesh.rotation.x = -s.fall * (Math.PI / 2 - 0.04)
       // The card is as wide as the art it shows; the shadow caster and the relief follow whichever view dominates.
       s.bu.uBack.value = s.back
       if (s.loaded) s.mesh.scale.x = c.height * (s.mapB ? THREE.MathUtils.lerp(s.aspect, s.aspectB, s.back) : s.aspect)

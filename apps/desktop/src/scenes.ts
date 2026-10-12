@@ -14,6 +14,7 @@ import theEnd from "@d20/stage/stagings/covert-cargo/the-end.json"
 import theEscape from "@d20/stage/stagings/covert-cargo/the-escape.json"
 import theFake from "@d20/stage/stagings/covert-cargo/the-fake.json"
 import theRanger from "@d20/stage/stagings/covert-cargo/the-ranger.json"
+import theRangersAid from "@d20/stage/stagings/covert-cargo/the-rangers-aid.json"
 import theShipment from "@d20/stage/stagings/covert-cargo/the-shipment.json"
 import theTransaction from "@d20/stage/stagings/covert-cargo/the-transaction.json"
 import gateStaging from "@d20/stage/stagings/march-of-davos/the-gates-of-kordavos.json"
@@ -124,8 +125,14 @@ export const SCENES: Record<string, Scene> = {
   "the-ranger": cargo(
     pierSet,
     theRanger,
+    "Mordava pier",
+    "The riverboat's lamplit saloon at the rickety pier, the crate in the middle and the only door opening forward onto the deck. Reinhard lies dead inside with an arrow in him. Across the gangway, a stranger with a longbow stands in the ferns at the treeline beside Poppen's bushes, a short bowshot from the lit windows."
+  ),
+  "the-rangers-aid": cargo(
+    pierSet,
+    theRangersAid,
     "Riverboat saloon",
-    "The riverboat's lamplit saloon after the fight. A ranger with a longbow stands in the only door, which opens forward onto the deck, and the crate sits in the middle."
+    "The riverboat's lamplit saloon after the fight. Reinhard lies dead by the crate, and the ranger has come in through the only door, which opens forward onto the deck."
   ),
   "return-to-the-city": cargo(riverfrontSet, returnToTheCity, "Kordavos riverfront", "The quay along the river in Kordavos, ships at their moorings and the castle on its hill above the city."),
   "the-end": cargo(pathSet, theEnd, "The old forest", "A mossy path winds between huge old trees in green-gold light."),

@@ -1,0 +1,120 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "covert-cargo/the-rangers-aid",
+  "set": "realm-of-myr/mordava-river-pier",
+  "cast": [
+    {
+      "id": "thalbern-npc",
+      "name": "Thalbern",
+      "role": "Ranger of the Valkarr woods",
+      "height": 1.82,
+      "art": {
+        "front": "/stage/fixtures/the-midnight-summons/thalbern-front.webp",
+        "back": "/stage/fixtures/the-midnight-summons/thalbern-back.webp",
+        "portrait": "/stage/fixtures/the-midnight-summons/thalbern-portrait.jpg"
+      },
+      "at": [
+        5.2,
+        2
+      ],
+      "facing": "lyra"
+    },
+    {
+      "id": "lyra",
+      "name": "Lyra Silvanus",
+      "role": "Asterian arcanist",
+      "height": 1.7,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/lyra-front.webp",
+        "back": "/stage/fixtures/covert-cargo/lyra-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/lyra-portrait.jpg"
+      },
+      "at": [
+        4.85,
+        0.75
+      ],
+      "facing": "thalbern-npc"
+    },
+    {
+      "id": "poppen",
+      "name": "Poppen Quickfoot",
+      "role": "Halfling rogue",
+      "height": 1.06,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/poppen-front.webp",
+        "back": "/stage/fixtures/covert-cargo/poppen-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/poppen-portrait.jpg"
+      },
+      "at": "foredeck",
+      "facing": "cabinDoor"
+    },
+    {
+      "id": "npcs-1749163978757",
+      "name": "Reinhard",
+      "role": "Enforcer",
+      "height": 1.92,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/reinhard-front.webp",
+        "back": "/stage/fixtures/covert-cargo/reinhard-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/reinhard-portrait.jpg"
+      },
+      "at": [
+        6.2,
+        -0.35
+      ],
+      "facing": "lyra",
+      "down": true
+    }
+  ],
+  "shots": {
+    "ranger": {
+      "subject": "thalbern-npc",
+      "distance": 2.1,
+      "angle": 25,
+      "height": 1.6,
+      "lookHeight": 1.49,
+      "fov": 44,
+      "label": "Thalbern"
+    },
+    "tending": {
+      "subjects": [
+        "thalbern-npc",
+        "lyra"
+      ],
+      "offset": [
+        0.5,
+        1.7,
+        -3.4
+      ],
+      "target": [
+        0,
+        1.2,
+        0
+      ],
+      "fov": 52,
+      "label": "The tending"
+    },
+    "poppen": {
+      "subject": "poppen",
+      "distance": 2.4,
+      "angle": 20,
+      "height": 1,
+      "lookHeight": 0.85,
+      "fov": 44,
+      "label": "Poppen"
+    }
+  },
+  "shot": "cabin",
+  "entrances": [
+    {
+      "cast": "thalbern-npc",
+      "when": "ducks through the saloon door",
+      "from": [
+        5.2,
+        3.3
+      ],
+      "shot": "ranger"
+    }
+  ]
+}

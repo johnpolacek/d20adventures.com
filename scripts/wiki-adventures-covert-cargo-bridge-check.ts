@@ -45,7 +45,7 @@ async function main() {
   assert.equal(artifacts.validationReport.status, "passed")
   assert.equal(artifacts.manifest.startEncounterId, "the-shipment")
   assert.deepEqual(artifacts.manifest.premadeCharacterIds, ["1749159962941", "1749307435667"])
-  assert.equal(Object.keys(artifacts.encounters).length, 10)
+  assert.equal(Object.keys(artifacts.encounters).length, 11)
   assert.equal(Object.keys(artifacts.characterSheets.npcs).length, 6)
   assert.equal(Object.keys(artifacts.characterSheets.premadeCharacters).length, 2)
   assert.equal(
@@ -81,7 +81,20 @@ async function main() {
   assert.deepEqual(artifacts.manifest.rescue, { encounterId: "the-ranger", atHealthPercent: 50 })
   assert.deepEqual(
     artifacts.encounters["the-ranger"].npcRefs.map((ref) => ref.id),
+    ["npcs-1749181492795", "thalbern-npc"],
+    "Silas is there to flee, and Reinhard dies in the intro"
+  )
+  assert.deepEqual(
+    artifacts.graph.encounterTransitions.filter((t) => t.fromEncounterId === "the-ranger").map((t) => t.toEncounterId),
+    ["the-rangers-aid"]
+  )
+  assert.deepEqual(
+    artifacts.encounters["the-rangers-aid"].npcRefs.map((ref) => ref.id),
     ["thalbern-npc"]
+  )
+  assert.deepEqual(
+    artifacts.graph.encounterTransitions.filter((t) => t.fromEncounterId === "the-rangers-aid").map((t) => t.toEncounterId),
+    ["the-crate", "return-to-the-city", "the-end"]
   )
   assert.equal(artifacts.characterSheets.npcs["thalbern-npc"].sheet.name, "Thalbern")
   assert.equal(isLocalWikiFinalEncounter(artifacts, "the-ranger"), false)

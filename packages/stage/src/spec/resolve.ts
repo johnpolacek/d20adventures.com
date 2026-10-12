@@ -30,7 +30,7 @@ export function resolveCast(set: SetSpec, staging: StagingSpec | null): CastMemb
       const t = Array.isArray(f) ? { x: f[0], z: f[1] } : (place.get(f) ?? where(f))
       ry = Math.atan2(t.x - p.x, t.z - p.z)
     }
-    return { id: c.id, name: c.name, role: c.role, height: c.height, art: c.art, x: p.x, z: p.z, ry, walking: false, walk: 0, stride: 0 }
+    return { id: c.id, name: c.name, role: c.role, height: c.height, art: c.art, x: p.x, z: p.z, ry, walking: false, walk: 0, stride: 0, down: c.down }
   })
 }
 

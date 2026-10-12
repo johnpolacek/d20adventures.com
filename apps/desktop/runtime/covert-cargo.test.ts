@@ -20,7 +20,7 @@ const unused = async (): Promise<never> => {
 test("every Covert Cargo encounter has a 3D scene with a figure and a portrait for everyone in it", () => {
   const players = pack.artifacts.manifest.premadeCharacterIds.map((characterId) => ({ characterId, userId: "local-player" }))
   const encounters = Object.values(pack.artifacts.encounters)
-  assert.equal(encounters.length, 10)
+  assert.equal(encounters.length, 11)
   for (const encounter of encounters) {
     const authored = sceneFor(encounter.id)
     assert.ok(authored, `${encounter.id} has no scene`)
@@ -99,13 +99,17 @@ test("the premise that Lyra and Poppen are strangers reaches the replies offered
 })
 
 // A model that answers each of the core's requests by its schema. `advance` is the GM's answer on turn advance.
-function stubLlm(advance: () => Record<string, unknown>, lethalTo?: string): Llm {
+function stubLlm(
+  advance: () => Record<string, unknown>,
+  lethalTo?: string,
+  npcAction: Record<string, unknown> = { actionSummary: "Cuts at the mage.", narrative: "The blade comes down.", actionType: "attack" }
+): Llm {
   return {
     generateText: async () => ({ text: "Steel rings in the saloon." }),
     generateObject: async ({ schema }) => {
       const answers = [
         advance(),
-        { actionSummary: "Cuts at the mage.", narrative: "The blade comes down.", actionType: "attack" },
+        npcAction,
         { narrative: "The blade bites deep.", effects: lethalTo ? [{ targetId: lethalTo, healthPercentDelta: -100, status: "dead" }] : [] },
         { rollType: "Attack", difficulty: 5 },
         { modifier: 0 },
@@ -155,11 +159,12 @@ test("a killing blow leaves a hero alive, and Thalbern ends a fight that would g
         .current()
         .characters.filter((c) => c.type === "npc")
         .map((c) => c.name),
-      ["Thalbern"]
+      ["Silas", "Thalbern"]
     )
-    assert.match(store.current().narrative, /Reinhard raises his sword again\.[\s\S]*I am Thalbern/)
+    // The arrow is authored: Reinhard dies in the intro and is not in the round.
+    assert.match(store.current().narrative, /Reinhard raises his sword again\.[\s\S]*The arrow takes Reinhard/)
     assert.deepEqual(store.current().adventurePatch?.transition?.toEncounterId, "the-ranger")
-    assert.match(spatialContext("the-ranger", store.current().characters, {}) ?? "", /Thalbern \(5\.2, 2\.4\)/)
+    assert.match(spatialContext("the-ranger", store.current().characters, {}) ?? "", /Thalbern \(-3\.9, 2\.3\)/)
 
     // He comes once. A patch that kills is floored too.
     for (const c of store.current().characters) c.hasReplied = c.isComplete = true
@@ -174,6 +179,24 @@ test("a killing blow leaves a hero alive, and Thalbern ends a fight that would g
     assert.equal(store.state!.turns.filter((t) => t.encounterId === "the-ranger").length, 2)
     assert.equal(lyra(store).healthPercent, 1)
     assert.notEqual(lyra(store).status, "dead")
+
+    // Silas runs on his turn and is out of the encounter. Then the ranger comes aboard.
+    for (const c of store.current().characters) if (c.name !== "Silas") c.hasReplied = c.isComplete = true
+    store.save()
+    const runs = { actionSummary: "Silas runs.", narrative: "Silas goes over the bow rail.", actionType: "flee" }
+    const round = store.current()._id
+    await play(stubLlm(() => ({ nextEncounterId: "the-rangers-aid", narrative: "The river takes him.", adventurePatch: {} }), undefined, runs))
+    assert.equal(store.state!.turns.find((t) => t._id === round)!.characters.find((c) => c.name === "Silas")!.status, "fled")
+    assert.equal(store.current().encounterId, "the-rangers-aid")
+    assert.deepEqual(
+      store
+        .current()
+        .characters.filter((c) => c.type === "npc")
+        .map((c) => c.name),
+      ["Thalbern"]
+    )
+    assert.match(store.current().narrative, /Silas goes over the bow rail\.|The river takes him\.[\s\S]*I am Thalbern/)
+    assert.match(spatialContext("the-rangers-aid", store.current().characters, {}) ?? "", /Thalbern \(5\.2, 2\.0\)/)
   })
 })
 

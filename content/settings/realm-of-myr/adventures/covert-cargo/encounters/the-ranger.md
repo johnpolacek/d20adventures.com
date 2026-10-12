@@ -8,38 +8,42 @@ title: "The Ranger"
 settingId: "realm-of-myr"
 adventureId: "covert-cargo"
 npcs:
+  - id: "npcs-1749181492795"
+    behavior: "Shaken. Reinhard is dead and an archer he cannot see has the windows covered. On his first turn he flees for good: out the saloon door, over the bow rail and into the river. He does not fight, bargain or take the crate."
+    initialInitiative: 0
+    startNear: "party"
   - id: "thalbern-npc"
-    behavior: "Has just driven off the attackers. Tends the wounded, asks what the boat carried and who was buying, and will not let anyone here come to further harm."
+    behavior: "Stays at the treeline with an arrow on the string until Silas is gone. Does not shoot a man who runs. Tells the halfling in the bushes to stay low. Does not give his name or come aboard yet."
     initialInitiative: 0
     startNear: "party"
 ---
 
 ## Intro
 
-Before the next blow can fall, a bowstring thrums somewhere in the grey dark. An arrow hisses past and stands quivering in the timber, a hand's width from the nearest blade. A second strikes steel, and a weapon spins away across the boards.
+At the treeline above the bank, a few paces from the bushes where Poppen has kept his watch, a shape rises out of the ferns. It is a man, lean and weathered, in a cloak the colors of the deep forest, and he has been there for some time. He lays one finger to his lips. Then a longbow comes up in his hands.
 
-"That is enough." The voice is low and unhurried, the voice of a man used to being heard by things with teeth.
+The bow bends. The string thrums once in the grey dark, and the arrow is gone across the gangway toward the lit windows.
 
-A stranger stands at the edge of the lamplight with a longbow at full draw. He is lean and weathered, with long, tangled brown hair and a cloak the colors of the deep forest. Sharp green eyes pass over every face and settle on the ones still holding steel. "The next one will not be a warning. Walk away."
+A pane bursts inward. The arrow takes Reinhard high in the chest and drives him back a step. He looks down at the shaft, and the sword slides out of his hand. Then Reinhard falls across the boards and does not move again.
 
-No one tests him. The attackers back off, and then they are gone, their footsteps fading into the mist along the river.
+Silas has gone very still beside the door. His eyes go from the dead man to the broken window and the dark trees beyond it.
 
-Only then does the ranger ease his bowstring and look over the wounded. "You'll live. Sit, and let me see to that." He shoulders the bow and kneels, already reaching for the pouch of herbs at his belt. "I am Thalbern. I followed this boat down the river from the Valkarr woods. I think you had better tell me what it was carrying."
+Out in the ferns, the stranger sets a second arrow to the string and holds it there.
+
+"Stay down, little one," the ranger says quietly. "This is nearly done."
 
 ## GM Notes
 
-Thalbern arrived because a player character was badly hurt. Whoever was attacking has withdrawn and does not return during this encounter. If it was Reinhard and Silas, they have gone for more men and will come back for the crate within hours. If it was the elves, they knew Thalbern, a ward of the forest elves, and stood down.
+The stranger is Thalbern, a ranger of the Valkarr woods. He has just killed Reinhard with one arrow from the treeline, because a player character was about to die. Reinhard is dead and stays dead. Nobody here knows the ranger's name yet. Call him the ranger or the stranger until he gives it.
 
-Thalbern dresses the wounds with herbs and clean linen. Each wounded player character recovers to about three quarters health.
+Silas will not fight an archer he cannot see. On his first turn he flees for good: out the saloon door, over the bow rail and into the river, gone downstream in the mist. He leaves the crate. He means to come back for it with more Blackthorn men within hours. If a player character stops him or brings him down first, the fight is over all the same.
 
-He says little about himself. If asked, a druid of the Valkarr woods sent him to find Valkaran relics taken from the elven vaults, and he tracked this boat downriver. He wants to know what the boat carried and who was buying. He will not open or take the crate himself, and he does not join the party.
+Thalbern lets him run. He does not shoot a man in the back. He stays at the treeline with an arrow on the string until Silas is gone, and tells the halfling in the bushes to stay low. He does not tend anyone, give his name or come aboard in this encounter.
 
-He advises them to be gone before the Blackthorn men return. Kordavos is three miles through the forest, and the Harvest Festival crowds will hide them. He allows that they may meet again in the city. When the players turn to the crate or leave, he slips out to watch the river trail.
+If elves were the ones threatening the players, they know Thalbern as a ward of the forest elves. They lower their weapons and withdraw into the trees.
 
-Continue this encounter until the players decide what to do next.
+This encounter is short. It ends as soon as Silas has fled, fallen or yielded, and after two rounds at the most.
 
 ## Transitions
 
-- To [[encounter:the-crate]] when the players turn their attention to the crate or the boat's cargo.
-- To [[encounter:return-to-the-city]] when the players decide to go back to the city or Kordavos.
-- To [[encounter:the-end]] when the players decide to go anywhere else or into hiding.
+- To [[encounter:the-rangers-aid]] when Silas has fled, fallen or yielded, or the fight is otherwise over. Always after two rounds here at the most.

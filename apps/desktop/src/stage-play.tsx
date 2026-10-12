@@ -198,6 +198,84 @@ export function StagePlay(props: {
       }
     }
   }, [stage, cues, reading, paragraph])
+  // Who the game has taken out of this encounter, by cast id: the dead and those who fled. A round is built without
+  // them, so each character's last appearance in the encounter says how they left.
+  const gone = useMemo(() => {
+    const out = new Map<string, "dead" | "fled">()
+    if (!stage || !save || !turn) return out
+    const rounds = save.turns.filter((t) => t.encounterId === turn.encounterId).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    for (const t of rounds)
+      for (const c of t.characters) {
+        const id = castIdFor(stage.cast, c)
+        if (!id) continue
+        const status = c.status?.trim().toLowerCase()
+        if (status === "dead" || c.healthPercent === 0) out.set(id, "dead")
+        else if (status === "fled") out.set(id, "fled")
+        else out.delete(id)
+      }
+    return out
+  }, [stage, save, turn])
+  // Someone who goes while the turn is being told leaves at the paragraph that came with the news: the first new one
+  // that names them. Anyone already gone when the turn was opened is simply not there.
+  const [leftAt, setLeftAt] = useState<Record<string, number>>({})
+  const leaving = useRef<{ turn?: string; paragraphs: number; out: Set<string> }>({ paragraphs: 0, out: new Set() })
+  useEffect(() => {
+    const old = leaving.current
+    const sameTurn = old.turn === turn?._id
+    const fresh = sameTurn ? [...gone.keys()].filter((id) => !old.out.has(id)) : []
+    setLeftAt((was) => {
+      if (sameTurn && !fresh.length) return was
+      const next = sameTurn ? { ...was } : {}
+      for (const id of fresh) {
+        const name = stage?.cast
+          .find((c) => c.id === id)
+          ?.name.split(" ")[0]
+          .toLowerCase()
+        const named = name ? text.findIndex((p, i) => i >= old.paragraphs && p.toLowerCase().includes(name)) : -1
+        next[id] = named >= 0 ? named : Math.min(old.paragraphs, Math.max(0, text.length - 1))
+      }
+      return next
+    })
+    leaving.current = { turn: turn?._id, paragraphs: text.length, out: new Set(gone.keys()) }
+  }, [gone, text, turn?._id, stage])
+  // Exits, the mirror of entrances: a fall or a run the staging ties to the narration, and anyone the game has taken
+  // out. They stay until their paragraph. Then a runner makes for their way out and is gone, and the rest lie down.
+  const exits = useMemo(() => {
+    const authored = stage?.staging?.exits ?? []
+    const out = new Map<string, { run: boolean; to?: string | [number, number]; at: number }>()
+    for (const e of authored) if (e.when) out.set(e.cast, { run: Boolean(e.to), to: e.to, at: text.findIndex((p) => p.toLowerCase().includes(e.when!.toLowerCase())) })
+    for (const [id, how] of gone) if (!out.has(id)) out.set(id, { run: how === "fled", to: authored.find((e) => e.cast === id)?.to, at: leftAt[id] ?? -1 })
+    return out
+  }, [stage, text, gone, leftAt])
+  const ran = useRef(new Set<string>())
+  const ranOn = useRef(stage)
+  useEffect(() => {
+    if (!stage) return
+    if (ranOn.current !== stage) ran.current.clear()
+    ranOn.current = stage
+    for (const [id, e] of exits) {
+      const home = stage.staging?.cast.find((c) => c.id === id)
+      if (reading && e.at >= 0 && paragraph < e.at) {
+        // Not yet: back on their feet in their place, as when the reader steps back.
+        if (ran.current.delete(id) && home) stage.placeCast(id, home.at, home.facing)
+        stage.setOnStage(id, true)
+        stage.setDown(id, false)
+      } else if (!e.run) stage.setDown(id, true, !(reading && paragraph === e.at))
+      else if (stage.isOnStage(id) && !ran.current.has(id)) {
+        ran.current.add(id)
+        if (!(reading && paragraph === e.at && e.to)) stage.setOnStage(id, false)
+        else {
+          const to = stage.point(e.to)
+          // Reading on does not cut the run short. Stepping back, or a new scene, does.
+          const running = () => ranOn.current === stage && ran.current.has(id)
+          void (async () => {
+            for (const p of stage.route(id, to, 40)) if (running()) await stage.moveCast(id, [p.x, p.z], { speed: 2.4 })
+            if (running()) stage.setOnStage(id, false)
+          })()
+        }
+      }
+    }
+  }, [stage, exits, reading, paragraph])
   // Each paragraph moves the camera to fit it: its first speaker, someone making an entrance, whoever it is about, or
   // the place it describes.
   useEffect(() => {

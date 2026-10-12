@@ -24,7 +24,7 @@ Desktop integration updated on 2026-10-03 in `feature/desktop-stage-play`, inclu
 - [Adventure premise](plans/adventure-premise.md): who knows whom. A rule in every prompt, and an authored `## Premise` per adventure. On main 2026-10-11.
 - [Skip a hero's turn](plans/skip-turn.md): a text button left of Send ends the hero's turn with nothing written and no AI. Local play and hosted games, on main 2026-10-11.
 - [Suggested replies](plans/turn-suggestions.md): on a hero's turn the GM card offers three replies that fill the reply box. Local play and hosted games, on main 2026-10-11.
-- [Covert Cargo rescue](plans/covert-cargo-rescue.md): no player deaths, and Thalbern steps in at half health. Merged into main 2026-10-10.
+- [Covert Cargo rescue](plans/covert-cargo-rescue.md): no player deaths, and Thalbern steps in at half health. Revised 2026-10-12: an arrow from the treeline kills Reinhard, Silas flees, and Thalbern comes aboard in The Ranger's Aid.
 - [Adventure store](plans/feature-adventure-store.md): buying adventures on the website, linking the desktop app, and pack downloads.
 - [Desktop Stageview integration](plans/zzz-completed/feature-desktop-stage-play.md): native game client, local saves, live turn flow, validation, and limits.
 - [Stage engine](stage-engine.md): implemented runtime, set/staging specs, measured limits.

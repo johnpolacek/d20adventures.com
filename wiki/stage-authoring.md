@@ -68,3 +68,6 @@ The web viewer and the desktop app run the same `packages/stage` renderer and th
 - Paint an interior's textures from the paintings of that interior, at 1536 px, and tint them near white. A dark texture tinted to a colour loses its grain under lamplight.
 - A window people should see through needs a real opening and one-sided `glass`: glowing from outside with the room behind it, clear from inside.
 - A cloaked character's back can come out as a front-facing body with the cloak drawn behind it. Give the figure a `backNote` in `scripts/stage-standees.ts` that says the cloak hangs down the back and hides it, and whether the hood is up.
+- A death the intro narrates needs no dice and no round. Leave the character out of the encounter's `npcs`, keep them in the staging cast, and give them an exit with the line they fall on. Give the next staging the same cast member with `down: true`, or the body vanishes at the scene change.
+- Pace a sequence with encounters, not one long intro. Stage positions reset on every encounter change, so a second encounter can bring someone through a door with an entrance. NPCs do not walk on their own.
+- Name a stranger by what the heroes see. The Ranger's staging calls Thalbern "The Ranger", so the plate does not give his name before he does, and narration that says "the ranger" still finds him.

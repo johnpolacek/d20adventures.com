@@ -54,3 +54,50 @@ Two authored adventure rules, enforced by the GM core rather than judged by the 
 - The new staging is placed from existing saloon marks. It still needs a look in the preview page and the app.
 - On the web, premade heroes return to full health on every encounter change. On desktop they keep their wounds, and Thalbern's healing depends on the GM's patch.
 - The Midnight Summons still leaves its own rescue to the GM's judgment. It could adopt the same rule.
+
+## Revision, 2026-10-12: the arrow from the treeline
+
+Owner request after a desktop play-through: Thalbern appeared inside the cabin and Silas and Reinhard vanished. He should be outside in the woods near Poppen. Poppen sees him loose one arrow, which hits and kills Reinhard or Silas with no roll. The other flees, and Thalbern tends the wounded. It should play out over a couple of rounds.
+
+### Findings
+
+- The rescue intro did everything in one block, and its staging dropped Reinhard and Silas from the cast.
+- Stage positions reset on every encounter change, so The Ranger's staging decides where everyone stands.
+- NPC standees never leave the stage. A dead or fled NPC keeps standing.
+- NPCs do not walk on the stage. Only player replies are read for movement, and only entrances move an NPC.
+- An NPC turn cannot kill another NPC or take itself out of the encounter. Only a roll outcome or the GM's advance patch sets a status.
+
+### Decision
+
+Two encounters pace it, each with an authored intro and staging.
+
+| Encounter | What happens | Stage |
+|---|---|---|
+| The Ranger (rescue target) | A stranger rises from the ferns beside Poppen's bushes and looses one arrow through the lit window. Reinhard dies in the intro, authored, no roll. Silas flees on his turn. | Battle positions. Thalbern walks on beside Poppen. Reinhard falls when the narration says so. Silas runs for the bow. |
+| The Ranger's Aid (new) | Thalbern crosses the gangway, tends the wounded, names himself, asks about the cargo. | Thalbern walks in through the saloon door. Reinhard lies where he fell. |
+
+- The arrow always takes Reinhard, the one attacking. Silas is the one who runs, and he is the one who would come back with more men.
+- The Ranger moves to The Ranger's Aid once Silas is gone, or after two rounds.
+- The Ranger's Aid keeps the old exits: The Crate, Return to the City, The End.
+
+### Engine work
+
+- GM core: an NPC action type `flee`. The NPC takes the status "fled" and is out of the encounter.
+- Stage: a standee can lie `down`. A staging cast member can start `down`. Staging `exits` time a fall or a run to the narration, the mirror of `entrances`.
+- Desktop: a character who is dead lies down and one who has fled runs off, at the paragraph that came with the change. Both stay that way for the rest of the encounter.
+
+### Known gaps
+
+- If the players had already killed Reinhard before the rescue fired, the intro still names him.
+- If Poppen had gone aboard, he is back at the treeline when the rescue starts, like every encounter change.
+- A rescue out of The Disturbance, where elves were the threat, still shoots Reinhard. The GM notes cover the elves standing down.
+
+### Results, 2026-10-12
+
+- Content: The Ranger rewritten, The Ranger's Aid added, and Thalbern's sheet now says he shoots to kill a man who means murder.
+- GM core: `flee` in `npc-turn-generation-service.ts` and `npc-turn-branch-service.ts`. The recorded turn fixture carries the new prompt and schema.
+- Stage: `Standees.down`, `stage.setDown`, cast `down`, staging `exits`. Both stagings come from `scripts/stage-sets/covert-cargo.ts`.
+- Desktop: `stage-play.tsx` plays exits and lays out or removes anyone the game has taken out of the encounter.
+- Passed: `pnpm test:gm-core`, the Covert Cargo bridge and public flow checks, `pnpm stage:check`, 54 desktop tests against a rebuilt pack, stage, GM core and desktop typechecks, scoped Biome.
+- Looked at in the stage preview at the high tier: the treeline two-shot, the saloon with Reinhard on the floor, and Thalbern in the doorway.
+- Not done: a play-through with a live model. The fall, Silas's run and both entrances have not been watched in the app.

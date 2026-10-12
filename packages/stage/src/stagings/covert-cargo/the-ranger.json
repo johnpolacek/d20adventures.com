@@ -5,16 +5,19 @@
   "set": "realm-of-myr/mordava-river-pier",
   "cast": [
     {
-      "id": "thalbern-npc",
-      "name": "Thalbern",
-      "role": "Ranger of the Valkarr woods",
-      "height": 1.82,
+      "id": "npcs-1749163978757",
+      "name": "Reinhard",
+      "role": "Enforcer",
+      "height": 1.92,
       "art": {
-        "front": "/stage/fixtures/the-midnight-summons/thalbern-front.webp",
-        "back": "/stage/fixtures/the-midnight-summons/thalbern-back.webp",
-        "portrait": "/stage/fixtures/the-midnight-summons/thalbern-portrait.jpg"
+        "front": "/stage/fixtures/covert-cargo/reinhard-front.webp",
+        "back": "/stage/fixtures/covert-cargo/reinhard-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/reinhard-portrait.jpg"
       },
-      "at": [5.2, 2.35],
+      "at": [
+        6.2,
+        -0.35
+      ],
       "facing": "lyra"
     },
     {
@@ -27,8 +30,27 @@
         "back": "/stage/fixtures/covert-cargo/lyra-back.webp",
         "portrait": "/stage/fixtures/covert-cargo/lyra-portrait.jpg"
       },
-      "at": [4.65, -0.2],
-      "facing": "thalbern-npc"
+      "at": [
+        4.85,
+        0.75
+      ],
+      "facing": "npcs-1749163978757"
+    },
+    {
+      "id": "npcs-1749181492795",
+      "name": "Silas",
+      "role": "Rogue, the brains of the mission",
+      "height": 1.78,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/silas-front.webp",
+        "back": "/stage/fixtures/covert-cargo/silas-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/silas-portrait.jpg"
+      },
+      "at": [
+        5.2,
+        2.35
+      ],
+      "facing": "lyra"
     },
     {
       "id": "poppen",
@@ -40,27 +62,120 @@
         "back": "/stage/fixtures/covert-cargo/poppen-back.webp",
         "portrait": "/stage/fixtures/covert-cargo/poppen-portrait.jpg"
       },
-      "at": [6.3, -0.9],
-      "facing": "thalbern-npc"
+      "at": [
+        -5,
+        4.3
+      ],
+      "facing": [
+        5.2,
+        0.5
+      ]
+    },
+    {
+      "id": "thalbern-npc",
+      "name": "The Ranger",
+      "role": "A stranger with a longbow",
+      "height": 1.82,
+      "art": {
+        "front": "/stage/fixtures/the-midnight-summons/thalbern-front.webp",
+        "back": "/stage/fixtures/the-midnight-summons/thalbern-back.webp",
+        "portrait": "/stage/fixtures/the-midnight-summons/thalbern-portrait.jpg"
+      },
+      "at": [
+        -3.9,
+        2.3
+      ],
+      "facing": [
+        5.2,
+        0.5
+      ]
     }
   ],
   "shots": {
+    "reinhard": {
+      "subject": "npcs-1749163978757",
+      "distance": 2,
+      "angle": 25,
+      "height": 1.35,
+      "lookHeight": 1.55,
+      "fov": 44,
+      "label": "Reinhard"
+    },
+    "lyra": {
+      "subject": "lyra",
+      "distance": 2,
+      "angle": 30,
+      "height": 1.6,
+      "lookHeight": 1.394,
+      "fov": 44,
+      "label": "Lyra"
+    },
+    "silas": {
+      "subject": "npcs-1749181492795",
+      "distance": 2.1,
+      "angle": 25,
+      "height": 1.6,
+      "lookHeight": 1.4596,
+      "fov": 44,
+      "label": "Silas"
+    },
+    "treeline": {
+      "subjects": [
+        "thalbern-npc",
+        "poppen"
+      ],
+      "offset": [
+        1.95,
+        1.55,
+        1.3
+      ],
+      "target": [
+        0,
+        1.1,
+        0
+      ],
+      "fov": 55,
+      "label": "The treeline"
+    },
     "ranger": {
       "subject": "thalbern-npc",
-      "distance": 2.1,
+      "distance": 2.4,
       "angle": 25,
       "height": 1.6,
       "lookHeight": 1.49,
       "fov": 44,
-      "label": "Thalbern"
+      "label": "The archer"
     },
-    "pair": {
-      "subjects": ["lyra", "poppen"],
-      "offset": [-0.275, 1.7, -2.95],
-      "target": [-0.175, 0.6, -0.55],
-      "fov": 55,
-      "label": "The pair"
+    "poppen": {
+      "subject": "poppen",
+      "distance": 2.2,
+      "angle": 30,
+      "height": 1.15,
+      "lookHeight": 0.8,
+      "fov": 44,
+      "label": "Poppen"
     }
   },
-  "shot": "ranger"
+  "shot": "reinhard",
+  "entrances": [
+    {
+      "cast": "thalbern-npc",
+      "when": "rises out of the ferns",
+      "from": [
+        -5.6,
+        0.6
+      ],
+      "shot": "treeline"
+    }
+  ],
+  "exits": [
+    {
+      "cast": "npcs-1749163978757",
+      "when": "The arrow takes Reinhard"
+    },
+    {
+      "cast": "npcs-1749181492795",
+      "to": "bow"
+    }
+  ]
 }

@@ -124,7 +124,7 @@ export function createNpcTurnService(ports: GmPorts) {
     })
 
     // HANDLE SKIP/PASS FIRST to avoid unnecessary API calls
-    if (actionResult.actionType === "skip" || actionResult.actionType === "pass") {
+    if (actionResult.actionType === "skip" || actionResult.actionType === "pass" || actionResult.actionType === "flee") {
       return handleSkipPassNpcTurn({
         turn,
         npc,

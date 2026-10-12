@@ -29,16 +29,18 @@ export type NpcTurnBranchResult = {
 type NpcActionResult = {
   actionSummary: string
   narrative: string
-  actionType: "attack" | "skill" | "skip" | "pass" | "other"
+  actionType: "attack" | "skill" | "skip" | "pass" | "flee" | "other"
   effects?: NpcTurnEffect[]
 }
 
+// An NPC turn that needs no roll and touches nobody else: waiting, holding back, or running away for good.
 export function handleSkipPassNpcTurn(args: { turn: Turn; npc: TurnCharacter; actionResult: NpcActionResult }): NpcTurnBranchResult {
   const narrativeToAppend = normalizeNarrative(args.actionResult.narrative)
   const updatedCharacters = args.turn.characters.map((character) => {
     if (character.id === args.npc.id) {
-      // Skipping or passing is not a condition. The NPC keeps whatever status it has.
-      return { ...character, hasReplied: true, isComplete: true }
+      // Skipping or passing is not a condition. The NPC keeps whatever status it has. One who flees is out of the
+      // encounter: the next round is built without them.
+      return { ...character, hasReplied: true, isComplete: true, ...(args.actionResult.actionType === "flee" ? { status: "fled" } : {}) }
     }
     return character
   })

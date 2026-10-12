@@ -28,6 +28,8 @@ const castMember = z
     art: z.object({ front: assetUrl, back: assetUrl.optional(), portrait: assetUrl.optional() }).strict(),
     at: z.union([idName, vec2]),
     facing: facing.default(0),
+    // Lying where they fell when the scene opens (a body left by an earlier encounter).
+    down: z.boolean().optional(),
   })
   .strict()
 
@@ -106,6 +108,14 @@ export const stagingSpecSchema = z
       .array(z.object({ cast: idName, when: z.string().min(3).max(120), from: z.union([idName, vec2]), shot: idName.optional() }).strict())
       .max(12)
       .default([]),
+    // Exits, the mirror of entrances. While a turn's narration contains `when`, the cast member stays until the
+    // paragraph that says it. Then they run to `to` (a mark or point) and are gone, or with no `to` fall where they
+    // stand. Narration without the phrase, such as a later round's, finds them already gone or down. An exit with no
+    // `when` only says where that cast member runs when the game takes them out of the encounter.
+    exits: z
+      .array(z.object({ cast: idName, when: z.string().min(3).max(120).optional(), to: z.union([idName, vec2]).optional() }).strict())
+      .max(12)
+      .default([]),
   })
   .strict()
   .superRefine((s, ctx) => {
@@ -115,6 +125,7 @@ export const stagingSpecSchema = z
       ids.add(c.id)
     }
     for (const e of s.entrances) if (!ids.has(e.cast)) ctx.addIssue({ code: "custom", message: `entrance for unknown cast member ${e.cast}`, path: ["entrances"] })
+    for (const e of s.exits) if (!ids.has(e.cast)) ctx.addIssue({ code: "custom", message: `exit for unknown cast member ${e.cast}`, path: ["exits"] })
     for (const [key, shot] of Object.entries(s.shots)) {
       const refs = "subjects" in shot ? shot.subjects : "subject" in shot ? [shot.subject] : []
       for (const r of refs) if (!ids.has(r)) ctx.addIssue({ code: "custom", message: `shot ${key} frames unknown cast member ${r}`, path: ["shots", key] })

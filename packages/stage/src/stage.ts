@@ -620,6 +620,15 @@ export class Stage {
   isOnStage(id: string) {
     return !this.standees.offstage.has(id)
   }
+  // Lay a cast member on the ground where they stand (a fall), or stand them up again.
+  // `instant` skips the fall, for someone already down when the scene is shown.
+  setDown(id: string, down: boolean, instant = false) {
+    this.member(id)
+    this.standees.lay(id, down, instant)
+  }
+  isDown(id: string) {
+    return this.standees.down.has(id)
+  }
   // Place a cast member instantly (setting up a beat sequence).
   placeCast(id: string, at: string | [number, number], facing?: string | [number, number] | number) {
     const c = this.member(id)

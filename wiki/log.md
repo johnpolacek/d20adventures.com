@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-12, Thalbern shoots from the treeline
+
+Owner, after a Covert Cargo rescue in the app: Thalbern "first appears inside the cabin then all of a sudden silas and reinhard are gone". He should be in the woods near Poppen, kill Reinhard or Silas with one arrow that cannot miss, and tend the wounded after the other flees, over a couple of rounds. The rescue is now two encounters. The Ranger's intro has the arrow kill Reinhard, and Silas flees on his turn. The Ranger's Aid brings Thalbern through the saloon door. An NPC turn can now `flee`, a standee can lie down, stagings have `exits`, and the desktop stage lays out the dead and sends off the fled. Reinhard is always the one shot. Not yet played with a live model. Details in [the rescue plan](plans/covert-cargo-rescue.md).
+
 ## 2026-10-11, March of Davos keeps its secrets, and two names are fixed
 
 Owner asked whether March of Davos needs a premise too. It does not: every encounter treats the heroes as one group. Checked with the real GM on throwaway saves at the gate, The Lady and the Bishop, and Face to Face with Silverhand. Twelve runs of the NPCs' turns and the round's end, half with a hero asking outright who leads the Covenant, and six runs of replies offered to a hero. No secret came out in any. The old prompts were not run, so this shows it holds now, not why. Two names changed on the owner's say. Silverhand's sheet was named "Silverhand (Kazimir Raskov)", which put his secret name in every prompt, so it is now "Silverhand". The bishop was "Nicolai" on his sheet and "Nikolai" in one intro, and is now "Nicolai" throughout. See [Adventure premise](plans/adventure-premise.md).

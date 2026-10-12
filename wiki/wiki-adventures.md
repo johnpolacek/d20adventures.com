@@ -48,6 +48,7 @@ Two optional manifest fields, enforced by the GM core in `packages/gm-core/src/w
 - A fight already won or fled follows the transition the GM chose.
 - The rescue encounter's intro follows the GM's narration of the round, so write it to open mid-fight.
 - The compiler rejects a `rescue.encounter` that is not an encounter.
+- Covert Cargo paces its rescue over two encounters. The Ranger's intro kills Reinhard with an authored arrow, so he is in the staging and not in the round. Silas is in the round to flee. The Ranger's Aid follows when he is gone.
 - Legacy plans ignore both fields.
 
 An NPC who is also another adventure's premade needs its own ID. Covert Cargo's Thalbern is `thalbern-npc`, since `thalbern` is the Midnight Summons premade.

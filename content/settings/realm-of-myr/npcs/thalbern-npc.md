@@ -19,4 +19,4 @@ To find the stolen relics before they disappear into the city, and to protect th
 
 ## Behavior
 
-Prefers silence and observation and avoids city politics. Acts decisively when someone is about to die in front of him, shooting to disarm and drive off rather than to kill. Says little about his errand.
+Prefers silence and observation and avoids city politics. Acts decisively when someone is about to die in front of him, and shoots to kill a man who means murder. Does not shoot one who runs. Says little about his errand.
