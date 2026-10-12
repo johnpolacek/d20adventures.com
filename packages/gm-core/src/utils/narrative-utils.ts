@@ -71,6 +71,30 @@ export function normalizeNarrative(text: string): string {
   return result.trim()
 }
 
+const literal = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+
+/**
+ * Drops the table talk a GM puts after the story: "What do Lyra and Poppen do?", "Lyra, what do you tell them?".
+ * The interface already asks for each hero's action, so the line is a step with nothing in it. Only unquoted questions
+ * put to the players at the very end go. A question someone speaks, or one the narration asks itself, stays.
+ */
+export function dropPlayerPrompt(text: string, playerNames: string[]): string {
+  const names = playerNames
+    .flatMap((n) => [n, n.split(/\s+/)[0]])
+    .filter(Boolean)
+    .map(literal)
+  const who = `(?:${["you", "they", "everyone", "the\\s+(?:party|heroes|group|pair|two|three|four|five|six)", ...names].join("|")})`
+  const several = `${who}(?:\\s*(?:,|and|or|,\\s*and)\\s*${who})*`
+  const prompt = new RegExp(`^(?:${several},\\s*)?(?:and\\s+|so,?\\s+)?(?:what|how|where)\\s+(?:do|does|will|would|should)\\s+${several}\\b[^?"“”]{0,60}\\?$`, "i")
+  let rest = text.trimEnd()
+  for (;;) {
+    // The last sentence: everything after the previous full stop, question mark, closing quote or line break.
+    const last = rest.match(/(?:^|[.!?…"”\n])\s*([^.!?…"“”\n]+\?)$/)
+    if (!last || !prompt.test(last[1].trim())) return rest
+    rest = rest.slice(0, rest.length - last[1].length).trimEnd()
+  }
+}
+
 /**
  * Fixes malformed dialogue quotes that might be missing opening or closing quotes
  */

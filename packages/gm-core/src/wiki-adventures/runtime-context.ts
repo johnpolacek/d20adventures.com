@@ -229,7 +229,7 @@ Your Task:
 1. Decide from what has already happened, including everything this round and roll outcomes. A player's action this round counts even when an NPC spoke after it. If events so far satisfy a listed transition condition, transition now rather than extending a situation that is already resolved. Continue the current encounter only when no listed condition is satisfied yet, or when one depends on a player choice that has not been made.
 2. If transitioning, set nextEncounterId to one of the listed transition target IDs.
 3. If not transitioning, set nextEncounterId to the current encounter ID.
-4. Return narrative for players. Do not write new player decisions, dialogue, or internal thoughts for: ${packet.outputContract.playerCharacterNames.join(", ")}.
+4. Return narrative for players. Do not write new player decisions, dialogue, or internal thoughts for: ${packet.outputContract.playerCharacterNames.join(", ")}. End on the story itself. Never ask the players what they do and never speak to them directly: the game asks for each action.
 5. ${KNOWLEDGE_RULE}
 6. Include an adventurePatch that updates the live Adventure playthrough record with summaries, discoveries, entity updates, character updates, open threads, resolved threads, and transition details when applicable.
 

@@ -14,6 +14,7 @@ import {
   getSectionAndSceneContext,
 } from "../services/advance-turn-prompt-service"
 import { appendNarrative, normalizeNarrative } from "../services/narrative-service"
+import { dropPlayerPrompt } from "../utils/narrative-utils"
 import type { TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import { mapConvexTurnToTurn } from "../utils/game-utils"
@@ -158,7 +159,8 @@ export function createAdvanceTurn(ports: GmPorts) {
             }))
             .sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
       const characters = keepPlayersAlive(artifacts.manifest, nextCharacters)
-      const narrative = isTransition ? appendNarrative(normalizeNarrative(llmResult.narrative), normalizeNarrative(nextEncounter.sections.intro ?? "")) : normalizeNarrative(llmResult.narrative)
+      const told = dropPlayerPrompt(normalizeNarrative(llmResult.narrative), packet.outputContract.playerCharacterNames)
+      const narrative = isTransition ? appendNarrative(told, normalizeNarrative(nextEncounter.sections.intro ?? "")) : told
       const isFinalEncounter = isLocalWikiFinalEncounter(artifacts, nextEncounter.id)
       const commitResult = await ports.store.commitWikiTurnAdvance({
         adventureId: turnData.adventureId,

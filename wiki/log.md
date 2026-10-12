@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-12, the GM does not ask the players what they do
+
+Owner, in Covert Cargo: a round's narration ended on its own step, "What do Lyra and Poppen do?", which "pulls me out of immersing in the game". The round prompt for wiki adventures had no rule against it, and three of seven rounds in that save ended that way. The prompt now says to end on the story, and `dropPlayerPrompt` removes an unquoted closing question put to the players before the round is saved. Questions a character speaks stay. The interface already asks for each hero's action.
+
 ## 2026-10-12, Thalbern shoots from the treeline
 
 Owner, after a Covert Cargo rescue in the app: Thalbern "first appears inside the cabin then all of a sudden silas and reinhard are gone". He should be in the woods near Poppen, kill Reinhard or Silas with one arrow that cannot miss, and tend the wounded after the other flees, over a couple of rounds. The rescue is now two encounters. The Ranger's intro has the arrow kill Reinhard, and Silas flees on his turn. The Ranger's Aid brings Thalbern through the saloon door. An NPC turn can now `flee`, a standee can lie down, stagings have `exits`, and the desktop stage lays out the dead and sends off the fled. Reinhard is always the one shot. Not yet played with a live model. Details in [the rescue plan](plans/covert-cargo-rescue.md).

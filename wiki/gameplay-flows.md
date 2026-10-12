@@ -23,7 +23,7 @@ The [shared GM core](gm-core.md) now owns reply, roll, NPC, companion, and advan
 3. Required rolls are stored and resolved before completing the action.
 4. Narrative and character-state updates are applied.
 5. NPC turns resolve as needed. An NPC who flees takes the status "fled" and is left out of the next round.
-6. Turn advance loads current content, validates encounter progression, and commits the next turn and story patch. An adventure's [safety rules](wiki-adventures.md#safety-rules) can keep player characters alive and send a badly hurt party to a rescue encounter.
+6. Turn advance loads current content, validates encounter progression, and commits the next turn and story patch. A closing question put to the players, such as "What do Lyra and Poppen do?", is dropped from the round's narration. An adventure's [safety rules](wiki-adventures.md#safety-rules) can keep player characters alive and send a badly hurt party to a rescue encounter.
 7. Terminal wiki encounters set completed status and an end timestamp.
 
 Spells: every cast is a check named for the spell, and the check marks the spell used for the encounter. A check for a spell on the character's own list adds their Intelligence modifier. Owner decision, 2026-10-11: a spell no creature resists (Fog Cloud, Light, Detect Magic) is an easy check, DC 5 to 8. A spell against a creature's mind or body (Charm Person, Ray of Frost) follows the normal difficulty guidelines. Encounter instructions that set a difficulty come first.
