@@ -13,6 +13,14 @@ const start = () => createRoot(document.getElementById("root")!).render(<Desktop
 if (import.meta.env.DEV && !isTauri()) void import("./preview").then((m) => m.installPreview()).then(start)
 else start()
 
+// Development only: Cmd+R (Ctrl+R) reloads the window, so a save edited on disk shows without restarting the app.
+if (import.meta.env.DEV)
+  addEventListener("keydown", (e) => {
+    if (!(e.metaKey || e.ctrlKey) || e.altKey || e.shiftKey || e.key.toLowerCase() !== "r") return
+    e.preventDefault()
+    location.reload()
+  })
+
 // Release checks (D20_RENDER_REPORT): whether the stage came up, any errors, and its frame rate and draw counts
 // sampled each second for the first 50 s. The app writes the report only when that variable is set.
 if (isTauri()) {

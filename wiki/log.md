@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-12, Cmd+R reloads the desktop app in development
+
+The app keeps its own copy of the save in memory, so a save edited on disk still shows the old text until the window reloads. Owner had no way to reload it: "this is not a browser". In development builds Cmd+R, or Ctrl+R, now reloads the window. An agent can also reload it by touching `apps/desktop/index.html`, which makes the dev server send a full reload. Checked in the browser preview, not in the Tauri window.
+
 ## 2026-10-12, the GM does not ask the players what they do
 
 Owner, in Covert Cargo: a round's narration ended on its own step, "What do Lyra and Poppen do?", which "pulls me out of immersing in the game". The round prompt for wiki adventures had no rule against it, and three of seven rounds in that save ended that way. The prompt now says to end on the story, and `dropPlayerPrompt` removes an unquoted closing question put to the players before the round is saved. Questions a character speaks stay. The interface already asks for each hero's action.
