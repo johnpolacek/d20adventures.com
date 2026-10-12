@@ -46,3 +46,12 @@ Two things, both in every prompt that writes for a character.
 - Runtime tests: Covert Cargo's premise reaches the GM's prompt and the offered replies, and an adventure without one carries none. 54 pass.
 - `pnpm test:gm-core`, the Covert Cargo bridge check, and type checks pass.
 - Not checked in the running app.
+
+2026-10-11, March of Davos, which has no premise.
+
+- Real GM on throwaway saves at the gate, The Lady and the Bishop, and Face to Face with Silverhand.
+  - 12 runs of the NPCs' turns and the round's end, half with a hero asking outright about the Covenant.
+  - 6 runs of replies offered to a hero.
+  - No secret came out in any. The heroes acted as companions.
+- The old prompts were not run there, so this does not show the rule is the reason.
+- An NPC's sheet name goes into every prompt. Silverhand's held his secret name, and is now "Silverhand".

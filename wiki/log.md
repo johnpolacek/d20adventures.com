@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-11, March of Davos keeps its secrets, and two names are fixed
+
+Owner asked whether March of Davos needs a premise too. It does not: every encounter treats the heroes as one group. Checked with the real GM on throwaway saves at the gate, The Lady and the Bishop, and Face to Face with Silverhand. Twelve runs of the NPCs' turns and the round's end, half with a hero asking outright who leads the Covenant, and six runs of replies offered to a hero. No secret came out in any. The old prompts were not run, so this shows it holds now, not why. Two names changed on the owner's say. Silverhand's sheet was named "Silverhand (Kazimir Raskov)", which put his secret name in every prompt, so it is now "Silverhand". The bishop was "Nicolai" on his sheet and "Nikolai" in one intro, and is now "Nicolai" throughout. See [Adventure premise](plans/adventure-premise.md).
+
 ## 2026-10-11, characters know only what the story shows them
 
 Owner, in Covert Cargo: "Lyra and the NPCs seem to have knowledge of Poppen but they should not. Lyra has never met him. No one knows he is there." Nothing told the GM who knows whom, and the narrator names every hero, so a reply offered for Lyra had her shout "Poppen, now!". Every prompt that writes for a character now carries a who-knows-what rule. The rule alone did not fix it, so an adventure page can author a `## Premise`, which reaches the same prompts, the players' side included. Covert Cargo's premise is the owner's statement. With the real GM on a snapshot of the owner's save, offered replies named Poppen 3 of 3 times before and 0 of 3 after. Not checked in the running app. See [Adventure premise](plans/adventure-premise.md).
