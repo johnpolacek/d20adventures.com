@@ -463,8 +463,8 @@ function pierSet() {
         { at: [5.2, 2.2, 0.8], color: "#ffb060", intensity: 8, distance: 6 },
         { at: [5.2, 2.2, -2.6], color: "#ffb060", intensity: 7, distance: 5 },
         // Lamplight spilling from the door and the bow windows onto the foredeck, and from the port windows over the deck
-        // and water.
-        { at: [5.2, 1.6, 3.8], color: "#ffa046", intensity: 20, distance: 9 },
+        // and water. The foredeck's is high and a step out from the door, so it does not wash out whoever stands there.
+        { at: [5.2, 2.6, 4.8], color: "#ffa046", intensity: 8, distance: 9 },
         { at: [2.5, 1.5, -1.0], color: "#ffa046", intensity: 18, distance: 9 },
         { at: [5.2, 5.8, -0.03], color: "#ffb060", intensity: 4, distance: 6 },
         { at: [7.9, -0.5, 0.9], color: "#ff9a40", intensity: 12, distance: 7 },
