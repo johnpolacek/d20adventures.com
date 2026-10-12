@@ -76,7 +76,7 @@ Two encounters pace it, each with an authored intro and staging.
 | The Ranger (rescue target) | A stranger rises from the ferns beside Poppen's bushes and looses one arrow through the lit window. Reinhard dies in the intro, authored, no roll. Silas flees on his turn. | Battle positions. Thalbern walks on beside Poppen. Reinhard falls when the narration says so. Silas runs for the bow. |
 | The Ranger's Aid (new) | Thalbern crosses the gangway, tends the wounded, names himself, asks about the cargo. | Thalbern walks in through the saloon door. Reinhard lies where he fell. |
 
-- The arrow always takes Reinhard, the one attacking. Silas is the one who runs, and he is the one who would come back with more men.
+- The arrow always takes Reinhard, the one attacking. Silas is the one who runs, and he is the one who would come back with more men. Owner confirmed 2026-10-12, over shooting whichever of the two is still alive.
 - The Ranger moves to The Ranger's Aid once Silas is gone, or after two rounds.
 - The Ranger's Aid keeps the old exits: The Crate, Return to the City, The End.
 
