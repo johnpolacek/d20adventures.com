@@ -95,8 +95,12 @@ test("suggested replies come from what the players have read, for the hero whose
   try {
     await game(store, packs, failLlm)({ kind: "start", provider: "claude" })
     const turn = store.current()
+    // Starting initiative is rolled, and the guard can roll highest. Put a hero up first.
+    const first = turn.characters.find((c) => c.type === "pc")!
+    for (const c of turn.characters) c.initiative = c.id === first.id ? 20 : 0
+    store.save()
     const actor = findCurrentActor(turn.characters)!
-    assert.equal(actor.type, "pc")
+    assert.equal(actor.id, first.id)
     const other = turn.characters.find((c) => c.id !== actor.id)!
     let prompt = ""
     const four = [1, 2, 3, 4].map((n) => ({ label: `Choice ${n}`, text: `${actor.name} tries idea ${n}.` }))
