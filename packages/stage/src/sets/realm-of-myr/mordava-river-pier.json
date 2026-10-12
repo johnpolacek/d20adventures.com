@@ -93,12 +93,12 @@
       },
       {
         "at": [
-          2.5,
-          1.5,
+          2,
+          2.6,
           -1
         ],
         "color": "#ffa046",
-        "intensity": 18,
+        "intensity": 8,
         "distance": 9
       },
       {
