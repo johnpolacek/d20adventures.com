@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-11, characters know only what the story shows them
+
+Owner, in Covert Cargo: "Lyra and the NPCs seem to have knowledge of Poppen but they should not. Lyra has never met him. No one knows he is there." Nothing told the GM who knows whom, and the narrator names every hero, so a reply offered for Lyra had her shout "Poppen, now!". Every prompt that writes for a character now carries a who-knows-what rule. The rule alone did not fix it, so an adventure page can author a `## Premise`, which reaches the same prompts, the players' side included. Covert Cargo's premise is the owner's statement. With the real GM on a snapshot of the owner's save, offered replies named Poppen 3 of 3 times before and 0 of 3 after. Not checked in the running app. See [Adventure premise](plans/adventure-premise.md).
+
 ## 2026-10-11, known spells are cast with Intelligence
 
 Owner was surprised by Lyra's Fog Cloud check: 11 - 1 = 10 against DC 13. The roll's ability bonus came from a short list of spell names in `modifier-utils.ts`, and Fog Cloud was not on it, so she rolled with no Intelligence and only the GM's -1 for the situation. A check named for any spell on the character's own list now uses Intelligence. With it that roll is 13, a success. The DC itself is the GM's choice under "adjust the difficulty based on the type of spell". Owner then chose an easy check for spells nobody resists, DC 5 to 8, in the roll rules of `roll-requirement-service.ts` and `narrative-service.ts`. One run through the Claude CLI with Lyra: Fog Cloud DC 8, Detect Magic DC 8, Light DC 5, Ray of Frost DC 13, Charm Person DC 16. See [Gameplay flows](gameplay-flows.md).

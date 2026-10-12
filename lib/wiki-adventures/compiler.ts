@@ -177,6 +177,7 @@ export function compileAdventureSourceTree(files: SourceFile[], options: Compile
     title: adventure?.title ?? "Invalid Adventure",
     teaser: adventureFile?.sections.teaser,
     summary: adventureFile?.sections.summary,
+    premise: adventureFile?.sections.premise,
     image: adventure?.image,
     startEncounterId: adventure?.startEncounter ?? "",
     recommendedPlayers: adventure?.recommendedPlayers,

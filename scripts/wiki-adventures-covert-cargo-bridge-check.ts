@@ -77,6 +77,7 @@ async function main() {
 
   // The rescue: authored rules, Thalbern's encounter, and a transition only the core takes.
   assert.equal(artifacts.manifest.playerDeath, false)
+  assert.match(artifacts.manifest.premise ?? "", /^Lyra and Poppen have never met/)
   assert.deepEqual(artifacts.manifest.rescue, { encounterId: "the-ranger", atHealthPercent: 50 })
   assert.deepEqual(
     artifacts.encounters["the-ranger"].npcRefs.map((ref) => ref.id),

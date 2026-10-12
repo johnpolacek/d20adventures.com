@@ -1,6 +1,7 @@
 import { z } from "zod"
 import type { GmPorts } from "../ports"
 import type { Turn, TurnCharacter } from "../types/adventure"
+import { KNOWLEDGE_RULE } from "../utils/narrative-utils"
 import { formatSpellsForPrompt } from "./spell-tracking-service"
 
 const npcActionSchema = z.object({
@@ -123,6 +124,8 @@ CRITICAL: Pay close attention to the NPC's behavior and role. The NPC behavior s
 
 **IMPORTANT: Before deciding the NPC's action, carefully review the 'Recent Narrative' to understand what has ALREADY happened. If a player character has already completed a task (like casting a spell, detecting magic, or performing an action), the NPC should react to that completed action appropriately. Do NOT ask the player to do something they have already done. Instead, the NPC should respond to what has been completed or ask for the next step in the process.**
 
+${KNOWLEDGE_RULE}
+
 Based on all the context provided, determine the most logical action for **${args.npc.name}** to take. The 'Recent Narrative' describes what other characters have already done. Do NOT repeat or continue actions for other characters. Your response must be exclusively about **${args.npc.name}**.
 
 IMPORTANT: If the NPC would realistically speak during this action (conversations, negotiations, threats, commands, etc.), include their actual dialogue in quotes. However, if the NPC is a non-speaking creature (like a mindless beast or monster) or the action doesn't involve speaking (pure physical actions, stealth, etc.), use descriptive narrative instead.
@@ -210,6 +213,8 @@ RESTRICTIONS:
 - Do not create new characters, items, or events
 - Do not add new details to the environment
 - Stick strictly to what is already established in the adventure plan
+
+${KNOWLEDGE_RULE}
 
 Then, output a JSON array of effects for any characters affected (targetId, healthPercentDelta, status). If the NPC's action results in any characters receiving items, specify these in an \`equipmentToAdd\` array (each item as \`{name: string, description?: string}\`) within the corresponding effect object for the target character.
 

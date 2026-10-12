@@ -4,9 +4,10 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
+import { findCurrentActor } from "@d20/gm-core/utils/turn-actors"
 import { buildLocalWikiTurnCharacters } from "@d20/gm-core/wiki-adventures/characters"
 import { castIdFor, partyScene, portraitFor, sceneFor, spatialContext } from "../src/scenes"
-import { game, type Packs, transitionsOf } from "./game"
+import { game, type Packs, suggest, transitionsOf } from "./game"
 import { LocalStore } from "./store"
 
 const packs: Packs = JSON.parse(readFileSync(new URL("../src-tauri/resources/packs.json", import.meta.url), "utf8"))
@@ -62,6 +63,35 @@ test("the real core walks Covert Cargo from the pier into the cabin and back to 
     }
     // The GM saw the pier's places while deciding the first move.
     assert.match(prompts[0], /the cabin door/)
+    // And who knows whom: the rule every adventure gets, and this adventure's premise.
+    assert.match(prompts[0], /WHO KNOWS WHAT:/)
+    assert.match(prompts[0], /ADVENTURE PREMISE[^\n]*\nLyra and Poppen have never met/)
+  } finally {
+    store.close()
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test("the premise that Lyra and Poppen are strangers reaches the replies offered to a player", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "d20-cargo-"))
+  const store = new LocalStore(join(dir, "save.sqlite"), transitionsOf(packs))
+  try {
+    await game(store, packs, { generateText: unused, generateObject: unused })({ kind: "start", provider: "claude", adventure: "covert-cargo" })
+    const turn = store.current()
+    const actor = findCurrentActor(turn.characters)!
+    let prompt = ""
+    const llm: Llm = {
+      generateText: unused,
+      generateObject: async (args) => {
+        prompt = args.prompt
+        return { object: args.schema.parse({ suggestions: [{ label: "Wait", text: `${actor.name} waits.` }] }) }
+      },
+    }
+    await suggest(store.state, packs, llm, { kind: "suggest", turnId: turn._id, characterId: actor.id })
+    assert.match(prompt, /ADVENTURE PREMISE[^\n]*\nLyra and Poppen have never met/)
+    assert.match(prompt, /does not say a stranger's name/)
+    // Still nothing from the GM's own notes.
+    assert.ok(!prompt.includes("Verodynian Oath Stone"))
   } finally {
     store.close()
     rmSync(dir, { recursive: true, force: true })

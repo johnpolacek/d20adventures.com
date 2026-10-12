@@ -5,6 +5,7 @@ import { createGmCore, type GmPorts, type Store } from "@d20/gm-core"
 import { assertPlayerCharacterControl } from "@d20/gm-core/access"
 import { calculateAttributeModifier } from "@d20/gm-core/utils/modifier-utils"
 import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventures/plan-view"
+import { gmNotesWithRules, premiseNote } from "@d20/gm-core/wiki-adventures/player-safety"
 import { build } from "esbuild"
 import ts from "typescript"
 import { z } from "zod"
@@ -313,6 +314,17 @@ function spellModifiers() {
   assert.equal(calculateAttributeModifier({ ...lyra, spells: [] }, "Fog Cloud Check"), 0)
 }
 
+// An adventure's standing rules join every encounter's GM notes. With none, the notes pass through untouched.
+function adventureRules() {
+  assert.equal(gmNotesWithRules(undefined, "Notes."), "Notes.")
+  assert.equal(gmNotesWithRules({}, undefined), undefined)
+  assert.equal(gmNotesWithRules({ premise: "  " }, ""), "")
+  assert.equal(premiseNote(undefined), "")
+  const notes = gmNotesWithRules({ playerDeath: false, premise: "The heroes have never met.\n" }, "Notes.") ?? ""
+  assert.match(notes, /^Notes\.\n\nPlayer characters cannot die[^\n]*\n\nADVENTURE PREMISE[^\n]*\nThe heroes have never met\.$/)
+  assert.match(gmNotesWithRules({ premise: "The heroes have never met." }, undefined) ?? "", /^ADVENTURE PREMISE/)
+}
+
 async function main() {
   const originalRandom = Math.random
   const originalConsole = { ...console }
@@ -321,6 +333,7 @@ async function main() {
   try {
     await packageBoundary()
     spellModifiers()
+    adventureRules()
     await replayTurn()
     await characterPrompts()
     await accessAndInstanceIsolation()

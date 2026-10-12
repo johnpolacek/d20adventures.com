@@ -80,7 +80,8 @@ async function main() {
         const save = reader.state
         reader.db.close()
         model = localLlm(save?.provider ?? "claude", scratch)
-        process.stdout.write(`${JSON.stringify({ suggestions: await suggest(save, model.llm, suggestCommandSchema.parse(input)) })}\n`)
+        const packs = await loadPacks(bundled, dirname(savePath))
+        process.stdout.write(`${JSON.stringify({ suggestions: await suggest(save, packs, model.llm, suggestCommandSchema.parse(input)) })}\n`)
         return
       }
       const command = ["heroDraft", "saveHero", "deleteHero", "paintHero", "art"].includes(input?.kind) ? heroCommandSchema.parse(input) : commandSchema.parse(input)

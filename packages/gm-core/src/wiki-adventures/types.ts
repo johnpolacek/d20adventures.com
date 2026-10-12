@@ -88,6 +88,8 @@ export type RuntimeManifest = {
   title: string
   teaser?: string
   summary?: string
+  // Who knows whom and what at the start. Every prompt carries it, the players' side too, so it holds no secrets.
+  premise?: string
   image?: string
   startEncounterId: string
   recommendedPlayers?: number

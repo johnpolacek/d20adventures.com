@@ -1,4 +1,13 @@
 // Narrative utility functions extracted from narrative-service
+
+// Who knows what. Without it the model treats the cast list as common knowledge, so a hero hiding outside the scene
+// was called by name by people who had never seen him.
+export const KNOWLEDGE_RULE =
+  "WHO KNOWS WHAT: The cast list and the narrative are the storyteller's view. Narration may name anyone, but each character knows only what the story shows them seeing, hearing or being told from where they are. Characters shown travelling or working together know each other. Anyone else is a stranger: a character who is hidden, watching from elsewhere or newly arrived is unknown to the others until the story shows them noticing that character, and then only as what they perceived, such as a voice at the door or a small figure at the window. In speech and in choices, no character uses a stranger's name or acts on a stranger's plans, allegiance or whereabouts before the story shows them learning it."
+
+// The same limit for a prompt written from one hero's side: the AI hero's reply and the replies offered to a player.
+export const PLAYER_KNOWLEDGE_RULE =
+  "The narrative and the list of others present are the storyteller's view. The character knows only what the story shows them seeing, hearing or being told from where they are. Others shown travelling or working with the character are known to them. Anyone else is a stranger: the character does not say a stranger's name, and does not act on plans, allegiances or events they could not have seen or heard. The character may still help, hinder or approach a stranger, addressed by what the character can perceive."
 const diceRollShortcodePattern = /\[DiceRoll:[^\]]*\]/g
 
 export function sanitizeUserVisibleProse(text: string): string {

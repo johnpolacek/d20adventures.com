@@ -23,6 +23,17 @@ The current runtime uses `loadAdventurePlanForRuntime` in `lib/wiki-adventures/p
 
 Do not delete the legacy JSON source files under `wiki/sources/adventure plans/`. The migration scripts read them. Legacy remote plan data was deliberately retained at cutover as a fallback.
 
+## Premise
+
+An adventure page may have a `## Premise` section. It compiles to `manifest.premise`. Added 2026-10-11 for Covert Cargo, where the two heroes are strangers.
+
+- It says who knows whom, and what each knows, when the adventure starts.
+- Every prompt that writes for a character carries it: NPC turns, roll outcomes, the end of a round, AI heroes, and the replies offered to a player.
+- Players' side prompts see it, so it holds no secrets. Secrets go in an encounter's GM Notes.
+- The GM is told it holds until the story shows it change.
+- Without one, the GM assumes characters shown travelling or working together know each other.
+- Legacy plans have none. See [the plan](plans/adventure-premise.md).
+
 ## Safety rules
 
 Two optional manifest fields, enforced by the GM core in `packages/gm-core/src/wiki-adventures/player-safety.ts`. Added 2026-10-10 for Covert Cargo.

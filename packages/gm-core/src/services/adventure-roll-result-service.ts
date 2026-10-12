@@ -1,6 +1,7 @@
 import type { GmPorts } from "../ports"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
+import { KNOWLEDGE_RULE } from "../utils/narrative-utils"
 import { gmNotesWithRules, keepPlayersAlive } from "../wiki-adventures/player-safety"
 import { appendNarrative } from "./narrative-service"
 import { detectSpellFromRollType, markSpellAsUsed } from "./spell-tracking-service"
@@ -54,6 +55,7 @@ A dice roll was made for ${args.characterName}: ${args.rollType} (Result: ${args
   - Only output nothing if the action is EXCLUSIVELY between player characters with no NPC involvement AND no environmental consequences.
   - Do not invent new objects, people, events, or details. Use only the encounter instructions/intro and established narrative.
   - Only reference NPCs that are actually present (listed above).
+  - ${KNOWLEDGE_RULE}
 
 Write a single, concise, immersive third-person PRESENT-tense narrative paragraph (exactly two sentences, max 60 words) describing the immediate outcome of the roll. Focus on how the NPC(s) react, perceive, or are affected by the action, or describe the environmental/atmospheric result of the successful roll.
 
@@ -105,6 +107,8 @@ export function createAdventureRollResultService(ports: GmPorts) {
     encounterInstructions: string
     // The adventure's `playerDeath` rule. False keeps player characters alive through the roll's outcome.
     playerDeath?: boolean
+    // The adventure's premise, added to the GM's notes.
+    premise?: string
   }): Promise<{
     narrative: string
     characters: TurnCharacter[]

@@ -88,12 +88,12 @@ export type GameCommand = z.infer<typeof commandSchema>
 export const suggestCommandSchema = z.object({ kind: z.literal("suggest"), turnId: z.string(), characterId: z.string() })
 // Replies the player could send on their hero's turn. It reads the save and writes nothing, so it runs beside a game
 // action. The prompt carries what the players have read and the hero's own saved state, never another character's.
-export async function suggest(save: Save | null, llm: Llm, input: z.infer<typeof suggestCommandSchema>): Promise<ActionSuggestion[]> {
+export async function suggest(save: Save | null, packs: Packs, llm: Llm, input: z.infer<typeof suggestCommandSchema>): Promise<ActionSuggestion[]> {
   const command = suggestCommandSchema.parse(input)
   const turn = save?.adventure.status === "active" ? save.turns.find((t) => t._id === save.adventure.currentTurnId) : undefined
   const actor = turn?._id === command.turnId ? findCurrentActor(turn.characters) : undefined
   if (!turn || actor?.id !== command.characterId || actor.type !== "pc" || actor.controlledBy === "ai" || actor.hasReplied) throw new Error("It is another character's turn.")
-  return suggestActions(llm, actor, turn.narrative, turn.characters, characterContext([actor]))
+  return suggestActions(llm, actor, turn.narrative, turn.characters, characterContext([actor]), packs[save!.adventure.planId]?.artifacts.manifest.premise)
 }
 export function game(store: LocalStore, packs: Packs, llm: Llm) {
   const packFor = (plan: string) => {

@@ -25,6 +25,8 @@ export interface AdventurePlan {
   nextAdventure?: string
   // Wiki adventures only. False: player characters never die here.
   playerDeath?: boolean
+  // Wiki adventures only. Who knows whom and what at the start.
+  premise?: string
 }
 
 export const RULES_PRESETS = [

@@ -28,6 +28,8 @@ The [shared GM core](gm-core.md) now owns reply, roll, NPC, companion, and advan
 
 Spells: every cast is a check named for the spell, and the check marks the spell used for the encounter. A check for a spell on the character's own list adds their Intelligence modifier. Owner decision, 2026-10-11: a spell no creature resists (Fog Cloud, Light, Detect Magic) is an easy check, DC 5 to 8. A spell against a creature's mind or body (Charm Person, Ray of Frost) follows the normal difficulty guidelines. Encounter instructions that set a difficulty come first.
 
+Who knows what: every prompt that writes for a character says a character knows only what the story shows them seeing, hearing or being told, and that a stranger has no name until it is spoken to them. Narration may still name anyone. An adventure can state its starting point in a `## Premise` section. See [Wiki adventures](wiki-adventures.md).
+
 The live commit rejects changed current turns/encounters and duplicate turn order. Authored content can change during a run. The commit updates its content provenance rather than loading the original immutable version.
 
 ## State and presentation

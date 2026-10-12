@@ -1,5 +1,6 @@
 import { buildRecentTurnHistory, buildRollInfo, getEncounterTurnStatus, getRecentTurnsForContext } from "../services/advance-turn-prompt-service"
 import type { Turn, TurnCharacter } from "../types/adventure"
+import { KNOWLEDGE_RULE } from "../utils/narrative-utils"
 import type { ContentRef } from "./content-ref"
 import { gmNotesWithRules } from "./player-safety"
 import type { RuntimeArtifacts, RuntimeEncounter, RuntimeEntityRecord, RuntimeTransition } from "./types"
@@ -229,7 +230,8 @@ Your Task:
 2. If transitioning, set nextEncounterId to one of the listed transition target IDs.
 3. If not transitioning, set nextEncounterId to the current encounter ID.
 4. Return narrative for players. Do not write new player decisions, dialogue, or internal thoughts for: ${packet.outputContract.playerCharacterNames.join(", ")}.
-5. Include an adventurePatch that updates the live Adventure playthrough record with summaries, discoveries, entity updates, character updates, open threads, resolved threads, and transition details when applicable.
+5. ${KNOWLEDGE_RULE}
+6. Include an adventurePatch that updates the live Adventure playthrough record with summaries, discoveries, entity updates, character updates, open threads, resolved threads, and transition details when applicable.
 
 Respond in JSON:
 {

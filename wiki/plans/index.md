@@ -8,6 +8,7 @@ Updated for the desktop integration worktree on 2026-10-02. Implementation statu
 
 | Plan | Status | Next work |
 |---|---|---|
+| [Adventure premise](adventure-premise.md) | Implemented on main 2026-10-11. Every prompt carries a who-knows-what rule, and an adventure page can author a `## Premise`. Covert Cargo has one. | Owner play-through. Tracking who has since met whom is not built. |
 | [Skip a hero's turn](skip-turn.md) | Implemented on main 2026-10-11 for local play and hosted games. A text button left of Send ends the hero's turn with nothing written and no AI. | Check a hosted game end to end. Deploy Convex before hosted skips work in production. |
 | [Suggested replies on a hero's turn](turn-suggestions.md) | Implemented on main 2026-10-11 for local play and hosted games. Three chips over the reply box fill the box when clicked. The player's AI writes them, or the host's in a hosted game. | Owner review. A setting to turn them off. |
 | [Desktop site style](desktop-site-style.md) | In progress on main. Shared theme, the site's header, title screen, pages, party setup, and hero creator merged 2026-10-10. The HUD is recoloured in one revertable commit. Adventures is the one place to choose an adventure. | Owner review of the HUD over each set. Then HUD components, literal colours, the link page, and cleanup, on main. |

@@ -2,7 +2,9 @@ import { z } from "zod"
 import type { GmPorts, Llm } from "../ports"
 import type { TurnCharacter } from "../types/adventure"
 import { rollD20 } from "../utils/game-utils"
+import { PLAYER_KNOWLEDGE_RULE } from "../utils/narrative-utils"
 import { isAiControlledPc, isDeadActor } from "../utils/turn-actors"
+import { premiseNote } from "../wiki-adventures/player-safety"
 import { createAdventureRollResultService, getEncounterInstructionsFromPlan } from "./adventure-roll-result-service"
 import { createAdventureTurnReplyService } from "./adventure-turn-reply-service"
 
@@ -13,7 +15,7 @@ function characterSheet(character: TurnCharacter): string {
 ${character.archetype ? `Class/Archetype: ${character.archetype}\n` : ""}${character.race ? `Race: ${character.race}\n` : ""}${character.personality ? `Personality: ${character.personality}\n` : ""}${character.background ? `Background: ${character.background}\n` : ""}${character.motivation ? `Motivation: ${character.motivation}\n` : ""}${character.behavior ? `How they act: ${character.behavior}\n` : ""}${character.appearance ? `Appearance: ${character.appearance}\n` : ""}${character.specialAbilities?.length ? `Special Abilities: ${character.specialAbilities.join(", ")}\n` : ""}${availableSpells.length ? `Spells: ${availableSpells.map((s) => s.name).join(", ")}\n` : ""}${character.skills?.length ? `Skills: ${character.skills.join(", ")}\n` : ""}${character.equipment?.length ? `Equipment: ${character.equipment.map((e) => e.name).join(", ")}\n` : ""}`
 }
 
-function buildAiPcIntentPrompt(character: TurnCharacter, narrative: string, sceneRoster: string): string {
+function buildAiPcIntentPrompt(character: TurnCharacter, narrative: string, sceneRoster: string, premise?: string): string {
   return `You are the PLAYER (not the GM) roleplaying as the character below. Players describe their character's intent and attempt only. The GM determines all outcomes, results, and perceptions.
 
 Given the recent narrative, write a short narrative describing what the character does next. Include a character action and, only when natural, one brief line of dialogue in the character's voice. Use third person for actions and put dialogue in quotes. Be creative, stay in character, and keep the reply concise, 1-2 short sentences total.
@@ -28,6 +30,7 @@ Constraints:
 - CRITICAL: Stop the narrative BEFORE any result, outcome, or feedback from the action.
 - Do NOT describe what the character perceives, senses, learns, or discovers.
 - Do NOT describe effects, reactions, or consequences of the action.
+- ${PLAYER_KNOWLEDGE_RULE}
 - GAME RULE: You are the PLAYER, not the GM. Players can only describe their character's INTENT and ATTEMPT. The GM (not you) determines outcomes, results, and what the character perceives. Never write the GM's part.
 
 WRONG: "She casts detect magic and feels ancient vibrations emanating from the crate."
@@ -39,10 +42,13 @@ RIGHT: "He raises his blade and lunges forward with a powerful overhead strike."
 Character:
 ${characterSheet(character)}
 Others present in the scene: ${sceneRoster || "None"}
-
+${premiseBlock(premise)}
 Recent Narrative:
 ${narrative}`
 }
+
+// The premise ends with a blank line, or is nothing, so a prompt without one reads as it did before.
+const premiseBlock = (premise?: string) => (premiseNote(premise) ? `\n${premiseNote(premise)}\n` : "")
 
 function buildSceneRoster(characters: TurnCharacter[], selfId: string): string {
   return characters
@@ -63,7 +69,7 @@ const actionSuggestionsSchema = z.object({
 })
 export type ActionSuggestion = z.infer<typeof actionSuggestionsSchema>["suggestions"][number]
 
-function buildActionSuggestionsPrompt(character: TurnCharacter, narrative: string, allCharacters: TurnCharacter[]): string {
+function buildActionSuggestionsPrompt(character: TurnCharacter, narrative: string, allCharacters: TurnCharacter[], premise?: string): string {
   return `You are helping a PLAYER (not the GM) choose what their character does next. Players describe their character's intent and attempt only. The GM determines all outcomes, results, and perceptions.
 
 Given the recent narrative, offer 3 different things the character below could do now. Make them distinct approaches that fit this moment and this character, such as speaking to someone, a careful or clever move, and a bold action.
@@ -80,20 +86,21 @@ Constraints:
 - Stop each text BEFORE any result, outcome, or feedback from the action.
 - Do NOT describe what the character perceives, senses, learns, or discovers.
 - Do NOT invent people, places, items, or facts that the narrative has not established.
+- ${PLAYER_KNOWLEDGE_RULE}
 
 Character:
 ${characterSheet(character)}
 Others present in the scene: ${buildSceneRoster(allCharacters, character.id) || "None"}
-
+${premiseBlock(premise)}
 Recent Narrative:
 ${narrative}`
 }
 
 // Replies offered to a player for their own character's turn, three at most. Like the AI companion's intent, they are
 // written from the narrative the players have read, never from the encounter's GM instructions. `context` is added
-// to the prompt as it stands, such as the character's saved state.
-export async function suggestActions(llm: Llm, character: TurnCharacter, narrative: string, allCharacters: TurnCharacter[], context = ""): Promise<ActionSuggestion[]> {
-  const prompt = buildActionSuggestionsPrompt(character, narrative, allCharacters) + context
+// to the prompt as it stands, such as the character's saved state. `premise` is the adventure's, which players know.
+export async function suggestActions(llm: Llm, character: TurnCharacter, narrative: string, allCharacters: TurnCharacter[], context = "", premise?: string): Promise<ActionSuggestion[]> {
+  const prompt = buildActionSuggestionsPrompt(character, narrative, allCharacters, premise) + context
   return (await llm.generateObject({ prompt, schema: actionSuggestionsSchema })).object.suggestions.slice(0, 3)
 }
 
@@ -102,8 +109,8 @@ export function createAiPcTurnService(ports: GmPorts) {
   const { resolvePlayerRollNarrativeAndCharacters } = createAdventureRollResultService(ports)
   const { buildTurnReplyRollRequirement } = createAdventureTurnReplyService(ports)
   const loadAdventurePlanForRuntime = ports.content.loadPlan.bind(ports.content)
-  async function generateAiPcIntent(args: { character: TurnCharacter; narrative: string; allCharacters: TurnCharacter[] }): Promise<string> {
-    const prompt = buildAiPcIntentPrompt(args.character, args.narrative, buildSceneRoster(args.allCharacters, args.character.id))
+  async function generateAiPcIntent(args: { character: TurnCharacter; narrative: string; allCharacters: TurnCharacter[]; premise?: string }): Promise<string> {
+    const prompt = buildAiPcIntentPrompt(args.character, args.narrative, buildSceneRoster(args.allCharacters, args.character.id), args.premise)
     const { text } = await generateText({ prompt })
     const intent = (text || "").trim()
     if (!intent) throw new Error(`Empty intent generated for AI companion ${args.character.name}`)
@@ -122,12 +129,14 @@ export function createAiPcTurnService(ports: GmPorts) {
     }
 
     const needsRollResolution = character.hasReplied && character.rollRequired && typeof character.rollResult !== "number"
+    const plan = await loadAdventurePlanForRuntime(adventure.settingId, adventure.planId)
 
     if (!needsRollResolution) {
       const intent = await generateAiPcIntent({
         character,
         narrative: turn.narrative || "",
         allCharacters: turn.characters as TurnCharacter[],
+        premise: plan?.premise,
       })
       console.log("[AI PC] Intent for", character.name, ":", intent)
 
@@ -157,7 +166,6 @@ export function createAiPcTurnService(ports: GmPorts) {
       return
     }
 
-    const plan = await loadAdventurePlanForRuntime(adventure.settingId, adventure.planId)
     if (!plan || !Array.isArray(plan.sections)) throw new Error("Adventure plan not found or invalid")
     const encounterInstructions = getEncounterInstructionsFromPlan(plan, turn.encounterId)
 
@@ -179,6 +187,7 @@ export function createAiPcTurnService(ports: GmPorts) {
       baseRollResult: baseRoll,
       encounterInstructions,
       playerDeath: plan.playerDeath,
+      premise: plan.premise,
     })
 
     await ports.store.updateTurn({

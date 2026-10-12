@@ -108,18 +108,20 @@ test("suggested replies come from what the players have read, for the hero whose
       },
     }
     const before = JSON.stringify(store.state)
-    assert.deepEqual(await suggest(store.state, llm, { kind: "suggest", turnId: turn._id, characterId: actor.id }), four.slice(0, 3))
+    assert.deepEqual(await suggest(store.state, packs, llm, { kind: "suggest", turnId: turn._id, characterId: actor.id }), four.slice(0, 3))
     assert.equal(JSON.stringify(store.state), before)
     assert.ok(prompt.includes(`Name: ${actor.name}`) && prompt.includes(turn.narrative))
     // Only the hero's own saved state, and none of the encounter's GM instructions.
     assert.ok(prompt.includes(`"id":"${actor.id}"`) && !prompt.includes(`"id":"${other.id}"`))
     const gmNotes = pack.artifacts.encounters[turn.encounterId].sections.gmNotes
     assert.ok(gmNotes && !prompt.includes(gmNotes.slice(0, 80)))
+    // This adventure authors no premise, so the prompt carries none.
+    assert.ok(!prompt.includes("ADVENTURE PREMISE"))
 
-    await assert.rejects(() => suggest(store.state, llm, { kind: "suggest", turnId: turn._id, characterId: other.id }), /another character/)
-    await assert.rejects(() => suggest(store.state, llm, { kind: "suggest", turnId: "stale", characterId: actor.id }), /another character/)
-    await assert.rejects(() => suggest(null, llm, { kind: "suggest", turnId: turn._id, characterId: actor.id }), /another character/)
-    await assert.rejects(() => suggest(store.state, failLlm, { kind: "suggest", turnId: turn._id, characterId: actor.id }), /offline/)
+    await assert.rejects(() => suggest(store.state, packs, llm, { kind: "suggest", turnId: turn._id, characterId: other.id }), /another character/)
+    await assert.rejects(() => suggest(store.state, packs, llm, { kind: "suggest", turnId: "stale", characterId: actor.id }), /another character/)
+    await assert.rejects(() => suggest(null, packs, llm, { kind: "suggest", turnId: turn._id, characterId: actor.id }), /another character/)
+    await assert.rejects(() => suggest(store.state, packs, failLlm, { kind: "suggest", turnId: turn._id, characterId: actor.id }), /offline/)
   } finally {
     cleanup()
   }

@@ -2,7 +2,7 @@ import type { RuntimeArtifacts, RuntimeManifest, RuntimeTransition } from "./typ
 
 // Authored adventure rules the core enforces itself, because the model cannot be trusted to judge them:
 // `playerDeath: false` keeps player characters alive, and `rescue` moves a badly hurt party to a rescue encounter.
-export type SafetyRules = Pick<RuntimeManifest, "playerDeath">
+export type SafetyRules = Pick<RuntimeManifest, "playerDeath" | "premise">
 type Health = { type: string; healthPercent?: number; status?: string }
 
 export const MIN_PLAYER_HEALTH = 1
@@ -39,9 +39,21 @@ export function keepPatchedPlayersAlive<U extends { characterId: string; healthP
   })
 }
 
-/** Tells the GM what the floor above enforces, so its prose does not kill a character the state keeps alive. */
+/**
+ * The adventure's premise as a prompt block, or nothing. The story's own text cannot be trusted to carry it: the
+ * narrator names every hero, so a hero nobody had met was greeted by name.
+ */
+export function premiseNote(premise?: string): string {
+  return premise?.trim() ? `ADVENTURE PREMISE (true when the adventure starts, and it holds until the story shows it change):\n${premise.trim()}` : ""
+}
+
+/**
+ * Adds the adventure's standing rules to an encounter's GM notes: the premise, and what the floor above enforces,
+ * so the GM's prose does not kill a character the state keeps alive.
+ */
 export function gmNotesWithRules(rules: SafetyRules | undefined, gmNotes?: string): string | undefined {
-  return rules?.playerDeath === false ? [gmNotes, NO_DEATH_NOTE].filter(Boolean).join("\n\n") : gmNotes
+  const added = [rules?.playerDeath === false ? NO_DEATH_NOTE : "", premiseNote(rules?.premise)].filter(Boolean)
+  return added.length ? [gmNotes, ...added].filter(Boolean).join("\n\n") : gmNotes
 }
 
 /**

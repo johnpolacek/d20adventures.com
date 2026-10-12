@@ -21,6 +21,7 @@ Desktop integration updated on 2026-10-03 in `feature/desktop-stage-play`, inclu
 - [Stageview](plans/stageview.md): owner decisions, remaining phases, release questions.
 - [Desktop local play](plans/desktop-local-play.md): core extraction, native client, local saves, and character-state application implemented locally. Further sets, provider coverage, and distribution remain open. Free solo play through the player's own AI CLI. Multiplayer through a host's app, free. Revenue from selling adventures, decided 2026-10-07.
 - [Desktop site style](plans/desktop-site-style.md): moves the desktop app's UI to the website's look. The screens around the game are done and the HUD is recoloured, merged into main 2026-10-10. The owner's HUD review is next, and the rest continues on main.
+- [Adventure premise](plans/adventure-premise.md): who knows whom. A rule in every prompt, and an authored `## Premise` per adventure. On main 2026-10-11.
 - [Skip a hero's turn](plans/skip-turn.md): a text button left of Send ends the hero's turn with nothing written and no AI. Local play and hosted games, on main 2026-10-11.
 - [Suggested replies](plans/turn-suggestions.md): on a hero's turn the GM card offers three replies that fill the reply box. Local play and hosted games, on main 2026-10-11.
 - [Covert Cargo rescue](plans/covert-cargo-rescue.md): no player deaths, and Thalbern steps in at half health. Merged into main 2026-10-10.
