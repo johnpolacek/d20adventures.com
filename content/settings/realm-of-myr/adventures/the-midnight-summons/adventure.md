@@ -18,7 +18,7 @@ A mysterious summons from an old druid friend draws a reclusive ranger into the 
 
 ## Summary
 
-Thalbern, a ranger of the Valkarr woods, is called upon by his old friend, the druid Wollandora, to meet him at the Old Standing Stones at midnight. The balance of the forest could depend on it.
+Thalbern, a ranger of the Valkarr woods, is called by his old friend, the druid Wollandora, to meet her at the Old Standing Stones at midnight. The balance of the forest could depend on it.
 
 ## Authoring Notes
 

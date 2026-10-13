@@ -13,25 +13,27 @@ image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-m
 
 ## Intro
 
-Thalbern, a solitary ranger of the Valkarr woods, has always trusted the silence of the wilds more than the promises of men. Orphaned by border raiders and raised by the elves of the Valkarr Forest, he has spent years living on the edge of Kordavos, guiding travelers, hunting for his own survival, and keeping his distance from the tangled politics of the city.
+Thalbern, a solitary ranger of the Valkarr woods, trusts the silence of the wilds more than the promises of men. Orphaned by border raiders and raised by the forest's elves, he lives on the edge of Kordavos, guiding travelers, hunting, and keeping clear of the city's politics.
 
-Yet on this night, a message delivered by a red squirrel bearing the unmistakable script of Wollandora, a trusted elven friend and druid, has drawn him from his hidden home. The note was simple and urgent: Meet me at the Old Standing Stones at midnight. The balance of the forest could depend on it.
+Tonight a red squirrel came to his hidden home with a note in the hand of Wollandora, an elven druid and trusted friend: Meet me at the Old Standing Stones at midnight. The balance of the forest could depend on it.
 
-Now, as midnight approaches, Thalbern moves quietly through the dense undergrowth, guided by memory and instinct. It is dark with almost no moonlight coming through the forest canopy.
+Now midnight is near. Thalbern moves quietly through the dense undergrowth by memory and instinct, with almost no moonlight coming through the canopy.
 
-Suddenly, the hush of the night is broken by a sharp crack. Something large has just stepped on a branch somewhere off in the distance.
+A sharp crack breaks the hush. Something large has stepped on a branch, somewhere off in the distance.
 
 ## GM Notes
 
-A perception check is appropriate if Thalbern investigates (low difficulty with a plus 3 modifier). If successful, he will determine it is a large creature that is approaching quickly. With a high roll (18+), he will determine it is an Owlbear. If combat ensues and Thalbern is below 25% health, Wollandora will intervene. If Thalbern avoids or defeats the Owlbear, or if Wollandora saves him, he proceeds to the Old Standing Stones.
+If Thalbern investigates, call for a Perception check, low difficulty with a plus 3 modifier. On a success he knows a large creature is approaching quickly. On 18 or higher he knows it is an Owlbear.
 
-Migration clarification: a successful Perception roll reveals the approaching threat, but it does not complete the encounter by itself. If Thalbern investigates, advances, stands his ground, readies a weapon, or otherwise does not successfully hide or evade after detecting the creature, transition to owlbear-confrontation so the Owlbear enters the active encounter as an NPC.
+A successful Perception roll reveals the threat, but it does not complete the encounter. If Thalbern investigates, advances, stands his ground, readies a weapon, or otherwise does not successfully hide or evade after detecting the creature, transition to owlbear-confrontation so the Owlbear enters the active encounter as an NPC.
+
+If combat ensues and Thalbern is badly wounded, below 25% health, Wollandora intervenes. If he avoids or defeats the Owlbear, or Wollandora saves him, he goes on to the Old Standing Stones.
 
 ## Transitions
 
 - To [[encounter:meeting-at-the-stones]] when If Thalbern successfully rolls to hide or evade and can avoid the Owlbear, go to meeting-at-the-stones.
 - To [[encounter:owlbear-confrontation]] when If Thalbern fails any dice roll (including stealth, perception, or any other check) or does nothing requiring a roll, advance to owlbear-confrontation. Also, if Thalbern detects the approaching creature but does not successfully hide, evade, or withdraw, advance to owlbear-confrontation so the Owlbear enters the encounter.
-- To [[encounter:timely-rescue]] when If Thalbern has a healthPercent of less than 50%, go to timely-rescue.
+- To [[encounter:timely-rescue]] when If Thalbern is badly wounded, with a healthPercent of less than 25%, go to timely-rescue.
 
 ## Migration Context
 

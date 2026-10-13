@@ -4,6 +4,14 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-13, concise narration
+
+Owner: "I think our narrative prose is too verbose. Can we keep all the meaningful information and story details while being more concise?" An audit of three saved Midnight Summons playthroughs from 2026-10-03 found the GM's round-end narrative was 53% of the words, at 180 words a time, and the only prose with no length rule. It also retold the round and ran into the next intro. The owner chose to fix the prompt and trim the authored text.
+
+The round-end prompt for the four Myr adventures now limits the narrative to 3 sentences when the encounter continues and 2 when it changes, tells nothing twice, and is shown the next encounter's intro so the bridge stops short of it. The Midnight Summons intros went from 632 words to 513 with every fact kept, both endings are in the present tense, and Wollandora's notes say her briefing is given once. Fixed on the way: a note naming an encounter that does not exist, a rescue threshold stated three ways, and gear in an ending that Thalbern's sheet does not have. The 25% threshold and the sword and dagger were decided without the owner.
+
+`pnpm test:gm-core`, the Midnight Summons bridge check, batch E and the public flow check pass. No live model has played the new prompt, so the new lengths are unmeasured. See [the plan](plans/concise-narration.md).
+
 ## 2026-10-13, Antigravity replaces the Gemini CLI
 
 Owner: "Google replaced Gemini CLI with the Antigravity CLI". The Gemini CLI has refused personal sign-in since the spike. The desktop app's fourth GM is now `agy`, and `gemini` is no longer listed. Antigravity has no ACP mode, so it runs in print mode over streamed JSON as a custom agent with no tools, written into the session's scratch folder. A tool step, or another agent in `init`, fails the session. The app picks the model from `agy models` at each session start, the Gemini Flash model at medium effort, since the CLI's default took 44 seconds on a one-word reply and the CLI also offers Claude and GPT models. On a scratch save of The Midnight Summons a reply, a roll and a round end played in 38, 12 and 32 seconds. Each GM action is kept as a conversation in the player's Antigravity history, and its docs name no way to turn that off. Not checked in the app itself. Details in [the plan](plans/antigravity-cli.md).

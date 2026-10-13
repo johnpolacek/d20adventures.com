@@ -13,11 +13,11 @@ image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-m
 
 ## Intro
 
-The following morning, bathed in the soft light of the forest, Thalbern is back at his secluded home. Wollandora's words from the previous night echo in his mind – the stolen relics, the suspicious shipment, the urgent need to investigate in Kordavos.
+The next morning Thalbern is back at his secluded home, in the soft light of the forest. Wollandora's words echo in his mind: the stolen relics, the suspicious shipment, the urgent need to investigate in Kordavos.
 
-The city's tangled ways are far from the quiet paths he knows. Thalbern carefully packs a change of simple, unassuming clothes, ensuring his hunting bow and a quiver of arrows were discreetly bundled, alongside a smaller hand axe and knife. As the sun climbed higher, he left the quiet security of his forest home, turning his steps towards the distant, bustling spires of Kordavos, a place where his survival instincts would be tested in a different kind of wilderness.
+The city's tangled ways are far from the quiet paths he knows. He packs a change of plain clothes and bundles his longbow and quiver out of sight, with his sword and dagger. As the sun climbs he leaves his forest home for the distant, bustling spires of Kordavos, where his survival instincts will be tested in a different kind of wilderness.
 
-He would not take the road. Wollandora had seen the boat on the river, Valkaran-made and riding low, and a river leaves a trail for those who can read its banks. Thalbern turned downstream along the Mordava.
+He does not take the road. Wollandora saw the boat on the river, Valkaran-made and riding low, and a river leaves a trail for those who can read its banks. Thalbern turns downstream along the Mordava.
 
 The story continues in Covert Cargo.
 

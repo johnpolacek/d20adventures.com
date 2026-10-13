@@ -16,11 +16,11 @@ image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-m
 
 ## Intro
 
-Just as the Owlbear is about to land a seemingly final blow, a shaft of silvery moonlight pierces the canopy. A calm, authoritative voice calls out, 'That's enough, beast of the wood!' Wollandora steps from the shadows, her staff glowing faintly. With a gesture and a word of power, she unleashes a wave of natural energy that stuns and drives the startled Owlbear back into the depths of the forest.
+As the Owlbear rears for a final blow, a shaft of silver moonlight pierces the canopy. "That's enough, beast of the wood!" a calm voice commands. Wollandora steps from the shadows, her staff glowing faintly. With a gesture and a word of power she sends out a wave of natural energy that stuns the startled Owlbear and drives it back into the forest.
 
 ## GM Notes
 
-Wollandora quickly checks on Thalbern's condition. She'll offer a brief comment ('You look like you've seen better nights, ranger. Come, the stones are not far, and our business is urgent.'). She then leads him to the Standing Stones.
+Wollandora quickly checks Thalbern's wounds. She says this once: "You look like you've seen better nights, ranger. Come, the stones are not far, and our business is urgent." Then she leads him to the Standing Stones.
 
 ## Transitions
 

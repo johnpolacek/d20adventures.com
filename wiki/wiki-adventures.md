@@ -61,6 +61,27 @@ To make one ending the likely one, say it three times: in the NPCs' `behavior`, 
 
 Heroes who start apart and unknown to each other need two things. The `## Premise` says who knows of whom, which reaches every prompt. Each encounter's GM notes say what check changes it, since the roll decision on a hero's action reads the encounter's notes and not the premise. Covert Cargo's watchers use a Perception check, DC 15.
 
+## Length
+
+The round-end prompt for the four Myr adventures limits the GM's narrative. Added 2026-10-13, see [the plan](plans/concise-narration.md).
+
+| Case | Limit |
+|---|---|
+| The encounter continues | One paragraph, 3 short sentences, 50 words. |
+| The encounter changes | 2 short sentences, 35 words. |
+| The GM notes call for an event at that moment | 5 sentences, 90 words. |
+
+- Nothing from the round or recent turns is told again, and no character repeats a line.
+- Each transition option shows the GM its target's intro. The bridge stops where the intro starts, so write an intro to stand by itself.
+- It is a prompt rule. No code cuts a long narrative.
+
+Authoring for length:
+
+- An intro says each fact once. Leave out a sentence that only sets a mood.
+- Lines a note scripts for an NPC are spoken whole. Say in the note that they are said once, or the NPC says them every round.
+- A note that asks the GM to describe something should say how much, such as "in a sentence or two".
+- Write an intro in one tense. Narration is in the present.
+
 ## Admin authoring
 
 The canonical editor route is `/admin/adventure-plans/{settingId}/{planId}`. The old `/admin/wiki-adventures` and misspelled `/admin/adventures-plans` routes redirect.

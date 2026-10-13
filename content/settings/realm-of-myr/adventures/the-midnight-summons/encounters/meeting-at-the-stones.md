@@ -17,13 +17,17 @@ image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-m
 
 ## Intro
 
-The ancient Standing Stones rise around Thalbern. The air is thick with anticipation as the moonlight bathes the clearing in a silvery glow.
+The ancient Standing Stones rise around Thalbern, and moonlight silvers the clearing.
 
-"Thalbern. The forest is grateful you are here," Wollandora intones, her voice echoing softly in the stillness. The wise elf's silver hair glistens in the moonlight, and her eyes are a deep forest green, wise and kind, but currently troubled.
+"Thalbern. The forest is grateful you are here," Wollandora says, her voice soft in the stillness. The elf's silver hair glistens, and her deep green eyes are wise and kind, but troubled.
 
 ## GM Notes
 
-Write dialogue for Wollandora as she explains the situation. She should say: "Thalbern, we have a problem. I received word from a friend from Faelendar, Eldoria, Sylvandor, and Oakhaven. Some Valkaran relics from the elves' vaults have gone missing. Items that should never leave these woods." She nods toward the river, where the current glides past the standing stones. "I saw a river boat, Valkaran-made, heading downstream to Kordavos. You must go to the city and investigate - find these relics before they disappear forever." Wollandora should NOT offer any transportation, boats, or assistance beyond information. She only provides the mission details and urges Thalbern to act. If Thalbern asks for further information about the relics, the boat, or Kordavos, this will trigger a transition to 'the-missing-relics' for more details. Once he is ready to accept or decline the overall mission, other transitions apply (e.g., to 'preparing-for-the-city' or 'back-home').
+Wollandora explains the situation once. She says: "Thalbern, we have a problem. Word has come from friends in Faelendar, Eldoria, Sylvandor, and Oakhaven. Valkaran relics have gone missing from the elves' vaults. Items that should never leave these woods." She nods toward the river, where the current glides past the standing stones. "I saw a river boat, Valkaran-made, heading downstream to Kordavos. You must go to the city and find these relics before they disappear forever."
+
+Once she has said this she does not say it again. After that she only urges Thalbern to act, in a line or two.
+
+Wollandora should NOT offer any transportation, boats, or assistance beyond information. If Thalbern asks for more about the relics, the boat, or Kordavos, transition to 'the-missing-relics'. When he accepts or declines the mission, transition to 'preparing-for-the-city' or 'back-home'.
 
 Legacy runtime flag: skipInitialNpcTurns was true.
 

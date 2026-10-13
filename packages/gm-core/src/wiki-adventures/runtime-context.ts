@@ -70,6 +70,8 @@ export type LlmGameplayContextPacket = {
   }
   graph: {
     legalTransitions: RuntimeTransition[]
+    // Each transition target's intro, which players read straight after the GM's narrative on that transition.
+    nextEncounterIntros: Record<string, string>
     currentEncounterLinks: RuntimeEncounter["typedLinks"]
   }
   outputContract: {
@@ -163,6 +165,7 @@ export function assembleGameplayContextPacket(args: {
     },
     graph: {
       legalTransitions,
+      nextEncounterIntros: Object.fromEntries(legalTransitions.map((transition) => [transition.toEncounterId, (args.artifacts.encounters[transition.toEncounterId]?.sections.intro ?? "").trim()])),
       currentEncounterLinks: currentEncounter.typedLinks,
     },
     outputContract: {
@@ -182,7 +185,11 @@ function linkedRecords(records: Record<string, RuntimeEntityRecord>, encounter: 
 export function buildWikiEncounterProgressionPrompt(packet: LlmGameplayContextPacket): string {
   const transitionText = packet.graph.legalTransitions.length
     ? packet.graph.legalTransitions
-        .map((transition, index) => `Transition Option ${index + 1} (leads to encounter ID: '${transition.toEncounterId}'):\n  Condition to check: ${transition.condition}`)
+        .map((transition, index) => {
+          const intro = packet.graph.nextEncounterIntros[transition.toEncounterId]
+          const option = `Transition Option ${index + 1} (leads to encounter ID: '${transition.toEncounterId}'):\n  Condition to check: ${transition.condition}`
+          return intro ? `${option}\n  Intro players read straight after your narrative if you take it. It has not happened yet:\n${intro}` : option
+        })
         .join("\n")
     : "No explicit transitions defined for this encounter."
 
@@ -230,8 +237,15 @@ Your Task:
 2. If transitioning, set nextEncounterId to one of the listed transition target IDs.
 3. If not transitioning, set nextEncounterId to the current encounter ID.
 4. Return narrative for players. Do not write new player decisions, dialogue, or internal thoughts for: ${packet.outputContract.playerCharacterNames.join(", ")}. End on the story itself. Never ask the players what they do and never speak to them directly: the game asks for each action.
-5. ${KNOWLEDGE_RULE}
-6. Include an adventurePatch that updates the live Adventure playthrough record with summaries, discoveries, entity updates, character updates, open threads, resolved threads, and transition details when applicable.
+5. Keep the narrative short and new.
+   - Players have just read everything under 'This Round So Far'. Tell none of it again: no action, roll outcome, description or line of dialogue from this round or from recent turns, and no character repeats what they have already said.
+   - If not transitioning: one paragraph of at most 3 short sentences and 50 words. Say what has changed and what the players now face.
+   - If transitioning: at most 2 short sentences and 35 words. The target's intro, listed with its transition option, is shown to players straight after your narrative. Carry the story to where that intro begins and stop. Describe nothing the intro describes.
+   - An event the GM notes call for at this moment may take up to 5 sentences and 90 words.
+   - Keep every fact the players need. Give one telling detail, not several, and cut any sentence that only adds mood.
+   - No em dashes, en dashes or semicolons.
+6. ${KNOWLEDGE_RULE}
+7. Include an adventurePatch that updates the live Adventure playthrough record with summaries, discoveries, entity updates, character updates, open threads, resolved threads, and transition details when applicable.
 
 Respond in JSON:
 {

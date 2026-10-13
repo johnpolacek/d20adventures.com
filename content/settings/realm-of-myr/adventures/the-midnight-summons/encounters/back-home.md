@@ -13,13 +13,11 @@ image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-m
 
 ## Intro
 
-The following morning, bathed in the soft light of the forest, Thalbern is back at his secluded home. Wollandora's words from the previous night echo in his mind – the stolen relics, the suspicious shipment, the urgent need to investigate in Kordavos.
+The next morning Thalbern is back at his secluded home, in the soft light of the forest. Wollandora's words echo in his mind: the stolen relics, the suspicious shipment, the urgent need to investigate in Kordavos.
 
-He had turned down her request for his help.
+He turned her down. Was it the right choice? He does not enjoy the city, but the stolen relics intrigue him. Perhaps the trip would be worth it.
 
-Had he made the right choice? He did not enjoy the city, but Wollandora's claims of stolen relics were intriguing. Perhaps a trip to the city would prove to be worth it.
-
-By nightfall he had made up his mind. He would follow the Mordava downstream and see this boat for himself.
+By nightfall he has made up his mind. He will follow the Mordava downstream and see this boat for himself.
 
 The story continues in Covert Cargo.
 
