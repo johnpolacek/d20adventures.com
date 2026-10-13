@@ -58,4 +58,5 @@ Read as: Silas and Reinhard throw Lyra in the river and get away on the tug with
 - `pnpm exec tsx scripts/stage-sets/covert-cargo.ts && pnpm stage:check`
 - Covert Cargo bridge check, public flow check, `pnpm test:gm-core`
 - Desktop tests and typechecks
-- Thalbern's hide and the elves' exit looked at in the stage preview
+- Looked at in the stage preview: Thalbern's hide, the escape trail, the saloon, the city, and the empty pier with Lyra in the reeds
+- The elves' exit is checked as a route by `stage:check`. It has not been watched in motion.
