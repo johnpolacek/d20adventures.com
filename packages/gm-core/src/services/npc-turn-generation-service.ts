@@ -135,7 +135,9 @@ STYLE AND FORMAT RULES:
 - No markdown, no lists, no bullets.
 - Do not use em dashes (—), en dashes, or semicolons. Use commas or periods instead.
 - Keep sentences short and clear.
-- **FORMATTING REQUIREMENT**: Write 1-2 compact paragraphs. Use \\n\\n (double newlines) between paragraphs. Each paragraph should use 1-2 short sentences.
+- **LENGTH**: At most 2 short sentences of narration, 40 words in all. Spoken lines are extra: give lines the Encounter Instructions script as they are written, and otherwise at most 2 short spoken lines. One beat of action or description for the whole turn, not one between each spoken line.
+- Say nothing this NPC has already said or done in the 'Recent Narrative', and do not describe again what it has already described.
+- An event the Encounter Instructions call for this turn may take up to 4 sentences.
 - Put each spoken line of dialogue on its own line. Dialogue should use straight quotes ("...") and may include dialogue tags like says/asks/replies.
 
 If the NPC would realistically skip or pass their turn (e.g., waiting, observing, preparing, doing nothing), set actionType to "skip" or "pass" and provide appropriate narrative. For example:
@@ -207,7 +209,7 @@ STYLE AND FORMAT RULES:
 - No markdown, no lists, no bullets.
 - Do not use em dashes (—), en dashes, or semicolons. Use commas or periods instead.
 - Keep sentences short and clear.
-- **FORMATTING REQUIREMENT**: Write 1-2 compact paragraphs. Use \\n\\n (double newlines) between paragraphs. Each paragraph should use 1-2 short sentences.
+- **LENGTH**: At most 2 short sentences, 40 words. Say what the action did and where it leaves the characters. Do not describe the wind-up, and do not describe again what the 'Recent Narrative' has already described. A spoken line, if there is one, is extra and short.
 - Put each spoken line of dialogue on its own line. Dialogue should use straight quotes ("...") and may include dialogue tags like says/asks/replies.
 
 RESTRICTIONS:

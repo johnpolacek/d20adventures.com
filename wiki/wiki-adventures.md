@@ -70,6 +70,8 @@ The round-end prompt for the four Myr adventures limits the GM's narrative. Adde
 | The encounter continues | One paragraph, 3 short sentences, 50 words. |
 | The encounter changes | 2 short sentences, 35 words. |
 | The GM notes call for an event at that moment | 5 sentences, 90 words. |
+| An NPC's turn, and the outcome of its roll | 2 short sentences of narration, 40 words. Spoken lines are extra. |
+| A player's action | Kept as written, or rewritten plainly with nothing added. |
 
 - Nothing from the round or recent turns is told again, and no character repeats a line.
 - Each transition option shows the GM its target's intro. The bridge stops where the intro starts, so write an intro to stand by itself.
@@ -78,7 +80,8 @@ The round-end prompt for the four Myr adventures limits the GM's narrative. Adde
 Authoring for length:
 
 - An intro says each fact once. Leave out a sentence that only sets a mood.
-- Lines a note scripts for an NPC are spoken whole. Say in the note that they are said once, or the NPC says them every round.
+- Lines a note scripts for an NPC are spoken whole, beyond the NPC's limit. Say in the note that they are said once, or the NPC says them every round.
+- An NPC with no scripted lines speaks at most 2 short ones a turn. Script what must be said in full.
 - A note that asks the GM to describe something should say how much, such as "in a sentence or two".
 - Write an intro in one tense. Narration is in the present.
 

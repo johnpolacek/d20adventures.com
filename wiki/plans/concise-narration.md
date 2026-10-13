@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki adventures](../wiki-adventures.md) · [GM core](../gm-core.md)
 
-Status: prompt change and The Midnight Summons trim implemented on main 2026-10-13. Replayed once with Claude the same day: 47% fewer words a turn.
+Status: round ends, NPC turns, action rewrites and The Midnight Summons trim implemented on main 2026-10-13. Replayed twice with Claude the same day: 52% fewer words a turn.
 
 ## Owner direction, 2026-10-13
 
@@ -41,6 +41,23 @@ Three saved desktop playthroughs of The Midnight Summons from 2026-10-03, all on
 - An event the GM notes call for at that moment may take 5 sentences and 90 words.
 - Each transition option now carries its target's intro, with the rule that the bridge stops where the intro starts.
 - The legacy plan prompt already had a length rule and is unchanged.
+
+### NPC turns and action rewrites
+
+Second pass, the same day, after the first replay. In `npc-turn-generation-service.ts` and `narrative-generation-service.ts`, shared by every adventure.
+
+- An NPC's turn: at most 2 short sentences of narration, 40 words. Spoken lines are extra.
+- Lines the notes script are spoken as written. Otherwise at most 2 short spoken lines.
+- One beat of action for the turn, not one between each spoken line.
+- The outcome of an NPC's roll: 2 short sentences, 40 words, with no wind-up.
+- Neither repeats what the recent narrative has said. An event the notes call for may take 4 sentences.
+- A player's action is rewritten plainly. Every action the player gave is kept and nothing is added.
+- The rewrite no longer sees the hero's appearance, which is where "sharp green eyes" came from.
+- A rewrite is 1 sentence, or 2 for two actions, and at most 10 words longer than the reply.
+
+### Quote spacing
+
+`sanitizeUserVisibleProse` put a space after every comma, so `"Come," she says` became `"Come, " she says` in every spoken line, authored or generated. A comma before a closing quote now keeps none. `scripts/validate-llm-style.ts` checks it.
 
 ### The Midnight Summons
 
@@ -82,19 +99,37 @@ One playthrough on the built desktop runtime, a scratch save, Claude as GM, scri
 - "moonlight" twice, "hooked beak" 3 times, "empty air" once, "amber eyes" never.
 - No fact the players needed was dropped, read against the notes.
 
-What it showed is left:
+It showed NPC turns at 29% of the words and 73 words a turn, a 10-word reply rewritten as 31, and a space before each closing quote. The second pass above answers those.
 
-- NPC turns are now 29% of the words, at 73 words a turn. Their rule is unchanged.
-- A 10-word reply was rewritten as 31, with "sharp green eyes" and "elven longbow" added.
+### Second replay
+
+The same replies and rolls after the second pass. The same eight turns.
+
+| Prose | Audit | First replay | Second replay |
+|---|---|---|---|
+| Words a turn, all narration | 297 | 157 | 143 |
+| Round-end narration | 180 words | 36 | 36 |
+| NPC turn | 72 words | 73 | 53 |
+| Player action rewrite | 31 words | 21 | 18 |
+| Roll outcome | 50 words | 44 | 45 |
+
+- The Owlbear's attacks went from 4 sentences to 2.
+- Wollandora's briefing and lore were spoken whole, once.
+- All seven replies went into the story as the player wrote them.
+- No spoken line had a space before its closing quote.
+- The NPC's dice fell differently in the two replays, so the comparison is rough.
+
+Left as it showed:
+
 - Asking about the relics moves to `the-missing-relics`, which has no intro. The player must ask again before Wollandora answers.
-- The round end and Wollandora's own turn can both press for an answer, one after the other.
-- Dialogue gains a space before its closing quote: `here, " Wollandora says`. The source has none. It was in the old saves too.
+- The round end and Wollandora's own turn both press for an answer, one after the other. The NPC with the highest initiative acts straight after the round end.
+- Roll outcomes keep their 60-word rule and are now 12% of the words.
+- Authored intros are now the largest share, 32%.
 
 ## Not done
 
 - One path, one model. The rescue and the refusal are unplayed, and so are the other GMs.
-- NPC turns keep their 4-sentence rule.
-- Player action rewrites still add adjectives to a short reply.
+- Roll outcomes are not tightened.
 - Covert Cargo, The Road to Kordavos and March of Davos are not audited or trimmed.
 - Codex, Antigravity and the other GMs are unmeasured. The saves were all Claude.
 - The website's S3 copies of the adventure are not changed.
@@ -106,4 +141,5 @@ What it showed is left:
 - `pnpm --filter @d20/gm-core check`
 - Bridge checks for all four adventures, `batch-e` and the public flow check
 - Desktop tests after `pnpm prepare:runtime`
-- The live replay above
+- Both live replays above
+- `scripts/validate-llm-style.ts`

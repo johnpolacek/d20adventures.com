@@ -10,6 +10,9 @@ const prose = sanitizeUserVisibleProse("The door opens — slowly; the torch fli
 assert(!/[;\u2012\u2013\u2014\u2015]/.test(prose), "Prose still contains forbidden punctuation")
 assert(prose === "The door opens, slowly, the torch flickers, then fades.", `Unexpected prose cleanup: ${prose}`)
 
+const spoken = '"Thalbern, you came,"  she says , "and late."'
+assert(sanitizeUserVisibleProse(spoken) === '"Thalbern, you came," she says, "and late."', `Unexpected dialogue cleanup: ${sanitizeUserVisibleProse(spoken)}`)
+
 const shortcode = "[DiceRoll:rollType=Attack;baseRoll=11;result=14;success=true]"
 const mixed = sanitizeUserVisibleProse(`${shortcode}\n\nThe blade strikes — hard; the guard staggers.`)
 assert(mixed.includes(shortcode), "Dice roll shortcode syntax was changed")

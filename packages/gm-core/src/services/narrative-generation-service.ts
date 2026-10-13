@@ -93,7 +93,6 @@ Narrative continuation:`.trim()
     if (characterInfo?.archetype) infoLines.push(`Archetype: ${characterInfo.archetype}`)
     if (gender) infoLines.push(`Gender: ${gender}`)
     if (characterInfo?.race) infoLines.push(`Race: ${characterInfo.race}`)
-    if (characterInfo?.appearance) infoLines.push(`Appearance: ${truncate(characterInfo.appearance, 120)}`)
     if (characterInfo?.personality) infoLines.push(`Personality: ${truncate(characterInfo.personality, 120)}`)
     if (characterInfo?.motivation) infoLines.push(`Motivation: ${truncate(characterInfo.motivation, 120)}`)
     if (characterInfo?.specialAbilities?.length) infoLines.push(`Abilities: ${characterInfo.specialAbilities.slice(0, 3).join(", ")}`)
@@ -130,7 +129,7 @@ Narrative continuation:`.trim()
     
     Player's action for ${characterName}: "${playerInput}"
     
-    Write one brief paragraph in third-person present tense describing ${characterName}'s complete action. If the action includes BOTH speaking AND a physical action (like attacking, shooting, moving, etc.), you MUST include BOTH elements in your response.
+    Write one brief paragraph in third-person present tense describing ${characterName}'s complete action. If the action includes BOTH speaking AND a physical action (like attacking, shooting, moving, etc.), you MUST include BOTH elements in your response. Keep everything the player gave and add nothing the player did not say: no appearance, no description of gear, no scenery.
     
     CRITICAL FORMATTING RULES:
     1. Write in THIRD PERSON (e.g., "${characterName} shouts..." not "I shout...")
@@ -167,13 +166,13 @@ CRITICAL FORMATTING RULES:
 
 Review the player's original action.
 If the action is already a well-written, third-person, present-tense narrative paragraph, return it verbatim.
-Otherwise, rewrite into a vivid, engaging, third-person, present-tense narrative paragraph. If the action is minimal (like "attack" or "hide"), enhance with appropriate descriptive details. Describe how ${characterName} performs the action in an immersive and engaging way.
+Otherwise, rewrite it in plain third person, present tense. Keep every action the player gave, in the player's own words where they can stand, and add nothing the player did not say: no appearance, no description of gear, no scenery. If the action is minimal (like "attack" or "hide"), write one plain sentence saying how ${characterName} does it, naming a weapon or target from the context only when the action needs one.
 
 CRITICAL: PRESERVE THE PLAYER'S INTENDED ACTION completely - if they want to pickpocket, steal, deceive, threaten, attack, or do something morally questionable, maintain that exact intent.
 
 IMPORTANT: Do NOT write anything about the outcome of the action!
-Use the provided context to inform appropriate details (weapons, environment, targets, etc.) but focus on ${characterName}'s specific actions. Write in the style of an adventure novel. Do not use semicolons. Never mention game mechanics, dice, or rules.
-Write only 1 or 2 sentences total. Output a single paragraph.
+Use the provided context only to name a weapon or target the action needs. Do not use semicolons. Never mention game mechanics, dice, or rules.
+Write 1 sentence, or 2 when the player gave more than one action. Stay close to the player's own length, at most 10 words longer. Output a single paragraph.
 
 Output only the narrative paragraph.`.trim()
 

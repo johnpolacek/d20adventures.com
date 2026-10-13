@@ -24,7 +24,8 @@ export function sanitizeUserVisibleProse(text: string): string {
   result = result.replace(/;/g, ",")
   result = result
     .replace(/\s+,/g, ",")
-    .replace(/,\s*/g, ", ")
+    // A comma takes one space after it, except before the quote that closes a spoken line: "Come," she says.
+    .replace(/,\s*(?!["\u201d](?:\s|$))/g, ", ")
     .replace(/,\s*,+/g, ", ")
     .replace(/[ \t]{2,}/g, " ")
 
