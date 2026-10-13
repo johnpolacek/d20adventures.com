@@ -82,7 +82,14 @@ const WORDS = "[\\w’']+(?:\\s+[\\w’']+){0,2}"
 const QUOTE = /[“"]([^”"]{1,400})[”"]/g
 const AFTER = new RegExp(`^[\\s,.!?…—-]*(?:(${WORDS})\\s+(?:${VERBS})\\b|(?:${VERBS})\\s+(${WORDS}))`, "i")
 // A tag before the quote sits in its sentence ("Aelar says, “…”") or closes the one just before ("…” Silas asks. “…”").
-const BEFORE = new RegExp(`(${WORDS})\\s+(?:${VERBS})\\b[^“".!?…]{0,40}[.!?…]?\\s*$`, "i")
+// The nearest one to the quote counts: in "Thalbern asks, and Wollandora answers, “…”" it is Wollandora's.
+const TAG = new RegExp(`(${WORDS})\\s+(?:${VERBS})\\b`, "gi")
+const REST = /^[^“".!?…]{0,40}[.!?…]?\s*$/
+const tagBefore = (lead: string) => {
+  let phrase: string | undefined
+  for (const m of lead.matchAll(TAG)) if (REST.test(lead.slice((m.index ?? 0) + m[0].length))) phrase = m[1]
+  return phrase
+}
 // A name inside a quote is someone spoken to or of, not the speaker, unless the speaker is naming themselves.
 const SELF = /\b(i am|i['’]m|name is|call me)\s+$/i
 const LOOSE = new Set(["the", "a", "an", "lead", "old", "young", "tall", "other", "first", "second", "one", "of", "his", "her"])
@@ -98,7 +105,8 @@ export function readNarration(paragraphs: string[], stage: NarrationStage, peopl
   const genders = Object.fromEntries(Object.entries(people).map(([id, p]) => [id, p?.gender]))
   const staged = Object.entries(stage.staging?.shots ?? {})
   let previous: Partial<Record<Gender, string>> = {}
-  // Who the paragraph before closed on, when it closed outside a quote.
+  // Who the paragraph before closed on: whoever its last sentence was about, or whoever spoke the quote it ended on.
+  // An NPC's turn puts each spoken line on a line of its own, so a quote after a quote is the same voice going on.
   let closing: string | undefined
   return paragraphs.map((text, index) => {
     const beat = (view: NarrationShot | null): NarrationBeat => ({ view, speech })
@@ -136,44 +144,64 @@ export function readNarration(paragraphs: string[], stage: NarrationStage, peopl
     // sentence beside it is about, else the one other person in the scene, else the cast member named nearest to it.
     // Nobody speaks a quote that names them: "Thalbern, we have a problem." is said to Thalbern. Several quotes from one
     // speaker run together.
+    // Whoever a pronoun points back to: the nearest of that gender named before it, else whoever the paragraph before
+    // was about, else the only one of that gender in the scene.
     const antecedent = (g: Gender, at: number) => {
       const before = mentions.filter((m) => m.at < at && genders[m.id] === g)
-      return before.length ? before[before.length - 1].id : previous[g]
+      if (before.length) return before[before.length - 1].id
+      const present = Object.keys(people).filter((id) => genders[id] === g)
+      return previous[g] ?? (present.length === 1 ? present[0] : undefined)
     }
     // Who a sentence is about: the pronoun it opens on, else the name it opens on, else the first name in it that is
     // not a possessive. "Lyra adjusts her spectacles and gives Silas a small nod." is about Lyra, "At Lyra's nod, Silas
     // steps forward." about Silas. An opening pronoun is whoever the sentence before was about, if the gender fits
     // ("Garlan raises a hand toward Milos. His voice carries." is about Garlan), else the nearest one named before it.
     // A sentence that opens on "She" is never about a man it goes on to name.
+    const refers = (g: Gender, at: number): string | undefined => {
+      const before = text.slice(0, at).match(/[^.!?…“”"]+[.!?…\s]*$/)
+      const prior = before?.[0].trim() ? subject(before.index ?? 0, at) : undefined
+      return prior && genders[prior] === g ? prior : antecedent(g, at)
+    }
     const subject = (from: number, to: number): string | undefined => {
       const lead = text
         .slice(from, to)
         .match(/^\s*(she|her|he|his)\b/i)?.[1]
         .toLowerCase()
       const g: Gender | undefined = lead ? (/^(she|her)$/.test(lead) ? "f" : "m") : undefined
-      if (g) {
-        const before = text.slice(0, from).match(/[^.!?…“”"]+[.!?…\s]*$/)
-        const prior = before?.[0].trim() ? subject(before.index ?? 0, from) : undefined
-        const led = prior && genders[prior] === g ? prior : antecedent(g, from)
-        if (led) return led
-      }
+      const led = g && refers(g, from)
+      if (led) return led
       const inside = mentions.filter((m) => m.at >= from && m.at < to && (!g || !genders[m.id] || genders[m.id] === g))
       const opens = inside[0] && !text.slice(from, inside[0].at).trim()
       return (opens ? inside[0] : (inside.find((m) => m.weight === 2) ?? inside[0]))?.id
     }
     const spoken = new Map<string, string[]>()
+    let last: string | undefined
     const quotes = [...text.matchAll(QUOTE)].map((q) => ({ start: q.index ?? 0, end: (q.index ?? 0) + q[0].length, words: q[1] }))
     for (const { start, end, words: said } of quotes) {
-      const named = new Set(mentions.filter((m) => m.at >= start && m.at < end && !SELF.test(text.slice(start, m.at))).map((m) => m.id))
+      const inside = mentions.filter((m) => m.at >= start && m.at < end)
+      const self = inside.find((m) => m.weight === 2 && SELF.test(text.slice(start, m.at)))?.id
+      const named = new Set(inside.filter((m) => m.id !== self).map((m) => m.id))
       const unnamed = (id: string | undefined) => (id && !named.has(id) ? id : undefined)
-      const tag = text.slice(end, end + 80).match(AFTER) ?? text.slice(Math.max(0, start - 80), start).match(BEFORE)
-      const phrase = (tag?.[1] ?? tag?.[2] ?? "").toLowerCase()
-      let who: string | undefined
-      if (phrase) {
-        who = stage.cast.find((c) => callNames(c.name).some((n) => new RegExp(`\\b${literal(n)}\\b`).test(phrase)))?.id
+      // A tag after the quote: "…," Silas replies / "…" asked the elf. After a quote that ends on a full stop, "Aelar
+      // laughs." is the next sentence, not a tag. A tag before the quote, cut at its last conjunction: in "Thalbern
+      // meets Wollandora's gaze and asks quietly", nobody is named as the one asking, so the sentence's subject is.
+      // A tag that leads into the quote on a comma or colon ("Wollandora asks, “…”") comes before one that follows it.
+      const ahead = text.slice(Math.max(0, start - 80), start)
+      const before = tagBefore(ahead)
+      const after = /[,:]\s*$/.test(ahead) && before !== undefined ? null : text.slice(end, end + 80).match(AFTER)
+      const tagged = after && (after[2] || !/[^.]\.$/.test(said.trim())) ? after : null
+      const phrase = (tagged ? (tagged[1] ?? tagged[2]) : (before?.split(/\b(?:and|but|then|yet)\b/i).pop() ?? "")).toLowerCase().trim()
+      let who: string | undefined = self
+      if (!who && phrase) {
+        // The name beside the verb: the first after "says", the last before "says".
+        const names = stage.cast
+          .flatMap((c) => callNames(c.name).map((n) => ({ id: c.id, at: phrase.search(new RegExp(`\\b${literal(n)}\\b`)) })))
+          .filter((n) => n.at >= 0)
+          .sort((a, b) => a.at - b.at)
+        who = (tagged?.[2] ? names[0] : names[names.length - 1])?.id
         const pronoun = phrase.split(/\s+/)[0]
         const g: Gender | undefined = /^(she|her)$/.test(pronoun) ? "f" : /^(he|him)$/.test(pronoun) ? "m" : undefined
-        if (!who && g) who = antecedent(g, start)
+        if (!who && g) who = refers(g, start)
         if (!who) {
           const asked = phrase.split(/\s+/).filter((w) => !LOOSE.has(w))
           const fits = stage.cast.filter((c) => asked.some((w) => people[c.id]?.words?.includes(w) || callNames(c.name).includes(w)))
@@ -197,11 +225,12 @@ export function readNarration(paragraphs: string[], stage: NarrationStage, peopl
         who = outside.sort((a, b) => Math.abs(a.at - start) - Math.abs(b.at - start))[0]?.id
       }
       if (who) spoken.set(who, [...(spoken.get(who) ?? []), said.trim()])
+      last = who
     }
     // A quote cut before its speech tag ends on a comma ("I have it here,” Silas says): it reads as a full stop.
     const speech = [...spoken].map(([id, lines]) => ({ id, text: lines.map((l) => l.replace(/,$/, ".")).join(" ") }))
     const tail = text.match(/[^.!?…“”"]+[.!?…\s]*$/)
-    closing = tail?.[0].trim() ? subject(tail.index ?? 0, text.length) : undefined
+    closing = tail?.[0].trim() ? subject(tail.index ?? 0, text.length) : quotes.length && quotes[quotes.length - 1].end === text.trimEnd().length ? last : undefined
     // Pronouns in the next paragraph point back to whoever this one was about, else to whoever spoke in it.
     previous = {}
     for (const id of [...ranked.map(([id]) => id), ...spoken.keys()]) {

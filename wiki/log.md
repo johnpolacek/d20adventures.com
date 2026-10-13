@@ -4,6 +4,14 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-13, a speech tag is read for who it names
+
+Owner, two hours after the fix below, in The Missing Relics: Thalbern's own reply, "Thalbern meets Wollandora's gaze and asks quietly, “Tell me all of it…”", showed over Wollandora. A different rule from the one fixed that morning, and older: the reader took the three words before "asks" as the speaker and found her name in them. No restart was needed, the app reloads the reader as it changes.
+
+The tag rules in `readNarration` are tightened. See [Stage engine](stage-engine.md). A second bare line from an NPC, which had no bubble, now keeps the voice of the line before it. Checked by throwaway scripts: 70 written sentence shapes, all read right, and the owner's save with ten older ones, 108 paragraphs with quotes. Against that morning's reader 7 changed, each read against its text: the owner's line went to Thalbern and 6 lines with no bubble went to Wollandora. Every one of the 16 in the owner's save is now right. 11 of the 108 still have no speaker. Then in the desktop preview on a copy of the owner's save. No permanent test was added.
+
+The reader still guesses from the prose. The game knows whose turn wrote each line and does not record it.
+
 ## 2026-10-13, a quote on its own line goes to its speaker
 
 Owner, in Meeting at the Stones: Wollandora's "Thalbern, we have a problem." showed in a bubble over Thalbern and on his plate. The NPC's turn wrote one sentence of action and then each spoken line alone on its own line, which is how the turns read since the concise narration pass of the same day. Alone in its paragraph, the quote had no speech tag and no sentence beside it, so the reader gave it to the nearest name, the one she was speaking to. Her next line, with no name in it, got no bubble at all.
