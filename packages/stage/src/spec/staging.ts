@@ -110,13 +110,26 @@ export const stagingSpecSchema = z
       .default([]),
     // Exits, the mirror of entrances. While a turn's narration contains `when`, the cast member stays until the
     // paragraph that says it. Then they run to `to` (a mark or point) and are gone, or with no `to` fall where they
-    // stand, onto their back with the head toward `lands` (a mark or point). The paragraph is seen from `shot` (a set
+    // stand, onto their back with the head toward `lands` (a mark or point). A run goes by `via` first, in order: a walk
+    // is one straight line or one doorway, so a way off a boat needs its turns named. The paragraph is seen from `shot` (a set
     // or staging shot) when given: frame the floor, since a shot on the character looks over someone lying down.
     // Narration without the phrase, such as a later round's, finds them already gone or down. An exit with no `when`
     // only says how that cast member leaves when the game takes them out of the encounter.
     exits: z
       .array(
-        z.object({ cast: idName, when: z.string().min(3).max(120).optional(), to: z.union([idName, vec2]).optional(), lands: z.union([idName, vec2]).optional(), shot: idName.optional() }).strict()
+        z
+          .object({
+            cast: idName,
+            when: z.string().min(3).max(120).optional(),
+            to: z.union([idName, vec2]).optional(),
+            via: z
+              .array(z.union([idName, vec2]))
+              .max(8)
+              .optional(),
+            lands: z.union([idName, vec2]).optional(),
+            shot: idName.optional(),
+          })
+          .strict()
       )
       .max(12)
       .default([]),

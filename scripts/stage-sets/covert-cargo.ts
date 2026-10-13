@@ -60,9 +60,9 @@ const CAST = {
   aelar: { id: "npcs-1749184389465", name: "Aelar Moonglimmer", role: "Elf operative", height: 1.86, art: art("aelar") },
   archer: { id: "npcs-1749243735467", name: "Elven Archer", role: "Wood elf archer", height: 1.8, art: art("elf-archer") },
   fighter: { id: "npcs-1749243869357", name: "Elven Fighter", role: "Elf fighter", height: 1.88, art: art("elf-fighter") },
-  // His standee from The Midnight Summons, where he is the hero.
+  // The third hero, with his standee from The Midnight Summons.
   thalbern: {
-    id: "thalbern-npc",
+    id: "thalbern",
     name: "Thalbern",
     role: "Ranger of the Valkarr woods",
     height: 1.82,
@@ -91,6 +91,7 @@ function staging(id: string, set: string, cast: Obj[], shots: Record<string, Obj
 // ── The Mordava pier before dawn ──
 // The river runs along -z into the fog. The west bank edge is near x = 0, the pier lies along it, and the boat is moored
 // alongside, bow upstream. Ground and decks are at y = 0; the water is 0.47 m below.
+const THICKET: V2 = [-1.4, -6.4]
 function pierSet() {
   const center = (zz: number) => 8.3 + 7 * Math.sin(-zz / 140) + (zz < -120 ? (zz + 120) * 0.05 : 0)
   const width = (zz: number) => 16 + Math.max(0, -zz - 40) * 0.05
@@ -437,7 +438,12 @@ function pierSet() {
   objects.push({ type: "grass", id: "turf", area: [-7, -4, -0.8, 30], count: 1200, height: [0.12, 0.35], clear: clearAlong(trailPts, 0.8) })
   // Poppen's hiding place in the bushes at the treeline, as in The Disturbance's art, far enough from the elves on deck.
   // Clearing the spot after the forest is laid keeps every other tree and bush where it was.
-  const hideout: [number, number, number][] = [[-5.0, 4.3, 0.8]]
+  // Thalbern's is a thicket on the bank below the stern, out of sight of Poppen's bushes and a bowshot from the port
+  // windows.
+  const hideout: [number, number, number][] = [
+    [-5.0, 4.3, 0.8],
+    [THICKET[0], THICKET[1], 0.9],
+  ]
   for (let i = objects.length - 1; i >= 0; i--) {
     const o = objects[i] as { type: string; at?: number[]; size?: number }
     if ((o.type !== "tree" && o.type !== "bush") || !o.at) continue
@@ -602,6 +608,7 @@ function pierSet() {
       reeds: { at: [-1.2, 4.6], label: "the reeds by the gangway" },
       bank: { at: [-2.4, 9.4], label: "the riverbank" },
       treeline: { at: [-5.0, 4.3], label: "the bushes at the treeline" },
+      thicket: { at: THICKET, label: "the thicket on the bank below the stern" },
       trail: { at: [-4.6, 20], label: "the bank trail into the woods" },
       woods: { at: [-12, 38], label: "deep in the woods along the trail" },
     },
@@ -621,16 +628,20 @@ function pierSet() {
   // The meeting, as the story needs it: the crate is too heavy to move, so Lyra checks it where it sits in the saloon.
   // Neither side trusts the other, so Reinhard stays beside her and Silas by the only door. Aelar comes out of his cabin
   // aft. His two elves guard the deck, one at the gangway and one at the stern, and Poppen watches the lit windows from
-  // the bushes at the treeline, too far for elven ears.
+  // the bushes at the treeline, too far for elven ears. Thalbern watches the port side from his thicket below the stern.
+  // Neither watcher can see the other's hide.
   const crew = [on("archer", [4.2, 4.9], "pierEnd"), on("fighter", "stern", "bank")]
   const boat: V2 = [5.2, 0.5]
   const poppen = on("poppen", [-5.0, 4.3], boat)
+  const thalbern = on("thalbern", THICKET, boat)
   // His face peeking over the leaves, as in The Disturbance's art.
   const peeking = close("poppen", 2.2, 30, 1.15, 0.8)
+  // From upstream along the bank, where a gap in the thicket shows him to the chest. Head on, the camera is in a bush.
+  const watching = close("thalbern", 2.8, 55, 1.6, 1.45)
   staging(
     "the-shipment",
     "mordava-river-pier",
-    [on("lyra", [5.0, 0.15], [5.2, -1.3]), on("reinhard", [6.15, 0.45], [5.2, -1.3]), on("silas", [4.45, 2.15], [5.0, 0.0]), on("aelar", [3.95, -0.55], "lyra"), poppen, ...crew],
+    [on("lyra", [5.0, 0.15], [5.2, -1.3]), on("reinhard", [6.15, 0.45], [5.2, -1.3]), on("silas", [4.45, 2.15], [5.0, 0.0]), on("aelar", [3.95, -0.55], "lyra"), poppen, thalbern, ...crew],
     {
       exchange: { subjects: [CAST.lyra.id, CAST.aelar.id, CAST.silas.id, CAST.reinhard.id], offset: [1.31, 2.0, -3.95], target: [-0.29, 1.1, 0.45], fov: 56, label: "The meeting" },
       // From aft, over the crate before her, Silas and the open door beyond.
@@ -639,6 +650,7 @@ function pierSet() {
       // Across the saloon at Aelar's door, the crate in front: he comes out and along the port side.
       arrival: { position: [6.6, 1.8, -0.4], target: [3.8, 1.2, -1.8], fov: 50, label: "Aelar's cabin" },
       poppen: peeking,
+      thalbern: watching,
     },
     "river",
     // Aelar is in his cabin until the narration opens its door.
@@ -647,14 +659,32 @@ function pierSet() {
   staging(
     "the-transaction",
     "mordava-river-pier",
-    [on("lyra", [5.55, 0.3], "silas"), on("reinhard", [6.35, 0.75], "silas"), on("silas", [4.65, 0.6], "aelar"), on("aelar", [3.95, -0.55], "silas"), poppen, ...crew],
+    [
+      on("lyra", [5.55, 0.3], "silas"),
+      on("reinhard", [6.35, 0.75], "silas"),
+      on("silas", [4.65, 0.6], "aelar"),
+      on("aelar", [3.95, -0.55], "silas"),
+      poppen,
+      thalbern,
+      on("archer", [4.2, 4.9], "cabinDoor"),
+      on("fighter", "pierEnd", "cabinDoor"),
+    ],
     {
       handover: { subjects: [CAST.aelar.id, CAST.silas.id], offset: [1.8, 1.8, -1.03], target: [0, 1.3, 0], fov: 46, label: "The handover" },
       // From his right, so Aelar's back is not in the way.
       silas: close("silas", 2.8, -60),
       lyra: close("lyra"),
     },
-    "handover"
+    "handover",
+    // Paid, the elves leave: out of the saloon, down the gangway and up the bank trail, away from both watchers. The
+    // two on deck have come to the gangway to wait for Aelar.
+    {
+      exits: [
+        { cast: CAST.aelar.id, via: ["foredeck", "pierEnd", "pier"] },
+        { cast: CAST.archer.id, via: ["pierEnd", "pier"] },
+        { cast: CAST.fighter.id, via: ["pier"] },
+      ].map((e) => ({ ...e, via: [...e.via, ...trailPts.slice(0, 3)], when: "made a quick and graceful exit", to: "trail" })),
+    }
   )
   staging(
     "the-disturbance",
@@ -667,6 +697,7 @@ function pierSet() {
       on("silas", [5.0, 3.4], "treeline"),
       on("aelar", [5.7, 3.9], "treeline"),
       on("poppen", [-5.0, 4.3], "fighter"),
+      thalbern,
     ],
     {
       search: { subjects: [CAST.fighter.id, CAST.archer.id, CAST.poppen.id], offset: [2.43, 2.2, -3.57], target: [-0.3, 0.9, 0], fov: 50, label: "The search" },
@@ -679,7 +710,7 @@ function pierSet() {
   staging(
     "the-fake",
     "mordava-river-pier",
-    [on("silas", [5.2, 2.35], "aelar"), on("aelar", [3.95, -0.55], "silas"), on("reinhard", [4.8, 0.4], "aelar"), on("lyra", [5.95, 0.1], "aelar"), poppen, ...crew],
+    [on("silas", [5.2, 2.35], "aelar"), on("aelar", [3.95, -0.55], "silas"), on("reinhard", [4.8, 0.4], "aelar"), on("lyra", [5.95, 0.1], "aelar"), poppen, thalbern, ...crew],
     {
       // From aft over the crate: Aelar, Reinhard stepping toward him, and Silas in the doorway beyond.
       standoff: { subjects: [CAST.silas.id, CAST.aelar.id, CAST.reinhard.id], offset: [0.35, 2.0, -4.03], target: [-0.15, 1.2, 0.27], fov: 56, label: "The standoff" },
@@ -688,82 +719,53 @@ function pierSet() {
     },
     "standoff"
   )
+  // Where Reinhard's head comes down: the open boards before the crate. Behind him are the wall, a post and the
+  // crate's chain.
+  const FELL: V2 = [4.3, -0.4]
   staging(
     "battle-on-the-boat",
     "mordava-river-pier",
-    [on("reinhard", [6.2, -0.35], "lyra"), on("lyra", [4.85, 0.75], "reinhard"), on("silas", [5.2, 2.35], "lyra"), poppen],
-    // Low, as in the battle's art, and clear of Lyra's shoulder.
-    { reinhard: close("reinhard", 2.0, 25, 1.35, 1.55), lyra: close("lyra", 2.0, 30), silas: close("silas", 2.1, 25) },
-    "reinhard"
-  )
-  // Where Reinhard's head comes down, and the facing that lays his body the same way in the next scene.
-  const FELL: V2 = [4.3, -0.4]
-  const fallen = { ...on("reinhard", [6.2, -0.35], [r2(2 * 6.2 - FELL[0]), r2(2 * -0.35 - FELL[1])]), down: true }
-  // The rescue, where the battle left everyone. A stranger walks out of the woods beside Poppen's bushes and shoots
-  // through the lit window: Reinhard falls on that line, and Silas runs for the bow when the game says he has fled.
-  // Nobody knows the ranger's name yet, so the scene does not show it.
-  staging(
-    "the-ranger",
-    "mordava-river-pier",
-    [
-      on("reinhard", [6.2, -0.35], "lyra"),
-      on("lyra", [4.85, 0.75], "reinhard"),
-      on("silas", [5.2, 2.35], "lyra"),
-      poppen,
-      { ...on("thalbern", [-3.9, 2.3], boat), name: "The Ranger", role: "A stranger with a longbow" },
-    ],
+    [on("reinhard", [6.2, -0.35], "lyra"), on("lyra", [4.85, 0.75], "reinhard"), on("silas", [5.2, 2.35], "lyra"), poppen, thalbern],
     {
+      // Low, as in the battle's art, and clear of Lyra's shoulder.
       reinhard: close("reinhard", 2.0, 25, 1.35, 1.55),
       lyra: close("lyra", 2.0, 30),
       silas: close("silas", 2.1, 25),
-      // From the bank side of the reeds and a little upstream, so both stand clear of each other against the woods.
-      treeline: { subjects: [CAST.thalbern.id, CAST.poppen.id], offset: [1.95, 1.55, 1.3], target: [0, 1.1, 0], fov: 55, label: "The treeline" },
-      ranger: close("thalbern", 2.4, 25, 1.6, 1.49, "The archer"),
       poppen: peeking,
+      thalbern: watching,
       // From above the helm, down at Reinhard and the open floor before the crate, where he falls. Lyra is on the left.
       fall: { position: [6.3, 2.2, 1.85], target: [5.3, 0.7, -0.5], fov: 56, label: "The fall" },
     },
     "reinhard",
+    // How the two leave when the game takes them out: Reinhard falls where the camera can see the floor, and Silas
+    // runs for the bow.
     {
-      entrances: [{ cast: CAST.thalbern.id, when: "rises out of the ferns", from: [-5.6, 0.6], shot: "treeline" }],
       exits: [
-        // Onto the open boards before the crate. Behind him are the wall, a post and the crate's chain.
-        { cast: CAST.reinhard.id, when: "The arrow takes Reinhard", lands: FELL, shot: "fall" },
+        { cast: CAST.reinhard.id, lands: FELL, shot: "fall" },
         { cast: CAST.silas.id, to: "bow" },
       ],
     }
   )
-  // Afterwards: Reinhard lies where he fell, and the ranger comes in through the door to see to Lyra. Poppen has come
-  // down as far as the foredeck.
-  staging(
-    "the-rangers-aid",
-    "mordava-river-pier",
-    [on("thalbern", [5.2, 2.0], "lyra"), on("lyra", [4.85, 0.75], "thalbern"), on("poppen", "foredeck", "cabinDoor"), fallen],
-    {
-      ranger: close("thalbern", 2.1, 25, 1.6, 1.49),
-      // From aft over the crate: the ranger kneeling by Lyra, the door behind them.
-      tending: { subjects: [CAST.thalbern.id, CAST.lyra.id], offset: [0.5, 1.7, -3.4], target: [0, 1.2, 0], fov: 52, label: "The tending" },
-      poppen: close("poppen", 2.4, 20, 1.0, 0.85),
-    },
-    "cabin",
-    { entrances: [{ cast: CAST.thalbern.id, when: "ducks through the saloon door", from: [5.2, 3.3], shot: "ranger" }] }
-  )
   staging(
     "the-crate",
     "mordava-river-pier",
-    // Poppen at the crate's end, where he is not hidden behind it.
-    [on("lyra", [4.65, -0.2], [4.65, -1.3]), on("poppen", [6.3, -0.9], [5.6, -1.3])],
-    { pair: { subjects: [CAST.lyra.id, CAST.poppen.id], offset: [-0.275, 1.7, -2.95], target: [-0.175, 0.6, -0.55], fov: 55, label: "The pair" } },
+    // Poppen at the crate's end, where he is not hidden behind it. Thalbern stays by the door.
+    [on("lyra", [4.65, -0.2], [4.65, -1.3]), on("poppen", [6.3, -0.9], [5.6, -1.3]), on("thalbern", [5.2, 2.2], [5.2, -1.3])],
+    {
+      pair: { subjects: [CAST.lyra.id, CAST.poppen.id], offset: [-0.275, 1.7, -2.95], target: [-0.175, 0.6, -0.55], fov: 55, label: "The pair" },
+      thalbern: close("thalbern", 2.1, 25, 1.6, 1.49),
+    },
     "crate"
   )
   staging(
     "the-escape",
     "mordava-river-pier",
-    [on("lyra", [-4.4, 19.6], [-12, 38]), on("poppen", [-3.6, 21.0], [-12, 38])],
+    [on("lyra", [-4.4, 19.6], [-12, 38]), on("poppen", [-3.6, 21.0], [-12, 38]), on("thalbern", [-5.6, 18.4], [-12, 38])],
     {
-      flight: { subjects: [CAST.lyra.id, CAST.poppen.id], offset: [-3.5, 1.9, 6.5], target: [0, 1.1, 0], fov: 50, label: "The flight" },
+      flight: { subjects: [CAST.lyra.id, CAST.poppen.id, CAST.thalbern.id], offset: [-3.5, 1.9, 6.5], target: [0, 1.1, 0], fov: 50, label: "The flight" },
       lyra: close("lyra", 3, 160),
       poppen: close("poppen", 2.6, 160, 0.9, 0.85),
+      thalbern: close("thalbern", 3, 160),
     },
     "flight"
   )
@@ -934,11 +936,12 @@ function riverfrontSet() {
   staging(
     "return-to-the-city",
     "kordavos-riverfront",
-    [on("lyra", [-3.6, 8.5], [-8, -60]), on("poppen", [-2.7, 9.6], [-8, -60])],
+    [on("lyra", [-3.6, 8.5], [-8, -60]), on("poppen", [-2.7, 9.6], [-8, -60]), on("thalbern", [-4.6, 9.7], [-8, -60])],
     {
-      pair: { subjects: [CAST.lyra.id, CAST.poppen.id], offset: [-1.8, 1.6, 4.5], target: [0, 1.2, 0], fov: 50, label: "Lyra and Poppen" },
+      pair: { subjects: [CAST.lyra.id, CAST.poppen.id, CAST.thalbern.id], offset: [-1.8, 1.6, 4.5], target: [0, 1.2, 0], fov: 50, label: "The three" },
       lyra: close("lyra"),
       poppen: close("poppen", 2.6, 20, 0.9, 0.85),
+      thalbern: close("thalbern"),
     },
     "city"
   )
@@ -1083,11 +1086,12 @@ function forestSet() {
   staging(
     "the-end",
     "old-forest-path",
-    [on("lyra", [-0.25, 4.6], [0.6, -16]), on("poppen", [0.8, 5.4], [0.6, -16])],
+    [on("lyra", [-0.25, 4.6], [0.6, -16]), on("poppen", [0.8, 5.4], [0.6, -16]), on("thalbern", [-1.2, 5.7], [0.6, -16])],
     {
-      pair: { subjects: [CAST.lyra.id, CAST.poppen.id], offset: [-1.6, 1.4, -4.6], target: [0, 1.1, 0], fov: 50, label: "Lyra and Poppen" },
+      pair: { subjects: [CAST.lyra.id, CAST.poppen.id, CAST.thalbern.id], offset: [-1.6, 1.4, -4.6], target: [0, 1.1, 0], fov: 50, label: "The three" },
       lyra: close("lyra"),
       poppen: close("poppen", 2.6, 20, 0.9, 0.85),
+      thalbern: close("thalbern"),
     },
     "path"
   )
@@ -1097,4 +1101,4 @@ mkdirSync(STAGINGS, { recursive: true })
 pierSet()
 riverfrontSet()
 forestSet()
-console.log("Wrote 3 sets and 11 stagings for Covert Cargo.")
+console.log("Wrote 3 sets and 9 stagings for Covert Cargo.")

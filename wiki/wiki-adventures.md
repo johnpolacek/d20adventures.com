@@ -48,10 +48,12 @@ Two optional manifest fields, enforced by the GM core in `packages/gm-core/src/w
 - A fight already won or fled follows the transition the GM chose.
 - The rescue encounter's intro follows the GM's narration of the round, so write it to open mid-fight.
 - The compiler rejects a `rescue.encounter` that is not an encounter.
-- Covert Cargo paces its rescue over two encounters. The Ranger's intro kills Reinhard with an authored arrow, so he is in the staging and not in the round. Silas is in the round to flee. The Ranger's Aid follows when he is gone.
+- No bundled adventure authors a rescue now. Covert Cargo had one until 2026-10-13, when its rescuer became a hero. Its bridge check exercises the rule on a copy of the artifacts with a rescue added.
 - Legacy plans ignore both fields.
 
-An NPC who is also another adventure's premade needs its own ID. Covert Cargo's Thalbern is `thalbern-npc`, since `thalbern` is the Midnight Summons premade.
+A premade can share an ID with another adventure's premade, since each adventure compiles from its own files. Thalbern is `thalbern` in The Midnight Summons and in Covert Cargo, with a sheet in each.
+
+Heroes who start apart and unknown to each other need two things. The `## Premise` says who knows of whom, which reaches every prompt. Each encounter's GM notes say what check changes it, since the roll decision on a hero's action reads the encounter's notes and not the premise. Covert Cargo's watchers use a Perception check, DC 15.
 
 ## Admin authoring
 

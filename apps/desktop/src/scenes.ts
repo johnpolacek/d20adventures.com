@@ -13,8 +13,6 @@ import theDisturbance from "@d20/stage/stagings/covert-cargo/the-disturbance.jso
 import theEnd from "@d20/stage/stagings/covert-cargo/the-end.json"
 import theEscape from "@d20/stage/stagings/covert-cargo/the-escape.json"
 import theFake from "@d20/stage/stagings/covert-cargo/the-fake.json"
-import theRanger from "@d20/stage/stagings/covert-cargo/the-ranger.json"
-import theRangersAid from "@d20/stage/stagings/covert-cargo/the-rangers-aid.json"
 import theShipment from "@d20/stage/stagings/covert-cargo/the-shipment.json"
 import theTransaction from "@d20/stage/stagings/covert-cargo/the-transaction.json"
 import gateStaging from "@d20/stage/stagings/march-of-davos/the-gates-of-kordavos.json"
@@ -46,6 +44,9 @@ export interface Scene {
 // The real intro starts at the checkpoint. The ambient queue must not move the party independently of game state.
 const gate = structuredClone(gateStaging)
 gate.loops["gate-line"].party.position = 0
+
+// Covert Cargo's two watchers on the bank, for the GM while the scene is inside the saloon.
+const WATCHERS = "Outside, Poppen hides in the bushes at the treeline above the gangway, and Thalbern in a thicket on the bank below the stern."
 
 // Encounters with an authored 3D scene. Any other encounter plays in story view with the same controls.
 export const SCENES: Record<string, Scene> = {
@@ -109,36 +110,35 @@ export const SCENES: Record<string, Scene> = {
     party: ["thalbern"],
   },
   "back-home": { set: homeSet, staging: backHome, location: "Thalbern's home", where: "Morning sun falls on Thalbern's stone and timber cottage at the edge of the woods.", party: ["thalbern"] },
-  // Covert Cargo: the pier before dawn, inside and outside the boat. The meeting is in the saloon, Poppen in the bushes.
+  // Covert Cargo: the pier before dawn, inside and outside the boat. The meeting is in the saloon. Poppen watches from
+  // the bushes at the treeline and Thalbern from a thicket below the stern, each unknown to the other.
   "the-shipment": cargo(
     pierSet,
     theShipment,
     "Mordava pier",
-    "Before dawn, a riverboat lies moored beside a rickety pier on a quiet, misty fork of the Mordava. Lyra stands in its lamplit saloon before the crate, Reinhard beside her and Silas by the only door. Elves guard the deck, and Poppen hides in the bushes at the treeline."
+    "Before dawn, a riverboat lies moored beside a rickety pier on a quiet, misty fork of the Mordava. Lyra stands in its lamplit saloon before the crate, Reinhard beside her and Silas by the only door. Elves guard the deck. Poppen hides in the bushes at the treeline above the gangway, and Thalbern in a thicket on the bank below the stern. Neither hide can be seen from the other."
   ),
-  "the-transaction": cargo(pierSet, theTransaction, "Riverboat saloon", "The riverboat's lamplit saloon at the rickety pier, the crate in the middle and the only door opening forward onto the deck."),
-  "the-disturbance": cargo(pierSet, theDisturbance, "Mordava pier", "Before dawn at the riverboat's pier. Something stirred in the bushes at the treeline, up the bank from the gangway."),
-  "the-escape": cargo(pierSet, theEscape, "Mordava woods", "A trail runs from the pier along the misty riverbank and into the woods toward Kordavos."),
-  "the-fake": cargo(pierSet, theFake, "Riverboat saloon", "The riverboat's lamplit saloon. The crate sits in the middle, and the only door opens forward onto the deck."),
-  "battle-on-the-boat": cargo(pierSet, battleOnTheBoat, "Riverboat saloon", "The riverboat's lamplit saloon. The crate sits in the middle, and the only door opens forward onto the deck."),
-  "the-crate": cargo(pierSet, theCrate, "Riverboat saloon", "The riverboat's saloon, quiet now. The heavy iron-banded crate sits in the middle under hanging rope."),
-  "the-ranger": cargo(
+  "the-transaction": cargo(
     pierSet,
-    theRanger,
-    "Mordava pier",
-    "The riverboat's lamplit saloon at the rickety pier, the crate in the middle and the only door opening forward onto the deck. Reinhard lies dead inside with an arrow in him. Across the gangway, a stranger with a longbow stands in the ferns at the treeline beside Poppen's bushes, a short bowshot from the lit windows."
-  ),
-  "the-rangers-aid": cargo(
-    pierSet,
-    theRangersAid,
+    theTransaction,
     "Riverboat saloon",
-    "The riverboat's lamplit saloon after the fight. Reinhard lies dead by the crate, and the ranger has come in through the only door, which opens forward onto the deck."
+    `The riverboat's lamplit saloon at the rickety pier, the crate in the middle and the only door opening forward onto the deck. ${WATCHERS}`
   ),
+  "the-disturbance": cargo(
+    pierSet,
+    theDisturbance,
+    "Mordava pier",
+    "Before dawn at the riverboat's pier. Something stirred on the bank. Poppen hides in the bushes at the treeline above the gangway, and Thalbern in a thicket on the bank below the stern."
+  ),
+  "the-escape": cargo(pierSet, theEscape, "Mordava woods", "A trail runs from the pier along the misty riverbank and into the woods toward Kordavos."),
+  "the-fake": cargo(pierSet, theFake, "Riverboat saloon", `The riverboat's lamplit saloon. The crate sits in the middle, and the only door opens forward onto the deck. ${WATCHERS}`),
+  "battle-on-the-boat": cargo(pierSet, battleOnTheBoat, "Riverboat saloon", `The riverboat's lamplit saloon. The crate sits in the middle, and the only door opens forward onto the deck. ${WATCHERS}`),
+  "the-crate": cargo(pierSet, theCrate, "Riverboat saloon", "The riverboat's saloon, quiet now. The heavy iron-banded crate sits in the middle under hanging rope."),
   "return-to-the-city": cargo(riverfrontSet, returnToTheCity, "Kordavos riverfront", "The quay along the river in Kordavos, ships at their moorings and the castle on its hill above the city."),
   "the-end": cargo(pathSet, theEnd, "The old forest", "A mossy path winds between huge old trees in green-gold light."),
 }
 function cargo(set: unknown, staging: unknown, location: string, where: string): Scene {
-  return { set: set as Scene["set"], staging: staging as Scene["staging"], location, where, party: ["lyra", "poppen"] }
+  return { set: set as Scene["set"], staging: staging as Scene["staging"], location, where, party: ["lyra", "poppen", "thalbern"] }
 }
 export const sceneFor = (encounterId: string | undefined) => (encounterId ? SCENES[encounterId] : undefined)
 

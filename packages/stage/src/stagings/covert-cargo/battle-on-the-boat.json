@@ -70,6 +70,25 @@
         5.2,
         0.5
       ]
+    },
+    {
+      "id": "thalbern",
+      "name": "Thalbern",
+      "role": "Ranger of the Valkarr woods",
+      "height": 1.82,
+      "art": {
+        "front": "/stage/fixtures/the-midnight-summons/thalbern-front.webp",
+        "back": "/stage/fixtures/the-midnight-summons/thalbern-back.webp",
+        "portrait": "/stage/fixtures/the-midnight-summons/thalbern-portrait.jpg"
+      },
+      "at": [
+        -1.4,
+        -6.4
+      ],
+      "facing": [
+        5.2,
+        0.5
+      ]
     }
   ],
   "shots": {
@@ -99,7 +118,53 @@
       "lookHeight": 1.4596,
       "fov": 44,
       "label": "Silas"
+    },
+    "poppen": {
+      "subject": "poppen",
+      "distance": 2.2,
+      "angle": 30,
+      "height": 1.15,
+      "lookHeight": 0.8,
+      "fov": 44,
+      "label": "Poppen"
+    },
+    "thalbern": {
+      "subject": "thalbern",
+      "distance": 2.8,
+      "angle": 55,
+      "height": 1.6,
+      "lookHeight": 1.45,
+      "fov": 44,
+      "label": "Thalbern"
+    },
+    "fall": {
+      "position": [
+        6.3,
+        2.2,
+        1.85
+      ],
+      "target": [
+        5.3,
+        0.7,
+        -0.5
+      ],
+      "fov": 56,
+      "label": "The fall"
     }
   },
-  "shot": "reinhard"
+  "shot": "reinhard",
+  "exits": [
+    {
+      "cast": "npcs-1749163978757",
+      "lands": [
+        4.3,
+        -0.4
+      ],
+      "shot": "fall"
+    },
+    {
+      "cast": "npcs-1749181492795",
+      "to": "bow"
+    }
+  ]
 }

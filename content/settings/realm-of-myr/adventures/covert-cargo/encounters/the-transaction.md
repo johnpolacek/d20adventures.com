@@ -27,12 +27,15 @@ With the exchange made, Aelar gave a final, sharp nod, then he and his kin made 
 
 ## GM Notes
 
+The elves have their payment and are gone, up the bank trail into the woods. They do not come back and take no side in what follows. Only Silas, Reinhard and Lyra are left aboard.
+
+Poppen and Thalbern hide in different places and do not know of each other. Poppen is in the bushes at the treeline above the gangway. Thalbern is in a thicket on the bank below the stern. Each learns of the other only by passing a check. Ask for a Perception check, DC 15, when one of them searches or watches the bank or the woods, or looks for where an arrow, a voice or a noise came from. Use DC 10 once the other has acted in the open, with a shot, a shout or a step onto the pier. With no check or a failed one, he notices nothing of the other, and the narration shows nothing passing between them. A passed check shows a stranger with no name: a shape in the leaves, a bow, a small figure.
+
 Legacy runtime flag: skipInitialNpcTurns was true.
 
 ## Transitions
 
 - To [[encounter:battle-on-the-boat]] when After this encounter, always transition immediately to the Battle on the Boat encounter.
-- To [[encounter:the-ranger]] when a player character is at half health or less. The adventure's rescue rule applies this one, not the GM.
 
 ## Migration Context
 

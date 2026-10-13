@@ -21,7 +21,7 @@ test("all four Myr adventures are bundled, share no encounter ids, and start wit
     [
       ["march-of-davos", "March of Davos", "the-gates-of-kordavos", [3, 5]],
       ["the-midnight-summons", "The Midnight Summons", "broken-silence", [1, 1]],
-      ["covert-cargo", "Covert Cargo", "the-shipment", [2, 2]],
+      ["covert-cargo", "Covert Cargo", "the-shipment", [3, 3]],
       ["the-road-to-kordavos", "The Road to Kordavos", "well-met", [1, 3]],
     ]
   )

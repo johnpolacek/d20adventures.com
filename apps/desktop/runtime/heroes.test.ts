@@ -121,10 +121,11 @@ test("a new game checks the party against the adventure's player range, premades
         start("covert-cargo", [
           { id: fighter.id, ai: false },
           { id: "1749159962941", ai: true },
+          { id: "thalbern", ai: true },
         ]),
       /own heroes/
     )
-    await assert.rejects(() => start("covert-cargo", [{ id: "1749159962941", ai: false }]), /needs 2 heroes/)
+    await assert.rejects(() => start("covert-cargo", [{ id: "1749159962941", ai: false }]), /needs 3 heroes/)
     await assert.rejects(
       () =>
         start("march-of-davos", [
@@ -157,11 +158,13 @@ test("a new game checks the party against the adventure's player range, premades
     await start("covert-cargo", [
       { id: "1749307435667", ai: false },
       { id: "1749159962941", ai: true },
+      { id: "thalbern", ai: true },
     ])
     const pcs = store.current().characters.filter((c) => c.type === "pc")
     assert.deepEqual(pcs.map((c) => [c.name, c.controlledBy ?? "you"]).sort(), [
       ["Lyra Silvanus", "ai"],
       ["Poppen Quickfoot", "you"],
+      ["Thalbern", "ai"],
     ])
     assert.deepEqual(store.state!.figures, {})
   } finally {

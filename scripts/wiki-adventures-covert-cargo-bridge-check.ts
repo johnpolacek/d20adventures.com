@@ -44,10 +44,12 @@ async function main() {
   assert.equal(contentRef.planId, PLAN_ID)
   assert.equal(artifacts.validationReport.status, "passed")
   assert.equal(artifacts.manifest.startEncounterId, "the-shipment")
-  assert.deepEqual(artifacts.manifest.premadeCharacterIds, ["1749159962941", "1749307435667"])
-  assert.equal(Object.keys(artifacts.encounters).length, 11)
-  assert.equal(Object.keys(artifacts.characterSheets.npcs).length, 6)
-  assert.equal(Object.keys(artifacts.characterSheets.premadeCharacters).length, 2)
+  assert.deepEqual(artifacts.manifest.premadeCharacterIds, ["1749159962941", "1749307435667", "thalbern"])
+  assert.deepEqual([artifacts.manifest.minPlayers, artifacts.manifest.maxPlayers], [3, 3])
+  assert.equal(Object.keys(artifacts.encounters).length, 9)
+  assert.equal(Object.keys(artifacts.characterSheets.npcs).length, 5)
+  assert.equal(Object.keys(artifacts.characterSheets.premadeCharacters).length, 3)
+  assert.equal(artifacts.characterSheets.premadeCharacters.thalbern.sheet.name, "Thalbern")
   assert.equal(
     artifacts.graph.encounterTransitions.some((transition) => transition.toEncounterId === ""),
     false
@@ -75,40 +77,32 @@ async function main() {
     true
   )
 
-  // The rescue: authored rules, Thalbern's encounter, and a transition only the core takes.
+  // Three heroes: Thalbern plays, so nobody comes to the rescue. Heroes still cannot die.
   assert.equal(artifacts.manifest.playerDeath, false)
-  assert.match(artifacts.manifest.premise ?? "", /^Lyra and Poppen have never met/)
-  assert.deepEqual(artifacts.manifest.rescue, { encounterId: "the-ranger", atHealthPercent: 50 })
-  assert.deepEqual(
-    artifacts.encounters["the-ranger"].npcRefs.map((ref) => ref.id),
-    ["npcs-1749181492795", "thalbern-npc"],
-    "Silas is there to flee, and Reinhard dies in the intro"
-  )
-  assert.deepEqual(
-    artifacts.graph.encounterTransitions.filter((t) => t.fromEncounterId === "the-ranger").map((t) => t.toEncounterId),
-    ["the-rangers-aid"]
-  )
-  assert.deepEqual(
-    artifacts.encounters["the-rangers-aid"].npcRefs.map((ref) => ref.id),
-    ["thalbern-npc"]
-  )
-  assert.deepEqual(
-    artifacts.graph.encounterTransitions.filter((t) => t.fromEncounterId === "the-rangers-aid").map((t) => t.toEncounterId),
-    ["the-crate", "return-to-the-city", "the-end"]
-  )
-  assert.equal(artifacts.characterSheets.npcs["thalbern-npc"].sheet.name, "Thalbern")
-  assert.equal(isLocalWikiFinalEncounter(artifacts, "the-ranger"), false)
+  assert.equal(artifacts.manifest.rescue, undefined)
+  const premise = artifacts.manifest.premise ?? ""
+  assert.match(premise, /^Lyra, Poppen and Thalbern have never met/)
+  assert.match(premise, /Poppen and Thalbern do not know of each other/)
+  assert.match(premise, /Once Silas hands over the payment they leave the boat/)
+  // The two watchers stay strangers until a check passes, in every encounter at the pier.
+  for (const id of ["the-shipment", "the-transaction", "the-fake", "the-disturbance", "battle-on-the-boat"])
+    assert.match(artifacts.encounters[id].sections.gmNotes ?? "", /Perception check, DC 15/, id)
+  assert.match(artifacts.encounters["the-shipment"].sections.intro ?? "", /Neither of them knew of the third watcher/)
   const hurt = (healthPercent: number) => [
     { type: "pc", healthPercent },
     { type: "pc", healthPercent: 100 },
     { type: "npc", healthPercent: 10 },
   ]
-  const rescueFrom = (encounterId: string, healthPercent: number, playedEncounterIds: string[] = []) => pendingRescue({ artifacts, encounterId, characters: hurt(healthPercent), playedEncounterIds })
-  assert.equal(rescueFrom("battle-on-the-boat", 50)?.toEncounterId, "the-ranger")
+  assert.equal(pendingRescue({ artifacts, encounterId: "battle-on-the-boat", characters: hurt(20), playedEncounterIds: [] }), undefined, "no rescue is authored")
+  // The rescue rule itself, on a copy that authors one: the fight leads to the crate when a hero is at half health.
+  const rescued = structuredClone(artifacts)
+  rescued.manifest.rescue = { encounterId: "the-crate", atHealthPercent: 50 }
+  const rescueFrom = (encounterId: string, healthPercent: number, playedEncounterIds: string[] = []) =>
+    pendingRescue({ artifacts: rescued, encounterId, characters: hurt(healthPercent), playedEncounterIds })
+  assert.equal(rescueFrom("battle-on-the-boat", 50)?.toEncounterId, "the-crate")
   assert.equal(rescueFrom("battle-on-the-boat", 51), undefined, "the rescue waits for half health")
-  assert.equal(rescueFrom("battle-on-the-boat", 20, ["the-ranger"]), undefined, "the rescue plays once")
-  assert.equal(rescueFrom("the-crate", 20), undefined, "the rescue needs an authored transition")
-  for (const from of ["the-shipment", "the-transaction", "the-fake", "the-disturbance"]) assert.equal(rescueFrom(from, 30)?.toEncounterId, "the-ranger", from)
+  assert.equal(rescueFrom("battle-on-the-boat", 20, ["the-crate"]), undefined, "the rescue plays once")
+  assert.equal(rescueFrom("the-shipment", 20), undefined, "the rescue needs an authored transition")
 
   const battle = artifacts.encounters["battle-on-the-boat"]
   const battleCharacters = buildLocalWikiTurnCharacters({ artifacts, encounter: battle, players: [{ userId: "user_test", characterId: "1749159962941" }] })
@@ -122,8 +116,20 @@ async function main() {
       allTurns: [],
     },
   })
-  assert.deepEqual(packet.outputContract.allowedNextEncounterIds, ["battle-on-the-boat", "the-escape", "the-crate"], "the GM is never offered the rescue")
-  assert.equal(buildWikiEncounterProgressionPrompt(packet).includes("the-ranger"), false)
+  assert.deepEqual(packet.outputContract.allowedNextEncounterIds, ["battle-on-the-boat", "the-escape", "the-crate"])
+  // With a rescue authored, the GM is never offered it.
+  const rescuedPacket = assembleGameplayContextPacket({
+    artifacts: rescued,
+    contentRef,
+    session: {
+      adventureInstanceId: "a",
+      currentTurnOrder: 1,
+      currentTurn: { id: "t", adventureId: "a", encounterId: battle.id, title: battle.title, narrative: "", characters: battleCharacters },
+      allTurns: [],
+    },
+  })
+  assert.deepEqual(rescuedPacket.outputContract.allowedNextEncounterIds, ["battle-on-the-boat", "the-escape"], "the GM is never offered the rescue")
+  assert.match(buildWikiEncounterProgressionPrompt(packet), /Perception check, DC 15/)
   assert.match(packet.currentEncounter.gmNotes ?? "", /cannot die/)
 
   const fallen = keepPlayersAlive(artifacts.manifest, [

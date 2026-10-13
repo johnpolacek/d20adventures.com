@@ -38,7 +38,7 @@ The web viewer and the desktop app run the same `packages/stage` renderer and th
 - Clear tree scatter around every camera position, along trails, and along key walks with scatter `clear` circles.
 - Keep views near eye height. From above, standees read as flat cards.
 - Keep the crowd off the camera lines of close-ups and character focus with `crowd.avoid` circles.
-- Generate a set from a script when it has many computed parts. `scripts/stage-sets/covert-cargo.ts` writes four sets and nine stagings: bank rocks along a river curve, scatter clearings along trails, ground cut around a river. Rerun it rather than editing the JSON.
+- Generate a set from a script when it has many computed parts. `scripts/stage-sets/covert-cargo.ts` writes three sets and nine stagings: bank rocks along a river curve, scatter clearings along trails, ground cut around a river. Rerun it rather than editing the JSON.
 - The `extrude` primitive's "xz" plane mirrors z. Write ground outlines with z negated, or build them in a builder.
 - Hanging moss and dense woods cost triangles fast. The first Mordava pier reached 3.2M rendered triangles. Fewer, closer trees with moss only on the near ones brought it to 1.8M with no visible loss in the mist.
 - Interiors light from the hemisphere and the camera fill, with `atmosphere.lights` at the lamps. Keep the grade neutral and the wood greyish: the warm grade with warm lamps turned the whole cabin orange. A cold light at the open door brings in the river's teal, as in The Fake.
@@ -70,5 +70,8 @@ The web viewer and the desktop app run the same `packages/stage` renderer and th
 - A cloaked character's back can come out as a front-facing body with the cloak drawn behind it. Give the figure a `backNote` in `scripts/stage-standees.ts` that says the cloak hangs down the back and hides it, and whether the hood is up.
 - A death the intro narrates needs no dice and no round. Leave the character out of the encounter's `npcs`, keep them in the staging cast, and give them an exit with the line they fall on. Give the next staging the same cast member with `down: true`, or the body vanishes at the scene change.
 - Pace a sequence with encounters, not one long intro. Stage positions reset on every encounter change, so a second encounter can bring someone through a door with an entrance. NPCs do not walk on their own.
-- Name a stranger by what the heroes see. The Ranger's staging calls Thalbern "The Ranger", so the plate does not give his name before he does, and narration that says "the ranger" still finds him.
+- Name a stranger by what the heroes see. A staging can call a cast member "The Ranger", so the plate does not give his name before he does, and narration that says "the ranger" still finds him.
 - Give a fall its own shot that shows the floor. A shot on the character looks at head height, so they drop out of frame and seem to vanish. Aim `lands` at open boards: behind Reinhard were a wall, a post and a chain.
+- Name the turns of a walk off the set. A walk is one straight line or one doorway, so Covert Cargo's elves leave by `via`: the foredeck, the gangway's two ends, then the trail's own bends. A straight line to the trail stopped at the saloon wall. `stage:check` fails an exit that stops short.
+- Try several angles on a character hidden in thick growth before settling. Of five views of Thalbern's thicket, three were inside a bush. The one that worked looks along the bank from 55 degrees off his facing.
+- Give two hidden characters hides that cannot see each other, and say so in the scene's `where` line for the GM.

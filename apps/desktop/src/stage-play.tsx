@@ -245,11 +245,12 @@ export function StagePlay(props: {
   // out. They stay until their paragraph. Then a runner makes for their way out and is gone, and the rest lie down.
   const exits = useMemo(() => {
     const authored = stage?.staging?.exits ?? []
-    const out = new Map<string, { run: boolean; to?: string | [number, number]; lands?: string | [number, number]; shot?: string; at: number }>()
-    for (const e of authored) if (e.when) out.set(e.cast, { run: Boolean(e.to), to: e.to, lands: e.lands, shot: e.shot, at: text.findIndex((p) => p.toLowerCase().includes(e.when!.toLowerCase())) })
+    const out = new Map<string, { run: boolean; to?: string | [number, number]; via?: (string | [number, number])[]; lands?: string | [number, number]; shot?: string; at: number }>()
+    for (const e of authored)
+      if (e.when) out.set(e.cast, { run: Boolean(e.to), to: e.to, via: e.via, lands: e.lands, shot: e.shot, at: text.findIndex((p) => p.toLowerCase().includes(e.when!.toLowerCase())) })
     for (const [id, how] of gone) {
       const way = authored.find((e) => e.cast === id)
-      if (!out.has(id)) out.set(id, { run: how === "fled", to: way?.to, lands: way?.lands, shot: way?.shot, at: leftAt[id] ?? -1 })
+      if (!out.has(id)) out.set(id, { run: how === "fled", to: way?.to, via: way?.via, lands: way?.lands, shot: way?.shot, at: leftAt[id] ?? -1 })
     }
     return out
   }, [stage, text, gone, leftAt])
@@ -278,11 +279,11 @@ export function StagePlay(props: {
         ran.current.add(id)
         if (!(reading && paragraph === e.at && e.to)) stage.setOnStage(id, false)
         else {
-          const to = stage.point(e.to)
+          const legs = [...(e.via ?? []), e.to].map((leg) => stage.point(leg))
           // Reading on does not cut the run short. Stepping back, or a new scene, does.
           const running = () => ranOn.current === stage && ran.current.has(id)
           void (async () => {
-            for (const p of stage.route(id, to, 40)) if (running()) await stage.moveCast(id, [p.x, p.z], { speed: 2.4 })
+            for (const leg of legs) for (const p of stage.route(id, leg, 40)) if (running()) await stage.moveCast(id, [p.x, p.z], { speed: 2.4 })
             if (running()) stage.setOnStage(id, false)
           })()
         }

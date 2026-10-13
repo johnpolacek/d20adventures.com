@@ -88,6 +88,25 @@
       ]
     },
     {
+      "id": "thalbern",
+      "name": "Thalbern",
+      "role": "Ranger of the Valkarr woods",
+      "height": 1.82,
+      "art": {
+        "front": "/stage/fixtures/the-midnight-summons/thalbern-front.webp",
+        "back": "/stage/fixtures/the-midnight-summons/thalbern-back.webp",
+        "portrait": "/stage/fixtures/the-midnight-summons/thalbern-portrait.jpg"
+      },
+      "at": [
+        -1.4,
+        -6.4
+      ],
+      "facing": [
+        5.2,
+        0.5
+      ]
+    },
+    {
       "id": "npcs-1749243735467",
       "name": "Elven Archer",
       "role": "Wood elf archer",

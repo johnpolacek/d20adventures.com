@@ -41,13 +41,33 @@
         -8,
         -60
       ]
+    },
+    {
+      "id": "thalbern",
+      "name": "Thalbern",
+      "role": "Ranger of the Valkarr woods",
+      "height": 1.82,
+      "art": {
+        "front": "/stage/fixtures/the-midnight-summons/thalbern-front.webp",
+        "back": "/stage/fixtures/the-midnight-summons/thalbern-back.webp",
+        "portrait": "/stage/fixtures/the-midnight-summons/thalbern-portrait.jpg"
+      },
+      "at": [
+        -4.6,
+        9.7
+      ],
+      "facing": [
+        -8,
+        -60
+      ]
     }
   ],
   "shots": {
     "pair": {
       "subjects": [
         "lyra",
-        "poppen"
+        "poppen",
+        "thalbern"
       ],
       "offset": [
         -1.8,
@@ -60,7 +80,7 @@
         0
       ],
       "fov": 50,
-      "label": "Lyra and Poppen"
+      "label": "The three"
     },
     "lyra": {
       "subject": "lyra",
@@ -79,6 +99,15 @@
       "lookHeight": 0.85,
       "fov": 44,
       "label": "Poppen"
+    },
+    "thalbern": {
+      "subject": "thalbern",
+      "distance": 3.2,
+      "angle": 22,
+      "height": 1.6,
+      "lookHeight": 1.4924,
+      "fov": 44,
+      "label": "Thalbern"
     }
   },
   "shot": "city"

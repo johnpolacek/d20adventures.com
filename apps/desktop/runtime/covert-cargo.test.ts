@@ -20,7 +20,7 @@ const unused = async (): Promise<never> => {
 test("every Covert Cargo encounter has a 3D scene with a figure and a portrait for everyone in it", () => {
   const players = pack.artifacts.manifest.premadeCharacterIds.map((characterId) => ({ characterId, userId: "local-player" }))
   const encounters = Object.values(pack.artifacts.encounters)
-  assert.equal(encounters.length, 11)
+  assert.equal(encounters.length, 9)
   for (const encounter of encounters) {
     const authored = sceneFor(encounter.id)
     assert.ok(authored, `${encounter.id} has no scene`)
@@ -29,7 +29,7 @@ test("every Covert Cargo encounter has a 3D scene with a figure and a portrait f
     assert.deepEqual(scene.staging, authored.staging, `${encounter.id}: the premade party stands in its authored places`)
     for (const c of characters) {
       assert.ok(castIdFor(scene.staging.cast, c), `${encounter.id}: ${c.name} has no figure`)
-      // Thalbern walks in from The Midnight Summons with his own art.
+      // Thalbern, the third hero, brings his art from The Midnight Summons.
       assert.match(portraitFor(scene, c) ?? "", /^\/stage\/fixtures\/(covert-cargo|the-midnight-summons)\/[a-z-]+-portrait\.jpg$/, `${encounter.id}: ${c.name}`)
     }
   }
@@ -60,19 +60,27 @@ test("the real core walks Covert Cargo from the pier into the cabin and back to 
       const where = spatialContext(next, store.current().characters, {})
       assert.match(where ?? "", /Lyra Silvanus \(/)
       assert.match(where ?? "", /Poppen Quickfoot \(/)
+      assert.match(where ?? "", /Thalbern \(/)
     }
     // The GM saw the pier's places while deciding the first move.
     assert.match(prompts[0], /the cabin door/)
     // And who knows whom: the rule every adventure gets, and this adventure's premise.
     assert.match(prompts[0], /WHO KNOWS WHAT:/)
-    assert.match(prompts[0], /ADVENTURE PREMISE[^\n]*\nLyra and Poppen have never met/)
+    assert.match(prompts[0], /ADVENTURE PREMISE[^\n]*\nLyra, Poppen and Thalbern have never met/)
+    // The two watchers are apart, each unknown to the other until a check passes, and the elves leave when paid.
+    assert.match(prompts[0], /Poppen and Thalbern do not know of each other/)
+    assert.match(prompts[0], /Perception check, DC 15/)
+    assert.match(prompts[0], /Once Silas hands over the payment they leave the boat/)
+    assert.match(prompts[0], /Poppen Quickfoot \(-5\.0, 4\.3\)/)
+    assert.match(prompts[0], /Thalbern \(-1\.4, -6\.4\)/)
+    assert.match(prompts[0], /the thicket on the bank below the stern/)
   } finally {
     store.close()
     rmSync(dir, { recursive: true, force: true })
   }
 })
 
-test("the premise that Lyra and Poppen are strangers reaches the replies offered to a player", async () => {
+test("the premise that the three heroes are strangers reaches the replies offered to a player", async () => {
   const dir = mkdtempSync(join(tmpdir(), "d20-cargo-"))
   const store = new LocalStore(join(dir, "save.sqlite"), transitionsOf(packs))
   try {
@@ -88,7 +96,7 @@ test("the premise that Lyra and Poppen are strangers reaches the replies offered
       },
     }
     await suggest(store.state, packs, llm, { kind: "suggest", turnId: turn._id, characterId: actor.id })
-    assert.match(prompt, /ADVENTURE PREMISE[^\n]*\nLyra and Poppen have never met/)
+    assert.match(prompt, /ADVENTURE PREMISE[^\n]*\nLyra, Poppen and Thalbern have never met/)
     assert.match(prompt, /does not say a stranger's name/)
     // Still nothing from the GM's own notes.
     assert.ok(!prompt.includes("Verodynian Oath Stone"))
@@ -147,57 +155,71 @@ async function inTheBattle(run: (store: LocalStore, play: (llm: Llm) => Promise<
 }
 const lyra = (store: LocalStore) => store.current().characters.find((c) => c.name === "Lyra Silvanus")!
 
-test("a killing blow leaves a hero alive, and Thalbern ends a fight that would go on", async () => {
+test("a killing blow leaves a hero alive, and nobody comes to the rescue: Thalbern is one of the heroes", async () => {
   await inTheBattle(async (store, play) => {
+    assert.deepEqual(
+      store
+        .current()
+        .characters.filter((c) => c.type === "pc")
+        .map((c) => c.name)
+        .sort(),
+      ["Lyra Silvanus", "Poppen Quickfoot", "Thalbern"]
+    )
     const fightGoesOn = () => ({ nextEncounterId: "battle-on-the-boat", narrative: "Reinhard raises his sword again.", adventurePatch: {} })
     await play(stubLlm(fightGoesOn, lyra(store).id))
-    assert.equal(store.current().encounterId, "the-ranger")
+    assert.equal(store.current().encounterId, "battle-on-the-boat")
     assert.equal(lyra(store).healthPercent, 1)
     assert.notEqual(lyra(store).status, "dead")
     assert.deepEqual(
       store
         .current()
         .characters.filter((c) => c.type === "npc")
-        .map((c) => c.name),
-      ["Silas", "Thalbern"]
+        .map((c) => c.name)
+        .sort(),
+      ["Reinhard", "Silas"]
     )
-    // The arrow is authored: Reinhard dies in the intro and is not in the round.
-    assert.match(store.current().narrative, /Reinhard raises his sword again\.[\s\S]*The arrow takes Reinhard/)
-    assert.deepEqual(store.current().adventurePatch?.transition?.toEncounterId, "the-ranger")
-    assert.match(spatialContext("the-ranger", store.current().characters, {}) ?? "", /Thalbern \(-3\.9, 2\.3\)/)
 
-    // He comes once. A patch that kills is floored too.
+    // A patch that kills is floored too.
     for (const c of store.current().characters) c.hasReplied = c.isComplete = true
     store.save()
     const dying = () => ({
-      nextEncounterId: "the-ranger",
-      narrative: "Thalbern binds the wound.",
+      nextEncounterId: "battle-on-the-boat",
+      narrative: "Lyra goes down on one knee.",
       adventurePatch: { characterUpdates: [{ characterId: lyra(store).id, healthPercent: 0, status: "dead" }] },
     })
     await play(stubLlm(dying))
-    assert.equal(store.current().encounterId, "the-ranger")
-    assert.equal(store.state!.turns.filter((t) => t.encounterId === "the-ranger").length, 2)
+    assert.equal(store.current().encounterId, "battle-on-the-boat")
     assert.equal(lyra(store).healthPercent, 1)
     assert.notEqual(lyra(store).status, "dead")
 
-    // Silas runs on his turn and is out of the encounter. Then the ranger comes aboard.
+    // Silas runs on his turn and is out of the encounter, and the fight ends at the crate.
     for (const c of store.current().characters) if (c.name !== "Silas") c.hasReplied = c.isComplete = true
     store.save()
     const runs = { actionSummary: "Silas runs.", narrative: "Silas goes over the bow rail.", actionType: "flee" }
     const round = store.current()._id
-    await play(stubLlm(() => ({ nextEncounterId: "the-rangers-aid", narrative: "The river takes him.", adventurePatch: {} }), undefined, runs))
+    await play(stubLlm(() => ({ nextEncounterId: "the-crate", narrative: "The river takes him.", adventurePatch: {} }), undefined, runs))
     assert.equal(store.state!.turns.find((t) => t._id === round)!.characters.find((c) => c.name === "Silas")!.status, "fled")
-    assert.equal(store.current().encounterId, "the-rangers-aid")
-    assert.deepEqual(
-      store
-        .current()
-        .characters.filter((c) => c.type === "npc")
-        .map((c) => c.name),
-      ["Thalbern"]
-    )
-    assert.match(store.current().narrative, /Silas goes over the bow rail\.|The river takes him\.[\s\S]*I am Thalbern/)
-    assert.match(spatialContext("the-rangers-aid", store.current().characters, {}) ?? "", /Thalbern \(5\.2, 2\.0\)/)
+    assert.equal(store.current().encounterId, "the-crate")
   })
+})
+
+test("the stage sends the elves off when they are paid, and lays out the fight's losers", () => {
+  const exits = (id: string) => (sceneFor(id)!.staging as { exits?: { cast: string; when?: string; to?: string; via?: unknown[]; lands?: unknown; shot?: string }[] }).exits ?? []
+  const paid = exits("the-transaction")
+  assert.deepEqual(paid.map((e) => e.cast).sort(), ["npcs-1749184389465", "npcs-1749243735467", "npcs-1749243869357"])
+  const intro = pack.artifacts.encounters["the-transaction"].sections.intro ?? ""
+  for (const e of paid) {
+    assert.ok(intro.includes(e.when!), "the cue is a line of the intro")
+    assert.equal(e.to, "trail")
+    assert.ok(e.via?.length, "by the gangway, not through the hull")
+  }
+  assert.deepEqual(
+    exits("battle-on-the-boat").map((e) => [e.cast, e.when, e.to]),
+    [
+      ["npcs-1749163978757", undefined, undefined],
+      ["npcs-1749181492795", undefined, "bow"],
+    ]
+  )
 })
 
 test("a fight the heroes win follows its own transition, however hurt they are", async () => {

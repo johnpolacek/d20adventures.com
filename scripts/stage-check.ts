@@ -11,7 +11,7 @@ import { createStubLibrary } from "@d20/stage/materials/library"
 import { SETS, STAGINGS } from "@d20/stage/sets"
 import { buildSetGeometry, parseSet, populateCrowd } from "@d20/stage/spec/build"
 import { resolveCast, resolveShots } from "@d20/stage/spec/resolve"
-import { stagingSpecSchema } from "@d20/stage/spec/staging"
+import { type StagingSpec, stagingSpecSchema } from "@d20/stage/spec/staging"
 import { doorways, onFootprint, reachOver, routeOver } from "@d20/stage/spec/walk"
 
 async function checkSet(label: string, raw: unknown) {
@@ -76,6 +76,36 @@ function checkWalks(set: ReturnType<typeof parseSet>, footprints: Footprint[], d
   if (blocked.length > 12) console.log(`  blocked: ${blocked.length - 12} more`)
 }
 
+// A staged run has to get where it is going. Each leg, by `via` and then `to`, is walked as the desktop walks it:
+// straight or through one doorway.
+function checkExits(
+  key: string,
+  exits: StagingSpec["exits"],
+  marks: ReturnType<typeof parseSet>["marks"],
+  footprints: Footprint[],
+  doors: ReturnType<typeof doorways>,
+  cast: ReturnType<typeof resolveCast>
+) {
+  const point = (ref: string | number[]) => {
+    if (Array.isArray(ref)) return { x: ref[0], z: ref[1] }
+    const at = cast.find((c) => c.id === ref) ?? (marks[ref] && { x: marks[ref].at[0], z: marks[ref].at[1] })
+    if (!at) throw new Error(`staging ${key}: exit names unknown place ${ref}`)
+    return { x: at.x, z: at.z }
+  }
+  for (const e of exits) {
+    if (e.lands !== undefined) point(e.lands)
+    if (e.via && e.to === undefined) throw new Error(`staging ${key}: ${e.cast}'s exit has a way but nowhere to go`)
+    if (e.to === undefined) continue
+    let from = point(e.cast)
+    for (const leg of [...(e.via ?? []), e.to].map(point))
+      for (const p of routeOver(footprints, doors, from, leg) ?? [leg]) {
+        const hit = reachOver(footprints, from, p, 40)
+        if (hit.short) throw new Error(`staging ${key}: ${e.cast}'s exit stops ${hit.distance.toFixed(1)} m into the leg to (${leg.x}, ${leg.z})`)
+        from = p
+      }
+  }
+}
+
 async function main() {
   const files = process.argv.slice(2)
   if (files.length) {
@@ -94,6 +124,7 @@ async function main() {
     if (staging.shot && !shots[staging.shot]) throw new Error(`staging ${key}: unknown opening shot ${staging.shot}`)
     for (const e of staging.entrances) if (e.shot && !shots[e.shot]) throw new Error(`staging ${key}: unknown entrance shot ${e.shot}`)
     for (const e of staging.exits) if (e.shot && !shots[e.shot]) throw new Error(`staging ${key}: unknown exit shot ${e.shot}`)
+    checkExits(key, staging.exits, set.marks, footprints, doors, cast)
     const missing = staging.cast.flatMap((c) => Object.values(c.art)).filter((u) => u.startsWith("/stage/") && !existsSync(`public${u}`))
     if (missing.length) throw new Error(`staging ${key}: missing art ${missing.join(", ")}`)
     console.log(`PASS staging ${key}: ${cast.length} cast (${cast.map((c) => c.id).join(", ")}), ${Object.keys(shots).length} shots (${Object.keys(shots).join(", ")})`)

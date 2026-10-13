@@ -16,7 +16,7 @@ The mysterious crate sits before you.
 
 ## GM Notes
 
-The crate is sealed tight. They can break it open after concerted effort with equipment lying around the ship. Inside is the large heavy sitting stone. It cannot easily be moved as it weighs about 500 pounds. Though it is a powerful artifact for binding oaths, it is of no immediate use to Lyra or Poppen. Continue with this encounter until they have resolved what they wish to do.
+The crate is sealed tight. They can break it open after concerted effort with equipment lying around the ship. Inside is the large heavy sitting stone. It cannot easily be moved as it weighs about 500 pounds. Though it is a powerful artifact for binding oaths, it is of no immediate use to Lyra or Poppen. Thalbern knows a Valkaran relic when he sees one: this is what Wollandora sent him to find, and it is far too heavy for the three of them to carry off. Any hero who has not yet met the others meets them here, as strangers with no names until they give them. Continue with this encounter until they have resolved what they wish to do.
 
 Suggest they return to the city, which is about 3 miles away.
 

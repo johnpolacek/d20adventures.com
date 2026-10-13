@@ -34,11 +34,14 @@ Aelar Moonglimmer recoiled, but it was with the shock of indignation, not fear. 
 
 Unless charmed, Silas will try to detect if Lyra is lying. Reinhard will do whatever Silas commands.
 
+Poppen and Thalbern hide in different places and do not know of each other. Poppen is in the bushes at the treeline above the gangway. Thalbern is in a thicket on the bank below the stern. Each learns of the other only by passing a check. Ask for a Perception check, DC 15, when one of them searches or watches the bank or the woods, or looks for where an arrow, a voice or a noise came from. Use DC 10 once the other has acted in the open, with a shot, a shout or a step onto the pier. With no check or a failed one, he notices nothing of the other, and the narration shows nothing passing between them. A passed check shows a stranger with no name: a shape in the leaves, a bow, a small figure.
+
+Aelar and his elves are here only to trade the crate. Once Silas hands over the payment they leave the boat, go up the bank trail into the woods and do not come back. They take no side in anything that happens after.
+
 ## Transitions
 
-- To [[encounter:battle-on-the-boat]] when If Lyra or Poppen attack
+- To [[encounter:battle-on-the-boat]] when If Lyra, Poppen or Thalbern attack
 - To [[encounter:the-transaction]] when Ultimately Silas wants to make this deal even if he isn't sure about the relic's authenticity.
-- To [[encounter:the-ranger]] when a player character is at half health or less. The adventure's rescue rule applies this one, not the GM.
 
 ## Migration Context
 

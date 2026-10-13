@@ -1,5 +1,7 @@
 # Covert Cargo: Thalbern's rescue and no player deaths
 
+Superseded 2026-10-13 by [three heroes](covert-cargo-three-heroes.md). Thalbern is now a hero, so The Ranger, The Ranger's Aid, their stagings, the `thalbern-npc` sheet and the adventure's `rescue` rule are deleted. `playerDeath: false` stays, and the engine keeps the `rescue` rule, the `flee` action, falls and staging exits. The rest of this page is history.
+
 [Plans](index.md) · [Wiki adventures](../wiki-adventures.md) · [GM core](../gm-core.md) · [Gameplay](../gameplay-flows.md)
 
 Started 2026-10-10 at owner request on `feature/covert-cargo-rescue`: "add Thalbern in as a NPC character that comes in and saves the day if anyone is down to half their health or less (don't allow player deaths since this is an intro adventure and we are setting them up for the main adventure)".
