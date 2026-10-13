@@ -19,7 +19,9 @@ export default async function StagePage({ searchParams }: { searchParams: Promis
   if (!isDev()) notFound()
   const p = await searchParams
   const stagingKey = p.staging === "none" ? null : p.staging && STAGINGS[p.staging] ? p.staging : (Object.keys(STAGINGS)[0] ?? null)
-  const setKey = p.set && SETS[p.set] ? p.set : (Object.keys(SETS)[0] ?? null)
+  // Without ?set, the staging names its set.
+  const staged = stagingKey ? ((await STAGINGS[stagingKey]()) as { set?: string }).set : undefined
+  const setKey = p.set && SETS[p.set] ? p.set : staged && SETS[staged] ? staged : (Object.keys(SETS)[0] ?? null)
   if (!setKey) notFound()
   return <StageViewer setKey={setKey} stagingKey={stagingKey} params={p} sets={Object.keys(SETS)} stagings={Object.keys(STAGINGS)} />
 }
