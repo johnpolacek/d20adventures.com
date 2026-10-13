@@ -10,7 +10,7 @@ Owner: "I think our narrative prose is too verbose. Can we keep all the meaningf
 
 The round-end prompt for the four Myr adventures now limits the narrative to 3 sentences when the encounter continues and 2 when it changes, tells nothing twice, and is shown the next encounter's intro so the bridge stops short of it. The Midnight Summons intros went from 632 words to 513 with every fact kept, both endings are in the present tense, and Wollandora's notes say her briefing is given once. Fixed on the way: a note naming an encounter that does not exist, a rescue threshold stated three ways, and gear in an ending that Thalbern's sheet does not have. The 25% threshold and the sword and dagger were decided without the owner.
 
-`pnpm test:gm-core`, the Midnight Summons bridge check, batch E and the public flow check pass. No live model has played the new prompt, so the new lengths are unmeasured. See [the plan](plans/concise-narration.md).
+`pnpm test:gm-core`, the four bridge checks, batch E, the public flow check and the desktop tests pass. One live replay on the built desktop runtime with Claude, eight turns to the ending: 157 words a turn against 297, and the round end at 36 words against 180, every one within its limit and none retelling the round. One path and one model only. NPC turns are now the largest share. See [the plan](plans/concise-narration.md).
 
 ## 2026-10-13, Antigravity replaces the Gemini CLI
 

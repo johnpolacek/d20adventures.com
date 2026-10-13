@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki adventures](../wiki-adventures.md) · [GM core](../gm-core.md)
 
-Status: prompt change and The Midnight Summons trim implemented on main 2026-10-13. Not yet replayed with a live model.
+Status: prompt change and The Midnight Summons trim implemented on main 2026-10-13. Replayed once with Claude the same day: 47% fewer words a turn.
 
 ## Owner direction, 2026-10-13
 
@@ -66,15 +66,39 @@ The intros are 19% shorter with every fact kept. The audit guessed a third. What
 
 Decisions made without the owner: the 25% threshold, and the sword and dagger.
 
+## Replay, 2026-10-13
+
+One playthrough on the built desktop runtime, a scratch save, Claude as GM, scripted replies and rolls. Sneak, shoot, slip past the Owlbear, ask about the relics, accept. Eight turns to the ending in under three minutes.
+
+| Prose | Before | After |
+|---|---|---|
+| Words a turn, all narration | 297 | 157 |
+| Round-end narration, average | 180 words, 13 sentences | 36 words, 3 sentences |
+| Round-end share of the words | 53% | 20% |
+
+- Every round end kept its limit: 2 sentences on a change of encounter, 3 when it continued.
+- Each bridge stopped where the intro began. The Owlbear arrived once and the Stones were described once.
+- Wollandora gave her briefing once and her lore once.
+- "moonlight" twice, "hooked beak" 3 times, "empty air" once, "amber eyes" never.
+- No fact the players needed was dropped, read against the notes.
+
+What it showed is left:
+
+- NPC turns are now 29% of the words, at 73 words a turn. Their rule is unchanged.
+- A 10-word reply was rewritten as 31, with "sharp green eyes" and "elven longbow" added.
+- Asking about the relics moves to `the-missing-relics`, which has no intro. The player must ask again before Wollandora answers.
+- The round end and Wollandora's own turn can both press for an answer, one after the other.
+- Dialogue gains a space before its closing quote: `here, " Wollandora says`. The source has none. It was in the old saves too.
+
 ## Not done
 
-- No live replay yet, so the new lengths are unmeasured.
-- NPC turns, 15% of the words, keep their 4-sentence rule.
+- One path, one model. The rescue and the refusal are unplayed, and so are the other GMs.
+- NPC turns keep their 4-sentence rule.
 - Player action rewrites still add adjectives to a short reply.
 - Covert Cargo, The Road to Kordavos and March of Davos are not audited or trimmed.
 - Codex, Antigravity and the other GMs are unmeasured. The saves were all Claude.
 - The website's S3 copies of the adventure are not changed.
-- No code enforces the length. It is a prompt rule only.
+- No code enforces the length. It is a prompt rule only, and it held on every round end of the replay.
 
 ## Validation
 
@@ -82,3 +106,4 @@ Decisions made without the owner: the 25% threshold, and the sword and dagger.
 - `pnpm --filter @d20/gm-core check`
 - Bridge checks for all four adventures, `batch-e` and the public flow check
 - Desktop tests after `pnpm prepare:runtime`
+- The live replay above
