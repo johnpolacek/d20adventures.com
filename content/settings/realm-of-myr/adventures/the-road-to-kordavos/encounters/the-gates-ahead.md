@@ -13,6 +13,10 @@ adventureId: "the-road-to-kordavos"
 
 It won’t be long now. The gates to the city are now in view.
 
+Stone archways rise over the road, hung with Asterian and Valkaran banners, and music and laughter carry from the Harvest Festival beyond them. A long line of travellers, merchants and villagers waits at the checkpoint, where the city guard is taking three marks a head and asking each their business in Kordavos.
+
+The story continues in March of Davos.
+
 ## Migration Context
 
 Legacy section: 

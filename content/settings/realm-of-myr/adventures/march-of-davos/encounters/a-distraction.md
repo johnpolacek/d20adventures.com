@@ -14,7 +14,7 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726622649291"
 
 The ballroom's murmur of conversation quiets, Lady Astrid Blackthorn steps forward, her voice smooth and commanding as she addresses the crowd. Her lips curl into a proud smile, and her eyes scan the room, lingering on the adventurers for a moment before she continues.
 
-"Ladies and gentlemen, honored guests, tonight we celebrate not just our prosperity but our alliance with the ancient people of the Valkarr Forest. In keeping with this celebration, I am pleased to introduce a very special guest, an emissary from our elven allies. Please welcome Aelindor, master bard of Lindrathil, who will honor us with the Song of the Eldertree."
+"Ladies and gentlemen, honored guests, tonight we celebrate not just our prosperity but our alliance with the ancient people of the Valkarr Forest. In keeping with this celebration, I am pleased to introduce a very special guest, an emissary from our elven allies. Please welcome Aelindor, master bard of Faelendar, who will honor us with the Song of the Eldertree."
 
 The grand doors of the ballroom swing open, and all eyes turn as a tall, ethereal elf strides into the room. His silver hair shimmers under the chandelier light, and his long, flowing robes of green and silver seem to blend with the very air around him. Across his back, he carries an ornately carved lyre made from the heartwood of an ancient tree, its strings glinting like threads of moonlight.
 

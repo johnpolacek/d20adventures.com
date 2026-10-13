@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-13, the three intro adventures are stitched to March of Davos
+
+Owner: "the point of these adventures is to lead into march of davos. midnight summons leads into covert cargo leads into Road to Kordavos, then finally into March of Davos the featured adventure." A read of all four found the first link strong and the rest thin: March of Davos never mentioned Covert Cargo's crate or its people, the elves' home had two names, players never heard "Blackthorn" in Covert Cargo, and no ending pointed on. Owner chose story stitching first. The settlement is Faelendar everywhere, the scrollcase carries the Blackthorn seal, the Oath Stone and Silas are in March of Davos's docks, warehouse and ledger, the Road carries the rumor, and each ending names the next adventure. March of Davos assumes the tug got away with the crate. Text only: nothing carries between playthroughs yet. Details in [the lead-in plan](plans/adventure-lead-in.md).
+
 ## 2026-10-13, the boat fight most often ends with Lyra overboard
 
 Owner: "Maybe we favor tossing Lyra overboard and they get away. That should be the most likely outcome." Read as Silas and Reinhard getting away with the crate. Battle on the Boat now says so in both men's behavior, in its GM notes and as its first transition. A new encounter, Overboard, has Lyra haul herself out by the gangway while the tug goes downstream, and is where the three heroes most likely meet. It plays on a second pier set with the tug cut out. Likely, not forced: nothing in the engine makes it happen. Not yet played with a live model. Details in [three heroes](plans/covert-cargo-three-heroes.md).

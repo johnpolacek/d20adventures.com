@@ -19,6 +19,10 @@ He had turned down her request for his help.
 
 Had he made the right choice? He did not enjoy the city, but Wollandora's claims of stolen relics were intriguing. Perhaps a trip to the city would prove to be worth it.
 
+By nightfall he had made up his mind. He would follow the Mordava downstream and see this boat for himself.
+
+The story continues in Covert Cargo.
+
 ## GM Notes
 
 Legacy runtime flag: resetHealth was true.

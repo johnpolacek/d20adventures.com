@@ -53,6 +53,10 @@ Two optional manifest fields, enforced by the GM core in `packages/gm-core/src/w
 
 A premade can share an ID with another adventure's premade, since each adventure compiles from its own files. Thalbern is `thalbern` in The Midnight Summons and in Covert Cargo, with a sheet in each.
 
+The four Myr adventures are one story: The Midnight Summons, Covert Cargo, The Road to Kordavos, then March of Davos. Names, the cargo and the endings are kept in step by hand, since nothing carries from one playthrough to the next. See [the lead-in plan](plans/adventure-lead-in.md) before changing a shared name or an ending.
+
+Editing March of Davos content changes its content hash, which the recorded GM prompts in `scripts/gm-core-fixtures/turn.json` pin. Replace the old hash there with the one `pnpm test:gm-core` reports.
+
 To make one ending the likely one, say it three times: in the NPCs' `behavior`, in the GM notes with a rough number of rounds, and as the first transition. Covert Cargo's boat fight does this for Lyra going overboard.
 
 Heroes who start apart and unknown to each other need two things. The `## Premise` says who knows of whom, which reaches every prompt. Each encounter's GM notes say what check changes it, since the roll decision on a hero's action reads the encounter's notes and not the premise. Covert Cargo's watchers use a Perception check, DC 15.

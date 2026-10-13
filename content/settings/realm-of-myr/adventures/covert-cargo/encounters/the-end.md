@@ -14,6 +14,10 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/cover
 
 The path forward remains uncertain, but things cannot be undone. Events have been set in motion and now all that remains is to move forward into the unknown.
 
+Whatever was sold at the pier was bought for Kordavos, and what began on the river will be finished in the city.
+
+The story continues in The Road to Kordavos.
+
 ## Migration Context
 
 Legacy section: Section One

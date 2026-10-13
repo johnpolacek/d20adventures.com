@@ -17,6 +17,10 @@ The following morning, bathed in the soft light of the forest, Thalbern is back 
 
 The city's tangled ways are far from the quiet paths he knows. Thalbern carefully packs a change of simple, unassuming clothes, ensuring his hunting bow and a quiver of arrows were discreetly bundled, alongside a smaller hand axe and knife. As the sun climbed higher, he left the quiet security of his forest home, turning his steps towards the distant, bustling spires of Kordavos, a place where his survival instincts would be tested in a different kind of wilderness.
 
+He would not take the road. Wollandora had seen the boat on the river, Valkaran-made and riding low, and a river leaves a trail for those who can read its banks. Thalbern turned downstream along the Mordava.
+
+The story continues in Covert Cargo.
+
 ## GM Notes
 
 Thalbern should be fully healed from any wounds or fatigue from the previous night.

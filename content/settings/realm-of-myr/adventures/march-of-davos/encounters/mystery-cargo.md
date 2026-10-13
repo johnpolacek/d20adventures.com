@@ -31,14 +31,15 @@ This encounter is a combat-focused scene that transitions into a discovery phase
 - **The Thugs** are simple mercenaries hired by the Blackthorn Clan to guard this specific shipment.
 - **The Environment:** The warehouse is filled with crates. These can be used as difficult terrain or cover. 
 
-If Alaric is reduced to 5 HP or less, he may try to flee or surrender in exchange for his life. He reveals he was told to hold the cargo until "The Lady" (Astrid) came for it, but some other 'cowl-wearing freaks' have been sniffing around.
+If Alaric is reduced to 5 HP or less, he may try to flee or surrender in exchange for his life. He reveals he was told to hold the cargo until "The Lady" (Astrid) came for it, but some other 'cowl-wearing freaks' have been sniffing around. He adds that Silas, one of the Lady's own men, brought the big crate in by river and said nobody was to open it.
 
 ### The Discovery
 
 Once the thugs are dealt with, the players can search the warehouse. Among crates of elven wine and silk, they find a small, reinforced lockbox. Inside is a **Manifest and Map**.
 
-- **The Manifest:** Lists several artifacts from Old Valkara, including the "Key of Ilmarin." However, the Key is missing from the crate.
-- **The Map:** Shows a route through the Valkarr Forest with a mark on a ship currently docked at the far end of the harbor: *The Star of lindrathil*.
+- **The Manifest:** Lists several artifacts from Old Valkara, including the "Key of Ilmarin" and the Oath Stone of the First Clans. However, the Key is missing from the crate.
+- **The Chained Crate:** Against the back wall stands an iron-banded oak crate hung with chain, far too heavy to shift. Inside is a great seat of carved stone. The manifest names it the Oath Stone of the First Clans, "brought by river, proven by an arcanist."
+- **The Map:** Shows a route through the Valkarr Forest with a mark on a ship currently docked at the far end of the harbor: *The Star of Faelendar*.
 
 **The Trigger:** As the players finish their search, a massive, bone-shaking crash echoes from the docks outside, followed by a scream that pierces the air.
 

@@ -26,6 +26,8 @@ Among the diverse stream of travelers along the road to Kordavos is a well-appoi
 
 ## GM Notes
 
+Road gossip, which any of the three can pass on if the talk turns to news. A night or two ago a riverboat came down a quiet fork of the Mordava before dawn and tied up at an old smugglers' pier three miles from the city. Elves were seen there. There was a fight aboard, and a woman is said to have gone into the river. By sunrise the boat had cast off and gone on to Kordavos. Dmitri has also heard that relics of Old Valkara are changing hands in the city, and that the Blackthorn family is buying. None of them knows more than that.
+
 Legacy runtime flag: skipInitialNpcTurns was true.
 
 ## Transitions

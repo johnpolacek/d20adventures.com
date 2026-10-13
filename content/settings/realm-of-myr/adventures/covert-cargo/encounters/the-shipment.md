@@ -36,7 +36,7 @@ Meanwhile, from his cleverly concealed vantage within a tangle of undergrowth at
 
 His keen hazel eyes, accustomed to discerning worth from a glint in the dark, had tracked the three figures down the pier and aboard, and now followed their shapes past the lit windows. The hulking soldier, the robed woman, and the whispering shadow-man. A professional crew, indeed; no sloppy thugs. This wasn't just any cargo; this was an item of importance, something worth securing. Poppen’s mind raced, not just with the thought of fencing such a treasure, but with the delicious social connections such a coup would bring.
 
-Neither of them knew of the third watcher. Farther down the bank, where a thicket crowded the water below the tug's stern, Thalbern knelt among the leaves with his longbow across his knee, as still as the roots around him. The druid Wollandora had sent him after relics taken from the elven vaults of the Valkarr woods, and for two days he had followed this boat down the Mordava, keeping to the trees. Now it lay moored where no honest boat had cause to stop, with its lamps lit and strangers gone aboard. He had seen no one else on the bank, and no one had seen him. Whatever the boat carried was about to change hands.
+Neither of them knew of the third watcher. Farther down the bank, where a thicket crowded the water below the tug's stern, Thalbern knelt among the leaves with his longbow across his knee, as still as the roots around him. The druid Wollandora had sent him after relics taken from the elven vaults of the Valkarr woods, and after the Valkaran-made riverboat she had seen carrying them toward Kordavos. He had followed the Mordava downstream from the Standing Stones, keeping to the trees, and here was the boat. It lay moored where no honest boat had cause to stop, with its lamps lit and strangers gone aboard. He had seen no one else on the bank, and no one had seen him. Whatever the boat carried was about to change hands.
 
 A soft creak of wood from the ship cuts through the night's quiet hum as the cabin door opened. A figure emerges with a silent, deliberate grace that was distinctly elven. He is tall and lithe, clad in dark, practical leather armor. Two other elves, equally silent and alert, could be seen on the boat's deck, one near the bow and another by the stern, both armed with bows.
 
@@ -44,7 +44,7 @@ The lead elf steps forward to the crate, his gaze settling on Lyra's escorts. Hi
 
 "You have the arrangement?" asked the elf.
 
-“I have it here Aelar,” Silas replies, gliding from the shadows by the door. He removes a heavy scrollcase from its oilskin wrapping.
+“I have it here Aelar,” Silas replies, gliding from the shadows by the door. He removes a heavy scrollcase from its oilskin wrapping. Black wax seals its cap, pressed with the thorned branch of the Blackthorn family.
 
 "Very well," Aelar says, turning to give an order in Elvish to one of his crew. "The shipment is ready for your specialist's inspection."
 
@@ -61,6 +61,8 @@ If Lyra successfully casts a spell on the crate to detect magic, she will be det
 Poppen and Thalbern hide in different places and do not know of each other. Poppen is in the bushes at the treeline above the gangway. Thalbern is in a thicket on the bank below the stern. Each learns of the other only by passing a check. Ask for a Perception check, DC 15, when one of them searches or watches the bank or the woods, or looks for where an arrow, a voice or a noise came from. Use DC 10 once the other has acted in the open, with a shot, a shout or a step onto the pier. With no check or a failed one, he notices nothing of the other, and the narration shows nothing passing between them. A passed check shows a stranger with no name: a shape in the leaves, a bow, a small figure.
 
 Aelar and his elves are here only to trade the crate. Once Silas hands over the payment they leave the boat, go up the bank trail into the woods and do not come back. They take no side in anything that happens after.
+
+Silas and Reinhard serve the Blackthorn family of Kordavos, who are buying the relic in secret. Aelar and his elves are of the Circle, a faction of the elven settlement of Faelendar. The scrollcase is the payment.
 
 Legacy runtime flag: skipInitialNpcTurns was true.
 

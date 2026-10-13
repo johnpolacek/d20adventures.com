@@ -14,7 +14,7 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726354341751"
 
 ## Intro
 
-You rush from the warehouse just in time to see a horrific scene. A nearby elven ship, the *Star of Lindrathil*, rocks violently in its berth. Startled cries fill the air as dockworkers dive into the water. A deep, guttural roar reverberates from the cargo hold—a sound of pure, ancient rage.
+You rush from the warehouse just in time to see a horrific scene. A nearby elven ship, the *Star of Faelendar*, rocks violently in its berth. Startled cries fill the air as dockworkers dive into the water. A deep, guttural roar reverberates from the cargo hold—a sound of pure, ancient rage.
 
 The thick wooden doors of the hold explode outward in a spray of splinters. A massive creature emerges, wings snapping open to catch the air. It is a **Forest Drake**, its scales shimmering in shades of mossy green and bark-brown. Its yellow eyes burn with a feral light as it lets out a deafening roar that rattles the windows of nearby shops.
 

@@ -19,6 +19,10 @@ As the group progresses along the Marquis Road towards Kordavos, the anticipatio
 
 "Paths entwine on the road to Kordavos, travelers!” She beckons. “Some lead to fortune, others to ruin. Fate whispers to those who listen, if they are willing to hear its truths, for a price, of course."
 
+## GM Notes
+
+Her readings are vague but true. Whatever else she tells them, she may see three things waiting in Kordavos: a stone that holds a promise, a key that opens every door, and a friend's face under a cowl. She does not know what they mean.
+
 ## Transitions
 
 - To [[encounter:the-gates-ahead]] when After the players have their fortune read or if they decide not to have their fortune read.

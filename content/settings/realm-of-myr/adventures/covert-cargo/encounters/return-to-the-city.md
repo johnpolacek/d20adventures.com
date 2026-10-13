@@ -14,6 +14,12 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/cover
 
 Kordavos, the capital city of the March of Davos, is a three mile trek back through the forest. It is the middle of the Harvest Festival so there will be many visitors, making it easy to blend in amongst the eclectic travellers from far and wide.
 
+Whatever the elves sold at that pier was bought under the seal of the Blackthorn family, and the Blackthorns are in Kordavos. The answers are in the city, and so is the trouble.
+
+Beyond the walls the Marquis Road is still filling with travellers bound for the festival, and every one of them is walking into the same city.
+
+The story continues in The Road to Kordavos.
+
 ## Migration Context
 
 Legacy section: Section One

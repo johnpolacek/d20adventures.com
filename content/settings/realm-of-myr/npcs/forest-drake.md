@@ -9,4 +9,4 @@ image: "https://d20-public.s3.us-east-1.amazonaws.com/images/app/avatar/npc.png?
 
 ## Summary
 
-A dangerous forest drake shipped from Lindrathil and released at the docks.
+A dangerous forest drake shipped from Faelendar and released at the docks.
