@@ -48,7 +48,7 @@ export const commandSchema = z.discriminatedUnion("kind", [
   // `replace` starts over, archiving the saved adventure.
   z.object({
     kind: z.literal("start"),
-    provider: z.enum(["claude", "codex", "grok", "gemini"]),
+    provider: z.enum(["claude", "codex", "grok", "antigravity"]),
     adventure: z.string().max(100).optional(),
     replace: z.boolean().optional(),
     // Who plays each hero. Without it, the suggested party, all played by the player.

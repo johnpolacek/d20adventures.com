@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-13, Antigravity replaces the Gemini CLI
+
+Owner: "Google replaced Gemini CLI with the Antigravity CLI". The Gemini CLI has refused personal sign-in since the spike. The desktop app's fourth GM is now `agy`, and `gemini` is no longer listed. Antigravity has no ACP mode, so it runs in print mode over streamed JSON as a custom agent with no tools, written into the session's scratch folder. A tool step, or another agent in `init`, fails the session. The app picks the model from `agy models` at each session start, the Gemini Flash model at medium effort, since the CLI's default took 44 seconds on a one-word reply and the CLI also offers Claude and GPT models. On a scratch save of The Midnight Summons a reply, a roll and a round end played in 38, 12 and 32 seconds. Each GM action is kept as a conversation in the player's Antigravity history, and its docs name no way to turn that off. Not checked in the app itself. Details in [the plan](plans/antigravity-cli.md).
+
 ## 2026-10-13, the Game Master picker names the model
 
 Owner: "the game master select should be better designed and should show the full model (e.g. Claude Opus 5.5 medium effort)", then "make the Cancel button be a ghost button". Party setup in the desktop app now lists each installed CLI by the model it runs and its effort, in the site's dropdown. Each CLI is asked what it would run without a prompt, one request per CLI, and the last answers are kept for the next launch. The Claude CLI does not report its default effort, so the app now passes `--effort medium`, taken from the owner's example. Before this it passed none, so the GM's effort on Claude may have changed. Codex stays at low. Gemini's CLI refuses sign-in on the owner's machine and shows by name only. Checked in the WebKit preview, not in the app itself. Details in [the plan](plans/gm-model-picker.md).

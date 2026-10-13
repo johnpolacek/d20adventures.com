@@ -4,23 +4,26 @@ import { homedir } from "node:os"
 import { isAbsolute, join } from "node:path"
 import { createInterface } from "node:readline"
 
-export const providers = ["claude", "codex", "gemini", "grok"]
+export const providers = ["claude", "codex", "antigravity", "grok"]
+// A provider whose executable goes by another name.
+const binaries = { antigravity: "agy" }
 export function minimalEnv(inherited = process.env) {
   // FilmBrain's credential-free allowlist. Do not copy the parent's API/auth/session env.
   return Object.fromEntries(["HOME", "PATH", "USER", "LOGNAME", "LANG", "TMPDIR"].filter((key) => inherited[key]).map((key) => [key, inherited[key]]))
 }
 export function locate(name) {
   if (![...providers, "node"].includes(name)) throw new Error("Unsupported executable")
+  const binary = binaries[name] ?? name
   const candidates = [
     // Native GUI PATH can contain terminal-injected wrappers. Prefer FilmBrain's
     // known installation locations so the spike launches the player's binary itself.
-    ...[".local/bin", ".local/share/fnm/aliases/default/bin", ".volta/bin", ".bun/bin", ".grok/bin"].map((dir) => join(homedir(), dir, name)),
+    ...[".local/bin", ".local/share/fnm/aliases/default/bin", ".volta/bin", ".bun/bin", ".grok/bin"].map((dir) => join(homedir(), dir, binary)),
     ...(process.env.PATH ?? "")
       .split(":")
       .filter(isAbsolute)
-      .map((dir) => join(dir, name)),
-    `/opt/homebrew/bin/${name}`,
-    `/usr/local/bin/${name}`,
+      .map((dir) => join(dir, binary)),
+    `/opt/homebrew/bin/${binary}`,
+    `/usr/local/bin/${binary}`,
   ]
   for (const candidate of candidates) {
     try {
@@ -72,7 +75,7 @@ export function runBounded(binary, args, { cwd, input, env = minimalEnv(), timeo
   })
 }
 // The effort the app asks of a CLI that takes one. The Game Master picker shows these, so set them only here.
-export const efforts = { claude: "medium", codex: "low" }
+export const efforts = { claude: "medium", codex: "low", antigravity: "medium" }
 export const claudeArgs = [
   "--print",
   "--input-format",
@@ -105,7 +108,7 @@ export function gate(provider, help) {
     const missing = required.filter((flag) => !help.includes(flag))
     return missing.length ? { allowed: false, reason: `Missing flags: ${missing.join(", ")}` } : { allowed: true }
   }
-  const flag = { codex: "app-server", gemini: "--acp", grok: "agent" }[provider]
+  const flag = { codex: "app-server", antigravity: "--input-format", grok: "agent" }[provider]
   return help.includes(flag) ? { allowed: true } : { allowed: false, reason: "Persistent protocol not exposed by this installed CLI" }
 }
 
@@ -125,7 +128,7 @@ export async function detect(cwd) {
         versionExit: version.code,
         helpExit: help.code,
         exposesIgnoreUserConfig: help.stdout.includes("--ignore-user-config"),
-        mode: { claude: "stream-json stdin", codex: "app-server JSON-RPC", gemini: "ACP", grok: "agent stdio ACP" }[provider],
+        mode: { claude: "stream-json stdin", codex: "app-server JSON-RPC", antigravity: "stream-json stdin", grok: "agent stdio ACP" }[provider],
         ...gate(provider, help.stdout),
       })
     } catch {

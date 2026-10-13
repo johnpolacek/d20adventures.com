@@ -8,6 +8,7 @@ Updated for the desktop integration worktree on 2026-10-02. Implementation statu
 
 | Plan | Status | Next work |
 |---|---|---|
+| [Antigravity replaces the Gemini CLI](antigravity-cli.md) | Implemented on main 2026-10-13. The fourth GM is Google's `agy`, run as a custom agent with no tools on the Gemini Flash model the app picks from the CLI's list. A reply, a roll and a round end played through the runtime. | Owner play-through in the app. A way to keep GM turns out of the player's Antigravity history. |
 | [Game Master picker shows the model](gm-model-picker.md) | Implemented on main 2026-10-13. Party setup names the model each CLI runs and its effort, in the site's dropdown, and Cancel is text only. Claude now runs at medium effort. | Owner review in the app. A turn played at the new effort. |
 | [Adventure premise](adventure-premise.md) | Implemented on main 2026-10-11. Every prompt carries a who-knows-what rule, and an adventure page can author a `## Premise`. Covert Cargo has one. | Owner play-through. Tracking who has since met whom is not built. |
 | [Skip a hero's turn](skip-turn.md) | Implemented on main 2026-10-11 for local play and hosted games. A text button left of Send ends the hero's turn with nothing written and no AI. | Check a hosted game end to end. Deploy Convex before hosted skips work in production. |

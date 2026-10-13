@@ -409,7 +409,7 @@ export function DesktopGame() {
                 {screen === "settings" && <SettingsPage realm={realm} onRealm={() => void openSite(`/settings/${realm?.id ?? "realm-of-myr"}`)} />}
                 {screen === "new" && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-black/70 text-center">
-                    {!providers.length && <p>Install and sign in to Claude Code, Codex, Grok, or Gemini CLI.</p>}
+                    {!providers.length && <p>Install and sign in to Claude Code, Codex, Grok, or Antigravity.</p>}
                     {adventures.length > 0 && (
                       <NewGame
                         key={carried ? `${adventure}:continued` : adventure}

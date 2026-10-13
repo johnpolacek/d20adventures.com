@@ -15,7 +15,7 @@ export const heroSchema = pcTemplateSchema.extend({
   painted: z.boolean().optional(),
 })
 export type Hero = z.infer<typeof heroSchema>
-const provider = z.enum(["claude", "codex", "grok", "gemini"])
+const provider = z.enum(["claude", "codex", "grok", "antigravity"])
 const text = (max: number) => z.string().trim().max(max)
 export const heroCommandSchema = z.discriminatedUnion("kind", [
   z.object({

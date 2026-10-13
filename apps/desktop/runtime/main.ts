@@ -103,7 +103,7 @@ async function main() {
         hero = await heroCommand(command as HeroCommand, store, packs, model.llm, { data: dirname(savePath), scratch })
       else await game(store, packs, model.llm)(command as GameCommand)
       const state = store.state
-      const providers = ["claude", "codex", "grok", "gemini"].filter((name) => {
+      const providers = ["claude", "codex", "grok", "antigravity"].filter((name) => {
         try {
           locate(name)
           return true

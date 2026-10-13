@@ -16,7 +16,8 @@ Each CLI is asked what it would run. No prompt is sent, so nothing is used.
 |---|---|---|
 | Claude | Control request `initialize`: the `default` entry's `resolvedModel`, named by the entry that resolves to the same model. | The app. It passes `--effort`. |
 | Codex | `thread/start`, named by `model/list`. | The app. It sends `effort` with each turn. |
-| Grok, Gemini | `session/new`: the current model's `name`. | The CLI: the model's `_meta.reasoningEffort`, when it reports one. |
+| Grok | `session/new`: the current model's `name`. | The CLI: the model's `_meta.reasoningEffort`, when it reports one. |
+| Antigravity | `agy models`: the Gemini Flash model the app picks. See [Antigravity](antigravity-cli.md). | The app, by the model it picks. |
 
 | Piece | Where | Notes |
 |---|---|---|
@@ -40,7 +41,7 @@ Each CLI is asked what it would run. No prompt is sent, so nothing is used.
 
 - Choosing a model or an effort in the app.
 - Hosted games and the play screen do not show the model.
-- Gemini. On the owner's machine its CLI refuses sign-in ("no longer supported for Gemini Code Assist for individuals"), so it shows as "Gemini" and its model names are unchecked.
+- Gemini's CLI refused sign-in on the owner's machine. [Antigravity](antigravity-cli.md) replaced it the same day.
 
 ## Validation
 

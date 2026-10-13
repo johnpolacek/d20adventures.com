@@ -13,7 +13,7 @@ Recorded 2026-10-01:
 - Desktop app built with Tauri. Mac first, then other platforms. The game UI stays in TypeScript inside the webview, with a thin Rust layer.
 - Ship as a notarized direct download. No Mac App Store, because its sandbox blocks running the player's installed CLIs.
 - Solo play runs the GM locally through the player's CLI and is free. AI-controlled party members can fill the party.
-- Supported CLIs include Claude Code, Codex, Gemini CLI, and Grok. The owner accepts the terms risk for Codex, Gemini, and Grok.
+- Supported CLIs include Claude Code, Codex, Antigravity, and Grok. The owner accepts the terms risk for Codex, Gemini, and Grok. [Antigravity](antigravity-cli.md) replaced the Gemini CLI on 2026-10-13.
 - Multiplayer runs the GM on the server. A subscription grants tokens, roughly matching current token pricing. Superseded on 2026-10-07, below.
 - Narration is optional and player-supplied through common voice-generation providers. The provider choice is TBD.
 - Players can generate their own characters or use premades.
@@ -99,7 +99,7 @@ Long-running text modes, checked against installed CLIs on 2026-10-01:
 |---|---|
 | Claude Code | `claude -p --input-format stream-json --output-format stream-json` |
 | Codex | `codex app-server`, JSON-RPC over stdio, marked experimental |
-| Gemini CLI | `gemini --acp`, Agent Client Protocol |
+| Gemini CLI | `gemini --acp`, Agent Client Protocol. Replaced on 2026-10-13 by [Antigravity](antigravity-cli.md): `agy` in print mode over streamed JSON. |
 | Grok | `grok agent stdio`, Agent Client Protocol. |
 
 Rules:
