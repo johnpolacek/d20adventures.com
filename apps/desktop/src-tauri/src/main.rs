@@ -93,6 +93,11 @@ async fn suggest_command(app: tauri::AppHandle, command: Value) -> Result<Value,
     }
     run_runtime(&app, &command).await
 }
+// The model a CLI runs comes from the CLI alone, so asking skips the game lock too.
+#[tauri::command]
+async fn model_command(app: tauri::AppHandle, provider: String) -> Result<Value, String> {
+    run_runtime(&app, &serde_json::json!({ "kind": "model", "provider": provider })).await
+}
 // Account actions only reach the website, so they skip the game lock. The token travels from the Keychain
 // to the runtime over stdin and back, and the webview never sees it.
 #[tauri::command]
@@ -307,6 +312,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             game_command,
             suggest_command,
+            model_command,
             account_command,
             host_command,
             host_start,

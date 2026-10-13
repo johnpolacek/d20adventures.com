@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-13, the Game Master picker names the model
+
+Owner: "the game master select should be better designed and should show the full model (e.g. Claude Opus 5.5 medium effort)", then "make the Cancel button be a ghost button". Party setup in the desktop app now lists each installed CLI by the model it runs and its effort, in the site's dropdown. Each CLI is asked what it would run without a prompt, one request per CLI, and the last answers are kept for the next launch. The Claude CLI does not report its default effort, so the app now passes `--effort medium`, taken from the owner's example. Before this it passed none, so the GM's effort on Claude may have changed. Codex stays at low. Gemini's CLI refuses sign-in on the owner's machine and shows by name only. Checked in the WebKit preview, not in the app itself. Details in [the plan](plans/gm-model-picker.md).
+
 ## 2026-10-13, the next adventure remembers the last
 
 Owner: "do story memory". Continuing from an ending in the desktop app now writes a chapter for the finished adventure into the new save: its last scenes, who played, the end of the GM's running summary and the threads left open. Chapters add up along the chain whoever the heroes are, so March of Davos is told of all three intro adventures. They reach the GM inside the premise as "THE STORY SO FAR", marked as settled fact that outranks an adventure's notes, and known only to the heroes each chapter names. Replies offered to a player carry only the chapters their hero lived. A hero who goes on keeps their gear, not their wounds. No model writes the recap. March of Davos's docks, warehouse and ledger say what changes if the crate never reached the city. Decided without the owner: no recap call, wounds stay behind, and memory needs the Continue button. Tested with a stub GM only. Details in [the lead-in plan](plans/adventure-lead-in.md).

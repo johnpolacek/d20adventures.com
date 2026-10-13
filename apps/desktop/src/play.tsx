@@ -8,7 +8,7 @@ import type { HostedState } from "../runtime/host-commands"
 import type { Save, SaveSummary } from "../runtime/store"
 import { AccountBadge, AccountNotice, LinkGate, useAccount } from "./account"
 import { AppHeader } from "./app-header"
-import { type HostWorkerState, host, hostRunning, hostStart, openSite, send, suggest } from "./bridge"
+import { type GmModel, gmModel, type HostWorkerState, host, hostRunning, hostStart, openSite, send, suggest } from "./bridge"
 import { partyOf } from "./carry"
 import type { FigureArt } from "./figures"
 import { FullscreenButton } from "./fullscreen"
@@ -26,6 +26,27 @@ export function DesktopGame() {
   const [loaded, setLoaded] = useState(false)
   const [providers, setProviders] = useState<string[]>([])
   const [provider, setProvider] = useState("claude")
+  // What each installed CLI runs as the GM. Each is asked once and answers in its own time, so a slow one holds up
+  // no other. The last answers are kept, so the picker has them at once the next time the app opens.
+  const [models, setModels] = useState<Record<string, GmModel>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("gm-models") ?? "{}")
+    } catch {
+      return {}
+    }
+  })
+  useEffect(() => localStorage.setItem("gm-models", JSON.stringify(models)), [models])
+  const askedModels = useRef(new Set<string>())
+  useEffect(() => {
+    for (const p of providers) {
+      if (askedModels.current.has(p)) continue
+      askedModels.current.add(p)
+      gmModel(p).then(
+        (res) => setModels((cur) => ({ ...cur, [p]: res.model ?? {} })),
+        () => {}
+      )
+    }
+  }, [providers])
   const [adventures, setAdventures] = useState<AdventureInfo[]>([])
   const [adventure, setAdventure] = useState("march-of-davos")
   // Set once the player picks an adventure, so loading never moves their choice.
@@ -396,6 +417,7 @@ export function DesktopGame() {
                         adventure={adventure}
                         heroes={heroes}
                         providers={providers}
+                        models={models}
                         provider={provider}
                         onProvider={setProvider}
                         busy={busy || sending}

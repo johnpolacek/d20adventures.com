@@ -2,6 +2,7 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { createInterface } from "node:readline"
 import { locate } from "../../desktop-spike/harness/cli.mjs"
+import { describeModel } from "../../desktop-spike/harness/sessions.mjs"
 import { accountCommand, accountCommandSchema } from "./account"
 import { applyCharacterUpdates } from "./characters"
 import { adventureList, type CatalogInfo, commandSchema, type GameCommand, game, type Packs, suggest, suggestCommandSchema, transitionsOf } from "./game"
@@ -72,6 +73,12 @@ async function main() {
         } finally {
           roster.db.close()
         }
+        return
+      }
+      // The model one CLI runs as the GM, for the picker. It asks the CLI alone: no save, no prompt. Empty when the
+      // CLI is missing, will not say, or takes too long.
+      if (input?.kind === "model") {
+        process.stdout.write(`${JSON.stringify({ model: await describeModel(String(input.provider), scratch).catch(() => ({})) })}\n`)
         return
       }
       // Suggested replies read the save and write nothing. They take no lock, so they can run beside a game action.

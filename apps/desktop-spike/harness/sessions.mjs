@@ -1,6 +1,6 @@
 import { writeFileSync } from "node:fs"
 import { join } from "node:path"
-import { ClaudeSession, locate, minimalEnv } from "./cli.mjs"
+import { ClaudeSession, efforts, locate, minimalEnv } from "./cli.mjs"
 import { RpcPeer } from "./rpc.mjs"
 
 class CodexSession {
@@ -66,12 +66,18 @@ class CodexSession {
     // Attach rejection handling while the start request is outstanding.
     completion.catch(() => {})
     try {
-      await this.peer.request("turn/start", { threadId: this.id, input: [{ type: "text", text }], effort: "low" })
+      await this.peer.request("turn/start", { threadId: this.id, input: [{ type: "text", text }], effort: efforts.codex })
       return await completion
     } catch (error) {
       this.peer.fail(error.message)
       throw error
     }
+  }
+  // The model a thread starts on, by the name the CLI lists it under. Starts no turn.
+  async describe() {
+    if (!this.id) await this.initialize()
+    const listed = await this.peer.request("model/list", {}).catch(() => ({}))
+    return { name: listed.data?.find((m) => m.model === this.model)?.displayName ?? this.model, effort: efforts.codex }
   }
   close() {
     this.peer.close()
@@ -125,6 +131,7 @@ class AcpSession {
     const session = await this.peer.request("session/new", { cwd: this.cwd, mcpServers: [] })
     this.id = session.sessionId
     this.model = session.models?.currentModelId ?? "CLI default (unreported)"
+    this.available = session.models?.availableModels ?? []
     this.mode = session.modes?.currentModeId
     this.startupMs = Math.round(performance.now() - this.start)
   }
@@ -134,6 +141,12 @@ class AcpSession {
     this.text = ""
     const result = await this.peer.request("session/prompt", { sessionId: this.id, prompt: [{ type: "text", text: `${this.system}\n\n${text}` }] })
     return { text: this.text, failed: result.stopReason !== "end_turn", stopReason: result.stopReason, providerTurns: null }
+  }
+  // The session's model, with the name and effort the CLI reports for it. Sends no prompt.
+  async describe() {
+    if (!this.id) await this.initialize()
+    const current = this.available.find((m) => m.modelId === this.model)
+    return { name: current?.name, effort: current?._meta?.reasoningEffort }
   }
   close() {
     this.peer.close()
@@ -145,6 +158,19 @@ export function createSession(provider, cwd, system) {
   if (provider === "codex") return new CodexSession(cwd, system)
   if (["gemini", "grok"].includes(provider)) return new AcpSession(provider, cwd, system)
   throw new Error("Unsupported provider")
+}
+
+// What a CLI would run as the GM: its model's name and effort, where it says. Failing the session on the time limit
+// rejects the request it is waiting on, so no timer outlives the call.
+export async function describeModel(provider, cwd, timeout = 10000) {
+  const session = createSession(provider, cwd, "")
+  const timer = setTimeout(() => (session.peer ?? session).fail("describe_timeout"), timeout)
+  try {
+    return await session.describe()
+  } finally {
+    clearTimeout(timer)
+    session.close()
+  }
 }
 
 export function sessionReport(session) {

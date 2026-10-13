@@ -71,6 +71,8 @@ export function runBounded(binary, args, { cwd, input, env = minimalEnv(), timeo
     child.stdin.end(input ?? "")
   })
 }
+// The effort the app asks of a CLI that takes one. The Game Master picker shows these, so set them only here.
+export const efforts = { claude: "medium", codex: "low" }
 export const claudeArgs = [
   "--print",
   "--input-format",
@@ -93,6 +95,8 @@ export const claudeArgs = [
   "none",
   "--no-session-persistence",
   "--exclude-dynamic-system-prompt-sections",
+  "--effort",
+  efforts.claude,
 ]
 
 export function gate(provider, help) {
@@ -165,6 +169,16 @@ export class ClaudeSession {
       }
       this.lockdownVerified = true
     }
+    if (event.type === "control_response" && this.pending) {
+      const pending = this.pending
+      this.pending = null
+      clearTimeout(pending.timer)
+      const models = event.response?.response?.models ?? []
+      const running = models.find((m) => m.value === "default")
+      const named = models.find((m) => m.value !== "default" && m.resolvedModel === running?.resolvedModel)
+      pending.resolve({ name: named ? `Claude ${named.displayName}` : undefined, effort: running?.supportsEffort ? efforts.claude : undefined })
+      return
+    }
     if (event.type === "assistant" && event.message?.content?.some((block) => block.type === "tool_use")) {
       this.fail("tool_attempt")
       return
@@ -200,6 +214,14 @@ export class ClaudeSession {
     return new Promise((resolve, reject) => {
       this.pending = { resolve, reject, timer: setTimeout(() => this.fail("request_timeout"), 120000) }
       this.child.stdin.write(`${JSON.stringify({ type: "user", message: { role: "user", content: text } })}\n`)
+    })
+  }
+  // The model this CLI would run, asked over the control channel. No prompt is sent, so nothing is used.
+  describe() {
+    if (this.failure) return Promise.reject(new Error(this.failure))
+    return new Promise((resolve, reject) => {
+      this.pending = { resolve, reject, timer: setTimeout(() => this.fail("request_timeout"), 120000) }
+      this.child.stdin.write(`${JSON.stringify({ type: "control_request", request_id: "describe", request: { subtype: "initialize" } })}\n`)
     })
   }
   close() {

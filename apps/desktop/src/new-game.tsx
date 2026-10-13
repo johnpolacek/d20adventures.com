@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Chip, Option, siteCard, siteLabel, siteOutline, sitePanel } from "@/components/ui/site"
 import { cn } from "@/lib/utils"
 import type { AdventureInfo, CatalogInfo } from "../runtime/game"
 import type { Hero, PartyChoice } from "../runtime/heroes"
+import type { GmModel } from "./bridge"
 import { openingParty } from "./carry"
 import { type FigureArt, STOCK_FIGURES } from "./figures"
 import { ModuleCover } from "./module-cover"
@@ -15,6 +17,10 @@ type Pick = { id: string; name: string; race: string; archetype: string; portrai
 type Seat = { id: string; who: "you" | "ai" | "invite"; open?: boolean }
 // The small controls over a roster hero's card.
 const mini = cn(siteOutline, "px-2 py-0.5 font-mono text-xxs")
+// A text-only control: the quiet way out beside the main action.
+const ghost = "rounded-md px-4 py-2 text-sm text-blue-50/80 transition-colors hover:text-white disabled:pointer-events-none disabled:opacity-50"
+// A CLI by name, until its model is known and when it will not say.
+const CLI: Record<string, string> = { claude: "Claude", codex: "Codex", grok: "Grok", gemini: "Gemini" }
 // An adventure for sale that this app cannot play yet. Owned ones are downloading, or failed to.
 export type Locked = CatalogInfo & { owned: boolean; failed: boolean }
 
@@ -47,6 +53,8 @@ export function NewGame(props: {
   adventure: string
   heroes: Hero[]
   providers: string[]
+  // What each CLI runs as the GM, by CLI. Empty until they answer.
+  models: Record<string, GmModel>
   provider: string
   onProvider: (p: string) => void
   busy: boolean
@@ -316,25 +324,11 @@ export function NewGame(props: {
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-4 border-t border-white/10 px-7 py-5">
-        <label className={siteLabel}>
-          Game Master{" "}
-          <select
-            aria-label="Game Master"
-            value={props.provider}
-            onChange={(e) => props.onProvider(e.target.value)}
-            className="ml-3 rounded-md border border-white/20 bg-black px-3 py-2 font-serif text-base normal-case tracking-normal text-white"
-          >
-            {props.providers.map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
-          </select>
-        </label>
+        <GameMaster providers={props.providers} models={props.models} provider={props.provider} onProvider={props.onProvider} />
         <div className="flex-1" />
         {hosting && sized && !hostable && <p className="text-sm text-amber-300">An invited game takes one hero for you and no AI heroes yet.</p>}
         {props.onCancel && (
-          <button type="button" className={cn(siteOutline, "px-4 py-2 text-sm")} disabled={props.busy} onClick={props.onCancel}>
+          <button type="button" className={ghost} disabled={props.busy} onClick={props.onCancel}>
             Cancel
           </button>
         )}
@@ -359,6 +353,39 @@ export function NewGame(props: {
         )}
       </div>
     </section>
+  )
+}
+
+// Which CLI runs the GM, each named by the model it runs and its effort. One installed CLI is stated, not chosen.
+function GameMaster(props: { providers: string[]; models: Record<string, GmModel>; provider: string; onProvider: (p: string) => void }) {
+  if (!props.providers.length) return null
+  const line = (p: string) => (
+    <>
+      {props.models[p]?.name ?? CLI[p] ?? p}
+      {props.models[p]?.effort && <span className="text-sm text-white/60">{props.models[p].effort} effort</span>}
+    </>
+  )
+  return (
+    <div className="flex items-center gap-3">
+      <span className={siteLabel}>Game Master</span>
+      {props.providers.length === 1 ? (
+        <span className="flex items-baseline gap-2 text-base">{line(props.providers[0])}</span>
+      ) : (
+        <Select value={props.provider} onValueChange={props.onProvider}>
+          <SelectTrigger aria-label="Game Master" className={cn(siteOutline, "h-auto gap-3 py-2 text-base shadow-none focus-visible:border-primary-400 focus-visible:ring-primary-400/50")}>
+            <SelectValue />
+          </SelectTrigger>
+          {/* Over the app's shell, which is its own layer at 100. */}
+          <SelectContent className="z-[110] border-white/20 bg-black text-white ring-[6px] ring-black">
+            {props.providers.map((p) => (
+              <SelectItem key={p} value={p} className="py-2 pl-3 text-base focus:bg-primary-600 focus:text-white">
+                {line(p)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+    </div>
   )
 }
 
@@ -411,7 +438,7 @@ function LockedAdventure(props: { info: Locked; linked: boolean | "offline"; onL
       <div className="flex flex-wrap items-center gap-4 border-t border-white/10 px-7 py-5">
         <div className="flex-1" />
         {props.onCancel && (
-          <button type="button" className={cn(siteOutline, "px-4 py-2 text-sm")} disabled={props.busy} onClick={props.onCancel}>
+          <button type="button" className={ghost} disabled={props.busy} onClick={props.onCancel}>
             Cancel
           </button>
         )}

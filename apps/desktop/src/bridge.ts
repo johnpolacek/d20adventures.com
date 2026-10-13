@@ -22,6 +22,9 @@ export const send = (command: GameCommand | HeroCommand) => invoke<GameResponse>
 // Replies offered on a hero's turn. Rust runs it outside the game lock, so it never holds up an action.
 export const suggest = (turnId: string, characterId: string) =>
   invoke<{ suggestions?: { label: string; text: string }[]; error?: string }>("suggest_command", { command: { kind: "suggest", turnId, characterId } })
+// The model a CLI runs as the GM, and its effort. Rust runs it outside the game lock too.
+export type GmModel = { name?: string; effort?: string }
+export const gmModel = (provider: string) => invoke<{ model?: GmModel }>("model_command", { provider })
 // Rust adds the Keychain token, so the webview never sends or sees it.
 type AccountRequest = AccountCommand extends infer C ? (C extends { token?: string } ? Omit<C, "token"> : never) : never
 export const account = (command: AccountRequest) => invoke<AccountResponse & { error?: string }>("account_command", { command })
