@@ -4,6 +4,12 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-13, a quote on its own line goes to its speaker
+
+Owner, in Meeting at the Stones: Wollandora's "Thalbern, we have a problem." showed in a bubble over Thalbern and on his plate. The NPC's turn wrote one sentence of action and then each spoken line alone on its own line, which is how the turns read since the concise narration pass of the same day. Alone in its paragraph, the quote had no speech tag and no sentence beside it, so the reader gave it to the nearest name, the one she was speaking to. Her next line, with no name in it, got no bubble at all.
+
+`readNarration` now carries the speaker across the line break, never gives a quote to someone it names, and reads an opening pronoun as the subject of the sentence before. See [Stage engine](stage-engine.md). Checked by a throwaway script over the owner's save and ten older saved playthroughs, 92 paragraphs with quotes: 23 changed, each read against its text. 17 lines that had no bubble found their speaker, 4 wrong ones are right, and 2 wrong ones now have none. Those 2 are Wollandora's, in old turns whose character list leaves her out, so the script could not name her. The 19 Covert Cargo paragraphs did not change. Then in the desktop preview on a copy of the owner's save, both lines over Wollandora with her plate. No permanent test was added.
+
 ## 2026-10-13, health on the portrait strip
 
 Owner, mid-fight in The Midnight Summons: "the owlbear just struck my character thalbern but i have no way to see my current health". The save held it, 70% and Bleeding, but the desktop app showed it only in the character card, two clicks on a portrait away.
