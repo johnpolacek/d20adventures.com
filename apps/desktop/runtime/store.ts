@@ -144,6 +144,33 @@ export class LocalStore implements Store, Roster {
     }
     if (this.db.prepare("DELETE FROM archive WHERE id=?").run(archiveId).changes === 0) throw new Error("That adventure is no longer saved.")
   }
+  // A fresh start: every saved adventure goes, the current one and the archive. With `heroes`, the roster too. Refused
+  // while a game action is running, since its next write would bring a save back.
+  wipe(heroes = false): { plays: number; heroes: number } {
+    this.db.exec("BEGIN IMMEDIATE")
+    try {
+      const active = this.db.prepare("SELECT pid FROM active WHERE id=1").get() as { pid: number } | undefined
+      if (active && active.pid !== process.pid) {
+        let alive = true
+        try {
+          process.kill(active.pid, 0)
+        } catch {
+          alive = false
+        }
+        if (alive) throw new Error("Another game action is still running.")
+      }
+      const count = (table: string) => (this.db.prepare(`SELECT count(*) AS n FROM ${table}`).get() as { n: number }).n
+      const gone = { plays: count("save") + count("archive"), heroes: heroes ? count("heroes") : 0 }
+      this.db.exec(`DELETE FROM save; DELETE FROM archive; DELETE FROM active;${heroes ? " DELETE FROM heroes;" : ""}`)
+      this.db.exec("COMMIT")
+      this.state = null
+      this.ownsLock = false
+      return gone
+    } catch (error) {
+      this.db.exec("ROLLBACK")
+      throw error
+    }
+  }
   resume(archiveId: number) {
     this.db.exec("BEGIN IMMEDIATE")
     let next: Save

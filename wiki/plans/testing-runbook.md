@@ -99,6 +99,10 @@ D20_PREVIEW_DATA_DIR=/path/to/copy pnpm exec vite --host 127.0.0.1 --port 1433 -
 
 Inspect shader errors, draw/triangle counts, native-pixel character crops, every relevant shot, motion, pause/resume, and disposal. A mobile quality tier running on a desktop does not establish phone performance. Future stage-first gameplay needs a full authenticated playthrough as well as renderer verification.
 
+## Starting fresh in the desktop app
+
+`pnpm desktop:wipe` removes every saved adventure on this computer, the current one and the archive. `pnpm desktop:wipe --heroes` also removes created heroes and their painted art. Both keep the account link and downloaded story packs, and leave hosted games on the website alone. A wipe is refused while a GM action is running. It also clears the browser preview's scratch save and reloads a dev app's window. `D20_DATA_DIR` points it at another data folder, which is how to try it safely. The `validation-*` files beside the save are evidence kept by earlier work and are not touched.
+
 ## Recording results
 
 For each meaningful change, record the commit/target, commands, environment, outcomes, and limits in its plan. Update the wiki log for durable findings. Do not convert an unchecked historical item into a pass without evidence.
