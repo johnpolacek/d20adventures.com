@@ -535,7 +535,7 @@ export function StagePlay(props: {
             </>
           )}
           <TurnOrder
-            order={(turn?.characters ?? []).map((c) => ({ id: c.id, name: c.name, portrait: portrait(c), npc: c.type === "npc" }))}
+            order={(turn?.characters ?? []).map((c) => ({ id: c.id, name: c.name, portrait: portrait(c), npc: c.type === "npc", health: c.healthPercent, status: c.status }))}
             activeId={actor?.id ?? null}
             label={actor?.name}
             compact={compact}

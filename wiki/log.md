@@ -4,6 +4,12 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-13, health on the portrait strip
+
+Owner, mid-fight in The Midnight Summons: "the owlbear just struck my character thalbern but i have no way to see my current health". The save held it, 70% and Bleeding, but the desktop app showed it only in the character card, two clicks on a portrait away.
+
+The turn order strip in `components/stage/turn-order.tsx` now draws a health bar under every portrait, green above 75%, yellow to 51%, orange to 26%, red below, the website's four tiers. A hero's portrait carries the number where an NPC's carries its tag. The tooltip gives name, health and status. Checked in the desktop preview against a copy of the owner's save at 70% and at 20%. The small-window layout was not checked. Decided without the owner: NPCs get a bar too, with no number.
+
 ## 2026-10-13, concise narration
 
 Owner: "I think our narrative prose is too verbose. Can we keep all the meaningful information and story details while being more concise?" An audit of three saved Midnight Summons playthroughs from 2026-10-03 found the GM's round-end narrative was 53% of the words, at 180 words a time, and the only prose with no length rule. It also retold the round and ran into the next intro. The owner chose to fix the prompt and trim the authored text.
