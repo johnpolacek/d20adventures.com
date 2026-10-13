@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-13, the next adventure remembers the last
+
+Owner: "do story memory". Continuing from an ending in the desktop app now writes a chapter for the finished adventure into the new save: its last scenes, who played, the end of the GM's running summary and the threads left open. Chapters add up along the chain whoever the heroes are, so March of Davos is told of all three intro adventures. They reach the GM inside the premise as "THE STORY SO FAR", marked as settled fact that outranks an adventure's notes, and known only to the heroes each chapter names. Replies offered to a player carry only the chapters their hero lived. A hero who goes on keeps their gear, not their wounds. No model writes the recap. March of Davos's docks, warehouse and ledger say what changes if the crate never reached the city. Decided without the owner: no recap call, wounds stay behind, and memory needs the Continue button. Tested with a stub GM only. Details in [the lead-in plan](plans/adventure-lead-in.md).
+
 ## 2026-10-13, heroes carry over from one adventure to the next
 
 Owner: "do carry-over". Each intro adventure now names its successor in `nextAdventure`, a field the website already used. The desktop app's ending panel offers "Continue: <next adventure>", which opens that adventure's party setup. Heroes who can go on keep their seats and whoever played them, and the next adventure's suggested party fills the rest: Thalbern goes from The Midnight Summons into Covert Cargo, and the player's own heroes go from The Road into March of Davos. Lyra, Poppen and Thalbern are March of Davos premades, with sheets that say why each came into the city. A hero goes on as a fresh sheet: health, gear and memory do not carry yet. Tried in the app's browser preview, not in the Tauri window. Details in [the lead-in plan](plans/adventure-lead-in.md).

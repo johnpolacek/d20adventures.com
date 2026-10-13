@@ -46,7 +46,7 @@ The records are precise, listing dates, shipments, and the exchange of valuable 
 
 Among the listed items, one particular entry stands out: "The Key of Ilmarin, acquired through negotiation, to be delivered in secret."
 
-A later entry reads: "The Oath Stone of the First Clans, bought of the Circle of Faelendar at the Mordava pier. Proven by an Asterian arcanist." Beside it, in a different hand: "No loose ends. S."
+A later entry reads: "The Oath Stone of the First Clans, bought of the Circle of Faelendar at the Mordava pier. Proven by an Asterian arcanist." Beside it, in a different hand: "No loose ends. S." If the story so far says the crate was lost at the pier, that note reads instead: "Lost at the pier. Find it."
 
 ## Transitions
 

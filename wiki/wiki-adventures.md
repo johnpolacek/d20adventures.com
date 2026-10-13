@@ -53,7 +53,7 @@ Two optional manifest fields, enforced by the GM core in `packages/gm-core/src/w
 
 A premade can share an ID with another adventure's premade, since each adventure compiles from its own files. Thalbern is `thalbern` in The Midnight Summons and in Covert Cargo, with a sheet in each.
 
-The four Myr adventures are one story: The Midnight Summons, Covert Cargo, The Road to Kordavos, then March of Davos. Names, the cargo and the endings are kept in step by hand, since nothing carries from one playthrough to the next. See [the lead-in plan](plans/adventure-lead-in.md) before changing a shared name or an ending. An adventure page names its successor in `nextAdventure`, which the website's ending and the desktop app's ending both offer.
+The four Myr adventures are one story: The Midnight Summons, Covert Cargo, The Road to Kordavos, then March of Davos. Names, the cargo and the endings are kept in step by hand, since nothing carries from one playthrough to the next. See [the lead-in plan](plans/adventure-lead-in.md) before changing a shared name or an ending. An adventure page names its successor in `nextAdventure`, which the website's ending and the desktop app's ending both offer. In the desktop app, continuing from an ending adds "THE STORY SO FAR" to the next adventure's premise: a chapter for each adventure finished, which outranks the notes where they disagree. Write a note that depends on an earlier adventure's outcome as "If the story so far says ..., then ...", as March of Davos does for the crate.
 
 Editing March of Davos content changes its content hash, which the recorded GM prompts in `scripts/gm-core-fixtures/turn.json` pin. Replace the old hash there with the one `pnpm test:gm-core` reports.
 

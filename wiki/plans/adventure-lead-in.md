@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki adventures](../wiki-adventures.md) · [Covert Cargo: three heroes](covert-cargo-three-heroes.md)
 
-Status: story stitching and carry-over implemented on main 2026-10-13. Not yet played.
+Status: story stitching, carry-over and story memory implemented on main 2026-10-13. Not yet played with a live model.
 
 ## Owner direction, 2026-10-13
 
@@ -42,11 +42,31 @@ Owner: "do carry-over".
   - The Road to March of Davos: the player's own heroes go on, and March's authored companions fill the party.
 - Lyra, Poppen and Thalbern are premades in March of Davos, with the ids and art they have in Covert Cargo. Their March sheets say why each has come into the city. March's suggested party is unchanged.
 
-A hero goes on as a fresh sheet. Health, gear and what they learned do not carry: that is story memory, the next step.
+A hero's seat carries here. What they hold and what happened carry with story memory, below.
+
+## Story memory, 2026-10-13
+
+Owner: "do story memory".
+
+In plain terms: the next adventure's GM is told what happened in the ones before. If the heroes kept the crate at the pier, March of Davos's GM knows it never reached the city.
+
+- Continuing from an ending writes a chapter for the finished adventure into the new save: its title, the last scenes it passed through, who played, the end of the GM's own running summary, and the threads left open. No model is asked. The chapter is cut from what the save already holds.
+- Chapters add up along the chain, whoever the heroes are. March of Davos is told of all three intro adventures, even when its party is new.
+- The chapters reach the GM as part of the adventure's premise, under "THE STORY SO FAR", so every prompt that carries the premise carries them. The block says they are settled fact, that they win over an adventure's notes where the two disagree, and that a hero knows only a chapter that names them.
+- Replies offered to a player carry only the chapters their hero lived.
+- Gear carries for a hero who goes on: what they held at the end joins the next adventure's sheet. Wounds and conditions do not, since time passes between adventures.
+- It applies only when the player continues from the ending panel, and only into the adventure the finished one names as next. A game started from the Adventures page is fresh.
+- March of Davos's notes say what changes if the crate never reached Kordavos, at the docks, in Warehouse 14 and in the ledger. The Road's gossip follows what happened at the pier.
+
+Decisions made without the owner: no model call for the recap, wounds do not carry, and memory needs the Continue button.
 
 ## Not done
 
-- Story memory: March of Davos's GM is told nothing of an earlier playthrough.
+- Story memory is local play in the desktop app only. Hosted games and the website carry nothing.
+- The recap is the tail of the GM's running summary, not a written epilogue. A long adventure's early events fall off it.
+- An AI hero's own turn is told every chapter, with the rule that it knows only those that name it. The rule is not enforced.
+- The three premade sheets in March of Davos still tell the likely ending in their backgrounds.
+- Players are not shown the story so far.
 - Nobody from Covert Cargo appears in person later. Silas is named in March of Davos, not met.
 - The Road's travellers do not reappear in March of Davos.
 - The website's S3 copies of the adventures are not changed.
@@ -55,4 +75,5 @@ A hero goes on as a fresh sheet. Health, gear and what they learned do not carry
 
 - Bridge checks for all four adventures, the public flow check, `pnpm test:gm-core`
 - Desktop tests after `pnpm prepare:runtime`, with `carry.test.ts` for the chain, the opening party and the three in March of Davos
+- `story.test.ts`: a chapter cut from a finished save, the GM's prompt and a player's offered replies in the next adventure, gear carried, and the chain to The Road with a different ending. All with a stub GM. No live model has read the story so far.
 - Carry-over tried in the app's browser preview on two finished games written into its scratch folder: The Midnight Summons into Covert Cargo, and The Road with a created hero into March of Davos. Not tried in the Tauri window, and no game was started from the party screen.

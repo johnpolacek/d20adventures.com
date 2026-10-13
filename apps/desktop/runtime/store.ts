@@ -6,6 +6,7 @@ import { validateRuntimeTransition } from "@d20/gm-core/wiki-adventures/transiti
 import type { MovementIntent } from "@d20/stage/movement"
 import { type CharacterStates, desktopPatchSchema, nextCharacterState, rememberCharacters } from "./characters"
 import type { Hero, Roster } from "./heroes"
+import type { Chapter } from "./story"
 
 export type SavedAdventure = AdventureRecord & {
   currentTurnId: string
@@ -32,6 +33,8 @@ export type Save = {
   // Each created hero's stock figure, by character id, and the heroes who stand as their painted art instead.
   figures?: Record<string, string>
   painted?: string[]
+  // The adventures this playthrough finished before this one, oldest first. See story.ts.
+  story?: Chapter[]
 }
 
 // A save as the home screen lists it. The current save has no archive id.

@@ -33,7 +33,7 @@ The grizzled veteran is **Finn Radonik** (Loric Windrider). He is the foreman of
 **Checks:**
 - **DC 12 Insight:** Players notice Finn is glancing nervously toward a smaller, guarded warehouse down the pier.
 - **DC 15 Persuasion:** Finn admits he saw a strange shipment from Faelendar (the elven settlement) being diverted to a private shed rather than the main Blackthorn warehouse.
-- **DC 12 Persuasion, or a few coins:** Finn mentions a river tug that came down the Mordava at first light a day or two back, low in the water for a single chained crate. Two Blackthorn men brought it in, a big soldier and a lean, quiet one the others called Silas. That crate went to Warehouse 14 as well.
+- **DC 12 Persuasion, or a few coins:** Finn mentions a river tug that came down the Mordava at first light a day or two back, low in the water for a single chained crate. Two Blackthorn men brought it in, a big soldier and a lean, quiet one the others called Silas. That crate went to Warehouse 14 as well. If the story so far says the tug never left the pier or lost its crate there, Finn has seen no such tug, and Blackthorn men have been asking the docks after one that never came.
 
 ### Finn's Tale
 

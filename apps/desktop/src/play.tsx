@@ -122,7 +122,7 @@ export function DesktopGame() {
   }, [busy, loaded, heroes, save?.painted, invoke])
   // A new game moves the saved adventure to the archive, where home lists it. Party setup stays open if the start fails.
   const start = async (chosenParty: PartyChoice[]) => {
-    const next = (await invoke({ kind: "start", provider: provider as "claude", adventure, party: chosenParty, replace: Boolean(save) }))?.state
+    const next = (await invoke({ kind: "start", provider: provider as "claude", adventure, party: chosenParty, replace: Boolean(save), continues: Boolean(carried) }))?.state
     if (!next || next.adventure._id === save?.adventure._id) return
     setCreated(null)
     setCarried(null)

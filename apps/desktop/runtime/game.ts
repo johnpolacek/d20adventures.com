@@ -11,6 +11,7 @@ import { spatialContext } from "../src/scenes"
 import { applyCharacterUpdates, characterContext, desktopPatchSchema } from "./characters"
 import { partyFor } from "./heroes"
 import type { LocalStore, Save } from "./store"
+import { carryGear, premiseWithStory, storyInto, withStory } from "./story"
 
 export type Pack = { artifacts: RuntimeArtifacts; contentRef: Awaited<ReturnType<Content["loadWikiRuntime"]>>["contentRef"]; definition: { promptSlug: string } }
 // Bundled adventures keyed by plan id.
@@ -56,6 +57,8 @@ export const commandSchema = z.discriminatedUnion("kind", [
       .min(1)
       .max(8)
       .optional(),
+    // Going on from the finished adventure in the save: its story, and the gear of heroes who go on, carry over.
+    continues: z.boolean().optional(),
   }),
   z.object({
     kind: z.literal("reply"),
@@ -95,7 +98,8 @@ export async function suggest(save: Save | null, packs: Packs, llm: Llm, input: 
   const turn = save?.adventure.status === "active" ? save.turns.find((t) => t._id === save.adventure.currentTurnId) : undefined
   const actor = turn?._id === command.turnId ? findCurrentActor(turn.characters) : undefined
   if (!turn || actor?.id !== command.characterId || actor.type !== "pc" || actor.controlledBy === "ai" || actor.hasReplied) throw new Error("It is another character's turn.")
-  return suggestActions(llm, actor, turn.narrative, turn.characters, characterContext([actor]), packs[save!.adventure.planId]?.artifacts.manifest.premise)
+  // Of the story so far, only the chapters this hero lived.
+  return suggestActions(llm, actor, turn.narrative, turn.characters, characterContext([actor]), premiseWithStory(packs[save!.adventure.planId]?.artifacts.manifest.premise, save!.story, actor.id))
 }
 export function game(store: LocalStore, packs: Packs, llm: Llm) {
   const packFor = (plan: string) => {
@@ -103,10 +107,12 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
     if (!pack) throw new Error("This adventure is not installed.")
     return pack
   }
+  // The saved adventure's pack as the GM reads it, with the story so far in its premise.
+  const told = (plan: string) => withStory(packFor(plan), store.state?.adventure.planId === plan ? store.state.story : undefined)
   const content: Content = {
     isWikiAdventure: (setting, plan) => setting === "realm-of-myr" && plan in packs,
-    loadWikiRuntime: async (_setting, plan) => packFor(plan),
-    loadPlan: async (_setting, plan) => buildAdventurePlanViewFromArtifacts(packFor(plan).artifacts),
+    loadWikiRuntime: async (_setting, plan) => told(plan),
+    loadPlan: async (_setting, plan) => buildAdventurePlanViewFromArtifacts(told(plan).artifacts),
     loadLegacyPlan: async () => null,
     spatialContext: async (_setting, _plan, encounter, characters) => spatialContext(encounter, characters, store.state?.positions ?? {}, store.state?.figures),
   }
@@ -175,6 +181,9 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
         turnId = randomUUID()
       const party = partyFor(packFor(plan), command.party ?? (PARTY[plan] ?? artifacts.manifest.premadeCharacterIds).map((id) => ({ id, ai: false })), store.heroes())
       const characters = buildLocalWikiTurnCharacters({ artifacts, encounter, players: party.players, sheetsByCharacterId: party.sheets })
+      const before = command.continues ? store.state : null
+      const story = storyInto(plan, before, before ? packs[before.adventure.planId]?.artifacts.manifest.nextAdventureId : undefined)
+      if (before && story) carryGear(characters, before)
       store.replace({
         version: 1,
         provider: command.provider,
@@ -183,6 +192,7 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
         positions: {},
         figures: party.figures,
         painted: party.painted,
+        ...(story ? { story } : {}),
         adventure: {
           _id: id,
           title: artifacts.manifest.title,
