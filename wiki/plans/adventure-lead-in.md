@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki adventures](../wiki-adventures.md) · [Covert Cargo: three heroes](covert-cargo-three-heroes.md)
 
-Status: story stitching implemented on main 2026-10-13. Text only. Not yet played.
+Status: story stitching and carry-over implemented on main 2026-10-13. Not yet played.
 
 ## Owner direction, 2026-10-13
 
@@ -30,9 +30,22 @@ Asked which gaps to close, the owner chose story stitching first. Carry-over in 
 
 Nothing carries between adventures, so March of Davos takes Covert Cargo's most likely ending as what happened: the tug got away with the crate, and Silas reported the arcanist drowned. A party that won the crate in Covert Cargo will find March of Davos disagrees with them.
 
+## Carry-over, 2026-10-13
+
+Owner: "do carry-over".
+
+- Each intro adventure names the next in its page's `nextAdventure`: The Midnight Summons to Covert Cargo, to The Road to Kordavos, to March of Davos. The field already existed, and the website's ending already offers "Play Next Adventure" from it.
+- The desktop app's ending panel gains "Continue: <next adventure>". It opens that adventure's party setup.
+- The heroes just played go on when the next adventure can seat them, on the same seats: a hero the player played stays the player's, an AI hero stays the AI's. The next adventure's suggested party fills the places left. A fresh New game is unchanged.
+  - The Midnight Summons to Covert Cargo: Thalbern stays the player's, with Lyra and Poppen on the AI.
+  - Covert Cargo to The Road: nobody goes on. The Road is played with heroes the player makes.
+  - The Road to March of Davos: the player's own heroes go on, and March's authored companions fill the party.
+- Lyra, Poppen and Thalbern are premades in March of Davos, with the ids and art they have in Covert Cargo. Their March sheets say why each has come into the city. March's suggested party is unchanged.
+
+A hero goes on as a fresh sheet. Health, gear and what they learned do not carry: that is story memory, the next step.
+
 ## Not done
 
-- Carry-over in the app: no "continue to the next adventure" step, and Lyra, Poppen and Thalbern cannot be played in March of Davos.
 - Story memory: March of Davos's GM is told nothing of an earlier playthrough.
 - Nobody from Covert Cargo appears in person later. Silas is named in March of Davos, not met.
 - The Road's travellers do not reappear in March of Davos.
@@ -41,4 +54,5 @@ Nothing carries between adventures, so March of Davos takes Covert Cargo's most 
 ## Validation
 
 - Bridge checks for all four adventures, the public flow check, `pnpm test:gm-core`
-- Desktop tests after `pnpm prepare:runtime`
+- Desktop tests after `pnpm prepare:runtime`, with `carry.test.ts` for the chain, the opening party and the three in March of Davos
+- Carry-over tried in the app's browser preview on two finished games written into its scratch folder: The Midnight Summons into Covert Cargo, and The Road with a created hero into March of Davos. Not tried in the Tauri window, and no game was started from the party screen.

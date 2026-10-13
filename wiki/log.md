@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-13, heroes carry over from one adventure to the next
+
+Owner: "do carry-over". Each intro adventure now names its successor in `nextAdventure`, a field the website already used. The desktop app's ending panel offers "Continue: <next adventure>", which opens that adventure's party setup. Heroes who can go on keep their seats and whoever played them, and the next adventure's suggested party fills the rest: Thalbern goes from The Midnight Summons into Covert Cargo, and the player's own heroes go from The Road into March of Davos. Lyra, Poppen and Thalbern are March of Davos premades, with sheets that say why each came into the city. A hero goes on as a fresh sheet: health, gear and memory do not carry yet. Tried in the app's browser preview, not in the Tauri window. Details in [the lead-in plan](plans/adventure-lead-in.md).
+
 ## 2026-10-13, the three intro adventures are stitched to March of Davos
 
 Owner: "the point of these adventures is to lead into march of davos. midnight summons leads into covert cargo leads into Road to Kordavos, then finally into March of Davos the featured adventure." A read of all four found the first link strong and the rest thin: March of Davos never mentioned Covert Cargo's crate or its people, the elves' home had two names, players never heard "Blackthorn" in Covert Cargo, and no ending pointed on. Owner chose story stitching first. The settlement is Faelendar everywhere, the scrollcase carries the Blackthorn seal, the Oath Stone and Silas are in March of Davos's docks, warehouse and ledger, the Road carries the rumor, and each ending names the next adventure. March of Davos assumes the tug got away with the crate. Text only: nothing carries between playthroughs yet. Details in [the lead-in plan](plans/adventure-lead-in.md).

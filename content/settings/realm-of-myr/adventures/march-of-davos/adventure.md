@@ -13,6 +13,9 @@ premadeCharacters:
   - "cassia-verane"
   - "wrenna-faelendar"
   - "ilya-veles"
+  - "thalbern"
+  - "1749159962941"
+  - "1749307435667"
 availableCharacterOptions:
   races: ["Human", "Elf", "Dwarf", "Half-Elf", "Halfling", "Gnome", "Half-Orc"]
   archetypes: ["Fighter", "Barbarian", "Rogue", "Wizard", "Sorcerer", "Cleric", "Paladin", "Bard", "Ranger", "Monk", "Druid", "Warlock"]

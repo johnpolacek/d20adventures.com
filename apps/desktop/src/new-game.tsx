@@ -4,6 +4,7 @@ import { Chip, Option, siteCard, siteLabel, siteOutline, sitePanel } from "@/com
 import { cn } from "@/lib/utils"
 import type { AdventureInfo, CatalogInfo } from "../runtime/game"
 import type { Hero, PartyChoice } from "../runtime/heroes"
+import { openingParty } from "./carry"
 import { type FigureArt, STOCK_FIGURES } from "./figures"
 import { ModuleCover } from "./module-cover"
 import { portraitFor } from "./scenes"
@@ -39,7 +40,8 @@ export function LockIcon() {
 // GM. The first hero is the player's, the rest default to AI. A hero set to Invite makes it a game hosted on the
 // website, with that hero held for a friend. With every hero on Invite, guests choose first and the player gets a
 // hero they leave. A party of one invited hero leaves the player none, so they watch. Roster heroes appear only where
-// the adventure accepts their race and class. Keyed by adventure, so each starts from its own suggested party.
+// the adventure accepts their race and class. Keyed by adventure, so each starts from its own suggested party, or
+// from the heroes of the adventure just finished when the player continues the story.
 export function NewGame(props: {
   adventures: AdventureInfo[]
   adventure: string
@@ -51,6 +53,8 @@ export function NewGame(props: {
   // The opening scene is still loading.
   waiting: boolean
   created: string | null
+  // The party of the adventure just finished, when the player continues the story from its ending.
+  carried?: PartyChoice[]
   onStart: (party: PartyChoice[]) => void
   onCreate: () => void
   onEdit: (hero: Hero) => void
@@ -74,7 +78,7 @@ export function NewGame(props: {
 }) {
   const info = props.adventures.find((a) => a.id === props.adventure)
   const lockedInfo = info ? undefined : props.locked.find((a) => a.id === props.adventure)
-  const [party, setParty] = useState<Seat[]>(() => (info?.party ?? []).map((id, i) => ({ id, who: i > 0 ? "ai" : "you" })))
+  const [party, setParty] = useState<Seat[]>(() => openingParty(info, props.heroes, props.carried).map((c) => ({ id: c.id, who: c.ai ? "ai" : "you" })))
   const [deleting, setDeleting] = useState<string | null>(null)
   // Whether the host approves each hero a guest brings to an open seat. Off, the guest is seated at once.
   const [askFirst, setAskFirst] = useState(false)

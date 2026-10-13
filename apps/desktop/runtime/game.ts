@@ -35,6 +35,8 @@ export const adventureList = (packs: Packs) =>
       options: m.availableCharacterOptions ?? null,
       premades: premades.map((s) => ({ id: s.id, name: s.name, race: s.race, archetype: s.archetype, gender: s.gender })),
       party: PARTY[id] ?? m.premadeCharacterIds.slice(0, m.maxPlayers),
+      // The adventure the story goes on to, which the ending offers.
+      next: m.nextAdventureId ?? null,
     }
   })
 export type AdventureInfo = ReturnType<typeof adventureList>[number]

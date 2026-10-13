@@ -34,10 +34,20 @@ function main() {
   assert.equal(contentRef.planId, PLAN_ID)
   assert.equal(artifacts.validationReport.status, "passed")
   assert.equal(artifacts.manifest.startEncounterId, "the-gates-of-kordavos")
-  assert.deepEqual(artifacts.manifest.premadeCharacterIds, ["branka-stoneveil", "milos-radan", "yeva-softstep", "cassia-verane", "wrenna-faelendar", "ilya-veles"])
+  assert.deepEqual(artifacts.manifest.premadeCharacterIds, [
+    "branka-stoneveil",
+    "milos-radan",
+    "yeva-softstep",
+    "cassia-verane",
+    "wrenna-faelendar",
+    "ilya-veles",
+    "thalbern",
+    "1749159962941",
+    "1749307435667",
+  ])
   assert.equal(Object.keys(artifacts.encounters).length, 45)
   assert.equal(Object.keys(artifacts.characterSheets.npcs).length, 35)
-  assert.equal(Object.keys(artifacts.characterSheets.premadeCharacters).length, 6)
+  assert.equal(Object.keys(artifacts.characterSheets.premadeCharacters).length, 9)
   assert.equal(artifacts.graph.encounterTransitions.length, 57)
   assert.equal(
     artifacts.graph.encounterTransitions.some((transition) => transition.fromEncounterId === "the-gates-of-kordavos" && transition.toEncounterId === "the-harvest-festival"),

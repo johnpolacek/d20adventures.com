@@ -9,6 +9,7 @@ maxPlayers: 3
 availableCharacterOptions:
   races: ["Human", "Elf", "Dwarf", "Half-Elf", "Halfling"]
   archetypes: ["Fighter", "Wizard", "Rogue", "Cleric"]
+nextAdventure: "march-of-davos"
 image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/the-road-to-kordavos/7ec618f4-bcb7-42ea-a94b-cbb27fa42547.png?t=1749866195046"
 ---
 

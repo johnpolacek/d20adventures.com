@@ -41,11 +41,13 @@ export const PREMADE_FIGURES: Record<string, Figure> = {
   // Covert Cargo's premades: Lyra Silvanus and Poppen Quickfoot.
   "1749159962941": { id: "1749159962941", race: "Asterian", height: 1.7, art: art("fixtures/covert-cargo", "lyra") },
   "1749307435667": { id: "1749307435667", race: "Halfling", height: 1.06, art: art("fixtures/covert-cargo", "poppen") },
+  // Thalbern, where a scene does not carry him: he goes on from his own adventures into March of Davos.
+  thalbern: { id: "thalbern", race: "Human", height: 1.82, art: art("fixtures/the-midnight-summons", "thalbern") },
 }
 
 // A hero's figure: art painted for them, else the stock figure chosen when they were created, else their premade art,
 // else stock for their race. Painted art keeps the stock figure's height. Premades with their own staging art (the gate
-// party, Thalbern) never get here, since their scenes already carry them.
+// party, and Thalbern in his own adventures) never get here, since their scenes already carry them.
 export function heroFigure(c: FigureOwner, chosen: Record<string, string> = {}, painted: Record<string, FigureArt> = {}): Figure {
   const figure = STOCK_FIGURES[chosen[c.id]] ?? PREMADE_FIGURES[c.id] ?? STOCK_FIGURES[defaultFigure(c.race ?? "Human", c.gender)]
   return painted[c.id] ? { ...figure, id: `painted-${c.id}`, art: painted[c.id] } : figure

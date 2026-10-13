@@ -44,7 +44,7 @@ const EXPECTATIONS: Expectation[] = [
     party: [3, 5],
     start: "the-gates-of-kordavos",
     // Both premades AND custom-character options: premades serve as AI companions.
-    premadeIds: ["branka-stoneveil", "milos-radan", "yeva-softstep", "cassia-verane", "wrenna-faelendar", "ilya-veles"],
+    premadeIds: ["branka-stoneveil", "milos-radan", "yeva-softstep", "cassia-verane", "wrenna-faelendar", "ilya-veles", "thalbern", "1749159962941", "1749307435667"],
     hasOptions: true,
   },
 ]

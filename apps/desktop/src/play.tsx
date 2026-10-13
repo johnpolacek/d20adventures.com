@@ -9,6 +9,7 @@ import type { Save, SaveSummary } from "../runtime/store"
 import { AccountBadge, AccountNotice, LinkGate, useAccount } from "./account"
 import { AppHeader } from "./app-header"
 import { type HostWorkerState, host, hostRunning, hostStart, openSite, send, suggest } from "./bridge"
+import { partyOf } from "./carry"
 import type { FigureArt } from "./figures"
 import { FullscreenButton } from "./fullscreen"
 import { HeroCreator, type HeroIdea } from "./hero-creator"
@@ -124,6 +125,7 @@ export function DesktopGame() {
     const next = (await invoke({ kind: "start", provider: provider as "claude", adventure, party: chosenParty, replace: Boolean(save) }))?.state
     if (!next || next.adventure._id === save?.adventure._id) return
     setCreated(null)
+    setCarried(null)
     setScreen(null)
   }
   const resume = async (archiveId: number) => {
@@ -131,10 +133,13 @@ export function DesktopGame() {
     if (!res || res.error) return
     setScreen(null)
   }
+  // The heroes of the adventure just finished, offered to the next one's party when the player continues the story.
+  const [carried, setCarried] = useState<PartyChoice[] | null>(null)
   const pickAdventure = (id: string) => {
     pickedAdventure.current = true
     setAdventure(id)
     setCreated(null)
+    setCarried(null)
   }
   const locked = catalog.filter((c) => !adventures.some((a) => a.id === c.id)).map((c): Locked => ({ ...c, owned: acct.owned.includes(c.id), failed: acct.failed.includes(c.id) }))
   const listPrices: Record<string, number> = Object.fromEntries(catalog.flatMap((c) => (c.free && c.listPriceCents ? [[c.id, c.listPriceCents]] : [])))
@@ -234,6 +239,15 @@ export function DesktopGame() {
     setHosted(null)
     setScreen("home")
   }
+  // Where the story goes after a finished local adventure: the next adventure's party setup, with its heroes.
+  const nextId = !hosting && save?.adventure.status === "completed" ? adventures.find((a) => a.id === save.adventure.planId)?.next : null
+  const nextUp = nextId ? (adventures.find((a) => a.id === nextId) ?? locked.find((a) => a.id === nextId)) : undefined
+  const continueStory = () => {
+    if (!save || !nextUp) return
+    pickAdventure(nextUp.id)
+    setCarried(partyOf(save))
+    setScreen("new")
+  }
   const gmLabel = (() => {
     if (!hosting) return ""
     if (worker?.adventureId !== hosting) return "GM stopped"
@@ -257,7 +271,16 @@ export function DesktopGame() {
       chat={hosting ? hosted?.chat : undefined}
       onChat={hosting && hosted?.chat ? say : undefined}
       trailingActions={<FullscreenButton />}
-      endActions={<Pill onClick={goHome}>Home</Pill>}
+      endActions={
+        <>
+          {nextUp && (
+            <Pill className="mr-2" onClick={continueStory}>
+              Continue: {nextUp.title}
+            </Pill>
+          )}
+          <Pill onClick={goHome}>Home</Pill>
+        </>
+      }
       onReply={async (turnId, characterId, text, movement) => {
         if (hosting) return act(() => host({ kind: "hostAct", adventureId: hosting, turnId, action: { kind: "reply", characterId, text } }))
         const res = await invoke({ kind: "reply", turnId, characterId, text, movement })
@@ -368,7 +391,7 @@ export function DesktopGame() {
                     {!providers.length && <p>Install and sign in to Claude Code, Codex, Grok, or Gemini CLI.</p>}
                     {adventures.length > 0 && (
                       <NewGame
-                        key={adventure}
+                        key={carried ? `${adventure}:continued` : adventure}
                         adventures={adventures}
                         adventure={adventure}
                         heroes={heroes}
@@ -378,6 +401,7 @@ export function DesktopGame() {
                         busy={busy || sending}
                         waiting={stageState.waiting}
                         created={created}
+                        carried={carried ?? undefined}
                         onStart={(chosenParty) => void start(chosenParty)}
                         onCreate={() => setCreator({})}
                         onEdit={(hero) => setCreator({ editing: hero })}
