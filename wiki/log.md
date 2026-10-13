@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-13, the boat fight most often ends with Lyra overboard
+
+Owner: "Maybe we favor tossing Lyra overboard and they get away. That should be the most likely outcome." Read as Silas and Reinhard getting away with the crate. Battle on the Boat now says so in both men's behavior, in its GM notes and as its first transition. A new encounter, Overboard, has Lyra haul herself out by the gangway while the tug goes downstream, and is where the three heroes most likely meet. It plays on a second pier set with the tug cut out. Likely, not forced: nothing in the engine makes it happen. Not yet played with a live model. Details in [three heroes](plans/covert-cargo-three-heroes.md).
+
 ## 2026-10-13, Covert Cargo has three heroes
 
 Owner: "let's make this a three player adventure, with thalbern tracking the ship in a different area than Poppen and they don't know about each other unless they pass d20 checks. The elves that are trading the crate will leave once they have payment." Thalbern is now a third hero, in a thicket on the bank below the stern, about eleven metres from Poppen's bushes. The premise says neither watcher knows of the other, and each pier encounter's GM notes set the Perception check that changes it. The elves leave when paid: the premise says so, and The Transaction's staging walks them off by the gangway and up the trail. Thalbern cannot be both a hero and the rescuer, so the rescue of 2026-10-12 is removed from this adventure, with The Ranger and The Ranger's Aid. That removal was not put to the owner. Staging exits gained `via`. Not yet played with a live model. Details in [three heroes](plans/covert-cargo-three-heroes.md).

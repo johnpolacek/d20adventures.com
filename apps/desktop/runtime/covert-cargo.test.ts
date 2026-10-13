@@ -20,7 +20,7 @@ const unused = async (): Promise<never> => {
 test("every Covert Cargo encounter has a 3D scene with a figure and a portrait for everyone in it", () => {
   const players = pack.artifacts.manifest.premadeCharacterIds.map((characterId) => ({ characterId, userId: "local-player" }))
   const encounters = Object.values(pack.artifacts.encounters)
-  assert.equal(encounters.length, 9)
+  assert.equal(encounters.length, 10)
   for (const encounter of encounters) {
     const authored = sceneFor(encounter.id)
     assert.ok(authored, `${encounter.id} has no scene`)
@@ -220,6 +220,37 @@ test("the stage sends the elves off when they are paid, and lays out the fight's
       ["npcs-1749181492795", undefined, "bow"],
     ]
   )
+})
+
+test("the fight is written to end with Lyra in the river, on a pier the tug has left", async () => {
+  await inTheBattle(async (store, play) => {
+    for (const c of store.current().characters) c.hasReplied = c.isComplete = true
+    store.save()
+    const stub = stubLlm(() => ({ nextEncounterId: "overboard", narrative: "Reinhard heaves her over the rail.", adventurePatch: {} }))
+    const prompts: string[] = []
+    await play({
+      ...stub,
+      generateObject: async (args) => {
+        prompts.push(args.prompt)
+        return stub.generateObject(args)
+      },
+    })
+    const asked = prompts.find((p) => p.includes("most likely")) ?? ""
+    assert.match(asked, /throw her over the side into the river and cast off with the crate for Kordavos\. This is the most likely way the fight ends/)
+    assert.equal(store.current().encounterId, "overboard")
+    assert.match(store.current().narrative, /The river closes over Lyra/)
+    assert.deepEqual(
+      store.current().characters.map((c) => c.type),
+      ["pc", "pc", "pc"]
+    )
+    const scene = sceneFor("overboard")!
+    assert.equal(scene.set.title, "The pier after the tug has gone")
+    for (const gone of ["saloon", "crate", "cabinDoor", "bow", "stern"]) assert.equal(gone in scene.set.marks, false, gone)
+    const where = spatialContext("overboard", store.current().characters, {}) ?? ""
+    assert.match(where, /Lyra Silvanus \(-0\.9, 5\.6\)/)
+    assert.match(where, /Thalbern \(-1\.4, -6\.4\)/)
+    assert.doesNotMatch(where, /the tug's saloon/)
+  })
 })
 
 test("a fight the heroes win follows its own transition, however hurt they are", async () => {

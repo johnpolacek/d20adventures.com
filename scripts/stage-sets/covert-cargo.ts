@@ -244,6 +244,11 @@ function pierSet() {
     { type: "beam", from: [1.9, 1.2, -6.6], to: [4.6, 0.4, -9.0], radius: 0.03, material: "rope" },
     { type: "beam", from: [8.45, 2.0, -7.6], to: [5.8, 0.4, -9.0], radius: 0.03, material: "rope" },
   ]
+  // What goes when the tug casts off: the boat, everything aboard and its three mooring lines. The gangway's lantern,
+  // which follows the boat in the list, and the five pilings stay.
+  const tugAt = objects.findIndex((o) => o.id === "tug")
+  const pilings = objects.findIndex((o) => o.material === "post")
+  const castOff = new Set([objects[tugAt], ...objects.slice(tugAt + 2, pilings), ...objects.slice(pilings + 5)])
   // The west bank climbs steeply into wooded hills behind the tug, as in the art. Its foot keeps clear of the reeds,
   // the gangway's landing and the trail. Trees, bushes and moss sit on the same height function.
   const trailX = (zz: number) => {
@@ -456,7 +461,7 @@ function pierSet() {
     [-5.0, 3.0, 1.8],
   ])
     objects.push({ type: "bush", at: [x, onHill(x, zz, 0.3), zz], size, materials: shrubs })
-  write(`${SETS}/mordava-river-pier.json`, {
+  const pier = {
     ...base("mordava-river-pier", "mordava-river-pier", "A quiet pier on the Mordava"),
     seed: 4212,
     // Blue predawn mist that brightens to cyan down the river, and warm lamplight from the tug's saloon pooling on the
@@ -624,6 +629,19 @@ function pierSet() {
       bank: { position: [5.2, 1.5, -12], target: [-6, 3.8, -4], fov: 55, label: "The wooded bank" },
     },
     life: { dust: { count: 160, box: [-6, 0.4, -10, 10, 5, 12] } },
+  }
+  write(`${SETS}/mordava-river-pier.json`, pier)
+  // The same pier after the tug has cast off with the crate: open water at the gangway's end, and no lamplight but the
+  // gangway's lantern and the lamp on the bank. Its places and views are the ones that are still there.
+  const left = <T>(all: Record<string, T>, gone: string[]) => Object.fromEntries(Object.entries(all).filter(([key]) => !gone.includes(key)))
+  write(`${SETS}/mordava-river-pier-empty.json`, {
+    ...pier,
+    ...base("mordava-river-pier-empty", "mordava-river-pier", "The pier after the tug has gone"),
+    atmosphere: { ...pier.atmosphere, lights: pier.atmosphere.lights.slice(-2) },
+    rooms: [],
+    objects: objects.filter((o) => !castOff.has(o)),
+    marks: left(pier.marks, ["foredeck", "saloon", "crate", "cabinDoor", "helm", "bow", "stern"]),
+    shots: left(pier.shots, ["cabin", "crate", "boat"]),
   })
   // The meeting, as the story needs it: the crate is too heavy to move, so Lyra checks it where it sits in the saloon.
   // Neither side trusts the other, so Reinhard stays beside her and Silas by the only door. Aelar comes out of his cabin
@@ -745,6 +763,21 @@ function pierSet() {
         { cast: CAST.silas.id, to: "bow" },
       ],
     }
+  )
+  // Thrown in the river, Lyra has dragged herself out into the reeds by the gangway and looks down the empty river. The
+  // tug is gone downstream, and the two watchers are still where they were. She stands south of the giant tree by the
+  // gangway, so Poppen's walk to her is clear.
+  staging(
+    "overboard",
+    "mordava-river-pier-empty",
+    [on("lyra", [-0.9, 5.6], [6, -12]), on("poppen", [-5.0, 4.3], "lyra"), on("thalbern", THICKET, "lyra")],
+    {
+      // From behind her, over the reeds, at the water where the boat was.
+      lyra: close("lyra", 2.6, 150),
+      poppen: peeking,
+      thalbern: watching,
+    },
+    "river"
   )
   staging(
     "the-crate",
@@ -1101,4 +1134,4 @@ mkdirSync(STAGINGS, { recursive: true })
 pierSet()
 riverfrontSet()
 forestSet()
-console.log("Wrote 3 sets and 9 stagings for Covert Cargo.")
+console.log("Wrote 4 sets and 10 stagings for Covert Cargo.")

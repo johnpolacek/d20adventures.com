@@ -38,7 +38,7 @@ The web viewer and the desktop app run the same `packages/stage` renderer and th
 - Clear tree scatter around every camera position, along trails, and along key walks with scatter `clear` circles.
 - Keep views near eye height. From above, standees read as flat cards.
 - Keep the crowd off the camera lines of close-ups and character focus with `crowd.avoid` circles.
-- Generate a set from a script when it has many computed parts. `scripts/stage-sets/covert-cargo.ts` writes three sets and nine stagings: bank rocks along a river curve, scatter clearings along trails, ground cut around a river. Rerun it rather than editing the JSON.
+- Generate a set from a script when it has many computed parts. `scripts/stage-sets/covert-cargo.ts` writes four sets and ten stagings: bank rocks along a river curve, scatter clearings along trails, ground cut around a river. Rerun it rather than editing the JSON.
 - The `extrude` primitive's "xz" plane mirrors z. Write ground outlines with z negated, or build them in a builder.
 - Hanging moss and dense woods cost triangles fast. The first Mordava pier reached 3.2M rendered triangles. Fewer, closer trees with moss only on the near ones brought it to 1.8M with no visible loss in the mist.
 - Interiors light from the hemisphere and the camera fill, with `atmosphere.lights` at the lamps. Keep the grade neutral and the wood greyish: the warm grade with warm lamps turned the whole cabin orange. A cold light at the open door brings in the river's teal, as in The Fake.
@@ -75,3 +75,5 @@ The web viewer and the desktop app run the same `packages/stage` renderer and th
 - Name the turns of a walk off the set. A walk is one straight line or one doorway, so Covert Cargo's elves leave by `via`: the foredeck, the gangway's two ends, then the trail's own bends. A straight line to the trail stopped at the saloon wall. `stage:check` fails an exit that stops short.
 - Try several angles on a character hidden in thick growth before settling. Of five views of Thalbern's thicket, three were inside a bush. The one that worked looks along the bank from 55 degrees off his facing.
 - Give two hidden characters hides that cannot see each other, and say so in the scene's `where` line for the GM.
+- When the story takes something big off a set, cut a second set from the first in the generator. Covert Cargo's empty pier is the pier's own spec with the tug, everything aboard, its mooring lines, its lights, its room, and the places and views on it filtered out. Hiding it with camera angles does not work: narration picks views by label, and "the tug" would find the boat still moored.
+- Check a new standing place against the big trees. The giant by the gangway has a 1.4 m footprint and stopped Poppen's walk to anyone north of it.

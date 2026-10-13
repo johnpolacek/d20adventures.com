@@ -2,11 +2,13 @@ import festivalSet from "@d20/stage/sets/realm-of-myr/kordavos-harvest-square.js
 import riverfrontSet from "@d20/stage/sets/realm-of-myr/kordavos-riverfront.json"
 import gateSet from "@d20/stage/sets/realm-of-myr/kordavos-south-gate.json"
 import pierSet from "@d20/stage/sets/realm-of-myr/mordava-river-pier.json"
+import emptyPierSet from "@d20/stage/sets/realm-of-myr/mordava-river-pier-empty.json"
 import pathSet from "@d20/stage/sets/realm-of-myr/old-forest-path.json"
 import stonesSet from "@d20/stage/sets/realm-of-myr/old-standing-stones.json"
 import homeSet from "@d20/stage/sets/realm-of-myr/thalberns-forest-home.json"
 import forestSet from "@d20/stage/sets/realm-of-myr/valkarr-forest-trail.json"
 import battleOnTheBoat from "@d20/stage/stagings/covert-cargo/battle-on-the-boat.json"
+import overboard from "@d20/stage/stagings/covert-cargo/overboard.json"
 import returnToTheCity from "@d20/stage/stagings/covert-cargo/return-to-the-city.json"
 import theCrate from "@d20/stage/stagings/covert-cargo/the-crate.json"
 import theDisturbance from "@d20/stage/stagings/covert-cargo/the-disturbance.json"
@@ -133,6 +135,13 @@ export const SCENES: Record<string, Scene> = {
   "the-escape": cargo(pierSet, theEscape, "Mordava woods", "A trail runs from the pier along the misty riverbank and into the woods toward Kordavos."),
   "the-fake": cargo(pierSet, theFake, "Riverboat saloon", `The riverboat's lamplit saloon. The crate sits in the middle, and the only door opens forward onto the deck. ${WATCHERS}`),
   "battle-on-the-boat": cargo(pierSet, battleOnTheBoat, "Riverboat saloon", `The riverboat's lamplit saloon. The crate sits in the middle, and the only door opens forward onto the deck. ${WATCHERS}`),
+  // The same pier with the tug gone.
+  overboard: cargo(
+    emptyPierSet,
+    overboard,
+    "Mordava pier",
+    "The pier just before dawn, after the riverboat has cast off and gone downstream into the mist. The gangway ends over open water. Lyra stands soaked in the reeds beside it. Poppen is in the bushes at the treeline above the gangway, and Thalbern in a thicket on the bank downstream. Neither hide can be seen from the other."
+  ),
   "the-crate": cargo(pierSet, theCrate, "Riverboat saloon", "The riverboat's saloon, quiet now. The heavy iron-banded crate sits in the middle under hanging rope."),
   "return-to-the-city": cargo(riverfrontSet, returnToTheCity, "Kordavos riverfront", "The quay along the river in Kordavos, ships at their moorings and the castle on its hill above the city."),
   "the-end": cargo(pathSet, theEnd, "The old forest", "A mossy path winds between huge old trees in green-gold light."),

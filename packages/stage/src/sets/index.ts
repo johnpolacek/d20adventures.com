@@ -6,6 +6,7 @@ export const SETS: Record<string, () => Promise<unknown>> = {
   "realm-of-myr/old-standing-stones": () => import("./realm-of-myr/old-standing-stones.json").then((m) => m.default),
   "realm-of-myr/thalberns-forest-home": () => import("./realm-of-myr/thalberns-forest-home.json").then((m) => m.default),
   "realm-of-myr/mordava-river-pier": () => import("./realm-of-myr/mordava-river-pier.json").then((m) => m.default),
+  "realm-of-myr/mordava-river-pier-empty": () => import("./realm-of-myr/mordava-river-pier-empty.json").then((m) => m.default),
   "realm-of-myr/kordavos-riverfront": () => import("./realm-of-myr/kordavos-riverfront.json").then((m) => m.default),
   "realm-of-myr/old-forest-path": () => import("./realm-of-myr/old-forest-path.json").then((m) => m.default),
 }
@@ -26,6 +27,7 @@ export const STAGINGS: Record<string, () => Promise<unknown>> = {
   "covert-cargo/the-fake": () => import("../stagings/covert-cargo/the-fake.json").then((m) => m.default),
   "covert-cargo/battle-on-the-boat": () => import("../stagings/covert-cargo/battle-on-the-boat.json").then((m) => m.default),
   "covert-cargo/the-crate": () => import("../stagings/covert-cargo/the-crate.json").then((m) => m.default),
+  "covert-cargo/overboard": () => import("../stagings/covert-cargo/overboard.json").then((m) => m.default),
   "covert-cargo/return-to-the-city": () => import("../stagings/covert-cargo/return-to-the-city.json").then((m) => m.default),
   "covert-cargo/the-end": () => import("../stagings/covert-cargo/the-end.json").then((m) => m.default),
 }

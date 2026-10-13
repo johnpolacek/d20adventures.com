@@ -46,7 +46,7 @@ async function main() {
   assert.equal(artifacts.manifest.startEncounterId, "the-shipment")
   assert.deepEqual(artifacts.manifest.premadeCharacterIds, ["1749159962941", "1749307435667", "thalbern"])
   assert.deepEqual([artifacts.manifest.minPlayers, artifacts.manifest.maxPlayers], [3, 3])
-  assert.equal(Object.keys(artifacts.encounters).length, 9)
+  assert.equal(Object.keys(artifacts.encounters).length, 10)
   assert.equal(Object.keys(artifacts.characterSheets.npcs).length, 5)
   assert.equal(Object.keys(artifacts.characterSheets.premadeCharacters).length, 3)
   assert.equal(artifacts.characterSheets.premadeCharacters.thalbern.sheet.name, "Thalbern")
@@ -116,7 +116,14 @@ async function main() {
       allTurns: [],
     },
   })
-  assert.deepEqual(packet.outputContract.allowedNextEncounterIds, ["battle-on-the-boat", "the-escape", "the-crate"])
+  // The fight is written to end with Lyra in the river and the tug gone, and that way out is offered first.
+  assert.deepEqual(packet.outputContract.allowedNextEncounterIds, ["battle-on-the-boat", "overboard", "the-crate", "the-escape"])
+  assert.match(battle.sections.gmNotes ?? "", /throw her over the side into the river and cast off with the crate for Kordavos\. This is the most likely way the fight ends/)
+  assert.deepEqual(artifacts.encounters.overboard.npcRefs, [])
+  assert.deepEqual(
+    artifacts.graph.encounterTransitions.filter((t) => t.fromEncounterId === "overboard").map((t) => t.toEncounterId),
+    ["return-to-the-city", "the-end"]
+  )
   // With a rescue authored, the GM is never offered it.
   const rescuedPacket = assembleGameplayContextPacket({
     artifacts: rescued,
@@ -128,7 +135,7 @@ async function main() {
       allTurns: [],
     },
   })
-  assert.deepEqual(rescuedPacket.outputContract.allowedNextEncounterIds, ["battle-on-the-boat", "the-escape"], "the GM is never offered the rescue")
+  assert.deepEqual(rescuedPacket.outputContract.allowedNextEncounterIds, ["battle-on-the-boat", "overboard", "the-escape"], "the GM is never offered the rescue")
   assert.match(buildWikiEncounterProgressionPrompt(packet), /Perception check, DC 15/)
   assert.match(packet.currentEncounter.gmNotes ?? "", /cannot die/)
 

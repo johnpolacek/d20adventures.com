@@ -53,6 +53,8 @@ Two optional manifest fields, enforced by the GM core in `packages/gm-core/src/w
 
 A premade can share an ID with another adventure's premade, since each adventure compiles from its own files. Thalbern is `thalbern` in The Midnight Summons and in Covert Cargo, with a sheet in each.
 
+To make one ending the likely one, say it three times: in the NPCs' `behavior`, in the GM notes with a rough number of rounds, and as the first transition. Covert Cargo's boat fight does this for Lyra going overboard.
+
 Heroes who start apart and unknown to each other need two things. The `## Premise` says who knows of whom, which reaches every prompt. Each encounter's GM notes say what check changes it, since the roll decision on a hero's action reads the encounter's notes and not the premise. Covert Cargo's watchers use a Perception check, DC 15.
 
 ## Admin authoring
