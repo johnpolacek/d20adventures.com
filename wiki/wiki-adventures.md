@@ -102,7 +102,8 @@ Added 2026-10-14 with [structured narrative](plans/structured-narrative.md). An 
 - `effect`, `element` and `object` take the words in [the plan](plans/structured-narrative.md).
 - Values are split on commas, so a `delivery` is written "calm and commanding".
 - Prompts and the website's text views show the intro with its labels taken off and each line under its speaker's name.
-- The Midnight Summons is labelled. The other three adventures are not yet.
+- All four Myr adventures are labelled, as of 2026-10-14. An unlabelled paragraph is narration: nothing is guessed from its words.
+- A spoken line needs its speaker among the encounter's characters. A quote by someone outside them stays in the prose with no bubble or voice. March of Davos has such lines from Astrid, Eamon, Bram, Petra and Thaddeus in encounters whose `npcs` do not list them, and Covert Cargo one from Aelar in the-transaction. Adding them to `npcs` would make them characters in the turn, so it is left for the author.
 
 ## Admin authoring
 

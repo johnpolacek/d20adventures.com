@@ -19,7 +19,9 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/cover
 
 ## Intro
 
-Silas glided from the shadows, extending the oilskin-wrapped scrollcase to the elf, "As agreed." 
+{actor: Silas, object: scroll} Silas glided from the shadows, extending the oilskin-wrapped scrollcase to the elf.
+
+{speaker: Silas, delivery: quiet and controlled} As agreed.
 
 Aelar Moonglimmer took the offering, his  grey eyes, sharp and observant, held the rogue’s gaze. "The Circle is appreciative," Aelar replied, his own voice just as quiet and controlled. "They trust this partnership will prove fruitful for all involved."
 

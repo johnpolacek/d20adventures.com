@@ -16,7 +16,7 @@ Kordavos, the capital city of the March of Davos, is a three mile trek back thro
 
 Whatever the elves sold at that pier was bought under the seal of the Blackthorn family, and the Blackthorns are in Kordavos. The answers are in the city, and so is the trouble.
 
-Beyond the walls the Marquis Road is still filling with travellers bound for the festival, and every one of them is walking into the same city.
+{place: road} Beyond the walls the Marquis Road is still filling with travellers bound for the festival, and every one of them is walking into the same city.
 
 The story continues in The Road to Kordavos.
 

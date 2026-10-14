@@ -17,9 +17,9 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726351294262"
 
 Following Finn’s directions, you navigate a labyrinth of warehouses and narrow alleyways. You find the inconspicuous storage shed, Warehouse 14, tucked away in a shadowed corner. The air here is stagnant, away from the sea breeze.
 
-A group of suspicious figures lurks near the entrance, attempting to blend in with the workers but clearly on high alert. One of them, a tall figure with a jagged scar running down his cheek, spots you. He signals his companions, and they draw short swords from beneath their tunics.
+{actor: Alaric Fleyven} A group of suspicious figures lurks near the entrance, attempting to blend in with the workers but clearly on high alert. One of them, a tall figure with a jagged scar running down his cheek, spots you. He signals his companions, and they draw short swords from beneath their tunics.
 
-"Who’re you lot?" the scarred figure, Alaric, demands. "Ain’t nothing here for the likes of you. Best be on your way before you find trouble you can't walk away from."
+{speaker: Alaric Fleyven, delivery: demanding} Who’re you lot? Ain’t nothing here for the likes of you. Best be on your way before you find trouble you can't walk away from.
 
 ## GM Notes
 

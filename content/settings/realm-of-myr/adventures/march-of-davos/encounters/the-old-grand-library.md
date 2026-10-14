@@ -19,11 +19,13 @@ The Old Grand Library stands as a beacon of knowledge in the rugged frontier of 
 
 Inside, towering bookshelves filled with rare and mystical texts stretch up toward the lofty ceiling, while secluded reading alcoves offer quiet sanctuaries for study. Cobblestone floors echo with the footsteps of countless seekers of knowledge over the centuries, and a faint scent of old parchment and burning candles fills the air. 
 
-A robed woman steps gracefully from the shadows of a nearby alcove, her presence calm yet commanding. Her long, dark hair is braided intricately, and the soft glow of candlelight reflects off the silver pendant she wears—a delicate symbol of a tree intertwined with the moon, marking her as a follower of Thyra. She approaches the adventurers with a serene smile, her eyes warm with understanding.
+{actor: sister-danica} A robed woman steps gracefully from the shadows of a nearby alcove, her presence calm yet commanding. Her long, dark hair is braided intricately, and the soft glow of candlelight reflects off the silver pendant she wears—a delicate symbol of a tree intertwined with the moon, marking her as a follower of Thyra. She approaches the adventurers with a serene smile, her eyes warm with understanding.
 
-"Welcome to the Grand Library," she says softly, her voice carrying a soothing authority. "I am Sister Danica, a cleric of Thyra, the Wayfinder. You appear as travelers in search of something beyond the ordinary. If there is knowledge you seek, I would be honored to assist you on your path."
+{speaker: sister-danica, delivery: soft with soothing authority} Welcome to the Grand Library. I am Sister Danica, a cleric of Thyra, the Wayfinder. You appear as travelers in search of something beyond the ordinary. If there is knowledge you seek, I would be honored to assist you on your path.
 
-She gestures toward a nearby table, inviting them to speak further. "The library holds many secrets—some ancient, some untamed. Let us explore the answers together."
+{actor: sister-danica} She gestures toward a nearby table, inviting them to speak further.
+
+{speaker: sister-danica} The library holds many secrets—some ancient, some untamed. Let us explore the answers together.
 
 ## GM Notes
 

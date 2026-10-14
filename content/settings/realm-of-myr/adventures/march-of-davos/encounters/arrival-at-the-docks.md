@@ -20,7 +20,7 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726345480155"
 
 The sun casts a golden hue over the bustling docks of Kordavos as you arrive. The air is thick with the tang of saltwater, mingled with the earthy scent of freshly unloaded cargo. Towering ships bob gently in their berths, and from every corner, dockworkers laden with crates and barrels shout directions to one another, their voices lost in the cacophony of seagulls and the crashing of waves against the piers.
 
-Ahead, a group of dockworkers pause their work, their sweat-streaked faces turning toward you with curiosity. One man, a grizzled veteran of the docks with a sun-worn face and a heavy leather apron, sets down a crate and wipes his brow, eyeing you cautiously.
+{actor: Finn Radonik} Ahead, a group of dockworkers pause their work, their sweat-streaked faces turning toward you with curiosity. One man, a grizzled veteran of the docks with a sun-worn face and a heavy leather apron, sets down a crate and wipes his brow, eyeing you cautiously.
 
 ## GM Notes
 

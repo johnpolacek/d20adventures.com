@@ -15,11 +15,15 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725044729016"
 
 ## Intro
 
-As the adventurers approach the grand gates of Kordavos, they are greeted by the sight of towering stone archways adorned with vibrant Asterian and Valkaran banners fluttering in the breeze. The sound of laughter, music, and lively chatter fills the air, signaling the ongoing festivities of the Harvest Festival just beyond the gates.
+{place: gateArch} As the adventurers approach the grand gates of Kordavos, they are greeted by the sight of towering stone archways adorned with vibrant Asterian and Valkaran banners fluttering in the breeze. The sound of laughter, music, and lively chatter fills the air, signaling the ongoing festivities of the Harvest Festival just beyond the gates.
 
-However, before they can join the revelry, they find themselves in a long line of travelers, merchants, and villagers all waiting to be inspected by the city guard. A few guards move among the crowd, occasionally pulling aside individuals for further questioning.
+{place: lineBack} However, before they can join the revelry, they find themselves in a long line of travelers, merchants, and villagers all waiting to be inspected by the city guard. A few guards move among the crowd, occasionally pulling aside individuals for further questioning.
 
-"Next!" shouts a burly Asterian guard with a stern face but kind eyes. Stepping forward, he inspects each person meticulously. "State your business in Kordavos," he demands from each group. "There is a fee of three marks for entrance."
+{speaker: garlan-ironfist, delivery: shouting} Next!
+
+{actor: garlan-ironfist} A burly Asterian guard with a stern face but kind eyes steps forward and inspects each person meticulously.
+
+{speaker: garlan-ironfist, delivery: demanding} State your business in Kordavos. There is a fee of three marks for entrance.
 
 ## GM Notes
 

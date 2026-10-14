@@ -17,9 +17,11 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726436939251"
 
 Nestled between two crumbling buildings, is a makeshift entrance hastily constructed from old wooden boards. The entrance itself is nondescript—just a few planks nailed together with no visible markings. But to those who know what to look for, it’s unmistakable: this is the hidden doorway to the Black Market. A heavy cloth curtain hangs over the entrance, swaying gently in the faint breeze, concealing what lies beyond.
 
-Standing guard is a burly figure dressed in a tattered cloak, his face mostly hidden beneath a hood. His arms are crossed, and a long dagger is tucked visibly into his belt. As the adventurers approach, the guard eyes them with suspicion, his gaze sharp beneath the shadow of his hood.
+{actor: garrick} Standing guard is a burly figure dressed in a tattered cloak, his face mostly hidden beneath a hood. His arms are crossed, and a long dagger is tucked visibly into his belt. As the adventurers approach, the guard eyes them with suspicion, his gaze sharp beneath the shadow of his hood.
 
-"Looking for something?" he grunts, his voice low and gravelly, stepping forward to block the entrance with his broad frame, waiting to see if the adventurers are worthy of entry.
+{speaker: garrick, delivery: a low and gravelly grunt} Looking for something?
+
+{actor: garrick} He steps forward to block the entrance with his broad frame, waiting to see if the adventurers are worthy of entry.
 
 ## GM Notes
 

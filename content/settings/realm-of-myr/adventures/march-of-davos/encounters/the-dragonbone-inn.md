@@ -19,7 +19,9 @@ As the sun settles beyond the horizon, painting the sky in vivid hues of orange 
 
 The interior is warm and inviting, with the smell of roasting meat and the sound of a lively bard playing a jaunty tune on his lute. The tavern is filled with a diverse crowd—merchants, travelers, and a few suspicious-looking individuals huddled in dark corners. A large fireplace dominates one wall, its flickering flames casting dancing shadows across the room.
 
-The innkeeper, a burly man named Bram, greets the adventurers with a hearty welcome and ushers them to a corner table where they can discuss their plans in relative privacy. As he sets down a tray of drinks, Bram remarks, "Ah, the road can be a harsh mistress, can't she? You lot look like you've seen some excitement. This corner will give you a bit of peace to mull things over."
+{actor: bram} The innkeeper, a burly man named Bram, greets the adventurers with a hearty welcome and ushers them to a corner table where they can discuss their plans in relative privacy. He sets down a tray of drinks.
+
+{speaker: bram, delivery: hearty} Ah, the road can be a harsh mistress, can't she? You lot look like you've seen some excitement. This corner will give you a bit of peace to mull things over.
 
 ## GM Notes
 

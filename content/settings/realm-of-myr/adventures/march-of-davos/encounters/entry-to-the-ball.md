@@ -22,11 +22,13 @@ Wrought iron gates, adorned with intricate Valkaran and Asterian symbols, stand 
 
 At the foot of the grand staircase, two imposing guards, clad in polished black armor adorned with the Blackthorn family crest, stand vigilant. Their hands rest casually on the hilts of their sheathed swords, but their watchful eyes dart over each guest with practiced precision.
 
-One of the guards steps forward, a burly man with a red beard and imposing frame that seems familiar. 
+{actor: Barok Redbeard} One of the guards steps forward, a burly man with a red beard and imposing frame that seems familiar. 
 
-Now, though, Barok looks far more composed, with his unruly beard neatly trimmed and his posture straighter, as if the formal attire demands a certain level of dignity. His eyes narrow in recognition as the adventurers approach, but he says nothing of their prior encounter. Instead, he steps forward, raising a gloved hand.
+{actor: Barok Redbeard} Now, though, Barok looks far more composed, with his unruly beard neatly trimmed and his posture straighter, as if the formal attire demands a certain level of dignity. His eyes narrow in recognition as the adventurers approach, but he says nothing of their prior encounter. Instead, he steps forward, raising a gloved hand.
 
-"Invitation," he grunts, his voice as gruff as they remember, though more restrained in this refined setting. His eyes scan each of them, lingering a moment longer than necessary, a hint of recognition on his face.
+{speaker: Barok Redbeard, delivery: restrained grunt} Invitation.
+
+{actor: Barok Redbeard} His voice is as gruff as they remember, though more restrained in this refined setting. His eyes scan each of them, lingering a moment longer than necessary, a hint of recognition on his face.
 
 ## GM Notes
 

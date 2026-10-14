@@ -17,9 +17,9 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726458036467"
 
 The gavel falls with a sharp crack, the sound echoing through the hushed chamber. "Sold—to the gentleman in black!" the auctioneer proclaims, though his enthusiasm falters as the weight of the room’s silence settles. 
 
-Silverhand’s representative stands, his gloved hands carefully taking the protective case containing the ancient map. He doesn't look back at the crowd. Silverhand himself rises with a predatory grace, his silver gauntlet catching the candlelight one last time before he pulls his hood lower. Without a word to his master, the representative turns on his heel and slips into the shadows near the side exit. 
+{actor: silverhand-representative, object: map} Silverhand’s representative stands, his gloved hands carefully taking the protective case containing the ancient map. He doesn't look back at the crowd. Silverhand himself rises with a predatory grace, his silver gauntlet catching the candlelight one last time before he pulls his hood lower. Without a word to his master, the representative turns on his heel and slips into the shadows near the side exit.
 
-Silverhand follows a few paces behind, flanked by his two silent guards. They move with the confidence of men who own the darkness, heading toward the labyrinth of the Lower District streets.
+{actor: silverhand} Silverhand follows a few paces behind, flanked by his two silent guards. They move with the confidence of men who own the darkness, heading toward the labyrinth of the Lower District streets.
 
 ## GM Notes
 

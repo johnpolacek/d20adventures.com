@@ -22,7 +22,7 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/the-r
 
 ## Intro
 
-Among the diverse stream of travelers along the road to Kordavos is a well-appointed caravan. Its wagons, laden with exotic goods and bearing the mark of a successful import-export business, are escorted by a few watchful guards. At the head of the caravan, a man rides confidently, his white hair and beard neatly combed, and a keen, smiling face that seems to miss nothing.
+{actor: Dmitri Volkov} Among the diverse stream of travelers along the road to Kordavos is a well-appointed caravan. Its wagons, laden with exotic goods and bearing the mark of a successful import-export business, are escorted by a few watchful guards. At the head of the caravan, a man rides confidently, his white hair and beard neatly combed, and a keen, smiling face that seems to miss nothing.
 
 ## GM Notes
 

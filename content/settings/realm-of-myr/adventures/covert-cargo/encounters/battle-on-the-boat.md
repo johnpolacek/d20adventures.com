@@ -19,11 +19,15 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/cover
 
 ## Intro
 
-Reinhard turned, a semblance of a smile touching his lips but not his cold eyes. "Good work, mage," he said, his voice suddenly relaxed. "Your service is most appreciated, but we have our orders." He took a slow step, his bulk seeming to shrink the confines of the cabin. 
+{actor: Reinhard, target: 1749159962941} Reinhard turned, a semblance of a smile touching his lips but not his cold eyes.
 
-The cabin door clicks shut, the sound unnaturally loud in the sudden stillness. Silas stands before it, blocking the only exit, the faint whisper of steel on leather the only warning as two wicked-looking daggers appear in his hands.
+{speaker: Reinhard, to: 1749159962941, delivery: suddenly relaxed} Good work, mage. Your service is most appreciated, but we have our orders.
 
-“No loose ends,” he states, flatly.
+{actor: Reinhard, target: 1749159962941} He took a slow step, his bulk seeming to shrink the confines of the cabin.
+
+{actor: Silas, object: blade} The cabin door clicks shut, the sound unnaturally loud in the sudden stillness. Silas stands before it, blocking the only exit, the faint whisper of steel on leather the only warning as two wicked-looking daggers appear in his hands.
+
+{speaker: Silas, delivery: flat} No loose ends.
 
 ## GM Notes
 

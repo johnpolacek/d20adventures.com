@@ -17,9 +17,15 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726111833875"
 
 As dawn breaks and pale light filters through the windows of the Dragonbone Inn, the smell of freshly baked bread and brewing coffee fills the air. The innkeeper, Bram, is busy preparing for the day. 
 
-The door creaks open, and in steps Elara. She is visibly distraught, her face pale and tired. Bram immediately notices her and makes his way over. “Elara, you’re early today. Everything alright?”
+{actor: Elara Antonov} The door creaks open, and in steps Elara. She is visibly distraught, her face pale and tired.
 
-Elara gives him a faint smile. “I’m here to drop off those supply orders... but...” Her voice falters. Bram looks at the adventurers and then back to her. “You know, these folks here,” he says, gesturing to the party, “they seem like the kind who could help you find Joran.”
+Bram immediately notices her and makes his way over. “Elara, you’re early today. Everything alright?”
+
+{actor: Elara Antonov} Elara gives him a faint smile.
+
+{speaker: Elara Antonov, delivery: faltering} I’m here to drop off those supply orders... but...
+
+Her voice falters. Bram looks at the adventurers and then back to her. “You know, these folks here,” he says, gesturing to the party, “they seem like the kind who could help you find Joran.”
 
 ## The Missing Brother
 

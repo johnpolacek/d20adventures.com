@@ -18,9 +18,13 @@ You rush from the warehouse just in time to see a horrific scene. A nearby elven
 
 The thick wooden doors of the hold explode outward in a spray of splinters. A massive creature emerges, wings snapping open to catch the air. It is a **Forest Drake**, its scales shimmering in shades of mossy green and bark-brown. Its yellow eyes burn with a feral light as it lets out a deafening roar that rattles the windows of nearby shops.
 
-At the edge of the gangplank, a woman stands with fierce determination. Tall and clad in rugged leather armor, her windblown black hair frames a face set in a mask of command. She draws a curved blade and shouts to the fleeing crew, “Keep it contained! If that beast reaches the lower district, it’ll be a massacre!” 
+{actor: astrid-blackthorn, object: blade} At the edge of the gangplank, a woman stands with fierce determination. Tall and clad in rugged leather armor, her windblown black hair frames a face set in a mask of command. She draws a curved blade.
 
-She spots you and gestures frantically. "You! If you can fight, help me!"
+{speaker: astrid-blackthorn, delivery: shouting to the fleeing crew} Keep it contained! If that beast reaches the lower district, it’ll be a massacre!
+
+{actor: astrid-blackthorn} She spots you and gestures frantically.
+
+{speaker: astrid-blackthorn} You! If you can fight, help me!
 
 ## GM Notes
 

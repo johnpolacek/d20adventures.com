@@ -22,13 +22,25 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/cover
 
 ## Intro
 
-A silence, sharp and cold as a shard of glass, fell over the boat’s cabin in the wake of the arcanist’s pronouncement.
+{place: saloon} A silence, sharp and cold as a shard of glass, fell over the boat’s cabin in the wake of the arcanist’s pronouncement.
 
-It was Silas who moved first. In a single, fluid motion, he was no longer lounging by the door but standing before it, blocking the only exit. A dagger appeared in his hand, its point aimed steadily at Aelar. "There seems to have been a misunderstanding," Silas said, his voice dropping to a silken threat. "My employers do not appreciate being sold worthless trinkets."
+{actor: Silas, target: Aelar Moonglimmer} It was Silas who moved first. In a single, fluid motion, he was no longer lounging by the door but standing before it, blocking the only exit. A dagger appeared in his hand, its point aimed steadily at Aelar.
 
-Reinhard let out a low, guttural growl, his hand dropping to the hilt of the massive blade at his side. "You have nerve, elf," he snarled, his cold, calculating eyes promising violence as he took a heavy step forward.
+{speaker: Silas, to: Aelar Moonglimmer, delivery: silken threat} There seems to have been a misunderstanding. My employers do not appreciate being sold worthless trinkets.
 
-Aelar Moonglimmer recoiled, but it was with the shock of indignation, not fear. His professional calm fractured into unconcealed fury. "Worthless?" he spat, his gaze flicking with contempt toward the unseen specialist. "Your arcanist is either a fool, or you mean to double-cross us!”
+{actor: Reinhard, target: Aelar Moonglimmer} Reinhard let out a low, guttural growl, his hand dropping to the hilt of the massive blade at his side.
+
+{speaker: Reinhard, to: Aelar Moonglimmer, delivery: snarling} You have nerve, elf.
+
+{actor: Reinhard, target: Aelar Moonglimmer} His cold, calculating eyes promised violence as he took a heavy step forward.
+
+{actor: Aelar Moonglimmer, target: Silas} Aelar Moonglimmer recoiled, but it was with the shock of indignation, not fear. His professional calm fractured into unconcealed fury.
+
+{speaker: Aelar Moonglimmer, to: Silas, delivery: spitting} Worthless?
+
+{actor: Aelar Moonglimmer, target: 1749159962941} His gaze flicked with contempt toward the unseen specialist.
+
+{speaker: Aelar Moonglimmer, to: Silas} Your arcanist is either a fool, or you mean to double-cross us!
 
 ## GM Notes
 

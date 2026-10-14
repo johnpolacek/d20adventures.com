@@ -19,9 +19,13 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726093207477"
 
 As late evening falls upon the Dragonbone Inn, the air thickens with the scent of roasted meats and the sound of mugs clinking. Amidst the revelry, several locals eye the adventurers with curious intent. 
 
-Among them is Beric, a burly dockworker with a scar across his face, and Eamon, a scholarly type with an aura of intelligence. Beric speaks first, his voice gruff but respectful, "Ye seem like quite an assorted lot. We could use some folks of varied talents like you lot."
+Among them is Beric, a burly dockworker with a scar across his face, and Eamon, a scholarly type with an aura of intelligence.
 
-Eamon, adjusting his spectacles, adds, "Indeed, we have matters that require the expertise of seasoned adventurers. Intricacies that only your kind might handle. Perhaps we could discuss this privately?"
+{speaker: Beric Sonacus, delivery: gruff but respectful} Ye seem like quite an assorted lot. We could use some folks of varied talents like you lot.
+
+{actor: Eamon Drakovan} Eamon adjusts his spectacles.
+
+{speaker: Eamon Drakovan} Indeed, we have matters that require the expertise of seasoned adventurers. Intricacies that only your kind might handle. Perhaps we could discuss this privately?
 
 ## The Meeting
 

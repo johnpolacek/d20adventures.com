@@ -14,15 +14,23 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726591063592"
 
 ## Intro
 
-A striking woman walks toward the new arrivals, her elaborate gown shimmering under the soft glow of chandeliers. She moves with effortless grace, her face obscured by a golden mask adorned with intricate details. 
+{actor: astrid-blackthorn} A striking woman walks toward the new arrivals, her elaborate gown shimmering under the soft glow of chandeliers. She moves with effortless grace, her face obscured by a golden mask adorned with intricate details.
 
-"Welcome to our humble gathering," she says, her voice smooth but commanding, her eyes scanning the party with a keen interest. "I’m so delighted that you have come." 
+{actor: astrid-blackthorn} Her eyes scan the party with a keen interest.
 
-She pauses, letting the tension hang for just a second longer before her hand reaches up to remove the mask. With a graceful flourish, the mask falls away, revealing the familiar face of Lady Astrid Blackthorn. Surrounded by luxury and opulence, she is almost unrecognizable from the rugged ranger they fought alongside in the chaos of the docks. Now, in her elaborate attire, she exudes an air of nobility and control.
+{speaker: astrid-blackthorn, delivery: smooth but commanding} Welcome to our humble gathering. I’m so delighted that you have come.
 
-“I must admit, you’ve piqued my interest since our little encounter at the docks. Not many handle themselves so well in such chaotic circumstances.”
+{actor: astrid-blackthorn} She pauses, letting the tension hang for just a second longer before her hand reaches up to remove the mask. With a graceful flourish, the mask falls away, revealing the familiar face of Lady Astrid Blackthorn. Surrounded by luxury and opulence, she is almost unrecognizable from the rugged ranger they fought alongside in the chaos of the docks. Now, in her elaborate attire, she exudes an air of nobility and control.
 
-She glances around the room, the faintest hint of pride in her gaze. “But tonight... tonight is a different kind of challenge. You’ll want to meet my brother, Thaddeus. He has a keen eye for talent and understands the value of... skilled allies.” Astrid offers a knowing smile. “He’s a man of vision, and if you’re the type who seeks to rise above the fray, I think you’ll find him quite compelling. Shall we?”
+{speaker: astrid-blackthorn} I must admit, you’ve piqued my interest since our little encounter at the docks. Not many handle themselves so well in such chaotic circumstances.
+
+{actor: astrid-blackthorn} She glances around the room, the faintest hint of pride in her gaze.
+
+{speaker: astrid-blackthorn} But tonight... tonight is a different kind of challenge. You’ll want to meet my brother, Thaddeus. He has a keen eye for talent and understands the value of... skilled allies.
+
+{actor: astrid-blackthorn} Astrid offers a knowing smile.
+
+{speaker: astrid-blackthorn} He’s a man of vision, and if you’re the type who seeks to rise above the fray, I think you’ll find him quite compelling. Shall we?
 
 ## GM Notes
 
