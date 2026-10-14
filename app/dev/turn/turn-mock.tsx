@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { inferStageMovement } from "@/app/_actions/stage-movement"
 import { type CardInfo, CharacterCard } from "@/components/stage/character-card"
 import { IconButton, Pill, panel, StageHud, useCompact } from "@/components/stage/hud"
-import { type ChatLine, Journal, type JournalTurn } from "@/components/stage/journal"
+import { type ChatLine, Journal, type JournalRoll, type JournalTurn } from "@/components/stage/journal"
 import { Narration } from "@/components/stage/narration"
 import { type CardCharacter, type CardMode, PromptCard } from "@/components/stage/prompt-card"
 import { RotatePrompt, requestLandscape, usePhonePortrait } from "@/components/stage/rotate-gate"
@@ -136,7 +136,7 @@ export function TurnMock({ demo = false }: { demo?: boolean }) {
   }
 
   const runTurn = useCallback(
-    async (index: number, reply: string | null, roll: RollOutcome, replyFrom: string | null, rollInfo: JournalTurn["roll"]) => {
+    async (index: number, reply: string | null, roll: RollOutcome, replyFrom: string | null, rollInfo: JournalRoll | undefined) => {
       if (!stage || !player.current) return
       const t = TURNS[index]
       const ps = t.narrative(reply, roll, storyRef.current)
@@ -149,9 +149,8 @@ export function TurnMock({ demo = false }: { demo?: boolean }) {
         {
           number: index,
           title: t.title,
-          paragraphs: ps,
+          paragraphs: rollInfo ? [rollInfo, ...ps] : ps,
           reply: reply && replyFrom ? { name: replyFrom, text: reply, moved: usedRef.current || undefined, movedTo: movedTo.current } : undefined,
-          roll: rollInfo,
         },
       ])
       setPhase("beats")
@@ -182,9 +181,11 @@ export function TurnMock({ demo = false }: { demo?: boolean }) {
             e.number === index
               ? {
                   ...e,
-                  paragraphs: all,
-                  rollAt: ps.length,
-                  roll: { name: nameOf(c.actor), skill: c.roll.skill, dc: c.roll.dc, base, total, success, versus: versus ? `${versus.name}'s ${versus.natural + versus.modifier}` : undefined },
+                  paragraphs: [
+                    ...ps,
+                    { name: nameOf(c.actor), skill: c.roll.skill, dc: c.roll.dc, base, total, success, versus: versus ? `${versus.name}'s ${versus.natural + versus.modifier}` : undefined },
+                    ...more,
+                  ],
                 }
               : e
           )
@@ -260,7 +261,7 @@ export function TurnMock({ demo = false }: { demo?: boolean }) {
   }
   // While the GM card is up, shots compose in the space above it (the character being asked stays in view).
   const onCardTop = useCallback((px: number) => stage?.setInsets({ bottom: px > 0 ? px + 12 : 0 }), [stage])
-  const advance = (reply: string, roll: RollOutcome, rollInfo: JournalTurn["roll"], wait = 1600) => {
+  const advance = (reply: string, roll: RollOutcome, rollInfo: JournalRoll | undefined, wait = 1600) => {
     const from = holdOf(turnIndex)?.actor
     setPhase("thinking")
     setTimeout(() => runTurn(turnIndex + 1, reply, roll, from ? nameOf(from) : null, rollInfo), wait)

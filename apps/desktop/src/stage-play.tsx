@@ -5,7 +5,7 @@ import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } fro
 import { CharacterCard } from "@/components/stage/character-card"
 import { setSoundOn, soundOn } from "@/components/stage/dice-sound"
 import { Pill, panel, StageHud, useCompact } from "@/components/stage/hud"
-import { type ChatLine, Journal, type JournalTurn } from "@/components/stage/journal"
+import { type ChatLine, Journal, type JournalRoll, type JournalTurn } from "@/components/stage/journal"
 import { Narration } from "@/components/stage/narration"
 import { type CardCharacter, type CardMode, type CardSuggestion, PromptCard } from "@/components/stage/prompt-card"
 import { ROLL_SECONDS, type RollResultData } from "@/components/stage/roll-result"
@@ -34,7 +34,7 @@ const story = (text: string, originals = false): { text: string; roll?: Roll }[]
       ]
     return [{ text: part.value }]
   })
-const prose = (text: string, originals = false) => story(text, originals).map((p) => p.text)
+const journalRoll = (r: Roll): JournalRoll => ({ name: r.character, skill: r.rollType, dc: r.difficulty, base: r.baseRoll ?? r.result, total: r.result, success: r.success })
 
 type Character = Save["turns"][number]["characters"][number]
 type Positions = Record<string, { x: number; z: number; ry: number }>
@@ -496,7 +496,7 @@ export function StagePlay(props: {
   const journal: JournalTurn[] = (save?.turns ?? []).map((t) => ({
     number: t.order,
     title: t.title,
-    paragraphs: prose(t.narrative, true),
+    paragraphs: story(t.narrative, true).map((p) => (p.roll ? journalRoll(p.roll) : p.text)),
   }))
   return (
     <StageHud

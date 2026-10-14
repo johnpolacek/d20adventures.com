@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-14, the journal numbers a scene's turns and shows rolls as cards
+
+Owner: the journal repeated the encounter's title over every turn of a fight, and the dice rolls read as plain sentences. `components/stage/journal.tsx` now shows a run of turns under one title once, with a rule and "2 of 5" between them. Each roll is a card: a small d20 on the natural roll, the sum against the DC, and the verdict stamped in its colour. A natural 20 that succeeds turns the die gold, a natural 1 that fails chars it, as on the roll card. The desktop app passes its rolls to the journal as data, not text. Checked on a throwaway page at DPR 2. Not checked in the desktop app itself.
+
 ## 2026-10-13, a speech tag is read for who it names
 
 Owner, two hours after the fix below, in The Missing Relics: Thalbern's own reply, "Thalbern meets Wollandora's gaze and asks quietly, “Tell me all of it…”", showed over Wollandora. A different rule from the one fixed that morning, and older: the reader took the three words before "asks" as the speaker and found her name in them. No restart was needed, the app reloads the reader as it changes.
