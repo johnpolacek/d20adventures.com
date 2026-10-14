@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [GM core](../gm-core.md) · [Stage engine](../stage-engine.md) · [Concise narration](concise-narration.md)
 
-Status: started 2026-10-14. The GM writes beats, every store keeps them, and the desktop stage plays them with effects and objects. The Midnight Summons first, on the desktop app.
+Status: implemented on main 2026-10-14. Turns keep beats only. All four Myr adventures are labelled. Nothing is guessed from prose. The Midnight Summons first, on the desktop app.
 
 ## Owner direction, 2026-10-14
 
@@ -128,6 +128,18 @@ The same scripted replies and rolls as the concise narration replays, on the bui
 - A beat's line breaks become spaces, so one beat is always one paragraph in every text view.
 - Not checked in the browser: the website's turn page needs a signed-in game.
 
+### All four adventures labelled, and the old text removed, 2026-10-14
+
+- Owner, offered removing the old text, labelling the other three adventures, and Wollandora's repeat: "g h i".
+- Covert Cargo, The Road to Kordavos and March of Davos intros are labelled, by three helpers working in parallel, each checked against the encounter's cast and places.
+- A turn keeps `story` only. The narrative string, the `[DiceRoll:]` and `[OriginalReply:]` markers, `readNarration`, `parseNarrative`, Storyview's attribution call, `formatNarrativeAction` and the legacy prose helpers are deleted.
+- Old desktop saves are read into beats once when loaded: paragraphs as narration, rolls and the player's words as theirs.
+- The website demo's first reply is written into beats on the server. The legacy round end for non-wiki plans writes beats too.
+- Storyview audio keys on a hash of the story. The dev database held no adventures or turns, and its 2 orphaned audio rows were deleted before the field was renamed.
+- A slip: the labels commit also carried 4 staged file deletions, so main had code importing deleted files for about a minute, until the next commit.
+- Wollandora asks once and answers first in The Missing Relics. See [Concise narration](concise-narration.md). Not yet replayed.
+- Checked: typechecks across the website, Convex, GM core, stage and desktop. The engine fixture re-recorded, 62 desktop tests, the five bridge checks, the style check, Convex deployed to dev.
+
 ## Decisions made without the owner
 
 - `story` is the field name, so it does not clash with the stage's own director beats.
@@ -136,8 +148,12 @@ The same scripted replies and rolls as the concise narration replays, on the bui
 - An attack in a hero's reply plays after its roll, not with the words, so the dice decide before the arrow lands.
 - A struck card is tinted, not lit: a glow strong enough to see in daylight made night cards flat silhouettes.
 - The website's reply is written into beats on the server, in one request, rather than by the browser.
-- Until other adventures' intros are converted, their unlabelled paragraphs keep the old camera and speaker guessing.
+- A quote by someone outside the encounter's characters stays in the prose with no bubble or voice. Adding those speakers to an encounter's `npcs` would make them turn characters, so it is left for the author.
+- Old desktop saves are converted, not thrown away, so a game in progress still opens.
 
 ## Not done
 
-Everything above. Covert Cargo, The Road to Kordavos and March of Davos come after The Midnight Summons.
+- A live replay since the old text was removed, and of Wollandora's fix.
+- Production: Convex and the website are not deployed. Production turns, if any, would need clearing first.
+- Other GMs than Claude have not written beats live.
+- The website turn page and Storyview are not checked in a browser.

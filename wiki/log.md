@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-14, turns keep beats only
+
+Owner chose to remove the old narrative text, label the other three adventures, and fix Wollandora asking twice. A turn's story is now its labelled beats and nothing else: the narrative string, its dice and reply markers, the stage's speaker and camera guessing, and Storyview's attribution call are gone. All four Myr adventures' intros are labelled. Old desktop saves are converted on load. The dev database had no turns to wipe. One slip: a commit briefly left main importing deleted files, fixed by the next commit a minute later. See [Structured narrative](plans/structured-narrative.md).
+
 ## 2026-10-14, structured narrative planned
 
 Owner, after two fixes to the stage's speaker guessing: "Maybe we need to have more structured data around dialogue." Then, offered speakers only or a full structure: "we only have test data right now. it is easy now to throw everything away and do it right from the start". The owner chose the full structure with camera data, spell effects and objects in 3D, The Midnight Summons first. A turn becomes a list of labelled beats: narration, action, line, roll and reply. See [Structured narrative](plans/structured-narrative.md).

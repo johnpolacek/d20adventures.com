@@ -27,8 +27,7 @@ The upfront balance estimate can return HTTP 402. After successful synthesis, th
 - `components/adventure/storyview/`: overlay, playback, rail card, and pause notices.
 - `app/_actions/storyview.ts`: owner auto-narration setting and current-turn warm-up.
 - `lib/services/turn-audio-service.ts`: incremental cache, attribution, synthesis, shared cost, and pause handling.
-- `lib/ai/narration-attribution.ts`: speaker segmentation with narrative reconstruction checks.
-- `lib/ai/story-segments.ts`: since 2026-10-14 a turn kept as labelled beats is split by its beats, each line in its speaker's voice with its delivery as the style. No attribution call and no attribution charge. A turn whose beats and text do not line up, or one from before beats, still goes to the attribution call. See [structured narrative](plans/structured-narrative.md).
+- `lib/ai/story-segments.ts`: a turn is split for voices by its beats, each line in its speaker's voice with its delivery as the style. A speaker who is not one of the turn's characters is read by the narrator. Audio keys on a hash of the story. Since 2026-10-14, see [structured narrative](plans/structured-narrative.md). The attribution call that guessed speakers from prose, and its charge, are gone.
 - `lib/ai/tts.ts` and `tts-voices.ts`: Gemini REST synthesis and voice configuration.
 - `lib/audio/wav.ts`: PCM-to-WAV wrapping.
 - `convex/turnAudio.ts`, `types/turn-audio.ts`: claims, manifests, and response types.
