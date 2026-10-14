@@ -255,3 +255,9 @@ export function spatialContext(encounterId: string, characters: readonly Who[], 
   })
   return `${authored.where}\nNamed places, x and z in metres: ${places.join("; ")}.\nWhere everyone stands now, x and z in metres: ${people.join("; ")}.`
 }
+
+// The set's named places, which the GM may point the camera at and walk characters to in its beats.
+export function scenePlaces(encounterId: string): { id: string; label: string }[] | undefined {
+  const marks = SCENES[encounterId]?.set.marks
+  return marks && Object.entries(marks).flatMap(([id, m]) => (m.label ? [{ id, label: m.label }] : []))
+}

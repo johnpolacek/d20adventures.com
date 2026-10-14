@@ -1,3 +1,4 @@
+import { turnScript } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import { mapConvexTurnToTurn } from "../utils/game-utils"
@@ -123,7 +124,7 @@ export function buildRollInfo(turn: Turn): string {
 export function buildRecentTurnHistory(recentTurns: RecentTurnContext[]): string {
   return recentTurns.length > 0
     ? `Recent Adventure History (last ${recentTurns.length} turns across encounters):
-${recentTurns.map((item) => `Turn ${item.order} [Encounter: ${item.encounterId}]: ${item.turn.narrative || ""}`).join("\n\n")}`
+${recentTurns.map((item) => `Turn ${item.order} [Encounter: ${item.encounterId}]:\n${turnScript(item.turn)}`).join("\n\n")}`
     : "No previous turns available."
 }
 

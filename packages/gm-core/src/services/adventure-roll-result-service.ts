@@ -1,9 +1,13 @@
 import type { GmPorts } from "../ports"
+import type { StoryBeat } from "../story/beats"
+import { cleanStory, type StoryScene } from "../story/clean"
+import { storyRules } from "../story/prompt"
+import { lastStep, storyNames, storyText, turnStory } from "../story/render"
+import { rollBeat, sceneFor, storyOutputObject, withStory } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import { KNOWLEDGE_RULE } from "../utils/narrative-utils"
 import { gmNotesWithRules, keepPlayersAlive } from "../wiki-adventures/player-safety"
-import { appendNarrative } from "./narrative-service"
 import { detectSpellFromRollType, markSpellAsUsed } from "./spell-tracking-service"
 import { createTurnUpdateService } from "./turn-update-service"
 
@@ -29,6 +33,7 @@ function buildRollOutcomePrompt(args: {
   totalResult: number
   difficulty: number
   margin: number
+  scene: StoryScene
 }): string {
   return `
 Context:
@@ -52,16 +57,18 @@ A dice roll was made for ${args.characterName}: ${args.rollType} (Result: ${args
   - ALWAYS generate narrative if NPCs are present and the action relates to them (attacking, hiding from, avoiding, reacting to, interacting with, etc.). Actions that respond to NPC threats or presence should be narrated.
   - Generate narrative for successful rolls that affect or respond to NPCs (e.g., successfully hiding from a monster, avoiding an attack, etc.).
   - Do not narrate speech or actions for player characters.
-  - Only output nothing if the action is EXCLUSIVELY between player characters with no NPC involvement AND no environmental consequences.
+  - Return no beats only if the action is EXCLUSIVELY between player characters with no NPC involvement AND no environmental consequences.
   - Do not invent new objects, people, events, or details. Use only the encounter instructions/intro and established narrative.
   - Only reference NPCs that are actually present (listed above).
   - ${KNOWLEDGE_RULE}
 
-Write a single, concise, immersive third-person PRESENT-tense narrative paragraph (exactly two sentences, max 60 words) describing the immediate outcome of the roll. Focus on how the NPC(s) react, perceive, or are affected by the action, or describe the environmental/atmospheric result of the successful roll.
+Write the immediate outcome of the roll as beats: two sentences of narration and action, 60 words at most. An NPC's spoken line is extra and short. Focus on how the NPC(s) react, perceive, or are affected by the action, or describe the environmental/atmospheric result of the successful roll. When the hero's attack or spell lands or misses, give that action its effect: an arrow, a slash, a spell.
 
-Write in third person PRESENT tense. Do not use lists, bullet points, or markdown formatting. Do not use semicolons. Never mention game mechanics, dice, or rules.
+Write in third person PRESENT tense. Do not use semicolons. Never mention game mechanics, dice, or rules.
 
-Output only the narrative paragraph.`.trim()
+${storyRules(args.scene)}
+
+Respond as JSON: { "beats": [...] }`.trim()
 }
 
 function sanitizeRollOutcome(text: string): string {
@@ -83,7 +90,7 @@ function normalizeCharactersForHealthAnalysis(characters: TurnCharacter[]): Turn
 
 export function createAdventureRollResultService(ports: GmPorts) {
   const wait = ports.sleep?.bind(ports) ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)))
-  const generateText = ports.llm.generateText.bind(ports.llm)
+  const generateObject = ports.llm.generateObject.bind(ports.llm)
   const { analyzeAndApplyDiceRoll } = createTurnUpdateService(ports)
   async function resolvePlayerRollNarrativeAndCharacters(args: {
     turn: {
@@ -91,6 +98,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
       encounterId: string
       title: string
       narrative?: string
+      story?: StoryBeat[]
       characters: TurnCharacter[]
       adventureId: string
       isFinalEncounter?: boolean
@@ -111,6 +119,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
     premise?: string
   }): Promise<{
     narrative: string
+    story: StoryBeat[]
     characters: TurnCharacter[]
   }> {
     const { rollType, difficulty, modifier = 0 } = args.character.rollRequired
@@ -118,12 +127,24 @@ export function createAdventureRollResultService(ports: GmPorts) {
     const totalResult = baseRoll + modifier
     const success = totalResult >= difficulty
     const margin = totalResult - difficulty
-    const shortcode = `[DiceRoll:rollType=${rollType};baseRoll=${baseRoll};modifier=${modifier >= 0 ? `+${modifier}` : modifier};result=${totalResult};difficulty=${difficulty};character=${args.character.name};image=${args.character.image};success=${success}]\n`
-
-    let newNarrative = appendNarrative(args.turn.narrative || "", shortcode)
-    const paragraphs = (args.turn.narrative || "").split(/\n\n+/).filter(Boolean)
-    const playerActionText = paragraphs[paragraphs.length - 1] || ""
-    const narrativeContext = (args.turn.narrative || "").split(/\n\n+/).slice(-2).join("\n\n")
+    const by = { step: "roll" as const, character: args.character.id }
+    const roll = rollBeat(by, {
+      id: args.character.id,
+      name: args.character.name,
+      image: args.character.image,
+      check: rollType,
+      natural: baseRoll,
+      modifier,
+      total: totalResult,
+      dc: difficulty,
+      success,
+    })
+    const story = turnStory(args.turn)
+    const names = storyNames(args.turn.characters)
+    const playerActionText = storyText(lastStep(story), names)
+    const narrativeContext = storyText(story, names).split(/\n\n+/).slice(-2).join("\n\n")
+    const scene = await sceneFor(ports, args.turn)
+    let added: StoryBeat[] = [roll]
     const presentNpcs = args.turn.characters
       .filter((character) => character.type === "npc")
       .map((character) => character.name)
@@ -139,19 +160,20 @@ export function createAdventureRollResultService(ports: GmPorts) {
       totalResult,
       difficulty,
       margin,
+      scene,
     })
 
     let rollOutcome = ""
     try {
-      const { text } = await generateText({ prompt: rollOutcomePrompt })
-      rollOutcome = sanitizeRollOutcome(text || "")
-      if (rollOutcome) {
-        newNarrative = appendNarrative(newNarrative, rollOutcome)
-      }
+      const { object } = await generateObject({ prompt: rollOutcomePrompt, schema: storyOutputObject })
+      const outcome = cleanStory(object.beats, scene, by).filter((b) => !("text" in b) || sanitizeRollOutcome(b.text))
+      rollOutcome = outcome.map((b) => ("text" in b ? b.text : "")).join(" ")
+      added = [roll, ...outcome]
     } catch (error) {
       console.error("[resolvePlayerRollResult] Error generating roll outcome:", error)
     }
 
+    const { story: newStory, narrative: newNarrative } = withStory(args.turn, added)
     const diceRoll = {
       rollType,
       baseRoll,
@@ -173,6 +195,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
       encounterId: args.turn.encounterId,
       title: args.turn.title,
       narrative: args.turn.narrative || "",
+      story: args.turn.story,
       characters: normalizedCharacters,
       adventureId: args.turn.adventureId,
       isFinalEncounter: args.turn.isFinalEncounter,
@@ -206,6 +229,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
 
     return {
       narrative: newNarrative,
+      story: newStory,
       characters: keepPlayersAlive(args, updatedCharacters),
     }
   }

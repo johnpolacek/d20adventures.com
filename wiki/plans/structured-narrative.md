@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [GM core](../gm-core.md) · [Stage engine](../stage-engine.md) · [Concise narration](concise-narration.md)
 
-Status: planned 2026-10-14. The Midnight Summons first, on the desktop app.
+Status: started 2026-10-14. The GM writes beats and every store keeps them. The Midnight Summons first, on the desktop app.
 
 ## Owner direction, 2026-10-14
 
@@ -72,6 +72,19 @@ An intro paragraph may open with labels in braces. Without them it is narration.
 6. Replay The Midnight Summons with Claude, and review it in the app.
 7. Website: the database keeps `story`, the turn view reads it, Storyview takes speakers from it and drops its guessing call.
 8. Remove `narrative`, the markers and the guessers. Old saves and test data are thrown away, with the owner's yes.
+
+## Done
+
+### The beat, and the GM writing it, 2026-10-14
+
+- `packages/gm-core/src/story/`: the beat types and stored schema, `cleanStory` against the scene's menus, prose and script rendering, authored intros, and the shared rules every prompt carries.
+- Every step of the Myr adventures writes beats: a hero's reply (`writeReply`, one call where there were up to three), an AI hero's move, a hero's roll and its outcome, an NPC's action, roll and outcome, and the round end with the next intro.
+- Prompts read the story as a script, every line under its speaker's name.
+- Turns keep `story` beside `narrative`. The narrative is rendered from the story, so the website, Storyview and the stage read on unchanged. A turn saved before beats is read back from its narrative.
+- The desktop save, the hosted game's store and the website's database keep `story`. Convex validates it.
+- The desktop names each 3D set's labelled marks as places.
+- The website's own reply path still writes prose, through `formatNarrativeAction`. So do the legacy round end for non-wiki plans and the first turn of a game started on the website.
+- Checked: the GM core fixture re-recorded with beat replies, 62 desktop tests, the five bridge checks, the style check, typechecks. No live model has played it yet.
 
 ## Decisions made without the owner
 

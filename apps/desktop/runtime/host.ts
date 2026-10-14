@@ -1,9 +1,10 @@
 import { type AdventureRecord, type Content, createGmCore, type Llm, type Store } from "@d20/gm-core"
 import { type ActionSuggestion, suggestActions } from "@d20/gm-core/services/ai-pc-turn-service"
+import { storyProse, turnScript } from "@d20/gm-core/story/turn"
 import type { TurnCharacter } from "@d20/gm-core/types/adventure"
 import { findCurrentActor, isDeadActor } from "@d20/gm-core/utils/turn-actors"
 import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventures/plan-view"
-import { spatialContext } from "../src/scenes"
+import { scenePlaces, spatialContext } from "../src/scenes"
 import type { Packs } from "./game"
 
 // Host mode: the game lives on the website, and this app runs its GM. Guests' actions and the host's own wait on the
@@ -57,6 +58,7 @@ function hostContent(packs: Packs): Content {
     loadLegacyPlan: async () => null,
     // Hosted games keep no stage positions yet, so places are read from the staging alone.
     spatialContext: async (_setting, _plan, encounter, characters) => spatialContext(encounter, characters, {}),
+    places: async (encounter) => scenePlaces(encounter),
   }
 }
 
@@ -125,7 +127,7 @@ export async function runHostJob(job: HostJob, store: Store, packs: Packs, llm: 
   }
   if (!actor || actor.id !== job.characterId || actor.type !== "pc" || actor.controlledBy === "ai" || actor.userId !== job.userId) throw new Error("It is another character's turn.")
   if (job.kind !== "roll" && actor.hasReplied) throw new Error("This reply is already saved. Resolve the pending roll.")
-  if (job.kind === "suggest") return suggestActions(llm, actor, turn.narrative, turn.characters, "", packs[adventure.planId]?.artifacts.manifest.premise)
+  if (job.kind === "suggest") return suggestActions(llm, actor, turnScript(turn), turn.characters, "", packs[adventure.planId]?.artifacts.manifest.premise)
   // A skip ends the hero's turn with nothing written and no AI.
   if (job.kind === "skip") {
     await store.updateTurn({ turnId: turn._id, patch: { characters: turn.characters.map((c) => (c.id === actor.id ? { ...c, hasReplied: true, isComplete: true } : c)), updatedAt: Date.now() } })
@@ -134,8 +136,8 @@ export async function runHostJob(job: HostJob, store: Store, packs: Packs, llm: 
   if (job.kind === "reply") {
     const text = job.text?.trim()
     if (!text) throw new Error("The action is empty.")
-    const action = await core.formatNarrativeAction({ characterName: actor.name, gender: actor.gender, playerInput: text, narrativeContext: turn.narrative, characterInfo: actor })
-    await core.processTurnReply({ turnId: turn._id, characterId: actor.id, narrativeAction: action, originalPlayerInput: text })
+    const beats = await core.writeReply({ character: actor, playerInput: text, turn })
+    await core.processTurnReply({ turnId: turn._id, characterId: actor.id, narrativeAction: storyProse(beats), originalPlayerInput: text, story: beats })
     return
   }
   if (!actor.rollRequired || actor.rollResult !== undefined) throw new Error("There is no pending roll.")

@@ -4,6 +4,7 @@ import { createAdventureFirstTurnService } from "../services/adventure-first-tur
 import { createAdventureRollResultService, getEncounterInstructionsFromPlan } from "../services/adventure-roll-result-service"
 import { createAdventureTurnReplyService } from "../services/adventure-turn-reply-service"
 import { createNpcTurnService } from "../services/npc-turn-service"
+import type { StoryBeat } from "../story/beats"
 import type { TurnCharacter } from "../types/adventure"
 import type { RollRequirement } from "../validations/roll-requirement-schema"
 
@@ -14,7 +15,20 @@ export function createAdventure(ports: GmPorts) {
   const { buildTurnReplyRollRequirement } = createAdventureTurnReplyService(ports)
   const { processNpcTurnsAfterCurrent } = createNpcTurnService(ports)
   const loadAdventurePlanForRuntime = ports.content.loadPlan.bind(ports.content)
-  async function processTurnReply({ turnId, characterId, narrativeAction, originalPlayerInput }: { turnId: string; characterId: string; narrativeAction: string; originalPlayerInput?: string }) {
+  // `story` is the reply as the hero's beats, from writeReply. The player's own words go before it.
+  async function processTurnReply({
+    turnId,
+    characterId,
+    narrativeAction,
+    originalPlayerInput,
+    story,
+  }: {
+    turnId: string
+    characterId: string
+    narrativeAction: string
+    originalPlayerInput?: string
+    story?: StoryBeat[]
+  }) {
     const userId = await ports.identity()
     if (!userId) {
       console.error("[processTurnReply] Unauthorized access attempt.")
@@ -24,6 +38,10 @@ export function createAdventure(ports: GmPorts) {
     const { turn, adventure } = await assertAdventureAccessByTurn(userId, turnId)
 
     const characterPerformingAction = assertPlayerCharacterControl(userId, turn, characterId)
+    const reply: StoryBeat[] | undefined = story && [
+      ...(originalPlayerInput ? [{ kind: "reply" as const, by: { step: "reply" as const, character: characterId }, character: characterId, text: originalPlayerInput }] : []),
+      ...story,
+    ]
     const rollRequirementDetails: RollRequirement = await buildTurnReplyRollRequirement({
       turn,
       adventure,
@@ -38,6 +56,7 @@ export function createAdventure(ports: GmPorts) {
         characterId,
         narrativeAction,
         originalPlayerInput,
+        ...(reply ? { story: reply } : {}),
         rollRequirement: rollRequirementDetails,
       })
       ports.narration.afterTurn(turnId)
@@ -48,6 +67,7 @@ export function createAdventure(ports: GmPorts) {
       characterId,
       narrativeAction,
       originalPlayerInput,
+      ...(reply ? { story: reply } : {}),
       rollRequirement: undefined,
     })
     await processNpcTurnsAfterCurrent(turnId)
@@ -123,6 +143,7 @@ export function createAdventure(ports: GmPorts) {
         encounterId: turn.encounterId,
         title: turn.title,
         narrative: turn.narrative,
+        story: turn.story,
         characters: turn.characters as TurnCharacter[],
         adventureId: turn.adventureId,
         isFinalEncounter: turn.isFinalEncounter,
@@ -146,6 +167,7 @@ export function createAdventure(ports: GmPorts) {
       turnId,
       patch: {
         narrative: rollResolution.narrative,
+        story: rollResolution.story,
         characters: rollResolution.characters,
         updatedAt: Date.now(),
       },

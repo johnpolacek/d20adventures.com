@@ -23,7 +23,7 @@ function gm(next: string, patch: Record<string, unknown> = {}, prompts: string[]
     generateText: async () => ({ text: "The night goes on." }),
     generateObject: async ({ schema, prompt }) => {
       prompts.push(prompt)
-      const parsed = schema.safeParse({ nextEncounterId: next, narrative: `On to ${next}.`, adventurePatch: patch })
+      const parsed = schema.safeParse({ nextEncounterId: next, beats: [{ kind: "narration", text: `On to ${next}.` }], adventurePatch: patch })
       if (parsed.success) return { object: parsed.data }
       throw new Error("Unexpected model request")
     },

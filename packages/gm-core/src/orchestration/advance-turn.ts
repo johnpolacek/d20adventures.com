@@ -13,11 +13,15 @@ import {
   getRecentTurnsForContext,
   getSectionAndSceneContext,
 } from "../services/advance-turn-prompt-service"
-import { appendNarrative, normalizeNarrative } from "../services/narrative-service"
-import { dropPlayerPrompt } from "../utils/narrative-utils"
+import { authoredStory } from "../story/authored"
+import type { StoryBeat } from "../story/beats"
+import { cleanStory } from "../story/clean"
+import { legacyNarrative } from "../story/render"
+import { beatsField, sceneFor, storyProse } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import { mapConvexTurnToTurn } from "../utils/game-utils"
+import { dropPlayerPrompt } from "../utils/narrative-utils"
 import { validateAdventurePatch } from "../wiki-adventures/adventure-patch"
 import { buildLocalWikiTurnCharacters, isLocalWikiFinalEncounter } from "../wiki-adventures/characters"
 import { keepPatchedPlayersAlive, keepPlayersAlive, pendingRescue } from "../wiki-adventures/player-safety"
@@ -31,9 +35,17 @@ const encounterProgressionSchema = z.object({
 
 const wikiEncounterProgressionSchema = z.object({
   nextEncounterId: z.string(),
-  narrative: z.string(),
+  ...beatsField,
   adventurePatch: z.unknown().optional(),
 })
+
+// The round's ending as told: the GM's beats without a closing question to the players, which the game asks itself.
+function tellRound(beats: StoryBeat[], playerNames: string[]): StoryBeat[] {
+  const last = beats[beats.length - 1]
+  if (last?.kind !== "narration") return beats
+  const text = dropPlayerPrompt(last.text, playerNames)
+  return text ? [...beats.slice(0, -1), { ...last, text }] : beats.slice(0, -1)
+}
 
 export function createAdvanceTurn(ports: GmPorts) {
   const wait = ports.sleep?.bind(ports) ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)))
@@ -103,14 +115,17 @@ export function createAdvanceTurn(ports: GmPorts) {
           allTurns: allTurns.map((row) => ({
             encounterId: row.encounterId,
             narrative: row.narrative,
+            story: row.story,
             order: row.order,
             characters: row.characters as TurnCharacter[],
           })),
         },
       })
-      const prompt = buildWikiEncounterProgressionPrompt(packet)
+      const scene = await sceneFor(ports, turn)
+      const prompt = buildWikiEncounterProgressionPrompt(packet, scene)
       await wait(1000)
       const llmResult = (await generateObject({ prompt, schema: wikiEncounterProgressionSchema })).object
+      const told = tellRound(cleanStory(llmResult.beats, scene, { step: "round" }), packet.outputContract.playerCharacterNames)
       let transition = validatePacketTransition(packet, llmResult.nextEncounterId)
       if (!transition.allowed) {
         throw new Error(`Wiki transition rejected: ${transition.rejectedReason} (${turn.encounterId} -> ${transition.nextEncounterId})`)
@@ -129,7 +144,7 @@ export function createAdvanceTurn(ports: GmPorts) {
         console.warn(`[advanceTurn:${requestId}] Invalid wiki adventurePatch returned by AI; falling back to summary-only patch`, error)
         adventurePatch = validateAdventurePatch(
           {
-            summaryDelta: llmResult.narrative,
+            summaryDelta: storyProse(told),
           },
           transition
         )
@@ -159,8 +174,10 @@ export function createAdvanceTurn(ports: GmPorts) {
             }))
             .sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
       const characters = keepPlayersAlive(artifacts.manifest, nextCharacters)
-      const told = dropPlayerPrompt(normalizeNarrative(llmResult.narrative), packet.outputContract.playerCharacterNames)
-      const narrative = isTransition ? appendNarrative(told, normalizeNarrative(nextEncounter.sections.intro ?? "")) : told
+      // A new encounter opens on its intro, read as beats for the characters who are in it.
+      const intro = isTransition ? cleanStory(authoredStory(nextEncounter.sections.intro ?? ""), await sceneFor(ports, { encounterId: nextEncounter.id, characters }), { step: "intro" }) : []
+      const story = [...told, ...intro]
+      const narrative = legacyNarrative(story)
       const isFinalEncounter = isLocalWikiFinalEncounter(artifacts, nextEncounter.id)
       const commitResult = await ports.store.commitWikiTurnAdvance({
         adventureId: turnData.adventureId,
@@ -172,6 +189,7 @@ export function createAdvanceTurn(ports: GmPorts) {
         nextEncounterId: nextEncounter.id,
         title: nextEncounter.title,
         narrative,
+        story,
         characters,
         order: currentTurnOrder + 1,
         adventurePatch,
@@ -180,7 +198,7 @@ export function createAdvanceTurn(ports: GmPorts) {
         isFinalEncounter,
       })
       ports.narration.afterTurn(commitResult.turnId)
-      return { status: "turn_advanced", turn: { ...turn, encounterId: nextEncounter.id, title: nextEncounter.title, narrative, characters, isFinalEncounter } }
+      return { status: "turn_advanced", turn: { ...turn, encounterId: nextEncounter.id, title: nextEncounter.title, narrative, story, characters, isFinalEncounter } }
     }
 
     // 2. Load the plan from S3

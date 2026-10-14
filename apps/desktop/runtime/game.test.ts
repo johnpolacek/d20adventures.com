@@ -4,9 +4,20 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
+import { turnScript } from "@d20/gm-core/story/turn"
 import { findCurrentActor } from "@d20/gm-core/utils/turn-actors"
+import type { z } from "zod"
 import { game, type Packs, suggest } from "./game"
 import { LocalStore } from "./store"
+
+// The first of a fake model's answers that the asked-for schema takes.
+const firstFit = <T extends z.ZodTypeAny>(schema: T, ...answers: unknown[]): z.infer<T> => {
+  for (const answer of answers) {
+    const parsed = schema.safeParse(answer)
+    if (parsed.success) return parsed.data
+  }
+  return schema.parse(answers[0])
+}
 
 test("saved adventures list newest first and resume swaps the archived one in", async () => {
   const { store, path, cleanup } = setup()
@@ -114,7 +125,7 @@ test("suggested replies come from what the players have read, for the hero whose
     const before = JSON.stringify(store.state)
     assert.deepEqual(await suggest(store.state, packs, llm, { kind: "suggest", turnId: turn._id, characterId: actor.id }), four.slice(0, 3))
     assert.equal(JSON.stringify(store.state), before)
-    assert.ok(prompt.includes(`Name: ${actor.name}`) && prompt.includes(turn.narrative))
+    assert.ok(prompt.includes(`Name: ${actor.name}`) && prompt.includes(turnScript(turn)))
     // Only the hero's own saved state, and none of the encounter's GM instructions.
     assert.ok(prompt.includes(`"id":"${actor.id}"`) && !prompt.includes(`"id":"${other.id}"`))
     const gmNotes = pack.artifacts.encounters[turn.encounterId].sections.gmNotes
@@ -189,7 +200,11 @@ test("reply storage and real roll services keep dice across failures and reject 
     })
     const good: Llm = {
       generateText: async () => ({ text: `${pc.name} argues for a lower gate fee.` }),
-      generateObject: async ({ schema, prompt }) => ({ object: schema.parse(prompt.includes("situational") ? { modifier: 0 } : { rollType: "Persuasion", difficulty: 12 }) }),
+      generateObject: async ({ schema, prompt }) => ({
+        object: firstFit(schema, prompt.includes("situational") ? { modifier: 0 } : { rollType: "Persuasion", difficulty: 12 }, {
+          beats: [{ kind: "narration", text: `${pc.name} argues for a lower gate fee.` }],
+        }),
+      }),
     }
     // Use the storage port for the roll fixture, then the real resolution pipeline.
     await store.submitReply({
@@ -257,7 +272,7 @@ test("real core advances through authored graph and atomically retains state acr
       generateObject: async ({ schema }) => ({
         object: schema.parse({
           nextEncounterId: "the-harvest-festival",
-          narrative: "The guard waves the party into the festival.",
+          beats: [{ kind: "narration", text: "The guard waves the party into the festival." }],
           adventurePatch: { summaryDelta: "Paid the gate fee.", discoveries: [{ id: "fee", type: "fact", title: "Gate fee", text: "The fee is paid.", visibility: "player" }] },
         }),
       }),

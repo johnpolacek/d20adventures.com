@@ -4,9 +4,20 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
+import { turnScript } from "@d20/gm-core/story/turn"
+import type { z } from "zod"
 import { game, type Packs } from "./game"
 import { type HostEvent, type HostJob, type HostPost, hostLoop, remoteStore, selfRunning } from "./host"
 import { LocalStore } from "./store"
+
+// The first of a fake model's answers that the asked-for schema takes.
+const firstFit = <T extends z.ZodTypeAny>(schema: T, ...answers: unknown[]): z.infer<T> => {
+  for (const answer of answers) {
+    const parsed = schema.safeParse(answer)
+    if (parsed.success) return parsed.data
+  }
+  return schema.parse(answers[0])
+}
 
 const packs: Packs = JSON.parse(readFileSync(new URL("../src-tauri/resources/packs.json", import.meta.url), "utf8"))
 console.log = console.warn = console.error = () => {}
@@ -76,7 +87,11 @@ test("a guest's reply and roll run through the host's GM and finish their jobs",
   try {
     const model: Llm = {
       generateText: async () => ({ text: `${pc.name} argues for a lower gate fee.` }),
-      generateObject: async ({ schema, prompt }) => ({ object: schema.parse(prompt.includes("situational") ? { modifier: 0 } : { rollRequired: true, rollType: "Persuasion", difficulty: 12 }) }),
+      generateObject: async ({ schema, prompt }) => ({
+        object: firstFit(schema, prompt.includes("situational") ? { modifier: 0 } : { rollRequired: true, rollType: "Persuasion", difficulty: 12 }, {
+          beats: [{ kind: "action", who: pc.id, text: `${pc.name} argues for a lower gate fee.` }],
+        }),
+      }),
     }
     const reply = job({ adventureId, turnId: turn._id, kind: "reply", userId: "guest", characterId: pc.id, text: "I bargain with the guard." })
     const first = await drain(store, [reply], model)
@@ -169,7 +184,7 @@ test("a suggest job finishes with replies for the guest's own hero and changes n
       { jobId: "a", error: undefined, suggestions: four.slice(0, 3) },
       { jobId: "b", error: "It is another character's turn." },
     ])
-    assert.ok(prompt.includes(`Name: ${pc.name}`) && prompt.includes(turn.narrative))
+    assert.ok(prompt.includes(`Name: ${pc.name}`) && prompt.includes(turnScript(turn)))
     assert.equal(JSON.stringify(store.state), before)
     assert.equal((await drain(store, [ask("guest", "c")], failLlm)).finished[0].error, "offline")
   } finally {
@@ -199,9 +214,11 @@ test("the worker continues on its own with an AI hero's turn and the round's end
     const model: Llm = {
       generateText: async () => ({ text: `${friend.name} keeps an eye on the gate.` }),
       generateObject: async ({ schema }) => {
+        // The roll check, the AI hero's move, then the round's end: the first each schema takes.
         const answers = [
           { rollType: "none", difficulty: 0 },
-          { nextEncounterId: "the-harvest-festival", narrative: "The guard waves the party into the festival.", adventurePatch: { summaryDelta: "Paid the gate fee." } },
+          { beats: [{ kind: "action", who: friend.id, text: `${friend.name} keeps an eye on the gate.` }] },
+          { nextEncounterId: "the-harvest-festival", beats: [{ kind: "narration", text: "The guard waves the party into the festival." }], adventurePatch: { summaryDelta: "Paid the gate fee." } },
         ]
         for (const answer of answers) {
           const parsed = schema.safeParse(answer)
@@ -242,7 +259,11 @@ test("continue advances a finished round to the next encounter", async () => {
     const model: Llm = {
       ...failLlm,
       generateObject: async ({ schema }) => ({
-        object: schema.parse({ nextEncounterId: "the-harvest-festival", narrative: "The guard waves the party into the festival.", adventurePatch: { summaryDelta: "Paid the gate fee." } }),
+        object: schema.parse({
+          nextEncounterId: "the-harvest-festival",
+          beats: [{ kind: "narration", text: "The guard waves the party into the festival." }],
+          adventurePatch: { summaryDelta: "Paid the gate fee." },
+        }),
       }),
     }
     const { finished } = await drain(store, [job({ adventureId, turnId: turn._id, kind: "continue", userId: "guest" })], model)

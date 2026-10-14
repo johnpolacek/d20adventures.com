@@ -1,5 +1,9 @@
 import { z } from "zod"
 import type { GmPorts, Llm } from "../ports"
+import type { StoryBeat } from "../story/beats"
+import { cleanStory, type StoryScene } from "../story/clean"
+import { storyRules } from "../story/prompt"
+import { sceneFor, storyOutputObject, storyProse, turnScript } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
 import { rollD20 } from "../utils/game-utils"
 import { PLAYER_KNOWLEDGE_RULE } from "../utils/narrative-utils"
@@ -15,10 +19,10 @@ function characterSheet(character: TurnCharacter): string {
 ${character.archetype ? `Class/Archetype: ${character.archetype}\n` : ""}${character.race ? `Race: ${character.race}\n` : ""}${character.personality ? `Personality: ${character.personality}\n` : ""}${character.background ? `Background: ${character.background}\n` : ""}${character.motivation ? `Motivation: ${character.motivation}\n` : ""}${character.behavior ? `How they act: ${character.behavior}\n` : ""}${character.appearance ? `Appearance: ${character.appearance}\n` : ""}${character.specialAbilities?.length ? `Special Abilities: ${character.specialAbilities.join(", ")}\n` : ""}${availableSpells.length ? `Spells: ${availableSpells.map((s) => s.name).join(", ")}\n` : ""}${character.skills?.length ? `Skills: ${character.skills.join(", ")}\n` : ""}${character.equipment?.length ? `Equipment: ${character.equipment.map((e) => e.name).join(", ")}\n` : ""}`
 }
 
-function buildAiPcIntentPrompt(character: TurnCharacter, narrative: string, sceneRoster: string, premise?: string): string {
+function buildAiPcIntentPrompt(character: TurnCharacter, narrative: string, sceneRoster: string, scene: StoryScene, premise?: string): string {
   return `You are the PLAYER (not the GM) roleplaying as the character below. Players describe their character's intent and attempt only. The GM determines all outcomes, results, and perceptions.
 
-Given the recent narrative, write a short narrative describing what the character does next. Include a character action and, only when natural, one brief line of dialogue in the character's voice. Use third person for actions and put dialogue in quotes. Be creative, stay in character, and keep the reply concise, 1-2 short sentences total.
+Given the recent narrative, write as beats what the character does next: an action by "${character.id}" and, only when natural, one brief line in the character's voice. Write actions in third person. Be creative, stay in character, and keep the reply concise, 1-2 short sentences total.
 
 Constraints:
 - Read the narrative to identify what the character is expected to do, then describe them actively taking that action.
@@ -44,7 +48,11 @@ ${characterSheet(character)}
 Others present in the scene: ${sceneRoster || "None"}
 ${premiseBlock(premise)}
 Recent Narrative:
-${narrative}`
+${narrative}
+
+${storyRules(scene)}
+
+Respond as JSON: { "beats": [...] }`
 }
 
 // The premise ends with a blank line, or is nothing, so a prompt without one reads as it did before.
@@ -105,16 +113,17 @@ export async function suggestActions(llm: Llm, character: TurnCharacter, narrati
 }
 
 export function createAiPcTurnService(ports: GmPorts) {
-  const generateText = ports.llm.generateText.bind(ports.llm)
+  const generateObject = ports.llm.generateObject.bind(ports.llm)
   const { resolvePlayerRollNarrativeAndCharacters } = createAdventureRollResultService(ports)
   const { buildTurnReplyRollRequirement } = createAdventureTurnReplyService(ports)
   const loadAdventurePlanForRuntime = ports.content.loadPlan.bind(ports.content)
-  async function generateAiPcIntent(args: { character: TurnCharacter; narrative: string; allCharacters: TurnCharacter[]; premise?: string }): Promise<string> {
-    const prompt = buildAiPcIntentPrompt(args.character, args.narrative, buildSceneRoster(args.allCharacters, args.character.id), args.premise)
-    const { text } = await generateText({ prompt })
-    const intent = (text || "").trim()
-    if (!intent) throw new Error(`Empty intent generated for AI companion ${args.character.name}`)
-    return intent
+  // The AI companion's move, as its own beats: what it does and, at times, says.
+  async function generateAiPcIntent(args: { character: TurnCharacter; narrative: string; allCharacters: TurnCharacter[]; scene: StoryScene; premise?: string }): Promise<StoryBeat[]> {
+    const prompt = buildAiPcIntentPrompt(args.character, args.narrative, buildSceneRoster(args.allCharacters, args.character.id), args.scene, args.premise)
+    const { object } = await generateObject({ prompt, schema: storyOutputObject })
+    const beats = cleanStory(object.beats, args.scene, { step: "reply", character: args.character.id })
+    if (!beats.length) throw new Error(`Empty intent generated for AI companion ${args.character.name}`)
+    return beats
   }
 
   async function processAiPcTurn(args: { turnId: string; characterId: string; adventure: { _id: string; settingId: string; planId: string } }): Promise<void> {
@@ -132,12 +141,14 @@ export function createAiPcTurnService(ports: GmPorts) {
     const plan = await loadAdventurePlanForRuntime(adventure.settingId, adventure.planId)
 
     if (!needsRollResolution) {
-      const intent = await generateAiPcIntent({
+      const beats = await generateAiPcIntent({
         character,
-        narrative: turn.narrative || "",
+        narrative: turnScript(turn),
         allCharacters: turn.characters as TurnCharacter[],
+        scene: await sceneFor(ports, turn),
         premise: plan?.premise,
       })
+      const intent = storyProse(beats)
       console.log("[AI PC] Intent for", character.name, ":", intent)
 
       const rollRequirement = await buildTurnReplyRollRequirement({
@@ -152,6 +163,7 @@ export function createAiPcTurnService(ports: GmPorts) {
         turnId,
         characterId,
         narrativeAction: intent,
+        story: beats,
         rollRequirement: hasRoll ? rollRequirement : undefined,
       })
       if (!hasRoll) return // submitReply marked the character complete
@@ -178,6 +190,7 @@ export function createAiPcTurnService(ports: GmPorts) {
         encounterId: turn.encounterId,
         title: turn.title,
         narrative: turn.narrative,
+        story: turn.story,
         characters: turn.characters as TurnCharacter[],
         adventureId: turn.adventureId,
         isFinalEncounter: turn.isFinalEncounter,
@@ -194,6 +207,7 @@ export function createAiPcTurnService(ports: GmPorts) {
       turnId,
       patch: {
         narrative: rollResolution.narrative,
+        story: rollResolution.story,
         characters: rollResolution.characters,
         updatedAt: Date.now(),
       },

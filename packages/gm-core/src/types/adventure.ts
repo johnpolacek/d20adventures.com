@@ -1,3 +1,4 @@
+import type { StoryBeat } from "../story/beats"
 import type { RollRequirement } from "../validations/roll-requirement-schema"
 import type { NPC, PC } from "./character"
 
@@ -45,6 +46,7 @@ export interface Turn {
   encounterId: string
   title: string
   narrative: string
+  story?: StoryBeat[]
   characters: TurnCharacter[]
   adventureId: string
   isFinalEncounter?: boolean

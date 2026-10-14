@@ -3,6 +3,7 @@ import { readdirSync, readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { createGmCore, type GmPorts, type Store } from "@d20/gm-core"
 import { assertPlayerCharacterControl } from "@d20/gm-core/access"
+import { storyProse } from "@d20/gm-core/story/turn"
 import { calculateAttributeModifier } from "@d20/gm-core/utils/modifier-utils"
 import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventures/plan-view"
 import { gmNotesWithRules, premiseNote } from "@d20/gm-core/wiki-adventures/player-safety"
@@ -12,7 +13,7 @@ import { z } from "zod"
 import { commitWikiTurnAdvance, submitReply } from "../convex/adventure"
 import { loadLocalWikiAdventureRuntime } from "../lib/wiki-adventures/local-runtime"
 
-// Recorded from the unmodified production services at 7ff0b2d. No model calls.
+// Recorded from the production services at 7ff0b2d, and again for story beats on 2026-10-14. No model calls.
 const fixture = JSON.parse(readFileSync("scripts/gm-core-fixtures/turn.json", "utf8"))
 const characterFixture = JSON.parse(readFileSync("scripts/gm-core-fixtures/character.json", "utf8"))
 const runtime = loadLocalWikiAdventureRuntime("realm-of-myr", "march-of-davos")
@@ -125,14 +126,8 @@ async function replayTurn() {
   const core = createGmCore(game.ports)
   const initial = fixture.initialState
   const player = { ...initial.characters[0], controlledBy: "human" }
-  const narrativeAction = await core.formatNarrativeAction({
-    characterName: player.name,
-    gender: player.gender,
-    playerInput: fixture.playerInput,
-    narrativeContext: initial.narrative,
-    characterInfo: player,
-  })
-  const reply = await core.processTurnReply({ turnId: "turn-1", characterId: player.id, narrativeAction, originalPlayerInput: fixture.playerInput })
+  const beats = await core.writeReply({ character: player, playerInput: fixture.playerInput, turn: initial })
+  const reply = await core.processTurnReply({ turnId: "turn-1", characterId: player.id, narrativeAction: storyProse(beats), originalPlayerInput: fixture.playerInput, story: beats })
   assert.ok(reply.rollRequired)
   await core.resolvePlayerRollResult({ turnId: "turn-1", characterId: player.id, result: 20 })
   assert.ok(game.records.get("turn-1").characters.every((actor: any) => actor.isComplete))
@@ -206,12 +201,13 @@ async function accessAndInstanceIsolation() {
   c.records.get("turn-1").characters[0].controlledBy = "ai"
   const statefulModel = {
     calls: 0,
-    async generateText() {
-      this.calls++
-      return { text: "Mira waits by the gate." }
+    async generateText(): Promise<{ text: string }> {
+      throw new Error("The AI companion writes beats")
     },
-    async generateObject() {
+    async generateObject(args: { schema: z.ZodTypeAny }) {
       this.calls++
+      // The companion's move as beats, then the roll check.
+      if (this.calls === 1) return { object: args.schema.parse({ beats: [{ kind: "action", who: "mira", text: "Mira waits by the gate." }] }) }
       return { object: { rollType: "none", difficulty: 0 } as any }
     },
   }
@@ -250,7 +246,7 @@ async function accessAndInstanceIsolation() {
   })
 
   const d = memoryGame()
-  d.ports.llm.generateObject = async () => ({ object: { nextEncounterId: "invented-encounter", narrative: "No." } as any })
+  d.ports.llm.generateObject = async () => ({ object: { nextEncounterId: "invented-encounter", beats: [{ kind: "narration", text: "No." }] } as any })
   await assert.rejects(createGmCore(d.ports).advanceTurn({ turnId: "turn-1", settingId: "realm-of-myr", adventurePlanId: "march-of-davos" }), /transition rejected/i)
   assert.deepEqual(d.writes, [])
 

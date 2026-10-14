@@ -1,13 +1,17 @@
 import { randomUUID } from "node:crypto"
 import { type Content, createGmCore, type Llm } from "@d20/gm-core"
 import { type ActionSuggestion, suggestActions } from "@d20/gm-core/services/ai-pc-turn-service"
+import { authoredStory } from "@d20/gm-core/story/authored"
+import { cleanStory } from "@d20/gm-core/story/clean"
+import { legacyNarrative } from "@d20/gm-core/story/render"
+import { storyProse, turnScript } from "@d20/gm-core/story/turn"
 import { findCurrentActor } from "@d20/gm-core/utils/turn-actors"
 import { buildLocalWikiTurnCharacters } from "@d20/gm-core/wiki-adventures/characters"
 import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventures/plan-view"
 import type { RuntimeArtifacts } from "@d20/gm-core/wiki-adventures/types"
 import { MOVEMENT_SYSTEM, movementIntentSchema, movementPrompt } from "@d20/stage/movement"
 import { z } from "zod"
-import { spatialContext } from "../src/scenes"
+import { scenePlaces, spatialContext } from "../src/scenes"
 import { applyCharacterUpdates, characterContext, desktopPatchSchema } from "./characters"
 import { partyFor } from "./heroes"
 import type { LocalStore, Save } from "./store"
@@ -90,6 +94,12 @@ export const commandSchema = z.discriminatedUnion("kind", [
   }),
 ])
 export type GameCommand = z.infer<typeof commandSchema>
+// A first turn's story: the encounter's intro as beats for the characters in it.
+function introTurn(encounterId: string, intro: string, characters: readonly { id: string; name: string; type: string }[]) {
+  const places = scenePlaces(encounterId)
+  const story = cleanStory(authoredStory(intro), { cast: characters, ...(places?.length ? { places } : {}) }, { step: "intro" })
+  return { narrative: legacyNarrative(story), story }
+}
 export const suggestCommandSchema = z.object({ kind: z.literal("suggest"), turnId: z.string(), characterId: z.string() })
 // Replies the player could send on their hero's turn. It reads the save and writes nothing, so it runs beside a game
 // action. The prompt carries what the players have read and the hero's own saved state, never another character's.
@@ -99,7 +109,7 @@ export async function suggest(save: Save | null, packs: Packs, llm: Llm, input: 
   const actor = turn?._id === command.turnId ? findCurrentActor(turn.characters) : undefined
   if (!turn || actor?.id !== command.characterId || actor.type !== "pc" || actor.controlledBy === "ai" || actor.hasReplied) throw new Error("It is another character's turn.")
   // Of the story so far, only the chapters this hero lived.
-  return suggestActions(llm, actor, turn.narrative, turn.characters, characterContext([actor]), premiseWithStory(packs[save!.adventure.planId]?.artifacts.manifest.premise, save!.story, actor.id))
+  return suggestActions(llm, actor, turnScript(turn), turn.characters, characterContext([actor]), premiseWithStory(packs[save!.adventure.planId]?.artifacts.manifest.premise, save!.story, actor.id))
 }
 export function game(store: LocalStore, packs: Packs, llm: Llm) {
   const packFor = (plan: string) => {
@@ -115,6 +125,7 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
     loadPlan: async (_setting, plan) => buildAdventurePlanViewFromArtifacts(told(plan).artifacts),
     loadLegacyPlan: async () => null,
     spatialContext: async (_setting, _plan, encounter, characters) => spatialContext(encounter, characters, store.state?.positions ?? {}, store.state?.figures),
+    places: async (encounter) => scenePlaces(encounter),
   }
   let inferenceFailure: unknown
   const tracked: Llm = {
@@ -209,7 +220,7 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
           resolvedThreadIds: [],
           adventureSummaryMarkdown: "",
         },
-        turns: [{ _id: turnId, adventureId: id, encounterId: encounter.id, title: encounter.title, narrative: encounter.sections.intro ?? "", characters, order: 1 }],
+        turns: [{ _id: turnId, adventureId: id, encounterId: encounter.id, title: encounter.title, ...introTurn(encounter.id, encounter.sections.intro ?? "", characters), characters, order: 1 }],
       })
       return store.state
     }
@@ -235,13 +246,13 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
       if (actor?.id !== command.characterId || actor.type !== "pc" || actor.controlledBy === "ai") throw new Error("It is another character's turn.")
       if (command.kind === "reply") {
         if (actor.hasReplied) throw new Error("This reply is already saved. Resolve the pending roll.")
-        const action = await core.formatNarrativeAction({ characterName: actor.name, gender: actor.gender, playerInput: command.text, narrativeContext: turn.narrative, characterInfo: actor })
+        const beats = await core.writeReply({ character: actor, playerInput: command.text, turn })
         // Movement is interpreted only for a staged encounter. No Next server action is involved.
         if (command.movement) {
           const intent = (await llm.generateObject({ prompt: movementPrompt({ ...command.movement, action: command.text }), system: MOVEMENT_SYSTEM, schema: movementIntentSchema })).object
           store.state!.movement[`${turn._id}:${actor.id}`] = { actorId: actor.id, intent }
         }
-        await core.processTurnReply({ turnId: turn._id, characterId: actor.id, narrativeAction: action, originalPlayerInput: command.text })
+        await core.processTurnReply({ turnId: turn._id, characterId: actor.id, narrativeAction: storyProse(beats), originalPlayerInput: command.text, story: beats })
       } else if (command.kind === "skip") {
         if (actor.hasReplied) throw new Error("This reply is already saved. Resolve the pending roll.")
         Object.assign(actor, { hasReplied: true, isComplete: true })

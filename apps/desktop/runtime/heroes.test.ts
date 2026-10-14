@@ -210,13 +210,12 @@ test("created heroes and AI companions start, take turns, and carry through an e
     await assert.rejects(() => game(store, packs, offline)({ kind: "reply", turnId: turn._id, characterId: bram.id, text: "I sneak." }), /another character/)
     const calls: string[] = []
     const llm: Llm = {
-      generateText: async () => {
-        calls.push("intent")
-        return { text: "Bram scans the treeline, one hand on his dagger." }
-      },
+      generateText: unused,
       generateObject: async ({ schema }) => {
-        calls.push("roll")
-        return { object: schema.parse({ rollType: "none", difficulty: 0 }) }
+        // The AI hero's move as beats, then its roll check.
+        const roll = schema.safeParse({ rollType: "none", difficulty: 0 })
+        calls.push(roll.success ? "roll" : "intent")
+        return { object: roll.success ? roll.data : schema.parse({ beats: [{ kind: "action", who: bram.id, text: "Bram scans the treeline, one hand on his dagger." }] }) }
       },
     }
     await game(store, packs, llm)({ kind: "continue", turnId: turn._id })
@@ -233,7 +232,10 @@ test("created heroes and AI companions start, take turns, and carry through an e
     })
     store.save()
     const next = packs["the-road-to-kordavos"].artifacts.graph.encounterTransitions.find((t) => t.fromEncounterId === "well-met")!.toEncounterId
-    const advance: Llm = { generateText: unused, generateObject: async ({ schema }) => ({ object: schema.parse({ nextEncounterId: next, narrative: "The road goes on.", adventurePatch: {} }) }) }
+    const advance: Llm = {
+      generateText: unused,
+      generateObject: async ({ schema }) => ({ object: schema.parse({ nextEncounterId: next, beats: [{ kind: "narration", text: "The road goes on." }], adventurePatch: {} }) }),
+    }
     await game(store, packs, advance)({ kind: "continue", turnId: turn._id })
     assert.equal(store.current().encounterId, next)
     const moved = store.current().characters.filter((c) => c.type === "pc")

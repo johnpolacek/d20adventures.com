@@ -1,9 +1,10 @@
+import { authoredText } from "../story/authored"
 import type { AdventureEncounter, AdventurePlan, AdventureSection } from "../types/adventure-plan"
 import type { Character, PCTemplate } from "../types/character"
 import type { RuntimeArtifacts, RuntimeEncounter } from "./types"
 
 function encounterIntro(encounter: RuntimeEncounter): string {
-  return encounter.sections.intro ?? encounter.sections.body ?? encounter.summary ?? ""
+  return authoredText(encounter.sections.intro ?? encounter.sections.body ?? encounter.summary ?? "")
 }
 
 function toAdventureEncounter(encounter: RuntimeEncounter, locations: RuntimeArtifacts["entities"]["locations"]): AdventureEncounter {

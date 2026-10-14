@@ -69,7 +69,7 @@ test("the real core plays The Midnight Summons through the owlbear to its ending
       store.save()
       const llm: Llm = {
         generateText: unused,
-        generateObject: async ({ schema }) => ({ object: schema.parse({ nextEncounterId: next, narrative: `Thalbern goes on to ${next}.`, adventurePatch: {} }) }),
+        generateObject: async ({ schema }) => ({ object: schema.parse({ nextEncounterId: next, beats: [{ kind: "narration", text: `Thalbern goes on to ${next}.` }], adventurePatch: {} }) }),
       }
       await game(store, packs, llm)({ kind: "continue", turnId: store.current()._id })
       assert.equal(store.current().encounterId, next)

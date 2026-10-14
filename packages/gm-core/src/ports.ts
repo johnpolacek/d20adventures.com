@@ -1,4 +1,6 @@
 import type { z } from "zod"
+import type { StoryBeat } from "./story/beats"
+import type { StoryPlace } from "./story/clean"
 import type { TurnCharacter } from "./types/adventure"
 import type { AdventurePlan } from "./types/adventure-plan"
 import type { RollRequirement } from "./validations/roll-requirement-schema"
@@ -25,6 +27,8 @@ export type TurnRecord = {
   encounterId: string
   title: string
   narrative: string
+  // The turn as labelled beats. A turn saved before beats has only its narrative.
+  story?: StoryBeat[]
   characters: TurnCharacter[]
   order: number
   isFinalEncounter?: boolean
@@ -45,6 +49,7 @@ export type NewTurn = {
   encounterId: string
   title: string
   narrative: string
+  story?: StoryBeat[]
   characters: TurnCharacter[]
   order: number
   isFinalEncounter?: boolean
@@ -68,8 +73,9 @@ export interface Store {
   getAdventure(args: { adventureId: string }): Promise<AdventureRecord | null>
   getTurns(args: { adventureId: string }): Promise<TurnRecord[]>
   getTurnByOrder(args: { adventureId: string; order: number }): Promise<TurnRecord | null>
-  submitReply(args: { turnId: string; characterId: string; narrativeAction: string; originalPlayerInput?: string; rollRequirement?: RollRequirement }): Promise<unknown>
-  updateTurn(args: { turnId: string; patch: { narrative?: string; characters?: TurnCharacter[]; updatedAt?: number } }): Promise<unknown>
+  // `story` holds the reply's beats, the player's own words first, to add to the turn's story.
+  submitReply(args: { turnId: string; characterId: string; narrativeAction: string; originalPlayerInput?: string; story?: StoryBeat[]; rollRequirement?: RollRequirement }): Promise<unknown>
+  updateTurn(args: { turnId: string; patch: { narrative?: string; story?: StoryBeat[]; characters?: TurnCharacter[]; updatedAt?: number } }): Promise<unknown>
   patchAdventure(args: {
     adventureId: string
     patch: { currentTurnId?: string; currentEncounterId?: string; endedAt?: number; updatedAt?: number; status?: "waitingForPlayers" | "active" | "completed" }
@@ -102,6 +108,8 @@ export interface Content {
   loadPlan(settingId: string, planId: string): Promise<AdventurePlan>
   loadLegacyPlan(settingId: string, planId: string): Promise<AdventurePlan | null>
   spatialContext(settingId: string, planId: string, encounterId: string, characters: TurnCharacter[]): Promise<string | undefined>
+  // The named places of the encounter's 3D set, which the GM may point the camera at and walk characters to.
+  places?(encounterId: string): Promise<StoryPlace[] | undefined>
 }
 
 export interface Narration {

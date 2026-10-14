@@ -1,13 +1,19 @@
+import type { StoryBeat } from "../story/beats"
+import { withStory } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
-import { appendNarrative } from "./narrative-service"
 
-export function buildNpcTurnUpdatePatch(args: { currentNarrative?: string; narrativeToAppend?: string; updatedCharacters: TurnCharacter[] }): {
+export function buildNpcTurnUpdatePatch(args: {
+  turn: { narrative?: string; story?: StoryBeat[]; characters: readonly { id: string; name: string }[] }
+  beatsToAppend: StoryBeat[]
+  updatedCharacters: TurnCharacter[]
+}): {
   narrative: string
+  story: StoryBeat[]
   characters: TurnCharacter[]
   updatedAt: number
 } {
   return {
-    narrative: appendNarrative(args.currentNarrative || "", args.narrativeToAppend || ""),
+    ...withStory(args.turn, args.beatsToAppend),
     characters: args.updatedCharacters,
     updatedAt: Date.now(),
   }

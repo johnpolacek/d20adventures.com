@@ -71,7 +71,7 @@ async function advance(store: LocalStore, patch: unknown, encounter = store.curr
     generateText: unused,
     async generateObject({ schema, prompt: text }) {
       prompt = text
-      return { object: schema.parse({ nextEncounterId: encounter, narrative: "The party continues.", adventurePatch: patch }) }
+      return { object: schema.parse({ nextEncounterId: encounter, beats: [{ kind: "narration", text: "The party continues." }], adventurePatch: patch }) }
     },
   }
   await game(store, packs, llm)({ kind: "continue", turnId: store.current()._id })

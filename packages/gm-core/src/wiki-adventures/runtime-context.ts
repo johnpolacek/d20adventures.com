@@ -1,4 +1,10 @@
 import { buildRecentTurnHistory, buildRollInfo, getEncounterTurnStatus, getRecentTurnsForContext } from "../services/advance-turn-prompt-service"
+import { authoredText } from "../story/authored"
+import type { StoryBeat } from "../story/beats"
+import type { StoryScene } from "../story/clean"
+import { storyRules } from "../story/prompt"
+import { lastStep, storyNames, storyText, turnStory } from "../story/render"
+import { turnScript } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import { KNOWLEDGE_RULE } from "../utils/narrative-utils"
 import type { ContentRef } from "./content-ref"
@@ -8,6 +14,7 @@ import type { RuntimeArtifacts, RuntimeEncounter, RuntimeEntityRecord, RuntimeTr
 export type RuntimeTurnRow = {
   encounterId: string
   narrative?: string
+  story?: StoryBeat[]
   order?: number
   characters?: TurnCharacter[]
 }
@@ -76,7 +83,7 @@ export type LlmGameplayContextPacket = {
   }
   outputContract: {
     allowedNextEncounterIds: string[]
-    responseShape: "nextEncounterId+narrative+adventurePatch"
+    responseShape: "nextEncounterId+beats+adventurePatch"
     playerCharacterNames: string[]
   }
   /** Battle-map staging summary (lib/mapview/spatial-summary.ts); absent when the encounter has no stored map. */
@@ -123,7 +130,7 @@ export function assembleGameplayContextPacket(args: {
       title: currentEncounter.title,
       summary: currentEncounter.summary,
       sections: currentEncounter.sections,
-      intro: currentEncounter.sections.intro ?? currentEncounter.sections.body ?? "",
+      intro: authoredText(currentEncounter.sections.intro ?? currentEncounter.sections.body ?? ""),
       gmNotes: gmNotesWithRules(args.artifacts.manifest, currentEncounter.sections.gmNotes),
       checks: currentEncounter.sections.checks,
       locationId: currentEncounter.locationId,
@@ -159,18 +166,20 @@ export function assembleGameplayContextPacket(args: {
       currentEncounterTurnNumber: args.session.currentEncounterTurnNumber ?? turnStatus.currentEncounterTurnNumber,
       recentTurnHistory: buildRecentTurnHistory(recentTurns),
       narrativeSummary: args.session.narrativeSummary,
-      currentRound: args.session.currentTurn.narrative ?? "",
-      mostRecentAction: (args.session.currentTurn.narrative ?? "").split(/\n\n/).filter(Boolean).at(-1),
+      currentRound: turnScript(args.session.currentTurn),
+      mostRecentAction: storyText(lastStep(turnStory(args.session.currentTurn)), storyNames(args.session.currentTurn.characters)),
       rollInfo: buildRollInfo(args.session.currentTurn),
     },
     graph: {
       legalTransitions,
-      nextEncounterIntros: Object.fromEntries(legalTransitions.map((transition) => [transition.toEncounterId, (args.artifacts.encounters[transition.toEncounterId]?.sections.intro ?? "").trim()])),
+      nextEncounterIntros: Object.fromEntries(
+        legalTransitions.map((transition) => [transition.toEncounterId, authoredText(args.artifacts.encounters[transition.toEncounterId]?.sections.intro ?? "").trim()])
+      ),
       currentEncounterLinks: currentEncounter.typedLinks,
     },
     outputContract: {
       allowedNextEncounterIds: [currentEncounter.id, ...legalTransitions.map((transition) => transition.toEncounterId)],
-      responseShape: "nextEncounterId+narrative+adventurePatch",
+      responseShape: "nextEncounterId+beats+adventurePatch",
       playerCharacterNames: liveCharacters.filter((character) => character.type === "pc").map((character) => character.name),
     },
     spatialContext: args.spatialContext,
@@ -182,7 +191,7 @@ function linkedRecords(records: Record<string, RuntimeEntityRecord>, encounter: 
   return [...ids].map((id) => records[id]).filter(Boolean)
 }
 
-export function buildWikiEncounterProgressionPrompt(packet: LlmGameplayContextPacket): string {
+export function buildWikiEncounterProgressionPrompt(packet: LlmGameplayContextPacket, scene?: StoryScene): string {
   const transitionText = packet.graph.legalTransitions.length
     ? packet.graph.legalTransitions
         .map((transition, index) => {
@@ -236,21 +245,21 @@ Your Task:
 1. Decide from what has already happened, including everything this round and roll outcomes. A player's action this round counts even when an NPC spoke after it. If events so far satisfy a listed transition condition, transition now rather than extending a situation that is already resolved. Continue the current encounter only when no listed condition is satisfied yet, or when one depends on a player choice that has not been made.
 2. If transitioning, set nextEncounterId to one of the listed transition target IDs.
 3. If not transitioning, set nextEncounterId to the current encounter ID.
-4. Return narrative for players. Do not write new player decisions, dialogue, or internal thoughts for: ${packet.outputContract.playerCharacterNames.join(", ")}. End on the story itself. Never ask the players what they do and never speak to them directly: the game asks for each action.
-5. Keep the narrative short and new.
+4. Return beats for players. Do not write new player decisions, lines, or internal thoughts for: ${packet.outputContract.playerCharacterNames.join(", ")}. End on the story itself. Never ask the players what they do and never speak to them directly: the game asks for each action.
+5. Keep the beats short and new. Lengths count narration and action, and an NPC's spoken line is extra.
    - Players have just read everything under 'This Round So Far'. Tell none of it again: no action, roll outcome, description or line of dialogue from this round or from recent turns, and no character repeats what they have already said.
-   - If not transitioning: one paragraph of at most 3 short sentences and 50 words. Say what has changed and what the players now face.
+   - If not transitioning: at most 3 short sentences and 50 words. Say what has changed and what the players now face.
    - If transitioning: at most 2 short sentences and 35 words. The target's intro, listed with its transition option, is shown to players straight after your narrative. Carry the story to where that intro begins and stop. Describe nothing the intro describes.
    - An event the GM notes call for at this moment may take up to 5 sentences and 90 words.
    - Keep every fact the players need. Give one telling detail, not several, and cut any sentence that only adds mood.
    - No em dashes, en dashes or semicolons.
 6. ${KNOWLEDGE_RULE}
 7. Include an adventurePatch that updates the live Adventure playthrough record with summaries, discoveries, entity updates, character updates, open threads, resolved threads, and transition details when applicable.
-
+${scene ? `\n${storyRules(scene)}\n` : ""}
 Respond in JSON:
 {
   "nextEncounterId": string,
-  "narrative": string,
+  "beats": [...],
   "adventurePatch": object
 }`
 }

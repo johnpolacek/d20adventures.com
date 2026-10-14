@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server"
 import { v } from "convex/values"
+import { storyValidator } from "./story"
 
 // Define your schema
 export default defineSchema({
@@ -172,6 +173,8 @@ export default defineSchema({
     encounterId: v.string(),
     title: v.string(),
     narrative: v.string(),
+    // The turn as labelled beats. Turns from before beats have only the narrative.
+    story: v.optional(storyValidator),
     characters: v.array(
       v.object({
         id: v.string(),

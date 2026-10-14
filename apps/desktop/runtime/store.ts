@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto"
 import { DatabaseSync } from "node:sqlite"
 import type { AdventureRecord, Store, TurnRecord, WikiTurnCommit } from "@d20/gm-core"
+import { withStory } from "@d20/gm-core/story/turn"
 import { type AdventurePatch, validateAdventurePatch } from "@d20/gm-core/wiki-adventures/adventure-patch"
 import { validateRuntimeTransition } from "@d20/gm-core/wiki-adventures/transition-validator"
 import type { MovementIntent } from "@d20/stage/movement"
@@ -244,7 +245,8 @@ export class LocalStore implements Store, Roster {
       this.state!.rollChecks ??= {}
       this.state!.rollChecks[`${turn._id}:${c.id}`] = { name: c.name, skill: args.rollRequirement.rollType, dc: args.rollRequirement.difficulty, modifier: args.rollRequirement.modifier ?? 0 }
     }
-    turn.narrative += `\n\n${args.originalPlayerInput ? `[OriginalReply: ${args.originalPlayerInput}]\n` : ""}${args.narrativeAction}`
+    if (args.story) Object.assign(turn, withStory(turn, args.story))
+    else turn.narrative += `\n\n${args.originalPlayerInput ? `[OriginalReply: ${args.originalPlayerInput}]\n` : ""}${args.narrativeAction}`
     Object.assign(c, { hasReplied: true, isComplete: !args.rollRequirement, rollRequired: args.rollRequirement, rollResult: undefined })
     this.save()
   }
@@ -295,6 +297,7 @@ export class LocalStore implements Store, Roster {
       encounterId: args.nextEncounterId,
       title: args.title,
       narrative: args.narrative,
+      ...(args.story ? { story: args.story } : {}),
       characters,
       order: args.order,
       isFinalEncounter: args.isFinalEncounter,

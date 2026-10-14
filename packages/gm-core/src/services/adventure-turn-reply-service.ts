@@ -1,4 +1,6 @@
 import type { GmPorts } from "../ports"
+import { authoredText } from "../story/authored"
+import { turnScript } from "../story/turn"
 import type { AdventurePlan } from "../types/adventure-plan"
 import type { Character } from "../types/character"
 import type { RollRequirement } from "../validations/roll-requirement-schema"
@@ -19,7 +21,7 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
         throw new Error("Encounter not found")
       }
       return {
-        encounterIntro: encounter.sections.intro ?? encounter.sections.body ?? "",
+        encounterIntro: authoredText(encounter.sections.intro ?? encounter.sections.body ?? ""),
         encounterInstructions: encounter.sections.gmNotes ?? "",
       }
     }
@@ -68,7 +70,7 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
       .filter((entry) => entry.order <= currentTurnOrder)
       .sort((a, b) => (a.order || 0) - (b.order || 0))
       .slice(-3)
-      .map((entry) => entry.narrative || "")
+      .map((entry) => turnScript(entry))
       .join("\n\n---\n\n")
 
     const actionToAnalyze = args.originalPlayerInput?.trim() ? args.originalPlayerInput : args.narrativeAction
@@ -83,7 +85,7 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
 
     const assessment = await getRollRequirementForAction(actionToAnalyze, args.characterPerformingAction as Character, {
       encounterInstructions,
-      narrativeContext: recentTurnNarratives || args.turn.narrative || "",
+      narrativeContext: recentTurnNarratives || turnScript(args.turn),
       encounterIntro,
     })
 
@@ -100,7 +102,7 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
         scenario: {
           encounterIntro: encounterInstructions,
           encounterInstructions,
-          narrativeContext: args.turn.narrative || "",
+          narrativeContext: turnScript(args.turn),
         },
         rollRequirement,
         character: args.characterPerformingAction as Character,

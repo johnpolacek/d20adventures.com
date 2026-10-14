@@ -1,6 +1,8 @@
 import { v } from "convex/values"
+import { legacyNarrative, turnStory } from "../packages/gm-core/src/story/render"
 import type { Doc, Id } from "./_generated/dataModel"
 import { action, mutation, query } from "./_generated/server"
+import { storyValidator } from "./story"
 
 const contentRefValidator = v.object({
   source: v.union(v.literal("published"), v.literal("preview")),
@@ -202,6 +204,7 @@ export const createTurn = mutation({
     encounterId: v.string(),
     title: v.string(),
     narrative: v.string(),
+    story: v.optional(storyValidator),
     characters: v.array(v.any()), // Should match character object
     order: v.number(),
     adventurePatch: v.optional(v.any()),
@@ -224,6 +227,7 @@ export const createTurn = mutation({
       encounterId: args.encounterId,
       title: args.title,
       narrative: args.narrative,
+      ...(args.story ? { story: args.story } : {}),
       characters: args.characters,
       order: args.order,
       adventurePatch: args.adventurePatch,
@@ -248,12 +252,14 @@ export const updateTurn = mutation({
   args: {
     turnId: v.id("turns"),
     narrative: v.optional(v.string()),
+    story: v.optional(storyValidator),
     characters: v.optional(v.array(v.any())),
   },
   handler: async (ctx, args) => {
     const now = Date.now()
     const patch: Partial<Doc<"turns">> = { updatedAt: now }
     if (args.narrative !== undefined) patch.narrative = args.narrative
+    if (args.story !== undefined) patch.story = args.story
     if (args.characters !== undefined) patch.characters = args.characters as Doc<"turns">["characters"]
     await ctx.db.patch(args.turnId, patch)
     return true
@@ -305,6 +311,7 @@ export const createAdventureWithFirstTurn = mutation({
       encounterId: v.string(),
       title: v.string(),
       narrative: v.string(),
+      story: v.optional(storyValidator),
       characters: v.array(v.any()),
       order: v.number(),
       adventurePatch: v.optional(v.any()),
@@ -390,6 +397,8 @@ export const submitReply = mutation({
     characterId: v.string(),
     narrativeAction: v.string(),
     originalPlayerInput: v.optional(v.string()),
+    // The reply as beats, the player's own words first.
+    story: v.optional(storyValidator),
     rollRequirement: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
@@ -405,7 +414,9 @@ export const submitReply = mutation({
       narrativeToAdd = `[OriginalReply: ${args.originalPlayerInput}]\n${args.narrativeAction}`
     }
 
-    const narrative = prev ? `${prev}\n\n${narrativeToAdd}` : narrativeToAdd
+    // A reply as beats joins the turn's story, which a turn from before beats reads back from its narrative.
+    const story = args.story && [...turnStory(turn), ...args.story]
+    const narrative = story ? legacyNarrative(story) : prev ? `${prev}\n\n${narrativeToAdd}` : narrativeToAdd
 
     // Use rollRequirement from args, do not call AI here!
     const updatedCharacters = turn.characters.map((c) =>
@@ -422,6 +433,7 @@ export const submitReply = mutation({
 
     await ctx.db.patch(args.turnId, {
       narrative,
+      ...(story ? { story } : {}),
       characters: updatedCharacters,
     })
     return await ctx.db.get(args.turnId)
@@ -470,6 +482,7 @@ export const patchTurn = mutation({
     turnId: v.id("turns"),
     patch: v.object({
       narrative: v.optional(v.string()),
+      story: v.optional(storyValidator),
       characters: v.optional(v.array(v.any())),
       updatedAt: v.optional(v.number()),
     }),
@@ -564,6 +577,7 @@ export const commitWikiTurnAdvance = mutation({
     nextEncounterId: v.string(),
     title: v.string(),
     narrative: v.string(),
+    story: v.optional(storyValidator),
     characters: v.array(v.any()),
     order: v.number(),
     adventurePatch: v.optional(v.any()),
@@ -588,8 +602,7 @@ export const commitWikiTurnAdvance = mutation({
     let contentRefRepin: typeof adventure.contentRef
     if (args.expectedContentHash && adventure.contentRef && adventure.contentRef.contentHash !== args.expectedContentHash) {
       console.log(
-        `[commitWikiTurnAdvance] Content hash drift for adventure ${args.adventureId}: ` +
-          `${adventure.contentRef.contentHash} -> ${args.expectedContentHash}. Re-pinning to current content.`
+        `[commitWikiTurnAdvance] Content hash drift for adventure ${args.adventureId}: ` + `${adventure.contentRef.contentHash} -> ${args.expectedContentHash}. Re-pinning to current content.`
       )
       contentRefRepin = {
         ...adventure.contentRef,
@@ -612,6 +625,7 @@ export const commitWikiTurnAdvance = mutation({
       encounterId: args.nextEncounterId,
       title: args.title,
       narrative: args.narrative,
+      ...(args.story ? { story: args.story } : {}),
       characters: args.characters,
       order: args.order,
       isFinalEncounter: args.isFinalEncounter,

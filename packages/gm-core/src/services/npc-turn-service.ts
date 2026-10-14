@@ -1,4 +1,7 @@
 import type { GmPorts } from "../ports"
+import { authoredText } from "../story/authored"
+import type { StoryBeat } from "../story/beats"
+import { sceneFor } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import { isAiControlledPc } from "../utils/turn-actors"
@@ -31,7 +34,9 @@ export function createNpcTurnService(ports: GmPorts) {
       const { artifacts } = await loadWikiAdventureRuntime(settingId, planId)
       const encounter = artifacts.encounters[encounterId]
       return {
-        encounterContext: encounter ? { intro: encounter.sections.intro ?? encounter.sections.body, instructions: gmNotesWithRules(artifacts.manifest, encounter.sections.gmNotes) } : {},
+        encounterContext: encounter
+          ? { intro: authoredText(encounter.sections.intro ?? encounter.sections.body ?? ""), instructions: gmNotesWithRules(artifacts.manifest, encounter.sections.gmNotes) }
+          : {},
         adventureOverview: artifacts.manifest.summary || undefined,
         rules: artifacts.manifest,
       }
@@ -66,6 +71,7 @@ export function createNpcTurnService(ports: GmPorts) {
   }): Promise<{
     updatedNarrative: string
     updatedCharacters: TurnCharacter[]
+    beatsToAppend: StoryBeat[]
     actionSummary: string
     rollInfo?: { rollType: string; difficulty: number; baseRoll: number; modifier: number; result: number; success: boolean }
     effects?: Array<{ targetId: string; healthPercentDelta?: number; status?: string; equipmentToAdd?: Array<{ name: string; description?: string }> }>
@@ -91,12 +97,14 @@ export function createNpcTurnService(ports: GmPorts) {
       sceneContext,
       adventureOverview,
     })
+    const scene = await sceneFor(ports, turn)
     const prompt1 = buildNpcActionPrompt({
       contextString: npcActionContext.contextString,
       npcDetails: npcActionContext.npcDetails,
       npc,
       alivePlayerCharacters: npcActionContext.alivePlayerCharacters,
       deadPlayerCharacters: npcActionContext.deadPlayerCharacters,
+      scene,
     })
 
     console.log(
@@ -117,9 +125,9 @@ export function createNpcTurnService(ports: GmPorts) {
 
     console.log("[LLM] NPC action response:", {
       actionType: actionResult.actionType,
-      narrativeLength: actionResult.narrative.length,
-      quality: actionResult.narrative && actionResult.actionSummary ? "complete" : "incomplete",
-      hasDialogue: actionResult.narrative.includes('"'),
+      beats: actionResult.beats.length,
+      quality: actionResult.beats.length && actionResult.actionSummary ? "complete" : "incomplete",
+      hasDialogue: actionResult.beats.some((b) => b.kind === "line"),
       hasEffects: !!actionResult.effects?.length,
     })
 
@@ -129,6 +137,7 @@ export function createNpcTurnService(ports: GmPorts) {
         turn,
         npc,
         actionResult,
+        scene,
       })
     }
 
@@ -142,6 +151,7 @@ export function createNpcTurnService(ports: GmPorts) {
         npcDetails: npcActionContext.npcDetails,
         playerCharacters: npcActionContext.playerCharacters,
       },
+      scene,
     })
 
     const updatedNarrative = branchResult.updatedNarrative
@@ -150,6 +160,7 @@ export function createNpcTurnService(ports: GmPorts) {
     const effects = branchResult.effects
     const shortcode = branchResult.shortcode
     const narrativeToAppend = branchResult.narrativeToAppend
+    const beatsToAppend = branchResult.beatsToAppend
 
     updatedCharacters = applyNpcSpellPostProcessing({
       updatedCharacters,
@@ -165,6 +176,7 @@ export function createNpcTurnService(ports: GmPorts) {
       effects,
       shortcode,
       narrativeToAppend,
+      beatsToAppend,
       npcId: npc.id,
     })
   }
@@ -388,8 +400,8 @@ export function createNpcTurnService(ports: GmPorts) {
       )
 
       const turnPatch = buildNpcTurnUpdatePatch({
-        currentNarrative: turn.narrative || "",
-        narrativeToAppend: result.narrativeToAppend,
+        turn,
+        beatsToAppend: result.beatsToAppend,
         updatedCharacters: keepPlayersAlive(rules, result.updatedCharacters),
       })
 

@@ -52,7 +52,7 @@ test("the real core walks Covert Cargo from the pier into the cabin and back to 
         generateText: unused,
         generateObject: async ({ schema, prompt }) => {
           prompts.push(prompt)
-          return { object: schema.parse({ nextEncounterId: next, narrative: `On to ${next}.`, adventurePatch: {} }) }
+          return { object: schema.parse({ nextEncounterId: next, beats: [{ kind: "narration", text: `On to ${next}.` }], adventurePatch: {} }) }
         },
       }
       await game(store, packs, llm)({ kind: "continue", turnId: store.current()._id })
@@ -110,7 +110,7 @@ test("the premise that the three heroes are strangers reaches the replies offere
 function stubLlm(
   advance: () => Record<string, unknown>,
   lethalTo?: string,
-  npcAction: Record<string, unknown> = { actionSummary: "Cuts at the mage.", narrative: "The blade comes down.", actionType: "attack" }
+  npcAction: Record<string, unknown> = { actionSummary: "Cuts at the mage.", beats: [{ kind: "narration", text: "The blade comes down." }], actionType: "attack" }
 ): Llm {
   return {
     generateText: async () => ({ text: "Steel rings in the saloon." }),
@@ -118,7 +118,7 @@ function stubLlm(
       const answers = [
         advance(),
         npcAction,
-        { narrative: "The blade bites deep.", effects: lethalTo ? [{ targetId: lethalTo, healthPercentDelta: -100, status: "dead" }] : [] },
+        { beats: [{ kind: "narration", text: "The blade bites deep." }], effects: lethalTo ? [{ targetId: lethalTo, healthPercentDelta: -100, status: "dead" }] : [] },
         { rollType: "Attack", difficulty: 5 },
         { modifier: 0 },
         { hasPhysicalEffect: false, reasoning: "Already applied.", update: null },
@@ -144,7 +144,7 @@ async function inTheBattle(run: (store: LocalStore, play: (llm: Llm) => Promise<
     await game(store, packs, { generateText: unused, generateObject: unused })({ kind: "start", provider: "claude", adventure: "covert-cargo" })
     for (const next of ["the-fake", "battle-on-the-boat"]) {
       done(() => true)
-      await play(stubLlm(() => ({ nextEncounterId: next, narrative: `On to ${next}.`, adventurePatch: {} })))
+      await play(stubLlm(() => ({ nextEncounterId: next, beats: [{ kind: "narration", text: `On to ${next}.` }], adventurePatch: {} })))
     }
     done((c) => c.type === "pc")
     await run(store, play)
@@ -165,7 +165,7 @@ test("a killing blow leaves a hero alive, and nobody comes to the rescue: Thalbe
         .sort(),
       ["Lyra Silvanus", "Poppen Quickfoot", "Thalbern"]
     )
-    const fightGoesOn = () => ({ nextEncounterId: "battle-on-the-boat", narrative: "Reinhard raises his sword again.", adventurePatch: {} })
+    const fightGoesOn = () => ({ nextEncounterId: "battle-on-the-boat", beats: [{ kind: "narration", text: "Reinhard raises his sword again." }], adventurePatch: {} })
     await play(stubLlm(fightGoesOn, lyra(store).id))
     assert.equal(store.current().encounterId, "battle-on-the-boat")
     assert.equal(lyra(store).healthPercent, 1)
@@ -184,7 +184,7 @@ test("a killing blow leaves a hero alive, and nobody comes to the rescue: Thalbe
     store.save()
     const dying = () => ({
       nextEncounterId: "battle-on-the-boat",
-      narrative: "Lyra goes down on one knee.",
+      beats: [{ kind: "narration", text: "Lyra goes down on one knee." }],
       adventurePatch: { characterUpdates: [{ characterId: lyra(store).id, healthPercent: 0, status: "dead" }] },
     })
     await play(stubLlm(dying))
@@ -195,9 +195,9 @@ test("a killing blow leaves a hero alive, and nobody comes to the rescue: Thalbe
     // Silas runs on his turn and is out of the encounter, and the fight ends at the crate.
     for (const c of store.current().characters) if (c.name !== "Silas") c.hasReplied = c.isComplete = true
     store.save()
-    const runs = { actionSummary: "Silas runs.", narrative: "Silas goes over the bow rail.", actionType: "flee" }
+    const runs = { actionSummary: "Silas runs.", beats: [{ kind: "narration", text: "Silas goes over the bow rail." }], actionType: "flee" }
     const round = store.current()._id
-    await play(stubLlm(() => ({ nextEncounterId: "the-crate", narrative: "The river takes him.", adventurePatch: {} }), undefined, runs))
+    await play(stubLlm(() => ({ nextEncounterId: "the-crate", beats: [{ kind: "narration", text: "The river takes him." }], adventurePatch: {} }), undefined, runs))
     assert.equal(store.state!.turns.find((t) => t._id === round)!.characters.find((c) => c.name === "Silas")!.status, "fled")
     assert.equal(store.current().encounterId, "the-crate")
   })
@@ -226,7 +226,7 @@ test("the fight is written to end with Lyra in the river, on a pier the tug has 
   await inTheBattle(async (store, play) => {
     for (const c of store.current().characters) c.hasReplied = c.isComplete = true
     store.save()
-    const stub = stubLlm(() => ({ nextEncounterId: "overboard", narrative: "Reinhard heaves her over the rail.", adventurePatch: {} }))
+    const stub = stubLlm(() => ({ nextEncounterId: "overboard", beats: [{ kind: "narration", text: "Reinhard heaves her over the rail." }], adventurePatch: {} }))
     const prompts: string[] = []
     await play({
       ...stub,
@@ -258,7 +258,7 @@ test("a fight the heroes win follows its own transition, however hurt they are",
     lyra(store).healthPercent = 30
     for (const c of store.current().characters) c.hasReplied = c.isComplete = true
     store.save()
-    await play(stubLlm(() => ({ nextEncounterId: "the-crate", narrative: "Reinhard falls.", adventurePatch: {} })))
+    await play(stubLlm(() => ({ nextEncounterId: "the-crate", beats: [{ kind: "narration", text: "Reinhard falls." }], adventurePatch: {} })))
     assert.equal(store.current().encounterId, "the-crate")
   })
 })

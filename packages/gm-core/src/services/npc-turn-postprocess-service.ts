@@ -1,3 +1,4 @@
+import type { StoryBeat } from "../story/beats"
 import type { TurnCharacter } from "../types/adventure"
 import type { NpcRollInfo } from "./npc-turn-branch-service"
 import type { NpcTurnEffect } from "./npc-turn-resolution-service"
@@ -25,6 +26,7 @@ export function finalizeNpcTurnResponse(args: {
   effects?: NpcTurnEffect[]
   shortcode?: string
   narrativeToAppend: string
+  beatsToAppend: StoryBeat[]
   npcId: string
 }) {
   console.log(
@@ -51,5 +53,6 @@ export function finalizeNpcTurnResponse(args: {
     effects: args.effects,
     shortcode: args.shortcode,
     narrativeToAppend: args.narrativeToAppend,
+    beatsToAppend: args.beatsToAppend,
   }
 }

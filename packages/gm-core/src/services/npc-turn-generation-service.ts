@@ -1,12 +1,15 @@
 import { z } from "zod"
 import type { GmPorts } from "../ports"
+import type { StoryScene } from "../story/clean"
+import { storyRules } from "../story/prompt"
+import { beatsField, turnScript } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import { KNOWLEDGE_RULE } from "../utils/narrative-utils"
 import { formatSpellsForPrompt } from "./spell-tracking-service"
 
 const npcActionSchema = z.object({
   actionSummary: z.string(),
-  narrative: z.string(),
+  ...beatsField,
   actionType: z.enum(["attack", "skill", "skip", "pass", "flee", "other"]).default("other"),
   effects: z
     .array(
@@ -26,7 +29,7 @@ const npcActionSchema = z.object({
 })
 
 const npcActionOutcomeSchema = z.object({
-  narrative: z.string(),
+  ...beatsField,
   effects: z.array(
     z.object({
       targetId: z.string(),
@@ -61,7 +64,7 @@ export function buildNpcActionContext({ turn, npc, encounterContext, sectionCont
   alivePlayerCharacters: TurnCharacter[]
   deadPlayerCharacters: TurnCharacter[]
 } {
-  const narrativeContext = (turn.narrative || "").split(/\n\n+/).slice(-6).join("\n\n")
+  const narrativeContext = turnScript(turn).split(/\n\n+/).slice(-6).join("\n\n")
   const playerCharacters = turn.characters.filter((character) => character.type === "pc")
   const alivePlayerCharacters = playerCharacters.filter((character) => character.healthPercent !== 0 && character.status !== "dead")
   const deadPlayerCharacters = playerCharacters.filter((character) => character.healthPercent === 0 || character.status === "dead")
@@ -102,8 +105,15 @@ NPC Details:
   }
 }
 
-export function buildNpcActionPrompt(args: { contextString: string; npcDetails: string; npc: TurnCharacter; alivePlayerCharacters: TurnCharacter[]; deadPlayerCharacters: TurnCharacter[] }): string {
-  return `You are the DM for a tabletop RPG. Given the following context, decide what action the NPC should take this turn. Be creative and act as a real DM would. Output a short narrative for the action.
+export function buildNpcActionPrompt(args: {
+  contextString: string
+  npcDetails: string
+  npc: TurnCharacter
+  alivePlayerCharacters: TurnCharacter[]
+  deadPlayerCharacters: TurnCharacter[]
+  scene: StoryScene
+}): string {
+  return `You are the DM for a tabletop RPG. Given the following context, decide what action the NPC should take this turn. Be creative and act as a real DM would. Write the action as a few short beats.
 
 ${args.contextString}
 
@@ -120,7 +130,7 @@ CRITICAL: When the NPC casts spells, they may ONLY use spells marked as "Availab
 
 CRITICAL: Pay close attention to the NPC's behavior and role. The NPC behavior section describes their specific responsibilities, motivations, and how they should act in this encounter. This is the most important context for determining their action.
 
-**CRITICAL: Dead or unconscious player characters (HP 0% or status "Dead"/"Unconscious") cannot act and should be ignored. Do NOT target them with attacks or actions. Focus only on active, conscious player characters. If a character is dead or unconscious, the NPC should acknowledge this in their narrative but not attempt to interact with them.**
+**CRITICAL: Dead or unconscious player characters (HP 0% or status "Dead"/"Unconscious") cannot act and should be ignored. Do NOT target them with attacks or actions. Focus only on active, conscious player characters. If a character is dead or unconscious, the NPC should acknowledge this in their beats but not attempt to interact with them.**
 
 **IMPORTANT: Before deciding the NPC's action, carefully review the 'Recent Narrative' to understand what has ALREADY happened. If a player character has already completed a task (like casting a spell, detecting magic, or performing an action), the NPC should react to that completed action appropriately. Do NOT ask the player to do something they have already done. Instead, the NPC should respond to what has been completed or ask for the next step in the process.**
 
@@ -128,26 +138,25 @@ ${KNOWLEDGE_RULE}
 
 Based on all the context provided, determine the most logical action for **${args.npc.name}** to take. The 'Recent Narrative' describes what other characters have already done. Do NOT repeat or continue actions for other characters. Your response must be exclusively about **${args.npc.name}**.
 
-IMPORTANT: If the NPC would realistically speak during this action (conversations, negotiations, threats, commands, etc.), include their actual dialogue in quotes. However, if the NPC is a non-speaking creature (like a mindless beast or monster) or the action doesn't involve speaking (pure physical actions, stealth, etc.), use descriptive narrative instead.
+IMPORTANT: If the NPC would realistically speak during this action (conversations, negotiations, threats, commands, etc.), give their words as lines. A non-speaking creature (like a mindless beast or monster), or an action that doesn't involve speaking (pure physical actions, stealth, etc.), has no lines.
 
 STYLE AND FORMAT RULES:
 - Write in present tense, third person.
 - No markdown, no lists, no bullets.
 - Do not use em dashes (—), en dashes, or semicolons. Use commas or periods instead.
 - Keep sentences short and clear.
-- **LENGTH**: At most 2 short sentences of narration, 40 words in all. Spoken lines are extra: give lines the Encounter Instructions script as they are written, and otherwise at most 2 short spoken lines. One beat of action or description for the whole turn, not one between each spoken line.
+- **LENGTH**: At most 2 short sentences of action and narration, 40 words in all. Spoken lines are extra: give lines the Encounter Instructions script as they are written, and otherwise at most 2 short lines. One action for the whole turn, not one between each line.
 - Say nothing this NPC has already said or done in the 'Recent Narrative', and do not describe again what it has already described.
 - An event the Encounter Instructions call for this turn may take up to 4 sentences.
-- Put each spoken line of dialogue on its own line. Dialogue should use straight quotes ("...") and may include dialogue tags like says/asks/replies.
 
-If the NPC would realistically skip or pass their turn (e.g., waiting, observing, preparing, doing nothing), set actionType to "skip" or "pass" and provide appropriate narrative. For example:
-- Skip action: 'The goblin scout remains hidden in the shadows, carefully observing the party's movements before making his next move.'
-- Pass action: 'The wounded orc takes a defensive stance, catching his breath and waiting for an opening.'
+If the NPC would realistically skip or pass their turn (e.g., waiting, observing, preparing, doing nothing), set actionType to "skip" or "pass" and write it as an action. For example:
+- Skip: {"kind": "action", "who": "goblin-scout", "text": "The goblin scout stays hidden in the shadows, watching the party."}
+- Pass: {"kind": "action", "who": "orc", "text": "The wounded orc takes a defensive stance, catching his breath."}
 
 Examples:
-- Speaking NPC: 'Silas steps forward, his voice calm but firm. "We need to complete this task quickly and quietly," he says, his eyes scanning the area for threats.'
-- Non-speaking creature: 'The dire wolf snarls, its hackles raised as it prepares to pounce on the nearest target.'
-- Physical action: 'The guard silently draws his sword, positioning himself to block the exit.'
+- Speaking NPC: {"kind": "action", "who": "silas", "to": "lyra", "text": "Silas steps forward, his eyes scanning the area."}, {"kind": "line", "who": "silas", "to": "lyra", "delivery": "calm but firm", "text": "We need to do this quickly and quietly."}
+- Non-speaking creature: {"kind": "action", "who": "dire-wolf", "to": "milos", "text": "The dire wolf snarls, its hackles raised, ready to pounce."}
+- Physical action: {"kind": "action", "who": "guard", "text": "The guard silently draws his sword and blocks the exit."}
 
 If the NPC runs away and leaves the scene for good, set actionType to "flee" and narrate them going. They are then out of the encounter and take no further turns. Use it only when they actually get away this turn, not for backing off or taking cover.
 
@@ -156,10 +165,12 @@ If the NPC's action involves giving items to a player character, include an "eff
 Targetable Player Characters (alive and conscious): ${args.alivePlayerCharacters.map((character) => character.name).join(", ")} (IDs: ${args.alivePlayerCharacters.map((character) => character.id).join(", ")})
 ${args.deadPlayerCharacters.length > 0 ? `\n\nIMPORTANT: The following player characters are DEAD or UNCONSCIOUS and should NOT be targeted: ${args.deadPlayerCharacters.map((character) => `${character.name} (HP ${character.healthPercent}%, Status: ${character.status || "Dead"})`).join(", ")}. The NPC should acknowledge their condition but not attempt to interact with them.` : ""}
 
-Respond as JSON. The 'narrative' and 'actionSummary' fields must describe the action of **${args.npc.name}** and no one else.
+${storyRules(args.scene)}
+
+Respond as JSON. The 'beats' and 'actionSummary' fields must describe the action of **${args.npc.name}** and no one else.
 {
   actionSummary: string, // e.g., "Faelar strums a tune on his lute to lighten the mood."
-  narrative: string, // e.g., "Faelar, noticing the tension, pulls out his lute. 'A somber crowd for a festival!' he jests, beginning a lighthearted melody."
+  beats: [...], // e.g., [{"kind": "action", "who": "faelar", "text": "Faelar notices the tension and pulls out his lute."}, {"kind": "line", "who": "faelar", "delivery": "jesting", "text": "A somber crowd for a festival!"}]
   actionType: "attack" | "skill" | "skip" | "pass" | "flee" | "other",
   effects?: [ { targetId: string, equipmentToAdd?: [{name: string, description?: string}] } ]
 }`
@@ -175,6 +186,7 @@ export function buildNpcOutcomePrompt(args: {
   result: number
   difficulty: number
   success: boolean
+  scene: StoryScene
 }): string {
   const playerCharacterNames = args.playerCharacters.map((character) => character.name)
   const playerCharacterDetails = args.playerCharacters
@@ -187,7 +199,7 @@ export function buildNpcOutcomePrompt(args: {
     })
     .join("\n")
 
-  return `You are the DM for a tabletop RPG. Given the action, the dice roll result, and the context, write a short narrative describing the outcome. Focus the narrative on the interacting characters. **Do not narrate any actions or dialogue for player characters.**
+  return `You are the DM for a tabletop RPG. Given the action, the dice roll result, and the context, write the outcome as a few short beats. Focus on the interacting characters. **Do not write any actions or lines for player characters.**
 
 ${args.contextString}
 
@@ -196,13 +208,13 @@ ${args.npcDetails}
 Player Character Details:
 ${playerCharacterDetails}
 
-CRITICAL: Dead or unconscious player characters (marked as "DEAD/UNCONSCIOUS") cannot act and should NOT be targeted. Focus only on active, conscious player characters. If a character is dead or unconscious, acknowledge this in the narrative but do not attempt to interact with them.
+CRITICAL: Dead or unconscious player characters (marked as "DEAD/UNCONSCIOUS") cannot act and should NOT be targeted. Focus only on active, conscious player characters. If a character is dead or unconscious, acknowledge this in the beats but do not attempt to interact with them.
 
 CRITICAL: When describing the NPC's attack or action, you MUST reference ONLY the weapons and items listed in their Equipment. Do NOT invent or reference weapons they don't have.
 
 CRITICAL: You must ONLY reference elements that are explicitly mentioned in the encounter instructions, encounter intro, or existing narrative context. Do NOT invent new objects, people, events, or details that are not already established in the adventure plan.
 
-IMPORTANT: If the NPC would realistically speak during this outcome (expressing success/failure, reactions, taunts, threats, etc.), include their actual dialogue in quotes. However, if the NPC is a non-speaking creature or the outcome doesn't involve speech, use descriptive narrative instead.
+IMPORTANT: If the NPC would realistically speak during this outcome (expressing success/failure, reactions, taunts, threats, etc.), give their words as a line. A non-speaking creature, or an outcome without speech, has no lines.
 
 STYLE AND FORMAT RULES:
 - Write in present tense, third person.
@@ -210,7 +222,7 @@ STYLE AND FORMAT RULES:
 - Do not use em dashes (—), en dashes, or semicolons. Use commas or periods instead.
 - Keep sentences short and clear.
 - **LENGTH**: At most 2 short sentences, 40 words. Say what the action did and where it leaves the characters. Do not describe the wind-up, and do not describe again what the 'Recent Narrative' has already described. A spoken line, if there is one, is extra and short.
-- Put each spoken line of dialogue on its own line. Dialogue should use straight quotes ("...") and may include dialogue tags like says/asks/replies.
+- The NPC's action is the first beat, with its effect when one shows: an arrow, a slash, a spell.
 
 RESTRICTIONS:
 - Only reference NPCs, objects, and locations explicitly mentioned in the encounter instructions or intro
@@ -228,9 +240,11 @@ Action: ${args.actionSummary}
 Roll Type: ${args.rollType}
 Roll Result: ${args.result} (difficulty: ${args.difficulty}, success: ${args.success})
 
+${storyRules(args.scene)}
+
 Respond as JSON:
 {
-  narrative: string,
+  beats: [...],
   effects: [ { targetId: string, healthPercentDelta?: number, status?: string, equipmentToAdd?: [{name: string, description?: string}] } ]
 }`
 }
