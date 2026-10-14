@@ -67,7 +67,8 @@ export function cleanStory(output: StoryOutput, scene: StoryScene, by: StoryBy):
     beats.push(beat)
   }
   for (const out of output) {
-    const text = sanitizeUserVisibleProse(out.text ?? "").trim()
+    // One beat reads as one paragraph: a line break inside it would split it in the text views.
+    const text = sanitizeUserVisibleProse((out.text ?? "").replace(/\s*\n\s*/g, " ")).trim()
     if (!text) continue
     const who = findCharacter(scene, out.who)
     const to = findCharacter(scene, out.to)

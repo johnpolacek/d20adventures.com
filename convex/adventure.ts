@@ -414,8 +414,20 @@ export const submitReply = mutation({
       narrativeToAdd = `[OriginalReply: ${args.originalPlayerInput}]\n${args.narrativeAction}`
     }
 
-    // A reply as beats joins the turn's story, which a turn from before beats reads back from its narrative.
-    const story = args.story && [...turnStory(turn), ...args.story]
+    // A reply as beats joins the turn's story, which a turn from before beats reads back from its narrative. A reply
+    // as text joins a turn that keeps beats as the player's words and narration, so the story never drops it.
+    const by = { step: "reply" as const, character: args.characterId }
+    const added: Doc<"turns">["story"] =
+      args.story ??
+      (turn.story && [
+        ...(args.originalPlayerInput ? [{ kind: "reply" as const, by, character: args.characterId, text: args.originalPlayerInput }] : []),
+        ...args.narrativeAction
+          .split(/\n+/)
+          .map((text) => text.trim())
+          .filter(Boolean)
+          .map((text) => ({ kind: "narration" as const, by, text })),
+      ])
+    const story = added && [...turnStory(turn), ...added]
     const narrative = story ? legacyNarrative(story) : prev ? `${prev}\n\n${narrativeToAdd}` : narrativeToAdd
 
     // Use rollRequirement from args, do not call AI here!
