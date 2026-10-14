@@ -1,17 +1,13 @@
-import { createHash } from "node:crypto"
 import { auth, clerkClient } from "@clerk/nextjs/server"
 import { type NextRequest, NextResponse } from "next/server"
+import type { Doc, Id } from "@/convex/_generated/dataModel"
+import { storyHash as hashStory } from "@/lib/ai/story-segments"
 import { getAssetUrl, isAwsConfigured } from "@/lib/aws"
 import { api, convex } from "@/lib/convex/server"
 import { generateTurnAudioIncremental } from "@/lib/services/turn-audio-service"
-import type { Doc, Id } from "@/convex/_generated/dataModel"
 import type { StoryviewAutoStatus, TurnAudioManifestResponse, TurnAudioSegment } from "@/types/turn-audio"
 
 export const maxDuration = 300
-
-function sha1(text: string): string {
-  return createHash("sha1").update(text).digest("hex")
-}
 
 async function loadTurnForUser(turnId: string) {
   const { userId } = await auth()
@@ -75,12 +71,16 @@ async function buildStoryviewAuto(adventure: Doc<"adventures">, turn: Doc<"turns
   }
 }
 
-function toManifestResponse(row: { status: "generating" | "ready" | "error"; narrativeHash: string; segments?: TurnAudioSegment[]; error?: string } | null, currentNarrativeHash: string, storyviewAuto?: StoryviewAutoStatus): TurnAudioManifestResponse {
+function toManifestResponse(
+  row: { status: "generating" | "ready" | "error"; storyHash: string; segments?: TurnAudioSegment[]; error?: string } | null,
+  currentStoryHash: string,
+  storyviewAuto?: StoryviewAutoStatus
+): TurnAudioManifestResponse {
   if (!row) return { status: "none", storyviewAuto }
   return {
     status: row.status,
     segments: row.segments?.map((segment) => ({ ...segment, audioUrl: getAssetUrl(segment.audioKey) ?? "" })),
-    stale: row.narrativeHash !== currentNarrativeHash,
+    stale: row.storyHash !== currentStoryHash,
     error: row.error,
     storyviewAuto,
   }
@@ -93,7 +93,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
   const row = await convex.query(api.turnAudio.getTurnAudio, { turnId: loaded.turn._id })
   const storyviewAuto = await buildStoryviewAuto(loaded.adventure, loaded.turn, loaded.userId)
-  return NextResponse.json(toManifestResponse(row, sha1(loaded.turn.narrative), storyviewAuto))
+  return NextResponse.json(toManifestResponse(row, hashStory(loaded.turn.story), storyviewAuto))
 }
 
 export async function POST(_request: NextRequest, { params }: { params: Promise<{ turnId: string }> }) {
@@ -128,8 +128,8 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
     // can play or poll.
   }
 
-  const narrativeHash = sha1(turn.narrative)
+  const storyHash = hashStory(turn.story)
   const row = await convex.query(api.turnAudio.getTurnAudio, { turnId: turn._id })
   const storyviewAuto = await buildStoryviewAuto(adventure, turn, userId)
-  return NextResponse.json(toManifestResponse(row, narrativeHash, storyviewAuto))
+  return NextResponse.json(toManifestResponse(row, storyHash, storyviewAuto))
 }

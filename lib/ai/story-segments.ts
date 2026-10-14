@@ -1,20 +1,30 @@
+import { createHash } from "node:crypto"
 import type { StoryBeat } from "@d20/gm-core/story/beats"
 import { storyParagraphs } from "@d20/gm-core/story/render"
-import type { AttributedSegment } from "@/lib/ai/narration-attribution"
-import type { parseNarrative } from "@/lib/utils/parse-narrative"
 
-// Speaker segments read straight from a turn's beats: narration and actions in the narrator's voice, each line in its
-// speaker's, with its delivery as the style. Null when the story's paragraphs do not line up with the narrative's, as
-// for a turn saved before the beats and the text agreed, and the attribution call decides instead.
-export function segmentsFromStory(story: StoryBeat[], parts: ReturnType<typeof parseNarrative>, wanted: Set<number>, characters: { id: string; name: string }[]): AttributedSegment[] | null {
-  const told = storyParagraphs(story)
-  if (told.length !== parts.length) return null
+export interface StorySegment {
+  partIndex: number // index into storyParagraphs()
+  speaker: string // "narrator" | characterId
+  characterName?: string
+  text: string
+  styleHint?: string
+}
+
+const sha1 = (s: string) => createHash("sha1").update(s).digest("hex")
+
+// Whether the turn's audio still matches its story.
+export const storyHash = (story: StoryBeat[]) => sha1(JSON.stringify(story))
+
+// The paragraphs Storyview reads aloud: everything but rolls and the players' own words, by their index in the story.
+export const narratedParagraphs = (story: StoryBeat[]) =>
+  storyParagraphs(story).flatMap((p, partIndex) => (p.beats[0].kind === "roll" || p.beats[0].kind === "reply" ? [] : [{ partIndex, text: p.text, hash: sha1(p.text) }]))
+
+// A turn's paragraphs split for voices: narration and actions in the narrator's voice, each line in its speaker's,
+// with its delivery as the style. A speaker who is not one of the turn's characters is read by the narrator.
+export function segmentsFromStory(story: StoryBeat[], wanted: Set<number>, characters: { id: string; name: string }[]): StorySegment[] {
   const names = new Map(characters.map((c) => [c.id, c.name]))
-  const segments: AttributedSegment[] = []
-  for (const [partIndex, paragraph] of told.entries()) {
-    const part = parts[partIndex]
-    const kind = paragraph.beats[0].kind
-    if ((part.type === "paragraph") !== (kind !== "roll" && kind !== "reply")) return null
+  const segments: StorySegment[] = []
+  for (const [partIndex, paragraph] of storyParagraphs(story).entries()) {
     if (!wanted.has(partIndex)) continue
     for (const beat of paragraph.beats) {
       if (beat.kind === "line" && names.has(beat.speaker)) segments.push({ partIndex, speaker: beat.speaker, characterName: names.get(beat.speaker), text: `"${beat.text}"`, styleHint: beat.delivery })

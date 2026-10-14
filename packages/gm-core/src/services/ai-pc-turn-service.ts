@@ -162,7 +162,6 @@ export function createAiPcTurnService(ports: GmPorts) {
       await ports.store.submitReply({
         turnId,
         characterId,
-        narrativeAction: intent,
         story: beats,
         rollRequirement: hasRoll ? rollRequirement : undefined,
       })
@@ -189,7 +188,6 @@ export function createAiPcTurnService(ports: GmPorts) {
         _id: turn._id,
         encounterId: turn.encounterId,
         title: turn.title,
-        narrative: turn.narrative,
         story: turn.story,
         characters: turn.characters as TurnCharacter[],
         adventureId: turn.adventureId,
@@ -206,7 +204,6 @@ export function createAiPcTurnService(ports: GmPorts) {
     await ports.store.updateTurn({
       turnId,
       patch: {
-        narrative: rollResolution.narrative,
         story: rollResolution.story,
         characters: rollResolution.characters,
         updatedAt: Date.now(),

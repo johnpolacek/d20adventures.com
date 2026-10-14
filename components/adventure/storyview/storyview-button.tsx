@@ -10,12 +10,12 @@ export default function StoryviewButton() {
   const { currentTurn } = useTurnContext()
   const [snapshot, setSnapshot] = useState<StoryviewSnapshot | null>(null)
 
-  if (!currentTurn?.narrative) return null
+  if (!currentTurn?.story.length) return null
 
   const open = () => {
     setSnapshot({
       turnId: currentTurn.id,
-      narrative: currentTurn.narrative,
+      story: currentTurn.story,
       characters: currentTurn.characters.map((c) => ({ id: c.id, name: c.name, image: c.image })),
     })
   }

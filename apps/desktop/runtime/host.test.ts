@@ -4,6 +4,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
+import { storyText } from "@d20/gm-core/story/render"
 import { turnScript } from "@d20/gm-core/story/turn"
 import type { z } from "zod"
 import { game, type Packs } from "./game"
@@ -102,7 +103,7 @@ test("a guest's reply and roll run through the host's GM and finish their jobs",
     )
     const replied = store.current().characters.find((c) => c.id === pc.id)!
     assert.equal(replied.hasReplied, true)
-    assert.match(store.current().narrative, /\[OriginalReply: I bargain with the guard\.\]/)
+    assert.ok(store.current().story.some((b) => b.kind === "reply" && b.text === "I bargain with the guard."))
     assert.ok(replied.rollRequired, "the model asked for a roll")
     const roll = job({ adventureId, turnId: turn._id, kind: "roll", userId: "guest", characterId: pc.id, result: 15 }, "job-2")
     const second = await drain(store, [roll], model)
@@ -146,7 +147,7 @@ test("jobs for someone else's character, a stale turn, or a failed model fail wi
 test("a skip job ends the guest's own hero's turn with nothing written and no AI", async () => {
   const { store, turn, pc, adventureId, cleanup } = await hosted()
   try {
-    const narrative = turn.narrative
+    const told = JSON.stringify(turn.story)
     const ask = (userId: string, id: string) => job({ adventureId, turnId: turn._id, kind: "skip", userId, characterId: pc.id }, id)
     const { finished } = await drain(store, [ask("host", "a"), ask("guest", "b"), ask("guest", "c")], failLlm)
     assert.deepEqual(
@@ -159,7 +160,7 @@ test("a skip job ends the guest's own hero's turn with nothing written and no AI
     )
     const skipped = store.current().characters.find((c) => c.id === pc.id)!
     assert.equal(skipped.hasReplied && skipped.isComplete, true)
-    assert.equal(store.current().narrative, narrative)
+    assert.equal(JSON.stringify(store.current().story), told)
   } finally {
     cleanup()
   }
@@ -231,7 +232,7 @@ test("the worker continues on its own with an AI hero's turn and the round's end
     assert.deepEqual(resumed.queued[0], { turnId: turn._id, kind: "continue" })
     assert.equal(resumed.finished[0].error, undefined)
     assert.equal(store.current().encounterId, "the-harvest-festival")
-    assert.match(store.state!.turns.find((t) => t._id === turn._id)!.narrative, /keeps an eye on the gate/)
+    assert.match(storyText(store.state!.turns.find((t) => t._id === turn._id)!.story), /keeps an eye on the gate/)
     // In the new round it stops at a player's hero, or at a turn the GM could not finish.
     assert.ok(resumed.finished[resumed.finished.length - 1].error || selfRunning(store.current().characters) === null)
   } finally {

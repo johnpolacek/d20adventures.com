@@ -4,6 +4,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
+import { storyText } from "@d20/gm-core/story/render"
 import { createStubLibrary } from "@d20/stage/materials/library"
 import { buildSetGeometry, parseSet } from "@d20/stage/spec/build"
 import { onFootprint } from "@d20/stage/spec/walk"
@@ -222,7 +223,7 @@ test("created heroes and AI companions start, take turns, and carry through an e
     assert.deepEqual(calls, ["intent", "roll"])
     const after = store.current().characters
     assert.equal(after.find((c) => c.id === bram.id)!.isComplete, true)
-    assert.match(store.current().narrative, /Bram scans the treeline/)
+    assert.match(storyText(store.current().story), /Bram scans the treeline/)
     await assert.rejects(() => game(store, packs, offline)({ kind: "continue", turnId: turn._id }), /player character still needs to act/)
 
     // An encounter change keeps both heroes, who plays them, and their figures.

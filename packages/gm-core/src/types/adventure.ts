@@ -45,8 +45,7 @@ export interface Turn {
   id: string
   encounterId: string
   title: string
-  narrative: string
-  story?: StoryBeat[]
+  story: StoryBeat[]
   characters: TurnCharacter[]
   adventureId: string
   isFinalEncounter?: boolean

@@ -1,8 +1,10 @@
+import { authoredStory } from "../story/authored"
+import type { StoryBeat } from "../story/beats"
+import { cleanStory } from "../story/clean"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import { rollD20 } from "../utils/game-utils"
 import { findEncounterInPlan } from "./advance-turn-prompt-service"
-import { appendNarrative, normalizeNarrative } from "./narrative-service"
 import { resetAllSpells } from "./spell-tracking-service"
 
 type TurnHistoryRow = {
@@ -12,7 +14,8 @@ type TurnHistoryRow = {
 
 type EncounterProgressionResult = {
   nextEncounterId: string
-  narrative: string
+  // The GM's beats for the round's end.
+  story: StoryBeat[]
 }
 
 export type BuildNextTurnResult =
@@ -26,9 +29,8 @@ export type BuildNextTurnResult =
       shouldProcessNpcTurns: boolean
     }
 
-function buildContinuingEncounterTurn(args: { turn: Turn; adventureId: string; currentEncounterTitle: string; narrative: string }): Turn {
+function buildContinuingEncounterTurn(args: { turn: Turn; adventureId: string; currentEncounterTitle: string; story: StoryBeat[] }): Turn {
   let newCharacters: TurnCharacter[] = (args.turn.characters as TurnCharacter[]).filter((c) => c.status !== "dead" && c.status !== "fled")
-  const normalizedNarrative = normalizeNarrative(args.narrative || "")
 
   newCharacters = newCharacters.map((c) => ({
     ...c,
@@ -44,7 +46,7 @@ function buildContinuingEncounterTurn(args: { turn: Turn; adventureId: string; c
     adventureId: args.adventureId,
     encounterId: args.turn.encounterId,
     title: args.currentEncounterTitle,
-    narrative: normalizedNarrative,
+    story: args.story,
     characters: newCharacters,
   }
 }
@@ -117,14 +119,14 @@ function buildTransitionEncounterTurn(args: { turn: Turn; plan: AdventurePlan; a
   }))
   allCharacters.sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
 
-  const narrative = appendNarrative(normalizeNarrative(args.llmResult.narrative || ""), normalizeNarrative(nextEncounter.intro || ""))
+  const intro = cleanStory(authoredStory(nextEncounter.intro || ""), { cast: allCharacters }, { step: "intro" })
 
   const turn: Turn = {
     id: "",
     adventureId: args.adventureId,
     encounterId: nextEncounter.id,
     title: nextEncounter.title,
-    narrative,
+    story: [...args.llmResult.story, ...intro],
     characters: allCharacters,
   }
 
@@ -144,7 +146,7 @@ export function buildNextTurnFromProgression(args: {
       turn: args.turn,
       adventureId: args.adventureId,
       currentEncounterTitle: args.currentEncounterTitle,
-      narrative: args.llmResult.narrative,
+      story: args.llmResult.story,
     })
     return { status: "turn_built", turn, shouldProcessNpcTurns: true }
   }

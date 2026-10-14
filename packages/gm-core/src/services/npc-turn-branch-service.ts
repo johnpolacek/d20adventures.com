@@ -1,11 +1,9 @@
 import type { GmPorts } from "../ports"
 import type { StoryBeat, StoryBy, StoryOutput } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
-import { legacyNarrative } from "../story/render"
 import { rollBeat, turnScript } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import { rollD20 } from "../utils/game-utils"
-import { appendNarrative } from "./narrative-service"
 import { buildNpcOutcomePrompt, createNpcTurnGenerationService } from "./npc-turn-generation-service"
 import { applyNpcEffectsToCharacters, createNpcTurnResolutionService, type NpcTurnEffect } from "./npc-turn-resolution-service"
 import { createRollModifierService } from "./roll-modifier-service"
@@ -21,13 +19,10 @@ export type NpcRollInfo = {
 }
 
 export type NpcTurnBranchResult = {
-  updatedNarrative: string
   updatedCharacters: TurnCharacter[]
   actionSummary: string
   rollInfo?: NpcRollInfo
   effects?: NpcTurnEffect[]
-  shortcode?: string
-  narrativeToAppend: string
   beatsToAppend: StoryBeat[]
 }
 
@@ -41,7 +36,6 @@ type NpcActionResult = {
 // An NPC turn that needs no roll and touches nobody else: waiting, holding back, or running away for good.
 export function handleSkipPassNpcTurn(args: { turn: Turn; npc: TurnCharacter; actionResult: NpcActionResult; scene: StoryScene }): NpcTurnBranchResult {
   const beatsToAppend = cleanStory(args.actionResult.beats, args.scene, npcStep(args.npc))
-  const narrativeToAppend = legacyNarrative(beatsToAppend)
   const updatedCharacters = args.turn.characters.map((character) => {
     if (character.id === args.npc.id) {
       // Skipping or passing is not a condition. The NPC keeps whatever status it has. One who flees is out of the
@@ -50,7 +44,6 @@ export function handleSkipPassNpcTurn(args: { turn: Turn; npc: TurnCharacter; ac
     }
     return character
   })
-  const updatedNarrative = appendNarrative(args.turn.narrative || "", narrativeToAppend)
 
   console.log("[LLM] NPC turn completed:", {
     action: args.actionResult.actionType,
@@ -58,13 +51,10 @@ export function handleSkipPassNpcTurn(args: { turn: Turn; npc: TurnCharacter; ac
   })
 
   return {
-    updatedNarrative,
     updatedCharacters,
     actionSummary: args.actionResult.actionSummary,
     rollInfo: undefined,
     effects: undefined,
-    shortcode: undefined,
-    narrativeToAppend,
     beatsToAppend,
   }
 }
@@ -88,14 +78,11 @@ export function createNpcTurnBranchService(ports: GmPorts) {
     }
     scene: StoryScene
   }): Promise<Omit<NpcTurnBranchResult, "actionSummary">> {
-    let updatedNarrative = args.turn.narrative || ""
-    let narrativeToAppend = ""
     let beatsToAppend: StoryBeat[] = []
     const script = turnScript(args.turn)
     let updatedCharacters = [...args.turn.characters]
     let rollInfo: NpcRollInfo | undefined
     let effects: NpcTurnEffect[] | undefined
-    let shortcode: string | undefined
 
     const rollRequirement = await getRollRequirementForAction(args.actionResult.actionSummary, args.npc, {
       encounterInstructions: args.encounterContext?.instructions || "",
@@ -138,20 +125,6 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         difficulty: rollRequirement.difficulty,
         success,
       })
-
-      shortcode = `[DiceRoll:rollType=${rollRequirement.rollType};baseRoll=${baseRoll};modifier=${modifier >= 0 ? `+${modifier}` : modifier};result=${result};difficulty=${rollRequirement.difficulty};character=${args.npc.name};image=${args.npc.image};success=${success}]\n`
-
-      console.log(
-        "[LLM DM] Generated dice roll shortcode",
-        JSON.stringify(
-          {
-            shortcode,
-            shortcodeLength: shortcode.length,
-          },
-          null,
-          2
-        )
-      )
 
       const prompt2 = buildNpcOutcomePrompt({
         contextString: args.npcActionContext.contextString,
@@ -208,7 +181,6 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         success,
       })
       beatsToAppend = [roll, ...cleanStory(outcomeResult.beats, args.scene, npcStep(args.npc))]
-      narrativeToAppend = legacyNarrative(beatsToAppend)
       effects = outcomeResult.effects
 
       updatedCharacters = applyNpcEffectsToCharacters({
@@ -232,13 +204,11 @@ export function createNpcTurnBranchService(ports: GmPorts) {
       updatedCharacters = await reconcileNpcRollWithAi({
         turn: args.turn,
         updatedCharacters,
-        updatedNarrative,
-        narrativeToAppend,
+        story: [...args.turn.story, ...beatsToAppend],
         diceRoll,
       })
     } else {
       beatsToAppend = cleanStory(args.actionResult.beats, args.scene, npcStep(args.npc))
-      narrativeToAppend = legacyNarrative(beatsToAppend)
       effects = args.actionResult.effects
 
       updatedCharacters = applyNpcEffectsToCharacters({
@@ -249,15 +219,10 @@ export function createNpcTurnBranchService(ports: GmPorts) {
       })
     }
 
-    updatedNarrative = appendNarrative(updatedNarrative, narrativeToAppend)
-
     return {
-      updatedNarrative,
       updatedCharacters,
       rollInfo,
       effects,
-      shortcode,
-      narrativeToAppend,
       beatsToAppend,
     }
   }

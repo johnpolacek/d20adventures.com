@@ -25,8 +25,7 @@ export const createTurn = mutation({
     adventureId: v.id("adventures"),
     encounterId: v.string(),
     title: v.string(),
-    narrative: v.string(),
-    story: v.optional(storyValidator),
+    story: storyValidator,
     characters: v.array(v.any()),
     order: v.number(),
     isFinalEncounter: v.optional(v.boolean()),
@@ -49,8 +48,7 @@ export const createTurn = mutation({
       adventureId: args.adventureId,
       encounterId: args.encounterId,
       title: args.title,
-      narrative: args.narrative,
-      ...(args.story ? { story: args.story } : {}),
+      story: args.story,
       characters: args.characters,
       order: args.order,
       isFinalEncounter: args.isFinalEncounter,
@@ -68,7 +66,6 @@ export const updateTurn = mutation({
   args: {
     turnId: v.id("turns"),
     patch: v.object({
-      narrative: v.optional(v.string()),
       story: v.optional(storyValidator),
       characters: v.optional(v.array(v.any())),
       updatedAt: v.optional(v.number()),

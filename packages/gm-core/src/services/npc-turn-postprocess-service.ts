@@ -20,12 +20,9 @@ export function applyNpcSpellPostProcessing(args: { updatedCharacters: TurnChara
 
 export function finalizeNpcTurnResponse(args: {
   actionSummary: string
-  updatedNarrative: string
   updatedCharacters: TurnCharacter[]
   rollInfo?: NpcRollInfo
   effects?: NpcTurnEffect[]
-  shortcode?: string
-  narrativeToAppend: string
   beatsToAppend: StoryBeat[]
   npcId: string
 }) {
@@ -33,8 +30,7 @@ export function finalizeNpcTurnResponse(args: {
     "[LLM DM] NPC turn processing completed",
     JSON.stringify(
       {
-        finalNarrativeLength: args.updatedNarrative.length,
-        narrativeToAppendLength: args.narrativeToAppend.length,
+        beats: args.beatsToAppend.length,
         characterCount: args.updatedCharacters.length,
         npcStatus: args.updatedCharacters.find((character) => character.id === args.npcId)?.status,
         hasRollInfo: !!args.rollInfo,
@@ -46,13 +42,10 @@ export function finalizeNpcTurnResponse(args: {
   )
 
   return {
-    updatedNarrative: args.updatedNarrative,
     updatedCharacters: args.updatedCharacters,
     actionSummary: args.actionSummary,
     rollInfo: args.rollInfo,
     effects: args.effects,
-    shortcode: args.shortcode,
-    narrativeToAppend: args.narrativeToAppend,
     beatsToAppend: args.beatsToAppend,
   }
 }

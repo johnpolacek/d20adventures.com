@@ -172,9 +172,8 @@ export default defineSchema({
     adventureId: v.id("adventures"),
     encounterId: v.string(),
     title: v.string(),
-    narrative: v.string(),
-    // The turn as labelled beats. Turns from before beats have only the narrative.
-    story: v.optional(storyValidator),
+    // The turn as labelled beats, in order: narration, actions, spoken lines, rolls and the players' own words.
+    story: storyValidator,
     characters: v.array(
       v.object({
         id: v.string(),
@@ -339,12 +338,12 @@ export default defineSchema({
     .index("by_userId", ["userId"])
     .index("by_timestamp", ["timestamp"]),
 
-  // Storyview narration audio manifests, one per turn, keyed by narrative hash
+  // Storyview narration audio manifests, one per turn, keyed by a hash of the story
   turnAudio: defineTable({
     turnId: v.id("turns"),
     adventureId: v.id("adventures"),
     status: v.union(v.literal("generating"), v.literal("ready"), v.literal("error")),
-    narrativeHash: v.string(),
+    storyHash: v.string(),
     requestedBy: v.string(), // Clerk User ID of the player who triggered generation
     segments: v.optional(
       v.array(

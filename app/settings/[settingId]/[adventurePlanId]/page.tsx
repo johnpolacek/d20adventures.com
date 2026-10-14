@@ -1,3 +1,4 @@
+import { introTurn } from "@d20/gm-core/story/turn"
 import { redirect } from "next/navigation"
 import AdventureHome from "@/components/views/adventure-home"
 import { loadAdventurePlanFromStorage } from "@/lib/adventure-plan-storage"
@@ -43,7 +44,7 @@ export default async function AdventureHomePage(props: { params: Promise<{ setti
     encounterId: adventurePlan.sections[0].scenes[0].encounters[0].id,
     title: adventurePlan.sections[0].scenes[0].encounters[0].title,
     subtitle: adventurePlan.sections[0].scenes[0].encounters[0].title,
-    narrative: adventurePlan.sections[0].scenes[0].encounters[0].intro,
+    ...introTurn(adventurePlan.sections[0].scenes[0].encounters[0].intro ?? "", { cast: selectedCharacter ? [{ id: selectedCharacter.id, name: selectedCharacter.name, type: "pc" }] : [] }),
     characters: selectedCharacter
       ? [
           {

@@ -54,15 +54,16 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
   const isPracticeRun = (adventure.runType ?? "campaign") === "practice"
 
   useEffect(() => {
-    // scroll to bottom of page when currentTurn.narrative changes after the first render
-    if (currentTurn?.narrative) {
+    // scroll to bottom of page when the turn's story grows after the first render
+    const told = currentTurn?.story.length ? `${currentTurn.id}:${currentTurn.story.length}` : ""
+    if (told) {
       if (!initialNarrative) {
-        setInitialNarrative(currentTurn.narrative)
-      } else if (initialNarrative !== currentTurn.narrative && !disableSSE) {
+        setInitialNarrative(told)
+      } else if (initialNarrative !== told && !disableSSE) {
         scrollToBottom()
       }
     }
-  }, [currentTurn?.narrative, disableSSE, initialNarrative])
+  }, [currentTurn?.id, currentTurn?.story.length, disableSSE, initialNarrative])
 
   const loadPracticeReports = React.useCallback(async () => {
     if (!isPracticeRun || !params.adventureId) return

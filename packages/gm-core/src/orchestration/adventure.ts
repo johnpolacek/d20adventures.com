@@ -19,19 +19,7 @@ export function createAdventure(ports: GmPorts) {
   const { writeReply } = createNarrativeGenerationService(ports)
   const loadAdventurePlanForRuntime = ports.content.loadPlan.bind(ports.content)
   // `story` is the reply as the hero's beats, from writeReply. The player's own words go before it.
-  async function processTurnReply({
-    turnId,
-    characterId,
-    narrativeAction,
-    originalPlayerInput,
-    story,
-  }: {
-    turnId: string
-    characterId: string
-    narrativeAction: string
-    originalPlayerInput?: string
-    story?: StoryBeat[]
-  }) {
+  async function processTurnReply({ turnId, characterId, originalPlayerInput, story }: { turnId: string; characterId: string; originalPlayerInput?: string; story: StoryBeat[] }) {
     const userId = await ports.identity()
     if (!userId) {
       console.error("[processTurnReply] Unauthorized access attempt.")
@@ -41,7 +29,8 @@ export function createAdventure(ports: GmPorts) {
     const { turn, adventure } = await assertAdventureAccessByTurn(userId, turnId)
 
     const characterPerformingAction = assertPlayerCharacterControl(userId, turn, characterId)
-    const reply: StoryBeat[] | undefined = story && [
+    const narrativeAction = storyProse(story)
+    const reply: StoryBeat[] = [
       ...(originalPlayerInput ? [{ kind: "reply" as const, by: { step: "reply" as const, character: characterId }, character: characterId, text: originalPlayerInput }] : []),
       ...story,
     ]
@@ -57,9 +46,7 @@ export function createAdventure(ports: GmPorts) {
       await ports.store.submitReply({
         turnId,
         characterId,
-        narrativeAction,
-        originalPlayerInput,
-        ...(reply ? { story: reply } : {}),
+        story: reply,
         rollRequirement: rollRequirementDetails,
       })
       ports.narration.afterTurn(turnId)
@@ -68,9 +55,7 @@ export function createAdventure(ports: GmPorts) {
     await ports.store.submitReply({
       turnId,
       characterId,
-      narrativeAction,
-      originalPlayerInput,
-      ...(reply ? { story: reply } : {}),
+      story: reply,
       rollRequirement: undefined,
     })
     await processNpcTurnsAfterCurrent(turnId)
@@ -85,7 +70,7 @@ export function createAdventure(ports: GmPorts) {
     const { turn } = await assertAdventureAccessByTurn(userId, turnId)
     const character = assertPlayerCharacterControl(userId, turn, characterId) as TurnCharacter
     const story = await writeReply({ character, playerInput, turn: { ...turn, characters: turn.characters as TurnCharacter[] } })
-    return processTurnReply({ turnId, characterId, narrativeAction: storyProse(story), originalPlayerInput: playerInput, story })
+    return processTurnReply({ turnId, characterId, originalPlayerInput: playerInput, story })
   }
 
   async function createAdventureWithFirstTurn(payload: {
@@ -98,7 +83,7 @@ export function createAdventure(ports: GmPorts) {
     playerInput: string
     turn: {
       encounterId: string
-      narrative: string
+      story: StoryBeat[]
       characters: TurnCharacter[]
       order: number
     }
@@ -110,13 +95,23 @@ export function createAdventure(ports: GmPorts) {
       settingId: payload.settingId,
       planId: payload.planId,
       encounterId: payload.turn.encounterId,
-      narrative: payload.turn.narrative,
+      story: payload.turn.story,
       playerInput: payload.playerInput,
       characters: payload.turn.characters,
     })
 
+    // The player's first words, written into the story as their hero's beats.
+    const hero = payload.turn.characters.find((c) => c.type === "pc")
+    const reply: StoryBeat[] =
+      hero && payload.playerInput.trim()
+        ? [
+            { kind: "reply", by: { step: "reply", character: hero.id }, character: hero.id, text: payload.playerInput },
+            ...(await writeReply({ character: hero, playerInput: payload.playerInput, turn: payload.turn })),
+          ]
+        : []
     const turnWithTitle = {
       ...payload.turn,
+      story: [...payload.turn.story, ...reply],
       title: firstTurnSetup.turnTitle,
     }
 
@@ -155,7 +150,6 @@ export function createAdventure(ports: GmPorts) {
         _id: turn._id,
         encounterId: turn.encounterId,
         title: turn.title,
-        narrative: turn.narrative,
         story: turn.story,
         characters: turn.characters as TurnCharacter[],
         adventureId: turn.adventureId,
@@ -179,7 +173,6 @@ export function createAdventure(ports: GmPorts) {
     await ports.store.updateTurn({
       turnId,
       patch: {
-        narrative: rollResolution.narrative,
         story: rollResolution.story,
         characters: rollResolution.characters,
         updatedAt: Date.now(),

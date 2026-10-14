@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto"
 import { DatabaseSync } from "node:sqlite"
 import type { AdventureRecord, Store, TurnRecord, WikiTurnCommit } from "@d20/gm-core"
+import type { StoryBeat } from "@d20/gm-core/story/beats"
 import { withStory } from "@d20/gm-core/story/turn"
 import { type AdventurePatch, validateAdventurePatch } from "@d20/gm-core/wiki-adventures/adventure-patch"
 import { validateRuntimeTransition } from "@d20/gm-core/wiki-adventures/transition-validator"
@@ -66,6 +67,58 @@ export const summarize = (save: Save, archiveId?: number, playedAt?: number): Sa
 }
 
 /** SQLite writes commit each milestone, including the natural die before inference. */
+// A save from before turns kept beats holds a narrative string with [DiceRoll:] and [OriginalReply:] markers. It is
+// read once into beats: paragraphs as narration, which nothing labels, and rolls and the player's words as theirs.
+type OldTurn = Omit<TurnRecord, "story"> & { story?: StoryBeat[]; narrative?: string }
+function oldStory(turn: OldTurn): StoryBeat[] {
+  const by = { step: "round" as const }
+  const beats: StoryBeat[] = []
+  const text = turn.narrative ?? ""
+  const reply = /\[OriginalReply:\s*([\s\S]*?)\]/g
+  const paragraphs = (chunk: string) => {
+    for (const line of chunk
+      .split(/\n/)
+      .map((l) => l.trim())
+      .filter(Boolean)) {
+      const roll = line.match(/^\[DiceRoll:([^\]]+)\]$/i)
+      if (!roll) {
+        beats.push({ kind: "narration", by, text: line })
+        continue
+      }
+      const f = Object.fromEntries(roll[1].split(";").map((pair) => [pair.split("=")[0].trim(), pair.split("=").slice(1).join("=").trim()]))
+      const name = f.character ?? ""
+      beats.push({
+        kind: "roll",
+        by: { step: "roll" },
+        character: turn.characters.find((c) => c.name === name)?.id ?? name,
+        name,
+        check: f.rollType ?? "",
+        natural: Number(f.baseRoll || f.result),
+        ...(f.modifier ? { modifier: Number(f.modifier) } : {}),
+        total: Number(f.result),
+        dc: Number(f.difficulty),
+        success: f.success === "true",
+      })
+    }
+  }
+  let last = 0
+  for (let m = reply.exec(text); m; m = reply.exec(text)) {
+    paragraphs(text.slice(last, m.index))
+    if (m[1].trim()) beats.push({ kind: "reply", by: { step: "reply" }, character: "", text: m[1].trim() })
+    last = reply.lastIndex
+  }
+  paragraphs(text.slice(last))
+  return beats
+}
+function readSave(json: string): Save {
+  const save = JSON.parse(json) as Save & { turns: OldTurn[] }
+  for (const turn of save.turns) {
+    turn.story ??= oldStory(turn)
+    delete turn.narrative
+  }
+  return save
+}
+
 export class LocalStore implements Store, Roster {
   db: DatabaseSync
   state: Save | null
@@ -82,9 +135,9 @@ export class LocalStore implements Store, Roster {
     const columns = this.db.prepare("PRAGMA table_info(archive)").all() as { name: string }[]
     if (!columns.some((c) => c.name === "summary")) this.db.exec("ALTER TABLE archive ADD COLUMN summary TEXT")
     for (const r of this.db.prepare("SELECT id, archived_at, json FROM archive WHERE summary IS NULL").all() as { id: number; archived_at: number; json: string }[])
-      this.db.prepare("UPDATE archive SET summary=? WHERE id=?").run(JSON.stringify(summarize(JSON.parse(r.json))), r.id)
+      this.db.prepare("UPDATE archive SET summary=? WHERE id=?").run(JSON.stringify(summarize(readSave(r.json))), r.id)
     const row = this.db.prepare("SELECT json FROM save WHERE id=1").get() as { json: string } | undefined
-    this.state = row ? JSON.parse(row.json) : null
+    this.state = row ? readSave(row.json) : null
     if (this.state && this.state.version !== 1) throw new Error("This save needs a newer version of D20 Adventures.")
   }
   acquire() {
@@ -104,7 +157,7 @@ export class LocalStore implements Store, Roster {
       this.db.exec("COMMIT")
       this.ownsLock = true
       const saved = this.db.prepare("SELECT json FROM save WHERE id=1").get() as { json: string } | undefined
-      this.state = saved ? JSON.parse(saved.json) : null
+      this.state = saved ? readSave(saved.json) : null
     } catch (error) {
       this.db.exec("ROLLBACK")
       throw error
@@ -112,7 +165,7 @@ export class LocalStore implements Store, Roster {
   }
   reload() {
     const row = this.db.prepare("SELECT json FROM save WHERE id=1").get() as { json: string } | undefined
-    this.state = row ? JSON.parse(row.json) : null
+    this.state = row ? readSave(row.json) : null
     return this.state
   }
   close() {
@@ -178,7 +231,7 @@ export class LocalStore implements Store, Roster {
     try {
       const row = this.db.prepare("SELECT json FROM archive WHERE id=?").get(archiveId) as { json: string } | undefined
       if (!row) throw new Error("That adventure is no longer saved.")
-      next = JSON.parse(row.json)
+      next = readSave(row.json)
       if (next.version !== 1) throw new Error("This save needs a newer version of D20 Adventures.")
       this.db.prepare("DELETE FROM archive WHERE id=?").run(archiveId)
       this.archiveCurrent()
@@ -245,8 +298,7 @@ export class LocalStore implements Store, Roster {
       this.state!.rollChecks ??= {}
       this.state!.rollChecks[`${turn._id}:${c.id}`] = { name: c.name, skill: args.rollRequirement.rollType, dc: args.rollRequirement.difficulty, modifier: args.rollRequirement.modifier ?? 0 }
     }
-    if (args.story) Object.assign(turn, withStory(turn, args.story))
-    else turn.narrative += `\n\n${args.originalPlayerInput ? `[OriginalReply: ${args.originalPlayerInput}]\n` : ""}${args.narrativeAction}`
+    Object.assign(turn, withStory(turn, args.story))
     Object.assign(c, { hasReplied: true, isComplete: !args.rollRequirement, rollRequired: args.rollRequirement, rollResult: undefined })
     this.save()
   }
@@ -296,8 +348,7 @@ export class LocalStore implements Store, Roster {
       adventureId: args.adventureId,
       encounterId: args.nextEncounterId,
       title: args.title,
-      narrative: args.narrative,
-      ...(args.story ? { story: args.story } : {}),
+      story: args.story,
       characters,
       order: args.order,
       isFinalEncounter: args.isFinalEncounter,

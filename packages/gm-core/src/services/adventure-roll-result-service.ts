@@ -2,7 +2,7 @@ import type { GmPorts } from "../ports"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
 import { storyRules } from "../story/prompt"
-import { lastStep, storyNames, storyText, turnStory } from "../story/render"
+import { lastStep, storyNames, storyText } from "../story/render"
 import { rollBeat, sceneFor, storyOutputObject, withStory } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
@@ -97,8 +97,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
       _id: string
       encounterId: string
       title: string
-      narrative?: string
-      story?: StoryBeat[]
+      story: StoryBeat[]
       characters: TurnCharacter[]
       adventureId: string
       isFinalEncounter?: boolean
@@ -118,7 +117,6 @@ export function createAdventureRollResultService(ports: GmPorts) {
     // The adventure's premise, added to the GM's notes.
     premise?: string
   }): Promise<{
-    narrative: string
     story: StoryBeat[]
     characters: TurnCharacter[]
   }> {
@@ -139,7 +137,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
       dc: difficulty,
       success,
     })
-    const story = turnStory(args.turn)
+    const story = args.turn.story
     const names = storyNames(args.turn.characters)
     const playerActionText = storyText(lastStep(story), names)
     const narrativeContext = storyText(story, names).split(/\n\n+/).slice(-2).join("\n\n")
@@ -173,7 +171,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
       console.error("[resolvePlayerRollResult] Error generating roll outcome:", error)
     }
 
-    const { story: newStory, narrative: newNarrative } = withStory(args.turn, added)
+    const { story: newStory } = withStory(args.turn, added)
     const diceRoll = {
       rollType,
       baseRoll,
@@ -194,7 +192,6 @@ export function createAdventureRollResultService(ports: GmPorts) {
       id: args.turn._id,
       encounterId: args.turn.encounterId,
       title: args.turn.title,
-      narrative: args.turn.narrative || "",
       story: args.turn.story,
       characters: normalizedCharacters,
       adventureId: args.turn.adventureId,
@@ -205,7 +202,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
       ? await analyzeAndApplyDiceRoll({
           turn: turnForAnalysis,
           diceRoll,
-          narrative: newNarrative,
+          story: newStory,
         })
       : turnForAnalysis
 
@@ -228,7 +225,6 @@ export function createAdventureRollResultService(ports: GmPorts) {
     }
 
     return {
-      narrative: newNarrative,
       story: newStory,
       characters: keepPlayersAlive(args, updatedCharacters),
     }

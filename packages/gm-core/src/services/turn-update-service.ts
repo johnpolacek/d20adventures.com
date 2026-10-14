@@ -1,5 +1,7 @@
 import { z } from "zod"
 import type { GmPorts } from "../ports"
+import type { StoryBeat } from "../story/beats"
+import { type StoryNames, storyNames, storyText } from "../story/render"
 import type { DiceRoll, Turn } from "../types/adventure"
 
 const healthAnalysisSchema = z.object({
@@ -18,32 +20,26 @@ const healthAnalysisSchema = z.object({
 
 type HealthAnalysis = z.infer<typeof healthAnalysisSchema>
 
-function extractNarrativeAfterLastDiceRoll(narrative: string): string | null {
-  const diceRollRegex = /\[DiceRoll:[^\]]+\]/g
-  let match: RegExpExecArray | null
-  let lastIndex = -1
-  while ((match = diceRollRegex.exec(narrative)) !== null) {
-    lastIndex = match.index + match[0].length
-  }
-  if (lastIndex === -1) return null
-  return narrative.slice(lastIndex).trim()
+// What the story says after its last roll: the outcome to judge for health and status. Null without a roll.
+function afterLastRoll(story: StoryBeat[], names: StoryNames): string | null {
+  const last = story.map((b) => b.kind).lastIndexOf("roll")
+  return last < 0 ? null : storyText(story.slice(last + 1), names).trim()
 }
 
 export function createTurnUpdateService(ports: GmPorts) {
   const generateObject = ports.llm.generateObject.bind(ports.llm)
-  async function analyzeAndApplyDiceRoll({ turn, diceRoll, narrative }: { turn: Turn; diceRoll: DiceRoll; narrative: string }): Promise<Turn> {
+  async function analyzeAndApplyDiceRoll({ turn, diceRoll, story }: { turn: Turn; diceRoll: DiceRoll; story: StoryBeat[] }): Promise<Turn> {
     console.log("[analyzeAndApplyDiceRoll] Input diceRoll:", JSON.stringify(diceRoll, null, 2))
     console.log(
       "[analyzeAndApplyDiceRoll] Input turn:",
       JSON.stringify({ characterCount: turn.characters.length, characters: turn.characters.map((c) => ({ id: c.id, name: c.name, healthPercent: c.healthPercent, status: c.status })) }, null, 2)
     )
 
-    // Extract only the narrative following the last dice roll shortcode
-    const relevantNarrative = extractNarrativeAfterLastDiceRoll(narrative)
+    // Only what followed the last roll
+    const relevantNarrative = afterLastRoll(story, storyNames(turn.characters))
 
     if (!relevantNarrative) {
       console.log("[analyzeAndApplyDiceRoll] No narrative found after dice roll")
-      console.log("[analyzeAndApplyDiceRoll] Full narrative:", narrative)
       return turn
     }
 

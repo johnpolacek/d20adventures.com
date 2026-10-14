@@ -1,3 +1,4 @@
+import type { StoryBeat } from "../story/beats"
 import { turnScript } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
@@ -7,7 +8,7 @@ import { KNOWLEDGE_RULE } from "../utils/narrative-utils"
 type TurnHistoryRow = {
   order?: number
   encounterId: string
-  narrative?: string
+  story?: StoryBeat[]
 }
 
 type RecentTurnContext = {
@@ -61,53 +62,12 @@ export function getRecentTurnsForContext(allTurns: (TurnHistoryRow & Record<stri
 }
 
 export function buildRollInfo(turn: Turn): string {
-  const diceRollRegex = /\[DiceRoll:([^\]]+)\]/g
-  const narrativeForRollParsing = turn.narrative ?? ""
-  let matches
-  let lastDiceRollParamsStr: string | null = null
-  while ((matches = diceRollRegex.exec(narrativeForRollParsing)) !== null) {
-    lastDiceRollParamsStr = matches[1]
-  }
-
+  const last = [...turn.story].reverse().find((b) => b.kind === "roll")
   let rollInfo = "No character-specific dice roll was identified as the immediate precursor to this state."
 
-  if (lastDiceRollParamsStr) {
-    const params = lastDiceRollParamsStr.split(";").reduce(
-      (acc, part) => {
-        const [key, ...valueParts] = part.split("=")
-        const value = valueParts.join("=")
-        if (key && value !== undefined) acc[key.trim()] = value.trim()
-        return acc
-      },
-      {} as Record<string, string>
-    )
-
-    const characterName = params.character
-    const rollType = params.rollType
-    const resultStr = params.result
-    const difficultyStr = params.difficulty
-    const successStr = params.success
-    const modifierStr = params.modifier
-
-    if (characterName && rollType && resultStr && difficultyStr && successStr) {
-      const rollResult = Number.parseInt(resultStr, 10)
-      const difficulty = Number.parseInt(difficultyStr, 10)
-      const success = successStr === "true"
-      let modifier: number | undefined
-      let modifierText = ""
-
-      if (modifierStr) {
-        const parsedModifier = Number.parseInt(modifierStr, 10)
-        if (!Number.isNaN(parsedModifier)) {
-          modifier = parsedModifier
-          modifierText = `, modifier: ${modifier}`
-        }
-      }
-
-      if (!Number.isNaN(rollResult) && !Number.isNaN(difficulty)) {
-        rollInfo = `Regarding the most recent dice roll: Character '${characterName}' attempted a '${rollType}'. The result was ${rollResult} (difficulty: ${difficulty}${modifierText}). This roll was a ${success ? "SUCCESS" : "FAILURE"}.`
-      }
-    }
+  if (last?.kind === "roll") {
+    const modifierText = last.modifier !== undefined ? `, modifier: ${last.modifier}` : ""
+    rollInfo = `Regarding the most recent dice roll: Character '${last.name}' attempted a '${last.check}'. The result was ${last.total} (difficulty: ${last.dc}${modifierText}). This roll was a ${last.success ? "SUCCESS" : "FAILURE"}.`
   } else {
     const lastRollingCharacter = (turn.characters as TurnCharacter[]).find(hasRollFields)
     if (lastRollingCharacter) {
@@ -179,6 +139,8 @@ export function buildEncounterProgressionPrompt(args: {
   playerCharacterNames: string
   /** Battle-map staging summary (lib/mapview/spatial-summary.ts); omitted when the encounter has no stored map. */
   spatialContext?: string
+  /** How to write beats, with the scene's cast and places. */
+  storyRules?: string
 }): string {
   return `
 ${args.adventureOverview}
@@ -237,7 +199,7 @@ Your Task:
    - If a transition condition IS MET: Use the 'leads to encounter ID' from that transition.
    - If MULTIPLE transition conditions appear to be met by PAST actions/rolls: Prioritize conditions related to explicit success or failure of a recent dice roll if applicable. If still ambiguous, use the first one that clearly applies.
    - If NO transition condition is met the 'nextEncounterId' should remain the Current Encounter ID ('${args.currentEncounterId}').
-5. Generate a 'narrative' response:
+5. Generate the 'beats' response, the narrative as beats:
    - If transitioning (because a condition was met by PAST actions/rolls): The narrative should briefly describe the events or state that fulfill the transition condition and logically lead into the new encounter. This acts as a bridge.
    - If NOT transitioning (i.e., 'nextEncounterId' is '${args.currentEncounterId}'): The narrative MUST describe what happens next in the current encounter based on the 'Most Recent Action/Event' and 'Key Information Regarding Recent Dice Roll'. It should set the stage for the player's NEXT decision. For example, if a creature was detected, the narrative might describe the creature appearing or its immediate reaction, prompting the player to decide their next move. DO NOT write new actions or decisions for the player character(s).
    - Do NOT add any questions at the end like 'What does he do next?'
@@ -252,12 +214,13 @@ IMPORTANT GUIDELINES:
 - If no transition occurs, the narrative should clearly end in a way that prompts the player for their next action. For instance, describe the scene and end with a question like "What does Thalbern do next?" or simply describe the immediate situation that demands a response.
 - ${KNOWLEDGE_RULE}
 - Write in clean, classic fantasy prose without em dashes (—), en dashes (–), figure dashes (‒), horizontal bars (―), or semicolons. Prefer commas or periods instead.
-- **FORMATTING REQUIREMENT**: Write 1-2 compact paragraphs. Use \\n\\n (double newlines) between paragraphs. Each paragraph should use 1-2 short sentences. Do NOT write a long block of text.
+- **LENGTH**: At most 4 short sentences in all. Do NOT write a long block of text.
+${args.storyRules ?? ""}
 
 Respond in JSON:
 {
   "nextEncounterId": string, // ID of the next/current encounter based on your evaluation
-  "narrative": string      // Narrative prose for the transition OR for continuing the current encounter. IMPORTANT: Do NOT include any questions at the end such as 'What does [character name] do next?' and do NOT mention any game mechanics such as dice rolls. CRITICAL: The narrative MUST be 1-2 compact paragraphs separated by \\n\\n (double newlines). Each paragraph should be 1-2 short sentences.
+  "beats": [...]      // The narrative for the transition OR for continuing the current encounter, as beats. IMPORTANT: Do NOT end on a question such as 'What does [character name] do next?' and do NOT mention any game mechanics such as dice rolls. At most 4 short sentences in all.
 }
 `
 }

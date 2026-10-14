@@ -15,7 +15,7 @@ export default function StoryviewSlideView({ slide, segmentIndex, getSpeaker }: 
     const part = slide.part
     return (
       <div className="fade-in w-full max-w-2xl">
-        <CharacterDiceRollResultDisplay character={part.character} rollType={part.rollType} difficulty={part.difficulty} result={part.result} image={part.image} modifier={part.modifier} baseRoll={part.baseRoll} />
+        <CharacterDiceRollResultDisplay character={part.name} rollType={part.check} difficulty={part.dc} result={part.total} image={part.image} modifier={part.modifier} baseRoll={part.natural} />
       </div>
     )
   }

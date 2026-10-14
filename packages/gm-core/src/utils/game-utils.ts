@@ -4,8 +4,7 @@ export function mapConvexTurnToTurn(raw: unknown): import("../types/adventure").
     _id: string
     encounterId: string
     title: string
-    narrative: string
-    story?: import("../story/beats").StoryBeat[]
+    story: import("../story/beats").StoryBeat[]
     characters: import("../types/adventure").TurnCharacter[]
     adventureId: string
     isFinalEncounter?: boolean
@@ -14,8 +13,7 @@ export function mapConvexTurnToTurn(raw: unknown): import("../types/adventure").
     id: t._id,
     encounterId: t.encounterId,
     title: t.title,
-    narrative: t.narrative,
-    ...(t.story ? { story: t.story } : {}),
+    story: t.story ?? [],
     characters: t.characters,
     adventureId: t.adventureId,
     isFinalEncounter: t.isFinalEncounter,

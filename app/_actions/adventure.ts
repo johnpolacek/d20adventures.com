@@ -12,11 +12,6 @@ import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
 import type { Adventure } from "@/types/adventure"
 import type { PC } from "@/types/character"
 
-export async function processTurnReply(args: { turnId: Id<"turns">; characterId: string; narrativeAction: string; originalPlayerInput?: string }) {
-  await refuseHostedTurn(args.turnId)
-  return createServerCore().processTurnReply(args)
-}
-
 // A reply in the player's own words. The GM writes it into the story as the hero's beats.
 export async function processPlayerReply(args: { turnId: Id<"turns">; characterId: string; playerInput: string }) {
   await refuseHostedTurn(args.turnId)

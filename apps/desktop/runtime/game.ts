@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto"
 import { type Content, createGmCore, type Llm } from "@d20/gm-core"
 import { type ActionSuggestion, suggestActions } from "@d20/gm-core/services/ai-pc-turn-service"
-import { introTurn, storyProse, turnScript } from "@d20/gm-core/story/turn"
+import { introTurn, turnScript } from "@d20/gm-core/story/turn"
 import { findCurrentActor } from "@d20/gm-core/utils/turn-actors"
 import { buildLocalWikiTurnCharacters } from "@d20/gm-core/wiki-adventures/characters"
 import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventures/plan-view"
@@ -253,7 +253,7 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
           const intent = (await llm.generateObject({ prompt: movementPrompt({ ...command.movement, action: command.text }), system: MOVEMENT_SYSTEM, schema: movementIntentSchema })).object
           store.state!.movement[`${turn._id}:${actor.id}`] = { actorId: actor.id, intent }
         }
-        await core.processTurnReply({ turnId: turn._id, characterId: actor.id, narrativeAction: storyProse(beats), originalPlayerInput: command.text, story: beats })
+        await core.processTurnReply({ turnId: turn._id, characterId: actor.id, originalPlayerInput: command.text, story: beats })
       } else if (command.kind === "skip") {
         if (actor.hasReplied) throw new Error("This reply is already saved. Resolve the pending roll.")
         Object.assign(actor, { hasReplied: true, isComplete: true })

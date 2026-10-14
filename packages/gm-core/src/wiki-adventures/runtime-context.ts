@@ -3,7 +3,7 @@ import { authoredText } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
 import type { StoryScene } from "../story/clean"
 import { storyRules } from "../story/prompt"
-import { lastStep, storyNames, storyText, turnStory } from "../story/render"
+import { lastStep, storyNames, storyText } from "../story/render"
 import { turnScript } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import { KNOWLEDGE_RULE } from "../utils/narrative-utils"
@@ -13,8 +13,7 @@ import type { RuntimeArtifacts, RuntimeEncounter, RuntimeEntityRecord, RuntimeTr
 
 export type RuntimeTurnRow = {
   encounterId: string
-  narrative?: string
-  story?: StoryBeat[]
+  story: StoryBeat[]
   order?: number
   characters?: TurnCharacter[]
 }
@@ -167,7 +166,7 @@ export function assembleGameplayContextPacket(args: {
       recentTurnHistory: buildRecentTurnHistory(recentTurns),
       narrativeSummary: args.session.narrativeSummary,
       currentRound: turnScript(args.session.currentTurn),
-      mostRecentAction: storyText(lastStep(turnStory(args.session.currentTurn)), storyNames(args.session.currentTurn.characters)),
+      mostRecentAction: storyText(lastStep(args.session.currentTurn.story), storyNames(args.session.currentTurn.characters)),
       rollInfo: buildRollInfo(args.session.currentTurn),
     },
     graph: {

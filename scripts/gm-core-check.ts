@@ -3,7 +3,6 @@ import { readdirSync, readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { createGmCore, type GmPorts, type Store } from "@d20/gm-core"
 import { assertPlayerCharacterControl } from "@d20/gm-core/access"
-import { storyProse } from "@d20/gm-core/story/turn"
 import { calculateAttributeModifier } from "@d20/gm-core/utils/modifier-utils"
 import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventures/plan-view"
 import { gmNotesWithRules, premiseNote } from "@d20/gm-core/wiki-adventures/player-safety"
@@ -127,7 +126,7 @@ async function replayTurn() {
   const initial = fixture.initialState
   const player = { ...initial.characters[0], controlledBy: "human" }
   const beats = await core.writeReply({ character: player, playerInput: fixture.playerInput, turn: initial })
-  const reply = await core.processTurnReply({ turnId: "turn-1", characterId: player.id, narrativeAction: storyProse(beats), originalPlayerInput: fixture.playerInput, story: beats })
+  const reply = await core.processTurnReply({ turnId: "turn-1", characterId: player.id, originalPlayerInput: fixture.playerInput, story: beats })
   assert.ok(reply.rollRequired)
   await core.resolvePlayerRollResult({ turnId: "turn-1", characterId: player.id, result: 20 })
   assert.ok(game.records.get("turn-1").characters.every((actor: any) => actor.isComplete))
@@ -154,7 +153,7 @@ async function replayTurn() {
       expectedCurrentEncounterId: initial.encounterId,
       nextEncounterId: "the-harvest-festival",
       title: "",
-      narrative: "",
+      story: [],
       characters: [],
       order: 3,
     }),
@@ -184,7 +183,10 @@ async function accessAndInstanceIsolation() {
   a.ports.identity = async () => "outsider"
   const coreA = createGmCore(a.ports)
   const coreB = createGmCore(b.ports)
-  await assert.rejects(coreA.processTurnReply({ turnId: "turn-1", characterId: "mira", narrativeAction: "Hello" }), /Forbidden/)
+  await assert.rejects(
+    coreA.processTurnReply({ turnId: "turn-1", characterId: "mira", story: [{ kind: "action", by: { step: "reply", character: "mira" }, actor: "mira", text: "Hello" }] }),
+    /Forbidden/
+  )
   await assert.rejects(coreB.assertAdventureAccess(null, "fixture-adventure"), /Unauthorized/)
   const turn = b.records.get("turn-1")
   assert.throws(() => assertPlayerCharacterControl("fixture-player", turn, "garlan-ironfist"), /Only player/)
@@ -242,7 +244,7 @@ async function accessAndInstanceIsolation() {
     title: "New game",
     startedAt: 0,
     playerInput: "",
-    turn: { encounterId: fixture.initialState.encounterId, narrative: "", characters: [], order: 1 },
+    turn: { encounterId: fixture.initialState.encounterId, story: [], characters: [], order: 1 },
   })
 
   const d = memoryGame()
@@ -260,7 +262,7 @@ async function accessAndInstanceIsolation() {
     currentVersionId: "new-version-id",
     nextEncounterId: "the-harvest-festival",
     title: "Festival",
-    narrative: "The party enters the city.",
+    story: [{ kind: "narration", by: { step: "round" }, text: "The party enters the city." }],
     characters: [],
     order: 2,
     isFinalEncounter: true,

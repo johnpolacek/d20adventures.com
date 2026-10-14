@@ -278,7 +278,7 @@ test("storage validates the whole patch before writing and a duplicate commit ca
       expectedCurrentEncounterId: turn.encounterId,
       nextEncounterId: turn.encounterId,
       title: turn.title,
-      narrative: "The guard gives Cassia a token.",
+      story: [{ kind: "narration" as const, by: { step: "round" as const }, text: "The guard gives Cassia a token." }],
       characters: turn.characters,
       order: turn.order + 1,
     }

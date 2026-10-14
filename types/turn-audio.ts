@@ -1,7 +1,7 @@
 export type StoryviewSpeaker = "narrator" | string // characterId
 
 export interface TurnAudioSegment {
-  partIndex: number // index into parseNarrative() parts for the turn's narrative
+  partIndex: number // index into storyParagraphs() of the turn's story
   speaker: StoryviewSpeaker
   characterName?: string
   text: string

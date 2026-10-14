@@ -10,27 +10,26 @@
 // gets the toggle.
 
 import { useUser } from "@clerk/nextjs"
+import type { StoryBeat } from "@d20/gm-core/story/beats"
+import { storyParagraphs } from "@d20/gm-core/story/render"
 import { Clapperboard, Loader2, Maximize2 } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { setStoryviewAutoEnabled } from "@/app/_actions/storyview"
 import { Switch } from "@/components/ui/switch"
+import type { Id } from "@/convex/_generated/dataModel"
 import { useAdventure } from "@/lib/context/AdventureContext"
 import { useTurnContext } from "@/lib/context/TurnContext"
 import { cn } from "@/lib/utils"
-import type { Id } from "@/convex/_generated/dataModel"
 import type { TurnAudioManifestResponse } from "@/types/turn-audio"
 import StoryviewOverlay, { type StoryviewSnapshot } from "./storyview-overlay"
 import StoryviewPausedNotice from "./storyview-paused-notice"
 
 const STATUS_REFRESH_DEBOUNCE_MS = 2000
 
-/** First substantial narrative line — enough for a cropped teaser. */
-function previewText(narrative: string): string {
-  const line = narrative
-    .split("\n")
-    .map((entry) => entry.trim())
-    .find((entry) => entry.length > 40)
-  return line ?? narrative.slice(0, 240)
+/** First substantial paragraph of the story, enough for a cropped teaser. */
+function previewText(story: StoryBeat[]): string {
+  const texts = storyParagraphs(story).flatMap((p) => (p.beats[0].kind === "roll" || p.beats[0].kind === "reply" ? [] : [p.text]))
+  return texts.find((entry) => entry.length > 40) ?? (texts[0] ?? "").slice(0, 240)
 }
 
 export default function StoryviewRailPanel({ className }: { className?: string }) {
@@ -45,13 +44,14 @@ export default function StoryviewRailPanel({ className }: { className?: string }
 
   const isOwner = !!user?.id && adventure.ownerId === user.id
   const turnId = currentTurn?.id
-  const narrative = currentTurn?.narrative
+  // The story changes when a beat is added: its length is enough to notice.
+  const told = currentTurn?.story.length ?? 0
 
   // Poll the manifest when the turn or its narrative settles (SSE turn updates
   // re-run this), debounced so mid-turn patches don't stack requests. This is
   // also how non-owners learn about pause state.
   useEffect(() => {
-    if (!turnId || !narrative) return
+    if (!turnId || !told) return
     let aborted = false
     const delay = firstFetchRef.current ? 0 : STATUS_REFRESH_DEBOUNCE_MS
     firstFetchRef.current = false
@@ -74,14 +74,14 @@ export default function StoryviewRailPanel({ className }: { className?: string }
       aborted = true
       clearTimeout(timer)
     }
-  }, [turnId, narrative, refreshTick])
+  }, [turnId, told, refreshTick])
 
-  if (!currentTurn?.narrative) return null
+  if (!currentTurn?.story.length) return null
 
   const open = () => {
     setSnapshot({
       turnId: currentTurn.id,
-      narrative: currentTurn.narrative,
+      story: currentTurn.story,
       characters: currentTurn.characters.map((c) => ({ id: c.id, name: c.name, image: c.image })),
     })
   }
@@ -122,9 +122,14 @@ export default function StoryviewRailPanel({ className }: { className?: string }
             </button>
           </div>
         </div>
-        <button type="button" onClick={open} className="group relative block w-full cursor-pointer bg-gradient-to-b from-[#14101f] via-[#0e0b16] to-[#08060d] text-left" aria-label="Play this turn in Storyview">
+        <button
+          type="button"
+          onClick={open}
+          className="group relative block w-full cursor-pointer bg-gradient-to-b from-[#14101f] via-[#0e0b16] to-[#08060d] text-left"
+          aria-label="Play this turn in Storyview"
+        >
           <div className="relative max-h-28 overflow-hidden px-4 pt-3">
-            <p className="font-display text-lg leading-snug text-stone-200/30 transition-colors group-hover:text-violet-100/30">{previewText(currentTurn.narrative)}</p>
+            <p className="font-display text-lg leading-snug text-stone-200/30 transition-colors group-hover:text-violet-100/30">{previewText(currentTurn.story)}</p>
             {/* crop fade into the caption row */}
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-[#0a0810] to-transparent" />
           </div>

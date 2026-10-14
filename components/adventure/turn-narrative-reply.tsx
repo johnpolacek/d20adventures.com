@@ -1,5 +1,6 @@
 "use client"
 import { SignUpButton, useUser } from "@clerk/nextjs"
+import { storyNames, storyText } from "@d20/gm-core/story/render"
 import { SparklesIcon } from "@heroicons/react/24/solid"
 import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -15,7 +16,6 @@ import { Textarea } from "@/components/ui/textarea"
 import type { Id } from "@/convex/_generated/dataModel"
 import { useAdventure } from "@/lib/context/AdventureContext"
 import { useTurn } from "@/lib/context/TurnContext"
-import { formatNarrativeAction } from "@/lib/services/narrative-generation-service"
 import { hasBooleanProp, hasNumberProp } from "@/lib/utils"
 import type { TurnCharacter } from "@/types/adventure"
 import LoadingAnimation from "../ui/loading-animation"
@@ -92,31 +92,8 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
   const handleDemoReply = async () => {
     if (!user || !user.id || !currentTurn) return
     const userId = user.id
-    let narrativeAction = input.trim()
     setError(null)
     try {
-      if (character) {
-        const paragraphs = (currentTurn.narrative || "").split(/\\n\\n+/).filter(Boolean)
-        const narrativeContext = paragraphs.slice(-2).join("\\n\\n")
-        narrativeAction = await formatNarrativeAction({
-          characterName: character.name,
-          gender: character.gender,
-          playerInput: input,
-          narrativeContext,
-          characterInfo: {
-            archetype: character.archetype,
-            race: character.race,
-            appearance: character.appearance,
-            personality: character.personality,
-            motivation: character.motivation,
-            specialAbilities: character.specialAbilities,
-            skills: character.skills,
-            equipment: character.equipment?.map((e) => ({ name: e.name })) || [],
-          },
-        })
-      }
-      const prev = currentTurn.narrative || ""
-      const newNarrative = prev ? `${prev}\\n\\n${narrativeAction}` : narrativeAction
       const payload = {
         planId: adventurePlanId,
         settingId,
@@ -127,7 +104,8 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
         playerInput: input,
         turn: {
           encounterId: currentTurn.encounterId,
-          narrative: newNarrative,
+          // The intro. The server writes the player's words into it as their hero's beats.
+          story: currentTurn.story,
           characters: (currentTurn.characters as TurnCharacter[]).map((c) => ({
             ...c,
             hasReplied: c.id === character.id,
@@ -273,7 +251,7 @@ Name: ${characterState.name}
 ${characterState.archetype ? `Class/Archetype: ${characterState.archetype}\n` : ""}${characterState.race ? `Race: ${characterState.race}\n` : ""}${characterState.personality ? `Personality: ${characterState.personality}\n` : ""}${characterState.background ? `Background: ${characterState.background}\n` : ""}${characterState.motivation ? `Motivation: ${characterState.motivation}\n` : ""}${characterState.appearance ? `Appearance: ${characterState.appearance}\n` : ""}${characterState.specialAbilities ? `Special Abilities: ${characterState.specialAbilities}\n` : ""}${characterState.spells?.length ? `Spells: ${characterState.spells.map((s) => s.name).join(", ")}\n` : ""}${characterState.skills?.length ? `Skills: ${characterState.skills.join(", ")}\n` : ""}${characterState.equipment?.length ? `Equipment: ${characterState.equipment.map((e) => e.name).join(", ")}\n` : ""}
 
 Recent Narrative:
-${currentTurn.narrative}
+${storyText(currentTurn.story, storyNames(currentTurn.characters))}
 ${input ? `\nPlayer Input: ${input}` : ""}`
       await streamText(prompt, (output) => {
         setInput(output)

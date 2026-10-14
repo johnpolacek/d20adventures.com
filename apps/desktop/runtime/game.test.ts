@@ -210,11 +210,13 @@ test("reply storage and real roll services keep dice across failures and reject 
     await store.submitReply({
       turnId: turn._id,
       characterId: pc.id,
-      narrativeAction: "She bargains for entry.",
-      originalPlayerInput: "I bargain.",
+      story: [
+        { kind: "reply", by: { step: "reply", character: pc.id }, character: pc.id, text: "I bargain." },
+        { kind: "action", by: { step: "reply", character: pc.id }, actor: pc.id, text: "She bargains for entry." },
+      ],
       rollRequirement: { rollType: "Persuasion", difficulty: 12, modifier: 2 },
     })
-    await assert.rejects(() => store.submitReply({ turnId: turn._id, characterId: pc.id, narrativeAction: "duplicate" }), /already acted/)
+    await assert.rejects(() => store.submitReply({ turnId: turn._id, characterId: pc.id, story: [] }), /already acted/)
     await assert.rejects(() => run({ kind: "roll", turnId: turn._id, characterId: pc.id, result: 14 }), /offline/)
     const reloaded = new LocalStore(path)
     assert.equal(reloaded.state!.rolls[`${turn._id}:${pc.id}`], 14)
@@ -238,13 +240,13 @@ test("skip ends the hero's turn with nothing written and no AI, and only for the
       c.initiative = c.id === pcs[0].id ? 20 : c.id === pcs[1].id ? 10 : 0
     })
     store.save()
-    const narrative = turn.narrative
+    const told = JSON.stringify(turn.story)
     await assert.rejects(() => run({ kind: "skip", turnId: turn._id, characterId: pcs[1].id }), /another character/)
     await assert.rejects(() => run({ kind: "skip", turnId: "stale", characterId: pcs[0].id }), /already advanced/)
     await run({ kind: "skip", turnId: turn._id, characterId: pcs[0].id })
     const skipped = store.current().characters.find((c) => c.id === pcs[0].id)!
     assert.equal(skipped.hasReplied && skipped.isComplete, true)
-    assert.equal(store.current().narrative, narrative)
+    assert.equal(JSON.stringify(store.current().story), told)
     assert.equal(findCurrentActor(store.current().characters)?.id, pcs[1].id)
     const reopened = new LocalStore(path)
     assert.equal(reopened.current().characters.find((c) => c.id === pcs[0].id)!.isComplete, true)

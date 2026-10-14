@@ -70,12 +70,6 @@ export const adventurePatchSchema = z.object({
 
 export type AdventurePatch = z.infer<typeof adventurePatchSchema>
 
-export type AiGmTurnResult = {
-  nextEncounterId: string
-  narrative: string
-  adventurePatch: AdventurePatch
-}
-
 export function validateAdventurePatch(input: unknown, transition: TransitionValidationResult): AdventurePatch {
   const patch = adventurePatchSchema.parse(input ?? {})
   if (transition.allowed && transition.kind === "transition" && transition.transition) {

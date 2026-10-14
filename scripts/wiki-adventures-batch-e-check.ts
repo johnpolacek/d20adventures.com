@@ -49,7 +49,10 @@ async function main() {
     adventureId: "adv-1",
     encounterId: "gatehouse-entry",
     title: loaded.artifacts.encounters["gatehouse-entry"].title,
-    narrative: "The party reaches the gatehouse.\n\n[OriginalReply: We ask Captain Vala for passage.]",
+    story: [
+      { kind: "narration", by: { step: "round" }, text: "The party reaches the gatehouse." },
+      { kind: "reply", by: { step: "reply", character: "vala-apprentice" }, character: "vala-apprentice", text: "We ask Captain Vala for passage." },
+    ],
     characters: [
       { ...pc, userId: "user-1", initiative: 15, hasReplied: true, isComplete: true },
       { ...npc, initiative: 12, hasReplied: false, isComplete: false },
@@ -61,8 +64,8 @@ async function main() {
     narrativeSummary: "The party arrived at the old road gatehouse.",
     currentTurn,
     allTurns: [
-      { encounterId: "gatehouse-entry", order: 1, narrative: "The road narrowed before repaired timber walls." },
-      { encounterId: "gatehouse-entry", order: 2, narrative: currentTurn.narrative },
+      { encounterId: "gatehouse-entry", order: 1, story: [{ kind: "narration", by: { step: "round" }, text: "The road narrowed before repaired timber walls." }] },
+      { encounterId: "gatehouse-entry", order: 2, story: currentTurn.story },
     ],
   }
   const packet = assembleGameplayContextPacket({

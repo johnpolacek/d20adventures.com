@@ -1,6 +1,7 @@
 "use server"
 
 import { auth } from "@clerk/nextjs/server"
+import { storyNames, storyText } from "@d20/gm-core/story/render"
 import { z } from "zod"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
@@ -95,7 +96,7 @@ export async function generatePracticeReport(adventureId: Id<"adventures">) {
     order: turn.order,
     encounterId: turn.encounterId,
     title: turn.title,
-    narrative: (turn.narrative || "").slice(-4000),
+    narrative: storyText(turn.story, storyNames(turn.characters)).slice(-4000),
   }))
 
   const prompt = buildPracticeReportPrompt({ plan, turnSnapshots })

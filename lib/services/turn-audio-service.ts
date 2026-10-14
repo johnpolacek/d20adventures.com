@@ -1,15 +1,13 @@
 import { createHash } from "node:crypto"
 import { decrementUserTokensAction } from "@/app/_actions/tokens"
 import type { Doc, Id } from "@/convex/_generated/dataModel"
-import { type AttributedSegment, attributeNarrative } from "@/lib/ai/narration-attribution"
-import { segmentsFromStory } from "@/lib/ai/story-segments"
+import { storyHash as hashStory, narratedParagraphs, type StorySegment, segmentsFromStory } from "@/lib/ai/story-segments"
 import { synthesizeSegment } from "@/lib/ai/tts"
 import { assignVoices, type VoiceAssignment, voiceForSpeaker } from "@/lib/ai/tts-voices"
 import { pcmDurationSec, pcmToWav } from "@/lib/audio/wav"
 import { isAwsConfigured } from "@/lib/aws"
 import { api, convex } from "@/lib/convex/server"
 import { uploadFileToS3 } from "@/lib/s3-utils"
-import { parseNarrative } from "@/lib/utils/parse-narrative"
 import type { TurnAudioSegment } from "@/types/turn-audio"
 
 // Storyview narration generation, shared by the on-demand route (single payer)
@@ -21,7 +19,6 @@ import type { TurnAudioSegment } from "@/types/turn-audio"
 // audio output (~25/sec at ~15 chars/sec ≈ 1.67/char) ≈ 2/char for TTS, plus
 // ~1/char for the attribution LLM pass whose cost folds into the same charge.
 const ESTIMATED_TTS_TOKENS_PER_CHAR = 2
-const ESTIMATED_ATTRIBUTION_TOKENS_PER_CHAR = 1
 const TOKEN_MULTIPLIER = 0.01 // 100 provider tokens = 1 D20 token
 const SYNTHESIS_CONCURRENCY = 4
 
@@ -41,7 +38,7 @@ function sha1(text: string): string {
   return createHash("sha1").update(text).digest("hex")
 }
 
-function styleInstructionFor(segment: Pick<AttributedSegment, "speaker" | "styleHint">): string {
+function styleInstructionFor(segment: Pick<StorySegment, "speaker" | "styleHint">): string {
   return segment.speaker === "narrator" ? NARRATOR_STYLE : `Say in a ${segment.styleHint || "natural, in-character"} voice:`
 }
 
@@ -58,16 +55,15 @@ async function runWithConcurrency<T, R>(items: T[], limit: number, fn: (item: T,
   return results
 }
 
-// A turn kept as beats says who speaks, so it needs no attribution call.
-export function estimateNarrationCharge(newChars: number, attributed = true): number {
-  return Math.ceil(newChars * (ESTIMATED_TTS_TOKENS_PER_CHAR + (attributed ? ESTIMATED_ATTRIBUTION_TOKENS_PER_CHAR : 0)) * TOKEN_MULTIPLIER)
+// Speech only: the story says who speaks, so there is no attribution call to pay for.
+export function estimateNarrationCharge(newChars: number): number {
+  return Math.ceil(newChars * ESTIMATED_TTS_TOKENS_PER_CHAR * TOKEN_MULTIPLIER)
 }
 
 export async function generateTurnAudioIncremental(opts: { turn: TurnDoc; adventure: AdventureDoc; requestedBy: string; charge: TurnAudioChargeMode }): Promise<GenerateTurnAudioResult> {
   const { turn, adventure, requestedBy, charge } = opts
-  const narrativeHash = sha1(turn.narrative)
-  const parts = parseNarrative(turn.narrative)
-  const paragraphs = parts.flatMap((part, index) => (part.type === "paragraph" ? [{ partIndex: index, text: part.value, hash: sha1(part.value) }] : []))
+  const storyHash = hashStory(turn.story)
+  const paragraphs = narratedParagraphs(turn.story)
   if (paragraphs.length === 0) {
     return { ok: false, reason: "no-content" }
   }
@@ -102,9 +98,8 @@ export async function generateTurnAudioIncremental(opts: { turn: TurnDoc; advent
     gender: c.gender,
     personality: c.personality,
   }))
-  const labelled = turn.story ? segmentsFromStory(turn.story, parts, new Set(newParagraphs.map((p) => p.partIndex)), roster) : null
   const newChars = newParagraphs.reduce((sum, p) => sum + p.text.length, 0)
-  const estimatedTokens = estimateNarrationCharge(newChars, !labelled)
+  const estimatedTokens = estimateNarrationCharge(newChars)
 
   // Balance gate before claiming or doing any AI work.
   if (estimatedTokens > 0) {
@@ -134,7 +129,7 @@ export async function generateTurnAudioIncremental(opts: { turn: TurnDoc; advent
   const claim = await convex.mutation(api.turnAudio.claimTurnAudioGeneration, {
     turnId: turn._id,
     adventureId: turn.adventureId,
-    narrativeHash,
+    storyHash,
     requestedBy,
   })
   if (!claim.claimed) {
@@ -142,12 +137,7 @@ export async function generateTurnAudioIncremental(opts: { turn: TurnDoc; advent
   }
 
   try {
-    const { segments: newSegments, usage: attributionUsage } = labelled
-      ? { segments: labelled, usage: { totalTokens: 0 } }
-      : await attributeNarrative(
-          newParagraphs.map(({ partIndex, text }) => ({ partIndex, text })),
-          roster
-        )
+    const newSegments = segmentsFromStory(turn.story, new Set(newParagraphs.map((p) => p.partIndex)), roster)
 
     // Assign stable per-adventure voices to any new speakers. Reused segments
     // carry their original voice, so persisted assignments keep them in sync.
@@ -177,7 +167,7 @@ export async function generateTurnAudioIncremental(opts: { turn: TurnDoc; advent
       ttsOutputTokens += usage.outputTokens
 
       // Content-addressed key: idempotent across regenerations and retries,
-      // and never collides with the legacy {narrativeHash8}/{i}.wav keys.
+      // and never collides with the legacy {storyHash8}/{i}.wav keys.
       const contentHash = sha1(`${voice}|${styleInstruction}|${segment.text}`).slice(0, 16)
       const audioKey = `adventures/${turn.adventureId}/turns/${turn._id}/audio/segments/${contentHash}.wav`
       const wav = pcmToWav(pcm)
@@ -209,7 +199,7 @@ export async function generateTurnAudioIncremental(opts: { turn: TurnDoc; advent
     // mid-flight and the charge fails or clamps, still publish the manifest:
     // the upfront check covers the common case, and breaking cached playback
     // for everyone is worse.
-    const totalProviderTokens = attributionUsage.totalTokens + ttsInputTokens + ttsOutputTokens
+    const totalProviderTokens = ttsInputTokens + ttsOutputTokens
     let chargedTokens = 0
     if (totalProviderTokens > 0) {
       if (charge.type === "single") {
@@ -240,7 +230,7 @@ export async function generateTurnAudioIncremental(opts: { turn: TurnDoc; advent
 
     await convex.mutation(api.turnAudio.finalizeTurnAudio, {
       turnId: turn._id,
-      narrativeHash,
+      storyHash,
       segments: manifestSegments,
       usage: { ttsInputTokens, ttsOutputTokens, chargedTokens },
     })
@@ -250,7 +240,7 @@ export async function generateTurnAudioIncremental(opts: { turn: TurnDoc; advent
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     console.error("turn-audio: generation failed:", error)
-    await convex.mutation(api.turnAudio.failTurnAudio, { turnId: turn._id, narrativeHash, error: message }).catch((failError) => console.error("turn-audio: failed to record error state:", failError))
+    await convex.mutation(api.turnAudio.failTurnAudio, { turnId: turn._id, storyHash, error: message }).catch((failError) => console.error("turn-audio: failed to record error state:", failError))
     return { ok: false, reason: "error" }
   }
 }
@@ -267,9 +257,9 @@ export async function maybeTriggerStoryviewAutoGeneration(turnId: Id<"turns">): 
     if (!adventure?.storyview?.autoEnabled) return
     if (!isAwsConfigured()) return
 
-    const narrativeHash = sha1(turn.narrative)
+    const storyHash = hashStory(turn.story)
     const existing = await convex.query(api.turnAudio.getTurnAudio, { turnId: turn._id })
-    if (existing?.narrativeHash === narrativeHash) {
+    if (existing?.storyHash === storyHash) {
       if (existing.status === "ready") {
         // Fresh audio already exists (e.g. someone generated on demand); a
         // lingering pause notice would only confuse.

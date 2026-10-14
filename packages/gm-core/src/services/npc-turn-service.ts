@@ -69,14 +69,11 @@ export function createNpcTurnService(ports: GmPorts) {
     sceneContext?: { title?: string; summary?: string }
     adventureOverview?: string
   }): Promise<{
-    updatedNarrative: string
     updatedCharacters: TurnCharacter[]
     beatsToAppend: StoryBeat[]
     actionSummary: string
     rollInfo?: { rollType: string; difficulty: number; baseRoll: number; modifier: number; result: number; success: boolean }
     effects?: Array<{ targetId: string; healthPercentDelta?: number; status?: string; equipmentToAdd?: Array<{ name: string; description?: string }> }>
-    shortcode?: string
-    narrativeToAppend: string
   }> {
     console.log("[LLM] Starting NPC turn:", {
       npc: npcId,
@@ -154,12 +151,9 @@ export function createNpcTurnService(ports: GmPorts) {
       scene,
     })
 
-    const updatedNarrative = branchResult.updatedNarrative
     let updatedCharacters = branchResult.updatedCharacters
     const rollInfo = branchResult.rollInfo
     const effects = branchResult.effects
-    const shortcode = branchResult.shortcode
-    const narrativeToAppend = branchResult.narrativeToAppend
     const beatsToAppend = branchResult.beatsToAppend
 
     updatedCharacters = applyNpcSpellPostProcessing({
@@ -170,12 +164,9 @@ export function createNpcTurnService(ports: GmPorts) {
 
     return finalizeNpcTurnResponse({
       actionSummary: actionResult.actionSummary,
-      updatedNarrative,
       updatedCharacters,
       rollInfo,
       effects,
-      shortcode,
-      narrativeToAppend,
       beatsToAppend,
       npcId: npc.id,
     })
@@ -197,8 +188,7 @@ export function createNpcTurnService(ports: GmPorts) {
           turnId: turn._id.toString(),
           adventureId: turn.adventureId.toString(),
           encounterId: turn.encounterId,
-          narrativeLength: turn.narrative?.length || 0,
-          narrativePreview: `${turn.narrative?.substring(0, 200)}...`,
+          beats: turn.story.length,
           characterCount: turn.characters.length,
           characters: turn.characters.map((c) => ({
             id: c.id,
@@ -316,7 +306,7 @@ export function createNpcTurnService(ports: GmPorts) {
         JSON.stringify(
           {
             turnId: turn._id.toString(),
-            narrativeLength: turn.narrative?.length || 0,
+            beats: turn.story.length,
             characterCount: characters.length,
             updatedCharacters: characters.map((c) => ({
               id: c.id,
@@ -388,11 +378,10 @@ export function createNpcTurnService(ports: GmPorts) {
         JSON.stringify(
           {
             actionSummary: result.actionSummary,
-            narrativeToAppendLength: result.narrativeToAppend?.length || 0,
+            beatsToAppend: result.beatsToAppend.length,
             updatedCharacterCount: result.updatedCharacters.length,
             hasRollInfo: !!result.rollInfo,
             effectCount: result.effects?.length || 0,
-            hasShortcode: !!result.shortcode,
           },
           null,
           2
@@ -410,11 +399,7 @@ export function createNpcTurnService(ports: GmPorts) {
         JSON.stringify(
           {
             turnId: turn._id.toString(),
-            oldNarrativeLength: turn.narrative?.length || 0,
-            newNarrativeLength: turnPatch.narrative.length,
-            narrativeDelta: turnPatch.narrative.length - (turn.narrative?.length || 0),
-            oldNarrativePreview: `${turn.narrative?.substring(0, 100)}...`,
-            newNarrativePreview: `${turnPatch.narrative.substring(0, 100)}...`,
+            beats: turnPatch.story.length,
             updatedCharacterCount: result.updatedCharacters.length,
           },
           null,

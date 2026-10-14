@@ -1,4 +1,6 @@
 import type { GmPorts } from "../ports"
+import type { StoryBeat } from "../story/beats"
+import { lastStep, storyNames, storyText } from "../story/render"
 import type { TurnCharacter } from "../types/adventure"
 import type { RollRequirement } from "../validations/roll-requirement-schema"
 import { createNarrativeService } from "./narrative-service"
@@ -8,7 +10,7 @@ export function createAdventureFirstTurnService(ports: GmPorts) {
   const { getRollRequirementHelper } = createNarrativeService(ports)
   const { getRollModifier } = createRollModifierService(ports)
   const loadAdventurePlanForRuntime = ports.content.loadPlan.bind(ports.content)
-  async function buildFirstTurnSetup(args: { settingId: string; planId: string; encounterId: string; narrative: string; playerInput: string; characters: TurnCharacter[] }): Promise<{
+  async function buildFirstTurnSetup(args: { settingId: string; planId: string; encounterId: string; story: StoryBeat[]; playerInput: string; characters: TurnCharacter[] }): Promise<{
     turnTitle: string
     rollRequirement: RollRequirement
   }> {
@@ -25,8 +27,9 @@ export function createAdventureFirstTurnService(ports: GmPorts) {
       throw new Error(`First encounter (ID: ${args.encounterId}) not found in plan or is missing a title.`)
     }
 
-    const paragraphs = (args.narrative || "").split(/\n\n+/).filter(Boolean)
-    const lastAction = paragraphs[paragraphs.length - 1] || ""
+    const names = storyNames(args.characters)
+    const paragraphs = storyText(args.story, names).split(/\n\n+/).filter(Boolean)
+    const lastAction = storyText(lastStep(args.story), names)
     const encounterIntro = ""
     const encounterInstructions = ""
     const narrativeContext = paragraphs.slice(-2).join("\n\n")

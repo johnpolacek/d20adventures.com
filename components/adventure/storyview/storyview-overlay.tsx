@@ -1,5 +1,6 @@
 "use client"
 
+import type { StoryBeat } from "@d20/gm-core/story/beats"
 import { AlertTriangle, X } from "lucide-react"
 import { useEffect } from "react"
 import { createPortal } from "react-dom"
@@ -15,7 +16,7 @@ import { useStoryviewPlayer } from "./use-storyview-player"
 
 export interface StoryviewSnapshot {
   turnId: string
-  narrative: string
+  story: StoryBeat[]
   characters: Array<Pick<TurnCharacter, "id" | "name" | "image">>
 }
 
@@ -24,7 +25,7 @@ export default function StoryviewOverlay({ snapshot, onClose }: { snapshot: Stor
   const { currentTurn } = useTurnContext()
   const player = useStoryviewPlayer({
     turnId: snapshot.turnId,
-    narrative: snapshot.narrative,
+    story: snapshot.story,
     open: true,
     onGenerated: () => {
       refreshTokens().catch(() => {})
@@ -105,7 +106,18 @@ export default function StoryviewOverlay({ snapshot, onClose }: { snapshot: Stor
       )}
       {player.status === "ready" && (
         <div className="px-6 pb-8">
-          <StoryviewControls playing={player.playing} finished={player.finished} slideCount={player.slides.length} slideIndex={player.slideIndex} speed={player.speed} onPlay={player.play} onPause={player.pause} onPrev={player.prev} onNext={player.next} onCycleSpeed={player.cycleSpeed} />
+          <StoryviewControls
+            playing={player.playing}
+            finished={player.finished}
+            slideCount={player.slides.length}
+            slideIndex={player.slideIndex}
+            speed={player.speed}
+            onPlay={player.play}
+            onPause={player.pause}
+            onPrev={player.prev}
+            onNext={player.next}
+            onCycleSpeed={player.cycleSpeed}
+          />
         </div>
       )}
     </div>,

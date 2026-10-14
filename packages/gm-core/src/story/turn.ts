@@ -3,28 +3,25 @@ import type { GmPorts } from "../ports"
 import { authoredStory } from "./authored"
 import { type RollBeat, type StoryBeat, type StoryBy, storyOutputSchema } from "./beats"
 import { cleanStory, type StoryScene } from "./clean"
-import { legacyNarrative, storyNames, storyParagraphs, storyText, turnStory } from "./render"
+import { storyNames, storyParagraphs, storyText } from "./render"
 
-type StoryTurn = { encounterId: string; story?: StoryBeat[]; narrative?: string; characters: readonly { id: string; name: string; type?: string }[] }
+type StoryTurn = { encounterId: string; story: StoryBeat[]; characters: readonly { id: string; name: string; type?: string }[] }
 
 // What a GM step returns when it writes story: its beats, alongside whatever else its schema asks for.
 export const beatsField = { beats: storyOutputSchema }
 export const storyOutputObject = z.object(beatsField)
 
 // The scene a step writes for: the turn's characters, and the set's named places when the game has a 3D scene.
-export async function sceneFor(ports: GmPorts, turn: StoryTurn): Promise<StoryScene> {
+export async function sceneFor(ports: GmPorts, turn: Omit<StoryTurn, "story">): Promise<StoryScene> {
   const places = (await ports.content.places?.(turn.encounterId).catch(() => undefined)) ?? undefined
   return { cast: turn.characters.map((c) => ({ id: c.id, name: c.name, type: c.type })), ...(places?.length ? { places } : {}) }
 }
 
 // A turn's story as a script, for prompts.
-export const turnScript = (turn: { story?: StoryBeat[]; narrative?: string; characters?: StoryTurn["characters"] }) => storyText(turnStory(turn), storyNames(turn.characters ?? []))
+export const turnScript = (turn: { story: StoryBeat[]; characters?: StoryTurn["characters"] }) => storyText(turn.story, storyNames(turn.characters ?? []))
 
-// A turn with beats added: the story, and the narrative string rendered from it for readers not yet on beats.
-export function withStory(turn: Omit<StoryTurn, "encounterId">, beats: readonly StoryBeat[]): { story: StoryBeat[]; narrative: string } {
-  const story = [...turnStory(turn), ...beats]
-  return { story, narrative: legacyNarrative(story) }
-}
+// A turn's story with beats added.
+export const withStory = (turn: { story: StoryBeat[] }, beats: readonly StoryBeat[]): { story: StoryBeat[] } => ({ story: [...turn.story, ...beats] })
 
 // Beats as plain prose, paragraphs apart.
 export const storyProse = (beats: readonly StoryBeat[]) =>
@@ -48,8 +45,5 @@ export function rollBeat(by: StoryBy, args: { id: string; name: string; image?: 
   }
 }
 
-// A turn that opens on an authored intro: its beats for the characters in it, and the narrative rendered from them.
-export function introTurn(intro: string, scene: StoryScene): { story: StoryBeat[]; narrative: string } {
-  const story = cleanStory(authoredStory(intro), scene, { step: "intro" })
-  return { story, narrative: legacyNarrative(story) }
-}
+// A turn that opens on an authored intro: its beats for the characters in it.
+export const introTurn = (intro: string, scene: StoryScene): { story: StoryBeat[] } => ({ story: cleanStory(authoredStory(intro), scene, { step: "intro" }) })

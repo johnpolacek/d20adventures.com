@@ -16,8 +16,9 @@ import {
 import { authoredStory } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory } from "../story/clean"
-import { legacyNarrative } from "../story/render"
-import { beatsField, sceneFor, storyProse } from "../story/turn"
+import { storyRules } from "../story/prompt"
+import { lastStep, storyNames, storyText } from "../story/render"
+import { beatsField, sceneFor, storyProse, turnScript } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import { mapConvexTurnToTurn } from "../utils/game-utils"
@@ -30,7 +31,7 @@ import { validatePacketTransition } from "../wiki-adventures/transition-validato
 
 const encounterProgressionSchema = z.object({
   nextEncounterId: z.string(),
-  narrative: z.string(),
+  ...beatsField,
 })
 
 const wikiEncounterProgressionSchema = z.object({
@@ -87,7 +88,7 @@ export function createAdvanceTurn(ports: GmPorts) {
       turnId: turn.id,
       encounterId: turn.encounterId,
       order: turnData.order,
-      narrativeLength: turn.narrative?.length || 0,
+      beats: turn.story.length,
     })
 
     // Battle-map staging for the narration prompt: token starting positions and
@@ -114,7 +115,6 @@ export function createAdvanceTurn(ports: GmPorts) {
           currentTurn: turn,
           allTurns: allTurns.map((row) => ({
             encounterId: row.encounterId,
-            narrative: row.narrative,
             story: row.story,
             order: row.order,
             characters: row.characters as TurnCharacter[],
@@ -177,7 +177,6 @@ export function createAdvanceTurn(ports: GmPorts) {
       // A new encounter opens on its intro, read as beats for the characters who are in it.
       const intro = isTransition ? cleanStory(authoredStory(nextEncounter.sections.intro ?? ""), await sceneFor(ports, { encounterId: nextEncounter.id, characters }), { step: "intro" }) : []
       const story = [...told, ...intro]
-      const narrative = legacyNarrative(story)
       const isFinalEncounter = isLocalWikiFinalEncounter(artifacts, nextEncounter.id)
       const commitResult = await ports.store.commitWikiTurnAdvance({
         adventureId: turnData.adventureId,
@@ -188,7 +187,6 @@ export function createAdvanceTurn(ports: GmPorts) {
         currentVersionId: contentRef.versionId,
         nextEncounterId: nextEncounter.id,
         title: nextEncounter.title,
-        narrative,
         story,
         characters,
         order: currentTurnOrder + 1,
@@ -198,7 +196,7 @@ export function createAdvanceTurn(ports: GmPorts) {
         isFinalEncounter,
       })
       ports.narration.afterTurn(commitResult.turnId)
-      return { status: "turn_advanced", turn: { ...turn, encounterId: nextEncounter.id, title: nextEncounter.title, narrative, story, characters, isFinalEncounter } }
+      return { status: "turn_advanced", turn: { ...turn, encounterId: nextEncounter.id, title: nextEncounter.title, story, characters, isFinalEncounter } }
     }
 
     // 2. Load the plan from S3
@@ -233,7 +231,7 @@ export function createAdvanceTurn(ports: GmPorts) {
         recentTurns.map((item) => ({
           order: item.order,
           encounterId: item.encounterId,
-          narrative: `${item.turn.narrative?.substring(0, 100)}...`,
+          beats: item.turn.story.length,
         }))
       )
     }
@@ -244,13 +242,13 @@ export function createAdvanceTurn(ports: GmPorts) {
 
     const encounterIntro = currentEncounter.intro ?? ""
     const encounterInstructions = currentEncounter.instructions ?? ""
-    const narrativeContext = turn.narrative ?? ""
+    const narrativeContext = turnScript(turn)
 
     console.log("[advanceTurn] Encounter intro:", JSON.stringify(encounterIntro, null, 2))
     console.log("[advanceTurn] Encounter instructions:", JSON.stringify(encounterInstructions, null, 2))
 
     // Extract the player's most recent action from the narrative
-    const mostRecentNarrativeBlock = (turn.narrative ?? "").split(/\n\n/).filter(Boolean).at(-1) ?? ""
+    const mostRecentNarrativeBlock = storyText(lastStep(turn.story), storyNames(turn.characters))
 
     const rollInfo = buildRollInfo(turn)
 
@@ -277,6 +275,7 @@ export function createAdvanceTurn(ports: GmPorts) {
     console.log("--- END LLM PROMPT INPUTS ---\n")
     // --- END DETAILED LOGGING ---
 
+    const legacyScene = await sceneFor(ports, turn)
     const prompt = buildEncounterProgressionPrompt({
       adventureOverview,
       sectionContext,
@@ -294,6 +293,7 @@ export function createAdvanceTurn(ports: GmPorts) {
       currentEncounterTurnNumber,
       playerCharacterNames,
       spatialContext,
+      storyRules: storyRules(legacyScene),
     })
 
     console.log(`[advanceTurn:${requestId}] Making LLM call for encounter progression`)
@@ -302,8 +302,10 @@ export function createAdvanceTurn(ports: GmPorts) {
 
     // Log the LLM's raw response with request ID
     console.log(`[advanceTurn:${requestId}] LLM result:`, JSON.stringify(llmResult, null, 2))
-    console.log(`[advanceTurn:${requestId}] Narrative length:`, llmResult.narrative?.length || 0)
-    console.log(`[advanceTurn:${requestId}] Narrative preview:`, `${llmResult.narrative?.substring(0, 200)}...`)
+    const told = tellRound(
+      cleanStory(llmResult.beats, legacyScene, { step: "round" }),
+      playerCharacters.map((c) => c.name)
+    )
 
     // Log what the LLM decided about encounter progression
     console.log("[advanceTurn] Next encounterId:", llmResult.nextEncounterId)
@@ -317,7 +319,7 @@ export function createAdvanceTurn(ports: GmPorts) {
       allTurns,
       adventureId: turnData.adventureId.toString(),
       currentEncounterTitle: currentEncounter.title,
-      llmResult,
+      llmResult: { nextEncounterId: llmResult.nextEncounterId, story: told },
     })
     shouldProcessNpcTurns = buildResult.shouldProcessNpcTurns
 

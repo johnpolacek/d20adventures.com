@@ -8,7 +8,7 @@
 // effects (NPC trigger, auto-navigate) stay in TurnNarrative.
 
 import { useUser } from "@clerk/nextjs"
-import { storyParagraphs, turnStory } from "@d20/gm-core/story/render"
+import { storyParagraphs } from "@d20/gm-core/story/render"
 import { AlertTriangle } from "lucide-react"
 import Link from "next/link"
 import React from "react"
@@ -36,17 +36,17 @@ export default function TurnNarrativeBody({ variant, showOriginalReplies = false
   const bottomRef = React.useRef<HTMLDivElement>(null)
   const hasScrolledRef = React.useRef(false)
   React.useEffect(() => {
-    if (variant !== "drawer" || !currentTurn?.narrative) return
+    if (variant !== "drawer" || !currentTurn?.story.length) return
     bottomRef.current?.scrollIntoView({ block: "end", behavior: hasScrolledRef.current ? "smooth" : "instant" })
     hasScrolledRef.current = true
-  }, [variant, currentTurn?.narrative])
+  }, [variant, currentTurn?.story.length])
 
   if (!currentTurn) {
     return null
   }
 
-  // The turn's story as paragraphs: a turn's beats, or for a turn saved before beats, its narrative read back.
-  const paragraphs = storyParagraphs(turnStory(currentTurn))
+  // The turn's story as paragraphs.
+  const paragraphs = storyParagraphs(currentTurn.story)
 
   return (
     <div className="w-full grow max-w-3xl mx-auto fade-in">

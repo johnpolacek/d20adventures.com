@@ -112,7 +112,7 @@ async function main() {
     session: {
       adventureInstanceId: "a",
       currentTurnOrder: 1,
-      currentTurn: { id: "t", adventureId: "a", encounterId: battle.id, title: battle.title, narrative: "", characters: battleCharacters },
+      currentTurn: { id: "t", adventureId: "a", encounterId: battle.id, title: battle.title, story: [], characters: battleCharacters },
       allTurns: [],
     },
   })
@@ -131,7 +131,7 @@ async function main() {
     session: {
       adventureInstanceId: "a",
       currentTurnOrder: 1,
-      currentTurn: { id: "t", adventureId: "a", encounterId: battle.id, title: battle.title, narrative: "", characters: battleCharacters },
+      currentTurn: { id: "t", adventureId: "a", encounterId: battle.id, title: battle.title, story: [], characters: battleCharacters },
       allTurns: [],
     },
   })

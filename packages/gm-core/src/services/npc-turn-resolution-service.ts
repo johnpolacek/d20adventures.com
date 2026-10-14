@@ -1,6 +1,6 @@
 import type { GmPorts } from "../ports"
+import type { StoryBeat } from "../story/beats"
 import type { Turn, TurnCharacter } from "../types/adventure"
-import { appendNarrative } from "./narrative-service"
 import { createTurnUpdateService } from "./turn-update-service"
 
 export type NpcTurnEffect = {
@@ -45,8 +45,8 @@ export function createNpcTurnResolutionService(ports: GmPorts) {
   async function reconcileNpcRollWithAi(args: {
     turn: Turn
     updatedCharacters: TurnCharacter[]
-    updatedNarrative: string
-    narrativeToAppend: string
+    // The turn's story with the NPC's beats, its roll among them.
+    story: StoryBeat[]
     diceRoll: {
       rollType: string
       baseRoll: number
@@ -67,7 +67,7 @@ export function createNpcTurnResolutionService(ports: GmPorts) {
     const aiTurn = await analyzeAndApplyDiceRoll({
       turn: { ...args.turn, characters: args.updatedCharacters },
       diceRoll: args.diceRoll,
-      narrative: appendNarrative(args.updatedNarrative, args.narrativeToAppend),
+      story: args.story,
     })
 
     console.log(

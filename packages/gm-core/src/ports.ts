@@ -26,9 +26,8 @@ export type TurnRecord = {
   adventureId: string
   encounterId: string
   title: string
-  narrative: string
-  // The turn as labelled beats. A turn saved before beats has only its narrative.
-  story?: StoryBeat[]
+  // The turn as labelled beats, in order.
+  story: StoryBeat[]
   characters: TurnCharacter[]
   order: number
   isFinalEncounter?: boolean
@@ -48,8 +47,7 @@ export type NewTurn = {
   adventureId: string
   encounterId: string
   title: string
-  narrative: string
-  story?: StoryBeat[]
+  story: StoryBeat[]
   characters: TurnCharacter[]
   order: number
   isFinalEncounter?: boolean
@@ -74,8 +72,8 @@ export interface Store {
   getTurns(args: { adventureId: string }): Promise<TurnRecord[]>
   getTurnByOrder(args: { adventureId: string; order: number }): Promise<TurnRecord | null>
   // `story` holds the reply's beats, the player's own words first, to add to the turn's story.
-  submitReply(args: { turnId: string; characterId: string; narrativeAction: string; originalPlayerInput?: string; story?: StoryBeat[]; rollRequirement?: RollRequirement }): Promise<unknown>
-  updateTurn(args: { turnId: string; patch: { narrative?: string; story?: StoryBeat[]; characters?: TurnCharacter[]; updatedAt?: number } }): Promise<unknown>
+  submitReply(args: { turnId: string; characterId: string; story: StoryBeat[]; rollRequirement?: RollRequirement }): Promise<unknown>
+  updateTurn(args: { turnId: string; patch: { story?: StoryBeat[]; characters?: TurnCharacter[]; updatedAt?: number } }): Promise<unknown>
   patchAdventure(args: {
     adventureId: string
     patch: { currentTurnId?: string; currentEncounterId?: string; endedAt?: number; updatedAt?: number; status?: "waitingForPlayers" | "active" | "completed" }

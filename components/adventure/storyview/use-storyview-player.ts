@@ -1,7 +1,8 @@
 "use client"
 
+import type { RollBeat, StoryBeat } from "@d20/gm-core/story/beats"
+import { storyParagraphs } from "@d20/gm-core/story/render"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { parseNarrative, type NarrativePart } from "@/lib/utils/parse-narrative"
 import type { StoryviewAutoStatus, TurnAudioManifestResponse, TurnAudioSegmentWithUrl } from "@/types/turn-audio"
 
 const GENERATION_POLL_MS = 2000
@@ -16,20 +17,18 @@ function loadStoredSpeed(): number {
   return SPEED_STEPS.includes(stored) ? stored : DEFAULT_SPEED
 }
 
-export type StoryviewSlide =
-  | { type: "paragraph"; partIndex: number; segments: TurnAudioSegmentWithUrl[] }
-  | { type: "diceroll"; partIndex: number; part: Extract<NarrativePart, { type: "diceroll" }> }
+export type StoryviewSlide = { type: "paragraph"; partIndex: number; segments: TurnAudioSegmentWithUrl[] } | { type: "diceroll"; partIndex: number; part: RollBeat }
 
 export type StoryviewStatus = "loading" | "generating" | "ready" | "error" | "insufficient-tokens"
 
 interface UseStoryviewPlayerArgs {
   turnId: string
-  narrative: string
+  story: StoryBeat[]
   open: boolean
   onGenerated?: () => void
 }
 
-export function useStoryviewPlayer({ turnId, narrative, open, onGenerated }: UseStoryviewPlayerArgs) {
+export function useStoryviewPlayer({ turnId, story, open, onGenerated }: UseStoryviewPlayerArgs) {
   const [status, setStatus] = useState<StoryviewStatus>("loading")
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [storyviewAuto, setStoryviewAuto] = useState<StoryviewAutoStatus | undefined>(undefined)
@@ -47,7 +46,7 @@ export function useStoryviewPlayer({ turnId, narrative, open, onGenerated }: Use
 
   const slides = useMemo<StoryviewSlide[]>(() => {
     if (segments.length === 0) return []
-    const parts = parseNarrative(narrative)
+    const parts = storyParagraphs(story)
     const byPart = new Map<number, TurnAudioSegmentWithUrl[]>()
     for (const segment of segments) {
       const list = byPart.get(segment.partIndex) ?? []
@@ -55,19 +54,20 @@ export function useStoryviewPlayer({ turnId, narrative, open, onGenerated }: Use
       byPart.set(segment.partIndex, list)
     }
     const result: StoryviewSlide[] = []
-    parts.forEach((part, partIndex) => {
-      if (part.type === "diceroll") {
+    parts.forEach(({ beats }, partIndex) => {
+      const part = beats[0]
+      if (part.kind === "roll") {
         result.push({ type: "diceroll", partIndex, part })
-      } else if (part.type === "paragraph") {
+      } else if (part.kind !== "reply") {
         const partSegments = byPart.get(partIndex)
         if (partSegments && partSegments.length > 0) {
           result.push({ type: "paragraph", partIndex, segments: partSegments })
         }
       }
-      // original-reply parts are not narrated
+      // the players' own words are not narrated
     })
     return result
-  }, [narrative, segments])
+  }, [story, segments])
 
   const clearTimers = useCallback(() => {
     if (diceTimerRef.current) {
@@ -232,7 +232,8 @@ export function useStoryviewPlayer({ turnId, narrative, open, onGenerated }: Use
     })
 
     // Preload the next segment in the background.
-    const nextSegment = currentSlide.segments[segmentIndex + 1] ?? (slides[slideIndex + 1]?.type === "paragraph" ? (slides[slideIndex + 1] as Extract<StoryviewSlide, { type: "paragraph" }>).segments[0] : undefined)
+    const nextSegment =
+      currentSlide.segments[segmentIndex + 1] ?? (slides[slideIndex + 1]?.type === "paragraph" ? (slides[slideIndex + 1] as Extract<StoryviewSlide, { type: "paragraph" }>).segments[0] : undefined)
     if (nextSegment?.audioUrl) {
       const preload = new Audio()
       preload.preload = "auto"

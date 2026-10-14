@@ -1,10 +1,6 @@
 import { z } from "zod"
 import type { GmPorts } from "../ports"
 
-export { analyzePlayerInput } from "../utils/narrative-analysis"
-
-export { appendNarrative, fixMalformedQuotes, limitToTwoSentences, normalizeNarrative } from "../utils/narrative-utils"
-
 const rollRequirementSchema = z.object({
   rollType: z.string(),
   difficulty: z.number().int(),

@@ -1,5 +1,6 @@
 import type { GmPorts } from "../ports"
 import { authoredText } from "../story/authored"
+import type { StoryBeat } from "../story/beats"
 import { turnScript } from "../story/turn"
 import type { AdventurePlan } from "../types/adventure-plan"
 import type { Character } from "../types/character"
@@ -47,7 +48,7 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
     turn: {
       encounterId: string
       order?: number
-      narrative?: string
+      story: StoryBeat[]
       adventureId: string
     }
     adventure: {

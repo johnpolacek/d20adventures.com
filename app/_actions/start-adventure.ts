@@ -1,6 +1,7 @@
 "use server"
 
 import { auth } from "@clerk/nextjs/server"
+import { introTurn } from "@d20/gm-core/story/turn"
 import { redirect } from "next/navigation"
 import { after } from "next/server"
 import { api } from "@/convex/_generated/api"
@@ -200,7 +201,7 @@ export async function startAdventure({ settingId, adventurePlanId, adventureId }
       adventureId: adventureId as Id<"adventures">,
       encounterId: firstEncounter.id,
       title: firstEncounter.title,
-      narrative: firstEncounter.intro,
+      ...introTurn(firstEncounter.intro ?? "", { cast: characters }),
       characters: characters,
       order: 1,
     })

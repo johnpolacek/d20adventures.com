@@ -32,7 +32,7 @@ export const claimTurnAudioGeneration = mutation({
   args: {
     turnId: v.id("turns"),
     adventureId: v.id("adventures"),
-    narrativeHash: v.string(),
+    storyHash: v.string(),
     requestedBy: v.string(),
   },
   handler: async (ctx, args) => {
@@ -42,7 +42,7 @@ export const claimTurnAudioGeneration = mutation({
       .withIndex("by_turn", (q) => q.eq("turnId", args.turnId))
       .unique()
 
-    if (existing && existing.narrativeHash === args.narrativeHash) {
+    if (existing && existing.storyHash === args.storyHash) {
       if (existing.status === "ready") {
         return { claimed: false, status: existing.status }
       }
@@ -55,7 +55,7 @@ export const claimTurnAudioGeneration = mutation({
     if (existing) {
       await ctx.db.patch(existing._id, {
         status: "generating" as const,
-        narrativeHash: args.narrativeHash,
+        storyHash: args.storyHash,
         requestedBy: args.requestedBy,
         segments: undefined,
         usage: undefined,
@@ -67,7 +67,7 @@ export const claimTurnAudioGeneration = mutation({
         turnId: args.turnId,
         adventureId: args.adventureId,
         status: "generating" as const,
-        narrativeHash: args.narrativeHash,
+        storyHash: args.storyHash,
         requestedBy: args.requestedBy,
         createdAt: now,
         updatedAt: now,
@@ -80,7 +80,7 @@ export const claimTurnAudioGeneration = mutation({
 export const finalizeTurnAudio = mutation({
   args: {
     turnId: v.id("turns"),
-    narrativeHash: v.string(),
+    storyHash: v.string(),
     segments: v.array(segmentValidator),
     usage: v.object({
       ttsInputTokens: v.number(),
@@ -93,7 +93,7 @@ export const finalizeTurnAudio = mutation({
       .query("turnAudio")
       .withIndex("by_turn", (q) => q.eq("turnId", args.turnId))
       .unique()
-    if (!existing || existing.narrativeHash !== args.narrativeHash) return false
+    if (!existing || existing.storyHash !== args.storyHash) return false
     await ctx.db.patch(existing._id, {
       status: "ready" as const,
       segments: args.segments,
@@ -108,7 +108,7 @@ export const finalizeTurnAudio = mutation({
 export const failTurnAudio = mutation({
   args: {
     turnId: v.id("turns"),
-    narrativeHash: v.string(),
+    storyHash: v.string(),
     error: v.string(),
   },
   handler: async (ctx, args) => {
@@ -116,7 +116,7 @@ export const failTurnAudio = mutation({
       .query("turnAudio")
       .withIndex("by_turn", (q) => q.eq("turnId", args.turnId))
       .unique()
-    if (!existing || existing.narrativeHash !== args.narrativeHash) return false
+    if (!existing || existing.storyHash !== args.storyHash) return false
     await ctx.db.patch(existing._id, {
       status: "error" as const,
       error: args.error,

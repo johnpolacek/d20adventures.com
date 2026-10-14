@@ -1,6 +1,6 @@
 import { type AdventureRecord, type Content, createGmCore, type Llm, type Store } from "@d20/gm-core"
 import { type ActionSuggestion, suggestActions } from "@d20/gm-core/services/ai-pc-turn-service"
-import { storyProse, turnScript } from "@d20/gm-core/story/turn"
+import { turnScript } from "@d20/gm-core/story/turn"
 import type { TurnCharacter } from "@d20/gm-core/types/adventure"
 import { findCurrentActor, isDeadActor } from "@d20/gm-core/utils/turn-actors"
 import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventures/plan-view"
@@ -137,7 +137,7 @@ export async function runHostJob(job: HostJob, store: Store, packs: Packs, llm: 
     const text = job.text?.trim()
     if (!text) throw new Error("The action is empty.")
     const beats = await core.writeReply({ character: actor, playerInput: text, turn })
-    await core.processTurnReply({ turnId: turn._id, characterId: actor.id, narrativeAction: storyProse(beats), originalPlayerInput: text, story: beats })
+    await core.processTurnReply({ turnId: turn._id, characterId: actor.id, originalPlayerInput: text, story: beats })
     return
   }
   if (!actor.rollRequired || actor.rollResult !== undefined) throw new Error("There is no pending roll.")

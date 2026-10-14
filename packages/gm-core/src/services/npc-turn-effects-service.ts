@@ -2,12 +2,7 @@ import type { StoryBeat } from "../story/beats"
 import { withStory } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
 
-export function buildNpcTurnUpdatePatch(args: {
-  turn: { narrative?: string; story?: StoryBeat[]; characters: readonly { id: string; name: string }[] }
-  beatsToAppend: StoryBeat[]
-  updatedCharacters: TurnCharacter[]
-}): {
-  narrative: string
+export function buildNpcTurnUpdatePatch(args: { turn: { story: StoryBeat[] }; beatsToAppend: StoryBeat[]; updatedCharacters: TurnCharacter[] }): {
   story: StoryBeat[]
   characters: TurnCharacter[]
   updatedAt: number

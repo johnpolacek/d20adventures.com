@@ -1,5 +1,4 @@
 import { v } from "convex/values"
-import { legacyNarrative, turnStory } from "../packages/gm-core/src/story/render"
 import type { Doc, Id } from "./_generated/dataModel"
 import { action, mutation, query } from "./_generated/server"
 import { storyValidator } from "./story"
@@ -203,8 +202,7 @@ export const createTurn = mutation({
     adventureId: v.id("adventures"),
     encounterId: v.string(),
     title: v.string(),
-    narrative: v.string(),
-    story: v.optional(storyValidator),
+    story: storyValidator,
     characters: v.array(v.any()), // Should match character object
     order: v.number(),
     adventurePatch: v.optional(v.any()),
@@ -226,8 +224,7 @@ export const createTurn = mutation({
       adventureId: args.adventureId,
       encounterId: args.encounterId,
       title: args.title,
-      narrative: args.narrative,
-      ...(args.story ? { story: args.story } : {}),
+      story: args.story,
       characters: args.characters,
       order: args.order,
       adventurePatch: args.adventurePatch,
@@ -247,18 +244,16 @@ export const createTurn = mutation({
   },
 })
 
-// Update a turn (narrative or characters)
+// Update a turn (story or characters)
 export const updateTurn = mutation({
   args: {
     turnId: v.id("turns"),
-    narrative: v.optional(v.string()),
     story: v.optional(storyValidator),
     characters: v.optional(v.array(v.any())),
   },
   handler: async (ctx, args) => {
     const now = Date.now()
     const patch: Partial<Doc<"turns">> = { updatedAt: now }
-    if (args.narrative !== undefined) patch.narrative = args.narrative
     if (args.story !== undefined) patch.story = args.story
     if (args.characters !== undefined) patch.characters = args.characters as Doc<"turns">["characters"]
     await ctx.db.patch(args.turnId, patch)
@@ -310,8 +305,7 @@ export const createAdventureWithFirstTurn = mutation({
     turn: v.object({
       encounterId: v.string(),
       title: v.string(),
-      narrative: v.string(),
-      story: v.optional(storyValidator),
+      story: storyValidator,
       characters: v.array(v.any()),
       order: v.number(),
       adventurePatch: v.optional(v.any()),
@@ -395,10 +389,8 @@ export const submitReply = mutation({
   args: {
     turnId: v.id("turns"),
     characterId: v.string(),
-    narrativeAction: v.string(),
-    originalPlayerInput: v.optional(v.string()),
     // The reply as beats, the player's own words first.
-    story: v.optional(storyValidator),
+    story: storyValidator,
     rollRequirement: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
@@ -406,29 +398,7 @@ export const submitReply = mutation({
     if (!turn) throw new Error("Turn not found")
     const character = turn.characters.find((c) => c.id === args.characterId)
     if (!character) throw new Error("Character not found")
-    const prev = turn.narrative || ""
-
-    // Build narrative with original reply tag if provided
-    let narrativeToAdd = args.narrativeAction
-    if (args.originalPlayerInput) {
-      narrativeToAdd = `[OriginalReply: ${args.originalPlayerInput}]\n${args.narrativeAction}`
-    }
-
-    // A reply as beats joins the turn's story, which a turn from before beats reads back from its narrative. A reply
-    // as text joins a turn that keeps beats as the player's words and narration, so the story never drops it.
-    const by = { step: "reply" as const, character: args.characterId }
-    const added: Doc<"turns">["story"] =
-      args.story ??
-      (turn.story && [
-        ...(args.originalPlayerInput ? [{ kind: "reply" as const, by, character: args.characterId, text: args.originalPlayerInput }] : []),
-        ...args.narrativeAction
-          .split(/\n+/)
-          .map((text) => text.trim())
-          .filter(Boolean)
-          .map((text) => ({ kind: "narration" as const, by, text })),
-      ])
-    const story = added && [...turnStory(turn), ...added]
-    const narrative = story ? legacyNarrative(story) : prev ? `${prev}\n\n${narrativeToAdd}` : narrativeToAdd
+    const story = [...turn.story, ...args.story]
 
     // Use rollRequirement from args, do not call AI here!
     const updatedCharacters = turn.characters.map((c) =>
@@ -444,8 +414,7 @@ export const submitReply = mutation({
     )
 
     await ctx.db.patch(args.turnId, {
-      narrative,
-      ...(story ? { story } : {}),
+      story,
       characters: updatedCharacters,
     })
     return await ctx.db.get(args.turnId)
@@ -493,7 +462,6 @@ export const patchTurn = mutation({
   args: {
     turnId: v.id("turns"),
     patch: v.object({
-      narrative: v.optional(v.string()),
       story: v.optional(storyValidator),
       characters: v.optional(v.array(v.any())),
       updatedAt: v.optional(v.number()),
@@ -588,8 +556,7 @@ export const commitWikiTurnAdvance = mutation({
     currentVersionId: v.optional(v.string()),
     nextEncounterId: v.string(),
     title: v.string(),
-    narrative: v.string(),
-    story: v.optional(storyValidator),
+    story: storyValidator,
     characters: v.array(v.any()),
     order: v.number(),
     adventurePatch: v.optional(v.any()),
@@ -636,8 +603,7 @@ export const commitWikiTurnAdvance = mutation({
       adventureId: args.adventureId,
       encounterId: args.nextEncounterId,
       title: args.title,
-      narrative: args.narrative,
-      ...(args.story ? { story: args.story } : {}),
+      story: args.story,
       characters: args.characters,
       order: args.order,
       isFinalEncounter: args.isFinalEncounter,

@@ -4,6 +4,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
+import { storyText } from "@d20/gm-core/story/render"
 import { findCurrentActor } from "@d20/gm-core/utils/turn-actors"
 import { buildLocalWikiTurnCharacters } from "@d20/gm-core/wiki-adventures/characters"
 import { castIdFor, partyScene, portraitFor, sceneFor, spatialContext } from "../src/scenes"
@@ -238,7 +239,7 @@ test("the fight is written to end with Lyra in the river, on a pier the tug has 
     const asked = prompts.find((p) => p.includes("most likely")) ?? ""
     assert.match(asked, /throw her over the side into the river and cast off with the crate for Kordavos\. This is the most likely way the fight ends/)
     assert.equal(store.current().encounterId, "overboard")
-    assert.match(store.current().narrative, /The river closes over Lyra/)
+    assert.match(storyText(store.current().story), /The river closes over Lyra/)
     assert.deepEqual(
       store.current().characters.map((c) => c.type),
       ["pc", "pc", "pc"]

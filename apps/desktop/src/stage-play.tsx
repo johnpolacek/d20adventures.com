@@ -1,9 +1,8 @@
-import type { StoryBeat } from "@d20/gm-core/story/beats"
-import { rollSentence, storyParagraphs, turnStory } from "@d20/gm-core/story/render"
+import type { RollBeat, StoryBeat } from "@d20/gm-core/story/beats"
+import { rollSentence, storyParagraphs } from "@d20/gm-core/story/render"
 import { findCurrentActor } from "@d20/gm-core/utils/turn-actors"
 import type { Stage } from "@d20/stage"
 import { readingSeconds } from "@d20/stage/beats"
-import { type NarrationShot, readNarration } from "@d20/stage/narration"
 import type { StagingShot } from "@d20/stage/spec/staging"
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { CharacterCard } from "@/components/stage/character-card"
@@ -16,45 +15,25 @@ import { ROLL_SECONDS, type RollResultData } from "@/components/stage/roll-resul
 import { Bubbles, Plate } from "@/components/stage/stage-dialogue"
 import { TurnOrder } from "@/components/stage/turn-order"
 import { useStage } from "@/components/stage/use-stage"
-import type { NarrativePart } from "@/lib/utils/parse-narrative"
 import type { Save } from "../runtime/store"
 import { characterInfo } from "./character-info"
 import type { FigureArt } from "./figures"
 import { applyMovement, context, positions as stagePositions } from "./movement"
 import { castIdFor, partyScene, portraitFor, sceneFor } from "./scenes"
 
-type Roll = Extract<NarrativePart, { type: "diceroll" }>
-type StoryTurn = { story?: StoryBeat[]; narrative?: string; characters: { id: string; name: string }[] }
-type Paragraph = { text: string; roll?: Roll; beats: StoryBeat[]; guess: boolean }
+type Paragraph = { text: string; roll?: RollBeat; beats: StoryBeat[] }
 // A turn's story as paragraphs to read. A dice roll keeps its sentence, which the camera and screen readers read, and
-// its numbers, which the narration shows as the roll itself. Paragraphs nobody labelled, an old turn's or an intro
-// not yet written as beats, are `guess`: their speakers and camera are read from the words.
-const story = (turn: StoryTurn | undefined, originals = false): Paragraph[] =>
-  turn
-    ? storyParagraphs(turnStory(turn)).flatMap((p) => {
-        const first = p.beats[0]
-        if (first.kind === "reply") return originals ? [{ text: `Player action: ${first.text}`, beats: p.beats, guess: false }] : []
-        if (first.kind === "roll") {
-          const roll: Roll = {
-            type: "diceroll",
-            rollType: first.check,
-            baseRoll: first.natural,
-            modifier: first.modifier,
-            result: first.total,
-            difficulty: first.dc,
-            character: first.name,
-            image: first.image,
-            success: first.success,
-          }
-          return [{ text: rollSentence(first), roll, beats: p.beats, guess: false }]
-        }
-        const guess = !turn.story || p.beats.every((b) => b.kind === "narration" && !b.place && b.by.step === "intro")
-        return [{ text: p.text, beats: p.beats, guess }]
-      })
-    : []
+// its numbers, which the narration shows as the roll itself.
+const story = (turn: { story: StoryBeat[] } | undefined, originals = false): Paragraph[] =>
+  (turn ? storyParagraphs(turn.story) : []).flatMap((p) => {
+    const first = p.beats[0]
+    if (first.kind === "reply") return originals ? [{ text: `Player action: ${first.text}`, beats: p.beats }] : []
+    if (first.kind === "roll") return [{ text: rollSentence(first), roll: first, beats: p.beats }]
+    return [{ text: p.text, beats: p.beats }]
+  })
 // Where a labelled paragraph puts the camera: on someone, on two people facing off, or on a place on the set.
 type Aim = { pair: [string, string] } | { place: string } | { subject: string }
-type View = NarrationShot | Aim | null
+type View = Aim | null
 const PACE = { walk: 1.2, hurry: 2.4, sneak: 0.8 } as const
 // The shot for an aim, framed on where everyone stands now.
 function shotFor(stage: Stage, aim: Aim, heroes: string[]): StagingShot | string | null {
@@ -91,7 +70,7 @@ function shotFor(stage: Stage, aim: Aim, heroes: string[]): StagingShot | string
   const near = Object.entries(stage.shots).sort(([, p], [, q]) => Math.hypot(p.target[0] - mx, p.target[2] - mz) - Math.hypot(q.target[0] - mx, q.target[2] - mz))[0]
   return near?.[0] ?? null
 }
-const journalRoll = (r: Roll): JournalRoll => ({ name: r.character, skill: r.rollType, dc: r.difficulty, base: r.baseRoll ?? r.result, total: r.result, success: r.success })
+const journalRoll = (r: RollBeat): JournalRoll => ({ name: r.name, skill: r.check, dc: r.dc, base: r.natural, total: r.total, success: r.success })
 
 type Character = Save["turns"][number]["characters"][number]
 type Positions = Record<string, { x: number; z: number; ry: number }>
@@ -196,22 +175,22 @@ export function StagePlay(props: {
   const { stage, stageRef, status: loading, error: stageError } = useStage(containerRef, specs)
   const actor = turn ? findCurrentActor(turn.characters) : undefined
   // Read again only when the story itself changes, not on every save, such as positions after a walk.
-  const told = turn ? JSON.stringify([turn._id, turn.story ?? turn.narrative]) : ""
+  const told = turn ? JSON.stringify([turn._id, turn.story]) : ""
   const paragraphs = useMemo(() => story(turn), [told])
   const text = useMemo(() => paragraphs.map((p) => p.text), [paragraphs])
   // The paragraph's dice roll, for the narration to show: the numbers from the roll, the roller's portrait from the scene.
   const rolled = paragraphs[paragraph]?.roll
-  const roller = rolled ? turn?.characters.find((c) => c.name === rolled.character) : undefined
+  const roller = rolled ? turn?.characters.find((c) => c.id === rolled.character) : undefined
   const rollerPortrait = roller ? portrait(roller) : undefined
   const roll = useMemo<RollResultData | undefined>(
     () =>
       rolled && {
-        character: rolled.character,
-        check: rolled.rollType,
-        natural: rolled.baseRoll ?? rolled.result,
+        character: rolled.name,
+        check: rolled.check,
+        natural: rolled.natural,
         modifier: rolled.modifier,
-        total: rolled.result,
-        dc: rolled.difficulty,
+        total: rolled.total,
+        dc: rolled.dc,
         success: rolled.success,
         portrait: rollerPortrait,
       },
@@ -231,24 +210,11 @@ export function StagePlay(props: {
     const id = c.type === "pc" ? castOf(c.id) : undefined
     return id ? [id] : []
   })
-  // The narration paragraph by paragraph: who speaks in it and where the camera goes. A labelled paragraph says so in
-  // its beats. One nobody labelled is read from its words: who it is about (by name and pronoun, so genders come from
-  // the turn's characters) and who speaks (by the speech tag beside each quote: "asked the elf" finds the elf by race).
+  // The narration paragraph by paragraph, from its beats: who speaks in it and where the camera goes. A paragraph that
+  // names no one and no place leaves the camera where it is.
   const beats = useMemo((): { view: View; speech: { id: string; text: string }[] }[] => {
     if (!stage) return []
-    const people: Record<string, { gender?: "f" | "m"; words: string[] }> = {}
-    for (const c of turn?.characters ?? []) {
-      const id = castIdFor(stage.cast, c)
-      if (!id) continue
-      const g = c.gender?.toLowerCase()
-      people[id] = {
-        gender: g?.startsWith("f") ? "f" : g?.startsWith("m") ? "m" : undefined,
-        words: [c.race, c.archetype].flatMap((w) => (w ? w.toLowerCase().split(/\s+/) : [])),
-      }
-    }
-    const read = readNarration(text, stage, people)
-    return paragraphs.map((p, i) => {
-      if (p.guess) return read[i] ?? { view: null, speech: [] }
+    return paragraphs.map((p) => {
       const speech = p.beats.flatMap((b) => {
         const id = b.kind === "line" ? castOf(b.speaker) : undefined
         return id && b.kind === "line" ? [{ id, text: b.text }] : []
@@ -259,18 +225,10 @@ export function StagePlay(props: {
       const place = p.beats.find((b) => b.kind === "narration" && b.place)
       const roller = p.beats[0].kind === "roll" ? castOf(p.beats[0].character) : undefined
       const view: View =
-        actor && target
-          ? { pair: [actor, target] }
-          : actor
-            ? { subject: actor }
-            : roller
-              ? { subject: roller }
-              : place?.kind === "narration" && place.place
-                ? { place: place.place }
-                : (read[i]?.view ?? null)
+        actor && target ? { pair: [actor, target] } : actor ? { subject: actor } : roller ? { subject: roller } : place?.kind === "narration" && place.place ? { place: place.place } : null
       return { view, speech }
     })
-  }, [stage, text, paragraphs, castOf, turn?.characters])
+  }, [stage, paragraphs, castOf])
   // Everyone who speaks in the paragraph gets a bubble, and the first speaker a portrait plate.
   const speech = useMemo(
     () =>
@@ -345,12 +303,10 @@ export function StagePlay(props: {
     setLeftAt((was) => {
       if (sameTurn && !fresh.length) return was
       const next = sameTurn ? { ...was } : {}
+      // The first new paragraph with a beat by them or aimed at them.
+      const involves = (id: string) => (b: StoryBeat) => (b.kind === "action" ? [b.actor, b.target] : b.kind === "line" ? [b.speaker, b.to] : []).some((who) => castOf(who) === id)
       for (const id of fresh) {
-        const name = stage?.cast
-          .find((c) => c.id === id)
-          ?.name.split(" ")[0]
-          .toLowerCase()
-        const named = name ? text.findIndex((p, i) => i >= old.paragraphs && p.toLowerCase().includes(name)) : -1
+        const named = paragraphs.findIndex((p, i) => i >= old.paragraphs && p.beats.some(involves(id)))
         next[id] = named >= 0 ? named : Math.min(old.paragraphs, Math.max(0, text.length - 1))
       }
       return next
@@ -430,7 +386,6 @@ export function StagePlay(props: {
     }
     const view = beats[paragraph]?.view
     if (!view) return
-    if (typeof view === "string") return void stage.shot(view)
     const shot = shotFor(stage, view, heroes.current)
     if (shot) stage.shot(shot)
   }, [stage, speech, departing, arriving, beats, paragraph, reading])
@@ -440,7 +395,7 @@ export function StagePlay(props: {
   // the roll or its target made it. A hero whose reply the movement model reads walks by that, not by the beats.
   const staged = useMemo(() => {
     const out = new Map<number, { key: string; beat: Extract<StoryBeat, { kind: "action" }>; effect: boolean; miss: boolean }[]>()
-    const all = paragraphs.flatMap((p, i) => (p.guess ? [] : p.beats.map((beat) => ({ beat, at: i }))))
+    const all = paragraphs.flatMap((p, i) => p.beats.map((beat) => ({ beat, at: i })))
     const same = (a: StoryBeat, b: StoryBeat) => a.by.step === b.by.step && a.by.character === b.by.character
     const add = (at: number, entry: { key: string; beat: Extract<StoryBeat, { kind: "action" }>; effect: boolean; miss: boolean }) => out.set(at, [...(out.get(at) ?? []), entry])
     const walksByModel = (actor: string) => Boolean(turn && saveRef.current?.movement[`${turn._id}:${actor}`])
