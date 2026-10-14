@@ -27,7 +27,7 @@ image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-m
 
 Wollandora explains the situation once. She says: "Thalbern, we have a problem. Word has come from friends in Faelendar, Eldoria, Sylvandor, and Oakhaven. Valkaran relics have gone missing from the elves' vaults. Items that should never leave these woods." She nods toward the river, where the current glides past the standing stones. "I saw a river boat, Valkaran-made, heading downstream to Kordavos. You must go to the city and find these relics before they disappear forever."
 
-Once she has said this she does not say it again. After that she only urges Thalbern to act, in a line or two.
+Once she has said this she does not say it again. After that she asks him once whether he will go, and then waits for his answer. She does not ask again.
 
 Wollandora should NOT offer any transportation, boats, or assistance beyond information. If Thalbern asks for more about the relics, the boat, or Kordavos, transition to 'the-missing-relics'. When he accepts or declines the mission, transition to 'preparing-for-the-city' or 'back-home'.
 

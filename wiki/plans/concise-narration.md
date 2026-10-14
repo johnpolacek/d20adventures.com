@@ -121,8 +121,8 @@ The same replies and rolls after the second pass. The same eight turns.
 
 Left as it showed:
 
-- Asking about the relics moves to `the-missing-relics`, which has no intro. The player must ask again before Wollandora answers.
-- The round end and Wollandora's own turn both press for an answer, one after the other. The NPC with the highest initiative acts straight after the round end.
+- Asking about the relics moves to `the-missing-relics`, which has no intro. The player must ask again before Wollandora answers. Fixed 2026-10-14: Wollandora acts first there, `initialInitiative: 20`, and answers the question just asked.
+- The round end and Wollandora's own turn both press for an answer, one after the other. The NPC with the highest initiative acts straight after the round end. Fixed 2026-10-14: her behavior scripted "Will you take on this task?" every turn. She now asks once and waits, and both the NPC and round-end prompts say a question waiting for the player's answer is not asked again. Not yet replayed.
 - Roll outcomes keep their 60-word rule and are now 12% of the words.
 - Authored intros are now the largest share, 32%.
 
