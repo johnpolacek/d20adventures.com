@@ -3,8 +3,10 @@ import type { GmPorts } from "../ports"
 import { createAdventureFirstTurnService } from "../services/adventure-first-turn-service"
 import { createAdventureRollResultService, getEncounterInstructionsFromPlan } from "../services/adventure-roll-result-service"
 import { createAdventureTurnReplyService } from "../services/adventure-turn-reply-service"
+import { createNarrativeGenerationService } from "../services/narrative-generation-service"
 import { createNpcTurnService } from "../services/npc-turn-service"
 import type { StoryBeat } from "../story/beats"
+import { storyProse } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
 import type { RollRequirement } from "../validations/roll-requirement-schema"
 
@@ -14,6 +16,7 @@ export function createAdventure(ports: GmPorts) {
   const { resolvePlayerRollNarrativeAndCharacters } = createAdventureRollResultService(ports)
   const { buildTurnReplyRollRequirement } = createAdventureTurnReplyService(ports)
   const { processNpcTurnsAfterCurrent } = createNpcTurnService(ports)
+  const { writeReply } = createNarrativeGenerationService(ports)
   const loadAdventurePlanForRuntime = ports.content.loadPlan.bind(ports.content)
   // `story` is the reply as the hero's beats, from writeReply. The player's own words go before it.
   async function processTurnReply({
@@ -73,6 +76,16 @@ export function createAdventure(ports: GmPorts) {
     await processNpcTurnsAfterCurrent(turnId)
     ports.narration.afterTurn(turnId)
     return { rollRequired: null }
+  }
+
+  // A player's reply in their own words: written into the story as their hero's beats, then taken as the hero's turn.
+  async function processPlayerReply({ turnId, characterId, playerInput }: { turnId: string; characterId: string; playerInput: string }) {
+    const userId = await ports.identity()
+    if (!userId) throw new Error("Unauthorized")
+    const { turn } = await assertAdventureAccessByTurn(userId, turnId)
+    const character = assertPlayerCharacterControl(userId, turn, characterId) as TurnCharacter
+    const story = await writeReply({ character, playerInput, turn: { ...turn, characters: turn.characters as TurnCharacter[] } })
+    return processTurnReply({ turnId, characterId, narrativeAction: storyProse(story), originalPlayerInput: playerInput, story })
   }
 
   async function createAdventureWithFirstTurn(payload: {
@@ -181,5 +194,5 @@ export function createAdventure(ports: GmPorts) {
     // 6. Return the updated turn
     return await ports.store.getTurn({ turnId })
   }
-  return { processTurnReply, createAdventureWithFirstTurn, resolvePlayerRollResult }
+  return { processTurnReply, processPlayerReply, createAdventureWithFirstTurn, resolvePlayerRollResult }
 }

@@ -17,6 +17,12 @@ export async function processTurnReply(args: { turnId: Id<"turns">; characterId:
   return createServerCore().processTurnReply(args)
 }
 
+// A reply in the player's own words. The GM writes it into the story as the hero's beats.
+export async function processPlayerReply(args: { turnId: Id<"turns">; characterId: string; playerInput: string }) {
+  await refuseHostedTurn(args.turnId)
+  return createServerCore().processPlayerReply(args)
+}
+
 export async function createAdventureWithFirstTurn(
   payload: Parameters<ReturnType<typeof createServerCore>["createAdventureWithFirstTurn"]>[0]
 ): Promise<{ adventureId: Id<"adventures">; turnId: Id<"turns"> }> {

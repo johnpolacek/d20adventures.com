@@ -8,6 +8,7 @@
 // effects (NPC trigger, auto-navigate) stay in TurnNarrative.
 
 import { useUser } from "@clerk/nextjs"
+import { storyParagraphs, turnStory } from "@d20/gm-core/story/render"
 import { AlertTriangle } from "lucide-react"
 import Link from "next/link"
 import React from "react"
@@ -16,7 +17,6 @@ import TurnAdvanceButton from "@/components/adventure/turn-advance-button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useAdventure } from "@/lib/context/AdventureContext"
 import { cn } from "@/lib/utils"
-import { parseNarrative } from "@/lib/utils/parse-narrative"
 import { Button } from "../ui/button"
 import LoadingAnimation from "../ui/loading-animation"
 import FinalEncounterCompleteMessage from "./final-encounter-complete-message"
@@ -45,7 +45,8 @@ export default function TurnNarrativeBody({ variant, showOriginalReplies = false
     return null
   }
 
-  const parsed = parseNarrative(currentTurn?.narrative || "")
+  // The turn's story as paragraphs: a turn's beats, or for a turn saved before beats, its narrative read back.
+  const paragraphs = storyParagraphs(turnStory(currentTurn))
 
   return (
     <div className="w-full grow max-w-3xl mx-auto fade-in">
@@ -56,35 +57,26 @@ export default function TurnNarrativeBody({ variant, showOriginalReplies = false
           <AlertDescription>{tokenError}</AlertDescription>
         </Alert>
       )}
-      {parsed.map((part, idx) => {
-        if (part.type === "original-reply") {
+      {paragraphs.map(({ beats, text }, idx) => {
+        const part = beats[0]
+        if (part.kind === "reply") {
           if (!showOriginalReplies) return null
           return (
             <div key={`original-${idx}`} className="text-base italic text-primary-200 mb-6 whitespace-pre-line">
-              Player Reply: {part.value}
+              Player Reply: {part.text}
             </div>
           )
         }
-        if (part.type === "paragraph") {
+        if (part.kind !== "roll") {
           return (
             <p key={idx} className="text-sm sm:text-base md:text-lg whitespace-pre-line mb-4">
-              {part.value}
+              {text}
             </p>
           )
         }
-        // Use a more unique key if available, otherwise fallback to idx
-        const key = part.character ? `${part.character}-${part.rollType}-${part.result}-${part.difficulty}` : idx
         return (
-          <div className="pb-6" key={key}>
-            <CharacterDiceRollResultDisplay
-              character={part.character}
-              rollType={part.rollType}
-              difficulty={part.difficulty}
-              result={part.result}
-              image={part.image}
-              modifier={part.modifier}
-              baseRoll={part.baseRoll}
-            />
+          <div className="pb-6" key={`${part.character}-${part.check}-${part.total}-${part.dc}-${idx}`}>
+            <CharacterDiceRollResultDisplay character={part.name} rollType={part.check} difficulty={part.dc} result={part.total} image={part.image} modifier={part.modifier} baseRoll={part.natural} />
           </div>
         )
       })}

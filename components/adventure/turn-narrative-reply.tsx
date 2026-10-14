@@ -22,7 +22,7 @@ import LoadingAnimation from "../ui/loading-animation"
 
 type TurnNarrativeReplyProps = {
   character: TurnCharacter
-  submitReply?: (args: { turnId: string | Id<"turns">; characterId: string; narrativeAction: string; originalPlayerInput?: string }) => Promise<unknown>
+  submitReply?: (args: { turnId: string | Id<"turns">; characterId: string; playerInput: string }) => Promise<unknown>
 }
 
 export default function TurnNarrativeReply({ character, submitReply }: TurnNarrativeReplyProps) {
@@ -157,30 +157,6 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
     if (!currentTurn || !currentTurn.id || !submitReply) return
     setError(null)
     try {
-      const paragraphs = (currentTurn.narrative || "").split(/\\n\\n+/).filter(Boolean)
-      const narrativeContext = paragraphs.slice(-2).join("\\n\\n")
-      const aiResult = await formatNarrativeAction({
-        characterName: character.name,
-        gender: character.gender,
-        playerInput: input,
-        narrativeContext,
-        characterInfo: {
-          archetype: character.archetype,
-          race: character.race,
-          appearance: character.appearance,
-          personality: character.personality,
-          motivation: character.motivation,
-          specialAbilities: character.specialAbilities,
-          skills: character.skills,
-          equipment: character.equipment?.map((e) => ({ name: e.name })) || [],
-        },
-      })
-      if (typeof aiResult !== "string") {
-        console.error("[handleCharacterReply] aiResult is not a string:", aiResult)
-        setError("Failed to format reply. Please try again.")
-        setLoading(false)
-        return
-      }
       if (typeof currentTurn.id !== "string") {
         console.error("[handleCharacterReply] currentTurn.id is not a string:", currentTurn.id)
         setError("Invalid turn ID. Please try again.")
@@ -188,12 +164,8 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
         return
       }
       setHasSubmitted(true)
-      await submitReply({
-        turnId: currentTurn.id,
-        characterId: character.id,
-        narrativeAction: aiResult,
-        originalPlayerInput: input.trim(),
-      })
+      // The GM writes the reply into the story on the server, as the hero's beats.
+      await submitReply({ turnId: currentTurn.id, characterId: character.id, playerInput: input.trim() })
     } catch (err) {
       console.error("[handleCharacterReply] Error:", err)
       setError(err instanceof Error ? err.message : "Failed to submit reply. Please try again.")

@@ -1,14 +1,15 @@
 import { createHash } from "node:crypto"
 import { decrementUserTokensAction } from "@/app/_actions/tokens"
-import { attributeNarrative, type AttributedSegment } from "@/lib/ai/narration-attribution"
+import type { Doc, Id } from "@/convex/_generated/dataModel"
+import { type AttributedSegment, attributeNarrative } from "@/lib/ai/narration-attribution"
+import { segmentsFromStory } from "@/lib/ai/story-segments"
 import { synthesizeSegment } from "@/lib/ai/tts"
-import { assignVoices, voiceForSpeaker, type VoiceAssignment } from "@/lib/ai/tts-voices"
+import { assignVoices, type VoiceAssignment, voiceForSpeaker } from "@/lib/ai/tts-voices"
 import { pcmDurationSec, pcmToWav } from "@/lib/audio/wav"
 import { isAwsConfigured } from "@/lib/aws"
 import { api, convex } from "@/lib/convex/server"
 import { uploadFileToS3 } from "@/lib/s3-utils"
 import { parseNarrative } from "@/lib/utils/parse-narrative"
-import type { Doc, Id } from "@/convex/_generated/dataModel"
 import type { TurnAudioSegment } from "@/types/turn-audio"
 
 // Storyview narration generation, shared by the on-demand route (single payer)
@@ -57,8 +58,9 @@ async function runWithConcurrency<T, R>(items: T[], limit: number, fn: (item: T,
   return results
 }
 
-export function estimateNarrationCharge(newChars: number): number {
-  return Math.ceil(newChars * (ESTIMATED_TTS_TOKENS_PER_CHAR + ESTIMATED_ATTRIBUTION_TOKENS_PER_CHAR) * TOKEN_MULTIPLIER)
+// A turn kept as beats says who speaks, so it needs no attribution call.
+export function estimateNarrationCharge(newChars: number, attributed = true): number {
+  return Math.ceil(newChars * (ESTIMATED_TTS_TOKENS_PER_CHAR + (attributed ? ESTIMATED_ATTRIBUTION_TOKENS_PER_CHAR : 0)) * TOKEN_MULTIPLIER)
 }
 
 export async function generateTurnAudioIncremental(opts: { turn: TurnDoc; adventure: AdventureDoc; requestedBy: string; charge: TurnAudioChargeMode }): Promise<GenerateTurnAudioResult> {
@@ -94,8 +96,15 @@ export async function generateTurnAudioIncremental(opts: { turn: TurnDoc; advent
     }
   }
 
+  const roster = turn.characters.map((c) => ({
+    id: c.id,
+    name: c.name,
+    gender: c.gender,
+    personality: c.personality,
+  }))
+  const labelled = turn.story ? segmentsFromStory(turn.story, parts, new Set(newParagraphs.map((p) => p.partIndex)), roster) : null
   const newChars = newParagraphs.reduce((sum, p) => sum + p.text.length, 0)
-  const estimatedTokens = estimateNarrationCharge(newChars)
+  const estimatedTokens = estimateNarrationCharge(newChars, !labelled)
 
   // Balance gate before claiming or doing any AI work.
   if (estimatedTokens > 0) {
@@ -133,17 +142,12 @@ export async function generateTurnAudioIncremental(opts: { turn: TurnDoc; advent
   }
 
   try {
-    const roster = turn.characters.map((c) => ({
-      id: c.id,
-      name: c.name,
-      gender: c.gender,
-      personality: c.personality,
-    }))
-
-    const { segments: newSegments, usage: attributionUsage } = await attributeNarrative(
-      newParagraphs.map(({ partIndex, text }) => ({ partIndex, text })),
-      roster
-    )
+    const { segments: newSegments, usage: attributionUsage } = labelled
+      ? { segments: labelled, usage: { totalTokens: 0 } }
+      : await attributeNarrative(
+          newParagraphs.map(({ partIndex, text }) => ({ partIndex, text })),
+          roster
+        )
 
     // Assign stable per-adventure voices to any new speakers. Reused segments
     // carry their original voice, so persisted assignments keep them in sync.

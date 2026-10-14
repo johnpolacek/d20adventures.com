@@ -119,6 +119,15 @@ The same scripted replies and rolls as the concise narration replays, on the bui
 - Still there, and not about beats: Wollandora asks "Will you take on this task?" word for word in two turns, and the round end and her turn both press for an answer.
 - Watched in the desktop preview on that save: one arrow lands with the outcome, the Owlbear walks to the clearing, stepping back does not replay a hit.
 
+### The website on beats, 2026-10-14
+
+- A reply sent as text into a turn that keeps beats was added to the narrative only, and the next step, which renders the narrative from the story, would have dropped it. Convex now adds it to the story as the player's words and narration. Fixed first, on its own.
+- The website's reply goes through `processPlayerReply`: the server writes the player's words as the hero's beats (`writeReply`), then takes the turn. The browser no longer calls `formatNarrativeAction`, except on the old demo first turn.
+- The turn view renders the story's paragraphs, rolls and the player's own words from beats.
+- Storyview takes speakers and delivery from beats and skips its attribution call and charge. Every turn of the live replay lined up, 13 lines voiced.
+- A beat's line breaks become spaces, so one beat is always one paragraph in every text view.
+- Not checked in the browser: the website's turn page needs a signed-in game.
+
 ## Decisions made without the owner
 
 - `story` is the field name, so it does not clash with the stage's own director beats.
@@ -126,6 +135,7 @@ The same scripted replies and rolls as the concise narration replays, on the bui
 - Wollandora enters before her first line in Timely Rescue, where the prose had her voice first.
 - An attack in a hero's reply plays after its roll, not with the words, so the dice decide before the arrow lands.
 - A struck card is tinted, not lit: a glow strong enough to see in daylight made night cards flat silhouettes.
+- The website's reply is written into beats on the server, in one request, rather than by the browser.
 - Until other adventures' intros are converted, their unlabelled paragraphs keep the old camera and speaker guessing.
 
 ## Not done

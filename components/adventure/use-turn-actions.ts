@@ -8,7 +8,7 @@
 import { useParams, useRouter } from "next/navigation"
 import React from "react"
 import { advanceTurn } from "@/app/_actions/advance-turn"
-import { processTurnReply } from "@/app/_actions/adventure"
+import { processPlayerReply } from "@/app/_actions/adventure"
 import type { Id } from "@/convex/_generated/dataModel"
 import { useAdventure } from "@/lib/context/AdventureContext"
 import { useTurnContext } from "@/lib/context/TurnContext"
@@ -85,14 +85,13 @@ export function useTurnActions() {
     }
   }
 
-  const submitReply = async ({ turnId, characterId, narrativeAction, originalPlayerInput }: { turnId: string | Id<"turns">; characterId: string; narrativeAction: string; originalPlayerInput?: string }) => {
+  const submitReply = async ({ turnId, characterId, playerInput }: { turnId: string | Id<"turns">; characterId: string; playerInput: string }) => {
     setTokenError(null) // Clear previous errors
     try {
-      const result = await processTurnReply({
+      const result = await processPlayerReply({
         turnId: turnId as Id<"turns">,
         characterId,
-        narrativeAction,
-        originalPlayerInput,
+        playerInput,
       })
       return result
     } catch (error) {
