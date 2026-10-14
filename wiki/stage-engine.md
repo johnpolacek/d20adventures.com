@@ -253,3 +253,18 @@ Remaining product work is tracked in [Stageview](plans/stageview.md).
 - Named staging shots on one character swing clear of solid footprints like inline ones. When a shot is taken and the camera had to swing more than 60 degrees from the character's facing, the character turns toward it, so a standee is not seen side on, where front and back dissolve into each other.
 - On Covert Cargo's opening, 14 paragraphs moved through the river, the meeting, Poppen in the reeds, the tug and the named characters' shots.
 
+## Effects, objects and labelled beats, 2026-10-14
+
+Part of [structured narrative](plans/structured-narrative.md).
+
+- `packages/stage/src/effects.ts` plays an attack or a spell from a small library: `arrow`, `bolt`, `beam`, `burst`, `aura`, `sparkles`, `slash`, `impact` and `mist`, coloured by an element (fire, frost, lightning, radiant, nature, shadow, arcane). Each is built at runtime from additive glow sprites, rings and shells, plays once and is disposed.
+- Objects: `scroll`, `letter`, `map`, `pouch`, `coin`, `key`, `relic`, `lantern`, `torch`, `blade`, `bow`, `potion`, `book`, `gem`, `pack`. Each is a small procedural model about half again its real size, held toward the camera beside the holder, and carried across to a receiver when there is one.
+- One point light is added to every stage for effects, dark when idle, so lighting an effect never changes the shaders.
+- `stage.effect(kind, from, to?, element?, { miss })`, `stage.prop(kind, holder, receiver?)`, `stage.hit(id, color, strength)`. A miss lands beside the target and flashes nobody.
+- A struck card is tinted toward the effect's colour, with a faint glow and a shake, over about half a second. A stronger glow turned night-scene cards into flat silhouettes.
+- The desktop play view reads a labelled turn from its beats: bubbles from lines, the camera from who acts and at whom or from a named place, entrances from `from`, walks from a place or a person, effects and objects once the camera has settled. An attack in a hero's reply waits for its roll and plays after it, as a hit or a miss.
+- Two people are framed by the staging's own group shot on both when there is one, else over the actor's shoulder when nothing solid stands behind them, else on the target. A place is seen from behind the heroes, or from the scene's view nearest it.
+- `stage.point(name)` finds a cast member before a mark of the same name. The Midnight Summons names its marks after the cast, so an entrance walked to where the entrant already stood. The play view now reads an entrance's places as marks.
+- Unlabelled paragraphs, an old turn's or an intro not yet in beats, keep `readNarration`.
+- Checked on the dev stage page and in the desktop preview with a scripted Owlbear fight. Not checked in the packaged app or at the small-window layout.
+

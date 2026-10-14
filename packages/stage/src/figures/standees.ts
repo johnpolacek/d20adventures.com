@@ -224,6 +224,8 @@ export class Standees {
   offstage = new Set<string>()
   // Cast members lying where they fell. The card tips back onto the ground.
   down = new Set<string>()
+  // Cast members just struck: a flash of colour on the card and a shake, fading over about half a second.
+  private hits = new Map<string, { t: number; color: THREE.Color; strength: number }>()
 
   constructor(
     cast: CastMember[],
@@ -241,6 +243,9 @@ export class Standees {
       s.fall = down ? 1 : 0
       s.yaw = null
     }
+  }
+  hit(id: string, color: string, strength = 1) {
+    if (this.items.has(id)) this.hits.set(id, { t: 0, color: new THREE.Color(color), strength: THREE.MathUtils.clamp(strength, 0, 1.5) })
   }
   // Full mip chain, trilinear, and the GPU's best anisotropy: the card is often minified and viewed at a slant.
   private texFor(img: HTMLImageElement) {
@@ -350,6 +355,17 @@ export class Standees {
       s.mesh.position.y = Math.abs(Math.cos(c.stride)) * 0.035 * c.walk + s.fall * 0.03
       s.mesh.rotation.z = Math.sin(c.stride) * 0.035 * c.walk
       s.mesh.rotation.x = -s.fall * (Math.PI / 2 - 0.04)
+      const hit = this.hits.get(c.id)
+      if (hit) {
+        hit.t += dt
+        // The art keeps its detail: tinted toward the colour, with only a faint glow, which a night scene would
+        // otherwise turn into a flat silhouette.
+        const k = Math.max(0, 1 - hit.t / 0.45) * hit.strength
+        s.mat.color.setRGB(1, 1, 1).lerp(hit.color, Math.min(0.7, 0.6 * k))
+        s.mat.emissive.copy(hit.color).multiplyScalar(0.035 * k)
+        s.mesh.position.x = Math.sin(hit.t * 70) * 0.05 * k
+        if (k <= 0) this.hits.delete(c.id)
+      }
       // The card is as wide as the art it shows; the shadow caster and the relief follow whichever view dominates.
       s.bu.uBack.value = s.back
       if (s.loaded) s.mesh.scale.x = c.height * (s.mapB ? THREE.MathUtils.lerp(s.aspect, s.aspectB, s.back) : s.aspect)

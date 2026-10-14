@@ -1,6 +1,7 @@
 import * as THREE from "three"
 import { OrbitControls } from "three/addons/controls/OrbitControls.js"
 import type { Footprint } from "./builders/types"
+import { type EffectEnd, type EffectKind, Effects, type Element, type PropKind } from "./effects"
 import type { CrowdLibrary, CrowdLibraryMeta } from "./figures/cards"
 import { Crowd } from "./figures/crowd"
 import { type CastMember, Standees } from "./figures/standees"
@@ -93,6 +94,7 @@ export class Stage {
   readonly pipeline: Pipeline
   readonly crowd: Crowd
   readonly standees: Standees
+  readonly effects: Effects
   readonly cast: CastMember[]
   readonly controls: OrbitControls | null
   readonly sun: THREE.DirectionalLight
@@ -282,6 +284,8 @@ export class Stage {
     this.cast = resolveCast(set, staging)
     this.standees = new Standees(this.cast, this.shared, maxAnisotropy)
     this.world.add(this.standees.group)
+    this.effects = new Effects({ hit: (id, color, strength) => this.standees.hit(id, color, strength), camera: this.camera })
+    this.world.add(this.effects.group)
 
     // Ambient loops (a queue at a checkpoint), fed by the staging's cast and lines.
     const coinMat = this.materials.get("coin")
@@ -797,6 +801,7 @@ export class Stage {
     this.controls?.update()
     this.constrain()
     this.lightRoom(dt)
+    if (this.motion) this.effects.update(dt)
     this.standees.update(dt, this.camera)
     this.crowd.updateLOD(this.camera)
     this.crowd.flush()
@@ -921,6 +926,42 @@ export class Stage {
     }
     return out
   }
+  // ── Effects and objects ──
+  // A cast member's chest, where effects start and land.
+  private chest(id: string): EffectEnd {
+    const c = this.member(id)
+    return { at: new THREE.Vector3(c.x, c.height * 0.62, c.z), id }
+  }
+  private endOf(ref: string | [number, number]): EffectEnd {
+    if (typeof ref === "string" && this.cast.some((c) => c.id === ref)) return this.chest(ref)
+    const p = this.point(ref)
+    return { at: new THREE.Vector3(p.x, 1, p.z) }
+  }
+  // An attack or spell from one cast member at another, or at a place, or about themselves with no target. A miss lands
+  // beside the target and strikes nobody. Resolves when it has played. With motion off it does not play.
+  effect(kind: EffectKind, from: string, to?: string | [number, number], element?: Element, { miss = false } = {}): Promise<void> {
+    if (!this.motion) return Promise.resolve()
+    const start = this.chest(from)
+    let end = to === undefined ? undefined : this.endOf(to)
+    if (end && miss) {
+      const away = end.at.clone().sub(start.at).setY(0)
+      const side = new THREE.Vector3(away.z, 0, -away.x).normalize()
+      end = { at: end.at.clone().addScaledVector(side, 0.9).addScaledVector(away.normalize(), 1.2).setY(end.at.y * 0.8) }
+    }
+    return this.effects.play(kind, start, end, element)
+  }
+  // An object in a cast member's hand, passed to another when there is a receiver.
+  prop(kind: PropKind, holder: string, receiver?: string): Promise<void> {
+    if (!this.motion) return Promise.resolve()
+    return this.effects.prop(kind, this.chest(holder), receiver ? this.chest(receiver) : undefined)
+  }
+  // A flash and a shake on a cast member's card, as when struck.
+  hit(id: string, color = "#ff5a3c", strength = 1) {
+    this.standees.hit(id, color, strength)
+  }
+  clearEffects() {
+    this.effects.clear()
+  }
   // Where a cast member stands (x, z) and faces (radians).
   castAt(id: string) {
     const c = this.member(id)
@@ -960,6 +1001,7 @@ export class Stage {
     for (const d of this.disposables) d.dispose()
     this.crowd.dispose()
     this.standees.dispose()
+    this.effects.dispose()
     this.coinMesh?.geometry.dispose()
     this.materials.dispose()
     this.pipeline.dispose()

@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [GM core](../gm-core.md) · [Stage engine](../stage-engine.md) · [Concise narration](concise-narration.md)
 
-Status: started 2026-10-14. The GM writes beats and every store keeps them. The Midnight Summons first, on the desktop app.
+Status: started 2026-10-14. The GM writes beats, every store keeps them, and the desktop stage plays them with effects and objects. The Midnight Summons first, on the desktop app.
 
 ## Owner direction, 2026-10-14
 
@@ -93,11 +93,19 @@ An intro paragraph may open with labels in braces. Without them it is narration.
 - A game started on the website opens on the same beats (`introTurn`).
 - The labels are documented in [Wiki adventures](../wiki-adventures.md).
 
+### Stage effects and the desktop reading beats, 2026-10-14
+
+- The stage plays effects and objects from a fixed library, and flashes a struck card. See [Stage engine](../stage-engine.md).
+- The desktop play view takes speakers, camera, entrances, walks, effects and objects from labelled beats, and the journal reads beats.
+- Checked in the desktop preview on a save played by a scripted GM through the real runtime: the Owlbear walks on from the tree line, the camera looks to the tree line when the eyes shine there, the arrow waits for the dice and lands with the outcome, a failed claw strike misses.
+
 ## Decisions made without the owner
 
 - `story` is the field name, so it does not clash with the stage's own director beats.
 - The hero's movement keeps its own model call and the engine's clamping. Beats move NPCs and authored entrances.
 - Wollandora enters before her first line in Timely Rescue, where the prose had her voice first.
+- An attack in a hero's reply plays after its roll, not with the words, so the dice decide before the arrow lands.
+- A struck card is tinted, not lit: a glow strong enough to see in daylight made night cards flat silhouettes.
 - Until other adventures' intros are converted, their unlabelled paragraphs keep the old camera and speaker guessing.
 
 ## Not done
