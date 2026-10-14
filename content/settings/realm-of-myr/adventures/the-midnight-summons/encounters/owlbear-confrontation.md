@@ -18,7 +18,11 @@ image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-m
 
 ## Intro
 
-Eyes shine in the shadows of the tree line, where the sound came from. A hulking monster crashes out of the undergrowth, fifteen feet tall, with the body of a giant bear and the head of an owl. It lets out a guttural squawk, agitated and territorial.
+{place: treeLine} Eyes shine in the shadows of the tree line, where the sound came from.
+
+{actor: owlbear, target: thalbern, from: treeLine, pace: hurry} A hulking monster crashes out of the undergrowth, fifteen feet tall, with the body of a giant bear and the head of an owl.
+
+{actor: owlbear, target: thalbern} It lets out a guttural squawk, agitated and territorial.
 
 ## GM Notes
 

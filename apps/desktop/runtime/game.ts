@@ -1,10 +1,7 @@
 import { randomUUID } from "node:crypto"
 import { type Content, createGmCore, type Llm } from "@d20/gm-core"
 import { type ActionSuggestion, suggestActions } from "@d20/gm-core/services/ai-pc-turn-service"
-import { authoredStory } from "@d20/gm-core/story/authored"
-import { cleanStory } from "@d20/gm-core/story/clean"
-import { legacyNarrative } from "@d20/gm-core/story/render"
-import { storyProse, turnScript } from "@d20/gm-core/story/turn"
+import { introTurn, storyProse, turnScript } from "@d20/gm-core/story/turn"
 import { findCurrentActor } from "@d20/gm-core/utils/turn-actors"
 import { buildLocalWikiTurnCharacters } from "@d20/gm-core/wiki-adventures/characters"
 import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventures/plan-view"
@@ -94,12 +91,6 @@ export const commandSchema = z.discriminatedUnion("kind", [
   }),
 ])
 export type GameCommand = z.infer<typeof commandSchema>
-// A first turn's story: the encounter's intro as beats for the characters in it.
-function introTurn(encounterId: string, intro: string, characters: readonly { id: string; name: string; type: string }[]) {
-  const places = scenePlaces(encounterId)
-  const story = cleanStory(authoredStory(intro), { cast: characters, ...(places?.length ? { places } : {}) }, { step: "intro" })
-  return { narrative: legacyNarrative(story), story }
-}
 export const suggestCommandSchema = z.object({ kind: z.literal("suggest"), turnId: z.string(), characterId: z.string() })
 // Replies the player could send on their hero's turn. It reads the save and writes nothing, so it runs beside a game
 // action. The prompt carries what the players have read and the hero's own saved state, never another character's.
@@ -220,7 +211,17 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
           resolvedThreadIds: [],
           adventureSummaryMarkdown: "",
         },
-        turns: [{ _id: turnId, adventureId: id, encounterId: encounter.id, title: encounter.title, ...introTurn(encounter.id, encounter.sections.intro ?? "", characters), characters, order: 1 }],
+        turns: [
+          {
+            _id: turnId,
+            adventureId: id,
+            encounterId: encounter.id,
+            title: encounter.title,
+            ...introTurn(encounter.sections.intro ?? "", { cast: characters, places: scenePlaces(encounter.id) }),
+            characters,
+            order: 1,
+          },
+        ],
       })
       return store.state
     }

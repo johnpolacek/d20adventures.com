@@ -17,9 +17,9 @@ Thalbern, a solitary ranger of the Valkarr woods, trusts the silence of the wild
 
 Tonight a red squirrel came to his hidden home with a note in the hand of Wollandora, an elven druid and trusted friend: Meet me at the Old Standing Stones at midnight. The balance of the forest could depend on it.
 
-Now midnight is near. Thalbern moves quietly through the dense undergrowth by memory and instinct, with almost no moonlight coming through the canopy.
+{actor: thalbern, place: trailNorth, pace: sneak} Now midnight is near. Thalbern moves quietly through the dense undergrowth by memory and instinct, with almost no moonlight coming through the canopy.
 
-A sharp crack breaks the hush. Something large has stepped on a branch, somewhere off in the distance.
+{place: treeLine} A sharp crack breaks the hush. Something large has stepped on a branch, somewhere off in the distance.
 
 ## GM Notes
 

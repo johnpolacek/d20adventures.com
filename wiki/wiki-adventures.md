@@ -85,6 +85,25 @@ Authoring for length:
 - A note that asks the GM to describe something should say how much, such as "in a sentence or two".
 - Write an intro in one tense. Narration is in the present.
 
+## Labels in an intro
+
+Added 2026-10-14 with [structured narrative](plans/structured-narrative.md). An intro paragraph may open with labels in braces, so the 3D stage knows who speaks, who acts and where to look. A paragraph without labels is narration.
+
+```
+{place: treeLine} Eyes shine in the shadows of the tree line.
+{actor: owlbear, target: thalbern, from: treeLine, pace: hurry} A hulking monster crashes out of the undergrowth.
+{speaker: wollandora, to: thalbern, delivery: soft} Thalbern. The forest is grateful you are here.
+{actor: wollandora, effect: burst, element: nature} She sends out a wave of natural energy.
+```
+
+- `speaker` makes a line: the paragraph is the spoken words only. `actor` makes an action. Otherwise it is narration.
+- Ids are character ids and the set's labelled marks. An id the scene does not have is dropped, and the words still show.
+- `place` on an action walks the actor there. `from` brings them on from there.
+- `effect`, `element` and `object` take the words in [the plan](plans/structured-narrative.md).
+- Values are split on commas, so a `delivery` is written "calm and commanding".
+- Prompts and the website's text views show the intro with its labels taken off and each line under its speaker's name.
+- The Midnight Summons is labelled. The other three adventures are not yet.
+
 ## Admin authoring
 
 The canonical editor route is `/admin/adventure-plans/{settingId}/{planId}`. The old `/admin/wiki-adventures` and misspelled `/admin/adventures-plans` routes redirect.

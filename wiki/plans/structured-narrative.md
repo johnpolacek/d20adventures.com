@@ -86,10 +86,18 @@ An intro paragraph may open with labels in braces. Without them it is narration.
 - The website's own reply path still writes prose, through `formatNarrativeAction`. So do the legacy round end for non-wiki plans and the first turn of a game started on the website.
 - Checked: the GM core fixture re-recorded with beat replies, 62 desktop tests, the five bridge checks, the style check, typechecks. No live model has played it yet.
 
+### The Midnight Summons intros, 2026-10-14
+
+- Five intros carry labels. The Owlbear enters from the tree line, Wollandora steps from the shadows and casts a nature burst, Thalbern sneaks up the trail, packs his gear and leaves by the path.
+- Wollandora's arrival now comes before her "That's enough" line, so the line has someone on stage to speak it. The words are unchanged.
+- A game started on the website opens on the same beats (`introTurn`).
+- The labels are documented in [Wiki adventures](../wiki-adventures.md).
+
 ## Decisions made without the owner
 
 - `story` is the field name, so it does not clash with the stage's own director beats.
 - The hero's movement keeps its own model call and the engine's clamping. Beats move NPCs and authored entrances.
+- Wollandora enters before her first line in Timely Rescue, where the prose had her voice first.
 - Until other adventures' intros are converted, their unlabelled paragraphs keep the old camera and speaker guessing.
 
 ## Not done

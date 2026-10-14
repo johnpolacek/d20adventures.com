@@ -1,7 +1,8 @@
 import { z } from "zod"
 import type { GmPorts } from "../ports"
+import { authoredStory } from "./authored"
 import { type RollBeat, type StoryBeat, type StoryBy, storyOutputSchema } from "./beats"
-import type { StoryScene } from "./clean"
+import { cleanStory, type StoryScene } from "./clean"
 import { legacyNarrative, storyNames, storyParagraphs, storyText, turnStory } from "./render"
 
 type StoryTurn = { encounterId: string; story?: StoryBeat[]; narrative?: string; characters: readonly { id: string; name: string; type?: string }[] }
@@ -45,4 +46,10 @@ export function rollBeat(by: StoryBy, args: { id: string; name: string; image?: 
     success: args.success,
     ...(args.image ? { image: args.image } : {}),
   }
+}
+
+// A turn that opens on an authored intro: its beats for the characters in it, and the narrative rendered from them.
+export function introTurn(intro: string, scene: StoryScene): { story: StoryBeat[]; narrative: string } {
+  const story = cleanStory(authoredStory(intro), scene, { step: "intro" })
+  return { story, narrative: legacyNarrative(story) }
 }

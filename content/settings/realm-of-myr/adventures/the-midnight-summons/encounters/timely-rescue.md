@@ -16,7 +16,13 @@ image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-m
 
 ## Intro
 
-As the Owlbear rears for a final blow, a shaft of silver moonlight pierces the canopy. "That's enough, beast of the wood!" a calm voice commands. Wollandora steps from the shadows, her staff glowing faintly. With a gesture and a word of power she sends out a wave of natural energy that stuns the startled Owlbear and drives it back into the forest.
+As the Owlbear rears for a final blow, a shaft of silver moonlight pierces the canopy.
+
+{actor: wollandora, from: treeLine} Wollandora steps from the shadows, her staff glowing faintly.
+
+{speaker: wollandora, delivery: calm and commanding} That's enough, beast of the wood!
+
+{actor: wollandora, effect: burst, element: nature} With a gesture and a word of power she sends out a wave of natural energy that stuns the startled Owlbear and drives it back into the forest.
 
 ## GM Notes
 

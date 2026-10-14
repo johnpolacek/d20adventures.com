@@ -1,3 +1,4 @@
+import { introTurn } from "@d20/gm-core/story/turn"
 import { after } from "next/server"
 import { api } from "@/convex/_generated/api"
 import type { Doc, Id } from "@/convex/_generated/dataModel"
@@ -24,7 +25,7 @@ export async function startWikiAdventure(adventure: Pick<Doc<"adventures">, "_id
     adventureId: adventure._id,
     encounterId: firstEncounter.id,
     title: firstEncounter.title,
-    narrative: firstEncounter.sections.intro ?? firstEncounter.sections.body ?? "",
+    ...introTurn(firstEncounter.sections.intro ?? firstEncounter.sections.body ?? "", { cast: characters }),
     characters,
     order: 1,
     generatedBy: { promptVersion: `wiki-${definition.promptSlug}-start-v1`, contextHash: contentRef.contentHash },
