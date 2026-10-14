@@ -20,7 +20,7 @@ export function storyRules(scene: StoryScene): string {
   const places = scene.places?.length ? scene.places.map((p) => `${p.id}: ${p.label}`).join("; ") : ""
   return `Write the story as "beats", a list in the order things happen:
 - narration: the scene or an outcome, in the narrator's voice.${places ? ' "place": the id of a place it shows.' : ""}
-- action: one character doing something. "who": their id. "to": the id of whoever it is aimed at.${places ? ' "place": where they go, if they move. "from": where they come from, if they enter the scene. "pace": walk, hurry or sneak.' : ""} "effect" and "element": what an attack or spell looks like, if anything visible happens. "object": something they show or hand over.
+- action: one character doing something. "who": their id. "to": the id of whoever it is aimed at.${places ? ' "place": where they go, if they move: the id of a place, or of a character to close in on. "from": where they come from, if they enter the scene. "pace": walk, hurry or sneak.' : ""} "effect" and "element": what an attack or spell looks like, if anything visible happens. "object": something they show or hand over.
 - line: words one character says aloud. "text" holds only the spoken words, with no quote marks. "who": the speaker. "to": whom they speak to. "delivery": how, in a word or two.
 Narration and action text never hold spoken words: every spoken word goes in a line. A beat is one or two sentences.
 Characters, by id: ${cast}.${places ? `\nPlaces, by id: ${places}.` : ""}

@@ -110,7 +110,7 @@ export const storyOutputSchema = z
       text: z.string().describe("narration and action: one or two sentences of prose with no spoken words. line: only the words spoken, with no quote marks"),
       who: z.string().optional().describe("action: the id of the character acting. line: the id of the character speaking"),
       to: z.string().optional().describe("action: the id of the character it is aimed at. line: the id of the character spoken to"),
-      place: z.string().optional().describe("narration: the id of the place it shows. action: the id of the place the actor goes to"),
+      place: z.string().optional().describe("narration: the id of the place it shows. action: the id of the place the actor goes to, or of a character they close in on"),
       from: z.string().optional().describe("action: the id of the place the actor arrives from, only when they come into the scene"),
       pace: menu(PACES, "action with a place: how the actor goes"),
       effect: menu(EFFECT_KINDS, "action: the visible effect of an attack or spell, if any"),

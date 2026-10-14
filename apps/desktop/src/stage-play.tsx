@@ -145,6 +145,8 @@ export function StagePlay(props: {
 }) {
   const { save, art } = props
   const { onPositions, onError, onEscape, onStage } = props
+  const saveRef = useRef(save)
+  saveRef.current = save
   const [walking, setWalking] = useState(false)
   const busy = props.busy || walking
 
@@ -193,7 +195,9 @@ export function StagePlay(props: {
   const specs = useMemo(() => (scene ? { set: scene.set, staging: scene.staging, tier: "balanced" as const } : null), [scene])
   const { stage, stageRef, status: loading, error: stageError } = useStage(containerRef, specs)
   const actor = turn ? findCurrentActor(turn.characters) : undefined
-  const paragraphs = useMemo(() => story(turn), [turn])
+  // Read again only when the story itself changes, not on every save, such as positions after a walk.
+  const told = turn ? JSON.stringify([turn._id, turn.story ?? turn.narrative]) : ""
+  const paragraphs = useMemo(() => story(turn), [told])
   const text = useMemo(() => paragraphs.map((p) => p.text), [paragraphs])
   // The paragraph's dice roll, for the narration to show: the numbers from the roll, the roller's portrait from the scene.
   const rolled = paragraphs[paragraph]?.roll
@@ -431,32 +435,45 @@ export function StagePlay(props: {
     if (shot) stage.shot(shot)
   }, [stage, speech, departing, arriving, beats, paragraph, reading])
   // What labelled paragraphs do on stage: walks, effects and objects, each played once when its paragraph is first read.
-  // An attack in a hero's reply waits for the roll that decides it, and plays after the roll as a hit or a miss. An
-  // effect after a failed roll in the same step misses too.
+  // An attack in a hero's reply waits for the roll that decides it, and plays after the roll as a hit or a miss, unless
+  // the roll's outcome shows the attack itself. After a roll in the same step, an effect misses when its actor failed
+  // the roll or its target made it. A hero whose reply the movement model reads walks by that, not by the beats.
   const staged = useMemo(() => {
     const out = new Map<number, { key: string; beat: Extract<StoryBeat, { kind: "action" }>; effect: boolean; miss: boolean }[]>()
     const all = paragraphs.flatMap((p, i) => (p.guess ? [] : p.beats.map((beat) => ({ beat, at: i }))))
     const same = (a: StoryBeat, b: StoryBeat) => a.by.step === b.by.step && a.by.character === b.by.character
     const add = (at: number, entry: { key: string; beat: Extract<StoryBeat, { kind: "action" }>; effect: boolean; miss: boolean }) => out.set(at, [...(out.get(at) ?? []), entry])
-    all.forEach(({ beat, at }, i) => {
-      if (beat.kind !== "action") return
-      const key = `${turn?._id}:${i}`
-      if (beat.move?.to || beat.object) add(at, { key: `${key}:own`, beat, effect: false, miss: false })
-      if (!beat.effect) return
+    const walksByModel = (actor: string) => Boolean(turn && saveRef.current?.movement[`${turn._id}:${actor}`])
+    // Where a beat's effect plays, and whether it misses: undefined when it does not play yet, or not at all.
+    const effectAt = (beat: Extract<StoryBeat, { kind: "action" }>, at: number, i: number): { at: number; miss: boolean } | undefined => {
       let j = i - 1
       while (j >= 0 && same(all[j].beat, beat) && all[j].beat.kind !== "roll") j--
       const before = j >= 0 && same(all[j].beat, beat) ? all[j].beat : undefined
-      if (before?.kind === "roll") return add(at, { key: `${key}:fx`, beat, effect: true, miss: !before.success })
-      if (beat.by.step === "reply") {
-        let k = i + 1
-        while (k < all.length && same(all[k].beat, beat)) k++
-        const roll = all[k]?.beat
-        if (roll?.kind === "roll" && roll.character === beat.actor) return add(all[k + 1]?.at ?? all[k].at, { key: `${key}:fx`, beat, effect: true, miss: !roll.success })
-        // A roll the player has still to make decides it later.
-        if (k >= all.length && turn?.characters.find((c) => c.id === beat.actor)?.rollRequired) return
+      if (before?.kind === "roll") return { at, miss: before.character === beat.actor ? !before.success : before.character === beat.target && before.success }
+      if (beat.by.step !== "reply") return { at, miss: false }
+      let k = i + 1
+      while (k < all.length && same(all[k].beat, beat)) k++
+      const roll = all[k]?.beat
+      if (roll?.kind === "roll" && roll.character === beat.actor) {
+        // The outcome shows the attack itself.
+        for (let m = k + 1; m < all.length && same(all[m].beat, roll); m++) {
+          const o = all[m].beat
+          if (o.kind === "action" && o.actor === beat.actor && o.effect) return undefined
+        }
+        return { at: all[k + 1]?.at ?? all[k].at, miss: !roll.success }
       }
-      add(at, { key: `${key}:fx`, beat, effect: true, miss: false })
-    })
+      // A roll the player has still to make decides it later.
+      if (k >= all.length && turn?.characters.find((c) => c.id === beat.actor)?.rollRequired) return undefined
+      return { at, miss: false }
+    }
+    for (const [i, { beat, at }] of all.entries()) {
+      if (beat.kind !== "action") continue
+      const key = `${turn?._id}:${i}`
+      const walks = Boolean(beat.move?.to) && !walksByModel(beat.actor)
+      if (walks || beat.object) add(at, { key: `${key}:own`, beat: walks ? beat : { ...beat, move: undefined }, effect: false, miss: false })
+      const fx = beat.effect ? effectAt(beat, at, i) : undefined
+      if (fx) add(fx.at, { key: `${key}:fx`, beat, effect: true, miss: fx.miss })
+    }
     return out
   }, [paragraphs, turn?._id, turn?.characters])
   const played = useRef(new Set<string>())
@@ -511,8 +528,6 @@ export function StagePlay(props: {
     const timer = setTimeout(() => (paragraph < text.length - 1 ? setParagraph((n) => n + 1) : setReading(false)), seconds * 1000)
     return () => clearTimeout(timer)
   }, [auto, reading, busy, text, paragraphs, paragraph])
-  const saveRef = useRef(save)
-  saveRef.current = save
   const focused = useRef<string | null>(null)
   const moved = useRef(new Set<string>())
   useEffect(() => {
@@ -525,6 +540,8 @@ export function StagePlay(props: {
     const old = previousText.current
     const sameTurn = old.turn === turn?._id
     const firstChanged = sameTurn ? text.findIndex((p, i) => p !== old.paragraphs[i]) : 0
+    // The same paragraphs again: nothing new to read.
+    if (sameTurn && firstChanged < 0 && text.length === old.paragraphs.length) return
     // Narration that arrives while an earlier paragraph is still being read waits its turn.
     setParagraph((p) => (sameTurn && readingRef.current && firstChanged > p ? p : Math.max(0, firstChanged)))
     setReading(true)

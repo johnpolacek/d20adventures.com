@@ -99,6 +99,26 @@ An intro paragraph may open with labels in braces. Without them it is narration.
 - The desktop play view takes speakers, camera, entrances, walks, effects and objects from labelled beats, and the journal reads beats.
 - Checked in the desktop preview on a save played by a scripted GM through the real runtime: the Owlbear walks on from the tree line, the camera looks to the tree line when the eyes shine there, the arrow waits for the dice and lands with the outcome, a failed claw strike misses.
 
+### Live replay with Claude, 2026-10-14
+
+The same scripted replies and rolls as the concise narration replays, on the built runtime, Claude as GM. Eight turns to the ending in 3 minutes 15 seconds.
+
+| | Second concise replay | Beats replay |
+|---|---|---|
+| Words a turn, all shown text | 143 | 145 |
+| Spoken lines with a speaker | guessed | 13 of 13 labelled |
+| Spoken words left in narration or actions | many | 0 |
+
+- Every line came with speaker, listener and delivery. No quote was left in prose for the reader to guess.
+- Effects: Thalbern's arrows, the Owlbear's claws. Places and walks on every turn, all from the menus.
+- Found and fixed: the hero's arrow played twice, once from the reply and once from the outcome. The outcome no longer gives the hero's attack an effect, and the reply's waits only when the outcome has none.
+- Found and fixed: a claw strike Thalbern dodged still flashed him. An effect after a roll its target made now misses.
+- Found and fixed: a hero's walk from beats and the movement model's walk could both run. The model's walk wins for a player's hero.
+- Found and fixed: saving positions after a walk sent the reader back to the turn's first paragraph.
+- The GM can name a character as where someone goes, so a monster closes in rather than walking to the nearest named spot.
+- Still there, and not about beats: Wollandora asks "Will you take on this task?" word for word in two turns, and the round end and her turn both press for an answer.
+- Watched in the desktop preview on that save: one arrow lands with the outcome, the Owlbear walks to the clearing, stepping back does not replay a hit.
+
 ## Decisions made without the owner
 
 - `story` is the field name, so it does not clash with the stage's own director beats.
