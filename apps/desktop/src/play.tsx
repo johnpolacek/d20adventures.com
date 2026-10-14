@@ -373,7 +373,7 @@ export function DesktopGame() {
             )}
             {ready && (
               <>
-                {screen === "home" && <Home save={save} busy={busy} onContinue={() => setScreen(null)} onBegin={() => setScreen("adventures")} />}
+                {screen === "home" && <Home save={save} busy={busy} next={nextUp?.title} onContinue={() => setScreen(null)} onNext={continueStory} onBegin={() => setScreen("adventures")} />}
                 {screen === "adventures" && (
                   <AdventuresPage
                     saves={saves}

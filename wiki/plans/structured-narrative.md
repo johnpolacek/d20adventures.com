@@ -133,7 +133,7 @@ The same scripted replies and rolls as the concise narration replays, on the bui
 - Owner, offered removing the old text, labelling the other three adventures, and Wollandora's repeat: "g h i".
 - Covert Cargo, The Road to Kordavos and March of Davos intros are labelled, by three helpers working in parallel, each checked against the encounter's cast and places.
 - A turn keeps `story` only. The narrative string, the `[DiceRoll:]` and `[OriginalReply:]` markers, `readNarration`, `parseNarrative`, Storyview's attribution call, `formatNarrativeAction` and the legacy prose helpers are deleted.
-- Old desktop saves are read into beats once when loaded: paragraphs as narration, rolls and the player's words as theirs.
+- Old desktop saves were at first converted on load. Owner, the same morning: "I thought we were wiping data since we have the new beats approach." The saved games and old validation saves on the owner's machine are deleted, heroes kept, and the conversion code removed.
 - The website demo's first reply is written into beats on the server. The legacy round end for non-wiki plans writes beats too.
 - Storyview audio keys on a hash of the story. The dev database held no adventures or turns, and its 2 orphaned audio rows were deleted before the field was renamed.
 - A slip: the labels commit also carried 4 staged file deletions, so main had code importing deleted files for about a minute, until the next commit.
@@ -149,7 +149,6 @@ The same scripted replies and rolls as the concise narration replays, on the bui
 - A struck card is tinted, not lit: a glow strong enough to see in daylight made night cards flat silhouettes.
 - The website's reply is written into beats on the server, in one request, rather than by the browser.
 - A quote by someone outside the encounter's characters stays in the prose with no bubble or voice. Adding those speakers to an encounter's `npcs` would make them turn characters, so it is left for the author.
-- Old desktop saves are converted, not thrown away, so a game in progress still opens.
 
 ## Not done
 

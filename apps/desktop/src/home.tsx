@@ -4,10 +4,12 @@ import { Chip } from "@/components/ui/site"
 import type { Save } from "../runtime/store"
 
 // Home: the website's title screen, with Continue for the saved adventure, or Begin, which opens the Adventures page
-// to choose one. The header above it leads to the pages.
-export function Home(props: { save: Save | null; busy: boolean; onContinue: () => void; onBegin: () => void }) {
+// to choose one. A finished adventure goes on into the next one when there is one, else Begin, and its ending can be
+// read again. The header above it leads to the pages.
+export function Home(props: { save: Save | null; busy: boolean; next?: string; onContinue: () => void; onNext: () => void; onBegin: () => void }) {
   const turn = props.save?.turns.find((t) => t._id === props.save?.adventure.currentTurnId)
   const pcs = (turn?.characters ?? []).filter((c) => c.type === "pc").map((c) => c.name.split(" ")[0])
+  const finished = props.save?.adventure.status === "completed"
   return (
     <div className="absolute inset-0 overflow-hidden bg-black text-white">
       <img src="/images/app/backgrounds/d20-hero.png" alt="" className="fade-in absolute inset-0 h-full w-full object-cover" />
@@ -26,7 +28,7 @@ export function Home(props: { save: Save | null; busy: boolean; onContinue: () =
             <>
               <div className="flex flex-col items-center gap-1">
                 <Chip tone="primary" className="rounded-lg px-3 font-display font-bold">
-                  {props.save.adventure.status === "completed" ? "Adventure complete" : `Round ${turn?.order ?? 1} · ${turn?.title ?? ""}`}
+                  {finished ? "Adventure complete" : `Round ${turn?.order ?? 1} · ${turn?.title ?? ""}`}
                 </Chip>
                 <h2 className="font-display text-2xl font-bold text-amber-300" style={textShadowSpread}>
                   {props.save.adventure.title}
@@ -37,9 +39,30 @@ export function Home(props: { save: Save | null; busy: boolean; onContinue: () =
                   </p>
                 )}
               </div>
-              <Button variant="epic" size="lg" disabled={props.busy} onClick={props.onContinue}>
-                Continue
-              </Button>
+              {!finished ? (
+                <Button variant="epic" size="lg" disabled={props.busy} onClick={props.onContinue}>
+                  Continue
+                </Button>
+              ) : props.next ? (
+                <Button variant="epic" size="lg" disabled={props.busy} onClick={props.onNext}>
+                  Continue: {props.next}
+                </Button>
+              ) : (
+                <Button variant="epic" size="lg" disabled={props.busy} onClick={props.onBegin}>
+                  Begin
+                </Button>
+              )}
+              {finished && (
+                <button
+                  type="button"
+                  className="font-display text-sm underline-offset-4 hover:underline disabled:opacity-50"
+                  style={textShadowSpreadLight}
+                  disabled={props.busy}
+                  onClick={props.onContinue}
+                >
+                  Read the ending
+                </button>
+              )}
             </>
           ) : (
             <Button variant="epic" size="lg" disabled={props.busy} onClick={props.onBegin}>

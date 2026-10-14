@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-14, a finished adventure's home screen, and old saves wiped
+
+Owner: "Why does it say Adventure Complete and Continue on the homepage. If complete, there is nothing to continue?" Continue opened the finished game's ending. A finished adventure now offers "Continue: {next adventure}" with its heroes carried over, or Begin when there is no next one, and "Read the ending". The Adventures page says "Read the ending" on a finished game too. Checked in the desktop preview. The owner also expected old data wiped, not converted: the saved games and old validation saves on the owner's machine are deleted, heroes kept, and the conversion code removed.
+
 ## 2026-10-14, turns keep beats only
 
 Owner chose to remove the old narrative text, label the other three adventures, and fix Wollandora asking twice. A turn's story is now its labelled beats and nothing else: the narrative string, its dice and reply markers, the stage's speaker and camera guessing, and Storyview's attribution call are gone. All four Myr adventures' intros are labelled. Old desktop saves are converted on load. The dev database had no turns to wipe. One slip: a commit briefly left main importing deleted files, fixed by the next commit a minute later. See [Structured narrative](plans/structured-narrative.md).

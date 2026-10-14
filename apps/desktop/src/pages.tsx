@@ -173,8 +173,8 @@ export function AdventuresPage(props: {
                   chip={<Chip tone={current ? "amber" : "dark"}>{current ? "Playing" : played(s.playedAt)}</Chip>}
                   status={s.status === "completed" ? "Complete" : `Round ${s.round} · ${s.turnTitle}`}
                   note={s.party.join(", ")}
-                  action={current ? "Continue" : "Resume"}
-                  label={`${current ? "Continue" : "Resume"} ${s.title}`}
+                  action={s.status === "completed" ? "Read the ending" : current ? "Continue" : "Resume"}
+                  label={`${s.status === "completed" ? "Read the ending of" : current ? "Continue" : "Resume"} ${s.title}`}
                   busy={props.busy}
                   onOpen={() => (current ? props.onContinue() : props.onResume(s.archiveId!))}
                 >
