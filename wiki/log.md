@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-14, one roll card
+
+Owner, after a Stealth roll: three screens for one roll, the roll card, a "GM is writing" card that cut the die off, and the roll again in the reader. "I think it should be all one UI." The roll card now holds the roll from the throw to the GM's answer: the die lands, the verdict stamps in, "The GM is resolving the roll…" shows, then Continue opens the reader after the roll. Walks no longer show the "GM is writing" card. Checked in the desktop preview with the GM's answer faked. See [One roll card](plans/one-roll-card.md).
+
 ## 2026-10-14, a finished adventure's home screen, and old saves wiped
 
 Owner: "Why does it say Adventure Complete and Continue on the homepage. If complete, there is nothing to continue?" Continue opened the finished game's ending. A finished adventure now offers "Continue: {next adventure}" with its heroes carried over, or Begin when there is no next one, and "Read the ending". The Adventures page says "Read the ending" on a finished game too. Checked in the desktop preview. The owner also expected old data wiped, not converted: the saved games and old validation saves on the owner's machine are deleted, heroes kept, and the conversion code removed.

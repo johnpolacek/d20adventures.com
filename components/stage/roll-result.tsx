@@ -1,10 +1,11 @@
 "use client"
 
-// A dice roll in the narration, as the hero of its paragraph: the d20 tumbles and lands on the natural roll, the
-// modifier and the total follow against the DC, and the verdict stamps in. A natural 20 or 1 that decides the roll is
-// called out as a critical: the die turns gold, or charred with embers, as it lands. Reduced motion shows the result at once.
+// A dice roll, in the narration as the hero of its paragraph and on the card where the player makes it: the d20
+// tumbles and lands on the natural roll, the modifier and the total follow against the DC, and the verdict stamps in. A
+// natural 20 or 1 that decides the roll is called out as a critical: the die turns gold, or charred with embers, as it
+// lands. Reduced motion shows the result at once. A roll still to make shows the die as a button that makes it.
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import { D20Solid } from "./d20"
 import { land, rattle, verdict as sound, type Verdict } from "./dice-sound"
@@ -20,6 +21,8 @@ export interface RollResultData {
   success: boolean
   portrait?: string
 }
+// A roll still to make: who rolls what, and against which DC.
+export type RollAsk = Omit<RollResultData, "natural" | "total" | "success">
 
 // When each part arrives, in ms from the start: the die lands, the total follows, then the verdict.
 const LAND = 1250
@@ -27,17 +30,30 @@ const TOTAL = LAND + 350
 const VERDICT = TOTAL + 450
 export const ROLL_SECONDS = (VERDICT + 900) / 1000
 
-export function RollResult({ roll, compact = false }: { roll: RollResultData; compact?: boolean }) {
+// `onRoll` makes a roll still to make, and `onVerdict` hears when the verdict is in.
+export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll: RollResultData | RollAsk; compact?: boolean; onRoll?: () => void; onVerdict?: () => void }) {
+  const made = "natural" in roll ? roll : null
+  const natural = made?.natural
+  const success = made?.success
+  // A roll the player made here keeps its modifier in view from the start.
+  const [asked] = useState(!made)
   const [step, setStep] = useState(0)
   const [face, setFace] = useState(() => 1 + Math.floor(Math.random() * 20))
   const [tumble, setTumble] = useState(0)
+  const verdictRef = useRef(onVerdict)
+  verdictRef.current = onVerdict
   useEffect(() => {
+    if (natural === undefined) return
     // The verdict's cue: a critical when a natural 20 or 1 decides the roll.
-    const cue: Verdict = roll.success ? (roll.natural === 20 ? "critical-success" : "success") : roll.natural === 1 ? "critical-failure" : "failure"
-    if (typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setFace(roll.natural)
+    const cue: Verdict = success ? (natural === 20 ? "critical-success" : "success") : natural === 1 ? "critical-failure" : "failure"
+    const done = () => {
+      setStep(3)
       sound(cue)
-      return void setStep(3)
+      verdictRef.current?.()
+    }
+    if (typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setFace(natural)
+      return done()
     }
     setTumble((k) => k + 1)
     rattle(LAND / 1000 - 0.05)
@@ -50,59 +66,74 @@ export function RollResult({ roll, compact = false }: { roll: RollResultData; co
     }
     timers.push(
       setTimeout(() => {
-        setFace(roll.natural)
+        setFace(natural)
         setStep(1)
         land()
       }, LAND)
     )
     timers.push(setTimeout(() => setStep(2), TOTAL))
-    timers.push(
-      setTimeout(() => {
-        setStep(3)
-        sound(cue)
-      }, VERDICT)
-    )
+    timers.push(setTimeout(done, VERDICT))
     return () => {
       for (const t of timers) clearTimeout(t)
     }
-  }, [roll.natural, roll.success])
+  }, [natural, success])
 
-  const crit = roll.natural === 20 && roll.success ? "high" : roll.natural === 1 && !roll.success ? "low" : null
-  const verdict = crit === "high" ? "Critical success" : crit === "low" ? "Critical failure" : roll.success ? "Success" : "Failure"
-  const margin = roll.total - roll.dc
-  const tone = roll.success ? (crit ? "#ffd88a" : "#b7d38a") : crit ? "#ff6a4a" : "#e39a7c"
+  const crit = natural === 20 && success ? "high" : natural === 1 && !success ? "low" : null
+  const verdict = crit === "high" ? "Critical success" : crit === "low" ? "Critical failure" : success ? "Success" : "Failure"
+  const margin = made ? made.total - made.dc : 0
+  const tone = success ? (crit ? "#ffd88a" : "#b7d38a") : crit ? "#ff6a4a" : "#e39a7c"
   const landed = step >= 1
   const size = compact ? 72 : 112
   const mod = roll.modifier ?? 0
 
   return (
     <div className={cn("flex items-center", compact ? "gap-3" : "gap-5")}>
-      <span className="sr-only">
-        {roll.character} rolled {roll.check}: {roll.natural}
-        {roll.modifier !== undefined ? ` plus ${mod} makes ${roll.total}` : ""} against DC {roll.dc}. {verdict}.
-      </span>
-      {/* The die, glowing in the verdict's colour once it lands, with rays behind a natural 20. */}
-      <div aria-hidden="true" className="relative grid shrink-0 place-items-center" style={{ width: size, height: size }}>
+      {made && (
+        <span className="sr-only">
+          {roll.character} rolled {roll.check}: {made.natural}
+          {roll.modifier !== undefined ? ` plus ${mod} makes ${made.total}` : ""} against DC {roll.dc}. {verdict}.
+        </span>
+      )}
+      {/* The die, glowing in the verdict's colour once it lands, with rays behind a natural 20. Before the roll it is the button. */}
+      <button
+        type="button"
+        onClick={onRoll}
+        disabled={!onRoll || Boolean(made)}
+        aria-label={made ? undefined : `Roll the d20 for ${roll.character.split(" ")[0]}'s ${roll.check}, DC ${roll.dc}`}
+        aria-hidden={made ? true : undefined}
+        className={cn("relative grid shrink-0 place-items-center disabled:cursor-default", !made && "transition-transform enabled:hover:scale-105")}
+        style={{ width: size, height: size }}
+      >
         {crit === "high" && step >= 3 && <div className="roll-rays absolute -inset-6 rounded-full" />}
         <div
           className="absolute inset-0 transition-[filter] duration-500"
-          style={{ filter: landed ? `drop-shadow(0 0 ${crit ? 22 : 12}px ${tone}${crit ? "cc" : "80"}) drop-shadow(0 3px 6px #000c)` : "drop-shadow(0 3px 6px #000c)" }}
+          style={{
+            filter: landed
+              ? `drop-shadow(0 0 ${crit ? 22 : 12}px ${tone}${crit ? "cc" : "80"}) drop-shadow(0 3px 6px #000c)`
+              : made
+                ? "drop-shadow(0 3px 6px #000c)"
+                : "drop-shadow(0 0 12px #e3b67c40) drop-shadow(0 3px 6px #000c)",
+          }}
         >
           <D20Solid size={size} roll={tumble} tone={landed && crit ? (crit === "high" ? "gold" : "char") : undefined} />
         </div>
-        <span
-          key={landed ? "landed" : face}
-          className={cn(
-            "relative font-serif font-bold leading-none tabular-nums [text-shadow:0_1px_4px_#000,0_0_2px_#000]",
-            landed ? "d20-land" : "d20-flip",
-            compact ? "text-[24px]" : "text-[40px]",
-            // Dark on the gold die, ember red on the charred one.
-            crit === "high" && landed ? "text-[#3a220c] [text-shadow:0_1px_0_#ffe8b080]" : crit === "low" && landed ? "text-[#ff7a5a]" : "text-stage-parchment"
-          )}
-        >
-          {face}
-        </span>
-      </div>
+        {made ? (
+          <span
+            key={landed ? "landed" : face}
+            className={cn(
+              "relative font-serif font-bold leading-none tabular-nums [text-shadow:0_1px_4px_#000,0_0_2px_#000]",
+              landed ? "d20-land" : "d20-flip",
+              compact ? "text-[24px]" : "text-[40px]",
+              // Dark on the gold die, ember red on the charred one.
+              crit === "high" && landed ? "text-[#3a220c] [text-shadow:0_1px_0_#ffe8b080]" : crit === "low" && landed ? "text-[#ff7a5a]" : "text-stage-parchment"
+            )}
+          >
+            {face}
+          </span>
+        ) : (
+          <span className={cn("relative font-sans leading-none tracking-[0.2em] text-stage-parchment [text-shadow:0_1px_3px_#000d]", compact ? "text-[9px]" : "text-[11px]")}>ROLL</span>
+        )}
+      </button>
 
       <div className="min-w-0 flex-1" aria-hidden="true">
         <div className={cn(eyebrow, "flex items-center gap-2 truncate")}>
@@ -116,16 +147,16 @@ export function RollResult({ roll, compact = false }: { roll: RollResultData; co
         </div>
         {/* natural + modifier = total, against the DC. */}
         <div className={cn("flex items-baseline gap-2 font-serif font-semibold tabular-nums text-stage-cream", compact ? "mt-0.5" : "mt-1.5")}>
-          <span className={cn(compact ? "text-[18px]" : "text-[24px]", !landed && "opacity-30")}>{landed ? roll.natural : "?"}</span>
+          <span className={cn(compact ? "text-[18px]" : "text-[24px]", !landed && "opacity-30")}>{landed ? natural : "?"}</span>
           {roll.modifier !== undefined && (
-            <span className={cn("transition-opacity duration-300", step >= 2 ? "opacity-100" : "opacity-0")}>
+            <span className={cn("transition-opacity duration-300", step >= 2 || asked ? "opacity-100" : "opacity-0")}>
               <span className={cn("text-stage-muted", compact ? "text-[14px]" : "text-[18px]")}>{mod < 0 ? "−" : "+"}</span>
               <span className={cn("ml-2", compact ? "text-[18px]" : "text-[24px]")}>{Math.abs(mod)}</span>
             </span>
           )}
           <span className={cn("transition-opacity duration-300", step >= 2 ? "opacity-100" : "opacity-0")}>
             <span className={cn("text-stage-muted", compact ? "text-[14px]" : "text-[18px]")}>=</span>
-            <span className={cn("ml-2 font-bold text-stage-gold", compact ? "text-[26px]" : "text-[38px]", step >= 2 && "roll-rise")}>{roll.total}</span>
+            <span className={cn("ml-2 font-bold text-stage-gold", compact ? "text-[26px]" : "text-[38px]", step >= 2 && "roll-rise")}>{made?.total}</span>
           </span>
           <span
             className={cn(

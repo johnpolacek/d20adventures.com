@@ -2,13 +2,14 @@
 
 // The GM card: the prototype's "GM note", grown into the turn's input. It sits low and centred over the stage and changes
 // with the turn: whose turn it is and what the GM asks (with the party's portraits and a reply box), the dice roll the GM
-// calls for, the GM writing, and the end of the encounter.
+// calls for and how it came out while the GM answers it, the GM writing, and the end of the encounter.
 
 import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import { D20Solid } from "./d20"
 import { land as landSound, rattle } from "./dice-sound"
 import { eyebrow, Pill, panel } from "./hud"
+import { RollResult } from "./roll-result"
 
 export interface CardCharacter {
   id: string
@@ -31,9 +32,10 @@ export interface CardSuggestion {
 }
 // `suggestions` are chips over the reply box that fill it in, blank while they are being written. `suggestion` is
 // the demo's one scripted reply, behind its Suggest button.
+// A roll's `made` is the natural roll once it is made, and `resolving` says the GM is still answering it.
 export type CardMode =
   | { kind: "hold"; prompt: string; suggestion?: string; suggestions?: CardSuggestion[] | "loading" }
-  | { kind: "roll"; roll: CardRoll; prompt?: string }
+  | { kind: "roll"; roll: CardRoll; prompt?: string; made?: number; resolving?: boolean }
   | { kind: "thinking"; note?: string }
   | { kind: "done"; next: string }
 
@@ -152,8 +154,70 @@ function Total({ natural, modifier }: { natural: number | null; modifier: number
   return <div className="mt-2 font-serif text-[13px] text-stage-parchment tabular-nums">{natural === null ? "\u00a0" : `${natural} + ${modifier} = ${natural + modifier}`}</div>
 }
 
-// The roll: the GM's roll for the other side first (in a contest), then the player's d20, then how it came out.
-function RollPanel({ roll, prompt, actor, compact, forced, onRoll }: { roll: CardRoll; prompt?: string; actor: CardCharacter; compact: boolean; forced?: number; onRoll: (n: number) => void }) {
+// The roll, start to finish on one card: the player's d20, how it came out, the GM answering it, and Continue once
+// the answer is in.
+function SingleRoll({
+  roll,
+  prompt,
+  actor,
+  compact,
+  forced,
+  made,
+  resolving,
+  onRoll,
+  onContinue,
+}: {
+  roll: CardRoll
+  prompt?: string
+  actor: CardCharacter
+  compact: boolean
+  forced?: number
+  made?: number
+  resolving?: boolean
+  onRoll: (n: number) => void
+  onContinue?: () => void
+}) {
+  const [mine, setMine] = useState<number | null>(null)
+  const [verdict, setVerdict] = useState(false)
+  const natural = made ?? mine
+  const ask = { character: actor.name, check: roll.skill, modifier: roll.modifier, dc: roll.dc, portrait: actor.portrait }
+  const total = natural === null ? 0 : natural + roll.modifier
+  return (
+    <div>
+      <div className={eyebrow}>{natural === null ? "Dice roll needed" : "Dice roll"}</div>
+      {prompt && !compact && <p className="mx-auto mt-2 max-w-[440px] font-serif text-[14px] leading-[1.5] text-stage-cream">{prompt}</p>}
+      <div className={cn("mx-auto max-w-[440px] text-left", compact ? "mt-1.5" : "mt-3")}>
+        <RollResult
+          compact={compact}
+          roll={natural === null ? ask : { ...ask, natural, total, success: total >= roll.dc }}
+          onRoll={() => {
+            const n = forced ?? 1 + Math.floor(Math.random() * 20)
+            setMine(n)
+            onRoll(n)
+          }}
+          onVerdict={() => setVerdict(true)}
+        />
+      </div>
+      {natural !== null && (
+        <div className={cn("grid place-items-center", compact ? "mt-1.5 h-7" : "mt-3 h-9")}>
+          {verdict &&
+            (resolving ? (
+              <div className={cn(eyebrow, "animate-pulse")}>The GM is resolving the roll…</div>
+            ) : (
+              onContinue && (
+                <Pill className="fade-in px-8 font-display text-[13px] font-bold tracking-[0.12em]" active onClick={onContinue}>
+                  Continue
+                </Pill>
+              )
+            ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// A contest: the GM's roll for the other side first, then the player's d20, then how it came out.
+function ContestRoll({ roll, prompt, actor, compact, forced, onRoll }: { roll: CardRoll; prompt?: string; actor: CardCharacter; compact: boolean; forced?: number; onRoll: (n: number) => void }) {
   const [theirs, setTheirs] = useState<number | null>(null)
   const [mine, setMine] = useState<number | null>(null)
   const total = mine === null ? null : mine + roll.modifier
@@ -166,7 +230,7 @@ function RollPanel({ roll, prompt, actor, compact, forced, onRoll }: { roll: Car
   )
   return (
     <div>
-      <div className={eyebrow}>{roll.versus ? "Contest" : "Dice roll needed"}</div>
+      <div className={eyebrow}>Contest</div>
       {prompt && !compact && <p className="mx-auto mt-2 max-w-[440px] font-serif text-[14px] leading-[1.5] text-stage-cream">{prompt}</p>}
       <div className={cn("flex items-start justify-center", compact ? "mt-1 gap-4" : "mt-3 gap-7")}>
         {roll.versus && (
@@ -180,11 +244,11 @@ function RollPanel({ roll, prompt, actor, compact, forced, onRoll }: { roll: Car
           </>
         )}
         <div className="flex flex-col items-center">
-          {side(actor.name.split(" ")[0], roll.skill, `${roll.ability} · +${roll.modifier}${roll.versus ? "" : ` · target ${roll.dc}`}`)}
+          {side(actor.name.split(" ")[0], roll.skill, `${roll.ability} · +${roll.modifier}`)}
           <D20
             land={forced}
             compact={compact}
-            disabled={!!roll.versus && theirs === null}
+            disabled={theirs === null}
             onRoll={(n) => {
               setMine(n)
               onRoll(n)
@@ -209,6 +273,7 @@ export function PromptCard({
   onSkip,
   onRoll,
   onPick,
+  onContinue,
   onTop,
   draft: draftProp,
   onDraft,
@@ -224,6 +289,8 @@ export function PromptCard({
   onSkip?: () => void
   onRoll: (n: number) => void
   onPick: (id: string) => void
+  // Leaves a roll once the GM has answered it. Without it the roll's card has no Continue button.
+  onContinue?: () => void
   // The card's top edge, in px from the bottom of the screen (so the stage can frame shots above it).
   onTop?: (px: number) => void
   // The reply can be held by the caller (so it survives the card closing while the turn is replayed).
@@ -342,7 +409,24 @@ export function PromptCard({
           </div>
         </>
       )}
-      {mode.kind === "roll" && actor && <RollPanel key={`${actor.id}-${mode.roll.skill}`} roll={mode.roll} prompt={mode.prompt} actor={actor} compact={compact} forced={forcedRoll} onRoll={onRoll} />}
+      {mode.kind === "roll" &&
+        actor &&
+        (mode.roll.versus ? (
+          <ContestRoll key={`${actor.id}-${mode.roll.skill}`} roll={mode.roll} prompt={mode.prompt} actor={actor} compact={compact} forced={forcedRoll} onRoll={onRoll} />
+        ) : (
+          <SingleRoll
+            key={`${actor.id}-${mode.roll.skill}`}
+            roll={mode.roll}
+            prompt={mode.prompt}
+            actor={actor}
+            compact={compact}
+            forced={forcedRoll}
+            made={mode.made}
+            resolving={mode.resolving}
+            onRoll={onRoll}
+            onContinue={onContinue}
+          />
+        ))}
       {mode.kind === "thinking" && (
         <div className="py-1">
           <div className={cn(eyebrow, "animate-pulse")}>The GM is writing…</div>

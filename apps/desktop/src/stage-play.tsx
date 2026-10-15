@@ -10,7 +10,7 @@ import { setSoundOn, soundOn } from "@/components/stage/dice-sound"
 import { Pill, panel, StageHud, useCompact } from "@/components/stage/hud"
 import { type ChatLine, Journal, type JournalRoll, type JournalTurn } from "@/components/stage/journal"
 import { Narration } from "@/components/stage/narration"
-import { type CardCharacter, type CardMode, type CardSuggestion, PromptCard } from "@/components/stage/prompt-card"
+import { type CardCharacter, type CardMode, type CardRoll, type CardSuggestion, PromptCard } from "@/components/stage/prompt-card"
 import { ROLL_SECONDS, type RollResultData } from "@/components/stage/roll-result"
 import { Bubbles, Plate } from "@/components/stage/stage-dialogue"
 import { TurnOrder } from "@/components/stage/turn-order"
@@ -102,7 +102,7 @@ export function StagePlay(props: {
   onReply: (turnId: string, characterId: string, text: string, movement: ReturnType<typeof context> | undefined) => Promise<boolean>
   // Ends a hero's turn with no reply. Without it the card has no Skip button.
   onSkip?: (turnId: string, characterId: string) => Promise<boolean>
-  onRoll: (turnId: string, characterId: string, result: number) => void
+  onRoll: (turnId: string, characterId: string, result: number) => Promise<boolean>
   // Replies offered on a hero's turn, which fill the reply box. Without it none are offered.
   onSuggest?: (turnId: string, characterId: string) => Promise<CardSuggestion[]>
   onContinue: (turnId: string) => void
@@ -146,6 +146,12 @@ export function StagePlay(props: {
   const [auto, setAuto] = useState(false)
   const [sound, setSound] = useState(soundOn)
   const [reading, setReading] = useState(true)
+  // The roll a hero has just made. It stays on the card, with how it came out, while the GM answers it, and the story
+  // after it is read once the player continues. `tries` renews the card for a roll that was not taken.
+  const [held, setHeld] = useState<{ turn: string; actor: CardCharacter; roll: CardRoll; natural: number; at: number } | null>(null)
+  const heldRef = useRef(held)
+  heldRef.current = held
+  const [tries, setTries] = useState(0)
   const previousText = useRef<{ turn?: string; paragraphs: string[] }>({ paragraphs: [] })
   const [, redraw] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -497,11 +503,17 @@ export function StagePlay(props: {
     const firstChanged = sameTurn ? text.findIndex((p, i) => p !== old.paragraphs[i]) : 0
     // The same paragraphs again: nothing new to read.
     if (sameTurn && firstChanged < 0 && text.length === old.paragraphs.length) return
+    previousText.current = { turn: turn?._id, paragraphs: text }
+    // The answer to a roll on the card waits for Continue, and starts after the roll the card has shown.
+    const hold = heldRef.current
+    if (hold) {
+      const at = paragraphs.findLastIndex((p) => p.roll?.character === hold.actor.id)
+      return void setParagraph(at >= 0 ? at + 1 : Math.max(0, firstChanged))
+    }
     // Narration that arrives while an earlier paragraph is still being read waits its turn.
     setParagraph((p) => (sameTurn && readingRef.current && firstChanged > p ? p : Math.max(0, firstChanged)))
     setReading(true)
-    previousText.current = { turn: turn?._id, paragraphs: text }
-  }, [text, turn?._id])
+  }, [text, paragraphs, turn?._id])
   useEffect(() => {
     setDraft("")
   }, [turn?._id, actor?.id])
@@ -593,10 +605,12 @@ export function StagePlay(props: {
     addEventListener("keydown", fn)
     return () => removeEventListener("keydown", fn)
   }, [stage, onEscape])
+  const holding = Boolean(held)
   useEffect(() => {
-    const sid = stage && actor && castIdFor(stage.cast, actor)
+    // The camera stays on a hero whose roll is on the card.
+    const sid = stage && actor && !holding && castIdFor(stage.cast, actor)
     if (stage && sid && !reading) stage.shot({ subject: sid, distance: 5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 })
-  }, [stage, actor?.id, reading])
+  }, [stage, actor?.id, reading, holding])
   const onTop = useCallback((px: number) => stage?.setInsets({ bottom: px > 0 ? px + 12 : 0 }), [stage])
   const party: CardCharacter[] = (turn?.characters ?? [])
     .filter((c) => c.type === "pc")
@@ -630,7 +644,9 @@ export function StagePlay(props: {
     }
   }, [holdKey, holdTurn, holdActor])
   let mode: CardMode | null = null
-  if (busy) mode = { kind: "thinking", note: "The GM is resolving the action…" }
+  if (held) mode = { kind: "roll", roll: held.roll, made: held.natural, resolving: props.busy }
+  // A walk holds the card back without a word about the GM.
+  else if (busy) mode = props.busy ? { kind: "thinking", note: "The GM is resolving the action…" } : null
   // Movement is read against the scene on screen, so wait for the next scene before taking an action.
   else if (scene && !stage && !stageError) mode = { kind: "thinking", note: loading }
   else if (ended) mode = null
@@ -655,6 +671,31 @@ export function StagePlay(props: {
   const skip = async () => {
     if (turn && actor && (await props.onSkip?.(turn._id, actor.id))) setDraft("")
   }
+  const makeRoll = async (natural: number) => {
+    if (!turn || !actor || !cardActor || mode?.kind !== "roll") return
+    setHeld({ turn: turn._id, actor: cardActor, roll: mode.roll, natural, at: Date.now() })
+    if (await props.onRoll(turn._id, actor.id, natural)) return
+    setHeld(null)
+    setTries((n) => n + 1)
+  }
+  // From the roll on the card to the story after it.
+  const leaveRoll = () => {
+    setHeld(null)
+    setTries((n) => n + 1)
+    if (paragraph < text.length) setReading(true)
+  }
+  // A roll from a game no longer on screen.
+  useEffect(() => {
+    if (held && !save?.turns.some((t) => t._id === held.turn)) setHeld(null)
+  }, [held, save])
+  const leaveRef = useRef(leaveRoll)
+  leaveRef.current = leaveRoll
+  // Played on its own, the card moves on once the verdict has had a moment and the GM has answered.
+  useEffect(() => {
+    if (!auto || !held || props.busy) return
+    const timer = setTimeout(() => leaveRef.current(), Math.max(1500, held.at + (ROLL_SECONDS + 1.5) * 1000 - Date.now()))
+    return () => clearTimeout(timer)
+  }, [auto, held, props.busy])
   const journal: JournalTurn[] = (save?.turns ?? []).map((t) => ({
     number: t.order,
     title: t.title,
@@ -726,7 +767,7 @@ export function StagePlay(props: {
                 onContinue={() => (paragraph < text.length - 1 ? setParagraph((n) => n + 1) : setReading(false))}
               />
             )}
-            {!reading && (
+            {!reading && !held && (
               <Pill
                 className="pointer-events-auto"
                 onClick={() => {
@@ -738,19 +779,18 @@ export function StagePlay(props: {
               </Pill>
             )}
           </div>
-          {mode && (!reading || busy) && (
+          {mode && (!reading || busy || held) && (
             <PromptCard
-              key={`${turn?._id}:${actor?.id}:${mode.kind}`}
+              key={`${turn?._id}:${(held?.actor ?? actor)?.id}:${mode.kind}:${tries}`}
               mode={mode}
-              actor={cardActor}
+              actor={held?.actor ?? cardActor}
               party={party}
               compact={compact}
               onReply={reply}
               onSkip={props.onSkip ? skip : undefined}
-              onRoll={(result) => {
-                if (turn && actor) props.onRoll(turn._id, actor.id, result)
-              }}
+              onRoll={(natural) => void makeRoll(natural)}
               onPick={focus}
+              onContinue={held && !props.busy ? leaveRoll : undefined}
               onTop={onTop}
               draft={draft}
               onDraft={setDraft}

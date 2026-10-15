@@ -10,6 +10,7 @@ import { IconButton, Pill, panel, StageHud, useCompact } from "@/components/stag
 import { type ChatLine, Journal, type JournalRoll, type JournalTurn } from "@/components/stage/journal"
 import { Narration } from "@/components/stage/narration"
 import { type CardCharacter, type CardMode, PromptCard } from "@/components/stage/prompt-card"
+import { ROLL_SECONDS } from "@/components/stage/roll-result"
 import { RotatePrompt, requestLandscape, usePhonePortrait } from "@/components/stage/rotate-gate"
 import { type Bubble, Bubbles, Plate, type PlateLine } from "@/components/stage/stage-dialogue"
 import { type OrderEntry, TurnOrder } from "@/components/stage/turn-order"
@@ -345,7 +346,8 @@ export function TurnMock({ demo = false }: { demo?: boolean }) {
     const success = total >= roll.dc
     if (roll.key) storyRef.current = { ...storyRef.current, [roll.key]: success }
     const versus = roll.versus ? `${roll.versus.name}'s ${roll.versus.natural + roll.versus.modifier}` : undefined
-    setTimeout(() => advance(pendingReply.current ?? "", { total, success }, { name: nameOf(hold.actor), skill: roll.skill, dc: roll.dc, base, total, success, versus }), 1500)
+    // The card rolls from the click: the turn goes on once its verdict is in.
+    setTimeout(() => advance(pendingReply.current ?? "", { total, success }, { name: nameOf(hold.actor), skill: roll.skill, dc: roll.dc, base, total, success, versus }), ROLL_SECONDS * 1000)
   }
   // Clicking a character takes the camera to them; clicking them again opens their card.
   const focus = useCallback(

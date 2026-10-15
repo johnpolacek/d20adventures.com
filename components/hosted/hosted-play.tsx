@@ -83,7 +83,7 @@ export function HostedPlay({ adventureId }: { adventureId: string }) {
       onReply={(turnId, characterId, text, movement) => act({ turnId: turnId as Id<"turns">, kind: "reply", characterId, text, movement })}
       onSkip={(turnId, characterId) => act({ turnId: turnId as Id<"turns">, kind: "skip", characterId })}
       onSuggest={suggest}
-      onRoll={(turnId, characterId, result) => void act({ turnId: turnId as Id<"turns">, kind: "roll", characterId, result })}
+      onRoll={(turnId, characterId, result) => act({ turnId: turnId as Id<"turns">, kind: "roll", characterId, result })}
       onContinue={(turnId) => void act({ turnId: turnId as Id<"turns">, kind: "continue" })}
       chat={state?.chat}
       onChat={say}

@@ -87,11 +87,12 @@ export function DesktopGame() {
   const saveRef = useRef(save)
   saveRef.current = save
 
+  // A quiet command, such as saving where the cast stands after a walk, waits its turn without showing the GM at work.
   const invoke = useCallback(
-    async (command: GameCommand | HeroCommand) => {
+    async (command: GameCommand | HeroCommand, quiet = false) => {
       if (busyRef.current) return
       busyRef.current = true
-      setBusy(true)
+      if (!quiet) setBusy(true)
       setError(null)
       try {
         const res = await send(command)
@@ -313,9 +314,10 @@ export function DesktopGame() {
         return Boolean(res && !res.error)
       }}
       onSuggest={hosting ? suggestHosted : async (turnId, characterId) => (await suggest(turnId, characterId)).suggestions ?? []}
-      onRoll={(turnId, characterId, result) => {
-        if (hosting) void act(() => host({ kind: "hostAct", adventureId: hosting, turnId, action: { kind: "roll", characterId, result } }))
-        else void invoke({ kind: "roll", turnId, characterId, result })
+      onRoll={async (turnId, characterId, result) => {
+        if (hosting) return act(() => host({ kind: "hostAct", adventureId: hosting, turnId, action: { kind: "roll", characterId, result } }))
+        const res = await invoke({ kind: "roll", turnId, characterId, result })
+        return Boolean(res && !res.error)
       }}
       autoContinue={!hosting}
       onContinue={(turnId) => {
@@ -326,7 +328,7 @@ export function DesktopGame() {
         hosting
           ? undefined
           : async (turnId, positions, appliedMovement) => {
-              await invoke({ kind: "positions", turnId, positions, appliedMovement })
+              await invoke({ kind: "positions", turnId, positions, appliedMovement }, true)
             }
       }
       onEscape={onEscape}
