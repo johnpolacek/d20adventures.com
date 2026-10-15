@@ -5,6 +5,7 @@
 // calls for and how it came out while the GM answers it, the GM writing, and the end of the encounter.
 
 import { useEffect, useRef, useState } from "react"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { D20Solid } from "./d20"
 import { land as landSound, rattle } from "./dice-sound"
@@ -199,15 +200,15 @@ function SingleRoll({
         />
       </div>
       {natural !== null && (
-        <div className={cn("grid place-items-center", compact ? "mt-1.5 h-7" : "mt-3 h-9")}>
+        <div className={cn("grid place-items-center", compact ? "mt-1.5 h-8" : "mt-3 h-11")}>
           {verdict &&
             (resolving ? (
               <div className={cn(eyebrow, "animate-pulse")}>The GM is resolving the roll…</div>
             ) : (
               onContinue && (
-                <Pill className="fade-in px-8 font-display text-[13px] font-bold tracking-[0.12em]" active onClick={onContinue}>
+                <Button variant="epic" className={cn("fade-in", compact ? "px-6 py-1 text-xs" : "py-1.5 text-sm")} onClick={onContinue}>
                   Continue
-                </Pill>
+                </Button>
               )
             ))}
         </div>
@@ -403,9 +404,10 @@ export function PromptCard({
                 Suggest
               </Pill>
             )}
-            <Pill className="flex-1 font-display text-[13px] font-bold tracking-[0.12em]" active onClick={send} disabled={!draft.trim()}>
+            {/* Full width, so it grows less than the epic button's usual hover. */}
+            <Button variant="epic" className={cn("flex-1 scale-100 hover:scale-105", compact ? "py-1 text-xs" : "py-1.5 text-sm")} onClick={send} disabled={!draft.trim()}>
               Send
-            </Pill>
+            </Button>
           </div>
         </>
       )}

@@ -15,6 +15,7 @@ import { ROLL_SECONDS, type RollResultData } from "@/components/stage/roll-resul
 import { Bubbles, Plate } from "@/components/stage/stage-dialogue"
 import { TurnOrder } from "@/components/stage/turn-order"
 import { useStage } from "@/components/stage/use-stage"
+import { Button } from "@/components/ui/button"
 import type { Save } from "../runtime/store"
 import { characterInfo } from "./character-info"
 import type { FigureArt } from "./figures"
@@ -819,7 +820,9 @@ export function StagePlay(props: {
               {actor?.type === "pc" && !aiActor ? (
                 <p className="text-sm text-stage-muted">Waiting for {actor.name.split(" ")[0]}</p>
               ) : (
-                <Pill onClick={() => props.onContinue(turn._id)}>{!actor ? "Continue adventure" : aiActor ? `Continue ${actor.name.split(" ")[0]}'s turn` : "Continue NPC turn"}</Pill>
+                <Button variant="epic" className="py-2 text-sm" onClick={() => props.onContinue(turn._id)}>
+                  {!actor ? "Continue adventure" : aiActor ? `Continue ${actor.name.split(" ")[0]}'s turn` : "Continue NPC turn"}
+                </Button>
               )}
             </div>
           )}

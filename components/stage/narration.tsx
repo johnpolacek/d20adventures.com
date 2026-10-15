@@ -6,6 +6,7 @@
 // paragraph when it plays itself), or skip to the end.
 
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react"
+import { Button, epicButtonStyle } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { eyebrow, Pill, panel } from "./hud"
 import { RollResult, type RollResultData } from "./roll-result"
@@ -121,19 +122,18 @@ export function Narration({
               </svg>
             </Control>
             {step ? (
-              <Pill
-                active
-                className={cn(
-                  "ml-1 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-1 font-display text-[12px] font-bold tracking-[0.12em] transition-[filter,box-shadow]",
-                  waiting && "shadow-[0_0_0_2px_#e3b67c55,0_0_18px_#e3b67c66]"
-                )}
+              <Button
+                variant="epic"
+                className={cn("ml-1 gap-1.5", compact ? "px-4 py-0.5 text-[11px]" : "px-5 py-1 text-xs")}
+                // Glows while the story waits on the reader.
+                style={waiting ? { ...epicButtonStyle, boxShadow: `${epicButtonStyle.boxShadow}, 0 0 0 2px #e3b67c55, 0 0 18px #e3b67c66` } : undefined}
                 onClick={onContinue}
               >
                 Continue
                 <svg viewBox="0 0 12 12" fill="currentColor" aria-hidden="true" className="h-2.5 w-2.5">
                   <path d="M4 2.2 9 6l-5 3.8z" />
                 </svg>
-              </Pill>
+              </Button>
             ) : (
               <Control label="Next paragraph" onClick={onNext}>
                 <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
