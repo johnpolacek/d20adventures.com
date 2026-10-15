@@ -6,7 +6,7 @@ This log retains durable decisions and dated evidence. Git owns detailed impleme
 
 ## 2026-10-15, shorter roll outcomes
 
-Owner: "yes just once" (Wollandora asked her question once in the live game), then chose to tighten roll outcomes. The outcome of a hero's roll is now at most 2 short sentences and 40 words, says what the action did, and does not retell the hero's action. It was 60 words, and the owner's live game ran 37 to 46. The desktop runtime is rebuilt, so the next roll uses it. Not yet measured. See [Concise narration](plans/concise-narration.md).
+Owner: "yes just once" (Wollandora asked her question once in the live game), then chose to tighten roll outcomes. The outcome of a hero's roll is now at most 2 short sentences and 40 words, says what the action did, and does not retell the hero's action. It was 60 words, and the owner's live game ran 37 to 46. The owner's next two rolls came in at 36 and 28 words, neither retelling the action. See [Concise narration](plans/concise-narration.md).
 
 ## 2026-10-15, epic Continue and Send, and the roll card played live
 

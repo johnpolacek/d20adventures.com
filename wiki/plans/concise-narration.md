@@ -137,12 +137,12 @@ Owner chose to tighten them next. The owner's own live game of The Midnight Summ
 - The hero's action and its wind-up are not told again, and nothing the context already describes is.
 - An NPC's spoken line is still extra and short.
 
-Not yet measured after the change. The owner's next rolls will show it.
+After the change, the owner's next game, Claude as GM, two rolls: a Stealth success in 36 words and an Insight failure in 28, 2 sentences each. Neither retold the action. Insight at the Stones went from 43 words to 28. Two rolls is a small sample.
 
 ## Not done
 
 - One path, one model. The rescue and the refusal are unplayed, and so are the other GMs.
-- Roll outcomes are tightened but not yet measured.
+- Roll outcomes are measured on two rolls only.
 - Covert Cargo, The Road to Kordavos and March of Davos are not audited or trimmed.
 - Codex, Antigravity and the other GMs are unmeasured. The saves were all Claude.
 - The website's S3 copies of the adventure are not changed.
