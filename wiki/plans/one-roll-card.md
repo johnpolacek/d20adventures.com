@@ -34,4 +34,6 @@ The roll goes to the GM on the click, not when the die lands, so the GM starts a
 
 ## Validation
 
-2026-10-14, in the desktop preview, on a copy of the owner's save rewound to before the Stealth roll, with the GM's answer faked in the page. Card sequence: ask, rolled, resolving at 2.1s, Continue when the answer came, then the reader at "The Owlbear swings…". A faked failure brought back a fresh die and the error. No GM was called. Typechecks and desktop tests pass. Not checked with a live GM or in a hosted game.
+2026-10-14, in the desktop preview, on a copy of the owner's save rewound to before the Stealth roll, with the GM's answer faked in the page. Card sequence: ask, rolled, resolving at 2.1s, Continue when the answer came, then the reader at "The Owlbear swings…". A faked failure brought back a fresh die and the error. No GM was called. Typechecks and desktop tests pass.
+
+2026-10-15, the owner played The Midnight Summons with the live GM: "roll card looks good. live replay is working." The card's Continue is now the epic button with a chevron. Not checked in a hosted game or the small-window layout.

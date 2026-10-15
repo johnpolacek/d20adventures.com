@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-15, epic Continue and Send, and the roll card played live
+
+Owner, playing The Midnight Summons: Continue and Send use the epic button. A new `xs` button size gives an epic button half the bevel, so its top shine stays thin on the stage's small buttons. Continue drops its waiting glow and takes a chevron, Send sits half-width on the right with Skip just before it, and both chevrons are hand-drawn, cap height and outlined like the lettering (Cinzel sits high on its line, so they are raised 0.1em). The owner then confirmed the one roll card with the live GM: "roll card looks good. live replay is working." See [One roll card](plans/one-roll-card.md).
+
 ## 2026-10-15, recorded dice roll
 
 Owner: play a sound when the die is rolled, stop it when the roll finishes, and cycle through three recorded clips. The three ElevenLabs takes are in `public/stage/sounds/` and replace the Web Audio clatter and the landing tock in `components/stage/dice-sound.ts`. The roll card and the narration's roll both use them. Checked in headless Chrome: the takes load, play 1, 2, 3, 1, stop on landing, and a roll stopped before its take loads stays silent. Not listened to. See [Roll results](plans/roll-results.md).
