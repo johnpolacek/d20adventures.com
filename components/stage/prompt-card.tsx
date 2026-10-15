@@ -208,8 +208,9 @@ function SingleRoll({
               <div className={cn(eyebrow, "animate-pulse")}>The GM is resolving the roll…</div>
             ) : (
               onContinue && (
-                <Button variant="epic" size="xs" className={cn("fade-in", compact ? "px-6" : "px-8 py-1.5 text-sm")} onClick={onContinue}>
+                <Button variant="epic" size="xs" className={cn("fade-in gap-1.5", compact ? "px-6" : "px-8 py-1.5 text-sm")} onClick={onContinue}>
                   Continue
+                  <Chevron />
                 </Button>
               )
             ))}
