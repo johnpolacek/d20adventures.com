@@ -401,18 +401,24 @@ export function PromptCard({
                 Suggest
               </Pill>
             )}
+            {onSkip && (
+              <button type="button" onClick={onSkip} className="mr-3 ml-auto px-2 font-sans text-[11px] tracking-wide text-stage-muted transition-colors hover:text-stage-cream">
+                Skip
+              </button>
+            )}
             {/* Half the card wide, so it grows less than the epic button's usual hover. */}
-            <Button variant="epic" size="xs" className={cn("ml-auto w-1/2 shrink-0 gap-1.5 scale-100 hover:scale-105", !compact && "py-1.5 text-sm")} onClick={send} disabled={!draft.trim()}>
+            <Button
+              variant="epic"
+              size="xs"
+              className={cn("w-1/2 shrink-0 gap-1.5 scale-100 hover:scale-105", !onSkip && "ml-auto", !compact && "py-1.5 text-sm")}
+              onClick={send}
+              disabled={!draft.trim()}
+            >
               Send
               <svg viewBox="0 0 14 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="h-2.5 w-3">
                 <path d="M2.5 2.5 6 6 2.5 9.5M7.5 2.5 11 6 7.5 9.5" />
               </svg>
             </Button>
-            {onSkip && (
-              <button type="button" onClick={onSkip} className="ml-3 pl-2 font-sans text-[11px] tracking-wide text-stage-muted transition-colors hover:text-stage-cream">
-                Skip
-              </button>
-            )}
           </div>
         </>
       )}
