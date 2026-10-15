@@ -12,7 +12,7 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/cover
 
 ## Intro
 
-{place: crate} The mysterious crate sits before you.
+{place: crate} The mysterious crate sits before them.
 
 ## GM Notes
 

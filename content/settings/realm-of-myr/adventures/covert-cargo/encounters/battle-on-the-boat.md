@@ -19,13 +19,13 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/cover
 
 ## Intro
 
-{actor: Reinhard, target: 1749159962941} Reinhard turned, a semblance of a smile touching his lips but not his cold eyes.
+{actor: Reinhard, target: 1749159962941} Reinhard turns, a smile touching his lips but not his cold eyes.
 
 {speaker: Reinhard, to: 1749159962941, delivery: suddenly relaxed} Good work, mage. Your service is most appreciated, but we have our orders.
 
-{actor: Reinhard, target: 1749159962941} He took a slow step, his bulk seeming to shrink the confines of the cabin.
+{actor: Reinhard, target: 1749159962941} He takes a slow step, his bulk filling the cabin.
 
-{actor: Silas, object: blade} The cabin door clicks shut, the sound unnaturally loud in the sudden stillness. Silas stands before it, blocking the only exit, the faint whisper of steel on leather the only warning as two wicked-looking daggers appear in his hands.
+{actor: Silas, object: blade} The cabin door clicks shut, loud in the stillness. Silas stands before it, blocking the only exit, and with a whisper of steel on leather two wicked daggers appear in his hands.
 
 {speaker: Silas, delivery: flat} No loose ends.
 

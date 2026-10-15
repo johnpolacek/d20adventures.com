@@ -17,11 +17,11 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/cover
 
 ## Teaser
 
-Docked on a discrete pier on a quiet fork of the Mordava River just before dawn, a river boat bearing a secret shipment bound for Kordavos sets a clandestine plot in motion.
+Docked on a discreet pier on a quiet fork of the Mordava River just before dawn, a river boat bearing a secret shipment bound for Kordavos sets a clandestine plot in motion.
 
 ## Summary
 
-Docked on a discrete pier on a quiet fork of the Mordava River, a river boat bearing a secret shipment bound for Kordavos sets a clandestine plot in motion.
+Docked on a discreet pier on a quiet fork of the Mordava River, a river boat bearing a secret shipment bound for Kordavos sets a clandestine plot in motion.
 
 ## Premise
 

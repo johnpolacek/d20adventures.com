@@ -11,11 +11,11 @@ adventureId: "covert-cargo"
 
 ## Intro
 
-{actor: 1749159962941} The river closes over Lyra, black and shockingly cold. For a moment there is no up or down, only the weight of her coat dragging at her and the roar of water in her ears. Then her head breaks the surface and she drags in a breath.
+{actor: 1749159962941} The river closes over Lyra, black and shockingly cold. For a moment there is no up or down, only her coat dragging at her and water roaring in her ears. Then her head breaks the surface and she drags in a breath.
 
-Above her the tug is already moving. A blade flashes at the bow as the last mooring line parts, and the current takes the boat. It slides out from the pier into the channel with its lamps glowing and the crate aboard, and nobody at the rail looks back. Then the mist has it, and the lamplight fades downstream toward Kordavos.
+Above her the tug is already moving. A blade flashes at the bow as the last mooring line parts, and the current carries the boat out into the channel, lamps glowing, the crate aboard, no one at the rail looking back. Then the mist has it, and its light fades downstream toward Kordavos.
 
-{actor: 1749159962941} The bank is close. Lyra's hands find reeds, then mud. She hauls herself out beside the empty gangway, coughing river water, and stands shivering among the reeds with the cold coming through her soaked coat.
+{actor: 1749159962941} The bank is close. Lyra's hands find reeds, then mud. She hauls herself out beside the empty gangway, coughing up river water, and stands shivering in her soaked coat.
 
 {place: pierEnd} The pier is quiet again. The lantern at the gangway's end swings over open water where the boat lay.
 

@@ -22,51 +22,49 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/cover
 
 ## Intro
 
-Docked on a discrete pier on a quiet fork of the Mordava River, a river boat bearing a shipment bound for Kordavos rests silently on the dark, placid water.
+A river boat bound for Kordavos lies moored at a discreet pier on a quiet fork of the Mordava River, still on the dark water.
 
-The air is cool and damp, thick with the scent of wet earth and the chirping of crickets. The only other sounds are the gentle lapping of water against the pier's aging pylons and the rustle of wind through the skeletal branches of the willow trees.
+The air is cool and damp and smells of wet earth. Crickets chirp, water laps at the pier's old pylons, and wind stirs the bare willows.
 
-{actor: 1749159962941} Lyra stands inside the boat, the mysterious cargo crate before her. Silas’s instructions were explicit. Her sole purpose is to verify the authenticity of a Valkaaran artifact using her arcane talents. She is to confirm its magical properties, give a simple nod, and her part will be done. She will be well compensated for her expertise and, more importantly, her discretion.
+{actor: 1749159962941} Lyra stands aboard with the cargo crate before her. Silas's instructions are explicit: use her arcane talents to confirm the Valkaran artifact is genuine, give a simple nod, and her part is done. She will be paid well for her expertise and better for her discretion.
 
-For her part, it was hard to resist getting the chance to interact with reclusive Faelendarian elves and also get a chance to be near a Valkaran relic. She had studied both at length, but there was a big difference between reading old dusty tomes and experiencing the real thing.
+She could not resist the chance to meet reclusive Faelendarian elves and stand near a Valkaran relic. She has studied both at length, but old tomes are not the real thing.
 
-She did not know much of her two escorts. There was Reinhard, a large gruff soldier type who was in charge of security for this little mission. Silas had recruited her, noticing her frequent visits to the Old Valkaran Archives section at the Grand Library. Where Varius was a stone wall of presence, Silas was a whisper. He was slender, moving with a liquid grace that spoke of a life spent in shadows. 
+She knows little of her two escorts. Reinhard, large and gruff, runs security for the job. Silas recruited her after noticing her visits to the Old Valkaran Archives at the Grand Library. Where Reinhard is a stone wall, Silas is a whisper, slender and moving with a grace learned in shadows.
 
-{actor: 1749307435667} Meanwhile, from his cleverly concealed vantage within a tangle of undergrowth at the treeline above the bank, Poppen Quickfoot watched the scene unfold, a small smile playing on his lips. Damp leaves brushed his cheek, but he remained utterly still, his senses stretched. Weeks of patient stakeouts had led him to this exact predawn hour, this quiet fork of the river, following the threads of rumor about a clandestine trade. His instinct, honed by a lifetime of seeking out hidden value, told him this was it—the score that would truly mark his arrival in Kordavos.
+{actor: 1749307435667} From a tangle of undergrowth at the treeline above the bank, Poppen Quickfoot watches, perfectly still, damp leaves brushing his cheek. Weeks of stakeouts and rumors of a clandestine trade have led him to this predawn hour on this quiet fork. His instinct says this is the score that will make his name in Kordavos.
 
-{actor: 1749307435667} His keen hazel eyes, accustomed to discerning worth from a glint in the dark, had tracked the three figures down the pier and aboard, and now followed their shapes past the lit windows. The hulking soldier, the robed woman, and the whispering shadow-man. A professional crew, indeed; no sloppy thugs. This wasn't just any cargo; this was an item of importance, something worth securing. Poppen’s mind raced, not just with the thought of fencing such a treasure, but with the delicious social connections such a coup would bring.
+{actor: 1749307435667} His keen hazel eyes followed the three figures down the pier and aboard, and now track their shapes past the lit windows: the hulking soldier, the robed woman and the whispering shadow-man. A professional crew, not sloppy thugs. Whatever they guard matters, and Poppen thinks not only of fencing it but of the connections such a coup would bring.
 
-{actor: thalbern} Neither of them knew of the third watcher. Farther down the bank, where a thicket crowded the water below the tug's stern, Thalbern knelt among the leaves with his longbow across his knee, as still as the roots around him. The druid Wollandora had sent him after relics taken from the elven vaults of the Valkarr woods, and after the Valkaran-made riverboat she had seen carrying them toward Kordavos. He had followed the Mordava downstream from the Standing Stones, keeping to the trees, and here was the boat. It lay moored where no honest boat had cause to stop, with its lamps lit and strangers gone aboard. He had seen no one else on the bank, and no one had seen him. Whatever the boat carried was about to change hands.
+{actor: thalbern} Neither knows of the third watcher. Farther down the bank, in a thicket below the boat's stern, Thalbern kneels with his longbow across his knee, still as the roots around him. The druid Wollandora sent him after relics taken from the elven vaults of the Valkarr woods, and after the Valkaran-made riverboat she saw carrying them toward Kordavos. He has followed the Mordava down from the Standing Stones through the trees, and here is the boat, moored where no honest boat would stop, lamps lit, strangers aboard. No one has seen him, and he has seen no one else on the bank. Whatever the boat carries is about to change hands.
 
-{actor: Aelar Moonglimmer} A soft creak of wood from the ship cuts through the night's quiet hum as the cabin door opened. A figure emerges with a silent, deliberate grace that was distinctly elven. He is tall and lithe, clad in dark, practical leather armor. Two other elves, equally silent and alert, could be seen on the boat's deck, one near the bow and another by the stern, both armed with bows.
+{actor: Aelar Moonglimmer} Wood creaks as the cabin door opens. A tall, lithe elf in dark leather armor steps out with silent, deliberate grace. Two more elves with bows keep watch on deck, one near the bow and one by the stern.
 
-{actor: Aelar Moonglimmer, target: Silas} The lead elf steps forward to the crate, his gaze settling on Lyra's escorts. His voice is low and clear, filling the cabin without being loud.
+{actor: Aelar Moonglimmer, target: Silas} The lead elf steps to the crate and looks to Lyra's escorts. His voice is low and clear.
 
 {speaker: Aelar Moonglimmer, to: Silas, delivery: low and clear} You have the arrangement?
 
 {actor: Silas, target: Aelar Moonglimmer} Silas glides from the shadows by the door.
 
-{speaker: Silas, to: Aelar Moonglimmer} I have it here Aelar.
+{speaker: Silas, to: Aelar Moonglimmer} I have it here, Aelar.
 
-{actor: Silas, object: scroll} He removes a heavy scrollcase from its oilskin wrapping. Black wax seals its cap, pressed with the thorned branch of the Blackthorn family.
+{actor: Silas, object: scroll} He draws a heavy scrollcase from its oilskin wrapping. Black wax seals its cap, pressed with the thorned branch of the Blackthorn family.
 
 {speaker: Aelar Moonglimmer, to: Silas} Very well.
 
-{actor: Aelar Moonglimmer} Aelar turns to give an order in Elvish to one of his crew.
+{actor: Aelar Moonglimmer} Aelar gives an order in Elvish to one of his crew.
 
 {speaker: Aelar Moonglimmer, to: Silas} The shipment is ready for your specialist's inspection.
 
-{actor: Reinhard, target: 1749159962941} Reinhard nods at Lyra, eager to get her to inspect the shipment and have the matter concluded.
+{actor: Reinhard, target: 1749159962941} Reinhard nods at Lyra, eager to have the matter done.
 
-{speaker: Reinhard, to: 1749159962941, delivery: eager} Ok, let’s get on with it then.
+{speaker: Reinhard, to: 1749159962941, delivery: eager} Ok, let's get on with it then.
 
-The crate remained closed. No one was allowed to see what was inside.
-
-Lyra had been contracted for one simple task, use her magecraft to determine that the contents of the shipment were indeed arcane in nature.
+The crate stays closed. No one may see inside, so Lyra must judge it by magecraft alone.
 
 ## GM Notes
 
-If Lyra asks questions or stalls in any way, Reinhard and Silas will be impatient and urge her to do what she was paid for. If Lyra tries to engage Aelar in conversation he will be evasive. If she continues to delay, then Silas will nod at Varius who will draw his sword and threaten her.
+If Lyra asks questions or stalls in any way, Reinhard and Silas will be impatient and urge her to do what she was paid for. If Lyra tries to engage Aelar in conversation he will be evasive. If she continues to delay, then Silas will nod at Reinhard who will draw his sword and threaten her.
 
 If Lyra successfully casts a spell on the crate to detect magic, she will be detect an ancient potent enchantment on an object within the crate. On a highly successful roll of 18 or higher, she will determine its purpose to be related to concepts of binding promises, loyalty, and solemn vows. On a 20, she will be able to name the item as the Verodynian Oath Stone of the First Clans.
 

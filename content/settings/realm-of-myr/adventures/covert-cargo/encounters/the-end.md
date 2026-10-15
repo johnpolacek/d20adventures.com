@@ -12,7 +12,7 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/cover
 
 ## Intro
 
-The path forward remains uncertain, but things cannot be undone. Events have been set in motion and now all that remains is to move forward into the unknown.
+What is done cannot be undone. Events are in motion, and the only way is forward.
 
 Whatever was sold at the pier was bought for Kordavos, and what began on the river will be finished in the city.
 

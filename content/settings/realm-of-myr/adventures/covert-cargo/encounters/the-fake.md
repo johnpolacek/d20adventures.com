@@ -22,23 +22,23 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/cover
 
 ## Intro
 
-{place: saloon} A silence, sharp and cold as a shard of glass, fell over the boat’s cabin in the wake of the arcanist’s pronouncement.
+{place: saloon} A cold, sharp silence falls over the cabin after the arcanist's pronouncement.
 
-{actor: Silas, target: Aelar Moonglimmer} It was Silas who moved first. In a single, fluid motion, he was no longer lounging by the door but standing before it, blocking the only exit. A dagger appeared in his hand, its point aimed steadily at Aelar.
+{actor: Silas, target: Aelar Moonglimmer} Silas moves first. In one fluid motion he is standing before the door, blocking the only exit, a dagger aimed steadily at Aelar.
 
 {speaker: Silas, to: Aelar Moonglimmer, delivery: silken threat} There seems to have been a misunderstanding. My employers do not appreciate being sold worthless trinkets.
 
-{actor: Reinhard, target: Aelar Moonglimmer} Reinhard let out a low, guttural growl, his hand dropping to the hilt of the massive blade at his side.
+{actor: Reinhard, target: Aelar Moonglimmer} Reinhard growls low, his hand dropping to the hilt of the massive blade at his side.
 
 {speaker: Reinhard, to: Aelar Moonglimmer, delivery: snarling} You have nerve, elf.
 
-{actor: Reinhard, target: Aelar Moonglimmer} His cold, calculating eyes promised violence as he took a heavy step forward.
+{actor: Reinhard, target: Aelar Moonglimmer} His cold eyes promise violence as he takes a heavy step forward.
 
-{actor: Aelar Moonglimmer, target: Silas} Aelar Moonglimmer recoiled, but it was with the shock of indignation, not fear. His professional calm fractured into unconcealed fury.
+{actor: Aelar Moonglimmer, target: Silas} Aelar Moonglimmer recoils, not in fear but in indignation, his calm breaking into open fury.
 
 {speaker: Aelar Moonglimmer, to: Silas, delivery: spitting} Worthless?
 
-{actor: Aelar Moonglimmer, target: 1749159962941} His gaze flicked with contempt toward the unseen specialist.
+{actor: Aelar Moonglimmer, target: 1749159962941} He flicks a contemptuous glance at the specialist.
 
 {speaker: Aelar Moonglimmer, to: Silas} Your arcanist is either a fool, or you mean to double-cross us!
 

@@ -15,7 +15,7 @@ npcs:
     behavior: "Will take the lead in investigating the cause of the disturbance. If he finds Poppen or Thalbern, he will aggressively tell him to go away."
     initialInitiative: 0
   - id: "npcs-1749163978757"
-    behavior: "Varius will keep his eye on the shipment and Lyra."
+    behavior: "Reinhard will keep his eye on the shipment and Lyra."
     initialInitiative: 0
   - id: "npcs-1749181492795"
     behavior: "Silas will look outside for any threats but will not engage."
@@ -27,7 +27,7 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/cover
 
 ## Intro
 
-Suddenly, the clandestine meeting is thrown off course by a sudden disturbance.
+A sudden disturbance throws the clandestine meeting off course.
 
 ## GM Notes
 

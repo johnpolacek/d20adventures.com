@@ -87,7 +87,7 @@ async function main() {
   // The two watchers stay strangers until a check passes, in every encounter at the pier.
   for (const id of ["the-shipment", "the-transaction", "the-fake", "the-disturbance", "battle-on-the-boat"])
     assert.match(artifacts.encounters[id].sections.gmNotes ?? "", /Perception check, DC 15/, id)
-  assert.match(artifacts.encounters["the-shipment"].sections.intro ?? "", /Neither of them knew of the third watcher/)
+  assert.match(artifacts.encounters["the-shipment"].sections.intro ?? "", /Neither knows of the third watcher/)
   const hurt = (healthPercent: number) => [
     { type: "pc", healthPercent },
     { type: "pc", healthPercent: 100 },

@@ -9,7 +9,7 @@ settingId: "realm-of-myr"
 adventureId: "covert-cargo"
 npcs:
   - id: "npcs-1749163978757"
-    behavior: "Varius silently awaits Silas’s instructions but will not let Lyra leave (if she tries to)"
+    behavior: "Reinhard silently awaits Silas’s instructions but will not let Lyra leave (if she tries to)"
     initialInitiative: 0
   - id: "npcs-1749181492795"
     behavior: "Silas is pleased, the mission is almost over."
@@ -19,13 +19,15 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/cover
 
 ## Intro
 
-{actor: Silas, object: scroll} Silas glided from the shadows, extending the oilskin-wrapped scrollcase to the elf.
+{actor: Silas, object: scroll} Silas holds out the sealed scrollcase to the elf.
 
 {speaker: Silas, delivery: quiet and controlled} As agreed.
 
-Aelar Moonglimmer took the offering, his  grey eyes, sharp and observant, held the rogue’s gaze. "The Circle is appreciative," Aelar replied, his own voice just as quiet and controlled. "They trust this partnership will prove fruitful for all involved."
+{actor: Aelar Moonglimmer, target: Silas} Aelar Moonglimmer takes it, his sharp grey eyes holding the rogue's gaze.
 
-With the exchange made, Aelar gave a final, sharp nod, then he and his kin made a quick and graceful exit, stepping off the boat and onto the pier. They moved like shadows across the rickety wood, disappearing into the shadows of the treeline without a single backward glance.
+{speaker: Aelar Moonglimmer, to: Silas, delivery: quiet and controlled} The Circle is appreciative. They trust this partnership will prove fruitful for all involved.
+
+With a final sharp nod, Aelar and his kin step off the boat and cross the rickety pier like shadows, vanishing into the treeline without a backward glance.
 
 ## GM Notes
 
