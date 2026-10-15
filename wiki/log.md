@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-15, shorter roll outcomes
+
+Owner: "yes just once" (Wollandora asked her question once in the live game), then chose to tighten roll outcomes. The outcome of a hero's roll is now at most 2 short sentences and 40 words, says what the action did, and does not retell the hero's action. It was 60 words, and the owner's live game ran 37 to 46. The desktop runtime is rebuilt, so the next roll uses it. Not yet measured. See [Concise narration](plans/concise-narration.md).
+
 ## 2026-10-15, epic Continue and Send, and the roll card played live
 
 Owner, playing The Midnight Summons: Continue and Send use the epic button. A new `xs` button size gives an epic button half the bevel, so its top shine stays thin on the stage's small buttons. Continue drops its waiting glow and takes a chevron, Send sits half-width on the right with Skip just before it, and both chevrons are hand-drawn, cap height and outlined like the lettering (Cinzel sits high on its line, so they are raised 0.1em). The owner then confirmed the one roll card with the live GM: "roll card looks good. live replay is working." See [One roll card](plans/one-roll-card.md).

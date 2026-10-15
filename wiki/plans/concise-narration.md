@@ -122,14 +122,27 @@ The same replies and rolls after the second pass. The same eight turns.
 Left as it showed:
 
 - Asking about the relics moves to `the-missing-relics`, which has no intro. The player must ask again before Wollandora answers. Fixed 2026-10-14: Wollandora acts first there, `initialInitiative: 20`, and answers the question just asked.
-- The round end and Wollandora's own turn both press for an answer, one after the other. The NPC with the highest initiative acts straight after the round end. Fixed 2026-10-14: her behavior scripted "Will you take on this task?" every turn. She now asks once and waits, and both the NPC and round-end prompts say a question waiting for the player's answer is not asked again. Not yet replayed.
-- Roll outcomes keep their 60-word rule and are now 12% of the words.
+- The round end and Wollandora's own turn both press for an answer, one after the other. The NPC with the highest initiative acts straight after the round end. Fixed 2026-10-14: her behavior scripted "Will you take on this task?" every turn. She now asks once and waits, and both the NPC and round-end prompts say a question waiting for the player's answer is not asked again. Confirmed in the owner's live game 2026-10-15: asked once.
+- Roll outcomes keep their 60-word rule and are now 12% of the words. Tightened 2026-10-15, below.
 - Authored intros are now the largest share, 32%.
+
+### Roll outcomes, 2026-10-15
+
+Owner chose to tighten them next. The owner's own live game of The Midnight Summons, read before the change: three hero rolls, 37, 46 and 43 words, 2 sentences each. The Animal Handling outcome retold Thalbern's retreat, and the Insight one ended on a simile about the river.
+
+`buildRollOutcomePrompt` in `packages/gm-core/src/services/adventure-roll-result-service.ts`, shared by every adventure, now matches the NPC roll rule:
+
+- At most 2 short sentences of narration and action, 40 words in all.
+- Say what the action did and where it leaves the characters.
+- The hero's action and its wind-up are not told again, and nothing the context already describes is.
+- An NPC's spoken line is still extra and short.
+
+Not yet measured after the change. The owner's next rolls will show it.
 
 ## Not done
 
 - One path, one model. The rescue and the refusal are unplayed, and so are the other GMs.
-- Roll outcomes are not tightened.
+- Roll outcomes are tightened but not yet measured.
 - Covert Cargo, The Road to Kordavos and March of Davos are not audited or trimmed.
 - Codex, Antigravity and the other GMs are unmeasured. The saves were all Claude.
 - The website's S3 copies of the adventure are not changed.

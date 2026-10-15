@@ -62,7 +62,7 @@ A dice roll was made for ${args.characterName}: ${args.rollType} (Result: ${args
   - Only reference NPCs that are actually present (listed above).
   - ${KNOWLEDGE_RULE}
 
-Write the immediate outcome of the roll as beats: two sentences of narration and action, 60 words at most. An NPC's spoken line is extra and short. Focus on how the NPC(s) react, perceive, or are affected by the action, or describe the environmental/atmospheric result of the successful roll. The hero's own attack already shows as an effect, so give effects only to what an NPC does.
+Write the immediate outcome of the roll as beats: at most 2 short sentences of narration and action, 40 words in all. Say what the action did and where it leaves the characters. Do not describe the hero's action or its wind-up again, since the story has just told it, and do not describe again what the Context already describes. An NPC's spoken line is extra and short. Focus on how the NPC(s) react, perceive, or are affected by the action, or describe the environmental/atmospheric result of the successful roll. The hero's own attack already shows as an effect, so give effects only to what an NPC does.
 
 Write in third person PRESENT tense. Do not use semicolons. Never mention game mechanics, dice, or rules.
 
