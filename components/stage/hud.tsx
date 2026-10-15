@@ -40,10 +40,22 @@ export function Pill({ active, className, children, ...rest }: React.ComponentPr
   )
 }
 
-// A chevron, or two, thin and a little uneven, as if drawn by hand: the strokes bow and cross at the tip.
+// A chevron, or two, thin and a little uneven, as if drawn by hand: the strokes bow and cross at the tip. It is as tall as
+// the capitals beside it, and outlined in black like the epic button's lettering.
+const outline = { filter: "drop-shadow(0 0 1px #000) drop-shadow(0 0 1px #000) drop-shadow(0 0 1px #000)" }
 export function Chevron({ double = false, className }: { double?: boolean; className?: string }) {
   return (
-    <svg viewBox={double ? "0 0 14 12" : "0 0 12 12"} fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={className}>
+    <svg
+      viewBox={double ? "1.5 1.7 10.9 8.6" : "3.4 1.9 5.8 8.5"}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={cn("h-[0.72em] shrink-0", double ? "w-[0.91em]" : "w-[0.49em]", className)}
+      style={outline}
+    >
       <path d={double ? "M2.2 2.7Q5 3.7 6.4 6.2M6.1 5.8Q4.6 7.7 2.6 9.6M7.4 2.4Q10.3 3.6 11.7 6.1M11.4 5.7Q9.7 7.8 7.8 9.5" : "M4.1 2.6Q7 3.6 8.5 6.3M8.1 5.8Q6.6 7.6 4.6 9.7"} />
     </svg>
   )

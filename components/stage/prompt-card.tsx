@@ -415,7 +415,7 @@ export function PromptCard({
               disabled={!draft.trim()}
             >
               Send
-              <Chevron double className="h-3 w-3.5" />
+              <Chevron double />
             </Button>
           </div>
         </>

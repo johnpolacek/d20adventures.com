@@ -121,7 +121,7 @@ export function Narration({
             {step ? (
               <Button variant="epic" size="xs" className={cn("ml-1 gap-1.5", compact && "px-4 py-0.5 text-[11px]")} onClick={onContinue}>
                 Continue
-                <Chevron className="h-3 w-3" />
+                <Chevron />
               </Button>
             ) : (
               <Control label="Next paragraph" onClick={onNext}>
