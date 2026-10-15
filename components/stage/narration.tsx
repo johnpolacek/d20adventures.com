@@ -7,7 +7,7 @@
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { eyebrow, Pill, panel } from "./hud"
+import { Chevron, eyebrow, Pill, panel } from "./hud"
 import { RollResult, type RollResultData } from "./roll-result"
 
 function Control({ label, children, ...rest }: React.ComponentProps<"button"> & { label: string; children: ReactNode }) {
@@ -121,9 +121,7 @@ export function Narration({
             {step ? (
               <Button variant="epic" size="xs" className={cn("ml-1 gap-1.5", compact && "px-4 py-0.5 text-[11px]")} onClick={onContinue}>
                 Continue
-                <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="h-2.5 w-2.5">
-                  <path d="M4.5 2.5 8 6 4.5 9.5" />
-                </svg>
+                <Chevron className="h-3 w-3" />
               </Button>
             ) : (
               <Control label="Next paragraph" onClick={onNext}>

@@ -40,6 +40,15 @@ export function Pill({ active, className, children, ...rest }: React.ComponentPr
   )
 }
 
+// A chevron, or two, thin and a little uneven, as if drawn by hand: the strokes bow and cross at the tip.
+export function Chevron({ double = false, className }: { double?: boolean; className?: string }) {
+  return (
+    <svg viewBox={double ? "0 0 14 12" : "0 0 12 12"} fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={className}>
+      <path d={double ? "M2.2 2.7Q5 3.7 6.4 6.2M6.1 5.8Q4.6 7.7 2.6 9.6M7.4 2.4Q10.3 3.6 11.7 6.1M11.4 5.7Q9.7 7.8 7.8 9.5" : "M4.1 2.6Q7 3.6 8.5 6.3M8.1 5.8Q6.6 7.6 4.6 9.7"} />
+    </svg>
+  )
+}
+
 export function IconButton({ label, active, children, ...rest }: React.ComponentProps<"button"> & { label: string; active?: boolean }) {
   return (
     <button

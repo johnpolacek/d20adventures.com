@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { D20Solid } from "./d20"
 import { rattle } from "./dice-sound"
-import { eyebrow, Pill, panel } from "./hud"
+import { Chevron, eyebrow, Pill, panel } from "./hud"
 import { RollResult } from "./roll-result"
 
 export interface CardCharacter {
@@ -415,9 +415,7 @@ export function PromptCard({
               disabled={!draft.trim()}
             >
               Send
-              <svg viewBox="0 0 14 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="h-2.5 w-3">
-                <path d="M2.5 2.5 6 6 2.5 9.5M7.5 2.5 11 6 7.5 9.5" />
-              </svg>
+              <Chevron double className="h-3 w-3.5" />
             </Button>
           </div>
         </>
