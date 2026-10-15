@@ -270,3 +270,11 @@ Part of [structured narrative](plans/structured-narrative.md).
 - `readNarration` and `narrationShots` are removed, the same day, once every intro was labelled. A paragraph that names no one and no place leaves the camera where it is.
 - Checked on the dev stage page and in the desktop preview with a scripted Owlbear fight. Not checked in the packaged app or at the small-window layout.
 
+
+## Crisp near ground, 2026-10-15
+
+- Owner: the grass at the Standing Stones looked fuzzy in the desktop app.
+- Cause: the paint filter runs 540 to 900 px tall, and the whole frame was mixed toward it. Grass blades are about 2 cm wide, so the filter smeared them. The desktop app plays on balanced, which also renders at pixel ratio 1 with no anti-aliasing.
+- The paint pass's final blend now keeps a quarter of the paint (`nearKeep`) within 3 m of the camera, rising to all of it by 18 m. Uniform paint mode turns this off. Characters keep their own mask.
+- Balanced now uses FXAA. Without it the crisp blades and leaf cards stair-step at pixel ratio 1.
+- Checked on `/dev/stage` at the stones (path, stones and Wollandora shots), balanced and high, DPR 2. Stones, trees, characters and sky look unchanged. FXAA on balanced measured within noise, 44 to 58 fps either way at load average 4.5. Not checked in the packaged app.

@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-15, crisp grass near the camera
+
+Owner: the grass at the Standing Stones looked fuzzy. The paint filter, 540 to 900 px tall, smeared the 2 cm blades. Its final blend now keeps a quarter of the paint within 3 m of the camera and all of it by 18 m, and the balanced tier gains FXAA. The stage typecheck and `stage:check` pass. See [the stage engine](stage-engine.md#crisp-near-ground-2026-10-15).
+
 ## 2026-10-15, March of Davos story questions answered
 
 Owner answered the eight questions, leaving three to me. Thaddeus ordered Milos Antonov's death and Astrid carried it out. The tunnel seal is on the grate. A barrel blast buries some of Astrid's soldiers rather than cutting them off. Eamon is a half-elf. The two Barok files were one man, now `barok-redbeard` alone. "Lower Districts" everywhere. The Forest Drake joins its fight's cast. Three typos fixed. The March of Davos check now expects 34 NPCs. All bridge checks, batch-e, authoring, stage and desktop checks pass. See [Concise narration](plans/concise-narration.md).

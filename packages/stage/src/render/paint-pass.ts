@@ -70,7 +70,7 @@ void main(){
  gl_FragColor = vec4(o.w > 0.0 ? o.rgb / o.w : texture2D(tColor, vUv).rgb, 1.0);
 }`
 // Canvas, brush grain aligned with the strokes, and a warm painterly grade.
-const FINAL = `uniform sampler2D tPaint, tOrig, tTensor, tNoise, tMask, tAO, tDepth; uniform vec2 res, pTexel; uniform float strength, grain, grade, warmth, vignette, detail, gs, aoStrength, aoDebug, near, far; varying vec2 vUv;
+const FINAL = `uniform sampler2D tPaint, tOrig, tTensor, tNoise, tMask, tAO, tDepth; uniform vec2 res, pTexel; uniform float strength, grain, grade, warmth, vignette, detail, gs, aoStrength, aoDebug, near, far, nearKeep, n0, n1; varying vec2 vUv;
 float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
 float lin(float z){ return 2.0 * near * far / (far + near - (z * 2.0 - 1.0) * (far - near)); }
 void main(){
@@ -79,6 +79,9 @@ void main(){
  paint = clamp(paint + (paint - soft) * .6, 0.0, 1.0);
  // Named characters keep most of the crisp full-resolution render: only a fraction (detail) of the paint stays inside the mask.
  float m = texture2D(tMask, vUv).r, st = strength * mix(1.0, detail, m);
+ // Near the lens the paint target is coarser than the fine detail there (grass blades), so the full frame shows through:
+ // only nearKeep of the paint stays by n0 metres, all of it by n1.
+ if (nearKeep < .999) st *= mix(nearKeep, 1.0, smoothstep(n0, n1, lin(texture2D(tDepth, vUv).x)));
  vec3 c = mix(orig, paint, st);
  // Contact shading from the GTAO map: faded with distance (its depth precision thins out) and eased off on the crisp characters.
  if (aoStrength > .001) { float ao = texture2D(tAO, vUv).r; ao = mix(ao, 1.0, smoothstep(40.0, 130.0, lin(texture2D(tDepth, vUv).x))); c *= mix(1.0, ao, aoStrength * (1.0 - .6 * m)); if (aoDebug > .5) c = vec3(ao); }
@@ -134,6 +137,8 @@ export class PaintPass extends Pass {
   maskEnabled = true
   depth: THREE.Texture | null = null
   depthPaint = true
+  // Share of the paint kept on the nearest ground, where the paint target cannot hold the detail (see FINAL).
+  nearKeep = 0.25
   ao: THREE.Texture | null = null
   aoStrength = 0
   full: [number, number] | null = null
@@ -194,6 +199,9 @@ export class PaintPass extends Pass {
       vignette: { value: 0.55 },
       detail: { value: 0.2 },
       gs: { value: 1 },
+      nearKeep: { value: 1 },
+      n0: { value: 3 },
+      n1: { value: 18 },
     })
   }
   private uniforms(q: FullScreenQuad) {
@@ -272,8 +280,10 @@ export class PaintPass extends Pass {
     U.tMask.value = drawn && this.mask ? this.mask.texture : this.black
     const aoOn = this.aoStrength > 0 && this.ao && this.depth && this.camera
     U.aoStrength.value = aoOn ? this.aoStrength : 0
-    if (aoOn && this.camera) {
-      U.tAO.value = this.ao
+    if (aoOn) U.tAO.value = this.ao
+    const nearOn = this.depthPaint && this.depth && this.camera
+    U.nearKeep.value = nearOn ? this.nearKeep : 1
+    if (this.depth && this.camera) {
       U.tDepth.value = this.depth
       U.near.value = this.camera.near
       U.far.value = this.camera.far
