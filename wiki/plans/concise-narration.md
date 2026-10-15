@@ -139,11 +139,70 @@ Owner chose to tighten them next. The owner's own live game of The Midnight Summ
 
 After the change, the owner's next game, Claude as GM, two rolls: a Stealth success in 36 words and an Insight failure in 28, 2 sentences each. Neither retold the action. Insight at the Stones went from 43 words to 28. Two rolls is a small sample.
 
+### The other three adventures, 2026-10-15
+
+Owner chose to trim Covert Cargo, The Road to Kordavos and March of Davos next, as The Midnight Summons was.
+
+| Adventure | Encounters | Intro words |
+|---|---|---|
+| The Road to Kordavos | 3 | 245 |
+| Covert Cargo | 10 | 1,486, of which `the-shipment` is 792 |
+| March of Davos | 45 | 7,653 |
+
+The same rules as The Midnight Summons:
+
+- Every fact a player or the GM needs is kept: names, places, objects, clues, threats, what is asked of the heroes.
+- Repetition, stacked adjectives, and atmosphere said twice go.
+- Spoken lines stay in the speaker's voice and are only shortened.
+- Labels in braces are kept on their paragraphs, and a paragraph keeps its label when it is shortened.
+- Present tense in intros and endings.
+- GM notes and NPC behaviors are left alone unless they contradict the intro or script a line the intro already gives.
+- Contradictions found along the way are fixed and listed. Decisions made without the owner are named.
+
+March of Davos is split between three helpers working in parallel, by file. Checked afterwards: labels still parse, every encounter's intro still names its cast, and the bridge checks pass.
+
+#### Result
+
+| Adventure | Intro words before | After | Shorter |
+|---|---|---|---|
+| The Road to Kordavos | 245 | 193 | 21% |
+| Covert Cargo | 1,486 | 1,113 | 25% |
+| March of Davos | 7,653 | 6,070 | 21% |
+
+Every labelled paragraph keeps its labels in the same order. Covert Cargo's intros, which slid between past and present, are all present tense. Three other narration sections the GM receives were trimmed too: March of Davos's "The Meeting", "The Missing Brother" and "The Final Night Approaches".
+
+Fixed:
+
+- Covert Cargo called Reinhard "Varius" in the shipment intro, its notes and two behaviors.
+- The transaction had Silas glide from the shadows and unwrap the scrollcase a second time. Aelar's line there is now its own labelled line.
+- The stage's cues for Aelar's entrance and the elves' exit quote the intro, so they follow the new wording. Every staging cue in the three staged adventures was checked against its intro.
+- the-aftermath: Petra pointed at "the lock", but the drake melted the cage. She says "Look at the cage!"
+- the-speech: the real, caged drake was "translucent", a word for Eamon's illusion. Dropped.
+- into-the-catacombs: the fuse was "sparking" while the line orders it lit. It is about to be lit.
+- the-hunt-for-the-assassin notes put the ward on a "sealed door". The intro puts it on the drainage grate. Now "grate".
+- the-blackthorns notes scripted Astrid's intro line word for word, and the-lady-and-the-bishop notes had masks lowered that the intro already lowered. Both say it once.
+- the-winning-bid: Silverhand rising sat in his representative's labelled paragraph. Moved to his own.
+
+Decisions made without the owner: point of view left as each intro had it, since many March of Davos intros say "you" and the rest "the adventurers", and "Past the detonation point" became "Past the barrels", since stopping them is the goal.
+
+Left for the owner:
+
+- death-to-the-murderer: the assassin calls Thaddeus the murderer of Milos Antonov. The notes of the-rangers-quarters say Astrid arranged it. It may be the Covenant's mistake on purpose.
+- If the barrels go off, the catacombs notes separate Astrid's soldiers from the party, but the labyrinth intro still has her order them to split up.
+- the-chase puts the magic seal on a wooden door down the tunnel. the-hunt-for-the-assassin puts the ward on the grate.
+- Eamon is a half-elf in two encounters' notes and an elf on his sheet.
+- Two NPC files, `barok-ironfist` and `barok-redbeard`, are both titled "Barok Redbeard".
+- "Lower District" and "Lower Districts" are both used.
+- the-beast-escapes fights the Forest Drake, which is not in its cast.
+- Typos left in GM notes: "Valkaran even" in clan-conflict, "There be eyes and everywhere." in the-silver-serpent-tavern, "in the air h," in the-chase.
+
+Not replayed. Only The Midnight Summons has been played since its trim.
+
 ## Not done
 
 - One path, one model. The rescue and the refusal are unplayed, and so are the other GMs.
 - Roll outcomes are measured on two rolls only.
-- Covert Cargo, The Road to Kordavos and March of Davos are not audited or trimmed.
+- Covert Cargo, The Road to Kordavos and March of Davos are trimmed but not replayed.
 - Codex, Antigravity and the other GMs are unmeasured. The saves were all Claude.
 - The website's S3 copies of the adventure are not changed.
 - No code enforces the length. It is a prompt rule only, and it held on every round end of the replay.

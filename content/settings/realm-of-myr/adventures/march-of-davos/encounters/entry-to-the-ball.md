@@ -16,19 +16,19 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726597339022"
 
 ## Intro
 
-Dressed in the finery required for such an occasion—and concealed behind the ornate masks that give the ball its name—the adventurers approach the Asterian Quarter. The Blackthorn Mansion looms ahead, its towering spires silhouetted against the darkening sky. Flickering torchlight illuminates the imposing stone walls, casting long, shifting shadows that dance across the mansion’s façade.
+In formal finery, their faces hidden behind the ornate masks of the masquerade, the adventurers approach the Asterian Quarter. The Blackthorn Mansion looms ahead, its towering spires silhouetted against the darkening sky. Torchlight flickers across its imposing stone walls.
 
-Wrought iron gates, adorned with intricate Valkaran and Asterian symbols, stand open, welcoming the evening’s elite. Servants in finely tailored uniforms guide carriages through the cobblestone courtyard, while guests draped in lavish costumes and ornate masks make their way up the grand staircase leading to the entrance.
+Wrought iron gates worked with Valkaran and Asterian symbols stand open to the evening’s elite. Uniformed servants guide carriages through the cobblestone courtyard, and guests in lavish costumes and masks climb the grand staircase to the entrance.
 
-At the foot of the grand staircase, two imposing guards, clad in polished black armor adorned with the Blackthorn family crest, stand vigilant. Their hands rest casually on the hilts of their sheathed swords, but their watchful eyes dart over each guest with practiced precision.
+At the foot of the staircase stand two guards in polished black armor bearing the Blackthorn family crest. Their hands rest casually on their sword hilts, but their eyes study every guest.
 
-{actor: Barok Redbeard} One of the guards steps forward, a burly man with a red beard and imposing frame that seems familiar. 
+{actor: Barok Redbeard} One of the guards steps forward, a burly man with a red beard and a familiar, imposing frame.
 
-{actor: Barok Redbeard} Now, though, Barok looks far more composed, with his unruly beard neatly trimmed and his posture straighter, as if the formal attire demands a certain level of dignity. His eyes narrow in recognition as the adventurers approach, but he says nothing of their prior encounter. Instead, he steps forward, raising a gloved hand.
+{actor: Barok Redbeard} It is Barok, though far more composed now, his unruly beard neatly trimmed and his posture straighter, as if the formal attire demands it. His eyes narrow in recognition, but he says nothing of their last meeting. He raises a gloved hand.
 
 {speaker: Barok Redbeard, delivery: restrained grunt} Invitation.
 
-{actor: Barok Redbeard} His voice is as gruff as they remember, though more restrained in this refined setting. His eyes scan each of them, lingering a moment longer than necessary, a hint of recognition on his face.
+{actor: Barok Redbeard} His voice is as gruff as they remember. His eyes linger on each of them a moment longer than necessary.
 
 ## GM Notes
 

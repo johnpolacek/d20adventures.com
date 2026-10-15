@@ -12,13 +12,13 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726672244509"
 
 ## Intro
 
-Through the winding hallways of the mansion is a section of the estate clearly reserved for the highest-ranking member of the Blackthorn family. The lavish decor gradually becomes even more ornate—walls adorned with rich tapestries, priceless paintings depicting scenes of conquest and glory, and opulent candelabras casting a warm golden glow along the corridors.
+Deeper in the mansion’s winding halls is a wing clearly reserved for the highest-ranking member of the Blackthorn family. The decor grows ever more ornate: rich tapestries, priceless paintings of conquest and glory, and opulent candelabras casting a warm golden glow.
 
-Two guards stand blocking the way. Behind them is a large, intricately carved door. Both guards, clad in dark leather reinforced with iron plating, wear the unmistakable crest of the Blackthorn family—a black tree twisted into a circle—stitched into their tabards. 
+Two guards block the way to a large, intricately carved door. Both wear dark leather reinforced with iron plating, with the Blackthorn crest, a black tree twisted into a circle, stitched on their tabards.
 
-Though they wear the family crest and carry longswords, their postures are relaxed, and their conversation seems far more focused on the lavish spread at the Masquerade than any potential threats. The hallway is otherwise silent, the muffled sounds of the Masquerade Ball barely audible from this far into the mansion
+They carry longswords, but they stand at ease, more interested in the Masquerade’s lavish spread than in any threat. The hall is otherwise silent, the ball barely audible this far into the mansion.
 
-One of the guards, a stocky man with graying hair, leans against the wall, absently fiddling with the straps of his armor. His companion, a younger guard with a scruffy beard, lets out a soft chuckle as he mutters something under his breath about the wine and roasted game downstairs. Neither seems particularly interested in the goings-on beyond the door they’re meant to protect, though they still cast occasional glances down the hall.
+One, a stocky man with graying hair, leans against the wall, absently fiddling with his armor straps. The other, a younger guard with a scruffy beard, chuckles and mutters about the wine and roasted game downstairs. Neither seems to care what goes on beyond the door they guard, though they still glance down the hall now and then.
 
 ## GM Notes
 

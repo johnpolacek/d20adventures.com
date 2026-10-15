@@ -12,11 +12,11 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726970504298"
 
 ## Intro
 
-From the darkness behind the great altar, a figure steps into the light of your torches. He is clad in the robes of the Covenant, but the hood is thrown back. 
+From the darkness behind the great altar, a figure steps into your torchlight. He wears the robes of the Covenant, the hood thrown back.
 
-"Joran?" Astrid gasps, her sword lowering slightly in shock. 
+"Joran?" Astrid gasps, her sword dipping in shock.
 
-Joran Antonov stands tall, the missing Key of Ilmarin held firmly in his grasp as he eyes the party with a mixture of defiance and hope. "It ends today, Astrid. The Blackthorns have stolen enough from this land. My father died for this truth, and I will see it restored."
+Joran Antonov stands tall, the missing Key of Ilmarin in his grasp, and eyes you with defiance and hope. "It ends today, Astrid. The Blackthorns have stolen enough from this land. My father died for this truth, and I will see it restored."
 
 ## GM Notes
 

@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-15, the other three adventures trimmed
+
+Owner chose to trim the three adventures after The Midnight Summons. Intros: The Road to Kordavos 245 words to 193, Covert Cargo 1,486 to 1,113, March of Davos 7,653 to 6,070, every fact and label kept. March of Davos was split between three helpers. Fixed along the way: Reinhard called Varius, a repeated scrollcase, Petra's lock that was a melted cage, a translucent real drake, a lit fuse ordered lit, and GM notes that repeated their intros. Covert Cargo's two stage cues follow the new wording. Eight story questions are left for the owner in [Concise narration](plans/concise-narration.md). All bridge checks, batch-e, the stage check and desktop tests pass. Not replayed.
+
 ## 2026-10-15, shorter roll outcomes
 
 Owner: "yes just once" (Wollandora asked her question once in the live game), then chose to tighten roll outcomes. The outcome of a hero's roll is now at most 2 short sentences and 40 words, says what the action did, and does not retell the hero's action. It was 60 words, and the owner's live game ran 37 to 46. The owner's next two rolls came in at 36 and 28 words, neither retelling the action. See [Concise narration](plans/concise-narration.md).

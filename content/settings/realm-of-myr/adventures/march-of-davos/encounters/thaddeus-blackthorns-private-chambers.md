@@ -12,15 +12,15 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726695978966"
 
 ## Intro
 
-Beyond the door to Thaddeus Blackthorn’s private chambers is a stark contrast to the opulence of the rest of the mansion. The room is grand, but there’s a certain coldness to it—no lavish decorations or personal touches, just polished dark wood and expensive furnishings, all meticulously arranged.
+Thaddeus Blackthorn’s private chambers are a stark contrast to the opulence of the rest of the mansion. The room is grand but cold: no lavish decorations or personal touches, just polished dark wood and expensive furnishings, meticulously arranged.
 
-The centerpiece of the room is an imposing mahogany desk, its surface covered in organized stacks of papers, ledgers, and maps. Behind the desk, a large window offers a sweeping view of the moonlit city of Kordavos, though thick velvet curtains are half-drawn, as if to limit just how much can be seen. 
+At its center stands an imposing mahogany desk, covered in neat stacks of papers, ledgers, and maps. Behind it, a large window looks out over moonlit Kordavos, its thick velvet curtains half-drawn, as if to limit how much can be seen.
 
-Along the walls are rows of shelves, but instead of books, they hold scrolls and sealed letters, many marked with the insignias of various prominent families, including the Blackthorn and Asterian crests. A glass cabinet in one corner houses rare and valuable trinkets—gems, ornate daggers, and a few peculiar objects that seem out of place, including a small carved wooden idol of Valkaran origin.
+The shelves along the walls hold no books, only scrolls and sealed letters, many bearing the insignias of prominent families, including the Blackthorn and Asterian crests. A glass cabinet in one corner holds rare, valuable trinkets: gems, ornate daggers, and a few objects that seem out of place, among them a small carved wooden idol of Valkaran origin.
 
-To the side, an ornate sword hangs mounted on the wall, its scabbard adorned with intricate Valkaran symbols. The hilt gleams in the firelight, drawing the eye as if it holds significance beyond mere decoration. A second door, almost hidden behind a heavy tapestry, leads to what seems to be a smaller, more private study.
+On one wall hangs an ornate sword, its scabbard adorned with intricate Valkaran symbols. Its hilt gleams in the firelight, as if it means more than decoration. A second door, almost hidden behind a heavy tapestry, seems to lead to a smaller, more private study.
 
-This is clearly a place where business is done—deals struck, secrets kept, and plans formed. The atmosphere is thick with ambition and power, and it’s easy to imagine Thaddeus sitting behind the desk, orchestrating his plans to rise further in Kordavos’s political landscape.
+This is where business is done: deals struck, secrets kept, plans formed. It is easy to imagine Thaddeus behind the desk, plotting his further rise in Kordavos’s politics.
 
 ## GM Notes
 

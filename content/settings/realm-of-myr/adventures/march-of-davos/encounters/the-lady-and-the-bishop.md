@@ -15,25 +15,23 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726609502768"
 
 ## Intro
 
-As the adventurers mingle among the masked guests of the ball, they are approached by a pair of figures moving with purpose through the crowd. One is an elegantly dressed woman, her poise regal, her movements deliberate and graceful. Beside her walks a tall man in ornate clerical robes, his presence calm yet commanding. Both wear ornate masks, but as they come to stand before the adventurers, the woman reaches up and removes hers with a respectful nod, revealing striking features and piercing eyes. The bishop follows suit, lowering his mask to reveal a stern yet composed face.
+As the adventurers mingle among the masked guests, two figures make their way to them through the crowd. One is an elegantly dressed woman of regal poise. Beside her walks a tall man in ornate clerical robes, calm yet commanding. Both wear ornate masks. Reaching the adventurers, the woman removes hers, revealing striking features and piercing eyes, and the bishop lowers his to show a stern, composed face.
 
 {speaker: seraphina-valtor, delivery: smooth and deliberate} Good evening. I am Seraphina Valtor, and this is Bishop Nicolai Petrov.
 
-{actor: seraphina-valtor} She offers a respectful nod, while the bishop inclines his head in silent greeting.
+{actor: seraphina-valtor} She offers a respectful nod, and the bishop inclines his head in silent greeting.
 
 {speaker: seraphina-valtor} It seems you are not the typical guests here.
 
-{actor: seraphina-valtor} Her eyes sweep over the adventurers, assessing them. She gestures subtly to the grand surroundings, her gaze settling on the opulence of the ballroom.
+{actor: seraphina-valtor} Her eyes sweep over the adventurers, assessing them. She gestures subtly at the opulent ballroom.
 
 {speaker: seraphina-valtor} Such grandeur on display, while so many of our people suffer... It’s an unfortunate contrast, don’t you think?
 
 {speaker: bishop-nicolai, delivery: measured} We were once a proud and mighty people, deeply connected to our heritage. Now it seems some have forgotten what made us strong.
 
-His tone carries a hint of regret, but also resolve.
-
 {speaker: bishop-nicolai, delivery: regretful but resolved} There are those who still believe in preserving what truly matters.
 
-{actor: seraphina-valtor} Seraphina’s eyes meet each of the adventurers', her expression intent.
+{actor: seraphina-valtor} Seraphina meets each adventurer’s eyes in turn, her expression intent.
 
 {speaker: seraphina-valtor} The Blackthorns have ambitions, of course. But not everyone shares their vision for our future. I wonder if people such as yourselves might be interested in... a different way forward.
 
@@ -53,7 +51,7 @@ As Seraphina Valtor continues the conversation with the adventurers, her questio
 
 "You know," she begins, glancing around at the extravagant ball, "Kordavos has always been a place where power and history intersect. It’s curious, really, how much of our heritage has been lost or, perhaps… *misplaced.*" Her eyes linger on the adventurers, gauging their reactions. "There have been whispers—rumors, really—that certain families in Kordavos are not content with their wealth and standing. They’re seeking to acquire more. And not just in gold or influence, but in things that truly belong to the Valkaran people."
 
-She lowers her mask, as does the bishop, her expression calm but sharp. "It’s said that the Blackthorn family has been collecting relics—items of great historical and cultural significance. Some believe they’re doing so to curry further favor with the Asterians, perhaps even to strengthen their grip on the city. These items… they should be safeguarded by those who truly understand their value, don’t you think?"
+Her expression is calm but sharp. "It’s said that the Blackthorn family has been collecting relics—items of great historical and cultural significance. Some believe they’re doing so to curry further favor with the Asterians, perhaps even to strengthen their grip on the city. These items… they should be safeguarded by those who truly understand their value, don’t you think?"
 
 Bishop Nicolai, standing quietly beside her, fingers his silver chain with the symbol of Thyra, his eyes narrowing slightly. Seraphina leans in, her voice soft but pointed. "Have you come across anything like that in your recent travels? Something that might help preserve our people’s true legacy?" 
 

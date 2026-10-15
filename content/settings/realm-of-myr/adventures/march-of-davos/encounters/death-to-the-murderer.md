@@ -12,11 +12,11 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726789587556"
 
 ## Intro
 
-As the applause for Thaddeus' grand announcement reaches its peak, a figure in the shadows moves with purpose. Clad in the dark, hooded garb of the Covenant of the Cowl, the assassin has been biding his time, waiting for the perfect moment amidst the excitement and spectacle of the Forest Drake's reveal.
+As the applause for Thaddeus’ announcement peaks, a figure in the shadows moves with purpose. Clad in the dark, hooded garb of the Covenant of the Cowl, the assassin has waited for this moment, while every eye is on the Forest Drake.
 
-With a sudden, calculated movement, the assassin breaks from the cover of the crowd gathered near Thaddeus. In one swift motion, a blade plunges into Thaddeus’ side, the assassin hissing, “Death to the murderer of Milos Antonov!” Thaddeus gasps, his eyes wide in shock as the poison begins to work its way through his veins.
+With a sudden, calculated movement, the assassin breaks from the crowd near Thaddeus and plunges a blade into his side, hissing, “Death to the murderer of Milos Antonov!” Thaddeus gasps, eyes wide in shock, as the poison begins to work through his veins.
 
-Chaos erupts. Guests scream and scatter as the assassin spins around, heading for the balcony with deadly speed. The figure vaults over the bannister toward the balcony, a rope already prepared for a quick descent into the darkness below.
+Chaos erupts. Guests scream and scatter as the assassin races for the balcony with deadly speed and vaults the bannister, a rope ready for a quick descent into the darkness below.
 
 ## GM Notes
 

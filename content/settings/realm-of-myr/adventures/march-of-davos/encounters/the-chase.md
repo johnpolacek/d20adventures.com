@@ -12,9 +12,9 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726797856154"
 
 ## Intro
 
-The ballroom explodes into chaos as the assassin rushes out over the balcony. The cool night air rushes against those who they peer over the edge, catching a glimpse of the hooded figure rapidly descending the rope into the darkened garden below. 
+The ballroom is in chaos. Anyone who peers over the balcony feels the cool night air and glimpses the hooded figure sliding down the rope into the dark garden below.
 
-Beneath the lush greenery and meticulously maintained flower beds, movement can be spotted as the figure disappears through what appears to be an old drainage grate hidden beneath the ivy. The grate, almost indistinguishable from the garden's stone pathways, swings shut with a soft clang, the mechanism hidden beneath the vines.
+Among the lush greenery and manicured flower beds, the figure disappears through what looks like an old drainage grate hidden beneath the ivy. The grate, almost indistinguishable from the garden's stone paths, swings shut with a soft clang, its mechanism hidden beneath the vines.
 
 ## GM Notes
 

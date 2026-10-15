@@ -12,11 +12,11 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726951147257"
 
 ## Intro
 
-The seamless wall shimmers as Eamon casts a flare of light, revealing a massive, ancient door of black iron. It is marked with glowing sigils that pulse with a rhythmic, heartbeat-like cadence. The air here is freezing, and every breath you take comes out as a white puff of frost. The oppressive weight of the magic makes it hard to speak.
+The seamless wall shimmers as Eamon casts a flare of light, revealing a massive, ancient door of black iron. Its glowing sigils pulse like a heartbeat. The air is freezing, your breath white with frost, and the weight of the magic makes it hard to speak.
 
-“This is the inner sanctum,” Astrid says, her hand tightening on the hilt of her sword. “Whatever they’ve been hiding—and whoever killed my brother—is through that door.”
+“This is the inner sanctum,” Astrid says, gripping her sword. “Whatever they’ve been hiding, and whoever killed my brother, is through that door.”
 
-Eamon steps forward, sweating despite the cold. “This seal is different. It’s tied to the ley lines of the city itself. If I break this, I’m effectively ringing a bell for everyone inside. Are you ready?”
+Eamon steps forward, sweating despite the cold. “This seal is different. It’s tied to the city’s own ley lines. If I break it, I’m ringing a bell for everyone inside. Are you ready?”
 
 ## GM Notes
 

@@ -672,7 +672,7 @@ function pierSet() {
     },
     "river",
     // Aelar is in his cabin until the narration opens its door.
-    { entrances: [{ cast: CAST.aelar.id, when: "cabin door opened", from: [4.02, -4.05], shot: "arrival" }] }
+    { entrances: [{ cast: CAST.aelar.id, when: "cabin door opens", from: [4.02, -4.05], shot: "arrival" }] }
   )
   staging(
     "the-transaction",
@@ -701,7 +701,7 @@ function pierSet() {
         { cast: CAST.aelar.id, via: ["foredeck", "pierEnd", "pier"] },
         { cast: CAST.archer.id, via: ["pierEnd", "pier"] },
         { cast: CAST.fighter.id, via: ["pier"] },
-      ].map((e) => ({ ...e, via: [...e.via, ...trailPts.slice(0, 3)], when: "made a quick and graceful exit", to: "trail" })),
+      ].map((e) => ({ ...e, via: [...e.via, ...trailPts.slice(0, 3)], when: "step off the boat", to: "trail" })),
     }
   )
   staging(

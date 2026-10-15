@@ -12,13 +12,13 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726955916736"
 
 ## Intro
 
-Astrid wipes the black ichor of the undead from her blade, her breathing heavy. She looks toward the far archway with a mix of awe and dread. "The catacombs were a decoy. This is the heart of Old Valkara."
+Astrid wipes the black ichor of the undead from her blade, breathing hard, and looks to the far archway with awe and dread. "The catacombs were a decoy. This is the heart of Old Valkara."
 
-As you step through the final archway, the rough stone gives way to impossible architecture. The walls are made of translucent white marble that seems to glow with a faint, inner starlight. Towering pillars, carved to look like ancient oaks, support a vaulted ceiling painted with the constellations of a sky that Kordavos hasn't seen in a thousand years.
+Through the archway, rough stone gives way to impossible architecture. Walls of translucent white marble glow with a faint inner starlight. Towering pillars carved as ancient oaks hold up a vaulted ceiling painted with the constellations of a sky Kordavos hasn't seen in a thousand years.
 
-In the center of this hidden cathedral, a grand altar stands empty, but the air around it ripples with heat. Faded runes, etched in silver filigree, tell the story of the "Key of Ilmarin"—a gift from the stars to the first High King of Valkara. 
+At the center of this hidden cathedral stands a grand altar, empty, the air around it rippling with heat. Faded runes in silver filigree tell the story of the "Key of Ilmarin," a gift from the stars to the first High King of Valkara.
 
-The silence here is profound, heavy with the weight of centuries. But then, from the shadows behind the altar, a soft, familiar chuckle breaks the stillness.
+The silence is heavy with centuries. Then, from the shadows behind the altar, a soft, familiar chuckle breaks it.
 
 ## GM Notes
 

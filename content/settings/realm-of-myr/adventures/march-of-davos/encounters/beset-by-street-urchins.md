@@ -17,11 +17,11 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726439333709"
 
 ## Intro
 
-The winding streets of the Lower District are teeming with life, a chaotic mix of hurried vendors, wandering townsfolk, and shady figures lurking in the shadows. The air is thick with the scent of smoke from nearby chimneys, and the distant clatter of market stalls blends with the constant hum of conversation.
+The winding streets of the Lower District teem with hurried vendors, wandering townsfolk, and shady figures lurking in the shadows. Chimney smoke hangs in the air, and the clatter of distant market stalls blends with the hum of conversation.
 
-People jostle past one another, their faces hidden beneath hoods or wide-brimmed hats, their steps quick as they navigate the crowded, narrow alleys. Children dart between adults, chasing each other or carrying small parcels, while street performers play haunting melodies on worn instruments.
+People jostle through the crowded, narrow alleys, faces hidden under hoods or wide-brimmed hats. Children dart between them, chasing each other or carrying small parcels, while street performers play haunting melodies on worn instruments.
 
-In the midst of it all, a group of halfling urchins moves unnoticed, weaving through the crowd with practiced ease. A small, wide-eyed halfling with messy brown hair rushes through, laughing mischievously as he slips between legs. A red-haired halfling with dirt-smudged cheeks skips and bounces as she bumps into people along the narrow street. More halflings trail behind, exchanging jokes and giggling, blending seamlessly into the bustling flow of the district.
+Amid it all, a group of halfling urchins weaves unnoticed through the crowd with practiced ease. A small, wide-eyed halfling with messy brown hair slips between legs, laughing mischievously. A red-haired halfling with dirt-smudged cheeks skips along, bumping into people as she goes. More halflings trail behind, joking and giggling, lost in the bustle of the district.
 
 ## GM Notes
 

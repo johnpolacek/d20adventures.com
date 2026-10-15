@@ -15,25 +15,25 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726111833875"
 
 ## Intro
 
-As dawn breaks and pale light filters through the windows of the Dragonbone Inn, the smell of freshly baked bread and brewing coffee fills the air. The innkeeper, Bram, is busy preparing for the day. 
+Dawn light filters through the windows of the Dragonbone Inn, and the air smells of fresh bread and coffee. The innkeeper, Bram, is busy preparing for the day.
 
-{actor: Elara Antonov} The door creaks open, and in steps Elara. She is visibly distraught, her face pale and tired.
+{actor: Elara Antonov} The door creaks open and Elara steps in, pale, tired, and visibly distraught.
 
-Bram immediately notices her and makes his way over. “Elara, you’re early today. Everything alright?”
+Bram goes straight to her. “Elara, you’re early today. Everything alright?”
 
 {actor: Elara Antonov} Elara gives him a faint smile.
 
 {speaker: Elara Antonov, delivery: faltering} I’m here to drop off those supply orders... but...
 
-Her voice falters. Bram looks at the adventurers and then back to her. “You know, these folks here,” he says, gesturing to the party, “they seem like the kind who could help you find Joran.”
+Bram glances at the adventurers, then back to her. “You know, these folks here,” he says, “they seem like the kind who could help you find Joran.”
 
 ## The Missing Brother
 
-Elara sinks into a chair near the adventurers. “My brother, Joran,” she begins, her voice barely above a whisper, “he’s always been one to chase after dangerous truths. After our father’s death, he became obsessed with uncovering why. He believed there was something more.”
+Elara sinks into a chair near the adventurers. “My brother, Joran,” she whispers, “he’s always been one to chase dangerous truths. After our father’s death, he became obsessed with finding out why. He believed there was something more.”
 
-“A few weeks ago, he discovered information about an artifact—a 'key' of some importance. Then, one night, he vanished. No note, no explanation. I’ve searched everywhere, but no one knows where he’s gone.”
+“A few weeks ago, he learned of an artifact, a 'key' of some importance. Then one night he vanished. No note, no explanation. I’ve searched everywhere, but no one knows where he’s gone.”
 
-She produces a small leather scrollcase. “This belonged to Joran. He left behind these sketches and notes, but they’re written in some sort of code. I can't make sense of them.”
+She produces a small leather scrollcase. “This was Joran’s. He left these sketches and notes, but they’re in some sort of code. I can’t make sense of them.”
 
 ## GM Notes
 

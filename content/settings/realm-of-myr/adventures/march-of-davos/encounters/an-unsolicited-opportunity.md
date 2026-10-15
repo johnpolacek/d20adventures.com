@@ -17,23 +17,21 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726093207477"
 
 ## Intro
 
-As late evening falls upon the Dragonbone Inn, the air thickens with the scent of roasted meats and the sound of mugs clinking. Amidst the revelry, several locals eye the adventurers with curious intent. 
+Late evening falls on the Dragonbone Inn amid the clink of mugs. Several locals eye the adventurers with interest, among them Beric, a burly dockworker with a scar across his face, and Eamon, a sharp-minded scholar.
 
-Among them is Beric, a burly dockworker with a scar across his face, and Eamon, a scholarly type with an aura of intelligence.
-
-{speaker: Beric Sonacus, delivery: gruff but respectful} Ye seem like quite an assorted lot. We could use some folks of varied talents like you lot.
+{speaker: Beric Sonacus, delivery: gruff but respectful} Ye seem quite an assorted lot. We could use folks of varied talents like you.
 
 {actor: Eamon Drakovan} Eamon adjusts his spectacles.
 
-{speaker: Eamon Drakovan} Indeed, we have matters that require the expertise of seasoned adventurers. Intricacies that only your kind might handle. Perhaps we could discuss this privately?
+{speaker: Eamon Drakovan} Indeed, we have matters that require the expertise of seasoned adventurers. Perhaps we could discuss this privately?
 
 ## The Meeting
 
-Beric and Eamon lead the adventurers to a dimly lit backroom. A sturdy table occupies the center of the room, with mismatched chairs pulled haphazardly around it. 
+Beric and Eamon lead the adventurers to a dim backroom with a sturdy table and mismatched chairs.
 
 "We've got a bit of a situation," Beric begins, his voice low. "A shipment went missin' from the docks. Valuable cargo, meant for a noble up in the Asterian quarter. The people I work for ain't too pleased."
 
-Eamon leans forward. "Among the cargo were certain... artifacts. Items that could cause quite a stir if they fall into the wrong hands. We believe a group of smugglers operating out of the lower district may be responsible. However, our hands are tied—discretion is paramount. We need you to recover it. Quietly."
+Eamon leans forward. "Among the cargo were certain... artifacts. Items that could cause quite a stir in the wrong hands. We believe smugglers operating out of the lower district may be responsible. Our hands are tied, and discretion is paramount. We need you to recover it. Quietly."
 
 ## GM Notes
 

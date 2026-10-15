@@ -12,15 +12,15 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726360716968"
 
 ## Intro
 
-As the dust settles, the docks are a scene of ruin. Shattered crates, torn sails, and the smell of ozone and wet wood hang in the air. Dockworkers slowly emerge from hiding, whispering in hushed, frightened tones.
+The dust settles on docks strewn with shattered crates and torn sails. The air smells of ozone and wet wood. Dockworkers creep from hiding, whispering in fear.
 
-The woman ranger sheathes her blade and approaches you. Up close, her nobility is evident despite the grime of battle. She wipes a smear of drake blood from her cheek and offers a stiff, respectful nod.
+The woman ranger sheathes her blade and approaches. Up close, she is plainly noble despite the grime of battle. She wipes drake blood from her cheek and gives a stiff, respectful nod.
 
-“I am Lady Astrid Blackthorn,” she says, her voice regaining its poise. “It seems I am in your debt. Few in this city would have run toward a drake while everyone else was running away. Well met.”
+“I am Lady Astrid Blackthorn,” she says, her poise returning. “It seems I am in your debt. Few in this city would run toward a drake while everyone else ran away. Well met.”
 
-Before you can respond, a dock worker named Petra calls out from the deck of the ship. “Astrid! Look at the lock! It wasn't the beast! This was sabotage!”
+Before you can answer, a dockworker named Petra calls from the ship’s deck. “Astrid! Look at the cage! It wasn’t the beast! This was sabotage!”
 
-Astrid climbs aboard, her expression darkening as she inspects the melted steel of the cage. “Acid,” she mutters. “Someone wanted this creature loose. Someone wanted to cause chaos for my family.” She turns back to you, her eyes searching. “There is more at play here than simple theft.”
+Astrid climbs aboard to inspect the cage’s melted steel, her face darkening. “Acid,” she mutters. “Someone wanted this creature loose. Someone wanted chaos for my family.” She turns to you. “There is more at play here than simple theft.”
 
 ## GM Notes
 

@@ -14,11 +14,11 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726354341751"
 
 ## Intro
 
-You rush from the warehouse just in time to see a horrific scene. A nearby elven ship, the *Star of Faelendar*, rocks violently in its berth. Startled cries fill the air as dockworkers dive into the water. A deep, guttural roar reverberates from the cargo hold—a sound of pure, ancient rage.
+You rush from the warehouse. A nearby elven ship, the *Star of Faelendar*, rocks violently in its berth, and dockworkers dive into the water with startled cries. A deep, guttural roar of ancient rage rises from the cargo hold.
 
-The thick wooden doors of the hold explode outward in a spray of splinters. A massive creature emerges, wings snapping open to catch the air. It is a **Forest Drake**, its scales shimmering in shades of mossy green and bark-brown. Its yellow eyes burn with a feral light as it lets out a deafening roar that rattles the windows of nearby shops.
+The hold's thick wooden doors burst outward in a spray of splinters. A massive **Forest Drake** emerges, wings snapping open, its scales mossy green and bark-brown. Its yellow eyes burn with a feral light, and its roar rattles the windows of nearby shops.
 
-{actor: astrid-blackthorn, object: blade} At the edge of the gangplank, a woman stands with fierce determination. Tall and clad in rugged leather armor, her windblown black hair frames a face set in a mask of command. She draws a curved blade.
+{actor: astrid-blackthorn, object: blade} At the edge of the gangplank stands a tall woman in rugged leather armor, her windblown black hair framing a commanding face. She draws a curved blade.
 
 {speaker: astrid-blackthorn, delivery: shouting to the fleeing crew} Keep it contained! If that beast reaches the lower district, it’ll be a massacre!
 

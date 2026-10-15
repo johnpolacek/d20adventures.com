@@ -12,7 +12,7 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726289298448"
 
 ## Intro
 
-The adventurers step into the dimly lit Silver Serpent Tavern, the air thick with the smell of salty seawater and unwashed bodies. The floor is sticky underfoot and the murmur of hushed conversations is occasionally punctuated by drunken laughter or the clinking of glasses. The tavern is filled with sailors, smugglers and other assorted nefarious individuals. A large map of the sea is carved into one wall, and an impressive collection of nautical memorabilia lines the shelves behind the bar.
+The adventurers step into the dim Silver Serpent Tavern. It smells of seawater and unwashed bodies, and the floor is sticky underfoot. Hushed talk is broken now and then by drunken laughter or clinking glasses. Sailors, smugglers, and other unsavory types fill the room. A large map of the sea is carved into one wall, and nautical memorabilia lines the shelves behind the bar.
 
 ## GM Notes
 

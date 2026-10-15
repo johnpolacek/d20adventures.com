@@ -12,11 +12,11 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726455716232"
 
 ## Intro
 
-The party is ushered into a shadowy, candlelit chamber deeper within the Black Market. The room is a stark contrast to the bustling stalls outside—quiet, dark, and secretive. Rows of velvet-covered seats are arranged before a small raised platform where the items will soon be displayed. The audience consists of a mix of shady figures, wealthy nobles, and collectors, their faces hidden behind intricately designed masks.
+The party is ushered into a candlelit chamber deeper in the Black Market, quiet, dark, and secretive after the bustling stalls. Rows of velvet seats face a small raised platform where the items will be shown. Shady figures, wealthy nobles, and collectors fill the seats, their faces hidden behind ornate masks.
 
-A tall, slim figure draped in a black robe and black leather mask strides onto the platform. His voice, smooth and commanding, fills the room. "Ladies and gentlemen, esteemed guests, welcome to tonight’s exclusive event. We have gathered some of the finest and most coveted items in the realm. May you bid wisely… and generously."
+A tall, slim figure in a black robe and black leather mask strides onto the platform. His voice is smooth and commanding. "Ladies and gentlemen, esteemed guests, welcome to tonight’s exclusive event. We have gathered some of the most coveted items in the realm. May you bid wisely… and generously."
 
-As the auctioneer gestures to an assistant, the first item is unveiled—a jeweled dagger, glinting ominously under the dim light. The crowd shifts with excitement as the bidding begins.
+The auctioneer gestures, and an assistant unveils the first item, a jeweled dagger glinting in the dim light. The crowd stirs as the bidding begins.
 
 ## GM Notes
 

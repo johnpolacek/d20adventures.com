@@ -12,13 +12,11 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726455771790"
 
 ## Intro
 
-The crowd hushes as the auctioneer takes the stage once more, his eyes gleaming with anticipation. "What I have next," he begins, his voice dripping with mystery, "is truly one of a kind. Recovered from the depths of the Valkarr Forest—a relic of Old Valkara."
+The crowd hushes as the auctioneer takes the stage again, eyes gleaming. "What I have next," he says, "is truly one of a kind. Recovered from the depths of the Valkarr Forest, a relic of Old Valkara."
 
-There’s a subtle shift in the room as interest piques, heads turning toward the stage.
+Heads turn toward the stage. With a dramatic sweep, he unveils an ancient map, its weathered parchment bearing faint, intricate markings. "This map," he continues, "leads to an item of unknown origin. Lost, forgotten, and waiting to be found. A mystery hidden in the wilds for centuries."
 
-With a dramatic sweep, he unveils an ancient map. The parchment, weathered by time, bears faint, intricate markings. "This map," he continues, "leads to an item of unknown origin—lost, forgotten, and waiting to be found. A mystery hidden in the wilds for centuries."
-
-Before anyone can get too good a look at the route, the auctioneer dutifully returns the map to its protective case, obscuring the details from prying eyes. The auctioneer smiles slyly, sensing the growing anticipation. "Now, let’s see who dares to take the first bid."
+Before anyone can get a good look at the route, he returns the map to its protective case and smiles slyly. "Now, let’s see who dares to take the first bid."
 
 ## GM Notes
 

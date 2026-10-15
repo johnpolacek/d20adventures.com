@@ -15,17 +15,17 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726275316858"
 
 ## Intro
 
-The Old Grand Library stands as a beacon of knowledge in the rugged frontier of the March of Davos. Connected to the nearby Church of Valkara, the library is an ancient building characterized by its grand structure: arched ceilings, intricate stained-glass windows depicting the deeds of Valkaran saints, and ivy-lined stone walls. 
+The Old Grand Library is a beacon of knowledge on the rugged frontier of the March of Davos. Connected to the nearby Church of Valkara, the ancient building has arched ceilings, ivy-lined stone walls, and stained-glass windows showing the deeds of Valkaran saints.
 
-Inside, towering bookshelves filled with rare and mystical texts stretch up toward the lofty ceiling, while secluded reading alcoves offer quiet sanctuaries for study. Cobblestone floors echo with the footsteps of countless seekers of knowledge over the centuries, and a faint scent of old parchment and burning candles fills the air. 
+Inside, towering shelves of rare and mystical texts climb toward the ceiling, and secluded alcoves offer quiet for study. Cobblestone floors worn by centuries of seekers echo underfoot, and the air smells faintly of old parchment and burning candles.
 
-{actor: sister-danica} A robed woman steps gracefully from the shadows of a nearby alcove, her presence calm yet commanding. Her long, dark hair is braided intricately, and the soft glow of candlelight reflects off the silver pendant she wears—a delicate symbol of a tree intertwined with the moon, marking her as a follower of Thyra. She approaches the adventurers with a serene smile, her eyes warm with understanding.
+{actor: sister-danica} A robed woman steps from a nearby alcove, calm yet commanding. Her long dark hair is intricately braided, and candlelight glints off her silver pendant, a tree intertwined with the moon, the symbol of Thyra. She approaches the adventurers with a serene, warm smile.
 
-{speaker: sister-danica, delivery: soft with soothing authority} Welcome to the Grand Library. I am Sister Danica, a cleric of Thyra, the Wayfinder. You appear as travelers in search of something beyond the ordinary. If there is knowledge you seek, I would be honored to assist you on your path.
+{speaker: sister-danica, delivery: soft with soothing authority} Welcome to the Grand Library. I am Sister Danica, a cleric of Thyra, the Wayfinder. You appear to be travelers in search of something beyond the ordinary. If you seek knowledge, I would be honored to assist you.
 
-{actor: sister-danica} She gestures toward a nearby table, inviting them to speak further.
+{actor: sister-danica} She gestures toward a nearby table, inviting them to talk.
 
-{speaker: sister-danica} The library holds many secrets—some ancient, some untamed. Let us explore the answers together.
+{speaker: sister-danica} The library holds many secrets, some ancient, some untamed. Let us explore the answers together.
 
 ## GM Notes
 

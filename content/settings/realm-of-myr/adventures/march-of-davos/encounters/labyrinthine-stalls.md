@@ -20,25 +20,25 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726435567019"
 
 ## Intro
 
-The narrow, makeshift entrance opens into the strange, shadowy world of the Black Market, a labyrinthine maze of stalls and tents. Vendors whisper from behind their counters, their goods ranging from the mundane to the forbidden: rare potions, stolen artifacts, strange magical trinkets, and enchanted weapons. Strange characters lurk in the shadows, their faces hidden by cloaks and masks, conducting quiet deals or watching intently as the adventurers move through the market. The sounds of hushed bartering, the occasional sharp laugh, and the constant shuffle of feet fill the air. 
+The narrow entrance opens into the shadowy Black Market, a labyrinth of stalls and tents. Vendors whisper from behind their counters, selling the mundane and the forbidden: rare potions, stolen artifacts, magical trinkets, and enchanted weapons. Figures hidden by cloaks and masks make quiet deals in the shadows or watch the adventurers pass. Hushed bartering, the odd sharp laugh, and the shuffle of feet fill the air.
 
-{actor: Grendar} From the first stall, a scarred and grizzled vendor with a wild look in his eyes and a crooked smile leans forward.
+{actor: Grendar} At the first stall, a scarred, grizzled vendor with wild eyes and a crooked smile leans forward.
 
 {speaker: Grendar} Looking for something special, are we? I've got charms to ward off death... for the right price.
 
-{actor: Vera Azimov, object: blade} Nearby, a dwarven vendor in a tattered cloak holds forth an intricately carved dagger.
+{actor: Vera Azimov, object: blade} Nearby, a dwarven vendor in a tattered cloak holds up an intricately carved dagger.
 
 {speaker: Vera Azimov, delivery: boasting} You won’t find craftsmanship like this above ground, love.
 
-{actor: Rae the Scarred} A young woman with a scar across her chin, chuckles quietly as she walks past.
+{actor: Rae the Scarred} A young woman with a scar across her chin chuckles as she walks past.
 
 {speaker: Rae the Scarred, delivery: with a smirk} New faces. Fresh meat.
 
-{actor: Mizrith the Cackler} From deeper within the maze of stalls, a cackling laugh echoes out.
+{actor: Mizrith the Cackler} A cackle echoes from deeper in the maze.
 
-{speaker: Mizrith the Cackler} Step right up, step right up! Rarities from the far reaches of Myr! Trinkets to tempt fate, and scrolls that speak of forgotten powers!
+{speaker: Mizrith the Cackler} Step right up! Rarities from the far reaches of Myr! Trinkets to tempt fate, and scrolls of forgotten powers!
 
-{actor: Mizrith the Cackler} A small hunched figure waves a bony hand toward the adventurers, beckoning them closer.
+{actor: Mizrith the Cackler} A small, hunched figure beckons the adventurers closer with a bony hand.
 
 {speaker: Mizrith the Cackler} Come closer, strangers... I’ve got exactly what you need.
 

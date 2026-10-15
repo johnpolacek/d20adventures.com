@@ -17,21 +17,21 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726580775048"
 
 ## Intro
 
-As the adventurers make their way back to the Dragonbone Inn, the streets of Kordavos are eerily quiet, bathed in the cold, pale light of a waning moon. The lanterns that line the narrow roads flicker weakly, casting long, twisted shadows across the cobblestones. The chill of the late evening air bites at their skin, and a heavy stillness hangs in the air.
+The adventurers make their way back to the Dragonbone Inn through eerily quiet streets, under the pale light of a waning moon. Lanterns flicker weakly along the narrow roads, casting long, twisted shadows across the cobblestones. The late evening air is cold and still.
 
-Suddenly, the sharp *thunk* of an arrow breaks the silence, embedding itself into the wooden door of a nearby shop, just inches from one of the adventurers. From above, a soft rustle catches their attention. The rooftops, dark and shrouded in shadow, hold the vague forms of hooded figures. Silent watchers, barely visible, but present.
+The sharp *thunk* of an arrow breaks the silence. It sinks into the wooden door of a shop, inches from one of the adventurers. A soft rustle comes from above. On the dark rooftops are the vague forms of hooded figures, silent watchers, barely visible.
 
-Then, without warning, a low rumbling voice, amplified and unnatural, reverberates through the narrow streets. "*You tread where you are not welcome,*" the voice booms, unnatural and echoing as if spoken from all directions at once. The air itself seems to tremble. The ground beneath their feet shudders slightly, cracks form in the nearby stone, and the faint scent of sulfur fills the air. From the rooftops, more arrows are nocked, but none are loosed.
+A low, rumbling voice booms through the narrow streets, unnatural and echoing as if from all directions at once. "*You tread where you are not welcome.*" The ground shudders beneath their feet, cracks form in the nearby stone, and the air smells faintly of sulfur. On the rooftops more arrows are nocked, but none are loosed.
 
-"Cease your meddling," the voice continues, filled with cold authority. "Turn your attention away from what is not yours to uncover, or the consequences will be far worse than arrows in the night." Another arrow whistles through the air, embedding itself in the wall just ahead of the adventurers, a clear warning.
+"Cease your meddling," the voice continues with cold authority. "Turn away from what is not yours to uncover, or the consequences will be far worse than arrows in the night." Another arrow whistles down and sinks into the wall just ahead of the adventurers.
 
-The figures on the rooftops remain motionless, but their presence is overwhelming. The voice speaks once more: "We are watching. We know every step you take. Keep searching, and you will find only ruin."
+The figures on the rooftops do not move. The voice speaks once more. "We are watching. We know every step you take. Keep searching, and you will find only ruin."
 
 ## The Final Night Approaches
 
-With that final threat, the shadows on the roofs dissipate, leaving only the cold wind whistling through the alleys. The adventurers are left to make their way back to the Dragonbone Inn in the heavy silence. 
+With that, the shadows on the roofs melt away, leaving only the cold wind in the alleys. The adventurers walk on to the Dragonbone Inn in heavy silence.
 
-At the inn, Bram is waiting up, his usual jovial face replaced by a look of concern. "You look like you've seen a ghost—or worse. Get some sleep. Tomorrow is the final day of the festival, and the Blackthorns don't like to be kept waiting for their grand ball. If you're going, I hope you've got your masks ready."
+At the inn, Bram is waiting up, his usual jovial face creased with concern. "You look like you've seen a ghost, or worse. Get some sleep. Tomorrow is the final day of the festival, and the Blackthorns don't like to be kept waiting for their grand ball. If you're going, I hope you've got your masks ready."
 
 ## GM Notes
 

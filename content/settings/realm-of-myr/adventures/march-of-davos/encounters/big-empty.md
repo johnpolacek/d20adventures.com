@@ -12,11 +12,11 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726951960914"
 
 ## Intro
 
-The arcane seal dissolves with a deafening crack, and the black iron door rumbles open. You brace for an attack, but find only... silence. 
+The seal dissolves with a deafening crack, and the black iron door rumbles open. You brace for an attack, but find only... silence.
 
-Beyond the threshold is a vast, cavernous chamber. The ceiling arches high into a darkness that torches cannot reach. The floor is covered in a layer of fine, grey dust. It looks like a tomb that has been picked clean. At the far end, a single, narrow archway leads further in, but for now, the room appears completely desolate.
+Beyond lies a vast, cavernous chamber, its ceiling lost in darkness the torches cannot reach. Fine grey dust covers the floor. It looks like a tomb picked clean. At the far end, a single narrow archway leads further in.
 
-Astrid steps into the center of the hall, her voice echoing. "All this? For an empty cellar?" She kicks at the dust, frustrated. Eamon, however, stays back, his eyes fixed on the floor. "Astrid, wait... look at the dust. There are no footprints leading *to* that archway. Only scuff marks *beneath* the dust."
+Astrid steps into the center of the hall, her voice echoing. "All this? For an empty cellar?" She kicks at the dust, frustrated. Eamon stays back, eyes on the floor. "Astrid, wait... look at the dust. There are no footprints leading *to* that archway. Only scuff marks *beneath* the dust."
 
 ## GM Notes
 

@@ -14,19 +14,19 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726464286132"
 
 ## Intro
 
-Inside the dimly lit hideout, the scent of damp wood and smoke fills the air. The interior is stark, with low ceilings and walls lined with crates and sacks—no doubt filled with illicit goods. A faint flickering of candlelight from the far side of the room casts long shadows across the floor, making the cramped space feel even more confined. 
+The dim hideout smells of damp wood and smoke. The ceilings are low, and the walls are lined with crates and sacks, no doubt full of illicit goods. Candlelight flickers at the far side of the cramped room, casting long shadows across the floor.
 
-{actor: Silverhand} At the far end of a long, weathered table, Silverhand sits, shrouded in the dim light of flickering lanterns. His presence dominates the room, his infamous silver gauntlet resting on the tabletop, the metal gleaming menacingly in the low light. His bald head shines faintly, but it’s his piercing eyes—cold, calculating, and dangerous—that capture attention. His dark, finely cut clothes hint at wealth, but the tension in his posture and the predatory stillness he exudes tell a story of violence and control. In front of him, a rare bottle of Hammerdeep whiskey sits uncorked, its deep amber liquid untouched, as though mocking any who might dare to indulge.
+{actor: Silverhand} Silverhand sits at the far end of a long, weathered table, his infamous silver gauntlet gleaming on the tabletop. His bald head shines faintly, but it is his piercing eyes that hold attention: cold, calculating, and dangerous. His dark, finely cut clothes speak of wealth, and his predatory stillness of violence and control. Before him stands an uncorked bottle of rare Hammerdeep whiskey, untouched, as if daring anyone to drink.
 
-{actor: Silverhand} Without standing, Silverhand's gaze locks onto the adventurers as they step into the room. His voice cuts through the silence like a blade.
+{actor: Silverhand} Without standing, Silverhand locks his gaze on the adventurers as they step into the room.
 
 {speaker: Silverhand, delivery: cold and accusing} You’re late.
 
-{actor: Silverhand} There’s no invitation in his tone, only cold accusation. He leans forward slightly, his silver-clad fingers tapping the table with a metallic clink that echoes ominously.
+{actor: Silverhand} He leans forward, his silver-clad fingers tapping the table with a metallic clink.
 
 {speaker: Silverhand} I don’t like being followed. I like being interrupted even less.
 
-{actor: Silverhand} He gestures lazily toward the empty chairs, though the gesture feels more like a command.
+{actor: Silverhand} He gestures lazily toward the empty chairs. It is a command, not an offer.
 
 {speaker: Silverhand} Sit. You’ve gone through a lot of trouble to find me, but let’s be clear.
 
@@ -34,7 +34,7 @@ Inside the dimly lit hideout, the scent of damp wood and smoke fills the air. Th
 
 {speaker: Silverhand, delivery: dropping to a growl} This is my domain. You are here because I have allowed it, and you leave when I decide.
 
-{actor: Silverhand} He takes a long, deliberate pause, eyes narrowing.
+{actor: Silverhand} He pauses, eyes narrowing.
 
 {speaker: Silverhand} Now, tell me why I shouldn’t have you thrown into the harbor, or worse.
 

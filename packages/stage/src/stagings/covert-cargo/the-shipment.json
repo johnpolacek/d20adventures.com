@@ -221,7 +221,7 @@
   "entrances": [
     {
       "cast": "npcs-1749184389465",
-      "when": "cabin door opened",
+      "when": "cabin door opens",
       "from": [
         4.02,
         -4.05

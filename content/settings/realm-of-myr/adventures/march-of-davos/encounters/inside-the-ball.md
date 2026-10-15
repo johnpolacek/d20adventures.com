@@ -12,11 +12,11 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726605687900"
 
 ## Intro
 
-As the adventurers step through the grand entrance of the Blackthorn Mansion, they are immediately enveloped by the opulence of the Masquerade Ball. The soaring ceilings stretch high above, supported by elegant marble columns adorned with gold filigree. Along the walls, intricate carvings tell the stories of Valkaran legends, their craftsmanship blending seamlessly with the sleek, Asterian-style architecture that dominates the room. Crystal chandeliers cast a warm glow over the scene, refracting light onto the polished stone floors and the vibrant tapestries that hang from every wall.
+The adventurers step through the grand entrance of the Blackthorn Mansion into the opulence of the Masquerade Ball. Marble columns trimmed with gold filigree hold up soaring ceilings. Carvings of Valkaran legends line the walls, blending with the sleek Asterian architecture that dominates the room. Crystal chandeliers cast a warm glow over polished stone floors and vibrant tapestries.
 
-The ballroom itself is a dazzling display of wealth and power, where nobles, merchants, and influential figures from across Kordavos gather in elaborate costumes and masks. Tables laden with exotic delicacies, goblets of rare wines, and displays of gemstones glimmer under the soft light. The air hums with laughter, music, and whispered conversations, creating a stark contrast to the modest and often struggling lives the adventurers have witnessed in the city outside.
+The ballroom is a dazzling display of wealth and power. Nobles, merchants, and influential figures from across Kordavos gather in elaborate costumes and masks. Tables of exotic delicacies, rare wines, and displays of gemstones glimmer in the soft light. The air hums with laughter, music, and whispered conversation.
 
-As they take in the splendor of the room, the disparity between this lavish celebration and the hardships endured by the common Valkarans becomes painfully clear. Here, in the heart of the Blackthorn’s domain, wealth flows freely, and the concerns of the outside world seem distant, almost forgotten. The adventurers can sense that beneath the glittering surface, deeper currents of intrigue and ambition swirl among the guests.
+It is a world away from the hardship of the common Valkarans the adventurers have seen in the city outside. Here, in the heart of the Blackthorns’ domain, wealth flows freely and the outside world seems almost forgotten. Beneath the glittering surface, the adventurers sense currents of intrigue and ambition swirling among the guests.
 
 ## GM Notes
 

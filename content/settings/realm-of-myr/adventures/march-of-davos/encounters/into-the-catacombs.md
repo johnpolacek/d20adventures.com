@@ -12,11 +12,11 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726873268984"
 
 ## Intro
 
-The tunnel stretches ahead in eerie silence, a long, narrow path carved deep into the foundation of Kordavos. The air is cool and damp, carrying the faint, metallic scent of iron and the earthy smell of deep stone. For a while, only the soft echo of your footsteps disturbs the stillness.
+A long, narrow tunnel runs deep into the foundations of Kordavos. The air is cool and damp, smelling faintly of iron and deep stone. For a while, only the echo of your footsteps breaks the silence.
 
-After several minutes, the walls begin to widen. The dim, flickering glow of torchlight appears around a bend. As you draw closer, the acoustics of the chamber carry low, urgent voices. 
+After several minutes the walls widen. Torchlight flickers around a bend, and low, urgent voices echo from the chamber ahead.
 
-Rounding the final corner, you see a group of four hooded figures from the Covenant. They are feverishly positioning six heavy wooden barrels against a set of support pillars. One figure kneels, tending to a long, sparking alchemical fuse that snakes across the floor. 
+Around the last corner, four hooded figures of the Covenant are feverishly setting six heavy wooden barrels against the support pillars. One kneels by a long alchemical fuse that snakes across the floor.
 
 A voice mutters, “Hurry. The wards at the surface are down. Light it now! We’ll collapse the tunnel and bury the Blackthorn bitch with her guards.”
 

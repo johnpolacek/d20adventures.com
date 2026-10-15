@@ -12,9 +12,9 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726623933022"
 
 ## Intro
 
-A dimly lit hallway stretches out, the flicker of a distant candle casting long shadows on the stone walls. Pressing forward, the sound of the party grows faint, replaced by the soft creak of wood underfoot and the low murmur of their own movements.
+A dimly lit hallway stretches ahead, a distant candle casting long shadows on the stone walls. The noise of the ball fades behind, replaced by the creak of wood underfoot.
 
-The hall ends with a staircase rising on the left, spiraling upwards to the higher levels of the mansion, its bannisters polished and ornate, hinting at more luxurious chambers above. On the right, a narrow set of steps descends into the bowels of the mansion, where the air grows cooler, and the faint scent of aged wine or damp stone lingers.
+The hall ends at two stairways. On the left, a spiral staircase with polished, ornate bannisters rises to the upper floors, hinting at more luxurious chambers. On the right, narrow steps descend into the bowels of the mansion, where the air is cooler and smells faintly of aged wine or damp stone.
 
 ## Transitions
 
