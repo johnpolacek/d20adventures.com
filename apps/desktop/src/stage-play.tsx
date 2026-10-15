@@ -221,10 +221,15 @@ export function StagePlay(props: {
   const beats = useMemo((): { view: View; speech: { id: string; text: string }[] }[] => {
     if (!stage) return []
     return paragraphs.map((p) => {
-      const speech = p.beats.flatMap((b) => {
+      // One bubble a speaker: lines said in a row join, or they would stack over the same head.
+      const speech = p.beats.reduce<{ id: string; text: string }[]>((all, b) => {
         const id = b.kind === "line" ? castOf(b.speaker) : undefined
-        return id && b.kind === "line" ? [{ id, text: b.text }] : []
-      })
+        if (!id || b.kind !== "line") return all
+        const said = all.find((l) => l.id === id)
+        if (said) said.text = `${said.text} ${b.text}`
+        else all.push({ id, text: b.text })
+        return all
+      }, [])
       const act = p.beats.find((b) => b.kind === "action")
       const actor = act?.kind === "action" ? castOf(act.actor) : undefined
       const target = act?.kind === "action" ? castOf(act.target) : undefined

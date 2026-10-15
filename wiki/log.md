@@ -20,6 +20,10 @@ Owner chose to remove the old narrative text, label the other three adventures, 
 
 Owner, after two fixes to the stage's speaker guessing: "Maybe we need to have more structured data around dialogue." Then, offered speakers only or a full structure: "we only have test data right now. it is easy now to throw everything away and do it right from the start". The owner chose the full structure with camera data, spell effects and objects in 3D, The Midnight Summons first. A turn becomes a list of labelled beats: narration, action, line, roll and reply. See [Structured narrative](plans/structured-narrative.md).
 
+## 2026-10-14, one bubble a speaker
+
+Owner, in Meeting at the Stones: two bubbles stacked over Wollandora. Her two lines in a row, "I saw a river boat…" and "Will you go, Thalbern?", read as one paragraph, and the desktop app gave each line its own bubble over the same head. `apps/desktop/src/stage-play.tsx` now joins one speaker's lines in a paragraph into one bubble, and the plate shows them all. Checked by a throwaway script over the owner's save: the one stacked paragraph is now one bubble. Not checked on screen.
+
 ## 2026-10-14, the journal numbers a scene's turns and shows rolls as cards
 
 Owner: the journal repeated the encounter's title over every turn of a fight, and the dice rolls read as plain sentences. `components/stage/journal.tsx` now shows a run of turns under one title once, with a rule and "2 of 5" between them. Each roll is a card: a small d20 on the natural roll, the sum against the DC, and the verdict stamped in its colour. A natural 20 that succeeds turns the die gold, a natural 1 that fails chars it, as on the roll card. The desktop app passes its rolls to the journal as data, not text. Checked on a throwaway page at DPR 2. Not checked in the desktop app itself.
