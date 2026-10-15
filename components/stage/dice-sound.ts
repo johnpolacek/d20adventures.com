@@ -1,7 +1,7 @@
 "use client"
 
-// Dice sounds, made in Web Audio rather than recorded: a d20 clattering on a wooden table and slowing as it settles, a
-// solid tock as it lands, and a short cue for the verdict. Quiet, and off when the player turns sound off.
+// Dice sounds: a recorded d20 rolling on a table while the die tumbles, cut off when it lands, and a short cue for the
+// verdict made in Web Audio. Quiet, and off when the player turns sound off.
 
 const KEY = "d20.sound"
 let context: AudioContext | null = null
@@ -28,6 +28,7 @@ function audio() {
     master = context.createGain()
     master.gain.value = 0.45
     master.connect(context.destination)
+    void load(context)
   }
   if (context.state === "suspended") void context.resume()
   return context
@@ -53,43 +54,54 @@ function envelope(c: AudioContext, t: number, peak: number, decay: number, attac
   return g
 }
 
-// One strike of the die: the click of a corner on wood, and the table's short thump under it.
-function hit(c: AudioContext, t: number, strength: number, pitch = 1) {
-  const src = c.createBufferSource()
-  src.buffer = noise(c)
-  const band = c.createBiquadFilter()
-  band.type = "bandpass"
-  band.frequency.value = (1600 + Math.random() * 2800) * pitch
-  band.Q.value = 3 + Math.random() * 5
-  src.connect(band).connect(envelope(c, t, strength, 0.025 + Math.random() * 0.03))
-  src.start(t, Math.random() * 0.8, 0.08)
-  const thump = c.createOscillator()
-  thump.frequency.setValueAtTime((170 + Math.random() * 110) * pitch, t)
-  thump.frequency.exponentialRampToValueAtTime(80 * pitch, t + 0.07)
-  thump.connect(envelope(c, t, strength * 0.7, 0.08, 0.003))
-  thump.start(t)
-  thump.stop(t + 0.12)
-}
+// Three recorded takes of the roll, played in turn so two rolls in a row do not sound the same. They load on the first
+// touch, so the first roll may start a moment late.
+const TAKES = [1, 2, 3].map((n) => `/stage/sounds/d20-roll-${n}.mp3`)
+// The takes are recorded near full scale. This brings them down to the level of the verdict cues.
+const TAKE_LEVEL = 0.5
+let takes: Promise<AudioBuffer[]> | null = null
+let take = 0
 
-// The tumble: hits come quick and loud, then further apart and softer, over `seconds`, as the die on screen settles.
-export function rattle(seconds = 1.2) {
-  const c = audio()
-  if (!c) return
-  const t0 = c.currentTime + 0.02
-  let gap = 0.045
-  for (let t = 0; t < seconds - 0.08; t += gap * (0.6 + Math.random() * 0.8), gap *= 1.17) {
-    const k = 1 - t / seconds
-    hit(c, t0 + t, 0.12 + 0.45 * k * k)
+function load(c: AudioContext) {
+  if (!takes) {
+    takes = Promise.all(TAKES.map((url) => fetch(url).then((r) => r.arrayBuffer()).then((b) => c.decodeAudioData(b))))
+    // A failed load tries again on the next roll.
+    takes.catch(() => {
+      takes = null
+    })
   }
+  return takes
 }
 
-// The die comes to rest: one solid tock, and a last small rock on its face.
-export function land() {
+// The die rolls: the next take plays, and the returned function cuts it off when the die lands.
+export function rattle() {
   const c = audio()
-  if (!c) return
-  const t = c.currentTime + 0.01
-  hit(c, t, 0.55, 0.85)
-  hit(c, t + 0.07, 0.12, 1.1)
+  if (!c) return () => {}
+  const buffer = load(c).then((b) => b[take++ % b.length])
+  let playing: { src: AudioBufferSourceNode; gain: GainNode } | null = null
+  let stopped = false
+  buffer.then(
+    (b) => {
+      if (stopped) return
+      const src = c.createBufferSource()
+      src.buffer = b
+      const gain = c.createGain()
+      gain.gain.value = TAKE_LEVEL
+      src.connect(gain).connect(master!)
+      src.start()
+      playing = { src, gain }
+    },
+    () => {}
+  )
+  return () => {
+    stopped = true
+    if (!playing) return
+    // A quick fade, so the cut does not click.
+    const t = c.currentTime
+    playing.gain.gain.setTargetAtTime(0, t, 0.015)
+    playing.src.stop(t + 0.1)
+    playing = null
+  }
 }
 
 // A short note: a sine with a quieter octave above it, so it rings like a small bell.

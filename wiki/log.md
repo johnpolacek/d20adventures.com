@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-15, recorded dice roll
+
+Owner: play a sound when the die is rolled, stop it when the roll finishes, and cycle through three recorded clips. The three ElevenLabs takes are in `public/stage/sounds/` and replace the Web Audio clatter and the landing tock in `components/stage/dice-sound.ts`. The roll card and the narration's roll both use them. Checked in headless Chrome: the takes load, play 1, 2, 3, 1, stop on landing, and a roll stopped before its take loads stays silent. Not listened to. See [Roll results](plans/roll-results.md).
+
 ## 2026-10-14, one roll card
 
 Owner, after a Stealth roll: three screens for one roll, the roll card, a "GM is writing" card that cut the die off, and the roll again in the reader. "I think it should be all one UI." The roll card now holds the roll from the throw to the GM's answer: the die lands, the verdict stamps in, "The GM is resolving the roll…" shows, then Continue opens the reader after the roll. Walks no longer show the "GM is writing" card. Checked in the desktop preview with the GM's answer faked. See [One roll card](plans/one-roll-card.md).

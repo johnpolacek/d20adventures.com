@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { D20Solid } from "./d20"
-import { land as landSound, rattle } from "./dice-sound"
+import { rattle } from "./dice-sound"
 import { eyebrow, Pill, panel } from "./hud"
 import { RollResult } from "./roll-result"
 
@@ -87,9 +87,11 @@ function D20({ onRoll, compact, land, auto = false, disabled = false }: { onRoll
   const [tumble, setTumble] = useState(0)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const started = useRef(false)
+  const hush = useRef(() => {})
   useEffect(
     () => () => {
       if (timer.current) clearTimeout(timer.current)
+      hush.current()
     },
     []
   )
@@ -98,7 +100,7 @@ function D20({ onRoll, compact, land, auto = false, disabled = false }: { onRoll
     started.current = true
     setRolling(true)
     setTumble((k) => k + 1)
-    rattle(1.15)
+    hush.current = rattle()
     let elapsed = 0
     let delay = 45
     const tick = () => {
@@ -107,7 +109,7 @@ function D20({ onRoll, compact, land, auto = false, disabled = false }: { onRoll
         const n = land ?? 1 + Math.floor(Math.random() * 20)
         setShown(n)
         setRolling(false)
-        landSound()
+        hush.current()
         onRoll(n)
         return
       }

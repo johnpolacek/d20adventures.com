@@ -8,7 +8,7 @@
 import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import { D20Solid } from "./d20"
-import { land, rattle, verdict as sound, type Verdict } from "./dice-sound"
+import { rattle, verdict as sound, type Verdict } from "./dice-sound"
 import { eyebrow } from "./hud"
 
 export interface RollResultData {
@@ -56,7 +56,7 @@ export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll:
       return done()
     }
     setTumble((k) => k + 1)
-    rattle(LAND / 1000 - 0.05)
+    const hush = rattle()
     // The number flickers while the die tumbles, slowing as it settles.
     const timers: ReturnType<typeof setTimeout>[] = []
     let at = 0
@@ -68,13 +68,14 @@ export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll:
       setTimeout(() => {
         setFace(natural)
         setStep(1)
-        land()
+        hush()
       }, LAND)
     )
     timers.push(setTimeout(() => setStep(2), TOTAL))
     timers.push(setTimeout(done, VERDICT))
     return () => {
       for (const t of timers) clearTimeout(t)
+      hush()
     }
   }, [natural, success])
 
