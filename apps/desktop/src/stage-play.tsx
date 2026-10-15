@@ -762,7 +762,6 @@ export function StagePlay(props: {
                 count={text.length}
                 compact={compact}
                 step={!auto}
-                waiting={!auto}
                 onReplay={() => {
                   setParagraph(0)
                   setReading(true)
@@ -820,7 +819,7 @@ export function StagePlay(props: {
               {actor?.type === "pc" && !aiActor ? (
                 <p className="text-sm text-stage-muted">Waiting for {actor.name.split(" ")[0]}</p>
               ) : (
-                <Button variant="epic" className="py-2 text-sm" onClick={() => props.onContinue(turn._id)}>
+                <Button variant="epic" size="xs" className="py-1.5 text-sm" onClick={() => props.onContinue(turn._id)}>
                   {!actor ? "Continue adventure" : aiActor ? `Continue ${actor.name.split(" ")[0]}'s turn` : "Continue NPC turn"}
                 </Button>
               )}

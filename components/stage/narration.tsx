@@ -2,11 +2,10 @@
 
 // The narrative, one paragraph at a time, in a panel that eases to each paragraph's height: the old text fades out, the
 // panel resizes, and the new text fades in. A paragraph that is a dice roll shows the roll itself (see RollResult). Dots mark the paragraph's place in the turn; the controls replay the turn,
-// step back, move on (Continue when stepping through, which glows while the story waits on the reader; the next
-// paragraph when it plays itself), or skip to the end.
+// step back, move on (Continue when stepping through, the next paragraph when it plays itself), or skip to the end.
 
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react"
-import { Button, epicButtonStyle } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { eyebrow, Pill, panel } from "./hud"
 import { RollResult, type RollResultData } from "./roll-result"
@@ -38,7 +37,6 @@ export function Narration({
   onNext,
   onSkip,
   step = false,
-  waiting = false,
   onContinue,
 }: {
   heading: string
@@ -54,7 +52,6 @@ export function Narration({
   onNext: () => void
   onSkip: () => void
   step?: boolean
-  waiting?: boolean
   onContinue?: () => void
 }) {
   const [shown, setShown] = useState(text)
@@ -122,16 +119,10 @@ export function Narration({
               </svg>
             </Control>
             {step ? (
-              <Button
-                variant="epic"
-                className={cn("ml-1 gap-1.5", compact ? "px-4 py-0.5 text-[11px]" : "px-5 py-1 text-xs")}
-                // Glows while the story waits on the reader.
-                style={waiting ? { ...epicButtonStyle, boxShadow: `${epicButtonStyle.boxShadow}, 0 0 0 2px #e3b67c55, 0 0 18px #e3b67c66` } : undefined}
-                onClick={onContinue}
-              >
+              <Button variant="epic" size="xs" className={cn("ml-1 gap-1.5", compact && "px-4 py-0.5 text-[11px]")} onClick={onContinue}>
                 Continue
-                <svg viewBox="0 0 12 12" fill="currentColor" aria-hidden="true" className="h-2.5 w-2.5">
-                  <path d="M4 2.2 9 6l-5 3.8z" />
+                <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="h-2.5 w-2.5">
+                  <path d="M4.5 2.5 8 6 4.5 9.5" />
                 </svg>
               </Button>
             ) : (

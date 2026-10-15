@@ -11,7 +11,8 @@ export interface ButtonProps {
   onClick?: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void
   type?: "button" | "submit" | "reset"
   className?: string
-  size?: "default" | "lg" | "sm" | "icon"
+  // xs: a small button, as on the stage. An epic one gets a shallower bevel.
+  size?: "default" | "lg" | "sm" | "icon" | "xs"
   variant?: "epic" | "brick" | "emboss" | "outline" | "ghost" | "ai" | "sparkle" | "destructive"
   disabled?: boolean
   ariaLabel?: string
@@ -42,6 +43,7 @@ export const buttonVariants = cva(
         sm: "h-8 rounded-md px-3 text-xs",
         lg: "h-10 rounded-md px-8",
         icon: "h-9 w-9",
+        xs: "h-7 rounded-md px-2.5 text-xs",
       },
     },
     defaultVariants: {
@@ -66,6 +68,11 @@ export const epicButtonStyle = {
   ...textShadow,
   boxShadow: "-4px -8px 0px 0px #0006 inset, 4px 4px 0px 0px #FFF7 inset, -4px -8px 36px 0px rgba(0,0,0,.5) inset, -3px -3px 6px 1px rgba(255,255,255,0.5) inset",
 }
+// A small epic button's bevel is half as deep, so the shine along its top stays thin.
+export const epicSmallButtonStyle = {
+  ...textShadow,
+  boxShadow: "-2px -4px 0px 0px #0006 inset, 2px 2px 0px 0px #FFF7 inset, -2px -4px 18px 0px rgba(0,0,0,.5) inset, -2px -2px 4px 0px rgba(255,255,255,0.5) inset",
+}
 export const brickButtonClass =
   "font-serif bg-blue-600 saturate-[1.2] brightness-110 rounded-2xl border-4 border-blue-900 text-white ml-[2px] px-2 py-[2px] rounded text-sm transition-all ease-in-out hover:scale-105 active:scale-95 bg-[url('/images/app/backgrounds/buried.png')]"
 
@@ -78,6 +85,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       sizeClass = "text-lg py-2"
     } else if (size === "icon") {
       sizeClass = "h-9 w-9"
+    } else if (size === "xs") {
+      sizeClass = "px-5 py-1 text-xs"
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -86,7 +95,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     let variantClass = ""
     if (variant === "epic") {
       variantClass = epicButtonClass
-      buttonStyle = epicButtonStyle
+      buttonStyle = size === "xs" ? epicSmallButtonStyle : epicButtonStyle
     }
     if (variant === "brick") {
       variantClass = brickButtonClass

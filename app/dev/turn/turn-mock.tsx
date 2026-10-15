@@ -62,7 +62,6 @@ export function TurnMock({ demo = false }: { demo?: boolean }) {
   const [drafts, setDrafts] = useState<Record<number, string>>({})
   // Step through (each paragraph and line waits for Continue) or play on its own at reading pace.
   const [stepMode, setStepMode] = useState(true)
-  const [waiting, setWaiting] = useState(false)
   // What earlier rolls decided, for the scripted branches.
   const storyRef = useRef<Story>({})
   const [journal, setJournal] = useState<JournalTurn[]>([])
@@ -97,7 +96,6 @@ export function TurnMock({ demo = false }: { demo?: boolean }) {
     stage.shot("gate", { instant: true })
     player.current = new BeatPlayer(stage, {
       onNarrate: setNarrated,
-      onWaiting: setWaiting,
       narrationSeconds: (n) => readingSeconds(paragraphsRef.current[n] ?? "") * PACES[paceRef.current],
       lineSeconds: (_, text) => lineSeconds(text) * PACES[paceRef.current],
     })
@@ -504,7 +502,6 @@ export function TurnMock({ demo = false }: { demo?: boolean }) {
             onNext={next}
             onSkip={skip}
             step={stepMode}
-            waiting={waiting}
             onContinue={advanceStep}
           />
         </div>
