@@ -12,13 +12,13 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726450092972"
 
 ## Intro
 
-Deeper into the Lower District, the streets close in. Rickety buildings lean overhead, casting long shadows in the fading light. The air smells of damp stone and stagnant water. The bustle of the city fades, replaced by hushed conversations, the shuffle of cloaks, and glances from shadowy figures.
+Deeper into the Lower Districts, the streets close in. Rickety buildings lean overhead, casting long shadows in the fading light. The air smells of damp stone and stagnant water. The bustle of the city fades, replaced by hushed conversations, the shuffle of cloaks, and glances from shadowy figures.
 
 ## GM Notes
 
 Roll for perception, one of the adventurers might notice something unusual—small, subtle symbols carved into the stone walls and wooden beams. A snake intertwined with a crescent moon. A crooked dagger etched faintly above a doorway. These are no mere graffiti; they are markers, covert signs left to guide those who know where to look. The catch? These symbols change daily, keeping the Black Market hidden from unwanted eyes.
 
-Alternatively, they may decide to approach one of the locals—a suspicious merchant or a lurking bystander—hoping to glean information. With a well-placed word or a bit of coin, they could persuade or charm someone into revealing the day’s clues. But the people here are wary, and only those who know how to play the game of the Lower District will get what they seek.
+Alternatively, they may decide to approach one of the locals—a suspicious merchant or a lurking bystander—hoping to glean information. With a well-placed word or a bit of coin, they could persuade or charm someone into revealing the day’s clues. But the people here are wary, and only those who know how to play the game of the Lower Districts will get what they seek.
 
 ## Transitions
 

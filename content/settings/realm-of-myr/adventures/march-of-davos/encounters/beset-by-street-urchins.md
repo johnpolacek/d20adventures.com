@@ -17,7 +17,7 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726439333709"
 
 ## Intro
 
-The winding streets of the Lower District teem with hurried vendors, wandering townsfolk, and shady figures lurking in the shadows. Chimney smoke hangs in the air, and the clatter of distant market stalls blends with the hum of conversation.
+The winding streets of the Lower Districts teem with hurried vendors, wandering townsfolk, and shady figures lurking in the shadows. Chimney smoke hangs in the air, and the clatter of distant market stalls blends with the hum of conversation.
 
 People jostle through the crowded, narrow alleys, faces hidden under hoods or wide-brimmed hats. Children dart between them, chasing each other or carrying small parcels, while street performers play haunting melodies on worn instruments.
 

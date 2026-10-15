@@ -22,6 +22,8 @@ Chaos erupts. Guests scream and scatter as the assassin races for the balcony wi
 
 The players have a decision to make. They could give chase, or go to Thaddeus. If they go to Thaddeus, it is possible they could obtain his key. Regardless, there is nothing they can do to help him—he will die.
 
+The Covenant blames Thaddeus, who as head of the house ordered Milos's death. Astrid carried it out. The journal in her quarters reveals this, and Joran confronts her with it at the end.
+
 ## Transitions
 
 - To [[encounter:the-chase]] when After resolving Death to the Murderer!, continue to The Chase.

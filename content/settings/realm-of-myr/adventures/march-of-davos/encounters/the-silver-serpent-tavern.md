@@ -26,9 +26,9 @@ Behind the bar, a grizzled man with deep-set eyes and a scar running down his ch
 
 "What’ll it be?" he asks, his voice rough like gravel. It’s clear from his demeanor that he’s no stranger to those seeking more than just a drink at the Silver Serpent.
 
-The bartender is a grizzled man named Harron, might provide minimal information at first—something vague about how “people who ask too many questions here tend to disappear.” If the adventurers press further, either by offering coin or leveraging intimidation/persuasion, they’ll hear that Joran was seen meeting with a smuggler known as Silverhand in the lower district. He operates in an area known only as the Black Market.
+The bartender is a grizzled man named Harron, might provide minimal information at first—something vague about how “people who ask too many questions here tend to disappear.” If the adventurers press further, either by offering coin or leveraging intimidation/persuasion, they’ll hear that Joran was seen meeting with a smuggler known as Silverhand in the Lower Districts. He operates in an area known only as the Black Market.
 
-“Now ye best move along. There be eyes and everywhere.,” he warns ominously.
+“Now ye best move along. There be eyes and ears everywhere,” he warns ominously.
 
 
 ### The Dockworkers
@@ -39,9 +39,9 @@ One of the men, a burly figure with a patchy beard and arms thick with muscle, l
 
 “What’s your business here, strangers?” he finally asks, his voice gruff and tinged with suspicion. His tone makes it clear that outsiders don’t usually mingle with the regulars here, and any intrusion will need to be handled carefully.
 
-If the adventurers press further, either by offering coin or leveraging intimidation/persuasion, they’ll hear about Silverhand, a prominent operator in the lower district, in an area known only as the Black Market.
+If the adventurers press further, either by offering coin or leveraging intimidation/persuasion, they’ll hear about Silverhand, a prominent operator in the Lower Districts, in an area known only as the Black Market.
 
-“If ye have any sense, ye best be moving along now. There be eyes and everywhere.,” he warns ominously.
+“If ye have any sense, ye best be moving along now. There be eyes and ears everywhere,” he warns ominously.
 
 ## Transitions
 

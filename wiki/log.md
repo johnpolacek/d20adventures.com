@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-15, March of Davos story questions answered
+
+Owner answered the eight questions, leaving three to me. Thaddeus ordered Milos Antonov's death and Astrid carried it out. The tunnel seal is on the grate. A barrel blast buries some of Astrid's soldiers rather than cutting them off. Eamon is a half-elf. The two Barok files were one man, now `barok-redbeard` alone. "Lower Districts" everywhere. The Forest Drake joins its fight's cast. Three typos fixed. The March of Davos check now expects 34 NPCs. All bridge checks, batch-e, authoring, stage and desktop checks pass. See [Concise narration](plans/concise-narration.md).
+
 ## 2026-10-15, the other three adventures trimmed
 
 Owner chose to trim the three adventures after The Midnight Summons. Intros: The Road to Kordavos 245 words to 193, Covert Cargo 1,486 to 1,113, March of Davos 7,653 to 6,070, every fact and label kept. March of Davos was split between three helpers. Fixed along the way: Reinhard called Varius, a repeated scrollcase, Petra's lock that was a melted cage, a translucent real drake, a lit fuse ordered lit, and GM notes that repeated their intros. Covert Cargo's two stage cues follow the new wording. Eight story questions are left for the owner in [Concise narration](plans/concise-narration.md). All bridge checks, batch-e, the stage check and desktop tests pass. Not replayed.

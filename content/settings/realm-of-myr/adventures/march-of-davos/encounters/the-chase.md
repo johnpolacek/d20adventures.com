@@ -22,13 +22,11 @@ If the assassin is somehow prevented from escaping, he will ingest a cyanide cap
 
 Legacy stages:
 
-### Dead End
+### The Sealed Grate
 
-At the end of the narrow, winding passage through which the assassin escaped is a crude wooden door, reinforced with iron bands. Despite its worn appearance, it is sealed impossibly tight. The door seems out of place, its rough craftsmanship in stark contrast to the smooth, ancient stone walls of the tunnel. The faint glow of arcane symbols etched into the wood pulses softly, casting eerie shadows on the walls around it. 
+Anyone who reaches the grate finds it sealed impossibly tight. Runes etched into its iron pulse softly beneath the ivy, and a faint hum of magic lingers in the air.
 
-A faint hum of magical energy lingers in the air h, the seal shimmering with faint runes, preventing anyone from crossing its threshold. 
-
-No matter how hard they push, pull, or attempt to force the door, it remains firmly shut, locked by powerful magic. The assassin has fled beyond this barrier, and without the proper means to dispel the seal, the adventurers find themselves temporarily thwarted in their pursuit.
+No matter how hard they push, pull, or pry, the grate stays shut, locked by powerful magic. The assassin has fled beneath it, and without the means to dispel the seal, the adventurers are thwarted for now.
 
 In the aftermath of the assassination, the once-celebratory atmosphere in the Blackthorn mansion turns to utter panic. Thaddeus Blackthorn lies lifeless, his body crumpled on the ballroom floor, the dark poison having already claimed his life. Guests scream and rush toward the exits, while guards frantically search for the assassin, who has long since disappeared. 
 

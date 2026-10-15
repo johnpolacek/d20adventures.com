@@ -39,7 +39,7 @@ Onlookers inch away, leaving a circle around the two sides. Vendors glance about
 
 ## GM Notes
 
-The Valtor Clan, led by Larya, views the Blackthorn Clan member Barok and his followers as disrespectful intruders threatening their traditional way of life. They are offended at the presence of Asterian symbols and parade participants during the traditional Valkaran even.
+The Valtor Clan, led by Larya, views the Blackthorn Clan member Barok and his followers as disrespectful intruders threatening their traditional way of life. They are offended at the presence of Asterian symbols and parade participants during the traditional Valkaran event.
 
 Meanwhile, Barok and his group, who have embraced the Asterian way of life, aligning themselves with the Blackthorn clan, see the Valtor clan as archaic and obstructive. They have been accumulating power and wealth since the Asterians’ arrival and plan to continue to do so.
 

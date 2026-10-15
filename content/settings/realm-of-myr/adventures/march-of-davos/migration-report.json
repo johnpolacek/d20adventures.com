@@ -436,14 +436,6 @@
       "kind": "npcSheet"
     },
     {
-      "path": "content/settings/realm-of-myr/npcs/barok-ironfist.md",
-      "kind": "npc"
-    },
-    {
-      "path": "content/settings/realm-of-myr/npcs/barok-ironfist.json",
-      "kind": "npcSheet"
-    },
-    {
       "path": "content/settings/realm-of-myr/npcs/door-guard.md",
       "kind": "npc"
     },

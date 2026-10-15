@@ -31,7 +31,7 @@ Beric and Eamon lead the adventurers to a dim backroom with a sturdy table and m
 
 "We've got a bit of a situation," Beric begins, his voice low. "A shipment went missin' from the docks. Valuable cargo, meant for a noble up in the Asterian quarter. The people I work for ain't too pleased."
 
-Eamon leans forward. "Among the cargo were certain... artifacts. Items that could cause quite a stir in the wrong hands. We believe smugglers operating out of the lower district may be responsible. Our hands are tied, and discretion is paramount. We need you to recover it. Quietly."
+Eamon leans forward. "Among the cargo were certain... artifacts. Items that could cause quite a stir in the wrong hands. We believe smugglers operating out of the Lower Districts may be responsible. Our hands are tied, and discretion is paramount. We need you to recover it. Quietly."
 
 ## GM Notes
 

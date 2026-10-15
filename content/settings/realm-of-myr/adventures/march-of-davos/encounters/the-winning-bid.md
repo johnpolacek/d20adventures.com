@@ -19,7 +19,7 @@ The gavel falls with a sharp crack. "Sold! To the gentleman in black!" the aucti
 
 {actor: silverhand-representative, object: map} Silverhand’s representative stands and takes the protective case holding the ancient map in his gloved hands. Without a look back or a word to his master, he slips into the shadows near the side exit.
 
-{actor: silverhand} Silverhand rises with predatory grace, his silver gauntlet catching the candlelight before he pulls his hood lower. He follows a few paces behind, flanked by his two silent guards. They move like men who own the darkness, heading for the labyrinth of the Lower District streets.
+{actor: silverhand} Silverhand rises with predatory grace, his silver gauntlet catching the candlelight before he pulls his hood lower. He follows a few paces behind, flanked by his two silent guards. They move like men who own the darkness, heading for the labyrinthine streets of the Lower Districts.
 
 ## GM Notes
 

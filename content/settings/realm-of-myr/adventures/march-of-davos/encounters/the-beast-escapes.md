@@ -8,6 +8,7 @@ title: "The Beast Escapes"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
 npcs:
+  - id: "forest-drake"
   - id: "astrid-blackthorn"
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726354341751"
 ---
@@ -20,7 +21,7 @@ The hold's thick wooden doors burst outward in a spray of splinters. A massive *
 
 {actor: astrid-blackthorn, object: blade} At the edge of the gangplank stands a tall woman in rugged leather armor, her windblown black hair framing a commanding face. She draws a curved blade.
 
-{speaker: astrid-blackthorn, delivery: shouting to the fleeing crew} Keep it contained! If that beast reaches the lower district, it’ll be a massacre!
+{speaker: astrid-blackthorn, delivery: shouting to the fleeing crew} Keep it contained! If that beast reaches the Lower Districts, it’ll be a massacre!
 
 {actor: astrid-blackthorn} She spots you and gestures frantically.
 

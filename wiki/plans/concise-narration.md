@@ -185,16 +185,16 @@ Fixed:
 
 Decisions made without the owner: point of view left as each intro had it, since many March of Davos intros say "you" and the rest "the adventurers", and "Past the detonation point" became "Past the barrels", since stopping them is the goal.
 
-Left for the owner:
+Owner's answers to the eight story questions, 2026-10-15:
 
-- death-to-the-murderer: the assassin calls Thaddeus the murderer of Milos Antonov. The notes of the-rangers-quarters say Astrid arranged it. It may be the Covenant's mistake on purpose.
-- If the barrels go off, the catacombs notes separate Astrid's soldiers from the party, but the labyrinth intro still has her order them to split up.
-- the-chase puts the magic seal on a wooden door down the tunnel. the-hunt-for-the-assassin puts the ward on the grate.
-- Eamon is a half-elf in two encounters' notes and an elf on his sheet.
-- Two NPC files, `barok-ironfist` and `barok-redbeard`, are both titled "Barok Redbeard".
-- "Lower District" and "Lower Districts" are both used.
-- the-beast-escapes fights the Forest Drake, which is not in its cast.
-- Typos left in GM notes: "Valkaran even" in clan-conflict, "There be eyes and everywhere." in the-silver-serpent-tavern, "in the air h," in the-chase.
+- Milos Antonov: the owner left it to me. Thaddeus ordered the death as head of the house, and Astrid carried it out. The assassin's line is true, the journal in her quarters reveals her part, and Joran confronts her at the end. death-to-the-murderer's notes say so.
+- The seal: on the grate, as the hunt has it. the-chase's wooden door is now "The Sealed Grate", so the later black iron door stays the only sealed door.
+- The barrels: the collapse buries several of Astrid's soldiers and the survivors catch up, so the labyrinth's "surviving soldiers" holds either way.
+- Eamon is a half-elf. His sheet's appearance says so.
+- Barok: one man, the festival brawler who guards the ball. `barok-ironfist` is removed and the ball uses `barok-redbeard`, keeping its own behavior. The ball's black-armor portrait went with it.
+- "Lower Districts" everywhere, the gate line in the stage too.
+- The Forest Drake is in the-beast-escapes' cast, with the default far start. A stored map of that encounter, if any, lacks its token until re-placed.
+- Typos fixed: "Valkaran event", "eyes and ears everywhere", and "in the air h," went with the chase's rewrite.
 
 Not replayed. Only The Midnight Summons has been played since its trim.
 

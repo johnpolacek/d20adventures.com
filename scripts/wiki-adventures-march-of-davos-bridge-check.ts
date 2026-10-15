@@ -46,7 +46,7 @@ function main() {
     "1749307435667",
   ])
   assert.equal(Object.keys(artifacts.encounters).length, 45)
-  assert.equal(Object.keys(artifacts.characterSheets.npcs).length, 35)
+  assert.equal(Object.keys(artifacts.characterSheets.npcs).length, 34)
   assert.equal(Object.keys(artifacts.characterSheets.premadeCharacters).length, 9)
   assert.equal(artifacts.graph.encounterTransitions.length, 57)
   assert.equal(

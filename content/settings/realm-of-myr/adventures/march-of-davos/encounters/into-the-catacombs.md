@@ -29,7 +29,7 @@ This is a "Ticking Clock" encounter. The primary goal is to stop the explosion.
 - **Disarming:** A character can use an action to make a **DC 14 Sleight of Hand** or **Arcana** check to snuff the fuse. Using water or *Mage Hand* can also work creatively.
 
 **Failure Scenarios:**
-- If the barrels detonate, characters take 4d6 bludgeoning damage and must succeed on a **DC 15 Dexterity Save** to avoid being buried. The tunnel collapses, separating the party from Astrid's soldiers, who are forced to find another way around.
+- If the barrels detonate, characters take 4d6 bludgeoning damage and must succeed on a **DC 15 Dexterity Save** to avoid being buried. The tunnel collapses behind the party and buries several of Astrid's soldiers. The survivors dig through and catch up.
 
 ## Transitions
 

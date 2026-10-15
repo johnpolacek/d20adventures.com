@@ -34,7 +34,7 @@ Stylized-realistic fantasy: readable painterly forms with physically based mater
 - Streets and market: cobbles and flagstones, timber-framed houses with jettied upper floors, striped canvas stall awnings, pennant bunting, hanging lanterns. Harvest Festival dressing is Valkaran: sheaves, gourds, orange and green cloth.
 - Asterian Quarter and the Blackthorn Mansion: pale ashlar, towering spires, wrought-iron gates bearing both cultures' symbols, cobblestone carriage courtyard, grand exterior staircase, torch-lit facades. Interiors gilt, marble, chandeliers, masks and finery.
 - Docks: salt-weathered timber piers on pilings, tall ships at berth, crates, barrels, rope, gulls, warm low sun on water. Leather aprons and sweat, not finery.
-- Lower District: narrow leaning tenements that block the sun, dilapidated timber and stained plaster, dim alleys, doors that close quickly. Damp, stale, shadowed.
+- Lower Districts: narrow leaning tenements that block the sun, dilapidated timber and stained plaster, dim alleys, doors that close quickly. Damp, stale, shadowed.
 - Taverns: the Dragonbone Inn is warm oak, a large stone hearth, roasting meat and a bard, mixed clientele. The Silver Serpent is a sailors' den: sticky floors, a sea chart carved into one wall, nautical relics behind the bar, dim and salt-stained.
 - Beneath the city: hand-carved tunnels and catacombs, cool damp stone, iron smell, torch-lit, support pillars, barrels. Deeper still is Old Valkara (see Valkaran sacred spaces).
 
