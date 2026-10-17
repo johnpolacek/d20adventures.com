@@ -2,7 +2,7 @@
 
 [Home](../index.md) · [Plans](index.md) · [Stage engine](../stage-engine.md) · [Stage set authoring](../stage-authoring.md)
 
-Status: spikes done 2026-10-17, decision open. A test directory only. Nothing here changes `packages/stage` or the desktop app until the owner decides.
+Status: spikes done 2026-10-17. Owner likes (a) and (c), (b) open. A test directory only. Nothing here changes `packages/stage` or the desktop app until the owner decides.
 
 ## Why
 
@@ -35,3 +35,7 @@ Details, numbers and how to run it: [lab/stage-art/README.md](../../lab/stage-ar
 ## Decision
 
 Open. Recommended: build (a) into the set spec as a `backdrop`, check (c) in the desktop app before building it, and keep (b) only as a paint-over reference for set review.
+
+Owner review, 2026-10-17: (a) is a definite improvement. (c) is wanted. (b) has parts the owner likes and parts that fail, so it stays open.
+
+Veo 3.1 Fast list price, Gemini API, 2026-10-17: $0.10 a second at 720p, $0.12 at 1080p, charged only on success. An 8 second 1080p idle costs $0.96. Veo 3.1 Lite: $0.08 a second at 1080p.
