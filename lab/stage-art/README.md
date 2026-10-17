@@ -1,6 +1,6 @@
 # Stage art lab
 
-Spikes run on 2026-10-17 to test a shared workflow: block out a scene, have an image model paint over a render, project the painting back onto the 3D, and animate characters with a video model. Plan and decision: [wiki/plans/stage-art-spikes.md](../../wiki/plans/stage-art-spikes.md). Nothing here changes `packages/stage`.
+Spikes run on 2026-10-17 to test a shared workflow: block out a scene, have an image model paint over a render, project the painting back onto the 3D, and animate characters with a video model. Plan and decision: [wiki/plans/stage-art-spikes.md](../../wiki/plans/stage-art-spikes.md). Only (a) was adopted, as the set spec's `backdrop` ([wiki/plans/stage-backdrop.md](../../wiki/plans/stage-backdrop.md)). The rest of this directory leaves `packages/stage` alone.
 
 All tests use The Midnight Summons, Meeting at the Stones, at the high tier (DPR 1.5, 1350x900 CSS).
 

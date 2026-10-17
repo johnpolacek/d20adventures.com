@@ -48,6 +48,7 @@ JSON only: no expressions, no code. Metres. `y` up. ground at `y = 0`. the set f
 | `format`, `version`, `id`, `settingId`, `locationId`, `title`, `seed` | Identity. `seed` drives every random choice (per object, so editing one object does not reshuffle the rest) |
 | `atmosphere` | Sun direction, colour, intensity, shadow box. hemisphere. sky colours. fog density (fog colour = sky horizon). environment intensity. exposure. wind. `lights`: up to 8 static point lights, no shadows |
 | `camera` | Near/far, bounds box, orbit limits |
+| `backdrop` | A painted, keyed panorama of far scenery from `/stage/textures`, on a far cylinder: `arc`, `yaw`, `bottom`, `top` and `radius` place it, `gain` and `haze` grade it |
 | `materials` | Name → `{ type: masonry \| wood \| cloth \| burlap \| metal \| plain \| foliage \| glow \| rock \| meadow \| grass \| water, …params }`. cloth can carry `heraldry` (a named banner design) and `tatters`. Ground masonry draws the gate road's ruts and edge dust unless `roads: false`. `foliage` is an alpha-tested painted leaf texture tinted by its colour. `rock`, `meadow` and `water` are painted from world position, so they need no uv and never tile: rock has moss on upward faces and hollows and lichen on bare stone, meadow has grass and moss patches, bare earth, pebbles, fallen leaves and wildflowers, water mirrors the sky with drifting ripples. `grass` shades blades from root to tip and sways them |
 | `objects[]` | `{ type, id?, at?, yaw?, materials?, …params }` , `type` names a builder. params are validated by that builder's schema (unknown keys rejected, ranges clamped) |
 | `crowd` | `library` (crowd art id), `avoid` (rects and circles), `groups[]`: `scatter` (area, count, density rects, mix, facing), `line`, `points`, `path` (people along a path), `walkers` (loop or ping-pong along a path), `anchors` (people on builder-emitted anchors such as parapet lookouts) |
@@ -278,3 +279,13 @@ Part of [structured narrative](plans/structured-narrative.md).
 - The paint pass's final blend now keeps a quarter of the paint (`nearKeep`) within 3 m of the camera, rising to all of it by 18 m. Uniform paint mode turns this off. Characters keep their own mask.
 - Balanced now uses FXAA. Without it the crisp blades and leaf cards stair-step at pixel ratio 1.
 - Checked on `/dev/stage` at the stones (path, stones and Wollandora shots), balanced and high, DPR 2. Stones, trees, characters and sky look unchanged. FXAA on balanced measured within noise, 44 to 58 fps either way at load average 4.5. Not checked in the packaged app.
+
+## Painted backdrop, 2026-10-17
+
+Part of [painted backdrop](plans/stage-backdrop.md), from spike (a) of the [stage art spikes](plans/stage-art-spikes.md).
+
+- A set's `backdrop` hangs a painted panorama on an open cylinder, 520 m out by default. One draw call, unlit, drawn after the opaque set, so the land hides its lower edge and the sky, moon and stars show through its keyed sky.
+- `packages/stage/src/backdrop.ts` builds it. `load()` waits for its texture, and one that fails stays hidden.
+- `scripts/stage-backdrops.ts` paints a panorama with Gemini 3 Pro Image at 21:9 4K on magenta, then keys it at 4096 px wide: about one texel per screen pixel at DPR 2, and within every GPU's limit.
+- The Old Standing Stones uses `stones-valley.webp`, 360 KB, over 130 degrees, in place of its three mountain cones.
+- Checked on the lab page at DPR 2, high tier, every Standing Stones shot: matches the spike's 6336 px version, mean difference under 0.2 of 255.

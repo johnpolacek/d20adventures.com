@@ -36,8 +36,12 @@ export function LabViewer({ params }: { params: Params }) {
       const [{ createStage }, { SETS, STAGINGS }] = await Promise.all([import("@d20/stage"), import("@d20/stage/sets")])
       const stagingKey = params.staging ?? "the-midnight-summons/meeting-at-the-stones"
       const staging = (await STAGINGS[stagingKey]()) as { set: string }
-      const set = structuredClone(await SETS[staging.set]()) as { objects: { type: string }[] }
-      if (params.backdrop) set.objects = set.objects.filter((o) => o.type !== "mountain")
+      const set = structuredClone(await SETS[staging.set]()) as { objects: { type: string }[]; backdrop?: unknown }
+      // The engine now draws the set's own backdrop: the spike's replaces it.
+      if (params.backdrop) {
+        set.objects = set.objects.filter((o) => o.type !== "mountain")
+        delete set.backdrop
+      }
       const tier = TIERS.includes(params.tier as TierName) ? (params.tier as TierName) : "balanced"
       st = await createStage({ container, set, staging, tier, motion: params.motion !== "0", onProgress: setStatus })
       if (cancelled) return st.dispose()

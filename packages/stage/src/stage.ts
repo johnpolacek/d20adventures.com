@@ -1,5 +1,6 @@
 import * as THREE from "three"
 import { OrbitControls } from "three/addons/controls/OrbitControls.js"
+import { backdrop } from "./backdrop"
 import type { Footprint } from "./builders/types"
 import { type EffectEnd, type EffectKind, Effects, type Element, type PropKind } from "./effects"
 import type { CrowdLibrary, CrowdLibraryMeta } from "./figures/cards"
@@ -123,6 +124,7 @@ export class Stage {
   private extras: THREE.Object3D[] = []
   private life: (LifeUpdate & Disposable)[] = []
   private disposables: Disposable[] = []
+  private backdropReady: Promise<void> = Promise.resolve()
   private sky: THREE.Mesh
   private envTexture: THREE.Texture
   private transition: Transition | null = null
@@ -266,6 +268,11 @@ export class Stage {
     for (const e of built.extras) this.world.add(e)
     this.extras = built.extras
     if (set.land) this.disposables.push(land(this.world, this.shared, rand.fork("land"), set.land))
+    if (set.backdrop) {
+      const b = backdrop(this.world, (this.scene.fog as THREE.FogExp2).color, renderer.capabilities.getMaxAnisotropy(), set.backdrop)
+      this.disposables.push(b)
+      this.backdropReady = b.ready
+    }
     if (set.life.birds) this.life.push(birds(this.world, this.shared, rand.fork("birds"), set.life.birds))
     if (set.life.dust) this.life.push(dust(this.world, this.shared, rand.fork("dust"), set.life.dust))
 
@@ -358,7 +365,7 @@ export class Stage {
   // Waits for the character art and the crowd atlas (when cards are on), then starts the loop.
   async load() {
     this.o.onProgress?.("Loading characters")
-    await Promise.all([this.standees.load(), this.materials.ready, this.crowd.cards && this.flags.crowd !== "procedural" ? this.waitForAtlas() : Promise.resolve()])
+    await Promise.all([this.standees.load(), this.materials.ready, this.backdropReady, this.crowd.cards && this.flags.crowd !== "procedural" ? this.waitForAtlas() : Promise.resolve()])
     const first = this.staging?.shot ?? Object.keys(this.shots)[0]
     if (first) this.shot(first, { instant: true })
     this.sync()

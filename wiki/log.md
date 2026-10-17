@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-17, painted backdrop
+
+Owner reviewed the spikes: the painted backdrop is a definite improvement. The animated standee looked good, but the owner does not want to pay for video generation. Projection had good and bad parts. Decision: build the backdrop only. Sets now take a `backdrop`, painted and keyed by `scripts/stage-backdrops.ts`. The Old Standing Stones uses it in place of its mountain cones. A lavender ridge left by the magenta key is now corrected. Not yet checked in the packaged desktop app. See [painted backdrop](plans/stage-backdrop.md).
+
 ## 2026-10-17, stage art spikes
 
 Owner asked whether a shared paint-over-and-project workflow suits our 3D, and chose to test three parts in a test directory. At the Standing Stones: a painted, keyed valley backdrop replaced the mountain cones and read like the encounter art from every shot facing it. GPT Image 2 painted over our render with 76% of edges within 2 px, Gemini 3 Pro Image 53%, chance 42%. Projected from the stones camera the painting looked like the art, and from other shots it smeared and put painted sky on trees. Veo 3.1 Fast animated Thalbern's standee into a clean 8 second loop. Minimax H3 cut to another scene mid-clip, and the fal account then ran out of balance. Nothing in `packages/stage` changed. See [Stage art spikes](plans/stage-art-spikes.md).
