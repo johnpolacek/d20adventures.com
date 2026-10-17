@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-17, stage art spikes
+
+Owner asked whether a shared paint-over-and-project workflow suits our 3D, and chose to test three parts in a test directory. At the Standing Stones: a painted, keyed valley backdrop replaced the mountain cones and read like the encounter art from every shot facing it. GPT Image 2 painted over our render with 76% of edges within 2 px, Gemini 3 Pro Image 53%, chance 42%. Projected from the stones camera the painting looked like the art, and from other shots it smeared and put painted sky on trees. Veo 3.1 Fast animated Thalbern's standee into a clean 8 second loop. Minimax H3 cut to another scene mid-clip, and the fal account then ran out of balance. Nothing in `packages/stage` changed. See [Stage art spikes](plans/stage-art-spikes.md).
+
 ## 2026-10-15, crisp grass near the camera
 
 Owner: the grass at the Standing Stones looked fuzzy. The paint filter, 540 to 900 px tall, smeared the 2 cm blades. Its final blend now keeps a quarter of the paint within 3 m of the camera and all of it by 18 m, and the balanced tier gains FXAA. The stage typecheck and `stage:check` pass. See [the stage engine](stage-engine.md#crisp-near-ground-2026-10-15).
