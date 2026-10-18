@@ -17,6 +17,26 @@ Spike (a) in [stage art spikes](stage-art-spikes.md) hung a painted valley behin
 - `scripts/stage-backdrops.ts` paints a panorama on magenta from the encounter art, and keys it.
 - The Old Standing Stones gets the valley backdrop, and loses its three mountain cones.
 
+## Other sets, 2026-10-18
+
+Owner chose to add backdrops to the other outdoor sets. Every set's shots were captured first.
+
+- Need one: their fixed shots show a bare horizon or a bright gap.
+  - Kordavos riverfront: the close-ups look away from the river, past where the quay's paving ends.
+  - Old forest path: the close-ups show a bright gap where the tree scatter ends.
+  - Thalbern's forest home: pale bare ground between the trees in the ranger and woods shots.
+- Little or no gain, skipped:
+  - Valkarr forest trail: thick mist hides the far trees.
+  - Kordavos gate and harvest square: walls and houses close every view.
+  - Mordava piers: an enclosed, misty swamp.
+- The riverfront and forest path come from `scripts/stage-sets/covert-cargo.ts`, so their backdrops go there.
+- The key's moonlight correction would brown red roofs, so it is now per painting (`cool`).
+- Results, each checked shot by shot against captures from before:
+  - Riverfront: `riverfront-city.webp`, a row of timber-framed houses and towers, 70 m out at the paving's edge. The close-ups now show the far side of a square instead of a bare plain.
+  - Forest path: `forest-path-depths.webp`, giant trunks in green haze, 90 m out ahead and behind. The bright gaps in the close-ups are gone.
+  - Thalbern's home: `home-woods.webp`, a sunlit forest edge, 120 m out. The pale gaps between trunks now show hazy forest. A subtler gain.
+- The forest painting faded its haze into the magenta sky, and the key left that band pink. An `opaque` backdrop is painted edge to edge with no sky and is not keyed.
+
 ## Not in scope
 
 - Paint-over projection and animated standees. The owner declined them for now.

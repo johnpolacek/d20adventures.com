@@ -510,6 +510,16 @@
       }
     }
   ],
+  "backdrops": [
+    {
+      "map": "/stage/textures/home-woods.webp",
+      "arc": 140,
+      "yaw": 0,
+      "radius": 120,
+      "bottom": -5.5,
+      "top": 34.3
+    }
+  ],
   "marks": {
     "thalbern": {
       "at": [-2.1, -1.6]

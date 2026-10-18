@@ -18,14 +18,18 @@ const OUT = "public/stage/textures"
 // 4096 px across: about one texel per screen pixel at DPR 2, and within every GPU's texture limit.
 const WIDTH = 4096
 const ART = "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr"
+const COVERT = "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters"
 
 // `scene` says what the far scenery is and how it is laid out. The painting's lowest band must be forest or ground that
-// can sit just below the set's horizon: anything painted there reads as giant if it rises above the land.
-type Backdrop = { ref: string; light: string; scene: string }
+// can sit just below the set's horizon: anything painted there reads as giant if it rises above the land. `cool` turns on
+// the key's correction for moonlit blue-grey, which would brown a red roof. An `opaque` backdrop has no sky: it is
+// painted edge to edge, like the depths of a forest, and not keyed.
+type Backdrop = { ref: string; light: string; scene: string; cool?: boolean; opaque?: boolean }
 const BACKDROPS: Record<string, Backdrop> = {
   "stones-valley": {
     ref: `${ART}/the-midnight-summons/meeting-at-the-stones.png`,
     light: "moonlit night light",
+    cool: true,
     scene: `the far end of a deep, forested mountain valley at night, seen from the valley floor. Steep dark mountain walls rise on the left and on the right, as in the reference. Between them, layers of more distant ridges and peaks recede into blue-grey moonlit mist, each farther layer paler and softer. Moonlight catches the ridgelines and rock faces from above and behind.
 
 Layout:
@@ -37,6 +41,7 @@ Layout:
   "stones-woods": {
     ref: `${ART}/the-midnight-summons/meeting-at-the-stones.png`,
     light: "moonlit night light",
+    cool: true,
     scene: `the gentle, wooded side of the same valley at night, with the moon high behind the viewer: a long, dark, densely forested ridge beyond the river. The ridge is near enough that its trees read clearly, and its skyline is a crisp, jagged silhouette of individual conifer tips against the sky. Behind it, one lower, paler wooded ridge shows through a little haze. Moonlight from the front catches the tree crowns with cool silver highlights. Almost no mist: no fog banks, no clouds, no pale bands.
 
 Layout:
@@ -45,14 +50,55 @@ Layout:
 - Above the skyline is magenta sky only. Every pixel below the skyline is painted forest.
 - No water, no river, no lake, no large trees in the foreground.`,
   },
+  // Behind the riverfront close-ups, which look away from the river to where the quay's paving ends: the far side of the
+  // square. Hung near (70 m), its street line at the paving's edge.
+  "riverfront-city": {
+    ref: `${COVERT}/return-to-the-city/280cc3ba-f72d-4e91-b839-8cec3778791b.png`,
+    light: "bright warm afternoon light",
+    scene: `the far side of a wide paved square in the same city, on a bright afternoon with the sun low behind the buildings: a continuous row of three- and four-storey timber-framed townhouses with steep red tile roofs, chimneys and gables, shoulder to shoulder across the full width. Behind them rise two or three slender round stone towers with conical red roofs, and in the far distance the walls of a castle on a hill. The facades face the viewer in soft, warm shadow, with bright warm light along the roof edges.
+
+Layout:
+- The houses all stand on one straight, level street line at about 12% of the image height, across the full width. Below it is only the paving of the square, in shadow.
+- The rooftops reach about half the image height. The towers and the castle reach about 70%.
+- Above the rooftops and towers is magenta sky only.
+- Seen straight on, level, with no perspective: the street line is horizontal.
+- No people, no carts, no market stalls, no trees in front of the houses.`,
+  },
+  // Every way the old forest path's close-ups look: giant trunks fading into the green haze, where the scatter ends.
+  "forest-path-depths": {
+    ref: `${COVERT}/the-end/68166163-ba2c-4387-bfb6-a98343c6c9d7.png`,
+    light: "hazy, green-gold afternoon light",
+    scene: `the depths of the same ancient forest of giant trees: huge, straight trunks of giant old trees, grey-green with moss, stand in rows that recede into thick, luminous green-gold haze, each farther row paler and softer until the last fade into the haze completely. Ferns and low undergrowth at their feet.
+
+Layout:
+- The forest floor runs along the bottom tenth of the image, level, across the full width.
+- The trunks rise from it all across the width and run out of the top edge of the image. No canopy and no sky are visible.
+- Between and behind the trunks there is only haze, up to the top edge.
+- No path, no people, no animals, no fallen logs in front.`,
+    opaque: true,
+  },
+  // Round Thalbern's cottage: the forest edge across the clearing, where the scatter thins to bare ground.
+  "home-woods": {
+    ref: `${ART}/the-midnight-summons/back-home.png`,
+    light: "bright, dappled daylight",
+    scene: `the edge of the same forest seen across a sunny clearing: tall broadleaf trees and a few conifers stand along a long, low forest edge, sunlit trunks and rich green crowns, with soft blue-green haze between the trunks deeper in. The light is bright and warm.
+
+Layout:
+- The forest floor runs along the bottom eighth of the image, level, across the full width.
+- The treetops form a ragged edge of individual crowns at about 35% of the image height across the full width, never higher than 40%.
+- Above the treetops is magenta sky only.
+- No cottage, no path, no people, no animals, nothing in the foreground.`,
+  },
 }
 
 const prompt = (b: Backdrop) => `A very wide panoramic matte painting, to be used as the far backdrop of a 3D game scene. Paint it in the exact style, palette and ${b.light} of the reference painting.
 
 What it shows: ${b.scene}
-- The SKY is SOLID, FLAT, PURE MAGENTA (#FF00FF) everywhere above the scenery: no moon, no sun, no stars, no clouds, no glow, no gradient, nothing painted in the sky.
-
-Nothing magenta, pink or purple anywhere except the sky. No people, no animals, no foreground objects, no text, no border. Oil painting with soft, confident brushwork. NOT a photograph, NOT a 3D render.`
+${
+  b.opaque
+    ? "- The image is painted edge to edge. No sky shows anywhere. Nothing magenta, pink or purple."
+    : "- The SKY is SOLID, FLAT, PURE MAGENTA (#FF00FF) everywhere above the scenery: no moon, no sun, no stars, no clouds, no glow, no gradient, nothing painted in the sky.\n\nNothing magenta, pink or purple anywhere except the sky."
+} No people, no animals, no foreground objects, no text, no border. Oil painting with soft, confident brushwork. NOT a photograph, NOT a 3D render.`
 
 async function paint(id: string) {
   const b = BACKDROPS[id]
@@ -102,8 +148,14 @@ const smooth = (a: number, b: number, x: number) => {
 // Unmixes magenta: each pixel is read as the painted colour blended toward magenta by how far red and blue rise above
 // green, so the edge pixels the painting bled into keep their own colour instead of a violet fringe. The model also
 // tints far ridges lavender near the magenta, so red is held down by as much as blue rises above green: moonlit grey-blue
-// and white snow keep their colour, lavender turns blue-grey. Blue is held near green too. Right for moonlit scenery only.
+// and white snow keep their colour, lavender turns blue-grey. Blue is held near green too. Only for `cool` backdrops.
 async function key(id: string, raw: string) {
+  const cool = !!BACKDROPS[id].cool
+  const out = `${OUT}/${id}.webp`
+  if (BACKDROPS[id].opaque) {
+    await sharp(raw).resize({ width: WIDTH }).webp({ quality: 88 }).toFile(out)
+    return console.log(`${out} from ${raw}, opaque`)
+  }
   const { data, info } = await sharp(raw).resize({ width: WIDTH }).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
   const { width: W, height: H } = info
   const N = W * H
@@ -158,13 +210,12 @@ async function key(id: string, raw: string) {
     const a = 1 - t[p]
     const k = Math.min(t[p], 0.9)
     const g = Math.min(255, data[i + 1] / (1 - k))
-    const b = Math.min(255, 1.28 * g + 8, Math.max(0, (data[i + 2] - k * 255) / (1 - k)))
-    data[i] = Math.round(Math.max(0, Math.min(g - 0.6 * (b - g), (data[i] - k * 255) / (1 - k))))
+    const b = Math.min(255, cool ? 1.28 * g + 8 : 255, Math.max(0, (data[i + 2] - k * 255) / (1 - k)))
+    data[i] = Math.round(Math.max(0, Math.min(cool ? g - 0.6 * (b - g) : 255, (data[i] - k * 255) / (1 - k))))
     data[i + 1] = Math.round(g)
     data[i + 2] = Math.round(b)
     data[i + 3] = sky[p] && !edge[p] ? 0 : Math.round(255 * smooth(0.1, 0.35, a) * Math.min(1, a / 0.35))
   }
-  const out = `${OUT}/${id}.webp`
   await sharp(data, { raw: { width: W, height: H, channels: 4 } })
     .webp({ quality: 88, alphaQuality: 90 })
     .toFile(out)

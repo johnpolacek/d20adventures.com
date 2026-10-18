@@ -2658,6 +2658,18 @@
       "height": 11
     }
   ],
+  "backdrops": [
+    {
+      "map": "/stage/textures/riverfront-city.webp",
+      "arc": 90,
+      "yaw": -155,
+      "radius": 70,
+      "bottom": -5.6,
+      "top": 30.4,
+      "gain": 0.6,
+      "haze": 0.1
+    }
+  ],
   "marks": {
     "quay": {
       "at": [

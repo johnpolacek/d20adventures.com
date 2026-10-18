@@ -1467,6 +1467,26 @@
       ]
     }
   ],
+  "backdrops": [
+    {
+      "map": "/stage/textures/forest-path-depths.webp",
+      "arc": 120,
+      "yaw": 180,
+      "radius": 90,
+      "bottom": -7,
+      "top": 43,
+      "haze": 0.45
+    },
+    {
+      "map": "/stage/textures/forest-path-depths.webp",
+      "arc": 120,
+      "yaw": 0,
+      "radius": 90,
+      "bottom": -7,
+      "top": 43,
+      "haze": 0.45
+    }
+  ],
   "marks": {
     "pathAhead": {
       "at": [

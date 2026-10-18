@@ -952,6 +952,9 @@ function riverfrontSet() {
       trimWood: { type: "wood", a: "#5a4030", b: "#6e4f37", c: "#4a4038", plank: [0, 40], relief: 0.03, seed: 6.2 },
     },
     objects,
+    // The close-ups look away from the river, where the quay's paving ends at z 60: a painted far side of the square,
+    // its street line on the paving's edge (scripts/stage-backdrops.ts).
+    backdrops: [{ map: "/stage/textures/riverfront-city.webp", arc: 90, yaw: -155, radius: 70, bottom: -5.6, top: 30.4, gain: 0.6, haze: 0.1 }],
     marks: {
       quay: { at: [-3, 0], label: "the quay" },
       quayEdge: { at: [r2(center(-6) + width(-6) / 2 + 1), -6], label: "the edge of the quay" },
@@ -1103,6 +1106,11 @@ function forestSet() {
       sunbeam: { type: "glow", color: "#eaf0b0", opacity: 0.1 },
     },
     objects,
+    // Giant trunks fading into the haze where the tree scatter ends, ahead and behind (scripts/stage-backdrops.ts).
+    backdrops: [
+      { map: "/stage/textures/forest-path-depths.webp", arc: 120, yaw: 180, radius: 90, bottom: -7, top: 43, haze: 0.45 },
+      { map: "/stage/textures/forest-path-depths.webp", arc: 120, yaw: 0, radius: 90, bottom: -7, top: 43, haze: 0.45 },
+    ],
     marks: {
       pathAhead: { at: [0.6, -16], label: "the path ahead" },
       roots: { at: [-2.6, -4], label: "the great roots" },
