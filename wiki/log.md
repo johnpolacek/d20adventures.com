@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-18, backdrops for the other outdoor sets
+
+Owner chose to add backdrops to the other outdoor sets. Every set's shots were captured first. Three needed one: the Kordavos riverfront close-ups looked past the end of the paving, and the old forest path and Thalbern's home showed bright gaps between trees. Each got a painting. The forest trail, Kordavos gate and square, and Mordava piers were left alone. See [painted backdrop](plans/stage-backdrop.md).
+
 ## 2026-10-18, a second backdrop at the stones
 
 Owner, in the desktop app: Thalbern's close-up could be better. He faces the valley, so it looked at a bare plain. Sets now take up to four `backdrops`, and the stones gained a dark forested ridge on that side. A misty layered-hills painting read as clouds, so the ridge is crisp and dark. The key now drops floating paint and fills enclosed magenta. See [painted backdrop](plans/stage-backdrop.md).
