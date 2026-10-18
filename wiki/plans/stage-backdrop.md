@@ -2,7 +2,7 @@
 
 [Home](../index.md) · [Plans](index.md) · [Stage engine](../stage-engine.md) · [Stage set authoring](../stage-authoring.md) · [Stage art spikes](stage-art-spikes.md)
 
-Status: implemented on main, 2026-10-17. Not yet checked in the packaged desktop app.
+Status: implemented on main, 2026-10-17. Second painting for Thalbern's close-up added 2026-10-18. The owner has run the stones in the desktop dev app. The packaged app is not checked.
 
 ## Why
 
@@ -37,3 +37,7 @@ Spike (a) in [stage art spikes](stage-art-spikes.md) hung a painted valley behin
 - 4096 px wide is not visibly softer than the spike's 6336 px at DPR 2, and costs about 38 MB of GPU memory against 91 MB.
 - The key now holds red down by how far blue rises above green, and blue near green. A far ridge the model painted lavender now reads as blue-grey mist.
 - The desktop build copies `public/stage`, so the texture ships with the app.
+- 2026-10-18, owner, in the desktop app: Thalbern's close-up "could be better". He faces the valley, so the shot looks away from it, at a bare plain and sky.
+  - `backdrop` became `backdrops`, up to four. `stones-woods.webp` covers that side: a dark forested ridge beyond the river.
+  - Three paintings: the first had magenta mist bands, the second read as cloud banks, the third, a crisp dark ridge, reads as land.
+  - The key now drops paint floating in the sky and fills magenta that the land encloses. The valley texture lost only stray specks.

@@ -1882,10 +1882,20 @@
       "material": "heather"
     }
   ],
-  "backdrop": {
-    "map": "/stage/textures/stones-valley.webp",
-    "arc": 130
-  },
+  "backdrops": [
+    {
+      "map": "/stage/textures/stones-valley.webp",
+      "arc": 130
+    },
+    {
+      "map": "/stage/textures/stones-woods.webp",
+      "arc": 120,
+      "yaw": -120,
+      "radius": 440,
+      "top": 22,
+      "gain": 0.42
+    }
+  ],
   "land": {
     "inner": 160,
     "outer": 1200,

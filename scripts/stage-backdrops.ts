@@ -32,6 +32,19 @@ Layout:
 - The lowest fifth of the image is one continuous band of dark, misty conifer and broadleaf forest along the valley floor, across the full width, with no gaps.
 - The mountains fill roughly the lower half of the image. The tallest walls are near the left and right ends, lower ridges toward the middle.`,
   },
+  // The other way from the stones, behind Thalbern's close-up: the valley's gentle side. Its left end meets the valley's
+  // right-hand mountain wall.
+  "stones-woods": {
+    ref: `${ART}/the-midnight-summons/meeting-at-the-stones.png`,
+    light: "moonlit night light",
+    scene: `the gentle, wooded side of the same valley at night, with the moon high behind the viewer: a long, dark, densely forested ridge beyond the river. The ridge is near enough that its trees read clearly, and its skyline is a crisp, jagged silhouette of individual conifer tips against the sky. Behind it, one lower, paler wooded ridge shows through a little haze. Moonlight from the front catches the tree crowns with cool silver highlights. Almost no mist: no fog banks, no clouds, no pale bands.
+
+Layout:
+- The bottom half of the image is solid dark forest canopy, across the full width, with no gaps and no clearings.
+- The ridge's skyline runs between 55% and 70% of the image height, rising at the far left, where it climbs to the top edge as the forested shoulder of a mountain.
+- Above the skyline is magenta sky only. Every pixel below the skyline is painted forest.
+- No water, no river, no lake, no large trees in the foreground.`,
+  },
 }
 
 const prompt = (b: Backdrop) => `A very wide panoramic matte painting, to be used as the far backdrop of a 3D game scene. Paint it in the exact style, palette and ${b.light} of the reference painting.
@@ -93,17 +106,63 @@ const smooth = (a: number, b: number, x: number) => {
 async function key(id: string, raw: string) {
   const { data, info } = await sharp(raw).resize({ width: WIDTH }).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
   const { width: W, height: H } = info
-  for (let p = 0; p < W * H; p++) {
+  const N = W * H
+  const t = new Float32Array(N)
+  for (let p = 0; p < N; p++) t[p] = Math.min(1, Math.max(0, (Math.min(data[p * 4], data[p * 4 + 2]) - data[p * 4 + 1]) / 250))
+  // Flood fill over 4-neighbours from `seeds`, through pixels `pass` allows.
+  const flood = (seeds: number[], pass: (p: number) => boolean) => {
+    const hit = new Uint8Array(N)
+    const stack = seeds.filter(pass)
+    for (const p of stack) hit[p] = 1
+    while (stack.length) {
+      const p = stack.pop() as number
+      const x = p % W
+      for (const q of [p - W, p + W, x > 0 ? p - 1 : -1, x < W - 1 ? p + 1 : -1])
+        if (q >= 0 && q < N && !hit[q] && pass(q)) {
+          hit[q] = 1
+          stack.push(q)
+        }
+    }
+    return hit
+  }
+  const row = (y: number) => Array.from({ length: W }, (_, x) => y * W + x)
+  // Land is paint joined to the bottom edge. Paint floating in the sky (a ghost ridge, a moon) is dropped. Magenta that
+  // land encloses, out of reach of the sky, is mist the model painted magenta: it is filled from the paint above and
+  // below it, and stays solid.
+  const land = flood(row(H - 1), (p) => t[p] <= 0.5)
+  const sky = flood(row(0), (p) => !land[p])
+  for (let x = 0; x < W; x++)
+    for (let y = 0; y < H; y++) {
+      if (land[y * W + x] || sky[y * W + x]) continue
+      const top = Math.max(y - 1, 0)
+      while (y < H && !land[y * W + x] && !sky[y * W + x]) y++
+      const bottom = Math.min(y, H - 1)
+      for (let f = top + 1; f < y; f++) {
+        const u = (f - top) / (bottom - top)
+        for (let c = 0; c < 3; c++) data[(f * W + x) * 4 + c] = Math.round(data[(top * W + x) * 4 + c] * (1 - u) + data[(bottom * W + x) * 4 + c] * u)
+        t[f * W + x] = 0
+      }
+    }
+  // Sky keeps only the soft edge within 3 px of land.
+  const edge = new Uint8Array(N)
+  for (let p = 0; p < N; p++)
+    if (land[p])
+      for (let dy = -3; dy <= 3; dy++)
+        for (let dx = -3; dx <= 3; dx++) {
+          const x = (p % W) + dx
+          const q = p + dy * W + dx
+          if (x >= 0 && x < W && q >= 0 && q < N) edge[q] = 1
+        }
+  for (let p = 0; p < N; p++) {
     const i = p * 4
-    const t = Math.min(1, Math.max(0, (Math.min(data[i], data[i + 2]) - data[i + 1]) / 250))
-    const a = 1 - t
-    const k = Math.min(t, 0.9)
+    const a = 1 - t[p]
+    const k = Math.min(t[p], 0.9)
     const g = Math.min(255, data[i + 1] / (1 - k))
     const b = Math.min(255, 1.28 * g + 8, Math.max(0, (data[i + 2] - k * 255) / (1 - k)))
     data[i] = Math.round(Math.max(0, Math.min(g - 0.6 * (b - g), (data[i] - k * 255) / (1 - k))))
     data[i + 1] = Math.round(g)
     data[i + 2] = Math.round(b)
-    data[i + 3] = Math.round(255 * smooth(0.1, 0.35, a) * Math.min(1, a / 0.35))
+    data[i + 3] = sky[p] && !edge[p] ? 0 : Math.round(255 * smooth(0.1, 0.35, a) * Math.min(1, a / 0.35))
   }
   const out = `${OUT}/${id}.webp`
   await sharp(data, { raw: { width: W, height: H, channels: 4 } })

@@ -8,7 +8,7 @@ Updated for the desktop integration worktree on 2026-10-02. Implementation statu
 
 | Plan | Status | Next work |
 |---|---|---|
-| [Painted backdrop](stage-backdrop.md) | Implemented on main 2026-10-17. A set's `backdrop` hangs a painted, keyed panorama on a far cylinder. The Old Standing Stones has a painted valley in place of its mountain cones. | Check in the packaged desktop app. Other sets per owner call. |
+| [Painted backdrop](stage-backdrop.md) | Implemented on main 2026-10-17. A set's `backdrops` hang painted, keyed panoramas on far cylinders. The Old Standing Stones has a painted valley in place of its mountain cones, and a forested ridge behind Thalbern's close-up since 2026-10-18. | Other sets per owner call. |
 | [Stage art spikes](stage-art-spikes.md) | Decided 2026-10-17. Painted backdrop adopted. Paint-over projection and video standees not adopted. | None. |
 | [One roll card](one-roll-card.md) | Implemented on main 2026-10-14 in the desktop app and hosted games. One card rolls the die, shows the result, says the GM is resolving, then offers Continue. The reader starts after the roll. Owner played it with the live GM 2026-10-15. | A hosted game. The small-window layout. |
 | [Structured narrative](structured-narrative.md) | Implemented on main 2026-10-14. A turn is a list of labelled beats: speakers, camera, walks, spell effects and objects come from data. All four adventures labelled, the narrative string and guessers removed, Storyview voices from beats. Replayed live with Claude. | A replay since the removal. Production deploy. Other GMs. |

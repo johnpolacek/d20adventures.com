@@ -341,24 +341,29 @@ export const setSpecSchema = z
       .object({ inner: size(5000), outer: size(10000), palette: z.array(color).min(1).max(12), hills: num(0, 5).default(1) })
       .strict()
       .optional(),
-    // A painted panorama of far scenery, keyed to alpha (scripts/stage-backdrops.ts), on a cylinder of `radius` round the
-    // set's centre. It covers `arc` degrees centred on `yaw` (0 looks down -z), from `bottom` to `top` degrees of
-    // elevation. The sky shows through where it is clear, and the land in front hides what lies below the horizon. A
-    // painting is already display colour, so `gain` brings it back down after AgX, and `haze` blends it toward the fog.
-    backdrop: z
-      .object({
-        map: texture,
-        arc: num(10, 360),
-        yaw: deg.default(0),
-        bottom: num(-45, 45).default(-16),
-        top: num(-45, 80).default(30),
-        radius: num(50, 1400).default(520),
-        feather: num(0, 0.5).default(0.06),
-        gain: num(0, 2).default(0.6),
-        haze: unit.default(0.3),
-      })
-      .strict()
-      .optional(),
+    // Painted panoramas of far scenery, keyed to alpha (scripts/stage-backdrops.ts), each on a cylinder of `radius` round
+    // the set's centre. One covers `arc` degrees centred on `yaw` (0 looks down -z, 90 down -x), from `bottom` to `top`
+    // degrees of elevation. The sky shows through where it is clear, and the land in front hides what lies below the
+    // horizon. Later ones draw over earlier ones, so a nearer, lower painting can overlap a farther one's edge. A painting
+    // is already display colour, so `gain` brings it back down after AgX, and `haze` blends it toward the fog.
+    backdrops: z
+      .array(
+        z
+          .object({
+            map: texture,
+            arc: num(10, 360),
+            yaw: deg.default(0),
+            bottom: num(-45, 45).default(-16),
+            top: num(-45, 80).default(30),
+            radius: num(50, 1400).default(520),
+            feather: num(0, 0.5).default(0.06),
+            gain: num(0, 2).default(0.6),
+            haze: unit.default(0.3),
+          })
+          .strict()
+      )
+      .max(4)
+      .default([]),
     crowd: z
       .object({
         library: slug,

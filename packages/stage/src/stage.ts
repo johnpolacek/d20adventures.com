@@ -268,11 +268,9 @@ export class Stage {
     for (const e of built.extras) this.world.add(e)
     this.extras = built.extras
     if (set.land) this.disposables.push(land(this.world, this.shared, rand.fork("land"), set.land))
-    if (set.backdrop) {
-      const b = backdrop(this.world, (this.scene.fog as THREE.FogExp2).color, renderer.capabilities.getMaxAnisotropy(), set.backdrop)
-      this.disposables.push(b)
-      this.backdropReady = b.ready
-    }
+    const backdrops = set.backdrops.map((b, i) => backdrop(this.world, (this.scene.fog as THREE.FogExp2).color, renderer.capabilities.getMaxAnisotropy(), b, i))
+    this.disposables.push(...backdrops)
+    this.backdropReady = Promise.all(backdrops.map((b) => b.ready)).then(() => undefined)
     if (set.life.birds) this.life.push(birds(this.world, this.shared, rand.fork("birds"), set.life.birds))
     if (set.life.dust) this.life.push(dust(this.world, this.shared, rand.fork("dust"), set.life.dust))
 

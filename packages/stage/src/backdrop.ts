@@ -2,13 +2,14 @@ import * as THREE from "three"
 import type { Disposable } from "./life"
 import type { SetSpec } from "./spec/set"
 
-type BackdropSpec = NonNullable<SetSpec["backdrop"]>
+type BackdropSpec = SetSpec["backdrops"][number]
 
-// The set's painted backdrop: far scenery on an open cylinder round the set's centre, drawn unlit and unfogged after
-// everything opaque, so the land in front hides its lower edge and the sky shows through its keyed sky. The side edges
-// fade out over `feather` of its width. A painting is already display colour and the scene is tone mapped after (AgX),
+// A painted backdrop: far scenery on an open cylinder round the set's centre, drawn unlit and unfogged after everything
+// opaque, so the land in front hides its lower edge and the sky shows through its keyed sky. It draws before every other
+// see-through thing (mist, leaves), and the set's later backdrops over its earlier ones, in `order`. The side edges fade
+// out over `feather` of its width. A painting is already display colour and the scene is tone mapped after (AgX),
 // so `gain` lowers it to come out near where it went in, and `haze` blends it toward the fog colour. Both are by eye.
-export function backdrop(root: THREE.Object3D, fog: THREE.Color, anisotropy: number, o: BackdropSpec): Disposable & { ready: Promise<void> } {
+export function backdrop(root: THREE.Object3D, fog: THREE.Color, anisotropy: number, o: BackdropSpec, order: number): Disposable & { ready: Promise<void> } {
   const arc = THREE.MathUtils.degToRad(o.arc)
   const y0 = o.radius * Math.tan(THREE.MathUtils.degToRad(o.bottom))
   const y1 = o.radius * Math.tan(THREE.MathUtils.degToRad(o.top))
@@ -32,6 +33,7 @@ void main(){
   })
   const mesh = new THREE.Mesh(geo, mat)
   mesh.name = "backdrop"
+  mesh.renderOrder = -10 + order
   mesh.frustumCulled = false
   mesh.visible = false
   root.add(mesh)

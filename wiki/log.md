@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-18, a second backdrop at the stones
+
+Owner, in the desktop app: Thalbern's close-up could be better. He faces the valley, so it looked at a bare plain. Sets now take up to four `backdrops`, and the stones gained a dark forested ridge on that side. A misty layered-hills painting read as clouds, so the ridge is crisp and dark. The key now drops floating paint and fills enclosed magenta. See [painted backdrop](plans/stage-backdrop.md).
+
 ## 2026-10-17, painted backdrop
 
 Owner reviewed the spikes: the painted backdrop is a definite improvement. The animated standee looked good, but the owner does not want to pay for video generation. Projection had good and bad parts. Decision: build the backdrop only. Sets now take a `backdrop`, painted and keyed by `scripts/stage-backdrops.ts`. The Old Standing Stones uses it in place of its mountain cones. A lavender ridge left by the magenta key is now corrected. Not yet checked in the packaged desktop app. See [painted backdrop](plans/stage-backdrop.md).

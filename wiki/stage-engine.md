@@ -48,7 +48,7 @@ JSON only: no expressions, no code. Metres. `y` up. ground at `y = 0`. the set f
 | `format`, `version`, `id`, `settingId`, `locationId`, `title`, `seed` | Identity. `seed` drives every random choice (per object, so editing one object does not reshuffle the rest) |
 | `atmosphere` | Sun direction, colour, intensity, shadow box. hemisphere. sky colours. fog density (fog colour = sky horizon). environment intensity. exposure. wind. `lights`: up to 8 static point lights, no shadows |
 | `camera` | Near/far, bounds box, orbit limits |
-| `backdrop` | A painted, keyed panorama of far scenery from `/stage/textures`, on a far cylinder: `arc`, `yaw`, `bottom`, `top` and `radius` place it, `gain` and `haze` grade it |
+| `backdrops` | Up to four painted, keyed panoramas of far scenery from `/stage/textures`, each on a far cylinder: `arc`, `yaw`, `bottom`, `top` and `radius` place it, `gain` and `haze` grade it. Later ones draw over earlier ones |
 | `materials` | Name → `{ type: masonry \| wood \| cloth \| burlap \| metal \| plain \| foliage \| glow \| rock \| meadow \| grass \| water, …params }`. cloth can carry `heraldry` (a named banner design) and `tatters`. Ground masonry draws the gate road's ruts and edge dust unless `roads: false`. `foliage` is an alpha-tested painted leaf texture tinted by its colour. `rock`, `meadow` and `water` are painted from world position, so they need no uv and never tile: rock has moss on upward faces and hollows and lichen on bare stone, meadow has grass and moss patches, bare earth, pebbles, fallen leaves and wildflowers, water mirrors the sky with drifting ripples. `grass` shades blades from root to tip and sways them |
 | `objects[]` | `{ type, id?, at?, yaw?, materials?, …params }` , `type` names a builder. params are validated by that builder's schema (unknown keys rejected, ranges clamped) |
 | `crowd` | `library` (crowd art id), `avoid` (rects and circles), `groups[]`: `scatter` (area, count, density rects, mix, facing), `line`, `points`, `path` (people along a path), `walkers` (loop or ping-pong along a path), `anchors` (people on builder-emitted anchors such as parapet lookouts) |
@@ -284,8 +284,10 @@ Part of [structured narrative](plans/structured-narrative.md).
 
 Part of [painted backdrop](plans/stage-backdrop.md), from spike (a) of the [stage art spikes](plans/stage-art-spikes.md).
 
-- A set's `backdrop` hangs a painted panorama on an open cylinder, 520 m out by default. One draw call, unlit, drawn after the opaque set, so the land hides its lower edge and the sky, moon and stars show through its keyed sky.
+- A set's `backdrops` hang painted panoramas on open cylinders, 520 m out by default. One draw call, unlit, drawn after the opaque set, so the land hides its lower edge and the sky, moon and stars show through its keyed sky.
 - `packages/stage/src/backdrop.ts` builds it. `load()` waits for its texture, and one that fails stays hidden.
 - `scripts/stage-backdrops.ts` paints a panorama with Gemini 3 Pro Image at 21:9 4K on magenta, then keys it at 4096 px wide: about one texel per screen pixel at DPR 2, and within every GPU's limit.
 - The Old Standing Stones uses `stones-valley.webp`, 360 KB, over 130 degrees, in place of its three mountain cones.
 - Checked on the lab page at DPR 2, high tier, every Standing Stones shot: matches the spike's 6336 px version, mean difference under 0.2 of 255.
+- 2026-10-18: owner flagged Thalbern's close-up. He faces the valley, so his close-up looks the other way, at a bare plain. `backdrop` became `backdrops`, up to four, drawn before other see-through things and in order. The stones gained `stones-woods.webp`: a dark forested ridge across the river, 440 m out over 120 degrees, gain 0.42.
+- The key now keeps only paint joined to the bottom edge, drops paint floating in the sky, and fills magenta that the land encloses as mist.
