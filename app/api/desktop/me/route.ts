@@ -7,9 +7,8 @@ async function avatarOf(imageUrl: string | undefined) {
   if (!imageUrl) return undefined
   try {
     const url = new URL(imageUrl)
+    // Width only: Clerk rounds width up to 160 but keeps a given height, which crops the picture to a strip.
     url.searchParams.set("width", "96")
-    url.searchParams.set("height", "96")
-    url.searchParams.set("fit", "crop")
     const res = await fetch(url, { signal: AbortSignal.timeout(5_000) })
     const type = res.headers.get("content-type") ?? ""
     if (!res.ok || !type.startsWith("image/")) return undefined
