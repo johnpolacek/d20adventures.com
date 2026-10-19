@@ -1,4 +1,5 @@
 import festivalSet from "@d20/stage/sets/realm-of-myr/kordavos-harvest-square.json"
+import conflictSet from "@d20/stage/sets/realm-of-myr/kordavos-harvest-square-conflict.json"
 import riverfrontSet from "@d20/stage/sets/realm-of-myr/kordavos-riverfront.json"
 import gateSet from "@d20/stage/sets/realm-of-myr/kordavos-south-gate.json"
 import pierSet from "@d20/stage/sets/realm-of-myr/mordava-river-pier.json"
@@ -17,6 +18,7 @@ import theEscape from "@d20/stage/stagings/covert-cargo/the-escape.json"
 import theFake from "@d20/stage/stagings/covert-cargo/the-fake.json"
 import theShipment from "@d20/stage/stagings/covert-cargo/the-shipment.json"
 import theTransaction from "@d20/stage/stagings/covert-cargo/the-transaction.json"
+import clanConflict from "@d20/stage/stagings/march-of-davos/clan-conflict.json"
 import gateStaging from "@d20/stage/stagings/march-of-davos/the-gates-of-kordavos.json"
 import festivalStaging from "@d20/stage/stagings/march-of-davos/the-harvest-festival.json"
 import backHome from "@d20/stage/stagings/the-midnight-summons/back-home.json"
@@ -67,6 +69,15 @@ export const SCENES: Record<string, Scene> = {
     where: "The party has come up the street from the gate into the festival square.",
     party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
     spare: [[-1, 19.3]],
+  },
+  "clan-conflict": {
+    set: conflictSet,
+    staging: clanConflict,
+    location: "Harvest Festival",
+    where:
+      "At the south end of the festival square, where the street from the gate opens into it, Barok Redbeard and Larya Halloway face each other with two of their people behind each. Onlookers have drawn back into a ring around them. The party stands at the front of the crowd on the square's side.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[1.2, 11.4]],
   },
   // The Midnight Summons: one moonlit stretch of deer trail for the walk, the owlbear, and the rescue.
   "broken-silence": {

@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Stage authoring](../stage-authoring.md) · [Stage engine](../stage-engine.md) · [Harvest Festival handoff](harvest-festival-handoff.md)
 
-Status: in progress on main, 2026-10-19.
+Status: implemented on main 2026-10-19. Owner review and a check in the running app are next.
 
 ## Owner request, 2026-10-19
 
@@ -49,4 +49,10 @@ Followers are cast only, not encounter NPCs, so they take no turns.
 
 ## Results
 
-None yet.
+- Six standees painted and keyed. Barok's first front came out with dwarf proportions, which would read as Branka's kin. The brief now asks for tall human proportions, and the third render is used.
+- `scripts/stage-standees.ts` counted `barok-bruiser`'s renders as `barok`'s. It now counts numbered files only.
+- The first layout put Larya in the shadow the south-west houses throw across the square, against a blank wall. The standoff moved to [1.2, 17.6], north-east of the street's middle, and both close-ups look across the ring so the other leader stays out of frame.
+- `pnpm stage:check` passes. 403 of 405 walks are clear. The two blocked ones are the festival's own vendor walks.
+- `scripts/stage-verify.ts` at ultra, DPR 2: every view passes, about 175 draw calls and 0.24M triangles, 15 to 22 fps on this Mac.
+- Desktop maps `clan-conflict` with a `where` line and a spare spot for a fifth hero. The scenes test now checks the two leaders' figures and portraits, and story view one encounter later.
+- Not yet seen in the running desktop app. The app copies `public/stage` when it starts, so it needs a restart.

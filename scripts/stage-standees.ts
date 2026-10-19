@@ -160,6 +160,45 @@ const FIGURES: Record<string, Figure> = {
     ref: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/covert-cargo/npcs/ce082298-d090-47b2-a3b9-5af7c851dec7.png",
     head: 0.13,
   },
+  // March of Davos, Clan Conflict: the two leaders from their portraits and the encounter art, and two followers each.
+  barok: {
+    out: "fixtures/march-of-davos/barok",
+    who: "Barok Redbeard, Human male warrior",
+    look: "A burly, barrel-chested man in his forties, about 1.9 m tall, with tall human proportions and long legs, not a dwarf. Curly brown hair, a long bushy beard dyed rust-red reaching his chest, two fresh red scratches across one cheek, a fierce scowl. Mismatched battle-worn armour: big scuffed blue-steel pauldrons with dented silver edges and a round star medallion, a dark steel breastplate over a deep-blue padded sleeves, a worn leather war belt and tassets, steel vambraces, heavy boots. A longsword in its scabbard at his left hip, his right hand resting on the hilt.",
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725127621254",
+    head: 0.13,
+  },
+  larya: {
+    out: "fixtures/march-of-davos/larya",
+    who: "Larya Halloway, Human female rogue",
+    look: "A tall, strong woman in her thirties, about 1.8 m. Long dark-brown hair worn half up, the rest falling past her shoulders, a diagonal red scar across her left cheek, a dark teardrop earring, a hard, proud glare. A finely tailored sleeveless tunic of ochre-gold cloth with a patterned silver-grey collar, a tooled leather shoulder strap, dark leather bracers to the elbow, a slim belt with a fine silver buckle, dark fitted trousers and tall boots. A long dagger sheathed at her hip.",
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725127643282",
+    head: 0.13,
+  },
+  "barok-bruiser": {
+    out: "fixtures/march-of-davos/barok-bruiser",
+    who: "Barok's man, Human male brawler",
+    look: "A big rough man in his forties with shaggy brown hair, a braided brown beard and a scarred brow. A heavy brown fur mantle over a dented mail shirt and a mismatched leather jerkin, one iron vambrace, a wide belt with a pouch, rough trousers and worn boots. A hand axe held low in his right hand.",
+    head: 0.13,
+  },
+  "barok-sellsword": {
+    out: "fixtures/march-of-davos/barok-sellsword",
+    who: "Barok's woman, Human female sellsword",
+    look: "A hard-faced woman in her thirties with cropped black hair and a once-broken nose. Patched brown leather armour with a single dented steel pauldron on her left shoulder, a short mail skirt, a rope belt, scuffed boots. A heavy wooden cudgel held in her right hand.",
+    head: 0.13,
+  },
+  "larya-retainer": {
+    out: "fixtures/march-of-davos/larya-retainer",
+    who: "Larya's retainer, Human male swordsman",
+    look: "A lean, upright man in his thirties with neat dark hair and a trimmed beard. A tailored deep-green Valkaran long coat with gold embroidery at the cuffs and collar, fine silver chains across the chest, a cream shirt, dark trousers and polished boots. A rapier at his left hip, his hand on its hilt.",
+    head: 0.13,
+  },
+  "larya-kinswoman": {
+    out: "fixtures/march-of-davos/larya-kinswoman",
+    who: "Larya's kinswoman, Human female noble",
+    look: "A proud woman in her twenties with auburn hair in an intricate braided crown, gold drop earrings and a jewelled gold collar. A fine russet coat with ochre trim over a cream blouse, a green sash, a slim dagger at her belt, soft leather boots. Arms folded.",
+    head: 0.13,
+  },
 }
 for (const [id, f] of Object.entries(FIGURES)) f.out ||= `heroes/${id}`
 
@@ -224,7 +263,8 @@ async function render(label: string, text: string, images: string[]) {
 }
 
 async function latest(kind: "front" | "back", id: string) {
-  const files = (await readdir(RAW)).filter((f) => f.startsWith(`${kind}-${id}-`) && f.endsWith(".png"))
+  // Numbered files only: `barok` must not count `barok-bruiser`'s renders.
+  const files = (await readdir(RAW)).filter((f) => f.startsWith(`${kind}-${id}-`) && /^\d+\.png$/.test(f.slice(`${kind}-${id}-`.length)))
   const n = Math.max(0, ...files.map((f) => Number(f.slice(`${kind}-${id}-`.length, -4))))
   return { n, path: join(RAW, `${kind}-${id}-${n}.png`) }
 }

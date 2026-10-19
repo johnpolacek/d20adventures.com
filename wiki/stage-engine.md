@@ -16,13 +16,14 @@ The engine ports the v5 prototype (`~/Projects/d20-graphics-test-2/src/v5/`, thr
 | Materials: masonry, wood, cloth, burlap, metal, plain, heraldry. height fog scoped to Stage materials | Beats, hold binding, Storyview sync (phase 4) |
 | Sky, sun, hemisphere, PMREM environment, AgX | Character art generator and S3 storage (phase 4) |
 | Post: 4× MSAA with resolved depth, FXAA, bloom, quarter-res GTAO, Kuwahara paint at fixed internal height with depth-scaled radius, character mask | Generated turn beats and narration synchronization |
-| Crowd: procedural pawns, instanced front/back cards, hybrid LOD, walkers | Clan Conflict and later encounters (story view on desktop) |
+| Crowd: procedural pawns, instanced front/back cards, hybrid LOD, walkers | March of Davos after Clan Conflict (story view on desktop) |
 | Named characters as front/back standees with alpha-derived normals | Procedural hero rigs and the MakeHuman head (superseded by standees) |
 | Quality tiers, pause when hidden, `dispose()` | Mobile measurement |
 | Set spec + interpreter + parametric builders. the Kordavos gate as the first spec | |
 | Minimal staging spec (cast at marks, shots relative to cast) for `/dev/stage` | |
 | Native gate scene and HUD connected to local CLI GM turns, movement, and SQLite saves | Further sets and native gameplay coverage |
 | Kordavos harvest square and the Harvest Festival staging, selected by encounter on desktop | Raised cast placement (festival performers stand in front of the stage) |
+| Clan Conflict on a cut of the harvest square with a ring of onlookers, 2026-10-19: 502 people, 0.24M triangles and about 175 draw calls per view at ultra, DPR 2 | |
 
 ## Module layout
 

@@ -79,7 +79,7 @@ test("every authored scene is a real encounter, and every festival character has
   }
 })
 
-test("the gate keeps first-name figures, and an encounter without a scene falls back to story view", async () => {
+test("the gate keeps first-name figures, Clan Conflict has its scene, and an encounter without one falls back to story view", async () => {
   const run = await setup()
   try {
     const gate = sceneFor(run.store.current().encounterId)
@@ -93,8 +93,19 @@ test("the gate keeps first-name figures, and an encounter without a scene falls 
     )
     await advance(run.store, "the-harvest-festival")
     await advance(run.store, "clan-conflict")
+    // The two leaders stand on the festival square with figures of their own.
+    const conflict = run.store.current()
+    const scene = sceneFor(conflict.encounterId)
+    assert.ok(scene)
+    const leaders = conflict.characters.filter((c) => c.type === "npc")
+    assert.deepEqual(leaders.map((c) => c.id).sort(), ["barok-redbeard", "larya-halloway"])
+    for (const c of leaders) {
+      assert.equal(castIdFor(scene.staging.cast, c), c.id)
+      assert.match(portraitFor(scene, c) ?? "", /^\/stage\/fixtures\/march-of-davos\/.+-portrait\.jpg$/)
+    }
+    await advance(run.store, "the-dragonbone-inn")
     const turn = run.store.current()
-    assert.equal(turn.encounterId, "clan-conflict")
+    assert.equal(turn.encounterId, "the-dragonbone-inn")
     assert.equal(sceneFor(turn.encounterId), undefined)
     assert.equal(spatialContext(turn.encounterId, turn.characters, {}), undefined)
     // Story view keeps the party's faces from the authored scenes.
