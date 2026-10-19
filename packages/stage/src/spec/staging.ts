@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { deg, matName, num, size, vec2, vec3 } from "../builders/types"
+import { deg, idName, num, size, vec2, vec3 } from "../builders/types"
 
 // Staging spec v1 (`d20.stage.staging`), minimal for phase 2: which set, who stands where, and the shots that frame
 // them. Scripts, ambient loops and beats come later (Stageview phases 3–4).
@@ -15,7 +15,6 @@ export const assetUrl = z
     "asset URLs must be /stage/… paths, page blobs or the asset bucket"
   )
 
-const idName = matName
 // Where to look: degrees, another cast member, a mark, or a point.
 const facing = z.union([deg, idName, vec2])
 

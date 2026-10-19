@@ -7,6 +7,7 @@ import type { Llm } from "@d20/gm-core"
 import { storyText } from "@d20/gm-core/story/render"
 import { createStubLibrary } from "@d20/stage/materials/library"
 import { buildSetGeometry, parseSet } from "@d20/stage/spec/build"
+import { stagingSpecSchema } from "@d20/stage/spec/staging"
 import { onFootprint } from "@d20/stage/spec/walk"
 import { STOCK_FIGURES } from "../src/figures"
 import { partyScene, portraitFor, SCENES, spatialContext } from "../src/scenes"
@@ -299,6 +300,20 @@ test("the party fills a scene's slots: premades keep theirs, created heroes take
 
   const context = spatialContext("the-harvest-festival", [milos, vex], {}, chosen)!
   assert.match(context, /Milos Hardcastle \(-1\.6, 17\.6\); Vex \(-0\.3, 18\.1\)/)
+})
+
+test("heroes from other adventures with numeric website ids stand in the gate's staging", () => {
+  const gate = SCENES["the-gates-of-kordavos"]
+  const party = [
+    premade("march-of-davos", "branka-stoneveil"),
+    who("thalbern", "Thalbern", "Half-Elf", "Ranger"),
+    who("1749159962941", "Lyra Silvanus", "Human", "Rogue", "Female"),
+    premade("march-of-davos", "milos-radan"),
+    who("1749307435667", "Poppen Quickfoot", "Halfling", "Bard"),
+  ]
+  const { staging } = partyScene(gate, party)
+  const parsed = stagingSpecSchema.parse(staging)
+  assert.deepEqual(parsed.loops["gate-line"].party!.members, ["branka", "thalbern", "1749159962941", "milos", "1749307435667"])
 })
 
 test("spare spots for extra heroes stand clear of anything solid", () => {

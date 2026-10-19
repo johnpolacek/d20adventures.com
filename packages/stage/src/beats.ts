@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { deg, matName, num, vec2 } from "./builders/types"
+import { deg, idName, num, vec2 } from "./builders/types"
 import { type StagingShot, stagingShot } from "./spec/staging"
 import type { Stage } from "./stage"
 
@@ -19,7 +19,7 @@ import type { Stage } from "./stage"
 //   { cue: "gate-line:front" }           wait for a named moment (a loop bringing the party to the front); skip jumps to it
 //   { loop: "gate-line", do: "release" } tell a loop the party is done (they pass and the line carries on); "stall" holds
 //                                        the line after the exchange at the counter, "resume" lets it move again
-const id = matName
+const id = idName
 export const beatSchema = z.union([
   z.object({ shot: z.union([id, stagingShot]), cut: z.boolean().optional(), duration: num(0.3, 20).optional() }).strict(),
   z.object({ move: id, to: z.union([id, vec2]), speed: num(0.3, 4).optional(), stop: num(0, 5).optional(), wait: z.boolean().optional() }).strict(),

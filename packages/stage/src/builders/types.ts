@@ -53,4 +53,6 @@ export const vec3 = z.tuple([coord, coord, coord])
 export const deg = num(-720, 720)
 export const size = (max = 200) => num(0.01, max)
 export const matName = z.string().regex(/^[a-zA-Z][a-zA-Z0-9_-]{0,63}$/, "material names are letters, digits, - and _")
+// Cast, shot, loop and beat ids. Heroes made on the website have numeric ids (`1749159962941`), so a leading digit is fine.
+export const idName = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/, "ids are letters, digits, - and _")
 export const segments = (min = 3, max = 96) => z.number().int().min(min).max(max)
