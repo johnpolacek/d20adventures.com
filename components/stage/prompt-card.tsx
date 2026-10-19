@@ -408,16 +408,15 @@ export function PromptCard({
                 Skip
               </button>
             )}
-            {/* Half the card wide, so it grows less than the epic button's usual hover. */}
             <Button
               variant="epic"
               size="xs"
-              className={cn("w-1/2 shrink-0 gap-1.5 scale-100 hover:scale-105", !onSkip && "ml-auto", !compact && "py-1.5 text-sm")}
+              className={cn("shrink-0 gap-1.5", !onSkip && "ml-auto", compact ? "px-6" : "px-8 py-1.5 text-sm")}
               onClick={send}
               disabled={!draft.trim()}
             >
               Send
-              <Chevron double />
+              <Chevron />
             </Button>
           </div>
         </>
