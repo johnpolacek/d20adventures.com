@@ -237,11 +237,11 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
     if (command.kind === "continue") {
       const current = findCurrentActor(turn.characters)
       if (current?.type === "pc" && current.controlledBy !== "ai") throw new Error("A player character still needs to act.")
-      await autonomous()
-      if (!findCurrentActor(store.current().characters)) {
-        await core.advanceTurn({ turnId: turn._id, settingId: "realm-of-myr", adventurePlanId: store.state!.adventure.planId })
-        // Deliberately let the new encounter's intro be read before the next NPC action.
-      }
+      // The turns that need no player, or the end of the round, never both: the last turns of a round are read on the
+      // stage before the next round replaces them.
+      if (current) await autonomous()
+      // Deliberately let the new encounter's intro be read before the next NPC action.
+      else await core.advanceTurn({ turnId: turn._id, settingId: "realm-of-myr", adventurePlanId: store.state!.adventure.planId })
     } else {
       const actor = findCurrentActor(turn.characters)
       if (actor?.id !== command.characterId || actor.type !== "pc" || actor.controlledBy === "ai") throw new Error("It is another character's turn.")

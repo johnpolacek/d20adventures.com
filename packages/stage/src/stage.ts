@@ -20,7 +20,7 @@ import { buildSetGeometry, populateCrowd } from "./spec/build"
 import { frameShot, type ResolvedShot, resolveCast, resolveShots } from "./spec/resolve"
 import { type SetSpec, setSpecSchema } from "./spec/set"
 import { type StagingShot, type StagingSpec, stagingSpecSchema } from "./spec/staging"
-import { doorways, onFootprint, reachOver, routeOver } from "./spec/walk"
+import { doorways, onFootprint, reachOver, routeOver, standingRoom } from "./spec/walk"
 
 // The Stage runtime: one set (plus an optional staging) rendered into a canvas it owns inside `container`.
 // Plain imperative three.js; the host (a React component) creates it, calls shot()/setTier()/pause(), and disposes it.
@@ -930,6 +930,11 @@ export class Stage {
       from = p
     }
     return out
+  }
+  // Where a cast member stands when they walk to a point: beside anyone already there, not on top of them.
+  standingRoom(id: string, to: { x: number; z: number }, gap = 0.8) {
+    const others = this.cast.filter((c) => c.id !== id && this.isOnStage(c.id))
+    return standingRoom(this.footprints, others, this.member(id), to, gap)
   }
   // ── Effects and objects ──
   // A cast member's chest, where effects start and land.

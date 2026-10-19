@@ -37,7 +37,8 @@ export async function applyMovement(stage: Stage, c: Mover, intent: MovementInte
     target = { x: me.x + Math.sin(angle) * (intent.meters ?? 0.7), z: me.z + Math.cos(angle) * (intent.meters ?? 0.7) }
   }
   if (target) {
-    // Through a doorway when a wall is in the way.
+    // Beside anyone already there, not on top of them. Through a doorway when a wall is in the way.
+    target = stage.standingRoom(id, target)
     for (const p of stage.route(id, target, speed(c))) await stage.moveCast(id, [p.x, p.z], { speed: intent.pace === "hurry" ? 2.4 : intent.pace === "sneak" ? 0.8 : 1.2 })
   }
   if (intent.face && known(intent.face)) stage.faceCast(id, intent.face)

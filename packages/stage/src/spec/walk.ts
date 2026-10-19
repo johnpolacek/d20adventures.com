@@ -42,6 +42,21 @@ export function reachOver(footprints: readonly Footprint[], from: { x: number; z
   return { x: from.x + dx * t, z: from.z + dz * t, distance: d, blocked, short: blocked || want > budget }
 }
 
+// Where someone walking to `to` stands: the point itself while no one else is there, else the nearest clear spot around
+// it on the walker's side, `gap` metres from everyone and not through anything solid.
+export function standingRoom(footprints: readonly Footprint[], others: readonly Point[], walker: Point, to: Point, gap = 0.8): Point {
+  const free = (p: Point) => others.every((c) => Math.hypot(c.x - p.x, c.z - p.z) >= gap - 1e-6)
+  if (free(to)) return to
+  const inside = onFootprint(footprints, to.x, to.z)
+  for (const r of [gap, gap * 2, gap * 3]) {
+    const ring = Array.from({ length: 12 }, (_, i) => ({ x: to.x + Math.sin((i * Math.PI) / 6) * r, z: to.z + Math.cos((i * Math.PI) / 6) * r })).filter(
+      (p) => free(p) && !onFootprint(footprints, p.x, p.z) && (inside || !reachOver(footprints, to, p, r + 0.01).short)
+    )
+    if (ring.length) return ring.reduce((a, b) => (Math.hypot(a.x - walker.x, a.z - walker.z) <= Math.hypot(b.x - walker.x, b.z - walker.z) ? a : b))
+  }
+  return to
+}
+
 type Point = { x: number; z: number }
 // A builder's doorways, from its "door" anchors in pairs: a point just inside and one just outside.
 export function doorways(anchors: readonly { tag: string; x: number; z: number }[]): [Point, Point][] {

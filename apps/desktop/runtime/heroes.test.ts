@@ -8,7 +8,7 @@ import { storyText } from "@d20/gm-core/story/render"
 import { createStubLibrary } from "@d20/stage/materials/library"
 import { buildSetGeometry, parseSet } from "@d20/stage/spec/build"
 import { stagingSpecSchema } from "@d20/stage/spec/staging"
-import { onFootprint } from "@d20/stage/spec/walk"
+import { onFootprint, standingRoom } from "@d20/stage/spec/walk"
 import { STOCK_FIGURES } from "../src/figures"
 import { partyScene, portraitFor, SCENES, spatialContext } from "../src/scenes"
 import { game, type Packs, transitionsOf } from "./game"
@@ -256,6 +256,47 @@ test("created heroes and AI companions start, take turns, and carry through an e
   }
 })
 
+test("an AI hero last in the round is read before the round ends, on a Continue of its own", async () => {
+  const { store, cleanup } = setup()
+  try {
+    const rosa = await addHero(store, "Rosa Vell", "Human", "Fighter", "human-b")
+    const bram = await addHero(store, "Bram Underhill", "Halfling", "Rogue", "halfling-a")
+    const party = [
+      { id: rosa.id, ai: false },
+      { id: bram.id, ai: true },
+    ]
+    await game(store, packs, offline)({ kind: "start", provider: "claude", adventure: "the-road-to-kordavos", party })
+    const turn = store.current()
+    turn.characters.forEach((c) => {
+      c.isComplete = c.hasReplied = c.id !== bram.id
+      c.initiative = c.id === bram.id ? 1 : 10
+    })
+    store.save()
+    const next = packs["the-road-to-kordavos"].artifacts.graph.encounterTransitions.find((t) => t.fromEncounterId === "well-met")!.toEncounterId
+    const llm: Llm = {
+      generateText: unused,
+      generateObject: async ({ schema }) => {
+        for (const answer of [
+          { rollType: "none", difficulty: 0 },
+          { beats: [{ kind: "action", who: bram.id, text: "Bram falls in at the back." }] },
+          { nextEncounterId: next, beats: [{ kind: "narration", text: "The road goes on." }], adventurePatch: {} },
+        ]) {
+          const parsed = schema.safeParse(answer)
+          if (parsed.success) return { object: parsed.data }
+        }
+        throw new Error("Unexpected model request")
+      },
+    }
+    await game(store, packs, llm)({ kind: "continue", turnId: turn._id })
+    assert.equal(store.current()._id, turn._id)
+    assert.match(storyText(store.current().story), /Bram falls in at the back/)
+    await game(store, packs, llm)({ kind: "continue", turnId: turn._id })
+    assert.notEqual(store.current()._id, turn._id)
+  } finally {
+    cleanup()
+  }
+})
+
 const who = (id: string, name: string, race = "Human", archetype = "Fighter", gender = "Male") => ({ id, name, race, archetype, gender, type: "pc" })
 const premade = (pack: string, id: string) => {
   const s = packs[pack].artifacts.characterSheets.premadeCharacters[id].sheet
@@ -330,6 +371,23 @@ test("spare spots for extra heroes stand clear of anything solid", () => {
   const max = Math.max(...Object.values(packs).map((p) => p.artifacts.manifest.maxPlayers ?? 1))
   assert.equal(max, 5)
   for (const scene of [SCENES["the-gates-of-kordavos"], SCENES["the-harvest-festival"]]) assert.ok(scene.party.length + (scene.spare?.length ?? 0) >= max)
+})
+
+test("heroes who walk to the same place stand beside each other, clear of anything solid", () => {
+  const set = parseSet(SCENES["the-gates-of-kordavos"].set)
+  const { footprints } = buildSetGeometry(set, createStubLibrary(set.materials))
+  const [x, z] = set.marks.queueHead.at
+  const standing = [{ x, z }]
+  for (const from of ["front2", "front3", "front4"]) {
+    const [fx, fz] = set.marks[from].at
+    const spot = standingRoom(footprints, standing, { x: fx, z: fz }, { x, z })
+    assert.ok(
+      standing.every((p) => Math.hypot(p.x - spot.x, p.z - spot.z) > 0.79),
+      from
+    )
+    assert.equal(onFootprint(footprints, spot.x, spot.z), false, from)
+    standing.push(spot)
+  }
 })
 
 test("created heroes show their figure and premades without stage art get theirs", () => {

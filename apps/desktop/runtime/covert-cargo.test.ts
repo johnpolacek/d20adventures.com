@@ -198,8 +198,12 @@ test("a killing blow leaves a hero alive, and nobody comes to the rescue: Thalbe
     store.save()
     const runs = { actionSummary: "Silas runs.", beats: [{ kind: "narration", text: "Silas goes over the bow rail." }], actionType: "flee" }
     const round = store.current()._id
-    await play(stubLlm(() => ({ nextEncounterId: "the-crate", beats: [{ kind: "narration", text: "The river takes him." }], adventurePatch: {} }), undefined, runs))
+    const toTheCrate = stubLlm(() => ({ nextEncounterId: "the-crate", beats: [{ kind: "narration", text: "The river takes him." }], adventurePatch: {} }), undefined, runs)
+    await play(toTheCrate)
     assert.equal(store.state!.turns.find((t) => t._id === round)!.characters.find((c) => c.name === "Silas")!.status, "fled")
+    // His run is read before the round ends, on a Continue of its own.
+    assert.equal(store.current()._id, round)
+    await play(toTheCrate)
     assert.equal(store.current().encounterId, "the-crate")
   })
 })

@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-18, March of Davos gate: AI turns read before the round ends
+
+Owner, in the desktop app with Thalbern and four AI heroes: the heroes merged into one figure, and Lyra, Milos and Poppen were skipped into round two. Two causes. Walks to a mark ended on the mark itself, so four heroes stood on `queueHead` and Thalbern stood on Garlan at `ledger`. Walks now stop beside anyone already there, clear of anything solid. And one Continue played the AI heroes after the last player and also ended the round, so the stage only told round two. In local play a Continue now plays the waiting NPC and AI turns or ends the round, never both. Hosted games still end the round in the same job. Website heroes with numeric ids (`1749159962941`) are now valid stage cast ids too. Desktop tests and typechecks pass. Not yet checked in the running app.
+
 ## 2026-10-18, backdrops for the other outdoor sets
 
 Owner chose to add backdrops to the other outdoor sets. Every set's shots were captured first. Three needed one: the Kordavos riverfront close-ups looked past the end of the paving, and the old forest path and Thalbern's home showed bright gaps between trees. Each got a painting. The forest trail, Kordavos gate and square, and Mordava piers were left alone. See [painted backdrop](plans/stage-backdrop.md).
