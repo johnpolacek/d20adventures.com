@@ -8,6 +8,7 @@ Updated for the desktop integration worktree on 2026-10-02. Implementation statu
 
 | Plan | Status | Next work |
 |---|---|---|
+| [Clan Conflict in 3D](clan-conflict-stage.md) | In progress on main 2026-10-19. A standoff at the south end of the harvest square, on a variant of the festival set with a ring of onlookers. Six new standees. | Standees, set, staging, review, app mapping. |
 | [Painted backdrop](stage-backdrop.md) | Implemented on main 2026-10-17. A set's `backdrops` hang painted, keyed panoramas on far cylinders. The Old Standing Stones has a painted valley in place of its mountain cones, and a forested ridge behind Thalbern's close-up since 2026-10-18. The riverfront, the old forest path and Thalbern's home have backdrops too. | None. |
 | [Stage art spikes](stage-art-spikes.md) | Decided 2026-10-17. Painted backdrop adopted. Paint-over projection and video standees not adopted. | None. |
 | [One roll card](one-roll-card.md) | Implemented on main 2026-10-14 in the desktop app and hosted games. One card rolls the die, shows the result, says the GM is resolving, then offers Continue. The reader starts after the roll. Owner played it with the live GM 2026-10-15. | A hosted game. The small-window layout. |
