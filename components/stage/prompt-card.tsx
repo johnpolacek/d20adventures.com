@@ -34,10 +34,11 @@ export interface CardSuggestion {
 // `suggestions` are chips over the reply box that fill it in, blank while they are being written. `suggestion` is
 // the demo's one scripted reply, behind its Suggest button.
 // A roll's `made` is the natural roll once it is made, and `resolving` says the GM is still answering it.
+// A thinking card's `who` is the NPC or AI hero the GM is playing, shown with their portrait.
 export type CardMode =
   | { kind: "hold"; prompt: string; suggestion?: string; suggestions?: CardSuggestion[] | "loading" }
   | { kind: "roll"; roll: CardRoll; prompt?: string; made?: number; resolving?: boolean }
-  | { kind: "thinking"; note?: string }
+  | { kind: "thinking"; note?: string; who?: CardCharacter }
   | { kind: "done"; next: string }
 
 function PartyRow({ party, actorId, compact, onPick }: { party: CardCharacter[]; actorId: string | null; compact: boolean; onPick: (id: string) => void }) {
@@ -439,10 +440,24 @@ export function PromptCard({
             onContinue={onContinue}
           />
         ))}
-      {mode.kind === "thinking" && (
+      {mode.kind === "thinking" && !mode.who && (
         <div className="py-1">
           <div className={cn(eyebrow, "animate-pulse")}>The GM is writing…</div>
           {mode.note && <div className="mt-1.5 font-serif text-[13px] text-stage-sage italic">{mode.note}</div>}
+        </div>
+      )}
+      {mode.kind === "thinking" && mode.who && (
+        <div className="flex items-center justify-center gap-3 py-1 text-left">
+          {mode.who.portrait && (
+            <div className={cn("shrink-0 border border-stage-gold bg-stage-ink p-[2px] shadow-[inset_0_0_0_1px_#000a,0_2px_8px_#0006]", compact ? "h-9 w-8" : "h-14 w-12")}>
+              {/* biome-ignore lint/performance/noImgElement: portrait art from the stage assets */}
+              <img src={mode.who.portrait} alt="" className="block h-full w-full object-cover object-top [filter:sepia(.2)_saturate(.88)]" />
+            </div>
+          )}
+          <div className="min-w-0">
+            <div className={cn(eyebrow, "animate-pulse")}>{mode.who.name.split(" ")[0]}&apos;s turn</div>
+            {mode.note && <div className="mt-1 font-serif text-[13px] text-stage-sage italic">{mode.note}</div>}
+          </div>
         </div>
       )}
       {mode.kind === "done" && (

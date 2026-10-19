@@ -198,6 +198,7 @@ export default defineSchema({
         behavior: v.optional(v.string()),
         motivation: v.optional(v.string()),
         personality: v.optional(v.string()),
+        thinking: v.optional(v.string()),
         skills: v.optional(v.array(v.string())),
         equipment: v.optional(
           v.array(

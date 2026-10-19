@@ -79,6 +79,20 @@ type Positions = Record<string, { x: number; z: number; ry: number }>
 // camera takes to reach them.
 const FALL_DELAY = 1500
 
+// What the card says while the GM plays an NPC's or AI hero's turn, when the sheet has no line of its own.
+const MULLING = ["considers the moment…", "weighs the options…", "sizes up the scene…", "makes a choice…", "takes a breath…"]
+
+// The card while the GM works: the NPC or AI hero it is playing, with their own line or one picked by the turn, or the
+// GM resolving a player's action.
+function playing(turnId: string | undefined, actor: Character | undefined, ai: boolean, portrait: (c: Character) => string | undefined): CardMode {
+  if (!actor || (actor.type !== "npc" && !ai)) return { kind: "thinking", note: "The GM is resolving the action…" }
+  const name = actor.name.split(" ")[0]
+  let pick = 0
+  for (const ch of `${turnId}:${actor.id}`) pick = (pick * 31 + ch.charCodeAt(0)) >>> 0
+  const note = actor.thinking ?? `${name} ${MULLING[pick % MULLING.length]}`
+  return { kind: "thinking", note, who: { id: actor.id, name: actor.name, role: `${actor.race} ${actor.archetype}`, portrait: portrait(actor) } }
+}
+
 // The stage-first play view: the 3D scene, the narration read paragraph by paragraph, and the prompt card for the
 // player's own heroes. The desktop app plays local saves in it, and hosted games on the app and the website. The
 // caller owns the game: it passes the save, says which heroes this player controls, and carries out each action.
@@ -657,7 +671,7 @@ export function StagePlay(props: {
   let mode: CardMode | null = null
   if (held) mode = { kind: "roll", roll: held.roll, made: held.natural, resolving: props.busy }
   // A walk holds the card back without a word about the GM.
-  else if (busy) mode = props.busy ? { kind: "thinking", note: "The GM is resolving the action…" } : null
+  else if (busy) mode = props.busy ? playing(turn?._id, actor, aiActor, portrait) : null
   // Movement is read against the scene on screen, so wait for the next scene before taking an action.
   else if (scene && !stage && !stageError) mode = { kind: "thinking", note: loading }
   else if (ended) mode = null

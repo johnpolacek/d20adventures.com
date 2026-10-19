@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-19, NPC turn card
+
+Owner asked for something more tailored than "The GM is resolving the action…" on an NPC's turn, and picked three options: an authored line per NPC, a fallback line picked by the turn, and the NPC's portrait. Character sheets gain an optional `thinking` line. Garlan Ironfist has the first. A player's own action keeps the GM wording. Typechecks and desktop tests pass. Not yet checked in the running app. See [NPC turn card](plans/npc-turn-card.md).
+
 ## 2026-10-18, March of Davos gate: AI turns read before the round ends
 
 Owner, in the desktop app with Thalbern and four AI heroes: the heroes merged into one figure, and Lyra, Milos and Poppen were skipped into round two. Two causes. Walks to a mark ended on the mark itself, so four heroes stood on `queueHead` and Thalbern stood on Garlan at `ledger`. Walks now stop beside anyone already there, clear of anything solid. And one Continue played the AI heroes after the last player and also ended the round, so the stage only told round two. In local play a Continue now plays the waiting NPC and AI turns or ends the round, never both. Hosted games still end the round in the same job. Website heroes with numeric ids (`1749159962941`) are now valid stage cast ids too. A second game showed one more cause: each round lists characters by initiative, and that new order rebuilt the stage and moved heroes between places in the line. The scene is now keyed by the party in a fixed order. Desktop tests and typechecks pass. Not yet checked in the running app.
