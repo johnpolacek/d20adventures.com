@@ -119,7 +119,7 @@ export function Narration({
               </svg>
             </Control>
             {step ? (
-              <Button variant="epic" size="xs" className={cn("ml-1 gap-1.5", compact && "px-4 py-0.5 text-[11px]")} onClick={onContinue}>
+              <Button variant="epic" size="xs" className={cn("ml-1 gap-1.5", compact ? "px-4 py-0.5 text-[11px]" : "-my-1 py-2 text-[11px]/4")} onClick={onContinue}>
                 Continue
                 <Chevron />
               </Button>
