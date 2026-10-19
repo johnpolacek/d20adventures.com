@@ -83,3 +83,6 @@ The web viewer and the desktop app run the same `packages/stage` renderer and th
 - Give two hidden characters hides that cannot see each other, and say so in the scene's `where` line for the GM.
 - When the story takes something big off a set, cut a second set from the first in the generator. Covert Cargo's empty pier is the pier's own spec with the tug, everything aboard, its mooring lines, its lights, its room, and the places and views on it filtered out. Hiding it with camera angles does not work: narration picks views by label, and "the tug" would find the boat still moored.
 - Check a new standing place against the big trees. The giant by the gangway has a 1.4 m footprint and stopped Poppen's walk to anyone north of it.
+- Place a scene's focus in the sun. The harvest square's afternoon sun throws the south-west houses' shadow across its south end, and the first Clan Conflict layout left Larya dim against a blank wall. Moving the standoff a few metres north-east fixed it.
+- Say "tall human proportions, long legs, not a dwarf" for a burly human. A brief for a burly, bearded man in armour came back with dwarf proportions.
+- Point a close-up across a face-off, not along it, or the other side's shoulder fills the edge of the frame.
