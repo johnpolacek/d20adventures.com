@@ -5,7 +5,7 @@
 // step back, move on (Continue when stepping through, the next paragraph when it plays itself), or skip to the end.
 
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react"
-import { Button } from "@/components/ui/button"
+import { Button, epicReducedButtonStyle } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Chevron, eyebrow, Pill, panel } from "./hud"
 import { RollResult, type RollResultData } from "./roll-result"
@@ -119,7 +119,14 @@ export function Narration({
               </svg>
             </Control>
             {step ? (
-              <Button variant="epic" size="xs" className={cn("ml-1 gap-1.5", compact ? "px-4 py-0.5 text-[11px]" : "-my-1 py-2 text-[11px]/4")} onClick={onContinue}>
+              // Taller than the row: the negative margin keeps the row at its height.
+              <Button
+                variant="epic"
+                size="xs"
+                className={cn("ml-1 gap-1.5", compact ? "px-4 py-0.5 text-[11px]" : "-my-[3px] border-[3px] py-2 text-[11px]/4")}
+                style={compact ? undefined : epicReducedButtonStyle}
+                onClick={onContinue}
+              >
                 Continue
                 <Chevron />
               </Button>

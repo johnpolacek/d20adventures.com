@@ -73,6 +73,11 @@ export const epicSmallButtonStyle = {
   ...textShadow,
   boxShadow: "-2px -4px 0px 0px #0006 inset, 2px 2px 0px 0px #FFF7 inset, -2px -4px 18px 0px rgba(0,0,0,.5) inset, -2px -2px 4px 0px rgba(255,255,255,0.5) inset",
 }
+// The full bevel and outline at two thirds, so a small button reads like a big one shrunk down.
+export const epicReducedButtonStyle = {
+  textShadow: Array(6).fill("0 0 1.3px #000").join(", "),
+  boxShadow: "-2.6px -5.3px 0px 0px #0006 inset, 2.6px 2.6px 0px 0px #FFF7 inset, -2.6px -5.3px 24px 0px rgba(0,0,0,.5) inset, -2px -2px 4px 0.7px rgba(255,255,255,0.5) inset",
+}
 export const brickButtonClass =
   "font-serif bg-blue-600 saturate-[1.2] brightness-110 rounded-2xl border-4 border-blue-900 text-white ml-[2px] px-2 py-[2px] rounded text-sm transition-all ease-in-out hover:scale-105 active:scale-95 bg-[url('/images/app/backgrounds/buried.png')]"
 
