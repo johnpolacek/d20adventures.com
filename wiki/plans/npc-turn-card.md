@@ -8,7 +8,8 @@ Owner, 2026-10-19: while the GM plays an NPC's turn, the card said "The GM is re
 
 While the GM plays an NPC's or AI hero's turn, the card shows that character's portrait, "Garlan's turn" as the eyebrow, and a line under it.
 
-- An NPC sheet may set `thinking`, such as "Garlan studies the line of travelers…". The card shows it as written.
+- An NPC sheet may set `thinking`, such as "Garlan strokes his beard, weighing his duty…". The card shows it as written.
+- The sheet goes with the NPC into every encounter, so the line describes the character, never a place or a scene.
 - Without one, the card picks a line by the turn, such as "Garlan weighs the moment…". The same turn always shows the same line.
 - A player's own action keeps "The GM is writing…" and "The GM is resolving the action…".
 

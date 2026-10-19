@@ -53,7 +53,7 @@ export const baseCharacterSchema = z.object({
   background: z.string().optional(),
   motivation: z.string().optional(),
   behavior: z.string().optional(),
-  // What the card says while the GM plays this character's turn, such as "Garlan studies the line of travelers…".
+  // What the card says while the GM plays this character's turn, such as "Garlan strokes his beard, weighing his duty…".
   thinking: z.string().optional(),
   healthPercent: z.number().min(0).max(100), // 0-100, percentage
   equipment: z.array(equipmentItemSchema).optional(),
