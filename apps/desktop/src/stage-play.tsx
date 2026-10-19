@@ -160,12 +160,17 @@ export function StagePlay(props: {
   const turn = save?.turns.find((t) => t._id === save.adventure.currentTurnId)
   const cardCharacter = turn?.characters.find((c) => c.id === cardId)
   // With no save, the stage shows the fallback encounter. Encounters without an authored scene play in story view.
-  // In a game the scene holds the actual party, keyed by value so a reloaded save does not rebuild the stage.
+  // In a game the scene holds the actual party, keyed by value so a reloaded save does not rebuild the stage. Each round
+  // lists its characters by initiative, so the party is keyed in a fixed order: a new round neither rebuilds the stage
+  // nor moves heroes between places in the line.
   const authored = sceneFor(turn?.encounterId ?? props.fallbackEncounter ?? "the-gates-of-kordavos")
   const painted = Object.fromEntries((save?.painted ?? []).flatMap((id) => (art[id] ? [[id, art[id]]] : [])))
   const partyKey = turn
     ? JSON.stringify([
-        turn.characters.filter((c) => c.type === "pc").map((c) => ({ id: c.id, name: c.name, race: c.race, archetype: c.archetype, gender: c.gender, type: c.type })),
+        turn.characters
+          .filter((c) => c.type === "pc")
+          .map((c) => ({ id: c.id, name: c.name, race: c.race, archetype: c.archetype, gender: c.gender, type: c.type }))
+          .sort((a, b) => a.id.localeCompare(b.id)),
         save?.figures ?? {},
         painted,
       ])
