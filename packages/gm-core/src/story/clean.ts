@@ -18,12 +18,31 @@ export interface StoryScene {
 
 const QUOTE = /["“”]([^"“”]+)["“”]/g
 const SAID_ONLY = /^["“][^"“”]+["”]$/
+const QUOTED = /["“][^"“”]+["”]/
 // What is left of a sentence once its quote is taken out, when it only said who spoke ("she says.", ", Wollandora
 // replies,").
 const TAG_ONLY =
   /^[\s,.:]*(?:(?:he|she|they|it|[A-Z][\w'-]*(?:\s[A-Z][\w'-]*)?)\s+)?(?:says|said|asks|asked|replies|replied|whispers|murmurs|growls|calls|shouts|adds|answers|mutters|snaps|warns|continues)(?:\s+(?:softly|quietly|firmly|gently|again|coldly|calmly))?[\s,.:]*$/i
 
 const lower = (s: string) => s.trim().toLowerCase()
+const literal = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+
+// What a beat says once its quotes are taken out, without the bare speech tags they leave behind.
+const unspoken = (text: string) =>
+  text
+    .replace(QUOTE, " ")
+    .split(/(?<=[.!?])\s+/)
+    .filter((s) => s.trim() && !TAG_ONLY.test(s))
+    .join(" ")
+    .replace(/\s+([,.!?])/g, "$1")
+    .replace(/\s{2,}/g, " ")
+    .trim()
+
+// The one listed character a text names, by full or first name, when it names exactly one.
+function soleNamed(scene: StoryScene, text: string): StoryCast | undefined {
+  const named = scene.cast.filter((c) => [c.name, c.name.split(/\s+/)[0]].some((n) => n.length > 2 && new RegExp(`\\b${literal(n)}\\b`).test(text)))
+  return named.length === 1 ? named[0] : undefined
+}
 
 export function findCharacter(scene: StoryScene, value: string | undefined): StoryCast | undefined {
   if (!value?.trim()) return undefined
@@ -88,14 +107,7 @@ export function cleanStory(output: StoryOutput, scene: StoryScene, by: StoryBy):
     if (out.kind === "action" && who) {
       // Spoken words in an action are the actor's, split out as their lines after what they do.
       const spoken = [...text.matchAll(QUOTE)].map((m) => m[1])
-      const rest = text
-        .replace(QUOTE, " ")
-        .split(/(?<=[.!?])\s+/)
-        .filter((s) => s.trim() && !TAG_ONLY.test(s))
-        .join(" ")
-        .replace(/\s+([,.!?])/g, "$1")
-        .replace(/\s{2,}/g, " ")
-        .trim()
+      const rest = unspoken(text)
       const action: ActionBeat = { kind: "action", by, text: rest, actor: who.id }
       if (to && to.id !== who.id) action.target = to.id
       const dest = findPlace(scene, out.place)?.id ?? findCharacter(scene, out.place)?.id
@@ -108,8 +120,15 @@ export function cleanStory(output: StoryOutput, scene: StoryScene, by: StoryBy):
       continue
     }
     const place = findPlace(scene, out.place)?.id
-    if (!place && SAID_ONLY.test(text)) said(text)
-    else beats.push(place ? { kind: "narration", by, text, place } : { kind: "narration", by, text })
+    if (!place && SAID_ONLY.test(text)) {
+      said(text)
+      continue
+    }
+    // Words in a narration that names one listed character, and no one else, are that character's lines.
+    const speaker = QUOTED.test(text) ? soleNamed(scene, text.replace(QUOTE, " ")) : undefined
+    const rest = speaker && maySpeak(speaker, by) ? unspoken(text) : text
+    if (rest && /\w/.test(rest)) beats.push(place ? { kind: "narration", by, text: rest, place } : { kind: "narration", by, text: rest })
+    if (speaker && rest !== text) for (const m of text.matchAll(QUOTE)) line(speaker, m[1])
   }
   return beats
 }
