@@ -58,7 +58,7 @@ export function createAdventure(ports: GmPorts) {
       story: reply,
       rollRequirement: undefined,
     })
-    await processNpcTurnsAfterCurrent(turnId)
+    if (ports.npcTurnsPerCall === undefined) await processNpcTurnsAfterCurrent(turnId)
     ports.narration.afterTurn(turnId)
     return { rollRequired: null }
   }
@@ -180,7 +180,7 @@ export function createAdventure(ports: GmPorts) {
     })
 
     // After marking player complete, process NPCs
-    await processNpcTurnsAfterCurrent(turnId)
+    if (ports.npcTurnsPerCall === undefined) await processNpcTurnsAfterCurrent(turnId)
 
     ports.narration.afterTurn(turnId)
 

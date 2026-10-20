@@ -173,6 +173,8 @@ export function createNpcTurnService(ports: GmPorts) {
   }
 
   async function processNpcTurnsAfterCurrent(turnId: string) {
+    const limit = ports.npcTurnsPerCall ?? Number.POSITIVE_INFINITY
+    let played = 0
     const npcRequestId = Math.random().toString(36).substring(7)
     console.log(`[NPC:${npcRequestId}] Starting NPC turns processing:`, {
       turnId: turnId.toString(),
@@ -282,6 +284,7 @@ export function createNpcTurnService(ports: GmPorts) {
           console.error("[LLM] AI companion turn failed, stopping loop for retry:", char.name, error)
           break
         }
+        if (++played >= limit) break
         continue
       }
       if (char.type !== "npc") {
@@ -426,6 +429,7 @@ export function createNpcTurnService(ports: GmPorts) {
           2
         )
       )
+      if (++played >= limit) break
     }
 
     // After processing NPCs, mark all dead characters as complete

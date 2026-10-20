@@ -122,4 +122,8 @@ export interface GmPorts {
   narration: Narration
   identity(): Promise<string | null>
   sleep?(ms: number): Promise<void>
+  // How many NPC and AI hero turns one call plays. Unset, a call plays every one up to the next player, and a player's
+  // reply or roll plays the turns after it. With a number, those turns wait for their own calls, so each can be read
+  // as soon as it is written instead of after the whole run.
+  npcTurnsPerCall?: number
 }
