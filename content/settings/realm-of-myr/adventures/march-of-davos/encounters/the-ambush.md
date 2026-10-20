@@ -12,6 +12,8 @@ npcs:
     behavior: "Cold, calculating, and merciless."
   - id: "liora"
     behavior: "Stoic, deadly, and fiercely loyal to The Cowl."
+  - id: "bram"
+    behavior: "Waits up at the Dragonbone Inn and appears only once the adventurers are back inside. Worried for them, urges sleep before the Blackthorns' ball, and offers the attic trunk of forgotten costumes and masks."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726580775048"
 ---
 
