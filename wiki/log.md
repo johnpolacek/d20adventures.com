@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-20, March of Davos content pass
+
+The playtest's live GM found later encounters with named characters but no `npcs`, lines inside narration, and intros that call the players "you". 31 encounters gained or filled in their casts, seven NPC sheets were added, and eight existing sheets joined the adventure's source. `forest-drake` had been missing, so entering The Beast Escapes threw. Quotes became speaker lines and intros moved to the third person. The March of Davos bridge and batches a to f pass. Not yet played through in the app, and the desktop runtime pack is not rebuilt. See [the playtest](plans/march-of-davos-playtest.md#content-pass-2026-10-20).
+
 ## 2026-10-19, NPC turn card
 
 Owner asked for something more tailored than "The GM is resolving the action…" on an NPC's turn, and picked three options: an authored line per NPC, a fallback line picked by the turn, and the NPC's portrait. Character sheets gain an optional `thinking` line. Garlan Ironfist has the first. A player's own action keeps the GM wording. Typechecks and desktop tests pass. Not yet checked in the running app. See [NPC turn card](plans/npc-turn-card.md).

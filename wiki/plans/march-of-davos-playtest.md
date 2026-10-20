@@ -37,6 +37,18 @@ An automated playtest of March of Davos. Fix gameplay issues found along the way
 - Festival: Zephyra foreshadowed the key and the mansion, Karim named the Blackthorns and the lost shipment, Liora complained of Asterian ways, all as the GM notes ask. One round, then Clan Conflict on cue.
 - Clan Conflict: Yeva sneaked to Barok's side, Milos calmed Barok with a Persuasion roll, Branka faced both leaders down with Intimidation. Barok named the last place the shipment was seen, a toll bridge on the east road. Then the Dragonbone Inn on cue.
 
+## Content pass, 2026-10-20
+
+The live GM found three content faults in the later encounters: named characters with no turn, spoken words inside narration, and intros that call the players "you". Fixed in the encounter files and NPC sheets.
+
+- NPCs. 31 encounters gained or filled in `npcs`, each with a one-line behavior. New casts: Bram in the morning at the inn, the Archivist in the library, Harron at the Silver Serpent, Astrid and Petra after the drake, Astrid with the invitation, the auctioneer, Silverhand and his representative through the auction, Silverhand's guards at the hideout, Thaddeus in the rotunda and on the stage, Astrid and Aelindor before the song, the corridor guards, the sommelier and servant in the cellar, the assassin at the murder and the chase, and Astrid and Eamon with the party from the grate to the inner sanctum, where Joran waits. Combatants: Alaric's thugs, the catacomb saboteurs, the ancient undead in Big Empty.
+- New sheets: `warehouse-thug`, `auctioneer`, `aelindor`, `blackthorn-guard`, `covenant-assassin`, `covenant-rogue`, `covenant-cultist`. A group of like foes is one sheet whose behavior says how many.
+- March of Davos reads its NPC sheets from `migration-report.json`. `forest-drake` was not listed, so The Beast Escapes threw "Missing NPC sheet". It and seven other existing sheets (Harron, the Archivist, Thaddeus, the sommelier, the servant, Joran, the undead) are now listed. 49 sheets.
+- Lines. Quotes by Bram, Astrid, Petra, Eamon, Thaddeus, Joran, Aelindor, the auctioneer, the assassin and a saboteur are now speaker lines, with actor beats for what they do.
+- Point of view. Docks, Mystery Cargo, The Beast Escapes, The Aftermath, An Invitation, Shadowing Silverhand, the hunt, the catacombs, the labyrinth, the sealed door, Big Empty and the final confrontation now speak of the adventurers in the third person.
+- Big Empty's notes say the undead rise there, as Forgotten Temple's intro assumes.
+- Left as is: the Covenant's disembodied voice in The Ambush and the festival's unnamed vendor stay narration. Text under a `##` heading other than Intro, GM Notes, Checks, Summary and Transitions reaches no prompt, so "The Meeting", "The Missing Brother" and "The Final Night Approaches" never reach the GM.
+
 ## Open
 
 - The rest of the adventure in story view, to an ending.

@@ -103,7 +103,9 @@ Added 2026-10-14 with [structured narrative](plans/structured-narrative.md). An 
 - Values are split on commas, so a `delivery` is written "calm and commanding".
 - Prompts and the website's text views show the intro with its labels taken off and each line under its speaker's name.
 - All four Myr adventures are labelled, as of 2026-10-14. An unlabelled paragraph is narration: nothing is guessed from its words.
-- A spoken line needs its speaker among the encounter's characters. A quote by someone outside them stays in the prose with no bubble or voice. March of Davos has such lines from Astrid, Eamon, Bram, Petra and Thaddeus in encounters whose `npcs` do not list them, and Covert Cargo one from Aelar in the-transaction. Adding them to `npcs` would make them characters in the turn, so it is left for the author.
+- A spoken line needs its speaker among the encounter's characters. A quote by someone outside them stays in the prose with no bubble or voice. Covert Cargo has one, from Aelar in the-transaction. March of Davos had several until 2026-10-20, when the speakers joined their encounters' `npcs` and the quotes became lines. Its last quotes in prose are a disembodied voice in the-ambush and an unnamed vendor at the festival. See [the playtest](plans/march-of-davos-playtest.md#content-pass-2026-10-20).
+- March of Davos takes its NPC sheets from the `generatedFiles` of its `migration-report.json`, not from every file in `npcs/`. A new sheet for it goes in that list, or the encounter that names it throws "Missing NPC sheet".
+- An encounter's Intro, GM Notes, Checks, Summary and Transitions sections are read. Text under any other `##` heading reaches no prompt.
 
 ## Admin authoring
 
