@@ -27,13 +27,13 @@ A low, rumbling voice booms through the narrow streets, unnatural and echoing as
 
 The figures on the rooftops do not move. The voice speaks once more. "We are watching. We know every step you take. Keep searching, and you will find only ruin."
 
-## The Final Night Approaches
+## GM Notes
+
+**After the voice falls silent:**
 
 With that, the shadows on the roofs melt away, leaving only the cold wind in the alleys. The adventurers walk on to the Dragonbone Inn in heavy silence.
 
 At the inn, Bram is waiting up, his usual jovial face creased with concern. "You look like you've seen a ghost, or worse. Get some sleep. Tomorrow is the final day of the festival, and the Blackthorns don't like to be kept waiting for their grand ball. If you're going, I hope you've got your masks ready."
-
-## GM Notes
 
 This encounter serves as a powerful psychological tactic by the Covenant of the Cowl to intimidate the adventurers rather than physically harm them. The use of magic, particularly Thaumaturgy, and the dramatic timing of the arrows are meant to create an atmosphere of unease and fear, reminding the party that they are constantly being watched.
 

@@ -36,11 +36,11 @@ As the adventurers explore Astrid’s private study, they notice a faint draft c
 
 Inside the hidden compartment is a worn, leather-bound journal. Its edges are frayed, and the pages are filled with the meticulous handwriting of a scholar. The cover bears the initials "M.A." 
 
-The pages reveal sketches, historical notes, and cryptic clues tied to forgotten relics. It's now clear that Thaddeus ordered Milos's death and Astrid carried it out. She took this journal and hid it, even from her brother, to keep its knowledge for herself.
+The pages reveal sketches, historical notes, and cryptic clues tied to forgotten relics. It's now clear that Thaddeus ordered Mikhail's death and Astrid carried it out. She took this journal and hid it, even from her brother, to keep its knowledge for herself.
 
-This is the very journal that Joran had been desperately searching for, believed lost when his father was murdered. The journal contains Milos Antonov’s research on ancient Valkaran artifacts, most notably his detailed investigation into the Key of Ilmarin and its significance to Valkaran history.
+This is the very journal that Joran had been desperately searching for, believed lost when his father was murdered. The journal contains Mikhail Antonov’s research on ancient Valkaran artifacts, most notably his detailed investigation into the Key of Ilmarin and its significance to Valkaran history.
 
-This journal represents both the culmination of Milos’s life’s work and the key to unraveling the truth behind his death—a truth the adventurers now hold in their hands.
+This journal represents both the culmination of Mikhail’s life’s work and the key to unraveling the truth behind his death—a truth the adventurers now hold in their hands.
 
 ## Transitions
 

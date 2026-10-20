@@ -21,7 +21,7 @@ As the applause for Thaddeus’ announcement peaks, a figure in the shadows move
 
 {actor: covenant-assassin, target: thaddeus-blackthorn, object: blade} With a sudden, calculated movement, the assassin breaks from the crowd near Thaddeus and plunges a blade into his side.
 
-{speaker: covenant-assassin, to: thaddeus-blackthorn, delivery: hissing} Death to the murderer of Milos Antonov!
+{speaker: covenant-assassin, to: thaddeus-blackthorn, delivery: hissing} Death to the murderer of Mikhail Antonov!
 
 {actor: thaddeus-blackthorn} Thaddeus gasps, eyes wide in shock, as the poison begins to work through his veins.
 
@@ -33,7 +33,7 @@ Chaos erupts. Guests scream and scatter.
 
 The players have a decision to make. They could give chase, or go to Thaddeus. If they go to Thaddeus, it is possible they could obtain his key. Regardless, there is nothing they can do to help him—he will die.
 
-The Covenant blames Thaddeus, who as head of the house ordered Milos's death. Astrid carried it out. The journal in her quarters reveals this, and Joran confronts her with it at the end.
+The Covenant blames Thaddeus, who as head of the house ordered Mikhail's death. Astrid carried it out. The journal in her quarters reveals this, and Joran confronts her with it at the end.
 
 ## Transitions
 

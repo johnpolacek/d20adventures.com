@@ -33,7 +33,9 @@ Dawn light filters through the windows of the Dragonbone Inn, and the air smells
 
 {speaker: bram, to: elara} You know, these folks here, they seem like the kind who could help you find Joran.
 
-## The Missing Brother
+## GM Notes
+
+**Elara's story, told once she sits with the party:**
 
 Elara sinks into a chair near the adventurers. “My brother, Joran,” she whispers, “he’s always been one to chase dangerous truths. After our father’s death, he became obsessed with finding out why. He believed there was something more.”
 
@@ -41,10 +43,8 @@ Elara sinks into a chair near the adventurers. “My brother, Joran,” she whis
 
 She produces a small leather scrollcase. “This was Joran’s. He left these sketches and notes, but they’re in some sort of code. I can’t make sense of them.”
 
-## GM Notes
-
 - **The Clues**: The scrollcase contains sketches of Valkaran runes and references to a "Key of Ilmarin." Successful Arcana or History checks reveal these are ancient Valkaran and Elvish symbols.
-- **The Father**: Milos Antonov was a scholar murdered under mysterious circumstances. He discovered the location of a powerful artifact, which Joran was trying to find.
+- **The Father**: Mikhail Antonov was a scholar murdered under mysterious circumstances. He discovered the location of a powerful artifact, which Joran was trying to find.
 - **The Research**: Elara mentions Joran spent a lot of time at the **Old Grand Library** researching their father's work before he went to the **Silver Serpent Tavern**.
 - **The Goal**: This provides the second major plot hook. Both the missing shipment (from the previous night) and the missing brother lead toward the docks and the library.
 - **Bram's Incentive**: Bram will offer the party free lodging if they agree to help Elara.

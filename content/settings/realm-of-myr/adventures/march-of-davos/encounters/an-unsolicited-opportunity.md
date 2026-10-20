@@ -25,15 +25,15 @@ Late evening falls on the Dragonbone Inn amid the clink of mugs. Several locals 
 
 {speaker: Eamon Drakovan} Indeed, we have matters that require the expertise of seasoned adventurers. Perhaps we could discuss this privately?
 
-## The Meeting
+## GM Notes
+
+**The meeting, played once the party agrees to talk:**
 
 Beric and Eamon lead the adventurers to a dim backroom with a sturdy table and mismatched chairs.
 
 "We've got a bit of a situation," Beric begins, his voice low. "A shipment went missin' from the docks. Valuable cargo, meant for a noble up in the Asterian quarter. The people I work for ain't too pleased."
 
 Eamon leans forward. "Among the cargo were certain... artifacts. Items that could cause quite a stir in the wrong hands. We believe smugglers operating out of the Lower Districts may be responsible. Our hands are tied, and discretion is paramount. We need you to recover it. Quietly."
-
-## GM Notes
 
 - **Beric** is a dockworker who knows the rough side of Kordavos. He speaks bluntly.
 - **Eamon** is a half-elf scholar with hidden ties to the Blackthorn family (though he won't reveal this). He is more refined and calculating.
