@@ -513,14 +513,24 @@ transformed.x += sway * sway * uWind * ${amp} * .6 * (1.0 + sin(uTime * .9 + ph)
     // Thin cloth lets the light through: the side turned from the sun glows with it, dimmer, as canvas does, so an
     // awning seen from below shows its colour instead of a black sheet.
     s.uniforms.uClothSun = ctx.shared.sun
-    s.fragmentShader = s.fragmentShader.replace("#include <common>", "#include <common>\nuniform vec3 uClothSun;").replace(
-      "#include <emissivemap_fragment>",
-      `#include <emissivemap_fragment>
+    s.fragmentShader = s.fragmentShader
+      .replace("#include <common>", "#include <common>\nuniform vec3 uClothSun;")
+      // Cloth passing right by the lens, a string of bunting or the edge of an awning, filled the frame with flat
+      // colour. It thins out, dithered, over the last metre before the camera.
+      .replace(
+        "#include <clipping_planes_fragment>",
+        `#include <clipping_planes_fragment>
+{ float keep = smoothstep(.8, 1.8, length(vViewPosition));
+  if (keep < 1.0 && fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(.06711056, .00583715)))) > keep) discard; }`
+      )
+      .replace(
+        "#include <emissivemap_fragment>",
+        `#include <emissivemap_fragment>
 #if NUM_DIR_LIGHTS > 0
  { float through = max(-dot(normal, normalize((viewMatrix * vec4(uClothSun, 0.0)).xyz)), 0.0);
    totalEmissiveRadiance += diffuseColor.rgb * directionalLights[0].color * through * .1; }
 #endif`
-    )
+      )
   })
 }
 
