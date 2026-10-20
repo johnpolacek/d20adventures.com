@@ -411,6 +411,23 @@ export const goodsPile = defineBuilder(z.object({}).strict(), (ctx) => {
 
 // ── Town ──
 // A timber-framed house that closes the plaza and throws the foreground into shade.
+// A town window on a front at z = face: dark leaded glass in a timber frame with a cross of glazing bars, a sill, and
+// shutters, open against the wall or, now and then, closed.
+function townWindow(F: Frame, M: BuildCtx["M"], rand: Rand, x: number, y: number, face: number) {
+  const ww = 0.7
+  const wh = 1.1
+  F.box(M.void, x, y, face + 0.04, ww, wh, 0.1)
+  for (const s of [-1, 1]) {
+    F.box(M.timber, x + (s * (ww + 0.1)) / 2, y, face + 0.1, 0.1, wh + 0.2, 0.08)
+    F.box(M.timber, x, y + (s * (wh + 0.1)) / 2, face + 0.1, ww + 0.2, 0.1, 0.08)
+  }
+  F.box(M.timber, x, y, face + 0.1, 0.04, wh, 0.04)
+  F.box(M.timber, x, y + wh * 0.12, face + 0.1, ww, 0.04, 0.04)
+  F.box(M.timber, x, y - wh / 2 - 0.1, face + 0.14, ww + 0.36, 0.07, 0.2)
+  if (rand() < 0.18) F.box(M.timber, x, y, face + 0.12, ww, wh, 0.05)
+  else if (rand() < 0.8) for (const s of [-1, 1]) F.box(M.timber, x + s * (ww / 2 + 0.1 + ww / 4), y, face + 0.1, ww / 2, wh, 0.04, s * rand(0.1, 0.4))
+}
+
 export const house = defineBuilder(
   z
     .object({
@@ -430,7 +447,7 @@ export const house = defineBuilder(
     for (const y of [1.2, h * 0.52, h - 0.1]) F.box(M.timber, 0, y, d / 2 + 0.06, w + 0.1, 0.2, 0.12)
     for (let i = 0; i < n; i++) {
       const cx = -w / 2 + ((i + 0.5) * w) / n
-      for (const y of [h * 0.3, h * 0.75]) if (h > 7 || y < h * 0.5) F.box(M.void, cx, y, d / 2 + 0.04, 0.7, 1.1, 0.1)
+      for (const y of [h * 0.3, h * 0.75]) if (h > 7 || y < h * 0.5) townWindow(F, M, rand, cx, y, d / 2)
     }
     F.shape(
       M.roof,
