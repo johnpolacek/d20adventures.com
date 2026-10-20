@@ -13,6 +13,8 @@ export function sanitizeUserVisibleProse(text: string): string {
 
   let result = text
 
+  // Markdown emphasis shows as raw marks in the game's text: **Forest Drake**, *Star of Faelendar*.
+  result = result.replace(/\*+/g, "").replace(/(^|[^\w])__?([^_]+?)__?(?=[^\w]|$)/g, "$1$2")
   result = result.replace(/[\u2012\u2013\u2014\u2015]/g, ", ")
   result = result.replace(/;/g, ",")
   result = result
