@@ -28,6 +28,8 @@ An automated playtest of March of Davos. Fix gameplay issues found along the way
 | Braziers | A flat peach cone for fire, and peach slabs for coals. | A `fire` material: crossed cards of live flame that lick, sway and flicker, white-gold at the root and red at the tips. A bed of glowing and charred coals. On the gate, the square, the conflict cut and the riverfront. |
 | Zephyra's stall | The crystal ball was a faceted pale-blue disc on the counter behind her, so she never "peers into" it. | An `orb` material: dark polished glass with mist turning inside and a bright rim. The ball sits on a brass stand on a draped round table in front of her. |
 | Game stall | The wheel of chance was a flat yellow disc under the awning. | A `prizeWheel` builder: painted wedges, brass rim and pegs, hub and pointer, on its own post beside the stall. |
+| Gate queue | The game pauses loops, and the queue loop stood the party second in line, behind a stranger at Garlan's counter. Garlan's "State your business" was framed on the stranger, and the two-shot hid Branka. | The party starts at the head of the line, where the intro has Garlan question them. The two-shot frames Garlan and the four heroes across the counter. |
+| Strongboxes | Plain dark brown, a black slab from behind. | Planked wood, iron straps over the lid and a hasp. |
 
 ## Gameplay notes
 
@@ -39,4 +41,3 @@ An automated playtest of March of Davos. Fix gameplay issues found along the way
 
 - The rest of the adventure in story view, to an ending.
 - The festival's party view looks down from above. The view back through the gate shows flat grey blocks.
-- The black strongbox on the sergeant's table is an untextured box.

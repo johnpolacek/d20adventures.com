@@ -291,9 +291,14 @@
       "roughness": 0.6
     },
     "chest": {
-      "type": "plain",
-      "color": "#3e2a1c",
-      "roughness": 0.8
+      "type": "wood",
+      "a": "#5c3c26",
+      "b": "#6e4a30",
+      "c": "#4a3222",
+      "plank": [0.11, 0.9],
+      "relief": 0.05,
+      "variance": 0.35,
+      "seed": 23.4
     },
     "banner": {
       "type": "cloth",

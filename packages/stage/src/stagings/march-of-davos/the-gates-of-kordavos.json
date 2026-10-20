@@ -94,9 +94,9 @@
     },
     "twoshot": {
       "subjects": ["garlan", "branka", "cassia"],
-      "offset": [-0.1, 1.9, -6.03],
-      "target": [0.2, 0.95, -0.03],
-      "fov": 40,
+      "offset": [-1.11, 1.55, -2.33],
+      "target": [0.49, 1.2, -0.03],
+      "fov": 46,
       "label": "Two-shot"
     },
     "close": {
@@ -115,7 +115,7 @@
       "official": "garlan",
       "party": {
         "members": ["branka", "cassia", "yeva", "milos"],
-        "position": 2,
+        "position": 0,
         "lateral": [-0.62, 0.58, -0.02, 1.2],
         "pair": 2
       },

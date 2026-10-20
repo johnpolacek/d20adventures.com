@@ -163,6 +163,9 @@ export const ledgerTable = defineBuilder(z.object({ cloth: matName.default("bann
   F.box(M.chest, 0.85, 1.08, 0.05, 0.5, 0.3, 0.34)
   for (const t of [-0.18, 0, 0.18]) F.box(M.iron, 0.85 + t, 1.08, 0.05, 0.04, 0.31, 0.35)
   F.box(M.chest, 0.85, 1.3, -0.16, 0.5, 0.32, 0.04, -0.35)
+  // Iron straps over the lid, front and back, and a hasp.
+  for (const t of [-0.18, 0, 0.18]) F.box(M.iron, 0.85 + t, 1.3, -0.16, 0.04, 0.33, 0.055, -0.35)
+  F.box(M.iron, 0.85, 1.03, 0.225, 0.07, 0.1, 0.02)
   for (let i = 0; i < 26; i++) F.cyl(M.coin, 0.85 + rand(-0.18, 0.18), 1.2 + rand(0, 0.05), 0.05 + rand(-0.12, 0.12), 0.03, 0.03, 0.006, 8)
   for (let i = 0; i < 6; i++) F.cyl(M.coin, rand(-0.2, 0.1), 0.945 + i * 0.007, 0.22, 0.03, 0.03, 0.006, 8)
   ctx.footprint(0, 0, 1.4, 0.6)
