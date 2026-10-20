@@ -188,6 +188,18 @@
       "kind": "encounter"
     },
     {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/the-new-dawn.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/vengeance-of-the-blackthorn.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/march-of-davos/encounters/the-dust-settles.md",
+      "kind": "encounter"
+    },
+    {
       "path": "content/settings/realm-of-myr/npcs/garlan-ironfist.md",
       "kind": "npc"
     },

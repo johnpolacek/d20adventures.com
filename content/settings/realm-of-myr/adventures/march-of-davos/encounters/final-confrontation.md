@@ -35,6 +35,12 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726970504298"
 
 The players must now choose between Joran's revolutionary cause, Astrid's imperial stability, or a neutral path mediated by the Church. Their choice will determine the aftermath of the adventure as outlined in the adventure summary.
 
+Let the confrontation play out. Joran makes his case: his father Mikhail found the truth of the Drakovan crimes and was killed for it, and the Key belongs to Valkara, not to an Asterian house. Astrid makes hers: the Covenant murdered her brother tonight, and only the Margrave's order keeps the March from civil war. Either may offer the party a place at their side. Neither backs down on their own, and if steel is drawn they fight each other as much as the party.
+
+The scene ends when the adventurers make their choice plain, by word or by deed: helping Joran keep the Key, taking it from him for Astrid, or putting it beyond both of them.
+
 ## Transitions
 
-- After resolving this encounter, the adventure concludes based on the outcomes described in the Aftermath section.
+- To [[encounter:the-new-dawn]] when the adventurers side with Joran and the Covenant, letting him keep the Key of Ilmarin or standing with him against House Blackthorn.
+- To [[encounter:vengeance-of-the-blackthorn]] when the adventurers side with Astrid and House Blackthorn, taking the Key from Joran or defeating him.
+- To [[encounter:the-dust-settles]] when the adventurers refuse both sides and give the Key to the Church of Valkara or put it out of either faction's reach.

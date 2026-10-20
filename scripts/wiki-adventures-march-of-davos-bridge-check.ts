@@ -45,15 +45,17 @@ function main() {
     "1749159962941",
     "1749307435667",
   ])
-  assert.equal(Object.keys(artifacts.encounters).length, 45)
+  assert.equal(Object.keys(artifacts.encounters).length, 48)
   assert.equal(Object.keys(artifacts.characterSheets.npcs).length, 49)
   assert.equal(Object.keys(artifacts.characterSheets.premadeCharacters).length, 9)
-  assert.equal(artifacts.graph.encounterTransitions.length, 57)
+  assert.equal(artifacts.graph.encounterTransitions.length, 60)
   assert.equal(
     artifacts.graph.encounterTransitions.some((transition) => transition.fromEncounterId === "the-gates-of-kordavos" && transition.toEncounterId === "the-harvest-festival"),
     true
   )
-  assert.equal(isLocalWikiFinalEncounter(artifacts, "final-confrontation"), true)
+  // The confrontation is played, and the party's choice leads to one of three endings.
+  assert.equal(isLocalWikiFinalEncounter(artifacts, "final-confrontation"), false)
+  for (const ending of ["the-new-dawn", "vengeance-of-the-blackthorn", "the-dust-settles"]) assert.equal(isLocalWikiFinalEncounter(artifacts, ending), true)
   assert.equal(isLocalWikiFinalEncounter(artifacts, "the-gates-of-kordavos"), false)
 
   const savedCharacter: TurnCharacter = {
