@@ -83,6 +83,8 @@ export async function createStage(o: StageOptions): Promise<Stage> {
   return stage
 }
 
+// The steepest the player can tilt the camera: its angle from straight overhead.
+const STEEPEST_ORBIT = Math.PI * 0.28
 type Transition = { from: { pos: THREE.Vector3; target: THREE.Vector3; fov: number }; to: { pos: THREE.Vector3; target: THREE.Vector3; fov: number }; start: number; duration: number }
 
 export class Stage {
@@ -349,6 +351,9 @@ export class Stage {
       c.addEventListener("start", () => {
         this.transition = null
         this.driving = true
+        // The player looks down at most about 40 degrees. From higher, the crowd's painted cards read as flat pegs. An
+        // authored shot that is steeper keeps its angle when the drag starts, so nothing jumps.
+        c.minPolarAngle = Math.min(STEEPEST_ORBIT, c.getPolarAngle())
       })
       this.controls = c
     } else this.controls = null
@@ -450,6 +455,7 @@ export class Stage {
     }
     if (!s) return false
     this.driving = false
+    if (this.controls) this.controls.minPolarAngle = 0
     this.activeShot = typeof which === "string" ? which : null
     this.activeFov = s.fov
     const to = { pos: V(...s.position), target: V(...s.target), fov: this.lens(s.fov) }
