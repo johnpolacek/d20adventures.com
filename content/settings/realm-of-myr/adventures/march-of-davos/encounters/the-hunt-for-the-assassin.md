@@ -20,6 +20,8 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726868134486"
 
 {actor: astrid-blackthorn} Lady Astrid, now in rugged ranger gear of dark leathers and a heavy cloak, crosses the moonlit courtyard with predatory focus. The air smells of wet earth and crushed ivy, and a cold wind whistles through the stone balustrades. She leads the adventurers along the assassin's escape route, her eyes on the churned-up soil and a discarded glove faintly glowing green with lingering poison.
 
+A handful of Blackthorn house guards follow her with lanterns and drawn swords.
+
 {actor: eamon} By a heavy drainage grate near the estate's ivy-choked wall waits a familiar figure: Eamon, no longer the mild-mannered scholar from the Dragonbone Inn. He stands tall, hands glowing with soft arcane light, inspecting runes etched into the grate's metal.
 
 {actor: astrid-blackthorn, target: eamon} Astrid strides forward, boots crunching on gravel.
