@@ -510,6 +510,17 @@ vec3 wdir = normalize(objectNormal + vec3(.35, 0.0, .2));
 transformed += wdir * wv * sway * uWind * ${amp};
 transformed.x += sway * sway * uWind * ${amp} * .6 * (1.0 + sin(uTime * .9 + ph));`
     )
+    // Thin cloth lets the light through: the side turned from the sun glows with it, dimmer, as canvas does, so an
+    // awning seen from below shows its colour instead of a black sheet.
+    s.uniforms.uClothSun = ctx.shared.sun
+    s.fragmentShader = s.fragmentShader.replace("#include <common>", "#include <common>\nuniform vec3 uClothSun;").replace(
+      "#include <emissivemap_fragment>",
+      `#include <emissivemap_fragment>
+#if NUM_DIR_LIGHTS > 0
+ { float through = max(-dot(normal, normalize((viewMatrix * vec4(uClothSun, 0.0)).xyz)), 0.0);
+   totalEmissiveRadiance += diffuseColor.rgb * directionalLights[0].color * through * .1; }
+#endif`
+    )
   })
 }
 

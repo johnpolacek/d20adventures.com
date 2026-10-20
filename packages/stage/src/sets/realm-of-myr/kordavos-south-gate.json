@@ -341,9 +341,14 @@
       "roughness": 0.7
     },
     "straw": {
-      "type": "plain",
-      "color": "#c4a45a",
-      "roughness": 0.95
+      "type": "wood",
+      "a": "#c8a65a",
+      "b": "#b38f45",
+      "c": "#d9bd74",
+      "plank": [0.03, 2],
+      "relief": 0.03,
+      "variance": 0.5,
+      "seed": 7.7
     },
     "gourd": {
       "type": "plain",
@@ -442,7 +447,6 @@
     "tentNavy": {
       "type": "cloth",
       "color": "#2a3a64",
-      "tatters": [2, 0.06],
       "amp": 0.18,
       "shadow": false
     },

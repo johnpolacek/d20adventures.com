@@ -546,32 +546,52 @@ export const bunting = defineBuilder(
   }
 )
 export const sheaf = defineBuilder(z.object({ size: size(3).default(1), pair: z.boolean().default(false) }).strict(), (ctx, p) => {
+  const { b, M, rand } = ctx
+  // A sheaf of wheat: a tight core with loose stalks around it, bound at the waist and fanning out into ears of grain.
   const one = (x: number, zz: number, s: number) => {
     lathe(
-      ctx.b,
-      ctx.M.straw,
+      b,
+      M.straw,
       x,
       0,
       zz,
       [
-        [0.18 * s, 0],
-        [0.12 * s, 0.45 * s],
-        [0.08 * s, 0.6 * s],
-        [0.22 * s, 1.05 * s],
-        [0.05 * s, 1.15 * s],
+        [0.14 * s, 0],
+        [0.09 * s, 0.45 * s],
+        [0.07 * s, 0.6 * s],
+        [0.17 * s, 1.0 * s],
+        [0.04 * s, 1.08 * s],
       ],
-      12,
+      14,
       { uv: "keep" }
     )
-    ctx.b.add(
+    const waist = 0.56 * s
+    for (let i = 0; i < 26; i++) {
+      const a = (i / 26) * TAU + rand(-0.1, 0.1)
+      const foot = V(x + Math.cos(a) * rand(0.13, 0.19) * s, 0, zz + Math.sin(a) * rand(0.13, 0.19) * s)
+      const bind = V(x + Math.cos(a) * 0.085 * s, waist, zz + Math.sin(a) * 0.085 * s)
+      const out = rand(0.18, 0.3) * s
+      const tip = V(x + Math.cos(a) * out, rand(1.02, 1.2) * s, zz + Math.sin(a) * out)
+      beam(b, M.straw, foot, bind, 0.007 * s, 3)
+      beam(b, M.straw, bind, tip, 0.007 * s, 3)
+      // The ear: a plump seed head leaning out along the stalk.
+      const dir = tip.clone().sub(bind).normalize()
+      b.add(
+        G("ear", () => new THREE.SphereGeometry(1, 4, 3)),
+        M.straw,
+        new THREE.Matrix4().compose(tip.clone().addScaledVector(dir, 0.04 * s), new THREE.Quaternion().setFromUnitVectors(V(0, 1, 0), dir), V(0.016 * s, 0.06 * s, 0.016 * s)),
+        { uv: "keep" }
+      )
+    }
+    b.add(
       G("band", () => new THREE.TorusGeometry(0.09, 0.02, 4, 12)),
-      ctx.M.goodsRed,
-      M4(x, 0.56 * s, zz, 0, s, s, s, Math.PI / 2),
+      M.goodsRed,
+      M4(x, waist, zz, 0, s, s, s, Math.PI / 2),
       { uv: "keep" }
     )
   }
   one(0, 0, p.size)
-  if (p.pair) one(0.5, 0.3, p.size * ctx.rand(0.85, 1))
+  if (p.pair) one(0.5, 0.3, p.size * rand(0.85, 1))
 })
 export const gourds = defineBuilder(z.object({ count: num(1, 30).default(7) }).strict(), (ctx, p) => {
   const F = new Frame(ctx.b, new THREE.Matrix4())

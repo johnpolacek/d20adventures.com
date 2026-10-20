@@ -114,6 +114,10 @@ export class Stage {
   private statics: THREE.Mesh[] = []
   // What the set's builders marked as solid (walls, stalls, tables), for walking the cast.
   private footprints: Footprint[] = []
+  // What the free camera may not pass into: walls, towers, houses and stalls, not crates or ropes.
+  private solids: Footprint[] = []
+  // The player is steering the camera, not a shot.
+  private driving = false
   private doors: ReturnType<typeof doorways> = []
   private hemisphere: THREE.HemisphereLight
   private fill: THREE.PointLight | null = null
@@ -249,6 +253,7 @@ export class Stage {
     this.materials = createMaterialLibrary(set.materials, this.shared, rand.fork("materials"), renderer.capabilities.getMaxAnisotropy())
     const built = buildSetGeometry(set, this.materials)
     this.footprints = built.footprints
+    this.solids = built.footprints.filter((f) => (f.kind === "circle" ? f.r >= 1.2 : f.top === undefined && f.hw * f.hd >= 1.5))
     this.doors = doorways(built.anchors)
     this.statics = built.batch.flush(this.world)
     const water = this.statics.filter((m) => (m.material as THREE.Material).userData.mirror)
@@ -343,6 +348,7 @@ export class Stage {
       c.zoomSpeed = 0.8
       c.addEventListener("start", () => {
         this.transition = null
+        this.driving = true
       })
       this.controls = c
     } else this.controls = null
@@ -443,6 +449,7 @@ export class Stage {
       s = undefined
     }
     if (!s) return false
+    this.driving = false
     this.activeShot = typeof which === "string" ? which : null
     this.activeFov = s.fov
     const to = { pos: V(...s.position), target: V(...s.target), fov: this.lens(s.fov) }
@@ -700,6 +707,24 @@ export class Stage {
     this.insets = { right: Math.max(0, insets.right ?? 0), bottom: Math.max(0, insets.bottom ?? 0) }
     this.resize()
   }
+  // A camera the player drags into a wall or a house is drawn back toward what it looks at until it stands clear, as a
+  // game camera keeps out of the scenery. Shots are framed by their authors and left alone.
+  private collide() {
+    if (!this.driving || !this.controls || !this.solids.length) return
+    const p = this.camera.position
+    const t = this.controls.target
+    const inside = (v: THREE.Vector3) => onFootprint(this.solids, v.x, v.z, v.y)
+    if (!inside(p) || inside(t)) return
+    const q = V()
+    let lo = 0
+    let hi = 1
+    for (let i = 0; i < 10; i++) {
+      const m = (lo + hi) / 2
+      if (inside(q.lerpVectors(t, p, m))) hi = m
+      else lo = m
+    }
+    p.lerpVectors(t, p.clone(), lo)
+  }
   private constrain() {
     const { min, max } = this.set.camera
     const p = this.camera.position
@@ -823,6 +848,7 @@ export class Stage {
     }
     this.controls?.update()
     this.constrain()
+    this.collide()
     this.lightRoom(dt)
     if (this.motion) this.effects.update(dt)
     this.standees.update(dt, this.camera)
