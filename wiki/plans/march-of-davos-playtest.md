@@ -35,6 +35,8 @@ An automated playtest of March of Davos. Fix gameplay issues found along the way
 | Crowd speech | A line from someone with no turn, such as a masked guest at the ball, became a bare quote on its own paragraph, said by no one. | It joins the narration before it, which shows who speaks. |
 | Story view | During an encounter's closing lines, the turn order already showed the next encounter's people. | The closing lines show their own encounter's turn order. |
 | The Ambush | Bram had no turn, so his warning and the attic costumes came as reported speech. | Bram is in the encounter's cast, waiting up at the inn. |
+| Desktop pacing | A reply or Continue played every NPC and AI hero up to the next player in one call: up to 110 seconds behind one thinking card, the card naming only the first of them. | The desktop app plays one NPC or AI hero per call (`npcTurnsPerCall: 1` on the GM core's ports). Each turn is on screen in 7 to 27 seconds and read while the next is written. A reply returns once the hero's own action is told. Hosted games keep the whole run. |
+| GM story rules | Astrid's answer came inside a roll's narration, as prose with no speaker. | The rules say every word a listed character says is a line, and someone not in the list speaks in quote marks inside the narration that shows them. |
 
 ## Gameplay notes
 
@@ -48,8 +50,9 @@ An automated playtest of March of Davos. Fix gameplay issues found along the way
 - Hideout and Silverhand: the party was walked in under guard. Milos laid down the manifest, Branka offered to deal with the hoods, Yeva traded the crate padlock, and Cassia's chart got Silverhand to name the tunnels under the city. He sails from Kordavos.
 - The Ambush: arrows, the Covenant's voice and sulfur, no fight, as written. Milos cast Bless, Cassia read the arrow. Long rest at the inn and costumes from the attic.
 - The ball: Barok, now a Blackthorn guard, made Branka wait after a natural 1, then let them in. Guests' whispers for and against the Blackthorns, Yeva lifted a purse, and Astrid unmasked to lead the party to Thaddeus.
+- The wine cellar, in the app's own UI: the sommelier and Mira bickered over the toast, Branka kept the sommelier talking, Cassia's failed Stealth gave the hiding place away, and Cassia's "imperial survey" sent him back upstairs.
 - Roll bonuses for the same skill vary by a point or two. By design: the ability modifier plus a situational modifier the model chooses.
-- Flaws seen: AI heroes recast detection spells (prompt fixed), long AI turns of 30 to 110 seconds when several NPCs act in a row, an NPC "back in the Silver Serpent" acting after the party had left, and the GM reusing a name (a thug called Bram).
+- Flaws seen: AI heroes recast detection spells (prompt fixed), long AI turns of 30 to 110 seconds when several NPCs act in a row (one per call now), an NPC "back in the Silver Serpent" acting after the party had left, and the GM reusing a name (a thug called Bram).
 
 ## Content pass, 2026-10-20
 

@@ -159,6 +159,8 @@ Examples:
 - Non-speaking creature: {"kind": "action", "who": "dire-wolf", "to": "milos", "text": "The dire wolf snarls, its hackles raised, ready to pounce."}
 - Physical action: {"kind": "action", "who": "guard", "text": "The guard silently draws his sword and blocks the exit."}
 
+If the NPC is away from the heroes and does nothing they could see or hear this turn, set actionType to "skip" and leave "beats" empty. Do not narrate that it stays where it is: a turn the heroes cannot perceive is not told.
+
 If the NPC runs away and leaves the scene for good, set actionType to "flee" and narrate them going. They are then out of the encounter and take no further turns. Use it only when they actually get away this turn, not for backing off or taking cover.
 
 If the NPC's action involves giving items to a player character, include an "effects" array. Each object in "effects" should have a "targetId" (the ID of the character receiving items) and an "equipmentToAdd" array listing the items ({name: string, description?: string}).
