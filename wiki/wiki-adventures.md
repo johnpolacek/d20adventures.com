@@ -106,6 +106,7 @@ Added 2026-10-14 with [structured narrative](plans/structured-narrative.md). An 
 - A spoken line needs its speaker among the encounter's characters. A quote by someone outside them stays in the prose with no bubble or voice. Covert Cargo has one, from Aelar in the-transaction. March of Davos had several until 2026-10-20, when the speakers joined their encounters' `npcs` and the quotes became lines. Its last quotes in prose are a disembodied voice in the-ambush and an unnamed vendor at the festival. See [the playtest](plans/march-of-davos-playtest.md#content-pass-2026-10-20).
 - March of Davos takes its NPC sheets from the `generatedFiles` of its `migration-report.json`, not from every file in `npcs/`. A new sheet for it goes in that list, or the encounter that names it throws "Missing NPC sheet".
 - An encounter's Intro, GM Notes, Checks, Summary and Transitions sections are read. Text under any other `##` heading reaches no prompt.
+- An encounter with no `[[encounter:...]]` transition is an ending: arriving there tells its intro and completes the adventure, with no turn played in it. A confrontation the party must resolve needs transitions to ending encounters of its own. March of Davos's Final Confrontation had none until 2026-10-20, so the adventure ended on Joran's first line. It now leads to The New Dawn, Vengeance of the Blackthorn or The Dust Settles.
 
 ## Admin authoring
 

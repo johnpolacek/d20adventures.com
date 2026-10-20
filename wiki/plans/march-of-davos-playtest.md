@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Stage authoring](../stage-authoring.md) · [Stage engine](../stage-engine.md) · [Testing runbook](testing-runbook.md)
 
-Status: in progress on main, started 2026-10-19.
+Status: played to an ending on main, 2026-10-19 to 2026-10-20.
 
 ## Owner request, 2026-10-19
 
@@ -37,6 +37,13 @@ An automated playtest of March of Davos. Fix gameplay issues found along the way
 | The Ambush | Bram had no turn, so his warning and the attic costumes came as reported speech. | Bram is in the encounter's cast, waiting up at the inn. |
 | Desktop pacing | A reply or Continue played every NPC and AI hero up to the next player in one call: up to 110 seconds behind one thinking card, the card naming only the first of them. | The desktop app plays one NPC or AI hero per call (`npcTurnsPerCall: 1` on the GM core's ports). Each turn is on screen in 7 to 27 seconds and read while the next is written. A reply returns once the hero's own action is told. Hosted games keep the whole run. |
 | GM story rules | Astrid's answer came inside a roll's narration, as prose with no speaker. | The rules say every word a listed character says is a line, and someone not in the list speaks in quote marks inside the narration that shows them. |
+| Spells and traps | A hero's roll was read for health only when named exactly Attack, Constitution, Strength or Dexterity. Guiding Bolt "seared" the drake and left it at full health, and a ward's lightning flung Cassia into the casks unhurt. | Any attack, save or bodily check is read, and any roll whose outcome tells of harm. |
+| Speech in narration | The rule above did not stop it: Clive's shout of "Thieves!" came inside a roll's narration. | When a narration names exactly one listed character who may speak, its quoted words become that character's lines. |
+| Off-stage NPCs | Clive took a turn to say he stayed in the ballroom. | An NPC away from the heroes that does nothing they could perceive skips with no beats. |
+| One turn per call | A slain NPC's turn, which only tells its fall, used up the call, so the NPC after it did not act and the app said the GM could not finish. | A fallen NPC's turn does not count. |
+| The hunt | The labyrinth spoke of Astrid's soldiers, but none came with her, so the GM conjured them. | Her house guards follow her into the hunt. |
+| The ending | Final Confrontation had no transitions, so arriving there completed the adventure on Joran's first line. The party never chose. | The confrontation is played. Siding with Joran, with Astrid or with neither leads to The New Dawn, Vengeance of the Blackthorn or The Dust Settles, from the adventure's Aftermath. They reuse the festival, Astrid and library paintings. |
+| Ending screen | The last hero in initiative stayed highlighted after the adventure ended. | No hero is up once it has ended. |
 
 ## Gameplay notes
 
@@ -51,6 +58,11 @@ An automated playtest of March of Davos. Fix gameplay issues found along the way
 - The Ambush: arrows, the Covenant's voice and sulfur, no fight, as written. Milos cast Bless, Cassia read the arrow. Long rest at the inn and costumes from the attic.
 - The ball: Barok, now a Blackthorn guard, made Branka wait after a natural 1, then let them in. Guests' whispers for and against the Blackthorns, Yeva lifted a purse, and Astrid unmasked to lead the party to Thaddeus.
 - The wine cellar, in the app's own UI: the sommelier and Mira bickered over the toast, Branka kept the sommelier talking, Cassia's failed Stealth gave the hiding place away, and Cassia's "imperial survey" sent him back upstairs.
+- The vault: a natural 1 on Arcana set off the ward's lightning, Yeva's lockpicks finished the onyx key's turn, and Branka took the Drakovan ledgers. Clive threatened to report them after the speech and did, when Yeva tried to lift his bottle.
+- The speech and the murder: the drake was unveiled, the assassin struck, Milos kept Thaddeus breathing for a round, and he died on his own stage. The assassin escaped through the warded grate.
+- Underground: Astrid and Eamon broke the ward. The catacomb saboteurs lit a two-round fuse, and Cassia tore it out with one round left. The labyrinth's creeping wall was an illusion anchored on a rune. The undead of Big Empty fell in three rounds.
+- The finale, replayed after the fix: Joran and Astrid each pressed their case over the Drakovan ledgers for three rounds. Branka wrenched the Key from Joran and gave it to Milos, and the adventure ended in The Dust Settles.
+- 75 rounds from the gate to the ending. Branka finished at 65%.
 - Roll bonuses for the same skill vary by a point or two. By design: the ability modifier plus a situational modifier the model chooses.
 - Flaws seen: AI heroes recast detection spells (prompt fixed), long AI turns of 30 to 110 seconds when several NPCs act in a row (one per call now), an NPC "back in the Silver Serpent" acting after the party had left, and the GM reusing a name (a thug called Bram).
 
@@ -71,6 +83,7 @@ The live GM found three content faults in the later encounters: named characters
 
 ## Open
 
-- The rest of the adventure in story view, to an ending.
+- The three endings reuse other encounters' paintings. Each could have its own.
+- The New Dawn and Vengeance of the Blackthorn are untested in play. The Dust Settles was reached.
 - The sheets' `image` still points at the stock avatar for the 19 painted NPCs, so the website's own views show the avatar. Uploading the portraits to the art bucket needs the owner.
 - `test:gm-core` was failing since 2026-10-13. It has a refresh mode now (`GM_FIXTURE_UPDATE=1`) and passes.

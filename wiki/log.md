@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-20, March of Davos played to an ending
+
+The playtest reached an ending after 75 rounds, from the gate through the ball, the murder of Thaddeus and the tunnels to Joran in the forgotten temple. Final Confrontation had no transitions, so arriving there completed the adventure before the party could choose. It is now played, and siding with Joran, with Astrid or with neither leads to one of three new ending encounters from the adventure's Aftermath. The Dust Settles was reached in a replay. Other fixes from the run: the desktop app plays one NPC or AI hero per call, so turns arrive in 7 to 27 seconds instead of up to 110 behind one card. Spells and traps that strike now hurt. Speech from a crowd stays with its narration, and a narration naming one character gives that character the line. Off-stage NPCs skip unseen. Bridge, batches a to f, gm-core and desktop tests pass. See [the playtest](plans/march-of-davos-playtest.md).
+
 ## 2026-10-20, March of Davos content pass
 
 The playtest's live GM found later encounters with named characters but no `npcs`, lines inside narration, and intros that call the players "you". 31 encounters gained or filled in their casts, seven NPC sheets were added, and eight existing sheets joined the adventure's source. `forest-drake` had been missing, so entering The Beast Escapes threw. Quotes became speaker lines and intros moved to the third person. The March of Davos bridge and batches a to f pass. Not yet played through in the app, and the desktop runtime pack is not rebuilt. See [the playtest](plans/march-of-davos-playtest.md#content-pass-2026-10-20).
