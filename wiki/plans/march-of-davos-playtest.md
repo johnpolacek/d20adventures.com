@@ -32,6 +32,9 @@ An automated playtest of March of Davos. Fix gameplay issues found along the way
 | Strongboxes | Plain dark brown, a black slab from behind. | Planked wood, iron straps over the lid and a hasp. |
 | Story view | Every encounter without a 3D scene played on a black screen, 42 of March of Davos's 45. NPCs with no stage art showed initials. | Each encounter's painting behind the narration, drifting slowly under a vignette, from `scripts/stage-encounter-art.ts` into `public/stage/art`. NPC portraits from their sheets into `public/stage/portraits`, listed in `apps/desktop/src/npc-portraits.ts`. 63 paintings, 9.3 MB, and 41 portraits, 1.1 MB. Desktop and hosted games. |
 | AI heroes | Companions cast a visible spell almost every turn, so detection spells came round again while a door stood open. | The AI hero prompt asks them to take the way on the narrative offers and not repeat a spell or question already used. |
+| Crowd speech | A line from someone with no turn, such as a masked guest at the ball, became a bare quote on its own paragraph, said by no one. | It joins the narration before it, which shows who speaks. |
+| Story view | During an encounter's closing lines, the turn order already showed the next encounter's people. | The closing lines show their own encounter's turn order. |
+| The Ambush | Bram had no turn, so his warning and the attic costumes came as reported speech. | Bram is in the encounter's cast, waiting up at the inn. |
 
 ## Gameplay notes
 
@@ -42,6 +45,10 @@ An automated playtest of March of Davos. Fix gameplay issues found along the way
 - Morning: Elara brought Joran's scrollcase and the Key of Ilmarin. The library ran five rounds: the Archivist, Sister Danica guarding the archive, and the reveal that House Drakovan took the name Blackthorn. The AI heroes kept circling a locked cabinet until Branka led them out.
 - Silver Serpent: Harron, newly a turn character, gave nothing until Cassia's roll, then named Silverhand and the Black Market. The docks tied back to Covert Cargo: the river tug, Silas, Warehouse 14.
 - Mystery Cargo: a real fight. Grease, magic missiles, Bless and Shield of Faith, a pinned dwarf at 90%.
+- Hideout and Silverhand: the party was walked in under guard. Milos laid down the manifest, Branka offered to deal with the hoods, Yeva traded the crate padlock, and Cassia's chart got Silverhand to name the tunnels under the city. He sails from Kordavos.
+- The Ambush: arrows, the Covenant's voice and sulfur, no fight, as written. Milos cast Bless, Cassia read the arrow. Long rest at the inn and costumes from the attic.
+- The ball: Barok, now a Blackthorn guard, made Branka wait after a natural 1, then let them in. Guests' whispers for and against the Blackthorns, Yeva lifted a purse, and Astrid unmasked to lead the party to Thaddeus.
+- Roll bonuses for the same skill vary by a point or two. By design: the ability modifier plus a situational modifier the model chooses.
 - Flaws seen: AI heroes recast detection spells (prompt fixed), long AI turns of 30 to 110 seconds when several NPCs act in a row, an NPC "back in the Silver Serpent" acting after the party had left, and the GM reusing a name (a thug called Bram).
 
 ## Content pass, 2026-10-20
