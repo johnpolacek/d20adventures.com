@@ -11,6 +11,12 @@ import { gmNotesWithRules, keepPlayersAlive } from "../wiki-adventures/player-sa
 import { detectSpellFromRollType, markSpellAsUsed } from "./spell-tracking-service"
 import { createTurnUpdateService } from "./turn-update-service"
 
+// Rolls that can hurt by their kind: attacks, saving throws, and checks of the body.
+const BODILY_CHECK = /attack|sav(e|ing)|constitution|strength|dexterity|athletics|acrobatics/i
+// Words an outcome uses when someone is hurt, so a spell or a trap that strikes is read for health too.
+const HARM =
+  /\b(?:hit|hits|hitting|struck|strikes?|striking|sears?|seared|searing|burn(?:s|ed|ing)?|scorch(?:es|ed|ing)?|wound(?:s|ed|ing)?|damage[sd]?|slam(?:s|med|ming)?|fling(?:s|ing)?|flung|hurl(?:s|ed|ing)?|bites?|biting|claw(?:s|ed|ing)?|cuts?|cutting|slash(?:es|ed|ing)?|stab(?:s|bed|bing)?|pierc(?:es|ed|ing)|crush(?:es|ed|ing)?|shock(?:s|ed)?|bleed(?:s|ing)?|blood(?:ied|y)?)\b/i
+
 export function getEncounterInstructionsFromPlan(plan: AdventurePlan, encounterId: string): string {
   for (const section of plan.sections) {
     for (const scene of section.scenes) {
@@ -183,8 +189,11 @@ export function createAdventureRollResultService(ports: GmPorts) {
     }
     await wait(500)
 
-    const healthAffectingRolls = ["Attack", "Constitution", "Strength", "Dexterity"]
-    const shouldAnalyzeHealth = !!rollOutcome && healthAffectingRolls.includes(rollType)
+    // Health is read from the outcome after an attack, a save or a feat of body, and after any roll whose outcome
+    // tells of harm. Only the exact names Attack, Constitution, Strength and Dexterity counted, so Guiding Bolt "sears
+    // into the drake's flank" left it unhurt, and a ward's lightning that flung Cassia into the casks after a failed
+    // Misty Step left her untouched.
+    const shouldAnalyzeHealth = !!rollOutcome && (BODILY_CHECK.test(rollType) || HARM.test(rollOutcome))
     console.log(`[resolvePlayerRollResult] Roll analysis: rollType=${rollType}, hasOutcome=${!!rollOutcome}, shouldAnalyzeHealth=${shouldAnalyzeHealth}`)
 
     const normalizedCharacters = normalizeCharactersForHealthAnalysis(args.turn.characters)
