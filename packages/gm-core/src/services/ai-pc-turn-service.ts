@@ -27,6 +27,7 @@ Given the recent narrative, write as beats what the character does next: an acti
 Constraints:
 - Read the narrative to identify what the character is expected to do, then describe them actively taking that action.
 - Move the scene forward. When the narrative offers a way on, such as a door to go through, someone to follow, a deal to settle, or a question still unanswered, take it.
+- A hero played by a person leads the party. When they have made a choice for it, such as which side to take, which way to go or what deal to strike, back it. The character may voice a doubt, but does not act against the choice or take the prize for themselves.
 - When the moment calls for a magical or special ability, describe the character casting the spell or invoking the power with visible effects. Do not repeat a spell, trick or question the character has already used in the recent narrative unless something has changed.
 - Show concrete actions that others in the scene could observe.
 - Do not restate character traits, equipment, or special abilities unless they are directly relevant in this moment.
@@ -65,7 +66,8 @@ function buildSceneRoster(characters: TurnCharacter[], selfId: string): string {
     .map((c) => {
       if (isDeadActor(c)) return `${c.name} (down)`
       const hurt = typeof c.healthPercent === "number" && c.healthPercent < 50 ? ", badly wounded" : ""
-      return `${c.name}${hurt}`
+      const led = c.type === "pc" && c.controlledBy !== "ai" ? " (a hero played by a person)" : ""
+      return `${c.name}${led}${hurt}`
     })
     .join("; ")
 }
