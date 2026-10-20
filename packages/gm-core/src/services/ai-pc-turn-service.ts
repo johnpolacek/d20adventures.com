@@ -26,7 +26,8 @@ Given the recent narrative, write as beats what the character does next: an acti
 
 Constraints:
 - Read the narrative to identify what the character is expected to do, then describe them actively taking that action.
-- When characters have magical or special abilities, describe them casting spells or invoking powers with visible effects.
+- Move the scene forward. When the narrative offers a way on, such as a door to go through, someone to follow, a deal to settle, or a question still unanswered, take it.
+- When the moment calls for a magical or special ability, describe the character casting the spell or invoking the power with visible effects. Do not repeat a spell, trick or question the character has already used in the recent narrative unless something has changed.
 - Show concrete actions that others in the scene could observe.
 - Do not restate character traits, equipment, or special abilities unless they are directly relevant in this moment.
 - Focus on what is happening now; avoid listing capabilities or background info.
