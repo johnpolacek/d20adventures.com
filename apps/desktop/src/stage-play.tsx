@@ -93,6 +93,40 @@ function playing(turnId: string | undefined, actor: Character | undefined, ai: b
   return { kind: "thinking", note, who: { id: actor.id, name: actor.name, role: `${actor.race} ${actor.archetype}`, portrait: portrait(actor) } }
 }
 
+// Story view's painting: the encounter's art, drifting slowly, darkened at the edges and behind the text so the
+// narration reads over it. Paintings are bundled under /stage/art (scripts/stage-encounter-art.ts). One that is
+// missing leaves the plain dark ground, and a new one fades in over the last.
+function StoryArt({ src }: { src: string }) {
+  const [shown, setShown] = useState<string | null>(null)
+  const img = useRef<HTMLImageElement>(null)
+  useEffect(() => {
+    const el = img.current
+    if (!el || shown !== src || matchMedia("(prefers-reduced-motion: reduce)").matches) return
+    const drift = el.animate([{ transform: "scale(1.04) translate(-1.2%, 0.6%)" }, { transform: "scale(1.13) translate(1.2%, -0.8%)" }], {
+      duration: 70_000,
+      iterations: Number.POSITIVE_INFINITY,
+      direction: "alternate",
+      easing: "ease-in-out",
+    })
+    return () => drift.cancel()
+  }, [shown, src])
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      <img
+        key={src}
+        ref={img}
+        src={src}
+        alt=""
+        onLoad={() => setShown(src)}
+        onError={() => setShown(null)}
+        className={`absolute inset-0 h-full w-full scale-[1.04] object-cover transition-opacity duration-[1600ms] [filter:saturate(.85)_brightness(.78)] ${shown === src ? "opacity-100" : "opacity-0"}`}
+      />
+      <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 50% 45%, transparent 35%, rgba(12,8,5,.7) 100%)" }} />
+      <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(12,8,5,.55), transparent 22%, transparent 62%, rgba(12,8,5,.75))" }} />
+    </div>
+  )
+}
+
 // The stage-first play view: the 3D scene, the narration read paragraph by paragraph, and the prompt card for the
 // player's own heroes. The desktop app plays local saves in it, and hosted games on the app and the website. The
 // caller owns the game: it passes the save, says which heroes this player controls, and carries out each action.
@@ -750,6 +784,7 @@ export function StagePlay(props: {
   return (
     <StageHud
       containerRef={containerRef}
+      backdrop={!scene && save && shown ? <StoryArt src={`/stage/art/${save.adventure.planId}/${shown.encounterId}.webp`} /> : undefined}
       title={{ eyebrow: (save?.adventure.title ?? "").toUpperCase(), text: shown?.title ?? "" }}
       location={{
         eyebrow: scene?.location ?? "Story view",

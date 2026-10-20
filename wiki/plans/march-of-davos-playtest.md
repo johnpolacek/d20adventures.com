@@ -30,6 +30,8 @@ An automated playtest of March of Davos. Fix gameplay issues found along the way
 | Game stall | The wheel of chance was a flat yellow disc under the awning. | A `prizeWheel` builder: painted wedges, brass rim and pegs, hub and pointer, on its own post beside the stall. |
 | Gate queue | The game pauses loops, and the queue loop stood the party second in line, behind a stranger at Garlan's counter. Garlan's "State your business" was framed on the stranger, and the two-shot hid Branka. | The party starts at the head of the line, where the intro has Garlan question them. The two-shot frames Garlan and the four heroes across the counter. |
 | Strongboxes | Plain dark brown, a black slab from behind. | Planked wood, iron straps over the lid and a hasp. |
+| Story view | Every encounter without a 3D scene played on a black screen, 42 of March of Davos's 45. NPCs with no stage art showed initials. | Each encounter's painting behind the narration, drifting slowly under a vignette, from `scripts/stage-encounter-art.ts` into `public/stage/art`. NPC portraits from their sheets into `public/stage/portraits`, listed in `apps/desktop/src/npc-portraits.ts`. 63 paintings, 9.3 MB, and 41 portraits, 1.1 MB. Desktop and hosted games. |
+| AI heroes | Companions cast a visible spell almost every turn, so detection spells came round again while a door stood open. | The AI hero prompt asks them to take the way on the narrative offers and not repeat a spell or question already used. |
 
 ## Gameplay notes
 

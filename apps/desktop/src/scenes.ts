@@ -29,6 +29,7 @@ import preparingForTheCity from "@d20/stage/stagings/the-midnight-summons/prepar
 import theMissingRelics from "@d20/stage/stagings/the-midnight-summons/the-missing-relics.json"
 import timelyRescue from "@d20/stage/stagings/the-midnight-summons/timely-rescue.json"
 import { type FigureArt, type FigureOwner, heroFigure, PREMADE_FIGURES } from "./figures"
+import { NPC_PORTRAITS } from "./npc-portraits"
 
 type Point = { x: number; z: number }
 type Who = { id: string; name: string; type?: string; race?: string; archetype?: string; gender?: string }
@@ -235,7 +236,7 @@ const PORTRAITS: Record<string, string> = {
 }
 
 // A character's portrait: a created hero's figure, else the current scene, else any authored scene, so story view keeps
-// the party's faces. Heroes with no art anywhere show their stock figure.
+// the party's faces. Heroes with no art anywhere show their stock figure, and NPCs the portrait painted on their sheet.
 export function portraitFor(scene: Scene | undefined, c: Who, chosen: Record<string, string> = {}, painted: Record<string, FigureArt> = {}) {
   if (chosen[c.id] || painted[c.id]) return heroFigure(c as FigureOwner, chosen, painted).art.portrait
   for (const s of [scene, ...Object.values(SCENES)]) {
@@ -243,7 +244,7 @@ export function portraitFor(scene: Scene | undefined, c: Who, chosen: Record<str
     const portrait = id && s.staging.cast.find((m) => m.id === id)?.art.portrait
     if (portrait) return portrait
   }
-  return PORTRAITS[c.id] ?? PREMADE_FIGURES[c.id]?.art.portrait ?? (c.type === "pc" ? heroFigure(c as FigureOwner).art.portrait : undefined)
+  return PORTRAITS[c.id] ?? PREMADE_FIGURES[c.id]?.art.portrait ?? (c.type === "pc" ? heroFigure(c as FigureOwner).art.portrait : NPC_PORTRAITS.has(c.id) ? `/stage/portraits/${c.id}.webp` : undefined)
 }
 
 // Map staging for the GM's narration: the place, its named spots, and where each character in the turn stands now

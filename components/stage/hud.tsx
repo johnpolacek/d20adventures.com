@@ -94,6 +94,7 @@ export function StageHud({
   actions,
   hidden,
   compact,
+  backdrop,
   children,
 }: {
   containerRef: RefObject<HTMLDivElement | null>
@@ -105,10 +106,13 @@ export function StageHud({
   actions?: ReactNode
   hidden?: boolean
   compact?: boolean
+  // Shown where the stage would be when there is none, such as story view's painting.
+  backdrop?: ReactNode
   children?: ReactNode
 }) {
   return (
     <div className="fixed inset-0 z-[100] overflow-clip bg-stage-ink font-sans text-stage-cream">
+      {backdrop}
       <div ref={containerRef} className="absolute inset-0" />
       <div
         className={cn("pointer-events-none absolute inset-0 transition-opacity duration-500", hidden && "opacity-0")}
