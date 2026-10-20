@@ -4,7 +4,7 @@ import type { MaterialSpec } from "../spec/set"
 import type { SharedUniforms } from "./atmosphere"
 import { bannerTexture } from "./heraldry"
 import { grass, meadow, rock, water } from "./nature"
-import { burlap, card, cloth, fire, foliage, glow, masonry, metal, mist, plain, TextureBank, tatters, wood } from "./surfaces"
+import { burlap, card, cloth, fire, foliage, glow, masonry, metal, mist, orb, plain, TextureBank, tatters, wood } from "./surfaces"
 
 export interface MaterialLibrary {
   get: (name: string) => THREE.Material | undefined
@@ -89,6 +89,9 @@ export function createMaterialLibrary(specs: Record<string, MaterialSpec>, share
         break
       case "fire":
         m = fire(ctx, name, s.color, s.intensity)
+        break
+      case "orb":
+        m = orb(ctx, name, s.color, s.glow)
         break
       case "metal":
         m = metal(ctx, name, s.color, s.roughness, s.metalness)

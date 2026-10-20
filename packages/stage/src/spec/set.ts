@@ -98,6 +98,8 @@ const mist = z.object({ type: z.literal("mist"), color, opacity: unit.optional()
 // Live flame on upright cards (a brazier's fire): additive, unlit and shadowless, licking upward. `color` is the body
 // of the flame, between the white-gold root and the red tips.
 const fire = z.object({ type: z.literal("fire"), color: color.optional(), intensity: num(0, 4).optional() }).strict()
+// A seer's crystal ball, for spheres: dark glass with light swirling inside. `glow` is the light's colour.
+const orb = z.object({ type: z.literal("orb"), color: color.optional(), glow: color.optional() }).strict()
 // Leaves: painted leaf clusters with gaps, for tree crowns, bushes and ferns.
 // With `map` (painted leaf clumps from scripts/stage-textures.ts) crowns and bushes are built from crossed leaf cards.
 // `shadow: false` keeps low growth (bushes, ferns) out of the shadow map, where dense foliage costs the most.
@@ -155,7 +157,7 @@ const water = z
     mirror: unit.optional(),
   })
   .strict()
-export const materialSpec = z.discriminatedUnion("type", [masonry, wood, painted, card, cloth, burlap, foliage, glow, mist, fire, metal, plain, glass, rock, meadow, grass, water])
+export const materialSpec = z.discriminatedUnion("type", [masonry, wood, painted, card, cloth, burlap, foliage, glow, mist, fire, orb, metal, plain, glass, rock, meadow, grass, water])
 export type MaterialSpec = z.infer<typeof materialSpec>
 
 // An object is `{ type, id?, at?, yaw?, materials?, ...params }`; params are checked by the builder named by `type`.

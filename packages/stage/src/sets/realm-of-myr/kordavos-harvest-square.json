@@ -237,11 +237,13 @@
       "emissiveIntensity": 1.5
     },
     "crystal": {
-      "type": "plain",
-      "color": "#c8dcea",
-      "roughness": 0.08,
-      "emissive": "#86b4e0",
-      "emissiveIntensity": 0.7
+      "type": "orb",
+      "glow": "#86b4f0"
+    },
+    "tablecloth": {
+      "type": "cloth",
+      "color": "#4a2442",
+      "amp": 0.01
     },
     "pottery": {
       "type": "plain",
@@ -817,18 +819,36 @@
     },
     {
       "type": "cylinder",
-      "at": [-13.48, 0.97, -8.78],
+      "id": "seer-table",
+      "at": [-12.02, 0, -6.09],
+      "radius": [0.47, 0.41],
+      "height": 0.76,
+      "material": "tablecloth",
+      "segments": 32,
+      "solid": true
+    },
+    {
+      "type": "cylinder",
+      "at": [-12.02, 0.76, -6.09],
+      "radius": 0.44,
+      "height": 0.025,
+      "material": "tablecloth",
+      "segments": 32
+    },
+    {
+      "type": "cylinder",
+      "at": [-12.02, 0.785, -6.09],
       "radius": [0.1, 0.06],
       "height": 0.07,
       "material": "brass",
-      "segments": 12
+      "segments": 24
     },
     {
       "type": "sphere",
-      "at": [-13.48, 1.04, -8.78],
+      "at": [-12.02, 0.835, -6.09],
       "radius": 0.13,
       "material": "crystal",
-      "segments": 20
+      "segments": 48
     },
     {
       "type": "lantern",
@@ -854,22 +874,10 @@
       "frontHeight": 2.8
     },
     {
-      "type": "cylinder",
+      "type": "prizeWheel",
       "id": "game-wheel",
-      "at": [11.3, 1.9, 18.6],
-      "yaw": 90,
-      "pitch": 90,
-      "radius": 0.55,
-      "height": 0.07,
-      "material": "goodsYellow",
-      "segments": 20
-    },
-    {
-      "type": "beam",
-      "from": [11.4, 0, 18.6],
-      "to": [11.4, 1.95, 18.6],
-      "radius": 0.05,
-      "material": "pole"
+      "at": [11.2, 20.1],
+      "yaw": -90
     },
     {
       "type": "row",

@@ -26,16 +26,17 @@ An automated playtest of March of Davos. Fix gameplay issues found along the way
 | Encounter change | The round-end beats that close an encounter lead the next encounter's first turn, so Garlan's farewell and "pass beneath the great arch" played on the festival set. | Those paragraphs are told on the old encounter's scene, with its people, under its title. The new scene follows. Desktop and hosted games. |
 | A hero's turn | The reply card covers the middle of the screen, and the hero was framed at 5 m in the strip above it: a small figure over a field of paving. | A tall card puts the subject in the column beside it, full height, and the camera comes in by the hero's height. |
 | Braziers | A flat peach cone for fire, and peach slabs for coals. | A `fire` material: crossed cards of live flame that lick, sway and flicker, white-gold at the root and red at the tips. A bed of glowing and charred coals. On the gate, the square, the conflict cut and the riverfront. |
+| Zephyra's stall | The crystal ball was a faceted pale-blue disc on the counter behind her, so she never "peers into" it. | An `orb` material: dark polished glass with mist turning inside and a bright rim. The ball sits on a brass stand on a draped round table in front of her. |
+| Game stall | The wheel of chance was a flat yellow disc under the awning. | A `prizeWheel` builder: painted wedges, brass rim and pegs, hub and pointer, on its own post beside the stall. |
 
 ## Gameplay notes
 
 - Gate: four heroes introduced themselves, Garlan answered in character from Branka's sheet (the gate-ward shield), the encounter moved on after one round.
 - Festival: Zephyra foreshadowed the key and the mansion, Karim named the Blackthorns and the lost shipment, Liora complained of Asterian ways, all as the GM notes ask. One round, then Clan Conflict on cue.
-- Clan Conflict: Yeva sneaked to Barok's side, Milos calmed Barok with a Persuasion roll.
+- Clan Conflict: Yeva sneaked to Barok's side, Milos calmed Barok with a Persuasion roll, Branka faced both leaders down with Intimidation. Barok named the last place the shipment was seen, a toll bridge on the east road. Then the Dragonbone Inn on cue.
 
 ## Open
 
 - The rest of the adventure in story view, to an ending.
-- Zephyra's crystal ball reads as a flat disc. The game stall's prize wheel floats as a yellow disc.
 - The festival's party view looks down from above. The view back through the gate shows flat grey blocks.
 - The black strongbox on the sergeant's table is an untextured box.

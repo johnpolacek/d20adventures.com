@@ -592,6 +592,25 @@ export function fire(ctx: MaterialContext, name: string, color = "#ff7a26", inte
     )
   })
 }
+// A seer's crystal ball: dark polished glass that takes the sky's reflections, with a slow swirl of light turning inside
+// it and a bright rim. Made for a sphere: the swirl follows the surface normal, so it needs no UVs.
+export function orb(ctx: MaterialContext, name: string, color = "#0f1a28", glow = "#7fb2ff") {
+  const m = new THREE.MeshStandardMaterial({ name, color, roughness: 0.04, metalness: 0, envMapIntensity: 1.8 })
+  return stageMaterial(m, ctx.shared, "orb", (s) => {
+    s.uniforms.uTime = ctx.shared.time
+    s.uniforms.uGlow = { value: new THREE.Color(glow) }
+    s.vertexShader = s.vertexShader.replace("#include <common>", "#include <common>\nvarying vec3 vOrbN;").replace("#include <begin_vertex>", "#include <begin_vertex>\nvOrbN = normal;")
+    s.fragmentShader = s.fragmentShader.replace("#include <common>", `#include <common>\nuniform float uTime; uniform vec3 uGlow; varying vec3 vOrbN;\n${NOISE}`).replace(
+      "#include <emissivemap_fragment>",
+      `#include <emissivemap_fragment>
+ { vec3 d = normalize(vOrbN); float t = uTime * .22;
+   float sw = mfbm(vec2(atan(d.z, d.x) * 1.4 + t + d.y * 1.6, d.y * 2.2 - t * .6));
+   float facing = clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0);
+   float rim = pow(1.0 - facing, 3.0);
+   totalEmissiveRadiance += uGlow * (smoothstep(.35, .8, sw) * pow(facing, 1.5) * 1.1 + rim * .45); }`
+    )
+  })
+}
 export function burlap(ctx: MaterialContext, bank: TextureBank, name: string, color: string, roughness = 0.95) {
   const t = bank.burlap()
   return stageMaterial(new THREE.MeshStandardMaterial({ name, color, roughness, metalness: 0, map: t, bumpMap: t, bumpScale: 1.6 }), ctx.shared, "burlap")

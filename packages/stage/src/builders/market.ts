@@ -355,6 +355,50 @@ export const lanternProp = defineBuilder(z.object({ height: num(0, 20).default(0
   if (p.post) beam(ctx.b, ctx.M.pole, [0, 0, 0], [0, p.height + 0.3, 0], 0.06, 5)
   lantern(ctx.b, ctx.M, 0, p.height, 0)
 })
+// A wheel of chance on a post, facing +z: painted wedges in turn, a brass rim with a peg between wedges, a hub, and an
+// iron pointer over the top.
+export const prizeWheel = defineBuilder(
+  z
+    .object({
+      radius: size(3).default(0.55),
+      height: size(6).default(1.9),
+      wedges: z.array(matName).min(2).max(6).default(["goodsRed", "tentCream", "goodsTeal", "goodsYellow"]),
+      count: z.number().int().min(4).max(24).default(12),
+    })
+    .strict(),
+  (ctx, p) => {
+    const { b, M } = ctx
+    const { radius: r, height: h, count: n } = p
+    beam(b, M.pole, [0, 0, -0.08], [0, h + 0.05, -0.08], 0.05, 6)
+    beam(b, M.pole, [-0.35, 0, -0.08], [0.35, 0, -0.08], 0.05, 5)
+    const step = TAU / n
+    for (let i = 0; i < n; i++) {
+      const wedge = G(`wheel-wedge-${n}-${i}`, () => new THREE.CylinderGeometry(1, 1, 1, 4, 1, false, i * step, step))
+      b.add(wedge, ctx.mat(p.wedges[i % p.wedges.length]), M4(0, h, 0, 0, r, 0.04, r, Math.PI / 2, 0), { uv: "keep" })
+      const a = i * step
+      beam(b, M.brass, [Math.sin(a) * r * 0.93, h - Math.cos(a) * r * 0.93, 0.02], [Math.sin(a) * r * 0.93, h - Math.cos(a) * r * 0.93, 0.09], 0.012, 5)
+    }
+    b.add(
+      G("wheel-rim", () => new THREE.TorusGeometry(1, 0.04, 6, 56)),
+      M.brass,
+      M4(0, h, 0, 0, r, r, r),
+      { uv: "keep" }
+    )
+    b.add(
+      G("wheel-hub", () => new THREE.CylinderGeometry(1, 1, 1, 12)),
+      M.brass,
+      M4(0, h, 0.02, 0, 0.07, 0.1, 0.07, Math.PI / 2, 0),
+      { uv: "keep" }
+    )
+    b.add(
+      G("wheel-pointer", () => new THREE.ConeGeometry(1, 1, 4)),
+      M.iron,
+      M4(0, h + r + 0.06, 0.07, 0, 0.05, 0.16, 0.02, Math.PI, 0),
+      { uv: "keep" }
+    )
+    ctx.circle(0, -0.08, 0.35)
+  }
+)
 // A carter's heap: a crate (often another on top), a barrel and a sack.
 export const goodsPile = defineBuilder(z.object({}).strict(), (ctx) => {
   const { b, M, rand } = ctx
