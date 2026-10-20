@@ -18,6 +18,18 @@ type EncounterProgressionResult = {
   story: StoryBeat[]
 }
 
+// States that last a moment of a fight, cleared when the story moves on to another encounter. A status such as
+// "poisoned" or "exhausted" stays. Statuses are free text, so each part of a list is judged on its own.
+const PASSING = /^(prone|knocked (down|prone)|grappled|restrained|pinned|stunned|dazed|staggered|off[- ]balance|blinded|deafened|frightened|surprised|hidden|invisible|dodging|readied|winded)$/i
+export function lastingStatus(status: string | undefined): string | undefined {
+  if (!status) return status
+  const kept = status
+    .split(/[,;]+/)
+    .map((part) => part.trim())
+    .filter((part) => part && !PASSING.test(part))
+  return kept.length ? kept.join(", ") : undefined
+}
+
 export type BuildNextTurnResult =
   | {
       status: "turn_built"
@@ -73,6 +85,11 @@ function buildTransitionEncounterTurn(args: { turn: Turn; plan: AdventurePlan; a
 
   console.log(`[advanceTurn] Resetting spell usage for all PCs on encounter transition to: ${nextEncounter.id}`)
   pcs = resetAllSpells(pcs)
+  // A new encounter comes later: the states of a fight's moment are over, and lasting ones stay.
+  pcs = pcs.map(({ status, ...pc }) => {
+    const kept = lastingStatus(status)
+    return kept ? { ...pc, status: kept } : pc
+  })
 
   if (nextEncounter.resetHealth) {
     console.log(`[advanceTurn] Resetting health for all characters due to resetHealth flag in encounter: ${nextEncounter.id}`)
