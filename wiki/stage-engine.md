@@ -293,3 +293,19 @@ Part of [painted backdrop](plans/stage-backdrop.md), from spike (a) of the [stag
 - 2026-10-18: owner flagged Thalbern's close-up. He faces the valley, so his close-up looks the other way, at a bare plain. `backdrop` became `backdrops`, up to four, drawn before other see-through things and in order. The stones gained `stones-woods.webp`: a dark forested ridge across the river, 440 m out over 120 degrees, gain 0.42.
 - The key now keeps only paint joined to the bottom edge, drops paint floating in the sky, and fills magenta that the land encloses as mist.
 - 2026-10-18: backdrops added to the Kordavos riverfront (a row of houses at the paving's edge), the old forest path (giant trunks in haze, both ways) and Thalbern's forest home (a sunlit forest edge). The forest trail, the Kordavos gate and square, and the Mordava piers show no bare horizon in their shots and have none.
+
+## March of Davos playtest pass, 2026-10-19
+
+From an automated play of March of Davos with the live GM and a pass over every view. See [the playtest plan](plans/march-of-davos-playtest.md).
+
+- Subject shots (close-ups, speakers, the acting hero) score every view clear of walls by who stands in the sight line or within 1.8 m beside the lens, cast at 3 and crowd at 1, plus a cost for swinging far round (up to 2.5 behind the subject) or drawing in. The lowest wins. Rooms keep their inside-first pass.
+- Crowd cards within 1.1 m of the camera, measured to the chest, are not drawn, so a passer-by never fills the frame.
+- A camera the player drags into a solid footprint (circles of 1.2 m radius and up, and rects of 1.5 m² and up without a `top`) is drawn back toward its target until clear. Shots are left as authored.
+- `fire` material: crossed flame cards that lick, sway and flicker, premultiplied so the core covers what is behind it. `brazier` uses three cards turned at random when its fire material is a `fire`.
+- `orb` material: dark polished glass with mist turning inside and a bright rim, for spheres.
+- Cloth lets the sun through: the side turned from the sun gets a tenth of the sun's light in its own colour, so awnings seen from below are not black.
+- `prizeWheel` builder: a wheel of chance on a post, painted wedges, brass rim and pegs, hub and pointer.
+- `sheaf` is now stalks bound at the waist with ears of grain round a core, about 1,250 triangles.
+- Town houses' windows have frames, a cross of glazing bars, sills and shutters, open or now and then closed.
+- Story view, for an encounter with no set, shows the encounter's painting from `public/stage/art`, and NPC portraits come from `public/stage/portraits`.
+- Measured: the gate set 0.67M static triangles, the square 0.18M, after windows and sheaves. Every staging still passes `pnpm stage:check`.

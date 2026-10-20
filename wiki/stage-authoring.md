@@ -86,3 +86,7 @@ The web viewer and the desktop app run the same `packages/stage` renderer and th
 - Place a scene's focus in the sun. The harvest square's afternoon sun throws the south-west houses' shadow across its south end, and the first Clan Conflict layout left Larya dim against a blank wall. Moving the standoff a few metres north-east fixed it.
 - Say "tall human proportions, long legs, not a dwarf" for a burly human. A brief for a burly, bearded man in armour came back with dwarf proportions.
 - Point a close-up across a face-off, not along it, or the other side's shoulder fills the edge of the frame.
+- The game pauses a set's loops, so people stay where the staging puts them for the whole encounter. Start the party where the intro needs it: the gate queue had the heroes second in line behind a stranger Garlan questioned, while the intro has him question them.
+- Check every authored view against awnings and overhangs. The gate's "Party" view sat at the edge of the watch's awning, which filled half the frame.
+- Audit the views at eye height from eight bearings and from above as well as the authored ones, since players drag the camera anywhere. That pass found black awning undersides, flat sheaves and a camera that could enter a tower.
+- A portrait reference lends its face. Paint NPC portraits from references that cannot be mistaken for the subject: a woman painted from a woman's portrait came out her twin.
