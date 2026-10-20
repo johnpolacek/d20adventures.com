@@ -308,4 +308,6 @@ From an automated play of March of Davos with the live GM and a pass over every 
 - `sheaf` is now stalks bound at the waist with ears of grain round a core, about 1,250 triangles.
 - Town houses' windows have frames, a cross of glazing bars, sills and shutters, open or now and then closed.
 - Story view, for an encounter with no set, shows the encounter's painting from `public/stage/art`, and NPC portraits come from `public/stage/portraits`.
+- Cloth thins out, dithered, over the last metre before the camera, so bunting or an awning's edge passing by the lens never fills the frame with flat colour. 2026-10-20.
+- A drag stops at 50 degrees from straight overhead, a look down of about 40 degrees, near the festival's overview shot. From higher the crowd's cards read as pegs. The limit applies from the angle the drag starts at, so a steeper authored shot does not jump, and every `shot()` lifts it. 2026-10-20.
 - Measured: the gate set 0.67M static triangles, the square 0.18M, after windows and sheaves. Every staging still passes `pnpm stage:check`.

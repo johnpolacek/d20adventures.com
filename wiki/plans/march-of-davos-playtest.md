@@ -44,6 +44,8 @@ An automated playtest of March of Davos. Fix gameplay issues found along the way
 | The hunt | The labyrinth spoke of Astrid's soldiers, but none came with her, so the GM conjured them. | Her house guards follow her into the hunt. |
 | The ending | Final Confrontation had no transitions, so arriving there completed the adventure on Joran's first line. The party never chose. | The confrontation is played. Siding with Joran, with Astrid or with neither leads to The New Dawn, Vengeance of the Blackthorn or The Dust Settles, from the adventure's Aftermath. They reuse the festival, Astrid and library paintings. |
 | Ending screen | The last hero in initiative stayed highlighted after the adventure ended. | No hero is up once it has ended. |
+| Festival from roof height | Orbiting at 6 m put the camera among the bunting, and three pennants filled the frame as flat triangles. | Cloth thins out over the last metre before the lens. |
+| Overhead orbit | A drag could reach straight overhead, where the crowd's painted cards read as pegs. | A drag stops at a look down of about 40 degrees, the overview shot's angle. Authored shots keep theirs. |
 
 ## Gameplay notes
 
