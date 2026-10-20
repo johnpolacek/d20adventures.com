@@ -839,8 +839,8 @@ export function StagePlay(props: {
           )}
           <TurnOrder
             order={(shown?.characters ?? []).map((c) => ({ id: c.id, name: c.name, portrait: portrait(c), npc: c.type === "npc", health: c.healthPercent, status: c.status }))}
-            activeId={actor?.id ?? null}
-            label={actor?.name}
+            activeId={ended ? null : (actor?.id ?? null)}
+            label={ended ? undefined : actor?.name}
             compact={compact}
             onPick={focus}
           />
