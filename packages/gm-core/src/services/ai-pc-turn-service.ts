@@ -19,7 +19,7 @@ function characterSheet(character: TurnCharacter): string {
 ${character.archetype ? `Class/Archetype: ${character.archetype}\n` : ""}${character.race ? `Race: ${character.race}\n` : ""}${character.personality ? `Personality: ${character.personality}\n` : ""}${character.background ? `Background: ${character.background}\n` : ""}${character.motivation ? `Motivation: ${character.motivation}\n` : ""}${character.behavior ? `How they act: ${character.behavior}\n` : ""}${character.appearance ? `Appearance: ${character.appearance}\n` : ""}${character.specialAbilities?.length ? `Special Abilities: ${character.specialAbilities.join(", ")}\n` : ""}${availableSpells.length ? `Spells: ${availableSpells.map((s) => s.name).join(", ")}\n` : ""}${character.skills?.length ? `Skills: ${character.skills.join(", ")}\n` : ""}${character.equipment?.length ? `Equipment: ${character.equipment.map((e) => e.name).join(", ")}\n` : ""}`
 }
 
-function buildAiPcIntentPrompt(character: TurnCharacter, narrative: string, sceneRoster: string, scene: StoryScene, premise?: string): string {
+function buildAiPcIntentPrompt(character: TurnCharacter, narrative: string, sceneRoster: string, scene: StoryScene, premise?: string, lately: string[] = []): string {
   return `You are the PLAYER (not the GM) roleplaying as the character below. Players describe their character's intent and attempt only. The GM determines all outcomes, results, and perceptions.
 
 Given the recent narrative, write as beats what the character does next: an action by "${character.id}" and, only when natural, one brief line in the character's voice. Write actions in third person. Be creative, stay in character, and keep the reply concise, 1-2 short sentences total.
@@ -47,7 +47,7 @@ RIGHT: "He raises his blade and lunges forward with a powerful overhead strike."
 Character:
 ${characterSheet(character)}
 Others present in the scene: ${sceneRoster || "None"}
-${premiseBlock(premise)}
+${premiseBlock(premise)}${lately.length ? `\nWhat ${character.name} did in earlier rounds, most recent last. Do something different now unless this moment truly calls for the same again:\n${lately.map((m) => `- ${m}`).join("\n")}\n` : ""}
 Recent Narrative:
 ${narrative}
 
@@ -119,12 +119,29 @@ export function createAiPcTurnService(ports: GmPorts) {
   const { buildTurnReplyRollRequirement } = createAdventureTurnReplyService(ports)
   const loadAdventurePlanForRuntime = ports.content.loadPlan.bind(ports.content)
   // The AI companion's move, as its own beats: what it does and, at times, says.
-  async function generateAiPcIntent(args: { character: TurnCharacter; narrative: string; allCharacters: TurnCharacter[]; scene: StoryScene; premise?: string }): Promise<StoryBeat[]> {
-    const prompt = buildAiPcIntentPrompt(args.character, args.narrative, buildSceneRoster(args.allCharacters, args.character.id), args.scene, args.premise)
+  async function generateAiPcIntent(args: {
+    character: TurnCharacter
+    narrative: string
+    allCharacters: TurnCharacter[]
+    scene: StoryScene
+    premise?: string
+    lately?: string[]
+  }): Promise<StoryBeat[]> {
+    const prompt = buildAiPcIntentPrompt(args.character, args.narrative, buildSceneRoster(args.allCharacters, args.character.id), args.scene, args.premise, args.lately)
     const { object } = await generateObject({ prompt, schema: storyOutputObject })
     const beats = cleanStory(object.beats, args.scene, { step: "reply", character: args.character.id })
     if (!beats.length) throw new Error(`Empty intent generated for AI companion ${args.character.name}`)
     return beats
+  }
+
+  // The companion's own actions in the last few rounds before this one, so it does not meet every scene with the same
+  // spell: each turn's prompt shows only that turn.
+  async function earlierMoves(turn: { adventureId: string; order: number }, characterId: string): Promise<string[]> {
+    const earlier = (await ports.store.getTurns({ adventureId: turn.adventureId })).filter((t) => t.order < turn.order && t.order >= turn.order - 4).sort((a, b) => a.order - b.order)
+    return earlier
+      .flatMap((t) => t.story ?? [])
+      .flatMap((b) => (b.kind === "action" && b.actor === characterId && b.by.step === "reply" ? [b.text] : []))
+      .slice(-4)
   }
 
   async function processAiPcTurn(args: { turnId: string; characterId: string; adventure: { _id: string; settingId: string; planId: string } }): Promise<void> {
@@ -148,6 +165,7 @@ export function createAiPcTurnService(ports: GmPorts) {
         allCharacters: turn.characters as TurnCharacter[],
         scene: await sceneFor(ports, turn),
         premise: plan?.premise,
+        lately: await earlierMoves(turn, characterId),
       })
       const intent = storyProse(beats)
       console.log("[AI PC] Intent for", character.name, ":", intent)
