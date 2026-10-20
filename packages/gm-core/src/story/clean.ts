@@ -17,6 +17,7 @@ export interface StoryScene {
 }
 
 const QUOTE = /["“”]([^"“”]+)["“”]/g
+const SAID_ONLY = /^["“][^"“”]+["”]$/
 // What is left of a sentence once its quote is taken out, when it only said who spoke ("she says.", ", Wollandora
 // replies,").
 const TAG_ONLY =
@@ -66,6 +67,13 @@ export function cleanStory(output: StoryOutput, scene: StoryScene, by: StoryBy):
     if (how && how.length <= 40) beat.delivery = how
     beats.push(beat)
   }
+  // Words of someone with no turn, such as a guest in the crowd, join the narration before them, which shows who
+  // speaks. On their own they read as a quote from no one.
+  const said = (text: string) => {
+    const last = beats.at(-1)
+    if (last?.kind === "narration") last.text = `${last.text} ${text}`
+    else beats.push({ kind: "narration", by, text })
+  }
   for (const out of output) {
     // One beat reads as one paragraph: a line break inside it would split it in the text views.
     const text = sanitizeUserVisibleProse((out.text ?? "").replace(/\s*\n\s*/g, " ")).trim()
@@ -74,7 +82,7 @@ export function cleanStory(output: StoryOutput, scene: StoryScene, by: StoryBy):
     const to = findCharacter(scene, out.to)
     if (out.kind === "line") {
       if (who) line(who, text, to, out.delivery)
-      else beats.push({ kind: "narration", by, text: `"${unquote(text)}"` })
+      else said(`"${unquote(text)}"`)
       continue
     }
     if (out.kind === "action" && who) {
@@ -100,7 +108,8 @@ export function cleanStory(output: StoryOutput, scene: StoryScene, by: StoryBy):
       continue
     }
     const place = findPlace(scene, out.place)?.id
-    beats.push(place ? { kind: "narration", by, text, place } : { kind: "narration", by, text })
+    if (!place && SAID_ONLY.test(text)) said(text)
+    else beats.push(place ? { kind: "narration", by, text, place } : { kind: "narration", by, text })
   }
   return beats
 }
