@@ -9,7 +9,9 @@ settingId: "realm-of-myr"
 adventureId: "march-of-davos"
 npcs:
   - id: "seraphina-valtor"
+    behavior: "Courteous and probing. Sounds out the party's loyalties and fishes for anything they know of the Key of Ilmarin without naming it first."
   - id: "bishop-nicolai"
+    behavior: "Grave and watchful at Seraphina's side. Speaks of Valkaran heritage and steps in when she needs support."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726609502768"
 ---
 

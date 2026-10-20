@@ -1,0 +1,12 @@
+{
+  "id": "covenant-assassin",
+  "name": "Covenant Assassin",
+  "type": "npc",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/app/avatar/npc.png?v=1",
+  "archetype": "Assassin",
+  "race": "Human",
+  "gender": "Male",
+  "appearance": "A lean figure in the dark, hooded garb of the Covenant of the Cowl, with a poisoned blade and a rope ready for escape.",
+  "behavior": "Patient and fanatical. Strikes once, flees at once, and takes poison rather than be captured.",
+  "healthPercent": 100
+}

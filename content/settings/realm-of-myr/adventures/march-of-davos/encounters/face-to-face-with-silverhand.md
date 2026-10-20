@@ -9,6 +9,7 @@ settingId: "realm-of-myr"
 adventureId: "march-of-davos"
 npcs:
   - id: "silverhand"
+    behavior: "Cold and in control. Demands to know why the party followed him, trades what he knows of the Covenant only for something useful, and avoids fighting himself."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726464286132"
 ---
 

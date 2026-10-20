@@ -10,6 +10,8 @@ adventureId: "march-of-davos"
 npcs:
   - id: "sister-danica"
     behavior: "Calm, serene, commanding, understanding."
+  - id: "eldrin-varokich"
+    behavior: "Keeps to the private archives below, out of sight, until a hero enters them. Then cautious and evasive, warning of dangerous truths."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726275316858"
 ---
 

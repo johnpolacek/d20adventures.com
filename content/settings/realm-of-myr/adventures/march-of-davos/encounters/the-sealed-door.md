@@ -7,16 +7,27 @@ type: "encounter"
 title: "The Sealed Door"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+npcs:
+  - id: "astrid-blackthorn"
+    behavior: "Grim and ready, sword in hand. Guards the party while the seal is broken."
+    startNear: "party"
+  - id: "eamon"
+    behavior: "Strains to break the seal with the party's help, and falters under its weight unless they steady him."
+    startNear: "party"
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726951147257"
 ---
 
 ## Intro
 
-The seamless wall shimmers as Eamon casts a flare of light, revealing a massive, ancient door of black iron. Its glowing sigils pulse like a heartbeat. The air is freezing, your breath white with frost, and the weight of the magic makes it hard to speak.
+{actor: eamon, effect: burst, element: radiant} The seamless wall shimmers as Eamon casts a flare of light, revealing a massive, ancient door of black iron. Its glowing sigils pulse like a heartbeat. The air is freezing, the adventurers' breath white with frost, and the weight of the magic makes it hard to speak.
 
-“This is the inner sanctum,” Astrid says, gripping her sword. “Whatever they’ve been hiding, and whoever killed my brother, is through that door.”
+{actor: astrid-blackthorn, object: blade} Astrid grips her sword.
 
-Eamon steps forward, sweating despite the cold. “This seal is different. It’s tied to the city’s own ley lines. If I break it, I’m ringing a bell for everyone inside. Are you ready?”
+{speaker: astrid-blackthorn} This is the inner sanctum. Whatever they’ve been hiding, and whoever killed my brother, is through that door.
+
+{actor: eamon} Eamon steps forward, sweating despite the cold.
+
+{speaker: eamon, delivery: strained} This seal is different. It’s tied to the city’s own ley lines. If I break it, I’m ringing a bell for everyone inside. Are you ready?
 
 ## GM Notes
 

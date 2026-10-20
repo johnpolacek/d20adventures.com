@@ -1,0 +1,11 @@
+{
+  "id": "covenant-cultist",
+  "name": "Cowl Cultist",
+  "type": "npc",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/app/avatar/npc.png?v=1",
+  "archetype": "Cultist",
+  "race": "Human",
+  "appearance": "Hooded Covenant zealots in rough robes, smelling of lamp oil and alchemical powder.",
+  "behavior": "Fanatical and reckless. Will see the tunnel brought down even if they are buried with it.",
+  "healthPercent": 100
+}

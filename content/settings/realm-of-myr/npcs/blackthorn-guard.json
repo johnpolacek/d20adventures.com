@@ -1,0 +1,12 @@
+{
+  "id": "blackthorn-guard",
+  "name": "Blackthorn Guard",
+  "type": "npc",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/app/avatar/npc.png?v=1",
+  "archetype": "Fighter",
+  "race": "Human",
+  "gender": "Male",
+  "appearance": "A house guard in dark leather reinforced with iron plating, a longsword at the hip, and a tabard stitched with the Blackthorn crest, a black tree twisted into a circle.",
+  "behavior": "Dutiful enough, but bored by long nights at a door.",
+  "healthPercent": 100
+}

@@ -9,13 +9,19 @@ settingId: "realm-of-myr"
 adventureId: "march-of-davos"
 npcs:
   - id: "silverhand-representative"
+    behavior: "Leaves at once with the map case by the side exit, without a word."
   - id: "silverhand"
+    behavior: "Follows his representative out with his two silent guards, alert for anyone on his trail."
+  - id: "auctioneer"
+    behavior: "Closes the sale and moves on to the next lot, paying the departing buyers no mind."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726458036467"
 ---
 
 ## Intro
 
-The gavel falls with a sharp crack. "Sold! To the gentleman in black!" the auctioneer proclaims, his enthusiasm faltering in the hushed chamber.
+{actor: auctioneer} The gavel falls with a sharp crack in the hushed chamber.
+
+{speaker: auctioneer, delivery: enthusiasm faltering} Sold! To the gentleman in black!
 
 {actor: silverhand-representative, object: map} Silverhand’s representative stands and takes the protective case holding the ancient map in his gloved hands. Without a look back or a word to his master, he slips into the shadows near the side exit.
 

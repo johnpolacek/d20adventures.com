@@ -1,0 +1,12 @@
+{
+  "id": "auctioneer",
+  "name": "Masked Auctioneer",
+  "type": "npc",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/app/avatar/npc.png?v=1",
+  "archetype": "Auctioneer",
+  "race": "Human",
+  "gender": "Male",
+  "appearance": "A tall, slim figure in a black robe and a black leather mask, with a smooth, commanding voice.",
+  "behavior": "A practiced showman who keeps the bidding moving and never says where the goods came from.",
+  "healthPercent": 100
+}

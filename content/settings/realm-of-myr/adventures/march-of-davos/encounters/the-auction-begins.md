@@ -7,6 +7,9 @@ type: "encounter"
 title: "The Auction Begins"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+npcs:
+  - id: "auctioneer"
+    behavior: "Smooth showman who runs the bidding briskly. Keeps order in the room and says nothing of where the goods come from."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726455716232"
 ---
 
@@ -14,9 +17,11 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726455716232"
 
 The party is ushered into a candlelit chamber deeper in the Black Market, quiet, dark, and secretive after the bustling stalls. Rows of velvet seats face a small raised platform where the items will be shown. Shady figures, wealthy nobles, and collectors fill the seats, their faces hidden behind ornate masks.
 
-A tall, slim figure in a black robe and black leather mask strides onto the platform. His voice is smooth and commanding. "Ladies and gentlemen, esteemed guests, welcome to tonight’s exclusive event. We have gathered some of the most coveted items in the realm. May you bid wisely… and generously."
+{actor: auctioneer} A tall, slim figure in a black robe and black leather mask strides onto the platform.
 
-The auctioneer gestures, and an assistant unveils the first item, a jeweled dagger glinting in the dim light. The crowd stirs as the bidding begins.
+{speaker: auctioneer, delivery: smooth and commanding} Ladies and gentlemen, esteemed guests, welcome to tonight’s exclusive event. We have gathered some of the most coveted items in the realm. May you bid wisely… and generously.
+
+{actor: auctioneer} The auctioneer gestures, and an assistant unveils the first item, a jeweled dagger glinting in the dim light. The crowd stirs as the bidding begins.
 
 ## GM Notes
 

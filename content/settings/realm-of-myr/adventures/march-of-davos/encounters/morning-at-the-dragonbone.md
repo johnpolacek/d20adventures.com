@@ -10,6 +10,8 @@ adventureId: "march-of-davos"
 npcs:
   - id: "elara"
     behavior: "Distraught, determined, and responsible. Has a deep sense of duty to her community and the people she cares about."
+  - id: "bram"
+    behavior: "Kindly and protective of Elara. Vouches for the adventurers and offers them free lodging if they help find Joran."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726111833875"
 ---
 
@@ -19,13 +21,17 @@ Dawn light filters through the windows of the Dragonbone Inn, and the air smells
 
 {actor: Elara Antonov} The door creaks open and Elara steps in, pale, tired, and visibly distraught.
 
-Bram goes straight to her. “Elara, you’re early today. Everything alright?”
+{actor: bram, target: elara} Bram goes straight to her.
+
+{speaker: bram, to: elara, delivery: concerned} Elara, you’re early today. Everything alright?
 
 {actor: Elara Antonov} Elara gives him a faint smile.
 
 {speaker: Elara Antonov, delivery: faltering} I’m here to drop off those supply orders... but...
 
-Bram glances at the adventurers, then back to her. “You know, these folks here,” he says, “they seem like the kind who could help you find Joran.”
+{actor: bram} Bram glances at the adventurers, then back to her.
+
+{speaker: bram, to: elara} You know, these folks here, they seem like the kind who could help you find Joran.
 
 ## The Missing Brother
 

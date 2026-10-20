@@ -7,6 +7,11 @@ type: "encounter"
 title: "Death to the Murderer!"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+npcs:
+  - id: "covenant-assassin"
+    behavior: "Strikes once with a poisoned blade, then flees over the balcony by rope. If cornered, bites a poison capsule rather than be taken."
+  - id: "thaddeus-blackthorn"
+    behavior: "Poisoned and dying. Gasps a few words to whoever reaches him, then dies. Nothing saves him."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726789587556"
 ---
 
@@ -14,9 +19,15 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726789587556"
 
 As the applause for Thaddeus’ announcement peaks, a figure in the shadows moves with purpose. Clad in the dark, hooded garb of the Covenant of the Cowl, the assassin has waited for this moment, while every eye is on the Forest Drake.
 
-With a sudden, calculated movement, the assassin breaks from the crowd near Thaddeus and plunges a blade into his side, hissing, “Death to the murderer of Milos Antonov!” Thaddeus gasps, eyes wide in shock, as the poison begins to work through his veins.
+{actor: covenant-assassin, target: thaddeus-blackthorn, object: blade} With a sudden, calculated movement, the assassin breaks from the crowd near Thaddeus and plunges a blade into his side.
 
-Chaos erupts. Guests scream and scatter as the assassin races for the balcony with deadly speed and vaults the bannister, a rope ready for a quick descent into the darkness below.
+{speaker: covenant-assassin, to: thaddeus-blackthorn, delivery: hissing} Death to the murderer of Milos Antonov!
+
+{actor: thaddeus-blackthorn} Thaddeus gasps, eyes wide in shock, as the poison begins to work through his veins.
+
+Chaos erupts. Guests scream and scatter.
+
+{actor: covenant-assassin} The assassin races for the balcony with deadly speed and vaults the bannister, a rope ready for a quick descent into the darkness below.
 
 ## GM Notes
 

@@ -7,16 +7,29 @@ type: "encounter"
 title: "A Relic of Old Valkara"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+npcs:
+  - id: "auctioneer"
+    behavior: "Builds drama around the map and runs the bidding. Calls going once, going twice when no one challenges the top bid."
+  - id: "silverhand-representative"
+    behavior: "Opens at ten thousand gold on Silverhand's behalf, calm and final, and does not back down."
+  - id: "silverhand"
+    behavior: "Watches from behind his representative and lets him bid. Says nothing, but his stare warns off rivals."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726455771790"
 ---
 
 ## Intro
 
-The crowd hushes as the auctioneer takes the stage again, eyes gleaming. "What I have next," he says, "is truly one of a kind. Recovered from the depths of the Valkarr Forest, a relic of Old Valkara."
+{actor: auctioneer} The crowd hushes as the auctioneer takes the stage again, eyes gleaming.
 
-Heads turn toward the stage. With a dramatic sweep, he unveils an ancient map, its weathered parchment bearing faint, intricate markings. "This map," he continues, "leads to an item of unknown origin. Lost, forgotten, and waiting to be found. A mystery hidden in the wilds for centuries."
+{speaker: auctioneer} What I have next is truly one of a kind. Recovered from the depths of the Valkarr Forest, a relic of Old Valkara.
 
-Before anyone can get a good look at the route, he returns the map to its protective case and smiles slyly. "Now, let’s see who dares to take the first bid."
+{actor: auctioneer, object: map} Heads turn toward the stage. With a dramatic sweep, he unveils an ancient map, its weathered parchment bearing faint, intricate markings.
+
+{speaker: auctioneer} This map leads to an item of unknown origin. Lost, forgotten, and waiting to be found. A mystery hidden in the wilds for centuries.
+
+{actor: auctioneer, object: map} Before anyone can get a good look at the route, he returns the map to its protective case and smiles slyly.
+
+{speaker: auctioneer, delivery: slyly} Now, let’s see who dares to take the first bid.
 
 ## GM Notes
 

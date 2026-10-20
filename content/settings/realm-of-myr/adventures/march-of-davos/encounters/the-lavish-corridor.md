@@ -7,6 +7,9 @@ type: "encounter"
 title: "The Lavish Corridor"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+npcs:
+  - id: "blackthorn-guard"
+    behavior: "The two complacent guards outside Thaddeus's door, acting as one. Open to flattery, a small bribe or a good story. Raise the alarm if attacked."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726672244509"
 ---
 
@@ -18,7 +21,7 @@ Two guards block the way to a large, intricately carved door. Both wear dark lea
 
 They carry longswords, but they stand at ease, more interested in the Masquerade’s lavish spread than in any threat. The hall is otherwise silent, the ball barely audible this far into the mansion.
 
-One, a stocky man with graying hair, leans against the wall, absently fiddling with his armor straps. The other, a younger guard with a scruffy beard, chuckles and mutters about the wine and roasted game downstairs. Neither seems to care what goes on beyond the door they guard, though they still glance down the hall now and then.
+{actor: blackthorn-guard} One, a stocky man with graying hair, leans against the wall, absently fiddling with his armor straps. The other, a younger guard with a scruffy beard, chuckles and mutters about the wine and roasted game downstairs. Neither seems to care what goes on beyond the door they guard, though they still glance down the hall now and then.
 
 ## GM Notes
 

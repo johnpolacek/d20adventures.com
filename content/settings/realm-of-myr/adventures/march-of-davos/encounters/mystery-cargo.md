@@ -10,14 +10,16 @@ adventureId: "march-of-davos"
 npcs:
   - id: "scarface-alaric"
     behavior: "Cautious and untrusting, fiercely protective of his crew and territory, has a sharp tongue and quick wit."
+  - id: "warehouse-thug"
+    behavior: "Alaric's three hired blades, acting as one. Fight at his signal and break if he falls or surrenders."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726351294262"
 ---
 
 ## Intro
 
-Following Finn’s directions through a maze of warehouses and narrow alleys, you find Warehouse 14, a storage shed tucked in a shadowed corner. The air is stagnant here, away from the sea breeze.
+Following Finn’s directions through a maze of warehouses and narrow alleys, the adventurers find Warehouse 14, a storage shed tucked in a shadowed corner. The air is stagnant here, away from the sea breeze.
 
-{actor: Alaric Fleyven} Suspicious figures lurk by the entrance, posing as workers but clearly on alert. One, a tall man with a jagged scar down his cheek, spots you and signals. His companions draw short swords from beneath their tunics.
+{actor: Alaric Fleyven} Suspicious figures lurk by the entrance, posing as workers but clearly on alert. One, a tall man with a jagged scar down his cheek, spots the adventurers and signals. His companions draw short swords from beneath their tunics.
 
 {speaker: Alaric Fleyven, delivery: demanding} Who’re you lot? Ain’t nothing here for you. Best be on your way before you find trouble you can’t walk away from.
 

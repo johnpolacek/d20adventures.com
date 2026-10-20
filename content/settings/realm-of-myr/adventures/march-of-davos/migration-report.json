@@ -458,6 +458,126 @@
     {
       "path": "content/settings/realm-of-myr/npcs/bishop-nicolai.json",
       "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/forest-drake.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/forest-drake.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/harron.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/harron.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/eldrin-varokich.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/eldrin-varokich.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/thaddeus-blackthorn.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/thaddeus-blackthorn.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/clive-stonebrook.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/clive-stonebrook.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/mira-hearthstone.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/mira-hearthstone.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/joran-antonov.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/joran-antonov.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/ancient-undead.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/ancient-undead.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/warehouse-thug.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/warehouse-thug.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/auctioneer.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/auctioneer.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/aelindor.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/aelindor.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/blackthorn-guard.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/blackthorn-guard.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/covenant-assassin.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/covenant-assassin.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/covenant-rogue.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/covenant-rogue.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/covenant-cultist.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/covenant-cultist.json",
+      "kind": "npcSheet"
     }
   ],
   "sourceFieldMappings": [

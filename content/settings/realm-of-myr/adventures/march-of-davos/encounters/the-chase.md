@@ -7,6 +7,9 @@ type: "encounter"
 title: "The Chase"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+npcs:
+  - id: "covenant-assassin"
+    behavior: "Slips through the garden grate and seals it behind him. If caught before he escapes, bites a poison capsule rather than be taken."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726797856154"
 ---
 
@@ -14,7 +17,7 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726797856154"
 
 The ballroom is in chaos. Anyone who peers over the balcony feels the cool night air and glimpses the hooded figure sliding down the rope into the dark garden below.
 
-Among the lush greenery and manicured flower beds, the figure disappears through what looks like an old drainage grate hidden beneath the ivy. The grate, almost indistinguishable from the garden's stone paths, swings shut with a soft clang, its mechanism hidden beneath the vines.
+{actor: covenant-assassin} Among the lush greenery and manicured flower beds, the figure disappears through what looks like an old drainage grate hidden beneath the ivy. The grate, almost indistinguishable from the garden's stone paths, swings shut with a soft clang, its mechanism hidden beneath the vines.
 
 ## GM Notes
 

@@ -7,6 +7,11 @@ type: "encounter"
 title: "The Hideout"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+npcs:
+  - id: "aldith"
+    behavior: "Guards the hideout door for Silverhand. Turns strangers away, can be bluffed or bribed with a good story, and fights anyone who forces the way."
+  - id: "kaelen"
+    behavior: "Watches the docks from the shadows near the hideout. Spots careless sneaking and slips word to Silverhand."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726461696892"
 ---
 

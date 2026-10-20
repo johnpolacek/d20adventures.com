@@ -7,12 +7,21 @@ type: "encounter"
 title: "Forgotten Temple"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+npcs:
+  - id: "astrid-blackthorn"
+    behavior: "Awed and wary, blade still drawn. Wants whoever killed her brother."
+    startNear: "party"
+  - id: "eamon"
+    behavior: "Fascinated by the silver runes. Reads the story of the Key of Ilmarin if asked."
+    startNear: "party"
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726955916736"
 ---
 
 ## Intro
 
-Astrid wipes the black ichor of the undead from her blade, breathing hard, and looks to the far archway with awe and dread. "The catacombs were a decoy. This is the heart of Old Valkara."
+{actor: astrid-blackthorn} Astrid wipes the black ichor of the undead from her blade, breathing hard, and looks to the far archway with awe and dread.
+
+{speaker: astrid-blackthorn, delivery: breathless} The catacombs were a decoy. This is the heart of Old Valkara.
 
 Through the archway, rough stone gives way to impossible architecture. Walls of translucent white marble glow with a faint inner starlight. Towering pillars carved as ancient oaks hold up a vaulted ceiling painted with the constellations of a sky Kordavos hasn't seen in a thousand years.
 

@@ -7,6 +7,11 @@ type: "encounter"
 title: "The Wine Cellar"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+npcs:
+  - id: "clive-stonebrook"
+    behavior: "Comes down the stairs with Mira after the party's first moves, hunting the 407 Dronis red for the toast. Fussy and impatient. Leaves once he has it, unless something looks amiss."
+  - id: "mira-hearthstone"
+    behavior: "Flustered young servant trailing Clive with a notepad. Eager to get back upstairs and easily rattled."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726777134645"
 ---
 

@@ -7,6 +7,9 @@ type: "encounter"
 title: "The Silver Serpent Tavern"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+npcs:
+  - id: "harron"
+    behavior: "Gruff and closemouthed behind the bar. For coin or a hard push, says Joran was seen meeting Silverhand, who works the Black Market in the Lower Districts."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726289298448"
 ---
 

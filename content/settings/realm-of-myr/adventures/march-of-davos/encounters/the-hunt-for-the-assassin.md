@@ -7,18 +7,34 @@ type: "encounter"
 title: "The Hunt for the Assassin"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+npcs:
+  - id: "astrid-blackthorn"
+    behavior: "Cold fury. Leads the hunt and pushes the party on. Offers 500 gold each and a Blackthorn favor if they bargain."
+    startNear: "party"
+  - id: "eamon"
+    behavior: "Focused and quiet. Unravels the ward on the grate and warns that the Cowl will feel it break."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726868134486"
 ---
 
 ## Intro
 
-Lady Astrid, now in rugged ranger gear of dark leathers and a heavy cloak, crosses the moonlit courtyard with predatory focus. The air smells of wet earth and crushed ivy, and a cold wind whistles through the stone balustrades. She leads you along the assassin's escape route, her eyes on the churned-up soil and a discarded glove faintly glowing green with lingering poison.
+{actor: astrid-blackthorn} Lady Astrid, now in rugged ranger gear of dark leathers and a heavy cloak, crosses the moonlit courtyard with predatory focus. The air smells of wet earth and crushed ivy, and a cold wind whistles through the stone balustrades. She leads the adventurers along the assassin's escape route, her eyes on the churned-up soil and a discarded glove faintly glowing green with lingering poison.
 
-By a heavy drainage grate near the estate's ivy-choked wall waits a familiar figure: Eamon, no longer the mild-mannered scholar from the Dragonbone Inn. He stands tall, hands glowing with soft arcane light, inspecting runes etched into the grate's metal.
+{actor: eamon} By a heavy drainage grate near the estate's ivy-choked wall waits a familiar figure: Eamon, no longer the mild-mannered scholar from the Dragonbone Inn. He stands tall, hands glowing with soft arcane light, inspecting runes etched into the grate's metal.
 
-Astrid strides forward, boots crunching on gravel. "Eamon," she snaps, low and intense. "The ward. Break it." Eamon nods and begins to unravel the seal in a steady, rhythmic murmur.
+{actor: astrid-blackthorn, target: eamon} Astrid strides forward, boots crunching on gravel.
 
-Astrid turns to you, her gaze hard as flint. "This assassin and the Covenant think they can hide behind magic and shadows. But they have murdered my brother, and they have underestimated me. Thaddeus will not die without vengeance." She gestures to the grate as it begins to grind open. "We hunt together."
+{speaker: astrid-blackthorn, to: eamon, delivery: low and intense} Eamon. The ward. Break it.
+
+{actor: eamon, effect: aura, element: arcane} Eamon nods and begins to unravel the seal in a steady, rhythmic murmur.
+
+{actor: astrid-blackthorn} Astrid turns to the adventurers, her gaze hard as flint.
+
+{speaker: astrid-blackthorn} This assassin and the Covenant think they can hide behind magic and shadows. But they have murdered my brother, and they have underestimated me. Thaddeus will not die without vengeance.
+
+{actor: astrid-blackthorn} She gestures to the grate as it begins to grind open.
+
+{speaker: astrid-blackthorn} We hunt together.
 
 ## GM Notes
 

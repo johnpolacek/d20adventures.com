@@ -1,0 +1,11 @@
+{
+  "id": "covenant-rogue",
+  "name": "Covenant Rogue",
+  "type": "npc",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/app/avatar/npc.png?v=1",
+  "archetype": "Rogue",
+  "race": "Human",
+  "appearance": "Hooded Covenant agents in dark leathers, quick and quiet, with short blades and hand crossbows.",
+  "behavior": "Skirmish from cover and protect their own above all.",
+  "healthPercent": 100
+}

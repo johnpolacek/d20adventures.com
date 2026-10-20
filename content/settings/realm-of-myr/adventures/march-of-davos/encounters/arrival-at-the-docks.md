@@ -13,14 +13,15 @@ npcs:
   - id: "tor-marros"
     behavior: "Very strong"
   - id: "petra-velan"
+    behavior: "Sharp-eyed dock hand with a pipe and a limp. Wary of the guard and the noble houses, but talks to anyone Finn trusts."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726345480155"
 ---
 
 ## Intro
 
-You arrive at the bustling docks of Kordavos in golden sunlight. The air smells of saltwater and freshly unloaded cargo. Tall ships bob in their berths, and dockworkers hauling crates and barrels shout to one another over the gulls and the waves against the piers.
+The adventurers arrive at the bustling docks of Kordavos in golden sunlight. The air smells of saltwater and freshly unloaded cargo. Tall ships bob in their berths, and dockworkers hauling crates and barrels shout to one another over the gulls and the waves against the piers.
 
-{actor: Finn Radonik} Ahead, a group of dockworkers pause and turn their sweat-streaked faces toward you. One of them, a grizzled veteran with a sun-worn face and a heavy leather apron, sets down a crate, wipes his brow, and eyes you warily.
+{actor: Finn Radonik} Ahead, a group of dockworkers pause and turn their sweat-streaked faces toward the adventurers. One of them, a grizzled veteran with a sun-worn face and a heavy leather apron, sets down a crate, wipes his brow, and eyes them warily.
 
 ## GM Notes
 

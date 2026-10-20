@@ -1,0 +1,12 @@
+{
+  "id": "aelindor",
+  "name": "Aelindor",
+  "type": "npc",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/app/avatar/npc.png?v=1",
+  "archetype": "Bard",
+  "race": "Elf",
+  "gender": "Male",
+  "appearance": "A tall, ethereal elf with shimmering silver hair and long green and silver robes, carrying an ornately carved lyre of ancient heartwood.",
+  "behavior": "Gracious and serene. An emissary of Faelendar who lets his music speak for him.",
+  "healthPercent": 100
+}
