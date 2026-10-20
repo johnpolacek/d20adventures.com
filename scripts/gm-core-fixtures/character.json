@@ -407,6 +407,9 @@
           "behavior": {
             "type": "string"
           },
+          "thinking": {
+            "type": "string"
+          },
           "healthPercent": {
             "type": "number",
             "minimum": 0,
@@ -574,6 +577,9 @@
             "type": "string"
           },
           "behavior": {
+            "type": "string"
+          },
+          "thinking": {
             "type": "string"
           },
           "healthPercent": {

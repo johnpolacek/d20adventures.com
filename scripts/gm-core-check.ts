@@ -1,5 +1,5 @@
 import assert from "node:assert/strict"
-import { readdirSync, readFileSync } from "node:fs"
+import { readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { createGmCore, type GmPorts, type Store } from "@d20/gm-core"
 import { assertPlayerCharacterControl } from "@d20/gm-core/access"
@@ -15,6 +15,10 @@ import { loadLocalWikiAdventureRuntime } from "../lib/wiki-adventures/local-runt
 // Recorded from the production services at 7ff0b2d, and again for story beats on 2026-10-14. No model calls.
 const fixture = JSON.parse(readFileSync("scripts/gm-core-fixtures/turn.json", "utf8"))
 const characterFixture = JSON.parse(readFileSync("scripts/gm-core-fixtures/character.json", "utf8"))
+// GM_FIXTURE_UPDATE=1 records the prompts, schemas and state the code produces now over the recorded model answers,
+// after a prompt or content change made on purpose. Read the fixtures' diff before committing it.
+const UPDATE = process.env.GM_FIXTURE_UPDATE === "1"
+const save = (path: string, value: unknown) => writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`)
 const runtime = loadLocalWikiAdventureRuntime("realm-of-myr", "march-of-davos")
 const clone = <T>(value: T): T => structuredClone(value)
 const unavailable = () => {
@@ -117,6 +121,7 @@ async function replayTurn() {
   const inference = async (args: { prompt: string; schema?: z.ZodTypeAny }) => {
     const expected = fixture.calls[index++]
     assert.ok(expected, "unexpected extra model call")
+    if (UPDATE) Object.assign(expected, { prompt: args.prompt, schema: args.schema ? z.toJSONSchema(args.schema) : undefined })
     assert.equal(args.prompt, expected.prompt, `prompt ${index} changed`)
     assert.deepEqual(args.schema ? z.toJSONSchema(args.schema) : undefined, expected.schema, `schema ${index} changed`)
     return args.schema ? { object: args.schema.parse(JSON.parse(expected.response)) } : { text: expected.response }
@@ -132,6 +137,7 @@ async function replayTurn() {
   assert.ok(game.records.get("turn-1").characters.every((actor: any) => actor.isComplete))
   await core.advanceTurn({ turnId: "turn-1", settingId: "realm-of-myr", adventurePlanId: "march-of-davos" })
   assert.equal(index, 7)
+  if (UPDATE) fixture.writes = game.writes
   assert.deepEqual(game.writes, fixture.writes)
   assert.deepEqual(game.narrations, ["turn-1", "turn-1", "turn-2"])
   // The old spike stored a subset of commit fields. Compare every recorded field,
@@ -140,9 +146,11 @@ async function replayTurn() {
     const actual = game.records.get(expected._id)
     for (const [key, value] of Object.entries(expected)) {
       if (key === "updatedAt") continue
-      assert.deepEqual(json(actual[key]), value, `${expected._id}.${key}`)
+      if (UPDATE) expected[key] = json(actual[key])
+      assert.deepEqual(json(actual[key]), expected[key], `${expected._id}.${key}`)
     }
   }
+  if (UPDATE) save("scripts/gm-core-fixtures/turn.json", fixture)
   assert.ok(game.records.get("turn-2").adventurePatch)
   assert.equal((await core.advanceTurn({ turnId: "turn-1", settingId: "realm-of-myr", adventurePlanId: "march-of-davos" })).status, "already_advanced")
   assert.equal(index, 7, "duplicate advance must not call the model")
@@ -165,6 +173,7 @@ async function characterPrompts() {
   const game = memoryGame()
   let current: any
   game.ports.llm.generateObject = async (args) => {
+    if (UPDATE) Object.assign(current, { prompt: args.prompt, schema: z.toJSONSchema(args.schema) })
     assert.equal(args.prompt, current.prompt, current.name)
     assert.deepEqual(z.toJSONSchema(args.schema), current.schema, current.name)
     return { object: {} as z.infer<typeof args.schema> }
@@ -175,6 +184,7 @@ async function characterPrompts() {
     assert.equal((await operation(current.input)).success, true)
   }
   assert.deepEqual(await core.generateCharacterAction({ prompt: " ", characterType: "pc" }), { success: false, error: "Prompt is required" })
+  if (UPDATE) save("scripts/gm-core-fixtures/character.json", characterFixture)
 }
 
 async function accessAndInstanceIsolation() {
