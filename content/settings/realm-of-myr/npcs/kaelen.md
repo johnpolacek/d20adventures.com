@@ -9,4 +9,4 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726461750367"
 
 ## Summary
 
-Calm, observant, and sharp-witted. Kaelen’s keen senses and agility make her an excellent scout.
+Silverhand's scout, a mage. Calm, observant, and sharp-witted, with keen senses and the agility of a born scout.
