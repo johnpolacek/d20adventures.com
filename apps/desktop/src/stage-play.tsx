@@ -82,15 +82,19 @@ const FALL_DELAY = 1500
 // What the card says while the GM plays an NPC's or AI hero's turn, when the sheet has no line of its own.
 const MULLING = ["considers the moment…", "weighs the options…", "sizes up the scene…", "makes a choice…", "takes a breath…"]
 
+// What the screen calls someone whose turn it is: a hero by first name, an NPC by the whole name, since NPC names
+// often lead with a title or a trade ("Sister Danica", "Warehouse Thug").
+const callName = (c: { name: string; type?: string }) => (c.type === "npc" ? c.name : c.name.split(" ")[0])
+
 // The card while the GM works: the NPC or AI hero it is playing, with their own line or one picked by the turn, or the
 // GM resolving a player's action.
 function playing(turnId: string | undefined, actor: Character | undefined, ai: boolean, portrait: (c: Character) => string | undefined): CardMode {
   if (!actor || (actor.type !== "npc" && !ai)) return { kind: "thinking", note: "The GM is resolving the action…" }
-  const name = actor.name.split(" ")[0]
+  const name = callName(actor)
   let pick = 0
   for (const ch of `${turnId}:${actor.id}`) pick = (pick * 31 + ch.charCodeAt(0)) >>> 0
   const note = actor.thinking ?? `${name} ${MULLING[pick % MULLING.length]}`
-  return { kind: "thinking", note, who: { id: actor.id, name: actor.name, role: `${actor.race} ${actor.archetype}`, portrait: portrait(actor) } }
+  return { kind: "thinking", note, who: { id: actor.id, name, role: `${actor.race} ${actor.archetype}`, portrait: portrait(actor) } }
 }
 
 // Story view's painting: the encounter's art, drifting slowly, darkened at the edges and behind the text so the
@@ -788,7 +792,7 @@ export function StagePlay(props: {
       title={{ eyebrow: (save?.adventure.title ?? "").toUpperCase(), text: shown?.title ?? "" }}
       location={{
         eyebrow: scene?.location ?? "Story view",
-        title: ended ? "Adventure complete" : actor ? `${actor.name.split(" ")[0]}'s turn` : `Round ${turn?.order ?? 1}`,
+        title: ended ? "Adventure complete" : actor ? `${callName(actor)}'s turn` : `Round ${turn?.order ?? 1}`,
         status: props.status,
       }}
       views={stage ? Object.entries(stage.shots).map(([id, s]) => ({ id, label: s.label ?? id })) : []}

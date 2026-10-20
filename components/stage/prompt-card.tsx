@@ -34,7 +34,7 @@ export interface CardSuggestion {
 // `suggestions` are chips over the reply box that fill it in, blank while they are being written. `suggestion` is
 // the demo's one scripted reply, behind its Suggest button.
 // A roll's `made` is the natural roll once it is made, and `resolving` says the GM is still answering it.
-// A thinking card's `who` is the NPC or AI hero the GM is playing, shown with their portrait.
+// A thinking card's `who` is the NPC or AI hero the GM is playing, shown with their portrait, by the name to call them.
 export type CardMode =
   | { kind: "hold"; prompt: string; suggestion?: string; suggestions?: CardSuggestion[] | "loading" }
   | { kind: "roll"; roll: CardRoll; prompt?: string; made?: number; resolving?: boolean }
@@ -451,7 +451,7 @@ export function PromptCard({
             </div>
           )}
           <div className="min-w-0">
-            <div className={cn(eyebrow, "animate-pulse")}>{mode.who.name.split(" ")[0]}&apos;s turn</div>
+            <div className={cn(eyebrow, "animate-pulse")}>{mode.who.name}&apos;s turn</div>
             {mode.note && <div className="mt-1 font-serif text-[13px] text-stage-sage italic">{mode.note}</div>}
           </div>
         </div>
