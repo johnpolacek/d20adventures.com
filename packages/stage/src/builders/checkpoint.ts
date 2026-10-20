@@ -94,29 +94,45 @@ export const brazier = defineBuilder(z.object({}).strict(), (ctx) => {
     14,
     { uv: "keep" }
   )
-  lathe(
-    b,
-    M.fire,
-    0,
-    0.92,
-    0,
-    [
-      [0, 0],
-      [0.2, 0.04],
-      [0.15, 0.24],
-      [0.05, 0.42],
-      [0, 0.46],
-    ],
-    10,
-    { uv: "keep" }
-  )
-  for (let i = 0; i < 7; i++)
-    b.add(
-      G("ember", () => new THREE.IcosahedronGeometry(1, 0)),
-      M.coal,
-      M4(rand(-0.2, 0.2), 0.98, rand(-0.2, 0.2), rand(0, 3), 0.09, 0.06, 0.09),
+  if (M.fire.userData.fire) {
+    // Three crossed cards of live flame, turned at random so no two braziers burn alike.
+    const turn = rand(0, TAU)
+    for (let i = 0; i < 3; i++)
+      b.add(
+        G("flame-card", () => new THREE.PlaneGeometry(1, 1).translate(0, 0.5, 0)),
+        M.fire,
+        M4(0, 0.9, 0, turn + (i * TAU) / 6, 0.62, 0.78, 1),
+        { uv: "keep" }
+      )
+  } else
+    lathe(
+      b,
+      M.fire,
+      0,
+      0.92,
+      0,
+      [
+        [0, 0],
+        [0.2, 0.04],
+        [0.15, 0.24],
+        [0.05, 0.42],
+        [0, 0.46],
+      ],
+      10,
       { uv: "keep" }
     )
+  // A bed of coals: glowing lumps among charred ones.
+  for (let i = 0; i < 14; i++) {
+    const r = Math.sqrt(rand()) * 0.3
+    const a = rand(0, TAU)
+    const s = rand(0.04, 0.075)
+    b.add(
+      G("ember", () => new THREE.IcosahedronGeometry(1, 0)),
+      i % 3 ? M.coal : M.iron,
+      M4(Math.cos(a) * r, 0.97 + rand(0, 0.03), Math.sin(a) * r, rand(0, 3), s, s * 0.7, s),
+      { uv: "keep" }
+    )
+  }
   ctx.circle(0, 0, 0.6)
 })
 

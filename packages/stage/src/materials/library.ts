@@ -4,7 +4,7 @@ import type { MaterialSpec } from "../spec/set"
 import type { SharedUniforms } from "./atmosphere"
 import { bannerTexture } from "./heraldry"
 import { grass, meadow, rock, water } from "./nature"
-import { burlap, card, cloth, foliage, glow, masonry, metal, mist, plain, TextureBank, tatters, wood } from "./surfaces"
+import { burlap, card, cloth, fire, foliage, glow, masonry, metal, mist, plain, TextureBank, tatters, wood } from "./surfaces"
 
 export interface MaterialLibrary {
   get: (name: string) => THREE.Material | undefined
@@ -87,6 +87,9 @@ export function createMaterialLibrary(specs: Record<string, MaterialSpec>, share
       case "mist":
         m = mist(ctx, bank, name, s.color, s.opacity)
         break
+      case "fire":
+        m = fire(ctx, name, s.color, s.intensity)
+        break
       case "metal":
         m = metal(ctx, name, s.color, s.roughness, s.metalness)
         break
@@ -140,6 +143,7 @@ export function createStubLibrary(specs: Record<string, MaterialSpec>): Material
     if (s.type === "foliage" && s.map) m.userData.cards = true
     if (s.type === "card") m.userData.card = true
     if (s.type === "cloth") m.userData.sway = true
+    if (s.type === "fire") m.userData.fire = true
     out.set(name, m)
   }
   return {

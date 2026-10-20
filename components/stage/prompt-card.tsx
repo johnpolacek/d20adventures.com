@@ -296,8 +296,8 @@ export function PromptCard({
   onPick: (id: string) => void
   // Leaves a roll once the GM has answered it. Without it the roll's card has no Continue button.
   onContinue?: () => void
-  // The card's top edge, in px from the bottom of the screen (so the stage can frame shots above it).
-  onTop?: (px: number) => void
+  // The card's top edge, in px from the bottom of the screen, and its box (so the stage can frame shots around it).
+  onTop?: (px: number, rect?: DOMRect) => void
   // The reply can be held by the caller (so it survives the card closing while the turn is replayed).
   draft?: string
   onDraft?: (text: string) => void
@@ -315,7 +315,10 @@ export function PromptCard({
   useEffect(() => {
     const el = ref.current
     if (!el || !onTop) return
-    const report = () => onTop(innerHeight - el.getBoundingClientRect().top)
+    const report = () => {
+      const rect = el.getBoundingClientRect()
+      onTop(innerHeight - rect.top, rect)
+    }
     const ro = new ResizeObserver(report)
     ro.observe(el)
     report()
@@ -408,13 +411,7 @@ export function PromptCard({
                 Skip
               </button>
             )}
-            <Button
-              variant="epic"
-              size="xs"
-              className={cn("shrink-0 gap-1.5", !onSkip && "ml-auto", compact ? "px-6" : "px-8 py-1.5 text-sm")}
-              onClick={send}
-              disabled={!draft.trim()}
-            >
+            <Button variant="epic" size="xs" className={cn("shrink-0 gap-1.5", !onSkip && "ml-auto", compact ? "px-6" : "px-8 py-1.5 text-sm")} onClick={send} disabled={!draft.trim()}>
               Send
               <Chevron />
             </Button>

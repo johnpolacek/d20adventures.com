@@ -85,6 +85,8 @@ float cYawA = cYB.x, cSin = sin(cYawA), cCos = cos(cYawA);`
  lp.y += walk * abs(stride) * .035;
  lp.x += (walk * stride * .012 + (1.0 - walk) * sin(uTime * (.8 + cA.w * .5) + ph) * .012) * position.y * cV.x;
  transformed = vec3(lp.x * cCos, lp.y, -lp.x * cSin);
+ // Someone the camera all but touches is left out, so a passer-by's head never fills the frame.
+ transformed *= step(1.1, distance(uCam, cPos + vec3(0.0, 1.1, 0.0)));
  float u = position.x + .5, uF = u * cVF.z, uB = u * cVB.z;
  vCUv = vec3(cA.z > 0.0 ? uF : cVF.z - uF, 1.0 - position.y * cVF.w, cA.y);
  vCUb = vec3(cA.z > 0.0 ? uB : cVB.z - uB, 1.0 - position.y * cVB.w, cA.y + ${N}.0);

@@ -364,18 +364,15 @@
       "emissiveIntensity": 5
     },
     "fire": {
-      "type": "plain",
-      "color": "#000000",
-      "roughness": 1,
-      "emissive": "#ff8a3a",
-      "emissiveIntensity": 2.2
+      "type": "fire",
+      "color": "#ff7a26"
     },
     "coal": {
       "type": "plain",
       "color": "#000000",
       "roughness": 1,
-      "emissive": "#ff5a1a",
-      "emissiveIntensity": 2.5
+      "emissive": "#c2360c",
+      "emissiveIntensity": 1.5
     },
     "pottery": {
       "type": "plain",

@@ -8,6 +8,7 @@ Updated for the desktop integration worktree on 2026-10-02. Implementation statu
 
 | Plan | Status | Next work |
 |---|---|---|
+| [March of Davos playtest](march-of-davos-playtest.md) | In progress on main 2026-10-19. An automated play of the adventure with the live Claude GM, and a pass over every 3D view. Camera framing, closing beats on the old scene, the hero-turn view and live fire fixed so far. | The rest of the adventure, the festival props, more views. |
 | [Clan Conflict in 3D](clan-conflict-stage.md) | Implemented on main 2026-10-19. A standoff at the south end of the harvest square, on a cut of the festival set with a ring of onlookers. Six new standees. | Owner review on `/dev/stage`, then a check in the running app. |
 | [Painted backdrop](stage-backdrop.md) | Implemented on main 2026-10-17. A set's `backdrops` hang painted, keyed panoramas on far cylinders. The Old Standing Stones has a painted valley in place of its mountain cones, and a forested ridge behind Thalbern's close-up since 2026-10-18. The riverfront, the old forest path and Thalbern's home have backdrops too. | None. |
 | [Stage art spikes](stage-art-spikes.md) | Decided 2026-10-17. Painted backdrop adopted. Paint-over projection and video standees not adopted. | None. |

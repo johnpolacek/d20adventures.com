@@ -549,6 +549,49 @@ export function glow(ctx: MaterialContext, bank: TextureBank, name: string, colo
   m.userData.noShadow = true
   return stageMaterial(m, ctx.shared, "glow")
 }
+// Live flame on upright cards, uv.y from the root to the tip: tongues of fire that lick upward and sway, white-gold at
+// the root and deep red where they break off. Unlit and shadowless.
+// Each card takes its own pattern from its facing, so crossed cards, and fires turned apart, never move as one.
+export function fire(ctx: MaterialContext, name: string, color = "#ff7a26", intensity = 1) {
+  // Premultiplied: mostly added light, with enough cover at the core to read against a sunlit wall.
+  const m = new THREE.MeshBasicMaterial({
+    name,
+    color,
+    transparent: true,
+    blending: THREE.CustomBlending,
+    blendSrc: THREE.OneFactor,
+    blendDst: THREE.OneMinusSrcAlphaFactor,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+    toneMapped: false,
+  })
+  m.userData.noShadow = true
+  m.userData.fire = true
+  return stageMaterial(m, ctx.shared, "fire", (s) => {
+    s.uniforms.uTime = ctx.shared.time
+    s.uniforms.uGain = { value: intensity }
+    s.vertexShader = s.vertexShader
+      .replace("#include <common>", "#include <common>\nvarying vec2 vFUv; varying float vFSeed;")
+      .replace("#include <begin_vertex>", "#include <begin_vertex>\nvFUv = uv; vFSeed = dot(normalize((modelMatrix * vec4(normal, 0.0)).xyz), vec3(3.17, 0.0, 7.31));")
+    s.fragmentShader = s.fragmentShader.replace("#include <common>", `#include <common>\nuniform float uTime; uniform float uGain; varying vec2 vFUv; varying float vFSeed;\n${NOISE}`).replace(
+      "#include <map_fragment>",
+      `#include <map_fragment>
+ { float y = vFUv.y, t = uTime + vFSeed * 4.0;
+   float n = mfbm(vec2(vFUv.x * 2.6 + vFSeed, y * 1.7 - t * 1.9));
+   float m2 = mfbm(vec2(vFUv.x * 5.0 - vFSeed, y * 3.2 - t * 3.1));
+   float sway = (n - .5) * .5 * y + sin(t * 2.3 + y * 3.0) * .05 * y;
+   float hw = mix(.46, .04, pow(y, .75)) * (.8 + .5 * n);
+   float body = 1.0 - smoothstep(hw * .45, hw, abs(vFUv.x - .5 - sway));
+   float top = 1.0 - smoothstep(.35, 1.0, y + (m2 - .5) * .55);
+   float root = smoothstep(0.0, .08, y);
+   float a = clamp(body * top * root, 0.0, 1.0);
+   float flick = .85 + .15 * sin(t * 13.0) * sin(t * 7.3 + 1.0);
+   vec3 c = mix(vec3(1.0, .78, .38), diffuse, smoothstep(.04, .5, y + (1.0 - body) * .55));
+   c = mix(c, vec3(.62, .1, .02), smoothstep(.5, 1.0, y + (1.0 - body) * .35));
+   diffuseColor = vec4(c * a * flick * uGain * 1.5, a * .45); }`
+    )
+  })
+}
 export function burlap(ctx: MaterialContext, bank: TextureBank, name: string, color: string, roughness = 0.95) {
   const t = bank.burlap()
   return stageMaterial(new THREE.MeshStandardMaterial({ name, color, roughness, metalness: 0, map: t, bumpMap: t, bumpScale: 1.6 }), ctx.shared, "burlap")

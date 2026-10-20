@@ -494,34 +494,52 @@ export class Stage {
         [0, 0.45],
         [0, -0.45],
       ].some(([dx, dz]) => onFootprint(this.footprints, x + dx, z + dz, y - 0.3))
-    // Whether nobody else stands in the sight line. A shorter person in front is looked over.
-    const open = (x: number, y: number, z: number) =>
-      !this.cast.some((m) => {
-        if (m === c || !this.isOnStage(m.id)) return false
-        const dx = c.x - x
-        const dz = c.z - z
-        const t = ((m.x - x) * dx + (m.z - z) * dz) / (dx * dx + dz * dz)
-        return t > 0 && t < 1 && Math.hypot(x + dx * t - m.x, z + dz * t - m.z) < 0.4 && y + (which.lookHeight - y) * t < m.height
-      })
-    // Someone in a room is framed from inside it, and past the others there if any spot allows. A camera out on deck,
-    // looking in through the door, is tried only when nowhere in the room gives a clear view.
+    // How badly people spoil a view: anyone in the sight line (a shorter person in front is looked over), or close
+    // enough beside the lens to fill the frame. Cast count for more than the crowd, whose nearest the renderer leaves out.
+    const crowding = (x: number, y: number, z: number) => {
+      const dx = c.x - x
+      const dz = c.z - z
+      const len2 = dx * dx + dz * dz
+      const spoils = (m: { x: number; z: number }, height: number) => {
+        const t = ((m.x - x) * dx + (m.z - z) * dz) / len2
+        if (t <= 0 || t >= 1) return false
+        const off = Math.hypot(x + dx * t - m.x, z + dz * t - m.z)
+        return (off < 0.4 && y + (which.lookHeight - y) * t < height) || (off < 1.1 && Math.hypot(m.x - x, m.z - z) < 1.8)
+      }
+      let score = 0
+      for (const m of this.cast) if (m !== c && this.isOnStage(m.id) && spoils(m, m.height)) score += 3
+      for (const p of this.crowd.people) if (Math.hypot(p.x - x, p.y + 1.1 - y, p.z - z) >= 1.1 && spoils(p, (p.kind === "child" ? 1.2 : 1.7) * p.s)) score += 1
+      return score
+    }
+    // Someone in a room is framed from inside it if any spot there will do. A camera out on deck, looking in through
+    // the door, is tried only when nowhere in the room can see them.
     const room = this.set.rooms.find(({ box: b }) => c.x > b[0] && c.z > b[2] && c.x < b[3] && c.z < b[5])?.box
-    // Strictest first: in the room and past the others, then in the room, then anywhere.
-    for (const pass of room ? [2, 1, 0] : [0])
-      for (const scale of [1, 0.75, 0.55])
+    // Of the views clear of walls, the one with the fewest people in the way. Swinging round or drawing in costs a
+    // little, so a view far from the authored one, such as the subject's back, has to be worth it: one bystander at the
+    // edge of the frame is better than looking at the subject from behind.
+    let best: { r: ResolvedShot; score: number } | undefined
+    for (const pass of room ? [1, 0] : [0]) {
+      for (const [scale, drawn] of [
+        [1, 0],
+        [0.75, 0.2],
+        [0.55, 0.5],
+      ])
         for (const swing of [0, 30, -30, 60, -60, 90, -90, 135, -135, 180]) {
           const r = fit(frameShot({ ...which, angle: which.angle + swing, distance: which.distance * scale }, this.cast))
           const [x, y, z] = r.position
           if (room && pass && !(x > room[0] && y > room[1] && z > room[2] && x < room[3] && y < room[4] && z < room[5])) continue
-          if (pass === 2 && !open(x, y, z)) continue
-          if (Math.hypot(x - c.x, z - c.z) > 1.5 && roomy(x, y, z) && clear(x, y, z)) {
-            const bearing = Math.atan2(x - c.x, z - c.z)
-            const off = Math.atan2(Math.sin(bearing - c.ry), Math.cos(bearing - c.ry))
-            if (turn && Math.abs(off) > THREE.MathUtils.degToRad(60)) c.ry = bearing - THREE.MathUtils.degToRad(which.angle)
-            return r
-          }
+          if (Math.hypot(x - c.x, z - c.z) <= 1.5 || !roomy(x, y, z) || !clear(x, y, z)) continue
+          const score = crowding(x, y, z) + drawn + (Math.abs(swing) >= 135 ? 2.5 : Math.abs(swing) / 90)
+          if (!best || score < best.score) best = { r, score }
         }
-    return first
+      if (best) break
+    }
+    if (!best) return first
+    const [x, , z] = best.r.position
+    const bearing = Math.atan2(x - c.x, z - c.z)
+    const off = Math.atan2(Math.sin(bearing - c.ry), Math.cos(bearing - c.ry))
+    if (turn && Math.abs(off) > THREE.MathUtils.degToRad(60)) c.ry = bearing - THREE.MathUtils.degToRad(which.angle)
+    return best.r
   }
   // Resolves when the current camera move has finished.
   shotSettled() {
@@ -956,7 +974,13 @@ export class Stage {
     if (end && miss) {
       const away = end.at.clone().sub(start.at).setY(0)
       const side = new THREE.Vector3(away.z, 0, -away.x).normalize()
-      end = { at: end.at.clone().addScaledVector(side, 0.9).addScaledVector(away.normalize(), 1.2).setY(end.at.y * 0.8) }
+      end = {
+        at: end.at
+          .clone()
+          .addScaledVector(side, 0.9)
+          .addScaledVector(away.normalize(), 1.2)
+          .setY(end.at.y * 0.8),
+      }
     }
     return this.effects.play(kind, start, end, element)
   }

@@ -173,11 +173,21 @@ export function StagePlay(props: {
   const compact = useCompact()
   const turn = save?.turns.find((t) => t._id === save.adventure.currentTurnId)
   const cardCharacter = turn?.characters.find((c) => c.id === cardId)
+  // A turn that opens a new encounter starts with the end of the last round, which closes the old one. Those
+  // paragraphs are told on the old encounter's scene, with its people, and the new scene follows them.
+  const before = turn && save?.turns.find((t) => t.order === (turn.order ?? 0) - 1 && t.encounterId !== turn.encounterId)
+  const closing = useMemo(() => {
+    if (!before || !turn) return 0
+    const end = turn.story.findIndex((b) => b.by.step !== "round")
+    return story({ story: end < 0 ? turn.story : turn.story.slice(0, end) }).length
+  }, [before, turn])
+  const closingNow = reading && paragraph < closing
+  const shown = closingNow ? before : turn
   // With no save, the stage shows the fallback encounter. Encounters without an authored scene play in story view.
   // In a game the scene holds the actual party, keyed by value so a reloaded save does not rebuild the stage. Each round
   // lists its characters by initiative, so the party is keyed in a fixed order: a new round neither rebuilds the stage
   // nor moves heroes between places in the line.
-  const authored = sceneFor(turn?.encounterId ?? props.fallbackEncounter ?? "the-gates-of-kordavos")
+  const authored = sceneFor(shown?.encounterId ?? props.fallbackEncounter ?? "the-gates-of-kordavos")
   const painted = Object.fromEntries((save?.painted ?? []).flatMap((id) => (art[id] ? [[id, art[id]]] : [])))
   const partyKey = turn
     ? JSON.stringify([
@@ -225,10 +235,10 @@ export function StagePlay(props: {
   // The cast member who plays a character in the turn, by the character's id.
   const castOf = useCallback(
     (id: string | undefined) => {
-      const c = id ? turn?.characters.find((c) => c.id === id) : undefined
+      const c = id ? (turn?.characters.find((c) => c.id === id) ?? before?.characters.find((c) => c.id === id)) : undefined
       return stage && c ? castIdFor(stage.cast, c) : undefined
     },
-    [stage, turn?.characters]
+    [stage, turn?.characters, before?.characters]
   )
   // The heroes' cast members, for views taken from behind them. Read when a shot is chosen, not a reason to choose one.
   const heroes = useRef<string[]>([])
@@ -632,11 +642,22 @@ export function StagePlay(props: {
   }, [stage, onEscape])
   const holding = Boolean(held)
   useEffect(() => {
-    // The camera stays on a hero whose roll is on the card.
+    // The camera stays on whoever acts, a hero whose roll is on the card too. The card leaves only the top of the
+    // screen to frame them in, so the camera comes in close enough that they fill it, a dwarf closer than a tall elf.
     const sid = stage && actor && !holding && castIdFor(stage.cast, actor)
-    if (stage && sid && !reading) stage.shot({ subject: sid, distance: 5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 })
+    if (!stage || !sid || reading) return
+    const h = stage.cast.find((c) => c.id === sid)?.height ?? 1.7
+    stage.shot({ subject: sid, distance: Math.min(3.6, Math.max(2.4, h * 1.9)), angle: 18, height: h * 0.9 + 0.15, lookHeight: h * 0.62, fov: 45 })
   }, [stage, actor?.id, reading, holding])
-  const onTop = useCallback((px: number) => stage?.setInsets({ bottom: px > 0 ? px + 12 : 0 }), [stage])
+  // Where the card leaves room to frame a shot. A tall card, a hero's reply, leaves the column beside it, and the
+  // stage frames its subject there, standing full height. A short card leaves the top of the screen.
+  const onTop = useCallback(
+    (px: number, rect?: DOMRect) => {
+      if (px > innerHeight * 0.45 && rect && rect.left > innerWidth * 0.22) stage?.setInsets({ right: innerWidth - rect.left + 12, bottom: 0 })
+      else stage?.setInsets({ bottom: px > 0 ? px + 12 : 0 })
+    },
+    [stage]
+  )
   const party: CardCharacter[] = (turn?.characters ?? [])
     .filter((c) => c.type === "pc")
     .map((c) => ({ id: c.id, name: c.name, role: `${c.race} ${c.archetype}${c.controlledBy === "ai" ? " · AI" : ""}`, portrait: portrait(c) }))
@@ -729,7 +750,7 @@ export function StagePlay(props: {
   return (
     <StageHud
       containerRef={containerRef}
-      title={{ eyebrow: (save?.adventure.title ?? "").toUpperCase(), text: turn?.title ?? "" }}
+      title={{ eyebrow: (save?.adventure.title ?? "").toUpperCase(), text: shown?.title ?? "" }}
       location={{
         eyebrow: scene?.location ?? "Story view",
         title: ended ? "Adventure complete" : actor ? `${actor.name.split(" ")[0]}'s turn` : `Round ${turn?.order ?? 1}`,
@@ -774,7 +795,7 @@ export function StagePlay(props: {
           >
             {reading && (
               <Narration
-                heading={`Round ${turn?.order} · ${turn?.title}`}
+                heading={`Round ${shown?.order} · ${shown?.title}`}
                 text={text[paragraph]}
                 roll={roll}
                 index={paragraph}
