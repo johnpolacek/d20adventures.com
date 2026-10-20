@@ -98,14 +98,33 @@ function playing(turnId: string | undefined, actor: Character | undefined, ai: b
 }
 
 // Story view's painting: the encounter's art, drifting slowly, darkened at the edges and behind the text so the
-// narration reads over it. Paintings are bundled under /stage/art (scripts/stage-encounter-art.ts). One that is
-// missing leaves the plain dark ground, and a new one fades in over the last.
+// narration reads over it. Paintings are bundled under /stage/art (scripts/stage-encounter-art.ts). A new encounter's
+// painting fades in over the last one, which goes once it has. One that is missing leaves the last, or the plain ground.
 function StoryArt({ src }: { src: string }) {
-  const [shown, setShown] = useState<string | null>(null)
+  const [layers, setLayers] = useState<{ src: string; loaded: boolean }[]>([])
+  useEffect(() => {
+    setLayers((all) => (all.some((l) => l.src === src) ? all : [...all.slice(-1), { src, loaded: false }]))
+  }, [src])
+  const loaded = (at: string) => {
+    setLayers((all) => all.map((l) => (l.src === at ? { ...l, loaded: true } : l)))
+    setTimeout(() => setLayers((all) => all.slice(all.findIndex((l) => l.src === at))), FADE_MS)
+  }
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      {layers.map((l) => (
+        <Painting key={l.src} src={l.src} shown={l.loaded} onLoad={() => loaded(l.src)} onError={() => setLayers((all) => all.filter((x) => x.src !== l.src))} />
+      ))}
+      <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 50% 45%, transparent 35%, rgba(12,8,5,.7) 100%)" }} />
+      <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(12,8,5,.55), transparent 22%, transparent 62%, rgba(12,8,5,.75))" }} />
+    </div>
+  )
+}
+const FADE_MS = 1600
+function Painting({ src, shown, onLoad, onError }: { src: string; shown: boolean; onLoad: () => void; onError: () => void }) {
   const img = useRef<HTMLImageElement>(null)
   useEffect(() => {
     const el = img.current
-    if (!el || shown !== src || matchMedia("(prefers-reduced-motion: reduce)").matches) return
+    if (!el || !shown || matchMedia("(prefers-reduced-motion: reduce)").matches) return
     const drift = el.animate([{ transform: "scale(1.04) translate(-1.2%, 0.6%)" }, { transform: "scale(1.13) translate(1.2%, -0.8%)" }], {
       duration: 70_000,
       iterations: Number.POSITIVE_INFINITY,
@@ -113,21 +132,17 @@ function StoryArt({ src }: { src: string }) {
       easing: "ease-in-out",
     })
     return () => drift.cancel()
-  }, [shown, src])
+  }, [shown])
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden">
-      <img
-        key={src}
-        ref={img}
-        src={src}
-        alt=""
-        onLoad={() => setShown(src)}
-        onError={() => setShown(null)}
-        className={`absolute inset-0 h-full w-full scale-[1.04] object-cover transition-opacity duration-[1600ms] [filter:saturate(.85)_brightness(.78)] ${shown === src ? "opacity-100" : "opacity-0"}`}
-      />
-      <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 50% 45%, transparent 35%, rgba(12,8,5,.7) 100%)" }} />
-      <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(12,8,5,.55), transparent 22%, transparent 62%, rgba(12,8,5,.75))" }} />
-    </div>
+    <img
+      ref={img}
+      src={src}
+      alt=""
+      onLoad={onLoad}
+      onError={onError}
+      style={{ transitionDuration: `${FADE_MS}ms` }}
+      className={`absolute inset-0 h-full w-full scale-[1.04] object-cover transition-opacity [filter:saturate(.85)_brightness(.78)] ${shown ? "opacity-100" : "opacity-0"}`}
+    />
   )
 }
 
