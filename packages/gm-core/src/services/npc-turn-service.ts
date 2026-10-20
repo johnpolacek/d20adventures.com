@@ -429,7 +429,8 @@ export function createNpcTurnService(ports: GmPorts) {
           2
         )
       )
-      if (++played >= limit) break
+      // A fallen NPC's turn only tells its fall, so it does not use up the call.
+      if (!(npc.healthPercent === 0 || npc.status === "dead") && ++played >= limit) break
     }
 
     // After processing NPCs, mark all dead characters as complete
