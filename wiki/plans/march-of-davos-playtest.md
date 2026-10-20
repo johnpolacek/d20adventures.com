@@ -44,6 +44,7 @@ An automated playtest of March of Davos. Fix gameplay issues found along the way
 | The hunt | The labyrinth spoke of Astrid's soldiers, but none came with her, so the GM conjured them. | Her house guards follow her into the hunt. |
 | The ending | Final Confrontation had no transitions, so arriving there completed the adventure on Joran's first line. The party never chose. | The confrontation is played. Siding with Joran, with Astrid or with neither leads to The New Dawn, Vengeance of the Blackthorn or The Dust Settles, from the adventure's Aftermath. They reuse the festival, Astrid and library paintings. |
 | Ending screen | The last hero in initiative stayed highlighted after the adventure ended. | No hero is up once it has ended. |
+| Party choice | At the finale Branka sided with Joran, and Yeva, an AI hero, tried to pocket the Key from him, so the choice never settled. | The AI hero sees which heroes are played by a person and backs a choice they make for the party. It may voice a doubt, not work against it. |
 | Festival from roof height | Orbiting at 6 m put the camera among the bunting, and three pennants filled the frame as flat triangles. | Cloth thins out over the last metre before the lens. |
 | Overhead orbit | A drag could reach straight overhead, where the crowd's painted cards read as pegs. | A drag stops at a look down of about 40 degrees, the overview shot's angle. Authored shots keep theirs. |
 
@@ -65,6 +66,7 @@ An automated playtest of March of Davos. Fix gameplay issues found along the way
 - Underground: Astrid and Eamon broke the ward. The catacomb saboteurs lit a two-round fuse, and Cassia tore it out with one round left. The labyrinth's creeping wall was an illusion anchored on a rune. The undead of Big Empty fell in three rounds.
 - The finale, replayed after the fix: Joran and Astrid each pressed their case over the Drakovan ledgers for three rounds. Branka wrenched the Key from Joran and gave it to Milos, and the adventure ended in The Dust Settles.
 - 75 rounds from the gate to the ending. Branka finished at 65%.
+- A second replay of the finale: Branka sided with Joran, Cassia greased the floor under Astrid, Joran slid out under the closing slab with the Key, and the adventure ended in The New Dawn.
 - Roll bonuses for the same skill vary by a point or two. By design: the ability modifier plus a situational modifier the model chooses.
 - Flaws seen: AI heroes recast detection spells (prompt fixed), long AI turns of 30 to 110 seconds when several NPCs act in a row (one per call now), an NPC "back in the Silver Serpent" acting after the party had left, and the GM reusing a name (a thug called Bram).
 
@@ -86,6 +88,6 @@ The live GM found three content faults in the later encounters: named characters
 ## Open
 
 - The three endings reuse other encounters' paintings. Each could have its own.
-- The New Dawn and Vengeance of the Blackthorn are untested in play. The Dust Settles was reached.
+- Vengeance of the Blackthorn is untested in play. The Dust Settles and The New Dawn were reached.
 - The sheets' `image` still points at the stock avatar for the 19 painted NPCs, so the website's own views show the avatar. Uploading the portraits to the art bucket needs the owner.
 - `test:gm-core` was failing since 2026-10-13. It has a refresh mode now (`GM_FIXTURE_UPDATE=1`) and passes.
