@@ -38,6 +38,11 @@ An automated playtest of March of Davos. Fix gameplay issues found along the way
 - Gate: four heroes introduced themselves, Garlan answered in character from Branka's sheet (the gate-ward shield), the encounter moved on after one round.
 - Festival: Zephyra foreshadowed the key and the mansion, Karim named the Blackthorns and the lost shipment, Liora complained of Asterian ways, all as the GM notes ask. One round, then Clan Conflict on cue.
 - Clan Conflict: Yeva sneaked to Barok's side, Milos calmed Barok with a Persuasion roll, Branka faced both leaders down with Intimidation. Barok named the last place the shipment was seen, a toll bridge on the east road. Then the Dragonbone Inn on cue.
+- Dragonbone Inn and the job: the heroes shared why they came, Bram named the Cowl, and Beric and Eamon offered Raskov coin for the lost cargo. Milos drew out who was paying with Persuasion.
+- Morning: Elara brought Joran's scrollcase and the Key of Ilmarin. The library ran five rounds: the Archivist, Sister Danica guarding the archive, and the reveal that House Drakovan took the name Blackthorn. The AI heroes kept circling a locked cabinet until Branka led them out.
+- Silver Serpent: Harron, newly a turn character, gave nothing until Cassia's roll, then named Silverhand and the Black Market. The docks tied back to Covert Cargo: the river tug, Silas, Warehouse 14.
+- Mystery Cargo: a real fight. Grease, magic missiles, Bless and Shield of Faith, a pinned dwarf at 90%.
+- Flaws seen: AI heroes recast detection spells (prompt fixed), long AI turns of 30 to 110 seconds when several NPCs act in a row, an NPC "back in the Silver Serpent" acting after the party had left, and the GM reusing a name (a thug called Bram).
 
 ## Content pass, 2026-10-20
 
@@ -49,9 +54,13 @@ The live GM found three content faults in the later encounters: named characters
 - Lines. Quotes by Bram, Astrid, Petra, Eamon, Thaddeus, Joran, Aelindor, the auctioneer, the assassin and a saboteur are now speaker lines, with actor beats for what they do.
 - Point of view. Docks, Mystery Cargo, The Beast Escapes, The Aftermath, An Invitation, Shadowing Silverhand, the hunt, the catacombs, the labyrinth, the sealed door, Big Empty and the final confrontation now speak of the adventurers in the third person.
 - Big Empty's notes say the undead rise there, as Forgotten Temple's intro assumes.
-- Left as is: the Covenant's disembodied voice in The Ambush and the festival's unnamed vendor stay narration. Text under a `##` heading other than Intro, GM Notes, Checks, Summary and Transitions reaches no prompt, so "The Meeting", "The Missing Brother" and "The Final Night Approaches" never reach the GM.
+- Left as is: the Covenant's disembodied voice in The Ambush and the festival's unnamed vendor stay narration.
+- Text under a `##` heading other than Intro, GM Notes, Checks, Summary and Transitions reaches no prompt. "The Meeting", "The Missing Brother" and "The Final Night Approaches" are now the first GM note of their encounters.
+- Joran's murdered father was Milos Antonov, while the party's cleric premade is Milos Radan, so "Death to the murderer of Milos" named a hero at the table. The father is now Mikhail Antonov in the content. A decision made without the owner, one commit to revert. The migration source in `wiki/sources` keeps the old name.
+- NPC portraits: 19 sheets had only the stock avatar, among them Astrid, Thaddeus, Joran and Silverhand. `scripts/stage-npc-portraits.ts` painted them with Gemini 3 Pro Image in the finish of the painted NPC portraits.
 
 ## Open
 
 - The rest of the adventure in story view, to an ending.
-- The festival's party view looks down from above. The view back through the gate shows flat grey blocks.
+- The sheets' `image` still points at the stock avatar for the 19 painted NPCs, so the website's own views show the avatar. Uploading the portraits to the art bucket needs the owner.
+- `test:gm-core` was failing since 2026-10-13. It has a refresh mode now (`GM_FIXTURE_UPDATE=1`) and passes.
