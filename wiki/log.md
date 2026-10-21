@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-21, second March of Davos playtest
+
+Owner asked again for an automated playtest with fixes as they come, and every 3D angle brought up to commercial quality. The gate's line and table, the festival and Clan Conflict were played in the desktop app in Chrome at DPR 2, then the adventure ran on unattended with the tester's hero picking among the offered replies. Fixed so far: a new scene's first paragraph showed the wide opening view, an encounter change built the new scene twice, the name over the portraits lagged the narration, crowd figures blocked close-ups, the line's intro framed the back of the line, the paving was flat slabs, characters hovered, speech bubbles ran under the portraits, a dragged camera showed the back of a tower, story view had no speaker portraits, and one speaker's lines read as quotes side by side. The square, the conflict cut and the gate are now cobbled like the festival painting, at the old frame cost. Desktop tests, gm-core, the stage check and the March of Davos checks pass. See [March of Davos playtest](plans/march-of-davos-playtest.md).
+
 ## 2026-10-21, the gate split into the line and the table
 
 Owner: the first round should be the heroes stuck in line, meeting other travelers, and the next the front of the line, time to pay. The gate is now two scenes. The Gates of Kordavos is one round in the line, with only the heroes in it: the sergeant bellows the festival law, and a family turned back, Blackthorn wagons waved past and a grumbling spice trader give them things to talk about. The Front of the Line is Garlan's table, a new encounter, where names, marks and the company's name are taken. In the app the party stands two groups back in the 3D line, then at the front. Four live runs with Claude: every line-round hero spoke to another hero, and the last two runs took three rounds from the line to the festival. Desktop tests, gm-core and the wiki checks pass. See [meeting at the gate](plans/meeting-at-the-gate.md).
