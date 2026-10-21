@@ -32,6 +32,8 @@ Who knows what: every prompt that writes for a character says a character knows 
 
 Since 2026-10-21 an adventure keeps a ledger of facts, each with every character who knows it. At the end of a round, each set of characters who shared private beats gets one fact, and the GM records what was learned in a `knowledge` field beside its beats. A prompt that plays one character, an AI hero's move, the replies offered to a player, or an NPC's turn, reads the round as that character knows it and only that character's facts. The GM's roll outcomes and round ends read every fact with who knows it. See [what each character knows](plans/character-knowledge.md).
 
+In an adventure whose heroes start as strangers, the ledger also keeps who has heard each hero's name, from the lines that say it. A prompt that plays one character lists the names it has not heard, and the GM's list who has not heard each. See [meeting at the gate](plans/meeting-at-the-gate.md).
+
 The live commit rejects changed current turns/encounters and duplicate turn order. Authored content can change during a run. The commit updates its content provenance rather than loading the original immutable version.
 
 ## State and presentation

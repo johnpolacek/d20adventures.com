@@ -29,7 +29,7 @@ Two things, both in every prompt that writes for a character.
 
 ## Not covered
 
-- Tracking introductions. After two strangers trade names, a hero side prompt sees only the current round, so it may keep them nameless for a while.
+- Tracking introductions. After two strangers trade names, a hero side prompt sees only the current round, so it may keep them nameless for a while. Since 2026-10-21 an adventure with `strangers: true` keeps who has heard each hero's name. March of Davos is the first. See [meeting at the gate](meeting-at-the-gate.md).
 - The reply a player types. Its rewrite into prose carries neither the rule nor the premise.
 - Legacy plans have no premise.
 - The website's S3 copy of Covert Cargo.
@@ -47,7 +47,7 @@ Two things, both in every prompt that writes for a character.
 - `pnpm test:gm-core`, the Covert Cargo bridge check, and type checks pass.
 - Not checked in the running app.
 
-2026-10-11, March of Davos, which has no premise.
+2026-10-11, March of Davos, which had no premise until 2026-10-21. It now says the heroes meet at the gate as strangers.
 
 - Real GM on throwaway saves at the gate, The Lady and the Bishop, and Face to Face with Silverhand.
   - 12 runs of the NPCs' turns and the round's end, half with a hero asking outright about the Covenant.

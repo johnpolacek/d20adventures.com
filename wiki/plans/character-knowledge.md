@@ -59,7 +59,7 @@ A character's view of a round keeps public beats and the private beats they are 
 
 ## Not covered
 
-- Who has seen whom. A hidden hero still relies on the premise, the GM notes and the knowledge rule. A private beat is not the same as hiding: Lyra's private thoughts do not hide her.
+- Who has seen whom. Who has heard a hero's name is kept since 2026-10-21, in adventures whose heroes start as strangers. See [meeting at the gate](meeting-at-the-gate.md). A hidden hero still relies on the premise, the GM notes and the knowledge rule. A private beat is not the same as hiding: Lyra's private thoughts do not hide her.
 - An NPC's turn still reads the encounter's GM notes and the adventure summary. They direct the GM, and the rule limits what the NPC acts on.
 - A fact is only as good as the GM's record. Each character's view of the current round is exact.
 - Hosted games need a Convex deploy to keep the ledger.

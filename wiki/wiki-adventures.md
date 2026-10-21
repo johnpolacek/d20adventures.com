@@ -34,6 +34,16 @@ An adventure page may have a `## Premise` section. It compiles to `manifest.prem
 - Without one, the GM assumes characters shown travelling or working together know each other.
 - Legacy plans have none. See [the plan](plans/adventure-premise.md).
 
+## Strangers
+
+`strangers: true` on an adventure page says its heroes start as strangers to each other and to everyone else. Added 2026-10-21 for March of Davos, whose gate is where the party meets.
+
+- The core keeps who has heard each hero's name. A spoken line that says it is heard by everyone present, or by those in it when private.
+- The round's GM may record a name heard another way, with the id `name-<hero id>`.
+- A prompt that plays one character lists the names they have not heard. The GM's prompts list who has not heard each name.
+- Heroes who come on together from the adventure just finished, by the desktop's Continue, know each other's names.
+- Write the premise to match. See [meeting at the gate](plans/meeting-at-the-gate.md).
+
 ## Safety rules
 
 Two optional manifest fields, enforced by the GM core in `packages/gm-core/src/wiki-adventures/player-safety.ts`. Added 2026-10-10 for Covert Cargo.
@@ -101,6 +111,7 @@ Added 2026-10-14 with [structured narrative](plans/structured-narrative.md). An 
 - `place` on an action walks the actor there. `from` brings them on from there.
 - `effect`, `element` and `object` take the words in [the plan](plans/structured-narrative.md).
 - Values are split on commas, so a `delivery` is written "calm and commanding".
+- `hero: <id>` makes an action about one hero that shows only when that hero is in the party. March of Davos's gate uses it to show each hero in line as the others see them. Since 2026-10-21.
 - `private: true` on an action or line hides it from every other character's side, heroes and NPCs: only its actor or speaker and its `target` or `to` know it. At the end of the round it becomes a fact for them in the adventure's ledger. Use it for a hero's own errand, a hidden watcher, or a whisper. Since 2026-10-21, see [what a hero knows](plans/hero-knowledge.md) and [what each character knows](plans/character-knowledge.md).
 - Prompts and the website's text views show the intro with its labels taken off and each line under its speaker's name.
 - All four Myr adventures are labelled, as of 2026-10-14. An unlabelled paragraph is narration: nothing is guessed from its words.
