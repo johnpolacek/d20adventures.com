@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-21, website build fix
+
+The website's deploy failed in `pnpm install`: `convex codegen` type-checks Convex with the ES2021 library, and `Array.at` in `gm-core/src/story/clean.ts` became reachable when Convex began importing the knowledge ledger. It is now an index. `pnpm test:gm-core` now type-checks Convex as the deploy does.
+
 ## 2026-10-21, meeting at the gate
 
 Owner: the March of Davos gate is where the heroes meet, make it a great experience. The adventure now has a premise: the heroes come alone and are strangers. Festival law lets no one through the gate alone, so they must choose each other and enter as one company in the gate book, which they name. The intro shows each hero in the party as the others see them, with a new `{hero: id}` label that drops heroes not playing. With `strangers: true` the core keeps who has heard each hero's name, from lines said aloud, and every prompt that plays one character is told which names it has not heard. Heroes who come on together from The Road know each other. Two live runs with Claude reached the festival in two rounds, every name used was one the speaker had heard, and the parties named themselves the Gate-ward Company and the Forest Road Company. Desktop tests, gm-core and the wiki checks pass. Convex is not deployed. See [meeting at the gate](plans/meeting-at-the-gate.md).

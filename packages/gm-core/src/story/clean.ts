@@ -90,7 +90,7 @@ export function cleanStory(output: StoryOutput, scene: StoryScene, by: StoryBy):
   // Words of someone with no turn, such as a guest in the crowd, join the narration before them, which shows who
   // speaks. On their own they read as a quote from no one.
   const said = (text: string) => {
-    const last = beats.at(-1)
+    const last = beats[beats.length - 1]
     if (last?.kind === "narration") last.text = `${last.text} ${text}`
     else beats.push({ kind: "narration", by, text })
   }
