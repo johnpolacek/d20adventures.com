@@ -14,7 +14,7 @@ Lean, weathered, with sharp green eyes and long, tangled brown hair. Wears a clo
 
 Solitary, cautious, loyal to those who earn his trust, and deeply connected to nature.
 
-Orphaned by border raiders, raised by elves in the Valkarr forest. Lives on the edge of Kordavos, guiding travelers and hunting for survival. The druid Wollandora has sent him after Valkaran relics taken from the elven vaults, and he has tracked the riverboat seen carrying them down the Mordava toward Kordavos. He found the boat at a hidden pier outside Kordavos and watched it carry a relic of the First Clans on into the city. He has come through the gates after it.
+Orphaned by border raiders, raised by elves in the Valkarr forest. Lives on the edge of Kordavos, guiding travelers and hunting for survival. The druid Wollandora has sent him after Valkaran relics taken from the elven vaults, and he has tracked the riverboat seen carrying them down the Mordava toward Kordavos. He found the boat at a hidden pier outside Kordavos and watched it carry a relic of the First Clans on into the city. He has come to the city gates after it.
 
 To find the stolen relics before they disappear into the city, and to protect the forest and its people from outside threats.
 

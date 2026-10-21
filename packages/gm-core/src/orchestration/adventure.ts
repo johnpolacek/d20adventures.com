@@ -168,6 +168,7 @@ export function createAdventure(ports: GmPorts) {
       playerDeath: plan.playerDeath,
       premise: plan.premise,
       knowledge: adventure.knowledge,
+      strangers: plan.strangers,
     })
 
     // 5. Patch the turn with the new narrative and character state

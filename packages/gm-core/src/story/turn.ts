@@ -49,4 +49,4 @@ export function rollBeat(by: StoryBy, args: { id: string; name: string; image?: 
 }
 
 // A turn that opens on an authored intro: its beats for the characters in it.
-export const introTurn = (intro: string, scene: StoryScene): { story: StoryBeat[] } => ({ story: cleanStory(authoredStory(intro), scene, { step: "intro" }) })
+export const introTurn = (intro: string, scene: StoryScene): { story: StoryBeat[] } => ({ story: cleanStory(authoredStory(intro, scene), scene, { step: "intro" }) })

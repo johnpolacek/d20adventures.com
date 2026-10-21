@@ -128,7 +128,10 @@ export async function runHostJob(job: HostJob, store: Store, packs: Packs, llm: 
   }
   if (!actor || actor.id !== job.characterId || actor.type !== "pc" || actor.controlledBy === "ai" || actor.userId !== job.userId) throw new Error("It is another character's turn.")
   if (job.kind !== "roll" && actor.hasReplied) throw new Error("This reply is already saved. Resolve the pending roll.")
-  if (job.kind === "suggest") return suggestActions(llm, actor, characterScript(turn, actor.id), turn.characters, "", packs[adventure.planId]?.artifacts.manifest.premise, adventure.knowledge)
+  if (job.kind === "suggest") {
+    const manifest = packs[adventure.planId]?.artifacts.manifest
+    return suggestActions(llm, actor, characterScript(turn, actor.id), turn.characters, "", manifest?.premise, adventure.knowledge, manifest?.strangers ? { story: turn.story } : undefined)
+  }
   // A skip ends the hero's turn with nothing written and no AI.
   if (job.kind === "skip") {
     await store.updateTurn({ turnId: turn._id, patch: { characters: turn.characters.map((c) => (c.id === actor.id ? { ...c, hasReplied: true, isComplete: true } : c)), updatedAt: Date.now() } })

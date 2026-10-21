@@ -3,6 +3,7 @@ import type { GmPorts } from "../ports"
 import { authoredText } from "../story/authored"
 import type { StoryScene } from "../story/clean"
 import { type KnownFact, knowledgeNote } from "../story/knowledge"
+import { namesHeard, unheardNote } from "../story/names"
 import { storyRules } from "../story/prompt"
 import { storyNames } from "../story/render"
 import { beatsField, characterScript } from "../story/turn"
@@ -58,11 +59,13 @@ type NpcActionContext = {
   sceneContext?: { title?: string; summary?: string }
   adventureOverview?: string
   knowledge?: KnownFact[]
+  // The adventure's heroes start as strangers: the NPC reads whose names it has not heard.
+  strangers?: boolean
 }
 
 // What an NPC's turn reads. The round and the intro are as the NPC knows them: without the private beats and
 // paragraphs it is not in, or the players' own words. The GM's notes stay whole, since they direct the GM.
-export function buildNpcActionContext({ turn, npc, encounterContext, sectionContext, sceneContext, adventureOverview, knowledge }: NpcActionContext): {
+export function buildNpcActionContext({ turn, npc, encounterContext, sectionContext, sceneContext, adventureOverview, knowledge, strangers }: NpcActionContext): {
   contextString: string
   npcDetails: string
   npcEquipmentList: string
@@ -84,6 +87,7 @@ export function buildNpcActionContext({ turn, npc, encounterContext, sectionCont
     encounterContext?.instructions ? `Encounter Instructions: ${encounterContext.instructions}` : "",
     npc.behavior ? `NPC Behavior: ${npc.behavior}` : "",
     knowledgeNote(knowledge, npc),
+    strangers ? unheardNote(namesHeard(knowledge, turn), npc, turn.characters) : "",
     narrativeContext ? `Recent Narrative:\n${narrativeContext}` : "",
   ]
     .filter(Boolean)

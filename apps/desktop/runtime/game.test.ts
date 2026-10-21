@@ -130,8 +130,9 @@ test("suggested replies come from what the players have read, for the hero whose
     assert.ok(prompt.includes(`"id":"${actor.id}"`) && !prompt.includes(`"id":"${other.id}"`))
     const gmNotes = pack.artifacts.encounters[turn.encounterId].sections.gmNotes
     assert.ok(gmNotes && !prompt.includes(gmNotes.slice(0, 80)))
-    // This adventure authors no premise, so the prompt carries none.
-    assert.ok(!prompt.includes("ADVENTURE PREMISE"))
+    // The premise players know: the heroes meet at the gate as strangers. And whose names this hero has not heard.
+    assert.match(prompt, /ADVENTURE PREMISE[^\n]*\nThe heroes come to the gates of Kordavos alone/)
+    assert.match(prompt, new RegExp(`NAMES ${actor.name.toUpperCase()} HAS NOT HEARD: `))
 
     await assert.rejects(() => suggest(store.state, packs, llm, { kind: "suggest", turnId: turn._id, characterId: other.id }), /another character/)
     await assert.rejects(() => suggest(store.state, packs, llm, { kind: "suggest", turnId: "stale", characterId: actor.id }), /another character/)

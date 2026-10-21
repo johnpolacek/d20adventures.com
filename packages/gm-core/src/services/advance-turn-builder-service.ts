@@ -136,7 +136,7 @@ function buildTransitionEncounterTurn(args: { turn: Turn; plan: AdventurePlan; a
   }))
   allCharacters.sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
 
-  const intro = cleanStory(authoredStory(nextEncounter.intro || ""), { cast: allCharacters }, { step: "intro" })
+  const intro = cleanStory(authoredStory(nextEncounter.intro || "", { cast: allCharacters }), { cast: allCharacters }, { step: "intro" })
 
   const turn: Turn = {
     id: "",

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto"
 import { type Content, createGmCore, type Llm } from "@d20/gm-core"
 import { type ActionSuggestion, suggestActions } from "@d20/gm-core/services/ai-pc-turn-service"
+import { namesMetBefore } from "@d20/gm-core/story/names"
 import { characterScript, introTurn } from "@d20/gm-core/story/turn"
 import { findCurrentActor } from "@d20/gm-core/utils/turn-actors"
 import { buildLocalWikiTurnCharacters } from "@d20/gm-core/wiki-adventures/characters"
@@ -107,7 +108,8 @@ export async function suggest(save: Save | null, packs: Packs, llm: Llm, input: 
     turn.characters,
     characterContext([actor]),
     premiseWithStory(packs[save!.adventure.planId]?.artifacts.manifest.premise, save!.story, actor.id),
-    save!.adventure.knowledge
+    save!.adventure.knowledge,
+    packs[save!.adventure.planId]?.artifacts.manifest.strangers ? { story: turn.story } : undefined
   )
 }
 export function game(store: LocalStore, packs: Packs, llm: Llm) {
@@ -207,6 +209,16 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
       const before = command.continues ? store.state : null
       const story = storyInto(plan, before, before ? packs[before.adventure.planId]?.artifacts.manifest.nextAdventureId : undefined)
       if (before && story) carryGear(characters, before)
+      // Where the heroes start as strangers, those who come on together from the adventure just finished know each
+      // other's names. Heroes of older chapters may never have met.
+      const last = story?.at(-1)
+      const met =
+        artifacts.manifest.strangers && last
+          ? namesMetBefore(
+              [last.heroes.map((h) => h.id)],
+              characters.filter((c) => c.type === "pc")
+            )
+          : []
       store.replace({
         version: 1,
         provider: command.provider,
@@ -231,6 +243,7 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
           openThreads: [],
           resolvedThreadIds: [],
           adventureSummaryMarkdown: "",
+          ...(met.length ? { knowledge: met } : {}),
         },
         turns: [
           {

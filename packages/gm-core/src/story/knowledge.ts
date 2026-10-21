@@ -29,6 +29,11 @@ export const learnedField = {
 }
 export type Learned = z.infer<typeof learnedField.knowledge>
 
+// A hero's name, heard: a fact with this id, known to everyone who has heard it. Names are kept in the ledger beside
+// the facts, never shown among them. See names.ts.
+export const nameId = (hero: string) => `name-${hero}`
+export const isName = (fact: { id: string }) => fact.id.startsWith("name-")
+
 // How many facts a prompt shows, the newest: one character's, or the GM's.
 const MINE = 12
 const ALL = 20
@@ -53,13 +58,15 @@ export function mergeKnowledge(known: readonly KnownFact[] = [], learned: readon
 }
 
 // The facts a round's GM recorded, checked: each knower is someone in the scene, by id or name, or someone a listed
-// fact names already. A fact with no text or no knowers is dropped.
+// fact names already. A fact with no text or no knowers is dropped. A name's id is made the hero's own.
 export function cleanLearned(output: Learned | undefined, scene: StoryScene, known: readonly KnownFact[] = []): KnownFact[] {
   const before = new Set(known.flatMap((f) => f.knownBy))
   return (output ?? []).flatMap((f) => {
     const text = (f.text ?? "").replace(/\s+/g, " ").trim()
     const knownBy = [...new Set((f.knownBy ?? []).flatMap((k) => findCharacter(scene, k)?.id ?? (before.has(k) ? [k] : [])))]
-    const fid = slug(f.id ?? "") || slug(text)
+    const named = /^name-/i.test(f.id ?? "") ? f.id.slice(5).trim() : undefined
+    const hero = named ? (findCharacter(scene, named) ?? findCharacter(scene, named.replace(/-/g, " "))) : undefined
+    const fid = hero ? nameId(hero.id) : slug(f.id ?? "") || slug(text)
     return text && fid && knownBy.length ? [{ id: fid, text, knownBy }] : []
   })
 }
@@ -81,7 +88,7 @@ export function privateFacts(story: readonly StoryBeat[], names: StoryNames, rou
 
 // One character's facts, for a prompt that plays them. Nothing when they know none.
 export function knowledgeNote(known: readonly KnownFact[] | undefined, who: { id: string; name: string }): string {
-  const facts = (known ?? []).filter((f) => f.knownBy.includes(who.id)).slice(-MINE)
+  const facts = (known ?? []).filter((f) => !isName(f) && f.knownBy.includes(who.id)).slice(-MINE)
   if (!facts.length) return ""
   return `WHAT ${who.name.toUpperCase()} KNOWS from earlier in the adventure, besides what the narrative shows. Anything else, ${who.name} knows only if the narrative or the premise shows it:
 ${facts.map((f) => `- ${f.text}`).join("\n")}`
@@ -90,7 +97,7 @@ ${facts.map((f) => `- ${f.text}`).join("\n")}`
 // Every fact with who knows it, for the GM's prompts. With `ids`, each fact's id too, so the GM can spread one. A
 // knower not in `names` reads as someone not here.
 export function ledgerNote(known: readonly KnownFact[] | undefined, names: StoryNames, ids = false): string {
-  const facts = (known ?? []).slice(-ALL)
+  const facts = (known ?? []).filter((f) => !isName(f)).slice(-ALL)
   if (!facts.length) return ""
   const knowers = (f: KnownFact) => {
     const here = f.knownBy.filter((k) => names[k])

@@ -6,6 +6,7 @@ settingId: "realm-of-myr"
 startEncounter: "the-gates-of-kordavos"
 minPlayers: 3
 maxPlayers: 5
+strangers: true
 premadeCharacters:
   - "branka-stoneveil"
   - "milos-radan"
@@ -33,6 +34,14 @@ The March of Davos, a wild frontier in the Realm of Myr, is a land of stark cont
 As the adventurers delve deeper, they become entangled with Kordavos's three powerful rival clans: the Blackthorns, who have aligned with Asterian customs to amass wealth and power; the opportunistic Raskov Clan, known for their smuggling operations; and the traditionalist Valtor Clan, deeply rooted in Valkaran heritage and the Church of Valkara. The investigation reveals that a mysterious organization, the Covenant of the Cowl, is at play. Initially suspected of being connected to the Raskovs, the Covenant is, in fact, the clandestine wing of the Valtor Clan, secretly working to undermine Asterian influence and restore Valkaran dominance, even orchestrating events like the sabotage of noble shipments.
 
 The narrative escalates during a lavish Blackthorn Masquerade Ball, where political machinations come to a head. A shocking assassination occurs, directly linked to the Covenant and revealing their secret network of underground tunnels beneath the city. The pursuit into these catacombs leads to a climactic confrontation where Joran Antonov, previously a missing person, is dramatically revealed as the Champion of the Covenant. He accuses Astrid Blackthorn of his father's murder and reveals his possession of the "Key of Ilmarin," an artifact with the power to magically secure or unlock any opening. At this critical juncture, the adventurers face a pivotal choice: expose the Valtor Clan's hidden operations, bring down the Covenant, or align with their radical agenda to preserve Valkaran traditions against the powerful Blackthorn family. This decision will determine the future of Kordavos and the delicate balance of power within the March of Davos.
+
+## Premise
+
+The heroes come to the gates of Kordavos alone, each on their own business, and have never met. They do not know each other's names, errands or pasts, only what they can see of each other in the line. That changes only as the story shows them talking, introducing themselves or hearing a name said aloud.
+
+Heroes who come on together from the adventure just before this one, as the story so far tells, already know each other and arrive together.
+
+Garlan and the city guard know none of the heroes.
 
 ## Aftermath: Potential Outcomes
 

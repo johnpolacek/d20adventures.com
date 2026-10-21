@@ -74,5 +74,6 @@ export function buildAdventurePlanViewFromArtifacts(artifacts: RuntimeArtifacts)
     nextAdventure: manifest.nextAdventureId,
     playerDeath: manifest.playerDeath,
     premise: manifest.premise,
+    strangers: manifest.strangers,
   }
 }

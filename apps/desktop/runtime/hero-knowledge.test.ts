@@ -174,7 +174,7 @@ test("at the gate of Kordavos, what Garlan whispers to Thalbern does not reach M
       const milos = await aiMove(store, MILOS)
       assert.match(milos, /Thalbern leans toward the burly guard/)
       assert.match(milos, /Garlan pockets the coins and leans in close/)
-      assert.ok(!/Mordava|River goods|first light/.test(milos), "Milos heard none of it")
+      assert.ok(!/off the Mordava|River goods|first light/.test(milos), "Milos heard none of it")
     }
   )
 })

@@ -3,6 +3,7 @@ import { authoredText } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
 import type { StoryScene } from "../story/clean"
 import { type KnownFact, ledgerNote } from "../story/knowledge"
+import { namesHeard, namesNote } from "../story/names"
 import { storyRules } from "../story/prompt"
 import { lastStep, storyNames, storyText } from "../story/render"
 import { turnScript } from "../story/turn"
@@ -76,6 +77,8 @@ export type LlmGameplayContextPacket = {
     currentRound?: string
     // Every fact with its id and who knows it.
     ledger?: string
+    // When the heroes start as strangers: whose names who here has not heard.
+    names?: string
     mostRecentAction?: string
     rollInfo: string
   }
@@ -174,6 +177,7 @@ export function assembleGameplayContextPacket(args: {
       narrativeSummary: args.session.narrativeSummary,
       currentRound: turnScript(args.session.currentTurn),
       ledger: ledgerNote(args.session.knowledge, names, true),
+      names: args.artifacts.manifest.strangers ? namesNote(namesHeard(args.session.knowledge, args.session.currentTurn), liveCharacters) : "",
       mostRecentAction: storyText(lastStep(args.session.currentTurn.story), storyNames(args.session.currentTurn.characters)),
       rollInfo: buildRollInfo(args.session.currentTurn),
     },
@@ -232,7 +236,7 @@ Keep described distances, positioning, and movement consistent with this staging
 `
     : ""
 }${packet.session.recentTurnHistory}
-${packet.session.ledger ? `\n${packet.session.ledger}\n` : ""}
+${packet.session.ledger ? `\n${packet.session.ledger}\n` : ""}${packet.session.names ? `\n${packet.session.names}\n` : ""}
 This Round So Far:
 ${packet.session.currentRound ?? ""}
 
@@ -263,7 +267,7 @@ Your Task:
    - No em dashes, en dashes or semicolons.
 6. ${KNOWLEDGE_RULE}
 7. Include an adventurePatch that updates the live Adventure playthrough record with summaries, discoveries, entity updates, character updates, open threads, resolved threads, and transition details when applicable.
-8. In "knowledge", record what characters learned this round that matters later: a secret, a plan, a name, a place, a deadline, who is behind something. A word said aloud to the whole line counts as much as a secret. One sentence each, with "knownBy": the id of every character who saw, heard or was told it. Said or done in the open, it is known to everyone present who could see or hear it. Leave out what anyone can see in the scene now. Private beats are recorded already for those in them. When someone tells a fact listed under WHO KNOWS WHAT to others, give its id with everyone who knows it now. At most 4, or [] when nothing new was learned.
+8. In "knowledge", record what characters learned this round that matters later: a secret, a plan, a name, a place, a deadline, who is behind something. A word said aloud to the whole line counts as much as a secret. One sentence each, with "knownBy": the id of every character who saw, heard or was told it. Said or done in the open, it is known to everyone present who could see or hear it. Leave out what anyone can see in the scene now. Private beats are recorded already for those in them. When someone tells a fact listed under WHO KNOWS WHAT to others, give its id with everyone who knows it now.${packet.session.names ? ` A hero's name heard aloud is recorded already. One learned another way, such as read in a book, has the id "name-<the hero's id>".` : ""} At most 4, or [] when nothing new was learned.
 ${scene ? `\n${storyRules(scene)}\n` : ""}
 Respond in JSON:
 {

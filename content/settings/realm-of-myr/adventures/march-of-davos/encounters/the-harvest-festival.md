@@ -35,7 +35,7 @@ Beyond the gates, the annual Valkaran Harvest Festival fills the streets. Stalls
 
 ## GM Notes
 
-- This is an opportunity for the characters to notice one another and decide to travel together if they have not yet formed a party.
+- The heroes met at the gate and came through as one company, each answering to the watch for the others. This is their first free hour together. Let them learn about each other here: where each is from, what brought them to Kordavos, what they make of the city. A hero who has not heard another's name may ask it now.
 - Characters can interact with vendors and performers. Use these interactions to establish the cultural tension between the Valkaran natives and the Asterian Empire.
 - **Karim (Jewel Merchant)**: Openly favors the Blackthorns for their 'modern' sensibilities.
 - **Liora (Spice Merchant)**: A traditionalist who grumbles about how Asterians are diluting Valkaran culture.

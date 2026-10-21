@@ -1,3 +1,4 @@
+import { isName } from "@d20/gm-core/story/knowledge"
 import type { TurnCharacter } from "@d20/gm-core/types/adventure"
 import type { Pack } from "./game"
 import type { Save } from "./store"
@@ -49,6 +50,7 @@ export function chapterOf(save: Save): Chapter {
   const open = (save.adventure.openThreads as { id: string; title?: string; text?: string }[]).filter((t) => !resolved.has(t.id) && (t.title || t.text))
   const heroes = (last?.characters ?? []).filter((c) => c.type === "pc").map((c) => ({ id: c.id, name: c.name }))
   const known = (save.adventure.knowledge ?? [])
+    .filter((f) => !isName(f))
     .map((f) => ({ text: f.text, knownBy: f.knownBy.filter((k) => heroes.some((h) => h.id === k)) }))
     .filter((f) => f.knownBy.length)
     .slice(-KNOWN)

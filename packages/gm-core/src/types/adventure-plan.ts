@@ -27,6 +27,8 @@ export interface AdventurePlan {
   playerDeath?: boolean
   // Wiki adventures only. Who knows whom and what at the start.
   premise?: string
+  // Wiki adventures only. The heroes start as strangers: who has heard each hero's name is kept.
+  strangers?: boolean
 }
 
 export const RULES_PRESETS = [

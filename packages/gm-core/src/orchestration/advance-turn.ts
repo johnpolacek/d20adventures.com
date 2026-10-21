@@ -17,6 +17,7 @@ import { authoredStory } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory } from "../story/clean"
 import { cleanLearned, learnedField, privateFacts } from "../story/knowledge"
+import { heardNames } from "../story/names"
 import { storyRules } from "../story/prompt"
 import { lastStep, storyNames, storyText } from "../story/render"
 import { beatsField, sceneFor, storyProse, turnScript } from "../story/turn"
@@ -153,8 +154,13 @@ export function createAdvanceTurn(ports: GmPorts) {
         )
       }
       if (adventurePatch.characterUpdates) adventurePatch.characterUpdates = keepPatchedPlayersAlive(artifacts.manifest, adventurePatch.characterUpdates, turn.characters as TurnCharacter[])
-      // What the round taught: its private beats for those in them, then what the GM recorded.
-      const knowledge = [...privateFacts(turn.story, storyNames(turn.characters), currentTurnOrder), ...cleanLearned(llmResult.knowledge, scene, adventure.knowledge)]
+      // What the round taught: its private beats for those in them, then what the GM recorded. Where the heroes start
+      // as strangers, every hero's name said aloud so far, for those who heard it.
+      const knowledge = [
+        ...privateFacts(turn.story, storyNames(turn.characters), currentTurnOrder),
+        ...cleanLearned(llmResult.knowledge, scene, adventure.knowledge),
+        ...(artifacts.manifest.strangers ? [...allTurns.filter((row) => row._id !== turnId), turn].flatMap((row) => heardNames(row.story, row.characters as TurnCharacter[])) : []),
+      ]
       const nextEncounter = artifacts.encounters[transition.nextEncounterId]
       if (!nextEncounter) throw new Error(`Next encounter ${transition.nextEncounterId} missing from wiki artifacts`)
       const isTransition = transition.nextEncounterId !== turn.encounterId
@@ -180,7 +186,8 @@ export function createAdvanceTurn(ports: GmPorts) {
             .sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
       const characters = keepPlayersAlive(artifacts.manifest, nextCharacters)
       // A new encounter opens on its intro, read as beats for the characters who are in it.
-      const intro = isTransition ? cleanStory(authoredStory(nextEncounter.sections.intro ?? ""), await sceneFor(ports, { encounterId: nextEncounter.id, characters }), { step: "intro" }) : []
+      const nextScene = isTransition ? await sceneFor(ports, { encounterId: nextEncounter.id, characters }) : scene
+      const intro = isTransition ? cleanStory(authoredStory(nextEncounter.sections.intro ?? "", nextScene), nextScene, { step: "intro" }) : []
       const story = [...told, ...intro]
       const isFinalEncounter = isLocalWikiFinalEncounter(artifacts, nextEncounter.id)
       const commitResult = await ports.store.commitWikiTurnAdvance({

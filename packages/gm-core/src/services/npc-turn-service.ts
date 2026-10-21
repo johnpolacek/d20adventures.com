@@ -26,6 +26,8 @@ type DmEncounterContext = {
   sectionTitle?: string
   sceneTitle?: string
   rules?: SafetyRules
+  // The adventure's heroes start as strangers.
+  strangers?: boolean
 }
 
 export function createNpcTurnService(ports: GmPorts) {
@@ -43,6 +45,7 @@ export function createNpcTurnService(ports: GmPorts) {
         encounterContext: encounter ? { intro: authoredText(introSource, names), introSource, instructions: gmNotesWithRules(artifacts.manifest, encounter.sections.gmNotes) } : {},
         adventureOverview: artifacts.manifest.summary || undefined,
         rules: artifacts.manifest,
+        strangers: artifacts.manifest.strangers,
       }
     }
 
@@ -66,6 +69,7 @@ export function createNpcTurnService(ports: GmPorts) {
     sceneContext,
     adventureOverview,
     knowledge,
+    strangers,
   }: {
     turn: Turn
     npcId: string
@@ -75,6 +79,8 @@ export function createNpcTurnService(ports: GmPorts) {
     adventureOverview?: string
     // The adventure's facts, of which the NPC reads its own.
     knowledge?: KnownFact[]
+    // The adventure's heroes start as strangers: the NPC is told whose names it has not heard.
+    strangers?: boolean
   }): Promise<{
     updatedCharacters: TurnCharacter[]
     beatsToAppend: StoryBeat[]
@@ -101,6 +107,7 @@ export function createNpcTurnService(ports: GmPorts) {
       sceneContext,
       adventureOverview,
       knowledge,
+      strangers,
     })
     const scene = await sceneFor(ports, turn)
     const prompt1 = buildNpcActionPrompt({
@@ -231,7 +238,7 @@ export function createNpcTurnService(ports: GmPorts) {
       )
     )
 
-    const { encounterContext, sectionContext, sceneContext, adventureOverview, sectionTitle, sceneTitle, rules } = await resolveDmContext(
+    const { encounterContext, sectionContext, sceneContext, adventureOverview, sectionTitle, sceneTitle, rules, strangers } = await resolveDmContext(
       adventure.settingId,
       adventure.planId,
       turn.encounterId,
@@ -384,6 +391,7 @@ export function createNpcTurnService(ports: GmPorts) {
           sceneContext,
           adventureOverview,
           knowledge: adventure.knowledge,
+          strangers,
         })
       } catch (error) {
         console.error("[LLM] NPC turn failed, stopping loop for retry:", npc.name, error)

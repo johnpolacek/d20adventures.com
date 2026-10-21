@@ -72,7 +72,7 @@ test("Lyra, Poppen and Thalbern can be played in March of Davos, and stand at th
       ["Thalbern", "you"],
     ])
     // Each sheet says why they have come into the city.
-    assert.match(pc(THALBERN).background ?? "", /He has come through the gates after it\./)
+    assert.match(pc(THALBERN).background ?? "", /He has come to the city gates after it\./)
     assert.match(pc(LYRA).background ?? "", /thrown in the river/)
     assert.match(pc(POPPEN).background ?? "", /carried off downriver to Kordavos/)
     const byId = (a: { id: string }, b: { id: string }) => a.id.localeCompare(b.id)

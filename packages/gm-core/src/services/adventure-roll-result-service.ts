@@ -2,6 +2,7 @@ import type { GmPorts } from "../ports"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
 import { type KnownFact, ledgerNote } from "../story/knowledge"
+import { namesHeard, namesNote } from "../story/names"
 import { storyRules } from "../story/prompt"
 import { lastStep, storyNames, storyText } from "../story/render"
 import { rollBeat, sceneFor, storyOutputObject, withStory } from "../story/turn"
@@ -126,6 +127,8 @@ export function createAdventureRollResultService(ports: GmPorts) {
     premise?: string
     // What each character knows, so the outcome gives no one what they do not.
     knowledge?: KnownFact[]
+    // The adventure's heroes start as strangers: the outcome is told whose names who has not heard.
+    strangers?: boolean
   }): Promise<{
     story: StoryBeat[]
     characters: TurnCharacter[]
@@ -169,7 +172,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
       difficulty,
       margin,
       scene,
-      ledger: ledgerNote(args.knowledge, names),
+      ledger: [ledgerNote(args.knowledge, names), args.strangers ? namesNote(namesHeard(args.knowledge, args.turn), args.turn.characters) : ""].filter(Boolean).join("\n\n"),
     })
 
     let rollOutcome = ""

@@ -100,6 +100,8 @@ export type RuntimeManifest = {
   nextAdventureId?: string
   // false: player characters never die here. See wiki-adventures/player-safety.ts.
   playerDeath?: boolean
+  // true: the heroes start as strangers, and the core keeps who has heard each hero's name. See story/names.ts.
+  strangers?: boolean
   // An encounter the core enters itself when a player character's health falls to the threshold.
   rescue?: { encounterId: string; atHealthPercent: number }
   sourcePath: string
