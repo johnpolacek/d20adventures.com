@@ -625,6 +625,8 @@ export function fire(ctx: MaterialContext, name: string, color = "#ff7a26", inte
     depthWrite: false,
     side: THREE.DoubleSide,
     toneMapped: false,
+    // Fog would add its haze across the whole card, flame or not, and draw a grey box round a distant fire.
+    fog: false,
   })
   m.userData.noShadow = true
   m.userData.fire = true

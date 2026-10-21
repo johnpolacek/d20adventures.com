@@ -1,11 +1,31 @@
 import * as THREE from "three"
 import { z } from "zod"
-import { archOutline, arcPts, beam, box, cyl, DEG, Frame, lathe, M4, type Sink, shape, TAU } from "../kit/geometry"
+import { archOutline, arcPts, beam, box, cyl, DEG, Frame, G, lathe, M4, type Sink, shape, TAU } from "../kit/geometry"
 import { band, banner, cone, corbels, merlons, opening, pennant, spike } from "./parts"
 import { coord, defineBuilder, matName, num, size } from "./types"
 
 // Fortifications, ported from the Kordavos gate: everything is authored in metres, facing +z (the field side) in the
 // object's own frame. `at` and `yaw` place it in the set.
+
+// A lamp's flame: crossed cards of live fire where the set has a fire material, as its braziers burn, else a glowing cone.
+function flame(f: Frame, M: Record<string, THREE.Material>, x: number, y: number, z: number, w: number, h: number) {
+  if (M.fire?.userData.fire)
+    for (let i = 0; i < 3; i++) f.geo(M.fire, G("flame-card", () => new THREE.PlaneGeometry(1, 1).translate(0, 0.5, 0)), M4(x, y, z, 0.4 + (i * TAU) / 6, w, h, 1), { uv: "keep" })
+  else
+    f.lathe(
+      M.flame,
+      x,
+      y,
+      z,
+      [
+        [0, 0],
+        [w * 0.55, h * 0.08],
+        [w * 0.45, h * 0.55],
+        [0, h],
+      ],
+      8
+    )
+}
 
 function pinnacle(ctx: { b: Sink; M: Record<string, THREE.Material> }, x: number, y: number, z: number, h = 7, w = 1) {
   const { b, M } = ctx
@@ -294,19 +314,7 @@ export const gatehouse = defineBuilder(
         ],
         12
       )
-      lamp.lathe(
-        M.flame,
-        0,
-        0.5,
-        0,
-        [
-          [0, 0],
-          [0.6, 0.1],
-          [0.65, 1],
-          [0, 1.3],
-        ],
-        10
-      )
+      flame(lamp, M, 0, 0.5, 0, 1.2, 1.3)
     }
     if (p.portcullis) {
       // Portcullis, raised: only its teeth show beneath the vault.
@@ -346,19 +354,7 @@ export const gatehouse = defineBuilder(
             ],
             8
           )
-          f.lathe(
-            M.flame,
-            0,
-            0.45,
-            1.2,
-            [
-              [0, 0],
-              [0.3, 0.05],
-              [0.25, 0.5],
-              [0, 0.9],
-            ],
-            8
-          )
+          flame(f, M, 0, 0.45, 1.2, 0.55, 0.9)
         }
     }
 
