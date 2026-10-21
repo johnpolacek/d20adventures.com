@@ -206,6 +206,23 @@ interface Standee {
   aspectB: number
   mask?: AlphaMask
   maskB?: AlphaMask
+  // The soft dark patch where they stand, which sets them on the ground.
+  contact: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>
+}
+
+// A radial falloff for contact shadows, drawn once.
+let contactMap: THREE.Texture | null = null
+function contactTexture() {
+  if (contactMap) return contactMap
+  const c = document.createElement("canvas")
+  c.width = c.height = 64
+  const cx = c.getContext("2d")!
+  const g = cx.createRadialGradient(32, 32, 0, 32, 32, 32)
+  for (let i = 0; i <= 8; i++) g.addColorStop(i / 8, `rgba(255,255,255,${((1 - i / 8) ** 2).toFixed(3)})`)
+  cx.fillStyle = g
+  cx.fillRect(0, 0, 64, 64)
+  contactMap = new THREE.CanvasTexture(c)
+  return contactMap
 }
 
 const loadImage = (src: string) =>
@@ -273,8 +290,19 @@ export class Standees {
     mesh.name = `standee:${cast.id}`
     mesh.userData.castId = cast.id
     grp.add(mesh)
+    // The sun's shadow of a thin card leaves the feet ungrounded from most angles. Games set a figure down with a soft
+    // patch of shade where it stands. It thins as they fall, and their whole length lies on the ground.
+    const contact = new THREE.Mesh(
+      new THREE.PlaneGeometry(1, 1),
+      new THREE.MeshBasicMaterial({ color: "#000", alphaMap: contactTexture(), transparent: true, opacity: 0.5, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 })
+    )
+    contact.rotation.x = -Math.PI / 2
+    contact.position.y = 0.01
+    contact.visible = false
+    contact.name = `contact:${cast.id}`
+    grp.add(contact)
     this.group.add(grp)
-    const s: Standee = { cast, grp, mesh, mat, depth, bu, yaw: null, loaded: false, back: 0, fall: cast.down ? 1 : 0, aspect: 0.4, aspectB: 0.4 }
+    const s: Standee = { cast, grp, mesh, mat, depth, bu, yaw: null, loaded: false, back: 0, fall: cast.down ? 1 : 0, aspect: 0.4, aspectB: 0.4, contact }
     if (cast.down) this.down.add(cast.id)
     this.items.set(cast.id, s)
   }
@@ -355,6 +383,10 @@ export class Standees {
       s.mesh.position.y = Math.abs(Math.cos(c.stride)) * 0.035 * c.walk + s.fall * 0.03
       s.mesh.rotation.z = Math.sin(c.stride) * 0.035 * c.walk
       s.mesh.rotation.x = -s.fall * (Math.PI / 2 - 0.04)
+      const r = 0.2 + c.height * 0.1
+      s.contact.visible = s.loaded && s.fall < 0.95
+      s.contact.scale.set(r * 2.2, r * 1.6, 1)
+      s.contact.material.opacity = 0.42 * (1 - s.fall)
       const hit = this.hits.get(c.id)
       if (hit) {
         hit.t += dt
@@ -396,6 +428,8 @@ export class Standees {
   dispose() {
     for (const s of this.items.values()) {
       s.mesh.geometry.dispose()
+      s.contact.geometry.dispose()
+      s.contact.material.dispose()
       s.mat.dispose()
       s.depth.dispose()
       for (const t of [s.map, s.normal, s.mapB, s.normalB]) t?.dispose()

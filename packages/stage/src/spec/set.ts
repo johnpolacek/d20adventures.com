@@ -36,6 +36,8 @@ const masonry = z
     roughness: unit.optional(),
     ground: z.boolean().optional(),
     roads: z.boolean().optional(),
+    // Ground only: rounded cobbles of about this size in metres, laid in no courses, in place of the coursed blocks.
+    stones: num(0.1, 2).optional(),
     doubleSided: z.boolean().optional(),
   })
   .strict()

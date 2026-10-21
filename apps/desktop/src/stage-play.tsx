@@ -64,6 +64,12 @@ function shotFor(stage: Stage, aim: Aim, heroes: string[]): StagingShot | string
   const pz = party.reduce((n, c) => n + c.z, 0) / Math.max(1, party.length)
   const [mx, mz] = mark.at
   const d = Math.hypot(px - mx, pz - mz) || 1
+  // Where the heroes themselves stand: the heroes, in the scene's own view of them when it has one.
+  if (d < 2.5 && party.some((c) => heroes.includes(c.id))) {
+    const ids = party.map((c) => c.id)
+    const authored = Object.entries(stage.staging?.shots ?? {}).find(([, shot]) => "subjects" in shot && ids.every((id) => shot.subjects.includes(id)))
+    return authored ? authored[0] : { subjects: ids, offset: [0, 1.7, 4.5], target: [0, 1.1, 0], relative: "facing", fov: 46 }
+  }
   const cam = { x: px + ((px - mx) / d) * 3, z: pz + ((pz - mz) / d) * 3 }
   const hero = party[0]
   if (!hero || !stage.reach(hero.id, cam, 6).short) return { position: [cam.x, 2, cam.z], target: [mx, 1, mz], fov: 50 }
@@ -234,7 +240,10 @@ export function StagePlay(props: {
     const end = turn.story.findIndex((b) => b.by.step !== "round")
     return story({ story: end < 0 ? turn.story : turn.story.slice(0, end) }).length
   }, [before, turn])
-  const closingNow = reading && paragraph < closing
+  // A turn not yet read starts at its first paragraph. Until the reader is set there, the old scene stays, so the new
+  // scene is not built and then thrown away for the closing paragraphs.
+  const newTurn = turn !== undefined && previousText.current.turn !== turn._id
+  const closingNow = closing > 0 && (newTurn || (reading && paragraph < closing))
   const shown = closingNow ? before : turn
   // With no save, the stage shows the fallback encounter. Encounters without an authored scene play in story view.
   // In a game the scene holds the actual party, keyed by value so a reloaded save does not rebuild the stage. Each round
@@ -323,6 +332,10 @@ export function StagePlay(props: {
       return { view, speech }
     })
   }, [stage, paragraphs, castOf])
+  // Whose turn the top of the screen names: while the story is read, whoever the paragraph's turn belongs to, and no one
+  // for an intro or the end of a round. A hero's turn that is told while the next one is played is still theirs.
+  const tellerId = reading ? paragraphs[paragraph]?.beats[0]?.by.character : undefined
+  const spotlit = reading ? shown?.characters.find((c) => c.id === tellerId) : actor
   // Everyone who speaks in the paragraph gets a bubble, and the first speaker a portrait plate.
   const speech = useMemo(
     () =>
@@ -457,14 +470,33 @@ export function StagePlay(props: {
     }
     return () => falls.forEach(clearTimeout)
   }, [stage, exits, reading, paragraph])
+  // A new stage: loops held, its opening view, and everyone where the save has them, before the camera frames anyone.
+  useEffect(() => {
+    if (!stage) return
+    for (const loop of stage.loops.values()) loop.paused = true
+    if (stage.staging?.shot) stage.shot(stage.staging.shot, { instant: true })
+    const timer = setInterval(() => redraw((n) => n + 1), 1000)
+    return () => clearInterval(timer)
+  }, [stage])
+  useEffect(() => {
+    // A stage being replaced for the next encounter must not take the new encounter's positions.
+    if (!stage || !turn || stageRef.current !== stage) return
+    for (const [id, p] of Object.entries(saveRef.current?.positions ?? {})) {
+      if (stage.cast.some((c) => c.id === id)) stage.placeCast(id, [p.x, p.z], (p.ry * 180) / Math.PI)
+    }
+  }, [stage, stageRef, turn?._id])
   // Each paragraph moves the camera to fit it: its first speaker, someone making an entrance, whoever it is about, or
-  // the place it describes.
+  // the place it describes. The first view on a new stage is a cut, not a glide from its opening view.
+  const framed = useRef<Stage | null>(null)
   useEffect(() => {
     if (!stage || !reading) return
-    if (speech.length) return void stage.shot({ subject: speech[0].cast.id, distance: 5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 })
-    if (departing?.shot) return void stage.shot(departing.shot)
+    const cut = framed.current !== stage
+    framed.current = stage
+    const go = (which: Parameters<Stage["shot"]>[0]) => stage.shot(which, { instant: cut })
+    if (speech.length) return void go({ subject: speech[0].cast.id, distance: 5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 })
+    if (departing?.shot) return void go(departing.shot)
     if (arriving) {
-      if (arriving.shot) return void stage.shot(arriving.shot)
+      if (arriving.shot) return void go(arriving.shot)
       // Facing the way they come: from beyond their place, looking back at where they enter.
       const mark = (at: string | number[] | undefined) => (typeof at === "string" ? stage.set.marks[at]?.at : at)
       const home = mark(stage.staging?.cast.find((c) => c.id === arriving.cast)?.at)
@@ -474,14 +506,14 @@ export function StagePlay(props: {
         const [hx, hz] = home
         const d = Math.hypot(hx - fx, hz - fz) || 1
         const k = 3.6 / d
-        return void stage.shot({ position: [hx + (hx - fx) * k, 1.75, hz + (hz - fz) * k], target: [(fx + hx) / 2, 1.3, (fz + hz) / 2], fov: 50 })
+        return void go({ position: [hx + (hx - fx) * k, 1.75, hz + (hz - fz) * k], target: [(fx + hx) / 2, 1.3, (fz + hz) / 2], fov: 50 })
       }
-      return void stage.shot({ subject: arriving.cast, distance: 5.5, angle: 12, height: 1.8, lookHeight: 1.2, fov: 48 })
+      return void go({ subject: arriving.cast, distance: 5.5, angle: 12, height: 1.8, lookHeight: 1.2, fov: 48 })
     }
     const view = beats[paragraph]?.view
     if (!view) return
     const shot = shotFor(stage, view, heroes.current)
-    if (shot) stage.shot(shot)
+    if (shot) go(shot)
   }, [stage, speech, departing, arriving, beats, paragraph, reading])
   // What labelled paragraphs do on stage: walks, effects and objects, each played once when its paragraph is first read.
   // An attack in a hero's reply waits for the roll that decides it, and plays after the roll as a hit or a miss, unless
@@ -605,20 +637,6 @@ export function StagePlay(props: {
   useEffect(() => {
     setDraft("")
   }, [turn?._id, actor?.id])
-  useEffect(() => {
-    if (!stage) return
-    for (const loop of stage.loops.values()) loop.paused = true
-    if (stage.staging?.shot) stage.shot(stage.staging.shot, { instant: true })
-    const timer = setInterval(() => redraw((n) => n + 1), 1000)
-    return () => clearInterval(timer)
-  }, [stage])
-  useEffect(() => {
-    // A stage being replaced for the next encounter must not take the new encounter's positions.
-    if (!stage || !turn || stageRef.current !== stage) return
-    for (const [id, p] of Object.entries(saveRef.current?.positions ?? {})) {
-      if (stage.cast.some((c) => c.id === id)) stage.placeCast(id, [p.x, p.z], (p.ry * 180) / Math.PI)
-    }
-  }, [stage, stageRef, turn?._id])
   useEffect(() => {
     if (!stage || !save || !turn || busy || stageRef.current !== stage) return
     const pending = Object.entries(save.movement).find(([key]) => key.startsWith(`${turn._id}:`) && !save.appliedMovement?.includes(key) && !moved.current.has(key))
@@ -839,8 +857,8 @@ export function StagePlay(props: {
           )}
           <TurnOrder
             order={(shown?.characters ?? []).map((c) => ({ id: c.id, name: c.name, portrait: portrait(c), npc: c.type === "npc", health: c.healthPercent, status: c.status }))}
-            activeId={ended ? null : (actor?.id ?? null)}
-            label={ended ? undefined : actor?.name}
+            activeId={ended ? null : (spotlit?.id ?? null)}
+            label={ended ? undefined : spotlit?.name}
             compact={compact}
             onPick={focus}
           />

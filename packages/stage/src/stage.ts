@@ -508,7 +508,7 @@ export class Stage {
         [0, -0.45],
       ].some(([dx, dz]) => onFootprint(this.footprints, x + dx, z + dz, y - 0.3))
     // How badly people spoil a view: anyone in the sight line (a shorter person in front is looked over), or close
-    // enough beside the lens to fill the frame. Cast count for more than the crowd, whose nearest the renderer leaves out.
+    // enough beside the lens to fill the frame. Cast count for much more than the crowd, which the renderer fades.
     const crowding = (x: number, y: number, z: number) => {
       const dx = c.x - x
       const dz = c.z - z
@@ -521,7 +521,8 @@ export class Stage {
       }
       let score = 0
       for (const m of this.cast) if (m !== c && this.isOnStage(m.id) && spoils(m, m.height)) score += 3
-      for (const p of this.crowd.people) if (Math.hypot(p.x - x, p.y + 1.1 - y, p.z - z) >= 1.1 && spoils(p, (p.kind === "child" ? 1.2 : 1.7) * p.s)) score += 1
+      // The crowd in the way fades from view (Crowd.occlude), so it costs little: a clear view is still better.
+      for (const p of this.crowd.people) if (Math.hypot(p.x - x, p.y + 1.1 - y, p.z - z) >= 1.1 && spoils(p, (p.kind === "child" ? 1.2 : 1.7) * p.s)) score += 0.2
       return score
     }
     // Someone in a room is framed from inside it if any spot there will do. A camera out on deck, looking in through
@@ -859,6 +860,8 @@ export class Stage {
     if (this.motion) this.effects.update(dt)
     this.standees.update(dt, this.camera)
     this.crowd.updateLOD(this.camera)
+    // A fade takes a third of a second, or none with motion off.
+    this.crowd.occlude(this.camera, this.controls?.target ?? this.camera.getWorldDirection(V()).multiplyScalar(6).add(this.camera.position), this.motion ? dt / 0.3 : 1)
     this.crowd.flush()
     this.render()
     if (++this.frame === 3) {

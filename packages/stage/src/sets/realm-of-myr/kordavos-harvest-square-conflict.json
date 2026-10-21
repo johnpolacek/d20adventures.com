@@ -145,7 +145,10 @@
         1.1,
         0.8
       ],
+      "stones": 0.36,
+      "joint": 0.03,
       "relief": 0.045,
+      "variance": 0.55,
       "grime": 0.35,
       "ground": true,
       "roads": false

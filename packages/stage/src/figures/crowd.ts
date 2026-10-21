@@ -324,6 +324,43 @@ export class Crowd {
     }
   }
 
+  // Anyone standing between the camera and the one it frames fades from view, as a third-person game fades a wall:
+  // whoever would cover the subject, from the lens to a step in front of them, and anyone in the near part of the frame,
+  // so a close view has a clear foreground. Wide and high views hide no one. `step` is how much of the fade one frame
+  // takes.
+  occlude(camera: THREE.PerspectiveCamera, focus: THREE.Vector3, step: number) {
+    const cards = this.cards
+    if (!cards?.ready) return
+    const c = camera.position
+    const fx = focus.x - c.x
+    const fz = focus.z - c.z
+    const len = Math.hypot(fx, fz)
+    const close = len > 1.2 && len < 14 && c.y < 4
+    for (const p of this.people) {
+      if (!p.card) continue
+      let want = 0
+      if (close) {
+        const px = p.x - c.x
+        const pz = p.z - c.z
+        const along = (px * fx + pz * fz) / len
+        if (along > 0.2 && along < len - 0.7) {
+          const lat = Math.abs(px * fz - pz * fx) / len
+          const top = p.y + (p.kind === "child" ? 1.2 : 1.7) * p.s
+          const sight = c.y + (focus.y - c.y) * (along / len)
+          const covers = lat < 0.3 + (0.35 * along) / len && top > sight - 0.2
+          const foreground = along < Math.min(len * 0.6, 3.5) && lat < 0.35 + along * 0.75
+          if (covers || foreground) want = 1
+        }
+      }
+      const was = p.cf ?? 0
+      const now = want > was ? Math.min(want, was + step) : Math.max(want, was - step)
+      if (now !== was) {
+        p.cf = now
+        cards.fade(p)
+      }
+    }
+  }
+
   setPose(p: Person, x: number, z: number, ry: number, walk: number) {
     p.x = x
     p.z = z

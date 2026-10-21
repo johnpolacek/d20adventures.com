@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Stage authoring](../stage-authoring.md) · [Stage engine](../stage-engine.md) · [Testing runbook](testing-runbook.md)
 
-Status: played to an ending on main, 2026-10-19 to 2026-10-20.
+Status: played to an ending on main, 2026-10-19 to 2026-10-20. A second pass began 2026-10-21, after the gate split into the line and the table.
 
 ## Owner request, 2026-10-19
 
@@ -47,6 +47,20 @@ An automated playtest of March of Davos. Fix gameplay issues found along the way
 | Party choice | At the finale Branka sided with Joran, and Yeva, an AI hero, tried to pocket the Key from him, so the choice never settled. | The AI hero sees which heroes are played by a person and backs a choice they make for the party. It may voice a doubt, not work against it. |
 | Festival from roof height | Orbiting at 6 m put the camera among the bunting, and three pennants filled the frame as flat triangles. | Cloth thins out over the last metre before the lens. |
 | Overhead orbit | A drag could reach straight overhead, where the crowd's painted cards read as pegs. | A drag stops at a look down of about 40 degrees, the overview shot's angle. Authored shots keep theirs. |
+
+## Second pass, 2026-10-21
+
+Owner asked again for an automated playtest with fixes as they come, and every angle of the 3D checked until it holds up to a commercial game. Same setup: Branka played by the tester, Cassia, Yeva and Milos by the AI, Claude at medium effort, Chrome at DPR 2.
+
+| Where | Finding | Fix |
+|---|---|---|
+| A new scene's first paragraph | Each new stage opened on its default view after the paragraph's own shot was set, so Garlan's first line at the table played on the wide view of the gate. | The new stage's loops, opening view and saved positions are set first. The first view on a new stage is a cut, not a glide from its opening view. |
+| Encounter change | When a turn opening a new encounter arrived, the new scene was built, thrown away for the old scene's closing paragraphs, then built again. | A turn not yet read keeps the old scene until the reader is set at its first paragraph. |
+| Top of the screen | While a paragraph was read, the name under the portraits was the character whose turn came next, so Milos's line played under "Cassia Verane", and the festival's intro under "Finnian the Fire-Eater". | While the story is read it names whoever the paragraph's turn belongs to, and no one for an intro or the end of a round. |
+| Close-ups in a crowd | In the line, the camera framed heroes past crowd figures standing in front of them, and passers-by filled the near edge of the frame. | Crowd figures between the camera and the one it frames, or in the near part of a close view, fade from view over a third of a second, shadow and all. Wide and high views hide no one. The camera's choice of angle no longer avoids the crowd as hard, so it shows faces more often. |
+| The line's intro | The sergeant bellowing the festival law, the strangers sizing each other up, and the family turned back at the table played on views of the back of the line. | Those paragraphs name their places: the table, the sergeant, and where the party stands. A place where the heroes stand frames the heroes. |
+| Paving | The square, the conflict cut and the gate were paved in big, flat, pillowy slabs that read as a prototype at eye height. The festival painting has rounded cobbles. | A `stones` option on ground masonry lays rounded cobbles with soft rims, rounded corners, a slight tilt each and per-stone colour, plus fine grain near the camera. On the square, the conflict cut and the gate. |
+| Characters on the ground | A card's sun shadow leaves its feet ungrounded from most angles, so heroes seemed to hover. | A soft contact shadow under every standing character, gone as they fall. |
 
 ## Gameplay notes
 

@@ -24,6 +24,8 @@ export interface MasonryOptions {
   ground?: boolean
   // Ground only: the gate approach's wear (cart ruts down the middle, dust toward the edges). Off for town squares.
   roads?: boolean
+  // Ground only: rounded cobbles of about this size in metres, in place of the coursed blocks.
+  stones?: number
   doubleSided?: boolean
 }
 
@@ -36,7 +38,7 @@ export function masonry(ctx: MaterialContext, name: string, o: MasonryOptions = 
     mB: { value: new THREE.Color(o.b || "#a88462") },
     mC: { value: new THREE.Color(o.c || "#6f6a68") },
     mMortar: { value: new THREE.Color(o.mortar || "#4a3a31") },
-    mBlock: { value: new THREE.Vector2(...(o.block || [1.9, 0.95])) },
+    mBlock: { value: o.ground && o.stones ? new THREE.Vector2(o.stones, o.stones) : new THREE.Vector2(...(o.block || [1.9, 0.95])) },
     mJoint: { value: o.joint ?? 0.05 },
     mRelief: { value: o.relief ?? 0.06 },
     mGrime: { value: o.grime ?? 1 },
@@ -48,8 +50,9 @@ export function masonry(ctx: MaterialContext, name: string, o: MasonryOptions = 
   m.userData.uniforms = u
   const ground = !!o.ground
   const roads = ground && o.roads !== false
-  if (ground) m.defines = roads ? { MGROUND: "", MROADS: "" } : { MGROUND: "" }
-  return stageMaterial(m, ctx.shared, `masonry${ground ? (roads ? "g" : "gs") : ""}`, (s) => {
+  const cobbles = ground && !!o.stones
+  if (ground) m.defines = { MGROUND: "", ...(roads ? { MROADS: "" } : {}), ...(cobbles ? { MCOBBLE: "" } : {}) }
+  return stageMaterial(m, ctx.shared, `masonry${ground ? (roads ? "g" : "gs") : ""}${cobbles ? "c" : ""}`, (s) => {
     Object.assign(s.uniforms, u)
     s.vertexShader = s.vertexShader
       .replace("#include <common>", "#include <common>\nvarying vec2 vMUV; varying vec3 vMWorld; varying vec3 vMNormalW;")
@@ -61,7 +64,30 @@ export function masonry(ctx: MaterialContext, name: string, o: MasonryOptions = 
 varying vec2 vMUV; varying vec3 vMWorld; varying vec3 vMNormalW;
 uniform vec3 mA, mB, mC, mMortar; uniform vec2 mBlock; uniform float mJoint, mRelief, mGrime, mVar, mSeed, mScale;
 ${NOISE}
+float mDome = 1.0;
 float mCell(vec2 uv, out float id, out float edge){
+#ifdef MCOBBLE
+ // Cobbles: the nearest of a jittered grid of stone centres, then the exact distance to that stone's border.
+ vec2 q = uv / mBlock.x, n = floor(q), f = fract(q), c1 = vec2(9.0), k1 = vec2(0.0);
+ for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) {
+  vec2 g = vec2(float(i), float(j)), cell = n + g;
+  vec2 o = g + .12 + .76 * vec2(mhash(cell + mSeed), mhash(cell * 1.7 + mSeed + 9.1)) - f;
+  if (dot(o, o) < dot(c1, c1)) { c1 = o; k1 = cell; }
+ }
+ // A soft minimum over the borders rounds the stone's corners, and a little noise roughens its outline.
+ float acc = 0.0;
+ for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) {
+  vec2 cell = k1 + vec2(float(i), float(j));
+  vec2 o = cell - n + .12 + .76 * vec2(mhash(cell + mSeed), mhash(cell * 1.7 + mSeed + 9.1)) - f;
+  vec2 d = o - c1;
+  if (dot(d, d) > 1e-5) acc += exp(-16.0 * dot(.5 * (c1 + o), normalize(d)));
+ }
+ id = mhash(k1 * 1.31 + mSeed * 2.0);
+ edge = (-log(acc) / 16.0) * mBlock.x - (mnoise(uv * 9.0 + id * 13.0) - .5) * .025;
+ // Highest at the stone's centre, falling away smoothly toward its edges, and each set at its own slight tilt.
+ mDome = 1.0 - .6 * dot(c1, c1) + dot(c1, vec2(mhash(k1 + 3.7), mhash(k1 + 8.3)) - .5) * .5;
+ return id;
+#endif
  vec2 p = uv / mBlock; float row = floor(p.y);
  p.x += mhash(vec2(row, mSeed)) * 5.0 + mod(row, 2.0) * .5;
  float col = floor(p.x), fx = fract(p.x), fy = fract(p.y), lo = 0.0, hi = 1.0;
@@ -73,7 +99,12 @@ float mCell(vec2 uv, out float id, out float edge){
 float mHeight(vec2 uv, out float id, out float edge){
  mCell(uv, id, edge);
  edge -= mnoise(uv * 7.0 + id * 31.0) * mJoint * .8 + mnoise(uv * 23.0) * mJoint * .3;
+#ifdef MCOBBLE
+ // A cobble is domed, its rim rounded down into the joint.
+ float bevel = smoothstep(mJoint * .3, mJoint * .3 + .1 * mScale, edge) * mDome;
+#else
  float bevel = smoothstep(mJoint * .35, mJoint * .35 + .12 * mScale, edge);
+#endif
  return bevel * (.72 + .28 * (mnoise(uv * 1.7 + id * 17.0) * .65 + mnoise(uv * 5.3) * .35));
 }
 vec3 mPerturb(vec3 sp, vec3 n, vec2 dh, float fd){
@@ -109,6 +140,9 @@ float mDust = smoothstep(.36, .72, mfbm(mW.xz * .045)) * .8;
 #endif
 vec3 mDirt = mix(vec3(.43, .3, .21), vec3(.62, .47, .33), mfbm(mW.xz * .31)) * (.82 + .3 * mnoise(mW.xz * 2.7));
 mBase = mix(mBase, mDirt, mDust);
+// Grain at arm's length: speckle and pitting in the stone, gone where a pixel covers more than a couple of centimetres.
+float mFine = 1.0 - smoothstep(.006, .025, mFoot);
+mBase *= 1.0 + ((mnoise(mW.xz * 11.0 + mId * 7.0) - .5) * .2 + (mnoise(mW.xz * 37.0) - .5) * .14) * mFine;
 mMortarAmt *= 1.0 - mDust;
 mH = mix(mH, mnoise(mW.xz * 3.0) * .3, mDust);
 #endif

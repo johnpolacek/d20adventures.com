@@ -55,6 +55,8 @@ export interface CardPerson {
   cphase: number
   ctint: [number, number, number]
   cs: number
+  // How far the person has faded from view, 0 to 1, while they stand between the camera and whoever it frames.
+  cf?: number
 }
 
 // Vertex code, shared. cA = (facing, layer, mirror, phase); cB = (tint rgb, walk); uVar[layer] = (height m, quad aspect, uMax, vMax), fronts then backs.
@@ -92,6 +94,9 @@ float cYawA = cYB.x, cSin = sin(cYawA), cCos = cos(cYawA);`
  vCUb = vec3(cA.z > 0.0 ? uB : cVB.z - uB, 1.0 - position.y * cVB.w, cA.y + ${N}.0);
  vCB = cYB.y; vCTint = cB.xyz;
 }`
+  // Someone faded from view: gone at 1, and dithered away on the way there. Their shadow goes once they have.
+  const FADE = /* glsl */ `
+ transformed *= step(cF, .999); vCF = cF;`
   // The card's alpha for the shadow caster and the character mask: front, back, or a blend while they trade places.
   const ALPHA = /* glsl */ `
 float cAlpha(){
@@ -99,7 +104,7 @@ float cAlpha(){
  if (vCB > .999) return texture(uAtlas, vCUb).a;
  return mix(texture(uAtlas, vCUv).a, texture(uAtlas, vCUb).a, vCB);
 }`
-  return { COMMON, SETUP, POS, ALPHA }
+  return { COMMON, SETUP, POS, ALPHA, FADE }
 }
 
 // Grade toward the set palette, as the hero standees get, a touch stronger on the crowd.
@@ -145,33 +150,36 @@ function makeUniforms(meta: CrowdLibraryMeta, camera: THREE.Camera, shared: Shar
   }
 }
 
+const DITHER = "fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(.06711056, .00583715))))"
 function cardMaterial(uniforms: CardUniforms, N: number, shared: SharedUniforms) {
-  const { COMMON, SETUP, POS } = glsl(N)
+  const { COMMON, SETUP, POS, FADE } = glsl(N)
   const m = new THREE.MeshStandardMaterial({ color: "#fff", roughness: 0.95, metalness: 0, alphaTest: 0.5 })
   return stageMaterial(m, shared, `crowd-card-${N}`, (s) => {
     Object.assign(s.uniforms, uniforms)
     s.vertexShader = s.vertexShader
-      .replace("#include <common>", `#include <common>\n${COMMON}\nvarying vec3 vCR; varying vec3 vCU; varying float vCMirror;`)
+      .replace("#include <common>", `#include <common>\n${COMMON}\nattribute float cF; varying float vCF; varying vec3 vCR; varying vec3 vCU; varying float vCMirror;`)
       .replace(
         "#include <beginnormal_vertex>",
         `#include <beginnormal_vertex>\n${SETUP}\nobjectNormal = vec3(cSin, 0.0, cCos); vCR = mat3(viewMatrix) * vec3(cCos, 0.0, -cSin); vCU = mat3(viewMatrix) * vec3(0.0, 1.0, 0.0); vCMirror = cA.z;`
       )
-      .replace("#include <begin_vertex>", `#include <begin_vertex>\n${POS}`)
+      .replace("#include <begin_vertex>", `#include <begin_vertex>\n${POS}\n${FADE}`)
     s.fragmentShader = s.fragmentShader
       .replace(
         "#include <common>",
-        "#include <common>\nuniform sampler2DArray uAtlas; varying vec3 vCUv; varying vec3 vCUb; varying float vCB; varying vec3 vCTint; varying vec3 vCR; varying vec3 vCU; varying float vCMirror; vec3 cUvw;"
+        "#include <common>\nuniform sampler2DArray uAtlas; varying vec3 vCUv; varying vec3 vCUb; varying float vCB; varying vec3 vCTint; varying vec3 vCR; varying vec3 vCU; varying float vCMirror; varying float vCF; vec3 cUvw;"
       )
-      .replace("#include <map_fragment>", `#include <map_fragment>\n${LAYERS}\n${GRADE}`)
+      .replace("#include <map_fragment>", `#include <map_fragment>\n if (vCF > ${DITHER}) discard;\n${LAYERS}\n${GRADE}`)
       .replace("#include <normal_fragment_maps>", `#include <normal_fragment_maps>\n${NORMAL}`)
   })
 }
 function cardDepthMaterial(uniforms: CardUniforms, N: number) {
-  const { COMMON, SETUP, POS, ALPHA } = glsl(N)
+  const { COMMON, SETUP, POS, ALPHA, FADE } = glsl(N)
   const d = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, alphaTest: 0.5, side: THREE.DoubleSide })
   d.onBeforeCompile = (s) => {
     Object.assign(s.uniforms, uniforms)
-    s.vertexShader = s.vertexShader.replace("#include <common>", `#include <common>\n${COMMON}`).replace("#include <begin_vertex>", `#include <begin_vertex>\n${SETUP}\n${POS}`)
+    s.vertexShader = s.vertexShader
+      .replace("#include <common>", `#include <common>\n${COMMON}\nattribute float cF; varying float vCF;`)
+      .replace("#include <begin_vertex>", `#include <begin_vertex>\n${SETUP}\n${POS}\n${FADE}`)
     s.fragmentShader = s.fragmentShader
       .replace("#include <common>", `#include <common>\nuniform sampler2DArray uAtlas; varying vec3 vCUv; varying vec3 vCUb; varying float vCB; varying vec3 vCTint;\n${ALPHA}`)
       .replace("#include <alphatest_fragment>", "diffuseColor.a = cAlpha();\n#include <alphatest_fragment>")
@@ -244,6 +252,7 @@ export class CardLayer {
   uniforms: CardUniforms
   cA: THREE.InstancedBufferAttribute
   cB: THREE.InstancedBufferAttribute
+  cF: THREE.InstancedBufferAttribute
   mesh: THREE.InstancedMesh
   slots: (CardPerson | undefined)[]
   n = 0
@@ -264,8 +273,10 @@ export class CardLayer {
     geo.translate(0, 0.5, 0)
     this.cA = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 4), 4).setUsage(THREE.DynamicDrawUsage)
     this.cB = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 4), 4).setUsage(THREE.DynamicDrawUsage)
+    this.cF = new THREE.InstancedBufferAttribute(new Float32Array(capacity), 1).setUsage(THREE.DynamicDrawUsage)
     geo.setAttribute("cA", this.cA)
     geo.setAttribute("cB", this.cB)
+    geo.setAttribute("cF", this.cF)
     this.mesh = new THREE.InstancedMesh(geo, cardMaterial(this.uniforms, this.N, shared), Math.max(1, capacity))
     this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
     this.mesh.count = 0
@@ -316,19 +327,24 @@ export class CardLayer {
     b[i * 4 + 1] = p.ctint[1]
     b[i * 4 + 2] = p.ctint[2]
     b[i * 4 + 3] = p.walk
+    ;(this.cF.array as Float32Array)[i] = p.cf ?? 0
+    this.dirty = true
+  }
+  fade(p: CardPerson) {
+    ;(this.cF.array as Float32Array)[p.cs] = p.cf ?? 0
     this.dirty = true
   }
   flush() {
     if (!this.dirty) return
-    this.mesh.instanceMatrix.needsUpdate = this.cA.needsUpdate = this.cB.needsUpdate = true
+    this.mesh.instanceMatrix.needsUpdate = this.cA.needsUpdate = this.cB.needsUpdate = this.cF.needsUpdate = true
     this.dirty = false
   }
   // The character mask's proxy: the same transform, alpha-tested by the atlas, writing `keep` (how much crisp detail to preserve).
   maskProxy(common: MaskCommon, keep: number) {
-    const { COMMON, SETUP, POS, ALPHA } = glsl(this.N)
+    const { COMMON, SETUP, POS, ALPHA, FADE } = glsl(this.N)
     const material = new THREE.ShaderMaterial({
       uniforms: { ...common, ...this.uniforms, keep: { value: keep } },
-      vertexShader: `${COMMON}\nvoid main(){ vec3 transformed; ${SETUP}\n${POS}\n gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(transformed, 1.0); }`,
+      vertexShader: `${COMMON}\nattribute float cF; varying float vCF;\nvoid main(){ vec3 transformed; ${SETUP}\n${POS}\n${FADE}\n gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(transformed, 1.0); }`,
       fragmentShader: `uniform sampler2DArray uAtlas; uniform sampler2D tDepth; uniform vec2 size; uniform float near, far, keep; varying vec3 vCUv; varying vec3 vCUb; varying float vCB; varying vec3 vCTint;
 ${ALPHA}
 float lin(float z){ return 2.0 * near * far / (far + near - (z * 2.0 - 1.0) * (far - near)); }
