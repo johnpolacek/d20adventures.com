@@ -63,6 +63,9 @@ Owner asked again for an automated playtest with fixes as they come, and every a
 | Characters on the ground | A card's sun shadow leaves its feet ungrounded from most angles, so heroes seemed to hover. | A soft contact shadow under every standing character, gone as they fall. |
 | Encounter change | The narration's heading switched to the new encounter while the old encounter's last paragraph was still fading out. | The heading changes with its paragraph. |
 | Speech bubbles | A tall speaker's bubble rose into the turn order at the top of the screen, and Barok's lines ran under the portraits. | A bubble with no room above its speaker below the top band sits beside their head. |
+| Story view | A line in an encounter with no 3D scene showed as a bare quote: Beric's opening words named no one. | Whoever speaks first in the paragraph gets the portrait plate a scene would give them. |
+| The line | The line scene offered the table's Two-shot and Close views, on Garlan, which framed strangers while the party waited two groups back. | The line scene has neither. |
+| Roll read aloud | A screen reader heard "20 plus -1 makes 19". | "20 minus 1 makes 19". |
 | Dragging the camera | Dragged behind a gate tower, the camera showed the back of the tower. | It stops on the near side of a building, wall or tower between it and what it looks at, as a third-person camera's arm does. Stalls and tables are low, so it passes over them. |
 
 ## Gameplay notes

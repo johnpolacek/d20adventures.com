@@ -53,6 +53,9 @@ gate.loops["gate-line"].party.position = 0
 // the GM's map staging.
 const inLine = structuredClone(gateStaging)
 inLine.loops["gate-line"].party.position = 2
+// The two-shot and the close-up are on Garlan at his table, which the party has not reached.
+delete (inLine.shots as Record<string, unknown>).twoshot
+delete (inLine.shots as Record<string, unknown>).close
 const LINE_SPOTS: Record<string, number[]> = { branka: [-0.5, 16.12], cassia: [-0.5, 14.92], yeva: [-1.35, 15.52], milos: [-1.35, 14.3] }
 const line = { ...inLine, cast: inLine.cast.map((m) => ({ ...m, at: LINE_SPOTS[m.id] ?? m.at })) }
 

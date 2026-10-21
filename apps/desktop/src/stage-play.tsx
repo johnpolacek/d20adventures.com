@@ -347,6 +347,17 @@ export function StagePlay(props: {
         : [],
     [stage, beats, paragraph, reading]
   )
+  // In story view, whoever speaks first in the paragraph gets the portrait plate a scene would give them.
+  const voice = useMemo(() => {
+    if (scene || !reading) return null
+    const beats = paragraphs[paragraph]?.beats ?? []
+    const line = beats.find((b) => b.kind === "line")
+    if (line?.kind !== "line") return null
+    const c = shown?.characters.find((c) => c.id === line.speaker)
+    if (!c) return null
+    const text = beats.flatMap((b) => (b.kind === "line" && b.speaker === line.speaker ? [b.text] : [])).join(" ")
+    return { name: c.name, role: c.type === "npc" ? c.archetype || c.race : `${c.race} ${c.archetype}`, portrait: portrait(c), text }
+  }, [scene, reading, paragraphs, paragraph, shown])
   // Entrances the scene ties to the narration: offstage until the paragraph that brings them on ("the cabin door
   // opened"), then they walk on from the door to their place. Narration without the phrase finds them in place.
   // An action that brings someone on from a place does the same, at its own paragraph.
@@ -855,6 +866,7 @@ export function StagePlay(props: {
               <Plate compact={compact} line={{ key: paragraph, side: "right", name: speech[0].cast.name, role: speech[0].cast.role, portrait: speech[0].cast.art.portrait, text: speech[0].text }} />
             </>
           )}
+          {!scene && voice && <Plate compact={compact} line={{ key: paragraph, side: "right", ...voice }} />}
           <TurnOrder
             order={(shown?.characters ?? []).map((c) => ({ id: c.id, name: c.name, portrait: portrait(c), npc: c.type === "npc", health: c.healthPercent, status: c.status }))}
             activeId={ended ? null : (spotlit?.id ?? null)}

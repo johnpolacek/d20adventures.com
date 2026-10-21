@@ -92,7 +92,7 @@ export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll:
       {made && (
         <span className="sr-only">
           {roll.character} rolled {roll.check}: {made.natural}
-          {roll.modifier !== undefined ? ` plus ${mod} makes ${made.total}` : ""} against DC {roll.dc}. {verdict}.
+          {roll.modifier !== undefined ? ` ${mod < 0 ? "minus" : "plus"} ${Math.abs(mod)} makes ${made.total}` : ""} against DC {roll.dc}. {verdict}.
         </span>
       )}
       {/* The die, glowing in the verdict's colour once it lands, with rays behind a natural 20. Before the roll it is the button. */}
