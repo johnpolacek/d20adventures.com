@@ -15,8 +15,16 @@ const EFFECTS: Record<(typeof EFFECT_KINDS)[number], string> = {
 
 // How a step writes its story, for every prompt that asks the GM for beats: the kinds, the rules, and the menus of
 // ids it may use. The scene's places are offered only when it has a 3D set.
+// The pronoun a sheet's gender gives, so the story never turns a woman into "he" halfway through a scene.
+const pronoun = (gender?: string) => (!gender ? undefined : /^f|^wom/i.test(gender) ? "she" : /^m/i.test(gender) ? "he" : /non|they|^n/i.test(gender) ? "they" : undefined)
+
 export function storyRules(scene: StoryScene): string {
-  const cast = scene.cast.map((c) => `${c.id}: ${c.name}${c.type === "pc" ? " (a player's hero)" : ""}`).join("; ")
+  const cast = scene.cast
+    .map((c) => {
+      const notes = [pronoun(c.gender), c.type === "pc" ? "a player's hero" : undefined].filter(Boolean)
+      return `${c.id}: ${c.name}${notes.length ? ` (${notes.join(", ")})` : ""}`
+    })
+    .join("; ")
   const places = scene.places?.length ? scene.places.map((p) => `${p.id}: ${p.label}`).join("; ") : ""
   return `Write the story as "beats", a list in the order things happen:
 - narration: the scene or an outcome, in the narrator's voice.${places ? ' "place": the id of a place it shows.' : ""}

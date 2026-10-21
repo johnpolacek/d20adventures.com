@@ -31,9 +31,11 @@ Silverhand’s people are seasoned professionals, and following them undetected 
 
 If they just attack, other Silverhand bodyguards will appear quickly to defend him. If any of the characters fall due to attacking him, they will wake up in a cell to be interrogated by Silverhand himself.
 
+Silverhand does not talk with the adventurers in this scene, and does not bring them along. He keeps walking. If they catch up with him or block his way, his guards close in and he slips off into the mist toward the docks. His meeting with them comes at his hideout, the next scene, where he lets them find him.
+
 ## Transitions
 
-- To [[encounter:the-hideout]] when the players successfully track the group to their destination or are confronted near it.
+- To [[encounter:the-hideout]] when the players successfully track the group to their destination, or are confronted and Silverhand slips away toward the docks.
 
 ## Migration Context
 

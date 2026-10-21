@@ -67,6 +67,9 @@ Owner asked again for an automated playtest with fixes as they come, and every a
 | Encounter title | A long title, such as Morning at the Dragonbone, ran under the turn order when six or more took turns. | The title keeps clear of the strip however wide it is, and wraps. |
 | Story view | A line in an encounter with no 3D scene showed as a bare quote: Beric's opening words named no one. | Whoever speaks first in the paragraph gets the portrait plate a scene would give them. |
 | The line | The line scene offered the table's Two-shot and Close views, on Garlan, which framed strangers while the party waited two groups back. | The line scene has neither. |
+| Pronouns | Kaeleth, a woman on her sheet, became "his gaze" mid-scene. No story prompt told the GM anyone's gender. | Every prompt that writes beats lists each character's pronoun beside their name. |
+| NPC sheets | Varchk's and Kaeleth's sheets called them Aldith and Kaelen, their file ids, in their own descriptions. | They use their names. |
+| Shadowing Silverhand | Silverhand stopped, talked and walked the party into his warehouse himself, against the scene's notes. The Hideout then opened with him slipping away unseen. Both playtests did this. | The notes say he does not talk with them or bring them along in this scene: his guards close in and he slips away toward the docks, and the meeting comes at his hideout. |
 | One speaker, two lines | Elara's two lines in one paragraph read as `"...something more." "A few weeks ago..."`. | One speaker's lines in a row read as one quotation. Desktop, website and Storyview. |
 | Roll read aloud | A screen reader heard "20 plus -1 makes 19". | "20 minus 1 makes 19". |
 | Dragging the camera | Dragged behind a gate tower, the camera showed the back of the tower. | It stops on the near side of a building, wall or tower between it and what it looks at, as a third-person camera's arm does. Stalls and tables are low, so it passes over them. |

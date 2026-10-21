@@ -5,7 +5,7 @@ import { type RollBeat, type StoryBeat, type StoryBy, storyOutputSchema } from "
 import { cleanStory, type StoryScene } from "./clean"
 import { characterStory, storyNames, storyParagraphs, storyText } from "./render"
 
-type StoryTurn = { encounterId: string; story: StoryBeat[]; characters: readonly { id: string; name: string; type?: string }[] }
+type StoryTurn = { encounterId: string; story: StoryBeat[]; characters: readonly { id: string; name: string; type?: string; gender?: string }[] }
 
 // What a GM step returns when it writes story: its beats, alongside whatever else its schema asks for.
 export const beatsField = { beats: storyOutputSchema }
@@ -14,7 +14,7 @@ export const storyOutputObject = z.object(beatsField)
 // The scene a step writes for: the turn's characters, and the set's named places when the game has a 3D scene.
 export async function sceneFor(ports: GmPorts, turn: Omit<StoryTurn, "story">): Promise<StoryScene> {
   const places = (await ports.content.places?.(turn.encounterId).catch(() => undefined)) ?? undefined
-  return { cast: turn.characters.map((c) => ({ id: c.id, name: c.name, type: c.type })), ...(places?.length ? { places } : {}) }
+  return { cast: turn.characters.map((c) => ({ id: c.id, name: c.name, type: c.type, ...(c.gender ? { gender: c.gender } : {}) })), ...(places?.length ? { places } : {}) }
 }
 
 // A turn's story as a script, for prompts.

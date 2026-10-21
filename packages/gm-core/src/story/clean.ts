@@ -6,6 +6,7 @@ export interface StoryCast {
   id: string
   name: string
   type?: string
+  gender?: string
 }
 export interface StoryPlace {
   id: string
