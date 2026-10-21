@@ -1,5 +1,5 @@
 ---
-moduleOrder: 7
+moduleOrder: 8
 sceneTitle: "The Library"
 sectionTitle: "The Investigation"
 id: "the-old-grand-library"

@@ -1,5 +1,5 @@
 ---
-moduleOrder: 10
+moduleOrder: 11
 sceneTitle: "The Docks"
 sectionTitle: "The Investigation"
 id: "mystery-cargo"

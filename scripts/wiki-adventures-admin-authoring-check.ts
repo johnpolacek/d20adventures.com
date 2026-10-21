@@ -27,8 +27,9 @@ async function main() {
   assert.ok(firstMarchEncounter?.content.includes('sectionTitle: "Arrival At Kordavos"'))
   assert.ok(firstMarchEncounter?.content.includes('sceneTitle: "Arrival at Kordavos"'))
   assert.ok(firstMarchEncounter?.content.includes("moduleOrder:"))
-  assert.ok(firstMarchEncounter?.content.includes('  - id: "garlan-ironfist"'))
-  assert.ok(firstMarchEncounter?.content.includes('behavior: "Diligent and fair'))
+  const marchTable = marchFiles.find((file) => file.path.endsWith("/encounters/the-front-of-the-line.md"))
+  assert.ok(marchTable?.content.includes('  - id: "garlan-ironfist"'))
+  assert.ok(marchTable?.content.includes('behavior: "Diligent and fair'))
 
   const adminPage = readFileSync("app/admin/page.tsx", "utf8")
   assert.equal(adminPage.includes("/admin/wiki-adventures"), false)

@@ -1,5 +1,5 @@
 ---
-moduleOrder: 20
+moduleOrder: 21
 sceneTitle: "The Auction"
 sectionTitle: "The Black Market"
 id: "a-relic-of-old-valkara"

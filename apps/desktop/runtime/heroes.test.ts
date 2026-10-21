@@ -304,7 +304,7 @@ const premade = (pack: string, id: string) => {
 }
 
 test("the party fills a scene's slots: premades keep theirs, created heroes take the rest and spare spots", () => {
-  const gate = SCENES["the-gates-of-kordavos"]
+  const gate = SCENES["the-front-of-the-line"]
   const authored = ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"].map((id) => premade("march-of-davos", id))
   assert.deepEqual(partyScene(gate, authored).staging, gate.staging)
 
@@ -341,6 +341,11 @@ test("the party fills a scene's slots: premades keep theirs, created heroes take
 
   const context = spatialContext("the-harvest-festival", [milos, vex], {}, chosen)!
   assert.match(context, /Milos Hardcastle \(-1\.6, 17\.6\); Vex \(-0\.3, 18\.1\)/)
+
+  // In the line, the party waits two groups back from the table, and a spare hero stands at its end.
+  const line = spatialContext("the-gates-of-kordavos", [premade("march-of-davos", "branka-stoneveil"), milos, vex], {}, chosen)!
+  assert.match(line, /two groups back/)
+  assert.match(line, /Branka Stoneveil \(-0\.5, 16\.1\); Milos Hardcastle \(-0\.5, 14\.9\); Vex \(-1\.4, 15\.5\)/)
 })
 
 test("heroes from other adventures with numeric website ids stand in the gate's staging", () => {
@@ -370,7 +375,7 @@ test("spare spots for extra heroes stand clear of anything solid", () => {
   }
   const max = Math.max(...Object.values(packs).map((p) => p.artifacts.manifest.maxPlayers ?? 1))
   assert.equal(max, 5)
-  for (const scene of [SCENES["the-gates-of-kordavos"], SCENES["the-harvest-festival"]]) assert.ok(scene.party.length + (scene.spare?.length ?? 0) >= max)
+  for (const scene of [SCENES["the-gates-of-kordavos"], SCENES["the-front-of-the-line"], SCENES["the-harvest-festival"]]) assert.ok(scene.party.length + (scene.spare?.length ?? 0) >= max)
 })
 
 test("heroes who walk to the same place stand beside each other, clear of anything solid", () => {

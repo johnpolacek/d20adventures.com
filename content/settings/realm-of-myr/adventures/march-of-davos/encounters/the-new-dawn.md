@@ -1,5 +1,5 @@
 ---
-moduleOrder: 46
+moduleOrder: 47
 sceneTitle: "Aftermath"
 sectionTitle: "The Covenant of The Cowl"
 id: "the-new-dawn"

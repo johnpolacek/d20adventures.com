@@ -1,5 +1,5 @@
 ---
-moduleOrder: 21
+moduleOrder: 22
 sceneTitle: "The Auction"
 sectionTitle: "The Black Market"
 id: "the-winning-bid"

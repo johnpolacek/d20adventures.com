@@ -1,5 +1,5 @@
 ---
-moduleOrder: 45
+moduleOrder: 46
 sceneTitle: "The Inner Sanctum"
 sectionTitle: "The Covenant of The Cowl"
 id: "final-confrontation"

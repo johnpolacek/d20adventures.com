@@ -1,5 +1,5 @@
 ---
-moduleOrder: 47
+moduleOrder: 48
 sceneTitle: "Aftermath"
 sectionTitle: "The Covenant of The Cowl"
 id: "vengeance-of-the-blackthorn"

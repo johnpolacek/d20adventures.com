@@ -1,5 +1,5 @@
 ---
-moduleOrder: 35
+moduleOrder: 36
 sceneTitle: "Exploring the Mansion"
 sectionTitle: "The Masquerade Ball"
 id: "the-wine-cellar"

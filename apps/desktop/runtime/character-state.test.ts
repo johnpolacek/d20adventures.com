@@ -25,6 +25,8 @@ async function setup() {
   const path = join(dir, "save.sqlite")
   let store = new LocalStore(path, pack.artifacts.graph.encounterTransitions)
   await game(store, packs, offline)({ kind: "start", provider: "claude" })
+  // Past the line, to Garlan's table, so the scene has an NPC.
+  await advance(store, {}, "the-front-of-the-line")
   const pc = store.current().characters.find((c) => c.name.startsWith("Cassia"))!
   const giver = store.current().characters.find((c) => c.name.startsWith("Branka"))!
   const npc = store.current().characters.find((c) => c.type === "npc")!
@@ -104,7 +106,7 @@ test("real turns transfer items, apply conditions/spell use, preserve history an
     })
     assert.match(prompt, /CURRENT SAVED CHARACTER STATE/)
     assert.match(prompt, /"name":"Potion"/)
-    assert.deepEqual(t.store.state!.turns[0], before)
+    assert.deepEqual(t.store.state!.turns[1], before)
     const c = byId(t.store, t.pc.id)
     assert.equal(c.healthPercent, 65)
     assert.equal(c.status, "Wounded")

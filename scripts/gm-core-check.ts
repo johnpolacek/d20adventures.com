@@ -262,7 +262,7 @@ async function accessAndInstanceIsolation() {
   }
   c.ports.store.createAdventureWithFirstTurn = async (args) => {
     assert.equal(args.ownerId, "fixture-player", "ownership must come from authenticated identity")
-    assert.equal(args.turn.title, "The Gates of Kordavos")
+    assert.equal(args.turn.title, "The Front of the Line")
     return { adventureId: "new-adventure", turnId: "new-turn" }
   }
   await createGmCore(c.ports).createAdventureWithFirstTurn({

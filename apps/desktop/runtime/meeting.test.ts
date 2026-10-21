@@ -30,15 +30,15 @@ const cast = [
 const line = (speaker: string, text: string, more: Partial<StoryBeat> = {}): StoryBeat => ({ kind: "line", by: { step: "reply", character: speaker }, speaker, text, ...more }) as StoryBeat
 
 // A GM that plays every step it is asked for and keeps each prompt: an AI hero's move or an NPC's turn as one quiet
-// action, and the end of a round that stays at the gate.
-function table(prompts: string[], answers: { beats?: unknown[] } = {}): Llm {
+// action, and the end of a round that goes on to `encounter`, by default staying where it is.
+function table(prompts: string[], answers: { beats?: unknown[]; encounter?: string } = {}): Llm {
   return {
     generateText: unused,
     generateObject: async ({ schema, prompt }) => {
       prompts.push(prompt)
       const who = prompt.match(/THE CURRENT NPC IS: [^(]+\(ID: ([^,]+),/)?.[1] ?? prompt.match(/an action by "([^"]+)"/)?.[1]
       for (const answer of [
-        { nextEncounterId: "the-gates-of-kordavos", beats: answers.beats ?? [{ kind: "narration", text: "The line shuffles forward." }], knowledge: [], adventurePatch: {} },
+        { nextEncounterId: answers.encounter, beats: answers.beats ?? [{ kind: "narration", text: "The line shuffles forward." }], knowledge: [], adventurePatch: {} },
         { actionSummary: "Waits.", beats: [{ kind: "action", who, text: "Waits and watches." }], actionType: "skip" },
         { beats: [{ kind: "action", who, text: "Waits and watches." }] },
         { suggestions: [{ label: "Wait", text: "Waits." }] },
@@ -83,17 +83,17 @@ async function turnOf(store: LocalStore, id: string): Promise<string> {
   for (const c of turn.characters) Object.assign(c, { hasReplied: c.id !== id, isComplete: c.id !== id })
   store.save()
   const prompts: string[] = []
-  await game(store, packs, table(prompts))({ kind: "continue", turnId: turn._id })
+  await game(store, packs, table(prompts, { encounter: turn.encounterId }))({ kind: "continue", turnId: turn._id })
   const played = prompts.filter((p) => p.includes("You are the PLAYER (not the GM)") || p.includes("THE CURRENT NPC IS"))
   assert.equal(played.length, 1, `${id} played once`)
   return played[0]
 }
 
-async function endRound(store: LocalStore, beats?: unknown[]): Promise<string> {
+async function endRound(store: LocalStore, beats?: unknown[], encounter = store.current().encounterId): Promise<string> {
   for (const c of store.current().characters) Object.assign(c, { hasReplied: true, isComplete: true })
   store.save()
   const prompts: string[] = []
-  await game(store, packs, table(prompts, { beats }))({ kind: "continue", turnId: store.current()._id })
+  await game(store, packs, table(prompts, { beats, encounter }))({ kind: "continue", turnId: store.current()._id })
   return prompts.find((p) => p.includes("Available Transition Options")) ?? ""
 }
 
@@ -183,37 +183,45 @@ test("the gate's intro shows each hero in the party as the others see them, and 
 
 test("at the gate, each hero starts a stranger to the others, and a name said aloud is heard and kept", async () => {
   await atTheGate(async (store) => {
-    // Round one: nobody knows anyone.
+    // Round one, in the line: the heroes alone, and nobody knows anyone.
+    assert.deepEqual(
+      store
+        .current()
+        .characters.map((c) => c.id)
+        .sort(),
+      [BRANKA, MILOS, THALBERN].sort(),
+      "only the heroes stand in the line"
+    )
     const thalbern = await turnOf(store, THALBERN)
     assert.match(thalbern, /Milos Radan \(a stranger, name not yet heard\)/)
     assert.match(thalbern, /Branka Stoneveil \(a hero played by a person\) \(a stranger, name not yet heard\)/)
     assert.match(thalbern, /NAMES THALBERN HAS NOT HEARD: [^\n]*Branka Stoneveil/)
     assert.match(thalbern, /ADVENTURE PREMISE[^\n]*\nThe heroes come to the gates of Kordavos alone/)
-    const garlan = await turnOf(store, GARLAN)
-    assert.match(garlan, /NAMES GARLAN IRONFIST HAS NOT HEARD: [^\n]*Thalbern/)
 
-    // Milos gives his name to Garlan, and Thalbern gives his in a whisper.
-    store.current().story.push(line(MILOS, "Milos Radan, a Wayfinder come for the Festival."), line(THALBERN, "Thalbern. I track for the elves.", { to: GARLAN, private: true }))
+    // Milos gives his name to the others, and Thalbern whispers his to Milos.
+    store.current().story.push(line(MILOS, "Milos Radan, a Wayfinder come for the Festival."), line(THALBERN, "Thalbern. I track for the elves.", { to: MILOS, private: true }))
     store.save()
     const offered = await suggestFor(store, BRANKA)
     assert.match(offered, /NAMES BRANKA STONEVEIL HAS NOT HEARD: Thalbern\./, "Branka heard Milos, and not the whisper")
     assert.ok(!/Milos Radan \(a stranger/.test(offered))
-    const gm = await endRound(store)
-    assert.match(gm, /NAMES NOT YET HEARD\.[^\n]*\n- [^\n]*\n- [^\n]*/)
-    assert.match(gm, /- Thalbern: not heard by [^\n]*Branka Stoneveil/)
+    const gm = await endRound(store, undefined, "the-front-of-the-line")
+    assert.match(gm, /- Thalbern: not heard by Branka Stoneveil/)
     assert.match(gm, /- Branka Stoneveil: not heard by /)
     assert.ok(!/- Milos Radan: not heard/.test(gm), "everyone heard Milos")
-    const garlanId = store.current().characters.find((c) => c.name === "Garlan Ironfist")!.id
     assert.deepEqual(
       (store.state!.adventure.knowledge ?? []).map((f) => [f.id, [...f.knownBy].sort()]),
       [
-        ["r1-private-1", [garlanId, THALBERN].sort()],
-        ["name-milos-radan", [BRANKA, garlanId, THALBERN].sort()],
-        ["name-thalbern", [garlanId]],
+        ["r1-private-1", [MILOS, THALBERN].sort()],
+        ["name-milos-radan", [BRANKA, THALBERN].sort()],
+        ["name-thalbern", [MILOS]],
       ]
     )
 
-    // Round two: the line is gone from the story, and the ledger keeps who heard it.
+    // Round two, at the table: the line is gone from the story, the ledger keeps who heard it, and Garlan knows no one.
+    assert.equal(store.current().encounterId, "the-front-of-the-line")
+    const garlanId = store.current().characters.find((c) => c.name === "Garlan Ironfist")!.id
+    const garlan = await turnOf(store, garlanId)
+    assert.match(garlan, /NAMES GARLAN IRONFIST HAS NOT HEARD: [^\n]*Thalbern/)
     const next = await turnOf(store, THALBERN)
     assert.ok(!/Milos Radan \(a stranger/.test(next), "Thalbern still knows Milos's name")
     assert.match(next, /Branka Stoneveil \(a hero played by a person\) \(a stranger, name not yet heard\)/)

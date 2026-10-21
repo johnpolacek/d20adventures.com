@@ -74,12 +74,12 @@ async function turnOf(store: LocalStore, id: string): Promise<string> {
   return played[0]
 }
 
-// The round ends with everyone done, the GM recording `learned`. The round-end prompt.
-async function endRound(store: LocalStore, learned: unknown[] = []): Promise<string> {
+// The round ends with everyone done, the GM recording `learned` and going on to `encounter`. The round-end prompt.
+async function endRound(store: LocalStore, learned: unknown[] = [], encounter = store.current().encounterId): Promise<string> {
   for (const c of store.current().characters) Object.assign(c, { hasReplied: true, isComplete: true })
   store.save()
   const prompts: string[] = []
-  await game(store, packs, table(prompts, store.current().encounterId, learned))({ kind: "continue", turnId: store.current()._id })
+  await game(store, packs, table(prompts, encounter, learned))({ kind: "continue", turnId: store.current()._id })
   return prompts.find((p) => p.includes("Available Transition Options")) ?? ""
 }
 
@@ -136,7 +136,7 @@ test("a round's private beats are one fact for those in them, and facts merge by
   assert.match(ledgerNote(merged, names, true), /- \[r3-private-1\] Thalbern told Milos [^\n]* Known to: Thalbern, Garlan Ironfist, 1 not here\./)
 })
 
-test("at the gate, Garlan's whisper is remembered the next round by Thalbern and Garlan only, until Thalbern tells Milos", async () => {
+test("at the gate table, Garlan's whisper is remembered the next round by Thalbern and Garlan only, until Thalbern tells Milos", async () => {
   await playing(
     "march-of-davos",
     [
@@ -145,18 +145,20 @@ test("at the gate, Garlan's whisper is remembered the next round by Thalbern and
       { id: MILOS, ai: true },
     ],
     async (store) => {
+      // The heroes wait out a round in the line, then reach Garlan's table.
+      await endRound(store, [], "the-front-of-the-line")
       store.current().story.push(...whisper())
       store.save()
       await endRound(store, [
         { id: "gate-closes-at-dusk", text: "Garlan said the gate closes at dusk.", knownBy: [THALBERN, MILOS, BRANKA, "Garlan Ironfist"] },
         { id: "ghost-fact", text: "Someone no one has met knows this.", knownBy: ["a-ghost"] },
       ])
-      assert.equal(store.current().order, 2)
+      assert.equal(store.current().order, 3)
       const known = store.state!.adventure.knowledge ?? []
       assert.deepEqual(
         known.map((f) => [f.id, f.knownBy]),
         [
-          ["r1-private-1", [THALBERN, GARLAN]],
+          ["r2-private-1", [THALBERN, GARLAN]],
           ["gate-closes-at-dusk", [THALBERN, MILOS, BRANKA, GARLAN]],
         ]
       )
@@ -175,8 +177,8 @@ test("at the gate, Garlan's whisper is remembered the next round by Thalbern and
       assert.ok(!/Herb Pouch|Watch Whistle/.test(milos), "Milos's prompt holds no one else's gear")
 
       // The GM reads every fact, with its id and who knows it, and Thalbern tells Milos.
-      const gm = await endRound(store, [{ id: "r1-private-1", text: "Thalbern told Milos the river goods came through the gate at first light.", knownBy: [MILOS] }])
-      assert.match(gm, /WHO KNOWS WHAT\. Facts from earlier[^\n]*\n- \[r1-private-1\] Thalbern to Garlan Ironfist, quietly: [^\n]* Known to: Thalbern, Garlan Ironfist\./)
+      const gm = await endRound(store, [{ id: "r2-private-1", text: "Thalbern told Milos the river goods came through the gate at first light.", knownBy: [MILOS] }])
+      assert.match(gm, /WHO KNOWS WHAT\. Facts from earlier[^\n]*\n- \[r2-private-1\] Thalbern to Garlan Ironfist, quietly: [^\n]* Known to: Thalbern, Garlan Ironfist\./)
       assert.match(store.state!.adventure.knowledge!.at(-1)!.knownBy.join(" "), /thalbern garlan-ironfist milos-radan/)
       assert.match(await turnOf(store, MILOS), /WHAT MILOS RADAN KNOWS[\s\S]*Thalbern told Milos the river goods/)
     }
@@ -192,6 +194,7 @@ test("an NPC's turn reads the round as the NPC knows it: no whisper between hero
       { id: BRANKA, ai: true },
     ],
     async (store) => {
+      await endRound(store, [], "the-front-of-the-line")
       store
         .current()
         .story.push(

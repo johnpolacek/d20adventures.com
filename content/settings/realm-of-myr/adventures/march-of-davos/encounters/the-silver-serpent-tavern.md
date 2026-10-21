@@ -1,5 +1,5 @@
 ---
-moduleOrder: 8
+moduleOrder: 9
 sceneTitle: "The Silver Serpent Tavern"
 sectionTitle: "The Investigation"
 id: "the-silver-serpent-tavern"

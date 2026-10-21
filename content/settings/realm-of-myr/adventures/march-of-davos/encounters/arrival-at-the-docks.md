@@ -1,5 +1,5 @@
 ---
-moduleOrder: 9
+moduleOrder: 10
 sceneTitle: "The Docks"
 sectionTitle: "The Investigation"
 id: "arrival-at-the-docks"

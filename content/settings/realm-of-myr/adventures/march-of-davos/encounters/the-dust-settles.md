@@ -1,5 +1,5 @@
 ---
-moduleOrder: 48
+moduleOrder: 49
 sceneTitle: "Aftermath"
 sectionTitle: "The Covenant of The Cowl"
 id: "the-dust-settles"

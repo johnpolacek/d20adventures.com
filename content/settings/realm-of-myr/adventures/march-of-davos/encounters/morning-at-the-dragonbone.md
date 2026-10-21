@@ -1,5 +1,5 @@
 ---
-moduleOrder: 6
+moduleOrder: 7
 sceneTitle: "Plea for Help"
 sectionTitle: "Arrival At Kordavos"
 id: "morning-at-the-dragonbone"

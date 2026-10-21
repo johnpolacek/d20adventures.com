@@ -1,5 +1,5 @@
 ---
-moduleOrder: 14
+moduleOrder: 15
 sceneTitle: "The Lower Districts"
 sectionTitle: "The Black Market"
 id: "welcome-to-the-lower-districts"

@@ -62,6 +62,7 @@ test("every authored scene is a real encounter, and every festival character has
     )
   const run = await setup()
   try {
+    await advance(run.store, "the-front-of-the-line")
     await advance(run.store, "the-harvest-festival")
     const turn = run.store.current()
     const scene = sceneFor(turn.encounterId)
@@ -82,15 +83,22 @@ test("every authored scene is a real encounter, and every festival character has
 test("the gate keeps first-name figures, Clan Conflict has its scene, and an encounter without one falls back to story view", async () => {
   const run = await setup()
   try {
-    const gate = sceneFor(run.store.current().encounterId)
-    assert.ok(gate)
-    assert.deepEqual(
-      run.store
-        .current()
-        .characters.map((c) => castIdFor(gate.staging.cast, c))
-        .sort(),
-      ["branka", "cassia", "garlan", "milos", "yeva"]
-    )
+    // The heroes wait in the line alone, then meet Garlan at the front.
+    for (const [encounter, cast] of [
+      ["the-gates-of-kordavos", ["branka", "cassia", "milos", "yeva"]],
+      ["the-front-of-the-line", ["branka", "cassia", "garlan", "milos", "yeva"]],
+    ] as const) {
+      if (run.store.current().encounterId !== encounter) await advance(run.store, encounter)
+      const gate = sceneFor(run.store.current().encounterId)
+      assert.ok(gate)
+      assert.deepEqual(
+        run.store
+          .current()
+          .characters.map((c) => castIdFor(gate.staging.cast, c))
+          .sort(),
+        cast
+      )
+    }
     await advance(run.store, "the-harvest-festival")
     await advance(run.store, "clan-conflict")
     // The two leaders stand on the festival square with figures of their own.
@@ -120,10 +128,11 @@ test("positions reset on a new encounter, persist through rounds and reopening, 
   try {
     const gateTurn = run.store.current()._id
     await positions(run.store, { branka: { x: 1, z: 12, ry: 0 } })
-    await advance(run.store, "the-harvest-festival")
+    await advance(run.store, "the-front-of-the-line")
     assert.deepEqual(run.store.state!.positions, {})
     await assert.rejects(() => positions(run.store, { branka: { x: 2, z: 12, ry: 0 } }, undefined, gateTurn), /already advanced/)
     assert.deepEqual(run.store.state!.positions, {})
+    await advance(run.store, "the-harvest-festival")
 
     // A walk is saved once with its movement key, so reopening never replays it.
     const key = `${run.store.current()._id}:cassia-verane`
@@ -137,7 +146,7 @@ test("positions reset on a new encounter, persist through rounds and reopening, 
     // The next festival round keeps where everyone stands, and the GM sees it with the square's named places.
     const prompt = await advance(run.store, "the-harvest-festival")
     assert.equal(run.store.current().encounterId, "the-harvest-festival")
-    assert.equal(run.store.state!.turns.length, 3)
+    assert.equal(run.store.state!.turns.length, 4)
     assert.deepEqual(run.store.state!.positions["cassia-verane"], { x: -10, z: 3.9, ry: 1 })
     assert.match(prompt, /festival square/)
     assert.match(prompt, /Karim's jewel stall \(-11\.8, 3\.9\)/)

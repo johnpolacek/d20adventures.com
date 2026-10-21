@@ -1,5 +1,5 @@
 ---
-moduleOrder: 29
+moduleOrder: 30
 sceneTitle: "The Blackthorn Mansion"
 sectionTitle: "The Masquerade Ball"
 id: "the-lady-and-the-bishop"

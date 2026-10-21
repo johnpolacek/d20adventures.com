@@ -274,17 +274,17 @@ test("real core advances through authored graph and atomically retains state acr
       ...failLlm,
       generateObject: async ({ schema }) => ({
         object: schema.parse({
-          nextEncounterId: "the-harvest-festival",
-          beats: [{ kind: "narration", text: "The guard waves the party into the festival." }],
-          adventurePatch: { summaryDelta: "Paid the gate fee.", discoveries: [{ id: "fee", type: "fact", title: "Gate fee", text: "The fee is paid.", visibility: "player" }] },
+          nextEncounterId: "the-front-of-the-line",
+          beats: [{ kind: "narration", text: "The line moves up to the sergeant's table." }],
+          adventurePatch: { summaryDelta: "Waited in the line.", discoveries: [{ id: "law", type: "fact", title: "Festival law", text: "No one enters alone.", visibility: "player" }] },
         }),
       }),
     }
     await game(store, packs, model)({ kind: "continue", turnId: turn._id })
-    assert.equal(store.current().encounterId, "the-harvest-festival")
+    assert.equal(store.current().encounterId, "the-front-of-the-line")
     assert.equal(store.state!.turns.length, 2)
     assert.equal(store.state!.adventure.discoveries.length, 1)
-    assert.equal(store.state!.adventure.adventureSummaryMarkdown, "Paid the gate fee.")
+    assert.equal(store.state!.adventure.adventureSummaryMarkdown, "Waited in the line.")
     const reopened = new LocalStore(path)
     assert.deepEqual(reopened.state, JSON.parse(JSON.stringify(store.state)))
     reopened.db.close()

@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-21, the gate split into the line and the table
+
+Owner: the first round should be the heroes stuck in line, meeting other travelers, and the next the front of the line, time to pay. The gate is now two scenes. The Gates of Kordavos is one round in the line, with only the heroes in it: the sergeant bellows the festival law, and a family turned back, Blackthorn wagons waved past and a grumbling spice trader give them things to talk about. The Front of the Line is Garlan's table, a new encounter, where names, marks and the company's name are taken. In the app the party stands two groups back in the 3D line, then at the front. Four live runs with Claude: every line-round hero spoke to another hero, and the last two runs took three rounds from the line to the festival. Desktop tests, gm-core and the wiki checks pass. See [meeting at the gate](plans/meeting-at-the-gate.md).
+
 ## 2026-10-21, production deployed
 
 Prod Convex had turns from before the 2026-10-14 story beats, which failed the schema. Owner: "we can clear any data as needed. the only user is me and i'm just testing." Prod's `turns`, `adventures`, `turnAudio`, `gmJobs` and `chat_messages` were emptied, and Convex deployed to prod. The website was already built from the latest main. Both answer. No game has been played on prod since.

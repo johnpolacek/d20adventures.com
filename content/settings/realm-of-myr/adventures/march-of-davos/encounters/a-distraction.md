@@ -1,5 +1,5 @@
 ---
-moduleOrder: 30
+moduleOrder: 31
 sceneTitle: "Exploring the Mansion"
 sectionTitle: "The Masquerade Ball"
 id: "a-distraction"

@@ -1,5 +1,5 @@
 ---
-moduleOrder: 26
+moduleOrder: 27
 sceneTitle: "The Blackthorn Mansion"
 sectionTitle: "The Masquerade Ball"
 id: "entry-to-the-ball"

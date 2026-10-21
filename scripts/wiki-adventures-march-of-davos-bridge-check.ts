@@ -15,7 +15,7 @@ function main() {
 
   assert.equal(isLocalWikiAdventure(SETTING_ID, PLAN_ID), true)
   assert.ok(adventureManifest.includes('startEncounter: "the-gates-of-kordavos"'), "March of Davos manifest does not start at the-gates-of-kordavos")
-  assert.equal(firstEncounter.includes("[[encounter:the-harvest-festival]]"), true, "First encounter does not infer a linear transition")
+  assert.equal(firstEncounter.includes("[[encounter:the-front-of-the-line]]"), true, "First encounter does not lead to the front of the line")
   assert.equal(
     migrationReport.warnings.some((warning) => warning.code === "legacy-format-normalized"),
     true
@@ -45,14 +45,19 @@ function main() {
     "1749159962941",
     "1749307435667",
   ])
-  assert.equal(Object.keys(artifacts.encounters).length, 48)
+  assert.equal(Object.keys(artifacts.encounters).length, 49)
   assert.equal(Object.keys(artifacts.characterSheets.npcs).length, 49)
   assert.equal(Object.keys(artifacts.characterSheets.premadeCharacters).length, 9)
-  assert.equal(artifacts.graph.encounterTransitions.length, 60)
-  assert.equal(
-    artifacts.graph.encounterTransitions.some((transition) => transition.fromEncounterId === "the-gates-of-kordavos" && transition.toEncounterId === "the-harvest-festival"),
-    true
-  )
+  assert.equal(artifacts.graph.encounterTransitions.length, 61)
+  // The heroes wait in the line, then meet Garlan at its front, then enter the festival.
+  for (const [from, to] of [
+    ["the-gates-of-kordavos", "the-front-of-the-line"],
+    ["the-front-of-the-line", "the-harvest-festival"],
+  ])
+    assert.equal(
+      artifacts.graph.encounterTransitions.some((transition) => transition.fromEncounterId === from && transition.toEncounterId === to),
+      true
+    )
   // The confrontation is played, and the party's choice leads to one of three endings.
   assert.equal(isLocalWikiFinalEncounter(artifacts, "final-confrontation"), false)
   for (const ending of ["the-new-dawn", "vengeance-of-the-blackthorn", "the-dust-settles"]) assert.equal(isLocalWikiFinalEncounter(artifacts, ending), true)
@@ -100,8 +105,19 @@ function main() {
   assert.equal(companion.type, "pc")
   assert.equal(companion.type === "pc" && companion.userId, "user_test")
   assert.equal(companion.type === "pc" && companion.controlledBy, "ai")
+  // The heroes wait in the line alone. Garlan is up at his table, in the next scene.
   assert.equal(
-    characters.some((character) => character.id === "garlan-ironfist" && character.type === "npc"),
+    characters.some((character) => character.type === "npc"),
+    false
+  )
+  const atTheTable = buildLocalWikiTurnCharacters({
+    artifacts,
+    encounter: artifacts.encounters["the-front-of-the-line"],
+    players: [{ userId: "user_test", characterId: "saved-fighter" }],
+    existingPlayerCharacters: [savedCharacter],
+  })
+  assert.equal(
+    atTheTable.some((character) => character.id === "garlan-ironfist" && character.type === "npc"),
     true
   )
 

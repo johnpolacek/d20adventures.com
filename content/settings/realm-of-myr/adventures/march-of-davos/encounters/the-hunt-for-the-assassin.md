@@ -1,5 +1,5 @@
 ---
-moduleOrder: 39
+moduleOrder: 40
 sceneTitle: "Into the Underground"
 sectionTitle: "The Covenant of The Cowl"
 id: "the-hunt-for-the-assassin"

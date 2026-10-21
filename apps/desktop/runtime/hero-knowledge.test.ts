@@ -46,6 +46,17 @@ async function playing(adventure: string, party: { id: string; ai: boolean }[], 
   }
 }
 
+// The heroes wait out a round in the line at the gate of Kordavos, then reach Garlan's table.
+async function toTheTable(store: LocalStore) {
+  for (const c of store.current().characters) Object.assign(c, { hasReplied: true, isComplete: true })
+  store.save()
+  const gm: Llm = {
+    generateText: unused,
+    generateObject: async ({ schema }) => ({ object: schema.parse({ nextEncounterId: "the-front-of-the-line", beats: [{ kind: "narration", text: "The line moves up." }], adventurePatch: {} }) }),
+  }
+  await game(store, packs, gm)({ kind: "continue", turnId: store.current()._id })
+}
+
 // The AI hero `id` plays its move with everyone else done. The prompt it was written from.
 async function aiMove(store: LocalStore, id: string): Promise<string> {
   const turn = store.current()
@@ -144,7 +155,7 @@ test("Covert Cargo opens with each hero's hide and errand known only to that her
   )
 })
 
-test("at the gate of Kordavos, what Garlan whispers to Thalbern does not reach Milos", async () => {
+test("at the gate table in Kordavos, what Garlan whispers to Thalbern does not reach Milos", async () => {
   await playing(
     "march-of-davos",
     [
@@ -153,6 +164,7 @@ test("at the gate of Kordavos, what Garlan whispers to Thalbern does not reach M
       { id: "branka-stoneveil", ai: true },
     ],
     async (store) => {
+      await toTheTable(store)
       const turn = store.current()
       const garlan = turn.characters.find((c) => c.name === "Garlan Ironfist")!.id
       turn.story.push(

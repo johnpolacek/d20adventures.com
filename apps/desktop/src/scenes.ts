@@ -46,9 +46,15 @@ export interface Scene {
   spare?: [number, number][]
 }
 
-// The real intro starts at the checkpoint. The ambient queue must not move the party independently of game state.
+// The table scene starts at the checkpoint. The ambient queue must not move the party independently of game state.
 const gate = structuredClone(gateStaging)
 gate.loops["gate-line"].party.position = 0
+// The line scene waits two groups back from the table. The queue places the party there, and these are its spots, for
+// the GM's map staging.
+const inLine = structuredClone(gateStaging)
+inLine.loops["gate-line"].party.position = 2
+const LINE_SPOTS: Record<string, number[]> = { branka: [-0.5, 16.12], cassia: [-0.5, 14.92], yeva: [-1.35, 15.52], milos: [-1.35, 14.3] }
+const line = { ...inLine, cast: inLine.cast.map((m) => ({ ...m, at: LINE_SPOTS[m.id] ?? m.at })) }
 
 // Covert Cargo's two watchers on the bank, for the GM while the scene is inside the saloon.
 const WATCHERS = "Outside, Poppen hides in the bushes at the treeline above the gangway, and Thalbern in a thicket on the bank below the stern."
@@ -57,9 +63,17 @@ const WATCHERS = "Outside, Poppen hides in the bushes at the treeline above the 
 export const SCENES: Record<string, Scene> = {
   "the-gates-of-kordavos": {
     set: gateSet,
+    staging: line,
+    location: "Kordavos checkpoint",
+    where: "The party waits in the line outside the gate of Kordavos, two groups back from the sergeant's table.",
+    party: ["branka", "cassia", "yeva", "milos"],
+    spare: [[-2.2, 15.8]],
+  },
+  "the-front-of-the-line": {
+    set: gateSet,
     staging: gate,
     location: "Kordavos checkpoint",
-    where: "The party stands in the line at Garlan's checkpoint outside the gate of Kordavos.",
+    where: "The party stands at the front of the line at Garlan's checkpoint outside the gate of Kordavos.",
     party: ["branka", "cassia", "yeva", "milos"],
     spare: [[0.82, 14.5]],
   },

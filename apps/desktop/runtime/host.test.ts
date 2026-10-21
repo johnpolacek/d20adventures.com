@@ -219,7 +219,7 @@ test("the worker continues on its own with an AI hero's turn and the round's end
         const answers = [
           { rollType: "none", difficulty: 0 },
           { beats: [{ kind: "action", who: friend.id, text: `${friend.name} keeps an eye on the gate.` }] },
-          { nextEncounterId: "the-harvest-festival", beats: [{ kind: "narration", text: "The guard waves the party into the festival." }], adventurePatch: { summaryDelta: "Paid the gate fee." } },
+          { nextEncounterId: "the-front-of-the-line", beats: [{ kind: "narration", text: "The line moves up to the sergeant's table." }], adventurePatch: { summaryDelta: "Waited in the line." } },
         ]
         for (const answer of answers) {
           const parsed = schema.safeParse(answer)
@@ -231,7 +231,7 @@ test("the worker continues on its own with an AI hero's turn and the round's end
     const resumed = await drain(store, [], model, true)
     assert.deepEqual(resumed.queued[0], { turnId: turn._id, kind: "continue" })
     assert.equal(resumed.finished[0].error, undefined)
-    assert.equal(store.current().encounterId, "the-harvest-festival")
+    assert.equal(store.current().encounterId, "the-front-of-the-line")
     assert.match(storyText(store.state!.turns.find((t) => t._id === turn._id)!.story), /keeps an eye on the gate/)
     // In the new round it stops at a player's hero, or at a turn the GM could not finish.
     assert.ok(resumed.finished[resumed.finished.length - 1].error || selfRunning(store.current().characters) === null)
@@ -261,15 +261,15 @@ test("continue advances a finished round to the next encounter", async () => {
       ...failLlm,
       generateObject: async ({ schema }) => ({
         object: schema.parse({
-          nextEncounterId: "the-harvest-festival",
-          beats: [{ kind: "narration", text: "The guard waves the party into the festival." }],
-          adventurePatch: { summaryDelta: "Paid the gate fee." },
+          nextEncounterId: "the-front-of-the-line",
+          beats: [{ kind: "narration", text: "The line moves up to the sergeant's table." }],
+          adventurePatch: { summaryDelta: "Waited in the line." },
         }),
       }),
     }
     const { finished } = await drain(store, [job({ adventureId, turnId: turn._id, kind: "continue", userId: "guest" })], model)
     assert.equal(finished[0].error, undefined)
-    assert.equal(store.current().encounterId, "the-harvest-festival")
+    assert.equal(store.current().encounterId, "the-front-of-the-line")
   } finally {
     cleanup()
   }
