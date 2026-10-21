@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-21, what each character knows
+
+Owner asked for an explicit and comprehensive way to keep AI hero and NPC knowledge. An adventure now keeps a ledger of facts, each naming every character who knows it. At the end of a round each set of characters who shared private beats gets one fact, and the GM records what was learned in a required `knowledge` field beside its beats. AI heroes, offered replies and NPC turns read the round as their character knows it, their own facts, and on the desktop only their own gear. NPC turns no longer read other characters' whispers, the players' own words, or others' private intro paragraphs. The GM reads every fact with who knows it. A finished adventure's chapter keeps its heroes' facts. Live with Claude: AI Thalbern remembered Garlan's whisper the next round and Milos did not, and with the field required the GM recorded the gate's dusk closing 2 of 2 times. Desktop tests, gm-core and the wiki checks pass. Convex is not deployed. See [what each character knows](plans/character-knowledge.md).
+
 ## 2026-10-21, what a hero knows
 
 Owner, playing Thalbern at the March of Davos gate: the AI heroes asked about the river goods that only Thalbern was after. An AI hero read the whole round, Garlan's whisper to Thalbern included. A beat can now be private, seen or heard only by its actor or speaker and whoever it is aimed at. The GM marks one in every step, and an AI hero's move and a player's offered replies read the round without the private beats that hero is not in, and without other players' own words. On the desktop an AI hero's premise now holds only the chapters it lived. Covert Cargo's hidden intro paragraphs are private, and its premise no longer gives every hero Thalbern's errand. Live with Claude, 3 runs: Garlan's answer was private each time. A question asked with no word of a whisper stays open. Desktop tests, gm-core and the bridge checks pass. See [what a hero knows](plans/hero-knowledge.md).

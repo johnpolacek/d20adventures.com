@@ -2,7 +2,7 @@
 
 [Wiki Home](../index.md) · [Plans](index.md) · [Adventure premise](adventure-premise.md) · [Structured narrative](structured-narrative.md)
 
-Status: implemented on main 2026-10-21. Not yet played in the app.
+Status: implemented on main 2026-10-21. Not yet played in the app. Carried on the same day by [what each character knows](character-knowledge.md): a private beat is remembered after its round, and NPCs read the round as they know it.
 
 ## Owner report, 2026-10-21
 
@@ -37,7 +37,7 @@ Two smaller leaks of the same kind:
 
 ## Not covered
 
-- What a hero hears later. Once Thalbern says it aloud to the party, everyone knows. A private exchange is not remembered as private across rounds, since a hero's side prompt sees only the current round.
+- What a hero hears later. Once Thalbern says it aloud to the party, everyone knows. A private exchange is not remembered as private across rounds, since a hero's side prompt sees only the current round. Covered since by [what each character knows](character-knowledge.md).
 - The GM's own summary, discoveries and threads. They go to the GM, not to a hero's side prompt.
 
 ## Validation
