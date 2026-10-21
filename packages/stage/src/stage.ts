@@ -716,21 +716,41 @@ export class Stage {
   }
   // A camera the player drags into a wall or a house is drawn back toward what it looks at until it stands clear, as a
   // game camera keeps out of the scenery. Shots are framed by their authors and left alone.
+  // While the player drives the camera it never ends up inside anything solid, and it stays on the near side of a
+  // building, wall or tower between it and what it looks at, as a third-person camera's arm does: dragged behind a
+  // tower, it stops in front of the tower instead of showing it. Stalls and tables are low, so the arm passes over them.
+  private walls: Footprint[] | null = null
   private collide() {
     if (!this.driving || !this.controls || !this.solids.length) return
     const p = this.camera.position
     const t = this.controls.target
-    const inside = (v: THREE.Vector3) => onFootprint(this.solids, v.x, v.z, v.y)
-    if (!inside(p) || inside(t)) return
-    const q = V()
-    let lo = 0
-    let hi = 1
-    for (let i = 0; i < 10; i++) {
-      const m = (lo + hi) / 2
-      if (inside(q.lerpVectors(t, p, m))) hi = m
-      else lo = m
+    // The last point outside, between one known to be outside (lo) and one inside (hi).
+    const pull = (inside: (v: THREE.Vector3) => boolean, from: number, to: number) => {
+      const q = V()
+      let lo = from
+      let hi = to
+      for (let i = 0; i < 10; i++) {
+        const m = (lo + hi) / 2
+        if (inside(q.lerpVectors(t, p, m))) hi = m
+        else lo = m
+      }
+      return lo
     }
-    p.lerpVectors(t, p.clone(), lo)
+    const solid = (v: THREE.Vector3) => onFootprint(this.solids, v.x, v.z, v.y)
+    if (solid(t)) return
+    if (solid(p)) p.lerpVectors(t, p.clone(), pull(solid, 0, 1))
+    this.walls ??= this.solids.filter((f) => (f.kind === "circle" ? f.r >= 1.2 : f.hw * f.hd >= 7.5))
+    const wall = (v: THREE.Vector3) => onFootprint(this.walls!, v.x, v.z, v.y)
+    const len = p.distanceTo(t)
+    const steps = Math.max(1, Math.ceil(len / 0.3))
+    const q = V()
+    for (let i = 1; i <= steps; i++) {
+      if (!wall(q.lerpVectors(t, p, i / steps))) continue
+      const lo = pull(wall, (i - 1) / steps, i / steps)
+      // A hand's width short of the wall, so the near plane does not cut into it.
+      p.lerpVectors(t, p.clone(), Math.max(0, lo * len - 0.35) / len)
+      return
+    }
   }
   private constrain() {
     const { min, max } = this.set.camera

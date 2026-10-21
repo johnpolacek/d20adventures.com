@@ -56,6 +56,8 @@ export function Narration({
 }) {
   const [shown, setShown] = useState(text)
   const [shownRoll, setShownRoll] = useState(roll)
+  // The heading changes with its paragraph, so a new encounter's title never sits over the last one's closing words.
+  const [shownHeading, setShownHeading] = useState(heading)
   const [visible, setVisible] = useState(false)
   useEffect(() => {
     if (text === undefined) return
@@ -63,13 +65,14 @@ export function Narration({
     const swap = setTimeout(() => {
       setShown(text)
       setShownRoll(roll)
+      setShownHeading(heading)
     }, 300)
     const show = setTimeout(() => setVisible(true), 480)
     return () => {
       clearTimeout(swap)
       clearTimeout(show)
     }
-  }, [text, roll])
+  }, [text, roll, heading])
 
   const inner = useRef<HTMLDivElement>(null)
   const [height, setHeight] = useState<number>()
@@ -89,7 +92,7 @@ export function Narration({
       style={{ height: height === undefined ? undefined : height + 2 }}
     >
       <div ref={inner} className={compact ? "px-3 pt-2 pb-2" : "px-5 pt-4 pb-3"}>
-        <div className={cn(eyebrow, "flex items-center gap-3 before:h-px before:w-6 before:bg-stage-gold", compact ? "mb-1" : "mb-2")}>{heading}</div>
+        <div className={cn(eyebrow, "flex items-center gap-3 before:h-px before:w-6 before:bg-stage-gold", compact ? "mb-1" : "mb-2")}>{shownHeading}</div>
         {shownRoll ? (
           <div className={cn("transition-opacity duration-300", visible ? "opacity-100" : "opacity-0", compact ? "py-0.5" : "py-1")}>
             {visible && <RollResult key={`${index}-${shown}`} roll={shownRoll} compact={compact} />}

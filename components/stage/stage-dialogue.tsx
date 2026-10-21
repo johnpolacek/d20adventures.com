@@ -11,6 +11,9 @@ export type Anchor = () => { x: number; y: number; visible: boolean; distance: n
 // unreadable), and scales a little with them, never below a readable size.
 const SPEAKER_MIN_PX = 70
 const bubbleScale = (speakerPx: number) => Math.min(1, 0.85 + (speakerPx - SPEAKER_MIN_PX) / 400)
+// The band at the top of the screen that holds the turn order and the name under it. A bubble with no room above its
+// speaker below that band sits beside their head instead, so it never runs under the portraits.
+const SAFE_TOP = { wide: 150, compact: 96 }
 export interface Bubble {
   key: number
   anchor: Anchor
@@ -30,17 +33,33 @@ function BubbleView({ bubble, compact }: { bubble: Bubble; compact: boolean }) {
       const speakerPx = (p.ppm ?? 1600 / p.distance) * 1.7
       const on = p.visible && speakerPx >= SPEAKER_MIN_PX
       el.style.opacity = on ? "1" : "0"
-      if (on) el.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) translate(-50%, calc(-100% - 8px)) scale(${bubbleScale(speakerPx).toFixed(3)})`
+      if (!on) return
+      const scale = bubbleScale(speakerPx)
+      const h = el.offsetHeight * scale
+      const w = el.offsetWidth * scale
+      const safe = compact ? SAFE_TOP.compact : SAFE_TOP.wide
+      if (p.y - 8 - h >= safe) {
+        el.dataset.side = ""
+        el.style.transformOrigin = "bottom center"
+        el.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) translate(-50%, calc(-100% - 8px)) scale(${scale.toFixed(3)})`
+        return
+      }
+      const room = el.parentElement?.clientWidth ?? window.innerWidth
+      const right = p.x + 40 + w < room - 16
+      el.dataset.side = "1"
+      el.style.transformOrigin = right ? "top left" : "top right"
+      const x = right ? p.x + 40 : p.x - 40 - el.offsetWidth
+      el.style.transform = `translate(${x.toFixed(1)}px, ${Math.max(safe, p.y - h * 0.25).toFixed(1)}px) scale(${scale.toFixed(3)})`
     }
     follow()
     return () => cancelAnimationFrame(raf)
-  }, [bubble])
+  }, [bubble, compact])
   return (
     <div
       ref={ref}
       className={cn(
         "absolute top-0 left-0 origin-bottom rounded-[10px] px-3 pt-2 pb-[9px] text-center font-serif leading-[1.4] text-[#2a1a10] italic opacity-0 shadow-[0_6px_18px_#0005] transition-opacity duration-200",
-        "after:absolute after:bottom-[-7px] after:left-1/2 after:-ml-[7px] after:border-[7px] after:border-b-0 after:border-transparent",
+        "after:absolute after:bottom-[-7px] after:left-1/2 after:-ml-[7px] after:border-[7px] after:border-b-0 after:border-transparent data-[side=1]:after:hidden",
         bubble.named ? "border border-stage-brass bg-[#fbf1dc] after:border-t-[#fbf1dc]" : "bg-stage-parchment/95 after:border-t-[#f3e6c8f2]",
         compact ? "max-w-[190px] text-[11px]" : cn("max-w-[240px]", bubble.named ? "text-[14px]" : "text-[13px]")
       )}
