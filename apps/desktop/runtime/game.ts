@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto"
 import { type Content, createGmCore, type Llm } from "@d20/gm-core"
 import { type ActionSuggestion, suggestActions } from "@d20/gm-core/services/ai-pc-turn-service"
-import { heroScript, introTurn } from "@d20/gm-core/story/turn"
+import { characterScript, introTurn } from "@d20/gm-core/story/turn"
 import { findCurrentActor } from "@d20/gm-core/utils/turn-actors"
 import { buildLocalWikiTurnCharacters } from "@d20/gm-core/wiki-adventures/characters"
 import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventures/plan-view"
@@ -99,14 +99,15 @@ export async function suggest(save: Save | null, packs: Packs, llm: Llm, input: 
   const turn = save?.adventure.status === "active" ? save.turns.find((t) => t._id === save.adventure.currentTurnId) : undefined
   const actor = turn?._id === command.turnId ? findCurrentActor(turn.characters) : undefined
   if (!turn || actor?.id !== command.characterId || actor.type !== "pc" || actor.controlledBy === "ai" || actor.hasReplied) throw new Error("It is another character's turn.")
-  // The round as this hero knows it, and of the story so far only the chapters this hero lived.
+  // The round as this hero knows it, their own facts, and of the story so far only the chapters this hero lived.
   return suggestActions(
     llm,
     actor,
-    heroScript(turn, actor.id),
+    characterScript(turn, actor.id),
     turn.characters,
     characterContext([actor]),
-    premiseWithStory(packs[save!.adventure.planId]?.artifacts.manifest.premise, save!.story, actor.id)
+    premiseWithStory(packs[save!.adventure.planId]?.artifacts.manifest.premise, save!.story, actor.id),
+    save!.adventure.knowledge
   )
 }
 export function game(store: LocalStore, packs: Packs, llm: Llm) {
@@ -131,7 +132,7 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
   const tracked: Llm = {
     async generateText(args) {
       try {
-        return await llm.generateText({ ...args, prompt: args.prompt + characterContext(store.current().characters) })
+        return await llm.generateText({ ...args, prompt: args.prompt + characterContext(store.current().characters, false, args.viewer) })
       } catch (error) {
         inferenceFailure = error
         throw error
@@ -140,7 +141,7 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
     async generateObject(args) {
       try {
         const advancement = args.schema instanceof z.ZodObject && "adventurePatch" in args.schema.shape
-        const result = await llm.generateObject({ ...args, prompt: args.prompt + characterContext(store.current().characters, advancement) })
+        const result = await llm.generateObject({ ...args, prompt: args.prompt + characterContext(store.current().characters, advancement, args.viewer) })
         if (advancement) {
           const patch = desktopPatchSchema.parse((result.object as { adventurePatch?: unknown }).adventurePatch ?? {})
           applyCharacterUpdates(store.current().characters, patch.characterUpdates)

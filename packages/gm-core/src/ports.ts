@@ -1,6 +1,7 @@
 import type { z } from "zod"
 import type { StoryBeat } from "./story/beats"
 import type { StoryPlace } from "./story/clean"
+import type { KnownFact } from "./story/knowledge"
 import type { TurnCharacter } from "./types/adventure"
 import type { AdventurePlan } from "./types/adventure-plan"
 import type { RollRequirement } from "./validations/roll-requirement-schema"
@@ -8,7 +9,9 @@ import type { AdventurePatch } from "./wiki-adventures/adventure-patch"
 import type { RuntimeArtifacts } from "./wiki-adventures/types"
 
 export type Usage = { inputTokens?: number; outputTokens?: number; totalTokens?: number }
-export type Prompt = { prompt: string; system?: string }
+// `viewer` is the one character a prompt plays, when it plays one: an NPC or an AI hero. A host that adds saved state to
+// prompts adds only what that character knows.
+export type Prompt = { prompt: string; system?: string; viewer?: string }
 export type ObjectResult<T extends z.ZodTypeAny> = { object: z.infer<T>; usage?: Usage; [key: string]: unknown }
 
 /** Providers own transport, retries, output cleanup, and usage accounting. */
@@ -41,6 +44,8 @@ export type AdventureRecord = {
   ownerId: string
   playerIds: string[]
   runType?: "campaign" | "practice"
+  // What each character knows: see story/knowledge.ts.
+  knowledge?: KnownFact[]
 }
 
 export type NewTurn = {
@@ -63,6 +68,8 @@ export type WikiTurnCommit = Omit<NewTurn, "encounterId"> & {
   adventurePatch?: AdventurePatch
   transition?: AdventurePatch["transition"]
   generatedBy?: { model?: string; promptVersion?: string; contextHash?: string }
+  // What characters learned in the round, new facts or more knowers of listed ones, to merge into the adventure's.
+  knowledge?: KnownFact[]
 }
 
 /** Atomic commit and duplicate/stale-write protection belong to the store. */

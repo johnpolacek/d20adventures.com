@@ -1,6 +1,7 @@
 import type { GmPorts } from "../ports"
 import { authoredText } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
+import { type StoryNames, storyNames } from "../story/render"
 import { turnScript } from "../story/turn"
 import type { AdventurePlan } from "../types/adventure-plan"
 import type { Character } from "../types/character"
@@ -13,7 +14,7 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
   const { getRollRequirementForAction } = createRollRequirementService(ports)
   const isLocalWikiAdventure = ports.content.isWikiAdventure.bind(ports.content)
   const loadWikiAdventureRuntime = ports.content.loadWikiRuntime.bind(ports.content)
-  async function resolveEncounterContent(settingId: string, planId: string, encounterId: string): Promise<{ encounterIntro: string; encounterInstructions: string }> {
+  async function resolveEncounterContent(settingId: string, planId: string, encounterId: string, names: StoryNames): Promise<{ encounterIntro: string; encounterInstructions: string }> {
     if (isLocalWikiAdventure(settingId, planId)) {
       const { artifacts } = await loadWikiAdventureRuntime(settingId, planId)
       const encounter = artifacts.encounters[encounterId]
@@ -22,7 +23,7 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
         throw new Error("Encounter not found")
       }
       return {
-        encounterIntro: authoredText(encounter.sections.intro ?? encounter.sections.body ?? ""),
+        encounterIntro: authoredText(encounter.sections.intro ?? encounter.sections.body ?? "", names),
         encounterInstructions: encounter.sections.gmNotes ?? "",
       }
     }
@@ -50,6 +51,7 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
       order?: number
       story: StoryBeat[]
       adventureId: string
+      characters?: readonly { id: string; name: string }[]
     }
     adventure: {
       settingId: string
@@ -62,7 +64,7 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
     narrativeAction: string
     originalPlayerInput?: string
   }): Promise<RollRequirement> {
-    const { encounterIntro, encounterInstructions } = await resolveEncounterContent(args.adventure.settingId, args.adventure.planId, args.turn.encounterId)
+    const { encounterIntro, encounterInstructions } = await resolveEncounterContent(args.adventure.settingId, args.adventure.planId, args.turn.encounterId, storyNames(args.turn.characters ?? []))
 
     const allTurns = await ports.store.getTurns({ adventureId: args.turn.adventureId })
     const currentTurnOrder = args.turn.order || 1

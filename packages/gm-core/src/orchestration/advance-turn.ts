@@ -16,6 +16,7 @@ import {
 import { authoredStory } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory } from "../story/clean"
+import { cleanLearned, learnedField, privateFacts } from "../story/knowledge"
 import { storyRules } from "../story/prompt"
 import { lastStep, storyNames, storyText } from "../story/render"
 import { beatsField, sceneFor, storyProse, turnScript } from "../story/turn"
@@ -37,6 +38,7 @@ const encounterProgressionSchema = z.object({
 const wikiEncounterProgressionSchema = z.object({
   nextEncounterId: z.string(),
   ...beatsField,
+  ...learnedField,
   adventurePatch: z.unknown().optional(),
 })
 
@@ -119,6 +121,7 @@ export function createAdvanceTurn(ports: GmPorts) {
             order: row.order,
             characters: row.characters as TurnCharacter[],
           })),
+          knowledge: adventure.knowledge,
         },
       })
       const scene = await sceneFor(ports, turn)
@@ -150,6 +153,8 @@ export function createAdvanceTurn(ports: GmPorts) {
         )
       }
       if (adventurePatch.characterUpdates) adventurePatch.characterUpdates = keepPatchedPlayersAlive(artifacts.manifest, adventurePatch.characterUpdates, turn.characters as TurnCharacter[])
+      // What the round taught: its private beats for those in them, then what the GM recorded.
+      const knowledge = [...privateFacts(turn.story, storyNames(turn.characters), currentTurnOrder), ...cleanLearned(llmResult.knowledge, scene, adventure.knowledge)]
       const nextEncounter = artifacts.encounters[transition.nextEncounterId]
       if (!nextEncounter) throw new Error(`Next encounter ${transition.nextEncounterId} missing from wiki artifacts`)
       const isTransition = transition.nextEncounterId !== turn.encounterId
@@ -194,6 +199,7 @@ export function createAdvanceTurn(ports: GmPorts) {
         transition: adventurePatch.transition,
         generatedBy: { promptVersion: `wiki-${definition.promptSlug}-advance-v1`, contextHash: contentRef.contentHash },
         isFinalEncounter,
+        knowledge,
       })
       ports.narration.afterTurn(commitResult.turnId)
       return { status: "turn_advanced", turn: { ...turn, encounterId: nextEncounter.id, title: nextEncounter.title, story, characters, isFinalEncounter } }

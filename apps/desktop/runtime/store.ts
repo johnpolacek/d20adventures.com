@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto"
 import { DatabaseSync } from "node:sqlite"
 import type { AdventureRecord, Store, TurnRecord, WikiTurnCommit } from "@d20/gm-core"
+import { mergeKnowledge } from "@d20/gm-core/story/knowledge"
 import { withStory } from "@d20/gm-core/story/turn"
 import { type AdventurePatch, validateAdventurePatch } from "@d20/gm-core/wiki-adventures/adventure-patch"
 import { validateRuntimeTransition } from "@d20/gm-core/wiki-adventures/transition-validator"
@@ -311,6 +312,7 @@ export class LocalStore implements Store, Roster {
     a.resolvedThreadIds = [...new Set([...a.resolvedThreadIds, ...(patch.resolvedThreadIds ?? [])])]
     a.openThreads = [...new Map([...a.openThreads, ...(patch.openThreads ?? [])].map((t) => [t.id, t])).values()].filter((t) => !a.resolvedThreadIds.includes(t.id))
     a.adventureSummaryMarkdown = [a.adventureSummaryMarkdown, patch.summaryDelta].filter(Boolean).join("\n\n")
+    if (args.knowledge?.length) a.knowledge = mergeKnowledge(a.knowledge, args.knowledge)
     if (old.encounterId !== args.nextEncounterId) next.positions = {}
     this.db.prepare("INSERT OR REPLACE INTO save VALUES(1, ?)").run(JSON.stringify(next))
     this.state = next

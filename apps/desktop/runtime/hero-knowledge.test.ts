@@ -6,7 +6,7 @@ import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
 import type { StoryBeat } from "@d20/gm-core/story/beats"
 import { cleanStory } from "@d20/gm-core/story/clean"
-import { heroScript, turnScript } from "@d20/gm-core/story/turn"
+import { characterScript, turnScript } from "@d20/gm-core/story/turn"
 import { findCurrentActor } from "@d20/gm-core/utils/turn-actors"
 import { game, type Packs, suggest, transitionsOf } from "./game"
 import { LocalStore } from "./store"
@@ -95,8 +95,8 @@ test("a whisper is private to the two in it, and a hero reads the round without 
   assert.match(turnScript(turn), /Garlan Ironfist to Thalbern, low \(private to Garlan Ironfist and Thalbern\): "River goods came through at first light\."/)
   assert.match(turnScript(turn), /Thalbern leans in\. \(private to Thalbern and Garlan Ironfist\)/)
   // Thalbern reads it too. Milos sees Garlan glance at the table, and nothing of what was said.
-  assert.match(heroScript(turn, THALBERN), /River goods/)
-  const milos = heroScript(turn, MILOS)
+  assert.match(characterScript(turn, THALBERN), /River goods/)
+  const milos = characterScript(turn, MILOS)
   assert.match(milos, /Garlan pockets the coins/)
   assert.ok(!/Mordava|River goods|Thalbern leans in/.test(milos), milos)
 })

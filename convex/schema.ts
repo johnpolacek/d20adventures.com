@@ -1,6 +1,6 @@
 import { defineSchema, defineTable } from "convex/server"
 import { v } from "convex/values"
-import { storyValidator } from "./story"
+import { knowledgeValidator, storyValidator } from "./story"
 
 // Define your schema
 export default defineSchema({
@@ -87,6 +87,8 @@ export default defineSchema({
     entityUpdates: v.optional(v.array(v.any())),
     openThreads: v.optional(v.array(v.any())),
     resolvedThreadIds: v.optional(v.array(v.string())),
+    // What each character knows. See packages/gm-core/src/story/knowledge.ts.
+    knowledge: v.optional(knowledgeValidator),
     // A hosted game: the host's desktop app runs its GM through the host's own CLI, never the server.
     // seenAt is when the host's app last asked for GM work, so guests can tell it is online.
     // seats are the heroes the host holds for invited players. A hero from the host's roster carries the key of its

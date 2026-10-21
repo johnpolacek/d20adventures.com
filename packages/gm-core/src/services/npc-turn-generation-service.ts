@@ -1,8 +1,11 @@
 import { z } from "zod"
 import type { GmPorts } from "../ports"
+import { authoredText } from "../story/authored"
 import type { StoryScene } from "../story/clean"
+import { type KnownFact, knowledgeNote } from "../story/knowledge"
 import { storyRules } from "../story/prompt"
-import { beatsField, turnScript } from "../story/turn"
+import { storyNames } from "../story/render"
+import { beatsField, characterScript } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import { KNOWLEDGE_RULE } from "../utils/narrative-utils"
 import { formatSpellsForPrompt } from "./spell-tracking-service"
@@ -50,13 +53,16 @@ const npcActionOutcomeSchema = z.object({
 type NpcActionContext = {
   turn: Turn
   npc: TurnCharacter
-  encounterContext?: { intro?: string; instructions?: string }
+  encounterContext?: { intro?: string; introSource?: string; instructions?: string }
   sectionContext?: { title?: string; summary?: string }
   sceneContext?: { title?: string; summary?: string }
   adventureOverview?: string
+  knowledge?: KnownFact[]
 }
 
-export function buildNpcActionContext({ turn, npc, encounterContext, sectionContext, sceneContext, adventureOverview }: NpcActionContext): {
+// What an NPC's turn reads. The round and the intro are as the NPC knows them: without the private beats and
+// paragraphs it is not in, or the players' own words. The GM's notes stay whole, since they direct the GM.
+export function buildNpcActionContext({ turn, npc, encounterContext, sectionContext, sceneContext, adventureOverview, knowledge }: NpcActionContext): {
   contextString: string
   npcDetails: string
   npcEquipmentList: string
@@ -64,7 +70,8 @@ export function buildNpcActionContext({ turn, npc, encounterContext, sectionCont
   alivePlayerCharacters: TurnCharacter[]
   deadPlayerCharacters: TurnCharacter[]
 } {
-  const narrativeContext = turnScript(turn).split(/\n\n+/).slice(-6).join("\n\n")
+  const narrativeContext = characterScript(turn, npc.id).split(/\n\n+/).slice(-6).join("\n\n")
+  const intro = encounterContext?.introSource !== undefined ? authoredText(encounterContext.introSource, storyNames(turn.characters), npc.id) : encounterContext?.intro
   const playerCharacters = turn.characters.filter((character) => character.type === "pc")
   const alivePlayerCharacters = playerCharacters.filter((character) => character.healthPercent !== 0 && character.status !== "dead")
   const deadPlayerCharacters = playerCharacters.filter((character) => character.healthPercent === 0 || character.status === "dead")
@@ -73,9 +80,10 @@ export function buildNpcActionContext({ turn, npc, encounterContext, sectionCont
     adventureOverview ? `Adventure Overview: ${adventureOverview}` : "",
     sectionContext && (sectionContext.title || sectionContext.summary) ? `Section Title: ${sectionContext.title || ""}\nSection Summary: ${sectionContext.summary || ""}` : "",
     sceneContext && (sceneContext.title || sceneContext.summary) ? `Scene Title: ${sceneContext.title || ""}\nScene Summary: ${sceneContext.summary || ""}` : "",
-    encounterContext?.intro ? `Encounter Intro: ${encounterContext.intro}` : "",
+    intro ? `Encounter Intro: ${intro}` : "",
     encounterContext?.instructions ? `Encounter Instructions: ${encounterContext.instructions}` : "",
     npc.behavior ? `NPC Behavior: ${npc.behavior}` : "",
+    knowledgeNote(knowledge, npc),
     narrativeContext ? `Recent Narrative:\n${narrativeContext}` : "",
   ]
     .filter(Boolean)
@@ -254,12 +262,13 @@ Respond as JSON:
 
 export function createNpcTurnGenerationService(ports: GmPorts) {
   const generateObject = ports.llm.generateObject.bind(ports.llm)
-  async function generateNpcAction(prompt: string) {
-    return (await generateObject({ prompt, schema: npcActionSchema })).object
+  // `viewer` is the NPC the prompt plays.
+  async function generateNpcAction(prompt: string, viewer?: string) {
+    return (await generateObject({ prompt, schema: npcActionSchema, viewer })).object
   }
 
-  async function generateNpcOutcome(prompt: string) {
-    return (await generateObject({ prompt, schema: npcActionOutcomeSchema })).object
+  async function generateNpcOutcome(prompt: string, viewer?: string) {
+    return (await generateObject({ prompt, schema: npcActionOutcomeSchema, viewer })).object
   }
   return { generateNpcAction, generateNpcOutcome }
 }

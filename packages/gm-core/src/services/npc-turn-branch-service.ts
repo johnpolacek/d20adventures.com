@@ -154,7 +154,7 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         )
       )
 
-      const outcomeResult = await generateNpcOutcome(prompt2)
+      const outcomeResult = await generateNpcOutcome(prompt2, args.npc.id)
 
       console.log(
         "[LLM DM] LLM response for outcome",

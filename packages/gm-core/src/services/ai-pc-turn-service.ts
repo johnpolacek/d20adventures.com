@@ -2,8 +2,9 @@ import { z } from "zod"
 import type { GmPorts, Llm } from "../ports"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
+import { type KnownFact, knowledgeNote } from "../story/knowledge"
 import { storyRules } from "../story/prompt"
-import { heroScript, sceneFor, storyOutputObject, storyProse } from "../story/turn"
+import { characterScript, sceneFor, storyOutputObject, storyProse } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
 import { rollD20 } from "../utils/game-utils"
 import { PLAYER_KNOWLEDGE_RULE } from "../utils/narrative-utils"
@@ -19,7 +20,7 @@ function characterSheet(character: TurnCharacter): string {
 ${character.archetype ? `Class/Archetype: ${character.archetype}\n` : ""}${character.race ? `Race: ${character.race}\n` : ""}${character.personality ? `Personality: ${character.personality}\n` : ""}${character.background ? `Background: ${character.background}\n` : ""}${character.motivation ? `Motivation: ${character.motivation}\n` : ""}${character.behavior ? `How they act: ${character.behavior}\n` : ""}${character.appearance ? `Appearance: ${character.appearance}\n` : ""}${character.specialAbilities?.length ? `Special Abilities: ${character.specialAbilities.join(", ")}\n` : ""}${availableSpells.length ? `Spells: ${availableSpells.map((s) => s.name).join(", ")}\n` : ""}${character.skills?.length ? `Skills: ${character.skills.join(", ")}\n` : ""}${character.equipment?.length ? `Equipment: ${character.equipment.map((e) => e.name).join(", ")}\n` : ""}`
 }
 
-function buildAiPcIntentPrompt(character: TurnCharacter, narrative: string, sceneRoster: string, scene: StoryScene, premise?: string, lately: string[] = []): string {
+function buildAiPcIntentPrompt(character: TurnCharacter, narrative: string, sceneRoster: string, scene: StoryScene, premise?: string, lately: string[] = [], knowledge?: KnownFact[]): string {
   return `You are the PLAYER (not the GM) roleplaying as the character below. Players describe their character's intent and attempt only. The GM determines all outcomes, results, and perceptions.
 
 Given the recent narrative, write as beats what the character does next: an action by "${character.id}" and, only when natural, one brief line in the character's voice. Write actions in third person. Be creative, stay in character, and keep the reply concise, 1-2 short sentences total.
@@ -48,7 +49,7 @@ RIGHT: "He raises his blade and lunges forward with a powerful overhead strike."
 Character:
 ${characterSheet(character)}
 Others present in the scene: ${sceneRoster || "None"}
-${premiseBlock(premise)}${lately.length ? `\nWhat ${character.name} did in earlier rounds, most recent last. Do something different now unless this moment truly calls for the same again:\n${lately.map((m) => `- ${m}`).join("\n")}\n` : ""}
+${premiseBlock(premise)}${knownBlock(knowledge, character)}${lately.length ? `\nWhat ${character.name} did in earlier rounds, most recent last. Do something different now unless this moment truly calls for the same again:\n${lately.map((m) => `- ${m}`).join("\n")}\n` : ""}
 Recent Narrative:
 ${narrative}
 
@@ -57,8 +58,10 @@ ${storyRules(scene)}
 Respond as JSON: { "beats": [...] }`
 }
 
-// The premise ends with a blank line, or is nothing, so a prompt without one reads as it did before.
+// The premise ends with a blank line, or is nothing, so a prompt without one reads as it did before. So do the
+// character's own facts.
 const premiseBlock = (premise?: string) => (premiseNote(premise) ? `\n${premiseNote(premise)}\n` : "")
+const knownBlock = (knowledge: KnownFact[] | undefined, character: TurnCharacter) => (knowledgeNote(knowledge, character) ? `\n${knowledgeNote(knowledge, character)}\n` : "")
 
 function buildSceneRoster(characters: TurnCharacter[], selfId: string): string {
   return characters
@@ -80,7 +83,7 @@ const actionSuggestionsSchema = z.object({
 })
 export type ActionSuggestion = z.infer<typeof actionSuggestionsSchema>["suggestions"][number]
 
-function buildActionSuggestionsPrompt(character: TurnCharacter, narrative: string, allCharacters: TurnCharacter[], premise?: string): string {
+function buildActionSuggestionsPrompt(character: TurnCharacter, narrative: string, allCharacters: TurnCharacter[], premise?: string, knowledge?: KnownFact[]): string {
   return `You are helping a PLAYER (not the GM) choose what their character does next. Players describe their character's intent and attempt only. The GM determines all outcomes, results, and perceptions.
 
 Given the recent narrative, offer 3 different things the character below could do now. Make them distinct approaches that fit this moment and this character, such as speaking to someone, a careful or clever move, and a bold action.
@@ -102,7 +105,7 @@ Constraints:
 Character:
 ${characterSheet(character)}
 Others present in the scene: ${buildSceneRoster(allCharacters, character.id) || "None"}
-${premiseBlock(premise)}
+${premiseBlock(premise)}${knownBlock(knowledge, character)}
 Recent Narrative:
 ${narrative}`
 }
@@ -110,9 +113,18 @@ ${narrative}`
 // Replies offered to a player for their own character's turn, three at most. Like the AI companion's intent, they are
 // written from the narrative the players have read, never from the encounter's GM instructions. `context` is added
 // to the prompt as it stands, such as the character's saved state. `premise` is the adventure's, which players know.
-export async function suggestActions(llm: Llm, character: TurnCharacter, narrative: string, allCharacters: TurnCharacter[], context = "", premise?: string): Promise<ActionSuggestion[]> {
-  const prompt = buildActionSuggestionsPrompt(character, narrative, allCharacters, premise) + context
-  return (await llm.generateObject({ prompt, schema: actionSuggestionsSchema })).object.suggestions.slice(0, 3)
+// `knowledge` is the adventure's facts, of which the prompt reads the character's own.
+export async function suggestActions(
+  llm: Llm,
+  character: TurnCharacter,
+  narrative: string,
+  allCharacters: TurnCharacter[],
+  context = "",
+  premise?: string,
+  knowledge?: KnownFact[]
+): Promise<ActionSuggestion[]> {
+  const prompt = buildActionSuggestionsPrompt(character, narrative, allCharacters, premise, knowledge) + context
+  return (await llm.generateObject({ prompt, schema: actionSuggestionsSchema, viewer: character.id })).object.suggestions.slice(0, 3)
 }
 
 export function createAiPcTurnService(ports: GmPorts) {
@@ -128,9 +140,10 @@ export function createAiPcTurnService(ports: GmPorts) {
     scene: StoryScene
     premise?: string
     lately?: string[]
+    knowledge?: KnownFact[]
   }): Promise<StoryBeat[]> {
-    const prompt = buildAiPcIntentPrompt(args.character, args.narrative, buildSceneRoster(args.allCharacters, args.character.id), args.scene, args.premise, args.lately)
-    const { object } = await generateObject({ prompt, schema: storyOutputObject })
+    const prompt = buildAiPcIntentPrompt(args.character, args.narrative, buildSceneRoster(args.allCharacters, args.character.id), args.scene, args.premise, args.lately, args.knowledge)
+    const { object } = await generateObject({ prompt, schema: storyOutputObject, viewer: args.character.id })
     const beats = cleanStory(object.beats, args.scene, { step: "reply", character: args.character.id })
     if (!beats.length) throw new Error(`Empty intent generated for AI companion ${args.character.name}`)
     return beats
@@ -146,7 +159,7 @@ export function createAiPcTurnService(ports: GmPorts) {
       .slice(-4)
   }
 
-  async function processAiPcTurn(args: { turnId: string; characterId: string; adventure: { _id: string; settingId: string; planId: string } }): Promise<void> {
+  async function processAiPcTurn(args: { turnId: string; characterId: string; adventure: { _id: string; settingId: string; planId: string; knowledge?: KnownFact[] } }): Promise<void> {
     const { turnId, characterId, adventure } = args
 
     let turn = await ports.store.getTurn({ turnId })
@@ -163,11 +176,12 @@ export function createAiPcTurnService(ports: GmPorts) {
     if (!needsRollResolution) {
       const beats = await generateAiPcIntent({
         character,
-        narrative: heroScript(turn, characterId),
+        narrative: characterScript(turn, characterId),
         allCharacters: turn.characters as TurnCharacter[],
         scene: await sceneFor(ports, turn),
         premise: (await ports.content.heroPremise?.(adventure.settingId, adventure.planId, characterId)) ?? plan?.premise,
         lately: await earlierMoves(turn, characterId),
+        knowledge: adventure.knowledge,
       })
       const intent = storyProse(beats)
       console.log("[AI PC] Intent for", character.name, ":", intent)
@@ -220,6 +234,7 @@ export function createAiPcTurnService(ports: GmPorts) {
       encounterInstructions,
       playerDeath: plan.playerDeath,
       premise: plan.premise,
+      knowledge: adventure.knowledge,
     })
 
     await ports.store.updateTurn({

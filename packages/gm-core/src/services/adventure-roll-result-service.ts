@@ -1,6 +1,7 @@
 import type { GmPorts } from "../ports"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
+import { type KnownFact, ledgerNote } from "../story/knowledge"
 import { storyRules } from "../story/prompt"
 import { lastStep, storyNames, storyText } from "../story/render"
 import { rollBeat, sceneFor, storyOutputObject, withStory } from "../story/turn"
@@ -40,11 +41,12 @@ function buildRollOutcomePrompt(args: {
   difficulty: number
   margin: number
   scene: StoryScene
+  ledger?: string
 }): string {
   return `
 Context:
 ${args.narrativeContext}
-
+${args.ledger ? `\n${args.ledger}\n` : ""}
 Encounter Instructions:
 ${args.encounterInstructions}
 
@@ -122,6 +124,8 @@ export function createAdventureRollResultService(ports: GmPorts) {
     playerDeath?: boolean
     // The adventure's premise, added to the GM's notes.
     premise?: string
+    // What each character knows, so the outcome gives no one what they do not.
+    knowledge?: KnownFact[]
   }): Promise<{
     story: StoryBeat[]
     characters: TurnCharacter[]
@@ -165,6 +169,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
       difficulty,
       margin,
       scene,
+      ledger: ledgerNote(args.knowledge, names),
     })
 
     let rollOutcome = ""

@@ -36,3 +36,6 @@ export const storyValidator = v.array(
     v.object({ kind: v.literal("reply"), by, character: v.string(), text: v.string() })
   )
 )
+
+// What each character knows: facts, each with every character who knows it (packages/gm-core/src/story/knowledge.ts).
+export const knowledgeValidator = v.array(v.object({ id: v.string(), text: v.string(), knownBy: v.array(v.string()) }))

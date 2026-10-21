@@ -100,8 +100,11 @@ export function nextCharacterState(args: { current: TurnCharacter[]; next: TurnC
   return { characters, characterStates: states }
 }
 
-export function characterContext(characters: TurnCharacter[], patchInstructions = false) {
-  const context = `\n\nCURRENT SAVED CHARACTER STATE (authoritative, after already resolved actions):\n${JSON.stringify(characters.map((c) => ({ id: c.id, name: c.name, ...characterState(c) })))}`
+// The saved state every GM prompt carries. A prompt that plays one character, its `viewer`, reads that character's own
+// gear, effects and spells, and of the others only what shows: how hurt they are and their condition.
+export function characterContext(characters: TurnCharacter[], patchInstructions = false, viewer?: string) {
+  const shown = (c: TurnCharacter) => (viewer === undefined || c.id === viewer ? characterState(c) : { healthPercent: c.healthPercent, status: c.status })
+  const context = `\n\nCURRENT SAVED CHARACTER STATE (authoritative, after already resolved actions):\n${JSON.stringify(characters.map((c) => ({ id: c.id, name: c.name, ...shown(c) })))}`
   if (!patchInstructions) return context
   return `${context}
 Use exact character IDs and existing item/effect/spell names. State patches describe only additional changes established by resolved actions or your outcome narrative. Do not repeat changes already reflected above. Do not apply attempted actions that failed or still need a roll.

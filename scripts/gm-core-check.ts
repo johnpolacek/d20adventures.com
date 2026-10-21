@@ -144,7 +144,7 @@ async function replayTurn() {
   // plus the durable patch now written by the real commit handler.
   for (const expected of fixture.finalState) {
     const actual = game.records.get(expected._id)
-    for (const [key, value] of Object.entries(expected)) {
+    for (const key of Object.keys(expected)) {
       if (key === "updatedAt") continue
       if (UPDATE) expected[key] = json(actual[key])
       assert.deepEqual(json(actual[key]), expected[key], `${expected._id}.${key}`)
@@ -167,6 +167,25 @@ async function replayTurn() {
     }),
     /Stale turn advance/
   )
+  // The Convex commit merges each round's facts into the adventure's: one told again gains its new knowers.
+  for (const [order, knownBy] of [
+    [3, ["thalbern", "garlan-ironfist"]],
+    [4, ["milos-radan"]],
+  ] as const) {
+    const adventure = game.records.get("fixture-adventure")
+    await game.ports.store.commitWikiTurnAdvance({
+      adventureId: "fixture-adventure",
+      expectedCurrentTurnId: adventure.currentTurnId,
+      expectedCurrentEncounterId: adventure.currentEncounterId,
+      nextEncounterId: adventure.currentEncounterId,
+      title: "",
+      story: [],
+      characters: [],
+      order,
+      knowledge: [{ id: "r2-private-1", text: "River goods came through at first light.", knownBy: [...knownBy] }],
+    })
+  }
+  assert.deepEqual(game.records.get("fixture-adventure").knowledge, [{ id: "r2-private-1", text: "River goods came through at first light.", knownBy: ["thalbern", "garlan-ironfist", "milos-radan"] }])
 }
 
 async function characterPrompts() {

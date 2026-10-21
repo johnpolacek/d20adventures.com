@@ -51,24 +51,26 @@ export function storyText(story: readonly StoryBeat[], names: StoryNames = {}): 
 
 // Who sees or hears a beat besides the narrator: everyone present, or for a private one only its actor or speaker and
 // whoever it is aimed at.
-const privateTo = (beat: StoryBeat): string[] | undefined =>
+export const privateTo = (beat: StoryBeat): string[] | undefined =>
   beat.kind === "action" && beat.private ? [beat.actor, ...(beat.target ? [beat.target] : [])] : beat.kind === "line" && beat.private ? [beat.speaker, ...(beat.to ? [beat.to] : [])] : undefined
 const privateNote = (beat: StoryBeat, names: StoryNames) => {
   const only = privateTo(beat)
   return only ? ` (private to ${only.map((id) => nameOf(names, id)).join(" and ")})` : ""
 }
 
-// The story as one hero knows it: without the private beats they are not part of, or another player's own words
-// before the GM wrote them in.
-export const heroStory = (story: readonly StoryBeat[], hero: string): StoryBeat[] =>
-  story.filter((beat) => (beat.kind === "reply" ? beat.character === hero : (privateTo(beat)?.includes(hero) ?? true)))
+// The story as one character knows it, a hero or an NPC: without the private beats they are not part of, or a player's
+// own words for another hero before the GM wrote them in.
+export const characterStory = (story: readonly StoryBeat[], id: string): StoryBeat[] =>
+  story.filter((beat) => (beat.kind === "reply" ? beat.character === id : (privateTo(beat)?.includes(id) ?? true)))
 
-function scriptLine(beat: StoryBeat, names: StoryNames): string {
+// One beat as a script line. `marked` notes who a private beat is private to.
+export function scriptLine(beat: StoryBeat, names: StoryNames, marked = true): string {
+  const note = marked ? privateNote(beat, names) : ""
   switch (beat.kind) {
     case "line":
-      return `${nameOf(names, beat.speaker)}${beat.to ? ` to ${nameOf(names, beat.to)}` : ""}${beat.delivery ? `, ${beat.delivery}` : ""}${privateNote(beat, names)}: "${beat.text}"`
+      return `${nameOf(names, beat.speaker)}${beat.to ? ` to ${nameOf(names, beat.to)}` : ""}${beat.delivery ? `, ${beat.delivery}` : ""}${note}: "${beat.text}"`
     case "action":
-      return `${beat.text}${privateNote(beat, names)}`
+      return `${beat.text}${note}`
     case "roll":
       return `[${beat.name} rolls ${beat.check}: ${beat.total} against DC ${beat.dc}, ${beat.success ? "success" : "failure"}]`
     case "reply":

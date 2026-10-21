@@ -1,6 +1,8 @@
 import type { GmPorts } from "../ports"
 import { authoredText } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
+import type { KnownFact } from "../story/knowledge"
+import { type StoryNames, storyNames } from "../story/render"
 import { sceneFor } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
@@ -13,8 +15,11 @@ import { buildNpcActionContext, buildNpcActionPrompt, createNpcTurnGenerationSer
 import { buildNpcInitiativeOrder, findEncounterInPlan, resolvePlanContextForEncounter } from "./npc-turn-intent-service"
 import { applyNpcSpellPostProcessing, finalizeNpcTurnResponse } from "./npc-turn-postprocess-service"
 
+// The encounter's intro as the GM reads it, private paragraphs marked, and its authored source, which each NPC reads as
+// it knows it.
+type EncounterContext = { intro?: string; introSource?: string; instructions?: string }
 type DmEncounterContext = {
-  encounterContext: { intro?: string; instructions?: string }
+  encounterContext: EncounterContext
   sectionContext?: { title?: string; summary?: string }
   sceneContext?: { title?: string; summary?: string }
   adventureOverview?: string
@@ -29,14 +34,13 @@ export function createNpcTurnService(ports: GmPorts) {
   const { generateNpcAction } = createNpcTurnGenerationService(ports)
   const isLocalWikiAdventure = ports.content.isWikiAdventure.bind(ports.content)
   const loadWikiAdventureRuntime = ports.content.loadWikiRuntime.bind(ports.content)
-  async function resolveDmContext(settingId: string, planId: string, encounterId: string): Promise<DmEncounterContext> {
+  async function resolveDmContext(settingId: string, planId: string, encounterId: string, names: StoryNames): Promise<DmEncounterContext> {
     if (isLocalWikiAdventure(settingId, planId)) {
       const { artifacts } = await loadWikiAdventureRuntime(settingId, planId)
       const encounter = artifacts.encounters[encounterId]
+      const introSource = encounter?.sections.intro ?? encounter?.sections.body ?? ""
       return {
-        encounterContext: encounter
-          ? { intro: authoredText(encounter.sections.intro ?? encounter.sections.body ?? ""), instructions: gmNotesWithRules(artifacts.manifest, encounter.sections.gmNotes) }
-          : {},
+        encounterContext: encounter ? { intro: authoredText(introSource, names), introSource, instructions: gmNotesWithRules(artifacts.manifest, encounter.sections.gmNotes) } : {},
         adventureOverview: artifacts.manifest.summary || undefined,
         rules: artifacts.manifest,
       }
@@ -61,13 +65,16 @@ export function createNpcTurnService(ports: GmPorts) {
     sectionContext,
     sceneContext,
     adventureOverview,
+    knowledge,
   }: {
     turn: Turn
     npcId: string
-    encounterContext?: { intro?: string; instructions?: string }
+    encounterContext?: EncounterContext
     sectionContext?: { title?: string; summary?: string }
     sceneContext?: { title?: string; summary?: string }
     adventureOverview?: string
+    // The adventure's facts, of which the NPC reads its own.
+    knowledge?: KnownFact[]
   }): Promise<{
     updatedCharacters: TurnCharacter[]
     beatsToAppend: StoryBeat[]
@@ -93,6 +100,7 @@ export function createNpcTurnService(ports: GmPorts) {
       sectionContext,
       sceneContext,
       adventureOverview,
+      knowledge,
     })
     const scene = await sceneFor(ports, turn)
     const prompt1 = buildNpcActionPrompt({
@@ -118,7 +126,7 @@ export function createNpcTurnService(ports: GmPorts) {
       )
     )
 
-    const actionResult = await generateNpcAction(prompt1)
+    const actionResult = await generateNpcAction(prompt1, npc.id)
 
     console.log("[LLM] NPC action response:", {
       actionType: actionResult.actionType,
@@ -223,7 +231,12 @@ export function createNpcTurnService(ports: GmPorts) {
       )
     )
 
-    const { encounterContext, sectionContext, sceneContext, adventureOverview, sectionTitle, sceneTitle, rules } = await resolveDmContext(adventure.settingId, adventure.planId, turn.encounterId)
+    const { encounterContext, sectionContext, sceneContext, adventureOverview, sectionTitle, sceneTitle, rules } = await resolveDmContext(
+      adventure.settingId,
+      adventure.planId,
+      turn.encounterId,
+      storyNames(turn.characters)
+    )
 
     console.log(
       "[LLM DM] Resolved encounter context",
@@ -278,7 +291,7 @@ export function createNpcTurnService(ports: GmPorts) {
           await processAiPcTurn({
             turnId,
             characterId: char.id,
-            adventure: { _id: adventure._id, settingId: adventure.settingId, planId: adventure.planId },
+            adventure: { _id: adventure._id, settingId: adventure.settingId, planId: adventure.planId, knowledge: adventure.knowledge },
           })
         } catch (error) {
           console.error("[LLM] AI companion turn failed, stopping loop for retry:", char.name, error)
@@ -370,6 +383,7 @@ export function createNpcTurnService(ports: GmPorts) {
           sectionContext,
           sceneContext,
           adventureOverview,
+          knowledge: adventure.knowledge,
         })
       } catch (error) {
         console.error("[LLM] NPC turn failed, stopping loop for retry:", npc.name, error)

@@ -1,4 +1,5 @@
 import { type StoryOutput, storyOutputSchema } from "./beats"
+import { findCharacter } from "./clean"
 import { nameOf, type StoryNames } from "./render"
 
 // An authored passage, such as an encounter's intro, read as beats. A paragraph may open with labels in braces:
@@ -49,8 +50,17 @@ export function authoredStory(text: string): StoryOutput {
 }
 
 // An authored passage as a script with its labels taken off, for prompts that read the text: a line under its
-// speaker's name, as storyText writes the story.
-export const authoredText = (text: string, names: StoryNames = {}) =>
-  authoredStory(text)
-    .map((b) => (b.kind === "line" && b.who ? `${nameOf(names, b.who)}: "${b.text.replace(/^["“”]+|["“”]+$/g, "")}"` : b.text))
+// speaker's name, as storyText writes the story. A private paragraph is marked with who it is private to. With
+// `viewer`, the text as that character knows it: a private paragraph they are not in is left out.
+export function authoredText(text: string, names: StoryNames = {}, viewer?: string): string {
+  const cast = { cast: Object.entries(names).map(([id, name]) => ({ id, name: name ?? id })) }
+  const idOf = (who: string) => findCharacter(cast, who)?.id ?? who
+  return authoredStory(text)
+    .flatMap((b) => {
+      const only = b.private && b.kind !== "narration" ? [b.who, b.to].filter((w): w is string => Boolean(w)).map(idOf) : undefined
+      if (only && viewer !== undefined && !only.includes(viewer)) return []
+      const said = b.kind === "line" && b.who ? `${nameOf(names, idOf(b.who))}: "${b.text.replace(/^["“”]+|["“”]+$/g, "")}"` : b.text
+      return [only?.length && viewer === undefined ? `${said} (private to ${only.map((id) => nameOf(names, id)).join(" and ")})` : said]
+    })
     .join("\n\n")
+}

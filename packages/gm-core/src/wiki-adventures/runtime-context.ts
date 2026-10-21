@@ -2,6 +2,7 @@ import { buildRecentTurnHistory, buildRollInfo, getEncounterTurnStatus, getRecen
 import { authoredText } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
 import type { StoryScene } from "../story/clean"
+import { type KnownFact, ledgerNote } from "../story/knowledge"
 import { storyRules } from "../story/prompt"
 import { lastStep, storyNames, storyText } from "../story/render"
 import { turnScript } from "../story/turn"
@@ -26,6 +27,8 @@ export type RuntimeSessionSnapshot = {
   currentTurn: Turn
   allTurns: RuntimeTurnRow[]
   activeCharacterId?: string
+  // What each character knows: see story/knowledge.ts.
+  knowledge?: KnownFact[]
 }
 
 export type LlmGameplayContextPacket = {
@@ -71,6 +74,8 @@ export type LlmGameplayContextPacket = {
     narrativeSummary?: string
     // Everything in the current turn so far, in order: the GM's framing, each reply, roll and NPC turn.
     currentRound?: string
+    // Every fact with its id and who knows it.
+    ledger?: string
     mostRecentAction?: string
     rollInfo: string
   }
@@ -106,6 +111,8 @@ export function assembleGameplayContextPacket(args: {
     (transition) => transition.fromEncounterId === currentEncounter.id && transition.publishResolved && transition.toEncounterId !== rescueEncounterId
   )
   const liveCharacters = args.session.currentTurn.characters
+  // Names of everyone met so far, so a fact known to someone from an earlier scene names them.
+  const names = storyNames([...args.session.allTurns.flatMap((t) => t.characters ?? []), ...liveCharacters])
   const npcIds = new Set(currentEncounter.npcRefs.map((ref) => ref.id))
   const liveIds = new Set(liveCharacters.map((character) => character.id))
 
@@ -129,7 +136,7 @@ export function assembleGameplayContextPacket(args: {
       title: currentEncounter.title,
       summary: currentEncounter.summary,
       sections: currentEncounter.sections,
-      intro: authoredText(currentEncounter.sections.intro ?? currentEncounter.sections.body ?? ""),
+      intro: authoredText(currentEncounter.sections.intro ?? currentEncounter.sections.body ?? "", names),
       gmNotes: gmNotesWithRules(args.artifacts.manifest, currentEncounter.sections.gmNotes),
       checks: currentEncounter.sections.checks,
       locationId: currentEncounter.locationId,
@@ -166,13 +173,14 @@ export function assembleGameplayContextPacket(args: {
       recentTurnHistory: buildRecentTurnHistory(recentTurns),
       narrativeSummary: args.session.narrativeSummary,
       currentRound: turnScript(args.session.currentTurn),
+      ledger: ledgerNote(args.session.knowledge, names, true),
       mostRecentAction: storyText(lastStep(args.session.currentTurn.story), storyNames(args.session.currentTurn.characters)),
       rollInfo: buildRollInfo(args.session.currentTurn),
     },
     graph: {
       legalTransitions,
       nextEncounterIntros: Object.fromEntries(
-        legalTransitions.map((transition) => [transition.toEncounterId, authoredText(args.artifacts.encounters[transition.toEncounterId]?.sections.intro ?? "").trim()])
+        legalTransitions.map((transition) => [transition.toEncounterId, authoredText(args.artifacts.encounters[transition.toEncounterId]?.sections.intro ?? "", names).trim()])
       ),
       currentEncounterLinks: currentEncounter.typedLinks,
     },
@@ -224,7 +232,7 @@ Keep described distances, positioning, and movement consistent with this staging
 `
     : ""
 }${packet.session.recentTurnHistory}
-
+${packet.session.ledger ? `\n${packet.session.ledger}\n` : ""}
 This Round So Far:
 ${packet.session.currentRound ?? ""}
 
@@ -255,11 +263,13 @@ Your Task:
    - No em dashes, en dashes or semicolons.
 6. ${KNOWLEDGE_RULE}
 7. Include an adventurePatch that updates the live Adventure playthrough record with summaries, discoveries, entity updates, character updates, open threads, resolved threads, and transition details when applicable.
+8. In "knowledge", record what characters learned this round that matters later: a secret, a plan, a name, a place, a deadline, who is behind something. A word said aloud to the whole line counts as much as a secret. One sentence each, with "knownBy": the id of every character who saw, heard or was told it. Said or done in the open, it is known to everyone present who could see or hear it. Leave out what anyone can see in the scene now. Private beats are recorded already for those in them. When someone tells a fact listed under WHO KNOWS WHAT to others, give its id with everyone who knows it now. At most 4, or [] when nothing new was learned.
 ${scene ? `\n${storyRules(scene)}\n` : ""}
 Respond in JSON:
 {
   "nextEncounterId": string,
   "beats": [...],
+  "knowledge": [...],
   "adventurePatch": object
 }`
 }

@@ -1,7 +1,8 @@
 import { v } from "convex/values"
+import { mergeKnowledge } from "../packages/gm-core/src/story/knowledge"
 import type { Doc, Id } from "./_generated/dataModel"
 import { action, mutation, query } from "./_generated/server"
-import { storyValidator } from "./story"
+import { knowledgeValidator, storyValidator } from "./story"
 
 const contentRefValidator = v.object({
   source: v.union(v.literal("published"), v.literal("preview")),
@@ -563,6 +564,8 @@ export const commitWikiTurnAdvance = mutation({
     transition: v.optional(v.any()),
     generatedBy: v.optional(generatedByValidator),
     isFinalEncounter: v.optional(v.boolean()),
+    // What characters learned in the round, merged into the adventure's.
+    knowledge: v.optional(knowledgeValidator),
   },
   handler: async (ctx, args) => {
     const adventure = await ctx.db.get(args.adventureId)
@@ -633,6 +636,7 @@ export const commitWikiTurnAdvance = mutation({
       entityUpdates,
       openThreads,
       resolvedThreadIds,
+      ...(args.knowledge?.length ? { knowledge: mergeKnowledge(adventure.knowledge, args.knowledge) } : {}),
       ...(contentRefRepin ? { contentRef: contentRefRepin } : {}),
       status: args.isFinalEncounter ? "completed" : "active",
       endedAt: args.isFinalEncounter ? now : adventure.endedAt,

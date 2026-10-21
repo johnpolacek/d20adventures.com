@@ -2,7 +2,7 @@ import type { GmPorts } from "../ports"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory } from "../story/clean"
 import { storyRules } from "../story/prompt"
-import { sceneFor, storyOutputObject, turnScript } from "../story/turn"
+import { characterScript, sceneFor, storyOutputObject } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
 
 export function createNarrativeGenerationService(ports: GmPorts) {
@@ -28,7 +28,7 @@ export function createNarrativeGenerationService(ports: GmPorts) {
     ]
       .filter(Boolean)
       .join("\n")
-    const context = turnScript(args.turn).split(/\n\n+/).slice(-3).join("\n\n")
+    const context = characterScript(args.turn, character.id).split(/\n\n+/).slice(-3).join("\n\n")
     const prompt = `A player has written what their hero does. Write it into the story as beats.
 
 Hero:
@@ -52,7 +52,7 @@ ${storyRules(scene)}
 
 Respond as JSON: { "beats": [...] }`
     try {
-      const beats = cleanStory((await generateObject({ prompt, schema: storyOutputObject })).object.beats, scene, by)
+      const beats = cleanStory((await generateObject({ prompt, schema: storyOutputObject, viewer: character.id })).object.beats, scene, by)
       if (beats.length) return beats
     } catch (error) {
       console.error("[writeReply] Falling back to the player's words:", error)
