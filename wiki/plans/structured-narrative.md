@@ -153,6 +153,6 @@ The same scripted replies and rolls as the concise narration replays, on the bui
 ## Not done
 
 - A live replay since the old text was removed, and of Wollandora's fix.
-- Production: Convex and the website are not deployed. Production turns, if any, would need clearing first.
+- Production deployed 2026-10-21, after prod's old turns and games were cleared. Not yet played there.
 - Other GMs than Claude have not written beats live.
 - The website turn page and Storyview are not checked in a browser.

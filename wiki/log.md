@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-21, production deployed
+
+Prod Convex had turns from before the 2026-10-14 story beats, which failed the schema. Owner: "we can clear any data as needed. the only user is me and i'm just testing." Prod's `turns`, `adventures`, `turnAudio`, `gmJobs` and `chat_messages` were emptied, and Convex deployed to prod. The website was already built from the latest main. Both answer. No game has been played on prod since.
+
 ## 2026-10-21, website build fix
 
 The website's deploy failed in `pnpm install`: `convex codegen` type-checks Convex with the ES2021 library, and `Array.at` in `gm-core/src/story/clean.ts` became reachable when Convex began importing the knowledge ledger. It is now an index. `pnpm test:gm-core` now type-checks Convex as the deploy does.

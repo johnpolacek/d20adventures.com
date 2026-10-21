@@ -2,7 +2,7 @@
 
 [Wiki Home](../index.md) · [Plans](index.md) · [What each character knows](character-knowledge.md) · [Adventure premise](adventure-premise.md)
 
-Status: implemented on main 2026-10-21. Played live with Claude twice. Not yet played in the app. Convex not deployed.
+Status: implemented on main 2026-10-21. Played live with Claude twice. Not yet played in the app. Website and Convex deployed to production 2026-10-21.
 
 ## Owner request, 2026-10-21
 
@@ -65,7 +65,6 @@ An adventure may say its heroes start as strangers, with `strangers: true` on it
 - NPC names. A hero may still call Garlan by name before hearing it. The knowledge rule asks them not to.
 - Covert Cargo's heroes are strangers too, and it does not use `strangers`. Its NPCs know Lyra, which the flag cannot say yet.
 - Heroes who meet in an older chapter, not the one just finished, start as strangers by name.
-- Hosted games need a Convex deploy to keep names, as they do the ledger.
 
 ## Validation
 
