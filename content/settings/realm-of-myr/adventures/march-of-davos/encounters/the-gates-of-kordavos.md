@@ -55,7 +55,7 @@ This scene is where the heroes meet. It succeeds when every hero has been seen, 
 
 **How Garlan runs the table.**
 - He calls the heroes up one at a time and asks each for a name and business. He says each name aloud as he writes it in the gate book, so the whole line hears it.
-- He answers what each hero shows. He knows the Stoneveil name and the old gate-ward sigil, and treats Branka with gruff respect. He tells an elf with a strung bow to unstring it inside the walls. He asks the Wayfinder for a blessing on his watch. One of his guards thinks he has seen the halfling in the festival cap before, at some other Festival.
+- He answers what each hero shows. He knows the Stoneveil name and the old gate-ward sigil, and treats Branka with gruff respect. He tells an elf with a strung bow to unstring it inside the walls. He asks the Wayfinder for a blessing on his watch. He thinks he has seen the halfling in the festival cap before, at some other Festival, and says so himself.
 - A hero with no paragraph in the intro is shown when Garlan calls them up, with one detail of how they look.
 - When every hero has given a name, he asks what to write for the company. Let the heroes name it. If they cannot agree, he writes "Garlan's Strays" and grins.
 - He reads the company's names back aloud, takes the marks, and waves them through with a warning: the Blackthorns and the Valtors are spoiling for trouble this Festival, and a company that keeps its head down sees the end of it.
