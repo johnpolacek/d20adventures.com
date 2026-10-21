@@ -4,6 +4,7 @@
 // and framed in gold. Clicking a portrait takes the camera to that character. A bar under each portrait is that
 // character's health, and a hero's portrait carries the number.
 
+import { useLayoutEffect, useRef } from "react"
 import { cn } from "@/lib/utils"
 
 export interface OrderEntry {
@@ -19,9 +20,22 @@ export interface OrderEntry {
 const healthColor = (health: number) => (health <= 25 ? "#c8452f" : health <= 50 ? "#d98a3a" : health <= 75 ? "#d9b44a" : "#7fb069")
 
 export function TurnOrder({ order, activeId, label, compact = false, onPick }: { order: OrderEntry[]; activeId: string | null; label?: string; compact?: boolean; onPick: (id: string) => void }) {
+  // Half the strip's width, for the encounter's title at the top left to keep clear of it however many take turns.
+  const strip = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    const el = strip.current
+    if (!el) return
+    const root = document.documentElement.style
+    const ro = new ResizeObserver(() => root.setProperty("--turn-order-half", `${Math.ceil(el.offsetWidth / 2)}px`))
+    ro.observe(el)
+    return () => {
+      ro.disconnect()
+      root.removeProperty("--turn-order-half")
+    }
+  }, [])
   return (
     <div className={cn("pointer-events-auto absolute left-1/2 z-20 flex -translate-x-1/2 flex-col items-center", compact ? "top-2" : "top-6")}>
-      <div className="flex items-end gap-1.5">
+      <div ref={strip} className="flex items-end gap-1.5">
         {order.map((c) => {
           const active = c.id === activeId
           const health = c.health === undefined ? undefined : Math.max(0, Math.min(100, Math.round(c.health)))

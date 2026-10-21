@@ -126,7 +126,7 @@ export function StageHud({
               <path d="M12 39V20h8v19m10 0V20h8v19M20 39V27l5-6 5 6v12M9 20h14m4 0h14M17 16v-4m16 4v-4M25 6v8M20 10h10M9 43h32" />
             </svg>
             {/* Kept clear of the turn order centred at the top. */}
-            <div className={compact ? "max-w-[calc(50vw-158px)]" : "max-w-[calc(50vw-244px)]"}>
+            <div style={{ maxWidth: compact ? "calc(50vw - var(--turn-order-half, 100px) - 58px)" : "calc(50vw - var(--turn-order-half, 134px) - 110px)" }}>
               <div className={cn(eyebrow, compact && "text-[8px]")}>{title.eyebrow}</div>
               <h1 className={cn("font-display leading-[1.12] [text-shadow:0_2px_18px_#1a0e08c0]", compact ? "mt-0.5 text-[15px]" : "mt-1.5 text-[clamp(20px,2vw,28px)]")}>{title.text}</h1>
             </div>

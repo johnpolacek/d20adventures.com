@@ -64,6 +64,7 @@ Owner asked again for an automated playtest with fixes as they come, and every a
 | Encounter change | The narration's heading switched to the new encounter while the old encounter's last paragraph was still fading out. | The heading changes with its paragraph. |
 | Speech bubbles | A tall speaker's bubble rose into the turn order at the top of the screen, and Barok's lines ran under the portraits. | A bubble with no room above its speaker below the top band sits beside their head. |
 | Gate lamps | The gate passage's sconces and hanging lamp burned as smooth peach cones. | They burn with the braziers' live flame cards. Fire is no longer fogged, which drew a grey box round any distant flame. |
+| Encounter title | A long title, such as Morning at the Dragonbone, ran under the turn order when six or more took turns. | The title keeps clear of the strip however wide it is, and wraps. |
 | Story view | A line in an encounter with no 3D scene showed as a bare quote: Beric's opening words named no one. | Whoever speaks first in the paragraph gets the portrait plate a scene would give them. |
 | The line | The line scene offered the table's Two-shot and Close views, on Garlan, which framed strangers while the party waited two groups back. | The line scene has neither. |
 | One speaker, two lines | Elara's two lines in one paragraph read as `"...something more." "A few weeks ago..."`. | One speaker's lines in a row read as one quotation. Desktop, website and Storyview. |
