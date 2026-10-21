@@ -24,6 +24,7 @@ Desktop integration updated on 2026-10-03 in `feature/desktop-stage-play`, inclu
 - [Structured narrative](plans/structured-narrative.md): a turn is a list of labelled beats, narration, action, line, roll and reply, so the stage and voices never guess. Spell effects and objects in 3D. All four adventures labelled. On main 2026-10-14.
 - [Concise narration](plans/concise-narration.md): the GM's round-end narrative has a length rule and tells nothing twice, for all four Myr adventures. NPC turns and action rewrites are tightened too. The Midnight Summons text is trimmed. On main 2026-10-13. Two live replays with Claude: 52% fewer words a turn.
 - [Adventure premise](plans/adventure-premise.md): who knows whom. A rule in every prompt, and an authored `## Premise` per adventure. On main 2026-10-11.
+- [What a hero knows](plans/hero-knowledge.md): a whisper or a hidden act is a private beat, and an AI hero reads the round without the ones it is not in. On main 2026-10-21.
 - [Antigravity replaces the Gemini CLI](plans/antigravity-cli.md): the fourth GM is Google's `agy`, run with no tools on Gemini Flash at medium effort. On main 2026-10-13.
 - [Game Master picker shows the model](plans/gm-model-picker.md): party setup names the model each installed CLI runs and its effort, read from the CLI without a prompt. Claude runs at medium effort, set by the app. On main 2026-10-13.
 - [One roll card](plans/one-roll-card.md): one card rolls the die, shows the result, waits for the GM, then offers Continue. Desktop app and hosted games, on main 2026-10-14.

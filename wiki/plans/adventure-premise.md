@@ -23,7 +23,7 @@ Two things, both in every prompt that writes for a character.
 ## Decisions
 
 - **The premise is authored, not inferred.** Mine. The rule alone failed: with only the rule, 2 of 2 offered replies still named Poppen. The round's text shows him shooting at Lyra's attackers, which reads as an ally.
-- **The premise holds no secrets.** Mine. It goes into the players' side prompts, so it says only what every player knows at the start. Secrets stay in an encounter's GM Notes.
+- **The premise holds no secrets.** Mine. It goes into the players' side prompts, so it says only what every player knows at the start. Secrets stay in an encounter's GM Notes. A hero's own errand stays on their sheet: Covert Cargo's premise gave every hero Thalbern's until 2026-10-21, see [what a hero knows](hero-knowledge.md).
 - **It is a starting fact.** The prompt says it holds until the story shows it change. Nothing tracks who has since met whom.
 - **Covert Cargo's premise is the owner's statement** above, written out for Lyra, Poppen and the NPCs.
 

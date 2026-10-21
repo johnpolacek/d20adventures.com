@@ -101,6 +101,7 @@ Added 2026-10-14 with [structured narrative](plans/structured-narrative.md). An 
 - `place` on an action walks the actor there. `from` brings them on from there.
 - `effect`, `element` and `object` take the words in [the plan](plans/structured-narrative.md).
 - Values are split on commas, so a `delivery` is written "calm and commanding".
+- `private: true` on an action or line hides it from the other heroes' side: only its actor or speaker and its `target` or `to` know it. Use it for a hero's own errand, a hidden watcher, or a whisper. Since 2026-10-21, see [what a hero knows](plans/hero-knowledge.md).
 - Prompts and the website's text views show the intro with its labels taken off and each line under its speaker's name.
 - All four Myr adventures are labelled, as of 2026-10-14. An unlabelled paragraph is narration: nothing is guessed from its words.
 - A spoken line needs its speaker among the encounter's characters. A quote by someone outside them stays in the prose with no bubble or voice. Covert Cargo has one, from Aelar in the-transaction. March of Davos had several until 2026-10-20, when the speakers joined their encounters' `npcs` and the quotes became lines. Its last quotes in prose are a disembodied voice in the-ambush and an unnamed vendor at the festival. See [the playtest](plans/march-of-davos-playtest.md#content-pass-2026-10-20).

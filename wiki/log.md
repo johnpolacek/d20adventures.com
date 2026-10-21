@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-21, what a hero knows
+
+Owner, playing Thalbern at the March of Davos gate: the AI heroes asked about the river goods that only Thalbern was after. An AI hero read the whole round, Garlan's whisper to Thalbern included. A beat can now be private, seen or heard only by its actor or speaker and whoever it is aimed at. The GM marks one in every step, and an AI hero's move and a player's offered replies read the round without the private beats that hero is not in, and without other players' own words. On the desktop an AI hero's premise now holds only the chapters it lived. Covert Cargo's hidden intro paragraphs are private, and its premise no longer gives every hero Thalbern's errand. Live with Claude, 3 runs: Garlan's answer was private each time. A question asked with no word of a whisper stays open. Desktop tests, gm-core and the bridge checks pass. See [what a hero knows](plans/hero-knowledge.md).
+
 ## 2026-10-20, March of Davos played to an ending
 
 The playtest reached an ending after 75 rounds, from the gate through the ball, the murder of Thaddeus and the tunnels to Joran in the forgotten temple. Final Confrontation had no transitions, so arriving there completed the adventure before the party could choose. It is now played, and siding with Joran, with Astrid or with neither leads to one of three new ending encounters from the adventure's Aftermath. The Dust Settles was reached in a replay. Other fixes from the run: the desktop app plays one NPC or AI hero per call, so turns arrive in 7 to 27 seconds instead of up to 110 behind one card. Spells and traps that strike now hurt. Speech from a crowd stays with its narration, and a narration naming one character gives that character the line. Off-stage NPCs skip unseen. Bridge, batches a to f, gm-core and desktop tests pass. See [the playtest](plans/march-of-davos-playtest.md).
