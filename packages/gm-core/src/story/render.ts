@@ -27,7 +27,17 @@ export function storyParagraphs(story: readonly StoryBeat[]): StoryParagraph[] {
     if (joins) last.push(beat)
     else out.push([beat])
   }
-  return out.map((beats) => ({ beats, text: beats.map(beatText).join(" ") }))
+  return out.map((beats) => ({ beats, text: paragraphText(beats) }))
+}
+
+// One speaker's lines in a row read as one quotation, not as quotes set side by side.
+function paragraphText(beats: readonly StoryBeat[]): string {
+  let text = ""
+  for (const [i, beat] of beats.entries()) {
+    if (beat.kind === "line" && beats[i - 1]?.kind === "line") text = `${text.slice(0, -1)} ${beat.text}"`
+    else text = text ? `${text} ${beatText(beat)}` : beatText(beat)
+  }
+  return text
 }
 
 function beatText(beat: StoryBeat): string {
