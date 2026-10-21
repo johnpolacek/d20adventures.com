@@ -153,10 +153,16 @@ diffuseColor.rgb *= mBase;`
       .replace(
         "#include <normal_fragment_maps>",
         `#include <normal_fragment_maps>
-{ float i0, e0; vec2 dx = dFdx(vMUV), dy = dFdy(vMUV);
+{
+ #ifdef MCOBBLE
+ // Cobbles are costly to evaluate, so their slope comes from the pixel's neighbours rather than two more evaluations.
+ float hx = mH + dFdx(mH), hy = mH + dFdy(mH);
+ #else
+ float i0, e0; vec2 dx = dFdx(vMUV), dy = dFdy(vMUV);
  float hx = mHeight(vMUV + dx, i0, e0), hy = mHeight(vMUV + dy, i0, e0);
  #ifdef MGROUND
  hx = mix(hx, mnoise((vMWorld.xz + dFdx(vMWorld.xz)) * 3.0) * .3, mDust); hy = mix(hy, mnoise((vMWorld.xz + dFdy(vMWorld.xz)) * 3.0) * .3, mDust);
+ #endif
  #endif
  normal = mPerturb(-vViewPosition, normal, vec2(hx - mH, hy - mH) * mRelief * mSharp, faceDirection); }`
       )
