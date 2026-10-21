@@ -6,6 +6,7 @@ import { nameOf, type StoryNames } from "./render"
 //   {actor: owlbear, from: treeLine, pace: hurry} The Owlbear crashes out of the undergrowth.
 //   {speaker: wollandora, to: owlbear} That's enough, beast of the wood!
 //   {place: stones} The ancient Standing Stones rise around Thalbern.
+//   {actor: thalbern, private: true} Thalbern kneels unseen in the thicket below the stern.
 //
 // With `speaker` it is a line, with `actor` an action, and otherwise narration. A paragraph without braces is
 // narration. cleanStory then checks the ids against the scene, as it does the GM's.
@@ -22,6 +23,7 @@ const KEYS: Record<string, keyof StoryOutput[number]> = {
   element: "element",
   object: "object",
   delivery: "delivery",
+  private: "private",
 }
 
 export function authoredStory(text: string): StoryOutput {
@@ -33,11 +35,12 @@ export function authoredStory(text: string): StoryOutput {
       if (!p) return []
       const m = p.match(LABELS)
       if (!m) return [{ kind: "narration", text: p }]
-      const labels: Record<string, string> = {}
+      const labels: Record<string, string | boolean> = {}
       for (const pair of m[1].split(",")) {
         const [k, ...v] = pair.split(":")
         const key = KEYS[k.trim().toLowerCase()]
-        if (key && v.length) labels[key] = v.join(":").trim()
+        if (key === "private") labels[key] = /^true$/i.test(v.join(":").trim())
+        else if (key && v.length) labels[key] = v.join(":").trim()
       }
       const kind = /\bspeaker\s*:/i.test(m[1]) ? "line" : /\bactor\s*:/i.test(m[1]) ? "action" : "narration"
       return [{ ...labels, kind, text: p.slice(m[0].length).trim() }]

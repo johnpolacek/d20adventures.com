@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto"
 import { type Content, createGmCore, type Llm } from "@d20/gm-core"
 import { type ActionSuggestion, suggestActions } from "@d20/gm-core/services/ai-pc-turn-service"
-import { introTurn, turnScript } from "@d20/gm-core/story/turn"
+import { heroScript, introTurn } from "@d20/gm-core/story/turn"
 import { findCurrentActor } from "@d20/gm-core/utils/turn-actors"
 import { buildLocalWikiTurnCharacters } from "@d20/gm-core/wiki-adventures/characters"
 import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventures/plan-view"
@@ -99,8 +99,15 @@ export async function suggest(save: Save | null, packs: Packs, llm: Llm, input: 
   const turn = save?.adventure.status === "active" ? save.turns.find((t) => t._id === save.adventure.currentTurnId) : undefined
   const actor = turn?._id === command.turnId ? findCurrentActor(turn.characters) : undefined
   if (!turn || actor?.id !== command.characterId || actor.type !== "pc" || actor.controlledBy === "ai" || actor.hasReplied) throw new Error("It is another character's turn.")
-  // Of the story so far, only the chapters this hero lived.
-  return suggestActions(llm, actor, turnScript(turn), turn.characters, characterContext([actor]), premiseWithStory(packs[save!.adventure.planId]?.artifacts.manifest.premise, save!.story, actor.id))
+  // The round as this hero knows it, and of the story so far only the chapters this hero lived.
+  return suggestActions(
+    llm,
+    actor,
+    heroScript(turn, actor.id),
+    turn.characters,
+    characterContext([actor]),
+    premiseWithStory(packs[save!.adventure.planId]?.artifacts.manifest.premise, save!.story, actor.id)
+  )
 }
 export function game(store: LocalStore, packs: Packs, llm: Llm) {
   const packFor = (plan: string) => {
@@ -117,6 +124,8 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
     loadLegacyPlan: async () => null,
     spatialContext: async (_setting, _plan, encounter, characters) => spatialContext(encounter, characters, store.state?.positions ?? {}, store.state?.figures),
     places: async (encounter) => scenePlaces(encounter),
+    // Of the story so far, only the chapters this hero lived.
+    heroPremise: async (_setting, plan, hero) => premiseWithStory(packFor(plan).artifacts.manifest.premise, store.state?.adventure.planId === plan ? store.state.story : undefined, hero),
   }
   let inferenceFailure: unknown
   const tracked: Llm = {

@@ -119,6 +119,26 @@ test("continuing carries the story and a hero's gear into the next adventure, an
     assert.match(asked, /THE STORY SO FAR\.[^\n]*what is written here wins[^\n]*A hero knows only a chapter that names them/)
     assert.match(asked, /1\. The Midnight Summons\. Its last scenes: [^\n]*Preparing for the City\. Heroes: Thalbern\.\n[\s\S]*set out down the Mordava after the boat\.\nLeft open: The riverboat: /)
 
+    // An AI hero's own move carries only what that hero lived.
+    const turn = store.current()
+    for (const c of turn.characters) Object.assign(c, { hasReplied: c.id !== LYRA, isComplete: c.id !== LYRA })
+    store.save()
+    const moves: string[] = []
+    const lyraMoves: Llm = {
+      generateText: unused,
+      generateObject: async ({ schema, prompt }) => {
+        if (prompt.includes("You are the PLAYER (not the GM) roleplaying")) moves.push(prompt)
+        for (const answer of [{ beats: [{ kind: "action", who: LYRA, text: "Waits." }] }, { rollType: "none", difficulty: 0 }]) {
+          const parsed = schema.safeParse(answer)
+          if (parsed.success) return { object: parsed.data }
+        }
+        throw new Error("Unexpected model request")
+      },
+    }
+    await game(store, packs, lyraMoves)({ kind: "continue", turnId: turn._id })
+    assert.match(moves[0] ?? "", /ADVENTURE PREMISE/)
+    assert.ok(!moves[0].includes("THE STORY SO FAR") && !moves[0].includes("feather from its nest"))
+
     // Replies offered to a player carry only what their hero lived.
     const offered = async (id: string) => {
       const turn = store.current()

@@ -49,10 +49,26 @@ export function storyText(story: readonly StoryBeat[], names: StoryNames = {}): 
   return blocks.map((b) => b.join("\n")).join("\n\n")
 }
 
+// Who sees or hears a beat besides the narrator: everyone present, or for a private one only its actor or speaker and
+// whoever it is aimed at.
+const privateTo = (beat: StoryBeat): string[] | undefined =>
+  beat.kind === "action" && beat.private ? [beat.actor, ...(beat.target ? [beat.target] : [])] : beat.kind === "line" && beat.private ? [beat.speaker, ...(beat.to ? [beat.to] : [])] : undefined
+const privateNote = (beat: StoryBeat, names: StoryNames) => {
+  const only = privateTo(beat)
+  return only ? ` (private to ${only.map((id) => nameOf(names, id)).join(" and ")})` : ""
+}
+
+// The story as one hero knows it: without the private beats they are not part of, or another player's own words
+// before the GM wrote them in.
+export const heroStory = (story: readonly StoryBeat[], hero: string): StoryBeat[] =>
+  story.filter((beat) => (beat.kind === "reply" ? beat.character === hero : (privateTo(beat)?.includes(hero) ?? true)))
+
 function scriptLine(beat: StoryBeat, names: StoryNames): string {
   switch (beat.kind) {
     case "line":
-      return `${nameOf(names, beat.speaker)}${beat.to ? ` to ${nameOf(names, beat.to)}` : ""}${beat.delivery ? `, ${beat.delivery}` : ""}: "${beat.text}"`
+      return `${nameOf(names, beat.speaker)}${beat.to ? ` to ${nameOf(names, beat.to)}` : ""}${beat.delivery ? `, ${beat.delivery}` : ""}${privateNote(beat, names)}: "${beat.text}"`
+    case "action":
+      return `${beat.text}${privateNote(beat, names)}`
     case "roll":
       return `[${beat.name} rolls ${beat.check}: ${beat.total} against DC ${beat.dc}, ${beat.success ? "success" : "failure"}]`
     case "reply":

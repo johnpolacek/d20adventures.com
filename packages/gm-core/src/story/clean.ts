@@ -77,13 +77,14 @@ const unquote = (text: string) =>
 // kept out of narration and actions, and every text cleaned as prose shown to players.
 export function cleanStory(output: StoryOutput, scene: StoryScene, by: StoryBy): StoryBeat[] {
   const beats: StoryBeat[] = []
-  const line = (speaker: StoryCast, text: string, to?: StoryCast, delivery?: string) => {
+  const line = (speaker: StoryCast, text: string, to?: StoryCast, delivery?: string, hidden?: boolean) => {
     const words = unquote(sanitizeUserVisibleProse(text))
     if (!words || !maySpeak(speaker, by)) return
     const beat: LineBeat = { kind: "line", by, text: words, speaker: speaker.id }
     if (to && to.id !== speaker.id) beat.to = to.id
     const how = delivery?.trim().replace(/[.,]+$/, "")
     if (how && how.length <= 40) beat.delivery = how
+    if (hidden) beat.private = true
     beats.push(beat)
   }
   // Words of someone with no turn, such as a guest in the crowd, join the narration before them, which shows who
@@ -100,7 +101,7 @@ export function cleanStory(output: StoryOutput, scene: StoryScene, by: StoryBy):
     const who = findCharacter(scene, out.who)
     const to = findCharacter(scene, out.to)
     if (out.kind === "line") {
-      if (who) line(who, text, to, out.delivery)
+      if (who) line(who, text, to, out.delivery, out.private)
       else said(`"${unquote(text)}"`)
       continue
     }
@@ -115,8 +116,9 @@ export function cleanStory(output: StoryOutput, scene: StoryScene, by: StoryBy):
       if ((dest && dest !== who.id) || from) action.move = { ...(dest && dest !== who.id ? { to: dest } : {}), ...(from ? { from } : {}), ...(out.pace ? { pace: out.pace } : {}) }
       if (out.effect) action.effect = { kind: out.effect, ...(out.element ? { element: out.element } : {}) }
       if (out.object) action.object = { kind: out.object, ...(action.target ? { to: action.target } : {}) }
+      if (out.private) action.private = true
       if (rest && /\w/.test(rest)) beats.push(action)
-      for (const words of spoken) line(who, words, to)
+      for (const words of spoken) line(who, words, to, undefined, out.private)
       continue
     }
     const place = findPlace(scene, out.place)?.id

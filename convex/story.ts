@@ -17,8 +17,9 @@ export const storyValidator = v.array(
       move: v.optional(v.object({ to: v.optional(v.string()), from: v.optional(v.string()), pace: v.optional(oneOf(PACES)) })),
       effect: v.optional(v.object({ kind: oneOf(EFFECT_KINDS), element: v.optional(oneOf(ELEMENTS)) })),
       object: v.optional(v.object({ kind: oneOf(OBJECT_KINDS), to: v.optional(v.string()) })),
+      private: v.optional(v.literal(true)),
     }),
-    v.object({ kind: v.literal("line"), by, text: v.string(), speaker: v.string(), to: v.optional(v.string()), delivery: v.optional(v.string()) }),
+    v.object({ kind: v.literal("line"), by, text: v.string(), speaker: v.string(), to: v.optional(v.string()), delivery: v.optional(v.string()), private: v.optional(v.literal(true)) }),
     v.object({
       kind: v.literal("roll"),
       by,

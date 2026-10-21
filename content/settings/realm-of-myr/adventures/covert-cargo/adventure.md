@@ -27,9 +27,9 @@ Docked on a discreet pier on a quiet fork of the Mordava River, a river boat bea
 
 Lyra, Poppen and Thalbern have never met and are not working together. Lyra came aboard with Silas and Reinhard, who hired her. She knows they serve the Blackthorn family of Kordavos. She does not know Poppen or Thalbern, their names, or that either is there.
 
-Poppen is alone and is here by chance. He is spying on the pier from the bushes at the treeline above the gangway, in the hope of a score. He knows nobody here, by name or by sight, and knows nothing of the deal, the crate or anyone's orders beyond what he sees and overhears.
+Poppen is alone and is here by chance. He is spying on the pier from the bushes at the treeline above the gangway. He knows nobody here, by name or by sight, and knows nothing of the deal, the crate or anyone's orders beyond what he sees and overhears.
 
-Thalbern is alone. The druid Wollandora sent him after Valkaran relics taken from the elven vaults, and he has tracked this riverboat down the Mordava. He watches from a thicket on the bank below the stern, well away from Poppen's bushes. He knows nobody here, by name or by sight, and does not know what is in the crate or who is buying it.
+Thalbern is alone. He watches from a thicket on the bank below the stern, well away from Poppen's bushes. He knows nobody here, by name or by sight, and does not know what is in the crate or who is buying it.
 
 Poppen and Thalbern do not know of each other. Neither has seen or heard the other, and each believes he is the only one watching. That changes only when one of them passes a check to notice the other.
 

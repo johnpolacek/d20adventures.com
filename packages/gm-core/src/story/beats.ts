@@ -38,6 +38,8 @@ export interface StoryObject {
 }
 
 export type NarrationBeat = { kind: "narration"; by: StoryBy; text: string; place?: string }
+// A private action or line is seen or heard only by its actor or speaker and whoever it is aimed at, such as a whisper
+// or a hidden watcher moving unseen.
 export type ActionBeat = {
   kind: "action"
   by: StoryBy
@@ -47,9 +49,10 @@ export type ActionBeat = {
   move?: StoryMove
   effect?: StoryEffect
   object?: StoryObject
+  private?: true
 }
 // Spoken words only, with no quote marks.
-export type LineBeat = { kind: "line"; by: StoryBy; text: string; speaker: string; to?: string; delivery?: string }
+export type LineBeat = { kind: "line"; by: StoryBy; text: string; speaker: string; to?: string; delivery?: string; private?: true }
 export type RollBeat = {
   kind: "roll"
   by: StoryBy
@@ -81,8 +84,9 @@ export const storyBeatSchema = z.discriminatedUnion("kind", [
     move: z.object({ to: id.optional(), from: id.optional(), pace: z.enum(PACES).optional() }).optional(),
     effect: z.object({ kind: z.enum(EFFECT_KINDS), element: z.enum(ELEMENTS).optional() }).optional(),
     object: z.object({ kind: z.enum(OBJECT_KINDS), to: id.optional() }).optional(),
+    private: z.literal(true).optional(),
   }),
-  z.object({ kind: z.literal("line"), by, text: z.string(), speaker: id, to: id.optional(), delivery: z.string().max(60).optional() }),
+  z.object({ kind: z.literal("line"), by, text: z.string(), speaker: id, to: id.optional(), delivery: z.string().max(60).optional(), private: z.literal(true).optional() }),
   z.object({
     kind: z.literal("roll"),
     by,
@@ -117,6 +121,7 @@ export const storyOutputSchema = z
       element: menu(ELEMENTS, "action with an effect: its element, if magical"),
       object: menu(OBJECT_KINDS, "action: an object the actor shows or hands over, if any"),
       delivery: z.string().optional().describe("line: how it is said, in one or two words, such as quietly or with a growl"),
+      private: z.boolean().optional().catch(undefined).describe("action and line: true when only the one acting or speaking and the one it is aimed at can see or hear it"),
     })
   )
   .describe("the beats, in the order they happen")

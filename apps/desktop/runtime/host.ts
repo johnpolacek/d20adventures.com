@@ -1,6 +1,6 @@
 import { type AdventureRecord, type Content, createGmCore, type Llm, type Store } from "@d20/gm-core"
 import { type ActionSuggestion, suggestActions } from "@d20/gm-core/services/ai-pc-turn-service"
-import { turnScript } from "@d20/gm-core/story/turn"
+import { heroScript } from "@d20/gm-core/story/turn"
 import type { TurnCharacter } from "@d20/gm-core/types/adventure"
 import { findCurrentActor, isDeadActor } from "@d20/gm-core/utils/turn-actors"
 import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventures/plan-view"
@@ -128,7 +128,7 @@ export async function runHostJob(job: HostJob, store: Store, packs: Packs, llm: 
   }
   if (!actor || actor.id !== job.characterId || actor.type !== "pc" || actor.controlledBy === "ai" || actor.userId !== job.userId) throw new Error("It is another character's turn.")
   if (job.kind !== "roll" && actor.hasReplied) throw new Error("This reply is already saved. Resolve the pending roll.")
-  if (job.kind === "suggest") return suggestActions(llm, actor, turnScript(turn), turn.characters, "", packs[adventure.planId]?.artifacts.manifest.premise)
+  if (job.kind === "suggest") return suggestActions(llm, actor, heroScript(turn, actor.id), turn.characters, "", packs[adventure.planId]?.artifacts.manifest.premise)
   // A skip ends the hero's turn with nothing written and no AI.
   if (job.kind === "skip") {
     await store.updateTurn({ turnId: turn._id, patch: { characters: turn.characters.map((c) => (c.id === actor.id ? { ...c, hasReplied: true, isComplete: true } : c)), updatedAt: Date.now() } })

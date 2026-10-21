@@ -3,7 +3,7 @@ import type { GmPorts } from "../ports"
 import { authoredStory } from "./authored"
 import { type RollBeat, type StoryBeat, type StoryBy, storyOutputSchema } from "./beats"
 import { cleanStory, type StoryScene } from "./clean"
-import { storyNames, storyParagraphs, storyText } from "./render"
+import { heroStory, storyNames, storyParagraphs, storyText } from "./render"
 
 type StoryTurn = { encounterId: string; story: StoryBeat[]; characters: readonly { id: string; name: string; type?: string }[] }
 
@@ -19,6 +19,9 @@ export async function sceneFor(ports: GmPorts, turn: Omit<StoryTurn, "story">): 
 
 // A turn's story as a script, for prompts.
 export const turnScript = (turn: { story: StoryBeat[]; characters?: StoryTurn["characters"] }) => storyText(turn.story, storyNames(turn.characters ?? []))
+
+// A turn's story as one hero knows it, for prompts written from that hero's side.
+export const heroScript = (turn: { story: StoryBeat[]; characters?: StoryTurn["characters"] }, hero: string) => storyText(heroStory(turn.story, hero), storyNames(turn.characters ?? []))
 
 // A turn's story with beats added.
 export const withStory = (turn: { story: StoryBeat[] }, beats: readonly StoryBeat[]): { story: StoryBeat[] } => ({ story: [...turn.story, ...beats] })

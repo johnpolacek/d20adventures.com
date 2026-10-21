@@ -108,6 +108,8 @@ export interface Content {
   spatialContext(settingId: string, planId: string, encounterId: string, characters: TurnCharacter[]): Promise<string | undefined>
   // The named places of the encounter's 3D set, which the GM may point the camera at and walk characters to.
   places?(encounterId: string): Promise<StoryPlace[] | undefined>
+  // The premise as one hero knows it, when the plan's own holds more than that hero should, such as the story so far.
+  heroPremise?(settingId: string, planId: string, heroId: string): Promise<string | undefined>
 }
 
 export interface Narration {

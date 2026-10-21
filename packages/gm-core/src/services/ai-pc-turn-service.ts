@@ -3,7 +3,7 @@ import type { GmPorts, Llm } from "../ports"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
 import { storyRules } from "../story/prompt"
-import { sceneFor, storyOutputObject, storyProse, turnScript } from "../story/turn"
+import { heroScript, sceneFor, storyOutputObject, storyProse } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
 import { rollD20 } from "../utils/game-utils"
 import { PLAYER_KNOWLEDGE_RULE } from "../utils/narrative-utils"
@@ -163,10 +163,10 @@ export function createAiPcTurnService(ports: GmPorts) {
     if (!needsRollResolution) {
       const beats = await generateAiPcIntent({
         character,
-        narrative: turnScript(turn),
+        narrative: heroScript(turn, characterId),
         allCharacters: turn.characters as TurnCharacter[],
         scene: await sceneFor(ports, turn),
-        premise: plan?.premise,
+        premise: (await ports.content.heroPremise?.(adventure.settingId, adventure.planId, characterId)) ?? plan?.premise,
         lately: await earlierMoves(turn, characterId),
       })
       const intent = storyProse(beats)
