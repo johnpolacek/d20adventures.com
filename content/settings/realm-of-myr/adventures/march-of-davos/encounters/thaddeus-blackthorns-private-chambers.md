@@ -26,6 +26,8 @@ This is where business is done: deals struck, secrets kept, plans formed. It is 
 
 The ornate long sword is lightly enchanted to slightly increase accuracy and damage.
 
+**Caught.** If the house guard has the adventurers in hand, the guards do not march them about the house or search it with them. They take them straight down to the ballroom to answer to Lady Astrid, and arrive just as Thaddeus takes the stage. Every eye turns to him, and the guards hold the adventurers at the edge of the crowd while he speaks.
+
 Legacy stages:
 
 ### The Desk

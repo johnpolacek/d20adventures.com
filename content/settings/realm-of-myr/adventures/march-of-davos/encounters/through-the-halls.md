@@ -16,6 +16,10 @@ A dimly lit hallway stretches ahead, a distant candle casting long shadows on th
 
 The hall ends at two stairways. On the left, a spiral staircase with polished, ornate bannisters rises to the upper floors, hinting at more luxurious chambers. On the right, narrow steps descend into the bowels of the mansion, where the air is cooler and smells faintly of aged wine or damp stone.
 
+## GM Notes
+
+**Caught.** If the house guard has the adventurers in hand, the guards do not march them about the house or search it with them. They take them straight down to the ballroom to answer to Lady Astrid, and arrive just as Thaddeus takes the stage. Every eye turns to him, and the guards hold the adventurers at the edge of the crowd while he speaks.
+
 ## Transitions
 
 - To [[encounter:the-rangers-quarters]] when the players choose to head up the grand staircase toward the family living quarters.

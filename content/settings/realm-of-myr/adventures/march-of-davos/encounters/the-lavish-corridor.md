@@ -27,6 +27,8 @@ They carry longswords, but they stand at ease, more interested in the Masquerade
 
 Unlike the highly alert soldiers in the main hall, these guards appear more complacent, their attention divided between their conversation and the events below. While they aren't entirely inattentive, they seem far more approachable and easier to influence.
 
+**Caught.** If the house guard has the adventurers in hand, the guards do not march them about the house or search it with them. They take them straight down to the ballroom to answer to Lady Astrid, and arrive just as Thaddeus takes the stage. Every eye turns to him, and the guards hold the adventurers at the edge of the crowd while he speaks.
+
 Friendly Conversation: A well-timed conversation or compliment about the Masquerade could distract them further, offering the party a chance to slip by unnoticed.
 
 Small Bribe: These guards don’t seem too proud to accept a little "encouragement." A few gold coins or a rare drink from the ball might make them more inclined to turn a blind eye.
