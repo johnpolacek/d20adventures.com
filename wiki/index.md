@@ -30,6 +30,7 @@ Desktop integration updated on 2026-10-03 in `feature/desktop-stage-play`, inclu
 - [Antigravity replaces the Gemini CLI](plans/antigravity-cli.md): the fourth GM is Google's `agy`, run with no tools on Gemini Flash at medium effort. On main 2026-10-13.
 - [Game Master picker shows the model](plans/gm-model-picker.md): party setup names the model each installed CLI runs and its effort, read from the CLI without a prompt. Claude runs at medium effort, set by the app. On main 2026-10-13.
 - [One roll card](plans/one-roll-card.md): one card rolls the die, shows the result, waits for the GM, then offers Continue. Desktop app and hosted games, on main 2026-10-14.
+- [Shorter waits](plans/shorter-waits.md): in local play the next NPC's or AI hero's turn is written while the one before it is read. Skipping minor NPC turns was measured and not built. On main 2026-10-22.
 - [NPC turn card](plans/npc-turn-card.md): while the GM plays an NPC or AI hero, the card shows their portrait and a line of their own. On main 2026-10-19.
 - [Skip a hero's turn](plans/skip-turn.md): a text button left of Send ends the hero's turn with nothing written and no AI. Local play and hosted games, on main 2026-10-11.
 - [Suggested replies](plans/turn-suggestions.md): on a hero's turn the GM card offers three replies that fill the reply box. Local play and hosted games, on main 2026-10-11.

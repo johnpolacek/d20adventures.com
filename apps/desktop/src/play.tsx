@@ -76,6 +76,11 @@ export function DesktopGame() {
   }, [])
   const [busy, setBusy] = useState(false)
   const busyRef = useRef(false)
+  // Continue in local play: the GM writes the next NPC's or AI hero's turn, often while the story before it is read.
+  const [writing, setWriting] = useState(false)
+  const working = busy || writing
+  // The game action running. One runs at a time, so the next waits for it.
+  const running = useRef<Promise<unknown>>(Promise.resolve())
   const [error, setError] = useState<string | null>(null)
   // Over the stage: the title screen on launch and from the Home button, its pages, or party setup. Null in play.
   const [screen, setScreen] = useState<"home" | Page | "new" | null>("home")
@@ -87,12 +92,23 @@ export function DesktopGame() {
   const saveRef = useRef(save)
   saveRef.current = save
 
-  // A quiet command, such as saving where the cast stands after a walk, waits its turn without showing the GM at work.
+  // Every command waits its turn behind the one running. A quiet one, such as saving where the cast stands after a walk,
+  // does not show the GM at work, and a written turn shows it only once the story before it has been read. A shown
+  // command asked while another is waiting or running is dropped, as a second click.
   const invoke = useCallback(
-    async (command: GameCommand | HeroCommand, quiet = false) => {
-      if (busyRef.current) return
-      busyRef.current = true
-      if (!quiet) setBusy(true)
+    async (command: GameCommand | HeroCommand, how: "shown" | "quiet" | "writing" = "shown") => {
+      if (how === "shown") {
+        if (busyRef.current) return
+        busyRef.current = true
+        setBusy(true)
+      }
+      const turn = running.current
+      let done = () => {}
+      running.current = new Promise<void>((resolve) => {
+        done = resolve
+      })
+      await turn
+      if (how === "writing") setWriting(true)
       setError(null)
       try {
         const res = await send(command)
@@ -117,9 +133,13 @@ export function DesktopGame() {
         setError(String(e))
         return null
       } finally {
-        busyRef.current = false
-        setBusy(false)
+        if (how === "shown") {
+          busyRef.current = false
+          setBusy(false)
+        }
+        if (how === "writing") setWriting(false)
         setLoaded(true)
+        done()
       }
     },
     [keepArt]
@@ -136,12 +156,12 @@ export function DesktopGame() {
   }, [invoke])
   // Fetch painted art once for roster heroes and for the saved party.
   useEffect(() => {
-    if (busy || !loaded) return
+    if (working || !loaded) return
     const ids = [...new Set([...heroes.filter((h) => h.painted).map((h) => h.id), ...(save?.painted ?? [])])].filter((id) => !askedArt.current.has(id))
     if (!ids.length) return
     for (const id of ids) askedArt.current.add(id)
     void invoke({ kind: "art", ids: ids.slice(0, 24) })
-  }, [busy, loaded, heroes, save?.painted, invoke])
+  }, [working, loaded, heroes, save?.painted, invoke])
   // A new game moves the saved adventure to the archive, where home lists it. Party setup stays open if the start fails.
   const start = async (chosenParty: PartyChoice[]) => {
     const next = (await invoke({ kind: "start", provider: provider as "claude", adventure, party: chosenParty, replace: Boolean(save), continues: Boolean(carried) }))?.state
@@ -284,6 +304,7 @@ export function DesktopGame() {
     <StagePlay
       save={hosting ? hostedView : save}
       busy={hosting ? sending || Boolean(work?.busy) : busy}
+      writing={!hosting && writing}
       art={art}
       fallbackEncounter={chosen?.start}
       controls={hosting ? (c) => (c as { userId?: string }).userId === hosted?.userId : () => true}
@@ -322,13 +343,13 @@ export function DesktopGame() {
       autoContinue={!hosting}
       onContinue={(turnId) => {
         if (hosting) void act(() => host({ kind: "hostAct", adventureId: hosting, turnId, action: { kind: "continue" } }))
-        else void invoke({ kind: "continue", turnId })
+        else void invoke({ kind: "continue", turnId }, "writing")
       }}
       onPositions={
         hosting
           ? undefined
           : async (turnId, positions, appliedMovement) => {
-              await invoke({ kind: "positions", turnId, positions, appliedMovement }, true)
+              await invoke({ kind: "positions", turnId, positions, appliedMovement }, "quiet")
             }
       }
       onEscape={onEscape}
@@ -375,14 +396,14 @@ export function DesktopGame() {
             )}
             {ready && (
               <>
-                {screen === "home" && <Home save={save} busy={busy} next={nextUp?.title} onContinue={() => setScreen(null)} onNext={continueStory} onBegin={() => setScreen("adventures")} />}
+                {screen === "home" && <Home save={save} busy={working} next={nextUp?.title} onContinue={() => setScreen(null)} onNext={continueStory} onBegin={() => setScreen("adventures")} />}
                 {screen === "adventures" && (
                   <AdventuresPage
                     saves={saves}
                     adventures={adventures}
                     locked={locked}
                     listPrices={listPrices}
-                    busy={busy}
+                    busy={working}
                     onContinue={() => setScreen(null)}
                     onResume={(id) => void resume(id)}
                     onRemove={(archiveId) => void invoke({ kind: "remove", archiveId })}
@@ -399,7 +420,7 @@ export function DesktopGame() {
                   <CharactersPage
                     heroes={heroes}
                     art={art}
-                    busy={busy}
+                    busy={working}
                     painting={painting}
                     canCreate={providers.length > 0}
                     onCreate={() => setCreator({})}
@@ -422,7 +443,7 @@ export function DesktopGame() {
                         models={models}
                         provider={provider}
                         onProvider={setProvider}
-                        busy={busy || sending}
+                        busy={working || sending}
                         waiting={stageState.waiting}
                         created={created}
                         carried={carried ?? undefined}
@@ -454,7 +475,7 @@ export function DesktopGame() {
           options={creator.editing || screen !== "new" ? options : (chosen?.options ?? options)}
           editing={creator.editing}
           painted={creator.editing ? art[creator.editing.id] : undefined}
-          busy={busy}
+          busy={working}
           onDraft={draftHero}
           onSave={saveHero}
           onClose={() => setCreator(null)}
@@ -463,7 +484,7 @@ export function DesktopGame() {
       {(error || stageError) && (
         <div role="alert" className={`${panel} absolute left-1/2 top-28 z-[60] w-[min(600px,90vw)] -translate-x-1/2 p-4 text-sm`}>
           <p>{error ?? stageError}</p>
-          <Pill className="mt-3" disabled={busy} onClick={() => void invoke({ kind: "load" })}>
+          <Pill className="mt-3" disabled={working} onClick={() => void invoke({ kind: "load" })}>
             Reload saved state
           </Pill>
           <Pill className="ml-3" onClick={() => setError(null)}>

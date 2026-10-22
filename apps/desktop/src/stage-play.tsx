@@ -180,9 +180,13 @@ export function StagePlay(props: {
   // Replies offered on a hero's turn, which fill the reply box. Without it none are offered.
   onSuggest?: (turnId: string, characterId: string) => Promise<CardSuggestion[]>
   onContinue: (turnId: string) => void
-  // NPC turns, AI heroes' turns and the end of a round run on their own once the narration has been read. One that
-  // fails leaves the Continue button, to retry. Without it Continue always waits for a click.
+  // NPC turns, AI heroes' turns and the end of a round run on their own. An NPC's or AI hero's turn is written while
+  // the story before it is read, and the end of a round once the round has been read. One that fails leaves the
+  // Continue button, to retry. Without it Continue always waits for a click.
   autoContinue?: boolean
+  // The GM is writing a turn Continue asked for. Unlike `busy`, the story already told reads on, and the card shows
+  // the turn being written only once it has been read.
+  writing?: boolean
   // Where the cast stands after a walk. Without it, walks are not saved.
   onPositions?: (turnId: string, positions: Positions, appliedMovement: string) => Promise<void>
   // The table chat of a game with other players, and how a line is sent. Resolves to whether it was taken.
@@ -775,17 +779,22 @@ export function StagePlay(props: {
   if (held) mode = { kind: "roll", roll: held.roll, made: held.natural, resolving: props.busy }
   // A walk holds the card back without a word about the GM.
   else if (busy) mode = props.busy ? playing(turn?._id, actor, aiActor, portrait) : null
+  else if (props.writing) mode = reading ? null : playing(turn?._id, actor, aiActor, portrait)
   // Movement is read against the scene on screen, so wait for the next scene before taking an action.
   else if (scene && !stage && !stageError) mode = { kind: "thinking", note: loading }
   else if (ended) mode = null
   else if (cardActor && rr) mode = { kind: "roll", roll: { skill: rr.rollType, ability: "", dc: rr.difficulty, modifier: rr.modifier ?? 0 } }
   else if (cardActor) mode = { kind: "hold", prompt: `What does ${cardActor.name.split(" ")[0]} do?`, suggestions: holdKey ? (offered?.key === holdKey ? offered.list : "loading") : undefined }
   // What Continue would run: an NPC's or AI hero's turn, or the end of the round. Each is tried once on its own.
-  // Narration that has just arrived is unread, though `reading` only says so after the effect above has run.
-  const unseen = reading || previousText.current.paragraphs !== text
-  const continueKey = !ended && !busy && !unseen && !mode && !props.overlay && turn && !(actor?.type === "pc" && !aiActor) ? `${turn._id}:${actor?.id ?? "round"}` : null
-  const [continued, setContinued] = useState<string | null>(null)
+  // Played on its own, an NPC's or AI hero's turn is written while the story before it is read, or while a roll's
+  // answer waits on the card. The end of a round waits until the round has been read, since the next round replaces
+  // it on screen. Narration that has just arrived is unread, though `reading` only says so after the effect above has
+  // run.
   const { autoContinue, onContinue } = props
+  const unseen = reading || previousText.current.paragraphs !== text
+  const ahead = Boolean(autoContinue && actor && !props.writing && (!mode || (held && !props.busy)))
+  const continueKey = !ended && !busy && (ahead || (!unseen && !mode)) && !props.overlay && turn && !(actor?.type === "pc" && !aiActor) ? `${turn._id}:${actor?.id ?? "round"}` : null
+  const [continued, setContinued] = useState<string | null>(null)
   useEffect(() => {
     if (!autoContinue || !continueKey || continued === continueKey) return
     setContinued(continueKey)

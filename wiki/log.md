@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-22, shorter waits
+
+Owner: "Cut waiting time. NPC turns take 7 to 27 seconds each. Pre-write the next NPC turn while the current one is read. Skip or summarize minor NPC turns in non-combat rounds." In local play the next NPC's or AI hero's turn is now written while the story before it is read, and a run of them keeps writing ahead of the reader. The end of a round still waits until the round is read. A walk's save waits for the turn being written instead of being dropped. Three live runs with Claude in the browser preview: seven festival turns after Branka's reply were written in 74 seconds while the reader was on the second, where before each cost a wait of 8 to 12 seconds. Skipping was measured on the second playtest's save and not built: of 36 calm-round NPC turns no hero had engaged, 28 carried the scene, such as Bram's costumes and Clive on the cellar stair. Every NPC turn also spends a second model call deciding whether it rolls. Desktop type check and tests pass. See [shorter waits](plans/shorter-waits.md).
+
 ## 2026-10-22, round budget
 
 Owner: "Cap stalled encounters", then "Add a round budget per encounter that nudges the GM toward its transition." The second playtest spent eight rounds in The Wine Cellar, and the round-end GM never saw how long a scene had run. Each encounter now has a round budget, 4 unless its frontmatter sets `roundBudget`. The round-end prompt says which round of the budget this is. From the budget's last round it asks the GM to transition if a condition is nearly met, or else move the scene toward a listed way out. Two rounds past, it asks for the transition that fits best. A way out that waits on the players' own choice stays theirs. Nothing is forced. Desktop and hosted games. gm-core, desktop tests and the wiki checks pass. No live run yet. Convex is not deployed. See [round budget](plans/round-budget.md).
