@@ -259,20 +259,25 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
       })
       return store.state
     }
-    const turn = store.turn(command.turnId)
     if (command.kind === "positions") {
-      store.state!.positions = command.positions
+      // A walk can end on a round the game has already moved past, while the stage still reads it. Where the cast
+      // stands belongs to its encounter, so a walk from an encounter the game has left is not kept.
+      const walked = store.state?.turns.find((t) => t._id === command.turnId)
+      if (!walked) throw new Error("This turn is not in the saved adventure.")
       if (command.appliedMovement && !store.state!.movement[command.appliedMovement]) throw new Error("Unknown stage movement.")
+      if (walked.encounterId !== store.current().encounterId) return store.state
+      store.state!.positions = command.positions
       if (command.appliedMovement) store.state!.appliedMovement = [...new Set([...(store.state!.appliedMovement ?? []), command.appliedMovement])]
       store.save()
       return store.state
     }
+    const turn = store.turn(command.turnId)
     if (store.state!.adventure.status === "completed") throw new Error("This adventure is complete.")
     if (command.kind === "continue") {
       const current = findCurrentActor(turn.characters)
       if (current?.type === "pc" && current.controlledBy !== "ai") throw new Error("A player character still needs to act.")
-      // The turns that need no player, or the end of the round, never both: the last turns of a round are read on the
-      // stage before the next round replaces them.
+      // The turns that need no player, or the end of the round, never both: the stage keeps a round on screen until
+      // its last turns have been read, then shows the next.
       if (current) await autonomous()
       // Deliberately let the new encounter's intro be read before the next NPC action.
       else await core.advanceTurn({ turnId: turn._id, settingId: "realm-of-myr", adventurePlanId: store.state!.adventure.planId })

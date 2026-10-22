@@ -234,7 +234,17 @@ export function StagePlay(props: {
   const [, redraw] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
   const compact = useCompact()
-  const turn = save?.turns.find((t) => t._id === save.adventure.currentTurnId)
+  const latest = save?.turns.find((t) => t._id === save.adventure.currentTurnId)
+  // The turn on screen. A round's end written while the round is still read, or while a roll's answer waits on the
+  // card, waits to replace it until the round has been read.
+  const [onScreen, setOnScreen] = useState<string | null>(null)
+  const kept = latest && onScreen !== latest._id ? save?.turns.find((t) => t._id === onScreen) : undefined
+  const turn = kept && (reading || held?.turn === kept._id) ? kept : latest
+  const turnRef = useRef(turn)
+  turnRef.current = turn
+  useEffect(() => {
+    if (turn) setOnScreen(turn._id)
+  }, [turn?._id])
   const cardCharacter = turn?.characters.find((c) => c.id === cardId)
   // A turn that opens a new encounter starts with the end of the last round, which closes the old one. Those
   // paragraphs are told on the old encounter's scene, with its people, and the new scene follows them.
@@ -493,13 +503,19 @@ export function StagePlay(props: {
     const timer = setInterval(() => redraw((n) => n + 1), 1000)
     return () => clearInterval(timer)
   }, [stage])
+  // Everyone where the save has them, once a stage and an adventure's encounter. A new round in the same encounter
+  // keeps the stage as it stands, since a walk's save may still wait behind a turn being written.
+  const placed = useRef<{ stage: Stage; encounter: string } | null>(null)
   useEffect(() => {
     // A stage being replaced for the next encounter must not take the new encounter's positions.
     if (!stage || !turn || stageRef.current !== stage) return
+    const encounter = `${turn.adventureId}:${turn.encounterId}`
+    if (placed.current?.stage === stage && placed.current.encounter === encounter) return
+    placed.current = { stage, encounter }
     for (const [id, p] of Object.entries(saveRef.current?.positions ?? {})) {
       if (stage.cast.some((c) => c.id === id)) stage.placeCast(id, [p.x, p.z], (p.ry * 180) / Math.PI)
     }
-  }, [stage, stageRef, turn?._id])
+  }, [stage, stageRef, turn?._id, turn?.adventureId, turn?.encounterId])
   // Each paragraph moves the camera to fit it: its first speaker, someone making an entrance, whoever it is about, or
   // the place it describes. The first view on a new stage is a cut, not a glide from its opening view.
   const framed = useRef<Stage | null>(null)
@@ -598,23 +614,18 @@ export function StagePlay(props: {
       const onSet = Boolean(stage.set.marks[to])
       const toward = onSet ? undefined : castOf(to)
       if (!onSet && !toward) continue
+      // The walk holds the story. Its save waits its turn behind a turn being written, and the story reads on.
       void (async () => {
         setWalking(true)
-        try {
-          const positions = await applyMovement(stage, character, {
-            move: onSet ? "place" : "character",
-            ...(onSet ? { place: to } : { character: toward }),
-            ...(target ? { face: target } : {}),
-            pace: b.move?.pace ?? "walk",
-            summary: "",
-          })
-          if (stageRef.current === stage) await onPositions?.(turn._id, positions, "")
-        } catch (error) {
-          onError(`Could not save the movement: ${String(error)}`)
-        } finally {
-          setWalking(false)
-        }
-      })()
+        const positions = await applyMovement(stage, character, {
+          move: onSet ? "place" : "character",
+          ...(onSet ? { place: to } : { character: toward }),
+          ...(target ? { face: target } : {}),
+          pace: b.move?.pace ?? "walk",
+          summary: "",
+        }).finally(() => setWalking(false))
+        if (stageRef.current === stage) await onPositions?.(turn._id, positions, "")
+      })().catch((error) => onError(`Could not save the movement: ${String(error)}`))
     }
   }, [stage, stageRef, reading, paragraph, staged, turn, castOf, onPositions, onError])
   useEffect(() => {
@@ -664,21 +675,16 @@ export function StagePlay(props: {
     moved.current.add(key)
     void (async () => {
       setWalking(true)
-      try {
-        const positions = check && c.rollResult! < check.dc ? stagePositions(stage) : await applyMovement(stage, c, movement.intent)
-        // A walk cut off by a scene change belongs to a renderer that no longer exists.
-        if (stageRef.current !== stage) return
-        await onPositions?.(turn._id, positions, key)
-      } catch (error) {
-        onError(`Could not save the movement: ${String(error)}`)
-      } finally {
-        setWalking(false)
-      }
-    })()
+      const walk = check && c.rollResult! < check.dc ? Promise.resolve(stagePositions(stage)) : applyMovement(stage, c, movement.intent)
+      const positions = await walk.finally(() => setWalking(false))
+      // A walk cut off by a scene change belongs to a renderer that no longer exists.
+      if (stageRef.current !== stage) return
+      await onPositions?.(turn._id, positions, key)
+    })().catch((error) => onError(`Could not save the movement: ${String(error)}`))
   }, [stage, stageRef, save, turn, busy, onPositions, onError])
   const focus = useCallback(
     (id: string) => {
-      const characters = saveRef.current?.turns.find((t) => t._id === saveRef.current?.adventure.currentTurnId)?.characters
+      const characters = turnRef.current?.characters
       const character = characters?.find((c) => c.id === id) ?? characters?.find((c) => stage && castIdFor(stage.cast, c) === id)
       if (!character) return
       const sid = stage && castIdFor(stage.cast, character)
@@ -752,7 +758,8 @@ export function StagePlay(props: {
   const cardActor = aiActor || !actor || !props.controls(actor) ? null : (party.find((c) => c.id === actor.id) ?? null)
   const rr = actor?.rollRequired
   // A finished adventure ends on its final narration. Its last turn has characters but takes no more actions.
-  const ended = save?.adventure.status === "completed"
+  const finished = save?.adventure.status === "completed"
+  const ended = finished && turn === latest
   // Suggested replies are asked for once per hero's turn, as soon as it comes up with the game on screen, so they are
   // often there once the narration has been read. A request that fails offers none.
   const suggestRef = useRef(props.onSuggest)
@@ -785,15 +792,17 @@ export function StagePlay(props: {
   else if (ended) mode = null
   else if (cardActor && rr) mode = { kind: "roll", roll: { skill: rr.rollType, ability: "", dc: rr.difficulty, modifier: rr.modifier ?? 0 } }
   else if (cardActor) mode = { kind: "hold", prompt: `What does ${cardActor.name.split(" ")[0]} do?`, suggestions: holdKey ? (offered?.key === holdKey ? offered.list : "loading") : undefined }
-  // What Continue would run: an NPC's or AI hero's turn, or the end of the round. Each is tried once on its own.
-  // Played on its own, an NPC's or AI hero's turn is written while the story before it is read, or while a roll's
-  // answer waits on the card. The end of a round waits until the round has been read, since the next round replaces
-  // it on screen. Narration that has just arrived is unread, though `reading` only says so after the effect above has
-  // run.
+  // What Continue would run: an NPC's or AI hero's turn, or the end of the round, in the turn the game is on, which
+  // may be a round ahead of the screen. Each is tried once on its own. Played on its own, the next one is written while
+  // the story before it is read, or while a roll's answer waits on the card. The end of a round is written ahead only
+  // for the round on screen, so the game is never more than a round ahead of the reader. Narration that has just
+  // arrived is unread, though `reading` only says so after the effect above has run.
   const { autoContinue, onContinue } = props
+  const next = latest ? findCurrentActor(latest.characters) : undefined
+  const nextAi = next?.type === "pc" && next.controlledBy === "ai"
   const unseen = reading || previousText.current.paragraphs !== text
-  const ahead = Boolean(autoContinue && actor && !props.writing && (!mode || (held && !props.busy)))
-  const continueKey = !ended && !busy && (ahead || (!unseen && !mode)) && !props.overlay && turn && !(actor?.type === "pc" && !aiActor) ? `${turn._id}:${actor?.id ?? "round"}` : null
+  const ahead = Boolean(autoContinue && !props.writing && (!mode || (held && !props.busy)) && (next || latest === turn))
+  const continueKey = !finished && !busy && (ahead || (!unseen && !mode)) && !props.overlay && latest && !(next?.type === "pc" && !nextAi) ? `${latest._id}:${next?.id ?? "round"}` : null
   const [continued, setContinued] = useState<string | null>(null)
   useEffect(() => {
     if (!autoContinue || !continueKey || continued === continueKey) return

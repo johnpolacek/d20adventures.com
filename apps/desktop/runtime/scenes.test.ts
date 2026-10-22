@@ -123,15 +123,16 @@ test("the gate keeps first-name figures, Clan Conflict has its scene, and an enc
   }
 })
 
-test("positions reset on a new encounter, persist through rounds and reopening, and stale or unknown writes are rejected", async () => {
+test("positions reset on a new encounter, persist through rounds and reopening, and a walk from a round already ended is kept only in its encounter", async () => {
   const run = await setup()
   try {
     const gateTurn = run.store.current()._id
     await positions(run.store, { branka: { x: 1, z: 12, ry: 0 } })
     await advance(run.store, "the-front-of-the-line")
     assert.deepEqual(run.store.state!.positions, {})
-    await assert.rejects(() => positions(run.store, { branka: { x: 2, z: 12, ry: 0 } }, undefined, gateTurn), /already advanced/)
+    await positions(run.store, { branka: { x: 2, z: 12, ry: 0 } }, undefined, gateTurn)
     assert.deepEqual(run.store.state!.positions, {})
+    await assert.rejects(() => positions(run.store, { branka: { x: 2, z: 12, ry: 0 } }, undefined, "no-such-turn"), /not in the saved adventure/)
     await advance(run.store, "the-harvest-festival")
 
     // A walk is saved once with its movement key, so reopening never replays it.
@@ -152,6 +153,11 @@ test("positions reset on a new encounter, persist through rounds and reopening, 
     assert.match(prompt, /Karim's jewel stall \(-11\.8, 3\.9\)/)
     assert.match(prompt, /Cassia Verane \(-10\.0, 3\.9\)/)
     assert.match(prompt, /Madam Zephyra \(-12\.4, -6\.7\)/)
+
+    // A walk read after the round's end was written is kept, since the next round is in the same square.
+    const lastRound = run.store.state!.turns.at(-2)!._id
+    await positions(run.store, { "cassia-verane": { x: -8, z: 3, ry: 0 } }, undefined, lastRound)
+    assert.deepEqual(run.store.state!.positions["cassia-verane"], { x: -8, z: 3, ry: 0 })
 
     await advance(run.store, "clan-conflict")
     assert.deepEqual(run.store.state!.positions, {})

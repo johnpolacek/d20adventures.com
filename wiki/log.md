@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-22, the end of a round written ahead
+
+Owner picked writing the end of a round while the round is read, "across all adventures". The screen now keeps a round until it has been read, so the end of the round and the next round's NPC and AI turns are written meanwhile, never more than a round ahead. A walk saved on a round the game has moved past is kept within its encounter, and its save no longer holds the story. Played live in the browser preview in all four adventures: in March of Davos five turns, the round's end and two of the next round's turns were written during one round's reading; in The Road to Kordavos a whole round ahead; in The Midnight Summons the round's end started as Thalbern's roll was answered, through an encounter change. Desktop type check and tests pass. See [shorter waits](plans/shorter-waits.md).
+
 ## 2026-10-22, shorter waits
 
 Owner: "Cut waiting time. NPC turns take 7 to 27 seconds each. Pre-write the next NPC turn while the current one is read. Skip or summarize minor NPC turns in non-combat rounds." In local play the next NPC's or AI hero's turn is now written while the story before it is read, and a run of them keeps writing ahead of the reader. The end of a round still waits until the round is read. A walk's save waits for the turn being written instead of being dropped. Three live runs with Claude in the browser preview: seven festival turns after Branka's reply were written in 74 seconds while the reader was on the second, where before each cost a wait of 8 to 12 seconds. Skipping was measured on the second playtest's save and not built: of 36 calm-round NPC turns no hero had engaged, 28 carried the scene, such as Bram's costumes and Clive on the cellar stair. Every NPC turn also spends a second model call deciding whether it rolls. Desktop type check and tests pass. See [shorter waits](plans/shorter-waits.md).
