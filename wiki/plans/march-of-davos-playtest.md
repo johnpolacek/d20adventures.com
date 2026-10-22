@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Stage authoring](../stage-authoring.md) · [Stage engine](../stage-engine.md) · [Testing runbook](testing-runbook.md)
 
-Status: played to an ending on main, 2026-10-19 to 2026-10-20. A second pass began 2026-10-21, after the gate split into the line and the table.
+Status: played to an ending on main, 2026-10-19 to 2026-10-20. Played to an ending again 2026-10-21, after the gate split into the line and the table, reaching Vengeance of the Blackthorn for the first time.
 
 ## Owner request, 2026-10-19
 
@@ -75,6 +75,7 @@ Owner asked again for an automated playtest with fixes as they come, and every a
 | Going back | Caught in the wine cellar, the party was marched back to Through the Halls, and its intro was read again word for word. | An encounter the party has played before opens without its intro. The round's story has already brought them back. Desktop and hosted games. |
 | Caught in the mansion | The house guard caught the party at the vault, then marched them from the cellar to the halls to Astrid's door for six rounds, the speech never reached. Only the cellar and the distraction led to it. | Caught anywhere in the mansion's rooms, the party is taken to the ballroom and arrives as Thaddeus takes the stage. The halls, Astrid's quarters, the corridor and Thaddeus's office lead to the speech, and each says so in its notes. The halls no longer lead back to the start of the ball. In this game, once Branka gave herself up, the guards took the four straight to the ballroom and the speech began. |
 | Invented exits | Twice the GM opened a way out of a scene that the content does not have: a Cowl rogue who left a trail to a cistern shaft, and a secret stair from Astrid's study to a tunnel under the city. Both pulled the party toward the tunnels, which belong to the scenes after the murder. | The round prompt and the NPC turn prompt say: improvise inside the scene, but open no way out of it that the intro and notes do not give, no secret passage, trail or fleeing figure. A search or chase for something the notes do not provide finds nothing more. |
+| Backing the player | At the finale Branka sided with Astrid, and Milos, an AI hero, stayed Astrid's blade and got Joran to hand the Key to him instead. | The AI hero prompt says backing a side means helping it get what it wants: not staying its blade, not pleading for its rival, not asking the prize go to anyone but whom the person named. |
 | One speaker, two lines | Elara's two lines in one paragraph read as `"...something more." "A few weeks ago..."`. | One speaker's lines in a row read as one quotation. Desktop, website and Storyview. |
 | Roll read aloud | A screen reader heard "20 plus -1 makes 19". | "20 minus 1 makes 19". |
 | Dragging the camera | Dragged behind a gate tower, the camera showed the back of the tower. | It stops on the near side of a building, wall or tower between it and what it looks at, as a third-person camera's arm does. Stalls and tables are low, so it passes over them. |
@@ -101,6 +102,18 @@ Owner asked again for an automated playtest with fixes as they come, and every a
 - Roll bonuses for the same skill vary by a point or two. By design: the ability modifier plus a situational modifier the model chooses.
 - Flaws seen: AI heroes recast detection spells (prompt fixed), long AI turns of 30 to 110 seconds when several NPCs act in a row (one per call now), an NPC "back in the Silver Serpent" acting after the party had left, and the GM reusing a name (a thug called Bram).
 
+### Second run, 2026-10-21
+
+- The gate in the app: the line round had every hero speak to another hero. At the table Garlan read the names back and wrote "The Wayfinder's Word", an AI hero's name, over Branka's offer. A side game took "Stoneveil Company" from the player.
+- Festival and Clan Conflict in 3D: Zephyra hinted at the mansion's cellars, Karim named the Blackthorn masquerade, and Cassia's Grease and Larya's people ended the standoff with the magistrates.
+- The Black Market road: Silver Serpent, Lower Districts, urchins, the passphrase door, Milos's Persuasion at Garrick, masks from Mizrith, the torc won at auction, Silverhand's gauntlet on Yeva's wrist, Dmitri Volk's name at his table. It skips the docks arc.
+- The Ambush derailed into a cistern chase until Branka called the party back. Costumes from the attic, then in through the musicians' door with no invitation.
+- The ball: Astrid and Thaddeus in the rotunda, Seraphina and the bishop, Aelindor's song, the cellar's hidden vault found, the party caught by the sommelier, Mikhail's journal in Astrid's study. A GM-invented stair to a tunnel cost three rounds before the caught-party route took them to the speech.
+- The murder: Milos held Thaddeus, who confessed the order and gave him the onyx key. The chase, the hunt with Astrid and Eamon, the fuse cut in the catacombs, the labyrinth's illusion wall, the sealed door, the undead of Big Empty.
+- The finale: Branka sided with Astrid. Cassia greased Joran down, Milos took the Key and Branka had it given to Astrid. Vengeance of the Blackthorn.
+- 86 rounds. Branka finished at 100%, the others at 85 to 95%.
+- Faults left to the GM, not fixed: a repeated phrase ("Astrid's shock hardens into something cold") and a long Wine Cellar of eight rounds.
+
 ## Content pass, 2026-10-20
 
 The live GM found three content faults in the later encounters: named characters with no turn, spoken words inside narration, and intros that call the players "you". Fixed in the encounter files and NPC sheets.
@@ -118,9 +131,11 @@ The live GM found three content faults in the later encounters: named characters
 
 ## Open
 
+- The Kordavos riverfront set, Covert Cargo's quay, is well below the gate and festival: box-hulled ships, an empty quay, flat facades. March of Davos's docks scenes could use it once it is rebuilt.
+- A party that picks the Party view while the reply card is open sees the heroes cropped into the narrow column.
 - The Silver Serpent's road straight to the Lower Districts skips the docks, the drake, Astrid and her invitation. Keep it as a short road, or send every party by the docks?
 
 - The three endings reuse other encounters' paintings. Each could have its own.
-- Vengeance of the Blackthorn is untested in play. The Dust Settles and The New Dawn were reached.
+- All three endings have now been reached in play.
 - The sheets' `image` still points at the stock avatar for the 19 painted NPCs, so the website's own views show the avatar. Uploading the portraits to the art bucket needs the owner.
 - `test:gm-core` was failing since 2026-10-13. It has a refresh mode now (`GM_FIXTURE_UPDATE=1`) and passes.
