@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-22, production deployed
+
+Vercel built the website from main `cbe9de0`, and the owner deployed Convex to prod `marvelous-mink-850`. Hosted games now use the story rules from the second playtest. No schema change and no data cleared. No game has been played on prod since.
+
 ## 2026-10-21, second March of Davos playtest
 
 Owner asked again for an automated playtest with fixes as they come, and every 3D angle brought up to commercial quality. The gate's line and table, the festival and Clan Conflict were played in the desktop app in Chrome at DPR 2, then the adventure ran on unattended with the tester's hero picking among the offered replies. Fixed so far: a new scene's first paragraph showed the wide opening view, an encounter change built the new scene twice, the name over the portraits lagged the narration, crowd figures blocked close-ups, the line's intro framed the back of the line, the paving was flat slabs, characters hovered, speech bubbles ran under the portraits, a dragged camera showed the back of a tower, story view had no speaker portraits, and one speaker's lines read as quotes side by side. The square, the conflict cut and the gate are now cobbled like the festival painting, at the old frame cost. The run reached Vengeance of the Blackthorn in 86 rounds, the first time that ending was played. Story fixes along the way: pronouns in every beats prompt, no invented exits from a scene, a return to a played encounter skips its intro, AI heroes back the player's side, the Ambush ends at the inn, a way into the ball without an invitation, and a party caught in the mansion goes to the speech. Desktop tests, gm-core, the stage check, the website type check and the March of Davos checks pass. Not deployed. See [March of Davos playtest](plans/march-of-davos-playtest.md).
