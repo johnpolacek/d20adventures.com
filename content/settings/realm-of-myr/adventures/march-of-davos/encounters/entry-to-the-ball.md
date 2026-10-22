@@ -38,6 +38,8 @@ This guard is the same man they encountered during the Harvest Festival brawl—
 **Disguises and Entry:**
 The adventurers are expected to be wearing masks. If they chose costumes that contrast with their typical adventuring gear, they may gain a bonus to any Deception checks to remain anonymous. 
 
+**Without an invitation.** Adventurers who came by the Black Market road have none, since only Lady Astrid hands them out, in An Invitation. They can still get in: talk or bluff their way past Barok as guests whose invitation was lost or sent ahead, pay him off, join a noble party going up the stairs, or slip in with the servants and musicians at the side door. Each takes a fitting check, and a failure costs a delay or a closer look, not the ball.
+
 If the adventurers previously sided with Barok, he’ll be more accommodating and might allow them in with minimal scrutiny. If they opposed him, Barok will be unfriendly, scrutinizing their invitations and potentially causing a delay unless persuaded or intimidated. In a neutral scenario, Barok remains professional, checking their invites efficiently but becoming confrontational if disrespected.
 
 ## Transitions
