@@ -25,6 +25,8 @@ At the bottom, a dimly lit corridor leads to the wine cellar. Old oak barrels ar
 
 Allow the characters to plot out their action, then roll a perception check to see if they hear footsteps from the stairway.
 
+**Caught.** If the house guard catches the adventurers anywhere below stairs or in the family's rooms, the guards do not march them about the house. They take them straight down to the ballroom to answer to Lady Astrid, and arrive just as Thaddeus takes the stage. Every eye turns to him, and the guards hold the adventurers at the edge of the crowd while he speaks.
+
 Legacy stages:
 
 ### The Sommelier
@@ -75,7 +77,7 @@ These documents would be enough to bring down the entire clan faction should the
 
 ## Transitions
 
-- To [[encounter:the-speech]] when the players head back to the grand ballroom to see the climax of the festival.
+- To [[encounter:the-speech]] when the players head back to the grand ballroom to see the climax of the festival, or the house guard catches the players and takes them down to the ballroom, where Thaddeus takes the stage as they arrive.
 - To [[encounter:through-the-halls]] when the players return to the main hallway hub at the base of the stairs.
 
 ## Migration Context

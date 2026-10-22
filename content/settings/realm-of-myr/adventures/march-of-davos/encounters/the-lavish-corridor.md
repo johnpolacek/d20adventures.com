@@ -47,6 +47,7 @@ The door is locked of course.
 
 - To [[encounter:thaddeus-blackthorns-private-chambers]] when After resolving The Lavish Corridor, continue to Thaddeus Blackthorn’s Private Chambers.
 - To [[encounter:the-rangers-quarters]] when the players head back toward the previous wing of the mansion.
+- To [[encounter:the-speech]] when the house guard catches the players and takes them down to the ballroom, where Thaddeus takes the stage as they arrive.
 
 ## Migration Context
 

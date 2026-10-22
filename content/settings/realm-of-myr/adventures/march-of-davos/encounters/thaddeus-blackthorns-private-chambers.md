@@ -52,6 +52,7 @@ A later entry reads: "The Oath Stone of the First Clans, bought of the Circle of
 
 - To [[encounter:the-wine-cellar]] when After resolving Thaddeus Blackthorn’s Private Chambers, continue to The Wine Cellar.
 - To [[encounter:the-lavish-corridor]] when the players leave the office and head back into the hall.
+- To [[encounter:the-speech]] when the house guard catches the players and takes them down to the ballroom, where Thaddeus takes the stage as they arrive.
 
 ## Migration Context
 

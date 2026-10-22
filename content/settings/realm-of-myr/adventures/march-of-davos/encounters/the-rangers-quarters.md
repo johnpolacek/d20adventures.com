@@ -46,6 +46,7 @@ This journal represents both the culmination of Mikhail’s life’s work and th
 
 - To [[encounter:the-lavish-corridor]] when After resolving The Ranger’s Quarters, continue to The Lavish Corridor.
 - To [[encounter:through-the-halls]] when the players exit the quarters and return to the main hallway hub.
+- To [[encounter:the-speech]] when the house guard catches the players and takes them down to the ballroom, where Thaddeus takes the stage as they arrive.
 
 ## Migration Context
 

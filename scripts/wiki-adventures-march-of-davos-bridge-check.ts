@@ -48,11 +48,16 @@ function main() {
   assert.equal(Object.keys(artifacts.encounters).length, 49)
   assert.equal(Object.keys(artifacts.characterSheets.npcs).length, 49)
   assert.equal(Object.keys(artifacts.characterSheets.premadeCharacters).length, 9)
-  assert.equal(artifacts.graph.encounterTransitions.length, 61)
-  // The heroes wait in the line, then meet Garlan at its front, then enter the festival.
+  assert.equal(artifacts.graph.encounterTransitions.length, 64)
+  // The heroes wait in the line, then meet Garlan at its front, then enter the festival. Caught anywhere in the
+  // mansion's rooms, or back in the hall, they are taken to the ballroom for the speech.
   for (const [from, to] of [
     ["the-gates-of-kordavos", "the-front-of-the-line"],
     ["the-front-of-the-line", "the-harvest-festival"],
+    ["through-the-halls", "the-speech"],
+    ["the-rangers-quarters", "the-speech"],
+    ["the-lavish-corridor", "the-speech"],
+    ["thaddeus-blackthorns-private-chambers", "the-speech"],
   ])
     assert.equal(
       artifacts.graph.encounterTransitions.some((transition) => transition.fromEncounterId === from && transition.toEncounterId === to),
