@@ -12,7 +12,7 @@ The four registered Realm of Myr adventures use authored markdown and JSON compi
 |---|---|
 | Registry | `LOCAL_WIKI_ADVENTURES` in `lib/wiki-adventures/local-runtime.ts` registers The Midnight Summons, Covert Cargo, The Road to Kordavos, and March of Davos. |
 | Manifest | Adventure `adventure.md` frontmatter supplies identity, start encounter, party limits, premades, character options, asset metadata, and the optional [safety rules](#safety-rules). |
-| Encounters | Markdown files carry stable IDs, NPC/location refs, transitions, intro, and GM notes. NPC refs can include `startNear`. |
+| Encounters | Markdown files carry stable IDs, NPC/location refs, transitions, intro, and GM notes. NPC refs can include `startNear`. An optional `roundBudget` sets how many rounds the scene should take, 4 when absent. See [round budget](plans/round-budget.md). |
 | Characters | JSON sheets hold mechanical data. Paired markdown profiles hold authored narrative context. |
 | Entities | NPCs, locations, factions, and items support context retrieval. Encounter location refs also supply map titles. |
 | Compiler | `compiler.ts` produces manifest, encounters, entities, character sheets, graph, retrieval index, and validation report. Registered runtime loads compile in publish mode and reject blocked content. |

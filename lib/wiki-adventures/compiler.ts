@@ -53,6 +53,7 @@ const commonFrontmatterSchema = z.object({
     )
     .optional(),
   assets: z.array(z.string()).optional(),
+  roundBudget: z.number().int().positive().optional(),
 })
 
 export type CompileOptions = {
@@ -162,6 +163,7 @@ export function compileAdventureSourceTree(files: SourceFile[], options: Compile
       summary: frontmatter.summary ?? file.sections.summary,
       typedLinks: file.typedLinks,
       transitions: extractedTransitions,
+      roundBudget: frontmatter.roundBudget,
       validationStatus: extractedTransitions.every((entry) => entry.publishResolved) ? "valid" : options.mode === "publish" ? "blocked" : "draftOnly",
     }
   }

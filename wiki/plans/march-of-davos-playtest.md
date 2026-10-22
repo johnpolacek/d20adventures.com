@@ -112,7 +112,7 @@ Owner asked again for an automated playtest with fixes as they come, and every a
 - The murder: Milos held Thaddeus, who confessed the order and gave him the onyx key. The chase, the hunt with Astrid and Eamon, the fuse cut in the catacombs, the labyrinth's illusion wall, the sealed door, the undead of Big Empty.
 - The finale: Branka sided with Astrid. Cassia greased Joran down, Milos took the Key and Branka had it given to Astrid. Vengeance of the Blackthorn.
 - 86 rounds. Branka finished at 100%, the others at 85 to 95%.
-- Faults left to the GM, not fixed: a repeated phrase ("Astrid's shock hardens into something cold") and a long Wine Cellar of eight rounds.
+- Faults left to the GM, not fixed: a repeated phrase ("Astrid's shock hardens into something cold") and a long Wine Cellar of eight rounds. The long scene led to a [round budget](round-budget.md), 2026-10-22.
 
 ## Content pass, 2026-10-20
 

@@ -126,6 +126,8 @@ export type RuntimeEncounter = {
   summary?: string
   typedLinks: RuntimeLink[]
   transitions: RuntimeTransition[]
+  // Rounds the scene should take before the round-end GM is pressed toward a way out. See wiki-adventures/runtime-context.ts.
+  roundBudget?: number
   validationStatus: "valid" | "draftOnly" | "blocked"
 }
 

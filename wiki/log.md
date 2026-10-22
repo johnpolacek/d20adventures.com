@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-22, round budget
+
+Owner: "Cap stalled encounters", then "Add a round budget per encounter that nudges the GM toward its transition." The second playtest spent eight rounds in The Wine Cellar, and the round-end GM never saw how long a scene had run. Each encounter now has a round budget, 4 unless its frontmatter sets `roundBudget`. The round-end prompt says which round of the budget this is. From the budget's last round it asks the GM to transition if a condition is nearly met, or else move the scene toward a listed way out. Two rounds past, it asks for the transition that fits best. A way out that waits on the players' own choice stays theirs. Nothing is forced. Desktop and hosted games. gm-core, desktop tests and the wiki checks pass. No live run yet. Convex is not deployed. See [round budget](plans/round-budget.md).
+
 ## 2026-10-22, production deployed
 
 Vercel built the website from main `cbe9de0`, and the owner deployed Convex to prod `marvelous-mink-850`. Hosted games now use the story rules from the second playtest. No schema change and no data cleared. No game has been played on prod since.

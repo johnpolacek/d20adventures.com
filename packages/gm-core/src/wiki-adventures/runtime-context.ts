@@ -79,6 +79,8 @@ export type LlmGameplayContextPacket = {
     ledger?: string
     // When the heroes start as strangers: whose names who here has not heard.
     names?: string
+    // How long the scene has run against its round budget, when it has a way out.
+    pace?: string
     mostRecentAction?: string
     rollInfo: string
   }
@@ -178,6 +180,7 @@ export function assembleGameplayContextPacket(args: {
       currentRound: turnScript(args.session.currentTurn),
       ledger: ledgerNote(args.session.knowledge, names, true),
       names: args.artifacts.manifest.strangers ? namesNote(namesHeard(args.session.knowledge, args.session.currentTurn), liveCharacters) : "",
+      pace: legalTransitions.length ? paceNote(sceneRound(args.session.allTurns, currentEncounter.id, args.session.currentTurnOrder), currentEncounter.roundBudget ?? DEFAULT_ROUND_BUDGET) : "",
       mostRecentAction: storyText(lastStep(args.session.currentTurn.story), storyNames(args.session.currentTurn.characters)),
       rollInfo: buildRollInfo(args.session.currentTurn),
     },
@@ -195,6 +198,31 @@ export function assembleGameplayContextPacket(args: {
     },
     spatialContext: args.spatialContext,
   }
+}
+
+// Rounds a scene should take when its frontmatter sets no `roundBudget`. The second March of Davos run spent eight
+// rounds in the wine cellar with nothing to say how long it had gone on.
+export const DEFAULT_ROUND_BUDGET = 4
+
+/** Rounds played in a row in the current encounter, the current one included. A return visit counts from 1. */
+export function sceneRound(turns: RuntimeTurnRow[], encounterId: string, currentTurnOrder: number): number {
+  const earlier = turns.filter((turn) => (turn.order ?? 0) < currentTurnOrder).sort((a, b) => (b.order ?? 0) - (a.order ?? 0))
+  const away = earlier.findIndex((turn) => turn.encounterId !== encounterId)
+  return 1 + (away === -1 ? earlier.length : away)
+}
+
+/**
+ * The round-end GM's pacing line. From the budget's last round it nudges the scene toward a listed way out, and two
+ * rounds past it asks for the transition that fits best. It never forces one: the core takes whatever the GM decides.
+ */
+export function paceNote(round: number, budget: number): string {
+  const choice = "A way out that waits on a choice only the players can make stays theirs: have the scene press them to make it."
+  if (round < budget) return `Scene Pace: round ${round} of ${budget} budgeted for this scene.`
+  const past = round - budget
+  const count = past ? `round ${round}, ${past} past the ${budget} budgeted for this scene` : `round ${round}, the last of ${budget} budgeted for this scene`
+  if (past < 2)
+    return `Scene Pace: ${count}. If a listed condition is met or nearly met, transition now. If not, move the scene toward the nearest listed way out so a condition can be met next round: an NPC acts on what they want, a deadline or interruption arrives, or an obstacle gives way. ${choice}`
+  return `Scene Pace: ${count}. It has run long. Take the listed transition that best fits what has happened. ${choice}`
 }
 
 function linkedRecords(records: Record<string, RuntimeEntityRecord>, encounter: RuntimeEncounter): RuntimeEntityRecord[] {
@@ -251,7 +279,7 @@ ${transitionText}
 
 Allowed nextEncounterId values:
 ${packet.outputContract.allowedNextEncounterIds.join(", ")}
-
+${packet.session.pace ? `\n${packet.session.pace}\n` : ""}
 Your Task:
 1. Decide from what has already happened, including everything this round and roll outcomes. A player's action this round counts even when an NPC spoke after it. If events so far satisfy a listed transition condition, transition now rather than extending a situation that is already resolved. Continue the current encounter only when no listed condition is satisfied yet, or when one depends on a player choice that has not been made.
    Improvise freely inside the scene, but open no way out of it that the intro and GM notes do not give: no secret passage, hidden stair or tunnel, no fleeing figure or trail to chase, no new lead toward a place no listed transition names. When the players search for or chase something the notes do not provide, they find nothing more to follow.

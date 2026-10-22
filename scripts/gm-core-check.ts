@@ -6,11 +6,13 @@ import { assertPlayerCharacterControl } from "@d20/gm-core/access"
 import { calculateAttributeModifier } from "@d20/gm-core/utils/modifier-utils"
 import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventures/plan-view"
 import { gmNotesWithRules, premiseNote } from "@d20/gm-core/wiki-adventures/player-safety"
+import { assembleGameplayContextPacket, buildWikiEncounterProgressionPrompt, paceNote, sceneRound } from "@d20/gm-core/wiki-adventures/runtime-context"
 import { build } from "esbuild"
 import ts from "typescript"
 import { z } from "zod"
 import { commitWikiTurnAdvance, submitReply } from "../convex/adventure"
-import { loadLocalWikiAdventureRuntime } from "../lib/wiki-adventures/local-runtime"
+import { compileAdventureSourceTree } from "../lib/wiki-adventures/compiler"
+import { getLocalWikiAdventureDefinition, loadLocalWikiAdventureRuntime, readLocalWikiAdventureSourceFiles } from "../lib/wiki-adventures/local-runtime"
 
 // Recorded from the production services at 7ff0b2d, and again for story beats on 2026-10-14. No model calls.
 const fixture = JSON.parse(readFileSync("scripts/gm-core-fixtures/turn.json", "utf8"))
@@ -352,6 +354,39 @@ function adventureRules() {
   assert.match(gmNotesWithRules({ premise: "The heroes have never met." }, undefined) ?? "", /^ADVENTURE PREMISE/)
 }
 
+// A scene's round budget counts the rounds in a row in one encounter. The round-end GM is told where the scene stands,
+// and from the budget's last round is nudged toward a way out. `roundBudget` in an encounter's frontmatter sets it.
+function roundBudget() {
+  const rows = (ids: string[]) => ids.map((encounterId, index) => ({ encounterId, story: [], order: index + 1 }))
+  assert.equal(sceneRound(rows(["a"]), "a", 1), 1)
+  assert.equal(sceneRound(rows(["a", "a", "a"]), "a", 3), 3)
+  assert.equal(sceneRound(rows(["a", "a", "b", "a"]), "a", 4), 1)
+  assert.equal(sceneRound(rows(["b", "a", "a", "a"]), "a", 3), 2)
+  assert.equal(paceNote(2, 4), "Scene Pace: round 2 of 4 budgeted for this scene.")
+  assert.match(paceNote(4, 4), /round 4, the last of 4 budgeted.*nearest listed way out.*stays theirs/)
+  assert.match(paceNote(5, 4), /round 5, 1 past the 4 budgeted.*nearest listed way out/)
+  assert.match(paceNote(6, 4), /round 6, 2 past the 4 budgeted.*best fits.*stays theirs/)
+
+  const definition = getLocalWikiAdventureDefinition("realm-of-myr", "march-of-davos")
+  assert.ok(definition)
+  const files = readLocalWikiAdventureSourceFiles(definition).map((file) =>
+    file.path.endsWith("/the-wine-cellar.md") ? { ...file, content: file.content.replace('type: "encounter"\n', 'type: "encounter"\nroundBudget: 2\n') } : file
+  )
+  const artifacts = compileAdventureSourceTree(files, { mode: "publish", contentVersion: definition.contentVersion, allowedAssetHosts: definition.assetHosts })
+  assert.equal(artifacts.encounters["the-wine-cellar"].roundBudget, 2)
+  assert.equal(artifacts.encounters["through-the-halls"].roundBudget, undefined)
+  const prompt = (encounterId: string, ids: string[]) => {
+    const currentTurn = { ...clone(fixture.initialState), id: "turn", encounterId }
+    const allTurns = ids.map((id, index) => ({ encounterId: id, story: [], order: index + 1, characters: currentTurn.characters }))
+    const session = { adventureInstanceId: "fixture-adventure", currentTurnOrder: ids.length, currentTurn, allTurns }
+    return buildWikiEncounterProgressionPrompt(assembleGameplayContextPacket({ artifacts, contentRef: runtime.contentRef, session }))
+  }
+  assert.match(prompt("the-wine-cellar", ["the-wine-cellar", "the-wine-cellar"]), /\n\nScene Pace: round 2, the last of 2 budgeted for this scene\. [^\n]+\n\nYour Task:/)
+  assert.match(prompt("through-the-halls", ["through-the-halls"]), /Scene Pace: round 1 of 4 budgeted/)
+  // An ending has nowhere to go, so it has no pace.
+  assert.doesNotMatch(prompt("the-new-dawn", ["final-confrontation", "the-new-dawn"]), /Scene Pace/)
+}
+
 async function main() {
   const originalRandom = Math.random
   const originalConsole = { ...console }
@@ -361,6 +396,7 @@ async function main() {
     await packageBoundary()
     spellModifiers()
     adventureRules()
+    roundBudget()
     await replayTurn()
     await characterPrompts()
     await accessAndInstanceIsolation()
@@ -369,7 +405,7 @@ async function main() {
     Object.assign(console, originalConsole)
   }
   console.log(
-    "GM core: browser bundle, dependency boundary, 7-call prompt/schema/write parity, 9 character prompts, spell modifiers, access, AI companion, instance isolation, duplicate/stale/invalid transitions passed."
+    "GM core: browser bundle, dependency boundary, 7-call prompt/schema/write parity, 9 character prompts, spell modifiers, round budget, access, AI companion, instance isolation, duplicate/stale/invalid transitions passed."
   )
 }
 main().catch((error) => {
