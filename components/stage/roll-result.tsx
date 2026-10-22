@@ -168,8 +168,8 @@ export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll:
             DC <span className={cn("font-serif font-semibold tracking-normal text-stage-cream", compact ? "text-[13px]" : "text-[17px]")}>{roll.dc}</span>
           </span>
         </div>
-        {/* The verdict, stamped in, and by how much the roll made or missed the DC. */}
-        <div className={cn("flex items-center gap-3", compact ? "mt-1" : "mt-2", step >= 3 ? "opacity-100" : "opacity-0")}>
+        {/* The verdict, stamped in, and by how much the roll made or missed the DC. Silent until the die has landed. */}
+        <div aria-hidden={step < 3} className={cn("flex items-center gap-3", compact ? "mt-1" : "mt-2", step >= 3 ? "opacity-100" : "opacity-0")}>
           <span
             className={cn(
               "roll-stamp inline-block shrink-0 whitespace-nowrap rounded-[3px] border-2 font-display font-bold tracking-[0.1em] [word-spacing:0.35em] uppercase",
