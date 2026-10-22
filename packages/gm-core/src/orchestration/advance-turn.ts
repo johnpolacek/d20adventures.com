@@ -185,9 +185,11 @@ export function createAdvanceTurn(ports: GmPorts) {
             }))
             .sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
       const characters = keepPlayersAlive(artifacts.manifest, nextCharacters)
-      // A new encounter opens on its intro, read as beats for the characters who are in it.
+      // A new encounter opens on its intro, read as beats for the characters who are in it. One the party has played
+      // before does not read it again: they know the place, and the round's own story has brought them back.
       const nextScene = isTransition ? await sceneFor(ports, { encounterId: nextEncounter.id, characters }) : scene
-      const intro = isTransition ? cleanStory(authoredStory(nextEncounter.sections.intro ?? "", nextScene), nextScene, { step: "intro" }) : []
+      const returning = allTurns.some((row) => row.encounterId === nextEncounter.id)
+      const intro = isTransition && !returning ? cleanStory(authoredStory(nextEncounter.sections.intro ?? "", nextScene), nextScene, { step: "intro" }) : []
       const story = [...told, ...intro]
       const isFinalEncounter = isLocalWikiFinalEncounter(artifacts, nextEncounter.id)
       const commitResult = await ports.store.commitWikiTurnAdvance({
