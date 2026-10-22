@@ -37,6 +37,8 @@ With that, the shadows on the roofs melt away, leaving only the cold wind in the
 
 At the inn, Bram is waiting up, his usual jovial face creased with concern. "You look like you've seen a ghost, or worse. Get some sleep. Tomorrow is the final day of the festival, and the Blackthorns don't like to be kept waiting for their grand ball. If you're going, I hope you've got your masks ready."
 
+**The Cowl cannot be followed tonight.** The archers and the voice are gone once it falls silent. If the heroes climb to the rooftops, search the lanes or try to follow, they find nothing: empty roofs, no trail, quiet streets. No Cowl agent comes back to the inn, leaves a trail or waits to be found. The Covenant's tunnels are not found tonight. The night ends at the inn.
+
 This encounter serves as a powerful psychological tactic by the Covenant of the Cowl to intimidate the adventurers rather than physically harm them. The use of magic, particularly Thaumaturgy, and the dramatic timing of the arrows are meant to create an atmosphere of unease and fear, reminding the party that they are constantly being watched.
 
 **Preparation for the Ball:**
@@ -48,7 +50,7 @@ Bram can assist by letting the party rummage through a trunk of "forgotten" cost
 
 ## Transitions
 
-- To [[encounter:entry-to-the-ball]] when the adventurers finish their preparations and head to the Blackthorn Mansion on the final night of the festival.
+- To [[encounter:entry-to-the-ball]] when the adventurers have rested at the inn and found their costumes and masks, and head to the Blackthorn Mansion on the final night of the festival.
 
 ## Migration Context
 
