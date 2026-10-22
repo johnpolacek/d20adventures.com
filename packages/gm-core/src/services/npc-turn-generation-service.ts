@@ -171,6 +171,8 @@ Examples:
 - Non-speaking creature: {"kind": "action", "who": "dire-wolf", "to": "milos", "text": "The dire wolf snarls, its hackles raised, ready to pounce."}
 - Physical action: {"kind": "action", "who": "guard", "text": "The guard silently draws his sword and blocks the exit."}
 
+The NPC opens no way out of the scene that the Encounter Instructions do not give: no secret passage, no trail or sign left for the heroes to follow, no lead toward a place the encounter does not go.
+
 If the NPC is away from the heroes and does nothing they could see or hear this turn, set actionType to "skip" and leave "beats" empty. Do not narrate that it stays where it is: a turn the heroes cannot perceive is not told.
 
 If the NPC runs away and leaves the scene for good, set actionType to "flee" and narrate them going. They are then out of the encounter and take no further turns. Use it only when they actually get away this turn, not for backing off or taking cover.
