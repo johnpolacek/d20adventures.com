@@ -6,7 +6,7 @@ This log retains durable decisions and dated evidence. Git owns detailed impleme
 
 ## 2026-10-23, token functions require the server secret
 
-Every function in `convex/userTokenManagement.ts` was public and took any user id, so anyone with the public Convex URL could credit or drain any account. All six now take the server secret, as the store, device and hosting functions do. `app/_actions/tokens.ts` is no longer a server action file, so a browser cannot call its credit helper either. Checked on the development deployment over the public HTTP API: no secret or a wrong one is refused, the right one passes. Production needs a Convex deploy after the Vercel deploy.
+Every function in `convex/userTokenManagement.ts` was public and took any user id, so anyone with the public Convex URL could credit or drain any account. All six now take the server secret, as the store, device and hosting functions do. `app/_actions/tokens.ts` is no longer a server action file, so a browser cannot call its credit helper either. Checked on the development deployment over the public HTTP API: no secret or a wrong one is refused, the right one passes. Deployed to Vercel and Convex production the same day. Production refuses calls with no secret or a wrong one.
 
 ## 2026-10-23, Vercel deployment storage
 
