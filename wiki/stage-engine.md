@@ -335,3 +335,5 @@ See [the plan](plans/march-of-davos-sets.md).
 - Measured: the Old Grand Library 0.25M static triangles, 0.50M rendered with shadows, about 130 draw calls.
 - Nautical builders: `serpent` (a sea serpent in a wall's plane, for a sign), `shipWheel`, `anchor`.
 - Measured: the Silver Serpent Tavern 0.12M static triangles, 0.24M rendered, about 160 draw calls.
+- Harbour builders: `galleon` (a ship people walk aboard, deck at y = 0, a gangway doorway), `cage` (with `melted`), `crane`, `warehouse`, `skiff`, `bollard`. `crate` and `barrel` take `solid`.
+- Measured: the Kordavos docks 0.10M static triangles, 0.28M rendered, about 200 draw calls.

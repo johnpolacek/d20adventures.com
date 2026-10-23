@@ -8,7 +8,7 @@ import { defineBuilder, num, size, vec3 } from "./types"
 
 // An outline on the ground [x, z], extruded up from y0 by `depth` in the object's frame. (The bare `extrude` primitive's
 // "xz" plane mirrors z; this does not.)
-function plan(b: Sink, mat: THREE.Material, pts: Vec2[], y0: number, depth: number) {
+export function plan(b: Sink, mat: THREE.Material, pts: Vec2[], y0: number, depth: number) {
   shape(
     b,
     mat,
@@ -23,7 +23,7 @@ const scale = (pts: Vec2[], sx: number, sz: number): Vec2[] => pts.map(([x, zz])
 const pick3 = ([x, zz]: readonly [number, number], y: number) => [x, y, zz] as const
 
 // A hull seen from above: a square-cut stern at -z, straight sides, and a bow that curves to a point at +z.
-function hullOutline(L: number, B: number, bow = 0.3, n = 10): Vec2[] {
+export function hullOutline(L: number, B: number, bow = 0.3, n = 10): Vec2[] {
   const half = B / 2
   const stern = -L / 2
   const shoulder = L / 2 - L * bow

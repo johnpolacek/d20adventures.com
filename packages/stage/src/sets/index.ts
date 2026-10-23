@@ -14,6 +14,8 @@ export const SETS: Record<string, () => Promise<unknown>> = {
   "realm-of-myr/dragonbone-inn-morning": () => import("./realm-of-myr/dragonbone-inn-morning.json").then((m) => m.default),
   "realm-of-myr/old-grand-library": () => import("./realm-of-myr/old-grand-library.json").then((m) => m.default),
   "realm-of-myr/silver-serpent-tavern": () => import("./realm-of-myr/silver-serpent-tavern.json").then((m) => m.default),
+  "realm-of-myr/kordavos-docks": () => import("./realm-of-myr/kordavos-docks.json").then((m) => m.default),
+  "realm-of-myr/kordavos-docks-wrecked": () => import("./realm-of-myr/kordavos-docks-wrecked.json").then((m) => m.default),
 }
 export const STAGINGS: Record<string, () => Promise<unknown>> = {
   "march-of-davos/the-gates-of-kordavos": () => import("../stagings/march-of-davos/the-gates-of-kordavos.json").then((m) => m.default),
@@ -24,6 +26,11 @@ export const STAGINGS: Record<string, () => Promise<unknown>> = {
   "march-of-davos/morning-at-the-dragonbone": () => import("../stagings/march-of-davos/morning-at-the-dragonbone.json").then((m) => m.default),
   "march-of-davos/the-old-grand-library": () => import("../stagings/march-of-davos/the-old-grand-library.json").then((m) => m.default),
   "march-of-davos/the-silver-serpent-tavern": () => import("../stagings/march-of-davos/the-silver-serpent-tavern.json").then((m) => m.default),
+  "march-of-davos/arrival-at-the-docks": () => import("../stagings/march-of-davos/arrival-at-the-docks.json").then((m) => m.default),
+  "march-of-davos/mystery-cargo": () => import("../stagings/march-of-davos/mystery-cargo.json").then((m) => m.default),
+  "march-of-davos/the-beast-escapes": () => import("../stagings/march-of-davos/the-beast-escapes.json").then((m) => m.default),
+  "march-of-davos/the-aftermath": () => import("../stagings/march-of-davos/the-aftermath.json").then((m) => m.default),
+  "march-of-davos/an-invitation": () => import("../stagings/march-of-davos/an-invitation.json").then((m) => m.default),
   "the-midnight-summons/broken-silence": () => import("../stagings/the-midnight-summons/broken-silence.json").then((m) => m.default),
   "the-midnight-summons/owlbear-confrontation": () => import("../stagings/the-midnight-summons/owlbear-confrontation.json").then((m) => m.default),
   "the-midnight-summons/timely-rescue": () => import("../stagings/the-midnight-summons/timely-rescue.json").then((m) => m.default),

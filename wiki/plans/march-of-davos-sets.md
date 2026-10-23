@@ -16,8 +16,8 @@ Encounters 1 to 7 already had sets: the gate, the harvest square, the Dragonbone
 |---|---|---|
 | 8 | The Old Grand Library and its private archives | Done 2026-10-23 |
 | 9 | The Silver Serpent Tavern | Done 2026-10-23 |
-| 10 to 14 | The docks | Next |
-| 15 to 17 | The lower districts | |
+| 10 to 14 | The docks | Done 2026-10-23 |
+| 15 to 17 | The lower districts | Next |
 | 18 to 19 | The black market | |
 | 20 to 22 | The auction | |
 | 23 to 26 | Silverhand's trail, the hideout, the ambush | |
@@ -55,3 +55,20 @@ Source: the encounter's painting (a long, dark timber hall packed with sailors, 
 - At ultra, DPR 2: about 150 to 170 draw calls, 0.24M rendered triangles, about 31 fps. 0.12M static triangles.
 - The camera stays inside the tavern. Seen from the quay, the room lit by the open sky's hemisphere read as flat grey.
 - Desktop maps the encounter with a `where` line. 78 desktop tests pass. Not yet seen in the running desktop app.
+
+## The docks
+
+Source: five paintings (a golden harbour with a great carved ship, stone warehouses with arcades and canvas awnings; the crowded quay by the ship; a wingless crocodile-like drake lunging across planks; a deck with a burst, melted cage hatch; Lady Astrid's portrait) and five encounters. The text gives the drake wings, mossy green and bark-brown scales and yellow eyes, so the standee follows the text.
+
+- Sets `realm-of-myr/kordavos-docks` and `kordavos-docks-wrecked`, both written by `scripts/stage-sets/kordavos-docks.ts`. Stagings `arrival-at-the-docks`, `mystery-cargo`, `the-beast-escapes`, `the-aftermath`, `an-invitation`.
+- A cobbled quay along the harbour, its stone face 2.4 m down to the water, bollards, rings and ladders. The Star of Faelendar lies alongside, her deck level with the quay so people walk aboard by the gangway, a doorway for walks. A treadwheel crane, cargo stacks, carts, stalls under the arcades of five stone warehouses, a jetty with skiffs, ships moored and across the harbour, gulls, and a painted far shore with the castle.
+- Warehouse 14 is a timber shed in the quay's west corner, doors open: crates of elven wine, silk bales, barrels, the lockbox and the chained crate.
+- The wrecked set has smashed cargo and loose planks, a torn main course, the hatch burst open with its doors split across the deck, and the cage in the hold eaten through by acid, its stubs dripping slag.
+- New builders in `packages/stage/src/builders/harbour.ts`: `galleon` (walkable, two-tier carved sterncastle, quarter galleries, gunports, shrouds with ratlines, a hold well under the hatch), `cage`, `crane`, `warehouse`, `skiff`, `bollard`. Crates and barrels take `solid`.
+- Standees: Finn, Tor, Petra and Alaric from their portraits, three hired blades, Lady Astrid armed and Lady Astrid with the invitation from her painting, and the forest drake. `scripts/stage-standees.ts` gained `magenta` (paint and key a green subject on magenta) and `pose` (a creature's stance).
+- Backdrop `docks-harbour.webp`: the far quays, the city on its hill and the castle.
+- `pnpm stage:check` passes. Walks: arrival 133 of 133, the beast 108 of 108, the invitation 85 of 85, the aftermath 106 of 108, Mystery Cargo 142 of 160. The blocked ones cross the whole quay through the cargo stacks, or go from the ship's deck into the shed, which takes two doorways.
+- At ultra, DPR 2: 180 to 250 draw calls, 0.26M to 0.29M rendered triangles, 21 to 33 fps. 0.10M static triangles.
+- Desktop maps the five encounters with `where` lines. 78 desktop tests pass.
+- Not yet seen in the running desktop app. The ship reads as a ship with a carved stern but not yet as grand as the painting's galleon, and the sails' cloth texture is blotchy up close.
+

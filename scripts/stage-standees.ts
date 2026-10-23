@@ -25,7 +25,9 @@ const PORTRAIT_BG = "#3b4256"
 
 // `backNote` adds to the back prompt when a back keeps coming out wrong (an open cloak drawn behind a front-facing body).
 // `seated` paints the figure sitting on the stool it brings, for a tavern's patrons.
-type Figure = { out: string; who: string; look: string; ref?: string; head: number; backNote?: string; seated?: boolean }
+// `pose` replaces the standing pose (a creature on all fours). `magenta` paints and keys on magenta instead of green, for a
+// green subject (a mossy drake).
+type Figure = { out: string; who: string; look: string; ref?: string; head: number; backNote?: string; seated?: boolean; pose?: string; magenta?: boolean }
 const stock = (who: string, look: string, head = 0.13): Figure => ({ out: "", who, look, head })
 // Stock figures stand in for created heroes: one per race and build, dressed for travel with no class gear, so any class
 // reads true. Heads are the share of figure height a portrait frames around.
@@ -349,6 +351,84 @@ const FIGURES: Record<string, Figure> = {
     look: "A rakish smuggler captain in his forties, about 1.84 m tall, with tall human proportions and long legs, not a dwarf. A black tricorn hat, long dark hair tied back, a sharp trimmed beard, a sly half smile, a gold earring. A long weathered brown greatcoat with wide cuffs over a dark red waistcoat and a loose white shirt, a baldric with a cutlass, a sash, high boots. Holding a pewter tankard raised in one hand.",
     head: 0.13,
   },
+  // March of Davos, the docks: Finn and his crew from their portraits, Alaric and his hired blades, Lady Astrid from her
+  // painting, and the forest drake from the text (wings, mossy green and bark-brown, yellow eyes).
+  "loric-windrider": {
+    out: "fixtures/march-of-davos/loric-windrider",
+    who: "Finn Radonik, Human male dock foreman",
+    look: "A grizzled dock veteran in his late fifties, about 1.8 m tall, with tall human proportions and long legs, not a dwarf. A deeply sun-worn, weathered face, close-cropped grey hair, a short grey beard, squinting wary eyes. A heavy scuffed leather apron over a sweat-stained rough linen shirt with rolled sleeves, thick forearms, a wide belt with a cargo hook, canvas trousers and heavy boots. A pair of leather work gloves tucked in his belt.",
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726344098147",
+    head: 0.13,
+    backNote:
+      "An apron is worn on the FRONT only. From behind it shows only its thin neck strap and the waist ties knotted at the small of the back, over the shirt: NO apron bib, panel or pocket on the back. The back of the shirt and the seat of the trousers show.",
+  },
+  "tor-marros": {
+    out: "fixtures/march-of-davos/tor-marros",
+    who: "Tor Marros, Human male dockworker called The Bull",
+    look: "A towering, heavily muscled man in his early forties, about 2.0 m tall, with tall human proportions and long legs. Bald head, a thick neck, a heavy brow and a short dark beard. A sleeveless faded brown tunic showing massive arms covered in crude dark tattoos of animals and mythical beasts, a broad leather belt, rough trousers and boots. A coil of heavy rope over one shoulder.",
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726344982001",
+    head: 0.12,
+  },
+  "petra-velan": {
+    out: "fixtures/march-of-davos/petra-velan",
+    who: "Petra Velan, Human female dock hand",
+    look: "A strong woman in her mid-forties, about 1.68 m tall, with short steel-grey hair tied back in a small ponytail, tanned weathered skin, sharp wary eyes. A patched cream shirt with rolled sleeves under a worn leather apron, heavy work boots, a metal brace strapped on her right leg over her trousers. A short clay pipe in her hand.",
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726344936638",
+    head: 0.13,
+    backNote:
+      "An apron is worn on the FRONT only. From behind it shows only its thin neck strap and the waist ties knotted at the small of the back, over the shirt: NO apron bib, panel or pocket on the back. The back of the shirt and the seat of the trousers show.",
+  },
+  "scarface-alaric": {
+    out: "fixtures/march-of-davos/scarface-alaric",
+    who: "Alaric Fleyven, Human male rogue",
+    look: "A tall, lean man in his thirties, about 1.85 m tall, with jet-black hair tied back in a ponytail, piercing blue eyes and a deep jagged scar running down his cheek, a sneer. A plain worn dockworker's tunic of grey-brown wool over dark leather, a dark sash, a belt with knives, dark trousers and soft boots. A short sword drawn and held low in his right hand.",
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726346336662",
+    head: 0.13,
+  },
+  "warehouse-thug": {
+    out: "fixtures/march-of-davos/warehouse-thug",
+    who: "A warehouse thug, Human male mercenary",
+    look: "A thickset hired blade in his thirties with a shaved head, a broken nose and heavy stubble. A sweat-stained work tunic worn over a hidden leather jerkin, rolled sleeves, a dark neckerchief, canvas trousers and boots. A short sword drawn in his right hand.",
+    head: 0.13,
+  },
+  "thug-b": {
+    out: "fixtures/march-of-davos/thug-b",
+    who: "A warehouse thug, Human male mercenary",
+    look: "A wiry young hired blade with greasy shoulder-length brown hair, a thin moustache and a cruel smirk. A loose dockworker's smock over a studded leather vest, a red cloth tied round one arm, patched trousers, boots. A short sword drawn in his left hand and a dagger in his right.",
+    head: 0.13,
+  },
+  "thug-c": {
+    out: "fixtures/march-of-davos/thug-c",
+    who: "A warehouse thug, Human female mercenary",
+    look: "A broad-shouldered woman mercenary in her thirties with cropped red hair and a scarred lip. A grey dockworker's tunic open over a leather jerkin, bracers, a broad belt, trousers and boots. A short sword drawn and held ready in her right hand.",
+    head: 0.13,
+  },
+  "astrid-blackthorn": {
+    out: "fixtures/march-of-davos/astrid-blackthorn",
+    who: "Lady Astrid Blackthorn, Human female noble ranger",
+    look: "A tall young noblewoman in her mid-twenties, about 1.78 m tall, with a sharp, striking, commanding face, intense forest-green eyes, and long wild windblown black hair. Rugged fitted black leather armour with a high collar, gilt-edged pauldrons and a gilt trim, leather bracers, a quiver strap across her chest, a longbow slung on her back, dark trousers and tall boots. A curved sabre drawn and held lowered in her right hand.",
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726361535587",
+    head: 0.13,
+  },
+  "astrid-letter": {
+    out: "fixtures/march-of-davos/astrid-letter",
+    who: "Lady Astrid Blackthorn, Human female noble ranger",
+    look: "A tall young noblewoman in her mid-twenties, about 1.78 m tall, with a sharp, striking, commanding face, intense forest-green eyes, and long wild windblown black hair. Rugged fitted black leather armour with a high collar, gilt-edged pauldrons and a gilt trim, leather bracers, a quiver strap across her chest, a longbow slung on her back, a curved sabre sheathed at her hip, dark trousers and tall boots. Holding out a small cream envelope sealed with black wax in her right hand.",
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726361535587",
+    head: 0.13,
+    backNote:
+      "There is only ONE envelope, held in her right hand, which from behind shows at the RIGHT of the picture. Her other hand is empty. The sheathed sabre hangs at her left hip, which from behind is at the LEFT of the picture.",
+  },
+  "forest-drake": {
+    out: "fixtures/march-of-davos/forest-drake",
+    who: "A forest drake, a wild wingèd dragon-kin beast from the elven forests",
+    look: "A massive four-legged drake the size of a horse, heavy and low like a great lizard, with a long thick tail, a crocodilian head with a gaping jaw of jagged teeth, burning yellow eyes and a crest of bony spines. Mossy green and bark-brown scales, lichen and moss growing in the hollows, a paler belly. A pair of leathery bat-like wings, mottled brown and green, half-raised and spread above its back. Iron shackle fragments on one foreleg.",
+    head: 0.3,
+    pose: "the whole creature, head to tail, standing on all four legs and rearing its chest up with the head raised and roaring, facing toward the camera at a slight three-quarter angle, wings half-raised above its back, tail curled tightly round in front of its feet, wings only half-raised and kept close so they fit. The WHOLE creature is small enough in the frame to leave a wide margin, at least 10% of empty background on every side: no wing tip, tail or claw touches or crosses the edge. Eye-level view.",
+    magenta: true,
+    backNote:
+      "The creature is seen squarely from directly behind, its rump and tail nearest the camera: its back, the row of spines along it, both wings from behind and the thick tail curling at the bottom. The head points AWAY from the camera, so only the back of the skull and the crest show above the shoulders: NO eyes, NO jaws, NO face, NO profile. Same size and stance.",
+  },
 }
 for (const [id, f] of Object.entries(FIGURES)) f.out ||= `heroes/${id}`
 
@@ -379,7 +459,7 @@ const frontPrompt = (f: Figure) =>
 Character: ${f.who}
 Appearance: ${f.look}
 
-${ART.replace("- POSE", f.seated ? SEATED : STANDING)}`
+${onKey(f, ART.replace("- POSE", f.pose ? `- Pose: ${f.pose}` : f.seated ? SEATED : STANDING))}`
 
 const BACK = `Two reference images are provided. Image 1 is the finished FRONT view of a character. Image 2 is a screenshot of a painted game world: it is the ART DIRECTION to match.
 
@@ -393,6 +473,14 @@ Requirements:
 - Full body, head to toe, standing, eye-level view, nothing cropped, about 6% margin on all sides, feet flat near the bottom of the frame.
 - Background: SOLID UNIFORM PURE GREEN (#00FF00) everywhere, edge to edge. No scenery, no text, no border, no logo. One character only.`
 
+// Swaps the green screen for magenta in a prompt.
+const onKey = (f: Figure, text: string) =>
+  f.magenta
+    ? text
+        .replaceAll("PURE GREEN (#00FF00)", "PURE MAGENTA (#FF00FF)")
+        .replaceAll("solid green background", "solid magenta background")
+        .replace("One character only.", "One character only. Nothing pink, purple or magenta in the subject itself.")
+    : text
 const jpeg = async (input: Buffer | string, bg: string) => (await sharp(input).flatten({ background: bg }).jpeg({ quality: 90 }).toBuffer()).toString("base64")
 async function render(label: string, text: string, images: string[]) {
   const key = process.env.GOOGLE_GENERATIVE_AI_API_KEY
@@ -443,7 +531,15 @@ async function back(id: string) {
   const seated = FIGURES[id].seated
     ? `${BACK.replaceAll("standing pose", "seated pose").replace("Full body, head to toe, standing", "Full body, head to toe, sitting on the same stool")}\n- The figure sits on the same three-legged stool, seen from behind.`
     : BACK
-  await keep("back", id, await render(`${id} back`, note ? `${seated}\n- ${note}` : seated, [await jpeg(path, "#00ff00"), await jpeg(STYLE, "#000")]))
+  const f = FIGURES[id]
+  const posed = f.pose
+    ? seated
+        .replaceAll("same standing pose from behind", "same pose from behind")
+        .replace("Full body, head to toe, standing, eye-level view", "Full body, the whole creature, eye-level view")
+        .replace("feet flat near the bottom of the frame", "its feet near the bottom of the frame")
+    : seated
+  const text = onKey(f, note ? `${posed}\n- ${note}` : posed)
+  await keep("back", id, await render(`${id} back`, text, [await jpeg(path, f.magenta ? "#ff00ff" : "#00ff00"), await jpeg(STYLE, "#000")]))
 }
 
 // Distance-from-green key (olive cloaks survive), eroded two pixels and despilled at the edge, cropped to the figure.
@@ -451,10 +547,12 @@ const smooth = (a: number, b: number, x: number) => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)))
   return t * t * (3 - 2 * t)
 }
-async function cutout(path: string) {
+async function cutout(path: string, magenta = false) {
   const { data, info } = await sharp(path).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
   const { width: W, height: H } = info
-  for (let i = 0; i < data.length; i += 4) data[i + 3] = Math.round(255 * (1 - smooth(45, 125, data[i + 1] - Math.max(data[i], data[i + 2]))))
+  // How far each pixel leans toward the screen: green over red and blue, or red and blue over green.
+  const lean = (i: number) => (magenta ? Math.min(data[i], data[i + 2]) - data[i + 1] : data[i + 1] - Math.max(data[i], data[i + 2]))
+  for (let i = 0; i < data.length; i += 4) data[i + 3] = Math.round(255 * (1 - smooth(45, 125, lean(i))))
   let alpha = new Uint8Array(W * H).map((_, p) => data[p * 4 + 3])
   for (let pass = 0; pass < 2; pass++) {
     const src = alpha
@@ -475,7 +573,12 @@ async function cutout(path: string) {
   for (let p = 0; p < W * H; p++) {
     const i = p * 4
     data[i + 3] = alpha[p]
-    if (alpha[p] < 250) data[i + 1] = Math.min(data[i + 1], Math.max(data[i], data[i + 2]))
+    if (alpha[p] < 250 && !magenta) data[i + 1] = Math.min(data[i + 1], Math.max(data[i], data[i + 2]))
+    if (alpha[p] < 250 && magenta) {
+      const cap = Math.round(data[i + 1] * 1.05 + 10)
+      data[i] = Math.min(data[i], cap)
+      data[i + 2] = Math.min(data[i + 2], cap)
+    }
     if (alpha[p] > 40) {
       const x = p % W
       const y = (p - x) / W
@@ -501,9 +604,9 @@ async function key(id: string) {
   const f = FIGURES[id]
   const out = join(STAGE, f.out)
   await mkdir(join(out, ".."), { recursive: true })
-  const fr = await cutout((await latest("front", id)).path)
+  const fr = await cutout((await latest("front", id)).path, f.magenta)
   await fr.clone().resize({ height: 2048, fit: "inside", withoutEnlargement: true }).webp({ quality: 90, alphaQuality: 100, effort: 5 }).toFile(`${out}-front.webp`)
-  const bk = await cutout((await latest("back", id)).path)
+  const bk = await cutout((await latest("back", id)).path, f.magenta)
   await bk.resize({ height: 2048, fit: "inside", withoutEnlargement: true }).webp({ quality: 90, alphaQuality: 100, effort: 5 }).toFile(`${out}-back.webp`)
   // Head and shoulders, centred on the head: the alpha-weighted middle of the figure's top rows.
   const { data, info } = await fr.clone().raw().toBuffer({ resolveWithObject: true })

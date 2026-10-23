@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-23, the docks in 3D
+
+Third of the remaining March of Davos sets, for its five dock encounters. A golden harbour quay with the elven ship Star of Faelendar alongside, walkable by her gangway, warehouses with arcades, a treadwheel crane, Warehouse 14 in its corner with the chained crate, and the same quay wrecked after the drake, the cage in the hold eaten through. Harbour builders, a painted far shore, ten standees including the winged forest drake. Stage check and desktop tests pass. Not yet checked in the running app. See [March of Davos in 3D](plans/march-of-davos-sets.md).
+
 ## 2026-10-23, the Silver Serpent Tavern in 3D
 
 Second of the remaining March of Davos sets. A long, dark dockside hall of tarred timber whose far end is an arch open on the foggy quay, as its painting has it: lanterns, glowing amber panels, a ring-lamp over the aisle, a carved sea map on the west wall, and a silver serpent over the bar. Nautical builders, four painted textures and five standees. Stage check and desktop tests pass. Not yet checked in the running app. See [March of Davos in 3D](plans/march-of-davos-sets.md).

@@ -80,7 +80,7 @@ test("every authored scene is a real encounter, and every festival character has
   }
 })
 
-test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the Old Grand Library and the Silver Serpent have their scenes, and an encounter without one falls back to story view", async () => {
+test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the Old Grand Library, the Silver Serpent and the docks have their scenes, and an encounter without one falls back to story view", async () => {
   const run = await setup()
   try {
     // The heroes wait in the line alone, then meet Garlan at the front.
@@ -118,6 +118,11 @@ test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the 
       ["morning-at-the-dragonbone", ["bram", "elara"], /Dragonbone Inn[\s\S]*the corner table/],
       ["the-old-grand-library", ["eldrin-varokich", "sister-danica"], /Old Grand Library[\s\S]*the red door/],
       ["the-silver-serpent-tavern", ["harron"], /Silver Serpent[\s\S]*the carved sea map/],
+      ["arrival-at-the-docks", ["loric-windrider", "petra-velan", "tor-marros"], /Kordavos docks[\s\S]*Warehouse 14/],
+      ["mystery-cargo", ["scarface-alaric", "warehouse-thug"], /Warehouse 14[\s\S]*the chained crate/],
+      ["the-beast-escapes", ["astrid-blackthorn", "forest-drake"], /drake[\s\S]*the gangway/],
+      ["the-aftermath", ["astrid-blackthorn", "petra-velan"], /burst open[\s\S]*the cargo hatch/],
+      ["an-invitation", ["astrid-blackthorn"], /invitation[\s\S]*the quay/],
     ] as const) {
       await advance(run.store, encounter)
       const here = run.store.current()
@@ -131,9 +136,9 @@ test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the 
       }
       assert.match(spatialContext(here.encounterId, here.characters, {}) ?? "", where)
     }
-    await advance(run.store, "arrival-at-the-docks")
+    await advance(run.store, "welcome-to-the-lower-districts")
     const turn = run.store.current()
-    assert.equal(turn.encounterId, "arrival-at-the-docks")
+    assert.equal(turn.encounterId, "welcome-to-the-lower-districts")
     assert.equal(sceneFor(turn.encounterId), undefined)
     assert.equal(spatialContext(turn.encounterId, turn.characters, {}), undefined)
     // Story view keeps the party's faces from the authored scenes.

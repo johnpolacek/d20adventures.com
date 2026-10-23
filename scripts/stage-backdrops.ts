@@ -64,6 +64,19 @@ Layout:
 - Seen straight on, level, with no perspective: the street line is horizontal.
 - No people, no carts, no market stalls, no trees in front of the houses.`,
   },
+  // Across the Kordavos harbour, behind the moored ships: the far quays and the city on its hill, in golden late light.
+  "docks-harbour": {
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726345480155",
+    light: "golden late-afternoon sunlight with a warm haze",
+    scene: `the far side of a busy city harbour seen across the water in golden late-afternoon light: a long stone quay with tall stone warehouses with arched arcades, timber-framed houses with red tile roofs stacked up a hill behind, round and square towers, a church spire, and a castle with tall pale towers on the hilltop. Along the far quay, many moored ships and boats with tall masts and furled sails, their masts rising above the roofs. Warm haze softens the farthest buildings.
+
+Layout:
+- The lowest band of the image, about the bottom 8%, is the dark stone of the far quay wall and the hulls of moored ships right at the waterline, across the full width. No water in the image.
+- The buildings fill the lower half of the image, climbing toward a hill in the right half. The castle's towers reach about 70% of the image height. The ships' masts rise to about 55%.
+- Above the rooftops, towers and masts is magenta sky only: the WHOLE sky, right up to the top edge, is flat pure magenta (#FF00FF). No clouds, no blue, no haze bands, no ships or buildings floating in the sky, nothing in the top quarter of the image.
+- Seen straight on, level, with no perspective: the quay's waterline is horizontal.
+- No people large enough to see, no birds, no sun disc.`,
+  },
   // Every way the old forest path's close-ups look: giant trunks fading into the green haze, where the scatter ends.
   "forest-path-depths": {
     ref: `${COVERT}/the-end/68166163-ba2c-4387-bfb6-a98343c6c9d7.png`,

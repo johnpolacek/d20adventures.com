@@ -1,5 +1,7 @@
 import innSet from "@d20/stage/sets/realm-of-myr/dragonbone-inn.json"
 import innMorningSet from "@d20/stage/sets/realm-of-myr/dragonbone-inn-morning.json"
+import docksSet from "@d20/stage/sets/realm-of-myr/kordavos-docks.json"
+import docksWreckedSet from "@d20/stage/sets/realm-of-myr/kordavos-docks-wrecked.json"
 import festivalSet from "@d20/stage/sets/realm-of-myr/kordavos-harvest-square.json"
 import conflictSet from "@d20/stage/sets/realm-of-myr/kordavos-harvest-square-conflict.json"
 import riverfrontSet from "@d20/stage/sets/realm-of-myr/kordavos-riverfront.json"
@@ -22,9 +24,14 @@ import theEscape from "@d20/stage/stagings/covert-cargo/the-escape.json"
 import theFake from "@d20/stage/stagings/covert-cargo/the-fake.json"
 import theShipment from "@d20/stage/stagings/covert-cargo/the-shipment.json"
 import theTransaction from "@d20/stage/stagings/covert-cargo/the-transaction.json"
+import anInvitation from "@d20/stage/stagings/march-of-davos/an-invitation.json"
 import anUnsolicitedOpportunity from "@d20/stage/stagings/march-of-davos/an-unsolicited-opportunity.json"
+import arrivalAtTheDocks from "@d20/stage/stagings/march-of-davos/arrival-at-the-docks.json"
 import clanConflict from "@d20/stage/stagings/march-of-davos/clan-conflict.json"
 import morningAtTheDragonbone from "@d20/stage/stagings/march-of-davos/morning-at-the-dragonbone.json"
+import mysteryCargo from "@d20/stage/stagings/march-of-davos/mystery-cargo.json"
+import theAftermath from "@d20/stage/stagings/march-of-davos/the-aftermath.json"
+import theBeastEscapes from "@d20/stage/stagings/march-of-davos/the-beast-escapes.json"
 import theDragonboneInn from "@d20/stage/stagings/march-of-davos/the-dragonbone-inn.json"
 import gateStaging from "@d20/stage/stagings/march-of-davos/the-gates-of-kordavos.json"
 import festivalStaging from "@d20/stage/stagings/march-of-davos/the-harvest-festival.json"
@@ -151,6 +158,52 @@ export const SCENES: Record<string, Scene> = {
       "Daytime in the Silver Serpent, a long, dim dockside tavern of tarred timber, smoky and crowded with sailors, smugglers and dockhands. Its far end is a great arch open on the foggy quay. A sea map is carved into the west wall, and a silver sea serpent hangs over the bar on the east side, where Harron wipes glasses before shelves of bottles and sea-curios. The party stands just inside the street door. Three dockworkers drink at the table under the sea map, the burly one leaning back to watch them.",
     party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
     spare: [[-1.5, 4.0]],
+  },
+  // The docks: one quay for all five scenes, wrecked after the drake.
+  "arrival-at-the-docks": {
+    set: docksSet,
+    staging: arrivalAtTheDocks,
+    location: "Kordavos docks",
+    where:
+      "Golden late afternoon on the Kordavos docks: a broad cobbled quay along the harbour, the tall elven ship Star of Faelendar moored at it with a gangway to her deck, a treadwheel crane and stacks of cargo beside her, stone warehouses with arcades and stalls along the back of the quay, and Warehouse 14, a timber shed, in the shadowed corner at its west end. The party has come along the quay. Ahead by the cargo stacks, a grizzled dockworker in a leather apron has set down a crate and eyes them, a huge tattooed dockworker and a dock hand with a pipe beside him.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[-2.6, 9.4]],
+  },
+  "mystery-cargo": {
+    set: docksSet,
+    staging: mysteryCargo,
+    location: "Warehouse 14",
+    where:
+      "Warehouse 14, a timber storage shed in the shadowed west corner of the Kordavos quay, its double doors open on stacks of crates, a row of barrels, bales of silk, a small lockbox on a crate, and against the back wall a great iron-banded crate hung with chain. A tall scarred man and three hired blades in work clothes stand at the doors with short swords drawn. The party faces them from the quay.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[-11.0, 10.4]],
+  },
+  "the-beast-escapes": {
+    set: docksWreckedSet,
+    staging: theBeastEscapes,
+    location: "Kordavos docks",
+    where:
+      "The Kordavos quay in chaos: the quay is strewn with smashed crates and loose planks, the Star of Faelendar's main course hangs torn, and her cargo hatch amidships has burst open on the iron cage below, its bars eaten through. The forest drake has come off the ship onto the quay beside the gangway, wings raised, roaring. A tall woman in black leather armour stands at the gangway's end with a curved blade drawn. The party has run out along the quay from Warehouse 14.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[-6.4, 8.6]],
+  },
+  "the-aftermath": {
+    set: docksWreckedSet,
+    staging: theAftermath,
+    location: "Kordavos docks",
+    where:
+      "The dust settling on the Kordavos quay: the quay is strewn with smashed crates and loose planks, the Star of Faelendar's main course hangs torn, and her cargo hatch amidships has burst open on the iron cage below, its bars eaten through. Lady Astrid stands with the party near the gangway. Petra calls from the ship's deck beside the burst hatch.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[-2.6, 4.8]],
+  },
+  "an-invitation": {
+    set: docksWreckedSet,
+    staging: anInvitation,
+    location: "Kordavos docks",
+    where:
+      "The Kordavos quay after the drake: the quay is strewn with smashed crates and loose planks, the Star of Faelendar's main course hangs torn, and her cargo hatch amidships has burst open on the iron cage below, its bars eaten through. Lady Astrid faces the party near the gangway with a sealed invitation.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[-2.6, 4.8]],
   },
   // The Midnight Summons: one moonlit stretch of deer trail for the walk, the owlbear, and the rescue.
   "broken-silence": {

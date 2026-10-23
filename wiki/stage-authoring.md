@@ -105,3 +105,10 @@ The web viewer and the desktop app run the same `packages/stage` renderer and th
 - Hemisphere light has no roof. From outside a building with an open end, the room inside reads as flat grey. Keep the camera inside such a room with `camera.min` and `max`.
 - Fog fills interiors too. A thick harbour fog turned the tavern's far half pale grey. Keep fog thin and let a cold room light at the opening and a glow shaft carry the haze.
 - Stand posts between tables, not in the aisle. Posts down the aisle's middle stopped every walk from the door.
+- Decks are at y = 0, the same as the ground. To make a ship read tall from the quay, drop the water instead, and build up her castles. Ring trims round a hull, never plates across it: a solid gilt plate hid the hold under the hatch.
+- Keep a hold's floor above the set's water plane, or the water shows in it.
+- Paint a green creature on magenta (`magenta: true`), and check a creature's pose against the text: the painting's drake had no wings, the encounter's does.
+- A back can show a front-only garment. Say in `backNote` that an apron shows only its ties from behind.
+- Keep crowd walker paths clear of buildings and of the confrontations staged in the scenes that use them.
+- Find a walk's blocker by building the set in Node and probing `reachOver` past where the walk stops. A cart's footprint stopped walks across half the quay.
+

@@ -343,11 +343,16 @@ export const standard = defineBuilder(
 )
 
 // ── Props ──
-export const crateProp = defineBuilder(z.object({ size: size(3).default(0.8), stack: z.boolean().default(false) }).strict(), (ctx, p) => {
+// `solid` stops walks at the crate or barrel, as at a stack people fight round.
+export const crateProp = defineBuilder(z.object({ size: size(3).default(0.8), stack: z.boolean().default(false), solid: z.boolean().default(false) }).strict(), (ctx, p) => {
   crate(ctx.b, ctx.M, 0, 0, 0, p.size)
   if (p.stack) crate(ctx.b, ctx.M, ctx.rand(-0.1, 0.1), p.size * 0.95, 0, p.size * ctx.rand(0.6, 0.8), ctx.rand(0, 1))
+  if (p.solid) ctx.footprint(0, 0, p.size / 2, p.size / 2, 0, p.stack ? p.size * 1.7 : p.size)
 })
-export const barrelProp = defineBuilder(z.object({ r: size(2).default(0.38), h: size(3).default(1) }).strict(), (ctx, p) => barrel(ctx.b, ctx.M, 0, 0, 0, p.r, p.h))
+export const barrelProp = defineBuilder(z.object({ r: size(2).default(0.38), h: size(3).default(1), solid: z.boolean().default(false) }).strict(), (ctx, p) => {
+  barrel(ctx.b, ctx.M, 0, 0, 0, p.r, p.h)
+  if (p.solid) ctx.circle(0, 0, p.r)
+})
 export const sackProp = defineBuilder(z.object({ size: size(3).default(0.6) }).strict(), (ctx, p) => sack(ctx.b, ctx.M, ctx.rand, 0, 0, 0, p.size))
 export const potProp = defineBuilder(z.object({ size: size(3).default(0.5) }).strict(), (ctx, p) => pot(ctx.b, ctx.M, ctx.rand, 0, 0, 0, p.size))
 export const basketProp = defineBuilder(z.object({ size: size(3).default(0.5) }).strict(), (ctx, p) => basket(ctx.b, ctx.M, ctx.rand, 0, 0, 0, p.size))

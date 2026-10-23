@@ -1,0 +1,3487 @@
+{
+  "format": "d20.stage.set",
+  "version": 1,
+  "id": "kordavos-docks-wrecked",
+  "settingId": "realm-of-myr",
+  "locationId": "kordavos-docks",
+  "title": "The Kordavos docks after the drake",
+  "seed": 7310,
+  "atmosphere": {
+    "sun": {
+      "direction": [
+        -0.62,
+        0.4,
+        -0.67
+      ],
+      "color": "#ffd8a0",
+      "intensity": 4.2,
+      "target": [
+        0,
+        0,
+        0
+      ],
+      "distance": 300,
+      "shadow": {
+        "left": -55,
+        "right": 55,
+        "top": 55,
+        "bottom": -55,
+        "near": 150,
+        "far": 480,
+        "size": 4096
+      }
+    },
+    "hemisphere": {
+      "sky": "#b8c8d8",
+      "ground": "#6a5a44",
+      "intensity": 0.75
+    },
+    "sky": {
+      "horizon": "#f2d8b0",
+      "mid": "#a8c0d4",
+      "zenith": "#5a86b8",
+      "gain": 1,
+      "clouds": 0.9,
+      "stars": 0,
+      "moon": 0
+    },
+    "fog": {
+      "density": 0.0035,
+      "color": "#e8d2b0",
+      "start": 40
+    },
+    "glow": "#ffcf8a",
+    "fill": {
+      "color": "#fff0dc",
+      "intensity": 1,
+      "distance": 9
+    },
+    "lights": [],
+    "environment": 0.4,
+    "exposure": 1,
+    "grade": "warm",
+    "wind": 1
+  },
+  "rooms": [
+    {
+      "box": [
+        -30,
+        -0.5,
+        5,
+        -20.5,
+        4.2,
+        15
+      ],
+      "ambient": 0.22,
+      "fill": 1.4,
+      "exposure": 1.2,
+      "lights": [
+        {
+          "at": [
+            -25.1,
+            1.4,
+            8.1
+          ],
+          "color": "#ffbc78",
+          "intensity": 5,
+          "distance": 4
+        },
+        {
+          "at": [
+            -21.4,
+            2.4,
+            10
+          ],
+          "color": "#ffe2b8",
+          "intensity": 9,
+          "distance": 7
+        },
+        {
+          "at": [
+            -27.6,
+            2.6,
+            12.4
+          ],
+          "color": "#ffcf98",
+          "intensity": 3,
+          "distance": 5
+        }
+      ]
+    }
+  ],
+  "camera": {
+    "near": 0.2,
+    "far": 1200,
+    "min": [
+      -55,
+      0.4,
+      -24
+    ],
+    "max": [
+      55,
+      30,
+      26
+    ],
+    "maxDistance": 40
+  },
+  "materials": {
+    "dark": {
+      "type": "masonry",
+      "a": "#6a4a3a",
+      "b": "#7f624d",
+      "c": "#5a5553",
+      "block": [
+        2.4,
+        1.2
+      ],
+      "grime": 1.3,
+      "relief": 0.08
+    },
+    "far": {
+      "type": "masonry",
+      "a": "#9b7a64",
+      "b": "#b2957a",
+      "c": "#8f8a86",
+      "block": [
+        2.5,
+        1.2
+      ],
+      "grime": 0.6,
+      "relief": 0.03
+    },
+    "roof": {
+      "type": "masonry",
+      "a": "#9a4a30",
+      "b": "#b45e3a",
+      "c": "#7c3e2c",
+      "mortar": "#3a2018",
+      "block": [
+        0.55,
+        0.34
+      ],
+      "joint": 0.035,
+      "relief": 0.07,
+      "grime": 0.6
+    },
+    "roofFar": {
+      "type": "masonry",
+      "a": "#6b4a40",
+      "b": "#7c5646",
+      "c": "#5f5a58",
+      "block": [
+        0.6,
+        0.4
+      ],
+      "relief": 0.02,
+      "grime": 0.4
+    },
+    "plaster": {
+      "type": "masonry",
+      "a": "#b39a78",
+      "b": "#c4ab86",
+      "c": "#9a8a78",
+      "block": [
+        40,
+        40
+      ],
+      "grime": 1.3
+    },
+    "plasterB": {
+      "type": "masonry",
+      "a": "#a88462",
+      "b": "#b8966e",
+      "c": "#8f8070",
+      "block": [
+        40,
+        40
+      ],
+      "grime": 1.3
+    },
+    "ground": {
+      "type": "masonry",
+      "a": "#9a7658",
+      "b": "#b08d6c",
+      "c": "#8a7c70",
+      "mortar": "#5d4636",
+      "block": [
+        1.1,
+        0.8
+      ],
+      "stones": 0.36,
+      "joint": 0.03,
+      "relief": 0.045,
+      "variance": 0.55,
+      "grime": 0.35,
+      "ground": true,
+      "roads": false
+    },
+    "planks": {
+      "type": "wood",
+      "a": "#7a5a3c",
+      "b": "#8c6a48",
+      "c": "#6a5644",
+      "plank": [
+        0.22,
+        2.4
+      ],
+      "relief": 0.05,
+      "variance": 0.45,
+      "seed": 7.3,
+      "grime": 0.6
+    },
+    "pole": {
+      "type": "wood",
+      "a": "#4d382a",
+      "b": "#644a35",
+      "c": "#453c34",
+      "plank": [
+        0,
+        60
+      ],
+      "relief": 0.03,
+      "variance": 0.35,
+      "seed": 5.7,
+      "grime": 0.5
+    },
+    "table": {
+      "type": "wood",
+      "a": "#6a4b33",
+      "b": "#7e5b3e",
+      "c": "#5a4a3c",
+      "plank": [
+        0.19,
+        1.9
+      ],
+      "relief": 0.045,
+      "variance": 0.4,
+      "seed": 11.2
+    },
+    "crate": {
+      "type": "wood",
+      "a": "#8a6a48",
+      "b": "#9c7a52",
+      "c": "#7a6a58",
+      "plank": [
+        0.2,
+        1.2
+      ],
+      "relief": 0.045,
+      "variance": 0.4,
+      "seed": 2.6
+    },
+    "crateDark": {
+      "type": "wood",
+      "a": "#4a3526",
+      "b": "#5a4230",
+      "c": "#403830",
+      "plank": [
+        0,
+        40
+      ],
+      "relief": 0.03,
+      "seed": 8.8
+    },
+    "barrel": {
+      "type": "wood",
+      "a": "#6a4a30",
+      "b": "#7c5a3a",
+      "c": "#5f4a3a",
+      "plank": [
+        0.105,
+        1.4
+      ],
+      "relief": 0.05,
+      "variance": 0.45,
+      "seed": 4.4
+    },
+    "timber": {
+      "type": "wood",
+      "a": "#3a2a20",
+      "b": "#4a362a",
+      "c": "#3a3230",
+      "plank": [
+        0,
+        40
+      ],
+      "relief": 0.03,
+      "seed": 6.1
+    },
+    "sack": {
+      "type": "burlap",
+      "color": "#c2b08c"
+    },
+    "sackB": {
+      "type": "burlap",
+      "color": "#a08a68"
+    },
+    "basket": {
+      "type": "burlap",
+      "color": "#b08a52"
+    },
+    "iron": {
+      "type": "metal",
+      "color": "#2e2a28",
+      "roughness": 0.55,
+      "metalness": 0.7
+    },
+    "brass": {
+      "type": "metal",
+      "color": "#a8823e",
+      "roughness": 0.38,
+      "metalness": 0.85
+    },
+    "coin": {
+      "type": "metal",
+      "color": "#d4a84a",
+      "roughness": 0.3,
+      "metalness": 0.95
+    },
+    "void": {
+      "type": "plain",
+      "color": "#0d0a09",
+      "roughness": 1
+    },
+    "flame": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ffae55",
+      "emissiveIntensity": 5
+    },
+    "fire": {
+      "type": "fire",
+      "color": "#ff7a26"
+    },
+    "coal": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#c2360c",
+      "emissiveIntensity": 1.5
+    },
+    "crystal": {
+      "type": "orb",
+      "glow": "#86b4f0"
+    },
+    "tablecloth": {
+      "type": "cloth",
+      "color": "#4a2442",
+      "amp": 0.01
+    },
+    "pottery": {
+      "type": "plain",
+      "color": "#a45a36",
+      "roughness": 0.7
+    },
+    "potteryB": {
+      "type": "plain",
+      "color": "#8a6a4e",
+      "roughness": 0.75
+    },
+    "goodsRed": {
+      "type": "plain",
+      "color": "#9a2e22",
+      "roughness": 0.8
+    },
+    "goodsGreen": {
+      "type": "plain",
+      "color": "#5a6a2e",
+      "roughness": 0.8
+    },
+    "goodsYellow": {
+      "type": "plain",
+      "color": "#c2963a",
+      "roughness": 0.7
+    },
+    "goodsTeal": {
+      "type": "plain",
+      "color": "#2a6a66",
+      "roughness": 0.8
+    },
+    "rope": {
+      "type": "plain",
+      "color": "#5a4632",
+      "roughness": 1
+    },
+    "straw": {
+      "type": "wood",
+      "a": "#c8a65a",
+      "b": "#b38f45",
+      "c": "#d9bd74",
+      "plank": [
+        0.03,
+        2
+      ],
+      "relief": 0.03,
+      "variance": 0.5,
+      "seed": 7.7
+    },
+    "gourd": {
+      "type": "plain",
+      "color": "#c0642a",
+      "roughness": 0.6
+    },
+    "chest": {
+      "type": "wood",
+      "a": "#5c3c26",
+      "b": "#6e4a30",
+      "c": "#4a3222",
+      "plank": [
+        0.11,
+        0.9
+      ],
+      "relief": 0.05,
+      "variance": 0.35,
+      "seed": 23.4
+    },
+    "banner": {
+      "type": "cloth",
+      "color": "#ffffff",
+      "heraldry": "asterian",
+      "tatters": [
+        2,
+        0.05
+      ],
+      "amp": 0.45
+    },
+    "bannerValkaran": {
+      "type": "cloth",
+      "color": "#ffffff",
+      "heraldry": "valkaran",
+      "tatters": [
+        2,
+        0.06
+      ],
+      "amp": 0.4
+    },
+    "pennantOrange": {
+      "type": "cloth",
+      "color": "#b5602a",
+      "amp": 0.9,
+      "freq": 2.2
+    },
+    "pennantGreen": {
+      "type": "cloth",
+      "color": "#3f5a30",
+      "amp": 0.9,
+      "freq": 2.2
+    },
+    "tentRust": {
+      "type": "cloth",
+      "color": "#9a4a2a",
+      "tatters": [
+        5,
+        0.1
+      ],
+      "amp": 0.22
+    },
+    "tentWine": {
+      "type": "cloth",
+      "color": "#5e2024",
+      "tatters": [
+        3,
+        0.1
+      ],
+      "amp": 0.22
+    },
+    "tentTeal": {
+      "type": "cloth",
+      "color": "#2c5f5c",
+      "tatters": [
+        4,
+        0.1
+      ],
+      "amp": 0.22
+    },
+    "tentOchre": {
+      "type": "cloth",
+      "color": "#a67a3c",
+      "tatters": [
+        3,
+        0.1
+      ],
+      "amp": 0.22
+    },
+    "tentOrange": {
+      "type": "cloth",
+      "color": "#b0602a",
+      "tatters": [
+        3,
+        0.08
+      ],
+      "amp": 0.22
+    },
+    "tentGreen": {
+      "type": "cloth",
+      "color": "#46603a",
+      "tatters": [
+        3,
+        0.08
+      ],
+      "amp": 0.22
+    },
+    "tentCream": {
+      "type": "cloth",
+      "color": "#cdbf9e",
+      "tatters": [
+        3,
+        0.08
+      ],
+      "amp": 0.22
+    },
+    "tentBlack": {
+      "type": "cloth",
+      "color": "#26201f",
+      "tatters": [
+        1,
+        0.04
+      ],
+      "amp": 0.18
+    },
+    "tentGold": {
+      "type": "cloth",
+      "color": "#a8823a",
+      "tatters": [
+        1,
+        0.04
+      ],
+      "amp": 0.2
+    },
+    "tentPlum": {
+      "type": "cloth",
+      "color": "#4e2c4c",
+      "tatters": [
+        3,
+        0.08
+      ],
+      "amp": 0.2
+    },
+    "curtain": {
+      "type": "cloth",
+      "color": "#3f5a30",
+      "amp": 0.08
+    },
+    "clothDrab": {
+      "type": "cloth",
+      "color": "#7d6a50",
+      "amp": 0.12
+    },
+    "flagOrange": {
+      "type": "cloth",
+      "color": "#c2692c",
+      "amp": 0.5,
+      "freq": 2.4
+    },
+    "flagGreen": {
+      "type": "cloth",
+      "color": "#4a6a36",
+      "amp": 0.5,
+      "freq": 2.4
+    },
+    "flagCream": {
+      "type": "cloth",
+      "color": "#d8ccae",
+      "amp": 0.5,
+      "freq": 2.4
+    },
+    "water": {
+      "type": "water",
+      "color": "#2a5058",
+      "reflect": 5,
+      "ripple": 0.7,
+      "flow": [
+        1,
+        0
+      ],
+      "mirror": 0.5
+    },
+    "mast": {
+      "type": "wood",
+      "a": "#6a5038",
+      "b": "#7a5e42",
+      "c": "#5a4430",
+      "plank": [
+        0,
+        60
+      ],
+      "relief": 0.02,
+      "seed": 7.8
+    },
+    "window": {
+      "type": "plain",
+      "color": "#1a1410",
+      "roughness": 1
+    },
+    "roofRed": {
+      "type": "masonry",
+      "a": "#9a4a30",
+      "b": "#b45e3a",
+      "c": "#7c3e2c",
+      "mortar": "#3a2018",
+      "block": [
+        0.55,
+        0.34
+      ],
+      "joint": 0.035,
+      "relief": 0.07,
+      "grime": 0.6
+    },
+    "paving": {
+      "type": "masonry",
+      "a": "#9a8466",
+      "b": "#ab9474",
+      "c": "#887258",
+      "mortar": "#4a3c2c",
+      "block": [
+        0.7,
+        0.5
+      ],
+      "joint": 0.025,
+      "relief": 0.06,
+      "variance": 0.5,
+      "grime": 1,
+      "ground": true,
+      "stones": 0.45
+    },
+    "stone": {
+      "type": "masonry",
+      "a": "#b89a72",
+      "b": "#c8aa80",
+      "c": "#a4885e",
+      "mortar": "#5a4834",
+      "block": [
+        0.9,
+        0.42
+      ],
+      "joint": 0.02,
+      "relief": 0.05,
+      "variance": 0.4,
+      "grime": 1.2
+    },
+    "stoneTrim": {
+      "type": "rock",
+      "a": "#a88e6a",
+      "b": "#c4aa84",
+      "moss": "#6a5a44",
+      "mossLight": "#8a7658",
+      "lichen": "#d0bc98",
+      "mossAmount": 0.15,
+      "lichenAmount": 0.1,
+      "relief": 0.4,
+      "scale": 0.8
+    },
+    "quayWall": {
+      "type": "masonry",
+      "a": "#5a5044",
+      "b": "#6a5e4e",
+      "c": "#4a4238",
+      "mortar": "#2a241e",
+      "block": [
+        0.9,
+        0.45
+      ],
+      "joint": 0.02,
+      "relief": 0.06,
+      "variance": 0.4,
+      "grime": 2.2
+    },
+    "hull": {
+      "type": "painted",
+      "map": "/stage/textures/timber-hold.jpg",
+      "tint": "#d8b48a",
+      "plank": [
+        0.24,
+        40
+      ],
+      "size": [
+        0.7,
+        2.2
+      ],
+      "relief": 0.06,
+      "grime": 1
+    },
+    "wale": {
+      "type": "painted",
+      "map": "/stage/textures/hull-tar.jpg",
+      "tint": "#6a5a50",
+      "plank": [
+        0,
+        40
+      ],
+      "size": [
+        0.5,
+        1.4
+      ],
+      "relief": 0.08,
+      "grime": 1
+    },
+    "band": {
+      "type": "plain",
+      "color": "#2e4a36",
+      "roughness": 0.6
+    },
+    "gilt": {
+      "type": "metal",
+      "color": "#c89a48",
+      "roughness": 0.38,
+      "metalness": 0.85
+    },
+    "trim": {
+      "type": "wood",
+      "a": "#5a4030",
+      "b": "#6e4f37",
+      "c": "#4a4038",
+      "plank": [
+        0,
+        40
+      ],
+      "relief": 0.03,
+      "seed": 6.2
+    },
+    "deck": {
+      "type": "painted",
+      "map": "/stage/textures/boards-weathered.jpg",
+      "tint": "#c8b49a",
+      "plank": [
+        0.16,
+        4.2
+      ],
+      "size": [
+        0.5,
+        1.4
+      ],
+      "relief": 0.08,
+      "grime": 1,
+      "nails": 0.6
+    },
+    "rail": {
+      "type": "painted",
+      "map": "/stage/textures/timber-hold.jpg",
+      "tint": "#9a7a5a",
+      "plank": [
+        0,
+        40
+      ],
+      "size": [
+        0.7,
+        2.2
+      ],
+      "relief": 0.08,
+      "grime": 0.8
+    },
+    "hold": {
+      "type": "plain",
+      "color": "#1a1410",
+      "roughness": 1
+    },
+    "post": {
+      "type": "painted",
+      "map": "/stage/textures/timber-hold.jpg",
+      "tint": "#7a6a5a",
+      "plank": [
+        0,
+        40
+      ],
+      "size": [
+        0.7,
+        2.2
+      ],
+      "relief": 0.08,
+      "grime": 1.1
+    },
+    "sail": {
+      "type": "cloth",
+      "color": "#e8dcc0",
+      "amp": 0.25,
+      "freq": 0.7
+    },
+    "sailTorn": {
+      "type": "cloth",
+      "color": "#dcceb0",
+      "amp": 0.5,
+      "freq": 1.1,
+      "tatters": [
+        9,
+        0.45
+      ]
+    },
+    "lamp": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ff8a30",
+      "emissiveIntensity": 0.5
+    },
+    "slag": {
+      "type": "metal",
+      "color": "#4a4a3e",
+      "roughness": 0.7,
+      "metalness": 0.5
+    },
+    "acid": {
+      "type": "plain",
+      "color": "#3a4a2a",
+      "roughness": 0.3,
+      "emissive": "#6a8a2a",
+      "emissiveIntensity": 0.25
+    },
+    "scorch": {
+      "type": "plain",
+      "color": "#141210",
+      "roughness": 1
+    },
+    "cageStraw": {
+      "type": "plain",
+      "color": "#4a3e2a",
+      "roughness": 1
+    },
+    "floor": {
+      "type": "painted",
+      "map": "/stage/textures/boards-weathered.jpg",
+      "tint": "#9a8e80",
+      "plank": [
+        0.22,
+        3.6
+      ],
+      "size": [
+        0.5,
+        1.4
+      ],
+      "relief": 0.08,
+      "grime": 1.4
+    },
+    "boards": {
+      "type": "painted",
+      "map": "/stage/textures/boards-weathered.jpg",
+      "tint": "#a89a88",
+      "plank": [
+        0.24,
+        40
+      ],
+      "size": [
+        0.5,
+        1.4
+      ],
+      "relief": 0.08,
+      "grime": 1.2
+    },
+    "panel": {
+      "type": "painted",
+      "map": "/stage/textures/boards-weathered.jpg",
+      "tint": "#8a7e70",
+      "plank": [
+        0.2,
+        40
+      ],
+      "size": [
+        0.5,
+        1.4
+      ],
+      "relief": 0.08,
+      "grime": 1.1
+    },
+    "shedRoof": {
+      "type": "painted",
+      "map": "/stage/textures/timber-hold.jpg",
+      "tint": "#6a5a4e",
+      "plank": [
+        0.3,
+        40
+      ],
+      "size": [
+        0.7,
+        2.2
+      ],
+      "relief": 0.08,
+      "grime": 1.1
+    },
+    "door": {
+      "type": "painted",
+      "map": "/stage/textures/timber-hold.jpg",
+      "tint": "#9a8470",
+      "plank": [
+        0.18,
+        3
+      ],
+      "size": [
+        0.7,
+        2.2
+      ],
+      "relief": 0.08,
+      "grime": 1.1
+    },
+    "crateOak": {
+      "type": "painted",
+      "map": "/stage/textures/crate-oak.jpg",
+      "tint": "#c0aa8c",
+      "plank": [
+        0.14,
+        1
+      ],
+      "size": [
+        0.5,
+        1.4
+      ],
+      "relief": 0.08,
+      "grime": 1.1,
+      "nails": 0.8
+    },
+    "silk": {
+      "type": "cloth",
+      "color": "#5a7a6a",
+      "amp": 0
+    },
+    "silkB": {
+      "type": "cloth",
+      "color": "#8a5a6a",
+      "amp": 0
+    },
+    "shutter": {
+      "type": "painted",
+      "map": "/stage/textures/boat-paint.jpg",
+      "tint": "#7a8a8a",
+      "plank": [
+        0.12,
+        2
+      ],
+      "size": [
+        0.5,
+        1.4
+      ],
+      "relief": 0.08,
+      "grime": 1.1
+    },
+    "lead": {
+      "type": "metal",
+      "color": "#2a2826",
+      "roughness": 0.6,
+      "metalness": 0.4
+    },
+    "glass": {
+      "type": "glass",
+      "color": "#203040",
+      "opacity": 0.4
+    },
+    "glassOut": {
+      "type": "glass",
+      "color": "#8aa0b0",
+      "opacity": 0.3
+    },
+    "shaft": {
+      "type": "glow",
+      "color": "#ffd9a0",
+      "opacity": 0.05
+    }
+  },
+  "objects": [
+    {
+      "type": "box",
+      "at": [
+        0,
+        -2.5,
+        -170
+      ],
+      "size": [
+        500,
+        0.1,
+        340
+      ],
+      "material": "water"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        -0.3,
+        30
+      ],
+      "size": [
+        260,
+        0.3,
+        60
+      ],
+      "material": "paving"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        -4.4,
+        -0.35
+      ],
+      "size": [
+        260,
+        4.4,
+        0.7
+      ],
+      "material": "quayWall"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        -0.02,
+        0.25
+      ],
+      "size": [
+        260,
+        0.08,
+        0.5
+      ],
+      "material": "stoneTrim"
+    },
+    {
+      "type": "pier",
+      "at": [
+        -15,
+        0,
+        0
+      ],
+      "yaw": 180,
+      "length": 16,
+      "width": 2.4,
+      "depth": 4,
+      "rickety": 0.15,
+      "materials": {
+        "plank": "deck",
+        "post": "post"
+      }
+    },
+    {
+      "type": "skiff",
+      "at": [
+        -17,
+        -1.8499999999999999,
+        -6
+      ],
+      "yaw": 172
+    },
+    {
+      "type": "skiff",
+      "at": [
+        -12.8,
+        -1.8499999999999999,
+        -9.5
+      ],
+      "yaw": 8
+    },
+    {
+      "type": "skiff",
+      "at": [
+        -17.2,
+        -1.8499999999999999,
+        -12.5
+      ],
+      "yaw": 186,
+      "length": 5.2
+    },
+    {
+      "type": "skiff",
+      "at": [
+        24,
+        -1.8499999999999999,
+        -2.2
+      ],
+      "yaw": 95
+    },
+    {
+      "type": "bollard",
+      "at": [
+        -38,
+        0.75
+      ]
+    },
+    {
+      "type": "bollard",
+      "at": [
+        -30,
+        0.75
+      ]
+    },
+    {
+      "type": "bollard",
+      "at": [
+        -22,
+        0.75
+      ]
+    },
+    {
+      "type": "bollard",
+      "at": [
+        -10.5,
+        0.75
+      ]
+    },
+    {
+      "type": "bollard",
+      "at": [
+        -6,
+        0.75
+      ]
+    },
+    {
+      "type": "bollard",
+      "at": [
+        9.5,
+        0.75
+      ]
+    },
+    {
+      "type": "bollard",
+      "at": [
+        13.5,
+        0.75
+      ]
+    },
+    {
+      "type": "bollard",
+      "at": [
+        17.5,
+        0.75
+      ]
+    },
+    {
+      "type": "bollard",
+      "at": [
+        25.5,
+        0.75
+      ]
+    },
+    {
+      "type": "bollard",
+      "at": [
+        33.5,
+        0.75
+      ]
+    },
+    {
+      "type": "bollard",
+      "at": [
+        41.5,
+        0.75
+      ]
+    },
+    {
+      "type": "torus",
+      "at": [
+        -36,
+        -0.7,
+        -0.02
+      ],
+      "radius": 0.13,
+      "tube": 0.025,
+      "material": "iron"
+    },
+    {
+      "type": "torus",
+      "at": [
+        -28,
+        -0.7,
+        -0.02
+      ],
+      "radius": 0.13,
+      "tube": 0.025,
+      "material": "iron"
+    },
+    {
+      "type": "torus",
+      "at": [
+        -20,
+        -0.7,
+        -0.02
+      ],
+      "radius": 0.13,
+      "tube": 0.025,
+      "material": "iron"
+    },
+    {
+      "type": "torus",
+      "at": [
+        -12,
+        -0.7,
+        -0.02
+      ],
+      "radius": 0.13,
+      "tube": 0.025,
+      "material": "iron"
+    },
+    {
+      "type": "torus",
+      "at": [
+        -4,
+        -0.7,
+        -0.02
+      ],
+      "radius": 0.13,
+      "tube": 0.025,
+      "material": "iron"
+    },
+    {
+      "type": "torus",
+      "at": [
+        4,
+        -0.7,
+        -0.02
+      ],
+      "radius": 0.13,
+      "tube": 0.025,
+      "material": "iron"
+    },
+    {
+      "type": "torus",
+      "at": [
+        12,
+        -0.7,
+        -0.02
+      ],
+      "radius": 0.13,
+      "tube": 0.025,
+      "material": "iron"
+    },
+    {
+      "type": "torus",
+      "at": [
+        20,
+        -0.7,
+        -0.02
+      ],
+      "radius": 0.13,
+      "tube": 0.025,
+      "material": "iron"
+    },
+    {
+      "type": "torus",
+      "at": [
+        28,
+        -0.7,
+        -0.02
+      ],
+      "radius": 0.13,
+      "tube": 0.025,
+      "material": "iron"
+    },
+    {
+      "type": "torus",
+      "at": [
+        36,
+        -0.7,
+        -0.02
+      ],
+      "radius": 0.13,
+      "tube": 0.025,
+      "material": "iron"
+    },
+    {
+      "type": "torus",
+      "at": [
+        44,
+        -0.7,
+        -0.02
+      ],
+      "radius": 0.13,
+      "tube": 0.025,
+      "material": "iron"
+    },
+    {
+      "type": "box",
+      "at": [
+        -3.25,
+        -2.8,
+        -0.06
+      ],
+      "size": [
+        0.05,
+        2.8,
+        0.05
+      ],
+      "material": "iron"
+    },
+    {
+      "type": "box",
+      "at": [
+        -2.75,
+        -2.8,
+        -0.06
+      ],
+      "size": [
+        0.05,
+        2.8,
+        0.05
+      ],
+      "material": "iron"
+    },
+    {
+      "type": "box",
+      "at": [
+        -3,
+        -2.4,
+        -0.06
+      ],
+      "size": [
+        0.5,
+        0.03,
+        0.04
+      ],
+      "material": "iron"
+    },
+    {
+      "type": "box",
+      "at": [
+        -3,
+        -2.1,
+        -0.06
+      ],
+      "size": [
+        0.5,
+        0.03,
+        0.04
+      ],
+      "material": "iron"
+    },
+    {
+      "type": "box",
+      "at": [
+        -3,
+        -1.8,
+        -0.06
+      ],
+      "size": [
+        0.5,
+        0.03,
+        0.04
+      ],
+      "material": "iron"
+    },
+    {
+      "type": "box",
+      "at": [
+        -3,
+        -1.5,
+        -0.06
+      ],
+      "size": [
+        0.5,
+        0.03,
+        0.04
+      ],
+      "material": "iron"
+    },
+    {
+      "type": "box",
+      "at": [
+        -3,
+        -1.2,
+        -0.06
+      ],
+      "size": [
+        0.5,
+        0.03,
+        0.04
+      ],
+      "material": "iron"
+    },
+    {
+      "type": "box",
+      "at": [
+        -3,
+        -0.8999999999999999,
+        -0.06
+      ],
+      "size": [
+        0.5,
+        0.03,
+        0.04
+      ],
+      "material": "iron"
+    },
+    {
+      "type": "box",
+      "at": [
+        -3,
+        -0.5999999999999999,
+        -0.06
+      ],
+      "size": [
+        0.5,
+        0.03,
+        0.04
+      ],
+      "material": "iron"
+    },
+    {
+      "type": "box",
+      "at": [
+        -3,
+        -0.2999999999999999,
+        -0.06
+      ],
+      "size": [
+        0.5,
+        0.03,
+        0.04
+      ],
+      "material": "iron"
+    },
+    {
+      "type": "box",
+      "at": [
+        20.75,
+        -2.8,
+        -0.06
+      ],
+      "size": [
+        0.05,
+        2.8,
+        0.05
+      ],
+      "material": "iron"
+    },
+    {
+      "type": "box",
+      "at": [
+        21.25,
+        -2.8,
+        -0.06
+      ],
+      "size": [
+        0.05,
+        2.8,
+        0.05
+      ],
+      "material": "iron"
+    },
+    {
+      "type": "box",
+      "at": [
+        21,
+        -2.4,
+        -0.06
+      ],
+      "size": [
+        0.5,
+        0.03,
+        0.04
+      ],
+      "material": "iron"
+    },
+    {
+      "type": "box",
+      "at": [
+        21,
+        -2.1,
+        -0.06
+      ],
+      "size": [
+        0.5,
+        0.03,
+        0.04
+      ],
+      "material": "iron"
+    },
+    {
+      "type": "box",
+      "at": [
+        21,
+        -1.8,
+        -0.06
+      ],
+      "size": [
+        0.5,
+        0.03,
+        0.04
+      ],
+      "material": "iron"
+    },
+    {
+      "type": "box",
+      "at": [
+        21,
+        -1.5,
+        -0.06
+      ],
+      "size": [
+        0.5,
+        0.03,
+        0.04
+      ],
+      "material": "iron"
+    },
+    {
+      "type": "box",
+      "at": [
+        21,
+        -1.2,
+        -0.06
+      ],
+      "size": [
+        0.5,
+        0.03,
+        0.04
+      ],
+      "material": "iron"
+    },
+    {
+      "type": "box",
+      "at": [
+        21,
+        -0.8999999999999999,
+        -0.06
+      ],
+      "size": [
+        0.5,
+        0.03,
+        0.04
+      ],
+      "material": "iron"
+    },
+    {
+      "type": "box",
+      "at": [
+        21,
+        -0.5999999999999999,
+        -0.06
+      ],
+      "size": [
+        0.5,
+        0.03,
+        0.04
+      ],
+      "material": "iron"
+    },
+    {
+      "type": "box",
+      "at": [
+        21,
+        -0.2999999999999999,
+        -0.06
+      ],
+      "size": [
+        0.5,
+        0.03,
+        0.04
+      ],
+      "material": "iron"
+    },
+    {
+      "type": "galleon",
+      "id": "star-of-faelendar",
+      "at": [
+        4,
+        0,
+        -5.6
+      ],
+      "yaw": 90,
+      "length": 30,
+      "beam": 8,
+      "sails": "torn",
+      "gangway": [
+        -1,
+        -2.2
+      ],
+      "hatch": {
+        "at": 3.2,
+        "size": 2.6,
+        "state": "burst"
+      }
+    },
+    {
+      "type": "box",
+      "at": [
+        1.8,
+        0.02,
+        -0.9
+      ],
+      "size": [
+        1.3,
+        0.06,
+        2
+      ],
+      "material": "deck"
+    },
+    {
+      "type": "box",
+      "at": [
+        1.1800000000000002,
+        0,
+        -0.9
+      ],
+      "size": [
+        0.08,
+        0.12,
+        2
+      ],
+      "material": "rail"
+    },
+    {
+      "type": "box",
+      "at": [
+        2.42,
+        0,
+        -0.9
+      ],
+      "size": [
+        0.08,
+        0.12,
+        2
+      ],
+      "material": "rail"
+    },
+    {
+      "type": "box",
+      "at": [
+        1.8,
+        0.05,
+        -0.4
+      ],
+      "size": [
+        1.2,
+        0.03,
+        0.05
+      ],
+      "material": "rail"
+    },
+    {
+      "type": "box",
+      "at": [
+        1.8,
+        0.05,
+        -0.9
+      ],
+      "size": [
+        1.2,
+        0.03,
+        0.05
+      ],
+      "material": "rail"
+    },
+    {
+      "type": "box",
+      "at": [
+        1.8,
+        0.05,
+        -1.4
+      ],
+      "size": [
+        1.2,
+        0.03,
+        0.05
+      ],
+      "material": "rail"
+    },
+    {
+      "type": "rope",
+      "from": [
+        1.1800000000000002,
+        1,
+        0.1
+      ],
+      "to": [
+        1.1800000000000002,
+        1.05,
+        -1.95
+      ],
+      "sag": 0.15,
+      "radius": 0.025
+    },
+    {
+      "type": "rope",
+      "from": [
+        2.42,
+        1,
+        0.1
+      ],
+      "to": [
+        2.42,
+        1.05,
+        -1.95
+      ],
+      "sag": 0.15,
+      "radius": 0.025
+    },
+    {
+      "type": "rope",
+      "from": [
+        -9,
+        1,
+        -1.8
+      ],
+      "to": [
+        -10.5,
+        0.6,
+        0.75
+      ],
+      "sag": 0.45,
+      "radius": 0.035
+    },
+    {
+      "type": "rope",
+      "from": [
+        -5,
+        1,
+        -1.8
+      ],
+      "to": [
+        -6,
+        0.6,
+        0.75
+      ],
+      "sag": 0.45,
+      "radius": 0.035
+    },
+    {
+      "type": "rope",
+      "from": [
+        14,
+        1,
+        -1.8
+      ],
+      "to": [
+        13.5,
+        0.6,
+        0.75
+      ],
+      "sag": 0.45,
+      "radius": 0.035
+    },
+    {
+      "type": "rope",
+      "from": [
+        17.5,
+        1,
+        -1.8
+      ],
+      "to": [
+        17.5,
+        0.6,
+        0.75
+      ],
+      "sag": 0.45,
+      "radius": 0.035
+    },
+    {
+      "type": "cage",
+      "id": "cage",
+      "at": [
+        7.2,
+        -2.15,
+        -5.6
+      ],
+      "yaw": 90,
+      "width": 2.2,
+      "depth": 2.2,
+      "height": 1.9,
+      "melted": 0.6
+    },
+    {
+      "type": "ship",
+      "at": [
+        44,
+        -1.4,
+        -7.5
+      ],
+      "yaw": 90,
+      "length": 24,
+      "beam": 6.5,
+      "masts": 2,
+      "height": 18,
+      "sails": "furled"
+    },
+    {
+      "type": "ship",
+      "at": [
+        -48,
+        -1.4,
+        -9
+      ],
+      "yaw": -88,
+      "length": 20,
+      "beam": 6,
+      "masts": 2,
+      "height": 16,
+      "sails": "furled"
+    },
+    {
+      "type": "ship",
+      "at": [
+        -30,
+        -1.4,
+        -70
+      ],
+      "yaw": 80,
+      "length": 22,
+      "beam": 6,
+      "masts": 3,
+      "height": 18,
+      "sails": "furled"
+    },
+    {
+      "type": "ship",
+      "at": [
+        18,
+        -1.4,
+        -95
+      ],
+      "yaw": -100,
+      "length": 26,
+      "beam": 7,
+      "masts": 3,
+      "height": 20,
+      "sails": "set"
+    },
+    {
+      "type": "ship",
+      "at": [
+        62,
+        -1.4,
+        -60
+      ],
+      "yaw": 110,
+      "length": 18,
+      "beam": 5.5,
+      "masts": 2,
+      "height": 15,
+      "sails": "furled"
+    },
+    {
+      "type": "skiff",
+      "at": [
+        -4,
+        -1.8499999999999999,
+        -40
+      ],
+      "yaw": 40
+    },
+    {
+      "type": "skiff",
+      "at": [
+        30,
+        -1.8499999999999999,
+        -30
+      ],
+      "yaw": -70,
+      "length": 5
+    },
+    {
+      "type": "crane",
+      "at": [
+        15.5,
+        3.2
+      ],
+      "yaw": 180,
+      "reach": 7.5,
+      "height": 9.5,
+      "drop": 6.5,
+      "load": false
+    },
+    {
+      "type": "warehouse",
+      "at": [
+        -42,
+        27
+      ],
+      "yaw": 180,
+      "w": 16,
+      "d": 10,
+      "h": 13,
+      "bays": 4,
+      "arch": 4.4
+    },
+    {
+      "type": "warehouse",
+      "at": [
+        -24,
+        27
+      ],
+      "yaw": 180,
+      "w": 14,
+      "d": 10,
+      "h": 15,
+      "bays": 3,
+      "arch": 4.4
+    },
+    {
+      "type": "warehouse",
+      "at": [
+        -6,
+        27
+      ],
+      "yaw": 180,
+      "w": 18,
+      "d": 10,
+      "h": 12,
+      "bays": 4,
+      "arch": 4.4
+    },
+    {
+      "type": "warehouse",
+      "at": [
+        24,
+        27
+      ],
+      "yaw": 180,
+      "w": 16,
+      "d": 10,
+      "h": 14,
+      "bays": 4,
+      "arch": 4.4
+    },
+    {
+      "type": "warehouse",
+      "at": [
+        42,
+        27
+      ],
+      "yaw": 180,
+      "w": 14,
+      "d": 10,
+      "h": 12,
+      "bays": 3,
+      "arch": 4.4
+    },
+    {
+      "type": "house",
+      "at": [
+        8,
+        34
+      ],
+      "yaw": 180,
+      "w": 8,
+      "d": 8,
+      "h": 10
+    },
+    {
+      "type": "house",
+      "at": [
+        16,
+        38
+      ],
+      "yaw": 180,
+      "w": 8,
+      "d": 8,
+      "h": 14
+    },
+    {
+      "type": "house",
+      "at": [
+        6,
+        44
+      ],
+      "yaw": 180,
+      "w": 8,
+      "d": 8,
+      "h": 16
+    },
+    {
+      "type": "box",
+      "at": [
+        -25.25,
+        -0.04,
+        10
+      ],
+      "size": [
+        9.5,
+        0.05,
+        10
+      ],
+      "material": "floor"
+    },
+    {
+      "type": "wall",
+      "at": [
+        -25.25,
+        4.88
+      ],
+      "yaw": 0,
+      "length": 9.74,
+      "height": 4.2,
+      "thickness": 0.24,
+      "a": {
+        "finish": "boards",
+        "studs": 1.5
+      },
+      "b": {
+        "finish": "boards"
+      }
+    },
+    {
+      "type": "wall",
+      "at": [
+        -25.25,
+        15.12
+      ],
+      "yaw": 180,
+      "length": 9.74,
+      "height": 4.2,
+      "thickness": 0.24,
+      "a": {
+        "finish": "boards",
+        "studs": 1.5
+      },
+      "b": {
+        "finish": "boards"
+      }
+    },
+    {
+      "type": "wall",
+      "at": [
+        -30.12,
+        10
+      ],
+      "yaw": -90,
+      "length": 10,
+      "height": 4.2,
+      "thickness": 0.24,
+      "a": {
+        "finish": "boards",
+        "studs": 1.5
+      },
+      "b": {
+        "finish": "boards"
+      }
+    },
+    {
+      "type": "wall",
+      "at": [
+        -20.38,
+        10
+      ],
+      "yaw": 90,
+      "length": 10,
+      "height": 4.2,
+      "thickness": 0.24,
+      "a": {
+        "finish": "boards",
+        "studs": 1.5
+      },
+      "b": {
+        "finish": "boards"
+      },
+      "openings": [
+        {
+          "at": 0,
+          "width": 3,
+          "height": 3,
+          "kind": "door"
+        },
+        {
+          "at": -3.4,
+          "width": 0.9,
+          "height": 0.7,
+          "sill": 2.3,
+          "kind": "window",
+          "panes": [
+            2,
+            2
+          ]
+        }
+      ]
+    },
+    {
+      "type": "box",
+      "at": [
+        -25.25,
+        4.2,
+        10
+      ],
+      "size": [
+        10.3,
+        0.12,
+        10.8
+      ],
+      "material": "shedRoof"
+    },
+    {
+      "type": "box",
+      "at": [
+        -28.1,
+        4,
+        10
+      ],
+      "size": [
+        0.16,
+        0.22,
+        10
+      ],
+      "material": "timber"
+    },
+    {
+      "type": "box",
+      "at": [
+        -26.2,
+        4,
+        10
+      ],
+      "size": [
+        0.16,
+        0.22,
+        10
+      ],
+      "material": "timber"
+    },
+    {
+      "type": "box",
+      "at": [
+        -24.3,
+        4,
+        10
+      ],
+      "size": [
+        0.16,
+        0.22,
+        10
+      ],
+      "material": "timber"
+    },
+    {
+      "type": "box",
+      "at": [
+        -22.4,
+        4,
+        10
+      ],
+      "size": [
+        0.16,
+        0.22,
+        10
+      ],
+      "material": "timber"
+    },
+    {
+      "type": "box",
+      "at": [
+        -20.2,
+        0.05,
+        7.75
+      ],
+      "size": [
+        0.08,
+        2.95,
+        1.5
+      ],
+      "material": "door"
+    },
+    {
+      "type": "box",
+      "at": [
+        -20.2,
+        0.05,
+        12.25
+      ],
+      "size": [
+        0.08,
+        2.95,
+        1.5
+      ],
+      "material": "door"
+    },
+    {
+      "type": "lantern",
+      "at": [
+        -20.1,
+        0,
+        8.1
+      ],
+      "height": 2.6
+    },
+    {
+      "type": "crate",
+      "at": [
+        -28.9,
+        6.3
+      ],
+      "yaw": -1.2999999999999545,
+      "size": 1,
+      "stack": true,
+      "solid": true,
+      "materials": {
+        "crate": "crateOak"
+      }
+    },
+    {
+      "type": "crate",
+      "at": [
+        -27.7,
+        6.2
+      ],
+      "yaw": -4.899999999999864,
+      "size": 0.9,
+      "stack": false,
+      "solid": true,
+      "materials": {
+        "crate": "crateOak"
+      }
+    },
+    {
+      "type": "crate",
+      "at": [
+        -28.8,
+        7.5
+      ],
+      "yaw": -9.600000000000136,
+      "size": 0.95,
+      "stack": true,
+      "solid": true,
+      "materials": {
+        "crate": "crateOak"
+      }
+    },
+    {
+      "type": "crate",
+      "at": [
+        -25.6,
+        6.3
+      ],
+      "yaw": -11.200000000000045,
+      "size": 0.85,
+      "stack": true,
+      "solid": true,
+      "materials": {
+        "crate": "crateOak"
+      }
+    },
+    {
+      "type": "crate",
+      "at": [
+        -24.5,
+        6.2
+      ],
+      "yaw": -6.5,
+      "size": 0.8,
+      "stack": false,
+      "solid": true,
+      "materials": {
+        "crate": "crateOak"
+      }
+    },
+    {
+      "type": "crate",
+      "at": [
+        -23.2,
+        6.5
+      ],
+      "yaw": -6.399999999999977,
+      "size": 0.9,
+      "stack": true,
+      "solid": true,
+      "materials": {
+        "crate": "crateOak"
+      }
+    },
+    {
+      "type": "crate",
+      "at": [
+        -26.4,
+        9.9
+      ],
+      "yaw": -4.7999999999999545,
+      "size": 0.9,
+      "stack": true,
+      "solid": true,
+      "materials": {
+        "crate": "crateOak"
+      }
+    },
+    {
+      "type": "crate",
+      "at": [
+        -25.3,
+        10.1
+      ],
+      "yaw": -0.10000000000002274,
+      "size": 0.85,
+      "stack": false,
+      "solid": true,
+      "materials": {
+        "crate": "crateOak"
+      }
+    },
+    {
+      "type": "crate",
+      "at": [
+        -26.3,
+        11.1
+      ],
+      "yaw": -1.1000000000000227,
+      "size": 0.8,
+      "stack": false,
+      "solid": true,
+      "materials": {
+        "crate": "crateOak"
+      }
+    },
+    {
+      "type": "crate",
+      "at": [
+        -23.4,
+        12.9
+      ],
+      "yaw": -1.7999999999999545,
+      "size": 0.9,
+      "stack": true,
+      "solid": true,
+      "materials": {
+        "crate": "crateOak"
+      }
+    },
+    {
+      "type": "crate",
+      "at": [
+        -22.3,
+        13.6
+      ],
+      "yaw": -9.100000000000023,
+      "size": 0.8,
+      "stack": false,
+      "solid": true,
+      "materials": {
+        "crate": "crateOak"
+      }
+    },
+    {
+      "type": "barrel",
+      "at": [
+        -29.2,
+        14.3
+      ],
+      "r": 0.36,
+      "h": 0.95,
+      "solid": true
+    },
+    {
+      "type": "barrel",
+      "at": [
+        -28.35,
+        14.3
+      ],
+      "r": 0.36,
+      "h": 0.95,
+      "solid": true
+    },
+    {
+      "type": "barrel",
+      "at": [
+        -27.5,
+        14.3
+      ],
+      "r": 0.36,
+      "h": 0.95,
+      "solid": true
+    },
+    {
+      "type": "barrel",
+      "at": [
+        -26.65,
+        14.3
+      ],
+      "r": 0.36,
+      "h": 0.95,
+      "solid": true
+    },
+    {
+      "type": "barrel",
+      "at": [
+        -25.8,
+        14.3
+      ],
+      "r": 0.36,
+      "h": 0.95,
+      "solid": true
+    },
+    {
+      "type": "sack",
+      "at": [
+        -28.6,
+        10.6
+      ],
+      "size": 0.75,
+      "materials": {
+        "sack": "silk",
+        "sackB": "silkB"
+      }
+    },
+    {
+      "type": "sack",
+      "at": [
+        -28.9,
+        11.4
+      ],
+      "size": 0.75,
+      "materials": {
+        "sack": "silk",
+        "sackB": "silkB"
+      }
+    },
+    {
+      "type": "sack",
+      "at": [
+        -28.3,
+        12.1
+      ],
+      "size": 0.75,
+      "materials": {
+        "sack": "silk",
+        "sackB": "silkB"
+      }
+    },
+    {
+      "type": "strongbox",
+      "id": "chained-crate",
+      "at": [
+        -29,
+        9.1
+      ],
+      "yaw": 90,
+      "width": 1.8,
+      "height": 1.3,
+      "depth": 1.3,
+      "boards": 6,
+      "chain": true,
+      "materials": {
+        "wood": "crateOak"
+      }
+    },
+    {
+      "type": "crate",
+      "at": [
+        -25.5,
+        8.4
+      ],
+      "size": 0.8,
+      "solid": true
+    },
+    {
+      "type": "strongbox",
+      "id": "lockbox",
+      "at": [
+        -25.5,
+        0.8,
+        8.4
+      ],
+      "yaw": 20,
+      "width": 0.5,
+      "height": 0.32,
+      "depth": 0.36,
+      "boards": 2,
+      "chain": false
+    },
+    {
+      "type": "lantern",
+      "at": [
+        -25.3,
+        0.8,
+        8.15
+      ],
+      "height": 0
+    },
+    {
+      "type": "box",
+      "at": [
+        -24,
+        0.4,
+        10.4
+      ],
+      "yaw": 30,
+      "size": [
+        0.9,
+        0.06,
+        0.6
+      ],
+      "material": "crateOak"
+    },
+    {
+      "type": "crate",
+      "at": [
+        10.9,
+        3.6
+      ],
+      "yaw": 30.300000000000068,
+      "size": 0.8,
+      "solid": true
+    },
+    {
+      "type": "crate",
+      "at": [
+        11.8,
+        4.2
+      ],
+      "yaw": 40.60000000000002,
+      "size": 0.7,
+      "solid": true
+    },
+    {
+      "type": "box",
+      "at": [
+        3.5,
+        0.02,
+        2.2
+      ],
+      "yaw": 0,
+      "size": [
+        0.12,
+        0.03,
+        0.6
+      ],
+      "material": "crate"
+    },
+    {
+      "type": "box",
+      "at": [
+        3.87,
+        0.02,
+        2.73
+      ],
+      "yaw": 53,
+      "size": [
+        0.12,
+        0.03,
+        0.77
+      ],
+      "material": "crate"
+    },
+    {
+      "type": "box",
+      "at": [
+        4.24,
+        0.02,
+        2.46
+      ],
+      "yaw": 106,
+      "size": [
+        0.12,
+        0.03,
+        0.94
+      ],
+      "material": "crate"
+    },
+    {
+      "type": "box",
+      "at": [
+        5.41,
+        0.02,
+        2.39
+      ],
+      "yaw": 159,
+      "size": [
+        0.12,
+        0.03,
+        0.61
+      ],
+      "material": "crate"
+    },
+    {
+      "type": "box",
+      "at": [
+        5.78,
+        0.02,
+        2.12
+      ],
+      "yaw": 32,
+      "size": [
+        0.12,
+        0.03,
+        0.78
+      ],
+      "material": "crate"
+    },
+    {
+      "type": "box",
+      "at": [
+        5.25,
+        0.02,
+        1.85
+      ],
+      "yaw": 85,
+      "size": [
+        0.12,
+        0.03,
+        0.9500000000000001
+      ],
+      "material": "crate"
+    },
+    {
+      "type": "box",
+      "at": [
+        7.02,
+        0.02,
+        3.18
+      ],
+      "yaw": 138,
+      "size": [
+        0.12,
+        0.03,
+        0.62
+      ],
+      "material": "crate"
+    },
+    {
+      "type": "box",
+      "at": [
+        7.39,
+        0.02,
+        2.91
+      ],
+      "yaw": 11,
+      "size": [
+        0.12,
+        0.03,
+        0.7900000000000001
+      ],
+      "material": "crate"
+    },
+    {
+      "type": "box",
+      "at": [
+        6.86,
+        0.02,
+        2.64
+      ],
+      "yaw": 64,
+      "size": [
+        0.12,
+        0.03,
+        0.9600000000000001
+      ],
+      "material": "crate"
+    },
+    {
+      "type": "box",
+      "at": [
+        8.83,
+        0.02,
+        2.67
+      ],
+      "yaw": 117,
+      "size": [
+        0.12,
+        0.03,
+        0.63
+      ],
+      "material": "crate"
+    },
+    {
+      "type": "box",
+      "at": [
+        8.3,
+        0.02,
+        2.4
+      ],
+      "yaw": 170,
+      "size": [
+        0.12,
+        0.03,
+        0.8000000000000002
+      ],
+      "material": "crate"
+    },
+    {
+      "type": "box",
+      "at": [
+        8.67,
+        0.02,
+        2.13
+      ],
+      "yaw": 43,
+      "size": [
+        0.12,
+        0.03,
+        0.9700000000000001
+      ],
+      "material": "crate"
+    },
+    {
+      "type": "box",
+      "at": [
+        2.84,
+        0.02,
+        4.36
+      ],
+      "yaw": 96,
+      "size": [
+        0.12,
+        0.03,
+        0.64
+      ],
+      "material": "crate"
+    },
+    {
+      "type": "box",
+      "at": [
+        2.31,
+        0.02,
+        4.09
+      ],
+      "yaw": 149,
+      "size": [
+        0.12,
+        0.03,
+        0.8099999999999999
+      ],
+      "material": "crate"
+    },
+    {
+      "type": "box",
+      "at": [
+        2.68,
+        0.02,
+        3.82
+      ],
+      "yaw": 22,
+      "size": [
+        0.12,
+        0.03,
+        0.9800000000000003
+      ],
+      "material": "crate"
+    },
+    {
+      "type": "box",
+      "at": [
+        9.55,
+        0.02,
+        3.65
+      ],
+      "yaw": 75,
+      "size": [
+        0.12,
+        0.03,
+        0.6500000000000002
+      ],
+      "material": "crate"
+    },
+    {
+      "type": "box",
+      "at": [
+        9.92,
+        0.02,
+        3.38
+      ],
+      "yaw": 128,
+      "size": [
+        0.12,
+        0.03,
+        0.8200000000000002
+      ],
+      "material": "crate"
+    },
+    {
+      "type": "box",
+      "at": [
+        10.29,
+        0.02,
+        3.11
+      ],
+      "yaw": 1,
+      "size": [
+        0.12,
+        0.03,
+        0.9900000000000001
+      ],
+      "material": "crate"
+    },
+    {
+      "type": "box",
+      "at": [
+        4.76,
+        0.02,
+        5.34
+      ],
+      "yaw": 54,
+      "size": [
+        0.12,
+        0.03,
+        0.66
+      ],
+      "material": "crate"
+    },
+    {
+      "type": "box",
+      "at": [
+        5.13,
+        0.02,
+        5.07
+      ],
+      "yaw": 107,
+      "size": [
+        0.12,
+        0.03,
+        0.8300000000000004
+      ],
+      "material": "crate"
+    },
+    {
+      "type": "box",
+      "at": [
+        4.6,
+        0.02,
+        4.8
+      ],
+      "yaw": 160,
+      "size": [
+        0.12,
+        0.03,
+        1.0000000000000004
+      ],
+      "material": "crate"
+    },
+    {
+      "type": "box",
+      "at": [
+        1.77,
+        0.02,
+        2.13
+      ],
+      "yaw": 33,
+      "size": [
+        0.12,
+        0.03,
+        0.6700000000000003
+      ],
+      "material": "crate"
+    },
+    {
+      "type": "box",
+      "at": [
+        1.24,
+        0.02,
+        1.86
+      ],
+      "yaw": 86,
+      "size": [
+        0.12,
+        0.03,
+        0.8400000000000002
+      ],
+      "material": "crate"
+    },
+    {
+      "type": "box",
+      "at": [
+        1.61,
+        0.02,
+        1.59
+      ],
+      "yaw": 139,
+      "size": [
+        0.12,
+        0.03,
+        1.0100000000000002
+      ],
+      "material": "crate"
+    },
+    {
+      "type": "box",
+      "at": [
+        8.58,
+        0.02,
+        6.32
+      ],
+      "yaw": 12,
+      "size": [
+        0.12,
+        0.03,
+        0.68
+      ],
+      "material": "crate"
+    },
+    {
+      "type": "box",
+      "at": [
+        8.05,
+        0.02,
+        6.05
+      ],
+      "yaw": 65,
+      "size": [
+        0.12,
+        0.03,
+        0.85
+      ],
+      "material": "crate"
+    },
+    {
+      "type": "box",
+      "at": [
+        8.42,
+        0.02,
+        5.78
+      ],
+      "yaw": 118,
+      "size": [
+        0.12,
+        0.03,
+        1.02
+      ],
+      "material": "crate"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -1.2,
+        0.36,
+        5.2
+      ],
+      "radius": 0.36,
+      "height": 0.95,
+      "roll": 90,
+      "material": "barrel"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        12.6,
+        0.36,
+        6.4
+      ],
+      "radius": 0.36,
+      "height": 0.95,
+      "roll": 90,
+      "material": "barrel"
+    },
+    {
+      "type": "box",
+      "at": [
+        14.5,
+        0,
+        7.6
+      ],
+      "yaw": 25,
+      "size": [
+        1.3,
+        0.08,
+        2.4
+      ],
+      "pitch": 0,
+      "roll": 70,
+      "material": "planks"
+    },
+    {
+      "type": "barrel",
+      "at": [
+        9.6,
+        4.6
+      ],
+      "r": 0.38,
+      "h": 1,
+      "solid": true
+    },
+    {
+      "type": "barrel",
+      "at": [
+        12.4,
+        2.9
+      ],
+      "r": 0.38,
+      "h": 1,
+      "solid": true
+    },
+    {
+      "type": "barrel",
+      "at": [
+        -5.6,
+        2.7
+      ],
+      "r": 0.38,
+      "h": 1,
+      "solid": true
+    },
+    {
+      "type": "sack",
+      "at": [
+        8.6,
+        5.4
+      ],
+      "size": 0.6
+    },
+    {
+      "type": "sack",
+      "at": [
+        9.1,
+        5.7
+      ],
+      "size": 0.6
+    },
+    {
+      "type": "sack",
+      "at": [
+        -2.8,
+        3.4
+      ],
+      "size": 0.6
+    },
+    {
+      "type": "cart",
+      "at": [
+        -13.5,
+        16.8
+      ],
+      "yaw": 80
+    },
+    {
+      "type": "cart",
+      "at": [
+        19.5,
+        16.6
+      ],
+      "yaw": -100
+    },
+    {
+      "type": "stall",
+      "at": [
+        -30.5,
+        20.1
+      ],
+      "yaw": 180,
+      "w": 5,
+      "d": 3.2,
+      "cloth": "tentCream",
+      "goods": "sacks",
+      "frontHeight": 2.6,
+      "backRise": 0.7,
+      "back": false
+    },
+    {
+      "type": "stall",
+      "at": [
+        -17.5,
+        20.1
+      ],
+      "yaw": 180,
+      "w": 5,
+      "d": 3.2,
+      "cloth": "tentOchre",
+      "goods": "baskets",
+      "frontHeight": 2.6,
+      "backRise": 0.7,
+      "back": false
+    },
+    {
+      "type": "stall",
+      "at": [
+        -1.5,
+        20.1
+      ],
+      "yaw": 180,
+      "w": 5,
+      "d": 3.2,
+      "cloth": "tentRust",
+      "goods": "pots",
+      "frontHeight": 2.6,
+      "backRise": 0.7,
+      "back": false
+    },
+    {
+      "type": "stall",
+      "at": [
+        -9.5,
+        20.1
+      ],
+      "yaw": 180,
+      "w": 5,
+      "d": 3.2,
+      "cloth": "tentCream",
+      "goods": "cloth",
+      "frontHeight": 2.6,
+      "backRise": 0.7,
+      "back": false
+    },
+    {
+      "type": "stall",
+      "at": [
+        30,
+        20.1
+      ],
+      "yaw": 180,
+      "w": 5,
+      "d": 3.2,
+      "cloth": "tentOchre",
+      "goods": "sacks",
+      "frontHeight": 2.6,
+      "backRise": 0.7,
+      "back": false
+    },
+    {
+      "type": "lantern",
+      "at": [
+        -12,
+        14.5
+      ],
+      "height": 3.2,
+      "post": true
+    },
+    {
+      "type": "lantern",
+      "at": [
+        0.5,
+        14.5
+      ],
+      "height": 3.2,
+      "post": true
+    },
+    {
+      "type": "lantern",
+      "at": [
+        13,
+        14.5
+      ],
+      "height": 3.2,
+      "post": true
+    },
+    {
+      "type": "lantern",
+      "at": [
+        28,
+        14.5
+      ],
+      "height": 3.2,
+      "post": true
+    },
+    {
+      "type": "beam",
+      "from": [
+        -19,
+        2.6,
+        10
+      ],
+      "to": [
+        -23.7,
+        0,
+        9.6
+      ],
+      "radius": 1.2,
+      "radiusTo": 1.6,
+      "segments": 12,
+      "material": "shaft",
+      "open": true
+    }
+  ],
+  "backdrops": [
+    {
+      "map": "/stage/textures/docks-harbour.webp",
+      "arc": 110,
+      "yaw": 8,
+      "radius": 320,
+      "bottom": -7,
+      "top": 39.6,
+      "gain": 0.62,
+      "haze": 0.35
+    }
+  ],
+  "crowd": {
+    "library": "realm-of-myr",
+    "groups": [
+      {
+        "type": "points",
+        "people": [
+          {
+            "kind": "porter",
+            "at": [
+              -6.5,
+              18.9
+            ],
+            "yaw": 200
+          },
+          {
+            "kind": "packer",
+            "at": [
+              -4.8,
+              19.2
+            ],
+            "yaw": 170
+          },
+          {
+            "kind": "woman",
+            "at": [
+              22,
+              18.8
+            ],
+            "yaw": 195
+          },
+          {
+            "kind": "porter",
+            "at": [
+              24.5,
+              19
+            ],
+            "yaw": 160
+          },
+          {
+            "kind": "child",
+            "at": [
+              -2.5,
+              19.4
+            ],
+            "yaw": 180
+          },
+          {
+            "kind": "merchant",
+            "at": [
+              29.5,
+              16.4
+            ],
+            "yaw": 210
+          },
+          {
+            "kind": "packer",
+            "at": [
+              -7.2,
+              1.2
+            ],
+            "yaw": 20
+          }
+        ]
+      }
+    ]
+  },
+  "paths": {
+    "quayWalk": [
+      [
+        -17,
+        16.5
+      ],
+      [
+        -12,
+        13
+      ],
+      [
+        -2,
+        11.8
+      ],
+      [
+        16,
+        12.2
+      ],
+      [
+        40,
+        12.8
+      ]
+    ]
+  },
+  "marks": {
+    "quay": {
+      "at": [
+        1,
+        8
+      ],
+      "label": "the quay"
+    },
+    "gangway": {
+      "at": [
+        1.8,
+        0.9
+      ],
+      "label": "the gangway of the Star of Faelendar"
+    },
+    "deck": {
+      "at": [
+        3.5,
+        -6.8
+      ],
+      "label": "the deck of the Star of Faelendar"
+    },
+    "hatch": {
+      "at": [
+        7.2,
+        -3.3
+      ],
+      "label": "the cargo hatch"
+    },
+    "crane": {
+      "at": [
+        13.6,
+        5.6
+      ],
+      "label": "the crane"
+    },
+    "cargo": {
+      "at": [
+        8.4,
+        6.8
+      ],
+      "label": "the cargo stacks"
+    },
+    "pier": {
+      "at": [
+        -15,
+        -1.2
+      ],
+      "label": "the jetty"
+    },
+    "warehouse14": {
+      "at": [
+        -18.6,
+        10
+      ],
+      "label": "Warehouse 14"
+    },
+    "inside": {
+      "at": [
+        -22.6,
+        10.4
+      ],
+      "label": "inside Warehouse 14"
+    },
+    "chainedCrate": {
+      "at": [
+        -27.7,
+        9.1
+      ],
+      "label": "the chained crate"
+    },
+    "lockbox": {
+      "at": [
+        -24.6,
+        8.4
+      ],
+      "label": "the lockbox"
+    },
+    "arcades": {
+      "at": [
+        -6,
+        18.6
+      ],
+      "label": "the warehouse arcades"
+    },
+    "street": {
+      "at": [
+        10.5,
+        21
+      ],
+      "label": "the street into the city"
+    }
+  },
+  "shots": {
+    "harbour": {
+      "position": [
+        -9.5,
+        2.4,
+        12.5
+      ],
+      "target": [
+        6,
+        6.5,
+        -12
+      ],
+      "fov": 58,
+      "label": "The harbour"
+    },
+    "ship": {
+      "position": [
+        -2.5,
+        1.8,
+        6.5
+      ],
+      "target": [
+        8,
+        5.5,
+        -8
+      ],
+      "fov": 62,
+      "label": "The Star of Faelendar"
+    },
+    "quay": {
+      "position": [
+        20,
+        2.2,
+        10
+      ],
+      "target": [
+        -6,
+        1.6,
+        6
+      ],
+      "fov": 56,
+      "label": "The quay"
+    },
+    "warehouses": {
+      "position": [
+        2,
+        1.8,
+        2
+      ],
+      "target": [
+        -14,
+        4.5,
+        20
+      ],
+      "fov": 58,
+      "label": "The warehouses"
+    },
+    "warehouse14": {
+      "position": [
+        -11.5,
+        1.7,
+        9.5
+      ],
+      "target": [
+        -21,
+        1.8,
+        10
+      ],
+      "fov": 56,
+      "label": "Warehouse 14"
+    },
+    "inside": {
+      "position": [
+        -21.4,
+        1.65,
+        13.4
+      ],
+      "target": [
+        -28.6,
+        1,
+        8.2
+      ],
+      "fov": 64,
+      "label": "Inside Warehouse 14"
+    },
+    "deck": {
+      "position": [
+        -5.4,
+        4.6,
+        -6
+      ],
+      "target": [
+        12,
+        2.2,
+        -5.6
+      ],
+      "fov": 62,
+      "label": "The deck"
+    },
+    "hatch": {
+      "position": [
+        6.8,
+        3,
+        -3
+      ],
+      "target": [
+        7.2,
+        -2.6,
+        -5.8
+      ],
+      "fov": 58,
+      "label": "The cage in the hold"
+    }
+  },
+  "life": {
+    "birds": {
+      "count": 22,
+      "center": [
+        4,
+        -30
+      ],
+      "spread": [
+        60,
+        40
+      ],
+      "radius": [
+        6,
+        22
+      ],
+      "height": [
+        10,
+        30
+      ]
+    }
+  }
+}

@@ -1,0 +1,212 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "march-of-davos/arrival-at-the-docks",
+  "set": "realm-of-myr/kordavos-docks",
+  "cast": [
+    {
+      "id": "branka-stoneveil",
+      "name": "Branka Stoneveil",
+      "role": "Dwarf fighter",
+      "height": 1.38,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/branka-front.webp",
+        "back": "/stage/fixtures/march-of-davos/branka-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/branka-portrait.jpg"
+      },
+      "at": [
+        -0.6,
+        9.4
+      ],
+      "facing": [
+        3.6,
+        5.6
+      ]
+    },
+    {
+      "id": "cassia-verane",
+      "name": "Cassia Verane",
+      "role": "Human wizard",
+      "height": 1.72,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/cassia-front.webp",
+        "back": "/stage/fixtures/march-of-davos/cassia-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/cassia-portrait.jpg"
+      },
+      "at": [
+        0.4,
+        9.9
+      ],
+      "facing": [
+        3.6,
+        5.6
+      ]
+    },
+    {
+      "id": "yeva-softstep",
+      "name": "Yeva Softstep",
+      "role": "Halfling rogue",
+      "height": 1.08,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/yeva-front.webp",
+        "back": "/stage/fixtures/march-of-davos/yeva-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/yeva-portrait.jpg"
+      },
+      "at": [
+        1.4,
+        9.5
+      ],
+      "facing": [
+        3.6,
+        5.6
+      ]
+    },
+    {
+      "id": "milos-radan",
+      "name": "Milos Radan",
+      "role": "Human cleric",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/milos-front.webp",
+        "back": "/stage/fixtures/march-of-davos/milos-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/milos-portrait.jpg"
+      },
+      "at": [
+        -1.6,
+        9.9
+      ],
+      "facing": [
+        3.6,
+        5.6
+      ]
+    },
+    {
+      "id": "loric-windrider",
+      "name": "A grizzled dockworker",
+      "role": "Dock foreman",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/loric-windrider-front.webp",
+        "back": "/stage/fixtures/march-of-davos/loric-windrider-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/loric-windrider-portrait.jpg"
+      },
+      "at": [
+        3.6,
+        5.6
+      ],
+      "facing": [
+        0.4,
+        9.6
+      ]
+    },
+    {
+      "id": "tor-marros",
+      "name": "A huge tattooed dockworker",
+      "role": "Dockworker",
+      "height": 2,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/tor-marros-front.webp",
+        "back": "/stage/fixtures/march-of-davos/tor-marros-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/tor-marros-portrait.jpg"
+      },
+      "at": [
+        5.3,
+        5.2
+      ],
+      "facing": [
+        0.4,
+        9.6
+      ]
+    },
+    {
+      "id": "petra-velan",
+      "name": "A dock hand with a pipe",
+      "role": "Dock hand",
+      "height": 1.68,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/petra-velan-front.webp",
+        "back": "/stage/fixtures/march-of-davos/petra-velan-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/petra-velan-portrait.jpg"
+      },
+      "at": [
+        2.2,
+        5
+      ],
+      "facing": [
+        0.4,
+        9.6
+      ]
+    }
+  ],
+  "shots": {
+    "finn": {
+      "subject": "loric-windrider",
+      "distance": 2.4,
+      "angle": 18,
+      "height": 1.7,
+      "lookHeight": 1.62,
+      "fov": 44,
+      "label": "Finn"
+    },
+    "tor": {
+      "subject": "tor-marros",
+      "distance": 2.8,
+      "angle": -15,
+      "height": 1.85,
+      "lookHeight": 1.78,
+      "fov": 44,
+      "label": "Tor"
+    },
+    "petra": {
+      "subject": "petra-velan",
+      "distance": 2.2,
+      "angle": 22,
+      "height": 1.6,
+      "lookHeight": 1.52,
+      "fov": 44,
+      "label": "Petra"
+    },
+    "crew": {
+      "subjects": [
+        "loric-windrider",
+        "tor-marros",
+        "petra-velan"
+      ],
+      "offset": [
+        -2.6,
+        1.75,
+        4.2
+      ],
+      "target": [
+        0,
+        1.2,
+        -0.6
+      ],
+      "relative": "world",
+      "fov": 52,
+      "label": "The dockworkers"
+    },
+    "party": {
+      "subjects": [
+        "branka-stoneveil",
+        "cassia-verane",
+        "yeva-softstep",
+        "milos-radan"
+      ],
+      "offset": [
+        2.8,
+        1.75,
+        -3.6
+      ],
+      "target": [
+        0,
+        1.1,
+        0
+      ],
+      "relative": "world",
+      "fov": 54,
+      "label": "Party"
+    }
+  },
+  "shot": "ship"
+}

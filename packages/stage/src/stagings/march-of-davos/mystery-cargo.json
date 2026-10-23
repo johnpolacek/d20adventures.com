@@ -1,0 +1,214 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "march-of-davos/mystery-cargo",
+  "set": "realm-of-myr/kordavos-docks",
+  "cast": [
+    {
+      "id": "branka-stoneveil",
+      "name": "Branka Stoneveil",
+      "role": "Dwarf fighter",
+      "height": 1.38,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/branka-front.webp",
+        "back": "/stage/fixtures/march-of-davos/branka-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/branka-portrait.jpg"
+      },
+      "at": [
+        -12.8,
+        9.4
+      ],
+      "facing": [
+        -18.6,
+        10
+      ]
+    },
+    {
+      "id": "cassia-verane",
+      "name": "Cassia Verane",
+      "role": "Human wizard",
+      "height": 1.72,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/cassia-front.webp",
+        "back": "/stage/fixtures/march-of-davos/cassia-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/cassia-portrait.jpg"
+      },
+      "at": [
+        -12.4,
+        10.6
+      ],
+      "facing": [
+        -18.6,
+        10
+      ]
+    },
+    {
+      "id": "yeva-softstep",
+      "name": "Yeva Softstep",
+      "role": "Halfling rogue",
+      "height": 1.08,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/yeva-front.webp",
+        "back": "/stage/fixtures/march-of-davos/yeva-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/yeva-portrait.jpg"
+      },
+      "at": [
+        -11.6,
+        9.8
+      ],
+      "facing": [
+        -18.6,
+        10
+      ]
+    },
+    {
+      "id": "milos-radan",
+      "name": "Milos Radan",
+      "role": "Human cleric",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/milos-front.webp",
+        "back": "/stage/fixtures/march-of-davos/milos-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/milos-portrait.jpg"
+      },
+      "at": [
+        -11.4,
+        11.2
+      ],
+      "facing": [
+        -18.6,
+        10
+      ]
+    },
+    {
+      "id": "scarface-alaric",
+      "name": "A scarred man",
+      "role": "Rogue",
+      "height": 1.86,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/scarface-alaric-front.webp",
+        "back": "/stage/fixtures/march-of-davos/scarface-alaric-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/scarface-alaric-portrait.jpg"
+      },
+      "at": [
+        -18.3,
+        10
+      ],
+      "facing": [
+        -12.2,
+        10.2
+      ]
+    },
+    {
+      "id": "warehouse-thug",
+      "name": "A hired blade",
+      "role": "Mercenary",
+      "height": 1.82,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/warehouse-thug-front.webp",
+        "back": "/stage/fixtures/march-of-davos/warehouse-thug-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/warehouse-thug-portrait.jpg"
+      },
+      "at": [
+        -18.9,
+        8.4
+      ],
+      "facing": [
+        -12.2,
+        10.2
+      ]
+    },
+    {
+      "id": "thug-b",
+      "name": "A hired blade",
+      "role": "Mercenary",
+      "height": 1.82,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/thug-b-front.webp",
+        "back": "/stage/fixtures/march-of-davos/thug-b-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/thug-b-portrait.jpg"
+      },
+      "at": [
+        -17.4,
+        11.5
+      ],
+      "facing": [
+        -12.2,
+        10.2
+      ]
+    },
+    {
+      "id": "thug-c",
+      "name": "A hired blade",
+      "role": "Mercenary",
+      "height": 1.82,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/thug-c-front.webp",
+        "back": "/stage/fixtures/march-of-davos/thug-c-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/thug-c-portrait.jpg"
+      },
+      "at": [
+        -19.4,
+        12
+      ],
+      "facing": [
+        -12.2,
+        10.2
+      ]
+    }
+  ],
+  "shots": {
+    "alaric": {
+      "subject": "scarface-alaric",
+      "distance": 2.5,
+      "angle": 20,
+      "height": 1.72,
+      "lookHeight": 1.66,
+      "fov": 44,
+      "label": "Alaric"
+    },
+    "blades": {
+      "subjects": [
+        "scarface-alaric",
+        "warehouse-thug",
+        "thug-b",
+        "thug-c"
+      ],
+      "offset": [
+        4.6,
+        1.8,
+        1
+      ],
+      "target": [
+        0,
+        1.2,
+        0
+      ],
+      "relative": "world",
+      "fov": 54,
+      "label": "The hired blades"
+    },
+    "party": {
+      "subjects": [
+        "branka-stoneveil",
+        "cassia-verane",
+        "yeva-softstep",
+        "milos-radan"
+      ],
+      "offset": [
+        -3.6,
+        1.8,
+        2.2
+      ],
+      "target": [
+        0,
+        1.1,
+        0
+      ],
+      "relative": "world",
+      "fov": 54,
+      "label": "Party"
+    }
+  },
+  "shot": "warehouse14"
+}
