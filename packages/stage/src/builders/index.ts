@@ -3,17 +3,18 @@ import { cask, torch, wineRack } from "./cellar"
 import { awning, bannerHanging, bannerPole, barrier, brazier, cart, ledgerTable, pennantPole, ropeLine } from "./checkpoint"
 import { bush, fern, lightShaft, log, mistBank, trail, tree } from "./forest"
 import { archScreen, curtainWall, dome, drumTower, gatehouse, roundTower, skyline, squareTower } from "./fortifications"
-import { bollard, cage, crane, galleon, skiff, warehouse } from "./harbour"
 import { aisle, dais, lectern, ringGallery, rotunda, theatreChair } from "./hall"
+import { bollard, cage, crane, galleon, skiff, warehouse } from "./harbour"
 import { group, row, scatter } from "./layouts"
 import { archHead, armchair, bookcase, candleStand, column, cupola, desk, gallery, globe, panel, vault } from "./library"
 import { barrelProp, basketProp, bunting, crateProp, farTown, goodsPile, gourds, house, lanternProp, potProp, prizeWheel, sackProp, sail, sheaf, spearRack, stall, standard } from "./market"
 import { anchor, serpent, shipWheel } from "./nautical"
 import { beamPrim, boxPrim, conePrim, cylinderPrim, extrudePrim, groundDisc, heightfieldPrim, lathePrim, openingPrim, spherePrim, torusPrim } from "./primitives"
 import { chainLine, hangingRope, pier, riverboat, ship, strongbox } from "./river"
+import { fortuneTable, shrine, wagon } from "./road"
 import { hangingSign, laundry, tenement, wallLantern } from "./streets"
-import { bore, cave } from "./tunnels"
 import { bar, bench, chair, chandelier, dragonSkull, hearth, stairs, stool, table, wall } from "./tavern"
+import { bore, cave } from "./tunnels"
 import type { BuilderDef } from "./types"
 import { flagstones, grassPatch, mountain, rock, standingStone } from "./wilds"
 
@@ -152,4 +153,8 @@ export const BUILDERS: Record<string, BuilderDef> = {
   bannerPole,
   banner: bannerHanging,
   pennant: pennantPole,
+  // the road
+  wagon,
+  shrine,
+  fortuneTable,
 }

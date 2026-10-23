@@ -135,3 +135,9 @@ The web viewer and the desktop app run the same `packages/stage` renderer and th
 - Put the moon on the street's axis. Off to one side, the roofs hide it.
 - Frame a cave mouth with a stone portal. The cut in the cave wall is wider than the bore's arch, and the gap shows the void as a black frame.
 - Below ground, light the rock from the hemisphere as well as lamps, and keep cave rock pale. Point lights alone left a 30 m cavern black.
+- Paint a mounted character as one standee, horse and rider together, three-quarter on. Horses and pack animals are cast members too, each with a back whose head points away.
+- Card-leaf trees thin out with distance until only trunks and a few flat masses show, like totem poles. Keep `fir` within about 40 m of the cameras and use solid `pine` cones beyond.
+- Oaks near a camera show their bare forks against the sky. Keep them back from camera places, or leave them out of the near woods.
+- Clear woods back from a road by more than the verge. A clearing just past the road edge left a wall of trunks and a canopy like a ceiling over it.
+- Lower a table for a seated figure. Behind a 72 cm table a seated dwarf showed only her head. At 56 cm her arms rest on it, as in the painting.
+- An adventure without premades still needs party places. Stock hero figures hold them (`hero-1` to `hero-3`), and the app gives them to the player's heroes.

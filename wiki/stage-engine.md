@@ -342,3 +342,11 @@ See [the plan](plans/march-of-davos-sets.md).
 - Street builders: `tenement`, `laundry`, `wallLantern`, `hangingSign`. Measured: the Lower Districts 0.17M static triangles, 0.33M rendered, about 150 draw calls with 84 walkers.
 - Black Market builders: `curtain`, `lanternString`, `curioShelf`, `treasureCounter`, `bladeRack`, `boards`, `canvas`. `stall` takes `pad`. `image` takes `size`, the metres a tile covers on surfaces whose uv runs in metres. Measured: the Black Market 0.21M static triangles, 0.42M rendered, about 210 draw calls with 48 walkers.
 - A shot's target beyond `camera.maxDistance` is drawn in along the shot's line, so the orbit no longer drags the camera toward it.
+
+## The Road to Kordavos sets, from 2026-10-23
+
+See [the plan](plans/road-to-kordavos-sets.md).
+
+- Road builders in `builders/road.ts`: `wagon` (a covered merchant wagon with spoked wheels, a canvas bonnet and a house mark), `shrine` (a wayside shrine) and `fortuneTable` (a carpeted table with a crystal ball and cards, `height` for a seated figure).
+- `tree` adds a `fir` kind: tiers of leaf masses narrowing to a spire. With card leaves it thins at a distance, so far woods use `pine`.
+- Measured: the hill road 0.81M static triangles, 1.28M rendered, about 120 draw calls. The road near the city 0.63M static, 0.91M rendered, about 95 calls with 60 walkers. Grass is 0.36M of each.

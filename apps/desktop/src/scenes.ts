@@ -28,6 +28,8 @@ import gateSet from "@d20/stage/sets/realm-of-myr/kordavos-south-gate.json"
 import squareDawnSet from "@d20/stage/sets/realm-of-myr/kordavos-square-dawn.json"
 import squareFuneralSet from "@d20/stage/sets/realm-of-myr/kordavos-square-funeral.json"
 import waterfrontSet from "@d20/stage/sets/realm-of-myr/kordavos-waterfront.json"
+import hillRoadSet from "@d20/stage/sets/realm-of-myr/marquis-road.json"
+import fortuneRoadSet from "@d20/stage/sets/realm-of-myr/marquis-road-fortune.json"
 import pierSet from "@d20/stage/sets/realm-of-myr/mordava-river-pier.json"
 import emptyPierSet from "@d20/stage/sets/realm-of-myr/mordava-river-pier-empty.json"
 import pathSet from "@d20/stage/sets/realm-of-myr/old-forest-path.json"
@@ -102,6 +104,9 @@ import owlbearConfrontation from "@d20/stage/stagings/the-midnight-summons/owlbe
 import preparingForTheCity from "@d20/stage/stagings/the-midnight-summons/preparing-for-the-city.json"
 import theMissingRelics from "@d20/stage/stagings/the-midnight-summons/the-missing-relics.json"
 import timelyRescue from "@d20/stage/stagings/the-midnight-summons/timely-rescue.json"
+import theFortuneTeller from "@d20/stage/stagings/the-road-to-kordavos/the-fortune-teller.json"
+import theGatesAhead from "@d20/stage/stagings/the-road-to-kordavos/the-gates-ahead.json"
+import wellMet from "@d20/stage/stagings/the-road-to-kordavos/well-met.json"
 import { type FigureArt, type FigureOwner, heroFigure, PREMADE_FIGURES } from "./figures"
 import { NPC_PORTRAITS } from "./npc-portraits"
 
@@ -663,9 +668,34 @@ export const SCENES: Record<string, Scene> = {
   "the-crate": cargo(pierSet, theCrate, "Riverboat saloon", "The riverboat's saloon, quiet now. The heavy iron-banded crate sits in the middle under hanging rope."),
   "return-to-the-city": cargo(riverfrontSet, returnToTheCity, "Kordavos riverfront", "The quay along the river in Kordavos, ships at their moorings and the castle on its hill above the city."),
   "the-end": cargo(pathSet, theEnd, "The old forest", "A mossy path winds between huge old trees in green-gold light."),
+  // The Road to Kordavos has no premades: the player's own heroes take the three travellers' places.
+  "well-met": road(
+    hillRoadSet,
+    wellMet,
+    [-1.2, -0.6],
+    "The Marquis Road",
+    "Morning on the Marquis Road through wooded hills of firs under pale rock peaks. The party has stopped at a wayside shrine on the west verge, where Sister Mira rests. Dmitri Volkov rides up the road at the head of his caravan: two covered wagons marked with a black wolf's head, a teamster, pack horses at the tail and two guards alongside. Elaraen stands with his lute by the milestone across the road."
+  ),
+  "the-fortune-teller": road(
+    fortuneRoadSet,
+    theFortuneTeller,
+    [-2.9, 0.6],
+    "The Marquis Road",
+    "Afternoon on the Marquis Road nearer Kordavos, between giant old trees, the road busy with travellers going both ways. Borina Runetongue sits at a small carpeted table with a crystal ball and her cards, under a great tree on the west verge. The party stands before her table."
+  ),
+  "the-gates-ahead": road(
+    gateSet,
+    theGatesAhead,
+    [3.8, 79.8],
+    "Before the gates of Kordavos",
+    "The Marquis Road at the end of the long line of travellers, merchants and villagers waiting outside the south gate of Kordavos, its towers hung with Asterian and Valkaran banners. Festival music carries from the city."
+  ),
 }
 function cargo(set: unknown, staging: unknown, location: string, where: string): Scene {
   return { set: set as Scene["set"], staging: staging as Scene["staging"], location, where, party: ["lyra", "poppen", "thalbern"] }
+}
+function road(set: unknown, staging: unknown, spare: [number, number], location: string, where: string): Scene {
+  return { set: set as Scene["set"], staging: staging as Scene["staging"], location, where, party: ["hero-1", "hero-2", "hero-3"], spare: [spare] }
 }
 export const sceneFor = (encounterId: string | undefined) => (encounterId ? SCENES[encounterId] : undefined)
 

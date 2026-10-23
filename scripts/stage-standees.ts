@@ -554,7 +554,8 @@ const FIGURES: Record<string, Figure> = {
     head: 0.17,
     seated: true,
     chair: "a high-backed chair upholstered in deep crimson velvet with a dark carved wooden frame, which is drawn",
-    backNote: "Seen squarely from directly behind: the chair's tall velvet back hides most of his back; above it his hood covers the whole back of his head. The silver gauntlet shows only at the side on the chair's arm.",
+    backNote:
+      "Seen squarely from directly behind: the chair's tall velvet back hides most of his back; above it his hood covers the whole back of his head. The silver gauntlet shows only at the side on the chair's arm.",
   },
   silverhand: {
     out: "fixtures/march-of-davos/silverhand",
@@ -708,7 +709,8 @@ const FIGURES: Record<string, Figure> = {
     who: "A Covenant of the Cowl rogue, Human male agent",
     look: "A lean, quick man of about thirty, about 1.78 m tall, his face half hidden under a deep charcoal hood and a dark cloth mask over his nose and mouth, sharp watchful eyes. Close-fitting dark leathers with many straps, a short charcoal cloak, dark gloves, soft boots. A short blade in his right hand and a small hand crossbow in his left, both held low. Crouched a little, ready to move.",
     head: 0.13,
-    backNote: "His deep hood is up and covers the whole back of his head. The short cloak hangs to his waist; below it his leathers, belt and boots show. His blade and crossbow show only at his sides.",
+    backNote:
+      "His deep hood is up and covers the whole back of his head. The short cloak hangs to his waist; below it his leathers, belt and boots show. His blade and crossbow show only at his sides.",
   },
   "covenant-cultist": {
     out: "fixtures/march-of-davos/covenant-cultist",
@@ -810,6 +812,76 @@ const FIGURES: Record<string, Figure> = {
     look: "A stout, wealthy nobleman of about fifty, about 1.76 m tall, a gilded sun mask with rays round his face, a doublet of gold brocade, a short crimson cape, a heavy gold chain, a goblet of wine in one hand.",
     head: 0.13,
   },
+  // The Road to Kordavos: Dmitri's caravan on the Marquis Road, the two travellers met with it, and Borina at her table.
+  // Volkov's house mark is a black wolf's head on saffron, on his guards' tabards and his wagons' canvas.
+  "dmitri-mounted": {
+    out: "fixtures/the-road-to-kordavos/dmitri-mounted",
+    who: "Dmitri Volkov, Human male merchant, riding his horse at the head of his caravan",
+    look: "A sturdy man of about sixty with neatly combed white hair and a full, neatly combed white beard, a confident, shrewd, smiling face with keen eyes. Fine, practical travelling clothes, clean and well kept: a broad-brimmed brown leather hat, a deep-red riding coat with a cream fur collar over a dark doublet, brown leather gloves, tall riding boots in the stirrups. He sits upright in the saddle of a sturdy chestnut horse with a white blaze down its face and a pale cream mane and tail. Good worn leather bridle, saddle and saddlebags, a rolled blanket behind the saddle.",
+    ref: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-road-to-kordavos/npcs/225e726d-4795-4d1c-8d8d-0f7b8f42e094.png",
+    head: 0.1,
+    pose: "horse and rider together. The horse stands still on all four hooves, its body turned a three-quarter angle toward the camera, its head toward the camera and a little to one side. The rider sits upright in the saddle, facing the camera, one hand on the reins, the other resting on his thigh. The WHOLE horse and rider are small enough in the frame to leave a wide margin, at least 8% of empty background on every side: no hoof, ear, hat or tail touches the edge. Eye-level view.",
+    backNote:
+      "Horse and rider are seen squarely from directly behind: the horse's rump and cream tail nearest the camera, its hind legs, and the rider's back above it, his red coat and fur collar and the back of his hat. The horse's head points AWAY from the camera, so only the tips of its ears show past the rider: NO horse face, NO rider face.",
+  },
+  "pack-horse": {
+    out: "fixtures/the-road-to-kordavos/pack-horse",
+    who: "A pack horse of a merchant caravan",
+    look: "A sturdy, patient dark-bay pack horse with a black mane and tail, laden with a wooden pack saddle carrying bundles of cloth in oilskin, small casks and canvas bales tied with rope on both sides. A plain leather halter with a lead rope hanging down. No rider.",
+    head: 0.3,
+    pose: "the whole horse standing still on all four hooves, its body turned a three-quarter angle toward the camera, its head toward the camera and a little to one side, the load on its back. The WHOLE horse is small enough in the frame to leave a wide margin, at least 8% of empty background on every side: no hoof, ear or tail touches the edge. Eye-level view.",
+    backNote:
+      "The horse is seen squarely from directly behind: its rump and black tail nearest the camera, its hind legs, the load on both sides of the pack saddle. Its head points AWAY from the camera, so only the tips of its ears show: NO face.",
+  },
+  "draft-horse": {
+    out: "fixtures/the-road-to-kordavos/draft-horse",
+    who: "A draft horse in harness, pulling a merchant's wagon",
+    look: "A big, heavy grey draft horse with a pale mane and feathered hooves, in a dark leather harness with a padded collar round its neck, brass fittings, blinkers on the bridle and long traces running back from its sides. No rider and no wagon.",
+    head: 0.3,
+    pose: "the whole horse standing still on all four hooves, its body turned a three-quarter angle toward the camera, its head toward the camera and a little to one side. The WHOLE horse is small enough in the frame to leave a wide margin, at least 8% of empty background on every side: no hoof, ear or tail touches the edge. Eye-level view.",
+    backNote:
+      "The horse is seen squarely from directly behind: its rump and pale tail nearest the camera, its hind legs, the harness straps over its back and the traces at its sides. Its head points AWAY from the camera, so only the tips of its ears and the top of the collar show: NO face.",
+  },
+  "caravan-guard-a": {
+    out: "fixtures/the-road-to-kordavos/caravan-guard-a",
+    who: "A caravan guard, Human male, of the Volkov trading house",
+    look: "A weathered, watchful man of about forty, tall human proportions, long legs, not a dwarf, about 1.82 m tall, a short dark beard and a steel kettle helm. A padded brown gambeson under a saffron tabard bearing a black wolf's head, a sword at his hip, a round wooden shield on his left arm and a spear held upright in his right hand. Leather bracers, dark trousers and boots.",
+    head: 0.13,
+  },
+  "caravan-guard-b": {
+    out: "fixtures/the-road-to-kordavos/caravan-guard-b",
+    who: "A caravan guard, Human female, of the Volkov trading house",
+    look: "A lean, alert woman of about thirty, about 1.72 m tall, sun-browned, black hair cropped short. A short brown leather jerkin over a saffron tunic bearing a black wolf's head, a quiver of bolts at her hip, a loaded crossbow held low in both hands. A grey travelling cloak thrown back, dark trousers and boots.",
+    head: 0.13,
+  },
+  teamster: {
+    out: "fixtures/the-road-to-kordavos/teamster",
+    who: "A teamster, Human male wagon driver of a merchant caravan",
+    look: "A broad, ruddy man of about fifty, about 1.76 m tall, a grey stubbled jaw and a battered felt hat. A faded saffron work shirt with rolled sleeves, a brown leather apron-vest, a coiled driving whip in one hand, sturdy dusty boots.",
+    head: 0.13,
+  },
+  elaraen: {
+    out: "fixtures/the-road-to-kordavos/elaraen",
+    who: "Elaraen Whisperwind, Half-Elf male bard",
+    look: "A lean half-elf man of about thirty with expressive green eyes, slightly pointed ears, tousled dark hair, and a charming, easy smile with a hint of melancholy. Practical, well-kept travelling clothes: a moss-green vest over a loose cream shirt, a long colourful scarf of red, teal and gold patterns wound round his neck, a small intricate silver brooch, brown trousers and worn boots. A lute held in his hands across his chest, a travelling pack on his back.",
+    ref: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-road-to-kordavos/npcs/09000b84-bff7-4c85-bba3-05e48f32f8ca.png",
+    head: 0.13,
+  },
+  "sister-mira": {
+    out: "fixtures/the-road-to-kordavos/sister-mira",
+    who: "Sister Mira, Human female cleric of Valkara",
+    look: "A sturdy woman in her late twenties with sun-kissed, freckled skin, kind, observant grey-green eyes a little weary from the road, and long curly brown hair worn back in practical braids. Well-kept brown leather armour with a short fur collar over simple undyed wool robes, a silver holy symbol of Valkara on a chain at her chest, a plain wooden walking staff in one hand, a travelling pack on her back.",
+    ref: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-road-to-kordavos/npcs/24fbafb0-8cc1-4e2e-97d4-8fb67b9d60a7.png",
+    head: 0.13,
+  },
+  borina: {
+    out: "fixtures/the-road-to-kordavos/borina",
+    who: "Borina Runetongue, Dwarf female fortune teller, seated",
+    look: "A stout, very broad old dwarf woman with stout dwarf proportions, not a short human, a weathered, deeply lined face and piercing blue eyes, with a gentle, knowing look. Long dark hair streaked with grey, bound by an embroidered headband and worn in many braids threaded with silver beads and small polished stones. Layers of dark navy and charcoal embroidered robes with red and gold borders, rustling with hidden trinkets and pouches, many silver necklaces and amulets, rings and wide silver bracelets. Her hands rest on her knees.",
+    ref: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-road-to-kordavos/npcs/7a98e364-48a3-4d85-8155-5505fe6c29ca.png",
+    head: 0.2,
+    seated: true,
+  },
 }
 for (const [id, f] of Object.entries(FIGURES)) f.out ||= `heroes/${id}`
 
@@ -830,8 +902,7 @@ const STANDING =
 const SEATED =
   "- Pose: full body, head to toe, SITTING on a plain round three-legged wooden tavern stool about 45 cm high, which is drawn, facing straight toward the camera, knees forward, feet flat on the floor in front of the stool, eye-level view without perspective distortion. No table and no other furniture. Nothing cropped, about 6% margin on all sides, the feet and the stool's feet near the bottom of the frame."
 
-const seatedOn = (f: Figure) =>
-  f.chair ? SEATED.replace("a plain round three-legged wooden tavern stool about 45 cm high", f.chair).replace("the stool's feet", "the chair's feet") : SEATED
+const seatedOn = (f: Figure) => (f.chair ? SEATED.replace("a plain round three-legged wooden tavern stool about 45 cm high", f.chair).replace("the stool's feet", "the chair's feet") : SEATED)
 
 const frontPrompt = (f: Figure) =>
   `${

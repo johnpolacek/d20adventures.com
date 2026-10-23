@@ -102,6 +102,18 @@ Layout:
 - Above the treetops is magenta sky only.
 - No cottage, no path, no people, no animals, nothing in the foreground.`,
   },
+  // The Marquis Road's hill woods (Well Met), round the road both ways: wooded hills of firs under pale rock peaks.
+  "marquis-hills": {
+    ref: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/the-road-to-kordavos/encounters/well-met/9e37fb3b-cf49-45f8-bc22-7d423e1b460e.png",
+    light: "bright, clear morning sunlight",
+    scene: `wooded hill country seen from a road in a valley: steep hillsides covered in tall, dark firs and spruces with rounder broadleaf trees among them, rising in two or three layers, each farther layer bluer and softer in the clear air. Above the farther hills stand two pale grey rock peaks with sheer faces, sunlit, as in the reference. The fir tips make a crisp, jagged skyline against the sky.
+
+Layout:
+- The lowest fifth of the image is one continuous band of dense forest across the full width, with no gaps, no clearings and no road.
+- The wooded hills fill roughly the lower half of the image, their skyline rising and falling between 35% and 55% of the image height.
+- The two rock peaks rise to about 70% of the image height, one left of centre and one smaller far to the right. Elsewhere the skyline stays below 55%.
+- Above the skyline is magenta sky only.`,
+  },
 }
 
 const prompt = (b: Backdrop) => `A very wide panoramic matte painting, to be used as the far backdrop of a 3D game scene. Paint it in the exact style, palette and ${b.light} of the reference painting.

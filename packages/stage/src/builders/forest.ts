@@ -99,14 +99,15 @@ function limb(b: Sink, mat: THREE.Material, a: THREE.Vector3, c: THREE.Vector3, 
 }
 
 // A tree. `oak`: a stout trunk forking into limbs under a broad crown of leaf masses. `pine`: a straight trunk under
-// stacked cones. `birch`: a slender pale trunk and a small, high crown. `gnarled`: an old crooked trunk whose twisting
-// limbs split into twigs, with a few sparse leaf clumps. `ancient`: a huge old forest giant, its smooth tapering trunk
-// flaring into buttress roots across the ground and great limbs arching out under a high crown. The trunk is solid; the
-// crown is not.
+// stacked cones. `fir`: a tall straight trunk under tiers of drooping boughs built from leaf masses, narrowing to a
+// spire, for painted conifer woods (with card leaves it thins at a distance, where `pine` reads better). `birch`: a
+// slender pale trunk and a small, high crown. `gnarled`: an old crooked trunk whose twisting limbs split into twigs, with
+// a few sparse leaf clumps. `ancient`: a huge old forest giant, its smooth tapering trunk flaring into buttress roots
+// across the ground and great limbs arching out under a high crown. The trunk is solid; the crown is not.
 export const tree = defineBuilder(
   z
     .object({
-      kind: z.enum(["oak", "pine", "birch", "gnarled", "ancient"]).default("oak"),
+      kind: z.enum(["oak", "pine", "fir", "birch", "gnarled", "ancient"]).default("oak"),
       height: size(60).default(12),
       girth: size(4).optional(),
       lean: num(0, 40).default(3),
@@ -225,6 +226,29 @@ export const tree = defineBuilder(
         const w = h * (0.26 - t * 0.17) * rand(0.9, 1.1)
         const c = top(y)
         b.add(unitCone(), leaves(), M4(c.x, y + w * 0.6, c.z, rand(0, TAU), w, w * 1.5, w), { uv: "keep", flat: true })
+      }
+      ctx.circle(0, 0, r + 0.25)
+      return
+    }
+    if (p.kind === "fir") {
+      const r = p.girth ?? h * 0.018
+      b.add(unitTrunk(), M.bark, M4(top(h * 0.44).x, h * 0.44, top(h * 0.44).z, rand(0, TAU), r, h * 0.88, r), { uv: "keep" })
+      // Each tier is a ring of leaf masses round the trunk, wide at the foot of the crown and narrowing up, close enough
+      // to overlap so no tier reads as a separate disc.
+      const tiers = p.low ? 6 : 9
+      for (let i = 0; i < tiers; i++) {
+        const t = i / (tiers - 1)
+        const y = h * (0.2 + t * 0.74)
+        const R = h * (0.17 - t * 0.14) * rand(0.9, 1.1)
+        const c = top(y)
+        const ring = t > 0.8 ? 1 : p.low ? 3 : 5
+        const a0 = rand(0, TAU)
+        for (let k = 0; k < ring; k++) {
+          const a = a0 + (k / ring) * TAU
+          const out = ring === 1 ? 0 : R * 0.38
+          const s = R * (ring === 1 ? 1.0 : 0.75)
+          mass(b, leaves(), M4(c.x + Math.cos(a) * out, y - s * 0.1, c.z + Math.sin(a) * out, rand(0, TAU), s, s * 0.75, s), rand, p.low)
+        }
       }
       ctx.circle(0, 0, r + 0.25)
       return
