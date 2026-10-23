@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-22, scene rails check
+
+Owner asked for headless playthroughs that keep the GM on the rails, with "an automated check that flags turns leaving the authored scene", run after each prompt change. The owner picked scene probes, with a judge built first. `scene:judge` reads a save's rounds against each encounter's intro, notes, transitions and cast, and flags invented exits and acts against the notes, with who pushed each one and any gap in the content. `scene:probe` starts a fresh game at an encounter from the five real turns before it, pushes on the scene's exits with scripted replies, and judges every round. Both playtest saves are now in the repo as known cases. The judge flagged every known derail, the cistern chase and the tunnel stair, and passed 9 of 10 early rounds. It traced the cistern chase to Silverhand's notes, which never say who betrayed him or where that man went. One short probe of The Ambush stayed on the rails. Also found: the round summary reaches no GM prompt, only the last five turns. See [scene rails check](plans/scene-rails.md).
+
 ## 2026-10-22, the Dragonbone Inn in 3D
 
 Owner: "More 3D sets. Do Dragonbone Inn." The inn's three encounters now play in 3D: its common room in the evening and late evening, the same room at dawn, and the backroom behind the bar. A stone hearth with a dragon's skull over the mantel, a bar of bottles and kegs, stairs, leaded windows, wheel chandeliers. Eleven new standees: Bram, Beric, Eamon and Elara from their portraits, a bard, and six patrons painted seated on their own stools. Two engine fixes: the camera passing straight from one room into another now takes the new room's lamps, and window glass casts no shadow. Every view passes the stage check and DPR 2 verification. 78 desktop tests pass. Not seen in the running app. See [the plan](plans/dragonbone-inn-stage.md).

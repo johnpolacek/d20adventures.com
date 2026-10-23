@@ -65,6 +65,8 @@ The old `/settings/{settingId}/{planId}/edit` route, nested section/scene editor
 
 For automated authenticated playthroughs, use the repository's [gameplay playthrough skill](../../.agents/skills/gameplay-playthrough-testing/SKILL.md).
 
+To check that the GM keeps to the authored scene, see [scene rails check](scene-rails.md). `pnpm --dir apps/desktop scene:judge <save>` judges a save's rounds against their encounters. `pnpm --dir apps/desktop scene:probe <probe>` plays a scene from `apps/desktop/scripts/scene-probes.json` fresh and judges it. Both run Claude through its CLI.
+
 | Scenario | Route and checks |
 |---|---|
 | Discovery | `/settings/realm-of-myr/play`. Four registered adventures, valid links, independent failure handling. |

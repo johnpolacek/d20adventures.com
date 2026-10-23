@@ -9,6 +9,8 @@
     "build": "pnpm prepare:runtime && vite build",
     "check": "tsc -p tsconfig.json",
     "test": "tsx --test runtime/*.test.ts",
+    "scene:judge": "tsx scripts/scene-judge.ts",
+    "scene:probe": "tsx scripts/scene-probe.ts",
     "tauri": "tauri"
   },
   "dependencies": {
