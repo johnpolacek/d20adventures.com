@@ -33,7 +33,7 @@ Start the checkout through `pnpm wt:dev`. For a deliberate direct port, `pnpm de
 | TypeScript/app behavior | `pnpm exec tsc --noEmit`, `pnpm lint`, focused checks below, then `pnpm build` when rendering/build behavior matters. |
 | Shared GM runtime | `pnpm --filter @d20/gm-core check`, `pnpm test:gm-core`, then app checks and an authenticated full playthrough. See [GM core](../gm-core.md). |
 | Compiler/source contracts | Relevant `pnpm test:wiki-adventures:batch-a` through `batch-f`. |
-| Adventure content/runtime | Relevant bridge check: `midnight-bridge`, `covert-cargo-bridge`, `road-to-kordavos-bridge`, or `march-of-davos-bridge`, with the `test:wiki-adventures:` prefix. |
+| Adventure content/runtime | Relevant bridge check: `midnight-bridge`, `covert-cargo-bridge`, `road-to-kordavos-bridge`, or `march-of-davos-bridge`, with the `test:wiki-adventures:` prefix. A March of Davos edit also changes the content hash in `pnpm test:gm-core`'s recorded round: refresh with `GM_FIXTURE_UPDATE=1 pnpm test:gm-core`, then `npx biome format --write scripts/gm-core-fixtures/turn.json`, and the diff should be the hash alone. |
 | Admin authoring | `pnpm test:wiki-adventures:admin-authoring`, affected bridge checks, editor browser checks. |
 | Discovery and runtime loader | `pnpm test:wiki-adventures:public-flow`, affected bridge checks, authenticated selection/start. |
 | Published artifact repository | `pnpm test:wiki-adventures:rollback`. This tests in-memory published versions, not frozen content in live registered adventures. |

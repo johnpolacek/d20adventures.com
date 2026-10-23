@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-22, AI heroes open no way out
+
+Owner picked the AI hero rule next. After the content fixes, the derails left came from AI heroes, such as Milos proposing the catacombs to Silverhand. The AI hero prompt now says to open no way out of a scene: no hidden passage, trail, fleeing figure or place the story has not set before the party now, and a lead from earlier rounds stays behind. Its "someone to follow" became "someone leading the way". All three probes then ran clean, 0 of 9 runs off the rails, against 4 of 9 at the first baseline. Every study run reached the journal, every Silverhand run moved on to The Ambush, and Silverhand kept Joran's secret. Also fixed: `test:gm-core` had failed since the content commit changed March of Davos's hash. Gm-core and desktop tests pass. Convex not deployed. See [scene rails check](plans/scene-rails.md).
+
 ## 2026-10-22, probes before and after content fixes
 
 Owner: "(a) first, then (b), then rerun (a)". Three scene probes ran three times each, before and after content fixes. Silverhand's traitor is now secretly Joran, who worked his crew as Lev. The owner liked it, "but don't want to give anything away", so Silverhand knows only Lev, names no place, and has never heard of Joran, and Joran tells it at the finale if asked. Astrid's door can be opened, her quarters are empty, and nothing lies beyond the study's compartment. Silverhand's probe went from 3 of 3 runs off the rails, with invented catacomb passages and a traitor called Dmitri Vasko, to 1 of 3, an AI hero proposing the catacombs. The study's probe never got through the door before, and every run found the journal after, with no tunnel stair. The Ambush stayed on the rails in all three reruns. The judge now sees how each next scene opens, which cleared its one false positive. See [scene rails check](plans/scene-rails.md).

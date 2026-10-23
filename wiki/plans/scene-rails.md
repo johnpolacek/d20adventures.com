@@ -91,8 +91,25 @@ Owner: "(a) first, then (b), then rerun (a)". Three runs a probe, Claude at medi
 - Final Confrontation: asked how he came by the Key, Joran tells it.
 - The Ranger's Quarters: the door opens to thieves' tools at DC 13 or force at DC 15, a failure costs only time, the floor and the quarters are empty, and nothing lies beyond the compartment.
 
+## AI heroes open no way out, 2026-10-22
+
+Owner picked the AI hero rule next. Both remaining derails came from AI heroes: Milos proposing the catacombs to Silverhand, Cassia leading the party down a stair. The round and NPC prompts already said to open no way out of a scene. The AI hero prompt did not, and its "move the scene forward" line named "someone to follow" as a way on.
+
+- The AI hero prompt sees the story, not the encounter's notes, so its rule is about the story: open no way out yourself, no hidden passage, stair, tunnel, trail, fleeing figure or place the story has not set before the party now. A lead from earlier rounds stays behind unless the story brings it back. A search or chase that found nothing is dropped.
+- "Someone to follow" is now "someone leading the way".
+- In `packages/gm-core`, so hosted games get it with a Convex deploy.
+
+| Probe | Before the rule | After |
+|---|---|---|
+| `ambush-follow` | 0 of 3 runs off | 0 of 3 runs, 0 of 12 rounds. Two reached Entry to the Ball |
+| `study-draft` | 2 of 3 runs off | 0 of 3 runs, 0 of 12 rounds. Every run got in and reached the journal. One left by the listed way back to the halls |
+| `silverhand-traitor` | 1 of 3 runs off | 0 of 3 runs, 0 of 7 rounds. Every run moved on to The Ambush. Asked about Joran: "I meet many men, dwarf. None by that name." |
+
+From the first baseline to now: 4 of 9 runs off the rails to 0 of 9.
+
+`pnpm test:gm-core` and 78 desktop tests pass. Not deployed.
+
 ## Next
 
-- AI heroes push on exits: Milos's catacombs, Cassia's stair. Their prompt has no rule against opening a way out, as the round and NPC prompts do.
 - Probe lead-ins copy a playtest's own derails. A clean lead-in would come from a run that stayed on the rails.
 - Gaps the judge keeps naming: what Silverhand counts as a fair trade, what the Key looks like, the study's chest and desk.

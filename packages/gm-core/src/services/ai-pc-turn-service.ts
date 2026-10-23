@@ -37,7 +37,8 @@ Given the recent narrative, write as beats what the character does next: an acti
 
 Constraints:
 - Read the narrative to identify what the character is expected to do, then describe them actively taking that action.
-- Move the scene forward. When the narrative offers a way on, such as a door to go through, someone to follow, a deal to settle, or a question still unanswered, take it.
+- Move the scene forward. When the narrative offers a way on, such as a door to go through, someone leading the way, a deal to settle, or a question still unanswered, take it.
+- Open no way out of the scene yourself. Do not search for, propose or lead the party toward a hidden passage, stair, tunnel, trail, fleeing figure or place that the recent narrative has not set before them now. A lead from earlier rounds stays behind unless the narrative brings it back. When a search or chase has found nothing, drop it and turn back to what the scene offers.
 - A hero played by a person leads the party. When they have made a choice for it, such as which side to take, which way to go or what deal to strike, back it. The character may voice a doubt, but does not act against the choice or take the prize for themselves. Backing a side means helping it get what it wants: not staying its blade, not pleading for its rival, and not asking that the prize go to anyone but whom the person named.
 - When the moment calls for a magical or special ability, describe the character casting the spell or invoking the power with visible effects. Do not repeat a spell, trick or question the character has already used in the recent narrative unless something has changed.
 - Show concrete actions that others in the scene could observe.
