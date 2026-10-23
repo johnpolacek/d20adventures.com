@@ -23,7 +23,7 @@ In `.env`, add the test user's Clerk id to `ADMIN_USER_IDS` (comma-separated) fo
 
 In-game **token economy**: a fresh user starts ~700 tokens and each LLM call charges it (`INSUFFICIENT_TOKENS` stalls turns). Top up:
 ```bash
-npx convex run userTokenManagement:incrementTokens '{"userId":"<clerkId>","tokensToCredit":1000000,"transactionType":"adjustment_manual"}'
+npx convex run userTokenManagement:incrementTokens "{\"secret\":\"$(grep ^STORE_SERVER_SECRET= .env.local | cut -d= -f2-)\",\"userId\":\"<clerkId>\",\"tokensToCredit\":1000000,\"transactionType\":\"adjustment_manual\"}"
 ```
 
 ## 3. Auth — create a test user (don't sign up in-browser)

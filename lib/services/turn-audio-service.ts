@@ -7,6 +7,7 @@ import { assignVoices, type VoiceAssignment, voiceForSpeaker } from "@/lib/ai/tt
 import { pcmDurationSec, pcmToWav } from "@/lib/audio/wav"
 import { isAwsConfigured } from "@/lib/aws"
 import { api, convex } from "@/lib/convex/server"
+import { serverSecret } from "@/lib/convex/server-secret"
 import { uploadFileToS3 } from "@/lib/s3-utils"
 import type { TurnAudioSegment } from "@/types/turn-audio"
 
@@ -104,13 +105,14 @@ export async function generateTurnAudioIncremental(opts: { turn: TurnDoc; advent
   // Balance gate before claiming or doing any AI work.
   if (estimatedTokens > 0) {
     if (charge.type === "single") {
-      await convex.mutation(api.userTokenManagement.ensureUserTokenRecord, { userId: charge.userId })
-      const balance = await convex.query(api.userTokenManagement.getTokenBalance, { userId: charge.userId })
+      await convex.mutation(api.userTokenManagement.ensureUserTokenRecord, { secret: serverSecret(), userId: charge.userId })
+      const balance = await convex.query(api.userTokenManagement.getTokenBalance, { secret: serverSecret(), userId: charge.userId })
       if (balance.tokensRemaining < estimatedTokens) {
         return { ok: false, reason: "insufficient", shortUserIds: [charge.userId], estimatedShare: estimatedTokens, estimatedTokens }
       }
     } else {
       const check = await convex.query(api.userTokenManagement.checkSplitBalances, {
+        secret: serverSecret(),
         userIds: charge.userIds,
         totalTokens: estimatedTokens,
       })
@@ -213,6 +215,7 @@ export async function generateTurnAudioIncremental(opts: { turn: TurnDoc; advent
         const totalD20Tokens = Number((totalProviderTokens * TOKEN_MULTIPLIER).toFixed(6))
         try {
           const splitResult = await convex.mutation(api.userTokenManagement.splitDecrementTokens, {
+            secret: serverSecret(),
             userIds: charge.userIds,
             totalTokens: totalD20Tokens,
             transactionType: "usage_tts_audio",

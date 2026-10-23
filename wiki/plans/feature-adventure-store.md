@@ -86,7 +86,7 @@ The New game screen shows owned adventures and locked ones with their price. Buy
 
 Validation on the worktree deployment: a wrong secret was refused, a grant was created, a replayed session and a second session for an owned adventure both returned the first row, and another user owned nothing. Biome and TypeScript passed. The library route was not exercised through a signed-in browser.
 
-`STORE_SERVER_SECRET` must be set in each Convex deployment and in the matching Next environment. Since the 2026-10-08 merge it is set on main's development deployment and in its `.env.local`. Production does not have it yet.
+`STORE_SERVER_SECRET` must be set in each Convex deployment and in the matching Next environment. Since the 2026-10-08 merge it is set on main's development deployment and in its `.env.local`. As of 2026-10-23 it is set in Convex production and Vercel production.
 
 ## Phase 3 record, 2026-10-08
 
@@ -155,7 +155,7 @@ Without `D20_REQUIRE_ACCOUNT` a development build plays without linking. Without
 
 ## Security
 
-- Pre-existing, found 2026-10-08: `convex/userTokenManagement.ts` exposes `incrementTokens` and `decrementTokens` as public mutations that take any user id with no check. Anyone with the public Convex URL can credit or drain any account's tokens. The same pattern would let anyone grant themselves adventures, so store functions use the server secret from the start. The token fix is tracked in [Maintenance](maintenance.md).
+- Found 2026-10-08, fixed 2026-10-23: `convex/userTokenManagement.ts` exposed its token functions as public mutations that took any user id. They now require the server secret too. Store functions used it from the start.
 - Grants come only from a verified Stripe webhook or an admin action.
 - Device tokens are random, stored hashed, revocable, and never logged.
 - Packs are local files and can be copied. Accepted for now. Packs are hash-checked in transit and version-checked on disk, but not signed. Signing stays an open decision.

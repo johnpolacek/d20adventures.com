@@ -1,5 +1,6 @@
 import { v } from "convex/values"
-import { mutation, query, type MutationCtx } from "./_generated/server"
+import { type MutationCtx, mutation, query } from "./_generated/server"
+import { requireServer } from "./serverSecret"
 
 const INITIAL_TOKEN_GRANT = 1000
 
@@ -47,19 +48,22 @@ async function ensureLedger(ctx: MutationCtx, userId: string) {
 }
 
 export const ensureUserTokenRecord = mutation({
-  args: { userId: v.string() },
+  args: { secret: v.string(), userId: v.string() },
   handler: async (ctx, args) => {
+    requireServer(args.secret)
     return await ensureLedger(ctx, args.userId)
   },
 })
 
 export const decrementTokens = mutation({
   args: {
+    secret: v.string(),
     userId: v.string(),
     tokensUsed: v.number(),
     transactionType: v.union(v.literal("usage_generate_text"), v.literal("usage_generate_object"), v.literal("usage_image_upload"), v.literal("usage_join_adventure"), v.literal("usage_tts_audio")),
   },
   handler: async (ctx, args) => {
+    requireServer(args.secret)
     if (args.tokensUsed <= 0) {
       // No actual cost, or invalid input
       // Optionally log this or return a specific status if needed
@@ -105,11 +109,13 @@ export const decrementTokens = mutation({
 
 export const incrementTokens = mutation({
   args: {
+    secret: v.string(),
     userId: v.string(),
     tokensToCredit: v.number(),
     transactionType: v.union(v.literal("purchase"), v.literal("adjustment_refund"), v.literal("adjustment_manual")),
   },
   handler: async (ctx, args) => {
+    requireServer(args.secret)
     if (args.tokensToCredit <= 0) {
       return { success: true, message: "No tokens to credit or invalid amount.", tokensRemaining: null }
     }
@@ -148,8 +154,9 @@ export const incrementTokens = mutation({
 })
 
 export const getTokenBalance = query({
-  args: { userId: v.string() },
+  args: { secret: v.string(), userId: v.string() },
   handler: async (ctx, args) => {
+    requireServer(args.secret)
     // It's generally better for the calling server action to call ensureUserTokenRecord first.
     // However, if we want this query to be self-sufficient in ensuring a record exists:
     // await ctx.runMutation(api.userTokenManagement.ensureUserTokenRecord, { userId: args.userId });
@@ -185,8 +192,9 @@ function computeShare(totalTokens: number, memberCount: number): number {
 // splitDecrementTokens creates missing ledgers with the initial grant, so a
 // user without a ledger row counts the grant as available here.
 export const checkSplitBalances = query({
-  args: { userIds: v.array(v.string()), totalTokens: v.number() },
+  args: { secret: v.string(), userIds: v.array(v.string()), totalTokens: v.number() },
   handler: async (ctx, args) => {
+    requireServer(args.secret)
     const userIds = [...new Set(args.userIds)]
     if (userIds.length === 0 || args.totalTokens <= 0) {
       return { ok: true, share: 0, members: [] }
@@ -217,6 +225,7 @@ export const checkSplitBalances = query({
 // no-charge failure path is atomic.
 export const splitDecrementTokens = mutation({
   args: {
+    secret: v.string(),
     userIds: v.array(v.string()),
     totalTokens: v.number(),
     transactionType: v.literal("usage_tts_audio"),
@@ -224,6 +233,7 @@ export const splitDecrementTokens = mutation({
     clampToBalance: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    requireServer(args.secret)
     const userIds = [...new Set(args.userIds)]
     if (userIds.length === 0 || args.totalTokens <= 0) {
       return { success: true as const, share: 0, results: [] }

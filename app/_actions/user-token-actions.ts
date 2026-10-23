@@ -3,6 +3,7 @@
 import { auth } from "@clerk/nextjs/server"
 import { api } from "@/convex/_generated/api"
 import { convex } from "@/lib/convex/server"
+import { serverSecret } from "@/lib/convex/server-secret"
 
 export type TokenBalanceResponse = {
   tokensRemaining: number | null
@@ -23,10 +24,10 @@ export async function fetchUserTokenBalance(): Promise<TokenBalanceResponse> {
 
   try {
     // Step 1: Ensure the user token record exists (and grant initial tokens if new)
-    await convex.mutation(api.userTokenManagement.ensureUserTokenRecord, { userId })
+    await convex.mutation(api.userTokenManagement.ensureUserTokenRecord, { secret: serverSecret(), userId })
 
     // Step 2: Fetch the latest token balance
-    const balance = await convex.query(api.userTokenManagement.getTokenBalance, { userId })
+    const balance = await convex.query(api.userTokenManagement.getTokenBalance, { secret: serverSecret(), userId })
 
     return {
       tokensRemaining: balance.tokensRemaining,

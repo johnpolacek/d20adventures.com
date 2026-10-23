@@ -1,8 +1,9 @@
-"use server"
+// Server only. Not a server action: a client could call incrementUserTokensAction to credit itself.
 
 import { auth } from "@clerk/nextjs/server"
 import { api } from "@/convex/_generated/api"
 import { convex } from "@/lib/convex/server" // Assuming you have a server client setup
+import { serverSecret } from "@/lib/convex/server-secret"
 
 type UsageTransactionType = "usage_generate_text" | "usage_generate_object" | "usage_image_upload" | "usage_join_adventure" | "usage_tts_audio"
 
@@ -62,8 +63,9 @@ export async function decrementUserTokensAction(args: DecrementTokensArgs): Prom
   try {
     const chargedTokens = computeChargedTokens(args)
 
-    await convex.mutation(api.userTokenManagement.ensureUserTokenRecord, { userId })
+    await convex.mutation(api.userTokenManagement.ensureUserTokenRecord, { secret: serverSecret(), userId })
     const result = await convex.mutation(api.userTokenManagement.decrementTokens, {
+      secret: serverSecret(),
       userId,
       tokensUsed: chargedTokens,
       transactionType: args.transactionType,
@@ -113,8 +115,9 @@ export async function incrementUserTokensAction(args: { tokensToCredit: number; 
   const credits = Number(args.tokensToCredit.toFixed(6))
 
   try {
-    await convex.mutation(api.userTokenManagement.ensureUserTokenRecord, { userId })
+    await convex.mutation(api.userTokenManagement.ensureUserTokenRecord, { secret: serverSecret(), userId })
     await convex.mutation(api.userTokenManagement.incrementTokens, {
+      secret: serverSecret(),
       userId,
       tokensToCredit: credits,
       transactionType: args.transactionType ?? "adjustment_refund",
