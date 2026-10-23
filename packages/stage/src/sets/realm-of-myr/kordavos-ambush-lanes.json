@@ -1,0 +1,2975 @@
+{
+  "format": "d20.stage.set",
+  "version": 1,
+  "id": "kordavos-ambush-lanes",
+  "settingId": "realm-of-myr",
+  "locationId": "kordavos-ambush-lanes",
+  "title": "Kordavos: the ambush in the lanes",
+  "seed": 2601,
+  "atmosphere": {
+    "sun": {
+      "direction": [
+        0.02,
+        0.36,
+        -0.93
+      ],
+      "color": "#a8c4cc",
+      "intensity": 0.95,
+      "target": [
+        0,
+        0,
+        -14
+      ],
+      "distance": 220,
+      "shadow": {
+        "left": -40,
+        "right": 40,
+        "top": 50,
+        "bottom": -50,
+        "near": 120,
+        "far": 360,
+        "size": 2048
+      }
+    },
+    "hemisphere": {
+      "sky": "#58747a",
+      "ground": "#1e1c1a",
+      "intensity": 0.6
+    },
+    "sky": {
+      "horizon": "#6e8a8c",
+      "mid": "#3a5258",
+      "zenith": "#16242a",
+      "gain": 0.7,
+      "clouds": 0.5,
+      "stars": 0.3,
+      "moon": 2.4
+    },
+    "fog": {
+      "density": 0.03,
+      "color": "#4e6466",
+      "start": 8
+    },
+    "glow": "#a8c4cc",
+    "fill": {
+      "color": "#ffe2c0",
+      "intensity": 1.2,
+      "distance": 8
+    },
+    "lights": [
+      {
+        "at": [
+          -2.6,
+          2.3,
+          8
+        ],
+        "color": "#ffa850",
+        "intensity": 7,
+        "distance": 7
+      },
+      {
+        "at": [
+          -2.6,
+          2.3,
+          -5
+        ],
+        "color": "#ffa850",
+        "intensity": 7,
+        "distance": 7
+      },
+      {
+        "at": [
+          -2.6,
+          2.3,
+          -18
+        ],
+        "color": "#ffa850",
+        "intensity": 7,
+        "distance": 7
+      },
+      {
+        "at": [
+          10.5,
+          2.2,
+          -22.88
+        ],
+        "color": "#ffa850",
+        "intensity": 7,
+        "distance": 7
+      },
+      {
+        "at": [
+          -2.6,
+          2.3,
+          -31
+        ],
+        "color": "#ffa850",
+        "intensity": 7,
+        "distance": 7
+      },
+      {
+        "at": [
+          -2.6,
+          2.3,
+          -44
+        ],
+        "color": "#ffa850",
+        "intensity": 7,
+        "distance": 7
+      }
+    ],
+    "environment": 0.28,
+    "exposure": 1.1,
+    "grade": "neutral",
+    "wind": 0.3
+  },
+  "camera": {
+    "near": 0.1,
+    "far": 600,
+    "min": [
+      -17.7,
+      0.4,
+      -74
+    ],
+    "max": [
+      13.7,
+      16,
+      15
+    ],
+    "maxDistance": 16
+  },
+  "materials": {
+    "far": {
+      "type": "masonry",
+      "a": "#9b7a64",
+      "b": "#b2957a",
+      "c": "#8f8a86",
+      "block": [
+        2.5,
+        1.2
+      ],
+      "grime": 0.6,
+      "relief": 0.03
+    },
+    "roofFar": {
+      "type": "masonry",
+      "a": "#6b4a40",
+      "b": "#7c5646",
+      "c": "#5f5a58",
+      "block": [
+        0.6,
+        0.4
+      ],
+      "relief": 0.02,
+      "grime": 0.4
+    },
+    "ground": {
+      "type": "masonry",
+      "a": "#9a7658",
+      "b": "#b08d6c",
+      "c": "#8a7c70",
+      "mortar": "#5d4636",
+      "block": [
+        1.1,
+        0.8
+      ],
+      "stones": 0.36,
+      "joint": 0.03,
+      "relief": 0.045,
+      "variance": 0.55,
+      "grime": 0.35,
+      "ground": true,
+      "roads": false
+    },
+    "table": {
+      "type": "wood",
+      "a": "#6a4b33",
+      "b": "#7e5b3e",
+      "c": "#5a4a3c",
+      "plank": [
+        0.19,
+        1.9
+      ],
+      "relief": 0.045,
+      "variance": 0.4,
+      "seed": 11.2
+    },
+    "crate": {
+      "type": "wood",
+      "a": "#8a6a48",
+      "b": "#9c7a52",
+      "c": "#7a6a58",
+      "plank": [
+        0.2,
+        1.2
+      ],
+      "relief": 0.045,
+      "variance": 0.4,
+      "seed": 2.6
+    },
+    "crateDark": {
+      "type": "wood",
+      "a": "#4a3526",
+      "b": "#5a4230",
+      "c": "#403830",
+      "plank": [
+        0,
+        40
+      ],
+      "relief": 0.03,
+      "seed": 8.8
+    },
+    "barrel": {
+      "type": "wood",
+      "a": "#6a4a30",
+      "b": "#7c5a3a",
+      "c": "#5f4a3a",
+      "plank": [
+        0.105,
+        1.4
+      ],
+      "relief": 0.05,
+      "variance": 0.45,
+      "seed": 4.4
+    },
+    "sack": {
+      "type": "burlap",
+      "color": "#c2b08c"
+    },
+    "sackB": {
+      "type": "burlap",
+      "color": "#a08a68"
+    },
+    "basket": {
+      "type": "burlap",
+      "color": "#b08a52"
+    },
+    "iron": {
+      "type": "metal",
+      "color": "#2e2a28",
+      "roughness": 0.55,
+      "metalness": 0.7
+    },
+    "brass": {
+      "type": "metal",
+      "color": "#a8823e",
+      "roughness": 0.38,
+      "metalness": 0.85
+    },
+    "void": {
+      "type": "plain",
+      "color": "#0d0a09",
+      "roughness": 1
+    },
+    "pottery": {
+      "type": "plain",
+      "color": "#a45a36",
+      "roughness": 0.7
+    },
+    "potteryB": {
+      "type": "plain",
+      "color": "#8a6a4e",
+      "roughness": 0.75
+    },
+    "goodsRed": {
+      "type": "plain",
+      "color": "#9a2e22",
+      "roughness": 0.8
+    },
+    "goodsGreen": {
+      "type": "plain",
+      "color": "#5a6a2e",
+      "roughness": 0.8
+    },
+    "goodsYellow": {
+      "type": "plain",
+      "color": "#c2963a",
+      "roughness": 0.7
+    },
+    "goodsTeal": {
+      "type": "plain",
+      "color": "#2a6a66",
+      "roughness": 0.8
+    },
+    "rope": {
+      "type": "plain",
+      "color": "#5a4632",
+      "roughness": 1
+    },
+    "straw": {
+      "type": "wood",
+      "a": "#c8a65a",
+      "b": "#b38f45",
+      "c": "#d9bd74",
+      "plank": [
+        0.03,
+        2
+      ],
+      "relief": 0.03,
+      "variance": 0.5,
+      "seed": 7.7
+    },
+    "clothDrab": {
+      "type": "cloth",
+      "color": "#5a5448"
+    },
+    "tentRust": {
+      "type": "cloth",
+      "color": "#9a4a2a",
+      "tatters": [
+        5,
+        0.1
+      ],
+      "amp": 0.22
+    },
+    "tentGreen": {
+      "type": "cloth",
+      "color": "#46603a",
+      "tatters": [
+        3,
+        0.08
+      ],
+      "amp": 0.22
+    },
+    "lead": {
+      "type": "metal",
+      "color": "#2a2826",
+      "roughness": 0.6,
+      "metalness": 0.4
+    },
+    "pole": {
+      "type": "wood",
+      "a": "#4d382a",
+      "b": "#644a35",
+      "c": "#453c34",
+      "plank": [
+        0,
+        60
+      ],
+      "relief": 0.03,
+      "variance": 0.35,
+      "seed": 5.7,
+      "grime": 0.5
+    },
+    "coin": {
+      "type": "metal",
+      "color": "#d4a84a",
+      "roughness": 0.3,
+      "metalness": 0.95
+    },
+    "gourd": {
+      "type": "plain",
+      "color": "#c0642a",
+      "roughness": 0.6
+    },
+    "door": {
+      "type": "painted",
+      "map": "/stage/textures/timber-hold.jpg",
+      "tint": "#9a8470",
+      "plank": [
+        0.18,
+        3
+      ],
+      "size": [
+        0.7,
+        2.2
+      ],
+      "relief": 0.08,
+      "grime": 1.1
+    },
+    "flame": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ffae55",
+      "emissiveIntensity": 5
+    },
+    "fire": {
+      "type": "fire",
+      "color": "#ff7a26"
+    },
+    "coal": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#c2360c",
+      "emissiveIntensity": 1.5
+    },
+    "crystal": {
+      "type": "orb",
+      "glow": "#86b4f0"
+    },
+    "tablecloth": {
+      "type": "cloth",
+      "color": "#4a2442",
+      "amp": 0.01
+    },
+    "chest": {
+      "type": "wood",
+      "a": "#5c3c26",
+      "b": "#6e4a30",
+      "c": "#4a3222",
+      "plank": [
+        0.11,
+        0.9
+      ],
+      "relief": 0.05,
+      "variance": 0.35,
+      "seed": 23.4
+    },
+    "cobbles": {
+      "type": "masonry",
+      "a": "#3e4246",
+      "b": "#4a4e52",
+      "c": "#34383c",
+      "mortar": "#16181a",
+      "block": [
+        0.7,
+        0.5
+      ],
+      "joint": 0.035,
+      "relief": 0.08,
+      "variance": 0.6,
+      "grime": 1.6,
+      "ground": true,
+      "stones": 0.16,
+      "roughness": 0.3
+    },
+    "gutter": {
+      "type": "masonry",
+      "a": "#3a3836",
+      "b": "#44403c",
+      "c": "#302e2c",
+      "mortar": "#161412",
+      "block": [
+        0.5,
+        0.36
+      ],
+      "joint": 0.03,
+      "relief": 0.06,
+      "variance": 0.4,
+      "grime": 2,
+      "ground": true,
+      "roughness": 0.3
+    },
+    "stone": {
+      "type": "image",
+      "map": "/stage/textures/stone-old.jpg",
+      "size": [
+        2.4,
+        2.4
+      ],
+      "tint": "#c8beb0",
+      "roughness": 0.9
+    },
+    "stoneTrim": {
+      "type": "rock",
+      "a": "#56504a",
+      "b": "#6c645c",
+      "moss": "#3a4232",
+      "mossLight": "#4c5640",
+      "lichen": "#7a7468",
+      "mossAmount": 0.35,
+      "lichenAmount": 0.1,
+      "relief": 0.4,
+      "scale": 0.8
+    },
+    "plaster": {
+      "type": "rock",
+      "a": "#7a7268",
+      "b": "#8e867a",
+      "moss": "#4c5244",
+      "mossLight": "#5e6454",
+      "lichen": "#a09888",
+      "mossAmount": 0.3,
+      "lichenAmount": 0.15,
+      "relief": 0.15,
+      "scale": 1.6
+    },
+    "plasterB": {
+      "type": "rock",
+      "a": "#6e6a62",
+      "b": "#84786a",
+      "moss": "#4a4a40",
+      "mossLight": "#5c5a4e",
+      "lichen": "#9a9080",
+      "mossAmount": 0.35,
+      "lichenAmount": 0.12,
+      "relief": 0.15,
+      "scale": 1.4
+    },
+    "timber": {
+      "type": "wood",
+      "a": "#2a201a",
+      "b": "#342820",
+      "c": "#262220",
+      "plank": [
+        0,
+        40
+      ],
+      "relief": 0.04,
+      "seed": 3.7
+    },
+    "roof": {
+      "type": "masonry",
+      "a": "#3c3e42",
+      "b": "#46484c",
+      "c": "#323438",
+      "mortar": "#18181a",
+      "block": [
+        0.42,
+        0.26
+      ],
+      "joint": 0.03,
+      "relief": 0.08,
+      "variance": 0.5,
+      "grime": 1.2
+    },
+    "shutter": {
+      "type": "painted",
+      "map": "/stage/textures/boat-paint.jpg",
+      "tint": "#6a7468",
+      "plank": [
+        0.12,
+        2
+      ],
+      "size": [
+        0.5,
+        1.4
+      ],
+      "relief": 0.08,
+      "grime": 1.4
+    },
+    "dark": {
+      "type": "plain",
+      "color": "#14110e",
+      "roughness": 1
+    },
+    "windowLit": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ff9a40",
+      "emissiveIntensity": 0.8
+    },
+    "shopLit": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#d27a34",
+      "emissiveIntensity": 0.45
+    },
+    "windowDark": {
+      "type": "plain",
+      "color": "#141820",
+      "roughness": 0.2
+    },
+    "lamp": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ffa850",
+      "emissiveIntensity": 2.2
+    },
+    "gilt": {
+      "type": "metal",
+      "color": "#b08a48",
+      "roughness": 0.45,
+      "metalness": 0.8
+    },
+    "signBoard": {
+      "type": "plain",
+      "color": "#3a2a1e",
+      "roughness": 0.8
+    },
+    "signRed": {
+      "type": "plain",
+      "color": "#5a2420",
+      "roughness": 0.8
+    },
+    "signGreen": {
+      "type": "plain",
+      "color": "#2a3e2c",
+      "roughness": 0.8
+    },
+    "signBlue": {
+      "type": "plain",
+      "color": "#26344a",
+      "roughness": 0.8
+    },
+    "linen": {
+      "type": "cloth",
+      "color": "#c8c0ae"
+    },
+    "linenB": {
+      "type": "cloth",
+      "color": "#a8a49a"
+    },
+    "clothRed": {
+      "type": "cloth",
+      "color": "#7a3a2c"
+    },
+    "clothBlue": {
+      "type": "cloth",
+      "color": "#3e4e66"
+    },
+    "farNight": {
+      "type": "masonry",
+      "a": "#6a6a68",
+      "b": "#7a7874",
+      "c": "#5e5e5c",
+      "block": [
+        2.5,
+        1.2
+      ],
+      "grime": 0.6,
+      "relief": 0.03
+    },
+    "stoneUpper": {
+      "type": "masonry",
+      "a": "#5e5852",
+      "b": "#6e6660",
+      "c": "#524c48",
+      "mortar": "#403a36",
+      "block": [
+        0.5,
+        0.3
+      ],
+      "joint": 0.012,
+      "relief": 0.008,
+      "variance": 0.8,
+      "grime": 2.4
+    },
+    "stoneUpperB": {
+      "type": "masonry",
+      "a": "#56524e",
+      "b": "#645e58",
+      "c": "#4a4642",
+      "mortar": "#3a3632",
+      "block": [
+        0.42,
+        0.28
+      ],
+      "joint": 0.012,
+      "relief": 0.008,
+      "variance": 0.8,
+      "grime": 2.6
+    },
+    "stoneFrame": {
+      "type": "masonry",
+      "a": "#4a4440",
+      "b": "#56504a",
+      "c": "#403c38",
+      "mortar": "#36302c",
+      "block": [
+        0.6,
+        0.3
+      ],
+      "joint": 0.01,
+      "relief": 0.006,
+      "variance": 0.5,
+      "grime": 2
+    },
+    "ashlar": {
+      "type": "masonry",
+      "a": "#8a8276",
+      "b": "#968e80",
+      "c": "#7e766a",
+      "mortar": "#6a6258",
+      "block": [
+        0.9,
+        0.42
+      ],
+      "joint": 0.008,
+      "relief": 0.006,
+      "variance": 0.4,
+      "grime": 1.2
+    },
+    "ashlarTrim": {
+      "type": "masonry",
+      "a": "#a0968a",
+      "b": "#aaa094",
+      "c": "#948a7e",
+      "mortar": "#7a7268",
+      "block": [
+        1.2,
+        0.3
+      ],
+      "joint": 0.006,
+      "relief": 0.004,
+      "variance": 0.3,
+      "grime": 0.8
+    },
+    "flags": {
+      "type": "masonry",
+      "a": "#4e4c48",
+      "b": "#5a5650",
+      "c": "#44423e",
+      "mortar": "#2a2826",
+      "block": [
+        0.9,
+        0.6
+      ],
+      "joint": 0.02,
+      "relief": 0.03,
+      "variance": 0.5,
+      "grime": 1.6,
+      "ground": true,
+      "roughness": 0.4
+    },
+    "quayFace": {
+      "type": "masonry",
+      "a": "#3a3c3a",
+      "b": "#44463e",
+      "c": "#30322e",
+      "mortar": "#22241e",
+      "block": [
+        0.8,
+        0.45
+      ],
+      "joint": 0.015,
+      "relief": 0.01,
+      "variance": 0.6,
+      "grime": 2.6
+    },
+    "harbour": {
+      "type": "water",
+      "color": "#1e2830",
+      "reflect": 5,
+      "ripple": 0.4,
+      "flow": [
+        0.2,
+        1
+      ],
+      "mirror": 0.3
+    },
+    "mast": {
+      "type": "wood",
+      "a": "#2a2420",
+      "b": "#342c26",
+      "c": "#241e1a",
+      "plank": [
+        0,
+        30
+      ],
+      "relief": 0.02
+    },
+    "candle": {
+      "type": "plain",
+      "color": "#e8dcc0",
+      "roughness": 0.9
+    },
+    "candleFlame": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ffb060",
+      "emissiveIntensity": 4
+    },
+    "hull": {
+      "type": "painted",
+      "map": "/stage/textures/timber-hold.jpg",
+      "tint": "#8a7c6c",
+      "plank": [
+        0.24,
+        40
+      ],
+      "size": [
+        0.7,
+        2.2
+      ],
+      "relief": 0.06,
+      "grime": 1.4
+    },
+    "deck": {
+      "type": "painted",
+      "map": "/stage/textures/boards-weathered.jpg",
+      "tint": "#8a8070",
+      "plank": [
+        0.16,
+        4.2
+      ],
+      "size": [
+        0.5,
+        1.4
+      ],
+      "relief": 0.08,
+      "grime": 1.4,
+      "nails": 0.6
+    },
+    "rail": {
+      "type": "wood",
+      "a": "#3a3028",
+      "b": "#443830",
+      "c": "#30281e",
+      "plank": [
+        0,
+        30
+      ],
+      "relief": 0.02
+    },
+    "arrowShaft": {
+      "type": "plain",
+      "color": "#5a4632",
+      "roughness": 0.8
+    },
+    "fletching": {
+      "type": "plain",
+      "color": "#141414",
+      "roughness": 1
+    }
+  },
+  "objects": [
+    {
+      "type": "box",
+      "at": [
+        0,
+        -0.14,
+        -20
+      ],
+      "size": [
+        200,
+        0.1,
+        220
+      ],
+      "material": "ground"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        -0.1,
+        -29
+      ],
+      "size": [
+        6.4,
+        0.1,
+        116
+      ],
+      "material": "cobbles"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        -0.06,
+        -29
+      ],
+      "size": [
+        0.5,
+        0.06,
+        116
+      ],
+      "material": "gutter"
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -7,
+        17.53
+      ],
+      "yaw": 90,
+      "w": 4.9,
+      "d": 8,
+      "storeys": 2,
+      "ground": 3.17,
+      "storey": 2.78,
+      "jetty": 0.42,
+      "lean": -0.06,
+      "gable": true,
+      "front": "shop",
+      "lit": 0.49,
+      "balcony": true
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -7,
+        11.83
+      ],
+      "yaw": 90,
+      "w": 6.42,
+      "d": 8,
+      "storeys": 4,
+      "ground": 3.01,
+      "storey": 2.67,
+      "jetty": 0.43,
+      "lean": 0.23,
+      "gable": true,
+      "front": "plain",
+      "lit": 0.25,
+      "balcony": true
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -7,
+        6.35
+      ],
+      "yaw": 90,
+      "w": 4.45,
+      "d": 8,
+      "storeys": 3,
+      "ground": 3.14,
+      "storey": 2.73,
+      "jetty": 0.32,
+      "lean": -0.06,
+      "gable": false,
+      "front": "shop",
+      "lit": 0.56,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -7,
+        -6.74
+      ],
+      "yaw": 90,
+      "w": 5.45,
+      "d": 8,
+      "storeys": 4,
+      "ground": 3.1,
+      "storey": 2.67,
+      "jetty": 0.39,
+      "lean": 0.04,
+      "gable": true,
+      "front": "plain",
+      "lit": 0.48,
+      "balcony": false,
+      "sides": true
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -7,
+        -11.7
+      ],
+      "yaw": 90,
+      "w": 4.38,
+      "d": 8,
+      "storeys": 2,
+      "ground": 3.03,
+      "storey": 2.77,
+      "jetty": 0.42,
+      "lean": 0.12,
+      "gable": true,
+      "front": "door",
+      "lit": 0.42,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -7,
+        -16.73
+      ],
+      "yaw": 90,
+      "w": 5.61,
+      "d": 8,
+      "storeys": 2,
+      "ground": 3.04,
+      "storey": 2.79,
+      "jetty": 0.25,
+      "lean": 0.23,
+      "gable": false,
+      "front": "shop",
+      "lit": 0.43,
+      "balcony": true
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -7,
+        -25.61
+      ],
+      "yaw": 90,
+      "w": 4.38,
+      "d": 8,
+      "storeys": 3,
+      "ground": 3.18,
+      "storey": 2.61,
+      "jetty": 0.33,
+      "lean": -0.16,
+      "gable": true,
+      "front": "plain",
+      "lit": 0.5,
+      "balcony": false,
+      "sides": true
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -7,
+        -30.83
+      ],
+      "yaw": 90,
+      "w": 5.98,
+      "d": 8,
+      "storeys": 4,
+      "ground": 2.84,
+      "storey": 2.59,
+      "jetty": 0.26,
+      "lean": 0.14,
+      "gable": true,
+      "front": "shop",
+      "lit": 0.27,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -7,
+        -36.75
+      ],
+      "yaw": 90,
+      "w": 5.77,
+      "d": 8,
+      "storeys": 3,
+      "ground": 3.2,
+      "storey": 2.72,
+      "jetty": 0.29,
+      "lean": 0.12,
+      "gable": true,
+      "front": "shop",
+      "lit": 0.29,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -7,
+        -42.48
+      ],
+      "yaw": 90,
+      "w": 5.6,
+      "d": 8,
+      "storeys": 3,
+      "ground": 2.99,
+      "storey": 2.74,
+      "jetty": 0.41,
+      "lean": 0.29,
+      "gable": false,
+      "front": "plain",
+      "lit": 0.29,
+      "balcony": true
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -7,
+        -48.45
+      ],
+      "yaw": 90,
+      "w": 6.26,
+      "d": 8,
+      "storeys": 3,
+      "ground": 2.9,
+      "storey": 2.61,
+      "jetty": 0.37,
+      "lean": -0.02,
+      "gable": true,
+      "front": "plain",
+      "lit": 0.57,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -7,
+        -53.81
+      ],
+      "yaw": 90,
+      "w": 4.38,
+      "d": 8,
+      "storeys": 4,
+      "ground": 3.04,
+      "storey": 2.59,
+      "jetty": 0.33,
+      "lean": -0.21,
+      "gable": true,
+      "front": "plain",
+      "lit": 0.31,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -7,
+        -58.66
+      ],
+      "yaw": 90,
+      "w": 5.24,
+      "d": 8,
+      "storeys": 3,
+      "ground": 3.01,
+      "storey": 2.51,
+      "jetty": 0.35,
+      "lean": 0.09,
+      "gable": true,
+      "front": "shop",
+      "lit": 0.48,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -7,
+        -64.57
+      ],
+      "yaw": 90,
+      "w": 6.5,
+      "d": 8,
+      "storeys": 4,
+      "ground": 3.06,
+      "storey": 2.67,
+      "jetty": 0.27,
+      "lean": -0.25,
+      "gable": true,
+      "front": "door",
+      "lit": 0.26,
+      "balcony": true
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -7,
+        -69.92
+      ],
+      "yaw": 90,
+      "w": 4.12,
+      "d": 8,
+      "storeys": 4,
+      "ground": 3.24,
+      "storey": 2.79,
+      "jetty": 0.4,
+      "lean": 0.26,
+      "gable": true,
+      "front": "door",
+      "lit": 0.26,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        7,
+        17.71
+      ],
+      "yaw": -90,
+      "w": 4.54,
+      "d": 8,
+      "storeys": 3,
+      "ground": 3.06,
+      "storey": 2.54,
+      "jetty": 0.31,
+      "lean": -0.07,
+      "gable": false,
+      "front": "shop",
+      "lit": 0.38,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        7,
+        12.96
+      ],
+      "yaw": -90,
+      "w": 4.88,
+      "d": 8,
+      "storeys": 3,
+      "ground": 2.83,
+      "storey": 2.6,
+      "jetty": 0.32,
+      "lean": -0.17,
+      "gable": true,
+      "front": "door",
+      "lit": 0.38,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        7,
+        7.45
+      ],
+      "yaw": -90,
+      "w": 6.08,
+      "d": 8,
+      "storeys": 3,
+      "ground": 3.21,
+      "storey": 2.77,
+      "jetty": 0.39,
+      "lean": 0.24,
+      "gable": true,
+      "front": "door",
+      "lit": 0.56,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        7,
+        1.67
+      ],
+      "yaw": -90,
+      "w": 5.39,
+      "d": 8,
+      "storeys": 3,
+      "ground": 3.21,
+      "storey": 2.62,
+      "jetty": 0.28,
+      "lean": 0.27,
+      "gable": false,
+      "front": "shop",
+      "lit": 0.37,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        7,
+        -17.43
+      ],
+      "yaw": -90,
+      "w": 4.81,
+      "d": 8,
+      "storeys": 4,
+      "ground": 3.05,
+      "storey": 2.78,
+      "jetty": 0.31,
+      "lean": 0.26,
+      "gable": true,
+      "front": "shop",
+      "lit": 0.27,
+      "balcony": true,
+      "sides": true
+    },
+    {
+      "type": "tenement",
+      "at": [
+        7,
+        -26.67
+      ],
+      "yaw": -90,
+      "w": 6.5,
+      "d": 8,
+      "storeys": 3,
+      "ground": 2.91,
+      "storey": 2.76,
+      "jetty": 0.44,
+      "lean": 0.26,
+      "gable": true,
+      "front": "shop",
+      "lit": 0.32,
+      "balcony": false,
+      "sides": true
+    },
+    {
+      "type": "tenement",
+      "at": [
+        7,
+        -33.17
+      ],
+      "yaw": -90,
+      "w": 6.42,
+      "d": 8,
+      "storeys": 3,
+      "ground": 3.2,
+      "storey": 2.51,
+      "jetty": 0.38,
+      "lean": -0.2,
+      "gable": false,
+      "front": "door",
+      "lit": 0.29,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        7,
+        -39.05
+      ],
+      "yaw": -90,
+      "w": 5.27,
+      "d": 8,
+      "storeys": 3,
+      "ground": 2.99,
+      "storey": 2.66,
+      "jetty": 0.38,
+      "lean": -0.34,
+      "gable": true,
+      "front": "shop",
+      "lit": 0.39,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        7,
+        -44.82
+      ],
+      "yaw": -90,
+      "w": 6.18,
+      "d": 8,
+      "storeys": 2,
+      "ground": 2.83,
+      "storey": 2.77,
+      "jetty": 0.42,
+      "lean": -0.02,
+      "gable": true,
+      "front": "plain",
+      "lit": 0.53,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        7,
+        -50.34
+      ],
+      "yaw": -90,
+      "w": 4.79,
+      "d": 8,
+      "storeys": 3,
+      "ground": 3.02,
+      "storey": 2.5,
+      "jetty": 0.29,
+      "lean": -0.01,
+      "gable": false,
+      "front": "door",
+      "lit": 0.4,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        7,
+        -55.95
+      ],
+      "yaw": -90,
+      "w": 6.34,
+      "d": 8,
+      "storeys": 2,
+      "ground": 3.02,
+      "storey": 2.66,
+      "jetty": 0.39,
+      "lean": 0.02,
+      "gable": true,
+      "front": "door",
+      "lit": 0.29,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        7,
+        -61.87
+      ],
+      "yaw": -90,
+      "w": 5.44,
+      "d": 8,
+      "storeys": 2,
+      "ground": 3.02,
+      "storey": 2.54,
+      "jetty": 0.32,
+      "lean": 0.19,
+      "gable": true,
+      "front": "plain",
+      "lit": 0.6,
+      "balcony": true
+    },
+    {
+      "type": "tenement",
+      "at": [
+        7,
+        -67.32
+      ],
+      "yaw": -90,
+      "w": 5.38,
+      "d": 8,
+      "storeys": 3,
+      "ground": 3.27,
+      "storey": 2.67,
+      "jetty": 0.44,
+      "lean": -0.28,
+      "gable": false,
+      "front": "door",
+      "lit": 0.31,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -13.35,
+        -27.4
+      ],
+      "yaw": 0,
+      "w": 4.45,
+      "d": 8,
+      "storeys": 3,
+      "ground": 3.02,
+      "storey": 2.79,
+      "jetty": 0.27,
+      "lean": 0.3,
+      "gable": false,
+      "front": "door",
+      "lit": 0.32,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -13.59,
+        -16.6
+      ],
+      "yaw": 180,
+      "w": 4.94,
+      "d": 8,
+      "storeys": 3,
+      "ground": 3.01,
+      "storey": 2.69,
+      "jetty": 0.38,
+      "lean": -0.34,
+      "gable": false,
+      "front": "door",
+      "lit": 0.33,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -21,
+        -22
+      ],
+      "yaw": 90,
+      "w": 6.4,
+      "d": 6,
+      "storeys": 3,
+      "ground": 2.83,
+      "storey": 2.8,
+      "jetty": 0.32,
+      "lean": 0.11,
+      "gable": false,
+      "front": "plain",
+      "lit": 0.35,
+      "balcony": true,
+      "sides": false
+    },
+    {
+      "type": "box",
+      "at": [
+        -10.5,
+        -0.1,
+        -22
+      ],
+      "size": [
+        15.4,
+        0.1,
+        3.1999999999999997
+      ],
+      "material": "cobbles"
+    },
+    {
+      "type": "wall",
+      "at": [
+        -3.12,
+        -22
+      ],
+      "yaw": 90,
+      "length": 2.8,
+      "height": 0.04,
+      "thickness": 0.3,
+      "openings": [
+        {
+          "at": 0,
+          "width": 2.7399999999999998,
+          "height": 0.02,
+          "kind": "doorway"
+        }
+      ],
+      "materials": {
+        "wall": "gutter",
+        "timber": "stoneTrim"
+      }
+    },
+    {
+      "type": "tenement",
+      "at": [
+        13.2,
+        -27.4
+      ],
+      "yaw": 0,
+      "w": 4.16,
+      "d": 8,
+      "storeys": 2,
+      "ground": 3.28,
+      "storey": 2.54,
+      "jetty": 0.39,
+      "lean": 0.07,
+      "gable": true,
+      "front": "door",
+      "lit": 0.49,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        16.65,
+        -27.4
+      ],
+      "yaw": 0,
+      "w": 2.66,
+      "d": 8,
+      "storeys": 2,
+      "ground": 3.25,
+      "storey": 2.61,
+      "jetty": 0.43,
+      "lean": 0.12,
+      "gable": true,
+      "front": "door",
+      "lit": 0.5,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        13.49,
+        -16.6
+      ],
+      "yaw": 180,
+      "w": 4.74,
+      "d": 8,
+      "storeys": 3,
+      "ground": 3.26,
+      "storey": 2.52,
+      "jetty": 0.34,
+      "lean": 0.06,
+      "gable": true,
+      "front": "door",
+      "lit": 0.46,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        21,
+        -22
+      ],
+      "yaw": -90,
+      "w": 6.4,
+      "d": 6,
+      "storeys": 3,
+      "ground": 3.1,
+      "storey": 2.56,
+      "jetty": 0.35,
+      "lean": 0.1,
+      "gable": true,
+      "front": "plain",
+      "lit": 0.57,
+      "balcony": false,
+      "sides": false
+    },
+    {
+      "type": "box",
+      "at": [
+        10.5,
+        -0.1,
+        -22
+      ],
+      "size": [
+        15.4,
+        0.1,
+        3.1999999999999997
+      ],
+      "material": "cobbles"
+    },
+    {
+      "type": "wall",
+      "at": [
+        3.12,
+        -22
+      ],
+      "yaw": 90,
+      "length": 2.8,
+      "height": 0.04,
+      "thickness": 0.3,
+      "openings": [
+        {
+          "at": 0,
+          "width": 2.7399999999999998,
+          "height": 0.02,
+          "kind": "doorway"
+        }
+      ],
+      "materials": {
+        "wall": "gutter",
+        "timber": "stoneTrim"
+      }
+    },
+    {
+      "type": "tenement",
+      "at": [
+        12.55,
+        -11.2
+      ],
+      "yaw": 0,
+      "w": 2.86,
+      "d": 8,
+      "storeys": 2,
+      "ground": 2.97,
+      "storey": 2.74,
+      "jetty": 0.28,
+      "lean": -0.13,
+      "gable": false,
+      "front": "arch",
+      "lit": 0.26,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        12.55,
+        -0.8
+      ],
+      "yaw": 180,
+      "w": 2.86,
+      "d": 8,
+      "storeys": 3,
+      "ground": 3.2,
+      "storey": 2.51,
+      "jetty": 0.29,
+      "lean": -0.12,
+      "gable": false,
+      "front": "door",
+      "lit": 0.49,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        17,
+        -6
+      ],
+      "yaw": -90,
+      "w": 6,
+      "d": 6,
+      "storeys": 3,
+      "ground": 2.97,
+      "storey": 2.77,
+      "jetty": 0.33,
+      "lean": 0.2,
+      "gable": true,
+      "front": "plain",
+      "lit": 0.27,
+      "balcony": false,
+      "sides": false
+    },
+    {
+      "type": "box",
+      "at": [
+        8.5,
+        -0.1,
+        -6
+      ],
+      "size": [
+        11.4,
+        0.1,
+        2.8
+      ],
+      "material": "cobbles"
+    },
+    {
+      "type": "wall",
+      "at": [
+        3.12,
+        -6
+      ],
+      "yaw": 90,
+      "length": 2.4,
+      "height": 0.04,
+      "thickness": 0.3,
+      "openings": [
+        {
+          "at": 0,
+          "width": 2.34,
+          "height": 0.02,
+          "kind": "doorway"
+        }
+      ],
+      "materials": {
+        "wall": "gutter",
+        "timber": "stoneTrim"
+      }
+    },
+    {
+      "type": "tenement",
+      "at": [
+        0,
+        -46
+      ],
+      "yaw": 0,
+      "w": 7.8,
+      "d": 8,
+      "storeys": 2,
+      "ground": 2.9,
+      "storey": 2.77,
+      "jetty": 0.3,
+      "lean": 0,
+      "gable": false,
+      "front": "passage",
+      "lit": 0.6,
+      "balcony": true
+    },
+    {
+      "type": "tenement",
+      "at": [
+        0,
+        24
+      ],
+      "yaw": 180,
+      "w": 7.8,
+      "d": 8,
+      "storeys": 3,
+      "ground": 2.9,
+      "storey": 2.75,
+      "jetty": 0.36,
+      "lean": -0.1,
+      "gable": true,
+      "front": "passage",
+      "lit": 0.4,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        0,
+        -78
+      ],
+      "yaw": 0,
+      "w": 10,
+      "d": 8,
+      "storeys": 4,
+      "ground": 3.23,
+      "storey": 2.78,
+      "jetty": 0.29,
+      "lean": 0.2,
+      "gable": true,
+      "front": "door",
+      "lit": 0.5,
+      "balcony": true
+    },
+    {
+      "type": "wallLantern",
+      "at": [
+        -3.05,
+        2.6,
+        8
+      ],
+      "yaw": 90,
+      "reach": 0.45
+    },
+    {
+      "type": "wallLantern",
+      "at": [
+        3.05,
+        2.6,
+        1.5
+      ],
+      "yaw": -90,
+      "reach": 0.45
+    },
+    {
+      "type": "wallLantern",
+      "at": [
+        -3.05,
+        2.6,
+        -5
+      ],
+      "yaw": 90,
+      "reach": 0.45
+    },
+    {
+      "type": "wallLantern",
+      "at": [
+        -3.05,
+        2.6,
+        -18
+      ],
+      "yaw": 90,
+      "reach": 0.45
+    },
+    {
+      "type": "wallLantern",
+      "at": [
+        3.05,
+        2.6,
+        -24.5
+      ],
+      "yaw": -90,
+      "reach": 0.45
+    },
+    {
+      "type": "wallLantern",
+      "at": [
+        -3.05,
+        2.6,
+        -31
+      ],
+      "yaw": 90,
+      "reach": 0.45
+    },
+    {
+      "type": "wallLantern",
+      "at": [
+        3.05,
+        2.6,
+        -37.5
+      ],
+      "yaw": -90,
+      "reach": 0.45
+    },
+    {
+      "type": "wallLantern",
+      "at": [
+        -3.05,
+        2.6,
+        -44
+      ],
+      "yaw": 90,
+      "reach": 0.45
+    },
+    {
+      "type": "wallLantern",
+      "at": [
+        3.05,
+        2.6,
+        -50.5
+      ],
+      "yaw": -90,
+      "reach": 0.45
+    },
+    {
+      "type": "wallLantern",
+      "at": [
+        -3.05,
+        2.6,
+        -57
+      ],
+      "yaw": 90,
+      "reach": 0.45
+    },
+    {
+      "type": "wallLantern",
+      "at": [
+        3.05,
+        2.6,
+        -63.5
+      ],
+      "yaw": -90,
+      "reach": 0.45
+    },
+    {
+      "type": "wallLantern",
+      "at": [
+        -10.5,
+        2.5,
+        -20.62
+      ],
+      "yaw": 180,
+      "reach": 0.35
+    },
+    {
+      "type": "wallLantern",
+      "at": [
+        10.5,
+        2.5,
+        -23.38
+      ],
+      "yaw": 0,
+      "reach": 0.35
+    },
+    {
+      "type": "wallLantern",
+      "at": [
+        9.5,
+        2.5,
+        -4.82
+      ],
+      "yaw": 180,
+      "reach": 0.35
+    },
+    {
+      "type": "roundTower",
+      "at": [
+        -3,
+        -136
+      ],
+      "r": 3.2,
+      "height": 30,
+      "roofHeight": 18,
+      "sides": 12,
+      "materials": {
+        "wall": "farNight",
+        "roof": "roofFar",
+        "trim": "farNight",
+        "pennant": "clothRed"
+      }
+    },
+    {
+      "type": "roundTower",
+      "at": [
+        3.5,
+        -142
+      ],
+      "r": 2.6,
+      "height": 38,
+      "roofHeight": 16,
+      "sides": 12,
+      "materials": {
+        "wall": "farNight",
+        "roof": "roofFar",
+        "trim": "farNight",
+        "pennant": "clothRed"
+      }
+    },
+    {
+      "type": "roundTower",
+      "at": [
+        -14,
+        -122
+      ],
+      "r": 2.4,
+      "height": 24,
+      "roofHeight": 12,
+      "sides": 12,
+      "materials": {
+        "wall": "farNight",
+        "roof": "roofFar",
+        "trim": "farNight",
+        "pennant": "clothRed"
+      }
+    },
+    {
+      "type": "roundTower",
+      "at": [
+        14,
+        -128
+      ],
+      "r": 2.2,
+      "height": 22,
+      "roofHeight": 10,
+      "sides": 12,
+      "materials": {
+        "wall": "farNight",
+        "roof": "roofFar",
+        "trim": "farNight",
+        "pennant": "clothRed"
+      }
+    },
+    {
+      "type": "laundry",
+      "from": [
+        -2.2,
+        6.890802425239235,
+        6
+      ],
+      "to": [
+        2.2,
+        7.02,
+        6.3
+      ],
+      "sag": 0.45,
+      "items": 3,
+      "cloths": [
+        "linen",
+        "linenB",
+        "clothRed",
+        "clothBlue",
+        "clothDrab"
+      ]
+    },
+    {
+      "type": "laundry",
+      "from": [
+        -2.2,
+        7.503635648451746,
+        -3.65
+      ],
+      "to": [
+        2.2,
+        7.24,
+        -2.6
+      ],
+      "sag": 0.45,
+      "items": 3,
+      "cloths": [
+        "linen",
+        "linenB",
+        "clothRed",
+        "clothBlue",
+        "clothDrab"
+      ]
+    },
+    {
+      "type": "laundry",
+      "from": [
+        -2.2,
+        7.111033221241087,
+        -15.3
+      ],
+      "to": [
+        2.2,
+        7.28,
+        -16.14
+      ],
+      "sag": 0.45,
+      "items": 4,
+      "cloths": [
+        "linen",
+        "linenB",
+        "clothRed",
+        "clothBlue",
+        "clothDrab"
+      ]
+    },
+    {
+      "type": "laundry",
+      "from": [
+        -2.2,
+        7.919387320056558,
+        -24.5
+      ],
+      "to": [
+        2.2,
+        7.56,
+        -24.93
+      ],
+      "sag": 0.45,
+      "items": 5,
+      "cloths": [
+        "linen",
+        "linenB",
+        "clothRed",
+        "clothBlue",
+        "clothDrab"
+      ]
+    },
+    {
+      "type": "laundry",
+      "from": [
+        -2.2,
+        7.398283269722015,
+        -37.32
+      ],
+      "to": [
+        2.2,
+        7.36,
+        -38.47
+      ],
+      "sag": 0.45,
+      "items": 3,
+      "cloths": [
+        "linen",
+        "linenB",
+        "clothRed",
+        "clothBlue",
+        "clothDrab"
+      ]
+    },
+    {
+      "type": "laundry",
+      "from": [
+        -2.2,
+        7.135907377488911,
+        -45.4
+      ],
+      "to": [
+        2.2,
+        7.34,
+        -45.22
+      ],
+      "sag": 0.45,
+      "items": 4,
+      "cloths": [
+        "linen",
+        "linenB",
+        "clothRed",
+        "clothBlue",
+        "clothDrab"
+      ]
+    },
+    {
+      "type": "laundry",
+      "from": [
+        -2.2,
+        7.497688390593976,
+        -52.97
+      ],
+      "to": [
+        2.2,
+        7.67,
+        -52.49
+      ],
+      "sag": 0.45,
+      "items": 4,
+      "cloths": [
+        "linen",
+        "linenB",
+        "clothRed",
+        "clothBlue",
+        "clothDrab"
+      ]
+    },
+    {
+      "type": "laundry",
+      "from": [
+        -2.2,
+        7.011251877248287,
+        -59.99
+      ],
+      "to": [
+        2.2,
+        7.09,
+        -59.12
+      ],
+      "sag": 0.45,
+      "items": 6,
+      "cloths": [
+        "linen",
+        "linenB",
+        "clothRed",
+        "clothBlue",
+        "clothDrab"
+      ]
+    },
+    {
+      "type": "hangingSign",
+      "at": [
+        3.05,
+        3.4,
+        12.5
+      ],
+      "yaw": -90,
+      "reach": 1.1,
+      "width": 0.75,
+      "height": 0.5,
+      "emblem": "boot",
+      "materials": {
+        "board": "signBlue"
+      }
+    },
+    {
+      "type": "hangingSign",
+      "at": [
+        -3.05,
+        3.4,
+        5.86
+      ],
+      "yaw": 90,
+      "reach": 1.1,
+      "width": 0.75,
+      "height": 0.5,
+      "emblem": "mug",
+      "materials": {
+        "board": "signBoard"
+      }
+    },
+    {
+      "type": "hangingSign",
+      "at": [
+        3.05,
+        3.4,
+        -2.15
+      ],
+      "yaw": -90,
+      "reach": 1.1,
+      "width": 0.75,
+      "height": 0.5,
+      "emblem": "key",
+      "materials": {
+        "board": "signRed"
+      }
+    },
+    {
+      "type": "hangingSign",
+      "at": [
+        -3.05,
+        3.4,
+        -10.98
+      ],
+      "yaw": 90,
+      "reach": 1.1,
+      "width": 0.75,
+      "height": 0.5,
+      "emblem": "fish",
+      "materials": {
+        "board": "signRed"
+      }
+    },
+    {
+      "type": "hangingSign",
+      "at": [
+        3.05,
+        3.4,
+        -18
+      ],
+      "yaw": -90,
+      "reach": 1.1,
+      "width": 0.75,
+      "height": 0.5,
+      "emblem": "scissors",
+      "materials": {
+        "board": "signGreen"
+      }
+    },
+    {
+      "type": "hangingSign",
+      "at": [
+        -3.05,
+        3.4,
+        -23.88
+      ],
+      "yaw": 90,
+      "reach": 1.1,
+      "width": 0.75,
+      "height": 0.5,
+      "emblem": "moon",
+      "materials": {
+        "board": "signRed"
+      }
+    },
+    {
+      "type": "hangingSign",
+      "at": [
+        3.05,
+        3.4,
+        -30.02
+      ],
+      "yaw": -90,
+      "reach": 1.1,
+      "width": 0.75,
+      "height": 0.5,
+      "emblem": "boot",
+      "materials": {
+        "board": "signGreen"
+      }
+    },
+    {
+      "type": "hangingSign",
+      "at": [
+        -3.05,
+        3.4,
+        -37.66
+      ],
+      "yaw": 90,
+      "reach": 1.1,
+      "width": 0.75,
+      "height": 0.5,
+      "emblem": "mug",
+      "materials": {
+        "board": "signBoard"
+      }
+    },
+    {
+      "type": "hangingSign",
+      "at": [
+        3.05,
+        3.4,
+        -42.89
+      ],
+      "yaw": -90,
+      "reach": 1.1,
+      "width": 0.75,
+      "height": 0.5,
+      "emblem": "key",
+      "materials": {
+        "board": "signRed"
+      }
+    },
+    {
+      "type": "hangingSign",
+      "at": [
+        -3.05,
+        3.4,
+        -49.17
+      ],
+      "yaw": 90,
+      "reach": 1.1,
+      "width": 0.75,
+      "height": 0.5,
+      "emblem": "fish",
+      "materials": {
+        "board": "signRed"
+      }
+    },
+    {
+      "type": "hangingSign",
+      "at": [
+        3.05,
+        3.4,
+        -57.1
+      ],
+      "yaw": -90,
+      "reach": 1.1,
+      "width": 0.75,
+      "height": 0.5,
+      "emblem": "scissors",
+      "materials": {
+        "board": "signBlue"
+      }
+    },
+    {
+      "type": "hangingSign",
+      "at": [
+        -3.05,
+        3.4,
+        -64.83
+      ],
+      "yaw": 90,
+      "reach": 1.1,
+      "width": 0.75,
+      "height": 0.5,
+      "emblem": "moon",
+      "materials": {
+        "board": "signGreen"
+      }
+    },
+    {
+      "type": "box",
+      "at": [
+        -7,
+        0,
+        -1
+      ],
+      "size": [
+        8,
+        12,
+        6
+      ],
+      "material": "stone",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "at": [
+        -3.15,
+        12,
+        -1
+      ],
+      "size": [
+        0.3,
+        0.5,
+        6
+      ],
+      "material": "stoneTrim"
+    },
+    {
+      "type": "box",
+      "at": [
+        -10.85,
+        12,
+        -1
+      ],
+      "size": [
+        0.3,
+        1,
+        6
+      ],
+      "material": "stoneTrim"
+    },
+    {
+      "type": "box",
+      "at": [
+        -7,
+        12,
+        -3.85
+      ],
+      "size": [
+        8,
+        1,
+        0.3
+      ],
+      "material": "stoneTrim"
+    },
+    {
+      "type": "box",
+      "at": [
+        -7,
+        12,
+        1.85
+      ],
+      "size": [
+        8,
+        1,
+        0.3
+      ],
+      "material": "stoneTrim"
+    },
+    {
+      "type": "box",
+      "at": [
+        -3.06,
+        11.75,
+        -1
+      ],
+      "size": [
+        0.2,
+        0.25,
+        6.1
+      ],
+      "material": "stoneTrim"
+    },
+    {
+      "type": "box",
+      "at": [
+        -3.04,
+        3,
+        -1
+      ],
+      "size": [
+        0.16,
+        0.2,
+        6
+      ],
+      "material": "stoneTrim"
+    },
+    {
+      "type": "box",
+      "at": [
+        -3.02,
+        0,
+        -1.6
+      ],
+      "size": [
+        0.1,
+        2.15,
+        1.05
+      ],
+      "material": "door"
+    },
+    {
+      "type": "box",
+      "at": [
+        -2.98,
+        2.15,
+        -1.6
+      ],
+      "size": [
+        0.12,
+        0.22,
+        1.45
+      ],
+      "material": "stoneTrim"
+    },
+    {
+      "type": "box",
+      "at": [
+        -2.98,
+        4.2,
+        -3
+      ],
+      "size": [
+        0.06,
+        1.1,
+        0.6
+      ],
+      "material": "windowDark"
+    },
+    {
+      "type": "box",
+      "at": [
+        -2.98,
+        6.4,
+        -3
+      ],
+      "size": [
+        0.06,
+        1.1,
+        0.6
+      ],
+      "material": "windowDark"
+    },
+    {
+      "type": "box",
+      "at": [
+        -2.98,
+        4.2,
+        1
+      ],
+      "size": [
+        0.06,
+        1.1,
+        0.6
+      ],
+      "material": "windowDark"
+    },
+    {
+      "type": "box",
+      "at": [
+        -2.98,
+        6.4,
+        1
+      ],
+      "size": [
+        0.06,
+        1.1,
+        0.6
+      ],
+      "material": "windowDark"
+    },
+    {
+      "type": "box",
+      "at": [
+        -2.98,
+        4.2,
+        -1.6
+      ],
+      "size": [
+        0.06,
+        1.1,
+        0.6
+      ],
+      "material": "windowDark"
+    },
+    {
+      "type": "box",
+      "at": [
+        7,
+        0,
+        -12
+      ],
+      "size": [
+        8,
+        12,
+        6
+      ],
+      "material": "stone",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "at": [
+        3.15,
+        12,
+        -12
+      ],
+      "size": [
+        0.3,
+        0.5,
+        6
+      ],
+      "material": "stoneTrim"
+    },
+    {
+      "type": "box",
+      "at": [
+        10.85,
+        12,
+        -12
+      ],
+      "size": [
+        0.3,
+        1,
+        6
+      ],
+      "material": "stoneTrim"
+    },
+    {
+      "type": "box",
+      "at": [
+        7,
+        12,
+        -14.85
+      ],
+      "size": [
+        8,
+        1,
+        0.3
+      ],
+      "material": "stoneTrim"
+    },
+    {
+      "type": "box",
+      "at": [
+        7,
+        12,
+        -9.15
+      ],
+      "size": [
+        8,
+        1,
+        0.3
+      ],
+      "material": "stoneTrim"
+    },
+    {
+      "type": "box",
+      "at": [
+        3.06,
+        11.75,
+        -12
+      ],
+      "size": [
+        0.2,
+        0.25,
+        6.1
+      ],
+      "material": "stoneTrim"
+    },
+    {
+      "type": "box",
+      "at": [
+        3.04,
+        3,
+        -12
+      ],
+      "size": [
+        0.16,
+        0.2,
+        6
+      ],
+      "material": "stoneTrim"
+    },
+    {
+      "type": "box",
+      "at": [
+        3.02,
+        0,
+        -12.6
+      ],
+      "size": [
+        0.1,
+        2.15,
+        1.05
+      ],
+      "material": "door"
+    },
+    {
+      "type": "box",
+      "at": [
+        2.98,
+        2.15,
+        -12.6
+      ],
+      "size": [
+        0.12,
+        0.22,
+        1.45
+      ],
+      "material": "stoneTrim"
+    },
+    {
+      "type": "box",
+      "at": [
+        2.98,
+        4.2,
+        -14
+      ],
+      "size": [
+        0.06,
+        1.1,
+        0.6
+      ],
+      "material": "windowDark"
+    },
+    {
+      "type": "box",
+      "at": [
+        2.98,
+        6.4,
+        -14
+      ],
+      "size": [
+        0.06,
+        1.1,
+        0.6
+      ],
+      "material": "windowDark"
+    },
+    {
+      "type": "box",
+      "at": [
+        2.98,
+        4.2,
+        -10
+      ],
+      "size": [
+        0.06,
+        1.1,
+        0.6
+      ],
+      "material": "windowDark"
+    },
+    {
+      "type": "box",
+      "at": [
+        2.98,
+        6.4,
+        -10
+      ],
+      "size": [
+        0.06,
+        1.1,
+        0.6
+      ],
+      "material": "windowDark"
+    },
+    {
+      "type": "box",
+      "at": [
+        2.98,
+        4.2,
+        -12.6
+      ],
+      "size": [
+        0.06,
+        1.1,
+        0.6
+      ],
+      "material": "windowDark"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -2.98,
+        1.45,
+        -1.2
+      ],
+      "to": [
+        -2.462,
+        1.878,
+        -1.304
+      ],
+      "radius": 0.01,
+      "material": "arrowShaft",
+      "segments": 5
+    },
+    {
+      "type": "beam",
+      "from": [
+        -2.553,
+        1.803,
+        -1.285
+      ],
+      "to": [
+        -2.447,
+        1.891,
+        -1.307
+      ],
+      "radius": 0.026,
+      "radiusTo": 0.01,
+      "material": "fletching",
+      "segments": 3
+    },
+    {
+      "type": "beam",
+      "from": [
+        2.98,
+        2.3,
+        -16.2
+      ],
+      "to": [
+        2.431,
+        2.677,
+        -16.063
+      ],
+      "radius": 0.01,
+      "material": "arrowShaft",
+      "segments": 5
+    },
+    {
+      "type": "beam",
+      "from": [
+        2.528,
+        2.611,
+        -16.087
+      ],
+      "to": [
+        2.415,
+        2.688,
+        -16.059
+      ],
+      "radius": 0.026,
+      "radiusTo": 0.01,
+      "material": "fletching",
+      "segments": 3
+    }
+  ],
+  "marks": {
+    "street": {
+      "at": [
+        0,
+        8
+      ],
+      "label": "the street"
+    },
+    "doorway": {
+      "at": [
+        -2.5,
+        2.6
+      ],
+      "label": "a dark doorway"
+    },
+    "sideAlley": {
+      "at": [
+        6.5,
+        -6
+      ],
+      "label": "the side alley"
+    },
+    "crossing": {
+      "at": [
+        0,
+        -22
+      ],
+      "label": "the crossing"
+    },
+    "westAlley": {
+      "at": [
+        -9,
+        -22
+      ],
+      "label": "the west alley at the crossing"
+    },
+    "eastAlley": {
+      "at": [
+        9,
+        -22
+      ],
+      "label": "the east alley at the crossing"
+    },
+    "bridge": {
+      "at": [
+        0,
+        -42
+      ],
+      "label": "the archway under the bridge-house"
+    },
+    "beyond": {
+      "at": [
+        0,
+        -54
+      ],
+      "label": "the street beyond the archway"
+    },
+    "westRoof": {
+      "at": [
+        -5.2,
+        -1
+      ]
+    },
+    "eastRoof": {
+      "at": [
+        5.2,
+        -12
+      ]
+    },
+    "arrowDoor": {
+      "at": [
+        -2.3,
+        -1.2
+      ],
+      "label": "the door with the arrow in it"
+    }
+  },
+  "shots": {
+    "lanes": {
+      "position": [
+        -2.3,
+        13.9,
+        2.2
+      ],
+      "target": [
+        0.6,
+        4,
+        -40
+      ],
+      "fov": 58,
+      "label": "The rooftops"
+    },
+    "crossing": {
+      "position": [
+        1,
+        1.6,
+        -12.5
+      ],
+      "target": [
+        -0.8,
+        1.9,
+        -26
+      ],
+      "fov": 56,
+      "label": "The crossing"
+    },
+    "sideAlley": {
+      "position": [
+        1.6,
+        1.6,
+        -6
+      ],
+      "target": [
+        14,
+        1.8,
+        -6
+      ],
+      "fov": 56,
+      "label": "The side alley"
+    },
+    "bridge": {
+      "position": [
+        0.6,
+        1.6,
+        -32
+      ],
+      "target": [
+        0,
+        4,
+        -46
+      ],
+      "fov": 58,
+      "label": "The bridge-house"
+    },
+    "spires": {
+      "position": [
+        0.4,
+        1.3,
+        -24
+      ],
+      "target": [
+        0.2,
+        14,
+        -80
+      ],
+      "fov": 60,
+      "label": "The spires"
+    },
+    "arrow": {
+      "position": [
+        -1.4,
+        1.6,
+        0.2
+      ],
+      "target": [
+        -2.9,
+        1.5,
+        -1.2
+      ],
+      "fov": 40,
+      "label": "The arrow"
+    }
+  },
+  "life": {
+    "dust": {
+      "count": 360,
+      "box": [
+        -3,
+        0.2,
+        -40,
+        3,
+        7,
+        14
+      ]
+    }
+  }
+}

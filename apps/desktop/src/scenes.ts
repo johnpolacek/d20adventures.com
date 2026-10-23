@@ -1,13 +1,18 @@
 import innSet from "@d20/stage/sets/realm-of-myr/dragonbone-inn.json"
 import innMorningSet from "@d20/stage/sets/realm-of-myr/dragonbone-inn-morning.json"
+import ambushLanesSet from "@d20/stage/sets/realm-of-myr/kordavos-ambush-lanes.json"
 import blackMarketSet from "@d20/stage/sets/realm-of-myr/kordavos-black-market.json"
 import docksSet from "@d20/stage/sets/realm-of-myr/kordavos-docks.json"
 import docksWreckedSet from "@d20/stage/sets/realm-of-myr/kordavos-docks-wrecked.json"
 import festivalSet from "@d20/stage/sets/realm-of-myr/kordavos-harvest-square.json"
 import conflictSet from "@d20/stage/sets/realm-of-myr/kordavos-harvest-square-conflict.json"
 import lowerDistrictsSet from "@d20/stage/sets/realm-of-myr/kordavos-lower-districts.json"
+import nightLanesSet from "@d20/stage/sets/realm-of-myr/kordavos-night-lanes.json"
 import riverfrontSet from "@d20/stage/sets/realm-of-myr/kordavos-riverfront.json"
 import gateSet from "@d20/stage/sets/realm-of-myr/kordavos-south-gate.json"
+import squareDawnSet from "@d20/stage/sets/realm-of-myr/kordavos-square-dawn.json"
+import squareFuneralSet from "@d20/stage/sets/realm-of-myr/kordavos-square-funeral.json"
+import waterfrontSet from "@d20/stage/sets/realm-of-myr/kordavos-waterfront.json"
 import pierSet from "@d20/stage/sets/realm-of-myr/mordava-river-pier.json"
 import emptyPierSet from "@d20/stage/sets/realm-of-myr/mordava-river-pier-empty.json"
 import pathSet from "@d20/stage/sets/realm-of-myr/old-forest-path.json"
@@ -35,14 +40,19 @@ import findingTheBlackMarket from "@d20/stage/stagings/march-of-davos/finding-th
 import labyrinthineStalls from "@d20/stage/stagings/march-of-davos/labyrinthine-stalls.json"
 import morningAtTheDragonbone from "@d20/stage/stagings/march-of-davos/morning-at-the-dragonbone.json"
 import mysteryCargo from "@d20/stage/stagings/march-of-davos/mystery-cargo.json"
+import shadowingSilverhand from "@d20/stage/stagings/march-of-davos/shadowing-silverhand.json"
 import theAftermath from "@d20/stage/stagings/march-of-davos/the-aftermath.json"
+import theAmbush from "@d20/stage/stagings/march-of-davos/the-ambush.json"
 import theBeastEscapes from "@d20/stage/stagings/march-of-davos/the-beast-escapes.json"
 import theDragonboneInn from "@d20/stage/stagings/march-of-davos/the-dragonbone-inn.json"
 import theEntranceToTheBlackMarket from "@d20/stage/stagings/march-of-davos/the-entrance-to-the-black-market.json"
 import gateStaging from "@d20/stage/stagings/march-of-davos/the-gates-of-kordavos.json"
 import festivalStaging from "@d20/stage/stagings/march-of-davos/the-harvest-festival.json"
+import theHideout from "@d20/stage/stagings/march-of-davos/the-hideout.json"
+import theNewDawn from "@d20/stage/stagings/march-of-davos/the-new-dawn.json"
 import theOldGrandLibrary from "@d20/stage/stagings/march-of-davos/the-old-grand-library.json"
 import theSilverSerpentTavern from "@d20/stage/stagings/march-of-davos/the-silver-serpent-tavern.json"
+import vengeanceOfTheBlackthorn from "@d20/stage/stagings/march-of-davos/vengeance-of-the-blackthorn.json"
 import welcomeToTheLowerDistricts from "@d20/stage/stagings/march-of-davos/welcome-to-the-lower-districts.json"
 import backHome from "@d20/stage/stagings/the-midnight-summons/back-home.json"
 import brokenSilence from "@d20/stage/stagings/the-midnight-summons/broken-silence.json"
@@ -258,6 +268,52 @@ export const SCENES: Record<string, Scene> = {
       "Inside the Black Market at night: a narrow lane of stalls and tents between leaning houses, roofed with patched canvas and strung with lanterns, braziers smoking, cloaked buyers drifting through. The party stands just inside the curtain. At the first stall on the right a grizzled dealer leans over a counter heaped with gold and gems; a dwarf weapon dealer shows a dagger at her rack of blades on the left; a scarred young woman saunters past. A side lane turns east to a peddler's tent of curiosities, another turns west to a shadowy stall of elven goods. At the far end of the lane, a curtained door between braziers leads to the auction house.",
     party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
     spare: [[0.4, 5.0]],
+  },
+  // The street kit: Silverhand's trail, his hideout, the Cowl's ambush, and the two endings in the great square.
+  "shadowing-silverhand": {
+    set: nightLanesSet,
+    staging: shadowingSilverhand,
+    location: "Kordavos lanes",
+    where:
+      "Late evening in the old lanes of Kordavos: a narrow cobbled street of leaning timber houses under a low moon, mist between them, lanterns on brackets. The party stands at the near end. Some twenty paces ahead Silverhand walks away up the street with his representative and Varchk a step behind; Kaeleth lingers at the corner of the crossing further on, watching the way they came. A side alley turns off east before the crossing. Beyond the crossing the street runs under an archway in a house built across it.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[-0.9, 11.2]],
+  },
+  "the-hideout": {
+    set: waterfrontSet,
+    staging: theHideout,
+    location: "Kordavos waterfront",
+    where:
+      "Night on the waterfront, thick sea mist: a lane of old stone houses runs down to a quay over the harbour. Near the water on the east side stands the abandoned warehouse, weathered boards over a stone ground storey, its windows boarded, its rusted iron door hanging open under a red lantern. Varchk and Kaeleth keep the door. Silverhand crosses the lane toward it. The party watches from the shadows on the west side, up the lane. Crates and barrels are heaped along the warehouse wall toward the quay.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[-2.2, -4.6]],
+  },
+  "the-ambush": {
+    set: ambushLanesSet,
+    staging: theAmbush,
+    location: "Kordavos lanes",
+    where:
+      "Late night in the narrow lanes on the way back to the Dragonbone Inn. Two flat-roofed stone houses stand over the street, taller than the timber houses round them. A hooded archer stands at the parapet of each, one on the west roof beside the party and one on the east roof further up the street. An arrow is stuck in the door of the west house beside the party, another in the wall ahead. The party is in the street between the two houses, heading back toward the inn.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[0.2, -3.4]],
+  },
+  "the-new-dawn": {
+    set: squareDawnSet,
+    staging: theNewDawn,
+    location: "The great square",
+    where:
+      "Dawn in the great square of Kordavos, bells ringing, the old green banners of Valkara hung from every house. At the head of the square stands the great stone house with a balcony over its door: Joran Antonov stands on it with the Key of Ilmarin raised, Seraphina Valtor at his shoulder. The square below is full of Valkarans. The party stands among them in the middle of the square.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[1.4, -10.2]],
+  },
+  "vengeance-of-the-blackthorn": {
+    set: squareFuneralSet,
+    staging: vengeanceOfTheBlackthorn,
+    location: "The great square",
+    where:
+      "Midday in the great square of Kordavos under black banners. Thaddeus Blackthorn's coffin lies on a draped bier before the great stone house, tall candles at its corners. Asterian soldiers line an aisle from the bier back to the street, knights stand before the house, and the city crowds in behind them. Lady Astrid stands at the coffin's foot facing the square. The party stands in the aisle.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[1.2, -7.4]],
   },
   // The Midnight Summons: one moonlit stretch of deer trail for the walk, the owlbear, and the rescue.
   "broken-silence": {

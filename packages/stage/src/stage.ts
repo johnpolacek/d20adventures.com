@@ -489,6 +489,7 @@ export class Stage {
     const c = this.cast.find((m) => m.id === which.subject)
     if (!c) return first
     // The sight line falls from the camera to the subject's look height, and passes over anything lower (a crate).
+    const look = which.lookHeight + (c.y ?? 0)
     const clear = (x: number, y: number, z: number) => {
       const len = Math.hypot(c.x - x, c.z - z)
       // Fine steps: cabin walls are a hand's width thick.
@@ -496,7 +497,7 @@ export class Stage {
       for (let i = 0; i <= n; i++) {
         const t = i / n
         if (t * len > len - 0.3) break
-        if (onFootprint(this.footprints, x + (c.x - x) * t, z + (c.z - z) * t, y + (which.lookHeight - y) * t)) return false
+        if (onFootprint(this.footprints, x + (c.x - x) * t, z + (c.z - z) * t, y + (look - y) * t)) return false
       }
       return true
     }
@@ -522,7 +523,7 @@ export class Stage {
         const t = ((m.x - x) * dx + (m.z - z) * dz) / len2
         if (t <= 0 || t >= 1) return false
         const off = Math.hypot(x + dx * t - m.x, z + dz * t - m.z)
-        return (off < 0.4 && y + (which.lookHeight - y) * t < height) || (off < 1.1 && Math.hypot(m.x - x, m.z - z) < 1.8)
+        return (off < 0.4 && y + (look - y) * t < height) || (off < 1.1 && Math.hypot(m.x - x, m.z - z) < 1.8)
       }
       let score = 0
       for (const m of this.cast) if (m !== c && this.isOnStage(m.id) && spoils(m, m.height)) score += 3
@@ -1020,7 +1021,7 @@ export class Stage {
   // A cast member's chest, where effects start and land.
   private chest(id: string): EffectEnd {
     const c = this.member(id)
-    return { at: new THREE.Vector3(c.x, c.height * 0.62, c.z), id }
+    return { at: new THREE.Vector3(c.x, (c.y ?? 0) + c.height * 0.62, c.z), id }
   }
   private endOf(ref: string | [number, number]): EffectEnd {
     if (typeof ref === "string" && this.cast.some((c) => c.id === ref)) return this.chest(ref)
@@ -1058,10 +1059,10 @@ export class Stage {
   clearEffects() {
     this.effects.clear()
   }
-  // Where a cast member stands (x, z) and faces (radians).
+  // Where a cast member stands (x, z, and y when raised) and faces (radians).
   castAt(id: string) {
     const c = this.member(id)
-    return { x: c.x, z: c.z, ry: c.ry, height: c.height }
+    return { x: c.x, y: c.y ?? 0, z: c.z, ry: c.ry, height: c.height }
   }
   pick(x: number, y: number) {
     const ndc = new THREE.Vector2((x / this.canvas.clientWidth) * 2 - 1, -(y / this.canvas.clientHeight) * 2 + 1)

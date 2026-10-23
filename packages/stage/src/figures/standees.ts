@@ -25,6 +25,8 @@ export interface CastMember {
   stride: number
   // Lying where they fell when the scene opens (a body).
   down?: boolean
+  // Standing up on something raised (a roof, a balcony), in metres.
+  y?: number
 }
 
 const LEAN = THREE.MathUtils.degToRad(60)
@@ -375,7 +377,7 @@ export class Standees {
         s.back = 0
       }
       s.yaw = s.yaw === null ? target : s.yaw + wrap(target - s.yaw) * k
-      s.grp.position.set(c.x, 0, c.z)
+      s.grp.position.set(c.x, c.y ?? 0, c.z)
       s.grp.rotation.y = s.yaw
       s.grp.visible = !this.offstage.has(c.id)
       s.fall += ((this.down.has(c.id) ? 1 : 0) - s.fall) * Math.min(1, dt * 3.5)

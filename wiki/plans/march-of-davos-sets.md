@@ -20,11 +20,11 @@ Encounters 1 to 7 already had sets: the gate, the harvest square, the Dragonbone
 | 15 to 17 | The Lower Districts | Done 2026-10-23 |
 | 18 to 19 | The Black Market | Done 2026-10-23 |
 | 20 to 22 | The auction | Next. A hall behind the Black Market lane's far door |
-| 23 to 26 | Silverhand's trail, the hideout, the ambush | Street and cellar kits |
+| 23 to 26 | Silverhand's trail, the hideout, the ambush | Street kit done 2026-10-23. Face-to-Face is the cellar kit |
 | 27 to 39 | The Blackthorn mansion: front, ballroom, halls, chambers, wine cellar | Bespoke. The wine cellar is the cellar kit |
 | 40 to 44 | The catacombs | Tunnel kit. The grate at 40 is the mansion's grounds |
 | 45 to 46 | The forgotten temple | Bespoke |
-| 47 to 49 | The aftermath | Street kit. 49 reuses the library |
+| 47 to 49 | The aftermath | Street kit done 2026-10-23 for 47 and 48. 49 reuses the library |
 
 ## Owner decision, 2026-10-23: reusable sets
 
@@ -53,6 +53,22 @@ Bespoke sets:
 - The forgotten temple: a ruined hall of broken columns before a carved doorway (45, 46).
 
 Order: street kit, cellar kit, tunnel kit, mansion, temple. Each kit is checked with `pnpm stage:check` and reviewed at DPR 2 before the next.
+
+## The street kit
+
+Done 2026-10-23. `scripts/stage-sets/kits/street.ts` builds a Kordavos street from a dressing. `scripts/stage-sets/kordavos-streets.ts` writes the five sets and their stagings.
+
+- Layouts: night lanes 86 m long with a crossing, a side alley and an archway house; a waterfront lane of stone houses ending at a quay; a street opening into a square 28 m wide under a great stone house with a balcony.
+- Times: night under a low moon in teal mist, dawn, and full day. A dressing can move the sun and replace parts of the atmosphere.
+- The kit lays the houses, cobbles, lanterns, signs, washing and spires. The dressing adds its own buildings in gaps, props, lamps, crowd, marks and shots. The eight lights spread along the street instead of bunching at the camera.
+- Sets: `kordavos-night-lanes`, `kordavos-ambush-lanes`, `kordavos-waterfront`, `kordavos-square-dawn`, `kordavos-square-funeral`.
+- The ambush's two flat-roofed stone houses stand 12 m tall with the Cowl's archers at their parapets. The hideout is a stone ground storey with boarded weatherboards above, its iron door open under a red lantern. The funeral has a draped bier with candle stands, two ranks of soldiers along an aisle and knights before the house.
+- Engine: a cast member's `y` stands them on something raised, a roof or a balcony. Shots on them rise with them, and `stage:check` leaves them out of ground walks.
+- Standees from their portraits: Varchk, Kaeleth and Seraphina. New: Liora the Cowl archer and Joran with the Key. Silas is the Covert Cargo figure.
+- `pnpm stage:check` passes. Walks: Shadowing Silverhand 120 of 120, the hideout 77 of 77, the ambush 48 of 48, the new dawn 36 of 36, the funeral 45 of 55, where walks to the steps stop at the bier.
+- At ultra, DPR 2: 105 to 175 draw calls, 0.16M to 0.33M rendered triangles, 19 to 32 fps.
+- Desktop maps the five encounters. 78 desktop tests pass. Not yet checked in the running desktop app.
+- Left: the ambush's rooftop view shows a narrower canyon than the painting. Bram has no figure in the ambush, since he waits at the inn.
 
 ## The Old Grand Library
 

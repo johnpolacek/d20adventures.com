@@ -30,12 +30,13 @@ export function resolveCast(set: SetSpec, staging: StagingSpec | null): CastMemb
       const t = Array.isArray(f) ? { x: f[0], z: f[1] } : (place.get(f) ?? where(f))
       ry = Math.atan2(t.x - p.x, t.z - p.z)
     }
-    return { id: c.id, name: c.name, role: c.role, height: c.height, art: c.art, x: p.x, z: p.z, ry, walking: false, walk: 0, stride: 0, down: c.down }
+    return { id: c.id, name: c.name, role: c.role, height: c.height, art: c.art, x: p.x, z: p.z, ry, walking: false, walk: 0, stride: 0, down: c.down, y: c.y }
   })
 }
 
 // A staging shot framed on the cast's current positions: group shots on the centroid of their subjects, subject shots
-// at a distance and angle off one character's facing.
+// at a distance and angle off one character's facing. Heights are above where the subjects stand, so a shot on someone
+// on a roof rises with them.
 export function frameShot(s: StagingShot, cast: CastMember[]): ResolvedShot {
   if ("position" in s) return s
   const byId = new Map(cast.map((c) => [c.id, c]))
@@ -46,13 +47,16 @@ export function frameShot(s: StagingShot, cast: CastMember[]): ResolvedShot {
   }
   if ("subjects" in s) {
     let x = 0
+    let y = 0
     let z = 0
     for (const id of s.subjects) {
       const c = need(id)
       x += c.x
+      y += c.y ?? 0
       z += c.z
     }
     x /= s.subjects.length
+    y /= s.subjects.length
     z /= s.subjects.length
     if (s.relative === "facing") {
       let fx = 0
@@ -63,14 +67,15 @@ export function frameShot(s: StagingShot, cast: CastMember[]): ResolvedShot {
         fz += Math.cos(c.ry)
       }
       const a = Math.atan2(fx, fz)
-      const rot = (v: [number, number, number]): [number, number, number] => [x + v[0] * Math.cos(a) + v[2] * Math.sin(a), v[1], z - v[0] * Math.sin(a) + v[2] * Math.cos(a)]
+      const rot = (v: [number, number, number]): [number, number, number] => [x + v[0] * Math.cos(a) + v[2] * Math.sin(a), y + v[1], z - v[0] * Math.sin(a) + v[2] * Math.cos(a)]
       return { position: rot(s.offset), target: rot(s.target), fov: s.fov, label: s.label }
     }
-    return { position: [x + s.offset[0], s.offset[1], z + s.offset[2]], target: [x + s.target[0], s.target[1], z + s.target[2]], fov: s.fov, label: s.label }
+    return { position: [x + s.offset[0], y + s.offset[1], z + s.offset[2]], target: [x + s.target[0], y + s.target[1], z + s.target[2]], fov: s.fov, label: s.label }
   }
   const c = need(s.subject)
   const a = c.ry + s.angle * DEG
-  return { position: [c.x + Math.sin(a) * s.distance, s.height, c.z + Math.cos(a) * s.distance], target: [c.x, s.lookHeight, c.z], fov: s.fov, label: s.label }
+  const y = c.y ?? 0
+  return { position: [c.x + Math.sin(a) * s.distance, y + s.height, c.z + Math.cos(a) * s.distance], target: [c.x, y + s.lookHeight, c.z], fov: s.fov, label: s.label }
 }
 
 // Set shots, then staging shots on top, framed on where the cast stands now.

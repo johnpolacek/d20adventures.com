@@ -80,7 +80,7 @@ test("every authored scene is a real encounter, and every festival character has
   }
 })
 
-test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the Old Grand Library, the Silver Serpent, the docks, the Lower Districts and the Black Market have their scenes, and an encounter without one falls back to story view", async () => {
+test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the Old Grand Library, the Silver Serpent, the docks, the Lower Districts, the Black Market and the street kit have their scenes, and an encounter without one falls back to story view", async () => {
   const run = await setup()
   try {
     // The heroes wait in the line alone, then meet Garlan at the front.
@@ -148,6 +148,31 @@ test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the 
     assert.equal(spatialContext(turn.encounterId, turn.characters, {}), undefined)
     // Story view keeps the party's faces from the authored scenes.
     for (const pc of turn.characters.filter((c) => c.type === "pc")) assert.ok(portraitFor(undefined, pc))
+    // The street kit's scenes, after the auction. Bram waits at the inn during the ambush, so he has no figure there.
+    await advance(run.store, "a-relic-of-old-valkara")
+    await advance(run.store, "the-winning-bid")
+    for (const [encounter, npcs, figures, where] of [
+      ["shadowing-silverhand", ["aldith", "kaelen", "silverhand", "silverhand-representative"], 4, /old lanes[\s\S]*the archway under the bridge-house/],
+      ["the-hideout", ["aldith", "kaelen"], 2, /abandoned warehouse[\s\S]*the hideout's door/],
+      ["face-to-face-with-silverhand", ["silverhand"], -1, null],
+      ["the-ambush", ["bram", "liora", "silas"], 2, /hooded archer[\s\S]*the door with the arrow in it/],
+    ] as const) {
+      await advance(run.store, encounter)
+      const here = run.store.current()
+      const people = here.characters.filter((c) => c.type === "npc")
+      assert.deepEqual(people.map((c) => c.id).sort(), npcs)
+      if (!where) continue
+      const scene = sceneFor(here.encounterId)
+      assert.ok(scene, encounter)
+      const staged = people.filter((c) => castIdFor(scene.staging.cast, c) === c.id)
+      assert.equal(staged.length, figures, encounter)
+      for (const c of staged) assert.match(portraitFor(scene, c) ?? "", /^\/stage\/fixtures\/march-of-davos\/.+-portrait\.jpg$/)
+      assert.match(spatialContext(here.encounterId, here.characters, {}) ?? "", where)
+    }
+    // The endings in the great square, reached only through the final choice.
+    const party = run.store.current().characters
+    assert.match(spatialContext("the-new-dawn", party, {}) ?? "", /Key of Ilmarin[\s\S]*the balcony/)
+    assert.match(spatialContext("vengeance-of-the-blackthorn", party, {}) ?? "", /coffin[\s\S]*the bier/)
   } finally {
     run.close()
   }

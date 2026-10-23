@@ -1,0 +1,251 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "march-of-davos/shadowing-silverhand",
+  "set": "realm-of-myr/kordavos-night-lanes",
+  "cast": [
+    {
+      "id": "branka-stoneveil",
+      "name": "Branka Stoneveil",
+      "role": "Dwarf fighter",
+      "height": 1.38,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/branka-front.webp",
+        "back": "/stage/fixtures/march-of-davos/branka-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/branka-portrait.jpg"
+      },
+      "at": [
+        -1,
+        9.4
+      ],
+      "facing": [
+        0.2,
+        -12
+      ]
+    },
+    {
+      "id": "cassia-verane",
+      "name": "Cassia Verane",
+      "role": "Human wizard",
+      "height": 1.72,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/cassia-front.webp",
+        "back": "/stage/fixtures/march-of-davos/cassia-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/cassia-portrait.jpg"
+      },
+      "at": [
+        0,
+        10
+      ],
+      "facing": [
+        0.2,
+        -12
+      ]
+    },
+    {
+      "id": "yeva-softstep",
+      "name": "Yeva Softstep",
+      "role": "Halfling rogue",
+      "height": 1.08,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/yeva-front.webp",
+        "back": "/stage/fixtures/march-of-davos/yeva-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/yeva-portrait.jpg"
+      },
+      "at": [
+        -1.9,
+        8.6
+      ],
+      "facing": [
+        0.2,
+        -12
+      ]
+    },
+    {
+      "id": "milos-radan",
+      "name": "Milos Radan",
+      "role": "Human cleric",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/milos-front.webp",
+        "back": "/stage/fixtures/march-of-davos/milos-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/milos-portrait.jpg"
+      },
+      "at": [
+        1,
+        9.7
+      ],
+      "facing": [
+        0.2,
+        -12
+      ]
+    },
+    {
+      "id": "silverhand",
+      "name": "Silverhand",
+      "role": "Smuggler lord",
+      "height": 1.88,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/silverhand-front.webp",
+        "back": "/stage/fixtures/march-of-davos/silverhand-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/silverhand-portrait.jpg"
+      },
+      "at": [
+        0.4,
+        -12.5
+      ],
+      "facing": [
+        0,
+        -40
+      ]
+    },
+    {
+      "id": "silverhand-representative",
+      "name": "Silverhand's representative",
+      "role": "Representative",
+      "height": 1.86,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/silverhand-representative-front.webp",
+        "back": "/stage/fixtures/march-of-davos/silverhand-representative-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/silverhand-representative-portrait.jpg"
+      },
+      "at": [
+        -0.6,
+        -11.4
+      ],
+      "facing": [
+        0,
+        -40
+      ]
+    },
+    {
+      "id": "aldith",
+      "name": "Varchk",
+      "role": "Silverhand's bodyguard",
+      "height": 1.98,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/aldith-front.webp",
+        "back": "/stage/fixtures/march-of-davos/aldith-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/aldith-portrait.jpg"
+      },
+      "at": [
+        1.2,
+        -10.4
+      ],
+      "facing": [
+        0,
+        -40
+      ]
+    },
+    {
+      "id": "kaelen",
+      "name": "Kaeleth",
+      "role": "Silverhand's scout",
+      "height": 1.7,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/kaelen-front.webp",
+        "back": "/stage/fixtures/march-of-davos/kaelen-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/kaelen-portrait.jpg"
+      },
+      "at": [
+        -2.2,
+        -19.6
+      ],
+      "facing": [
+        0,
+        6
+      ]
+    }
+  ],
+  "shots": {
+    "party": {
+      "subjects": [
+        "branka-stoneveil",
+        "cassia-verane",
+        "yeva-softstep",
+        "milos-radan"
+      ],
+      "offset": [
+        1.6,
+        1.7,
+        4.4
+      ],
+      "target": [
+        0,
+        1.2,
+        0
+      ],
+      "relative": "world",
+      "fov": 54,
+      "label": "Party"
+    },
+    "silverhand": {
+      "subjects": [
+        "silverhand",
+        "silverhand-representative",
+        "aldith"
+      ],
+      "offset": [
+        -1.6,
+        1.7,
+        6.5
+      ],
+      "target": [
+        0,
+        1.4,
+        -2
+      ],
+      "relative": "world",
+      "fov": 46,
+      "label": "Silverhand"
+    },
+    "kaeleth": {
+      "subject": "kaelen",
+      "distance": 2.6,
+      "angle": -20,
+      "height": 1.6,
+      "lookHeight": 1.5,
+      "fov": 44,
+      "label": "Kaeleth"
+    },
+    "varchk": {
+      "subject": "aldith",
+      "distance": 2.8,
+      "angle": 25,
+      "height": 1.7,
+      "lookHeight": 1.65,
+      "fov": 44,
+      "label": "Varchk"
+    }
+  },
+  "shot": "lanes",
+  "exits": [
+    {
+      "cast": "silverhand",
+      "when": "slips off",
+      "via": [
+        "crossing"
+      ],
+      "to": "beyond"
+    },
+    {
+      "cast": "silverhand-representative",
+      "when": "slips off",
+      "via": [
+        "crossing"
+      ],
+      "to": "beyond"
+    },
+    {
+      "cast": "aldith",
+      "via": [
+        "crossing"
+      ],
+      "to": "beyond"
+    },
+    {
+      "cast": "kaelen",
+      "to": "beyond"
+    }
+  ]
+}

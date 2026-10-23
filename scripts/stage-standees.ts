@@ -530,6 +530,46 @@ const FIGURES: Record<string, Figure> = {
     backNote:
       "Seen squarely from directly behind, sitting on the stool facing AWAY from us. The back of his green velvet coat covers his whole back from the collar down over the stool; its tails hang down behind. His shirt, chest, hands, thighs and knees are in front of him and NOT visible. Below the coat only the stool's legs, the backs of his calves and the heels of his boots show.",
   },
+  // March of Davos, the street kit: Silverhand's bodyguard and scout on his trail and at his hideout, the Cowl's archer
+  // on the roofs, and Joran and Seraphina for the new dawn.
+  aldith: {
+    out: "fixtures/march-of-davos/aldith",
+    who: "Varchk, Half-Orc male bodyguard",
+    look: "A huge, heavily muscled half-orc, about 1.98 m tall, with tall proportions and long legs, not a dwarf. Olive-green skin, a heavy brow, a broken nose with a ring through it, a lower tusk jutting from his jaw, a long scar from his forehead down to his cheek, small hard eyes, long black hair in a braid bound with silver rings, a thick black beard. A dark leather brigandine studded with iron over a charcoal tunic, a short dark cloak, heavy bracers, a broad belt, dark trousers and boots. A heavy curved sword sheathed at his hip, his hands empty and loose at his sides. Stoic and watchful.",
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726459305887",
+    head: 0.12,
+  },
+  kaelen: {
+    out: "fixtures/march-of-davos/kaelen",
+    who: "Kaeleth, Human female scout and mage",
+    look: "A lean young woman in her twenties, about 1.70 m tall, with pale skin, sharp features, piercing pale-blue eyes and long dark hair escaping a deep charcoal hood. A charcoal hooded cloak, wet at the hem, over close-fitting dark grey leathers with a laced bodice, a belt of pouches and a slim wand, dark gloves, tall soft boots. One hand holds the cloak closed at her chest, the other hangs free. Calm and observant.",
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726461750367",
+    head: 0.13,
+    backNote:
+      "Her deep hood is up and covers the whole back of her head; only a few dark strands of hair show at its edge. The cloak hangs straight down her back to the calves and hides her back completely. Her arms are at her front, out of sight: NO hands, gloves, belt or pouches show from behind, only the outside of the cloak and her boots below it.",
+  },
+  "cowl-archer": {
+    out: "fixtures/march-of-davos/cowl-archer",
+    who: "Liora, Half-Elf female assassin of the Covenant of the Cowl",
+    look: "A slender, graceful half-elf woman, about 1.72 m tall, her face in the shadow of a deep black hood: narrow gleaming grey eyes, high cheekbones, a black cloth mask over her nose and mouth, the tip of one pointed ear at the hood's edge. A long black hooded cloak of rough wool over close-fitting black leathers with dark straps, a quiver of black-fletched arrows on her back, black gloves, soft black boots. A dark longbow held in her left hand, an arrow nocked but the string undrawn, pointed down. Silent and still.",
+    head: 0.13,
+    backNote: "Her deep hood is up and covers the whole back of her head. The black cloak hangs down her back; the quiver's black fletchings rise over her right shoulder.",
+  },
+  joran: {
+    out: "fixtures/march-of-davos/joran",
+    who: "Joran Antonov, Human male Valkaran scholar turned revolutionary",
+    look: "A lean young man of about thirty, about 1.82 m tall, with a gaunt, intense, determined face, dark deep-set eyes, short unkempt dark hair and a short dark beard. Long dark Covenant robes of charcoal wool with the hood thrown back, a deep grey mantle with a worn border of old Valkaran knotwork, a rope belt, dark boots. His right hand is raised high holding an ancient key of dark bronze as long as a forearm, its bow set with a pale blue stone, glowing faintly. His left hand open at his side.",
+    head: 0.13,
+  },
+  seraphina: {
+    out: "fixtures/march-of-davos/seraphina",
+    who: "Seraphina Valtor, Human female clan matriarch",
+    look: "A tall, upright noblewoman in her late sixties, about 1.70 m tall, with voluminous white hair swept up and back, a lined, proud face, keen dark eyes and a knowing half-smile, gold drop earrings set with amethyst. A heavy gown of ivory brocade worked with gold thread, a high embroidered collar, a dark green velvet mantle on her shoulders fastened with an old Valkaran gold brooch, rings on her fingers. Her hands folded before her.",
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726609419379",
+    head: 0.13,
+    backNote:
+      "Seen squarely from directly behind, her whole body facing AWAY from us: the back of her white hair, the green velvet mantle hanging from her shoulders down her back to the hem, and the gown's brocade skirt below it. Her hands, face, jewels and the front of the gown are NOT visible.",
+  },
 }
 for (const [id, f] of Object.entries(FIGURES)) f.out ||= `heroes/${id}`
 

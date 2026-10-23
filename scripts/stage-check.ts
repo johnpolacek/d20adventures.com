@@ -54,13 +54,15 @@ async function checkSet(label: string, raw: unknown) {
 // desktop movement does (Stage.route: straight or through a doorway, then 1.1 m short of a person). Blocked walks stop
 // at the first solid thing.
 function checkWalks(set: ReturnType<typeof parseSet>, footprints: Footprint[], doors: ReturnType<typeof doorways>, cast: ReturnType<typeof resolveCast>) {
-  const inside = cast.filter((c) => onFootprint(footprints, c.x, c.z))
+  // Someone raised (on a roof, a balcony) stands on something solid by design, and no one walks up to them.
+  const ground = cast.filter((c) => !c.y)
+  const inside = ground.filter((c) => onFootprint(footprints, c.x, c.z))
   if (inside.length) throw new Error(`cast starts inside something solid: ${inside.map((c) => c.id).join(", ")}`)
   const places = Object.entries(set.marks).filter(([, m]) => m.label)
   const blocked: string[] = []
   let walks = 0
-  for (const c of cast) {
-    const targets = [...places.map(([id, m]) => ({ id, x: m.at[0], z: m.at[1], stop: 0 })), ...cast.filter((o) => o.id !== c.id).map((o) => ({ id: o.id, x: o.x, z: o.z, stop: 1.1 }))]
+  for (const c of ground) {
+    const targets = [...places.map(([id, m]) => ({ id, x: m.at[0], z: m.at[1], stop: 0 })), ...ground.filter((o) => o.id !== c.id).map((o) => ({ id: o.id, x: o.x, z: o.z, stop: 1.1 }))]
     for (const t of targets) {
       const d = Math.hypot(t.x - c.x, t.z - c.z)
       const k = Math.max(0, d - t.stop) / Math.max(d, 1e-6)
@@ -95,7 +97,8 @@ function checkExits(
   for (const e of exits) {
     if (e.lands !== undefined) point(e.lands)
     if (e.via && e.to === undefined) throw new Error(`staging ${key}: ${e.cast}'s exit has a way but nowhere to go`)
-    if (e.to === undefined) continue
+    // Someone raised runs off along the roof they stand on, which no ground walk can check.
+    if (e.to === undefined || cast.find((c) => c.id === e.cast)?.y) continue
     let from = point(e.cast)
     for (const leg of [...(e.via ?? []), e.to].map(point))
       for (const p of routeOver(footprints, doors, from, leg) ?? [leg]) {

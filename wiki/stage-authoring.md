@@ -126,3 +126,10 @@ The web viewer and the desktop app run the same `packages/stage` renderer and th
 - Stall awnings stand on poles that block close shots. Over a counter in a close shot, sling a `canvas` from the wall instead.
 - A wall that fills a painting's close shot needs a painted stone `image` at real block size. Procedural masonry read as cartoon squares under lamps.
 - A seated figure's back can come out as its front with the head turned. Say the back faces straight away, the coat covers it, and only the stool's legs and the heels show.
+- Build a location that recurs as a kit and redress it. The street kit's lanes serve both Silverhand's trail and the ambush, and its square both endings.
+- A `wall` built as an upper storey still lays its footprint on the ground. Over a door it stops every walk through the door. Build an upper storey as a plain box.
+- The crowd's pilgrims are pale robed monks. Do not use them as hooded watchers at night.
+- Stand a raised character against the sky, not a darker wall. On a roof lower than its neighbours, Silas was a dark head against dark timber.
+- From the street, a parapet hides anyone standing a step behind it. Put rooftop figures right at a low parapet, and frame them from the roof behind, as the painting does.
+- At night a long street needs its eight lights spread along it. Lights bunched by the camera left the crossing black.
+- Put the moon on the street's axis. Off to one side, the roofs hide it.

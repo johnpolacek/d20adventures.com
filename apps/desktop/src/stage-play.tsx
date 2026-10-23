@@ -52,7 +52,7 @@ function shotFor(stage: Stage, aim: Aim, heroes: string[]): StagingShot | string
     // Over the actor's shoulder toward the one the action is aimed at, when nothing solid stands behind the actor.
     // Someone much taller than a person would fill that frame with their back.
     const cam = { x: a.x - dx * 2.4 + dz * 0.9, z: a.z - dz * 2.4 - dx * 0.9 }
-    if (d > 0.3 && d < 14 && a.height <= 2.2 && !stage.reach(actor, cam, 4).short) return { position: [cam.x, 1.9, cam.z], target: [a.x + dx * d * 0.6, 1.2, a.z + dz * d * 0.6], fov: 48 }
+    if (d > 0.3 && d < 14 && a.height <= 2.2 && !stage.reach(actor, cam, 4).short) return { position: [cam.x, a.y + 1.9, cam.z], target: [a.x + dx * d * 0.6, a.y + (b.y - a.y) * 0.6 + 1.2, a.z + dz * d * 0.6], fov: 48 }
     return { subject: target, distance: 6, angle: 25, height: 1.8, lookHeight: 1.2, fov: 48 }
   }
   const mark = stage.set.marks[aim.place]

@@ -29,6 +29,8 @@ const castMember = z
     facing: facing.default(0),
     // Lying where they fell when the scene opens (a body left by an earlier encounter).
     down: z.boolean().optional(),
+    // Standing this many metres up, on something raised: a roof, a balcony, a wall walk. Walks keep the height.
+    y: num(0, 60).optional(),
   })
   .strict()
 
