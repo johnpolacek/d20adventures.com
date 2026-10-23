@@ -14,12 +14,12 @@ Owner, 2026-10-23: the project was using all of the Hobby account's deployment s
 
 - 2026-10-23: removed seven older production deploys. The live deploy and one rollback remain.
 - 2026-10-23: `vercel.json` `ignoreCommand` skips a build when nothing outside `wiki/` changed since `VERCEL_GIT_PREVIOUS_SHA`. A missing or unknown previous SHA builds.
-
 - 2026-10-23: stage art moved off the deploy. `.vercelignore` leaves out `public/stage` and `public/stage-lab`, about 88 MB. `next.config.ts` rewrites `/stage/*` and `/stage-lab/*` to `CLOUDFRONT_DOMAIN`, which already serves the `d20-public` bucket. Rewrites fall back only when no local file exists, so dev serves `public/` as before. `pnpm stage:sync` uploads changed files under `stage/` and `stage-lab/` with a 5 minute cache. The desktop app copies `public/stage` into its own bundle at build, so it is unaffected.
 - Checked on the local dev server: a local file is served locally, and a missing one is answered by CloudFront.
 
+- Checked on production after `82a7d3e`: `/stage/` and `/stage-lab/` files return 200 through CloudFront.
+
 ## Next
 
-- Confirm on the first deploy that the files are left out and the stage art loads on d20adventures.com.
 - Consider `public/images/app/backgrounds`, 27 MB, the same way.
 - Convert the largest PNG and MP4 files.
