@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Stage authoring](../stage-authoring.md) · [Stage engine](../stage-engine.md) · [The Dragonbone Inn](dragonbone-inn-stage.md)
 
-Status: in progress on main from 2026-10-22. One location at a time, in story order, each reviewed at DPR 2 before the next.
+Status: every encounter of the adventure has a set, 2026-10-23. Not yet checked in the running desktop app beyond the inn.
 
 ## Owner request, 2026-10-22
 
@@ -23,7 +23,7 @@ Encounters 1 to 7 already had sets: the gate, the harvest square, the Dragonbone
 | 23 to 26 | Silverhand's trail, the hideout, the ambush | Street and cellar kits done 2026-10-23 |
 | 27 to 39 | The Blackthorn mansion: front, ballroom, halls, chambers, wine cellar | Bespoke, done 2026-10-23. The wine cellar is the cellar kit |
 | 40 to 44 | The catacombs | Tunnel kit done 2026-10-23. The grate at 40 is the mansion's grounds, done |
-| 45 to 46 | The forgotten temple | Bespoke |
+| 45 to 46 | The forgotten temple | Bespoke, done 2026-10-23 |
 | 47 to 49 | The aftermath | Done 2026-10-23: the street kit for 47 and 48, the library for 49 |
 
 ## Owner decision, 2026-10-23: reusable sets
@@ -214,3 +214,13 @@ Source: the entrance painting (a hooded guard before an arched doorway hung with
 - At ultra, DPR 2: 146 to 231 draw calls, 0.31M to 0.42M rendered triangles, 23 to 33 fps. 0.21M static triangles, 48 walkers.
 - Desktop maps both encounters. 78 desktop tests pass.
 - Left: the crowd library's pale robes against the painting's dark cloaks, and a lane brighter than the painting's sky slot. Not yet checked in the running desktop app.
+
+## The forgotten temple
+
+Done 2026-10-23, bespoke, written by `scripts/stage-sets/forgotten-temple.ts`. The encounter's text, not its painting of a dark ruin: a hidden cathedral of glowing white marble, eight pillars carved as oaks whose boughs spread into the vault, the vault night-blue with 260 stars and six constellations, an empty altar on a stepped dais in a ring of silver runes, faint heat over it.
+
+- Forgotten Temple: the party at the archway with Astrid and Eamon. The Final Confrontation: Joran with the Key before the altar, walking on from the shadows behind it when the narration says he steps into the light.
+- `pnpm stage:check` passes. Walks 54 of 60 and 72 of 77, the rest stopped by the oak pillars and the altar.
+- At ultra, DPR 2: 66 to 77 draw calls, 0.03M rendered triangles, 23 to 30 fps.
+- Desktop maps both encounters. 78 desktop tests pass.
+- Left: the oak boughs read as smooth tubes rather than carved wood.

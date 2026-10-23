@@ -11,6 +11,7 @@ import powderSet from "@d20/stage/sets/realm-of-myr/catacombs-powder.json"
 import sealedDoorSet from "@d20/stage/sets/realm-of-myr/catacombs-sealed-door.json"
 import innSet from "@d20/stage/sets/realm-of-myr/dragonbone-inn.json"
 import innMorningSet from "@d20/stage/sets/realm-of-myr/dragonbone-inn-morning.json"
+import templeSet from "@d20/stage/sets/realm-of-myr/forgotten-temple.json"
 import ambushLanesSet from "@d20/stage/sets/realm-of-myr/kordavos-ambush-lanes.json"
 import blackMarketSet from "@d20/stage/sets/realm-of-myr/kordavos-black-market.json"
 import docksSet from "@d20/stage/sets/realm-of-myr/kordavos-docks.json"
@@ -53,7 +54,9 @@ import clanConflict from "@d20/stage/stagings/march-of-davos/clan-conflict.json"
 import deathToTheMurderer from "@d20/stage/stagings/march-of-davos/death-to-the-murderer.json"
 import entryToTheBall from "@d20/stage/stagings/march-of-davos/entry-to-the-ball.json"
 import faceToFaceWithSilverhand from "@d20/stage/stagings/march-of-davos/face-to-face-with-silverhand.json"
+import finalConfrontation from "@d20/stage/stagings/march-of-davos/final-confrontation.json"
 import findingTheBlackMarket from "@d20/stage/stagings/march-of-davos/finding-the-black-market.json"
+import forgottenTemple from "@d20/stage/stagings/march-of-davos/forgotten-temple.json"
 import insideTheBall from "@d20/stage/stagings/march-of-davos/inside-the-ball.json"
 import intoTheCatacombs from "@d20/stage/stagings/march-of-davos/into-the-catacombs.json"
 import labyrinthineStalls from "@d20/stage/stagings/march-of-davos/labyrinthine-stalls.json"
@@ -493,6 +496,25 @@ export const SCENES: Record<string, Scene> = {
       "Beyond the iron door, a vast cavern whose roof is lost in the dark, its floor deep in fine grey dust. A single narrow archway glows blue at the far end. Lady Astrid has stepped out into the middle of the hall; Eamon stays back by the door with the party just inside it. The ancient dead lie hidden under the dust until they rise.",
     party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
     spare: [[0.4, 10.6]],
+  },
+  // The forgotten temple beyond the catacombs, bespoke.
+  "forgotten-temple": {
+    set: templeSet,
+    staging: forgottenTemple,
+    location: "The forgotten temple",
+    where:
+      "Through the narrow archway, a hidden cathedral of Old Valkara: walls of white marble glowing with a faint inner starlight, pillars carved as ancient oaks branching up into a vault painted with the constellations of a lost sky. At its centre, on a stepped dais in a ring of silver runes, an empty altar, the air above it rippling. Shadows lie behind the altar. The party has just come through the archway with Lady Astrid and Eamon.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[0.2, -4.2]],
+  },
+  "final-confrontation": {
+    set: templeSet,
+    staging: finalConfrontation,
+    location: "The forgotten temple",
+    where:
+      "The hidden cathedral under its vault of stars, before the empty altar in its ring of silver runes. Joran Antonov, in the robes of the Covenant with the hood thrown back, has stepped out from the shadows behind the altar and stands before it, the Key of Ilmarin raised. The party faces him across the nave, Lady Astrid on their left with her sword, Eamon on their right.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[0.6, -10.0]],
   },
   "the-ambush": {
     set: ambushLanesSet,
