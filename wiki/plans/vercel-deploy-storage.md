@@ -20,6 +20,9 @@ Owner, 2026-10-23: the project was using all of the Hobby account's deployment s
 - Checked on production after `82a7d3e`: `/stage/` and `/stage-lab/` files return 200 through CloudFront.
 - 2026-10-23: `public/images/app/backgrounds`, 27 MB, moved the same way. Same sync, rewrite and ignore list. The desktop app copies it at build, so it is unaffected.
 
+- 2026-10-23: the large images in use, re-encoded. `d20-hero` (7.5 MB PNG) and `parchment-texture` (2.5 MB PNG) became WebP at 0.33 and 0.29 MB, and their references moved. The old PNG URLs still answer from CloudFront. `characters/default.png`, `avatar/npc.png` and `screenshot.png` keep their paths, since content, saved records and shared links use them, and are resized to 0.4, 0.2 and 0.66 MB. The deploy's `public/images` went from 20.6 to 10.2 MB, and the desktop bundle lost 10 MB.
+- There are no MP4 files in `public/`. The two in `lab/stage-art/results/` are under 1 MB and not deployed.
+
 ## Next
 
-- Convert the largest PNG and MP4 files.
+- Unused images from the first commit, referenced nowhere in code or content: `images/app/screenshots/` (3.9 MB), `avatar/npc-0.png` (3.5 MB), `avatar/bot.png` (1.2 MB), `d20-transparent.png`, and in backgrounds `genre/` (13.8 MB) and `background-texture.jpg` (2.7 MB). Owner decision pending.

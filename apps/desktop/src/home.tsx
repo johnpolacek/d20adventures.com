@@ -12,7 +12,7 @@ export function Home(props: { save: Save | null; busy: boolean; next?: string; o
   const finished = props.save?.adventure.status === "completed"
   return (
     <div className="absolute inset-0 overflow-hidden bg-black text-white">
-      <img src="/images/app/backgrounds/d20-hero.png" alt="" className="fade-in absolute inset-0 h-full w-full object-cover" />
+      <img src="/images/app/backgrounds/d20-hero.webp" alt="" className="fade-in absolute inset-0 h-full w-full object-cover" />
       <h1 className="fade-in relative mt-[5vh] text-center font-display text-[clamp(2.25rem,5vw,3.75rem)] delay-[400ms]" style={textShadowSpreadLight}>
         EXpeRienCe <span className="inline-block scale-90">tHe</span> Thrill
       </h1>

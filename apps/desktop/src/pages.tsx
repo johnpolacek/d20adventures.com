@@ -26,7 +26,7 @@ function PageShell(props: { title: string; children: ReactNode }) {
   return (
     <div className="absolute inset-0 overflow-y-auto bg-black text-white">
       <div className="relative">
-        <ImageHeader variant="compact" imageUrl="/images/app/backgrounds/d20-hero.png" title={props.title} />
+        <ImageHeader variant="compact" imageUrl="/images/app/backgrounds/d20-hero.webp" title={props.title} />
         <div className="relative z-10 mx-auto -mt-32 max-w-6xl space-y-12 px-8 pb-24">{props.children}</div>
       </div>
     </div>

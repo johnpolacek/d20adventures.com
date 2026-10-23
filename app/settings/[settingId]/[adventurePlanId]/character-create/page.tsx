@@ -33,7 +33,7 @@ export default async function CharacterCreatePage({ params }: PageProps) {
         <CharacterCreateForm availableRaces={availableRaces} availableArchetypes={availableArchetypes} settingId={settingId} adventurePlanId={adventurePlanId} />
       </div>
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/70 to-black/10 z-10" />
-      <Image className="object-cover fade-in" fill={true} src="/images/app/backgrounds/d20-hero.png" alt="D20" />
+      <Image className="object-cover fade-in" fill={true} src="/images/app/backgrounds/d20-hero.webp" alt="D20" />
     </div>
   )
 }

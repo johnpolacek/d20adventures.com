@@ -386,7 +386,7 @@ export function DesktopGame() {
               <div className="absolute inset-0 grid place-items-center">
                 {acct.gated && (
                   <>
-                    <img src="/images/app/backgrounds/d20-hero.png" alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" />
+                    <img src="/images/app/backgrounds/d20-hero.webp" alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" />
                     <div className="relative">
                       <LinkGate account={acct} />
                     </div>

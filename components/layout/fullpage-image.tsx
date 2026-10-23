@@ -6,7 +6,7 @@ export default async function FullPageImage({ children, image, overlay }: { chil
       {children}
       <div className="fixed inset-0 z-0">
         {overlay && <div className="absolute inset-0 z-[1] bg-gradient-to-t from-black/70 via-bg-black/10 to-tranparent" />}
-        <Image className="object-cover fade-in" fill={true} src={image ?? "/images/app/backgrounds/d20-hero.png"} alt="D20" />
+        <Image className="object-cover fade-in" fill={true} src={image ?? "/images/app/backgrounds/d20-hero.webp"} alt="D20" />
       </div>
     </div>
   )

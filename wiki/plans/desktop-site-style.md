@@ -58,7 +58,7 @@ The app and the website share the display font, the d20 painting, and the epic b
 - Cinzel Decorative and Rethink Sans.
 - `components/ui/button.tsx`, so the epic button is the website's own.
 - `textShadowSpreadLight` and the title screen's copy and painting.
-- The textures: `buried.png`, `black-paper.png`, `parchment-texture.png`, `paper-texture.png`, `texture-line.png`.
+- The textures: `buried.png`, `black-paper.png`, `parchment-texture.webp`, `paper-texture.png`, `texture-line.png`.
 
 ### Gaps in the desktop theme
 

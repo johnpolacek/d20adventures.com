@@ -29,7 +29,7 @@ export default function HomePage() {
             </Link>
           </div>
         </HomeAdventure>
-        <Image className="object-cover fade-in" fill={true} src="/images/app/backgrounds/d20-hero.png" alt="D20" />
+        <Image className="object-cover fade-in" fill={true} src="/images/app/backgrounds/d20-hero.webp" alt="D20" />
       </div>
     </>
   )
