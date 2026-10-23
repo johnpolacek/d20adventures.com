@@ -24,7 +24,8 @@ const FINISH = "public/stage/fixtures/march-of-davos/yeva-front.webp"
 const PORTRAIT_BG = "#3b4256"
 
 // `backNote` adds to the back prompt when a back keeps coming out wrong (an open cloak drawn behind a front-facing body).
-type Figure = { out: string; who: string; look: string; ref?: string; head: number; backNote?: string }
+// `seated` paints the figure sitting on the stool it brings, for a tavern's patrons.
+type Figure = { out: string; who: string; look: string; ref?: string; head: number; backNote?: string; seated?: boolean }
 const stock = (who: string, look: string, head = 0.13): Figure => ({ out: "", who, look, head })
 // Stock figures stand in for created heroes: one per race and build, dressed for travel with no class gear, so any class
 // reads true. Heads are the share of figure height a portrait frames around.
@@ -199,6 +200,91 @@ const FIGURES: Record<string, Figure> = {
     look: "A proud woman in her twenties with auburn hair in an intricate braided crown, gold drop earrings and a jewelled gold collar. A fine russet coat with ochre trim over a cream blouse, a green sash, a slim dagger at her belt, soft leather boots. Arms folded.",
     head: 0.13,
   },
+  // March of Davos, the Dragonbone Inn: the innkeeper and the inn's visitors from their portraits, a bard, and patrons.
+  bram: {
+    out: "fixtures/march-of-davos/bram",
+    who: "Bram, Human male innkeeper",
+    look: "A burly, barrel-chested innkeeper in his fifties, about 1.85 m tall, with tall human proportions and long legs, not a dwarf. Curly grey-brown hair to the collar, a big curled grey moustache and a short grey beard, ruddy cheeks, jovial creased eyes and a warm grin. A brown leather waistcoat with brass buttons and tooled trim over a loose white linen shirt with the sleeves rolled to the elbow, a long stained canvas apron tied at the waist, a cloth over one shoulder, dark trousers and boots.",
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726055418469",
+    head: 0.13,
+  },
+  beric: {
+    out: "fixtures/march-of-davos/beric",
+    who: "Beric Sonacus, Human male dockworker",
+    look: "A burly, broad-shouldered dockworker in his forties, about 1.86 m tall, with tall human proportions and long legs, not a dwarf. Short dark tousled hair, heavy dark stubble, a weathered sun-darkened face with a deep old scar running diagonally across it, hard hazel eyes. A worn dark-brown leather coat with a high collar and stitched trim, a dark wool shirt, a wide belt with an iron cargo hook, rough trousers tucked into heavy boots. Big working hands at his sides.",
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726093177133",
+    head: 0.13,
+  },
+  eamon: {
+    out: "fixtures/march-of-davos/eamon",
+    who: "Eamon Drakovan, Half-Elf male scholar",
+    look: "A slender, slightly frail half-elf man who looks about sixty, about 1.78 m tall. Pointed ears, short swept grey hair, a neat white beard, sharp features, keen pale eyes behind round wire spectacles. A long worn ochre-gold scholar's robe trimmed with dark fur over a dark coat, a cream shirt with a loose cravat, a leather satchel of papers at his hip, a book held against his side, soft boots.",
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726093191207",
+    head: 0.13,
+    backNote:
+      "In image 1 the satchel hangs at the left of the picture and the book is held at the right of the picture. Seen from behind they swap: the satchel hangs at the RIGHT of the picture and the book shows at the LEFT of the picture, partly hidden by his body.",
+  },
+  elara: {
+    out: "fixtures/march-of-davos/elara",
+    who: "Elara Antonov, Human female courier",
+    look: "A slight young woman of about twenty, about 1.65 m tall. Long dark-brown hair, tousled, loose strands falling over her face, pale skin, tired grey-green eyes red-rimmed from crying, tear-streaked cheeks, a worried frown. A loose white linen blouse with full sleeves under a dark brown laced bodice, a long dark skirt, a small round gold pendant on a cord, a thin bracelet, worn shoes. A small leather scroll case held in one hand.",
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726111995012",
+    head: 0.13,
+  },
+  bard: {
+    out: "fixtures/march-of-davos/bard",
+    who: "The Dragonbone's bard, Human male minstrel",
+    look: "A lanky man in his late twenties, about 1.8 m tall, with a cheerful face, a short dark beard and wavy chestnut hair under a soft green cap with a pheasant feather. A patched crimson doublet with slashed sleeves over a cream shirt, a short green cloak thrown back over one shoulder, brown hose and soft boots. Playing a pear-shaped wooden lute held across his body, one hand on its neck and the other on the strings.",
+    head: 0.13,
+  },
+  "patron-merchant": {
+    out: "fixtures/march-of-davos/patron-merchant",
+    who: "A merchant at the inn, Human male",
+    look: "A stout, prosperous merchant in his fifties with a bald crown, grey side hair and a forked grey beard, a ruddy face mid-laugh. A wine-red wool coat with fur trim over a mustard doublet, a heavy belt purse, rings on his fingers. A pewter tankard in his right hand resting on his knee.",
+    head: 0.17,
+    seated: true,
+  },
+  "patron-traveller": {
+    out: "fixtures/march-of-davos/patron-traveller",
+    who: "A traveller at the inn, Human female",
+    look: "A weathered woman traveller in her forties with grey-streaked auburn hair tied back, a tired kind face. A hooded brown travelling cloak thrown back over a moss-green wool dress, a leather satchel, dusty boots. A wooden bowl of stew in her lap and a spoon in her right hand.",
+    head: 0.17,
+    seated: true,
+    backNote:
+      "Seen squarely from directly behind, not turned: her back faces the camera straight on, the back of her head centred above it, no cheek or profile showing. In image 1 her knees angle toward the left of the picture, so from behind they angle toward the RIGHT of the picture. The bowl and spoon are hidden in front of her.",
+  },
+  "patron-farmer": {
+    out: "fixtures/march-of-davos/patron-farmer",
+    who: "A farmer at the inn, Human male",
+    look: "An old farmer in his sixties, lean and weathered, white stubble, a flat grey wool cap, deep laugh lines. A patched brown smock over a cream shirt, a rope belt, mud-stained trousers and old boots. A long clay pipe in his right hand.",
+    head: 0.17,
+    seated: true,
+  },
+  "patron-sailor": {
+    out: "fixtures/march-of-davos/patron-sailor",
+    who: "A river sailor at the inn, Human male",
+    look: "A young river sailor in his twenties with sun-browned skin, a short dark beard and a gold ring in one ear. A blue knitted cap, a faded red-and-cream striped shirt under an open oilskin vest, a sash, canvas trousers rolled at the calf, bare forearms with a faded tattoo. A pewter tankard held up in his right hand.",
+    head: 0.17,
+    seated: true,
+  },
+  "patron-hooded": {
+    out: "fixtures/march-of-davos/patron-hooded",
+    who: "A hooded stranger at the inn, Human male",
+    look: "A lean, watchful man whose deep charcoal hood shadows his face down to a stubbled jaw, a thin mouth and the glint of narrow eyes. A dark wool cloak wrapped close, worn black leather gloves, the hilt of a long dagger at his belt, dark boots. Hunched forward with his elbows on his knees, a small clay cup held in both hands.",
+    head: 0.17,
+    seated: true,
+    backNote:
+      "Seen from directly behind: his hood is up and covers the whole back of his head, and the cloak hangs straight down his back to the stool and hides his back. His hands, the cup, the dagger and his knees are in front of him and NOT visible. Below the cloak only the stool's legs, the backs of his calves and the heels of his boots show.",
+  },
+  "patron-hooded-b": {
+    out: "fixtures/march-of-davos/patron-hooded-b",
+    who: "A cloaked stranger at the inn, Human female",
+    look: "A slim woman in a dusty dark-green cloak with the hood up, a narrow pale face, sharp dark eyes glancing to one side, a thin scar on her chin. Arms folded under the cloak, dark leather trousers and soft boots.",
+    head: 0.17,
+    seated: true,
+    backNote:
+      "Seen from directly behind: her hood is up and covers the whole back of her head, and the cloak hangs straight down her back to the stool and hides her back and arms. Her knees and thighs are in front of her and NOT visible. Below the cloak only the stool's legs, the backs of her calves and the heels of her boots show.",
+  },
 }
 for (const [id, f] of Object.entries(FIGURES)) f.out ||= `heroes/${id}`
 
@@ -211,8 +297,13 @@ const ART = `Art direction (critical):
 - LIGHTING: soft neutral daylight from the upper left, gentle even modelling, no rim light, no vignette.
 - NO OUTLINE of any kind: no ink line, no dark contour, no rim glow, no halo. NO cast shadow and no ground contact shadow.
 - NOT photorealistic, NOT cartoon, NOT chibi, NOT a 3D render.
-- Pose: full body, head to toe, standing, facing straight toward the camera in a relaxed front-facing stance, eye-level view without perspective distortion, hands relaxed or holding gear close to the body. Nothing cropped, about 6% margin on all sides, feet flat near the bottom of the frame.
+- POSE
 - Background: SOLID UNIFORM PURE GREEN (#00FF00) everywhere, edge to edge. No scenery, no ground, no text, no border, no logo. One character only.`
+
+const STANDING =
+  "- Pose: full body, head to toe, standing, facing straight toward the camera in a relaxed front-facing stance, eye-level view without perspective distortion, hands relaxed or holding gear close to the body. Nothing cropped, about 6% margin on all sides, feet flat near the bottom of the frame."
+const SEATED =
+  "- Pose: full body, head to toe, SITTING on a plain round three-legged wooden tavern stool about 45 cm high, which is drawn, facing straight toward the camera, knees forward, feet flat on the floor in front of the stool, eye-level view without perspective distortion. No table and no other furniture. Nothing cropped, about 6% margin on all sides, the feet and the stool's feet near the bottom of the frame."
 
 const frontPrompt = (f: Figure) =>
   `${
@@ -224,7 +315,7 @@ const frontPrompt = (f: Figure) =>
 Character: ${f.who}
 Appearance: ${f.look}
 
-${ART}`
+${ART.replace("- POSE", f.seated ? SEATED : STANDING)}`
 
 const BACK = `Two reference images are provided. Image 1 is the finished FRONT view of a character. Image 2 is a screenshot of a painted game world: it is the ART DIRECTION to match.
 
@@ -285,7 +376,10 @@ async function back(id: string) {
   const { path } = await latest("front", id)
   if (!existsSync(path)) throw new Error(`No front for ${id}. Run front first.`)
   const note = FIGURES[id].backNote
-  await keep("back", id, await render(`${id} back`, note ? `${BACK}\n- ${note}` : BACK, [await jpeg(path, "#00ff00"), await jpeg(STYLE, "#000")]))
+  const seated = FIGURES[id].seated
+    ? `${BACK.replaceAll("standing pose", "seated pose").replace("Full body, head to toe, standing", "Full body, head to toe, sitting on the same stool")}\n- The figure sits on the same three-legged stool, seen from behind.`
+    : BACK
+  await keep("back", id, await render(`${id} back`, note ? `${seated}\n- ${note}` : seated, [await jpeg(path, "#00ff00"), await jpeg(STYLE, "#000")]))
 }
 
 // Distance-from-green key (olive cloaks survive), eroded two pixels and despilled at the edge, cropped to the figure.

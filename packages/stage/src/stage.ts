@@ -124,9 +124,10 @@ export class Stage {
   private hemisphere: THREE.HemisphereLight
   private fill: THREE.PointLight | null = null
   private lamps: THREE.PointLight[] = []
-  // How far the camera is into a room (0 outside, 1 in), and which room.
+  // How far the camera is into a room (0 outside, 1 in), which room, and the room whose light is up.
   private indoors = 0
   private room: SetSpec["rooms"][number] | null = null
+  private lit: SetSpec["rooms"][number] | null = null
   private extras: THREE.Object3D[] = []
   private life: (LifeUpdate & Disposable)[] = []
   private disposables: Disposable[] = []
@@ -908,7 +909,8 @@ export class Stage {
     const inside = this.set.rooms.find(({ box: b }) => x > b[0] && y > b[1] && z > b[2] && x < b[3] && y < b[4] && z < b[5])
     if (inside) this.room = inside
     const want = inside ? 1 : 0
-    if (want === this.indoors || !this.room) return
+    // Straight from one room into another (the inn's common room to its backroom), the new room's light takes over.
+    if ((want === this.indoors && (!inside || inside === this.lit)) || !this.room) return
     this.indoors = this.motion ? THREE.MathUtils.clamp(this.indoors + Math.sign(want - this.indoors) * dt * 3, 0, 1) : want
     const m = this.indoors
     const r = this.room
@@ -920,6 +922,7 @@ export class Stage {
     this.renderer.toneMappingExposure = mix(A.exposure, r.exposure ?? A.exposure)
     if (m < 0.5) this.light(A.lights, 1 - 2 * m)
     else this.light(r.lights, 2 * m - 1)
+    this.lit = m >= 0.5 ? r : null
   }
   render() {
     this.renderer.info.reset()

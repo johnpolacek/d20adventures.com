@@ -10,11 +10,16 @@ export const SETS: Record<string, () => Promise<unknown>> = {
   "realm-of-myr/mordava-river-pier-empty": () => import("./realm-of-myr/mordava-river-pier-empty.json").then((m) => m.default),
   "realm-of-myr/kordavos-riverfront": () => import("./realm-of-myr/kordavos-riverfront.json").then((m) => m.default),
   "realm-of-myr/old-forest-path": () => import("./realm-of-myr/old-forest-path.json").then((m) => m.default),
+  "realm-of-myr/dragonbone-inn": () => import("./realm-of-myr/dragonbone-inn.json").then((m) => m.default),
+  "realm-of-myr/dragonbone-inn-morning": () => import("./realm-of-myr/dragonbone-inn-morning.json").then((m) => m.default),
 }
 export const STAGINGS: Record<string, () => Promise<unknown>> = {
   "march-of-davos/the-gates-of-kordavos": () => import("../stagings/march-of-davos/the-gates-of-kordavos.json").then((m) => m.default),
   "march-of-davos/the-harvest-festival": () => import("../stagings/march-of-davos/the-harvest-festival.json").then((m) => m.default),
   "march-of-davos/clan-conflict": () => import("../stagings/march-of-davos/clan-conflict.json").then((m) => m.default),
+  "march-of-davos/the-dragonbone-inn": () => import("../stagings/march-of-davos/the-dragonbone-inn.json").then((m) => m.default),
+  "march-of-davos/an-unsolicited-opportunity": () => import("../stagings/march-of-davos/an-unsolicited-opportunity.json").then((m) => m.default),
+  "march-of-davos/morning-at-the-dragonbone": () => import("../stagings/march-of-davos/morning-at-the-dragonbone.json").then((m) => m.default),
   "the-midnight-summons/broken-silence": () => import("../stagings/the-midnight-summons/broken-silence.json").then((m) => m.default),
   "the-midnight-summons/owlbear-confrontation": () => import("../stagings/the-midnight-summons/owlbear-confrontation.json").then((m) => m.default),
   "the-midnight-summons/timely-rescue": () => import("../stagings/the-midnight-summons/timely-rescue.json").then((m) => m.default),

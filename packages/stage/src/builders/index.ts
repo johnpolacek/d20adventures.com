@@ -5,6 +5,7 @@ import { group, row, scatter } from "./layouts"
 import { barrelProp, basketProp, bunting, crateProp, farTown, goodsPile, gourds, house, lanternProp, potProp, prizeWheel, sackProp, sail, sheaf, spearRack, stall, standard } from "./market"
 import { beamPrim, boxPrim, conePrim, cylinderPrim, extrudePrim, groundDisc, heightfieldPrim, lathePrim, openingPrim, spherePrim, torusPrim } from "./primitives"
 import { chainLine, hangingRope, pier, riverboat, ship, strongbox } from "./river"
+import { bar, bench, chair, chandelier, dragonSkull, hearth, stairs, stool, table, wall } from "./tavern"
 import type { BuilderDef } from "./types"
 import { flagstones, grassPatch, mountain, rock, standingStone } from "./wilds"
 
@@ -74,6 +75,17 @@ export const BUILDERS: Record<string, BuilderDef> = {
   chain: chainLine,
   pier,
   ship,
+  // taverns and rooms
+  wall,
+  hearth,
+  bar,
+  table,
+  bench,
+  stool,
+  chair,
+  stairs,
+  chandelier,
+  dragonSkull,
   // checkpoint and dressing
   barrier,
   ropeLine,

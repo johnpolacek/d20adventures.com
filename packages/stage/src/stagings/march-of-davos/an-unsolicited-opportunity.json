@@ -1,0 +1,278 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "march-of-davos/an-unsolicited-opportunity",
+  "set": "realm-of-myr/dragonbone-inn",
+  "cast": [
+    {
+      "id": "branka-stoneveil",
+      "name": "Branka Stoneveil",
+      "role": "Dwarf fighter",
+      "height": 1.38,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/branka-front.webp",
+        "back": "/stage/fixtures/march-of-davos/branka-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/branka-portrait.jpg"
+      },
+      "at": [
+        4.2,
+        3.25
+      ],
+      "facing": [
+        5.4,
+        3.3
+      ]
+    },
+    {
+      "id": "cassia-verane",
+      "name": "Cassia Verane",
+      "role": "Human wizard",
+      "height": 1.72,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/cassia-front.webp",
+        "back": "/stage/fixtures/march-of-davos/cassia-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/cassia-portrait.jpg"
+      },
+      "at": [
+        4.45,
+        4.1
+      ],
+      "facing": [
+        5.4,
+        3.3
+      ]
+    },
+    {
+      "id": "yeva-softstep",
+      "name": "Yeva Softstep",
+      "role": "Halfling rogue",
+      "height": 1.08,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/yeva-front.webp",
+        "back": "/stage/fixtures/march-of-davos/yeva-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/yeva-portrait.jpg"
+      },
+      "at": [
+        5.35,
+        4.05
+      ],
+      "facing": [
+        5.4,
+        3.3
+      ]
+    },
+    {
+      "id": "milos-radan",
+      "name": "Milos Radan",
+      "role": "Human cleric",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/milos-front.webp",
+        "back": "/stage/fixtures/march-of-davos/milos-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/milos-portrait.jpg"
+      },
+      "at": [
+        5.95,
+        2.15
+      ],
+      "facing": [
+        5.4,
+        3.3
+      ]
+    },
+    {
+      "id": "beric",
+      "name": "Beric Sonacus",
+      "role": "Dockworker",
+      "height": 1.86,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/beric-front.webp",
+        "back": "/stage/fixtures/march-of-davos/beric-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/beric-portrait.jpg"
+      },
+      "at": [
+        4.6,
+        2.2
+      ],
+      "facing": [
+        5.3,
+        3.8
+      ]
+    },
+    {
+      "id": "eamon",
+      "name": "Eamon Drakovan",
+      "role": "Scholar",
+      "height": 1.78,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/eamon-front.webp",
+        "back": "/stage/fixtures/march-of-davos/eamon-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/eamon-portrait.jpg"
+      },
+      "at": [
+        5.45,
+        2.15
+      ],
+      "facing": [
+        5.3,
+        3.8
+      ]
+    },
+    {
+      "id": "bram",
+      "name": "Bram",
+      "role": "Innkeeper",
+      "height": 1.86,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/bram-front.webp",
+        "back": "/stage/fixtures/march-of-davos/bram-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/bram-portrait.jpg"
+      },
+      "at": [
+        -1.1,
+        -2.35
+      ],
+      "facing": [
+        2,
+        1
+      ]
+    },
+    {
+      "id": "patron-merchant",
+      "name": "A laughing merchant",
+      "role": "Patron",
+      "height": 1.32,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/patron-merchant-front.webp",
+        "back": "/stage/fixtures/march-of-davos/patron-merchant-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/patron-merchant-portrait.jpg"
+      },
+      "at": [
+        -2,
+        -0.42
+      ],
+      "facing": [
+        -2,
+        0.4
+      ]
+    },
+    {
+      "id": "patron-farmer",
+      "name": "An old farmer",
+      "role": "Patron",
+      "height": 1.32,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/patron-farmer-front.webp",
+        "back": "/stage/fixtures/march-of-davos/patron-farmer-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/patron-farmer-portrait.jpg"
+      },
+      "at": [
+        0.8,
+        2.62
+      ],
+      "facing": [
+        0.8,
+        1.8
+      ]
+    },
+    {
+      "id": "patron-hooded",
+      "name": "A hooded stranger",
+      "role": "Patron",
+      "height": 1.32,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/patron-hooded-front.webp",
+        "back": "/stage/fixtures/march-of-davos/patron-hooded-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/patron-hooded-portrait.jpg"
+      },
+      "at": [
+        -6.25,
+        -4
+      ],
+      "facing": [
+        -5.4,
+        -4
+      ]
+    },
+    {
+      "id": "patron-hooded-b",
+      "name": "A cloaked woman",
+      "role": "Patron",
+      "height": 1.32,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/patron-hooded-b-front.webp",
+        "back": "/stage/fixtures/march-of-davos/patron-hooded-b-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/patron-hooded-b-portrait.jpg"
+      },
+      "at": [
+        -5.25,
+        -4.62
+      ],
+      "facing": [
+        -5.4,
+        -4
+      ]
+    }
+  ],
+  "shots": {
+    "visitors": {
+      "subjects": [
+        "beric",
+        "eamon"
+      ],
+      "offset": [
+        0.35,
+        1.72,
+        2.55
+      ],
+      "target": [
+        0,
+        1.45,
+        0
+      ],
+      "relative": "world",
+      "fov": 50,
+      "label": "Beric and Eamon"
+    },
+    "beric": {
+      "subject": "beric",
+      "distance": 2.2,
+      "angle": -25,
+      "height": 1.72,
+      "lookHeight": 1.62,
+      "fov": 44,
+      "label": "Beric"
+    },
+    "eamon": {
+      "subject": "eamon",
+      "distance": 2.1,
+      "angle": 25,
+      "height": 1.66,
+      "lookHeight": 1.55,
+      "fov": 44,
+      "label": "Eamon"
+    },
+    "party": {
+      "subjects": [
+        "branka-stoneveil",
+        "cassia-verane",
+        "yeva-softstep",
+        "milos-radan"
+      ],
+      "offset": [
+        -2.2,
+        1.75,
+        -2.4
+      ],
+      "target": [
+        0.1,
+        1.05,
+        0.1
+      ],
+      "relative": "world",
+      "fov": 54,
+      "label": "Party"
+    }
+  },
+  "shot": "visitors"
+}

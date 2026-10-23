@@ -1,0 +1,2763 @@
+{
+  "format": "d20.stage.set",
+  "version": 1,
+  "id": "dragonbone-inn-morning",
+  "settingId": "realm-of-myr",
+  "locationId": "dragonbone-inn",
+  "title": "The Dragonbone Inn at dawn",
+  "seed": 5150,
+  "atmosphere": {
+    "sun": {
+      "direction": [
+        0.4,
+        0.5,
+        0.76
+      ],
+      "color": "#ffe2b8",
+      "intensity": 5,
+      "target": [
+        0,
+        0,
+        0
+      ],
+      "distance": 200,
+      "shadow": {
+        "left": -14,
+        "right": 14,
+        "top": 14,
+        "bottom": -14,
+        "near": 120,
+        "far": 280,
+        "size": 4096
+      }
+    },
+    "hemisphere": {
+      "sky": "#b8cce0",
+      "ground": "#6a5440",
+      "intensity": 0.55
+    },
+    "sky": {
+      "horizon": "#f0dcc0",
+      "mid": "#a8c4dc",
+      "zenith": "#5a8ab8",
+      "gain": 1,
+      "clouds": 0.5,
+      "stars": 0,
+      "moon": 0
+    },
+    "fog": {
+      "density": 0.004,
+      "start": 12
+    },
+    "fill": {
+      "color": "#fff2e0",
+      "intensity": 1.2,
+      "distance": 10
+    },
+    "lights": [],
+    "environment": 0.3,
+    "exposure": 1,
+    "grade": "neutral",
+    "wind": 0.2
+  },
+  "rooms": [
+    {
+      "box": [
+        -7,
+        -0.5,
+        -5,
+        7,
+        3.6,
+        5
+      ],
+      "ambient": 0.5,
+      "fill": 1,
+      "exposure": 1,
+      "lights": [
+        {
+          "at": [
+            -6,
+            0.5,
+            -0.5
+          ],
+          "color": "#ff7030",
+          "intensity": 5,
+          "distance": 3.5
+        },
+        {
+          "at": [
+            -3.2,
+            2.9,
+            4.3
+          ],
+          "color": "#ffe2b8",
+          "intensity": 3,
+          "distance": 5
+        },
+        {
+          "at": [
+            3.4,
+            2.9,
+            4.3
+          ],
+          "color": "#ffe2b8",
+          "intensity": 3,
+          "distance": 5
+        },
+        {
+          "at": [
+            0,
+            2.6,
+            1
+          ],
+          "color": "#d8e4f0",
+          "intensity": 4,
+          "distance": 9
+        },
+        {
+          "at": [
+            1.6,
+            1.5,
+            -3.3
+          ],
+          "color": "#ffb060",
+          "intensity": 2.5,
+          "distance": 3
+        }
+      ]
+    },
+    {
+      "box": [
+        2.8,
+        -0.5,
+        -8.6,
+        7,
+        3,
+        -5.3
+      ],
+      "ambient": 0.16,
+      "fill": 2.2,
+      "exposure": 1.15,
+      "lights": [
+        {
+          "at": [
+            5,
+            1.3,
+            -7
+          ],
+          "color": "#ffbc78",
+          "intensity": 20,
+          "distance": 5
+        },
+        {
+          "at": [
+            3.6,
+            2.2,
+            -5.9
+          ],
+          "color": "#ffb070",
+          "intensity": 3,
+          "distance": 4
+        }
+      ]
+    }
+  ],
+  "camera": {
+    "near": 0.1,
+    "far": 300,
+    "min": [
+      -6.85,
+      0.4,
+      -8.45
+    ],
+    "max": [
+      6.85,
+      3.35,
+      4.85
+    ],
+    "maxDistance": 12
+  },
+  "materials": {
+    "ground": {
+      "type": "masonry",
+      "a": "#9a7658",
+      "b": "#b08d6c",
+      "c": "#8a7c70",
+      "mortar": "#5d4636",
+      "block": [
+        1.1,
+        0.8
+      ],
+      "stones": 0.36,
+      "joint": 0.03,
+      "relief": 0.045,
+      "variance": 0.55,
+      "grime": 0.35,
+      "ground": true,
+      "roads": false
+    },
+    "barrel": {
+      "type": "wood",
+      "a": "#6a4a30",
+      "b": "#7c5a3a",
+      "c": "#5f4a3a",
+      "plank": [
+        0.105,
+        1.4
+      ],
+      "relief": 0.05,
+      "variance": 0.45,
+      "seed": 4.4
+    },
+    "iron": {
+      "type": "metal",
+      "color": "#2e2a28",
+      "roughness": 0.55,
+      "metalness": 0.7
+    },
+    "brass": {
+      "type": "metal",
+      "color": "#a8823e",
+      "roughness": 0.38,
+      "metalness": 0.85
+    },
+    "pottery": {
+      "type": "plain",
+      "color": "#a45a36",
+      "roughness": 0.7
+    },
+    "crate": {
+      "type": "wood",
+      "a": "#8a6a48",
+      "b": "#9c7a52",
+      "c": "#7a6a58",
+      "plank": [
+        0.2,
+        1.2
+      ],
+      "relief": 0.045,
+      "variance": 0.4,
+      "seed": 2.6
+    },
+    "crateDark": {
+      "type": "wood",
+      "a": "#4a3526",
+      "b": "#5a4230",
+      "c": "#403830",
+      "plank": [
+        0,
+        40
+      ],
+      "relief": 0.03,
+      "seed": 8.8
+    },
+    "sack": {
+      "type": "burlap",
+      "color": "#c2b08c"
+    },
+    "sackB": {
+      "type": "burlap",
+      "color": "#a08a68"
+    },
+    "plasterB": {
+      "type": "masonry",
+      "a": "#a88462",
+      "b": "#b8966e",
+      "c": "#8f8070",
+      "block": [
+        40,
+        40
+      ],
+      "grime": 1.3
+    },
+    "dark": {
+      "type": "masonry",
+      "a": "#6a4a3a",
+      "b": "#7f624d",
+      "c": "#5a5553",
+      "block": [
+        2.4,
+        1.2
+      ],
+      "grime": 1.3,
+      "relief": 0.08
+    },
+    "roof": {
+      "type": "masonry",
+      "a": "#5a3a30",
+      "b": "#7a4a38",
+      "c": "#4f4a48",
+      "mortar": "#2c2320",
+      "block": [
+        0.55,
+        0.34
+      ],
+      "joint": 0.035,
+      "relief": 0.07,
+      "grime": 0.7
+    },
+    "fire": {
+      "type": "fire",
+      "color": "#ff7a26"
+    },
+    "coal": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#c2360c",
+      "emissiveIntensity": 1.5
+    },
+    "void": {
+      "type": "plain",
+      "color": "#0d0a09",
+      "roughness": 1
+    },
+    "floor": {
+      "type": "painted",
+      "map": "/stage/textures/floor-worn.jpg",
+      "tint": "#cdb8a2",
+      "plank": [
+        0.26,
+        3.2
+      ],
+      "size": [
+        0.6,
+        1.8
+      ],
+      "relief": 0.05,
+      "grime": 1,
+      "nails": 0.5,
+      "variance": 0.3
+    },
+    "timber": {
+      "type": "painted",
+      "map": "/stage/textures/timber-hold.jpg",
+      "tint": "#a08672",
+      "plank": [
+        0,
+        40
+      ],
+      "size": [
+        0.7,
+        2.2
+      ],
+      "relief": 0.1,
+      "grime": 1.2,
+      "variance": 0.25
+    },
+    "ceiling": {
+      "type": "painted",
+      "map": "/stage/textures/timber-hold.jpg",
+      "tint": "#6e5c50",
+      "plank": [
+        0.2,
+        40
+      ],
+      "size": [
+        0.7,
+        2.2
+      ],
+      "relief": 0.1,
+      "grime": 1.5
+    },
+    "oak": {
+      "type": "painted",
+      "map": "/stage/textures/door-oak.jpg",
+      "tint": "#d0b498",
+      "plank": [
+        0.2,
+        2.4
+      ],
+      "size": [
+        0.6,
+        1.8
+      ],
+      "relief": 0.1,
+      "grime": 0.9
+    },
+    "oakDark": {
+      "type": "painted",
+      "map": "/stage/textures/door-oak.jpg",
+      "tint": "#9a7c64",
+      "plank": [
+        0.12,
+        2.4
+      ],
+      "size": [
+        0.6,
+        1.8
+      ],
+      "relief": 0.1,
+      "grime": 1.1
+    },
+    "panel": {
+      "type": "painted",
+      "map": "/stage/textures/cabin-planks.jpg",
+      "tint": "#a88a7a",
+      "plank": [
+        0.16,
+        40
+      ],
+      "size": [
+        0.5,
+        1.6
+      ],
+      "relief": 0.14,
+      "grime": 0.9,
+      "variance": 0.35
+    },
+    "boards": {
+      "type": "painted",
+      "map": "/stage/textures/timber-hold.jpg",
+      "tint": "#dcb88e",
+      "plank": [
+        0.26,
+        40
+      ],
+      "size": [
+        0.7,
+        2.2
+      ],
+      "relief": 0.08,
+      "grime": 0.9,
+      "variance": 0.35
+    },
+    "door": {
+      "type": "painted",
+      "map": "/stage/textures/door-oak.jpg",
+      "tint": "#ffffff",
+      "plank": [
+        0,
+        12
+      ],
+      "size": [
+        0.6,
+        1.8
+      ],
+      "relief": 0.14,
+      "grime": 0.6
+    },
+    "plaster": {
+      "type": "rock",
+      "a": "#76685a",
+      "b": "#928270",
+      "moss": "#56483c",
+      "mossLight": "#6a5c4e",
+      "lichen": "#a29280",
+      "mossAmount": 0.3,
+      "lichenAmount": 0.2,
+      "relief": 0.2,
+      "scale": 1.4
+    },
+    "hearthApron": {
+      "type": "masonry",
+      "a": "#5a524c",
+      "b": "#6a6058",
+      "c": "#4c4642",
+      "mortar": "#2e2824",
+      "block": [
+        0.7,
+        0.5
+      ],
+      "joint": 0.03,
+      "relief": 0.03,
+      "variance": 0.6,
+      "grime": 1.6
+    },
+    "hearthStone": {
+      "type": "rock",
+      "a": "#4a4440",
+      "b": "#6a6258",
+      "moss": "#2e2a26",
+      "mossLight": "#3e3832",
+      "lichen": "#7a7266",
+      "mossAmount": 0.4,
+      "lichenAmount": 0.08,
+      "relief": 0.8,
+      "scale": 0.6
+    },
+    "hearthMortar": {
+      "type": "plain",
+      "color": "#2e2824",
+      "roughness": 1
+    },
+    "soot": {
+      "type": "plain",
+      "color": "#171310",
+      "roughness": 1
+    },
+    "log": {
+      "type": "wood",
+      "a": "#4a3426",
+      "b": "#5c4232",
+      "c": "#3a2c22",
+      "plank": [
+        0,
+        40
+      ],
+      "relief": 0.05,
+      "seed": 5.3
+    },
+    "roast": {
+      "type": "plain",
+      "color": "#6a3a20",
+      "roughness": 0.6
+    },
+    "roastDark": {
+      "type": "plain",
+      "color": "#4c2410",
+      "roughness": 0.5
+    },
+    "bread": {
+      "type": "plain",
+      "color": "#b47a3e",
+      "roughness": 0.8
+    },
+    "cheese": {
+      "type": "plain",
+      "color": "#d8b456",
+      "roughness": 0.7
+    },
+    "pewter": {
+      "type": "metal",
+      "color": "#8e8c88",
+      "roughness": 0.45,
+      "metalness": 0.7
+    },
+    "steel": {
+      "type": "metal",
+      "color": "#9a9ea2",
+      "roughness": 0.35,
+      "metalness": 0.85
+    },
+    "bottleGreen": {
+      "type": "plain",
+      "color": "#2a4a2c",
+      "roughness": 0.2
+    },
+    "bottleBrown": {
+      "type": "plain",
+      "color": "#4c2c14",
+      "roughness": 0.2
+    },
+    "cloth": {
+      "type": "burlap",
+      "color": "#c8b898"
+    },
+    "rug": {
+      "type": "plain",
+      "color": "#4a3428",
+      "roughness": 1
+    },
+    "shield": {
+      "type": "plain",
+      "color": "#5a3026",
+      "roughness": 0.7
+    },
+    "lead": {
+      "type": "metal",
+      "color": "#2a2826",
+      "roughness": 0.6,
+      "metalness": 0.4
+    },
+    "candle": {
+      "type": "plain",
+      "color": "#e8dcc0",
+      "roughness": 0.9
+    },
+    "bone": {
+      "type": "rock",
+      "a": "#a29274",
+      "b": "#d8ccae",
+      "moss": "#7e705a",
+      "mossLight": "#a49478",
+      "lichen": "#c8bc9e",
+      "mossAmount": 0.25,
+      "lichenAmount": 0.1,
+      "relief": 0.5,
+      "scale": 0.5
+    },
+    "candleFlame": {
+      "type": "plain",
+      "color": "#2a2420",
+      "roughness": 1
+    },
+    "lamp": {
+      "type": "plain",
+      "color": "#3a2a1a",
+      "roughness": 0.5
+    },
+    "glass": {
+      "type": "glass",
+      "color": "#eef2f0",
+      "opacity": 0.1,
+      "roughness": 0.1
+    },
+    "glassOut": {
+      "type": "glass",
+      "color": "#c8d4dc",
+      "opacity": 0.2,
+      "roughness": 0.1
+    },
+    "shaft": {
+      "type": "glow",
+      "color": "#ffe2b4",
+      "opacity": 0.07
+    }
+  },
+  "objects": [
+    {
+      "type": "box",
+      "at": [
+        0,
+        -0.12,
+        6
+      ],
+      "size": [
+        90,
+        0.1,
+        80
+      ],
+      "material": "ground"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        -0.1,
+        0
+      ],
+      "size": [
+        14.6,
+        0.1,
+        10.6
+      ],
+      "material": "floor"
+    },
+    {
+      "type": "box",
+      "at": [
+        4.9,
+        -0.1,
+        -6.95
+      ],
+      "size": [
+        4.8,
+        0.1,
+        3.6
+      ],
+      "material": "floor"
+    },
+    {
+      "type": "wall",
+      "at": [
+        0,
+        5.15
+      ],
+      "yaw": -180,
+      "length": 14.6,
+      "height": 3.5,
+      "thickness": 0.3,
+      "a": {
+        "finish": "plaster",
+        "wainscot": 1,
+        "studs": 1.4,
+        "rail": 2.45
+      },
+      "b": {
+        "finish": "plaster",
+        "studs": 1.2
+      },
+      "openings": [
+        {
+          "at": -0.6,
+          "width": 1.2,
+          "height": 2.2,
+          "kind": "door",
+          "leaf": 78
+        },
+        {
+          "at": 5,
+          "width": 1.1,
+          "height": 1.3,
+          "sill": 0.95,
+          "kind": "window",
+          "panes": [
+            2,
+            4
+          ]
+        },
+        {
+          "at": 2.4,
+          "width": 1.1,
+          "height": 1.3,
+          "sill": 0.95,
+          "kind": "window",
+          "panes": [
+            2,
+            4
+          ]
+        },
+        {
+          "at": -3.2,
+          "width": 1.1,
+          "height": 1.3,
+          "sill": 0.95,
+          "kind": "window",
+          "panes": [
+            2,
+            4
+          ]
+        },
+        {
+          "at": -5.6,
+          "width": 1.1,
+          "height": 1.3,
+          "sill": 0.95,
+          "kind": "window",
+          "panes": [
+            2,
+            4
+          ]
+        }
+      ]
+    },
+    {
+      "type": "wall",
+      "at": [
+        0,
+        -5.15
+      ],
+      "yaw": 0,
+      "length": 14.6,
+      "height": 3.5,
+      "thickness": 0.3,
+      "a": {
+        "finish": "plaster",
+        "wainscot": 1,
+        "studs": 1.4,
+        "rail": 2.45
+      },
+      "b": {
+        "finish": "boards"
+      },
+      "openings": [
+        {
+          "at": -3.95,
+          "width": 0.95,
+          "height": 2.05,
+          "kind": "doorway"
+        },
+        {
+          "at": 4.1,
+          "width": 1,
+          "height": 2.05,
+          "kind": "doorway"
+        }
+      ]
+    },
+    {
+      "type": "wall",
+      "at": [
+        7.15,
+        0
+      ],
+      "yaw": -90,
+      "length": 10,
+      "height": 3.5,
+      "thickness": 0.3,
+      "a": {
+        "finish": "plaster",
+        "wainscot": 1,
+        "studs": 1.4,
+        "rail": 2.45
+      },
+      "openings": [
+        {
+          "at": 3.5,
+          "width": 0.9,
+          "height": 1.2,
+          "sill": 1,
+          "kind": "window",
+          "panes": [
+            2,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "type": "wall",
+      "at": [
+        -7.15,
+        0
+      ],
+      "yaw": 90,
+      "length": 10,
+      "height": 3.5,
+      "thickness": 0.3,
+      "a": {
+        "finish": "plaster",
+        "wainscot": 1,
+        "studs": 1.4,
+        "rail": 2.45
+      },
+      "openings": [
+        {
+          "at": -3.6,
+          "width": 0.9,
+          "height": 1.2,
+          "sill": 1,
+          "kind": "window",
+          "panes": [
+            2,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "type": "wall",
+      "at": [
+        4.9,
+        -8.75
+      ],
+      "yaw": 0,
+      "length": 4.8,
+      "height": 2.9,
+      "thickness": 0.3,
+      "a": {
+        "finish": "boards"
+      },
+      "openings": []
+    },
+    {
+      "type": "wall",
+      "at": [
+        7.15,
+        -6.95
+      ],
+      "yaw": -90,
+      "length": 3.3,
+      "height": 2.9,
+      "thickness": 0.3,
+      "a": {
+        "finish": "boards"
+      },
+      "openings": []
+    },
+    {
+      "type": "wall",
+      "at": [
+        2.65,
+        -6.95
+      ],
+      "yaw": 90,
+      "length": 3.3,
+      "height": 2.9,
+      "thickness": 0.3,
+      "a": {
+        "finish": "boards"
+      },
+      "openings": []
+    },
+    {
+      "type": "box",
+      "at": [
+        -3.95,
+        0,
+        -5.9
+      ],
+      "size": [
+        1.4,
+        2.4,
+        1.2
+      ],
+      "material": "void"
+    },
+    {
+      "type": "box",
+      "at": [
+        -0.73,
+        3.5,
+        0
+      ],
+      "size": [
+        13.15,
+        0.12,
+        10.6
+      ],
+      "material": "ceiling"
+    },
+    {
+      "type": "box",
+      "at": [
+        6.57,
+        3.5,
+        2.05
+      ],
+      "size": [
+        1.45,
+        0.12,
+        6.5
+      ],
+      "material": "ceiling"
+    },
+    {
+      "type": "box",
+      "at": [
+        7.15,
+        3.5,
+        -3.25
+      ],
+      "size": [
+        0.3,
+        0.12,
+        4.1
+      ],
+      "material": "ceiling"
+    },
+    {
+      "type": "box",
+      "at": [
+        6.43,
+        3.5,
+        -5.15
+      ],
+      "size": [
+        1.15,
+        0.12,
+        0.3
+      ],
+      "material": "ceiling"
+    },
+    {
+      "type": "box",
+      "at": [
+        5.85,
+        3.5,
+        -3.1
+      ],
+      "size": [
+        0.1,
+        1.6,
+        3.9
+      ],
+      "material": "void"
+    },
+    {
+      "type": "box",
+      "at": [
+        7.02,
+        3.5,
+        -3.1
+      ],
+      "size": [
+        0.1,
+        1.6,
+        3.9
+      ],
+      "material": "void"
+    },
+    {
+      "type": "box",
+      "at": [
+        6.43,
+        3.5,
+        -1.17
+      ],
+      "size": [
+        1.2,
+        1.6,
+        0.1
+      ],
+      "material": "void"
+    },
+    {
+      "type": "box",
+      "at": [
+        6.43,
+        3.5,
+        -5.03
+      ],
+      "size": [
+        1.2,
+        1.6,
+        0.1
+      ],
+      "material": "void"
+    },
+    {
+      "type": "box",
+      "at": [
+        6.43,
+        5.1,
+        -3.1
+      ],
+      "size": [
+        1.3,
+        0.1,
+        4
+      ],
+      "material": "void"
+    },
+    {
+      "type": "box",
+      "at": [
+        -6,
+        3.2,
+        0
+      ],
+      "size": [
+        0.28,
+        0.3,
+        10
+      ],
+      "material": "timber"
+    },
+    {
+      "type": "box",
+      "at": [
+        -4.3,
+        3.2,
+        0
+      ],
+      "size": [
+        0.28,
+        0.3,
+        10
+      ],
+      "material": "timber"
+    },
+    {
+      "type": "box",
+      "at": [
+        -2.6,
+        3.2,
+        0
+      ],
+      "size": [
+        0.28,
+        0.3,
+        10
+      ],
+      "material": "timber"
+    },
+    {
+      "type": "box",
+      "at": [
+        -0.9,
+        3.2,
+        0
+      ],
+      "size": [
+        0.28,
+        0.3,
+        10
+      ],
+      "material": "timber"
+    },
+    {
+      "type": "box",
+      "at": [
+        0.8,
+        3.2,
+        0
+      ],
+      "size": [
+        0.28,
+        0.3,
+        10
+      ],
+      "material": "timber"
+    },
+    {
+      "type": "box",
+      "at": [
+        2.5,
+        3.2,
+        0
+      ],
+      "size": [
+        0.28,
+        0.3,
+        10
+      ],
+      "material": "timber"
+    },
+    {
+      "type": "box",
+      "at": [
+        4.2,
+        3.2,
+        0
+      ],
+      "size": [
+        0.28,
+        0.3,
+        10
+      ],
+      "material": "timber"
+    },
+    {
+      "type": "box",
+      "at": [
+        5.85,
+        3.2,
+        1.9
+      ],
+      "size": [
+        0.28,
+        0.3,
+        6.2
+      ],
+      "material": "timber"
+    },
+    {
+      "type": "box",
+      "at": [
+        -0.05,
+        3.36,
+        -3.2
+      ],
+      "size": [
+        11.8,
+        0.14,
+        0.12
+      ],
+      "material": "timber"
+    },
+    {
+      "type": "box",
+      "at": [
+        -0.05,
+        3.36,
+        -1.4
+      ],
+      "size": [
+        11.8,
+        0.14,
+        0.12
+      ],
+      "material": "timber"
+    },
+    {
+      "type": "box",
+      "at": [
+        -0.05,
+        3.36,
+        0.4
+      ],
+      "size": [
+        11.8,
+        0.14,
+        0.12
+      ],
+      "material": "timber"
+    },
+    {
+      "type": "box",
+      "at": [
+        -0.05,
+        3.36,
+        2.2
+      ],
+      "size": [
+        11.8,
+        0.14,
+        0.12
+      ],
+      "material": "timber"
+    },
+    {
+      "type": "box",
+      "at": [
+        -0.05,
+        3.36,
+        4
+      ],
+      "size": [
+        11.8,
+        0.14,
+        0.12
+      ],
+      "material": "timber"
+    },
+    {
+      "type": "box",
+      "at": [
+        4.9,
+        2.9,
+        -6.95
+      ],
+      "size": [
+        4.8,
+        0.12,
+        3.6
+      ],
+      "material": "ceiling"
+    },
+    {
+      "type": "box",
+      "at": [
+        3.6,
+        2.6799999999999997,
+        -6.95
+      ],
+      "size": [
+        0.22,
+        0.22,
+        3.3
+      ],
+      "material": "timber"
+    },
+    {
+      "type": "box",
+      "at": [
+        4.9,
+        2.6799999999999997,
+        -6.95
+      ],
+      "size": [
+        0.22,
+        0.22,
+        3.3
+      ],
+      "material": "timber"
+    },
+    {
+      "type": "box",
+      "at": [
+        6.2,
+        2.6799999999999997,
+        -6.95
+      ],
+      "size": [
+        0.22,
+        0.22,
+        3.3
+      ],
+      "material": "timber"
+    },
+    {
+      "type": "house",
+      "at": [
+        -10.5,
+        19.6
+      ],
+      "yaw": 180,
+      "w": 8.5,
+      "d": 6,
+      "h": 7
+    },
+    {
+      "type": "house",
+      "at": [
+        -1.5,
+        20
+      ],
+      "yaw": 180,
+      "w": 8,
+      "d": 6,
+      "h": 6.6
+    },
+    {
+      "type": "house",
+      "at": [
+        7.5,
+        19.5
+      ],
+      "yaw": 180,
+      "w": 8.5,
+      "d": 6,
+      "h": 7
+    },
+    {
+      "type": "house",
+      "at": [
+        16.5,
+        19.8
+      ],
+      "yaw": 180,
+      "w": 8,
+      "d": 6,
+      "h": 7
+    },
+    {
+      "type": "house",
+      "at": [
+        -15.5,
+        1
+      ],
+      "yaw": 90,
+      "w": 8,
+      "d": 6,
+      "h": 9
+    },
+    {
+      "type": "house",
+      "at": [
+        15.5,
+        0
+      ],
+      "yaw": -90,
+      "w": 8,
+      "d": 6,
+      "h": 8.5
+    },
+    {
+      "type": "hearth",
+      "id": "hearth",
+      "at": [
+        -6.1,
+        -0.5
+      ],
+      "yaw": 90,
+      "width": 3,
+      "depth": 0.9,
+      "height": 3.5,
+      "fire": "embers",
+      "spit": false,
+      "wood": "right"
+    },
+    {
+      "type": "dragonSkull",
+      "id": "dragonbone",
+      "at": [
+        -6.19,
+        2.5,
+        -0.5
+      ],
+      "yaw": 90,
+      "length": 1.1,
+      "jaw": 18
+    },
+    {
+      "type": "box",
+      "at": [
+        -4.75,
+        0.005,
+        -0.5
+      ],
+      "size": [
+        1.3,
+        0.02,
+        1.9
+      ],
+      "material": "rug"
+    },
+    {
+      "type": "bar",
+      "id": "bar",
+      "at": [
+        -0.4,
+        -3
+      ],
+      "length": 5.8,
+      "back": 1.95,
+      "gap": "left",
+      "kegs": 3,
+      "materials": {
+        "top": "oak",
+        "seat": "oakDark"
+      }
+    },
+    {
+      "type": "stairs",
+      "at": [
+        6.45,
+        1.4
+      ],
+      "width": 1,
+      "rise": 3.5,
+      "run": 4.8,
+      "rail": "left",
+      "materials": {
+        "tread": "oak",
+        "riser": "timber"
+      }
+    },
+    {
+      "type": "barrel",
+      "at": [
+        6.5,
+        -2.3
+      ],
+      "r": 0.32,
+      "h": 0.9
+    },
+    {
+      "type": "barrel",
+      "at": [
+        6.45,
+        -1.55
+      ],
+      "r": 0.3,
+      "h": 0.85
+    },
+    {
+      "type": "crate",
+      "at": [
+        6.45,
+        -0.75
+      ],
+      "yaw": 6,
+      "size": 0.6
+    },
+    {
+      "type": "sack",
+      "at": [
+        6.4,
+        0
+      ],
+      "size": 0.55
+    },
+    {
+      "type": "table",
+      "at": [
+        -2.6,
+        0.4
+      ],
+      "length": 2.4,
+      "width": 0.85,
+      "setting": 8,
+      "candle": true,
+      "materials": {
+        "top": "oak",
+        "seat": "oakDark"
+      }
+    },
+    {
+      "type": "stool",
+      "at": [
+        -3.4,
+        1.15
+      ],
+      "materials": {
+        "top": "oak",
+        "seat": "oakDark"
+      }
+    },
+    {
+      "type": "stool",
+      "at": [
+        -2.2,
+        1.12
+      ],
+      "materials": {
+        "top": "oak",
+        "seat": "oakDark"
+      }
+    },
+    {
+      "type": "stool",
+      "at": [
+        -3.2,
+        -0.4
+      ],
+      "materials": {
+        "top": "oak",
+        "seat": "oakDark"
+      }
+    },
+    {
+      "type": "table",
+      "at": [
+        0.8,
+        1.8
+      ],
+      "kind": "round",
+      "radius": 0.55,
+      "setting": 5,
+      "materials": {
+        "top": "oak",
+        "seat": "oakDark"
+      }
+    },
+    {
+      "type": "stool",
+      "at": [
+        0.05,
+        1.45
+      ],
+      "materials": {
+        "top": "oak",
+        "seat": "oakDark"
+      }
+    },
+    {
+      "type": "stool",
+      "at": [
+        0.55,
+        0.95
+      ],
+      "materials": {
+        "top": "oak",
+        "seat": "oakDark"
+      }
+    },
+    {
+      "type": "table",
+      "at": [
+        -2.6,
+        3.4
+      ],
+      "kind": "round",
+      "radius": 0.5,
+      "setting": 4,
+      "candle": true,
+      "materials": {
+        "top": "oak",
+        "seat": "oakDark"
+      }
+    },
+    {
+      "type": "stool",
+      "at": [
+        -2.6,
+        4.2
+      ],
+      "materials": {
+        "top": "oak",
+        "seat": "oakDark"
+      }
+    },
+    {
+      "type": "stool",
+      "at": [
+        -3.35,
+        3.9
+      ],
+      "materials": {
+        "top": "oak",
+        "seat": "oakDark"
+      }
+    },
+    {
+      "type": "table",
+      "id": "corner",
+      "at": [
+        5.4,
+        3.3
+      ],
+      "length": 1.6,
+      "width": 0.8,
+      "setting": 6,
+      "candle": true,
+      "materials": {
+        "top": "oak",
+        "seat": "oakDark"
+      }
+    },
+    {
+      "type": "bench",
+      "at": [
+        5.4,
+        4.6
+      ],
+      "yaw": 180,
+      "length": 1.7,
+      "back": 1.35,
+      "materials": {
+        "top": "oak",
+        "seat": "oakDark"
+      }
+    },
+    {
+      "type": "bench",
+      "at": [
+        6.55,
+        3.1
+      ],
+      "yaw": -90,
+      "length": 1.5,
+      "back": 1.35,
+      "materials": {
+        "top": "oak",
+        "seat": "oakDark"
+      }
+    },
+    {
+      "type": "table",
+      "at": [
+        -5.4,
+        -4
+      ],
+      "length": 1.1,
+      "width": 0.7,
+      "setting": 2,
+      "candle": true,
+      "materials": {
+        "top": "oak",
+        "seat": "oakDark"
+      }
+    },
+    {
+      "type": "barrel",
+      "at": [
+        -1.2,
+        -1.6
+      ],
+      "r": 0.32,
+      "h": 1
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -1.2,
+        1,
+        -1.6
+      ],
+      "radius": 0.42,
+      "height": 0.05,
+      "material": "oak"
+    },
+    {
+      "type": "barrel",
+      "at": [
+        3.4,
+        -1.4
+      ],
+      "r": 0.32,
+      "h": 1
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        3.4,
+        1,
+        -1.4
+      ],
+      "radius": 0.42,
+      "height": 0.05,
+      "material": "oak"
+    },
+    {
+      "type": "chandelier",
+      "at": [
+        -2.6,
+        3.2,
+        0.4
+      ],
+      "radius": 0.55,
+      "candles": 8,
+      "drop": 0.75
+    },
+    {
+      "type": "chandelier",
+      "at": [
+        0.8,
+        3.2,
+        1.8
+      ],
+      "radius": 0.5,
+      "candles": 7,
+      "drop": 0.75
+    },
+    {
+      "type": "table",
+      "id": "backroom",
+      "at": [
+        5,
+        -7
+      ],
+      "length": 1.8,
+      "width": 0.9,
+      "setting": 2,
+      "materials": {
+        "top": "oak",
+        "seat": "oakDark"
+      }
+    },
+    {
+      "type": "chair",
+      "at": [
+        4.3,
+        -6.3
+      ],
+      "yaw": 170,
+      "materials": {
+        "seat": "oakDark"
+      }
+    },
+    {
+      "type": "chair",
+      "at": [
+        5.6,
+        -6.25
+      ],
+      "yaw": 196,
+      "materials": {
+        "seat": "oak"
+      }
+    },
+    {
+      "type": "chair",
+      "at": [
+        4.5,
+        -7.75
+      ],
+      "yaw": 8,
+      "materials": {
+        "seat": "timber"
+      }
+    },
+    {
+      "type": "stool",
+      "at": [
+        5.7,
+        -7.7
+      ],
+      "materials": {
+        "top": "oak",
+        "seat": "oakDark"
+      }
+    },
+    {
+      "type": "chair",
+      "at": [
+        6.25,
+        -7
+      ],
+      "yaw": -100,
+      "materials": {
+        "seat": "oakDark"
+      }
+    },
+    {
+      "type": "crate",
+      "at": [
+        3.3,
+        -8.1
+      ],
+      "yaw": 10,
+      "size": 0.7
+    },
+    {
+      "type": "crate",
+      "at": [
+        3.35,
+        0.7,
+        -8.1
+      ],
+      "yaw": -6,
+      "size": 0.5
+    },
+    {
+      "type": "barrel",
+      "at": [
+        6.6,
+        -8.15
+      ],
+      "r": 0.3,
+      "h": 0.85
+    },
+    {
+      "type": "sack",
+      "at": [
+        3.2,
+        -7.2
+      ],
+      "size": 0.6
+    },
+    {
+      "type": "box",
+      "at": [
+        6.95,
+        1.2,
+        -6.4
+      ],
+      "size": [
+        0.3,
+        0.04,
+        1.6
+      ],
+      "material": "oak"
+    },
+    {
+      "type": "box",
+      "at": [
+        6.95,
+        1.75,
+        -6.4
+      ],
+      "size": [
+        0.3,
+        0.04,
+        1.6
+      ],
+      "material": "oak"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        6.95,
+        1.75,
+        4.2
+      ],
+      "radius": 0.075,
+      "height": 0.05,
+      "material": "brass"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        6.95,
+        1.8,
+        4.2
+      ],
+      "radius": 0.06,
+      "height": 0.2,
+      "material": "lamp"
+    },
+    {
+      "type": "beam",
+      "from": [
+        7,
+        1.8,
+        4.25
+      ],
+      "to": [
+        7,
+        2,
+        4.25
+      ],
+      "radius": 0.01,
+      "material": "iron"
+    },
+    {
+      "type": "beam",
+      "from": [
+        6.9,
+        1.8,
+        4.25
+      ],
+      "to": [
+        6.9,
+        2,
+        4.25
+      ],
+      "radius": 0.01,
+      "material": "iron"
+    },
+    {
+      "type": "beam",
+      "from": [
+        6.9,
+        1.8,
+        4.15
+      ],
+      "to": [
+        6.9,
+        2,
+        4.15
+      ],
+      "radius": 0.01,
+      "material": "iron"
+    },
+    {
+      "type": "beam",
+      "from": [
+        7,
+        1.8,
+        4.15
+      ],
+      "to": [
+        7,
+        2,
+        4.15
+      ],
+      "radius": 0.01,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        6.95,
+        2,
+        4.2
+      ],
+      "radius": [
+        0.085,
+        0.03
+      ],
+      "height": 0.08,
+      "material": "brass"
+    },
+    {
+      "type": "torus",
+      "at": [
+        6.95,
+        2.11,
+        4.2
+      ],
+      "radius": 0.035,
+      "tube": 0.01,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -0.4,
+        2.3,
+        -3.15
+      ],
+      "radius": 0.075,
+      "height": 0.05,
+      "material": "brass"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -0.4,
+        2.3499999999999996,
+        -3.15
+      ],
+      "radius": 0.06,
+      "height": 0.2,
+      "material": "lamp"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -0.35,
+        2.3499999999999996,
+        -3.1
+      ],
+      "to": [
+        -0.35,
+        2.55,
+        -3.1
+      ],
+      "radius": 0.01,
+      "material": "iron"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -0.45,
+        2.3499999999999996,
+        -3.1
+      ],
+      "to": [
+        -0.45,
+        2.55,
+        -3.1
+      ],
+      "radius": 0.01,
+      "material": "iron"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -0.45,
+        2.3499999999999996,
+        -3.2
+      ],
+      "to": [
+        -0.45,
+        2.55,
+        -3.2
+      ],
+      "radius": 0.01,
+      "material": "iron"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -0.35,
+        2.3499999999999996,
+        -3.2
+      ],
+      "to": [
+        -0.35,
+        2.55,
+        -3.2
+      ],
+      "radius": 0.01,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -0.4,
+        2.55,
+        -3.15
+      ],
+      "radius": [
+        0.085,
+        0.03
+      ],
+      "height": 0.08,
+      "material": "brass"
+    },
+    {
+      "type": "torus",
+      "at": [
+        -0.4,
+        2.6599999999999997,
+        -3.15
+      ],
+      "radius": 0.035,
+      "tube": 0.01,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        2.2,
+        2.3,
+        -3.15
+      ],
+      "radius": 0.075,
+      "height": 0.05,
+      "material": "brass"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        2.2,
+        2.3499999999999996,
+        -3.15
+      ],
+      "radius": 0.06,
+      "height": 0.2,
+      "material": "lamp"
+    },
+    {
+      "type": "beam",
+      "from": [
+        2.25,
+        2.3499999999999996,
+        -3.1
+      ],
+      "to": [
+        2.25,
+        2.55,
+        -3.1
+      ],
+      "radius": 0.01,
+      "material": "iron"
+    },
+    {
+      "type": "beam",
+      "from": [
+        2.15,
+        2.3499999999999996,
+        -3.1
+      ],
+      "to": [
+        2.15,
+        2.55,
+        -3.1
+      ],
+      "radius": 0.01,
+      "material": "iron"
+    },
+    {
+      "type": "beam",
+      "from": [
+        2.15,
+        2.3499999999999996,
+        -3.2
+      ],
+      "to": [
+        2.15,
+        2.55,
+        -3.2
+      ],
+      "radius": 0.01,
+      "material": "iron"
+    },
+    {
+      "type": "beam",
+      "from": [
+        2.25,
+        2.3499999999999996,
+        -3.2
+      ],
+      "to": [
+        2.25,
+        2.55,
+        -3.2
+      ],
+      "radius": 0.01,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        2.2,
+        2.55,
+        -3.15
+      ],
+      "radius": [
+        0.085,
+        0.03
+      ],
+      "height": 0.08,
+      "material": "brass"
+    },
+    {
+      "type": "torus",
+      "at": [
+        2.2,
+        2.6599999999999997,
+        -3.15
+      ],
+      "radius": 0.035,
+      "tube": 0.01,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        5,
+        0.76,
+        -7
+      ],
+      "radius": 0.075,
+      "height": 0.05,
+      "material": "brass"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        5,
+        0.81,
+        -7
+      ],
+      "radius": 0.06,
+      "height": 0.2,
+      "material": "lamp"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.05,
+        0.81,
+        -6.95
+      ],
+      "to": [
+        5.05,
+        1.01,
+        -6.95
+      ],
+      "radius": 0.01,
+      "material": "iron"
+    },
+    {
+      "type": "beam",
+      "from": [
+        4.95,
+        0.81,
+        -6.95
+      ],
+      "to": [
+        4.95,
+        1.01,
+        -6.95
+      ],
+      "radius": 0.01,
+      "material": "iron"
+    },
+    {
+      "type": "beam",
+      "from": [
+        4.95,
+        0.81,
+        -7.05
+      ],
+      "to": [
+        4.95,
+        1.01,
+        -7.05
+      ],
+      "radius": 0.01,
+      "material": "iron"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.05,
+        0.81,
+        -7.05
+      ],
+      "to": [
+        5.05,
+        1.01,
+        -7.05
+      ],
+      "radius": 0.01,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        5,
+        1.01,
+        -7
+      ],
+      "radius": [
+        0.085,
+        0.03
+      ],
+      "height": 0.08,
+      "material": "brass"
+    },
+    {
+      "type": "torus",
+      "at": [
+        5,
+        1.12,
+        -7
+      ],
+      "radius": 0.035,
+      "tube": 0.01,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        3.2,
+        2,
+        -4.97
+      ],
+      "radius": 0.38,
+      "height": 0.05,
+      "pitch": 90,
+      "material": "shield"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        3.2,
+        2,
+        -4.93
+      ],
+      "radius": 0.09,
+      "height": 0.05,
+      "pitch": 90,
+      "material": "iron"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -6.97,
+        1.85,
+        2.6
+      ],
+      "radius": 0.36,
+      "height": 0.05,
+      "roll": 90,
+      "material": "shield"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -6.93,
+        1.85,
+        2.6
+      ],
+      "radius": 0.08,
+      "height": 0.05,
+      "roll": 90,
+      "material": "iron"
+    },
+    {
+      "type": "box",
+      "at": [
+        -6.85,
+        1.62,
+        -3.6
+      ],
+      "size": [
+        0.28,
+        0.04,
+        1.6
+      ],
+      "material": "oak"
+    },
+    {
+      "type": "lathe",
+      "at": [
+        -6.85,
+        1.64,
+        -4.25
+      ],
+      "profile": [
+        [
+          0,
+          0
+        ],
+        [
+          0.05,
+          0
+        ],
+        [
+          0.06,
+          0.12
+        ],
+        [
+          0.03,
+          0.15
+        ],
+        [
+          0.03,
+          0.2
+        ]
+      ],
+      "segments": 14,
+      "material": "pewter"
+    },
+    {
+      "type": "lathe",
+      "at": [
+        -6.85,
+        1.64,
+        -3.95
+      ],
+      "profile": [
+        [
+          0,
+          0
+        ],
+        [
+          0.06,
+          0
+        ],
+        [
+          0.09,
+          0.1
+        ],
+        [
+          0.07,
+          0.2
+        ],
+        [
+          0.035,
+          0.24
+        ],
+        [
+          0.04,
+          0.26
+        ]
+      ],
+      "segments": 14,
+      "material": "pottery"
+    },
+    {
+      "type": "lathe",
+      "at": [
+        -6.85,
+        1.64,
+        -3.6
+      ],
+      "profile": [
+        [
+          0,
+          0
+        ],
+        [
+          0.05,
+          0
+        ],
+        [
+          0.06,
+          0.12
+        ],
+        [
+          0.03,
+          0.15
+        ],
+        [
+          0.03,
+          0.2
+        ]
+      ],
+      "segments": 14,
+      "material": "pewter"
+    },
+    {
+      "type": "lathe",
+      "at": [
+        -6.85,
+        1.64,
+        -3.25
+      ],
+      "profile": [
+        [
+          0,
+          0
+        ],
+        [
+          0.06,
+          0
+        ],
+        [
+          0.09,
+          0.1
+        ],
+        [
+          0.07,
+          0.2
+        ],
+        [
+          0.035,
+          0.24
+        ],
+        [
+          0.04,
+          0.26
+        ]
+      ],
+      "segments": 14,
+      "material": "pottery"
+    },
+    {
+      "type": "lathe",
+      "at": [
+        -6.85,
+        1.64,
+        -2.95
+      ],
+      "profile": [
+        [
+          0,
+          0
+        ],
+        [
+          0.05,
+          0
+        ],
+        [
+          0.06,
+          0.12
+        ],
+        [
+          0.03,
+          0.15
+        ],
+        [
+          0.03,
+          0.2
+        ]
+      ],
+      "segments": 14,
+      "material": "pewter"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5,
+        1.6,
+        5.05
+      ],
+      "to": [
+        -6.28,
+        0,
+        2.62
+      ],
+      "radius": 0.5,
+      "radiusTo": 0.62,
+      "segments": 12,
+      "material": "shaft"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -2.4,
+        1.6,
+        5.05
+      ],
+      "to": [
+        -3.68,
+        0,
+        2.62
+      ],
+      "radius": 0.5,
+      "radiusTo": 0.62,
+      "segments": 12,
+      "material": "shaft"
+    },
+    {
+      "type": "beam",
+      "from": [
+        3.2,
+        1.6,
+        5.05
+      ],
+      "to": [
+        1.92,
+        0,
+        2.62
+      ],
+      "radius": 0.5,
+      "radiusTo": 0.62,
+      "segments": 12,
+      "material": "shaft"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.6,
+        1.6,
+        5.05
+      ],
+      "to": [
+        4.32,
+        0,
+        2.62
+      ],
+      "radius": 0.5,
+      "radiusTo": 0.62,
+      "segments": 12,
+      "material": "shaft"
+    }
+  ],
+  "crowd": {
+    "library": "realm-of-myr",
+    "groups": [
+      {
+        "type": "points",
+        "people": [
+          {
+            "kind": "traveler",
+            "at": [
+              1.5,
+              -2.4
+            ],
+            "yaw": 190
+          }
+        ]
+      }
+    ]
+  },
+  "marks": {
+    "hearth": {
+      "at": [
+        -4.8,
+        1.3
+      ],
+      "label": "the hearth"
+    },
+    "bar": {
+      "at": [
+        -0.4,
+        -2.45
+      ],
+      "label": "the bar"
+    },
+    "cornerTable": {
+      "at": [
+        4.3,
+        2.5
+      ],
+      "label": "the corner table"
+    },
+    "frontDoor": {
+      "at": [
+        0.6,
+        4.1
+      ],
+      "label": "the front door"
+    },
+    "street": {
+      "at": [
+        0.6,
+        6.5
+      ],
+      "label": "the street outside the inn"
+    },
+    "stairs": {
+      "at": [
+        6.1,
+        2.1
+      ],
+      "label": "the foot of the stairs"
+    },
+    "backroomDoor": {
+      "at": [
+        4.1,
+        -4.35
+      ],
+      "label": "the backroom doorway"
+    },
+    "backroom": {
+      "at": [
+        5,
+        -6
+      ],
+      "label": "the backroom"
+    },
+    "kitchen": {
+      "at": [
+        -3.95,
+        -4.35
+      ],
+      "label": "the kitchen doorway"
+    },
+    "bard": {
+      "at": [
+        -4.6,
+        2.1
+      ],
+      "label": "the bard by the fire"
+    },
+    "darkCorner": {
+      "at": [
+        -4.6,
+        -3.2
+      ],
+      "label": "the dark corner"
+    },
+    "window": {
+      "at": [
+        -2.4,
+        4.4
+      ],
+      "label": "the street windows"
+    }
+  },
+  "shots": {
+    "morning": {
+      "position": [
+        -5,
+        1.75,
+        -2.6
+      ],
+      "target": [
+        1,
+        1.1,
+        4.2
+      ],
+      "fov": 56,
+      "label": "The common room"
+    },
+    "hearth": {
+      "position": [
+        -2.6,
+        1.55,
+        1.6
+      ],
+      "target": [
+        -6.4,
+        1.85,
+        -0.6
+      ],
+      "fov": 52,
+      "label": "The hearth"
+    },
+    "skull": {
+      "position": [
+        -3.9,
+        2.15,
+        0.9
+      ],
+      "target": [
+        -6.1,
+        2.45,
+        -0.5
+      ],
+      "fov": 44,
+      "label": "The dragon's skull"
+    },
+    "bar": {
+      "position": [
+        0.9,
+        1.65,
+        0.6
+      ],
+      "target": [
+        -0.6,
+        1.3,
+        -4.4
+      ],
+      "fov": 54,
+      "label": "The bar"
+    },
+    "table": {
+      "position": [
+        3,
+        1.75,
+        0.8
+      ],
+      "target": [
+        5.6,
+        1,
+        3.6
+      ],
+      "fov": 52,
+      "label": "The corner table"
+    },
+    "door": {
+      "position": [
+        -1.6,
+        1.7,
+        -0.6
+      ],
+      "target": [
+        0.6,
+        1.3,
+        5
+      ],
+      "fov": 52,
+      "label": "The front door"
+    },
+    "stairs": {
+      "position": [
+        2.4,
+        1.6,
+        3.6
+      ],
+      "target": [
+        6.4,
+        2,
+        -1.6
+      ],
+      "fov": 56,
+      "label": "The stairs"
+    },
+    "backroom": {
+      "position": [
+        3.25,
+        1.6,
+        -5.65
+      ],
+      "target": [
+        6.2,
+        0.8,
+        -8.1
+      ],
+      "fov": 62,
+      "label": "The backroom"
+    },
+    "darkCorner": {
+      "position": [
+        -2.9,
+        1.55,
+        -1.6
+      ],
+      "target": [
+        -5.8,
+        0.9,
+        -4.2
+      ],
+      "fov": 52,
+      "label": "The dark corner"
+    }
+  },
+  "life": {
+    "dust": {
+      "count": 260,
+      "box": [
+        -6.5,
+        0.2,
+        -1.5,
+        6.5,
+        3.2,
+        5
+      ]
+    }
+  }
+}

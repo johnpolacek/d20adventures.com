@@ -1,3 +1,5 @@
+import innSet from "@d20/stage/sets/realm-of-myr/dragonbone-inn.json"
+import innMorningSet from "@d20/stage/sets/realm-of-myr/dragonbone-inn-morning.json"
 import festivalSet from "@d20/stage/sets/realm-of-myr/kordavos-harvest-square.json"
 import conflictSet from "@d20/stage/sets/realm-of-myr/kordavos-harvest-square-conflict.json"
 import riverfrontSet from "@d20/stage/sets/realm-of-myr/kordavos-riverfront.json"
@@ -18,7 +20,10 @@ import theEscape from "@d20/stage/stagings/covert-cargo/the-escape.json"
 import theFake from "@d20/stage/stagings/covert-cargo/the-fake.json"
 import theShipment from "@d20/stage/stagings/covert-cargo/the-shipment.json"
 import theTransaction from "@d20/stage/stagings/covert-cargo/the-transaction.json"
+import anUnsolicitedOpportunity from "@d20/stage/stagings/march-of-davos/an-unsolicited-opportunity.json"
 import clanConflict from "@d20/stage/stagings/march-of-davos/clan-conflict.json"
+import morningAtTheDragonbone from "@d20/stage/stagings/march-of-davos/morning-at-the-dragonbone.json"
+import theDragonboneInn from "@d20/stage/stagings/march-of-davos/the-dragonbone-inn.json"
 import gateStaging from "@d20/stage/stagings/march-of-davos/the-gates-of-kordavos.json"
 import festivalStaging from "@d20/stage/stagings/march-of-davos/the-harvest-festival.json"
 import backHome from "@d20/stage/stagings/the-midnight-summons/back-home.json"
@@ -96,6 +101,34 @@ export const SCENES: Record<string, Scene> = {
       "At the south end of the festival square, where the street from the gate opens into it, Barok Redbeard and Larya Halloway face each other with two of their people behind each. Onlookers have drawn back into a ring around them. The party stands at the front of the crowd on the square's side.",
     party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
     spare: [[1.2, 11.4]],
+  },
+  // The Dragonbone Inn: its common room in the evening and at dawn, and the backroom behind the bar.
+  "the-dragonbone-inn": {
+    set: innSet,
+    staging: theDragonboneInn,
+    location: "Dragonbone Inn",
+    where:
+      "Evening in the common room of the Dragonbone Inn: a great stone hearth with a dragon's skull over the mantel, a bard by the fire, the bar along the back wall, stairs up to the rooms, a dark corner where two hooded strangers sit. Bram has brought the party to the corner table by the street windows. A scarred dockworker and a spectacled scholar watch them from a barrel by the bar.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[3.7, 3.7]],
+  },
+  "an-unsolicited-opportunity": {
+    set: innSet,
+    staging: anUnsolicitedOpportunity,
+    location: "Dragonbone Inn",
+    where:
+      "Late evening in the Dragonbone Inn's common room. Beric and Eamon stand at the party's corner table by the street windows. Bram is at the bar. A doorway at the bar's east end leads to a dim backroom with a sturdy table and mismatched chairs.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[3.7, 3.7]],
+  },
+  "morning-at-the-dragonbone": {
+    set: innMorningSet,
+    staging: morningAtTheDragonbone,
+    location: "Dragonbone Inn",
+    where:
+      "Early morning sun falls through the street windows of the Dragonbone Inn's common room. The fire is banked and the room nearly empty, an old farmer at breakfast. The party is at a table under the windows, Bram in front of the bar.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[-3.6, 2.2]],
   },
   // The Midnight Summons: one moonlit stretch of deer trail for the walk, the owlbear, and the rescue.
   "broken-silence": {

@@ -119,6 +119,8 @@ export function createMaterialLibrary(specs: Record<string, MaterialSpec>, share
           ...(s.emissive ? { emissive: new THREE.Color(s.emissive), emissiveIntensity: s.emissiveIntensity ?? 1 } : {}),
         })
         m.userData.glass = true
+        // Sunlight passes through a window: the panes cast no shadow, the leading and the frame do.
+        m.userData.noShadow = true
         break
     }
     out.set(name, m)
