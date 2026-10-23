@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [March of Davos playtest](march-of-davos-playtest.md) · [Round budget](round-budget.md) · [Testing runbook](testing-runbook.md)
 
-Status: implemented on main 2026-10-22. The judge is checked on both playtest saves. Three probes ran before and after content fixes for Silverhand's traitor, Astrid's door and the study's draft.
+Status: implemented on main 2026-10-22. Both playtest saves are judged in full. Six probes stay on the rails after content fixes and the AI hero rule.
 
 ## Owner request, 2026-10-22
 
@@ -109,7 +109,30 @@ From the first baseline to now: 4 of 9 runs off the rails to 0 of 9.
 
 `pnpm test:gm-core` and 78 desktop tests pass. Not deployed.
 
+## Both playtests judged in full, 2026-10-22
+
+Owner picked judging all 161 rounds, then probing the worst scenes. About two minutes for both saves at five at a time. The judge reads current content, so a round played before a later fix is judged against the fixed notes.
+
+47 of 161 rounds off: 15 of 75 in the first playtest, 32 of 86 in the second. Of 115 findings, the GM pushed 73, AI heroes 32 and the player 10. 74 were acts against the notes and 41 invented exits.
+
+| Scene | Rounds off | Played before | New probe |
+|---|---|---|---|
+| The Ranger's Quarters | 11 of 11 | Today's content fix | `study-draft`, 0 of 3 |
+| The Ambush | 7 of 9 | Today's AI hero rule | `ambush-follow`, 0 of 3 |
+| Shadowing Silverhand | 4 of 4, both playtests | "Silverhand keeps walking", committed six minutes after the second playtest's round 25 | `shadowing-tail`, 0 of 3 |
+| Face-to-Face with Silverhand | 3 of 3 | Today's content fix | `silverhand-traitor`, 0 of 3 |
+| The Wine Cellar and Through the Halls | 5 of 19 | "A caught party goes to the ballroom", committed after the second playtest's capture | `cellar-caught`, 0 of 3 |
+| Clan Conflict | 2 of 3, both playtests | Today's AI hero rule, for Yeva's cellar | `clan-clue`, 0 of 3 |
+
+- Shadowing Silverhand: in the second playtest Silverhand talked and led the party to his door. In the first, his scout Kaeleth guided a hero round his own bodyguard, played a minute after the commit that put his guards on his side, likely before `prepare:runtime`. In the probe he never answered: "No answer comes back through the harbor mist."
+- The Wine Cellar: in the second playtest guards marched the caught party upstairs to a steward. In the probe every run reached The Speech, one with the guards bluffed into taking the party as witnesses.
+- Clan Conflict: in the first playtest the GM invented a lost relic shipment and a toll bridge clue. In the probe no run did, though Larya once hinted at Blackthorn coin buying old things, after Branka's scripted ask about missing goods.
+- Scenes off once, in one playtest: The Old Grand Library, with the Archivist showing himself early, and An Unsolicited Opportunity, with Beric naming the Raskov coin.
+- 104 of 161 rounds name a content gap. Most are small calls a GM makes anyway. The ones repeated across runs: what Clive does when bluffed, bribed or persuaded, whether the vault lock breaks to force, what terms the clans would accept, and what the library's glass cabinet holds.
+
+All six probes, 18 runs, stay on the rails. Not deployed.
+
 ## Next
 
 - Probe lead-ins copy a playtest's own derails. A clean lead-in would come from a run that stayed on the rails.
-- Gaps the judge keeps naming: what Silverhand counts as a fair trade, what the Key looks like, the study's chest and desk.
+- Gaps the judge keeps naming: what Silverhand counts as a fair trade, what the Key looks like, the study's chest and desk, Clive when bluffed or bribed, the vault lock to force, the clans' terms, the library's glass cabinet.

@@ -43,5 +43,51 @@
       "Branka asks where this man went, and whether anyone has seen him since. \"Point us at him and he's ours.\"",
       "Branka asks whether he has ever met a Valkaran scholar named Joran Antonov. \"Harron at the Silver Serpent says you did.\""
     ]
+  },
+  "shadowing-tail": {
+    "adventure": "march-of-davos",
+    "encounter": "shadowing-silverhand",
+    "story": {
+      "save": "playtests/march-of-davos-2026-10-21.json.gz",
+      "turns": [20, 24],
+      "lead": true
+    },
+    "rounds": 3,
+    "replies": [
+      "Branka hangs back behind a cart and follows Silverhand's group at a distance, keeping to the shadows.",
+      "Branka quickens her pace to catch Silverhand and calls after him. \"Silverhand! A word about the scholar Joran.\"",
+      "Branka plants herself in Silverhand's path. \"You'll talk to us here, or we follow you all night.\""
+    ]
+  },
+  "cellar-caught": {
+    "adventure": "march-of-davos",
+    "encounter": "the-wine-cellar",
+    "story": {
+      "save": "playtests/march-of-davos-2026-10-21.json.gz",
+      "turns": [42, 46],
+      "lead": true
+    },
+    "rounds": 5,
+    "replies": [
+      "Branka keeps watch at the foot of the stairs while the others search the racks for anything hidden.",
+      "Branka tells the sommelier they were sent down to check the stock, and that he should fetch his wine and go.",
+      "Branka hauls the odd rack away from the wall and hammers at the vault lock.",
+      "Branka tells the guards to take the party to the steward, not parade them before the guests."
+    ]
+  },
+  "clan-clue": {
+    "adventure": "march-of-davos",
+    "encounter": "clan-conflict",
+    "story": {
+      "save": "playtests/march-of-davos-2026-10-21.json.gz",
+      "turns": [1, 5],
+      "lead": true
+    },
+    "rounds": 3,
+    "replies": [
+      "Branka steps between the two leaders. \"Enough. What exactly did each of you lose? Name it.\"",
+      "Branka asks where the trouble started, and whether anyone saw where the missing goods went.",
+      "Branka tells the crowd to go home, then asks the party where they mean to sleep tonight."
+    ]
   }
 }

@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-22, both playtests judged in full
+
+Owner picked judging all 161 rounds of both playtests, then probing the worst scenes. 47 rounds came back off the rails, most pushed by the GM. The worst scenes were all played before a fix: today's content and AI hero changes, and yesterday's "Silverhand keeps walking" and "a caught party goes to the ballroom", each committed minutes after its derail. Three new probes, Shadowing Silverhand, the wine cellar capture and Clan Conflict, stayed on the rails in all nine runs. All six probes now pass, 18 runs. 104 rounds name a content gap, and the repeated ones are listed in the plan. See [scene rails check](plans/scene-rails.md).
+
 ## 2026-10-22, AI heroes open no way out
 
 Owner picked the AI hero rule next. After the content fixes, the derails left came from AI heroes, such as Milos proposing the catacombs to Silverhand. The AI hero prompt now says to open no way out of a scene: no hidden passage, trail, fleeing figure or place the story has not set before the party now, and a lead from earlier rounds stays behind. Its "someone to follow" became "someone leading the way". All three probes then ran clean, 0 of 9 runs off the rails, against 4 of 9 at the first baseline. Every study run reached the journal, every Silverhand run moved on to The Ambush, and Silverhand kept Joran's secret. Also fixed: `test:gm-core` had failed since the content commit changed March of Davos's hash. Gm-core and desktop tests pass. Convex not deployed. See [scene rails check](plans/scene-rails.md).
