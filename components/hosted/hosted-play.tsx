@@ -5,6 +5,7 @@ import { queueHostedAction, sendHostedChat } from "@/app/_actions/hosted"
 import { hostedSave, hostedWork, useHostedSuggest } from "@/apps/desktop/src/hosted"
 import { StagePlay } from "@/apps/desktop/src/stage-play"
 import { eyebrow, Pill, panel } from "@/components/stage/hud"
+import { RotatePrompt, requestLandscape, usePhonePortrait } from "@/components/stage/rotate-gate"
 import type { ChatLine } from "@/components/stage/journal"
 import type { Id } from "@/convex/_generated/dataModel"
 import { cn } from "@/lib/utils"
@@ -17,6 +18,13 @@ export function HostedPlay({ adventureId }: { adventureId: string }) {
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const shownFailure = useRef<string | null>(null)
+  const portrait = usePhonePortrait()
+  // Phones play in landscape. Android locks it from the player's first tap, iOS keeps the rotate prompt.
+  useEffect(() => {
+    const lock = () => void requestLandscape()
+    window.addEventListener("pointerdown", lock, { once: true })
+    return () => window.removeEventListener("pointerdown", lock)
+  }, [])
   useEffect(() => {
     let live = true
     const tick = async () => {
@@ -108,6 +116,7 @@ export function HostedPlay({ adventureId }: { adventureId: string }) {
           </Pill>
         </div>
       )}
+      {portrait && <RotatePrompt />}
     </StagePlay>
   )
 }

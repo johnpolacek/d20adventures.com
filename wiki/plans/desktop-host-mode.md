@@ -352,8 +352,9 @@ Owner: the host hosts on the laptop, then plays as a player from the website on 
 - The guest joined Poppen from the seat link. The host found Covert Cargo under Your Adventures on the player page, opened its lobby, and started.
 - Both phones moved to `/play/<id>`. The host sent Lyra's reply, the guest sent Poppen's, the worker ran both and two NPC continues, and both phones reached Lyra's turn again.
 - One reply failed when the website's call to Convex timed out. The phone showed "The website answered 500." and sending again worked.
-- Seen: the stage play view in portrait overlaps the header, the party strip, and the narration card. Phone landscape and layout remain on the Later list.
-- Seen: the home page has no link to a signed-in player's games. They are under the player page.
+- Seen: the stage play view in portrait overlaps the header, the party strip, and the narration card. The rotate prompt from Stageview's landscape decision was wired only into `/dev/turn`. `/play` now shows it to a phone held upright, and asks Android for fullscreen landscape on the first tap.
+- Checked: the rotate prompt on `/play` at 390 by 664 with a coarse pointer faked through `matchMedia`. Not checked on a real phone.
+- The home page's Welcome Back card leads to the game with Continue. It loads after the page, about 4 s in dev.
 - Not checked: the app's own play view while the host acts from the phone, and a roll on the phone.
 
 ## Open decisions
