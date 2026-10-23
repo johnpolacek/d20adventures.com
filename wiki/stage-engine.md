@@ -339,3 +339,5 @@ See [the plan](plans/march-of-davos-sets.md).
 - Measured: the Kordavos docks 0.16M static triangles, 0.47M rendered, about 220 draw calls, after the quality pass.
 - `galleon` castles follow the hull outline, with a rising stem and beakhead, gilt bands, and four yards a mast with the top sails furled. Standee keying takes `hue`.
 - Street builders: `tenement`, `laundry`, `wallLantern`, `hangingSign`. Measured: the Lower Districts 0.17M static triangles, 0.33M rendered, about 150 draw calls with 84 walkers.
+- Black Market builders: `curtain`, `lanternString`, `curioShelf`, `treasureCounter`, `bladeRack`, `boards`, `canvas`. `stall` takes `pad`. `image` takes `size`, the metres a tile covers on surfaces whose uv runs in metres. Measured: the Black Market 0.21M static triangles, 0.42M rendered, about 210 draw calls with 48 walkers.
+- A shot's target beyond `camera.maxDistance` is drawn in along the shot's line, so the orbit no longer drags the camera toward it.

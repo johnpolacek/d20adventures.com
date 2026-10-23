@@ -119,3 +119,9 @@ The web viewer and the desktop app run the same `packages/stage` renderer and th
 - Masonry relief and dark joints read as bevelled cartoon blocks up close under lamps. Keep relief near 0.01 and the mortar close to the stone's colour.
 - Close both ends of a street. A view back down an open street showed the bare ground plane and sky. An archway house at each end reads as the way on.
 - Small water discs read as black and white blobs, not puddles. Leave them out.
+- Keep every shot within the set's `camera.maxDistance`, or check the engine draws its target in. A long shot down a lane was dragged 4 m forward by the orbit, into a passer-by's face.
+- A market stall's default footprint reaches 0.9 m past its counter. Along a lane, set `pad` low or walks have nowhere left to go.
+- Put a worn threshold doorway across a side lane's mouth, out in the main lane where walks pass, so walks turn into it there.
+- Stall awnings stand on poles that block close shots. Over a counter in a close shot, sling a `canvas` from the wall instead.
+- A wall that fills a painting's close shot needs a painted stone `image` at real block size. Procedural masonry read as cartoon squares under lamps.
+- A seated figure's back can come out as its front with the head turned. Say the back faces straight away, the coat covers it, and only the stool's legs and the heels show.

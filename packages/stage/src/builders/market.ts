@@ -162,7 +162,7 @@ const NAMED_GOODS = ["jewels", "spices", "none"] as const
 // A trader's stall: four poles, a pitched cloth roof, a ragged valance, a counter with goods, and stock behind.
 function buildStall(
   ctx: BuildCtx,
-  p: { w: number; d: number; cloth: string; goods: string; back: boolean; sides: boolean; frontHeight?: number; backRise?: number; sag: number; valance?: string; backCloth: string }
+  p: { w: number; d: number; cloth: string; goods: string; back: boolean; sides: boolean; frontHeight?: number; backRise?: number; sag: number; valance?: string; backCloth: string; pad: number }
 ) {
   const { b, M, rand } = ctx
   const { w, d } = p
@@ -232,7 +232,7 @@ function buildStall(
     beam(b, M.pole, [w / 2 - 0.2, 0, d / 2 + 0.1], [w / 2 - 0.2, hf + 1.8, d / 2 + 0.1], 0.05, 5)
     lantern(b, M, w / 2 - 0.2, hf + 0.6, d / 2 + 0.1)
   }
-  ctx.footprint(0, 0, w / 2 + 0.6, d / 2 + 0.9)
+  ctx.footprint(0, 0, w / 2 + Math.min(0.6, p.pad), d / 2 + p.pad)
 }
 export const stall = defineBuilder(
   z
@@ -248,6 +248,9 @@ export const stall = defineBuilder(
       sag: num(0, 3).default(0.22),
       valance: matName.optional(),
       backCloth: matName.default("clothDrab"),
+      // How far round the stall the crowd and walks keep clear, in metres in front and behind (a market street's stalls
+      // stand close to the passers-by).
+      pad: num(0, 2).default(0.9),
     })
     .strict(),
   buildStall

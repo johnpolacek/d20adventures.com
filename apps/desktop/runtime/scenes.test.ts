@@ -80,7 +80,7 @@ test("every authored scene is a real encounter, and every festival character has
   }
 })
 
-test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the Old Grand Library, the Silver Serpent and the docks have their scenes, and an encounter without one falls back to story view", async () => {
+test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the Old Grand Library, the Silver Serpent, the docks, the Lower Districts and the Black Market have their scenes, and an encounter without one falls back to story view", async () => {
   const run = await setup()
   try {
     // The heroes wait in the line alone, then meet Garlan at the front.
@@ -126,6 +126,8 @@ test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the 
       ["welcome-to-the-lower-districts", [], /Lower Districts[\s\S]*the archway under the bridge-house/],
       ["beset-by-street-urchins", ["finn-swiftfoot", "mara-redleaf"], /urchins[\s\S]*the mouth of the side alley/],
       ["finding-the-black-market", [], /crooked dagger[\s\S]*the carved sign in the paving/],
+      ["the-entrance-to-the-black-market", ["garrick"], /crumbling buildings[\s\S]*the curtained doorway/],
+      ["labyrinthine-stalls", ["grendel-one-eye", "mizrith-the-cackler", "rae-the-scarred", "vera-azimov"], /Black Market[\s\S]*the auction house door/],
     ] as const) {
       await advance(run.store, encounter)
       const here = run.store.current()
@@ -139,9 +141,9 @@ test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the 
       }
       assert.match(spatialContext(here.encounterId, here.characters, {}) ?? "", where)
     }
-    await advance(run.store, "the-entrance-to-the-black-market")
+    await advance(run.store, "the-auction-begins")
     const turn = run.store.current()
-    assert.equal(turn.encounterId, "the-entrance-to-the-black-market")
+    assert.equal(turn.encounterId, "the-auction-begins")
     assert.equal(sceneFor(turn.encounterId), undefined)
     assert.equal(spatialContext(turn.encounterId, turn.characters, {}), undefined)
     // Story view keeps the party's faces from the authored scenes.

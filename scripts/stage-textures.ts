@@ -41,6 +41,7 @@ type Texture = {
   tileX?: boolean
 }
 const LIBRARY = "public/stage/art/march-of-davos/the-old-grand-library.webp"
+const MARKET_DOOR = "public/stage/art/march-of-davos/the-entrance-to-the-black-market.webp"
 const FINDING = "public/stage/art/march-of-davos/finding-the-black-market.webp"
 const SERPENT = "public/stage/art/march-of-davos/the-silver-serpent-tavern.webp"
 const TEXTURES: Record<string, Texture> = {
@@ -203,6 +204,14 @@ const TEXTURES: Record<string, Texture> = {
     whole: true,
     aspect: "16:9",
     out: [1024, 576],
+  },
+  // The Black Market's court, from the entrance painting: old ochre-grey stone, soot and damp.
+  "stone-old": {
+    subject:
+      "an old weathered wall of rough-cut stone blocks seen straight on, about four courses of blocks of uneven length: warm ochre-grey and umber stone, chipped edges, thin dark mortar lines set back, soot and damp streaks running down, a few patches of crumbling plaster",
+    ref: MARKET_DOOR,
+    crop: [0.17, 0.3, 0.18, 0.45],
+    size: 1024,
   },
   "stained-thyra": {
     subject:

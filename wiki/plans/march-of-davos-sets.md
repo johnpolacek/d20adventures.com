@@ -18,8 +18,8 @@ Encounters 1 to 7 already had sets: the gate, the harvest square, the Dragonbone
 | 9 | The Silver Serpent Tavern | Done 2026-10-23 |
 | 10 to 14 | The docks | Done 2026-10-23 |
 | 15 to 17 | The Lower Districts | Done 2026-10-23 |
-| 18 to 19 | The black market | Next |
-| 20 to 22 | The auction | |
+| 18 to 19 | The Black Market | Done 2026-10-23 |
+| 20 to 22 | The auction | Next. A hall behind the Black Market lane's far door |
 | 23 to 26 | Silverhand's trail, the hideout, the ambush | |
 | 27 to 39 | The Blackthorn mansion: front, ballroom, halls, chambers, wine cellar | |
 | 40 to 44 | The catacombs | |
@@ -102,3 +102,21 @@ Source: three paintings. The walk in is a long narrow street of leaning half-tim
 - At ultra quality, DPR 2: 129 to 173 draw calls, 0.32M to 0.34M rendered triangles, 20 to 28 fps. 0.17M static triangles, 84 walkers.
 - Desktop maps the three encounters. 78 desktop tests pass.
 - Left: the crowd library's robed figures are paler than the paintings' dark cloaks. The cobbles have no wet sheen. Not yet checked in the running desktop app.
+
+
+## The Black Market
+
+Source: the entrance painting (a hooded guard before an arched doorway hung with ochre curtains, old stone and wood, warm light, dark beyond), the stalls painting (a grinning scarred dealer leaning over gold and gems, a narrow lane of stalls and lanterns behind him crowded with cloaked buyers, a pale sky slot), and the two intros (a doorway of old planks between crumbling buildings, a labyrinth of stalls and tents, potions, stolen artifacts, blades, masked figures). The auction intro puts its chamber "deeper in the Black Market".
+
+- Set `realm-of-myr/kordavos-black-market`, stagings `the-entrance-to-the-black-market` and `labyrinthine-stalls`, written by `scripts/stage-sets/black-market.ts`.
+- A court between crumbling houses ends in an old stone wall with the curtained arch and planked-up doors. Behind it a lane of stalls 5.6 m wide runs 42 m between leaning houses, roofed with patched canvas and strung with lantern globes, braziers smoking. Side lanes turn east to Mizrith's tent of curiosities and west to the shadowy stall of elven goods. The lane ends at the auction house: a tall stone front, a door hung with wine curtains between braziers and two guards, the serpent-and-moon over it. The auction hall goes behind that door.
+- Nightfall. The court is a `room` with its own four lights, so the market keeps the set's eight.
+- Grendar's counter heaped with gold, gems, goblets and an open casket, his shelves of potions. Vera's rack of blades and a table of daggers. Potion shelves, cloth, spice, jewel and arms stalls.
+- New builders in `packages/stage/src/builders/blackmarket.ts`: `curtain` (pleated, drawn and tied back), `lanternString`, `curioShelf`, `treasureCounter`, `bladeRack`, `boards`, `canvas` (a sheet slung overhead with no poles). `stall` takes `pad`, how far round it walks keep clear.
+- Painted texture `stone-old.jpg` from the entrance painting, an `image` material with `size` metres a tile.
+- Standees from their portraits: Garrick, Grendar, Vera Azimov, Rae the Scarred, Mizrith; and the oily vendor of the elven goods, seated. Three backs repainted: Garrick's cloak open on his armour, Mizrith's and the vendor's hands behind them.
+- Engine fix: a shot whose target lies beyond the set's `camera.maxDistance` had its camera dragged toward the target by the orbit. The target is now drawn in along the same line. Shots of the library, the Silver Serpent, the docks and the Lower Districts that were affected now frame as authored.
+- `pnpm stage:check` passes. Walks: entrance 76 of 80, the stalls 138 of 180. The blocked ones start at a dealer behind a counter, or go from the court into a side lane, which takes two doorways.
+- At ultra, DPR 2: 146 to 231 draw calls, 0.31M to 0.42M rendered triangles, 23 to 33 fps. 0.21M static triangles, 48 walkers.
+- Desktop maps both encounters. 78 desktop tests pass.
+- Left: the crowd library's pale robes against the painting's dark cloaks, and a lane brighter than the painting's sky slot. Not yet checked in the running desktop app.

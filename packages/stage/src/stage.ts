@@ -460,6 +460,10 @@ export class Stage {
     this.activeShot = typeof which === "string" ? which : null
     this.activeFov = s.fov
     const to = { pos: V(...s.position), target: V(...s.target), fov: this.lens(s.fov) }
+    // The orbit keeps the camera within `maxDistance` of its target, so a long shot down a street would be dragged
+    // toward what it looks at. Draw the target in along the same line instead: the framing is unchanged.
+    const reach = this.set.camera.maxDistance - 0.1
+    if (to.pos.distanceTo(to.target) > reach) to.target.sub(to.pos).setLength(reach).add(to.pos)
     if (instant || !this.motion) {
       this.camera.position.copy(to.pos)
       this.controls?.target.copy(to.target)

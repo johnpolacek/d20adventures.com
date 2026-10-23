@@ -1,5 +1,6 @@
 import innSet from "@d20/stage/sets/realm-of-myr/dragonbone-inn.json"
 import innMorningSet from "@d20/stage/sets/realm-of-myr/dragonbone-inn-morning.json"
+import blackMarketSet from "@d20/stage/sets/realm-of-myr/kordavos-black-market.json"
 import docksSet from "@d20/stage/sets/realm-of-myr/kordavos-docks.json"
 import docksWreckedSet from "@d20/stage/sets/realm-of-myr/kordavos-docks-wrecked.json"
 import festivalSet from "@d20/stage/sets/realm-of-myr/kordavos-harvest-square.json"
@@ -31,11 +32,13 @@ import arrivalAtTheDocks from "@d20/stage/stagings/march-of-davos/arrival-at-the
 import besetByStreetUrchins from "@d20/stage/stagings/march-of-davos/beset-by-street-urchins.json"
 import clanConflict from "@d20/stage/stagings/march-of-davos/clan-conflict.json"
 import findingTheBlackMarket from "@d20/stage/stagings/march-of-davos/finding-the-black-market.json"
+import labyrinthineStalls from "@d20/stage/stagings/march-of-davos/labyrinthine-stalls.json"
 import morningAtTheDragonbone from "@d20/stage/stagings/march-of-davos/morning-at-the-dragonbone.json"
 import mysteryCargo from "@d20/stage/stagings/march-of-davos/mystery-cargo.json"
 import theAftermath from "@d20/stage/stagings/march-of-davos/the-aftermath.json"
 import theBeastEscapes from "@d20/stage/stagings/march-of-davos/the-beast-escapes.json"
 import theDragonboneInn from "@d20/stage/stagings/march-of-davos/the-dragonbone-inn.json"
+import theEntranceToTheBlackMarket from "@d20/stage/stagings/march-of-davos/the-entrance-to-the-black-market.json"
 import gateStaging from "@d20/stage/stagings/march-of-davos/the-gates-of-kordavos.json"
 import festivalStaging from "@d20/stage/stagings/march-of-davos/the-harvest-festival.json"
 import theOldGrandLibrary from "@d20/stage/stagings/march-of-davos/the-old-grand-library.json"
@@ -236,6 +239,25 @@ export const SCENES: Record<string, Scene> = {
       "A narrow side alley off the Lower Districts' street as the light fades: damp stone ground floors, timber storeys leaning close overhead, washing strung across, crates and barrels against the walls, a lantern here and there. The party stands a few paces in from the street. At their feet a paving stone has a small crooked dagger cut into it, and further in a stone over a doorway bears a snake coiled round a crescent moon. A trinket-seller lounges near the end, where a dark archway leads to a shut gate, and a hooded woman comes from it.",
     party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
     spare: [[-11.6, -7.6]],
+  },
+  // The Black Market: the curtained doorway in its court, and the lane of stalls behind it to the auction house's door.
+  "the-entrance-to-the-black-market": {
+    set: blackMarketSet,
+    staging: theEntranceToTheBlackMarket,
+    location: "Black Market",
+    where:
+      "Nightfall in a narrow court between two crumbling buildings. Its north end is an old stone wall with an arched doorway hung with heavy ochre curtains, half drawn, darkness and a glimmer of lamps beyond. Planked-up doors and a lantern either side. The party stands in the court a few paces back. A huge hooded guard stands before the curtain, arms crossed, a long dagger in his belt.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[0.4, 12.9]],
+  },
+  "labyrinthine-stalls": {
+    set: blackMarketSet,
+    staging: labyrinthineStalls,
+    location: "Black Market",
+    where:
+      "Inside the Black Market at night: a narrow lane of stalls and tents between leaning houses, roofed with patched canvas and strung with lanterns, braziers smoking, cloaked buyers drifting through. The party stands just inside the curtain. At the first stall on the right a grizzled dealer leans over a counter heaped with gold and gems; a dwarf weapon dealer shows a dagger at her rack of blades on the left; a scarred young woman saunters past. A side lane turns east to a peddler's tent of curiosities, another turns west to a shadowy stall of elven goods. At the far end of the lane, a curtained door between braziers leads to the auction house.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[0.4, 5.0]],
   },
   // The Midnight Summons: one moonlit stretch of deer trail for the walk, the owlbear, and the rescue.
   "broken-silence": {

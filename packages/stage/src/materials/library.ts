@@ -19,14 +19,17 @@ class PaintedTextures {
   private cache = new Map<string, THREE.Texture>()
   private pending: Promise<void>[] = []
   constructor(private anisotropy: number) {}
-  get(url: string) {
-    const hit = this.cache.get(url)
+  // `repeat` scales the texture over the surface's uv: an `image` laid by surface metres covers `size` metres a tile.
+  get(url: string, repeat?: [number, number]) {
+    const key = repeat ? `${url}|${repeat[0]},${repeat[1]}` : url
+    const hit = this.cache.get(key)
     if (hit) return hit
     const t = new THREE.Texture()
+    if (repeat) t.repeat.set(...repeat)
     t.colorSpace = THREE.SRGBColorSpace
     t.wrapS = t.wrapT = THREE.RepeatWrapping
     t.anisotropy = this.anisotropy
-    this.cache.set(url, t)
+    this.cache.set(key, t)
     this.pending.push(
       new THREE.ImageLoader()
         .loadAsync(url)
@@ -68,7 +71,7 @@ export function createMaterialLibrary(specs: Record<string, MaterialSpec>, share
         m = card(ctx, name, painted.get(s.map), s.tint, s.roughness)
         break
       case "image": {
-        const map = painted.get(s.map)
+        const map = painted.get(s.map, s.size ? [1 / s.size[0], 1 / s.size[1]] : undefined)
         m = plain(ctx, name, s.tint ?? "#ffffff", s.roughness ?? 0.8, {
           map,
           metalness: s.metalness ?? 0,

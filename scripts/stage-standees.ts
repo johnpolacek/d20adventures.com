@@ -481,6 +481,55 @@ const FIGURES: Record<string, Figure> = {
     backNote:
       "The tray of trinkets hangs on his CHEST in front of him and is NOT visible from behind: only its strap shows, crossing the back of his neck. His back shows the long plain plum coat from collar to hem with nothing hung on it, no bag, no pouches, no charms. His hands are at his sides.",
   },
+  // March of Davos, the Black Market: the doorkeeper and the dealers from their portraits, and the fence of the elven goods.
+  garrick: {
+    out: "fixtures/march-of-davos/garrick",
+    who: "Garrick, Human male doorkeeper of the Black Market",
+    look: "A huge, broad-shouldered man about 1.95 m tall, with tall human proportions and long legs, not a dwarf. A deep, ragged grey-green hood shadows his face down to a heavy jaw, a hard scowling mouth and the glint of narrow eyes; a flat broken nose. A long tattered charcoal cloak over worn dark leather armour with straps and buckles, a wide belt with a long dagger tucked in plain view, dark leather bracers and gloves, heavy boots. Arms crossed over his chest.",
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726436888924",
+    head: 0.13,
+    backNote:
+      "Seen from directly behind: his hood is up and covers the whole back of his head. The tattered cloak is CLOSED behind him: one unbroken sheet of grey-green cloth from the shoulders straight down to the calves covering his whole back, so NO leather armour, straps, belt or pouches show. His crossed arms and the dagger are in front of him and NOT visible. Only the backs of his boots show below the cloak's ragged hem.",
+  },
+  "grendel-one-eye": {
+    out: "fixtures/march-of-davos/grendel-one-eye",
+    who: "Grendar One-Eye, Human male trinket dealer",
+    look: "A grizzled man in his fifties, about 1.8 m tall, with wild greying dark hair, a short grey-streaked beard, a scarred face with a cut across one brow and a cloudy, scarred eye, a wide crooked grin full of teeth and wild eyes. A black coat over a red-and-gold brocade tunic with a gilt-trimmed collar, big brass amulets and chains round his neck, rings on his fingers, a worn belt with pouches. Leaning a little forward with one hand held out, palm up, offering a trinket.",
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726436104061",
+    head: 0.13,
+  },
+  "vera-azimov": {
+    out: "fixtures/march-of-davos/vera-azimov",
+    who: "Vera Azimov, Dwarf female weapon dealer",
+    look: "Very short and very broad, about 1.35 m tall, with stout dwarf proportions, not a short human. A heavy-set dwarf woman with thick curly brown hair tied back messily, small pointed ears, a round weathered face, heavy brows and a stern, proud look. A tattered mustard-yellow cloak over a quilted brown leather jerkin, heavy belts with a row of sheathed knives, leather bracers, sturdy boots. Holding up an intricately carved dagger in her right hand to show it off.",
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726438484598",
+    head: 0.17,
+  },
+  "rae-the-scarred": {
+    out: "fixtures/march-of-davos/rae-the-scarred",
+    who: "Rae the Scarred, Human female rogue",
+    look: "A slim young woman of about twenty, about 1.68 m tall, with short messy black hair falling over her forehead, sharp grey eyes, a small thin scar across her chin and a confident smirk. Rugged dark-green and black adventurer's leathers, a hooded short cloak thrown back, a few thin cords and a small pendant at her throat, fingerless gloves, a long knife at her hip, dark trousers and soft boots. Walking with a relaxed swagger, thumbs hooked in her belt.",
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726439232056",
+    head: 0.13,
+  },
+  "mizrith-the-cackler": {
+    out: "fixtures/march-of-davos/mizrith-the-cackler",
+    who: "Mizrith the Cackler, a hunched old goblin-kin peddler",
+    look: "A small hunched old figure only about 1.3 m tall, with long pointed ears, a big hooked nose, bushy white eyebrows, a wild white beard and straggly hair, purple marks on his forehead, and an enormous gleeful grin. A mix of colourful rags: a mustard-yellow patched coat, a purple and red sash, a blue shawl, strings of beads, bones and amulets round his neck, heavy rings on bony fingers. Hunched forward, beckoning with one bony hand.",
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726438466481",
+    head: 0.2,
+    backNote:
+      "Both his hands are in front of him and NOT visible from behind: no hand, fingers or rings show at his back or sides. We see the back of the patched yellow coat, the sash's knot, the shawl's ends hanging down his back, and his wild white hair and pointed ears.",
+  },
+  "oily-vendor": {
+    out: "fixtures/march-of-davos/oily-vendor",
+    who: "An oily fence at the Black Market, Human male",
+    look: "A thin, sallow man in his forties with slicked-back black hair, a pencil moustache, small beady eyes and a nervous ingratiating smile. A shiny dark-green velvet coat gone shabby at the cuffs over a stained cream shirt, a gold earring, too many rings. His fingers steepled and twitching in front of his chest.",
+    head: 0.17,
+    seated: true,
+    backNote:
+      "Seen squarely from directly behind, sitting on the stool facing AWAY from us. The back of his green velvet coat covers his whole back from the collar down over the stool; its tails hang down behind. His shirt, chest, hands, thighs and knees are in front of him and NOT visible. Below the coat only the stool's legs, the backs of his calves and the heels of his boots show.",
+  },
 }
 for (const [id, f] of Object.entries(FIGURES)) f.out ||= `heroes/${id}`
 

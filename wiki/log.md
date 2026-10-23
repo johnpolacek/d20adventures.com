@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-23, the Black Market in 3D
+
+The Black Market for encounters 18 and 19: a court with the curtained doorway Garrick guards, and behind it a canvas-roofed lane of stalls and lanterns to the auction house's door, ready for the auction next. Seven builders, a painted stone texture, six standees. An engine fix: shots beyond a set's camera reach were being dragged toward their targets, which had shifted views of the library, the Silver Serpent, the docks and the Lower Districts. Stage check and 78 desktop tests pass. See [March of Davos in 3D](plans/march-of-davos-sets.md).
+
 ## 2026-10-23, the Lower Districts in 3D
 
 March of Davos encounters 15 to 17 in 3D. A street of leaning jettied tenements with a house built across it, washing, lanterns and a hooded crowd, and the side alley where the Black Market's day signs are carved. Halfling urchins, a fiddler, a hooded local and a trinket-seller. New street builders. Each opening view was framed against its painting first. Stage check and desktop tests pass. Not yet checked in the running app. See [March of Davos in 3D](plans/march-of-davos-sets.md).
