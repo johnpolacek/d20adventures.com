@@ -69,6 +69,7 @@ export const STAGINGS: Record<string, () => Promise<unknown>> = {
   "march-of-davos/the-rangers-quarters": () => import("../stagings/march-of-davos/the-rangers-quarters.json").then((m) => m.default),
   "march-of-davos/the-lavish-corridor": () => import("../stagings/march-of-davos/the-lavish-corridor.json").then((m) => m.default),
   "march-of-davos/thaddeus-blackthorns-private-chambers": () => import("../stagings/march-of-davos/thaddeus-blackthorns-private-chambers.json").then((m) => m.default),
+  "march-of-davos/the-dust-settles": () => import("../stagings/march-of-davos/the-dust-settles.json").then((m) => m.default),
   "march-of-davos/the-old-grand-library": () => import("../stagings/march-of-davos/the-old-grand-library.json").then((m) => m.default),
   "march-of-davos/the-silver-serpent-tavern": () => import("../stagings/march-of-davos/the-silver-serpent-tavern.json").then((m) => m.default),
   "march-of-davos/arrival-at-the-docks": () => import("../stagings/march-of-davos/arrival-at-the-docks.json").then((m) => m.default),

@@ -24,7 +24,7 @@ Encounters 1 to 7 already had sets: the gate, the harvest square, the Dragonbone
 | 27 to 39 | The Blackthorn mansion: front, ballroom, halls, chambers, wine cellar | Bespoke, done 2026-10-23. The wine cellar is the cellar kit |
 | 40 to 44 | The catacombs | Tunnel kit done 2026-10-23. The grate at 40 is the mansion's grounds, done |
 | 45 to 46 | The forgotten temple | Bespoke |
-| 47 to 49 | The aftermath | Street kit done 2026-10-23 for 47 and 48. 49 reuses the library |
+| 47 to 49 | The aftermath | Done 2026-10-23: the street kit for 47 and 48, the library for 49 |
 
 ## Owner decision, 2026-10-23: reusable sets
 
@@ -99,6 +99,10 @@ Done 2026-10-23. `scripts/stage-sets/kits/tunnel.ts` builds tunnels and caves fr
 - At ultra, DPR 2: 63 to 97 draw calls, under 0.04M rendered triangles, 16 to 32 fps.
 - Desktop maps the four encounters. 78 desktop tests pass. Not yet checked in the running desktop app.
 - Left: the labyrinth is darker than its painting, and its crystals read as pale shards.
+
+## The Dust Settles
+
+Done 2026-10-23 on the Old Grand Library's own set, with no new geometry. `scripts/stage-sets/library-talks.ts` writes the staging: Bishop Nicolai bare-faced at the head of the reading table, Seraphina and Lady Astrid across it from each other, Sister Danica by, the party under the dome. Walks 124 of 144, the rest stopped by the table and the lecterns.
 
 ## The Blackthorn mansion
 

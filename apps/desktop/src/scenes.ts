@@ -67,6 +67,7 @@ import theBeastEscapes from "@d20/stage/stagings/march-of-davos/the-beast-escape
 import theBlackthorns from "@d20/stage/stagings/march-of-davos/the-blackthorns.json"
 import theChase from "@d20/stage/stagings/march-of-davos/the-chase.json"
 import theDragonboneInn from "@d20/stage/stagings/march-of-davos/the-dragonbone-inn.json"
+import theDustSettles from "@d20/stage/stagings/march-of-davos/the-dust-settles.json"
 import theEntranceToTheBlackMarket from "@d20/stage/stagings/march-of-davos/the-entrance-to-the-black-market.json"
 import gateStaging from "@d20/stage/stagings/march-of-davos/the-gates-of-kordavos.json"
 import festivalStaging from "@d20/stage/stagings/march-of-davos/the-harvest-festival.json"
@@ -510,6 +511,15 @@ export const SCENES: Record<string, Scene> = {
       "Dawn in the great square of Kordavos, bells ringing, the old green banners of Valkara hung from every house. At the head of the square stands the great stone house with a balcony over its door: Joran Antonov stands on it with the Key of Ilmarin raised, Seraphina Valtor at his shoulder. The square below is full of Valkarans. The party stands among them in the middle of the square.",
     party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
     spare: [[1.4, -10.2]],
+  },
+  "the-dust-settles": {
+    set: librarySet,
+    staging: theDustSettles,
+    location: "Old Grand Library",
+    where:
+      "The Old Grand Library, its bookcases two storeys high under the painted vault. At the reading table near the entrance Bishop Nicolai presides over the truce talks; Seraphina Valtor and Lady Astrid Blackthorn sit across the table from each other, and Sister Danica stands by. The party watches from under the dome.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[2.2, 2.4]],
   },
   "vengeance-of-the-blackthorn": {
     set: squareFuneralSet,

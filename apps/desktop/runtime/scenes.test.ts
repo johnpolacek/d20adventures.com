@@ -173,6 +173,7 @@ test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the 
     const party = run.store.current().characters
     assert.match(spatialContext("the-new-dawn", party, {}) ?? "", /Key of Ilmarin[\s\S]*the balcony/)
     assert.match(spatialContext("vengeance-of-the-blackthorn", party, {}) ?? "", /coffin[\s\S]*the bier/)
+    assert.match(spatialContext("the-dust-settles", party, {}) ?? "", /truce talks[\s\S]*the reading table/)
     // The Blackthorn mansion.
     for (const [encounter, where] of [
       ["entry-to-the-ball", /grand staircase[\s\S]*the foot of the grand staircase/],
