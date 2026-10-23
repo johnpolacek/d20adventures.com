@@ -1,62 +1,27 @@
 # D20 Adventures
 
-**Home** · [Plans](plans/index.md) · [Roadmap](roadmap.md) · [Architecture](Architecture.md) · [Sources](Sources.md) · [Log](log.md)
+**Home** · [Roadmap](roadmap.md) · [Plans](plans/index.md) · [Architecture](Architecture.md) · [Sources](Sources.md) · [Log](log.md)
 
-D20 Adventures is a narrative RPG with an AI Game Master, authored adventures, D20 checks, and live turn state in Convex.
+A narrative RPG with an AI Game Master, authored adventures and D20 checks. The desktop app is the game client, with a 3D stage and the GM run through the player's own AI CLI. Updated 2026-10-23.
 
-Desktop integration updated on 2026-10-03 in `feature/desktop-stage-play`, including durable character-state application and the Harvest Festival 3D scene. This worktree includes the committed GM core extraction. Main and production remain separate.
+What is built and what is next: [Roadmap](roadmap.md). Active and recent work: [Plans](plans/index.md).
 
-| Area | Current state |
-|---|---|
-| Gameplay | Text turn UI with Storyview audio and optional 2D Mapview. |
-| Content | Four Realm of Myr adventures use the wiki runtime. Production cutover completed in June 2026. |
-| Current priority | Desktop Stageview is connected to the local GM flow in this worktree. Extend authored set coverage and finish distribution. |
-| Latest recorded renderer validation | 2026-09-29, engine build/typecheck/lint and GPU checks. Every tested shot stayed within 300 draw calls and 2.5M triangles. Phone performance remains unmeasured. |
-| Latest gameplay validation | 2026-10-03, native Claude playthrough of The Midnight Summons start to finish, including a fight, the ending, and starting over. Also a native gate-to-festival advance into the new festival set, with NPC focus and cards, saved walks, and reopen without replay. 2026-10-02, native Claude gate playthrough with dice and reopen persistence. The isolated GM core worktree also completed Midnight Summons in seven turns and passed 16 Playwright tests. No production deployment. |
+## Reference
 
-## Work and references
-
-- [Plans](plans/index.md): Stageview delivery and maintenance backlog.
-- [Harvest Festival handoff](plans/harvest-festival-handoff.md): handoff record. The festival scene was resumed and implemented on 2026-10-03.
-- [Stageview](plans/stageview.md): owner decisions, remaining phases, release questions.
-- [Desktop local play](plans/desktop-local-play.md): core extraction, native client, local saves, and character-state application implemented locally. Further sets, provider coverage, and distribution remain open. Free solo play through the player's own AI CLI. Multiplayer through a host's app, free. Revenue from selling adventures, decided 2026-10-07.
-- [Desktop site style](plans/desktop-site-style.md): moves the desktop app's UI to the website's look. The screens around the game are done and the HUD is recoloured, merged into main 2026-10-10. The owner's HUD review is next, and the rest continues on main.
-- [Structured narrative](plans/structured-narrative.md): a turn is a list of labelled beats, narration, action, line, roll and reply, so the stage and voices never guess. Spell effects and objects in 3D. All four adventures labelled. On main 2026-10-14.
-- [Concise narration](plans/concise-narration.md): the GM's round-end narrative has a length rule and tells nothing twice, for all four Myr adventures. NPC turns and action rewrites are tightened too. The Midnight Summons text is trimmed. On main 2026-10-13. Two live replays with Claude: 52% fewer words a turn.
-- [Adventure premise](plans/adventure-premise.md): who knows whom. A rule in every prompt, and an authored `## Premise` per adventure. On main 2026-10-11.
-- [Meeting at the gate](plans/meeting-at-the-gate.md): March of Davos opens with the heroes meeting as strangers at the gate. They spend one round alone in the line, then reach Garlan's table. Festival law makes them enter as one company. Who has heard each hero's name is kept, and each prompt that plays a character knows which names it has not heard. On main 2026-10-21.
-- [What each character knows](plans/character-knowledge.md): a ledger of facts with who knows each, kept across rounds. Every prompt that plays one character, AI hero or NPC, reads only what that character knows. On main 2026-10-21.
-- [What a hero knows](plans/hero-knowledge.md): a whisper or a hidden act is a private beat, and an AI hero reads the round without the ones it is not in. On main 2026-10-21.
-- [Antigravity replaces the Gemini CLI](plans/antigravity-cli.md): the fourth GM is Google's `agy`, run with no tools on Gemini Flash at medium effort. On main 2026-10-13.
-- [Game Master picker shows the model](plans/gm-model-picker.md): party setup names the model each installed CLI runs and its effort, read from the CLI without a prompt. Claude runs at medium effort, set by the app. On main 2026-10-13.
-- [One roll card](plans/one-roll-card.md): one card rolls the die, shows the result, waits for the GM, then offers Continue. Desktop app and hosted games, on main 2026-10-14.
-- [Shorter waits](plans/shorter-waits.md): in local play the next NPC's, AI hero's or round end's turn is written while the story before it is read, in every adventure. Skipping minor NPC turns was measured and not built. On main 2026-10-22.
-- [NPC turn card](plans/npc-turn-card.md): while the GM plays an NPC or AI hero, the card shows their portrait and a line of their own. On main 2026-10-19.
-- [Skip a hero's turn](plans/skip-turn.md): a text button left of Send ends the hero's turn with nothing written and no AI. Local play and hosted games, on main 2026-10-11.
-- [Suggested replies](plans/turn-suggestions.md): on a hero's turn the GM card offers three replies that fill the reply box. Local play and hosted games, on main 2026-10-11.
-- [The lead-in to March of Davos](plans/adventure-lead-in.md): The Midnight Summons, Covert Cargo and The Road to Kordavos lead into the featured adventure. Story stitched 2026-10-13: one elven name, the Blackthorn seal, the Oath Stone in March of Davos, a road rumor, and endings that point on. Carry-over built the same day: the app's ending offers the next adventure with the heroes who can go on, and Lyra, Poppen and Thalbern can be played in March of Davos. Story memory too: continuing hands the next adventure's GM a chapter for each one finished, and a hero keeps their gear.
-- [Covert Cargo: three heroes](plans/covert-cargo-three-heroes.md): Thalbern is a third hero, hidden apart from Poppen. Each learns of the other only by a Perception check, and the elves leave when paid. The boat fight most often ends with Lyra overboard and the tug gone. Replaces the rescue, 2026-10-13.
-- [Covert Cargo rescue](plans/covert-cargo-rescue.md): superseded 2026-10-13. No player deaths stays. Thalbern's rescue at half health is removed from the adventure, and the engine keeps the `rescue` rule, `flee`, falls and staging exits.
-- [Scene rails check](plans/scene-rails.md): a judge flags rounds where the GM leaves the authored scene, and scene probes replay a scene with a player who pushes on its exits. On main 2026-10-22.
-- [March of Davos in 3D](plans/march-of-davos-sets.md): every encounter of the adventure has a set, 2026-10-23. The later ones from reusable street, cellar and tunnel kits, with bespoke sets for the mansion and the temple only.
-- [The Dragonbone Inn in 3D](plans/dragonbone-inn-stage.md): the inn's common room and backroom, evening and dawn, for March of Davos's three inn encounters. On main 2026-10-22.
-- [Stage art spikes](plans/stage-art-spikes.md): a painted far backdrop, a paint-over projected onto the set, and a video idle loop on a standee, tried in `lab/stage-art/` on 2026-10-17. Only the backdrop was adopted.
-- [Painted backdrop](plans/stage-backdrop.md): a set's `backdrop`, a painted panorama of far scenery, first used at the Old Standing Stones.
-- [Adventure store](plans/feature-adventure-store.md): buying adventures on the website, linking the desktop app, and pack downloads.
-- [Desktop Stageview integration](plans/zzz-completed/feature-desktop-stage-play.md): native game client, local saves, live turn flow, validation, and limits.
-- [Stage engine](stage-engine.md): implemented runtime, set/staging specs, measured limits.
-- [Stage set authoring](stage-authoring.md): the pattern for new 3D locations, web review first, then the desktop app.
-- [Wiki adventures](wiki-adventures.md): authoring, compilation, source selection, and live content updates.
-- [GM core](gm-core.md): portable game runtime, typed interfaces, server adapters, and extraction checks.
-- [Gameplay flows](gameplay-flows.md): creation, turns, dice, NPCs, and completion.
-- [Mapview](plans/mapview.md): stored 2D maps, generation, and token placement.
-- [Storyview](storyview.md): narration, caching, automatic generation, and charging.
-- [Testing runbook](plans/testing-runbook.md): commands, routes, and coverage limits.
-- [Worktree guide](plans/parallel-dev-worktrees.md): retired 2026-10-08. Since 2026-10-10 work happens directly on main while the project is in alpha. Worktrees return at beta.
+- [Architecture](Architecture.md): apps, packages, data and hosting.
+- [GM core](gm-core.md): portable game runtime and its interfaces.
+- [Gameplay flows](gameplay-flows.md): creation, turns, dice, NPCs, completion.
+- [Wiki adventures](wiki-adventures.md): adventure authoring, compilation, live updates.
+- [Stage engine](stage-engine.md): 3D runtime, set and staging specs, limits.
+- [Stage set authoring](stage-authoring.md): how to build a new 3D location.
+- [Storyview](storyview.md): narration, caching, charging.
+- [Mapview](plans/mapview.md): stored 2D maps, generation, token placement.
+- [Testing runbook](plans/testing-runbook.md): commands, routes, coverage limits.
+- [Maintenance](plans/maintenance.md): open bugs and audits.
 - [Wiki maintenance guide](AGENTS.md): documentation rules.
 
 ## Product context
 
 [Product](sources/prd.md) · [Technical](sources/technical-brief.md) · [Design](sources/design-brief.md) · [Marketing](sources/marketing-brief.md)
 
-Git preserves completed implementation history. Current contracts live in reference pages, and unfinished work lives in active plans. Commits are allowed when confident. Pushes and long-running operations require confirmation under the repository policy.
+Git holds implementation history. Reference pages hold current contracts. Plans hold unfinished work.
