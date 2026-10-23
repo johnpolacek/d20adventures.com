@@ -4,6 +4,7 @@ import docksSet from "@d20/stage/sets/realm-of-myr/kordavos-docks.json"
 import docksWreckedSet from "@d20/stage/sets/realm-of-myr/kordavos-docks-wrecked.json"
 import festivalSet from "@d20/stage/sets/realm-of-myr/kordavos-harvest-square.json"
 import conflictSet from "@d20/stage/sets/realm-of-myr/kordavos-harvest-square-conflict.json"
+import lowerDistrictsSet from "@d20/stage/sets/realm-of-myr/kordavos-lower-districts.json"
 import riverfrontSet from "@d20/stage/sets/realm-of-myr/kordavos-riverfront.json"
 import gateSet from "@d20/stage/sets/realm-of-myr/kordavos-south-gate.json"
 import pierSet from "@d20/stage/sets/realm-of-myr/mordava-river-pier.json"
@@ -27,7 +28,9 @@ import theTransaction from "@d20/stage/stagings/covert-cargo/the-transaction.jso
 import anInvitation from "@d20/stage/stagings/march-of-davos/an-invitation.json"
 import anUnsolicitedOpportunity from "@d20/stage/stagings/march-of-davos/an-unsolicited-opportunity.json"
 import arrivalAtTheDocks from "@d20/stage/stagings/march-of-davos/arrival-at-the-docks.json"
+import besetByStreetUrchins from "@d20/stage/stagings/march-of-davos/beset-by-street-urchins.json"
 import clanConflict from "@d20/stage/stagings/march-of-davos/clan-conflict.json"
+import findingTheBlackMarket from "@d20/stage/stagings/march-of-davos/finding-the-black-market.json"
 import morningAtTheDragonbone from "@d20/stage/stagings/march-of-davos/morning-at-the-dragonbone.json"
 import mysteryCargo from "@d20/stage/stagings/march-of-davos/mystery-cargo.json"
 import theAftermath from "@d20/stage/stagings/march-of-davos/the-aftermath.json"
@@ -37,6 +40,7 @@ import gateStaging from "@d20/stage/stagings/march-of-davos/the-gates-of-kordavo
 import festivalStaging from "@d20/stage/stagings/march-of-davos/the-harvest-festival.json"
 import theOldGrandLibrary from "@d20/stage/stagings/march-of-davos/the-old-grand-library.json"
 import theSilverSerpentTavern from "@d20/stage/stagings/march-of-davos/the-silver-serpent-tavern.json"
+import welcomeToTheLowerDistricts from "@d20/stage/stagings/march-of-davos/welcome-to-the-lower-districts.json"
 import backHome from "@d20/stage/stagings/the-midnight-summons/back-home.json"
 import brokenSilence from "@d20/stage/stagings/the-midnight-summons/broken-silence.json"
 import meetingAtTheStones from "@d20/stage/stagings/the-midnight-summons/meeting-at-the-stones.json"
@@ -204,6 +208,34 @@ export const SCENES: Record<string, Scene> = {
       "The Kordavos quay after the drake: the quay is strewn with smashed crates and loose planks, the Star of Faelendar's main course hangs torn, and her cargo hatch amidships has burst open on the iron cage below, its bars eaten through. Lady Astrid faces the party near the gangway with a sealed invitation.",
     party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
     spare: [[-2.6, 4.8]],
+  },
+  // The Lower Districts: one street of leaning tenements and its side alley, for the walk in, the urchins and the signs.
+  "welcome-to-the-lower-districts": {
+    set: lowerDistrictsSet,
+    staging: welcomeToTheLowerDistricts,
+    location: "Lower Districts",
+    where:
+      "A narrow street in Kordavos's Lower Districts at the grey end of the day: tall leaning timber tenements jut over wet cobbles, washing strung between them, lanterns lit on brackets, a crowd of hooded folk hurrying both ways. A house is built across the street further up, its archway the way on, and a side alley turns off to the west. The party has come up from the docks and stands near the street's lower end. A fiddler plays by a shop window, a hooded woman hurries past, and a trinket-seller watches from a doorway.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[-0.4, 10.8]],
+  },
+  "beset-by-street-urchins": {
+    set: lowerDistrictsSet,
+    staging: besetByStreetUrchins,
+    location: "Lower Districts",
+    where:
+      "The crowded street in the Lower Districts by the mouth of a side alley, the crowd thick around the party. Halfling urchins weave among them: a red-haired girl skips right up to the heroes, a wide-eyed boy slips past behind them, two more giggle a few steps off. A fiddler plays by a cart against the wall. The side alley to the west is the urchins' way out.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[-0.6, 0.2]],
+  },
+  "finding-the-black-market": {
+    set: lowerDistrictsSet,
+    staging: findingTheBlackMarket,
+    location: "Lower Districts",
+    where:
+      "A narrow side alley off the Lower Districts' street as the light fades: damp stone ground floors, timber storeys leaning close overhead, washing strung across, crates and barrels against the walls, a lantern here and there. The party stands a few paces in from the street. At their feet a paving stone has a small crooked dagger cut into it, and further in a stone over a doorway bears a snake coiled round a crescent moon. A trinket-seller lounges near the end, where a dark archway leads to a shut gate, and a hooded woman comes from it.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[-11.6, -7.6]],
   },
   // The Midnight Summons: one moonlit stretch of deer trail for the walk, the owlbear, and the rescue.
   "broken-silence": {

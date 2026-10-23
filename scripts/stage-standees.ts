@@ -432,6 +432,55 @@ const FIGURES: Record<string, Figure> = {
     backNote:
       "The creature is seen squarely from directly behind, its rump and tail nearest the camera: its back, the row of spines along it, both wings from behind and the thick tail curling at the bottom. The head points AWAY from the camera, so only the back of the skull and the crest show above the shoulders: NO eyes, NO jaws, NO face, NO profile. Same size and stance.",
   },
+  // March of Davos, the Lower Districts: the halfling urchins from their portraits, two more of their gang, a street
+  // fiddler, a wary hooded local and a fence lurking in a doorway.
+  "finn-swiftfoot": {
+    out: "fixtures/march-of-davos/finn-swiftfoot",
+    who: "Finn Swiftfoot, Halfling boy pickpocket",
+    look: "A halfling urchin only about 1.0 m tall, a child-sized body with a wide-eyed, mischievous boyish face of about twelve, small pointed ears, very messy shaggy dark-brown hair, rosy grubby cheeks and a gap-toothed grin. A too-big patched cream shirt with rolled sleeves under a frayed dark-brown waistcoat, a rope belt with a little pouch, ragged brown knee breeches, bare dirty feet. Leaning forward mid-step as if about to dart away, one hand tucked behind his back.",
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726439716482",
+    head: 0.2,
+  },
+  "mara-redleaf": {
+    out: "fixtures/march-of-davos/mara-redleaf",
+    who: "Mara Redleaf, Halfling girl urchin and musician",
+    look: "A halfling girl only about 1.0 m tall, a child-sized body with the face of a sly girl of about fourteen, small pointed ears, long tangled copper-red hair with a few thin braids, a freckled face with dirt-smudged cheeks and a knowing smile. A faded mustard-ochre blouse, a ragged grey hooded cloak thrown back, a small brass pendant on a cord, a patched brown skirt over leggings, scuffed little boots. A small wooden penny-whistle in one hand, skipping on her toes.",
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726439437517",
+    head: 0.2,
+  },
+  "urchin-a": {
+    out: "fixtures/march-of-davos/urchin-a",
+    who: "A halfling street urchin, boy",
+    look: "A halfling boy only about 0.95 m tall, a child-sized body and a cheeky round face of about ten, small pointed ears, a cropped mop of sandy hair under a floppy too-big grey wool cap, a smudged nose. A ragged moss-green tunic tied with string, patched grey trousers rolled to the knee, bare feet. Clutching a stolen apple to his chest and laughing.",
+    head: 0.2,
+  },
+  "urchin-b": {
+    out: "fixtures/march-of-davos/urchin-b",
+    who: "A halfling street urchin, girl",
+    look: "A halfling girl only about 0.95 m tall, a child-sized body and a sharp little face of about eleven, small pointed ears, black hair in two scruffy short plaits, big dark eyes. An oversized faded rust-red coat with the sleeves hanging past her hands, a dirty cream smock beneath, bare feet. Peeking over her shoulder, one finger to her lips.",
+    head: 0.2,
+  },
+  fiddler: {
+    out: "fixtures/march-of-davos/fiddler",
+    who: "A street fiddler in the Lower Districts, Human male",
+    look: "A gaunt old street musician of about sixty, about 1.75 m tall, long lank grey hair under a battered wide-brimmed felt hat, a hollow-cheeked weathered face with a grey stubble, eyes half closed as he plays. A long threadbare dark-green coat patched at the elbows, a faded red scarf, worn grey breeches and cracked boots. Playing a battered old fiddle tucked under his chin with a bow.",
+    head: 0.13,
+  },
+  "hooded-local": {
+    out: "fixtures/march-of-davos/hooded-local",
+    who: "A wary local of the Lower Districts, Human female",
+    look: "A wary middle-aged woman, about 1.65 m tall, a pinched pale face peering out from a deep dark-brown wool hood, grey hair escaping it, suspicious narrowed eyes. A heavy patched brown cloak clutched closed with one hand, a covered wicker basket on her other arm, muddy hem, worn clogs.",
+    head: 0.13,
+    backNote: "Her deep hood is up and covers the whole back of her head. The cloak hangs straight down her back to the calves and hides it. The basket shows only at her side.",
+  },
+  fence: {
+    out: "fixtures/march-of-davos/fence",
+    who: "A suspicious street merchant of the Lower Districts, Human male",
+    look: "A lean shifty man of about forty, about 1.78 m tall, tall human proportions, a narrow sallow face with a thin moustache and a gold tooth, slicked-back black hair under a wide-brimmed black hat. A long dark-plum coat over a stained mustard waistcoat, rings on his fingers, a tray of cheap trinkets and charms hung from a strap round his neck, worn boots. A sly half-smile, one hand beckoning.",
+    head: 0.13,
+    backNote:
+      "The tray of trinkets hangs on his CHEST in front of him and is NOT visible from behind: only its strap shows, crossing the back of his neck. His back shows the long plain plum coat from collar to hem with nothing hung on it, no bag, no pouches, no charms. His hands are at his sides.",
+  },
 }
 for (const [id, f] of Object.entries(FIGURES)) f.out ||= `heroes/${id}`
 

@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-23, the Lower Districts in 3D
+
+March of Davos encounters 15 to 17 in 3D. A street of leaning jettied tenements with a house built across it, washing, lanterns and a hooded crowd, and the side alley where the Black Market's day signs are carved. Halfling urchins, a fiddler, a hooded local and a trinket-seller. New street builders. Each opening view was framed against its painting first. Stage check and desktop tests pass. Not yet checked in the running app. See [March of Davos in 3D](plans/march-of-davos-sets.md).
+
 ## 2026-10-23, the docks' quality pass
 
 Review: the docks were not at the bar beside the arrival painting. The opening now frames like the painting, from a quay head looking east along the water with the ship right of centre. The ship is larger, bow toward the viewer, with a painted canvas for her sails, and the water lies 5.5 m down so her hull towers. Small cobbles and worn flags, a crowded harbour of boats, barges and ships, cream-canvas stalls, gulls, golden backlight and haze. The drake reads green, and the wrecked quay is denser. Stage check and desktop tests pass. See [March of Davos in 3D](plans/march-of-davos-sets.md).

@@ -123,6 +123,9 @@ test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the 
       ["the-beast-escapes", ["astrid-blackthorn", "forest-drake"], /drake[\s\S]*the gangway/],
       ["the-aftermath", ["astrid-blackthorn", "petra-velan"], /burst open[\s\S]*the cargo hatch/],
       ["an-invitation", ["astrid-blackthorn"], /invitation[\s\S]*the quay/],
+      ["welcome-to-the-lower-districts", [], /Lower Districts[\s\S]*the archway under the bridge-house/],
+      ["beset-by-street-urchins", ["finn-swiftfoot", "mara-redleaf"], /urchins[\s\S]*the mouth of the side alley/],
+      ["finding-the-black-market", [], /crooked dagger[\s\S]*the carved sign in the paving/],
     ] as const) {
       await advance(run.store, encounter)
       const here = run.store.current()
@@ -136,9 +139,9 @@ test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the 
       }
       assert.match(spatialContext(here.encounterId, here.characters, {}) ?? "", where)
     }
-    await advance(run.store, "welcome-to-the-lower-districts")
+    await advance(run.store, "the-entrance-to-the-black-market")
     const turn = run.store.current()
-    assert.equal(turn.encounterId, "welcome-to-the-lower-districts")
+    assert.equal(turn.encounterId, "the-entrance-to-the-black-market")
     assert.equal(sceneFor(turn.encounterId), undefined)
     assert.equal(spatialContext(turn.encounterId, turn.characters, {}), undefined)
     // Story view keeps the party's faces from the authored scenes.

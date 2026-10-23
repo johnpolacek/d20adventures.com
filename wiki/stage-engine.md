@@ -338,3 +338,4 @@ See [the plan](plans/march-of-davos-sets.md).
 - Harbour builders: `galleon` (a ship people walk aboard, deck at y = 0, a gangway doorway), `cage` (with `melted`), `crane`, `warehouse`, `skiff`, `bollard`. `crate` and `barrel` take `solid`.
 - Measured: the Kordavos docks 0.16M static triangles, 0.47M rendered, about 220 draw calls, after the quality pass.
 - `galleon` castles follow the hull outline, with a rising stem and beakhead, gilt bands, and four yards a mast with the top sails furled. Standee keying takes `hue`.
+- Street builders: `tenement`, `laundry`, `wallLantern`, `hangingSign`. Measured: the Lower Districts 0.17M static triangles, 0.33M rendered, about 150 draw calls with 84 walkers.

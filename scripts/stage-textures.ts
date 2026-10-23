@@ -41,6 +41,7 @@ type Texture = {
   tileX?: boolean
 }
 const LIBRARY = "public/stage/art/march-of-davos/the-old-grand-library.webp"
+const FINDING = "public/stage/art/march-of-davos/finding-the-black-market.webp"
 const SERPENT = "public/stage/art/march-of-davos/the-silver-serpent-tavern.webp"
 const TEXTURES: Record<string, Texture> = {
   "boards-weathered": {
@@ -248,6 +249,23 @@ const TEXTURES: Record<string, Texture> = {
     whole: true,
     aspect: "4:3",
     out: [1024, 768],
+  },
+  // The Lower Districts: the Black Market's day signs, carved small into stone, as the finding painting shows.
+  "sign-dagger": {
+    subject:
+      "ONE worn square paving stone seen from straight above, filling the whole frame edge to edge: dark wet grey granite, and cut shallowly into its middle a small crooked dagger symbol with a cross-guard and a bent blade, its grooves pale and freshly scratched, rain-dark stone around, fine grit in the grooves",
+    ref: FINDING,
+    crop: [0.3, 0.35, 0.45, 0.5],
+    whole: true,
+    out: [768, 768],
+  },
+  "sign-serpent": {
+    subject:
+      "ONE old squared stone block of a wall seen straight on, filling the whole frame edge to edge: dark weathered grey stone, damp, with a small symbol carved shallowly into it, a thin snake coiled around a crescent moon, the grooves pale against the dark stone, moss in the edges",
+    ref: FINDING,
+    crop: [0.0, 0.0, 0.4, 0.6],
+    whole: true,
+    out: [768, 768],
   },
   "door-thyra": {
     subject:

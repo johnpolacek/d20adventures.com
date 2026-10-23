@@ -98,7 +98,7 @@ The web viewer and the desktop app run the same `packages/stage` renderer and th
 - Interiors full of furniture stop straight walks. Put the party where walks out are clear, and keep a booth to one hero.
 - A wall's openings cannot stand one over another. A door and a window above it in one `wall` broke the cuts and the window vanished. Build the wall in two storeys, the upper one with a 3D `at`.
 - Close every gap between a vault and the walls or a crossing. Sky leaked through the corners above the vault's ends as bright quads, and the sun through them as a stray patch on the floor.
-- A flat `panel` lying with pitch -90 runs from `at` toward +z. Place a rug by its near edge.
+- A flat `panel` lying with pitch -90 runs from `at` toward -z. Place a rug or a carved slab by its +z edge.
 - Paint a book's spine once, pale, and tint it into many bindings. Real book boxes with a painted spine read as a library at every distance.
 - The image model draws Earth when asked for a world map, and a wolf when told the land is shaped like one. Name the coastline's features instead.
 - Light from a high window leads the eye in a hall. The library's south sun runs down the floor to the red door, as the painting does.
@@ -115,3 +115,7 @@ The web viewer and the desktop app run the same `packages/stage` renderer and th
 - A ship's side reads grand only when it is seen at an angle and her stem is nearest. Stern-on, a sterncastle reads as a house.
 - Paint sails as one canvas image. The procedural cloth is blotchy at the distances sails are seen from.
 
+- Turn a walk into an alley with a doorway. A low stone threshold built as a `wall` with one `doorway` across the alley's mouth gives walks from the street a turn there.
+- Masonry relief and dark joints read as bevelled cartoon blocks up close under lamps. Keep relief near 0.01 and the mortar close to the stone's colour.
+- Close both ends of a street. A view back down an open street showed the bare ground plane and sky. An archway house at each end reads as the way on.
+- Small water discs read as black and white blobs, not puddles. Leave them out.

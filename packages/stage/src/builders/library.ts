@@ -7,7 +7,7 @@ import { defineBuilder, matName, num, size } from "./types"
 // dome, galleries with balustrades, columns, arched frames, reading desks, armchairs, a globe and candle stands.
 
 // A geometry turned inside out: faces wound the other way and normals reversed, for vaults and domes seen from within.
-function inward(g: THREE.BufferGeometry) {
+export function inward(g: THREE.BufferGeometry) {
   const out = g.index ? g.toNonIndexed() : g.clone()
   const p = out.attributes.position.array as Float32Array
   const n = out.attributes.normal.array as Float32Array

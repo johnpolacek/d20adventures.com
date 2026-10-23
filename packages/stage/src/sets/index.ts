@@ -16,6 +16,7 @@ export const SETS: Record<string, () => Promise<unknown>> = {
   "realm-of-myr/silver-serpent-tavern": () => import("./realm-of-myr/silver-serpent-tavern.json").then((m) => m.default),
   "realm-of-myr/kordavos-docks": () => import("./realm-of-myr/kordavos-docks.json").then((m) => m.default),
   "realm-of-myr/kordavos-docks-wrecked": () => import("./realm-of-myr/kordavos-docks-wrecked.json").then((m) => m.default),
+  "realm-of-myr/kordavos-lower-districts": () => import("./realm-of-myr/kordavos-lower-districts.json").then((m) => m.default),
 }
 export const STAGINGS: Record<string, () => Promise<unknown>> = {
   "march-of-davos/the-gates-of-kordavos": () => import("../stagings/march-of-davos/the-gates-of-kordavos.json").then((m) => m.default),
@@ -48,4 +49,7 @@ export const STAGINGS: Record<string, () => Promise<unknown>> = {
   "covert-cargo/overboard": () => import("../stagings/covert-cargo/overboard.json").then((m) => m.default),
   "covert-cargo/return-to-the-city": () => import("../stagings/covert-cargo/return-to-the-city.json").then((m) => m.default),
   "covert-cargo/the-end": () => import("../stagings/covert-cargo/the-end.json").then((m) => m.default),
+  "march-of-davos/welcome-to-the-lower-districts": () => import("../stagings/march-of-davos/welcome-to-the-lower-districts.json").then((m) => m.default),
+  "march-of-davos/beset-by-street-urchins": () => import("../stagings/march-of-davos/beset-by-street-urchins.json").then((m) => m.default),
+  "march-of-davos/finding-the-black-market": () => import("../stagings/march-of-davos/finding-the-black-market.json").then((m) => m.default),
 }

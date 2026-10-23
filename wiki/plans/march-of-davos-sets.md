@@ -17,8 +17,8 @@ Encounters 1 to 7 already had sets: the gate, the harvest square, the Dragonbone
 | 8 | The Old Grand Library and its private archives | Done 2026-10-23 |
 | 9 | The Silver Serpent Tavern | Done 2026-10-23 |
 | 10 to 14 | The docks | Done 2026-10-23 |
-| 15 to 17 | The lower districts | Next |
-| 18 to 19 | The black market | |
+| 15 to 17 | The Lower Districts | Done 2026-10-23 |
+| 18 to 19 | The black market | Next |
 | 20 to 22 | The auction | |
 | 23 to 26 | Silverhand's trail, the hideout, the ambush | |
 | 27 to 39 | The Blackthorn mansion: front, ballroom, halls, chambers, wine cellar | |
@@ -87,3 +87,18 @@ Review against the arrival painting: the opening looked down an empty street, th
 - At ultra, DPR 2: 189 to 253 draw calls, 0.43M to 0.47M rendered triangles, 23 to 32 fps. 0.16M static triangles.
 - The painting's hull is still taller and more richly carved than the built one.
 
+
+## The Lower Districts
+
+Source: three paintings. The walk in is a long narrow street of leaning half-timbered houses, crowded with cloaked people, lanterns on the walls and a house built across the street. The urchins' painting is a close-up of the red-haired halfling girl with the crowd behind. The finding painting is a carved dagger sign on a wet paving stone in a dark alley. The intros add washing, chimney smoke, street performers, and a sign of a snake round a crescent moon.
+
+- Set `realm-of-myr/kordavos-lower-districts`, stagings `welcome-to-the-lower-districts`, `beset-by-street-urchins` and `finding-the-black-market`, written by `scripts/stage-sets/lower-districts.ts`.
+- A street of 6.4 m between stone ground floors, its timber storeys jutting further at each floor. There is an archway house at each end, the far one 68 m up the street. A side alley 2.6 m wide turns off west to a dark archway and a shut gate. Washing hangs across both, along with bracket lanterns, hanging signs with emblems, shopfronts, clutter, a handcart and two stalls. Spires of the upper city show beyond. The time is the grey end of the day.
+- The day signs: a carved dagger on a paving slab in the alley and a serpent-and-moon block over a doorway, both painted textures.
+- New builders in `packages/stage/src/builders/streets.ts`: `tenement` (a jettied townhouse with a door, shop, arch or passage ground floor, a gable or eaves, a lean, framed sides for corners and alleys), `laundry`, `wallLantern` and `hangingSign`.
+- A low stone threshold across the alley's mouth is a doorway to the walks, so walks from the street turn into the alley there.
+- Standees: Finn Swiftfoot and Mara Redleaf from their portraits, as halflings the size of children with the portraits' pointed ears, two more urchins, a street fiddler, a hooded local and a trinket-seller. The trinket-seller's back was repainted: the first showed his tray behind him.
+- `pnpm stage:check` passes. Walks: 107 of 112, 156 of 162 and 78 of 90. The blocked ones go from the alley to the bridge-house, which needs two turns, or start against the wall clutter.
+- At ultra quality, DPR 2: 129 to 173 draw calls, 0.32M to 0.34M rendered triangles, 20 to 28 fps. 0.17M static triangles, 84 walkers.
+- Desktop maps the three encounters. 78 desktop tests pass.
+- Left: the crowd library's robed figures are paler than the paintings' dark cloaks. The cobbles have no wet sheen. Not yet checked in the running desktop app.

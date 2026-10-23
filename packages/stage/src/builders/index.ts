@@ -8,6 +8,7 @@ import { barrelProp, basketProp, bunting, crateProp, farTown, goodsPile, gourds,
 import { anchor, serpent, shipWheel } from "./nautical"
 import { beamPrim, boxPrim, conePrim, cylinderPrim, extrudePrim, groundDisc, heightfieldPrim, lathePrim, openingPrim, spherePrim, torusPrim } from "./primitives"
 import { chainLine, hangingRope, pier, riverboat, ship, strongbox } from "./river"
+import { hangingSign, laundry, tenement, wallLantern } from "./streets"
 import { bar, bench, chair, chandelier, dragonSkull, hearth, stairs, stool, table, wall } from "./tavern"
 import type { BuilderDef } from "./types"
 import { flagstones, grassPatch, mountain, rock, standingStone } from "./wilds"
@@ -95,6 +96,11 @@ export const BUILDERS: Record<string, BuilderDef> = {
   stairs,
   chandelier,
   dragonSkull,
+  // old town streets
+  tenement,
+  laundry,
+  wallLantern,
+  hangingSign,
   // libraries and halls
   panel,
   archHead,
