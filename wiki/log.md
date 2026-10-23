@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-22, the Dragonbone Inn in 3D
+
+Owner: "More 3D sets. Do Dragonbone Inn." The inn's three encounters now play in 3D: its common room in the evening and late evening, the same room at dawn, and the backroom behind the bar. A stone hearth with a dragon's skull over the mantel, a bar of bottles and kegs, stairs, leaded windows, wheel chandeliers. Eleven new standees: Bram, Beric, Eamon and Elara from their portraits, a bard, and six patrons painted seated on their own stools. Two engine fixes: the camera passing straight from one room into another now takes the new room's lamps, and window glass casts no shadow. Every view passes the stage check and DPR 2 verification. 78 desktop tests pass. Not seen in the running app. See [the plan](plans/dragonbone-inn-stage.md).
+
 ## 2026-10-22, the end of a round written ahead
 
 Owner picked writing the end of a round while the round is read, "across all adventures". The screen now keeps a round until it has been read, so the end of the round and the next round's NPC and AI turns are written meanwhile, never more than a round ahead. A walk saved on a round the game has moved past is kept within its encounter, and its save no longer holds the story. Played live in the browser preview in all four adventures: in March of Davos five turns, the round's end and two of the next round's turns were written during one round's reading; in The Road to Kordavos a whole round ahead; in The Midnight Summons the round's end started as Thalbern's roll was answered, through an encounter change. Desktop type check and tests pass. See [shorter waits](plans/shorter-waits.md).

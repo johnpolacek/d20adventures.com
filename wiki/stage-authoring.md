@@ -90,3 +90,9 @@ The web viewer and the desktop app run the same `packages/stage` renderer and th
 - Check every authored view against awnings and overhangs. The gate's "Party" view sat at the edge of the watch's awning, which filled half the frame.
 - Audit the views at eye height from eight bearings and from above as well as the authored ones, since players drag the camera anywhere. That pass found black awning undersides, flat sheaves and a camera that could enter a tower.
 - A portrait reference lends its face. Paint NPC portraits from references that cannot be mistaken for the subject: a woman painted from a woman's portrait came out her twin.
+- Seat tavern patrons on stools painted into their standees. `seated: true` in `scripts/stage-standees.ts` asks for the figure on a three-legged stool. A standee leans to the camera, so a 3D stool would show beside it.
+- When a back keeps facing the same way as its front, as a seated traveller's knees did, mirror it. The stool, the satchel and the knees all land on the right side.
+- Check what stands between the sun and the windows. The houses across the inn's street shaded its whole front at a dawn sun, so they moved back and the sun rose to 30 degrees.
+- Keep a lamp off a standing place. A room light at head height by a window blew out the hero standing in the sun beside it.
+- A slab that runs into a wall flickers against it. The backroom's ceiling reached into the common room's wall and drew a dashed line along it.
+- Interiors full of furniture stop straight walks. Put the party where walks out are clear, and keep a booth to one hero.

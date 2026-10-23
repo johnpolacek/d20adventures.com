@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Stage authoring](../stage-authoring.md) · [Stage engine](../stage-engine.md) · [March of Davos playtest](march-of-davos-playtest.md)
 
-Status: started on main 2026-10-22.
+Status: implemented on main 2026-10-22. Owner review on `/dev/stage` and a check in the running app are next.
 
 ## Owner request, 2026-10-22
 
@@ -43,7 +43,7 @@ The hearth, the bar, the corner table, the front door, the stairs, the backroom,
 | `elara` | Young woman, dark tousled hair, tired red-rimmed eyes, a white blouse under a dark bodice, a pendant. | Portrait |
 | `bard` | A travelling bard with a lute. | New |
 
-Seated patrons painted with their own stools, if a test render works. Otherwise the crowd library stands at the bar, the hearth and barrel tables.
+Six seated patrons, painted with their own stools: a laughing merchant, an old farmer, a river sailor, a tired traveller, and a hooded man and a cloaked woman in the dark corner. The crowd library stands at the bar, the barrel by it and the bard.
 
 ## Steps
 
@@ -56,4 +56,12 @@ Seated patrons painted with their own stools, if a test render works. Otherwise 
 
 ## Results
 
-Not yet.
+- Sets `realm-of-myr/dragonbone-inn` and `realm-of-myr/dragonbone-inn-morning`, written by `scripts/stage-sets/dragonbone-inn.ts`. Stagings `the-dragonbone-inn`, `an-unsolicited-opportunity` and `morning-at-the-dragonbone`.
+- The common room is 14 by 10 m with a ceiling at 3.5 m, the backroom 4.2 by 3.3 m at 2.9 m. Leaded windows on the street, a door that stands open at dawn, a kitchen doorway and the backroom doorway.
+- New builders in `packages/stage/src/builders/tavern.ts`: `wall`, `hearth`, `bar`, `table`, `bench` (a settle with `back`), `stool`, `chair`, `stairs`, `chandelier`, `dragonSkull`.
+- The evening: Bram at the party's corner table, the bard by the fire, Beric and Eamon unnamed at a barrel by the bar. Late evening: Beric and Eamon at the corner table, Bram at the bar. Dawn: the party at the table under the windows turned to the door, Elara walking in on "door creaks open", Bram in front of the bar, the farmer at breakfast.
+- Two engine fixes found on the way. Going straight from one room into another kept the first room's lamps, so the backroom was black. Window glass cast shadows, so no sun came through.
+- `pnpm stage:check` passes. Walks go straight or through one doorway, so tables stop some: the hero in the booth, and walks from the bar side to the hearth.
+- `scripts/stage-verify.ts` at ultra, DPR 2: every view of the three stagings passes, 121 to 167 draw calls and 0.16M to 0.20M triangles, 25 to 36 fps on this Mac.
+- Desktop maps the three encounters with `where` lines and a spare spot. The scenes test checks Bram, Beric, Eamon and Elara's figures and portraits and the GM's staging, then story view at the Old Grand Library. 78 desktop tests pass.
+- Not yet seen in the running desktop app.

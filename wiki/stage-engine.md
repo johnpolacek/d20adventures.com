@@ -24,6 +24,7 @@ The engine ports the v5 prototype (`~/Projects/d20-graphics-test-2/src/v5/`, thr
 | Native gate scene and HUD connected to local CLI GM turns, movement, and SQLite saves | Further sets and native gameplay coverage |
 | Kordavos harvest square and the Harvest Festival staging, selected by encounter on desktop | Raised cast placement (festival performers stand in front of the stage) |
 | Clan Conflict on a cut of the harvest square with a ring of onlookers, 2026-10-19: 502 people, 0.24M triangles and about 175 draw calls per view at ultra, DPR 2 | |
+| The Dragonbone Inn, evening and dawn, 2026-10-22: two rooms, 0.10M static triangles, at most 167 draw calls and 0.20M triangles per view at ultra, DPR 2 | |
 
 ## Module layout
 
@@ -64,6 +65,7 @@ JSON only: no expressions, no code. Metres. `y` up. ground at `y = 0`. the set f
 - Primitives: `box`, `cylinder`, `cone`, `sphere`, `torus`, `lathe`, `beam`, `extrude` (polygon with holes), `opening` (arched window). `box` and `cylinder` take `solid: true` to register a footprint (a platform, a well).
 - Layouts: `group` (children in a local frame), `row` (items along a line at a random step), `scatter` (items in an area), each with `vary` (numeric ranges) and `choose` (discrete picks) per placement.
 - Kit (ported from v5): fortifications (`gatehouse`, `drumTower`, `curtainWall`, `roundTower`, `squareTower`, `archScreen`, `skyline`, `dome`), town (`house`, `farTown`), market (`stall` with goods `pots`, `baskets`, `cloth`, `sacks`, `arms`, or by name only `jewels`, `spices`, `none`, `sail`, `spearRack`, `standard`, `crate`, `barrel`, `sack`, `pot`, `basket`, `lantern`, `goodsPile`), festival (`bunting`, `sheaf`, `gourds`), checkpoint (`barrier`, `ropeLine`, `brazier`, `ledgerTable`, `cart`, `awning`, `bannerPole`), dressing (`banner`, `pennant`), ground (`groundDisc`, `land`).
+- Taverns (`tavern.ts`): `wall` (a straight wall cut by windows with leaded lights, doors with a planked leaf and doorways, each face plaster, boards or stone with a dado, studs and a rail; `door` anchors either side of every doorway), `hearth` (a stone-faced chimney breast, mantel, live fire, spit, pot and log stack), `bar` (counter, dresser of bottles and tankards, kegs), `table` (trestle or round, with a `setting` of tableware), `bench` (a settle with `back`), `stool`, `chair`, `stairs`, `chandelier`, `dragonSkull`.
 
 **Limits** (untrusted input): object count, nesting depth, per-layout counts, crowd total, segment counts and extents are capped in the schemas.
 
@@ -311,3 +313,15 @@ From an automated play of March of Davos with the live GM and a pass over every 
 - Cloth thins out, dithered, over the last metre before the camera, so bunting or an awning's edge passing by the lens never fills the frame with flat colour. 2026-10-20.
 - A drag stops at 50 degrees from straight overhead, a look down of about 40 degrees, near the festival's overview shot. From higher the crowd's cards read as pegs. The limit applies from the angle the drag starts at, so a steeper authored shot does not jump, and every `shot()` lifts it. 2026-10-20.
 - Measured: the gate set 0.67M static triangles, the square 0.18M, after windows and sheaves. Every staging still passes `pnpm stage:check`.
+
+## The Dragonbone Inn, 2026-10-22
+
+See [the plan](plans/dragonbone-inn-stage.md).
+
+- Two sets from one generator: the evening, lit by the fire, two chandeliers and lanterns with dusk in the windows, and the dawn, with the sun through the street windows, the fire banked, candles out and dust in the light.
+- The camera passing straight from one room into another, as from the common room into the backroom, kept the first room's lamps. `lightRoom` now relights when the room changes.
+- Window glass cast shadows, so the sun never came through a window. Glass now casts none, while the leading and frames do: the dawn sun lays the leaded lights on the floor.
+- The hearth's face is courses of rough faceted stones in a `rock` material over a dark mortar core. Masonry blocks with relief read as studded tiles under firelight.
+- The plaster between the studs is a `rock` material in limewash colours. A blank masonry plaster read as empty panels.
+- Measured at ultra, DPR 2, on this Mac: 121 to 167 draw calls, 0.16M to 0.20M triangles, 25 to 36 fps.
+
