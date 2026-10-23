@@ -570,6 +570,20 @@ const FIGURES: Record<string, Figure> = {
     backNote:
       "Seen squarely from directly behind, her whole body facing AWAY from us: the back of her white hair, the green velvet mantle hanging from her shoulders down her back to the hem, and the gown's brocade skirt below it. Her hands, face, jewels and the front of the gown are NOT visible.",
   },
+  // March of Davos, the cellar kit: the Blackthorn sommelier and the servant who follows him down to the wine cellar.
+  "clive-stonebrook": {
+    out: "fixtures/march-of-davos/clive-stonebrook",
+    who: "Clive Stonebrook, Human male sommelier of House Blackthorn",
+    look: "A tall, wiry man in his fifties, about 1.86 m tall, with tall human proportions and long legs. Greying hair slicked straight back, a long sharp nose tilted up, thin pursed lips, a disdainful expression. Crisp formal household livery: a black tailcoat with silver piping over a dove-grey waistcoat, a white shirt with a high collar and black stock, a silver brooch of a thorned rose on his lapel, black breeches, white stockings and buckled black shoes. A silver tasting cup on a chain round his neck. One hand raised a little as he speaks, the other holding a dusty wine bottle.",
+    head: 0.13,
+  },
+  "mira-hearthstone": {
+    out: "fixtures/march-of-davos/mira-hearthstone",
+    who: "Mira Hearthstone, Human female household servant",
+    look: "A short, sturdy young woman of about twenty, about 1.58 m tall, with a round flushed face, a sheen of sweat on her brow, anxious brown eyes and brown hair tucked under a white linen cap. Practical Blackthorn household dress: a dark grey wool gown with the sleeves pushed up, a long white apron, a black bodice laced at the front. A small notepad in one hand and a pencil in the other.",
+    head: 0.13,
+    backNote: "An apron shows only its ties from behind; the gown's skirt hangs down her back. The notepad and pencil show only at her sides.",
+  },
 }
 for (const [id, f] of Object.entries(FIGURES)) f.out ||= `heroes/${id}`
 

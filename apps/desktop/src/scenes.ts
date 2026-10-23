@@ -1,3 +1,4 @@
+import wineCellarSet from "@d20/stage/sets/realm-of-myr/blackthorn-wine-cellar.json"
 import innSet from "@d20/stage/sets/realm-of-myr/dragonbone-inn.json"
 import innMorningSet from "@d20/stage/sets/realm-of-myr/dragonbone-inn-morning.json"
 import ambushLanesSet from "@d20/stage/sets/realm-of-myr/kordavos-ambush-lanes.json"
@@ -19,6 +20,7 @@ import pathSet from "@d20/stage/sets/realm-of-myr/old-forest-path.json"
 import librarySet from "@d20/stage/sets/realm-of-myr/old-grand-library.json"
 import stonesSet from "@d20/stage/sets/realm-of-myr/old-standing-stones.json"
 import serpentSet from "@d20/stage/sets/realm-of-myr/silver-serpent-tavern.json"
+import hideoutSet from "@d20/stage/sets/realm-of-myr/silverhand-hideout.json"
 import homeSet from "@d20/stage/sets/realm-of-myr/thalberns-forest-home.json"
 import forestSet from "@d20/stage/sets/realm-of-myr/valkarr-forest-trail.json"
 import battleOnTheBoat from "@d20/stage/stagings/covert-cargo/battle-on-the-boat.json"
@@ -36,6 +38,7 @@ import anUnsolicitedOpportunity from "@d20/stage/stagings/march-of-davos/an-unso
 import arrivalAtTheDocks from "@d20/stage/stagings/march-of-davos/arrival-at-the-docks.json"
 import besetByStreetUrchins from "@d20/stage/stagings/march-of-davos/beset-by-street-urchins.json"
 import clanConflict from "@d20/stage/stagings/march-of-davos/clan-conflict.json"
+import faceToFaceWithSilverhand from "@d20/stage/stagings/march-of-davos/face-to-face-with-silverhand.json"
 import findingTheBlackMarket from "@d20/stage/stagings/march-of-davos/finding-the-black-market.json"
 import labyrinthineStalls from "@d20/stage/stagings/march-of-davos/labyrinthine-stalls.json"
 import morningAtTheDragonbone from "@d20/stage/stagings/march-of-davos/morning-at-the-dragonbone.json"
@@ -52,6 +55,7 @@ import theHideout from "@d20/stage/stagings/march-of-davos/the-hideout.json"
 import theNewDawn from "@d20/stage/stagings/march-of-davos/the-new-dawn.json"
 import theOldGrandLibrary from "@d20/stage/stagings/march-of-davos/the-old-grand-library.json"
 import theSilverSerpentTavern from "@d20/stage/stagings/march-of-davos/the-silver-serpent-tavern.json"
+import theWineCellar from "@d20/stage/stagings/march-of-davos/the-wine-cellar.json"
 import vengeanceOfTheBlackthorn from "@d20/stage/stagings/march-of-davos/vengeance-of-the-blackthorn.json"
 import welcomeToTheLowerDistricts from "@d20/stage/stagings/march-of-davos/welcome-to-the-lower-districts.json"
 import backHome from "@d20/stage/stagings/the-midnight-summons/back-home.json"
@@ -287,6 +291,25 @@ export const SCENES: Record<string, Scene> = {
       "Night on the waterfront, thick sea mist: a lane of old stone houses runs down to a quay over the harbour. Near the water on the east side stands the abandoned warehouse, weathered boards over a stone ground storey, its windows boarded, its rusted iron door hanging open under a red lantern. Varchk and Kaeleth keep the door. Silverhand crosses the lane toward it. The party watches from the shadows on the west side, up the lane. Crates and barrels are heaped along the warehouse wall toward the quay.",
     party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
     spare: [[-2.2, -4.6]],
+  },
+  // The cellar kit: Silverhand's back room, and the Blackthorn wine cellar.
+  "face-to-face-with-silverhand": {
+    set: hideoutSet,
+    staging: faceToFaceWithSilverhand,
+    location: "Silverhand's hideout",
+    where:
+      "A cramped, low back room in the abandoned warehouse: board walls, beams overhead, crates and sacks of smuggled goods stacked along every wall. A long weathered table runs down the middle with empty chairs either side. Silverhand sits in a high-backed chair at its far end behind a single candle and an uncorked bottle of Hammerdeep whiskey, his silver gauntlet on the table. Varchk stands behind him. The party has just come in by the door at the near end.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[0.2, -1.6]],
+  },
+  "the-wine-cellar": {
+    set: wineCellarSet,
+    staging: theWineCellar,
+    location: "Blackthorn wine cellar",
+    where:
+      "Below the Blackthorn mansion: a long stone barrel vault reached by a stair from the halls above. Racks of dusty bottles line both walls, and rows of casks lie before them with their heads to the aisle, some stacked two high, room to hide behind them. Two candle chandeliers hang over the aisle. At the far end, beyond a small tasting table, stands a sturdier rack of newer, paler wood against the wall. The party stands in the middle of the aisle. The sommelier and a servant come down the stair when they arrive.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[-0.9, -12.2]],
   },
   "the-ambush": {
     set: ambushLanesSet,

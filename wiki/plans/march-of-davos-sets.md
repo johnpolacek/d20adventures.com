@@ -20,8 +20,8 @@ Encounters 1 to 7 already had sets: the gate, the harvest square, the Dragonbone
 | 15 to 17 | The Lower Districts | Done 2026-10-23 |
 | 18 to 19 | The Black Market | Done 2026-10-23 |
 | 20 to 22 | The auction | Next. A hall behind the Black Market lane's far door |
-| 23 to 26 | Silverhand's trail, the hideout, the ambush | Street kit done 2026-10-23. Face-to-Face is the cellar kit |
-| 27 to 39 | The Blackthorn mansion: front, ballroom, halls, chambers, wine cellar | Bespoke. The wine cellar is the cellar kit |
+| 23 to 26 | Silverhand's trail, the hideout, the ambush | Street and cellar kits done 2026-10-23 |
+| 27 to 39 | The Blackthorn mansion: front, ballroom, halls, chambers, wine cellar | Bespoke. The wine cellar is the cellar kit, done 2026-10-23 |
 | 40 to 44 | The catacombs | Tunnel kit. The grate at 40 is the mansion's grounds |
 | 45 to 46 | The forgotten temple | Bespoke |
 | 47 to 49 | The aftermath | Street kit done 2026-10-23 for 47 and 48. 49 reuses the library |
@@ -69,6 +69,20 @@ Done 2026-10-23. `scripts/stage-sets/kits/street.ts` builds a Kordavos street fr
 - At ultra, DPR 2: 105 to 175 draw calls, 0.16M to 0.33M rendered triangles, 19 to 32 fps.
 - Desktop maps the five encounters. 78 desktop tests pass. Not yet checked in the running desktop app.
 - Left: the ambush's rooftop view shows a narrower canyon than the painting. Bram has no figure in the ambush, since he waits at the inn.
+
+## The cellar kit
+
+Done 2026-10-23. `scripts/stage-sets/kits/cellar.ts` builds a room below ground from a dressing. `scripts/stage-sets/cellars.ts` writes both rooms and their stagings.
+
+- A dressing picks the size, a stone barrel vault or a low beamed ceiling on posts, stone or boarded walls, a flagged or boarded floor, a stair or a door in, and a warm or cold tone. No daylight: the dressing's lamps and the camera's fill light it.
+- New builders in `packages/stage/src/builders/cellar.ts`: `cask` (rows on cradles, heads out, stacked in tiers), `wineRack` (bottles lying necks out) and `torch` (a live flame in an iron sconce).
+- `silverhand-hideout`: the warehouse's back room for Face-to-Face with Silverhand. Board walls, beams, crates and sacks along the walls, a long table with empty chairs, Silverhand seated at the far end behind one candle and the whiskey, Varchk behind him.
+- `blackthorn-wine-cellar`: a 22 m barrel vault under the mansion for The Wine Cellar. Racks along both walls, casks before them, two chandeliers, torches at the stair, a tasting table, and the paler rack on the far wall that hides the alcove. The sommelier and the servant walk on from the stair when the narration names them.
+- Standees: Clive Stonebrook the sommelier and Mira Hearthstone. Silverhand seated is the auction's figure.
+- `pnpm stage:check` passes. Walks: the hideout 35 of 60, since the long table stops walks down the room; the wine cellar 66 of 66.
+- At ultra, DPR 2: 78 to 85 draw calls, 0.02M and 0.28M rendered triangles, 27 to 37 fps.
+- Desktop maps both encounters. 78 desktop tests pass. Not yet checked in the running desktop app.
+- Left: the casks read as banded logs more than staved casks, and the racks behind them stay dim.
 
 ## The Old Grand Library
 

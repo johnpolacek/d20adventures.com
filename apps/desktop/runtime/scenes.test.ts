@@ -80,7 +80,7 @@ test("every authored scene is a real encounter, and every festival character has
   }
 })
 
-test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the Old Grand Library, the Silver Serpent, the docks, the Lower Districts, the Black Market and the street kit have their scenes, and an encounter without one falls back to story view", async () => {
+test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the Old Grand Library, the Silver Serpent, the docks, the Lower Districts, the Black Market, the street kit and the cellar kit have their scenes, and an encounter without one falls back to story view", async () => {
   const run = await setup()
   try {
     // The heroes wait in the line alone, then meet Garlan at the front.
@@ -154,7 +154,7 @@ test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the 
     for (const [encounter, npcs, figures, where] of [
       ["shadowing-silverhand", ["aldith", "kaelen", "silverhand", "silverhand-representative"], 4, /old lanes[\s\S]*the archway under the bridge-house/],
       ["the-hideout", ["aldith", "kaelen"], 2, /abandoned warehouse[\s\S]*the hideout's door/],
-      ["face-to-face-with-silverhand", ["silverhand"], -1, null],
+      ["face-to-face-with-silverhand", ["silverhand"], 1, /back room[\s\S]*Silverhand's end of the table/],
       ["the-ambush", ["bram", "liora", "silas"], 2, /hooded archer[\s\S]*the door with the arrow in it/],
     ] as const) {
       await advance(run.store, encounter)
@@ -173,6 +173,8 @@ test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the 
     const party = run.store.current().characters
     assert.match(spatialContext("the-new-dawn", party, {}) ?? "", /Key of Ilmarin[\s\S]*the balcony/)
     assert.match(spatialContext("vengeance-of-the-blackthorn", party, {}) ?? "", /coffin[\s\S]*the bier/)
+    // The wine cellar, below the mansion.
+    assert.match(spatialContext("the-wine-cellar", party, {}) ?? "", /barrel vault[\s\S]*the rack on the far wall/)
   } finally {
     run.close()
   }
