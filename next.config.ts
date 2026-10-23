@@ -15,7 +15,8 @@ const nextConfig: NextConfig = {
     return [
       { source: "/stage/:path*", destination: `${cdn}/stage/:path*` },
       { source: "/stage-lab/:path*", destination: `${cdn}/stage-lab/:path*` },
-      { source: "/images/app/backgrounds/:path*", destination: `${cdn}/images/app/backgrounds/:path*` },
+      // Any image the deploy does not carry: the backgrounds, and old images kept only in the bucket.
+      { source: "/images/:path*", destination: `${cdn}/images/:path*` },
     ]
   },
 }

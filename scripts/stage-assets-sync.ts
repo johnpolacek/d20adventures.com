@@ -1,5 +1,6 @@
 // Uploads the website's stage art to the public bucket, so deploys need not carry it. `next.config.ts` rewrites
-// `/stage/...`, `/stage-lab/...` and `/images/app/backgrounds/...` to CloudFront when a deploy has no local copy, and `.vercelignore` leaves them out.
+// `/stage/...`, `/stage-lab/...` and `/images/...` to CloudFront when a deploy has no local copy, and `.vercelignore` leaves
+// `public/stage`, `public/stage-lab` and `public/images/app/backgrounds` out.
 // Unchanged files (same size and MD5) are skipped. Run before pushing new or changed stage art.
 //
 //   pnpm stage:sync            # upload what changed
