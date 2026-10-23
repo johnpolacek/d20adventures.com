@@ -145,10 +145,31 @@ function stage(lot: "dagger" | "map" | "none"): Obj[] {
     ...pedestal(-2.6, -5.3, "drape"),
     ...pedestal(2.5, -5.5, "bust"),
     ...pedestal(-1.0, -6.0, "casket"),
-    { type: "lathe", at: [1.2, 0.7, -6.1], profile: [[0, 0], [0.32, 0], [0.32, 0.05], [0.04, 0.08], [0.04, 0.9], [0.3, 0.95], [0.32, 1.0], [0, 1.02]], segments: 18, material: "gilt" },
+    {
+      type: "lathe",
+      at: [1.2, 0.7, -6.1],
+      profile: [
+        [0, 0],
+        [0.32, 0],
+        [0.32, 0.05],
+        [0.04, 0.08],
+        [0.04, 0.9],
+        [0.3, 0.95],
+        [0.32, 1.0],
+        [0, 1.02],
+      ],
+      segments: 18,
+      material: "gilt",
+    },
     ...Array.from({ length: 10 }, (_, i) => {
       const a = (i / 10) * Math.PI * 2
-      return { type: "beam", from: [r2(1.2 + Math.cos(a) * 0.3), 0.75, r2(-6.1 + Math.sin(a) * 0.3)], to: [r2(1.2 + Math.cos(a) * 0.12), 1.95, r2(-6.1 + Math.sin(a) * 0.12)], radius: 0.012, material: "gilt" }
+      return {
+        type: "beam",
+        from: [r2(1.2 + Math.cos(a) * 0.3), 0.75, r2(-6.1 + Math.sin(a) * 0.3)],
+        to: [r2(1.2 + Math.cos(a) * 0.12), 1.95, r2(-6.1 + Math.sin(a) * 0.12)],
+        radius: 0.012,
+        material: "gilt",
+      }
     }),
     { type: "sphere", at: [1.2, 1.9, -6.1], radius: 0.13, material: "gilt" },
     // An easel with a covered painting.
@@ -166,15 +187,50 @@ function stage(lot: "dagger" | "map" | "none"): Obj[] {
 }
 function pedestal(x: number, zz: number, top: "drape" | "bust" | "casket"): Obj[] {
   const o: Obj[] = [
-    { type: "lathe", at: [x, 0.7, zz], profile: [[0, 0], [0.32, 0], [0.32, 0.1], [0.2, 0.16], [0.17, 0.85], [0.28, 0.92], [0.3, 1.0], [0, 1.0]], segments: 20, material: "stoneTrim" },
+    {
+      type: "lathe",
+      at: [x, 0.7, zz],
+      profile: [
+        [0, 0],
+        [0.32, 0],
+        [0.32, 0.1],
+        [0.2, 0.16],
+        [0.17, 0.85],
+        [0.28, 0.92],
+        [0.3, 1.0],
+        [0, 1.0],
+      ],
+      segments: 20,
+      material: "stoneTrim",
+    },
   ]
-  if (top === "drape") o.push({ type: "sphere", at: [x, 1.7, zz], radius: [0.28, 0.3, 0.28], hemisphere: true, segments: 18, material: "clothVelvet" }, { type: "cylinder", at: [x, 1.55, zz], radius: [0.32, 0.27], height: 0.18, material: "clothVelvet" })
+  if (top === "drape")
+    o.push(
+      { type: "sphere", at: [x, 1.7, zz], radius: [0.28, 0.3, 0.28], hemisphere: true, segments: 18, material: "clothVelvet" },
+      { type: "cylinder", at: [x, 1.55, zz], radius: [0.32, 0.27], height: 0.18, material: "clothVelvet" }
+    )
   if (top === "bust")
     o.push(
-      { type: "lathe", at: [x, 1.7, zz], profile: [[0, 0], [0.16, 0], [0.12, 0.06], [0.06, 0.1], [0.2, 0.22], [0.22, 0.32], [0.1, 0.38], [0.06, 0.42]], segments: 18, material: "marble" },
+      {
+        type: "lathe",
+        at: [x, 1.7, zz],
+        profile: [
+          [0, 0],
+          [0.16, 0],
+          [0.12, 0.06],
+          [0.06, 0.1],
+          [0.2, 0.22],
+          [0.22, 0.32],
+          [0.1, 0.38],
+          [0.06, 0.42],
+        ],
+        segments: 18,
+        material: "marble",
+      },
       { type: "sphere", at: [x, 2.1, zz], radius: [0.1, 0.13, 0.11], segments: 14, material: "marble" }
     )
-  if (top === "casket") o.push({ type: "strongbox", at: [x, 1.7, zz], yaw: 15, width: 0.5, height: 0.32, depth: 0.34, lid: 0.12, chain: false, materials: { wood: "chest", inner: "dark", iron: "gilt" } })
+  if (top === "casket")
+    o.push({ type: "strongbox", at: [x, 1.7, zz], yaw: 15, width: 0.5, height: 0.32, depth: 0.34, lid: 0.12, chain: false, materials: { wood: "chest", inner: "dark", iron: "gilt" } })
   return o
 }
 
@@ -211,9 +267,7 @@ function dressing(): Obj[] {
     { type: "chandelier", at: [3.6, H - 0.2, 2.2], radius: 0.8, candles: 12, drop: 4.3, materials: { timber: "brass" } },
     { type: "chandelier", at: [0, H - 0.2, -3.6], radius: 1.0, candles: 14, drop: 4.0, materials: { timber: "brass" } },
     // Tall banners on the side walls between the gallery and the ceiling, and dark hangings below.
-    ...[-1, 1].flatMap((s) =>
-      [-5.2, -1.8].map((zz) => ({ type: "box", at: [r2(s * (R - 0.04)), LEVEL + 1.0, zz], size: [0.04, 3.6, 1.4], material: "clothVelvet" }))
-    ),
+    ...[-1, 1].flatMap((s) => [-5.2, -1.8].map((zz) => ({ type: "box", at: [r2(s * (R - 0.04)), LEVEL + 1.0, zz], size: [0.04, 3.6, 1.4], material: "clothVelvet" }))),
     // A runner up the central aisle.
     { type: "panel", at: [0, 0.006, 9.0], size: [1.3, 9.6], pitch: -90, material: "runner", depth: 0.01, edge: "rugEdge" },
     // A guard's stool and a small table with the ledger of lots by the entrance.

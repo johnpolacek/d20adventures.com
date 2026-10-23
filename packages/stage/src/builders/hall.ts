@@ -51,7 +51,10 @@ export const rotunda = defineBuilder(
       nicheSize: z.tuple([size(10), size(10)]).default([1.4, 2.6]),
       nicheSill: num(0, 20).default(0.9),
       nicheLevels: z.array(num(0, 40)).max(4).default([]),
-      doors: z.array(z.tuple([num(-360, 360), size(10)])).max(6).default([]),
+      doors: z
+        .array(z.tuple([num(-360, 360), size(10)]))
+        .max(6)
+        .default([]),
       doorHeight: size(10).default(3.2),
       cornice: num(0, 40).optional(),
     })
@@ -83,8 +86,13 @@ export const rotunda = defineBuilder(
       // A moulded arch over the door, its jambs, and anchors a step either side for walks.
       const [x, zz] = at(a, r - 0.02)
       const frame = new Frame(b, M4(x, 0, zz, a * DEG + Math.PI))
-      frame.geo(M.trim, G(`hall-door-${w}`, () => new THREE.TorusGeometry(w / 2 + 0.12, 0.12, 6, 20, Math.PI)), M4(0, p.doorHeight - w / 2, 0), { uv: "keep" })
-      for (const s of [-1, 1]) frame.box(M.trim, (s * (w / 2 + 0.12)), (p.doorHeight - w / 2) / 2, 0, 0.26, p.doorHeight - w / 2, 0.3)
+      frame.geo(
+        M.trim,
+        G(`hall-door-${w}`, () => new THREE.TorusGeometry(w / 2 + 0.12, 0.12, 6, 20, Math.PI)),
+        M4(0, p.doorHeight - w / 2, 0),
+        { uv: "keep" }
+      )
+      for (const s of [-1, 1]) frame.box(M.trim, s * (w / 2 + 0.12), (p.doorHeight - w / 2) / 2, 0, 0.26, p.doorHeight - w / 2, 0.3)
       const [ix, iz] = at(a, r - 0.8)
       const [ox, oz] = at(a, r + T + 0.8)
       ctx.anchor("door", ix, 0, iz)
@@ -111,8 +119,13 @@ export const rotunda = defineBuilder(
           // The niche: a dark round-headed recess, its frame, a sill.
           const arch = [...arcPts(0, nh - nw / 2, nw / 2, 0, Math.PI, 14), [-nw / 2, 0] as Vec2, [nw / 2, 0] as Vec2]
           f.shape(M.niche, arch, 0.02, M4(0, y0, -0.02))
-          f.geo(M.trim, G(`hall-niche-${nw}`, () => new THREE.TorusGeometry(nw / 2 + 0.06, 0.06, 5, 16, Math.PI)), M4(0, y0 + nh - nw / 2, 0.02), { uv: "keep" })
-          for (const s of [-1, 1]) f.box(M.trim, (s * (nw / 2 + 0.06)), y0 + (nh - nw / 2) / 2, 0.02, 0.12, nh - nw / 2, 0.1)
+          f.geo(
+            M.trim,
+            G(`hall-niche-${nw}`, () => new THREE.TorusGeometry(nw / 2 + 0.06, 0.06, 5, 16, Math.PI)),
+            M4(0, y0 + nh - nw / 2, 0.02),
+            { uv: "keep" }
+          )
+          for (const s of [-1, 1]) f.box(M.trim, s * (nw / 2 + 0.06), y0 + (nh - nw / 2) / 2, 0.02, 0.12, nh - nw / 2, 0.1)
           f.box(M.trim, 0, y0 - 0.05, 0.08, nw + 0.3, 0.1, 0.24)
           // A lamp on a bracket in the niche: a brass cup and a glowing globe.
           f.cyl(M.brass, 0, y0 + nh * 0.42, 0.12, 0.07, 0.1, 0.06, 10)
@@ -189,7 +202,17 @@ export const ringGallery = defineBuilder(
         const a = p.from + ((p.to - p.from) * i) / nk
         const [x, zz] = at(a, r1)
         const f = new Frame(b, M4(x, 0, zz, a * DEG + Math.PI))
-        f.shape(M.case, [[0, 0], [p.depth * 0.75, 0], [p.depth * 0.18, -0.9], [0, -0.9]], 0.16, M4(0.08, p.level - 0.1, 0, Math.PI / 2))
+        f.shape(
+          M.case,
+          [
+            [0, 0],
+            [p.depth * 0.75, 0],
+            [p.depth * 0.18, -0.9],
+            [0, -0.9],
+          ],
+          0.16,
+          M4(0.08, p.level - 0.1, 0, Math.PI / 2)
+        )
       }
     }
   },
@@ -263,7 +286,12 @@ export const lectern = defineBuilder(
     F.sphere(M.flame, -w / 2 + 0.14, top + 0.42, -0.14, 0.012, 0.03, 0.012, 6)
     if (p.lot === "map") {
       // The relic: a weathered map laid open, its corners curling.
-      F.geo(M.map, G("hall-map", () => new THREE.PlaneGeometry(0.62, 0.44, 8, 4)), M4(-0.05, top + 0.004, 0.02, 0, 1, 1, 1, -Math.PI / 2), { uv: "keep" })
+      F.geo(
+        M.map,
+        G("hall-map", () => new THREE.PlaneGeometry(0.62, 0.44, 8, 4)),
+        M4(-0.05, top + 0.004, 0.02, 0, 1, 1, 1, -Math.PI / 2),
+        { uv: "keep" }
+      )
       for (const s of [-1, 1]) F.cyl(M.paper, -0.05 + s * 0.31, top + 0.016 - 0.22, 0.02, 0.016, 0.016, 0.44, 8, Math.PI / 2, 0)
     }
     if (p.lot === "case") {
@@ -281,7 +309,22 @@ export const lectern = defineBuilder(
     }
     ctx.footprint(0, 0, w / 2 + 0.07, d / 2 + 0.07, 0, h)
   },
-  { stone: "stone", trim: "stoneTrim", frieze: "stoneDark", wood: "oakDark", brass: "brass", wax: "candle", flame: "candleFlame", map: "relicMap", paper: "paper", leather: "leatherRed", cushion: "velvet", steel: "steel", gold: "gilt", gem: "ruby" }
+  {
+    stone: "stone",
+    trim: "stoneTrim",
+    frieze: "stoneDark",
+    wood: "oakDark",
+    brass: "brass",
+    wax: "candle",
+    flame: "candleFlame",
+    map: "relicMap",
+    paper: "paper",
+    leather: "leatherRed",
+    cushion: "velvet",
+    steel: "steel",
+    gold: "gilt",
+    gem: "ruby",
+  }
 )
 
 // A way through rows of seats for walks: two doorway anchors, at the aisle's near end and at `to` from it. Nothing is drawn. A walk that
@@ -307,18 +350,32 @@ export const theatreChair = defineBuilder(
       [-w / 2 + 0.04, -d / 2 + 0.04],
       [w / 2 - 0.04, -d / 2 + 0.04],
     ])
-      F.lathe(M.frame, x, 0, zz, [[0.018, 0], [0.026, 0.05], [0.018, 0.16], [0.026, 0.26], [0.022, seatH - 0.06], [0, seatH - 0.06]], 8)
+      F.lathe(
+        M.frame,
+        x,
+        0,
+        zz,
+        [
+          [0.018, 0],
+          [0.026, 0.05],
+          [0.018, 0.16],
+          [0.026, 0.26],
+          [0.022, seatH - 0.06],
+          [0, seatH - 0.06],
+        ],
+        8
+      )
     F.box(M.frame, 0, seatH - 0.07, 0, w, 0.06, d)
     F.box(M.velvet, 0, seatH - 0.01, 0.02, w - 0.06, 0.08, d - 0.06)
     // The back: two posts, a velvet panel, a carved crest.
-    for (const s of [-1, 1]) F.box(M.frame, (s * (w / 2 - 0.035)), (seatH + p.back) / 2, -d / 2 + 0.03, 0.05, p.back - seatH + 0.02, 0.05, 0, -0.08)
+    for (const s of [-1, 1]) F.box(M.frame, s * (w / 2 - 0.035), (seatH + p.back) / 2, -d / 2 + 0.03, 0.05, p.back - seatH + 0.02, 0.05, 0, -0.08)
     F.box(M.velvet, 0, (seatH + 0.06 + p.back - 0.07) / 2, -d / 2 + 0.05, w - 0.1, p.back - seatH - 0.12, 0.06, 0, -0.08)
     F.box(M.frame, 0, p.back - 0.03, -d / 2 + 0.01, w - 0.02, 0.07, 0.06, 0, -0.08)
     F.sphere(M.trim, 0, p.back + 0.02, -d / 2 + 0.01, 0.05, 0.04, 0.025, 8)
     // Arms.
     for (const s of [-1, 1]) {
-      F.box(M.frame, (s * (w / 2 - 0.03)), seatH + 0.12, 0.02, 0.05, 0.24, 0.05)
-      F.box(M.velvet, (s * (w / 2 - 0.03)), seatH + 0.25, -0.03, 0.07, 0.04, d - 0.08)
+      F.box(M.frame, s * (w / 2 - 0.03), seatH + 0.12, 0.02, 0.05, 0.24, 0.05)
+      F.box(M.velvet, s * (w / 2 - 0.03), seatH + 0.25, -0.03, 0.07, 0.04, d - 0.08)
     }
     ctx.footprint(0, 0, w / 2, d / 2, 0, p.back)
   },
