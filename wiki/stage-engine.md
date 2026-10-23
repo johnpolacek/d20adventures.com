@@ -325,3 +325,11 @@ See [the plan](plans/dragonbone-inn-stage.md).
 - The plaster between the studs is a `rock` material in limewash colours. A blank masonry plaster read as empty panels.
 - Measured at ultra, DPR 2, on this Mac: 121 to 167 draw calls, 0.16M to 0.20M triangles, 25 to 36 fps.
 
+
+## March of Davos sets, from 2026-10-23
+
+See [the plan](plans/march-of-davos-sets.md).
+
+- `image` material: a painting laid by the builder's uv, tinted, with `glow` (lit from within by its own colours, no shadow) and `double`.
+- Library builders: `panel`, `archHead`, `bookcase`, `vault`, `cupola`, `gallery`, `column`, `desk`, `armchair`, `globe`, `candleStand`. `beam` takes `open`, and `chandelier` drops up to 12 m.
+- Measured: the Old Grand Library 0.25M static triangles, 0.50M rendered with shadows, about 130 draw calls.

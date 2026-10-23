@@ -1,0 +1,3994 @@
+{
+  "format": "d20.stage.set",
+  "version": 1,
+  "id": "old-grand-library",
+  "settingId": "realm-of-myr",
+  "locationId": "old-grand-library",
+  "title": "The Old Grand Library",
+  "seed": 8080,
+  "atmosphere": {
+    "sun": {
+      "direction": [
+        0.09,
+        0.5,
+        0.86
+      ],
+      "color": "#ffe0b0",
+      "intensity": 5,
+      "target": [
+        0,
+        0,
+        -2
+      ],
+      "distance": 200,
+      "shadow": {
+        "left": -22,
+        "right": 22,
+        "top": 22,
+        "bottom": -22,
+        "near": 120,
+        "far": 300,
+        "size": 4096
+      }
+    },
+    "hemisphere": {
+      "sky": "#a8bcd4",
+      "ground": "#5a4a3a",
+      "intensity": 0.5
+    },
+    "sky": {
+      "horizon": "#e8d8c0",
+      "mid": "#a0bcd8",
+      "zenith": "#5a84b4",
+      "gain": 1,
+      "clouds": 0.5,
+      "stars": 0,
+      "moon": 0
+    },
+    "fog": {
+      "density": 0.003,
+      "start": 20
+    },
+    "fill": {
+      "color": "#fff0e0",
+      "intensity": 1.2,
+      "distance": 10
+    },
+    "lights": [],
+    "environment": 0.3,
+    "exposure": 1,
+    "grade": "neutral",
+    "wind": 0
+  },
+  "rooms": [
+    {
+      "box": [
+        -7,
+        -0.5,
+        -12,
+        7,
+        18,
+        10
+      ],
+      "ambient": 0.32,
+      "fill": 1.5,
+      "exposure": 1.3,
+      "lights": [
+        {
+          "at": [
+            0,
+            9.5,
+            0.4
+          ],
+          "color": "#fff0d8",
+          "intensity": 26,
+          "distance": 14
+        },
+        {
+          "at": [
+            -4,
+            2.2,
+            -3.2
+          ],
+          "color": "#ffb870",
+          "intensity": 7,
+          "distance": 6
+        },
+        {
+          "at": [
+            4,
+            2.2,
+            -3.2
+          ],
+          "color": "#ffb870",
+          "intensity": 7,
+          "distance": 6
+        },
+        {
+          "at": [
+            -4,
+            2.2,
+            3.9
+          ],
+          "color": "#ffb870",
+          "intensity": 7,
+          "distance": 6
+        },
+        {
+          "at": [
+            4,
+            2.2,
+            3.9
+          ],
+          "color": "#ffb870",
+          "intensity": 7,
+          "distance": 6
+        },
+        {
+          "at": [
+            0,
+            5.6,
+            -8
+          ],
+          "color": "#ffc078",
+          "intensity": 26,
+          "distance": 12
+        },
+        {
+          "at": [
+            0,
+            5.6,
+            6.8
+          ],
+          "color": "#ffc078",
+          "intensity": 26,
+          "distance": 12
+        },
+        {
+          "at": [
+            0,
+            2.4,
+            -10.8
+          ],
+          "color": "#ffb870",
+          "intensity": 5,
+          "distance": 5
+        }
+      ]
+    },
+    {
+      "box": [
+        -3.2,
+        -0.5,
+        -18.4,
+        3.2,
+        4.6,
+        -12.2
+      ],
+      "ambient": 0.12,
+      "fill": 1.1,
+      "exposure": 1.15,
+      "lights": [
+        {
+          "at": [
+            -2.3,
+            1.9,
+            -17.4
+          ],
+          "color": "#ffb870",
+          "intensity": 6,
+          "distance": 5
+        },
+        {
+          "at": [
+            -0.6,
+            1.2,
+            -15.4
+          ],
+          "color": "#ffbc78",
+          "intensity": 5,
+          "distance": 4
+        },
+        {
+          "at": [
+            2.4,
+            1.4,
+            -15.6
+          ],
+          "color": "#8ab4ff",
+          "intensity": 1.2,
+          "distance": 2.5
+        },
+        {
+          "at": [
+            0,
+            2.6,
+            -13.2
+          ],
+          "color": "#b8c4e8",
+          "intensity": 2,
+          "distance": 5
+        }
+      ]
+    }
+  ],
+  "camera": {
+    "near": 0.1,
+    "far": 300,
+    "min": [
+      -6.6,
+      0.4,
+      -18.099999999999998
+    ],
+    "max": [
+      6.6,
+      13,
+      9.6
+    ],
+    "maxDistance": 14
+  },
+  "materials": {
+    "ground": {
+      "type": "masonry",
+      "a": "#9a7658",
+      "b": "#b08d6c",
+      "c": "#8a7c70",
+      "mortar": "#5d4636",
+      "block": [
+        1.1,
+        0.8
+      ],
+      "stones": 0.36,
+      "joint": 0.03,
+      "relief": 0.045,
+      "variance": 0.55,
+      "grime": 0.35,
+      "ground": true,
+      "roads": false
+    },
+    "iron": {
+      "type": "metal",
+      "color": "#2e2a28",
+      "roughness": 0.55,
+      "metalness": 0.7
+    },
+    "brass": {
+      "type": "metal",
+      "color": "#a8823e",
+      "roughness": 0.38,
+      "metalness": 0.85
+    },
+    "dark": {
+      "type": "masonry",
+      "a": "#6a4a3a",
+      "b": "#7f624d",
+      "c": "#5a5553",
+      "block": [
+        2.4,
+        1.2
+      ],
+      "grime": 1.3,
+      "relief": 0.08
+    },
+    "void": {
+      "type": "plain",
+      "color": "#0d0a09",
+      "roughness": 1
+    },
+    "floor": {
+      "type": "masonry",
+      "a": "#5e554c",
+      "b": "#6e6458",
+      "c": "#4e463e",
+      "mortar": "#2a2420",
+      "block": [
+        0.9,
+        0.6
+      ],
+      "joint": 0.02,
+      "relief": 0.05,
+      "variance": 0.5,
+      "grime": 1.4,
+      "ground": true
+    },
+    "stone": {
+      "type": "masonry",
+      "a": "#4e4a46",
+      "b": "#5a5450",
+      "c": "#46423e",
+      "mortar": "#2a2624",
+      "block": [
+        0.6,
+        0.32
+      ],
+      "joint": 0.015,
+      "relief": 0.02,
+      "variance": 0.4,
+      "grime": 1.6
+    },
+    "stoneVault": {
+      "type": "masonry",
+      "a": "#5a544e",
+      "b": "#645e56",
+      "c": "#4e4842",
+      "mortar": "#2e2a26",
+      "block": [
+        0.5,
+        0.28
+      ],
+      "joint": 0.015,
+      "relief": 0.015,
+      "variance": 0.4,
+      "grime": 1.8
+    },
+    "stoneTrim": {
+      "type": "rock",
+      "a": "#5a5450",
+      "b": "#6e6862",
+      "moss": "#3e3a36",
+      "mossLight": "#4e4842",
+      "lichen": "#7e766e",
+      "mossAmount": 0.2,
+      "lichenAmount": 0.05,
+      "relief": 0.4,
+      "scale": 0.8
+    },
+    "stoneDark": {
+      "type": "plain",
+      "color": "#2a2624",
+      "roughness": 1
+    },
+    "plaster": {
+      "type": "plain",
+      "color": "#3a3430",
+      "roughness": 1
+    },
+    "oak": {
+      "type": "painted",
+      "map": "/stage/textures/door-oak.jpg",
+      "tint": "#8a6a54",
+      "plank": [
+        0.2,
+        2.4
+      ],
+      "size": [
+        0.6,
+        1.8
+      ],
+      "relief": 0.1,
+      "grime": 1
+    },
+    "oakDark": {
+      "type": "painted",
+      "map": "/stage/textures/door-oak.jpg",
+      "tint": "#5c4436",
+      "plank": [
+        0,
+        40
+      ],
+      "size": [
+        0.6,
+        1.8
+      ],
+      "relief": 0.1,
+      "grime": 1.2
+    },
+    "timber": {
+      "type": "painted",
+      "map": "/stage/textures/timber-hold.jpg",
+      "tint": "#6e5a4a",
+      "plank": [
+        0,
+        40
+      ],
+      "size": [
+        0.7,
+        2.2
+      ],
+      "relief": 0.1,
+      "grime": 1.2
+    },
+    "panel": {
+      "type": "painted",
+      "map": "/stage/textures/cabin-planks.jpg",
+      "tint": "#6e5446",
+      "plank": [
+        0.16,
+        40
+      ],
+      "size": [
+        0.5,
+        1.6
+      ],
+      "relief": 0.14,
+      "grime": 0.9
+    },
+    "boards": {
+      "type": "painted",
+      "map": "/stage/textures/timber-hold.jpg",
+      "tint": "#7a6450",
+      "plank": [
+        0.26,
+        40
+      ],
+      "size": [
+        0.7,
+        2.2
+      ],
+      "relief": 0.08,
+      "grime": 0.9
+    },
+    "door": {
+      "type": "painted",
+      "map": "/stage/textures/door-oak.jpg",
+      "tint": "#a08068",
+      "plank": [
+        0,
+        12
+      ],
+      "size": [
+        0.6,
+        1.8
+      ],
+      "relief": 0.14,
+      "grime": 0.6
+    },
+    "gilt": {
+      "type": "metal",
+      "color": "#c89a48",
+      "roughness": 0.38,
+      "metalness": 0.85
+    },
+    "lead": {
+      "type": "metal",
+      "color": "#2a2826",
+      "roughness": 0.6,
+      "metalness": 0.4
+    },
+    "bookRed": {
+      "type": "image",
+      "map": "/stage/textures/book-spine.jpg",
+      "tint": "#b04a3a",
+      "roughness": 0.7
+    },
+    "bookGreen": {
+      "type": "image",
+      "map": "/stage/textures/book-spine.jpg",
+      "tint": "#5a7a4c",
+      "roughness": 0.7
+    },
+    "bookBlue": {
+      "type": "image",
+      "map": "/stage/textures/book-spine.jpg",
+      "tint": "#4a5e86",
+      "roughness": 0.7
+    },
+    "bookBrown": {
+      "type": "image",
+      "map": "/stage/textures/book-spine.jpg",
+      "tint": "#9a6a44",
+      "roughness": 0.7
+    },
+    "bookTan": {
+      "type": "image",
+      "map": "/stage/textures/book-spine.jpg",
+      "tint": "#e8d0aa",
+      "roughness": 0.7
+    },
+    "bookBlack": {
+      "type": "image",
+      "map": "/stage/textures/book-spine.jpg",
+      "tint": "#4e4440",
+      "roughness": 0.7
+    },
+    "bookOx": {
+      "type": "image",
+      "map": "/stage/textures/book-spine.jpg",
+      "tint": "#8a2e2a",
+      "roughness": 0.7
+    },
+    "bookCloth": {
+      "type": "image",
+      "map": "/stage/textures/book-spine-cloth.jpg",
+      "tint": "#c8bca0",
+      "roughness": 0.7
+    },
+    "paper": {
+      "type": "plain",
+      "color": "#e2d6b8",
+      "roughness": 0.95
+    },
+    "leather": {
+      "type": "plain",
+      "color": "#1e3a44",
+      "roughness": 0.5
+    },
+    "leatherRed": {
+      "type": "plain",
+      "color": "#5a2420",
+      "roughness": 0.6
+    },
+    "candle": {
+      "type": "plain",
+      "color": "#e8dcc0",
+      "roughness": 0.9
+    },
+    "candleFlame": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ffa040",
+      "emissiveIntensity": 2.4
+    },
+    "rug": {
+      "type": "image",
+      "map": "/stage/textures/library-rug.jpg",
+      "roughness": 1
+    },
+    "rugEdge": {
+      "type": "plain",
+      "color": "#4a1a1a",
+      "roughness": 1
+    },
+    "fresco": {
+      "type": "image",
+      "map": "/stage/textures/vault-fresco.jpg",
+      "roughness": 0.9,
+      "tint": "#f0e8dc"
+    },
+    "dome": {
+      "type": "image",
+      "map": "/stage/textures/dome-fresco.jpg",
+      "roughness": 0.9
+    },
+    "ceiling": {
+      "type": "masonry",
+      "a": "#2c3a3a",
+      "b": "#334242",
+      "c": "#283434",
+      "mortar": "#a07a3a",
+      "block": [
+        1.2,
+        1.2
+      ],
+      "joint": 0.07,
+      "relief": 0.4,
+      "variance": 0.3,
+      "grime": 0.6
+    },
+    "skylight": {
+      "type": "plain",
+      "color": "#000000",
+      "emissive": "#fff2d8",
+      "emissiveIntensity": 3
+    },
+    "saint": {
+      "type": "image",
+      "map": "/stage/textures/stained-saint.jpg",
+      "glow": 1.4,
+      "roughness": 0.3,
+      "double": true
+    },
+    "saintDim": {
+      "type": "image",
+      "map": "/stage/textures/stained-saint.jpg",
+      "glow": 0.55,
+      "roughness": 0.3
+    },
+    "thyra": {
+      "type": "image",
+      "map": "/stage/textures/stained-thyra.jpg",
+      "glow": 1.3,
+      "roughness": 0.3
+    },
+    "doorRed": {
+      "type": "image",
+      "map": "/stage/textures/door-thyra.jpg",
+      "roughness": 0.55,
+      "tint": "#e8dcd4"
+    },
+    "doorOak": {
+      "type": "painted",
+      "map": "/stage/textures/door-oak.jpg",
+      "tint": "#8a6a54",
+      "plank": [
+        0.18,
+        3.4
+      ],
+      "size": [
+        0.6,
+        1.8
+      ],
+      "relief": 0.08,
+      "grime": 0.8
+    },
+    "globeMap": {
+      "type": "image",
+      "map": "/stage/textures/globe-map.jpg",
+      "roughness": 0.6
+    },
+    "glass": {
+      "type": "glass",
+      "color": "#a8c0d8",
+      "opacity": 0.25
+    },
+    "glassOut": {
+      "type": "glass",
+      "color": "#a8c0d8",
+      "opacity": 0.25
+    },
+    "cabinetGlass": {
+      "type": "glass",
+      "color": "#c8d8e0",
+      "opacity": 0.12,
+      "roughness": 0.05
+    },
+    "glassShelf": {
+      "type": "glass",
+      "color": "#c8d8e0",
+      "opacity": 0.2,
+      "roughness": 0.05
+    },
+    "relicOrb": {
+      "type": "orb",
+      "color": "#1a2a3a",
+      "glow": "#7ab0ff"
+    },
+    "ink": {
+      "type": "plain",
+      "color": "#141414",
+      "roughness": 0.3
+    },
+    "shaft": {
+      "type": "glow",
+      "color": "#ffd9a0",
+      "opacity": 0.035
+    },
+    "shaftDome": {
+      "type": "glow",
+      "color": "#fff0d0",
+      "opacity": 0.03
+    }
+  },
+  "objects": [
+    {
+      "type": "box",
+      "at": [
+        0,
+        -0.14,
+        0
+      ],
+      "size": [
+        120,
+        0.1,
+        120
+      ],
+      "material": "ground"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        -0.1,
+        -1
+      ],
+      "size": [
+        14.8,
+        0.1,
+        22.8
+      ],
+      "material": "floor"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        -0.1,
+        -15.299999999999999
+      ],
+      "size": [
+        7.2,
+        0.1,
+        6.999999999999999
+      ],
+      "material": "floor"
+    },
+    {
+      "type": "box",
+      "at": [
+        -7.2,
+        0,
+        -11.07
+      ],
+      "size": [
+        0.4,
+        18.3,
+        2.65
+      ],
+      "material": "stone",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "at": [
+        -7.2,
+        0,
+        -9
+      ],
+      "size": [
+        0.4,
+        4.7,
+        1.5
+      ],
+      "material": "stone",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "at": [
+        -7.2,
+        7.300000000000001,
+        -9
+      ],
+      "size": [
+        0.4,
+        11,
+        1.5
+      ],
+      "material": "stone"
+    },
+    {
+      "type": "box",
+      "at": [
+        -7.2,
+        0,
+        -7.2
+      ],
+      "size": [
+        0.4,
+        18.3,
+        2.1
+      ],
+      "material": "stone",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "at": [
+        -7.2,
+        0,
+        -5.4
+      ],
+      "size": [
+        0.4,
+        4.7,
+        1.5
+      ],
+      "material": "stone",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "at": [
+        -7.2,
+        7.300000000000001,
+        -5.4
+      ],
+      "size": [
+        0.4,
+        11,
+        1.5
+      ],
+      "material": "stone"
+    },
+    {
+      "type": "box",
+      "at": [
+        -7.2,
+        0,
+        0
+      ],
+      "size": [
+        0.4,
+        18.3,
+        9.3
+      ],
+      "material": "stone",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "at": [
+        -7.2,
+        0,
+        5.4
+      ],
+      "size": [
+        0.4,
+        4.7,
+        1.5
+      ],
+      "material": "stone",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "at": [
+        -7.2,
+        7.300000000000001,
+        5.4
+      ],
+      "size": [
+        0.4,
+        11,
+        1.5
+      ],
+      "material": "stone"
+    },
+    {
+      "type": "box",
+      "at": [
+        -7.2,
+        0,
+        6.9
+      ],
+      "size": [
+        0.4,
+        18.3,
+        1.5
+      ],
+      "material": "stone",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "at": [
+        -7.2,
+        0,
+        8.4
+      ],
+      "size": [
+        0.4,
+        4.7,
+        1.5
+      ],
+      "material": "stone",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "at": [
+        -7.2,
+        7.300000000000001,
+        8.4
+      ],
+      "size": [
+        0.4,
+        11,
+        1.5
+      ],
+      "material": "stone"
+    },
+    {
+      "type": "box",
+      "at": [
+        -7.2,
+        0,
+        9.78
+      ],
+      "size": [
+        0.4,
+        18.3,
+        1.25
+      ],
+      "material": "stone",
+      "solid": true
+    },
+    {
+      "type": "archHead",
+      "at": [
+        -7.2,
+        4.7,
+        -9
+      ],
+      "yaw": 90,
+      "width": 1.5,
+      "height": 2.6,
+      "thickness": 0.4,
+      "materials": {
+        "fill": "stone",
+        "trim": "stoneTrim"
+      }
+    },
+    {
+      "type": "panel",
+      "at": [
+        -7.22,
+        4.7,
+        -9
+      ],
+      "yaw": 90,
+      "size": [
+        1.5,
+        2.6
+      ],
+      "arch": true,
+      "material": "saint"
+    },
+    {
+      "type": "box",
+      "at": [
+        -6.92,
+        4.62,
+        -9
+      ],
+      "size": [
+        0.36,
+        0.08,
+        1.8
+      ],
+      "material": "stoneTrim"
+    },
+    {
+      "type": "archHead",
+      "at": [
+        -7.2,
+        4.7,
+        -5.4
+      ],
+      "yaw": 90,
+      "width": 1.5,
+      "height": 2.6,
+      "thickness": 0.4,
+      "materials": {
+        "fill": "stone",
+        "trim": "stoneTrim"
+      }
+    },
+    {
+      "type": "panel",
+      "at": [
+        -7.22,
+        4.7,
+        -5.4
+      ],
+      "yaw": 90,
+      "size": [
+        1.5,
+        2.6
+      ],
+      "arch": true,
+      "material": "saint"
+    },
+    {
+      "type": "box",
+      "at": [
+        -6.92,
+        4.62,
+        -5.4
+      ],
+      "size": [
+        0.36,
+        0.08,
+        1.8
+      ],
+      "material": "stoneTrim"
+    },
+    {
+      "type": "archHead",
+      "at": [
+        -7.2,
+        4.7,
+        5.4
+      ],
+      "yaw": 90,
+      "width": 1.5,
+      "height": 2.6,
+      "thickness": 0.4,
+      "materials": {
+        "fill": "stone",
+        "trim": "stoneTrim"
+      }
+    },
+    {
+      "type": "panel",
+      "at": [
+        -7.22,
+        4.7,
+        5.4
+      ],
+      "yaw": 90,
+      "size": [
+        1.5,
+        2.6
+      ],
+      "arch": true,
+      "material": "saint"
+    },
+    {
+      "type": "box",
+      "at": [
+        -6.92,
+        4.62,
+        5.4
+      ],
+      "size": [
+        0.36,
+        0.08,
+        1.8
+      ],
+      "material": "stoneTrim"
+    },
+    {
+      "type": "archHead",
+      "at": [
+        -7.2,
+        4.7,
+        8.4
+      ],
+      "yaw": 90,
+      "width": 1.5,
+      "height": 2.6,
+      "thickness": 0.4,
+      "materials": {
+        "fill": "stone",
+        "trim": "stoneTrim"
+      }
+    },
+    {
+      "type": "panel",
+      "at": [
+        -7.22,
+        4.7,
+        8.4
+      ],
+      "yaw": 90,
+      "size": [
+        1.5,
+        2.6
+      ],
+      "arch": true,
+      "material": "saint"
+    },
+    {
+      "type": "box",
+      "at": [
+        -6.92,
+        4.62,
+        8.4
+      ],
+      "size": [
+        0.36,
+        0.08,
+        1.8
+      ],
+      "material": "stoneTrim"
+    },
+    {
+      "type": "box",
+      "at": [
+        7.2,
+        0,
+        -11.07
+      ],
+      "size": [
+        0.4,
+        18.3,
+        2.65
+      ],
+      "material": "stone",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "at": [
+        7.2,
+        0,
+        -9
+      ],
+      "size": [
+        0.4,
+        4.7,
+        1.5
+      ],
+      "material": "stone",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "at": [
+        7.2,
+        7.300000000000001,
+        -9
+      ],
+      "size": [
+        0.4,
+        11,
+        1.5
+      ],
+      "material": "stone"
+    },
+    {
+      "type": "box",
+      "at": [
+        7.2,
+        0,
+        -7.2
+      ],
+      "size": [
+        0.4,
+        18.3,
+        2.1
+      ],
+      "material": "stone",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "at": [
+        7.2,
+        0,
+        -5.4
+      ],
+      "size": [
+        0.4,
+        4.7,
+        1.5
+      ],
+      "material": "stone",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "at": [
+        7.2,
+        7.300000000000001,
+        -5.4
+      ],
+      "size": [
+        0.4,
+        11,
+        1.5
+      ],
+      "material": "stone"
+    },
+    {
+      "type": "box",
+      "at": [
+        7.2,
+        0,
+        0
+      ],
+      "size": [
+        0.4,
+        18.3,
+        9.3
+      ],
+      "material": "stone",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "at": [
+        7.2,
+        0,
+        5.4
+      ],
+      "size": [
+        0.4,
+        4.7,
+        1.5
+      ],
+      "material": "stone",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "at": [
+        7.2,
+        7.300000000000001,
+        5.4
+      ],
+      "size": [
+        0.4,
+        11,
+        1.5
+      ],
+      "material": "stone"
+    },
+    {
+      "type": "box",
+      "at": [
+        7.2,
+        0,
+        6.9
+      ],
+      "size": [
+        0.4,
+        18.3,
+        1.5
+      ],
+      "material": "stone",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "at": [
+        7.2,
+        0,
+        8.4
+      ],
+      "size": [
+        0.4,
+        4.7,
+        1.5
+      ],
+      "material": "stone",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "at": [
+        7.2,
+        7.300000000000001,
+        8.4
+      ],
+      "size": [
+        0.4,
+        11,
+        1.5
+      ],
+      "material": "stone"
+    },
+    {
+      "type": "box",
+      "at": [
+        7.2,
+        0,
+        9.78
+      ],
+      "size": [
+        0.4,
+        18.3,
+        1.25
+      ],
+      "material": "stone",
+      "solid": true
+    },
+    {
+      "type": "archHead",
+      "at": [
+        7.2,
+        4.7,
+        -9
+      ],
+      "yaw": -90,
+      "width": 1.5,
+      "height": 2.6,
+      "thickness": 0.4,
+      "materials": {
+        "fill": "stone",
+        "trim": "stoneTrim"
+      }
+    },
+    {
+      "type": "panel",
+      "at": [
+        7.22,
+        4.7,
+        -9
+      ],
+      "yaw": -90,
+      "size": [
+        1.5,
+        2.6
+      ],
+      "arch": true,
+      "material": "saint"
+    },
+    {
+      "type": "box",
+      "at": [
+        6.92,
+        4.62,
+        -9
+      ],
+      "size": [
+        0.36,
+        0.08,
+        1.8
+      ],
+      "material": "stoneTrim"
+    },
+    {
+      "type": "archHead",
+      "at": [
+        7.2,
+        4.7,
+        -5.4
+      ],
+      "yaw": -90,
+      "width": 1.5,
+      "height": 2.6,
+      "thickness": 0.4,
+      "materials": {
+        "fill": "stone",
+        "trim": "stoneTrim"
+      }
+    },
+    {
+      "type": "panel",
+      "at": [
+        7.22,
+        4.7,
+        -5.4
+      ],
+      "yaw": -90,
+      "size": [
+        1.5,
+        2.6
+      ],
+      "arch": true,
+      "material": "saint"
+    },
+    {
+      "type": "box",
+      "at": [
+        6.92,
+        4.62,
+        -5.4
+      ],
+      "size": [
+        0.36,
+        0.08,
+        1.8
+      ],
+      "material": "stoneTrim"
+    },
+    {
+      "type": "archHead",
+      "at": [
+        7.2,
+        4.7,
+        5.4
+      ],
+      "yaw": -90,
+      "width": 1.5,
+      "height": 2.6,
+      "thickness": 0.4,
+      "materials": {
+        "fill": "stone",
+        "trim": "stoneTrim"
+      }
+    },
+    {
+      "type": "panel",
+      "at": [
+        7.22,
+        4.7,
+        5.4
+      ],
+      "yaw": -90,
+      "size": [
+        1.5,
+        2.6
+      ],
+      "arch": true,
+      "material": "saint"
+    },
+    {
+      "type": "box",
+      "at": [
+        6.92,
+        4.62,
+        5.4
+      ],
+      "size": [
+        0.36,
+        0.08,
+        1.8
+      ],
+      "material": "stoneTrim"
+    },
+    {
+      "type": "archHead",
+      "at": [
+        7.2,
+        4.7,
+        8.4
+      ],
+      "yaw": -90,
+      "width": 1.5,
+      "height": 2.6,
+      "thickness": 0.4,
+      "materials": {
+        "fill": "stone",
+        "trim": "stoneTrim"
+      }
+    },
+    {
+      "type": "panel",
+      "at": [
+        7.22,
+        4.7,
+        8.4
+      ],
+      "yaw": -90,
+      "size": [
+        1.5,
+        2.6
+      ],
+      "arch": true,
+      "material": "saint"
+    },
+    {
+      "type": "box",
+      "at": [
+        6.92,
+        4.62,
+        8.4
+      ],
+      "size": [
+        0.36,
+        0.08,
+        1.8
+      ],
+      "material": "stoneTrim"
+    },
+    {
+      "type": "wall",
+      "at": [
+        0,
+        -12.2
+      ],
+      "yaw": 0,
+      "length": 14.8,
+      "height": 18.3,
+      "thickness": 0.4,
+      "a": {
+        "finish": "stone"
+      },
+      "b": {
+        "finish": "stone"
+      },
+      "openings": [
+        {
+          "at": 0,
+          "width": 1.8,
+          "height": 3,
+          "kind": "door"
+        }
+      ]
+    },
+    {
+      "type": "wall",
+      "at": [
+        0,
+        10.2
+      ],
+      "yaw": 180,
+      "length": 14.8,
+      "height": 7.6,
+      "thickness": 0.4,
+      "a": {
+        "finish": "stone"
+      },
+      "b": {
+        "finish": "stone"
+      },
+      "openings": [
+        {
+          "at": 0,
+          "width": 2.2,
+          "height": 3.4,
+          "kind": "door"
+        }
+      ]
+    },
+    {
+      "type": "wall",
+      "at": [
+        0,
+        7.6,
+        10.2
+      ],
+      "yaw": 180,
+      "length": 14.8,
+      "height": 10.700000000000001,
+      "thickness": 0.4,
+      "a": {
+        "finish": "stone"
+      },
+      "b": {
+        "finish": "stone"
+      },
+      "openings": [
+        {
+          "at": 0,
+          "width": 3.2,
+          "height": 5,
+          "kind": "window",
+          "panes": [
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "type": "archHead",
+      "at": [
+        0,
+        7.6,
+        10.2
+      ],
+      "yaw": 180,
+      "width": 3.2,
+      "height": 5,
+      "thickness": 0.4,
+      "materials": {
+        "fill": "stone",
+        "trim": "stoneTrim"
+      }
+    },
+    {
+      "type": "panel",
+      "at": [
+        0,
+        7.6,
+        10.02
+      ],
+      "yaw": 180,
+      "size": [
+        3.2,
+        5
+      ],
+      "arch": true,
+      "material": "saint"
+    },
+    {
+      "type": "archHead",
+      "at": [
+        0,
+        0,
+        -12.2
+      ],
+      "width": 1.8,
+      "height": 3,
+      "thickness": 0.44,
+      "materials": {
+        "fill": "stone",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "archHead",
+      "at": [
+        0,
+        0,
+        10.2
+      ],
+      "yaw": 180,
+      "width": 2.2,
+      "height": 3.4,
+      "thickness": 0.44,
+      "materials": {
+        "fill": "stone",
+        "trim": "stoneTrim"
+      }
+    },
+    {
+      "type": "panel",
+      "at": [
+        0,
+        0,
+        -11.995
+      ],
+      "size": [
+        1.8,
+        3
+      ],
+      "arch": true,
+      "material": "doorRed"
+    },
+    {
+      "type": "panel",
+      "at": [
+        0,
+        0,
+        -12.405000000000001
+      ],
+      "yaw": 180,
+      "size": [
+        1.8,
+        3
+      ],
+      "arch": true,
+      "material": "doorRed"
+    },
+    {
+      "type": "panel",
+      "at": [
+        0,
+        0,
+        9.995
+      ],
+      "yaw": 180,
+      "size": [
+        2.2,
+        3.4
+      ],
+      "arch": true,
+      "material": "doorOak",
+      "depth": 0.06,
+      "edge": "oakDark"
+    },
+    {
+      "type": "vault",
+      "at": [
+        0,
+        0
+      ],
+      "span": 14,
+      "from": -12,
+      "to": -3.6,
+      "spring": 7.5,
+      "bay": 2.8,
+      "repeat": [
+        3,
+        3
+      ],
+      "materials": {
+        "shell": "fresco",
+        "rib": "stoneTrim",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "vault",
+      "at": [
+        0,
+        0
+      ],
+      "span": 14,
+      "from": 3.6,
+      "to": 10,
+      "spring": 7.5,
+      "bay": 3.2,
+      "repeat": [
+        3,
+        2
+      ],
+      "materials": {
+        "shell": "fresco",
+        "rib": "stoneTrim",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "extrude",
+      "at": [
+        0,
+        14.5,
+        0
+      ],
+      "plane": "xz",
+      "depth": 0.3,
+      "points": [
+        [
+          -7.1,
+          -3.7
+        ],
+        [
+          7.1,
+          -3.7
+        ],
+        [
+          7.1,
+          3.7
+        ],
+        [
+          -7.1,
+          3.7
+        ]
+      ],
+      "holes": [
+        [
+          [
+            3.4,
+            0
+          ],
+          [
+            3.36,
+            0.53
+          ],
+          [
+            3.23,
+            1.05
+          ],
+          [
+            3.03,
+            1.54
+          ],
+          [
+            2.75,
+            2
+          ],
+          [
+            2.4,
+            2.4
+          ],
+          [
+            2,
+            2.75
+          ],
+          [
+            1.54,
+            3.03
+          ],
+          [
+            1.05,
+            3.23
+          ],
+          [
+            0.53,
+            3.36
+          ],
+          [
+            0,
+            3.4
+          ],
+          [
+            -0.53,
+            3.36
+          ],
+          [
+            -1.05,
+            3.23
+          ],
+          [
+            -1.54,
+            3.03
+          ],
+          [
+            -2,
+            2.75
+          ],
+          [
+            -2.4,
+            2.4
+          ],
+          [
+            -2.75,
+            2
+          ],
+          [
+            -3.03,
+            1.54
+          ],
+          [
+            -3.23,
+            1.05
+          ],
+          [
+            -3.36,
+            0.53
+          ],
+          [
+            -3.4,
+            0
+          ],
+          [
+            -3.36,
+            -0.53
+          ],
+          [
+            -3.23,
+            -1.05
+          ],
+          [
+            -3.03,
+            -1.54
+          ],
+          [
+            -2.75,
+            -2
+          ],
+          [
+            -2.4,
+            -2.4
+          ],
+          [
+            -2,
+            -2.75
+          ],
+          [
+            -1.54,
+            -3.03
+          ],
+          [
+            -1.05,
+            -3.23
+          ],
+          [
+            -0.53,
+            -3.36
+          ],
+          [
+            0,
+            -3.4
+          ],
+          [
+            0.53,
+            -3.36
+          ],
+          [
+            1.05,
+            -3.23
+          ],
+          [
+            1.54,
+            -3.03
+          ],
+          [
+            2,
+            -2.75
+          ],
+          [
+            2.4,
+            -2.4
+          ],
+          [
+            2.75,
+            -2
+          ],
+          [
+            3.03,
+            -1.54
+          ],
+          [
+            3.23,
+            -1.05
+          ],
+          [
+            3.36,
+            -0.53
+          ]
+        ]
+      ],
+      "material": "ceiling"
+    },
+    {
+      "type": "archHead",
+      "at": [
+        0,
+        7.5,
+        -3.68
+      ],
+      "width": 14,
+      "height": 7,
+      "thickness": 0.16,
+      "moulding": 0,
+      "keystone": false,
+      "materials": {
+        "fill": "stone",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "archHead",
+      "at": [
+        0,
+        7.5,
+        3.68
+      ],
+      "width": 14,
+      "height": 7,
+      "thickness": 0.16,
+      "moulding": 0,
+      "keystone": false,
+      "materials": {
+        "fill": "stone",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "cupola",
+      "at": [
+        0,
+        14.8,
+        0
+      ],
+      "radius": 3.4,
+      "rise": 3,
+      "ribs": 8,
+      "oculus": 0.7,
+      "materials": {
+        "shell": "dome"
+      }
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        18.3,
+        -4
+      ],
+      "size": [
+        15.6,
+        0.4,
+        30
+      ],
+      "material": "dark"
+    },
+    {
+      "type": "box",
+      "at": [
+        -6.95,
+        7.5,
+        0
+      ],
+      "size": [
+        0.1,
+        7,
+        7.2
+      ],
+      "material": "stone"
+    },
+    {
+      "type": "panel",
+      "at": [
+        -6.89,
+        8.4,
+        0
+      ],
+      "yaw": 90,
+      "size": [
+        2.6,
+        5.2
+      ],
+      "arch": true,
+      "material": "saint",
+      "depth": 0.05,
+      "edge": "stoneTrim"
+    },
+    {
+      "type": "archHead",
+      "at": [
+        -6.83,
+        8.4,
+        0
+      ],
+      "yaw": 90,
+      "width": 3,
+      "height": 5.4,
+      "thickness": 0.12,
+      "materials": {
+        "fill": "stone",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "box",
+      "at": [
+        -6.73,
+        8.3,
+        0
+      ],
+      "size": [
+        0.3,
+        0.12,
+        3.2
+      ],
+      "material": "stoneTrim"
+    },
+    {
+      "type": "box",
+      "at": [
+        6.95,
+        7.5,
+        0
+      ],
+      "size": [
+        0.1,
+        7,
+        7.2
+      ],
+      "material": "stone"
+    },
+    {
+      "type": "panel",
+      "at": [
+        6.89,
+        8.4,
+        0
+      ],
+      "yaw": -90,
+      "size": [
+        2.6,
+        5.2
+      ],
+      "arch": true,
+      "material": "saint",
+      "depth": 0.05,
+      "edge": "stoneTrim"
+    },
+    {
+      "type": "archHead",
+      "at": [
+        6.83,
+        8.4,
+        0
+      ],
+      "yaw": -90,
+      "width": 3,
+      "height": 5.4,
+      "thickness": 0.12,
+      "materials": {
+        "fill": "stone",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "box",
+      "at": [
+        6.73,
+        8.3,
+        0
+      ],
+      "size": [
+        0.3,
+        0.12,
+        3.2
+      ],
+      "material": "stoneTrim"
+    },
+    {
+      "type": "bookcase",
+      "at": [
+        -7,
+        -7.75
+      ],
+      "yaw": 90,
+      "length": 7.5,
+      "height": 3.9,
+      "depth": 0.45,
+      "bay": 1.05,
+      "books": [
+        "bookRed",
+        "bookGreen",
+        "bookBlue",
+        "bookBrown",
+        "bookTan",
+        "bookBlack",
+        "bookCloth",
+        "bookOx"
+      ],
+      "ladder": -1.5
+    },
+    {
+      "type": "bookcase",
+      "at": [
+        -7,
+        6.75
+      ],
+      "yaw": 90,
+      "length": 5.5,
+      "height": 3.9,
+      "depth": 0.45,
+      "bay": 1.05,
+      "books": [
+        "bookRed",
+        "bookGreen",
+        "bookBlue",
+        "bookBrown",
+        "bookTan",
+        "bookBlack",
+        "bookCloth",
+        "bookOx"
+      ],
+      "ladder": 0.8
+    },
+    {
+      "type": "bookcase",
+      "at": [
+        -7,
+        0
+      ],
+      "yaw": 90,
+      "length": 3.2,
+      "height": 3.9,
+      "depth": 0.45,
+      "bay": 1.06,
+      "books": [
+        "bookRed",
+        "bookGreen",
+        "bookBlue",
+        "bookBrown",
+        "bookTan",
+        "bookBlack",
+        "bookCloth",
+        "bookOx"
+      ],
+      "fill": 0.8
+    },
+    {
+      "type": "gallery",
+      "at": [
+        -7,
+        4.2,
+        -1
+      ],
+      "yaw": 90,
+      "length": 19.5,
+      "level": 0,
+      "depth": 1.25,
+      "brackets": 1.4
+    },
+    {
+      "type": "bookcase",
+      "at": [
+        -7,
+        4.28,
+        -10.98
+      ],
+      "yaw": 90,
+      "length": 1.85,
+      "height": 2.9,
+      "depth": 0.4,
+      "bay": 1,
+      "plinth": 0.3,
+      "books": [
+        "bookRed",
+        "bookGreen",
+        "bookBlue",
+        "bookBrown",
+        "bookTan",
+        "bookBlack",
+        "bookCloth",
+        "bookOx"
+      ]
+    },
+    {
+      "type": "bookcase",
+      "at": [
+        -7,
+        4.28,
+        -7.2
+      ],
+      "yaw": 90,
+      "length": 1.5,
+      "height": 2.9,
+      "depth": 0.4,
+      "bay": 1,
+      "plinth": 0.3,
+      "books": [
+        "bookRed",
+        "bookGreen",
+        "bookBlue",
+        "bookBrown",
+        "bookTan",
+        "bookBlack",
+        "bookCloth",
+        "bookOx"
+      ]
+    },
+    {
+      "type": "bookcase",
+      "at": [
+        -7,
+        4.28,
+        0
+      ],
+      "yaw": 90,
+      "length": 8.7,
+      "height": 2.9,
+      "depth": 0.4,
+      "bay": 1,
+      "plinth": 0.3,
+      "books": [
+        "bookRed",
+        "bookGreen",
+        "bookBlue",
+        "bookBrown",
+        "bookTan",
+        "bookBlack",
+        "bookCloth",
+        "bookOx"
+      ]
+    },
+    {
+      "type": "bookcase",
+      "at": [
+        -7,
+        4.28,
+        6.9
+      ],
+      "yaw": 90,
+      "length": 0.9,
+      "height": 2.9,
+      "depth": 0.4,
+      "bay": 1,
+      "plinth": 0.3,
+      "books": [
+        "bookRed",
+        "bookGreen",
+        "bookBlue",
+        "bookBrown",
+        "bookTan",
+        "bookBlack",
+        "bookCloth",
+        "bookOx"
+      ]
+    },
+    {
+      "type": "bookcase",
+      "at": [
+        7,
+        -7.75
+      ],
+      "yaw": -90,
+      "length": 7.5,
+      "height": 3.9,
+      "depth": 0.45,
+      "bay": 1.05,
+      "books": [
+        "bookRed",
+        "bookGreen",
+        "bookBlue",
+        "bookBrown",
+        "bookTan",
+        "bookBlack",
+        "bookCloth",
+        "bookOx"
+      ],
+      "ladder": 1.5
+    },
+    {
+      "type": "bookcase",
+      "at": [
+        7,
+        6.75
+      ],
+      "yaw": -90,
+      "length": 5.5,
+      "height": 3.9,
+      "depth": 0.45,
+      "bay": 1.05,
+      "books": [
+        "bookRed",
+        "bookGreen",
+        "bookBlue",
+        "bookBrown",
+        "bookTan",
+        "bookBlack",
+        "bookCloth",
+        "bookOx"
+      ],
+      "ladder": -0.8
+    },
+    {
+      "type": "bookcase",
+      "at": [
+        7,
+        0
+      ],
+      "yaw": -90,
+      "length": 3.2,
+      "height": 3.9,
+      "depth": 0.45,
+      "bay": 1.06,
+      "books": [
+        "bookRed",
+        "bookGreen",
+        "bookBlue",
+        "bookBrown",
+        "bookTan",
+        "bookBlack",
+        "bookCloth",
+        "bookOx"
+      ],
+      "fill": 0.8
+    },
+    {
+      "type": "gallery",
+      "at": [
+        7,
+        4.2,
+        -1
+      ],
+      "yaw": -90,
+      "length": 19.5,
+      "level": 0,
+      "depth": 1.25,
+      "brackets": 1.4
+    },
+    {
+      "type": "bookcase",
+      "at": [
+        7,
+        4.28,
+        -10.98
+      ],
+      "yaw": -90,
+      "length": 1.85,
+      "height": 2.9,
+      "depth": 0.4,
+      "bay": 1,
+      "plinth": 0.3,
+      "books": [
+        "bookRed",
+        "bookGreen",
+        "bookBlue",
+        "bookBrown",
+        "bookTan",
+        "bookBlack",
+        "bookCloth",
+        "bookOx"
+      ]
+    },
+    {
+      "type": "bookcase",
+      "at": [
+        7,
+        4.28,
+        -7.2
+      ],
+      "yaw": -90,
+      "length": 1.5,
+      "height": 2.9,
+      "depth": 0.4,
+      "bay": 1,
+      "plinth": 0.3,
+      "books": [
+        "bookRed",
+        "bookGreen",
+        "bookBlue",
+        "bookBrown",
+        "bookTan",
+        "bookBlack",
+        "bookCloth",
+        "bookOx"
+      ]
+    },
+    {
+      "type": "bookcase",
+      "at": [
+        7,
+        4.28,
+        0
+      ],
+      "yaw": -90,
+      "length": 8.7,
+      "height": 2.9,
+      "depth": 0.4,
+      "bay": 1,
+      "plinth": 0.3,
+      "books": [
+        "bookRed",
+        "bookGreen",
+        "bookBlue",
+        "bookBrown",
+        "bookTan",
+        "bookBlack",
+        "bookCloth",
+        "bookOx"
+      ]
+    },
+    {
+      "type": "bookcase",
+      "at": [
+        7,
+        4.28,
+        6.9
+      ],
+      "yaw": -90,
+      "length": 0.9,
+      "height": 2.9,
+      "depth": 0.4,
+      "bay": 1,
+      "plinth": 0.3,
+      "books": [
+        "bookRed",
+        "bookGreen",
+        "bookBlue",
+        "bookBrown",
+        "bookTan",
+        "bookBlack",
+        "bookCloth",
+        "bookOx"
+      ]
+    },
+    {
+      "type": "gallery",
+      "at": [
+        0,
+        4.2,
+        -12
+      ],
+      "length": 13.9,
+      "level": 0,
+      "depth": 1.25,
+      "curve": 1.2
+    },
+    {
+      "type": "column",
+      "at": [
+        -1.55,
+        -11.45
+      ],
+      "height": 3.9000000000000004,
+      "radius": 0.24,
+      "flutes": 16
+    },
+    {
+      "type": "column",
+      "at": [
+        1.55,
+        -11.45
+      ],
+      "height": 3.9000000000000004,
+      "radius": 0.24,
+      "flutes": 16
+    },
+    {
+      "type": "panel",
+      "at": [
+        0,
+        4.28,
+        -11.995
+      ],
+      "size": [
+        1.4,
+        2.5
+      ],
+      "arch": true,
+      "material": "doorRed"
+    },
+    {
+      "type": "archHead",
+      "at": [
+        0,
+        4.28,
+        -12.2
+      ],
+      "width": 1.4,
+      "height": 2.5,
+      "thickness": 0.45,
+      "materials": {
+        "fill": "stone",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "panel",
+      "at": [
+        0,
+        7.4,
+        -11.98
+      ],
+      "size": [
+        3.2,
+        6
+      ],
+      "arch": true,
+      "material": "thyra",
+      "depth": 0.1,
+      "edge": "stoneTrim"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        7.24,
+        -11.85
+      ],
+      "size": [
+        3.6,
+        0.16,
+        0.3
+      ],
+      "material": "stoneTrim"
+    },
+    {
+      "type": "torus",
+      "at": [
+        0,
+        11.8,
+        -11.92
+      ],
+      "radius": 1.68,
+      "tube": 0.1,
+      "arc": 180,
+      "segments": 28,
+      "material": "gilt"
+    },
+    {
+      "type": "box",
+      "at": [
+        -1.68,
+        7.4,
+        -11.92
+      ],
+      "size": [
+        0.2,
+        4.4,
+        0.2
+      ],
+      "material": "gilt"
+    },
+    {
+      "type": "box",
+      "at": [
+        1.68,
+        7.4,
+        -11.92
+      ],
+      "size": [
+        0.2,
+        4.4,
+        0.2
+      ],
+      "material": "gilt"
+    },
+    {
+      "type": "bookcase",
+      "at": [
+        -4.2,
+        -12
+      ],
+      "length": 4.6,
+      "height": 3.9,
+      "depth": 0.45,
+      "bay": 1,
+      "books": [
+        "bookRed",
+        "bookGreen",
+        "bookBlue",
+        "bookBrown",
+        "bookTan",
+        "bookBlack",
+        "bookCloth",
+        "bookOx"
+      ]
+    },
+    {
+      "type": "bookcase",
+      "at": [
+        -4.2,
+        4.28,
+        -12
+      ],
+      "length": 4.6,
+      "height": 2.9,
+      "depth": 0.4,
+      "bay": 1,
+      "plinth": 0.3,
+      "books": [
+        "bookRed",
+        "bookGreen",
+        "bookBlue",
+        "bookBrown",
+        "bookTan",
+        "bookBlack",
+        "bookCloth",
+        "bookOx"
+      ]
+    },
+    {
+      "type": "bookcase",
+      "at": [
+        -4,
+        10
+      ],
+      "yaw": 180,
+      "length": 5,
+      "height": 3.9,
+      "depth": 0.45,
+      "bay": 1.05,
+      "books": [
+        "bookRed",
+        "bookGreen",
+        "bookBlue",
+        "bookBrown",
+        "bookTan",
+        "bookBlack",
+        "bookCloth",
+        "bookOx"
+      ]
+    },
+    {
+      "type": "gallery",
+      "at": [
+        -4.15,
+        4.2,
+        10
+      ],
+      "yaw": 180,
+      "length": 5.5,
+      "level": 0,
+      "depth": 1.25,
+      "brackets": 1.4
+    },
+    {
+      "type": "bookcase",
+      "at": [
+        -4,
+        4.28,
+        10
+      ],
+      "yaw": 180,
+      "length": 5,
+      "height": 2.9,
+      "depth": 0.4,
+      "bay": 1.05,
+      "plinth": 0.3,
+      "books": [
+        "bookRed",
+        "bookGreen",
+        "bookBlue",
+        "bookBrown",
+        "bookTan",
+        "bookBlack",
+        "bookCloth",
+        "bookOx"
+      ]
+    },
+    {
+      "type": "bookcase",
+      "at": [
+        4.2,
+        -12
+      ],
+      "length": 4.6,
+      "height": 3.9,
+      "depth": 0.45,
+      "bay": 1,
+      "books": [
+        "bookRed",
+        "bookGreen",
+        "bookBlue",
+        "bookBrown",
+        "bookTan",
+        "bookBlack",
+        "bookCloth",
+        "bookOx"
+      ]
+    },
+    {
+      "type": "bookcase",
+      "at": [
+        4.2,
+        4.28,
+        -12
+      ],
+      "length": 4.6,
+      "height": 2.9,
+      "depth": 0.4,
+      "bay": 1,
+      "plinth": 0.3,
+      "books": [
+        "bookRed",
+        "bookGreen",
+        "bookBlue",
+        "bookBrown",
+        "bookTan",
+        "bookBlack",
+        "bookCloth",
+        "bookOx"
+      ]
+    },
+    {
+      "type": "bookcase",
+      "at": [
+        4,
+        10
+      ],
+      "yaw": 180,
+      "length": 5,
+      "height": 3.9,
+      "depth": 0.45,
+      "bay": 1.05,
+      "books": [
+        "bookRed",
+        "bookGreen",
+        "bookBlue",
+        "bookBrown",
+        "bookTan",
+        "bookBlack",
+        "bookCloth",
+        "bookOx"
+      ]
+    },
+    {
+      "type": "gallery",
+      "at": [
+        4.15,
+        4.2,
+        10
+      ],
+      "yaw": 180,
+      "length": 5.5,
+      "level": 0,
+      "depth": 1.25,
+      "brackets": 1.4
+    },
+    {
+      "type": "bookcase",
+      "at": [
+        4,
+        4.28,
+        10
+      ],
+      "yaw": 180,
+      "length": 5,
+      "height": 2.9,
+      "depth": 0.4,
+      "bay": 1.05,
+      "plinth": 0.3,
+      "books": [
+        "bookRed",
+        "bookGreen",
+        "bookBlue",
+        "bookBrown",
+        "bookTan",
+        "bookBlack",
+        "bookCloth",
+        "bookOx"
+      ]
+    },
+    {
+      "type": "panel",
+      "at": [
+        0,
+        0.006,
+        -1.3
+      ],
+      "size": [
+        7.4,
+        4.2
+      ],
+      "pitch": -90,
+      "material": "rug",
+      "depth": 0.012,
+      "edge": "rugEdge"
+    },
+    {
+      "type": "panel",
+      "at": [
+        0,
+        0.006,
+        -10.6
+      ],
+      "size": [
+        2.6,
+        1.5
+      ],
+      "pitch": -90,
+      "material": "rug",
+      "depth": 0.012,
+      "edge": "rugEdge"
+    },
+    {
+      "type": "desk",
+      "id": "reading-table",
+      "at": [
+        -3.3,
+        5.6
+      ],
+      "kind": "writing",
+      "length": 2.2,
+      "width": 1,
+      "books": 6,
+      "materials": {
+        "wood": "oakDark"
+      }
+    },
+    {
+      "type": "chair",
+      "at": [
+        -3.9,
+        6.35
+      ],
+      "yaw": 180,
+      "materials": {
+        "seat": "oakDark"
+      }
+    },
+    {
+      "type": "chair",
+      "at": [
+        -2.75,
+        6.38
+      ],
+      "yaw": 172,
+      "materials": {
+        "seat": "oakDark"
+      }
+    },
+    {
+      "type": "chair",
+      "at": [
+        -3.85,
+        4.82
+      ],
+      "yaw": 4,
+      "materials": {
+        "seat": "oakDark"
+      }
+    },
+    {
+      "type": "desk",
+      "at": [
+        4.9,
+        -4.8
+      ],
+      "yaw": -90,
+      "kind": "lectern",
+      "length": 1.3,
+      "width": 0.7,
+      "materials": {
+        "wood": "oakDark"
+      }
+    },
+    {
+      "type": "desk",
+      "at": [
+        4.9,
+        -8
+      ],
+      "yaw": -90,
+      "kind": "lectern",
+      "length": 1.3,
+      "width": 0.7,
+      "candle": false,
+      "materials": {
+        "wood": "oakDark"
+      }
+    },
+    {
+      "type": "desk",
+      "at": [
+        -4.9,
+        -6.4
+      ],
+      "yaw": 90,
+      "kind": "double",
+      "length": 1.6,
+      "width": 1,
+      "materials": {
+        "wood": "oakDark"
+      }
+    },
+    {
+      "type": "desk",
+      "at": [
+        -5.35,
+        -0.4
+      ],
+      "yaw": 90,
+      "kind": "writing",
+      "length": 1.6,
+      "width": 0.8,
+      "books": 5,
+      "materials": {
+        "wood": "oakDark"
+      }
+    },
+    {
+      "type": "armchair",
+      "at": [
+        -4.6,
+        1.7
+      ],
+      "yaw": 140
+    },
+    {
+      "type": "desk",
+      "at": [
+        5.35,
+        0.6
+      ],
+      "yaw": -90,
+      "kind": "writing",
+      "length": 1.6,
+      "width": 0.8,
+      "books": 4,
+      "materials": {
+        "wood": "oakDark"
+      }
+    },
+    {
+      "type": "armchair",
+      "at": [
+        4.5,
+        -1.2
+      ],
+      "yaw": -40
+    },
+    {
+      "type": "armchair",
+      "at": [
+        -5.6,
+        7.7
+      ],
+      "yaw": 120
+    },
+    {
+      "type": "armchair",
+      "at": [
+        5.6,
+        7.6
+      ],
+      "yaw": -120
+    },
+    {
+      "type": "globe",
+      "at": [
+        2.6,
+        7.4
+      ],
+      "radius": 0.28
+    },
+    {
+      "type": "candleStand",
+      "at": [
+        -4.3,
+        -3.2
+      ],
+      "height": 1.7,
+      "candles": 5
+    },
+    {
+      "type": "candleStand",
+      "at": [
+        4.3,
+        -3.2
+      ],
+      "height": 1.7,
+      "candles": 5
+    },
+    {
+      "type": "candleStand",
+      "at": [
+        -4.3,
+        3.9
+      ],
+      "height": 1.7,
+      "candles": 5
+    },
+    {
+      "type": "candleStand",
+      "at": [
+        4.3,
+        3.9
+      ],
+      "height": 1.7,
+      "candles": 5
+    },
+    {
+      "type": "chandelier",
+      "at": [
+        0,
+        14.2,
+        -8
+      ],
+      "radius": 0.9,
+      "candles": 12,
+      "drop": 8.2,
+      "materials": {
+        "timber": "brass"
+      }
+    },
+    {
+      "type": "chandelier",
+      "at": [
+        0,
+        14.2,
+        6.8
+      ],
+      "radius": 0.9,
+      "candles": 12,
+      "drop": 8.2,
+      "materials": {
+        "timber": "brass"
+      }
+    },
+    {
+      "type": "box",
+      "at": [
+        -6.1,
+        0,
+        0.9
+      ],
+      "yaw": 0,
+      "size": [
+        0.32,
+        0.07,
+        0.24
+      ],
+      "material": "bookCloth"
+    },
+    {
+      "type": "box",
+      "at": [
+        -6.08,
+        0.07,
+        0.9
+      ],
+      "yaw": 23,
+      "size": [
+        0.32,
+        0.07,
+        0.24
+      ],
+      "material": "bookGreen"
+    },
+    {
+      "type": "box",
+      "at": [
+        -6.1,
+        0.14,
+        0.9
+      ],
+      "yaw": 6,
+      "size": [
+        0.32,
+        0.07,
+        0.24
+      ],
+      "material": "bookTan"
+    },
+    {
+      "type": "box",
+      "at": [
+        -6.08,
+        0.21000000000000002,
+        0.9
+      ],
+      "yaw": 29,
+      "size": [
+        0.32,
+        0.07,
+        0.24
+      ],
+      "material": "bookOx"
+    },
+    {
+      "type": "box",
+      "at": [
+        -6.1,
+        0.28,
+        0.9
+      ],
+      "yaw": 12,
+      "size": [
+        0.32,
+        0.07,
+        0.24
+      ],
+      "material": "bookBlue"
+    },
+    {
+      "type": "box",
+      "at": [
+        -6.08,
+        0.35000000000000003,
+        0.9
+      ],
+      "yaw": 35,
+      "size": [
+        0.32,
+        0.07,
+        0.24
+      ],
+      "material": "bookBlack"
+    },
+    {
+      "type": "box",
+      "at": [
+        -6,
+        0,
+        1.45
+      ],
+      "yaw": 0,
+      "size": [
+        0.32,
+        0.07,
+        0.24
+      ],
+      "material": "bookTan"
+    },
+    {
+      "type": "box",
+      "at": [
+        -5.98,
+        0.07,
+        1.45
+      ],
+      "yaw": 23,
+      "size": [
+        0.32,
+        0.07,
+        0.24
+      ],
+      "material": "bookOx"
+    },
+    {
+      "type": "box",
+      "at": [
+        -6,
+        0.14,
+        1.45
+      ],
+      "yaw": 6,
+      "size": [
+        0.32,
+        0.07,
+        0.24
+      ],
+      "material": "bookBlue"
+    },
+    {
+      "type": "box",
+      "at": [
+        -5.98,
+        0.21000000000000002,
+        1.45
+      ],
+      "yaw": 29,
+      "size": [
+        0.32,
+        0.07,
+        0.24
+      ],
+      "material": "bookBlack"
+    },
+    {
+      "type": "box",
+      "at": [
+        6.1,
+        0,
+        -0.6
+      ],
+      "yaw": 0,
+      "size": [
+        0.32,
+        0.07,
+        0.24
+      ],
+      "material": "bookBlack"
+    },
+    {
+      "type": "box",
+      "at": [
+        6.119999999999999,
+        0.07,
+        -0.6
+      ],
+      "yaw": 23,
+      "size": [
+        0.32,
+        0.07,
+        0.24
+      ],
+      "material": "bookRed"
+    },
+    {
+      "type": "box",
+      "at": [
+        6.1,
+        0.14,
+        -0.6
+      ],
+      "yaw": 6,
+      "size": [
+        0.32,
+        0.07,
+        0.24
+      ],
+      "material": "bookBrown"
+    },
+    {
+      "type": "box",
+      "at": [
+        6.119999999999999,
+        0.21000000000000002,
+        -0.6
+      ],
+      "yaw": 29,
+      "size": [
+        0.32,
+        0.07,
+        0.24
+      ],
+      "material": "bookCloth"
+    },
+    {
+      "type": "box",
+      "at": [
+        6.1,
+        0.28,
+        -0.6
+      ],
+      "yaw": 12,
+      "size": [
+        0.32,
+        0.07,
+        0.24
+      ],
+      "material": "bookGreen"
+    },
+    {
+      "type": "wall",
+      "at": [
+        0,
+        -18.599999999999998
+      ],
+      "length": 7.2,
+      "height": 6.800000000000001,
+      "thickness": 0.4,
+      "a": {
+        "finish": "stone"
+      },
+      "b": {
+        "finish": "stone"
+      }
+    },
+    {
+      "type": "wall",
+      "at": [
+        -3.4000000000000004,
+        -15.299999999999999
+      ],
+      "yaw": -90,
+      "length": 6.199999999999999,
+      "height": 6.800000000000001,
+      "thickness": 0.4,
+      "a": {
+        "finish": "stone"
+      },
+      "b": {
+        "finish": "stone"
+      }
+    },
+    {
+      "type": "wall",
+      "at": [
+        3.4000000000000004,
+        -15.299999999999999
+      ],
+      "yaw": 90,
+      "length": 6.199999999999999,
+      "height": 6.800000000000001,
+      "thickness": 0.4,
+      "a": {
+        "finish": "stone"
+      },
+      "b": {
+        "finish": "stone"
+      }
+    },
+    {
+      "type": "vault",
+      "at": [
+        0,
+        0
+      ],
+      "span": 6.4,
+      "from": -18.4,
+      "to": -12.2,
+      "spring": 3,
+      "bay": 1.6,
+      "rib": 0.18,
+      "materials": {
+        "shell": "stoneVault",
+        "rib": "stoneTrim",
+        "trim": "brass"
+      }
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        6.6,
+        -15.299999999999999
+      ],
+      "size": [
+        8,
+        0.4,
+        8
+      ],
+      "material": "dark"
+    },
+    {
+      "type": "panel",
+      "at": [
+        -3.18,
+        1.7,
+        -16.6
+      ],
+      "yaw": 90,
+      "size": [
+        0.55,
+        1.5
+      ],
+      "arch": true,
+      "material": "saintDim",
+      "depth": 0.04,
+      "edge": "lead"
+    },
+    {
+      "type": "panel",
+      "at": [
+        3.18,
+        1.7,
+        -16.6
+      ],
+      "yaw": -90,
+      "size": [
+        0.55,
+        1.5
+      ],
+      "arch": true,
+      "material": "saintDim",
+      "depth": 0.04,
+      "edge": "lead"
+    },
+    {
+      "type": "panel",
+      "at": [
+        -3.18,
+        1.7,
+        -14.2
+      ],
+      "yaw": 90,
+      "size": [
+        0.55,
+        1.5
+      ],
+      "arch": true,
+      "material": "saintDim",
+      "depth": 0.04,
+      "edge": "lead"
+    },
+    {
+      "type": "panel",
+      "at": [
+        3.18,
+        1.7,
+        -14.2
+      ],
+      "yaw": -90,
+      "size": [
+        0.55,
+        1.5
+      ],
+      "arch": true,
+      "material": "saintDim",
+      "depth": 0.04,
+      "edge": "lead"
+    },
+    {
+      "type": "bookcase",
+      "at": [
+        0,
+        -18.4
+      ],
+      "length": 6.2,
+      "height": 2.9,
+      "depth": 0.42,
+      "bay": 1.03,
+      "books": [
+        "bookRed",
+        "bookGreen",
+        "bookBlue",
+        "bookBrown",
+        "bookTan",
+        "bookBlack",
+        "bookCloth",
+        "bookOx"
+      ],
+      "plinth": 0.4,
+      "fill": 0.85
+    },
+    {
+      "type": "bookcase",
+      "at": [
+        -3.2,
+        -15.6
+      ],
+      "yaw": 90,
+      "length": 3.2,
+      "height": 2.6,
+      "depth": 0.42,
+      "bay": 1.06,
+      "books": [
+        "bookRed",
+        "bookGreen",
+        "bookBlue",
+        "bookBrown",
+        "bookTan",
+        "bookBlack",
+        "bookCloth",
+        "bookOx"
+      ],
+      "plinth": 0.4,
+      "fill": 0.75,
+      "gilt": false
+    },
+    {
+      "type": "desk",
+      "id": "archive-table",
+      "at": [
+        0,
+        -15.5
+      ],
+      "kind": "writing",
+      "length": 2,
+      "width": 1,
+      "books": 3,
+      "materials": {
+        "wood": "oakDark"
+      }
+    },
+    {
+      "type": "chair",
+      "at": [
+        0.3,
+        -14.7
+      ],
+      "yaw": 190,
+      "materials": {
+        "seat": "oakDark"
+      }
+    },
+    {
+      "type": "box",
+      "id": "cabinet",
+      "at": [
+        2.8800000000000003,
+        0,
+        -15.6
+      ],
+      "size": [
+        0.6,
+        0.85,
+        1.6
+      ],
+      "material": "oakDark",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "at": [
+        2.8800000000000003,
+        0.85,
+        -15.6
+      ],
+      "size": [
+        0.56,
+        0.04,
+        1.56
+      ],
+      "material": "gilt"
+    },
+    {
+      "type": "box",
+      "at": [
+        2.8800000000000003,
+        2.05,
+        -15.6
+      ],
+      "size": [
+        0.62,
+        0.1,
+        1.66
+      ],
+      "material": "oakDark"
+    },
+    {
+      "type": "box",
+      "at": [
+        2.8800000000000003,
+        0.85,
+        -16.37
+      ],
+      "size": [
+        0.06,
+        1.2,
+        0.06
+      ],
+      "material": "oakDark"
+    },
+    {
+      "type": "box",
+      "at": [
+        2.8800000000000003,
+        0.85,
+        -15.6
+      ],
+      "size": [
+        0.06,
+        1.2,
+        0.06
+      ],
+      "material": "oakDark"
+    },
+    {
+      "type": "box",
+      "at": [
+        2.8800000000000003,
+        0.85,
+        -14.83
+      ],
+      "size": [
+        0.06,
+        1.2,
+        0.06
+      ],
+      "material": "oakDark"
+    },
+    {
+      "type": "box",
+      "at": [
+        2.6,
+        0.85,
+        -16.37
+      ],
+      "size": [
+        0.04,
+        1.2,
+        0.04
+      ],
+      "material": "oakDark"
+    },
+    {
+      "type": "box",
+      "at": [
+        3.16,
+        0.85,
+        -16.37
+      ],
+      "size": [
+        0.04,
+        1.2,
+        0.04
+      ],
+      "material": "oakDark"
+    },
+    {
+      "type": "box",
+      "at": [
+        2.5900000000000003,
+        0.89,
+        -15.6
+      ],
+      "size": [
+        0.01,
+        1.14,
+        1.5
+      ],
+      "material": "cabinetGlass"
+    },
+    {
+      "type": "box",
+      "at": [
+        2.8800000000000003,
+        1.42,
+        -15.6
+      ],
+      "size": [
+        0.5,
+        0.02,
+        1.5
+      ],
+      "material": "glassShelf"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        2.8800000000000003,
+        0.9,
+        -16
+      ],
+      "radius": 0.1,
+      "material": "relicOrb"
+    },
+    {
+      "type": "lathe",
+      "at": [
+        2.8800000000000003,
+        0.87,
+        -15.3
+      ],
+      "profile": [
+        [
+          0,
+          0
+        ],
+        [
+          0.06,
+          0
+        ],
+        [
+          0.02,
+          0.04
+        ],
+        [
+          0.015,
+          0.14
+        ],
+        [
+          0.07,
+          0.2
+        ],
+        [
+          0.075,
+          0.28
+        ],
+        [
+          0,
+          0.26
+        ]
+      ],
+      "segments": 18,
+      "material": "gilt"
+    },
+    {
+      "type": "box",
+      "at": [
+        2.8800000000000003,
+        1.44,
+        -15.9
+      ],
+      "yaw": 20,
+      "size": [
+        0.3,
+        0.06,
+        0.24
+      ],
+      "material": "bookRed"
+    },
+    {
+      "type": "box",
+      "at": [
+        2.8800000000000003,
+        1.44,
+        -15.3
+      ],
+      "yaw": -10,
+      "size": [
+        0.18,
+        0.1,
+        0.18
+      ],
+      "material": "gilt"
+    },
+    {
+      "type": "candleStand",
+      "at": [
+        -2.3,
+        -17.5
+      ],
+      "height": 1.5,
+      "candles": 3
+    },
+    {
+      "type": "panel",
+      "at": [
+        -0.2,
+        0.006,
+        -16.45
+      ],
+      "size": [
+        3,
+        1.9
+      ],
+      "pitch": -90,
+      "material": "rug",
+      "depth": 0.012,
+      "edge": "rugEdge"
+    },
+    {
+      "type": "beam",
+      "from": [
+        0,
+        10,
+        10
+      ],
+      "to": [
+        -1.8,
+        0,
+        -7.2
+      ],
+      "radius": 0.9,
+      "radiusTo": 1.4,
+      "segments": 16,
+      "material": "shaft",
+      "open": true
+    },
+    {
+      "type": "beam",
+      "from": [
+        0,
+        17.3,
+        0
+      ],
+      "to": [
+        0,
+        0,
+        0.8
+      ],
+      "radius": 0.55,
+      "radiusTo": 1.6,
+      "segments": 16,
+      "material": "shaftDome",
+      "open": true
+    }
+  ],
+  "crowd": {
+    "library": "realm-of-myr",
+    "groups": [
+      {
+        "type": "points",
+        "people": [
+          {
+            "kind": "pilgrim",
+            "at": [
+              5.95,
+              -6.4
+            ],
+            "yaw": -90
+          },
+          {
+            "kind": "woman",
+            "at": [
+              -6.15,
+              3.4
+            ],
+            "yaw": -90,
+            "y": 4.2
+          },
+          {
+            "kind": "traveler",
+            "at": [
+              6.2,
+              -2.4
+            ],
+            "yaw": 90,
+            "y": 4.2
+          },
+          {
+            "kind": "pilgrim",
+            "at": [
+              -5.9,
+              -8.6
+            ],
+            "yaw": 90
+          }
+        ]
+      }
+    ]
+  },
+  "marks": {
+    "entrance": {
+      "at": [
+        0,
+        8.6
+      ],
+      "label": "the entrance"
+    },
+    "readingTable": {
+      "at": [
+        -2,
+        5.6
+      ],
+      "label": "the reading table"
+    },
+    "dome": {
+      "at": [
+        0,
+        1.5
+      ],
+      "label": "under the dome"
+    },
+    "stacks": {
+      "at": [
+        -5.6,
+        -3
+      ],
+      "label": "the stacks"
+    },
+    "lecterns": {
+      "at": [
+        3.9,
+        -6.4
+      ],
+      "label": "the lecterns"
+    },
+    "alcove": {
+      "at": [
+        -3.9,
+        -0.2
+      ],
+      "label": "the reading alcove"
+    },
+    "globe": {
+      "at": [
+        2,
+        7.8
+      ],
+      "label": "the globe"
+    },
+    "archiveDoor": {
+      "at": [
+        0,
+        -10.9
+      ],
+      "label": "the red door to the private archives"
+    },
+    "archives": {
+      "at": [
+        -1.2,
+        -14
+      ],
+      "label": "the private archives"
+    },
+    "cabinet": {
+      "at": [
+        1.9,
+        -15.6
+      ],
+      "label": "the locked glass cabinet"
+    },
+    "archiveTable": {
+      "at": [
+        -1.5,
+        -15.5
+      ],
+      "label": "the archive's reading table"
+    }
+  },
+  "shots": {
+    "hall": {
+      "position": [
+        0,
+        1.75,
+        8.6
+      ],
+      "target": [
+        0,
+        3.6,
+        -12
+      ],
+      "fov": 60,
+      "label": "The great hall"
+    },
+    "dome": {
+      "position": [
+        0.8,
+        1.6,
+        -1.8
+      ],
+      "target": [
+        0,
+        16,
+        0.2
+      ],
+      "fov": 66,
+      "label": "The dome"
+    },
+    "stacks": {
+      "position": [
+        -2.6,
+        1.6,
+        2.8
+      ],
+      "target": [
+        -6.8,
+        3.4,
+        -6.4
+      ],
+      "fov": 58,
+      "label": "The stacks"
+    },
+    "gallery": {
+      "position": [
+        4.8,
+        1.7,
+        6.6
+      ],
+      "target": [
+        -5.4,
+        5.6,
+        -4
+      ],
+      "fov": 56,
+      "label": "The galleries"
+    },
+    "lecterns": {
+      "position": [
+        1.8,
+        1.6,
+        -2.2
+      ],
+      "target": [
+        5.4,
+        1.1,
+        -8.4
+      ],
+      "fov": 54,
+      "label": "The lecterns"
+    },
+    "table": {
+      "position": [
+        -1.2,
+        1.7,
+        2.6
+      ],
+      "target": [
+        -3.6,
+        0.9,
+        6
+      ],
+      "fov": 54,
+      "label": "The reading table"
+    },
+    "door": {
+      "position": [
+        0,
+        1.65,
+        -5
+      ],
+      "target": [
+        0,
+        2.6,
+        -12.2
+      ],
+      "fov": 56,
+      "label": "The red door"
+    },
+    "archives": {
+      "position": [
+        -2.5,
+        1.65,
+        -12.9
+      ],
+      "target": [
+        1.6,
+        1.1,
+        -17.2
+      ],
+      "fov": 64,
+      "label": "The private archives"
+    },
+    "cabinet": {
+      "position": [
+        -0.6,
+        1.5,
+        -14
+      ],
+      "target": [
+        3,
+        1.2,
+        -15.8
+      ],
+      "fov": 52,
+      "label": "The glass cabinet"
+    }
+  },
+  "life": {
+    "dust": {
+      "count": 420,
+      "box": [
+        -6.5,
+        0.2,
+        -11.5,
+        6.5,
+        9,
+        9.5
+      ]
+    }
+  }
+}

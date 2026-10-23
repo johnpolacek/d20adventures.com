@@ -67,6 +67,17 @@ export function createMaterialLibrary(specs: Record<string, MaterialSpec>, share
       case "card":
         m = card(ctx, name, painted.get(s.map), s.tint, s.roughness)
         break
+      case "image": {
+        const map = painted.get(s.map)
+        m = plain(ctx, name, s.tint ?? "#ffffff", s.roughness ?? 0.8, {
+          map,
+          metalness: s.metalness ?? 0,
+          side: s.double ? THREE.DoubleSide : THREE.FrontSide,
+          ...(s.glow ? { emissive: new THREE.Color("#ffffff"), emissiveMap: map, emissiveIntensity: s.glow } : {}),
+        })
+        if (s.glow) m.userData.noShadow = true
+        break
+      }
       case "cloth": {
         const map = s.heraldry ? bank.keep(bannerTexture(rand.fork(`heraldry/${name}`), s.heraldry)) : undefined
         const alphaMap = s.tatters ? bank.keep(tatters(rand.fork(`tatters/${name}`), s.tatters[0], s.tatters[1])) : null

@@ -81,6 +81,11 @@ const painted = z
   .strict()
 // Cut-out cards such as hanging moss: an image with alpha, lit from both sides, casting no shadow.
 const card = z.object({ type: z.literal("card"), map: texture, tint: color.optional(), roughness: unit.optional() }).strict()
+// A painting laid on a surface by the builder's own uv (a rug, a fresco, a book's spine, stained glass): `tint` multiplies
+// it, `glow` lights it from within by its own colours (glass with daylight behind it), `double` shows both sides.
+const image = z
+  .object({ type: z.literal("image"), map: texture, tint: color.optional(), roughness: unit.optional(), metalness: unit.optional(), glow: num(0, 20).optional(), double: z.boolean().optional() })
+  .strict()
 const cloth = z
   .object({
     type: z.literal("cloth"),
@@ -159,7 +164,7 @@ const water = z
     mirror: unit.optional(),
   })
   .strict()
-export const materialSpec = z.discriminatedUnion("type", [masonry, wood, painted, card, cloth, burlap, foliage, glow, mist, fire, orb, metal, plain, glass, rock, meadow, grass, water])
+export const materialSpec = z.discriminatedUnion("type", [masonry, wood, painted, card, image, cloth, burlap, foliage, glow, mist, fire, orb, metal, plain, glass, rock, meadow, grass, water])
 export type MaterialSpec = z.infer<typeof materialSpec>
 
 // An object is `{ type, id?, at?, yaw?, materials?, ...params }`; params are checked by the builder named by `type`.

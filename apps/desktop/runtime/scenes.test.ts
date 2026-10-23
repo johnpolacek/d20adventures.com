@@ -80,7 +80,7 @@ test("every authored scene is a real encounter, and every festival character has
   }
 })
 
-test("the gate keeps first-name figures, Clan Conflict and the Dragonbone Inn have their scenes, and an encounter without one falls back to story view", async () => {
+test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn and the Old Grand Library have their scenes, and an encounter without one falls back to story view", async () => {
   const run = await setup()
   try {
     // The heroes wait in the line alone, then meet Garlan at the front.
@@ -111,27 +111,28 @@ test("the gate keeps first-name figures, Clan Conflict and the Dragonbone Inn ha
       assert.equal(castIdFor(scene.staging.cast, c), c.id)
       assert.match(portraitFor(scene, c) ?? "", /^\/stage\/fixtures\/march-of-davos\/.+-portrait\.jpg$/)
     }
-    // The inn's three scenes: Bram, then Beric and Eamon, then Elara, each with a figure and a portrait of their own.
-    for (const [encounter, npcs] of [
-      ["the-dragonbone-inn", ["bram"]],
-      ["an-unsolicited-opportunity", ["beric", "eamon"]],
-      ["morning-at-the-dragonbone", ["bram", "elara"]],
+    // The authored March of Davos scenes after the square, each NPC with a figure and a portrait of their own.
+    for (const [encounter, npcs, where] of [
+      ["the-dragonbone-inn", ["bram"], /Dragonbone Inn[\s\S]*the corner table/],
+      ["an-unsolicited-opportunity", ["beric", "eamon"], /Dragonbone Inn[\s\S]*the corner table/],
+      ["morning-at-the-dragonbone", ["bram", "elara"], /Dragonbone Inn[\s\S]*the corner table/],
+      ["the-old-grand-library", ["eldrin-varokich", "sister-danica"], /Old Grand Library[\s\S]*the red door/],
     ] as const) {
       await advance(run.store, encounter)
-      const inn = run.store.current()
-      const scene = sceneFor(inn.encounterId)
+      const here = run.store.current()
+      const scene = sceneFor(here.encounterId)
       assert.ok(scene, encounter)
-      const people = inn.characters.filter((c) => c.type === "npc")
+      const people = here.characters.filter((c) => c.type === "npc")
       assert.deepEqual(people.map((c) => c.id).sort(), npcs)
       for (const c of people) {
         assert.equal(castIdFor(scene.staging.cast, c), c.id)
         assert.match(portraitFor(scene, c) ?? "", /^\/stage\/fixtures\/march-of-davos\/.+-portrait\.jpg$/)
       }
-      assert.match(spatialContext(inn.encounterId, inn.characters, {}) ?? "", /Dragonbone Inn[\s\S]*the corner table/)
+      assert.match(spatialContext(here.encounterId, here.characters, {}) ?? "", where)
     }
-    await advance(run.store, "the-old-grand-library")
+    await advance(run.store, "the-silver-serpent-tavern")
     const turn = run.store.current()
-    assert.equal(turn.encounterId, "the-old-grand-library")
+    assert.equal(turn.encounterId, "the-silver-serpent-tavern")
     assert.equal(sceneFor(turn.encounterId), undefined)
     assert.equal(spatialContext(turn.encounterId, turn.characters, {}), undefined)
     // Story view keeps the party's faces from the authored scenes.

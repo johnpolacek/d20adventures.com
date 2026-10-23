@@ -26,7 +26,21 @@ const FAKE = `${ART}/the-fake/7b96ca3c-db72-4559-8f8d-59dacbba3185.png`
 
 // `crop` is the reference's region to match, as fractions [left, top, width, height] of the art. Cut-outs are painted on
 // green, or on magenta when the subject itself is green (leaves).
-type Texture = { subject: string; ref: string; crop: [number, number, number, number]; cutout?: boolean; key?: "green" | "magenta"; size?: number }
+// `whole` paintings are one picture laid once on a surface (a rug, a fresco, a door), not tiled: `aspect` is the model's
+// frame and `out` the published size, width by height. `tileX` makes only the left and right edges meet (a dome's band).
+type Texture = {
+  subject: string
+  ref: string
+  crop: [number, number, number, number]
+  cutout?: boolean
+  key?: "green" | "magenta"
+  size?: number
+  whole?: boolean
+  aspect?: string
+  out?: [number, number]
+  tileX?: boolean
+}
+const LIBRARY = "public/stage/art/march-of-davos/the-old-grand-library.webp"
 const TEXTURES: Record<string, Texture> = {
   "boards-weathered": {
     subject:
@@ -125,6 +139,86 @@ const TEXTURES: Record<string, Texture> = {
     ref: CRATE,
     crop: [0.0, 0.0, 0.3, 0.7],
   },
+  // The Old Grand Library, from its painting: dark gilt-carved wood, a red rug, a painted dome, warm lamps and daylight.
+  "book-spine": {
+    subject:
+      "the spine of ONE old leather-bound book standing upright, filling the whole frame edge to edge: pale undyed tan calf leather, five raised bands across it with gilt rules, gilt floral tooling between the bands, a small dark title label near the top with faint gilt lettering-like marks (no readable text), scuffed and worn at the head and tail",
+    ref: LIBRARY,
+    crop: [0.7, 0.35, 0.12, 0.3],
+    whole: true,
+    aspect: "1:4",
+    out: [256, 1024],
+  },
+  "book-spine-cloth": {
+    subject:
+      "the spine of ONE old cloth-bound book standing upright, filling the whole frame edge to edge: pale linen-grey bookcloth, faded, two thin gilt rules near the head and two near the tail, a square paper label in the upper third with faint inked marks (no readable text), frayed and soiled at the head and tail",
+    ref: LIBRARY,
+    crop: [0.86, 0.3, 0.12, 0.3],
+    whole: true,
+    aspect: "1:4",
+    out: [256, 1024],
+  },
+  "library-rug": {
+    subject:
+      "an old oriental rug seen from straight above, filling the whole frame edge to edge: a deep crimson field with a large ornate central medallion in cream, navy and gold, matching corner pieces, a wide navy-and-gold border of interlaced vines, worn thin and faded in the middle where people walk, painterly",
+    ref: LIBRARY,
+    crop: [0.3, 0.75, 0.45, 0.25],
+    whole: true,
+    aspect: "16:9",
+    out: [2048, 1152],
+  },
+  "vault-fresco": {
+    subject:
+      "a painted barrel-vault ceiling panel seen straight on: a deep blue-green ground with rich gilt baroque ornament, scrolling acanthus and cartouches framing a small faded painting of a cloudy sky with a saint, ornate and dark, gilded mouldings",
+    ref: LIBRARY,
+    crop: [0.18, 0.0, 0.6, 0.35],
+  },
+  "dome-fresco": {
+    subject:
+      "the inside of a painted dome unrolled into a flat horizontal band: at the bottom a ring of robed Valkaran saints and angels standing on clouds holding books and lanterns, above them swirling golden clouds, at the top a pale luminous sky, in the rich warm baroque style of the reference, gilded frame lines at the bottom edge",
+    ref: LIBRARY,
+    crop: [0.28, 0.0, 0.3, 0.12],
+    whole: true,
+    tileX: true,
+    aspect: "21:9",
+    out: [2048, 878],
+  },
+  "stained-saint": {
+    subject:
+      "a tall round-topped stained glass window seen straight on from inside, filling the whole frame: a robed Valkaran saint holding an open book and a lantern under a crescent moon and a stylised tree, deep blue, ruby red, amber gold and green glass pieces in black lead cames, the background sky of the window blue glass, a border of small coloured squares, glowing with daylight behind it",
+    ref: LIBRARY,
+    crop: [0.73, 0.0, 0.1, 0.24],
+    whole: true,
+    aspect: "9:16",
+    out: [576, 1024],
+  },
+  "stained-thyra": {
+    subject:
+      "a tall round-topped stained glass window seen straight on from inside, filling the whole frame: a great silver-white tree whose branches intertwine with a large crescent moon, stars among the leaves, roots spreading over a green hill, the symbol of the goddess Thyra the Wayfinder, deep midnight blue, violet, emerald and amber glass pieces in black lead cames, a border of small coloured squares, glowing with daylight behind it",
+    ref: LIBRARY,
+    crop: [0.73, 0.0, 0.1, 0.24],
+    whole: true,
+    aspect: "9:16",
+    out: [576, 1024],
+  },
+  "door-thyra": {
+    subject:
+      "a tall pair of old carved wooden double doors seen straight on, filling the whole frame edge to edge: deep red lacquered wood, with carved gilt panels of interlaced leaves and stars, and in the middle of each leaf a gilt roundel of a tree intertwined with a crescent moon, iron ring handles, worn gold",
+    ref: LIBRARY,
+    crop: [0.33, 0.48, 0.12, 0.25],
+    whole: true,
+    aspect: "9:16",
+    out: [576, 1024],
+  },
+  "globe-map": {
+    subject:
+      "an old hand-painted parchment sea chart of the fantasy Realm of Myr: one huge irregular landmass with deep bays, a long hooked peninsula and a great inland lake, filling the middle, a scatter of small rocky islands, wide empty parchment seas with faint wave lines, ochre and sepia land with tiny painted mountains and forests, a compass rose and a sea serpent, cracked varnish. NOT a map of Earth: no Africa, no Americas, no Europe, no real coastlines",
+    ref: LIBRARY,
+    crop: [0.0, 0.7, 0.3, 0.3],
+    whole: true,
+    aspect: "16:9",
+    out: [1024, 512],
+  },
 }
 
 const TILE = (t: Texture) => `A square surface texture for a painted 3D game world, matching the reference image's painted art style.
@@ -148,20 +242,30 @@ Requirements:
 - Painted in the reference's manner: oil painting, visible brushwork, its palette and soft misty light. NOT a photograph, NOT a 3D render.
 - ${t.key === "magenta" ? "Nothing pink, purple or magenta in the subject itself." : "Nothing green in the subject itself: the moss is grey-green to silver, never pure green."}`
 
+const WHOLE = (t: Texture) => `A painted surface for a painted 3D game world, matching the reference image's painted art style.
+
+Subject: ${t.subject}.
+
+Requirements:
+- The subject fills the ENTIRE frame edge to edge, seen straight on, with no perspective. No background, no border, no vignette, no hands, no table.${t.tileX ? "\n- The LEFT edge continues seamlessly into the RIGHT edge." : ""}
+- Flat, even lighting: the 3D engine adds the light. No cast shadows.
+- No text, no letters, no logo, no signature.
+- Painted in the reference's manner: an oil painting with visible confident brushwork and its palette. NOT a photograph, NOT a 3D render, NOT cartoon.`
+
 async function reference(t: Texture) {
-  const img = sharp(Buffer.from(await (await fetch(t.ref)).arrayBuffer()))
+  const img = sharp(t.ref.startsWith("http") ? Buffer.from(await (await fetch(t.ref)).arrayBuffer()) : t.ref)
   const { width = 1, height = 1 } = await img.metadata()
   const [l, tp, w, h] = t.crop
   const region = { left: Math.round(l * width), top: Math.round(tp * height), width: Math.round(w * width), height: Math.round(h * height) }
   return (await img.extract(region).jpeg({ quality: 90 }).toBuffer()).toString("base64")
 }
 
-async function render(label: string, text: string, images: string[]) {
+async function render(label: string, text: string, images: string[], aspectRatio = "1:1") {
   const key = process.env.GOOGLE_GENERATIVE_AI_API_KEY
   if (!key) throw new Error("GOOGLE_GENERATIVE_AI_API_KEY is not set")
   const body = JSON.stringify({
     contents: [{ parts: [{ text }, ...images.map((data) => ({ inline_data: { mime_type: "image/jpeg", data } }))] }],
-    generationConfig: { responseModalities: ["IMAGE"], imageConfig: { aspectRatio: "1:1", imageSize: "2K" } },
+    generationConfig: { responseModalities: ["IMAGE"], imageConfig: { aspectRatio, imageSize: "2K" } },
   })
   const call = () =>
     fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key }, body })
@@ -187,7 +291,7 @@ async function latest(id: string) {
 
 async function paint(id: string) {
   const t = TEXTURES[id]
-  const png = await render(id, t.cutout ? CUT(t) : TILE(t), [await reference(t)])
+  const png = await render(id, t.cutout ? CUT(t) : t.whole ? WHOLE(t) : TILE(t), [await reference(t)], t.aspect)
   const { n } = await latest(id)
   await writeFile(join(RAW, `${id}-${n + 1}.png`), png)
   await appendFile(join(RAW, "generations.log"), `${new Date().toISOString()} ${id} #${n + 1} ${MODEL}\n`)
@@ -283,12 +387,40 @@ async function cutout(path: string, size: number, key: "green" | "magenta" = "gr
   return sharp(data, { raw: { width: W, height: H, channels: 4 } })
 }
 
+// Closes a band's left-right seam: the last tenth is cross-faded over the first and cut off, so the new right edge runs
+// straight on into the new left edge.
+async function seamX(img: sharp.Sharp, w: number, h: number) {
+  const { data } = await img.removeAlpha().raw().toBuffer({ resolveWithObject: true })
+  const band = Math.round(w * 0.1)
+  const W = w - band
+  const out = Buffer.alloc(W * h * 3)
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < W; x++)
+      for (let c = 0; c < 3; c++) {
+        const v = data[(y * w + x) * 3 + c]
+        out[(y * W + x) * 3 + c] = x < band ? Math.round(data[(y * w + W + x) * 3 + c] * (1 - x / band) + v * (x / band)) : v
+      }
+  return sharp(
+    await sharp(out, { raw: { width: W, height: h, channels: 3 } })
+      .resize(w, h, { fit: "fill" })
+      .raw()
+      .toBuffer(),
+    { raw: { width: w, height: h, channels: 3 } }
+  )
+}
+
 async function make(id: string) {
   const t = TEXTURES[id]
   const { n, path } = await latest(id)
   if (!n) throw new Error(`${id}: no raw painting yet`)
   await mkdir(OUT, { recursive: true })
-  if (t.cutout) await (await cutout(path, t.size ?? 1024, t.key)).webp({ quality: 88, alphaQuality: 90 }).toFile(join(OUT, `${id}.webp`))
+  if (t.whole) {
+    const [w, h] = t.out ?? [1024, 1024]
+    let img = sharp(path).resize(w, h, { fit: "fill" })
+    // A dome's band: blend the outer tenth of each side into the other so the seam closes.
+    if (t.tileX) img = await seamX(img, w, h)
+    await img.jpeg({ quality: 88 }).toFile(join(OUT, `${id}.jpg`))
+  } else if (t.cutout) await (await cutout(path, t.size ?? 1024, t.key)).webp({ quality: 88, alphaQuality: 90 }).toFile(join(OUT, `${id}.webp`))
   else await (await tile(path, t.size ?? 1024)).jpeg({ quality: 86 }).toFile(join(OUT, `${id}.jpg`))
   console.log(`${id}: published from #${n}`)
 }

@@ -285,6 +285,34 @@ const FIGURES: Record<string, Figure> = {
     backNote:
       "Seen from directly behind: her hood is up and covers the whole back of her head, and the cloak hangs straight down her back to the stool and hides her back and arms. Her knees and thighs are in front of her and NOT visible. Below the cloak only the stool's legs, the backs of her calves and the heels of her boots show.",
   },
+  // March of Davos, the Old Grand Library: Sister Danica from her portrait, the archivist, and two readers.
+  "sister-danica": {
+    out: "fixtures/march-of-davos/sister-danica",
+    who: "Sister Danica, Human female cleric of Thyra",
+    look: "A serene woman in her thirties, about 1.7 m tall, with long dark-brown hair in an intricate braid over one shoulder, calm dark eyes, a gentle, knowing smile. Long flowing robes of deep blue-grey wool with a cream inner robe, a silver-embroidered stole, wide sleeves, a corded belt. A silver pendant on a chain: a tree intertwined with a crescent moon, the symbol of Thyra. Hands folded before her.",
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726275370282",
+    head: 0.13,
+  },
+  "eldrin-varokich": {
+    out: "fixtures/march-of-davos/eldrin-varokich",
+    who: "Eldrin Varokich, Human male archivist",
+    look: "An elderly, slightly stooped man of about seventy, about 1.72 m tall, with a pale, lined face, thin wispy grey hair combed back from a high forehead, keen watchful grey eyes and a faint wary smile. Simple long robes of faded charcoal-brown wool with a cream stole embroidered with the old Valkaran sun-and-oak symbol, a rope belt with a ring of iron keys, a pair of wire spectacles hanging on a cord around his neck. Hands clasped behind his back.",
+    head: 0.13,
+  },
+  "reader-scholar": {
+    out: "fixtures/march-of-davos/reader-scholar",
+    who: "An old scholar in the library, Human male",
+    look: "A white-bearded old scholar in his seventies with a bald head, half-moon spectacles on his nose, absorbed in reading. A long plum-coloured scholar's gown with black velvet trim over a grey robe, soft slippers. A large open leather-bound book held in his lap with both hands.",
+    head: 0.17,
+    seated: true,
+  },
+  "reader-acolyte": {
+    out: "fixtures/march-of-davos/reader-acolyte",
+    who: "A young acolyte of Thyra in the library, Human female",
+    look: "A young woman acolyte of about seventeen with short dark-blonde hair under a plain grey coif, ink-stained fingers, a studious frown. A simple undyed cream novice's robe with a grey tabard, a small wooden tree pendant. Writing with a quill on a wax-sealed scroll held on a board across her knees.",
+    head: 0.17,
+    seated: true,
+  },
 }
 for (const [id, f] of Object.entries(FIGURES)) f.out ||= `heroes/${id}`
 

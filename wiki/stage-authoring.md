@@ -96,3 +96,9 @@ The web viewer and the desktop app run the same `packages/stage` renderer and th
 - Keep a lamp off a standing place. A room light at head height by a window blew out the hero standing in the sun beside it.
 - A slab that runs into a wall flickers against it. The backroom's ceiling reached into the common room's wall and drew a dashed line along it.
 - Interiors full of furniture stop straight walks. Put the party where walks out are clear, and keep a booth to one hero.
+- A wall's openings cannot stand one over another. A door and a window above it in one `wall` broke the cuts and the window vanished. Build the wall in two storeys, the upper one with a 3D `at`.
+- Close every gap between a vault and the walls or a crossing. Sky leaked through the corners above the vault's ends as bright quads, and the sun through them as a stray patch on the floor.
+- A flat `panel` lying with pitch -90 runs from `at` toward +z. Place a rug by its near edge.
+- Paint a book's spine once, pale, and tint it into many bindings. Real book boxes with a painted spine read as a library at every distance.
+- The image model draws Earth when asked for a world map, and a wolf when told the land is shaped like one. Name the coastline's features instead.
+- Light from a high window leads the eye in a hall. The library's south sun runs down the floor to the red door, as the painting does.

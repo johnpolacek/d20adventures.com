@@ -7,6 +7,7 @@ import gateSet from "@d20/stage/sets/realm-of-myr/kordavos-south-gate.json"
 import pierSet from "@d20/stage/sets/realm-of-myr/mordava-river-pier.json"
 import emptyPierSet from "@d20/stage/sets/realm-of-myr/mordava-river-pier-empty.json"
 import pathSet from "@d20/stage/sets/realm-of-myr/old-forest-path.json"
+import librarySet from "@d20/stage/sets/realm-of-myr/old-grand-library.json"
 import stonesSet from "@d20/stage/sets/realm-of-myr/old-standing-stones.json"
 import homeSet from "@d20/stage/sets/realm-of-myr/thalberns-forest-home.json"
 import forestSet from "@d20/stage/sets/realm-of-myr/valkarr-forest-trail.json"
@@ -26,6 +27,7 @@ import morningAtTheDragonbone from "@d20/stage/stagings/march-of-davos/morning-a
 import theDragonboneInn from "@d20/stage/stagings/march-of-davos/the-dragonbone-inn.json"
 import gateStaging from "@d20/stage/stagings/march-of-davos/the-gates-of-kordavos.json"
 import festivalStaging from "@d20/stage/stagings/march-of-davos/the-harvest-festival.json"
+import theOldGrandLibrary from "@d20/stage/stagings/march-of-davos/the-old-grand-library.json"
 import backHome from "@d20/stage/stagings/the-midnight-summons/back-home.json"
 import brokenSilence from "@d20/stage/stagings/the-midnight-summons/broken-silence.json"
 import meetingAtTheStones from "@d20/stage/stagings/the-midnight-summons/meeting-at-the-stones.json"
@@ -129,6 +131,15 @@ export const SCENES: Record<string, Scene> = {
       "Early morning sun falls through the street windows of the Dragonbone Inn's common room. The fire is banked and the room nearly empty, an old farmer at breakfast. The party is at a table under the windows, Bram in front of the bar.",
     party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
     spare: [[-3.6, 2.2]],
+  },
+  "the-old-grand-library": {
+    set: librarySet,
+    staging: theOldGrandLibrary,
+    location: "Old Grand Library",
+    where:
+      "Midday in the great hall of the Old Grand Library: bookcases two storeys high with a gallery round them, saints in stained glass, a painted vault and a dome over the crossing, a red rug under it, lecterns down the sides. The party stands just inside the entrance. Sister Danica has come to them from beside a reading table where a young acolyte writes. At the far end a red door under a balcony leads to the private archives, where the archivist keeps out of sight by a locked glass cabinet.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[0, 7.2]],
   },
   // The Midnight Summons: one moonlit stretch of deer trail for the walk, the owlbear, and the rescue.
   "broken-silence": {

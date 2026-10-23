@@ -1,0 +1,202 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "march-of-davos/the-old-grand-library",
+  "set": "realm-of-myr/old-grand-library",
+  "cast": [
+    {
+      "id": "branka-stoneveil",
+      "name": "Branka Stoneveil",
+      "role": "Dwarf fighter",
+      "height": 1.38,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/branka-front.webp",
+        "back": "/stage/fixtures/march-of-davos/branka-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/branka-portrait.jpg"
+      },
+      "at": [
+        -1.3,
+        7.7
+      ],
+      "facing": [
+        0,
+        5.9
+      ]
+    },
+    {
+      "id": "cassia-verane",
+      "name": "Cassia Verane",
+      "role": "Human wizard",
+      "height": 1.72,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/cassia-front.webp",
+        "back": "/stage/fixtures/march-of-davos/cassia-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/cassia-portrait.jpg"
+      },
+      "at": [
+        -0.45,
+        7.95
+      ],
+      "facing": [
+        0,
+        5.9
+      ]
+    },
+    {
+      "id": "yeva-softstep",
+      "name": "Yeva Softstep",
+      "role": "Halfling rogue",
+      "height": 1.08,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/yeva-front.webp",
+        "back": "/stage/fixtures/march-of-davos/yeva-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/yeva-portrait.jpg"
+      },
+      "at": [
+        0.45,
+        7.95
+      ],
+      "facing": [
+        0,
+        5.9
+      ]
+    },
+    {
+      "id": "milos-radan",
+      "name": "Milos Radan",
+      "role": "Human cleric",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/milos-front.webp",
+        "back": "/stage/fixtures/march-of-davos/milos-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/milos-portrait.jpg"
+      },
+      "at": [
+        1.3,
+        7.7
+      ],
+      "facing": [
+        0,
+        5.9
+      ]
+    },
+    {
+      "id": "sister-danica",
+      "name": "Sister Danica",
+      "role": "Cleric of Thyra",
+      "height": 1.7,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/sister-danica-front.webp",
+        "back": "/stage/fixtures/march-of-davos/sister-danica-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/sister-danica-portrait.jpg"
+      },
+      "at": [
+        -0.3,
+        5.9
+      ],
+      "facing": [
+        0,
+        7.9
+      ]
+    },
+    {
+      "id": "eldrin-varokich",
+      "name": "The Archivist",
+      "role": "Archivist",
+      "height": 1.72,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/eldrin-varokich-front.webp",
+        "back": "/stage/fixtures/march-of-davos/eldrin-varokich-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/eldrin-varokich-portrait.jpg"
+      },
+      "at": [
+        1.6,
+        -16.6
+      ],
+      "facing": [
+        -0.4,
+        -13.2
+      ]
+    },
+    {
+      "id": "reader-scholar",
+      "name": "An old scholar",
+      "role": "Reader",
+      "height": 1.32,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/reader-scholar-front.webp",
+        "back": "/stage/fixtures/march-of-davos/reader-scholar-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/reader-scholar-portrait.jpg"
+      },
+      "at": [
+        -4.75,
+        -0.4
+      ],
+      "facing": [
+        -5.35,
+        -0.4
+      ]
+    },
+    {
+      "id": "reader-acolyte",
+      "name": "A young acolyte",
+      "role": "Reader",
+      "height": 1.32,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/reader-acolyte-front.webp",
+        "back": "/stage/fixtures/march-of-davos/reader-acolyte-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/reader-acolyte-portrait.jpg"
+      },
+      "at": [
+        -2.75,
+        4.8
+      ],
+      "facing": [
+        -2.75,
+        5.6
+      ]
+    }
+  ],
+  "shots": {
+    "danica": {
+      "subject": "sister-danica",
+      "distance": 2.2,
+      "angle": 20,
+      "height": 1.62,
+      "lookHeight": 1.56,
+      "fov": 44,
+      "label": "Sister Danica"
+    },
+    "archivist": {
+      "subject": "eldrin-varokich",
+      "distance": 2,
+      "angle": -25,
+      "height": 1.6,
+      "lookHeight": 1.55,
+      "fov": 44,
+      "label": "The Archivist"
+    },
+    "party": {
+      "subjects": [
+        "branka-stoneveil",
+        "cassia-verane",
+        "yeva-softstep",
+        "milos-radan"
+      ],
+      "offset": [
+        1.8,
+        1.7,
+        -3.2
+      ],
+      "target": [
+        0,
+        1.1,
+        0
+      ],
+      "relative": "world",
+      "fov": 54,
+      "label": "Party"
+    }
+  },
+  "shot": "hall"
+}

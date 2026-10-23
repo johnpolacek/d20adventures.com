@@ -118,10 +118,19 @@ export const beamPrim = defineBuilder(
       radiusTo: size(20).optional(),
       segments: segments(3, 32).default(6),
       material: matName,
+      // No end caps: a shaft of light, whose caps would show as bright discs.
+      open: z.boolean().default(false),
     })
     .strict(),
   (ctx, p) => {
-    beam(ctx.b, ctx.mat(p.material), V(...p.from), V(...p.to), p.radius, p.segments, p.radiusTo ?? p.radius)
+    if (!p.open) return void beam(ctx.b, ctx.mat(p.material), V(...p.from), V(...p.to), p.radius, p.segments, p.radiusTo ?? p.radius)
+    const a = V(...p.from)
+    const c = V(...p.to)
+    const dir = c.clone().sub(a)
+    const g = new THREE.CylinderGeometry(p.radiusTo ?? p.radius, p.radius, 1, p.segments, 1, true)
+    const m = new THREE.Matrix4().compose(a.clone().add(c).multiplyScalar(0.5), new THREE.Quaternion().setFromUnitVectors(V(0, 1, 0), dir.clone().normalize()), V(1, dir.length(), 1))
+    ctx.b.add(g, ctx.mat(p.material), m, { uv: "keep" })
+    g.dispose()
   }
 )
 

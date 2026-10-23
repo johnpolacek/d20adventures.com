@@ -753,7 +753,7 @@ export const chandelier = defineBuilder(
     .object({
       radius: size(2).default(0.55),
       candles: z.number().int().min(3).max(16).default(8),
-      drop: size(4).default(1.0),
+      drop: size(12).default(1.0),
     })
     .strict(),
   (ctx, p) => {
