@@ -244,8 +244,9 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
   const showTeaser = adventurePlan?.teaser
   // Generate the invite link for the lobby
   const inviteLink = typeof window !== "undefined" ? `${window.location.origin}/settings/${params.settingId}/${params.adventurePlanId}/${adventure.id}` : ""
-  // Calculate min and max party size
-  const minParty = adventurePlan?.party?.[0] || 1
+  // Calculate min and max party size. The host sets a hosted game's party in their app, so its host starts with any
+  // hero seated, as the app does.
+  const minParty = hosted ? 1 : adventurePlan?.party?.[0] || 1
   const maxParty = adventurePlan?.party?.[1] || 4
   const currentPartySize = party?.length || 0
   const canStartAdventure = currentPartySize >= minParty
