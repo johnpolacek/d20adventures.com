@@ -893,7 +893,7 @@ export function StagePlay(props: {
             onPick={focus}
           />
           <div
-            className={`pointer-events-none absolute z-20 ${!scene && reading ? "left-1/2 top-1/2 w-[min(680px,75vw)] -translate-x-1/2 -translate-y-1/2" : "bottom-[118px] left-8 w-[min(460px,35vw)]"}`}
+            className={`pointer-events-none absolute z-20 ${!scene && reading ? "left-1/2 top-1/2 w-[min(680px,75vw)] -translate-x-1/2 -translate-y-1/2" : compact ? "bottom-[118px] left-8 w-[min(460px,45vw)]" : "bottom-[118px] left-8 w-[min(460px,35vw)]"}`}
           >
             {reading && (
               <Narration

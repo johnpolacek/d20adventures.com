@@ -354,6 +354,9 @@ Owner: the host hosts on the laptop, then plays as a player from the website on 
 - One reply failed when the website's call to Convex timed out. The phone showed "The website answered 500." and sending again worked.
 - Seen: the stage play view in portrait overlaps the header, the party strip, and the narration card. The rotate prompt from Stageview's landscape decision was wired only into `/dev/turn`. `/play` now shows it to a phone held upright, and asks Android for fullscreen landscape on the first tap.
 - Checked: the rotate prompt on `/play` at 390 by 664 with a coarse pointer faked through `matchMedia`. Not checked on a real phone.
+- Checked `/play` at 844 by 390, phone landscape, in a headed browser with WebGL. The stage, party strip, reply card, journal, and chat fit. The narration card's Skip was cut off at 35% width. Compact screens now give it 45%.
+- Seen at 844 by 390: the host offline notice covers the middle of the stage and the top of the narration card.
+- Not checked: the phone keyboard in landscape, which leaves little height for the reply card, and a roll.
 - The home page's Welcome Back card leads to the game with Continue. It loads after the page, about 4 s in dev.
 - Not checked: the app's own play view while the host acts from the phone, and a roll on the phone.
 
