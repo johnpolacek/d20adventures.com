@@ -2,8 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Maintenance](maintenance.md)
 
-Maintained reference. Commands and routes reviewed against local main on 2026-10-01. Historical results in [the log](../log.md) are not fresh test runs.
-
+Maintained reference. Commands and routes reviewed against local main on 2026-10-01.
 ## Environment
 
 Use the checkout's isolated Convex project and [worktree workflow](parallel-dev-worktrees.md). S3 buckets and Clerk remain shared. Authoring, map generation, token replacement, and real narration can write shared storage or spend tokens.
@@ -65,7 +64,7 @@ The old `/settings/{settingId}/{planId}/edit` route, nested section/scene editor
 
 For automated authenticated playthroughs, use the repository's [gameplay playthrough skill](../../.agents/skills/gameplay-playthrough-testing/SKILL.md).
 
-To check that the GM keeps to the authored scene, see [scene rails check](scene-rails.md). `pnpm --dir apps/desktop scene:judge <save>` judges a save's rounds against their encounters. `pnpm --dir apps/desktop scene:probe <probe>` plays a scene from `apps/desktop/scripts/scene-probes.json` fresh and judges it. Both run Claude through its CLI.
+To check that the GM keeps to the authored scene, see scene rails check. `pnpm --dir apps/desktop scene:judge <save>` judges a save's rounds against their encounters. `pnpm --dir apps/desktop scene:probe <probe>` plays a scene from `apps/desktop/scripts/scene-probes.json` fresh and judges it. Both run Claude through its CLI.
 
 | Scenario | Route and checks |
 |---|---|

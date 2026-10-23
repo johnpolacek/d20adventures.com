@@ -12,7 +12,7 @@ The four registered Realm of Myr adventures use authored markdown and JSON compi
 |---|---|
 | Registry | `LOCAL_WIKI_ADVENTURES` in `lib/wiki-adventures/local-runtime.ts` registers The Midnight Summons, Covert Cargo, The Road to Kordavos, and March of Davos. |
 | Manifest | Adventure `adventure.md` frontmatter supplies identity, start encounter, party limits, premades, character options, asset metadata, and the optional [safety rules](#safety-rules). |
-| Encounters | Markdown files carry stable IDs, NPC/location refs, transitions, intro, and GM notes. NPC refs can include `startNear`. An optional `roundBudget` sets how many rounds the scene should take, 4 when absent. See [round budget](plans/round-budget.md). |
+| Encounters | Markdown files carry stable IDs, NPC/location refs, transitions, intro, and GM notes. NPC refs can include `startNear`. An optional `roundBudget` sets how many rounds the scene should take, 4 when absent. See round budget. |
 | Characters | JSON sheets hold mechanical data. Paired markdown profiles hold authored narrative context. |
 | Entities | NPCs, locations, factions, and items support context retrieval. Encounter location refs also supply map titles. |
 | Compiler | `compiler.ts` produces manifest, encounters, entities, character sheets, graph, retrieval index, and validation report. Registered runtime loads compile in publish mode and reject blocked content. |
@@ -32,7 +32,7 @@ An adventure page may have a `## Premise` section. It compiles to `manifest.prem
 - Players' side prompts see it, so it holds no secrets. Secrets go in an encounter's GM Notes.
 - The GM is told it holds until the story shows it change.
 - Without one, the GM assumes characters shown travelling or working together know each other.
-- Legacy plans have none. See [the plan](plans/adventure-premise.md).
+- Legacy plans have none. See the plan.
 
 ## Strangers
 
@@ -42,7 +42,7 @@ An adventure page may have a `## Premise` section. It compiles to `manifest.prem
 - The round's GM may record a name heard another way, with the id `name-<hero id>`.
 - A prompt that plays one character lists the names they have not heard. The GM's prompts list who has not heard each name.
 - Heroes who come on together from the adventure just finished, by the desktop's Continue, know each other's names.
-- Write the premise to match. See [meeting at the gate](plans/meeting-at-the-gate.md).
+- Write the premise to match. See meeting at the gate.
 
 ## Safety rules
 
@@ -63,7 +63,7 @@ Two optional manifest fields, enforced by the GM core in `packages/gm-core/src/w
 
 A premade can share an ID with another adventure's premade, since each adventure compiles from its own files. Thalbern is `thalbern` in The Midnight Summons and in Covert Cargo, with a sheet in each.
 
-The four Myr adventures are one story: The Midnight Summons, Covert Cargo, The Road to Kordavos, then March of Davos. Names, the cargo and the endings are kept in step by hand, since nothing carries from one playthrough to the next. See [the lead-in plan](plans/adventure-lead-in.md) before changing a shared name or an ending. An adventure page names its successor in `nextAdventure`, which the website's ending and the desktop app's ending both offer. In the desktop app, continuing from an ending adds "THE STORY SO FAR" to the next adventure's premise: a chapter for each adventure finished, which outranks the notes where they disagree. Write a note that depends on an earlier adventure's outcome as "If the story so far says ..., then ...", as March of Davos does for the crate.
+The four Myr adventures are one story: The Midnight Summons, Covert Cargo, The Road to Kordavos, then March of Davos. Names, the cargo and the endings are kept in step by hand, since nothing carries from one playthrough to the next. See the lead-in plan before changing a shared name or an ending. An adventure page names its successor in `nextAdventure`, which the website's ending and the desktop app's ending both offer. In the desktop app, continuing from an ending adds "THE STORY SO FAR" to the next adventure's premise: a chapter for each adventure finished, which outranks the notes where they disagree. Write a note that depends on an earlier adventure's outcome as "If the story so far says ..., then ...", as March of Davos does for the crate.
 
 Editing March of Davos content changes its content hash, which the recorded GM prompts in `scripts/gm-core-fixtures/turn.json` pin. Replace the old hash there with the one `pnpm test:gm-core` reports.
 
@@ -73,7 +73,7 @@ Heroes who start apart and unknown to each other need two things. The `## Premis
 
 ## Length
 
-The round-end prompt for the four Myr adventures limits the GM's narrative. Added 2026-10-13, see [the plan](plans/concise-narration.md).
+The round-end prompt for the four Myr adventures limits the GM's narrative. Added 2026-10-13, see the plan.
 
 | Case | Limit |
 |---|---|
@@ -97,7 +97,7 @@ Authoring for length:
 
 ## Labels in an intro
 
-Added 2026-10-14 with [structured narrative](plans/structured-narrative.md). An intro paragraph may open with labels in braces, so the 3D stage knows who speaks, who acts and where to look. A paragraph without labels is narration.
+Added 2026-10-14 with structured narrative. An intro paragraph may open with labels in braces, so the 3D stage knows who speaks, who acts and where to look. A paragraph without labels is narration.
 
 ```
 {place: treeLine} Eyes shine in the shadows of the tree line.
@@ -109,13 +109,13 @@ Added 2026-10-14 with [structured narrative](plans/structured-narrative.md). An 
 - `speaker` makes a line: the paragraph is the spoken words only. `actor` makes an action. Otherwise it is narration.
 - Ids are character ids and the set's labelled marks. An id the scene does not have is dropped, and the words still show.
 - `place` on an action walks the actor there. `from` brings them on from there.
-- `effect`, `element` and `object` take the words in [the plan](plans/structured-narrative.md).
+- `effect`, `element` and `object` take the words in the plan.
 - Values are split on commas, so a `delivery` is written "calm and commanding".
 - `hero: <id>` makes an action about one hero that shows only when that hero is in the party. March of Davos's gate uses it to show each hero in line as the others see them. Since 2026-10-21.
-- `private: true` on an action or line hides it from every other character's side, heroes and NPCs: only its actor or speaker and its `target` or `to` know it. At the end of the round it becomes a fact for them in the adventure's ledger. Use it for a hero's own errand, a hidden watcher, or a whisper. Since 2026-10-21, see [what a hero knows](plans/hero-knowledge.md) and [what each character knows](plans/character-knowledge.md).
+- `private: true` on an action or line hides it from every other character's side, heroes and NPCs: only its actor or speaker and its `target` or `to` know it. At the end of the round it becomes a fact for them in the adventure's ledger. Use it for a hero's own errand, a hidden watcher, or a whisper. Since 2026-10-21, see what a hero knows and what each character knows.
 - Prompts and the website's text views show the intro with its labels taken off and each line under its speaker's name.
 - All four Myr adventures are labelled, as of 2026-10-14. An unlabelled paragraph is narration: nothing is guessed from its words.
-- A spoken line needs its speaker among the encounter's characters. A quote by someone outside them stays in the prose with no bubble or voice. Covert Cargo has one, from Aelar in the-transaction. March of Davos had several until 2026-10-20, when the speakers joined their encounters' `npcs` and the quotes became lines. Its last quotes in prose are a disembodied voice in the-ambush and an unnamed vendor at the festival. See [the playtest](plans/march-of-davos-playtest.md#content-pass-2026-10-20).
+- A spoken line needs its speaker among the encounter's characters. A quote by someone outside them stays in the prose with no bubble or voice. Covert Cargo has one, from Aelar in the-transaction. March of Davos had several until 2026-10-20, when the speakers joined their encounters' `npcs` and the quotes became lines. Its last quotes in prose are a disembodied voice in the-ambush and an unnamed vendor at the festival. See the playtest.
 - March of Davos takes its NPC sheets from the `generatedFiles` of its `migration-report.json`, not from every file in `npcs/`. A new sheet for it goes in that list, or the encounter that names it throws "Missing NPC sheet".
 - An encounter's Intro, GM Notes, Checks, Summary and Transitions sections are read. Text under any other `##` heading reaches no prompt.
 - An encounter with no `[[encounter:...]]` transition is an ending: arriving there tells its intro and completes the adventure, with no turn played in it. A confrontation the party must resolve needs transitions to ending encounters of its own. March of Davos's Final Confrontation had none until 2026-10-20, so the adventure ended on Joran's first line. It now leads to The New Dawn, Vengeance of the Blackthorn or The Dust Settles.

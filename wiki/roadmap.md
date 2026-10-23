@@ -1,6 +1,6 @@
 # Roadmap
 
-[Home](index.md) · [Plans](plans/index.md) · [Log](log.md)
+[Home](index.md) · [Plans](plans/index.md)
 
 Updated 2026-10-23. Alpha, no players, work on `main`.
 

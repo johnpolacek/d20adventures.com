@@ -18,7 +18,7 @@ Owner decisions recorded on 2026-09-29:
 - Use illustrated front/back standees for named characters, portrait plates for dialogue, and instanced illustrated crowds with coarse procedural figures at distance or steep viewing angles.
 - No old mini purchases or assets require migration. At removal, the owner confirmed there were only test accounts.
 
-Owner decisions from the turn-page mock, 2026-09-29 to 2026-10-01 (details in [Stage-first turn mock](feature-stage-turn-mock.md)):
+Owner decisions from the turn-page mock, 2026-09-29 to 2026-10-01 (details in Stage-first turn mock):
 
 - **Mapview** is for larger maps (a city, wilderness travel, exploring ruins), not a map per encounter.
 - **Turns work like Baldur's Gate 3, with movement, and positions become game state.** This supersedes "positions remain visual only".
@@ -38,7 +38,7 @@ Owner decisions from the turn-page mock, 2026-09-29 to 2026-10-01 (details in [S
 | Kordavos south gate and development cast | `lib/stage/sets/realm-of-myr/kordavos-south-gate.json` and `lib/stage/stagings/march-of-davos/the-gates-of-kordavos.json`. |
 | Myr crowd library | 16 front/back variants under `public/stage/crowd/realm-of-myr/`. |
 | Development preview and verification | `/dev/stage`, `pnpm stage:check`, `pnpm stage:verify`. |
-| Stage-first turn page, scripted demo of the gate scene | Merged 2026-10-01. `/dev/turn`, public `/demo/kordavos` (no model calls, noindex), `/dev/dice`. Queue loop, beats with step-through, contest rolls, narrative-to-movement eval (`pnpm stage:eval-movement`). See [Stage-first turn mock](feature-stage-turn-mock.md). |
+| Stage-first turn page, scripted demo of the gate scene | Merged 2026-10-01. `/dev/turn`, public `/demo/kordavos` (no model calls, noindex), `/dev/dice`. Queue loop, beats with step-through, contest rolls, narrative-to-movement eval (`pnpm stage:eval-movement`). See Stage-first turn mock. |
 
 ## Remaining phases
 
@@ -51,7 +51,7 @@ Owner decisions from the turn-page mock, 2026-09-29 to 2026-10-01 (details in [S
 
 ### Phase 4, stage-first gameplay
 
-The first real local client is implemented in [Desktop Stageview integration](zzz-completed/feature-desktop-stage-play.md): native stage, player input, dice, NPCs, journal, local saves, and authored transitions. Remaining work includes richer generated beats, complete set coverage, and multiplayer.
+The first real local client is implemented in Desktop Stageview integration: native stage, player input, dice, NPCs, journal, local saves, and authored transitions. Remaining work includes richer generated beats, complete set coverage, and multiplayer.
 
 - Render Stageview across the turn-page viewport and dock the complete text turn UI over it.
 - Build the stage-first turn page in the [desktop app](desktop-local-play.md), not the web app. Web play is deprecated once the desktop app ships (owner decision, 2026-10-01).

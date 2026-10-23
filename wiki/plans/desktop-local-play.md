@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Stageview](stageview.md) · [Architecture](../Architecture.md) · [Roadmap](../roadmap.md)
 
-Status: Phase 0 refinement recorded 2026-10-02 in `spike/desktop-local-play`. Strict nested output preserved accepted state in eight native trials. Combining pre-roll decisions reduced seven requests to five for the three working CLIs. Narrative continuity remains open. Character-state application was completed locally on 2026-10-03 in the integration worktree. Gemini compatibility is separate. Phase 1 is extracted. The phase 2 client and initial phase 3 local save/CLI flow are implemented in [Desktop Stageview integration](zzz-completed/feature-desktop-stage-play.md), on an unmerged feature branch. Remaining product phases stay open.
+Status: Phase 0 refinement recorded 2026-10-02 in `spike/desktop-local-play`. Strict nested output preserved accepted state in eight native trials. Combining pre-roll decisions reduced seven requests to five for the three working CLIs. Narrative continuity remains open. Character-state application was completed locally on 2026-10-03 in the integration worktree. Gemini compatibility is separate. Phase 1 is extracted. The phase 2 client and initial phase 3 local save/CLI flow are implemented in Desktop Stageview integration, on an unmerged feature branch. Remaining product phases stay open.
 
 A Tauri desktop app becomes the only game client. Solo play is free. The AI Game Master runs through an AI CLI the player already has installed and signed in to with their own subscription. Multiplayer runs through a host: one player's app runs the GM through their CLI, and friends join from a browser. Revenue comes from selling adventures, decided 2026-10-07. The web app's play experience is deprecated once the desktop app ships. Stageview is rebuilding the turn page now, so the stage-first turn page should be built for the desktop app instead of the web app.
 
@@ -13,7 +13,7 @@ Recorded 2026-10-01:
 - Desktop app built with Tauri. Mac first, then other platforms. The game UI stays in TypeScript inside the webview, with a thin Rust layer.
 - Ship as a notarized direct download. No Mac App Store, because its sandbox blocks running the player's installed CLIs.
 - Solo play runs the GM locally through the player's CLI and is free. AI-controlled party members can fill the party.
-- Supported CLIs include Claude Code, Codex, Antigravity, and Grok. The owner accepts the terms risk for Codex, Gemini, and Grok. [Antigravity](antigravity-cli.md) replaced the Gemini CLI on 2026-10-13.
+- Supported CLIs include Claude Code, Codex, Antigravity, and Grok. The owner accepts the terms risk for Codex, Gemini, and Grok. Antigravity replaced the Gemini CLI on 2026-10-13.
 - Multiplayer runs the GM on the server. A subscription grants tokens, roughly matching current token pricing. Superseded on 2026-10-07, below.
 - Narration is optional and player-supplied through common voice-generation providers. The provider choice is TBD.
 - Players can generate their own characters or use premades.
@@ -99,7 +99,7 @@ Long-running text modes, checked against installed CLIs on 2026-10-01:
 |---|---|
 | Claude Code | `claude -p --input-format stream-json --output-format stream-json` |
 | Codex | `codex app-server`, JSON-RPC over stdio, marked experimental |
-| Gemini CLI | `gemini --acp`, Agent Client Protocol. Replaced on 2026-10-13 by [Antigravity](antigravity-cli.md): `agy` in print mode over streamed JSON. |
+| Gemini CLI | `gemini --acp`, Agent Client Protocol. Replaced on 2026-10-13 by Antigravity: `agy` in print mode over streamed JSON. |
 | Grok | `grok agent stdio`, Agent Client Protocol. |
 
 Rules:
@@ -222,11 +222,11 @@ Passed: five focused environment, stream, chroma-key, RPC denial, and timeout te
 
 Next: extract the shared core with the existing behavior and regression fixtures, then integrate the tested strict contract and optional combined pre-roll request into the desktop adapter. Define and implement character-patch application before claiming durable gameplay state. Add narrative continuity, combat, AI companions, failure/recovery, usage-limit, and production-auth coverage as those paths are built. Keep Gemini unavailable for the tested login until provider compatibility is resolved through its own supported flow. These are scoped follow-ups, not reasons to stop the other adapters.
 
-Protocol basis: installed Codex-generated JSON schemas, [Codex app-server](https://learn.chatgpt.com/docs/app-server), [Gemini ACP](https://geminicli.com/docs/cli/acp-mode/), [Grok ACP](https://docs.x.ai/build/cli/headless-scripting), and [ACP session setup](https://agentclientprotocol.com/protocol/v1/session-setup). FilmBrain provenance is in the [spike README](../../apps/desktop-spike/README.md). See the [log](../log.md) and [worktree lifecycle](spike-desktop-local-play.md).
+Protocol basis: installed Codex-generated JSON schemas, [Codex app-server](https://learn.chatgpt.com/docs/app-server), [Gemini ACP](https://geminicli.com/docs/cli/acp-mode/), [Grok ACP](https://docs.x.ai/build/cli/headless-scripting), and [ACP session setup](https://agentclientprotocol.com/protocol/v1/session-setup). FilmBrain provenance is in the [spike README](../../apps/desktop-spike/README.md). See the log and worktree lifecycle.
 
 ### Phase 1, extract gm-core
 
-Completed locally on 2026-10-02 in `feature/gm-core`. Existing web behavior is preserved. Main integration and deployment are separate. See the [extraction plan](feature-gm-core.md) for evidence and [GM core](../gm-core.md) for contracts.
+Completed locally on 2026-10-02 in `feature/gm-core`. Existing web behavior is preserved. Main integration and deployment are separate. See the extraction plan for evidence and [GM core](../gm-core.md) for contracts.
 
 - Added the pnpm workspace and `@d20/gm-core`, with per-instance model, store, content, identity, and narration interfaces. The model adapter consumes the billing interface.
 - Moved 20 gameplay service modules, eight character-generation operations, reply/roll/advance orchestration, shared schemas/types, and pure helpers. Storyview transport and caching stay in the host behind `Narration`.
@@ -251,7 +251,7 @@ Initial CLI generation, SQLite persistence, bundled content, and four premade pl
 
 - Rust CLI manager, SQLite saves, and pack loader.
 - Content packs compiled from authored adventures with pre-baked art. Packs are declarative data and never executable code, matching the Stageview set rule.
-- AI party members through the existing `ai-pc-turn-service`. Implemented 2026-10-04 in [Desktop heroes](zzz-completed/feature-desktop-heroes.md), merged into main.
+- AI party members through the existing `ai-pc-turn-service`. Implemented 2026-10-04 in Desktop heroes, merged into main.
 - Turns that need no player run on their own. Implemented 2026-10-11 for local play: once the narration has been read, an NPC's turn, an AI hero's turn, or the end of the round starts without a click. A failed one is tried once, then leaves the Continue button to retry. In hosted games the host's worker does the same, see [Desktop host mode](desktop-host-mode.md).
 - Premade characters, plus generated characters through the player's CLI. Implemented 2026-10-04 with a local roster, stock standees, and art painted through Codex or Grok.
 - Optional narration add-on with the player's own voice provider key.

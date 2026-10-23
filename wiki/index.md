@@ -1,10 +1,10 @@
 # D20 Adventures
 
-**Home** · [Roadmap](roadmap.md) · [Plans](plans/index.md) · [Architecture](Architecture.md) · [Sources](Sources.md) · [Log](log.md)
+**Home** · [Roadmap](roadmap.md) · [Plans](plans/index.md) · [Architecture](Architecture.md) · [Sources](Sources.md)
 
 A narrative RPG with an AI Game Master, authored adventures and D20 checks. The desktop app is the game client, with a 3D stage and the GM run through the player's own AI CLI. Updated 2026-10-23.
 
-What is built and what is next: [Roadmap](roadmap.md). Active and recent work: [Plans](plans/index.md).
+What is built and what is next: [Roadmap](roadmap.md). Open work: [Plans](plans/index.md).
 
 ## Reference
 
@@ -19,6 +19,7 @@ What is built and what is next: [Roadmap](roadmap.md). Active and recent work: [
 - [Testing runbook](plans/testing-runbook.md): commands, routes, coverage limits.
 - [Maintenance](plans/maintenance.md): open bugs and audits.
 - [Wiki maintenance guide](AGENTS.md): documentation rules.
+- [Worktree guide](plans/parallel-dev-worktrees.md): retired until beta.
 
 ## Product context
 

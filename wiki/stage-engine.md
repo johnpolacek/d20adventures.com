@@ -2,7 +2,7 @@
 
 [Home](index.md) · [Plans](plans/index.md) · [Stageview](plans/stageview.md) · [Testing](plans/testing-runbook.md)
 
-Status: Implemented reference. Engine merged in `384a622` on 2026-09-29. Moved to `packages/stage` for web and desktop in `feature/desktop-stage-play` on 2026-10-02, merged into main on 2026-10-03. Native real-turn integration is recorded in [its plan](plans/zzz-completed/feature-desktop-stage-play.md). The Kordavos harvest square, the second authored set, was added there on 2026-10-03. Performance results below remain dated evidence.
+Status: Implemented reference. Engine merged in `384a622` on 2026-09-29. Moved to `packages/stage` for web and desktop in `feature/desktop-stage-play` on 2026-10-02, merged into main on 2026-10-03. Native real-turn integration is recorded in its plan. The Kordavos harvest square, the second authored set, was added there on 2026-10-03. Performance results below remain dated evidence.
 
 ## Implementation basis
 
@@ -228,7 +228,7 @@ Remaining product work is tracked in [Stageview](plans/stageview.md).
 
 ## Covert Cargo's meeting inside the boat, 2026-10-05
 
-- Owner review against the source: the meeting belongs inside the boat, with one larger interior. See [the plan](plans/covert-cargo-boat-meeting.md).
+- Owner review against the source: the meeting belongs inside the boat, with one larger interior. See the plan.
 - The tug's cabin is wider and longer (`riverboat.width` 0.78 of the beam, `cabin` 0.6, `saloon` 0.72), so the saloon is a room about 7.3 by 4.2 m. With `interior`, the bow door is the only way out, with a porthole in its leaf. The aft exterior door is gone, and a dark doorway in the aft bulkhead leads to the owner's cabin, which stays solid.
 - The Fake, Battle on the Boat and The Crate now play in the pier set's saloon. The separate `riverboat-cabin` set is retired, and the helm, gauges and crate hold moved into the saloon.
 - Staging: Lyra at the crate, Reinhard beside her, Silas by the door, Aelar out of his cabin on "the cabin door opened", one elf by the gangway and one at the stern, Poppen peeking from bushes at the treeline. The Shipment's intro lines that put people outside were edited to match.
@@ -262,7 +262,7 @@ Removed 2026-10-14: the camera and speakers now come from labelled beats. The hi
 
 ## Effects, objects and labelled beats, 2026-10-14
 
-Part of [structured narrative](plans/structured-narrative.md).
+Part of structured narrative.
 
 - `packages/stage/src/effects.ts` plays an attack or a spell from a small library: `arrow`, `bolt`, `beam`, `burst`, `aura`, `sparkles`, `slash`, `impact` and `mist`, coloured by an element (fire, frost, lightning, radiant, nature, shadow, arcane). Each is built at runtime from additive glow sprites, rings and shells, plays once and is disposed.
 - Objects: `scroll`, `letter`, `map`, `pouch`, `coin`, `key`, `relic`, `lantern`, `torch`, `blade`, `bow`, `potion`, `book`, `gem`, `pack`. Each is a small procedural model about half again its real size, held toward the camera beside the holder, and carried across to a receiver when there is one.
@@ -299,7 +299,7 @@ Part of [painted backdrop](plans/stage-backdrop.md), from spike (a) of the [stag
 
 ## March of Davos playtest pass, 2026-10-19
 
-From an automated play of March of Davos with the live GM and a pass over every view. See [the playtest plan](plans/march-of-davos-playtest.md).
+From an automated play of March of Davos with the live GM and a pass over every view. See the playtest plan.
 
 - Subject shots (close-ups, speakers, the acting hero) score every view clear of walls by who stands in the sight line or within 1.8 m beside the lens, cast at 3 and crowd at 1, plus a cost for swinging far round (up to 2.5 behind the subject) or drawing in. The lowest wins. Rooms keep their inside-first pass.
 - Crowd cards within 1.1 m of the camera, measured to the chest, are not drawn, so a passer-by never fills the frame.

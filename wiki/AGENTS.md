@@ -1,26 +1,23 @@
 # D20 Adventures Wiki Agent Guide
 
 <!-- PROJECT-HTML-WIKI-SKILL:START v1 -->
-This `wiki/` directory is the maintained knowledge and planning layer for `D20 Adventures`.
+This `wiki/` directory holds reference pages, the roadmap and a few open plans for `D20 Adventures`. Git holds history.
 
 ## Source Of Truth
 
 - `index.md` is the wiki front door.
-- `log.md` is the project-context changelog. Git owns routine implementation history.
-- `Sources.md` catalogs source material, repository evidence, and unknowns.
-- `plans/index.md` defines the planning contract.
-- `roadmap.md` tracks the next useful project direction.
+- `roadmap.md` lists what is built and what is next.
+- `plans/index.md` lists open plans.
+- `Sources.md` catalogs source material and unknowns.
 - `Architecture.md` captures cross-cutting architecture boundaries and risks.
 
 ## Rules
 
-- Read `index.md` before structural wiki changes.
-- Keep durable project knowledge, planning, decisions, and validation notes under `wiki/`.
-- Preserve exact source material under `wiki/sources/` only when provenance matters.
-- Update `index.md` when adding or materially changing durable pages.
-- Update `log.md` after bootstrapping, planning, validation, or material project changes that affect durable project context. Keep results dated and separate local implementation from deployment.
-- After completed work, retain current contracts in reference pages and open items in active plans. Delete redundant completed plans after updating links. Git preserves the history.
-- Write pages as GitHub-flavored Markdown with a short breadcrumb nav line, relative `.md` links, and tables instead of decorative HTML. Keep pages concise and scannable.
+- Keep reference pages and the roadmap current when work changes what they describe.
+- Plans are optional, for large or multi-session work. Delete a plan when its work is done, after moving any lasting contract into a reference page.
+- There is no decision log. Put a durable decision in the page it affects.
+- Keep `wiki/sources/adventure plans/`. The migration scripts read it.
+- Write GitHub-flavored Markdown with relative `.md` links. Keep pages short.
 
 ## Boundaries
 
@@ -28,12 +25,5 @@ Do not create root-level `docs/` or `tasks/` for maintained project knowledge.
 
 ## Automation Policy
 
-Follow the root repo policy when it is more current. Default to committing local wiki or code changes when confident the work is correct and implementation questions are resolved. Ask before pushing or running long commands.
-
-- Commit docs-only wiki changes: allow
-- Commit code changes: allow
-- Push changes: ask
-- Install dependencies: allow
-- Run long commands: ask
-- Create plans before code: meaningful-only
+Follow the root `AGENTS.md` policy.
 <!-- PROJECT-HTML-WIKI-SKILL:END -->

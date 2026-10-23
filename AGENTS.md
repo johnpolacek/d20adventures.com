@@ -8,13 +8,10 @@ Auto-commit local changes whenever confident that the code is good and there are
 ### Project Wiki
 
 - Read `wiki/index.md` before answering project-specific questions or making structural changes.
-- Keep durable project knowledge, plans, decisions, and project-context history under `wiki/`.
-- Use `wiki/Sources.md` as the source index.
-- Create or update `wiki/plans/` before meaningful code, config, schema, dependency, architecture, test, build, or app behavior changes.
-- Do not create plans for small, local, reversible fixes that do not change product behavior, architecture, schema, dependencies, build configuration, public APIs, security posture, or durable project direction.
-- Sync recent codebase changes back into `wiki/log.md`, relevant plans, roadmap, and source docs when work happened before planning or made the wiki stale.
-- Update `wiki/index.md` when adding or materially changing durable wiki pages.
-- Update `wiki/log.md` after bootstrapping, planning, validation, or material project changes that affect durable project context.
+- `wiki/` holds reference pages, the roadmap, a few open plans, and source files. Git holds history.
+- A plan in `wiki/plans/` is optional. Write one only for large or multi-session work, and delete it when done.
+- Keep reference pages and `wiki/roadmap.md` current when work changes what they describe.
+- There is no decision log. Put durable decisions in the page they affect.
 
 ### Working Rules
 
@@ -36,7 +33,7 @@ Auto-commit local changes whenever confident that the code is good and there are
 - Push changes: allow
 - Install dependencies: allow
 - Run long commands: ask
-- Create plans before code: meaningful-only
+- Create plans before code: optional, large work only
 <!-- PROJECT-HTML-WIKI-SKILL:END -->
 
 ## Branches
@@ -44,7 +41,6 @@ Auto-commit local changes whenever confident that the code is good and there are
 Owner decision, 2026-10-10: the project is back in alpha with no players, so work happens directly on `main`. This replaces the 2026-10-08 decision to use feature branches. Worktrees return at beta.
 
 - Commit to `main` in the main checkout. Do not create feature branches or git worktrees, and do not run `pnpm wt:create`.
-- Put a feature's plan at `wiki/plans/<slug>.md` before meaningful work.
 - `pnpm dev` starts Convex, the website, and the desktop app pointed at the local website. `pnpm dev:web` starts the website alone, and `pnpm dev:app` the app alone.
 - `pnpm dev` does not kill ports. Use `pnpm dev:fresh` to kill ports first.
 - The `wt:*` scripts and `wiki/plans/parallel-dev-worktrees.md` remain for reference until beta.

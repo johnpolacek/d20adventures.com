@@ -1,69 +1,33 @@
 # Plans
 
-[Wiki Home](../index.md) · [Sources](../Sources.md) · [Roadmap](../roadmap.md) · [Architecture](../Architecture.md)
+[Wiki Home](../index.md) · [Roadmap](../roadmap.md)
 
-Updated for the desktop integration worktree on 2026-10-02. Implementation status does not imply production deployment.
+Updated 2026-10-23. Plans are optional and deleted when done. Git keeps the old ones.
 
-## Active work
+## Open
 
-| Plan | Status | Next work |
-|---|---|---|
-| [Scene rails check](scene-rails.md) | Implemented on main 2026-10-22. A judge reads each round of a save against its encounter and flags invented exits and acts against the notes, with who pushed them and any gap in the content. Scene probes play a fresh scene with a pushing player and judge every round. Content fixes for Silverhand's traitor, secretly Joran, Astrid's door and the study, and a rule that AI heroes open no way out. Three probes went from 4 of 9 runs off the rails to 0 of 9. | Convex deploy for hosted games. A clean probe lead-in. |
-| [Vercel deployment storage](vercel-deploy-storage.md) | Started on main 2026-10-23. Old production deploys removed. Wiki-only commits no longer deploy. Stage art and app backgrounds served from the bucket, `pnpm stage:sync` uploads them. | Convert the largest PNG and MP4 files. |
-| [March of Davos in 3D](march-of-davos-sets.md) | In progress on main. Sets for every remaining March of Davos location, one at a time. Library, Silver Serpent, docks, Lower Districts and Black Market done 2026-10-23. | The auction next. |
-| [The Dragonbone Inn in 3D](dragonbone-inn-stage.md) | Implemented on main 2026-10-22. The inn's common room and backroom, evening and dawn, for March of Davos's three inn encounters. Eleven standees, tavern builders. | Owner review on `/dev/stage`, then a check in the running app. |
-| [Round budget](round-budget.md) | Implemented on main 2026-10-22. Each encounter has a round budget, 4 unless its frontmatter sets `roundBudget`. The round-end GM sees the scene's round against it, is nudged toward a listed way out from the budget's last round, and two rounds past it is asked for the transition that fits best. Nothing is forced. | A live run through a long scene. Per-encounter budgets from play. Convex deploy for hosted games. |
-| [Meeting at the gate](meeting-at-the-gate.md) | Implemented on main 2026-10-21. March of Davos's heroes start as strangers. They spend one round alone in the line, then reach Garlan's table. Festival law lets no one through the gate alone, so they must choose each other and enter as one company. The intro shows each hero in the party as the others see them. The core keeps who has heard each hero's name, and every prompt that plays one character is told which names it has not heard. | Owner play-through. |
-| [What each character knows](character-knowledge.md) | Implemented on main 2026-10-21. An adventure keeps a ledger of facts with who knows each, from private beats and from what the round's GM records. AI heroes, offered replies and NPC turns read the round as their character knows it, their own facts, and on the desktop only their own gear. The GM reads every fact with who knows it. | Owner play-through. |
-| [What a hero knows](hero-knowledge.md) | Implemented on main 2026-10-21. A whisper or a hidden act is a private beat, and an AI hero's move and a player's offered replies read the round without the private beats that hero is not in. On the desktop an AI hero's premise holds only the chapters it lived. Covert Cargo's hidden intro paragraphs are private, and its premise no longer gives out Thalbern's errand. | Owner play-through. |
-| [March of Davos playtest](march-of-davos-playtest.md) | Played to an ending twice. The second run, 2026-10-21, reached Vengeance of the Blackthorn and fixed scene cuts, crowd fade in close-ups, cobbled paving, contact shadows, live lamp flames, a camera arm, story-view speaker portraits, and GM drift out of scenes. | Owner review of the 3D. Whether the Silver Serpent's short road should skip the docks arc. |
-| [Clan Conflict in 3D](clan-conflict-stage.md) | Implemented on main 2026-10-19. A standoff at the south end of the harvest square, on a cut of the festival set with a ring of onlookers. Six new standees. | Owner review on `/dev/stage`, then a check in the running app. |
-| [Painted backdrop](stage-backdrop.md) | Implemented on main 2026-10-17. A set's `backdrops` hang painted, keyed panoramas on far cylinders. The Old Standing Stones has a painted valley in place of its mountain cones, and a forested ridge behind Thalbern's close-up since 2026-10-18. The riverfront, the old forest path and Thalbern's home have backdrops too. | None. |
-| [Stage art spikes](stage-art-spikes.md) | Decided 2026-10-17. Painted backdrop adopted. Paint-over projection and video standees not adopted. | None. |
-| [One roll card](one-roll-card.md) | Implemented on main 2026-10-14 in the desktop app and hosted games. One card rolls the die, shows the result, says the GM is resolving, then offers Continue. The reader starts after the roll. Owner played it with the live GM 2026-10-15. | A hosted game. The small-window layout. |
-| [Shorter waits](shorter-waits.md) | Pre-writing implemented on main 2026-10-22 in the desktop app. The next NPC's, AI hero's or round end's turn is written while the story before it is read, never more than a round ahead. Played live in all four adventures. Skipping minor NPC turns measured on the second playtest's save and not built: a simple rule would have dropped 28 of 36 turns that carried the scene. | The Tauri app. Owner's call on deciding NPC rolls in the action call. |
-| [NPC turn card](npc-turn-card.md) | Implemented on main 2026-10-19 in the desktop app and hosted games. While the GM plays an NPC or AI hero, the card shows their portrait, "Name's turn", and their sheet's `thinking` line or one picked by the turn. | Seen in the running app. More authored lines. |
-| [Structured narrative](structured-narrative.md) | Implemented on main 2026-10-14. A turn is a list of labelled beats: speakers, camera, walks, spell effects and objects come from data. All four adventures labelled, the narrative string and guessers removed, Storyview voices from beats. Replayed live with Claude. | A replay since the removal. Production deploy. Other GMs. |
-| [Concise narration](concise-narration.md) | Implemented on main 2026-10-13. The round-end prompt for the four Myr adventures has a length rule and a no-repeat rule, and sees the next encounter's intro. NPC turns are 2 sentences with spoken lines extra, and a player's action is rewritten with nothing added. The Midnight Summons intros are 19% shorter. Two live replays with Claude: 52% fewer words a turn. Roll outcomes 2 sentences, 40 words, 2026-10-15: 36 and 28 words in the owner's game. The other three adventures trimmed 21 to 25% the same day, and the owner's eight March of Davos story questions settled. | Replays of the other three adventures. The rescue and refusal branches, and the other GMs. |
-| [Antigravity replaces the Gemini CLI](antigravity-cli.md) | Implemented on main 2026-10-13. The fourth GM is Google's `agy`, run as a custom agent with no tools on the Gemini Flash model the app picks from the CLI's list. A reply, a roll and a round end played through the runtime. | Owner play-through in the app. A way to keep GM turns out of the player's Antigravity history. |
-| [Game Master picker shows the model](gm-model-picker.md) | Implemented on main 2026-10-13. Party setup names the model each CLI runs and its effort, in the site's dropdown, and Cancel is text only. Claude now runs at medium effort. | Owner review in the app. A turn played at the new effort. |
-| [Adventure premise](adventure-premise.md) | Implemented on main 2026-10-11. Every prompt carries a who-knows-what rule, and an adventure page can author a `## Premise`. Covert Cargo has one. | Owner play-through. Tracking who has since met whom is not built. |
-| [Skip a hero's turn](skip-turn.md) | Implemented on main 2026-10-11 for local play and hosted games. A text button left of Send ends the hero's turn with nothing written and no AI. | Check a hosted game end to end. Deploy Convex before hosted skips work in production. |
-| [Suggested replies on a hero's turn](turn-suggestions.md) | Implemented on main 2026-10-11 for local play and hosted games. Three chips over the reply box fill the box when clicked. The player's AI writes them, or the host's in a hosted game. | Owner review. A setting to turn them off. |
-| [Desktop site style](desktop-site-style.md) | In progress on main. Shared theme, the site's header, title screen, pages, party setup, and hero creator merged 2026-10-10. The HUD is recoloured in one revertable commit. Adventures is the one place to choose an adventure. | Owner review of the HUD over each set. Then HUD components, literal colours, the link page, and cleanup, on main. |
-| [The lead-in to March of Davos](adventure-lead-in.md) | Story stitching implemented on main 2026-10-13, text only. The three intro adventures now name the same elves, family and cargo as March of Davos, and each ending points to the next. Carry-over the same day: the desktop ending offers the next adventure, heroes who can go on keep their seats, and Lyra, Poppen and Thalbern are March of Davos premades. Story memory the same day: each finished adventure becomes a chapter in the next one's premise, and gear carries. | Owner play-through with a live model. Hosted games and the website carry nothing yet. |
-| [Covert Cargo: three heroes](covert-cargo-three-heroes.md) | Implemented on main 2026-10-13. Thalbern is a third hero in his own hide, he and Poppen meet only by a Perception check, and the elves walk off when paid. The boat fight now most often ends with Lyra thrown overboard and the tug gone, in a new encounter on an empty pier. | Owner play-through with a live model. |
-| [Covert Cargo: Thalbern's rescue](covert-cargo-rescue.md) | Superseded 2026-10-13 by three heroes. No player deaths stays. The rescue encounters are deleted, and the engine features remain. | Owner play-through of the new rescue in the app. |
-| [Desktop home screen](zzz-completed/feature-desktop-home.md) | Merged into main 2026-10-08 and archived. Home with saved adventures and resume, heroes, new adventures, and the Realm of Myr page. | Owner review of the merged build. Delete the worktree's Convex project in the dashboard. |
-| [Desktop host mode](desktop-host-mode.md) | Merged into main 2026-10-10, not shipped. Hosted games, GM job queue, host worker, hosting screens, and the guest play page. End-to-end run passed against dev. Party setup invites a player to a held hero or to bring their own with the host's approval, checked in the running app 2026-10-10. Since 2026-10-11 the host's worker runs NPC turns, AI heroes' turns, and round ends by itself. | Play a hosted game end to end with the worker's own Continue jobs. Owner review in the running app, Convex lockdown, provider terms, then ship. |
-| [Adventure store](feature-adventure-store.md) | Merged into main 2026-10-08. Alpha. Catalog, entitlements, desktop account linking, story pack downloads, and locked adventures on New game implemented 2026-10-08 on `feature/adventure-store`. Web checkout waits for beta. | Owner review in the running app, then the alpha release: deploy the website and Convex, set the store secret. Pack upload and checkout wait for beta. |
-| [Roll results in the narration](roll-results.md) | Implemented on main 2026-10-05. A roll's paragraph shows the d20 landing, the total against the DC and a stamped verdict. | Owner review. |
-| [Covert Cargo: the meeting inside the boat](covert-cargo-boat-meeting.md) | Implemented on main 2026-10-05. One larger saloon for every boat encounter, restaged to the source, intro edited, walks through doors. | Owner play-through. |
-| [Desktop module covers](desktop-module-covers.md) | Implemented on main 2026-10-04. Painted module-style covers and a module cover layout for the New game screen. | Owner review. |
-| [Harvest Festival handoff](harvest-festival-handoff.md) | Implementation stopped at owner request. No scene code changed. | Resume from inspected integration points, authored NPCs, and validation steps. |
-| [Stageview](stageview.md) | Desktop gate scene connected to the real local turn flow in this worktree. | More authored sets, per-turn beats, and encounter coverage. |
-| [Stage-first turn mock](feature-stage-turn-mock.md) | Scripted gate-scene demo merged 2026-10-01; public at `/demo/kordavos` for feedback. | Owner and playtester feedback, then the real turn page (Stageview phase 4). |
-| [Covert Cargo in 3D](zzz-completed/covert-cargo-3d.md) | Merged into main 2026-10-04 and archived. Four sets, nine stagings and five character standees from the adventure's art, painted textures, leaf cards and water reflections, checked in the packaged app. | Owner play-through. The End's forest haze. |
-| [Desktop heroes](zzz-completed/feature-desktop-heroes.md) | Merged into main 2026-10-04 and archived. Hero creation, a local roster, party setup with AI companions, all four Myr adventures, stock figures, and art painted through Codex or Grok. | Delete the worktree's Convex project in the dashboard. |
-| [Desktop Stageview integration](zzz-completed/feature-desktop-stage-play.md) | Merged into main 2026-10-03 and archived. Both bundled adventures play in the desktop app, The Midnight Summons on every branch with 3D scenes. | Package distribution and more 3D sets. Character creation is in [Desktop heroes](zzz-completed/feature-desktop-heroes.md). |
-| [Desktop local play](desktop-local-play.md) | Core extraction, desktop shell, and initial local save/CLI play implemented. Revenue and multiplayer direction revised 2026-10-07. | More sets, save management, optional pre-roll batching, broader gameplay, provider coverage, and distribution. |
-| [Maintenance follow-ups](maintenance.md) | Open findings and unverified follow-ups carried forward from completed work. | Test harness, authoring edge cases, narration validation, and environment cleanup. |
-
-## Maintained references
-
-| Guide | Scope |
+| Plan | Next work |
 |---|---|
-| [Mapview](mapview.md) | Implemented 2D maps, storage, generation, placement, and catalog rules. |
-| [Storyview](../storyview.md) | Implemented narration, incremental caching, and token charging. |
-| [Stage engine](../stage-engine.md) | Implemented set/staging specs, rendering, and dated performance evidence. |
-| [Wiki adventures](../wiki-adventures.md) | Content contracts, authoring, source selection, and turn persistence. |
-| [Testing runbook](testing-runbook.md) | Current commands, routes, browser checks, and known test limits. |
-| [Parallel dev worktrees](parallel-dev-worktrees.md) | Retired 2026-10-08 by the owner. Since 2026-10-10 work happens directly on main while the project is in alpha. Kept for reference until beta, when worktrees return. |
+| [Vercel deployment storage](vercel-deploy-storage.md) | Convert the largest PNG and MP4 files. |
+| [Desktop site style](desktop-site-style.md) | Owner review of the HUD over each set, then cleanup. |
+| [Desktop host mode](desktop-host-mode.md) | A hosted game end to end, Convex lockdown, provider terms, ship. |
+| [Adventure store](feature-adventure-store.md) | Alpha release: website, Convex, store secret. Checkout at beta. |
+| [Desktop local play](desktop-local-play.md) | Save management, provider coverage, distribution. |
+| [Maintenance](maintenance.md) | Test harness, authoring edge cases, audits, cleanup. |
 
-## Plan lifecycle
+## Kept for reference
 
-Create a plan before meaningful behavior, architecture, schema, dependency, build, or test changes. Record current state, remaining work, decisions, and validation. Small local fixes do not need a plan.
+Code links to these.
 
-`wt:finish` still moves branch plans into `wiki/plans/zzz-completed/`. During wiki maintenance, move useful contracts into reference pages, carry open work into an active plan, record the outcome in [the log](../log.md), and delete redundant completed plans. Git preserves implementation history.
-
-The completed-plan archive and obsolete Stageview comparison images were removed on 2026-10-01. Migration inputs under `wiki/sources/adventure plans/` remain because scripts still read them.
+| Page | Scope |
+|---|---|
+| [Stageview](stageview.md) | Stage play screen decisions and open questions. |
+| [March of Davos in 3D](march-of-davos-sets.md) | Sets and kits for every March of Davos encounter. |
+| [The Dragonbone Inn in 3D](dragonbone-inn-stage.md) | The inn's sets. |
+| [Clan Conflict in 3D](clan-conflict-stage.md) | The standoff set. |
+| [Covert Cargo in 3D](covert-cargo-3d.md) | Covert Cargo's sets. |
+| [Painted backdrop](stage-backdrop.md) | A set's painted far scenery. |
+| [Stage art spikes](stage-art-spikes.md) | `lab/stage-art/` experiments. |
+| [Mapview](mapview.md) | Stored 2D maps, generation, placement. |
+| [Testing runbook](testing-runbook.md) | Commands, routes, coverage limits. |
+| [Parallel dev worktrees](parallel-dev-worktrees.md) | Retired until beta. |

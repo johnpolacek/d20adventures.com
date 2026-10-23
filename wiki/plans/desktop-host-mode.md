@@ -1,6 +1,6 @@
 # Desktop host mode
 
-[Plans](index.md) · [Wiki Home](../index.md) · [Desktop local play](desktop-local-play.md) · [Desktop home screen](zzz-completed/feature-desktop-home.md) · [Adventure store](feature-adventure-store.md)
+[Plans](index.md) · [Wiki Home](../index.md) · [Desktop local play](desktop-local-play.md) · [Adventure store](feature-adventure-store.md)
 
 Status: Merged into main 2026-10-10, not shipped. Paused 2026-10-08, resumed 2026-10-10. The app's hosting screens are untested in the running app. Convex lockdown not started.
 
@@ -310,7 +310,7 @@ Owner: "Do we have chat working so the participants in the session can chat?" It
 
 ## Suggested replies, 2026-10-11
 
-The host's GM writes each player's suggested replies as a `suggest` job. See [Suggested replies](turn-suggestions.md).
+The host's GM writes each player's suggested replies as a `suggest` job. See Suggested replies.
 
 ## Turns that need no player, 2026-10-11
 

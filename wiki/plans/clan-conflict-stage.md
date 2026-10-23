@@ -1,6 +1,6 @@
 # Clan Conflict in 3D
 
-[Plans](index.md) · [Stage authoring](../stage-authoring.md) · [Stage engine](../stage-engine.md) · [Harvest Festival handoff](harvest-festival-handoff.md)
+[Plans](index.md) · [Stage authoring](../stage-authoring.md) · [Stage engine](../stage-engine.md) · Harvest Festival handoff
 
 Status: implemented on main 2026-10-19. Owner review and a check in the running app are next.
 
