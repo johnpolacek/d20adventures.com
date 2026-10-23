@@ -1,4 +1,8 @@
 import wineCellarSet from "@d20/stage/sets/realm-of-myr/blackthorn-wine-cellar.json"
+import hallSet from "@d20/stage/sets/realm-of-myr/catacombs-hall.json"
+import labyrinthSet from "@d20/stage/sets/realm-of-myr/catacombs-labyrinth.json"
+import powderSet from "@d20/stage/sets/realm-of-myr/catacombs-powder.json"
+import sealedDoorSet from "@d20/stage/sets/realm-of-myr/catacombs-sealed-door.json"
 import innSet from "@d20/stage/sets/realm-of-myr/dragonbone-inn.json"
 import innMorningSet from "@d20/stage/sets/realm-of-myr/dragonbone-inn-morning.json"
 import ambushLanesSet from "@d20/stage/sets/realm-of-myr/kordavos-ambush-lanes.json"
@@ -37,9 +41,11 @@ import anInvitation from "@d20/stage/stagings/march-of-davos/an-invitation.json"
 import anUnsolicitedOpportunity from "@d20/stage/stagings/march-of-davos/an-unsolicited-opportunity.json"
 import arrivalAtTheDocks from "@d20/stage/stagings/march-of-davos/arrival-at-the-docks.json"
 import besetByStreetUrchins from "@d20/stage/stagings/march-of-davos/beset-by-street-urchins.json"
+import bigEmpty from "@d20/stage/stagings/march-of-davos/big-empty.json"
 import clanConflict from "@d20/stage/stagings/march-of-davos/clan-conflict.json"
 import faceToFaceWithSilverhand from "@d20/stage/stagings/march-of-davos/face-to-face-with-silverhand.json"
 import findingTheBlackMarket from "@d20/stage/stagings/march-of-davos/finding-the-black-market.json"
+import intoTheCatacombs from "@d20/stage/stagings/march-of-davos/into-the-catacombs.json"
 import labyrinthineStalls from "@d20/stage/stagings/march-of-davos/labyrinthine-stalls.json"
 import morningAtTheDragonbone from "@d20/stage/stagings/march-of-davos/morning-at-the-dragonbone.json"
 import mysteryCargo from "@d20/stage/stagings/march-of-davos/mystery-cargo.json"
@@ -54,8 +60,10 @@ import festivalStaging from "@d20/stage/stagings/march-of-davos/the-harvest-fest
 import theHideout from "@d20/stage/stagings/march-of-davos/the-hideout.json"
 import theNewDawn from "@d20/stage/stagings/march-of-davos/the-new-dawn.json"
 import theOldGrandLibrary from "@d20/stage/stagings/march-of-davos/the-old-grand-library.json"
+import theSealedDoor from "@d20/stage/stagings/march-of-davos/the-sealed-door.json"
 import theSilverSerpentTavern from "@d20/stage/stagings/march-of-davos/the-silver-serpent-tavern.json"
 import theWineCellar from "@d20/stage/stagings/march-of-davos/the-wine-cellar.json"
+import throughTheLabyrinth from "@d20/stage/stagings/march-of-davos/through-the-labyrinth.json"
 import vengeanceOfTheBlackthorn from "@d20/stage/stagings/march-of-davos/vengeance-of-the-blackthorn.json"
 import welcomeToTheLowerDistricts from "@d20/stage/stagings/march-of-davos/welcome-to-the-lower-districts.json"
 import backHome from "@d20/stage/stagings/the-midnight-summons/back-home.json"
@@ -310,6 +318,43 @@ export const SCENES: Record<string, Scene> = {
       "Below the Blackthorn mansion: a long stone barrel vault reached by a stair from the halls above. Racks of dusty bottles line both walls, and rows of casks lie before them with their heads to the aisle, some stacked two high, room to hide behind them. Two candle chandeliers hang over the aisle. At the far end, beyond a small tasting table, stands a sturdier rack of newer, paler wood against the wall. The party stands in the middle of the aisle. The sommelier and a servant come down the stair when they arrive.",
     party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
     spare: [[-0.9, -12.2]],
+  },
+  // The tunnel kit: the catacombs under the city.
+  "into-the-catacombs": {
+    set: powderSet,
+    staging: intoTheCatacombs,
+    location: "The catacombs",
+    where:
+      "Deep under Kordavos: a long tunnel of old laid stone, torches on its walls, runs down into a cave chamber held up by four rough stone pillars. Four hooded Covenant agents are setting powder kegs against the pillars, and a long fuse snakes across the floor from keg to keg to a cultist by the far tunnel mouth. The party stands in the tunnel just before the chamber with Lady Astrid and Eamon at its front; Astrid's soldiers come behind. The tunnel goes on beyond the chamber into the dark.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[-0.2, 12.4]],
+  },
+  "through-the-labyrinth": {
+    set: labyrinthSet,
+    staging: throughTheLabyrinth,
+    location: "The catacombs",
+    where:
+      "A rough-hewn cave under the city where the tunnel splits into two forks of dripping stone, a cold mist drifting out of them. Crystal-set runes glow faintly blue in the walls. The party stands in the cave; Eamon studies the runes on the east wall while Lady Astrid looks down the left-hand fork. The right fork runs off into darkness; the left bends twice and ends at a blank, seamless wall.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[2.8, 3.0]],
+  },
+  "the-sealed-door": {
+    set: sealedDoorSet,
+    staging: theSealedDoor,
+    location: "The catacombs",
+    where:
+      "At the end of the left-hand tunnel the seamless wall has become a massive black iron door in a carved stone frame, glowing sigils pulsing on its face, frost on the floor before it. Eamon stands at the door; Lady Astrid is a step behind with her sword drawn. The party stands in the tunnel behind them.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[-6.4, -17.4]],
+  },
+  "big-empty": {
+    set: hallSet,
+    staging: bigEmpty,
+    location: "The catacombs",
+    where:
+      "Beyond the iron door, a vast cavern whose roof is lost in the dark, its floor deep in fine grey dust. A single narrow archway glows blue at the far end. Lady Astrid has stepped out into the middle of the hall; Eamon stays back by the door with the party just inside it. The ancient dead lie hidden under the dust until they rise.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[0.4, 10.6]],
   },
   "the-ambush": {
     set: ambushLanesSet,

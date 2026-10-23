@@ -584,6 +584,27 @@ const FIGURES: Record<string, Figure> = {
     head: 0.13,
     backNote: "An apron shows only its ties from behind; the gown's skirt hangs down her back. The notepad and pencil show only at her sides.",
   },
+  // March of Davos, the tunnel kit: the Covenant's saboteurs in the catacombs, and the undead of Old Valkara.
+  "covenant-rogue": {
+    out: "fixtures/march-of-davos/covenant-rogue",
+    who: "A Covenant of the Cowl rogue, Human male agent",
+    look: "A lean, quick man of about thirty, about 1.78 m tall, his face half hidden under a deep charcoal hood and a dark cloth mask over his nose and mouth, sharp watchful eyes. Close-fitting dark leathers with many straps, a short charcoal cloak, dark gloves, soft boots. A short blade in his right hand and a small hand crossbow in his left, both held low. Crouched a little, ready to move.",
+    head: 0.13,
+    backNote: "His deep hood is up and covers the whole back of his head. The short cloak hangs to his waist; below it his leathers, belt and boots show. His blade and crossbow show only at his sides.",
+  },
+  "covenant-cultist": {
+    out: "fixtures/march-of-davos/covenant-cultist",
+    who: "A Covenant of the Cowl cultist, Human female zealot",
+    look: "A gaunt woman of about forty, about 1.68 m tall, in a rough, patched robe of undyed brown wool with a deep hood pulled up, her thin pale face fervent, hollow-cheeked, smudged with soot. A rope belt hung with a pouch of alchemical powder and a coil of waxed fuse cord, a flint striker in one hand, the other hand cupped round a small lit taper. Bare dirty feet in sandals.",
+    head: 0.13,
+    backNote: "Her deep hood is up and covers the whole back of her head. The rough robe hangs to her ankles; the rope belt is tied at the back.",
+  },
+  "ancient-undead": {
+    out: "fixtures/march-of-davos/ancient-undead",
+    who: "An ancient undead warrior of Old Valkara",
+    look: "A tall skeletal warrior, about 1.85 m tall, grey-brown bones with scraps of dried sinew, a fanged skull with faint cold blue light glowing in its hollow eye sockets. Rusted ancient armour: a corroded bronze-and-iron scale shirt hanging in tatters, a dented conical helm with a broken nasal, a rotten fur mantle on one shoulder, rags of a dark tabard with a faded knotwork border. A notched, rusted longsword in its right hand, a split round shield on its left arm. Dust and grave dirt falling from it.",
+    head: 0.13,
+  },
 }
 for (const [id, f] of Object.entries(FIGURES)) f.out ||= `heroes/${id}`
 

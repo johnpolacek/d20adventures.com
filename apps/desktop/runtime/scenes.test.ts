@@ -80,7 +80,7 @@ test("every authored scene is a real encounter, and every festival character has
   }
 })
 
-test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the Old Grand Library, the Silver Serpent, the docks, the Lower Districts, the Black Market, the street kit and the cellar kit have their scenes, and an encounter without one falls back to story view", async () => {
+test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the Old Grand Library, the Silver Serpent, the docks, the Lower Districts, the Black Market, the street, cellar and tunnel kits have their scenes, and an encounter without one falls back to story view", async () => {
   const run = await setup()
   try {
     // The heroes wait in the line alone, then meet Garlan at the front.
@@ -175,6 +175,11 @@ test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the 
     assert.match(spatialContext("vengeance-of-the-blackthorn", party, {}) ?? "", /coffin[\s\S]*the bier/)
     // The wine cellar, below the mansion.
     assert.match(spatialContext("the-wine-cellar", party, {}) ?? "", /barrel vault[\s\S]*the rack on the far wall/)
+    // The catacombs, reached from the mansion's grounds.
+    assert.match(spatialContext("into-the-catacombs", party, {}) ?? "", /powder kegs[\s\S]*the end of the fuse/)
+    assert.match(spatialContext("through-the-labyrinth", party, {}) ?? "", /two forks[\s\S]*the crystal runes/)
+    assert.match(spatialContext("the-sealed-door", party, {}) ?? "", /black iron door[\s\S]*the black iron door/)
+    assert.match(spatialContext("big-empty", party, {}) ?? "", /grey dust[\s\S]*the archway at the far end/)
   } finally {
     run.close()
   }

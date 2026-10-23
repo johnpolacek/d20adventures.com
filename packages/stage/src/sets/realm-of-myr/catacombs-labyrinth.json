@@ -1,0 +1,1522 @@
+{
+  "format": "d20.stage.set",
+  "version": 1,
+  "id": "catacombs-labyrinth",
+  "settingId": "realm-of-myr",
+  "locationId": "catacombs-labyrinth",
+  "title": "The catacombs: the labyrinth",
+  "seed": 4201,
+  "atmosphere": {
+    "sun": {
+      "direction": [
+        0.2,
+        1,
+        0.1
+      ],
+      "color": "#202428",
+      "intensity": 0,
+      "target": [
+        0.5499999999999998,
+        0,
+        -1.5
+      ],
+      "distance": 80,
+      "shadow": {
+        "left": -30,
+        "right": 30,
+        "top": 30,
+        "bottom": -30,
+        "near": 10,
+        "far": 160,
+        "size": 1024
+      }
+    },
+    "hemisphere": {
+      "sky": "#2e4a6a",
+      "ground": "#0c1016",
+      "intensity": 0.6
+    },
+    "sky": {
+      "horizon": "#0e1214",
+      "mid": "#08090a",
+      "zenith": "#040506",
+      "gain": 0.1,
+      "clouds": 0,
+      "stars": 0,
+      "moon": 0
+    },
+    "fog": {
+      "density": 0.03,
+      "color": "#122030",
+      "start": 5
+    },
+    "glow": "#8ab0d8",
+    "fill": {
+      "color": "#d8e4f0",
+      "intensity": 1.1,
+      "distance": 8
+    },
+    "lights": [
+      {
+        "at": [
+          3.64,
+          1.7,
+          2.09
+        ],
+        "color": "#6ab8ff",
+        "intensity": 5,
+        "distance": 7
+      },
+      {
+        "at": [
+          -3.63,
+          1.7,
+          2.11
+        ],
+        "color": "#6ab8ff",
+        "intensity": 4,
+        "distance": 6
+      },
+      {
+        "at": [
+          -7.2,
+          1.6,
+          -14.6
+        ],
+        "color": "#6ab8ff",
+        "intensity": 3,
+        "distance": 6
+      },
+      {
+        "at": [
+          0.9,
+          0.6,
+          1.6
+        ],
+        "color": "#ffb070",
+        "intensity": 3,
+        "distance": 6
+      },
+      {
+        "at": [
+          4.4,
+          1.6,
+          -7.6
+        ],
+        "color": "#5aa0d8",
+        "intensity": 7,
+        "distance": 9
+      },
+      {
+        "at": [
+          -4.4,
+          1.6,
+          -7.6
+        ],
+        "color": "#5aa0d8",
+        "intensity": 6,
+        "distance": 9
+      }
+    ],
+    "environment": 0.1,
+    "exposure": 1.25,
+    "grade": "neutral",
+    "wind": 0.05
+  },
+  "camera": {
+    "near": 0.05,
+    "far": 300,
+    "min": [
+      -8.4,
+      0.3,
+      -24
+    ],
+    "max": [
+      9.5,
+      4.4,
+      21
+    ],
+    "maxDistance": 22
+  },
+  "materials": {
+    "far": {
+      "type": "masonry",
+      "a": "#9b7a64",
+      "b": "#b2957a",
+      "c": "#8f8a86",
+      "block": [
+        2.5,
+        1.2
+      ],
+      "grime": 0.6,
+      "relief": 0.03
+    },
+    "roofFar": {
+      "type": "masonry",
+      "a": "#6b4a40",
+      "b": "#7c5646",
+      "c": "#5f5a58",
+      "block": [
+        0.6,
+        0.4
+      ],
+      "relief": 0.02,
+      "grime": 0.4
+    },
+    "ground": {
+      "type": "masonry",
+      "a": "#9a7658",
+      "b": "#b08d6c",
+      "c": "#8a7c70",
+      "mortar": "#5d4636",
+      "block": [
+        1.1,
+        0.8
+      ],
+      "stones": 0.36,
+      "joint": 0.03,
+      "relief": 0.045,
+      "variance": 0.55,
+      "grime": 0.35,
+      "ground": true,
+      "roads": false
+    },
+    "table": {
+      "type": "wood",
+      "a": "#6a4b33",
+      "b": "#7e5b3e",
+      "c": "#5a4a3c",
+      "plank": [
+        0.19,
+        1.9
+      ],
+      "relief": 0.045,
+      "variance": 0.4,
+      "seed": 11.2
+    },
+    "crate": {
+      "type": "wood",
+      "a": "#8a6a48",
+      "b": "#9c7a52",
+      "c": "#7a6a58",
+      "plank": [
+        0.2,
+        1.2
+      ],
+      "relief": 0.045,
+      "variance": 0.4,
+      "seed": 2.6
+    },
+    "crateDark": {
+      "type": "wood",
+      "a": "#4a3526",
+      "b": "#5a4230",
+      "c": "#403830",
+      "plank": [
+        0,
+        40
+      ],
+      "relief": 0.03,
+      "seed": 8.8
+    },
+    "barrel": {
+      "type": "wood",
+      "a": "#6a4a30",
+      "b": "#7c5a3a",
+      "c": "#5f4a3a",
+      "plank": [
+        0.105,
+        1.4
+      ],
+      "relief": 0.05,
+      "variance": 0.45,
+      "seed": 4.4
+    },
+    "sack": {
+      "type": "burlap",
+      "color": "#c2b08c"
+    },
+    "sackB": {
+      "type": "burlap",
+      "color": "#a08a68"
+    },
+    "basket": {
+      "type": "burlap",
+      "color": "#b08a52"
+    },
+    "iron": {
+      "type": "metal",
+      "color": "#2e2a28",
+      "roughness": 0.55,
+      "metalness": 0.7
+    },
+    "brass": {
+      "type": "metal",
+      "color": "#a8823e",
+      "roughness": 0.38,
+      "metalness": 0.85
+    },
+    "void": {
+      "type": "plain",
+      "color": "#0d0a09",
+      "roughness": 1
+    },
+    "pottery": {
+      "type": "plain",
+      "color": "#a45a36",
+      "roughness": 0.7
+    },
+    "potteryB": {
+      "type": "plain",
+      "color": "#8a6a4e",
+      "roughness": 0.75
+    },
+    "goodsRed": {
+      "type": "plain",
+      "color": "#9a2e22",
+      "roughness": 0.8
+    },
+    "goodsGreen": {
+      "type": "plain",
+      "color": "#5a6a2e",
+      "roughness": 0.8
+    },
+    "goodsYellow": {
+      "type": "plain",
+      "color": "#c2963a",
+      "roughness": 0.7
+    },
+    "goodsTeal": {
+      "type": "plain",
+      "color": "#2a6a66",
+      "roughness": 0.8
+    },
+    "rope": {
+      "type": "plain",
+      "color": "#5a4632",
+      "roughness": 1
+    },
+    "straw": {
+      "type": "wood",
+      "a": "#c8a65a",
+      "b": "#b38f45",
+      "c": "#d9bd74",
+      "plank": [
+        0.03,
+        2
+      ],
+      "relief": 0.03,
+      "variance": 0.5,
+      "seed": 7.7
+    },
+    "clothDrab": {
+      "type": "cloth",
+      "color": "#7d6a50",
+      "amp": 0.12
+    },
+    "tentRust": {
+      "type": "cloth",
+      "color": "#9a4a2a",
+      "tatters": [
+        5,
+        0.1
+      ],
+      "amp": 0.22
+    },
+    "tentGreen": {
+      "type": "cloth",
+      "color": "#46603a",
+      "tatters": [
+        3,
+        0.08
+      ],
+      "amp": 0.22
+    },
+    "lead": {
+      "type": "metal",
+      "color": "#2a2826",
+      "roughness": 0.6,
+      "metalness": 0.4
+    },
+    "pole": {
+      "type": "wood",
+      "a": "#4d382a",
+      "b": "#644a35",
+      "c": "#453c34",
+      "plank": [
+        0,
+        60
+      ],
+      "relief": 0.03,
+      "variance": 0.35,
+      "seed": 5.7,
+      "grime": 0.5
+    },
+    "coin": {
+      "type": "metal",
+      "color": "#d4a84a",
+      "roughness": 0.3,
+      "metalness": 0.95
+    },
+    "gourd": {
+      "type": "plain",
+      "color": "#c0642a",
+      "roughness": 0.6
+    },
+    "door": {
+      "type": "painted",
+      "map": "/stage/textures/timber-hold.jpg",
+      "tint": "#9a8470",
+      "plank": [
+        0.18,
+        3
+      ],
+      "size": [
+        0.7,
+        2.2
+      ],
+      "relief": 0.08,
+      "grime": 1.1
+    },
+    "flame": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ffae55",
+      "emissiveIntensity": 5
+    },
+    "fire": {
+      "type": "fire",
+      "color": "#ff7a26"
+    },
+    "coal": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#c2360c",
+      "emissiveIntensity": 1.5
+    },
+    "crystal": {
+      "type": "plain",
+      "color": "#1e4a78",
+      "roughness": 0.2,
+      "emissive": "#3a8ad8",
+      "emissiveIntensity": 0.7
+    },
+    "tablecloth": {
+      "type": "cloth",
+      "color": "#4a2442",
+      "amp": 0.01
+    },
+    "chest": {
+      "type": "wood",
+      "a": "#5c3c26",
+      "b": "#6e4a30",
+      "c": "#4a3222",
+      "plank": [
+        0.11,
+        0.9
+      ],
+      "relief": 0.05,
+      "variance": 0.35,
+      "seed": 23.4
+    },
+    "cobbles": {
+      "type": "masonry",
+      "a": "#3e4246",
+      "b": "#4a4e52",
+      "c": "#34383c",
+      "mortar": "#16181a",
+      "block": [
+        0.7,
+        0.5
+      ],
+      "joint": 0.035,
+      "relief": 0.08,
+      "variance": 0.6,
+      "grime": 1.6,
+      "ground": true,
+      "stones": 0.16,
+      "roughness": 0.3
+    },
+    "gutter": {
+      "type": "masonry",
+      "a": "#3a3836",
+      "b": "#44403c",
+      "c": "#302e2c",
+      "mortar": "#161412",
+      "block": [
+        0.5,
+        0.36
+      ],
+      "joint": 0.03,
+      "relief": 0.06,
+      "variance": 0.4,
+      "grime": 2,
+      "ground": true,
+      "roughness": 0.3
+    },
+    "stone": {
+      "type": "masonry",
+      "a": "#56504a",
+      "b": "#6a625a",
+      "c": "#4a4440",
+      "mortar": "#3a3430",
+      "block": [
+        0.46,
+        0.28
+      ],
+      "joint": 0.012,
+      "relief": 0.008,
+      "variance": 0.8,
+      "grime": 2.2
+    },
+    "stoneTrim": {
+      "type": "rock",
+      "a": "#56504a",
+      "b": "#6c645c",
+      "moss": "#3a4232",
+      "mossLight": "#4c5640",
+      "lichen": "#7a7468",
+      "mossAmount": 0.35,
+      "lichenAmount": 0.1,
+      "relief": 0.4,
+      "scale": 0.8
+    },
+    "plaster": {
+      "type": "rock",
+      "a": "#7a7268",
+      "b": "#8e867a",
+      "moss": "#4c5244",
+      "mossLight": "#5e6454",
+      "lichen": "#a09888",
+      "mossAmount": 0.3,
+      "lichenAmount": 0.15,
+      "relief": 0.15,
+      "scale": 1.6
+    },
+    "plasterB": {
+      "type": "rock",
+      "a": "#6e6a62",
+      "b": "#84786a",
+      "moss": "#4a4a40",
+      "mossLight": "#5c5a4e",
+      "lichen": "#9a9080",
+      "mossAmount": 0.35,
+      "lichenAmount": 0.12,
+      "relief": 0.15,
+      "scale": 1.4
+    },
+    "timber": {
+      "type": "wood",
+      "a": "#2a201a",
+      "b": "#342820",
+      "c": "#262220",
+      "plank": [
+        0,
+        40
+      ],
+      "relief": 0.04,
+      "seed": 3.7
+    },
+    "roof": {
+      "type": "masonry",
+      "a": "#3c3e42",
+      "b": "#46484c",
+      "c": "#323438",
+      "mortar": "#18181a",
+      "block": [
+        0.42,
+        0.26
+      ],
+      "joint": 0.03,
+      "relief": 0.08,
+      "variance": 0.5,
+      "grime": 1.2
+    },
+    "shutter": {
+      "type": "painted",
+      "map": "/stage/textures/boat-paint.jpg",
+      "tint": "#6a7468",
+      "plank": [
+        0.12,
+        2
+      ],
+      "size": [
+        0.5,
+        1.4
+      ],
+      "relief": 0.08,
+      "grime": 1.4
+    },
+    "dark": {
+      "type": "plain",
+      "color": "#14110e",
+      "roughness": 1
+    },
+    "windowLit": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ff9a40",
+      "emissiveIntensity": 0.8
+    },
+    "shopLit": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#d27a34",
+      "emissiveIntensity": 0.45
+    },
+    "windowDark": {
+      "type": "plain",
+      "color": "#141820",
+      "roughness": 0.2
+    },
+    "lamp": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ffa850",
+      "emissiveIntensity": 2.2
+    },
+    "gilt": {
+      "type": "metal",
+      "color": "#b08a48",
+      "roughness": 0.45,
+      "metalness": 0.8
+    },
+    "signBoard": {
+      "type": "plain",
+      "color": "#3a2a1e",
+      "roughness": 0.8
+    },
+    "signRed": {
+      "type": "plain",
+      "color": "#5a2420",
+      "roughness": 0.8
+    },
+    "signGreen": {
+      "type": "plain",
+      "color": "#2a3e2c",
+      "roughness": 0.8
+    },
+    "signBlue": {
+      "type": "plain",
+      "color": "#26344a",
+      "roughness": 0.8
+    },
+    "linen": {
+      "type": "cloth",
+      "color": "#c8c0ae"
+    },
+    "linenB": {
+      "type": "cloth",
+      "color": "#a8a49a"
+    },
+    "clothRed": {
+      "type": "cloth",
+      "color": "#7a3a2c"
+    },
+    "clothBlue": {
+      "type": "cloth",
+      "color": "#3e4e66"
+    },
+    "tunnelStone": {
+      "type": "image",
+      "map": "/stage/textures/stone-old.jpg",
+      "size": [
+        2,
+        2
+      ],
+      "tint": "#8a9488",
+      "roughness": 0.6
+    },
+    "tunnelRock": {
+      "type": "rock",
+      "a": "#5a5e64",
+      "b": "#6e7276",
+      "moss": "#2e3a34",
+      "mossLight": "#3c4a40",
+      "lichen": "#6a7270",
+      "mossAmount": 0.12,
+      "lichenAmount": 0.08,
+      "relief": 0.8,
+      "scale": 1.4
+    },
+    "tunnelFloor": {
+      "type": "rock",
+      "a": "#34363a",
+      "b": "#44464a",
+      "moss": "#2a302c",
+      "mossLight": "#343c36",
+      "lichen": "#5a605e",
+      "mossAmount": 0.15,
+      "lichenAmount": 0.05,
+      "relief": 0.4,
+      "scale": 1
+    },
+    "sigil": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ff9a30",
+      "emissiveIntensity": 3.2
+    },
+    "ironBlack": {
+      "type": "metal",
+      "color": "#16161a",
+      "roughness": 0.5,
+      "metalness": 0.85
+    },
+    "powder": {
+      "type": "plain",
+      "color": "#2a2622",
+      "roughness": 1
+    },
+    "fuse": {
+      "type": "plain",
+      "color": "#4a3a2a",
+      "roughness": 0.9
+    },
+    "ember": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ff6a20",
+      "emissiveIntensity": 4
+    },
+    "dustFloor": {
+      "type": "rock",
+      "a": "#6a6a68",
+      "b": "#7a7874",
+      "moss": "#5a5a58",
+      "mossLight": "#6a6a68",
+      "lichen": "#8a8884",
+      "mossAmount": 0.05,
+      "lichenAmount": 0.05,
+      "relief": 0.2,
+      "scale": 2
+    },
+    "frost": {
+      "type": "mist",
+      "color": "#c8dcec",
+      "opacity": 0.22
+    },
+    "mist": {
+      "type": "mist",
+      "color": "#6a8aa0",
+      "opacity": 0.2
+    },
+    "candle": {
+      "type": "plain",
+      "color": "#e8dcc0",
+      "roughness": 0.9
+    },
+    "candleFlame": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ffa040",
+      "emissiveIntensity": 2.4
+    },
+    "arch": {
+      "type": "masonry",
+      "a": "#4a4c50",
+      "b": "#56585c",
+      "c": "#404246",
+      "mortar": "#2a2c2e",
+      "block": [
+        0.6,
+        0.35
+      ],
+      "joint": 0.012,
+      "relief": 0.008,
+      "variance": 0.5,
+      "grime": 2
+    }
+  },
+  "objects": [
+    {
+      "type": "bore",
+      "path": [
+        [
+          0,
+          22
+        ],
+        [
+          0,
+          4.8
+        ]
+      ],
+      "width": 2.6,
+      "walls": 1.3,
+      "rough": 0.35,
+      "caps": [
+        true,
+        false
+      ]
+    },
+    {
+      "type": "cave",
+      "at": [
+        0,
+        0
+      ],
+      "rx": 5.2,
+      "rz": 5.2,
+      "height": 5,
+      "rough": 0.9,
+      "mouths": [
+        {
+          "at": 0,
+          "width": 3.1,
+          "height": 3
+        },
+        {
+          "at": 150,
+          "width": 3.1,
+          "height": 3
+        },
+        {
+          "at": 210,
+          "width": 3.1,
+          "height": 3
+        }
+      ]
+    },
+    {
+      "type": "bore",
+      "path": [
+        [
+          2.3,
+          -3.98
+        ],
+        [
+          7.5,
+          -13
+        ],
+        [
+          9,
+          -24
+        ]
+      ],
+      "width": 2.6,
+      "walls": 1.3,
+      "rough": 0.4,
+      "caps": [
+        false,
+        true
+      ]
+    },
+    {
+      "type": "bore",
+      "path": [
+        [
+          -2.3,
+          -3.98
+        ],
+        [
+          -6.5,
+          -11.3
+        ],
+        [
+          -7,
+          -17
+        ],
+        [
+          -3.5,
+          -21.5
+        ]
+      ],
+      "width": 2.6,
+      "walls": 1.3,
+      "rough": 0.4,
+      "caps": [
+        false,
+        true
+      ]
+    },
+    {
+      "type": "box",
+      "at": [
+        -1.7,
+        0,
+        4.6
+      ],
+      "yaw": 0,
+      "size": [
+        0.7,
+        3.55,
+        1.2
+      ],
+      "material": "arch"
+    },
+    {
+      "type": "box",
+      "at": [
+        1.7,
+        0,
+        4.6
+      ],
+      "yaw": 0,
+      "size": [
+        0.7,
+        3.55,
+        1.2
+      ],
+      "material": "arch"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        2.65,
+        4.6
+      ],
+      "yaw": 0,
+      "size": [
+        4.1,
+        0.9,
+        1.2
+      ],
+      "material": "arch"
+    },
+    {
+      "type": "box",
+      "at": [
+        3.77,
+        0,
+        -3.13
+      ],
+      "yaw": 150,
+      "size": [
+        0.7,
+        3.55,
+        1.2
+      ],
+      "material": "arch"
+    },
+    {
+      "type": "box",
+      "at": [
+        0.83,
+        0,
+        -4.83
+      ],
+      "yaw": 150,
+      "size": [
+        0.7,
+        3.55,
+        1.2
+      ],
+      "material": "arch"
+    },
+    {
+      "type": "box",
+      "at": [
+        2.3,
+        2.65,
+        -3.98
+      ],
+      "yaw": 150,
+      "size": [
+        4.1,
+        0.9,
+        1.2
+      ],
+      "material": "arch"
+    },
+    {
+      "type": "box",
+      "at": [
+        -0.83,
+        0,
+        -4.83
+      ],
+      "yaw": 210,
+      "size": [
+        0.7,
+        3.55,
+        1.2
+      ],
+      "material": "arch"
+    },
+    {
+      "type": "box",
+      "at": [
+        -3.77,
+        0,
+        -3.13
+      ],
+      "yaw": 210,
+      "size": [
+        0.7,
+        3.55,
+        1.2
+      ],
+      "material": "arch"
+    },
+    {
+      "type": "box",
+      "at": [
+        -2.3,
+        2.65,
+        -3.98
+      ],
+      "yaw": 210,
+      "size": [
+        4.1,
+        0.9,
+        1.2
+      ],
+      "material": "arch"
+    },
+    {
+      "type": "cone",
+      "at": [
+        4.21,
+        1.7,
+        2.35
+      ],
+      "yaw": -95,
+      "pitch": 65,
+      "radius": 0.0648,
+      "height": 0.288,
+      "segments": 5,
+      "material": "crystal"
+    },
+    {
+      "type": "cone",
+      "at": [
+        4.14,
+        1.82,
+        2.35
+      ],
+      "yaw": -108,
+      "pitch": 72,
+      "radius": 0.08279999999999998,
+      "height": 0.44999999999999996,
+      "segments": 5,
+      "material": "crystal"
+    },
+    {
+      "type": "cone",
+      "at": [
+        4,
+        1.82,
+        2.35
+      ],
+      "yaw": -132,
+      "pitch": 79,
+      "radius": 0.1008,
+      "height": 0.342,
+      "segments": 5,
+      "material": "crystal"
+    },
+    {
+      "type": "cone",
+      "at": [
+        3.93,
+        1.7,
+        2.35
+      ],
+      "yaw": -145,
+      "pitch": 86,
+      "radius": 0.0648,
+      "height": 0.504,
+      "segments": 5,
+      "material": "crystal"
+    },
+    {
+      "type": "cone",
+      "at": [
+        4,
+        1.58,
+        2.35
+      ],
+      "yaw": -133,
+      "pitch": 93,
+      "radius": 0.08279999999999998,
+      "height": 0.396,
+      "segments": 5,
+      "material": "crystal"
+    },
+    {
+      "type": "cone",
+      "at": [
+        4.14,
+        1.58,
+        2.35
+      ],
+      "yaw": -108,
+      "pitch": 70,
+      "radius": 0.1008,
+      "height": 0.288,
+      "segments": 5,
+      "material": "crystal"
+    },
+    {
+      "type": "cone",
+      "at": [
+        4.56,
+        1.7,
+        -1.61
+      ],
+      "yaw": -45,
+      "pitch": 65,
+      "radius": 0.0648,
+      "height": 0.288,
+      "segments": 5,
+      "material": "crystal"
+    },
+    {
+      "type": "cone",
+      "at": [
+        4.49,
+        1.82,
+        -1.61
+      ],
+      "yaw": -57,
+      "pitch": 72,
+      "radius": 0.08279999999999998,
+      "height": 0.44999999999999996,
+      "segments": 5,
+      "material": "crystal"
+    },
+    {
+      "type": "cone",
+      "at": [
+        4.35,
+        1.82,
+        -1.61
+      ],
+      "yaw": -82,
+      "pitch": 79,
+      "radius": 0.1008,
+      "height": 0.342,
+      "segments": 5,
+      "material": "crystal"
+    },
+    {
+      "type": "cone",
+      "at": [
+        4.28,
+        1.7,
+        -1.61
+      ],
+      "yaw": -95,
+      "pitch": 86,
+      "radius": 0.0648,
+      "height": 0.504,
+      "segments": 5,
+      "material": "crystal"
+    },
+    {
+      "type": "cone",
+      "at": [
+        4.35,
+        1.58,
+        -1.61
+      ],
+      "yaw": -83,
+      "pitch": 93,
+      "radius": 0.08279999999999998,
+      "height": 0.396,
+      "segments": 5,
+      "material": "crystal"
+    },
+    {
+      "type": "cone",
+      "at": [
+        4.49,
+        1.58,
+        -1.61
+      ],
+      "yaw": -57,
+      "pitch": 70,
+      "radius": 0.1008,
+      "height": 0.288,
+      "segments": 5,
+      "material": "crystal"
+    },
+    {
+      "type": "cone",
+      "at": [
+        -3.93,
+        1.7,
+        2.35
+      ],
+      "yaw": 145,
+      "pitch": 65,
+      "radius": 0.0648,
+      "height": 0.288,
+      "segments": 5,
+      "material": "crystal"
+    },
+    {
+      "type": "cone",
+      "at": [
+        -4,
+        1.82,
+        2.35
+      ],
+      "yaw": 133,
+      "pitch": 72,
+      "radius": 0.08279999999999998,
+      "height": 0.44999999999999996,
+      "segments": 5,
+      "material": "crystal"
+    },
+    {
+      "type": "cone",
+      "at": [
+        -4.14,
+        1.82,
+        2.35
+      ],
+      "yaw": 108,
+      "pitch": 79,
+      "radius": 0.1008,
+      "height": 0.342,
+      "segments": 5,
+      "material": "crystal"
+    },
+    {
+      "type": "cone",
+      "at": [
+        -4.21,
+        1.7,
+        2.35
+      ],
+      "yaw": 95,
+      "pitch": 86,
+      "radius": 0.0648,
+      "height": 0.504,
+      "segments": 5,
+      "material": "crystal"
+    },
+    {
+      "type": "cone",
+      "at": [
+        -4.14,
+        1.58,
+        2.35
+      ],
+      "yaw": 108,
+      "pitch": 93,
+      "radius": 0.08279999999999998,
+      "height": 0.396,
+      "segments": 5,
+      "material": "crystal"
+    },
+    {
+      "type": "cone",
+      "at": [
+        -4,
+        1.58,
+        2.35
+      ],
+      "yaw": 133,
+      "pitch": 70,
+      "radius": 0.1008,
+      "height": 0.288,
+      "segments": 5,
+      "material": "crystal"
+    },
+    {
+      "type": "cone",
+      "at": [
+        -4.48,
+        1.5,
+        -8.6
+      ],
+      "yaw": 85,
+      "pitch": 65,
+      "radius": 0.054,
+      "height": 0.24,
+      "segments": 5,
+      "material": "crystal"
+    },
+    {
+      "type": "cone",
+      "at": [
+        -4.56,
+        1.61,
+        -8.6
+      ],
+      "yaw": 67,
+      "pitch": 72,
+      "radius": 0.06899999999999999,
+      "height": 0.375,
+      "segments": 5,
+      "material": "crystal"
+    },
+    {
+      "type": "cone",
+      "at": [
+        -4.7,
+        1.57,
+        -8.6
+      ],
+      "yaw": 39,
+      "pitch": 79,
+      "radius": 0.084,
+      "height": 0.28500000000000003,
+      "segments": 5,
+      "material": "crystal"
+    },
+    {
+      "type": "cone",
+      "at": [
+        -4.7,
+        1.43,
+        -8.6
+      ],
+      "yaw": 39,
+      "pitch": 86,
+      "radius": 0.054,
+      "height": 0.42,
+      "segments": 5,
+      "material": "crystal"
+    },
+    {
+      "type": "cone",
+      "at": [
+        -4.56,
+        1.39,
+        -8.6
+      ],
+      "yaw": 67,
+      "pitch": 93,
+      "radius": 0.06899999999999999,
+      "height": 0.33,
+      "segments": 5,
+      "material": "crystal"
+    },
+    {
+      "type": "cone",
+      "at": [
+        -7.69,
+        1.6,
+        -14.6
+      ],
+      "yaw": 115,
+      "pitch": 65,
+      "radius": 0.0504,
+      "height": 0.22400000000000003,
+      "segments": 5,
+      "material": "crystal"
+    },
+    {
+      "type": "cone",
+      "at": [
+        -7.8,
+        1.71,
+        -14.6
+      ],
+      "yaw": 90,
+      "pitch": 72,
+      "radius": 0.0644,
+      "height": 0.35000000000000003,
+      "segments": 5,
+      "material": "crystal"
+    },
+    {
+      "type": "cone",
+      "at": [
+        -7.91,
+        1.6,
+        -14.6
+      ],
+      "yaw": 65,
+      "pitch": 79,
+      "radius": 0.07840000000000001,
+      "height": 0.26600000000000007,
+      "segments": 5,
+      "material": "crystal"
+    },
+    {
+      "type": "cone",
+      "at": [
+        -7.8,
+        1.49,
+        -14.6
+      ],
+      "yaw": 90,
+      "pitch": 86,
+      "radius": 0.0504,
+      "height": 0.392,
+      "segments": 5,
+      "material": "crystal"
+    },
+    {
+      "type": "lantern",
+      "at": [
+        0.9,
+        0,
+        1.6
+      ]
+    },
+    {
+      "type": "mist",
+      "at": [
+        0,
+        -0.4,
+        -3.6
+      ],
+      "width": 9,
+      "height": 2.2,
+      "layers": 2,
+      "spacing": 2.2
+    }
+  ],
+  "crowd": {
+    "library": "realm-of-myr",
+    "groups": [
+      {
+        "type": "points",
+        "people": [
+          {
+            "kind": "soldier",
+            "at": [
+              -0.5,
+              8
+            ],
+            "yaw": 180
+          },
+          {
+            "kind": "soldier",
+            "at": [
+              0.6,
+              9.2
+            ],
+            "yaw": 180
+          }
+        ]
+      }
+    ]
+  },
+  "marks": {
+    "tunnel": {
+      "at": [
+        0,
+        9
+      ],
+      "label": "the tunnel down"
+    },
+    "junction": {
+      "at": [
+        0,
+        0
+      ],
+      "label": "the fork"
+    },
+    "runes": {
+      "at": [
+        3.6,
+        1.8
+      ],
+      "label": "the crystal runes"
+    },
+    "right": {
+      "at": [
+        3.85,
+        -6.67
+      ],
+      "label": "the right-hand tunnel"
+    },
+    "left": {
+      "at": [
+        -3.85,
+        -6.67
+      ],
+      "label": "the left-hand tunnel"
+    },
+    "bend": {
+      "at": [
+        -6.6,
+        -12.6
+      ],
+      "label": "the bend in the left-hand tunnel"
+    },
+    "wall": {
+      "at": [
+        -4.48,
+        -20.24
+      ],
+      "label": "the wall at the tunnel's end"
+    }
+  },
+  "shots": {
+    "labyrinth": {
+      "position": [
+        -1.4,
+        1.7,
+        3.6
+      ],
+      "target": [
+        0.4,
+        1.3,
+        -5
+      ],
+      "fov": 62,
+      "label": "The labyrinth"
+    },
+    "runes": {
+      "position": [
+        1.2,
+        1.6,
+        0.4
+      ],
+      "target": [
+        4.6,
+        1.6,
+        2.4
+      ],
+      "fov": 50,
+      "label": "The crystal runes"
+    },
+    "left": {
+      "position": [
+        -5.9,
+        1.6,
+        -9
+      ],
+      "target": [
+        -7,
+        1.4,
+        -17
+      ],
+      "fov": 56,
+      "label": "The left-hand tunnel"
+    },
+    "wall": {
+      "position": [
+        -6.82,
+        1.6,
+        -17.23
+      ],
+      "target": [
+        -3.5,
+        1.4,
+        -21.5
+      ],
+      "fov": 54,
+      "label": "The blank wall"
+    }
+  },
+  "life": {
+    "dust": {
+      "count": 500,
+      "box": [
+        -8.4,
+        0.2,
+        -24,
+        9.5,
+        4.4,
+        21
+      ]
+    }
+  }
+}

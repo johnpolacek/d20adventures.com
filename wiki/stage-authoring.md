@@ -133,3 +133,5 @@ The web viewer and the desktop app run the same `packages/stage` renderer and th
 - From the street, a parapet hides anyone standing a step behind it. Put rooftop figures right at a low parapet, and frame them from the roof behind, as the painting does.
 - At night a long street needs its eight lights spread along it. Lights bunched by the camera left the crossing black.
 - Put the moon on the street's axis. Off to one side, the roofs hide it.
+- Frame a cave mouth with a stone portal. The cut in the cave wall is wider than the bore's arch, and the gap shows the void as a black frame.
+- Below ground, light the rock from the hemisphere as well as lamps, and keep cave rock pale. Point lights alone left a 30 m cavern black.

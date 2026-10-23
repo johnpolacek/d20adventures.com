@@ -4,9 +4,9 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
-## 2026-10-23, reusable sets: the street and cellar kits
+## 2026-10-23, reusable sets: the street, cellar and tunnel kits
 
-Owner decision: the 27 encounters still without a 3D set get reusable kits, a street, a cellar and a tunnel, redressed per encounter. Only the Blackthorn mansion and the forgotten temple get bespoke sets. The Dust Settles reuses the library. The street kit is done: five dressings for Shadowing Silverhand, The Hideout, The Ambush, The New Dawn and Vengeance of the Blackthorn. The engine gained raised cast members for roofs and balconies. The cellar kit followed the same day: Silverhand's back room and the Blackthorn wine cellar, with cask, wine rack and torch builders. Stage check and 78 desktop tests pass. See [March of Davos in 3D](plans/march-of-davos-sets.md).
+Owner decision: the 27 encounters still without a 3D set get reusable kits, a street, a cellar and a tunnel, redressed per encounter. Only the Blackthorn mansion and the forgotten temple get bespoke sets. The Dust Settles reuses the library. The street kit is done: five dressings for Shadowing Silverhand, The Hideout, The Ambush, The New Dawn and Vengeance of the Blackthorn. The engine gained raised cast members for roofs and balconies. The cellar kit followed the same day: Silverhand's back room and the Blackthorn wine cellar, with cask, wine rack and torch builders. Then the tunnel kit: the four catacomb scenes from new `bore` and `cave` builders. Stage check and 78 desktop tests pass. See [March of Davos in 3D](plans/march-of-davos-sets.md).
 
 ## 2026-10-23, token functions require the server secret
 

@@ -22,7 +22,7 @@ Encounters 1 to 7 already had sets: the gate, the harvest square, the Dragonbone
 | 20 to 22 | The auction | Next. A hall behind the Black Market lane's far door |
 | 23 to 26 | Silverhand's trail, the hideout, the ambush | Street and cellar kits done 2026-10-23 |
 | 27 to 39 | The Blackthorn mansion: front, ballroom, halls, chambers, wine cellar | Bespoke. The wine cellar is the cellar kit, done 2026-10-23 |
-| 40 to 44 | The catacombs | Tunnel kit. The grate at 40 is the mansion's grounds |
+| 40 to 44 | The catacombs | Tunnel kit done 2026-10-23 for 41 to 44. The grate at 40 is the mansion's grounds |
 | 45 to 46 | The forgotten temple | Bespoke |
 | 47 to 49 | The aftermath | Street kit done 2026-10-23 for 47 and 48. 49 reuses the library |
 
@@ -83,6 +83,22 @@ Done 2026-10-23. `scripts/stage-sets/kits/cellar.ts` builds a room below ground 
 - At ultra, DPR 2: 78 to 85 draw calls, 0.02M and 0.28M rendered triangles, 27 to 37 fps.
 - Desktop maps both encounters. 78 desktop tests pass. Not yet checked in the running desktop app.
 - Left: the casks read as banded logs more than staved casks, and the racks behind them stay dim.
+
+## The tunnel kit
+
+Done 2026-10-23. `scripts/stage-sets/kits/tunnel.ts` builds tunnels and caves from a dressing. `scripts/stage-sets/catacombs.ts` writes four sets and their stagings.
+
+- New builders in `packages/stage/src/builders/tunnels.ts`: `bore`, a tunnel swept along a path with laid-stone or rough-hewn walls, a round vault, a floor and optional blank end walls; and `cave`, a rough domed chamber with mouths cut where bores come in. Both lay their walls down as footprints.
+- The kit adds stone portals round each mouth, crystal clusters, and tones of light: green, blue and frost.
+- `catacombs-powder` (Into the Catacombs): a laid-stone tunnel with torches into a pillared chamber, six powder kegs, the fuse across the floor with its ember, four Covenant agents, Astrid's soldiers behind the party.
+- `catacombs-labyrinth` (Through the Labyrinth): a cave where the way forks, crystal runes in the walls, cold mist; the left fork bends twice to a blank wall.
+- `catacombs-sealed-door` (The Sealed Door): the same tunnels, the blank wall now a black iron door in a stone frame with glowing rings, spokes and runes, frost before it.
+- `catacombs-hall` (Big Empty): a cavern 20 by 30 m in grey dust, a narrow archway glowing blue at the far end. Three undead rise from the dust when the narration says so.
+- Standees: a Covenant rogue, a cultist, and an ancient undead warrior.
+- `pnpm stage:check` passes. Walks: powder 136 of 140, labyrinth 61 of 72 and sealed door 40 of 72, where walks round the bends stop at the rock; hall 107 of 108.
+- At ultra, DPR 2: 63 to 97 draw calls, under 0.04M rendered triangles, 16 to 32 fps.
+- Desktop maps the four encounters. 78 desktop tests pass. Not yet checked in the running desktop app.
+- Left: the labyrinth is darker than its painting, and its crystals read as pale shards.
 
 ## The Old Grand Library
 

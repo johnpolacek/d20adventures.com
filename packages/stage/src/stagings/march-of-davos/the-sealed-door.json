@@ -1,0 +1,164 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "march-of-davos/the-sealed-door",
+  "set": "realm-of-myr/catacombs-sealed-door",
+  "cast": [
+    {
+      "id": "branka-stoneveil",
+      "name": "Branka Stoneveil",
+      "role": "Dwarf fighter",
+      "height": 1.38,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/branka-front.webp",
+        "back": "/stage/fixtures/march-of-davos/branka-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/branka-portrait.jpg"
+      },
+      "at": [
+        -6.42,
+        -18.72
+      ],
+      "facing": [
+        -3.5,
+        -21.5
+      ]
+    },
+    {
+      "id": "cassia-verane",
+      "name": "Cassia Verane",
+      "role": "Human wizard",
+      "height": 1.72,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/cassia-front.webp",
+        "back": "/stage/fixtures/march-of-davos/cassia-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/cassia-portrait.jpg"
+      },
+      "at": [
+        -5.77,
+        -17.77
+      ],
+      "facing": [
+        -3.5,
+        -21.5
+      ]
+    },
+    {
+      "id": "yeva-softstep",
+      "name": "Yeva Softstep",
+      "role": "Halfling rogue",
+      "height": 1.08,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/yeva-front.webp",
+        "back": "/stage/fixtures/march-of-davos/yeva-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/yeva-portrait.jpg"
+      },
+      "at": [
+        -6.74,
+        -17.66
+      ],
+      "facing": [
+        -3.5,
+        -21.5
+      ]
+    },
+    {
+      "id": "milos-radan",
+      "name": "Milos Radan",
+      "role": "Human cleric",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/milos-front.webp",
+        "back": "/stage/fixtures/march-of-davos/milos-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/milos-portrait.jpg"
+      },
+      "at": [
+        -6.25,
+        -16.99
+      ],
+      "facing": [
+        -3.5,
+        -21.5
+      ]
+    },
+    {
+      "id": "astrid-blackthorn",
+      "name": "Lady Astrid Blackthorn",
+      "role": "Blackthorn ranger",
+      "height": 1.78,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/astrid-blackthorn-front.webp",
+        "back": "/stage/fixtures/march-of-davos/astrid-blackthorn-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/astrid-blackthorn-portrait.jpg"
+      },
+      "at": [
+        -4.78,
+        -18.88
+      ],
+      "facing": [
+        -3.5,
+        -21.5
+      ]
+    },
+    {
+      "id": "eamon",
+      "name": "Eamon",
+      "role": "Scholar and mage",
+      "height": 1.78,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/eamon-front.webp",
+        "back": "/stage/fixtures/march-of-davos/eamon-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/eamon-portrait.jpg"
+      },
+      "at": [
+        -4.93,
+        -20.15
+      ],
+      "facing": [
+        -3.5,
+        -21.5
+      ]
+    }
+  ],
+  "shots": {
+    "party": {
+      "subjects": [
+        "branka-stoneveil",
+        "cassia-verane",
+        "yeva-softstep",
+        "milos-radan"
+      ],
+      "offset": [
+        -1.9646099632477456,
+        1.7,
+        2.5259270956042443
+      ],
+      "target": [
+        1.227881227029841,
+        1.2,
+        -1.5787044347526527
+      ],
+      "relative": "world",
+      "fov": 54,
+      "label": "Party"
+    },
+    "eamon": {
+      "subject": "eamon",
+      "distance": 2,
+      "angle": -30,
+      "height": 1.6,
+      "lookHeight": 1.55,
+      "fov": 44,
+      "label": "Eamon"
+    },
+    "astrid": {
+      "subject": "astrid-blackthorn",
+      "distance": 2.2,
+      "angle": 30,
+      "height": 1.65,
+      "lookHeight": 1.6,
+      "fov": 44,
+      "label": "Lady Astrid"
+    }
+  },
+  "shot": "door"
+}

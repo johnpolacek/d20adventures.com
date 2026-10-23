@@ -11,6 +11,7 @@ import { anchor, serpent, shipWheel } from "./nautical"
 import { beamPrim, boxPrim, conePrim, cylinderPrim, extrudePrim, groundDisc, heightfieldPrim, lathePrim, openingPrim, spherePrim, torusPrim } from "./primitives"
 import { chainLine, hangingRope, pier, riverboat, ship, strongbox } from "./river"
 import { hangingSign, laundry, tenement, wallLantern } from "./streets"
+import { bore, cave } from "./tunnels"
 import { bar, bench, chair, chandelier, dragonSkull, hearth, stairs, stool, table, wall } from "./tavern"
 import type { BuilderDef } from "./types"
 import { flagstones, grassPatch, mountain, rock, standingStone } from "./wilds"
@@ -131,6 +132,9 @@ export const BUILDERS: Record<string, BuilderDef> = {
   cask,
   wineRack,
   torch,
+  // tunnels and caves
+  bore,
+  cave,
   // checkpoint and dressing
   barrier,
   ropeLine,
