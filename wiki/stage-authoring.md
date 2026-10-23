@@ -20,7 +20,7 @@ The web viewer and the desktop app run the same `packages/stage` renderer and th
 8. **Look.** Run `pnpm exec next dev -p 3057` and `scripts/stage-verify.ts --tiers=ultra --staging=<key>` against Chrome at DPR 2. Read every view and the native-pixel character crops before asking for review.
 9. **Owner review.** Send `http://localhost:3057/dev/stage?staging=<key>&tier=balanced`. Ultra draws four times the pixels and slows an 8 GB Mac. Do not leave a test Chrome or extra servers running during review. View buttons or number keys switch cameras, tier buttons switch quality, and H hides the panel. Iterate on feedback.
 10. **App.** Map each encounter in `apps/desktop/src/scenes.ts` with a place name and a one-line `where` for the GM, extend the desktop tests, build, and check the scene once in the packaged app.
-11. **Publish art.** Run `pnpm stage:sync` before pushing new or changed files in `public/stage` or `public/stage-lab`. Deploys leave them out and the site serves them from the public bucket. See [Vercel deployment storage](plans/vercel-deploy-storage.md).
+11. **Publish art.** Run `pnpm stage:sync` before pushing new or changed files in `public/stage`, `public/stage-lab` or `public/images/app/backgrounds`. Deploys leave them out and the site serves them from the public bucket. See [Vercel deployment storage](plans/vercel-deploy-storage.md).
 12. **Record.** Add measured counts to [the stage engine reference](stage-engine.md) and results to the plan.
 
 ## Lessons

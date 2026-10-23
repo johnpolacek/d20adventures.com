@@ -15,6 +15,7 @@ const nextConfig: NextConfig = {
     return [
       { source: "/stage/:path*", destination: `${cdn}/stage/:path*` },
       { source: "/stage-lab/:path*", destination: `${cdn}/stage-lab/:path*` },
+      { source: "/images/app/backgrounds/:path*", destination: `${cdn}/images/app/backgrounds/:path*` },
     ]
   },
 }

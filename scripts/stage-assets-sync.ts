@@ -1,5 +1,5 @@
 // Uploads the website's stage art to the public bucket, so deploys need not carry it. `next.config.ts` rewrites
-// `/stage/...` and `/stage-lab/...` to CloudFront when a deploy has no local copy, and `.vercelignore` leaves them out.
+// `/stage/...`, `/stage-lab/...` and `/images/app/backgrounds/...` to CloudFront when a deploy has no local copy, and `.vercelignore` leaves them out.
 // Unchanged files (same size and MD5) are skipped. Run before pushing new or changed stage art.
 //
 //   pnpm stage:sync            # upload what changed
@@ -10,7 +10,7 @@ import { readdir, readFile } from "node:fs/promises"
 import { extname, join, relative } from "node:path"
 import { HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
 
-const DIRS = ["public/stage", "public/stage-lab"]
+const DIRS = ["public/stage", "public/stage-lab", "public/images/app/backgrounds"]
 const TYPES: Record<string, string> = {
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",

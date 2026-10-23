@@ -18,8 +18,8 @@ Owner, 2026-10-23: the project was using all of the Hobby account's deployment s
 - Checked on the local dev server: a local file is served locally, and a missing one is answered by CloudFront.
 
 - Checked on production after `82a7d3e`: `/stage/` and `/stage-lab/` files return 200 through CloudFront.
+- 2026-10-23: `public/images/app/backgrounds`, 27 MB, moved the same way. Same sync, rewrite and ignore list. The desktop app copies it at build, so it is unaffected.
 
 ## Next
 
-- Consider `public/images/app/backgrounds`, 27 MB, the same way.
 - Convert the largest PNG and MP4 files.
