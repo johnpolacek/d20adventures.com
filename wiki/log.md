@@ -28,6 +28,10 @@ Second of the remaining March of Davos sets. A long, dark dockside hall of tarre
 
 Owner asked for 3D sets for the rest of March of Davos, one at a time, to the end. First, the Old Grand Library: a two-storey hall of bookcases under a painted vault and dome, saints in stained glass, midday sun down the floor to the red door, and the private archives behind it. Library builders, an `image` material for paintings, eight painted textures and four standees. Stage check and desktop tests pass. Not yet checked in the running app. See [March of Davos in 3D](plans/march-of-davos-sets.md).
 
+## 2026-10-23, AI hero rule deployed
+
+Owner: "deploy convex". The owner ran the deploy to Convex production `marvelous-mink-850` from `b4179f5`, so hosted games now get the AI hero rule. See [scene rails check](plans/scene-rails.md).
+
 ## 2026-10-22, both playtests judged in full
 
 Owner picked judging all 161 rounds of both playtests, then probing the worst scenes. 47 rounds came back off the rails, most pushed by the GM. The worst scenes were all played before a fix: today's content and AI hero changes, and yesterday's "Silverhand keeps walking" and "a caught party goes to the ballroom", each committed minutes after its derail. Three new probes, Shadowing Silverhand, the wine cellar capture and Clan Conflict, stayed on the rails in all nine runs. All six probes now pass, 18 runs. 104 rounds name a content gap, and the repeated ones are listed in the plan. See [scene rails check](plans/scene-rails.md).

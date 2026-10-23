@@ -130,7 +130,9 @@ Owner picked judging all 161 rounds, then probing the worst scenes. About two mi
 - Scenes off once, in one playtest: The Old Grand Library, with the Archivist showing himself early, and An Unsolicited Opportunity, with Beric naming the Raskov coin.
 - 104 of 161 rounds name a content gap. Most are small calls a GM makes anyway. The ones repeated across runs: what Clive does when bluffed, bribed or persuaded, whether the vault lock breaks to force, what terms the clans would accept, and what the library's glass cabinet holds.
 
-All six probes, 18 runs, stay on the rails. Not deployed.
+All six probes, 18 runs, stay on the rails.
+
+The AI hero rule reached hosted games on 2026-10-23, deployed to Convex production `marvelous-mink-850` from `b4179f5`. The desktop app gets it with `pnpm prepare:runtime`.
 
 ## Next
 
