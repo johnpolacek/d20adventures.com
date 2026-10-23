@@ -1,3 +1,6 @@
+import auctionSet from "@d20/stage/sets/realm-of-myr/black-market-auction.json"
+import auctionRelicSet from "@d20/stage/sets/realm-of-myr/black-market-auction-relic.json"
+import auctionSoldSet from "@d20/stage/sets/realm-of-myr/black-market-auction-sold.json"
 import ballroomSet from "@d20/stage/sets/realm-of-myr/blackthorn-ballroom.json"
 import ballroomDrakeSet from "@d20/stage/sets/realm-of-myr/blackthorn-ballroom-drake.json"
 import corridorSet from "@d20/stage/sets/realm-of-myr/blackthorn-corridor.json"
@@ -45,6 +48,7 @@ import theFake from "@d20/stage/stagings/covert-cargo/the-fake.json"
 import theShipment from "@d20/stage/stagings/covert-cargo/the-shipment.json"
 import theTransaction from "@d20/stage/stagings/covert-cargo/the-transaction.json"
 import aDistraction from "@d20/stage/stagings/march-of-davos/a-distraction.json"
+import aRelicOfOldValkara from "@d20/stage/stagings/march-of-davos/a-relic-of-old-valkara.json"
 import anInvitation from "@d20/stage/stagings/march-of-davos/an-invitation.json"
 import anUnsolicitedOpportunity from "@d20/stage/stagings/march-of-davos/an-unsolicited-opportunity.json"
 import arrivalAtTheDocks from "@d20/stage/stagings/march-of-davos/arrival-at-the-docks.json"
@@ -66,6 +70,7 @@ import shadowingSilverhand from "@d20/stage/stagings/march-of-davos/shadowing-si
 import thaddeusBlackthornsPrivateChambers from "@d20/stage/stagings/march-of-davos/thaddeus-blackthorns-private-chambers.json"
 import theAftermath from "@d20/stage/stagings/march-of-davos/the-aftermath.json"
 import theAmbush from "@d20/stage/stagings/march-of-davos/the-ambush.json"
+import theAuctionBegins from "@d20/stage/stagings/march-of-davos/the-auction-begins.json"
 import theBeastEscapes from "@d20/stage/stagings/march-of-davos/the-beast-escapes.json"
 import theBlackthorns from "@d20/stage/stagings/march-of-davos/the-blackthorns.json"
 import theChase from "@d20/stage/stagings/march-of-davos/the-chase.json"
@@ -85,6 +90,7 @@ import theSealedDoor from "@d20/stage/stagings/march-of-davos/the-sealed-door.js
 import theSilverSerpentTavern from "@d20/stage/stagings/march-of-davos/the-silver-serpent-tavern.json"
 import theSpeech from "@d20/stage/stagings/march-of-davos/the-speech.json"
 import theWineCellar from "@d20/stage/stagings/march-of-davos/the-wine-cellar.json"
+import theWinningBid from "@d20/stage/stagings/march-of-davos/the-winning-bid.json"
 import throughTheHalls from "@d20/stage/stagings/march-of-davos/through-the-halls.json"
 import throughTheLabyrinth from "@d20/stage/stagings/march-of-davos/through-the-labyrinth.json"
 import vengeanceOfTheBlackthorn from "@d20/stage/stagings/march-of-davos/vengeance-of-the-blackthorn.json"
@@ -303,6 +309,34 @@ export const SCENES: Record<string, Scene> = {
       "Inside the Black Market at night: a narrow lane of stalls and tents between leaning houses, roofed with patched canvas and strung with lanterns, braziers smoking, cloaked buyers drifting through. The party stands just inside the curtain. At the first stall on the right a grizzled dealer leans over a counter heaped with gold and gems; a dwarf weapon dealer shows a dagger at her rack of blades on the left; a scarred young woman saunters past. A side lane turns east to a peddler's tent of curiosities, another turns west to a shadowy stall of elven goods. At the far end of the lane, a curtained door between braziers leads to the auction house.",
     party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
     spare: [[0.4, 5.0]],
+  },
+  // The Black Market's auction house: one hall, the lot on the lectern changing from scene to scene.
+  "the-auction-begins": {
+    set: auctionSet,
+    staging: theAuctionBegins,
+    location: "Black Market",
+    where:
+      "Deeper in the Black Market, the auction house: a candlelit horseshoe hall of old stone with a gallery of standing buyers round it, rows of velvet chairs facing a stone lectern and a half-round stage. The masked auctioneer stands at the lectern with a jewelled dagger, his assistant beside him; masked bidders fill the seats. Near the back by the side exit a hooded man in a velvet chair watches, a well-dressed man at his shoulder and two guards behind. The party stands at the back of the hall by the entrance.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[0, 7.8]],
+  },
+  "a-relic-of-old-valkara": {
+    set: auctionRelicSet,
+    staging: aRelicOfOldValkara,
+    location: "Black Market",
+    where:
+      "Deeper in the Black Market, the auction house: a candlelit horseshoe hall of old stone with a gallery of standing buyers round it, rows of velvet chairs facing a stone lectern and a half-round stage. The relic map of Old Valkara lies open on the lectern before the auctioneer. Silverhand's representative has stepped into the east aisle to bid while Silverhand watches from his seat near the side exit, his guards behind him. The party stands at the back of the hall by the entrance.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[0, 7.8]],
+  },
+  "the-winning-bid": {
+    set: auctionSoldSet,
+    staging: theWinningBid,
+    location: "Black Market",
+    where:
+      "Deeper in the Black Market, the auction house: a candlelit horseshoe hall of old stone with a gallery of standing buyers round it, rows of velvet chairs facing a stone lectern and a half-round stage. The map is sold and gone from the lectern. Silverhand's representative waits at the side exit with the map case; Silverhand has risen and makes for it, his two guards flanking him. The party stands at the back of the hall by the entrance.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[0, 7.8]],
   },
   // The street kit: Silverhand's trail, his hideout, the Cowl's ambush, and the two endings in the great square.
   "shadowing-silverhand": {

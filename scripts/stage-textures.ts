@@ -39,6 +39,8 @@ type Texture = {
   aspect?: string
   out?: [number, number]
   tileX?: boolean
+  // A `whole` painting is cropped this share in from each edge before it is published.
+  inset?: number
 }
 const LIBRARY = "public/stage/art/march-of-davos/the-old-grand-library.webp"
 const MARKET_DOOR = "public/stage/art/march-of-davos/the-entrance-to-the-black-market.webp"
@@ -276,6 +278,18 @@ const TEXTURES: Record<string, Texture> = {
     whole: true,
     out: [768, 768],
   },
+  // The auction's relic: the map of Old Valkara from "A Relic of Old Valkara".
+  "relic-map": {
+    subject:
+      "an ancient weathered parchment map seen from straight above, filling the whole frame edge to edge: cracked, stained and foxed pale grey-ochre vellum, faint intricate ink markings of a great forest of tiny trees, winding rivers, standing stones and a dotted route ending at a small circled rune, a faded compass rose of interlaced Valkaran knotwork, a border of runic knots, burnt and torn edges, no readable text",
+    ref: "public/stage/art/march-of-davos/a-relic-of-old-valkara.webp",
+    crop: [0.4, 0.55, 0.3, 0.35],
+    whole: true,
+    aspect: "4:3",
+    out: [1024, 768],
+    // The burnt edge must reach the frame, or white corners show on the lectern.
+    inset: 0.06,
+  },
   "door-thyra": {
     subject:
       "a tall pair of old carved wooden double doors seen straight on, filling the whole frame edge to edge: deep red lacquered wood, with carved gilt panels of interlaced leaves and stars, and in the middle of each leaf a gilt roundel of a tree intertwined with a crescent moon, iron ring handles, worn gold",
@@ -491,7 +505,12 @@ async function make(id: string) {
   await mkdir(OUT, { recursive: true })
   if (t.whole) {
     const [w, h] = t.out ?? [1024, 1024]
-    let img = sharp(path).resize(w, h, { fit: "fill" })
+    const meta = await sharp(path).metadata()
+    const iw = meta.width ?? w
+    const ih = meta.height ?? h
+    const dx = Math.round(iw * (t.inset ?? 0))
+    const dy = Math.round(ih * (t.inset ?? 0))
+    let img = sharp(path).extract({ left: dx, top: dy, width: iw - 2 * dx, height: ih - 2 * dy }).resize(w, h, { fit: "fill" })
     // A dome's band: blend the outer tenth of each side into the other so the seam closes.
     if (t.tileX) img = await seamX(img, w, h)
     await img.jpeg({ quality: 88 }).toFile(join(OUT, `${id}.jpg`))

@@ -80,7 +80,7 @@ test("every authored scene is a real encounter, and every festival character has
   }
 })
 
-test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the Old Grand Library, the Silver Serpent, the docks, the Lower Districts, the Black Market, the street, cellar and tunnel kits, the Blackthorn mansion and the forgotten temple have their scenes, and an encounter without one falls back to story view", async () => {
+test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the Old Grand Library, the Silver Serpent, the docks, the Lower Districts, the Black Market, the auction, the street, cellar and tunnel kits, the Blackthorn mansion and the forgotten temple have their scenes, and an encounter without one falls back to story view", async () => {
   const run = await setup()
   try {
     // The heroes wait in the line alone, then meet Garlan at the front.
@@ -141,17 +141,11 @@ test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the 
       }
       assert.match(spatialContext(here.encounterId, here.characters, {}) ?? "", where)
     }
-    await advance(run.store, "the-auction-begins")
-    const turn = run.store.current()
-    assert.equal(turn.encounterId, "the-auction-begins")
-    assert.equal(sceneFor(turn.encounterId), undefined)
-    assert.equal(spatialContext(turn.encounterId, turn.characters, {}), undefined)
-    // Story view keeps the party's faces from the authored scenes.
-    for (const pc of turn.characters.filter((c) => c.type === "pc")) assert.ok(portraitFor(undefined, pc))
-    // The street kit's scenes, after the auction. Bram waits at the inn during the ambush, so he has no figure there.
-    await advance(run.store, "a-relic-of-old-valkara")
-    await advance(run.store, "the-winning-bid")
+    // The auction, then the street kit's scenes. Bram waits at the inn during the ambush, so he has no figure there.
     for (const [encounter, npcs, figures, where] of [
+      ["the-auction-begins", ["auctioneer"], 1, /auction house[\s\S]*the auctioneer's lectern/],
+      ["a-relic-of-old-valkara", ["auctioneer", "silverhand", "silverhand-representative"], 3, /relic map[\s\S]*the side exit/],
+      ["the-winning-bid", ["auctioneer", "silverhand", "silverhand-representative"], 3, /sold[\s\S]*the side exit/],
       ["shadowing-silverhand", ["aldith", "kaelen", "silverhand", "silverhand-representative"], 4, /old lanes[\s\S]*the archway under the bridge-house/],
       ["the-hideout", ["aldith", "kaelen"], 2, /abandoned warehouse[\s\S]*the hideout's door/],
       ["face-to-face-with-silverhand", ["silverhand"], 1, /back room[\s\S]*Silverhand's end of the table/],
@@ -169,8 +163,12 @@ test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the 
       for (const c of staged) assert.match(portraitFor(scene, c) ?? "", /^\/stage\/fixtures\/march-of-davos\/.+-portrait\.jpg$/)
       assert.match(spatialContext(here.encounterId, here.characters, {}) ?? "", where)
     }
-    // The endings in the great square, reached only through the final choice.
+    // An encounter with no scene falls back to story view, which keeps the party's faces from the authored scenes.
     const party = run.store.current().characters
+    assert.equal(sceneFor("no-such-encounter"), undefined)
+    assert.equal(spatialContext("no-such-encounter", party, {}), undefined)
+    for (const pc of party.filter((c) => c.type === "pc")) assert.ok(portraitFor(undefined, pc))
+    // The endings in the great square, reached only through the final choice.
     assert.match(spatialContext("the-new-dawn", party, {}) ?? "", /Key of Ilmarin[\s\S]*the balcony/)
     assert.match(spatialContext("vengeance-of-the-blackthorn", party, {}) ?? "", /coffin[\s\S]*the bier/)
     assert.match(spatialContext("the-dust-settles", party, {}) ?? "", /truce talks[\s\S]*the reading table/)

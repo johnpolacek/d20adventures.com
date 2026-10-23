@@ -28,7 +28,8 @@ const PORTRAIT_BG = "#3b4256"
 // `pose` replaces the standing pose (a creature on all fours). `magenta` paints and keys on magenta instead of green, for a
 // green subject (a mossy drake).
 // `hue` turns the keyed figure's colours by that many degrees, as when a painting came back warmer than the text.
-type Figure = { out: string; who: string; look: string; ref?: string; head: number; backNote?: string; seated?: boolean; pose?: string; magenta?: boolean; hue?: number }
+// `chair` seats a `seated` figure on that chair instead of the stool (an auction's velvet chairs).
+type Figure = { out: string; who: string; look: string; ref?: string; head: number; backNote?: string; seated?: boolean; chair?: string; pose?: string; magenta?: boolean; hue?: number }
 const stock = (who: string, look: string, head = 0.13): Figure => ({ out: "", who, look, head })
 // Stock figures stand in for created heroes: one per race and build, dressed for travel with no class gear, so any class
 // reads true. Heads are the share of figure height a portrait frames around.
@@ -530,6 +531,123 @@ const FIGURES: Record<string, Figure> = {
     backNote:
       "Seen squarely from directly behind, sitting on the stool facing AWAY from us. The back of his green velvet coat covers his whole back from the collar down over the stool; its tails hang down behind. His shirt, chest, hands, thighs and knees are in front of him and NOT visible. Below the coat only the stool's legs, the backs of his calves and the heels of his boots show.",
   },
+  // March of Davos, the auction: the masked auctioneer and his assistant, Silverhand seated and standing, his
+  // representative and a guard, and masked bidders in velvet chairs.
+  auctioneer: {
+    out: "fixtures/march-of-davos/auctioneer",
+    who: "The masked auctioneer of the Black Market, Human male",
+    look: "A tall, slim man in his fifties, about 1.88 m tall, with swept-back iron-grey hair, a lean clean-shaven face, a sly knowing smile, and a black leather half-mask over his eyes tied behind his head. A long flowing black robe with a deep cowl lying on his shoulders, a high collar, black leather gloves, a silver chain of office across his chest. One gloved hand raised a little in a showman's gesture.",
+    ref: "public/stage/portraits/auctioneer.webp",
+    head: 0.13,
+  },
+  "auction-assistant": {
+    out: "fixtures/march-of-davos/auction-assistant",
+    who: "The auctioneer's assistant, Human female",
+    look: "A slender young woman, about 1.68 m tall, with black hair pulled into a tight bun and a plain black velvet mask over her eyes. A fitted black high-necked dress with a long black apron, white gloves. She holds a folded dark-red velvet cloth over one arm, ready to unveil a lot.",
+    head: 0.13,
+  },
+  "silverhand-seated": {
+    out: "fixtures/march-of-davos/silverhand-seated",
+    who: "Silverhand, Kazimir Raskov, Human male smuggler lord, seated",
+    look: "A tall, slender man in his forties with a hard handsome face, a thin-lipped smirk and cold amber eyes in the shadow of a deep hood, dark stubble. A dark richly embroidered coat of umber leather with silver-grey scrollwork, hood up, a dark shirt, dark breeches and boots. ONE silver gauntlet only: his LEFT hand (at the right of the picture) wears an intricate gauntlet of polished silver plates and rests on the arm of the chair. His RIGHT hand is bare, with no gauntlet and no armour, resting on his knee. Legs crossed at the knee, at ease and watchful.",
+    ref: "public/stage/portraits/silverhand.webp",
+    head: 0.17,
+    seated: true,
+    chair: "a high-backed chair upholstered in deep crimson velvet with a dark carved wooden frame, which is drawn",
+    backNote: "Seen squarely from directly behind: the chair's tall velvet back hides most of his back; above it his hood covers the whole back of his head. The silver gauntlet shows only at the side on the chair's arm.",
+  },
+  silverhand: {
+    out: "fixtures/march-of-davos/silverhand",
+    who: "Silverhand, Kazimir Raskov, Human male smuggler lord",
+    look: "A tall, slender man in his forties, about 1.88 m tall, with a hard handsome face, a thin-lipped smirk and cold amber eyes in the shadow of a deep hood, dark stubble. A long dark richly embroidered coat of umber leather with silver-grey scrollwork, hood up, a dark shirt, dark breeches and tall boots. ONE silver gauntlet only: his LEFT hand (at the right of the picture) wears an intricate gauntlet of polished silver plates up to the forearm. His RIGHT hand is bare, with no gauntlet and no armour. A slim sword at his hip. Predatory stillness.",
+    ref: "public/stage/portraits/silverhand.webp",
+    head: 0.13,
+    backNote: "His hood is up and covers the whole back of his head. The long coat hangs down his back to the calves.",
+  },
+  "silverhand-representative": {
+    out: "fixtures/march-of-davos/silverhand-representative",
+    who: "Silverhand's representative, Human male",
+    look: "A tall, impeccably dressed man in his thirties, about 1.86 m tall, with short dark hair combed back, a narrow cold face, clean-shaven, a calm unreadable expression. A sharp tailored black frock coat buttoned high with a black silk cravat, black gloves, black trousers and polished boots. One gloved hand raised calmly to bid.",
+    head: 0.13,
+  },
+  "raskov-guard": {
+    out: "fixtures/march-of-davos/raskov-guard",
+    who: "A silent Raskov guard, Human male",
+    look: "A broad, hard-faced man, about 1.85 m tall, with a shaved head, a short black beard and a scar through one eyebrow, a black cloth mask over the lower face pulled down at his neck. A dark grey quilted coat over a black leather jerkin, a broad belt with a heavy cudgel and a long knife, dark trousers and boots. Arms folded.",
+    head: 0.13,
+  },
+  "bidder-noblewoman": {
+    out: "fixtures/march-of-davos/bidder-noblewoman",
+    who: "A masked noblewoman at the auction, Human female",
+    look: "An elegant woman in her forties with auburn hair piled high with pearl pins, a gilded filigree mask over her eyes, a pale powdered face and dark red lips. A deep emerald silk gown with gold embroidery and a fur stole, long gloves, a closed fan in one hand.",
+    head: 0.17,
+    seated: true,
+    chair: "a high-backed chair upholstered in deep crimson velvet with a dark carved wooden frame, which is drawn",
+  },
+  "bidder-merchant": {
+    out: "fixtures/march-of-davos/bidder-merchant",
+    who: "A masked merchant at the auction, Human male",
+    look: "A stout, wealthy merchant in his fifties with a bald head and a heavy grey beard, a plain black velvet mask over his eyes. A plum velvet doublet straining at the buttons, a heavy gold chain, rings on every finger. Both hands resting on a silver-topped cane between his knees.",
+    head: 0.17,
+    seated: true,
+    chair: "a high-backed chair upholstered in deep crimson velvet with a dark carved wooden frame, which is drawn",
+  },
+  "bidder-collector": {
+    out: "fixtures/march-of-davos/bidder-collector",
+    who: "A masked collector at the auction, Human male",
+    look: "A thin old man in his seventies with long white hair and a long-nosed white porcelain mask over the upper face, bony hands. A rich black robe trimmed with silver fox fur, a tall black hat. Leaning forward eagerly with a small brass opera glass raised in one hand.",
+    head: 0.17,
+    seated: true,
+    chair: "a high-backed chair upholstered in deep crimson velvet with a dark carved wooden frame, which is drawn",
+  },
+  "bidder-veiled": {
+    out: "fixtures/march-of-davos/bidder-veiled",
+    who: "A veiled lady at the auction, Human female",
+    look: "A slim young woman whose face is hidden by a black lace veil falling from a small black hat, only her chin and dark lips showing. A black velvet gown with a high lace collar, black gloves, a jet necklace. Hands folded on a small beaded purse in her lap.",
+    head: 0.17,
+    seated: true,
+    chair: "a high-backed chair upholstered in deep crimson velvet with a dark carved wooden frame, which is drawn",
+  },
+  "bidder-young-noble": {
+    out: "fixtures/march-of-davos/bidder-young-noble",
+    who: "A masked young noble at the auction, Human male",
+    look: "A haughty young nobleman in his twenties with wavy blond hair, a gold-and-crimson half-mask with a feather at one side, a smug smile. A slashed crimson-and-gold doublet, a short black cape over one shoulder, a jewelled rapier hilt at his side. Lounging, one arm draped over the chair's back.",
+    head: 0.17,
+    seated: true,
+    chair: "a high-backed chair upholstered in deep crimson velvet with a dark carved wooden frame, which is drawn",
+  },
+  "bidder-blue": {
+    out: "fixtures/march-of-davos/bidder-blue",
+    who: "A masked lady at the auction, Human female",
+    look: "A poised woman in her thirties with black hair in sleek coils, a midnight-blue lace mask over her eyes, pearl earrings. A dark sapphire velvet gown with a high collar and silver embroidery, a dark shawl over her shoulders, gloved hands holding a small numbered bidding paddle in her lap.",
+    head: 0.17,
+    seated: true,
+    chair: "a high-backed chair upholstered in deep crimson velvet with a dark carved wooden frame, which is drawn",
+  },
+  "bidder-hooded": {
+    out: "fixtures/march-of-davos/bidder-hooded",
+    who: "A hooded masked buyer at the auction, Human male",
+    look: "A lean man in a deep charcoal hooded cloak with the hood up, the face below it hidden by a plain black leather full mask with narrow eye slits, gloved hands steepled before him. Dark boots.",
+    head: 0.17,
+    seated: true,
+    chair: "a high-backed chair upholstered in deep crimson velvet with a dark carved wooden frame, which is drawn",
+  },
+  "bidder-beak": {
+    out: "fixtures/march-of-davos/bidder-beak",
+    who: "A masked dealer at the auction, Human male",
+    look: "A heavyset man in his forties with a long-beaked dark leather mask covering his face to the mouth, a short dark beard below it, a wide-brimmed black hat. A dark brown coat with brass buttons, a satchel on his lap with one hand on it.",
+    head: 0.17,
+    seated: true,
+    chair: "a high-backed chair upholstered in deep crimson velvet with a dark carved wooden frame, which is drawn",
+  },
+  "bidder-silver": {
+    out: "fixtures/march-of-davos/bidder-silver",
+    who: "A masked elf at the auction, Elf female",
+    look: "A slender elf woman with pointed ears and long silver-white hair, a silver leaf-shaped mask over her eyes, pale skin. A dove-grey silk robe with a dark green mantle, slim hands folded, a thin silver circlet.",
+    head: 0.17,
+    seated: true,
+    chair: "a high-backed chair upholstered in deep crimson velvet with a dark carved wooden frame, which is drawn",
+  },
   // March of Davos, the street kit: Silverhand's bodyguard and scout on his trail and at his hideout, the Cowl's archer
   // on the roofs, and Joran and Seraphina for the new dawn.
   aldith: {
@@ -712,6 +830,9 @@ const STANDING =
 const SEATED =
   "- Pose: full body, head to toe, SITTING on a plain round three-legged wooden tavern stool about 45 cm high, which is drawn, facing straight toward the camera, knees forward, feet flat on the floor in front of the stool, eye-level view without perspective distortion. No table and no other furniture. Nothing cropped, about 6% margin on all sides, the feet and the stool's feet near the bottom of the frame."
 
+const seatedOn = (f: Figure) =>
+  f.chair ? SEATED.replace("a plain round three-legged wooden tavern stool about 45 cm high", f.chair).replace("the stool's feet", "the chair's feet") : SEATED
+
 const frontPrompt = (f: Figure) =>
   `${
     f.ref
@@ -722,7 +843,7 @@ const frontPrompt = (f: Figure) =>
 Character: ${f.who}
 Appearance: ${f.look}
 
-${onKey(f, ART.replace("- POSE", f.pose ? `- Pose: ${f.pose}` : f.seated ? SEATED : STANDING))}`
+${onKey(f, ART.replace("- POSE", f.pose ? `- Pose: ${f.pose}` : f.seated ? seatedOn(f) : STANDING))}`
 
 const BACK = `Two reference images are provided. Image 1 is the finished FRONT view of a character. Image 2 is a screenshot of a painted game world: it is the ART DIRECTION to match.
 
@@ -784,15 +905,16 @@ async function keep(kind: "front" | "back", id: string, png: Buffer) {
 
 async function front(id: string) {
   const f = FIGURES[id]
-  const ref = f.ref ? [await jpeg(Buffer.from(await (await fetch(f.ref)).arrayBuffer()), "#8a8a8a")] : []
+  const ref = f.ref ? [await jpeg(f.ref.startsWith("http") ? Buffer.from(await (await fetch(f.ref)).arrayBuffer()) : f.ref, "#8a8a8a")] : []
   await keep("front", id, await render(id, frontPrompt(f), [...ref, await jpeg(FINISH, "#8a8a8a"), await jpeg(STYLE, "#000")]))
 }
 async function back(id: string) {
   const { path } = await latest("front", id)
   if (!existsSync(path)) throw new Error(`No front for ${id}. Run front first.`)
   const note = FIGURES[id].backNote
+  const chair = FIGURES[id].chair ? "chair" : "stool"
   const seated = FIGURES[id].seated
-    ? `${BACK.replaceAll("standing pose", "seated pose").replace("Full body, head to toe, standing", "Full body, head to toe, sitting on the same stool")}\n- The figure sits on the same three-legged stool, seen from behind.`
+    ? `${BACK.replaceAll("standing pose", "seated pose").replace("Full body, head to toe, standing", `Full body, head to toe, sitting on the same ${chair}`)}\n- The figure sits on the same ${FIGURES[id].chair ? "chair, its back toward us, hiding most of the figure's back" : "three-legged stool"}, seen from behind.`
     : BACK
   const f = FIGURES[id]
   const posed = f.pose
@@ -801,7 +923,12 @@ async function back(id: string) {
         .replace("Full body, head to toe, standing, eye-level view", "Full body, the whole creature, eye-level view")
         .replace("feet flat near the bottom of the frame", "its feet near the bottom of the frame")
     : seated
-  const text = onKey(f, note ? `${posed}\n- ${note}` : posed)
+  // A chair's back hides a seated figure: only the head above it and the elbows beside it show.
+  const chairBack = f.chair
+    ? "We see the BACK of the chair, square on: its tall upholstered back, the rear of the velvet in its carved wooden frame, fills the middle of the picture and hides the figure behind it. Above the chair's top only the BACK of the head and hair (and any hat or hood) show; beside it only the outer edges of the sleeves at the elbows; below the seat only the chair's back legs and the heels of the shoes. NO face, NO chest, NO lap, NO knees, NO hands, NO front of the clothes anywhere."
+    : ""
+  const notes = [note, chairBack].filter(Boolean).join("\n- ")
+  const text = onKey(f, notes ? `${posed}\n- ${notes}` : posed)
   await keep("back", id, await render(`${id} back`, text, [await jpeg(path, f.magenta ? "#ff00ff" : "#00ff00"), await jpeg(STYLE, "#000")]))
 }
 

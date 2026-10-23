@@ -1,0 +1,491 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "march-of-davos/a-relic-of-old-valkara",
+  "set": "realm-of-myr/black-market-auction-relic",
+  "cast": [
+    {
+      "id": "branka-stoneveil",
+      "name": "Branka Stoneveil",
+      "role": "Dwarf fighter",
+      "height": 1.38,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/branka-front.webp",
+        "back": "/stage/fixtures/march-of-davos/branka-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/branka-portrait.jpg"
+      },
+      "at": [
+        -2.2,
+        7
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "cassia-verane",
+      "name": "Cassia Verane",
+      "role": "Human wizard",
+      "height": 1.72,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/cassia-front.webp",
+        "back": "/stage/fixtures/march-of-davos/cassia-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/cassia-portrait.jpg"
+      },
+      "at": [
+        -1.3,
+        7.45
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "yeva-softstep",
+      "name": "Yeva Softstep",
+      "role": "Halfling rogue",
+      "height": 1.08,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/yeva-front.webp",
+        "back": "/stage/fixtures/march-of-davos/yeva-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/yeva-portrait.jpg"
+      },
+      "at": [
+        1.3,
+        7.45
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "milos-radan",
+      "name": "Milos Radan",
+      "role": "Human cleric",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/milos-front.webp",
+        "back": "/stage/fixtures/march-of-davos/milos-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/milos-portrait.jpg"
+      },
+      "at": [
+        2.2,
+        7
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "auctioneer",
+      "name": "The Auctioneer",
+      "role": "Auctioneer",
+      "height": 1.88,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/auctioneer-front.webp",
+        "back": "/stage/fixtures/march-of-davos/auctioneer-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/auctioneer-portrait.jpg"
+      },
+      "at": [
+        0,
+        -2.65
+      ],
+      "facing": [
+        0,
+        6
+      ]
+    },
+    {
+      "id": "auction-assistant",
+      "name": "The assistant",
+      "role": "Auction assistant",
+      "height": 1.68,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/auction-assistant-front.webp",
+        "back": "/stage/fixtures/march-of-davos/auction-assistant-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/auction-assistant-portrait.jpg"
+      },
+      "at": [
+        -1.55,
+        -2.75
+      ],
+      "facing": [
+        -0.3,
+        -1.9
+      ]
+    },
+    {
+      "id": "bidder-noblewoman",
+      "name": "A masked noblewoman",
+      "role": "Bidder",
+      "height": 1.36,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/bidder-noblewoman-front.webp",
+        "back": "/stage/fixtures/march-of-davos/bidder-noblewoman-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/bidder-noblewoman-portrait.jpg"
+      },
+      "at": [
+        -1.38,
+        0.71
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "bidder-merchant",
+      "name": "A masked merchant",
+      "role": "Bidder",
+      "height": 1.36,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/bidder-merchant-front.webp",
+        "back": "/stage/fixtures/march-of-davos/bidder-merchant-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/bidder-merchant-portrait.jpg"
+      },
+      "at": [
+        1.54,
+        1.83
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "bidder-collector",
+      "name": "A masked collector",
+      "role": "Bidder",
+      "height": 1.36,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/bidder-collector-front.webp",
+        "back": "/stage/fixtures/march-of-davos/bidder-collector-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/bidder-collector-portrait.jpg"
+      },
+      "at": [
+        1.7,
+        0.54
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "bidder-veiled",
+      "name": "A veiled lady",
+      "role": "Bidder",
+      "height": 1.36,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/bidder-veiled-front.webp",
+        "back": "/stage/fixtures/march-of-davos/bidder-veiled-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/bidder-veiled-portrait.jpg"
+      },
+      "at": [
+        -2.97,
+        2.35
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "bidder-young-noble",
+      "name": "A masked young noble",
+      "role": "Bidder",
+      "height": 1.36,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/bidder-young-noble-front.webp",
+        "back": "/stage/fixtures/march-of-davos/bidder-young-noble-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/bidder-young-noble-portrait.jpg"
+      },
+      "at": [
+        -3.34,
+        0.61
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "bidder-blue",
+      "name": "A lady in a blue mask",
+      "role": "Bidder",
+      "height": 1.36,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/bidder-blue-front.webp",
+        "back": "/stage/fixtures/march-of-davos/bidder-blue-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/bidder-blue-portrait.jpg"
+      },
+      "at": [
+        0.82,
+        0.9
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "bidder-hooded",
+      "name": "A hooded buyer",
+      "role": "Bidder",
+      "height": 1.36,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/bidder-hooded-front.webp",
+        "back": "/stage/fixtures/march-of-davos/bidder-hooded-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/bidder-hooded-portrait.jpg"
+      },
+      "at": [
+        0.78,
+        3.15
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "bidder-beak",
+      "name": "A buyer in a beaked mask",
+      "role": "Bidder",
+      "height": 1.36,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/bidder-beak-front.webp",
+        "back": "/stage/fixtures/march-of-davos/bidder-beak-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/bidder-beak-portrait.jpg"
+      },
+      "at": [
+        -0.94,
+        2
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "bidder-silver",
+      "name": "An elf in a silver mask",
+      "role": "Bidder",
+      "height": 1.36,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/bidder-silver-front.webp",
+        "back": "/stage/fixtures/march-of-davos/bidder-silver-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/bidder-silver-portrait.jpg"
+      },
+      "at": [
+        3.6,
+        1.89
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "bidder-hooded-b",
+      "name": "Another hooded buyer",
+      "role": "Bidder",
+      "height": 1.36,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/bidder-hooded-front.webp",
+        "back": "/stage/fixtures/march-of-davos/bidder-hooded-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/bidder-hooded-portrait.jpg"
+      },
+      "at": [
+        -2.07,
+        3.97
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "bidder-blue-b",
+      "name": "A masked lady",
+      "role": "Bidder",
+      "height": 1.36,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/bidder-blue-front.webp",
+        "back": "/stage/fixtures/march-of-davos/bidder-blue-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/bidder-blue-portrait.jpg"
+      },
+      "at": [
+        2.94,
+        3.62
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "bidder-merchant-b",
+      "name": "A stout masked buyer",
+      "role": "Bidder",
+      "height": 1.36,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/bidder-merchant-front.webp",
+        "back": "/stage/fixtures/march-of-davos/bidder-merchant-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/bidder-merchant-portrait.jpg"
+      },
+      "at": [
+        -4.29,
+        1.2
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "silverhand",
+      "name": "Silverhand",
+      "role": "Smuggler lord",
+      "height": 1.36,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/silverhand-seated-front.webp",
+        "back": "/stage/fixtures/march-of-davos/silverhand-seated-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/silverhand-seated-portrait.jpg"
+      },
+      "at": [
+        4.8,
+        3.75
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "silverhand-representative",
+      "name": "Silverhand's representative",
+      "role": "Representative",
+      "height": 1.86,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/silverhand-representative-front.webp",
+        "back": "/stage/fixtures/march-of-davos/silverhand-representative-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/silverhand-representative-portrait.jpg"
+      },
+      "at": [
+        6.2,
+        0.62
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "raskov-guard-a",
+      "name": "A silent guard",
+      "role": "Raskov guard",
+      "height": 1.85,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/raskov-guard-front.webp",
+        "back": "/stage/fixtures/march-of-davos/raskov-guard-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/raskov-guard-portrait.jpg"
+      },
+      "at": [
+        4.77,
+        4.94
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "raskov-guard-b",
+      "name": "A silent guard",
+      "role": "Raskov guard",
+      "height": 1.85,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/raskov-guard-front.webp",
+        "back": "/stage/fixtures/march-of-davos/raskov-guard-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/raskov-guard-portrait.jpg"
+      },
+      "at": [
+        5.92,
+        4.18
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    }
+  ],
+  "shots": {
+    "map": {
+      "position": [
+        0.1,
+        2.05,
+        -0.95
+      ],
+      "target": [
+        -0.05,
+        1.05,
+        -1.95
+      ],
+      "fov": 40,
+      "label": "The map"
+    },
+    "auctioneer": {
+      "subject": "auctioneer",
+      "distance": 2.4,
+      "angle": 0,
+      "height": 1.75,
+      "lookHeight": 1.7,
+      "fov": 44,
+      "label": "The Auctioneer"
+    },
+    "representative": {
+      "subject": "silverhand-representative",
+      "distance": 2.3,
+      "angle": 25,
+      "height": 1.75,
+      "lookHeight": 1.7,
+      "fov": 44,
+      "label": "The representative"
+    },
+    "silverhand": {
+      "subject": "silverhand",
+      "distance": 2.2,
+      "angle": -20,
+      "height": 1.4,
+      "lookHeight": 1.15,
+      "fov": 44,
+      "label": "Silverhand"
+    },
+    "party": {
+      "subjects": [
+        "branka-stoneveil",
+        "cassia-verane",
+        "yeva-softstep",
+        "milos-radan"
+      ],
+      "offset": [
+        0.4,
+        1.75,
+        -3.6
+      ],
+      "target": [
+        0,
+        1.15,
+        0
+      ],
+      "relative": "world",
+      "fov": 56,
+      "label": "Party"
+    }
+  },
+  "shot": "lectern"
+}

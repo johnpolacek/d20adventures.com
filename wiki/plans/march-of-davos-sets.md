@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Stage authoring](../stage-authoring.md) · [Stage engine](../stage-engine.md) · [The Dragonbone Inn](dragonbone-inn-stage.md)
 
-Status: every encounter of the adventure has a set, 2026-10-23. Not yet checked in the running desktop app beyond the inn.
+Status: every encounter of the adventure has a set, 2026-10-23, the auction included. Not yet checked in the running desktop app beyond the inn.
 
 ## Owner request, 2026-10-22
 
@@ -19,12 +19,24 @@ Encounters 1 to 7 already had sets: the gate, the harvest square, the Dragonbone
 | 10 to 14 | The docks | Done 2026-10-23 |
 | 15 to 17 | The Lower Districts | Done 2026-10-23 |
 | 18 to 19 | The Black Market | Done 2026-10-23 |
-| 20 to 22 | The auction | Next. A hall behind the Black Market lane's far door |
+| 20 to 22 | The auction | Done 2026-10-23 |
 | 23 to 26 | Silverhand's trail, the hideout, the ambush | Street and cellar kits done 2026-10-23 |
 | 27 to 39 | The Blackthorn mansion: front, ballroom, halls, chambers, wine cellar | Bespoke, done 2026-10-23. The wine cellar is the cellar kit |
 | 40 to 44 | The catacombs | Tunnel kit done 2026-10-23. The grate at 40 is the mansion's grounds, done |
 | 45 to 46 | The forgotten temple | Bespoke, done 2026-10-23 |
 | 47 to 49 | The aftermath | Done 2026-10-23: the street kit for 47 and 48, the library for 49 |
+
+## The auction
+
+Built overnight by another session, then checked, reviewed and committed 2026-10-23. Written by `scripts/stage-sets/auction-hall.ts`.
+
+- A candlelit horseshoe hall of old stone behind the Black Market lane's far door: a gallery of standing buyers round it, rows of velvet chairs on arcs facing a stone lectern and a half-round stage, the entrance at the back and a side exit.
+- One set per lot on the lectern: `black-market-auction` with the jewelled dagger, `black-market-auction-relic` with the relic map, `black-market-auction-sold` with nothing.
+- New builders in `packages/stage/src/builders/hall.ts`: `rotunda`, `ringGallery`, `aisle`, `theatreChair`, `dais`, `lectern`. A painted texture, `relic-map.jpg`, and `scripts/stage-textures.ts` gained `inset` to crop a painting's edges.
+- Standees: the masked auctioneer and his assistant, twelve masked bidders seated in velvet chairs, Silverhand seated and standing, his representative, and a Raskov guard. `scripts/stage-standees.ts` gained `chair`.
+- `pnpm stage:check` passes. Walks 368 to 394 of 660, the rest stopped by the rows of seated bidders. `STAGE_WALKS=all` lists every blocked walk.
+- At ultra, DPR 2: 153 to 181 draw calls, 0.23M to 0.25M rendered triangles, 28 to 33 fps.
+- Desktop maps the three encounters. 78 desktop tests pass. The test of the story-view fallback now uses an encounter with no scene, since every March of Davos encounter has one.
 
 ## Owner decision, 2026-10-23: reusable sets
 

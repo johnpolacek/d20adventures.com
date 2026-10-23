@@ -74,8 +74,10 @@ function checkWalks(set: ReturnType<typeof parseSet>, footprints: Footprint[], d
   }
   const solidPlaces = places.filter(([, m]) => onFootprint(footprints, m.at[0], m.at[1])).map(([id]) => id)
   console.log(`  walks: ${walks - blocked.length} of ${walks} clear${solidPlaces.length ? `. places on something solid (walks stop at its edge): ${solidPlaces.join(", ")}` : ""}`)
-  for (const b of blocked.slice(0, 12)) console.log(`  blocked: ${b}`)
-  if (blocked.length > 12) console.log(`  blocked: ${blocked.length - 12} more`)
+  // STAGE_WALKS=all lists every blocked walk.
+  const show = process.env.STAGE_WALKS === "all" ? blocked.length : 12
+  for (const b of blocked.slice(0, show)) console.log(`  blocked: ${b}`)
+  if (blocked.length > show) console.log(`  blocked: ${blocked.length - show} more`)
 }
 
 // A staged run has to get where it is going. Each leg, by `via` and then `to`, is walked as the desktop walks it:
