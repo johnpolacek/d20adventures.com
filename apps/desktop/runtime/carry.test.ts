@@ -4,7 +4,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
-import { openingParty, partyOf } from "../src/carry"
+import { openingParty, partyOf, type Seat, seatCreated } from "../src/carry"
 import { PREMADE_FIGURES } from "../src/figures"
 import { partyScene, portraitFor, SCENES } from "../src/scenes"
 import { adventureList, game, type Packs, transitionsOf } from "./game"
@@ -56,6 +56,28 @@ test("continuing the story keeps the heroes who can go on, on the seats they had
   // Never more than the adventure seats.
   assert.equal(openingParty(info("march-of-davos"), [], [...info("march-of-davos").premades.map((p) => you(p.id))]).length, info("march-of-davos").players[1])
   assert.deepEqual(openingParty(undefined, roster, [you("hero-a")]), [])
+})
+
+test("a hero made on the party screen is the player's, and the hero they had goes to the AI", () => {
+  const seat = (id: string, who: Seat["who"], open?: boolean): Seat => (open ? { id, who, open } : { id, who })
+  const davos = openingParty(info("march-of-davos"), []).map((c) => seat(c.id, c.ai ? "ai" : "you"))
+  assert.deepEqual(
+    davos.map((c) => c.who),
+    ["you", "ai", "ai", "ai"]
+  )
+  assert.deepEqual(seatCreated(davos, "hero-a", 5), [seat("branka-stoneveil", "ai"), ...davos.slice(1), seat("hero-a", "you")])
+  // A full party: the new hero takes the player's seat.
+  const full = [...davos, seat("wrenna-faelendar", "ai")]
+  assert.deepEqual(seatCreated(full, "hero-a", 5), [seat("hero-a", "you"), ...full.slice(1)])
+  // An invited game has no AI heroes, so the player's old hero leaves.
+  const invited = [seat("branka-stoneveil", "you"), seat("cassia-verane", "invite"), seat("open-1", "invite", true)]
+  assert.deepEqual(seatCreated(invited, "hero-a", 5), [seat("hero-a", "you"), ...invited.slice(1)])
+  // With no hero of the player's, the new hero joins as any other, while there is room.
+  const guests = [seat("branka-stoneveil", "invite"), seat("cassia-verane", "invite")]
+  assert.deepEqual(seatCreated(guests, "hero-a", 3), [...guests, seat("hero-a", "you")])
+  assert.deepEqual(seatCreated(guests, "hero-a", 2), guests)
+  // Seated already: nothing changes.
+  assert.deepEqual(seatCreated([seat("hero-a", "ai")], "hero-a", 5), [seat("hero-a", "ai")])
 })
 
 test("Lyra, Poppen and Thalbern can be played in March of Davos, and stand at the gate as themselves", async () => {

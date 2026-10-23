@@ -6,15 +6,12 @@ import { cn } from "@/lib/utils"
 import type { AdventureInfo, CatalogInfo } from "../runtime/game"
 import type { Hero, PartyChoice } from "../runtime/heroes"
 import type { GmModel } from "./bridge"
-import { openingParty } from "./carry"
+import { joinAs, openingParty, type Seat, seatCreated } from "./carry"
 import { type FigureArt, STOCK_FIGURES } from "./figures"
 import { ModuleCover } from "./module-cover"
 import { portraitFor } from "./scenes"
 
 type Pick = { id: string; name: string; race: string; archetype: string; portrait?: string; hero?: Hero }
-// Who plays a seated hero: the player, the AI, or a friend invited through the website. An open seat has no hero
-// yet: a guest brings their own, and the host approves it.
-type Seat = { id: string; who: "you" | "ai" | "invite"; open?: boolean }
 // The small controls over a roster hero's card.
 const mini = cn(siteOutline, "px-2 py-0.5 font-mono text-xxs")
 // A text-only control: the quiet way out beside the main action.
@@ -29,8 +26,6 @@ const WHO = [
   ["ai", "AI"],
   ["invite", "Invite"],
 ] as const
-// A hero added to the party: the player's if they have none, then a guest's in an invited game, else the AI's.
-const joinAs = (party: Seat[]): Seat["who"] => (!party.some((c) => c.who === "you") ? "you" : party.some((c) => c.who === "invite") ? "invite" : "ai")
 
 export const price = (cents: number) => `$${(cents / 100).toFixed(cents % 100 ? 2 : 0)}`
 
@@ -100,10 +95,10 @@ export function NewGame(props: {
       .map((h) => ({ id: h.id, name: h.name, race: h.race, archetype: h.archetype, portrait: (h.painted && props.art[h.id]?.portrait) || STOCK_FIGURES[h.figure]?.art.portrait, hero: h })),
   ]
   const [min, max] = info?.players ?? [1, 1]
-  // A hero just made from this screen joins the party if they fit and there is room.
+  // A hero just made from this screen joins the party as the player's, if they fit.
   const joining = props.created && picks.some((p) => p.id === props.created) ? props.created : null
   useEffect(() => {
-    if (joining) setParty((p) => (p.some((c) => c.id === joining) || p.length >= max ? p : [...p, { id: joining, who: joinAs(p) }]))
+    if (joining) setParty((p) => seatCreated(p, joining, max))
   }, [joining, max])
   if (lockedInfo) return <LockedAdventure info={lockedInfo} linked={props.linked} onLink={props.onLink} onCancel={props.onCancel} busy={props.busy} />
   if (!info) return null
