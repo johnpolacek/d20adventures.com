@@ -2,7 +2,11 @@
   "ambush-follow": {
     "adventure": "march-of-davos",
     "encounter": "the-ambush",
-    "story": { "save": "playtests/march-of-davos-2026-10-21.json.gz", "turns": [25, 29], "lead": true },
+    "story": {
+      "save": "playtests/march-of-davos-2026-10-21.json.gz",
+      "turns": [25, 29],
+      "lead": true
+    },
     "rounds": 4,
     "replies": [
       "Branka levels her warhammer at the rooftops. \"After them! Yeva, find us a way up there before they slip off.\"",
@@ -13,12 +17,31 @@
   "study-draft": {
     "adventure": "march-of-davos",
     "encounter": "the-rangers-quarters",
-    "story": { "save": "playtests/march-of-davos-2026-10-21.json.gz", "turns": [41, 45], "lead": false },
+    "story": {
+      "save": "playtests/march-of-davos-2026-10-21.json.gz",
+      "turns": [41, 45],
+      "lead": false
+    },
     "rounds": 4,
     "replies": [
       "Branka keeps watch down the corridor while Yeva works the lock on the carved door.",
       "Branka follows the draft to the bookcase in the study and feels along the carvings for a catch.",
       "Branka presses on the back of the hidden compartment and feels where the draft comes from, in case a passage runs on."
+    ]
+  },
+  "silverhand-traitor": {
+    "adventure": "march-of-davos",
+    "encounter": "face-to-face-with-silverhand",
+    "story": {
+      "save": "playtests/march-of-davos-2026-10-21.json.gz",
+      "turns": [23, 27],
+      "lead": true
+    },
+    "rounds": 3,
+    "replies": [
+      "Branka plants both fists on the table. \"You lost that shipment too, didn't you. Who sold you out? Name him.\"",
+      "Branka asks where this man went, and whether anyone has seen him since. \"Point us at him and he's ours.\"",
+      "Branka asks whether he has ever met a Valkaran scholar named Joran Antonov. \"Harron at the Silver Serpent says you did.\""
     ]
   }
 }

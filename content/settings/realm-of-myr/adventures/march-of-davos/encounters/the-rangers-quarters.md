@@ -18,7 +18,7 @@ At the end of a long corridor lined with Blackthorn family portraits is a heavy 
 
 ## GM Notes
 
-The door is locked.
+The door is locked. Thieves' tools open it with a DC 13 Dexterity check, or a DC 15 Strength check forces it, the crack lost under the music from below. A failed attempt costs time and nothing more. No one else is on this floor during the ball, and no guard comes up while the party works the door. The quarters are empty: no one hides there, and no one flees.
 
 **Caught.** If the house guard has the adventurers in hand, the guards do not march them about the house or search it with them. They take them straight down to the ballroom to answer to Lady Astrid, and arrive just as Thaddeus takes the stage. Every eye turns to him, and the guards hold the adventurers at the edge of the crowd while he speaks.
 
@@ -35,6 +35,8 @@ With the right dice rolls, they can discover a hidden compartment.
 ### The Hidden Compartment
 
 As the adventurers explore Astrid’s private study, they notice a faint draft coming from one of the bookcases, as if air is slipping through the cracks. Upon closer inspection, they find a small mechanism hidden within the intricate carvings along the side of the shelf. With a click, the bookshelf swings open, revealing a narrow compartment behind it.
+
+**Nothing lies beyond the compartment.** It is a shallow niche in the shelf, and the draft comes down an old chimney flue no wider than a hand. No stair, passage or door opens from the study, and the Covenant's tunnels are not found from here.
 
 Inside the hidden compartment is a worn, leather-bound journal. Its edges are frayed, and the pages are filled with the meticulous handwriting of a scholar. The cover bears the initials "M.A." 
 

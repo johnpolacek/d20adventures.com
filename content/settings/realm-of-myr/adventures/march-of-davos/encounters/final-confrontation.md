@@ -35,7 +35,7 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726970504298"
 
 The players must now choose between Joran's revolutionary cause, Astrid's imperial stability, or a neutral path mediated by the Church. Their choice will determine the aftermath of the adventure as outlined in the adventure summary.
 
-Let the confrontation play out. Joran makes his case: his father Mikhail found the truth of the Drakovan crimes and was killed for it, and the Key belongs to Valkara, not to an Asterian house. Astrid makes hers: the Covenant murdered her brother tonight, and only the Margrave's order keeps the March from civil war. Either may offer the party a place at their side. Neither backs down on their own, and if steel is drawn they fight each other as much as the party.
+Let the confrontation play out. Joran makes his case: his father Mikhail found the truth of the Drakovan crimes and was killed for it, and the Key belongs to Valkara, not to an Asterian house. Astrid makes hers: the Covenant murdered her brother tonight, and only the Margrave's order keeps the March from civil war. Either may offer the party a place at their side. If asked how he came by the Key, Joran tells it: he rode with Silverhand's crew as Lev and took the Key from the Blackthorn shipment on the quay. Neither backs down on their own, and if steel is drawn they fight each other as much as the party.
 
 The scene ends when the adventurers make their choice plain, by word or by deed: helping Joran keep the Key, taking it from him for Astrid, or putting it beyond both of them.
 

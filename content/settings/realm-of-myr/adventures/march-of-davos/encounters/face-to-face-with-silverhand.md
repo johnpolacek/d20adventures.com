@@ -45,6 +45,14 @@ This encounter could play itself out in a variety of ways.
 
 Silverhand is an alias used by Kazimir Raskov, the head of the Raskov Clan’s smuggling operations. He was in fact behind the operation to steal the Blackthorn shipment at the docks. However, he was double crossed by one of his men who was secretly a member of an organization known as the Covenant of the Cowl. 
 
+**Secret: the man who crossed him was Joran Antonov.** Some weeks ago Joran joined Silverhand's crew under a false name, Lev, to get at the shipment and the Key of Ilmarin in it. Silverhand never learned who he really was. Nothing in this scene tells the party, and no one here hints at it. The truth comes out only at the final confrontation.
+
+**What Silverhand tells, if asked:**
+- The man called himself Lev, a quiet young Valkaran he took on a few weeks ago. Good with locks and letters, and kept to himself.
+- His crew opened the Blackthorn shipment on the quay for one piece, an old Valkaran key. Lev had it in his hands, and then he and the key were gone. The alarm went up, and the Blackthorns took back the rest of the cargo. He gives no warehouse or place for it.
+- He does not know where Lev went. His people have searched since and found nothing, and he believes the Cowl hides its own. He names no street, house, grate or tunnel, and nothing here leads anywhere but on to The Ambush.
+- He has never heard the name Joran Antonov. Told that Joran was seen meeting him, he shrugs: he meets many men, none by that name. He does not connect Joran with Lev.
+
 Kazimir wishes to avoid any direct confrontation with the Covenant. His instincts tell him that it is too dangerous. They seem to know everything, with spies operating everywhere. In fact, he is considering leaving the city to expand their operations elsewhere.
 
 ## Transitions

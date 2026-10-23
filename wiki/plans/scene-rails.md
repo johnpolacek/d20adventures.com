@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [March of Davos playtest](march-of-davos-playtest.md) · [Round budget](round-budget.md) · [Testing runbook](testing-runbook.md)
 
-Status: implemented on main 2026-10-22. The judge is checked on both playtest saves, and one short probe ran.
+Status: implemented on main 2026-10-22. The judge is checked on both playtest saves. Three probes ran before and after content fixes for Silverhand's traitor, Astrid's door and the study's draft.
 
 ## Owner request, 2026-10-22
 
@@ -69,3 +69,30 @@ The judge on the second playtest's save, current content, Claude at medium effor
 One probe run of `ambush-follow`, two rounds, about 2.5 minutes. Both on. Yeva's roof search found nothing, and the round end walked the party to the inn as the notes say. Branka's second scripted reply came after the party was inside, so it no longer fit and the GM let it pass. Scripted replies do not see the scene.
 
 Desktop type check and Biome pass.
+
+## Probes before and after the content fixes, 2026-10-22
+
+Owner: "(a) first, then (b), then rerun (a)". Three runs a probe, Claude at medium effort, rounds in the probe's scene only.
+
+| Probe | Before | After |
+|---|---|---|
+| `ambush-follow`, The Ambush, content unchanged | 1 of 3 runs off, 2 of 12 rounds, both Bram: speaking before the party was inside, and asking for an invitation | 0 of 3 runs, 0 of 12 rounds. Two runs reached Entry to the Ball |
+| `study-draft`, The Ranger's Quarters | 0 of 3 runs off, but no run got through Astrid's locked door in 4 rounds. The notes gave no way to open it, so the GM invented failed picks, a guard and fights | Every run got in and found the journal. No tunnel stair. 2 rounds flagged, both AI heroes: one called the room a cellar, one led the party down a stair back toward the halls |
+| `silverhand-traitor`, Face-to-Face with Silverhand | 3 of 3 runs off, 5 of 7 rounds: catacomb passages marked on Cassia's chart, boot prints under the harbor, a traitor named "Dmitri Vasko" | First rerun 1 of 3: Silverhand pointed at Warehouse 14, from a line in the new notes, since removed. Second rerun 1 of 3: Milos, an AI hero, proposed going below to the catacombs, and Silverhand let him |
+
+- Silverhand never said Lev was Joran. Asked about Joran: "I meet many men in this city. None of them goes by Joran Antonov."
+- The catacombs Milos reached for are in the lead-in: the copied turns hold the second playtest's invented cistern lanes and Cassia's tunnel chart.
+- The judge called setting off for the inn an invented exit, though it is the road into The Ambush. Each way out now carries the first paragraph of the scene it leads to. The two runs it misjudged now pass, and the known derails are still flagged.
+- The judge does not see how the party arrived, so a stair they climbed to reach a scene can read as new.
+
+## Content changed, 2026-10-22
+
+- Face-to-Face with Silverhand: the man who crossed Silverhand was Joran, working his crew as Lev, a secret the scene never tells. Owner chose this with nothing given away. Silverhand tells what he knows of Lev, names no place, and has never heard of Joran.
+- Final Confrontation: asked how he came by the Key, Joran tells it.
+- The Ranger's Quarters: the door opens to thieves' tools at DC 13 or force at DC 15, a failure costs only time, the floor and the quarters are empty, and nothing lies beyond the compartment.
+
+## Next
+
+- AI heroes push on exits: Milos's catacombs, Cassia's stair. Their prompt has no rule against opening a way out, as the round and NPC prompts do.
+- Probe lead-ins copy a playtest's own derails. A clean lead-in would come from a run that stayed on the rails.
+- Gaps the judge keeps naming: what Silverhand counts as a fair trade, what the Key looks like, the study's chest and desk.
