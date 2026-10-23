@@ -1,6 +1,9 @@
 import ballroomSet from "@d20/stage/sets/realm-of-myr/blackthorn-ballroom.json"
 import ballroomDrakeSet from "@d20/stage/sets/realm-of-myr/blackthorn-ballroom-drake.json"
+import corridorSet from "@d20/stage/sets/realm-of-myr/blackthorn-corridor.json"
 import groundsSet from "@d20/stage/sets/realm-of-myr/blackthorn-grounds.json"
+import stairHallSet from "@d20/stage/sets/realm-of-myr/blackthorn-stair-hall.json"
+import studySet from "@d20/stage/sets/realm-of-myr/blackthorn-study.json"
 import wineCellarSet from "@d20/stage/sets/realm-of-myr/blackthorn-wine-cellar.json"
 import hallSet from "@d20/stage/sets/realm-of-myr/catacombs-hall.json"
 import labyrinthSet from "@d20/stage/sets/realm-of-myr/catacombs-labyrinth.json"
@@ -57,6 +60,7 @@ import labyrinthineStalls from "@d20/stage/stagings/march-of-davos/labyrinthine-
 import morningAtTheDragonbone from "@d20/stage/stagings/march-of-davos/morning-at-the-dragonbone.json"
 import mysteryCargo from "@d20/stage/stagings/march-of-davos/mystery-cargo.json"
 import shadowingSilverhand from "@d20/stage/stagings/march-of-davos/shadowing-silverhand.json"
+import thaddeusBlackthornsPrivateChambers from "@d20/stage/stagings/march-of-davos/thaddeus-blackthorns-private-chambers.json"
 import theAftermath from "@d20/stage/stagings/march-of-davos/the-aftermath.json"
 import theAmbush from "@d20/stage/stagings/march-of-davos/the-ambush.json"
 import theBeastEscapes from "@d20/stage/stagings/march-of-davos/the-beast-escapes.json"
@@ -69,12 +73,15 @@ import festivalStaging from "@d20/stage/stagings/march-of-davos/the-harvest-fest
 import theHideout from "@d20/stage/stagings/march-of-davos/the-hideout.json"
 import theHuntForTheAssassin from "@d20/stage/stagings/march-of-davos/the-hunt-for-the-assassin.json"
 import theLadyAndTheBishop from "@d20/stage/stagings/march-of-davos/the-lady-and-the-bishop.json"
+import theLavishCorridor from "@d20/stage/stagings/march-of-davos/the-lavish-corridor.json"
 import theNewDawn from "@d20/stage/stagings/march-of-davos/the-new-dawn.json"
 import theOldGrandLibrary from "@d20/stage/stagings/march-of-davos/the-old-grand-library.json"
+import theRangersQuarters from "@d20/stage/stagings/march-of-davos/the-rangers-quarters.json"
 import theSealedDoor from "@d20/stage/stagings/march-of-davos/the-sealed-door.json"
 import theSilverSerpentTavern from "@d20/stage/stagings/march-of-davos/the-silver-serpent-tavern.json"
 import theSpeech from "@d20/stage/stagings/march-of-davos/the-speech.json"
 import theWineCellar from "@d20/stage/stagings/march-of-davos/the-wine-cellar.json"
+import throughTheHalls from "@d20/stage/stagings/march-of-davos/through-the-halls.json"
 import throughTheLabyrinth from "@d20/stage/stagings/march-of-davos/through-the-labyrinth.json"
 import vengeanceOfTheBlackthorn from "@d20/stage/stagings/march-of-davos/vengeance-of-the-blackthorn.json"
 import welcomeToTheLowerDistricts from "@d20/stage/stagings/march-of-davos/welcome-to-the-lower-districts.json"
@@ -375,6 +382,42 @@ export const SCENES: Record<string, Scene> = {
       "Lord Thaddeus on the stage, the caged drake beside him, the crowd's eyes on it. A hooded figure waits at the foot of the stage close to him. Glazed doors in the east wall open onto the balcony. The party is in the crowd in front of the stage.",
     party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
     spare: [[-2.6, -12.4]],
+  },
+  "through-the-halls": {
+    set: stairHallSet,
+    staging: throughTheHalls,
+    location: "The Blackthorn mansion",
+    where:
+      "A dim, high stair hall away from the ball. At its far end a grand stair climbs in two flights to a gallery, up to the family's floors, under a tall moonlit window; candle stands burn at the foot of each flight. By the near wall on the right, narrow steps go down through an arch into the dark, toward the cellars. The party stands in the middle of the hall.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[0.2, -6.4]],
+  },
+  "the-rangers-quarters": {
+    set: corridorSet,
+    staging: theRangersQuarters,
+    location: "The Blackthorn mansion",
+    where:
+      "The family's upper floor: a long corridor of damask over dark panelling, portraits in gilt frames, tapestries of the Asterian eagle, a runner down the middle. At its end a heavy double door carved with branches, twisted boughs framing it, candle sconces either side. No one else is on this floor. The party stands before the door.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[-0.6, -24.6]],
+  },
+  "the-lavish-corridor": {
+    set: corridorSet,
+    staging: theLavishCorridor,
+    location: "The Blackthorn mansion",
+    where:
+      "The family's upper floor, deep in the house: a long corridor of portraits, tapestries, candelabra and crystal chandeliers. Two Blackthorn guards stand at ease before the great carved door of Thaddeus's chambers in the east wall, chatting. The party is a few paces up the corridor.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[-0.8, -9.8]],
+  },
+  "thaddeus-blackthorns-private-chambers": {
+    set: studySet,
+    staging: thaddeusBlackthornsPrivateChambers,
+    location: "The Blackthorn mansion",
+    where:
+      "Thaddeus Blackthorn's study: dark panelling, a mahogany desk heaped with ledgers and maps before a tall window on moonlit Kordavos, velvet curtains half drawn. Shelves of scrolls along the west wall, a glass cabinet of trinkets in the corner, a hearth on the east wall with an ornate sword over it, and a tapestry hiding a second door. The party has just come in by the door.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[-1.8, -3.0]],
   },
   "the-chase": {
     set: groundsSet,

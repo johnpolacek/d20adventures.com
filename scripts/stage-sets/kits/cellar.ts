@@ -18,15 +18,20 @@ export interface CellarDress {
   // The vault springs at `height`; a beamed ceiling sits at it.
   height: number
   ceiling: "vault" | "beams"
+  // Posts under a beamed ceiling's two great beams; a finished room has none.
+  posts?: boolean
   walls: "stone" | "boards"
   floor: "flags" | "boards"
-  // A stair coming down through an arch in the entrance wall, or a plank door, at x = entranceX.
-  entrance: "stair" | "door"
+  // A stair coming down through an arch in the entrance wall, steps going on down from it ("down"), or a plank door,
+  // at x = entranceX.
+  entrance: "stair" | "down" | "door"
   entranceX?: number
   // Warm candle and lamp light, or a cold damp gloom.
   tone: "warm" | "cold"
   objects?: Obj[]
   materials?: Obj
+  // Parts of the tone's atmosphere to replace (a finished room lit brighter than a cellar).
+  atmosphere?: Obj
   lights: Obj[]
   marks?: Record<string, Obj>
   shots: Record<string, Obj>
@@ -52,7 +57,7 @@ export function cellarSet(d: CellarDress): Obj {
     { type: "box", at: [0, 0, -L - 0.3], size: [W + 1.2, top + 0.4, 0.6], material: wallMat, solid: true },
   ]
   // The entrance wall, cut by a stair arch or a door.
-  const opening = d.entrance === "stair" ? { at: ex, width: 1.5, height: 2.5, kind: "doorway" } : { at: ex, width: 1.2, height: 2.2, kind: "door", leaf: -70 }
+  const opening = d.entrance === "door" ? { at: ex, width: 1.2, height: 2.2, kind: "door", leaf: -70 } : { at: ex, width: 1.5, height: 2.5, kind: "doorway" }
   o.push({
     type: "wall",
     at: [0, 0.3],
@@ -74,12 +79,16 @@ export function cellarSet(d: CellarDress): Obj {
     for (let z = -0.4; z > -L; z -= 0.62) o.push({ type: "box", at: [0, H - 0.16, z], size: [W, 0.16, 0.12], material: "timber" })
     for (const x of [-W / 4, W / 4]) {
       o.push({ type: "box", at: [x, H - 0.42, -L / 2], size: [0.28, 0.28, L], material: "timber" })
-      for (let z = -L / 3; z > -L + 0.5; z -= L / 3) o.push({ type: "box", at: [x, 0, z], size: [0.24, H - 0.42, 0.24], material: "timber", solid: true })
+      if (d.posts !== false) for (let z = -L / 3; z > -L + 0.5; z -= L / 3) o.push({ type: "box", at: [x, 0, z], size: [0.24, H - 0.42, 0.24], material: "timber", solid: true })
     }
   }
-  // Beyond the entrance: the foot of a stone stair rising out of sight, or a dark passage.
-  if (d.entrance === "stair") {
-    for (let i = 0; i < 9; i++) o.push({ type: "box", at: [ex, i * 0.19, 1.0 + i * 0.27], size: [1.5, 0.19, 0.3 + (9 - i) * 0.27], material: "cellarStep" })
+  // Beyond the entrance: the foot of a stone stair rising out of sight, steps going down into the dark, or a dark passage.
+  if (d.entrance === "down") {
+    for (let i = 0; i < 9; i++) o.push({ type: "box", at: [ex, -(i + 1) * 0.19, 1.0 + i * 0.27], size: [1.5, 0.19, 0.3], material: "cellarStep" })
+    o.push({ type: "box", at: [ex, -2.4, 4.0], size: [1.6, 2.4, 0.2], material: "void" })
+  }
+  if (d.entrance !== "door") {
+    if (d.entrance === "stair") for (let i = 0; i < 9; i++) o.push({ type: "box", at: [ex, i * 0.19, 1.0 + i * 0.27], size: [1.5, 0.19, 0.3 + (9 - i) * 0.27], material: "cellarStep" })
     o.push(
       { type: "box", at: [ex - 1.0, 0, 2.2], size: [0.5, 4.2, 3.0], material: wallMat },
       { type: "box", at: [ex + 1.0, 0, 2.2], size: [0.5, 4.2, 3.0], material: wallMat },
@@ -112,8 +121,9 @@ export function cellarSet(d: CellarDress): Obj {
       exposure: warm ? 1.3 : 1.2,
       grade: warm ? "warm" : "neutral",
       wind: 0.05,
+      ...(d.atmosphere ?? {}),
     },
-    camera: { near: 0.05, far: 200, min: [-W / 2 + 0.25, 0.3, -L + 0.25], max: [W / 2 - 0.25, top - 0.3, d.entrance === "stair" ? 1.6 : -0.3], maxDistance: Math.max(8, L) },
+    camera: { near: 0.05, far: 200, min: [-W / 2 + 0.25, 0.3, -L + 0.25], max: [W / 2 - 0.25, top - 0.3, d.entrance === "door" ? -0.3 : 1.6], maxDistance: Math.max(8, L) },
     materials: { ...keep, ...fromLibrary, ...CELLAR_MATERIALS, ...(d.materials ?? {}) },
     objects: o,
     crowd: d.crowd,

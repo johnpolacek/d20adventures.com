@@ -182,6 +182,10 @@ test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the 
       ["a-distraction", /Aelindor[\s\S]*the foot of the stage/],
       ["the-speech", /drake[\s\S]*the curtained cage/],
       ["death-to-the-murderer", /hooded figure[\s\S]*the doors to the balcony/],
+      ["through-the-halls", /grand stair[\s\S]*the steps down to the cellars/],
+      ["the-rangers-quarters", /carved with branches[\s\S]*the door carved with branches/],
+      ["the-lavish-corridor", /guards[\s\S]*the carved door of Thaddeus's chambers/],
+      ["thaddeus-blackthorns-private-chambers", /mahogany desk[\s\S]*the glass cabinet/],
       ["the-chase", /rope[\s\S]*the drain grate under the ivy/],
       ["the-hunt-for-the-assassin", /drain grate[\s\S]*the drain grate under the ivy/],
     ] as const)
