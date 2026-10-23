@@ -193,6 +193,16 @@ const TEXTURES: Record<string, Texture> = {
     aspect: "9:16",
     out: [576, 1024],
   },
+  // The docks: a square sail of the Star of Faelendar, laid whole on each sail.
+  "sail-canvas": {
+    subject:
+      "one square ship's sail of warm cream sailcloth seen straight on, filling the whole frame edge to edge: vertical seams between the long cloths every few centimetres of the image, two rows of small reef points across the upper third, a slightly darker bolt rope along all four edges, soft warm golden light glowing through the canvas, faint weathering and sun-bleaching, smooth and clean, no patches, no emblem",
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726345480155",
+    crop: [0.45, 0.1, 0.25, 0.35],
+    whole: true,
+    aspect: "16:9",
+    out: [1024, 576],
+  },
   "stained-thyra": {
     subject:
       "a tall round-topped stained glass window seen straight on from inside, filling the whole frame: a great silver-white tree whose branches intertwine with a large crescent moon, stars among the leaves, roots spreading over a green hill, the symbol of the goddess Thyra the Wayfinder, deep midnight blue, violet, emerald and amber glass pieces in black lead cames, a border of small coloured squares, glowing with daylight behind it",

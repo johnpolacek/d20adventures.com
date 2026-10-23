@@ -70,5 +70,20 @@ Source: five paintings (a golden harbour with a great carved ship, stone warehou
 - `pnpm stage:check` passes. Walks: arrival 133 of 133, the beast 108 of 108, the invitation 85 of 85, the aftermath 106 of 108, Mystery Cargo 142 of 160. The blocked ones cross the whole quay through the cargo stacks, or go from the ship's deck into the shed, which takes two doorways.
 - At ultra, DPR 2: 180 to 250 draw calls, 0.26M to 0.29M rendered triangles, 21 to 33 fps. 0.10M static triangles.
 - Desktop maps the five encounters with `where` lines. 78 desktop tests pass.
-- Not yet seen in the running desktop app. The ship reads as a ship with a carved stern but not yet as grand as the painting's galleon, and the sails' cloth texture is blotchy up close.
+- Not yet seen in the running desktop app.
+
+### Quality pass, 2026-10-23
+
+Review against the arrival painting: the opening looked down an empty street, the ship was low and plain, the cobbles huge, the harbour bare, the drake orange.
+
+- The opening shot, "The docks", now frames like the painting: from a quay head across the harbour's west end, low, looking east along the water, moored boats on the left, the Star of Faelendar right of centre with her bow toward the viewer, the warehouses and the far end of the harbour beyond, porters and cargo in the foreground.
+- The ship is 42 m long with a 32 m main mast, lying bow west. The water dropped to 5.5 m below the quay, so her hull towers out of it. A curved sterncastle and poop follow the hull's line, a rising gilt stem and beakhead, a forecastle balustrade, gilt rubbing bands, four yards a mast with the top sails furled. The sails are a painted canvas (`sail-canvas.jpg`, an `image` material) in place of the blotchy cloth.
+- Small cobbles (`stones` 0.13) with a band of worn flags along the edge, bollards, rope coils, mooring rings and ladders.
+- Twenty skiffs and two laden barges, eight more ships in the harbour and down its far end, a jetty east of the ship, nets drying on poles, nine stalls under cream canvas, a round harbour tower, a second backdrop down the harbour, 34 walkers and porters at the cargo, forty gulls.
+- Low golden sun from the east-north-east across the water, warmer haze.
+- The drake is turned 40 degrees of hue toward green at keying (`hue` in `scripts/stage-standees.ts`).
+- The wrecked quay has staved-in and tipped crates, more splintered planks, spilt silk and sacks, barrels rolled loose, a cart on its side, scorch and acid on the stones.
+- Walks: arrival 133 of 133, the beast 106 of 108, the aftermath 101 of 108, the invitation 82 of 85, Mystery Cargo 150 of 160. The blocked walks are 40 m walks to the far jetty past the crane, and walks to or from the shed across the cargo.
+- At ultra, DPR 2: 189 to 253 draw calls, 0.43M to 0.47M rendered triangles, 23 to 32 fps. 0.16M static triangles.
+- The painting's hull is still taller and more richly carved than the built one.
 

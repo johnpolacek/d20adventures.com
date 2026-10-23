@@ -33,95 +33,164 @@ const painted = (map: string, tint: string, plank: [number, number], extra: Obj 
 })
 
 // ── The harbour ──
-// The quay's edge runs along x at z = 0, the harbour lies north (z < 0) with its water 1.5 m down, and the quay runs
+// The quay's edge runs along x at z = 0, the harbour lies north (z < 0) with its water 4 m down, and the quay runs
 // south 22 m to a row of stone warehouses facing the water. The Star of Faelendar lies along the quay, bow east, her main
-// deck level with the paving. Warehouse 14 is a timber shed at the west end, its doors open east onto the quay, wedged
-// between a tall warehouse and the harbour wall.
-const WATER = -2.4
+// deck level with the paving and her hull towering out of the deep water. Warehouse 14 is a timber shed at the west
+// end, its doors open east onto the quay, wedged between a tall warehouse and the harbour wall. A timber jetty runs
+// out west of the ship; the painting's view looks east along the water from it.
+const WATER = -5.5
 const BACK = 22
-const SHIP = { x: 4, z: -5.6, length: 30, beam: 8 }
-// The ship's frame: her local z runs along world x (bow east), local x along world -z.
-const onShip = (lz: number, lx = 0): V2 => [r2(SHIP.x + lz), r2(SHIP.z - lx)]
-const GANGWAY_Z = -2.2
-const BOLLARDS = [-38, -30, -22, -10.5, -6, 9.5, 13.5, 17.5, 25.5, 33.5, 41.5]
-const HATCH_Z = 3.2
+const SHIP = { x: 14, z: -7.4, length: 42, beam: 11 }
+// The ship lies bow west, toward the painting's view: her local z runs along world -x, local x along world +z (the
+// quay side).
+const onShip = (lz: number, lx = 0): V2 => [r2(SHIP.x - lz), r2(SHIP.z + lx)]
+const GANGWAY_Z = 8
+const BOLLARDS = [-46, -38, -30, -18, -14, -10.5, -6, 9.5, 13.5, 22, 25.5, 33.5, 49]
+const HATCH_Z = -4.5
+const JETTY = 42
 const SHED = { x0: -30, x1: -20.5, z0: 5, z1: 15, h: 4.2 }
-// Golden late sun from the west-north-west, low over the water, behind the ship as in the painting.
-const SUN: V3 = [-0.62, 0.4, -0.67]
+// Golden low sun from the east-north-east over the water: backlight down the harbour, as in the painting.
+const SUN: V3 = [0.72, 0.3, -0.62]
 
 function harbour(wrecked: boolean): Obj[] {
   const o: Obj[] = [
-    // The water, the quay's paving and its stone face down to the water, with a coping along the edge.
+    // The water, the quay's paving of small worn cobbles, worn flags along the edge, and the stone face down to the water
+    // under a coping.
     { type: "box", at: [0, WATER - 0.1, -170], size: [500, 0.1, 340], material: "water" },
-    { type: "box", at: [0, -0.3, 30], size: [260, 0.3, 60], material: "paving" },
-    { type: "box", at: [0, WATER - 2, -0.35], size: [260, 2 - WATER, 0.7], material: "quayWall" },
-    { type: "box", at: [0, -0.02, 0.25], size: [260, 0.08, 0.5], material: "stoneTrim" },
-    // A stone pier west of the ship, and a timber jetty beyond it with skiffs.
-    { type: "pier", at: [-15, 0, 0], yaw: 180, length: 16, width: 2.4, depth: 4, rickety: 0.15, materials: { plank: "deck", post: "post" } },
-    { type: "skiff", at: [-17, WATER + 0.55, -6], yaw: 172 },
-    { type: "skiff", at: [-12.8, WATER + 0.55, -9.5], yaw: 8 },
-    { type: "skiff", at: [-17.2, WATER + 0.55, -12.5], yaw: 186, length: 5.2 },
-    { type: "skiff", at: [24, WATER + 0.55, -2.2], yaw: 95 },
+    { type: "box", at: [0, -0.3, 31.75], size: [500, 0.3, 56.5], material: "paving" },
+    { type: "box", at: [0, -0.3, 1.75], size: [500, 0.3, 3.5], material: "flags" },
+    { type: "box", at: [0, WATER - 2, -0.35], size: [500, 2 - WATER, 0.7], material: "quayWall" },
+    { type: "box", at: [0, -0.02, 0.25], size: [500, 0.08, 0.5], material: "stoneTrim" },
+    // The quay head across the harbour's west end, where the painting's view stands, its face down to the water.
+    { type: "box", at: [-29, -0.3, -15.5], size: [14, 0.3, 31], material: "flags" },
+    { type: "box", at: [-21.65, WATER - 2, -15.5], size: [0.7, 2 - WATER, 31], material: "quayWall" },
+    { type: "box", at: [-22.25, -0.02, -15.5], size: [0.5, 0.08, 31], material: "stoneTrim" },
+    // The timber jetty west of the ship.
+    { type: "pier", at: [JETTY, 0, 0], yaw: 180, length: 20, width: 2.6, depth: 8, rickety: 0.15, materials: { plank: "deck", post: "post" } },
   ]
-  // Bollards along the edge, clear of the jetty's root and the gangway; iron rings and ladders down the quay's face.
+  // Small craft along the quay and round the jetty, and two cargo barges laden with crates.
+  for (const [x, zz, yaw, len] of [
+    [JETTY - 2.2, -5, 172, 4.6],
+    [JETTY + 2.3, -8.5, 8, 4.4],
+    [JETTY - 2.4, -11.5, 186, 5.2],
+    [JETTY + 2.4, -14, -6, 4.2],
+    [JETTY - 2.2, -16.5, 176, 4.8],
+    [-19.6, -24, 4, 5],
+    [-19.4, -28.5, 178, 4.6],
+    [-19.8, -12, 2, 4.4],
+    [-19.6, -16.5, 176, 5],
+    [-17.2, -14.5, 6, 4.2],
+    [-17.0, -26.5, 182, 4.8],
+    [-6, -24, 70, 4.6],
+    [2, -28, 96, 5.2],
+    [10, -24, 84, 4.4],
+    [-2, -33, 120, 4.6],
+    [34, -2.2, 92, 4.8],
+    [38.5, -2.4, 88, 4.4],
+    [-8, -30, 40, 4.6],
+    [20, -34, -70, 5],
+    [-26, -40, 110, 4.4],
+  ] as [number, number, number, number][])
+    o.push({ type: "skiff", at: [x, WATER + 0.55, zz], yaw, length: len })
+  for (const [x, zz, yaw] of [
+    [-10, -20, 84],
+    [26, -21, -96],
+  ] as [number, number, number][]) {
+    o.push({ type: "skiff", at: [x, WATER + 0.5, zz], yaw, length: 10, beam: 3.2, materials: { hull: "wale" } })
+    for (let k = 0; k < 6; k++) {
+      const along = -3 + k * 1.2
+      const rad = (yaw * Math.PI) / 180
+      o.push({
+        type: "crate",
+        at: [r2(x + Math.sin(rad) * along + ((k % 2) - 0.5) * 0.9 * Math.cos(rad)), WATER + 0.17, r2(zz + Math.cos(rad) * along - ((k % 2) - 0.5) * 0.9 * Math.sin(rad))],
+        yaw: yaw + k * 7,
+        size: 0.8,
+        stack: k % 3 === 0,
+      })
+    }
+  }
+  // Bollards along the edge, clear of the jetty's root and the gangway; rope coils by some; iron rings and ladders down
+  // the quay's face.
   for (const x of BOLLARDS) o.push({ type: "bollard", at: [x, 0.75] })
-  for (let x = -36; x <= 48; x += 8) o.push({ type: "torus", at: [x, -0.7, -0.02], radius: 0.13, tube: 0.025, material: "iron" })
-  for (const x of [-3, 21]) {
+  for (const x of [-38, -18, 22, 33.5]) for (let k = 0; k < 3; k++) o.push({ type: "torus", at: [x + 0.8, 0.05 + k * 0.07, 1.4], radius: 0.32 - k * 0.04, tube: 0.04, pitch: 90, material: "rope" })
+  for (let x = -44; x <= 52; x += 6) o.push({ type: "torus", at: [x, -0.9, -0.02], radius: 0.14, tube: 0.028, material: "iron" })
+  for (const x of [-3, 21, -44]) {
     for (const s of [-0.25, 0.25]) o.push({ type: "box", at: [x + s, WATER - 0.4, -0.06], size: [0.05, -WATER + 0.4, 0.05], material: "iron" })
     for (let y = WATER; y < 0; y += 0.3) o.push({ type: "box", at: [x, y, -0.06], size: [0.5, 0.03, 0.04], material: "iron" })
+  }
+  // Nets hung to dry on poles by the jetty.
+  for (const [x, zz] of [
+    [JETTY - 4, 1.8],
+    [JETTY + 4.2, 2.0],
+  ]) {
+    o.push({ type: "panel", at: [x, 0.2, zz], size: [3.2, 2.4], material: "net" })
+    for (const dx of [-1.65, 1.65]) o.push({ type: "cylinder", at: [x + dx, 0, zz], radius: 0.05, height: 2.8, material: "post" })
   }
   // The Star of Faelendar at her berth, a gangway to her rail, her lines to the bollards.
   o.push({
     type: "galleon",
     id: "star-of-faelendar",
     at: [SHIP.x, 0, SHIP.z],
-    yaw: 90,
+    yaw: -90,
     length: SHIP.length,
     beam: SHIP.beam,
+    height: 32,
+    depth: 8,
+    stern: 9.5,
+    fore: 6.5,
     sails: wrecked ? "torn" : "set",
-    gangway: [-1, GANGWAY_Z],
-    hatch: { at: HATCH_Z, size: 2.6, state: wrecked ? "burst" : "shut" },
+    gangway: [1, GANGWAY_Z],
+    hatch: { at: HATCH_Z, size: 2.8, state: wrecked ? "burst" : "shut" },
   })
   const g = onShip(GANGWAY_Z)
+  const gap = -SHIP.z - SHIP.beam / 2
   o.push(
-    { type: "box", at: [g[0], 0.02, -0.9], size: [1.3, 0.06, 2.0], material: "deck" },
-    ...[-0.62, 0.62].map((dx) => ({ type: "box", at: [g[0] + dx, 0.0, -0.9], size: [0.08, 0.12, 2.0], material: "rail" })),
+    { type: "box", at: [g[0], 0.02, r2(-gap / 2 - 0.1)], size: [1.3, 0.06, r2(gap + 0.4)], material: "deck" },
+    ...[-0.62, 0.62].map((dx) => ({ type: "box", at: [g[0] + dx, 0.0, r2(-gap / 2 - 0.1)], size: [0.08, 0.12, r2(gap + 0.4)], material: "rail" })),
     ...[-0.4, -0.9, -1.4].map((zz) => ({ type: "box", at: [g[0], 0.05, zz], size: [1.2, 0.03, 0.05], material: "rail" })),
-    ...[-0.62, 0.62].map((dx) => ({ type: "rope", from: [g[0] + dx, 1.0, 0.1], to: [g[0] + dx, 1.05, -1.95], sag: 0.15, radius: 0.025 }))
+    ...[-0.62, 0.62].map((dx) => ({ type: "rope", from: [g[0] + dx, 1.0, 0.1], to: [g[0] + dx, 1.05, r2(-gap - 0.1)], sag: 0.15, radius: 0.025 }))
   )
   for (const [lz, bx] of [
-    [-13, -10.5],
-    [-9, -6],
-    [10, 13.5],
-    [13.5, 17.5],
+    [19, -14],
+    [15, -6],
+    [-15, 33.5],
+    [-19, 49],
   ]) {
-    const [sx, sz] = onShip(lz, -SHIP.beam / 2 + 0.2)
-    o.push({ type: "rope", from: [sx, 1.0, sz], to: [bx, 0.6, 0.75], sag: 0.45, radius: 0.035 })
+    const [sx, sz] = onShip(lz, SHIP.beam / 2 - 0.3)
+    o.push({ type: "rope", from: [sx, 1.0, sz], to: [bx, 0.6, 0.75], sag: 0.5, radius: 0.04 })
   }
   // The beast's cage in the hold under the hatch: whole, or eaten through by acid.
   const [cx, cz] = onShip(HATCH_Z)
-  o.push({ type: "cage", id: "cage", at: [cx, -2.1 - 0.05, cz], yaw: 90, width: 2.2, depth: 2.2, height: 1.9, melted: wrecked ? 0.6 : 0 })
-  // A second ship east along the quay, sails furled, and ships across the harbour.
+  o.push({ type: "cage", id: "cage", at: [cx, -2.1 - 0.05, cz], yaw: -90, width: 2.3, depth: 2.3, height: 1.9, melted: wrecked ? 0.6 : 0 })
+  // Ships along the quay and out in the harbour, some under sail.
   o.push(
-    { type: "ship", at: [44, WATER + 1.0, -7.5], yaw: 90, length: 24, beam: 6.5, masts: 2, height: 18, sails: "furled" },
-    { type: "ship", at: [-48, WATER + 1.0, -9], yaw: -88, length: 20, beam: 6, masts: 2, height: 16, sails: "furled" },
-    { type: "ship", at: [-30, WATER + 1.0, -70], yaw: 80, length: 22, beam: 6, masts: 3, height: 18, sails: "furled" },
-    { type: "ship", at: [18, WATER + 1.0, -95], yaw: -100, length: 26, beam: 7, masts: 3, height: 20, sails: "set" },
-    { type: "ship", at: [62, WATER + 1.0, -60], yaw: 110, length: 18, beam: 5.5, masts: 2, height: 15, sails: "furled" },
-    { type: "skiff", at: [-4, WATER + 0.55, -40], yaw: 40 },
-    { type: "skiff", at: [30, WATER + 0.55, -30], yaw: -70, length: 5 }
+    { type: "ship", at: [64, WATER + 1.4, -7.5], yaw: 90, length: 24, beam: 6.5, masts: 2, height: 18, sails: "furled" },
+    { type: "ship", at: [-52, WATER + 1.4, -9], yaw: -88, length: 20, beam: 6, masts: 2, height: 16, sails: "furled" },
+    { type: "ship", at: [-14, WATER + 1.4, -52], yaw: 70, length: 22, beam: 6, masts: 3, height: 18, sails: "set" },
+    { type: "ship", at: [64, WATER + 1.4, -36], yaw: 100, length: 26, beam: 7, masts: 3, height: 20, sails: "set" },
+    { type: "ship", at: [-30, WATER + 1.4, -70], yaw: 80, length: 22, beam: 6, masts: 3, height: 18, sails: "furled" },
+    { type: "ship", at: [18, WATER + 1.4, -95], yaw: -100, length: 26, beam: 7, masts: 3, height: 20, sails: "set" },
+    { type: "ship", at: [110, WATER + 1.4, -20], yaw: 88, length: 22, beam: 6, masts: 2, height: 17, sails: "furled" },
+    { type: "ship", at: [150, WATER + 1.4, -32], yaw: 100, length: 24, beam: 6.5, masts: 3, height: 19, sails: "set" }
   )
   // The treadwheel crane east of the ship, its net of crates swung out over her deck.
-  o.push({ type: "crane", at: [15.5, 3.2], yaw: 180, reach: 7.5, height: 9.5, drop: wrecked ? 6.5 : 4.2, load: !wrecked })
-  // Warehouses along the back of the quay, facing the water, with a gap for a street up into the city.
+  o.push({ type: "crane", at: [19, 3.2], yaw: 180, reach: 9.5, height: 11, drop: wrecked ? 7.5 : 4.5, load: !wrecked })
+  // Warehouses along the back of the quay, facing the water, with a gap for a street up into the city, and more running
+  // on east along the harbour.
   for (const [x, w, h, bays] of [
+    [-58, 14, 12, 3],
     [-42, 16, 13, 4],
     [-24, 14, 15, 3],
     [-6, 18, 12, 4],
     [24, 16, 14, 4],
     [42, 14, 12, 3],
+    [58, 16, 15, 4],
+    [76, 16, 12, 4],
+    [94, 14, 14, 3],
   ] as [number, number, number, number][])
     o.push({ type: "warehouse", at: [x, BACK + 5], yaw: 180, w, d: 10, h, bays, arch: 4.4 })
+  // A round harbour tower at the far end of the quay, as in the painting.
+  o.push({ type: "roundTower", at: [112, 4], r: 4.5, height: 22, sides: 18, roofHeight: 9, materials: { roof: "roofRed" } })
   // Beyond the street gap, houses climbing into the city.
   for (const [x, zz, h] of [
     [8, 34, 10],
@@ -197,27 +266,38 @@ function shed(wrecked: boolean): Obj[] {
   return o
 }
 
-// The quay's working clutter: cargo by the gangway, carts, stalls under awnings along the warehouse fronts, lamps.
+// The quay's working clutter: cargo by the gangway, carts, stalls under cream canvas along the warehouse fronts, lamps.
+// After the drake: staved-in crates, spilt cargo, splintered planks, a toppled cart, scorch and acid on the stones.
+const CARGO: [number, number, number, boolean][] = [
+  [10.4, 3.4, 0.9, true],
+  [11.4, 3.6, 0.8, false],
+  [11.0, 4.6, 0.85, true],
+  [14.4, 3.2, 0.9, false],
+  [15.2, 3.9, 0.8, true],
+  [-3.8, 3.0, 0.8, false],
+  [-4.6, 3.8, 0.9, true],
+  [24.5, 3.6, 0.9, true],
+  [25.5, 3.8, 0.8, false],
+  [-13.2, 3.2, 0.9, true],
+]
 function quay(wrecked: boolean): Obj[] {
   const o: Obj[] = []
-  // Cargo waiting by the ship: crate stacks, barrels, sacks, the dockworkers' clutter round the gangway.
-  const cargo: [number, number, number, boolean][] = [
-    [6.4, 3.4, 0.9, true],
-    [7.4, 3.6, 0.8, false],
-    [7.0, 4.6, 0.85, true],
-    [10.5, 3.2, 0.9, false],
-    [11.3, 3.9, 0.8, true],
-    [-3.8, 3.0, 0.8, false],
-    [-4.6, 3.8, 0.9, true],
-  ]
-  if (!wrecked) for (const [x, zz, s, stack] of cargo) o.push({ type: "crate", at: [x, zz], yaw: (x * 41) % 20, size: s, stack, solid: true })
+  if (!wrecked) for (const [x, zz, sz, stack] of CARGO) o.push({ type: "crate", at: [x, zz], yaw: (x * 41) % 20, size: sz, stack, solid: true })
   else {
-    // Smashed cargo: crates staved in and their planks flung across the paving, barrels rolled loose.
-    for (const [x, zz, s] of [
-      [10.9, 3.6, 0.8],
-      [11.8, 4.2, 0.7],
+    // Crates the drake smashed, staved in and tipped, and the rest standing.
+    for (const [x, zz, sz, stack] of CARGO.slice(5)) o.push({ type: "crate", at: [x, zz], yaw: (x * 41) % 20, size: sz, stack, solid: true })
+    for (const [x, zz, sz] of [
+      [14.6, 3.6, 0.8],
+      [15.4, 4.4, 0.7],
     ])
-      o.push({ type: "crate", at: [x, zz], yaw: (x * 67) % 50, size: s, solid: true })
+      o.push({ type: "crate", at: [x, zz], yaw: (x * 67) % 50, size: sz, solid: true })
+    for (const [x, zz, yaw, roll] of [
+      [9.6, 3.0, 20, 35],
+      [11.8, 5.2, -30, 60],
+      [3.2, 4.4, 50, 90],
+    ])
+      o.push({ type: "box", at: [x, 0.25, zz], yaw, roll, size: [0.8, 0.5, 0.8], material: "crate" })
+    // Splintered planks flung across the paving round the gangway and toward the warehouses.
     let k = 0
     for (const [x, zz] of [
       [3.5, 2.2],
@@ -229,40 +309,94 @@ function quay(wrecked: boolean): Obj[] {
       [4.4, 4.6],
       [1.2, 1.4],
       [7.8, 5.6],
+      [10.8, 2.0],
+      [12.6, 4.8],
+      [6.0, 6.8],
+      [0.2, 2.6],
+      [8.8, 7.4],
     ])
-      for (let j = 0; j < 3; j++, k++)
-        o.push({ type: "box", at: [r2(x + ((k * 0.37) % 0.9)), 0.02, r2(zz + ((k * 0.53) % 0.8))], yaw: (k * 53) % 180, size: [0.12, 0.03, 0.6 + ((k * 0.17) % 0.5)], material: "crate" })
+      for (let j = 0; j < 4; j++, k++)
+        o.push({
+          type: "box",
+          at: [r2(x + ((k * 0.37) % 1.2) - 0.6), 0.02, r2(zz + ((k * 0.53) % 1.0) - 0.5)],
+          yaw: (k * 53) % 180,
+          size: [0.1 + (k % 3) * 0.03, 0.03, 0.5 + ((k * 0.17) % 0.7)],
+          material: "crate",
+        })
+    // Spilt cargo: silk bolts unrolled, sacks burst, barrels rolled loose.
+    for (const [x, zz, yaw, mat] of [
+      [7.0, 3.6, 30, "silk"],
+      [9.0, 4.4, -20, "silkB"],
+      [5.4, 5.2, 70, "silk"],
+    ] as [number, number, number, string][])
+      o.push({ type: "box", at: [x, 0.01, zz], yaw, size: [0.55, 0.02, 1.6], material: mat })
     for (const [x, zz] of [
-      [-1.2, 5.2],
-      [12.6, 6.4],
+      [4.8, 3.2],
+      [12.2, 6.0],
+      [2.6, 5.6],
     ])
-      o.push({ type: "cylinder", at: [x, 0.36, zz], radius: 0.36, height: 0.95, roll: 90, material: "barrel" })
-    o.push({ type: "box", at: [14.5, 0, 7.6], yaw: 25, size: [1.3, 0.08, 2.4], pitch: 0, roll: 70, material: "planks" })
+      o.push({ type: "sack", at: [x, zz], size: 0.55 })
+    for (const [x, zz, yaw] of [
+      [-1.2, 5.2, 30],
+      [12.6, 6.4, -40],
+      [16.4, 7.2, 80],
+    ])
+      o.push({ type: "cylinder", at: [x, 0.38, zz], radius: 0.38, height: 0.95, roll: 90, yaw, material: "barrel" })
+    // A cart toppled on its side, one wheel in the air.
+    o.push(
+      { type: "box", at: [13.8, 0.75, 8.6], yaw: 25, roll: 80, size: [1.5, 0.12, 2.6], material: "planks" },
+      { type: "box", at: [13.25, 0.35, 8.35], yaw: 25, size: [0.1, 0.7, 2.6], material: "planks" },
+      { type: "torus", at: [14.3, 0.5, 7.4], yaw: 25, radius: 0.5, tube: 0.06, segments: 16, material: "planks" },
+      { type: "torus", at: [14.5, 1.4, 9.6], yaw: 25, pitch: 80, radius: 0.5, tube: 0.06, segments: 16, material: "planks" }
+    )
+    // Scorch where the drake's acid-wet hide dragged, and acid pooled by the gangway.
+    for (const [x, zz, sx, sz, yaw, mat] of [
+      [5.8, 1.2, 0.9, 1.4, 10, "scorch"],
+      [7.6, 2.8, 0.6, 1.0, 40, "scorch"],
+      [4.6, 0.8, 0.8, 1.2, -20, "acid"],
+      [9.0, 1.6, 0.7, 0.9, 60, "acid"],
+    ] as [number, number, number, number, number, string][])
+      o.push({ type: "box", at: [x, 0.005, zz], yaw, size: [sx, 0.01, sz], material: mat })
   }
   for (const [x, zz] of [
-    [9.6, 4.6],
-    [12.4, 2.9],
+    [13.6, 4.6],
+    [16.4, 2.9],
     [-5.6, 2.7],
+    [26.8, 3.2],
   ])
     o.push({ type: "barrel", at: [x, zz], r: 0.38, h: 1.0, solid: true })
   for (const [x, zz] of [
-    [8.6, 5.4],
-    [9.1, 5.7],
+    [12.6, 5.4],
+    [13.1, 5.7],
     [-2.8, 3.4],
+    [24, 5],
   ])
     o.push({ type: "sack", at: [x, zz], size: 0.6 })
-  o.push({ type: "cart", at: [-13.5, 16.8], yaw: 80 }, { type: "cart", at: [19.5, 16.6], yaw: -100 })
-  // Stalls under canvas along the warehouse arcades, as in the painting.
+  if (!wrecked) o.push({ type: "cart", at: [19.5, 16.6], yaw: -100 })
+  o.push({ type: "cart", at: [-13.5, 16.8], yaw: 80 })
+  // Stalls under cream canvas along the warehouse arcades, as in the painting.
   for (const [x, cloth, goods] of [
-    [-30.5, "tentCream", "sacks"],
-    [-17.5, "tentOchre", "baskets"],
-    [-1.5, "tentRust", "pots"],
-    [-9.5, "tentCream", "cloth"],
-    [30, "tentOchre", "sacks"],
+    [-38, "tentCream", "sacks"],
+    [-17.5, "tentCream", "baskets"],
+    [-9.5, "tentOchre", "cloth"],
+    [-1.5, "tentCream", "pots"],
+    [28, "tentCream", "sacks"],
+    [35, "tentRust", "baskets"],
+    [46, "tentCream", "pots"],
+    [62, "tentCream", "cloth"],
+    [80, "tentOchre", "sacks"],
   ] as [number, string, string][])
     o.push({ type: "stall", at: [x, BACK - 1.9], yaw: 180, w: 5, d: 3.2, cloth, goods, frontHeight: 2.6, backRise: 0.7, back: false })
+  // The quay head: cargo and a few dockhands in the painting's foreground.
+  for (const [x, zz, sz, stack] of [
+    [-25.0, -24.6, 0.9, true],
+    [-25.6, -23.5, 0.8, false],
+    [-24.4, -12.5, 0.9, true],
+  ] as [number, number, number, boolean][])
+    o.push({ type: "crate", at: [x, zz], yaw: 12, size: sz, stack, solid: true })
+  o.push({ type: "barrel", at: [-23.6, -26], r: 0.38, h: 1.0, solid: true }, { type: "bollard", at: [-22.8, -17] }, { type: "bollard", at: [-22.8, -8] })
   // Lamp posts along the quay.
-  for (const x of [-12, 0.5, 13, 28]) o.push({ type: "lantern", at: [x, 14.5], height: 3.2, post: true })
+  for (const x of [-12, 0.5, 13, 28, 44]) o.push({ type: "lantern", at: [x, 14.5], height: 3.2, post: true })
   return o
 }
 
@@ -272,14 +406,16 @@ function materials(): Obj {
     ...square.materials,
     ...Object.fromEntries(["water", "mast", "window", "roofRed"].map((n) => [n, riverfront.materials[n]])),
     roof: riverfront.materials.roofRed,
+    pennant: riverfront.materials.pennant,
     // Sun-warmed paving and honey stone, the painting's palette.
-    paving: { type: "masonry", a: "#9a8466", b: "#ab9474", c: "#887258", mortar: "#4a3c2c", block: [0.7, 0.5], joint: 0.025, relief: 0.06, variance: 0.5, grime: 1.0, ground: true, stones: 0.45 },
+    paving: { type: "masonry", a: "#9a8466", b: "#ab9474", c: "#887258", mortar: "#4a3c2c", block: [0.7, 0.5], joint: 0.03, relief: 0.05, variance: 0.5, grime: 1.1, ground: true, stones: 0.13 },
+    flags: { type: "masonry", a: "#a08a6c", b: "#b09a7a", c: "#8c785e", mortar: "#4a3c2c", block: [1.1, 0.7], joint: 0.025, relief: 0.04, variance: 0.6, grime: 1.4, ground: true },
     stone: { type: "masonry", a: "#b89a72", b: "#c8aa80", c: "#a4885e", mortar: "#5a4834", block: [0.9, 0.42], joint: 0.02, relief: 0.05, variance: 0.4, grime: 1.2 },
     stoneTrim: { type: "rock", a: "#a88e6a", b: "#c4aa84", moss: "#6a5a44", mossLight: "#8a7658", lichen: "#d0bc98", mossAmount: 0.15, lichenAmount: 0.1, relief: 0.4, scale: 0.8 },
     quayWall: { type: "masonry", a: "#5a5044", b: "#6a5e4e", c: "#4a4238", mortar: "#2a241e", block: [0.9, 0.45], joint: 0.02, relief: 0.06, variance: 0.4, grime: 2.2 },
     water: { type: "water", color: "#2a5058", reflect: 5, ripple: 0.7, flow: [1, 0], mirror: 0.5 },
     // The Star of Faelendar: honey-brown elven planking, a green band with gilt, pale sails.
-    hull: painted("timber-hold", "#d8b48a", [0.24, 40], { size: [0.7, 2.2], grime: 1.0, relief: 0.06 }),
+    hull: painted("timber-hold", "#f0c890", [0.24, 40], { size: [0.7, 2.2], grime: 0.8, relief: 0.06 }),
     wale: painted("hull-tar", "#6a5a50", [0, 40], { size: [0.5, 1.4], grime: 1.0 }),
     band: { type: "plain", color: "#2e4a36", roughness: 0.6 },
     gilt: { type: "metal", color: "#c89a48", roughness: 0.38, metalness: 0.85 },
@@ -288,7 +424,9 @@ function materials(): Obj {
     rail: painted("timber-hold", "#9a7a5a", [0, 40], { size: [0.7, 2.2], grime: 0.8 }),
     hold: { type: "plain", color: "#1a1410", roughness: 1 },
     post: painted("timber-hold", "#7a6a5a", [0, 40], { size: [0.7, 2.2] }),
-    sail: { type: "cloth", color: "#e8dcc0", amp: 0.25, freq: 0.7 },
+    sail: { type: "image", map: "/stage/textures/sail-canvas.jpg", tint: "#fff6e8", roughness: 0.9, double: true },
+    furl: { type: "cloth", color: "#d8ccb0", amp: 0, freq: 0.7 },
+    net: { type: "card", map: "/stage/textures/fishing-net.webp", tint: "#c8b8a0" },
     sailTorn: { type: "cloth", color: "#dcceb0", amp: 0.5, freq: 1.1, tatters: [9, 0.45] },
     rope: { type: "plain", color: "#5a4632", roughness: 1 },
     lamp: { type: "plain", color: "#000000", roughness: 1, emissive: "#ff8a30", emissiveIntensity: 0.5 },
@@ -304,8 +442,8 @@ function materials(): Obj {
     shedRoof: painted("timber-hold", "#6a5a4e", [0.3, 40], { size: [0.7, 2.2] }),
     door: painted("timber-hold", "#9a8470", [0.18, 3], { size: [0.7, 2.2] }),
     crateOak: painted("crate-oak", "#c0aa8c", [0.14, 1.0], { size: [0.5, 1.4], nails: 0.8 }),
-    silk: { type: "cloth", color: "#5a7a6a", amp: 0 },
-    silkB: { type: "cloth", color: "#8a5a6a", amp: 0 },
+    silk: { type: "cloth", color: "#3e5a4e", amp: 0 },
+    silkB: { type: "cloth", color: "#6a4a3e", amp: 0 },
     shutter: painted("boat-paint", "#7a8a8a", [0.12, 2], { size: [0.5, 1.4] }),
     lead: { type: "metal", color: "#2a2826", roughness: 0.6, metalness: 0.4 },
     glass: { type: "glass", color: "#203040", opacity: 0.4 },
@@ -319,10 +457,10 @@ const MARKS = {
   quay: { at: [1.0, 8.0], label: "the quay" },
   gangway: { at: [onShip(GANGWAY_Z)[0], 0.9], label: "the gangway of the Star of Faelendar" },
   deck: { at: onShip(-0.5, 1.2), label: "the deck of the Star of Faelendar" },
-  hatch: { at: onShip(HATCH_Z, -2.3), label: "the cargo hatch" },
-  crane: { at: [13.6, 5.6], label: "the crane" },
-  cargo: { at: [8.4, 6.8], label: "the cargo stacks" },
-  pier: { at: [-15, -1.2], label: "the jetty" },
+  hatch: { at: onShip(HATCH_Z + 2.3, 0.6), label: "the cargo hatch" },
+  crane: { at: [17.0, 6.0], label: "the crane" },
+  cargo: { at: [12.6, 7.0], label: "the cargo stacks" },
+  pier: { at: [JETTY, -1.2], label: "the jetty" },
   warehouse14: { at: [-18.6, 10], label: "Warehouse 14" },
   inside: { at: [-22.6, 10.4], label: "inside Warehouse 14" },
   chainedCrate: { at: [-27.7, 9.1], label: "the chained crate" },
@@ -331,16 +469,18 @@ const MARKS = {
   street: { at: [10.5, 21], label: "the street into the city" },
 }
 const SHOTS = {
-  harbour: { position: [-9.5, 2.4, 12.5], target: [6, 6.5, -12], fov: 58, label: "The harbour" },
-  ship: { position: [-2.5, 1.8, 6.5], target: [8, 5.5, -8], fov: 62, label: "The Star of Faelendar" },
-  quay: { position: [20, 2.2, 10], target: [-6, 1.6, 6], fov: 56, label: "The quay" },
+  // The painting's view: low on the jetty, looking east along the water, the ship looming right of centre, boats on
+  // the water to the left, the warehouses and the far end of the harbour beyond.
+  quay: { position: [-31, 2.0, -19.5], target: [22, 6.5, -3], fov: 62, label: "The docks" },
+  harbour: { position: [-9.5, 2.4, 12.5], target: [6, 7.5, -12], fov: 58, label: "The harbour" },
+  ship: { position: [-2.5, 1.8, 6.5], target: [10, 7.5, -8], fov: 64, label: "The Star of Faelendar" },
+  along: { position: [26, 2.2, 10], target: [-6, 1.6, 6], fov: 56, label: "Along the quay" },
   warehouses: { position: [2, 1.8, 2], target: [-14, 4.5, 20], fov: 58, label: "The warehouses" },
   warehouse14: { position: [-11.5, 1.7, 9.5], target: [-21, 1.8, 10], fov: 56, label: "Warehouse 14" },
   inside: { position: [-21.4, 1.65, 13.4], target: [-28.6, 1.0, 8.2], fov: 64, label: "Inside Warehouse 14" },
-  deck: { position: [onShip(-9.4, 0.4)[0], 4.6, onShip(-9.4, 0.4)[1]], target: [onShip(8)[0], 2.2, onShip(8)[1]], fov: 62, label: "The deck" },
+  deck: { position: [onShip(-18, 0.4)[0], 7.8, onShip(-18, 0.4)[1]], target: [onShip(8)[0], 2.0, onShip(8)[1]], fov: 62, label: "The deck" },
   hatch: { position: [onShip(HATCH_Z)[0] - 0.4, 3.0, onShip(0, -2.6)[1]], target: [onShip(HATCH_Z)[0], -2.6, onShip(0, 0.2)[1]], fov: 58, label: "The cage in the hold" },
 }
-const QUAY_BOX = [-60, -0.6, -1, 60, 60, 60]
 const SHED_BOX = [SHED.x0, -0.5, SHED.z0, SHED.x1, SHED.h, SHED.z1]
 
 function crowd(wrecked: boolean) {
@@ -366,18 +506,29 @@ function crowd(wrecked: boolean) {
   return {
     library: "realm-of-myr",
     groups: [
-      { type: "walkers", path: "quayWalk", count: 18, speed: [0.7, 1.1], lateral: [-2.5, 2.5], both: true, mix: { porter: 4, packer: 4, traveler: 2, merchant: 2, woman: 2 } },
+      { type: "walkers", path: "quayWalk", count: 34, speed: [0.7, 1.1], lateral: [-2.5, 2.5], both: true, mix: { porter: 6, packer: 5, traveler: 2, merchant: 2, woman: 2, child: 1 } },
       {
         type: "points",
         people: [
-          { kind: "porter", at: [10.1, 5.6], yaw: 200 },
-          { kind: "packer", at: [12.0, 4.8], yaw: 240 },
+          { kind: "porter", at: [-24.6, -19.6], yaw: 80 },
+          { kind: "merchant", at: [-25.8, -21.2], yaw: 60 },
+          { kind: "woman", at: [-26.4, -16.4], yaw: 100 },
+          { kind: "packer", at: [-23.2, -14.6], yaw: 150 },
+          { kind: "porter", at: [12.4, 5.9], yaw: 200 },
+          { kind: "packer", at: [13.6, 2.4], yaw: 240 },
+          { kind: "porter", at: [16.0, 5.2], yaw: 170 },
+          { kind: "packer", at: [23.6, 4.6], yaw: 120 },
+          { kind: "porter", at: [-12.4, 4.4], yaw: 60 },
+          { kind: "porter", at: [JETTY + 0.4, -6], yaw: 0 },
+          { kind: "packer", at: [JETTY - 0.4, -11], yaw: 180 },
+          { kind: "merchant", at: [27.5, 17.2], yaw: 10 },
+          { kind: "woman", at: [34.8, 17.4], yaw: -10 },
+          { kind: "porter", at: [onShip(-10, 2)[0], onShip(-10, 2)[1]], yaw: 270 },
           { kind: "porter", at: [-3.2, 2.0], yaw: 150 },
           { kind: "merchant", at: [-1.6, 17.4], yaw: 0 },
           { kind: "woman", at: [5.6, 17.6], yaw: 20 },
-          { kind: "packer", at: [-16.2, -6.5], yaw: 180 },
           { kind: "porter", at: [onShip(6, 1.5)[0], onShip(6, 1.5)[1]], yaw: 90 },
-          { kind: "packer", at: [onShip(-4, -1.2)[0], onShip(-4, -1.2)[1]], yaw: 300 },
+          { kind: "packer", at: [onShip(-1, -3)[0], onShip(-1, -3)[1]], yaw: 300 },
         ],
       },
     ],
@@ -399,16 +550,16 @@ function docks(wrecked: boolean) {
     atmosphere: {
       sun: {
         direction: SUN,
-        color: "#ffd8a0",
-        intensity: 4.2,
+        color: "#ffcf8a",
+        intensity: 4.6,
         target: [0, 0, 0],
         distance: 300,
         shadow: { left: -55, right: 55, top: 55, bottom: -55, near: 150, far: 480, size: 4096 },
       },
-      hemisphere: { sky: "#b8c8d8", ground: "#6a5a44", intensity: 0.75 },
-      sky: { horizon: "#f2d8b0", mid: "#a8c0d4", zenith: "#5a86b8", gain: 1.0, clouds: 0.9, stars: 0, moon: 0 },
-      fog: { density: 0.0035, color: "#e8d2b0", start: 40 },
-      glow: "#ffcf8a",
+      hemisphere: { sky: "#c0c8d0", ground: "#7a6044", intensity: 0.8 },
+      sky: { horizon: "#f6d6a2", mid: "#b4c4cc", zenith: "#5a86b8", gain: 1.05, clouds: 0.9, stars: 0, moon: 0 },
+      fog: { density: 0.006, color: "#efcf9e", start: 28 },
+      glow: "#ffc070",
       fill: { color: "#fff0dc", intensity: 1.0, distance: 9 },
       lights: [],
       environment: 0.4,
@@ -429,10 +580,14 @@ function docks(wrecked: boolean) {
         ],
       },
     ],
-    camera: { near: 0.2, far: 1200, min: [-55, 0.4, -24], max: [55, 30, 26], maxDistance: 40 },
+    camera: { near: 0.2, far: 1200, min: [-60, 0.4, -40], max: [60, 34, 26], maxDistance: 55 },
     materials: materials(),
     objects,
-    backdrops: [{ map: "/stage/textures/docks-harbour.webp", arc: 110, yaw: 8, radius: 320, bottom: -7, top: 39.6, gain: 0.62, haze: 0.35 }],
+    // Across the harbour to the north, and down its far end to the east.
+    backdrops: [
+      { map: "/stage/textures/docks-harbour.webp", arc: 110, yaw: 8, radius: 320, bottom: -7, top: 39.6, gain: 0.62, haze: 0.4 },
+      { map: "/stage/textures/docks-harbour.webp", arc: 80, yaw: -78, radius: 300, bottom: -6, top: 28, gain: 0.6, haze: 0.5 },
+    ],
     crowd: crowd(wrecked),
     paths: {
       quayWalk: [
@@ -441,11 +596,12 @@ function docks(wrecked: boolean) {
         [-2, 11.8],
         [16, 12.2],
         [40, 12.8],
+        [70, 13],
       ],
     },
     marks: MARKS,
     shots: SHOTS,
-    life: { birds: { count: 22, center: [4, -30], spread: [60, 40], radius: [6, 22], height: [10, 30] } },
+    life: { birds: { count: 40, center: [10, -25], spread: [80, 40], radius: [6, 24], height: [8, 34] } },
   }
 }
 write(`${SETS}/kordavos-docks.json`, docks(false))
@@ -490,11 +646,11 @@ staging(
     crew: { subjects: ["loric-windrider", "tor-marros", "petra-velan"], offset: [-2.6, 1.75, 4.2], target: [0, 1.2, -0.6], relative: "world", fov: 52, label: "The dockworkers" },
     party: partyShot(IDS, [2.8, 1.75, -3.6]),
   },
-  "ship"
+  "quay"
 )
 
 // Mystery Cargo: Alaric and his three blades at Warehouse 14's open doors; the party comes down the quay from the east.
-const CARGO = at([
+const AT_CARGO = at([
   [-12.8, 9.4],
   [-12.4, 10.6],
   [-11.6, 9.8],
@@ -505,7 +661,7 @@ staging(
   "mystery-cargo",
   "kordavos-docks",
   [
-    ...party(CARGO, [-18.6, 10]),
+    ...party(AT_CARGO, [-18.6, 10]),
     member("scarface-alaric", "A scarred man", "Rogue", 1.86, "scarface-alaric", [-18.3, 10.0], [-12.2, 10.2]),
     thug("warehouse-thug", "warehouse-thug", [-18.9, 8.4]),
     thug("thug-b", "thug-b", [-17.4, 11.5]),
@@ -530,11 +686,11 @@ const BEAST = at([
 staging(
   "the-beast-escapes",
   "kordavos-docks-wrecked",
-  [...party(BEAST, [4.4, 3.8]), member("forest-drake", "The forest drake", "Beast", 3.8, "forest-drake", [5.0, 3.6], [-3.6, 8.6]), astrid([1.6, 1.4], [5.0, 3.6], "A woman with a curved blade")],
+  [...party(BEAST, [6.8, 3.6]), member("forest-drake", "The forest drake", "Beast", 3.8, "forest-drake", [6.8, 3.6], [-3.6, 8.6]), astrid([4.7, 1.3], [6.8, 3.6], "A woman with a curved blade")],
   {
     drake: shotOn("forest-drake", 6.0, 18, 1.6, 2.0, "The drake", 52),
     astrid: shotOn("astrid-blackthorn", 2.4, 30, 1.7, 1.62, "The woman with the blade"),
-    standoff: { position: [-3.2, 1.65, 9.8], target: [4.8, 1.9, 3.2], fov: 56, label: "The standoff" },
+    standoff: { position: [-2.2, 1.65, 10.2], target: [6.4, 2.0, 2.8], fov: 56, label: "The standoff" },
     party: partyShot(IDS, [5.2, 1.8, -2.4]),
   },
   "standoff"
@@ -551,7 +707,7 @@ const AFTER = at([
 staging(
   "the-aftermath",
   "kordavos-docks-wrecked",
-  [...party(AFTER, [1.5, 2.6]), astrid([1.5, 2.6], [0.1, 4.8], "Lady Astrid Blackthorn"), petra(onShip(HATCH_Z + 2.2, -1.9), [1.5, 2.6], "Petra")],
+  [...party(AFTER, [1.5, 2.6]), astrid([1.5, 2.6], [0.1, 4.8], "Lady Astrid Blackthorn"), petra(onShip(HATCH_Z + 2.2, 2.2), [1.5, 2.6], "Petra")],
   {
     astrid: shotOn("astrid-blackthorn", 2.2, 22, 1.7, 1.64, "Astrid"),
     petra: shotOn("petra-velan", 2.6, 30, 1.8, 1.55, "Petra"),

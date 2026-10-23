@@ -94,6 +94,9 @@ export const galleon = defineBuilder(
     ring(M.wale, 1.02, 1.004, -1.25, 0.14)
     ring(M.band, 1.012, 1.002, -0.36, 0.3)
     ring(M.gilt, 1.03, 1.006, -0.07, 0.05)
+    ring(M.gilt, 1.03, 1.005, -0.62, 0.05)
+    ring(M.gilt, 1.022, 1.004, -1.95, 0.06)
+    ring(M.wale, 1.012, 1.003, -2.9, 0.18)
     // The deck, its planks running fore and aft, with the hatch cut out.
     shape(b, M.deck, flip(s(0.965, 0.985)), 0.06, M4(0, -0.06, 0, 0, 1, 1, 1, -Math.PI / 2), 0, [flip(hole)])
     // The hold's well under the hatch: plank walls and a floor in the dark.
@@ -140,8 +143,16 @@ export const galleon = defineBuilder(
     const z0 = -L / 2 + 0.35
     const zf = -L / 2 + p.stern
     const sw = B * 0.8
-    const sh = 2.8
-    F.box(M.castle, 0, sh / 2, (z0 + zf) / 2, sw, sh, zf - z0)
+    const sh = Math.max(2.8, B * 0.32)
+    // The castles follow the hull's own curve aft: the outline behind a station, closed across it.
+    const aft = (k: number, upTo: number): Vec2[] => {
+      const pts = edge.filter(([, zz]) => zz < upTo).map(([x, zz]) => [x * k, zz] as Vec2)
+      const w = edge.reduce((m, [x, zz]) => (Math.abs(zz - upTo) < Math.abs(m[1] - upTo) ? [Math.abs(x), zz] : m), [0, 0] as Vec2)[0] * k
+      const right = pts.filter(([x]) => x > 0)
+      const left = pts.filter(([x]) => x <= 0)
+      return [[-w, upTo], ...left, ...right, [w, upTo]]
+    }
+    plan(b, M.castle, aft(0.97, zf), 0, sh)
     F.box(M.deck, 0, sh + 0.03, (z0 + zf) / 2, sw + 0.3, 0.08, zf - z0 + 0.3)
     F.box(M.gilt, 0, sh - 0.06, zf + 0.02, sw + 0.1, 0.1, 0.06)
     F.box(M.band, 0, sh - 0.35, zf + 0.02, sw, 0.4, 0.04)
@@ -168,8 +179,8 @@ export const galleon = defineBuilder(
     // The poop: a second tier over the after part of the sterncastle, with its own windows and balustrade.
     const pz = z0 + (zf - z0) * 0.55
     const pw = sw * 0.86
-    const ph = 1.9
-    F.box(M.castle, 0, sh + ph / 2, (z0 + pz) / 2, pw, ph, pz - z0)
+    const ph = sh * 0.7
+    plan(b, M.castle, aft(0.86, pz), sh, ph)
     F.box(M.deck, 0, sh + ph + 0.03, (z0 + pz) / 2, pw + 0.3, 0.08, pz - z0 + 0.3)
     F.box(M.void, 0, sh + 0.95, pz + 0.005, 0.9, 1.6, 0.04)
     F.box(M.gilt, 0, sh + ph - 0.06, pz + 0.02, pw + 0.1, 0.1, 0.06)
@@ -233,7 +244,7 @@ export const galleon = defineBuilder(
       ...bowPts.filter(([x]) => x <= 0).map(([x, zz]) => [x + 0.15, zz] as Vec2),
       [-half + 0.15, zb],
     ]
-    const fh = 2.3
+    const fh = Math.max(2.3, B * 0.28)
     plan(b, M.castle, fore, 0, fh)
     plan(
       b,
@@ -259,13 +270,14 @@ export const galleon = defineBuilder(
       // A fighting top: a round platform two thirds up.
       F.cyl(M.mast, 0, m.h * 0.66, m.z, 0.9, 1.0, 0.12, 14)
       tops.push(new THREE.Vector3(0, m.h, m.z))
-      const yards = mi === 0 ? [0.55, 0.85] : [0.4, 0.68, 0.9]
+      const yards = mi === 0 ? [0.5, 0.74, 0.93] : [0.36, 0.6, 0.8, 0.95]
       for (const [k, yf] of yards.entries()) {
         const yy = m.h * yf
-        const half = B * (0.95 - k * 0.22) * (mi === 1 ? 1 : 0.85)
+        const half = B * (0.95 - k * 0.17) * (mi === 1 ? 1 : 0.85)
         beam(b, M.mast, [-half, yy, m.z + 0.25], [half, yy, m.z + 0.25], 0.11, 6, 0.11)
         const drop = Math.max(1.5, (k === 0 ? yy - (base + 3.2) : yy - m.h * yards[k - 1]) * 0.92)
-        if (p.sails === "furled") beam(b, M.sail, [-half * 0.92, yy - 0.2, m.z + 0.35], [half * 0.92, yy - 0.2, m.z + 0.35], 0.22, 6, 0.22)
+        // The topmost sail on each mast is furled to its yard, as a ship lies in harbour with her courses loosed to dry.
+        if (p.sails === "furled" || k === yards.length - 1) beam(b, M.furl, [-half * 0.92, yy - 0.2, m.z + 0.35], [half * 0.92, yy - 0.2, m.z + 0.35], 0.22, 6, 0.22)
         else {
           const torn = p.sails === "torn" && mi === 1 && k === 0
           sail(b, torn ? M.sailTorn : M.sail, 0, yy - 0.12, m.z + 0.42, half * 1.9, drop, torn ? 0.06 : 0.14)
@@ -305,6 +317,27 @@ export const galleon = defineBuilder(
       g.setAttribute("uv", new THREE.Float32BufferAttribute([0, 0, 0.5, 1, 1, 0, 0, 0, 1, 0, 0.5, 1], 2))
       b.add(g, M.sail, null, { uv: "keep" })
       g.dispose()
+    }
+    // The stem: a curved post rising from the waterline at the bow to over the forecastle, carved and gilt, with the
+    // beakhead's rails running out to the figurehead.
+    for (let k = 0; k < 10; k++) {
+      const t0 = k / 10
+      const t1 = (k + 1) / 10
+      const pt = (t: number) => [0, -p.depth * 0.6 + t * (p.depth * 0.6 + fh + 1.4), L / 2 + Math.sin(t * Math.PI * 0.5) * 1.2 - (1 - t) * 0.2] as [number, number, number]
+      beam(b, M.hull, pt(t0), pt(t1), 0.32, 6)
+      beam(b, M.gilt, pt(t0).map((v, i) => (i === 2 ? v + 0.18 : v)) as [number, number, number], pt(t1).map((v, i) => (i === 2 ? v + 0.18 : v)) as [number, number, number], 0.08, 5)
+    }
+    for (const sx of [-1, 1]) {
+      beam(b, M.gilt, [sx * half * 0.8, fh + 0.9, L / 2 - p.fore * 0.6], [0, fh + 0.4, L / 2 + 1.2], 0.05, 5)
+      beam(b, M.rail, [sx * half * 0.8, fh * 0.55, L / 2 - p.fore * 0.6], [0, fh * 0.2, L / 2 + 1.0], 0.07, 5)
+    }
+    // A balustrade round the forecastle.
+    for (let k = 0; k < fore.length - 1; k++) {
+      const [ax, az] = fore[k]
+      const [cx, cz] = fore[k + 1]
+      const n = Math.max(1, Math.round(Math.hypot(cx - ax, cz - az) / 0.26))
+      for (let j = 0; j < n; j++) beam(b, M.rail, [ax + ((cx - ax) * j) / n, fh, az + ((cz - az) * j) / n], [ax + ((cx - ax) * j) / n, fh + 0.85, az + ((cz - az) * j) / n], 0.03, 5)
+      beam(b, M.gilt, [ax, fh + 0.88, az], [cx, fh + 0.88, cz], 0.05, 6)
     }
     // The figurehead: a gilt swan's neck under the bowsprit.
     for (let k = 0; k < 6; k++) {
@@ -371,6 +404,7 @@ export const galleon = defineBuilder(
     mast: "mast",
     sail: "sail",
     sailTorn: "sailTorn",
+    furl: "furl",
     rope: "rope",
     iron: "iron",
     lamp: "lamp",

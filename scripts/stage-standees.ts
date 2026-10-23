@@ -27,7 +27,8 @@ const PORTRAIT_BG = "#3b4256"
 // `seated` paints the figure sitting on the stool it brings, for a tavern's patrons.
 // `pose` replaces the standing pose (a creature on all fours). `magenta` paints and keys on magenta instead of green, for a
 // green subject (a mossy drake).
-type Figure = { out: string; who: string; look: string; ref?: string; head: number; backNote?: string; seated?: boolean; pose?: string; magenta?: boolean }
+// `hue` turns the keyed figure's colours by that many degrees, as when a painting came back warmer than the text.
+type Figure = { out: string; who: string; look: string; ref?: string; head: number; backNote?: string; seated?: boolean; pose?: string; magenta?: boolean; hue?: number }
 const stock = (who: string, look: string, head = 0.13): Figure => ({ out: "", who, look, head })
 // Stock figures stand in for created heroes: one per race and build, dressed for travel with no class gear, so any class
 // reads true. Heads are the share of figure height a portrait frames around.
@@ -426,6 +427,8 @@ const FIGURES: Record<string, Figure> = {
     head: 0.3,
     pose: "the whole creature, head to tail, standing on all four legs and rearing its chest up with the head raised and roaring, facing toward the camera at a slight three-quarter angle, wings half-raised above its back, tail curled tightly round in front of its feet, wings only half-raised and kept close so they fit. The WHOLE creature is small enough in the frame to leave a wide margin, at least 10% of empty background on every side: no wing tip, tail or claw touches or crosses the edge. Eye-level view.",
     magenta: true,
+    // The model paints it gold-brown, which turns orange in the docks' low sun; the text says mossy green.
+    hue: 40,
     backNote:
       "The creature is seen squarely from directly behind, its rump and tail nearest the camera: its back, the row of spines along it, both wings from behind and the thick tail curling at the bottom. The head points AWAY from the camera, so only the back of the skull and the crest show above the shoulders: NO eyes, NO jaws, NO face, NO profile. Same size and stance.",
   },
@@ -604,9 +607,10 @@ async function key(id: string) {
   const f = FIGURES[id]
   const out = join(STAGE, f.out)
   await mkdir(join(out, ".."), { recursive: true })
-  const fr = await cutout((await latest("front", id)).path, f.magenta)
+  const turn = async (img: sharp.Sharp) => (f.hue ? sharp(await img.modulate({ hue: f.hue, saturation: 0.85 }).png().toBuffer()) : img)
+  const fr = await turn(await cutout((await latest("front", id)).path, f.magenta))
   await fr.clone().resize({ height: 2048, fit: "inside", withoutEnlargement: true }).webp({ quality: 90, alphaQuality: 100, effort: 5 }).toFile(`${out}-front.webp`)
-  const bk = await cutout((await latest("back", id)).path, f.magenta)
+  const bk = await turn(await cutout((await latest("back", id)).path, f.magenta))
   await bk.resize({ height: 2048, fit: "inside", withoutEnlargement: true }).webp({ quality: 90, alphaQuality: 100, effort: 5 }).toFile(`${out}-back.webp`)
   // Head and shoulders, centred on the head: the alpha-weighted middle of the figure's top rows.
   const { data, info } = await fr.clone().raw().toBuffer({ resolveWithObject: true })

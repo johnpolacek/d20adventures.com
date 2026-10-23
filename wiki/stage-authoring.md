@@ -111,4 +111,7 @@ The web viewer and the desktop app run the same `packages/stage` renderer and th
 - A back can show a front-only garment. Say in `backNote` that an apron shows only its ties from behind.
 - Keep crowd walker paths clear of buildings and of the confrontations staged in the scenes that use them.
 - Find a walk's blocker by building the set in Node and probing `reachOver` past where the walk stops. A cart's footprint stopped walks across half the quay.
+- Put the painting beside the opening view before calling a set done. Find where the painting's camera stands: the docks painting looks down a channel from a quay across its head, with the ship's bow toward the viewer, which a camera on the quay's long side cannot frame.
+- A ship's side reads grand only when it is seen at an angle and her stem is nearest. Stern-on, a sterncastle reads as a house.
+- Paint sails as one canvas image. The procedural cloth is blotchy at the distances sails are seen from.
 

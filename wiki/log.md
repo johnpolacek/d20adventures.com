@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-23, the docks' quality pass
+
+Review: the docks were not at the bar beside the arrival painting. The opening now frames like the painting, from a quay head looking east along the water with the ship right of centre. The ship is larger, bow toward the viewer, with a painted canvas for her sails, and the water lies 5.5 m down so her hull towers. Small cobbles and worn flags, a crowded harbour of boats, barges and ships, cream-canvas stalls, gulls, golden backlight and haze. The drake reads green, and the wrecked quay is denser. Stage check and desktop tests pass. See [March of Davos in 3D](plans/march-of-davos-sets.md).
+
 ## 2026-10-23, the docks in 3D
 
 Third of the remaining March of Davos sets, for its five dock encounters. A golden harbour quay with the elven ship Star of Faelendar alongside, walkable by her gangway, warehouses with arcades, a treadwheel crane, Warehouse 14 in its corner with the chained crate, and the same quay wrecked after the drake, the cage in the hold eaten through. Harbour builders, a painted far shore, ten standees including the winged forest drake. Stage check and desktop tests pass. Not yet checked in the running app. See [March of Davos in 3D](plans/march-of-davos-sets.md).
