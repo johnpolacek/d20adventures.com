@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-23, Vercel deployment storage
+
+The project filled the Hobby deployment storage. Each deploy carries about 136 MB of `public/`, and every push deploys. Seven older production deploys removed. `vercel.json` now skips builds for wiki-only changes. Retention cannot be set by API on this plan. See [Vercel deployment storage](plans/vercel-deploy-storage.md).
+
 ## 2026-10-23, the Black Market in 3D
 
 The Black Market for encounters 18 and 19: a court with the curtained doorway Garrick guards, and behind it a canvas-roofed lane of stalls and lanterns to the auction house's door, ready for the auction next. Seven builders, a painted stone texture, six standees. An engine fix: shots beyond a set's camera reach were being dragged toward their targets, which had shifted views of the library, the Silver Serpent, the docks and the Lower Districts. Stage check and 78 desktop tests pass. See [March of Davos in 3D](plans/march-of-davos-sets.md).
