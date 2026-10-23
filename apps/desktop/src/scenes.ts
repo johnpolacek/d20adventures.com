@@ -1,3 +1,6 @@
+import ballroomSet from "@d20/stage/sets/realm-of-myr/blackthorn-ballroom.json"
+import ballroomDrakeSet from "@d20/stage/sets/realm-of-myr/blackthorn-ballroom-drake.json"
+import groundsSet from "@d20/stage/sets/realm-of-myr/blackthorn-grounds.json"
 import wineCellarSet from "@d20/stage/sets/realm-of-myr/blackthorn-wine-cellar.json"
 import hallSet from "@d20/stage/sets/realm-of-myr/catacombs-hall.json"
 import labyrinthSet from "@d20/stage/sets/realm-of-myr/catacombs-labyrinth.json"
@@ -37,14 +40,18 @@ import theEscape from "@d20/stage/stagings/covert-cargo/the-escape.json"
 import theFake from "@d20/stage/stagings/covert-cargo/the-fake.json"
 import theShipment from "@d20/stage/stagings/covert-cargo/the-shipment.json"
 import theTransaction from "@d20/stage/stagings/covert-cargo/the-transaction.json"
+import aDistraction from "@d20/stage/stagings/march-of-davos/a-distraction.json"
 import anInvitation from "@d20/stage/stagings/march-of-davos/an-invitation.json"
 import anUnsolicitedOpportunity from "@d20/stage/stagings/march-of-davos/an-unsolicited-opportunity.json"
 import arrivalAtTheDocks from "@d20/stage/stagings/march-of-davos/arrival-at-the-docks.json"
 import besetByStreetUrchins from "@d20/stage/stagings/march-of-davos/beset-by-street-urchins.json"
 import bigEmpty from "@d20/stage/stagings/march-of-davos/big-empty.json"
 import clanConflict from "@d20/stage/stagings/march-of-davos/clan-conflict.json"
+import deathToTheMurderer from "@d20/stage/stagings/march-of-davos/death-to-the-murderer.json"
+import entryToTheBall from "@d20/stage/stagings/march-of-davos/entry-to-the-ball.json"
 import faceToFaceWithSilverhand from "@d20/stage/stagings/march-of-davos/face-to-face-with-silverhand.json"
 import findingTheBlackMarket from "@d20/stage/stagings/march-of-davos/finding-the-black-market.json"
+import insideTheBall from "@d20/stage/stagings/march-of-davos/inside-the-ball.json"
 import intoTheCatacombs from "@d20/stage/stagings/march-of-davos/into-the-catacombs.json"
 import labyrinthineStalls from "@d20/stage/stagings/march-of-davos/labyrinthine-stalls.json"
 import morningAtTheDragonbone from "@d20/stage/stagings/march-of-davos/morning-at-the-dragonbone.json"
@@ -53,15 +60,20 @@ import shadowingSilverhand from "@d20/stage/stagings/march-of-davos/shadowing-si
 import theAftermath from "@d20/stage/stagings/march-of-davos/the-aftermath.json"
 import theAmbush from "@d20/stage/stagings/march-of-davos/the-ambush.json"
 import theBeastEscapes from "@d20/stage/stagings/march-of-davos/the-beast-escapes.json"
+import theBlackthorns from "@d20/stage/stagings/march-of-davos/the-blackthorns.json"
+import theChase from "@d20/stage/stagings/march-of-davos/the-chase.json"
 import theDragonboneInn from "@d20/stage/stagings/march-of-davos/the-dragonbone-inn.json"
 import theEntranceToTheBlackMarket from "@d20/stage/stagings/march-of-davos/the-entrance-to-the-black-market.json"
 import gateStaging from "@d20/stage/stagings/march-of-davos/the-gates-of-kordavos.json"
 import festivalStaging from "@d20/stage/stagings/march-of-davos/the-harvest-festival.json"
 import theHideout from "@d20/stage/stagings/march-of-davos/the-hideout.json"
+import theHuntForTheAssassin from "@d20/stage/stagings/march-of-davos/the-hunt-for-the-assassin.json"
+import theLadyAndTheBishop from "@d20/stage/stagings/march-of-davos/the-lady-and-the-bishop.json"
 import theNewDawn from "@d20/stage/stagings/march-of-davos/the-new-dawn.json"
 import theOldGrandLibrary from "@d20/stage/stagings/march-of-davos/the-old-grand-library.json"
 import theSealedDoor from "@d20/stage/stagings/march-of-davos/the-sealed-door.json"
 import theSilverSerpentTavern from "@d20/stage/stagings/march-of-davos/the-silver-serpent-tavern.json"
+import theSpeech from "@d20/stage/stagings/march-of-davos/the-speech.json"
 import theWineCellar from "@d20/stage/stagings/march-of-davos/the-wine-cellar.json"
 import throughTheLabyrinth from "@d20/stage/stagings/march-of-davos/through-the-labyrinth.json"
 import vengeanceOfTheBlackthorn from "@d20/stage/stagings/march-of-davos/vengeance-of-the-blackthorn.json"
@@ -299,6 +311,88 @@ export const SCENES: Record<string, Scene> = {
       "Night on the waterfront, thick sea mist: a lane of old stone houses runs down to a quay over the harbour. Near the water on the east side stands the abandoned warehouse, weathered boards over a stone ground storey, its windows boarded, its rusted iron door hanging open under a red lantern. Varchk and Kaeleth keep the door. Silverhand crosses the lane toward it. The party watches from the shadows on the west side, up the lane. Crates and barrels are heaped along the warehouse wall toward the quay.",
     party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
     spare: [[-2.2, -4.6]],
+  },
+  // The Blackthorn mansion, bespoke: its grounds by night and the ballroom of the masquerade.
+  "entry-to-the-ball": {
+    set: groundsSet,
+    staging: entryToTheBall,
+    location: "The Blackthorn mansion",
+    where:
+      "Evening at the Blackthorn mansion in the Asterian Quarter: a long front of dressed stone with lit windows and spired corner towers, a portico at the head of a grand staircase. The party has come in through the wrought-iron gates across the cobbled court and stands at the foot of the stair among masked guests. Barok and another guard in black armour with the Blackthorn crest stand at its foot, checking each guest.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[2.4, -4.6]],
+  },
+  "inside-the-ball": {
+    set: ballroomSet,
+    staging: insideTheBall,
+    location: "The Blackthorn ballroom",
+    where:
+      "The masquerade ball: a long hall of marble columns under gilded arches, a painted barrel vault, three great chandeliers, red velvet at the tall windows, banquet tables and a gem display in the west aisle. Masked guests in lavish costumes talk in pairs across the floor. At the far end a stage hung with the house's banners and red drapes, a curtained cage on its west half. Glazed doors in the east wall stand open onto a moonlit balcony. The party has just come in by the grand doors.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[2.3, 5.0]],
+  },
+  "the-blackthorns": {
+    set: ballroomSet,
+    staging: theBlackthorns,
+    location: "The Blackthorn ballroom",
+    where:
+      "The middle of the ballroom floor among masked guests, under the chandeliers. Lady Astrid Blackthorn, in a gold mask and a black gown with a golden wrap, has crossed the floor to the party; Lord Thaddeus holds court a few paces off.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[2.3, 0.4]],
+  },
+  "the-lady-and-the-bishop": {
+    set: ballroomSet,
+    staging: theLadyAndTheBishop,
+    location: "The Blackthorn ballroom",
+    where:
+      "The ballroom by the east colonnade, near a tall curtained window. Seraphina Valtor, white-haired in ivory and green with a gilt mask, and Bishop Nicolai in a silver full mask and gold headdress have come to the party through the crowd.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[3.2, -4.0]],
+  },
+  "a-distraction": {
+    set: ballroomSet,
+    staging: aDistraction,
+    location: "The Blackthorn ballroom",
+    where:
+      "The ballroom with every eye on the floor. Lady Astrid stands at the foot of the stage addressing the guests; the elf bard Aelindor comes in by the grand doors and plays his lyre in the middle of the floor. The party stands in the crowd on the west side, near the colonnade and the way out of the hall.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[-3.8, -10.0]],
+  },
+  "the-speech": {
+    set: ballroomDrakeSet,
+    staging: theSpeech,
+    location: "The Blackthorn ballroom",
+    where:
+      "Lord Thaddeus stands on the stage at the far end of the ballroom, the crowd gathered below. The curtain on the stage's west half is drawn back: the forest drake glares from a great iron cage. Eamon stands in the crowd. The party is among the guests in front of the stage.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[-2.6, -12.4]],
+  },
+  "death-to-the-murderer": {
+    set: ballroomDrakeSet,
+    staging: deathToTheMurderer,
+    location: "The Blackthorn ballroom",
+    where:
+      "Lord Thaddeus on the stage, the caged drake beside him, the crowd's eyes on it. A hooded figure waits at the foot of the stage close to him. Glazed doors in the east wall open onto the balcony. The party is in the crowd in front of the stage.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[-2.6, -12.4]],
+  },
+  "the-chase": {
+    set: groundsSet,
+    staging: theChase,
+    location: "The Blackthorn mansion",
+    where:
+      "The ballroom's balcony on the mansion's east wing, high over the walled garden in the moonlight. A rope hangs from the balustrade to the ground. Below, among flower beds and gravel paths, the hooded figure makes for an old drain grate under the ivy on the east wall. The party stands at the balustrade.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[17.4, -15.9]],
+  },
+  "the-hunt-for-the-assassin": {
+    set: groundsSet,
+    staging: theHuntForTheAssassin,
+    location: "The Blackthorn mansion",
+    where:
+      "The mansion's walled garden by moonlight: gravel paths, flower beds, ivy thick on the east wall. By the wall an old drain grate is set in the paving, runes faintly glowing on its frame. Lady Astrid, now in ranger's leathers, has led the party here; Eamon kneels at the grate working on its seal; two Blackthorn guards hold lanterns.",
+    party: ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"],
+    spare: [[18.6, -6.4]],
   },
   // The cellar kit: Silverhand's back room, and the Blackthorn wine cellar.
   "face-to-face-with-silverhand": {

@@ -605,6 +605,93 @@ const FIGURES: Record<string, Figure> = {
     look: "A tall skeletal warrior, about 1.85 m tall, grey-brown bones with scraps of dried sinew, a fanged skull with faint cold blue light glowing in its hollow eye sockets. Rusted ancient armour: a corroded bronze-and-iron scale shirt hanging in tatters, a dented conical helm with a broken nasal, a rotten fur mantle on one shoulder, rags of a dark tabard with a faded knotwork border. A notched, rusted longsword in its right hand, a split round shield on its left arm. Dust and grave dirt falling from it.",
     head: 0.13,
   },
+  // March of Davos, the Blackthorn mansion: the house and its guards, the masked guests of the ball, the Covenant's
+  // assassin, and Bishop Nicolai masked for the ball and bare-faced at the talks after.
+  "door-guard": {
+    out: "fixtures/march-of-davos/door-guard",
+    who: "The Blackthorn door guard, Human male",
+    look: "A big, broad-shouldered guard captain in his forties, about 1.92 m tall, with tall human proportions and long legs, not a dwarf. A square weathered face, a short copper-red beard, cropped red-brown hair, hard grey eyes. Black lacquered plate armour over mail, a high collar, pauldrons edged in dull gold, a black tabard with the Blackthorn crest of a black thorned tree on gold. Gauntleted hands, one resting on the pommel of a sheathed longsword, the other holding a guest list.",
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726597363187",
+    head: 0.12,
+  },
+  "blackthorn-guard": {
+    out: "fixtures/march-of-davos/blackthorn-guard",
+    who: "A Blackthorn house guard, Human male",
+    look: "A tall, hard-faced house guard of about thirty, about 1.85 m tall, with short dark hair and a clean-shaven jaw. Polished black lacquered armour over dark leather, iron-plated shoulders and bracers, a black tabard stitched with the Blackthorn crest of a black thorned tree on gold. A longsword sheathed at his hip, a halberd held upright in his right hand. Standing at attention.",
+    head: 0.12,
+  },
+  "thaddeus-blackthorn": {
+    out: "fixtures/march-of-davos/thaddeus-blackthorn",
+    who: "Lord Thaddeus Blackthorn, Human male noble, at his masquerade ball",
+    look: "A tall, broad-shouldered nobleman in his late thirties, about 1.88 m tall, with slicked-back dark hair, sharp angular features, a strong jaw and piercing blue eyes behind an ornate gilded half-mask that covers his brow and cheekbones. Immaculate formal dress: a high-collared doublet of midnight blue silk worked with gold thread, a heavy cloak of dark blue lined with gold silk thrown back from one shoulder, a gold medallion with a black thorned tree on his chest, black breeches and polished boots. One hand raised in a gesture to the crowd.",
+    head: 0.13,
+  },
+  "astrid-ball": {
+    out: "fixtures/march-of-davos/astrid-ball",
+    who: "Lady Astrid Blackthorn, Human female noble, at the masquerade ball",
+    look: "A tall young noblewoman in her mid-twenties, about 1.78 m tall, with a sharp, striking face, intense forest-green eyes behind an ornate gold filigree half-mask, dark red lips, and long black hair swept up with a few loose strands. A black velvet gown with a high choker collar and a cameo, black feathered trim at the shoulders, and a voluminous wrap of rich golden-yellow brocade silk draped round her arms. Proud and watchful.",
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726361535587",
+    head: 0.13,
+  },
+  "seraphina-masked": {
+    out: "fixtures/march-of-davos/seraphina-masked",
+    who: "Seraphina Valtor, Human female clan matriarch, at the masquerade ball",
+    look: "A tall, upright noblewoman in her late sixties, about 1.70 m tall, with voluminous white hair swept up and back, a lined, proud face and a knowing half-smile, keen dark eyes behind an ornate bronze-gold filigree half-mask set with a small amethyst, gold drop earrings. A heavy gown of ivory brocade worked with gold thread, a high embroidered collar, a dark green velvet mantle on her shoulders, rings on her fingers. Her hands folded before her.",
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726609419379",
+    head: 0.13,
+    backNote:
+      "Seen squarely from directly behind, her whole body facing AWAY from us: the back of her white hair with the mask's ribbon tied in it, the green velvet mantle hanging from her shoulders down her back, and the gown's brocade skirt below it. Her hands, face and the front of the gown are NOT visible.",
+  },
+  "bishop-nicolai-masked": {
+    out: "fixtures/march-of-davos/bishop-nicolai-masked",
+    who: "Bishop Nicolai Petrov of the Church of Valkara, Human male, at the masquerade ball",
+    look: "A tall, spare churchman in his fifties, about 1.82 m tall, wearing a smooth full-face mask of polished silver with dark eye slits under a tall headdress of gold brocade set with small jewels. A long black velvet cassock-coat with a high collar trimmed in gold embroidery, a black mantle, a silver chain with the round symbol of Thyra on his chest, one hand fingering the chain. Grey hair showing at the nape.",
+    ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726609448307",
+    head: 0.13,
+  },
+  "bishop-nicolai": {
+    out: "fixtures/march-of-davos/bishop-nicolai",
+    who: "Bishop Nicolai Petrov of the Church of Valkara, Human male",
+    look: "A tall, spare churchman in his fifties, about 1.82 m tall, with a narrow, lined face, a neat grey beard, close-cut grey hair, heavy-lidded measuring eyes. A long black cassock with a high collar, a white stole embroidered in gold with Valkaran knotwork, a silver chain with the round symbol of Thyra on his chest, a plain black skullcap. Hands clasped before him.",
+    head: 0.13,
+  },
+  aelindor: {
+    out: "fixtures/march-of-davos/aelindor",
+    who: "Aelindor, Elf male bard",
+    look: "A tall, ethereal elf of indeterminate age, about 1.85 m tall, with long shimmering silver hair to his waist, pointed ears, a fine pale face and grey eyes. Long flowing robes of deep green and silver, layered and embroidered with leaves, a silver circlet, and a half-mask of silver leaves pushed up on his brow for the ball. He plays an ornately carved lyre of dark heartwood held against his chest, fingers on the strings.",
+    head: 0.13,
+  },
+  "covenant-assassin": {
+    out: "fixtures/march-of-davos/covenant-assassin",
+    who: "The Covenant of the Cowl assassin, Human male",
+    look: "A lean, wiry man of about thirty, about 1.80 m tall, his face hidden in the shadow of a deep black hood and a black cloth mask over his nose and mouth, only cold pale eyes showing. A long black hooded cloak of fine wool split for running, close-fitting black leathers with many straps, a coil of black rope with a grappling hook at his hip, black gloves, soft black boots. A curved poisoned dagger in his right hand, its blade faintly green.",
+    head: 0.13,
+    backNote: "His deep hood is up and covers the whole back of his head. The black cloak hangs down his back to the calves; the coil of rope shows at his hip.",
+  },
+  "guest-crimson": {
+    out: "fixtures/march-of-davos/guest-crimson",
+    who: "A masked guest in crimson, Human female noble, at the Blackthorn masquerade ball",
+    look: "A slim noblewoman of about thirty, about 1.68 m tall, with auburn hair pinned up with pearls, a full-face porcelain mask painted with gold leaf. A floor-length gown of crimson velvet with a deep red hooded cloak trimmed in gold thread, long gloves, a closed fan in one hand.",
+    head: 0.13,
+  },
+  "guest-ivory": {
+    out: "fixtures/march-of-davos/guest-ivory",
+    who: "A masked guest in ivory, Human female noble, at the Blackthorn masquerade ball",
+    look: "A tall young noblewoman of about twenty-five, about 1.72 m tall, with long pale blonde hair under a sheer ivory veil, a silver lace mask over her eyes. A gown of ivory silk embroidered in gold and crimson, a long trailing sleeve, a string of pearls.",
+    head: 0.13,
+  },
+  "guest-raven": {
+    out: "fixtures/march-of-davos/guest-raven",
+    who: "A masked guest in black, Human male noble, at the Blackthorn masquerade ball",
+    look: "A tall nobleman of about forty, about 1.85 m tall, in a long black velvet coat with a high collar, a black beaked raven half-mask, a black tricorne hat, silver buttons and a silver-topped cane. A dark beard.",
+    head: 0.13,
+  },
+  "guest-gold": {
+    out: "fixtures/march-of-davos/guest-gold",
+    who: "A masked guest in gold, Human male noble, at the Blackthorn masquerade ball",
+    look: "A stout, wealthy nobleman of about fifty, about 1.76 m tall, a gilded sun mask with rays round his face, a doublet of gold brocade, a short crimson cape, a heavy gold chain, a goblet of wine in one hand.",
+    head: 0.13,
+  },
 }
 for (const [id, f] of Object.entries(FIGURES)) f.out ||= `heroes/${id}`
 

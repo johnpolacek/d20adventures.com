@@ -1,0 +1,150 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "march-of-davos/the-chase",
+  "set": "realm-of-myr/blackthorn-grounds",
+  "cast": [
+    {
+      "id": "branka-stoneveil",
+      "name": "Branka Stoneveil",
+      "role": "Dwarf fighter",
+      "height": 1.38,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/branka-front.webp",
+        "back": "/stage/fixtures/march-of-davos/branka-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/branka-portrait.jpg"
+      },
+      "at": [
+        13.2,
+        -15.9
+      ],
+      "facing": [
+        23.8,
+        -9.4
+      ],
+      "y": 5.4
+    },
+    {
+      "id": "cassia-verane",
+      "name": "Cassia Verane",
+      "role": "Human wizard",
+      "height": 1.72,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/cassia-front.webp",
+        "back": "/stage/fixtures/march-of-davos/cassia-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/cassia-portrait.jpg"
+      },
+      "at": [
+        14.4,
+        -15.7
+      ],
+      "facing": [
+        23.8,
+        -9.4
+      ],
+      "y": 5.4
+    },
+    {
+      "id": "yeva-softstep",
+      "name": "Yeva Softstep",
+      "role": "Halfling rogue",
+      "height": 1.08,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/yeva-front.webp",
+        "back": "/stage/fixtures/march-of-davos/yeva-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/yeva-portrait.jpg"
+      },
+      "at": [
+        15.6,
+        -15.9
+      ],
+      "facing": [
+        23.8,
+        -9.4
+      ],
+      "y": 5.4
+    },
+    {
+      "id": "milos-radan",
+      "name": "Milos Radan",
+      "role": "Human cleric",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/milos-front.webp",
+        "back": "/stage/fixtures/march-of-davos/milos-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/milos-portrait.jpg"
+      },
+      "at": [
+        16.6,
+        -15.7
+      ],
+      "facing": [
+        23.8,
+        -9.4
+      ],
+      "y": 5.4
+    },
+    {
+      "id": "covenant-assassin",
+      "name": "A hooded figure",
+      "role": "Covenant assassin",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/covenant-assassin-front.webp",
+        "back": "/stage/fixtures/march-of-davos/covenant-assassin-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/covenant-assassin-portrait.jpg"
+      },
+      "at": [
+        20.6,
+        -10.4
+      ],
+      "facing": [
+        23.8,
+        -9.4
+      ]
+    }
+  ],
+  "shots": {
+    "party": {
+      "subjects": [
+        "branka-stoneveil",
+        "cassia-verane",
+        "yeva-softstep",
+        "milos-radan"
+      ],
+      "offset": [
+        -1.6,
+        2.2,
+        -1.4
+      ],
+      "target": [
+        3,
+        -2,
+        6
+      ],
+      "relative": "world",
+      "fov": 56,
+      "label": "Party"
+    },
+    "assassin": {
+      "subject": "covenant-assassin",
+      "distance": 3.4,
+      "angle": 30,
+      "height": 1.8,
+      "lookHeight": 1.4,
+      "fov": 44,
+      "label": "The hooded figure"
+    }
+  },
+  "shot": "balcony",
+  "exits": [
+    {
+      "cast": "covenant-assassin",
+      "when": "disappears",
+      "to": [
+        23.8,
+        -9.4
+      ]
+    }
+  ]
+}

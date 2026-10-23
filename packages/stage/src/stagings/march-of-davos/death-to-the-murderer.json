@@ -1,0 +1,278 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "march-of-davos/death-to-the-murderer",
+  "set": "realm-of-myr/blackthorn-ballroom-drake",
+  "cast": [
+    {
+      "id": "branka-stoneveil",
+      "name": "Branka Stoneveil",
+      "role": "Dwarf fighter",
+      "height": 1.38,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/branka-front.webp",
+        "back": "/stage/fixtures/march-of-davos/branka-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/branka-portrait.jpg"
+      },
+      "at": [
+        -1.8,
+        -13
+      ],
+      "facing": [
+        1,
+        -22
+      ]
+    },
+    {
+      "id": "cassia-verane",
+      "name": "Cassia Verane",
+      "role": "Human wizard",
+      "height": 1.72,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/cassia-front.webp",
+        "back": "/stage/fixtures/march-of-davos/cassia-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/cassia-portrait.jpg"
+      },
+      "at": [
+        -0.9,
+        -13.4
+      ],
+      "facing": [
+        1,
+        -22
+      ]
+    },
+    {
+      "id": "yeva-softstep",
+      "name": "Yeva Softstep",
+      "role": "Halfling rogue",
+      "height": 1.08,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/yeva-front.webp",
+        "back": "/stage/fixtures/march-of-davos/yeva-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/yeva-portrait.jpg"
+      },
+      "at": [
+        -1.4,
+        -12.2
+      ],
+      "facing": [
+        1,
+        -22
+      ]
+    },
+    {
+      "id": "milos-radan",
+      "name": "Milos Radan",
+      "role": "Human cleric",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/milos-front.webp",
+        "back": "/stage/fixtures/march-of-davos/milos-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/milos-portrait.jpg"
+      },
+      "at": [
+        -0.2,
+        -12.8
+      ],
+      "facing": [
+        1,
+        -22
+      ]
+    },
+    {
+      "id": "thaddeus-blackthorn",
+      "name": "Lord Thaddeus Blackthorn",
+      "role": "Lord of the house",
+      "height": 1.88,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/thaddeus-blackthorn-front.webp",
+        "back": "/stage/fixtures/march-of-davos/thaddeus-blackthorn-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/thaddeus-blackthorn-portrait.jpg"
+      },
+      "at": [
+        2.4,
+        -22.6
+      ],
+      "facing": [
+        0,
+        -10
+      ],
+      "y": 0.9
+    },
+    {
+      "id": "covenant-assassin",
+      "name": "A hooded figure",
+      "role": "Covenant assassin",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/covenant-assassin-front.webp",
+        "back": "/stage/fixtures/march-of-davos/covenant-assassin-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/covenant-assassin-portrait.jpg"
+      },
+      "at": [
+        3.6,
+        -20.4
+      ],
+      "facing": [
+        2.4,
+        -22.6
+      ]
+    },
+    {
+      "id": "forest-drake",
+      "name": "The forest drake",
+      "role": "Caged drake",
+      "height": 3,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/forest-drake-front.webp",
+        "back": "/stage/fixtures/march-of-davos/forest-drake-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/forest-drake-portrait.jpg"
+      },
+      "at": [
+        -3.4,
+        -23.7
+      ],
+      "facing": [
+        0,
+        0
+      ],
+      "y": 0.96
+    },
+    {
+      "id": "guest-gold",
+      "name": "A gentleman in a sun mask",
+      "role": "Masked guest",
+      "height": 1.76,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/guest-gold-front.webp",
+        "back": "/stage/fixtures/march-of-davos/guest-gold-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/guest-gold-portrait.jpg"
+      },
+      "at": [
+        3.6,
+        -12.4
+      ],
+      "facing": [
+        2.4,
+        -22.6
+      ]
+    },
+    {
+      "id": "guest-ivory",
+      "name": "A lady in ivory",
+      "role": "Masked guest",
+      "height": 1.72,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/guest-ivory-front.webp",
+        "back": "/stage/fixtures/march-of-davos/guest-ivory-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/guest-ivory-portrait.jpg"
+      },
+      "at": [
+        -3.2,
+        -14.6
+      ],
+      "facing": [
+        2.4,
+        -22.6
+      ]
+    }
+  ],
+  "shots": {
+    "party": {
+      "subjects": [
+        "branka-stoneveil",
+        "cassia-verane",
+        "yeva-softstep",
+        "milos-radan"
+      ],
+      "offset": [
+        2.2,
+        1.8,
+        3.6
+      ],
+      "target": [
+        0,
+        1.2,
+        0
+      ],
+      "relative": "world",
+      "fov": 54,
+      "label": "Party"
+    },
+    "thaddeus": {
+      "subject": "thaddeus-blackthorn",
+      "distance": 4.2,
+      "angle": 0,
+      "height": 1,
+      "lookHeight": 1.7,
+      "fov": 46,
+      "label": "Lord Thaddeus"
+    },
+    "assassin": {
+      "subject": "covenant-assassin",
+      "distance": 2.6,
+      "angle": 20,
+      "height": 1.6,
+      "lookHeight": 1.6,
+      "fov": 44,
+      "label": "The assassin"
+    },
+    "fall": {
+      "position": [
+        4.6,
+        2.4,
+        -19.2
+      ],
+      "target": [
+        2.4,
+        0.9,
+        -22.8
+      ],
+      "fov": 50,
+      "label": "Thaddeus falls"
+    },
+    "balcony": {
+      "position": [
+        5.4,
+        1.7,
+        -5.6
+      ],
+      "target": [
+        12,
+        1.3,
+        -8
+      ],
+      "fov": 56,
+      "label": "The balcony"
+    }
+  },
+  "shot": "stage",
+  "exits": [
+    {
+      "cast": "thaddeus-blackthorn",
+      "when": "gasps",
+      "lands": [
+        2.4,
+        -24.2
+      ],
+      "shot": "fall"
+    },
+    {
+      "cast": "covenant-assassin",
+      "when": "races for the balcony",
+      "via": [
+        [
+          4.4,
+          -8
+        ],
+        [
+          7.4,
+          -8
+        ]
+      ],
+      "to": "balcony",
+      "shot": "balcony"
+    }
+  ]
+}

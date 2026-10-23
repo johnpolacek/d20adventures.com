@@ -80,7 +80,7 @@ test("every authored scene is a real encounter, and every festival character has
   }
 })
 
-test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the Old Grand Library, the Silver Serpent, the docks, the Lower Districts, the Black Market, the street, cellar and tunnel kits have their scenes, and an encounter without one falls back to story view", async () => {
+test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the Old Grand Library, the Silver Serpent, the docks, the Lower Districts, the Black Market, the street, cellar and tunnel kits and the Blackthorn mansion have their scenes, and an encounter without one falls back to story view", async () => {
   const run = await setup()
   try {
     // The heroes wait in the line alone, then meet Garlan at the front.
@@ -173,6 +173,19 @@ test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the 
     const party = run.store.current().characters
     assert.match(spatialContext("the-new-dawn", party, {}) ?? "", /Key of Ilmarin[\s\S]*the balcony/)
     assert.match(spatialContext("vengeance-of-the-blackthorn", party, {}) ?? "", /coffin[\s\S]*the bier/)
+    // The Blackthorn mansion.
+    for (const [encounter, where] of [
+      ["entry-to-the-ball", /grand staircase[\s\S]*the foot of the grand staircase/],
+      ["inside-the-ball", /masquerade[\s\S]*the grand doors/],
+      ["the-blackthorns", /Lady Astrid[\s\S]*the middle of the ballroom/],
+      ["the-lady-and-the-bishop", /Seraphina[\s\S]*the window by the colonnade/],
+      ["a-distraction", /Aelindor[\s\S]*the foot of the stage/],
+      ["the-speech", /drake[\s\S]*the curtained cage/],
+      ["death-to-the-murderer", /hooded figure[\s\S]*the doors to the balcony/],
+      ["the-chase", /rope[\s\S]*the drain grate under the ivy/],
+      ["the-hunt-for-the-assassin", /drain grate[\s\S]*the drain grate under the ivy/],
+    ] as const)
+      assert.match(spatialContext(encounter, party, {}) ?? "", where, encounter)
     // The wine cellar, below the mansion.
     assert.match(spatialContext("the-wine-cellar", party, {}) ?? "", /barrel vault[\s\S]*the rack on the far wall/)
     // The catacombs, reached from the mansion's grounds.

@@ -21,8 +21,8 @@ Encounters 1 to 7 already had sets: the gate, the harvest square, the Dragonbone
 | 18 to 19 | The Black Market | Done 2026-10-23 |
 | 20 to 22 | The auction | Next. A hall behind the Black Market lane's far door |
 | 23 to 26 | Silverhand's trail, the hideout, the ambush | Street and cellar kits done 2026-10-23 |
-| 27 to 39 | The Blackthorn mansion: front, ballroom, halls, chambers, wine cellar | Bespoke. The wine cellar is the cellar kit, done 2026-10-23 |
-| 40 to 44 | The catacombs | Tunnel kit done 2026-10-23 for 41 to 44. The grate at 40 is the mansion's grounds |
+| 27 to 39 | The Blackthorn mansion: front, ballroom, halls, chambers, wine cellar | Bespoke. Grounds, ballroom and wine cellar done 2026-10-23; the halls and chambers next |
+| 40 to 44 | The catacombs | Tunnel kit done 2026-10-23. The grate at 40 is the mansion's grounds, done |
 | 45 to 46 | The forgotten temple | Bespoke |
 | 47 to 49 | The aftermath | Street kit done 2026-10-23 for 47 and 48. 49 reuses the library |
 
@@ -99,6 +99,19 @@ Done 2026-10-23. `scripts/stage-sets/kits/tunnel.ts` builds tunnels and caves fr
 - At ultra, DPR 2: 63 to 97 draw calls, under 0.04M rendered triangles, 16 to 32 fps.
 - Desktop maps the four encounters. 78 desktop tests pass. Not yet checked in the running desktop app.
 - Left: the labyrinth is darker than its painting, and its crystals read as pale shards.
+
+## The Blackthorn mansion
+
+Bespoke, written by `scripts/stage-sets/blackthorn-mansion.ts`. The ballroom and the grounds done 2026-10-23; the stair hall, the corridor and the study next.
+
+- `blackthorn-ballroom`: an 18 by 34 m hall on the first floor. Fluted marble columns under gilded arches, a painted barrel vault, three chandeliers, red velvet at the tall windows, banquet tables and a gem display, a stage with banners and drapes, and a curtained cage on its west half. Glazed doors in the east wall open onto a moonlit balcony. The hall is a `room` lit by its own eight lamps.
+- `blackthorn-ballroom-drake`: the same hall with the cage's curtain drawn back and the forest drake inside, for The Speech and Death to the Murderer. Thaddeus stands raised on the stage; he falls there, and the assassin runs out through the colonnade to the balcony.
+- `blackthorn-grounds`: the house by night under a high moon. A long front of dressed stone with lit, mullioned windows, spired corner towers, a portico over a grand stair, a cobbled court, wrought-iron gates open on a street of townhouses. East of the house a walled garden under the ballroom balcony: flower beds, gravel paths, ivy, the drain grate with faint runes, a rope hanging from the balustrade. Entry to the Ball, The Chase from the balcony, and The Hunt for the Assassin.
+- Masked guests are standees in four costumes, each used twice; the crowd's figures are kept to the far end of the hall, since they read as travellers with packs.
+- Standees: the door guard, a Blackthorn guard, Thaddeus masked, Astrid in her ball gown and gold mask, Seraphina and Bishop Nicolai masked, the bishop bare-faced for the talks, Aelindor with his lyre, the Covenant assassin, and four masked guests.
+- `pnpm stage:check` passes, every walk clear or blocked only by the stage and the cage.
+- At ultra, DPR 2: 104 to 129 draw calls, 0.07M to 0.20M rendered triangles, 22 to 33 fps.
+- Desktop maps the nine encounters. 78 desktop tests pass. Not yet checked in the running desktop app.
 
 ## The Old Grand Library
 
