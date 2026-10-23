@@ -15,8 +15,8 @@ Encounters 1 to 7 already had sets: the gate, the harvest square, the Dragonbone
 | Encounters | Location | Status |
 |---|---|---|
 | 8 | The Old Grand Library and its private archives | Done 2026-10-23 |
-| 9 | The Silver Serpent Tavern | Next |
-| 10 to 14 | The docks | |
+| 9 | The Silver Serpent Tavern | Done 2026-10-23 |
+| 10 to 14 | The docks | Next |
 | 15 to 17 | The lower districts | |
 | 18 to 19 | The black market | |
 | 20 to 22 | The auction | |
@@ -40,3 +40,18 @@ Source: the encounter's painting (a tall hall of dark gilt bookcases two storeys
 - `pnpm stage:check` passes, 144 of 144 walks clear. At ultra, DPR 2: 124 to 137 draw calls, 0.50M rendered triangles, 26 to 32 fps.
 - Desktop maps the encounter with a `where` line. 78 desktop tests pass.
 - Not yet seen in the running desktop app.
+
+## The Silver Serpent Tavern
+
+Source: the encounter's painting (a long, dark timber hall packed with sailors, glowing amber panels, ship's lanterns, a hanging ring-lamp with a brass globe, long candlelit tables either side of an aisle, and a great arch at the far end bright with harbour fog and smoke), its intro (sticky floor, a sea map carved into a wall, nautical memorabilia behind the bar) and the legacy notes (Harron at the bar, a burly dockworker and his companions at a table).
+
+- Set `realm-of-myr/silver-serpent-tavern`, staging `the-silver-serpent-tavern`, written by `scripts/stage-sets/silver-serpent-tavern.ts`.
+- The hall is 12 by 19 m under boards on heavy beams and posts with knee braces. The far end is a 4.6 m arch onto a foggy quay with ships and warehouses, and the riverfront backdrop beyond. Cold daylight lies along the aisle; inside it is dark but for lanterns, candles, the ring-lamp and the amber panels.
+- The bar runs down the east side with Harron's shelves and kegs, under a silver sea serpent on an oak board. The carved sea map, 5.6 m wide, fills the west wall over the dockworkers' table. A ship's wheel, an anchor, fishing nets and shelves of curios dress the walls.
+- New builders in `packages/stage/src/builders/nautical.ts`: `serpent`, `shipWheel`, `anchor`.
+- Painted textures: the carved sea map, a fishing net cut-out, two backlit amber panels.
+- Standees: Harron, a burly dockworker and two companions seated, a smuggler in a tricorn. The inn's seated sailor, merchant and two hooded strangers return as patrons. Fifteen crowd figures fill the far half and the arch.
+- `pnpm stage:check` passes. 130 of 260 walks are clear: the rest are walks to people seated on the wall side of a table and to Harron behind his bar, which stop at the table or counter. Every walk to a place is clear.
+- At ultra, DPR 2: about 150 to 170 draw calls, 0.24M rendered triangles, about 31 fps. 0.12M static triangles.
+- The camera stays inside the tavern. Seen from the quay, the room lit by the open sky's hemisphere read as flat grey.
+- Desktop maps the encounter with a `where` line. 78 desktop tests pass. Not yet seen in the running desktop app.

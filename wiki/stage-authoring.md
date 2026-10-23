@@ -102,3 +102,6 @@ The web viewer and the desktop app run the same `packages/stage` renderer and th
 - Paint a book's spine once, pale, and tint it into many bindings. Real book boxes with a painted spine read as a library at every distance.
 - The image model draws Earth when asked for a world map, and a wolf when told the land is shaped like one. Name the coastline's features instead.
 - Light from a high window leads the eye in a hall. The library's south sun runs down the floor to the red door, as the painting does.
+- Hemisphere light has no roof. From outside a building with an open end, the room inside reads as flat grey. Keep the camera inside such a room with `camera.min` and `max`.
+- Fog fills interiors too. A thick harbour fog turned the tavern's far half pale grey. Keep fog thin and let a cold room light at the opening and a glow shaft carry the haze.
+- Stand posts between tables, not in the aisle. Posts down the aisle's middle stopped every walk from the door.

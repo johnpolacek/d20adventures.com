@@ -333,3 +333,5 @@ See [the plan](plans/march-of-davos-sets.md).
 - `image` material: a painting laid by the builder's uv, tinted, with `glow` (lit from within by its own colours, no shadow) and `double`.
 - Library builders: `panel`, `archHead`, `bookcase`, `vault`, `cupola`, `gallery`, `column`, `desk`, `armchair`, `globe`, `candleStand`. `beam` takes `open`, and `chandelier` drops up to 12 m.
 - Measured: the Old Grand Library 0.25M static triangles, 0.50M rendered with shadows, about 130 draw calls.
+- Nautical builders: `serpent` (a sea serpent in a wall's plane, for a sign), `shipWheel`, `anchor`.
+- Measured: the Silver Serpent Tavern 0.12M static triangles, 0.24M rendered, about 160 draw calls.

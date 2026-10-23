@@ -80,7 +80,7 @@ test("every authored scene is a real encounter, and every festival character has
   }
 })
 
-test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn and the Old Grand Library have their scenes, and an encounter without one falls back to story view", async () => {
+test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the Old Grand Library and the Silver Serpent have their scenes, and an encounter without one falls back to story view", async () => {
   const run = await setup()
   try {
     // The heroes wait in the line alone, then meet Garlan at the front.
@@ -117,6 +117,7 @@ test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn and t
       ["an-unsolicited-opportunity", ["beric", "eamon"], /Dragonbone Inn[\s\S]*the corner table/],
       ["morning-at-the-dragonbone", ["bram", "elara"], /Dragonbone Inn[\s\S]*the corner table/],
       ["the-old-grand-library", ["eldrin-varokich", "sister-danica"], /Old Grand Library[\s\S]*the red door/],
+      ["the-silver-serpent-tavern", ["harron"], /Silver Serpent[\s\S]*the carved sea map/],
     ] as const) {
       await advance(run.store, encounter)
       const here = run.store.current()
@@ -130,9 +131,9 @@ test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn and t
       }
       assert.match(spatialContext(here.encounterId, here.characters, {}) ?? "", where)
     }
-    await advance(run.store, "the-silver-serpent-tavern")
+    await advance(run.store, "arrival-at-the-docks")
     const turn = run.store.current()
-    assert.equal(turn.encounterId, "the-silver-serpent-tavern")
+    assert.equal(turn.encounterId, "arrival-at-the-docks")
     assert.equal(sceneFor(turn.encounterId), undefined)
     assert.equal(spatialContext(turn.encounterId, turn.characters, {}), undefined)
     // Story view keeps the party's faces from the authored scenes.

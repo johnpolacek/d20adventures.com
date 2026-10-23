@@ -41,6 +41,7 @@ type Texture = {
   tileX?: boolean
 }
 const LIBRARY = "public/stage/art/march-of-davos/the-old-grand-library.webp"
+const SERPENT = "public/stage/art/march-of-davos/the-silver-serpent-tavern.webp"
 const TEXTURES: Record<string, Texture> = {
   "boards-weathered": {
     subject:
@@ -200,6 +201,43 @@ const TEXTURES: Record<string, Texture> = {
     whole: true,
     aspect: "9:16",
     out: [576, 1024],
+  },
+  // The Silver Serpent, from its painting: dark tarred timber, amber lamplight, sea fog through the far arch.
+  "sea-map-carved": {
+    subject:
+      "a large old map of a sea CARVED in low relief into dark weathered oak planks, seen straight on: raised coastlines with harbours and rocky islands, carved waves filling the sea, a coiling sea serpent among the waves, two small sailing ships, a compass rose in one corner, rhumb lines cut into the wood, worn smooth and dark with age and pipe smoke, faint traces of old blue and gold paint in the grooves, the plank seams running across it",
+    ref: SERPENT,
+    crop: [0.0, 0.2, 0.3, 0.4],
+    whole: true,
+    aspect: "16:9",
+    out: [2048, 1152],
+  },
+  "fishing-net": {
+    subject:
+      "an old knotted fishing net hanging from the top edge of the frame in loose folds and sags, filling most of the frame: brown tarred hemp cord in a diamond mesh about a hand wide, knots at every crossing, a few cork floats and one small glass float tied along the top, frayed at the bottom edge",
+    ref: SERPENT,
+    crop: [0.7, 0.05, 0.3, 0.4],
+    cutout: true,
+    key: "magenta",
+    size: 1024,
+  },
+  "amber-panel-serpent": {
+    subject:
+      "a backlit painted panel of amber-coloured horn and oiled parchment in a dark wooden frame, glowing warm orange from a lamp behind it, painted on it in dark brown: a great sea serpent coiling round a sailing ship on stormy waves, the light glowing brightest in the middle",
+    ref: SERPENT,
+    crop: [0.3, 0.1, 0.1, 0.12],
+    whole: true,
+    aspect: "3:4",
+    out: [768, 1024],
+  },
+  "amber-panel-sailors": {
+    subject:
+      "a backlit painted panel of amber-coloured horn and oiled parchment in a dark wooden frame, glowing warm orange from a lamp behind it, painted on it in dark brown: a crowd of sailors and smugglers drinking and singing round a table, a ship's lantern above them, the light glowing brightest in the middle",
+    ref: SERPENT,
+    crop: [0.1, 0.25, 0.1, 0.15],
+    whole: true,
+    aspect: "4:3",
+    out: [1024, 768],
   },
   "door-thyra": {
     subject:

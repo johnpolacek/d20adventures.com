@@ -13,6 +13,7 @@ export const SETS: Record<string, () => Promise<unknown>> = {
   "realm-of-myr/dragonbone-inn": () => import("./realm-of-myr/dragonbone-inn.json").then((m) => m.default),
   "realm-of-myr/dragonbone-inn-morning": () => import("./realm-of-myr/dragonbone-inn-morning.json").then((m) => m.default),
   "realm-of-myr/old-grand-library": () => import("./realm-of-myr/old-grand-library.json").then((m) => m.default),
+  "realm-of-myr/silver-serpent-tavern": () => import("./realm-of-myr/silver-serpent-tavern.json").then((m) => m.default),
 }
 export const STAGINGS: Record<string, () => Promise<unknown>> = {
   "march-of-davos/the-gates-of-kordavos": () => import("../stagings/march-of-davos/the-gates-of-kordavos.json").then((m) => m.default),
@@ -22,6 +23,7 @@ export const STAGINGS: Record<string, () => Promise<unknown>> = {
   "march-of-davos/an-unsolicited-opportunity": () => import("../stagings/march-of-davos/an-unsolicited-opportunity.json").then((m) => m.default),
   "march-of-davos/morning-at-the-dragonbone": () => import("../stagings/march-of-davos/morning-at-the-dragonbone.json").then((m) => m.default),
   "march-of-davos/the-old-grand-library": () => import("../stagings/march-of-davos/the-old-grand-library.json").then((m) => m.default),
+  "march-of-davos/the-silver-serpent-tavern": () => import("../stagings/march-of-davos/the-silver-serpent-tavern.json").then((m) => m.default),
   "the-midnight-summons/broken-silence": () => import("../stagings/the-midnight-summons/broken-silence.json").then((m) => m.default),
   "the-midnight-summons/owlbear-confrontation": () => import("../stagings/the-midnight-summons/owlbear-confrontation.json").then((m) => m.default),
   "the-midnight-summons/timely-rescue": () => import("../stagings/the-midnight-summons/timely-rescue.json").then((m) => m.default),

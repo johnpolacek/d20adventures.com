@@ -1,0 +1,317 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "march-of-davos/the-silver-serpent-tavern",
+  "set": "realm-of-myr/silver-serpent-tavern",
+  "cast": [
+    {
+      "id": "branka-stoneveil",
+      "name": "Branka Stoneveil",
+      "role": "Dwarf fighter",
+      "height": 1.38,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/branka-front.webp",
+        "back": "/stage/fixtures/march-of-davos/branka-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/branka-portrait.jpg"
+      },
+      "at": [
+        -2.9,
+        4.3
+      ],
+      "facing": [
+        -0.5,
+        -4
+      ]
+    },
+    {
+      "id": "cassia-verane",
+      "name": "Cassia Verane",
+      "role": "Human wizard",
+      "height": 1.72,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/cassia-front.webp",
+        "back": "/stage/fixtures/march-of-davos/cassia-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/cassia-portrait.jpg"
+      },
+      "at": [
+        -2,
+        4.75
+      ],
+      "facing": [
+        -0.5,
+        -4
+      ]
+    },
+    {
+      "id": "yeva-softstep",
+      "name": "Yeva Softstep",
+      "role": "Halfling rogue",
+      "height": 1.08,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/yeva-front.webp",
+        "back": "/stage/fixtures/march-of-davos/yeva-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/yeva-portrait.jpg"
+      },
+      "at": [
+        -1,
+        4.65
+      ],
+      "facing": [
+        -0.5,
+        -4
+      ]
+    },
+    {
+      "id": "milos-radan",
+      "name": "Milos Radan",
+      "role": "Human cleric",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/milos-front.webp",
+        "back": "/stage/fixtures/march-of-davos/milos-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/milos-portrait.jpg"
+      },
+      "at": [
+        -0.4,
+        3.9
+      ],
+      "facing": [
+        -0.5,
+        -4
+      ]
+    },
+    {
+      "id": "harron",
+      "name": "The bartender",
+      "role": "Bartender",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/harron-front.webp",
+        "back": "/stage/fixtures/march-of-davos/harron-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/harron-portrait.jpg"
+      },
+      "at": [
+        4.75,
+        -2.6
+      ],
+      "facing": [
+        2,
+        -2
+      ]
+    },
+    {
+      "id": "dockworker-boss",
+      "name": "A burly dockworker",
+      "role": "Dockworker",
+      "height": 1.32,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/dockworker-boss-front.webp",
+        "back": "/stage/fixtures/march-of-davos/dockworker-boss-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/dockworker-boss-portrait.jpg"
+      },
+      "at": [
+        -2.55,
+        -2
+      ],
+      "facing": [
+        -1.2,
+        1
+      ]
+    },
+    {
+      "id": "dockworker-a",
+      "name": "A dockworker",
+      "role": "Dockworker",
+      "height": 1.32,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/dockworker-a-front.webp",
+        "back": "/stage/fixtures/march-of-davos/dockworker-a-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/dockworker-a-portrait.jpg"
+      },
+      "at": [
+        -2.55,
+        -2.95
+      ],
+      "facing": [
+        -3.3,
+        -2.2
+      ]
+    },
+    {
+      "id": "dockworker-b",
+      "name": "A dockworker",
+      "role": "Dockworker",
+      "height": 1.32,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/dockworker-b-front.webp",
+        "back": "/stage/fixtures/march-of-davos/dockworker-b-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/dockworker-b-portrait.jpg"
+      },
+      "at": [
+        -4.05,
+        -2.5
+      ],
+      "facing": [
+        -3.3,
+        -2.2
+      ]
+    },
+    {
+      "id": "patron-sailor",
+      "name": "A river sailor",
+      "role": "Patron",
+      "height": 1.32,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/patron-sailor-front.webp",
+        "back": "/stage/fixtures/march-of-davos/patron-sailor-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/patron-sailor-portrait.jpg"
+      },
+      "at": [
+        -4.05,
+        -5.6
+      ],
+      "facing": [
+        -3.3,
+        -5.8
+      ]
+    },
+    {
+      "id": "patron-hooded",
+      "name": "A hooded stranger",
+      "role": "Patron",
+      "height": 1.32,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/patron-hooded-front.webp",
+        "back": "/stage/fixtures/march-of-davos/patron-hooded-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/patron-hooded-portrait.jpg"
+      },
+      "at": [
+        -4.05,
+        1.4
+      ],
+      "facing": [
+        -3.3,
+        1.4
+      ]
+    },
+    {
+      "id": "patron-hooded-b",
+      "name": "A cloaked woman",
+      "role": "Patron",
+      "height": 1.32,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/patron-hooded-b-front.webp",
+        "back": "/stage/fixtures/march-of-davos/patron-hooded-b-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/patron-hooded-b-portrait.jpg"
+      },
+      "at": [
+        -2.55,
+        -9.1
+      ],
+      "facing": [
+        -3.3,
+        -9.4
+      ]
+    },
+    {
+      "id": "patron-merchant",
+      "name": "A laughing merchant",
+      "role": "Patron",
+      "height": 1.32,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/patron-merchant-front.webp",
+        "back": "/stage/fixtures/march-of-davos/patron-merchant-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/patron-merchant-portrait.jpg"
+      },
+      "at": [
+        1.35,
+        -5.2
+      ],
+      "facing": [
+        0.6,
+        -5.8
+      ]
+    },
+    {
+      "id": "smuggler",
+      "name": "A smuggler in a tricorn",
+      "role": "Smuggler",
+      "height": 1.84,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/smuggler-front.webp",
+        "back": "/stage/fixtures/march-of-davos/smuggler-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/smuggler-portrait.jpg"
+      },
+      "at": [
+        -0.35,
+        -9
+      ],
+      "facing": [
+        0.6,
+        -9.4
+      ]
+    }
+  ],
+  "shots": {
+    "harron": {
+      "subject": "harron",
+      "distance": 2.3,
+      "angle": 20,
+      "height": 1.68,
+      "lookHeight": 1.6,
+      "fov": 44,
+      "label": "Harron"
+    },
+    "dockworkers": {
+      "subjects": [
+        "dockworker-boss",
+        "dockworker-a",
+        "dockworker-b"
+      ],
+      "offset": [
+        2.4,
+        1.6,
+        0.9
+      ],
+      "target": [
+        0,
+        0.9,
+        0
+      ],
+      "relative": "world",
+      "fov": 52,
+      "label": "The dockworkers"
+    },
+    "boss": {
+      "subject": "dockworker-boss",
+      "distance": 2,
+      "angle": 0,
+      "height": 1.3,
+      "lookHeight": 1.15,
+      "fov": 44,
+      "label": "The burly dockworker"
+    },
+    "party": {
+      "subjects": [
+        "branka-stoneveil",
+        "cassia-verane",
+        "yeva-softstep",
+        "milos-radan"
+      ],
+      "offset": [
+        0.8,
+        1.7,
+        -3.4
+      ],
+      "target": [
+        0,
+        1.1,
+        0
+      ],
+      "relative": "world",
+      "fov": 54,
+      "label": "Party"
+    }
+  },
+  "shot": "hall"
+}

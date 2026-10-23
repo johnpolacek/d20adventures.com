@@ -313,6 +313,42 @@ const FIGURES: Record<string, Figure> = {
     head: 0.17,
     seated: true,
   },
+  // March of Davos, the Silver Serpent: Harron the bartender, the dockworkers, and a smuggler.
+  harron: {
+    out: "fixtures/march-of-davos/harron",
+    who: "Harron, Human male bartender",
+    look: "A grizzled man in his fifties, about 1.8 m tall, with tall human proportions and long legs, not a dwarf. Deep-set hard grey eyes under heavy brows, a long pale scar running down his left cheek, cropped iron-grey hair, grey stubble, an unreadable weathered face. A faded dark-blue sailor's shirt with the sleeves rolled up over tattooed forearms, a stained leather apron, a wide belt, dark trousers and sea boots. Wiping a pewter tankard with a rag.",
+    head: 0.13,
+    backNote:
+      "The apron is tied on at the front: from behind only its neck strap and the waist ties show over the back of the blue shirt, and his dark trousers show below. The tankard and rag are in front of him and NOT visible.",
+  },
+  "dockworker-boss": {
+    out: "fixtures/march-of-davos/dockworker-boss",
+    who: "A burly dockworker at the tavern, Human male",
+    look: "A big, burly dockworker in his forties with arms thick with muscle, a patchy brown beard, a broken nose, small suspicious eyes and a weather-beaten red face. A sweat-stained sleeveless grey linen shirt under an open leather vest, a cargo hook on his belt, rough canvas trousers, heavy boots. Leaning back, a pewter tankard of ale held in his right hand resting on his thigh.",
+    head: 0.17,
+    seated: true,
+  },
+  "dockworker-a": {
+    out: "fixtures/march-of-davos/dockworker-a",
+    who: "A dockworker at the tavern, Human male",
+    look: "A lean, wiry dockworker in his thirties with a gaunt weather-beaten face, a shaved head, a short black beard and wary narrow eyes. A patched brown wool jerkin over a dirty cream shirt, a knitted grey scarf, rough trousers, worn boots. Hunched forward, both calloused hands round a clay mug of ale.",
+    head: 0.17,
+    seated: true,
+  },
+  "dockworker-b": {
+    out: "fixtures/march-of-davos/dockworker-b",
+    who: "A dockworker at the tavern, Human female",
+    look: "A strong, broad-shouldered woman dockworker in her thirties with a sunburnt freckled face, red hair tied back under a stained kerchief, a hard, guarded stare. A rolled-sleeve olive canvas shirt, a heavy leather apron, a rope coiled over one shoulder, rough trousers, boots. A pewter tankard held in both hands on her knee.",
+    head: 0.17,
+    seated: true,
+  },
+  smuggler: {
+    out: "fixtures/march-of-davos/smuggler",
+    who: "A smuggler at the tavern, Human male",
+    look: "A rakish smuggler captain in his forties, about 1.84 m tall, with tall human proportions and long legs, not a dwarf. A black tricorn hat, long dark hair tied back, a sharp trimmed beard, a sly half smile, a gold earring. A long weathered brown greatcoat with wide cuffs over a dark red waistcoat and a loose white shirt, a baldric with a cutlass, a sash, high boots. Holding a pewter tankard raised in one hand.",
+    head: 0.13,
+  },
 }
 for (const [id, f] of Object.entries(FIGURES)) f.out ||= `heroes/${id}`
 

@@ -4,6 +4,7 @@ import { archScreen, curtainWall, dome, drumTower, gatehouse, roundTower, skylin
 import { group, row, scatter } from "./layouts"
 import { archHead, armchair, bookcase, candleStand, column, cupola, desk, gallery, globe, panel, vault } from "./library"
 import { barrelProp, basketProp, bunting, crateProp, farTown, goodsPile, gourds, house, lanternProp, potProp, prizeWheel, sackProp, sail, sheaf, spearRack, stall, standard } from "./market"
+import { anchor, serpent, shipWheel } from "./nautical"
 import { beamPrim, boxPrim, conePrim, cylinderPrim, extrudePrim, groundDisc, heightfieldPrim, lathePrim, openingPrim, spherePrim, torusPrim } from "./primitives"
 import { chainLine, hangingRope, pier, riverboat, ship, strongbox } from "./river"
 import { bar, bench, chair, chandelier, dragonSkull, hearth, stairs, stool, table, wall } from "./tavern"
@@ -99,6 +100,10 @@ export const BUILDERS: Record<string, BuilderDef> = {
   armchair,
   globe,
   candleStand,
+  // sailors' taverns
+  serpent,
+  shipWheel,
+  anchor,
   // checkpoint and dressing
   barrier,
   ropeLine,

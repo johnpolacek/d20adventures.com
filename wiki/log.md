@@ -4,6 +4,10 @@
 
 This log retains durable decisions and dated evidence. Git owns detailed implementation history. Past validation does not establish current production health.
 
+## 2026-10-23, the Silver Serpent Tavern in 3D
+
+Second of the remaining March of Davos sets. A long, dark dockside hall of tarred timber whose far end is an arch open on the foggy quay, as its painting has it: lanterns, glowing amber panels, a ring-lamp over the aisle, a carved sea map on the west wall, and a silver serpent over the bar. Nautical builders, four painted textures and five standees. Stage check and desktop tests pass. Not yet checked in the running app. See [March of Davos in 3D](plans/march-of-davos-sets.md).
+
 ## 2026-10-23, the Old Grand Library in 3D
 
 Owner asked for 3D sets for the rest of March of Davos, one at a time, to the end. First, the Old Grand Library: a two-storey hall of bookcases under a painted vault and dome, saints in stained glass, midday sun down the floor to the red door, and the private archives behind it. Library builders, an `image` material for paintings, eight painted textures and four standees. Stage check and desktop tests pass. Not yet checked in the running app. See [March of Davos in 3D](plans/march-of-davos-sets.md).
