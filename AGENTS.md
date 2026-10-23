@@ -27,6 +27,7 @@ Auto-commit local changes whenever confident that the code is good and there are
 ### Encounter Authoring
 
 - Initial NPC map placement must match the intro's implied distance: an NPC whose intro reads as a close ambush should set `startNear: "party"` on its ref in the encounter frontmatter ("distant"/absent keeps the default far placement; a zone/label name targets that spot). After changing staging hints, re-place tokens on stored maps with `scripts/mapview-replace-tokens.ts`.
+- Run `pnpm stage:sync` before pushing new or changed files in `public/stage` or `public/stage-lab`. Vercel deploys leave them out and the site serves them from the public bucket.
 
 ### Automation Policy
 

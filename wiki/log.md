@@ -6,7 +6,7 @@ This log retains durable decisions and dated evidence. Git owns detailed impleme
 
 ## 2026-10-23, Vercel deployment storage
 
-The project filled the Hobby deployment storage. Each deploy carries about 136 MB of `public/`, and every push deploys. Seven older production deploys removed. `vercel.json` now skips builds for wiki-only changes. Retention cannot be set by API on this plan. See [Vercel deployment storage](plans/vercel-deploy-storage.md).
+The project filled the Hobby deployment storage. Each deploy carries about 136 MB of `public/`, and every push deploys. Seven older production deploys removed. `vercel.json` now skips builds for wiki-only changes. Retention cannot be set by API on this plan. Stage art, about 88 MB, is left out of deploys and served from the public bucket through CloudFront rewrites. `pnpm stage:sync` uploads it. See [Vercel deployment storage](plans/vercel-deploy-storage.md).
 
 ## 2026-10-23, the Black Market in 3D
 
