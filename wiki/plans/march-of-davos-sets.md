@@ -20,11 +20,39 @@ Encounters 1 to 7 already had sets: the gate, the harvest square, the Dragonbone
 | 15 to 17 | The Lower Districts | Done 2026-10-23 |
 | 18 to 19 | The Black Market | Done 2026-10-23 |
 | 20 to 22 | The auction | Next. A hall behind the Black Market lane's far door |
-| 23 to 26 | Silverhand's trail, the hideout, the ambush | |
-| 27 to 39 | The Blackthorn mansion: front, ballroom, halls, chambers, wine cellar | |
-| 40 to 44 | The catacombs | |
-| 45 to 46 | The forgotten temple | |
-| 47 to 49 | The aftermath | |
+| 23 to 26 | Silverhand's trail, the hideout, the ambush | Street and cellar kits |
+| 27 to 39 | The Blackthorn mansion: front, ballroom, halls, chambers, wine cellar | Bespoke. The wine cellar is the cellar kit |
+| 40 to 44 | The catacombs | Tunnel kit. The grate at 40 is the mansion's grounds |
+| 45 to 46 | The forgotten temple | Bespoke |
+| 47 to 49 | The aftermath | Street kit. 49 reuses the library |
+
+## Owner decision, 2026-10-23: reusable sets
+
+"Use reusable sets instead of one bespoke set per location. 27 encounters still have no 3D set. Build bespoke sets only for the mansion and the temple. Give the trail, the catacombs and the aftermath generic sets you can redress (street, cellar, tunnel)."
+
+A kit is a generator in `scripts/stage-sets/kits/` that takes a dressing and returns a set: layout, time of day, light, props, signs and crowd. Each dressing writes its own set JSON, as the docks' wrecked quay does, since a staging cannot add objects. One script per kit writes every dressing and its stagings.
+
+| Kit | Dressing | Encounters |
+|---|---|---|
+| Street | Night lanes under a low moon, mist, spires | 23 Shadowing Silverhand |
+| Street | Waterfront lane in sea mist, the warehouse's iron door and red lamp | 24 The Hideout |
+| Street | Night lanes, archers on the roofs, arrows in a shop door | 26 The Ambush |
+| Street | Dawn square, Valkaran banners, a balcony | 47 The New Dawn |
+| Street | Day square, black banners, a bier, soldiers | 48 Vengeance of the Blackthorn |
+| Cellar | Low timber room, crates and sacks, a long table, one candle | 25 Face-to-Face with Silverhand |
+| Cellar | Barrel vaults, wine racks, barrels, a chandelier | 36 The Wine Cellar |
+| Tunnel | Tunnel widening to a pillared chamber, powder barrels, a fuse | 41 Into the Catacombs |
+| Tunnel | Forks of rough stone, crystal runes, a blank wall | 42 Through the Labyrinth |
+| Tunnel | The same wall, a black iron door of glowing sigils, frost | 43 The Sealed Door |
+| Tunnel | A vast dark chamber, dust, a narrow lit archway | 44 Big Empty |
+| None | The Old Grand Library as built, a table for the talks | 49 The Dust Settles |
+
+Bespoke sets:
+
+- The Blackthorn mansion: the gate and front at night (27), the ballroom with its gallery (28 to 31, 37, 38), the grand stair hall (32), the ranger's door (33), the lavish corridor (34), Thaddeus's study (35), the moonlit balcony (39) and the ivy courtyard with the drain grate (40).
+- The forgotten temple: a ruined hall of broken columns before a carved doorway (45, 46).
+
+Order: street kit, cellar kit, tunnel kit, mansion, temple. Each kit is checked with `pnpm stage:check` and reviewed at DPR 2 before the next.
 
 ## The Old Grand Library
 
