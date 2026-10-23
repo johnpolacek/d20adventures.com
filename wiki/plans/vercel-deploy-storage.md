@@ -2,6 +2,8 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Maintenance](maintenance.md)
 
+Status: done, 2026-10-23. Kept for reference.
+
 Owner, 2026-10-23: the project was using all of the Hobby account's deployment storage.
 
 ## Findings
@@ -25,3 +27,4 @@ Owner, 2026-10-23: the project was using all of the Hobby account's deployment s
 
 - 2026-10-23, owner decision: unused images from the first commit, referenced nowhere in code or content, left the repo after upload to the bucket. `images/app/screenshots/` (3.9 MB), `avatar/npc-0.png` (3.5 MB), `avatar/bot.png` (1.2 MB) and `d20-transparent.png` left the deploy, and `backgrounds/genre/` (13.8 MB) and `backgrounds/background-texture.jpg` (2.7 MB) the desktop bundle. The rewrite now covers all of `/images/`, so any image a deploy lacks answers from CloudFront and old links keep working. The deploy's `public/images` is 1.3 MB.
 - Through the local dev server the CloudFront fallback is slow, 15 to 40 s for a 1 MB file. Fetched directly, the same files come back at once.
+- Checked on production after `3e90347`: removed images, old PNG URLs and the new WebP files all return 200 in about 1 to 5 s.

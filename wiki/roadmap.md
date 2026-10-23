@@ -14,6 +14,7 @@ Updated 2026-10-23. Alpha, no players, work on `main`.
 - Hosted games: one player's app hosts, friends join from a browser. Merged, not shipped.
 - Adventure store: catalog, entitlements, account linking, pack downloads. Merged, not deployed.
 - Website: text turn page, Storyview narration, Mapview, admin editor, `/demo/kordavos`.
+- Deploys carry 1.3 MB of images. Stage art and backgrounds come from the bucket through CloudFront.
 
 ## Next
 
@@ -21,7 +22,6 @@ Updated 2026-10-23. Alpha, no players, work on `main`.
 2. Alpha release: deploy website and Convex, set the store secret, package the desktop app.
 3. Hosted games end to end, Convex lockdown, provider terms.
 4. Finish the desktop site style: HUD review and cleanup.
-5. Shrink large PNG and MP4 files for Vercel storage.
 
 ## Later
 

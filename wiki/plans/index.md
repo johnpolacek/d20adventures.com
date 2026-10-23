@@ -8,7 +8,6 @@ Updated 2026-10-23. Plans are optional and deleted when done. Git keeps the old 
 
 | Plan | Next work |
 |---|---|
-| [Vercel deployment storage](vercel-deploy-storage.md) | Convert the largest PNG and MP4 files. |
 | [Desktop site style](desktop-site-style.md) | Owner review of the HUD over each set, then cleanup. |
 | [Desktop host mode](desktop-host-mode.md) | A hosted game end to end, Convex lockdown, provider terms, ship. |
 | [Adventure store](feature-adventure-store.md) | Alpha release: website, Convex, store secret. Checkout at beta. |
@@ -28,6 +27,7 @@ Code links to these.
 | [Clan Conflict in 3D](clan-conflict-stage.md) | The standoff set. |
 | [Covert Cargo in 3D](covert-cargo-3d.md) | Covert Cargo's sets. |
 | [Painted backdrop](stage-backdrop.md) | A set's painted far scenery. |
+| [Vercel deployment storage](vercel-deploy-storage.md) | Art and images served from the bucket, not the deploy. |
 | [Stage art spikes](stage-art-spikes.md) | `lab/stage-art/` experiments. |
 | [Mapview](mapview.md) | Stored 2D maps, generation, placement. |
 | [Testing runbook](testing-runbook.md) | Commands, routes, coverage limits. |
