@@ -90,6 +90,8 @@ export type RuntimeManifest = {
   summary?: string
   // Who knows whom and what at the start. Every prompt carries it, the players' side too, so it holds no secrets.
   premise?: string
+  // Reasons a hero made for this adventure may have come, one line each. Players pick from them, so they hold no secrets.
+  heroHooks?: string[]
   image?: string
   startEncounterId: string
   recommendedPlayers?: number

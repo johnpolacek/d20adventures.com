@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Gameplay flows](../gameplay-flows.md) · [Wiki adventures](../wiki-adventures.md)
 
-Status: planned 2026-10-23. Not started.
+Status: steps 1 to 3 done 2026-10-24. Steps 4 to 6 open. The hooks await owner review in the creator.
 
 ## Owner decisions
 
@@ -13,6 +13,15 @@ Recorded 2026-10-23:
 - The hero's sheet stays their own. The reason and arrival belong to one adventure, so a hero can go on to other adventures.
 
 Done 2026-10-23: a hero made on the party screen is the player's to play. The hero they had goes to the AI. See `seatCreated` in `apps/desktop/src/carry.ts`.
+
+Done 2026-10-24, steps 1 to 3. See [Hero Hooks](../wiki-adventures.md#hero-hooks).
+
+- March of Davos has 7 hooks. `heroCommand` writes the arrival in the draft call, through `extend` on `generateCharacterAction`.
+- The creator shows the hooks as choices over a text field, and the review shows Arrival, Why they came, and What others notice.
+- A hero made from the Characters page is no longer drafted for an adventure.
+- Checked in the browser preview: a Half-Orc Ranger drafted on Claude in about 25 seconds and was seated as the player's.
+- Traces on Claude, 3 heroes, 3 runs. The first run's paragraphs named "the priest" and ran to 60 words. The prompt now caps them at 45 words and mentions no other traveler. Later runs met the rubric below.
+- A Gnome Warlock with no reason got the sealed letter in all 3 runs. It is the last hook. Watch for the model favouring the end of the list.
 
 ## The gap
 

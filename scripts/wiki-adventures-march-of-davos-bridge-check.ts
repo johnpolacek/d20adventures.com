@@ -45,6 +45,9 @@ function main() {
     "1749159962941",
     "1749307435667",
   ])
+  // Reasons a created hero may have come to Kordavos, offered in the hero creator.
+  assert.equal(artifacts.manifest.heroHooks?.length, 7)
+  assert.match(artifacts.manifest.heroHooks?.[0] ?? "", /^Bringing an offering to the Church of Valkara/)
   assert.equal(Object.keys(artifacts.encounters).length, 49)
   assert.equal(Object.keys(artifacts.characterSheets.npcs).length, 49)
   assert.equal(Object.keys(artifacts.characterSheets.premadeCharacters).length, 9)

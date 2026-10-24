@@ -43,6 +43,16 @@ Heroes who come on together from the adventure just before this one, as the stor
 
 Garlan and the city guard know none of the heroes.
 
+## Hero Hooks
+
+- Bringing an offering to the Church of Valkara for the Harvest rites.
+- Owed coin by someone in the Lower Districts, and here to collect it.
+- Taking up a post in the Asterian governor's service after the Festival.
+- Coming home to the March for the first Festival in years.
+- Chasing word of old Valkaran relics changing hands in the city.
+- Looking for guard work, since the Festival's merchants pay well.
+- Carrying a sealed letter for someone in the city, and told not to read it.
+
 ## Aftermath: Potential Outcomes
 
 Based on the choices made during the Final Confrontation, the story of the March of Davos resolves in one of the following ways:

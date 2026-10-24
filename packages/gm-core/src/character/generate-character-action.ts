@@ -1,9 +1,12 @@
+import type { z } from "zod"
 import type { GmPorts } from "../ports"
 import { type NPC, npcGenerationSchema, type PCTemplate, pcTemplateGenerationSchema } from "../types/character"
 
 interface GenerateCharacterInput {
   prompt: string
   characterType: "npc" | "pc"
+  // More fields for a player character, written in the same call.
+  extend?: z.ZodRawShape
 }
 
 interface GenerateCharacterResult {
@@ -14,7 +17,7 @@ interface GenerateCharacterResult {
 
 export function createGenerateCharacterAction(ports: GmPorts) {
   const generateObject = ports.llm.generateObject.bind(ports.llm)
-  async function generateCharacterAction({ prompt, characterType }: GenerateCharacterInput): Promise<GenerateCharacterResult> {
+  async function generateCharacterAction({ prompt, characterType, extend }: GenerateCharacterInput): Promise<GenerateCharacterResult> {
     try {
       if (!prompt.trim()) {
         return {
@@ -24,7 +27,7 @@ export function createGenerateCharacterAction(ports: GmPorts) {
       }
 
       // Use the appropriate schema based on character type
-      const schema = characterType === "npc" ? npcGenerationSchema : pcTemplateGenerationSchema
+      const schema = characterType === "npc" ? npcGenerationSchema : extend ? pcTemplateGenerationSchema.extend(extend) : pcTemplateGenerationSchema
 
       // Enhance the prompt with character type context
       const enhancedPrompt = `Generate a ${characterType === "npc" ? "non-player character (NPC)" : "player character"} based on this description: ${prompt}. 

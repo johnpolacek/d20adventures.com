@@ -194,7 +194,9 @@ export function DesktopGame() {
     await invoke({ kind: "paintHero", provider: painter, id: hero.id })
     setPainting(null)
   }
-  const draftHero = async (idea: HeroIdea) => (await invoke({ kind: "heroDraft", provider: provider as "claude", adventure, ...idea }))?.draft
+  // A hero made from a party screen is made for that adventure. One made from the Characters page is not.
+  const draftHero = async ({ hook, ...idea }: HeroIdea) =>
+    (await invoke({ kind: "heroDraft", provider: provider as "claude", ...idea, ...(screen === "new" ? { adventure, ...(hook.trim() ? { hook } : {}) } : {}) }))?.draft
   const saveHero = async (hero: Omit<Hero, "id"> & { id?: string }) => {
     const before = new Set(heroes.map((h) => h.id))
     const res = await invoke({ kind: "saveHero", hero })
@@ -473,6 +475,7 @@ export function DesktopGame() {
       {creator && (
         <HeroCreator
           options={creator.editing || screen !== "new" ? options : (chosen?.options ?? options)}
+          adventure={screen === "new" && chosen ? { id: chosen.id, hooks: chosen.hooks } : undefined}
           editing={creator.editing}
           painted={creator.editing ? art[creator.editing.id] : undefined}
           busy={working}

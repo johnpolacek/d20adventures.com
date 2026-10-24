@@ -2,11 +2,11 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Option, siteField, siteLabel, siteOutline } from "@/components/ui/site"
 import { cn } from "@/lib/utils"
-import type { Hero, HeroDraft } from "../runtime/heroes"
+import type { Arrival, Hero, HeroDraft } from "../runtime/heroes"
 import { defaultFigure, type FigureArt, figuresFor } from "./figures"
 
 type Options = { races: string[]; archetypes: string[] }
-export type HeroIdea = { race: string; archetype: string; name: string; gender: string; idea: string }
+export type HeroIdea = { race: string; archetype: string; name: string; gender: string; idea: string; hook: string }
 const ATTRIBUTES = ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"] as const
 const field = cn(siteField, "bg-black/30")
 // A figure to choose: ringed in the primary colour when chosen.
@@ -25,9 +25,12 @@ const named = (text: string) =>
 const unnamed = (items: { name: string; description?: string }[] = []) => items.map((i) => (i.description ? `${i.name}: ${i.description}` : i.name)).join("\n")
 
 // Making a hero: race, class, name and an idea, then one GM call writes the rest. The player reviews and edits every
-// field and picks a figure before saving. Editing a roster hero opens straight on the review.
+// field and picks a figure before saving. Editing a roster hero opens straight on the review. Made for an adventure
+// with hooks, the player also says why the hero came, and the same call writes how they arrive in its opening scene.
 export function HeroCreator(props: {
   options: Options
+  // The adventure the hero is made for, from its party screen.
+  adventure?: { id: string; hooks: string[] }
   editing?: Hero
   // Art painted for the hero being edited, offered beside the stock figures.
   painted?: FigureArt
@@ -42,6 +45,7 @@ export function HeroCreator(props: {
     name: props.editing?.name ?? "",
     gender: props.editing?.gender ?? "",
     idea: "",
+    hook: "",
   }))
   const [hero, setHero] = useState<(HeroDraft & { id?: string; figure: string; painted?: boolean }) | null>(props.editing ?? null)
   const [lists, setLists] = useState(() => listText(props.editing))
@@ -60,6 +64,10 @@ export function HeroCreator(props: {
     if (!draft) return
     setHero({ ...draft, figure: defaultFigure(draft.race, draft.gender) })
     setLists(listText(draft))
+  }
+  const arrival = props.adventure && hero?.arrivals?.[props.adventure.id]
+  const setArrival = (key: keyof Arrival, value: string) => {
+    if (props.adventure && arrival && hero) setHero({ ...hero, arrivals: { ...hero.arrivals, [props.adventure.id]: { ...arrival, [key]: value } } })
   }
   const save = () => {
     if (!hero) return
@@ -98,6 +106,19 @@ export function HeroCreator(props: {
             <Labeled label="Idea">
               <textarea className={cn(field, "resize-none")} rows={2} maxLength={600} value={idea.idea} onChange={(e) => set("idea", e.target.value)} />
             </Labeled>
+            {props.adventure && props.adventure.hooks.length > 0 && (
+              <div>
+                <div className={cn(siteLabel, "mb-2")}>Why they came</div>
+                <div className="mb-2 flex flex-wrap gap-2">
+                  {props.adventure.hooks.map((h) => (
+                    <Option key={h} aria-pressed={h === idea.hook} active={h === idea.hook} className="text-left" onClick={() => set("hook", h === idea.hook ? "" : h)}>
+                      {h}
+                    </Option>
+                  ))}
+                </div>
+                <input className={field} aria-label="Why they came" placeholder="Let the GM choose" value={idea.hook} maxLength={300} onChange={(e) => set("hook", e.target.value)} />
+              </div>
+            )}
             <div className="sticky -bottom-7 z-10 -mx-7 -mb-7 flex items-center justify-end gap-3 border-t border-primary-700 bg-primary-900 px-7 py-4">
               {props.busy && <span className="text-sm text-white/70 italic">The GM is writing your hero…</span>}
               <Button variant="epic" className="text-lg" disabled={props.busy || !idea.name.trim()} onClick={() => void create()}>
@@ -183,6 +204,21 @@ export function HeroCreator(props: {
                 </div>
               </div>
             </div>
+            {arrival && (
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="md:col-span-2">
+                  <Labeled label="Arrival">
+                    <textarea className={cn(field, "resize-y")} rows={2} maxLength={600} value={arrival.intro} onChange={(e) => setArrival("intro", e.target.value)} />
+                  </Labeled>
+                </div>
+                <Labeled label="Why they came">
+                  <textarea className={cn(field, "resize-y")} rows={2} maxLength={400} value={arrival.reason} onChange={(e) => setArrival("reason", e.target.value)} />
+                </Labeled>
+                <Labeled label="What others notice">
+                  <textarea className={cn(field, "resize-y")} rows={2} maxLength={200} value={arrival.tell} onChange={(e) => setArrival("tell", e.target.value)} />
+                </Labeled>
+              </div>
+            )}
             <div className="grid gap-3 md:grid-cols-2">
               {(["appearance", "personality", "background", "motivation", "behavior"] as const).map((key) => (
                 <Labeled key={key} label={key}>
@@ -201,7 +237,12 @@ export function HeroCreator(props: {
                   Back
                 </button>
               )}
-              <Button variant="epic" className="text-lg" disabled={props.busy || !hero.name.trim() || !hero.appearance.trim()} onClick={save}>
+              <Button
+                variant="epic"
+                className="text-lg"
+                disabled={props.busy || !hero.name.trim() || !hero.appearance.trim() || (arrival && Object.values(arrival).some((v) => !v.trim()))}
+                onClick={save}
+              >
                 Save hero
               </Button>
             </div>

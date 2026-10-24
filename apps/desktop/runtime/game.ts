@@ -36,6 +36,8 @@ export const adventureList = (packs: Packs) =>
       scenes: Object.keys(p.artifacts.encounters).length,
       players: [m.minPlayers ?? 1, m.maxPlayers ?? Math.max(1, premades.length)] as [number, number],
       options: m.availableCharacterOptions ?? null,
+      // Why a hero made for it may have come, offered in the hero creator.
+      hooks: m.heroHooks ?? [],
       premades: premades.map((s) => ({ id: s.id, name: s.name, race: s.race, archetype: s.archetype, gender: s.gender })),
       party: PARTY[id] ?? m.premadeCharacterIds.slice(0, m.maxPlayers),
       // The adventure the story goes on to, which the ending offers.

@@ -181,6 +181,7 @@ export function compileAdventureSourceTree(files: SourceFile[], options: Compile
     teaser: adventureFile?.sections.teaser,
     summary: adventureFile?.sections.summary,
     premise: adventureFile?.sections.premise,
+    heroHooks: listItems(adventureFile?.sections.heroHooks),
     image: adventure?.image,
     startEncounterId: adventure?.startEncounter ?? "",
     recommendedPlayers: adventure?.recommendedPlayers,
@@ -384,6 +385,12 @@ function entityToRetrievalRecord(entity: RuntimeEntityRecord) {
     linkedRecordIds: entity.typedLinks.map((link) => `${link.type}:${link.id}`),
     promptSections: Object.keys(entity.sections),
   }
+}
+
+// A section's bulleted list, one item per bullet, or nothing when it has none.
+function listItems(text: string | undefined): string[] | undefined {
+  const items = (text ?? "").split("\n").flatMap((line) => line.match(/^\s*[-*]\s+(.+?)\s*$/)?.[1] ?? [])
+  return items.length ? items : undefined
 }
 
 function resolveSiblingPath(path: string, filename: string): string {

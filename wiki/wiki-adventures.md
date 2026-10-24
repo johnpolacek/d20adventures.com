@@ -34,6 +34,15 @@ An adventure page may have a `## Premise` section. It compiles to `manifest.prem
 - Without one, the GM assumes characters shown travelling or working together know each other.
 - Legacy plans have none. See the plan.
 
+## Hero Hooks
+
+An adventure page may have a `## Hero Hooks` section: a bulleted list of reasons a created hero may have come. It compiles to `manifest.heroHooks`. Added 2026-10-24 for March of Davos.
+
+- The desktop hero creator offers them when opened from the adventure's party screen. The player picks one, writes their own, or leaves it to the GM.
+- The same draft call then writes the hero's arrival: a reason for their sheet, a paragraph like the start encounter's `{hero}` paragraphs, and a tell others can see.
+- Arrivals are kept on the roster hero by adventure id. A new game adds the reason to the background and the tell to the appearance, on the adventure's copy of the sheet.
+- Players see the hooks, so they hold no secrets.
+
 ## Strangers
 
 `strangers: true` on an adventure page says its heroes start as strangers to each other and to everyone else. Added 2026-10-21 for March of Davos, whose gate is where the party meets.

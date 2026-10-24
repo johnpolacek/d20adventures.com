@@ -89,6 +89,9 @@ test("one model call drafts a hero from race, class, name and idea, and the rost
     // The player's choices win over the model's, and spells start unused.
     assert.deepEqual([draft!.name, draft!.race, draft!.archetype], ["Hilde Ashbrand", "Dwarf", "Cleric"])
     assert.deepEqual(draft!.spells, [{ name: "Light", description: "A glow." }])
+    // The Road has no hooks, so the hero arrives as before.
+    assert.equal(draft!.arrivals, undefined)
+    assert.doesNotMatch(prompts[0], /arrival/)
     assert.deepEqual(store.heroes(), [])
 
     await heroCommand({ kind: "saveHero", hero: { ...draft!, figure: "dwarf-b" } }, store, packs, offline)
@@ -104,6 +107,63 @@ test("one model call drafts a hero from race, class, name and idea, and the rost
     await assert.rejects(() => heroCommand({ kind: "saveHero", hero: { ...hero, figure: "dragon-a" } }, store, packs, offline))
     await heroCommand({ kind: "deleteHero", id: hero.id }, store, packs, offline)
     assert.deepEqual(store.heroes(), [])
+  } finally {
+    cleanup()
+  }
+})
+
+test("a hero made for March of Davos says why they came, and arrives at the gate with it", async () => {
+  const { store, cleanup } = setup()
+  try {
+    const prompts: string[] = []
+    const arrival = {
+      reason: "She has come to deliver a sealed letter.",
+      intro: "A half-orc in a ranger's cloak turns a wax-sealed letter over in her hands.",
+      tell: "A letter sealed in black wax hangs at her belt.",
+    }
+    const llm: Llm = {
+      generateText: unused,
+      generateObject: async ({ schema, prompt }) => {
+        prompts.push(prompt)
+        return { object: schema.parse({ ...sheet("Dusha", "Half-Orc", "Ranger"), arrival }) }
+      },
+    }
+    const hook = "Carrying a sealed letter for someone in the city, and told not to read it."
+    const idea = { kind: "heroDraft", provider: "claude", race: "Half-Orc", archetype: "Ranger", name: "Dusha", adventure: "march-of-davos" } as const
+    const { draft } = await heroCommand({ ...idea, hook }, store, packs, llm)
+    assert.equal(prompts.length, 1)
+    assert.match(prompts[0], /The player's reason for them: Carrying a sealed letter/)
+    // The opening scene, with its labels taken off, shows how the premades arrive.
+    assert.match(prompts[0], /A broad dwarf with copper braids/)
+    assert.doesNotMatch(prompts[0], /\{hero:/)
+    assert.deepEqual(draft!.arrivals, { "march-of-davos": arrival })
+    // Without a reason, the GM picks one of the adventure's hooks.
+    await heroCommand(idea, store, packs, llm)
+    assert.match(prompts[1], /Pick the reason that suits them best: Bringing an offering/)
+
+    await heroCommand({ kind: "saveHero", hero: { ...draft!, figure: "half-orc-b" } }, store, packs, offline)
+    const [hero] = store.heroes()
+    assert.deepEqual(hero.arrivals, { "march-of-davos": arrival })
+    await game(
+      store,
+      packs,
+      offline
+    )({
+      kind: "start",
+      provider: "claude",
+      adventure: "march-of-davos",
+      party: [
+        { id: hero.id, ai: false },
+        { id: "branka-stoneveil", ai: true },
+        { id: "milos-radan", ai: true },
+      ],
+    })
+    // The running adventure's sheet carries the arrival. The roster hero's own sheet does not.
+    const pc = store.current().characters.find((c) => c.id === hero.id)!
+    assert.equal(pc.background, `A farm near the road. ${arrival.reason}`)
+    assert.equal(pc.appearance, `Dusha wears a travel-stained cloak. ${arrival.tell}`)
+    assert.equal("arrivals" in pc, false)
+    assert.equal(store.heroes()[0].background, "A farm near the road.")
   } finally {
     cleanup()
   }
