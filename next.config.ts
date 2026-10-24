@@ -2,6 +2,8 @@ import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@d20/gm-core"],
+  // A phone on the same Wi-Fi opens the dev site at the laptop's address, such as http://192.168.1.20:3000.
+  allowedDevOrigins: ["192.168.*.*", "10.*.*.*"],
   // Wiki adventures are read from dynamic filesystem paths at runtime, which
   // Next.js cannot discover through static output-file tracing on its own.
   outputFileTracingIncludes: {
