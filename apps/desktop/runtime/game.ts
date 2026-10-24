@@ -12,7 +12,7 @@ import { MOVEMENT_SYSTEM, movementIntentSchema, movementPrompt } from "@d20/stag
 import { z } from "zod"
 import { scenePlaces, spatialContext } from "../src/scenes"
 import { applyCharacterUpdates, characterContext, desktopPatchSchema } from "./characters"
-import { partyFor } from "./heroes"
+import { partyFor, writeArrivals } from "./heroes"
 import type { LocalStore, Save } from "./store"
 import { carryGear, premiseWithStory, storyInto, withStory } from "./story"
 
@@ -207,7 +207,16 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
       const encounter = artifacts.encounters[artifacts.manifest.startEncounterId]
       const id = randomUUID(),
         turnId = randomUUID()
-      const party = partyFor(packFor(plan), command.party ?? (PARTY[plan] ?? artifacts.manifest.premadeCharacterIds).map((id) => ({ id, ai: false })), store.heroes())
+      const choices = command.party ?? (PARTY[plan] ?? artifacts.manifest.premadeCharacterIds).map((id) => ({ id, ai: false }))
+      // Checked before any arrival is written.
+      partyFor(packFor(plan), choices, store.heroes())
+      await writeArrivals(
+        packFor(plan),
+        choices.map((c) => c.id),
+        store,
+        llm
+      )
+      const party = partyFor(packFor(plan), choices, store.heroes())
       const characters = buildLocalWikiTurnCharacters({ artifacts, encounter, players: party.players, sheetsByCharacterId: party.sheets })
       const before = command.continues ? store.state : null
       const story = storyInto(plan, before, before ? packs[before.adventure.planId]?.artifacts.manifest.nextAdventureId : undefined)

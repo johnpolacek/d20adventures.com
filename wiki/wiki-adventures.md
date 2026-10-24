@@ -40,6 +40,7 @@ An adventure page may have a `## Hero Hooks` section: a bulleted list of reasons
 
 - The desktop hero creator offers them when opened from the adventure's party screen. The player picks one, writes their own, or leaves it to the GM.
 - The same draft call then writes the hero's arrival: a reason for their sheet, a paragraph like the start encounter's `{hero}` paragraphs, and a tell others can see.
+- A roster hero without an arrival for the adventure, such as one made from the Characters page, gets one when a desktop game starts. The GM picks the hook, and the arrival is saved to the hero.
 - Arrivals are kept on the roster hero by adventure id. A new game adds the reason to the background and the tell to the appearance, on the adventure's copy of the sheet.
 - A new game keeps each arrival paragraph on the adventure as `arrivals`. `withArrivals` places them after the start encounter's last `{hero}` paragraph, in the first turn and in the GM's view of that intro.
 - Desktop games only. Hosted games start on the website and carry no arrivals yet.

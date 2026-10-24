@@ -129,12 +129,42 @@ export async function heroCommand(
 // Asks for a hero's arrival in an adventure's opening scene, written like the paragraphs that show its premades there.
 function arrivalPrompt(hooks: string[], opening: string, hook?: string) {
   return [
-    "They arrive alone, a stranger to everyone, in the adventure's opening scene below. Also write their arrival:",
+    "They arrive alone, a stranger to everyone, in the adventure's opening scene below. Write their arrival:",
     `- reason: one sentence for their sheet on why they have come, in the third person. ${hook ? `The player's reason for them: ${hook}` : `Pick the reason that suits them best: ${hooks.join(" | ")}`}`,
     "- intro: a paragraph for the scene like the one about each traveler in it. One or two sentences in the present tense, at most 45 words: how they look and what they do while they wait, with one detail the others can notice and ask about. Show the reason without stating it. Never give their name, since no one there knows it. Mention no other traveler, since who else stands in the line changes.",
     "- tell: one short sentence on that detail as others see it, for their sheet.",
     `The opening scene:\n${authoredText(opening)}`,
   ].join("\n")
+}
+
+// Writes the arrival each chosen roster hero lacks for an adventure with hooks, such as a hero made from the Characters
+// page, one call per hero with the hook the GM picks. It is kept on the roster hero, so the next start needs no call.
+// A failed call leaves the hero without one: the opening scene's notes cover heroes it does not name.
+export async function writeArrivals(pack: Pack, ids: string[], roster: Roster, llm: Llm) {
+  const m = pack.artifacts.manifest
+  const opening = m.heroHooks?.length ? pack.artifacts.encounters[m.startEncounterId]?.sections.intro : undefined
+  if (!m.heroHooks || !opening) return
+  const hooks = m.heroHooks
+  const missing = roster.heroes().filter((h) => ids.includes(h.id) && !h.arrivals?.[m.adventureId])
+  // One at a time: a CLI session answers one request at a time.
+  for (const hero of missing) {
+    const prompt = [
+      `${hero.name}, a ${[hero.gender, hero.race, hero.archetype].filter(Boolean).join(" ")}, a hero of the Realm of Myr, a medieval fantasy world, is about to set out on ${m.title}${m.teaser ? `: ${m.teaser}` : "."}`,
+      `Appearance: ${hero.appearance}`,
+      hero.personality ? `Personality: ${hero.personality}` : "",
+      hero.background ? `Background: ${hero.background}` : "",
+      hero.motivation ? `Motivation: ${hero.motivation}` : "",
+      arrivalPrompt(hooks, opening),
+    ]
+      .filter(Boolean)
+      .join("\n")
+    try {
+      const { object } = await llm.generateObject({ prompt, schema: arrivalSchema })
+      roster.putHero({ ...hero, arrivals: { ...hero.arrivals, [m.adventureId]: object } })
+    } catch (error) {
+      console.warn(`No arrival for ${hero.name}:`, error)
+    }
+  }
 }
 
 export type PartyChoice = { id: string; ai: boolean }

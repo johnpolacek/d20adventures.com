@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Gameplay flows](../gameplay-flows.md) · [Wiki adventures](../wiki-adventures.md)
 
-Status: steps 1, 2, 3, 5 and 6 done 2026-10-24. Step 4 open. The hooks await owner review in the creator.
+Status: steps 1 to 6 done 2026-10-24 for desktop games. Hosted games and owner review remain.
 
 ## Owner decisions
 
@@ -25,12 +25,13 @@ How it works now is in [Hero Hooks](../wiki-adventures.md#hero-hooks).
 - A Gnome Warlock with no reason got the sealed letter in all 3 runs. It is the last hook. Watch for the model favouring the end of the list.
 - Not checked: a live GM round at the gate with a created hero, and the stage playing their arrival beat.
 
+- 2026-10-24, step 4: `writeArrivals` in `apps/desktop/runtime/heroes.ts` writes the arrival a roster hero lacks, at the start of a desktop game. One call per hero, one at a time, since a CLI session takes one request at a time. The GM picks the hook. The arrival is saved to the roster hero. A failed call starts the game without it.
+- Traces on Claude for step 4, 3 roster heroes, 2 runs. All 6 met the rubric. The hooks varied with the sheet: the letter for a rogue in debt, the offering for a cleric, coming home for a bard.
+
 ## Remaining
 
-4. **Heroes without an arrival.** A roster hero made elsewhere, or a guest's hero, has no arrival for this adventure.
-   - Start writes the missing ones, one call per hero, with a hook the GM picks.
-   - Then it saves them to the roster hero, so the next start is instant.
-   - Hosted games start on the website, in `lib/wiki-adventures/start.ts`, and carry no arrivals yet.
+- Hosted games start on the website, in `lib/wiki-adventures/start.ts`, and carry no arrivals yet.
+- A live GM round at the gate with a created hero, and the stage playing their arrival beat.
 
 ## Eval
 

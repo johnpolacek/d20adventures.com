@@ -192,6 +192,75 @@ test("a hero made for March of Davos says why they came, and arrives at the gate
   }
 })
 
+test("a roster hero with no arrival for March of Davos gets one at the start, kept for the next game", async () => {
+  const { store, cleanup } = setup()
+  try {
+    const hero = await addHero(store, "Dusha", "Half-Orc", "Ranger", "half-orc-b")
+    const arrival = {
+      reason: "She has come to sell furs at the Festival market.",
+      intro: "A half-orc shoulders a bundle of wolf pelts, counting the guards at the arch.",
+      tell: "A bundle of grey wolf pelts rides on her back.",
+    }
+    const prompts: string[] = []
+    const llm: Llm = {
+      generateText: unused,
+      generateObject: async ({ schema, prompt }) => {
+        prompts.push(prompt)
+        return { object: schema.parse(arrival) }
+      },
+    }
+    const start = {
+      kind: "start" as const,
+      provider: "claude" as const,
+      adventure: "march-of-davos",
+      replace: true,
+      party: [
+        { id: hero.id, ai: false },
+        { id: "branka-stoneveil", ai: true },
+        { id: "milos-radan", ai: true },
+      ],
+    }
+    await game(store, packs, llm)(start)
+    assert.equal(prompts.length, 1)
+    assert.match(prompts[0], /Dusha, a Female Half-Orc Ranger[\s\S]*Pick the reason that suits them best: Bringing an offering/)
+    assert.deepEqual(store.heroes()[0].arrivals, { "march-of-davos": arrival })
+    assert.match(storyText(store.current().story), /A half-orc shoulders a bundle of wolf pelts/)
+    assert.equal(store.current().characters.find((c) => c.id === hero.id)!.appearance, `Dusha wears a travel-stained cloak. ${arrival.tell}`)
+
+    // The next game uses the kept arrival.
+    await game(store, packs, offline)(start)
+    assert.equal(prompts.length, 1)
+    assert.deepEqual(store.state!.adventure.arrivals, { [hero.id]: arrival.intro })
+  } finally {
+    cleanup()
+  }
+})
+
+test("a failed arrival call still starts the game, with the hero left out of the opening paragraphs", async () => {
+  const { store, cleanup } = setup()
+  try {
+    const hero = await addHero(store, "Dusha", "Half-Orc", "Ranger", "half-orc-b")
+    await game(
+      store,
+      packs,
+      offline
+    )({
+      kind: "start",
+      provider: "claude",
+      adventure: "march-of-davos",
+      party: [
+        { id: hero.id, ai: false },
+        { id: "branka-stoneveil", ai: true },
+        { id: "milos-radan", ai: true },
+      ],
+    })
+    assert.equal(store.state!.adventure.arrivals, undefined)
+    assert.equal(store.heroes()[0].arrivals, undefined)
+  } finally {
+    cleanup()
+  }
+})
+
 test("a new game checks the party against the adventure's player range, premades and allowed heroes", async () => {
   const { store, cleanup } = setup()
   try {
