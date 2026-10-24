@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto"
 import { type Content, createGmCore, type Llm } from "@d20/gm-core"
 import { type ActionSuggestion, suggestActions } from "@d20/gm-core/services/ai-pc-turn-service"
+import { withArrivals } from "@d20/gm-core/story/authored"
 import { namesMetBefore } from "@d20/gm-core/story/names"
 import { characterScript, introTurn } from "@d20/gm-core/story/turn"
 import { findCurrentActor } from "@d20/gm-core/utils/turn-actors"
@@ -246,6 +247,7 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
           resolvedThreadIds: [],
           adventureSummaryMarkdown: "",
           ...(met.length ? { knowledge: met } : {}),
+          ...(Object.keys(party.arrivals).length ? { arrivals: party.arrivals } : {}),
         },
         turns: [
           {
@@ -253,7 +255,7 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
             adventureId: id,
             encounterId: encounter.id,
             title: encounter.title,
-            ...introTurn(encounter.sections.intro ?? "", { cast: characters, places: scenePlaces(encounter.id) }),
+            ...introTurn(withArrivals(encounter.sections.intro ?? "", party.arrivals), { cast: characters, places: scenePlaces(encounter.id) }),
             characters,
             order: 1,
           },

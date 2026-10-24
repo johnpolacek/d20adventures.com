@@ -1,5 +1,5 @@
 import { buildRecentTurnHistory, buildRollInfo, getEncounterTurnStatus, getRecentTurnsForContext } from "../services/advance-turn-prompt-service"
-import { authoredText } from "../story/authored"
+import { authoredText, withArrivals } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
 import type { StoryScene } from "../story/clean"
 import { type KnownFact, ledgerNote } from "../story/knowledge"
@@ -30,6 +30,8 @@ export type RuntimeSessionSnapshot = {
   activeCharacterId?: string
   // What each character knows: see story/knowledge.ts.
   knowledge?: KnownFact[]
+  // Paragraphs that show created heroes in the start encounter's intro, by hero id.
+  arrivals?: Record<string, string>
 }
 
 export type LlmGameplayContextPacket = {
@@ -141,7 +143,10 @@ export function assembleGameplayContextPacket(args: {
       title: currentEncounter.title,
       summary: currentEncounter.summary,
       sections: currentEncounter.sections,
-      intro: authoredText(currentEncounter.sections.intro ?? currentEncounter.sections.body ?? "", names),
+      intro: authoredText(
+        withArrivals(currentEncounter.sections.intro ?? currentEncounter.sections.body ?? "", currentEncounter.id === args.artifacts.manifest.startEncounterId ? args.session.arrivals : undefined),
+        names
+      ),
       gmNotes: gmNotesWithRules(args.artifacts.manifest, currentEncounter.sections.gmNotes),
       checks: currentEncounter.sections.checks,
       locationId: currentEncounter.locationId,

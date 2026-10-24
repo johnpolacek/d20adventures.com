@@ -123,6 +123,7 @@ export function createAdvanceTurn(ports: GmPorts) {
             characters: row.characters as TurnCharacter[],
           })),
           knowledge: adventure.knowledge,
+          arrivals: adventure.arrivals,
         },
       })
       const scene = await sceneFor(ports, turn)

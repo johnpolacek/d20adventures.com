@@ -53,6 +53,17 @@ export function authoredStory(text: string, scene?: StoryScene): StoryOutput {
   return storyOutputSchema.parse(raw)
 }
 
+// An authored intro with a paragraph for each created hero, by hero id, after its last hero paragraph, or at its end
+// when it has none. Each is labelled as that hero's, so it drops out as the authored ones do when they are absent.
+export function withArrivals(text: string, arrivals: Record<string, string> = {}): string {
+  const added = Object.entries(arrivals).map(([id, paragraph]) => `{hero: ${id}} ${paragraph.replace(/\s+/g, " ").trim()}`)
+  if (!added.length) return text
+  const paragraphs = text.replace(/\r\n/g, "\n").split(/\n\s*\n/)
+  const heroes = paragraphs.flatMap((p, i) => (/^\{[^}]*\bhero\s*:/i.test(p.trim()) ? [i] : []))
+  paragraphs.splice(heroes.length ? heroes[heroes.length - 1] + 1 : paragraphs.length, 0, ...added)
+  return paragraphs.join("\n\n")
+}
+
 // An authored passage as a script with its labels taken off, for prompts that read the text: a line under its
 // speaker's name, as storyText writes the story. A private paragraph is marked with who it is private to. With
 // `viewer`, the text as that character knows it: a private paragraph they are not in is left out. With `names`, a

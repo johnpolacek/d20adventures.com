@@ -50,7 +50,7 @@ This scene is where the heroes meet, before anyone at the gate asks them anythin
 
 **The table is out of reach.** The sergeant at the table is Garlan Ironfist. He is too far up the line to hear the heroes or be heard, and calls no one up in this scene. Guards keep the line in order and send back anyone who tries to go ahead of it. A hero's business with the gate waits for the table.
 
-**Between the heroes.** Each hero shows something the others can notice and ask about: Branka's sigil, Cassia's charts, Yeva's counting eyes, Milos's compass-star, Wrenna's strung bow, Ilya's song, Thalbern's river mud, Lyra's soaked books, Poppen's questions. When one hero asks another about it, leave the answer to that hero. Never answer for them. A hero with no paragraph in the intro is shown the first time the story turns to them, with one detail of how they look.
+**Between the heroes.** Each hero shows something the others can notice and ask about: Branka's sigil, Cassia's charts, Yeva's counting eyes, Milos's compass-star, Wrenna's strung bow, Ilya's song, Thalbern's river mud, Lyra's soaked books, Poppen's questions. Any other hero shows the detail their own paragraph in the intro gives. When one hero asks another about it, leave the answer to that hero. Never answer for them. A hero with no paragraph in the intro is shown the first time the story turns to them, with one detail of how they look.
 
 **Things in the line to talk about.**
 - The family turned back three marks short. A hero may pay for them, and the family thanks them as it passes.

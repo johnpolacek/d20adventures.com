@@ -164,6 +164,29 @@ test("a hero made for March of Davos says why they came, and arrives at the gate
     assert.equal(pc.appearance, `Dusha wears a travel-stained cloak. ${arrival.tell}`)
     assert.equal("arrivals" in pc, false)
     assert.equal(store.heroes()[0].background, "A farm near the road.")
+
+    // She arrives in the gate line after the premades who came, before the line moves on.
+    const opening = store.current().story.map((b) => (b.kind === "action" ? b.actor : b.kind === "narration" && b.place) || "")
+    assert.deepEqual(opening.slice(4, 8), ["branka-stoneveil", "milos-radan", hero.id, "ledger"])
+    assert.match(storyText(store.current().story), /A half-orc in a ranger's cloak turns a wax-sealed letter over in her hands\./)
+    assert.deepEqual(store.state!.adventure.arrivals, { [hero.id]: arrival.intro })
+
+    // The GM reads it in the scene's intro too.
+    store.current().characters.forEach((c) => {
+      c.isComplete = true
+      c.hasReplied = true
+    })
+    store.save()
+    const gm: string[] = []
+    const advance: Llm = {
+      generateText: unused,
+      generateObject: async ({ schema, prompt }) => {
+        gm.push(prompt)
+        return { object: schema.parse({ nextEncounterId: "the-gates-of-kordavos", beats: [{ kind: "narration", text: "The line shuffles forward." }], adventurePatch: {} }) }
+      },
+    }
+    await game(store, packs, advance)({ kind: "continue", turnId: store.current()._id })
+    assert.match(gm.at(-1) ?? "", /A broad dwarf with copper braids[\s\S]*A half-orc in a ranger's cloak turns a wax-sealed letter[\s\S]*Up at the table/)
   } finally {
     cleanup()
   }

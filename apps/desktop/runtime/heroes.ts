@@ -147,6 +147,8 @@ export function partyFor(pack: Pack, choices: PartyChoice[], roster: Hero[]) {
   if (choices.length < min || choices.length > max) throw new Error(min === max ? `${m.title} needs ${min} ${min === 1 ? "hero" : "heroes"}.` : `${m.title} needs ${min} to ${max} heroes.`)
   if (choices.every((c) => c.ai)) throw new Error("Play at least one hero yourself.")
   const sheets: Record<string, PCTemplate> = {}
+  // The paragraphs that show created heroes in the opening scene.
+  const arrivals: Record<string, string> = {}
   const figures: Record<string, string> = {}
   const painted: string[] = []
   for (const choice of choices) {
@@ -157,9 +159,10 @@ export function partyFor(pack: Pack, choices: PartyChoice[], roster: Hero[]) {
     if (!options) throw new Error(`${m.title} is played with its own heroes.`)
     if (!options.races.includes(hero.race) || !options.archetypes.includes(hero.archetype))
       throw new Error(`${hero.name} cannot join ${m.title}. It allows ${options.races.join(", ")} heroes who are ${options.archetypes.join(", ")}.`)
-    const { figure, painted: art, arrivals, ...sheet } = hero
+    const { figure, painted: art, arrivals: byAdventure, ...sheet } = hero
     // Why they came goes on their background, and what others see of them on their appearance.
-    const arrival = arrivals?.[m.adventureId]
+    const arrival = byAdventure?.[m.adventureId]
+    if (arrival) arrivals[hero.id] = arrival.intro
     sheets[hero.id] = arrival ? { ...sheet, background: [sheet.background, arrival.reason].filter(Boolean).join(" "), appearance: [sheet.appearance, arrival.tell].filter(Boolean).join(" ") } : sheet
     figures[hero.id] = figure
     if (art) painted.push(hero.id)
@@ -167,6 +170,7 @@ export function partyFor(pack: Pack, choices: PartyChoice[], roster: Hero[]) {
   return {
     players: choices.map((c) => ({ characterId: c.id, userId: "local-player", ...(c.ai ? { controlledBy: "ai" as const } : {}) })),
     sheets,
+    arrivals,
     figures,
     painted,
   }

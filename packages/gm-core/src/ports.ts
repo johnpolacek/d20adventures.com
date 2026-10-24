@@ -46,6 +46,8 @@ export type AdventureRecord = {
   runType?: "campaign" | "practice"
   // What each character knows: see story/knowledge.ts.
   knowledge?: KnownFact[]
+  // The paragraphs that show created heroes in the start encounter's intro, by hero id: see story/authored.ts.
+  arrivals?: Record<string, string>
 }
 
 export type NewTurn = {
