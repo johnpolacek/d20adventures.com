@@ -1,0 +1,12 @@
+{
+  "id": "forest-drake",
+  "name": "Forest Drake",
+  "type": "npc",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/app/avatar/npc.png?v=1",
+  "archetype": "Monster",
+  "race": "Drake",
+  "gender": "Unknown",
+  "appearance": "A massive forest drake with green and brown scales, glowing yellow eyes, powerful wings, and a deep guttural roar.",
+  "behavior": "Panicked and dangerous when released from captivity; lashes out at the nearest threats and tries to escape confinement.",
+  "healthPercent": 100
+}

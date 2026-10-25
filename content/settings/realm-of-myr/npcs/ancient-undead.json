@@ -1,0 +1,12 @@
+{
+  "id": "ancient-undead",
+  "name": "Ancient Undead",
+  "type": "npc",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/app/avatar/npc.png?v=1",
+  "archetype": "Monster",
+  "race": "Undead",
+  "gender": "Unknown",
+  "appearance": "Cursed skeletal remnants of Old Valkara, clad in rusted ancient armor with hollow eyes glowing faintly in the dark.",
+  "behavior": "Rise in numbers from the chamber floor and keep coming until the intruders are overwhelmed or escape.",
+  "healthPercent": 100
+}

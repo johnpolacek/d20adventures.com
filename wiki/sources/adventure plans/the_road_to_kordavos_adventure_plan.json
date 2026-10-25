@@ -1,0 +1,439 @@
+{
+  "title": "The Road to Kordavos",
+  "author": "D20Adventures",
+  "version": "1749858694601",
+  "teaser": "Travellers from across the realm head to the March of Davos seeking their fortune in a land of bustling cities and untamed wildlands. Who will you run into on the road to Kordavos?",
+  "overview": "Travellers from across the Realm of Myr travel to the March of Davos, seeking their fortune in this land of bustling cities and untamed wildlands. On this occasion, many of them head to the capital and its annual Harvest Festival. Rumors of clan rivalries, ancient relics of a lost civilization and opportunities for those who seek riches and power have drawn much interest from far and wide. Who will you run into on the road to Kordavos.",
+  "minPartySize": 1,
+  "maxPartySize": 3,
+  "tags": [],
+  "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/the-road-to-kordavos/7ec618f4-bcb7-42ea-a94b-cbb27fa42547.png?t=1749866195046",
+  "start": "",
+  "id": "the-road-to-kordavos",
+  "settingId": "realm-of-myr",
+  "party": [
+    1,
+    3
+  ],
+  "sections": [
+    {
+      "title": "",
+      "summary": "",
+      "scenes": [
+        {
+          "title": "The Marquis Road",
+          "summary": "A quick way for players to get acquainted with each other and learn about the city of Kordavos.",
+          "encounters": [
+            {
+              "id": "well-met",
+              "title": "Well Met",
+              "intro": "Among the diverse stream of travelers along the road to Kordavos is a well-appointed caravan. Its wagons, laden with exotic goods and bearing the mark of a successful import-export business, are escorted by a few watchful guards. At the head of the caravan, a man rides confidently, his white hair and beard neatly combed, and a keen, smiling face that seems to miss nothing.",
+              "instructions": "",
+              "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/the-road-to-kordavos/encounters/well-met/9e37fb3b-cf49-45f8-bc22-7d423e1b460e.png?t=1749868719243",
+              "transitions": [
+                {
+                  "condition": "After 4 turns, transition to The Gates Ahead",
+                  "encounter": "the-gates-ahead"
+                }
+              ],
+              "npc": [
+                {
+                  "id": "npcs-1749870310278",
+                  "behavior": "Dmitri, ever the entrepreneur, is quick to engage with fellow travelers, perhaps noting your equipment or inquiring about your destination with a charming smile and a firm handshake.\n\n\"Well met, travelers!\" he might call out, his voice smooth and clear above the sounds of the road. \"A fine journey to Kordavos, wouldn't you agree? Especially with the Harvest Festival just upon us. A grand time for all, and for merchants like myself, a bustling market!\".\nHe might then steer the conversation towards business or the general state of affairs in the March of Davos. \"Rumors are certainly abundant as of late,\" Dmitri might muse, adjusting a glove. \"Especially about the shifting tides in Kordavos. Some of the older families, steeped in tradition, find themselves at odds with those embracing the new ways, aligning with the Asterian Empire. It makes for... interesting market fluctuations, shall we say\".\n\nIf the players express interest in opportunities or recent events, Dmitri could lean in conspiratorially, his eyes glinting with a shrewd intelligence. \"Indeed, there are whispers of unusual opportunities for those with the right connections and a daring spirit. Certain 'rare goods' and 'artifacts' have been making their way through less conventional channels lately. A few high-value shipments have been 'disrupted,' causing quite a stir amongst the city's elite. It seems some shadowy figures are growing bolder, seeking to profit from the underlying tensions\"",
+                  "initialInitiative": 0
+                },
+                {
+                  "id": "npcs-1749870658664",
+                  "behavior": "Excited about performing at the Harvest Festival. Happy to talk.",
+                  "initialInitiative": 0
+                },
+                {
+                  "id": "npcs-1749870721240",
+                  "behavior": "Road weary but happy to share her faith with anyone.",
+                  "initialInitiative": 0
+                }
+              ],
+              "skipInitialNpcTurns": true,
+              "resetHealth": false
+            },
+            {
+              "id": "the-fortune-teller",
+              "title": "The Fortune Teller",
+              "intro": "As the group progresses along the Marquis Road towards Kordavos, the anticipation of the Harvest Festival grows, mingled with the usual currents of travelers and merchants. Amidst the usual hustle is an unusual sight: a stout dwarf woman, her weathered face framed by long, dark hair braided with silver beads, sits beside a small, intricately carved wooden table. Upon it rests a polished crystal ball and a deck of ornate tarot cards.\n\n\"Paths entwine on the road to Kordavos, travelers!” She beckons. “Some lead to fortune, others to ruin. Fate whispers to those who listen, if they are willing to hear its truths, for a price, of course.\"",
+              "instructions": "",
+              "image": "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/the-road-to-kordavos/encounters/the-fortune-teller/49675791-4402-4dff-a8d1-bc260a638c03.png?t=1749923016928",
+              "transitions": [
+                {
+                  "condition": "After the players have their fortune read or if they decide not to have their fortune read.",
+                  "encounter": "the-gates-ahead"
+                }
+              ],
+              "npc": [
+                {
+                  "id": "npcs-1749870598631",
+                  "behavior": "",
+                  "initialInitiative": 0
+                }
+              ],
+              "skipInitialNpcTurns": false,
+              "resetHealth": false
+            },
+            {
+              "id": "the-gates-ahead",
+              "title": "The Gates Ahead",
+              "intro": "It won’t be long now. The gates to the city are now in view. ",
+              "instructions": "",
+              "image": "",
+              "transitions": [],
+              "npc": [],
+              "skipInitialNpcTurns": false,
+              "resetHealth": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "premadePlayerCharacters": [],
+  "npcs": {
+    "npcs-1749870310278": {
+      "name": "Dmitri Volkov",
+      "archetype": "Merchant",
+      "race": "Human",
+      "gender": "Male",
+      "appearance": "Dmitri Volkov is a man of average height with a sturdy build. His white hair and beard is neatly combed, framing a confident, often smiling, face. He dresses in fine, practical clothes, always clean and well-maintained.",
+      "personality": "Confident, shrewd, affable, and meticulous. He possesses a dry wit and a keen eye for detail. While generally honest in his dealings, he is fiercely protective of his business and can be ruthless when necessary.",
+      "background": "Dmitri started his career from humble beginnings, working as a clerk in a trading house. Through shrewd deals, keen observation, and an innate understanding of market trends, he slowly built his own network and capital. He now owns a successful import-export business, specializing in rare spices and exotic textiles, with connections across several major cities.",
+      "motivation": "Dmitri's primary motivation is to expand his mercantile empire and secure his family's legacy. He seeks out new trade routes, rare goods, and influential contacts to further his business. He also harbors a secret desire to be recognized as the most influential merchant in the region, not just for wealth, but for the power and respect it commands.",
+      "behavior": "Dmitri is generally affable and polite, always ready with a charming smile and a firm handshake. However, beneath the pleasant demeanor lies a sharp mind and a shrewd negotiator. He values punctuality and honesty in business, but is not above a bit of calculated manipulation to secure a favorable deal. He can be surprisingly stubborn when his interests are at stake.",
+      "healthPercent": 100,
+      "equipment": [
+        {
+          "name": "Fine Merchant's Robes",
+          "description": "Well-tailored clothes made from quality fabrics, suitable for formal meetings and travel."
+        },
+        {
+          "name": "Leather-bound Ledger",
+          "description": "A meticulously kept book detailing his transactions, contacts, and inventory."
+        },
+        {
+          "name": "Heavy Coin Pouch",
+          "description": "Filled with a substantial amount of various currencies."
+        },
+        {
+          "name": "Small Dagger",
+          "description": "A simple, well-maintained dagger kept concealed for personal defense."
+        },
+        {
+          "name": "Signet Ring",
+          "description": "A silver ring bearing the crest of his trading house."
+        }
+      ],
+      "skills": [
+        "Persuasion",
+        "Insight",
+        "Investigation",
+        "Appraisal",
+        "Negotiation",
+        "History (Trade Routes)"
+      ],
+      "specialAbilities": [
+        "Keen Negotiator: Dmitri gains advantage on Charisma (Persuasion) checks when negotiating prices or contracts.",
+        "Resourceful: Once per long rest, Dmitri can recall a piece of information about a specific trade good, market trend, or influential contact that might be relevant to the current situation.",
+        "Well-Connected: Dmitri can always find a contact in any major settlement who can provide information or goods, though it may come at a cost."
+      ],
+      "type": "npc",
+      "attributes": {
+        "strength": 9,
+        "dexterity": 10,
+        "constitution": 12,
+        "intelligence": 14,
+        "wisdom": 13,
+        "charisma": 16
+      },
+      "status": "",
+      "id": "npcs-1749870310278",
+      "image": "images/settings/realm-of-myr/the-road-to-kordavos/npcs/225e726d-4795-4d1c-8d8d-0f7b8f42e094.png?t=1749871388935"
+    },
+    "npcs-1749870598631": {
+      "name": "Borina Runetongue",
+      "archetype": "Fortune Teller",
+      "race": "Dwarf",
+      "gender": "Female",
+      "appearance": "Borina is a stout dwarf with a weathered face, framed by long, dark hair braided with silver beads and small, polished stones. Her eyes, a piercing blue, seem to hold ancient secrets. She often wears layers of dark, embroidered robes that rustle with hidden trinkets and pouches.",
+      "personality": "Wise, eccentric, and deeply insightful, Borina possesses a quiet dignity. She can be cryptic but is fundamentally kind, offering guidance with a gentle, knowing smile. There's a hint of melancholy about her, a lingering sadness from her past, but it's tempered by a profound sense of purpose.",
+      "background": "Borina hails from Hammerdeep, a formidable dwarven kingdom renowned for its craftsmanship and rigid traditions. Her innate fascination with divination and the 'strange ways' of foresight were met with disapproval by her kin, who valued tangible craft over ethereal visions. Unable to reconcile her calling with their strict culture, Borina chose exile, leaving her ancestral home to wander the lands, seeking understanding and a place where her unique gifts would be accepted.",
+      "motivation": "Borina is driven by a deep desire to understand the threads of fate and to use her visions to guide others, hoping to prevent misfortune or reveal hidden truths. She also secretly yearns for a place where her unique gifts are not just tolerated, but valued.",
+      "behavior": "Borina is generally calm and observant, often speaking in riddles or metaphors. She has a habit of studying people intently, as if reading their past and future in their expressions. When performing a reading, she becomes deeply focused, sometimes muttering to herself or entering a trance-like state.",
+      "healthPercent": 100,
+      "equipment": [
+        {
+          "name": "Deck of Ornate Tarot Cards",
+          "description": "A well-worn deck, each card intricately illustrated with dwarven runes and symbols."
+        },
+        {
+          "name": "Polished Crystal Ball",
+          "description": "A small, clear orb that seems to shimmer with inner light."
+        },
+        {
+          "name": "Set of Runestones",
+          "description": "Smooth, carved stones used for casting fortunes."
+        },
+        {
+          "name": "Sturdy Gnarled Staff",
+          "description": "A walking stick adorned with carved dwarven faces and wrapped with leather straps."
+        },
+        {
+          "name": "Leather Pouch of Trinkets",
+          "description": "Contains various small charms, dried herbs, and lucky coins."
+        }
+      ],
+      "skills": [
+        "Arcana",
+        "Insight",
+        "Perception",
+        "History",
+        "Investigation"
+      ],
+      "spells": [
+        {
+          "name": "Detect Magic",
+          "description": "Borina can sense the presence of magic within 30 feet.",
+          "isUsed": false
+        },
+        {
+          "name": "Augury",
+          "description": "Borina can cast a spell to receive an omen from an otherworldly entity regarding the outcome of a specific course of action that she plans to take within the next 30 minutes.",
+          "isUsed": false
+        },
+        {
+          "name": "Clairvoyance",
+          "description": "Borina can create an invisible sensor at a chosen location within range, allowing her to see or hear through it.",
+          "isUsed": false
+        },
+        {
+          "name": "Scrying",
+          "description": "Borina can use a crystal ball to magically spy on a creature or location.",
+          "isUsed": false
+        },
+        {
+          "name": "Guidance",
+          "description": "Borina can touch one willing creature to grant them a d4 bonus to one ability check of their choice.",
+          "isUsed": false
+        }
+      ],
+      "specialAbilities": [
+        "Dwarven Resilience: Advantage on saving throws against poison, and resistance against poison damage.",
+        "Stonecunning: When making an Intelligence (History) check related to the origin of stonework, Borina is considered proficient in the History skill and adds double her proficiency bonus to the check.",
+        "Foresight Glimpse: Once per day, Borina can gain a brief, fleeting vision of the immediate future, granting her advantage on one attack roll, ability check, or saving throw of her choice."
+      ],
+      "type": "npc",
+      "attributes": {
+        "strength": 10,
+        "dexterity": 10,
+        "constitution": 14,
+        "intelligence": 16,
+        "wisdom": 18,
+        "charisma": 12
+      },
+      "status": "",
+      "id": "npcs-1749870598631",
+      "image": "images/settings/realm-of-myr/the-road-to-kordavos/npcs/7a98e364-48a3-4d85-8155-5505fe6c29ca.png?t=1749872201860"
+    },
+    "npcs-1749870658664": {
+      "name": "Elaraen Whisperwind",
+      "archetype": "Bard",
+      "race": "Half-Elf",
+      "gender": "Male",
+      "appearance": "Elaraen is a lean half-elf with expressive green eyes that often hold a hint of melancholy. His slightly pointed ears are usually hidden by his long, dark hair, which he often ties back with a simple leather thong. He possesses a charming, easy smile that belies a deeper thoughtfulness. His traveling clothes are practical but well-maintained, often adorned with a colorful scarf or a small, intricate brooch.",
+      "personality": "Charismatic, witty, and a natural storyteller, Elaraen uses his charm to navigate the world. He possesses a melancholic streak, often masked by his performances and humor. He is fiercely independent and values personal freedom above all else. He is observant and empathetic, often picking up on the subtle cues of others.",
+      "background": "Born to an elven mother and a human noble father, Elaraen felt like an outsider in his father's rigid, human-dominated household. His artistic inclinations and free spirit clashed constantly with his father's expectations for him to pursue a more 'respectable' and structured career. After a particularly heated argument about his future, Elaraen, then a young adult, left home to forge his own path. He found solace and purpose in music and storytelling, honing his craft as a traveling performer.",
+      "motivation": "Elaraen is driven by a deep desire to find his own identity and worth through his art, separate from his father's expectations. He seeks to experience the world beyond the confines of his past, to gather stories, and to share his music. Subconsciously, he may also be searching for a sense of belonging and acceptance that he never found at home.",
+      "behavior": "Elaraen is generally affable and quick-witted, using humor and music to connect with people. He is observant and empathetic, often picking up on the moods of those around him. While he enjoys company, he maintains a certain emotional distance, a lingering effect of his estrangement. He can be melancholic when alone, often composing new songs that reflect his inner turmoil or the beauty he finds in the world.",
+      "healthPercent": 100,
+      "equipment": [
+        {
+          "name": "Masterwork Lute",
+          "description": "A beautifully crafted instrument, well-worn from countless performances."
+        },
+        {
+          "name": "Leather Armor",
+          "description": "Light and flexible, offering protection without hindering movement."
+        },
+        {
+          "name": "Rapier",
+          "description": "A slender, elegant blade for self-defense."
+        },
+        {
+          "name": "Dagger",
+          "description": "A small, easily concealed utility knife."
+        },
+        {
+          "name": "Worn Leather Journal",
+          "description": "Filled with song lyrics, poems, and travel notes."
+        },
+        {
+          "name": "Pouch of Gold Coins",
+          "description": "Contains enough coin for immediate needs."
+        }
+      ],
+      "skills": [
+        "Performance",
+        "Persuasion",
+        "Deception",
+        "Insight",
+        "Acrobatics"
+      ],
+      "spells": [
+        {
+          "name": "Vicious Mockery",
+          "description": "Unleashes a string of insults laced with subtle enchantments, causing psychic damage and disadvantage on the next attack roll.",
+          "isUsed": false
+        },
+        {
+          "name": "Minor Illusion",
+          "description": "Creates a sound or an image of an object within range.",
+          "isUsed": false
+        },
+        {
+          "name": "Charm Person",
+          "description": "Attempts to magically charm a humanoid, making them friendly towards him.",
+          "isUsed": false
+        },
+        {
+          "name": "Healing Word",
+          "description": "A word of power that can heal a creature from a distance.",
+          "isUsed": false
+        },
+        {
+          "name": "Faerie Fire",
+          "description": "Outlines creatures and objects in a colorful light, making them visible and granting advantage on attack rolls against them.",
+          "isUsed": false
+        }
+      ],
+      "specialAbilities": [
+        "Darkvision (Half-Elf: Can see in dim light within 60 feet as if it were bright light, and in darkness as if it were dim light. He can't discern color in darkness, only shades of gray.)",
+        "Fey Ancestry (Half-Elf: Has advantage on saving throws against being charmed, and magic can't put him to sleep.)",
+        "Skill Versatility (Half-Elf: Gains proficiency in two skills of his choice.)",
+        "Bardic Inspiration (Bard: Can inspire others through stirring words or music, granting them a bonus to an ability check, attack roll, or saving throw.)",
+        "Song of Rest (Bard: Can perform a soothing song or tale during a short rest, allowing allies to regain additional hit points.)"
+      ],
+      "type": "npc",
+      "attributes": {
+        "strength": 9,
+        "dexterity": 15,
+        "constitution": 13,
+        "intelligence": 11,
+        "wisdom": 12,
+        "charisma": 17
+      },
+      "status": "",
+      "id": "npcs-1749870658664",
+      "image": "images/settings/realm-of-myr/the-road-to-kordavos/npcs/09000b84-bff7-4c85-bba3-05e48f32f8ca.png?t=1749872181244"
+    },
+    "npcs-1749870721240": {
+      "name": "Sister Mira",
+      "archetype": "Cleric",
+      "race": "Human",
+      "gender": "Female",
+      "appearance": "A woman in her late twenties, with a sturdy build and sun-kissed skin. Her brown hair is often tied back in a practical braid, and her kind, observant eyes show a hint of weariness from long journeys. She wears practical, well-maintained leather armor over simple robes, adorned with the silver holy symbol of Valkara.",
+      "personality": "Devout, compassionate, resilient, and practical. She possesses a quiet strength and a deep well of empathy. While she can be weary from her travels, her faith remains unwavering, and she approaches challenges with determination and a calm demeanor.",
+      "background": "Sister Elara grew up in a small village near the capital, joining the Church of Valkara at a young age. She felt a strong calling to serve those in need, especially in places where the church's presence was sparse. For the past few years, she has been ministering to the scattered settlements along the rugged frontier, providing healing, spiritual guidance, and a beacon of hope against the wilderness's harsh realities. She is now returning to the main temple to report on the conditions and resupply.",
+      "motivation": "Her primary motivation is to serve Valkara by bringing healing and hope to those in need, especially in the harsh frontier lands. She feels a deep responsibility to her flock and to the church, and is driven by a desire to alleviate suffering and spread the light of her deity.",
+      "behavior": "Calm and compassionate, but with a practical, no-nonsense approach born from her time on the frontier. She is quick to offer aid and comfort, but also firm when necessary. She speaks with a gentle, reassuring tone, often interjecting with words of faith or encouragement.",
+      "healthPercent": 95,
+      "equipment": [
+        {
+          "name": "Mace",
+          "description": "A sturdy, well-balanced mace, often used for self-defense against wild beasts or bandits."
+        },
+        {
+          "name": "Shield",
+          "description": "A simple wooden shield emblazoned with the symbol of Valkara."
+        },
+        {
+          "name": "Leather Armor",
+          "description": "Practical, well-worn leather armor suitable for travel."
+        },
+        {
+          "name": "Holy Symbol of Valkara",
+          "description": "A silver pendant depicting a stylized sun, the symbol of Valkara."
+        },
+        {
+          "name": "Healer's Kit",
+          "description": "Contains bandages, salves, and other medical supplies."
+        },
+        {
+          "name": "Traveler's Pack",
+          "description": "Includes rations, a waterskin, bedroll, and other essentials for a long journey."
+        }
+      ],
+      "skills": [
+        "Medicine",
+        "Religion",
+        "Persuasion",
+        "Survival"
+      ],
+      "spells": [
+        {
+          "name": "Cure Wounds",
+          "description": "A touch heals a creature of its wounds.",
+          "isUsed": false
+        },
+        {
+          "name": "Healing Word",
+          "description": "A creature you choose within range regains hit points.",
+          "isUsed": false
+        },
+        {
+          "name": "Bless",
+          "description": "Up to three creatures gain a bonus to attack rolls and saving throws.",
+          "isUsed": false
+        },
+        {
+          "name": "Guiding Bolt",
+          "description": "A flash of light strikes a creature, dealing radiant damage and granting advantage on the next attack roll against it.",
+          "isUsed": false
+        },
+        {
+          "name": "Shield of Faith",
+          "description": "A shimmering field of force appears and surrounds a creature, granting it a bonus to AC.",
+          "isUsed": false
+        }
+      ],
+      "specialAbilities": [
+        "Divine Health: Immune to disease.",
+        "Turn Undead: As an action, she can present her holy symbol and speak a prayer, causing undead within 30 feet to flee.",
+        "Human Versatility: Adaptable and resourceful, able to quickly learn and apply new skills in diverse situations."
+      ],
+      "type": "npc",
+      "attributes": {
+        "strength": 12,
+        "dexterity": 10,
+        "constitution": 14,
+        "intelligence": 13,
+        "wisdom": 16,
+        "charisma": 12
+      },
+      "status": "",
+      "id": "npcs-1749870721240",
+      "image": "images/settings/realm-of-myr/the-road-to-kordavos/npcs/24fbafb0-8cc1-4e2e-97d4-8fb67b9d60a7.png?t=1749872192595"
+    }
+  },
+  "draft": false,
+  "availableCharacterOptions": {
+    "races": [
+      "Human",
+      "Elf",
+      "Dwarf",
+      "Half-Elf",
+      "Halfling"
+    ],
+    "archetypes": [
+      "Fighter",
+      "Wizard",
+      "Rogue",
+      "Cleric"
+    ]
+  }
+}

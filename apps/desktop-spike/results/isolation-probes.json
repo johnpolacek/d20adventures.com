@@ -1,0 +1,43 @@
+{
+  "recordedAt": "2026-10-01T19:45:28.598Z",
+  "kind": "argument-parse-only, no GM input or persistent session",
+  "results": [
+    {
+      "provider": "codex",
+      "args": [
+        "app-server",
+        "--ignore-user-config",
+        "--help"
+      ],
+      "exitCode": 2,
+      "timedOut": false,
+      "rejectedUnknownOption": true,
+      "helpExposesIgnoreUserConfig": false
+    },
+    {
+      "provider": "gemini",
+      "args": [
+        "--acp",
+        "--ignore-user-config",
+        "--help"
+      ],
+      "exitCode": 0,
+      "timedOut": false,
+      "rejectedUnknownOption": false,
+      "helpExposesIgnoreUserConfig": false
+    },
+    {
+      "provider": "grok",
+      "args": [
+        "agent",
+        "stdio",
+        "--ignore-user-config",
+        "--help"
+      ],
+      "exitCode": 2,
+      "timedOut": false,
+      "rejectedUnknownOption": true,
+      "helpExposesIgnoreUserConfig": false
+    }
+  ]
+}

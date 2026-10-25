@@ -1,0 +1,12 @@
+{
+  "id": "mira-hearthstone",
+  "name": "Mira Hearthstone",
+  "type": "npc",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/app/avatar/npc.png?v=1",
+  "archetype": "Servant",
+  "race": "Human",
+  "gender": "Female",
+  "appearance": "A shorter, stockier young servant with a flushed round face, a notepad, and practical Blackthorn household attire.",
+  "behavior": "Nervous and dutiful, following Clive’s instructions under pressure.",
+  "healthPercent": 100
+}

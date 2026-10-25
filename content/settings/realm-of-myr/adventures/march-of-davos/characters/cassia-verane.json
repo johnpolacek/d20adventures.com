@@ -1,0 +1,81 @@
+{
+  "name": "Cassia Verane",
+  "archetype": "Wizard",
+  "race": "Human",
+  "gender": "Female",
+  "appearance": "Cassia is a precise Asterian woman with ink-stained fingers, dark hair coiled in the capital fashion, and a grey travelling coat lined with map pockets. She carries a brass surveyor's glass and a thick folio of hand-drawn charts of the tunnels and ruins beneath Kordavos.",
+  "personality": "Methodical, dryly witty, and endlessly curious, Cassia believes every mystery is simply a map no one has finished drawing. She is Asterian by birth but loyal to knowledge over empire, which has made her superiors uneasy and made her few friends on either side, a fact she pretends not to mind.",
+  "background": "Trained as a cartographer-mage in the Asterian capital, Cassia was posted to Kordavos to chart the March for the imperial survey. The work led her beneath the city, where her charts began to show what her superiors did not want recorded: old Valkaran catacombs, sealed doors bearing wards she could not break, and fresh boot prints in passages that should have been empty for a century. Her latest report was returned unread, so she has resolved to find the truth herself.",
+  "motivation": "Cassia wants to map the hidden passages beneath Kordavos and understand the Valkaran wardings sealed within them before someone with worse intentions gets there first. Truth, to her, is the only cause worth the trouble it brings.",
+  "behavior": "Cassia observes before she acts, cross-references what she sees against her charts and histories, and shares conclusions in crisp, matter-of-fact terms. In a fight she keeps her distance, opening with clever use of her spells to control the ground and expose weaknesses. She cannot resist examining runes, relics, and anything old enough to be interesting.",
+  "healthPercent": 100,
+  "equipment": [
+    {
+      "name": "Surveyor's Staff",
+      "description": "A brass-capped staff etched with measuring marks, serving as arcane focus and walking stick alike."
+    },
+    {
+      "name": "Folio of Charts",
+      "description": "Hand-drawn maps of Kordavos and the tunnels beneath it, annotated in tight Asterian shorthand."
+    },
+    {
+      "name": "Brass Surveyor's Glass",
+      "description": "A fine spyglass used for sighting landmarks and reading distant inscriptions."
+    },
+    {
+      "name": "Grey Travelling Coat",
+      "description": "A practical coat lined with pockets for pens, chalk, twine, and folded maps."
+    }
+  ],
+  "skills": ["Arcana", "Investigation", "Cartography", "History", "Perception"],
+  "spells": [
+    {
+      "name": "Detect Magic",
+      "description": "Reveals the presence and general nature of magical auras within range.",
+      "isUsed": false
+    },
+    {
+      "name": "Identify",
+      "description": "Determines the specific magical properties of an item.",
+      "isUsed": false
+    },
+    {
+      "name": "Mage Armor",
+      "description": "Wraps the caster in an invisible ward of protective force.",
+      "isUsed": false
+    },
+    {
+      "name": "Magic Missile",
+      "description": "Darts of arcane force that unerringly strike their target.",
+      "isUsed": false
+    },
+    {
+      "name": "Grease",
+      "description": "Slicks the ground with conjured grease, sending foes sprawling.",
+      "isUsed": false
+    },
+    {
+      "name": "Comprehend Languages",
+      "description": "Allows the caster to understand the literal meaning of any spoken or written language.",
+      "isUsed": false
+    },
+    {
+      "name": "Misty Step",
+      "description": "The caster vanishes in silvery mist and reappears a short distance away.",
+      "isUsed": false
+    }
+  ],
+  "specialAbilities": ["Cartographer's Memory: Cassia can accurately recall and sketch any place she has seen", "Ward Sense: Cassia recognizes the structure of Valkaran wards and sealing magic on sight"],
+  "status": "",
+  "type": "pc",
+  "attributes": {
+    "strength": 8,
+    "dexterity": 12,
+    "constitution": 10,
+    "intelligence": 16,
+    "wisdom": 14,
+    "charisma": 10
+  },
+  "id": "cassia-verane",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/march-of-davos/pcs/cassia-verane.png"
+}

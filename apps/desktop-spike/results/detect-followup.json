@@ -1,0 +1,46 @@
+{
+  "recordedAt": "2026-10-02T03:41:46.887Z",
+  "nativeTauri": true,
+  "providers": [
+    {
+      "provider": "claude",
+      "executable": "~/.local/share/claude/versions/2.1.287",
+      "version": "2.1.287 (Claude Code)",
+      "versionExit": 0,
+      "helpExit": 0,
+      "exposesIgnoreUserConfig": false,
+      "mode": "stream-json stdin",
+      "allowed": true
+    },
+    {
+      "provider": "codex",
+      "executable": "~/.local/share/fnm/node-versions/v24.14.1/installation/lib/node_modules/@openai/codex/bin/codex.js",
+      "version": "codex-cli 0.156.1",
+      "versionExit": 0,
+      "helpExit": 0,
+      "exposesIgnoreUserConfig": false,
+      "mode": "app-server JSON-RPC",
+      "allowed": true
+    },
+    {
+      "provider": "gemini",
+      "executable": "~/.local/share/fnm/node-versions/v24.14.1/installation/lib/node_modules/@google/gemini-cli/bundle/gemini.js",
+      "version": "0.60.0",
+      "versionExit": 0,
+      "helpExit": 0,
+      "exposesIgnoreUserConfig": false,
+      "mode": "ACP",
+      "allowed": true
+    },
+    {
+      "provider": "grok",
+      "executable": "~/.grok/downloads/grok-1.0.41-macos-aarch64",
+      "version": "grok 1.0.41 (4220f3b224a6) [stable]",
+      "versionExit": 0,
+      "helpExit": 0,
+      "exposesIgnoreUserConfig": false,
+      "mode": "agent stdio ACP",
+      "allowed": true
+    }
+  ]
+}

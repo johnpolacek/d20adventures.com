@@ -1,0 +1,176 @@
+import * as THREE from "three"
+import type { Rand } from "../kit/rng"
+import type { MaterialSpec } from "../spec/set"
+import type { SharedUniforms } from "./atmosphere"
+import { bannerTexture } from "./heraldry"
+import { grass, meadow, rock, water } from "./nature"
+import { burlap, card, cloth, fire, foliage, glow, masonry, metal, mist, orb, plain, TextureBank, tatters, wood } from "./surfaces"
+
+export interface MaterialLibrary {
+  get: (name: string) => THREE.Material | undefined
+  names: () => string[]
+  // Resolves when every painted texture has loaded (a failed one stays blank rather than blocking the stage).
+  ready: Promise<void>
+  dispose: () => void
+}
+
+// Painted textures by URL, shared between materials: repeat-wrapped, full mips, sRGB, the GPU's best anisotropy.
+class PaintedTextures {
+  private cache = new Map<string, THREE.Texture>()
+  private pending: Promise<void>[] = []
+  constructor(private anisotropy: number) {}
+  // `repeat` scales the texture over the surface's uv: an `image` laid by surface metres covers `size` metres a tile.
+  get(url: string, repeat?: [number, number]) {
+    const key = repeat ? `${url}|${repeat[0]},${repeat[1]}` : url
+    const hit = this.cache.get(key)
+    if (hit) return hit
+    const t = new THREE.Texture()
+    if (repeat) t.repeat.set(...repeat)
+    t.colorSpace = THREE.SRGBColorSpace
+    t.wrapS = t.wrapT = THREE.RepeatWrapping
+    t.anisotropy = this.anisotropy
+    this.cache.set(key, t)
+    this.pending.push(
+      new THREE.ImageLoader()
+        .loadAsync(url)
+        .then((img) => {
+          t.image = img
+          t.needsUpdate = true
+        })
+        .catch(() => console.warn(`[stage] texture failed: ${url}`))
+    )
+    return t
+  }
+  ready() {
+    return Promise.all(this.pending).then(() => undefined)
+  }
+  dispose() {
+    for (const t of this.cache.values()) t.dispose()
+  }
+}
+
+// The set's named materials, built for rendering (needs a DOM for the canvas textures).
+export function createMaterialLibrary(specs: Record<string, MaterialSpec>, shared: SharedUniforms, rand: Rand, anisotropy = 4): MaterialLibrary {
+  const ctx = { shared, rand }
+  const bank = new TextureBank(rand.fork("textures"))
+  const painted = new PaintedTextures(anisotropy)
+  const out = new Map<string, THREE.Material>()
+  for (const [name, s] of Object.entries(specs)) {
+    let m: THREE.Material
+    switch (s.type) {
+      case "masonry":
+        m = masonry(ctx, name, s)
+        break
+      case "wood":
+        m = wood(ctx, name, s)
+        break
+      case "painted":
+        m = wood(ctx, name, { ...s, a: "#ffffff", b: "#ffffff", c: "#ffffff", map: painted.get(s.map), mapSize: s.size })
+        break
+      case "card":
+        m = card(ctx, name, painted.get(s.map), s.tint, s.roughness)
+        break
+      case "image": {
+        const map = painted.get(s.map, s.size ? [1 / s.size[0], 1 / s.size[1]] : undefined)
+        m = plain(ctx, name, s.tint ?? "#ffffff", s.roughness ?? 0.8, {
+          map,
+          metalness: s.metalness ?? 0,
+          side: s.double ? THREE.DoubleSide : THREE.FrontSide,
+          ...(s.glow ? { emissive: new THREE.Color("#ffffff"), emissiveMap: map, emissiveIntensity: s.glow } : {}),
+        })
+        if (s.glow) m.userData.noShadow = true
+        break
+      }
+      case "cloth": {
+        const map = s.heraldry ? bank.keep(bannerTexture(rand.fork(`heraldry/${name}`), s.heraldry)) : undefined
+        const alphaMap = s.tatters ? bank.keep(tatters(rand.fork(`tatters/${name}`), s.tatters[0], s.tatters[1])) : null
+        m = cloth(ctx, bank, name, s.heraldry ? "#ffffff" : s.color, { map, alphaMap, amp: s.amp, freq: s.freq })
+        if (s.shadow === false) m.userData.noShadow = true
+        break
+      }
+      case "burlap":
+        m = burlap(ctx, bank, name, s.color, s.roughness)
+        break
+      case "foliage":
+        m = foliage(ctx, bank, name, s.color, s.roughness, s.map ? painted.get(s.map) : undefined)
+        if (s.shadow === false) m.userData.noShadow = true
+        break
+      case "glow":
+        m = glow(ctx, bank, name, s.color, s.opacity)
+        break
+      case "mist":
+        m = mist(ctx, bank, name, s.color, s.opacity)
+        break
+      case "fire":
+        m = fire(ctx, name, s.color, s.intensity)
+        break
+      case "orb":
+        m = orb(ctx, name, s.color, s.glow)
+        break
+      case "metal":
+        m = metal(ctx, name, s.color, s.roughness, s.metalness)
+        break
+      case "rock":
+        m = rock(ctx, name, s)
+        break
+      case "meadow":
+        m = meadow(ctx, name, s)
+        break
+      case "grass":
+        m = grass(ctx, name, s)
+        break
+      case "water":
+        m = water(ctx, name, s)
+        break
+      case "plain":
+        m = plain(ctx, name, s.emissive ? "#000000" : s.color, s.roughness ?? 0.85, s.emissive ? { emissive: new THREE.Color(s.emissive), emissiveIntensity: s.emissiveIntensity ?? 1 } : {})
+        break
+      case "glass":
+        m = plain(ctx, name, s.color, s.roughness ?? 0.15, {
+          transparent: true,
+          opacity: s.opacity,
+          depthWrite: false,
+          ...(s.emissive ? { emissive: new THREE.Color(s.emissive), emissiveIntensity: s.emissiveIntensity ?? 1 } : {}),
+        })
+        m.userData.glass = true
+        // Sunlight passes through a window: the panes cast no shadow, the leading and the frame do.
+        m.userData.noShadow = true
+        break
+    }
+    out.set(name, m)
+  }
+  return {
+    get: (name) => out.get(name),
+    names: () => [...out.keys()],
+    ready: painted.ready(),
+    dispose: () => {
+      for (const m of out.values()) m.dispose()
+      bank.dispose()
+      painted.dispose()
+    },
+  }
+}
+
+// For checking a set without a GPU or a DOM: one plain material per name, flagged like the real one so the batch adds
+// the same attributes (wood grain, cloth sway).
+export function createStubLibrary(specs: Record<string, MaterialSpec>): MaterialLibrary {
+  const out = new Map<string, THREE.Material>()
+  for (const [name, s] of Object.entries(specs)) {
+    const m = new THREE.MeshBasicMaterial({ name })
+    if (s.type === "wood" || s.type === "painted") m.userData.wood = true
+    // Builders choose geometry by these flags (leaf cards, moss curtains), so the check counts what will render.
+    if (s.type === "foliage" && s.map) m.userData.cards = true
+    if (s.type === "card") m.userData.card = true
+    if (s.type === "cloth") m.userData.sway = true
+    if (s.type === "fire") m.userData.fire = true
+    out.set(name, m)
+  }
+  return {
+    get: (name) => out.get(name),
+    names: () => [...out.keys()],
+    ready: Promise.resolve(),
+    dispose: () => {
+      for (const m of out.values()) m.dispose()
+    },
+  }
+}

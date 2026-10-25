@@ -1,0 +1,476 @@
+import assert from "node:assert/strict"
+import { readdirSync, readFileSync, writeFileSync } from "node:fs"
+import { resolve } from "node:path"
+import { createGmCore, type GmPorts, type Store } from "@d20/gm-core"
+import { assertPlayerCharacterControl } from "@d20/gm-core/access"
+import { handleSkipPassNpcTurn } from "@d20/gm-core/services/npc-turn-branch-service"
+import { npcEarlierTurns, waitsUnaddressed } from "@d20/gm-core/services/npc-turn-service"
+import { createRollRequirementService } from "@d20/gm-core/services/roll-requirement-service"
+import { ledgerNote } from "@d20/gm-core/story/knowledge"
+import { castRulesNote, npcNoteRules } from "@d20/gm-core/story/limits"
+import { calculateAttributeModifier } from "@d20/gm-core/utils/modifier-utils"
+import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventures/plan-view"
+import { gmNotesWithRules, premiseNote } from "@d20/gm-core/wiki-adventures/player-safety"
+import { assembleGameplayContextPacket, buildWikiEncounterProgressionPrompt, paceNote, sceneRound } from "@d20/gm-core/wiki-adventures/runtime-context"
+import { build } from "esbuild"
+import ts from "typescript"
+import { z } from "zod"
+import { commitWikiTurnAdvance, submitReply } from "../convex/adventure"
+import { compileAdventureSourceTree } from "../lib/wiki-adventures/compiler"
+import { getLocalWikiAdventureDefinition, loadLocalWikiAdventureRuntime, readLocalWikiAdventureSourceFiles } from "../lib/wiki-adventures/local-runtime"
+
+// Recorded from the production services at 7ff0b2d, and again for story beats on 2026-10-14. No model calls.
+const fixture = JSON.parse(readFileSync("scripts/gm-core-fixtures/turn.json", "utf8"))
+const characterFixture = JSON.parse(readFileSync("scripts/gm-core-fixtures/character.json", "utf8"))
+// GM_FIXTURE_UPDATE=1 records the prompts, schemas and state the code produces now over the recorded model answers,
+// after a prompt or content change made on purpose. Read the fixtures' diff before committing it.
+const UPDATE = process.env.GM_FIXTURE_UPDATE === "1"
+const save = (path: string, value: unknown) => writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`)
+const runtime = loadLocalWikiAdventureRuntime("realm-of-myr", "march-of-davos")
+const clone = <T>(value: T): T => structuredClone(value)
+const unavailable = () => {
+  throw new Error("Unexpected host call")
+}
+const json = (value: unknown) => JSON.parse(JSON.stringify(value))
+
+function memoryGame() {
+  const adventure = { ...clone(fixture.finalState[0]), currentTurnId: "turn-1", currentEncounterId: fixture.initialState.encounterId }
+  const records = new Map<string, any>([
+    [adventure._id, adventure],
+    ["turn-1", clone(fixture.initialState)],
+  ])
+  const writes: string[] = []
+  const narrations: string[] = []
+  const db = {
+    get: async (id: string) => clone(records.get(id) ?? null),
+    patch: async (id: string, patch: any) => Object.assign(records.get(id), clone(patch)),
+    insert: async (table: string, value: any) => {
+      assert.equal(table, "turns")
+      const id = `turn-${value.order}`
+      assert.ok(!records.has(id), "duplicate turn")
+      records.set(id, { _id: id, ...clone(value) })
+      return id
+    },
+    query: (table: string) => {
+      assert.equal(table, "turns")
+      let adventureId: string, order: number
+      const query = {
+        withIndex(name: string, predicate: any) {
+          assert.equal(name, "by_adventure")
+          predicate({
+            eq: (_key: string, value: string) => {
+              adventureId = value
+            },
+          })
+          return query
+        },
+        filter(predicate: any) {
+          predicate({
+            field: (key: string) => key,
+            eq: (_key: string, value: number) => {
+              order = value
+            },
+          })
+          return query
+        },
+        first: async () => clone([...records.values()].find((row) => row.adventureId === adventureId && row.order === order) ?? null),
+      }
+      return query
+    },
+  }
+  // Exercise the actual Convex handlers. Only the database transport is replaced.
+  const handler = (mutation: unknown) => (mutation as { _handler(ctx: unknown, args: unknown): Promise<any> })._handler
+  const store: Store = {
+    getAdventure: ({ adventureId }) => db.get(adventureId),
+    getTurn: ({ turnId }) => db.get(turnId),
+    getTurns: async ({ adventureId }) => clone([...records.values()].filter((row) => row.adventureId === adventureId)),
+    getTurnByOrder: async ({ adventureId, order }) => clone([...records.values()].find((row) => row.adventureId === adventureId && row.order === order) ?? null),
+    submitReply: async (args) => {
+      writes.push("adventure:submitReply")
+      return handler(submitReply)({ db }, args)
+    },
+    updateTurn: async ({ turnId, patch }) => {
+      writes.push("turns:updateTurn")
+      return db.patch(turnId, patch)
+    },
+    commitWikiTurnAdvance: async (args) => {
+      writes.push("adventure:commitWikiTurnAdvance")
+      return handler(commitWikiTurnAdvance)({ db }, args)
+    },
+    createTurn: unavailable,
+    patchAdventure: unavailable,
+    createAdventureWithFirstTurn: unavailable,
+  }
+  const ports: GmPorts = {
+    store,
+    identity: async () => "fixture-player",
+    sleep: async () => {},
+    narration: {
+      afterTurn: (id) => {
+        narrations.push(id)
+      },
+    },
+    content: {
+      isWikiAdventure: () => true,
+      loadWikiRuntime: async () => runtime,
+      loadPlan: async () => buildAdventurePlanViewFromArtifacts(runtime.artifacts),
+      loadLegacyPlan: unavailable,
+      spatialContext: async () => undefined,
+    },
+    llm: { generateObject: unavailable, generateText: unavailable },
+  }
+  return { records, writes, narrations, ports }
+}
+
+async function replayTurn() {
+  const game = memoryGame()
+  let index = 0
+  const inference = async (args: { prompt: string; schema?: z.ZodTypeAny }) => {
+    const expected = fixture.calls[index++]
+    assert.ok(expected, "unexpected extra model call")
+    if (UPDATE) Object.assign(expected, { prompt: args.prompt, schema: args.schema ? z.toJSONSchema(args.schema) : undefined })
+    assert.equal(args.prompt, expected.prompt, `prompt ${index} changed`)
+    assert.deepEqual(args.schema ? z.toJSONSchema(args.schema) : undefined, expected.schema, `schema ${index} changed`)
+    return args.schema ? { object: args.schema.parse(JSON.parse(expected.response)) } : { text: expected.response }
+  }
+  game.ports.llm = { generateObject: inference as GmPorts["llm"]["generateObject"], generateText: inference as GmPorts["llm"]["generateText"] }
+  const core = createGmCore(game.ports)
+  const initial = fixture.initialState
+  const player = { ...initial.characters[0], controlledBy: "human" }
+  const beats = await core.writeReply({ character: player, playerInput: fixture.playerInput, turn: initial })
+  const reply = await core.processTurnReply({ turnId: "turn-1", characterId: player.id, originalPlayerInput: fixture.playerInput, story: beats })
+  assert.ok(reply.rollRequired)
+  await core.resolvePlayerRollResult({ turnId: "turn-1", characterId: player.id, result: 20 })
+  assert.ok(game.records.get("turn-1").characters.every((actor: any) => actor.isComplete))
+  await core.advanceTurn({ turnId: "turn-1", settingId: "realm-of-myr", adventurePlanId: "march-of-davos" })
+  assert.equal(index, 7)
+  if (UPDATE) fixture.writes = game.writes
+  assert.deepEqual(game.writes, fixture.writes)
+  assert.deepEqual(game.narrations, ["turn-1", "turn-1", "turn-2"])
+  // The old spike stored a subset of commit fields. Compare every recorded field,
+  // plus the durable patch now written by the real commit handler.
+  for (const expected of fixture.finalState) {
+    const actual = game.records.get(expected._id)
+    for (const key of Object.keys(expected)) {
+      if (key === "updatedAt") continue
+      if (UPDATE) expected[key] = json(actual[key])
+      assert.deepEqual(json(actual[key]), expected[key], `${expected._id}.${key}`)
+    }
+  }
+  if (UPDATE) save("scripts/gm-core-fixtures/turn.json", fixture)
+  assert.ok(game.records.get("turn-2").adventurePatch)
+  assert.equal((await core.advanceTurn({ turnId: "turn-1", settingId: "realm-of-myr", adventurePlanId: "march-of-davos" })).status, "already_advanced")
+  assert.equal(index, 7, "duplicate advance must not call the model")
+  await assert.rejects(
+    game.ports.store.commitWikiTurnAdvance({
+      adventureId: "fixture-adventure",
+      expectedCurrentTurnId: "turn-1",
+      expectedCurrentEncounterId: initial.encounterId,
+      nextEncounterId: "the-harvest-festival",
+      title: "",
+      story: [],
+      characters: [],
+      order: 3,
+    }),
+    /Stale turn advance/
+  )
+  // The Convex commit merges each round's facts into the adventure's: one told again gains its new knowers.
+  for (const [order, knownBy] of [
+    [3, ["thalbern", "garlan-ironfist"]],
+    [4, ["milos-radan"]],
+  ] as const) {
+    const adventure = game.records.get("fixture-adventure")
+    await game.ports.store.commitWikiTurnAdvance({
+      adventureId: "fixture-adventure",
+      expectedCurrentTurnId: adventure.currentTurnId,
+      expectedCurrentEncounterId: adventure.currentEncounterId,
+      nextEncounterId: adventure.currentEncounterId,
+      title: "",
+      story: [],
+      characters: [],
+      order,
+      knowledge: [{ id: "r2-private-1", text: "River goods came through at first light.", knownBy: [...knownBy] }],
+    })
+  }
+  assert.deepEqual(game.records.get("fixture-adventure").knowledge, [{ id: "r2-private-1", text: "River goods came through at first light.", knownBy: ["thalbern", "garlan-ironfist", "milos-radan"] }])
+}
+
+async function characterPrompts() {
+  const game = memoryGame()
+  let current: any
+  game.ports.llm.generateObject = async (args) => {
+    if (UPDATE) Object.assign(current, { prompt: args.prompt, schema: z.toJSONSchema(args.schema) })
+    assert.equal(args.prompt, current.prompt, current.name)
+    assert.deepEqual(z.toJSONSchema(args.schema), current.schema, current.name)
+    return { object: {} as z.infer<typeof args.schema> }
+  }
+  const core = createGmCore(game.ports)
+  for (current of characterFixture.cases) {
+    const operation = core[current.name as keyof typeof core] as (args: any) => Promise<{ success: boolean }>
+    assert.equal((await operation(current.input)).success, true)
+  }
+  assert.deepEqual(await core.generateCharacterAction({ prompt: " ", characterType: "pc" }), { success: false, error: "Prompt is required" })
+  if (UPDATE) save("scripts/gm-core-fixtures/character.json", characterFixture)
+}
+
+async function accessAndInstanceIsolation() {
+  const a = memoryGame(),
+    b = memoryGame()
+  a.ports.identity = async () => "outsider"
+  const coreA = createGmCore(a.ports)
+  const coreB = createGmCore(b.ports)
+  await assert.rejects(
+    coreA.processTurnReply({ turnId: "turn-1", characterId: "mira", story: [{ kind: "action", by: { step: "reply", character: "mira" }, actor: "mira", text: "Hello" }] }),
+    /Forbidden/
+  )
+  await assert.rejects(coreB.assertAdventureAccess(null, "fixture-adventure"), /Unauthorized/)
+  const turn = b.records.get("turn-1")
+  assert.throws(() => assertPlayerCharacterControl("fixture-player", turn, "garlan-ironfist"), /Only player/)
+  turn.characters[0].controlledBy = "ai"
+  assert.throws(() => assertPlayerCharacterControl("fixture-player", turn, "mira"), /AI companion/)
+  b.records.get("fixture-adventure").runType = "practice"
+  b.records.get("fixture-adventure").playerIds.push("outsider")
+  await assert.rejects(coreB.assertAdventureAccess("outsider", "fixture-adventure"), /Forbidden/)
+  assert.deepEqual(a.writes, [])
+  assert.deepEqual(b.writes, [])
+
+  // An automatic companion consumes its own model and store, without a human roll.
+  const c = memoryGame()
+  c.records.get("turn-1").characters[0].controlledBy = "ai"
+  const statefulModel = {
+    calls: 0,
+    async generateText(): Promise<{ text: string }> {
+      throw new Error("The AI companion writes beats")
+    },
+    async generateObject(args: { schema: z.ZodTypeAny }) {
+      this.calls++
+      // The companion's move as beats, then the roll check.
+      if (this.calls === 1) return { object: args.schema.parse({ beats: [{ kind: "action", who: "mira", text: "Mira waits by the gate." }] }) }
+      return { object: { rollType: "none", difficulty: 0 } as any }
+    },
+  }
+  c.ports.llm = statefulModel
+  c.ports.content.isWikiAdventure = function () {
+    assert.equal(this, c.ports.content, "content method lost its receiver")
+    return true
+  }
+  c.ports.content.loadWikiRuntime = async function () {
+    assert.equal(this, c.ports.content, "content loader lost its receiver")
+    return runtime
+  }
+  await createGmCore(c.ports).processAiPcTurn({ turnId: "turn-1", characterId: "mira", adventure: c.records.get("fixture-adventure") })
+  assert.equal(statefulModel.calls, 2)
+  assert.equal(c.records.get("turn-1").characters[0].isComplete, true)
+  assert.equal(b.records.get("turn-1").characters[0].isComplete, false)
+
+  c.ports.content.loadPlan = async function () {
+    assert.equal(this, c.ports.content, "plan loader lost its receiver")
+    return buildAdventurePlanViewFromArtifacts(runtime.artifacts)
+  }
+  c.ports.store.createAdventureWithFirstTurn = async (args) => {
+    assert.equal(args.ownerId, "fixture-player", "ownership must come from authenticated identity")
+    assert.equal(args.turn.title, "The Front of the Line")
+    return { adventureId: "new-adventure", turnId: "new-turn" }
+  }
+  await createGmCore(c.ports).createAdventureWithFirstTurn({
+    planId: "march-of-davos",
+    settingId: "realm-of-myr",
+    ownerId: "forged-owner",
+    playerIds: ["fixture-player"],
+    title: "New game",
+    startedAt: 0,
+    playerInput: "",
+    turn: { encounterId: fixture.initialState.encounterId, story: [], characters: [], order: 1 },
+  })
+
+  const d = memoryGame()
+  d.ports.llm.generateObject = async () => ({ object: { nextEncounterId: "invented-encounter", beats: [{ kind: "narration", text: "No." }] } as any })
+  await assert.rejects(createGmCore(d.ports).advanceTurn({ turnId: "turn-1", settingId: "realm-of-myr", adventurePlanId: "march-of-davos" }), /transition rejected/i)
+  assert.deepEqual(d.writes, [])
+
+  const drift = memoryGame()
+  await drift.ports.store.commitWikiTurnAdvance({
+    adventureId: "fixture-adventure",
+    expectedCurrentTurnId: "turn-1",
+    expectedCurrentEncounterId: fixture.initialState.encounterId,
+    expectedContentHash: "new-content-hash",
+    currentContentVersion: "new-version",
+    currentVersionId: "new-version-id",
+    nextEncounterId: "the-harvest-festival",
+    title: "Festival",
+    story: [{ kind: "narration", by: { step: "round" }, text: "The party enters the city." }],
+    characters: [],
+    order: 2,
+    isFinalEncounter: true,
+  })
+  const completed = drift.records.get("fixture-adventure")
+  assert.equal(completed.contentRef.contentHash, "new-content-hash")
+  assert.equal(completed.contentRef.contentVersion, "new-version")
+  assert.equal(completed.status, "completed")
+  assert.equal(typeof completed.endedAt, "number")
+}
+
+async function packageBoundary() {
+  const sourceRoot = resolve("packages/gm-core/src")
+  const visit = (dir: string) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const path = resolve(dir, entry.name)
+      if (entry.isDirectory()) {
+        visit(path)
+        continue
+      }
+      if (!path.endsWith(".ts")) continue
+      const source = readFileSync(path, "utf8")
+      const file = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true)
+      function check(node: ts.Node) {
+        if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
+          const specifier = node.moduleSpecifier.text
+          assert.ok(specifier === "zod" || (specifier.startsWith(".") && resolve(dir, specifier).startsWith(`${sourceRoot}/`)), `${path}: forbidden dependency ${specifier}`)
+        }
+        if (ts.isIdentifier(node)) assert.ok(!["process", "Buffer", "require", "__dirname"].includes(node.text), `${path}: forbidden host global ${node.text}`)
+        ts.forEachChild(node, check)
+      }
+      check(file)
+    }
+  }
+  visit(sourceRoot)
+  const bundle = await build({ entryPoints: ["packages/gm-core/src/index.ts"], bundle: true, platform: "browser", format: "esm", write: false, logLevel: "silent" })
+  assert.ok(bundle.outputFiles[0].text.includes("createGmCore"))
+}
+
+// A check for a spell the character knows is cast with Intelligence, whatever the spell is called.
+function spellModifiers() {
+  const lyra = { attributes: { strength: 8, dexterity: 10, constitution: 10, intelligence: 16, wisdom: 14, charisma: 12 }, spells: [{ name: "Fog Cloud" }, { name: "Charm Person" }] }
+  assert.equal(calculateAttributeModifier(lyra, "Fog Cloud Check"), 3)
+  assert.equal(calculateAttributeModifier(lyra, "Charm Person Check"), 3)
+  assert.equal(calculateAttributeModifier(lyra, "Stealth"), 0)
+  assert.equal(calculateAttributeModifier(lyra, "Lockpicking Check"), 0)
+  assert.equal(calculateAttributeModifier({ ...lyra, spells: [] }, "Fog Cloud Check"), 0)
+}
+
+// An adventure's standing rules join every encounter's GM notes, and notes are marked binding.
+function adventureRules() {
+  assert.match(gmNotesWithRules(undefined, "Notes.") ?? "", /^Notes\.\n\nThese GM notes bind every outcome\./)
+  assert.equal(gmNotesWithRules({}, undefined), undefined)
+  assert.equal(gmNotesWithRules({ premise: "  " }, ""), "")
+  assert.equal(premiseNote(undefined), "")
+  const notes = gmNotesWithRules({ playerDeath: false, premise: "The heroes have never met.\n" }, "Notes.") ?? ""
+  assert.match(notes, /^Notes\.\n\nThese GM notes bind[^\n]*\n\nPlayer characters cannot die[^\n]*\n\nADVENTURE PREMISE[^\n]*\nThe heroes have never met\.$/)
+  assert.match(gmNotesWithRules({ premise: "The heroes have never met." }, undefined) ?? "", /^ADVENTURE PREMISE/)
+}
+
+// An NPC who dies on its own turn is dead in the state. One who acts only when spoken to waits until a hero does. An
+// NPC reads its own turns from the scene's earlier rounds. Private chatter does not push recorded facts off the ledger.
+function npcTurnRules() {
+  const npc = { id: "karim", name: "Karim the Jewel Merchant", type: "npc", behavior: "Shrewd. Acts only on a turn when a hero has spoken to him." } as any
+  const turn = { id: "t", encounterId: "e", title: "", adventureId: "a", story: [], characters: [npc] } as any
+  const died = handleSkipPassNpcTurn({ turn, npc, actionResult: { actionSummary: "", beats: [], actionType: "die" }, scene: { cast: [npc], places: [] } as any })
+  assert.deepEqual([died.updatedCharacters[0].healthPercent, died.updatedCharacters[0].status], [0, "dead"])
+  const reply = (text: string, to?: string) => ({ kind: "line", by: { step: "reply", character: "milos" }, speaker: "milos", text, ...(to ? { to } : {}) }) as any
+  assert.ok(waitsUnaddressed(npc, [reply("Lovely day.")]))
+  assert.ok(!waitsUnaddressed(npc, [reply("How much?", "karim")]))
+  assert.ok(!waitsUnaddressed(npc, [reply("Karim, a fair price?")]))
+  assert.ok(!waitsUnaddressed({ ...npc, behavior: "Shrewd." }, []))
+  const own = { kind: "action", by: { step: "npc", character: "karim" }, actor: "karim", text: "Karim lifts a sapphire." }
+  const rows = [
+    { order: 1, encounterId: "x", story: [own], characters: [npc] },
+    { order: 2, encounterId: "e", story: [reply("Hi."), own], characters: [npc] },
+  ]
+  assert.equal(npcEarlierTurns(rows, { order: 3, encounterId: "e" }, "karim"), "Karim lifts a sapphire.")
+  // A rule the notes set for an NPC is lifted out for its turn, and a behavior's rule reaches every GM prompt.
+  const notes = "**Moving on early.** The street runs along this quay. Loric and his crew never send the party away. Loric may open up.\n- Silverhand watches, says nothing, and marks their faces."
+  const cast = [
+    { id: "loric", name: "Loric Windrider", type: "npc" },
+    { id: "silverhand", name: "Silverhand", type: "npc", behavior: "Watches from behind his man. Says nothing." },
+    { id: "rep", name: "Silverhand Representative", type: "npc", behavior: "Bids calmly." },
+  ] as any[]
+  assert.deepEqual(npcNoteRules(notes, cast[0], cast), ["Loric and his crew never send the party away."])
+  assert.deepEqual(npcNoteRules(notes, cast[1], cast), ["Silverhand watches, says nothing, and marks their faces."])
+  assert.deepEqual(npcNoteRules(notes, cast[2], cast), [])
+  assert.match(castRulesNote(cast), /\n- Silverhand: Watches from behind his man\. Says nothing\.$/)
+  assert.doesNotMatch(castRulesNote(cast), /Bids calmly/)
+  assert.equal(castRulesNote([{ ...cast[1], status: "dead" }]), "")
+  const facts = [{ id: "clue", text: "The key is below.", knownBy: ["milos"] }, ...Array.from({ length: 30 }, (_, i) => ({ id: `r${i}-private-1`, text: `Chatter ${i}.`, knownBy: ["milos"] }))]
+  const ledger = ledgerNote(facts, { milos: "Milos" })
+  assert.match(ledger, /The key is below\./)
+  assert.match(ledger, /Chatter 29\./)
+  assert.doesNotMatch(ledger, /Chatter 0\./)
+}
+
+// An NPC's roll requirement is told not to roll against an outcome the notes fix. A hero's is not.
+async function npcFixedOutcome() {
+  const prompts: string[] = []
+  const generateObject = async (args: { prompt: string }) => {
+    prompts.push(args.prompt)
+    return { object: { rollType: "none", difficulty: 0 } }
+  }
+  const { getRollRequirementForAction } = createRollRequirementService({ llm: { generateObject } } as any)
+  await getRollRequirementForAction("Mara lifts the scroll case.", { name: "Mara", type: "npc" } as any)
+  await getRollRequirementForAction("Mira lifts a purse.", { name: "Mira", type: "pc" } as any)
+  assert.match(prompts[0], /This character is an NPC\. [^\n]*does not roll against an outcome the notes fix/)
+  assert.doesNotMatch(prompts[1], /This character is an NPC/)
+}
+
+// A scene's round budget counts the rounds in a row in one encounter. The round-end GM is told where the scene stands,
+// and from the budget's last round is nudged toward a way out. `roundBudget` in an encounter's frontmatter sets it.
+function roundBudget() {
+  const rows = (ids: string[]) => ids.map((encounterId, index) => ({ encounterId, story: [], order: index + 1 }))
+  assert.equal(sceneRound(rows(["a"]), "a", 1), 1)
+  assert.equal(sceneRound(rows(["a", "a", "a"]), "a", 3), 3)
+  assert.equal(sceneRound(rows(["a", "a", "b", "a"]), "a", 4), 1)
+  assert.equal(sceneRound(rows(["b", "a", "a", "a"]), "a", 3), 2)
+  assert.equal(paceNote(2, 4), "Scene Pace: round 2 of 4 budgeted for this scene.")
+  assert.match(paceNote(4, 4), /round 4, the last of 4 budgeted.*nearest listed way out.*stays theirs/)
+  assert.match(paceNote(5, 4), /round 5, 1 past the 4 budgeted.*nearest listed way out/)
+  assert.match(paceNote(6, 4), /round 6, 2 past the 4 budgeted.*best fits.*stays theirs/)
+
+  const definition = getLocalWikiAdventureDefinition("realm-of-myr", "march-of-davos")
+  assert.ok(definition)
+  // Authored budgets come and go, so the two scenes checked set theirs here: the wine cellar 2, the halls none.
+  const files = readLocalWikiAdventureSourceFiles(definition).map((file) => {
+    const content = file.content.replace(/^roundBudget: \d+\n/m, "")
+    if (file.path.endsWith("/the-wine-cellar.md")) return { ...file, content: content.replace('type: "encounter"\n', 'type: "encounter"\nroundBudget: 2\n') }
+    return file.path.endsWith("/through-the-halls.md") ? { ...file, content } : file
+  })
+  const artifacts = compileAdventureSourceTree(files, { mode: "publish", contentVersion: definition.contentVersion, allowedAssetHosts: definition.assetHosts })
+  assert.equal(artifacts.encounters["the-wine-cellar"].roundBudget, 2)
+  assert.equal(artifacts.encounters["through-the-halls"].roundBudget, undefined)
+  const prompt = (encounterId: string, ids: string[]) => {
+    const currentTurn = { ...clone(fixture.initialState), id: "turn", encounterId }
+    const allTurns = ids.map((id, index) => ({ encounterId: id, story: [], order: index + 1, characters: currentTurn.characters }))
+    const session = { adventureInstanceId: "fixture-adventure", currentTurnOrder: ids.length, currentTurn, allTurns }
+    return buildWikiEncounterProgressionPrompt(assembleGameplayContextPacket({ artifacts, contentRef: runtime.contentRef, session }))
+  }
+  assert.match(prompt("the-wine-cellar", ["the-wine-cellar", "the-wine-cellar"]), /\n\nScene Pace: round 2, the last of 2 budgeted for this scene\. [^\n]+\n\nYour Task:/)
+  assert.match(prompt("through-the-halls", ["through-the-halls"]), /Scene Pace: round 1 of 4 budgeted/)
+  // An ending has nowhere to go, so it has no pace.
+  assert.doesNotMatch(prompt("the-new-dawn", ["final-confrontation", "the-new-dawn"]), /Scene Pace/)
+}
+
+async function main() {
+  const originalRandom = Math.random
+  const originalConsole = { ...console }
+  Math.random = () => 0.8
+  console.log = console.warn = console.error = () => {}
+  try {
+    await packageBoundary()
+    spellModifiers()
+    adventureRules()
+    npcTurnRules()
+    await npcFixedOutcome()
+    roundBudget()
+    await replayTurn()
+    await characterPrompts()
+    await accessAndInstanceIsolation()
+  } finally {
+    Math.random = originalRandom
+    Object.assign(console, originalConsole)
+  }
+  console.log(
+    "GM core: browser bundle, dependency boundary, 7-call prompt/schema/write parity, 9 character prompts, spell modifiers, NPC death, waiting, memory, rules and fixed outcomes, ledger ranking, round budget, access, AI companion, instance isolation, duplicate/stale/invalid transitions passed."
+  )
+}
+main().catch((error) => {
+  console.error(error)
+  process.exitCode = 1
+})

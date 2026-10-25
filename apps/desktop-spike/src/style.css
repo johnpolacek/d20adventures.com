@@ -1,0 +1,5 @@
+:root { font: 15px system-ui; color: #e5e7eb; background: #18181b; }
+body { margin: 0; } main { max-width: 1000px; padding: 24px; margin: auto; }
+h1 { font-size: 24px; } h2 { font-size: 18px; } nav { display: flex; gap: 8px; }
+button { padding: 8px 18px; cursor: pointer; } pre { white-space: pre-wrap; max-height: 380px; overflow: auto; font-size: 12px; }
+dl { display: grid; grid-template-columns: 160px 1fr; gap: 8px; } dd { margin: 0; }

@@ -1,0 +1,12 @@
+{
+  "id": "vesk-the-fence",
+  "name": "Vesk the Fence",
+  "type": "npc",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/app/avatar/npc.png?v=1",
+  "archetype": "Merchant",
+  "race": "Human",
+  "gender": "Male",
+  "appearance": "An oily man with beady eyes and twitching fingers, sitting behind a cluttered table in a shadowy corner stall.",
+  "personality": "Slick, nervous and greedy. Croons over his wares and grows prickly when asked where they came from.",
+  "healthPercent": 100
+}

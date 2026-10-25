@@ -1,0 +1,1114 @@
+import * as THREE from "three"
+import { OrbitControls } from "three/addons/controls/OrbitControls.js"
+import { backdrop } from "./backdrop"
+import type { Footprint } from "./builders/types"
+import { type EffectEnd, type EffectKind, Effects, type Element, type PropKind } from "./effects"
+import type { CrowdLibrary, CrowdLibraryMeta } from "./figures/cards"
+import { Crowd } from "./figures/crowd"
+import { type CastMember, Standees } from "./figures/standees"
+import { V } from "./kit/geometry"
+import { createRand, hashSeed } from "./kit/rng"
+import { birds, type Disposable, dust, type LifeUpdate, land } from "./life"
+import { QueueLoop } from "./loops/queue"
+import { createShared, type SharedUniforms } from "./materials/atmosphere"
+import { createMaterialLibrary, type MaterialLibrary } from "./materials/library"
+import { autoTier, DEFAULT_FLAGS, type Flags, TIERS, type TierName } from "./quality"
+import { PlanarMirror } from "./render/mirror"
+import { Pipeline } from "./render/pipeline"
+import { skyMaterial } from "./sky"
+import { buildSetGeometry, populateCrowd } from "./spec/build"
+import { frameShot, type ResolvedShot, resolveCast, resolveShots } from "./spec/resolve"
+import { type SetSpec, setSpecSchema } from "./spec/set"
+import { type StagingShot, type StagingSpec, stagingSpecSchema } from "./spec/staging"
+import { doorways, onFootprint, reachOver, routeOver, standingRoom } from "./spec/walk"
+
+// The Stage runtime: one set (plus an optional staging) rendered into a canvas it owns inside `container`.
+// Plain imperative three.js; the host (a React component) creates it, calls shot()/setTier()/pause(), and disposes it.
+
+export interface StageOptions {
+  container: HTMLElement
+  set: unknown
+  staging?: unknown
+  tier?: TierName | "auto"
+  flags?: Partial<Flags>
+  controls?: boolean
+  motion?: boolean
+  // Crowd art for a library id; defaults to the repo-hosted libraries under /stage/crowd/<id>/.
+  crowdLibrary?: (id: string) => Promise<CrowdLibrary | null>
+  onProgress?: (message: string) => void
+}
+
+export interface StageStats {
+  fps: number
+  calls: number
+  triangles: number
+  people: number
+  cards: number
+  tier: TierName
+  dpr: number
+  paintHeight: number
+  aa: string
+  ao: boolean
+  bloom: boolean
+  shot: string | null
+  camera: number[]
+  programs: number
+  frame: number
+}
+
+// A spoken line: by a cast member, or by someone in the crowd (a world point to anchor the bubble).
+export interface StageLine {
+  castId?: string
+  point?: () => THREE.Vector3
+  name?: string
+  text: string
+  seconds: number
+}
+type Events = { line: StageLine; cue: string }
+
+export async function defaultCrowdLibrary(id: string): Promise<CrowdLibrary | null> {
+  const base = `/stage/crowd/${id}`
+  const res = await fetch(`${base}/atlas.json`)
+  if (!res.ok) return null
+  const meta = (await res.json()) as CrowdLibraryMeta
+  return { meta, front: { rgb: `${base}/front-rgb.webp`, alpha: `${base}/front-a.webp` }, back: { rgb: `${base}/back-rgb.webp`, alpha: `${base}/back-a.webp` } }
+}
+
+export async function createStage(o: StageOptions): Promise<Stage> {
+  const set = setSpecSchema.parse(o.set)
+  const staging = o.staging ? stagingSpecSchema.parse(o.staging) : null
+  const library = set.crowd ? await (o.crowdLibrary ?? defaultCrowdLibrary)(set.crowd.library).catch(() => null) : null
+  const stage = new Stage(o, set, staging, library)
+  await stage.load()
+  return stage
+}
+
+// The steepest the player can tilt the camera: its angle from straight overhead.
+const STEEPEST_ORBIT = Math.PI * 0.28
+type Transition = { from: { pos: THREE.Vector3; target: THREE.Vector3; fov: number }; to: { pos: THREE.Vector3; target: THREE.Vector3; fov: number }; start: number; duration: number }
+
+export class Stage {
+  readonly canvas: HTMLCanvasElement
+  readonly renderer: THREE.WebGLRenderer
+  readonly scene = new THREE.Scene()
+  readonly camera: THREE.PerspectiveCamera
+  readonly world = new THREE.Group()
+  readonly shared: SharedUniforms
+  readonly pipeline: Pipeline
+  readonly crowd: Crowd
+  readonly standees: Standees
+  readonly effects: Effects
+  readonly cast: CastMember[]
+  readonly controls: OrbitControls | null
+  readonly sun: THREE.DirectionalLight
+  tier: TierName
+  flags: Flags
+  // A planar reflection when the set has mirrored water, and the share of the drawing buffer it renders at.
+  private mirror: PlanarMirror | null = null
+  private mirrorScale = 0
+  private shadowCap = 4096
+  motion: boolean
+  activeShot: string | null = null
+  private activeFov: number | null = null
+  ready = false
+
+  private materials: MaterialLibrary
+  private statics: THREE.Mesh[] = []
+  // What the set's builders marked as solid (walls, stalls, tables), for walking the cast.
+  private footprints: Footprint[] = []
+  // What the free camera may not pass into: walls, towers, houses and stalls, not crates or ropes.
+  private solids: Footprint[] = []
+  // The player is steering the camera, not a shot.
+  private driving = false
+  private doors: ReturnType<typeof doorways> = []
+  private hemisphere: THREE.HemisphereLight
+  private fill: THREE.PointLight | null = null
+  private lamps: THREE.PointLight[] = []
+  // How far the camera is into a room (0 outside, 1 in), which room, and the room whose light is up.
+  private indoors = 0
+  private room: SetSpec["rooms"][number] | null = null
+  private lit: SetSpec["rooms"][number] | null = null
+  private extras: THREE.Object3D[] = []
+  private life: (LifeUpdate & Disposable)[] = []
+  private disposables: Disposable[] = []
+  private backdropReady: Promise<void> = Promise.resolve()
+  private sky: THREE.Mesh
+  private envTexture: THREE.Texture
+  private transition: Transition | null = null
+  private settleWaiters: (() => void)[] = []
+  private listeners: { [K in keyof Events]?: Set<(e: Events[K]) => void> } = {}
+  private cues = new Set<string>()
+  private cueWaiters = new Map<string, (() => void)[]>()
+  readonly loops = new Map<string, QueueLoop>()
+  private coinMesh: THREE.Mesh | null = null
+  private moves = new Map<string, { tx: number; tz: number; speed: number; resolve: () => void }>()
+  private insets = { right: 0, bottom: 0 }
+  private raf = 0
+  private running = false
+  private paused = false
+  private visible = true
+  private last = 0
+  private fpsT = 0
+  private fpsN = 0
+  private fps = 0
+  private frame = 0
+  private stats0 = { calls: 0, triangles: 0 }
+  private resizeObserver: ResizeObserver
+  private intersection: IntersectionObserver | null = null
+  private onVisibility = () => this.sync()
+  private readyResolve: (() => void) | null = null
+  readonly firstFrame: Promise<void>
+
+  constructor(
+    private o: StageOptions,
+    readonly set: SetSpec,
+    readonly staging: StagingSpec | null,
+    library: CrowdLibrary | null
+  ) {
+    this.firstFrame = new Promise((r) => {
+      this.readyResolve = r
+    })
+    this.flags = { ...DEFAULT_FLAGS, ...o.flags }
+    this.motion = o.motion ?? !(typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches)
+    this.canvas = document.createElement("canvas")
+    this.canvas.style.cssText = "display:block;width:100%;height:100%;touch-action:none"
+    o.container.appendChild(this.canvas)
+    const renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: false, powerPreference: "high-performance" })
+    this.renderer = renderer
+    renderer.shadowMap.enabled = true
+    renderer.shadowMap.type = THREE.PCFShadowMap
+    renderer.info.autoReset = false
+    renderer.toneMapping = THREE.AgXToneMapping
+    renderer.toneMappingExposure = set.atmosphere.exposure
+    this.tier = o.tier && o.tier !== "auto" ? o.tier : autoTier(renderer.getContext())
+
+    const A = set.atmosphere
+    this.shared = createShared()
+    // The sky draws the sun (or moon) at `disc` when set, a painter's cheat: the moon shows ahead while it lights the scene
+    // from where `direction` says.
+    this.shared.sun.value.set(...(A.sun.disc ?? A.sun.direction)).normalize()
+    this.shared.wind.value = A.wind
+    const horizon = new THREE.Color(A.sky.horizon)
+    // Fog takes the horizon as the sky draws it, dimmed by its gain, so distant trees fade into the night sky, unless
+    // the set gives the mist its own colour.
+    this.shared.fogStart.value = A.fog.start
+    this.scene.fog = new THREE.FogExp2(A.fog.color ? new THREE.Color(A.fog.color) : horizon.clone().multiplyScalar(A.sky.gain), A.fog.density)
+    this.camera = new THREE.PerspectiveCamera(58, 1, set.camera.near, set.camera.far)
+    this.scene.add(this.world)
+
+    // Light: the sun rakes across the set; the hemisphere fills the shadows with sky and warm ground bounce.
+    const sun = new THREE.DirectionalLight(A.sun.color, A.sun.intensity)
+    const target = V(...A.sun.target)
+    sun.position
+      .set(...A.sun.direction)
+      .normalize()
+      .multiplyScalar(A.sun.distance)
+      .add(target)
+    sun.target.position.copy(target)
+    sun.castShadow = true
+    sun.shadow.mapSize.set(4096, 4096)
+    const { size: shadowCap, ...shadowBox } = A.sun.shadow
+    this.shadowCap = shadowCap ?? 4096
+    Object.assign(sun.shadow.camera, shadowBox)
+    sun.shadow.camera.updateProjectionMatrix()
+    sun.shadow.bias = -0.0004
+    sun.shadow.normalBias = 0.6
+    this.sun = sun
+    this.scene.add(sun, sun.target)
+    this.hemisphere = new THREE.HemisphereLight(A.hemisphere.sky, A.hemisphere.ground, A.hemisphere.intensity)
+    this.scene.add(this.hemisphere)
+    // One set of lamps serves outside and every room, so the light count, and with it the shaders, never changes.
+    const count = Math.max(A.lights.length, ...set.rooms.map((r) => r.lights.length))
+    for (let i = 0; i < count; i++) {
+      const lamp = new THREE.PointLight()
+      this.lamps.push(lamp)
+      this.scene.add(lamp)
+    }
+    this.light(A.lights, 1)
+    if (A.fill) {
+      this.fill = new THREE.PointLight(A.fill.color, A.fill.intensity, A.fill.distance, 1.4)
+      this.fill.position.set(0, 0.6, 0.5)
+      this.camera.add(this.fill)
+      this.scene.add(this.camera)
+    }
+
+    const skyColors = { horizon, mid: new THREE.Color(A.sky.mid), zenith: new THREE.Color(A.sky.zenith) }
+    const glow = A.glow ? new THREE.Color(A.glow) : undefined
+    if (glow) this.shared.sunTint.value.set(glow.r, glow.g, glow.b).multiplyScalar(1.45)
+    this.sky = new THREE.Mesh(new THREE.SphereGeometry(Math.min(set.camera.far * 0.62, 1500), 48, 24), skyMaterial(this.shared, skyColors, { ...A.sky, glow }))
+    this.sky.renderOrder = -1
+    this.sky.frustumCulled = false
+    this.scene.add(this.sky)
+    const pmrem = new THREE.PMREMGenerator(renderer)
+    const envScene = new THREE.Scene()
+    const envSky = new THREE.Mesh(new THREE.SphereGeometry(100, 32, 16), skyMaterial(this.shared, skyColors, { ...A.sky, glow }))
+    envScene.add(envSky)
+    this.envTexture = pmrem.fromScene(envScene, 0.04).texture
+    envSky.geometry.dispose()
+    ;(envSky.material as THREE.Material).dispose()
+    pmrem.dispose()
+    this.scene.environment = this.envTexture
+    this.scene.environmentIntensity = A.environment
+
+    // The set itself: every builder into one batch, merged by material.
+    o.onProgress?.("Building the set")
+    const rand = createRand(hashSeed(set.seed, "stage"))
+    this.materials = createMaterialLibrary(set.materials, this.shared, rand.fork("materials"), renderer.capabilities.getMaxAnisotropy())
+    const built = buildSetGeometry(set, this.materials)
+    this.footprints = built.footprints
+    this.solids = built.footprints.filter((f) => (f.kind === "circle" ? f.r >= 1.2 : f.top === undefined && f.hw * f.hd >= 1.5))
+    this.doors = doorways(built.anchors)
+    this.statics = built.batch.flush(this.world)
+    const water = this.statics.filter((m) => (m.material as THREE.Material).userData.mirror)
+    if (water.length) {
+      const level = Math.max(
+        ...water.map((m) => {
+          m.geometry.computeBoundingBox()
+          return m.geometry.boundingBox?.max.y ?? 0
+        })
+      )
+      const skip = this.statics.filter((m) => {
+        const spec = set.materials[(m.material as THREE.Material).name]
+        return !!spec && (["grass", "mist", "card", "rock"].includes(spec.type) || (spec.type === "foliage" && !spec.map))
+      })
+      this.mirror = new PlanarMirror(renderer, this.scene, this.shared, water, level, skip)
+    }
+    for (const e of built.extras) this.world.add(e)
+    this.extras = built.extras
+    if (set.land) this.disposables.push(land(this.world, this.shared, rand.fork("land"), set.land))
+    const backdrops = set.backdrops.map((b, i) => backdrop(this.world, (this.scene.fog as THREE.FogExp2).color, renderer.capabilities.getMaxAnisotropy(), b, i))
+    this.disposables.push(...backdrops)
+    this.backdropReady = Promise.all(backdrops.map((b) => b.ready)).then(() => undefined)
+    if (set.life.birds) this.life.push(birds(this.world, this.shared, rand.fork("birds"), set.life.birds))
+    if (set.life.dust) this.life.push(dust(this.world, this.shared, rand.fork("dust"), set.life.dust))
+
+    const maxAnisotropy = renderer.capabilities.getMaxAnisotropy()
+    this.crowd = new Crowd({
+      seeds: populateCrowd(set, built.footprints, built.anchors),
+      rand: rand.fork("crowd"),
+      camera: this.camera,
+      shared: this.shared,
+      library,
+      mode: this.flags.crowd,
+      cardRadius: this.flags.cardRadius ?? TIERS[this.tier].cardRadius,
+      maxAnisotropy,
+    })
+    this.world.add(this.crowd.group)
+    this.cast = resolveCast(set, staging)
+    this.standees = new Standees(this.cast, this.shared, maxAnisotropy)
+    this.world.add(this.standees.group)
+    this.effects = new Effects({ hit: (id, color, strength) => this.standees.hit(id, color, strength), camera: this.camera })
+    this.world.add(this.effects.group)
+
+    // Ambient loops (a queue at a checkpoint), fed by the staging's cast and lines.
+    const coinMat = this.materials.get("coin")
+    if (coinMat) {
+      this.coinMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.008, 10), coinMat)
+      this.coinMesh.castShadow = true
+    }
+    for (const spec of set.loops) {
+      const path = set.paths[spec.path]
+      const station = set.marks[spec.station]
+      if (!path || !station) continue
+      const loop: QueueLoop = new QueueLoop(
+        { ...spec, path: path as [number, number][], station: station.at },
+        staging?.loops[spec.id] ?? null,
+        this.crowd.groups.get(spec.crowd) ?? [],
+        this.cast,
+        {
+          crowdPose: (p, x, z, ry, walk) => this.crowd.setPose(p, x, z, ry, walk),
+          say: (who, text) => this.say({ ...who, text }),
+          cue: (name) => this.cue(name),
+          coin: (a, b) => {
+            if (!this.coinMesh) return
+            const m = this.coinMesh.clone()
+            m.position.copy(a)
+            this.world.add(m)
+            loop.addCoin(m, a, b)
+          },
+        },
+        rand.fork(`loop/${spec.id}`)
+      )
+      this.loops.set(spec.id, loop)
+    }
+    this.pipeline = new Pipeline(renderer, this.scene, this.camera)
+    this.pipeline.paint.warmth = set.atmosphere.grade === "warm" ? 1 : 0
+    this.shared.warmth.value = this.pipeline.paint.warmth
+    this.pipeline.mask.setSources([
+      // Crowd cards keep half the paint; named characters keep about 80% of the crisp render.
+      ...(this.crowd.cards ? [{ src: this.crowd.cards.mesh, keep: 0.625, custom: (common: Parameters<Crowd["maskProxy"]>[0]) => this.crowd.maskProxy(common, 0.625)! }] : []),
+      ...this.standees.maskSources(),
+    ])
+
+    if (o.controls !== false) {
+      const c = new OrbitControls(this.camera, this.canvas)
+      c.enableDamping = true
+      c.dampingFactor = 0.07
+      c.screenSpacePanning = true
+      c.maxDistance = set.camera.maxDistance
+      c.maxPolarAngle = Math.PI * 0.8
+      c.rotateSpeed = 0.5
+      c.zoomSpeed = 0.8
+      c.addEventListener("start", () => {
+        this.transition = null
+        this.driving = true
+        // The player looks down at most about 40 degrees. From higher, the crowd's painted cards read as flat pegs. An
+        // authored shot that is steeper keeps its angle when the drag starts, so nothing jumps.
+        c.minPolarAngle = Math.min(STEEPEST_ORBIT, c.getPolarAngle())
+      })
+      this.controls = c
+    } else this.controls = null
+
+    this.resizeObserver = new ResizeObserver(() => this.resize())
+    this.resizeObserver.observe(o.container)
+    if (typeof IntersectionObserver !== "undefined") {
+      this.intersection = new IntersectionObserver((entries) => {
+        this.visible = entries.some((e) => e.isIntersecting)
+        this.sync()
+      })
+      this.intersection.observe(this.canvas)
+    }
+    document.addEventListener("visibilitychange", this.onVisibility)
+    this.applyTier()
+  }
+
+  // Waits for the character art and the crowd atlas (when cards are on), then starts the loop.
+  async load() {
+    this.o.onProgress?.("Loading characters")
+    await Promise.all([this.standees.load(), this.materials.ready, this.backdropReady, this.crowd.cards && this.flags.crowd !== "procedural" ? this.waitForAtlas() : Promise.resolve()])
+    const first = this.staging?.shot ?? Object.keys(this.shots)[0]
+    if (first) this.shot(first, { instant: true })
+    this.sync()
+  }
+  private waitForAtlas() {
+    return new Promise<void>((resolve) => {
+      const check = () => (this.crowd.cards?.ready || this.crowd.mode === "procedural" ? resolve() : setTimeout(check, 50))
+      check()
+    })
+  }
+
+  // ── Events ──
+  on<K extends keyof Events>(type: K, fn: (e: Events[K]) => void) {
+    this.listeners[type] ??= new Set() as never
+    const set = this.listeners[type] as Set<(e: Events[K]) => void>
+    set.add(fn)
+    return () => {
+      set.delete(fn)
+    }
+  }
+  private emit<K extends keyof Events>(type: K, e: Events[K]) {
+    const set = this.listeners[type] as Set<(e: Events[K]) => void> | undefined
+    if (set) for (const fn of set) fn(e)
+  }
+  // A line spoken on stage (hosts render it: bubble, plate). Reading time scales with length.
+  say(line: Omit<StageLine, "seconds"> & { seconds?: number }) {
+    const seconds = line.seconds ?? Math.min(9, 1.3 + line.text.length * 0.052)
+    this.emit("line", { ...line, seconds })
+    return seconds
+  }
+  // Named moments (a loop's party reaching the front): fired once, awaited by beats.
+  cue(name: string) {
+    this.cues.add(name)
+    const w = this.cueWaiters.get(name) ?? []
+    this.cueWaiters.delete(name)
+    for (const r of w) r()
+    this.emit("cue", name)
+  }
+  waitCue(name: string) {
+    if (this.cues.has(name)) return Promise.resolve()
+    return new Promise<void>((r) => this.cueWaiters.set(name, [...(this.cueWaiters.get(name) ?? []), r]))
+  }
+  // Skipping: loops jump to the moment the beats are waiting for (the party's turn at the front unless a cue says which).
+  skipLoops(cue?: string) {
+    if (cue && this.cues.has(cue)) return
+    for (const l of this.loops.values()) {
+      if (cue) l.skipTo(cue)
+      else l.skipToFront()
+    }
+  }
+
+  // ── Camera ──
+  private lens(fov: number) {
+    // Portrait screens keep the set in frame by widening the lens.
+    return this.camera.aspect >= 1 ? fov : Math.min(100, THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(fov) / 2) / Math.sqrt(this.camera.aspect))))
+  }
+  // Set and staging shots, framed on where the cast stands now (group and subject shots follow the characters).
+  get shots(): Record<string, ResolvedShot> {
+    const out = resolveShots(this.set, this.staging, this.cast)
+    // Named shots on one character swing clear of walls and cabins like inline ones (see clearFrame).
+    for (const [k, s] of Object.entries(this.staging?.shots ?? {}))
+      if ("subject" in s)
+        try {
+          out[k] = this.clearFrame(s)
+        } catch {
+          // An unknown subject keeps the authored framing.
+        }
+    return out
+  }
+  // A named shot, or an inline one (absolute, group or subject). Eased over 2.2 s unless instant or motion is off.
+  shot(which: string | StagingShot, { instant = false, duration = 2200 } = {}) {
+    let s: ResolvedShot | undefined
+    const authored = typeof which === "string" ? this.staging?.shots[which] : which
+    try {
+      s = authored && "subject" in authored ? this.clearFrame(authored, true) : typeof which === "string" ? this.shots[which] : frameShot(which, this.cast)
+    } catch {
+      s = undefined
+    }
+    if (!s) return false
+    this.driving = false
+    if (this.controls) this.controls.minPolarAngle = 0
+    this.activeShot = typeof which === "string" ? which : null
+    this.activeFov = s.fov
+    const to = { pos: V(...s.position), target: V(...s.target), fov: this.lens(s.fov) }
+    // The orbit keeps the camera within `maxDistance` of its target, so a long shot down a street would be dragged
+    // toward what it looks at. Draw the target in along the same line instead: the framing is unchanged.
+    const reach = this.set.camera.maxDistance - 0.1
+    if (to.pos.distanceTo(to.target) > reach) to.target.sub(to.pos).setLength(reach).add(to.pos)
+    if (instant || !this.motion) {
+      this.camera.position.copy(to.pos)
+      this.controls?.target.copy(to.target)
+      if (!this.controls) this.camera.lookAt(to.target)
+      this.camera.fov = to.fov
+      this.camera.updateProjectionMatrix()
+      this.controls?.update()
+      this.transition = null
+      this.standees.reset()
+      this.settle()
+    } else {
+      const target = this.controls ? this.controls.target.clone() : this.camera.getWorldDirection(V()).multiplyScalar(10).add(this.camera.position)
+      this.transition = { from: { pos: this.camera.position.clone(), target, fov: this.camera.fov }, to, start: performance.now(), duration }
+    }
+    return true
+  }
+  // A shot on one character, swung round them (and then drawn in) until neither the camera nor its view of them passes
+  // through anything solid, such as a cabin the character stands in front of. Other shots frame as authored.
+  // With `turn`, a subject the camera had to swing far round turns toward it, so their card is never seen edge on.
+  private clearFrame(which: StagingShot, turn = false): ResolvedShot {
+    const first = frameShot(which, this.cast)
+    if (!("subject" in which) || !this.footprints.length) return first
+    const c = this.cast.find((m) => m.id === which.subject)
+    if (!c) return first
+    // The sight line falls from the camera to the subject's look height, and passes over anything lower (a crate).
+    const look = which.lookHeight + (c.y ?? 0)
+    const clear = (x: number, y: number, z: number) => {
+      const len = Math.hypot(c.x - x, c.z - z)
+      // Fine steps: cabin walls are a hand's width thick.
+      const n = Math.max(2, Math.ceil(len / 0.05))
+      for (let i = 0; i <= n; i++) {
+        const t = i / n
+        if (t * len > len - 0.3) break
+        if (onFootprint(this.footprints, x + (c.x - x) * t, z + (c.z - z) * t, y + (look - y) * t)) return false
+      }
+      return true
+    }
+    // Where the set's camera box would pull the camera, so the test sees where it really ends up. It also needs elbow
+    // room: a camera brushing a post shows nothing but the post.
+    const { min, max } = this.set.camera
+    const fit = (r: ResolvedShot): ResolvedShot => ({ ...r, position: [0, 1, 2].map((i) => THREE.MathUtils.clamp(r.position[i], min[i], max[i])) as [number, number, number] })
+    const roomy = (x: number, y: number, z: number) =>
+      ![
+        [0, 0],
+        [0.45, 0],
+        [-0.45, 0],
+        [0, 0.45],
+        [0, -0.45],
+      ].some(([dx, dz]) => onFootprint(this.footprints, x + dx, z + dz, y - 0.3))
+    // How badly people spoil a view: anyone in the sight line (a shorter person in front is looked over), or close
+    // enough beside the lens to fill the frame. Cast count for much more than the crowd, which the renderer fades.
+    const crowding = (x: number, y: number, z: number) => {
+      const dx = c.x - x
+      const dz = c.z - z
+      const len2 = dx * dx + dz * dz
+      const spoils = (m: { x: number; z: number }, height: number) => {
+        const t = ((m.x - x) * dx + (m.z - z) * dz) / len2
+        if (t <= 0 || t >= 1) return false
+        const off = Math.hypot(x + dx * t - m.x, z + dz * t - m.z)
+        return (off < 0.4 && y + (look - y) * t < height) || (off < 1.1 && Math.hypot(m.x - x, m.z - z) < 1.8)
+      }
+      let score = 0
+      for (const m of this.cast) if (m !== c && this.isOnStage(m.id) && spoils(m, m.height)) score += 3
+      // The crowd in the way fades from view (Crowd.occlude), so it costs little: a clear view is still better.
+      for (const p of this.crowd.people) if (Math.hypot(p.x - x, p.y + 1.1 - y, p.z - z) >= 1.1 && spoils(p, (p.kind === "child" ? 1.2 : 1.7) * p.s)) score += 0.2
+      return score
+    }
+    // Someone in a room is framed from inside it if any spot there will do. A camera out on deck, looking in through
+    // the door, is tried only when nowhere in the room can see them.
+    const room = this.set.rooms.find(({ box: b }) => c.x > b[0] && c.z > b[2] && c.x < b[3] && c.z < b[5])?.box
+    // Of the views clear of walls, the one with the fewest people in the way. Swinging round or drawing in costs a
+    // little, so a view far from the authored one, such as the subject's back, has to be worth it: one bystander at the
+    // edge of the frame is better than looking at the subject from behind.
+    let best: { r: ResolvedShot; score: number } | undefined
+    for (const pass of room ? [1, 0] : [0]) {
+      for (const [scale, drawn] of [
+        [1, 0],
+        [0.75, 0.2],
+        [0.55, 0.5],
+      ])
+        for (const swing of [0, 30, -30, 60, -60, 90, -90, 135, -135, 180]) {
+          const r = fit(frameShot({ ...which, angle: which.angle + swing, distance: which.distance * scale }, this.cast))
+          const [x, y, z] = r.position
+          if (room && pass && !(x > room[0] && y > room[1] && z > room[2] && x < room[3] && y < room[4] && z < room[5])) continue
+          if (Math.hypot(x - c.x, z - c.z) <= 1.5 || !roomy(x, y, z) || !clear(x, y, z)) continue
+          const score = crowding(x, y, z) + drawn + (Math.abs(swing) >= 135 ? 2.5 : Math.abs(swing) / 90)
+          if (!best || score < best.score) best = { r, score }
+        }
+      if (best) break
+    }
+    if (!best) return first
+    const [x, , z] = best.r.position
+    const bearing = Math.atan2(x - c.x, z - c.z)
+    const off = Math.atan2(Math.sin(bearing - c.ry), Math.cos(bearing - c.ry))
+    if (turn && Math.abs(off) > THREE.MathUtils.degToRad(60)) c.ry = bearing - THREE.MathUtils.degToRad(which.angle)
+    return best.r
+  }
+  // Resolves when the current camera move has finished.
+  shotSettled() {
+    return this.transition ? new Promise<void>((r) => this.settleWaiters.push(r)) : Promise.resolve()
+  }
+  private settle() {
+    const w = this.settleWaiters
+    this.settleWaiters = []
+    for (const r of w) r()
+  }
+  // Jump an in-progress camera move to its end.
+  finishShot() {
+    const tr = this.transition
+    if (!tr) return
+    this.camera.position.copy(tr.to.pos)
+    this.controls?.target.copy(tr.to.target)
+    if (!this.controls) this.camera.lookAt(tr.to.target)
+    this.camera.fov = tr.to.fov
+    this.camera.updateProjectionMatrix()
+    this.transition = null
+    this.settle()
+  }
+
+  // ── Cast ──
+  // A place on the set: a cast member, a mark, or a point [x, z].
+  point(ref: string | [number, number]): { x: number; z: number } {
+    if (Array.isArray(ref)) return { x: ref[0], z: ref[1] }
+    const c = this.cast.find((m) => m.id === ref)
+    if (c) return { x: c.x, z: c.z }
+    const m = this.set.marks[ref]
+    if (m) return { x: m.at[0], z: m.at[1] }
+    throw new Error(`unknown cast member or mark "${ref}"`)
+  }
+  private member(id: string) {
+    const c = this.cast.find((m) => m.id === id)
+    if (!c) throw new Error(`unknown cast member "${id}"`)
+    return c
+  }
+  // Walk a cast member to a mark or point, facing the way they go, stopping `stop` metres short (beside someone rather
+  // than on them). Resolves on arrival.
+  moveCast(id: string, to: string | [number, number], { speed = 1.1, stop = 0 } = {}) {
+    const c = this.member(id)
+    let p = this.point(to)
+    if (stop > 0) {
+      const d = Math.hypot(p.x - c.x, p.z - c.z)
+      const k = Math.max(0, d - stop) / Math.max(d, 1e-6)
+      p = { x: c.x + (p.x - c.x) * k, z: c.z + (p.z - c.z) * k }
+    }
+    this.moves.get(id)?.resolve()
+    this.moves.delete(id)
+    if (!this.motion) {
+      c.x = p.x
+      c.z = p.z
+      return Promise.resolve()
+    }
+    // Frames stop while the window is hidden or covered. The walk still arrives on time, so nothing awaiting it stalls.
+    const due = (Math.hypot(p.x - c.x, p.z - c.z) / speed) * 1000 + 1000
+    return new Promise<void>((resolve) => {
+      const timer = setTimeout(() => {
+        const m = this.moves.get(id)
+        if (!m) return
+        c.x = m.tx
+        c.z = m.tz
+        c.walking = false
+        this.moves.delete(id)
+        m.resolve()
+      }, due)
+      this.moves.set(id, {
+        tx: p.x,
+        tz: p.z,
+        speed,
+        resolve: () => {
+          clearTimeout(timer)
+          resolve()
+        },
+      })
+    })
+  }
+  // Every walk in progress arrives at once (skipping a beat sequence).
+  finishMoves() {
+    for (const [id, m] of this.moves) {
+      const c = this.member(id)
+      c.x = m.tx
+      c.z = m.tz
+      c.walking = false
+      m.resolve()
+    }
+    this.moves.clear()
+  }
+  // Turn a cast member toward another, a mark, a point, or to a heading in degrees.
+  faceCast(id: string, to: string | [number, number] | number) {
+    const c = this.member(id)
+    if (typeof to === "number") c.ry = THREE.MathUtils.degToRad(to)
+    else {
+      const p = this.point(to)
+      c.ry = Math.atan2(p.x - c.x, p.z - c.z)
+    }
+  }
+  // Take a cast member off the stage (hidden, still placed) or bring them back.
+  setOnStage(id: string, on: boolean) {
+    this.member(id)
+    if (on) this.standees.offstage.delete(id)
+    else this.standees.offstage.add(id)
+  }
+  isOnStage(id: string) {
+    return !this.standees.offstage.has(id)
+  }
+  // Lay a cast member on the ground where they stand (a fall), or stand them up again.
+  // They fall onto their back, away from the way they face. `lands` (a mark or point) turns them so the head comes
+  // down there. `instant` skips the fall, for someone already down when the scene is shown.
+  setDown(id: string, down: boolean, instant = false, lands?: string | [number, number]) {
+    const c = this.member(id)
+    if (down && lands !== undefined && !this.standees.down.has(id)) {
+      const p = this.point(lands)
+      c.ry = Math.atan2(c.x - p.x, c.z - p.z)
+    }
+    this.standees.lay(id, down, instant)
+  }
+  isDown(id: string) {
+    return this.standees.down.has(id)
+  }
+  // Place a cast member instantly (setting up a beat sequence).
+  placeCast(id: string, at: string | [number, number], facing?: string | [number, number] | number) {
+    const c = this.member(id)
+    const p = this.point(at)
+    this.moves.get(id)?.resolve()
+    this.moves.delete(id)
+    c.x = p.x
+    c.z = p.z
+    c.walking = false
+    if (facing !== undefined) this.faceCast(id, facing)
+  }
+  private stepMoves(dt: number) {
+    for (const [id, m] of this.moves) {
+      const c = this.member(id)
+      const dx = m.tx - c.x
+      const dz = m.tz - c.z
+      const dist = Math.hypot(dx, dz)
+      if (dist < 0.02) {
+        c.x = m.tx
+        c.z = m.tz
+        c.walking = false
+        m.resolve()
+        this.moves.delete(id)
+        continue
+      }
+      const step = Math.min(dist, m.speed * dt)
+      c.x += (dx / dist) * step
+      c.z += (dz / dist) * step
+      c.ry = Math.atan2(dx, dz)
+      c.walking = true
+    }
+  }
+
+  // UI laid over part of the canvas (a docked panel): shots compose in the uncovered area, and the scene continues
+  // under the panel. Implemented as a camera view offset, so framing, picking and projection all agree.
+  setInsets(insets: { right?: number; bottom?: number }) {
+    this.insets = { right: Math.max(0, insets.right ?? 0), bottom: Math.max(0, insets.bottom ?? 0) }
+    this.resize()
+  }
+  // A camera the player drags into a wall or a house is drawn back toward what it looks at until it stands clear, as a
+  // game camera keeps out of the scenery. Shots are framed by their authors and left alone.
+  // While the player drives the camera it never ends up inside anything solid, and it stays on the near side of a
+  // building, wall or tower between it and what it looks at, as a third-person camera's arm does: dragged behind a
+  // tower, it stops in front of the tower instead of showing it. Stalls and tables are low, so the arm passes over them.
+  private walls: Footprint[] | null = null
+  private collide() {
+    if (!this.driving || !this.controls || !this.solids.length) return
+    const p = this.camera.position
+    const t = this.controls.target
+    // The last point outside, between one known to be outside (lo) and one inside (hi).
+    const pull = (inside: (v: THREE.Vector3) => boolean, from: number, to: number) => {
+      const q = V()
+      let lo = from
+      let hi = to
+      for (let i = 0; i < 10; i++) {
+        const m = (lo + hi) / 2
+        if (inside(q.lerpVectors(t, p, m))) hi = m
+        else lo = m
+      }
+      return lo
+    }
+    const solid = (v: THREE.Vector3) => onFootprint(this.solids, v.x, v.z, v.y)
+    if (solid(t)) return
+    if (solid(p)) p.lerpVectors(t, p.clone(), pull(solid, 0, 1))
+    this.walls ??= this.solids.filter((f) => (f.kind === "circle" ? f.r >= 1.2 : f.hw * f.hd >= 7.5))
+    const wall = (v: THREE.Vector3) => onFootprint(this.walls!, v.x, v.z, v.y)
+    const len = p.distanceTo(t)
+    const steps = Math.max(1, Math.ceil(len / 0.3))
+    const q = V()
+    for (let i = 1; i <= steps; i++) {
+      if (!wall(q.lerpVectors(t, p, i / steps))) continue
+      const lo = pull(wall, (i - 1) / steps, i / steps)
+      // A hand's width short of the wall, so the near plane does not cut into it.
+      p.lerpVectors(t, p.clone(), Math.max(0, lo * len - 0.35) / len)
+      return
+    }
+  }
+  private constrain() {
+    const { min, max } = this.set.camera
+    const p = this.camera.position
+    const before = p.clone()
+    p.set(THREE.MathUtils.clamp(p.x, min[0], max[0]), THREE.MathUtils.clamp(p.y, min[1], max[1]), THREE.MathUtils.clamp(p.z, min[2], max[2]))
+    if (this.controls && !before.equals(p)) this.controls.target.add(p.clone().sub(before))
+  }
+
+  // ── Quality ──
+  setTier(name: TierName) {
+    this.tier = name
+    this.applyTier()
+  }
+  setFlags(f: Partial<Flags>) {
+    this.flags = { ...this.flags, ...f }
+    this.applyTier()
+  }
+  private applyTier() {
+    const t = TIERS[this.tier]
+    const f = this.flags
+    const ratio = Math.min(window.devicePixelRatio || 1, f.dpr || t.ratio)
+    this.renderer.setPixelRatio(ratio)
+    const p = this.pipeline
+    p.paint.setHeight(t.paint)
+    p.paint.depthPaint = f.paint === "depth"
+    p.paint.strength = Math.min(1, f.brush)
+    p.paint.brush = Math.max(0.35, f.brush)
+    p.bloom.enabled = f.bloom ?? t.bloom
+    const aa = f.aa ?? t.aa
+    p.setAA(aa)
+    const cardMaterial = this.crowd.cards?.mesh.material as THREE.Material | undefined
+    if (cardMaterial && cardMaterial.alphaToCoverage !== (aa === "msaa")) {
+      cardMaterial.alphaToCoverage = aa === "msaa"
+      cardMaterial.needsUpdate = true
+    }
+    this.standees.setAlphaToCoverage(aa === "msaa")
+    p.setAO(f.ao ?? t.ao)
+    this.mirrorScale = f.mirror ?? t.mirror
+    this.crowd.setMode(f.crowd)
+    this.crowd.setRadius(f.cardRadius ?? t.cardRadius)
+    const shadowSize = Math.min(t.shadow, this.shadowCap)
+    if (this.sun.shadow.mapSize.x !== shadowSize) {
+      this.sun.shadow.mapSize.setScalar(shadowSize)
+      this.sun.shadow.map?.dispose()
+      this.sun.shadow.map = null
+    }
+    this.resize()
+  }
+  resize() {
+    const w = Math.max(1, this.o.container.clientWidth)
+    const h = Math.max(1, this.o.container.clientHeight)
+    const vw = Math.max(1, w - this.insets.right)
+    const vh = Math.max(1, h - this.insets.bottom)
+    this.camera.aspect = vw / vh
+    if (vw !== w || vh !== h) this.camera.setViewOffset(vw, vh, 0, 0, w, h)
+    else this.camera.clearViewOffset()
+    if (!this.transition && this.activeFov) this.camera.fov = this.lens(this.activeFov)
+    this.camera.updateProjectionMatrix()
+    this.renderer.setSize(w, h, false)
+    this.pipeline.setSize(w, h, this.renderer.getPixelRatio())
+    const buffer = this.renderer.getDrawingBufferSize(new THREE.Vector2())
+    this.mirror?.setScale(this.mirrorScale, buffer.x, buffer.y)
+  }
+
+  // ── Loop ──
+  // Rendering stops while the tab is hidden, the canvas is off screen (a hidden overlay), or the host pauses.
+  pause() {
+    this.paused = true
+    this.sync()
+  }
+  resume() {
+    this.paused = false
+    this.sync()
+  }
+  private sync() {
+    const run = !this.paused && this.visible && document.visibilityState !== "hidden"
+    if (run && !this.running) {
+      this.running = true
+      this.last = performance.now()
+      this.raf = requestAnimationFrame(this.tick)
+    } else if (!run && this.running) {
+      this.running = false
+      cancelAnimationFrame(this.raf)
+    }
+  }
+  private tick = (now: number) => {
+    if (!this.running) return
+    this.raf = requestAnimationFrame(this.tick)
+    const raw = Math.max(0, (now - this.last) / 1000)
+    this.last = now
+    this.step(Math.min(raw, 0.05), raw)
+  }
+  private step(dt: number, raw: number) {
+    this.fpsT += raw
+    this.fpsN++
+    if (this.fpsT > 1) {
+      this.fps = Math.round(this.fpsN / this.fpsT)
+      this.fpsT = this.fpsN = 0
+    }
+    if (this.motion) {
+      this.stepMoves(dt)
+      for (const l of this.loops.values()) l.update(dt)
+      this.shared.time.value += dt
+      this.crowd.update(dt)
+      for (const f of this.life) f(this.shared.time.value)
+    }
+    if (this.transition) {
+      const tr = this.transition
+      const t = THREE.MathUtils.clamp((performance.now() - tr.start) / tr.duration, 0, 1)
+      const e = t * t * (3 - 2 * t)
+      this.camera.position.lerpVectors(tr.from.pos, tr.to.pos, e)
+      const target = V().lerpVectors(tr.from.target, tr.to.target, e)
+      if (this.controls) this.controls.target.copy(target)
+      else this.camera.lookAt(target)
+      this.camera.fov = THREE.MathUtils.lerp(tr.from.fov, tr.to.fov, e)
+      this.camera.updateProjectionMatrix()
+      if (t === 1) {
+        this.transition = null
+        this.settle()
+      }
+    }
+    this.controls?.update()
+    this.constrain()
+    this.collide()
+    this.lightRoom(dt)
+    if (this.motion) this.effects.update(dt)
+    this.standees.update(dt, this.camera)
+    this.crowd.updateLOD(this.camera)
+    // A fade takes a third of a second, or none with motion off.
+    this.crowd.occlude(this.camera, this.controls?.target ?? this.camera.getWorldDirection(V()).multiplyScalar(6).add(this.camera.position), this.motion ? dt / 0.3 : 1)
+    this.crowd.flush()
+    this.render()
+    if (++this.frame === 3) {
+      this.ready = true
+      this.readyResolve?.()
+    }
+  }
+  // Lamps from a light list at a share of their strength. Unused lamps go dark.
+  private light(list: SetSpec["atmosphere"]["lights"], k: number) {
+    this.lamps.forEach((lamp, i) => {
+      const l = list[i]
+      if (!l) return void (lamp.intensity = 0)
+      lamp.position.set(...l.at)
+      lamp.color.set(l.color)
+      lamp.distance = l.distance
+      lamp.decay = l.decay
+      lamp.intensity = l.intensity * k
+    })
+  }
+  // Inside a room the sky's light fades and the room's lamps take over: the set's lamps dim out, then the room's come up,
+  // over about half a second as the camera passes the wall.
+  private lightRoom(dt: number) {
+    const { x, y, z } = this.camera.position
+    const inside = this.set.rooms.find(({ box: b }) => x > b[0] && y > b[1] && z > b[2] && x < b[3] && y < b[4] && z < b[5])
+    if (inside) this.room = inside
+    const want = inside ? 1 : 0
+    // Straight from one room into another (the inn's common room to its backroom), the new room's light takes over.
+    if ((want === this.indoors && (!inside || inside === this.lit)) || !this.room) return
+    this.indoors = this.motion ? THREE.MathUtils.clamp(this.indoors + Math.sign(want - this.indoors) * dt * 3, 0, 1) : want
+    const m = this.indoors
+    const r = this.room
+    const A = this.set.atmosphere
+    const mix = (a: number, b: number) => a + (b - a) * m
+    this.hemisphere.intensity = mix(A.hemisphere.intensity, A.hemisphere.intensity * r.ambient)
+    this.scene.environmentIntensity = mix(A.environment, A.environment * r.ambient)
+    if (this.fill && A.fill) this.fill.intensity = mix(A.fill.intensity, r.fill ?? A.fill.intensity * r.ambient)
+    this.renderer.toneMappingExposure = mix(A.exposure, r.exposure ?? A.exposure)
+    if (m < 0.5) this.light(A.lights, 1 - 2 * m)
+    else this.light(r.lights, 2 * m - 1)
+    this.lit = m >= 0.5 ? r : null
+  }
+  render() {
+    this.renderer.info.reset()
+    this.mirror?.render(this.camera)
+    this.pipeline.render()
+    this.stats0 = { calls: this.renderer.info.render.calls, triangles: this.renderer.info.render.triangles }
+  }
+
+  // ── For hosts ──
+  stats(): StageStats {
+    return {
+      fps: this.fps,
+      ...this.stats0,
+      people: this.crowd.count,
+      cards: this.crowd.cardCount,
+      tier: this.tier,
+      dpr: this.renderer.getPixelRatio(),
+      paintHeight: this.pipeline.paint.size[1],
+      aa: this.pipeline.aa,
+      ao: this.pipeline.gtao.enabled,
+      bloom: this.pipeline.bloom.enabled,
+      shot: this.activeShot,
+      camera: this.camera.position.toArray().map((v) => +v.toFixed(2)),
+      programs: this.renderer.info.programs?.length ?? 0,
+      frame: this.frame,
+    }
+  }
+  // Programs that failed to compile or link (renderer.debug.checkShaderErrors is on by default).
+  programErrors() {
+    return (this.renderer.info.programs ?? []).filter((p) => (p as unknown as { diagnostics?: { runnable: boolean } }).diagnostics?.runnable === false).map((p) => p.name)
+  }
+  // Screen position (CSS px, relative to the canvas) of a cast member's head, for bubbles and plates.
+  project(castId: string) {
+    const head = this.standees.head(castId)
+    return head ? this.projectPoint(head) : null
+  }
+  // Screen position (CSS px) of any world point, and how many CSS px a metre spans there (how big things look).
+  projectPoint(p: THREE.Vector3) {
+    const v = p.clone()
+    const d = v.distanceTo(this.camera.position)
+    const above = p.clone()
+    above.y += 1
+    v.project(this.camera)
+    above.project(this.camera)
+    const h = this.canvas.clientHeight
+    return {
+      x: (v.x * 0.5 + 0.5) * this.canvas.clientWidth,
+      y: (-v.y * 0.5 + 0.5) * h,
+      visible: v.z < 1 && Math.abs(v.x) < 1.05 && Math.abs(v.y) < 1.05,
+      behind: v.z > 1,
+      distance: d,
+      ppm: Math.abs(above.y - v.y) * 0.5 * h,
+    }
+  }
+  private ray = new THREE.Raycaster()
+  // The cast member under a canvas point (CSS px), if any.
+  // The ground point under a canvas point (CSS px), on the y = 0 plane.
+  groundAt(x: number, y: number) {
+    const ndc = new THREE.Vector2((x / this.canvas.clientWidth) * 2 - 1, -(y / this.canvas.clientHeight) * 2 + 1)
+    this.ray.setFromCamera(ndc, this.camera)
+    const hit = this.ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), new THREE.Vector3())
+    return hit && hit.distanceTo(this.camera.position) < 400 ? { x: hit.x, z: hit.z } : null
+  }
+  // How far a cast member can walk toward a point in a straight line: stops at the first solid footprint or at `budget`
+  // metres. Returns where they would stop, the distance walked, and whether something or the budget cut it short.
+  reach(id: string, to: { x: number; z: number }, budget: number) {
+    return reachOver(this.footprints, this.member(id), to, budget)
+  }
+  // The way a cast member walks toward a point: straight, or through a doorway when a wall is in the way, stopping at the
+  // first solid thing or after `budget` metres. The points to walk through, in order.
+  route(id: string, to: { x: number; z: number }, budget: number) {
+    const c = this.member(id)
+    const out: { x: number; z: number }[] = []
+    let from = { x: c.x, z: c.z }
+    let left = budget
+    for (const p of routeOver(this.footprints, this.doors, from, to) ?? [to]) {
+      const hit = reachOver(this.footprints, from, p, left)
+      out.push({ x: hit.x, z: hit.z })
+      if (hit.short) break
+      left -= hit.distance
+      from = p
+    }
+    return out
+  }
+  // Where a cast member stands when they walk to a point: beside anyone already there, not on top of them.
+  standingRoom(id: string, to: { x: number; z: number }, gap = 0.8) {
+    const others = this.cast.filter((c) => c.id !== id && this.isOnStage(c.id))
+    return standingRoom(this.footprints, others, this.member(id), to, gap)
+  }
+  // ── Effects and objects ──
+  // A cast member's chest, where effects start and land.
+  private chest(id: string): EffectEnd {
+    const c = this.member(id)
+    return { at: new THREE.Vector3(c.x, (c.y ?? 0) + c.height * 0.62, c.z), id }
+  }
+  private endOf(ref: string | [number, number]): EffectEnd {
+    if (typeof ref === "string" && this.cast.some((c) => c.id === ref)) return this.chest(ref)
+    const p = this.point(ref)
+    return { at: new THREE.Vector3(p.x, 1, p.z) }
+  }
+  // An attack or spell from one cast member at another, or at a place, or about themselves with no target. A miss lands
+  // beside the target and strikes nobody. Resolves when it has played. With motion off it does not play.
+  effect(kind: EffectKind, from: string, to?: string | [number, number], element?: Element, { miss = false } = {}): Promise<void> {
+    if (!this.motion) return Promise.resolve()
+    const start = this.chest(from)
+    let end = to === undefined ? undefined : this.endOf(to)
+    if (end && miss) {
+      const away = end.at.clone().sub(start.at).setY(0)
+      const side = new THREE.Vector3(away.z, 0, -away.x).normalize()
+      end = {
+        at: end.at
+          .clone()
+          .addScaledVector(side, 0.9)
+          .addScaledVector(away.normalize(), 1.2)
+          .setY(end.at.y * 0.8),
+      }
+    }
+    return this.effects.play(kind, start, end, element)
+  }
+  // An object in a cast member's hand, passed to another when there is a receiver.
+  prop(kind: PropKind, holder: string, receiver?: string): Promise<void> {
+    if (!this.motion) return Promise.resolve()
+    return this.effects.prop(kind, this.chest(holder), receiver ? this.chest(receiver) : undefined)
+  }
+  // A flash and a shake on a cast member's card, as when struck.
+  hit(id: string, color = "#ff5a3c", strength = 1) {
+    this.standees.hit(id, color, strength)
+  }
+  clearEffects() {
+    this.effects.clear()
+  }
+  // Where a cast member stands (x, z, and y when raised) and faces (radians).
+  castAt(id: string) {
+    const c = this.member(id)
+    return { x: c.x, y: c.y ?? 0, z: c.z, ry: c.ry, height: c.height }
+  }
+  pick(x: number, y: number) {
+    const ndc = new THREE.Vector2((x / this.canvas.clientWidth) * 2 - 1, -(y / this.canvas.clientHeight) * 2 + 1)
+    this.ray.setFromCamera(ndc, this.camera)
+    for (const hit of this.ray.intersectObject(this.standees.group, true)) {
+      const id = hit.object.userData.castId as string | undefined
+      if (id && (!hit.uv || this.standees.opaqueAt(id, hit.uv))) return id
+    }
+    return null
+  }
+  // A PNG of the current view, rendered on demand (no preserveDrawingBuffer needed: read in the same task).
+  capture(): Promise<Blob | null> {
+    this.render()
+    return new Promise((resolve) => this.canvas.toBlob(resolve, "image/png"))
+  }
+
+  dispose() {
+    this.running = false
+    cancelAnimationFrame(this.raf)
+    // Walks in progress end where they are, so nothing awaiting them hangs on a disposed stage.
+    for (const m of this.moves.values()) m.resolve()
+    this.moves.clear()
+    document.removeEventListener("visibilitychange", this.onVisibility)
+    this.resizeObserver.disconnect()
+    this.intersection?.disconnect()
+    this.controls?.dispose()
+    for (const m of this.statics) m.geometry.dispose()
+    for (const e of this.extras)
+      e.traverse((o) => {
+        if ((o as THREE.Mesh).isMesh) (o as THREE.Mesh).geometry.dispose()
+      })
+    for (const l of this.life) l.dispose()
+    for (const d of this.disposables) d.dispose()
+    this.crowd.dispose()
+    this.standees.dispose()
+    this.effects.dispose()
+    this.coinMesh?.geometry.dispose()
+    this.materials.dispose()
+    this.pipeline.dispose()
+    this.mirror?.dispose()
+    this.sky.geometry.dispose()
+    ;(this.sky.material as THREE.Material).dispose()
+    this.envTexture.dispose()
+    this.sun.shadow.map?.dispose()
+    this.renderer.dispose()
+    this.renderer.forceContextLoss()
+    this.canvas.remove()
+  }
+}

@@ -1,0 +1,64 @@
+---
+moduleOrder: 26
+sceneTitle: "Ambush"
+sectionTitle: "The Black Market"
+id: "the-ambush"
+type: "encounter"
+title: "The Ambush"
+settingId: "realm-of-myr"
+adventureId: "march-of-davos"
+roundBudget: 3
+npcs:
+  - id: "silas"
+    behavior: "Cold, calculating, and merciless. Looses the warning arrows from the rooftops, then withdraws with the others when the voice falls silent, and does not come back this night."
+  - id: "liora"
+    behavior: "Stoic, deadly, and fiercely loyal to The Cowl. Watches from the rooftops while the voice speaks, then melts away with the others and does not come back this night."
+  - id: "bram"
+    behavior: "Waits up at the Dragonbone Inn and appears only once the adventurers are back inside. Worried for them, urges sleep before the Blackthorns' ball, and offers the attic trunk of forgotten costumes and masks."
+image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726580775048"
+---
+
+## Intro
+
+The adventurers make their way back to the Dragonbone Inn through eerily quiet streets, under the pale light of a waning moon. Lanterns flicker weakly along the narrow roads, casting long, twisted shadows across the cobblestones. The late evening air is cold and still.
+
+The sharp *thunk* of an arrow breaks the silence. It sinks into the wooden door of a shop, inches from one of the adventurers. A soft rustle comes from above. On the dark rooftops are the vague forms of hooded figures, silent watchers, barely visible.
+
+A low, rumbling voice booms through the narrow streets, unnatural and echoing as if from all directions at once. "*You tread where you are not welcome.*" The ground shudders beneath their feet, cracks form in the nearby stone, and the air smells faintly of sulfur. On the rooftops more arrows are nocked, but none are loosed.
+
+"Cease your meddling," the voice continues with cold authority. "Turn away from what is not yours to uncover, or the consequences will be far worse than arrows in the night." Another arrow whistles down and sinks into the wall just ahead of the adventurers.
+
+The figures on the rooftops do not move. The voice speaks once more. "We are watching. We know every step you take. Keep searching, and you will find only ruin."
+
+## GM Notes
+
+**After the voice falls silent:**
+
+With that, the shadows on the roofs melt away, leaving only the cold wind in the alleys. The adventurers walk on to the Dragonbone Inn in heavy silence.
+
+At the inn, Bram is waiting up, his usual jovial face creased with concern. "You look like you've seen a ghost, or worse. Get some sleep. Tomorrow is the final day of the festival, and the Blackthorns don't like to be kept waiting for their grand ball. If you're going, I hope you've got your masks ready."
+
+**The Cowl cannot be followed tonight.** The archers and the voice are gone once it falls silent. If the heroes climb to the rooftops, search the lanes or try to follow, they find nothing: empty roofs, no trail, quiet streets. No Cowl agent comes back to the inn, leaves a trail or waits to be found. The Covenant's tunnels are not found tonight. The night ends at the inn.
+
+This encounter serves as a powerful psychological tactic by the Covenant of the Cowl to intimidate the adventurers rather than physically harm them. The use of magic, particularly Thaumaturgy, and the dramatic timing of the arrows are meant to create an atmosphere of unease and fear, reminding the party that they are constantly being watched.
+
+**Preparation for the Ball:**
+This marks the conclusion of the festival's penultimate day. At the inn, the party should take a **Long Rest**. To attend the ball and pass the guards in the next encounter, each character needs:
+- **A Formal Costume**: Reflecting either Valkaran heritage or Asterian nobility.
+- **An Ornate Mask**: To maintain the theme and secrecy of the event.
+
+Bram lets the party rummage through a trunk of "forgotten" costumes in the inn's attic.
+
+**The trunk dresses everyone.** Bram's attic trunk holds a costume and a mask that fit each hero, a dwarf or a halfling included. No hero needs coin, a tailor or a shop. The night passes quietly, and the final day goes by in a sentence.
+
+**Pace.** The voice speaks, the party walks to the inn and Bram shows them the trunk. Once they have taken their costumes, the night passes and they set out for the ball, by the end of the third round at the latest.
+
+## Transitions
+
+- To [[encounter:entry-to-the-ball]] when the adventurers have rested at the inn and found their costumes and masks, and head to the Blackthorn Mansion on the final night of the festival, by the end of the third round at the latest.
+
+## Migration Context
+
+Legacy section: The Black Market
+
+Legacy scene: Ambush

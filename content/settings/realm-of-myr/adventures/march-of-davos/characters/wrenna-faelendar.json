@@ -1,0 +1,44 @@
+{
+  "name": "Wrenna of Faelendar",
+  "archetype": "Ranger",
+  "race": "Elf",
+  "gender": "Female",
+  "appearance": "Wrenna is a tall, watchful elf with moss-green eyes, ash-blonde hair bound in a scout's knot, and travel leathers dyed the grey-green of the Valkarr Forest. A longbow of pale yew rides at her shoulder, and she moves through city streets as quietly as forest paths.",
+  "personality": "Reserved, patient, and dry-humored, Wrenna speaks little and misses less. Cities make her wary and crowds make her quietly miserable, but she honors her duty without complaint. Those who earn her trust find her loyal, gently teasing, and surprisingly kind.",
+  "background": "Wrenna is a scout of the reclusive elven settlement of Faelendar, deep in the forests of the March. The elders sent her to Kordavos when word reached them that old Valkaran relics, things the elves helped seal away long ago, had begun to surface in the city's markets and noble houses. She arrived with the festival crowds, posing as a fur trader, and what she has seen so far troubles her.",
+  "motivation": "Wrenna must learn who is unearthing the old relics and stop them before something the elves buried for good reason is brought back into the light. She also quietly hopes to prove to her elders that the peoples of Kordavos are worth trusting, not just watching.",
+  "behavior": "Wrenna keeps to the edges of a scene, watching exits and rooftops, and reads tracks, wounds, and faces with equal skill. In a fight she looses precise arrows from cover and herds enemies away from her companions. She says what she has seen plainly and briefly, and defers city politics to those who understand them.",
+  "healthPercent": 100,
+  "equipment": [
+    {
+      "name": "Yew Longbow",
+      "description": "A pale elven longbow, strung with silk, that has never missed its draw in the cold."
+    },
+    {
+      "name": "Quiver of Grey-fletched Arrows",
+      "description": "Arrows fletched in Faelendar grey, each one straight as a pine."
+    },
+    {
+      "name": "Scout's Long Knife",
+      "description": "A single-edged blade for close work, quiet and quick."
+    },
+    {
+      "name": "Forest Leathers",
+      "description": "Supple travel leathers dyed to vanish among trees and shadows."
+    }
+  ],
+  "skills": ["Survival", "Tracking", "Stealth", "Perception", "Nature", "Archery"],
+  "specialAbilities": ["Keen Senses: Wrenna's elven sight and hearing pick out details others miss, even in darkness", "Hunter's Mark: once Wrenna has a quarry's trail, she does not lose it"],
+  "status": "",
+  "type": "pc",
+  "attributes": {
+    "strength": 10,
+    "dexterity": 16,
+    "constitution": 12,
+    "intelligence": 10,
+    "wisdom": 16,
+    "charisma": 8
+  },
+  "id": "wrenna-faelendar",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/march-of-davos/pcs/wrenna-faelendar.png"
+}

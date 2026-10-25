@@ -1,0 +1,19 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "D20 Desktop Spike",
+  "version": "0.0.0",
+  "identifier": "com.d20adventures.desktop-spike",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "beforeBuildCommand": "pnpm build",
+    "devUrl": "http://127.0.0.1:1420",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [{ "title": "D20 Desktop Spike", "width": 1000, "height": 850 }],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline' https://*.clerk.accounts.dev https://*.clerk.com; connect-src 'self' ipc: http://ipc.localhost https://*.convex.cloud wss://*.convex.cloud https://*.clerk.accounts.dev https://*.clerk.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; frame-src https://*.clerk.accounts.dev https://*.clerk.com https://challenges.cloudflare.com"
+    }
+  },
+  "bundle": { "active": false }
+}

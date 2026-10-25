@@ -1,0 +1,270 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "march-of-davos/big-empty",
+  "set": "realm-of-myr/catacombs-hall",
+  "cast": [
+    {
+      "id": "branka-stoneveil",
+      "name": "Branka Stoneveil",
+      "role": "Dwarf fighter",
+      "height": 1.38,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/branka-front.webp",
+        "back": "/stage/fixtures/march-of-davos/branka-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/branka-portrait.jpg"
+      },
+      "at": [
+        -1.6,
+        9.4
+      ],
+      "facing": [
+        0,
+        -10
+      ]
+    },
+    {
+      "id": "cassia-verane",
+      "name": "Cassia Verane",
+      "role": "Human wizard",
+      "height": 1.72,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/cassia-front.webp",
+        "back": "/stage/fixtures/march-of-davos/cassia-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/cassia-portrait.jpg"
+      },
+      "at": [
+        -0.4,
+        9.8
+      ],
+      "facing": [
+        0,
+        -10
+      ]
+    },
+    {
+      "id": "yeva-softstep",
+      "name": "Yeva Softstep",
+      "role": "Halfling rogue",
+      "height": 1.08,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/yeva-front.webp",
+        "back": "/stage/fixtures/march-of-davos/yeva-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/yeva-portrait.jpg"
+      },
+      "at": [
+        -2.4,
+        10.4
+      ],
+      "facing": [
+        0,
+        -10
+      ]
+    },
+    {
+      "id": "milos-radan",
+      "name": "Milos Radan",
+      "role": "Human cleric",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/milos-front.webp",
+        "back": "/stage/fixtures/march-of-davos/milos-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/milos-portrait.jpg"
+      },
+      "at": [
+        1.4,
+        9.6
+      ],
+      "facing": [
+        0,
+        -10
+      ]
+    },
+    {
+      "id": "astrid-blackthorn",
+      "name": "Lady Astrid Blackthorn",
+      "role": "Blackthorn ranger",
+      "height": 1.78,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/astrid-blackthorn-front.webp",
+        "back": "/stage/fixtures/march-of-davos/astrid-blackthorn-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/astrid-blackthorn-portrait.jpg"
+      },
+      "at": [
+        0.4,
+        4
+      ],
+      "facing": [
+        0,
+        -10
+      ]
+    },
+    {
+      "id": "eamon",
+      "name": "Eamon",
+      "role": "Scholar and mage",
+      "height": 1.78,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/eamon-front.webp",
+        "back": "/stage/fixtures/march-of-davos/eamon-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/eamon-portrait.jpg"
+      },
+      "at": [
+        -1.2,
+        14
+      ],
+      "facing": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "ancient-undead",
+      "name": "An ancient dead warrior",
+      "role": "Ancient undead",
+      "height": 1.85,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/ancient-undead-front.webp",
+        "back": "/stage/fixtures/march-of-davos/ancient-undead-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/ancient-undead-portrait.jpg"
+      },
+      "at": [
+        -4.5,
+        -3
+      ],
+      "facing": [
+        0,
+        6
+      ]
+    },
+    {
+      "id": "ancient-undead-2",
+      "name": "An ancient dead warrior",
+      "role": "Ancient undead",
+      "height": 1.85,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/ancient-undead-front.webp",
+        "back": "/stage/fixtures/march-of-davos/ancient-undead-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/ancient-undead-portrait.jpg"
+      },
+      "at": [
+        4.2,
+        -5.4
+      ],
+      "facing": [
+        0,
+        6
+      ]
+    },
+    {
+      "id": "ancient-undead-3",
+      "name": "An ancient dead warrior",
+      "role": "Ancient undead",
+      "height": 1.85,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/ancient-undead-front.webp",
+        "back": "/stage/fixtures/march-of-davos/ancient-undead-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/ancient-undead-portrait.jpg"
+      },
+      "at": [
+        -0.8,
+        -9
+      ],
+      "facing": [
+        0,
+        6
+      ]
+    }
+  ],
+  "shots": {
+    "party": {
+      "subjects": [
+        "branka-stoneveil",
+        "cassia-verane",
+        "yeva-softstep",
+        "milos-radan"
+      ],
+      "offset": [
+        1.4,
+        1.7,
+        4
+      ],
+      "target": [
+        0,
+        1.2,
+        0
+      ],
+      "relative": "world",
+      "fov": 54,
+      "label": "Party"
+    },
+    "astrid": {
+      "subject": "astrid-blackthorn",
+      "distance": 2.6,
+      "angle": 20,
+      "height": 1.65,
+      "lookHeight": 1.6,
+      "fov": 44,
+      "label": "Lady Astrid"
+    },
+    "eamon": {
+      "subject": "eamon",
+      "distance": 2.2,
+      "angle": -20,
+      "height": 1.65,
+      "lookHeight": 1.6,
+      "fov": 44,
+      "label": "Eamon"
+    },
+    "undead": {
+      "subjects": [
+        "ancient-undead",
+        "ancient-undead-2",
+        "ancient-undead-3"
+      ],
+      "offset": [
+        0,
+        1.6,
+        9
+      ],
+      "target": [
+        0,
+        1.2,
+        0
+      ],
+      "relative": "world",
+      "fov": 56,
+      "label": "The undead"
+    }
+  },
+  "shot": "hall",
+  "entrances": [
+    {
+      "cast": "ancient-undead",
+      "when": "rise",
+      "from": [
+        -4.5,
+        -3
+      ],
+      "shot": "undead"
+    },
+    {
+      "cast": "ancient-undead-2",
+      "when": "rise",
+      "from": [
+        4.2,
+        -5.4
+      ],
+      "shot": "undead"
+    },
+    {
+      "cast": "ancient-undead-3",
+      "when": "rise",
+      "from": [
+        -0.8,
+        -9
+      ],
+      "shot": "undead"
+    }
+  ]
+}

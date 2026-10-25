@@ -1,0 +1,44 @@
+{
+  "name": "Branka Stoneveil",
+  "archetype": "Fighter",
+  "race": "Dwarf",
+  "gender": "Female",
+  "appearance": "Branka is a broad-shouldered dwarf with a weathered face, a nose broken at least twice, and copper hair worked into tight braids. She wears a battered breastplate stamped with the old gate-ward sigil of Kordavos and carries a round steel shield scarred by years of honest use.",
+  "personality": "Blunt, steady, and utterly dependable, Branka says exactly what she thinks and stands exactly where she is needed. She has little patience for intrigue and even less for people who endanger her companions, but beneath the gruffness is a fierce, protective loyalty that never wavers.",
+  "background": "The Stoneveils guarded the gates of Kordavos for four generations under the old Valkaran marcher lords. When the Asterian Empire restructured the city watch, Branka's family lost their post and their standing overnight. She has worked as a shield-for-hire ever since, escorting caravans through the March. She has returned to Kordavos for the Harvest Festival, where the sight of the gates her family once kept stirs old pride and old grievances alike.",
+  "motivation": "Branka wants to restore her family's honor by proving that a Stoneveil shield still means something in Kordavos. She dreams of earning back a formal post at the gates, and she will not stand by while schemers, whether Asterian or Valkaran, endanger the ordinary folk of the city.",
+  "behavior": "Branka positions herself between danger and her companions, favors direct action over talk, and speaks in short, practical statements. In a fight she attacks with her warhammer and uses her shield to protect the most vulnerable member of the party. In conversation she is honest to a fault and defers social maneuvering to smoother tongues.",
+  "healthPercent": 100,
+  "equipment": [
+    {
+      "name": "Warhammer",
+      "description": "A well-kept dwarven warhammer, its haft wrapped in worn leather."
+    },
+    {
+      "name": "Gate-ward Shield",
+      "description": "A round steel shield bearing the faded gate-ward sigil of the old Kordavos watch."
+    },
+    {
+      "name": "Battered Breastplate",
+      "description": "A serviceable breastplate that has turned aside more blows than Branka can count."
+    },
+    {
+      "name": "Watch Whistle",
+      "description": "A brass whistle of the old city watch, kept polished as a family heirloom."
+    }
+  ],
+  "skills": ["Athletics", "Intimidation", "Perception", "Endurance", "Shield Wall Tactics"],
+  "specialAbilities": ["Stone Resolve: Branka's dwarven constitution lets her shrug off blows and stand her ground where others would falter", "Shield Guard: Branka can interpose her shield to protect an adjacent ally from harm"],
+  "status": "",
+  "type": "pc",
+  "attributes": {
+    "strength": 16,
+    "dexterity": 10,
+    "constitution": 16,
+    "intelligence": 10,
+    "wisdom": 12,
+    "charisma": 8
+  },
+  "id": "branka-stoneveil",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/march-of-davos/pcs/branka-stoneveil.png"
+}

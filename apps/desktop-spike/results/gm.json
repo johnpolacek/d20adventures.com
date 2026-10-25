@@ -1,0 +1,219 @@
+{
+  "recordedAt": "2026-10-01T19:43:51.439Z",
+  "nativeTauri": true,
+  "providers": [
+    {
+      "provider": "claude",
+      "executable": "~/.local/share/claude/versions/2.1.287",
+      "version": "2.1.287 (Claude Code)",
+      "versionExit": 0,
+      "helpExit": 0,
+      "exposesIgnoreUserConfig": false,
+      "mode": "stream-json stdin",
+      "allowed": true
+    },
+    {
+      "provider": "codex",
+      "executable": "~/.local/share/fnm/node-versions/v24.14.1/installation/lib/node_modules/@openai/codex/bin/codex.js",
+      "version": "codex-cli 0.156.1",
+      "versionExit": 0,
+      "helpExit": 0,
+      "exposesIgnoreUserConfig": false,
+      "mode": "app-server JSON-RPC",
+      "allowed": false,
+      "reason": "App-server does not expose exec's --ignore-user-config / --ignore-rules. Config overrides do not establish that user settings, hooks, and MCP were never loaded. No GM launched."
+    },
+    {
+      "provider": "gemini",
+      "executable": "~/.local/share/fnm/node-versions/v24.14.1/installation/lib/node_modules/@google/gemini-cli/bundle/gemini.js",
+      "version": "0.60.0",
+      "versionExit": 0,
+      "helpExit": 0,
+      "exposesIgnoreUserConfig": false,
+      "mode": "ACP",
+      "allowed": false,
+      "reason": "Installed settings loader unconditionally loads user settings. GEMINI_CLI_HOME relocates both settings and OAuth storage. No supported credential-preserving ignore-settings mode established. No GM launched."
+    },
+    {
+      "provider": "grok",
+      "executable": "~/.grok/downloads/grok-1.0.41-macos-aarch64",
+      "version": "grok 1.0.41 (4220f3b224a6) [stable]",
+      "versionExit": 0,
+      "helpExit": 0,
+      "exposesIgnoreUserConfig": false,
+      "mode": "agent stdio ACP",
+      "allowed": false,
+      "reason": "ACP is available, but no ignore-user-settings mode is exposed. GROK_HOME relocates config, auth, plugins, and sessions together. No GM launched."
+    }
+  ],
+  "results": [
+    {
+      "provider": "claude",
+      "executable": "~/.local/share/claude/versions/2.1.287",
+      "version": "2.1.287 (Claude Code)",
+      "versionExit": 0,
+      "helpExit": 0,
+      "exposesIgnoreUserConfig": false,
+      "mode": "stream-json stdin",
+      "allowed": true,
+      "model": "claude-opus-5-5",
+      "startupMs": 781,
+      "lockdownVerified": true,
+      "capabilities": {
+        "tools": [],
+        "skills": [],
+        "plugins": [],
+        "mcpServers": []
+      },
+      "processCount": 1,
+      "requests": 2,
+      "results": [
+        {
+          "id": "progression-turn",
+          "inferenceRequests": 1,
+          "expected": {
+            "nextEncounterId": "the-harvest-festival"
+          },
+          "attempts": [
+            {
+              "elapsedMs": 4180,
+              "text": "{\"nextEncounterId\":\"the-harvest-festival\",\"narrative\":\"Garlan Ironfist tallies the three marks with a satisfied grunt and waves Mira through. \\\"Enjoy the festival, and mind your purse in the crowds,\\\" he rumbles, stepping aside from the inspection table.\\n\\nBeyond the open city gate, Kordavos bursts to life with colorful stalls, drifting smells of roasted chestnuts and spiced cider, and the merry tune of fiddles. Banners of Asteria and Valkara snap overhead as revelers fill the streets for the Harvest Festival.\"}",
+              "failed": false,
+              "providerTurns": 1,
+              "reportedSessionApiMs": 3372,
+              "jsonValid": true,
+              "schemaValid": true,
+              "value": {
+                "nextEncounterId": "the-harvest-festival",
+                "narrative": "Garlan Ironfist tallies the three marks with a satisfied grunt and waves Mira through. \"Enjoy the festival, and mind your purse in the crowds,\" he rumbles, stepping aside from the inspection table.\n\nBeyond the open city gate, Kordavos bursts to life with colorful stalls, drifting smells of roasted chestnuts and spiced cider, and the merry tune of fiddles. Banners of Asteria and Valkara snap overhead as revelers fill the streets for the Harvest Festival."
+              }
+            }
+          ]
+        },
+        {
+          "id": "warm-roll-schema-probe",
+          "inferenceRequests": 1,
+          "expected": {
+            "rollType": "none",
+            "difficulty": 0
+          },
+          "attempts": [
+            {
+              "elapsedMs": 1451,
+              "text": "{\"rollType\":\"none\",\"difficulty\":0}",
+              "failed": false,
+              "providerTurns": 1,
+              "reportedSessionApiMs": 4803,
+              "jsonValid": true,
+              "schemaValid": true,
+              "value": {
+                "rollType": "none",
+                "difficulty": 0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "provider": "codex",
+      "executable": "~/.local/share/fnm/node-versions/v24.14.1/installation/lib/node_modules/@openai/codex/bin/codex.js",
+      "version": "codex-cli 0.156.1",
+      "versionExit": 0,
+      "helpExit": 0,
+      "exposesIgnoreUserConfig": false,
+      "mode": "app-server JSON-RPC",
+      "allowed": false,
+      "reason": "App-server does not expose exec's --ignore-user-config / --ignore-rules. Config overrides do not establish that user settings, hooks, and MCP were never loaded. No GM launched.",
+      "status": "blocked",
+      "inferenceRequests": 0,
+      "latencyMs": null,
+      "jsonValidity": null,
+      "quality": "not measured"
+    },
+    {
+      "provider": "gemini",
+      "executable": "~/.local/share/fnm/node-versions/v24.14.1/installation/lib/node_modules/@google/gemini-cli/bundle/gemini.js",
+      "version": "0.60.0",
+      "versionExit": 0,
+      "helpExit": 0,
+      "exposesIgnoreUserConfig": false,
+      "mode": "ACP",
+      "allowed": false,
+      "reason": "Installed settings loader unconditionally loads user settings. GEMINI_CLI_HOME relocates both settings and OAuth storage. No supported credential-preserving ignore-settings mode established. No GM launched.",
+      "status": "blocked",
+      "inferenceRequests": 0,
+      "latencyMs": null,
+      "jsonValidity": null,
+      "quality": "not measured"
+    },
+    {
+      "provider": "grok",
+      "executable": "~/.grok/downloads/grok-1.0.41-macos-aarch64",
+      "version": "grok 1.0.41 (4220f3b224a6) [stable]",
+      "versionExit": 0,
+      "helpExit": 0,
+      "exposesIgnoreUserConfig": false,
+      "mode": "agent stdio ACP",
+      "allowed": false,
+      "reason": "ACP is available, but no ignore-user-settings mode is exposed. GROK_HOME relocates config, auth, plugins, and sessions together. No GM launched.",
+      "status": "blocked",
+      "inferenceRequests": 0,
+      "latencyMs": null,
+      "jsonValidity": null,
+      "quality": "not measured"
+    },
+    {
+      "provider": "google-api-baseline",
+      "model": "gemini-3.5-flash-lite",
+      "note": "Independent requests with identical prompt/schema/system, no CLI session context",
+      "results": [
+        {
+          "id": "progression-turn",
+          "inferenceRequests": 1,
+          "expected": {
+            "nextEncounterId": "the-harvest-festival"
+          },
+          "attempts": [
+            {
+              "elapsedMs": 2283,
+              "text": "{\n  \"nextEncounterId\": \"the-harvest-festival\",\n  \"narrative\": \"Garlan counts the three marks and nods with approval. He stamps an entry pass and hands it back.\\n\\nWith the fee paid, the open city gate behind Garlan welcomes the traveler into the vibrant celebration of the Harvest Festival.\"\n}",
+              "failed": false,
+              "providerTurns": 1,
+              "durationApiMs": null,
+              "jsonValid": true,
+              "schemaValid": true,
+              "value": {
+                "nextEncounterId": "the-harvest-festival",
+                "narrative": "Garlan counts the three marks and nods with approval. He stamps an entry pass and hands it back.\n\nWith the fee paid, the open city gate behind Garlan welcomes the traveler into the vibrant celebration of the Harvest Festival."
+              }
+            }
+          ]
+        },
+        {
+          "id": "warm-roll-schema-probe",
+          "inferenceRequests": 1,
+          "expected": {
+            "rollType": "none",
+            "difficulty": 0
+          },
+          "attempts": [
+            {
+              "elapsedMs": 615,
+              "text": "{\"rollType\":\"none\",\"difficulty\":0}",
+              "failed": false,
+              "providerTurns": 1,
+              "durationApiMs": null,
+              "jsonValid": true,
+              "schemaValid": true,
+              "value": {
+                "rollType": "none",
+                "difficulty": 0
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

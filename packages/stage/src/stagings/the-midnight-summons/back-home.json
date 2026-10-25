@@ -1,0 +1,33 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "the-midnight-summons/back-home",
+  "set": "realm-of-myr/thalberns-forest-home",
+  "cast": [
+    {
+      "id": "thalbern",
+      "name": "Thalbern",
+      "role": "Ranger of the Valkarr woods",
+      "height": 1.82,
+      "art": {
+        "front": "/stage/fixtures/the-midnight-summons/thalbern-front.webp",
+        "back": "/stage/fixtures/the-midnight-summons/thalbern-back.webp",
+        "portrait": "/stage/fixtures/the-midnight-summons/thalbern-portrait.jpg"
+      },
+      "at": "thalbern",
+      "facing": [0.6, 18]
+    }
+  ],
+  "shots": {
+    "ranger": {
+      "subject": "thalbern",
+      "distance": 3.2,
+      "angle": 20,
+      "height": 1.7,
+      "lookHeight": 1.5,
+      "fov": 46,
+      "label": "Thalbern"
+    }
+  },
+  "shot": "home"
+}

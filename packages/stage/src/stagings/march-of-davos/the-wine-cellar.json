@@ -1,0 +1,178 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "march-of-davos/the-wine-cellar",
+  "set": "realm-of-myr/blackthorn-wine-cellar",
+  "cast": [
+    {
+      "id": "branka-stoneveil",
+      "name": "Branka Stoneveil",
+      "role": "Dwarf fighter",
+      "height": 1.38,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/branka-front.webp",
+        "back": "/stage/fixtures/march-of-davos/branka-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/branka-portrait.jpg"
+      },
+      "at": [
+        -0.7,
+        -10.2
+      ],
+      "facing": [
+        0,
+        -22
+      ]
+    },
+    {
+      "id": "cassia-verane",
+      "name": "Cassia Verane",
+      "role": "Human wizard",
+      "height": 1.72,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/cassia-front.webp",
+        "back": "/stage/fixtures/march-of-davos/cassia-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/cassia-portrait.jpg"
+      },
+      "at": [
+        0.4,
+        -10.8
+      ],
+      "facing": [
+        0,
+        -22
+      ]
+    },
+    {
+      "id": "yeva-softstep",
+      "name": "Yeva Softstep",
+      "role": "Halfling rogue",
+      "height": 1.08,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/yeva-front.webp",
+        "back": "/stage/fixtures/march-of-davos/yeva-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/yeva-portrait.jpg"
+      },
+      "at": [
+        -0.2,
+        -11.6
+      ],
+      "facing": [
+        0,
+        -22
+      ]
+    },
+    {
+      "id": "milos-radan",
+      "name": "Milos Radan",
+      "role": "Human cleric",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/milos-front.webp",
+        "back": "/stage/fixtures/march-of-davos/milos-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/milos-portrait.jpg"
+      },
+      "at": [
+        0.9,
+        -9.8
+      ],
+      "facing": [
+        0,
+        -22
+      ]
+    },
+    {
+      "id": "clive-stonebrook",
+      "name": "The sommelier",
+      "role": "Blackthorn sommelier",
+      "height": 1.86,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/clive-stonebrook-front.webp",
+        "back": "/stage/fixtures/march-of-davos/clive-stonebrook-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/clive-stonebrook-portrait.jpg"
+      },
+      "at": [
+        0.6,
+        -6.2
+      ],
+      "facing": [
+        0,
+        -12
+      ]
+    },
+    {
+      "id": "mira-hearthstone",
+      "name": "A servant",
+      "role": "Blackthorn servant",
+      "height": 1.58,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/mira-hearthstone-front.webp",
+        "back": "/stage/fixtures/march-of-davos/mira-hearthstone-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/mira-hearthstone-portrait.jpg"
+      },
+      "at": [
+        -0.4,
+        -5.4
+      ],
+      "facing": [
+        0,
+        -12
+      ]
+    }
+  ],
+  "shots": {
+    "party": {
+      "subjects": [
+        "branka-stoneveil",
+        "cassia-verane",
+        "yeva-softstep",
+        "milos-radan"
+      ],
+      "offset": [
+        1.4,
+        1.6,
+        3.8
+      ],
+      "target": [
+        0,
+        1.2,
+        0
+      ],
+      "relative": "world",
+      "fov": 54,
+      "label": "Party"
+    },
+    "sommelier": {
+      "subject": "clive-stonebrook",
+      "distance": 2.6,
+      "angle": -10,
+      "height": 1.7,
+      "lookHeight": 1.6,
+      "fov": 44,
+      "label": "The sommelier"
+    },
+    "servant": {
+      "subject": "mira-hearthstone",
+      "distance": 2.2,
+      "angle": 15,
+      "height": 1.5,
+      "lookHeight": 1.4,
+      "fov": 44,
+      "label": "The servant"
+    }
+  },
+  "shot": "cellar",
+  "entrances": [
+    {
+      "cast": "clive-stonebrook",
+      "when": "sommelier",
+      "from": "stair",
+      "shot": "stair"
+    },
+    {
+      "cast": "mira-hearthstone",
+      "when": "servant",
+      "from": "stair",
+      "shot": "stair"
+    }
+  ]
+}

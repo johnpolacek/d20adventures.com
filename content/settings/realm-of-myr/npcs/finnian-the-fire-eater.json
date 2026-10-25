@@ -1,0 +1,13 @@
+{
+  "id": "finnian-the-fire-eater",
+  "name": "Finnian the Fire-Eater",
+  "type": "npc",
+  "image": "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725142650394",
+  "archetype": "Performer",
+  "race": "Halfling",
+  "gender": "Male",
+  "appearance": "A small, nimble figure with a mischievous grin, wearing a leather vest and a bandana to keep his hair back.",
+  "personality": "Energetic, daring, loves to entertain and show off his skills.",
+  "behavior": "Fire-eating, acrobatics, juggling.",
+  "healthPercent": 100
+}

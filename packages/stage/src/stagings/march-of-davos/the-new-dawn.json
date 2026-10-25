@@ -1,0 +1,166 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "march-of-davos/the-new-dawn",
+  "set": "realm-of-myr/kordavos-square-dawn",
+  "cast": [
+    {
+      "id": "branka-stoneveil",
+      "name": "Branka Stoneveil",
+      "role": "Dwarf fighter",
+      "height": 1.38,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/branka-front.webp",
+        "back": "/stage/fixtures/march-of-davos/branka-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/branka-portrait.jpg"
+      },
+      "at": [
+        -1,
+        -11.6
+      ],
+      "facing": [
+        0,
+        -36
+      ]
+    },
+    {
+      "id": "cassia-verane",
+      "name": "Cassia Verane",
+      "role": "Human wizard",
+      "height": 1.72,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/cassia-front.webp",
+        "back": "/stage/fixtures/march-of-davos/cassia-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/cassia-portrait.jpg"
+      },
+      "at": [
+        0.1,
+        -12.2
+      ],
+      "facing": [
+        0,
+        -36
+      ]
+    },
+    {
+      "id": "yeva-softstep",
+      "name": "Yeva Softstep",
+      "role": "Halfling rogue",
+      "height": 1.08,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/yeva-front.webp",
+        "back": "/stage/fixtures/march-of-davos/yeva-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/yeva-portrait.jpg"
+      },
+      "at": [
+        1,
+        -11.2
+      ],
+      "facing": [
+        0,
+        -36
+      ]
+    },
+    {
+      "id": "milos-radan",
+      "name": "Milos Radan",
+      "role": "Human cleric",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/milos-front.webp",
+        "back": "/stage/fixtures/march-of-davos/milos-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/milos-portrait.jpg"
+      },
+      "at": [
+        -0.2,
+        -10.6
+      ],
+      "facing": [
+        0,
+        -36
+      ]
+    },
+    {
+      "id": "joran-antonov",
+      "name": "Joran Antonov",
+      "role": "Champion of the Covenant",
+      "height": 1.82,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/joran-front.webp",
+        "back": "/stage/fixtures/march-of-davos/joran-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/joran-portrait.jpg"
+      },
+      "at": [
+        -0.8,
+        -35.5
+      ],
+      "facing": [
+        0,
+        -10
+      ],
+      "y": 4.24
+    },
+    {
+      "id": "seraphina-valtor",
+      "name": "Seraphina Valtor",
+      "role": "Head of the Valtor clan",
+      "height": 1.7,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/seraphina-front.webp",
+        "back": "/stage/fixtures/march-of-davos/seraphina-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/seraphina-portrait.jpg"
+      },
+      "at": [
+        1.1,
+        -35.6
+      ],
+      "facing": [
+        0,
+        -10
+      ],
+      "y": 4.24
+    }
+  ],
+  "shots": {
+    "party": {
+      "subjects": [
+        "branka-stoneveil",
+        "cassia-verane",
+        "yeva-softstep",
+        "milos-radan"
+      ],
+      "offset": [
+        2,
+        1.8,
+        4.4
+      ],
+      "target": [
+        0,
+        1.2,
+        0
+      ],
+      "relative": "world",
+      "fov": 54,
+      "label": "Party"
+    },
+    "joran": {
+      "subject": "joran-antonov",
+      "distance": 3.4,
+      "angle": 0,
+      "height": 0.3,
+      "lookHeight": 1.6,
+      "fov": 46,
+      "label": "Joran"
+    },
+    "seraphina": {
+      "subject": "seraphina-valtor",
+      "distance": 3,
+      "angle": -10,
+      "height": 0.3,
+      "lookHeight": 1.5,
+      "fov": 44,
+      "label": "Seraphina"
+    }
+  },
+  "shot": "square"
+}

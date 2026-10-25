@@ -1,0 +1,384 @@
+{
+ "variants": [
+  {
+   "id": "valkMan1",
+   "body": 1.72,
+   "frac": 1,
+   "layer": 0,
+   "uMax": 0.76953,
+   "vMax": 1,
+   "aspect": 0.38356,
+   "srcW": 1034,
+   "srcH": 2696,
+   "back": {
+    "id": "valkMan1",
+    "layer": 16,
+    "uMax": 0.78711,
+    "vMax": 1,
+    "aspect": 0.39237,
+    "srcW": 1050,
+    "srcH": 2676,
+    "frac": 1
+   }
+  },
+  {
+   "id": "valkMan2",
+   "body": 1.74,
+   "frac": 1,
+   "layer": 1,
+   "uMax": 0.75,
+   "vMax": 1,
+   "aspect": 0.37378,
+   "srcW": 986,
+   "srcH": 2639,
+   "back": {
+    "id": "valkMan2",
+    "layer": 17,
+    "uMax": 0.75781,
+    "vMax": 1,
+    "aspect": 0.37769,
+    "srcW": 995,
+    "srcH": 2633,
+    "frac": 1
+   }
+  },
+  {
+   "id": "valkWoman1",
+   "body": 1.62,
+   "frac": 1,
+   "layer": 2,
+   "uMax": 0.82617,
+   "vMax": 1,
+   "aspect": 0.41194,
+   "srcW": 1078,
+   "srcH": 2619,
+   "back": {
+    "id": "valkWoman1",
+    "layer": 18,
+    "uMax": 0.82813,
+    "vMax": 1,
+    "aspect": 0.41292,
+    "srcW": 1078,
+    "srcH": 2612,
+    "frac": 1
+   }
+  },
+  {
+   "id": "valkWoman2",
+   "body": 1.6,
+   "frac": 1,
+   "layer": 3,
+   "uMax": 0.69727,
+   "vMax": 1,
+   "aspect": 0.34736,
+   "srcW": 885,
+   "srcH": 2547,
+   "back": {
+    "id": "valkWoman2",
+    "layer": 19,
+    "uMax": 0.69336,
+    "vMax": 1,
+    "aspect": 0.3454,
+    "srcW": 885,
+    "srcH": 2563,
+    "frac": 1
+   }
+  },
+  {
+   "id": "valkElder",
+   "body": 1.6,
+   "frac": 1,
+   "layer": 4,
+   "uMax": 0.83203,
+   "vMax": 1,
+   "aspect": 0.41487,
+   "srcW": 1094,
+   "srcH": 2634,
+   "back": {
+    "id": "valkElder",
+    "layer": 20,
+    "uMax": 0.86328,
+    "vMax": 1,
+    "aspect": 0.43053,
+    "srcW": 1121,
+    "srcH": 2601,
+    "frac": 1
+   }
+  },
+  {
+   "id": "valkChild",
+   "body": 1.12,
+   "frac": 1,
+   "layer": 5,
+   "uMax": 0.71094,
+   "vMax": 1,
+   "aspect": 0.35421,
+   "srcW": 922,
+   "srcH": 2606,
+   "back": {
+    "id": "valkChild",
+    "layer": 21,
+    "uMax": 0.71289,
+    "vMax": 1,
+    "aspect": 0.35519,
+    "srcW": 921,
+    "srcH": 2596,
+    "frac": 1
+   }
+  },
+  {
+   "id": "porter",
+   "body": 1.72,
+   "frac": 1,
+   "layer": 6,
+   "uMax": 0.99023,
+   "vMax": 1,
+   "aspect": 0.49413,
+   "srcW": 1326,
+   "srcH": 2682,
+   "back": {
+    "id": "porter",
+    "layer": 22,
+    "uMax": 0.96289,
+    "vMax": 1,
+    "aspect": 0.48043,
+    "srcW": 1278,
+    "srcH": 2661,
+    "frac": 1
+   }
+  },
+  {
+   "id": "pilgrim",
+   "body": 1.74,
+   "frac": 1,
+   "layer": 7,
+   "uMax": 0.96875,
+   "vMax": 1,
+   "aspect": 0.48337,
+   "srcW": 1292,
+   "srcH": 2674,
+   "back": {
+    "id": "pilgrim",
+    "layer": 23,
+    "uMax": 0.95898,
+    "vMax": 1,
+    "aspect": 0.47847,
+    "srcW": 1273,
+    "srcH": 2660,
+    "frac": 1
+   }
+  },
+  {
+   "id": "traveler",
+   "body": 1.72,
+   "frac": 1,
+   "layer": 8,
+   "uMax": 0.875,
+   "vMax": 1,
+   "aspect": 0.4364,
+   "srcW": 1168,
+   "srcH": 2678,
+   "back": {
+    "id": "traveler",
+    "layer": 24,
+    "uMax": 0.88477,
+    "vMax": 1,
+    "aspect": 0.44129,
+    "srcW": 1177,
+    "srcH": 2669,
+    "frac": 1
+   }
+  },
+  {
+   "id": "merchant",
+   "body": 1.7,
+   "frac": 1,
+   "layer": 9,
+   "uMax": 1,
+   "vMax": 0.91113,
+   "aspect": 0.5478,
+   "srcW": 1436,
+   "srcH": 2621,
+   "back": {
+    "id": "merchant",
+    "layer": 25,
+    "uMax": 1,
+    "vMax": 0.9043,
+    "aspect": 0.55195,
+    "srcW": 1435,
+    "srcH": 2601,
+    "frac": 1
+   }
+  },
+  {
+   "id": "farmer",
+   "body": 1.7,
+   "frac": 1,
+   "layer": 10,
+   "uMax": 0.89453,
+   "vMax": 1,
+   "aspect": 0.44618,
+   "srcW": 1168,
+   "srcH": 2620,
+   "back": {
+    "id": "farmer",
+    "layer": 26,
+    "uMax": 0.90039,
+    "vMax": 1,
+    "aspect": 0.44912,
+    "srcW": 1166,
+    "srcH": 2595,
+    "frac": 1
+   }
+  },
+  {
+   "id": "asterianNavy",
+   "body": 1.76,
+   "frac": 1,
+   "layer": 11,
+   "uMax": 0.74414,
+   "vMax": 1,
+   "aspect": 0.37084,
+   "srcW": 967,
+   "srcH": 2605,
+   "back": {
+    "id": "asterianNavy",
+    "layer": 27,
+    "uMax": 0.74023,
+    "vMax": 1,
+    "aspect": 0.36888,
+    "srcW": 957,
+    "srcH": 2597,
+    "frac": 1
+   }
+  },
+  {
+   "id": "asterianCrimson",
+   "body": 1.66,
+   "frac": 1,
+   "layer": 12,
+   "uMax": 0.76367,
+   "vMax": 1,
+   "aspect": 0.38063,
+   "srcW": 1000,
+   "srcH": 2624,
+   "back": {
+    "id": "asterianCrimson",
+    "layer": 28,
+    "uMax": 0.76367,
+    "vMax": 1,
+    "aspect": 0.38063,
+    "srcW": 1000,
+    "srcH": 2628,
+    "frac": 1
+   }
+  },
+  {
+   "id": "guardA",
+   "body": 1.78,
+   "frac": 1,
+   "layer": 13,
+   "uMax": 0.86719,
+   "vMax": 1,
+   "aspect": 0.43249,
+   "srcW": 1123,
+   "srcH": 2598,
+   "back": {
+    "id": "guardA",
+    "layer": 29,
+    "uMax": 0.88477,
+    "vMax": 1,
+    "aspect": 0.44129,
+    "srcW": 1139,
+    "srcH": 2581,
+    "frac": 1
+   }
+  },
+  {
+   "id": "guardB",
+   "body": 1.8,
+   "frac": 0.94,
+   "layer": 14,
+   "uMax": 0.96094,
+   "vMax": 1,
+   "aspect": 0.47945,
+   "srcW": 1268,
+   "srcH": 2644,
+   "back": {
+    "id": "guardB",
+    "layer": 30,
+    "uMax": 1,
+    "vMax": 0.99707,
+    "aspect": 0.50049,
+    "srcW": 1319,
+    "srcH": 2635,
+    "frac": 0.94
+   }
+  },
+  {
+   "id": "knight",
+   "body": 1.88,
+   "frac": 1,
+   "layer": 15,
+   "uMax": 0.79688,
+   "vMax": 1,
+   "aspect": 0.39726,
+   "srcW": 1066,
+   "srcH": 2685,
+   "back": {
+    "id": "knight",
+    "layer": 31,
+    "uMax": 0.83008,
+    "vMax": 1,
+    "aspect": 0.41389,
+    "srcW": 1095,
+    "srcH": 2648,
+    "frac": 1
+   }
+  }
+ ],
+ "kinds": {
+  "traveler": {
+   "valkMan1": 2,
+   "valkMan2": 2,
+   "valkElder": 1,
+   "farmer": 1
+  },
+  "packer": {
+   "traveler": 2,
+   "merchant": 1
+  },
+  "pilgrim": {
+   "pilgrim": 2,
+   "valkElder": 1
+  },
+  "merchant": {
+   "asterianNavy": 1,
+   "asterianCrimson": 1,
+   "merchant": 1
+  },
+  "woman": {
+   "valkWoman1": 1,
+   "valkWoman2": 1
+  },
+  "porter": {
+   "porter": 1
+  },
+  "child": {
+   "valkChild": 1
+  },
+  "soldier": {
+   "guardA": 1,
+   "guardB": 1
+  },
+  "knight": {
+   "knight": 1
+  }
+ },
+ "layer": [
+  512,
+  1024
+ ],
+ "cols": 4,
+ "rows": 4
+}

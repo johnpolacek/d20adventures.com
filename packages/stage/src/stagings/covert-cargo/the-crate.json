@@ -1,0 +1,95 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "covert-cargo/the-crate",
+  "set": "realm-of-myr/mordava-river-pier",
+  "cast": [
+    {
+      "id": "lyra",
+      "name": "Lyra Silvanus",
+      "role": "Asterian arcanist",
+      "height": 1.7,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/lyra-front.webp",
+        "back": "/stage/fixtures/covert-cargo/lyra-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/lyra-portrait.jpg"
+      },
+      "at": [
+        4.65,
+        -0.2
+      ],
+      "facing": [
+        4.65,
+        -1.3
+      ]
+    },
+    {
+      "id": "poppen",
+      "name": "Poppen Quickfoot",
+      "role": "Halfling rogue",
+      "height": 1.06,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/poppen-front.webp",
+        "back": "/stage/fixtures/covert-cargo/poppen-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/poppen-portrait.jpg"
+      },
+      "at": [
+        6.3,
+        -0.9
+      ],
+      "facing": [
+        5.6,
+        -1.3
+      ]
+    },
+    {
+      "id": "thalbern",
+      "name": "Thalbern",
+      "role": "Ranger of the Valkarr woods",
+      "height": 1.82,
+      "art": {
+        "front": "/stage/fixtures/the-midnight-summons/thalbern-front.webp",
+        "back": "/stage/fixtures/the-midnight-summons/thalbern-back.webp",
+        "portrait": "/stage/fixtures/the-midnight-summons/thalbern-portrait.jpg"
+      },
+      "at": [
+        5.2,
+        2.2
+      ],
+      "facing": [
+        5.2,
+        -1.3
+      ]
+    }
+  ],
+  "shots": {
+    "pair": {
+      "subjects": [
+        "lyra",
+        "poppen"
+      ],
+      "offset": [
+        -0.275,
+        1.7,
+        -2.95
+      ],
+      "target": [
+        -0.175,
+        0.6,
+        -0.55
+      ],
+      "fov": 55,
+      "label": "The pair"
+    },
+    "thalbern": {
+      "subject": "thalbern",
+      "distance": 2.1,
+      "angle": 25,
+      "height": 1.6,
+      "lookHeight": 1.49,
+      "fov": 44,
+      "label": "Thalbern"
+    }
+  },
+  "shot": "crate"
+}

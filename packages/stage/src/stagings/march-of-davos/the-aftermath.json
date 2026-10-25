@@ -1,0 +1,164 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "march-of-davos/the-aftermath",
+  "set": "realm-of-myr/kordavos-docks-wrecked",
+  "cast": [
+    {
+      "id": "branka-stoneveil",
+      "name": "Branka Stoneveil",
+      "role": "Dwarf fighter",
+      "height": 1.38,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/branka-front.webp",
+        "back": "/stage/fixtures/march-of-davos/branka-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/branka-portrait.jpg"
+      },
+      "at": [
+        -0.9,
+        4.4
+      ],
+      "facing": [
+        1.5,
+        2.6
+      ]
+    },
+    {
+      "id": "cassia-verane",
+      "name": "Cassia Verane",
+      "role": "Human wizard",
+      "height": 1.72,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/cassia-front.webp",
+        "back": "/stage/fixtures/march-of-davos/cassia-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/cassia-portrait.jpg"
+      },
+      "at": [
+        0.2,
+        5
+      ],
+      "facing": [
+        1.5,
+        2.6
+      ]
+    },
+    {
+      "id": "yeva-softstep",
+      "name": "Yeva Softstep",
+      "role": "Halfling rogue",
+      "height": 1.08,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/yeva-front.webp",
+        "back": "/stage/fixtures/march-of-davos/yeva-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/yeva-portrait.jpg"
+      },
+      "at": [
+        1.2,
+        4.6
+      ],
+      "facing": [
+        1.5,
+        2.6
+      ]
+    },
+    {
+      "id": "milos-radan",
+      "name": "Milos Radan",
+      "role": "Human cleric",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/milos-front.webp",
+        "back": "/stage/fixtures/march-of-davos/milos-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/milos-portrait.jpg"
+      },
+      "at": [
+        -1.8,
+        5.2
+      ],
+      "facing": [
+        1.5,
+        2.6
+      ]
+    },
+    {
+      "id": "astrid-blackthorn",
+      "name": "Lady Astrid Blackthorn",
+      "role": "Noble ranger",
+      "height": 1.78,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/astrid-blackthorn-front.webp",
+        "back": "/stage/fixtures/march-of-davos/astrid-blackthorn-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/astrid-blackthorn-portrait.jpg"
+      },
+      "at": [
+        1.5,
+        2.6
+      ],
+      "facing": [
+        0.1,
+        4.8
+      ]
+    },
+    {
+      "id": "petra-velan",
+      "name": "Petra",
+      "role": "Dock hand",
+      "height": 1.68,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/petra-velan-front.webp",
+        "back": "/stage/fixtures/march-of-davos/petra-velan-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/petra-velan-portrait.jpg"
+      },
+      "at": [
+        16.3,
+        -5.2
+      ],
+      "facing": [
+        1.5,
+        2.6
+      ]
+    }
+  ],
+  "shots": {
+    "astrid": {
+      "subject": "astrid-blackthorn",
+      "distance": 2.2,
+      "angle": 22,
+      "height": 1.7,
+      "lookHeight": 1.64,
+      "fov": 44,
+      "label": "Astrid"
+    },
+    "petra": {
+      "subject": "petra-velan",
+      "distance": 2.6,
+      "angle": 30,
+      "height": 1.8,
+      "lookHeight": 1.55,
+      "fov": 44,
+      "label": "Petra"
+    },
+    "party": {
+      "subjects": [
+        "branka-stoneveil",
+        "cassia-verane",
+        "yeva-softstep",
+        "milos-radan"
+      ],
+      "offset": [
+        2.8,
+        1.75,
+        -2.6
+      ],
+      "target": [
+        0,
+        1.1,
+        0
+      ],
+      "relative": "world",
+      "fov": 54,
+      "label": "Party"
+    }
+  },
+  "shot": "astrid"
+}

@@ -1,0 +1,62 @@
+@import "tailwindcss";
+@import "../../../components/theme.css";
+@source "../../../components/stage";
+@source "../../../components/graphics";
+@source "../../../components/typography";
+@source "../../../components/ui/button.tsx";
+@source "../../../components/ui/image-header.tsx";
+@source "../../../components/ui/native-image.tsx";
+@source "../../../components/ui/select.tsx";
+@source "../../../components/ui/site.tsx";
+@source "./";
+@theme {
+  --font-display: "Cinzel Decorative", Georgia, serif;
+  --font-sans: "Rethink Sans", system-ui, sans-serif;
+  --font-mono: "Syne Mono", ui-monospace, monospace;
+}
+
+/* The website's base: black ground, white serif text, 18px root. The window's own background is black too, so nothing
+   white shows before the first paint. */
+html {
+  font-size: 18px;
+}
+html,
+body,
+#root {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  color: #fff;
+}
+body {
+  font-family: var(--font-serif);
+  -webkit-font-smoothing: antialiased;
+}
+html,
+body {
+  overscroll-behavior: none;
+}
+/* In the base layer, so truncate and whitespace utilities still win. */
+@layer base {
+  div,
+  p,
+  textarea {
+    text-wrap: pretty;
+  }
+}
+button {
+  cursor: pointer;
+}
+textarea,
+select {
+  color: inherit;
+}
+
+/* Keep last, as in the website's stylesheet. */
+.fade-in {
+  @apply opacity-100 transition-opacity duration-1000 ease-in-out;
+  @starting-style {
+    opacity: 0;
+  }
+}

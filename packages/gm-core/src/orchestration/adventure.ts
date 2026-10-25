@@ -1,0 +1,193 @@
+import { assertPlayerCharacterControl, createAdventureAccess } from "../access"
+import type { GmPorts } from "../ports"
+import { createAdventureFirstTurnService } from "../services/adventure-first-turn-service"
+import { createAdventureRollResultService, getEncounterInstructionsFromPlan } from "../services/adventure-roll-result-service"
+import { createAdventureTurnReplyService } from "../services/adventure-turn-reply-service"
+import { createNarrativeGenerationService } from "../services/narrative-generation-service"
+import { createNpcTurnService } from "../services/npc-turn-service"
+import type { StoryBeat } from "../story/beats"
+import { storyProse } from "../story/turn"
+import type { TurnCharacter } from "../types/adventure"
+import type { RollRequirement } from "../validations/roll-requirement-schema"
+
+export function createAdventure(ports: GmPorts) {
+  const { assertAdventureAccessByTurn } = createAdventureAccess(ports)
+  const { buildFirstTurnSetup } = createAdventureFirstTurnService(ports)
+  const { resolvePlayerRollNarrativeAndCharacters } = createAdventureRollResultService(ports)
+  const { buildTurnReplyRollRequirement } = createAdventureTurnReplyService(ports)
+  const { processNpcTurnsAfterCurrent } = createNpcTurnService(ports)
+  const { writeReply } = createNarrativeGenerationService(ports)
+  const loadAdventurePlanForRuntime = ports.content.loadPlan.bind(ports.content)
+  // `story` is the reply as the hero's beats, from writeReply. The player's own words go before it.
+  async function processTurnReply({ turnId, characterId, originalPlayerInput, story }: { turnId: string; characterId: string; originalPlayerInput?: string; story: StoryBeat[] }) {
+    const userId = await ports.identity()
+    if (!userId) {
+      console.error("[processTurnReply] Unauthorized access attempt.")
+      throw new Error("Unauthorized")
+    }
+
+    const { turn, adventure } = await assertAdventureAccessByTurn(userId, turnId)
+
+    const characterPerformingAction = assertPlayerCharacterControl(userId, turn, characterId)
+    const narrativeAction = storyProse(story)
+    const reply: StoryBeat[] = [
+      ...(originalPlayerInput ? [{ kind: "reply" as const, by: { step: "reply" as const, character: characterId }, character: characterId, text: originalPlayerInput }] : []),
+      ...story,
+    ]
+    const rollRequirementDetails: RollRequirement = await buildTurnReplyRollRequirement({
+      turn,
+      adventure,
+      characterPerformingAction,
+      narrativeAction,
+      originalPlayerInput,
+    })
+
+    if (rollRequirementDetails?.rollType && typeof rollRequirementDetails.difficulty === "number") {
+      await ports.store.submitReply({
+        turnId,
+        characterId,
+        story: reply,
+        rollRequirement: rollRequirementDetails,
+      })
+      ports.narration.afterTurn(turnId)
+      return { rollRequired: rollRequirementDetails }
+    }
+    await ports.store.submitReply({
+      turnId,
+      characterId,
+      story: reply,
+      rollRequirement: undefined,
+    })
+    if (ports.npcTurnsPerCall === undefined) await processNpcTurnsAfterCurrent(turnId)
+    ports.narration.afterTurn(turnId)
+    return { rollRequired: null }
+  }
+
+  // A player's reply in their own words: written into the story as their hero's beats, then taken as the hero's turn.
+  async function processPlayerReply({ turnId, characterId, playerInput }: { turnId: string; characterId: string; playerInput: string }) {
+    const userId = await ports.identity()
+    if (!userId) throw new Error("Unauthorized")
+    const { turn } = await assertAdventureAccessByTurn(userId, turnId)
+    const character = assertPlayerCharacterControl(userId, turn, characterId) as TurnCharacter
+    const story = await writeReply({ character, playerInput, turn: { ...turn, characters: turn.characters as TurnCharacter[] } })
+    return processTurnReply({ turnId, characterId, originalPlayerInput: playerInput, story })
+  }
+
+  async function createAdventureWithFirstTurn(payload: {
+    planId: string
+    settingId: string
+    ownerId: string
+    playerIds: string[]
+    title: string
+    startedAt: number
+    playerInput: string
+    turn: {
+      encounterId: string
+      story: StoryBeat[]
+      characters: TurnCharacter[]
+      order: number
+    }
+  }) {
+    const userId = await ports.identity()
+    if (!userId) throw new Error("Unauthorized")
+
+    const firstTurnSetup = await buildFirstTurnSetup({
+      settingId: payload.settingId,
+      planId: payload.planId,
+      encounterId: payload.turn.encounterId,
+      story: payload.turn.story,
+      playerInput: payload.playerInput,
+      characters: payload.turn.characters,
+    })
+
+    // The player's first words, written into the story as their hero's beats.
+    const hero = payload.turn.characters.find((c) => c.type === "pc")
+    const reply: StoryBeat[] =
+      hero && payload.playerInput.trim()
+        ? [
+            { kind: "reply", by: { step: "reply", character: hero.id }, character: hero.id, text: payload.playerInput },
+            ...(await writeReply({ character: hero, playerInput: payload.playerInput, turn: payload.turn })),
+          ]
+        : []
+    const turnWithTitle = {
+      ...payload.turn,
+      story: [...payload.turn.story, ...reply],
+      title: firstTurnSetup.turnTitle,
+    }
+
+    // Overwrite ownerId with the authenticated user
+    const result = await ports.store.createAdventureWithFirstTurn({
+      ...payload,
+      settingId: payload.settingId,
+      ownerId: userId,
+      turn: turnWithTitle, // Pass the turn object with the title
+      rollRequirement: firstTurnSetup.rollRequirement,
+    })
+    ports.narration.afterTurn(result.turnId)
+    return result
+  }
+
+  async function resolvePlayerRollResult({ turnId, characterId, result }: { turnId: string; characterId: string; result: number }) {
+    const userId = await ports.identity()
+    if (!userId) throw new Error("Unauthorized")
+
+    // 1. Fetch and authorize turn access + character control
+    const { turn, adventure } = await assertAdventureAccessByTurn(userId, turnId)
+    const character = assertPlayerCharacterControl(userId, turn, characterId)
+    if (!character.rollRequired) throw new Error("No roll required for this character")
+    if (typeof character.rollResult === "number") throw new Error("Roll already completed")
+
+    // 2. Fetch the adventure plan (wiki runtime for migrated adventures, legacy S3 JSON otherwise)
+    const plan = await loadAdventurePlanForRuntime(adventure.settingId, adventure.planId)
+    if (!plan || !Array.isArray(plan.sections)) throw new Error("Adventure plan not found or invalid")
+
+    // 3. Extract encounter instructions
+    const encounterInstructions = getEncounterInstructionsFromPlan(plan, turn.encounterId)
+
+    // 4. Resolve narrative + character updates for the roll
+    const rollResolution = await resolvePlayerRollNarrativeAndCharacters({
+      turn: {
+        _id: turn._id,
+        encounterId: turn.encounterId,
+        title: turn.title,
+        story: turn.story,
+        characters: turn.characters as TurnCharacter[],
+        adventureId: turn.adventureId,
+        isFinalEncounter: turn.isFinalEncounter,
+      },
+      character: character as TurnCharacter & {
+        rollRequired: {
+          rollType: string
+          difficulty: number
+          modifier?: number
+        }
+      },
+      characterId,
+      baseRollResult: result,
+      encounterInstructions,
+      playerDeath: plan.playerDeath,
+      premise: plan.premise,
+      knowledge: adventure.knowledge,
+      strangers: plan.strangers,
+    })
+
+    // 5. Patch the turn with the new narrative and character state
+    await ports.store.updateTurn({
+      turnId,
+      patch: {
+        story: rollResolution.story,
+        characters: rollResolution.characters,
+        updatedAt: Date.now(),
+      },
+    })
+
+    // After marking player complete, process NPCs
+    if (ports.npcTurnsPerCall === undefined) await processNpcTurnsAfterCurrent(turnId)
+
+    ports.narration.afterTurn(turnId)
+
+    // 6. Return the updated turn
+    return await ports.store.getTurn({ turnId })
+  }
+  return { processTurnReply, processPlayerReply, createAdventureWithFirstTurn, resolvePlayerRollResult }
+}

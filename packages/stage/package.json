@@ -1,0 +1,22 @@
+{
+  "name": "@d20/stage",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./sets": "./src/sets/index.ts",
+    "./*.json": "./src/*.json",
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "check": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "three": "0.183.2",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@types/three": "0.183.1"
+  }
+}

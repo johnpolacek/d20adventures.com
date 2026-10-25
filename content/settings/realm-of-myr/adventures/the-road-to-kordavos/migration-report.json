@@ -1,0 +1,202 @@
+{
+  "planId": "the-road-to-kordavos",
+  "settingId": "realm-of-myr",
+  "generatedAt": "2026-05-23T00:00:00.000Z",
+  "generatedFiles": [
+    {
+      "path": "content/settings/realm-of-myr/adventures/the-road-to-kordavos/adventure.md",
+      "kind": "adventure"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/the-road-to-kordavos/encounters/well-met.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/the-road-to-kordavos/encounters/the-fortune-teller.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/the-road-to-kordavos/encounters/the-gates-ahead.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/npcs-1749870310278.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/npcs-1749870310278.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/npcs-1749870598631.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/npcs-1749870598631.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/npcs-1749870658664.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/npcs-1749870658664.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/npcs-1749870721240.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/npcs-1749870721240.json",
+      "kind": "npcSheet"
+    }
+  ],
+  "sourceFieldMappings": [
+    {
+      "source": "AdventurePlan.title",
+      "destination": "adventure.md frontmatter.title"
+    },
+    {
+      "source": "AdventurePlan.teaser",
+      "destination": "adventure.md ## Teaser"
+    },
+    {
+      "source": "AdventurePlan.overview",
+      "destination": "adventure.md ## Summary"
+    },
+    {
+      "source": "AdventurePlan.party",
+      "destination": "adventure.md frontmatter.minPlayers/maxPlayers"
+    },
+    {
+      "source": "AdventurePlan.start",
+      "destination": "adventure.md frontmatter.startEncounter"
+    },
+    {
+      "source": "AdventurePlan.nextAdventure",
+      "destination": "adventure.md frontmatter.nextAdventure"
+    },
+    {
+      "source": "AdventurePlan.premadePlayerCharacters[].id",
+      "destination": "adventure.md frontmatter.premadeCharacters"
+    },
+    {
+      "source": "Encounter.well-met.intro",
+      "destination": "encounters/well-met.md ## Intro"
+    },
+    {
+      "source": "Encounter.well-met.instructions",
+      "destination": "encounters/well-met.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.well-met.transitions",
+      "destination": "encounters/well-met.md ## Transitions"
+    },
+    {
+      "source": "Encounter.well-met.npc",
+      "destination": "encounters/well-met.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-fortune-teller.intro",
+      "destination": "encounters/the-fortune-teller.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-fortune-teller.instructions",
+      "destination": "encounters/the-fortune-teller.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-fortune-teller.transitions",
+      "destination": "encounters/the-fortune-teller.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-fortune-teller.npc",
+      "destination": "encounters/the-fortune-teller.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-gates-ahead.intro",
+      "destination": "encounters/the-gates-ahead.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-gates-ahead.instructions",
+      "destination": "encounters/the-gates-ahead.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-gates-ahead.transitions",
+      "destination": "encounters/the-gates-ahead.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-gates-ahead.npc",
+      "destination": "encounters/the-gates-ahead.md frontmatter.npcs"
+    },
+    {
+      "source": "AdventurePlan.npcs.npcs-1749870310278",
+      "destination": "content/settings/realm-of-myr/npcs/npcs-1749870310278.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.npcs-1749870310278",
+      "destination": "content/settings/realm-of-myr/npcs/npcs-1749870310278.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.npcs-1749870598631",
+      "destination": "content/settings/realm-of-myr/npcs/npcs-1749870598631.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.npcs-1749870598631",
+      "destination": "content/settings/realm-of-myr/npcs/npcs-1749870598631.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.npcs-1749870658664",
+      "destination": "content/settings/realm-of-myr/npcs/npcs-1749870658664.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.npcs-1749870658664",
+      "destination": "content/settings/realm-of-myr/npcs/npcs-1749870658664.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.npcs-1749870721240",
+      "destination": "content/settings/realm-of-myr/npcs/npcs-1749870721240.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.npcs-1749870721240",
+      "destination": "content/settings/realm-of-myr/npcs/npcs-1749870721240.md"
+    },
+    {
+      "source": "AdventurePlan.start",
+      "destination": "adventure.md frontmatter.startEncounter",
+      "note": "Legacy source had a blank start field; migrated as \"well-met\"."
+    }
+  ],
+  "warnings": [
+    {
+      "code": "runtime-flag-preserved-as-note",
+      "message": "Encounter \"well-met\" used skipInitialNpcTurns; migrated as a GM note.",
+      "source": "well-met.skipInitialNpcTurns"
+    },
+    {
+      "code": "asset-key-converted",
+      "message": "Converted legacy asset key \"images/settings/realm-of-myr/the-road-to-kordavos/npcs/225e726d-4795-4d1c-8d8d-0f7b8f42e094.png?t=1749871388935\" to full S3 URL.",
+      "source": "AdventurePlan.npcs.npcs-1749870310278.image"
+    },
+    {
+      "code": "asset-key-converted",
+      "message": "Converted legacy asset key \"images/settings/realm-of-myr/the-road-to-kordavos/npcs/7a98e364-48a3-4d85-8155-5505fe6c29ca.png?t=1749872201860\" to full S3 URL.",
+      "source": "AdventurePlan.npcs.npcs-1749870598631.image"
+    },
+    {
+      "code": "asset-key-converted",
+      "message": "Converted legacy asset key \"images/settings/realm-of-myr/the-road-to-kordavos/npcs/09000b84-bff7-4c85-bba3-05e48f32f8ca.png?t=1749872181244\" to full S3 URL.",
+      "source": "AdventurePlan.npcs.npcs-1749870658664.image"
+    },
+    {
+      "code": "asset-key-converted",
+      "message": "Converted legacy asset key \"images/settings/realm-of-myr/the-road-to-kordavos/npcs/24fbafb0-8cc1-4e2e-97d4-8fb67b9d60a7.png?t=1749872192595\" to full S3 URL.",
+      "source": "AdventurePlan.npcs.npcs-1749870721240.image"
+    },
+    {
+      "code": "legacy-start-repaired",
+      "message": "Set blank AdventurePlan.start to \"well-met\", the first authored encounter in The Road to Kordavos.",
+      "source": "AdventurePlan.start"
+    }
+  ]
+}

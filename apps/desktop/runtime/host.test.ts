@@ -1,0 +1,287 @@
+import assert from "node:assert/strict"
+import { mkdtempSync, readFileSync, rmSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
+import { test } from "node:test"
+import type { Llm } from "@d20/gm-core"
+import { storyText } from "@d20/gm-core/story/render"
+import { turnScript } from "@d20/gm-core/story/turn"
+import type { z } from "zod"
+import { game, type Packs } from "./game"
+import { type HostEvent, type HostJob, type HostPost, hostLoop, remoteStore, selfRunning } from "./host"
+import { LocalStore } from "./store"
+
+// The first of a fake model's answers that the asked-for schema takes.
+const firstFit = <T extends z.ZodTypeAny>(schema: T, ...answers: unknown[]): z.infer<T> => {
+  for (const answer of answers) {
+    const parsed = schema.safeParse(answer)
+    if (parsed.success) return parsed.data
+  }
+  return schema.parse(answers[0])
+}
+
+const packs: Packs = JSON.parse(readFileSync(new URL("../src-tauri/resources/packs.json", import.meta.url), "utf8"))
+console.log = console.warn = console.error = () => {}
+
+const failLlm: Llm = {
+  generateText: async () => {
+    throw new Error("offline")
+  },
+  generateObject: async () => {
+    throw new Error("offline")
+  },
+}
+
+// A hosted game stands in for the website: a local save as the store, and a job queue the loop drains.
+async function hosted() {
+  const dir = mkdtempSync(join(tmpdir(), "d20-host-test-"))
+  const store = new LocalStore(join(dir, "save.sqlite"), packs["march-of-davos"].artifacts.graph.encounterTransitions)
+  await game(store, packs, failLlm)({ kind: "start", provider: "claude" })
+  const turn = store.current()
+  const pc = turn.characters.find((c) => c.type === "pc")!
+  // The guest acts first, and the rest of the round is done.
+  for (const c of turn.characters) {
+    c.isComplete = c.id !== pc.id
+    c.initiative = c.id === pc.id ? 20 : 0
+    if (c.type === "pc") c.userId = c.id === pc.id ? "guest" : "host"
+  }
+  Object.assign(store.state!.adventure, { ownerId: "host", playerIds: ["host", "guest"] })
+  store.save()
+  return {
+    store,
+    turn,
+    pc,
+    adventureId: store.state!.adventure._id,
+    cleanup: () => {
+      store.close()
+      rmSync(dir, { recursive: true, force: true })
+    },
+  }
+}
+
+// The worker's own Continue jobs are kept in `queued`. With `follow` they also join the queue, as on the website.
+async function drain(store: LocalStore, jobs: HostJob[], llm: Llm, follow = false) {
+  const finished: { jobId: string; error?: string; suggestions?: unknown }[] = []
+  const queued: { turnId: string; kind: string }[] = []
+  const events: HostEvent[] = []
+  const post: HostPost = async (path, body) => {
+    const b = body as { op: string; jobId: string; error?: string; suggestions?: unknown; turnId: string; kind: HostJob["kind"] }
+    assert.match(path, /^\/api\/desktop\/host\/[^/]+\/jobs$/)
+    if (b.op === "claim") return { job: jobs.shift() ?? null }
+    if (b.op === "queue") {
+      queued.push({ turnId: b.turnId, kind: b.kind })
+      if (follow) jobs.push({ _id: `auto-${queued.length}`, adventureId: store.state!.adventure._id, turnId: b.turnId, kind: b.kind, userId: "host" })
+      return { jobId: `auto-${queued.length}` }
+    }
+    finished.push({ jobId: b.jobId, error: b.error, ...(b.suggestions ? { suggestions: b.suggestions } : {}) })
+    return { ok: true }
+  }
+  let stop = false
+  await hostLoop({ adventureId: store.state!.adventure._id, post, store, packs, llm, emit: (e) => events.push(e), stopped: () => stop, wait: async () => void (stop = true) })
+  return { finished, events, queued }
+}
+
+const job = (base: Omit<HostJob, "_id">, id = "job-1"): HostJob => ({ _id: id, ...base })
+
+test("a guest's reply and roll run through the host's GM and finish their jobs", async () => {
+  const { store, turn, pc, adventureId, cleanup } = await hosted()
+  try {
+    const model: Llm = {
+      generateText: async () => ({ text: `${pc.name} argues for a lower gate fee.` }),
+      generateObject: async ({ schema, prompt }) => ({
+        object: firstFit(schema, prompt.includes("situational") ? { modifier: 0 } : { rollRequired: true, rollType: "Persuasion", difficulty: 12 }, {
+          beats: [{ kind: "action", who: pc.id, text: `${pc.name} argues for a lower gate fee.` }],
+        }),
+      }),
+    }
+    const reply = job({ adventureId, turnId: turn._id, kind: "reply", userId: "guest", characterId: pc.id, text: "I bargain with the guard." })
+    const first = await drain(store, [reply], model)
+    assert.deepEqual(first.finished, [{ jobId: "job-1", error: undefined }])
+    assert.deepEqual(
+      first.events.map((e) => e.type),
+      ["working", "done", "idle"]
+    )
+    const replied = store.current().characters.find((c) => c.id === pc.id)!
+    assert.equal(replied.hasReplied, true)
+    assert.ok(store.current().story.some((b) => b.kind === "reply" && b.text === "I bargain with the guard."))
+    assert.ok(replied.rollRequired, "the model asked for a roll")
+    const roll = job({ adventureId, turnId: turn._id, kind: "roll", userId: "guest", characterId: pc.id, result: 15 }, "job-2")
+    const second = await drain(store, [roll], model)
+    assert.equal(second.finished[0].error, undefined)
+    assert.equal(store.current().characters.find((c) => c.id === pc.id)!.isComplete, true)
+  } finally {
+    cleanup()
+  }
+})
+
+test("jobs for someone else's character, a stale turn, or a failed model fail without changing the game", async () => {
+  const { store, turn, pc, adventureId, cleanup } = await hosted()
+  try {
+    const before = JSON.stringify(store.state)
+    const { finished, events } = await drain(
+      store,
+      [
+        job({ adventureId, turnId: turn._id, kind: "reply", userId: "host", characterId: pc.id, text: "I act for the guest." }, "a"),
+        job({ adventureId, turnId: "stale", kind: "reply", userId: "guest", characterId: pc.id, text: "Too late." }, "b"),
+        job({ adventureId, turnId: turn._id, kind: "reply", userId: "guest", characterId: pc.id, text: "I bargain." }, "c"),
+        job({ adventureId, turnId: turn._id, kind: "continue", userId: "guest" }, "d"),
+      ],
+      failLlm
+    )
+    assert.deepEqual(
+      finished.map((f) => [f.jobId, f.error]),
+      [
+        ["a", "It is another character's turn."],
+        ["b", "This turn has already advanced."],
+        ["c", "offline"],
+        ["d", "A player character still needs to act."],
+      ]
+    )
+    assert.equal(events.filter((e) => e.type === "failed").length, 4)
+    assert.equal(JSON.stringify(store.state), before)
+  } finally {
+    cleanup()
+  }
+})
+
+test("a skip job ends the guest's own hero's turn with nothing written and no AI", async () => {
+  const { store, turn, pc, adventureId, cleanup } = await hosted()
+  try {
+    const told = JSON.stringify(turn.story)
+    const ask = (userId: string, id: string) => job({ adventureId, turnId: turn._id, kind: "skip", userId, characterId: pc.id }, id)
+    const { finished } = await drain(store, [ask("host", "a"), ask("guest", "b"), ask("guest", "c")], failLlm)
+    assert.deepEqual(
+      finished.map((f) => [f.jobId, f.error]),
+      [
+        ["a", "It is another character's turn."],
+        ["b", undefined],
+        ["c", "It is another character's turn."],
+      ]
+    )
+    const skipped = store.current().characters.find((c) => c.id === pc.id)!
+    assert.equal(skipped.hasReplied && skipped.isComplete, true)
+    assert.equal(JSON.stringify(store.current().story), told)
+  } finally {
+    cleanup()
+  }
+})
+
+test("a suggest job finishes with replies for the guest's own hero and changes nothing", async () => {
+  const { store, turn, pc, adventureId, cleanup } = await hosted()
+  try {
+    const before = JSON.stringify(store.state)
+    const four = [1, 2, 3, 4].map((n) => ({ label: `Choice ${n}`, text: `${pc.name} tries idea ${n}.` }))
+    let prompt = ""
+    const model: Llm = {
+      ...failLlm,
+      generateObject: async (args) => {
+        prompt = args.prompt
+        return { object: args.schema.parse({ suggestions: four }) }
+      },
+    }
+    const ask = (userId: string, id: string) => job({ adventureId, turnId: turn._id, kind: "suggest", userId, characterId: pc.id }, id)
+    const { finished } = await drain(store, [ask("guest", "a"), ask("host", "b")], model)
+    assert.deepEqual(finished, [
+      { jobId: "a", error: undefined, suggestions: four.slice(0, 3) },
+      { jobId: "b", error: "It is another character's turn." },
+    ])
+    assert.ok(prompt.includes(`Name: ${pc.name}`) && prompt.includes(turnScript(turn)))
+    assert.equal(JSON.stringify(store.state), before)
+    assert.equal((await drain(store, [ask("guest", "c")], failLlm)).finished[0].error, "offline")
+  } finally {
+    cleanup()
+  }
+})
+
+test("the worker continues on its own with an AI hero's turn and the round's end, once each, and never past a player", async () => {
+  const { store, turn, pc, adventureId, cleanup } = await hosted()
+  try {
+    const friend = store.current().characters.find((c) => c.type === "pc" && c.id !== pc.id)!
+    Object.assign(friend, { controlledBy: "ai", isComplete: false, hasReplied: false, initiative: 10 })
+    store.save()
+    const skip = [job({ adventureId, turnId: turn._id, kind: "skip", userId: "guest", characterId: pc.id }, "skip")]
+    // The AI hero's turn fails: it was queued once and is not queued again.
+    const failed = await drain(store, skip, failLlm, true)
+    assert.deepEqual(failed.queued, [{ turnId: turn._id, kind: "continue" }])
+    assert.deepEqual(
+      failed.finished.map((f) => [f.jobId, Boolean(f.error)]),
+      [
+        ["skip", false],
+        ["auto-1", true],
+      ]
+    )
+    assert.equal(store.current()._id, turn._id)
+    // A worker starting on that turn takes it up, plays the hero, and ends the round in the same job.
+    const model: Llm = {
+      generateText: async () => ({ text: `${friend.name} keeps an eye on the gate.` }),
+      generateObject: async ({ schema }) => {
+        // The roll check, the AI hero's move, then the round's end: the first each schema takes.
+        const answers = [
+          { rollType: "none", difficulty: 0 },
+          { beats: [{ kind: "action", who: friend.id, text: `${friend.name} keeps an eye on the gate.` }] },
+          { nextEncounterId: "the-front-of-the-line", beats: [{ kind: "narration", text: "The line moves up to the sergeant's table." }], adventurePatch: { summaryDelta: "Waited in the line." } },
+        ]
+        for (const answer of answers) {
+          const parsed = schema.safeParse(answer)
+          if (parsed.success) return { object: parsed.data }
+        }
+        throw new Error("offline")
+      },
+    }
+    const resumed = await drain(store, [], model, true)
+    assert.deepEqual(resumed.queued[0], { turnId: turn._id, kind: "continue" })
+    assert.equal(resumed.finished[0].error, undefined)
+    assert.equal(store.current().encounterId, "the-front-of-the-line")
+    assert.match(storyText(store.state!.turns.find((t) => t._id === turn._id)!.story), /keeps an eye on the gate/)
+    // In the new round it stops at a player's hero, or at a turn the GM could not finish.
+    assert.ok(resumed.finished[resumed.finished.length - 1].error || selfRunning(store.current().characters) === null)
+  } finally {
+    cleanup()
+  }
+})
+
+test("nothing is queued while a player is up, or once no player has a living hero", () => {
+  const hero = { id: "h", name: "Hero", type: "pc", initiative: 10 } as Parameters<typeof selfRunning>[0][number]
+  const ai = { ...hero, id: "a", controlledBy: "ai" as const, initiative: 5 }
+  const npc = { ...hero, id: "n", type: "npc", initiative: 1 } as typeof hero
+  assert.equal(selfRunning([hero, npc]), null)
+  assert.equal(selfRunning([{ ...hero, isComplete: true }, ai, npc]), "a")
+  assert.equal(selfRunning([{ ...hero, isComplete: true }, { ...ai, isComplete: true }, npc]), "n")
+  assert.equal(selfRunning([hero, ai, npc].map((c) => ({ ...c, isComplete: true }))), "round")
+  assert.equal(selfRunning([{ ...hero, healthPercent: 0 }, ai, npc]), null)
+  assert.equal(selfRunning([ai, npc]), null)
+})
+
+test("continue advances a finished round to the next encounter", async () => {
+  const { store, turn, adventureId, cleanup } = await hosted()
+  try {
+    for (const c of store.current().characters) Object.assign(c, { isComplete: true, hasReplied: true })
+    store.save()
+    const model: Llm = {
+      ...failLlm,
+      generateObject: async ({ schema }) => ({
+        object: schema.parse({
+          nextEncounterId: "the-front-of-the-line",
+          beats: [{ kind: "narration", text: "The line moves up to the sergeant's table." }],
+          adventurePatch: { summaryDelta: "Waited in the line." },
+        }),
+      }),
+    }
+    const { finished } = await drain(store, [job({ adventureId, turnId: turn._id, kind: "continue", userId: "guest" })], model)
+    assert.equal(finished[0].error, undefined)
+    assert.equal(store.current().encounterId, "the-front-of-the-line")
+  } finally {
+    cleanup()
+  }
+})
+
+test("the website store sends each operation to the host store route", async () => {
+  const calls: unknown[] = []
+  const store = remoteStore(async (path, body) => {
+    calls.push([path, body])
+    return { result: { _id: "t1" } }
+  })
+  assert.deepEqual(await store.getTurn({ turnId: "t1" }), { _id: "t1" })
+  assert.deepEqual(calls, [["/api/desktop/host/store", { op: "getTurn", args: { turnId: "t1" } }]])
+  await assert.rejects(() => store.createTurn({} as never), /authored adventures only/)
+})

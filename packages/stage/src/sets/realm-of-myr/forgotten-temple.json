@@ -1,0 +1,6685 @@
+{
+  "format": "d20.stage.set",
+  "version": 1,
+  "id": "forgotten-temple",
+  "settingId": "realm-of-myr",
+  "locationId": "forgotten-temple",
+  "title": "The forgotten temple",
+  "seed": 4501,
+  "atmosphere": {
+    "sun": {
+      "direction": [
+        0.2,
+        1,
+        0.1
+      ],
+      "color": "#202430",
+      "intensity": 0,
+      "target": [
+        0,
+        0,
+        -15
+      ],
+      "distance": 80,
+      "shadow": {
+        "left": -30,
+        "right": 30,
+        "top": 30,
+        "bottom": -30,
+        "near": 10,
+        "far": 160,
+        "size": 1024
+      }
+    },
+    "hemisphere": {
+      "sky": "#7a88b0",
+      "ground": "#2a2a34",
+      "intensity": 0.9
+    },
+    "sky": {
+      "horizon": "#0e1018",
+      "mid": "#08090e",
+      "zenith": "#040508",
+      "gain": 0.1,
+      "clouds": 0,
+      "stars": 0,
+      "moon": 0
+    },
+    "fog": {
+      "density": 0.01,
+      "color": "#3a4060",
+      "start": 10
+    },
+    "glow": "#c8d4ff",
+    "fill": {
+      "color": "#e8ecff",
+      "intensity": 1,
+      "distance": 9
+    },
+    "lights": [
+      {
+        "at": [
+          0,
+          10,
+          -8
+        ],
+        "color": "#b8c8ff",
+        "intensity": 18,
+        "distance": 22
+      },
+      {
+        "at": [
+          0,
+          10,
+          -22
+        ],
+        "color": "#b8c8ff",
+        "intensity": 18,
+        "distance": 22
+      },
+      {
+        "at": [
+          0,
+          2.4,
+          -16.8
+        ],
+        "color": "#ffcc90",
+        "intensity": 10,
+        "distance": 9
+      },
+      {
+        "at": [
+          -6,
+          3,
+          -14
+        ],
+        "color": "#a8b8ff",
+        "intensity": 6,
+        "distance": 10
+      },
+      {
+        "at": [
+          6,
+          3,
+          -14
+        ],
+        "color": "#a8b8ff",
+        "intensity": 6,
+        "distance": 10
+      },
+      {
+        "at": [
+          0,
+          1.8,
+          -3.2
+        ],
+        "color": "#ffa850",
+        "intensity": 5,
+        "distance": 7
+      }
+    ],
+    "environment": 0.2,
+    "exposure": 1.2,
+    "grade": "neutral",
+    "wind": 0.05
+  },
+  "camera": {
+    "near": 0.05,
+    "far": 300,
+    "min": [
+      -8.7,
+      0.3,
+      -29.6
+    ],
+    "max": [
+      8.7,
+      14,
+      1.6
+    ],
+    "maxDistance": 26
+  },
+  "materials": {
+    "void": {
+      "type": "plain",
+      "color": "#0d0a09",
+      "roughness": 1
+    },
+    "dark": {
+      "type": "plain",
+      "color": "#14110e",
+      "roughness": 1
+    },
+    "iron": {
+      "type": "metal",
+      "color": "#2e2a28",
+      "roughness": 0.55,
+      "metalness": 0.7
+    },
+    "marbleGlow": {
+      "type": "masonry",
+      "a": "#e8e6ee",
+      "b": "#dcdae4",
+      "c": "#f2f0f6",
+      "mortar": "#c8c6d4",
+      "block": [
+        1.4,
+        0.7
+      ],
+      "joint": 0.003,
+      "relief": 0.002,
+      "variance": 0.25,
+      "grime": 0.15,
+      "roughness": 0.35
+    },
+    "marbleFloor": {
+      "type": "masonry",
+      "a": "#c8c6d0",
+      "b": "#bcbac6",
+      "c": "#d4d2dc",
+      "mortar": "#8a889a",
+      "block": [
+        1.2,
+        1.2
+      ],
+      "joint": 0.004,
+      "relief": 0.002,
+      "variance": 0.3,
+      "grime": 0.4,
+      "ground": true,
+      "roughness": 0.25
+    },
+    "nightVault": {
+      "type": "plain",
+      "color": "#0c1230",
+      "roughness": 0.9,
+      "emissive": "#0a1030",
+      "emissiveIntensity": 0.5
+    },
+    "star": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#e8f0ff",
+      "emissiveIntensity": 3
+    },
+    "starBright": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#fff4d8",
+      "emissiveIntensity": 5
+    },
+    "starLine": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#a8b8e8",
+      "emissiveIntensity": 1.2
+    },
+    "silver": {
+      "type": "metal",
+      "color": "#c8ccd4",
+      "roughness": 0.3,
+      "metalness": 0.9
+    },
+    "silverGlow": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#d8e4ff",
+      "emissiveIntensity": 1.6
+    },
+    "heat": {
+      "type": "mist",
+      "color": "#fff0dc",
+      "opacity": 0.05
+    }
+  },
+  "objects": [
+    {
+      "type": "box",
+      "at": [
+        0,
+        -0.3,
+        -15
+      ],
+      "size": [
+        20,
+        0.3,
+        32
+      ],
+      "material": "marbleFloor"
+    },
+    {
+      "type": "box",
+      "at": [
+        -9.3,
+        0,
+        -15
+      ],
+      "size": [
+        0.6,
+        9.02,
+        31.2
+      ],
+      "material": "marbleGlow",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "at": [
+        9.3,
+        0,
+        -15
+      ],
+      "size": [
+        0.6,
+        9.02,
+        31.2
+      ],
+      "material": "marbleGlow",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        0,
+        -30.3
+      ],
+      "size": [
+        19.2,
+        18.4,
+        0.6
+      ],
+      "material": "marbleGlow",
+      "solid": true
+    },
+    {
+      "type": "wall",
+      "at": [
+        0,
+        0.3
+      ],
+      "length": 18.6,
+      "height": 9,
+      "thickness": 0.6,
+      "openings": [
+        {
+          "at": 0,
+          "width": 1.7,
+          "height": 2.7,
+          "kind": "doorway"
+        }
+      ],
+      "materials": {
+        "wall": "marbleGlow",
+        "stone": "marbleGlow",
+        "timber": "silver"
+      }
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        9,
+        0.3
+      ],
+      "size": [
+        19.2,
+        9.4,
+        0.6
+      ],
+      "material": "marbleGlow"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        0,
+        2.2
+      ],
+      "size": [
+        2,
+        3,
+        0.2
+      ],
+      "material": "void"
+    },
+    {
+      "type": "vault",
+      "at": [
+        0,
+        0
+      ],
+      "span": 18,
+      "from": 0.02,
+      "to": -30.02,
+      "spring": 9,
+      "bay": 6,
+      "rib": 0.18,
+      "materials": {
+        "shell": "nightVault",
+        "rib": "marbleGlow",
+        "trim": "silver"
+      }
+    },
+    {
+      "type": "cone",
+      "at": [
+        -5.4,
+        0,
+        -5
+      ],
+      "radius": 1.1,
+      "height": 1.4,
+      "segments": 12,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -5.4,
+        0,
+        -5
+      ],
+      "radius": [
+        0.62,
+        0.5
+      ],
+      "height": 7.4,
+      "segments": 14,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "box",
+      "at": [
+        -5.4,
+        -0.4,
+        -5
+      ],
+      "size": [
+        1.5,
+        0.05,
+        1.5
+      ],
+      "material": "marbleFloor",
+      "solid": true
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.01,
+        1.2,
+        -4.92
+      ],
+      "to": [
+        -4.17,
+        0.02,
+        -4.76
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.21,
+        1.2,
+        -4.65
+      ],
+      "to": [
+        -4.79,
+        0.02,
+        -3.91
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.63,
+        1.2,
+        -4.67
+      ],
+      "to": [
+        -6.11,
+        0.02,
+        -3.97
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.8,
+        1.2,
+        -4.96
+      ],
+      "to": [
+        -6.65,
+        0.02,
+        -4.89
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.65,
+        1.2,
+        -5.31
+      ],
+      "to": [
+        -6.17,
+        0.02,
+        -5.98
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.26,
+        1.2,
+        -5.38
+      ],
+      "to": [
+        -4.97,
+        0.02,
+        -6.17
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.4,
+        7.2,
+        -5
+      ],
+      "to": [
+        -5.42,
+        8.52,
+        -3.81
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.42,
+        8.52,
+        -3.81
+      ],
+      "to": [
+        -5.4,
+        11.6,
+        -2.4
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.4,
+        7.2,
+        -5
+      ],
+      "to": [
+        -5.54,
+        8.41,
+        -6.47
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.54,
+        8.41,
+        -6.47
+      ],
+      "to": [
+        -5.4,
+        11.6,
+        -7.6
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.4,
+        7.2,
+        -5
+      ],
+      "to": [
+        -6.71,
+        8.41,
+        -4.92
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -6.71,
+        8.41,
+        -4.92
+      ],
+      "to": [
+        -8,
+        11.6,
+        -5
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.4,
+        7.2,
+        -5
+      ],
+      "to": [
+        -4.14,
+        8.43,
+        -4.65
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -4.14,
+        8.43,
+        -4.65
+      ],
+      "to": [
+        -2.8,
+        11.6,
+        -4.48
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "cone",
+      "at": [
+        5.4,
+        0,
+        -5
+      ],
+      "radius": 1.1,
+      "height": 1.4,
+      "segments": 12,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        5.4,
+        0,
+        -5
+      ],
+      "radius": [
+        0.62,
+        0.5
+      ],
+      "height": 7.4,
+      "segments": 14,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "box",
+      "at": [
+        5.4,
+        -0.4,
+        -5
+      ],
+      "size": [
+        1.5,
+        0.05,
+        1.5
+      ],
+      "material": "marbleFloor",
+      "solid": true
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.8,
+        1.2,
+        -5.03
+      ],
+      "to": [
+        6.65,
+        0.02,
+        -5.09
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.66,
+        1.2,
+        -4.7
+      ],
+      "to": [
+        6.21,
+        0.02,
+        -4.05
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.26,
+        1.2,
+        -4.63
+      ],
+      "to": [
+        4.95,
+        0.02,
+        -3.83
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5,
+        1.2,
+        -5.05
+      ],
+      "to": [
+        4.16,
+        0.02,
+        -5.17
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.15,
+        1.2,
+        -5.31
+      ],
+      "to": [
+        4.62,
+        0.02,
+        -5.97
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.53,
+        1.2,
+        -5.38
+      ],
+      "to": [
+        5.8,
+        0.02,
+        -6.18
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.4,
+        7.2,
+        -5
+      ],
+      "to": [
+        5.37,
+        8.83,
+        -3.68
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.37,
+        8.83,
+        -3.68
+      ],
+      "to": [
+        5.4,
+        11.6,
+        -2.4
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.4,
+        7.2,
+        -5
+      ],
+      "to": [
+        5.29,
+        8.7,
+        -6.24
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.29,
+        8.7,
+        -6.24
+      ],
+      "to": [
+        5.4,
+        11.6,
+        -7.6
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.4,
+        7.2,
+        -5
+      ],
+      "to": [
+        6.56,
+        8.51,
+        -5.1
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        6.56,
+        8.51,
+        -5.1
+      ],
+      "to": [
+        8,
+        11.6,
+        -5
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.4,
+        7.2,
+        -5
+      ],
+      "to": [
+        4.2,
+        8.69,
+        -4.57
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        4.2,
+        8.69,
+        -4.57
+      ],
+      "to": [
+        2.8,
+        11.6,
+        -4.48
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "cone",
+      "at": [
+        -5.4,
+        0,
+        -11
+      ],
+      "radius": 1.1,
+      "height": 1.4,
+      "segments": 12,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -5.4,
+        0,
+        -11
+      ],
+      "radius": [
+        0.62,
+        0.5
+      ],
+      "height": 7.4,
+      "segments": 14,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "box",
+      "at": [
+        -5.4,
+        -0.4,
+        -11
+      ],
+      "size": [
+        1.5,
+        0.05,
+        1.5
+      ],
+      "material": "marbleFloor",
+      "solid": true
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.01,
+        1.2,
+        -11.07
+      ],
+      "to": [
+        -4.17,
+        0.02,
+        -11.22
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.14,
+        1.2,
+        -10.7
+      ],
+      "to": [
+        -4.57,
+        0.02,
+        -10.06
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.65,
+        1.2,
+        -10.69
+      ],
+      "to": [
+        -6.18,
+        0.02,
+        -10.03
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.79,
+        1.2,
+        -10.93
+      ],
+      "to": [
+        -6.63,
+        0.02,
+        -10.77
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.64,
+        1.2,
+        -11.32
+      ],
+      "to": [
+        -6.14,
+        0.02,
+        -12
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.23,
+        1.2,
+        -11.36
+      ],
+      "to": [
+        -4.86,
+        0.02,
+        -12.13
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.4,
+        7.2,
+        -11
+      ],
+      "to": [
+        -5.49,
+        8.87,
+        -9.75
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.49,
+        8.87,
+        -9.75
+      ],
+      "to": [
+        -5.4,
+        11.6,
+        -8.4
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.4,
+        7.2,
+        -11
+      ],
+      "to": [
+        -5.54,
+        8.87,
+        -12.13
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.54,
+        8.87,
+        -12.13
+      ],
+      "to": [
+        -5.4,
+        11.6,
+        -13.6
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.4,
+        7.2,
+        -11
+      ],
+      "to": [
+        -6.5,
+        8.53,
+        -10.89
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -6.5,
+        8.53,
+        -10.89
+      ],
+      "to": [
+        -8,
+        11.6,
+        -11
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.4,
+        7.2,
+        -11
+      ],
+      "to": [
+        -4.21,
+        8.86,
+        -10.7
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -4.21,
+        8.86,
+        -10.7
+      ],
+      "to": [
+        -2.8,
+        11.6,
+        -10.48
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "cone",
+      "at": [
+        5.4,
+        0,
+        -11
+      ],
+      "radius": 1.1,
+      "height": 1.4,
+      "segments": 12,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        5.4,
+        0,
+        -11
+      ],
+      "radius": [
+        0.62,
+        0.5
+      ],
+      "height": 7.4,
+      "segments": 14,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "box",
+      "at": [
+        5.4,
+        -0.4,
+        -11
+      ],
+      "size": [
+        1.5,
+        0.05,
+        1.5
+      ],
+      "material": "marbleFloor",
+      "solid": true
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.8,
+        1.2,
+        -11.05
+      ],
+      "to": [
+        6.64,
+        0.02,
+        -11.16
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.64,
+        1.2,
+        -10.68
+      ],
+      "to": [
+        6.16,
+        0.02,
+        -10.01
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.18,
+        1.2,
+        -10.67
+      ],
+      "to": [
+        4.71,
+        0.02,
+        -9.96
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5,
+        1.2,
+        -10.99
+      ],
+      "to": [
+        4.15,
+        0.02,
+        -10.98
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.15,
+        1.2,
+        -11.31
+      ],
+      "to": [
+        4.62,
+        0.02,
+        -11.98
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.57,
+        1.2,
+        -11.36
+      ],
+      "to": [
+        5.94,
+        0.02,
+        -12.13
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.4,
+        7.2,
+        -11
+      ],
+      "to": [
+        5.33,
+        8.67,
+        -9.83
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.33,
+        8.67,
+        -9.83
+      ],
+      "to": [
+        5.4,
+        11.6,
+        -8.4
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.4,
+        7.2,
+        -11
+      ],
+      "to": [
+        5.46,
+        8.65,
+        -12.48
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.46,
+        8.65,
+        -12.48
+      ],
+      "to": [
+        5.4,
+        11.6,
+        -13.6
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.4,
+        7.2,
+        -11
+      ],
+      "to": [
+        6.56,
+        8.89,
+        -10.94
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        6.56,
+        8.89,
+        -10.94
+      ],
+      "to": [
+        8,
+        11.6,
+        -11
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.4,
+        7.2,
+        -11
+      ],
+      "to": [
+        4.06,
+        8.73,
+        -10.86
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        4.06,
+        8.73,
+        -10.86
+      ],
+      "to": [
+        2.8,
+        11.6,
+        -10.48
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "cone",
+      "at": [
+        -5.4,
+        0,
+        -17
+      ],
+      "radius": 1.1,
+      "height": 1.4,
+      "segments": 12,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -5.4,
+        0,
+        -17
+      ],
+      "radius": [
+        0.62,
+        0.5
+      ],
+      "height": 7.4,
+      "segments": 14,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "box",
+      "at": [
+        -5.4,
+        -0.4,
+        -17
+      ],
+      "size": [
+        1.5,
+        0.05,
+        1.5
+      ],
+      "material": "marbleFloor",
+      "solid": true
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5,
+        1.2,
+        -17.05
+      ],
+      "to": [
+        -4.16,
+        0.02,
+        -17.16
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.26,
+        1.2,
+        -16.62
+      ],
+      "to": [
+        -4.97,
+        0.02,
+        -15.83
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.64,
+        1.2,
+        -16.68
+      ],
+      "to": [
+        -6.16,
+        0.02,
+        -16.01
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.8,
+        1.2,
+        -17.06
+      ],
+      "to": [
+        -6.64,
+        0.02,
+        -17.19
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.66,
+        1.2,
+        -17.3
+      ],
+      "to": [
+        -6.22,
+        0.02,
+        -17.94
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.19,
+        1.2,
+        -17.34
+      ],
+      "to": [
+        -4.73,
+        0.02,
+        -18.06
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.4,
+        7.2,
+        -17
+      ],
+      "to": [
+        -5.36,
+        8.74,
+        -15.89
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.36,
+        8.74,
+        -15.89
+      ],
+      "to": [
+        -5.4,
+        11.6,
+        -14.4
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.4,
+        7.2,
+        -17
+      ],
+      "to": [
+        -5.58,
+        8.74,
+        -18.36
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.58,
+        8.74,
+        -18.36
+      ],
+      "to": [
+        -5.4,
+        11.6,
+        -19.6
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.4,
+        7.2,
+        -17
+      ],
+      "to": [
+        -6.76,
+        8.42,
+        -17.15
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -6.76,
+        8.42,
+        -17.15
+      ],
+      "to": [
+        -8,
+        11.6,
+        -17
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.4,
+        7.2,
+        -17
+      ],
+      "to": [
+        -4.16,
+        8.85,
+        -16.94
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -4.16,
+        8.85,
+        -16.94
+      ],
+      "to": [
+        -2.8,
+        11.6,
+        -16.48
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "cone",
+      "at": [
+        5.4,
+        0,
+        -17
+      ],
+      "radius": 1.1,
+      "height": 1.4,
+      "segments": 12,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        5.4,
+        0,
+        -17
+      ],
+      "radius": [
+        0.62,
+        0.5
+      ],
+      "height": 7.4,
+      "segments": 14,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "box",
+      "at": [
+        5.4,
+        -0.4,
+        -17
+      ],
+      "size": [
+        1.5,
+        0.05,
+        1.5
+      ],
+      "material": "marbleFloor",
+      "solid": true
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.8,
+        1.2,
+        -16.95
+      ],
+      "to": [
+        6.64,
+        0.02,
+        -16.84
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.65,
+        1.2,
+        -16.69
+      ],
+      "to": [
+        6.18,
+        0.02,
+        -16.02
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.2,
+        1.2,
+        -16.65
+      ],
+      "to": [
+        4.77,
+        0.02,
+        -15.92
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.01,
+        1.2,
+        -17.08
+      ],
+      "to": [
+        4.17,
+        0.02,
+        -17.25
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.19,
+        1.2,
+        -17.34
+      ],
+      "to": [
+        4.75,
+        0.02,
+        -18.07
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.54,
+        1.2,
+        -17.37
+      ],
+      "to": [
+        5.84,
+        0.02,
+        -18.17
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.4,
+        7.2,
+        -17
+      ],
+      "to": [
+        5.27,
+        8.63,
+        -15.53
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.27,
+        8.63,
+        -15.53
+      ],
+      "to": [
+        5.4,
+        11.6,
+        -14.4
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.4,
+        7.2,
+        -17
+      ],
+      "to": [
+        5.33,
+        8.78,
+        -18.13
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.33,
+        8.78,
+        -18.13
+      ],
+      "to": [
+        5.4,
+        11.6,
+        -19.6
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.4,
+        7.2,
+        -17
+      ],
+      "to": [
+        6.59,
+        8.85,
+        -17.19
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        6.59,
+        8.85,
+        -17.19
+      ],
+      "to": [
+        8,
+        11.6,
+        -17
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.4,
+        7.2,
+        -17
+      ],
+      "to": [
+        4.22,
+        8.88,
+        -16.87
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        4.22,
+        8.88,
+        -16.87
+      ],
+      "to": [
+        2.8,
+        11.6,
+        -16.48
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "cone",
+      "at": [
+        -5.4,
+        0,
+        -23
+      ],
+      "radius": 1.1,
+      "height": 1.4,
+      "segments": 12,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        -5.4,
+        0,
+        -23
+      ],
+      "radius": [
+        0.62,
+        0.5
+      ],
+      "height": 7.4,
+      "segments": 14,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "box",
+      "at": [
+        -5.4,
+        -0.4,
+        -23
+      ],
+      "size": [
+        1.5,
+        0.05,
+        1.5
+      ],
+      "material": "marbleFloor",
+      "solid": true
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5,
+        1.2,
+        -23
+      ],
+      "to": [
+        -4.15,
+        0.02,
+        -22.99
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.17,
+        1.2,
+        -22.67
+      ],
+      "to": [
+        -4.69,
+        0.02,
+        -21.97
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.56,
+        1.2,
+        -22.63
+      ],
+      "to": [
+        -5.9,
+        0.02,
+        -21.85
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.8,
+        1.2,
+        -22.96
+      ],
+      "to": [
+        -6.64,
+        0.02,
+        -22.88
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.64,
+        1.2,
+        -23.32
+      ],
+      "to": [
+        -6.15,
+        0.02,
+        -24
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.17,
+        1.2,
+        -23.32
+      ],
+      "to": [
+        -4.67,
+        0.02,
+        -24.01
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.4,
+        7.2,
+        -23
+      ],
+      "to": [
+        -5.3,
+        8.51,
+        -21.71
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.3,
+        8.51,
+        -21.71
+      ],
+      "to": [
+        -5.4,
+        11.6,
+        -20.4
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.4,
+        7.2,
+        -23
+      ],
+      "to": [
+        -5.39,
+        8.55,
+        -24.2
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.39,
+        8.55,
+        -24.2
+      ],
+      "to": [
+        -5.4,
+        11.6,
+        -25.6
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.4,
+        7.2,
+        -23
+      ],
+      "to": [
+        -6.9,
+        8.49,
+        -23.04
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -6.9,
+        8.49,
+        -23.04
+      ],
+      "to": [
+        -8,
+        11.6,
+        -23
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.4,
+        7.2,
+        -23
+      ],
+      "to": [
+        -4.24,
+        8.83,
+        -22.93
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -4.24,
+        8.83,
+        -22.93
+      ],
+      "to": [
+        -2.8,
+        11.6,
+        -22.48
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "cone",
+      "at": [
+        5.4,
+        0,
+        -23
+      ],
+      "radius": 1.1,
+      "height": 1.4,
+      "segments": 12,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        5.4,
+        0,
+        -23
+      ],
+      "radius": [
+        0.62,
+        0.5
+      ],
+      "height": 7.4,
+      "segments": 14,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "box",
+      "at": [
+        5.4,
+        -0.4,
+        -23
+      ],
+      "size": [
+        1.5,
+        0.05,
+        1.5
+      ],
+      "material": "marbleFloor",
+      "solid": true
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.8,
+        1.2,
+        -22.99
+      ],
+      "to": [
+        6.65,
+        0.02,
+        -22.97
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.6,
+        1.2,
+        -22.65
+      ],
+      "to": [
+        6.03,
+        0.02,
+        -21.92
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.21,
+        1.2,
+        -22.65
+      ],
+      "to": [
+        4.8,
+        0.02,
+        -21.9
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5,
+        1.2,
+        -23.04
+      ],
+      "to": [
+        4.16,
+        0.02,
+        -23.14
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.17,
+        1.2,
+        -23.33
+      ],
+      "to": [
+        4.7,
+        0.02,
+        -24.03
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.56,
+        1.2,
+        -23.37
+      ],
+      "to": [
+        5.89,
+        0.02,
+        -24.15
+      ],
+      "radius": 0.16,
+      "radiusTo": 0.06,
+      "segments": 6,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.4,
+        7.2,
+        -23
+      ],
+      "to": [
+        5.31,
+        8.51,
+        -21.82
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.31,
+        8.51,
+        -21.82
+      ],
+      "to": [
+        5.4,
+        11.6,
+        -20.4
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.4,
+        7.2,
+        -23
+      ],
+      "to": [
+        5.58,
+        8.9,
+        -24.11
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.58,
+        8.9,
+        -24.11
+      ],
+      "to": [
+        5.4,
+        11.6,
+        -25.6
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.4,
+        7.2,
+        -23
+      ],
+      "to": [
+        6.65,
+        8.89,
+        -22.94
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        6.65,
+        8.89,
+        -22.94
+      ],
+      "to": [
+        8,
+        11.6,
+        -23
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.4,
+        7.2,
+        -23
+      ],
+      "to": [
+        4.19,
+        8.43,
+        -22.74
+      ],
+      "radius": 0.32,
+      "radiusTo": 0.24,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "beam",
+      "from": [
+        4.19,
+        8.43,
+        -22.74
+      ],
+      "to": [
+        2.8,
+        11.6,
+        -22.48
+      ],
+      "radius": 0.24,
+      "radiusTo": 0.1,
+      "segments": 8,
+      "material": "marbleGlow"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -1.6,
+        17.73,
+        -6.55
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        8.66,
+        10.97,
+        -15.18
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -7.35,
+        13.98,
+        -21.2
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        7.89,
+        13.07,
+        -27.09
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        3.88,
+        16.99,
+        -27.73
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        8.65,
+        11,
+        -18.43
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        5.73,
+        15.78,
+        -22.3
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        8.22,
+        12.37,
+        -16.39
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        3.87,
+        16.99,
+        -8.04
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -3.83,
+        17.01,
+        -9.67
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -8.15,
+        12.53,
+        -21.36
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -3.67,
+        17.09,
+        -27.53
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        4.3,
+        16.77,
+        -19.74
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -0.98,
+        17.83,
+        -10.4
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        1.56,
+        17.74,
+        -26.86
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -7.67,
+        13.47,
+        -11.22
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        7.45,
+        13.83,
+        -26.77
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -0.36,
+        17.87,
+        -12.3
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -8.62,
+        11.13,
+        -13.12
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        4.52,
+        16.64,
+        -15.71
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        0.78,
+        17.85,
+        -24.04
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        4.68,
+        16.55,
+        -10.34
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        0.14,
+        17.88,
+        -28.49
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        0.54,
+        17.86,
+        -2.25
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        0.27,
+        17.88,
+        -1.04
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -2.91,
+        17.39,
+        -12.97
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -2.87,
+        17.4,
+        -19.47
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        0.07,
+        17.88,
+        -26.4
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        1.57,
+        17.74,
+        -18.45
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        8.38,
+        11.94,
+        -0.6
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        7.79,
+        13.26,
+        -18.18
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        5.54,
+        15.94,
+        -28.3
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        1.76,
+        17.7,
+        -12.25
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        3.45,
+        17.18,
+        -28.85
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        7.76,
+        13.32,
+        -28.49
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        0.82,
+        17.84,
+        -4.23
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -7.82,
+        13.21,
+        -5.28
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -7.66,
+        13.49,
+        -27.3
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        2.11,
+        17.63,
+        -11.77
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        0.79,
+        17.84,
+        -19.94
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -1.59,
+        17.74,
+        -7.38
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        3.03,
+        17.35,
+        -26.52
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -2.09,
+        17.63,
+        -18.14
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -0.18,
+        17.88,
+        -11.74
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -7.94,
+        12.98,
+        -8.45
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        4.33,
+        16.75,
+        -1.92
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -4.28,
+        16.78,
+        -8.56
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -8.45,
+        11.73,
+        -10.25
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        4.77,
+        16.49,
+        -27.2
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        0.25,
+        17.88,
+        -23.46
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -6.73,
+        14.79,
+        -8.21
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -3.44,
+        17.18,
+        -22.33
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -0.12,
+        17.88,
+        -25.29
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -0.07,
+        17.88,
+        -1.32
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -6.44,
+        15.11,
+        -6.05
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        4.69,
+        16.54,
+        -17.55
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        6.51,
+        15.04,
+        -12.18
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -0.06,
+        17.88,
+        -21.11
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -5.8,
+        15.72,
+        -23.4
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -5.71,
+        15.8,
+        -23.24
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        1.04,
+        17.82,
+        -20
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        6.73,
+        14.79,
+        -22.2
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        4.13,
+        16.86,
+        -12.97
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        2.35,
+        17.56,
+        -6.02
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -3.89,
+        16.98,
+        -27.04
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -8.44,
+        11.75,
+        -1.26
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -6.19,
+        15.36,
+        -25.7
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        7.74,
+        13.35,
+        -22.32
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        7.04,
+        14.42,
+        -16.87
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -5.17,
+        16.22,
+        -2.02
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        3.57,
+        17.13,
+        -2.39
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -0.6,
+        17.86,
+        -11.24
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -3.04,
+        17.34,
+        -5.06
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -7.01,
+        14.45,
+        -14.95
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -0.3,
+        17.88,
+        -18.83
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        1.86,
+        17.68,
+        -16.87
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -7.08,
+        14.35,
+        -3.11
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -8.61,
+        11.16,
+        -19.31
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -8.24,
+        12.3,
+        -8.08
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -5.29,
+        16.13,
+        -24.77
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -1.93,
+        17.67,
+        -26.99
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        6.78,
+        14.74,
+        -15.75
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        1.14,
+        17.81,
+        -5.97
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        6.66,
+        14.87,
+        -11.38
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -5.58,
+        15.91,
+        -18.41
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        6.73,
+        14.79,
+        -6.45
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        4.97,
+        16.36,
+        -16.05
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -6.65,
+        14.89,
+        -14.53
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -4.93,
+        16.38,
+        -3.72
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -5.29,
+        16.13,
+        -17.51
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        6.03,
+        15.52,
+        -3.61
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -3.55,
+        17.14,
+        -26.16
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -6.51,
+        15.04,
+        -25.15
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -5.69,
+        15.82,
+        -18.92
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -3.69,
+        17.08,
+        -28.28
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -2.03,
+        17.64,
+        -23.21
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        5.36,
+        16.08,
+        -9.6
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        4.03,
+        16.91,
+        -25.55
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -1.28,
+        17.79,
+        -24.63
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        8.59,
+        11.23,
+        -9.97
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        6.98,
+        14.49,
+        -23.37
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -8.44,
+        11.75,
+        -16.89
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -7.32,
+        14.03,
+        -8.59
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -5.19,
+        16.21,
+        -25.6
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        8.38,
+        11.94,
+        -19.47
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        1.21,
+        17.8,
+        -2.3
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -7.42,
+        13.88,
+        -1.56
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        4.56,
+        16.62,
+        -4.53
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        6.18,
+        15.37,
+        -4.35
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -3.33,
+        17.23,
+        -29.35
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        0.33,
+        17.87,
+        -0.78
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -8.27,
+        12.23,
+        -8.85
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        6.63,
+        14.91,
+        -6.34
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -1.32,
+        17.78,
+        -12.29
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -3.36,
+        17.22,
+        -27.01
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        2.06,
+        17.64,
+        -10.05
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -0.59,
+        17.86,
+        -3.92
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -6.65,
+        14.89,
+        -4.65
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -8.04,
+        12.76,
+        -12.88
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -2.41,
+        17.55,
+        -14.65
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        8.64,
+        11.04,
+        -22.81
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        2.19,
+        17.61,
+        -24.73
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        0.77,
+        17.85,
+        -12.28
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -7.04,
+        14.41,
+        -15.59
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        7.39,
+        13.93,
+        -23.43
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        7.23,
+        14.16,
+        -14.39
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -6.66,
+        14.88,
+        -15.65
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -7.86,
+        13.13,
+        -27.37
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        7.37,
+        13.96,
+        -5.14
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        3.31,
+        17.24,
+        -11.36
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -4.48,
+        16.67,
+        -11.21
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -3.38,
+        17.21,
+        -20.44
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        8.24,
+        12.31,
+        -21.45
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -1.65,
+        17.73,
+        -27.92
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -0.08,
+        17.88,
+        -26.22
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        4.9,
+        16.41,
+        -27.16
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -6.62,
+        14.91,
+        -25.01
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -0.52,
+        17.86,
+        -20.88
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -6.99,
+        14.48,
+        -20.13
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        8.49,
+        11.6,
+        -17.44
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -7.12,
+        14.3,
+        -5.11
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -0.32,
+        17.87,
+        -11.08
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -8.43,
+        11.8,
+        -15.92
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -0.65,
+        17.86,
+        -4.91
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        5.33,
+        16.11,
+        -2.99
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -7.98,
+        12.9,
+        -26.73
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -3.59,
+        17.12,
+        -8.12
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        5.54,
+        15.94,
+        -25.14
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        3.71,
+        17.07,
+        -18.16
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        2.12,
+        17.62,
+        -1.54
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        2.28,
+        17.58,
+        -19.35
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        8.65,
+        10.99,
+        -26.24
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -0.68,
+        17.85,
+        -14.65
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -0.03,
+        17.88,
+        -12.33
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -8.43,
+        11.8,
+        -3.32
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -8.23,
+        12.33,
+        -24.02
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -7.43,
+        13.86,
+        -25.69
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -8.2,
+        12.41,
+        -15.52
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -6.2,
+        15.36,
+        -9.59
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -3.86,
+        17,
+        -25.37
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        7.44,
+        13.84,
+        -29.43
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        4.86,
+        16.43,
+        -3.79
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -8.72,
+        10.7,
+        -3.55
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -8.02,
+        12.82,
+        -28.59
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        6.53,
+        15.02,
+        -14.59
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        6.9,
+        14.59,
+        -17.87
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -4.57,
+        16.61,
+        -3.56
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        7.09,
+        14.35,
+        -24.93
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        5.54,
+        15.94,
+        -10.16
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        6.83,
+        14.68,
+        -20.99
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -4.12,
+        16.87,
+        -1
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        0.04,
+        17.88,
+        -5.4
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        7.63,
+        13.55,
+        -19.63
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -8.24,
+        12.32,
+        -13.73
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        6.11,
+        15.44,
+        -20.71
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -4.82,
+        16.46,
+        -27.74
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -7.19,
+        14.21,
+        -25.21
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -8,
+        12.86,
+        -5.16
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        4.43,
+        16.7,
+        -5.23
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        7.35,
+        13.98,
+        -14.05
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -7.75,
+        13.34,
+        -17.24
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -4.16,
+        16.84,
+        -0.52
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        4.46,
+        16.68,
+        -10.71
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        7.73,
+        13.38,
+        -15.5
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        8.07,
+        12.71,
+        -25.45
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -6.98,
+        14.49,
+        -12.87
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        6.46,
+        15.1,
+        -6.28
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -1.39,
+        17.77,
+        -20.09
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -8.57,
+        11.33,
+        -6.06
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -4.51,
+        16.65,
+        -12.41
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -7.59,
+        13.61,
+        -11.48
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        1.05,
+        17.82,
+        -25.41
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        8.7,
+        10.79,
+        -10.78
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -4.99,
+        16.34,
+        -9.46
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -6.93,
+        14.55,
+        -22.94
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        5.76,
+        15.76,
+        -17.87
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        8.15,
+        12.53,
+        -13.06
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        8.68,
+        10.86,
+        -25.23
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -2.7,
+        17.46,
+        -15.31
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        8.47,
+        11.67,
+        -14.78
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        6.41,
+        15.15,
+        -6.42
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        1.54,
+        17.75,
+        -15.92
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -4.59,
+        16.6,
+        -4.31
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -0.93,
+        17.83,
+        -28.36
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        6.41,
+        15.15,
+        -25.42
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        4.11,
+        16.87,
+        -11.79
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -0.05,
+        17.88,
+        -7.26
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -8.04,
+        12.77,
+        -6.49
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -7.77,
+        13.29,
+        -22.86
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -2.13,
+        17.62,
+        -29.18
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -8.7,
+        10.79,
+        -19.48
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        8.72,
+        10.7,
+        -0.82
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -8.68,
+        10.89,
+        -22.08
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -7.63,
+        13.54,
+        -2.67
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -8.43,
+        11.8,
+        -1.61
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -4.99,
+        16.34,
+        -22.47
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -8.46,
+        11.69,
+        -28.52
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        8.25,
+        12.28,
+        -5.86
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -6.57,
+        14.97,
+        -10.37
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        4.41,
+        16.71,
+        -24.53
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        6.72,
+        14.8,
+        -17.97
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        6.57,
+        14.97,
+        -7.42
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -4.12,
+        16.87,
+        -18.66
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        8.18,
+        12.46,
+        -8.08
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        1.95,
+        17.66,
+        -22.04
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -2.33,
+        17.57,
+        -25.45
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        8.29,
+        12.19,
+        -6.84
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -1.47,
+        17.76,
+        -9.37
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        2.67,
+        17.47,
+        -4.92
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -7.81,
+        13.22,
+        -28.23
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        6,
+        15.55,
+        -1.6
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        3.82,
+        17.02,
+        -8.44
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -7.75,
+        13.33,
+        -1.34
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        7.38,
+        13.94,
+        -23.95
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        5.85,
+        15.68,
+        -20.89
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -8.72,
+        10.7,
+        -24.34
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -7.63,
+        13.55,
+        -21.33
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        5.7,
+        15.81,
+        -20.99
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        5.19,
+        16.2,
+        -21.6
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -6.52,
+        15.03,
+        -16.66
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        4.88,
+        16.42,
+        -3.3
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        3.83,
+        17.01,
+        -25.88
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -2.93,
+        17.38,
+        -26.16
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        6.22,
+        15.34,
+        -18.06
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -4.37,
+        16.73,
+        -2.4
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -7.85,
+        13.15,
+        -6.85
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        0.91,
+        17.83,
+        -17.13
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        3.7,
+        17.07,
+        -16.06
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -6.83,
+        14.67,
+        -11.17
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -5.98,
+        15.57,
+        -4.82
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        3.37,
+        17.22,
+        -22.52
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -6.17,
+        15.39,
+        -23.19
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -7.78,
+        13.27,
+        -20.13
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        4.77,
+        16.49,
+        -15.14
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        8.14,
+        12.56,
+        -24.37
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -1.32,
+        17.78,
+        -13.31
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -8.64,
+        11.04,
+        -19.62
+      ],
+      "radius": 0.05,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        5.69,
+        15.82,
+        -10.34
+      ],
+      "radius": 0.06,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        7.12,
+        14.3,
+        -11.88
+      ],
+      "radius": 0.03,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        5.75,
+        15.76,
+        -3.76
+      ],
+      "radius": 0.04,
+      "segments": 4,
+      "material": "star"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -7.05,
+        14.37,
+        -14.28
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -6.72,
+        14.78,
+        -13.51
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -5.54,
+        15.91,
+        -11.91
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -5.02,
+        16.3,
+        -13.45
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -5.23,
+        16.15,
+        -12.53
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -7.05,
+        14.37,
+        -14.28
+      ],
+      "to": [
+        -6.72,
+        14.78,
+        -13.51
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -6.72,
+        14.78,
+        -13.51
+      ],
+      "to": [
+        -5.54,
+        15.91,
+        -11.91
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.54,
+        15.91,
+        -11.91
+      ],
+      "to": [
+        -5.02,
+        16.3,
+        -13.45
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.02,
+        16.3,
+        -13.45
+      ],
+      "to": [
+        -5.23,
+        16.15,
+        -12.53
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -6.37,
+        15.16,
+        -22.99
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -5.74,
+        15.75,
+        -21.48
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -5.25,
+        16.14,
+        -20.09
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -5.84,
+        15.66,
+        -18.57
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -5.81,
+        15.69,
+        -19.23
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -5.55,
+        15.91,
+        -18.38
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -6.37,
+        15.16,
+        -22.99
+      ],
+      "to": [
+        -5.74,
+        15.75,
+        -21.48
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.74,
+        15.75,
+        -21.48
+      ],
+      "to": [
+        -5.25,
+        16.14,
+        -20.09
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.25,
+        16.14,
+        -20.09
+      ],
+      "to": [
+        -5.84,
+        15.66,
+        -18.57
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.84,
+        15.66,
+        -18.57
+      ],
+      "to": [
+        -5.81,
+        15.69,
+        -19.23
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.81,
+        15.69,
+        -19.23
+      ],
+      "to": [
+        -5.55,
+        15.91,
+        -18.38
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -3.05,
+        17.32,
+        -11.75
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -2.58,
+        17.48,
+        -10.48
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -1.94,
+        17.65,
+        -10.89
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -2.66,
+        17.45,
+        -10.17
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -3.18,
+        17.27,
+        -9.74
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -4.46,
+        16.66,
+        -8.35
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -2.98,
+        17.34,
+        -9.65
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -3.05,
+        17.32,
+        -11.75
+      ],
+      "to": [
+        -2.58,
+        17.48,
+        -10.48
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -2.58,
+        17.48,
+        -10.48
+      ],
+      "to": [
+        -1.94,
+        17.65,
+        -10.89
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -1.94,
+        17.65,
+        -10.89
+      ],
+      "to": [
+        -2.66,
+        17.45,
+        -10.17
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -2.66,
+        17.45,
+        -10.17
+      ],
+      "to": [
+        -3.18,
+        17.27,
+        -9.74
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -3.18,
+        17.27,
+        -9.74
+      ],
+      "to": [
+        -4.46,
+        16.66,
+        -8.35
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -4.46,
+        16.66,
+        -8.35
+      ],
+      "to": [
+        -2.98,
+        17.34,
+        -9.65
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -2.61,
+        17.47,
+        -6.45
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -3.82,
+        16.99,
+        -7.04
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -4.42,
+        16.68,
+        -5.5
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -3.23,
+        17.25,
+        -6.24
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -2.27,
+        17.57,
+        -5.37
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -2.61,
+        17.47,
+        -6.45
+      ],
+      "to": [
+        -3.82,
+        16.99,
+        -7.04
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -3.82,
+        16.99,
+        -7.04
+      ],
+      "to": [
+        -4.42,
+        16.68,
+        -5.5
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -4.42,
+        16.68,
+        -5.5
+      ],
+      "to": [
+        -3.23,
+        17.25,
+        -6.24
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -3.23,
+        17.25,
+        -6.24
+      ],
+      "to": [
+        -2.27,
+        17.57,
+        -5.37
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -4.28,
+        16.76,
+        -8
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -4.51,
+        16.63,
+        -7.28
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -3.92,
+        16.95,
+        -6.97
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -4.85,
+        16.42,
+        -5.73
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -5.04,
+        16.29,
+        -5.16
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -6.39,
+        15.13,
+        -5.89
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -4.28,
+        16.76,
+        -8
+      ],
+      "to": [
+        -4.51,
+        16.63,
+        -7.28
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -4.51,
+        16.63,
+        -7.28
+      ],
+      "to": [
+        -3.92,
+        16.95,
+        -6.97
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -3.92,
+        16.95,
+        -6.97
+      ],
+      "to": [
+        -4.85,
+        16.42,
+        -5.73
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -4.85,
+        16.42,
+        -5.73
+      ],
+      "to": [
+        -5.04,
+        16.29,
+        -5.16
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "beam",
+      "from": [
+        -5.04,
+        16.29,
+        -5.16
+      ],
+      "to": [
+        -6.39,
+        15.13,
+        -5.89
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        6.31,
+        15.22,
+        -15.46
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        5.3,
+        16.1,
+        -16.97
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        6.43,
+        15.1,
+        -17.7
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        6.2,
+        15.33,
+        -19.11
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        7.13,
+        14.25,
+        -19.55
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        7.61,
+        13.54,
+        -19.86
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        8.35,
+        11.97,
+        -18.77
+      ],
+      "radius": 0.1,
+      "segments": 6,
+      "material": "starBright"
+    },
+    {
+      "type": "beam",
+      "from": [
+        6.31,
+        15.22,
+        -15.46
+      ],
+      "to": [
+        5.3,
+        16.1,
+        -16.97
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "beam",
+      "from": [
+        5.3,
+        16.1,
+        -16.97
+      ],
+      "to": [
+        6.43,
+        15.1,
+        -17.7
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "beam",
+      "from": [
+        6.43,
+        15.1,
+        -17.7
+      ],
+      "to": [
+        6.2,
+        15.33,
+        -19.11
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "beam",
+      "from": [
+        6.2,
+        15.33,
+        -19.11
+      ],
+      "to": [
+        7.13,
+        14.25,
+        -19.55
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "beam",
+      "from": [
+        7.13,
+        14.25,
+        -19.55
+      ],
+      "to": [
+        7.61,
+        13.54,
+        -19.86
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "beam",
+      "from": [
+        7.61,
+        13.54,
+        -19.86
+      ],
+      "to": [
+        8.35,
+        11.97,
+        -18.77
+      ],
+      "radius": 0.012,
+      "segments": 3,
+      "material": "starLine"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        0,
+        0,
+        -18
+      ],
+      "radius": 3.4,
+      "height": 0.22,
+      "segments": 40,
+      "material": "marbleFloor"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        0,
+        0.22,
+        -18
+      ],
+      "radius": 2.7,
+      "height": 0.22,
+      "segments": 40,
+      "material": "marbleFloor"
+    },
+    {
+      "type": "cylinder",
+      "at": [
+        0,
+        0.44,
+        -18
+      ],
+      "radius": 2,
+      "height": 0.22,
+      "segments": 40,
+      "material": "marbleFloor"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        0.66,
+        -18
+      ],
+      "size": [
+        2.6,
+        1,
+        1.3
+      ],
+      "material": "marbleGlow",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        1.66,
+        -18
+      ],
+      "size": [
+        2.9,
+        0.14,
+        1.6
+      ],
+      "material": "marbleGlow"
+    },
+    {
+      "type": "torus",
+      "at": [
+        0,
+        0.68,
+        -18
+      ],
+      "pitch": 90,
+      "radius": 3,
+      "tube": 0.025,
+      "segments": 64,
+      "material": "silverGlow"
+    },
+    {
+      "type": "mist",
+      "at": [
+        0,
+        1.7,
+        -18
+      ],
+      "width": 1.8,
+      "height": 2.2,
+      "layers": 2,
+      "spacing": 0.3,
+      "materials": {
+        "mist": "heat"
+      }
+    },
+    {
+      "type": "box",
+      "at": [
+        -1,
+        1,
+        -17.34
+      ],
+      "size": [
+        0.22,
+        0.14,
+        0.02
+      ],
+      "material": "silverGlow"
+    },
+    {
+      "type": "box",
+      "at": [
+        -0.5,
+        1.2,
+        -17.34
+      ],
+      "size": [
+        0.22,
+        0.14,
+        0.02
+      ],
+      "material": "silverGlow"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        1,
+        -17.34
+      ],
+      "size": [
+        0.22,
+        0.14,
+        0.02
+      ],
+      "material": "silverGlow"
+    },
+    {
+      "type": "box",
+      "at": [
+        0.5,
+        1.2,
+        -17.34
+      ],
+      "size": [
+        0.22,
+        0.14,
+        0.02
+      ],
+      "material": "silverGlow"
+    },
+    {
+      "type": "box",
+      "at": [
+        1,
+        1,
+        -17.34
+      ],
+      "size": [
+        0.22,
+        0.14,
+        0.02
+      ],
+      "material": "silverGlow"
+    },
+    {
+      "type": "box",
+      "at": [
+        -1,
+        1.2,
+        -18.66
+      ],
+      "size": [
+        0.22,
+        0.14,
+        0.02
+      ],
+      "material": "silverGlow"
+    },
+    {
+      "type": "box",
+      "at": [
+        -0.5,
+        1,
+        -18.66
+      ],
+      "size": [
+        0.22,
+        0.14,
+        0.02
+      ],
+      "material": "silverGlow"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        1.2,
+        -18.66
+      ],
+      "size": [
+        0.22,
+        0.14,
+        0.02
+      ],
+      "material": "silverGlow"
+    },
+    {
+      "type": "box",
+      "at": [
+        0.5,
+        1,
+        -18.66
+      ],
+      "size": [
+        0.22,
+        0.14,
+        0.02
+      ],
+      "material": "silverGlow"
+    },
+    {
+      "type": "box",
+      "at": [
+        1,
+        1.2,
+        -18.66
+      ],
+      "size": [
+        0.22,
+        0.14,
+        0.02
+      ],
+      "material": "silverGlow"
+    }
+  ],
+  "marks": {
+    "archway": {
+      "at": [
+        0,
+        -1.2
+      ],
+      "label": "the archway"
+    },
+    "nave": {
+      "at": [
+        0,
+        -8
+      ],
+      "label": "the nave"
+    },
+    "altar": {
+      "at": [
+        0,
+        -14.2
+      ],
+      "label": "the altar"
+    },
+    "runes": {
+      "at": [
+        1.6,
+        -15.4
+      ],
+      "label": "the silver runes"
+    },
+    "behind": {
+      "at": [
+        0,
+        -27.6
+      ],
+      "label": "the shadows behind the altar"
+    }
+  },
+  "shots": {
+    "temple": {
+      "position": [
+        0.6,
+        1.8,
+        -1
+      ],
+      "target": [
+        0,
+        5,
+        -30
+      ],
+      "fov": 62,
+      "label": "The forgotten temple"
+    },
+    "vault": {
+      "position": [
+        0,
+        1.6,
+        -6
+      ],
+      "target": [
+        0,
+        14,
+        -16
+      ],
+      "fov": 70,
+      "label": "The vault of stars"
+    },
+    "altar": {
+      "position": [
+        2.6,
+        1.7,
+        -11
+      ],
+      "target": [
+        0,
+        1.4,
+        -18
+      ],
+      "fov": 50,
+      "label": "The altar"
+    },
+    "pillar": {
+      "position": [
+        -2.2,
+        1.4,
+        -8.4
+      ],
+      "target": [
+        -5.4,
+        6,
+        -11
+      ],
+      "fov": 58,
+      "label": "The oak pillars"
+    }
+  },
+  "life": {
+    "dust": {
+      "count": 600,
+      "box": [
+        -9,
+        0.4,
+        -30,
+        9,
+        9,
+        0
+      ]
+    }
+  }
+}

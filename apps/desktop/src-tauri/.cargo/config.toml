@@ -1,0 +1,3 @@
+# `tauri dev` launches through `cargo run`, so this signs each debug build before it starts.
+[target.'cfg(target_os = "macos")']
+runner = "../scripts/macos-dev-run.sh"

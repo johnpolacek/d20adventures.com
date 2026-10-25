@@ -1,0 +1,213 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "march-of-davos/the-dust-settles",
+  "set": "realm-of-myr/old-grand-library",
+  "cast": [
+    {
+      "id": "branka-stoneveil",
+      "name": "Branka Stoneveil",
+      "role": "Dwarf fighter",
+      "height": 1.38,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/branka-front.webp",
+        "back": "/stage/fixtures/march-of-davos/branka-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/branka-portrait.jpg"
+      },
+      "at": [
+        0.2,
+        2.6
+      ],
+      "facing": [
+        -3.3,
+        5.6
+      ]
+    },
+    {
+      "id": "cassia-verane",
+      "name": "Cassia Verane",
+      "role": "Human wizard",
+      "height": 1.72,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/cassia-front.webp",
+        "back": "/stage/fixtures/march-of-davos/cassia-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/cassia-portrait.jpg"
+      },
+      "at": [
+        1.1,
+        2.2
+      ],
+      "facing": [
+        -3.3,
+        5.6
+      ]
+    },
+    {
+      "id": "yeva-softstep",
+      "name": "Yeva Softstep",
+      "role": "Halfling rogue",
+      "height": 1.08,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/yeva-front.webp",
+        "back": "/stage/fixtures/march-of-davos/yeva-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/yeva-portrait.jpg"
+      },
+      "at": [
+        0.6,
+        3.4
+      ],
+      "facing": [
+        -3.3,
+        5.6
+      ]
+    },
+    {
+      "id": "milos-radan",
+      "name": "Milos Radan",
+      "role": "Human cleric",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/milos-front.webp",
+        "back": "/stage/fixtures/march-of-davos/milos-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/milos-portrait.jpg"
+      },
+      "at": [
+        1.6,
+        3
+      ],
+      "facing": [
+        -3.3,
+        5.6
+      ]
+    },
+    {
+      "id": "bishop-nicolai",
+      "name": "Bishop Nicolai",
+      "role": "Bishop of the Church of Valkara",
+      "height": 1.82,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/bishop-nicolai-front.webp",
+        "back": "/stage/fixtures/march-of-davos/bishop-nicolai-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/bishop-nicolai-portrait.jpg"
+      },
+      "at": [
+        -1.7,
+        5.6
+      ],
+      "facing": [
+        -3.3,
+        5.6
+      ]
+    },
+    {
+      "id": "seraphina-valtor",
+      "name": "Seraphina Valtor",
+      "role": "Head of the Valtor clan",
+      "height": 1.7,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/seraphina-front.webp",
+        "back": "/stage/fixtures/march-of-davos/seraphina-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/seraphina-portrait.jpg"
+      },
+      "at": [
+        -3.6,
+        6.55
+      ],
+      "facing": [
+        -3.3,
+        5.6
+      ]
+    },
+    {
+      "id": "astrid-blackthorn",
+      "name": "Lady Astrid Blackthorn",
+      "role": "Head of House Blackthorn",
+      "height": 1.78,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/astrid-blackthorn-front.webp",
+        "back": "/stage/fixtures/march-of-davos/astrid-blackthorn-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/astrid-blackthorn-portrait.jpg"
+      },
+      "at": [
+        -3,
+        4.65
+      ],
+      "facing": [
+        -3.3,
+        5.6
+      ]
+    },
+    {
+      "id": "sister-danica",
+      "name": "Sister Danica",
+      "role": "Wayfinder of the Church",
+      "height": 1.68,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/sister-danica-front.webp",
+        "back": "/stage/fixtures/march-of-davos/sister-danica-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/sister-danica-portrait.jpg"
+      },
+      "at": [
+        -1,
+        6.6
+      ],
+      "facing": [
+        -3.3,
+        5.6
+      ]
+    }
+  ],
+  "shots": {
+    "talks": {
+      "subjects": [
+        "bishop-nicolai",
+        "seraphina-valtor",
+        "astrid-blackthorn"
+      ],
+      "offset": [
+        2.6,
+        1.8,
+        -1.4
+      ],
+      "target": [
+        -0.6,
+        1.2,
+        0.2
+      ],
+      "relative": "world",
+      "fov": 50,
+      "label": "The talks"
+    },
+    "bishop": {
+      "subject": "bishop-nicolai",
+      "distance": 2.2,
+      "angle": 0,
+      "height": 1.7,
+      "lookHeight": 1.65,
+      "fov": 44,
+      "label": "Bishop Nicolai"
+    },
+    "party": {
+      "subjects": [
+        "branka-stoneveil",
+        "cassia-verane",
+        "yeva-softstep",
+        "milos-radan"
+      ],
+      "offset": [
+        1.6,
+        1.8,
+        -3.6
+      ],
+      "target": [
+        0,
+        1.2,
+        0
+      ],
+      "relative": "world",
+      "fov": 54,
+      "label": "Party"
+    }
+  },
+  "shot": "talks"
+}

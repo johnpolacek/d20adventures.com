@@ -1,0 +1,395 @@
+{
+  "planId": "covert-cargo",
+  "settingId": "realm-of-myr",
+  "generatedAt": "2026-05-23T00:00:00.000Z",
+  "generatedFiles": [
+    {
+      "path": "content/settings/realm-of-myr/adventures/covert-cargo/adventure.md",
+      "kind": "adventure"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/covert-cargo/encounters/the-shipment.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/covert-cargo/encounters/the-transaction.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/covert-cargo/encounters/the-fake.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/covert-cargo/encounters/battle-on-the-boat.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/covert-cargo/encounters/the-disturbance.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/covert-cargo/encounters/the-escape.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/covert-cargo/encounters/the-crate.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/covert-cargo/encounters/return-to-the-city.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/covert-cargo/encounters/the-end.md",
+      "kind": "encounter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/npcs-1749163978757.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/npcs-1749163978757.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/npcs-1749181492795.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/npcs-1749181492795.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/npcs-1749184389465.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/npcs-1749184389465.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/npcs-1749243735467.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/npcs-1749243735467.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/npcs-1749243869357.md",
+      "kind": "npc"
+    },
+    {
+      "path": "content/settings/realm-of-myr/npcs/npcs-1749243869357.json",
+      "kind": "npcSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/covert-cargo/characters/1749159962941.md",
+      "kind": "premadeCharacter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/covert-cargo/characters/1749159962941.json",
+      "kind": "premadeCharacterSheet"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/covert-cargo/characters/1749307435667.md",
+      "kind": "premadeCharacter"
+    },
+    {
+      "path": "content/settings/realm-of-myr/adventures/covert-cargo/characters/1749307435667.json",
+      "kind": "premadeCharacterSheet"
+    }
+  ],
+  "sourceFieldMappings": [
+    {
+      "source": "AdventurePlan.title",
+      "destination": "adventure.md frontmatter.title"
+    },
+    {
+      "source": "AdventurePlan.teaser",
+      "destination": "adventure.md ## Teaser"
+    },
+    {
+      "source": "AdventurePlan.overview",
+      "destination": "adventure.md ## Summary"
+    },
+    {
+      "source": "AdventurePlan.party",
+      "destination": "adventure.md frontmatter.minPlayers/maxPlayers"
+    },
+    {
+      "source": "AdventurePlan.start",
+      "destination": "adventure.md frontmatter.startEncounter"
+    },
+    {
+      "source": "AdventurePlan.nextAdventure",
+      "destination": "adventure.md frontmatter.nextAdventure"
+    },
+    {
+      "source": "AdventurePlan.premadePlayerCharacters[].id",
+      "destination": "adventure.md frontmatter.premadeCharacters"
+    },
+    {
+      "source": "Encounter.the-shipment.intro",
+      "destination": "encounters/the-shipment.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-shipment.instructions",
+      "destination": "encounters/the-shipment.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-shipment.transitions",
+      "destination": "encounters/the-shipment.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-shipment.npc",
+      "destination": "encounters/the-shipment.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-transaction.intro",
+      "destination": "encounters/the-transaction.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-transaction.instructions",
+      "destination": "encounters/the-transaction.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-transaction.transitions",
+      "destination": "encounters/the-transaction.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-transaction.npc",
+      "destination": "encounters/the-transaction.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-fake.intro",
+      "destination": "encounters/the-fake.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-fake.instructions",
+      "destination": "encounters/the-fake.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-fake.transitions",
+      "destination": "encounters/the-fake.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-fake.npc",
+      "destination": "encounters/the-fake.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.battle-on-the-boat.intro",
+      "destination": "encounters/battle-on-the-boat.md ## Intro"
+    },
+    {
+      "source": "Encounter.battle-on-the-boat.instructions",
+      "destination": "encounters/battle-on-the-boat.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.battle-on-the-boat.transitions",
+      "destination": "encounters/battle-on-the-boat.md ## Transitions"
+    },
+    {
+      "source": "Encounter.battle-on-the-boat.npc",
+      "destination": "encounters/battle-on-the-boat.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-disturbance.intro",
+      "destination": "encounters/the-disturbance.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-disturbance.instructions",
+      "destination": "encounters/the-disturbance.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-disturbance.transitions",
+      "destination": "encounters/the-disturbance.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-disturbance.npc",
+      "destination": "encounters/the-disturbance.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-escape.intro",
+      "destination": "encounters/the-escape.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-escape.instructions",
+      "destination": "encounters/the-escape.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-escape.transitions",
+      "destination": "encounters/the-escape.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-escape.npc",
+      "destination": "encounters/the-escape.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-crate.intro",
+      "destination": "encounters/the-crate.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-crate.instructions",
+      "destination": "encounters/the-crate.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-crate.transitions",
+      "destination": "encounters/the-crate.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-crate.npc",
+      "destination": "encounters/the-crate.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.return-to-the-city.intro",
+      "destination": "encounters/return-to-the-city.md ## Intro"
+    },
+    {
+      "source": "Encounter.return-to-the-city.instructions",
+      "destination": "encounters/return-to-the-city.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.return-to-the-city.transitions",
+      "destination": "encounters/return-to-the-city.md ## Transitions"
+    },
+    {
+      "source": "Encounter.return-to-the-city.npc",
+      "destination": "encounters/return-to-the-city.md frontmatter.npcs"
+    },
+    {
+      "source": "Encounter.the-end.intro",
+      "destination": "encounters/the-end.md ## Intro"
+    },
+    {
+      "source": "Encounter.the-end.instructions",
+      "destination": "encounters/the-end.md ## GM Notes"
+    },
+    {
+      "source": "Encounter.the-end.transitions",
+      "destination": "encounters/the-end.md ## Transitions"
+    },
+    {
+      "source": "Encounter.the-end.npc",
+      "destination": "encounters/the-end.md frontmatter.npcs"
+    },
+    {
+      "source": "AdventurePlan.npcs.npcs-1749163978757",
+      "destination": "content/settings/realm-of-myr/npcs/npcs-1749163978757.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.npcs-1749163978757",
+      "destination": "content/settings/realm-of-myr/npcs/npcs-1749163978757.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.npcs-1749181492795",
+      "destination": "content/settings/realm-of-myr/npcs/npcs-1749181492795.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.npcs-1749181492795",
+      "destination": "content/settings/realm-of-myr/npcs/npcs-1749181492795.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.npcs-1749184389465",
+      "destination": "content/settings/realm-of-myr/npcs/npcs-1749184389465.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.npcs-1749184389465",
+      "destination": "content/settings/realm-of-myr/npcs/npcs-1749184389465.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.npcs-1749243735467",
+      "destination": "content/settings/realm-of-myr/npcs/npcs-1749243735467.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.npcs-1749243735467",
+      "destination": "content/settings/realm-of-myr/npcs/npcs-1749243735467.md"
+    },
+    {
+      "source": "AdventurePlan.npcs.npcs-1749243869357",
+      "destination": "content/settings/realm-of-myr/npcs/npcs-1749243869357.json"
+    },
+    {
+      "source": "AdventurePlan.npcs.npcs-1749243869357",
+      "destination": "content/settings/realm-of-myr/npcs/npcs-1749243869357.md"
+    },
+    {
+      "source": "AdventurePlan.premadePlayerCharacters.1749159962941",
+      "destination": "content/settings/realm-of-myr/adventures/covert-cargo/characters/1749159962941.json"
+    },
+    {
+      "source": "AdventurePlan.premadePlayerCharacters.1749159962941",
+      "destination": "content/settings/realm-of-myr/adventures/covert-cargo/characters/1749159962941.md"
+    },
+    {
+      "source": "AdventurePlan.premadePlayerCharacters.1749307435667",
+      "destination": "content/settings/realm-of-myr/adventures/covert-cargo/characters/1749307435667.json"
+    },
+    {
+      "source": "AdventurePlan.premadePlayerCharacters.1749307435667",
+      "destination": "content/settings/realm-of-myr/adventures/covert-cargo/characters/1749307435667.md"
+    },
+    {
+      "source": "AdventurePlan.start",
+      "destination": "adventure.md frontmatter.startEncounter",
+      "note": "Legacy source omitted start; migrated as \"the-shipment\"."
+    }
+  ],
+  "warnings": [
+    {
+      "code": "runtime-flag-preserved-as-note",
+      "message": "Encounter \"the-shipment\" used skipInitialNpcTurns; migrated as a GM note.",
+      "source": "the-shipment.skipInitialNpcTurns"
+    },
+    {
+      "code": "runtime-flag-preserved-as-note",
+      "message": "Encounter \"the-transaction\" used skipInitialNpcTurns; migrated as a GM note.",
+      "source": "the-transaction.skipInitialNpcTurns"
+    },
+    {
+      "code": "asset-key-converted",
+      "message": "Converted legacy asset key \"images/settings/realm-of-myr/covert-cargo/npcs/236683b0-4745-4a8c-ad9d-48ed3bbaf908.png?t=1749164549983\" to full S3 URL.",
+      "source": "AdventurePlan.npcs.npcs-1749163978757.image"
+    },
+    {
+      "code": "asset-key-converted",
+      "message": "Converted legacy asset key \"images/settings/realm-of-myr/covert-cargo/npcs/3959ac3c-b63a-4e88-9cce-6a2d69f2bc52.png?t=1749182638807\" to full S3 URL.",
+      "source": "AdventurePlan.npcs.npcs-1749181492795.image"
+    },
+    {
+      "code": "asset-key-converted",
+      "message": "Converted legacy asset key \"images/settings/realm-of-myr/covert-cargo/npcs/e8e02409-93a9-4936-8b2e-b5a3d083889d.png?t=1749226155922\" to full S3 URL.",
+      "source": "AdventurePlan.npcs.npcs-1749184389465.image"
+    },
+    {
+      "code": "asset-key-converted",
+      "message": "Converted legacy asset key \"images/settings/realm-of-myr/covert-cargo/npcs/66faef7d-7d77-4aac-bdec-83850e136f5f.png?t=1749243814586\" to full S3 URL.",
+      "source": "AdventurePlan.npcs.npcs-1749243735467.image"
+    },
+    {
+      "code": "asset-key-converted",
+      "message": "Converted legacy asset key \"images/settings/realm-of-myr/covert-cargo/npcs/ce082298-d090-47b2-a3b9-5af7c851dec7.png?t=1749243962919\" to full S3 URL.",
+      "source": "AdventurePlan.npcs.npcs-1749243869357.image"
+    },
+    {
+      "code": "asset-key-converted",
+      "message": "Converted legacy asset key \"images/settings/realm-of-myr/covert-cargo/pcs/dc23c6a6-6247-4384-bccc-2eeed66a7b0c.png?t=1749161969365\" to full S3 URL.",
+      "source": "premadePlayerCharacters.1749159962941.image"
+    },
+    {
+      "code": "asset-key-converted",
+      "message": "Converted legacy asset key \"images/settings/realm-of-myr/covert-cargo/pcs/b44179ad-0e8e-4d1e-8b17-8c436dbeb15a.png?t=1749311061893\" to full S3 URL.",
+      "source": "premadePlayerCharacters.1749307435667.image"
+    },
+    {
+      "code": "legacy-start-repaired",
+      "message": "Set missing AdventurePlan.start to \"the-shipment\", the first authored encounter in Covert Cargo.",
+      "source": "AdventurePlan.start"
+    },
+    {
+      "code": "legacy-transition-dropped",
+      "message": "Dropped an empty transition target from \"the-shipment\"; the legacy condition and encounter fields were incomplete.",
+      "source": "sections[0].scenes[0].encounters[the-shipment].transitions"
+    }
+  ]
+}

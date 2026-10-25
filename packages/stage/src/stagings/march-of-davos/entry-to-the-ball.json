@@ -1,0 +1,202 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "march-of-davos/entry-to-the-ball",
+  "set": "realm-of-myr/blackthorn-grounds",
+  "cast": [
+    {
+      "id": "branka-stoneveil",
+      "name": "Branka Stoneveil",
+      "role": "Dwarf fighter",
+      "height": 1.38,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/branka-front.webp",
+        "back": "/stage/fixtures/march-of-davos/branka-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/branka-portrait.jpg"
+      },
+      "at": [
+        -1.6,
+        -4.6
+      ],
+      "facing": [
+        0,
+        -12
+      ]
+    },
+    {
+      "id": "cassia-verane",
+      "name": "Cassia Verane",
+      "role": "Human wizard",
+      "height": 1.72,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/cassia-front.webp",
+        "back": "/stage/fixtures/march-of-davos/cassia-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/cassia-portrait.jpg"
+      },
+      "at": [
+        -0.6,
+        -4.2
+      ],
+      "facing": [
+        0,
+        -12
+      ]
+    },
+    {
+      "id": "yeva-softstep",
+      "name": "Yeva Softstep",
+      "role": "Halfling rogue",
+      "height": 1.08,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/yeva-front.webp",
+        "back": "/stage/fixtures/march-of-davos/yeva-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/yeva-portrait.jpg"
+      },
+      "at": [
+        0.4,
+        -4.6
+      ],
+      "facing": [
+        0,
+        -12
+      ]
+    },
+    {
+      "id": "milos-radan",
+      "name": "Milos Radan",
+      "role": "Human cleric",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/milos-front.webp",
+        "back": "/stage/fixtures/march-of-davos/milos-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/milos-portrait.jpg"
+      },
+      "at": [
+        1.4,
+        -4.2
+      ],
+      "facing": [
+        0,
+        -12
+      ]
+    },
+    {
+      "id": "barok-redbeard",
+      "name": "Barok Redbeard",
+      "role": "House guard",
+      "height": 1.9,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/barok-front.webp",
+        "back": "/stage/fixtures/march-of-davos/barok-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/barok-portrait.jpg"
+      },
+      "at": [
+        -1.2,
+        -8.2
+      ],
+      "facing": [
+        0,
+        -4.4
+      ]
+    },
+    {
+      "id": "door-guard",
+      "name": "The door guard",
+      "role": "House guard",
+      "height": 1.92,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/door-guard-front.webp",
+        "back": "/stage/fixtures/march-of-davos/door-guard-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/door-guard-portrait.jpg"
+      },
+      "at": [
+        1.6,
+        -8.4
+      ],
+      "facing": [
+        0,
+        -4.4
+      ]
+    },
+    {
+      "id": "guest-crimson",
+      "name": "A lady in a crimson cloak",
+      "role": "Masked guest",
+      "height": 1.68,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/guest-crimson-front.webp",
+        "back": "/stage/fixtures/march-of-davos/guest-crimson-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/guest-crimson-portrait.jpg"
+      },
+      "at": [
+        -3.6,
+        -2.8
+      ],
+      "facing": [
+        0,
+        -12
+      ]
+    },
+    {
+      "id": "guest-raven",
+      "name": "A gentleman in a raven mask",
+      "role": "Masked guest",
+      "height": 1.85,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/guest-raven-front.webp",
+        "back": "/stage/fixtures/march-of-davos/guest-raven-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/guest-raven-portrait.jpg"
+      },
+      "at": [
+        -2.8,
+        -3.4
+      ],
+      "facing": [
+        0,
+        -12
+      ]
+    }
+  ],
+  "shots": {
+    "party": {
+      "subjects": [
+        "branka-stoneveil",
+        "cassia-verane",
+        "yeva-softstep",
+        "milos-radan"
+      ],
+      "offset": [
+        1.6,
+        1.8,
+        4.2
+      ],
+      "target": [
+        0,
+        1.2,
+        0
+      ],
+      "relative": "world",
+      "fov": 54,
+      "label": "Party"
+    },
+    "barok": {
+      "subject": "barok-redbeard",
+      "distance": 2.6,
+      "angle": 10,
+      "height": 1.75,
+      "lookHeight": 1.75,
+      "fov": 44,
+      "label": "Barok"
+    },
+    "guard": {
+      "subject": "door-guard",
+      "distance": 2.6,
+      "angle": -15,
+      "height": 1.75,
+      "lookHeight": 1.75,
+      "fov": 44,
+      "label": "The door guard"
+    }
+  },
+  "shot": "mansion"
+}

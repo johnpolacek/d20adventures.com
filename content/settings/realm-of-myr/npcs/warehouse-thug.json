@@ -1,0 +1,11 @@
+{
+  "id": "warehouse-thug",
+  "name": "Warehouse Thug",
+  "type": "npc",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/app/avatar/npc.png?v=1",
+  "archetype": "Fighter",
+  "race": "Human",
+  "appearance": "Rough dockside mercenaries posing as workers, with short swords hidden beneath their tunics.",
+  "behavior": "Follow Alaric's lead. Fight hard while he stands and scatter if he falls or gives up.",
+  "healthPercent": 100
+}

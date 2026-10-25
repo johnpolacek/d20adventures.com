@@ -1,0 +1,3941 @@
+{
+  "format": "d20.stage.set",
+  "version": 1,
+  "id": "kordavos-black-market",
+  "settingId": "realm-of-myr",
+  "locationId": "kordavos-black-market",
+  "title": "The Black Market",
+  "seed": 1818,
+  "atmosphere": {
+    "sun": {
+      "direction": [
+        0.3,
+        0.55,
+        -0.78
+      ],
+      "color": "#8a9ab8",
+      "intensity": 0.5,
+      "target": [
+        0,
+        0,
+        -12
+      ],
+      "distance": 220,
+      "shadow": {
+        "left": -36,
+        "right": 36,
+        "top": 40,
+        "bottom": -40,
+        "near": 120,
+        "far": 360,
+        "size": 2048
+      }
+    },
+    "hemisphere": {
+      "sky": "#5a6a88",
+      "ground": "#2a2018",
+      "intensity": 0.45
+    },
+    "sky": {
+      "horizon": "#7a8094",
+      "mid": "#4a5470",
+      "zenith": "#1e2438",
+      "gain": 0.75,
+      "clouds": 0.8,
+      "stars": 0.1,
+      "moon": 0
+    },
+    "fog": {
+      "density": 0.026,
+      "color": "#3a3e4a",
+      "start": 10
+    },
+    "glow": "#ffb070",
+    "fill": {
+      "color": "#ffe2c0",
+      "intensity": 1.1,
+      "distance": 8
+    },
+    "lights": [
+      {
+        "at": [
+          0.9,
+          2.4,
+          1.6
+        ],
+        "color": "#ffa850",
+        "intensity": 9,
+        "distance": 6
+      },
+      {
+        "at": [
+          -1.2,
+          3.2,
+          -2
+        ],
+        "color": "#ffa850",
+        "intensity": 9,
+        "distance": 7
+      },
+      {
+        "at": [
+          -2,
+          1.4,
+          -11.45
+        ],
+        "color": "#ff8a3a",
+        "intensity": 10,
+        "distance": 7
+      },
+      {
+        "at": [
+          5,
+          2.3,
+          -11.4
+        ],
+        "color": "#ffb070",
+        "intensity": 6,
+        "distance": 6
+      },
+      {
+        "at": [
+          0.6,
+          3.4,
+          -16
+        ],
+        "color": "#ffa850",
+        "intensity": 9,
+        "distance": 8
+      },
+      {
+        "at": [
+          -8.6,
+          1.9,
+          -21.9
+        ],
+        "color": "#ffb060",
+        "intensity": 8,
+        "distance": 5
+      },
+      {
+        "at": [
+          2.05,
+          1.4,
+          -23.45
+        ],
+        "color": "#ff8a3a",
+        "intensity": 10,
+        "distance": 8
+      },
+      {
+        "at": [
+          0,
+          2.2,
+          -34.6
+        ],
+        "color": "#ff9a40",
+        "intensity": 12,
+        "distance": 9
+      }
+    ],
+    "environment": 0.3,
+    "exposure": 1.1,
+    "grade": "neutral",
+    "wind": 0.3
+  },
+  "rooms": [
+    {
+      "box": [
+        -2.6,
+        -0.5,
+        6.7,
+        2.6,
+        14,
+        20
+      ],
+      "ambient": 0.9,
+      "fill": 1.3,
+      "exposure": 1.15,
+      "lights": [
+        {
+          "at": [
+            -1.4,
+            2.3,
+            9.2
+          ],
+          "color": "#ffb064",
+          "intensity": 7,
+          "distance": 6
+        },
+        {
+          "at": [
+            0,
+            2.3,
+            6.95
+          ],
+          "color": "#ffc070",
+          "intensity": 5,
+          "distance": 3.5
+        },
+        {
+          "at": [
+            1.55,
+            2.4,
+            7.050000000000001
+          ],
+          "color": "#ffa850",
+          "intensity": 4,
+          "distance": 4
+        },
+        {
+          "at": [
+            0.6,
+            6,
+            15
+          ],
+          "color": "#8a9ac0",
+          "intensity": 4,
+          "distance": 14
+        }
+      ]
+    }
+  ],
+  "camera": {
+    "near": 0.1,
+    "far": 500,
+    "min": [
+      -13.4,
+      0.4,
+      -35.2
+    ],
+    "max": [
+      14.4,
+      7.5,
+      19.4
+    ],
+    "maxDistance": 14
+  },
+  "materials": {
+    "tentRust": {
+      "type": "cloth",
+      "color": "#9a4a2a",
+      "tatters": [
+        5,
+        0.1
+      ],
+      "amp": 0.22
+    },
+    "tentWine": {
+      "type": "cloth",
+      "color": "#5e2024",
+      "tatters": [
+        3,
+        0.1
+      ],
+      "amp": 0.22
+    },
+    "tentPlum": {
+      "type": "cloth",
+      "color": "#4e2c4c",
+      "tatters": [
+        3,
+        0.08
+      ],
+      "amp": 0.2
+    },
+    "tentBlack": {
+      "type": "cloth",
+      "color": "#26201f",
+      "tatters": [
+        1,
+        0.04
+      ],
+      "amp": 0.18
+    },
+    "tentOchre": {
+      "type": "cloth",
+      "color": "#a67a3c",
+      "tatters": [
+        3,
+        0.1
+      ],
+      "amp": 0.22
+    },
+    "tentTeal": {
+      "type": "cloth",
+      "color": "#2c5f5c",
+      "tatters": [
+        4,
+        0.1
+      ],
+      "amp": 0.22
+    },
+    "tentGreen": {
+      "type": "cloth",
+      "color": "#46603a",
+      "tatters": [
+        3,
+        0.08
+      ],
+      "amp": 0.22
+    },
+    "tentCream": {
+      "type": "cloth",
+      "color": "#cdbf9e",
+      "tatters": [
+        3,
+        0.08
+      ],
+      "amp": 0.22
+    },
+    "goodsRed": {
+      "type": "plain",
+      "color": "#9a2e22",
+      "roughness": 0.8
+    },
+    "goodsGreen": {
+      "type": "plain",
+      "color": "#5a6a2e",
+      "roughness": 0.8
+    },
+    "goodsYellow": {
+      "type": "plain",
+      "color": "#c2963a",
+      "roughness": 0.7
+    },
+    "goodsTeal": {
+      "type": "plain",
+      "color": "#2a6a66",
+      "roughness": 0.8
+    },
+    "far": {
+      "type": "masonry",
+      "a": "#9b7a64",
+      "b": "#b2957a",
+      "c": "#8f8a86",
+      "block": [
+        2.5,
+        1.2
+      ],
+      "grime": 0.6,
+      "relief": 0.03
+    },
+    "roofFar": {
+      "type": "masonry",
+      "a": "#6b4a40",
+      "b": "#7c5646",
+      "c": "#5f5a58",
+      "block": [
+        0.6,
+        0.4
+      ],
+      "relief": 0.02,
+      "grime": 0.4
+    },
+    "ground": {
+      "type": "masonry",
+      "a": "#9a7658",
+      "b": "#b08d6c",
+      "c": "#8a7c70",
+      "mortar": "#5d4636",
+      "block": [
+        1.1,
+        0.8
+      ],
+      "stones": 0.36,
+      "joint": 0.03,
+      "relief": 0.045,
+      "variance": 0.55,
+      "grime": 0.35,
+      "ground": true,
+      "roads": false
+    },
+    "table": {
+      "type": "wood",
+      "a": "#6a4b33",
+      "b": "#7e5b3e",
+      "c": "#5a4a3c",
+      "plank": [
+        0.19,
+        1.9
+      ],
+      "relief": 0.045,
+      "variance": 0.4,
+      "seed": 11.2
+    },
+    "crate": {
+      "type": "wood",
+      "a": "#8a6a48",
+      "b": "#9c7a52",
+      "c": "#7a6a58",
+      "plank": [
+        0.2,
+        1.2
+      ],
+      "relief": 0.045,
+      "variance": 0.4,
+      "seed": 2.6
+    },
+    "crateDark": {
+      "type": "wood",
+      "a": "#4a3526",
+      "b": "#5a4230",
+      "c": "#403830",
+      "plank": [
+        0,
+        40
+      ],
+      "relief": 0.03,
+      "seed": 8.8
+    },
+    "barrel": {
+      "type": "wood",
+      "a": "#6a4a30",
+      "b": "#7c5a3a",
+      "c": "#5f4a3a",
+      "plank": [
+        0.105,
+        1.4
+      ],
+      "relief": 0.05,
+      "variance": 0.45,
+      "seed": 4.4
+    },
+    "sack": {
+      "type": "burlap",
+      "color": "#c2b08c"
+    },
+    "sackB": {
+      "type": "burlap",
+      "color": "#a08a68"
+    },
+    "basket": {
+      "type": "burlap",
+      "color": "#b08a52"
+    },
+    "iron": {
+      "type": "metal",
+      "color": "#2e2a28",
+      "roughness": 0.55,
+      "metalness": 0.7
+    },
+    "brass": {
+      "type": "metal",
+      "color": "#a8823e",
+      "roughness": 0.38,
+      "metalness": 0.85
+    },
+    "void": {
+      "type": "plain",
+      "color": "#0d0a09",
+      "roughness": 1
+    },
+    "pottery": {
+      "type": "plain",
+      "color": "#a45a36",
+      "roughness": 0.7
+    },
+    "potteryB": {
+      "type": "plain",
+      "color": "#8a6a4e",
+      "roughness": 0.75
+    },
+    "rope": {
+      "type": "plain",
+      "color": "#5a4632",
+      "roughness": 1
+    },
+    "straw": {
+      "type": "wood",
+      "a": "#c8a65a",
+      "b": "#b38f45",
+      "c": "#d9bd74",
+      "plank": [
+        0.03,
+        2
+      ],
+      "relief": 0.03,
+      "variance": 0.5,
+      "seed": 7.7
+    },
+    "clothDrab": {
+      "type": "cloth",
+      "color": "#7d6a50",
+      "amp": 0.12
+    },
+    "pole": {
+      "type": "wood",
+      "a": "#4d382a",
+      "b": "#644a35",
+      "c": "#453c34",
+      "plank": [
+        0,
+        60
+      ],
+      "relief": 0.03,
+      "variance": 0.35,
+      "seed": 5.7,
+      "grime": 0.5
+    },
+    "coin": {
+      "type": "metal",
+      "color": "#d4a84a",
+      "roughness": 0.3,
+      "metalness": 0.95
+    },
+    "gourd": {
+      "type": "plain",
+      "color": "#c0642a",
+      "roughness": 0.6
+    },
+    "door": {
+      "type": "painted",
+      "map": "/stage/textures/timber-hold.jpg",
+      "tint": "#9a8470",
+      "plank": [
+        0.18,
+        3
+      ],
+      "size": [
+        0.7,
+        2.2
+      ],
+      "relief": 0.08,
+      "grime": 1.1
+    },
+    "flame": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ffae55",
+      "emissiveIntensity": 5
+    },
+    "fire": {
+      "type": "fire",
+      "color": "#ff7a26"
+    },
+    "coal": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#c2360c",
+      "emissiveIntensity": 1.5
+    },
+    "crystal": {
+      "type": "orb",
+      "glow": "#86b4f0"
+    },
+    "tablecloth": {
+      "type": "cloth",
+      "color": "#4a2442",
+      "amp": 0.01
+    },
+    "chest": {
+      "type": "wood",
+      "a": "#5c3c26",
+      "b": "#6e4a30",
+      "c": "#4a3222",
+      "plank": [
+        0.11,
+        0.9
+      ],
+      "relief": 0.05,
+      "variance": 0.35,
+      "seed": 23.4
+    },
+    "gutter": {
+      "type": "masonry",
+      "a": "#3a3836",
+      "b": "#44403c",
+      "c": "#302e2c",
+      "mortar": "#161412",
+      "block": [
+        0.5,
+        0.36
+      ],
+      "joint": 0.03,
+      "relief": 0.06,
+      "variance": 0.4,
+      "grime": 2,
+      "ground": true,
+      "roughness": 0.3
+    },
+    "stone": {
+      "type": "image",
+      "map": "/stage/textures/stone-old.jpg",
+      "size": [
+        2.4,
+        2.4
+      ],
+      "tint": "#c8beb0",
+      "roughness": 0.9
+    },
+    "stoneTrim": {
+      "type": "rock",
+      "a": "#56504a",
+      "b": "#6c645c",
+      "moss": "#3a4232",
+      "mossLight": "#4c5640",
+      "lichen": "#7a7468",
+      "mossAmount": 0.35,
+      "lichenAmount": 0.1,
+      "relief": 0.4,
+      "scale": 0.8
+    },
+    "plaster": {
+      "type": "rock",
+      "a": "#7a7268",
+      "b": "#8e867a",
+      "moss": "#4c5244",
+      "mossLight": "#5e6454",
+      "lichen": "#a09888",
+      "mossAmount": 0.3,
+      "lichenAmount": 0.15,
+      "relief": 0.15,
+      "scale": 1.6
+    },
+    "plasterB": {
+      "type": "rock",
+      "a": "#6e6a62",
+      "b": "#84786a",
+      "moss": "#4a4a40",
+      "mossLight": "#5c5a4e",
+      "lichen": "#9a9080",
+      "mossAmount": 0.35,
+      "lichenAmount": 0.12,
+      "relief": 0.15,
+      "scale": 1.4
+    },
+    "timber": {
+      "type": "wood",
+      "a": "#2a201a",
+      "b": "#342820",
+      "c": "#262220",
+      "plank": [
+        0,
+        40
+      ],
+      "relief": 0.04,
+      "seed": 3.7
+    },
+    "roof": {
+      "type": "masonry",
+      "a": "#3c3e42",
+      "b": "#46484c",
+      "c": "#323438",
+      "mortar": "#18181a",
+      "block": [
+        0.42,
+        0.26
+      ],
+      "joint": 0.03,
+      "relief": 0.08,
+      "variance": 0.5,
+      "grime": 1.2
+    },
+    "shutter": {
+      "type": "painted",
+      "map": "/stage/textures/boat-paint.jpg",
+      "tint": "#6a7468",
+      "plank": [
+        0.12,
+        2
+      ],
+      "size": [
+        0.5,
+        1.4
+      ],
+      "relief": 0.08,
+      "grime": 1.4
+    },
+    "dark": {
+      "type": "plain",
+      "color": "#14110e",
+      "roughness": 1
+    },
+    "windowLit": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ff9a40",
+      "emissiveIntensity": 0.8
+    },
+    "shopLit": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#d27a34",
+      "emissiveIntensity": 0.45
+    },
+    "windowDark": {
+      "type": "plain",
+      "color": "#141820",
+      "roughness": 0.2
+    },
+    "gilt": {
+      "type": "metal",
+      "color": "#b08a48",
+      "roughness": 0.45,
+      "metalness": 0.8
+    },
+    "linen": {
+      "type": "cloth",
+      "color": "#c8c0ae"
+    },
+    "linenB": {
+      "type": "cloth",
+      "color": "#a8a49a"
+    },
+    "clothRed": {
+      "type": "cloth",
+      "color": "#7a3a2c"
+    },
+    "clothBlue": {
+      "type": "cloth",
+      "color": "#3e4e66"
+    },
+    "lead": {
+      "type": "metal",
+      "color": "#2a2826",
+      "roughness": 0.6,
+      "metalness": 0.4
+    },
+    "signSerpent": {
+      "type": "image",
+      "map": "/stage/textures/sign-serpent.jpg",
+      "roughness": 0.8
+    },
+    "signBoard": {
+      "type": "plain",
+      "color": "#3a2a1e",
+      "roughness": 0.8
+    },
+    "signRed": {
+      "type": "plain",
+      "color": "#5a2420",
+      "roughness": 0.8
+    },
+    "signGreen": {
+      "type": "plain",
+      "color": "#2a3e2c",
+      "roughness": 0.8
+    },
+    "signBlue": {
+      "type": "plain",
+      "color": "#26344a",
+      "roughness": 0.8
+    },
+    "cobbles": {
+      "type": "masonry",
+      "a": "#3a3a38",
+      "b": "#46443e",
+      "c": "#302e2c",
+      "mortar": "#1a1814",
+      "block": [
+        0.7,
+        0.5
+      ],
+      "joint": 0.035,
+      "relief": 0.08,
+      "variance": 0.6,
+      "grime": 1.6,
+      "ground": true,
+      "stones": 0.16,
+      "roughness": 0.3
+    },
+    "flags": {
+      "type": "masonry",
+      "a": "#4a4640",
+      "b": "#56524a",
+      "c": "#3e3a36",
+      "mortar": "#26221e",
+      "block": [
+        0.62,
+        0.44
+      ],
+      "joint": 0.02,
+      "relief": 0.012,
+      "variance": 0.7,
+      "grime": 2.2,
+      "ground": true,
+      "roughness": 0.4
+    },
+    "curtainGold": {
+      "type": "cloth",
+      "color": "#8e6a2e",
+      "amp": 0.4,
+      "freq": 0.6
+    },
+    "curtainWine": {
+      "type": "cloth",
+      "color": "#4a1a1e",
+      "amp": 0.3,
+      "freq": 0.6
+    },
+    "canvasOld": {
+      "type": "cloth",
+      "color": "#7a6e5a",
+      "amp": 0.5
+    },
+    "clothPlum": {
+      "type": "cloth",
+      "color": "#4e2a46"
+    },
+    "smoke": {
+      "type": "mist",
+      "color": "#6a6460",
+      "opacity": 0.14
+    },
+    "gold": {
+      "type": "metal",
+      "color": "#d4a640",
+      "roughness": 0.32,
+      "metalness": 0.9
+    },
+    "silver": {
+      "type": "metal",
+      "color": "#c8ccd0",
+      "roughness": 0.25,
+      "metalness": 0.9
+    },
+    "steel": {
+      "type": "metal",
+      "color": "#9aa0a6",
+      "roughness": 0.3,
+      "metalness": 0.85
+    },
+    "leather": {
+      "type": "plain",
+      "color": "#3a2618",
+      "roughness": 0.7
+    },
+    "bone": {
+      "type": "plain",
+      "color": "#c8bca0",
+      "roughness": 0.8
+    },
+    "paper": {
+      "type": "plain",
+      "color": "#d8ccae",
+      "roughness": 0.9
+    },
+    "carving": {
+      "type": "wood",
+      "a": "#8a6a44",
+      "b": "#a07c50",
+      "c": "#74583a",
+      "plank": [
+        0,
+        40
+      ],
+      "relief": 0.2,
+      "seed": 2.2
+    },
+    "elvenSilk": {
+      "type": "cloth",
+      "color": "#d8d2c2",
+      "shadow": false
+    },
+    "gemRed": {
+      "type": "plain",
+      "color": "#a01828",
+      "roughness": 0.15,
+      "emissive": "#ff2040",
+      "emissiveIntensity": 0.25
+    },
+    "gemGreen": {
+      "type": "plain",
+      "color": "#1a8a3a",
+      "roughness": 0.15,
+      "emissive": "#30ff70",
+      "emissiveIntensity": 0.2
+    },
+    "gemBlue": {
+      "type": "plain",
+      "color": "#1a3aa0",
+      "roughness": 0.15,
+      "emissive": "#4070ff",
+      "emissiveIntensity": 0.25
+    },
+    "gemPurple": {
+      "type": "plain",
+      "color": "#6a1a8a",
+      "roughness": 0.15,
+      "emissive": "#b040ff",
+      "emissiveIntensity": 0.2
+    },
+    "potionRed": {
+      "type": "plain",
+      "color": "#7a1018",
+      "roughness": 0.12,
+      "emissive": "#c02030",
+      "emissiveIntensity": 0.3
+    },
+    "potionGreen": {
+      "type": "plain",
+      "color": "#1e5a20",
+      "roughness": 0.12,
+      "emissive": "#40c050",
+      "emissiveIntensity": 0.3
+    },
+    "potionBlue": {
+      "type": "plain",
+      "color": "#18306a",
+      "roughness": 0.12,
+      "emissive": "#3060e0",
+      "emissiveIntensity": 0.3
+    },
+    "potionAmber": {
+      "type": "plain",
+      "color": "#7a4a10",
+      "roughness": 0.12,
+      "emissive": "#e09030",
+      "emissiveIntensity": 0.3
+    },
+    "potionViolet": {
+      "type": "plain",
+      "color": "#4a1a5a",
+      "roughness": 0.12,
+      "emissive": "#a050d0",
+      "emissiveIntensity": 0.3
+    },
+    "shield": {
+      "type": "plain",
+      "color": "#4a2a20",
+      "roughness": 0.7
+    },
+    "globe": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ff7a24",
+      "emissiveIntensity": 0.9
+    },
+    "lamp": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ff8a30",
+      "emissiveIntensity": 1.1
+    },
+    "rugWorn": {
+      "type": "image",
+      "map": "/stage/textures/library-rug.jpg",
+      "roughness": 1,
+      "tint": "#a08878"
+    }
+  },
+  "objects": [
+    {
+      "type": "box",
+      "at": [
+        0,
+        -0.14,
+        -10
+      ],
+      "size": [
+        160,
+        0.1,
+        160
+      ],
+      "material": "ground"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        -0.1,
+        13.700000000000001
+      ],
+      "size": [
+        5.2,
+        0.1,
+        15
+      ],
+      "material": "flags"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        -0.1,
+        -14.95
+      ],
+      "size": [
+        6,
+        0.1,
+        43.1
+      ],
+      "material": "cobbles"
+    },
+    {
+      "type": "box",
+      "at": [
+        8.9,
+        -0.1,
+        -11.45
+      ],
+      "size": [
+        12.6,
+        0.1,
+        3.9
+      ],
+      "material": "cobbles"
+    },
+    {
+      "type": "box",
+      "at": [
+        -8.4,
+        -0.1,
+        -21.45
+      ],
+      "size": [
+        11.6,
+        0.1,
+        3.9
+      ],
+      "material": "cobbles"
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -6.4,
+        16.96
+      ],
+      "yaw": 90,
+      "w": 6.04,
+      "d": 8,
+      "storeys": 3,
+      "ground": 3.15,
+      "storey": 2.79,
+      "jetty": 0.3,
+      "lean": 0.37,
+      "gable": false,
+      "front": "plain",
+      "lit": 0.15,
+      "balcony": true
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -6.4,
+        11.15
+      ],
+      "yaw": 90,
+      "w": 5.5,
+      "d": 8,
+      "storeys": 3,
+      "ground": 3.12,
+      "storey": 2.59,
+      "jetty": 0.32,
+      "lean": 0.3,
+      "gable": true,
+      "front": "plain",
+      "lit": 0.15,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        6.4,
+        16.98
+      ],
+      "yaw": -90,
+      "w": 6,
+      "d": 8,
+      "storeys": 3,
+      "ground": 3.25,
+      "storey": 2.68,
+      "jetty": 0.39,
+      "lean": -0.02,
+      "gable": false,
+      "front": "door",
+      "lit": 0.1,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        6.4,
+        11.25
+      ],
+      "yaw": -90,
+      "w": 5.37,
+      "d": 8,
+      "storeys": 3,
+      "ground": 3.17,
+      "storey": 2.74,
+      "jetty": 0.38,
+      "lean": -0.25,
+      "gable": false,
+      "front": "door",
+      "lit": 0.1,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        0,
+        24
+      ],
+      "yaw": 180,
+      "w": 5.2,
+      "d": 8,
+      "storeys": 2,
+      "ground": 3.07,
+      "storey": 2.78,
+      "jetty": 0.43,
+      "lean": 0.1,
+      "gable": true,
+      "front": "passage",
+      "lit": 0.25,
+      "balcony": false
+    },
+    {
+      "type": "wall",
+      "at": [
+        0,
+        6.4
+      ],
+      "yaw": 180,
+      "length": 5.3999999999999995,
+      "height": 7.2,
+      "thickness": 0.5,
+      "a": {
+        "finish": "stone"
+      },
+      "b": {
+        "finish": "stone"
+      },
+      "openings": [
+        {
+          "at": 0,
+          "width": 2.3,
+          "height": 3.2,
+          "kind": "doorway"
+        }
+      ]
+    },
+    {
+      "type": "archHead",
+      "at": [
+        0,
+        0,
+        6.4
+      ],
+      "yaw": 180,
+      "width": 2.3,
+      "height": 3.2,
+      "thickness": 0.56,
+      "moulding": 0.12,
+      "materials": {
+        "fill": "stone",
+        "trim": "stoneTrim"
+      }
+    },
+    {
+      "type": "curtain",
+      "at": [
+        0,
+        0,
+        6.3500000000000005
+      ],
+      "yaw": 180,
+      "width": 2.3,
+      "height": 3.05,
+      "folds": 20,
+      "depth": 0.045,
+      "gather": 0.5,
+      "side": "both",
+      "tie": 0.42,
+      "cloth": "curtainGold"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        0,
+        5.2
+      ],
+      "size": [
+        2.5,
+        3,
+        0.1
+      ],
+      "material": "void"
+    },
+    {
+      "type": "box",
+      "at": [
+        -1.95,
+        0,
+        6.67
+      ],
+      "size": [
+        0.9,
+        2.3,
+        0.06
+      ],
+      "material": "door"
+    },
+    {
+      "type": "boards",
+      "at": [
+        -1.95,
+        0,
+        6.7
+      ],
+      "yaw": 180,
+      "width": 1,
+      "height": 2.2,
+      "planks": 4
+    },
+    {
+      "type": "box",
+      "at": [
+        1.95,
+        0,
+        6.67
+      ],
+      "size": [
+        0.9,
+        2.3,
+        0.06
+      ],
+      "material": "door"
+    },
+    {
+      "type": "boards",
+      "at": [
+        1.95,
+        0,
+        6.7
+      ],
+      "yaw": 180,
+      "width": 1,
+      "height": 2.2,
+      "planks": 3
+    },
+    {
+      "type": "box",
+      "at": [
+        -2.1,
+        1.1,
+        6.8500000000000005
+      ],
+      "size": [
+        0.5,
+        0.05,
+        0.3
+      ],
+      "material": "crateDark"
+    },
+    {
+      "type": "pot",
+      "at": [
+        -2.15,
+        1.15,
+        6.8500000000000005
+      ],
+      "size": 0.22
+    },
+    {
+      "type": "wallLantern",
+      "at": [
+        1.55,
+        2.7,
+        6.680000000000001
+      ],
+      "yaw": 180,
+      "reach": 0.35
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -6.8,
+        3.55
+      ],
+      "yaw": 90,
+      "w": 4.66,
+      "d": 8,
+      "storeys": 4,
+      "ground": 3.03,
+      "storey": 2.68,
+      "jetty": 0.39,
+      "lean": -0.2,
+      "gable": true,
+      "front": "shop",
+      "lit": 0.48,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -6.8,
+        -1.27
+      ],
+      "yaw": 90,
+      "w": 4.9,
+      "d": 8,
+      "storeys": 3,
+      "ground": 3.12,
+      "storey": 2.61,
+      "jetty": 0.47,
+      "lean": 0.08,
+      "gable": false,
+      "front": "shop",
+      "lit": 0.45,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -6.8,
+        -6.49
+      ],
+      "yaw": 90,
+      "w": 5.46,
+      "d": 8,
+      "storeys": 3,
+      "ground": 3.01,
+      "storey": 2.76,
+      "jetty": 0.47,
+      "lean": -0.02,
+      "gable": true,
+      "front": "plain",
+      "lit": 0.22,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -6.8,
+        -11.53
+      ],
+      "yaw": 90,
+      "w": 4.54,
+      "d": 8,
+      "storeys": 3,
+      "ground": 2.94,
+      "storey": 2.54,
+      "jetty": 0.47,
+      "lean": 0.09,
+      "gable": false,
+      "front": "door",
+      "lit": 0.5,
+      "balcony": true
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -6.8,
+        -16.38
+      ],
+      "yaw": 90,
+      "w": 5.08,
+      "d": 8,
+      "storeys": 2,
+      "ground": 3.29,
+      "storey": 2.59,
+      "jetty": 0.46,
+      "lean": -0.07,
+      "gable": false,
+      "front": "shop",
+      "lit": 0.41,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -6.8,
+        -25.51
+      ],
+      "yaw": 90,
+      "w": 4.58,
+      "d": 8,
+      "storeys": 2,
+      "ground": 3.01,
+      "storey": 2.54,
+      "jetty": 0.41,
+      "lean": -0.06,
+      "gable": false,
+      "front": "door",
+      "lit": 0.25,
+      "balcony": false,
+      "sides": true
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -6.8,
+        -30.89
+      ],
+      "yaw": 90,
+      "w": 6.1,
+      "d": 8,
+      "storeys": 4,
+      "ground": 3.3,
+      "storey": 2.65,
+      "jetty": 0.42,
+      "lean": 0.14,
+      "gable": true,
+      "front": "shop",
+      "lit": 0.26,
+      "balcony": true
+    },
+    {
+      "type": "tenement",
+      "at": [
+        6.8,
+        2.94
+      ],
+      "yaw": -90,
+      "w": 5.87,
+      "d": 8,
+      "storeys": 4,
+      "ground": 3.11,
+      "storey": 2.62,
+      "jetty": 0.48,
+      "lean": 0.37,
+      "gable": true,
+      "front": "shop",
+      "lit": 0.25,
+      "balcony": true
+    },
+    {
+      "type": "tenement",
+      "at": [
+        6.8,
+        -2.88
+      ],
+      "yaw": -90,
+      "w": 5.69,
+      "d": 8,
+      "storeys": 4,
+      "ground": 3.29,
+      "storey": 2.74,
+      "jetty": 0.47,
+      "lean": -0.08,
+      "gable": false,
+      "front": "shop",
+      "lit": 0.38,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        6.8,
+        -15.36
+      ],
+      "yaw": -90,
+      "w": 4.28,
+      "d": 8,
+      "storeys": 3,
+      "ground": 3.21,
+      "storey": 2.76,
+      "jetty": 0.48,
+      "lean": 0.39,
+      "gable": false,
+      "front": "shop",
+      "lit": 0.31,
+      "balcony": true,
+      "sides": true
+    },
+    {
+      "type": "tenement",
+      "at": [
+        6.8,
+        -20.56
+      ],
+      "yaw": -90,
+      "w": 6.03,
+      "d": 8,
+      "storeys": 4,
+      "ground": 3.08,
+      "storey": 2.57,
+      "jetty": 0.37,
+      "lean": -0.1,
+      "gable": true,
+      "front": "plain",
+      "lit": 0.48,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        6.8,
+        -26.51
+      ],
+      "yaw": -90,
+      "w": 5.79,
+      "d": 8,
+      "storeys": 3,
+      "ground": 3.26,
+      "storey": 2.66,
+      "jetty": 0.34,
+      "lean": 0.22,
+      "gable": false,
+      "front": "shop",
+      "lit": 0.5,
+      "balcony": true
+    },
+    {
+      "type": "tenement",
+      "at": [
+        6.8,
+        -31.82
+      ],
+      "yaw": -90,
+      "w": 4.75,
+      "d": 8,
+      "storeys": 3,
+      "ground": 3.07,
+      "storey": 2.69,
+      "jetty": 0.35,
+      "lean": -0.35,
+      "gable": true,
+      "front": "door",
+      "lit": 0.36,
+      "balcony": true
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        7.2,
+        6.4
+      ],
+      "size": [
+        6,
+        3,
+        0.5
+      ],
+      "material": "stone"
+    },
+    {
+      "type": "tenement",
+      "at": [
+        12.95,
+        -17.2
+      ],
+      "yaw": 0,
+      "w": 4.06,
+      "d": 8,
+      "storeys": 3,
+      "ground": 3.06,
+      "storey": 2.75,
+      "jetty": 0.38,
+      "lean": 0.17,
+      "gable": true,
+      "front": "shop",
+      "lit": 0.36,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        12.95,
+        -5.699999999999999
+      ],
+      "yaw": 180,
+      "w": 4.06,
+      "d": 8,
+      "storeys": 2,
+      "ground": 3.28,
+      "storey": 2.76,
+      "jetty": 0.47,
+      "lean": 0.01,
+      "gable": true,
+      "front": "shop",
+      "lit": 0.33,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        19,
+        -11.45
+      ],
+      "yaw": -90,
+      "w": 6.1,
+      "d": 8,
+      "storeys": 3,
+      "ground": 3.27,
+      "storey": 2.76,
+      "jetty": 0.45,
+      "lean": 0.22,
+      "gable": true,
+      "front": "plain",
+      "lit": 0.35,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -12.45,
+        -27.2
+      ],
+      "yaw": 0,
+      "w": 3.06,
+      "d": 8,
+      "storeys": 2,
+      "ground": 3.06,
+      "storey": 2.72,
+      "jetty": 0.43,
+      "lean": -0.09,
+      "gable": false,
+      "front": "shop",
+      "lit": 0.49,
+      "balcony": true
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -12.45,
+        -15.7
+      ],
+      "yaw": 180,
+      "w": 3.06,
+      "d": 8,
+      "storeys": 3,
+      "ground": 3.16,
+      "storey": 2.63,
+      "jetty": 0.32,
+      "lean": 0.31,
+      "gable": true,
+      "front": "door",
+      "lit": 0.21,
+      "balcony": false
+    },
+    {
+      "type": "tenement",
+      "at": [
+        -18,
+        -21.45
+      ],
+      "yaw": 90,
+      "w": 6.1,
+      "d": 8,
+      "storeys": 3,
+      "ground": 3.22,
+      "storey": 2.74,
+      "jetty": 0.43,
+      "lean": -0.21,
+      "gable": true,
+      "front": "plain",
+      "lit": 0.34,
+      "balcony": false
+    },
+    {
+      "type": "wall",
+      "at": [
+        0,
+        -36.25
+      ],
+      "length": 7,
+      "height": 11,
+      "thickness": 0.5,
+      "a": {
+        "finish": "stone"
+      },
+      "b": {
+        "finish": "stone"
+      },
+      "openings": [
+        {
+          "at": 0,
+          "width": 2.6,
+          "height": 3.6,
+          "kind": "doorway"
+        }
+      ]
+    },
+    {
+      "type": "archHead",
+      "at": [
+        0,
+        0,
+        -36.25
+      ],
+      "width": 2.6,
+      "height": 3.6,
+      "thickness": 0.56,
+      "moulding": 0.14,
+      "materials": {
+        "fill": "stone",
+        "trim": "stoneTrim"
+      }
+    },
+    {
+      "type": "curtain",
+      "at": [
+        0,
+        0,
+        -36.1
+      ],
+      "width": 2.6,
+      "height": 3.4,
+      "folds": 14,
+      "depth": 0.08,
+      "gather": 0.25,
+      "side": "both",
+      "tie": 0.4,
+      "cloth": "curtainWine"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        0,
+        -37.4
+      ],
+      "size": [
+        2.8,
+        3.6,
+        0.1
+      ],
+      "material": "void"
+    },
+    {
+      "type": "column",
+      "at": [
+        -1.75,
+        -35.75
+      ],
+      "height": 4.2,
+      "radius": 0.2,
+      "square": true,
+      "gilt": false,
+      "materials": {
+        "shaft": "stoneTrim",
+        "trim": "stoneTrim"
+      }
+    },
+    {
+      "type": "column",
+      "at": [
+        1.75,
+        -35.75
+      ],
+      "height": 4.2,
+      "radius": 0.2,
+      "square": true,
+      "gilt": false,
+      "materials": {
+        "shaft": "stoneTrim",
+        "trim": "stoneTrim"
+      }
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        4.3,
+        -35.85
+      ],
+      "size": [
+        4.4,
+        0.35,
+        0.6
+      ],
+      "material": "stoneTrim"
+    },
+    {
+      "type": "brazier",
+      "at": [
+        -2.3,
+        -35
+      ]
+    },
+    {
+      "type": "brazier",
+      "at": [
+        2.3,
+        -35
+      ]
+    },
+    {
+      "type": "panel",
+      "at": [
+        0,
+        5,
+        -35.98
+      ],
+      "size": [
+        0.9,
+        0.9
+      ],
+      "material": "signSerpent"
+    },
+    {
+      "type": "panel",
+      "at": [
+        -2,
+        6,
+        -35.98
+      ],
+      "size": [
+        0.9,
+        2.2
+      ],
+      "arch": true,
+      "material": "windowLit",
+      "depth": 0.05,
+      "edge": "stoneTrim"
+    },
+    {
+      "type": "panel",
+      "at": [
+        2,
+        6,
+        -35.98
+      ],
+      "size": [
+        0.9,
+        2.2
+      ],
+      "arch": true,
+      "material": "windowDark",
+      "depth": 0.05,
+      "edge": "stoneTrim"
+    },
+    {
+      "type": "stall",
+      "at": [
+        -2.05,
+        3.2
+      ],
+      "yaw": 90,
+      "w": 2.2,
+      "d": 1.3,
+      "cloth": "tentOchre",
+      "goods": "cloth",
+      "sides": false,
+      "back": true,
+      "frontHeight": 2.25,
+      "backRise": 0.35,
+      "sag": 0.18,
+      "valance": "clothDrab",
+      "backCloth": "clothDrab",
+      "pad": 0.1
+    },
+    {
+      "type": "stall",
+      "at": [
+        -2.05,
+        -6
+      ],
+      "yaw": 90,
+      "w": 2.4,
+      "d": 1.3,
+      "cloth": "tentRust",
+      "goods": "spices",
+      "sides": false,
+      "back": true,
+      "frontHeight": 2.25,
+      "backRise": 0.35,
+      "sag": 0.18,
+      "valance": "tentRust",
+      "backCloth": "tentGreen",
+      "pad": 0.1
+    },
+    {
+      "type": "stall",
+      "at": [
+        -2.05,
+        -9
+      ],
+      "yaw": 90,
+      "w": 2.2,
+      "d": 1.3,
+      "cloth": "tentOchre",
+      "goods": "pots",
+      "sides": false,
+      "back": true,
+      "frontHeight": 2.25,
+      "backRise": 0.35,
+      "sag": 0.18,
+      "valance": "tentBlack",
+      "backCloth": "tentRust",
+      "pad": 0.1
+    },
+    {
+      "type": "stall",
+      "at": [
+        -2.05,
+        -14
+      ],
+      "yaw": 90,
+      "w": 2.4,
+      "d": 1.3,
+      "cloth": "tentOchre",
+      "goods": "jewels",
+      "sides": false,
+      "back": true,
+      "frontHeight": 2.25,
+      "backRise": 0.35,
+      "sag": 0.18,
+      "valance": "tentRust",
+      "backCloth": "tentRust",
+      "pad": 0.1
+    },
+    {
+      "type": "stall",
+      "at": [
+        -2.05,
+        -17.2
+      ],
+      "yaw": 90,
+      "w": 2.2,
+      "d": 1.3,
+      "cloth": "tentTeal",
+      "goods": "baskets",
+      "sides": false,
+      "back": true,
+      "frontHeight": 2.25,
+      "backRise": 0.35,
+      "sag": 0.18,
+      "valance": "tentTeal",
+      "backCloth": "tentWine",
+      "pad": 0.1
+    },
+    {
+      "type": "stall",
+      "at": [
+        -2.05,
+        -25
+      ],
+      "yaw": 90,
+      "w": 2.6,
+      "d": 1.3,
+      "cloth": "tentGreen",
+      "goods": "arms",
+      "sides": false,
+      "back": true,
+      "frontHeight": 2.25,
+      "backRise": 0.35,
+      "sag": 0.18,
+      "valance": "tentOchre",
+      "backCloth": "tentOchre",
+      "pad": 0.1
+    },
+    {
+      "type": "stall",
+      "at": [
+        -2.05,
+        -28.6
+      ],
+      "yaw": 90,
+      "w": 2.2,
+      "d": 1.3,
+      "cloth": "tentBlack",
+      "goods": "sacks",
+      "sides": false,
+      "back": true,
+      "frontHeight": 2.25,
+      "backRise": 0.35,
+      "sag": 0.18,
+      "valance": "clothDrab",
+      "backCloth": "tentWine",
+      "pad": 0.1
+    },
+    {
+      "type": "stall",
+      "at": [
+        -2.05,
+        -32
+      ],
+      "yaw": 90,
+      "w": 2.2,
+      "d": 1.3,
+      "cloth": "tentWine",
+      "goods": "cloth",
+      "sides": false,
+      "back": true,
+      "frontHeight": 2.25,
+      "backRise": 0.35,
+      "sag": 0.18,
+      "valance": "tentRust",
+      "backCloth": "tentRust",
+      "pad": 0.1
+    },
+    {
+      "type": "stall",
+      "at": [
+        2.05,
+        -3.6
+      ],
+      "yaw": -90,
+      "w": 2.2,
+      "d": 1.3,
+      "cloth": "tentRust",
+      "goods": "spices",
+      "sides": false,
+      "back": true,
+      "frontHeight": 2.25,
+      "backRise": 0.35,
+      "sag": 0.18,
+      "valance": "clothDrab",
+      "backCloth": "tentPlum",
+      "pad": 0.1
+    },
+    {
+      "type": "stall",
+      "at": [
+        2.05,
+        -6.8
+      ],
+      "yaw": -90,
+      "w": 2.2,
+      "d": 1.3,
+      "cloth": "tentGreen",
+      "goods": "none",
+      "sides": false,
+      "back": true,
+      "frontHeight": 2.25,
+      "backRise": 0.35,
+      "sag": 0.18,
+      "valance": "tentTeal",
+      "backCloth": "clothDrab",
+      "pad": 0.1
+    },
+    {
+      "type": "stall",
+      "at": [
+        2.05,
+        -14.6
+      ],
+      "yaw": -90,
+      "w": 2.4,
+      "d": 1.3,
+      "cloth": "tentGreen",
+      "goods": "cloth",
+      "sides": false,
+      "back": true,
+      "frontHeight": 2.25,
+      "backRise": 0.35,
+      "sag": 0.18,
+      "valance": "tentBlack",
+      "backCloth": "tentTeal",
+      "pad": 0.1
+    },
+    {
+      "type": "stall",
+      "at": [
+        2.05,
+        -18
+      ],
+      "yaw": -90,
+      "w": 2.2,
+      "d": 1.3,
+      "cloth": "tentGreen",
+      "goods": "pots",
+      "sides": false,
+      "back": true,
+      "frontHeight": 2.25,
+      "backRise": 0.35,
+      "sag": 0.18,
+      "valance": "tentBlack",
+      "backCloth": "tentPlum",
+      "pad": 0.1
+    },
+    {
+      "type": "stall",
+      "at": [
+        2.05,
+        -21.6
+      ],
+      "yaw": -90,
+      "w": 2.4,
+      "d": 1.3,
+      "cloth": "tentRust",
+      "goods": "spices",
+      "sides": false,
+      "back": true,
+      "frontHeight": 2.25,
+      "backRise": 0.35,
+      "sag": 0.18,
+      "valance": "tentGreen",
+      "backCloth": "tentOchre",
+      "pad": 0.1
+    },
+    {
+      "type": "stall",
+      "at": [
+        2.05,
+        -25.2
+      ],
+      "yaw": -90,
+      "w": 2.2,
+      "d": 1.3,
+      "cloth": "clothDrab",
+      "goods": "none",
+      "sides": false,
+      "back": true,
+      "frontHeight": 2.25,
+      "backRise": 0.35,
+      "sag": 0.18,
+      "valance": "tentGreen",
+      "backCloth": "tentPlum",
+      "pad": 0.1
+    },
+    {
+      "type": "stall",
+      "at": [
+        2.05,
+        -29
+      ],
+      "yaw": -90,
+      "w": 2.4,
+      "d": 1.3,
+      "cloth": "tentOchre",
+      "goods": "jewels",
+      "sides": false,
+      "back": true,
+      "frontHeight": 2.25,
+      "backRise": 0.35,
+      "sag": 0.18,
+      "valance": "clothDrab",
+      "backCloth": "tentWine",
+      "pad": 0.1
+    },
+    {
+      "type": "stall",
+      "at": [
+        2.05,
+        -32.6
+      ],
+      "yaw": -90,
+      "w": 2.2,
+      "d": 1.3,
+      "cloth": "tentPlum",
+      "goods": "baskets",
+      "sides": false,
+      "back": true,
+      "frontHeight": 2.25,
+      "backRise": 0.35,
+      "sag": 0.18,
+      "valance": "tentWine",
+      "backCloth": "tentOchre",
+      "pad": 0.1
+    },
+    {
+      "type": "treasureCounter",
+      "at": [
+        1.75,
+        1.2
+      ],
+      "yaw": -90,
+      "length": 2,
+      "width": 0.7,
+      "height": 0.92,
+      "heaps": 12,
+      "gems": [
+        "gemRed",
+        "gemGreen",
+        "gemBlue",
+        "gemPurple"
+      ]
+    },
+    {
+      "type": "curioShelf",
+      "at": [
+        2.78,
+        1.2
+      ],
+      "yaw": -90,
+      "width": 2,
+      "height": 2.2,
+      "shelves": 5,
+      "glass": [
+        "potionRed",
+        "potionGreen",
+        "potionBlue",
+        "potionAmber",
+        "potionViolet",
+        "pottery"
+      ]
+    },
+    {
+      "type": "canvas",
+      "corners": [
+        [
+          1.15,
+          2.55,
+          2.4
+        ],
+        [
+          1.15,
+          2.55,
+          0
+        ],
+        [
+          2.8,
+          3,
+          0
+        ],
+        [
+          2.8,
+          3,
+          2.4
+        ]
+      ],
+      "cloth": "tentWine",
+      "sag": 0.12
+    },
+    {
+      "type": "curioShelf",
+      "at": [
+        2.6799999999999997,
+        -6.8
+      ],
+      "yaw": -90,
+      "width": 2,
+      "height": 2,
+      "shelves": 4,
+      "glass": [
+        "potionRed",
+        "potionGreen",
+        "potionBlue",
+        "potionAmber",
+        "potionViolet",
+        "pottery"
+      ]
+    },
+    {
+      "type": "curioShelf",
+      "at": [
+        2.6799999999999997,
+        -25.2
+      ],
+      "yaw": -90,
+      "width": 2,
+      "height": 2,
+      "shelves": 4,
+      "glass": [
+        "potionRed",
+        "potionGreen",
+        "potionBlue",
+        "potionAmber",
+        "potionViolet",
+        "pottery"
+      ]
+    },
+    {
+      "type": "bladeRack",
+      "at": [
+        -2.35,
+        -1.2
+      ],
+      "yaw": 90,
+      "width": 1.6,
+      "height": 1.8,
+      "blades": 9
+    },
+    {
+      "type": "table",
+      "at": [
+        -1.85,
+        -2.9
+      ],
+      "yaw": 90,
+      "length": 1.4,
+      "width": 0.6,
+      "materials": {
+        "top": "table"
+      }
+    },
+    {
+      "type": "box",
+      "at": [
+        -1.9,
+        0.77,
+        -3.45
+      ],
+      "yaw": 80,
+      "size": [
+        0.32,
+        0.012,
+        0.04
+      ],
+      "material": "steel"
+    },
+    {
+      "type": "box",
+      "at": [
+        -1.72,
+        0.77,
+        -3.25
+      ],
+      "yaw": 87,
+      "size": [
+        0.32,
+        0.012,
+        0.04
+      ],
+      "material": "steel"
+    },
+    {
+      "type": "box",
+      "at": [
+        -1.9,
+        0.77,
+        -3.0500000000000003
+      ],
+      "yaw": 94,
+      "size": [
+        0.32,
+        0.012,
+        0.04
+      ],
+      "material": "steel"
+    },
+    {
+      "type": "box",
+      "at": [
+        -1.72,
+        0.77,
+        -2.85
+      ],
+      "yaw": 101,
+      "size": [
+        0.32,
+        0.012,
+        0.04
+      ],
+      "material": "steel"
+    },
+    {
+      "type": "box",
+      "at": [
+        -1.9,
+        0.77,
+        -2.6500000000000004
+      ],
+      "yaw": 108,
+      "size": [
+        0.32,
+        0.012,
+        0.04
+      ],
+      "material": "steel"
+    },
+    {
+      "type": "box",
+      "at": [
+        -1.72,
+        0.77,
+        -2.45
+      ],
+      "yaw": 115,
+      "size": [
+        0.32,
+        0.012,
+        0.04
+      ],
+      "material": "steel"
+    },
+    {
+      "type": "canvas",
+      "corners": [
+        [
+          -1.15,
+          2.55,
+          -0.3
+        ],
+        [
+          -1.15,
+          2.55,
+          -3.7
+        ],
+        [
+          -2.8,
+          3,
+          -3.7
+        ],
+        [
+          -2.8,
+          3,
+          -0.3
+        ]
+      ],
+      "cloth": "tentBlack",
+      "sag": 0.12
+    },
+    {
+      "type": "curioShelf",
+      "at": [
+        5.6,
+        -13.149999999999999
+      ],
+      "yaw": 0,
+      "width": 2.2,
+      "height": 2.2,
+      "shelves": 5,
+      "glass": [
+        "potionRed",
+        "potionGreen",
+        "potionBlue",
+        "potionAmber",
+        "potionViolet",
+        "pottery"
+      ]
+    },
+    {
+      "type": "treasureCounter",
+      "at": [
+        5.6,
+        -12
+      ],
+      "yaw": 0,
+      "length": 1.6,
+      "width": 0.6,
+      "height": 0.85,
+      "heaps": 3,
+      "gems": [
+        "gemRed",
+        "gemGreen",
+        "gemBlue",
+        "gemPurple"
+      ],
+      "materials": {
+        "cloth": "clothPlum"
+      }
+    },
+    {
+      "type": "awning",
+      "corners": [
+        [
+          4.4,
+          2.7,
+          -13.1
+        ],
+        [
+          6.8,
+          2.7,
+          -13.1
+        ],
+        [
+          6.8,
+          2.45,
+          -11.5
+        ],
+        [
+          4.4,
+          2.45,
+          -11.5
+        ]
+      ],
+      "cloth": "tentPlum",
+      "sag": 0.15
+    },
+    {
+      "type": "stall",
+      "at": [
+        9.8,
+        -12.45
+      ],
+      "yaw": 0,
+      "w": 2.4,
+      "d": 1.3,
+      "cloth": "tentTeal",
+      "goods": "jewels",
+      "sides": false,
+      "back": true,
+      "frontHeight": 2.2,
+      "backRise": 0.3,
+      "backCloth": "tentBlack",
+      "pad": 0.1
+    },
+    {
+      "type": "stall",
+      "at": [
+        12.6,
+        -10.45
+      ],
+      "yaw": 180,
+      "w": 2.2,
+      "d": 1.3,
+      "cloth": "tentOchre",
+      "goods": "pots",
+      "sides": false,
+      "back": true,
+      "frontHeight": 2.2,
+      "backRise": 0.3,
+      "backCloth": "clothDrab"
+    },
+    {
+      "type": "table",
+      "at": [
+        -9.2,
+        -22.45
+      ],
+      "length": 1.8,
+      "width": 0.7,
+      "materials": {
+        "top": "table"
+      }
+    },
+    {
+      "type": "box",
+      "at": [
+        -9.6,
+        0.765,
+        -22.4
+      ],
+      "yaw": 8,
+      "size": [
+        0.7,
+        0.012,
+        0.5
+      ],
+      "material": "elvenSilk"
+    },
+    {
+      "type": "lathe",
+      "at": [
+        -9.85,
+        0.77,
+        -22.58
+      ],
+      "profile": [
+        [
+          0,
+          0
+        ],
+        [
+          0.04,
+          0
+        ],
+        [
+          0.012,
+          0.025
+        ],
+        [
+          0.01,
+          0.1
+        ],
+        [
+          0.045,
+          0.14
+        ],
+        [
+          0.05,
+          0.22
+        ],
+        [
+          0,
+          0.2
+        ]
+      ],
+      "segments": 14,
+      "material": "silver"
+    },
+    {
+      "type": "lathe",
+      "at": [
+        -9.5,
+        0.77,
+        -22.38
+      ],
+      "profile": [
+        [
+          0,
+          0
+        ],
+        [
+          0.04,
+          0
+        ],
+        [
+          0.012,
+          0.025
+        ],
+        [
+          0.01,
+          0.1
+        ],
+        [
+          0.045,
+          0.14
+        ],
+        [
+          0.05,
+          0.22
+        ],
+        [
+          0,
+          0.2
+        ]
+      ],
+      "segments": 14,
+      "material": "silver"
+    },
+    {
+      "type": "lathe",
+      "at": [
+        -9.15,
+        0.77,
+        -22.58
+      ],
+      "profile": [
+        [
+          0,
+          0
+        ],
+        [
+          0.04,
+          0
+        ],
+        [
+          0.012,
+          0.025
+        ],
+        [
+          0.01,
+          0.1
+        ],
+        [
+          0.045,
+          0.14
+        ],
+        [
+          0.05,
+          0.22
+        ],
+        [
+          0,
+          0.2
+        ]
+      ],
+      "segments": 14,
+      "material": "silver"
+    },
+    {
+      "type": "box",
+      "at": [
+        -8.6,
+        0.77,
+        -22.5
+      ],
+      "yaw": 30,
+      "size": [
+        0.36,
+        0.3,
+        0.12
+      ],
+      "material": "carving"
+    },
+    {
+      "type": "box",
+      "at": [
+        -8.35,
+        0.77,
+        -22.3
+      ],
+      "yaw": -12,
+      "size": [
+        0.14,
+        0.42,
+        0.1
+      ],
+      "material": "carving"
+    },
+    {
+      "type": "box",
+      "at": [
+        -8.9,
+        0.78,
+        -22.2
+      ],
+      "yaw": 8,
+      "size": [
+        0.5,
+        0.08,
+        0.32
+      ],
+      "material": "elvenSilk"
+    },
+    {
+      "type": "stall",
+      "at": [
+        -5.6,
+        -20.45
+      ],
+      "yaw": 180,
+      "w": 2.4,
+      "d": 1.3,
+      "cloth": "tentRust",
+      "goods": "sacks",
+      "sides": false,
+      "back": true,
+      "frontHeight": 2.2,
+      "backRise": 0.3,
+      "backCloth": "clothDrab",
+      "pad": 0.1
+    },
+    {
+      "type": "stall",
+      "at": [
+        -11.8,
+        -20.45
+      ],
+      "yaw": 180,
+      "w": 2.2,
+      "d": 1.3,
+      "cloth": "tentBlack",
+      "goods": "arms",
+      "sides": false,
+      "back": true,
+      "frontHeight": 2.1,
+      "backRise": 0.3,
+      "backCloth": "tentBlack",
+      "pad": 0.1
+    },
+    {
+      "type": "awning",
+      "corners": [
+        [
+          -10.4,
+          2.3,
+          -23.2
+        ],
+        [
+          -8,
+          2.3,
+          -23.2
+        ],
+        [
+          -8,
+          2.1,
+          -21.8
+        ],
+        [
+          -10.4,
+          2.1,
+          -21.8
+        ]
+      ],
+      "cloth": "tentBlack",
+      "sag": 0.15
+    },
+    {
+      "type": "lantern",
+      "at": [
+        -8.1,
+        2,
+        -21.849999999999998
+      ]
+    },
+    {
+      "type": "canvas",
+      "corners": [
+        [
+          -3.1999999999999997,
+          5.3,
+          1
+        ],
+        [
+          3.1999999999999997,
+          5,
+          1
+        ],
+        [
+          3.1999999999999997,
+          4.8,
+          -4.6
+        ],
+        [
+          -3.1999999999999997,
+          5.1,
+          -4.6
+        ]
+      ],
+      "cloth": "canvasOld",
+      "sag": 0.5
+    },
+    {
+      "type": "canvas",
+      "corners": [
+        [
+          -3.1999999999999997,
+          5.7,
+          -7.6
+        ],
+        [
+          3.1999999999999997,
+          5.4,
+          -7.6
+        ],
+        [
+          3.1999999999999997,
+          5.2,
+          -13
+        ],
+        [
+          -3.1999999999999997,
+          5.5,
+          -13
+        ]
+      ],
+      "cloth": "tentRust",
+      "sag": 0.5
+    },
+    {
+      "type": "canvas",
+      "corners": [
+        [
+          -3.1999999999999997,
+          5.3999999999999995,
+          -15.6
+        ],
+        [
+          3.1999999999999997,
+          5.1,
+          -15.6
+        ],
+        [
+          3.1999999999999997,
+          4.8999999999999995,
+          -20.4
+        ],
+        [
+          -3.1999999999999997,
+          5.199999999999999,
+          -20.4
+        ]
+      ],
+      "cloth": "canvasOld",
+      "sag": 0.5
+    },
+    {
+      "type": "canvas",
+      "corners": [
+        [
+          -3.1999999999999997,
+          5.8,
+          -23.4
+        ],
+        [
+          3.1999999999999997,
+          5.5,
+          -23.4
+        ],
+        [
+          3.1999999999999997,
+          5.3,
+          -28.8
+        ],
+        [
+          -3.1999999999999997,
+          5.6,
+          -28.8
+        ]
+      ],
+      "cloth": "tentWine",
+      "sag": 0.5
+    },
+    {
+      "type": "canvas",
+      "corners": [
+        [
+          -3.1999999999999997,
+          5.5,
+          -30.6
+        ],
+        [
+          3.1999999999999997,
+          5.2,
+          -30.6
+        ],
+        [
+          3.1999999999999997,
+          5,
+          -34.6
+        ],
+        [
+          -3.1999999999999997,
+          5.3,
+          -34.6
+        ]
+      ],
+      "cloth": "canvasOld",
+      "sag": 0.5
+    },
+    {
+      "type": "lanternString",
+      "materials": {
+        "lamp": "globe"
+      },
+      "from": [
+        -3,
+        3.93,
+        4.27
+      ],
+      "to": [
+        3,
+        3.93,
+        3.38
+      ],
+      "sag": 0.45,
+      "count": 5,
+      "drop": 0.25,
+      "size": 0.2
+    },
+    {
+      "type": "lanternString",
+      "materials": {
+        "lamp": "globe"
+      },
+      "from": [
+        -3,
+        3.9,
+        1.77
+      ],
+      "to": [
+        3,
+        3.98,
+        0.83
+      ],
+      "sag": 0.45,
+      "count": 5,
+      "drop": 0.25,
+      "size": 0.2
+    },
+    {
+      "type": "lanternString",
+      "materials": {
+        "lamp": "globe"
+      },
+      "from": [
+        -3,
+        3.92,
+        -0.25
+      ],
+      "to": [
+        3,
+        3.88,
+        -1.26
+      ],
+      "sag": 0.45,
+      "count": 4,
+      "drop": 0.25,
+      "size": 0.2
+    },
+    {
+      "type": "lanternString",
+      "materials": {
+        "lamp": "globe"
+      },
+      "from": [
+        -3,
+        3.79,
+        -2.91
+      ],
+      "to": [
+        3,
+        4.05,
+        -3.53
+      ],
+      "sag": 0.45,
+      "count": 3,
+      "drop": 0.25,
+      "size": 0.2
+    },
+    {
+      "type": "lanternString",
+      "materials": {
+        "lamp": "globe"
+      },
+      "from": [
+        -3,
+        3.93,
+        -5.79
+      ],
+      "to": [
+        3,
+        3.82,
+        -6.6
+      ],
+      "sag": 0.45,
+      "count": 4,
+      "drop": 0.25,
+      "size": 0.2
+    },
+    {
+      "type": "lanternString",
+      "materials": {
+        "lamp": "globe"
+      },
+      "from": [
+        -3,
+        3.77,
+        -8.65
+      ],
+      "to": [
+        3,
+        4,
+        -9.4
+      ],
+      "sag": 0.45,
+      "count": 4,
+      "drop": 0.25,
+      "size": 0.2
+    },
+    {
+      "type": "lanternString",
+      "materials": {
+        "lamp": "globe"
+      },
+      "from": [
+        -3,
+        3.91,
+        -11.28
+      ],
+      "to": [
+        3,
+        4.02,
+        -12.39
+      ],
+      "sag": 0.45,
+      "count": 4,
+      "drop": 0.25,
+      "size": 0.2
+    },
+    {
+      "type": "lanternString",
+      "materials": {
+        "lamp": "globe"
+      },
+      "from": [
+        -3,
+        3.71,
+        -13.34
+      ],
+      "to": [
+        3,
+        3.88,
+        -14.82
+      ],
+      "sag": 0.45,
+      "count": 5,
+      "drop": 0.25,
+      "size": 0.2
+    },
+    {
+      "type": "lanternString",
+      "materials": {
+        "lamp": "globe"
+      },
+      "from": [
+        -3,
+        4.12,
+        -16.05
+      ],
+      "to": [
+        3,
+        4.01,
+        -17.01
+      ],
+      "sag": 0.45,
+      "count": 5,
+      "drop": 0.25,
+      "size": 0.2
+    },
+    {
+      "type": "lanternString",
+      "materials": {
+        "lamp": "globe"
+      },
+      "from": [
+        -3,
+        4.12,
+        -18.67
+      ],
+      "to": [
+        3,
+        3.73,
+        -19.45
+      ],
+      "sag": 0.45,
+      "count": 5,
+      "drop": 0.25,
+      "size": 0.2
+    },
+    {
+      "type": "lanternString",
+      "materials": {
+        "lamp": "globe"
+      },
+      "from": [
+        -3,
+        4.02,
+        -21.63
+      ],
+      "to": [
+        3,
+        3.74,
+        -22.94
+      ],
+      "sag": 0.45,
+      "count": 5,
+      "drop": 0.25,
+      "size": 0.2
+    },
+    {
+      "type": "lanternString",
+      "materials": {
+        "lamp": "globe"
+      },
+      "from": [
+        -3,
+        4.16,
+        -23.91
+      ],
+      "to": [
+        3,
+        3.7,
+        -25.44
+      ],
+      "sag": 0.45,
+      "count": 3,
+      "drop": 0.25,
+      "size": 0.2
+    },
+    {
+      "type": "lanternString",
+      "materials": {
+        "lamp": "globe"
+      },
+      "from": [
+        -3,
+        3.77,
+        -26.74
+      ],
+      "to": [
+        3,
+        4.07,
+        -27.61
+      ],
+      "sag": 0.45,
+      "count": 4,
+      "drop": 0.25,
+      "size": 0.2
+    },
+    {
+      "type": "lanternString",
+      "materials": {
+        "lamp": "globe"
+      },
+      "from": [
+        -3,
+        3.95,
+        -29.32
+      ],
+      "to": [
+        3,
+        4.1,
+        -30.36
+      ],
+      "sag": 0.45,
+      "count": 3,
+      "drop": 0.25,
+      "size": 0.2
+    },
+    {
+      "type": "lanternString",
+      "materials": {
+        "lamp": "globe"
+      },
+      "from": [
+        -3,
+        3.79,
+        -31.97
+      ],
+      "to": [
+        3,
+        3.87,
+        -33.52
+      ],
+      "sag": 0.45,
+      "count": 5,
+      "drop": 0.25,
+      "size": 0.2
+    },
+    {
+      "type": "lanternString",
+      "materials": {
+        "lamp": "globe"
+      },
+      "from": [
+        -3,
+        3.89,
+        -34.71
+      ],
+      "to": [
+        3,
+        3.75,
+        -36.26
+      ],
+      "sag": 0.45,
+      "count": 4,
+      "drop": 0.25,
+      "size": 0.2
+    },
+    {
+      "type": "lanternString",
+      "materials": {
+        "lamp": "globe"
+      },
+      "from": [
+        5,
+        3.6,
+        -13.299999999999999
+      ],
+      "to": [
+        6,
+        3.8,
+        -9.6
+      ],
+      "sag": 0.3,
+      "count": 2,
+      "drop": 0.2,
+      "size": 0.18
+    },
+    {
+      "type": "lanternString",
+      "materials": {
+        "lamp": "globe"
+      },
+      "from": [
+        8.5,
+        3.6,
+        -13.299999999999999
+      ],
+      "to": [
+        9.5,
+        3.8,
+        -9.6
+      ],
+      "sag": 0.3,
+      "count": 2,
+      "drop": 0.2,
+      "size": 0.18
+    },
+    {
+      "type": "lanternString",
+      "materials": {
+        "lamp": "globe"
+      },
+      "from": [
+        12,
+        3.6,
+        -13.299999999999999
+      ],
+      "to": [
+        13,
+        3.8,
+        -9.6
+      ],
+      "sag": 0.3,
+      "count": 2,
+      "drop": 0.2,
+      "size": 0.18
+    },
+    {
+      "type": "lanternString",
+      "materials": {
+        "lamp": "globe"
+      },
+      "from": [
+        -6,
+        3.5,
+        -23.3
+      ],
+      "to": [
+        -6.8,
+        3.7,
+        -19.599999999999998
+      ],
+      "sag": 0.3,
+      "count": 2,
+      "drop": 0.2,
+      "size": 0.18
+    },
+    {
+      "type": "lanternString",
+      "materials": {
+        "lamp": "globe"
+      },
+      "from": [
+        -9.5,
+        3.5,
+        -23.3
+      ],
+      "to": [
+        -10.3,
+        3.7,
+        -19.599999999999998
+      ],
+      "sag": 0.3,
+      "count": 2,
+      "drop": 0.2,
+      "size": 0.18
+    },
+    {
+      "type": "lanternString",
+      "materials": {
+        "lamp": "globe"
+      },
+      "from": [
+        -12.5,
+        3.5,
+        -23.3
+      ],
+      "to": [
+        -13.3,
+        3.7,
+        -19.599999999999998
+      ],
+      "sag": 0.3,
+      "count": 2,
+      "drop": 0.2,
+      "size": 0.18
+    },
+    {
+      "type": "laundry",
+      "from": [
+        -2.4,
+        8,
+        -5.5
+      ],
+      "to": [
+        2.4,
+        8.043146751541645,
+        -4.872497869189829
+      ],
+      "sag": 0.4,
+      "items": 5,
+      "cloths": [
+        "linen",
+        "linenB",
+        "clothRed",
+        "clothBlue"
+      ]
+    },
+    {
+      "type": "laundry",
+      "from": [
+        -2.4,
+        8.4,
+        -21
+      ],
+      "to": [
+        2.4,
+        8.236926823854446,
+        -20.456276312936097
+      ],
+      "sag": 0.4,
+      "items": 5,
+      "cloths": [
+        "linen",
+        "linenB",
+        "clothRed",
+        "clothBlue"
+      ]
+    },
+    {
+      "type": "laundry",
+      "from": [
+        -2.4,
+        7.8,
+        -30
+      ],
+      "to": [
+        2.4,
+        7.842703796457499,
+        -29.071869324427098
+      ],
+      "sag": 0.4,
+      "items": 5,
+      "cloths": [
+        "linen",
+        "linenB",
+        "clothRed",
+        "clothBlue"
+      ]
+    },
+    {
+      "type": "brazier",
+      "at": [
+        -2,
+        -11.45
+      ]
+    },
+    {
+      "type": "brazier",
+      "at": [
+        2.05,
+        -23.45
+      ]
+    },
+    {
+      "type": "wall",
+      "at": [
+        1.75,
+        -11.45
+      ],
+      "yaw": 90,
+      "length": 3.5,
+      "height": 0.03,
+      "thickness": 0.3,
+      "openings": [
+        {
+          "at": 0,
+          "width": 3.44,
+          "height": 0.02,
+          "kind": "doorway"
+        }
+      ],
+      "materials": {
+        "wall": "gutter",
+        "timber": "gutter"
+      }
+    },
+    {
+      "type": "wall",
+      "at": [
+        -1.75,
+        -21.45
+      ],
+      "yaw": 90,
+      "length": 3.5,
+      "height": 0.03,
+      "thickness": 0.3,
+      "openings": [
+        {
+          "at": 0,
+          "width": 3.44,
+          "height": 0.02,
+          "kind": "doorway"
+        }
+      ],
+      "materials": {
+        "wall": "gutter",
+        "timber": "gutter"
+      }
+    },
+    {
+      "type": "mist",
+      "at": [
+        0,
+        0,
+        -10
+      ],
+      "width": 5.6,
+      "height": 3.5,
+      "layers": 4,
+      "spacing": 7,
+      "materials": {
+        "mist": "smoke"
+      }
+    },
+    {
+      "type": "barrel",
+      "at": [
+        -2.45,
+        5.2
+      ],
+      "r": 0.3,
+      "h": 0.85
+    },
+    {
+      "type": "crate",
+      "at": [
+        2.45,
+        -1
+      ],
+      "yaw": 12,
+      "size": 0.6
+    },
+    {
+      "type": "crate",
+      "at": [
+        2.4,
+        -1
+      ],
+      "yaw": -8,
+      "size": 0.45
+    },
+    {
+      "type": "barrel",
+      "at": [
+        2.5,
+        -16.4
+      ],
+      "r": 0.32,
+      "h": 0.9
+    },
+    {
+      "type": "crate",
+      "at": [
+        -2.45,
+        -18.9
+      ],
+      "yaw": 5,
+      "size": 0.6
+    },
+    {
+      "type": "basket",
+      "at": [
+        2.5,
+        -23.4
+      ],
+      "size": 0.5
+    },
+    {
+      "type": "barrel",
+      "at": [
+        -2.45,
+        -30.2
+      ],
+      "r": 0.3,
+      "h": 0.85
+    },
+    {
+      "type": "panel",
+      "at": [
+        -0.2,
+        0.006,
+        -14
+      ],
+      "size": [
+        1.6,
+        1
+      ],
+      "pitch": -90,
+      "material": "rugWorn"
+    }
+  ],
+  "paths": {
+    "lane": [
+      [
+        0.35,
+        1.6
+      ],
+      [
+        0.3,
+        -10
+      ],
+      [
+        0.4,
+        -22
+      ],
+      [
+        0.3,
+        -33
+      ]
+    ],
+    "laneB": [
+      [
+        0.9,
+        -33
+      ],
+      [
+        0.8,
+        -20
+      ],
+      [
+        0.95,
+        -8
+      ],
+      [
+        0.85,
+        1.6
+      ]
+    ]
+  },
+  "crowd": {
+    "library": "realm-of-myr",
+    "avoid": {
+      "rects": [],
+      "circles": [
+        [
+          1,
+          1.8,
+          2.4
+        ],
+        [
+          0,
+          4.6,
+          1.6
+        ],
+        [
+          -0.7,
+          -0.9,
+          1.4
+        ]
+      ]
+    },
+    "groups": [
+      {
+        "type": "walkers",
+        "path": "lane",
+        "count": 24,
+        "speed": [
+          0.4,
+          0.7
+        ],
+        "lateral": [
+          -0.4,
+          0.3
+        ],
+        "mix": {
+          "pilgrim": 6,
+          "traveler": 4,
+          "merchant": 2,
+          "woman": 2
+        }
+      },
+      {
+        "type": "walkers",
+        "path": "laneB",
+        "count": 24,
+        "speed": [
+          0.4,
+          0.7
+        ],
+        "lateral": [
+          -0.3,
+          0.4
+        ],
+        "mix": {
+          "pilgrim": 6,
+          "traveler": 4,
+          "packer": 1,
+          "woman": 2
+        }
+      },
+      {
+        "type": "points",
+        "people": [
+          {
+            "kind": "pilgrim",
+            "at": [
+              -1,
+              -6.1
+            ],
+            "yaw": -90
+          },
+          {
+            "kind": "traveler",
+            "at": [
+              1.2,
+              -14.6
+            ],
+            "yaw": 90
+          },
+          {
+            "kind": "pilgrim",
+            "at": [
+              -1.1,
+              -17
+            ],
+            "yaw": -90
+          },
+          {
+            "kind": "merchant",
+            "at": [
+              1.2,
+              -21.6
+            ],
+            "yaw": 95
+          },
+          {
+            "kind": "woman",
+            "at": [
+              -1.2,
+              -25.1
+            ],
+            "yaw": -80
+          },
+          {
+            "kind": "pilgrim",
+            "at": [
+              1.1,
+              -29.1
+            ],
+            "yaw": 90
+          },
+          {
+            "kind": "traveler",
+            "at": [
+              -1.2,
+              -32
+            ],
+            "yaw": -100
+          },
+          {
+            "kind": "pilgrim",
+            "at": [
+              8,
+              -11.2
+            ],
+            "yaw": 10
+          },
+          {
+            "kind": "traveler",
+            "at": [
+              -5.4,
+              -20.8
+            ],
+            "yaw": 200
+          },
+          {
+            "kind": "soldier",
+            "at": [
+              -1.2,
+              -34.8
+            ],
+            "yaw": 0
+          },
+          {
+            "kind": "soldier",
+            "at": [
+              1.2,
+              -34.8
+            ],
+            "yaw": 0
+          }
+        ]
+      }
+    ]
+  },
+  "marks": {
+    "court": {
+      "at": [
+        0,
+        13
+      ],
+      "label": "the court before the curtained doorway"
+    },
+    "doorway": {
+      "at": [
+        0,
+        7.5
+      ],
+      "label": "the curtained doorway"
+    },
+    "inside": {
+      "at": [
+        0,
+        4.2
+      ],
+      "label": "inside the curtain"
+    },
+    "grendar": {
+      "at": [
+        0.5,
+        1.2
+      ],
+      "label": "the first stall, heaped with gold"
+    },
+    "blades": {
+      "at": [
+        -0.7,
+        -2.2
+      ],
+      "label": "the dwarf's blade stall"
+    },
+    "potions": {
+      "at": [
+        1,
+        -6.8
+      ],
+      "label": "the potion stall"
+    },
+    "eastLane": {
+      "at": [
+        4,
+        -11.45
+      ],
+      "label": "the turn to the east lane"
+    },
+    "curios": {
+      "at": [
+        5.6,
+        -10.9
+      ],
+      "label": "the cackling peddler's tent of curiosities"
+    },
+    "westLane": {
+      "at": [
+        -4,
+        -21.45
+      ],
+      "label": "the turn to the west lane"
+    },
+    "elven": {
+      "at": [
+        -9.2,
+        -21.6
+      ],
+      "label": "the shadowy stall of elven goods"
+    },
+    "braziers": {
+      "at": [
+        -0.7,
+        -11.45
+      ],
+      "label": "the smoking brazier"
+    },
+    "auction": {
+      "at": [
+        0,
+        -33.8
+      ],
+      "label": "the auction house door"
+    }
+  },
+  "shots": {
+    "entrance": {
+      "position": [
+        0.2,
+        1.55,
+        9.75
+      ],
+      "target": [
+        0,
+        1.62,
+        6.6
+      ],
+      "fov": 50,
+      "label": "The curtained doorway"
+    },
+    "court": {
+      "position": [
+        -1.6,
+        1.7,
+        18.4
+      ],
+      "target": [
+        0.4,
+        2.2,
+        6.4
+      ],
+      "fov": 56,
+      "label": "The court"
+    },
+    "stalls": {
+      "position": [
+        -0.9,
+        1.55,
+        4
+      ],
+      "target": [
+        0.9,
+        1.7,
+        -14
+      ],
+      "fov": 52,
+      "label": "The Black Market"
+    },
+    "grendar": {
+      "position": [
+        0.75,
+        1.45,
+        3
+      ],
+      "target": [
+        3.6,
+        1.45,
+        -3.4
+      ],
+      "fov": 54,
+      "label": "Grendar's stall"
+    },
+    "lane": {
+      "position": [
+        0.6,
+        1.6,
+        -4.5
+      ],
+      "target": [
+        -0.4,
+        2,
+        -34
+      ],
+      "fov": 54,
+      "label": "The lane"
+    },
+    "curios": {
+      "position": [
+        3.6,
+        1.55,
+        -9
+      ],
+      "target": [
+        5.8,
+        1.2,
+        -12.8
+      ],
+      "fov": 52,
+      "label": "The curiosities"
+    },
+    "elven": {
+      "position": [
+        -6.4,
+        1.6,
+        -20.6
+      ],
+      "target": [
+        -9.4,
+        0.9,
+        -22.6
+      ],
+      "fov": 50,
+      "label": "The elven goods"
+    },
+    "auction": {
+      "position": [
+        0.4,
+        1.7,
+        -27.5
+      ],
+      "target": [
+        0,
+        3,
+        -36
+      ],
+      "fov": 56,
+      "label": "The auction house"
+    },
+    "canvas": {
+      "position": [
+        0.8,
+        1.4,
+        -10
+      ],
+      "target": [
+        -0.6,
+        6.5,
+        -20
+      ],
+      "fov": 62,
+      "label": "The lanterns"
+    }
+  },
+  "life": {
+    "dust": {
+      "count": 260,
+      "box": [
+        -2.8,
+        0.2,
+        -30,
+        2.8,
+        5,
+        6
+      ]
+    }
+  }
+}

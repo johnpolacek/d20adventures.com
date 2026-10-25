@@ -1,0 +1,62 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "the-midnight-summons/timely-rescue",
+  "set": "realm-of-myr/valkarr-forest-trail",
+  "cast": [
+    {
+      "id": "thalbern",
+      "name": "Thalbern",
+      "role": "Ranger of the Valkarr woods",
+      "height": 1.82,
+      "art": {
+        "front": "/stage/fixtures/the-midnight-summons/thalbern-front.webp",
+        "back": "/stage/fixtures/the-midnight-summons/thalbern-back.webp",
+        "portrait": "/stage/fixtures/the-midnight-summons/thalbern-portrait.jpg"
+      },
+      "at": "thalbernFallen",
+      "facing": "wollandora"
+    },
+    {
+      "id": "wollandora",
+      "name": "Wollandora",
+      "role": "Druid of the Standing Stones",
+      "height": 1.86,
+      "art": {
+        "front": "/stage/fixtures/the-midnight-summons/wollandora-front.webp",
+        "back": "/stage/fixtures/the-midnight-summons/wollandora-back.webp",
+        "portrait": "/stage/fixtures/the-midnight-summons/wollandora-portrait.jpg"
+      },
+      "at": "wollandora",
+      "facing": "thalbern"
+    }
+  ],
+  "shots": {
+    "rescue": {
+      "subjects": ["thalbern", "wollandora"],
+      "offset": [-6.5, 2.2, 5.0],
+      "target": [0, 1.4, 0],
+      "fov": 50,
+      "label": "Rescue"
+    },
+    "ranger": {
+      "subject": "thalbern",
+      "distance": 3.2,
+      "angle": 30,
+      "height": 1.6,
+      "lookHeight": 1.35,
+      "fov": 46,
+      "label": "Thalbern"
+    },
+    "druid": {
+      "subject": "wollandora",
+      "distance": 3.4,
+      "angle": -25,
+      "height": 1.7,
+      "lookHeight": 1.5,
+      "fov": 46,
+      "label": "Wollandora"
+    }
+  },
+  "shot": "rescue"
+}

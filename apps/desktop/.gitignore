@@ -1,0 +1,7 @@
+node_modules/
+dist/
+public/
+src-tauri/target/
+src-tauri/resources/
+src-tauri/gen/
+dist-packs/

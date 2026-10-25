@@ -1,0 +1,431 @@
+import { defineSchema, defineTable } from "convex/server"
+import { v } from "convex/values"
+import { knowledgeValidator, storyValidator } from "./story"
+
+// Define your schema
+export default defineSchema({
+  mailing_list_subscriptions: defineTable({
+    userId: v.string(),
+    email: v.string(),
+    name: v.optional(v.string()),
+    preferences: v.object({
+      marketing: v.boolean(),
+      updates: v.boolean(),
+    }),
+    subscribedAt: v.number(),
+    unsubscribedAt: v.union(v.number(), v.null()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_email", ["email"])
+    .index("by_user", ["userId"])
+    .index("by_subscribed", ["subscribedAt"]),
+
+  // Multiplayer Adventure Tables
+  adventures: defineTable({
+    planId: v.string(),
+    settingId: v.string(),
+    ownerId: v.string(),
+    runType: v.optional(v.union(v.literal("campaign"), v.literal("practice"))),
+    parentAdventureId: v.optional(v.id("adventures")),
+    parentTurnId: v.optional(v.id("turns")),
+    playerIds: v.array(v.string()),
+    players: v.optional(
+      v.array(
+        v.object({
+          userId: v.string(),
+          characterId: v.string(),
+          // "ai" marks an AI-controlled companion; userId is the adventure owner's.
+          controlledBy: v.optional(v.literal("ai")),
+        })
+      )
+    ),
+    status: v.optional(v.union(v.literal("waitingForPlayers"), v.literal("active"), v.literal("completed"))),
+    startedAt: v.number(),
+    endedAt: v.optional(v.number()),
+    currentTurnId: v.optional(v.id("turns")),
+    currentEncounterId: v.optional(v.string()),
+    contentRef: v.optional(
+      v.object({
+        source: v.union(v.literal("published"), v.literal("preview")),
+        settingId: v.string(),
+        planId: v.string(),
+        contentVersion: v.optional(v.string()),
+        contentHash: v.optional(v.string()),
+        versionId: v.optional(v.string()),
+        previewDraftId: v.optional(v.string()),
+        schemaVersion: v.string(),
+      })
+    ),
+    voiceAssignments: v.optional(
+      v.array(
+        v.object({
+          characterId: v.string(),
+          voice: v.string(),
+        })
+      )
+    ),
+    // Storyview auto-narration mode: audio generates on narrative settle and the
+    // cost splits evenly across all members (owner + players).
+    storyview: v.optional(
+      v.object({
+        autoEnabled: v.boolean(),
+        updatedBy: v.string(), // Clerk ID of the owner who toggled
+        updatedAt: v.number(),
+        paused: v.optional(
+          v.object({
+            reason: v.literal("insufficient_tokens"),
+            shortUserIds: v.array(v.string()),
+            estimatedShare: v.number(), // D20 tokens each member needed
+            at: v.number(),
+          })
+        ),
+      })
+    ),
+    adventureSummaryMarkdown: v.optional(v.string()),
+    discoveries: v.optional(v.array(v.any())),
+    entityUpdates: v.optional(v.array(v.any())),
+    openThreads: v.optional(v.array(v.any())),
+    resolvedThreadIds: v.optional(v.array(v.string())),
+    // What each character knows. See packages/gm-core/src/story/knowledge.ts.
+    knowledge: v.optional(knowledgeValidator),
+    // A hosted game: the host's desktop app runs its GM through the host's own CLI, never the server.
+    // seenAt is when the host's app last asked for GM work, so guests can tell it is online.
+    // seats are the heroes the host holds for invited players. A hero from the host's roster carries the key of its
+    // sheet in the host's account. open is how many more seats take a guest's own hero. A rejected request, or the
+    // record of a removal, stays with the host's note until the guest asks again. With seats or open seats, guests
+    // join no other way.
+    host: v.optional(
+      v.object({
+        userId: v.string(),
+        deviceId: v.id("devices"),
+        seenAt: v.optional(v.number()),
+        seats: v.optional(v.array(v.object({ id: v.string(), name: v.string(), key: v.optional(v.string()) }))),
+        open: v.optional(v.number()),
+        // True when the host approves each guest's own hero. Otherwise an open seat takes the guest at once.
+        approve: v.optional(v.boolean()),
+        // True when guests choose among every held hero and the host plays one they leave, seated as the game starts.
+        pick: v.optional(v.boolean()),
+        // Guests the host removed from the table. They take no held seat, and their next request waits for the host.
+        removed: v.optional(v.array(v.string())),
+        requests: v.optional(
+          v.array(
+            v.object({
+              userId: v.string(),
+              player: v.string(),
+              characterId: v.string(),
+              name: v.string(),
+              race: v.optional(v.string()),
+              archetype: v.optional(v.string()),
+              status: v.union(v.literal("pending"), v.literal("rejected"), v.literal("removed")),
+              note: v.optional(v.string()),
+              at: v.number(),
+            })
+          )
+        ),
+      })
+    ),
+    title: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_owner", ["ownerId"])
+    .index("by_player", ["playerIds"])
+    .index("by_started", ["startedAt"]),
+
+  // GM work for hosted games, done by the host's desktop app one job at a time per adventure.
+  gmJobs: defineTable({
+    adventureId: v.id("adventures"),
+    turnId: v.id("turns"),
+    // A suggest job changes nothing in the game. It finishes with replies the player could send for their hero.
+    kind: v.union(v.literal("reply"), v.literal("roll"), v.literal("continue"), v.literal("suggest"), v.literal("skip")),
+    // Who asked, and for which character. Continue jobs have no character.
+    userId: v.string(),
+    characterId: v.optional(v.string()),
+    text: v.optional(v.string()),
+    result: v.optional(v.number()),
+    // The guest's stage context for a reply, so the host can read movement from it.
+    movement: v.optional(v.any()),
+    suggestions: v.optional(v.array(v.object({ label: v.string(), text: v.string() }))),
+    status: v.union(v.literal("queued"), v.literal("running"), v.literal("done"), v.literal("failed")),
+    error: v.optional(v.string()),
+    createdAt: v.number(),
+    startedAt: v.optional(v.number()),
+    finishedAt: v.optional(v.number()),
+  })
+    .index("by_adventure_status", ["adventureId", "status"])
+    .index("by_adventure", ["adventureId"]),
+
+  adventure_reports: defineTable({
+    adventureId: v.id("adventures"),
+    ownerId: v.string(),
+    runType: v.union(v.literal("campaign"), v.literal("practice")),
+    trigger: v.literal("on_demand"),
+    status: v.union(v.literal("ready"), v.literal("failed")),
+    report: v.optional(v.any()),
+    error: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_adventure_created", ["adventureId", "createdAt"])
+    .index("by_owner_created", ["ownerId", "createdAt"]),
+
+  turns: defineTable({
+    adventureId: v.id("adventures"),
+    encounterId: v.string(),
+    title: v.string(),
+    // The turn as labelled beats, in order: narration, actions, spoken lines, rolls and the players' own words.
+    story: storyValidator,
+    characters: v.array(
+      v.object({
+        id: v.string(),
+        name: v.string(),
+        type: v.string(), // "pc" | "npc"
+        userId: v.optional(v.string()),
+        // "ai" on a PC means an AI-controlled companion (userId is the owner's).
+        controlledBy: v.optional(v.literal("ai")),
+        initiative: v.number(),
+        isComplete: v.boolean(),
+        hasReplied: v.boolean(),
+        rollRequired: v.optional(v.any()),
+        rollResult: v.optional(v.number()),
+        healthPercent: v.optional(v.number()),
+        image: v.optional(v.string()),
+        gender: v.optional(v.string()),
+        race: v.optional(v.string()),
+        archetype: v.optional(v.string()),
+        // Added fields for AI/gameplay context
+        appearance: v.optional(v.string()),
+        background: v.optional(v.string()),
+        behavior: v.optional(v.string()),
+        motivation: v.optional(v.string()),
+        personality: v.optional(v.string()),
+        thinking: v.optional(v.string()),
+        skills: v.optional(v.array(v.string())),
+        equipment: v.optional(
+          v.array(
+            v.object({
+              name: v.string(),
+              description: v.optional(v.string()),
+            })
+          )
+        ),
+        attributes: v.optional(
+          v.object({
+            strength: v.optional(v.number()),
+            dexterity: v.optional(v.number()),
+            constitution: v.optional(v.number()),
+            intelligence: v.optional(v.number()),
+            wisdom: v.optional(v.number()),
+            charisma: v.optional(v.number()),
+          })
+        ),
+        spells: v.optional(
+          v.array(
+            v.object({
+              name: v.string(),
+              description: v.optional(v.string()),
+              isUsed: v.optional(v.boolean()),
+            })
+          )
+        ),
+        specialAbilities: v.optional(v.array(v.string())),
+        status: v.optional(v.string()),
+        effects: v.optional(
+          v.array(
+            v.object({
+              name: v.string(),
+              description: v.optional(v.string()),
+              duration: v.optional(v.number()),
+              status: v.optional(v.string()),
+              healthPercentDelta: v.optional(v.number()),
+              equipmentToAdd: v.optional(
+                v.array(
+                  v.object({
+                    name: v.string(),
+                    description: v.optional(v.string()),
+                  })
+                )
+              ),
+            })
+          )
+        ),
+      })
+    ),
+    order: v.number(),
+    isFinalEncounter: v.optional(v.boolean()),
+    adventurePatch: v.optional(v.any()),
+    transition: v.optional(v.any()),
+    generatedBy: v.optional(
+      v.object({
+        model: v.optional(v.string()),
+        promptVersion: v.optional(v.string()),
+        contextHash: v.optional(v.string()),
+      })
+    ),
+    createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index("by_adventure", ["adventureId"])
+    .index("by_encounter", ["encounterId"]),
+
+  // Purchased or granted adventures. Free catalog adventures have no rows.
+  entitlements: defineTable({
+    userId: v.string(), // Clerk User ID
+    adventureId: v.string(),
+    source: v.union(v.literal("purchase"), v.literal("grant")),
+    stripeSessionId: v.optional(v.string()),
+    amountCents: v.optional(v.number()),
+    currency: v.optional(v.string()),
+    createdAt: v.number(),
+    revokedAt: v.optional(v.number()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_adventure", ["userId", "adventureId"])
+    .index("by_stripe_session", ["stripeSessionId"]),
+
+  // A desktop app waiting to be linked. The player approves the short code on the website,
+  // then the app redeems its poll secret for a device token. Secrets are stored as SHA-256 hashes.
+  deviceLinks: defineTable({
+    userCode: v.string(),
+    pollHash: v.string(),
+    deviceName: v.string(),
+    createdAt: v.number(),
+    expiresAt: v.number(),
+    userId: v.optional(v.string()), // Clerk User ID, set on approval
+    approvedAt: v.optional(v.number()),
+  })
+    .index("by_user_code", ["userCode"])
+    .index("by_poll_hash", ["pollHash"])
+    .index("by_expires", ["expiresAt"]),
+
+  // Linked desktop apps. The app keeps its token in the Keychain.
+  devices: defineTable({
+    userId: v.string(), // Clerk User ID
+    tokenHash: v.string(),
+    name: v.string(),
+    createdAt: v.number(),
+    lastSeenAt: v.optional(v.number()),
+    revokedAt: v.optional(v.number()),
+  })
+    .index("by_token_hash", ["tokenHash"])
+    .index("by_user", ["userId"]),
+
+  userTokenLedger: defineTable({
+    userId: v.string(), // Clerk User ID
+    alltimeTokens: v.number(), // Total tokens ever granted or purchased by the user
+    tokensRemaining: v.number(), // Current spendable balance
+    lastTokenUpdate: v.optional(v.number()), // Timestamp of the last update to token fields
+  }).index("by_userId", ["userId"]),
+
+  tokenTransactionHistory: defineTable({
+    userId: v.string(), // Clerk User ID, to link to userTokenLedger
+    type: v.union(
+      // Type of transaction
+      v.literal("initial_grant"),
+      v.literal("purchase"),
+      v.literal("usage_generate_text"),
+      v.literal("usage_generate_object"),
+      v.literal("usage_image_upload"),
+      v.literal("usage_join_adventure"),
+      v.literal("usage_tts_audio"),
+      v.literal("usage_encounter_asset"), // legacy: standee and 3D mini charges (products removed); keep while ledger rows exist
+      v.literal("adjustment_refund"),
+      v.literal("adjustment_manual") // For admin corrections or other types
+    ),
+    amount: v.number(), // Positive for additions (grants, purchases), negative for deductions (usage)
+    timestamp: v.number(), // Timestamp of the transaction
+    tokensRemainingAfterTransaction: v.optional(v.number()), // User's token balance after this transaction
+    description: v.optional(v.string()),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_timestamp", ["timestamp"]),
+
+  // Storyview narration audio manifests, one per turn, keyed by a hash of the story
+  turnAudio: defineTable({
+    turnId: v.id("turns"),
+    adventureId: v.id("adventures"),
+    status: v.union(v.literal("generating"), v.literal("ready"), v.literal("error")),
+    storyHash: v.string(),
+    requestedBy: v.string(), // Clerk User ID of the player who triggered generation
+    segments: v.optional(
+      v.array(
+        v.object({
+          partIndex: v.number(),
+          speaker: v.string(), // "narrator" | characterId
+          characterName: v.optional(v.string()),
+          text: v.string(),
+          voice: v.string(),
+          audioKey: v.string(),
+          durationSec: v.number(),
+          // sha1 of the source paragraph text; lets regeneration reuse audio for
+          // unchanged paragraphs. Absent on rows created before incremental mode.
+          paragraphHash: v.optional(v.string()),
+        })
+      )
+    ),
+    usage: v.optional(
+      v.object({
+        ttsInputTokens: v.number(),
+        ttsOutputTokens: v.number(),
+        chargedTokens: v.number(),
+      })
+    ),
+    error: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_turn", ["turnId"]),
+
+  // Per-adventure game chat (text only)
+  chat_messages: defineTable({
+    adventureId: v.id("adventures"),
+    username: v.string(),
+    characterName: v.optional(v.string()),
+    content: v.string(),
+    createdAt: v.number(),
+  }).index("by_adventure_created", ["adventureId", "createdAt"]),
+
+  // Shared authoring chat for the S3-backed Adventure Plan editor.
+  adventure_plan_chat_messages: defineTable({
+    settingId: v.string(),
+    adventurePlanId: v.string(),
+    role: v.union(v.literal("user"), v.literal("assistant"), v.literal("event")),
+    userId: v.string(),
+    displayName: v.string(),
+    content: v.string(),
+    scope: v.optional(
+      v.object({
+        label: v.string(),
+        target: v.string(),
+        sectionIndex: v.optional(v.number()),
+        sceneIndex: v.optional(v.number()),
+        encounterId: v.optional(v.string()),
+      })
+    ),
+    proposal: v.optional(
+      v.object({
+        status: v.union(v.literal("proposed"), v.literal("used"), v.literal("dismissed")),
+        target: v.string(),
+        kind: v.optional(v.union(v.literal("text"), v.literal("structure"))),
+        suggestedText: v.string(),
+        operationsJson: v.optional(v.string()),
+        sourceMessageId: v.optional(v.id("adventure_plan_chat_messages")),
+      })
+    ),
+    contextReport: v.optional(
+      v.object({
+        modelId: v.string(),
+        contextWindowTokens: v.number(),
+        estimatedPromptTokens: v.number(),
+        inputTokens: v.optional(v.number()),
+        outputTokens: v.optional(v.number()),
+        totalTokens: v.optional(v.number()),
+        percentUsed: v.number(),
+        includedMessages: v.number(),
+        omittedMessages: v.number(),
+        status: v.union(v.literal("ok"), v.literal("warning"), v.literal("critical"), v.literal("unknown")),
+      })
+    ),
+    createdAt: v.number(),
+  }).index("by_plan_created", ["settingId", "adventurePlanId", "createdAt"]),
+})

@@ -1,0 +1,296 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "the-road-to-kordavos/well-met",
+  "set": "realm-of-myr/marquis-road",
+  "cast": [
+    {
+      "id": "npcs-1749870310278",
+      "name": "Dmitri Volkov",
+      "role": "Merchant of the Volkov trading house",
+      "height": 2.6,
+      "art": {
+        "front": "/stage/fixtures/the-road-to-kordavos/dmitri-mounted-front.webp",
+        "back": "/stage/fixtures/the-road-to-kordavos/dmitri-mounted-back.webp",
+        "portrait": "/stage/fixtures/the-road-to-kordavos/dmitri-mounted-portrait.jpg"
+      },
+      "at": [
+        0.1,
+        2.2
+      ],
+      "facing": [
+        -1.8,
+        -1.6
+      ]
+    },
+    {
+      "id": "npcs-1749870658664",
+      "name": "Elaraen Whisperwind",
+      "role": "Half-elf bard",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/the-road-to-kordavos/elaraen-front.webp",
+        "back": "/stage/fixtures/the-road-to-kordavos/elaraen-back.webp",
+        "portrait": "/stage/fixtures/the-road-to-kordavos/elaraen-portrait.jpg"
+      },
+      "at": [
+        3,
+        -6.3
+      ],
+      "facing": [
+        -1.5,
+        -1.5
+      ]
+    },
+    {
+      "id": "npcs-1749870721240",
+      "name": "Sister Mira",
+      "role": "Cleric of Valkara",
+      "height": 1.7,
+      "art": {
+        "front": "/stage/fixtures/the-road-to-kordavos/sister-mira-front.webp",
+        "back": "/stage/fixtures/the-road-to-kordavos/sister-mira-back.webp",
+        "portrait": "/stage/fixtures/the-road-to-kordavos/sister-mira-portrait.jpg"
+      },
+      "at": [
+        -3.9,
+        -2.6
+      ],
+      "facing": [
+        0.4,
+        -4
+      ]
+    },
+    {
+      "id": "caravan-guard-a",
+      "name": "Caravan guard",
+      "role": "Volkov house guard",
+      "height": 1.82,
+      "art": {
+        "front": "/stage/fixtures/the-road-to-kordavos/caravan-guard-a-front.webp",
+        "back": "/stage/fixtures/the-road-to-kordavos/caravan-guard-a-back.webp",
+        "portrait": "/stage/fixtures/the-road-to-kordavos/caravan-guard-a-portrait.jpg"
+      },
+      "at": [
+        2.3,
+        7.6
+      ],
+      "facing": [
+        6,
+        -4
+      ]
+    },
+    {
+      "id": "draft-horse-1",
+      "name": "Draft horse",
+      "role": "Wagon horse",
+      "height": 2.15,
+      "art": {
+        "front": "/stage/fixtures/the-road-to-kordavos/draft-horse-front.webp",
+        "back": "/stage/fixtures/the-road-to-kordavos/draft-horse-back.webp",
+        "portrait": "/stage/fixtures/the-road-to-kordavos/draft-horse-portrait.jpg"
+      },
+      "at": [
+        0.08,
+        6.5
+      ],
+      "facing": [
+        0.08,
+        -10
+      ]
+    },
+    {
+      "id": "teamster",
+      "name": "Teamster",
+      "role": "Wagon driver",
+      "height": 1.76,
+      "art": {
+        "front": "/stage/fixtures/the-road-to-kordavos/teamster-front.webp",
+        "back": "/stage/fixtures/the-road-to-kordavos/teamster-back.webp",
+        "portrait": "/stage/fixtures/the-road-to-kordavos/teamster-portrait.jpg"
+      },
+      "at": [
+        -1.1199999999999999,
+        6.699999999999999
+      ],
+      "facing": [
+        -1.6,
+        -2
+      ]
+    },
+    {
+      "id": "draft-horse-2",
+      "name": "Draft horse",
+      "role": "Wagon horse",
+      "height": 2.15,
+      "art": {
+        "front": "/stage/fixtures/the-road-to-kordavos/draft-horse-front.webp",
+        "back": "/stage/fixtures/the-road-to-kordavos/draft-horse-back.webp",
+        "portrait": "/stage/fixtures/the-road-to-kordavos/draft-horse-portrait.jpg"
+      },
+      "at": [
+        0.52,
+        15.299999999999999
+      ],
+      "facing": [
+        0.52,
+        -10
+      ]
+    },
+    {
+      "id": "caravan-guard-b",
+      "name": "Caravan guard",
+      "role": "Volkov house guard",
+      "height": 1.72,
+      "art": {
+        "front": "/stage/fixtures/the-road-to-kordavos/caravan-guard-b-front.webp",
+        "back": "/stage/fixtures/the-road-to-kordavos/caravan-guard-b-back.webp",
+        "portrait": "/stage/fixtures/the-road-to-kordavos/caravan-guard-b-portrait.jpg"
+      },
+      "at": [
+        -2,
+        13.6
+      ],
+      "facing": [
+        -8,
+        12
+      ]
+    },
+    {
+      "id": "pack-horse-1",
+      "name": "Pack horse",
+      "role": "Pack horse",
+      "height": 2,
+      "art": {
+        "front": "/stage/fixtures/the-road-to-kordavos/pack-horse-front.webp",
+        "back": "/stage/fixtures/the-road-to-kordavos/pack-horse-back.webp",
+        "portrait": "/stage/fixtures/the-road-to-kordavos/pack-horse-portrait.jpg"
+      },
+      "at": [
+        1.08,
+        22.8
+      ],
+      "facing": [
+        0,
+        -10
+      ]
+    },
+    {
+      "id": "pack-horse-2",
+      "name": "Pack horse",
+      "role": "Pack horse",
+      "height": 2,
+      "art": {
+        "front": "/stage/fixtures/the-road-to-kordavos/pack-horse-front.webp",
+        "back": "/stage/fixtures/the-road-to-kordavos/pack-horse-back.webp",
+        "portrait": "/stage/fixtures/the-road-to-kordavos/pack-horse-portrait.jpg"
+      },
+      "at": [
+        0.76,
+        25.6
+      ],
+      "facing": [
+        0,
+        -10
+      ]
+    },
+    {
+      "id": "hero-1",
+      "name": "Traveller 1",
+      "role": "Hero",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/heroes/human-a-front.webp",
+        "back": "/stage/heroes/human-a-back.webp",
+        "portrait": "/stage/heroes/human-a-portrait.jpg"
+      },
+      "at": [
+        -2.1,
+        -1.6
+      ],
+      "facing": "npcs-1749870310278"
+    },
+    {
+      "id": "hero-2",
+      "name": "Traveller 2",
+      "role": "Hero",
+      "height": 1.76,
+      "art": {
+        "front": "/stage/heroes/elf-b-front.webp",
+        "back": "/stage/heroes/elf-b-back.webp",
+        "portrait": "/stage/heroes/elf-b-portrait.jpg"
+      },
+      "at": [
+        -1,
+        -2.5
+      ],
+      "facing": "npcs-1749870310278"
+    },
+    {
+      "id": "hero-3",
+      "name": "Traveller 3",
+      "role": "Hero",
+      "height": 1.4,
+      "art": {
+        "front": "/stage/heroes/dwarf-a-front.webp",
+        "back": "/stage/heroes/dwarf-a-back.webp",
+        "portrait": "/stage/heroes/dwarf-a-portrait.jpg"
+      },
+      "at": [
+        -3,
+        -0.4
+      ],
+      "facing": "npcs-1749870310278"
+    }
+  ],
+  "shots": {
+    "party": {
+      "subjects": [
+        "hero-1",
+        "hero-2",
+        "hero-3"
+      ],
+      "offset": [
+        2.6,
+        1.7,
+        -4.6
+      ],
+      "target": [
+        0,
+        1.2,
+        0
+      ],
+      "relative": "world",
+      "fov": 54,
+      "label": "Party"
+    },
+    "dmitri": {
+      "subject": "npcs-1749870310278",
+      "distance": 4.4,
+      "angle": 18,
+      "height": 1.5,
+      "lookHeight": 2.1,
+      "fov": 46,
+      "label": "Dmitri"
+    },
+    "elaraen": {
+      "subject": "npcs-1749870658664",
+      "distance": 3,
+      "angle": -20,
+      "height": 1.6,
+      "lookHeight": 1.5,
+      "fov": 44,
+      "label": "Elaraen"
+    },
+    "mira": {
+      "subject": "npcs-1749870721240",
+      "distance": 3,
+      "angle": 25,
+      "height": 1.55,
+      "lookHeight": 1.4,
+      "fov": 44,
+      "label": "Mira"
+    }
+  },
+  "shot": "caravan"
+}

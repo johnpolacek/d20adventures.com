@@ -1,0 +1,150 @@
+import { auth } from "@clerk/nextjs/server"
+import type { Metadata } from "next"
+import { notFound, redirect } from "next/navigation"
+import { loadAdventureLobby, loadAdventureWithNpc } from "@/app/_actions/load-adventure"
+import type { LobbyInvite } from "@/components/adventure/adventure-lobby"
+import AdventureHome from "@/components/views/adventure-home"
+import type { Doc, Id } from "@/convex/_generated/dataModel"
+import { guestSeat, openSeats, seatHero } from "@/lib/host/seats"
+import { readJsonFromS3 } from "@/lib/s3-utils"
+import { mapConvexTurnToTurn, reverseSlugify } from "@/lib/utils"
+import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
+import type { Adventure } from "@/types/adventure"
+import type { AdventurePlan } from "@/types/adventure-plan"
+import type { PC, PCTemplate } from "@/types/character"
+
+// Helper to map Convex adventure to frontend Adventure type
+function mapConvexAdventureToAdventure(raw: unknown): Adventure | null {
+  if (!raw || typeof raw !== "object" || !("_id" in raw)) return null
+  const a = raw as {
+    _id: string
+    title: string
+    planId: string
+    ownerId: string
+    startedAt: number
+    endedAt?: number
+    settingId?: string
+    runType?: "campaign" | "practice"
+    parentAdventureId?: string
+    parentTurnId?: string
+    status?: "waitingForPlayers" | "active" | "completed"
+    players?: Array<{ userId: string; characterId: string; controlledBy?: "ai" }>
+    playerIds?: string[]
+    storyview?: { autoEnabled: boolean }
+  }
+
+  return {
+    id: a._id,
+    title: a.title,
+    adventurePlanId: a.planId,
+    settingId: a.settingId ?? "",
+    ownerId: a.ownerId,
+    runType: a.runType ?? "campaign",
+    parentAdventureId: a.parentAdventureId,
+    parentTurnId: a.parentTurnId,
+    status: a.status || "active", // Default to active for backwards compatibility
+    party: [],
+    players: a.players ?? [],
+    turns: [],
+    startedAt: a.startedAt ? new Date(a.startedAt).toISOString() : "",
+    endedAt: a.endedAt ? new Date(a.endedAt).toISOString() : undefined,
+    pausedAt: undefined,
+    storyview: a.storyview ? { autoEnabled: a.storyview.autoEnabled } : undefined,
+  }
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ settingId: string; adventurePlanId: string; adventureId: string }> }): Promise<Metadata> {
+  const { adventurePlanId } = await params
+  return {
+    title: `D20 Adventures | ${reverseSlugify(adventurePlanId)}`,
+  }
+}
+
+function findEncounter(adventurePlan: AdventurePlan, encounterIdToFind: string | undefined) {
+  if (!encounterIdToFind) return null
+  for (const section of adventurePlan.sections) {
+    for (const scene of section.scenes) {
+      for (const encounter of scene.encounters) {
+        if (encounter.id === encounterIdToFind) {
+          return encounter
+        }
+      }
+    }
+  }
+  return null
+}
+
+export default async function AdventurePage(props: { params: Promise<{ settingId: string; adventurePlanId: string; adventureId: string }>; searchParams: Promise<{ as?: string | string[] }> }) {
+  const { adventurePlanId, adventureId, settingId } = await props.params
+  const adventurePlan = await loadAdventurePlanForRuntime(settingId, adventurePlanId)
+  if (!adventurePlan) return notFound()
+  // Players load their game. Anyone else sees it only while it waits for players, which is how an invite link opens.
+  const playing = await loadAdventureWithNpc(adventureId as Id<"adventures">)
+  const adventureData = playing ?? (await loadAdventureLobby(adventureId as Id<"adventures">))
+  const adventure = mapConvexAdventureToAdventure(adventureData?.adventure)
+  const currentTurn = mapConvexTurnToTurn(adventureData?.currentTurn)
+
+  if (!adventure) return notFound()
+
+  // A hosted game plays on its own page once it starts, with the GM in the host's app.
+  if (currentTurn && (adventureData?.adventure as { host?: unknown } | undefined)?.host) redirect(`/play/${adventureId}`)
+
+  // If there's a current turn, redirect to the turn-specific URL
+  if (currentTurn) {
+    const turnOrder = (adventureData?.currentTurn as { order?: number })?.order
+    if (turnOrder) {
+      redirect(`/settings/${settingId}/${adventurePlanId}/${adventureId}/${turnOrder}`)
+    }
+  }
+
+  // Server-side: resolve party array
+  let party: PC[] = []
+  if (adventure.players && Array.isArray(adventure.players)) {
+    const partyResults = await Promise.all(
+      adventure.players.map(async (player) => {
+        if (typeof player.characterId === "string" && player.characterId.startsWith("characters/")) {
+          try {
+            const pcTemplate = (await readJsonFromS3(player.characterId)) as PCTemplate
+            // Convert PCTemplate to PC by adding userId + AI marker
+            return { ...pcTemplate, userId: player.userId, controlledBy: player.controlledBy } as PC
+          } catch (err) {
+            console.error("[AdventurePage] Failed to load custom character from S3:", player.characterId, err)
+            return undefined
+          }
+        } else if (adventurePlan?.premadePlayerCharacters) {
+          const pc = adventurePlan.premadePlayerCharacters.find((c) => c.id === player.characterId)
+          if (pc && typeof pc === "object") return { ...pc, userId: player.userId, controlledBy: player.controlledBy } as PC
+        }
+        return undefined
+      })
+    )
+    party = partyResults.filter((pc): pc is PC => !!pc)
+  }
+
+  const encounter = findEncounter(adventurePlan, currentTurn?.encounterId)
+
+  // A hosted game's seats for guests: the held heroes still open, the seat this guest's link names, how many seats
+  // take a guest's own hero, and this guest's request for one.
+  const raw = adventureData?.adventure as Doc<"adventures"> | undefined
+  let invite: LobbyInvite | undefined
+  if (raw?.host?.seats?.length || raw?.host?.open) {
+    const heroes = await Promise.all(openSeats(raw).map((seat) => seatHero(seat, adventurePlan.premadePlayerCharacters)))
+    const { as } = await props.searchParams
+    invite = { seats: heroes.filter((pc): pc is PCTemplate => !!pc), as: typeof as === "string" ? as : undefined, ...guestSeat(raw, (await auth()).userId) }
+  }
+
+  return (
+    <AdventureHome
+      settingId={settingId}
+      adventurePlanId={adventurePlanId}
+      adventure={{ ...adventure, party }}
+      encounterImage={encounter?.image || adventurePlan.image}
+      currentTurn={currentTurn}
+      adventurePlan={adventurePlan}
+      invite={invite}
+      hosted={Boolean(raw?.host)}
+      // The turn stream answers players only.
+      disableSSE={!playing}
+    />
+  )
+}

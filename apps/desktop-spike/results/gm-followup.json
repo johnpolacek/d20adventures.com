@@ -1,0 +1,365 @@
+{
+  "recordedAt": "2026-10-02T03:41:46.887Z",
+  "nativeTauri": true,
+  "providers": [
+    {
+      "provider": "claude",
+      "executable": "~/.local/share/claude/versions/2.1.287",
+      "version": "2.1.287 (Claude Code)",
+      "versionExit": 0,
+      "helpExit": 0,
+      "exposesIgnoreUserConfig": false,
+      "mode": "stream-json stdin",
+      "allowed": true
+    },
+    {
+      "provider": "codex",
+      "executable": "~/.local/share/fnm/node-versions/v24.14.1/installation/lib/node_modules/@openai/codex/bin/codex.js",
+      "version": "codex-cli 0.156.1",
+      "versionExit": 0,
+      "helpExit": 0,
+      "exposesIgnoreUserConfig": false,
+      "mode": "app-server JSON-RPC",
+      "allowed": true
+    },
+    {
+      "provider": "gemini",
+      "executable": "~/.local/share/fnm/node-versions/v24.14.1/installation/lib/node_modules/@google/gemini-cli/bundle/gemini.js",
+      "version": "0.60.0",
+      "versionExit": 0,
+      "helpExit": 0,
+      "exposesIgnoreUserConfig": false,
+      "mode": "ACP",
+      "allowed": true
+    },
+    {
+      "provider": "grok",
+      "executable": "~/.grok/downloads/grok-1.0.41-macos-aarch64",
+      "version": "grok 1.0.41 (4220f3b224a6) [stable]",
+      "versionExit": 0,
+      "helpExit": 0,
+      "exposesIgnoreUserConfig": false,
+      "mode": "agent stdio ACP",
+      "allowed": true
+    }
+  ],
+  "results": [
+    {
+      "provider": "claude",
+      "executable": "~/.local/share/claude/versions/2.1.287",
+      "version": "2.1.287 (Claude Code)",
+      "versionExit": 0,
+      "helpExit": 0,
+      "exposesIgnoreUserConfig": false,
+      "allowed": true,
+      "model": "claude-opus-5-5",
+      "startupMs": 661,
+      "processCount": 1,
+      "requests": 2,
+      "toolEvents": 0,
+      "deniedHostRequests": 0,
+      "capabilities": {
+        "tools": [],
+        "skills": [],
+        "plugins": [],
+        "mcpServers": []
+      },
+      "configurationPolicy": "Existing CLI home retained. Supported invocation controls applied. Configuration presence is not a failure.",
+      "results": [
+        {
+          "id": "progression-turn",
+          "inferenceRequests": 1,
+          "expected": {
+            "nextEncounterId": "the-harvest-festival"
+          },
+          "attempts": [
+            {
+              "elapsedMs": 3725,
+              "text": "{\"nextEncounterId\":\"the-harvest-festival\",\"narrative\":\"Garlan Ironfist counts the three marks with a practiced thumb, then gives a satisfied grunt and tucks them into his belt pouch. \\\"Enjoy the festival,\\\" he rumbles, his stern face softening as he waves Mira toward the open city gate behind him.\\n\\nBeyond the stone archway, Kordavos bursts into color and sound, with music spilling from every street and the scent of roasted chestnuts and spiced cider drifting through the crowds. The Harvest Festival is in full swing.\"}",
+              "failed": false,
+              "providerTurns": 1,
+              "reportedSessionApiMs": 3043,
+              "jsonValid": true,
+              "schemaValid": true,
+              "value": {
+                "nextEncounterId": "the-harvest-festival",
+                "narrative": "Garlan Ironfist counts the three marks with a practiced thumb, then gives a satisfied grunt and tucks them into his belt pouch. \"Enjoy the festival,\" he rumbles, his stern face softening as he waves Mira toward the open city gate behind him.\n\nBeyond the stone archway, Kordavos bursts into color and sound, with music spilling from every street and the scent of roasted chestnuts and spiced cider drifting through the crowds. The Harvest Festival is in full swing."
+              }
+            }
+          ]
+        },
+        {
+          "id": "warm-roll-schema-probe",
+          "inferenceRequests": 1,
+          "expected": {
+            "rollType": "none",
+            "difficulty": 0
+          },
+          "attempts": [
+            {
+              "elapsedMs": 1390,
+              "text": "{\"rollType\":\"none\",\"difficulty\":0}",
+              "failed": false,
+              "providerTurns": 1,
+              "reportedSessionApiMs": 4414,
+              "jsonValid": true,
+              "schemaValid": true,
+              "value": {
+                "rollType": "none",
+                "difficulty": 0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "provider": "codex",
+      "executable": "~/.local/share/fnm/node-versions/v24.14.1/installation/lib/node_modules/@openai/codex/bin/codex.js",
+      "version": "codex-cli 0.156.1",
+      "versionExit": 0,
+      "helpExit": 0,
+      "exposesIgnoreUserConfig": false,
+      "allowed": true,
+      "model": "gpt-6-astra",
+      "startupMs": 1296,
+      "processCount": 1,
+      "requests": 2,
+      "toolEvents": 0,
+      "deniedHostRequests": 0,
+      "protocolMethods": {
+        "configWarning": 1,
+        "remoteControl/status/changed": 1,
+        "account/updated": 1,
+        "thread/started": 1,
+        "warning": 1,
+        "mcpServer/startupStatus/updated": 8,
+        "thread/status/changed": 4,
+        "turn/started": 2,
+        "item/started": 4,
+        "item/completed": 4,
+        "item/agentMessage/delta": 81,
+        "thread/tokenUsage/updated": 2,
+        "account/rateLimits/updated": 2,
+        "turn/completed": 2
+      },
+      "configurationPolicy": "Existing CLI home retained. Supported invocation controls applied. Configuration presence is not a failure.",
+      "results": [
+        {
+          "id": "progression-turn",
+          "inferenceRequests": 1,
+          "expected": {
+            "nextEncounterId": "the-harvest-festival"
+          },
+          "attempts": [
+            {
+              "elapsedMs": 11678,
+              "text": "{\"nextEncounterId\":\"the-harvest-festival\",\"narrative\":\"Garlan finishes counting the three marks and steps aside at the inspection table. \\\"Welcome to Kordavos. Enjoy the Harvest Festival.\\\"\\n\\nThe open city gate behind him offers a clear path to the festivities. Music and laughter drift beneath the fluttering banners.\"}",
+              "failed": false,
+              "providerTurns": 1,
+              "jsonValid": true,
+              "schemaValid": true,
+              "value": {
+                "nextEncounterId": "the-harvest-festival",
+                "narrative": "Garlan finishes counting the three marks and steps aside at the inspection table. \"Welcome to Kordavos. Enjoy the Harvest Festival.\"\n\nThe open city gate behind him offers a clear path to the festivities. Music and laughter drift beneath the fluttering banners."
+              }
+            }
+          ]
+        },
+        {
+          "id": "warm-roll-schema-probe",
+          "inferenceRequests": 1,
+          "expected": {
+            "rollType": "none",
+            "difficulty": 0
+          },
+          "attempts": [
+            {
+              "elapsedMs": 8834,
+              "text": "{\"rollType\":\"none\",\"difficulty\":0}",
+              "failed": false,
+              "providerTurns": 1,
+              "jsonValid": true,
+              "schemaValid": true,
+              "value": {
+                "rollType": "none",
+                "difficulty": 0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "provider": "gemini",
+      "executable": "~/.local/share/fnm/node-versions/v24.14.1/installation/lib/node_modules/@google/gemini-cli/bundle/gemini.js",
+      "version": "0.60.0",
+      "versionExit": 0,
+      "helpExit": 0,
+      "exposesIgnoreUserConfig": false,
+      "allowed": true,
+      "startupMs": null,
+      "processCount": 1,
+      "requests": 0,
+      "protocolVersion": 1,
+      "agentVersion": "0.60.0",
+      "toolEvents": 0,
+      "deniedHostRequests": 0,
+      "protocolMethods": {},
+      "protocolError": {
+        "method": "authenticate",
+        "code": -32000,
+        "message": "This client is no longer supported for Gemini Code Assist for individuals. To continue using Gemini, please migrate to the Antigravity suite of products: [url]"
+      },
+      "configurationPolicy": "Existing CLI home retained. Supported invocation controls applied. Configuration presence is not a failure.",
+      "results": [
+        {
+          "id": "progression-turn",
+          "inferenceRequests": 1,
+          "expected": {
+            "nextEncounterId": "the-harvest-festival"
+          },
+          "attempts": [
+            {
+              "elapsedMs": 2144,
+              "failure": "rpc_server_-32000",
+              "jsonValid": false,
+              "schemaValid": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "provider": "grok",
+      "executable": "~/.grok/downloads/grok-1.0.41-macos-aarch64",
+      "version": "grok 1.0.41 (4220f3b224a6) [stable]",
+      "versionExit": 0,
+      "helpExit": 0,
+      "exposesIgnoreUserConfig": false,
+      "allowed": true,
+      "model": "grok-4.7",
+      "startupMs": 622,
+      "processCount": 1,
+      "requests": 2,
+      "protocolVersion": 1,
+      "authMethod": "cached_token",
+      "toolEvents": 0,
+      "deniedHostRequests": 0,
+      "protocolMethods": {
+        "_x.ai/session/setup": 11,
+        "_x.ai/mcp/servers_updated": 1,
+        "_x.ai/models/update": 3,
+        "_x.ai/settings/update": 1,
+        "_x.ai/announcements/update": 2,
+        "_x.ai/mcp/init_progress": 1,
+        "session/update": 161,
+        "_x.ai/session_notification": 14,
+        "_x.ai/sessions/changed": 4,
+        "_x.ai/queue/changed": 6,
+        "_x.ai/session/prompt_complete": 2
+      },
+      "configurationPolicy": "Existing CLI home retained. Supported invocation controls applied. Configuration presence is not a failure.",
+      "results": [
+        {
+          "id": "progression-turn",
+          "inferenceRequests": 1,
+          "expected": {
+            "nextEncounterId": "the-harvest-festival"
+          },
+          "attempts": [
+            {
+              "elapsedMs": 20464,
+              "text": "{\"nextEncounterId\":\"the-harvest-festival\",\"narrative\":\"Garlan Ironfist finishes counting the three marks and nods, the stern set of his face easing. He waves Mira past the inspection table and through the open city gate.\\n\\nBeyond the stone arch, Asterian and Valkaran banners snap in the breeze, and the Harvest Festival fills the street with music, laughter, and a pressing crowd.\"}",
+              "failed": false,
+              "stopReason": "end_turn",
+              "providerTurns": null,
+              "jsonValid": true,
+              "schemaValid": true,
+              "value": {
+                "nextEncounterId": "the-harvest-festival",
+                "narrative": "Garlan Ironfist finishes counting the three marks and nods, the stern set of his face easing. He waves Mira past the inspection table and through the open city gate.\n\nBeyond the stone arch, Asterian and Valkaran banners snap in the breeze, and the Harvest Festival fills the street with music, laughter, and a pressing crowd."
+              }
+            }
+          ]
+        },
+        {
+          "id": "warm-roll-schema-probe",
+          "inferenceRequests": 1,
+          "expected": {
+            "rollType": "none",
+            "difficulty": 0
+          },
+          "attempts": [
+            {
+              "elapsedMs": 8270,
+              "text": "{\"rollType\":\"none\",\"difficulty\":0}",
+              "failed": false,
+              "stopReason": "end_turn",
+              "providerTurns": null,
+              "jsonValid": true,
+              "schemaValid": true,
+              "value": {
+                "rollType": "none",
+                "difficulty": 0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "provider": "google-api-baseline",
+      "model": "gemini-3.5-flash-lite",
+      "note": "Independent requests with identical prompt/schema/system, no CLI session context",
+      "results": [
+        {
+          "id": "progression-turn",
+          "inferenceRequests": 1,
+          "expected": {
+            "nextEncounterId": "the-harvest-festival"
+          },
+          "attempts": [
+            {
+              "elapsedMs": 941,
+              "text": "{\n  \"nextEncounterId\": \"the-harvest-festival\",\n  \"narrative\": \"Garlan Ironfist accepts the coins and nods with a welcoming smile. He waves them past the inspection table and into the bustling streets.\\n\\nThe open city gate behind Garlan reveals the vibrant sights and sounds of the Harvest Festival waiting just beyond.\"\n}",
+              "failed": false,
+              "providerTurns": 1,
+              "durationApiMs": null,
+              "jsonValid": true,
+              "schemaValid": true,
+              "value": {
+                "nextEncounterId": "the-harvest-festival",
+                "narrative": "Garlan Ironfist accepts the coins and nods with a welcoming smile. He waves them past the inspection table and into the bustling streets.\n\nThe open city gate behind Garlan reveals the vibrant sights and sounds of the Harvest Festival waiting just beyond."
+              }
+            }
+          ]
+        },
+        {
+          "id": "warm-roll-schema-probe",
+          "inferenceRequests": 1,
+          "expected": {
+            "rollType": "none",
+            "difficulty": 0
+          },
+          "attempts": [
+            {
+              "elapsedMs": 551,
+              "text": "{\"rollType\":\"none\",\"difficulty\":0,\"modifier\":0}",
+              "failed": false,
+              "providerTurns": 1,
+              "durationApiMs": null,
+              "jsonValid": true,
+              "schemaValid": true,
+              "value": {
+                "rollType": "none",
+                "difficulty": 0,
+                "modifier": 0
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

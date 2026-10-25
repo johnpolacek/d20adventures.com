@@ -1,0 +1,155 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "march-of-davos/finding-the-black-market",
+  "set": "realm-of-myr/kordavos-lower-districts",
+  "cast": [
+    {
+      "id": "branka-stoneveil",
+      "name": "Branka Stoneveil",
+      "role": "Dwarf fighter",
+      "height": 1.38,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/branka-front.webp",
+        "back": "/stage/fixtures/march-of-davos/branka-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/branka-portrait.jpg"
+      },
+      "at": [
+        -11.2,
+        -7
+      ],
+      "facing": [
+        -15.2,
+        -7.6
+      ]
+    },
+    {
+      "id": "cassia-verane",
+      "name": "Cassia Verane",
+      "role": "Human wizard",
+      "height": 1.72,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/cassia-front.webp",
+        "back": "/stage/fixtures/march-of-davos/cassia-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/cassia-portrait.jpg"
+      },
+      "at": [
+        -12,
+        -8.1
+      ],
+      "facing": [
+        -15.2,
+        -7.6
+      ]
+    },
+    {
+      "id": "yeva-softstep",
+      "name": "Yeva Softstep",
+      "role": "Halfling rogue",
+      "height": 1.08,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/yeva-front.webp",
+        "back": "/stage/fixtures/march-of-davos/yeva-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/yeva-portrait.jpg"
+      },
+      "at": [
+        -12.7,
+        -7
+      ],
+      "facing": [
+        -15.2,
+        -7.6
+      ]
+    },
+    {
+      "id": "milos-radan",
+      "name": "Milos Radan",
+      "role": "Human cleric",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/milos-front.webp",
+        "back": "/stage/fixtures/march-of-davos/milos-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/milos-portrait.jpg"
+      },
+      "at": [
+        -10.4,
+        -7.9
+      ],
+      "facing": [
+        -15.2,
+        -7.6
+      ]
+    },
+    {
+      "id": "fence",
+      "name": "A trinket-seller",
+      "role": "Street merchant",
+      "height": 1.78,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/fence-front.webp",
+        "back": "/stage/fixtures/march-of-davos/fence-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/fence-portrait.jpg"
+      },
+      "at": [
+        -21.9,
+        -6.75
+      ],
+      "facing": [
+        -13,
+        -7.5
+      ]
+    },
+    {
+      "id": "hooded-local",
+      "name": "A hooded woman",
+      "role": "Local",
+      "height": 1.64,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/hooded-local-front.webp",
+        "back": "/stage/fixtures/march-of-davos/hooded-local-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/hooded-local-portrait.jpg"
+      },
+      "at": [
+        -23.6,
+        -7.9
+      ],
+      "facing": [
+        -16,
+        -7.5
+      ]
+    }
+  ],
+  "shots": {
+    "party": {
+      "subjects": [
+        "branka-stoneveil",
+        "cassia-verane",
+        "yeva-softstep",
+        "milos-radan"
+      ],
+      "offset": [
+        -3.6,
+        1.6,
+        0.3
+      ],
+      "target": [
+        0,
+        1.2,
+        0
+      ],
+      "relative": "world",
+      "fov": 54,
+      "label": "Party"
+    },
+    "fenceShot": {
+      "subject": "fence",
+      "distance": 2,
+      "angle": -20,
+      "height": 1.68,
+      "lookHeight": 1.6,
+      "fov": 44,
+      "label": "The trinket-seller"
+    }
+  },
+  "shot": "sign"
+}

@@ -1,0 +1,179 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "covert-cargo/the-fake",
+  "set": "realm-of-myr/mordava-river-pier",
+  "cast": [
+    {
+      "id": "npcs-1749181492795",
+      "name": "Silas",
+      "role": "Rogue, the brains of the mission",
+      "height": 1.78,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/silas-front.webp",
+        "back": "/stage/fixtures/covert-cargo/silas-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/silas-portrait.jpg"
+      },
+      "at": [
+        5.2,
+        2.35
+      ],
+      "facing": "npcs-1749184389465"
+    },
+    {
+      "id": "npcs-1749184389465",
+      "name": "Aelar Moonglimmer",
+      "role": "Elf operative",
+      "height": 1.86,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/aelar-front.webp",
+        "back": "/stage/fixtures/covert-cargo/aelar-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/aelar-portrait.jpg"
+      },
+      "at": [
+        3.95,
+        -0.55
+      ],
+      "facing": "npcs-1749181492795"
+    },
+    {
+      "id": "npcs-1749163978757",
+      "name": "Reinhard",
+      "role": "Enforcer",
+      "height": 1.92,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/reinhard-front.webp",
+        "back": "/stage/fixtures/covert-cargo/reinhard-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/reinhard-portrait.jpg"
+      },
+      "at": [
+        4.8,
+        0.4
+      ],
+      "facing": "npcs-1749184389465"
+    },
+    {
+      "id": "lyra",
+      "name": "Lyra Silvanus",
+      "role": "Asterian arcanist",
+      "height": 1.7,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/lyra-front.webp",
+        "back": "/stage/fixtures/covert-cargo/lyra-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/lyra-portrait.jpg"
+      },
+      "at": [
+        5.95,
+        0.1
+      ],
+      "facing": "npcs-1749184389465"
+    },
+    {
+      "id": "poppen",
+      "name": "Poppen Quickfoot",
+      "role": "Halfling rogue",
+      "height": 1.06,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/poppen-front.webp",
+        "back": "/stage/fixtures/covert-cargo/poppen-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/poppen-portrait.jpg"
+      },
+      "at": [
+        -5,
+        4.3
+      ],
+      "facing": [
+        5.2,
+        0.5
+      ]
+    },
+    {
+      "id": "thalbern",
+      "name": "Thalbern",
+      "role": "Ranger of the Valkarr woods",
+      "height": 1.82,
+      "art": {
+        "front": "/stage/fixtures/the-midnight-summons/thalbern-front.webp",
+        "back": "/stage/fixtures/the-midnight-summons/thalbern-back.webp",
+        "portrait": "/stage/fixtures/the-midnight-summons/thalbern-portrait.jpg"
+      },
+      "at": [
+        -1.4,
+        -6.4
+      ],
+      "facing": [
+        5.2,
+        0.5
+      ]
+    },
+    {
+      "id": "npcs-1749243735467",
+      "name": "Elven Archer",
+      "role": "Wood elf archer",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/elf-archer-front.webp",
+        "back": "/stage/fixtures/covert-cargo/elf-archer-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/elf-archer-portrait.jpg"
+      },
+      "at": [
+        4.2,
+        4.9
+      ],
+      "facing": "pierEnd"
+    },
+    {
+      "id": "npcs-1749243869357",
+      "name": "Elven Fighter",
+      "role": "Elf fighter",
+      "height": 1.88,
+      "art": {
+        "front": "/stage/fixtures/covert-cargo/elf-fighter-front.webp",
+        "back": "/stage/fixtures/covert-cargo/elf-fighter-back.webp",
+        "portrait": "/stage/fixtures/covert-cargo/elf-fighter-portrait.jpg"
+      },
+      "at": "stern",
+      "facing": "bank"
+    }
+  ],
+  "shots": {
+    "standoff": {
+      "subjects": [
+        "npcs-1749181492795",
+        "npcs-1749184389465",
+        "npcs-1749163978757"
+      ],
+      "offset": [
+        0.35,
+        2,
+        -4.03
+      ],
+      "target": [
+        -0.15,
+        1.2,
+        0.27
+      ],
+      "fov": 56,
+      "label": "The standoff"
+    },
+    "silas": {
+      "subject": "npcs-1749181492795",
+      "distance": 2.1,
+      "angle": 25,
+      "height": 1.55,
+      "lookHeight": 1.4596,
+      "fov": 44,
+      "label": "Silas"
+    },
+    "aelar": {
+      "subject": "npcs-1749184389465",
+      "distance": 2,
+      "angle": -20,
+      "height": 1.6,
+      "lookHeight": 1.5252,
+      "fov": 44,
+      "label": "Aelar"
+    }
+  },
+  "shot": "standoff"
+}

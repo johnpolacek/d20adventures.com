@@ -1,0 +1,76 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.4.6/schema.json",
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "correctness": {
+        "useExhaustiveDependencies": "off"
+      },
+      "suspicious": {
+        "noExplicitAny": "off",
+        "noArrayIndexKey": "off",
+        "noAssignInExpressions": "off",
+        "noImplicitAnyLet": "off"
+      },
+      "style": {
+        "noNonNullAssertion": "off",
+        "noParameterAssign": "off"
+      },
+      "a11y": {
+        "noLabelWithoutControl": "off",
+        "useKeyWithClickEvents": "off",
+        "noStaticElementInteractions": "off",
+        "useButtonType": "off",
+        "noSvgWithoutTitle": "off"
+      },
+      "complexity": {
+        "noForEach": "off"
+      }
+    }
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 200,
+    "lineEnding": "lf"
+  },
+  "javascript": {
+    "formatter": {
+      "semicolons": "asNeeded",
+      "quoteStyle": "double",
+      "trailingCommas": "es5"
+    }
+  },
+  "files": {
+    "includes": [
+      "**",
+      "!**/.next",
+      "!**/test-results",
+      "!**/tests-examples",
+      "!**/tests",
+      "!**/coverage",
+      "!**/dist",
+      "!**/build",
+      "!apps/desktop/src-tauri/target",
+      "!apps/desktop/src-tauri/resources",
+      "!apps/desktop/src-tauri/gen",
+      "!**/node_modules",
+      "!**/*.min.js",
+      "!**/*.bundle.js",
+      "!**/convex/_generated",
+      "!lib/generated",
+      "!next-env.d.ts",
+      "!**/playwright-report",
+      "!**/*.css",
+      "!wiki",
+      "!.agent-browser"
+    ]
+  },
+  "css": {
+    "linter": { "enabled": false },
+    "formatter": { "enabled": false }
+  }
+}

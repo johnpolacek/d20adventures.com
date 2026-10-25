@@ -1,0 +1,107 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "the-road-to-kordavos/the-fortune-teller",
+  "set": "realm-of-myr/marquis-road-fortune",
+  "cast": [
+    {
+      "id": "npcs-1749870598631",
+      "name": "Borina Runetongue",
+      "role": "Dwarf fortune teller",
+      "height": 1.2,
+      "art": {
+        "front": "/stage/fixtures/the-road-to-kordavos/borina-front.webp",
+        "back": "/stage/fixtures/the-road-to-kordavos/borina-back.webp",
+        "portrait": "/stage/fixtures/the-road-to-kordavos/borina-portrait.jpg"
+      },
+      "at": [
+        -5.720000000000001,
+        -1.6
+      ],
+      "facing": [
+        0,
+        -1.6
+      ]
+    },
+    {
+      "id": "hero-1",
+      "name": "Traveller 1",
+      "role": "Hero",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/heroes/human-a-front.webp",
+        "back": "/stage/heroes/human-a-back.webp",
+        "portrait": "/stage/heroes/human-a-portrait.jpg"
+      },
+      "at": [
+        -3.6,
+        -3.1
+      ],
+      "facing": "npcs-1749870598631"
+    },
+    {
+      "id": "hero-2",
+      "name": "Traveller 2",
+      "role": "Hero",
+      "height": 1.76,
+      "art": {
+        "front": "/stage/heroes/elf-b-front.webp",
+        "back": "/stage/heroes/elf-b-back.webp",
+        "portrait": "/stage/heroes/elf-b-portrait.jpg"
+      },
+      "at": [
+        -3.6,
+        0
+      ],
+      "facing": "npcs-1749870598631"
+    },
+    {
+      "id": "hero-3",
+      "name": "Traveller 3",
+      "role": "Hero",
+      "height": 1.4,
+      "art": {
+        "front": "/stage/heroes/dwarf-a-front.webp",
+        "back": "/stage/heroes/dwarf-a-back.webp",
+        "portrait": "/stage/heroes/dwarf-a-portrait.jpg"
+      },
+      "at": [
+        -2.8,
+        -3.7
+      ],
+      "facing": "npcs-1749870598631"
+    }
+  ],
+  "shots": {
+    "party": {
+      "subjects": [
+        "hero-1",
+        "hero-2",
+        "hero-3"
+      ],
+      "offset": [
+        1.8,
+        1.6,
+        2.6
+      ],
+      "target": [
+        0,
+        1.2,
+        0
+      ],
+      "relative": "world",
+      "fov": 54,
+      "label": "Party"
+    },
+    "borina": {
+      "subject": "npcs-1749870598631",
+      "distance": 2.4,
+      "angle": 0,
+      "height": 1.25,
+      "lookHeight": 0.95,
+      "fov": 44,
+      "label": "Borina"
+    }
+  },
+  "shot": "fortune"
+}

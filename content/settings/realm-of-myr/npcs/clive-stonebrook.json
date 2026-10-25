@@ -1,0 +1,12 @@
+{
+  "id": "clive-stonebrook",
+  "name": "Clive Stonebrook",
+  "type": "npc",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/app/avatar/npc.png?v=1",
+  "archetype": "Sommelier",
+  "race": "Human",
+  "gender": "Male",
+  "appearance": "A tall, wiry man with graying slicked-back hair, a sharp nose, crisp formal staff attire, and a silver brooch.",
+  "behavior": "Precise, impatient, and status-conscious; expects flawless service in the Blackthorn wine cellar.",
+  "healthPercent": 100
+}

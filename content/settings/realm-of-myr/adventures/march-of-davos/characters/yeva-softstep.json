@@ -1,0 +1,44 @@
+{
+  "name": "Yeva Softstep",
+  "archetype": "Rogue",
+  "race": "Halfling",
+  "gender": "Female",
+  "appearance": "Yeva is a small, quick halfling with sharp hazel eyes, a mess of dark curls pinned under a festival cap, and clothes cut for blending into crowds. Half a dozen hidden pockets hold picks, wires, and at least one item she swears she was only holding for a friend.",
+  "personality": "Quick-witted, irreverent, and disarmingly cheerful, Yeva treats danger like a game she intends to win. She trusts slowly and jokes constantly, but she keeps every promise she actually makes, and she has a soft spot for anyone the powerful step on.",
+  "background": "Yeva grew up picking pockets during the Harvest Festival in the Lower Districts of Kordavos, and graduated to what she calls freelance acquisitions. She knows the black market stalls, the smugglers' shortcuts, and which Raskov warehouses are never really empty. A job went sour last season when a crate she lifted turned out to hold an old Valkaran relic someone very dangerous wanted back, and she has been watching the shadows ever since.",
+  "motivation": "Yeva wants to find out who was moving that relic and why it nearly cost her her life, because being hunted for a job she does not understand offends her professional pride. She also would not mind a payday large enough to finally buy her own tavern in the Lower Districts.",
+  "behavior": "Yeva scouts ahead, checks for traps and watchers, and keeps to the shadows until she sees an opening. In a fight she strikes from unexpected angles with her daggers and slips away before anyone can answer. She talks her way past trouble when she can, needles her companions affectionately, and quietly pockets anything shiny that no one will miss.",
+  "healthPercent": 100,
+  "equipment": [
+    {
+      "name": "Paired Daggers",
+      "description": "Two well-balanced daggers, one worn openly and one that most people never see."
+    },
+    {
+      "name": "Thieves' Tools",
+      "description": "Picks, wires, and shims rolled in soft cloth so they never clink."
+    },
+    {
+      "name": "Festival Cap",
+      "description": "A jaunty cap that makes Yeva look like any other festival-goer in a crowd."
+    },
+    {
+      "name": "Smuggler's Map of the Lower Districts",
+      "description": "A hand-drawn map marking shortcuts, cellar doors, and places to disappear in Kordavos."
+    }
+  ],
+  "skills": ["Stealth", "Sleight of Hand", "Lockpicking", "Deception", "Acrobatics", "Streetwise (Kordavos)"],
+  "specialAbilities": ["Sneak Attack: Yeva strikes with deadly precision when a foe is distracted or unaware", "Festival Ghost: Yeva can vanish into a crowd or shadow almost at will"],
+  "status": "",
+  "type": "pc",
+  "attributes": {
+    "strength": 8,
+    "dexterity": 16,
+    "constitution": 10,
+    "intelligence": 12,
+    "wisdom": 12,
+    "charisma": 14
+  },
+  "id": "yeva-softstep",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/march-of-davos/pcs/yeva-softstep.png"
+}

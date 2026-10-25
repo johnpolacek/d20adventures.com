@@ -1,0 +1,191 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "march-of-davos/morning-at-the-dragonbone",
+  "set": "realm-of-myr/dragonbone-inn-morning",
+  "cast": [
+    {
+      "id": "branka-stoneveil",
+      "name": "Branka Stoneveil",
+      "role": "Dwarf fighter",
+      "height": 1.38,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/branka-front.webp",
+        "back": "/stage/fixtures/march-of-davos/branka-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/branka-portrait.jpg"
+      },
+      "at": [
+        -3.4,
+        2.85
+      ],
+      "facing": [
+        0.3,
+        3.4
+      ]
+    },
+    {
+      "id": "cassia-verane",
+      "name": "Cassia Verane",
+      "role": "Human wizard",
+      "height": 1.72,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/cassia-front.webp",
+        "back": "/stage/fixtures/march-of-davos/cassia-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/cassia-portrait.jpg"
+      },
+      "at": [
+        -2.75,
+        2.45
+      ],
+      "facing": [
+        0.3,
+        3.4
+      ]
+    },
+    {
+      "id": "yeva-softstep",
+      "name": "Yeva Softstep",
+      "role": "Halfling rogue",
+      "height": 1.08,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/yeva-front.webp",
+        "back": "/stage/fixtures/march-of-davos/yeva-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/yeva-portrait.jpg"
+      },
+      "at": [
+        -2,
+        2.45
+      ],
+      "facing": [
+        0.3,
+        3.4
+      ]
+    },
+    {
+      "id": "milos-radan",
+      "name": "Milos Radan",
+      "role": "Human cleric",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/milos-front.webp",
+        "back": "/stage/fixtures/march-of-davos/milos-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/milos-portrait.jpg"
+      },
+      "at": [
+        -1.55,
+        2.95
+      ],
+      "facing": [
+        0.3,
+        3.4
+      ]
+    },
+    {
+      "id": "bram",
+      "name": "Bram",
+      "role": "Innkeeper",
+      "height": 1.86,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/bram-front.webp",
+        "back": "/stage/fixtures/march-of-davos/bram-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/bram-portrait.jpg"
+      },
+      "at": [
+        -0.8,
+        -2.3
+      ],
+      "facing": [
+        0.3,
+        3.4
+      ]
+    },
+    {
+      "id": "elara",
+      "name": "Elara Antonov",
+      "role": "Courier",
+      "height": 1.65,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/elara-front.webp",
+        "back": "/stage/fixtures/march-of-davos/elara-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/elara-portrait.jpg"
+      },
+      "at": [
+        0.3,
+        3.4
+      ],
+      "facing": [
+        -0.8,
+        -2.3
+      ]
+    },
+    {
+      "id": "patron-farmer",
+      "name": "An old farmer",
+      "role": "Patron",
+      "height": 1.32,
+      "art": {
+        "front": "/stage/fixtures/march-of-davos/patron-farmer-front.webp",
+        "back": "/stage/fixtures/march-of-davos/patron-farmer-back.webp",
+        "portrait": "/stage/fixtures/march-of-davos/patron-farmer-portrait.jpg"
+      },
+      "at": [
+        -1.65,
+        -0.42
+      ],
+      "facing": [
+        -1.65,
+        0.4
+      ]
+    }
+  ],
+  "shots": {
+    "elara": {
+      "subject": "elara",
+      "distance": 2.2,
+      "angle": 20,
+      "height": 1.6,
+      "lookHeight": 1.5,
+      "fov": 44,
+      "label": "Elara"
+    },
+    "bram": {
+      "subject": "bram",
+      "distance": 2.3,
+      "angle": -20,
+      "height": 1.7,
+      "lookHeight": 1.6,
+      "fov": 44,
+      "label": "Bram"
+    },
+    "party": {
+      "subjects": [
+        "branka-stoneveil",
+        "cassia-verane",
+        "yeva-softstep",
+        "milos-radan"
+      ],
+      "offset": [
+        2.5,
+        1.7,
+        -0.4
+      ],
+      "target": [
+        0,
+        1.05,
+        0.15
+      ],
+      "relative": "world",
+      "fov": 54,
+      "label": "Party"
+    }
+  },
+  "shot": "morning",
+  "entrances": [
+    {
+      "cast": "elara",
+      "when": "door creaks open",
+      "from": "street",
+      "shot": "door"
+    }
+  ]
+}

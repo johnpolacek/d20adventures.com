@@ -1,0 +1,148 @@
+"use client"
+import { ChevronDoubleLeftIcon } from "@heroicons/react/24/outline"
+import Link from "next/link"
+import { useEffect, useState } from "react"
+import PartySetup from "@/components/adventure/party-setup"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { CharacterSelectCard } from "@/components/ui/character-select-card"
+import Image from "@/components/ui/native-image"
+import type { PCTemplate } from "@/types/character"
+import { textShadow, textShadowSpread } from "../typography/styles"
+import { scrollToTop } from "../ui/utils"
+
+export default function ChooseCharacterView({
+  username,
+  characters,
+  characterFiles,
+  userId,
+  settingId,
+  adventurePlanId,
+  adventureTitle,
+  adventureTeaser,
+  premadeCompanions = [],
+  party = [1, 1],
+}: {
+  username: string
+  characters: PCTemplate[]
+  characterFiles: string[]
+  userId: string
+  settingId: string
+  adventurePlanId: string
+  adventureTitle: string
+  adventureTeaser: string
+  premadeCompanions?: PCTemplate[]
+  party?: [number, number]
+}) {
+  const [selectedCharacter, setSelectedCharacter] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  // When the adventure has premade companions, picking a character advances to
+  // a party-setup step instead of creating the adventure immediately.
+  const hasPartyStep = premadeCompanions.length > 0
+  const [partyStep, setPartyStep] = useState(false)
+
+  // The party step is much shorter than the character grid, so an inherited
+  // scroll position would leave its heading tucked under the fixed header.
+  useEffect(() => {
+    scrollToTop()
+  }, [partyStep])
+
+  async function handleChoose(characterFile: string) {
+    if (hasPartyStep) {
+      setSelectedCharacter(characterFile)
+      setPartyStep(true)
+      return
+    }
+    setSubmitting(true)
+    const { createAdventure } = await import("@/app/_actions/create-adventure")
+    await createAdventure({
+      settingId,
+      adventurePlanId,
+      characterChoices: [{ characterId: `characters/${userId}/${characterFile}.json`, mode: "player" }],
+    })
+    // The redirect happens in the server action
+    setSubmitting(false)
+  }
+
+  const selectedIndex = selectedCharacter ? characterFiles.indexOf(selectedCharacter) : -1
+  const selectedCharacterSheet = selectedIndex >= 0 ? characters[selectedIndex] : null
+
+  if (partyStep && selectedCharacter && selectedCharacterSheet) {
+    // The fixed header is ~110px tall at desktop widths, so pt-24 (96px) clipped the card.
+    return (
+      <div className="flex flex-col items-center justify-center relative z-10 pt-28 sm:pt-36 pb-12">
+        <PartySetup
+          settingId={settingId}
+          adventurePlanId={adventurePlanId}
+          selectedCharacterId={`characters/${userId}/${selectedCharacter}.json`}
+          selectedCharacterName={selectedCharacterSheet.name}
+          selectedCharacterImage={selectedCharacterSheet.image}
+          companions={premadeCompanions}
+          party={party}
+          onBack={() => {
+            setPartyStep(false)
+            setSelectedCharacter(null)
+          }}
+        />
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center relative z-10 pt-24 pb-12">
+      <Card className="text-center mt-8 mb-12 p-8 bg-gradient-to-tl from-black/80 to-black/50 border-none ring-8 ring-black/20">
+        <div style={textShadow} className="mb-4 text-5xl font-display font-bold text-amber-300">
+          {adventureTitle}
+        </div>
+        <div style={textShadow} className="max-w-4xl mx-auto text-base text-amber-50 text-left text-pretty">
+          {adventureTeaser}
+        </div>
+        <Link href={`/settings/${settingId}/play`}>
+          <Button variant="ghost" className="mt-2 text-sm bg-primary-800 px-4 text-primary-300 hover:text-primary-200" size="sm">
+            <ChevronDoubleLeftIcon className="w-3 h-3" /> Back to Setting Adventures
+          </Button>
+        </Link>
+      </Card>
+      <div style={textShadowSpread} className="mb-8 text-3xl font-display font-bold text-amber-100">
+        Choose Your Character
+      </div>
+      <div className="flex flex-wrap gap-8 justify-center mb-8 w-full max-w-6xl">
+        {characters.map((char, i) => (
+          <div
+            key={char.id}
+            className={`w-full sm:w-1/2 md:w-1/3 lg:w-1/4 cursor-pointer transition-all ease-in-out duration-500${selectedCharacter === characterFiles[i] ? " ring-amber-400 border-amber-400 scale-105" : ""}`}
+            onClick={() => {
+              setSelectedCharacter(characterFiles[i])
+              handleChoose(characterFiles[i])
+            }}
+          >
+            <CharacterSelectCard
+              character={char}
+              buttonLabel="Choose"
+              disabled={submitting}
+              clickable={true}
+              className={selectedCharacter === characterFiles[i] ? "ring-amber-400/50 border-amber-400/50 hover:scale-[1.01]" : ""}
+            />
+          </div>
+        ))}
+        {/* Create New Character Card */}
+        <div className="w-full md:w-1/2 lg:w-1/3 cursor-pointer transition-all ease-in-out duration-500 hover:scale-[1.01] hover:ring-primary-400">
+          <Link href={`/player/${username}/characters/new`}>
+            <Card className="bg-black text-white rounded-lg overflow-hidden flex flex-col items-center ring-8 ring-black/30 border border-white/10 p-0 font-display w-full h-full transition-all ease-in-out duration-500 hover:scale-105 hover:ring-primary-400/80">
+              <div className="w-full aspect-video relative">
+                <Image src="/images/app/characters/default.png" alt="Create New Character" fill={true} className="object-cover w-full h-full" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+              </div>
+              <div className="pb-6 -mt-10 z-10 relative flex flex-col justify-center items-center">
+                <div className="font-bold text-3xl text-amber-400 -mt-8 mb-4 truncate w-full text-center">Create New Character</div>
+                <Button variant="epic" className="text-sm" size="sm">
+                  Create
+                </Button>
+              </div>
+            </Card>
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
+}

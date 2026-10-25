@@ -1,0 +1,2265 @@
+{
+  "format": "d20.stage.set",
+  "version": 1,
+  "id": "blackthorn-ballroom-drake",
+  "settingId": "realm-of-myr",
+  "locationId": "blackthorn-ballroom",
+  "title": "The Blackthorn ballroom, the drake revealed",
+  "seed": 2801,
+  "atmosphere": {
+    "sun": {
+      "direction": [
+        0.8,
+        0.5,
+        -0.25
+      ],
+      "color": "#a8bcd8",
+      "intensity": 0.8,
+      "target": [
+        11,
+        0,
+        -8
+      ],
+      "distance": 120,
+      "shadow": {
+        "left": -20,
+        "right": 20,
+        "top": 20,
+        "bottom": -20,
+        "near": 40,
+        "far": 200,
+        "size": 1024
+      }
+    },
+    "hemisphere": {
+      "sky": "#2a3a56",
+      "ground": "#14100c",
+      "intensity": 0.35
+    },
+    "sky": {
+      "horizon": "#3a4a62",
+      "mid": "#1e2a40",
+      "zenith": "#0a1020",
+      "gain": 0.6,
+      "clouds": 0.3,
+      "stars": 0.5,
+      "moon": 2.6
+    },
+    "fog": {
+      "density": 0.004,
+      "color": "#2a2420",
+      "start": 20
+    },
+    "glow": "#a8bcd8",
+    "fill": {
+      "color": "#fff0dc",
+      "intensity": 1,
+      "distance": 9
+    },
+    "lights": [
+      {
+        "at": [
+          10.6,
+          2.6,
+          -8
+        ],
+        "color": "#a8c0e0",
+        "intensity": 3,
+        "distance": 6
+      }
+    ],
+    "environment": 0.25,
+    "exposure": 1.1,
+    "grade": "warm",
+    "wind": 0.1
+  },
+  "rooms": [
+    {
+      "box": [
+        -9.2,
+        0,
+        -26.2,
+        9.2,
+        15,
+        8.2
+      ],
+      "ambient": 0.35,
+      "fill": 1,
+      "exposure": 1.15,
+      "lights": [
+        {
+          "at": [
+            0,
+            8.4,
+            3
+          ],
+          "color": "#ffc070",
+          "intensity": 26,
+          "distance": 18
+        },
+        {
+          "at": [
+            0,
+            8.4,
+            -7
+          ],
+          "color": "#ffc070",
+          "intensity": 26,
+          "distance": 18
+        },
+        {
+          "at": [
+            0,
+            8.4,
+            -17
+          ],
+          "color": "#ffc070",
+          "intensity": 26,
+          "distance": 18
+        },
+        {
+          "at": [
+            -7.5,
+            3,
+            0
+          ],
+          "color": "#ffb060",
+          "intensity": 8,
+          "distance": 10
+        },
+        {
+          "at": [
+            7.5,
+            3,
+            -4
+          ],
+          "color": "#ffb060",
+          "intensity": 8,
+          "distance": 10
+        },
+        {
+          "at": [
+            0,
+            3.4,
+            -20.5
+          ],
+          "color": "#ffc880",
+          "intensity": 14,
+          "distance": 10
+        },
+        {
+          "at": [
+            -3.4,
+            3.6,
+            -21.2
+          ],
+          "color": "#ffd8a0",
+          "intensity": 10,
+          "distance": 7
+        },
+        {
+          "at": [
+            8.4,
+            2.4,
+            -8
+          ],
+          "color": "#a8c0e0",
+          "intensity": 3,
+          "distance": 5
+        }
+      ]
+    }
+  ],
+  "camera": {
+    "near": 0.1,
+    "far": 400,
+    "min": [
+      -8.7,
+      0.4,
+      -25.6
+    ],
+    "max": [
+      12.2,
+      12,
+      7.7
+    ],
+    "maxDistance": 26
+  },
+  "materials": {
+    "gilt": {
+      "type": "metal",
+      "color": "#c89a48",
+      "roughness": 0.38,
+      "metalness": 0.85
+    },
+    "fresco": {
+      "type": "image",
+      "map": "/stage/textures/vault-fresco.jpg",
+      "roughness": 0.9,
+      "tint": "#f0e8dc"
+    },
+    "candle": {
+      "type": "plain",
+      "color": "#e8dcc0",
+      "roughness": 0.9
+    },
+    "candleFlame": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ffa040",
+      "emissiveIntensity": 2.4
+    },
+    "iron": {
+      "type": "metal",
+      "color": "#2e2a28",
+      "roughness": 0.55,
+      "metalness": 0.7
+    },
+    "brass": {
+      "type": "metal",
+      "color": "#a8823e",
+      "roughness": 0.38,
+      "metalness": 0.85
+    },
+    "oak": {
+      "type": "painted",
+      "map": "/stage/textures/door-oak.jpg",
+      "tint": "#8a6a54",
+      "plank": [
+        0.2,
+        2.4
+      ],
+      "size": [
+        0.6,
+        1.8
+      ],
+      "relief": 0.1,
+      "grime": 1
+    },
+    "oakDark": {
+      "type": "painted",
+      "map": "/stage/textures/door-oak.jpg",
+      "tint": "#5c4436",
+      "plank": [
+        0,
+        40
+      ],
+      "size": [
+        0.6,
+        1.8
+      ],
+      "relief": 0.1,
+      "grime": 1.2
+    },
+    "void": {
+      "type": "plain",
+      "color": "#0d0a09",
+      "roughness": 1
+    },
+    "dark": {
+      "type": "masonry",
+      "a": "#6a4a3a",
+      "b": "#7f624d",
+      "c": "#5a5553",
+      "block": [
+        2.4,
+        1.2
+      ],
+      "grime": 1.3,
+      "relief": 0.08
+    },
+    "lead": {
+      "type": "metal",
+      "color": "#2a2826",
+      "roughness": 0.6,
+      "metalness": 0.4
+    },
+    "slag": {
+      "type": "metal",
+      "color": "#4a4a3e",
+      "roughness": 0.7,
+      "metalness": 0.5
+    },
+    "acid": {
+      "type": "plain",
+      "color": "#3a4a2a",
+      "roughness": 0.3,
+      "emissive": "#6a8a2a",
+      "emissiveIntensity": 0.25
+    },
+    "cageStraw": {
+      "type": "plain",
+      "color": "#4a3e2a",
+      "roughness": 1
+    },
+    "scorch": {
+      "type": "plain",
+      "color": "#141210",
+      "roughness": 1
+    },
+    "pewter": {
+      "type": "metal",
+      "color": "#8e8c88",
+      "roughness": 0.45,
+      "metalness": 0.7
+    },
+    "bread": {
+      "type": "plain",
+      "color": "#b47a3e",
+      "roughness": 0.8
+    },
+    "cheese": {
+      "type": "plain",
+      "color": "#d8b456",
+      "roughness": 0.7
+    },
+    "roast": {
+      "type": "plain",
+      "color": "#6a3a20",
+      "roughness": 0.6
+    },
+    "roastDark": {
+      "type": "plain",
+      "color": "#4c2410",
+      "roughness": 0.5
+    },
+    "bone": {
+      "type": "rock",
+      "a": "#a29274",
+      "b": "#d8ccae",
+      "moss": "#7e705a",
+      "mossLight": "#a49478",
+      "lichen": "#c8bc9e",
+      "mossAmount": 0.25,
+      "lichenAmount": 0.1,
+      "relief": 0.5,
+      "scale": 0.5
+    },
+    "bottleBrown": {
+      "type": "plain",
+      "color": "#4c2c14",
+      "roughness": 0.2
+    },
+    "bottleGreen": {
+      "type": "plain",
+      "color": "#2a4a2c",
+      "roughness": 0.2
+    },
+    "timber": {
+      "type": "wood",
+      "a": "#2a201a",
+      "b": "#342820",
+      "c": "#262220",
+      "plank": [
+        0,
+        40
+      ],
+      "relief": 0.04,
+      "seed": 3.7
+    },
+    "tablecloth": {
+      "type": "cloth",
+      "color": "#4a2442",
+      "amp": 0.01
+    },
+    "pottery": {
+      "type": "plain",
+      "color": "#a45a36",
+      "roughness": 0.7
+    },
+    "potteryB": {
+      "type": "plain",
+      "color": "#8a6a4e",
+      "roughness": 0.75
+    },
+    "rope": {
+      "type": "plain",
+      "color": "#5a4632",
+      "roughness": 1
+    },
+    "lamp": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ffa850",
+      "emissiveIntensity": 2.2
+    },
+    "flame": {
+      "type": "plain",
+      "color": "#000000",
+      "roughness": 1,
+      "emissive": "#ffae55",
+      "emissiveIntensity": 5
+    },
+    "bannerAsterian": {
+      "type": "cloth",
+      "color": "#ffffff",
+      "heraldry": "asterian",
+      "tatters": [
+        2,
+        0.05
+      ],
+      "amp": 0.45
+    },
+    "marble": {
+      "type": "masonry",
+      "a": "#d8cfc0",
+      "b": "#cbbfae",
+      "c": "#e2d9cc",
+      "mortar": "#9a8a76",
+      "block": [
+        1.2,
+        1.2
+      ],
+      "joint": 0.005,
+      "relief": 0.002,
+      "variance": 0.35,
+      "grime": 0.3,
+      "ground": true,
+      "roughness": 0.22
+    },
+    "marbleColumn": {
+      "type": "masonry",
+      "a": "#e4dccc",
+      "b": "#d8cebc",
+      "c": "#ece4d6",
+      "mortar": "#c8bca8",
+      "block": [
+        0.8,
+        0.5
+      ],
+      "joint": 0.002,
+      "relief": 0.001,
+      "variance": 0.25,
+      "grime": 0.2,
+      "roughness": 0.3
+    },
+    "marbleTrim": {
+      "type": "masonry",
+      "a": "#cfc4b0",
+      "b": "#c4b8a2",
+      "c": "#d8cebc",
+      "mortar": "#b0a48e",
+      "block": [
+        0.6,
+        0.3
+      ],
+      "joint": 0.003,
+      "relief": 0.002,
+      "variance": 0.2,
+      "grime": 0.3
+    },
+    "ballWall": {
+      "type": "masonry",
+      "a": "#d6c8ac",
+      "b": "#cfc0a2",
+      "c": "#dccfb4",
+      "mortar": "#c0b092",
+      "block": [
+        1.6,
+        0.8
+      ],
+      "joint": 0.002,
+      "relief": 0.001,
+      "variance": 0.15,
+      "grime": 0.25
+    },
+    "ballPanel": {
+      "type": "plain",
+      "color": "#7a4a2a",
+      "roughness": 0.6
+    },
+    "ballCeiling": {
+      "type": "plain",
+      "color": "#c8b48c",
+      "roughness": 0.8
+    },
+    "ballDoor": {
+      "type": "painted",
+      "map": "/stage/textures/door-oak.jpg",
+      "tint": "#7a5a40",
+      "plank": [
+        0.2,
+        2.4
+      ],
+      "size": [
+        0.6,
+        1.8
+      ],
+      "relief": 0.08,
+      "grime": 0.6
+    },
+    "nightGlass": {
+      "type": "glass",
+      "color": "#0c1424",
+      "opacity": 0.7,
+      "emissive": "#0a1426",
+      "emissiveIntensity": 0.12
+    },
+    "velvet": {
+      "type": "cloth",
+      "color": "#6a141a",
+      "amp": 0.15,
+      "freq": 0.5
+    },
+    "velvetDark": {
+      "type": "plain",
+      "color": "#3a0c10",
+      "roughness": 0.8
+    },
+    "carpet": {
+      "type": "plain",
+      "color": "#5a1018",
+      "roughness": 0.9
+    },
+    "stageWood": {
+      "type": "painted",
+      "map": "/stage/textures/door-oak.jpg",
+      "tint": "#6a4a32",
+      "plank": [
+        0.18,
+        3
+      ],
+      "size": [
+        0.6,
+        1.8
+      ],
+      "relief": 0.06,
+      "grime": 0.6
+    },
+    "gem": {
+      "type": "plain",
+      "color": "#2a4a8a",
+      "roughness": 0.1,
+      "emissive": "#3a6ac0",
+      "emissiveIntensity": 0.6
+    },
+    "terrace": {
+      "type": "masonry",
+      "a": "#8a8478",
+      "b": "#948e82",
+      "c": "#7e786c",
+      "mortar": "#5a564e",
+      "block": [
+        0.8,
+        0.8
+      ],
+      "joint": 0.008,
+      "relief": 0.004,
+      "variance": 0.3,
+      "grime": 1.2,
+      "ground": true
+    },
+    "balustrade": {
+      "type": "masonry",
+      "a": "#b8b0a2",
+      "b": "#c2baac",
+      "c": "#aea698",
+      "mortar": "#8a8276",
+      "block": [
+        0.6,
+        0.3
+      ],
+      "joint": 0.003,
+      "relief": 0.002,
+      "variance": 0.2,
+      "grime": 1
+    },
+    "garden": {
+      "type": "meadow",
+      "grass": "#1a2a1c",
+      "grassDark": "#101a12",
+      "dirt": "#1a1612",
+      "flowers": 0.1
+    },
+    "leaves": {
+      "type": "foliage",
+      "color": "#1e3a22"
+    },
+    "leavesDark": {
+      "type": "foliage",
+      "color": "#142a18"
+    },
+    "bark": {
+      "type": "plain",
+      "color": "#2a2018",
+      "roughness": 1
+    }
+  },
+  "objects": [
+    {
+      "type": "box",
+      "at": [
+        0,
+        -0.3,
+        -9
+      ],
+      "size": [
+        18.6,
+        0.3,
+        34.6
+      ],
+      "material": "marble"
+    },
+    {
+      "type": "wall",
+      "at": [
+        -9.2,
+        -9
+      ],
+      "yaw": 90,
+      "length": 34.4,
+      "height": 7.4,
+      "thickness": 0.4,
+      "a": {
+        "finish": "plaster",
+        "wainscot": 1.1,
+        "studs": 0,
+        "rail": 3
+      },
+      "b": {
+        "finish": "plaster",
+        "wainscot": 1.1,
+        "studs": 0,
+        "rail": 3
+      },
+      "openings": [
+        {
+          "at": -13,
+          "width": 2,
+          "height": 4.6,
+          "sill": 1.3,
+          "kind": "window",
+          "panes": [
+            3,
+            6
+          ]
+        },
+        {
+          "at": -5,
+          "width": 2,
+          "height": 4.6,
+          "sill": 1.3,
+          "kind": "window",
+          "panes": [
+            3,
+            6
+          ]
+        },
+        {
+          "at": 3,
+          "width": 2,
+          "height": 4.6,
+          "sill": 1.3,
+          "kind": "window",
+          "panes": [
+            3,
+            6
+          ]
+        },
+        {
+          "at": 11,
+          "width": 2,
+          "height": 4.6,
+          "sill": 1.3,
+          "kind": "window",
+          "panes": [
+            3,
+            6
+          ]
+        }
+      ],
+      "materials": {
+        "wall": "ballWall",
+        "panel": "ballPanel",
+        "timber": "gilt",
+        "door": "ballDoor",
+        "glass": "nightGlass",
+        "glassOut": "nightGlass",
+        "lead": "gilt",
+        "stone": "marbleTrim",
+        "boards": "ballPanel"
+      }
+    },
+    {
+      "type": "wall",
+      "at": [
+        9.2,
+        -9
+      ],
+      "yaw": -90,
+      "length": 34.4,
+      "height": 7.4,
+      "thickness": 0.4,
+      "a": {
+        "finish": "plaster",
+        "wainscot": 1.1,
+        "studs": 0,
+        "rail": 3
+      },
+      "b": {
+        "finish": "plaster",
+        "wainscot": 1.1,
+        "studs": 0,
+        "rail": 3
+      },
+      "openings": [
+        {
+          "at": 13,
+          "width": 2,
+          "height": 4.6,
+          "sill": 1.3,
+          "kind": "window",
+          "panes": [
+            3,
+            6
+          ]
+        },
+        {
+          "at": -7,
+          "width": 2,
+          "height": 4.6,
+          "sill": 1.3,
+          "kind": "window",
+          "panes": [
+            3,
+            6
+          ]
+        },
+        {
+          "at": 1,
+          "width": 2.6,
+          "height": 4.6,
+          "kind": "door",
+          "leaf": -75,
+          "panes": [
+            3,
+            8
+          ]
+        }
+      ],
+      "materials": {
+        "wall": "ballWall",
+        "panel": "ballPanel",
+        "timber": "gilt",
+        "door": "ballDoor",
+        "glass": "nightGlass",
+        "glassOut": "nightGlass",
+        "lead": "gilt",
+        "stone": "marbleTrim",
+        "boards": "ballPanel"
+      }
+    },
+    {
+      "type": "wall",
+      "at": [
+        0,
+        8.2
+      ],
+      "length": 18.8,
+      "height": 7.4,
+      "thickness": 0.4,
+      "a": {
+        "finish": "plaster",
+        "wainscot": 1.1,
+        "studs": 0,
+        "rail": 3
+      },
+      "b": {
+        "finish": "plaster",
+        "wainscot": 1.1,
+        "studs": 0,
+        "rail": 3
+      },
+      "openings": [
+        {
+          "at": 0,
+          "width": 3.4,
+          "height": 4.8,
+          "kind": "doorway"
+        }
+      ],
+      "materials": {
+        "wall": "ballWall",
+        "panel": "ballPanel",
+        "timber": "gilt",
+        "door": "ballDoor",
+        "glass": "nightGlass",
+        "glassOut": "nightGlass",
+        "lead": "gilt",
+        "stone": "marbleTrim",
+        "boards": "ballPanel"
+      }
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        0,
+        10.2
+      ],
+      "size": [
+        3.6,
+        5,
+        0.2
+      ],
+      "material": "void"
+    },
+    {
+      "type": "wall",
+      "at": [
+        0,
+        -26.2
+      ],
+      "length": 18.8,
+      "height": 7.4,
+      "thickness": 0.4,
+      "a": {
+        "finish": "plaster",
+        "wainscot": 1.1,
+        "studs": 0,
+        "rail": 3
+      },
+      "b": {
+        "finish": "plaster",
+        "wainscot": 1.1,
+        "studs": 0,
+        "rail": 3
+      },
+      "materials": {
+        "wall": "ballWall",
+        "panel": "ballPanel",
+        "timber": "gilt",
+        "door": "ballDoor",
+        "glass": "nightGlass",
+        "glassOut": "nightGlass",
+        "lead": "gilt",
+        "stone": "marbleTrim",
+        "boards": "ballPanel"
+      }
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        7.4,
+        8.2
+      ],
+      "size": [
+        18.8,
+        7,
+        0.4
+      ],
+      "material": "ballWall"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        7.4,
+        -26.2
+      ],
+      "size": [
+        18.8,
+        7,
+        0.4
+      ],
+      "material": "ballWall"
+    },
+    {
+      "type": "column",
+      "at": [
+        -6,
+        6
+      ],
+      "height": 5.6,
+      "radius": 0.38,
+      "flutes": 16,
+      "materials": {
+        "shaft": "marbleColumn",
+        "flute": "marbleTrim",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "column",
+      "at": [
+        -6,
+        2
+      ],
+      "height": 5.6,
+      "radius": 0.38,
+      "flutes": 16,
+      "materials": {
+        "shaft": "marbleColumn",
+        "flute": "marbleTrim",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "column",
+      "at": [
+        -6,
+        -2
+      ],
+      "height": 5.6,
+      "radius": 0.38,
+      "flutes": 16,
+      "materials": {
+        "shaft": "marbleColumn",
+        "flute": "marbleTrim",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "column",
+      "at": [
+        -6,
+        -6
+      ],
+      "height": 5.6,
+      "radius": 0.38,
+      "flutes": 16,
+      "materials": {
+        "shaft": "marbleColumn",
+        "flute": "marbleTrim",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "column",
+      "at": [
+        -6,
+        -10
+      ],
+      "height": 5.6,
+      "radius": 0.38,
+      "flutes": 16,
+      "materials": {
+        "shaft": "marbleColumn",
+        "flute": "marbleTrim",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "column",
+      "at": [
+        -6,
+        -14
+      ],
+      "height": 5.6,
+      "radius": 0.38,
+      "flutes": 16,
+      "materials": {
+        "shaft": "marbleColumn",
+        "flute": "marbleTrim",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "column",
+      "at": [
+        -6,
+        -18
+      ],
+      "height": 5.6,
+      "radius": 0.38,
+      "flutes": 16,
+      "materials": {
+        "shaft": "marbleColumn",
+        "flute": "marbleTrim",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "column",
+      "at": [
+        -6,
+        -22
+      ],
+      "height": 5.6,
+      "radius": 0.38,
+      "flutes": 16,
+      "materials": {
+        "shaft": "marbleColumn",
+        "flute": "marbleTrim",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "archHead",
+      "at": [
+        -6,
+        4
+      ],
+      "yaw": 90,
+      "width": 3.24,
+      "height": 7.4,
+      "thickness": 0.6,
+      "materials": {
+        "fill": "ballWall",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "archHead",
+      "at": [
+        -6,
+        0
+      ],
+      "yaw": 90,
+      "width": 3.24,
+      "height": 7.4,
+      "thickness": 0.6,
+      "materials": {
+        "fill": "ballWall",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "archHead",
+      "at": [
+        -6,
+        -4
+      ],
+      "yaw": 90,
+      "width": 3.24,
+      "height": 7.4,
+      "thickness": 0.6,
+      "materials": {
+        "fill": "ballWall",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "archHead",
+      "at": [
+        -6,
+        -8
+      ],
+      "yaw": 90,
+      "width": 3.24,
+      "height": 7.4,
+      "thickness": 0.6,
+      "materials": {
+        "fill": "ballWall",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "archHead",
+      "at": [
+        -6,
+        -12
+      ],
+      "yaw": 90,
+      "width": 3.24,
+      "height": 7.4,
+      "thickness": 0.6,
+      "materials": {
+        "fill": "ballWall",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "archHead",
+      "at": [
+        -6,
+        -16
+      ],
+      "yaw": 90,
+      "width": 3.24,
+      "height": 7.4,
+      "thickness": 0.6,
+      "materials": {
+        "fill": "ballWall",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "archHead",
+      "at": [
+        -6,
+        -20
+      ],
+      "yaw": 90,
+      "width": 3.24,
+      "height": 7.4,
+      "thickness": 0.6,
+      "materials": {
+        "fill": "ballWall",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "archHead",
+      "at": [
+        -6,
+        -24
+      ],
+      "yaw": 90,
+      "width": 3.8,
+      "height": 7.4,
+      "thickness": 0.6,
+      "materials": {
+        "fill": "ballWall",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "archHead",
+      "at": [
+        -6,
+        7
+      ],
+      "yaw": 90,
+      "width": 1.6,
+      "height": 7.4,
+      "thickness": 0.6,
+      "materials": {
+        "fill": "ballWall",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "box",
+      "at": [
+        -6,
+        7.4,
+        -9
+      ],
+      "size": [
+        0.9,
+        0.6,
+        34
+      ],
+      "material": "ballWall"
+    },
+    {
+      "type": "box",
+      "at": [
+        -6.47,
+        7.5,
+        -9
+      ],
+      "size": [
+        0.06,
+        0.12,
+        34
+      ],
+      "material": "gilt"
+    },
+    {
+      "type": "box",
+      "at": [
+        -7.7,
+        7.4,
+        -9
+      ],
+      "size": [
+        3.4,
+        0.2,
+        34
+      ],
+      "material": "ballCeiling"
+    },
+    {
+      "type": "column",
+      "at": [
+        6,
+        6
+      ],
+      "height": 5.6,
+      "radius": 0.38,
+      "flutes": 16,
+      "materials": {
+        "shaft": "marbleColumn",
+        "flute": "marbleTrim",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "column",
+      "at": [
+        6,
+        2
+      ],
+      "height": 5.6,
+      "radius": 0.38,
+      "flutes": 16,
+      "materials": {
+        "shaft": "marbleColumn",
+        "flute": "marbleTrim",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "column",
+      "at": [
+        6,
+        -2
+      ],
+      "height": 5.6,
+      "radius": 0.38,
+      "flutes": 16,
+      "materials": {
+        "shaft": "marbleColumn",
+        "flute": "marbleTrim",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "column",
+      "at": [
+        6,
+        -6
+      ],
+      "height": 5.6,
+      "radius": 0.38,
+      "flutes": 16,
+      "materials": {
+        "shaft": "marbleColumn",
+        "flute": "marbleTrim",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "column",
+      "at": [
+        6,
+        -10
+      ],
+      "height": 5.6,
+      "radius": 0.38,
+      "flutes": 16,
+      "materials": {
+        "shaft": "marbleColumn",
+        "flute": "marbleTrim",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "column",
+      "at": [
+        6,
+        -14
+      ],
+      "height": 5.6,
+      "radius": 0.38,
+      "flutes": 16,
+      "materials": {
+        "shaft": "marbleColumn",
+        "flute": "marbleTrim",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "column",
+      "at": [
+        6,
+        -18
+      ],
+      "height": 5.6,
+      "radius": 0.38,
+      "flutes": 16,
+      "materials": {
+        "shaft": "marbleColumn",
+        "flute": "marbleTrim",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "column",
+      "at": [
+        6,
+        -22
+      ],
+      "height": 5.6,
+      "radius": 0.38,
+      "flutes": 16,
+      "materials": {
+        "shaft": "marbleColumn",
+        "flute": "marbleTrim",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "archHead",
+      "at": [
+        6,
+        4
+      ],
+      "yaw": 90,
+      "width": 3.24,
+      "height": 7.4,
+      "thickness": 0.6,
+      "materials": {
+        "fill": "ballWall",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "archHead",
+      "at": [
+        6,
+        0
+      ],
+      "yaw": 90,
+      "width": 3.24,
+      "height": 7.4,
+      "thickness": 0.6,
+      "materials": {
+        "fill": "ballWall",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "archHead",
+      "at": [
+        6,
+        -4
+      ],
+      "yaw": 90,
+      "width": 3.24,
+      "height": 7.4,
+      "thickness": 0.6,
+      "materials": {
+        "fill": "ballWall",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "archHead",
+      "at": [
+        6,
+        -8
+      ],
+      "yaw": 90,
+      "width": 3.24,
+      "height": 7.4,
+      "thickness": 0.6,
+      "materials": {
+        "fill": "ballWall",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "archHead",
+      "at": [
+        6,
+        -12
+      ],
+      "yaw": 90,
+      "width": 3.24,
+      "height": 7.4,
+      "thickness": 0.6,
+      "materials": {
+        "fill": "ballWall",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "archHead",
+      "at": [
+        6,
+        -16
+      ],
+      "yaw": 90,
+      "width": 3.24,
+      "height": 7.4,
+      "thickness": 0.6,
+      "materials": {
+        "fill": "ballWall",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "archHead",
+      "at": [
+        6,
+        -20
+      ],
+      "yaw": 90,
+      "width": 3.24,
+      "height": 7.4,
+      "thickness": 0.6,
+      "materials": {
+        "fill": "ballWall",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "archHead",
+      "at": [
+        6,
+        -24
+      ],
+      "yaw": 90,
+      "width": 3.8,
+      "height": 7.4,
+      "thickness": 0.6,
+      "materials": {
+        "fill": "ballWall",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "archHead",
+      "at": [
+        6,
+        7
+      ],
+      "yaw": 90,
+      "width": 1.6,
+      "height": 7.4,
+      "thickness": 0.6,
+      "materials": {
+        "fill": "ballWall",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "box",
+      "at": [
+        6,
+        7.4,
+        -9
+      ],
+      "size": [
+        0.9,
+        0.6,
+        34
+      ],
+      "material": "ballWall"
+    },
+    {
+      "type": "box",
+      "at": [
+        6.47,
+        7.5,
+        -9
+      ],
+      "size": [
+        0.06,
+        0.12,
+        34
+      ],
+      "material": "gilt"
+    },
+    {
+      "type": "box",
+      "at": [
+        7.7,
+        7.4,
+        -9
+      ],
+      "size": [
+        3.4,
+        0.2,
+        34
+      ],
+      "material": "ballCeiling"
+    },
+    {
+      "type": "vault",
+      "at": [
+        0,
+        0
+      ],
+      "span": 12,
+      "from": 8.1,
+      "to": -26.1,
+      "spring": 8,
+      "bay": 4,
+      "rib": 0.26,
+      "repeat": [
+        3,
+        2
+      ],
+      "materials": {
+        "shell": "fresco",
+        "rib": "ballWall",
+        "trim": "gilt"
+      }
+    },
+    {
+      "type": "chandelier",
+      "at": [
+        0,
+        13.6,
+        3
+      ],
+      "radius": 1.7,
+      "candles": 16,
+      "drop": 4.6,
+      "materials": {
+        "timber": "gilt"
+      }
+    },
+    {
+      "type": "chandelier",
+      "at": [
+        0,
+        13.6,
+        -7
+      ],
+      "radius": 1.7,
+      "candles": 16,
+      "drop": 4.6,
+      "materials": {
+        "timber": "gilt"
+      }
+    },
+    {
+      "type": "chandelier",
+      "at": [
+        0,
+        13.6,
+        -17
+      ],
+      "radius": 1.7,
+      "candles": 16,
+      "drop": 4.6,
+      "materials": {
+        "timber": "gilt"
+      }
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        0,
+        -23.8
+      ],
+      "size": [
+        13,
+        0.9,
+        4.399999999999999
+      ],
+      "material": "stageWood",
+      "solid": true
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        0.88,
+        -23.5
+      ],
+      "size": [
+        12.4,
+        0.03,
+        3.7999999999999985
+      ],
+      "material": "carpet"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        0.78,
+        -21.580000000000002
+      ],
+      "size": [
+        13.04,
+        0.1,
+        0.06
+      ],
+      "material": "gilt"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        0,
+        -20.55
+      ],
+      "size": [
+        4.4,
+        0.3,
+        0.7
+      ],
+      "material": "stageWood"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        0.3,
+        -20.900000000000002
+      ],
+      "size": [
+        4,
+        0.3,
+        0.7
+      ],
+      "material": "stageWood"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        0.6,
+        -21.25
+      ],
+      "size": [
+        3.6000000000000005,
+        0.3,
+        0.7
+      ],
+      "material": "stageWood"
+    },
+    {
+      "type": "box",
+      "at": [
+        0,
+        0,
+        -25.95
+      ],
+      "size": [
+        17,
+        7.3,
+        0.1
+      ],
+      "material": "velvetDark"
+    },
+    {
+      "type": "curtain",
+      "at": [
+        0,
+        0,
+        -25.65
+      ],
+      "width": 16.8,
+      "height": 7.2,
+      "folds": 30,
+      "depth": 0.16,
+      "gather": 0.08,
+      "side": "both",
+      "tie": 0.4,
+      "cloth": "velvet"
+    },
+    {
+      "type": "banner",
+      "at": [
+        -3.6,
+        7,
+        -25.5
+      ],
+      "w": 2,
+      "h": 5.2,
+      "material": "bannerAsterian"
+    },
+    {
+      "type": "banner",
+      "at": [
+        3.6,
+        7,
+        -25.5
+      ],
+      "w": 2,
+      "h": 5.2,
+      "material": "bannerAsterian"
+    },
+    {
+      "type": "cage",
+      "at": [
+        -3.4,
+        0.9,
+        -23.7
+      ],
+      "width": 3.8,
+      "depth": 3.4,
+      "height": 4.4
+    },
+    {
+      "type": "curtain",
+      "at": [
+        -3.4,
+        0,
+        -21.450000000000003
+      ],
+      "width": 4.8,
+      "height": 6.2,
+      "folds": 18,
+      "depth": 0.14,
+      "gather": 0.85,
+      "side": "both",
+      "tie": 0.45,
+      "cloth": "velvet"
+    },
+    {
+      "type": "box",
+      "at": [
+        -3.4,
+        6.1,
+        -21.450000000000003
+      ],
+      "size": [
+        5.2,
+        0.12,
+        0.12
+      ],
+      "material": "gilt"
+    },
+    {
+      "type": "curtain",
+      "at": [
+        -8.7,
+        0,
+        4
+      ],
+      "yaw": 90,
+      "width": 2.9,
+      "height": 6,
+      "folds": 12,
+      "depth": 0.12,
+      "gather": 0.7,
+      "side": "both",
+      "tie": 0.42,
+      "cloth": "velvet"
+    },
+    {
+      "type": "curtain",
+      "at": [
+        -8.7,
+        0,
+        -4
+      ],
+      "yaw": 90,
+      "width": 2.9,
+      "height": 6,
+      "folds": 12,
+      "depth": 0.12,
+      "gather": 0.7,
+      "side": "both",
+      "tie": 0.42,
+      "cloth": "velvet"
+    },
+    {
+      "type": "curtain",
+      "at": [
+        -8.7,
+        0,
+        -12
+      ],
+      "yaw": 90,
+      "width": 2.9,
+      "height": 6,
+      "folds": 12,
+      "depth": 0.12,
+      "gather": 0.7,
+      "side": "both",
+      "tie": 0.42,
+      "cloth": "velvet"
+    },
+    {
+      "type": "curtain",
+      "at": [
+        -8.7,
+        0,
+        -20
+      ],
+      "yaw": 90,
+      "width": 2.9,
+      "height": 6,
+      "folds": 12,
+      "depth": 0.12,
+      "gather": 0.7,
+      "side": "both",
+      "tie": 0.42,
+      "cloth": "velvet"
+    },
+    {
+      "type": "curtain",
+      "at": [
+        8.7,
+        0,
+        4
+      ],
+      "yaw": -90,
+      "width": 2.9,
+      "height": 6,
+      "folds": 12,
+      "depth": 0.12,
+      "gather": 0.7,
+      "side": "both",
+      "tie": 0.42,
+      "cloth": "velvet"
+    },
+    {
+      "type": "curtain",
+      "at": [
+        8.7,
+        0,
+        -16
+      ],
+      "yaw": -90,
+      "width": 2.9,
+      "height": 6,
+      "folds": 12,
+      "depth": 0.12,
+      "gather": 0.7,
+      "side": "both",
+      "tie": 0.42,
+      "cloth": "velvet"
+    },
+    {
+      "type": "candleStand",
+      "at": [
+        -6.9,
+        0
+      ]
+    },
+    {
+      "type": "candleStand",
+      "at": [
+        -6.9,
+        -8
+      ]
+    },
+    {
+      "type": "candleStand",
+      "at": [
+        -6.9,
+        -16
+      ]
+    },
+    {
+      "type": "candleStand",
+      "at": [
+        6.9,
+        0
+      ]
+    },
+    {
+      "type": "candleStand",
+      "at": [
+        6.9,
+        -4
+      ]
+    },
+    {
+      "type": "candleStand",
+      "at": [
+        6.9,
+        -16
+      ]
+    },
+    {
+      "type": "table",
+      "at": [
+        -7.5,
+        3.2
+      ],
+      "yaw": 90,
+      "length": 3.2,
+      "width": 1.1,
+      "height": 0.84,
+      "setting": 8,
+      "candle": true,
+      "materials": {
+        "top": "tablecloth"
+      }
+    },
+    {
+      "type": "table",
+      "at": [
+        -7.5,
+        -1.2
+      ],
+      "yaw": 90,
+      "length": 3.2,
+      "width": 1.1,
+      "height": 0.84,
+      "setting": 8,
+      "candle": true,
+      "materials": {
+        "top": "tablecloth"
+      }
+    },
+    {
+      "type": "table",
+      "at": [
+        -7.5,
+        -6.6
+      ],
+      "yaw": 90,
+      "length": 2.2,
+      "width": 1,
+      "height": 0.9,
+      "materials": {
+        "top": "velvetDark"
+      }
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -7.6,
+        0.98,
+        -6
+      ],
+      "radius": 0.08,
+      "segments": 10,
+      "material": "gem"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -7.3,
+        0.98,
+        -6.8
+      ],
+      "radius": 0.06,
+      "segments": 10,
+      "material": "gem"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        -7.7,
+        0.98,
+        -7.3
+      ],
+      "radius": 0.07,
+      "segments": 10,
+      "material": "gem"
+    },
+    {
+      "type": "chair",
+      "at": [
+        7,
+        -19.6
+      ],
+      "yaw": -110
+    },
+    {
+      "type": "chair",
+      "at": [
+        7.9,
+        -20.4
+      ],
+      "yaw": -110
+    },
+    {
+      "type": "chair",
+      "at": [
+        7.2,
+        -21.4
+      ],
+      "yaw": -110
+    },
+    {
+      "type": "box",
+      "at": [
+        10.8,
+        -0.3,
+        -8
+      ],
+      "size": [
+        3.4,
+        0.3,
+        6.4
+      ],
+      "material": "terrace"
+    },
+    {
+      "type": "gallery",
+      "at": [
+        9.2,
+        -8
+      ],
+      "yaw": 90,
+      "length": 6.2,
+      "level": 0,
+      "depth": 3.2,
+      "rail": 1.05,
+      "materials": {
+        "deck": "terrace",
+        "case": "balustrade",
+        "trim": "balustrade"
+      }
+    },
+    {
+      "type": "box",
+      "at": [
+        21,
+        -7,
+        -8
+      ],
+      "size": [
+        26,
+        0.2,
+        40
+      ],
+      "material": "garden"
+    },
+    {
+      "type": "bush",
+      "at": [
+        15,
+        -6.9,
+        -14
+      ],
+      "size": 1.4
+    },
+    {
+      "type": "bush",
+      "at": [
+        17,
+        -6.9,
+        -3
+      ],
+      "size": 1.2
+    },
+    {
+      "type": "bush",
+      "at": [
+        20,
+        -6.9,
+        -10
+      ],
+      "size": 1.6
+    },
+    {
+      "type": "bush",
+      "at": [
+        14,
+        -6.9,
+        0
+      ],
+      "size": 1
+    }
+  ],
+  "crowd": {
+    "library": "realm-of-myr",
+    "avoid": {
+      "rects": [],
+      "circles": [
+        [
+          0,
+          4.5,
+          2.6
+        ],
+        [
+          0,
+          -2,
+          2.6
+        ],
+        [
+          3.4,
+          -2.4,
+          2.2
+        ],
+        [
+          0,
+          -19.6,
+          2.4
+        ],
+        [
+          -1.4,
+          -12.6,
+          2.6
+        ],
+        [
+          -3.4,
+          -21,
+          2.4
+        ]
+      ]
+    },
+    "groups": [
+      {
+        "type": "scatter",
+        "area": [
+          -8.3,
+          -19.6,
+          8.3,
+          -7
+        ],
+        "count": 26,
+        "mix": {
+          "merchant": 5,
+          "knight": 1
+        },
+        "density": [
+          {
+            "rect": [
+              -9,
+              -19.6,
+              -6,
+              5
+            ],
+            "factor": 0.5
+          }
+        ],
+        "face": {
+          "toward": [
+            0,
+            -22
+          ],
+          "jitter": 60,
+          "share": 0.4
+        }
+      }
+    ]
+  },
+  "marks": {
+    "entrance": {
+      "at": [
+        0,
+        6.6
+      ],
+      "label": "the grand doors"
+    },
+    "floor": {
+      "at": [
+        0,
+        -4
+      ],
+      "label": "the middle of the ballroom"
+    },
+    "tables": {
+      "at": [
+        -5.6,
+        1
+      ],
+      "label": "the banquet tables"
+    },
+    "gems": {
+      "at": [
+        -5.6,
+        -6.6
+      ],
+      "label": "the gem display"
+    },
+    "window": {
+      "at": [
+        5,
+        -1.6
+      ],
+      "label": "the window by the colonnade"
+    },
+    "stage": {
+      "at": [
+        0,
+        -19.8
+      ],
+      "label": "the foot of the stage"
+    },
+    "cage": {
+      "at": [
+        -3.4,
+        -20.6
+      ],
+      "label": "the curtained cage"
+    },
+    "musicians": {
+      "at": [
+        5.4,
+        -19.4
+      ],
+      "label": "the musicians"
+    },
+    "balconyDoor": {
+      "at": [
+        8,
+        -8
+      ],
+      "label": "the doors to the balcony"
+    },
+    "balcony": {
+      "at": [
+        10.9,
+        -8
+      ],
+      "label": "the balcony"
+    }
+  },
+  "shots": {
+    "ballroom": {
+      "position": [
+        0.8,
+        1.8,
+        7.2
+      ],
+      "target": [
+        0,
+        4,
+        -20
+      ],
+      "fov": 60,
+      "label": "The ballroom"
+    },
+    "stage": {
+      "position": [
+        1,
+        1.7,
+        -11
+      ],
+      "target": [
+        0,
+        2.4,
+        -24
+      ],
+      "fov": 56,
+      "label": "The stage"
+    },
+    "colonnade": {
+      "position": [
+        -4.4,
+        1.6,
+        5
+      ],
+      "target": [
+        -6.4,
+        4.6,
+        -16
+      ],
+      "fov": 60,
+      "label": "The colonnade"
+    },
+    "balcony": {
+      "position": [
+        5.6,
+        1.7,
+        -6.8
+      ],
+      "target": [
+        15,
+        1.2,
+        -9
+      ],
+      "fov": 58,
+      "label": "The balcony"
+    },
+    "vault": {
+      "position": [
+        0,
+        1.6,
+        -2
+      ],
+      "target": [
+        0,
+        12,
+        -12
+      ],
+      "fov": 64,
+      "label": "The painted vault"
+    }
+  },
+  "life": {
+    "dust": {
+      "count": 220,
+      "box": [
+        -9,
+        1,
+        -26,
+        9,
+        9,
+        8
+      ]
+    }
+  }
+}

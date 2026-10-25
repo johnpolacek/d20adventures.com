@@ -1,0 +1,25 @@
+---
+moduleOrder: 9
+sceneTitle: "Quiet Pier at Dawn"
+sectionTitle: "Section One"
+id: "the-end"
+type: "encounter"
+title: "The End"
+settingId: "realm-of-myr"
+adventureId: "covert-cargo"
+image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/the-end/68166163-ba2c-4387-bfb6-a98343c6c9d7.png?t=1749678027089"
+---
+
+## Intro
+
+What is done cannot be undone. Events are in motion, and the only way is forward.
+
+Whatever was sold at the pier was bought for Kordavos, and what began on the river will be finished in the city.
+
+The story continues in The Road to Kordavos.
+
+## Migration Context
+
+Legacy section: Section One
+
+Legacy scene: Quiet Pier at Dawn
