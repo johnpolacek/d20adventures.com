@@ -232,7 +232,7 @@ export function NewGame(props: {
                       {held.length > 2 ? "Their choice" : "Either hero"}
                     </Option>
                   </fieldset>
-                  {guestsChoose && <span className="text-sm text-white/70">{held.length > 2 ? "You play the hero left." : "You play the other."}</span>}
+                  {guestsChoose && <span className="text-sm text-white/70">{held.length > 2 ? "You choose who plays the rest at Start." : "You play the other."}</span>}
                 </div>
               )}
               {watching && <p className="mt-3 text-sm text-white/70">You watch your guest play.</p>}

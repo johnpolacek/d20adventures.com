@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { textShadow } from "@/components/typography/styles"
 import { Button } from "@/components/ui/button"
-import { siteCard, siteField, siteLabel, siteOutline } from "@/components/ui/site"
+import { Option, siteCard, siteField, siteLabel, siteOutline } from "@/components/ui/site"
 import { cn } from "@/lib/utils"
 import type { GuestHero, HostedSummary } from "../../../lib/host/server"
 
@@ -237,7 +237,7 @@ function Request({ request, busy, onAnswer, onSheet }: { request: SeatRequest; b
 
 // A hosted game before it starts: a link for each hero held for a friend and one for the seats open to a guest's
 // own hero, the guests asking for those, who has joined, and Start. Where guests choose first, one link serves every
-// hero and the host plays one they leave. A host who watches has no hero, and starts once a guest has joined. A game
+// hero, and at Start the host plays the heroes they leave or gives them to AI. A host who watches has no hero, and starts once a guest has joined. A game
 // hosted without seats for guests has one link, and guests bring their own heroes. The table chat reaches guests
 // seated in their lobby.
 export function HostedLobby(props: {
@@ -250,7 +250,8 @@ export function HostedLobby(props: {
   onAnswer: (userId: string, approve: boolean, note?: string) => void
   onSheet: ReadSheet
   onRemove: (userId: string, note?: string) => void
-  onStart: () => void
+  // Where guests choose first, the heroes nobody chose that go to AI. The rest are the host's.
+  onStart: (ais?: string[]) => void
   onHome: () => void
 }) {
   const seats = props.summary.seats ?? []
@@ -259,6 +260,12 @@ export function HostedLobby(props: {
   // The heroes nobody has chosen, where guests choose first. Guests take all but the last, which is the host's.
   const left = props.summary.left ?? []
   const hostHeroes = props.summary.party.slice(0, props.summary.party.length - guests.reduce((n, g) => n + (g.heroes ?? 1), 0))
+  // Who plays each hero nobody chose, by id, as the host sets it. Unset, the first is the host's and the rest AI.
+  const [plays, setPlays] = useState<Record<string, "you" | "ai">>({})
+  const unchosen = props.summary.unchosen
+  const playsOf = (id: string) => plays[id] ?? (unchosen?.[0]?.id === id ? "you" : "ai")
+  const ais = unchosen?.filter((h) => playsOf(h.id) === "ai").map((h) => h.id)
+  const nobody = Boolean(unchosen?.length && ais?.length === unchosen.length && guests.length === 0)
   return (
     <div className="absolute inset-0 z-40 grid place-items-center bg-black/70 font-serif text-white">
       <section className={cn(siteCard, "max-h-[94%] w-[min(34rem,92vw)] overflow-y-auto p-8 text-left backdrop-blur-xl")}>
@@ -302,9 +309,23 @@ export function HostedLobby(props: {
             <InviteLink label="Invite link" url={props.summary.invite} />
           </>
         )}
-        <div className={cn(siteLabel, "mt-7 mb-2")}>At the table · {props.summary.party.length + (left.length ? 1 : 0)}</div>
+        <div className={cn(siteLabel, "mt-7 mb-2")}>At the table · {props.summary.party.length + (unchosen ? unchosen.length : left.length ? 1 : 0)}</div>
         <ul className="space-y-1">
-          {left.length > 0 && <li className={cn("font-display text-lg", left.length > 1 && "text-white/60")}>{left.length > 1 ? "You play the hero left" : left[0]}</li>}
+          {unchosen
+            ? unchosen.map((h) => (
+                <li key={h.id} className="flex items-center gap-3">
+                  <span className={cn("flex-1 truncate font-display text-lg", playsOf(h.id) === "ai" && "text-white/60")}>{h.name}</span>
+                  <fieldset className="flex" aria-label={`Who plays ${h.name}`}>
+                    <Option active={playsOf(h.id) === "you"} aria-pressed={playsOf(h.id) === "you"} className="rounded-r-none" onClick={() => setPlays((p) => ({ ...p, [h.id]: "you" }))}>
+                      You
+                    </Option>
+                    <Option active={playsOf(h.id) === "ai"} aria-pressed={playsOf(h.id) === "ai"} className="-ml-0.5 rounded-l-none" onClick={() => setPlays((p) => ({ ...p, [h.id]: "ai" }))}>
+                      AI
+                    </Option>
+                  </fieldset>
+                </li>
+              ))
+            : left.length > 0 && <li className={cn("font-display text-lg", left.length > 1 && "text-white/60")}>{left.length > 1 ? "You play the hero left" : left[0]}</li>}
           {props.summary.watching && <li className="font-display text-lg text-white/60">You watch</li>}
           {hostHeroes.map((name) => (
             <li key={name} className="font-display text-lg">
@@ -322,7 +343,7 @@ export function HostedLobby(props: {
           <button type="button" className={cn(siteOutline, "px-4 py-2 text-sm")} onClick={props.onHome}>
             Home
           </button>
-          <Button variant="epic" className="text-xl" disabled={props.busy || (props.summary.watching && guests.length === 0)} onClick={props.onStart}>
+          <Button variant="epic" className="text-xl" disabled={props.busy || nobody || (props.summary.watching && guests.length === 0)} onClick={() => props.onStart(ais)}>
             Start
           </Button>
         </div>

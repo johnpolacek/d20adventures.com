@@ -104,23 +104,27 @@ export async function createHostedAdventure(args: {
 }
 
 /**
- * Where guests choose first, seats the host as a held hero nobody chose. Called as the game starts. A host who
- * watches needs a guest at the table first.
+ * Where guests choose first, seats every held hero nobody chose as the game starts: the host's, or AI heroes where ais
+ * names them. Without ais the host plays the first and AI the rest. A host who watches needs a guest at the table first.
  */
-export async function seatHost(adventure: Doc<"adventures">) {
+export async function seatHost(adventure: Doc<"adventures">, ais?: string[]) {
   const host = adventure.host
   if (hostWatches(adventure) && !adventure.players?.some((p) => p.controlledBy !== "ai")) throw new HostError(409, "Nobody has joined yet.")
   if (!host || !hostWaits(adventure)) return adventure
-  const seat = openSeats(adventure)[0]
-  if (!seat) throw new HostError(409, "No hero is left for the host.")
-  const characterId = seat.key ?? `characters/${host.userId}/${seat.id}.json`
-  if (!seat.key) {
-    const { artifacts } = await loadWikiAdventureRuntime(adventure.settingId, adventure.planId)
-    const pc = toPCTemplate(artifacts.characterSheets.premadeCharacters[seat.id]?.sheet)
-    if (!pc) throw new HostError(500, `${seat.name}'s sheet could not be read.`)
-    await updateJsonOnS3(characterId, pc)
+  const left = openSeats(adventure)
+  if (!left.length) throw new HostError(409, "No hero is left for the host.")
+  const ai = (id: string) => (ais ? ais.includes(id) : id !== left[0].id)
+  if (left.every((s) => ai(s.id)) && !adventure.players?.some((p) => p.controlledBy !== "ai")) throw new HostError(409, "Nobody plays a hero yet.")
+  const premades = left.some((s) => !s.key) ? (await loadWikiAdventureRuntime(adventure.settingId, adventure.planId)).artifacts.characterSheets.premadeCharacters : {}
+  for (const seat of left) {
+    const characterId = seat.key ?? `characters/${host.userId}/${seat.id}.json`
+    if (!seat.key) {
+      const pc = toPCTemplate(premades[seat.id]?.sheet)
+      if (!pc) throw new HostError(500, `${seat.name}'s sheet could not be read.`)
+      await updateJsonOnS3(characterId, pc)
+    }
+    await convex.mutation(api.hosting.seatHost, { secret: serverSecret(), adventureId: adventure._id, userId: host.userId, characterId, ...(ai(seat.id) ? { ai: true } : {}) })
   }
-  await convex.mutation(api.hosting.seatHost, { secret: serverSecret(), adventureId: adventure._id, userId: host.userId, characterId })
   return (await convex.query(api.adventure.getAdventureById, { adventureId: adventure._id })) ?? adventure
 }
 
@@ -188,6 +192,8 @@ export async function hostedSummary(adventure: Doc<"adventures">, origin: string
     seats: hostWaits(adventure) ? [] : openSeats(adventure).map((s) => ({ id: s.id, name: s.name, invite: `${inviteUrl(origin, adventure)}?as=${s.id}` })),
     // Where guests choose first and the host plays a hero they leave: the heroes nobody has chosen yet.
     left: hostWaits(adventure) ? openSeats(adventure).map((s) => s.name) : [],
+    // The same heroes by id, which the host seats as their own or as AI heroes at Start.
+    unchosen: hostWaits(adventure) ? openSeats(adventure).map((s) => ({ id: s.id, name: s.name })) : [],
     // The host has no hero and watches the guests play.
     watching: hostWatches(adventure),
     updatedAt: adventure.updatedAt,

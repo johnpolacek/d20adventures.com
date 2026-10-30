@@ -139,17 +139,19 @@ export const removeGuest = mutation({
   },
 })
 
-/** Where guests choose first, the host takes a held hero nobody chose, as the game starts. */
+/** Where guests choose first, the host takes a held hero nobody chose as the game starts, as their own or an AI hero. */
 export const seatHost = mutation({
-  args: { secret: v.string(), adventureId: v.id("adventures"), userId: v.string(), characterId: v.string() },
-  handler: async (ctx, { secret, adventureId, userId, characterId }) => {
+  args: { secret: v.string(), adventureId: v.id("adventures"), userId: v.string(), characterId: v.string(), ai: v.optional(v.boolean()) },
+  handler: async (ctx, { secret, adventureId, userId, characterId, ai }) => {
     requireServer(secret)
     const { adventure, host } = waiting(await ctx.db.get(adventureId))
     if (host.userId !== userId) throw new Error("You are not hosting this adventure")
-    if (adventure.players?.some((p) => p.userId === userId && p.controlledBy !== "ai")) return
     const hero = sheetId(characterId)
+    if (adventure.players?.some((p) => p.userId === userId && sheetId(p.characterId) === hero)) return
     if (!host.seats?.some((s) => s.id === hero) || adventure.players?.some((p) => sheetId(p.characterId) === hero)) throw new Error("That hero is not open")
-    await ctx.db.patch(adventureId, { players: [{ userId, characterId }, ...(adventure.players ?? [])], updatedAt: Date.now() })
+    // The host's own hero leads the party, as at hosting. AI heroes follow.
+    const players = adventure.players ?? []
+    await ctx.db.patch(adventureId, { players: ai ? [...players, { userId, characterId, controlledBy: "ai" }] : [{ userId, characterId }, ...players], updatedAt: Date.now() })
   },
 })
 

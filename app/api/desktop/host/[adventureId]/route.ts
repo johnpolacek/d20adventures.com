@@ -32,7 +32,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ adv
   if (error) return error
   try {
     const adventure = await hostedAdventure((await params).adventureId, device.userId)
-    const { action, ...body } = (await request.json()) as { action?: string; userId?: unknown; approve?: unknown; note?: unknown; text?: unknown }
+    const { action, ...body } = (await request.json()) as { action?: string; userId?: unknown; approve?: unknown; note?: unknown; text?: unknown; ais?: unknown }
     if (action === "sheet") {
       if (typeof body.userId !== "string") return NextResponse.json({ error: "Choose a guest." }, { status: 400 })
       return NextResponse.json({ sheet: await guestHero(adventure, body.userId) })
@@ -60,7 +60,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ adv
     }
     if (action !== "start") return NextResponse.json({ error: "Unknown action." }, { status: 400 })
     if (adventure.status !== "waitingForPlayers" || adventure.currentTurnId) return NextResponse.json({ error: "This game has already started." }, { status: 409 })
-    const turnId = await startWikiAdventure(await seatHost(adventure))
+    // Where guests chose first, the heroes nobody chose that the host gives to AI. The rest are the host's.
+    const ais = Array.isArray(body.ais) ? body.ais.filter((id): id is string => typeof id === "string") : undefined
+    const turnId = await startWikiAdventure(await seatHost(adventure, ais))
     return NextResponse.json({ turnId })
   } catch (e) {
     return hostErrorResponse(e)

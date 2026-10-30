@@ -34,7 +34,8 @@ export const hostCommandSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("hostState"), adventureId: id, token }),
   // The host says something in the table chat.
   z.object({ kind: z.literal("hostChat"), adventureId: id, text: z.string().trim().min(1).max(1000), token }),
-  z.object({ kind: z.literal("hostStart"), adventureId: id, token }),
+  // Where guests chose first, the heroes nobody chose that go to AI. The rest are the host's.
+  z.object({ kind: z.literal("hostStart"), adventureId: id, ais: z.array(id).max(8).optional(), token }),
   z.object({
     kind: z.literal("hostAct"),
     adventureId: id,
@@ -127,7 +128,7 @@ export async function hostCommand(command: HostCommand, site: string, heroes: ()
         await call(`/api/desktop/host/${command.adventureId}`, { action: "chat", text: command.text })
         return { state: (await call(`/api/desktop/host/${command.adventureId}`)) as HostedState }
       case "hostStart": {
-        await call(`/api/desktop/host/${command.adventureId}`, { action: "start" })
+        await call(`/api/desktop/host/${command.adventureId}`, { action: "start", ais: command.ais })
         const state = (await call(`/api/desktop/host/${command.adventureId}`)) as HostedState
         // An opening turn that belongs to an NPC or AI hero runs on its own.
         if (!state.turn || !selfRunning(state.turn.characters)) return { state }
