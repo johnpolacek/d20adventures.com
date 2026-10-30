@@ -26,7 +26,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ adve
 }
 
 // The host reads a guest's hero sheet, answers a guest's request for an open seat, removes a seated guest, says
-// something in the table chat, or starts the game once friends have joined in the lobby.
+// something in the table chat, starts the game once friends have joined in the lobby, or deletes the game.
 export async function POST(request: Request, { params }: { params: Promise<{ adventureId: string }> }) {
   const { device, error } = await deviceFromRequest(request)
   if (error) return error
@@ -52,6 +52,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ adv
         throw new HostError(409, thrownMessage(e, "The request could not be answered."))
       })
       return NextResponse.json({ answered: true })
+    }
+    if (action === "delete") {
+      await convex.mutation(api.adventure.deleteAdventureCascade, { adventureId: adventure._id })
+      return NextResponse.json({ deleted: true })
     }
     if (action === "chat") {
       const text = typeof body.text === "string" ? body.text.trim() : ""

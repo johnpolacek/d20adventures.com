@@ -8,7 +8,7 @@ import type { HostedState } from "../runtime/host-commands"
 import type { Save, SaveSummary } from "../runtime/store"
 import { AccountBadge, AccountNotice, LinkGate, useAccount } from "./account"
 import { AppHeader } from "./app-header"
-import { type GmModel, gmModel, type HostWorkerState, host, hostRunning, hostStart, openSite, send, suggest } from "./bridge"
+import { type GmModel, gmModel, type HostWorkerState, host, hostRunning, hostStart, hostStop, openSite, send, suggest } from "./bridge"
 import { partyOf } from "./carry"
 import type { FigureArt } from "./figures"
 import { FullscreenButton } from "./fullscreen"
@@ -255,6 +255,13 @@ export function DesktopGame() {
     if (res.error || !res.created) return setError(res.error ?? "Could not host the game.")
     await openHosted(res.created.adventureId)
   }
+  // Deletes a hosted game from the website, after stopping its GM if this app runs it.
+  const removeHosted = async (adventureId: string) => {
+    if (worker?.adventureId === adventureId) await hostStop().catch(() => {})
+    const res = await host({ kind: "hostDelete", adventureId })
+    if (res.hosted) setHostedList(res.hosted)
+    if (res.error) setError(res.error)
+  }
   const act = async (fn: () => ReturnType<typeof host>) => {
     setSending(true)
     const res = await fn()
@@ -418,6 +425,7 @@ export function DesktopGame() {
                     hosted={hostedList}
                     hostingNow={worker?.adventureId ?? null}
                     onOpenHosted={(id) => void openHosted(id)}
+                    onRemoveHosted={(id) => void removeHosted(id)}
                   />
                 )}
                 {screen === "characters" && (

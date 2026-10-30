@@ -148,6 +148,7 @@ export function AdventuresPage(props: {
   hosted: HostedSummary[]
   hostingNow: string | null
   onOpenHosted: (adventureId: string) => void
+  onRemoveHosted: (adventureId: string) => void
 }) {
   const [removing, setRemoving] = useState<string | null>(null)
   const players = (id: string): [number, number] => props.adventures.find((a) => a.id === id)?.players ?? props.locked.find((a) => a.id === id)?.players ?? [1, 4]
@@ -208,7 +209,21 @@ export function AdventuresPage(props: {
                 label={`Open hosted game ${h.title}`}
                 busy={props.busy}
                 onOpen={() => props.onOpenHosted(h.adventureId)}
-              />
+              >
+                <RemoveButton
+                  className="absolute right-6 bottom-6"
+                  confirming={removing === h.adventureId}
+                  label={`Remove ${h.title}`}
+                  confirmLabel={`Confirm removing ${h.title}`}
+                  disabled={props.busy}
+                  onBlur={() => setRemoving(null)}
+                  onClick={() => {
+                    if (removing !== h.adventureId) return setRemoving(h.adventureId)
+                    setRemoving(null)
+                    props.onRemoveHosted(h.adventureId)
+                  }}
+                />
+              </SavedCard>
             ))}
           </ul>
         </section>

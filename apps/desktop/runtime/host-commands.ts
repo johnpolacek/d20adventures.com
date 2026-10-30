@@ -38,6 +38,8 @@ export const hostCommandSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("hostChat"), adventureId: id, text: z.string().trim().min(1).max(1000), token }),
   // Where guests chose first, the heroes nobody chose that go to AI. The rest are the host's.
   z.object({ kind: z.literal("hostStart"), adventureId: id, ais: z.array(id).max(8).optional(), token }),
+  // The host deletes the game, with its turns, chat, and GM jobs.
+  z.object({ kind: z.literal("hostDelete"), adventureId: id, token }),
   z.object({
     kind: z.literal("hostAct"),
     adventureId: id,
@@ -127,6 +129,9 @@ export async function hostCommand(command: HostCommand, site: string, heroes: ()
       case "hostAnswer":
         await call(`/api/desktop/host/${command.adventureId}`, { action: "answer", userId: command.userId, approve: command.approve, note: command.note })
         return { state: (await call(`/api/desktop/host/${command.adventureId}`)) as HostedState }
+      case "hostDelete":
+        await call(`/api/desktop/host/${command.adventureId}`, { action: "delete" })
+        return { hosted: ((await call("/api/desktop/host")) as { hosted: HostedSummary[] }).hosted }
       case "hostChat":
         await call(`/api/desktop/host/${command.adventureId}`, { action: "chat", text: command.text })
         return { state: (await call(`/api/desktop/host/${command.adventureId}`)) as HostedState }
