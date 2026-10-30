@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   const { device, error } = await deviceFromRequest(request)
   if (error) return error
   try {
-    const body = (await request.json()) as { planId?: unknown; character?: HostCharacter; characters?: unknown; invites?: unknown; ais?: unknown; open?: unknown; approve?: unknown; watch?: unknown }
+    const body = (await request.json()) as { planId?: unknown; character?: HostCharacter; characters?: unknown; invites?: unknown; ais?: unknown; open?: unknown; approve?: unknown; watch?: unknown; each?: unknown }
     const invites = Array.isArray(body.invites) ? (body.invites.slice(0, 8) as HostCharacter[]) : []
     // An older app sends the host's one character.
     const characters = Array.isArray(body.characters) ? (body.characters.slice(0, 8) as HostCharacter[]) : body.character ? [body.character] : []
@@ -37,6 +37,7 @@ export async function POST(request: Request) {
       open: typeof body.open === "number" ? body.open : 0,
       approve: body.approve === true,
       watch: body.watch === true,
+      each: typeof body.each === "number" && Number.isInteger(body.each) && body.each > 0 ? body.each : undefined,
     })
     const adventure = await convex.query(api.adventure.getAdventureById, { adventureId })
     if (!adventure) throw new Error("The hosted game was not saved.")

@@ -23,6 +23,8 @@ export const hostCommandSchema = z.discriminatedUnion("kind", [
     open: z.number().int().min(0).max(8).default(0),
     approve: z.boolean().default(false),
     watch: z.boolean().default(false),
+    // Where guests choose first, how many heroes each guest may take.
+    each: z.number().int().min(1).max(8).optional(),
     token,
   }),
   // The host removes a seated guest before the game starts, with an optional note for them.
@@ -111,6 +113,7 @@ export async function hostCommand(command: HostCommand, site: string, heroes: ()
           open: command.open,
           approve: command.approve,
           watch: command.watch,
+          each: command.each,
         }
         return { created: ((await call("/api/desktop/host", body)) as { hosted: HostedSummary }).hosted }
       }

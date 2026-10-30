@@ -21,8 +21,9 @@ export const setHost = mutation({
     open: v.optional(v.number()),
     approve: v.optional(v.boolean()),
     pick: v.optional(v.boolean()),
+    each: v.optional(v.number()),
   },
-  handler: async (ctx, { secret, adventureId, userId, deviceId, seats, open, approve, pick }) => {
+  handler: async (ctx, { secret, adventureId, userId, deviceId, seats, open, approve, pick, each }) => {
     requireServer(secret)
     const adventure = await ctx.db.get(adventureId)
     if (!adventure) throw new Error("Adventure not found")
@@ -36,6 +37,7 @@ export const setHost = mutation({
         ...(open ? { open } : {}),
         ...(open && approve ? { approve } : {}),
         ...(pick && seats?.length ? { pick } : {}),
+        ...(pick && seats?.length && each ? { each } : {}),
       },
       updatedAt: Date.now(),
     })

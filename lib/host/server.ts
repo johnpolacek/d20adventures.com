@@ -55,6 +55,8 @@ export async function createHostedAdventure(args: {
   // Whether the host approves each guest's own hero. Otherwise an open seat takes the guest at once.
   approve?: boolean
   watch?: boolean
+  // Where guests choose first, how many heroes each guest may take.
+  each?: number
 }) {
   if (!isLocalWikiAdventure(SETTING, args.planId)) throw new HostError(404, "This adventure cannot be hosted.")
   const { artifacts, contentRef } = await loadWikiAdventureRuntime(SETTING, args.planId)
@@ -99,7 +101,7 @@ export async function createHostedAdventure(args: {
     currentEncounterId: manifest.startEncounterId,
     adventureSummaryMarkdown: manifest.summary,
   })
-  await convex.mutation(api.hosting.setHost, { secret: serverSecret(), adventureId, userId: args.userId, deviceId: args.deviceId, seats, open, approve: args.approve, pick: !mine && !watch })
+  await convex.mutation(api.hosting.setHost, { secret: serverSecret(), adventureId, userId: args.userId, deviceId: args.deviceId, seats, open, approve: args.approve, pick: !mine.length && !watch, ...(args.each ? { each: args.each } : {}) })
   return adventureId
 }
 

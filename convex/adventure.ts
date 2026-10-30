@@ -117,6 +117,8 @@ export const joinAdventure = mutation({
       if (host?.pick && !adventure.players?.some((p) => p.userId === host.userId && p.controlledBy !== "ai")) {
         const left = seats.filter((s) => !adventure.players?.some((p) => sheetId(p.characterId) === s.id)).length
         if (left < 2) throw new Error("Every seat at this table is taken")
+        const taken = adventure.players?.filter((p) => p.userId === args.userId && seats.some((s) => s.id === sheetId(p.characterId))).length ?? 0
+        if (host.each && taken >= host.each) throw new Error(`Each guest plays ${host.each} ${host.each === 1 ? "hero" : "heroes"} at this table`)
       }
     }
 

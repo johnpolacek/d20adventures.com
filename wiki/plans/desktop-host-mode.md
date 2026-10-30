@@ -341,6 +341,7 @@ Owner, after local play stopped asking for "Continue NPC turn": the host's app s
 - One guest may take several held heroes, 2026-10-25: each hero's invite link joins them again. The host's list shows them once with every hero, Remove takes all of them, and their sheet button opens the first. Open seats for a guest's own hero still take one each. Not yet checked live.
 - The host may play several heroes, 2026-10-26: party setup sends every You seat as `characters`, each seated under the host. An older app's one `character` still works. Not yet checked live.
 - Guests choose first, then the host sets the rest, 2026-10-30: the app's lobby shows each hero nobody chose with You and AI, and Start sends the AI ones as `ais`. The host plays the rest. Without `ais`, as from the website lobby, the host plays the first and AI the rest. Start refuses when nobody would play a hero. Not yet checked live.
+- Each guest picks a set number of heroes, 2026-10-30: with Their choice and three or more heroes, party setup sets Each guest picks, stored as `host.each`. `joinAdventure` refuses a guest past it, and the website lobby offers a seated guest another hero until they reach it. Fixed then: since 2026-10-26 Their choice made a watch game with a link per hero, because `pick` tested the host's hero list as a value. Not yet checked live.
 - A browser without WebGL crashes at a roll prompt, since the die has no fallback.
 - The play view's chat shows the latest 50 lines, with no way to load older ones.
 - The app's home does not yet list games the account joined as a guest.

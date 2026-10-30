@@ -77,7 +77,7 @@ export function NewGame(props: {
   // Needs a linked account, so Invite links first. Without a hero for the player, guests choose first, or with
   // watch the player has no hero at all. open is how many more seats take a guest's own hero, and approve whether
   // the host answers each of those.
-  onHost?: (you: string[], invites: string[], ais: string[], open: number, approve: boolean, watch: boolean) => void
+  onHost?: (you: string[], invites: string[], ais: string[], open: number, approve: boolean, watch: boolean, each?: number) => void
 }) {
   const info = props.adventures.find((a) => a.id === props.adventure)
   const lockedInfo = info ? undefined : props.locked.find((a) => a.id === props.adventure)
@@ -85,6 +85,8 @@ export function NewGame(props: {
   const [deleting, setDeleting] = useState<string | null>(null)
   // Whether the host approves each hero a guest brings to an open seat. Off, the guest is seated at once.
   const [askFirst, setAskFirst] = useState(false)
+  // Where guests choose first, how many heroes each guest may take.
+  const [each, setEach] = useState(1)
   // The hero the player last held, so leaving a guest's choice of hero gives it back.
   const [lastYou, setLastYou] = useState<string | null>(null)
   const fits = (h: Hero) => Boolean(info?.options?.races.includes(h.race) && info.options.archetypes.includes(h.archetype))
@@ -235,6 +237,18 @@ export function NewGame(props: {
                   {guestsChoose && <span className="text-sm text-white/70">{held.length > 2 ? "You choose who plays the rest at Start." : "You play the other."}</span>}
                 </div>
               )}
+              {guestsChoose && held.length > 2 && (
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <span className={siteLabel}>Each guest picks</span>
+                  <fieldset className="flex" aria-label="How many heroes each guest picks">
+                    {Array.from({ length: held.length - 1 }, (_, i) => i + 1).map((n, i) => (
+                      <Option key={n} active={each === n} aria-pressed={each === n} className={cn(i > 0 && "-ml-0.5 rounded-l-none", i < held.length - 2 && "rounded-r-none")} onClick={() => setEach(n)}>
+                        {n}
+                      </Option>
+                    ))}
+                  </fieldset>
+                </div>
+              )}
               {watching && <p className="mt-3 text-sm text-white/70">You watch your guest play.</p>}
             </div>
             <div>
@@ -341,7 +355,8 @@ export function NewGame(props: {
                     ais,
                     open,
                     askFirst,
-                    watching
+                    watching,
+                    guestsChoose ? Math.min(each, held.length - 1) : undefined
                   )
                 : props.onLink?.()
             }
