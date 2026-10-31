@@ -127,7 +127,7 @@ test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the 
       ["beset-by-street-urchins", ["finn-swiftfoot", "mara-redleaf"], /urchins[\s\S]*the mouth of the side alley/],
       ["finding-the-black-market", [], /crooked dagger[\s\S]*the carved sign in the paving/],
       ["the-entrance-to-the-black-market", ["garrick"], /crumbling buildings[\s\S]*the curtained doorway/],
-      ["labyrinthine-stalls", ["grendel-one-eye", "mizrith-the-cackler", "rae-the-scarred", "vera-azimov"], /Black Market[\s\S]*the auction house door/],
+      ["labyrinthine-stalls", ["grendel-one-eye", "mizrith-the-cackler", "rae-the-scarred", "vera-azimov", "vesk-the-fence"], /Black Market[\s\S]*the auction house door/],
     ] as const) {
       await advance(run.store, encounter)
       const here = run.store.current()
