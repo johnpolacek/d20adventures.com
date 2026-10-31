@@ -360,7 +360,8 @@ Owner: a full playthrough of March of Davos, two players with two heroes each an
 - Seen: The Chase moved on one round late, at the end of its third round, not its second.
 - Seen: Magic Missile, which "unerringly strikes" on Cassia's sheet, missed once on a roll.
 - Seen: the reply box can take several seconds to appear after a reload, and a send made before then is lost.
-- Seen: `pnpm test` in `apps/desktop` fails one Stageview test, since Vesk the Fence joined the Black Market's figures on 2026-10-26. It fails without this change too.
+- Fixed after: `pnpm test` in `apps/desktop` failed one Stageview test, since Vesk the Fence joined the Black Market's figures on 2026-10-26. The test now expects Vesk.
+- Fixed after: a hero's roll result from one round stayed on them into the next. A new round now starts with none.
 - Not checked: the app's own lobby, Start with `ais`, and the app's play view. The run used the routes and the website.
 
 ## Host plays from a phone, 2026-10-23
