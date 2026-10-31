@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Spatial claims](../sources/kordavos-spatial-claims.md) · [Mapview](mapview.md) · [March of Davos in 3D](march-of-davos-sets.md)
 
-Status: steps 1 to 5 built 2026-10-31. Not yet seen in the running desktop app.
+Status: steps 1 to 5 built 2026-10-31. Seen in the desktop app's browser preview on a finished playtest save: the small map over the stage, the full map and a district zoom. Not yet seen in the Tauri window.
 
 ## Owner request, 2026-10-31
 
