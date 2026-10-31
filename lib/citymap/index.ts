@@ -53,7 +53,7 @@ export interface CityMap {
   art?: { outer?: MapArt; districts: Record<string, MapArt> }
 }
 
-const ART = art as Record<string, CityMap["art"]>
+const ART = art as unknown as Record<string, CityMap["art"]>
 const MAPS: Record<string, CityMap> = { kordavos: { ...(kordavos as unknown as CityMap), art: ART.kordavos } }
 const PLACES = encounterPlaces as Record<string, Record<string, string>>
 

@@ -23,11 +23,21 @@ An overhead map of Kordavos for March of Davos, with a small view and a full scr
    - Small view: replaces the compass over the location, bottom right of the play screen. It shows the streets round the party and opens the full map.
    - Full map: the Map button or the small view. It opens on the whole city with the river, the road, the sea and the Valkarr Forest. A district button or a click on a district zooms to it.
    - Zoomed out, only the current place is named. Zoomed in, every place reached is named.
-   - Painted art may sit underneath later, with no labels in the painting.
+   - Painted art sits underneath, with no text in it. See Painted art.
 5. Show only places the party has reached, up to the turn on screen, joined by a faint trail. Tunnels show only between places reached. Districts, water, roads and forest always show.
    - `lib/citymap/encounter-places.json` maps each encounter to its place. `pnpm map:check --write` rewrites it, and `pnpm map:check` fails when it is stale.
    - Covert Cargo has no map: its forest pier is off the map.
    - The website's hosted games use the same `StagePlay`, so they get the map too.
+
+## Painted art
+
+Done 2026-10-31. `scripts/city-map-paint.ts` writes it, `lib/citymap/art.json` lists it, and the webp files are in `public/stage/maps/kordavos/` (about 12 MB, synced with `pnpm stage:sync`).
+
+- The outer painting starts from a sketch of every street and block, drawn from the map file, plus a labelled copy that says what each region is. Without the labelled copy, `gemini-3-pro-image` turned the harbour into land and the Asterian Quarter into a fortress.
+- Each district's close-up redraws a crop of the outer painting at more detail, so the two match. The map shows it inside the district's outline when zoomed in.
+- Each painting gets a drift check: the map file's coast, river, wall and places drawn in red over it. Review it before publishing. All six passed by eye on 2026-10-31.
+- A district can be repainted alone: `paint kordavos docks --force`, then `publish kordavos docks`.
+- Left: a few docks ships are malformed, roofs get chunky at full zoom, and the wide full map shows plain bands beside the square painting.
 
 ## Settled by the text
 
