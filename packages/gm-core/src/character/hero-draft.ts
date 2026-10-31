@@ -33,6 +33,8 @@ export function heroDraftPrompt(hero: HeroIdea, adventure?: HeroAdventure, hook?
     hero.idea ? `The player's idea for them: ${hero.idea}` : "",
     adventure ? about(adventure) : "",
     adventure ? "Give them a past that could bring them there: they may be from that land or from elsewhere." : "",
+    // Without an arrival in the same call, the player's reason still shapes the past.
+    adventure && hook && !draftsArrival(adventure) ? `Why they are going there: ${hook.replace(/\.?$/, ".")} Their background leads to it.` : "",
     FIT,
     "Keep the given name, race and class. Write appearance, personality, background and motivation as two or three vivid sentences each, plus a short behavior note on how they act in play. A spellcaster has two to four spells. Others have none. Equipment items have one-sentence descriptions.",
     adventure?.hooks?.length && adventure.opening ? arrivalPrompt(adventure.hooks, adventure.opening, hook) : "",

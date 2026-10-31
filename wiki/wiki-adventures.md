@@ -44,7 +44,8 @@ An adventure page may have a `## Hero Hooks` section: a bulleted list of reasons
 - A roster hero without an arrival for the adventure, such as one made from the Characters page, gets one when a desktop game starts. The GM picks the hook, and the arrival is saved to the hero.
 - Arrivals are kept on the roster hero by adventure id. A new game adds the reason to the background and the tell to the appearance, on the adventure's copy of the sheet.
 - A new game keeps each arrival paragraph on the adventure as `arrivals`. `withArrivals` places them after the start encounter's last `{hero}` paragraph, in the first turn and in the GM's view of that intro.
-- Desktop games only. Hosted games start on the website and carry no arrivals yet.
+- Hosted games, 2026-10-31: the host's GM writes each created hero's arrival as an `arrival` job before Start, with the hook their player chose. Kept in `host.arrivals` by sheet id. Start places them as above.
+- Every hero is drafted by `heroDraftPrompt` in `packages/gm-core/src/character/hero-draft.ts`, in the app and on the website. It keeps the hero inside the Realm of Myr and the adventure's teaser.
 - Players see the hooks, so they hold no secrets.
 
 ## Strangers

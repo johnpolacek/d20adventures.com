@@ -338,6 +338,7 @@ Owner, after local play stopped asking for "Continue NPC turn": the host's app s
 - Hosted games keep no stage positions, so movement is not read or walked.
 - The journal shows only the current turn.
 - AI heroes in hosted parties, 2026-10-25: the host's app plays them. Checked live 2026-10-31, below.
+- Guests make heroes for the game and bring up to `host.bring` to open seats, 2026-10-31. See [Created heroes](created-heroes.md).
 - One guest may take several held heroes, 2026-10-25: each hero's invite link joins them again. The host's list shows them once with every hero, Remove takes all of them, and their sheet button opens the first. Open seats for a guest's own hero still take one each. Joining by two links checked live 2026-10-31. Remove and the sheet button not checked.
 - The host may play several heroes, 2026-10-26: party setup sends every You seat as `characters`, each seated under the host. An older app's one `character` still works. Checked live 2026-10-31, through the route.
 - Guests choose first, then the host sets the rest, 2026-10-30: the app's lobby shows each hero nobody chose with You and AI, and Start sends the AI ones as `ais`. The host plays the rest. Without `ais`, as from the website lobby, the host plays the first and AI the rest. Start refuses when nobody would play a hero. Not yet checked live.
