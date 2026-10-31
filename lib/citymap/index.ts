@@ -21,6 +21,8 @@ export interface MapDistrict extends MapShape {
   polygon: Point[]
   elevation: "low" | "middle" | "high"
   labelAt?: Point
+  // Where the district's own painting shows up close, when it reaches past the district, such as the docks' harbour.
+  artClip?: Point[]
 }
 export interface MapLandmark {
   id: string

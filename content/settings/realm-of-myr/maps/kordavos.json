@@ -37,7 +37,7 @@
     {"id": "quay-street", "name": "Quay street", "path": [[385, 705], [160, 650], [200, 480]]}
   ],
   "districts": [
-    {"id": "docks", "name": "The Docks", "elevation": "low", "polygon": [[140, 570], [400, 600], [400, 715], [140, 695]], "labelAt": [330, 585]},
+    {"id": "docks", "name": "The Docks", "elevation": "low", "polygon": [[140, 570], [400, 600], [400, 715], [140, 695]], "labelAt": [330, 585], "artClip": [[140, 570], [400, 600], [400, 818], [96, 818], [96, 700], [140, 695]]},
     {"id": "lower-districts", "name": "The Lower Districts", "elevation": "low", "polygon": [[140, 140], [380, 138], [400, 600], [140, 570]], "labelAt": [270, 230]},
     {"id": "old-quarter", "name": "The old quarter", "elevation": "middle", "polygon": [[380, 138], [640, 133], [640, 600], [400, 600]], "labelAt": [510, 180]},
     {"id": "gate-ward", "name": "Gate ward", "elevation": "low", "polygon": [[400, 600], [900, 600], [880, 790], [400, 795]], "labelAt": [760, 745]},

@@ -14,6 +14,9 @@ const HERE = "#a3261f"
 const BELOW = "#6d3fa0"
 const GROUND = { low: "#d9cfb8", middle: "#cfc3a6", high: "#c2b28e" }
 
+// Map units per screen pixel below which the view counts as up close: every place is named and districts show their own painting.
+const CLOSE = 1.2
+
 const points = (p: Point[] = []) => p.map((q) => q.join(",")).join(" ")
 
 // The map in a box of map units. Text and lines keep their size on screen whatever the zoom. Zoomed out, only where
@@ -70,14 +73,14 @@ export function CityMapView({ map, trail, box, fill, onDistrict, className }: { 
       {art?.outer && <image href={art.outer.src} x={art.outer.box[0]} y={art.outer.box[1]} width={art.outer.box[2]} height={art.outer.box[3]} preserveAspectRatio="none" />}
       {/* Up close, each district's own painting, cut to its outline. */}
       {art &&
-        u < 1 &&
+        u < CLOSE &&
         map.districts.map((d) => {
           const a = art.districts[d.id]
           return (
             a && (
               <g key={d.id}>
                 <clipPath id={`${clip}-${d.id}`}>
-                  <polygon points={points(d.polygon)} />
+                  <polygon points={points(d.artClip ?? d.polygon)} />
                 </clipPath>
                 <image href={a.src} x={a.box[0]} y={a.box[1]} width={a.box[2]} height={a.box[3]} preserveAspectRatio="none" clipPath={`url(#${clip}-${d.id})`} />
               </g>
@@ -142,7 +145,7 @@ export function CityMapView({ map, trail, box, fill, onDistrict, className }: { 
             y={y}
             textAnchor="middle"
             fill={INK}
-            fontSize={(u < 0.9 ? 13 : 9.5) * u}
+            fontSize={(u < CLOSE ? 13 : 9.5) * u}
             fontWeight={700}
             fontFamily="Georgia, serif"
             letterSpacing={0.5 * u}
@@ -187,7 +190,7 @@ export function CityMapView({ map, trail, box, fill, onDistrict, className }: { 
         return (
           <g key={l.id}>
             <circle cx={l.x} cy={l.y} r={4.5 * u} fill={l.below ? "#fff" : color} stroke={color} strokeWidth={2 * u} />
-            {(u < 0.9 || l.id === here) && (
+            {(u < CLOSE || l.id === here) && (
               <text
                 x={l.x + dx * u}
                 y={l.y + dy * u}
@@ -238,13 +241,16 @@ export function CityMapPanel({ map, trail, compact, onClose }: { map: CityMap; t
   const here = trail[trail.length - 1]
   const hereDistrict = map.landmarks.find((l) => l.id === here)?.district ?? map.districts.find((d) => d.id === here)?.id
   const district = map.districts.find((d) => d.id === view)
-  const box = district ? districtBox(district) : frameBox(map)
+  // A painted map is square: the view is a painting's own box, in a square frame.
+  const art = district ? map.art?.districts[district.id] : map.art?.outer
+  const box = art?.box ?? (district ? districtBox(district) : frameBox(map))
   return (
     <section className={cn(panel, "absolute z-40 flex flex-col", compact ? "inset-3" : "inset-x-10 top-24 bottom-28")} aria-label="Map">
       <header className="flex flex-wrap items-center gap-2 border-b border-stage-line/20 px-5 py-3">
         <div className="mr-3">
           <div className={eyebrow}>Map</div>
           <h2 className="font-serif text-xl">{district?.name ?? map.name}</h2>
+          <p className="text-xs text-stage-muted">You are at {placeName(map, here)}</p>
         </div>
         <Pill active={view === "all"} onClick={() => setView("all")}>
           {map.name}
@@ -259,9 +265,10 @@ export function CityMapPanel({ map, trail, compact, onClose }: { map: CityMap; t
           Close
         </Pill>
       </header>
-      <div className="relative min-h-0 flex-1 overflow-hidden rounded-b-md">
-        <CityMapView map={map} trail={trail} box={box} onDistrict={view === "all" ? setView : undefined} />
-        <p className="pointer-events-none absolute bottom-3 left-4 font-serif text-sm text-[#4a3b28]">You are at {placeName(map, here)}</p>
+      <div className="grid min-h-0 flex-1 place-items-center overflow-hidden p-3">
+        <div className={cn("relative h-full max-w-full overflow-hidden rounded-sm", art ? "aspect-square" : "w-full")}>
+          <CityMapView map={map} trail={trail} box={box} onDistrict={view === "all" ? setView : undefined} />
+        </div>
       </div>
     </section>
   )

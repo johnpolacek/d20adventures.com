@@ -183,7 +183,7 @@ Directly overhead, orthographic, no perspective. No text, letters, labels, compa
 // What a close-up of each district should show, from the encounters set there.
 const DISTRICT_DETAIL: Record<string, string> = {
   docks:
-    "Long warehouses with large roofs along the waterfront, crates, barrels and coiled rope on the quay, cargo nets, carts, mooring posts, planked piers, ships with rigging and furled sails, rowing boats, ripples round the hulls.",
+    "Long warehouses with large roofs along the waterfront, crates, barrels and coiled rope on the quay, cargo nets, carts, mooring posts, planked piers, rowing boats, ripples round the hulls. Each ship is a clear top-down sailing ship: a pointed bow, a square stern, deck planks, round masts with yards across them and sails furled along the yards. No flat triangles, no ships overlapping each other or the piers.",
   "lower-districts":
     "Crowded, leaning tenements and shacks with patched roofs, narrow crooked alleys, washing lines strung between houses, refuse heaps, tiny yards, canvas awnings over a hidden market lane.",
   "old-quarter":

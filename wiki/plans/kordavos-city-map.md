@@ -37,7 +37,10 @@ Done 2026-10-31. `scripts/city-map-paint.ts` writes it, `lib/citymap/art.json` l
 - Each district's close-up redraws a crop of the outer painting at more detail, so the two match. The map shows it inside the district's outline when zoomed in.
 - Each painting gets a drift check: the map file's coast, river, wall and places drawn in red over it. Review it before publishing. All six passed by eye on 2026-10-31.
 - A district can be repainted alone: `paint kordavos docks --force`, then `publish kordavos docks`.
-- Left: a few docks ships are malformed, roofs get chunky at full zoom, and the wide full map shows plain bands beside the square painting.
+- A district's painting shows inside its outline, or inside `artClip` where it reaches past it. The docks' `artClip` takes in the harbour, so its ships show up close.
+- Ships copied from the outer painting stayed malformed however the district brief asked. An edit pass on the docks painting fixed them: "change only the ships and boats", sent with the painting. Use the same for a district whose small things come out wrong.
+- The full map is a square frame round the square painting.
+- Left: roofs get chunky at full zoom.
 
 ## Settled by the text
 
