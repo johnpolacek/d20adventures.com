@@ -245,7 +245,7 @@ export function CityMapPanel({ map, trail, compact, onClose }: { map: CityMap; t
   const art = district ? map.art?.districts[district.id] : map.art?.outer
   const box = art?.box ?? (district ? districtBox(district) : frameBox(map))
   return (
-    <section className={cn(panel, "absolute z-40 flex flex-col", compact ? "inset-3" : "inset-x-10 top-24 bottom-28")} aria-label="Map">
+    <section className={cn(panel, "absolute z-40 flex flex-col", compact ? "inset-3" : "inset-x-10 top-24 bottom-6")} aria-label="Map">
       <header className="flex flex-wrap items-center gap-2 border-b border-stage-line/20 px-5 py-3">
         <div className="mr-3">
           <div className={eyebrow}>Map</div>
