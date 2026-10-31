@@ -118,14 +118,22 @@ function anchor(place: Place): Point {
   return [points.reduce((sum, p) => sum + p[0], 0) / points.length, points.reduce((sum, p) => sum + p[1], 0) / points.length]
 }
 
-// Distance between two places, measured to the nearest edge of a district, river, road or wall.
+// Distance between two places: points, or the nearest edges of districts, rivers, roads and walls. 0 when one overlaps the other.
 function distance(a: Place, b: Place) {
-  if (a.x === undefined) [a, b] = [b, a]
-  const point = anchor(a)
-  if (b.polygon && inside(point, b.polygon)) return 0
-  const line = b.polygon ? [...b.polygon, b.polygon[0]] : b.path
-  if (!line) return Math.hypot(point[0] - anchor(b)[0], point[1] - anchor(b)[1])
-  return Math.min(...line.slice(1).map((end, i) => toSegment(point, line[i], end)))
+  const pointsA = vertices(a)
+  const pointsB = vertices(b)
+  if (a.polygon && pointsB.some((point) => inside(point, a.polygon!))) return 0
+  if (b.polygon && pointsA.some((point) => inside(point, b.polygon!))) return 0
+  return Math.min(toShape(pointsA, b), toShape(pointsB, a))
+}
+
+function vertices(place: Place): Point[] {
+  return place.polygon ?? place.path ?? [anchor(place)]
+}
+
+function toShape(points: Point[], shape: Place) {
+  const line = shape.polygon ? [...shape.polygon, shape.polygon[0]] : (shape.path ?? [anchor(shape), anchor(shape)])
+  return Math.min(...points.flatMap((point) => line.slice(1).map((end, i) => toSegment(point, line[i], end))))
 }
 
 function toSegment([x, y]: Point, [x1, y1]: Point, [x2, y2]: Point) {
