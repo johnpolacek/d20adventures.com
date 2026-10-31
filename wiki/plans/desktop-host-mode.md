@@ -337,14 +337,31 @@ Owner, after local play stopped asking for "Continue NPC turn": the host's app s
 
 - Hosted games keep no stage positions, so movement is not read or walked.
 - The journal shows only the current turn.
-- AI heroes in hosted parties, 2026-10-25: the host's app plays them. Not yet checked in a live hosted game.
-- One guest may take several held heroes, 2026-10-25: each hero's invite link joins them again. The host's list shows them once with every hero, Remove takes all of them, and their sheet button opens the first. Open seats for a guest's own hero still take one each. Not yet checked live.
-- The host may play several heroes, 2026-10-26: party setup sends every You seat as `characters`, each seated under the host. An older app's one `character` still works. Not yet checked live.
+- AI heroes in hosted parties, 2026-10-25: the host's app plays them. Checked live 2026-10-31, below.
+- One guest may take several held heroes, 2026-10-25: each hero's invite link joins them again. The host's list shows them once with every hero, Remove takes all of them, and their sheet button opens the first. Open seats for a guest's own hero still take one each. Joining by two links checked live 2026-10-31. Remove and the sheet button not checked.
+- The host may play several heroes, 2026-10-26: party setup sends every You seat as `characters`, each seated under the host. An older app's one `character` still works. Checked live 2026-10-31, through the route.
 - Guests choose first, then the host sets the rest, 2026-10-30: the app's lobby shows each hero nobody chose with You and AI, and Start sends the AI ones as `ais`. The host plays the rest. Without `ais`, as from the website lobby, the host plays the first and AI the rest. Start refuses when nobody would play a hero. Not yet checked live.
 - Each guest picks a set number of heroes, 2026-10-30: with Their choice and three or more heroes, party setup sets Each guest picks, stored as `host.each`. `joinAdventure` refuses a guest past it, and the website lobby offers a seated guest another hero until they reach it. Fixed then: since 2026-10-26 Their choice made a watch game with a link per hero, because `pick` tested the host's hero list as a value. Not yet checked live.
 - A browser without WebGL crashes at a roll prompt, since the die has no fallback.
 - The play view's chat shows the latest 50 lines, with no way to load older ones.
 - The app's home does not yet list games the account joined as a guest.
+
+## Full hosted playthrough, 2026-10-31
+
+Owner: a full playthrough of March of Davos, two players with two heroes each and one AI hero.
+
+- Local website and dev Convex. `POST /api/desktop/host` with Branka and Milos for the host, Yeva and Cassia invited, and Thalbern as AI.
+- The bundled `host.cjs` worker ran the GM through Claude, standing in for the app. Both players played from `/play/<id>` in headed browsers, the host as `d20playtest` and the guest as `d20guest`.
+- The guest joined both heroes from their two seat links. Start made turn 1.
+- 67 rounds, 33 encounters, to the Dust Settles ending. Both play pages showed Adventure complete.
+- Worked throughout: guest and host replies and rolls, Thalbern's turns, NPC turns and round ends with no Continue, and every transition taken.
+- Fixed: after one failed GM request the worker's Claude session stayed failed, so every later job failed with "Check its sign-in or usage limit" until the worker restarted. It hit at round 26. `localLlm` now replaces a failed session and tries the request once more. Untouched for the rest of the run.
+- Seen: a suggestion job failed once with a 500 when the website's call to Convex timed out. Only the suggestions were lost.
+- Seen: The Chase moved on one round late, at the end of its third round, not its second.
+- Seen: Magic Missile, which "unerringly strikes" on Cassia's sheet, missed once on a roll.
+- Seen: the reply box can take several seconds to appear after a reload, and a send made before then is lost.
+- Seen: `pnpm test` in `apps/desktop` fails one Stageview test, since Vesk the Fence joined the Black Market's figures on 2026-10-26. It fails without this change too.
+- Not checked: the app's own lobby, Start with `ais`, and the app's play view. The run used the routes and the website.
 
 ## Host plays from a phone, 2026-10-23
 
