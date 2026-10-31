@@ -12,7 +12,8 @@ type CityMap = {
   id: string
   settingId: string
   adventures: string[]
-  frame: { width: number; height: number }
+  frame: { x: number; y: number; width: number; height: number }
+  forests: Place[]
   water: Place[]
   rivers: Place[]
   walls: Place[]
@@ -25,7 +26,7 @@ type CityMap = {
 }
 
 const SETTINGS = "content/settings"
-// Map units, out of a 1000 square frame. Near is about a few streets.
+// Map units. The walled city spans about 1000. Near is about a few streets.
 const NEAR = 120
 const errors: string[] = []
 
@@ -54,7 +55,7 @@ function main() {
 
 function checkMap(map: CityMap, settingId: string) {
   const name = `${settingId}/${map.id}`
-  const shapes = [...map.water, ...map.rivers, ...map.walls, ...map.roads, ...map.districts]
+  const shapes = [...map.forests, ...map.water, ...map.rivers, ...map.walls, ...map.roads, ...map.districts]
   const all = [...shapes, ...map.landmarks, ...map.beyond]
   const byId = new Map<string, Place>()
   for (const place of all) {
@@ -63,7 +64,8 @@ function checkMap(map: CityMap, settingId: string) {
   }
 
   for (const place of map.landmarks) {
-    expect(place.x! >= 0 && place.x! <= map.frame.width && place.y! >= 0 && place.y! <= map.frame.height, `${name}: ${place.id} is outside the frame`)
+    const { x, y, width, height } = map.frame
+    expect(place.x! >= x && place.x! <= x + width && place.y! >= y && place.y! <= y + height, `${name}: ${place.id} is outside the frame`)
     if (!place.district) continue
     const district = byId.get(place.district)
     if (!expect(district?.polygon, `${name}: ${place.id} names unknown district ${place.district}`)) continue
@@ -71,7 +73,7 @@ function checkMap(map: CityMap, settingId: string) {
   }
   for (const tunnel of map.tunnels) for (const id of tunnel.path) expect(byId.has(id), `${name}: tunnel ${tunnel.id} names unknown ${id}`)
 
-  for (const place of [...map.landmarks, ...map.roads, ...map.beyond]) for (const source of place.sources ?? []) checkSource(name, place.id, settingId, source)
+  for (const place of [...map.landmarks, ...map.roads, ...map.forests, ...map.beyond]) for (const source of place.sources ?? []) checkSource(name, place.id, settingId, source)
   for (const constraint of map.constraints) {
     const label = `${constraint.a} ${constraint.rel} ${constraint.b}`
     checkSource(name, label, settingId, constraint.source)

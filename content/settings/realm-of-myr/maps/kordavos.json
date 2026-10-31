@@ -3,7 +3,7 @@
   "name": "Kordavos",
   "settingId": "realm-of-myr",
   "adventures": ["march-of-davos", "covert-cargo", "the-road-to-kordavos"],
-  "frame": {"width": 1000, "height": 1000, "north": "up", "note": "x runs east, y runs south. Positions are relative, not surveyed."},
+  "frame": {"x": -300, "y": -350, "width": 1700, "height": 1600, "north": "up", "note": "x runs east, y runs south. The walled city spans about 0 to 1000. Positions are relative, not surveyed."},
   "rulings": [
     "The land gate faces south. The Marquis Road comes along the Mordava's north bank and turns up to it.",
     "Kordavos is an estuary port. The Mordava runs west along the south wall and widens into the harbour on the Jade Sea.",
@@ -17,18 +17,22 @@
     "The temple has no surface entrance on the map. Joran's way in stays unstated.",
     "\"The heart of Kordavos\" for the inn and the mansion is loose wording and does not bind the map."
   ],
+  "forests": [
+    {"id": "valkarr-forest", "name": "Valkarr Forest", "polygon": [[300, -350], [1400, -350], [1400, 560], [1230, 640], [1080, 560], [1000, 380], [980, 100], [820, 10], [560, 30], [300, -60]], "sources": ["encounters/the-beast-escapes.md:54", "covert-cargo/encounters/the-shipment.md:40"]},
+    {"id": "river-woods", "name": "Woods", "polygon": [[620, 1000], [900, 920], [1150, 900], [1400, 820], [1400, 1250], [560, 1250]], "sources": ["covert-cargo/encounters/return-to-the-city.md:16"]}
+  ],
   "water": [
-    {"id": "jade-sea", "name": "Jade Sea", "polygon": [[0, 0], [110, 0], [110, 700], [0, 700]]},
-    {"id": "harbour", "name": "Harbour", "polygon": [[0, 690], [140, 695], [400, 715], [400, 790], [160, 840], [110, 1000], [0, 1000]]}
+    {"id": "jade-sea", "name": "Jade Sea", "polygon": [[-300, -350], [60, -350], [110, 0], [110, 700], [0, 700], [-300, 700]]},
+    {"id": "harbour", "name": "Harbour", "polygon": [[-300, 700], [0, 690], [140, 695], [400, 715], [400, 790], [160, 840], [120, 1000], [80, 1250], [-300, 1250]]}
   ],
   "rivers": [
-    {"id": "mordava", "name": "Mordava", "path": [[1000, 870], [820, 850], [600, 840], [460, 825], [390, 795]], "width": 26}
+    {"id": "mordava", "name": "Mordava", "path": [[1400, 700], [1250, 760], [1100, 830], [1000, 870], [820, 850], [600, 840], [460, 825], [390, 795]], "width": 26}
   ],
   "walls": [
     {"id": "city-wall", "path": [[140, 140], [880, 120], [920, 520], [880, 790], [400, 795], [400, 715], [140, 695], [140, 140]]}
   ],
   "roads": [
-    {"id": "marquis-road", "name": "Marquis Road", "path": [[1000, 815], [800, 812], [600, 815], [560, 795]], "sources": ["scripts/stage-sets/marquis-road.ts:53"]},
+    {"id": "marquis-road", "name": "Marquis Road", "path": [[1400, 620], [1220, 700], [1060, 790], [960, 815], [800, 812], [600, 815], [560, 795]], "sources": ["scripts/stage-sets/marquis-road.ts:53"]},
     {"id": "gate-street", "name": "Gate street", "path": [[560, 790], [560, 740]]},
     {"id": "quay-street", "name": "Quay street", "path": [[385, 705], [160, 650], [200, 480]]}
   ],
@@ -89,7 +93,6 @@
     {"a": "south-gate", "rel": "near", "b": "city-wall", "source": "encounters/the-front-of-the-line.md:43"}
   ],
   "beyond": [
-    {"id": "valkarr-forest", "name": "Valkarr Forest", "direction": "north and east", "sources": ["encounters/the-beast-escapes.md:54"]},
     {"id": "covert-cargo-pier", "name": "The forest pier", "direction": "east, about three miles up the Mordava", "sources": ["covert-cargo/encounters/return-to-the-city.md:16"]}
   ]
 }
