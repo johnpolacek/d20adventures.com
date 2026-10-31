@@ -33,46 +33,46 @@
   ],
   "roads": [
     {"id": "marquis-road", "name": "Marquis Road", "path": [[3000, 450], [1400, 620], [1220, 700], [1060, 790], [960, 815], [800, 812], [600, 815], [560, 795]], "sources": ["scripts/stage-sets/marquis-road.ts:53"]},
-    {"id": "gate-street", "name": "Gate street", "path": [[560, 790], [560, 740]]},
-    {"id": "quay-street", "name": "Quay street", "path": [[385, 705], [160, 650], [200, 480]]}
+    {"id": "gate-street", "name": "Gate Street", "path": [[560, 790], [560, 740]]},
+    {"id": "quay-street", "name": "Quay Street", "path": [[385, 705], [160, 650], [200, 480]]}
   ],
   "districts": [
     {"id": "docks", "name": "The Docks", "elevation": "low", "polygon": [[140, 570], [400, 600], [400, 715], [140, 695]], "labelAt": [330, 585], "artClip": [[140, 570], [400, 600], [400, 818], [96, 818], [96, 700], [140, 695]]},
     {"id": "lower-districts", "name": "The Lower Districts", "elevation": "low", "polygon": [[140, 140], [380, 138], [400, 600], [140, 570]], "labelAt": [270, 230]},
-    {"id": "old-quarter", "name": "The old quarter", "elevation": "middle", "polygon": [[380, 138], [640, 133], [640, 600], [400, 600]], "labelAt": [510, 180]},
-    {"id": "gate-ward", "name": "Gate ward", "elevation": "low", "polygon": [[400, 600], [900, 600], [880, 790], [400, 795]], "labelAt": [760, 745]},
-    {"id": "asterian-quarter", "name": "The Asterian Quarter", "elevation": "high", "polygon": [[640, 133], [880, 120], [920, 520], [900, 600], [640, 600]], "labelAt": [790, 200]}
+    {"id": "old-quarter", "name": "The Old Quarter", "elevation": "middle", "polygon": [[380, 138], [640, 133], [640, 600], [400, 600]], "labelAt": [490, 175]},
+    {"id": "gate-ward", "name": "Gate Ward", "elevation": "low", "polygon": [[400, 600], [900, 600], [880, 790], [400, 795]], "labelAt": [760, 745]},
+    {"id": "asterian-quarter", "name": "The Asterian Quarter", "elevation": "high", "polygon": [[640, 133], [880, 120], [920, 520], [900, 600], [640, 600]], "labelAt": [800, 215]}
   ],
   "landmarks": [
-    {"id": "south-gate", "name": "The gates of Kordavos", "kind": "gate", "district": "gate-ward", "x": 560, "y": 792, "sources": ["encounters/the-gates-of-kordavos.md:17", "encounters/the-front-of-the-line.md:43", "scripts/stage-sets/marquis-road.ts:53", "encounters/the-new-dawn.md:16"]},
-    {"id": "harvest-square", "name": "The harvest square", "kind": "square", "district": "gate-ward", "x": 560, "y": 715, "sources": ["encounters/the-gates-of-kordavos.md:17", "encounters/clan-conflict.md:66", "encounters/the-harvest-festival.md:36"]},
+    {"id": "south-gate", "name": "The Gates of Kordavos", "kind": "gate", "district": "gate-ward", "x": 560, "y": 792, "sources": ["encounters/the-gates-of-kordavos.md:17", "encounters/the-front-of-the-line.md:43", "scripts/stage-sets/marquis-road.ts:53", "encounters/the-new-dawn.md:16"]},
+    {"id": "harvest-square", "name": "The Harvest Square", "kind": "square", "district": "gate-ward", "x": 560, "y": 715, "sources": ["encounters/the-gates-of-kordavos.md:17", "encounters/clan-conflict.md:66", "encounters/the-harvest-festival.md:36"]},
     {"id": "dragonbone-inn", "name": "The Dragonbone Inn", "kind": "inn", "district": "gate-ward", "x": 625, "y": 690, "sources": ["encounters/the-dragonbone-inn.md:20"]},
     {"id": "old-grand-library", "name": "The Old Grand Library", "kind": "library", "district": "old-quarter", "x": 480, "y": 400, "sources": ["encounters/the-old-grand-library.md:22"]},
     {"id": "church-of-valkara", "name": "The Church of Valkara", "kind": "church", "district": "old-quarter", "x": 520, "y": 380, "sources": ["encounters/the-old-grand-library.md:22"]},
-    {"id": "valtor-chapel", "name": "The Valtor chapel", "kind": "chapel", "district": "old-quarter", "x": 500, "y": 220, "sources": ["encounters/through-the-labyrinth.md:42"]},
+    {"id": "valtor-chapel", "name": "The Valtor Chapel", "kind": "chapel", "district": "old-quarter", "x": 500, "y": 220, "sources": ["encounters/through-the-labyrinth.md:42"]},
     {"id": "silver-serpent", "name": "The Silver Serpent Tavern", "kind": "tavern", "district": "docks", "x": 330, "y": 640, "sources": ["encounters/an-unsolicited-opportunity.md:44", "encounters/the-silver-serpent-tavern.md:61"]},
-    {"id": "river-pier", "name": "The river pier", "aliases": ["Mordava pier"], "kind": "pier", "district": "docks", "x": 385, "y": 705, "sources": ["encounters/an-unsolicited-opportunity.md:34", "encounters/an-unsolicited-opportunity.md:40", "encounters/thaddeus-blackthorns-private-chambers.md:57"], "label": "below"},
-    {"id": "the-quay", "name": "The quay", "kind": "quay", "district": "docks", "x": 290, "y": 700, "sources": ["encounters/arrival-at-the-docks.md:55", "encounters/the-aftermath.md:23"], "label": "below"},
-    {"id": "blackthorn-warehouses", "name": "The Blackthorn warehouses", "kind": "warehouse", "district": "docks", "x": 270, "y": 670, "sources": ["encounters/the-old-grand-library.md:46", "encounters/arrival-at-the-docks.md:38"]},
+    {"id": "river-pier", "name": "The River Pier", "aliases": ["Mordava pier"], "kind": "pier", "district": "docks", "x": 385, "y": 705, "sources": ["encounters/an-unsolicited-opportunity.md:34", "encounters/an-unsolicited-opportunity.md:40", "encounters/thaddeus-blackthorns-private-chambers.md:57"], "label": "below"},
+    {"id": "the-quay", "name": "The Quay", "kind": "quay", "district": "docks", "x": 290, "y": 700, "sources": ["encounters/arrival-at-the-docks.md:55", "encounters/the-aftermath.md:23"], "label": "below"},
+    {"id": "blackthorn-warehouses", "name": "The Blackthorn Warehouses", "kind": "warehouse", "district": "docks", "x": 270, "y": 670, "sources": ["encounters/the-old-grand-library.md:46", "encounters/arrival-at-the-docks.md:38"]},
     {"id": "warehouse-14", "name": "Warehouse 14", "kind": "warehouse", "district": "docks", "x": 200, "y": 650, "sources": ["encounters/arrival-at-the-docks.md:37", "encounters/arrival-at-the-docks.md:45", "encounters/mystery-cargo.md:22", "scripts/stage-sets/kordavos-docks.ts:38"]},
     {"id": "star-of-faelendar", "name": "The Star of Faelendar", "kind": "ship", "district": "docks", "x": 195, "y": 690, "sources": ["encounters/mystery-cargo.md:47", "encounters/the-beast-escapes.md:22"], "label": "below"},
-    {"id": "harbour-tower", "name": "Harbour tower", "kind": "tower", "district": "docks", "x": 150, "y": 688, "stageOnly": true, "sources": ["scripts/stage-sets/kits/street.ts:222"], "label": "left"},
-    {"id": "silverhand-hideout", "name": "Silverhand's hideout", "kind": "warehouse", "district": "docks", "x": 165, "y": 600, "sources": ["encounters/shadowing-silverhand.md:42", "encounters/the-hideout.md:22"], "label": "below"},
+    {"id": "harbour-tower", "name": "Harbour Tower", "kind": "tower", "district": "docks", "x": 150, "y": 688, "stageOnly": true, "sources": ["scripts/stage-sets/kits/street.ts:222"], "label": "left"},
+    {"id": "silverhand-hideout", "name": "Silverhand's Hideout", "kind": "warehouse", "district": "docks", "x": 165, "y": 600, "sources": ["encounters/shadowing-silverhand.md:42", "encounters/the-hideout.md:22"], "label": "below"},
     {"id": "black-market", "name": "The Black Market", "kind": "market", "district": "lower-districts", "x": 250, "y": 420, "sources": ["encounters/beset-by-street-urchins.md:44", "encounters/finding-the-black-market.md:17", "encounters/the-entrance-to-the-black-market.md:36"]},
-    {"id": "auction-hall", "name": "The auction hall", "kind": "hall", "district": "lower-districts", "x": 230, "y": 395, "sources": ["encounters/labyrinthine-stalls.md:65", "encounters/the-winning-bid.md:30"], "label": "above"},
-    {"id": "ambush-lane", "name": "The ambush lane", "kind": "street", "district": "gate-ward", "x": 450, "y": 660, "sources": ["encounters/the-ambush.md:24"]},
-    {"id": "counting-houses", "name": "The counting houses", "kind": "treasury", "district": "gate-ward", "x": 440, "y": 770, "sources": ["encounters/the-new-dawn.md:20"], "label": "left"},
+    {"id": "auction-hall", "name": "The Auction Hall", "kind": "hall", "district": "lower-districts", "x": 230, "y": 395, "sources": ["encounters/labyrinthine-stalls.md:65", "encounters/the-winning-bid.md:30"], "label": "above"},
+    {"id": "ambush-lane", "name": "The Ambush Lane", "kind": "street", "district": "gate-ward", "x": 450, "y": 660, "sources": ["encounters/the-ambush.md:24"]},
+    {"id": "counting-houses", "name": "The Counting Houses", "kind": "treasury", "district": "gate-ward", "x": 440, "y": 770, "sources": ["encounters/the-new-dawn.md:20"], "label": "left"},
     {"id": "blackthorn-mansion", "name": "The Blackthorn Mansion", "kind": "mansion", "district": "asterian-quarter", "x": 770, "y": 340, "sources": ["encounters/entry-to-the-ball.md:22", "encounters/thaddeus-blackthorns-private-chambers.md:19"]},
-    {"id": "grand-square", "name": "The grand square", "kind": "square", "district": "asterian-quarter", "x": 770, "y": 420, "sources": ["adventure.md:68", "encounters/the-new-dawn.md:18", "encounters/vengeance-of-the-blackthorn.md:16"]},
-    {"id": "blackthorn-garden", "name": "The Blackthorn garden", "kind": "garden", "district": "asterian-quarter", "x": 780, "y": 280, "sources": ["encounters/death-to-the-murderer.md:38", "encounters/the-hunt-for-the-assassin.md:22"], "label": "left"},
-    {"id": "drain-grate", "name": "The drain grate", "kind": "grate", "district": "asterian-quarter", "x": 815, "y": 270, "sources": ["encounters/the-chase.md:22", "encounters/the-hunt-for-the-assassin.md:26"]},
-    {"id": "council-chambers", "name": "The City Council chambers", "kind": "hall", "district": "asterian-quarter", "x": 690, "y": 460, "sources": ["encounters/through-the-labyrinth.md:33"], "label": "right"},
-    {"id": "castle", "name": "The castle", "kind": "castle", "district": "asterian-quarter", "x": 850, "y": 180, "stageOnly": true, "sources": ["scripts/stage-backdrops.ts:67", "scripts/stage-sets/covert-cargo.ts:809"]},
-    {"id": "powder-chamber", "name": "The powder chamber", "kind": "tunnel", "below": true, "x": 760, "y": 410, "sources": ["encounters/into-the-catacombs.md:27", "encounters/into-the-catacombs.md:29"], "label": "left"},
-    {"id": "labyrinth", "name": "The labyrinth", "kind": "tunnel", "below": true, "x": 640, "y": 470, "sources": ["encounters/through-the-labyrinth.md:29", "encounters/through-the-labyrinth.md:33"]},
-    {"id": "sealed-door", "name": "The sealed door", "kind": "door", "below": true, "x": 590, "y": 500, "sources": ["encounters/the-sealed-door.md:31"]},
+    {"id": "grand-square", "name": "The Grand Square", "kind": "square", "district": "asterian-quarter", "x": 770, "y": 420, "sources": ["adventure.md:68", "encounters/the-new-dawn.md:18", "encounters/vengeance-of-the-blackthorn.md:16"]},
+    {"id": "blackthorn-garden", "name": "The Blackthorn Garden", "kind": "garden", "district": "asterian-quarter", "x": 780, "y": 280, "sources": ["encounters/death-to-the-murderer.md:38", "encounters/the-hunt-for-the-assassin.md:22"], "label": "left"},
+    {"id": "drain-grate", "name": "The Drain Grate", "kind": "grate", "district": "asterian-quarter", "x": 815, "y": 270, "sources": ["encounters/the-chase.md:22", "encounters/the-hunt-for-the-assassin.md:26"]},
+    {"id": "council-chambers", "name": "The City Council Chambers", "kind": "hall", "district": "asterian-quarter", "x": 690, "y": 460, "sources": ["encounters/through-the-labyrinth.md:33"], "label": "right"},
+    {"id": "castle", "name": "The Castle", "kind": "castle", "district": "asterian-quarter", "x": 850, "y": 180, "stageOnly": true, "sources": ["scripts/stage-backdrops.ts:67", "scripts/stage-sets/covert-cargo.ts:809"]},
+    {"id": "powder-chamber", "name": "The Powder Chamber", "kind": "tunnel", "below": true, "x": 760, "y": 410, "sources": ["encounters/into-the-catacombs.md:27", "encounters/into-the-catacombs.md:29"], "label": "left"},
+    {"id": "labyrinth", "name": "The Labyrinth", "kind": "tunnel", "below": true, "x": 640, "y": 470, "sources": ["encounters/through-the-labyrinth.md:29", "encounters/through-the-labyrinth.md:33"]},
+    {"id": "sealed-door", "name": "The Sealed Door", "kind": "door", "below": true, "x": 590, "y": 500, "sources": ["encounters/the-sealed-door.md:31"]},
     {"id": "big-empty", "name": "The Big Empty", "kind": "cavern", "below": true, "x": 550, "y": 530, "sources": ["encounters/big-empty.md:37"]},
-    {"id": "forgotten-temple", "name": "The forgotten temple", "kind": "temple", "below": true, "x": 510, "y": 550, "sources": ["encounters/forgotten-temple.md:25", "encounters/forgotten-temple.md:27"]}
+    {"id": "forgotten-temple", "name": "The Forgotten Temple", "kind": "temple", "below": true, "x": 510, "y": 550, "sources": ["encounters/forgotten-temple.md:25", "encounters/forgotten-temple.md:27"]}
   ],
   "tunnels": [
     {"id": "covenant-tunnel", "path": ["drain-grate", "powder-chamber", "labyrinth", "sealed-door", "big-empty", "forgotten-temple"]}
@@ -93,6 +93,6 @@
     {"a": "south-gate", "rel": "near", "b": "city-wall", "source": "encounters/the-front-of-the-line.md:43"}
   ],
   "beyond": [
-    {"id": "covert-cargo-pier", "name": "The forest pier", "direction": "east, about three miles up the Mordava", "sources": ["covert-cargo/encounters/return-to-the-city.md:16"]}
+    {"id": "covert-cargo-pier", "name": "The Forest Pier", "direction": "east, about three miles up the Mordava", "sources": ["covert-cargo/encounters/return-to-the-city.md:16"]}
   ]
 }

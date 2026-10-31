@@ -8,7 +8,9 @@ import { type Box, boxAround, type CityMap, centroid, districtBox, frameBox, typ
 import { cn } from "@/lib/utils"
 import { eyebrow, Pill, panel } from "./hud"
 
-const INK = "#4a3b28"
+const INK = "#2b1a10"
+// The pale edge round every label, so it reads over the painting.
+const HALO = "#f4ead2"
 const TRAIL = "#b8862e"
 const HERE = "#a3261f"
 const BELOW = "#6d3fa0"
@@ -20,8 +22,24 @@ const CLOSE = 1.2
 const points = (p: Point[] = []) => p.map((q) => q.join(",")).join(" ")
 
 // The map in a box of map units. Text and lines keep their size on screen whatever the zoom. Zoomed out, only where
-// the party is now is named.
-export function CityMapView({ map, trail, box, fill, onDistrict, className }: { map: CityMap; trail: string[]; box: Box; fill?: boolean; onDistrict?: (id: string) => void; className?: string }) {
+// the party is now is named. Without `names`, only districts and forests are.
+export function CityMapView({
+  map,
+  trail,
+  box,
+  fill,
+  onDistrict,
+  className,
+  names = true,
+}: {
+  map: CityMap
+  trail: string[]
+  box: Box
+  fill?: boolean
+  onDistrict?: (id: string) => void
+  className?: string
+  names?: boolean
+}) {
   const ref = useRef<SVGSVGElement>(null)
   const shown = useTween(box)
   const [size, setSize] = useState({ width: 300, height: 300 })
@@ -138,6 +156,10 @@ export function CityMapView({ map, trail, box, fill, onDistrict, className }: { 
       {steps.length > 1 && <polyline points={points(steps)} fill="none" stroke={TRAIL} strokeWidth={2 * u} strokeDasharray={`${2 * u} ${5 * u}`} strokeLinecap="round" opacity={0.55} />}
       {map.districts.map((d) => {
         const [x, y] = d.labelAt ?? centroid(d.polygon)
+        // A name cut off at the edge reads as a misspelling, so one that would not fit is left out. Georgia averages
+        // about 0.55 of its size per letter.
+        const half = (d.name.length * 0.55 * (u < CLOSE ? 16 : 12) * u) / 2
+        if (x - half < shown[0] || x + half > shown[0] + shown[2]) return null
         return (
           <text
             key={d.id}
@@ -145,13 +167,14 @@ export function CityMapView({ map, trail, box, fill, onDistrict, className }: { 
             y={y}
             textAnchor="middle"
             fill={INK}
-            fontSize={(u < CLOSE ? 13 : 9.5) * u}
+            fontSize={(u < CLOSE ? 16 : 12) * u}
             fontWeight={700}
             fontFamily="Georgia, serif"
             letterSpacing={0.5 * u}
             paintOrder="stroke"
-            stroke="#efe4c8d9"
-            strokeWidth={3 * u}
+            stroke={HALO}
+            strokeWidth={4 * u}
+            strokeLinejoin="round"
             pointerEvents="none"
           >
             {d.name}
@@ -167,13 +190,14 @@ export function CityMapView({ map, trail, box, fill, onDistrict, className }: { 
             y={y}
             textAnchor="middle"
             fill="#2f4a22"
-            fontSize={14 * u}
+            fontSize={16 * u}
             fontStyle="italic"
             fontWeight={700}
             fontFamily="Georgia, serif"
             paintOrder="stroke"
-            stroke="#a9c08ecc"
-            strokeWidth={3 * u}
+            stroke="#eef2dd"
+            strokeWidth={4 * u}
+            strokeLinejoin="round"
             pointerEvents="none"
           >
             {f.name}
@@ -182,7 +206,7 @@ export function CityMapView({ map, trail, box, fill, onDistrict, className }: { 
       })}
       {landmarks.map((l) => {
         const color = l.below ? BELOW : l.id === here ? HERE : "#7a3d22"
-        const [dx, dy, anchor] = { left: [-8, 4, "end"], above: [0, -10, "middle"], below: [0, 16, "middle"], right: [8, 4, "start"] }[l.label ?? "right"] as [
+        const [dx, dy, anchor] = { left: [-9, 5, "end"], above: [0, -11, "middle"], below: [0, 19, "middle"], right: [9, 5, "start"] }[l.label ?? "right"] as [
           number,
           number,
           "start" | "middle" | "end",
@@ -190,17 +214,19 @@ export function CityMapView({ map, trail, box, fill, onDistrict, className }: { 
         return (
           <g key={l.id}>
             <circle cx={l.x} cy={l.y} r={4.5 * u} fill={l.below ? "#fff" : color} stroke={color} strokeWidth={2 * u} />
-            {(u < CLOSE || l.id === here) && (
+            {names && (u < CLOSE || l.id === here) && (
               <text
                 x={l.x + dx * u}
                 y={l.y + dy * u}
                 textAnchor={anchor}
-                fill={color}
-                fontSize={11 * u}
+                fill={l.below || l.id === here ? color : INK}
+                fontSize={13 * u}
+                fontWeight={l.id === here ? 700 : 600}
                 fontFamily="Georgia, serif"
                 paintOrder="stroke"
-                stroke="#e7dfcbd9"
-                strokeWidth={2.5 * u}
+                stroke={HALO}
+                strokeWidth={4 * u}
+                strokeLinejoin="round"
                 pointerEvents="none"
               >
                 {l.name}
@@ -230,7 +256,7 @@ export function CityMapInset({ map, trail, onOpen, className }: { map: CityMap; 
       aria-label="Open the map"
       className={cn(panel, "block h-[180px] w-[252px] overflow-hidden p-0 transition-[border-color] hover:border-stage-gold", className)}
     >
-      <CityMapView map={map} trail={trail} box={box} fill />
+      <CityMapView map={map} trail={trail} box={box} fill names={false} />
     </button>
   )
 }

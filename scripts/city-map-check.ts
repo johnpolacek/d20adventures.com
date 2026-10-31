@@ -73,6 +73,8 @@ function checkMap(map: CityMap, settingId: string) {
     byId.set(place.id, place)
   }
 
+  // Place names are shown as titles, so they are in title case.
+  for (const place of all) if (place.name) expect(place.name === titleCase(place.name), `${name}: "${place.name}" is not in title case`)
   for (const place of map.landmarks) {
     const { x, y, width, height } = map.frame
     expect(place.x! >= x && place.x! <= x + width && place.y! >= y && place.y! <= y + height, `${name}: ${place.id} is outside the frame`)
@@ -123,6 +125,14 @@ function checkSource(name: string, owner: string, settingId: string, source: str
   if (!expect(existsSync(path), `${name}: ${owner} cites missing file ${source}`)) return
   const text = readFileSync(path, "utf8").split("\n")[Number(line) - 1]
   expect(text?.trim(), `${name}: ${owner} cites a blank or missing line ${source}`)
+}
+
+const MINOR_WORDS = new Set(["a", "an", "the", "of", "and", "or", "in", "on", "at", "to", "by", "for"])
+function titleCase(text: string) {
+  return text
+    .split(" ")
+    .map((word, i) => (i > 0 && MINOR_WORDS.has(word) ? word : word.charAt(0).toUpperCase() + word.slice(1)))
+    .join(" ")
 }
 
 function anchor(place: Place): Point {
