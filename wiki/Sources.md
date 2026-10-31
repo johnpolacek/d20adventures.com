@@ -32,6 +32,10 @@ The files under `wiki/sources/adventure plans/` are legacy inputs, not current a
 
 The current authoring source is under `content/settings/realm-of-myr/` or the corresponding complete S3 source. March of Davos was reconciled from richer production source into the repo in June 2026, so rerunning its original migration can overwrite later authoring.
 
+## Kordavos geography
+
+[Kordavos spatial claims](sources/kordavos-spatial-claims.md) quotes every claim about the city's layout, from the encounters, NPCs, Covert Cargo, the 3D sets and the legacy plans. The [city map plan](plans/kordavos-city-map.md) holds the rulings.
+
 ## Source briefs
 
 [Product](sources/prd.md) · [Technical](sources/technical-brief.md) · [Design](sources/design-brief.md) · [Marketing](sources/marketing-brief.md)

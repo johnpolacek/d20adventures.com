@@ -2,7 +2,7 @@
 
 [Wiki Home](../index.md) · [Roadmap](../roadmap.md)
 
-Updated 2026-10-23. Plans are optional and deleted when done. Git keeps the old ones.
+Updated 2026-10-31. Plans are optional and deleted when done. Git keeps the old ones.
 
 ## Open
 
@@ -13,6 +13,7 @@ Updated 2026-10-23. Plans are optional and deleted when done. Git keeps the old 
 | [Adventure store](feature-adventure-store.md) | Alpha release: website, Convex, store secret. Checkout at beta. |
 | [Desktop local play](desktop-local-play.md) | Save management, provider coverage, distribution. |
 | [Created heroes](created-heroes.md) | Guest creation in the running app, owner review of the hooks, a live gate round. |
+| [Kordavos city map](kordavos-city-map.md) | Owner rulings on the open conflicts, then the gazetteer. |
 | [Maintenance](maintenance.md) | Test harness, authoring edge cases, audits, cleanup. |
 
 ## Kept for reference
