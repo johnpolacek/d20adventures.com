@@ -1,6 +1,6 @@
 import { z } from "zod"
-import { authoredText } from "../story/authored"
 import type { Llm } from "../ports"
+import { authoredText } from "../story/authored"
 
 // Making a player's hero for the Realm of Myr, and their arrival in an adventure with hero hooks. Shared by the desktop
 // app, where the player's CLI writes them, and the website, so a hero fits the world wherever it is made.
