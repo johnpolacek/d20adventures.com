@@ -89,6 +89,8 @@ export default defineSchema({
     resolvedThreadIds: v.optional(v.array(v.string())),
     // What each character knows. See packages/gm-core/src/story/knowledge.ts.
     knowledge: v.optional(knowledgeValidator),
+    // The paragraphs that show created heroes in the start encounter's intro, by hero id. See story/authored.ts.
+    arrivals: v.optional(v.record(v.string(), v.string())),
     // A hosted game: the host's desktop app runs its GM through the host's own CLI, never the server.
     // seenAt is when the host's app last asked for GM work, so guests can tell it is online.
     // seats are the heroes the host holds for invited players. A hero from the host's roster carries the key of its
@@ -108,6 +110,10 @@ export default defineSchema({
         pick: v.optional(v.boolean()),
         // Where guests choose first, how many held heroes each guest may take. Unset, as many as their links name.
         each: v.optional(v.number()),
+        // How many open seats one guest may fill with heroes of their own. Unset, one.
+        bring: v.optional(v.number()),
+        // Created heroes' arrivals in the opening scene, by hero sheet id, written by the host's GM before the game starts.
+        arrivals: v.optional(v.record(v.string(), v.object({ reason: v.string(), intro: v.string(), tell: v.string() }))),
         // Guests the host removed from the table. They take no held seat, and their next request waits for the host.
         removed: v.optional(v.array(v.string())),
         requests: v.optional(
@@ -119,6 +125,8 @@ export default defineSchema({
               name: v.string(),
               race: v.optional(v.string()),
               archetype: v.optional(v.string()),
+              // Why the hero came, as the guest chose it when making them.
+              hook: v.optional(v.string()),
               status: v.union(v.literal("pending"), v.literal("rejected"), v.literal("removed")),
               note: v.optional(v.string()),
               at: v.number(),
@@ -138,9 +146,11 @@ export default defineSchema({
   // GM work for hosted games, done by the host's desktop app one job at a time per adventure.
   gmJobs: defineTable({
     adventureId: v.id("adventures"),
-    turnId: v.id("turns"),
+    // Every job but an arrival is for the turn it was asked in.
+    turnId: v.optional(v.id("turns")),
     // A suggest job changes nothing in the game. It finishes with replies the player could send for their hero.
-    kind: v.union(v.literal("reply"), v.literal("roll"), v.literal("continue"), v.literal("suggest"), v.literal("skip")),
+    // An arrival job writes a created hero's arrival before the game starts, for their sheet's key, with their hook as text.
+    kind: v.union(v.literal("reply"), v.literal("roll"), v.literal("continue"), v.literal("suggest"), v.literal("skip"), v.literal("arrival")),
     // Who asked, and for which character. Continue jobs have no character.
     userId: v.string(),
     characterId: v.optional(v.string()),

@@ -33,18 +33,33 @@ export const hostWatches = (adventure: Seated) => Boolean(adventure.host && !adv
 
 /**
  * What a guest sees of the seats: how many take a hero of their own, whether the host approves theirs, whether the
- * host removed them, how many held seats are kept for the host, how many more held heroes they may take, and their own request with the host's answer.
+ * host removed them, how many held seats are kept for the host, how many more held heroes they may take, how many
+ * more of their own heroes they may bring, the heroes waiting on the host, and their latest request with the host's answer.
  */
 export function guestSeat(adventure: Seated, userId: string | null | undefined) {
   const host = adventure.host
-  const request = userId ? host?.requests?.find((r) => r.userId === userId) : undefined
+  const theirs = userId ? (host?.requests ?? []).filter((r) => r.userId === userId).sort((a, b) => a.at - b.at) : []
+  const request = theirs[theirs.length - 1]
+  const pending = theirs.filter((r) => r.status === "pending").map((r) => r.name)
   const removed = Boolean(userId && host?.removed?.includes(userId))
   const keep = hostWaits(adventure) ? 1 : 0
   // Where guests choose first, how many more held heroes this guest may take.
   const held = new Set((host?.seats ?? []).map((s) => s.id))
   const taken = (adventure.players ?? []).filter((p) => p.userId === userId && held.has(sheetId(p.characterId))).length
   const more = keep && host?.each && userId ? Math.max(0, host.each - taken) : 0
-  return { open: openLeft(adventure), approve: Boolean(host?.approve) || removed, removed, keep, more, request: request && { name: request.name, status: request.status, note: request.note } }
+  // Their own heroes in open seats, seated or waiting, count against the host's limit.
+  const brought = (adventure.players ?? []).filter((p) => p.userId === userId && !held.has(sheetId(p.characterId))).length + pending.length
+  const bring = userId ? Math.max(0, (host?.bring ?? 1) - brought) : 0
+  return {
+    open: openLeft(adventure),
+    approve: Boolean(host?.approve) || removed,
+    removed,
+    keep,
+    more,
+    bring,
+    pending,
+    request: request && { name: request.name, status: request.status, note: request.note },
+  }
 }
 export type GuestSeat = ReturnType<typeof guestSeat>
 

@@ -1,24 +1,19 @@
-import CharacterCreateForm from "@/components/forms/character-create-form"
+import { NewHero } from "@/components/heroes/new-hero"
 import FullPageImage from "@/components/layout/fullpage-image"
+import { api } from "@/convex/_generated/api"
+import type { Id } from "@/convex/_generated/dataModel"
+import { convex } from "@/lib/convex/server"
+import { heroCreation } from "@/lib/heroes/creation"
 
-export default function NewCharacterPage() {
-  // TODO: Replace with real data fetching for these props
-  const availableRaces = ["Human", "Elf", "Dwarf", "Halfling"]
-  const availableArchetypes = ["Fighter", "Wizard", "Rogue", "Cleric"]
-  const settingId = "realm-of-myr"
-  const adventurePlanId = "default-plan"
-
+// Made from a lobby, redirectToAdventure is that lobby's link: the hero is made for its adventure and joins its game.
+export default async function NewCharacterPage({ searchParams }: { searchParams: Promise<{ redirectToAdventure?: string }> }) {
+  const href = (await searchParams).redirectToAdventure
+  const [, settingId, planId, adventureId] = /^\/settings\/([^/?#]+)\/([^/?#]+)\/([^/?#]+)/.exec(href ?? "") ?? []
+  const adventure = adventureId ? await convex.query(api.adventure.getAdventureById, { adventureId: adventureId as Id<"adventures"> }).catch(() => null) : null
+  const lobby = href && adventure ? { href, settingId, planId, adventureId, hosted: Boolean(adventure.host) } : undefined
   return (
     <FullPageImage>
-      <div className="max-w-3xl mx-auto py-12 relative z-10">
-        <CharacterCreateForm
-          availableRaces={availableRaces}
-          availableArchetypes={availableArchetypes}
-          settingId={settingId}
-          adventurePlanId={adventurePlanId}
-          className="rounded-lg bg-black/50 ring-8 ring-black/30 border border-white/10 p-8 mt-24"
-        />
-      </div>
+      <NewHero creation={await heroCreation(lobby?.planId)} lobby={lobby} />
     </FullPageImage>
   )
 }

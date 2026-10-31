@@ -67,7 +67,8 @@ function TableChat({ chat, onSend }: { chat: { from: string; text: string }[]; o
 }
 
 type SeatRequest = NonNullable<HostedSummary["requests"]>[number]
-type ReadSheet = (userId: string) => Promise<GuestHero | null>
+// characterId names one of a guest's heroes.
+type ReadSheet = (userId: string, characterId?: string) => Promise<GuestHero | null>
 
 const ATTRIBUTES = [
   ["strength", "Str"],
@@ -124,7 +125,7 @@ function HeroSheet({ hero }: { hero: GuestHero }) {
 }
 
 // Sheet opens a guest's hero under their row. It is read from the website when first opened.
-function useSheet(userId: string, read: ReadSheet) {
+function useSheet(userId: string, read: ReadSheet, characterId?: string) {
   const [hero, setHero] = useState<GuestHero | null>(null)
   const [open, setOpen] = useState(false)
   const [reading, setReading] = useState(false)
@@ -133,7 +134,7 @@ function useSheet(userId: string, read: ReadSheet) {
     setOpen(true)
     if (hero) return
     setReading(true)
-    setHero(await read(userId).catch(() => null))
+    setHero(await read(userId, characterId).catch(() => null))
     setReading(false)
   }
   const button = (
@@ -206,7 +207,7 @@ function Guest({ guest, busy, onSheet, onRemove }: { guest: { userId: string; na
 
 // A guest asking for an open seat with their own hero: Approve seats them, Reject takes an optional note for them.
 function Request({ request, busy, onAnswer, onSheet }: { request: SeatRequest; busy: boolean; onAnswer: (approve: boolean, note?: string) => void; onSheet: ReadSheet }) {
-  const { button, sheet } = useSheet(request.userId, onSheet)
+  const { button, sheet } = useSheet(request.userId, onSheet, request.characterId)
   const note = useNote("Reject", request.player, busy, (text) => onAnswer(false, text))
   return (
     <li className="rounded-lg border border-white/10 bg-black/50 p-3">
@@ -247,7 +248,7 @@ export function HostedLobby(props: {
   onChat: (text: string) => Promise<boolean>
   gm: string
   busy: boolean
-  onAnswer: (userId: string, approve: boolean, note?: string) => void
+  onAnswer: (userId: string, approve: boolean, note?: string, characterId?: string) => void
   onSheet: ReadSheet
   onRemove: (userId: string, note?: string) => void
   // Where guests choose first, the heroes nobody chose that go to AI. The rest are the host's.
@@ -298,7 +299,13 @@ export function HostedLobby(props: {
             <div className={cn(siteLabel, "mt-7 mb-2")}>Asking to join · {requests.length}</div>
             <ul className="space-y-2">
               {requests.map((r) => (
-                <Request key={`${r.userId}:${r.name}`} request={r} busy={props.busy} onAnswer={(approve, note) => props.onAnswer(r.userId, approve, note)} onSheet={props.onSheet} />
+                <Request
+                  key={`${r.userId}:${r.characterId ?? r.name}`}
+                  request={r}
+                  busy={props.busy}
+                  onAnswer={(approve, note) => props.onAnswer(r.userId, approve, note, r.characterId)}
+                  onSheet={props.onSheet}
+                />
               ))}
             </ul>
           </>

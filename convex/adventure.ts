@@ -514,6 +514,7 @@ export const patchAdventure = mutation({
       updatedAt: v.optional(v.number()),
       endedAt: v.optional(v.number()),
       status: v.optional(v.union(v.literal("waitingForPlayers"), v.literal("active"), v.literal("completed"))),
+      arrivals: v.optional(v.record(v.string(), v.string())),
       // Add other fields as needed
     }),
   },

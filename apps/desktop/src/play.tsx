@@ -248,9 +248,9 @@ export function DesktopGame() {
     setScreen(null)
     await hostStart(adventureId, provider).catch((e) => setError(String(e)))
   }
-  const hostGame = async (you: string[], invites: string[], ais: string[], open: number, approve: boolean, watch: boolean, each?: number) => {
+  const hostGame = async (you: string[], invites: string[], ais: string[], open: number, approve: boolean, watch: boolean, each?: number, bring?: number) => {
     setSending(true)
-    const res = await host({ kind: "hostCreate", planId: adventure, characterIds: you, invites, ais, open, approve, watch, each })
+    const res = await host({ kind: "hostCreate", planId: adventure, characterIds: you, invites, ais, open, approve, watch, each, bring })
     setSending(false)
     if (res.error || !res.created) return setError(res.error ?? "Could not host the game.")
     await openHosted(res.created.adventureId)
@@ -372,8 +372,8 @@ export function DesktopGame() {
           onChat={say}
           gm={gmLabel}
           busy={sending}
-          onAnswer={(userId, approve, note) => void act(() => host({ kind: "hostAnswer", adventureId: hosting, userId, approve, note }))}
-          onSheet={(userId) => host({ kind: "hostSheet", adventureId: hosting, userId }).then((r) => r.sheet ?? null)}
+          onAnswer={(userId, approve, note, characterId) => void act(() => host({ kind: "hostAnswer", adventureId: hosting, userId, characterId, approve, note }))}
+          onSheet={(userId, characterId) => host({ kind: "hostSheet", adventureId: hosting, userId, characterId }).then((r) => r.sheet ?? null)}
           onRemove={(userId, note) => void act(() => host({ kind: "hostRemove", adventureId: hosting, userId, note }))}
           onStart={(ais) => void act(() => host({ kind: "hostStart", adventureId: hosting, ais }))}
           onHome={goHome}

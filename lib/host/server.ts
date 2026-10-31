@@ -57,6 +57,10 @@ export async function createHostedAdventure(args: {
   watch?: boolean
   // Where guests choose first, how many heroes each guest may take.
   each?: number
+  // How many open seats one guest may fill with heroes of their own.
+  bring?: number
+  // Arrivals the host's app already wrote for its roster heroes, by hero id.
+  arrivals?: Record<string, unknown>
 }) {
   if (!isLocalWikiAdventure(SETTING, args.planId)) throw new HostError(404, "This adventure cannot be hosted.")
   const { artifacts, contentRef } = await loadWikiAdventureRuntime(SETTING, args.planId)
@@ -101,9 +105,55 @@ export async function createHostedAdventure(args: {
     currentEncounterId: manifest.startEncounterId,
     adventureSummaryMarkdown: manifest.summary,
   })
-  await convex.mutation(api.hosting.setHost, { secret: serverSecret(), adventureId, userId: args.userId, deviceId: args.deviceId, seats, open, approve: args.approve, pick: !mine.length && !watch, ...(args.each ? { each: args.each } : {}) })
+  // Roster heroes keep the arrival the app wrote. The host's GM writes the rest before the game starts.
+  const roster = [...mine, ...ais, ...held].filter((h) => !h.premade)
+  const arrivals = Object.fromEntries(roster.flatMap((h) => (validArrival(args.arrivals?.[h.id]) ? [[h.id, validArrival(args.arrivals?.[h.id])!]] : [])))
+  await convex.mutation(api.hosting.setHost, {
+    secret: serverSecret(),
+    adventureId,
+    userId: args.userId,
+    deviceId: args.deviceId,
+    seats,
+    open,
+    approve: args.approve,
+    pick: !mine.length && !watch,
+    arrivals,
+    ...(args.each ? { each: args.each } : {}),
+    ...(args.bring ? { bring: args.bring } : {}),
+  })
+  if (manifest.heroHooks?.length) for (const h of roster.filter((h) => !arrivals[h.id])) await queueArrival(adventureId, keyOf(h.id), args.userId)
   return adventureId
 }
+
+const arrivalText = (value: unknown, max: number) => (typeof value === "string" && value.trim() ? value.trim().slice(0, max) : undefined)
+// An arrival as the host's app sends it, or nothing when it is not one.
+function validArrival(value: unknown) {
+  const a = (value ?? {}) as Record<string, unknown>
+  const arrival = { reason: arrivalText(a.reason, 400), intro: arrivalText(a.intro, 600), tell: arrivalText(a.tell, 200) }
+  return arrival.reason && arrival.intro && arrival.tell ? (arrival as { reason: string; intro: string; tell: string }) : undefined
+}
+
+/**
+ * Asks the host's GM for the arrival of a created hero, by their sheet's key, with the hook their player chose. Only
+ * in an adventure with hero hooks, and only before the game starts.
+ */
+export async function queueArrival(adventureId: Id<"adventures">, characterId: string, userId: string, hook?: string) {
+  await convex.mutation(api.hosting.queueArrival, { secret: serverSecret(), adventureId, userId, characterId, ...(hook?.trim() ? { hook: hook.trim().slice(0, 300) } : {}) })
+}
+
+/** Whether an adventure has hero hooks, so its created heroes get arrivals. */
+export async function takesArrivals(adventure: Pick<Doc<"adventures">, "settingId" | "planId">) {
+  return isLocalWikiAdventure(adventure.settingId, adventure.planId) && Boolean((await loadWikiAdventureRuntime(adventure.settingId, adventure.planId)).artifacts.manifest.heroHooks?.length)
+}
+
+/** An arrival job as the host's app runs it: the hero's sheet goes with it, and the adventure is the host's. */
+export async function arrivalJob<T extends { kind: string; characterId?: string }>(job: T) {
+  if (job.kind !== "arrival" || !job.characterId?.startsWith("characters/")) return job
+  return { ...job, sheet: toPCTemplate(await readJsonFromS3(job.characterId).catch(() => null)) }
+}
+
+/** An arrival the host's app reports for a finished arrival job. */
+export const reportedArrival = validArrival
 
 /**
  * Where guests choose first, seats every held hero nobody chose as the game starts: the host's, or AI heroes where ais
@@ -189,8 +239,10 @@ export async function hostedSummary(adventure: Doc<"adventures">, origin: string
     approval: Boolean(adventure.host?.approve),
     openInvite: `${inviteUrl(origin, adventure)}?as=any`,
     requests: (adventure.host?.requests ?? [])
-      .filter((r) => r.status === "pending" && !adventure.playerIds.includes(r.userId))
-      .map((r) => ({ userId: r.userId, player: r.player, name: r.name, race: r.race, archetype: r.archetype })),
+      .filter((r) => r.status === "pending" && !adventure.players?.some((p) => p.characterId === r.characterId))
+      .map((r) => ({ userId: r.userId, characterId: r.characterId, player: r.player, name: r.name, race: r.race, archetype: r.archetype })),
+    // How many open seats one guest may fill.
+    bring: adventure.host?.bring ?? 1,
     seats: hostWaits(adventure) ? [] : openSeats(adventure).map((s) => ({ id: s.id, name: s.name, invite: `${inviteUrl(origin, adventure)}?as=${s.id}` })),
     // Where guests choose first and the host plays a hero they leave: the heroes nobody has chosen yet.
     left: hostWaits(adventure) ? openSeats(adventure).map((s) => s.name) : [],
@@ -213,9 +265,15 @@ function guestsOf(adventure: Doc<"adventures">, names: string[]) {
   return [...guests.values()]
 }
 
-/** A guest's hero as the host reads it: the hero they ask to bring, or the one they are seated with. */
-export async function guestHero(adventure: Doc<"adventures">, userId: string) {
-  const key = adventure.host?.requests?.find((r) => r.userId === userId)?.characterId ?? adventure.players?.find((p) => p.userId === userId && p.controlledBy !== "ai")?.characterId
+/**
+ * A guest's hero as the host reads it: the one characterId names, else the hero they ask to bring, or the one they are
+ * seated with.
+ */
+export async function guestHero(adventure: Doc<"adventures">, userId: string, characterId?: string) {
+  const theirs = [...(adventure.host?.requests ?? []).filter((r) => r.userId === userId), ...(adventure.players ?? []).filter((p) => p.userId === userId && p.controlledBy !== "ai")].map(
+    (x) => x.characterId
+  )
+  const key = (characterId && theirs.find((k) => k === characterId)) || theirs[0]
   const pc = key?.startsWith("characters/") ? toPCTemplate(await readJsonFromS3(key).catch(() => null)) : null
   if (!pc) throw new HostError(404, "That hero's sheet could not be read.")
   const { name, race, archetype, gender, appearance, personality, background, motivation, attributes, skills, specialAbilities, spells, equipment } = pc

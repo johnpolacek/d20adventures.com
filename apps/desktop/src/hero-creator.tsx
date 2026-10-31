@@ -34,6 +34,8 @@ export function HeroCreator(props: {
   editing?: Hero
   // Art painted for the hero being edited, offered beside the stock figures.
   painted?: FigureArt
+  // False where the stage does not read a chosen figure yet, as on the website.
+  figures?: boolean
   busy: boolean
   onDraft: (idea: HeroIdea) => Promise<HeroDraft | undefined>
   onSave: (hero: HeroDraft & { id?: string; figure: string; painted?: boolean }) => Promise<boolean>
@@ -128,8 +130,8 @@ export function HeroCreator(props: {
           </>
         ) : (
           <>
-            <div className="grid gap-6 md:grid-cols-[220px_1fr]">
-              <div>
+            <div className={cn("grid gap-6", props.figures !== false && "md:grid-cols-[220px_1fr]")}>
+              <div hidden={props.figures === false}>
                 <div className={cn(siteLabel, "mb-2")}>Figure</div>
                 <div className="grid grid-cols-2 gap-2">
                   {props.painted && (

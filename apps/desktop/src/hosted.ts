@@ -37,7 +37,8 @@ export function hostedSave(state: Hosted): Save | null {
 
 /** Whether the host's GM has an action to resolve for the current turn, and the latest failure since its last success. Suggested replies do not count. */
 export function hostedWork(state: Hosted) {
-  const current = state.jobs.filter((j) => j.turnId === state.turn?._id && j.kind !== "suggest")
+  // Arrival jobs are written before the first turn, for no turn.
+  const current = state.jobs.filter((j) => state.turn && j.turnId === state.turn._id && j.kind !== "suggest")
   const busy = current.some((j) => j.status === "queued" || j.status === "running")
   // Jobs come newest first. A failure counts until a later job for the turn succeeds.
   const latest = current.find((j) => j.status === "done" || j.status === "failed")

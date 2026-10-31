@@ -5,7 +5,7 @@ import { serverSecret } from "@/lib/convex/server-secret"
 import { deviceFromRequest } from "@/lib/desktop/server"
 import { postTableChat, tableChat } from "@/lib/host/chat"
 import { thrownMessage } from "@/lib/host/seats"
-import { guestHero, HostError, hostErrorResponse, hostedAdventure, hostedSummary, seatHost, siteOrigin } from "@/lib/host/server"
+import { guestHero, HostError, hostErrorResponse, hostedAdventure, hostedSummary, queueArrival, seatHost, siteOrigin, takesArrivals } from "@/lib/host/server"
 import { startWikiAdventure } from "@/lib/wiki-adventures/start"
 
 // A hosted game's state for the host's app: the adventure, its current turn, recent GM work, and the table chat.
@@ -32,10 +32,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ adv
   if (error) return error
   try {
     const adventure = await hostedAdventure((await params).adventureId, device.userId)
-    const { action, ...body } = (await request.json()) as { action?: string; userId?: unknown; approve?: unknown; note?: unknown; text?: unknown; ais?: unknown }
+    const { action, ...body } = (await request.json()) as { action?: string; userId?: unknown; characterId?: unknown; approve?: unknown; note?: unknown; text?: unknown; ais?: unknown }
+    // A guest who brings several heroes is asked about by hero.
+    const characterId = typeof body.characterId === "string" ? body.characterId : undefined
     if (action === "sheet") {
       if (typeof body.userId !== "string") return NextResponse.json({ error: "Choose a guest." }, { status: 400 })
-      return NextResponse.json({ sheet: await guestHero(adventure, body.userId) })
+      return NextResponse.json({ sheet: await guestHero(adventure, body.userId, characterId) })
     }
     if (action === "remove") {
       if (typeof body.userId !== "string") return NextResponse.json({ error: "Choose a guest." }, { status: 400 })
@@ -48,9 +50,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ adv
     if (action === "answer") {
       if (typeof body.userId !== "string" || typeof body.approve !== "boolean") return NextResponse.json({ error: "Choose a request to answer." }, { status: 400 })
       const note = typeof body.note === "string" ? body.note : undefined
-      await convex.mutation(api.hosting.answerSeat, { secret: serverSecret(), adventureId: adventure._id, hostUserId: device.userId, userId: body.userId, approve: body.approve, note }).catch((e) => {
-        throw new HostError(409, thrownMessage(e, "The request could not be answered."))
-      })
+      const seated = await convex
+        .mutation(api.hosting.answerSeat, { secret: serverSecret(), adventureId: adventure._id, hostUserId: device.userId, userId: body.userId, characterId, approve: body.approve, note })
+        .catch((e) => {
+          throw new HostError(409, thrownMessage(e, "The request could not be answered."))
+        })
+      if (seated && (await takesArrivals(adventure))) await queueArrival(adventure._id, seated.characterId, body.userId, seated.hook).catch((e) => console.warn("No arrival job:", e))
       return NextResponse.json({ answered: true })
     }
     if (action === "delete") {

@@ -25,14 +25,24 @@ export const hostCommandSchema = z.discriminatedUnion("kind", [
     watch: z.boolean().default(false),
     // Where guests choose first, how many heroes each guest may take.
     each: z.number().int().min(1).max(8).optional(),
+    // How many open seats one guest may fill with heroes of their own.
+    bring: z.number().int().min(1).max(8).optional(),
     token,
   }),
   // The host removes a seated guest before the game starts, with an optional note for them.
   z.object({ kind: z.literal("hostRemove"), adventureId: id, userId: id, note: z.string().trim().max(300).optional(), token }),
-  // A guest's hero sheet, for one asking to join or one at the table.
-  z.object({ kind: z.literal("hostSheet"), adventureId: id, userId: id, token }),
-  // The host's answer to a guest asking for an open seat. A rejection may carry a note for the guest.
-  z.object({ kind: z.literal("hostAnswer"), adventureId: id, userId: id, approve: z.boolean(), note: z.string().trim().max(300).optional(), token }),
+  // A guest's hero sheet, for one asking to join or one at the table. characterId names one of several.
+  z.object({ kind: z.literal("hostSheet"), adventureId: id, userId: id, characterId: z.string().max(200).optional(), token }),
+  // The host's answer to a guest asking for an open seat with a hero. A rejection may carry a note for the guest.
+  z.object({
+    kind: z.literal("hostAnswer"),
+    adventureId: id,
+    userId: id,
+    characterId: z.string().max(200).optional(),
+    approve: z.boolean(),
+    note: z.string().trim().max(300).optional(),
+    token,
+  }),
   z.object({ kind: z.literal("hostState"), adventureId: id, token }),
   // The host says something in the table chat.
   z.object({ kind: z.literal("hostChat"), adventureId: id, text: z.string().trim().min(1).max(1000), token }),
@@ -59,8 +69,9 @@ export type HostCommand = z.infer<typeof hostCommandSchema>
 
 export type HostedJob = {
   _id: string
-  turnId: string
-  kind: "reply" | "roll" | "continue" | "suggest" | "skip"
+  // None for an arrival job, which is written before the first turn.
+  turnId?: string
+  kind: "reply" | "roll" | "continue" | "suggest" | "skip" | "arrival"
   characterId?: string
   status: "queued" | "running" | "done" | "failed"
   error?: string
@@ -116,18 +127,23 @@ export async function hostCommand(command: HostCommand, site: string, heroes: ()
           approve: command.approve,
           watch: command.watch,
           each: command.each,
+          bring: command.bring,
+          // Arrivals this app wrote for its roster heroes. The host's GM writes the rest before the game starts.
+          arrivals: Object.fromEntries(
+            roster.flatMap((h) => (h.arrivals?.[command.planId] && [...command.characterIds, ...command.invites, ...command.ais].includes(h.id) ? [[h.id, h.arrivals[command.planId]]] : []))
+          ),
         }
         return { created: ((await call("/api/desktop/host", body)) as { hosted: HostedSummary }).hosted }
       }
       case "hostState":
         return { state: (await call(`/api/desktop/host/${command.adventureId}`)) as HostedState }
       case "hostSheet":
-        return { sheet: ((await call(`/api/desktop/host/${command.adventureId}`, { action: "sheet", userId: command.userId })) as { sheet: GuestHero }).sheet }
+        return { sheet: ((await call(`/api/desktop/host/${command.adventureId}`, { action: "sheet", userId: command.userId, characterId: command.characterId })) as { sheet: GuestHero }).sheet }
       case "hostRemove":
         await call(`/api/desktop/host/${command.adventureId}`, { action: "remove", userId: command.userId, note: command.note })
         return { state: (await call(`/api/desktop/host/${command.adventureId}`)) as HostedState }
       case "hostAnswer":
-        await call(`/api/desktop/host/${command.adventureId}`, { action: "answer", userId: command.userId, approve: command.approve, note: command.note })
+        await call(`/api/desktop/host/${command.adventureId}`, { action: "answer", userId: command.userId, characterId: command.characterId, approve: command.approve, note: command.note })
         return { state: (await call(`/api/desktop/host/${command.adventureId}`)) as HostedState }
       case "hostDelete":
         await call(`/api/desktop/host/${command.adventureId}`, { action: "delete" })

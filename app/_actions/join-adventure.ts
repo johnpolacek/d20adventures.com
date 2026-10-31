@@ -6,7 +6,9 @@ import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { convex } from "@/lib/convex/server"
 import { serverSecret } from "@/lib/convex/server-secret"
+import { heroMisfit } from "@/lib/heroes/creation"
 import { guestSeats, openLeft, seatHero, sheetId, thrownMessage } from "@/lib/host/seats"
+import { queueArrival, takesArrivals } from "@/lib/host/server"
 import { readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 import { toPCTemplate } from "@/lib/utils/character-mapping"
 import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
@@ -100,9 +102,10 @@ export async function joinAdventure({ settingId, adventurePlanId, adventureId, c
 }
 
 // A guest takes an open seat with a hero from their own account. They are seated at once, unless the host approves
-// heroes: then the host answers in their app, and the lobby shows the answer. Returns whether they were seated, or
-// why it could not be done.
-export async function requestSeat({ adventureId, characterId }: { adventureId: string; characterId: string }): Promise<{ seated?: boolean; error?: string }> {
+// heroes: then the host answers in their app, and the lobby shows the answer. The hero must be a race and class the
+// adventure allows. hook is why a hero made for this game came, for the host's GM to write their arrival. Returns
+// whether they were seated, or why it could not be done.
+export async function requestSeat({ adventureId, characterId, hook }: { adventureId: string; characterId: string; hook?: string }): Promise<{ seated?: boolean; error?: string }> {
   const user = await currentUser()
   if (!user) return { error: "Sign in to ask for a seat." }
   const adventure = await convex.query(api.adventure.getAdventureById, { adventureId: adventureId as Id<"adventures"> }).catch(() => null)
@@ -110,9 +113,23 @@ export async function requestSeat({ adventureId, characterId }: { adventureId: s
   const key = `characters/${user.id}/${sheetId(characterId)}.json`
   const hero = toPCTemplate(await readJsonFromS3(key).catch(() => null))
   if (!hero) return { error: "That hero is not in your account." }
-  const request = { userId: user.id, player: user.username ?? user.firstName ?? "A guest", characterId: key, name: hero.name, race: hero.race, archetype: hero.archetype }
-  return convex.mutation(api.hosting.requestSeat, { secret: serverSecret(), adventureId: adventure._id, ...request }).then(
-    (res) => ({ seated: res.seated }),
-    (e) => ({ error: thrownMessage(e, "That seat could not be taken.") })
-  )
+  const misfit = await heroMisfit(adventure.planId, hero)
+  if (misfit) return { error: misfit }
+  const why = hook?.trim().slice(0, 300) || undefined
+  const request = {
+    userId: user.id,
+    player: user.username ?? user.firstName ?? "A guest",
+    characterId: key,
+    name: hero.name,
+    race: hero.race,
+    archetype: hero.archetype,
+    ...(why ? { hook: why } : {}),
+  }
+  try {
+    const { seated } = await convex.mutation(api.hosting.requestSeat, { secret: serverSecret(), adventureId: adventure._id, ...request })
+    if (seated && (await takesArrivals(adventure))) await queueArrival(adventure._id, key, user.id, why).catch((e) => console.warn("No arrival job:", e))
+    return { seated }
+  } catch (e) {
+    return { error: thrownMessage(e, "That seat could not be taken.") }
+  }
 }

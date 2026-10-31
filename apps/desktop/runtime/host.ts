@@ -1,11 +1,14 @@
 import { type AdventureRecord, type Content, createGmCore, type Llm, type Store } from "@d20/gm-core"
+import { type Arrival, writeArrival } from "@d20/gm-core/character/hero-draft"
 import { type ActionSuggestion, suggestActions } from "@d20/gm-core/services/ai-pc-turn-service"
 import { characterScript } from "@d20/gm-core/story/turn"
 import type { TurnCharacter } from "@d20/gm-core/types/adventure"
+import type { PCTemplate } from "@d20/gm-core/types/character"
 import { findCurrentActor, isDeadActor } from "@d20/gm-core/utils/turn-actors"
 import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventures/plan-view"
 import { scenePlaces, spatialContext } from "../src/scenes"
 import type { Packs } from "./game"
+import { heroAdventure } from "./heroes"
 
 // Host mode: the game lives on the website, and this app runs its GM. Guests' actions and the host's own wait on the
 // website as jobs. The worker claims one at a time, runs it through the host's CLI, and reports it done or failed.
@@ -14,12 +17,16 @@ import type { Packs } from "./game"
 export type HostJob = {
   _id: string
   adventureId: string
-  turnId: string
-  kind: "reply" | "roll" | "continue" | "suggest" | "skip"
+  // None for an arrival job, which is written before the first turn.
+  turnId?: string
+  kind: "reply" | "roll" | "continue" | "suggest" | "skip" | "arrival"
   userId: string
   characterId?: string
+  // A reply's text, or the hook a created hero's player chose for an arrival job.
   text?: string
   result?: number
+  // An arrival job's hero, as the website sends it.
+  sheet?: PCTemplate | null
 }
 // One request to the website's host routes, with the device token added by the caller.
 export type HostPost = (path: string, body: unknown) => Promise<unknown>
@@ -107,7 +114,7 @@ export async function runHostJob(job: HostJob, store: Store, packs: Packs, llm: 
   const core = createGmCore({ llm: tracked, store: guarded, content: hostContent(packs), narration: { afterTurn() {} }, identity: async () => job.userId, sleep: async () => {} })
   const adventure = (await store.getAdventure({ adventureId: job.adventureId })) as (AdventureRecord & { currentTurnId?: string; status?: string }) | null
   if (!adventure) throw new Error("The hosted game is missing.")
-  if (adventure.currentTurnId !== job.turnId) throw new Error("This turn has already advanced.")
+  if (!job.turnId || adventure.currentTurnId !== job.turnId) throw new Error("This turn has already advanced.")
   if (adventure.status === "completed") throw new Error("This adventure is complete.")
   const turn = await store.getTurn({ turnId: job.turnId })
   if (!turn) throw new Error("The turn is missing.")
@@ -147,6 +154,18 @@ export async function runHostJob(job: HostJob, store: Store, packs: Packs, llm: 
   if (!actor.rollRequired || actor.rollResult !== undefined) throw new Error("There is no pending roll.")
   if (!Number.isInteger(job.result) || job.result! < 1 || job.result! > 20) throw new Error("A roll is a whole number from 1 to 20.")
   await core.resolvePlayerRollResult({ turnId: turn._id, characterId: actor.id, result: job.result! })
+}
+
+/** Writes a created hero's arrival in the adventure's opening scene, before the game starts. */
+export async function runArrivalJob(job: HostJob, store: Store, packs: Packs, llm: Llm): Promise<Arrival> {
+  const adventure = (await store.getAdventure({ adventureId: job.adventureId })) as (AdventureRecord & { currentTurnId?: string }) | null
+  if (!adventure) throw new Error("The hosted game is missing.")
+  if (adventure.currentTurnId) throw new Error("The game has started without this hero's arrival.")
+  const pack = packs[adventure.planId]
+  const { hooks, opening, ...about } = pack ? heroAdventure(pack) : { title: "" }
+  if (!hooks?.length || !opening) throw new Error("This adventure has no arrivals.")
+  if (!job.sheet?.name || !job.sheet.appearance) throw new Error("The hero's sheet could not be read.")
+  return writeArrival(llm, job.sheet, { ...about, hooks, opening }, job.text)
 }
 
 export type HostEvent =
@@ -208,7 +227,7 @@ export async function hostLoop(opts: {
     opts.emit({ type: "working", job: { _id: job._id, kind: job.kind, characterId: job.characterId } })
     // A report the website missed is sent again. Finishing a job twice changes nothing, and a job left running holds
     // every later one for ten minutes.
-    const finish = async (report: { suggestions?: ActionSuggestion[]; error?: string }) => {
+    const finish = async (report: { suggestions?: ActionSuggestion[]; arrival?: Arrival; error?: string }) => {
       for (let attempt = 0; ; attempt++) {
         try {
           return await opts.post(jobs, { op: "finish", jobId: job._id, ...report })
@@ -218,8 +237,14 @@ export async function hostLoop(opts: {
         }
       }
     }
-    let result: { suggestions?: ActionSuggestion[] } | { error: string }
+    let result: { suggestions?: ActionSuggestion[]; arrival?: Arrival } | { error: string }
     try {
+      if (job.kind === "arrival") {
+        result = { arrival: await runArrivalJob(job, opts.store, opts.packs, opts.llm) }
+        await finish(result).catch((error) => opts.emit({ type: "offline", error: error instanceof Error ? error.message : String(error) }))
+        opts.emit({ type: "done", jobId: job._id })
+        continue
+      }
       const suggestions = await runHostJob(job, opts.store, opts.packs, opts.llm)
       // Queued before this job is reported done, so no screen sees the game waiting on a Continue.
       if (job.kind !== "suggest") await follow()

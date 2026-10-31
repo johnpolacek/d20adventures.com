@@ -4,7 +4,7 @@ import type { Id } from "@/convex/_generated/dataModel"
 import { convex } from "@/lib/convex/server"
 import { serverSecret } from "@/lib/convex/server-secret"
 import { deviceFromRequest } from "@/lib/desktop/server"
-import { type HostedAction, hostErrorResponse, hostedAdventure, queueAction } from "@/lib/host/server"
+import { arrivalJob, type HostedAction, hostErrorResponse, hostedAdventure, queueAction, reportedArrival } from "@/lib/host/server"
 
 // The host's app asks for the next GM job, which also tells guests it is online, and reports each one done or failed.
 export async function POST(request: Request, { params }: { params: Promise<{ adventureId: string }> }) {
@@ -12,8 +12,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ adv
   if (error) return error
   try {
     const adventureId = (await params).adventureId as Id<"adventures">
-    const body = (await request.json()) as { op?: string; jobId?: string; error?: string; suggestions?: unknown } & Partial<HostedAction>
-    if (body.op === "claim") return NextResponse.json({ job: await convex.mutation(api.hosting.claimJob, { secret: serverSecret(), adventureId, userId: device.userId }) })
+    const body = (await request.json()) as { op?: string; jobId?: string; error?: string; suggestions?: unknown; arrival?: unknown } & Partial<HostedAction>
+    if (body.op === "claim") {
+      const job = await convex.mutation(api.hosting.claimJob, { secret: serverSecret(), adventureId, userId: device.userId })
+      return NextResponse.json({ job: job && (await arrivalJob(job)) })
+    }
     // The host plays too. Their actions queue like a guest's, so the worker takes every action in order.
     if (body.op === "queue") {
       const adventure = await hostedAdventure(adventureId, device.userId)
@@ -27,7 +30,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ adv
             .slice(0, 3)
             .map((s) => ({ label: s.label.trim().slice(0, 60), text: s.text.trim().slice(0, 600) }))
         : undefined
-      await convex.mutation(api.hosting.finishJob, { secret: serverSecret(), jobId: body.jobId as Id<"gmJobs">, userId: device.userId, error: body.error?.slice(0, 500), suggestions })
+      // An arrival job finishes with the hero's arrival.
+      const arrival = reportedArrival(body.arrival)
+      await convex.mutation(api.hosting.finishJob, {
+        secret: serverSecret(),
+        jobId: body.jobId as Id<"gmJobs">,
+        userId: device.userId,
+        error: body.error?.slice(0, 500),
+        suggestions,
+        ...(arrival ? { arrival } : {}),
+      })
       return NextResponse.json({ ok: true })
     }
     return NextResponse.json({ error: "Unknown job request." }, { status: 400 })

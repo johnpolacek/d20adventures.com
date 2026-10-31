@@ -76,8 +76,8 @@ export function NewGame(props: {
   // Hosting the adventure on the website for friends instead: the player's heroes, and the heroes held for guests.
   // Needs a linked account, so Invite links first. Without a hero for the player, guests choose first, or with
   // watch the player has no hero at all. open is how many more seats take a guest's own hero, and approve whether
-  // the host answers each of those.
-  onHost?: (you: string[], invites: string[], ais: string[], open: number, approve: boolean, watch: boolean, each?: number) => void
+  // the host answers each of those. bring is how many of those seats one guest may fill.
+  onHost?: (you: string[], invites: string[], ais: string[], open: number, approve: boolean, watch: boolean, each?: number, bring?: number) => void
 }) {
   const info = props.adventures.find((a) => a.id === props.adventure)
   const lockedInfo = info ? undefined : props.locked.find((a) => a.id === props.adventure)
@@ -87,6 +87,8 @@ export function NewGame(props: {
   const [askFirst, setAskFirst] = useState(false)
   // Where guests choose first, how many heroes each guest may take.
   const [each, setEach] = useState(1)
+  // How many open seats one guest may fill with heroes of their own. Unset, all of them.
+  const [bring, setBring] = useState<number | null>(null)
   // The hero the player last held, so leaving a guest's choice of hero gives it back.
   const [lastYou, setLastYou] = useState<string | null>(null)
   const fits = (h: Hero) => Boolean(info?.options?.races.includes(h.race) && info.options.archetypes.includes(h.archetype))
@@ -242,7 +244,31 @@ export function NewGame(props: {
                   <span className={siteLabel}>Each guest picks</span>
                   <fieldset className="flex" aria-label="How many heroes each guest picks">
                     {Array.from({ length: held.length - 1 }, (_, i) => i + 1).map((n, i) => (
-                      <Option key={n} active={each === n} aria-pressed={each === n} className={cn(i > 0 && "-ml-0.5 rounded-l-none", i < held.length - 2 && "rounded-r-none")} onClick={() => setEach(n)}>
+                      <Option
+                        key={n}
+                        active={each === n}
+                        aria-pressed={each === n}
+                        className={cn(i > 0 && "-ml-0.5 rounded-l-none", i < held.length - 2 && "rounded-r-none")}
+                        onClick={() => setEach(n)}
+                      >
+                        {n}
+                      </Option>
+                    ))}
+                  </fieldset>
+                </div>
+              )}
+              {open > 1 && (
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <span className={siteLabel}>Each guest brings</span>
+                  <fieldset className="flex" aria-label="How many of their own heroes each guest brings">
+                    {Array.from({ length: open }, (_, i) => i + 1).map((n, i) => (
+                      <Option
+                        key={n}
+                        active={Math.min(bring ?? open, open) === n}
+                        aria-pressed={Math.min(bring ?? open, open) === n}
+                        className={cn(i > 0 && "-ml-0.5 rounded-l-none", i < open - 1 && "rounded-r-none")}
+                        onClick={() => setBring(n)}
+                      >
                         {n}
                       </Option>
                     ))}
@@ -356,7 +382,8 @@ export function NewGame(props: {
                     open,
                     askFirst,
                     watching,
-                    guestsChoose ? Math.min(each, held.length - 1) : undefined
+                    guestsChoose ? Math.min(each, held.length - 1) : undefined,
+                    open > 1 ? Math.min(bring ?? open, open) : undefined
                   )
                 : props.onLink?.()
             }
