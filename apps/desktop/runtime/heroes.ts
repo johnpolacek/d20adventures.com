@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto"
 import type { GmPorts, Llm } from "@d20/gm-core"
 import { createGenerateCharacterAction } from "@d20/gm-core/character/generate-character-action"
-import { authoredText } from "@d20/gm-core/story/authored"
+import { type Arrival, arrivalSchema, draftsArrival, heroDraftPrompt, withArrival, writeArrival } from "@d20/gm-core/character/hero-draft"
 import { type PCTemplate, pcTemplateSchema } from "@d20/gm-core/types/character"
 import { z } from "zod"
 import { STOCK_FIGURES } from "../src/figures"
@@ -9,10 +9,7 @@ import type { Pack, Packs } from "./game"
 import { PAINTERS, paint, readArt, storeArt } from "./paint"
 
 const text = (max: number) => z.string().trim().max(max)
-// How a hero comes into one adventure: why they came, for their sheet, the paragraph that shows them in its opening
-// scene, and the one thing others there can see and ask about.
-const arrivalSchema = z.object({ reason: text(400).min(1), intro: text(600).min(1), tell: text(200).min(1) })
-export type Arrival = z.infer<typeof arrivalSchema>
+export type { Arrival }
 // A hero in the local roster: a player character sheet and the stock figure that stands for them. `painted` heroes
 // stand as the art painted for them instead, while it exists. Arrivals are by adventure id, so the sheet itself stays
 // the hero's own in every adventure.
@@ -90,22 +87,12 @@ export async function heroCommand(
     return {}
   }
   const pack = command.adventure ? packs[command.adventure] : undefined
-  const manifest = pack?.artifacts.manifest
-  // An adventure with hooks has the hero arrive in its opening scene, written in the same call.
-  const opening = manifest?.heroHooks?.length ? pack?.artifacts.encounters[manifest.startEncounterId]?.sections.intro : undefined
+  const adventure = pack && heroAdventure(pack)
   const { generateCharacterAction } = createGenerateCharacterAction({ llm } as GmPorts)
   const result = await generateCharacterAction({
     characterType: "pc",
-    prompt: [
-      `${command.name}, a ${[command.gender, command.race, command.archetype].filter(Boolean).join(" ")}, a hero of the Realm of Myr, a medieval fantasy world.`,
-      command.idea ? `The player's idea for them: ${command.idea}` : "",
-      manifest ? `They are about to set out on ${manifest.title}${manifest.teaser ? `: ${manifest.teaser}` : "."}` : "",
-      "Keep the given name, race and class. Write appearance, personality, background and motivation as two or three vivid sentences each, plus a short behavior note on how they act in play. A spellcaster has two to four spells. Others have none. Equipment items have one-sentence descriptions.",
-      manifest?.heroHooks && opening ? arrivalPrompt(manifest.heroHooks, opening, command.hook) : "",
-    ]
-      .filter(Boolean)
-      .join("\n"),
-    ...(opening ? { extend: { arrival: arrivalSchema } } : {}),
+    prompt: heroDraftPrompt(command, adventure, command.hook),
+    ...(draftsArrival(adventure) ? { extend: { arrival: arrivalSchema } } : {}),
   })
   if (!result.success || !result.character) throw new Error(result.error ?? "The hero could not be created. Retry.")
   const { arrival, ...c } = result.character as PCTemplate & { arrival?: Arrival }
@@ -121,20 +108,16 @@ export async function heroCommand(
       healthPercent: 100,
       effects: [],
       spells: (c.spells ?? []).map((s) => ({ name: s.name, description: s.description })),
-      ...(arrival && manifest ? { arrivals: { [manifest.adventureId]: arrival } } : {}),
+      ...(arrival && pack ? { arrivals: { [pack.artifacts.manifest.adventureId]: arrival } } : {}),
     },
   }
 }
 
-// Asks for a hero's arrival in an adventure's opening scene, written like the paragraphs that show its premades there.
-function arrivalPrompt(hooks: string[], opening: string, hook?: string) {
-  return [
-    "They arrive alone, a stranger to everyone, in the adventure's opening scene below. Write their arrival:",
-    `- reason: one sentence for their sheet on why they have come, in the third person. ${hook ? `The player's reason for them: ${hook}` : `Pick the reason that suits them best: ${hooks.join(" | ")}`}`,
-    "- intro: a paragraph for the scene like the one about each traveler in it. One or two sentences in the present tense, at most 45 words: how they look and what they do while they wait, with one detail the others can notice and ask about. Show the reason without stating it. Never give their name, since no one there knows it. Mention no other traveler, since who else stands in the line changes.",
-    "- tell: one short sentence on that detail as others see it, for their sheet.",
-    `The opening scene:\n${authoredText(opening)}`,
-  ].join("\n")
+// What a hero made for an adventure knows of it: its teaser, and with hooks the opening scene they arrive in.
+export function heroAdventure(pack: Pack) {
+  const m = pack.artifacts.manifest
+  const opening = m.heroHooks?.length ? pack.artifacts.encounters[m.startEncounterId]?.sections.intro : undefined
+  return { title: m.title, teaser: m.teaser, hooks: m.heroHooks, opening }
 }
 
 // Writes the arrival each chosen roster hero lacks for an adventure with hooks, such as a hero made from the Characters
@@ -142,25 +125,14 @@ function arrivalPrompt(hooks: string[], opening: string, hook?: string) {
 // A failed call leaves the hero without one: the opening scene's notes cover heroes it does not name.
 export async function writeArrivals(pack: Pack, ids: string[], roster: Roster, llm: Llm) {
   const m = pack.artifacts.manifest
-  const opening = m.heroHooks?.length ? pack.artifacts.encounters[m.startEncounterId]?.sections.intro : undefined
-  if (!m.heroHooks || !opening) return
-  const hooks = m.heroHooks
+  const { hooks, opening, ...adventure } = heroAdventure(pack)
+  if (!hooks || !opening) return
   const missing = roster.heroes().filter((h) => ids.includes(h.id) && !h.arrivals?.[m.adventureId])
   // One at a time: a CLI session answers one request at a time.
   for (const hero of missing) {
-    const prompt = [
-      `${hero.name}, a ${[hero.gender, hero.race, hero.archetype].filter(Boolean).join(" ")}, a hero of the Realm of Myr, a medieval fantasy world, is about to set out on ${m.title}${m.teaser ? `: ${m.teaser}` : "."}`,
-      `Appearance: ${hero.appearance}`,
-      hero.personality ? `Personality: ${hero.personality}` : "",
-      hero.background ? `Background: ${hero.background}` : "",
-      hero.motivation ? `Motivation: ${hero.motivation}` : "",
-      arrivalPrompt(hooks, opening),
-    ]
-      .filter(Boolean)
-      .join("\n")
     try {
-      const { object } = await llm.generateObject({ prompt, schema: arrivalSchema })
-      roster.putHero({ ...hero, arrivals: { ...hero.arrivals, [m.adventureId]: object } })
+      const arrival = await writeArrival(llm, hero, { ...adventure, hooks, opening })
+      roster.putHero({ ...hero, arrivals: { ...hero.arrivals, [m.adventureId]: arrival } })
     } catch (error) {
       console.warn(`No arrival for ${hero.name}:`, error)
     }
@@ -193,7 +165,7 @@ export function partyFor(pack: Pack, choices: PartyChoice[], roster: Hero[]) {
     // Why they came goes on their background, and what others see of them on their appearance.
     const arrival = byAdventure?.[m.adventureId]
     if (arrival) arrivals[hero.id] = arrival.intro
-    sheets[hero.id] = arrival ? { ...sheet, background: [sheet.background, arrival.reason].filter(Boolean).join(" "), appearance: [sheet.appearance, arrival.tell].filter(Boolean).join(" ") } : sheet
+    sheets[hero.id] = withArrival(sheet, arrival)
     figures[hero.id] = figure
     if (art) painted.push(hero.id)
   }

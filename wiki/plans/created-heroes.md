@@ -33,6 +33,25 @@ How it works now is in [Hero Hooks](../wiki-adventures.md#hero-hooks).
 - Hosted games start on the website, in `lib/wiki-adventures/start.ts`, and carry no arrivals yet.
 - A live GM round at the gate with a created hero, and the stage playing their arrival beat.
 
+## Guests create heroes, 2026-10-31
+
+Owner: a guest joining a hosted March of Davos makes their own hero, and may make several, up to the open seats. The heroes must fit the adventure and setting.
+
+Chosen 2026-10-31:
+
+- The host sets how many open seats one guest may fill, in party setup. Kept as `host.bring`.
+- The host's GM writes each created hero's arrival as a job, not the website. Hosted games stay free.
+- The website's creator page works for any adventure, rather than a new creator in the lobby.
+
+Steps:
+
+1. One hero prompt in gm-core for the app and the website. It carries the setting, the adventure's teaser and its hooks.
+2. The website's creator page is the app's creator. Opened from a lobby, it offers that adventure's races, classes and hooks.
+3. A hero made from a hosted lobby takes an open seat with its hook, then returns to the lobby link it came from.
+4. A guest fills open seats up to `host.bring`. Requests, approval and sheets go by hero, not by guest.
+5. An `arrival` job: the host's worker writes a seated hero's arrival before Start. Start places it in the opening.
+6. The website refuses a guest hero whose race or class the adventure does not allow.
+
 ## Eval
 
 The arrival prompt is AI output that ordinary tests cannot judge. Rubric, judged by reading traces:

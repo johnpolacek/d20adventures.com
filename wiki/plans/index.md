@@ -12,7 +12,7 @@ Updated 2026-10-23. Plans are optional and deleted when done. Git keeps the old 
 | [Desktop host mode](desktop-host-mode.md) | A hosted game end to end, Convex lockdown, provider terms, ship. |
 | [Adventure store](feature-adventure-store.md) | Alpha release: website, Convex, store secret. Checkout at beta. |
 | [Desktop local play](desktop-local-play.md) | Save management, provider coverage, distribution. |
-| [Created heroes](created-heroes.md) | Owner review of the hooks, arrivals for hosted games, a live gate check. |
+| [Created heroes](created-heroes.md) | Guests create heroes in hosted games, arrivals for them, owner review of the hooks. |
 | [Maintenance](maintenance.md) | Test harness, authoring edge cases, audits, cleanup. |
 
 ## Kept for reference
