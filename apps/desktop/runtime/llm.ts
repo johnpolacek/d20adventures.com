@@ -7,16 +7,21 @@ import { desktopPatchSchema } from "./characters"
 export function localLlm(provider: string, cwd: string, validatePatch?: (patch: { characterUpdates?: unknown }) => void, strict = true) {
   let session: ReturnType<typeof createSession> | undefined
   const ask = async (prompt: string) => {
-    session ??= createSession(
-      provider,
-      cwd,
-      "You are the Game Master for D20 Adventures. Use only supplied fictional context. Do not use tools or host operations. Follow the requested output format exactly."
-    )
     let result
-    try {
-      result = await session.ask(prompt)
-    } catch {
-      throw new Error(`${provider} could not finish this request. Check its sign-in or usage limit, then retry.`)
+    // A session that failed stays failed, so the host worker's long-lived one is replaced and the request tried once more.
+    for (let attempt = 0; !result; attempt++) {
+      session ??= createSession(
+        provider,
+        cwd,
+        "You are the Game Master for D20 Adventures. Use only supplied fictional context. Do not use tools or host operations. Follow the requested output format exactly."
+      )
+      try {
+        result = await session.ask(prompt)
+      } catch {
+        session.close()
+        session = undefined
+        if (attempt > 0) throw new Error(`${provider} could not finish this request. Check its sign-in or usage limit, then retry.`)
+      }
     }
     if (result.failed || !result.text.trim()) throw new Error(`${provider} could not finish this request. Check its sign-in or usage limit, then retry.`)
     return result.text.trim()
