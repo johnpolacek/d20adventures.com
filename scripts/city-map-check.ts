@@ -1,9 +1,10 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs"
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { loadLocalWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
 
 // Checks each city map in content/settings/{settingId}/maps/: every cited source line exists, every place sits in its
-// district, every story constraint holds, and every encounter of the map's adventures names a place on it.
+// district, every story constraint holds, and every encounter of the map's adventures names a place on it. It also
+// checks lib/citymap/encounter-places.json, the index the game reads, and `--write` rewrites it.
 
 type Point = [number, number]
 type Place = { id: string; name?: string; x?: number; y?: number; district?: string; polygon?: Point[]; path?: Point[]; sources?: string[] }
@@ -29,6 +30,8 @@ const SETTINGS = "content/settings"
 // Map units. The walled city spans about 1000. Near is about a few streets.
 const NEAR = 120
 const errors: string[] = []
+const INDEX = "lib/citymap/encounter-places.json"
+const index: Record<string, Record<string, string>> = {}
 
 function expect(condition: unknown, message: string) {
   if (!condition) errors.push(message)
@@ -46,6 +49,9 @@ function main() {
     }
   }
   expect(maps > 0, "No city maps found")
+  const written = `${JSON.stringify(index, null, 2)}\n`
+  if (process.argv.includes("--write")) writeFileSync(INDEX, written)
+  else expect(existsSync(INDEX) && readFileSync(INDEX, "utf8") === written, `${INDEX} is out of date. Run pnpm map:check --write`)
   if (errors.length) {
     console.error(errors.join("\n"))
     process.exit(1)
@@ -91,6 +97,7 @@ function checkMap(map: CityMap, settingId: string) {
     const { artifacts } = loadLocalWikiAdventureRuntime(settingId, adventureId)
     for (const encounter of Object.values(artifacts.encounters)) {
       const where = `${adventureId}/${encounter.id}`
+      if (encounter.landmarkId) (index[adventureId] ??= {})[encounter.id] = encounter.landmarkId
       if (!encounter.landmarkId) {
         expect(false, `${where} has no landmark`)
         continue

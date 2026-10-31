@@ -6,6 +6,7 @@ import { readingSeconds } from "@d20/stage/beats"
 import type { StagingShot } from "@d20/stage/spec/staging"
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { CharacterCard } from "@/components/stage/character-card"
+import { CityMapInset, CityMapPanel } from "@/components/stage/city-map"
 import { setSoundOn, soundOn } from "@/components/stage/dice-sound"
 import { Pill, panel, StageHud, useCompact } from "@/components/stage/hud"
 import { type ChatLine, Journal, type JournalRoll, type JournalTurn } from "@/components/stage/journal"
@@ -16,6 +17,7 @@ import { Bubbles, Plate } from "@/components/stage/stage-dialogue"
 import { TurnOrder } from "@/components/stage/turn-order"
 import { useStage } from "@/components/stage/use-stage"
 import { Button } from "@/components/ui/button"
+import { cityMapTrail } from "@/lib/citymap"
 import type { Save } from "../runtime/store"
 import { characterInfo } from "./character-info"
 import type { FigureArt } from "./figures"
@@ -52,7 +54,8 @@ function shotFor(stage: Stage, aim: Aim, heroes: string[]): StagingShot | string
     // Over the actor's shoulder toward the one the action is aimed at, when nothing solid stands behind the actor.
     // Someone much taller than a person would fill that frame with their back.
     const cam = { x: a.x - dx * 2.4 + dz * 0.9, z: a.z - dz * 2.4 - dx * 0.9 }
-    if (d > 0.3 && d < 14 && a.height <= 2.2 && !stage.reach(actor, cam, 4).short) return { position: [cam.x, a.y + 1.9, cam.z], target: [a.x + dx * d * 0.6, a.y + (b.y - a.y) * 0.6 + 1.2, a.z + dz * d * 0.6], fov: 48 }
+    if (d > 0.3 && d < 14 && a.height <= 2.2 && !stage.reach(actor, cam, 4).short)
+      return { position: [cam.x, a.y + 1.9, cam.z], target: [a.x + dx * d * 0.6, a.y + (b.y - a.y) * 0.6 + 1.2, a.z + dz * d * 0.6], fov: 48 }
     return { subject: target, distance: 6, angle: 25, height: 1.8, lookHeight: 1.2, fov: 48 }
   }
   const mark = stage.set.marks[aim.place]
@@ -208,7 +211,7 @@ export function StagePlay(props: {
   const busy = props.busy || walking
 
   const [draft, setDraft] = useState("")
-  const [open, setOpen] = useState<"journal" | "chat" | "settings" | null>(null)
+  const [open, setOpen] = useState<"journal" | "chat" | "settings" | "map" | null>(null)
   // The Chat button counts the lines said since the chat was last open. Lines already there when it loads are read.
   const chat = props.chat ?? []
   const lastChat = chat[chat.length - 1]?.at ?? 0
@@ -842,6 +845,12 @@ export function StagePlay(props: {
     const timer = setTimeout(() => leaveRef.current(), Math.max(1500, held.at + (ROLL_SECONDS + 1.5) * 1000 - Date.now()))
     return () => clearTimeout(timer)
   }, [auto, held, props.busy])
+  // Where the party has been on the city map, up to the turn on screen.
+  const encountersSoFar = (save?.turns ?? [])
+    .filter((t) => (t.order ?? 0) <= (shown?.order ?? 0))
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    .map((t) => t.encounterId)
+  const city = useMemo(() => (save ? cityMapTrail(save.adventure.planId, encountersSoFar) : null), [save?.adventure.planId, encountersSoFar.join()])
   const journal: JournalTurn[] = (save?.turns ?? []).map((t) => ({
     number: t.order,
     title: t.title,
@@ -861,10 +870,12 @@ export function StagePlay(props: {
       activeView={stage?.activeShot ?? null}
       onView={(id) => stage?.shot(id)}
       hidden={hidden || !save || props.overlay}
+      map={city && <CityMapInset map={city.map} trail={city.trail} onOpen={() => setOpen("map")} />}
       compact={compact}
       actions={
         <>
           {props.actions}
+          {city && <Pill onClick={() => setOpen(open === "map" ? null : "map")}>Map</Pill>}
           <Pill onClick={() => setOpen(open === "journal" ? null : "journal")}>Journal</Pill>
           {props.onChat && (
             <Pill active={unread > 0} onClick={() => setOpen(open === "chat" ? null : "chat")}>
@@ -978,6 +989,7 @@ export function StagePlay(props: {
               onChat={props.onChat}
             />
           )}
+          {open === "map" && city && <CityMapPanel map={city.map} trail={city.trail} compact={compact} onClose={() => setOpen(null)} />}
           {card && <CharacterCard info={card} compact={compact} onClose={() => setCardId(null)} />}
           {open === "settings" && (
             <section className={`${panel} absolute right-10 top-24 z-40 w-72 p-6`}>

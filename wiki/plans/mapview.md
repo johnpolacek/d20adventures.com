@@ -4,7 +4,7 @@
 
 Status: Implemented reference. V1 merged 2026-07-03. Reviewed against local main on 2026-10-01.
 
-Mapview renders a stored 2D encounter backdrop during play. Maps use a square grid and SVG pieces. Party and NPC positions are static visual staging, not gameplay state.
+Mapview renders a stored 2D encounter backdrop during play. The Kordavos city map is separate: see [Kordavos city map](kordavos-city-map.md). Maps use a square grid and SVG pieces. Party and NPC positions are static visual staging, not gameplay state.
 
 ## Runtime and authoring
 

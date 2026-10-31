@@ -95,6 +95,7 @@ export function StageHud({
   hidden,
   compact,
   backdrop,
+  map,
   children,
 }: {
   containerRef: RefObject<HTMLDivElement | null>
@@ -108,6 +109,8 @@ export function StageHud({
   compact?: boolean
   // Shown where the stage would be when there is none, such as story view's painting.
   backdrop?: ReactNode
+  // A small map, shown over the location in place of the compass.
+  map?: ReactNode
   children?: ReactNode
 }) {
   return (
@@ -135,11 +138,15 @@ export function StageHud({
         </header>
 
         <aside className={cn("pointer-events-none absolute text-right transition-opacity duration-300", compact ? "hidden" : "right-10 bottom-[130px]", location.hidden && "opacity-0")}>
-          <svg viewBox="0 0 60 60" aria-hidden="true" className="mb-3 ml-auto h-12 w-12 fill-none stroke-stage-gold" strokeWidth=".8">
-            <circle cx="30" cy="30" r="23" opacity=".4" />
-            <path d="m30 1 4 25 25 4-25 4-4 25-4-25-25-4 25-4Z" />
-            <circle cx="30" cy="30" r="4" />
-          </svg>
+          {map ? (
+            <div className="pointer-events-auto mb-3 flex justify-end">{map}</div>
+          ) : (
+            <svg viewBox="0 0 60 60" aria-hidden="true" className="mb-3 ml-auto h-12 w-12 fill-none stroke-stage-gold" strokeWidth=".8">
+              <circle cx="30" cy="30" r="23" opacity=".4" />
+              <path d="m30 1 4 25 25 4-25 4-4 25-4-25-25-4 25-4Z" />
+              <circle cx="30" cy="30" r="4" />
+            </svg>
+          )}
           <div className="text-[8px] tracking-[0.25em] text-stage-sage uppercase">{location.eyebrow}</div>
           <p className="mt-2 font-serif text-[17px] text-stage-sage">{location.title}</p>
           {location.status && <div className="mt-2 text-[10px] tracking-wide text-[#e8c898]">{location.status}</div>}

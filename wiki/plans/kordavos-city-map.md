@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Spatial claims](../sources/kordavos-spatial-claims.md) · [Mapview](mapview.md) · [March of Davos in 3D](march-of-davos-sets.md)
 
-Status: steps 1 to 3 done 2026-10-31. The SVG map is next.
+Status: steps 1 to 5 built 2026-10-31. Not yet seen in the running desktop app.
 
 ## Owner request, 2026-10-31
 
@@ -19,8 +19,15 @@ An overhead map of Kordavos for March of Davos, with a small view and a full scr
    - a `constraints` entry fails. Each is a story fact with its source, such as the Valtor chapel north of the labyrinth. Near means within 120 of 1000 map units.
 
    Source cites are line numbers, so editing an encounter above a cited line breaks them. The check catches it.
-4. Draw pins, labels, roads and water as SVG from the gazetteer. Painted art may sit underneath later, with no labels in the painting.
-5. Show only places the party has reached or heard of. A small view over the stage, and a full screen view with the visited trail.
+4. Draw the map as SVG from the map file. Done: `components/stage/city-map.tsx`, read through `lib/citymap/`.
+   - Small view: replaces the compass over the location, bottom right of the play screen. It shows the streets round the party and opens the full map.
+   - Full map: the Map button or the small view. It opens on the whole city with the river, the road, the sea and the Valkarr Forest. A district button or a click on a district zooms to it.
+   - Zoomed out, only the current place is named. Zoomed in, every place reached is named.
+   - Painted art may sit underneath later, with no labels in the painting.
+5. Show only places the party has reached, up to the turn on screen, joined by a faint trail. Tunnels show only between places reached. Districts, water, roads and forest always show.
+   - `lib/citymap/encounter-places.json` maps each encounter to its place. `pnpm map:check --write` rewrites it, and `pnpm map:check` fails when it is stale.
+   - Covert Cargo has no map: its forest pier is off the map.
+   - The website's hosted games use the same `StagePlay`, so they get the map too.
 
 ## Settled by the text
 
