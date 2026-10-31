@@ -44,7 +44,8 @@ export type BuildNextTurnResult =
 function buildContinuingEncounterTurn(args: { turn: Turn; adventureId: string; currentEncounterTitle: string; story: StoryBeat[] }): Turn {
   let newCharacters: TurnCharacter[] = (args.turn.characters as TurnCharacter[]).filter((c) => c.status !== "dead" && c.status !== "fled")
 
-  newCharacters = newCharacters.map((c) => ({
+  // Last round's rolls are over.
+  newCharacters = newCharacters.map(({ rollResult: _rollResult, ...c }) => ({
     ...c,
     hasReplied: false,
     isComplete: false,
@@ -78,7 +79,7 @@ function buildTransitionEncounterTurn(args: { turn: Turn; plan: AdventurePlan; a
 
   let pcs: TurnCharacter[] = (args.turn.characters as TurnCharacter[])
     .filter((c) => c.type === "pc" && c.status !== "dead" && c.status !== "fled")
-    .map((pc) => ({
+    .map(({ rollResult: _rollResult, ...pc }) => ({
       ...pc,
       initiative: rollD20(),
     }))

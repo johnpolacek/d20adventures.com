@@ -3,6 +3,7 @@ import { readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { createGmCore, type GmPorts, type Store } from "@d20/gm-core"
 import { assertPlayerCharacterControl } from "@d20/gm-core/access"
+import { buildNextTurnFromProgression } from "@d20/gm-core/services/advance-turn-builder-service"
 import { handleSkipPassNpcTurn } from "@d20/gm-core/services/npc-turn-branch-service"
 import { npcEarlierTurns, waitsUnaddressed } from "@d20/gm-core/services/npc-turn-service"
 import { createRollRequirementService } from "@d20/gm-core/services/roll-requirement-service"
@@ -447,6 +448,17 @@ function roundBudget() {
   assert.doesNotMatch(prompt("the-new-dawn", ["final-confrontation", "the-new-dawn"]), /Scene Pace/)
 }
 
+// A roll belongs to its round. The next round, in the same scene or the next, starts with none on any hero.
+function rollsEndWithTheRound() {
+  const turn = { ...clone(fixture.initialState), id: "turn", encounterId: "the-wine-cellar" }
+  turn.characters = turn.characters.map((c: Record<string, unknown>) => ({ ...c, rollResult: 14 }))
+  const plan = { sections: [], npcs: {} } as never
+  const next = (nextEncounterId: string) => buildNextTurnFromProgression({ turn, plan, allTurns: [], adventureId: "a", currentEncounterTitle: "t", llmResult: { nextEncounterId, story: [] } })
+  const same = next("the-wine-cellar")
+  assert.equal(same.status, "turn_built")
+  if (same.status === "turn_built") assert.ok(same.turn.characters.every((c) => c.rollResult === undefined))
+}
+
 async function main() {
   const originalRandom = Math.random
   const originalConsole = { ...console }
@@ -459,6 +471,7 @@ async function main() {
     npcTurnRules()
     await npcFixedOutcome()
     roundBudget()
+    rollsEndWithTheRound()
     await replayTurn()
     await characterPrompts()
     await accessAndInstanceIsolation()
@@ -467,7 +480,7 @@ async function main() {
     Object.assign(console, originalConsole)
   }
   console.log(
-    "GM core: browser bundle, dependency boundary, 7-call prompt/schema/write parity, 9 character prompts, spell modifiers, NPC death, waiting, memory, rules and fixed outcomes, ledger ranking, round budget, access, AI companion, instance isolation, duplicate/stale/invalid transitions passed."
+    "GM core: browser bundle, dependency boundary, 7-call prompt/schema/write parity, 9 character prompts, spell modifiers, NPC death, waiting, memory, rules and fixed outcomes, ledger ranking, round budget, rolls ending with the round, access, AI companion, instance isolation, duplicate/stale/invalid transitions passed."
   )
 }
 main().catch((error) => {
