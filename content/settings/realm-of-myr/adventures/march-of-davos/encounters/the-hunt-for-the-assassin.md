@@ -7,6 +7,7 @@ type: "encounter"
 title: "The Hunt for the Assassin"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/drain-grate"
 npcs:
   - id: "astrid-blackthorn"
     behavior: "Cold fury. Leads the hunt and pushes the party on. Offers 500 gold each and a Blackthorn favor if they bargain."

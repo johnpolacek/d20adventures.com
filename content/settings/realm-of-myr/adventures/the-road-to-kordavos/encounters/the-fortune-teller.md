@@ -7,6 +7,7 @@ type: "encounter"
 title: "The Fortune Teller"
 settingId: "realm-of-myr"
 adventureId: "the-road-to-kordavos"
+landmark: "kordavos/marquis-road"
 npcs:
   - id: "npcs-1749870598631"
     initialInitiative: 0

@@ -7,6 +7,7 @@ type: "encounter"
 title: "The Hideout"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/silverhand-hideout"
 roundBudget: 2
 npcs:
   - id: "aldith"

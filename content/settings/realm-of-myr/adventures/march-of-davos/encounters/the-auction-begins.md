@@ -7,6 +7,7 @@ type: "encounter"
 title: "The Auction Begins"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/auction-hall"
 roundBudget: 2
 npcs:
   - id: "auctioneer"

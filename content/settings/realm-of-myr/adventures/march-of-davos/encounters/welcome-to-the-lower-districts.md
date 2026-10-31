@@ -7,6 +7,7 @@ type: "encounter"
 title: "Welcome to the Lower Districts"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/lower-districts"
 roundBudget: 2
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726428910497"
 ---

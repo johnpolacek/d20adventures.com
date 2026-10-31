@@ -123,6 +123,8 @@ export type RuntimeEncounter = {
   image?: string
   assetIds: string[]
   locationId?: string
+  // City map place, "map/place", resolved against content/settings/{settingId}/maps/{map}.json. See scripts/city-map-check.ts.
+  landmarkId?: string
   npcRefs: Array<{ id: string; behavior?: string; initialInitiative?: number; startNear?: string }>
   sections: Record<string, string>
   summary?: string

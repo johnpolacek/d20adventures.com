@@ -7,6 +7,7 @@ type: "encounter"
 title: "The Sealed Door"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/sealed-door"
 npcs:
   - id: "astrid-blackthorn"
     behavior: "Grim and ready, sword in hand. Guards the party while the seal is broken."

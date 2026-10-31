@@ -7,6 +7,7 @@ type: "encounter"
 title: "Forgotten Temple"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/forgotten-temple"
 npcs:
   - id: "astrid-blackthorn"
     behavior: "Awed and wary, blade still drawn. Wants whoever killed her brother."

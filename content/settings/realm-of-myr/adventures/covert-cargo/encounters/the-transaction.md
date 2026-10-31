@@ -7,6 +7,7 @@ type: "encounter"
 title: "The Transaction"
 settingId: "realm-of-myr"
 adventureId: "covert-cargo"
+landmark: "kordavos/covert-cargo-pier"
 npcs:
   - id: "npcs-1749163978757"
     behavior: "Reinhard silently awaits Silas’s instructions but will not let Lyra leave (if she tries to)"

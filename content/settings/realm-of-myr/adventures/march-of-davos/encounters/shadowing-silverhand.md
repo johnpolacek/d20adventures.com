@@ -7,6 +7,7 @@ type: "encounter"
 title: "Shadowing Silverhand"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/lower-districts"
 roundBudget: 3
 npcs:
   - id: "silverhand"

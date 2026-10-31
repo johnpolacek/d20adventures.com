@@ -7,6 +7,7 @@ type: "encounter"
 title: "Death to the Murderer!"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/blackthorn-mansion"
 roundBudget: 2
 npcs:
   - id: "covenant-assassin"

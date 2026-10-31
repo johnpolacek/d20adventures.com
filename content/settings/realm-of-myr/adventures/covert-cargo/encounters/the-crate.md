@@ -7,6 +7,7 @@ type: "encounter"
 title: "The Crate"
 settingId: "realm-of-myr"
 adventureId: "covert-cargo"
+landmark: "kordavos/covert-cargo-pier"
 image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/the-crate/a3a863a9-dca9-48da-b3fe-e8c4ad90af3a.png?t=1749674703995"
 ---
 

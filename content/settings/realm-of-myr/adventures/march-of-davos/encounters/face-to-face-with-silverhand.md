@@ -7,6 +7,7 @@ type: "encounter"
 title: "Face-to-Face with Silverhand"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/silverhand-hideout"
 roundBudget: 4
 npcs:
   - id: "silverhand"

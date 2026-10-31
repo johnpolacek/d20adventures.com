@@ -7,6 +7,7 @@ type: "encounter"
 title: "Mystery Cargo"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/warehouse-14"
 roundBudget: 4
 npcs:
   - id: "scarface-alaric"

@@ -7,6 +7,7 @@ type: "encounter"
 title: "The Ambush"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/ambush-lane"
 roundBudget: 3
 npcs:
   - id: "silas"

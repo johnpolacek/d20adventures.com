@@ -7,6 +7,7 @@ type: "encounter"
 title: "Into the Catacombs"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/powder-chamber"
 npcs:
   - id: "astrid-blackthorn"
     behavior: "Attacks the nearest saboteur with her sword each turn, with a roll. Leaves the fuse to others."

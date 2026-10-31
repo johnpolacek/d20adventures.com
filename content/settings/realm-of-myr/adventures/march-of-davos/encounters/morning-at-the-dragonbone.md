@@ -7,6 +7,7 @@ type: "encounter"
 title: "Morning at the Dragonbone"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/dragonbone-inn"
 roundBudget: 2
 npcs:
   - id: "elara"

@@ -7,6 +7,7 @@ type: "encounter"
 title: "The Gates Ahead"
 settingId: "realm-of-myr"
 adventureId: "the-road-to-kordavos"
+landmark: "kordavos/south-gate"
 ---
 
 ## Intro

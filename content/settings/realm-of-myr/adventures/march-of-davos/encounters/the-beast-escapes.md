@@ -7,6 +7,7 @@ type: "encounter"
 title: "The Beast Escapes"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/star-of-faelendar"
 roundBudget: 3
 npcs:
   - id: "forest-drake"

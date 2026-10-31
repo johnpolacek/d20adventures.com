@@ -7,6 +7,7 @@ type: "encounter"
 title: "Clan Conflict"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/harvest-square"
 roundBudget: 3
 npcs:
   - id: "barok-redbeard"

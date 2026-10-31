@@ -7,6 +7,7 @@ type: "encounter"
 title: "An Unsolicited Opportunity"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/dragonbone-inn"
 roundBudget: 3
 npcs:
   - id: "beric"

@@ -7,6 +7,7 @@ type: "encounter"
 title: "Beset by Street Urchins"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/lower-districts"
 roundBudget: 2
 npcs:
   - id: "finn-swiftfoot"

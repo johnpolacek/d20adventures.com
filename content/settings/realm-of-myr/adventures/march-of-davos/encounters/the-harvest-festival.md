@@ -7,6 +7,7 @@ type: "encounter"
 title: "The Harvest Festival"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/harvest-square"
 roundBudget: 2
 npcs:
   - id: "karim-the-jewel-merchant"

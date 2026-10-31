@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Spatial claims](../sources/kordavos-spatial-claims.md) · [Mapview](mapview.md) · [March of Davos in 3D](march-of-davos-sets.md)
 
-Status: steps 1 and 2 done 2026-10-31. Tagging encounters is next.
+Status: steps 1 to 3 done 2026-10-31. The SVG map is next.
 
 ## Owner request, 2026-10-31
 
@@ -12,7 +12,13 @@ An overhead map of Kordavos for March of Davos, with a small view and a full scr
 
 1. Extract every spatial claim from the text. Done: [Spatial claims](../sources/kordavos-spatial-claims.md), 134 places and 463 claims over four parts.
 2. Rule on the conflicts, then write one gazetteer. Done: `content/settings/realm-of-myr/maps/kordavos.json`, shared with Covert Cargo and The Road to Kordavos. Every landmark cites its source lines. It sits outside the adventure folders, which the compiler reads as source.
-3. Tag each encounter with a landmark id. A check fails on a missing or unknown id.
+3. Tag each encounter with a landmark. Done: every encounter of March of Davos, Covert Cargo and The Road to Kordavos has `landmark: "kordavos/{place}"`, compiled to `landmarkId`. A place is a landmark, district, road or `beyond` entry. `pnpm map:check` fails when:
+   - an encounter has no landmark or names an unknown place;
+   - a cited source line is missing or blank;
+   - a landmark falls outside its district;
+   - a `constraints` entry fails. Each is a story fact with its source, such as the Valtor chapel north of the labyrinth. Near means within 120 of 1000 map units.
+
+   Source cites are line numbers, so editing an encounter above a cited line breaks them. The check catches it.
 4. Draw pins, labels, roads and water as SVG from the gazetteer. Painted art may sit underneath later, with no labels in the painting.
 5. Show only places the party has reached or heard of. A small view over the stage, and a full screen view with the visited trail.
 

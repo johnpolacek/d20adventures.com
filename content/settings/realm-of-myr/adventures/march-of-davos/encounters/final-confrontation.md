@@ -7,6 +7,7 @@ type: "encounter"
 title: "Final Confrontation"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/forgotten-temple"
 npcs:
   - id: "joran-antonov"
     behavior: "Defiant and certain, the Key of Ilmarin in hand. Accuses Astrid of his father's murder and urges the party to join the Covenant. Never sets down or hands over the Key, whatever a talking roll gives, except to the Church as the notes allow. Fights only if attacked, with a roll."

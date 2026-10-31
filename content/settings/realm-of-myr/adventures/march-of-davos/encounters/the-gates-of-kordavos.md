@@ -7,6 +7,7 @@ type: "encounter"
 title: "The Gates of Kordavos"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/south-gate"
 roundBudget: 1
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725044729016"
 ---

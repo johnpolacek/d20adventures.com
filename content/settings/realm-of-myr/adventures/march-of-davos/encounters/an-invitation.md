@@ -7,6 +7,7 @@ type: "encounter"
 title: "An Invitation"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/the-quay"
 roundBudget: 1
 npcs:
   - id: "astrid-blackthorn"

@@ -7,6 +7,7 @@ type: "encounter"
 title: "The Speech"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/blackthorn-mansion"
 roundBudget: 1
 npcs:
   - id: "thaddeus-blackthorn"

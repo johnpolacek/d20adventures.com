@@ -7,6 +7,7 @@ type: "encounter"
 title: "Battle on the Boat"
 settingId: "realm-of-myr"
 adventureId: "covert-cargo"
+landmark: "kordavos/covert-cargo-pier"
 npcs:
   - id: "npcs-1749163978757"
     behavior: "Means to be rid of Lyra without leaving a body aboard. Fights to seize her, drag her out on deck and throw her over the side into the river. Uses his grip, his weight and the flat of his blade before the edge."

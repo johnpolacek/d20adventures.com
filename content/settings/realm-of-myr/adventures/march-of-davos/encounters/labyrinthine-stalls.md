@@ -7,6 +7,7 @@ type: "encounter"
 title: "Labyrinthine Stalls"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/black-market"
 roundBudget: 3
 npcs:
   - id: "grendel-one-eye"

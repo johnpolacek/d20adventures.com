@@ -7,6 +7,7 @@ type: "encounter"
 title: "Return to the City"
 settingId: "realm-of-myr"
 adventureId: "covert-cargo"
+landmark: "kordavos/covert-cargo-pier"
 image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/return-to-the-city/280cc3ba-f72d-4e91-b839-8cec3778791b.png?t=1749677694632"
 ---
 

@@ -7,6 +7,7 @@ type: "encounter"
 title: "Vengeance of the Blackthorn"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/grand-square"
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725044853455"
 ---
 

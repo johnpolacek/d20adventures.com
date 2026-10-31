@@ -7,6 +7,7 @@ type: "encounter"
 title: "The Front of the Line"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/south-gate"
 roundBudget: 2
 npcs:
   - id: "garlan-ironfist"

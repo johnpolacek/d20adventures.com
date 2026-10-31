@@ -7,6 +7,7 @@ type: "encounter"
 title: "Arrival at the Docks"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/the-quay"
 roundBudget: 2
 npcs:
   - id: "loric-windrider"

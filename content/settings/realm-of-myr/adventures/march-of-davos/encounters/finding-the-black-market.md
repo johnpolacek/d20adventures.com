@@ -7,6 +7,7 @@ type: "encounter"
 title: "Finding the Black Market"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/lower-districts"
 roundBudget: 3
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726450092972"
 ---

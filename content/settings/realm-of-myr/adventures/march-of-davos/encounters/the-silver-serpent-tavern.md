@@ -7,6 +7,7 @@ type: "encounter"
 title: "The Silver Serpent Tavern"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/silver-serpent"
 roundBudget: 3
 npcs:
   - id: "harron"

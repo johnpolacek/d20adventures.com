@@ -7,6 +7,7 @@ type: "encounter"
 title: "Inside the Ball"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/blackthorn-mansion"
 roundBudget: 1
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726605687900"
 ---

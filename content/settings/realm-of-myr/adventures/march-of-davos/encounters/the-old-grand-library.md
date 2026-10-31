@@ -7,6 +7,7 @@ type: "encounter"
 title: "The Old Grand Library"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/old-grand-library"
 roundBudget: 3
 npcs:
   - id: "sister-danica"

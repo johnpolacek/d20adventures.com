@@ -7,6 +7,7 @@ type: "encounter"
 title: "Through the Labyrinth"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/labyrinth"
 npcs:
   - id: "astrid-blackthorn"
     behavior: "Driven and impatient. Sends her soldiers down the side spurs and presses on with the party."

@@ -7,6 +7,7 @@ type: "encounter"
 title: "The Shipment"
 settingId: "realm-of-myr"
 adventureId: "covert-cargo"
+landmark: "kordavos/covert-cargo-pier"
 npcs:
   - id: "npcs-1749163978757"
     behavior: "Determined to complete the mission to secure the artifact."

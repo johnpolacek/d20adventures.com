@@ -7,6 +7,7 @@ type: "encounter"
 title: "The Blackthorns"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/blackthorn-mansion"
 roundBudget: 3
 npcs:
   - id: "astrid-blackthorn"

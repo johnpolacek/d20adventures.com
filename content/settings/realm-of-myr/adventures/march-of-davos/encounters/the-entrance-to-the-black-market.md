@@ -7,6 +7,7 @@ type: "encounter"
 title: "The Entrance to the Black Market"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/black-market"
 roundBudget: 3
 npcs:
   - id: "garrick"

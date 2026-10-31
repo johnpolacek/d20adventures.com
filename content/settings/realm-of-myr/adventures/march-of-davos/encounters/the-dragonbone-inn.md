@@ -7,6 +7,7 @@ type: "encounter"
 title: "The Dragonbone Inn"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/dragonbone-inn"
 roundBudget: 1
 npcs:
   - id: "bram"

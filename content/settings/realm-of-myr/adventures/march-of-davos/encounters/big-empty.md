@@ -7,6 +7,7 @@ type: "encounter"
 title: "Big Empty"
 settingId: "realm-of-myr"
 adventureId: "march-of-davos"
+landmark: "kordavos/big-empty"
 npcs:
   - id: "astrid-blackthorn"
     behavior: "Frustrated, then on guard. When the dead rise, attacks the nearest one with her sword every turn, with a roll, and cuts toward any hero who is hard pressed."
