@@ -357,6 +357,7 @@ Owner: a full playthrough of March of Davos, two players with two heroes each an
 - Worked throughout: guest and host replies and rolls, Thalbern's turns, NPC turns and round ends with no Continue, and every transition taken.
 - Fixed: after one failed GM request the worker's Claude session stayed failed, so every later job failed with "Check its sign-in or usage limit" until the worker restarted. It hit at round 26. `localLlm` now replaces a failed session and tries the request once more. Untouched for the rest of the run.
 - Seen: a suggestion job failed once with a 500 when the website's call to Convex timed out. Only the suggestions were lost.
+- Fixed after: the website tries a Convex call once more when it could not connect, and the worker sends a missed job report again instead of reporting the job failed or leaving it running.
 - Seen: The Chase moved on one round late, at the end of its third round, not its second.
 - Seen: Magic Missile, which "unerringly strikes" on Cassia's sheet, missed once on a roll.
 - Seen: the reply box can take several seconds to appear after a reload, and a send made before then is lost.
