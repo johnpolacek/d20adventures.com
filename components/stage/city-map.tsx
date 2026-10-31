@@ -3,7 +3,7 @@
 // The city map: the whole city and the land round it, a district up close, or a small view of where the party is.
 // Drawn from the setting's map file, showing only the places the party has reached, joined by the trail between them.
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { type Box, boxAround, type CityMap, centroid, districtBox, frameBox, type MapShape, type Point, placeAt, placeName } from "@/lib/citymap"
 import { cn } from "@/lib/utils"
 import { eyebrow, Pill, panel } from "./hud"
@@ -47,6 +47,9 @@ export function CityMapView({ map, trail, box, fill, onDistrict, className }: { 
   )
   const steps = trail.map((id) => placeAt(map, id)).filter((p): p is Point => p !== null)
   const herePoint = placeAt(map, here)
+  const clip = useId()
+  const art = map.art
+  const painted = Boolean(art?.outer)
   const shape = (s: MapShape, fillColor: string) => <polygon key={s.id} points={points(s.polygon)} fill={fillColor} />
   return (
     <svg
@@ -64,33 +67,68 @@ export function CityMapView({ map, trail, box, fill, onDistrict, className }: { 
         </pattern>
       </defs>
       <rect x={map.frame.x - 2000} y={map.frame.y - 2000} width={map.frame.width + 4000} height={map.frame.height + 4000} fill="#e3dcc2" />
-      {map.forests.map((f) => (
-        <g key={f.id}>
-          {shape(f, "#86a56a")}
-          <polygon points={points(f.polygon)} fill="url(#city-map-trees)" opacity={0.7} />
-        </g>
-      ))}
-      {map.water.map((w) => shape(w, "#8fb3c4"))}
-      {map.districts.map((d) => (
-        <polygon
-          key={d.id}
-          points={points(d.polygon)}
-          fill={GROUND[d.elevation]}
-          stroke="#a89470"
-          strokeWidth={1.2 * u}
-          className={cn(onDistrict && "cursor-pointer transition-[filter] hover:brightness-105")}
-          onClick={onDistrict && (() => onDistrict(d.id))}
-        />
-      ))}
-      {map.rivers.map((r) => (
-        <polyline key={r.id} points={points(r.path)} fill="none" stroke="#8fb3c4" strokeWidth={r.width} strokeLinecap="round" strokeLinejoin="round" />
-      ))}
-      {map.walls.map((w) => (
-        <polyline key={w.id} points={points(w.path)} fill="none" stroke="#5b4a35" strokeWidth={Math.max(4, 3 * u)} strokeLinejoin="round" />
-      ))}
-      {map.roads.map((r) => (
-        <polyline key={r.id} points={points(r.path)} fill="none" stroke="#9a7b52" strokeWidth={2.5 * u} strokeDasharray={`${8 * u} ${4 * u}`} />
-      ))}
+      {art?.outer && <image href={art.outer.src} x={art.outer.box[0]} y={art.outer.box[1]} width={art.outer.box[2]} height={art.outer.box[3]} preserveAspectRatio="none" />}
+      {/* Up close, each district's own painting, cut to its outline. */}
+      {art &&
+        u < 1 &&
+        map.districts.map((d) => {
+          const a = art.districts[d.id]
+          return (
+            a && (
+              <g key={d.id}>
+                <clipPath id={`${clip}-${d.id}`}>
+                  <polygon points={points(d.polygon)} />
+                </clipPath>
+                <image href={a.src} x={a.box[0]} y={a.box[1]} width={a.box[2]} height={a.box[3]} preserveAspectRatio="none" clipPath={`url(#${clip}-${d.id})`} />
+              </g>
+            )
+          )
+        })}
+      {!painted && (
+        <>
+          {map.forests.map((f) => (
+            <g key={f.id}>
+              {shape(f, "#86a56a")}
+              <polygon points={points(f.polygon)} fill="url(#city-map-trees)" opacity={0.7} />
+            </g>
+          ))}
+          {map.water.map((w) => shape(w, "#8fb3c4"))}
+          {map.districts.map((d) => (
+            <polygon
+              key={d.id}
+              points={points(d.polygon)}
+              fill={GROUND[d.elevation]}
+              stroke="#a89470"
+              strokeWidth={1.2 * u}
+              className={cn(onDistrict && "cursor-pointer transition-[filter] hover:brightness-105")}
+              onClick={onDistrict && (() => onDistrict(d.id))}
+            />
+          ))}
+          {map.rivers.map((r) => (
+            <polyline key={r.id} points={points(r.path)} fill="none" stroke="#8fb3c4" strokeWidth={r.width} strokeLinecap="round" strokeLinejoin="round" />
+          ))}
+          {map.walls.map((w) => (
+            <polyline key={w.id} points={points(w.path)} fill="none" stroke="#5b4a35" strokeWidth={Math.max(4, 3 * u)} strokeLinejoin="round" />
+          ))}
+          {map.roads.map((r) => (
+            <polyline key={r.id} points={points(r.path)} fill="none" stroke="#9a7b52" strokeWidth={2.5 * u} strokeDasharray={`${8 * u} ${4 * u}`} />
+          ))}
+        </>
+      )}
+      {/* Over the painting, districts are only there to be picked. */}
+      {painted &&
+        onDistrict &&
+        map.districts.map((d) => (
+          <polygon
+            key={d.id}
+            points={points(d.polygon)}
+            fill="transparent"
+            stroke="#f3e2b8"
+            strokeWidth={2 * u}
+            className="cursor-pointer [stroke-opacity:0] hover:[stroke-opacity:.9]"
+            onClick={() => onDistrict(d.id)}
+          />
+        ))}
       {tunnels.map(([a, b]) => (
         <line key={`${a}-${b}`} x1={byId[a].x} y1={byId[a].y} x2={byId[b].x} y2={byId[b].y} stroke={BELOW} strokeWidth={2.5 * u} strokeDasharray={`${4 * u} ${4 * u}`} />
       ))}
@@ -98,7 +136,21 @@ export function CityMapView({ map, trail, box, fill, onDistrict, className }: { 
       {map.districts.map((d) => {
         const [x, y] = d.labelAt ?? centroid(d.polygon)
         return (
-          <text key={d.id} x={x} y={y} textAnchor="middle" fill={INK} fontSize={(u < 0.9 ? 13 : 9.5) * u} fontWeight={700} fontFamily="Georgia, serif" letterSpacing={0.5 * u} pointerEvents="none">
+          <text
+            key={d.id}
+            x={x}
+            y={y}
+            textAnchor="middle"
+            fill={INK}
+            fontSize={(u < 0.9 ? 13 : 9.5) * u}
+            fontWeight={700}
+            fontFamily="Georgia, serif"
+            letterSpacing={0.5 * u}
+            paintOrder="stroke"
+            stroke="#efe4c8d9"
+            strokeWidth={3 * u}
+            pointerEvents="none"
+          >
             {d.name}
           </text>
         )

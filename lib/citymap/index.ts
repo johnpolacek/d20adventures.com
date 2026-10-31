@@ -2,6 +2,7 @@
 // stands on one. The encounter index is written by `pnpm map:check --write` from each encounter's `landmark`.
 
 import kordavos from "@/content/settings/realm-of-myr/maps/kordavos.json"
+import art from "./art.json"
 import encounterPlaces from "./encounter-places.json"
 
 export type Point = [number, number]
@@ -32,6 +33,11 @@ export interface MapLandmark {
   stageOnly?: boolean
   label?: LabelSide
 }
+// Painted art for a map, written by scripts/city-map-paint.ts: the whole map, and each district up close.
+export interface MapArt {
+  src: string
+  box: Box
+}
 export interface CityMap {
   id: string
   name: string
@@ -44,9 +50,11 @@ export interface CityMap {
   districts: MapDistrict[]
   landmarks: MapLandmark[]
   tunnels: Array<{ id: string; path: string[] }>
+  art?: { outer?: MapArt; districts: Record<string, MapArt> }
 }
 
-const MAPS: Record<string, CityMap> = { kordavos: kordavos as unknown as CityMap }
+const ART = art as Record<string, CityMap["art"]>
+const MAPS: Record<string, CityMap> = { kordavos: { ...(kordavos as unknown as CityMap), art: ART.kordavos } }
 const PLACES = encounterPlaces as Record<string, Record<string, string>>
 
 // Where the party has been on a plan's city map, oldest first and ending where it is now. Places with no spot on the

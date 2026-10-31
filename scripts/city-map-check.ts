@@ -49,6 +49,10 @@ function main() {
     }
   }
   expect(maps > 0, "No city maps found")
+  // Painted art the game shows, from scripts/city-map-paint.ts.
+  const art = JSON.parse(readFileSync("lib/citymap/art.json", "utf8")) as Record<string, { outer?: { src: string }; districts?: Record<string, { src: string }> }>
+  for (const [mapId, entry] of Object.entries(art))
+    for (const { src } of [...(entry.outer ? [entry.outer] : []), ...Object.values(entry.districts ?? {})]) expect(existsSync(`public${src}`), `${mapId}: art ${src} is missing`)
   const written = `${JSON.stringify(index, null, 2)}\n`
   if (process.argv.includes("--write")) writeFileSync(INDEX, written)
   else expect(existsSync(INDEX) && readFileSync(INDEX, "utf8") === written, `${INDEX} is out of date. Run pnpm map:check --write`)
