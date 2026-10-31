@@ -166,6 +166,31 @@ test("a skip job ends the guest's own hero's turn with nothing written and no AI
   }
 })
 
+test("a finished job's report the website missed is sent again, never as a failure", async () => {
+  const { store, turn, pc, adventureId, cleanup } = await hosted()
+  try {
+    const jobs = [job({ adventureId, turnId: turn._id, kind: "skip", userId: "guest", characterId: pc.id })]
+    const reports: { jobId: string; error?: string }[] = []
+    const events: HostEvent[] = []
+    let misses = 2
+    let stop = false
+    const post: HostPost = async (_path, body) => {
+      const b = body as { op: string; jobId: string; error?: string }
+      if (b.op === "claim") return { job: jobs.shift() ?? ((stop = true), null) }
+      if (b.op === "queue") return { jobId: "auto" }
+      reports.push({ jobId: b.jobId, error: b.error })
+      if (misses-- > 0) throw new Error("fetch failed")
+      return { ok: true }
+    }
+    await hostLoop({ adventureId, post, store, packs, llm: failLlm, emit: (e) => events.push(e), stopped: () => stop, wait: async () => {} })
+    assert.deepEqual(reports, [1, 2, 3].map(() => ({ jobId: "job-1", error: undefined })))
+    assert.ok(events.some((e) => e.type === "done"))
+    assert.ok(!events.some((e) => e.type === "failed"))
+  } finally {
+    cleanup()
+  }
+})
+
 test("a suggest job finishes with replies for the guest's own hero and changes nothing", async () => {
   const { store, turn, pc, adventureId, cleanup } = await hosted()
   try {

@@ -206,16 +206,29 @@ export async function hostLoop(opts: {
     }
     idle = false
     opts.emit({ type: "working", job: { _id: job._id, kind: job.kind, characterId: job.characterId } })
+    // A report the website missed is sent again. Finishing a job twice changes nothing, and a job left running holds
+    // every later one for ten minutes.
+    const finish = async (report: { suggestions?: ActionSuggestion[]; error?: string }) => {
+      for (let attempt = 0; ; attempt++) {
+        try {
+          return await opts.post(jobs, { op: "finish", jobId: job._id, ...report })
+        } catch (error) {
+          if (attempt === 3) throw error
+          await opts.wait(2000)
+        }
+      }
+    }
+    let result: { suggestions?: ActionSuggestion[] } | { error: string }
     try {
       const suggestions = await runHostJob(job, opts.store, opts.packs, opts.llm)
       // Queued before this job is reported done, so no screen sees the game waiting on a Continue.
       if (job.kind !== "suggest") await follow()
-      await opts.post(jobs, { op: "finish", jobId: job._id, suggestions })
-      opts.emit({ type: "done", jobId: job._id })
+      result = { suggestions }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "The GM could not finish this action."
-      await opts.post(jobs, { op: "finish", jobId: job._id, error: message }).catch(() => {})
-      opts.emit({ type: "failed", jobId: job._id, error: message })
+      result = { error: error instanceof Error ? error.message : "The GM could not finish this action." }
     }
+    // The game is already saved, so a missed report never turns a finished action into a failed one.
+    await finish(result).catch((error) => opts.emit({ type: "offline", error: error instanceof Error ? error.message : String(error) }))
+    opts.emit("error" in result ? { type: "failed", jobId: job._id, error: result.error } : { type: "done", jobId: job._id })
   }
 }
