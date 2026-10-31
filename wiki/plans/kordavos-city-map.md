@@ -2,7 +2,7 @@
 
 [Plans](index.md) · [Spatial claims](../sources/kordavos-spatial-claims.md) · [Mapview](mapview.md) · [March of Davos in 3D](march-of-davos-sets.md)
 
-Status: step 1 done 2026-10-31. Owner rulings on the conflicts are next.
+Status: steps 1 and 2 done 2026-10-31. Tagging encounters is next.
 
 ## Owner request, 2026-10-31
 
@@ -11,7 +11,7 @@ An overhead map of Kordavos for March of Davos, with a small view and a full scr
 ## Approach
 
 1. Extract every spatial claim from the text. Done: [Spatial claims](../sources/kordavos-spatial-claims.md), 134 places and 463 claims over four parts.
-2. Rule on the conflicts below, then write one gazetteer: districts, landmarks, coordinates, river, walls, gates. It becomes the source of truth.
+2. Rule on the conflicts, then write one gazetteer. Done: `content/settings/realm-of-myr/maps/kordavos.json`, shared with Covert Cargo and The Road to Kordavos. Every landmark cites its source lines. It sits outside the adventure folders, which the compiler reads as source.
 3. Tag each encounter with a landmark id. A check fails on a missing or unknown id.
 4. Draw pins, labels, roads and water as SVG from the gazetteer. Painted art may sit underneath later, with no labels in the painting.
 5. Show only places the party has reached or heard of. A small view over the stage, and a full screen view with the visited trail.
@@ -31,19 +31,23 @@ An overhead map of Kordavos for March of Davos, with a small view and a full scr
 - Covert Cargo's pier is about three miles upriver through the forest. The Marquis Road passes beyond the trees there.
 - Aftermath scenes add gate towers, counting houses by the river, river barges and a grand square.
 
-## Open rulings
+## Rulings
 
-Each needs an owner call before the gazetteer.
+Owner, 2026-10-31, on the five that shape the map:
 
-- Which side the gate faces. The road set says the south gate. The drake flies north to the Valkarr Forest, but the legacy realm puts the Valkarr on the March's east border.
-- Where the Mordava meets the sea. The text fits an estuary port, but never says so.
-- Whether the docks belong to the Lower Districts. The text only says the Lower Districts lie past the docks.
-- Where the Asterian Quarter sits. It is never placed relative to the docks, the inn or the gate. The legacy plan also uses North End, upper district and upper city.
-- Whether the city climbs a hill. The docks set and the road cover say yes. No encounter says so.
-- The castle. Only the 3D sets have one, in two different places.
-- The two squares. The square under the mansion balcony, the grand square of the funeral and the harvest square may be one, two or three places.
-- The mansion balcony. One scene has it over the walled garden, another over the square. Two balconies would settle it.
-- Warehouse 14. One line puts it down the pier, others behind larger buildings inland of the quay.
-- Joran reaches the temple before the party, past a sealed door and unmarked dust. A second way in is implied but not stated.
-- Whether the "heart of Kordavos" for both the inn and the mansion means a small city or loose wording.
-- The 3D sets disagree on compass. The docks set has the city south of the quay. The Lower Districts set has the docks at its south end. Set bearings are local and do not bind the map.
+- The land gate faces south.
+- Kordavos is an estuary port. The Mordava widens into the harbour on the Jade Sea.
+- The Asterian Quarter holds the high ground, across the city from the docks.
+- Two squares: the harvest square by the gate, the grand square before the mansion. The ballroom balcony faces the garden, a front balcony faces the square.
+- The docks are their own district. The Lower Districts lie past them and climb behind.
+
+Settled to fit, in the gazetteer's `rulings`:
+
+- The Mordava runs west along the south wall. The Marquis Road follows its north bank to the gate.
+- The city climbs from the harbour in the south-west to the Asterian heights in the north-east.
+- The castle is a stage invention. It stands on the hill crown above the Asterian Quarter, marked `stageOnly`.
+- Warehouse 14 is at the docks' west end, behind the quay warehouses. The Star of Faelendar is moored off it.
+- The Mordava pier and the river pier are one pier, where the river meets the harbour.
+- The temple gets no surface entrance. Joran's way in stays unstated.
+- "The heart of Kordavos" is loose wording.
+- 3D set bearings are local and do not bind the map.
