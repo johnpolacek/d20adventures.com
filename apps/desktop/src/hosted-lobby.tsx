@@ -289,7 +289,7 @@ export function HostedLobby(props: {
         {props.summary.open > 0 && (
           <>
             <div className={cn(siteLabel, "mt-7 mb-2")}>
-              Invite · Any hero · {props.summary.open} open · {props.summary.approval ? "you approve" : "auto-approve"}
+              Invite · {props.summary.flex ? "Open Invite" : "Any hero"} · {props.summary.open} open · {props.summary.approval ? "you approve" : "auto-approve"}
             </div>
             <InviteLink label="Invite link for any hero" url={props.summary.openInvite} />
           </>

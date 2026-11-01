@@ -242,13 +242,15 @@ export async function hostedSummary(adventure: Doc<"adventures">, origin: string
     // Seats still open to a guest's own hero, their link, and the guests waiting on the host's answer.
     open: openLeft(adventure),
     approval: Boolean(adventure.host?.approve),
-    openInvite: `${inviteUrl(origin, adventure)}?as=any`,
+    // In an open invite, one link offers the held heroes and the guest's own together.
+    openInvite: adventure.host?.flex ? inviteUrl(origin, adventure) : `${inviteUrl(origin, adventure)}?as=any`,
+    flex: Boolean(adventure.host?.flex),
     requests: (adventure.host?.requests ?? [])
       .filter((r) => r.status === "pending" && !adventure.players?.some((p) => p.characterId === r.characterId))
       .map((r) => ({ userId: r.userId, characterId: r.characterId, player: r.player, name: r.name, race: r.race, archetype: r.archetype })),
     // How many open seats one guest may fill.
     bring: adventure.host?.bring ?? 1,
-    seats: hostWaits(adventure) ? [] : openSeats(adventure).map((s) => ({ id: s.id, name: s.name, invite: `${inviteUrl(origin, adventure)}?as=${s.id}` })),
+    seats: hostWaits(adventure) || adventure.host?.flex ? [] : openSeats(adventure).map((s) => ({ id: s.id, name: s.name, invite: `${inviteUrl(origin, adventure)}?as=${s.id}` })),
     // Where guests choose first and the host plays a hero they leave: the heroes nobody has chosen yet.
     left: hostWaits(adventure) ? openSeats(adventure).map((s) => s.name) : [],
     // The same heroes by id, which the host seats as their own or as AI heroes at Start.
