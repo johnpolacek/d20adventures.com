@@ -50,18 +50,6 @@
     "vengeance-of-the-blackthorn": "kordavos/grand-square",
     "welcome-to-the-lower-districts": "kordavos/lower-districts"
   },
-  "covert-cargo": {
-    "battle-on-the-boat": "kordavos/covert-cargo-pier",
-    "overboard": "kordavos/covert-cargo-pier",
-    "return-to-the-city": "kordavos/covert-cargo-pier",
-    "the-crate": "kordavos/covert-cargo-pier",
-    "the-disturbance": "kordavos/covert-cargo-pier",
-    "the-end": "kordavos/covert-cargo-pier",
-    "the-escape": "kordavos/covert-cargo-pier",
-    "the-fake": "kordavos/covert-cargo-pier",
-    "the-shipment": "kordavos/covert-cargo-pier",
-    "the-transaction": "kordavos/covert-cargo-pier"
-  },
   "the-road-to-kordavos": {
     "the-fortune-teller": "kordavos/marquis-road",
     "the-gates-ahead": "kordavos/south-gate",
@@ -75,5 +63,17 @@
     "preparing-for-the-city": "valkarr-woods/thalberns-home",
     "the-missing-relics": "valkarr-woods/standing-stones",
     "timely-rescue": "valkarr-woods/tree-line"
+  },
+  "covert-cargo": {
+    "battle-on-the-boat": "valkarr-woods/forest-pier",
+    "overboard": "valkarr-woods/forest-pier",
+    "return-to-the-city": "valkarr-woods/forest-pier",
+    "the-crate": "valkarr-woods/forest-pier",
+    "the-disturbance": "valkarr-woods/forest-pier",
+    "the-end": "valkarr-woods/forest-pier",
+    "the-escape": "valkarr-woods/forest-pier",
+    "the-fake": "valkarr-woods/forest-pier",
+    "the-shipment": "valkarr-woods/forest-pier",
+    "the-transaction": "valkarr-woods/forest-pier"
   }
 }

@@ -3,7 +3,8 @@
   "name": "The Valkarr Woods",
   "summary": "The forest up the Mordava from Kordavos, which stands at the west edge of it by the sea. The Marquis Road runs east from the city north of the river. The river comes down from the east through the woods: the Old Standing Stones stand on its bank far upstream, Thalbern's hidden home lies downstream of them, and a quiet fork with a pier lies three miles above the city.",
   "settingId": "realm-of-myr",
-  "adventures": ["the-midnight-summons"],
+  "adventures": ["the-midnight-summons", "covert-cargo"],
+  "unitsPerMile": 83,
   "frame": {"x": 0, "y": 0, "width": 1000, "height": 1000, "north": "up", "note": "x runs east, y runs south. About 83 units to the mile: the pier is three miles from Kordavos."},
   "rulings": [
     "The Mordava comes from the east and flows west to Kordavos, as on the Kordavos map. The Marquis Road runs east from the city north of the river.",

@@ -46,6 +46,8 @@ export interface CityMap {
   name: string
   // The city in a few sentences, for the GM.
   summary?: string
+  // Open country gives the GM distances in miles.
+  unitsPerMile?: number
   frame: { x: number; y: number; width: number; height: number }
   forests: Array<MapShape & { labelAt?: Point }>
   water: MapShape[]
@@ -149,7 +151,7 @@ export function cityContext(map: CityMap, encounters: Encounters, encounterId: s
       .filter((l) => l.id !== place && !l.below && !l.stageOnly && !l.hidden && distance(here, l) <= NEAR)
       .sort((a, b) => distance(here, a) - distance(here, b))
       .slice(0, 6)
-      .map((l) => `${l.name}, ${bearing(here, l)}`)
+      .map((l) => `${l.name}, ${bearing(map, here, l)}`)
     if (near.length) lines.push(`- Nearby: ${near.join("; ")}.`)
   }
   const exits = (encounters[encounterId]?.transitions ?? []).flatMap((t) => {
@@ -158,7 +160,7 @@ export function cityContext(map: CityMap, encounters: Encounters, encounterId: s
     if (!next || !to || next === place) return []
     const title = encounters[t.toEncounterId]?.title ?? t.toEncounterId
     const name = placeName(map, next)
-    return [`${title === name ? name : `${title} at ${name}`}, ${bearing(here, { x: to[0], y: to[1] })}`]
+    return [`${title === name ? name : `${title} at ${name}`}, ${bearing(map, here, { x: to[0], y: to[1] })}`]
   })
   if (exits.length) lines.push(`- Ways on: ${[...new Set(exits)].join("; ")}.`)
   return lines.join("\n")
@@ -178,12 +180,24 @@ function distance([x, y]: Point, to: { x: number; y: number }) {
 }
 
 // Which way and how far, in words. North is up, so y grows southward.
-function bearing(from: Point, to: Pick<MapLandmark, "x" | "y">) {
+function bearing(map: CityMap, from: Point, to: Pick<MapLandmark, "x" | "y">) {
   const d = distance(from, to)
   if (d < 25) return "right here"
   const angle = Math.atan2(to.y - from[1], to.x - from[0])
   const way = DIRECTIONS[(Math.round(angle / (Math.PI / 4)) + 8) % 8]
-  const far = d < 60 ? "next door" : d < 160 ? "a short walk" : d < 350 ? "across a district or two" : "across the city"
+  const miles = map.unitsPerMile ? d / map.unitsPerMile : undefined
+  const far =
+    miles !== undefined
+      ? miles < 0.5
+        ? "a short walk"
+        : `about ${miles < 1.5 ? "a mile" : `${Math.round(miles)} miles`}`
+      : d < 60
+        ? "next door"
+        : d < 160
+          ? "a short walk"
+          : d < 350
+            ? "across a district or two"
+            : "across the city"
   return `${way}, ${far}`
 }
 

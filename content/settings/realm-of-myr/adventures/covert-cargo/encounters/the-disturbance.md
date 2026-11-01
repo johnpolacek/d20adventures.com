@@ -7,7 +7,7 @@ type: "encounter"
 title: "The Disturbance"
 settingId: "realm-of-myr"
 adventureId: "covert-cargo"
-landmark: "kordavos/covert-cargo-pier"
+landmark: "valkarr-woods/forest-pier"
 npcs:
   - id: "npcs-1749243735467"
     behavior: "Will back up the Fighter, her bow drawn."

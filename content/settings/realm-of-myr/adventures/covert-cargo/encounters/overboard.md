@@ -7,7 +7,7 @@ type: "encounter"
 title: "Overboard"
 settingId: "realm-of-myr"
 adventureId: "covert-cargo"
-landmark: "kordavos/covert-cargo-pier"
+landmark: "valkarr-woods/forest-pier"
 ---
 
 ## Intro

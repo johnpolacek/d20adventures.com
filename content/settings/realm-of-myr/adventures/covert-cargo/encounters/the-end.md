@@ -7,7 +7,7 @@ type: "encounter"
 title: "The End"
 settingId: "realm-of-myr"
 adventureId: "covert-cargo"
-landmark: "kordavos/covert-cargo-pier"
+landmark: "valkarr-woods/forest-pier"
 image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/the-end/68166163-ba2c-4387-bfb6-a98343c6c9d7.png?t=1749678027089"
 ---
 

@@ -61,7 +61,8 @@ Done 2026-10-31 for The Midnight Summons. `content/settings/realm-of-myr/maps/va
 - Rulings are in the file. The stage set's "trailNorth" is a set label, not a bearing, so the stones are upstream to the east. "He lives on the edge of Kordavos" is loose: his home is hidden, a long walk from the city's distant spires.
 - A map with no districts is sketched as country (`regionSvg` in the paint script) and painted from that. It names every place reached at any zoom, as it has few.
 - A landmark marked `known`, such as Kordavos here, shows from the start.
-- Covert Cargo still stands at the Kordavos map's off-map forest pier. It could move to this map.
+- Covert Cargo's scenes all stand at The Forest Pier on this map. The Kordavos map no longer lists Covert Cargo.
+- A map with `unitsPerMile` gives the GM distances in miles, as open country has no districts to cross.
 
 ## Settled by the text
 

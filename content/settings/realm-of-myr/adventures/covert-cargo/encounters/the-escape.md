@@ -7,7 +7,7 @@ type: "encounter"
 title: "The Escape"
 settingId: "realm-of-myr"
 adventureId: "covert-cargo"
-landmark: "kordavos/covert-cargo-pier"
+landmark: "valkarr-woods/forest-pier"
 image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/the-escape/26311198-03c5-4f40-9a79-e75e9c48c524.png?t=1749675141542"
 ---
 

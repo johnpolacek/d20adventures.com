@@ -7,7 +7,7 @@ type: "encounter"
 title: "The Fake"
 settingId: "realm-of-myr"
 adventureId: "covert-cargo"
-landmark: "kordavos/covert-cargo-pier"
+landmark: "valkarr-woods/forest-pier"
 npcs:
   - id: "npcs-1749163978757"
     behavior: "Reinhard will follow Silas’s lead and orders."

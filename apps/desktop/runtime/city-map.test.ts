@@ -40,5 +40,14 @@ test("the GM is told where each Midnight Summons scene stands in the Valkarr woo
   const home = cityContext(map, encounters, "preparing-for-the-city") ?? ""
   assert.match(home, /^Map of The Valkarr Woods/)
   assert.match(home, /Here: Thalbern's Home\./)
-  assert.match(cityContext(map, encounters, "owlbear-confrontation") ?? "", /The Old Standing Stones, east, a short walk/)
+  assert.match(cityContext(map, encounters, "owlbear-confrontation") ?? "", /The Old Standing Stones, east, about a mile/)
+  assert.match(cityContext(map, encounters, "meeting-at-the-stones") ?? "", /Thalbern's Home, west, about 3 miles/)
+})
+
+test("the GM is told Covert Cargo's pier is three miles up the river from Kordavos", () => {
+  const cargo = packs["covert-cargo"]
+  assert.equal(cargo.cityMap?.id, "valkarr-woods")
+  const pier = cityContext(cargo.cityMap!, cargo.artifacts.encounters, "the-shipment") ?? ""
+  assert.match(pier, /Here: The Forest Pier\./)
+  assert.match(pier, /Kordavos, west, about 3 miles/)
 })
