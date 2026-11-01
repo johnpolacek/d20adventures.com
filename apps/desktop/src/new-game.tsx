@@ -168,7 +168,7 @@ export function NewGame(props: {
                 Party · {party.length} of {range}
               </div>
               {/* One grid: a hero's card adds it to the party, and a party hero's card says who plays it. */}
-              <ul className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2">
+              <ul className="grid grid-cols-[repeat(auto-fill,minmax(185px,1fr))] gap-2">
                 {picks.map((p) => {
                   const choice = party.find((c) => c.id === p.id)
                   const full = !choice && party.length >= max
