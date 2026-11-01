@@ -167,63 +167,126 @@ export function NewGame(props: {
               <div className={cn(siteLabel, "mb-2")}>
                 Party · {party.length} of {range}
               </div>
-              {/* One column when seats can be invited: three choices leave no room for a second. */}
-              <ul className={cn("grid gap-2", !canInvite && "sm:grid-cols-2")}>
-                {party.map((choice) => {
-                  if (choice.open)
-                    return (
-                      <li key={choice.id} className="flex items-center gap-3 rounded-lg border border-dashed border-white/20 bg-black/50 p-2">
-                        <span className="grid h-12 w-10 shrink-0 place-items-center rounded border border-white/10 bg-white/5 font-display text-lg text-white/40">?</span>
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate font-display text-base">Any hero</div>
-                          <div className="text-xs text-white/70">A guest's own hero</div>
-                        </div>
-                        <fieldset className="flex" aria-label="Approving a guest's hero">
-                          <Option active={!askFirst} aria-pressed={!askFirst} className="rounded-r-none" onClick={() => setAskFirst(false)}>
-                            Auto-approve
-                          </Option>
-                          <Option active={askFirst} aria-pressed={askFirst} className="-ml-0.5 rounded-l-none" onClick={() => setAskFirst(true)}>
-                            Ask me
-                          </Option>
-                        </fieldset>
-                        <button type="button" aria-label="Remove the open seat" onClick={() => toggle(choice.id)} className="px-2 text-xl leading-none text-white/50 hover:text-white">
-                          ×
-                        </button>
-                      </li>
-                    )
-                  const p = picks.find((x) => x.id === choice.id)
-                  if (!p) return null
+              {/* One grid: a hero's card adds it to the party, and a party hero's card says who plays it. */}
+              <ul className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2">
+                {picks.map((p) => {
+                  const choice = party.find((c) => c.id === p.id)
+                  const full = !choice && party.length >= max
                   return (
-                    <li key={p.id} className="flex items-center gap-3 rounded-lg border border-white/10 bg-black/50 p-2">
-                      <Face pick={p} size="h-12 w-10" />
-                      <div className="min-w-0 flex-1">
-                        <div className={cn("truncate font-display text-base", choice.who === "you" && "text-amber-400")}>{p.name}</div>
-                        <div className="text-xs text-white/70">
+                    <li
+                      key={p.id}
+                      className={cn(
+                        "relative flex flex-col rounded-lg border bg-black transition-all duration-300",
+                        choice ? "border-primary-400 ring-2 ring-primary-500" : "border-white/10",
+                        !choice && !full && "hover:border-white/40",
+                        full && "opacity-40"
+                      )}
+                    >
+                      <button
+                        type="button"
+                        aria-pressed={Boolean(choice)}
+                        disabled={full}
+                        onClick={() => toggle(p.id)}
+                        className="flex w-full flex-1 flex-col items-stretch gap-2 p-2 text-left disabled:cursor-default"
+                      >
+                        <Face pick={p} size="h-24 w-full" />
+                        <span className={cn("truncate font-display text-sm", choice?.who === "you" && "text-amber-400")}>{p.name}</span>
+                        <span className="-mt-2 truncate text-xs text-white/70">
                           {p.race} {p.archetype}
-                        </div>
-                      </div>
-                      <fieldset className="flex" aria-label={`Who plays ${p.name}`}>
-                        {(canInvite ? WHO : WHO.slice(0, 2)).map(([who, label], i, all) => (
-                          <Option
-                            key={who}
-                            active={choice.who === who}
-                            aria-pressed={choice.who === who}
-                            className={cn(i > 0 && "-ml-0.5 rounded-l-none", i < all.length - 1 && "rounded-r-none")}
-                            // The party keeps a hero for the player, unless another hero is invited or this is the
-                            // only one: then this one can be invited too.
-                            disabled={who !== "you" && choice.who === "you" && yours.length === 1 && !(who === "invite" && (invites.length > 0 || party.length === 1))}
-                            onClick={() => seat(p.id, who)}
-                          >
-                            {label}
-                          </Option>
-                        ))}
-                      </fieldset>
-                      <button type="button" aria-label={`Remove ${p.name}`} onClick={() => toggle(p.id)} className="px-2 text-xl leading-none text-white/50 hover:text-white">
-                        ×
+                        </span>
                       </button>
+                      {choice && (
+                        <fieldset className="flex px-2 pb-2" aria-label={`Who plays ${p.name}`}>
+                          {(canInvite ? WHO : WHO.slice(0, 2)).map(([who, label], i, all) => (
+                            <Option
+                              key={who}
+                              active={choice.who === who}
+                              aria-pressed={choice.who === who}
+                              className={cn("flex-1 px-1 py-1 text-xs", i > 0 && "-ml-0.5 rounded-l-none", i < all.length - 1 && "rounded-r-none")}
+                              // The party keeps a hero for the player, unless another hero is invited or this is the
+                              // only one: then this one can be invited too.
+                              disabled={who !== "you" && choice.who === "you" && yours.length === 1 && !(who === "invite" && (invites.length > 0 || party.length === 1))}
+                              onClick={() => seat(p.id, who)}
+                            >
+                              {label}
+                            </Option>
+                          ))}
+                        </fieldset>
+                      )}
+                      {p.hero && (
+                        <div className="absolute top-3 right-3 flex gap-1">
+                          <button type="button" className={mini} disabled={props.busy} onClick={() => props.onEdit(p.hero!)} aria-label={`Edit ${p.name}`}>
+                            Edit
+                          </button>
+                          {props.onPaint && (
+                            <button type="button" className={mini} disabled={props.busy} onClick={() => props.onPaint!(p.hero!)} aria-label={`Paint ${p.name}`}>
+                              {props.painting === p.id ? "Painting…" : "Paint"}
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className={cn(mini, deleting === p.id && "border-red-400/60 bg-red-600/80 text-white hover:bg-red-600")}
+                            disabled={props.busy}
+                            aria-label={deleting === p.id ? `Confirm deleting ${p.name}` : `Delete ${p.name}`}
+                            onBlur={() => setDeleting(null)}
+                            onClick={() => {
+                              if (deleting !== p.id) return setDeleting(p.id)
+                              setDeleting(null)
+                              setParty((cur) => cur.filter((c) => c.id !== p.id))
+                              props.onDelete(p.hero!)
+                            }}
+                          >
+                            {deleting === p.id ? "Confirm" : "Delete"}
+                          </button>
+                        </div>
+                      )}
                     </li>
                   )
                 })}
+                {party
+                  .filter((c) => c.open)
+                  .map((c) => (
+                    <li key={c.id} className="relative flex flex-col gap-2 rounded-lg border border-dashed border-primary-400 bg-black p-2 ring-2 ring-primary-500">
+                      <span className="grid h-24 w-full place-items-center rounded-md border border-white/10 bg-white/5 font-display text-3xl text-white/40">?</span>
+                      <span className="truncate font-display text-sm">Any Hero</span>
+                      <span className="-mt-2 truncate text-xs text-white/70">A guest's own hero</span>
+                      <fieldset className="flex" aria-label="Approving a guest's hero">
+                        <Option active={!askFirst} aria-pressed={!askFirst} className="flex-1 rounded-r-none px-1 py-1 text-xs" onClick={() => setAskFirst(false)}>
+                          Auto
+                        </Option>
+                        <Option active={askFirst} aria-pressed={askFirst} className="-ml-0.5 flex-1 rounded-l-none px-1 py-1 text-xs" onClick={() => setAskFirst(true)}>
+                          Ask Me
+                        </Option>
+                      </fieldset>
+                      <button type="button" aria-label="Remove the open seat" onClick={() => toggle(c.id)} className={cn(mini, "absolute top-3 right-3")}>
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+                {info.options && (
+                  <li>
+                    <button
+                      type="button"
+                      onClick={props.onCreate}
+                      disabled={props.busy || !props.providers.length}
+                      className="grid h-full min-h-[10rem] w-full place-items-center rounded-lg border border-dashed border-white/30 bg-black p-2 font-display text-sm text-white/60 transition-colors hover:border-sky-300/60 hover:text-sky-200 disabled:cursor-default disabled:opacity-40"
+                    >
+                      New Hero
+                    </button>
+                  </li>
+                )}
+                {info.options && canInvite && (
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => setParty((p) => (p.length < max ? [...p, { id: `open-${Date.now()}`, who: "invite", open: true }] : p))}
+                      disabled={props.busy || party.length >= max}
+                      className="grid h-full min-h-[10rem] w-full place-items-center rounded-lg border border-dashed border-white/30 bg-black p-2 font-display text-sm text-white/60 transition-colors hover:border-sky-300/60 hover:text-white disabled:cursor-default disabled:opacity-40"
+                    >
+                      Any Hero
+                    </button>
+                  </li>
+                )}
               </ul>
               {guestPlays && (
                 <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -276,85 +339,6 @@ export function NewGame(props: {
                 </div>
               )}
               {watching && <p className="mt-3 text-sm text-white/70">You watch your guest play.</p>}
-            </div>
-            <div>
-              <div className={cn(siteLabel, "mb-2")}>Heroes</div>
-              <ul className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2">
-                {picks.map((p) => {
-                  const chosen = party.some((c) => c.id === p.id)
-                  return (
-                    <li key={p.id} className="relative">
-                      <button
-                        type="button"
-                        aria-pressed={chosen}
-                        disabled={!chosen && party.length >= max}
-                        onClick={() => toggle(p.id)}
-                        className={cn(
-                          "flex w-full flex-col items-stretch gap-2 rounded-lg border bg-black p-2 text-left transition-all duration-300 disabled:cursor-default disabled:opacity-40",
-                          chosen ? "border-primary-400 ring-2 ring-primary-500" : "border-white/10 hover:border-white/40"
-                        )}
-                      >
-                        <Face pick={p} size="h-24 w-full" />
-                        <span className={cn("truncate font-display text-sm", chosen && "text-amber-400")}>{p.name}</span>
-                        <span className="-mt-2 truncate text-xs text-white/70">
-                          {p.race} {p.archetype}
-                        </span>
-                      </button>
-                      {p.hero && (
-                        <div className="absolute top-3 right-3 flex gap-1">
-                          <button type="button" className={mini} disabled={props.busy} onClick={() => props.onEdit(p.hero!)} aria-label={`Edit ${p.name}`}>
-                            Edit
-                          </button>
-                          {props.onPaint && (
-                            <button type="button" className={mini} disabled={props.busy} onClick={() => props.onPaint!(p.hero!)} aria-label={`Paint ${p.name}`}>
-                              {props.painting === p.id ? "Painting…" : "Paint"}
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            className={cn(mini, deleting === p.id && "border-red-400/60 bg-red-600/80 text-white hover:bg-red-600")}
-                            disabled={props.busy}
-                            aria-label={deleting === p.id ? `Confirm deleting ${p.name}` : `Delete ${p.name}`}
-                            onBlur={() => setDeleting(null)}
-                            onClick={() => {
-                              if (deleting !== p.id) return setDeleting(p.id)
-                              setDeleting(null)
-                              setParty((cur) => cur.filter((c) => c.id !== p.id))
-                              props.onDelete(p.hero!)
-                            }}
-                          >
-                            {deleting === p.id ? "Confirm" : "Delete"}
-                          </button>
-                        </div>
-                      )}
-                    </li>
-                  )
-                })}
-                {info.options && (
-                  <li>
-                    <button
-                      type="button"
-                      onClick={props.onCreate}
-                      disabled={props.busy || !props.providers.length}
-                      className="grid h-full min-h-[10rem] w-full place-items-center rounded-lg border border-dashed border-white/30 bg-black p-2 font-display text-sm text-white/60 transition-colors hover:border-sky-300/60 hover:text-sky-200 disabled:cursor-default disabled:opacity-40"
-                    >
-                      New hero
-                    </button>
-                  </li>
-                )}
-                {info.options && canInvite && (
-                  <li>
-                    <button
-                      type="button"
-                      onClick={() => setParty((p) => (p.length < max ? [...p, { id: `open-${Date.now()}`, who: "invite", open: true }] : p))}
-                      disabled={props.busy || party.length >= max}
-                      className="grid h-full min-h-[10rem] w-full place-items-center rounded-lg border border-dashed border-white/30 bg-black p-2 font-display text-sm text-white/60 transition-colors hover:border-sky-300/60 hover:text-white disabled:cursor-default disabled:opacity-40"
-                    >
-                      Any hero
-                    </button>
-                  </li>
-                )}
-              </ul>
             </div>
           </div>
         </div>
