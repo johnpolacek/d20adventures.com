@@ -78,5 +78,16 @@ export default defineConfig({
   },
   css: { postcss: { plugins: [tailwind()] } },
   clearScreen: false,
-  build: { target: "safari16" },
+  build: {
+    target: "safari16",
+    // The app loads from disk, so one large chunk costs nothing.
+    chunkSizeWarningLimit: 4000,
+    rollupOptions: {
+      // "use client" in components shared with the website means nothing here, and its sourcemap lookups fail.
+      onwarn(warning, warn) {
+        if (warning.code === "MODULE_LEVEL_DIRECTIVE" || warning.code === "SOURCEMAP_ERROR") return
+        warn(warning)
+      },
+    },
+  },
 })
