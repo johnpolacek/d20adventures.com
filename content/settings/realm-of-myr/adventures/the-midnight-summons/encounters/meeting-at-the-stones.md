@@ -8,6 +8,7 @@ title: "Meeting at the Stones"
 settingId: "realm-of-myr"
 location: "old-standing-stones"
 adventureId: "the-midnight-summons"
+landmark: "valkarr-woods/standing-stones"
 npcs:
   - id: "wollandora"
     behavior: "Concerned about the missing relics, focused on getting Thalbern to investigate in the city."

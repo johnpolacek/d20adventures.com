@@ -65,5 +65,17 @@
         440
       ]
     }
+  },
+  "valkarr-woods": {
+    "districts": {},
+    "outer": {
+      "src": "/stage/maps/valkarr-woods/valkarr-woods.webp",
+      "box": [
+        0,
+        0,
+        1000,
+        1000
+      ]
+    }
   }
 }

@@ -32,6 +32,8 @@ export interface MapLandmark {
   stageOnly?: boolean
   // A secret of the story: the GM is not told of it until the party is there or it is the way on.
   hidden?: boolean
+  // Known from the start, such as the city in the distance: shown before the party has been there.
+  known?: boolean
   label?: LabelSide
 }
 // Painted art for a map, written by scripts/city-map-paint.ts: the whole map, and each district up close.
@@ -128,9 +130,10 @@ export function cityContext(map: CityMap, encounters: Encounters, encounterId: s
   if (!here) return undefined
   const landmark = map.landmarks.find((l) => l.id === place)
   const below = Boolean(landmark?.below)
-  const lines = [`City map of ${map.name}, north up. Keep directions, distances and routes consistent with it, and use its place names.`]
-  if (map.summary) lines.push(`- The city: ${map.summary}`)
-  lines.push(`- Here: ${placeName(map, place)}, ${where(map, place, here, below)}.`)
+  const lines = [`Map of ${map.name}, north up. Keep directions, distances and routes consistent with it, and use its place names.`]
+  if (map.summary) lines.push(`- In brief: ${map.summary}`)
+  const setting = where(map, place, here, below)
+  lines.push(`- Here: ${placeName(map, place)}${setting ? `, ${setting}` : ""}.`)
   if (below) {
     const tunnel = map.tunnels.find((t) => t.path.includes(place))
     if (tunnel) {
@@ -166,7 +169,8 @@ function where(map: CityMap, place: string, [x, y]: Point, below: boolean) {
   if (district) return `a district of the city`
   const above = map.districts.find((d) => inside([x, y], d.polygon))
   if (below) return above ? `underground, beneath ${above.name}` : "underground"
-  return above ? `in ${above.name}` : "outside the walls"
+  if (above) return `in ${above.name}`
+  return map.walls.length ? "outside the walls" : undefined
 }
 
 function distance([x, y]: Point, to: { x: number; y: number }) {

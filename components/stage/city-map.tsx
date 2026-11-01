@@ -22,7 +22,8 @@ const CLOSE = 1.2
 const points = (p: Point[] = []) => p.map((q) => q.join(",")).join(" ")
 
 // The map in a box of map units. Text and lines keep their size on screen whatever the zoom. Zoomed out, only where
-// the party is now is named. Without `names`, only districts and forests are.
+// the party is now is named, except on a map of open country, which has few places. Without `names`, only districts
+// and forests are.
 export function CityMapView({
   map,
   trail,
@@ -61,7 +62,7 @@ export function CityMapView({
   const u = fill ? Math.min(across, down) : Math.max(across, down)
   const here = trail[trail.length - 1]
   const visited = new Set(trail)
-  const landmarks = map.landmarks.filter((l) => visited.has(l.id) && (!below || l.below))
+  const landmarks = map.landmarks.filter((l) => (visited.has(l.id) || l.known) && (!below || l.below))
   const byId = Object.fromEntries(map.landmarks.map((l) => [l.id, l]))
   const tunnels = map.tunnels.flatMap((t) =>
     t.path
@@ -232,7 +233,7 @@ export function CityMapView({
         return (
           <g key={l.id}>
             <circle cx={l.x} cy={l.y} r={4.5 * u} fill={l.below ? "#fff" : color} stroke={color} strokeWidth={2 * u} />
-            {names && (u < CLOSE || l.id === here) && (
+            {names && (u < CLOSE || l.id === here || !map.districts.length) && (
               <text
                 x={l.x + dx * u}
                 y={l.y + dy * u}

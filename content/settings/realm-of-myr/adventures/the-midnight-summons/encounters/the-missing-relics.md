@@ -8,6 +8,7 @@ title: "The Missing Relics"
 settingId: "realm-of-myr"
 location: "old-standing-stones"
 adventureId: "the-midnight-summons"
+landmark: "valkarr-woods/standing-stones"
 npcs:
   - id: "wollandora"
     behavior: "Focused on getting Thalbern to agree to investigate in the city. Once she has answered him she asks, once: \"The hour is late and the trail grows cold. Will you take on this task?\" Then she waits for his answer and does not ask again."

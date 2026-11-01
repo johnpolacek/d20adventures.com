@@ -8,6 +8,7 @@ title: "Owlbear Confrontation"
 settingId: "realm-of-myr"
 location: "valkarr-forest"
 adventureId: "the-midnight-summons"
+landmark: "valkarr-woods/tree-line"
 npcs:
   - id: "owlbear"
     behavior: "Aggressively attacks any perceived threat. Will fight until heavily wounded or driven off."

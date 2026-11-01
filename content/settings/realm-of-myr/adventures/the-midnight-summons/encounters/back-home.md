@@ -8,6 +8,7 @@ title: "Back home"
 settingId: "realm-of-myr"
 location: "thalberns-forest-home"
 adventureId: "the-midnight-summons"
+landmark: "valkarr-woods/thalberns-home"
 image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-midnight-summons/back-home.png"
 ---
 

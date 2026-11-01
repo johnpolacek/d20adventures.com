@@ -1,0 +1,48 @@
+{
+  "id": "valkarr-woods",
+  "name": "The Valkarr Woods",
+  "summary": "The forest up the Mordava from Kordavos, which stands at the west edge of it by the sea. The Marquis Road runs east from the city north of the river. The river comes down from the east through the woods: the Old Standing Stones stand on its bank far upstream, Thalbern's hidden home lies downstream of them, and a quiet fork with a pier lies three miles above the city.",
+  "settingId": "realm-of-myr",
+  "adventures": ["the-midnight-summons"],
+  "frame": {"x": 0, "y": 0, "width": 1000, "height": 1000, "north": "up", "note": "x runs east, y runs south. About 83 units to the mile: the pier is three miles from Kordavos."},
+  "rulings": [
+    "The Mordava comes from the east and flows west to Kordavos, as on the Kordavos map. The Marquis Road runs east from the city north of the river.",
+    "The Old Standing Stones are upstream of Thalbern's home, on the river. The stage set's \"trailNorth\" is a set label, not a compass bearing.",
+    "Thalbern's home is on the north bank, upstream of the pier, so he follows the river down past the pier toward the city.",
+    "\"He lives on the edge of Kordavos\" is loose wording: his home is a long day's walk from the city's \"distant\" spires, deep enough to be hidden.",
+    "The owlbear's tree line is on the trail between his home and the stones, where the stones are \"not far\"."
+  ],
+  "forests": [
+    {"id": "valkarr-forest", "name": "Valkarr Forest", "polygon": [[180, -400], [1400, -400], [1400, 1400], [180, 1400], [150, 760], [230, 690], [210, 470], [150, 380]], "labelAt": [640, 220], "sources": ["the-midnight-summons/encounters/broken-silence.md:17"]}
+  ],
+  "water": [
+    {"id": "jade-sea", "name": "Jade Sea", "polygon": [[-400, -400], [40, -400], [40, 1400], [-400, 1400]]}
+  ],
+  "rivers": [
+    {"id": "mordava", "name": "Mordava", "path": [[1400, 790], [1000, 760], [860, 700], [760, 660], [640, 640], [520, 615], [420, 600], [330, 590], [200, 575], [70, 560], [30, 560]], "width": 18},
+    {"id": "quiet-fork", "name": "The Quiet Fork", "path": [[420, 600], [380, 560], [330, 548], [280, 562], [240, 577]], "width": 8}
+  ],
+  "walls": [],
+  "roads": [
+    {"id": "marquis-road", "name": "Marquis Road", "path": [[90, 530], [230, 480], [420, 450], [640, 440], [860, 470], [1400, 500]], "sources": ["covert-cargo/encounters/return-to-the-city.md:20"]},
+    {"id": "bank-trail", "name": "The Bank Trail", "path": [[90, 545], [200, 560], [330, 545]], "sources": ["covert-cargo/encounters/overboard.md:35"]},
+    {"id": "dark-trail", "name": "The Dark Trail", "path": [[620, 610], [700, 620], [780, 640], [850, 675]], "sources": ["the-midnight-summons/encounters/broken-silence.md:21"]}
+  ],
+  "districts": [],
+  "landmarks": [
+    {"id": "kordavos", "name": "Kordavos", "kind": "city", "x": 80, "y": 545, "label": "above", "known": true, "sources": ["covert-cargo/encounters/overboard.md:35", "the-midnight-summons/encounters/preparing-for-the-city.md:23"]},
+    {"id": "forest-pier", "name": "The Forest Pier", "kind": "pier", "x": 330, "y": 548, "label": "above", "sources": ["covert-cargo/adventure.md:20", "covert-cargo/encounters/overboard.md:35"]},
+    {"id": "thalberns-home", "name": "Thalbern's Home", "kind": "home", "x": 610, "y": 605, "label": "above", "sources": ["the-midnight-summons/encounters/broken-silence.md:19", "the-midnight-summons/encounters/preparing-for-the-city.md:17", "the-midnight-summons/encounters/preparing-for-the-city.md:25"]},
+    {"id": "tree-line", "name": "The Tree Line", "kind": "wood", "x": 760, "y": 630, "label": "above", "sources": ["the-midnight-summons/encounters/owlbear-confrontation.md:22", "the-midnight-summons/encounters/timely-rescue.md:30"]},
+    {"id": "standing-stones", "name": "The Old Standing Stones", "kind": "stones", "x": 865, "y": 665, "label": "left", "sources": ["the-midnight-summons/encounters/meeting-at-the-stones.md:21", "covert-cargo/encounters/the-shipment.md:40"]}
+  ],
+  "tunnels": [],
+  "constraints": [
+    {"a": "tree-line", "rel": "near", "b": "standing-stones", "source": "the-midnight-summons/encounters/timely-rescue.md:30"},
+    {"a": "thalberns-home", "rel": "near", "b": "mordava", "source": "the-midnight-summons/encounters/preparing-for-the-city.md:25"},
+    {"a": "standing-stones", "rel": "near", "b": "mordava", "source": "covert-cargo/encounters/the-shipment.md:40"},
+    {"a": "forest-pier", "rel": "near", "b": "quiet-fork", "source": "covert-cargo/adventure.md:20"},
+    {"a": "forest-pier", "rel": "near", "b": "marquis-road", "source": "covert-cargo/encounters/return-to-the-city.md:20"}
+  ],
+  "beyond": []
+}

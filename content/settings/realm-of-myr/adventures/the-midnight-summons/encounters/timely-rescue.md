@@ -8,6 +8,7 @@ title: "Timely Rescue"
 settingId: "realm-of-myr"
 location: "valkarr-forest"
 adventureId: "the-midnight-summons"
+landmark: "valkarr-woods/tree-line"
 npcs:
   - id: "wollandora"
     behavior: "Protective of Thalbern, focused on getting to the meeting."

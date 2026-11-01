@@ -66,5 +66,14 @@
     "the-fortune-teller": "kordavos/marquis-road",
     "the-gates-ahead": "kordavos/south-gate",
     "well-met": "kordavos/marquis-road"
+  },
+  "the-midnight-summons": {
+    "back-home": "valkarr-woods/thalberns-home",
+    "broken-silence": "valkarr-woods/dark-trail",
+    "meeting-at-the-stones": "valkarr-woods/standing-stones",
+    "owlbear-confrontation": "valkarr-woods/tree-line",
+    "preparing-for-the-city": "valkarr-woods/thalberns-home",
+    "the-missing-relics": "valkarr-woods/standing-stones",
+    "timely-rescue": "valkarr-woods/tree-line"
   }
 }

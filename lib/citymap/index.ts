@@ -3,13 +3,17 @@
 
 import { type CityMap, placeAt } from "@d20/gm-core/citymap"
 import kordavos from "@/content/settings/realm-of-myr/maps/kordavos.json"
+import valkarrWoods from "@/content/settings/realm-of-myr/maps/valkarr-woods.json"
 import art from "./art.json"
 import encounterPlaces from "./encounter-places.json"
 
 export * from "@d20/gm-core/citymap"
 
 const ART = art as unknown as Record<string, CityMap["art"]>
-const MAPS: Record<string, CityMap> = { kordavos: { ...(kordavos as unknown as CityMap), art: ART.kordavos } }
+const MAPS: Record<string, CityMap> = {
+  kordavos: { ...(kordavos as unknown as CityMap), art: ART.kordavos },
+  "valkarr-woods": { ...(valkarrWoods as unknown as CityMap), art: ART["valkarr-woods"] },
+}
 const PLACES = encounterPlaces as Record<string, Record<string, string>>
 
 // Where the party has been on a plan's city map, oldest first and ending where it is now. Places with no spot on the

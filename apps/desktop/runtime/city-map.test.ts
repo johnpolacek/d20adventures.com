@@ -28,5 +28,17 @@ test("the GM is told where each March of Davos scene stands in Kordavos, which w
 
   // Staging and city share one block, and a pack with no map leaves the staging as it was.
   assert.equal(withCityContext("staging", undefined, encounters, "the-harvest-festival"), "staging")
-  assert.match(withCityContext("staging", map, encounters, "the-harvest-festival") ?? "", /^staging\n\nCity map of Kordavos/)
+  assert.match(withCityContext("staging", map, encounters, "the-harvest-festival") ?? "", /^staging\n\nMap of Kordavos/)
+})
+
+test("the GM is told where each Midnight Summons scene stands in the Valkarr woods", () => {
+  const midnight = packs["the-midnight-summons"]
+  const map = midnight.cityMap
+  assert.ok(map, "The Midnight Summons carries the woods map")
+  const { encounters } = midnight.artifacts
+  for (const id of Object.keys(encounters)) assert.match(cityContext(map, encounters, id) ?? "", /- Here: /, id)
+  const home = cityContext(map, encounters, "preparing-for-the-city") ?? ""
+  assert.match(home, /^Map of The Valkarr Woods/)
+  assert.match(home, /Here: Thalbern's Home\./)
+  assert.match(cityContext(map, encounters, "owlbear-confrontation") ?? "", /The Old Standing Stones, east, a short walk/)
 })

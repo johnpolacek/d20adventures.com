@@ -54,6 +54,15 @@ Done 2026-10-31. `@d20/gm-core/citymap` holds the map logic, so the desktop runt
 
 Done 2026-10-31. The tunnel stops from the drain grate to the forgotten temple have their own painted view, `underground` in the map file and art index, painted from a plan drawn along the map file's tunnel by `paint kordavos underground`. The small map shows it while the party is below ground, and the full map opens on it there and offers it as The Catacombs once the party has been down.
 
+## The Valkarr Woods
+
+Done 2026-10-31 for The Midnight Summons. `content/settings/realm-of-myr/maps/valkarr-woods.json` is a second map, of open country: the Mordava from the east down to Kordavos at the sea edge, the Marquis Road north of it, Covert Cargo's pier on a quiet fork three miles above the city, Thalbern's home upstream, and the Old Standing Stones further up with the owlbear's tree line between.
+
+- Rulings are in the file. The stage set's "trailNorth" is a set label, not a bearing, so the stones are upstream to the east. "He lives on the edge of Kordavos" is loose: his home is hidden, a long walk from the city's distant spires.
+- A map with no districts is sketched as country (`regionSvg` in the paint script) and painted from that. It names every place reached at any zoom, as it has few.
+- A landmark marked `known`, such as Kordavos here, shows from the start.
+- Covert Cargo still stands at the Kordavos map's off-map forest pier. It could move to this map.
+
 ## Settled by the text
 
 - Kordavos is a port on the Jade Sea. The Mordava runs down to it.

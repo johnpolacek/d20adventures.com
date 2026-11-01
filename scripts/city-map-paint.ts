@@ -71,10 +71,12 @@ function districtBox(district: MapDistrict): Box {
 }
 
 async function sketches() {
-  await sharp(Buffer.from(sketchSvg(false)))
+  // A city has streets and districts. A map without districts is open country.
+  const draw = map.districts.length ? sketchSvg : regionSvg
+  await sharp(Buffer.from(draw(false)))
     .png()
     .toFile(raw("sketch.png"))
-  await sharp(Buffer.from(sketchSvg(true)))
+  await sharp(Buffer.from(draw(true)))
     .png()
     .toFile(raw("sketch-labelled.png"))
   console.log(`Sketches in ${RAW}`)
@@ -84,7 +86,7 @@ async function paintOuter() {
   const out = raw("outer.jpg")
   if (existsSync(out) && !force) return console.log(`outer: kept ${out}`)
   await sketches()
-  const image = await paint("outer", OUTER_PROMPT, [raw("sketch.png"), raw("sketch-labelled.png")])
+  const image = await paint("outer", map.districts.length ? OUTER_PROMPT : REGION_PROMPT, [raw("sketch.png"), raw("sketch-labelled.png")])
   await writeFile(out, image)
   await driftCheck(out, outerBox, raw("outer-drift.png"))
   console.log(`outer: ${out}, check ${raw("outer-drift.png")}`)
@@ -526,6 +528,104 @@ function undergroundSvg(labelled: boolean) {
     text(box[0] + 60, box[1] + 30, "SOLID ROCK", 14)
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="2048" viewBox="${box.join(" ")}">${svg}</svg>`
+}
+
+const REGION_PROMPT = `Image 1 is an exact layout plan of a stretch of forest country seen from directly above. Image 2 is the same plan with labels explaining each part; the labels are only for you and must never appear in the result.
+
+Repaint image 1 as a finished, top-down illustrated regional map, the quality of a premium published tabletop roleplaying adventure module: hand-inked linework with watercolour and gouache washes. A deep old forest of densely packed, individually inked tree crowns with soft shadows. A winding river with fine hand-drawn ripples and darker banks, and a small quiet side channel with a wooden pier and a moored river boat. A packed-earth road through the trees, and narrow footpaths. A small walled port town with red roofs and towers at the far west edge by the sea, and patchwork farm fields round it. Deep in the woods, a ranger's small timber cabin in a little clearing by the river, and further upstream a ring of ancient standing stones in a moonlit clearing. Warm aged parchment palette, greens and river blues.
+
+This is a trace, not a suggestion: the river, the side channel, the road, the paths, the forest edge, the town and every clearing stay where they are in image 1, with the same shapes.
+
+Directly overhead, orthographic, no perspective. No text, letters, labels, compass, scale bar, border, frame or legend. Fill the whole image.`
+
+// Open country: forest, fields, water, roads and paths from the map file, a small town for a city landmark, and a
+// clearing for each place in the woods. Seeded, so it redraws the same.
+function regionSvg(labelled: boolean) {
+  let seed = 5
+  const rnd = () => {
+    seed = (seed * 16807) % 2147483647
+    return seed / 2147483647
+  }
+  const pts = (p: Point[] = []) => p.map((q) => q.map((v) => v.toFixed(1)).join(",")).join(" ")
+  const inside = ([x, y]: Point, poly: Point[] = []) => {
+    let r = false
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const [xi, yi] = poly[i]
+      const [xj, yj] = poly[j]
+      if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) r = !r
+    }
+    return r
+  }
+  const [bx, by, bw] = outerBox
+  const clearings = map.landmarks.filter((l) => l.kind !== "city").map((l) => ({ x: l.x, y: l.y, r: l.kind === "stones" ? 42 : l.kind === "home" ? 32 : 22 }))
+  const city = map.landmarks.find((l) => l.kind === "city")
+  // Trees keep off roads, paths and water.
+  const nearPath = (x: number, y: number) =>
+    [...map.roads, ...map.rivers].some((r) =>
+      (r.path ?? []).some((p, i, a) => {
+        const q = a[i + 1]
+        if (!q) return false
+        const t = Math.max(0, Math.min(1, ((x - p[0]) * (q[0] - p[0]) + (y - p[1]) * (q[1] - p[1])) / ((q[0] - p[0]) ** 2 + (q[1] - p[1]) ** 2 || 1)))
+        return Math.hypot(x - (p[0] + t * (q[0] - p[0])), y - (p[1] + t * (q[1] - p[1]))) < (r.width ?? 6) / 2 + 9
+      })
+    )
+  let svg = `<rect x="${bx - 50}" y="${by - 50}" width="${bw + 100}" height="${bw + 100}" fill="#d3c99a"/>`
+  for (let i = 0; i < 120; i++) {
+    const x = bx + rnd() * 320
+    const y = by + 300 + rnd() * 500
+    if (map.forests.some((f) => inside([x, y], f.polygon))) continue
+    svg += `<rect x="${x}" y="${y}" width="${24 + rnd() * 30}" height="${14 + rnd() * 20}" fill="${["#c8bd85", "#bfb47c", "#cfc590"][Math.floor(rnd() * 3)]}" stroke="#b0a571" stroke-width=".6" transform="rotate(${rnd() * 30 - 15} ${x} ${y})"/>`
+  }
+  for (const f of map.forests) {
+    svg += `<polygon points="${pts(f.polygon)}" fill="#3f5a2e"/>`
+    for (let i = 0; i < 9000; i++) {
+      const x = bx + rnd() * bw
+      const y = by + rnd() * bw
+      if (!inside([x, y], f.polygon) || clearings.some((c) => Math.hypot(x - c.x, y - c.y) < c.r) || nearPath(x, y)) continue
+      svg += `<circle cx="${x}" cy="${y}" r="${4 + rnd() * 5}" fill="${["#567a40", "#4d6f3a", "#5f8547", "#456634"][Math.floor(rnd() * 4)]}"/>`
+    }
+  }
+  for (const c of clearings) svg += `<circle cx="${c.x}" cy="${c.y}" r="${c.r}" fill="#b9c08a"/>`
+  for (const w of map.water) svg += `<polygon points="${pts(w.polygon)}" fill="#6f9cb0"/>`
+  for (const r of map.rivers) svg += `<polyline points="${pts(r.path)}" fill="none" stroke="#6f9cb0" stroke-width="${r.width}" stroke-linecap="round" stroke-linejoin="round"/>`
+  for (const r of map.roads) {
+    const main = r.id === "marquis-road"
+    svg += `<polyline points="${pts(r.path)}" fill="none" stroke="${main ? "#c2a574" : "#b49a6a"}" stroke-width="${main ? 7 : 3}" stroke-dasharray="${main ? "none" : "6 4"}" stroke-linecap="round" stroke-linejoin="round"/>`
+  }
+  if (city) {
+    svg += `<circle cx="${city.x}" cy="${city.y}" r="46" fill="#b9a789" stroke="#7d7466" stroke-width="5"/>`
+    for (let i = 0; i < 70; i++) {
+      const a = rnd() * Math.PI * 2
+      const d = rnd() * 40
+      svg += `<rect x="${city.x + Math.cos(a) * d - 3}" y="${city.y + Math.sin(a) * d - 3}" width="${5 + rnd() * 4}" height="${4 + rnd() * 4}" fill="${["#a85c3a", "#96503a", "#8a5a3c"][Math.floor(rnd() * 3)]}"/>`
+    }
+  }
+  for (const l of map.landmarks) {
+    if (l.kind === "home") svg += `<rect x="${l.x - 9}" y="${l.y - 6}" width="18" height="12" fill="#7a5a3c" stroke="#3f342a" stroke-width="1"/>`
+    if (l.kind === "stones")
+      for (let i = 0; i < 9; i++)
+        svg += `<circle cx="${l.x + Math.cos((i / 9) * Math.PI * 2) * 22}" cy="${l.y + Math.sin((i / 9) * Math.PI * 2) * 22}" r="4.5" fill="#8d8a84" stroke="#3f3a34" stroke-width="1"/>`
+    if (l.kind === "pier") svg += `<rect x="${l.x - 3}" y="${l.y - 2}" width="6" height="16" fill="#7a5c3e"/><ellipse cx="${l.x + 10}" cy="${l.y + 8}" rx="9" ry="3" fill="#5b4330"/>`
+    if (l.kind === "wood") svg += `<circle cx="${l.x}" cy="${l.y - 14}" r="16" fill="#2f4524" opacity=".8"/>`
+  }
+  if (labelled) {
+    const t = (x: number, y: number, words: string, size = 16) =>
+      (svg += `<text x="${x}" y="${y}" font-size="${size}" font-family="Arial" font-weight="bold" fill="#000" stroke="#fff" stroke-width="4" paint-order="stroke" text-anchor="middle">${words}</text>`)
+    t(640, 220, "DEEP OLD FOREST", 22)
+    t(640, 900, "DEEP OLD FOREST", 22)
+    for (const r of map.rivers) {
+      const [x, y] = r.path![Math.floor(r.path!.length / 2)]
+      t(x, y + 28, r.id === "mordava" ? "RIVER" : "QUIET SIDE CHANNEL", 13)
+    }
+    t(640, 425, "ROAD", 13)
+    t(760, 610, "FOOTPATH", 11)
+    if (city) t(city.x + 30, city.y - 58, "SMALL WALLED PORT TOWN", 13)
+    t(20, 300, "SEA", 16)
+    t(150, 700, "FARM FIELDS", 13)
+    const names: Record<string, string> = { home: "RANGER'S CABIN CLEARING", stones: "STANDING STONES CLEARING", pier: "PIER + RIVER BOAT", wood: "DARK THICKET" }
+    for (const l of map.landmarks) if (names[l.kind]) t(l.x, l.y + 40, names[l.kind], 12)
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="2048" viewBox="${outerBox.join(" ")}">${svg}</svg>`
 }
 
 void main()
